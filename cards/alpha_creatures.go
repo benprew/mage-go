@@ -772,11 +772,10 @@ func registerAlphaCreatures() {
 		c.Power_ = 1
 		c.Toughness_ = 1
 		// {T}: Prevent the next 1 damage that would be dealt to any target this turn.
-		// Simplified: gain 1 life
 		ab := mage.NewActivatedAbility(
-			mage.GainLife(1),
+			mage.PreventDamageToTarget(1),
 			mage.TapSourceCost(),
-		)
+		).AddTarget(mage.TargetAnyTarget())
 		c.AddAbility(ab)
 		return c
 	})
