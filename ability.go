@@ -140,3 +140,22 @@ func NewManaAbility(c Color) *ManaAbilityImpl {
 		Color: c,
 	}
 }
+
+// ManaBonusAbility grants bonus mana when matching permanents are tapped for mana.
+// E.g. Gauntlet of Might: "Whenever a Mountain is tapped for mana, add {R}."
+type ManaBonusAbility struct {
+	BaseAbility
+	Filter    PermanentFilter
+	BonusMana Color
+}
+
+func NewManaBonusAbility(filter PermanentFilter, bonusMana Color) *ManaBonusAbility {
+	return &ManaBonusAbility{
+		BaseAbility: BaseAbility{
+			ID_:   uuid.New(),
+			Type_: AbilityStatic,
+		},
+		Filter:    filter,
+		BonusMana: bonusMana,
+	}
+}

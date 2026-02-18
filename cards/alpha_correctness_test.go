@@ -468,14 +468,13 @@ func TestGauntletOfMight(t *testing.T) {
 		g := mage.NewTestGame(t)
 		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Gauntlet of Might")
 		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Mountain")
-		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Mox Ruby")
-		g.ActivateAbility(1, mage.PrecombatMain, mage.PlayerA, "Mox Ruby")
+		g.ActivateAbility(1, mage.PrecombatMain, mage.PlayerA, "Mountain")
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
-		// Auto-mana adds 5R. Mox produces 1R. Gauntlet should add +1R = 7 total.
+		// Auto-mana adds 5R. Mountain tapped for 1R + Gauntlet bonus 1R = 7R total.
 		pool := g.Players[0].ManaPool()
-		if pool.Count(mage.Red) <= 6 {
-			t.Errorf("Gauntlet should make Mox Ruby produce extra {R}; expected >6 red mana, got %d", pool.Count(mage.Red))
+		if pool.Count(mage.Red) < 7 {
+			t.Errorf("Gauntlet should make Mountain produce extra {R}; expected >=7 red mana, got %d", pool.Count(mage.Red))
 		}
 	})
 }

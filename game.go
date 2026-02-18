@@ -37,6 +37,7 @@ type Game struct {
 	// Damage tracking: maps target permanent ID -> set of source permanent IDs that dealt damage this turn
 	DamageDealtBy map[uuid.UUID]map[uuid.UUID]bool
 
+
 	// Control flags
 	stopped bool
 }
@@ -704,7 +705,52 @@ func (g *Game) ActivateAbilityByText(playerID uuid.UUID, permName string, target
 		return nil
 	}
 
+	// Try mana abilities (these don't use the stack)
+	for _, a := range perm.RuntimeAbilities {
+		inner := a
+		if wrapped, ok := inner.(*grantedByEffect); ok {
+			inner = wrapped.Ability
+		}
+		ma, ok := inner.(*ManaAbilityImpl)
+		if !ok {
+			continue
+		}
+		if perm.Tapped {
+			continue // already tapped
+		}
+		perm.Tapped = true
+		p := g.GetPlayer(playerID)
+		if p != nil {
+			p.ManaPool().Add(ma.Color, 1)
+			// Check for mana bonus effects (e.g. Gauntlet of Might)
+			g.applyManaBonuses(perm, ma.Color, p)
+		}
+		g.FireEvent(GameEvent{
+			Type:     EvtAbilityActivated,
+			SourceID: perm.ID(),
+			PlayerID: playerID,
+		})
+		return nil
+	}
+
 	return fmt.Errorf("no activatable ability found on %s", permName)
+}
+
+// applyManaBonuses checks for mana bonus effects when a permanent is tapped for mana.
+func (g *Game) applyManaBonuses(tappedPerm *Permanent, producedColor Color, p Player) {
+	for _, perm := range g.Battlefield {
+		for _, a := range perm.RuntimeAbilities {
+			inner := a
+			if wrapped, ok := inner.(*grantedByEffect); ok {
+				inner = wrapped.Ability
+			}
+			if mb, ok := inner.(*ManaBonusAbility); ok {
+				if mb.Filter(tappedPerm, g) {
+					p.ManaPool().Add(mb.BonusMana, 1)
+				}
+			}
+		}
+	}
 }
 
 // CheckStateBasedActions checks and processes state-based actions.

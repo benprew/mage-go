@@ -174,10 +174,12 @@ func registerAlphaArtifacts() {
 
 	mage.Register("Gauntlet of Might", func() mage.Card {
 		c := mage.NewArtifact("Gauntlet of Might", "{4}")
-		// Red creatures get +1/+1; whenever a Mountain is tapped for mana, add an additional R
+		// Red creatures get +1/+1
 		c.AddAbility(mage.StaticAbility(
 			mage.BoostAllCreaturesIncludingSelf(1, 1, mage.HasColorFilter(mage.Red)),
 		))
+		// Whenever a Mountain is tapped for mana, its controller adds an additional {R}
+		c.AddAbility(mage.NewManaBonusAbility(mage.HasSubType("Mountain"), mage.Red))
 		return c
 	})
 
