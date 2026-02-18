@@ -843,6 +843,35 @@ func (e *boostAttachedByForestCountEffect) Apply(g *Game) error {
 	return nil
 }
 
+// preventUntapForMatchingEffect prevents permanents matching a filter from
+// untapping during their controller's untap step (e.g. Meekstone).
+type preventUntapForMatchingEffect struct {
+	filter PermanentFilter
+	effectSource
+}
+
+// PreventUntapForMatching creates a continuous effect that sets DoesNotUntap
+// on all permanents matching the given filter.
+func PreventUntapForMatching(filter PermanentFilter) ContinuousEffect {
+	return &preventUntapForMatchingEffect{filter: filter}
+}
+
+func (e *preventUntapForMatchingEffect) GetLayer() Layer      { return LayerAbility }
+func (e *preventUntapForMatchingEffect) GetDuration() Duration { return WhileOnBattlefield }
+
+func (e *preventUntapForMatchingEffect) IsActive(g *Game) bool {
+	return g.FindPermanent(e.sourceID) != nil
+}
+
+func (e *preventUntapForMatchingEffect) Apply(g *Game) error {
+	for _, p := range g.Battlefield {
+		if e.filter(p, g) {
+			p.DoesNotUntap = true
+		}
+	}
+	return nil
+}
+
 // boostSelfWhileControllingEffect boosts the source +P/+T while the controller
 // controls a permanent matching a filter.
 type boostSelfWhileControllingEffect struct {

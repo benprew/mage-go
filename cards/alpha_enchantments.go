@@ -260,17 +260,16 @@ func registerAlphaEnchantments() {
 
 	mage.Register("Copper Tablet", func() mage.Card {
 		c := mage.NewArtifact("Copper Tablet", "{2}")
-		// At the beginning of each player's upkeep, deal 1 damage to that player
-		// Simplified: upkeep trigger deals 1 to controller
-		c.AddAbility(mage.BeginningOfUpkeepTrigger(mage.DealDamageToSourceController(1), false))
+		// At the beginning of each player's upkeep, Copper Tablet deals 1 damage to that player.
+		c.AddAbility(mage.BeginningOfEachUpkeepTrigger(mage.DealDamageToActivePlayer(1), false))
 		return c
 	})
 
 	mage.Register("Black Vise", func() mage.Card {
 		c := mage.NewArtifact("Black Vise", "{1}")
-		// At the beginning of each opponent's upkeep, deal damage equal to cards in hand minus 4
-		// Simplified: deal 1 on upkeep
-		c.AddAbility(mage.BeginningOfUpkeepTrigger(mage.DealDamageToSourceController(1), false))
+		// At the beginning of each opponent's upkeep, Black Vise deals X damage to
+		// that player, where X is the number of cards in their hand minus 4, minimum 0.
+		c.AddAbility(mage.BeginningOfEachUpkeepTrigger(mage.BlackViseEffect(), false))
 		return c
 	})
 
@@ -312,9 +311,9 @@ func registerAlphaEnchantments() {
 
 	mage.Register("Karma", func() mage.Card {
 		c := mage.NewEnchantment("Karma", "{2}{W}{W}")
-		// Upkeep: deal damage to each player equal to the number of Swamps they control
-		// Simplified: deal 1 to each player on upkeep
-		c.AddAbility(mage.BeginningOfUpkeepTrigger(mage.DealDamageToSourceController(1), false))
+		// At the beginning of each player's upkeep, Karma deals damage to that player
+		// equal to the number of Swamps they control.
+		c.AddAbility(mage.BeginningOfEachUpkeepTrigger(mage.DealDamagePerSwamp(), false))
 		return c
 	})
 

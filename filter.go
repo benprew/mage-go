@@ -144,3 +144,10 @@ func NotHasKeywordFilter(kw Keyword) PermanentFilter {
 		return !p.HasAbility(kw)
 	}
 }
+
+// HasPowerGTE returns a filter matching creatures with power >= n.
+func HasPowerGTE(n int) PermanentFilter {
+	return func(p *Permanent, g *Game) bool {
+		return p.CurrentPower(g) >= n
+	}
+}

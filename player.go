@@ -45,6 +45,12 @@ type Player interface {
 	DeclareAttackers(g *Game) []uuid.UUID
 	DeclareBlockers(g *Game) []BlockAssignment
 	ChooseMayAbility(description string) bool
+
+	// Player choice methods (overridden by TestPlayer for scripted choices)
+	ChoosePermanent(candidates []*Permanent, reason string, g *Game) *Permanent
+	ChooseCardsFromHand(amount int, reason string, g *Game) []Card
+	ChooseManaColor(reason string) Color
+	ChooseCardFromLibrary(candidates []Card, reason string, g *Game) Card
 }
 
 // BasePlayer implements Player with basic functionality.
@@ -157,4 +163,34 @@ func (p *BasePlayer) DeclareBlockers(g *Game) []BlockAssignment {
 
 func (p *BasePlayer) ChooseMayAbility(description string) bool {
 	return false
+}
+
+// Default choice implementations (pick first available option).
+
+func (p *BasePlayer) ChoosePermanent(candidates []*Permanent, reason string, g *Game) *Permanent {
+	if len(candidates) > 0 {
+		return candidates[0]
+	}
+	return nil
+}
+
+func (p *BasePlayer) ChooseCardsFromHand(amount int, reason string, g *Game) []Card {
+	hand := p.Hand()
+	if amount > len(hand) {
+		amount = len(hand)
+	}
+	result := make([]Card, amount)
+	copy(result, hand[:amount])
+	return result
+}
+
+func (p *BasePlayer) ChooseManaColor(reason string) Color {
+	return White // default to White
+}
+
+func (p *BasePlayer) ChooseCardFromLibrary(candidates []Card, reason string, g *Game) Card {
+	if len(candidates) > 0 {
+		return candidates[0]
+	}
+	return nil
 }

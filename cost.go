@@ -164,14 +164,22 @@ func (c *sacrificeCreatureCost) CanPay(sourceID, controller uuid.UUID, g *Game) 
 }
 
 func (c *sacrificeCreatureCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
-	// Sacrifice the first creature controlled that isn't the source
+	var candidates []*Permanent
 	for _, p := range g.Battlefield {
 		if p.Controller == controller && p.HasType(TypeCreature) && p.ID() != sourceID {
-			g.Sacrifice(p)
-			return nil
+			candidates = append(candidates, p)
 		}
 	}
-	return ErrNoCreature
+	if len(candidates) == 0 {
+		return ErrNoCreature
+	}
+	player := g.GetPlayer(controller)
+	chosen := player.ChoosePermanent(candidates, "sacrifice cost", g)
+	if chosen == nil {
+		return ErrNoCreature
+	}
+	g.Sacrifice(chosen)
+	return nil
 }
 
 func (c *sacrificeCreatureCost) Text() string { return "Sacrifice a creature" }

@@ -172,7 +172,10 @@ func registerAlphaArtifacts() {
 
 	mage.Register("Meekstone", func() mage.Card {
 		c := mage.NewArtifact("Meekstone", "{1}")
-		// Creatures with power 3 or greater don't untap during their controller's untap step
+		// Creatures with power 3 or greater don't untap during their controller's untap step.
+		c.AddAbility(mage.StaticAbility(
+			mage.PreventUntapForMatching(mage.And(mage.IsCreature, mage.HasPowerGTE(3))),
+		))
 		return c
 	})
 
@@ -332,8 +335,14 @@ func registerAlphaArtifacts() {
 
 	mage.Register("Mana Flare", func() mage.Card {
 		c := mage.NewEnchantment("Mana Flare", "{2}{R}")
-		// Whenever a player taps a land for mana, that land produces one additional mana
-		// Stub - complex trigger
+		// Whenever a player taps a land for mana, that player adds one additional
+		// mana of any type that land produced.
+		// We approximate by adding bonus for each basic land type.
+		c.AddAbility(mage.NewManaBonusAbility(mage.HasSubType("Plains"), mage.White))
+		c.AddAbility(mage.NewManaBonusAbility(mage.HasSubType("Island"), mage.Blue))
+		c.AddAbility(mage.NewManaBonusAbility(mage.HasSubType("Swamp"), mage.Black))
+		c.AddAbility(mage.NewManaBonusAbility(mage.HasSubType("Mountain"), mage.Red))
+		c.AddAbility(mage.NewManaBonusAbility(mage.HasSubType("Forest"), mage.Green))
 		return c
 	})
 
