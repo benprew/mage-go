@@ -58,11 +58,12 @@ type EffectManager struct {
 	toughBonuses map[uuid.UUID]int
 	grantedKW    map[uuid.UUID][]Keyword
 	removedKW    map[uuid.UUID][]Keyword
-	preventAttack map[uuid.UUID]bool
+	preventAttack       map[uuid.UUID]bool
 	regenerationShields map[uuid.UUID]int
 	preventionShields   map[uuid.UUID]int
-	landUntapLimit      int // -1 = no limit; >= 0 = max lands that may untap per turn
-	forcefieldShields   map[uuid.UUID]bool // players with Forcefield active this turn
+	landUntapLimit      int                    // -1 = no limit; >= 0 = max lands that may untap per turn
+	forcefieldShields   map[uuid.UUID]bool     // players with Forcefield active this turn
+	subtypeOverrides    map[uuid.UUID][]string // permanent ID -> replacement subtypes
 }
 
 func NewEffectManager() *EffectManager {
@@ -76,7 +77,18 @@ func NewEffectManager() *EffectManager {
 		preventionShields:   make(map[uuid.UUID]int),
 		landUntapLimit:      -1,
 		forcefieldShields:   make(map[uuid.UUID]bool),
+		subtypeOverrides:    make(map[uuid.UUID][]string),
 	}
+}
+
+// SetSubTypeOverride replaces the subtypes of a permanent (e.g. Evil Presence, Phantasmal Terrain).
+func (em *EffectManager) SetSubTypeOverride(permID uuid.UUID, subTypes []string) {
+	em.subtypeOverrides[permID] = subTypes
+}
+
+// SubTypeOverride returns the overridden subtypes for a permanent, or nil if none.
+func (em *EffectManager) SubTypeOverride(permID uuid.UUID) []string {
+	return em.subtypeOverrides[permID]
 }
 
 // AddForcefieldShield marks a player as having Forcefield active this turn.
@@ -177,9 +189,10 @@ func (em *EffectManager) Apply(g *Game) {
 	em.grantedKW = make(map[uuid.UUID][]Keyword)
 	em.removedKW = make(map[uuid.UUID][]Keyword)
 	em.preventAttack = make(map[uuid.UUID]bool)
+	em.subtypeOverrides = make(map[uuid.UUID][]string)
 	em.landUntapLimit = -1
 
-	// Reset granted runtime abilities from effects (will be re-granted below)
+	// Reset granted runtime abilities and subtype overrides from effects
 	for _, p := range g.Battlefield {
 		var base []Ability
 		for _, a := range p.RuntimeAbilities {
@@ -188,6 +201,7 @@ func (em *EffectManager) Apply(g *Game) {
 			}
 		}
 		p.RuntimeAbilities = base
+		p.SubTypeOverride = nil
 	}
 
 	// Remove effects whose source is no longer on the battlefield
@@ -200,8 +214,8 @@ func (em *EffectManager) Apply(g *Game) {
 	}
 	em.effects = active
 
-	// Apply in layer order (2, 6, 7)
-	for _, layer := range []Layer{LayerControl, LayerAbility, LayerPT} {
+	// Apply in layer order (2, 4, 6, 7)
+	for _, layer := range []Layer{LayerControl, LayerType, LayerAbility, LayerPT} {
 		for _, e := range em.effects {
 			if e.GetLayer() == layer && e.IsActive(g) {
 				e.Apply(g)
@@ -375,6 +389,39 @@ func (e *removeKeywordAttachedEffect) Apply(g *Game) error {
 		filtered = append(filtered, a)
 	}
 	target.RuntimeAbilities = filtered
+	return nil
+}
+
+// ChangeAttachedSubTypes replaces the subtypes of the attached permanent (e.g. Evil Presence
+// makes enchanted land a Swamp, Phantasmal Terrain makes it a chosen type).
+func ChangeAttachedSubTypes(newSubTypes []string) ContinuousEffect {
+	return &changeAttachedSubTypesEffect{newSubTypes: newSubTypes}
+}
+
+type changeAttachedSubTypesEffect struct {
+	newSubTypes []string
+	effectSource
+}
+
+func (e *changeAttachedSubTypesEffect) GetLayer() Layer      { return LayerType }
+func (e *changeAttachedSubTypesEffect) GetDuration() Duration { return WhileOnBattlefield }
+
+func (e *changeAttachedSubTypesEffect) IsActive(g *Game) bool {
+	src := g.FindPermanent(e.sourceID)
+	return src != nil && src.IsAttached()
+}
+
+func (e *changeAttachedSubTypesEffect) Apply(g *Game) error {
+	src := g.FindPermanent(e.sourceID)
+	if src == nil || !src.IsAttached() {
+		return nil
+	}
+	target := g.FindPermanent(src.AttachedTo)
+	if target == nil {
+		return nil
+	}
+	target.SubTypeOverride = make([]string, len(e.newSubTypes))
+	copy(target.SubTypeOverride, e.newSubTypes)
 	return nil
 }
 

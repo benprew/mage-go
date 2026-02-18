@@ -138,8 +138,10 @@ func registerAlphaEnchantments() {
 
 	mage.Register("Invisibility", func() mage.Card {
 		c := mage.NewAura("Invisibility", "{U}{U}")
-		// Enchanted creature can't be blocked except by Walls
-		// Simplified: no effect (would need custom blocking restriction)
+		// Enchanted creature can't be blocked except by Walls.
+		c.AddAbility(mage.StaticAbility(
+			mage.GrantAbilityToAttached(mage.CantBeBlockedExceptByWalls, mage.AttachAura),
+		))
 		return c
 	})
 
@@ -191,13 +193,20 @@ func registerAlphaEnchantments() {
 
 	mage.Register("Evil Presence", func() mage.Card {
 		c := mage.NewAura("Evil Presence", "{B}")
-		// Enchanted land is a Swamp
+		// Enchanted land is a Swamp.
+		c.AddAbility(mage.StaticAbility(
+			mage.ChangeAttachedSubTypes([]string{"Swamp"}),
+		))
 		return c
 	})
 
 	mage.Register("Phantasmal Terrain", func() mage.Card {
 		c := mage.NewAura("Phantasmal Terrain", "{U}{U}")
-		// Enchanted land is the basic land type of your choice
+		// Enchanted land is the basic land type of your choice.
+		// Default choice: Island.
+		c.AddAbility(mage.StaticAbility(
+			mage.ChangeAttachedSubTypes([]string{"Island"}),
+		))
 		return c
 	})
 

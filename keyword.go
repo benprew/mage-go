@@ -26,7 +26,8 @@ const (
 	Mountainwalk
 	Plainswalk
 	CantBeBlockedByWalls
-	CanBlockAdditional // can block an additional creature each combat
+	CanBlockAdditional          // can block an additional creature each combat
+	CantBeBlockedExceptByWalls  // can only be blocked by Walls
 	EntersTapped
 	DoesNotUntapKW
 	UnblockableKW
@@ -80,6 +81,8 @@ func (k Keyword) String() string {
 		return "Can't Be Blocked by Walls"
 	case CanBlockAdditional:
 		return "Can Block Additional Creature"
+	case CantBeBlockedExceptByWalls:
+		return "Can't Be Blocked Except by Walls"
 	case EntersTapped:
 		return "Enters Tapped"
 	case DoesNotUntapKW:

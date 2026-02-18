@@ -147,6 +147,10 @@ func CanBlock(blocker, attacker *Permanent, g *Game) bool {
 			return false
 		}
 	}
+	// CantBeBlockedExceptByWalls: can only be blocked by Walls (e.g. Invisibility)
+	if attacker.HasAbility(CantBeBlockedExceptByWalls) && !blocker.HasSubType("Wall") {
+		return false
+	}
 	// Menace: must be blocked by two or more creatures (simplified - we don't enforce here)
 	return true
 }

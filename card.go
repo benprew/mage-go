@@ -241,6 +241,7 @@ type Permanent struct {
 	Attachments []uuid.UUID // what's attached to this permanent
 
 	RuntimeAbilities []Ability // base + granted by effects
+	SubTypeOverride  []string  // if set, replaces card's subtypes (from continuous effects)
 }
 
 // NewPermanent creates a permanent from a card.
@@ -267,7 +268,11 @@ func (p *Permanent) HasType(t CardType) bool {
 }
 
 func (p *Permanent) HasSubType(s string) bool {
-	for _, st := range p.Card.SubTypes() {
+	subs := p.Card.SubTypes()
+	if len(p.SubTypeOverride) > 0 {
+		subs = p.SubTypeOverride
+	}
+	for _, st := range subs {
 		if st == s {
 			return true
 		}

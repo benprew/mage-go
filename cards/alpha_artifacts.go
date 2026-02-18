@@ -468,6 +468,10 @@ func registerAlphaArtifacts() {
 
 	mage.Register("Magnetic Mountain", func() mage.Card {
 		c := mage.NewEnchantment("Magnetic Mountain", "{1}{R}{R}")
+		// Blue creatures don't untap during their controller's untap step.
+		c.AddAbility(mage.StaticAbility(
+			mage.PreventUntapForMatching(mage.And(mage.IsCreature, mage.HasColorFilter(mage.Blue))),
+		))
 		return c
 	})
 

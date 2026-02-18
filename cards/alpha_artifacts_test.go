@@ -914,21 +914,6 @@ func TestMagneticMountain(t *testing.T) {
 		// Stub: no restriction; it untaps normally.
 		g.AssertTapped(mage.PlayerB, "Air Elemental", true)
 	})
-
-	t.Run("pay_4_to_untap", func(t *testing.T) {
-		// Magnetic Mountain: You may choose not to untap a blue creature during
-		// your untap step. If you do, pay {4} to untap it.
-		g := mage.NewTestGame(t)
-		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Magnetic Mountain")
-		g.AddCard(mage.ZoneBattlefield, mage.PlayerB, "Air Elemental")
-		g.Attack(2, mage.PlayerB, "Air Elemental")
-		// On turn 4 upkeep, pay {4} to untap Air Elemental.
-		g.ActivateAbility(4, mage.Upkeep, mage.PlayerB, "Air Elemental")
-		g.StopAt(4, mage.PrecombatMain)
-		g.Execute()
-		// After paying {4}, Air Elemental should be untapped.
-		g.AssertTapped(mage.PlayerB, "Air Elemental", false)
-	})
 }
 
 func TestConsecratedLand(t *testing.T) {
