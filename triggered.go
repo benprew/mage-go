@@ -404,3 +404,39 @@ func (t *AnyCreatureDiesTriggered) CheckTrigger(evt *GameEvent, g *Game) bool {
 func (t *AnyCreatureDiesTriggered) IsOptional() bool { return t.Optional }
 func (t *AnyCreatureDiesTriggered) Effects() []Effect { return t.Effs }
 func (t *AnyCreatureDiesTriggered) Targets() []Target { return t.Tgts }
+
+// CreatureDealtDamageBySourceDiesTriggered triggers when a creature that was
+// dealt damage by the source permanent this turn dies.
+type CreatureDealtDamageBySourceDiesTriggered struct {
+	BaseAbility
+	Optional bool
+	Effs     []Effect
+	Tgts     []Target
+}
+
+func CreatureDealtDamageBySourceDiesTrigger(effect Effect, optional bool) *CreatureDealtDamageBySourceDiesTriggered {
+	return &CreatureDealtDamageBySourceDiesTriggered{
+		BaseAbility: BaseAbility{
+			ID_:   uuid.New(),
+			Type_: AbilityTriggered,
+		},
+		Optional: optional,
+		Effs:     []Effect{effect},
+	}
+}
+
+func (t *CreatureDealtDamageBySourceDiesTriggered) CheckEventType(et EventType) bool {
+	return et == EvtCreatureDied
+}
+
+func (t *CreatureDealtDamageBySourceDiesTriggered) CheckTrigger(evt *GameEvent, g *Game) bool {
+	// evt.SourceID is the dying creature's ID
+	// t.Source_ is the permanent with this trigger (e.g. Sengir Vampire)
+	// Check if the source dealt damage to the dying creature this turn
+	sources := g.DamageDealtBy[evt.SourceID]
+	return sources != nil && sources[t.Source_]
+}
+
+func (t *CreatureDealtDamageBySourceDiesTriggered) IsOptional() bool { return t.Optional }
+func (t *CreatureDealtDamageBySourceDiesTriggered) Effects() []Effect { return t.Effs }
+func (t *CreatureDealtDamageBySourceDiesTriggered) Targets() []Target { return t.Tgts }

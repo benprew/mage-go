@@ -34,6 +34,9 @@ type Game struct {
 	// Interactive play tracking
 	LandsPlayedThisTurn int
 
+	// Damage tracking: maps target permanent ID -> set of source permanent IDs that dealt damage this turn
+	DamageDealtBy map[uuid.UUID]map[uuid.UUID]bool
+
 	// Control flags
 	stopped bool
 }
@@ -48,11 +51,12 @@ type pendingTrigger struct {
 // NewGame creates a new 2-player game.
 func NewGame(playerA, playerB Player) *Game {
 	return &Game{
-		Players: []Player{playerA, playerB},
-		Stack:   NewStack(),
-		Combat:  NewCombat(),
-		Effects: NewEffectManager(),
-		Turn:    1,
+		Players:      []Player{playerA, playerB},
+		Stack:        NewStack(),
+		Combat:       NewCombat(),
+		Effects:      NewEffectManager(),
+		Turn:         1,
+		DamageDealtBy: make(map[uuid.UUID]map[uuid.UUID]bool),
 	}
 }
 
@@ -385,6 +389,11 @@ func (g *Game) DealDamageToPermanent(perm *Permanent, amount int, sourceID uuid.
 		return
 	}
 	perm.Damage += amount
+	// Track which sources dealt damage to this permanent
+	if g.DamageDealtBy[perm.ID()] == nil {
+		g.DamageDealtBy[perm.ID()] = make(map[uuid.UUID]bool)
+	}
+	g.DamageDealtBy[perm.ID()][sourceID] = true
 	g.FireEvent(GameEvent{
 		Type:     EvtDamageDealt,
 		SourceID: sourceID,
@@ -918,6 +927,8 @@ func (g *Game) doCleanup() {
 	g.Effects.RemoveEndOfTurn()
 	// Reset combat damage prevention
 	g.PreventCombatDamage = false
+	// Clear damage tracking
+	g.DamageDealtBy = make(map[uuid.UUID]map[uuid.UUID]bool)
 }
 
 // RunTurn executes a complete turn for the active player.
