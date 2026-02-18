@@ -68,16 +68,16 @@ type BaseCard struct {
 }
 
 func (c *BaseCard) ID() uuid.UUID         { return c.id }
-func (c *BaseCard) Name() string           { return c.name }
-func (c *BaseCard) ManaCost() ManaCost     { return c.manaCost }
-func (c *BaseCard) Types() []CardType      { return c.types }
-func (c *BaseCard) SubTypes() []string     { return c.subTypes }
-func (c *BaseCard) Abilities() []Ability   { return c.abilities }
-func (c *BaseCard) Owner() uuid.UUID       { return c.owner }
-func (c *BaseCard) Power() int             { return c.power }
-func (c *BaseCard) Toughness() int         { return c.toughness }
-func (c *BaseCard) SetOwner(id uuid.UUID)  { c.owner = id }
-func (c *BaseCard) SetID(id uuid.UUID)     { c.id = id }
+func (c *BaseCard) Name() string          { return c.name }
+func (c *BaseCard) ManaCost() ManaCost    { return c.manaCost }
+func (c *BaseCard) Types() []CardType     { return c.types }
+func (c *BaseCard) SubTypes() []string    { return c.subTypes }
+func (c *BaseCard) Abilities() []Ability  { return c.abilities }
+func (c *BaseCard) Owner() uuid.UUID      { return c.owner }
+func (c *BaseCard) Power() int            { return c.power }
+func (c *BaseCard) Toughness() int        { return c.toughness }
+func (c *BaseCard) SetOwner(id uuid.UUID) { c.owner = id }
+func (c *BaseCard) SetID(id uuid.UUID)    { c.id = id }
 
 func (c *BaseCard) HasType(t CardType) bool {
 	for _, ct := range c.types {
@@ -146,7 +146,7 @@ func NewToken(name string, power, toughness int, types []CardType, subTypes []st
 		isToken:   true,
 	}
 	for _, kw := range keywords {
-		c.AddAbility(HasKeyword(kw))
+		c.AddAbility(NewKeywordAbility(kw))
 	}
 	return c
 }
@@ -241,12 +241,12 @@ type Permanent struct {
 	AttachedTo  uuid.UUID   // what this permanent is attached to
 	Attachments []uuid.UUID // what's attached to this permanent
 
-	RuntimeAbilities []Ability   // base + granted by effects
-	SubTypeOverride  []string    // if set, replaces card's subtypes (from continuous effects)
-	TypesAdded       []CardType  // types added by continuous effects (e.g. Living Lands)
-	BasePTOverride   *[2]int     // if set, overrides base P/T (for animate effects)
-	ColorOverride    *[]Color    // if set, replaces card's colors (from lace effects)
-	FaceDown         bool        // true when face-down (e.g. Illusionary Mask)
+	RuntimeAbilities []Ability  // base + granted by effects
+	SubTypeOverride  []string   // if set, replaces card's subtypes (from continuous effects)
+	TypesAdded       []CardType // types added by continuous effects (e.g. Living Lands)
+	BasePTOverride   *[2]int    // if set, overrides base P/T (for animate effects)
+	ColorOverride    *[]Color   // if set, replaces card's colors (from lace effects)
+	FaceDown         bool       // true when face-down (e.g. Illusionary Mask)
 }
 
 // NewPermanent creates a permanent from a card.
@@ -265,8 +265,8 @@ func NewPermanent(card Card, controller uuid.UUID) *Permanent {
 	return p
 }
 
-func (p *Permanent) ID() uuid.UUID     { return p.Card.ID() }
-func (p *Permanent) Name() string      { return p.Card.Name() }
+func (p *Permanent) ID() uuid.UUID { return p.Card.ID() }
+func (p *Permanent) Name() string  { return p.Card.Name() }
 
 func (p *Permanent) HasType(t CardType) bool {
 	if p.FaceDown {

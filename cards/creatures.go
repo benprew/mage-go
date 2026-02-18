@@ -14,8 +14,8 @@ func registerCreatures() {
 
 	mage.Register("Serra Angel", func() mage.Card {
 		c := mage.NewCreature("Serra Angel", "{3}{W}{W}", 4, 4, "Angel")
-		c.AddAbility(mage.HasKeyword(mage.Flying))
-		c.AddAbility(mage.HasKeyword(mage.Vigilance))
+		c.AddAbility(mage.NewKeywordAbility(mage.Flying))
+		c.AddAbility(mage.NewKeywordAbility(mage.Vigilance))
 		return c
 	})
 
@@ -28,7 +28,7 @@ func registerCreatures() {
 	// First striker for testing
 	mage.Register("White Knight", func() mage.Card {
 		c := mage.NewCreature("White Knight", "{W}{W}", 2, 2, "Human", "Knight")
-		c.AddAbility(mage.HasKeyword(mage.FirstStrike))
+		c.AddAbility(mage.NewKeywordAbility(mage.FirstStrike))
 		c.AddAbility(mage.ProtectionFromColor(mage.Black))
 		return c
 	})
@@ -36,28 +36,28 @@ func registerCreatures() {
 	// Double striker for testing
 	mage.Register("Fencing Ace", func() mage.Card {
 		c := mage.NewCreature("Fencing Ace", "{1}{W}", 1, 1, "Human", "Soldier")
-		c.AddAbility(mage.HasKeyword(mage.DoubleStrike))
+		c.AddAbility(mage.NewKeywordAbility(mage.DoubleStrike))
 		return c
 	})
 
 	// A bigger double striker
 	mage.Register("Boros Swiftblade", func() mage.Card {
 		c := mage.NewCreature("Boros Swiftblade", "{R}{W}", 1, 2, "Human", "Soldier")
-		c.AddAbility(mage.HasKeyword(mage.DoubleStrike))
+		c.AddAbility(mage.NewKeywordAbility(mage.DoubleStrike))
 		return c
 	})
 
 	// Hexproof creature for testing
 	mage.Register("Gladecover Scout", func() mage.Card {
 		c := mage.NewCreature("Gladecover Scout", "{G}", 1, 1, "Elf", "Scout")
-		c.AddAbility(mage.HasKeyword(mage.Hexproof))
+		c.AddAbility(mage.NewKeywordAbility(mage.Hexproof))
 		return c
 	})
 
 	// Shroud creature for testing
 	mage.Register("Blurred Mongoose", func() mage.Card {
 		c := mage.NewCreature("Blurred Mongoose", "{1}{G}", 2, 1, "Mongoose")
-		c.AddAbility(mage.HasKeyword(mage.Shroud))
+		c.AddAbility(mage.NewKeywordAbility(mage.Shroud))
 		return c
 	})
 
@@ -83,7 +83,7 @@ func registerCreatures() {
 	// Flying creature for testing
 	mage.Register("Wind Drake", func() mage.Card {
 		c := mage.NewCreature("Wind Drake", "{2}{U}", 2, 2, "Drake")
-		c.AddAbility(mage.HasKeyword(mage.Flying))
+		c.AddAbility(mage.NewKeywordAbility(mage.Flying))
 		return c
 	})
 }

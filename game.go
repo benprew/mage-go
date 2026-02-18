@@ -27,8 +27,8 @@ type Game struct {
 	Combat      *Combat
 	Effects     *EffectManager
 
-	Turn     int
-	Step     PhaseStep
+	Turn         int
+	Step         PhaseStep
 	ActivePlayer int // index into Players
 
 	// Event handling

@@ -49,59 +49,59 @@ type effectSource struct {
 	sourceID uuid.UUID
 }
 
-func (s *effectSource) SourceID() uuid.UUID     { return s.sourceID }
+func (s *effectSource) SourceID() uuid.UUID      { return s.sourceID }
 func (s *effectSource) SetSourceID(id uuid.UUID) { s.sourceID = id }
-
 
 // EffectManager manages and applies continuous effects.
 type EffectManager struct {
-	effects      []ContinuousEffect
-	powerBonuses map[uuid.UUID]int
-	toughBonuses map[uuid.UUID]int
-	grantedKW    map[uuid.UUID][]Keyword
-	removedKW    map[uuid.UUID][]Keyword
-	preventAttack       map[uuid.UUID]bool
-	regenerationShields map[uuid.UUID]int
-	preventionShields   map[uuid.UUID]int
-	landUntapLimit      int                    // -1 = no limit; >= 0 = max lands that may untap per turn
-	forcefieldShields    map[uuid.UUID]bool     // players with Forcefield active this turn
-	subtypeOverrides     map[uuid.UUID][]string // permanent ID -> replacement subtypes
-	reverseDamageShields map[uuid.UUID]bool     // players with Reverse Damage active this turn
-	channelActive        map[uuid.UUID]bool     // players with Channel active this turn
-	colorPrevention      map[uuid.UUID][]Color  // player -> colors that prevent next damage source
-	spellCostIncrease    map[Color]int           // color -> additional generic cost for spells of that color
-	unlimitedLandPlays   bool                    // true if a player can play unlimited lands (Fastbond)
-	sanctuaryActive      map[uuid.UUID]bool      // player -> if true, only flying/islandwalk can attack them
-	lichActive           map[uuid.UUID]bool      // player -> if true, Lich replacement effects apply
-	skipNextDraw         map[uuid.UUID]bool      // player -> if true, skip normal draw in draw step
-	preventBlock         map[uuid.UUID]bool      // permanent -> can't block this turn (Raging River)
-	manaConversion       map[Color]Color          // from color -> to color (Sunglasses of Urza)
-	bodyguard            map[uuid.UUID]uuid.UUID  // controller -> bodyguard permanent ID (Veteran Bodyguard)
-	playerDamageRedirect map[uuid.UUID]uuid.UUID  // controller -> creature that absorbs ALL damage to player
+	effects                []ContinuousEffect
+	powerBonuses           map[uuid.UUID]int
+	toughBonuses           map[uuid.UUID]int
+	grantedKW              map[uuid.UUID][]Keyword
+	removedKW              map[uuid.UUID][]Keyword
+	preventAttack          map[uuid.UUID]bool
+	regenerationShields    map[uuid.UUID]int
+	preventionShields      map[uuid.UUID]int
+	preventionRules        []damagePreventionRule
+	landUntapLimit         int                     // -1 = no limit; >= 0 = max lands that may untap per turn
+	forcefieldShields      map[uuid.UUID]bool      // players with Forcefield active this turn
+	subtypeOverrides       map[uuid.UUID][]string  // permanent ID -> replacement subtypes
+	reverseDamageShields   map[uuid.UUID]bool      // players with Reverse Damage active this turn
+	channelActive          map[uuid.UUID]bool      // players with Channel active this turn
+	colorPrevention        map[uuid.UUID][]Color   // player -> colors that prevent next damage source
+	spellCostIncrease      map[Color]int           // color -> additional generic cost for spells of that color
+	unlimitedLandPlays     bool                    // true if a player can play unlimited lands (Fastbond)
+	sanctuaryActive        map[uuid.UUID]bool      // player -> if true, only flying/islandwalk can attack them
+	lichActive             map[uuid.UUID]bool      // player -> if true, Lich replacement effects apply
+	skipNextDraw           map[uuid.UUID]bool      // player -> if true, skip normal draw in draw step
+	preventBlock           map[uuid.UUID]bool      // permanent -> can't block this turn (Raging River)
+	manaConversion         map[Color]Color         // from color -> to color (Sunglasses of Urza)
+	bodyguard              map[uuid.UUID]uuid.UUID // controller -> bodyguard permanent ID (Veteran Bodyguard)
+	playerDamageRedirect   map[uuid.UUID]uuid.UUID // controller -> creature that absorbs ALL damage to player
 	creatureDamageRedirect map[uuid.UUID]uuid.UUID // creature -> player who receives damage instead of creature (one-shot)
 }
 
 func NewEffectManager() *EffectManager {
 	return &EffectManager{
-		powerBonuses:        make(map[uuid.UUID]int),
-		toughBonuses:        make(map[uuid.UUID]int),
-		grantedKW:           make(map[uuid.UUID][]Keyword),
-		removedKW:           make(map[uuid.UUID][]Keyword),
-		preventAttack:       make(map[uuid.UUID]bool),
-		regenerationShields: make(map[uuid.UUID]int),
-		preventionShields:   make(map[uuid.UUID]int),
-		landUntapLimit:      -1,
-		forcefieldShields:    make(map[uuid.UUID]bool),
-		subtypeOverrides:     make(map[uuid.UUID][]string),
-		reverseDamageShields: make(map[uuid.UUID]bool),
-		channelActive:        make(map[uuid.UUID]bool),
-		colorPrevention:      make(map[uuid.UUID][]Color),
-		spellCostIncrease:    make(map[Color]int),
-		sanctuaryActive:      make(map[uuid.UUID]bool),
-		lichActive:           make(map[uuid.UUID]bool),
-		skipNextDraw:         make(map[uuid.UUID]bool),
-		preventBlock:         make(map[uuid.UUID]bool),
-		manaConversion:       make(map[Color]Color),
+		powerBonuses:           make(map[uuid.UUID]int),
+		toughBonuses:           make(map[uuid.UUID]int),
+		grantedKW:              make(map[uuid.UUID][]Keyword),
+		removedKW:              make(map[uuid.UUID][]Keyword),
+		preventAttack:          make(map[uuid.UUID]bool),
+		regenerationShields:    make(map[uuid.UUID]int),
+		preventionShields:      make(map[uuid.UUID]int),
+		landUntapLimit:         -1,
+		forcefieldShields:      make(map[uuid.UUID]bool),
+		subtypeOverrides:       make(map[uuid.UUID][]string),
+		reverseDamageShields:   make(map[uuid.UUID]bool),
+		channelActive:          make(map[uuid.UUID]bool),
+		colorPrevention:        make(map[uuid.UUID][]Color),
+		spellCostIncrease:      make(map[Color]int),
+		sanctuaryActive:        make(map[uuid.UUID]bool),
+		lichActive:             make(map[uuid.UUID]bool),
+		skipNextDraw:           make(map[uuid.UUID]bool),
+		preventBlock:           make(map[uuid.UUID]bool),
+		manaConversion:         make(map[Color]Color),
 		bodyguard:              make(map[uuid.UUID]uuid.UUID),
 		playerDamageRedirect:   make(map[uuid.UUID]uuid.UUID),
 		creatureDamageRedirect: make(map[uuid.UUID]uuid.UUID),
@@ -360,6 +360,39 @@ func (em *EffectManager) CheckColorPrevention(playerID uuid.UUID, sourceCard Car
 	return false
 }
 
+type damagePreventionRule struct {
+	from    PermanentFilter
+	to      PermanentFilter
+	oneShot bool
+}
+
+type damagePreventionRuleOption func(*damagePreventionRule)
+
+func (dpr *damagePreventionRule) WithFrom(from PermanentFilter) {
+	dpr.from = from
+}
+
+func (dpr *damagePreventionRule) WithTo(to PermanentFilter) {
+	dpr.to = to
+}
+
+func (dpr *damagePreventionRule) WithOneShot(oneshot bool) {
+	dpr.oneShot = oneshot
+}
+
+func (em *EffectManager) AddDamagePreventionRule(opts ...damagePreventionRuleOption) {
+	dpr := &damagePreventionRule{}
+	for _, opt := range opts {
+		opt(dpr)
+	}
+
+	em.preventionRules = append(em.preventionRules, *dpr)
+}
+
+func (em *EffectManager) ClearDamagePreventionRules() {
+	em.preventionRules = make([]damagePreventionRule, 0)
+}
+
 func (em *EffectManager) Add(e ContinuousEffect) {
 	em.effects = append(em.effects, e)
 }
@@ -524,7 +557,7 @@ type boostAttachedEffect struct {
 	effectSource
 }
 
-func (e *boostAttachedEffect) GetLayer() Layer      { return LayerPT }
+func (e *boostAttachedEffect) GetLayer() Layer       { return LayerPT }
 func (e *boostAttachedEffect) GetDuration() Duration { return WhileOnBattlefield }
 
 func (e *boostAttachedEffect) IsActive(g *Game) bool {
@@ -559,7 +592,7 @@ type grantKeywordAttachedEffect struct {
 	effectSource
 }
 
-func (e *grantKeywordAttachedEffect) GetLayer() Layer      { return LayerAbility }
+func (e *grantKeywordAttachedEffect) GetLayer() Layer       { return LayerAbility }
 func (e *grantKeywordAttachedEffect) GetDuration() Duration { return WhileOnBattlefield }
 
 func (e *grantKeywordAttachedEffect) IsActive(g *Game) bool {
@@ -581,7 +614,7 @@ func (e *grantKeywordAttachedEffect) Apply(g *Game) error {
 	}
 	g.Effects.grantedKW[target.ID()] = append(g.Effects.grantedKW[target.ID()], e.keyword)
 	// Also add to runtime abilities so HasAbility works (wrapped so it can be removed on reapply)
-	target.RuntimeAbilities = append(target.RuntimeAbilities, &grantedByEffect{HasKeyword(e.keyword)})
+	target.RuntimeAbilities = append(target.RuntimeAbilities, &grantedByEffect{NewKeywordAbility(e.keyword)})
 	return nil
 }
 
@@ -600,7 +633,7 @@ type grantProtectionAttachedEffect struct {
 	effectSource
 }
 
-func (e *grantProtectionAttachedEffect) GetLayer() Layer      { return LayerAbility }
+func (e *grantProtectionAttachedEffect) GetLayer() Layer       { return LayerAbility }
 func (e *grantProtectionAttachedEffect) GetDuration() Duration { return WhileOnBattlefield }
 
 func (e *grantProtectionAttachedEffect) IsActive(g *Game) bool {
@@ -638,7 +671,7 @@ type removeKeywordAttachedEffect struct {
 	effectSource
 }
 
-func (e *removeKeywordAttachedEffect) GetLayer() Layer      { return LayerAbility }
+func (e *removeKeywordAttachedEffect) GetLayer() Layer       { return LayerAbility }
 func (e *removeKeywordAttachedEffect) GetDuration() Duration { return WhileOnBattlefield }
 
 func (e *removeKeywordAttachedEffect) IsActive(g *Game) bool {
@@ -679,7 +712,7 @@ type changeAttachedSubTypesEffect struct {
 	effectSource
 }
 
-func (e *changeAttachedSubTypesEffect) GetLayer() Layer      { return LayerType }
+func (e *changeAttachedSubTypesEffect) GetLayer() Layer       { return LayerType }
 func (e *changeAttachedSubTypesEffect) GetDuration() Duration { return WhileOnBattlefield }
 
 func (e *changeAttachedSubTypesEffect) IsActive(g *Game) bool {
@@ -717,7 +750,7 @@ type grantActivatedAbilityAttachedEffect struct {
 	effectSource
 }
 
-func (e *grantActivatedAbilityAttachedEffect) GetLayer() Layer      { return LayerAbility }
+func (e *grantActivatedAbilityAttachedEffect) GetLayer() Layer       { return LayerAbility }
 func (e *grantActivatedAbilityAttachedEffect) GetDuration() Duration { return WhileOnBattlefield }
 
 func (e *grantActivatedAbilityAttachedEffect) IsActive(g *Game) bool {
@@ -744,9 +777,9 @@ func (e *grantActivatedAbilityAttachedEffect) Apply(g *Game) error {
 
 // grantActivatedAbilityToAllEffect grants an activated ability to all creatures matching a filter.
 type grantActivatedAbilityToAllEffect struct {
-	effect    Effect
-	cost      Cost
-	filter    PermanentFilter
+	effect Effect
+	cost   Cost
+	filter PermanentFilter
 	effectSource
 }
 
@@ -759,7 +792,7 @@ func GrantActivatedAbilityToAll(effect Effect, cost Cost, filter PermanentFilter
 	}
 }
 
-func (e *grantActivatedAbilityToAllEffect) GetLayer() Layer      { return LayerAbility }
+func (e *grantActivatedAbilityToAllEffect) GetLayer() Layer       { return LayerAbility }
 func (e *grantActivatedAbilityToAllEffect) GetDuration() Duration { return WhileOnBattlefield }
 
 func (e *grantActivatedAbilityToAllEffect) IsActive(g *Game) bool {
@@ -797,7 +830,7 @@ type preventUntapEffect struct {
 	effectSource
 }
 
-func (e *preventUntapEffect) GetLayer() Layer      { return LayerAbility }
+func (e *preventUntapEffect) GetLayer() Layer       { return LayerAbility }
 func (e *preventUntapEffect) GetDuration() Duration { return WhileOnBattlefield }
 
 func (e *preventUntapEffect) IsActive(g *Game) bool {
@@ -813,7 +846,7 @@ func (e *preventUntapEffect) Apply(g *Game) error {
 	target := g.FindPermanent(src.AttachedTo)
 	if target != nil {
 		g.Effects.grantedKW[target.ID()] = append(g.Effects.grantedKW[target.ID()], DoesNotUntapKW)
-		target.RuntimeAbilities = append(target.RuntimeAbilities, &grantedByEffect{HasKeyword(DoesNotUntapKW)})
+		target.RuntimeAbilities = append(target.RuntimeAbilities, &grantedByEffect{NewKeywordAbility(DoesNotUntapKW)})
 	}
 	return nil
 }
@@ -830,7 +863,7 @@ type preventAttackEffect struct {
 	effectSource
 }
 
-func (e *preventAttackEffect) GetLayer() Layer      { return LayerAbility }
+func (e *preventAttackEffect) GetLayer() Layer       { return LayerAbility }
 func (e *preventAttackEffect) GetDuration() Duration { return WhileOnBattlefield }
 
 func (e *preventAttackEffect) IsActive(g *Game) bool {
@@ -858,7 +891,7 @@ type temporaryBoostEffect struct {
 	effectSource
 }
 
-func (e *temporaryBoostEffect) GetLayer() Layer      { return LayerPT }
+func (e *temporaryBoostEffect) GetLayer() Layer       { return LayerPT }
 func (e *temporaryBoostEffect) GetDuration() Duration { return EndOfTurn }
 
 func (e *temporaryBoostEffect) IsActive(g *Game) bool {
@@ -873,12 +906,12 @@ func (e *temporaryBoostEffect) Apply(g *Game) error {
 
 // temporaryKeywordEffect grants a keyword to a specific creature until end of turn.
 type temporaryKeywordEffect struct {
-	targetID  uuid.UUID
-	keyword   Keyword
+	targetID uuid.UUID
+	keyword  Keyword
 	effectSource
 }
 
-func (e *temporaryKeywordEffect) GetLayer() Layer      { return LayerAbility }
+func (e *temporaryKeywordEffect) GetLayer() Layer       { return LayerAbility }
 func (e *temporaryKeywordEffect) GetDuration() Duration { return EndOfTurn }
 
 func (e *temporaryKeywordEffect) IsActive(g *Game) bool {
@@ -891,7 +924,7 @@ func (e *temporaryKeywordEffect) Apply(g *Game) error {
 		return nil
 	}
 	g.Effects.grantedKW[e.targetID] = append(g.Effects.grantedKW[e.targetID], e.keyword)
-	target.RuntimeAbilities = append(target.RuntimeAbilities, &grantedByEffect{HasKeyword(e.keyword)})
+	target.RuntimeAbilities = append(target.RuntimeAbilities, &grantedByEffect{NewKeywordAbility(e.keyword)})
 	return nil
 }
 
@@ -929,7 +962,7 @@ func BoostAllCreaturesIncludingSelf(power, toughness int, filter PermanentFilter
 	}
 }
 
-func (e *boostAllCreaturesEffect) GetLayer() Layer      { return LayerPT }
+func (e *boostAllCreaturesEffect) GetLayer() Layer       { return LayerPT }
 func (e *boostAllCreaturesEffect) GetDuration() Duration { return WhileOnBattlefield }
 
 func (e *boostAllCreaturesEffect) IsActive(g *Game) bool {
@@ -979,7 +1012,7 @@ func PTEqualsControlledCount(countFilter PermanentFilter) ContinuousEffect {
 	}
 }
 
-func (e *ptEqualsCountEffect) GetLayer() Layer      { return LayerPT }
+func (e *ptEqualsCountEffect) GetLayer() Layer       { return LayerPT }
 func (e *ptEqualsCountEffect) GetDuration() Duration { return WhileOnBattlefield }
 
 func (e *ptEqualsCountEffect) IsActive(g *Game) bool {
@@ -1019,7 +1052,7 @@ func PowerEqualsCount(countFilter PermanentFilter) ContinuousEffect {
 	}
 }
 
-func (e *powerEqualsCountEffect) GetLayer() Layer      { return LayerPT }
+func (e *powerEqualsCountEffect) GetLayer() Layer       { return LayerPT }
 func (e *powerEqualsCountEffect) GetDuration() Duration { return WhileOnBattlefield }
 
 func (e *powerEqualsCountEffect) IsActive(g *Game) bool {
@@ -1043,8 +1076,8 @@ func (e *powerEqualsCountEffect) Apply(g *Game) error {
 
 // grantKeywordToAllEffect grants a keyword ability to all matching creatures.
 type grantKeywordToAllEffect struct {
-	keyword   Keyword
-	filter    PermanentFilter
+	keyword Keyword
+	filter  PermanentFilter
 	effectSource
 }
 
@@ -1055,7 +1088,7 @@ func GrantKeywordToAll(kw Keyword, filter PermanentFilter) ContinuousEffect {
 	}
 }
 
-func (e *grantKeywordToAllEffect) GetLayer() Layer      { return LayerAbility }
+func (e *grantKeywordToAllEffect) GetLayer() Layer       { return LayerAbility }
 func (e *grantKeywordToAllEffect) GetDuration() Duration { return WhileOnBattlefield }
 
 func (e *grantKeywordToAllEffect) IsActive(g *Game) bool {
@@ -1074,7 +1107,7 @@ func (e *grantKeywordToAllEffect) Apply(g *Game) error {
 			continue
 		}
 		g.Effects.grantedKW[p.ID()] = append(g.Effects.grantedKW[p.ID()], e.keyword)
-		p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{HasKeyword(e.keyword)})
+		p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{NewKeywordAbility(e.keyword)})
 	}
 	return nil
 }
@@ -1096,7 +1129,7 @@ func BoostControlledCreatures(power, toughness int, filter PermanentFilter) Cont
 	}
 }
 
-func (e *boostControlledCreaturesEffect) GetLayer() Layer      { return LayerPT }
+func (e *boostControlledCreaturesEffect) GetLayer() Layer       { return LayerPT }
 func (e *boostControlledCreaturesEffect) GetDuration() Duration { return WhileOnBattlefield }
 
 func (e *boostControlledCreaturesEffect) IsActive(g *Game) bool {
@@ -1133,7 +1166,7 @@ func ControlChangeContinuous() ContinuousEffect {
 	return &controlChangeEffect{}
 }
 
-func (e *controlChangeEffect) GetLayer() Layer      { return LayerControl }
+func (e *controlChangeEffect) GetLayer() Layer       { return LayerControl }
 func (e *controlChangeEffect) GetDuration() Duration { return WhileOnBattlefield }
 
 func (e *controlChangeEffect) IsActive(g *Game) bool {
@@ -1163,7 +1196,7 @@ func BoostAttachedByForestCount() ContinuousEffect {
 	return &boostAttachedByForestCountEffect{}
 }
 
-func (e *boostAttachedByForestCountEffect) GetLayer() Layer      { return LayerPT }
+func (e *boostAttachedByForestCountEffect) GetLayer() Layer       { return LayerPT }
 func (e *boostAttachedByForestCountEffect) GetDuration() Duration { return WhileOnBattlefield }
 
 func (e *boostAttachedByForestCountEffect) IsActive(g *Game) bool {
@@ -1204,7 +1237,7 @@ func PreventUntapForMatching(filter PermanentFilter) ContinuousEffect {
 	return &preventUntapForMatchingEffect{filter: filter}
 }
 
-func (e *preventUntapForMatchingEffect) GetLayer() Layer      { return LayerAbility }
+func (e *preventUntapForMatchingEffect) GetLayer() Layer       { return LayerAbility }
 func (e *preventUntapForMatchingEffect) GetDuration() Duration { return WhileOnBattlefield }
 
 func (e *preventUntapForMatchingEffect) IsActive(g *Game) bool {
@@ -1215,7 +1248,7 @@ func (e *preventUntapForMatchingEffect) Apply(g *Game) error {
 	for _, p := range g.Battlefield {
 		if e.filter(p, g) {
 			g.Effects.grantedKW[p.ID()] = append(g.Effects.grantedKW[p.ID()], DoesNotUntapKW)
-			p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{HasKeyword(DoesNotUntapKW)})
+			p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{NewKeywordAbility(DoesNotUntapKW)})
 		}
 	}
 	return nil
@@ -1238,7 +1271,7 @@ type increaseSpellCostEffect struct {
 	effectSource
 }
 
-func (e *increaseSpellCostEffect) GetLayer() Layer      { return LayerAbility }
+func (e *increaseSpellCostEffect) GetLayer() Layer       { return LayerAbility }
 func (e *increaseSpellCostEffect) GetDuration() Duration { return WhileOnBattlefield }
 
 func (e *increaseSpellCostEffect) IsActive(g *Game) bool {
@@ -1265,7 +1298,7 @@ type changeSubTypesForAllEffect struct {
 	effectSource
 }
 
-func (e *changeSubTypesForAllEffect) GetLayer() Layer      { return LayerType }
+func (e *changeSubTypesForAllEffect) GetLayer() Layer       { return LayerType }
 func (e *changeSubTypesForAllEffect) GetDuration() Duration { return WhileOnBattlefield }
 
 func (e *changeSubTypesForAllEffect) IsActive(g *Game) bool {
@@ -1321,7 +1354,7 @@ func CyclopeanTombEffect() ContinuousEffect {
 	return &cyclopeanTombEffect{}
 }
 
-func (e *cyclopeanTombEffect) GetLayer() Layer      { return LayerType }
+func (e *cyclopeanTombEffect) GetLayer() Layer       { return LayerType }
 func (e *cyclopeanTombEffect) GetDuration() Duration { return WhileOnBattlefield }
 
 func (e *cyclopeanTombEffect) IsActive(g *Game) bool {
@@ -1356,7 +1389,7 @@ type keywordReplacementContinuous struct {
 	effectSource
 }
 
-func (e *keywordReplacementContinuous) GetLayer() Layer      { return LayerAbility }
+func (e *keywordReplacementContinuous) GetLayer() Layer       { return LayerAbility }
 func (e *keywordReplacementContinuous) GetDuration() Duration { return Indefinite }
 
 func (e *keywordReplacementContinuous) IsActive(g *Game) bool {
@@ -1370,7 +1403,7 @@ func (e *keywordReplacementContinuous) Apply(g *Game) error {
 	}
 	g.Effects.removedKW[e.targetID] = append(g.Effects.removedKW[e.targetID], e.from)
 	g.Effects.grantedKW[e.targetID] = append(g.Effects.grantedKW[e.targetID], e.to)
-	perm.RuntimeAbilities = append(perm.RuntimeAbilities, &grantedByEffect{HasKeyword(e.to)})
+	perm.RuntimeAbilities = append(perm.RuntimeAbilities, &grantedByEffect{NewKeywordAbility(e.to)})
 	return nil
 }
 
@@ -1381,7 +1414,7 @@ type colorOverrideContinuous struct {
 	effectSource
 }
 
-func (e *colorOverrideContinuous) GetLayer() Layer      { return LayerColor }
+func (e *colorOverrideContinuous) GetLayer() Layer       { return LayerColor }
 func (e *colorOverrideContinuous) GetDuration() Duration { return Indefinite }
 
 func (e *colorOverrideContinuous) IsActive(g *Game) bool {
@@ -1407,7 +1440,7 @@ func PreventAllUntaps() ContinuousEffect {
 	return &preventAllUntapsEffect{}
 }
 
-func (e *preventAllUntapsEffect) GetLayer() Layer      { return LayerAbility }
+func (e *preventAllUntapsEffect) GetLayer() Layer       { return LayerAbility }
 func (e *preventAllUntapsEffect) GetDuration() Duration { return WhileOnBattlefield }
 
 func (e *preventAllUntapsEffect) IsActive(g *Game) bool {
@@ -1417,7 +1450,7 @@ func (e *preventAllUntapsEffect) IsActive(g *Game) bool {
 func (e *preventAllUntapsEffect) Apply(g *Game) error {
 	for _, p := range g.Battlefield {
 		g.Effects.grantedKW[p.ID()] = append(g.Effects.grantedKW[p.ID()], DoesNotUntapKW)
-		p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{HasKeyword(DoesNotUntapKW)})
+		p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{NewKeywordAbility(DoesNotUntapKW)})
 	}
 	return nil
 }
@@ -1439,7 +1472,7 @@ func BoostSelfWhileControlling(power, toughness int, condition PermanentFilter) 
 	}
 }
 
-func (e *boostSelfWhileControllingEffect) GetLayer() Layer      { return LayerPT }
+func (e *boostSelfWhileControllingEffect) GetLayer() Layer       { return LayerPT }
 func (e *boostSelfWhileControllingEffect) GetDuration() Duration { return WhileOnBattlefield }
 
 func (e *boostSelfWhileControllingEffect) IsActive(g *Game) bool {
@@ -1475,7 +1508,7 @@ func LimitLandUntaps(limit int) ContinuousEffect {
 	return &limitLandUntapsEffect{limit: limit}
 }
 
-func (e *limitLandUntapsEffect) GetLayer() Layer      { return LayerAbility }
+func (e *limitLandUntapsEffect) GetLayer() Layer       { return LayerAbility }
 func (e *limitLandUntapsEffect) GetDuration() Duration { return WhileOnBattlefield }
 
 func (e *limitLandUntapsEffect) IsActive(g *Game) bool {
@@ -1504,7 +1537,7 @@ func AnimateLands(filter PermanentFilter, power, toughness int) ContinuousEffect
 	return &animateLandsEffect{filter: filter, power: power, toughness: toughness}
 }
 
-func (e *animateLandsEffect) GetLayer() Layer      { return LayerType }
+func (e *animateLandsEffect) GetLayer() Layer       { return LayerType }
 func (e *animateLandsEffect) GetDuration() Duration { return WhileOnBattlefield }
 
 func (e *animateLandsEffect) IsActive(g *Game) bool {
@@ -1532,7 +1565,7 @@ func AllowUnlimitedLandPlays() ContinuousEffect {
 	return &allowUnlimitedLandPlaysEffect{}
 }
 
-func (e *allowUnlimitedLandPlaysEffect) GetLayer() Layer      { return LayerAbility }
+func (e *allowUnlimitedLandPlaysEffect) GetLayer() Layer       { return LayerAbility }
 func (e *allowUnlimitedLandPlaysEffect) GetDuration() Duration { return WhileOnBattlefield }
 
 func (e *allowUnlimitedLandPlaysEffect) IsActive(g *Game) bool {
@@ -1555,7 +1588,7 @@ type doppelgangerCopyEffect struct {
 	keywords       []Keyword
 }
 
-func (e *doppelgangerCopyEffect) GetLayer() Layer      { return LayerCopy }
+func (e *doppelgangerCopyEffect) GetLayer() Layer       { return LayerCopy }
 func (e *doppelgangerCopyEffect) GetDuration() Duration { return Indefinite }
 
 func (e *doppelgangerCopyEffect) IsActive(g *Game) bool {
@@ -1569,7 +1602,7 @@ func (e *doppelgangerCopyEffect) Apply(g *Game) error {
 	}
 	perm.BasePTOverride = &[2]int{e.power, e.toughness}
 	for _, kw := range e.keywords {
-		perm.RuntimeAbilities = append(perm.RuntimeAbilities, &grantedByEffect{HasKeyword(kw)})
+		perm.RuntimeAbilities = append(perm.RuntimeAbilities, &grantedByEffect{NewKeywordAbility(kw)})
 	}
 	return nil
 }
@@ -1639,7 +1672,7 @@ func ManaConversion(from, to Color) ContinuousEffect {
 	return &manaConversionEffect{from: from, to: to}
 }
 
-func (e *manaConversionEffect) GetLayer() Layer      { return LayerAbility }
+func (e *manaConversionEffect) GetLayer() Layer       { return LayerAbility }
 func (e *manaConversionEffect) GetDuration() Duration { return WhileOnBattlefield }
 
 func (e *manaConversionEffect) IsActive(g *Game) bool {
@@ -1662,7 +1695,7 @@ func BodyguardContinuous() ContinuousEffect {
 	return &bodyguardEffect{}
 }
 
-func (e *bodyguardEffect) GetLayer() Layer      { return LayerAbility }
+func (e *bodyguardEffect) GetLayer() Layer       { return LayerAbility }
 func (e *bodyguardEffect) GetDuration() Duration { return WhileOnBattlefield }
 
 func (e *bodyguardEffect) IsActive(g *Game) bool {
@@ -1690,7 +1723,7 @@ func PersonalIncarnationRedirect() ContinuousEffect {
 	return &personalIncarnationEffect{}
 }
 
-func (e *personalIncarnationEffect) GetLayer() Layer      { return LayerAbility }
+func (e *personalIncarnationEffect) GetLayer() Layer       { return LayerAbility }
 func (e *personalIncarnationEffect) GetDuration() Duration { return WhileOnBattlefield }
 
 func (e *personalIncarnationEffect) IsActive(g *Game) bool {
@@ -1737,7 +1770,7 @@ func TemporaryAnimateUntilEndOfCombat(targetID uuid.UUID, power, toughness int) 
 	}
 }
 
-func (e *temporaryAnimateEffect) GetLayer() Layer      { return LayerType }
+func (e *temporaryAnimateEffect) GetLayer() Layer       { return LayerType }
 func (e *temporaryAnimateEffect) GetDuration() Duration { return e.duration }
 
 func (e *temporaryAnimateEffect) IsActive(g *Game) bool {

@@ -25,13 +25,13 @@ type Ability interface {
 
 // BaseAbility provides common ability fields.
 type BaseAbility struct {
-	id         uuid.UUID
-	source     uuid.UUID
-	controller uuid.UUID
-	abilityType       AbilityType
+	id          uuid.UUID
+	source      uuid.UUID
+	controller  uuid.UUID
+	abilityType AbilityType
 }
 
-func (a *BaseAbility) AbilityID() uuid.UUID      { return a.id }
+func (a *BaseAbility) AbilityID() uuid.UUID       { return a.id }
 func (a *BaseAbility) Source() uuid.UUID          { return a.source }
 func (a *BaseAbility) SetSource(id uuid.UUID)     { a.source = id }
 func (a *BaseAbility) Controller() uuid.UUID      { return a.controller }
@@ -44,11 +44,11 @@ type KeywordAbility struct {
 	Keyword Keyword
 }
 
-// HasKeyword creates a static ability that grants the given keyword (e.g. Flying, Trample).
-func HasKeyword(k Keyword) *KeywordAbility {
+// NewKeywordAbility creates a static ability that grants the given keyword (e.g. Flying, Trample).
+func NewKeywordAbility(k Keyword) *KeywordAbility {
 	return &KeywordAbility{
 		BaseAbility: BaseAbility{
-			id:   uuid.New(),
+			id:          uuid.New(),
 			abilityType: AbilityStatic,
 		},
 		Keyword: k,
@@ -66,7 +66,7 @@ type ProtectionAbility struct {
 func ProtectionFromColor(c Color) *ProtectionAbility {
 	return &ProtectionAbility{
 		BaseAbility: BaseAbility{
-			id:   uuid.New(),
+			id:          uuid.New(),
 			abilityType: AbilityStatic,
 		},
 		FromColors: []Color{c},
@@ -89,7 +89,7 @@ func ProtectionFromColors(cs ...Color) *ProtectionAbility {
 	}
 	return &ProtectionAbility{
 		BaseAbility: BaseAbility{
-			id:   uuid.New(),
+			id:          uuid.New(),
 			abilityType: AbilityStatic,
 		},
 		FromColors: cs,
@@ -122,7 +122,7 @@ type StaticAbilityHolder struct {
 func StaticAbility(effects ...ContinuousEffect) *StaticAbilityHolder {
 	return &StaticAbilityHolder{
 		BaseAbility: BaseAbility{
-			id:   uuid.New(),
+			id:          uuid.New(),
 			abilityType: AbilityStatic,
 		},
 		Effects: effects,

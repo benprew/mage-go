@@ -555,12 +555,12 @@ func TestPermanentPropertyMigration(t *testing.T) {
 			{name, func() Card {
 				c := NewCreature(name, "{4}", 5, 3, "Juggernaut")
 				c.AddType(TypeArtifact)
-				c.AddAbility(HasKeyword(CantBeBlockedByWalls))
+				c.AddAbility(NewKeywordAbility(CantBeBlockedByWalls))
 				return c
 			}},
 			{wallName, func() Card {
 				c := NewCreature(wallName, "{2}{W}", 0, 5, "Wall")
-				c.AddAbility(HasKeyword(Defender))
+				c.AddAbility(NewKeywordAbility(Defender))
 				return c
 			}},
 		} {
@@ -586,7 +586,7 @@ func TestPermanentPropertyMigration(t *testing.T) {
 		if !CardRegistered(name) {
 			Register(name, func() Card {
 				c := NewArtifact(name, "{4}")
-				c.AddAbility(HasKeyword(EntersTapped))
+				c.AddAbility(NewKeywordAbility(EntersTapped))
 				return c
 			})
 		}
@@ -605,7 +605,7 @@ func TestPermanentPropertyMigration(t *testing.T) {
 		if !CardRegistered(name) {
 			Register(name, func() Card {
 				c := NewArtifact(name, "{3}")
-				c.AddAbility(HasKeyword(DoesNotUntapKW))
+				c.AddAbility(NewKeywordAbility(DoesNotUntapKW))
 				return c
 			})
 		}
@@ -666,7 +666,7 @@ func TestPermanentPropertyMigration(t *testing.T) {
 		}{
 			{name, func() Card {
 				c := NewCreature(name, "{B}{B}", 1, 1, "Spirit")
-				c.AddAbility(HasKeyword(Haste))
+				c.AddAbility(NewKeywordAbility(Haste))
 				c.AddAbility(GraveyardReturnIfCreaturesAbove(2))
 				return c
 			}},

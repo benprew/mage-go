@@ -44,9 +44,7 @@ func registerCreatures() {
 						}
 						return nil
 					}),
-			).SetCondition(func(evt *mage.GameEvent, g *mage.Game, sourceID, _ uuid.UUID) bool {
-				return evt.SourceID == sourceID
-			}),
+			).SetCondition(mage.IsThisSource),
 		)
 		return c
 	})
@@ -56,6 +54,8 @@ func registerCreatures() {
 		// As long as Camel is attacking, prevent all damage Deserts would deal to
 		// Camel and to creatures banded with Camel.
 		c := mage.NewCreature("Camel", "{W}", 0, 1, "Camel")
+		c.AddAbility(mage.NewKeywordAbility(mage.Banding))
+		c.AddAbility(mage.NewTriggered(mage.EvtDeclaredAttacker, false, mage.))
 		return c
 	})
 
