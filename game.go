@@ -239,6 +239,15 @@ func (g *Game) DestroyPermanent(perm *Permanent) {
 	if perm.HasAbility(Indestructible) {
 		return
 	}
+	// Regeneration replaces destruction: tap, remove damage, remove from combat
+	if perm.RegenerationShield {
+		perm.RegenerationShield = false
+		perm.Tapped = true
+		perm.Damage = 0
+		// Remove from combat if attacking/blocking
+		g.Combat.RemoveFromCombat(perm.ID())
+		return
+	}
 	controller := perm.Controller
 	owner := perm.Card.Owner()
 	if owner == uuid.Nil {
@@ -387,6 +396,15 @@ func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
 
 // DealDamageToPermanent deals damage to a permanent.
 func (g *Game) DealDamageToPermanent(perm *Permanent, amount int, sourceID uuid.UUID) {
+	if amount <= 0 {
+		return
+	}
+	// Apply damage prevention shield
+	if perm.DamagePreventionShield > 0 {
+		prevented := min(amount, perm.DamagePreventionShield)
+		perm.DamagePreventionShield -= prevented
+		amount -= prevented
+	}
 	if amount <= 0 {
 		return
 	}
@@ -755,8 +773,12 @@ func (g *Game) doUntap() {
 	active := g.ActivePlayerObj()
 	for _, p := range g.Battlefield {
 		if p.Controller == active.PlayerID() {
-			p.Tapped = false
+			if !p.DoesNotUntap {
+				p.Tapped = false
+			}
 			p.SummonSick = false
+			// Clear regeneration shields at start of turn
+			p.RegenerationShield = false
 		}
 	}
 	g.LandsPlayedThisTurn = 0
@@ -931,6 +953,20 @@ func (g *Game) doCleanup() {
 	g.PreventCombatDamage = false
 	// Clear damage tracking
 	g.DamageDealtBy = make(map[uuid.UUID]map[uuid.UUID]bool)
+	// Destroy permanents marked for end-of-turn destruction
+	var toDestroy []*Permanent
+	for _, p := range g.Battlefield {
+		if p.DestroyAtEndOfTurn {
+			toDestroy = append(toDestroy, p)
+		}
+		// Clear unblockable flag
+		p.Unblockable = false
+		// Clear damage prevention shields
+		p.DamagePreventionShield = 0
+	}
+	for _, p := range toDestroy {
+		g.DestroyPermanent(p)
+	}
 }
 
 // RunTurn executes a complete turn for the active player.

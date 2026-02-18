@@ -197,6 +197,14 @@ type Permanent struct {
 	Attachments []uuid.UUID // what's attached to this permanent
 
 	RuntimeAbilities []Ability // base + granted by effects
+
+	RegenerationShield     bool // if true, the next destruction is replaced by tap + remove damage
+	DoesNotUntap           bool // if true, does not untap during untap step
+	DamagePreventionShield int  // amount of damage to prevent
+	DestroyAtEndOfTurn     bool // if true, destroy during cleanup
+	Unblockable            bool // if true, can't be blocked this turn
+	CantBeBlockedByWalls   bool // if true, can't be blocked by Walls (e.g. Juggernaut)
+	CanBlockAdditional     int  // number of additional creatures this can block (e.g. Two-Headed Giant)
 }
 
 // NewPermanent creates a permanent from a card.

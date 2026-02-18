@@ -216,6 +216,18 @@ func (mp *ManaPool) Total() int {
 	return len(mp.pool)
 }
 
+// TotalMana returns the total mana in the pool (alias for Total).
+func (mp *ManaPool) TotalMana() int {
+	return len(mp.pool)
+}
+
+// DrainGeneric removes n mana from the pool (any color).
+func (mp *ManaPool) DrainGeneric(n int) {
+	for i := 0; i < n && len(mp.pool) > 0; i++ {
+		mp.pool = mp.pool[:len(mp.pool)-1]
+	}
+}
+
 // CanPay returns true if the pool can pay the given mana cost.
 func (mp *ManaPool) CanPay(mc ManaCost) bool {
 	avail := map[Color]int{}

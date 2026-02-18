@@ -30,6 +30,9 @@ type Player interface {
 	DrawCard() (Card, bool)
 	ManaPool() *ManaPool
 
+	AddToLibrary(Card)
+	ClearGraveyard()
+
 	// Decision-making (overridden by TestPlayer)
 	ChooseTargets(possible []uuid.UUID, min, max int, g *Game) []uuid.UUID
 	DeclareAttackers(g *Game) []uuid.UUID
@@ -106,6 +109,14 @@ func (p *BasePlayer) RemoveFromGraveyard(id uuid.UUID) (Card, bool) {
 
 func (p *BasePlayer) Library() []Card    { return p.Library_ }
 func (p *BasePlayer) SetLibrary(l []Card) { p.Library_ = l }
+
+func (p *BasePlayer) AddToLibrary(c Card) {
+	p.Library_ = append(p.Library_, c)
+}
+
+func (p *BasePlayer) ClearGraveyard() {
+	p.Graveyard_ = nil
+}
 
 func (p *BasePlayer) DrawCard() (Card, bool) {
 	if len(p.Library_) == 0 {
