@@ -260,9 +260,8 @@ func registerAlphaEnchantments() {
 
 	mage.Register("Copper Tablet", func() mage.Card {
 		c := mage.NewArtifact("Copper Tablet", "{2}")
-		// At the beginning of each player's upkeep, deal 1 damage to that player
-		// Simplified: upkeep trigger deals 1 to controller
-		c.AddAbility(mage.BeginningOfUpkeepTrigger(mage.DealDamageToSourceController(1), false))
+		// At the beginning of each player's upkeep, Copper Tablet deals 1 damage to that player.
+		c.AddAbility(mage.BeginningOfEachUpkeepTrigger(mage.DealDamageToActivePlayer(1), false))
 		return c
 	})
 
