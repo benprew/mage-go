@@ -69,7 +69,9 @@ type BaseCard struct {
 	EntersTapped_          bool   // e.g. Nevinyrral's Disk
 	IntrinsicDoesNotUntap_ bool   // e.g. Basalt Monolith
 	DestroyAtEndOfTurn_    bool   // e.g. Berserk
-	SacrificeUnlessLand_   string // e.g. "Island" for Sea Serpent
+	SacrificeUnlessLand_   string      // e.g. "Island" for Sea Serpent
+	EntersWithXCounters_   CounterType // if non-zero, add X counters of this type on ETB
+	EntersWithXCountersSet bool        // whether EntersWithXCounters is configured
 }
 
 func (c *BaseCard) ID() uuid.UUID         { return c.ID_ }

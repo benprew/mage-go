@@ -149,6 +149,11 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 		a.SetController(controller)
 	}
 
+	// Add X counters if configured (replacement effect, not a trigger)
+	if bc, ok := card.(*BaseCard); ok && bc.EntersWithXCountersSet && g.CurrentX > 0 {
+		perm.AddCounter(bc.EntersWithXCounters_, g.CurrentX)
+	}
+
 	g.Battlefield = append(g.Battlefield, perm)
 
 	// Register continuous effects from static abilities
@@ -554,7 +559,6 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 	for _, eff := range obj.Effects {
 		eff.Apply(g, obj.SourceID, obj.Controller, obj.Targets)
 	}
-	g.CurrentX = 0
 
 	// If this was a spell (not an ability), put the card in the graveyard
 	if obj.Card != nil && !obj.IsAbility {
@@ -572,6 +576,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 				g.Attach(perm.ID(), obj.Targets[0])
 			}
 
+			g.CurrentX = 0
 			g.CheckStateBasedActions()
 			return
 		}
@@ -582,6 +587,8 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 			p.AddToGraveyard(obj.Card)
 		}
 	}
+
+	g.CurrentX = 0
 
 	g.CheckStateBasedActions()
 }

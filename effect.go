@@ -58,6 +58,30 @@ func (e *addCountersToSourceEffect) Text() string {
 	return fmt.Sprintf("put %d %s counter(s) on it", e.amount, e.ct)
 }
 
+// addXCountersToSourceEffect adds X counters to the source, reading X from g.CurrentX.
+type addXCountersToSourceEffect struct {
+	ct CounterType
+}
+
+func AddXCountersToSource(ct CounterType) Effect {
+	return &addXCountersToSourceEffect{ct: ct}
+}
+
+func (e *addXCountersToSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	p := g.FindPermanent(sourceID)
+	if p == nil {
+		return nil
+	}
+	if g.CurrentX > 0 {
+		p.AddCounter(e.ct, g.CurrentX)
+	}
+	return nil
+}
+
+func (e *addXCountersToSourceEffect) Text() string {
+	return fmt.Sprintf("put X %s counters on it", e.ct)
+}
+
 // removeCountersFromSourceEffect removes counters from the source permanent.
 type removeCountersFromSourceEffect struct {
 	ct     CounterType

@@ -844,10 +844,12 @@ func registerAlphaCreatures() {
 	})
 
 	mage.Register("Rock Hydra", func() mage.Card {
-		// Enters with X +1/+1 counters
 		c := mage.NewCreature("Rock Hydra", "{X}{R}{R}", "Hydra")
 		c.Power_ = 0
 		c.Toughness_ = 0
+		// Enters with X +1/+1 counters (replacement effect)
+		c.EntersWithXCounters_ = mage.P1P1
+		c.EntersWithXCountersSet = true
 		return c
 	})
 
