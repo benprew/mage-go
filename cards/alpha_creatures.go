@@ -264,9 +264,9 @@ func registerAlphaCreatures() {
 		c.Toughness_ = 7
 		c.AddAbility(mage.HasKeyword(mage.Flying))
 		c.AddAbility(mage.HasKeyword(mage.Trample))
-		// At the beginning of your upkeep, sacrifice a creature or take 7 damage
-		// Simplified: take 7 damage on upkeep
-		c.AddAbility(mage.BeginningOfUpkeepTrigger(mage.DealDamageToSourceController(7), false))
+		// At the beginning of your upkeep, sacrifice a creature other than Lord of the Pit.
+		// If you can't, Lord of the Pit deals 7 damage to you.
+		c.AddAbility(mage.BeginningOfUpkeepTrigger(mage.SacrificeCreatureOrDamage(7), false))
 		return c
 	})
 

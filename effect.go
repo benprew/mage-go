@@ -846,6 +846,35 @@ func (e *sacrificeSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, t
 
 func (e *sacrificeSourceEffect) Text() string { return "sacrifice this permanent" }
 
+// sacrificeCreatureOrDamageEffect sacrifices another creature you control, or deals damage to you.
+type sacrificeCreatureOrDamageEffect struct {
+	damage int
+}
+
+func SacrificeCreatureOrDamage(damage int) Effect {
+	return &sacrificeCreatureOrDamageEffect{damage: damage}
+}
+
+func (e *sacrificeCreatureOrDamageEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	// Try to sacrifice another creature you control
+	for _, p := range g.Battlefield {
+		if p.Controller == controller && p.HasType(TypeCreature) && p.ID() != sourceID {
+			g.Sacrifice(p)
+			return nil
+		}
+	}
+	// No creature to sacrifice — deal damage to controller
+	player := g.GetPlayer(controller)
+	if player != nil {
+		g.DealDamageToPlayer(player, e.damage, sourceID)
+	}
+	return nil
+}
+
+func (e *sacrificeCreatureOrDamageEffect) Text() string {
+	return fmt.Sprintf("sacrifice a creature or take %d damage", e.damage)
+}
+
 // searchLibraryEffect lets the controller search their library and put a card in hand.
 type searchLibraryEffect struct{}
 
