@@ -229,7 +229,10 @@ func registerAlphaArtifacts() {
 
 	mage.Register("Copy Artifact", func() mage.Card {
 		c := mage.NewArtifact("Copy Artifact", "{1}{U}")
-		// Copy - stub
+		// You may have Copy Artifact enter the battlefield as a copy of any artifact
+		// on the battlefield, except it's an enchantment in addition to its other types.
+		sa := mage.NewTargetedSpell(mage.TargetArtifact(), mage.CloneTargetArtifact())
+		c.AddAbility(sa)
 		return c
 	})
 

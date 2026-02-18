@@ -48,6 +48,7 @@ type Card interface {
 	SetOwner(uuid.UUID)
 	SetID(uuid.UUID)
 	HasType(CardType) bool
+	AddType(CardType)
 	AddAbility(Ability)
 	CloneFrom(Card)
 }
@@ -96,6 +97,8 @@ func (c *BaseCard) AddAbility(a Ability) {
 }
 
 func (c *BaseCard) CloneFrom(other Card) {
+	c.name = other.Name()
+	c.manaCost = other.ManaCost()
 	c.power = other.Power()
 	c.toughness = other.Toughness()
 	c.types = make([]CardType, len(other.Types()))

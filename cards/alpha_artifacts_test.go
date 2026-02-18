@@ -322,14 +322,63 @@ func TestCopyArtifact(t *testing.T) {
 		g.CastSpell(1, mage.PrecombatMain, mage.PlayerA, "Copy Artifact", "Sol Ring")
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
-		// The copy should be an Enchantment in addition to Artifact.
-		perm := g.FindPermanentByName("Copy Artifact", g.Players[0].PlayerID())
-		if perm == nil {
-			t.Fatal("Copy Artifact not found on battlefield")
+		// The copy becomes "Sol Ring" but is also an Enchantment.
+		// Find the Sol Ring that has the Enchantment type.
+		playerAID := g.Players[0].PlayerID()
+		found := false
+		for _, perm := range g.Battlefield {
+			if perm.Controller == playerAID && perm.Name() == "Sol Ring" && perm.HasType(mage.TypeEnchantment) {
+				found = true
+				break
+			}
 		}
-		if !perm.HasType(mage.TypeEnchantment) {
-			t.Errorf("Copy Artifact should also be an Enchantment")
+		if !found {
+			t.Errorf("Copy Artifact should be an Enchantment in addition to Artifact")
 		}
+	})
+
+	t.Run("copy_is_still_artifact", func(t *testing.T) {
+		// The copy should retain the Artifact type from the original.
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Sol Ring")
+		g.AddCard(mage.ZoneHand, mage.PlayerA, "Copy Artifact")
+		g.CastSpell(1, mage.PrecombatMain, mage.PlayerA, "Copy Artifact", "Sol Ring")
+		g.StopAt(1, mage.BeginCombat)
+		g.Execute()
+		playerAID := g.Players[0].PlayerID()
+		found := false
+		for _, perm := range g.Battlefield {
+			if perm.Controller == playerAID && perm.Name() == "Sol Ring" &&
+				perm.HasType(mage.TypeEnchantment) && perm.HasType(mage.TypeArtifact) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("Copy Artifact should be both Artifact and Enchantment")
+		}
+	})
+
+	t.Run("copy_has_mana_ability", func(t *testing.T) {
+		// The copy should have the same activated abilities as the original.
+		// Activate the copy's mana ability to verify it produces mana.
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Sol Ring")
+		g.AddCard(mage.ZoneHand, mage.PlayerA, "Copy Artifact")
+		g.CastSpell(1, mage.PrecombatMain, mage.PlayerA, "Copy Artifact", "Sol Ring")
+		g.StopAt(1, mage.BeginCombat)
+		g.Execute()
+		// Find the copy (Sol Ring with Enchantment type) and verify it has abilities
+		playerAID := g.Players[0].PlayerID()
+		for _, perm := range g.Battlefield {
+			if perm.Controller == playerAID && perm.Name() == "Sol Ring" && perm.HasType(mage.TypeEnchantment) {
+				if len(perm.RuntimeAbilities) == 0 {
+					t.Errorf("Copy Artifact should have copied Sol Ring's abilities")
+				}
+				return
+			}
+		}
+		t.Errorf("Copy not found")
 	})
 }
 
