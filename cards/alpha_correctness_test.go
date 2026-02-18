@@ -74,11 +74,11 @@ func TestWheelOfFortune(t *testing.T) {
 		g.AddCard(mage.ZoneHand, mage.PlayerA, "Wheel of Fortune")
 		g.AddCard(mage.ZoneHand, mage.PlayerA, "Grizzly Bears")
 		g.AddCard(mage.ZoneHand, mage.PlayerA, "Hill Giant")
-		for i := 0; i < 7; i++ {
-			g.AddCard(mage.ZoneLibrary, mage.PlayerA, "Forest")
+		for i := 0; i < 10; i++ {
+			g.AddCard(mage.ZoneLibrary, mage.PlayerA, "Grizzly Bears")
 		}
-		for i := 0; i < 7; i++ {
-			g.AddCard(mage.ZoneLibrary, mage.PlayerB, "Forest")
+		for i := 0; i < 10; i++ {
+			g.AddCard(mage.ZoneLibrary, mage.PlayerB, "Grizzly Bears")
 		}
 		g.CastSpell(1, mage.PrecombatMain, mage.PlayerA, "Wheel of Fortune")
 		g.StopAt(1, mage.BeginCombat)
@@ -328,7 +328,7 @@ func TestVerduranEnchantress(t *testing.T) {
 		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Verduran Enchantress")
 		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Grizzly Bears")
 		g.AddCard(mage.ZoneHand, mage.PlayerA, "Holy Armor") // white enchantment
-		g.AddCard(mage.ZoneLibrary, mage.PlayerA, "Forest")
+		g.AddCard(mage.ZoneLibrary, mage.PlayerA, "Grizzly Bears")
 		g.CastSpell(1, mage.PrecombatMain, mage.PlayerA, "Holy Armor", "Grizzly Bears")
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()

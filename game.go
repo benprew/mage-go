@@ -52,6 +52,14 @@ type Game struct {
 	// Damage tracking: maps target permanent ID -> set of source permanent IDs that dealt damage this turn
 	DamageDealtBy map[uuid.UUID]map[uuid.UUID]bool
 
+	// Player damage tracking: maps player ID -> total damage taken this turn
+	DamageTakenThisTurn map[uuid.UUID]int
+
+	// Creatures that attacked this turn (survives combat reset for end-of-turn checks)
+	AttackedThisTurn map[uuid.UUID]bool
+
+	// Targets of the spell currently being resolved (for ETB copy effects)
+	ResolvingTargets []uuid.UUID
 
 	// Delayed triggers
 	delayedTriggers []*DelayedTrigger
@@ -80,12 +88,13 @@ type pendingTrigger struct {
 // NewGame creates a new 2-player game.
 func NewGame(playerA, playerB Player) *Game {
 	return &Game{
-		Players:      []Player{playerA, playerB},
-		Stack:        NewStack(),
-		Combat:       NewCombat(),
-		Effects:      NewEffectManager(),
-		Turn:         1,
-		DamageDealtBy: make(map[uuid.UUID]map[uuid.UUID]bool),
+		Players:             []Player{playerA, playerB},
+		Stack:               NewStack(),
+		Combat:              NewCombat(),
+		Effects:             NewEffectManager(),
+		Turn:                1,
+		DamageDealtBy:       make(map[uuid.UUID]map[uuid.UUID]bool),
+		DamageTakenThisTurn: make(map[uuid.UUID]int),
 	}
 }
 
@@ -167,6 +176,87 @@ func (g *Game) FindCardAnywhere(id uuid.UUID) Card {
 	return nil
 }
 
+// FindCardForDamageSource finds the Card associated with a damage source ID.
+// This looks at permanents, graveyard, and the currently resolving card.
+func (g *Game) FindCardForDamageSource(sourceID uuid.UUID) Card {
+	perm := g.FindPermanent(sourceID)
+	if perm != nil {
+		return perm.Card
+	}
+	if g.ResolvingCard != nil && g.ResolvingCard.ID() == sourceID {
+		return g.ResolvingCard
+	}
+	return g.FindCardAnywhere(sourceID)
+}
+
+// TryPayCostFromLands attempts to pay a mana cost by tapping untapped lands
+// controlled by the player. Returns true if the cost was fully paid.
+func (g *Game) TryPayCostFromLands(playerID uuid.UUID, manaCostStr string) bool {
+	cost := ParseManaCost(manaCostStr)
+
+	// Collect untapped lands controlled by the player
+	var lands []*Permanent
+	for _, p := range g.Battlefield {
+		if p.Controller == playerID && !p.Tapped && p.HasType(TypeLand) {
+			lands = append(lands, p)
+		}
+	}
+
+	used := make(map[uuid.UUID]bool)
+
+	// Pay colored costs first
+	colorCosts := []struct {
+		amount  int
+		subtype string
+	}{
+		{cost.White, "Plains"},
+		{cost.Blue, "Island"},
+		{cost.Black, "Swamp"},
+		{cost.Red, "Mountain"},
+		{cost.Green, "Forest"},
+	}
+
+	for _, cc := range colorCosts {
+		for i := 0; i < cc.amount; i++ {
+			found := false
+			for _, land := range lands {
+				if !used[land.ID()] && land.HasSubType(cc.subtype) {
+					used[land.ID()] = true
+					found = true
+					break
+				}
+			}
+			if !found {
+				return false
+			}
+		}
+	}
+
+	// Pay generic cost with any remaining untapped land
+	for i := 0; i < cost.Generic; i++ {
+		found := false
+		for _, land := range lands {
+			if !used[land.ID()] {
+				used[land.ID()] = true
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+
+	// Actually tap the selected lands
+	for _, land := range lands {
+		if used[land.ID()] {
+			land.Tapped = true
+		}
+	}
+
+	return true
+}
+
 // PutOnBattlefield puts a card onto the battlefield under the given controller.
 func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 	perm := NewPermanent(card, controller)
@@ -186,6 +276,17 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 	for _, a := range perm.RuntimeAbilities {
 		if xc, ok := a.(*EntersWithXCountersAbility); ok && g.CurrentX > 0 {
 			perm.AddCounter(xc.CounterType, g.CurrentX)
+			break
+		}
+	}
+
+	// Copy creature on ETB (Vesuvan Doppelganger): copy target creature's P/T and keywords
+	for _, a := range perm.RuntimeAbilities {
+		if _, ok := a.(*CopyCreatureOnETBAbility); ok && len(g.ResolvingTargets) > 0 {
+			target := g.FindPermanent(g.ResolvingTargets[0])
+			if target != nil {
+				g.Effects.AddCopyEffect(perm.ID(), target)
+			}
 			break
 		}
 	}
@@ -387,6 +488,40 @@ func (g *Game) Sacrifice(perm *Permanent) {
 	}
 }
 
+// PlayerGainLife handles life gain with replacement effects (Lich).
+func (g *Game) PlayerGainLife(p Player, amount int) {
+	if amount <= 0 {
+		return
+	}
+	if g.Effects.IsLichActive(p.PlayerID()) {
+		// Lich replacement: draw cards instead of gaining life
+		for i := 0; i < amount; i++ {
+			p.DrawCard()
+		}
+		return
+	}
+	p.GainLife(amount)
+}
+
+// sacrificePermanents sacrifices N nontoken permanents a player controls (for Lich).
+func (g *Game) sacrificePermanents(playerID uuid.UUID, count int) {
+	sacrificed := 0
+	for sacrificed < count {
+		var target *Permanent
+		for _, p := range g.Battlefield {
+			if p.Controller == playerID {
+				target = p
+				break
+			}
+		}
+		if target == nil {
+			break
+		}
+		g.Sacrifice(target)
+		sacrificed++
+	}
+}
+
 // ExilePermanent removes a permanent from the battlefield to exile.
 func (g *Game) ExilePermanent(perm *Permanent) {
 	card := perm.Card
@@ -404,7 +539,30 @@ func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
 	if amount <= 0 {
 		return
 	}
-	p.LoseLife(amount)
+	// Check color prevention (Circle of Protection)
+	sourceCard := g.FindCardForDamageSource(sourceID)
+	if g.Effects.CheckColorPrevention(p.PlayerID(), sourceCard) {
+		return // all damage from this source prevented
+	}
+	// Apply damage prevention shield (also used for player)
+	if prevented := g.Effects.PreventDamage(p.PlayerID(), amount); prevented > 0 {
+		amount -= prevented
+		// If there's a "reverse damage" effect, gain life equal to prevented
+		if g.Effects.HasReverseDamageShield(p.PlayerID()) {
+			p.GainLife(prevented)
+			g.Effects.ClearReverseDamageShield(p.PlayerID())
+		}
+	}
+	if amount <= 0 {
+		return
+	}
+	// Lich replacement: instead of losing life, sacrifice permanents
+	if g.Effects.IsLichActive(p.PlayerID()) {
+		g.sacrificePermanents(p.PlayerID(), amount)
+	} else {
+		p.LoseLife(amount)
+	}
+	g.DamageTakenThisTurn[p.PlayerID()] += amount
 	g.FireEvent(GameEvent{
 		Type:     EvtDamageDealt,
 		SourceID: sourceID,
@@ -446,11 +604,14 @@ func (g *Game) DealDamageToPermanent(perm *Permanent, amount int, sourceID uuid.
 		TargetID: perm.ID(),
 		Amount:   amount,
 	})
-	// Deathtouch
+	// Deathtouch / BasiliskTouch
 	src := g.FindPermanent(sourceID)
-	if src != nil && src.HasAbility(Deathtouch) && amount > 0 {
-		// Mark for destruction in SBAs
-		perm.Damage = perm.CurrentToughness(g)
+	if src != nil && amount > 0 {
+		if src.HasAbility(Deathtouch) {
+			perm.Damage = perm.CurrentToughness(g)
+		} else if src.HasAbility(BasiliskTouch) && !perm.HasSubType("Wall") {
+			perm.Damage = perm.CurrentToughness(g)
+		}
 	}
 	// Lifelink
 	if src != nil && src.HasAbility(Lifelink) {
@@ -585,6 +746,7 @@ func (g *Game) ResolveStack() {
 func (g *Game) ResolveStackObject(obj *StackObject) {
 	g.CurrentX = obj.XValue
 	g.ResolvingCard = obj.Card
+	g.ResolvingTargets = obj.Targets
 	for _, eff := range obj.Effects {
 		eff.Apply(g, obj.SourceID, obj.Controller, obj.Targets)
 	}
@@ -606,6 +768,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 			}
 
 			g.CurrentX = 0
+			g.ResolvingTargets = nil
 			g.CheckStateBasedActions()
 			return
 		}
@@ -619,6 +782,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 
 	g.CurrentX = 0
 	g.ResolvingCard = nil
+	g.ResolvingTargets = nil
 
 	g.CheckStateBasedActions()
 }
@@ -648,19 +812,47 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		xValue = xValues[0]
 	}
 
-	// Pay mana cost (auto-pay from pool)
 	mc := card.ManaCost()
-	// For X costs, add X to the generic cost for payment purposes
-	payMC := mc
-	if mc.HasX {
-		payMC.Generic += xValue * mc.XCount
-	}
-	if !payMC.IsZero() {
-		if !p.ManaPool().CanPay(payMC) {
-			return fmt.Errorf("cannot pay mana cost %s for %s", payMC, name)
+
+	// Apply spell cost increases (e.g. Gloom)
+	for _, col := range mc.Colors() {
+		increase := g.Effects.SpellCostIncrease(col)
+		if increase > 0 {
+			mc.Generic += increase
+			break // only apply once per spell
 		}
-		if err := p.ManaPool().Pay(payMC); err != nil {
-			return err
+	}
+
+	// Channel: pay life for X costs instead of mana
+	if mc.HasX && xValue > 0 && g.Effects.IsChannelActive(playerID) {
+		// Pay colored portion from pool
+		colorMC := mc
+		colorMC.Generic = 0
+		colorMC.HasX = false
+		if !colorMC.IsZero() {
+			if !p.ManaPool().CanPay(colorMC) {
+				return fmt.Errorf("cannot pay mana cost %s for %s", colorMC, name)
+			}
+			if err := p.ManaPool().Pay(colorMC); err != nil {
+				return err
+			}
+		}
+		// Pay X from life
+		lifeCost := xValue * mc.XCount
+		p.LoseLife(lifeCost)
+	} else {
+		// Pay mana cost (auto-pay from pool)
+		payMC := mc
+		if mc.HasX {
+			payMC.Generic += xValue * mc.XCount
+		}
+		if !payMC.IsZero() {
+			if !p.ManaPool().CanPay(payMC) {
+				return fmt.Errorf("cannot pay mana cost %s for %s", payMC, name)
+			}
+			if err := p.ManaPool().Pay(payMC); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -761,6 +953,11 @@ func (g *Game) ActivateAbilityByText(playerID uuid.UUID, permName string, target
 			// Check for mana bonus effects (e.g. Gauntlet of Might)
 			g.applyManaBonuses(perm, color, p)
 		}
+		g.FireEvent(GameEvent{
+			Type:     EvtTapped,
+			SourceID: perm.ID(),
+			PlayerID: playerID,
+		})
 		g.FireEvent(GameEvent{
 			Type:     EvtAbilityActivated,
 			SourceID: perm.ID(),
@@ -920,6 +1117,8 @@ func (g *Game) doEndStep() {
 func (g *Game) doUntap() {
 	active := g.ActivePlayerObj()
 	g.Effects.ClearRegenerationShields(active.PlayerID(), g)
+	// Island Sanctuary: clear protection at the start of the player's turn
+	g.Effects.ClearSanctuary(active.PlayerID())
 
 	landUntapLimit := g.Effects.LandUntapLimit()
 	landsUntapped := 0
@@ -995,10 +1194,6 @@ func (g *Game) checkGraveyardReturns(p Player) {
 }
 
 func (g *Game) doDraw() {
-	if g.Turn == 1 && g.ActivePlayer == 0 {
-		return // first player doesn't draw on turn 1
-	}
-
 	active := g.ActivePlayerObj()
 
 	// Fire draw step event before the normal draw so triggers can queue
@@ -1008,6 +1203,16 @@ func (g *Game) doDraw() {
 	})
 	g.PutTriggersOnStack()
 	g.ResolveStack()
+
+	// First player doesn't draw on turn 1
+	if g.Turn == 1 && g.ActivePlayer == 0 {
+		return
+	}
+
+	// Island Sanctuary: skip the normal draw if flagged
+	if g.Effects.ShouldSkipDraw(active.PlayerID()) {
+		return
+	}
 
 	active.DrawCard()
 }
@@ -1036,6 +1241,12 @@ func (g *Game) doDeclareAttackers() {
 		if !CanAttackCheck(atk, g) {
 			continue
 		}
+		// Island Sanctuary: only flying or islandwalk creatures can attack
+		if g.Effects.IsSanctuaryActive(defender.PlayerID()) {
+			if !atk.HasAbility(Flying) && !atk.HasAbility(Islandwalk) {
+				continue
+			}
+		}
 
 		// Tap attacker (unless vigilance)
 		if !atk.HasAbility(Vigilance) {
@@ -1043,6 +1254,10 @@ func (g *Game) doDeclareAttackers() {
 		}
 
 		g.Combat.AddAttacker(id, defender.PlayerID())
+		if g.AttackedThisTurn == nil {
+			g.AttackedThisTurn = make(map[uuid.UUID]bool)
+		}
+		g.AttackedThisTurn[id] = true
 		g.FireEvent(GameEvent{
 			Type:     EvtDeclaredAttacker,
 			SourceID: id,
@@ -1058,14 +1273,32 @@ func (g *Game) doDeclareBlockers() {
 		return
 	}
 
+	// Check for Lure: if any attacker has MustBeBlocked, redirect all blocks to it
+	var luredAttackerID uuid.UUID
+	for _, group := range g.Combat.Groups {
+		atk := g.FindPermanent(group.AttackerID)
+		if atk != nil && atk.HasAbility(MustBeBlocked) {
+			luredAttackerID = group.AttackerID
+			break
+		}
+	}
+
 	blockerCount := make(map[uuid.UUID]int) // how many attackers each blocker is assigned to
 	for _, ba := range assignments {
 		blocker := g.FindPermanent(ba.BlockerID)
-		attacker := g.FindPermanent(ba.AttackerID)
+		attackerID := ba.AttackerID
+		// If there's a Lure creature, redirect all blocks to it
+		if luredAttackerID != uuid.Nil {
+			attackerID = luredAttackerID
+		}
+		attacker := g.FindPermanent(attackerID)
 		if blocker == nil || attacker == nil {
 			continue
 		}
 		if blocker.Tapped {
+			continue
+		}
+		if !g.Effects.CanBlockCheck(blocker.ID()) {
 			continue
 		}
 		if !CanBlock(blocker, attacker, g) {
@@ -1077,18 +1310,20 @@ func (g *Game) doDeclareBlockers() {
 		}
 		// Check multi-block limit: normally a creature can only block one attacker
 		maxBlocks := 1
-		if blocker.HasAbility(CanBlockAdditional) {
+		if blocker.HasAbility(CanBlockAny) {
+			maxBlocks = 999
+		} else if blocker.HasAbility(CanBlockAdditional) {
 			maxBlocks = 2
 		}
 		if blockerCount[ba.BlockerID] >= maxBlocks {
 			continue
 		}
 		blockerCount[ba.BlockerID]++
-		g.Combat.AddBlocker(ba.BlockerID, ba.AttackerID)
+		g.Combat.AddBlocker(ba.BlockerID, attackerID)
 		g.FireEvent(GameEvent{
 			Type:     EvtDeclaredBlocker,
 			SourceID: ba.BlockerID,
-			TargetID: ba.AttackerID,
+			TargetID: attackerID,
 			PlayerID: nonActive.PlayerID(),
 		})
 	}
@@ -1178,6 +1413,9 @@ func (g *Game) doCleanup() {
 	g.PreventCombatDamage = false
 	// Clear damage tracking
 	g.DamageDealtBy = make(map[uuid.UUID]map[uuid.UUID]bool)
+	g.DamageTakenThisTurn = make(map[uuid.UUID]int)
+	g.AttackedThisTurn = make(map[uuid.UUID]bool)
+	g.Effects.ClearBlockPrevention()
 	// Clear damage prevention and Forcefield shields
 	g.Effects.ClearPreventionShields()
 	g.Effects.ClearForcefieldShields()
@@ -1228,6 +1466,15 @@ func (g *Game) Run(stopTurn int, stopStep PhaseStep, maxTurns int) {
 	}
 }
 
+// MaxLandPlays returns the maximum number of lands that can be played this turn.
+func (g *Game) MaxLandPlays() int {
+	limit := 1
+	if g.Effects.HasUnlimitedLandPlays() {
+		limit = 999
+	}
+	return limit
+}
+
 // PlayLand moves a land from a player's hand to the battlefield.
 func (g *Game) PlayLand(playerID, cardID uuid.UUID) error {
 	if !g.Step.IsMainPhase() {
@@ -1236,7 +1483,7 @@ func (g *Game) PlayLand(playerID, cardID uuid.UUID) error {
 	if g.ActivePlayerObj().PlayerID() != playerID {
 		return fmt.Errorf("only the active player can play a land")
 	}
-	if g.LandsPlayedThisTurn >= 1 {
+	if g.LandsPlayedThisTurn >= g.MaxLandPlays() {
 		return fmt.Errorf("already played a land this turn")
 	}
 
@@ -1256,6 +1503,16 @@ func (g *Game) PlayLand(playerID, cardID uuid.UUID) error {
 
 	g.PutOnBattlefield(card, playerID)
 	g.LandsPlayedThisTurn++
+
+	g.FireEvent(GameEvent{
+		Type:     EvtLandPlayed,
+		SourceID: card.ID(),
+		PlayerID: playerID,
+		Amount:   g.LandsPlayedThisTurn, // which land number this was
+	})
+	g.PutTriggersOnStack()
+	g.ResolveStack()
+
 	return nil
 }
 

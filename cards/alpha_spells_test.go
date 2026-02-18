@@ -162,6 +162,11 @@ func TestStasis(t *testing.T) {
 	t.Run("players_skip_untap_step", func(t *testing.T) {
 		// Stasis: Players skip their untap steps.
 		g := mage.NewTestGame(t)
+		// Island lets PlayerA pay {U} at turn 1 upkeep so Stasis survives.
+		// At turn 3 untap the Island is tapped (used for payment) and can't
+		// untap (Stasis prevents it), so Stasis is sacrificed at turn 3 upkeep.
+		// But the untap prevention already happened, so Bears stay tapped.
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Island")
 		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Stasis")
 		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Grizzly Bears")
 		// Attack with Bears to tap them
@@ -169,7 +174,6 @@ func TestStasis(t *testing.T) {
 		// Turn 3 is PlayerA's next turn -- Bears should NOT untap with Stasis.
 		g.StopAt(3, mage.PrecombatMain)
 		g.Execute()
-		// Stub has no skip-untap effect; Bears untap normally.
 		g.AssertTapped(mage.PlayerA, "Grizzly Bears", true)
 	})
 

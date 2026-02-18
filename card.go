@@ -155,6 +155,7 @@ func NewToken(name string, power, toughness int, types []CardType, subTypes []st
 
 func (c *BaseCard) SetPower(p int)     { c.power = p }
 func (c *BaseCard) SetToughness(t int) { c.toughness = t }
+func (c *BaseCard) IsToken() bool      { return c.isToken }
 
 // NewInstant creates a new instant card.
 func NewInstant(name, cost string) *BaseCard {
@@ -240,8 +241,11 @@ type Permanent struct {
 	AttachedTo  uuid.UUID   // what this permanent is attached to
 	Attachments []uuid.UUID // what's attached to this permanent
 
-	RuntimeAbilities []Ability // base + granted by effects
-	SubTypeOverride  []string  // if set, replaces card's subtypes (from continuous effects)
+	RuntimeAbilities []Ability   // base + granted by effects
+	SubTypeOverride  []string    // if set, replaces card's subtypes (from continuous effects)
+	TypesAdded       []CardType  // types added by continuous effects (e.g. Living Lands)
+	BasePTOverride   *[2]int     // if set, overrides base P/T (for animate effects)
+	ColorOverride    *[]Color    // if set, replaces card's colors (from lace effects)
 }
 
 // NewPermanent creates a permanent from a card.
@@ -264,7 +268,20 @@ func (p *Permanent) ID() uuid.UUID     { return p.Card.ID() }
 func (p *Permanent) Name() string      { return p.Card.Name() }
 
 func (p *Permanent) HasType(t CardType) bool {
+	for _, added := range p.TypesAdded {
+		if added == t {
+			return true
+		}
+	}
 	return p.Card.HasType(t)
+}
+
+// Colors returns the permanent's current colors, considering color overrides.
+func (p *Permanent) Colors() []Color {
+	if p.ColorOverride != nil {
+		return *p.ColorOverride
+	}
+	return p.Card.ManaCost().Colors()
 }
 
 func (p *Permanent) HasSubType(s string) bool {
@@ -320,6 +337,9 @@ func (p *Permanent) CanBeTargetedBy(source Card, sourceController uuid.UUID, g *
 // CurrentPower returns power including counters and continuous effects.
 func (p *Permanent) CurrentPower(g *Game) int {
 	pw := p.Card.Power()
+	if p.BasePTOverride != nil {
+		pw = p.BasePTOverride[0]
+	}
 	for ct, n := range p.Counters {
 		pw += ct.PowerBoost() * n
 	}
@@ -333,6 +353,9 @@ func (p *Permanent) CurrentPower(g *Game) int {
 // CurrentToughness returns toughness including counters and continuous effects.
 func (p *Permanent) CurrentToughness(g *Game) int {
 	tg := p.Card.Toughness()
+	if p.BasePTOverride != nil {
+		tg = p.BasePTOverride[1]
+	}
 	for ct, n := range p.Counters {
 		tg += ct.ToughnessBoost() * n
 	}

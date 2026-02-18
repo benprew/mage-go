@@ -169,7 +169,7 @@ func TestLaceCycle(t *testing.T) {
 			t.Fatal("Grizzly Bears not found")
 		}
 		hasBlack := false
-		for _, col := range perm.Card.ManaCost().Colors() {
+		for _, col := range perm.Colors() {
 			if col == mage.Black {
 				hasBlack = true
 			}

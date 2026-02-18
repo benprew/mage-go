@@ -24,6 +24,8 @@ const (
 	EvtUpkeep
 	EvtDrawStep
 	EvtEndStep
+	EvtTapped     // fired when a permanent becomes tapped
+	EvtLandPlayed // fired when a land is played from hand
 )
 
 // GameEvent carries data about a game event.

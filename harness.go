@@ -21,9 +21,11 @@ type TestGame struct {
 	castActions     []castAction
 	activateActions []activateAction
 	counterActions  []counterAction
+	actionSeq       int // global insertion order counter
 }
 
 type castAction struct {
+	seq       int // global insertion order
 	turn      int
 	step      PhaseStep
 	player    PlayerRef
@@ -42,6 +44,7 @@ type responseAction struct {
 }
 
 type activateAction struct {
+	seq      int // global insertion order
 	turn     int
 	step     PhaseStep
 	player   PlayerRef
@@ -128,15 +131,17 @@ func (tg *TestGame) AddCounters(turn int, step PhaseStep, p PlayerRef, card stri
 
 // CastSpell scripts a spell cast at a specific turn/step.
 func (tg *TestGame) CastSpell(turn int, step PhaseStep, p PlayerRef, spell string, targets ...string) {
+	tg.actionSeq++
 	tg.castActions = append(tg.castActions, castAction{
-		turn: turn, step: step, player: p, spell: spell, targets: targets,
+		seq: tg.actionSeq, turn: turn, step: step, player: p, spell: spell, targets: targets,
 	})
 }
 
 // CastSpellWithX scripts an X-cost spell cast at a specific turn/step with a given X value.
 func (tg *TestGame) CastSpellWithX(turn int, step PhaseStep, p PlayerRef, spell string, xValue int, targets ...string) {
+	tg.actionSeq++
 	tg.castActions = append(tg.castActions, castAction{
-		turn: turn, step: step, player: p, spell: spell, targets: targets, xValue: xValue,
+		seq: tg.actionSeq, turn: turn, step: step, player: p, spell: spell, targets: targets, xValue: xValue,
 	})
 }
 
@@ -186,8 +191,9 @@ func (tg *TestGame) ActivateInResponseTo(p PlayerRef, permName string, targets .
 
 // ActivateAbility scripts an ability activation at a specific turn/step.
 func (tg *TestGame) ActivateAbility(turn int, step PhaseStep, p PlayerRef, permName string, targets ...string) {
+	tg.actionSeq++
 	tg.activateActions = append(tg.activateActions, activateAction{
-		turn: turn, step: step, player: p, permName: permName, targets: targets,
+		seq: tg.actionSeq, turn: turn, step: step, player: p, permName: permName, targets: targets,
 	})
 }
 
@@ -256,11 +262,14 @@ func (tg *TestGame) Execute() {
 			// Execute scripted counter additions
 			tg.executeCounterActions(tg.Turn, step)
 
-			// Execute scripted casts before the step runs
-			tg.executeCastActions(tg.Turn, step)
+			// Execute scripted casts and activations in the order they
+			// were scripted (sequence number preserves insertion order).
+			tg.executeOrderedActions(tg.Turn, step)
 
-			// Execute scripted ability activations
-			tg.executeActivateActions(tg.Turn, step)
+			// Auto-play lands from hand during PrecombatMain
+			if step == PrecombatMain {
+				tg.autoPlayLands()
+			}
 
 			tg.RunStep(step)
 		}
@@ -278,6 +287,66 @@ func (tg *TestGame) Execute() {
 			tg.ActivePlayer = (tg.ActivePlayer + 1) % len(tg.Players)
 		}
 		tg.Turn++
+	}
+}
+
+// autoPlayLands plays all land cards from the active player's hand (respecting limits).
+func (tg *TestGame) autoPlayLands() {
+	active := tg.Game.ActivePlayerObj()
+	for {
+		if tg.LandsPlayedThisTurn >= tg.MaxLandPlays() {
+			break
+		}
+		var landID uuid.UUID
+		for _, c := range active.Hand() {
+			if c.HasType(TypeLand) {
+				landID = c.ID()
+				break
+			}
+		}
+		if landID == uuid.Nil {
+			break
+		}
+		err := tg.Game.PlayLand(active.PlayerID(), landID)
+		if err != nil {
+			break
+		}
+	}
+}
+
+// ensureManaForCast tops up a player's pool so they can afford a scripted spell.
+// This handles spells cast on later turns when the pool may have been cleared.
+func (tg *TestGame) ensureManaForCast(ca castAction) {
+	player := tg.getPlayer(ca.player)
+	card, err := CreateCard(ca.spell)
+	if err != nil {
+		return
+	}
+	mc := card.ManaCost()
+	pool := player.ManaPool()
+
+	// Ensure enough of each colored mana
+	colors := []struct {
+		color Color
+		need  int
+	}{
+		{White, mc.White}, {Blue, mc.Blue}, {Black, mc.Black},
+		{Red, mc.Red}, {Green, mc.Green},
+	}
+	for _, c := range colors {
+		have := pool.Count(c.color)
+		if have < c.need {
+			pool.Add(c.color, c.need-have)
+		}
+	}
+
+	// Ensure enough for generic + X cost
+	genericNeeded := mc.Generic
+	if mc.HasX {
+		genericNeeded += ca.xValue * mc.XCount
+	}
+	if genericNeeded > 0 {
+		pool.Add(Colorless, genericNeeded)
 	}
 }
 
@@ -347,37 +416,82 @@ func (tg *TestGame) autoAddMana() {
 	}
 }
 
-func (tg *TestGame) executeCastActions(turn int, step PhaseStep) {
-	for _, ca := range tg.castActions {
-		if ca.turn != turn || ca.step != step {
-			continue
-		}
-		playerID := tg.getPlayerID(ca.player)
-		targets := tg.resolveTargets(ca.targets, playerID)
-
-		// Validate targets against targeting restrictions
-		card, _ := CreateCard(ca.spell)
-		if card != nil {
-			validTargets := tg.validateTargets(card, targets, playerID)
-			if len(validTargets) == 0 && len(targets) > 0 {
-				// All targets illegal, spell fizzles
-				continue
-			}
-			targets = validTargets
-		}
-
-		err := tg.Game.CastSpellByName(playerID, ca.spell, targets, ca.xValue)
-		if err != nil {
-			tg.t.Logf("CastSpell %s failed: %v", ca.spell, err)
-		}
-
-		// If there are responses, cast them before resolving the stack
-		if len(ca.responses) > 0 {
-			tg.executeResponses(ca.responses)
-		}
-
-		tg.Game.ResolveStack()
+// executeOrderedActions processes cast and activate actions for the given
+// turn/step in the order they were scripted (by sequence number).
+func (tg *TestGame) executeOrderedActions(turn int, step PhaseStep) {
+	type ordered struct {
+		seq    int
+		isCast bool
+		idx    int
 	}
+	var actions []ordered
+
+	for i, ca := range tg.castActions {
+		if ca.turn == turn && ca.step == step {
+			actions = append(actions, ordered{seq: ca.seq, isCast: true, idx: i})
+		}
+	}
+	for i, aa := range tg.activateActions {
+		if aa.turn == turn && aa.step == step {
+			actions = append(actions, ordered{seq: aa.seq, isCast: false, idx: i})
+		}
+	}
+
+	// Sort by sequence number to preserve scripting order
+	for i := 1; i < len(actions); i++ {
+		for j := i; j > 0 && actions[j].seq < actions[j-1].seq; j-- {
+			actions[j], actions[j-1] = actions[j-1], actions[j]
+		}
+	}
+
+	for _, a := range actions {
+		if a.isCast {
+			tg.executeSingleCast(tg.castActions[a.idx])
+		} else {
+			tg.executeSingleActivate(tg.activateActions[a.idx])
+		}
+	}
+}
+
+func (tg *TestGame) executeSingleCast(ca castAction) {
+	playerID := tg.getPlayerID(ca.player)
+	targets := tg.resolveTargets(ca.targets, playerID)
+
+	// Just-in-time mana: ensure the player can afford the spell right now.
+	// This handles spells cast on later turns whose mana may have been cleared.
+	tg.ensureManaForCast(ca)
+
+	// Validate targets against targeting restrictions
+	card, _ := CreateCard(ca.spell)
+	if card != nil {
+		validTargets := tg.validateTargets(card, targets, playerID)
+		if len(validTargets) == 0 && len(targets) > 0 {
+			return // All targets illegal, spell fizzles
+		}
+		targets = validTargets
+	}
+
+	err := tg.Game.CastSpellByName(playerID, ca.spell, targets, ca.xValue)
+	if err != nil {
+		tg.t.Logf("CastSpell %s failed: %v", ca.spell, err)
+	}
+
+	// If there are responses, cast them before resolving the stack
+	if len(ca.responses) > 0 {
+		tg.executeResponses(ca.responses)
+	}
+
+	tg.Game.ResolveStack()
+}
+
+func (tg *TestGame) executeSingleActivate(aa activateAction) {
+	playerID := tg.getPlayerID(aa.player)
+	targets := tg.resolveTargets(aa.targets, playerID)
+	err := tg.Game.ActivateAbilityByText(playerID, aa.permName, targets)
+	if err != nil {
+		tg.t.Logf("ActivateAbility %s failed: %v", aa.permName, err)
+	}
+	tg.Game.ResolveStack()
 }
 
 func (tg *TestGame) executeResponses(responses []responseAction) {
@@ -406,21 +520,6 @@ func (tg *TestGame) executeResponses(responses []responseAction) {
 				tg.t.Logf("CastInResponseTo %s failed: %v", r.spell, err)
 			}
 		}
-	}
-}
-
-func (tg *TestGame) executeActivateActions(turn int, step PhaseStep) {
-	for _, aa := range tg.activateActions {
-		if aa.turn != turn || aa.step != step {
-			continue
-		}
-		playerID := tg.getPlayerID(aa.player)
-		targets := tg.resolveTargets(aa.targets, playerID)
-		err := tg.Game.ActivateAbilityByText(playerID, aa.permName, targets)
-		if err != nil {
-			tg.t.Logf("ActivateAbility %s failed: %v", aa.permName, err)
-		}
-		tg.Game.ResolveStack()
 	}
 }
 

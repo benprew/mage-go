@@ -49,8 +49,27 @@ func registerAlphaSpells() {
 
 	mage.Register("Healing Salve", func() mage.Card {
 		c := mage.NewInstant("Healing Salve", "{W}")
-		// Target player gains 3 life (one of two modes, simplified)
-		sa := mage.NewTargetedSpell(mage.TargetPlayer(), mage.GainLifeTarget(mage.Fixed(3)))
+		// Mode 1: Target player gains 3 life
+		// Mode 2: Prevent the next 3 damage to any target
+		// Auto-detect: if targeting a player, gain life; otherwise prevent damage.
+		sa := mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.FuncEffect(
+			"gain 3 life or prevent 3 damage",
+			func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				if len(targets) == 0 {
+					return nil
+				}
+				// If target is a player, gain 3 life
+				for _, pl := range g.Players {
+					if pl.PlayerID() == targets[0] {
+						g.PlayerGainLife(pl, 3)
+						return nil
+					}
+				}
+				// Otherwise prevent 3 damage to target permanent
+				g.Effects.AddPreventionShield(targets[0], 3)
+				return nil
+			},
+		))
 		c.AddAbility(sa)
 		return c
 	})
@@ -63,9 +82,8 @@ func registerAlphaSpells() {
 	})
 
 	mage.Register("Balance", func() mage.Card {
-		// Complex card - stub
 		c := mage.NewSorcery("Balance", "{1}{W}")
-		sa := mage.NewSpellAbility(mage.GainLife(0)) // stub
+		sa := mage.NewSpellAbility(mage.BalanceEffect())
 		c.AddAbility(sa)
 		return c
 	})
@@ -79,14 +97,21 @@ func registerAlphaSpells() {
 
 	mage.Register("Reverse Damage", func() mage.Card {
 		c := mage.NewInstant("Reverse Damage", "{1}{W}{W}")
-		sa := mage.NewSpellAbility(mage.GainLife(0)) // stub - prevent damage is complex
+		sa := mage.NewSpellAbility(mage.FuncEffect(
+			"prevent the next source of damage to you and gain that much life",
+			func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				// Set a large prevention shield on the controller and mark reverse damage
+				g.Effects.AddPreventionShield(controller, 1000)
+				g.Effects.AddReverseDamageShield(controller)
+				return nil
+			}))
 		c.AddAbility(sa)
 		return c
 	})
 
 	mage.Register("Death Ward", func() mage.Card {
 		c := mage.NewInstant("Death Ward", "{W}")
-		sa := mage.NewSpellAbility(mage.GainLife(0)) // stub - regenerate target
+		sa := mage.NewTargetedSpell(mage.TargetCreature(), mage.RegenerateTarget())
 		c.AddAbility(sa)
 		return c
 	})
@@ -178,14 +203,21 @@ func registerAlphaSpells() {
 
 	mage.Register("Sleight of Mind", func() mage.Card {
 		c := mage.NewInstant("Sleight of Mind", "{U}")
-		sa := mage.NewSpellAbility(mage.GainLife(0)) // stub
+		// Change the text of target permanent by replacing all instances of one
+		// color word with another. Default: swamp->forest (swampwalk->forestwalk).
+		sa := mage.NewTargetedSpell(mage.TargetPermanent(), mage.ReplaceKeywordEffect(mage.Swampwalk, mage.Forestwalk))
 		c.AddAbility(sa)
 		return c
 	})
 
 	mage.Register("Stasis", func() mage.Card {
 		c := mage.NewEnchantment("Stasis", "{1}{U}")
-		// Stub - nobody untaps is very complex
+		// Players skip their untap steps.
+		c.AddAbility(mage.StaticAbility(
+			mage.PreventAllUntaps(),
+		))
+		// At the beginning of your upkeep, sacrifice Stasis unless you pay {U}.
+		c.AddAbility(mage.SacrificeAtUpkeepUnlessPay("{U}"))
 		return c
 	})
 
@@ -363,7 +395,7 @@ func registerAlphaSpells() {
 	mage.Register("Fork", func() mage.Card {
 		// Copy target instant or sorcery spell
 		c := mage.NewInstant("Fork", "{R}{R}")
-		sa := mage.NewSpellAbility(mage.GainLife(0)) // stub
+		sa := mage.NewTargetedSpell(mage.TargetSpellOnStack(), mage.CopySpellOnStack())
 		c.AddAbility(sa)
 		return c
 	})
@@ -440,9 +472,16 @@ func registerAlphaSpells() {
 	})
 
 	mage.Register("Channel", func() mage.Card {
-		// Complex card - stub
 		c := mage.NewSorcery("Channel", "{G}{G}")
-		sa := mage.NewSpellAbility(mage.GainLife(0)) // stub
+		// Until end of turn, you may pay 1 life to add {C}.
+		// Simplified: add a large pool of colorless mana and lose life when used.
+		// We implement by setting a channel flag that charges life for X costs.
+		sa := mage.NewSpellAbility(mage.FuncEffect(
+			"until end of turn, pay 1 life to add {C}",
+			func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				g.Effects.SetChannelActive(controller)
+				return nil
+			}))
 		c.AddAbility(sa)
 		return c
 	})
@@ -465,8 +504,14 @@ func registerAlphaSpells() {
 	// ===== COLORLESS SPELLS =====
 
 	mage.Register("Chaos Orb", func() mage.Card {
-		// Physical dexterity card - not implementable
 		c := mage.NewArtifact("Chaos Orb", "{2}")
+		// {1}, {T}: Destroy a random nontoken permanent you don't control, then destroy Chaos Orb.
+		ab := mage.NewActivatedAbility(
+			mage.ChaosOrbEffect(),
+			mage.GenericCost(1),
+			mage.WithCost(mage.TapSourceCost()),
+		)
+		c.AddAbility(ab)
 		return c
 	})
 }

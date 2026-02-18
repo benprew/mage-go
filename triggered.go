@@ -250,3 +250,54 @@ func CreatureDealtDamageBySourceDiesTrigger(effect Effect, optional bool) *Gener
 			return sources != nil && sources[sourceID]
 		})
 }
+
+// SacrificeAtUpkeepUnlessPay creates a trigger that sacrifices the source at
+// the beginning of the controller's upkeep unless the mana cost can be paid
+// by tapping lands. If cost is non-empty, the engine auto-pays from untapped
+// lands; otherwise the permanent is always sacrificed.
+func SacrificeAtUpkeepUnlessPay(cost string) *GenericTriggered {
+	return NewTriggered(EvtUpkeep, false, FuncEffect(
+		"Sacrifice unless pay "+cost,
+		func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+			if cost != "" && g.TryPayCostFromLands(controller, cost) {
+				return nil // paid, keep the permanent
+			}
+			perm := g.FindPermanent(sourceID)
+			if perm != nil {
+				g.Sacrifice(perm)
+			}
+			return nil
+		},
+	)).SetCondition(func(evt *GameEvent, _ *Game, _, controllerID uuid.UUID) bool {
+		return evt.PlayerID == controllerID
+	})
+}
+
+// WhenAttachedBecomesTappedTrigger fires when the permanent this aura is
+// attached to becomes tapped (e.g. Psychic Venom, Kudzu).
+func WhenAttachedBecomesTappedTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtTapped, optional, effect).
+		SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+			src := g.FindPermanent(sourceID)
+			if src == nil || !src.IsAttached() {
+				return false
+			}
+			return evt.SourceID == src.AttachedTo
+		})
+}
+
+// WhenOpponentPermanentBecomesTappedTrigger fires when a permanent matching the
+// filter that an opponent controls becomes tapped (e.g. Lifetap).
+func WhenOpponentPermanentBecomesTappedTrigger(effect Effect, optional bool, filter PermanentFilter) *GenericTriggered {
+	return NewTriggered(EvtTapped, optional, effect).
+		SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+			perm := g.FindPermanent(evt.SourceID)
+			if perm == nil {
+				return false
+			}
+			if perm.Controller == controllerID {
+				return false // not an opponent's permanent
+			}
+			return filter(perm, g)
+		})
+}

@@ -42,13 +42,15 @@ func GainLife(amount int) Effect {
 	return &gainLifeEffect{amount: amount}
 }
 
-func (e *gainLifeEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *gainLifeEffect) Apply(g *Game, _, controller uuid.UUID, _ []uuid.UUID) error {
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return ErrPlayerNotFound
 	}
-	p.GainLife(e.amount)
-	g.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: controller, Amount: e.amount})
+	g.PlayerGainLife(p, e.amount)
+	if !g.Effects.IsLichActive(controller) {
+		g.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: controller, Amount: e.amount})
+	}
 	return nil
 }
 
@@ -733,6 +735,32 @@ func (e *drawCardsTargetEffect) Text() string {
 	return fmt.Sprintf("target player draws %d card(s)", e.amount.Resolve(nil, uuid.Nil, uuid.Nil))
 }
 
+// drawCardsActivePlayerEffect draws cards for the active player (e.g. Howling Mine).
+type drawCardsActivePlayerEffect struct {
+	amount ValueSource
+}
+
+// DrawCardsActivePlayer creates an effect that draws cards for the active player.
+func DrawCardsActivePlayer(amount ValueSource) Effect {
+	return &drawCardsActivePlayerEffect{amount: amount}
+}
+
+func (e *drawCardsActivePlayerEffect) Apply(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
+	active := g.ActivePlayerObj()
+	if active == nil {
+		return ErrPlayerNotFound
+	}
+	amount := e.amount.Resolve(g, sourceID, active.PlayerID())
+	for i := 0; i < amount; i++ {
+		active.DrawCard()
+	}
+	return nil
+}
+
+func (e *drawCardsActivePlayerEffect) Text() string {
+	return "that player draws an additional card"
+}
+
 // exileTargetEffect exiles a target permanent (removes from game).
 type exileTargetEffect struct{}
 
@@ -777,8 +805,10 @@ func (e *gainLifeTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, ta
 		return ErrPlayerNotFound
 	}
 	amount := e.amount.Resolve(g, sourceID, controller)
-	targetPlayer.GainLife(amount)
-	g.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: targetPlayer.PlayerID(), Amount: amount})
+	g.PlayerGainLife(targetPlayer, amount)
+	if !g.Effects.IsLichActive(targetPlayer.PlayerID()) {
+		g.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: targetPlayer.PlayerID(), Amount: amount})
+	}
 	return nil
 }
 
@@ -1064,6 +1094,27 @@ func (e *regenerateSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, 
 }
 
 func (e *regenerateSourceEffect) Text() string { return "Regenerate ~" }
+
+// regenerateTargetEffect sets a regeneration shield on the target.
+type regenerateTargetEffect struct{}
+
+func RegenerateTarget() Effect {
+	return &regenerateTargetEffect{}
+}
+
+func (e *regenerateTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	if len(targets) == 0 {
+		return nil
+	}
+	perm := g.FindPermanent(targets[0])
+	if perm == nil {
+		return nil
+	}
+	g.Effects.AddRegenerationShield(perm.ID())
+	return nil
+}
+
+func (e *regenerateTargetEffect) Text() string { return "Regenerate target creature" }
 
 // preventDamageToTargetEffect sets a damage prevention shield on a target.
 type preventDamageToTargetEffect struct {
@@ -1647,3 +1698,262 @@ func (s selectEventController) Select(_ *Game, _, _ uuid.UUID, targets []uuid.UU
 	return []uuid.UUID{targets[0]}
 }
 func (s selectEventController) Text() string { return "that player" }
+
+// tapAllLandsEffect taps all lands target player controls.
+type tapAllLandsEffect struct{}
+
+func TapAllLands() Effect { return &tapAllLandsEffect{} }
+
+func (e *tapAllLandsEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	if len(targets) == 0 {
+		return nil
+	}
+	playerID := targets[0]
+	for _, p := range g.Battlefield {
+		if p.Controller == playerID && p.HasType(TypeLand) {
+			p.Tapped = true
+		}
+	}
+	return nil
+}
+func (e *tapAllLandsEffect) Text() string { return "Tap all lands target player controls" }
+
+// balanceEffect equalizes lands, creatures, and hand sizes.
+type balanceEffect struct{}
+
+func BalanceEffect() Effect { return &balanceEffect{} }
+
+func (e *balanceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	// Count lands for each player
+	landCounts := make(map[uuid.UUID]int)
+	creatureCounts := make(map[uuid.UUID]int)
+	for _, p := range g.Battlefield {
+		if p.HasType(TypeLand) {
+			landCounts[p.Controller]++
+		}
+		if p.HasType(TypeCreature) {
+			creatureCounts[p.Controller]++
+		}
+	}
+
+	// Find minimums
+	minLands := -1
+	minCreatures := -1
+	minHand := -1
+	for _, p := range g.Players {
+		pid := p.PlayerID()
+		if minLands < 0 || landCounts[pid] < minLands {
+			minLands = landCounts[pid]
+		}
+		if minCreatures < 0 || creatureCounts[pid] < minCreatures {
+			minCreatures = creatureCounts[pid]
+		}
+		if minHand < 0 || len(p.Hand()) < minHand {
+			minHand = len(p.Hand())
+		}
+	}
+
+	// Sacrifice lands down to minimum
+	for _, p := range g.Players {
+		pid := p.PlayerID()
+		toSac := landCounts[pid] - minLands
+		for toSac > 0 {
+			for _, perm := range g.Battlefield {
+				if perm.Controller == pid && perm.HasType(TypeLand) {
+					g.Sacrifice(perm)
+					toSac--
+					break
+				}
+			}
+		}
+	}
+
+	// Sacrifice creatures down to minimum
+	for _, p := range g.Players {
+		pid := p.PlayerID()
+		toSac := creatureCounts[pid] - minCreatures
+		for toSac > 0 {
+			for _, perm := range g.Battlefield {
+				if perm.Controller == pid && perm.HasType(TypeCreature) {
+					g.Sacrifice(perm)
+					toSac--
+					break
+				}
+			}
+		}
+	}
+
+	// Discard down to minimum hand size
+	for _, p := range g.Players {
+		for len(p.Hand()) > minHand {
+			hand := p.Hand()
+			if len(hand) == 0 {
+				break
+			}
+			chosen := p.ChooseCardsFromHand(1, "discard for Balance", g)
+			if len(chosen) > 0 {
+				p.RemoveFromHand(chosen[0].ID())
+				p.AddToGraveyard(chosen[0])
+			} else {
+				break
+			}
+		}
+	}
+
+	return nil
+}
+func (e *balanceEffect) Text() string {
+	return "Each player sacrifices to match fewest lands, creatures; discards to match smallest hand"
+}
+
+// destroyRandomNontokenPermanent destroys a random nontoken permanent an
+// opponent controls, then destroys the source.
+type chaosOrbEffect struct{}
+
+func ChaosOrbEffect() Effect { return &chaosOrbEffect{} }
+
+func (e *chaosOrbEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	var candidates []*Permanent
+	for _, p := range g.Battlefield {
+		if p.Controller != controller && !p.Card.(*BaseCard).IsToken() {
+			candidates = append(candidates, p)
+		}
+	}
+	if len(candidates) > 0 {
+		chosen := candidates[rand.Intn(len(candidates))]
+		g.DestroyPermanent(chosen)
+	}
+	// Destroy self
+	src := g.FindPermanent(sourceID)
+	if src != nil {
+		g.DestroyPermanent(src)
+	}
+	return nil
+}
+func (e *chaosOrbEffect) Text() string { return "Destroy a random nontoken permanent, then destroy ~" }
+
+// removeFromCombatEffect removes a target creature from combat.
+type removeFromCombatEffect struct{}
+
+func RemoveFromCombat() Effect { return &removeFromCombatEffect{} }
+
+func (e *removeFromCombatEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	if len(targets) == 0 {
+		return nil
+	}
+	perm := g.FindPermanent(targets[0])
+	if perm == nil {
+		return nil
+	}
+	g.Combat.RemoveFromCombat(perm.ID())
+	return nil
+}
+func (e *removeFromCombatEffect) Text() string { return "Remove target creature from combat" }
+
+// replaceKeywordEffect replaces one keyword with another on a target permanent.
+type replaceKeywordEffect struct {
+	from Keyword
+	to   Keyword
+}
+
+func ReplaceKeywordEffect(from, to Keyword) Effect {
+	return &replaceKeywordEffect{from: from, to: to}
+}
+
+func (e *replaceKeywordEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	if len(targets) == 0 {
+		return nil
+	}
+	perm := g.FindPermanent(targets[0])
+	if perm == nil {
+		return nil
+	}
+	// Remove the old keyword and add the new one as a continuous effect
+	eff := &keywordReplacementContinuous{
+		from:         e.from,
+		to:           e.to,
+		targetID:     perm.ID(),
+		effectSource: effectSource{sourceID: sourceID},
+	}
+	g.Effects.Add(eff)
+	g.Effects.Apply(g)
+	return nil
+}
+
+func (e *replaceKeywordEffect) Text() string {
+	return fmt.Sprintf("Replace %s with %s", e.from, e.to)
+}
+
+// changeColorEffect changes a target permanent's color.
+type changeColorEffect struct {
+	color Color
+}
+
+// ChangeColorEffect creates an effect that changes a target permanent's color.
+func ChangeColorEffect(color Color) Effect {
+	return &changeColorEffect{color: color}
+}
+
+func (e *changeColorEffect) Apply(g *Game, sourceID, _ uuid.UUID, targets []uuid.UUID) error {
+	if len(targets) == 0 {
+		return nil
+	}
+	perm := g.FindPermanent(targets[0])
+	if perm == nil {
+		return nil
+	}
+	// Register as a continuous effect so the color change persists
+	ce := &colorOverrideContinuous{
+		color:    e.color,
+		targetID: perm.ID(),
+	}
+	ce.sourceID = sourceID
+	g.Effects.Add(ce)
+	return nil
+}
+
+func (e *changeColorEffect) Text() string {
+	return fmt.Sprintf("Target permanent becomes %s", e.color)
+}
+
+// copySpellOnStackEffect copies the top spell on the stack. Used by Fork.
+type copySpellOnStackEffect struct{}
+
+// CopySpellOnStack creates an effect that copies the target spell on the stack.
+func CopySpellOnStack() Effect {
+	return &copySpellOnStackEffect{}
+}
+
+func (e *copySpellOnStackEffect) Apply(g *Game, _, ctrl uuid.UUID, targets []uuid.UUID) error {
+	if len(targets) == 0 {
+		return nil
+	}
+	// Find the target spell on the stack
+	original := g.Stack.FindBySourceID(targets[0])
+	if original == nil {
+		return nil
+	}
+	// Create a copy of the stack object
+	cp := &StackObject{
+		ID:         uuid.New(),
+		Card:       original.Card,
+		Controller: ctrl,
+		SourceID:   original.SourceID,
+		Effects:    make([]Effect, len(original.Effects)),
+		Targets:    make([]uuid.UUID, len(original.Targets)),
+		IsAbility:  original.IsAbility,
+		XValue:     original.XValue,
+	}
+	for i, eff := range original.Effects {
+		cp.Effects[i] = eff
+	}
+	for i, t := range original.Targets {
+		cp.Targets[i] = t
+	}
+	g.Stack.Push(cp)
+	return nil
+}
+
+func (e *copySpellOnStackEffect) Text() string {
+	return "copy target instant or sorcery spell"
+}

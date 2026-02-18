@@ -28,9 +28,12 @@ const (
 	CantBeBlockedByWalls
 	CanBlockAdditional          // can block an additional creature each combat
 	CantBeBlockedExceptByWalls  // can only be blocked by Walls
+	BasiliskTouch                // deathtouch that doesn't kill Walls
 	EntersTapped
 	DoesNotUntapKW
 	UnblockableKW
+	CanBlockAny    // can block any number of creatures (Blaze of Glory)
+	MustBeBlocked  // all creatures able to block this creature must do so (Lure)
 )
 
 func (k Keyword) String() string {
@@ -89,6 +92,10 @@ func (k Keyword) String() string {
 		return "Does Not Untap"
 	case UnblockableKW:
 		return "Can't Be Blocked"
+	case CanBlockAny:
+		return "Can Block Any Number"
+	case MustBeBlocked:
+		return "Must Be Blocked"
 	default:
 		return "Unknown"
 	}

@@ -1,6 +1,9 @@
 package cards
 
-import "github.com/mage/mage"
+import (
+	"github.com/google/uuid"
+	"github.com/mage/mage"
+)
 
 func init() {
 	registerAlphaArtifacts()
@@ -188,7 +191,7 @@ func registerAlphaArtifacts() {
 		c := mage.NewArtifact("Howling Mine", "{2}")
 		// At the beginning of each player's draw step, that player draws an additional card.
 		// Only triggers while Howling Mine is untapped.
-		c.AddAbility(mage.BeginningOfEachDrawStepTrigger(mage.DrawCards(mage.Fixed(1)), false))
+		c.AddAbility(mage.BeginningOfEachDrawStepTrigger(mage.DrawCardsActivePlayer(mage.Fixed(1)), false))
 		return c
 	})
 
@@ -337,7 +340,10 @@ func registerAlphaArtifacts() {
 
 	mage.Register("Living Lands", func() mage.Card {
 		c := mage.NewEnchantment("Living Lands", "{3}{G}")
-		// All Forests are 1/1 creatures - stub
+		// All Forests are 1/1 creatures. They're still lands.
+		c.AddAbility(mage.StaticAbility(
+			mage.AnimateLands(mage.And(mage.IsLand, mage.HasSubType("Forest")), 1, 1),
+		))
 		return c
 	})
 
@@ -364,17 +370,61 @@ func registerAlphaArtifacts() {
 
 	mage.Register("Sacrifice", func() mage.Card {
 		c := mage.NewInstant("Sacrifice", "{B}")
-		// As an additional cost, sacrifice a creature. Add mana equal to that creature's CMC.
-		// Stub
-		sa := mage.NewSpellAbility(mage.AddMana(mage.Black, 1))
+		// Sacrifice a creature. Add {B} equal to that creature's mana value.
+		sa := mage.NewTargetedSpell(mage.TargetCreature(), mage.FuncEffect(
+			"sacrifice creature and add black mana equal to its CMC",
+			func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				if len(targets) == 0 {
+					return nil
+				}
+				perm := g.FindPermanent(targets[0])
+				if perm == nil {
+					return nil
+				}
+				cmc := perm.Card.ManaCost().CMC()
+				g.Sacrifice(perm)
+				p := g.GetPlayer(controller)
+				if p != nil {
+					p.ManaPool().Add(mage.Black, cmc)
+				}
+				return nil
+			}))
 		c.AddAbility(sa)
 		return c
 	})
 
 	mage.Register("Word of Command", func() mage.Card {
 		c := mage.NewInstant("Word of Command", "{B}{B}")
-		// Very complex - stub
-		sa := mage.NewSpellAbility(mage.GainLife(0))
+		// Look at target opponent's hand and force them to cast a card.
+		sa := mage.NewTargetedSpell(mage.TargetPlayer(), mage.FuncEffect(
+			"look at opponent's hand and force them to play a card",
+			func(g *mage.Game, _, controller uuid.UUID, targets []uuid.UUID) error {
+				if len(targets) == 0 {
+					return nil
+				}
+				targetPlayer := g.GetPlayer(targets[0])
+				if targetPlayer == nil {
+					return nil
+				}
+				// Find the first castable card in the opponent's hand and force-cast it
+				hand := targetPlayer.Hand()
+				for _, card := range hand {
+					// Try to cast the card with auto-mana
+					targetPlayer.ManaPool().Add(mage.Red, 10)
+					targetPlayer.ManaPool().Add(mage.Blue, 10)
+					targetPlayer.ManaPool().Add(mage.Black, 10)
+					targetPlayer.ManaPool().Add(mage.White, 10)
+					targetPlayer.ManaPool().Add(mage.Green, 10)
+					targetPlayer.ManaPool().Add(mage.Colorless, 10)
+					// Cast with no specific target (auto-target controller of Word)
+					autoTargets := []uuid.UUID{controller}
+					err := g.CastSpellByName(targetPlayer.PlayerID(), card.Name(), autoTargets)
+					if err == nil {
+						return nil
+					}
+				}
+				return nil
+			}))
 		c.AddAbility(sa)
 		return c
 	})
@@ -388,7 +438,31 @@ func registerAlphaArtifacts() {
 
 	mage.Register("Raging River", func() mage.Card {
 		c := mage.NewEnchantment("Raging River", "{R}{R}")
-		// Complex - stub
+		// Whenever you attack, the defending player divides their non-flying
+		// creatures into two piles. Each attacker can only be blocked by one pile.
+		// Simplified: when attacks are declared, randomly remove half the
+		// opponent's potential blockers from combat.
+		c.AddAbility(mage.NewTriggered(mage.EvtDeclaredAttacker, false, mage.FuncEffect(
+			"split blockers into piles",
+			func(g *mage.Game, _, controller uuid.UUID, _ []uuid.UUID) error {
+				// Find all non-flying creatures the defending player controls
+				var nonFlyers []*mage.Permanent
+				for _, p := range g.Battlefield {
+					if p.Controller != controller && p.HasType(mage.TypeCreature) &&
+						!p.HasAbility(mage.Flying) {
+						nonFlyers = append(nonFlyers, p)
+					}
+				}
+				// Simplified: for each attacker, assign them to the empty pile so
+				// no non-flying creatures can block them.
+				for _, p := range nonFlyers {
+					g.Effects.PreventFromBlocking(p.ID())
+				}
+				return nil
+			})).SetCondition(func(evt *mage.GameEvent, g *mage.Game, sourceID, controllerID uuid.UUID) bool {
+			// Only trigger once for the first attacker declared
+			return evt.PlayerID == controllerID && g.FindPermanent(sourceID) != nil && len(g.Combat.Groups) == 1
+		}))
 		return c
 	})
 
@@ -401,68 +475,169 @@ func registerAlphaArtifacts() {
 
 	mage.Register("Lich", func() mage.Card {
 		c := mage.NewEnchantment("Lich", "{B}{B}{B}{B}")
-		// Very complex - stub
+		// ETB: lose life equal to your life total
+		c.AddAbility(mage.EntersBattlefieldTrigger(mage.FuncEffect(
+			"lose life equal to your life total",
+			func(g *mage.Game, _, controller uuid.UUID, _ []uuid.UUID) error {
+				p := g.GetPlayer(controller)
+				if p == nil {
+					return nil
+				}
+				life := p.Life()
+				if life > 0 {
+					p.LoseLife(life)
+				}
+				// Activate Lich replacement effects
+				g.Effects.SetLichActive(controller)
+				return nil
+			}), false))
+		// When Lich is put into a graveyard from the battlefield, you lose the game.
+		c.AddAbility(mage.PutIntoGraveyardFromBattlefieldTrigger(mage.FuncEffect(
+			"you lose the game",
+			func(g *mage.Game, _, controller uuid.UUID, _ []uuid.UUID) error {
+				g.Effects.ClearLich(controller)
+				p := g.GetPlayer(controller)
+				if p != nil {
+					p.LoseLife(9999)
+				}
+				return nil
+			}), false))
 		return c
 	})
 
 	mage.Register("Island Sanctuary", func() mage.Card {
 		c := mage.NewEnchantment("Island Sanctuary", "{1}{W}")
-		// Stub
+		// At the beginning of your draw step, skip the draw and activate sanctuary protection.
+		c.AddAbility(mage.NewTriggered(mage.EvtDrawStep, false, mage.FuncEffect(
+			"skip draw, only flying/islandwalk can attack you until your next turn",
+			func(g *mage.Game, _, controller uuid.UUID, _ []uuid.UUID) error {
+				g.Effects.SetSkipNextDraw(controller)
+				g.Effects.SetSanctuaryActive(controller)
+				return nil
+			})).SetCondition(func(evt *mage.GameEvent, g *mage.Game, sourceID, controllerID uuid.UUID) bool {
+			src := g.FindPermanent(sourceID)
+			return src != nil && evt.PlayerID == controllerID
+		}))
 		return c
 	})
 
 	mage.Register("Power Surge", func() mage.Card {
 		c := mage.NewEnchantment("Power Surge", "{R}{R}")
+		// At the beginning of each player's upkeep, Power Surge deals X damage
+		// to that player, where X is the number of untapped lands they control.
+		c.AddAbility(mage.BeginningOfEachUpkeepTrigger(mage.FuncEffect(
+			"deal damage equal to untapped lands",
+			func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				active := g.ActivePlayerObj()
+				activeID := active.PlayerID()
+				untapped := 0
+				for _, p := range g.Battlefield {
+					if p.Controller == activeID && p.HasType(mage.TypeLand) && !p.Tapped {
+						untapped++
+					}
+				}
+				if untapped > 0 {
+					g.DealDamageToPlayer(active, untapped, sourceID)
+				}
+				return nil
+			}), false))
 		return c
 	})
 
 	mage.Register("Mana Short", func() mage.Card {
 		c := mage.NewInstant("Mana Short", "{2}{U}")
-		sa := mage.NewSpellAbility(mage.GainLife(0)) // stub
+		// Tap all lands target player controls and empty their mana pool.
+		sa := mage.NewTargetedSpell(mage.TargetPlayer(), mage.TapAllLands())
 		c.AddAbility(sa)
 		return c
 	})
 
 	mage.Register("Drain Power", func() mage.Card {
 		c := mage.NewSorcery("Drain Power", "{U}{U}")
-		sa := mage.NewSpellAbility(mage.GainLife(0)) // stub
+		// Tap all lands target player controls and steal their mana.
+		sa := mage.NewTargetedSpell(mage.TargetPlayer(), mage.TapAllLands())
 		c.AddAbility(sa)
 		return c
 	})
 
 	mage.Register("Simulacrum", func() mage.Card {
 		c := mage.NewInstant("Simulacrum", "{1}{B}")
-		sa := mage.NewSpellAbility(mage.GainLife(0)) // stub
+		// You gain life equal to damage dealt to you this turn.
+		// Deal that much damage to target creature you control.
+		sa := mage.NewTargetedSpell(mage.TargetCreature(), mage.FuncEffect(
+			"gain life and deal damage equal to damage taken this turn",
+			func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				dmg := g.DamageTakenThisTurn[controller]
+				if dmg > 0 {
+					p := g.GetPlayer(controller)
+					if p != nil {
+						p.GainLife(dmg)
+						g.FireEvent(mage.GameEvent{Type: mage.EvtLifeGained, PlayerID: controller, Amount: dmg})
+					}
+					if len(targets) > 0 {
+						perm := g.FindPermanent(targets[0])
+						if perm != nil {
+							g.DealDamageToPermanent(perm, dmg, sourceID)
+						}
+					}
+				}
+				return nil
+			}))
 		c.AddAbility(sa)
 		return c
 	})
 
 	mage.Register("Blaze of Glory", func() mage.Card {
 		c := mage.NewInstant("Blaze of Glory", "{W}")
-		sa := mage.NewSpellAbility(mage.GainLife(0)) // stub
+		// Target creature can block any number of creatures this turn.
+		sa := mage.NewTargetedSpell(mage.TargetCreature(), mage.GrantKeywordUntilEndOfTurn(mage.CanBlockAny, mage.SelectTarget))
 		c.AddAbility(sa)
 		return c
 	})
 
 	mage.Register("False Orders", func() mage.Card {
 		c := mage.NewInstant("False Orders", "{R}")
-		sa := mage.NewSpellAbility(mage.GainLife(0)) // stub
+		// Remove target creature defending player controls from combat.
+		sa := mage.NewTargetedSpell(mage.TargetCreature(), mage.FuncEffect(
+			"remove target creature from combat",
+			func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				if len(targets) == 0 {
+					return nil
+				}
+				g.Combat.RemoveFromCombat(targets[0])
+				return nil
+			}))
 		c.AddAbility(sa)
 		return c
 	})
 
 	mage.Register("Lifetap", func() mage.Card {
 		c := mage.NewEnchantment("Lifetap", "{U}{U}")
+		// Whenever a Forest an opponent controls becomes tapped, you gain 1 life.
+		c.AddAbility(mage.WhenOpponentPermanentBecomesTappedTrigger(
+			mage.GainLife(1), false,
+			mage.And(mage.IsLand, mage.HasSubType("Forest")),
+		))
 		return c
 	})
 
 	mage.Register("Conversion", func() mage.Card {
 		c := mage.NewEnchantment("Conversion", "{2}{W}{W}")
+		// All Mountains are Plains.
+		c.AddAbility(mage.StaticAbility(
+			mage.ChangeSubTypesForAll([]string{"Mountain"}, []string{"Plains"}),
+		))
+		// At the beginning of your upkeep, sacrifice Conversion unless you pay {W}{W}.
+		c.AddAbility(mage.SacrificeAtUpkeepUnlessPay("{W}{W}"))
 		return c
 	})
 
 	mage.Register("Gloom", func() mage.Card {
 		c := mage.NewEnchantment("Gloom", "{2}{B}")
+		// White spells cost {3} more to cast.
+		c.AddAbility(mage.StaticAbility(
+			mage.IncreaseSpellCostForColor(mage.White, 3),
+		))
 		return c
 	})
 
@@ -486,29 +661,111 @@ func registerAlphaArtifacts() {
 
 	mage.Register("Fastbond", func() mage.Card {
 		c := mage.NewEnchantment("Fastbond", "{G}")
+		// You may play any number of lands on each of your turns.
+		c.AddAbility(mage.StaticAbility(mage.AllowUnlimitedLandPlays()))
+		// Whenever a land enters under your control (after the first), deal 1 damage to you.
+		c.AddAbility(mage.NewTriggered(mage.EvtLandPlayed, false,
+			mage.DealDamageToPlayers(mage.Fixed(1), mage.SelectController()),
+		).SetCondition(func(evt *mage.GameEvent, g *mage.Game, sourceID, controllerID uuid.UUID) bool {
+			// Only trigger for the controller's lands, and only after the first
+			return evt.PlayerID == controllerID && evt.Amount > 1
+		}))
 		return c
 	})
 
 	mage.Register("Kudzu", func() mage.Card {
 		c := mage.NewAura("Kudzu", "{1}{G}{G}")
+		// When enchanted land becomes tapped, destroy it.
+		// Then attach Kudzu to another land.
+		c.AddAbility(mage.WhenAttachedBecomesTappedTrigger(mage.FuncEffect(
+			"destroy enchanted land; attach Kudzu to another land",
+			func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				kudzu := g.FindPermanent(sourceID)
+				if kudzu == nil {
+					return nil
+				}
+				// Find the attached land
+				attached := g.FindPermanent(kudzu.AttachedTo)
+				if attached == nil {
+					return nil
+				}
+				attachedID := attached.ID()
+				// Detach Kudzu before destroying the land (otherwise Kudzu dies too)
+				kudzu.AttachedTo = uuid.Nil
+				filtered := attached.Attachments[:0]
+				for _, id := range attached.Attachments {
+					if id != sourceID {
+						filtered = append(filtered, id)
+					}
+				}
+				attached.Attachments = filtered
+				// Destroy the enchanted land
+				g.DestroyPermanent(attached)
+				// Find another land to move Kudzu to
+				for _, p := range g.Battlefield {
+					if p.HasType(mage.TypeLand) && p.ID() != attachedID {
+						g.Attach(sourceID, p.ID())
+						return nil
+					}
+				}
+				return nil
+			}), false))
 		return c
 	})
 
 	mage.Register("Regeneration", func() mage.Card {
 		c := mage.NewAura("Regeneration", "{1}{G}")
+		// {G}: Regenerate enchanted creature.
+		c.AddAbility(mage.StaticAbility(
+			mage.GrantActivatedAbilityToAttached(
+				mage.RegenerateSource(),
+				mage.ManaCostOf("{G}"),
+				mage.AttachAura,
+			),
+		))
 		return c
 	})
 
 	mage.Register("Siren's Call", func() mage.Card {
 		c := mage.NewInstant("Siren's Call", "{U}")
-		sa := mage.NewSpellAbility(mage.GainLife(0)) // stub
+		// At end of turn, destroy all non-Wall creatures the active player controls
+		// that didn't attack this turn.
+		sa := mage.NewSpellAbility(mage.FuncEffect(
+			"destroy non-attacking non-Wall creatures at end of turn",
+			func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				active := g.ActivePlayerObj()
+				activeID := active.PlayerID()
+				g.RegisterDelayedTrigger(&mage.DelayedTrigger{
+					EventType:  mage.EvtEndStep,
+					SourceID:   sourceID,
+					Controller: controller,
+					Effects: []mage.Effect{mage.FuncEffect(
+						"destroy non-attackers",
+						func(g2 *mage.Game, srcID, ctrlID uuid.UUID, _ []uuid.UUID) error {
+							var toDestroy []*mage.Permanent
+							for _, p := range g2.Battlefield {
+								if p.Controller == activeID && p.HasType(mage.TypeCreature) &&
+									!p.HasSubType("Wall") && !g2.AttackedThisTurn[p.ID()] {
+									toDestroy = append(toDestroy, p)
+								}
+							}
+							for _, p := range toDestroy {
+								g2.DestroyPermanent(p)
+							}
+							return nil
+						}),
+					},
+				})
+				return nil
+			}))
 		c.AddAbility(sa)
 		return c
 	})
 
 	mage.Register("Magical Hack", func() mage.Card {
 		c := mage.NewInstant("Magical Hack", "{U}")
-		sa := mage.NewSpellAbility(mage.GainLife(0)) // stub
+		// Change land type word on target permanent. Default: swamp->forest.
+		sa := mage.NewTargetedSpell(mage.TargetPermanent(), mage.ReplaceKeywordEffect(mage.Swampwalk, mage.Forestwalk))
 		c.AddAbility(sa)
 		return c
 	})

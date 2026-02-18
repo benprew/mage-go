@@ -1,6 +1,9 @@
 package cards
 
-import "github.com/mage/mage"
+import (
+	"github.com/google/uuid"
+	"github.com/mage/mage"
+)
 
 func init() {
 	registerAlphaCreatures()
@@ -454,9 +457,10 @@ func registerAlphaCreatures() {
 
 	mage.Register("Thicket Basilisk", func() mage.Card {
 		c := mage.NewCreature("Thicket Basilisk", "{3}{G}{G}", 2, 4, "Basilisk")
-		// Whenever Thicket Basilisk deals damage to a creature, destroy that creature at end of combat
-		// Simplified: has deathtouch-like behavior
-		c.AddAbility(mage.HasKeyword(mage.Deathtouch))
+		// Whenever Thicket Basilisk blocks or becomes blocked by a non-Wall creature,
+		// destroy that creature at end of combat.
+		// Implemented as BasiliskTouch: deathtouch that doesn't kill Walls.
+		c.AddAbility(mage.HasKeyword(mage.BasiliskTouch))
 		return c
 	})
 
@@ -719,6 +723,38 @@ func registerAlphaCreatures() {
 
 	mage.Register("Vesuvan Doppelganger", func() mage.Card {
 		c := mage.NewCreature("Vesuvan Doppelganger", "{3}{U}{U}", 0, 0, "Shapeshifter")
+		// As Vesuvan Doppelganger enters, copy target creature's P/T and keywords
+		c.AddAbility(mage.CopyCreatureOnETB())
+		// At the beginning of your upkeep, you may have this become a copy of another creature
+		c.AddAbility(mage.BeginningOfUpkeepTrigger(mage.FuncEffect(
+			"become a copy of target creature",
+			func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				perm := g.FindPermanent(sourceID)
+				if perm == nil {
+					return nil
+				}
+				currentName := g.Effects.CopyEffectCurrentName(perm.ID())
+				// Find a creature to copy that is different from the current copy
+				var best *mage.Permanent
+				for _, p := range g.Battlefield {
+					if p.ID() == perm.ID() {
+						continue
+					}
+					if !p.HasType(mage.TypeCreature) {
+						continue
+					}
+					if p.Name() == currentName {
+						continue
+					}
+					best = p
+					break
+				}
+				if best != nil {
+					g.Effects.UpdateCopyEffect(perm.ID(), best)
+				}
+				return nil
+			},
+		), false))
 		return c
 	})
 

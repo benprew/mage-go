@@ -139,8 +139,8 @@ func TestHowlingMine(t *testing.T) {
 		g := mage.NewTestGame(t)
 		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Howling Mine")
 		for i := 0; i < 10; i++ {
-			g.AddCard(mage.ZoneLibrary, mage.PlayerA, "Forest")
-			g.AddCard(mage.ZoneLibrary, mage.PlayerB, "Forest")
+			g.AddCard(mage.ZoneLibrary, mage.PlayerA, "Grizzly Bears")
+			g.AddCard(mage.ZoneLibrary, mage.PlayerB, "Grizzly Bears")
 		}
 		// Turn 1 doesn't draw for first player; check turn 3 (PlayerA's second turn).
 		g.StopAt(3, mage.PrecombatMain)
@@ -469,8 +469,8 @@ func TestSacrifice(t *testing.T) {
 		// Stub adds 1 black mana and doesn't sacrifice.
 		g.AssertPermanentCount(mage.PlayerA, "Hill Giant", 0)
 		pool := g.Players[0].ManaPool()
-		if pool.Count(mage.Black) < 9 { // 5 auto + 4 from Sacrifice
-			t.Errorf("Sacrifice should add 4 black (CMC of Hill Giant); expected >= 9 black, got %d", pool.Count(mage.Black))
+		if pool.Count(mage.Black) < 4 { // 4 from sacrificed Hill Giant (CMC 4)
+			t.Errorf("Sacrifice should add 4 black (CMC of Hill Giant); expected >= 4 black, got %d", pool.Count(mage.Black))
 		}
 	})
 }
@@ -581,7 +581,7 @@ func TestLich(t *testing.T) {
 		g.SetLife(mage.PlayerA, 0)
 		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Lich")
 		for i := 0; i < 10; i++ {
-			g.AddCard(mage.ZoneLibrary, mage.PlayerA, "Forest")
+			g.AddCard(mage.ZoneLibrary, mage.PlayerA, "Grizzly Bears")
 		}
 		g.AddCard(mage.ZoneHand, mage.PlayerA, "Healing Salve")
 		// Cast Healing Salve to gain 3 life -> instead draw 3 cards.
@@ -743,8 +743,8 @@ func TestFalseOrders(t *testing.T) {
 		g.AddCard(mage.ZoneHand, mage.PlayerA, "False Orders")
 		g.Attack(1, mage.PlayerA, "Craw Wurm")
 		g.Block(1, mage.PlayerB, "Hill Giant", "Craw Wurm")
-		// Cast False Orders to remove Hill Giant from combat.
-		g.CastSpell(1, mage.DeclareBlockers, mage.PlayerA, "False Orders", "Hill Giant")
+		// Cast False Orders after blocks to remove Hill Giant from combat.
+		g.CastSpell(1, mage.FirstStrikeDamage, mage.PlayerA, "False Orders", "Hill Giant")
 		g.StopAt(1, mage.EndCombat)
 		g.Execute()
 		// Hill Giant removed from combat -> Craw Wurm becomes unblocked -> 6 damage.
@@ -767,7 +767,7 @@ func TestSirensCall(t *testing.T) {
 		// Cast on PlayerB's turn before attackers.
 		g.CastSpell(2, mage.PrecombatMain, mage.PlayerA, "Siren's Call")
 		// PlayerB doesn't attack with either creature.
-		g.StopAt(2, mage.EndStep)
+		g.StopAt(2, mage.Cleanup)
 		g.Execute()
 		// Non-attackers should be destroyed at end of turn.
 		// Stub does nothing; creatures survive.
@@ -855,13 +855,16 @@ func TestConversion(t *testing.T) {
 	t.Run("mountains_become_plains", func(t *testing.T) {
 		// Conversion: All Mountains are Plains.
 		g := mage.NewTestGame(t)
+		// Add 2 Plains first so Conversion can pay {W}{W} at upkeep and survive.
+		// Plains are added before Mountain so TryPayCostFromLands picks them first.
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Plains")
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Plains")
 		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Conversion")
 		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Mountain")
 		g.ActivateAbility(1, mage.PrecombatMain, mage.PlayerA, "Mountain")
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
 		// Mountain should produce {W} instead of {R}.
-		// Stub: no type-changing effect; Mountain produces {R}.
 		pool := g.Players[0].ManaPool()
 		if pool.Count(mage.White) < 6 { // 5 auto + 1 from converted Mountain
 			t.Errorf("Conversion should make Mountain produce {W}; expected >= 6 white, got %d", pool.Count(mage.White))

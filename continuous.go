@@ -22,6 +22,7 @@ const (
 	WhileOnBattlefield Duration = iota
 	EndOfTurn
 	UntilYourNextTurn
+	Indefinite // persists until target leaves battlefield (e.g. Sleight of Mind)
 )
 
 // AttachType distinguishes aura vs equipment attachment.
@@ -62,8 +63,17 @@ type EffectManager struct {
 	regenerationShields map[uuid.UUID]int
 	preventionShields   map[uuid.UUID]int
 	landUntapLimit      int                    // -1 = no limit; >= 0 = max lands that may untap per turn
-	forcefieldShields   map[uuid.UUID]bool     // players with Forcefield active this turn
-	subtypeOverrides    map[uuid.UUID][]string // permanent ID -> replacement subtypes
+	forcefieldShields    map[uuid.UUID]bool     // players with Forcefield active this turn
+	subtypeOverrides     map[uuid.UUID][]string // permanent ID -> replacement subtypes
+	reverseDamageShields map[uuid.UUID]bool     // players with Reverse Damage active this turn
+	channelActive        map[uuid.UUID]bool     // players with Channel active this turn
+	colorPrevention      map[uuid.UUID][]Color  // player -> colors that prevent next damage source
+	spellCostIncrease    map[Color]int           // color -> additional generic cost for spells of that color
+	unlimitedLandPlays   bool                    // true if a player can play unlimited lands (Fastbond)
+	sanctuaryActive      map[uuid.UUID]bool      // player -> if true, only flying/islandwalk can attack them
+	lichActive           map[uuid.UUID]bool      // player -> if true, Lich replacement effects apply
+	skipNextDraw         map[uuid.UUID]bool      // player -> if true, skip normal draw in draw step
+	preventBlock         map[uuid.UUID]bool      // permanent -> can't block this turn (Raging River)
 }
 
 func NewEffectManager() *EffectManager {
@@ -76,8 +86,16 @@ func NewEffectManager() *EffectManager {
 		regenerationShields: make(map[uuid.UUID]int),
 		preventionShields:   make(map[uuid.UUID]int),
 		landUntapLimit:      -1,
-		forcefieldShields:   make(map[uuid.UUID]bool),
-		subtypeOverrides:    make(map[uuid.UUID][]string),
+		forcefieldShields:    make(map[uuid.UUID]bool),
+		subtypeOverrides:     make(map[uuid.UUID][]string),
+		reverseDamageShields: make(map[uuid.UUID]bool),
+		channelActive:        make(map[uuid.UUID]bool),
+		colorPrevention:      make(map[uuid.UUID][]Color),
+		spellCostIncrease:    make(map[Color]int),
+		sanctuaryActive:      make(map[uuid.UUID]bool),
+		lichActive:           make(map[uuid.UUID]bool),
+		skipNextDraw:         make(map[uuid.UUID]bool),
+		preventBlock:         make(map[uuid.UUID]bool),
 	}
 }
 
@@ -109,6 +127,70 @@ func (em *EffectManager) ClearForcefieldShields() {
 // LandUntapLimit returns the current land untap limit. -1 means no limit.
 func (em *EffectManager) LandUntapLimit() int {
 	return em.landUntapLimit
+}
+
+// HasUnlimitedLandPlays returns true if a player can play unlimited lands this turn.
+func (em *EffectManager) HasUnlimitedLandPlays() bool {
+	return em.unlimitedLandPlays
+}
+
+// SetSanctuaryActive marks a player as protected by Island Sanctuary.
+func (em *EffectManager) SetSanctuaryActive(playerID uuid.UUID) {
+	em.sanctuaryActive[playerID] = true
+}
+
+// IsSanctuaryActive returns true if the player is protected by Island Sanctuary.
+func (em *EffectManager) IsSanctuaryActive(playerID uuid.UUID) bool {
+	return em.sanctuaryActive[playerID]
+}
+
+// ClearSanctuary clears Island Sanctuary protection for a player.
+func (em *EffectManager) ClearSanctuary(playerID uuid.UUID) {
+	delete(em.sanctuaryActive, playerID)
+}
+
+// SetLichActive marks a player as having Lich replacement effects.
+func (em *EffectManager) SetLichActive(playerID uuid.UUID) {
+	em.lichActive[playerID] = true
+}
+
+// IsLichActive returns true if the player has Lich replacement effects.
+func (em *EffectManager) IsLichActive(playerID uuid.UUID) bool {
+	return em.lichActive[playerID]
+}
+
+// ClearLich clears Lich replacement effects for a player.
+func (em *EffectManager) ClearLich(playerID uuid.UUID) {
+	delete(em.lichActive, playerID)
+}
+
+// SetSkipNextDraw marks a player to skip their next draw step draw.
+func (em *EffectManager) SetSkipNextDraw(playerID uuid.UUID) {
+	em.skipNextDraw[playerID] = true
+}
+
+// ShouldSkipDraw returns true and clears the flag if the player should skip their draw.
+func (em *EffectManager) ShouldSkipDraw(playerID uuid.UUID) bool {
+	if em.skipNextDraw[playerID] {
+		delete(em.skipNextDraw, playerID)
+		return true
+	}
+	return false
+}
+
+// PreventFromBlocking prevents a creature from blocking this turn (Raging River).
+func (em *EffectManager) PreventFromBlocking(permID uuid.UUID) {
+	em.preventBlock[permID] = true
+}
+
+// CanBlock returns true if the creature is not prevented from blocking.
+func (em *EffectManager) CanBlockCheck(permID uuid.UUID) bool {
+	return !em.preventBlock[permID]
+}
+
+// ClearBlockPrevention clears all block prevention.
+func (em *EffectManager) ClearBlockPrevention() {
+	em.preventBlock = make(map[uuid.UUID]bool)
 }
 
 // AddRegenerationShield increments the regeneration shield count for a permanent.
@@ -157,6 +239,61 @@ func (em *EffectManager) ClearPreventionShields() {
 	em.preventionShields = make(map[uuid.UUID]int)
 }
 
+// AddReverseDamageShield marks a player as having Reverse Damage active.
+func (em *EffectManager) AddReverseDamageShield(playerID uuid.UUID) {
+	em.reverseDamageShields[playerID] = true
+}
+
+// HasReverseDamageShield returns true if the player has Reverse Damage active.
+func (em *EffectManager) HasReverseDamageShield(playerID uuid.UUID) bool {
+	return em.reverseDamageShields[playerID]
+}
+
+// ClearReverseDamageShield clears Reverse Damage shield for a player.
+func (em *EffectManager) ClearReverseDamageShield(playerID uuid.UUID) {
+	delete(em.reverseDamageShields, playerID)
+}
+
+// SetChannelActive marks a player as having Channel active this turn.
+func (em *EffectManager) SetChannelActive(playerID uuid.UUID) {
+	em.channelActive[playerID] = true
+}
+
+// IsChannelActive returns true if the player has Channel active.
+func (em *EffectManager) IsChannelActive(playerID uuid.UUID) bool {
+	return em.channelActive[playerID]
+}
+
+// ClearChannelActive clears Channel state (called at end of turn).
+func (em *EffectManager) ClearChannelActive() {
+	em.channelActive = make(map[uuid.UUID]bool)
+}
+
+// AddColorPrevention adds a color prevention shield (prevents all damage from one source of that color).
+func (em *EffectManager) AddColorPrevention(playerID uuid.UUID, color Color) {
+	em.colorPrevention[playerID] = append(em.colorPrevention[playerID], color)
+}
+
+// CheckColorPrevention returns true and consumes a shield if the player has
+// color prevention matching the source's color.
+func (em *EffectManager) CheckColorPrevention(playerID uuid.UUID, sourceCard Card) bool {
+	colors := em.colorPrevention[playerID]
+	if len(colors) == 0 || sourceCard == nil {
+		return false
+	}
+	sourceColors := sourceCard.ManaCost().Colors()
+	for i, shield := range colors {
+		for _, sc := range sourceColors {
+			if sc == shield {
+				// Consume this shield
+				em.colorPrevention[playerID] = append(colors[:i], colors[i+1:]...)
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func (em *EffectManager) Add(e ContinuousEffect) {
 	em.effects = append(em.effects, e)
 }
@@ -191,6 +328,8 @@ func (em *EffectManager) Apply(g *Game) {
 	em.preventAttack = make(map[uuid.UUID]bool)
 	em.subtypeOverrides = make(map[uuid.UUID][]string)
 	em.landUntapLimit = -1
+	em.unlimitedLandPlays = false
+	em.spellCostIncrease = make(map[Color]int)
 
 	// Reset granted runtime abilities and subtype overrides from effects
 	for _, p := range g.Battlefield {
@@ -202,20 +341,25 @@ func (em *EffectManager) Apply(g *Game) {
 		}
 		p.RuntimeAbilities = base
 		p.SubTypeOverride = nil
+		p.TypesAdded = nil
+		p.BasePTOverride = nil
+		p.ColorOverride = nil
 	}
 
 	// Remove effects whose source is no longer on the battlefield
 	// EndOfTurn effects persist until cleanup regardless of source (e.g., Giant Growth)
+	// Indefinite effects persist as long as they self-report active (e.g., Sleight of Mind)
 	active := em.effects[:0]
 	for _, e := range em.effects {
-		if e.GetDuration() == EndOfTurn || g.FindPermanent(e.SourceID()) != nil {
+		dur := e.GetDuration()
+		if dur == EndOfTurn || dur == Indefinite || g.FindPermanent(e.SourceID()) != nil {
 			active = append(active, e)
 		}
 	}
 	em.effects = active
 
-	// Apply in layer order (2, 4, 6, 7)
-	for _, layer := range []Layer{LayerControl, LayerType, LayerAbility, LayerPT} {
+	// Apply in layer order (1, 2, 4, 5, 6, 7)
+	for _, layer := range []Layer{LayerCopy, LayerControl, LayerType, LayerColor, LayerAbility, LayerPT} {
 		for _, e := range em.effects {
 			if e.GetLayer() == layer && e.IsActive(g) {
 				e.Apply(g)
@@ -345,6 +489,45 @@ func (e *grantKeywordAttachedEffect) Apply(g *Game) error {
 	g.Effects.grantedKW[target.ID()] = append(g.Effects.grantedKW[target.ID()], e.keyword)
 	// Also add to runtime abilities so HasAbility works (wrapped so it can be removed on reapply)
 	target.RuntimeAbilities = append(target.RuntimeAbilities, &grantedByEffect{HasKeyword(e.keyword)})
+	return nil
+}
+
+// GrantProtectionToAttached creates a continuous effect granting protection from
+// a color to the attached creature (e.g. Black Ward, Blue Ward).
+func GrantProtectionToAttached(color Color, at AttachType) ContinuousEffect {
+	return &grantProtectionAttachedEffect{
+		color:      color,
+		attachType: at,
+	}
+}
+
+type grantProtectionAttachedEffect struct {
+	color      Color
+	attachType AttachType
+	effectSource
+}
+
+func (e *grantProtectionAttachedEffect) GetLayer() Layer      { return LayerAbility }
+func (e *grantProtectionAttachedEffect) GetDuration() Duration { return WhileOnBattlefield }
+
+func (e *grantProtectionAttachedEffect) IsActive(g *Game) bool {
+	src := g.FindPermanent(e.sourceID)
+	if src == nil {
+		return false
+	}
+	return src.IsAttached()
+}
+
+func (e *grantProtectionAttachedEffect) Apply(g *Game) error {
+	src := g.FindPermanent(e.sourceID)
+	if src == nil || !src.IsAttached() {
+		return nil
+	}
+	target := g.FindPermanent(src.AttachedTo)
+	if target == nil {
+		return nil
+	}
+	target.RuntimeAbilities = append(target.RuntimeAbilities, ProtectionFromColor(e.color))
 	return nil
 }
 
@@ -945,6 +1128,171 @@ func (e *preventUntapForMatchingEffect) Apply(g *Game) error {
 	return nil
 }
 
+// SpellCostIncrease returns the additional generic cost for spells of the given color.
+func (em *EffectManager) SpellCostIncrease(c Color) int {
+	return em.spellCostIncrease[c]
+}
+
+// IncreaseSpellCostForColor is a continuous effect that increases the cost of
+// spells of a given color (e.g. Gloom makes white spells cost {3} more).
+func IncreaseSpellCostForColor(color Color, amount int) ContinuousEffect {
+	return &increaseSpellCostEffect{color: color, amount: amount}
+}
+
+type increaseSpellCostEffect struct {
+	color  Color
+	amount int
+	effectSource
+}
+
+func (e *increaseSpellCostEffect) GetLayer() Layer      { return LayerAbility }
+func (e *increaseSpellCostEffect) GetDuration() Duration { return WhileOnBattlefield }
+
+func (e *increaseSpellCostEffect) IsActive(g *Game) bool {
+	return g.FindPermanent(e.sourceID) != nil
+}
+
+func (e *increaseSpellCostEffect) Apply(g *Game) error {
+	g.Effects.spellCostIncrease[e.color] += e.amount
+	return nil
+}
+
+// ChangeSubTypesForAll changes subtypes of all permanents matching fromSubTypes
+// to toSubTypes (e.g. Conversion: all Mountains become Plains).
+func ChangeSubTypesForAll(fromSubTypes, toSubTypes []string) ContinuousEffect {
+	return &changeSubTypesForAllEffect{
+		fromSubTypes: fromSubTypes,
+		toSubTypes:   toSubTypes,
+	}
+}
+
+type changeSubTypesForAllEffect struct {
+	fromSubTypes []string
+	toSubTypes   []string
+	effectSource
+}
+
+func (e *changeSubTypesForAllEffect) GetLayer() Layer      { return LayerType }
+func (e *changeSubTypesForAllEffect) GetDuration() Duration { return WhileOnBattlefield }
+
+func (e *changeSubTypesForAllEffect) IsActive(g *Game) bool {
+	return g.FindPermanent(e.sourceID) != nil
+}
+
+func (e *changeSubTypesForAllEffect) Apply(g *Game) error {
+	// Map basic land subtypes to mana colors
+	colorMap := map[string]Color{
+		"Plains": White, "Island": Blue, "Swamp": Black,
+		"Mountain": Red, "Forest": Green,
+	}
+	var newColor Color
+	hasNewColor := false
+	for _, st := range e.toSubTypes {
+		if c, ok := colorMap[st]; ok {
+			newColor = c
+			hasNewColor = true
+			break
+		}
+	}
+
+	for _, p := range g.Battlefield {
+		for _, from := range e.fromSubTypes {
+			if p.HasSubType(from) {
+				p.SubTypeOverride = e.toSubTypes
+				// When a land's basic type changes, replace its mana ability
+				if hasNewColor && p.HasType(TypeLand) {
+					var filtered []Ability
+					for _, a := range p.RuntimeAbilities {
+						inner := UnwrapAbility(a)
+						if _, ok := inner.(*ManaAbility); !ok {
+							filtered = append(filtered, a)
+						}
+					}
+					p.RuntimeAbilities = filtered
+					p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{NewManaAbility(newColor)})
+				}
+				break
+			}
+		}
+	}
+	return nil
+}
+
+// keywordReplacementContinuous replaces one keyword with another on a target
+// (e.g. swampwalk -> forestwalk via Sleight of Mind / Magical Hack).
+type keywordReplacementContinuous struct {
+	from     Keyword
+	to       Keyword
+	targetID uuid.UUID
+	effectSource
+}
+
+func (e *keywordReplacementContinuous) GetLayer() Layer      { return LayerAbility }
+func (e *keywordReplacementContinuous) GetDuration() Duration { return Indefinite }
+
+func (e *keywordReplacementContinuous) IsActive(g *Game) bool {
+	return g.FindPermanent(e.targetID) != nil
+}
+
+func (e *keywordReplacementContinuous) Apply(g *Game) error {
+	perm := g.FindPermanent(e.targetID)
+	if perm == nil {
+		return nil
+	}
+	g.Effects.removedKW[e.targetID] = append(g.Effects.removedKW[e.targetID], e.from)
+	g.Effects.grantedKW[e.targetID] = append(g.Effects.grantedKW[e.targetID], e.to)
+	perm.RuntimeAbilities = append(perm.RuntimeAbilities, &grantedByEffect{HasKeyword(e.to)})
+	return nil
+}
+
+// colorOverrideContinuous permanently changes a target permanent's color (Lace cycle).
+type colorOverrideContinuous struct {
+	color    Color
+	targetID uuid.UUID
+	effectSource
+}
+
+func (e *colorOverrideContinuous) GetLayer() Layer      { return LayerColor }
+func (e *colorOverrideContinuous) GetDuration() Duration { return Indefinite }
+
+func (e *colorOverrideContinuous) IsActive(g *Game) bool {
+	return g.FindPermanent(e.targetID) != nil
+}
+
+func (e *colorOverrideContinuous) Apply(g *Game) error {
+	perm := g.FindPermanent(e.targetID)
+	if perm == nil {
+		return nil
+	}
+	colors := []Color{e.color}
+	perm.ColorOverride = &colors
+	return nil
+}
+
+// preventAllUntapsEffect prevents ALL permanents from untapping during untap steps (Stasis).
+type preventAllUntapsEffect struct {
+	effectSource
+}
+
+func PreventAllUntaps() ContinuousEffect {
+	return &preventAllUntapsEffect{}
+}
+
+func (e *preventAllUntapsEffect) GetLayer() Layer      { return LayerAbility }
+func (e *preventAllUntapsEffect) GetDuration() Duration { return WhileOnBattlefield }
+
+func (e *preventAllUntapsEffect) IsActive(g *Game) bool {
+	return g.FindPermanent(e.sourceID) != nil
+}
+
+func (e *preventAllUntapsEffect) Apply(g *Game) error {
+	for _, p := range g.Battlefield {
+		g.Effects.grantedKW[p.ID()] = append(g.Effects.grantedKW[p.ID()], DoesNotUntapKW)
+		p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{HasKeyword(DoesNotUntapKW)})
+	}
+	return nil
+}
+
 // boostSelfWhileControllingEffect boosts the source +P/+T while the controller
 // controls a permanent matching a filter.
 type boostSelfWhileControllingEffect struct {
@@ -1011,4 +1359,140 @@ func (e *limitLandUntapsEffect) Apply(g *Game) error {
 		g.Effects.landUntapLimit = e.limit
 	}
 	return nil
+}
+
+// animateLandsEffect makes matching permanents into creatures with given P/T.
+// Used by Living Lands (Forests become 1/1 creatures).
+type animateLandsEffect struct {
+	filter    PermanentFilter
+	power     int
+	toughness int
+	effectSource
+}
+
+// AnimateLands creates a continuous effect that turns matching lands into creatures.
+func AnimateLands(filter PermanentFilter, power, toughness int) ContinuousEffect {
+	return &animateLandsEffect{filter: filter, power: power, toughness: toughness}
+}
+
+func (e *animateLandsEffect) GetLayer() Layer      { return LayerType }
+func (e *animateLandsEffect) GetDuration() Duration { return WhileOnBattlefield }
+
+func (e *animateLandsEffect) IsActive(g *Game) bool {
+	return g.FindPermanent(e.sourceID) != nil
+}
+
+func (e *animateLandsEffect) Apply(g *Game) error {
+	for _, p := range g.Battlefield {
+		if e.filter(p, g) {
+			p.TypesAdded = append(p.TypesAdded, TypeCreature)
+			p.BasePTOverride = &[2]int{e.power, e.toughness}
+		}
+	}
+	return nil
+}
+
+// allowUnlimitedLandPlaysEffect lets the controller play any number of lands.
+// Used by Fastbond.
+type allowUnlimitedLandPlaysEffect struct {
+	effectSource
+}
+
+// AllowUnlimitedLandPlays creates a continuous effect that removes the land play limit.
+func AllowUnlimitedLandPlays() ContinuousEffect {
+	return &allowUnlimitedLandPlaysEffect{}
+}
+
+func (e *allowUnlimitedLandPlaysEffect) GetLayer() Layer      { return LayerAbility }
+func (e *allowUnlimitedLandPlaysEffect) GetDuration() Duration { return WhileOnBattlefield }
+
+func (e *allowUnlimitedLandPlaysEffect) IsActive(g *Game) bool {
+	return g.FindPermanent(e.sourceID) != nil
+}
+
+func (e *allowUnlimitedLandPlaysEffect) Apply(g *Game) error {
+	g.Effects.unlimitedLandPlays = true
+	return nil
+}
+
+// doppelgangerCopyEffect copies another creature's P/T and keyword abilities
+// onto the Doppelganger. Operates at LayerCopy (layer 1).
+type doppelgangerCopyEffect struct {
+	effectSource
+	doppelgangerID uuid.UUID
+	copiedName     string // name of the creature being copied
+	power          int
+	toughness      int
+	keywords       []Keyword
+}
+
+func (e *doppelgangerCopyEffect) GetLayer() Layer      { return LayerCopy }
+func (e *doppelgangerCopyEffect) GetDuration() Duration { return Indefinite }
+
+func (e *doppelgangerCopyEffect) IsActive(g *Game) bool {
+	return g.FindPermanent(e.doppelgangerID) != nil
+}
+
+func (e *doppelgangerCopyEffect) Apply(g *Game) error {
+	perm := g.FindPermanent(e.doppelgangerID)
+	if perm == nil {
+		return nil
+	}
+	perm.BasePTOverride = &[2]int{e.power, e.toughness}
+	for _, kw := range e.keywords {
+		perm.RuntimeAbilities = append(perm.RuntimeAbilities, &grantedByEffect{HasKeyword(kw)})
+	}
+	return nil
+}
+
+// AddCopyEffect creates a doppelganger copy effect from the target creature.
+func (em *EffectManager) AddCopyEffect(doppelgangerID uuid.UUID, target *Permanent) {
+	keywords := extractKeywords(target)
+	ce := &doppelgangerCopyEffect{
+		doppelgangerID: doppelgangerID,
+		copiedName:     target.Name(),
+		power:          target.Card.Power(),
+		toughness:      target.Card.Toughness(),
+		keywords:       keywords,
+	}
+	ce.sourceID = doppelgangerID
+	em.effects = append(em.effects, ce)
+}
+
+// UpdateCopyEffect updates the copy effect for a doppelganger to copy a new target.
+func (em *EffectManager) UpdateCopyEffect(doppelgangerID uuid.UUID, target *Permanent) {
+	keywords := extractKeywords(target)
+	for _, e := range em.effects {
+		if ce, ok := e.(*doppelgangerCopyEffect); ok && ce.doppelgangerID == doppelgangerID {
+			ce.copiedName = target.Name()
+			ce.power = target.Card.Power()
+			ce.toughness = target.Card.Toughness()
+			ce.keywords = keywords
+			return
+		}
+	}
+	// No existing effect found, create a new one
+	em.AddCopyEffect(doppelgangerID, target)
+}
+
+// CopyEffectCurrentName returns the name of the creature currently being copied
+// by the doppelganger, or "" if no copy effect exists.
+func (em *EffectManager) CopyEffectCurrentName(doppelgangerID uuid.UUID) string {
+	for _, e := range em.effects {
+		if ce, ok := e.(*doppelgangerCopyEffect); ok && ce.doppelgangerID == doppelgangerID {
+			return ce.copiedName
+		}
+	}
+	return ""
+}
+
+// extractKeywords returns the keyword abilities from a permanent's card.
+func extractKeywords(p *Permanent) []Keyword {
+	var keywords []Keyword
+	for _, a := range p.Card.Abilities() {
+		if ka, ok := a.(*KeywordAbility); ok {
+			keywords = append(keywords, ka.Keyword)
+		}
+	}
+	return keywords
 }

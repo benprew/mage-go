@@ -231,6 +231,21 @@ func EntersWithXCounters(ct CounterType) *EntersWithXCountersAbility {
 	}
 }
 
+// CopyCreatureOnETBAbility is a replacement effect that copies a target creature
+// when this permanent enters the battlefield (e.g., Vesuvan Doppelganger).
+type CopyCreatureOnETBAbility struct {
+	BaseAbility
+}
+
+func CopyCreatureOnETB() *CopyCreatureOnETBAbility {
+	return &CopyCreatureOnETBAbility{
+		BaseAbility: BaseAbility{
+			id:          uuid.New(),
+			abilityType: AbilityStatic,
+		},
+	}
+}
+
 // GraveyardReturnAbility allows a creature card in the graveyard to return to
 // the battlefield if enough creature cards are above it in the graveyard.
 type GraveyardReturnAbility struct {

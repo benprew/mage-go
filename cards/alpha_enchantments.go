@@ -1,6 +1,9 @@
 package cards
 
-import "github.com/mage/mage"
+import (
+	"github.com/google/uuid"
+	"github.com/mage/mage"
+)
 
 func init() {
 	registerAlphaEnchantments()
@@ -147,8 +150,10 @@ func registerAlphaEnchantments() {
 
 	mage.Register("Lure", func() mage.Card {
 		c := mage.NewAura("Lure", "{1}{G}{G}")
-		// All creatures able to block enchanted creature do so
-		// Simplified: stub
+		// All creatures able to block enchanted creature do so.
+		c.AddAbility(mage.StaticAbility(
+			mage.GrantAbilityToAttached(mage.MustBeBlocked, mage.AttachAura),
+		))
 		return c
 	})
 
@@ -212,56 +217,71 @@ func registerAlphaEnchantments() {
 
 	mage.Register("Psychic Venom", func() mage.Card {
 		c := mage.NewAura("Psychic Venom", "{1}{U}")
-		// Whenever enchanted land becomes tapped, deal 2 damage to its controller
+		// Whenever enchanted land becomes tapped, deal 2 damage to its controller.
+		c.AddAbility(mage.WhenAttachedBecomesTappedTrigger(
+			mage.DealDamageToPlayers(mage.Fixed(2), mage.SelectAttachedController()), false,
+		))
 		return c
 	})
 
 	// ===== WARD/PROTECTION ENCHANTMENTS =====
 
-	mage.Register("Circle of Protection: Blue", func() mage.Card {
-		c := mage.NewEnchantment("Circle of Protection: Blue", "{1}{W}")
-		// {1}: Prevent all damage from one blue source
-		return c
-	})
-
-	mage.Register("Circle of Protection: Green", func() mage.Card {
-		c := mage.NewEnchantment("Circle of Protection: Green", "{1}{W}")
-		return c
-	})
-
-	mage.Register("Circle of Protection: Red", func() mage.Card {
-		c := mage.NewEnchantment("Circle of Protection: Red", "{1}{W}")
-		return c
-	})
-
-	mage.Register("Circle of Protection: White", func() mage.Card {
-		c := mage.NewEnchantment("Circle of Protection: White", "{1}{W}")
-		return c
-	})
+	copColors := []struct {
+		name  string
+		color mage.Color
+	}{
+		{"Circle of Protection: Blue", mage.Blue},
+		{"Circle of Protection: Green", mage.Green},
+		{"Circle of Protection: Red", mage.Red},
+		{"Circle of Protection: White", mage.White},
+	}
+	for _, cop := range copColors {
+		name := cop.name
+		color := cop.color
+		mage.Register(name, func() mage.Card {
+			c := mage.NewEnchantment(name, "{1}{W}")
+			// {1}: Prevent all damage from one source of this color this turn.
+			ab := mage.NewActivatedAbility(
+				mage.FuncEffect(
+					"prevent all damage from one source of the chosen color",
+					func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						g.Effects.AddColorPrevention(controller, color)
+						return nil
+					}),
+				mage.GenericCost(1),
+			)
+			c.AddAbility(ab)
+			return c
+		})
+	}
 
 	mage.Register("Black Ward", func() mage.Card {
 		c := mage.NewAura("Black Ward", "{W}")
-		// Enchanted creature has protection from black
+		c.AddAbility(mage.StaticAbility(mage.GrantProtectionToAttached(mage.Black, mage.AttachAura)))
 		return c
 	})
 
 	mage.Register("Blue Ward", func() mage.Card {
 		c := mage.NewAura("Blue Ward", "{W}")
+		c.AddAbility(mage.StaticAbility(mage.GrantProtectionToAttached(mage.Blue, mage.AttachAura)))
 		return c
 	})
 
 	mage.Register("Green Ward", func() mage.Card {
 		c := mage.NewAura("Green Ward", "{W}")
+		c.AddAbility(mage.StaticAbility(mage.GrantProtectionToAttached(mage.Green, mage.AttachAura)))
 		return c
 	})
 
 	mage.Register("Red Ward", func() mage.Card {
 		c := mage.NewAura("Red Ward", "{W}")
+		c.AddAbility(mage.StaticAbility(mage.GrantProtectionToAttached(mage.Red, mage.AttachAura)))
 		return c
 	})
 
 	mage.Register("White Ward", func() mage.Card {
 		c := mage.NewAura("White Ward", "{W}")
+		c.AddAbility(mage.StaticAbility(mage.GrantProtectionToAttached(mage.White, mage.AttachAura)))
 		return c
 	})
 
@@ -364,38 +384,27 @@ func registerAlphaEnchantments() {
 
 	// ===== LACE CYCLE =====
 
-	mage.Register("Chaoslace", func() mage.Card {
-		c := mage.NewInstant("Chaoslace", "{R}")
-		sa := mage.NewSpellAbility(mage.GainLife(0)) // stub
-		c.AddAbility(sa)
-		return c
-	})
-
-	mage.Register("Deathlace", func() mage.Card {
-		c := mage.NewInstant("Deathlace", "{B}")
-		sa := mage.NewSpellAbility(mage.GainLife(0)) // stub
-		c.AddAbility(sa)
-		return c
-	})
-
-	mage.Register("Lifelace", func() mage.Card {
-		c := mage.NewInstant("Lifelace", "{G}")
-		sa := mage.NewSpellAbility(mage.GainLife(0)) // stub
-		c.AddAbility(sa)
-		return c
-	})
-
-	mage.Register("Purelace", func() mage.Card {
-		c := mage.NewInstant("Purelace", "{W}")
-		sa := mage.NewSpellAbility(mage.GainLife(0)) // stub
-		c.AddAbility(sa)
-		return c
-	})
-
-	mage.Register("Thoughtlace", func() mage.Card {
-		c := mage.NewInstant("Thoughtlace", "{U}")
-		sa := mage.NewSpellAbility(mage.GainLife(0)) // stub
-		c.AddAbility(sa)
-		return c
-	})
+	// Lace cycle: target permanent becomes the specified color.
+	laces := []struct {
+		name  string
+		cost  string
+		color mage.Color
+	}{
+		{"Chaoslace", "{R}", mage.Red},
+		{"Deathlace", "{B}", mage.Black},
+		{"Lifelace", "{G}", mage.Green},
+		{"Purelace", "{W}", mage.White},
+		{"Thoughtlace", "{U}", mage.Blue},
+	}
+	for _, lace := range laces {
+		name := lace.name
+		color := lace.color
+		cost := lace.cost
+		mage.Register(name, func() mage.Card {
+			c := mage.NewInstant(name, cost)
+			sa := mage.NewTargetedSpell(mage.TargetPermanent(), mage.ChangeColorEffect(color))
+			c.AddAbility(sa)
+			return c
+		})
+	}
 }
