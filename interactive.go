@@ -29,7 +29,7 @@ type PriorityAction struct {
 	AbilityIndex  int
 	XValue        int
 	Attackers     []uuid.UUID
-	Blockers      map[uuid.UUID]uuid.UUID // blocker -> attacker
+	Blockers      []BlockAssignment // blocker -> attacker pairs
 }
 
 // PromptType tells the TUI what kind of input is needed.
@@ -235,7 +235,7 @@ func buildRulesText(c Card) string {
 			for _, eff := range ab.Effects() {
 				parts = append(parts, eff.Text())
 			}
-		case ActivatedAbilityI:
+		case ActivatedAbility:
 			var costParts []string
 			for _, cost := range ab.Costs() {
 				costParts = append(costParts, cost.Text())
@@ -910,11 +910,11 @@ func blockerOptions(g *Game, eligible []*Permanent) []ActionOption {
 	return options
 }
 
-func performBlock(g *Game, blockers map[uuid.UUID]uuid.UUID, addLog func(string)) {
+func performBlock(g *Game, blockers []BlockAssignment, addLog func(string)) {
 	nonActive := g.NonActivePlayerObj()
-	for blockerID, attackerID := range blockers {
-		blocker := g.FindPermanent(blockerID)
-		attacker := g.FindPermanent(attackerID)
+	for _, ba := range blockers {
+		blocker := g.FindPermanent(ba.BlockerID)
+		attacker := g.FindPermanent(ba.AttackerID)
 		if blocker == nil || attacker == nil {
 			continue
 		}
@@ -924,13 +924,13 @@ func performBlock(g *Game, blockers map[uuid.UUID]uuid.UUID, addLog func(string)
 		if HasLandwalkEvasion(attacker, nonActive.PlayerID(), g) {
 			continue
 		}
-		g.Combat.AddBlocker(blockerID, attackerID)
+		g.Combat.AddBlocker(ba.BlockerID, ba.AttackerID)
 		addLog(fmt.Sprintf("%s blocks %s with %s",
 			nonActive.Name(), attacker.Name(), blocker.Name()))
 		g.FireEvent(GameEvent{
 			Type:     EvtDeclaredBlocker,
-			SourceID: blockerID,
-			TargetID: attackerID,
+			SourceID: ba.BlockerID,
+			TargetID: ba.AttackerID,
 			PlayerID: nonActive.PlayerID(),
 		})
 	}

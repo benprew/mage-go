@@ -30,7 +30,7 @@ type Model struct {
 	assigningBlocker    bool
 	blockerID           uuid.UUID
 	blockerAssignCursor int
-	blockerMap          map[uuid.UUID]uuid.UUID // accumulated blocker->attacker
+	blockerAssignments  []mage.BlockAssignment // accumulated blocker->attacker pairs
 
 	// For target selection
 	selectingTarget    bool
@@ -75,7 +75,7 @@ func NewModel(toGame chan<- mage.PriorityAction, fromGame <-chan mage.GameMsg) M
 		toGame:     toGame,
 		fromGame:   fromGame,
 		selected:   make(map[int]bool),
-		blockerMap: make(map[uuid.UUID]uuid.UUID),
+		blockerAssignments: nil,
 	}
 }
 
@@ -218,9 +218,9 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 				// "Done" option — submit all accumulated blockers
 				m.toGame <- mage.PriorityAction{
 					Type:     mage.ActionSelectBlockers,
-					Blockers: m.blockerMap,
+					Blockers: m.blockerAssignments,
 				}
-				m.blockerMap = make(map[uuid.UUID]uuid.UUID)
+				m.blockerAssignments = nil
 				return m, waitForGameState(m.fromGame)
 			}
 			// Start assigning this blocker to an attacker
@@ -332,13 +332,16 @@ func (m Model) handleBlockerAssignKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.assigningBlocker = false
 			m.toGame <- mage.PriorityAction{
 				Type:     mage.ActionSelectBlockers,
-				Blockers: m.blockerMap,
+				Blockers: m.blockerAssignments,
 			}
-			m.blockerMap = make(map[uuid.UUID]uuid.UUID)
+			m.blockerAssignments = nil
 			return m, waitForGameState(m.fromGame)
 		}
 		if m.blockerAssignCursor < len(attackers) {
-			m.blockerMap[m.blockerID] = attackers[m.blockerAssignCursor].ID
+			m.blockerAssignments = append(m.blockerAssignments, mage.BlockAssignment{
+				BlockerID:  m.blockerID,
+				AttackerID: attackers[m.blockerAssignCursor].ID,
+			})
 			m.assigningBlocker = false
 		}
 	}
