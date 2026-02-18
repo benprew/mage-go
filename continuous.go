@@ -866,7 +866,8 @@ func (e *preventUntapForMatchingEffect) IsActive(g *Game) bool {
 func (e *preventUntapForMatchingEffect) Apply(g *Game) error {
 	for _, p := range g.Battlefield {
 		if e.filter(p, g) {
-			p.DoesNotUntap = true
+			g.Effects.grantedKW[p.ID()] = append(g.Effects.grantedKW[p.ID()], DoesNotUntapKW)
+			p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{HasKeyword(DoesNotUntapKW)})
 		}
 	}
 	return nil
