@@ -206,6 +206,8 @@ func (g *Game) setEffectSource(e ContinuousEffect, id uuid.UUID) {
 		eff.sourceID_ = id
 	case *powerEqualsCountEffect:
 		eff.sourceID_ = id
+	case *grantActivatedAbilityToAllEffect:
+		eff.sourceID_ = id
 	}
 }
 

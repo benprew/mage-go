@@ -767,9 +767,14 @@ func registerAlphaCreatures() {
 		c := mage.NewCreature("Zombie Master", "{1}{B}{B}", "Zombie")
 		c.Power_ = 2
 		c.Toughness_ = 3
-		// Other Zombie creatures have swampwalk
+		// Other Zombie creatures have swampwalk and "{B}: Regenerate"
 		c.AddAbility(mage.StaticAbility(
 			mage.GrantKeywordToAll(mage.Swampwalk, mage.HasSubType("Zombie")),
+			mage.GrantActivatedAbilityToAll(
+				mage.RegenerateSource(),
+				mage.ManaCostOf("{B}"),
+				mage.HasSubType("Zombie"),
+			),
 		))
 		return c
 	})

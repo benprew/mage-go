@@ -346,6 +346,50 @@ func (e *grantActivatedAbilityAttachedEffect) Apply(g *Game) error {
 	return nil
 }
 
+// grantActivatedAbilityToAllEffect grants an activated ability to all creatures matching a filter.
+type grantActivatedAbilityToAllEffect struct {
+	effect    Effect
+	cost      Cost
+	filter    PermanentFilter
+	sourceID_ uuid.UUID
+}
+
+// GrantActivatedAbilityToAll grants an activated ability to all creatures matching filter.
+func GrantActivatedAbilityToAll(effect Effect, cost Cost, filter PermanentFilter) ContinuousEffect {
+	return &grantActivatedAbilityToAllEffect{
+		effect: effect,
+		cost:   cost,
+		filter: filter,
+	}
+}
+
+func (e *grantActivatedAbilityToAllEffect) GetLayer() Layer      { return LayerAbility }
+func (e *grantActivatedAbilityToAllEffect) GetDuration() Duration { return WhileOnBattlefield }
+func (e *grantActivatedAbilityToAllEffect) SourceID() uuid.UUID   { return e.sourceID_ }
+
+func (e *grantActivatedAbilityToAllEffect) IsActive(g *Game) bool {
+	return g.FindPermanent(e.sourceID_) != nil
+}
+
+func (e *grantActivatedAbilityToAllEffect) Apply(g *Game) error {
+	for _, p := range g.Battlefield {
+		if !p.HasType(TypeCreature) {
+			continue
+		}
+		if p.ID() == e.sourceID_ {
+			continue // typically "other" creatures
+		}
+		if e.filter != nil && !e.filter(p, g) {
+			continue
+		}
+		ab := NewActivatedAbility(e.effect, e.cost)
+		ab.Source_ = p.ID()
+		ab.Controller_ = p.Controller
+		p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{ab})
+	}
+	return nil
+}
+
 // PreventAttachedFromUntapping creates a continuous effect preventing the attached creature from untapping.
 func PreventAttachedFromUntapping(at AttachType) ContinuousEffect {
 	return &preventUntapEffect{
