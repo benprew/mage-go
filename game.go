@@ -153,8 +153,8 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 	}
 
 	// Add X counters if configured (replacement effect, not a trigger)
-	if bc, ok := card.(*BaseCard); ok && bc.EntersWithXCountersSet && g.CurrentX > 0 {
-		perm.AddCounter(bc.EntersWithXCounters_, g.CurrentX)
+	if bc, ok := card.(*BaseCard); ok && bc.entersWithXCountersSet && g.CurrentX > 0 {
+		perm.AddCounter(bc.entersWithXCounters, g.CurrentX)
 	}
 
 	g.Battlefield = append(g.Battlefield, perm)
@@ -191,19 +191,19 @@ func (g *Game) setEffectSource(e ContinuousEffect, id uuid.UUID) {
 	case *preventAttackEffect:
 		eff.sourceID = id
 	case *boostAllCreaturesEffect:
-		eff.sourceID_ = id
+		eff.sourceID = id
 	case *boostAllCreaturesIncludingSelfEffect:
-		eff.sourceID_ = id
+		eff.sourceID = id
 	case *grantKeywordToAllEffect:
-		eff.sourceID_ = id
+		eff.sourceID = id
 	case *controlChangeEffect:
-		eff.sourceID_ = id
+		eff.sourceID = id
 	case *boostControlledCreaturesEffect:
-		eff.sourceID_ = id
+		eff.sourceID = id
 	case *boostAttachedByForestCountEffect:
 		eff.sourceID = id
 	case *boostSelfWhileControllingEffect:
-		eff.sourceID_ = id
+		eff.sourceID = id
 	case *grantActivatedAbilityAttachedEffect:
 		eff.sourceID = id
 	case *removeKeywordAttachedEffect:
@@ -211,11 +211,11 @@ func (g *Game) setEffectSource(e ContinuousEffect, id uuid.UUID) {
 	case *preventUntapEffect:
 		eff.sourceID = id
 	case *ptEqualsCountEffect:
-		eff.sourceID_ = id
+		eff.sourceID = id
 	case *powerEqualsCountEffect:
-		eff.sourceID_ = id
+		eff.sourceID = id
 	case *grantActivatedAbilityToAllEffect:
-		eff.sourceID_ = id
+		eff.sourceID = id
 	}
 }
 
@@ -911,7 +911,7 @@ func (g *Game) checkGraveyardReturns(p Player) {
 
 	for i, card := range graveyard {
 		bc, ok := card.(*BaseCard)
-		if !ok || bc.GraveyardReturnMinCreatures_ <= 0 {
+		if !ok || bc.graveyardReturnMinCreatures <= 0 {
 			continue
 		}
 		// Count creature cards above this one (higher indices = more recently added)
@@ -921,7 +921,7 @@ func (g *Game) checkGraveyardReturns(p Player) {
 				creaturesAbove++
 			}
 		}
-		if creaturesAbove >= bc.GraveyardReturnMinCreatures_ {
+		if creaturesAbove >= bc.graveyardReturnMinCreatures {
 			toReturn = append(toReturn, bc.ID())
 		}
 	}

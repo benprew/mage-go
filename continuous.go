@@ -340,8 +340,8 @@ func (e *grantActivatedAbilityAttachedEffect) Apply(g *Game) error {
 	}
 	// Create the activated ability and assign it to the target
 	ab := NewActivatedAbility(e.effect, e.cost)
-	ab.Source_ = target.ID()
-	ab.Controller_ = target.Controller
+	ab.source = target.ID()
+	ab.controller = target.Controller
 	target.RuntimeAbilities = append(target.RuntimeAbilities, &grantedByEffect{ab})
 	return nil
 }
@@ -351,7 +351,7 @@ type grantActivatedAbilityToAllEffect struct {
 	effect    Effect
 	cost      Cost
 	filter    PermanentFilter
-	sourceID_ uuid.UUID
+	sourceID uuid.UUID
 }
 
 // GrantActivatedAbilityToAll grants an activated ability to all creatures matching filter.
@@ -365,10 +365,10 @@ func GrantActivatedAbilityToAll(effect Effect, cost Cost, filter PermanentFilter
 
 func (e *grantActivatedAbilityToAllEffect) GetLayer() Layer      { return LayerAbility }
 func (e *grantActivatedAbilityToAllEffect) GetDuration() Duration { return WhileOnBattlefield }
-func (e *grantActivatedAbilityToAllEffect) SourceID() uuid.UUID   { return e.sourceID_ }
+func (e *grantActivatedAbilityToAllEffect) SourceID() uuid.UUID   { return e.sourceID }
 
 func (e *grantActivatedAbilityToAllEffect) IsActive(g *Game) bool {
-	return g.FindPermanent(e.sourceID_) != nil
+	return g.FindPermanent(e.sourceID) != nil
 }
 
 func (e *grantActivatedAbilityToAllEffect) Apply(g *Game) error {
@@ -376,15 +376,15 @@ func (e *grantActivatedAbilityToAllEffect) Apply(g *Game) error {
 		if !p.HasType(TypeCreature) {
 			continue
 		}
-		if p.ID() == e.sourceID_ {
+		if p.ID() == e.sourceID {
 			continue // typically "other" creatures
 		}
 		if e.filter != nil && !e.filter(p, g) {
 			continue
 		}
 		ab := NewActivatedAbility(e.effect, e.cost)
-		ab.Source_ = p.ID()
-		ab.Controller_ = p.Controller
+		ab.source = p.ID()
+		ab.controller = p.Controller
 		p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{ab})
 	}
 	return nil
@@ -461,12 +461,12 @@ type temporaryBoostEffect struct {
 	targetID  uuid.UUID
 	power     int
 	toughness int
-	sourceID_ uuid.UUID
+	sourceID uuid.UUID
 }
 
 func (e *temporaryBoostEffect) GetLayer() Layer      { return LayerPT }
 func (e *temporaryBoostEffect) GetDuration() Duration { return EndOfTurn }
-func (e *temporaryBoostEffect) SourceID() uuid.UUID   { return e.sourceID_ }
+func (e *temporaryBoostEffect) SourceID() uuid.UUID   { return e.sourceID }
 
 func (e *temporaryBoostEffect) IsActive(g *Game) bool {
 	return g.FindPermanent(e.targetID) != nil
@@ -482,12 +482,12 @@ func (e *temporaryBoostEffect) Apply(g *Game) error {
 type temporaryKeywordEffect struct {
 	targetID  uuid.UUID
 	keyword   Keyword
-	sourceID_ uuid.UUID
+	sourceID uuid.UUID
 }
 
 func (e *temporaryKeywordEffect) GetLayer() Layer      { return LayerAbility }
 func (e *temporaryKeywordEffect) GetDuration() Duration { return EndOfTurn }
-func (e *temporaryKeywordEffect) SourceID() uuid.UUID   { return e.sourceID_ }
+func (e *temporaryKeywordEffect) SourceID() uuid.UUID   { return e.sourceID }
 
 func (e *temporaryKeywordEffect) IsActive(g *Game) bool {
 	return g.FindPermanent(e.targetID) != nil
@@ -508,7 +508,7 @@ type boostAllCreaturesEffect struct {
 	power     int
 	toughness int
 	filter    PermanentFilter
-	sourceID_ uuid.UUID
+	sourceID uuid.UUID
 }
 
 func BoostAllCreatures(power, toughness int, filter PermanentFilter) ContinuousEffect {
@@ -521,10 +521,10 @@ func BoostAllCreatures(power, toughness int, filter PermanentFilter) ContinuousE
 
 func (e *boostAllCreaturesEffect) GetLayer() Layer      { return LayerPT }
 func (e *boostAllCreaturesEffect) GetDuration() Duration { return WhileOnBattlefield }
-func (e *boostAllCreaturesEffect) SourceID() uuid.UUID   { return e.sourceID_ }
+func (e *boostAllCreaturesEffect) SourceID() uuid.UUID   { return e.sourceID }
 
 func (e *boostAllCreaturesEffect) IsActive(g *Game) bool {
-	return g.FindPermanent(e.sourceID_) != nil
+	return g.FindPermanent(e.sourceID) != nil
 }
 
 func (e *boostAllCreaturesEffect) Apply(g *Game) error {
@@ -532,7 +532,7 @@ func (e *boostAllCreaturesEffect) Apply(g *Game) error {
 		if !p.HasType(TypeCreature) {
 			continue
 		}
-		if p.ID() == e.sourceID_ {
+		if p.ID() == e.sourceID {
 			continue // lords typically don't boost themselves
 		}
 		if e.filter != nil && !e.filter(p, g) {
@@ -549,7 +549,7 @@ type boostAllCreaturesIncludingSelfEffect struct {
 	power     int
 	toughness int
 	filter    PermanentFilter
-	sourceID_ uuid.UUID
+	sourceID uuid.UUID
 }
 
 func BoostAllCreaturesIncludingSelf(power, toughness int, filter PermanentFilter) ContinuousEffect {
@@ -562,10 +562,10 @@ func BoostAllCreaturesIncludingSelf(power, toughness int, filter PermanentFilter
 
 func (e *boostAllCreaturesIncludingSelfEffect) GetLayer() Layer      { return LayerPT }
 func (e *boostAllCreaturesIncludingSelfEffect) GetDuration() Duration { return WhileOnBattlefield }
-func (e *boostAllCreaturesIncludingSelfEffect) SourceID() uuid.UUID   { return e.sourceID_ }
+func (e *boostAllCreaturesIncludingSelfEffect) SourceID() uuid.UUID   { return e.sourceID }
 
 func (e *boostAllCreaturesIncludingSelfEffect) IsActive(g *Game) bool {
-	return g.FindPermanent(e.sourceID_) != nil
+	return g.FindPermanent(e.sourceID) != nil
 }
 
 func (e *boostAllCreaturesIncludingSelfEffect) Apply(g *Game) error {
@@ -588,7 +588,7 @@ func (e *boostAllCreaturesIncludingSelfEffect) Apply(g *Game) error {
 type ptEqualsCountEffect struct {
 	countFilter    PermanentFilter // what to count
 	controllerOnly bool            // if true, only count permanents you control
-	sourceID_      uuid.UUID
+	sourceID      uuid.UUID
 }
 
 // PTEqualsCount creates a continuous effect where the source creature gets
@@ -610,14 +610,14 @@ func PTEqualsControlledCount(countFilter PermanentFilter) ContinuousEffect {
 
 func (e *ptEqualsCountEffect) GetLayer() Layer      { return LayerPT }
 func (e *ptEqualsCountEffect) GetDuration() Duration { return WhileOnBattlefield }
-func (e *ptEqualsCountEffect) SourceID() uuid.UUID   { return e.sourceID_ }
+func (e *ptEqualsCountEffect) SourceID() uuid.UUID   { return e.sourceID }
 
 func (e *ptEqualsCountEffect) IsActive(g *Game) bool {
-	return g.FindPermanent(e.sourceID_) != nil
+	return g.FindPermanent(e.sourceID) != nil
 }
 
 func (e *ptEqualsCountEffect) Apply(g *Game) error {
-	src := g.FindPermanent(e.sourceID_)
+	src := g.FindPermanent(e.sourceID)
 	if src == nil {
 		return nil
 	}
@@ -638,7 +638,7 @@ func (e *ptEqualsCountEffect) Apply(g *Game) error {
 // powerEqualsCountEffect sets only a permanent's power bonus equal to a count.
 type powerEqualsCountEffect struct {
 	countFilter PermanentFilter
-	sourceID_   uuid.UUID
+	sourceID   uuid.UUID
 }
 
 // PowerEqualsCount creates a continuous effect where the source creature gets
@@ -651,10 +651,10 @@ func PowerEqualsCount(countFilter PermanentFilter) ContinuousEffect {
 
 func (e *powerEqualsCountEffect) GetLayer() Layer      { return LayerPT }
 func (e *powerEqualsCountEffect) GetDuration() Duration { return WhileOnBattlefield }
-func (e *powerEqualsCountEffect) SourceID() uuid.UUID   { return e.sourceID_ }
+func (e *powerEqualsCountEffect) SourceID() uuid.UUID   { return e.sourceID }
 
 func (e *powerEqualsCountEffect) IsActive(g *Game) bool {
-	return g.FindPermanent(e.sourceID_) != nil
+	return g.FindPermanent(e.sourceID) != nil
 }
 
 func (e *powerEqualsCountEffect) Apply(g *Game) error {
@@ -664,7 +664,7 @@ func (e *powerEqualsCountEffect) Apply(g *Game) error {
 			count++
 		}
 	}
-	src := g.FindPermanent(e.sourceID_)
+	src := g.FindPermanent(e.sourceID)
 	if src != nil {
 		g.Effects.powerBonuses[src.ID()] += count
 		g.Effects.toughBonuses[src.ID()] += count
@@ -676,7 +676,7 @@ func (e *powerEqualsCountEffect) Apply(g *Game) error {
 type grantKeywordToAllEffect struct {
 	keyword   Keyword
 	filter    PermanentFilter
-	sourceID_ uuid.UUID
+	sourceID uuid.UUID
 }
 
 func GrantKeywordToAll(kw Keyword, filter PermanentFilter) ContinuousEffect {
@@ -688,10 +688,10 @@ func GrantKeywordToAll(kw Keyword, filter PermanentFilter) ContinuousEffect {
 
 func (e *grantKeywordToAllEffect) GetLayer() Layer      { return LayerAbility }
 func (e *grantKeywordToAllEffect) GetDuration() Duration { return WhileOnBattlefield }
-func (e *grantKeywordToAllEffect) SourceID() uuid.UUID   { return e.sourceID_ }
+func (e *grantKeywordToAllEffect) SourceID() uuid.UUID   { return e.sourceID }
 
 func (e *grantKeywordToAllEffect) IsActive(g *Game) bool {
-	return g.FindPermanent(e.sourceID_) != nil
+	return g.FindPermanent(e.sourceID) != nil
 }
 
 func (e *grantKeywordToAllEffect) Apply(g *Game) error {
@@ -699,7 +699,7 @@ func (e *grantKeywordToAllEffect) Apply(g *Game) error {
 		if !p.HasType(TypeCreature) {
 			continue
 		}
-		if p.ID() == e.sourceID_ {
+		if p.ID() == e.sourceID {
 			continue // don't grant to self
 		}
 		if e.filter != nil && !e.filter(p, g) {
@@ -717,7 +717,7 @@ type boostControlledCreaturesEffect struct {
 	power     int
 	toughness int
 	filter    PermanentFilter
-	sourceID_ uuid.UUID
+	sourceID uuid.UUID
 }
 
 func BoostControlledCreatures(power, toughness int, filter PermanentFilter) ContinuousEffect {
@@ -730,14 +730,14 @@ func BoostControlledCreatures(power, toughness int, filter PermanentFilter) Cont
 
 func (e *boostControlledCreaturesEffect) GetLayer() Layer      { return LayerPT }
 func (e *boostControlledCreaturesEffect) GetDuration() Duration { return WhileOnBattlefield }
-func (e *boostControlledCreaturesEffect) SourceID() uuid.UUID   { return e.sourceID_ }
+func (e *boostControlledCreaturesEffect) SourceID() uuid.UUID   { return e.sourceID }
 
 func (e *boostControlledCreaturesEffect) IsActive(g *Game) bool {
-	return g.FindPermanent(e.sourceID_) != nil
+	return g.FindPermanent(e.sourceID) != nil
 }
 
 func (e *boostControlledCreaturesEffect) Apply(g *Game) error {
-	src := g.FindPermanent(e.sourceID_)
+	src := g.FindPermanent(e.sourceID)
 	if src == nil {
 		return nil
 	}
@@ -759,7 +759,7 @@ func (e *boostControlledCreaturesEffect) Apply(g *Game) error {
 
 // controlChangeEffect is a continuous control change effect (e.g., Control Magic).
 type controlChangeEffect struct {
-	sourceID_ uuid.UUID
+	sourceID uuid.UUID
 }
 
 func ControlChangeContinuous() ContinuousEffect {
@@ -768,15 +768,15 @@ func ControlChangeContinuous() ContinuousEffect {
 
 func (e *controlChangeEffect) GetLayer() Layer      { return LayerControl }
 func (e *controlChangeEffect) GetDuration() Duration { return WhileOnBattlefield }
-func (e *controlChangeEffect) SourceID() uuid.UUID   { return e.sourceID_ }
+func (e *controlChangeEffect) SourceID() uuid.UUID   { return e.sourceID }
 
 func (e *controlChangeEffect) IsActive(g *Game) bool {
-	src := g.FindPermanent(e.sourceID_)
+	src := g.FindPermanent(e.sourceID)
 	return src != nil && src.IsAttached()
 }
 
 func (e *controlChangeEffect) Apply(g *Game) error {
-	src := g.FindPermanent(e.sourceID_)
+	src := g.FindPermanent(e.sourceID)
 	if src == nil || !src.IsAttached() {
 		return nil
 	}
@@ -832,7 +832,7 @@ type boostSelfWhileControllingEffect struct {
 	power     int
 	toughness int
 	condition PermanentFilter
-	sourceID_ uuid.UUID
+	sourceID uuid.UUID
 }
 
 func BoostSelfWhileControlling(power, toughness int, condition PermanentFilter) ContinuousEffect {
@@ -845,14 +845,14 @@ func BoostSelfWhileControlling(power, toughness int, condition PermanentFilter) 
 
 func (e *boostSelfWhileControllingEffect) GetLayer() Layer      { return LayerPT }
 func (e *boostSelfWhileControllingEffect) GetDuration() Duration { return WhileOnBattlefield }
-func (e *boostSelfWhileControllingEffect) SourceID() uuid.UUID   { return e.sourceID_ }
+func (e *boostSelfWhileControllingEffect) SourceID() uuid.UUID   { return e.sourceID }
 
 func (e *boostSelfWhileControllingEffect) IsActive(g *Game) bool {
-	return g.FindPermanent(e.sourceID_) != nil
+	return g.FindPermanent(e.sourceID) != nil
 }
 
 func (e *boostSelfWhileControllingEffect) Apply(g *Game) error {
-	src := g.FindPermanent(e.sourceID_)
+	src := g.FindPermanent(e.sourceID)
 	if src == nil {
 		return nil
 	}

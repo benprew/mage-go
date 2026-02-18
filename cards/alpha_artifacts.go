@@ -57,7 +57,7 @@ func registerAlphaArtifacts() {
 
 	mage.Register("Basalt Monolith", func() mage.Card {
 		c := mage.NewArtifact("Basalt Monolith", "{3}")
-		c.IntrinsicDoesNotUntap_ = true // doesn't untap during untap step
+		c.SetIntrinsicDoesNotUntap(true // doesn't untap during untap step)
 		// {T}: Add {C}{C}{C}
 		ab := mage.NewActivatedAbility(
 			mage.AddMana(mage.Colorless, 3),
@@ -75,7 +75,7 @@ func registerAlphaArtifacts() {
 
 	mage.Register("Mana Vault", func() mage.Card {
 		c := mage.NewArtifact("Mana Vault", "{1}")
-		c.IntrinsicDoesNotUntap_ = true // doesn't untap during untap step
+		c.SetIntrinsicDoesNotUntap(true // doesn't untap during untap step)
 		// {T}: Add {C}{C}{C}
 		ab := mage.NewActivatedAbility(
 			mage.AddMana(mage.Colorless, 3),
@@ -252,7 +252,7 @@ func registerAlphaArtifacts() {
 
 	mage.Register("Nevinyrral's Disk", func() mage.Card {
 		c := mage.NewArtifact("Nevinyrral's Disk", "{4}")
-		c.EntersTapped_ = true
+		c.SetEntersTapped(true)
 		// {1}, {T}: Destroy all artifacts, creatures, and enchantments
 		ab := mage.NewActivatedAbility(
 			mage.CompositeEffects("destroy all artifacts, creatures, and enchantments",

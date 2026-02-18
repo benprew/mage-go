@@ -111,14 +111,14 @@ func (e *cloneTargetCreatureEffect) Apply(g *Game, sourceID, controller uuid.UUI
 
 	// Copy the target's characteristics onto Clone
 	tc := target.Card
-	bc.Power_ = tc.Power()
-	bc.Toughness_ = tc.Toughness()
-	bc.Types_ = tc.Types()
-	bc.SubTypes_ = tc.SubTypes()
+	bc.power = tc.Power()
+	bc.toughness = tc.Toughness()
+	bc.types = tc.Types()
+	bc.subTypes = tc.SubTypes()
 	// Copy abilities from the target card
-	bc.Abilities_ = nil
+	bc.abilities = nil
 	for _, a := range tc.Abilities() {
-		bc.Abilities_ = append(bc.Abilities_, a)
+		bc.abilities = append(bc.abilities, a)
 	}
 	return nil
 }
@@ -434,7 +434,7 @@ func (e *boostTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targe
 		targetID:  perm.ID(),
 		power:     e.power,
 		toughness: e.toughness,
-		sourceID_: sourceID,
+		sourceID: sourceID,
 	}
 	g.Effects.Add(eff)
 	g.Effects.Apply(g)
@@ -464,7 +464,7 @@ func (e *boostSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targe
 		targetID:  perm.ID(),
 		power:     e.power,
 		toughness: e.toughness,
-		sourceID_: sourceID,
+		sourceID: sourceID,
 	}
 	g.Effects.Add(eff)
 	g.Effects.Apply(g)
@@ -1417,7 +1417,7 @@ func (e *grantKeywordTargetUntilEndOfTurnEffect) Apply(g *Game, sourceID, contro
 	eff := &temporaryKeywordEffect{
 		targetID:  perm.ID(),
 		keyword:   e.keyword,
-		sourceID_: sourceID,
+		sourceID: sourceID,
 	}
 	g.Effects.Add(eff)
 	g.Effects.Apply(g)
@@ -1445,7 +1445,7 @@ func (e *grantKeywordSourceUntilEndOfTurnEffect) Apply(g *Game, sourceID, contro
 	eff := &temporaryKeywordEffect{
 		targetID:  perm.ID(),
 		keyword:   e.keyword,
-		sourceID_: sourceID,
+		sourceID: sourceID,
 	}
 	g.Effects.Add(eff)
 	g.Effects.Apply(g)
@@ -1573,7 +1573,7 @@ func (e *doubleSourcePowerEffect) Apply(g *Game, sourceID, controller uuid.UUID,
 		targetID:  perm.ID(),
 		power:     currentPower,
 		toughness: 0,
-		sourceID_: sourceID,
+		sourceID: sourceID,
 	}
 	g.Effects.Add(eff)
 	g.Effects.Apply(g)
@@ -1636,7 +1636,7 @@ func (e *boostTargetXEffect) Apply(g *Game, sourceID, controller uuid.UUID, targ
 		targetID:  perm.ID(),
 		power:     p,
 		toughness: t,
-		sourceID_: sourceID,
+		sourceID: sourceID,
 	}
 	g.Effects.Add(eff)
 	g.Effects.Apply(g)

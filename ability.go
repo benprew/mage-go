@@ -25,18 +25,18 @@ type Ability interface {
 
 // BaseAbility provides common ability fields.
 type BaseAbility struct {
-	ID_         uuid.UUID
-	Source_     uuid.UUID
-	Controller_ uuid.UUID
-	Type_       AbilityType
+	id         uuid.UUID
+	source     uuid.UUID
+	controller uuid.UUID
+	abilityType       AbilityType
 }
 
-func (a *BaseAbility) AbilityID() uuid.UUID      { return a.ID_ }
-func (a *BaseAbility) Source() uuid.UUID          { return a.Source_ }
-func (a *BaseAbility) SetSource(id uuid.UUID)     { a.Source_ = id }
-func (a *BaseAbility) Controller() uuid.UUID      { return a.Controller_ }
-func (a *BaseAbility) SetController(id uuid.UUID) { a.Controller_ = id }
-func (a *BaseAbility) Type() AbilityType          { return a.Type_ }
+func (a *BaseAbility) AbilityID() uuid.UUID      { return a.id }
+func (a *BaseAbility) Source() uuid.UUID          { return a.source }
+func (a *BaseAbility) SetSource(id uuid.UUID)     { a.source = id }
+func (a *BaseAbility) Controller() uuid.UUID      { return a.controller }
+func (a *BaseAbility) SetController(id uuid.UUID) { a.controller = id }
+func (a *BaseAbility) Type() AbilityType          { return a.abilityType }
 
 // KeywordAbility is a static ability granting a keyword.
 type KeywordAbility struct {
@@ -47,8 +47,8 @@ type KeywordAbility struct {
 func HasKeyword(k Keyword) *KeywordAbility {
 	return &KeywordAbility{
 		BaseAbility: BaseAbility{
-			ID_:   uuid.New(),
-			Type_: AbilityStatic,
+			id:   uuid.New(),
+			abilityType: AbilityStatic,
 		},
 		Keyword: k,
 	}
@@ -64,8 +64,8 @@ type ProtectionAbility struct {
 func ProtectionFromColor(c Color) *ProtectionAbility {
 	return &ProtectionAbility{
 		BaseAbility: BaseAbility{
-			ID_:   uuid.New(),
-			Type_: AbilityStatic,
+			id:   uuid.New(),
+			abilityType: AbilityStatic,
 		},
 		FromColors: []Color{c},
 		Filter: func(card Card) bool {
@@ -86,8 +86,8 @@ func ProtectionFromColors(cs ...Color) *ProtectionAbility {
 	}
 	return &ProtectionAbility{
 		BaseAbility: BaseAbility{
-			ID_:   uuid.New(),
-			Type_: AbilityStatic,
+			id:   uuid.New(),
+			abilityType: AbilityStatic,
 		},
 		FromColors: cs,
 		Filter: func(card Card) bool {
@@ -118,8 +118,8 @@ type StaticAbilityHolder struct {
 func StaticAbility(effects ...ContinuousEffect) *StaticAbilityHolder {
 	return &StaticAbilityHolder{
 		BaseAbility: BaseAbility{
-			ID_:   uuid.New(),
-			Type_: AbilityStatic,
+			id:   uuid.New(),
+			abilityType: AbilityStatic,
 		},
 		Effects: effects,
 	}
@@ -134,8 +134,8 @@ type ManaAbility struct {
 func NewManaAbility(c Color) *ManaAbility {
 	return &ManaAbility{
 		BaseAbility: BaseAbility{
-			ID_:   uuid.New(),
-			Type_: AbilityMana,
+			id:   uuid.New(),
+			abilityType: AbilityMana,
 		},
 		Color: c,
 	}
@@ -152,8 +152,8 @@ type ManaBonusAbility struct {
 func NewManaBonusAbility(filter PermanentFilter, bonusMana Color) *ManaBonusAbility {
 	return &ManaBonusAbility{
 		BaseAbility: BaseAbility{
-			ID_:   uuid.New(),
-			Type_: AbilityStatic,
+			id:   uuid.New(),
+			abilityType: AbilityStatic,
 		},
 		Filter:    filter,
 		BonusMana: bonusMana,

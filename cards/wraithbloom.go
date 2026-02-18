@@ -8,9 +8,7 @@ func init() {
 
 func registerWraithbloom() {
 	mage.Register("Wraithbloom Cultivator", func() mage.Card {
-		c := mage.NewCreature("Wraithbloom Cultivator", "{1}{B}{G}", "Elf", "Shaman")
-		c.Power_ = 2
-		c.Toughness_ = 3
+		c := mage.NewCreature("Wraithbloom Cultivator", "{1}{B}{G}", 2, 3, "Elf", "Shaman")
 
 		// Whenever another creature you control dies, you gain 1 life and
 		// put a +1/+1 counter on Wraithbloom Cultivator.

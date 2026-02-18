@@ -6,8 +6,8 @@ func TestHarnessSmokeTest(t *testing.T) {
 	if !CardRegistered("Smoke Test Creature") {
 		Register("Smoke Test Creature", func() Card {
 			c := NewCreature("Smoke Test Creature", "{1}{G}", "Beast")
-			c.Power_ = 2
-			c.Toughness_ = 2
+			c.power = 2
+			c.toughness = 2
 			return c
 		})
 	}
