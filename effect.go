@@ -846,35 +846,6 @@ func (e *sacrificeSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, t
 
 func (e *sacrificeSourceEffect) Text() string { return "sacrifice this permanent" }
 
-// sacrificeCreatureOrDamageEffect sacrifices another creature you control, or deals damage to you.
-type sacrificeCreatureOrDamageEffect struct {
-	damage int
-}
-
-func SacrificeCreatureOrDamage(damage int) Effect {
-	return &sacrificeCreatureOrDamageEffect{damage: damage}
-}
-
-func (e *sacrificeCreatureOrDamageEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	// Try to sacrifice another creature you control
-	for _, p := range g.Battlefield {
-		if p.Controller == controller && p.HasType(TypeCreature) && p.ID() != sourceID {
-			g.Sacrifice(p)
-			return nil
-		}
-	}
-	// No creature to sacrifice — deal damage to controller
-	player := g.GetPlayer(controller)
-	if player != nil {
-		g.DealDamageToPlayer(player, e.damage, sourceID)
-	}
-	return nil
-}
-
-func (e *sacrificeCreatureOrDamageEffect) Text() string {
-	return fmt.Sprintf("sacrifice a creature or take %d damage", e.damage)
-}
-
 // searchLibraryEffect lets the controller search their library and put a card in hand.
 type searchLibraryEffect struct{}
 
@@ -1365,4 +1336,396 @@ func (e *grantKeywordSourceUntilEndOfTurnEffect) Apply(g *Game, sourceID, contro
 
 func (e *grantKeywordSourceUntilEndOfTurnEffect) Text() string {
 	return fmt.Sprintf("~ gains %s until end of turn", e.keyword)
+}
+
+// regenerateSourceEffect sets a regeneration shield on the source.
+type regenerateSourceEffect struct{}
+
+func RegenerateSource() Effect {
+	return &regenerateSourceEffect{}
+}
+
+func (e *regenerateSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	perm := g.FindPermanent(sourceID)
+	if perm == nil {
+		return nil
+	}
+	perm.RegenerationShield = true
+	return nil
+}
+
+func (e *regenerateSourceEffect) Text() string { return "Regenerate ~" }
+
+// preventDamageToTargetEffect sets a damage prevention shield on a target.
+type preventDamageToTargetEffect struct {
+	amount int
+}
+
+func PreventDamageToTarget(amount int) Effect {
+	return &preventDamageToTargetEffect{amount: amount}
+}
+
+func (e *preventDamageToTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	if len(targets) == 0 {
+		return nil
+	}
+	perm := g.FindPermanent(targets[0])
+	if perm != nil {
+		perm.DamagePreventionShield += e.amount
+		return nil
+	}
+	// Could also prevent damage to player - not implemented yet
+	return nil
+}
+
+func (e *preventDamageToTargetEffect) Text() string {
+	return fmt.Sprintf("Prevent the next %d damage to target", e.amount)
+}
+
+// preventXDamageToTargetEffect prevents X damage to a target.
+type preventXDamageToTargetEffect struct{}
+
+func PreventXDamageToTarget() Effect {
+	return &preventXDamageToTargetEffect{}
+}
+
+func (e *preventXDamageToTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	if len(targets) == 0 {
+		return nil
+	}
+	perm := g.FindPermanent(targets[0])
+	if perm != nil {
+		perm.DamagePreventionShield += g.CurrentX
+		return nil
+	}
+	return nil
+}
+
+func (e *preventXDamageToTargetEffect) Text() string {
+	return "Prevent the next X damage to target"
+}
+
+// sacrificeOrDamageEffect sacrifices a creature you control, or deals damage
+// to the source's controller if no creature is available.
+type sacrificeOrDamageEffect struct {
+	damage int
+}
+
+func SacrificeCreatureOrDamage(damage int) Effect {
+	return &sacrificeOrDamageEffect{damage: damage}
+}
+
+func (e *sacrificeOrDamageEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	// Try to find a creature to sacrifice (not the source itself)
+	for _, p := range g.Battlefield {
+		if p.Controller == controller && p.HasType(TypeCreature) && p.ID() != sourceID {
+			g.Sacrifice(p)
+			return nil
+		}
+	}
+	// No creature available - deal damage to controller
+	player := g.GetPlayer(controller)
+	if player != nil {
+		g.DealDamageToPlayer(player, e.damage, sourceID)
+	}
+	return nil
+}
+
+func (e *sacrificeOrDamageEffect) Text() string {
+	return fmt.Sprintf("Sacrifice a creature or take %d damage", e.damage)
+}
+
+// doubleSourcePowerEffect doubles the source creature's power until end of turn.
+type doubleSourcePowerEffect struct{}
+
+func DoubleTargetPower() Effect {
+	return &doubleSourcePowerEffect{}
+}
+
+func (e *doubleSourcePowerEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	if len(targets) == 0 {
+		return nil
+	}
+	perm := g.FindPermanent(targets[0])
+	if perm == nil {
+		return nil
+	}
+	currentPower := perm.CurrentPower(g)
+	eff := &temporaryBoostEffect{
+		targetID:  perm.ID(),
+		power:     currentPower,
+		toughness: 0,
+		sourceID_: sourceID,
+	}
+	g.Effects.Add(eff)
+	g.Effects.Apply(g)
+	return nil
+}
+
+func (e *doubleSourcePowerEffect) Text() string {
+	return "Target creature's power is doubled until end of turn"
+}
+
+// destroyTargetAtEndOfTurnEffect marks a creature for destruction at end of turn.
+type destroyTargetAtEndOfTurnEffect struct{}
+
+func DestroyTargetAtEndOfTurn() Effect {
+	return &destroyTargetAtEndOfTurnEffect{}
+}
+
+func (e *destroyTargetAtEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	if len(targets) == 0 {
+		return nil
+	}
+	perm := g.FindPermanent(targets[0])
+	if perm == nil {
+		return nil
+	}
+	perm.DestroyAtEndOfTurn = true
+	return nil
+}
+
+func (e *destroyTargetAtEndOfTurnEffect) Text() string {
+	return "Destroy target creature at end of turn"
+}
+
+// boostTargetXEffect gives +X/+0 to a target creature until end of turn.
+type boostTargetXEffect struct {
+	power     bool // if true, boost power by X
+	toughness bool // if true, boost toughness by X
+}
+
+func BoostTargetXUntilEndOfTurn(power, toughness bool) Effect {
+	return &boostTargetXEffect{power: power, toughness: toughness}
+}
+
+func (e *boostTargetXEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	if len(targets) == 0 {
+		return nil
+	}
+	perm := g.FindPermanent(targets[0])
+	if perm == nil {
+		return nil
+	}
+	p, t := 0, 0
+	if e.power {
+		p = g.CurrentX
+	}
+	if e.toughness {
+		t = g.CurrentX
+	}
+	eff := &temporaryBoostEffect{
+		targetID:  perm.ID(),
+		power:     p,
+		toughness: t,
+		sourceID_: sourceID,
+	}
+	g.Effects.Add(eff)
+	g.Effects.Apply(g)
+	return nil
+}
+
+func (e *boostTargetXEffect) Text() string {
+	return "Target creature gets +X/+0 until end of turn"
+}
+
+// discardHandAndDrawEffect makes each player discard their hand and draw N cards.
+type discardHandAndDrawEffect struct {
+	drawCount int
+}
+
+func DiscardHandAndDraw(n int) Effect {
+	return &discardHandAndDrawEffect{drawCount: n}
+}
+
+func (e *discardHandAndDrawEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	for _, p := range g.Players {
+		// Discard entire hand
+		hand := p.Hand()
+		for _, c := range hand {
+			p.RemoveFromHand(c.ID())
+			p.AddToGraveyard(c)
+		}
+		// Draw N cards
+		for i := 0; i < e.drawCount; i++ {
+			p.DrawCard()
+		}
+	}
+	return nil
+}
+
+func (e *discardHandAndDrawEffect) Text() string {
+	return fmt.Sprintf("Each player discards their hand, then draws %d cards", e.drawCount)
+}
+
+// shuffleGraveyardIntoLibraryAndDrawEffect shuffles each player's graveyard
+// into their library, then each player draws N cards.
+type shuffleGraveyardIntoLibraryAndDrawEffect struct {
+	drawCount int
+}
+
+func ShuffleGraveyardIntoLibraryAndDraw(n int) Effect {
+	return &shuffleGraveyardIntoLibraryAndDrawEffect{drawCount: n}
+}
+
+func (e *shuffleGraveyardIntoLibraryAndDrawEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	for _, p := range g.Players {
+		// Move graveyard into library
+		for _, c := range p.Graveyard() {
+			p.AddToLibrary(c)
+		}
+		p.ClearGraveyard()
+		// Draw N cards
+		for i := 0; i < e.drawCount; i++ {
+			p.DrawCard()
+		}
+	}
+	return nil
+}
+
+func (e *shuffleGraveyardIntoLibraryAndDrawEffect) Text() string {
+	return fmt.Sprintf("Each player shuffles graveyard into library, then draws %d cards", e.drawCount)
+}
+
+// counterSpellIfColorEffect counters a target spell only if it matches a specific color.
+type counterSpellIfColorEffect struct {
+	color Color
+}
+
+func CounterSpellIfColor(c Color) Effect {
+	return &counterSpellIfColorEffect{color: c}
+}
+
+func (e *counterSpellIfColorEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	if len(targets) == 0 {
+		return nil
+	}
+	// Find the spell on the stack
+	obj := g.Stack.FindBySourceID(targets[0])
+	if obj == nil || obj.Card == nil {
+		return nil
+	}
+	// Check if the spell has the required color
+	for _, c := range obj.Card.ManaCost().Colors() {
+		if c == e.color {
+			g.CounterSpellOnStack(targets[0])
+			return nil
+		}
+	}
+	// Color doesn't match, spell is NOT countered
+	return nil
+}
+
+func (e *counterSpellIfColorEffect) Text() string {
+	return fmt.Sprintf("Counter target %s spell", e.color)
+}
+
+// counterSpellIfXMeetsOrExceedsCMCEffect counters a spell only if X >= its CMC.
+type counterSpellIfXMeetsOrExceedsCMCEffect struct{}
+
+func CounterSpellIfXMeetsCMC() Effect {
+	return &counterSpellIfXMeetsOrExceedsCMCEffect{}
+}
+
+func (e *counterSpellIfXMeetsOrExceedsCMCEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	if len(targets) == 0 {
+		return nil
+	}
+	obj := g.Stack.FindBySourceID(targets[0])
+	if obj == nil || obj.Card == nil {
+		return nil
+	}
+	cmc := obj.Card.ManaCost().CMC()
+	if g.CurrentX >= cmc {
+		g.CounterSpellOnStack(targets[0])
+	}
+	return nil
+}
+
+func (e *counterSpellIfXMeetsOrExceedsCMCEffect) Text() string {
+	return "Counter target spell if X >= its mana value"
+}
+
+// powerSinkEffect counters a spell unless its controller pays X mana.
+type powerSinkEffect struct{}
+
+func PowerSinkEffect() Effect {
+	return &powerSinkEffect{}
+}
+
+func (e *powerSinkEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	if len(targets) == 0 {
+		return nil
+	}
+	obj := g.Stack.FindBySourceID(targets[0])
+	if obj == nil {
+		return nil
+	}
+	// Check if the spell's controller can pay X mana
+	spellController := g.GetPlayer(obj.Controller)
+	if spellController == nil {
+		return nil
+	}
+	// If they have enough mana in pool, they pay and spell resolves
+	totalMana := spellController.ManaPool().TotalMana()
+	if totalMana >= g.CurrentX {
+		// Opponent can pay - drain X mana but don't counter
+		spellController.ManaPool().DrainGeneric(g.CurrentX)
+		return nil
+	}
+	// Can't pay - counter the spell and drain all mana
+	spellController.ManaPool().Clear()
+	g.CounterSpellOnStack(targets[0])
+	return nil
+}
+
+func (e *powerSinkEffect) Text() string {
+	return "Counter target spell unless its controller pays {X}"
+}
+
+// tapOrUntapTargetEffect lets you tap or untap a target permanent.
+type tapOrUntapTargetEffect struct{}
+
+func TapOrUntapTarget() Effect {
+	return &tapOrUntapTargetEffect{}
+}
+
+func (e *tapOrUntapTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	if len(targets) == 0 {
+		return nil
+	}
+	perm := g.FindPermanent(targets[0])
+	if perm == nil {
+		return nil
+	}
+	// Toggle: if tapped, untap; if untapped, tap
+	perm.Tapped = !perm.Tapped
+	return nil
+}
+
+func (e *tapOrUntapTargetEffect) Text() string {
+	return "Tap or untap target permanent"
+}
+
+// makeUnblockableUntilEndOfTurnEffect makes a target creature unblockable until end of turn.
+type makeUnblockableUntilEndOfTurnEffect struct{}
+
+func MakeUnblockableUntilEndOfTurn() Effect {
+	return &makeUnblockableUntilEndOfTurnEffect{}
+}
+
+func (e *makeUnblockableUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	if len(targets) == 0 {
+		return nil
+	}
+	perm := g.FindPermanent(targets[0])
+	if perm == nil {
+		return nil
+	}
+	perm.Unblockable = true
+	return nil
+}
+
+func (e *makeUnblockableUntilEndOfTurnEffect) Text() string {
+	return "Target creature can't be blocked this turn"
 }

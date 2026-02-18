@@ -50,6 +50,23 @@ func (c *Combat) IsAttacking(id uuid.UUID) bool {
 	return c.Attackers[id]
 }
 
+// RemoveFromCombat removes a permanent from combat (attacker or blocker).
+func (c *Combat) RemoveFromCombat(id uuid.UUID) {
+	delete(c.Attackers, id)
+	for _, g := range c.Groups {
+		if g.AttackerID == id {
+			g.AttackerID = uuid.Nil
+		}
+		filtered := g.BlockerIDs[:0]
+		for _, bid := range g.BlockerIDs {
+			if bid != id {
+				filtered = append(filtered, bid)
+			}
+		}
+		g.BlockerIDs = filtered
+	}
+}
+
 func (c *Combat) GroupFor(attackerID uuid.UUID) *CombatGroup {
 	for _, g := range c.Groups {
 		if g.AttackerID == attackerID {
@@ -97,6 +114,14 @@ func (c *Combat) DealsDamageInStep(p *Permanent, isFirstStrikeStep bool) bool {
 
 // CanBlock returns true if blocker can legally block the attacker.
 func CanBlock(blocker, attacker *Permanent, g *Game) bool {
+	// Unblockable creatures can't be blocked
+	if attacker.Unblockable {
+		return false
+	}
+	// CantBeBlockedByWalls creatures can't be blocked by Walls
+	if attacker.CantBeBlockedByWalls && blocker.HasSubType("Wall") {
+		return false
+	}
 	// Defender creatures can't attack (checked elsewhere), but they CAN block.
 	// Protection: creature with protection from X can't be blocked by X
 	if attacker.HasProtectionFrom(blocker.Card) {

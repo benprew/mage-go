@@ -164,9 +164,9 @@ func registerAlphaCreatures() {
 		c := mage.NewCreature("Drudge Skeletons", "{1}{B}", "Skeleton")
 		c.Power_ = 1
 		c.Toughness_ = 1
-		// {B}: Regenerate (simplified as +0/+1 until end of turn)
+		// {B}: Regenerate Drudge Skeletons.
 		ab := mage.NewActivatedAbility(
-			mage.BoostSourceUntilEndOfTurn(0, 1),
+			mage.RegenerateSource(),
 			mage.ManaCostOf("{B}"),
 		)
 		c.AddAbility(ab)
@@ -255,6 +255,12 @@ func registerAlphaCreatures() {
 		c.Power_ = 0
 		c.Toughness_ = 1
 		c.AddAbility(mage.HasKeyword(mage.Flying))
+		// {B}: Regenerate Will-o'-the-Wisp.
+		ab := mage.NewActivatedAbility(
+			mage.RegenerateSource(),
+			mage.ManaCostOf("{B}"),
+		)
+		c.AddAbility(ab)
 		return c
 	})
 
@@ -395,6 +401,12 @@ func registerAlphaCreatures() {
 		c := mage.NewCreature("Uthden Troll", "{2}{R}", "Troll")
 		c.Power_ = 2
 		c.Toughness_ = 2
+		// {R}: Regenerate Uthden Troll.
+		ab := mage.NewActivatedAbility(
+			mage.RegenerateSource(),
+			mage.ManaCostOf("{R}"),
+		)
+		c.AddAbility(ab)
 		return c
 	})
 
@@ -583,6 +595,12 @@ func registerAlphaCreatures() {
 		c.Power_ = 1
 		c.Toughness_ = 4
 		c.AddAbility(mage.HasKeyword(mage.Defender))
+		// {B}: Regenerate Wall of Bone.
+		ab := mage.NewActivatedAbility(
+			mage.RegenerateSource(),
+			mage.ManaCostOf("{B}"),
+		)
+		c.AddAbility(ab)
 		return c
 	})
 
@@ -591,6 +609,12 @@ func registerAlphaCreatures() {
 		c.Power_ = 2
 		c.Toughness_ = 3
 		c.AddAbility(mage.HasKeyword(mage.Defender))
+		// {G}: Regenerate Wall of Brambles.
+		ab := mage.NewActivatedAbility(
+			mage.RegenerateSource(),
+			mage.ManaCostOf("{G}"),
+		)
+		c.AddAbility(ab)
 		return c
 	})
 
@@ -691,6 +715,12 @@ func registerAlphaCreatures() {
 		c.Power_ = 0
 		c.Toughness_ = 6
 		c.AddAbility(mage.HasKeyword(mage.Defender))
+		// {1}: Regenerate Living Wall.
+		ab := mage.NewActivatedAbility(
+			mage.RegenerateSource(),
+			mage.GenericCost(1),
+		)
+		c.AddAbility(ab)
 		return c
 	})
 
