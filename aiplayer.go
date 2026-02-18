@@ -192,7 +192,7 @@ func (ai *AIPlayer) autoSelectTargets(g *Game, card Card) []uuid.UUID {
 			}
 
 			switch t.(type) {
-			case *AnyTargetImpl:
+			case *AnyTarget:
 				// For damage spells: prefer opponent's creature, else opponent's face
 				// First look for an opponent creature we can kill
 				for _, id := range possible {

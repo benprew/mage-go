@@ -235,7 +235,7 @@ func buildRulesText(c Card) string {
 			for _, eff := range ab.Effects() {
 				parts = append(parts, eff.Text())
 			}
-		case ActivatedAbilityI:
+		case ActivatedAbility:
 			var costParts []string
 			for _, cost := range ab.Costs() {
 				costParts = append(costParts, cost.Text())

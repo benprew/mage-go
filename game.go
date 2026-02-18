@@ -711,7 +711,7 @@ func (g *Game) ActivateAbilityByText(playerID uuid.UUID, permName string, target
 		if wrapped, ok := inner.(*grantedByEffect); ok {
 			inner = wrapped.Ability
 		}
-		ma, ok := inner.(*ManaAbilityImpl)
+		ma, ok := inner.(*ManaAbility)
 		if !ok {
 			continue
 		}
@@ -1149,7 +1149,7 @@ func (g *Game) TapForMana(playerID, permanentID uuid.UUID) error {
 
 	// Find a mana ability
 	for _, a := range perm.RuntimeAbilities {
-		if ma, ok := a.(*ManaAbilityImpl); ok {
+		if ma, ok := a.(*ManaAbility); ok {
 			// Creatures with mana abilities need to not be summoning sick
 			if perm.HasType(TypeCreature) && perm.SummonSick && !perm.HasAbility(Haste) {
 				return fmt.Errorf("creature has summoning sickness")
@@ -1184,7 +1184,7 @@ func (g *Game) GetUntappedManaSources(playerID uuid.UUID) []ManaSourceInfo {
 			continue
 		}
 		for _, a := range perm.RuntimeAbilities {
-			if ma, ok := a.(*ManaAbilityImpl); ok {
+			if ma, ok := a.(*ManaAbility); ok {
 				sources = append(sources, ManaSourceInfo{
 					PermanentID: perm.ID(),
 					Name:        perm.Name(),
@@ -1359,7 +1359,7 @@ func (g *Game) GetActivatableAbilities(playerID uuid.UUID) []ActivatableInfo {
 				continue
 			}
 			// Skip mana abilities - those are handled separately
-			if _, isMana := a.(*ManaAbilityImpl); isMana {
+			if _, isMana := a.(*ManaAbility); isMana {
 				continue
 			}
 			if !aa.CanActivate(playerID, g) {

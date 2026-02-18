@@ -125,14 +125,14 @@ func StaticAbility(effects ...ContinuousEffect) *StaticAbilityHolder {
 	}
 }
 
-// ManaAbilityImpl is a mana ability that taps to add mana.
-type ManaAbilityImpl struct {
+// ManaAbility is a mana ability that taps to add mana.
+type ManaAbility struct {
 	BaseAbility
 	Color Color
 }
 
-func NewManaAbility(c Color) *ManaAbilityImpl {
-	return &ManaAbilityImpl{
+func NewManaAbility(c Color) *ManaAbility {
+	return &ManaAbility{
 		BaseAbility: BaseAbility{
 			ID_:   uuid.New(),
 			Type_: AbilityMana,

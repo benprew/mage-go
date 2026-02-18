@@ -1862,14 +1862,14 @@ func (e *dealDamagePerSwampEffect) Text() string {
 	return "Deal damage to active player equal to Swamps they control"
 }
 
-// blackViseEffectImpl deals damage to the active player based on hand size > 4.
-type blackViseEffectImpl struct{}
+// blackViseEffect deals damage to the active player based on hand size > 4.
+type blackViseEffect struct{}
 
 func BlackViseEffect() Effect {
-	return &blackViseEffectImpl{}
+	return &blackViseEffect{}
 }
 
-func (e *blackViseEffectImpl) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *blackViseEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	active := g.ActivePlayerObj()
 	handSize := len(active.Hand())
 	if handSize > 4 {
@@ -1879,6 +1879,6 @@ func (e *blackViseEffectImpl) Apply(g *Game, sourceID, controller uuid.UUID, tar
 	return nil
 }
 
-func (e *blackViseEffectImpl) Text() string {
+func (e *blackViseEffect) Text() string {
 	return "Deal damage to active player equal to cards in hand minus 4"
 }
