@@ -44,6 +44,42 @@ func TestWinterOrb(t *testing.T) {
 		}
 	})
 
+	t.Run("affects_opponent_too", func(t *testing.T) {
+		// Winter Orb affects all players, not just the controller.
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Winter Orb")
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerB, "Swamp")
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerB, "Mountain")
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerB, "Forest")
+		g.ActivateAbility(2, mage.PrecombatMain, mage.PlayerB, "Swamp")
+		g.ActivateAbility(2, mage.PrecombatMain, mage.PlayerB, "Mountain")
+		g.ActivateAbility(2, mage.PrecombatMain, mage.PlayerB, "Forest")
+		g.StopAt(4, mage.PrecombatMain)
+		g.Execute()
+		tapped := 0
+		playerBID := g.Players[1].PlayerID()
+		for _, perm := range g.Battlefield {
+			if perm.Controller == playerBID && perm.HasType(mage.TypeLand) && perm.Tapped {
+				tapped++
+			}
+		}
+		if tapped < 2 {
+			t.Errorf("Winter Orb should limit opponent too; only %d lands tapped, want >= 2", tapped)
+		}
+	})
+
+	t.Run("creatures_untap_normally", func(t *testing.T) {
+		// Winter Orb only restricts lands; creatures untap normally.
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Winter Orb")
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Serra Angel")
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Hill Giant")
+		g.Attack(1, mage.PlayerA, "Hill Giant")
+		g.StopAt(3, mage.PrecombatMain)
+		g.Execute()
+		g.AssertTapped(mage.PlayerA, "Hill Giant", false)
+	})
+
 	t.Run("no_restriction_when_tapped", func(t *testing.T) {
 		// When Winter Orb is tapped, its restriction doesn't apply.
 		g := mage.NewTestGame(t)

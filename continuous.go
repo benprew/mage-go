@@ -61,6 +61,7 @@ type EffectManager struct {
 	preventAttack map[uuid.UUID]bool
 	regenerationShields map[uuid.UUID]int
 	preventionShields   map[uuid.UUID]int
+	landUntapLimit      int // -1 = no limit; >= 0 = max lands that may untap per turn
 }
 
 func NewEffectManager() *EffectManager {
@@ -72,7 +73,13 @@ func NewEffectManager() *EffectManager {
 		preventAttack:       make(map[uuid.UUID]bool),
 		regenerationShields: make(map[uuid.UUID]int),
 		preventionShields:   make(map[uuid.UUID]int),
+		landUntapLimit:      -1,
 	}
+}
+
+// LandUntapLimit returns the current land untap limit. -1 means no limit.
+func (em *EffectManager) LandUntapLimit() int {
+	return em.landUntapLimit
 }
 
 // AddRegenerationShield increments the regeneration shield count for a permanent.
@@ -153,6 +160,7 @@ func (em *EffectManager) Apply(g *Game) {
 	em.grantedKW = make(map[uuid.UUID][]Keyword)
 	em.removedKW = make(map[uuid.UUID][]Keyword)
 	em.preventAttack = make(map[uuid.UUID]bool)
+	em.landUntapLimit = -1
 
 	// Reset granted runtime abilities from effects (will be re-granted below)
 	for _, p := range g.Battlefield {
@@ -909,6 +917,34 @@ func (e *boostSelfWhileControllingEffect) Apply(g *Game) error {
 			g.Effects.toughBonuses[src.ID()] += e.toughness
 			return nil
 		}
+	}
+	return nil
+}
+
+// limitLandUntapsEffect limits how many lands each player can untap per turn
+// (e.g. Winter Orb). Only active while the source is untapped.
+type limitLandUntapsEffect struct {
+	limit int
+	effectSource
+}
+
+// LimitLandUntaps creates a continuous effect that limits land untaps per turn.
+// Only active while the source permanent is untapped.
+func LimitLandUntaps(limit int) ContinuousEffect {
+	return &limitLandUntapsEffect{limit: limit}
+}
+
+func (e *limitLandUntapsEffect) GetLayer() Layer      { return LayerAbility }
+func (e *limitLandUntapsEffect) GetDuration() Duration { return WhileOnBattlefield }
+
+func (e *limitLandUntapsEffect) IsActive(g *Game) bool {
+	src := g.FindPermanent(e.sourceID)
+	return src != nil && !src.Tapped
+}
+
+func (e *limitLandUntapsEffect) Apply(g *Game) error {
+	if g.Effects.landUntapLimit < 0 || e.limit < g.Effects.landUntapLimit {
+		g.Effects.landUntapLimit = e.limit
 	}
 	return nil
 }

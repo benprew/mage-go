@@ -908,9 +908,21 @@ func (g *Game) doEndStep() {
 func (g *Game) doUntap() {
 	active := g.ActivePlayerObj()
 	g.Effects.ClearRegenerationShields(active.PlayerID(), g)
+
+	landUntapLimit := g.Effects.LandUntapLimit()
+	landsUntapped := 0
+
 	for _, p := range g.Battlefield {
 		if p.Controller == active.PlayerID() {
-			if !p.HasAbility(DoesNotUntapKW) {
+			if p.HasAbility(DoesNotUntapKW) {
+				// Does not untap keyword — skip
+			} else if p.HasType(TypeLand) && landUntapLimit >= 0 {
+				// Land with untap limit in effect
+				if p.Tapped && landsUntapped < landUntapLimit {
+					p.Tapped = false
+					landsUntapped++
+				}
+			} else {
 				p.Tapped = false
 			}
 			p.SummonSick = false

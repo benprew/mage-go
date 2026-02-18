@@ -165,8 +165,11 @@ func registerAlphaArtifacts() {
 
 	mage.Register("Winter Orb", func() mage.Card {
 		c := mage.NewArtifact("Winter Orb", "{2}")
-		// Players can't untap more than one land during their untap step
-		// Stub - complex
+		// Players can't untap more than one land during their untap steps.
+		// Only applies while Winter Orb is untapped.
+		c.AddAbility(mage.StaticAbility(
+			mage.LimitLandUntaps(1),
+		))
 		return c
 	})
 
