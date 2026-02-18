@@ -58,6 +58,29 @@ func (e *addCountersToSourceEffect) Text() string {
 	return fmt.Sprintf("put %d %s counter(s) on it", e.amount, e.ct)
 }
 
+// removeCountersFromSourceEffect removes counters from the source permanent.
+type removeCountersFromSourceEffect struct {
+	ct     CounterType
+	amount int
+}
+
+func RemoveCountersFromSource(ct CounterType, amount int) Effect {
+	return &removeCountersFromSourceEffect{ct: ct, amount: amount}
+}
+
+func (e *removeCountersFromSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	p := g.FindPermanent(sourceID)
+	if p == nil {
+		return nil
+	}
+	p.RemoveCounter(e.ct, e.amount)
+	return nil
+}
+
+func (e *removeCountersFromSourceEffect) Text() string {
+	return fmt.Sprintf("remove %d %s counter(s) from it", e.amount, e.ct)
+}
+
 // dealDamageEffect deals damage to the target.
 type dealDamageEffect struct {
 	amount int
@@ -1750,3 +1773,86 @@ func (e *tapAttachedCreatureEffect) Apply(g *Game, sourceID, controller uuid.UUI
 }
 
 func (e *tapAttachedCreatureEffect) Text() string { return "Tap enchanted creature" }
+
+// untapSourceEffect untaps the source permanent.
+type untapSourceEffect struct{}
+
+func UntapSource() Effect {
+	return &untapSourceEffect{}
+}
+
+func (e *untapSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	perm := g.FindPermanent(sourceID)
+	if perm != nil {
+		perm.Tapped = false
+	}
+	return nil
+}
+
+func (e *untapSourceEffect) Text() string { return "Untap this permanent" }
+
+// dealDamageToActivePlayerEffect deals damage to the active player (the one whose upkeep it is).
+type dealDamageToActivePlayerEffect struct {
+	amount int
+}
+
+func DealDamageToActivePlayer(amount int) Effect {
+	return &dealDamageToActivePlayerEffect{amount: amount}
+}
+
+func (e *dealDamageToActivePlayerEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	active := g.ActivePlayerObj()
+	active.LoseLife(e.amount)
+	return nil
+}
+
+func (e *dealDamageToActivePlayerEffect) Text() string {
+	return fmt.Sprintf("Deal %d damage to active player", e.amount)
+}
+
+// dealDamagePerSwampEffect deals damage to the active player equal to the number of Swamps they control.
+type dealDamagePerSwampEffect struct{}
+
+func DealDamagePerSwamp() Effect {
+	return &dealDamagePerSwampEffect{}
+}
+
+func (e *dealDamagePerSwampEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	active := g.ActivePlayerObj()
+	activeID := active.PlayerID()
+	swampCount := 0
+	for _, p := range g.Battlefield {
+		if p.Controller == activeID && p.HasSubType("Swamp") {
+			swampCount++
+		}
+	}
+	if swampCount > 0 {
+		active.LoseLife(swampCount)
+	}
+	return nil
+}
+
+func (e *dealDamagePerSwampEffect) Text() string {
+	return "Deal damage to active player equal to Swamps they control"
+}
+
+// blackViseEffectImpl deals damage to the active player based on hand size > 4.
+type blackViseEffectImpl struct{}
+
+func BlackViseEffect() Effect {
+	return &blackViseEffectImpl{}
+}
+
+func (e *blackViseEffectImpl) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	active := g.ActivePlayerObj()
+	handSize := len(active.Hand())
+	if handSize > 4 {
+		damage := handSize - 4
+		active.LoseLife(damage)
+	}
+	return nil
+}
+
+func (e *blackViseEffectImpl) Text() string {
+	return "Deal damage to active player equal to cards in hand minus 4"
+}

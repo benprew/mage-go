@@ -580,9 +580,8 @@ func registerAlphaCreatures() {
 		c := mage.NewCreature("Verduran Enchantress", "{1}{G}{G}", "Human", "Druid")
 		c.Power_ = 0
 		c.Toughness_ = 2
-		// Whenever you cast an enchantment spell, draw a card
-		green := mage.Green
-		c.AddAbility(mage.WheneverSpellCastTrigger(mage.DrawCards(1), true, &green))
+		// Whenever you cast an enchantment spell, draw a card (any color enchantment)
+		c.AddAbility(mage.WheneverEnchantmentCastTrigger(mage.DrawCards(1), true))
 		return c
 	})
 
@@ -710,9 +709,14 @@ func registerAlphaCreatures() {
 		c.Types_ = []mage.CardType{mage.TypeArtifact, mage.TypeCreature}
 		c.Power_ = 0
 		c.Toughness_ = 4
-		// Enters with 7 +1/+0 counters, loses one when attacking
-		// Simplified: just a 7/4
-		c.Power_ = 7
+		// Enters with 7 +1/+0 counters
+		c.AddAbility(mage.EntersBattlefieldTrigger(
+			mage.AddCountersToSource(mage.P1P0, 7), false,
+		))
+		// Loses a +1/+0 counter whenever it attacks
+		c.AddAbility(mage.AttacksTrigger(
+			mage.RemoveCountersFromSource(mage.P1P0, 1), false,
+		))
 		return c
 	})
 
@@ -722,6 +726,7 @@ func registerAlphaCreatures() {
 		c.Power_ = 5
 		c.Toughness_ = 3
 		// Juggernaut attacks each combat if able. Can't be blocked by Walls.
+		c.CantBeBlockedByWalls_ = true
 		return c
 	})
 

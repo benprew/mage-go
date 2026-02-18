@@ -2,6 +2,12 @@ package mage
 
 import "github.com/google/uuid"
 
+// BlockAssignment represents a single blocker-attacker pair.
+type BlockAssignment struct {
+	BlockerID  uuid.UUID
+	AttackerID uuid.UUID
+}
+
 // PlayerRef is used in test harness to refer to players.
 type PlayerRef int
 
@@ -36,7 +42,7 @@ type Player interface {
 	// Decision-making (overridden by TestPlayer)
 	ChooseTargets(possible []uuid.UUID, min, max int, g *Game) []uuid.UUID
 	DeclareAttackers(g *Game) []uuid.UUID
-	DeclareBlockers(g *Game) map[uuid.UUID]uuid.UUID // blocker → attacker
+	DeclareBlockers(g *Game) []BlockAssignment
 	ChooseMayAbility(description string) bool
 }
 
@@ -140,7 +146,7 @@ func (p *BasePlayer) DeclareAttackers(g *Game) []uuid.UUID {
 	return nil
 }
 
-func (p *BasePlayer) DeclareBlockers(g *Game) map[uuid.UUID]uuid.UUID {
+func (p *BasePlayer) DeclareBlockers(g *Game) []BlockAssignment {
 	return nil
 }
 

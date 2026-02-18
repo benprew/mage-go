@@ -6,6 +6,7 @@ type CounterType int
 const (
 	P1P1 CounterType = iota // +1/+1
 	M1M1                    // -1/-1
+	P1P0                    // +1/+0
 	Loyalty
 	Charge
 )
@@ -16,6 +17,8 @@ func (ct CounterType) String() string {
 		return "+1/+1"
 	case M1M1:
 		return "-1/-1"
+	case P1P0:
+		return "+1/+0"
 	case Loyalty:
 		return "Loyalty"
 	case Charge:
@@ -28,7 +31,7 @@ func (ct CounterType) String() string {
 // PowerBoost returns the power modification from this counter type.
 func (ct CounterType) PowerBoost() int {
 	switch ct {
-	case P1P1:
+	case P1P1, P1P0:
 		return 1
 	case M1M1:
 		return -1

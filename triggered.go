@@ -12,6 +12,37 @@ type TriggeredAbility interface {
 	Targets() []Target
 }
 
+// AttacksTriggered triggers when the source creature attacks.
+type AttacksTriggered struct {
+	BaseAbility
+	Optional bool
+	Effs     []Effect
+	Tgts     []Target
+}
+
+func AttacksTrigger(effect Effect, optional bool) *AttacksTriggered {
+	return &AttacksTriggered{
+		BaseAbility: BaseAbility{
+			ID_:   uuid.New(),
+			Type_: AbilityTriggered,
+		},
+		Optional: optional,
+		Effs:     []Effect{effect},
+	}
+}
+
+func (t *AttacksTriggered) CheckEventType(et EventType) bool {
+	return et == EvtDeclaredAttacker
+}
+
+func (t *AttacksTriggered) CheckTrigger(evt *GameEvent, g *Game) bool {
+	return evt.SourceID == t.Source_
+}
+
+func (t *AttacksTriggered) IsOptional() bool { return t.Optional }
+func (t *AttacksTriggered) Effects() []Effect { return t.Effs }
+func (t *AttacksTriggered) Targets() []Target { return t.Tgts }
+
 // DiesCreatureTriggered triggers when another creature you control dies.
 type DiesCreatureTriggered struct {
 	BaseAbility
@@ -178,6 +209,37 @@ func (t *BeginningOfUpkeepTriggered) IsOptional() bool { return t.Optional }
 func (t *BeginningOfUpkeepTriggered) Effects() []Effect { return t.Effs }
 func (t *BeginningOfUpkeepTriggered) Targets() []Target { return t.Tgts }
 
+// BeginningOfEachUpkeepTriggered triggers at each player's upkeep.
+type BeginningOfEachUpkeepTriggered struct {
+	BaseAbility
+	Optional bool
+	Effs     []Effect
+	Tgts     []Target
+}
+
+func BeginningOfEachUpkeepTrigger(effect Effect, optional bool) *BeginningOfEachUpkeepTriggered {
+	return &BeginningOfEachUpkeepTriggered{
+		BaseAbility: BaseAbility{
+			ID_:   uuid.New(),
+			Type_: AbilityTriggered,
+		},
+		Optional: optional,
+		Effs:     []Effect{effect},
+	}
+}
+
+func (t *BeginningOfEachUpkeepTriggered) CheckEventType(et EventType) bool {
+	return et == EvtUpkeep
+}
+
+func (t *BeginningOfEachUpkeepTriggered) CheckTrigger(evt *GameEvent, g *Game) bool {
+	return true // fires on every player's upkeep
+}
+
+func (t *BeginningOfEachUpkeepTriggered) IsOptional() bool { return t.Optional }
+func (t *BeginningOfEachUpkeepTriggered) Effects() []Effect { return t.Effs }
+func (t *BeginningOfEachUpkeepTriggered) Targets() []Target { return t.Tgts }
+
 // DealsDamageToOpponentTriggered triggers when the source deals damage to an opponent.
 type DealsDamageToOpponentTriggered struct {
 	BaseAbility
@@ -263,6 +325,46 @@ func (t *WheneverSpellCastTriggered) CheckTrigger(evt *GameEvent, g *Game) bool 
 func (t *WheneverSpellCastTriggered) IsOptional() bool { return t.Optional }
 func (t *WheneverSpellCastTriggered) Effects() []Effect { return t.Effs }
 func (t *WheneverSpellCastTriggered) Targets() []Target { return t.Tgts }
+
+// WheneverEnchantmentCastTriggered triggers whenever an enchantment spell is cast by the controller.
+type WheneverEnchantmentCastTriggered struct {
+	BaseAbility
+	Optional bool
+	Effs     []Effect
+	Tgts     []Target
+}
+
+func WheneverEnchantmentCastTrigger(effect Effect, optional bool) *WheneverEnchantmentCastTriggered {
+	return &WheneverEnchantmentCastTriggered{
+		BaseAbility: BaseAbility{
+			ID_:   uuid.New(),
+			Type_: AbilityTriggered,
+		},
+		Optional: optional,
+		Effs:     []Effect{effect},
+	}
+}
+
+func (t *WheneverEnchantmentCastTriggered) CheckEventType(et EventType) bool {
+	return et == EvtSpellCast
+}
+
+func (t *WheneverEnchantmentCastTriggered) CheckTrigger(evt *GameEvent, g *Game) bool {
+	// Only trigger for spells cast by the controller
+	if evt.PlayerID != t.Controller_ {
+		return false
+	}
+	// Check if the cast card is an enchantment
+	card := g.FindCardAnywhere(evt.SourceID)
+	if card == nil {
+		return false
+	}
+	return card.HasType(TypeEnchantment)
+}
+
+func (t *WheneverEnchantmentCastTriggered) IsOptional() bool { return t.Optional }
+func (t *WheneverEnchantmentCastTriggered) Effects() []Effect { return t.Effs }
+func (t *WheneverEnchantmentCastTriggered) Targets() []Target { return t.Tgts }
 
 // WhenDamageDealtToThisTriggered triggers when damage is dealt to this creature.
 type WhenDamageDealtToThisTriggered struct {
