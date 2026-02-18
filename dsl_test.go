@@ -143,6 +143,105 @@ func TestGenericTriggered(t *testing.T) {
 	})
 }
 
+// TestDestroyAllCollapse verifies that DestroyAllCreatures, DestroyAllLands,
+// and DestroyAllEnchantments are thin aliases over DestroyAllMatching.
+func TestDestroyAllCollapse(t *testing.T) {
+	t.Run("DestroyAllCreatures still works", func(t *testing.T) {
+		name := "DSL Wrath"
+		if !CardRegistered(name) {
+			Register(name, func() Card {
+				c := NewSorcery(name, "{2}{W}{W}")
+				c.AddAbility(NewSpellAbility(DestroyAllCreatures()))
+				return c
+			})
+		}
+		creatureName := "DSL Bear"
+		if !CardRegistered(creatureName) {
+			Register(creatureName, func() Card {
+				c := NewCreature(creatureName, "{1}{G}", "Bear")
+				c.Power_ = 2
+				c.Toughness_ = 2
+				return c
+			})
+		}
+
+		tg := NewTestGame(t)
+		tg.AddCard(ZoneBattlefield, PlayerA, creatureName)
+		tg.AddCard(ZoneBattlefield, PlayerB, creatureName)
+		tg.AddCard(ZoneHand, PlayerA, name)
+		tg.CastSpell(1, PrecombatMain, PlayerA, name)
+		tg.StopAt(1, EndCombat)
+		tg.Execute()
+
+		tg.AssertPermanentCount(PlayerA, creatureName, 0)
+		tg.AssertPermanentCount(PlayerB, creatureName, 0)
+	})
+
+	t.Run("DestroyAllLands still works", func(t *testing.T) {
+		name := "DSL Armageddon"
+		landName := "DSL Test Land"
+		for _, reg := range []struct {
+			n string
+			f func() Card
+		}{
+			{name, func() Card {
+				c := NewSorcery(name, "{3}{W}")
+				c.AddAbility(NewSpellAbility(DestroyAllLands()))
+				return c
+			}},
+			{landName, func() Card {
+				c := NewLand(landName, "Forest")
+				c.AddAbility(NewManaAbility(Green))
+				return c
+			}},
+		} {
+			if !CardRegistered(reg.n) {
+				Register(reg.n, reg.f)
+			}
+		}
+
+		tg := NewTestGame(t)
+		tg.AddCard(ZoneBattlefield, PlayerA, landName)
+		tg.AddCard(ZoneBattlefield, PlayerB, landName)
+		tg.AddCard(ZoneHand, PlayerA, name)
+		tg.CastSpell(1, PrecombatMain, PlayerA, name)
+		tg.StopAt(1, EndCombat)
+		tg.Execute()
+
+		tg.AssertPermanentCount(PlayerA, landName, 0)
+		tg.AssertPermanentCount(PlayerB, landName, 0)
+	})
+
+	t.Run("DestroyAllEnchantments still works", func(t *testing.T) {
+		name := "DSL Tranquility"
+		if !CardRegistered(name) {
+			Register(name, func() Card {
+				c := NewSorcery(name, "{2}{G}")
+				c.AddAbility(NewSpellAbility(DestroyAllEnchantments()))
+				return c
+			})
+		}
+		enchName := "DSL Test Enchantment"
+		if !CardRegistered(enchName) {
+			Register(enchName, func() Card {
+				c := NewEnchantment(enchName, "{W}")
+				return c
+			})
+		}
+
+		tg := NewTestGame(t)
+		tg.AddCard(ZoneBattlefield, PlayerA, enchName)
+		tg.AddCard(ZoneBattlefield, PlayerB, enchName)
+		tg.AddCard(ZoneHand, PlayerA, name)
+		tg.CastSpell(1, PrecombatMain, PlayerA, name)
+		tg.StopAt(1, EndCombat)
+		tg.Execute()
+
+		tg.AssertPermanentCount(PlayerA, enchName, 0)
+		tg.AssertPermanentCount(PlayerB, enchName, 0)
+	})
+}
+
 // TestFuncEffect verifies that anonymous functions can be used as effects.
 func TestFuncEffect(t *testing.T) {
 	t.Run("inline effect via FuncEffect", func(t *testing.T) {

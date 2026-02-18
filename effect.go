@@ -312,28 +312,10 @@ func (e *returnSourceToHandEffect) Text() string {
 	return "return this card to its owner's hand"
 }
 
-// destroyAllCreaturesEffect destroys all creatures (board wipe).
-type destroyAllCreaturesEffect struct{}
-
+// DestroyAllCreatures destroys all creatures (board wipe).
+// This is a convenience alias for DestroyAllMatching with the IsCreature filter.
 func DestroyAllCreatures() Effect {
-	return &destroyAllCreaturesEffect{}
-}
-
-func (e *destroyAllCreaturesEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	var toDestroy []*Permanent
-	for _, p := range g.Battlefield {
-		if p.HasType(TypeCreature) && !p.HasAbility(Indestructible) {
-			toDestroy = append(toDestroy, p)
-		}
-	}
-	for _, p := range toDestroy {
-		g.DestroyPermanent(p)
-	}
-	return nil
-}
-
-func (e *destroyAllCreaturesEffect) Text() string {
-	return "destroy all creatures"
+	return DestroyAllMatching(IsCreature, "destroy all creatures")
 }
 
 // compositeEffect applies multiple effects in sequence.
@@ -555,49 +537,17 @@ func (e *destroyTargetPermanentEffect) Apply(g *Game, sourceID, controller uuid.
 
 func (e *destroyTargetPermanentEffect) Text() string { return e.text }
 
-// destroyAllLandsEffect destroys all lands (Armageddon).
-type destroyAllLandsEffect struct{}
-
+// DestroyAllLands destroys all lands (Armageddon).
+// This is a convenience alias for DestroyAllMatching with the IsLand filter.
 func DestroyAllLands() Effect {
-	return &destroyAllLandsEffect{}
+	return DestroyAllMatching(IsLand, "destroy all lands")
 }
 
-func (e *destroyAllLandsEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	var toDestroy []*Permanent
-	for _, p := range g.Battlefield {
-		if p.HasType(TypeLand) {
-			toDestroy = append(toDestroy, p)
-		}
-	}
-	for _, p := range toDestroy {
-		g.DestroyPermanent(p)
-	}
-	return nil
-}
-
-func (e *destroyAllLandsEffect) Text() string { return "destroy all lands" }
-
-// destroyAllEnchantmentsEffect destroys all enchantments (Tranquility).
-type destroyAllEnchantmentsEffect struct{}
-
+// DestroyAllEnchantments destroys all enchantments (Tranquility).
+// This is a convenience alias for DestroyAllMatching with the IsEnchantment filter.
 func DestroyAllEnchantments() Effect {
-	return &destroyAllEnchantmentsEffect{}
+	return DestroyAllMatching(IsEnchantment, "destroy all enchantments")
 }
-
-func (e *destroyAllEnchantmentsEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	var toDestroy []*Permanent
-	for _, p := range g.Battlefield {
-		if p.HasType(TypeEnchantment) {
-			toDestroy = append(toDestroy, p)
-		}
-	}
-	for _, p := range toDestroy {
-		g.DestroyPermanent(p)
-	}
-	return nil
-}
-
-func (e *destroyAllEnchantmentsEffect) Text() string { return "destroy all enchantments" }
 
 // destroyAllMatchingEffect destroys all permanents matching a filter.
 type destroyAllMatchingEffect struct {
