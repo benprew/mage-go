@@ -31,6 +31,9 @@ type Game struct {
 	// X value for the currently resolving spell
 	CurrentX int
 
+	// Interactive play tracking
+	LandsPlayedThisTurn int
+
 	// Control flags
 	stopped bool
 }
@@ -745,6 +748,7 @@ func (g *Game) doUntap() {
 			p.SummonSick = false
 		}
 	}
+	g.LandsPlayedThisTurn = 0
 }
 
 func (g *Game) doUpkeep() {
@@ -955,6 +959,432 @@ func (g *Game) Run(stopTurn int, stopStep PhaseStep, maxTurns int) {
 		}
 		g.Turn++
 	}
+}
+
+// PlayLand moves a land from a player's hand to the battlefield.
+func (g *Game) PlayLand(playerID, cardID uuid.UUID) error {
+	if !g.Step.IsMainPhase() {
+		return fmt.Errorf("can only play lands during a main phase")
+	}
+	if g.ActivePlayerObj().PlayerID() != playerID {
+		return fmt.Errorf("only the active player can play a land")
+	}
+	if g.LandsPlayedThisTurn >= 1 {
+		return fmt.Errorf("already played a land this turn")
+	}
+
+	p := g.GetPlayer(playerID)
+	if p == nil {
+		return fmt.Errorf("player not found")
+	}
+
+	card, ok := p.RemoveFromHand(cardID)
+	if !ok {
+		return fmt.Errorf("card not found in hand")
+	}
+	if !card.HasType(TypeLand) {
+		p.AddToHand(card)
+		return fmt.Errorf("card is not a land")
+	}
+
+	g.PutOnBattlefield(card, playerID)
+	g.LandsPlayedThisTurn++
+	return nil
+}
+
+// TapForMana taps a permanent for mana using its mana ability.
+func (g *Game) TapForMana(playerID, permanentID uuid.UUID) error {
+	perm := g.FindPermanent(permanentID)
+	if perm == nil {
+		return fmt.Errorf("permanent not found")
+	}
+	if perm.Controller != playerID {
+		return fmt.Errorf("you don't control that permanent")
+	}
+	if perm.Tapped {
+		return fmt.Errorf("permanent is already tapped")
+	}
+
+	// Find a mana ability
+	for _, a := range perm.RuntimeAbilities {
+		if ma, ok := a.(*ManaAbilityImpl); ok {
+			// Creatures with mana abilities need to not be summoning sick
+			if perm.HasType(TypeCreature) && perm.SummonSick && !perm.HasAbility(Haste) {
+				return fmt.Errorf("creature has summoning sickness")
+			}
+			perm.Tapped = true
+			p := g.GetPlayer(playerID)
+			if p != nil {
+				p.ManaPool().Add(ma.Color, 1)
+			}
+			return nil
+		}
+	}
+	return fmt.Errorf("permanent has no mana ability")
+}
+
+// ManaSourceInfo describes a mana source available for tapping.
+type ManaSourceInfo struct {
+	PermanentID uuid.UUID
+	Name        string
+	Color       Color
+}
+
+// GetUntappedManaSources returns all untapped permanents with mana abilities for a player.
+func (g *Game) GetUntappedManaSources(playerID uuid.UUID) []ManaSourceInfo {
+	var sources []ManaSourceInfo
+	for _, perm := range g.Battlefield {
+		if perm.Controller != playerID || perm.Tapped {
+			continue
+		}
+		// Skip summoning-sick creatures without haste
+		if perm.HasType(TypeCreature) && perm.SummonSick && !perm.HasAbility(Haste) {
+			continue
+		}
+		for _, a := range perm.RuntimeAbilities {
+			if ma, ok := a.(*ManaAbilityImpl); ok {
+				sources = append(sources, ManaSourceInfo{
+					PermanentID: perm.ID(),
+					Name:        perm.Name(),
+					Color:       ma.Color,
+				})
+				break // one entry per permanent even if it has multiple mana abilities
+			}
+		}
+	}
+	return sources
+}
+
+// AutoTapForCost taps untapped lands/mana sources to pay a mana cost.
+func (g *Game) AutoTapForCost(playerID uuid.UUID, mc ManaCost) error {
+	sources := g.GetUntappedManaSources(playerID)
+
+	// Collect how much of each color we need
+	needed := map[Color]int{
+		White: mc.White,
+		Blue:  mc.Blue,
+		Black: mc.Black,
+		Red:   mc.Red,
+		Green: mc.Green,
+	}
+	genericNeeded := mc.Generic
+
+	var toTap []uuid.UUID
+
+	// First pass: tap sources for exact color requirements
+	for color, count := range needed {
+		for i := 0; i < count; i++ {
+			found := false
+			for j, src := range sources {
+				if src.Color == color && src.PermanentID != uuid.Nil {
+					toTap = append(toTap, src.PermanentID)
+					sources[j].PermanentID = uuid.Nil // mark as used
+					found = true
+					break
+				}
+			}
+			if !found {
+				return fmt.Errorf("insufficient %s mana", color)
+			}
+		}
+	}
+
+	// Second pass: tap remaining sources for generic mana
+	for i := 0; i < genericNeeded; i++ {
+		found := false
+		for j, src := range sources {
+			if src.PermanentID != uuid.Nil {
+				toTap = append(toTap, src.PermanentID)
+				sources[j].PermanentID = uuid.Nil
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("insufficient mana for generic cost")
+		}
+	}
+
+	// Actually tap all selected sources
+	for _, id := range toTap {
+		if err := g.TapForMana(playerID, id); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// CanAfford returns true if a player has enough untapped mana sources to pay a cost.
+func (g *Game) CanAfford(playerID uuid.UUID, mc ManaCost) bool {
+	sources := g.GetUntappedManaSources(playerID)
+
+	avail := map[Color]int{}
+	for _, src := range sources {
+		avail[src.Color]++
+	}
+
+	remaining := 0
+	for _, color := range []Color{White, Blue, Black, Red, Green} {
+		need := 0
+		switch color {
+		case White:
+			need = mc.White
+		case Blue:
+			need = mc.Blue
+		case Black:
+			need = mc.Black
+		case Red:
+			need = mc.Red
+		case Green:
+			need = mc.Green
+		}
+		if avail[color] < need {
+			return false
+		}
+		remaining += avail[color] - need
+	}
+	remaining += avail[Colorless]
+	return remaining >= mc.Generic
+}
+
+// ActivatableInfo describes an activated ability on a permanent that can currently be used.
+type ActivatableInfo struct {
+	PermanentID   uuid.UUID
+	PermanentName string
+	AbilityIndex  int
+	Description   string
+}
+
+// GetCastableSpells returns cards in a player's hand they can currently cast.
+func (g *Game) GetCastableSpells(playerID uuid.UUID) []Card {
+	p := g.GetPlayer(playerID)
+	if p == nil {
+		return nil
+	}
+	isMainPhase := g.Step.IsMainPhase()
+	isActive := g.ActivePlayerObj().PlayerID() == playerID
+
+	var castable []Card
+	for _, card := range p.Hand() {
+		if card.HasType(TypeLand) {
+			continue
+		}
+		// Sorceries can only be cast at sorcery speed (main phase, active player, empty stack)
+		if card.HasType(TypeSorcery) {
+			if !isMainPhase || !isActive || !g.Stack.IsEmpty() {
+				continue
+			}
+		}
+		// Creatures/artifacts/enchantments are sorcery speed
+		if card.HasType(TypeCreature) || card.HasType(TypeArtifact) || card.HasType(TypeEnchantment) {
+			if !isMainPhase || !isActive || !g.Stack.IsEmpty() {
+				continue
+			}
+		}
+		// Check mana (ignore X costs for now - those are always "castable" if base cost met)
+		mc := card.ManaCost()
+		checkMC := mc
+		if mc.HasX {
+			// For X spells, check if we can pay the non-X portion
+			checkMC = ManaCost{
+				Generic: mc.Generic,
+				White:   mc.White,
+				Blue:    mc.Blue,
+				Black:   mc.Black,
+				Red:     mc.Red,
+				Green:   mc.Green,
+			}
+		}
+		if !g.CanAfford(playerID, checkMC) {
+			continue
+		}
+		castable = append(castable, card)
+	}
+	return castable
+}
+
+// GetActivatableAbilities returns activated abilities the player can currently use.
+func (g *Game) GetActivatableAbilities(playerID uuid.UUID) []ActivatableInfo {
+	var result []ActivatableInfo
+	for _, perm := range g.Battlefield {
+		if perm.Controller != playerID {
+			continue
+		}
+		for i, a := range perm.RuntimeAbilities {
+			aa, ok := a.(ActivatedAbilityI)
+			if !ok {
+				continue
+			}
+			// Skip mana abilities - those are handled separately
+			if _, isMana := a.(*ManaAbilityImpl); isMana {
+				continue
+			}
+			if !aa.CanActivate(playerID, g) {
+				continue
+			}
+			if aa.SorcerySpeed() && !g.Step.IsMainPhase() {
+				continue
+			}
+			desc := ""
+			for _, e := range aa.Effects() {
+				if desc != "" {
+					desc += ", "
+				}
+				desc += e.Text()
+			}
+			result = append(result, ActivatableInfo{
+				PermanentID:   perm.ID(),
+				PermanentName: perm.Name(),
+				AbilityIndex:  i,
+				Description:   desc,
+			})
+		}
+	}
+	return result
+}
+
+// CastSpellByID casts a spell from a player's hand by card ID.
+func (g *Game) CastSpellByID(playerID, cardID uuid.UUID, targets []uuid.UUID, xValue int) error {
+	p := g.GetPlayer(playerID)
+	if p == nil {
+		return fmt.Errorf("player not found")
+	}
+
+	// Find card in hand
+	var card Card
+	for _, c := range p.Hand() {
+		if c.ID() == cardID {
+			card = c
+			break
+		}
+	}
+	if card == nil {
+		return fmt.Errorf("card not found in hand")
+	}
+
+	// Compute payment mana cost
+	mc := card.ManaCost()
+	payMC := mc
+	if mc.HasX {
+		payMC.Generic += xValue * mc.XCount
+	}
+
+	// Auto-tap lands to pay the cost
+	if !payMC.IsZero() {
+		if err := g.AutoTapForCost(playerID, payMC); err != nil {
+			return fmt.Errorf("cannot pay for %s: %v", card.Name(), err)
+		}
+		// Now pay from the mana pool
+		if err := p.ManaPool().Pay(payMC); err != nil {
+			return err
+		}
+	}
+
+	// Remove from hand
+	p.RemoveFromHand(card.ID())
+
+	// Build effects from spell abilities
+	var effects []Effect
+	for _, a := range card.Abilities() {
+		if sa, ok := a.(*SpellAbility); ok {
+			effects = append(effects, sa.Effects()...)
+		}
+	}
+
+	obj := &StackObject{
+		ID:         uuid.New(),
+		Card:       card,
+		Controller: playerID,
+		SourceID:   card.ID(),
+		Effects:    effects,
+		Targets:    targets,
+		XValue:     xValue,
+	}
+
+	g.Stack.Push(obj)
+
+	g.FireEvent(GameEvent{
+		Type:     EvtSpellCast,
+		SourceID: card.ID(),
+		PlayerID: playerID,
+	})
+
+	return nil
+}
+
+// ActivateAbilityByIndex activates an ability on a permanent by index.
+func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIndex int, targets []uuid.UUID) error {
+	perm := g.FindPermanent(permanentID)
+	if perm == nil {
+		return fmt.Errorf("permanent not found")
+	}
+	if abilityIndex < 0 || abilityIndex >= len(perm.RuntimeAbilities) {
+		return fmt.Errorf("invalid ability index")
+	}
+
+	a := perm.RuntimeAbilities[abilityIndex]
+	aa, ok := a.(ActivatedAbilityI)
+	if !ok {
+		return fmt.Errorf("not an activated ability")
+	}
+	if !aa.CanActivate(playerID, g) {
+		return fmt.Errorf("cannot activate ability")
+	}
+	if aa.SorcerySpeed() && !g.Step.IsMainPhase() {
+		return fmt.Errorf("can only activate at sorcery speed")
+	}
+
+	// Pay costs
+	for _, c := range aa.Costs() {
+		if err := c.Pay(perm.ID(), playerID, g); err != nil {
+			return err
+		}
+	}
+
+	obj := &StackObject{
+		ID:         uuid.New(),
+		Controller: playerID,
+		SourceID:   perm.ID(),
+		IsAbility:  true,
+		Targets:    targets,
+	}
+	for _, e := range aa.Effects() {
+		obj.Effects = append(obj.Effects, e)
+	}
+
+	g.Stack.Push(obj)
+	return nil
+}
+
+// ResolveTopOfStack resolves just the top item on the stack.
+func (g *Game) ResolveTopOfStack() {
+	if g.Stack.IsEmpty() {
+		return
+	}
+	obj := g.Stack.Pop()
+	g.ResolveStackObject(obj)
+	g.PutTriggersOnStack()
+}
+
+// IsGameOver returns true if any player has 0 or less life.
+func (g *Game) IsGameOver() bool {
+	for _, p := range g.Players {
+		if !p.IsAlive() {
+			return true
+		}
+	}
+	return false
+}
+
+// Winner returns the name of the winning player, or "" if no winner yet.
+func (g *Game) Winner() string {
+	for _, p := range g.Players {
+		if !p.IsAlive() {
+			return g.GetOpponent(p.PlayerID()).Name()
+		}
+	}
+	return ""
 }
 
 func min(a, b int) int {

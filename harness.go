@@ -24,12 +24,21 @@ type TestGame struct {
 }
 
 type castAction struct {
-	turn    int
-	step    PhaseStep
-	player  PlayerRef
-	spell   string
-	targets []string
-	xValue  int // X value for X-cost spells
+	turn      int
+	step      PhaseStep
+	player    PlayerRef
+	spell     string
+	targets   []string
+	xValue    int // X value for X-cost spells
+	responses []responseAction // spells/abilities cast in response before resolution
+}
+
+type responseAction struct {
+	player   PlayerRef
+	spell    string   // for spell responses
+	perm     string   // for activated ability responses
+	targets  []string // explicit targets (empty = auto-target spell on stack)
+	xValue   int
 }
 
 type activateAction struct {
@@ -131,6 +140,50 @@ func (tg *TestGame) CastSpellWithX(turn int, step PhaseStep, p PlayerRef, spell 
 	})
 }
 
+// CastInResponseTo scripts a spell cast in response to the most recently scripted
+// cast action. The response spell is cast while the original spell is still on the
+// stack, then both resolve LIFO. If no explicit targets are given, the response
+// automatically targets the original spell on the stack.
+func (tg *TestGame) CastInResponseTo(p PlayerRef, spell string, targets ...string) {
+	if len(tg.castActions) == 0 {
+		return
+	}
+	last := &tg.castActions[len(tg.castActions)-1]
+	last.responses = append(last.responses, responseAction{
+		player:  p,
+		spell:   spell,
+		targets: targets,
+	})
+}
+
+// CastInResponseToWithX is like CastInResponseTo but for X-cost spells.
+func (tg *TestGame) CastInResponseToWithX(p PlayerRef, spell string, xValue int, targets ...string) {
+	if len(tg.castActions) == 0 {
+		return
+	}
+	last := &tg.castActions[len(tg.castActions)-1]
+	last.responses = append(last.responses, responseAction{
+		player:  p,
+		spell:   spell,
+		targets: targets,
+		xValue:  xValue,
+	})
+}
+
+// ActivateInResponseTo scripts an activated ability in response to the most recently
+// scripted cast action. If no explicit targets are given, it auto-targets the spell on stack.
+func (tg *TestGame) ActivateInResponseTo(p PlayerRef, permName string, targets ...string) {
+	if len(tg.castActions) == 0 {
+		return
+	}
+	last := &tg.castActions[len(tg.castActions)-1]
+	last.responses = append(last.responses, responseAction{
+		player:  p,
+		perm:    permName,
+		targets: targets,
+	})
+}
+
 // ActivateAbility scripts an ability activation at a specific turn/step.
 func (tg *TestGame) ActivateAbility(turn int, step PhaseStep, p PlayerRef, permName string, targets ...string) {
 	tg.activateActions = append(tg.activateActions, activateAction{
@@ -226,6 +279,38 @@ func (tg *TestGame) autoAddMana() {
 		if mc.HasX {
 			pool.Add(Colorless, ca.xValue*mc.XCount)
 		}
+
+		// Add mana for response spells
+		for _, r := range ca.responses {
+			if r.spell != "" {
+				rCard, err := CreateCard(r.spell)
+				if err != nil {
+					continue
+				}
+				rmc := rCard.ManaCost()
+				rPlayer := tg.getPlayer(r.player)
+				rPool := rPlayer.ManaPool()
+				rPool.Add(White, rmc.White)
+				rPool.Add(Blue, rmc.Blue)
+				rPool.Add(Black, rmc.Black)
+				rPool.Add(Red, rmc.Red)
+				rPool.Add(Green, rmc.Green)
+				rPool.Add(Colorless, rmc.Generic)
+				if rmc.HasX {
+					rPool.Add(Colorless, r.xValue*rmc.XCount)
+				}
+			}
+			if r.perm != "" {
+				// Add mana for activated ability responses
+				rPlayer := tg.getPlayer(r.player)
+				rPlayer.ManaPool().Add(White, 5)
+				rPlayer.ManaPool().Add(Blue, 5)
+				rPlayer.ManaPool().Add(Black, 5)
+				rPlayer.ManaPool().Add(Red, 5)
+				rPlayer.ManaPool().Add(Green, 5)
+				rPlayer.ManaPool().Add(Colorless, 10)
+			}
+		}
 	}
 
 	for _, aa := range tg.activateActions {
@@ -263,7 +348,42 @@ func (tg *TestGame) executeCastActions(turn int, step PhaseStep) {
 		if err != nil {
 			tg.t.Logf("CastSpell %s failed: %v", ca.spell, err)
 		}
+
+		// If there are responses, cast them before resolving the stack
+		if len(ca.responses) > 0 {
+			tg.executeResponses(ca.responses)
+		}
+
 		tg.Game.ResolveStack()
+	}
+}
+
+func (tg *TestGame) executeResponses(responses []responseAction) {
+	for _, r := range responses {
+		respPlayerID := tg.getPlayerID(r.player)
+
+		// Resolve explicit targets, or auto-target the top spell on the stack
+		var targets []uuid.UUID
+		if len(r.targets) > 0 {
+			targets = tg.resolveTargets(r.targets, respPlayerID)
+		} else if tg.Game.Stack.Peek() != nil {
+			// Auto-target the top spell on the stack
+			targets = []uuid.UUID{tg.Game.Stack.Peek().SourceID}
+		}
+
+		if r.perm != "" {
+			// Activated ability response
+			err := tg.Game.ActivateAbilityByText(respPlayerID, r.perm, targets)
+			if err != nil {
+				tg.t.Logf("ActivateInResponseTo %s failed: %v", r.perm, err)
+			}
+		} else {
+			// Spell response
+			err := tg.Game.CastSpellByName(respPlayerID, r.spell, targets, r.xValue)
+			if err != nil {
+				tg.t.Logf("CastInResponseTo %s failed: %v", r.spell, err)
+			}
+		}
 	}
 }
 
