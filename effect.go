@@ -12,6 +12,26 @@ type Effect interface {
 	Text() string
 }
 
+// funcEffect wraps an anonymous function as an Effect. Use FuncEffect to create
+// one-off effects inline in card definitions without needing a dedicated struct.
+type funcEffect struct {
+	text string
+	fn   func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error
+}
+
+// FuncEffect creates an Effect from an anonymous function. This is ideal for
+// card-specific effects that are used by only one card and don't warrant a
+// dedicated type. The text parameter is used for Text() (rules text display).
+func FuncEffect(text string, fn func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error) Effect {
+	return &funcEffect{text: text, fn: fn}
+}
+
+func (e *funcEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	return e.fn(g, sourceID, controller, targets)
+}
+
+func (e *funcEffect) Text() string { return e.text }
+
 // gainLifeEffect gains life for the controller.
 type gainLifeEffect struct {
 	amount int
