@@ -33,19 +33,6 @@ func (ct CardType) String() string {
 	}
 }
 
-// PermanentProps holds card-level properties that transfer to a Permanent on the battlefield.
-type PermanentProps struct {
-	CantBeBlockedByWalls        bool
-	CanBlockAdditional          int
-	EntersTapped                bool
-	IntrinsicDoesNotUntap       bool
-	DestroyAtEndOfTurn          bool
-	SacrificeUnlessLand         string
-	EntersWithXCounters         CounterType
-	EntersWithXCountersSet      bool
-	GraveyardReturnMinCreatures int
-}
-
 // Card is the interface for all cards.
 type Card interface {
 	ID() uuid.UUID
@@ -62,7 +49,6 @@ type Card interface {
 	SetID(uuid.UUID)
 	HasType(CardType) bool
 	AddAbility(Ability)
-	Props() PermanentProps
 	CloneFrom(Card)
 }
 
@@ -78,16 +64,6 @@ type BaseCard struct {
 	power     int
 	toughness int
 
-	// Permanent properties set at card creation time
-	cantBeBlockedByWalls  bool   // e.g. Juggernaut
-	canBlockAdditional    int    // e.g. Two-Headed Giant can block 1 additional creature
-	entersTapped          bool   // e.g. Nevinyrral's Disk
-	intrinsicDoesNotUntap bool   // e.g. Basalt Monolith
-	destroyAtEndOfTurn    bool   // e.g. Berserk
-	sacrificeUnlessLand   string      // e.g. "Island" for Sea Serpent
-	entersWithXCounters   CounterType // if non-zero, add X counters of this type on ETB
-	entersWithXCountersSet bool        // whether EntersWithXCounters is configured
-	graveyardReturnMinCreatures int  // e.g. 3 for Nether Shadow: return from graveyard if N creatures above
 }
 
 func (c *BaseCard) ID() uuid.UUID         { return c.id }
@@ -117,20 +93,6 @@ func (c *BaseCard) AddType(t CardType) {
 
 func (c *BaseCard) AddAbility(a Ability) {
 	c.abilities = append(c.abilities, a)
-}
-
-func (c *BaseCard) Props() PermanentProps {
-	return PermanentProps{
-		CantBeBlockedByWalls:        c.cantBeBlockedByWalls,
-		CanBlockAdditional:          c.canBlockAdditional,
-		EntersTapped:                c.entersTapped,
-		IntrinsicDoesNotUntap:       c.intrinsicDoesNotUntap,
-		DestroyAtEndOfTurn:          c.destroyAtEndOfTurn,
-		SacrificeUnlessLand:         c.sacrificeUnlessLand,
-		EntersWithXCounters:         c.entersWithXCounters,
-		EntersWithXCountersSet:      c.entersWithXCountersSet,
-		GraveyardReturnMinCreatures: c.graveyardReturnMinCreatures,
-	}
 }
 
 func (c *BaseCard) CloneFrom(other Card) {
@@ -171,18 +133,8 @@ func NewCreature(name, cost string, power, toughness int, subTypes ...string) *B
 
 // Setter methods for cross-package access to unexported fields.
 
-func (c *BaseCard) SetPower(p int)                       { c.power = p }
-func (c *BaseCard) SetToughness(t int)                   { c.toughness = t }
-func (c *BaseCard) SetEntersTapped(v bool)               { c.entersTapped = v }
-func (c *BaseCard) SetIntrinsicDoesNotUntap(v bool)      { c.intrinsicDoesNotUntap = v }
-func (c *BaseCard) SetCantBeBlockedByWalls(v bool)       { c.cantBeBlockedByWalls = v }
-func (c *BaseCard) SetDestroyAtEndOfTurn(v bool)         { c.destroyAtEndOfTurn = v }
-func (c *BaseCard) SetSacrificeUnlessLand(subtype string) { c.sacrificeUnlessLand = subtype }
-func (c *BaseCard) SetGraveyardReturnMinCreatures(n int) { c.graveyardReturnMinCreatures = n }
-func (c *BaseCard) SetEntersWithXCounters(ct CounterType) {
-	c.entersWithXCounters = ct
-	c.entersWithXCountersSet = true
-}
+func (c *BaseCard) SetPower(p int)     { c.power = p }
+func (c *BaseCard) SetToughness(t int) { c.toughness = t }
 
 // NewInstant creates a new instant card.
 func NewInstant(name, cost string) *BaseCard {
@@ -272,13 +224,9 @@ type Permanent struct {
 
 	RegenerationShield     bool // if true, the next destruction is replaced by tap + remove damage
 	DoesNotUntap           bool // if true, does not untap during untap step
-	IntrinsicDoesNotUntap  bool // permanent property (e.g. Basalt Monolith)
 	DamagePreventionShield int  // amount of damage to prevent
 	DestroyAtEndOfTurn     bool // if true, destroy during cleanup
 	Unblockable            bool   // if true, can't be blocked this turn
-	CantBeBlockedByWalls   bool   // if true, can't be blocked by Walls (e.g. Juggernaut)
-	CanBlockAdditional     int    // number of additional creatures this can block (e.g. Two-Headed Giant)
-	SacrificeUnlessLand    string // sacrifice if controller has no land of this subtype
 }
 
 // NewPermanent creates a permanent from a card.
@@ -294,17 +242,8 @@ func NewPermanent(card Card, controller uuid.UUID) *Permanent {
 		cp := a
 		p.RuntimeAbilities = append(p.RuntimeAbilities, cp)
 	}
-	// Copy card-level permanent properties
-	props := card.Props()
-	p.CantBeBlockedByWalls = props.CantBeBlockedByWalls
-	p.CanBlockAdditional = props.CanBlockAdditional
-	p.IntrinsicDoesNotUntap = props.IntrinsicDoesNotUntap
-	p.DoesNotUntap = props.IntrinsicDoesNotUntap
-	p.DestroyAtEndOfTurn = props.DestroyAtEndOfTurn
-	p.SacrificeUnlessLand = props.SacrificeUnlessLand
-	if props.EntersTapped {
-		p.Tapped = true
-	}
+	// Initialize DoesNotUntap from keyword
+	p.DoesNotUntap = p.HasAbility(DoesNotUntapKW)
 	return p
 }
 

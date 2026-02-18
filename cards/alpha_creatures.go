@@ -172,7 +172,7 @@ func registerAlphaCreatures() {
 		c.AddAbility(mage.HasKeyword(mage.Haste))
 		// At beginning of your upkeep, if Nether Shadow is in your graveyard
 		// with three or more creature cards above it, put it onto the battlefield.
-		c.SetGraveyardReturnMinCreatures(3)
+		c.AddAbility(mage.GraveyardReturnIfCreaturesAbove(3))
 		return c
 	})
 
@@ -609,7 +609,7 @@ func registerAlphaCreatures() {
 		c := mage.NewCreature("Juggernaut", "{4}", 5, 3, "Juggernaut")
 		c.AddType(mage.TypeArtifact)
 		// Juggernaut attacks each combat if able. Can't be blocked by Walls.
-		c.SetCantBeBlockedByWalls(true)
+		c.AddAbility(mage.HasKeyword(mage.CantBeBlockedByWalls))
 		return c
 	})
 
@@ -683,7 +683,7 @@ func registerAlphaCreatures() {
 	mage.Register("Sea Serpent", func() mage.Card {
 		c := mage.NewCreature("Sea Serpent", "{5}{U}", 5, 5, "Serpent")
 		c.AddAbility(mage.HasKeyword(mage.Islandwalk))
-		c.SetSacrificeUnlessLand("Island")
+		c.AddAbility(mage.SacrificeUnlessLand("Island"))
 		return c
 	})
 
@@ -711,7 +711,7 @@ func registerAlphaCreatures() {
 	mage.Register("Rock Hydra", func() mage.Card {
 		c := mage.NewCreature("Rock Hydra", "{X}{R}{R}", 0, 0, "Hydra")
 		// Enters with X +1/+1 counters (replacement effect)
-		c.SetEntersWithXCounters(mage.P1P1)
+		c.AddAbility(mage.EntersWithXCounters(mage.P1P1))
 		return c
 	})
 

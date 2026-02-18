@@ -114,7 +114,7 @@ func (em *EffectManager) Apply(g *Game) {
 		}
 		p.RuntimeAbilities = base
 		// Reset DoesNotUntap to intrinsic value (will be re-set by effects if applicable)
-		p.DoesNotUntap = p.IntrinsicDoesNotUntap
+		p.DoesNotUntap = p.HasAbility(DoesNotUntapKW)
 	}
 
 	// Remove effects whose source is no longer on the battlefield
