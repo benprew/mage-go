@@ -55,51 +55,63 @@ func (e *gainLifeEffect) Text() string {
 	return fmt.Sprintf("gain %d life", e.amount)
 }
 
-// addCountersToSourceEffect adds counters to the source permanent.
-type addCountersToSourceEffect struct {
-	ct     CounterType
-	amount int
+// addCountersEffect adds counters to the source or a target permanent.
+// When applyToSource is true, counters go on the source; otherwise on the
+// first target. When useX is true, the count is read from g.CurrentX.
+type addCountersEffect struct {
+	ct            CounterType
+	amount        int
+	applyToSource bool
+	useX          bool
 }
 
+// AddCountersToSource creates an effect that adds counters to the source permanent.
 func AddCountersToSource(ct CounterType, amount int) Effect {
-	return &addCountersToSourceEffect{ct: ct, amount: amount}
+	return &addCountersEffect{ct: ct, amount: amount, applyToSource: true}
 }
 
-func (e *addCountersToSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	p := g.FindPermanent(sourceID)
-	if p == nil {
-		return nil // source gone, effect does nothing
-	}
-	p.AddCounter(e.ct, e.amount)
-	return nil
+// AddCountersToTarget creates an effect that adds counters to a target permanent.
+func AddCountersToTarget(ct CounterType, amount int) Effect {
+	return &addCountersEffect{ct: ct, amount: amount}
 }
 
-func (e *addCountersToSourceEffect) Text() string {
-	return fmt.Sprintf("put %d %s counter(s) on it", e.amount, e.ct)
-}
-
-// addXCountersToSourceEffect adds X counters to the source, reading X from g.CurrentX.
-type addXCountersToSourceEffect struct {
-	ct CounterType
-}
-
+// AddXCountersToSource creates an effect that adds X counters to the source permanent,
+// where X is the value of g.CurrentX when the spell resolves.
 func AddXCountersToSource(ct CounterType) Effect {
-	return &addXCountersToSourceEffect{ct: ct}
+	return &addCountersEffect{ct: ct, applyToSource: true, useX: true}
 }
 
-func (e *addXCountersToSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	p := g.FindPermanent(sourceID)
-	if p == nil {
+func (e *addCountersEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	var perm *Permanent
+	if e.applyToSource {
+		perm = g.FindPermanent(sourceID)
+	} else {
+		if len(targets) == 0 {
+			return fmt.Errorf("no target for counters")
+		}
+		perm = g.FindPermanent(targets[0])
+	}
+	if perm == nil {
 		return nil
 	}
-	if g.CurrentX > 0 {
-		p.AddCounter(e.ct, g.CurrentX)
+	amount := e.amount
+	if e.useX {
+		amount = g.CurrentX
+	}
+	if amount > 0 {
+		perm.AddCounter(e.ct, amount)
 	}
 	return nil
 }
 
-func (e *addXCountersToSourceEffect) Text() string {
-	return fmt.Sprintf("put X %s counters on it", e.ct)
+func (e *addCountersEffect) Text() string {
+	if e.useX {
+		return fmt.Sprintf("put X %s counters on it", e.ct)
+	}
+	if e.applyToSource {
+		return fmt.Sprintf("put %d %s counter(s) on it", e.amount, e.ct)
+	}
+	return fmt.Sprintf("put %d %s counter(s) on target", e.amount, e.ct)
 }
 
 // cloneTargetCreatureEffect copies target creature's characteristics onto the source card.
@@ -437,59 +449,61 @@ func (e *returnFromGraveyardToHandTargetEffect) Text() string {
 	return "return target card from your graveyard to your hand"
 }
 
-// boostTargetEffect boosts target creature's P/T until end of turn.
-type boostTargetEffect struct {
-	power     int
-	toughness int
+// boostUntilEndOfTurnEffect boosts a creature's P/T until end of turn.
+// When applyToSource is true, it boosts the source permanent; otherwise it
+// boosts the first target. When useX is true, the boost values are derived
+// from g.CurrentX (using the xPower/xToughness flags).
+type boostUntilEndOfTurnEffect struct {
+	power         int
+	toughness     int
+	applyToSource bool
+	useX          bool
+	xPower        bool // if useX, whether to boost power by X
+	xToughness    bool // if useX, whether to boost toughness by X
 }
 
+// BoostTargetUntilEndOfTurn creates an effect that boosts a target creature's P/T until end of turn.
 func BoostTargetUntilEndOfTurn(power, toughness int) Effect {
-	return &boostTargetEffect{power: power, toughness: toughness}
+	return &boostUntilEndOfTurnEffect{power: power, toughness: toughness}
 }
 
-func (e *boostTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 {
-		return fmt.Errorf("no target for boost")
-	}
-	perm := g.FindPermanent(targets[0])
-	if perm == nil {
-		return nil
-	}
-	// Apply as an end-of-turn continuous effect
-	eff := &temporaryBoostEffect{
-		targetID:  perm.ID(),
-		power:     e.power,
-		toughness: e.toughness,
-		sourceID_: sourceID,
-	}
-	g.Effects.Add(eff)
-	g.Effects.Apply(g)
-	return nil
-}
-
-func (e *boostTargetEffect) Text() string {
-	return fmt.Sprintf("target creature gets +%d/+%d until end of turn", e.power, e.toughness)
-}
-
-// boostSourceEffect boosts the source permanent's P/T until end of turn (for firebreathing).
-type boostSourceEffect struct {
-	power     int
-	toughness int
-}
-
+// BoostSourceUntilEndOfTurn creates an effect that boosts the source creature's P/T until end of turn.
 func BoostSourceUntilEndOfTurn(power, toughness int) Effect {
-	return &boostSourceEffect{power: power, toughness: toughness}
+	return &boostUntilEndOfTurnEffect{power: power, toughness: toughness, applyToSource: true}
 }
 
-func (e *boostSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	perm := g.FindPermanent(sourceID)
+// BoostTargetXUntilEndOfTurn creates an effect that boosts a target creature by X
+// in the specified dimensions until end of turn.
+func BoostTargetXUntilEndOfTurn(power, toughness bool) Effect {
+	return &boostUntilEndOfTurnEffect{useX: true, xPower: power, xToughness: toughness}
+}
+
+func (e *boostUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	var perm *Permanent
+	if e.applyToSource {
+		perm = g.FindPermanent(sourceID)
+	} else {
+		if len(targets) == 0 {
+			return fmt.Errorf("no target for boost")
+		}
+		perm = g.FindPermanent(targets[0])
+	}
 	if perm == nil {
 		return nil
 	}
+	p, t := e.power, e.toughness
+	if e.useX {
+		if e.xPower {
+			p = g.CurrentX
+		}
+		if e.xToughness {
+			t = g.CurrentX
+		}
+	}
 	eff := &temporaryBoostEffect{
 		targetID:  perm.ID(),
-		power:     e.power,
-		toughness: e.toughness,
+		power:     p,
+		toughness: t,
 		sourceID_: sourceID,
 	}
 	g.Effects.Add(eff)
@@ -497,8 +511,14 @@ func (e *boostSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targe
 	return nil
 }
 
-func (e *boostSourceEffect) Text() string {
-	return fmt.Sprintf("this creature gets +%d/+%d until end of turn", e.power, e.toughness)
+func (e *boostUntilEndOfTurnEffect) Text() string {
+	if e.useX {
+		return "Target creature gets +X/+0 until end of turn"
+	}
+	if e.applyToSource {
+		return fmt.Sprintf("this creature gets +%d/+%d until end of turn", e.power, e.toughness)
+	}
+	return fmt.Sprintf("target creature gets +%d/+%d until end of turn", e.power, e.toughness)
 }
 
 // markDestroyAtEOTAfterNActivationsEffect tracks pump activations using Charge
@@ -1193,31 +1213,6 @@ func (e *dealDamageToEachOpponentEffect) Text() string {
 	return fmt.Sprintf("deal %d damage to each opponent", e.amount)
 }
 
-// addCountersToTargetEffect adds counters to a target permanent.
-type addCountersToTargetEffect struct {
-	ct     CounterType
-	amount int
-}
-
-func AddCountersToTarget(ct CounterType, amount int) Effect {
-	return &addCountersToTargetEffect{ct: ct, amount: amount}
-}
-
-func (e *addCountersToTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 {
-		return fmt.Errorf("no target for counters")
-	}
-	perm := g.FindPermanent(targets[0])
-	if perm == nil {
-		return nil
-	}
-	perm.AddCounter(e.ct, e.amount)
-	return nil
-}
-
-func (e *addCountersToTargetEffect) Text() string {
-	return fmt.Sprintf("put %d %s counter(s) on target", e.amount, e.ct)
-}
 
 // drainXLifeEffect deals X damage to target and gains X life.
 type drainXLifeEffect struct{}
@@ -1317,47 +1312,34 @@ func (e *dealDamageToEventControllerEffect) Text() string {
 }
 
 // grantKeywordTargetUntilEndOfTurnEffect grants a keyword to a target creature until end of turn.
-type grantKeywordTargetUntilEndOfTurnEffect struct {
-	keyword Keyword
+// grantKeywordUntilEndOfTurnEffect grants a keyword to the source or a target
+// creature until end of turn. When applyToSource is true, the keyword goes on
+// the source; otherwise on the first target.
+type grantKeywordUntilEndOfTurnEffect struct {
+	keyword       Keyword
+	applyToSource bool
 }
 
+// GrantKeywordTargetUntilEndOfTurn creates an effect that grants a keyword to a target creature until end of turn.
 func GrantKeywordTargetUntilEndOfTurn(kw Keyword) Effect {
-	return &grantKeywordTargetUntilEndOfTurnEffect{keyword: kw}
+	return &grantKeywordUntilEndOfTurnEffect{keyword: kw}
 }
 
-func (e *grantKeywordTargetUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 {
-		return fmt.Errorf("no target for keyword grant")
-	}
-	perm := g.FindPermanent(targets[0])
-	if perm == nil {
-		return nil
-	}
-	eff := &temporaryKeywordEffect{
-		targetID:  perm.ID(),
-		keyword:   e.keyword,
-		sourceID_: sourceID,
-	}
-	g.Effects.Add(eff)
-	g.Effects.Apply(g)
-	return nil
-}
-
-func (e *grantKeywordTargetUntilEndOfTurnEffect) Text() string {
-	return fmt.Sprintf("target creature gains %s until end of turn", e.keyword)
-}
-
-// grantKeywordSourceUntilEndOfTurnEffect grants a keyword to the source permanent until end of turn.
-type grantKeywordSourceUntilEndOfTurnEffect struct {
-	keyword Keyword
-}
-
+// GrantKeywordSourceUntilEndOfTurn creates an effect that grants a keyword to the source creature until end of turn.
 func GrantKeywordSourceUntilEndOfTurn(kw Keyword) Effect {
-	return &grantKeywordSourceUntilEndOfTurnEffect{keyword: kw}
+	return &grantKeywordUntilEndOfTurnEffect{keyword: kw, applyToSource: true}
 }
 
-func (e *grantKeywordSourceUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	perm := g.FindPermanent(sourceID)
+func (e *grantKeywordUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	var perm *Permanent
+	if e.applyToSource {
+		perm = g.FindPermanent(sourceID)
+	} else {
+		if len(targets) == 0 {
+			return fmt.Errorf("no target for keyword grant")
+		}
+		perm = g.FindPermanent(targets[0])
+	}
 	if perm == nil {
 		return nil
 	}
@@ -1371,8 +1353,11 @@ func (e *grantKeywordSourceUntilEndOfTurnEffect) Apply(g *Game, sourceID, contro
 	return nil
 }
 
-func (e *grantKeywordSourceUntilEndOfTurnEffect) Text() string {
-	return fmt.Sprintf("~ gains %s until end of turn", e.keyword)
+func (e *grantKeywordUntilEndOfTurnEffect) Text() string {
+	if e.applyToSource {
+		return fmt.Sprintf("~ gains %s until end of turn", e.keyword)
+	}
+	return fmt.Sprintf("target creature gains %s until end of turn", e.keyword)
 }
 
 // regenerateSourceEffect sets a regeneration shield on the source.
@@ -1527,44 +1512,6 @@ func (e *destroyTargetAtEndOfTurnEffect) Text() string {
 }
 
 // boostTargetXEffect gives +X/+0 to a target creature until end of turn.
-type boostTargetXEffect struct {
-	power     bool // if true, boost power by X
-	toughness bool // if true, boost toughness by X
-}
-
-func BoostTargetXUntilEndOfTurn(power, toughness bool) Effect {
-	return &boostTargetXEffect{power: power, toughness: toughness}
-}
-
-func (e *boostTargetXEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 {
-		return nil
-	}
-	perm := g.FindPermanent(targets[0])
-	if perm == nil {
-		return nil
-	}
-	p, t := 0, 0
-	if e.power {
-		p = g.CurrentX
-	}
-	if e.toughness {
-		t = g.CurrentX
-	}
-	eff := &temporaryBoostEffect{
-		targetID:  perm.ID(),
-		power:     p,
-		toughness: t,
-		sourceID_: sourceID,
-	}
-	g.Effects.Add(eff)
-	g.Effects.Apply(g)
-	return nil
-}
-
-func (e *boostTargetXEffect) Text() string {
-	return "Target creature gets +X/+0 until end of turn"
-}
 
 // discardHandAndDrawEffect makes each player discard their hand and draw N cards.
 type discardHandAndDrawEffect struct {

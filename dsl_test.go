@@ -343,3 +343,70 @@ func TestFuncEffect(t *testing.T) {
 		}
 	})
 }
+
+// TestSourceTargetUnification verifies that Source/Target effect pairs have been
+// unified into single parameterized structs that determine their target via
+// an applyToSource flag.
+func TestSourceTargetUnification(t *testing.T) {
+	t.Run("BoostSourceUntilEndOfTurn pumps source", func(t *testing.T) {
+		name := "DSL Boost Source"
+		if !CardRegistered(name) {
+			Register(name, func() Card {
+				c := NewCreature(name, "{1}{R}", "Warrior")
+				c.Power_ = 2
+				c.Toughness_ = 2
+				c.AddAbility(NewTriggered(
+					EvtDeclaredAttacker,
+					false,
+					BoostSourceUntilEndOfTurn(1, 0),
+				).SetCondition(func(evt *GameEvent, _ *Game, sourceID, _ uuid.UUID) bool {
+					return evt.SourceID == sourceID
+				}))
+				return c
+			})
+		}
+
+		tg := NewTestGame(t)
+		tg.AddCard(ZoneBattlefield, PlayerA, name)
+		tg.Attack(1, PlayerA, name)
+		tg.StopAt(1, EndCombat)
+		tg.Execute()
+
+		tg.AssertLife(PlayerB, 17) // 2+1 = 3 damage
+	})
+
+	t.Run("BoostTargetUntilEndOfTurn pumps target", func(t *testing.T) {
+		eff := BoostTargetUntilEndOfTurn(2, 2)
+		if eff.Text() != "target creature gets +2/+2 until end of turn" {
+			t.Errorf("BoostTargetUntilEndOfTurn(2,2).Text() = %q", eff.Text())
+		}
+	})
+
+	t.Run("AddCountersToSource adds to source", func(t *testing.T) {
+		eff := AddCountersToSource(P1P1, 2)
+		if eff.Text() != "put 2 +1/+1 counter(s) on it" {
+			t.Errorf("AddCountersToSource.Text() = %q", eff.Text())
+		}
+	})
+
+	t.Run("AddCountersToTarget adds to target", func(t *testing.T) {
+		eff := AddCountersToTarget(P1P1, 1)
+		if eff.Text() != "put 1 +1/+1 counter(s) on target" {
+			t.Errorf("AddCountersToTarget.Text() = %q", eff.Text())
+		}
+	})
+
+	t.Run("GrantKeywordSourceUntilEndOfTurn Text()", func(t *testing.T) {
+		eff := GrantKeywordSourceUntilEndOfTurn(Flying)
+		if eff.Text() != "~ gains Flying until end of turn" {
+			t.Errorf("GrantKeywordSource.Text() = %q", eff.Text())
+		}
+	})
+
+	t.Run("GrantKeywordTargetUntilEndOfTurn Text()", func(t *testing.T) {
+		eff := GrantKeywordTargetUntilEndOfTurn(Flying)
+		if eff.Text() != "target creature gains Flying until end of turn" {
+			t.Errorf("GrantKeywordTarget.Text() = %q", eff.Text())
+		}
+	})
+}
