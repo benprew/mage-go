@@ -246,9 +246,8 @@ func registerAlphaCreatures() {
 		c.Power_ = 4
 		c.Toughness_ = 4
 		c.AddAbility(mage.HasKeyword(mage.Flying))
-		// Whenever a creature dealt damage by Sengir Vampire this turn dies, +1/+1 counter
-		// Simplified: whenever any creature an opponent controls dies, get counter
-		c.AddAbility(mage.AnyCreatureDiesTrigger(mage.AddCountersToSource(mage.P1P1, 1), true))
+		// Whenever a creature dealt damage by Sengir Vampire this turn dies, put a +1/+1 counter on Sengir Vampire
+		c.AddAbility(mage.CreatureDealtDamageBySourceDiesTrigger(mage.AddCountersToSource(mage.P1P1, 1), false))
 		return c
 	})
 
@@ -313,6 +312,12 @@ func registerAlphaCreatures() {
 		c := mage.NewCreature("Goblin Balloon Brigade", "{R}", "Goblin", "Warrior")
 		c.Power_ = 1
 		c.Toughness_ = 1
+		// {R}: Goblin Balloon Brigade gains flying until end of turn.
+		ab := mage.NewActivatedAbility(
+			mage.GrantKeywordSourceUntilEndOfTurn(mage.Flying),
+			mage.ManaCostOf("{R}"),
+		)
+		c.AddAbility(ab)
 		return c
 	})
 

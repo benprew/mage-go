@@ -1309,3 +1309,31 @@ func (e *grantKeywordTargetUntilEndOfTurnEffect) Apply(g *Game, sourceID, contro
 func (e *grantKeywordTargetUntilEndOfTurnEffect) Text() string {
 	return fmt.Sprintf("target creature gains %s until end of turn", e.keyword)
 }
+
+// grantKeywordSourceUntilEndOfTurnEffect grants a keyword to the source permanent until end of turn.
+type grantKeywordSourceUntilEndOfTurnEffect struct {
+	keyword Keyword
+}
+
+func GrantKeywordSourceUntilEndOfTurn(kw Keyword) Effect {
+	return &grantKeywordSourceUntilEndOfTurnEffect{keyword: kw}
+}
+
+func (e *grantKeywordSourceUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	perm := g.FindPermanent(sourceID)
+	if perm == nil {
+		return nil
+	}
+	eff := &temporaryKeywordEffect{
+		targetID:  perm.ID(),
+		keyword:   e.keyword,
+		sourceID_: sourceID,
+	}
+	g.Effects.Add(eff)
+	g.Effects.Apply(g)
+	return nil
+}
+
+func (e *grantKeywordSourceUntilEndOfTurnEffect) Text() string {
+	return fmt.Sprintf("~ gains %s until end of turn", e.keyword)
+}
