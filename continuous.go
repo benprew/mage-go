@@ -499,18 +499,36 @@ func (e *temporaryKeywordEffect) Apply(g *Game) error {
 }
 
 // BoostAllCreaturesContinuous boosts all creatures matching a filter.
+// boostAllCreaturesEffect boosts all creatures matching an optional filter.
+// When includeSelf is false (the default for lord effects), the source permanent
+// is excluded from the boost. When includeSelf is true, all matching creatures
+// including the source are boosted.
 type boostAllCreaturesEffect struct {
-	power     int
-	toughness int
-	filter    PermanentFilter
+	power       int
+	toughness   int
+	filter      PermanentFilter
+	includeSelf bool
 	effectSource
 }
 
+// BoostAllCreatures creates a continuous effect that boosts all matching creatures
+// except the source (typical lord behavior).
 func BoostAllCreatures(power, toughness int, filter PermanentFilter) ContinuousEffect {
 	return &boostAllCreaturesEffect{
 		power:     power,
 		toughness: toughness,
 		filter:    filter,
+	}
+}
+
+// BoostAllCreaturesIncludingSelf creates a continuous effect that boosts all
+// matching creatures including the source.
+func BoostAllCreaturesIncludingSelf(power, toughness int, filter PermanentFilter) ContinuousEffect {
+	return &boostAllCreaturesEffect{
+		power:       power,
+		toughness:   toughness,
+		filter:      filter,
+		includeSelf: true,
 	}
 }
 
@@ -526,45 +544,8 @@ func (e *boostAllCreaturesEffect) Apply(g *Game) error {
 		if !p.HasType(TypeCreature) {
 			continue
 		}
-		if p.ID() == e.sourceID {
+		if !e.includeSelf && p.ID() == e.sourceID {
 			continue // lords typically don't boost themselves
-		}
-		if e.filter != nil && !e.filter(p, g) {
-			continue
-		}
-		g.Effects.powerBonuses[p.ID()] += e.power
-		g.Effects.toughBonuses[p.ID()] += e.toughness
-	}
-	return nil
-}
-
-// boostAllCreaturesIncludingSelfEffect boosts all matching creatures including source.
-type boostAllCreaturesIncludingSelfEffect struct {
-	power     int
-	toughness int
-	filter    PermanentFilter
-	effectSource
-}
-
-func BoostAllCreaturesIncludingSelf(power, toughness int, filter PermanentFilter) ContinuousEffect {
-	return &boostAllCreaturesIncludingSelfEffect{
-		power:     power,
-		toughness: toughness,
-		filter:    filter,
-	}
-}
-
-func (e *boostAllCreaturesIncludingSelfEffect) GetLayer() Layer      { return LayerPT }
-func (e *boostAllCreaturesIncludingSelfEffect) GetDuration() Duration { return WhileOnBattlefield }
-
-func (e *boostAllCreaturesIncludingSelfEffect) IsActive(g *Game) bool {
-	return g.FindPermanent(e.sourceID) != nil
-}
-
-func (e *boostAllCreaturesIncludingSelfEffect) Apply(g *Game) error {
-	for _, p := range g.Battlefield {
-		if !p.HasType(TypeCreature) {
-			continue
 		}
 		if e.filter != nil && !e.filter(p, g) {
 			continue

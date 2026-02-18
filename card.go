@@ -412,3 +412,34 @@ func (p *Permanent) RemoveCounter(ct CounterType, n int) bool {
 func (p *Permanent) IsAttached() bool {
 	return p.AttachedTo != uuid.Nil
 }
+
+// ---------------------------------------------------------------------------
+// Card template helpers: pre-assembled cards for common patterns.
+// These reduce boilerplate for cards that follow well-known formulas.
+// ---------------------------------------------------------------------------
+
+// NewLuckyCharm creates a {1} artifact that optionally gains 1 life whenever a
+// spell of the given color is cast (e.g. Crystal Rod, Iron Star, Ivory Cup).
+func NewLuckyCharm(name, cost string, color Color) *BaseCard {
+	c := NewArtifact(name, cost)
+	c.AddAbility(WheneverSpellCastTrigger(GainLife(1), true, &color))
+	return c
+}
+
+// NewLandDestruction creates a sorcery that destroys target land
+// (e.g. Stone Rain, Sinkhole, Ice Storm).
+func NewLandDestruction(name, cost string) *BaseCard {
+	c := NewSorcery(name, cost)
+	c.AddAbility(NewTargetedSpell(TargetLand(), DestroyTargetLand()))
+	return c
+}
+
+// NewBoostAura creates an aura enchantment that gives the enchanted creature
+// +power/+toughness (e.g. Holy Strength, Unholy Strength, Giant Growth-style auras).
+func NewBoostAura(name, cost string, power, toughness int) *BaseCard {
+	c := NewAura(name, cost)
+	c.AddAbility(StaticAbility(
+		BoostAttached(power, toughness, AttachAura),
+	))
+	return c
+}

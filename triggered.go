@@ -12,503 +12,230 @@ type TriggeredAbility interface {
 	Targets() []Target
 }
 
-// AttacksTriggered triggers when the source creature attacks.
-type AttacksTriggered struct {
+// TriggerCondition is a predicate that determines whether a triggered ability
+// should fire for a given event. It receives the event, game state, the source
+// permanent's ID, and the controller's ID. Return true to trigger.
+// A nil condition always triggers.
+type TriggerCondition func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool
+
+// GenericTriggered is a universal triggered ability that replaces bespoke trigger
+// types. It listens for a single EventType and applies an optional condition
+// function to decide whether to fire. All existing trigger constructors
+// (AttacksTrigger, BeginningOfUpkeepTrigger, etc.) are thin wrappers that
+// create a GenericTriggered with the appropriate condition.
+type GenericTriggered struct {
 	BaseAbility
-	Optional bool
-	effects     []Effect
-	targets     []Target
-}
-
-func AttacksTrigger(effect Effect, optional bool) *AttacksTriggered {
-	return &AttacksTriggered{
-		BaseAbility: BaseAbility{
-			id:   uuid.New(),
-			abilityType: AbilityTriggered,
-		},
-		Optional: optional,
-		effects:     []Effect{effect},
-	}
-}
-
-func (t *AttacksTriggered) CheckEventType(et EventType) bool {
-	return et == EvtDeclaredAttacker
-}
-
-func (t *AttacksTriggered) CheckTrigger(evt *GameEvent, g *Game) bool {
-	return evt.SourceID == t.source
-}
-
-func (t *AttacksTriggered) IsOptional() bool { return t.Optional }
-func (t *AttacksTriggered) Effects() []Effect { return t.effects }
-func (t *AttacksTriggered) Targets() []Target { return t.targets }
-
-// DiesCreatureTriggered triggers when another creature you control dies.
-type DiesCreatureTriggered struct {
-	BaseAbility
-	Optional bool
-	Filter   PermanentFilter
-	effects     []Effect
-	targets     []Target
-}
-
-func DiesCreatureTrigger(effect Effect, optional bool, filter PermanentFilter) *DiesCreatureTriggered {
-	return &DiesCreatureTriggered{
-		BaseAbility: BaseAbility{
-			id:   uuid.New(),
-			abilityType: AbilityTriggered,
-		},
-		Optional: optional,
-		Filter:   filter,
-		effects:     []Effect{effect},
-	}
-}
-
-func (t *DiesCreatureTriggered) CheckEventType(et EventType) bool {
-	return et == EvtCreatureDied
-}
-
-func (t *DiesCreatureTriggered) CheckTrigger(evt *GameEvent, g *Game) bool {
-	// The dying creature is evt.SourceID
-	// The trigger source (Wraithbloom etc.) is t.source
-	if evt.SourceID == t.source {
-		return false // "another" creature — not itself
-	}
-	// Check if the dying creature was controlled by the same player
-	if evt.PlayerID != t.controller {
-		return false
-	}
-	return true
-}
-
-func (t *DiesCreatureTriggered) IsOptional() bool { return t.Optional }
-func (t *DiesCreatureTriggered) Effects() []Effect { return t.effects }
-func (t *DiesCreatureTriggered) Targets() []Target { return t.targets }
-
-// ETBTriggered triggers when the source enters the battlefield.
-type ETBTriggered struct {
-	BaseAbility
-	Optional bool
-	effects     []Effect
-	targets     []Target
-}
-
-func EntersBattlefieldTrigger(effect Effect, optional bool) *ETBTriggered {
-	return &ETBTriggered{
-		BaseAbility: BaseAbility{
-			id:   uuid.New(),
-			abilityType: AbilityTriggered,
-		},
-		Optional: optional,
-		effects:     []Effect{effect},
-	}
-}
-
-func (t *ETBTriggered) CheckEventType(et EventType) bool {
-	return et == EvtEntersBattlefield
-}
-
-func (t *ETBTriggered) CheckTrigger(evt *GameEvent, g *Game) bool {
-	return evt.SourceID == t.source
-}
-
-func (t *ETBTriggered) IsOptional() bool { return t.Optional }
-func (t *ETBTriggered) Effects() []Effect { return t.effects }
-func (t *ETBTriggered) Targets() []Target { return t.targets }
-
-// PutIntoGraveyardFromBattlefieldTriggered triggers when the source goes from battlefield to graveyard.
-type PutIntoGraveyardFromBattlefieldTriggered struct {
-	BaseAbility
-	Optional bool
-	effects     []Effect
-	targets     []Target
-}
-
-func PutIntoGraveyardFromBattlefieldTrigger(effect Effect, optional bool) *PutIntoGraveyardFromBattlefieldTriggered {
-	return &PutIntoGraveyardFromBattlefieldTriggered{
-		BaseAbility: BaseAbility{
-			id:   uuid.New(),
-			abilityType: AbilityTriggered,
-		},
-		Optional: optional,
-		effects:     []Effect{effect},
-	}
-}
-
-func (t *PutIntoGraveyardFromBattlefieldTriggered) CheckEventType(et EventType) bool {
-	return et == EvtPutIntoGraveyardFromBattlefield
-}
-
-func (t *PutIntoGraveyardFromBattlefieldTriggered) CheckTrigger(evt *GameEvent, g *Game) bool {
-	return evt.SourceID == t.source
-}
-
-func (t *PutIntoGraveyardFromBattlefieldTriggered) IsOptional() bool { return t.Optional }
-func (t *PutIntoGraveyardFromBattlefieldTriggered) Effects() []Effect { return t.effects }
-func (t *PutIntoGraveyardFromBattlefieldTriggered) Targets() []Target { return t.targets }
-
-// BeginningOfUpkeepTriggered triggers at the beginning of your upkeep.
-type BeginningOfUpkeepTriggered struct {
-	BaseAbility
-	Optional bool
-	effects     []Effect
-	targets     []Target
-}
-
-func BeginningOfUpkeepTrigger(effect Effect, optional bool) *BeginningOfUpkeepTriggered {
-	return &BeginningOfUpkeepTriggered{
-		BaseAbility: BaseAbility{
-			id:   uuid.New(),
-			abilityType: AbilityTriggered,
-		},
-		Optional: optional,
-		effects:     []Effect{effect},
-	}
-}
-
-func (t *BeginningOfUpkeepTriggered) CheckEventType(et EventType) bool {
-	return et == EvtUpkeep
-}
-
-func (t *BeginningOfUpkeepTriggered) CheckTrigger(evt *GameEvent, g *Game) bool {
-	// Triggers for the controller's upkeep
-	return evt.PlayerID == t.controller
-}
-
-func (t *BeginningOfUpkeepTriggered) IsOptional() bool { return t.Optional }
-func (t *BeginningOfUpkeepTriggered) Effects() []Effect { return t.effects }
-func (t *BeginningOfUpkeepTriggered) Targets() []Target { return t.targets }
-
-// BeginningOfEachUpkeepTriggered triggers at each player's upkeep.
-type BeginningOfEachUpkeepTriggered struct {
-	BaseAbility
-	Optional bool
-	effects     []Effect
-	targets     []Target
-}
-
-func BeginningOfEachUpkeepTrigger(effect Effect, optional bool) *BeginningOfEachUpkeepTriggered {
-	return &BeginningOfEachUpkeepTriggered{
-		BaseAbility: BaseAbility{
-			id:   uuid.New(),
-			abilityType: AbilityTriggered,
-		},
-		Optional: optional,
-		effects:     []Effect{effect},
-	}
-}
-
-func (t *BeginningOfEachUpkeepTriggered) CheckEventType(et EventType) bool {
-	return et == EvtUpkeep
-}
-
-func (t *BeginningOfEachUpkeepTriggered) CheckTrigger(evt *GameEvent, g *Game) bool {
-	return true // fires on every player's upkeep
-}
-
-func (t *BeginningOfEachUpkeepTriggered) IsOptional() bool { return t.Optional }
-func (t *BeginningOfEachUpkeepTriggered) Effects() []Effect { return t.effects }
-func (t *BeginningOfEachUpkeepTriggered) Targets() []Target { return t.targets }
-
-// DealsDamageToOpponentTriggered triggers when the source deals damage to an opponent.
-type DealsDamageToOpponentTriggered struct {
-	BaseAbility
-	Optional bool
-	effects     []Effect
-	targets     []Target
-}
-
-func DealsDamageToOpponentTrigger(effect Effect, optional bool) *DealsDamageToOpponentTriggered {
-	return &DealsDamageToOpponentTriggered{
-		BaseAbility: BaseAbility{
-			id:   uuid.New(),
-			abilityType: AbilityTriggered,
-		},
-		Optional: optional,
-		effects:     []Effect{effect},
-	}
-}
-
-func (t *DealsDamageToOpponentTriggered) CheckEventType(et EventType) bool {
-	return et == EvtDamageDealt
-}
-
-func (t *DealsDamageToOpponentTriggered) CheckTrigger(evt *GameEvent, g *Game) bool {
-	// Source of damage is the permanent this is on
-	if evt.SourceID != t.source {
-		return false
-	}
-	// Target must be an opponent (a player who is not the controller)
-	targetPlayer := g.GetPlayer(evt.TargetID)
-	if targetPlayer == nil {
-		return false // damage was to a creature, not a player
-	}
-	return targetPlayer.PlayerID() != t.controller
-}
-
-func (t *DealsDamageToOpponentTriggered) IsOptional() bool { return t.Optional }
-func (t *DealsDamageToOpponentTriggered) Effects() []Effect { return t.effects }
-func (t *DealsDamageToOpponentTriggered) Targets() []Target { return t.targets }
-
-// WheneverSpellCastTriggered triggers whenever a spell of the matching type is cast.
-type WheneverSpellCastTriggered struct {
-	BaseAbility
+	eventType EventType
 	Optional  bool
-	ColorFilter *Color // optional: only trigger on spells of this color
-	effects      []Effect
-	targets      []Target
+	Condition TriggerCondition
+	effects   []Effect
+	targets   []Target
 }
 
-func WheneverSpellCastTrigger(effect Effect, optional bool, colorFilter *Color) *WheneverSpellCastTriggered {
-	return &WheneverSpellCastTriggered{
+// NewTriggered creates a GenericTriggered ability that fires on the given event type.
+// Use SetCondition to add a predicate that filters which events actually trigger it.
+func NewTriggered(eventType EventType, optional bool, effects ...Effect) *GenericTriggered {
+	return &GenericTriggered{
 		BaseAbility: BaseAbility{
-			id:   uuid.New(),
+			id:          uuid.New(),
 			abilityType: AbilityTriggered,
 		},
-		Optional:    optional,
-		ColorFilter: colorFilter,
-		effects:        []Effect{effect},
+		eventType: eventType,
+		Optional:  optional,
+		effects:   effects,
 	}
 }
 
-func (t *WheneverSpellCastTriggered) CheckEventType(et EventType) bool {
-	return et == EvtSpellCast
+// SetCondition sets the trigger condition and returns the trigger for chaining.
+func (t *GenericTriggered) SetCondition(cond TriggerCondition) *GenericTriggered {
+	t.Condition = cond
+	return t
 }
 
-func (t *WheneverSpellCastTriggered) CheckTrigger(evt *GameEvent, g *Game) bool {
-	if t.ColorFilter == nil {
+// AddEffect appends an effect to the trigger. Returns the trigger for chaining.
+func (t *GenericTriggered) AddEffect(e Effect) *GenericTriggered {
+	t.effects = append(t.effects, e)
+	return t
+}
+
+// AddTarget appends a target requirement. Returns the trigger for chaining.
+func (t *GenericTriggered) AddTarget(tgt Target) *GenericTriggered {
+	t.targets = append(t.targets, tgt)
+	return t
+}
+
+func (t *GenericTriggered) CheckEventType(et EventType) bool {
+	return et == t.eventType
+}
+
+func (t *GenericTriggered) CheckTrigger(evt *GameEvent, g *Game) bool {
+	if t.Condition == nil {
 		return true
 	}
-	// Find the spell card to check its color
-	card := g.FindCardAnywhere(evt.SourceID)
-	if card == nil {
-		return false
-	}
-	for _, c := range card.ManaCost().Colors() {
-		if c == *t.ColorFilter {
-			return true
-		}
-	}
-	return false
+	return t.Condition(evt, g, t.source, t.controller)
 }
 
-func (t *WheneverSpellCastTriggered) IsOptional() bool { return t.Optional }
-func (t *WheneverSpellCastTriggered) Effects() []Effect { return t.effects }
-func (t *WheneverSpellCastTriggered) Targets() []Target { return t.targets }
+func (t *GenericTriggered) IsOptional() bool { return t.Optional }
+func (t *GenericTriggered) Effects() []Effect { return t.effects }
+func (t *GenericTriggered) Targets() []Target { return t.targets }
 
-// WheneverEnchantmentCastTriggered triggers whenever an enchantment spell is cast by the controller.
-type WheneverEnchantmentCastTriggered struct {
-	BaseAbility
-	Optional bool
-	effects     []Effect
-	targets     []Target
+// ---------------------------------------------------------------------------
+// Convenience constructors: thin wrappers around NewTriggered that preserve
+// the existing API. Each returns *GenericTriggered with the appropriate
+// event type and condition baked in.
+// ---------------------------------------------------------------------------
+
+// AttacksTrigger fires when the source creature is declared as an attacker.
+func AttacksTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtDeclaredAttacker, optional, effect).
+		SetCondition(func(evt *GameEvent, _ *Game, sourceID, _ uuid.UUID) bool {
+			return evt.SourceID == sourceID
+		})
 }
 
-func WheneverEnchantmentCastTrigger(effect Effect, optional bool) *WheneverEnchantmentCastTriggered {
-	return &WheneverEnchantmentCastTriggered{
-		BaseAbility: BaseAbility{
-			id:   uuid.New(),
-			abilityType: AbilityTriggered,
-		},
-		Optional: optional,
-		effects:     []Effect{effect},
-	}
+// DiesCreatureTrigger fires when another creature you control dies.
+// The filter parameter is reserved for future use.
+func DiesCreatureTrigger(effect Effect, optional bool, filter PermanentFilter) *GenericTriggered {
+	return NewTriggered(EvtCreatureDied, optional, effect).
+		SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+			if evt.SourceID == sourceID {
+				return false // "another" creature — not itself
+			}
+			return evt.PlayerID == controllerID
+		})
 }
 
-func (t *WheneverEnchantmentCastTriggered) CheckEventType(et EventType) bool {
-	return et == EvtSpellCast
+// EntersBattlefieldTrigger fires when the source permanent enters the battlefield.
+func EntersBattlefieldTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtEntersBattlefield, optional, effect).
+		SetCondition(func(evt *GameEvent, _ *Game, sourceID, _ uuid.UUID) bool {
+			return evt.SourceID == sourceID
+		})
 }
 
-func (t *WheneverEnchantmentCastTriggered) CheckTrigger(evt *GameEvent, g *Game) bool {
-	// Only trigger for spells cast by the controller
-	if evt.PlayerID != t.controller {
-		return false
-	}
-	// Check if the cast card is an enchantment
-	card := g.FindCardAnywhere(evt.SourceID)
-	if card == nil {
-		return false
-	}
-	return card.HasType(TypeEnchantment)
+// PutIntoGraveyardFromBattlefieldTrigger fires when the source goes to graveyard
+// from the battlefield (e.g. Rancor).
+func PutIntoGraveyardFromBattlefieldTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtPutIntoGraveyardFromBattlefield, optional, effect).
+		SetCondition(func(evt *GameEvent, _ *Game, sourceID, _ uuid.UUID) bool {
+			return evt.SourceID == sourceID
+		})
 }
 
-func (t *WheneverEnchantmentCastTriggered) IsOptional() bool { return t.Optional }
-func (t *WheneverEnchantmentCastTriggered) Effects() []Effect { return t.effects }
-func (t *WheneverEnchantmentCastTriggered) Targets() []Target { return t.targets }
-
-// WhenDamageDealtToThisTriggered triggers when damage is dealt to this creature.
-type WhenDamageDealtToThisTriggered struct {
-	BaseAbility
-	Optional bool
-	effects     []Effect
-	targets     []Target
+// BeginningOfUpkeepTrigger fires at the beginning of the controller's upkeep.
+func BeginningOfUpkeepTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtUpkeep, optional, effect).
+		SetCondition(func(evt *GameEvent, _ *Game, _, controllerID uuid.UUID) bool {
+			return evt.PlayerID == controllerID
+		})
 }
 
-func WhenDamageDealtToThisTrigger(effect Effect, optional bool) *WhenDamageDealtToThisTriggered {
-	return &WhenDamageDealtToThisTriggered{
-		BaseAbility: BaseAbility{
-			id:   uuid.New(),
-			abilityType: AbilityTriggered,
-		},
-		Optional: optional,
-		effects:     []Effect{effect},
-	}
+// BeginningOfEachUpkeepTrigger fires at the beginning of every player's upkeep.
+func BeginningOfEachUpkeepTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtUpkeep, optional, effect)
+	// nil condition = always fires
 }
 
-func (t *WhenDamageDealtToThisTriggered) CheckEventType(et EventType) bool {
-	return et == EvtDamageDealt
+// DealsDamageToOpponentTrigger fires when the source deals damage to an opponent.
+func DealsDamageToOpponentTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtDamageDealt, optional, effect).
+		SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+			if evt.SourceID != sourceID {
+				return false
+			}
+			targetPlayer := g.GetPlayer(evt.TargetID)
+			if targetPlayer == nil {
+				return false // damage was to a creature, not a player
+			}
+			return targetPlayer.PlayerID() != controllerID
+		})
 }
 
-func (t *WhenDamageDealtToThisTriggered) CheckTrigger(evt *GameEvent, g *Game) bool {
-	return evt.TargetID == t.source
+// WheneverSpellCastTrigger fires whenever a spell of the matching color is cast.
+// Pass nil for colorFilter to trigger on any spell.
+func WheneverSpellCastTrigger(effect Effect, optional bool, colorFilter *Color) *GenericTriggered {
+	return NewTriggered(EvtSpellCast, optional, effect).
+		SetCondition(func(evt *GameEvent, g *Game, _, _ uuid.UUID) bool {
+			if colorFilter == nil {
+				return true
+			}
+			card := g.FindCardAnywhere(evt.SourceID)
+			if card == nil {
+				return false
+			}
+			for _, c := range card.ManaCost().Colors() {
+				if c == *colorFilter {
+					return true
+				}
+			}
+			return false
+		})
 }
 
-func (t *WhenDamageDealtToThisTriggered) IsOptional() bool { return t.Optional }
-func (t *WhenDamageDealtToThisTriggered) Effects() []Effect { return t.effects }
-func (t *WhenDamageDealtToThisTriggered) Targets() []Target { return t.targets }
-
-// BeginningOfAttachedControllerUpkeepTriggered triggers at the beginning of
-// the upkeep of the player who controls the permanent this aura is attached to.
-type BeginningOfAttachedControllerUpkeepTriggered struct {
-	BaseAbility
-	Optional bool
-	effects     []Effect
-	targets     []Target
+// WheneverEnchantmentCastTrigger fires whenever the controller casts an enchantment.
+func WheneverEnchantmentCastTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtSpellCast, optional, effect).
+		SetCondition(func(evt *GameEvent, g *Game, _, controllerID uuid.UUID) bool {
+			if evt.PlayerID != controllerID {
+				return false
+			}
+			card := g.FindCardAnywhere(evt.SourceID)
+			if card == nil {
+				return false
+			}
+			return card.HasType(TypeEnchantment)
+		})
 }
 
-func BeginningOfAttachedControllerUpkeepTrigger(effect Effect, optional bool) *BeginningOfAttachedControllerUpkeepTriggered {
-	return &BeginningOfAttachedControllerUpkeepTriggered{
-		BaseAbility: BaseAbility{
-			id:   uuid.New(),
-			abilityType: AbilityTriggered,
-		},
-		Optional: optional,
-		effects:     []Effect{effect},
-	}
+// WhenDamageDealtToThisTrigger fires when damage is dealt to the source creature.
+func WhenDamageDealtToThisTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtDamageDealt, optional, effect).
+		SetCondition(func(evt *GameEvent, _ *Game, sourceID, _ uuid.UUID) bool {
+			return evt.TargetID == sourceID
+		})
 }
 
-func (t *BeginningOfAttachedControllerUpkeepTriggered) CheckEventType(et EventType) bool {
-	return et == EvtUpkeep
+// BeginningOfAttachedControllerUpkeepTrigger fires at the beginning of the
+// upkeep of the player who controls the permanent this aura is attached to.
+func BeginningOfAttachedControllerUpkeepTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtUpkeep, optional, effect).
+		SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+			src := g.FindPermanent(sourceID)
+			if src == nil || !src.IsAttached() {
+				return false
+			}
+			host := g.FindPermanent(src.AttachedTo)
+			if host == nil {
+				return false
+			}
+			return evt.PlayerID == host.Controller
+		})
 }
 
-func (t *BeginningOfAttachedControllerUpkeepTriggered) CheckTrigger(evt *GameEvent, g *Game) bool {
-	// Find the source permanent (the aura)
-	src := g.FindPermanent(t.source)
-	if src == nil || !src.IsAttached() {
-		return false
-	}
-	// Find the host permanent
-	host := g.FindPermanent(src.AttachedTo)
-	if host == nil {
-		return false
-	}
-	// Trigger if the upkeep belongs to the controller of the host
-	return evt.PlayerID == host.Controller
+// WheneverLandEntersBattlefieldTrigger fires whenever any land enters the battlefield.
+func WheneverLandEntersBattlefieldTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtEntersBattlefield, optional, effect).
+		SetCondition(func(evt *GameEvent, g *Game, _, _ uuid.UUID) bool {
+			perm := g.FindPermanent(evt.SourceID)
+			if perm == nil {
+				return false
+			}
+			return perm.HasType(TypeLand)
+		})
 }
 
-func (t *BeginningOfAttachedControllerUpkeepTriggered) IsOptional() bool { return t.Optional }
-func (t *BeginningOfAttachedControllerUpkeepTriggered) Effects() []Effect { return t.effects }
-func (t *BeginningOfAttachedControllerUpkeepTriggered) Targets() []Target { return t.targets }
-
-// WheneverLandEntersBattlefieldTriggered triggers whenever a land enters the battlefield.
-type WheneverLandEntersBattlefieldTriggered struct {
-	BaseAbility
-	Optional bool
-	effects     []Effect
-	targets     []Target
+// AnyCreatureDiesTrigger fires when any creature dies (regardless of controller).
+func AnyCreatureDiesTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtCreatureDied, optional, effect)
+	// nil condition = always fires
 }
 
-func WheneverLandEntersBattlefieldTrigger(effect Effect, optional bool) *WheneverLandEntersBattlefieldTriggered {
-	return &WheneverLandEntersBattlefieldTriggered{
-		BaseAbility: BaseAbility{
-			id:   uuid.New(),
-			abilityType: AbilityTriggered,
-		},
-		Optional: optional,
-		effects:     []Effect{effect},
-	}
+// CreatureDealtDamageBySourceDiesTrigger fires when a creature that was dealt
+// damage by the source permanent this turn dies (e.g. Sengir Vampire).
+func CreatureDealtDamageBySourceDiesTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtCreatureDied, optional, effect).
+		SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+			sources := g.DamageDealtBy[evt.SourceID]
+			return sources != nil && sources[sourceID]
+		})
 }
-
-func (t *WheneverLandEntersBattlefieldTriggered) CheckEventType(et EventType) bool {
-	return et == EvtEntersBattlefield
-}
-
-func (t *WheneverLandEntersBattlefieldTriggered) CheckTrigger(evt *GameEvent, g *Game) bool {
-	// Check if the entering permanent is a land
-	perm := g.FindPermanent(evt.SourceID)
-	if perm == nil {
-		return false
-	}
-	return perm.HasType(TypeLand)
-}
-
-func (t *WheneverLandEntersBattlefieldTriggered) IsOptional() bool { return t.Optional }
-func (t *WheneverLandEntersBattlefieldTriggered) Effects() []Effect { return t.effects }
-func (t *WheneverLandEntersBattlefieldTriggered) Targets() []Target { return t.targets }
-
-// AnyCreatureDiesTriggered triggers when any creature dies.
-type AnyCreatureDiesTriggered struct {
-	BaseAbility
-	Optional bool
-	effects     []Effect
-	targets     []Target
-}
-
-func AnyCreatureDiesTrigger(effect Effect, optional bool) *AnyCreatureDiesTriggered {
-	return &AnyCreatureDiesTriggered{
-		BaseAbility: BaseAbility{
-			id:   uuid.New(),
-			abilityType: AbilityTriggered,
-		},
-		Optional: optional,
-		effects:     []Effect{effect},
-	}
-}
-
-func (t *AnyCreatureDiesTriggered) CheckEventType(et EventType) bool {
-	return et == EvtCreatureDied
-}
-
-func (t *AnyCreatureDiesTriggered) CheckTrigger(evt *GameEvent, g *Game) bool {
-	return true // any creature dying triggers this
-}
-
-func (t *AnyCreatureDiesTriggered) IsOptional() bool { return t.Optional }
-func (t *AnyCreatureDiesTriggered) Effects() []Effect { return t.effects }
-func (t *AnyCreatureDiesTriggered) Targets() []Target { return t.targets }
-
-// CreatureDealtDamageBySourceDiesTriggered triggers when a creature that was
-// dealt damage by the source permanent this turn dies.
-type CreatureDealtDamageBySourceDiesTriggered struct {
-	BaseAbility
-	Optional bool
-	effects     []Effect
-	targets     []Target
-}
-
-func CreatureDealtDamageBySourceDiesTrigger(effect Effect, optional bool) *CreatureDealtDamageBySourceDiesTriggered {
-	return &CreatureDealtDamageBySourceDiesTriggered{
-		BaseAbility: BaseAbility{
-			id:   uuid.New(),
-			abilityType: AbilityTriggered,
-		},
-		Optional: optional,
-		effects:     []Effect{effect},
-	}
-}
-
-func (t *CreatureDealtDamageBySourceDiesTriggered) CheckEventType(et EventType) bool {
-	return et == EvtCreatureDied
-}
-
-func (t *CreatureDealtDamageBySourceDiesTriggered) CheckTrigger(evt *GameEvent, g *Game) bool {
-	// evt.SourceID is the dying creature's ID
-	// t.source is the permanent with this trigger (e.g. Sengir Vampire)
-	// Check if the source dealt damage to the dying creature this turn
-	sources := g.DamageDealtBy[evt.SourceID]
-	return sources != nil && sources[t.source]
-}
-
-func (t *CreatureDealtDamageBySourceDiesTriggered) IsOptional() bool { return t.Optional }
-func (t *CreatureDealtDamageBySourceDiesTriggered) Effects() []Effect { return t.effects }
-func (t *CreatureDealtDamageBySourceDiesTriggered) Targets() []Target { return t.targets }

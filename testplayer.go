@@ -55,13 +55,13 @@ func (tp *TestPlayer) DeclareAttackers(g *Game) []uuid.UUID {
 	return ids
 }
 
-// DeclareBlockers returns the blocker-attacker assignments.
+// DeclareBlockers returns blocker-attacker assignments for the current turn.
 func (tp *TestPlayer) DeclareBlockers(g *Game) []BlockAssignment {
 	blockers, ok := tp.blockActions[g.Turn]
 	if !ok {
 		return nil
 	}
-	var assignments []BlockAssignment
+	var result []BlockAssignment
 	for blockerName, attackerName := range blockers {
 		blocker := g.FindPermanentByName(blockerName, tp.PlayerID())
 		// Attacker could be controlled by any player
@@ -73,10 +73,13 @@ func (tp *TestPlayer) DeclareBlockers(g *Game) []BlockAssignment {
 			}
 		}
 		if blocker != nil && attacker != nil {
-			assignments = append(assignments, BlockAssignment{BlockerID: blocker.ID(), AttackerID: attacker.ID()})
+			result = append(result, BlockAssignment{
+				BlockerID:  blocker.ID(),
+				AttackerID: attacker.ID(),
+			})
 		}
 	}
-	return assignments
+	return result
 }
 
 // ChooseTargets selects from possible targets (for auto-targeting).

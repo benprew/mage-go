@@ -12,6 +12,26 @@ type Effect interface {
 	Text() string
 }
 
+// funcEffect wraps an anonymous function as an Effect. Use FuncEffect to create
+// one-off effects inline in card definitions without needing a dedicated struct.
+type funcEffect struct {
+	text string
+	fn   func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error
+}
+
+// FuncEffect creates an Effect from an anonymous function. This is ideal for
+// card-specific effects that are used by only one card and don't warrant a
+// dedicated type. The text parameter is used for Text() (rules text display).
+func FuncEffect(text string, fn func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error) Effect {
+	return &funcEffect{text: text, fn: fn}
+}
+
+func (e *funcEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	return e.fn(g, sourceID, controller, targets)
+}
+
+func (e *funcEffect) Text() string { return e.text }
+
 // gainLifeEffect gains life for the controller.
 type gainLifeEffect struct {
 	amount int
@@ -35,51 +55,63 @@ func (e *gainLifeEffect) Text() string {
 	return fmt.Sprintf("gain %d life", e.amount)
 }
 
-// addCountersToSourceEffect adds counters to the source permanent.
-type addCountersToSourceEffect struct {
-	ct     CounterType
-	amount int
+// addCountersEffect adds counters to the source or a target permanent.
+// When applyToSource is true, counters go on the source; otherwise on the
+// first target. When useX is true, the count is read from g.CurrentX.
+type addCountersEffect struct {
+	ct            CounterType
+	amount        int
+	applyToSource bool
+	useX          bool
 }
 
+// AddCountersToSource creates an effect that adds counters to the source permanent.
 func AddCountersToSource(ct CounterType, amount int) Effect {
-	return &addCountersToSourceEffect{ct: ct, amount: amount}
+	return &addCountersEffect{ct: ct, amount: amount, applyToSource: true}
 }
 
-func (e *addCountersToSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	p := g.FindPermanent(sourceID)
-	if p == nil {
-		return nil // source gone, effect does nothing
-	}
-	p.AddCounter(e.ct, e.amount)
-	return nil
+// AddCountersToTarget creates an effect that adds counters to a target permanent.
+func AddCountersToTarget(ct CounterType, amount int) Effect {
+	return &addCountersEffect{ct: ct, amount: amount}
 }
 
-func (e *addCountersToSourceEffect) Text() string {
-	return fmt.Sprintf("put %d %s counter(s) on it", e.amount, e.ct)
-}
-
-// addXCountersToSourceEffect adds X counters to the source, reading X from g.CurrentX.
-type addXCountersToSourceEffect struct {
-	ct CounterType
-}
-
+// AddXCountersToSource creates an effect that adds X counters to the source permanent,
+// where X is the value of g.CurrentX when the spell resolves.
 func AddXCountersToSource(ct CounterType) Effect {
-	return &addXCountersToSourceEffect{ct: ct}
+	return &addCountersEffect{ct: ct, applyToSource: true, useX: true}
 }
 
-func (e *addXCountersToSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	p := g.FindPermanent(sourceID)
-	if p == nil {
+func (e *addCountersEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	var perm *Permanent
+	if e.applyToSource {
+		perm = g.FindPermanent(sourceID)
+	} else {
+		if len(targets) == 0 {
+			return fmt.Errorf("no target for counters")
+		}
+		perm = g.FindPermanent(targets[0])
+	}
+	if perm == nil {
 		return nil
 	}
-	if g.CurrentX > 0 {
-		p.AddCounter(e.ct, g.CurrentX)
+	amount := e.amount
+	if e.useX {
+		amount = g.CurrentX
+	}
+	if amount > 0 {
+		perm.AddCounter(e.ct, amount)
 	}
 	return nil
 }
 
-func (e *addXCountersToSourceEffect) Text() string {
-	return fmt.Sprintf("put X %s counters on it", e.ct)
+func (e *addCountersEffect) Text() string {
+	if e.useX {
+		return fmt.Sprintf("put X %s counters on it", e.ct)
+	}
+	if e.applyToSource {
+		return fmt.Sprintf("put %d %s counter(s) on it", e.amount, e.ct)
+	}
+	return fmt.Sprintf("put %d %s counter(s) on target", e.amount, e.ct)
 }
 
 // cloneTargetCreatureEffect copies target creature's characteristics onto the source card.
@@ -134,24 +166,45 @@ func (e *removeCountersFromSourceEffect) Text() string {
 }
 
 // dealDamageEffect deals damage to the target.
+// dealDamageEffect deals a fixed or X-based amount of damage to a target.
+// When useX is true, the amount is read from g.CurrentX.
 type dealDamageEffect struct {
 	amount int
+	useX   bool
 }
 
+// DealDamage creates an effect that deals a fixed amount of damage to a target.
 func DealDamage(amount int) Effect {
 	return &dealDamageEffect{amount: amount}
+}
+
+// DealXDamage creates an effect that deals X damage to a target,
+// where X is the value of g.CurrentX when the spell resolves.
+func DealXDamage() Effect {
+	return &dealDamageEffect{useX: true}
+}
+
+func (e *dealDamageEffect) resolveAmount(g *Game) int {
+	if e.useX {
+		return g.CurrentX
+	}
+	return e.amount
 }
 
 func (e *dealDamageEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return fmt.Errorf("no target for damage")
 	}
+	amount := e.resolveAmount(g)
+	if amount <= 0 && e.useX {
+		return nil
+	}
 	targetID := targets[0]
 
 	// Check if target is a player
 	for _, pl := range g.Players {
 		if pl.PlayerID() == targetID {
-			g.DealDamageToPlayer(pl, e.amount, sourceID)
+			g.DealDamageToPlayer(pl, amount, sourceID)
 			return nil
 		}
 	}
@@ -168,11 +221,14 @@ func (e *dealDamageEffect) Apply(g *Game, sourceID, controller uuid.UUID, target
 		return nil // damage prevented by protection
 	}
 
-	g.DealDamageToPermanent(perm, e.amount, sourceID)
+	g.DealDamageToPermanent(perm, amount, sourceID)
 	return nil
 }
 
 func (e *dealDamageEffect) Text() string {
+	if e.useX {
+		return "deal X damage to target"
+	}
 	return fmt.Sprintf("deal %d damage to target", e.amount)
 }
 
@@ -275,28 +331,10 @@ func (e *returnSourceToHandEffect) Text() string {
 	return "return this card to its owner's hand"
 }
 
-// destroyAllCreaturesEffect destroys all creatures (board wipe).
-type destroyAllCreaturesEffect struct{}
-
+// DestroyAllCreatures destroys all creatures (board wipe).
+// This is a convenience alias for DestroyAllMatching with the IsCreature filter.
 func DestroyAllCreatures() Effect {
-	return &destroyAllCreaturesEffect{}
-}
-
-func (e *destroyAllCreaturesEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	var toDestroy []*Permanent
-	for _, p := range g.Battlefield {
-		if p.HasType(TypeCreature) && !p.HasAbility(Indestructible) {
-			toDestroy = append(toDestroy, p)
-		}
-	}
-	for _, p := range toDestroy {
-		g.DestroyPermanent(p)
-	}
-	return nil
-}
-
-func (e *destroyAllCreaturesEffect) Text() string {
-	return "destroy all creatures"
+	return DestroyAllMatching(IsCreature, "destroy all creatures")
 }
 
 // compositeEffect applies multiple effects in sequence.
@@ -394,59 +432,61 @@ func (e *returnFromGraveyardToHandTargetEffect) Text() string {
 	return "return target card from your graveyard to your hand"
 }
 
-// boostTargetEffect boosts target creature's P/T until end of turn.
-type boostTargetEffect struct {
-	power     int
-	toughness int
+// boostUntilEndOfTurnEffect boosts a creature's P/T until end of turn.
+// When applyToSource is true, it boosts the source permanent; otherwise it
+// boosts the first target. When useX is true, the boost values are derived
+// from g.CurrentX (using the xPower/xToughness flags).
+type boostUntilEndOfTurnEffect struct {
+	power         int
+	toughness     int
+	applyToSource bool
+	useX          bool
+	xPower        bool // if useX, whether to boost power by X
+	xToughness    bool // if useX, whether to boost toughness by X
 }
 
+// BoostTargetUntilEndOfTurn creates an effect that boosts a target creature's P/T until end of turn.
 func BoostTargetUntilEndOfTurn(power, toughness int) Effect {
-	return &boostTargetEffect{power: power, toughness: toughness}
+	return &boostUntilEndOfTurnEffect{power: power, toughness: toughness}
 }
 
-func (e *boostTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 {
-		return fmt.Errorf("no target for boost")
-	}
-	perm := g.FindPermanent(targets[0])
-	if perm == nil {
-		return nil
-	}
-	// Apply as an end-of-turn continuous effect
-	eff := &temporaryBoostEffect{
-		targetID:  perm.ID(),
-		power:     e.power,
-		toughness: e.toughness,
-		effectSource: effectSource{sourceID: sourceID},
-	}
-	g.Effects.Add(eff)
-	g.Effects.Apply(g)
-	return nil
-}
-
-func (e *boostTargetEffect) Text() string {
-	return fmt.Sprintf("target creature gets +%d/+%d until end of turn", e.power, e.toughness)
-}
-
-// boostSourceEffect boosts the source permanent's P/T until end of turn (for firebreathing).
-type boostSourceEffect struct {
-	power     int
-	toughness int
-}
-
+// BoostSourceUntilEndOfTurn creates an effect that boosts the source creature's P/T until end of turn.
 func BoostSourceUntilEndOfTurn(power, toughness int) Effect {
-	return &boostSourceEffect{power: power, toughness: toughness}
+	return &boostUntilEndOfTurnEffect{power: power, toughness: toughness, applyToSource: true}
 }
 
-func (e *boostSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	perm := g.FindPermanent(sourceID)
+// BoostTargetXUntilEndOfTurn creates an effect that boosts a target creature by X
+// in the specified dimensions until end of turn.
+func BoostTargetXUntilEndOfTurn(power, toughness bool) Effect {
+	return &boostUntilEndOfTurnEffect{useX: true, xPower: power, xToughness: toughness}
+}
+
+func (e *boostUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	var perm *Permanent
+	if e.applyToSource {
+		perm = g.FindPermanent(sourceID)
+	} else {
+		if len(targets) == 0 {
+			return fmt.Errorf("no target for boost")
+		}
+		perm = g.FindPermanent(targets[0])
+	}
 	if perm == nil {
 		return nil
 	}
+	p, t := e.power, e.toughness
+	if e.useX {
+		if e.xPower {
+			p = g.CurrentX
+		}
+		if e.xToughness {
+			t = g.CurrentX
+		}
+	}
 	eff := &temporaryBoostEffect{
 		targetID:  perm.ID(),
-		power:     e.power,
-		toughness: e.toughness,
+		power:     p,
+		toughness: t,
 		effectSource: effectSource{sourceID: sourceID},
 	}
 	g.Effects.Add(eff)
@@ -454,8 +494,14 @@ func (e *boostSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targe
 	return nil
 }
 
-func (e *boostSourceEffect) Text() string {
-	return fmt.Sprintf("this creature gets +%d/+%d until end of turn", e.power, e.toughness)
+func (e *boostUntilEndOfTurnEffect) Text() string {
+	if e.useX {
+		return "Target creature gets +X/+0 until end of turn"
+	}
+	if e.applyToSource {
+		return fmt.Sprintf("this creature gets +%d/+%d until end of turn", e.power, e.toughness)
+	}
+	return fmt.Sprintf("target creature gets +%d/+%d until end of turn", e.power, e.toughness)
 }
 
 // markDestroyAtEOTAfterNActivationsEffect tracks pump activations using Charge
@@ -518,49 +564,17 @@ func (e *destroyTargetPermanentEffect) Apply(g *Game, sourceID, controller uuid.
 
 func (e *destroyTargetPermanentEffect) Text() string { return e.text }
 
-// destroyAllLandsEffect destroys all lands (Armageddon).
-type destroyAllLandsEffect struct{}
-
+// DestroyAllLands destroys all lands (Armageddon).
+// This is a convenience alias for DestroyAllMatching with the IsLand filter.
 func DestroyAllLands() Effect {
-	return &destroyAllLandsEffect{}
+	return DestroyAllMatching(IsLand, "destroy all lands")
 }
 
-func (e *destroyAllLandsEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	var toDestroy []*Permanent
-	for _, p := range g.Battlefield {
-		if p.HasType(TypeLand) {
-			toDestroy = append(toDestroy, p)
-		}
-	}
-	for _, p := range toDestroy {
-		g.DestroyPermanent(p)
-	}
-	return nil
-}
-
-func (e *destroyAllLandsEffect) Text() string { return "destroy all lands" }
-
-// destroyAllEnchantmentsEffect destroys all enchantments (Tranquility).
-type destroyAllEnchantmentsEffect struct{}
-
+// DestroyAllEnchantments destroys all enchantments (Tranquility).
+// This is a convenience alias for DestroyAllMatching with the IsEnchantment filter.
 func DestroyAllEnchantments() Effect {
-	return &destroyAllEnchantmentsEffect{}
+	return DestroyAllMatching(IsEnchantment, "destroy all enchantments")
 }
-
-func (e *destroyAllEnchantmentsEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	var toDestroy []*Permanent
-	for _, p := range g.Battlefield {
-		if p.HasType(TypeEnchantment) {
-			toDestroy = append(toDestroy, p)
-		}
-	}
-	for _, p := range toDestroy {
-		g.DestroyPermanent(p)
-	}
-	return nil
-}
-
-func (e *destroyAllEnchantmentsEffect) Text() string { return "destroy all enchantments" }
 
 // destroyAllMatchingEffect destroys all permanents matching a filter.
 type destroyAllMatchingEffect struct {
@@ -667,12 +681,22 @@ func (e *discardRandomEffect) Text() string {
 }
 
 // discardCardsEffect forces a player to discard N cards.
+// discardCardsEffect forces a target player to discard cards.
+// When useX is true, the amount is read from g.CurrentX.
 type discardCardsEffect struct {
 	amount int
+	useX   bool
 }
 
+// DiscardCards creates an effect that forces a target player to discard a fixed number of cards.
 func DiscardCards(amount int) Effect {
 	return &discardCardsEffect{amount: amount}
+}
+
+// DiscardXCards creates an effect that forces a target player to discard X cards,
+// where X is the value of g.CurrentX when the spell resolves.
+func DiscardXCards() Effect {
+	return &discardCardsEffect{useX: true}
 }
 
 func (e *discardCardsEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -686,7 +710,11 @@ func (e *discardCardsEffect) Apply(g *Game, sourceID, controller uuid.UUID, targ
 	if targetPlayer == nil {
 		return nil
 	}
-	for i := 0; i < e.amount; i++ {
+	amount := e.amount
+	if e.useX {
+		amount = g.CurrentX
+	}
+	for i := 0; i < amount; i++ {
 		hand := targetPlayer.Hand()
 		if len(hand) == 0 {
 			break
@@ -699,6 +727,9 @@ func (e *discardCardsEffect) Apply(g *Game, sourceID, controller uuid.UUID, targ
 }
 
 func (e *discardCardsEffect) Text() string {
+	if e.useX {
+		return "target player discards X cards"
+	}
 	return fmt.Sprintf("target player discards %d card(s)", e.amount)
 }
 
@@ -749,12 +780,22 @@ func (e *addAnyManaEffect) Text() string {
 }
 
 // drawCardsTargetEffect draws cards for a target player.
+// drawCardsTargetEffect draws cards for a target player (or controller as fallback).
+// When useX is true, the amount is read from g.CurrentX.
 type drawCardsTargetEffect struct {
 	amount int
+	useX   bool
 }
 
+// DrawCardsTarget creates an effect that draws a fixed number of cards for a target player.
 func DrawCardsTarget(amount int) Effect {
 	return &drawCardsTargetEffect{amount: amount}
+}
+
+// DrawXCards creates an effect that draws X cards for a target player,
+// where X is the value of g.CurrentX when the spell resolves.
+func DrawXCards() Effect {
+	return &drawCardsTargetEffect{useX: true}
 }
 
 func (e *drawCardsTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -768,13 +809,20 @@ func (e *drawCardsTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, t
 	if targetPlayer == nil {
 		return ErrPlayerNotFound
 	}
-	for i := 0; i < e.amount; i++ {
+	amount := e.amount
+	if e.useX {
+		amount = g.CurrentX
+	}
+	for i := 0; i < amount; i++ {
 		targetPlayer.DrawCard()
 	}
 	return nil
 }
 
 func (e *drawCardsTargetEffect) Text() string {
+	if e.useX {
+		return "target player draws X cards"
+	}
 	return fmt.Sprintf("target player draws %d card(s)", e.amount)
 }
 
@@ -831,12 +879,22 @@ func (e *exileAndGainLifeEffect) Text() string {
 }
 
 // gainLifeTargetEffect gains life for the target player.
+// gainLifeTargetEffect gains life for a target player (or controller as fallback).
+// When useX is true, the amount is read from g.CurrentX.
 type gainLifeTargetEffect struct {
 	amount int
+	useX   bool
 }
 
+// GainLifeTarget creates an effect that gains a fixed amount of life for a target player.
 func GainLifeTarget(amount int) Effect {
 	return &gainLifeTargetEffect{amount: amount}
+}
+
+// GainXLife creates an effect that gains X life for a target player,
+// where X is the value of g.CurrentX when the spell resolves.
+func GainXLife() Effect {
+	return &gainLifeTargetEffect{useX: true}
 }
 
 func (e *gainLifeTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -850,12 +908,19 @@ func (e *gainLifeTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, ta
 	if targetPlayer == nil {
 		return ErrPlayerNotFound
 	}
-	targetPlayer.GainLife(e.amount)
-	g.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: targetPlayer.PlayerID(), Amount: e.amount})
+	amount := e.amount
+	if e.useX {
+		amount = g.CurrentX
+	}
+	targetPlayer.GainLife(amount)
+	g.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: targetPlayer.PlayerID(), Amount: amount})
 	return nil
 }
 
 func (e *gainLifeTargetEffect) Text() string {
+	if e.useX {
+		return "target player gains X life"
+	}
 	return fmt.Sprintf("target player gains %d life", e.amount)
 }
 
@@ -883,16 +948,34 @@ func (e *loseLifeEffect) Text() string {
 }
 
 // dealDamageToAllCreaturesEffect deals damage to all creatures.
+// dealDamageToAllCreaturesEffect deals damage to all creatures matching an optional filter.
+// When useX is true, the amount is read from g.CurrentX.
 type dealDamageToAllCreaturesEffect struct {
 	amount int
+	useX   bool
 	filter PermanentFilter // optional filter (e.g., without flying)
 }
 
+// DealDamageToAllCreatures creates an effect that deals a fixed amount of damage to all matching creatures.
 func DealDamageToAllCreatures(amount int, filter PermanentFilter) Effect {
 	return &dealDamageToAllCreaturesEffect{amount: amount, filter: filter}
 }
 
+// DealXDamageToAllCreatures creates an effect that deals X damage to all matching creatures,
+// where X is the value of g.CurrentX when the spell resolves.
+func DealXDamageToAllCreatures(filter PermanentFilter) Effect {
+	return &dealDamageToAllCreaturesEffect{useX: true, filter: filter}
+}
+
 func (e *dealDamageToAllCreaturesEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	amount := e.amount
+	if e.useX {
+		amount = g.CurrentX
+	}
+	if amount <= 0 && e.useX {
+		return nil
+	}
+	var creatures []*Permanent
 	for _, p := range g.Battlefield {
 		if !p.HasType(TypeCreature) {
 			continue
@@ -900,32 +983,57 @@ func (e *dealDamageToAllCreaturesEffect) Apply(g *Game, sourceID, controller uui
 		if e.filter != nil && !e.filter(p, g) {
 			continue
 		}
-		g.DealDamageToPermanent(p, e.amount, sourceID)
+		creatures = append(creatures, p)
+	}
+	for _, p := range creatures {
+		g.DealDamageToPermanent(p, amount, sourceID)
 	}
 	return nil
 }
 
 func (e *dealDamageToAllCreaturesEffect) Text() string {
+	if e.useX {
+		return "deal X damage to each creature"
+	}
 	return fmt.Sprintf("deal %d damage to each creature", e.amount)
 }
 
 // dealDamageToEachPlayerEffect deals damage to each player.
+// When useX is true, the amount is read from g.CurrentX.
 type dealDamageToEachPlayerEffect struct {
 	amount int
+	useX   bool
 }
 
+// DealDamageToEachPlayer creates an effect that deals a fixed amount of damage to each player.
 func DealDamageToEachPlayer(amount int) Effect {
 	return &dealDamageToEachPlayerEffect{amount: amount}
 }
 
+// DealXDamageToEachPlayer creates an effect that deals X damage to each player,
+// where X is the value of g.CurrentX when the spell resolves.
+func DealXDamageToEachPlayer() Effect {
+	return &dealDamageToEachPlayerEffect{useX: true}
+}
+
 func (e *dealDamageToEachPlayerEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	amount := e.amount
+	if e.useX {
+		amount = g.CurrentX
+	}
+	if amount <= 0 && e.useX {
+		return nil
+	}
 	for _, p := range g.Players {
-		g.DealDamageToPlayer(p, e.amount, sourceID)
+		g.DealDamageToPlayer(p, amount, sourceID)
 	}
 	return nil
 }
 
 func (e *dealDamageToEachPlayerEffect) Text() string {
+	if e.useX {
+		return "deal X damage to each player"
+	}
 	return fmt.Sprintf("deal %d damage to each player", e.amount)
 }
 
@@ -1088,200 +1196,6 @@ func (e *dealDamageToEachOpponentEffect) Text() string {
 	return fmt.Sprintf("deal %d damage to each opponent", e.amount)
 }
 
-// addCountersToTargetEffect adds counters to a target permanent.
-type addCountersToTargetEffect struct {
-	ct     CounterType
-	amount int
-}
-
-func AddCountersToTarget(ct CounterType, amount int) Effect {
-	return &addCountersToTargetEffect{ct: ct, amount: amount}
-}
-
-func (e *addCountersToTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 {
-		return fmt.Errorf("no target for counters")
-	}
-	perm := g.FindPermanent(targets[0])
-	if perm == nil {
-		return nil
-	}
-	perm.AddCounter(e.ct, e.amount)
-	return nil
-}
-
-func (e *addCountersToTargetEffect) Text() string {
-	return fmt.Sprintf("put %d %s counter(s) on target", e.amount, e.ct)
-}
-
-// dealXDamageEffect deals X damage to the target (reads X from game.CurrentX).
-type dealXDamageEffect struct{}
-
-func DealXDamage() Effect {
-	return &dealXDamageEffect{}
-}
-
-func (e *dealXDamageEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 {
-		return fmt.Errorf("no target for X damage")
-	}
-	x := g.CurrentX
-	if x <= 0 {
-		return nil
-	}
-	targetID := targets[0]
-	for _, pl := range g.Players {
-		if pl.PlayerID() == targetID {
-			g.DealDamageToPlayer(pl, x, sourceID)
-			return nil
-		}
-	}
-	perm := g.FindPermanent(targetID)
-	if perm == nil {
-		return nil
-	}
-	g.DealDamageToPermanent(perm, x, sourceID)
-	return nil
-}
-
-func (e *dealXDamageEffect) Text() string { return "deal X damage to target" }
-
-// drawXCardsEffect draws X cards for the target.
-type drawXCardsEffect struct{}
-
-func DrawXCards() Effect {
-	return &drawXCardsEffect{}
-}
-
-func (e *drawXCardsEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	var targetPlayer Player
-	if len(targets) > 0 {
-		targetPlayer = g.GetPlayer(targets[0])
-	}
-	if targetPlayer == nil {
-		targetPlayer = g.GetPlayer(controller)
-	}
-	if targetPlayer == nil {
-		return ErrPlayerNotFound
-	}
-	for i := 0; i < g.CurrentX; i++ {
-		targetPlayer.DrawCard()
-	}
-	return nil
-}
-
-func (e *drawXCardsEffect) Text() string { return "target player draws X cards" }
-
-// discardXCardsEffect forces target player to discard X cards.
-type discardXCardsEffect struct{}
-
-func DiscardXCards() Effect {
-	return &discardXCardsEffect{}
-}
-
-func (e *discardXCardsEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	var targetPlayer Player
-	if len(targets) > 0 {
-		targetPlayer = g.GetPlayer(targets[0])
-	}
-	if targetPlayer == nil {
-		targetPlayer = g.GetOpponent(controller)
-	}
-	if targetPlayer == nil {
-		return nil
-	}
-	for i := 0; i < g.CurrentX; i++ {
-		hand := targetPlayer.Hand()
-		if len(hand) == 0 {
-			break
-		}
-		card := hand[0]
-		targetPlayer.RemoveFromHand(card.ID())
-		targetPlayer.AddToGraveyard(card)
-	}
-	return nil
-}
-
-func (e *discardXCardsEffect) Text() string { return "target player discards X cards" }
-
-// gainXLifeEffect gains X life for the controller.
-type gainXLifeEffect struct{}
-
-func GainXLife() Effect {
-	return &gainXLifeEffect{}
-}
-
-func (e *gainXLifeEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	var targetPlayer Player
-	if len(targets) > 0 {
-		targetPlayer = g.GetPlayer(targets[0])
-	}
-	if targetPlayer == nil {
-		targetPlayer = g.GetPlayer(controller)
-	}
-	if targetPlayer == nil {
-		return ErrPlayerNotFound
-	}
-	targetPlayer.GainLife(g.CurrentX)
-	g.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: targetPlayer.PlayerID(), Amount: g.CurrentX})
-	return nil
-}
-
-func (e *gainXLifeEffect) Text() string { return "target player gains X life" }
-
-// dealXDamageToAllCreaturesEffect deals X damage to all matching creatures.
-type dealXDamageToAllCreaturesEffect struct {
-	filter PermanentFilter
-}
-
-func DealXDamageToAllCreatures(filter PermanentFilter) Effect {
-	return &dealXDamageToAllCreaturesEffect{filter: filter}
-}
-
-func (e *dealXDamageToAllCreaturesEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	x := g.CurrentX
-	if x <= 0 {
-		return nil
-	}
-	var creatures []*Permanent
-	for _, p := range g.Battlefield {
-		if !p.HasType(TypeCreature) {
-			continue
-		}
-		if e.filter != nil && !e.filter(p, g) {
-			continue
-		}
-		creatures = append(creatures, p)
-	}
-	for _, p := range creatures {
-		g.DealDamageToPermanent(p, x, sourceID)
-	}
-	return nil
-}
-
-func (e *dealXDamageToAllCreaturesEffect) Text() string {
-	return "deal X damage to each creature"
-}
-
-// dealXDamageToEachPlayerEffect deals X damage to each player.
-type dealXDamageToEachPlayerEffect struct{}
-
-func DealXDamageToEachPlayer() Effect {
-	return &dealXDamageToEachPlayerEffect{}
-}
-
-func (e *dealXDamageToEachPlayerEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	x := g.CurrentX
-	if x <= 0 {
-		return nil
-	}
-	for _, p := range g.Players {
-		g.DealDamageToPlayer(p, x, sourceID)
-	}
-	return nil
-}
-
-func (e *dealXDamageToEachPlayerEffect) Text() string { return "deal X damage to each player" }
 
 // drainXLifeEffect deals X damage to target and gains X life.
 type drainXLifeEffect struct{}
@@ -1381,47 +1295,34 @@ func (e *dealDamageToEventControllerEffect) Text() string {
 }
 
 // grantKeywordTargetUntilEndOfTurnEffect grants a keyword to a target creature until end of turn.
-type grantKeywordTargetUntilEndOfTurnEffect struct {
-	keyword Keyword
+// grantKeywordUntilEndOfTurnEffect grants a keyword to the source or a target
+// creature until end of turn. When applyToSource is true, the keyword goes on
+// the source; otherwise on the first target.
+type grantKeywordUntilEndOfTurnEffect struct {
+	keyword       Keyword
+	applyToSource bool
 }
 
+// GrantKeywordTargetUntilEndOfTurn creates an effect that grants a keyword to a target creature until end of turn.
 func GrantKeywordTargetUntilEndOfTurn(kw Keyword) Effect {
-	return &grantKeywordTargetUntilEndOfTurnEffect{keyword: kw}
+	return &grantKeywordUntilEndOfTurnEffect{keyword: kw}
 }
 
-func (e *grantKeywordTargetUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 {
-		return fmt.Errorf("no target for keyword grant")
-	}
-	perm := g.FindPermanent(targets[0])
-	if perm == nil {
-		return nil
-	}
-	eff := &temporaryKeywordEffect{
-		targetID:  perm.ID(),
-		keyword:   e.keyword,
-		effectSource: effectSource{sourceID: sourceID},
-	}
-	g.Effects.Add(eff)
-	g.Effects.Apply(g)
-	return nil
-}
-
-func (e *grantKeywordTargetUntilEndOfTurnEffect) Text() string {
-	return fmt.Sprintf("target creature gains %s until end of turn", e.keyword)
-}
-
-// grantKeywordSourceUntilEndOfTurnEffect grants a keyword to the source permanent until end of turn.
-type grantKeywordSourceUntilEndOfTurnEffect struct {
-	keyword Keyword
-}
-
+// GrantKeywordSourceUntilEndOfTurn creates an effect that grants a keyword to the source creature until end of turn.
 func GrantKeywordSourceUntilEndOfTurn(kw Keyword) Effect {
-	return &grantKeywordSourceUntilEndOfTurnEffect{keyword: kw}
+	return &grantKeywordUntilEndOfTurnEffect{keyword: kw, applyToSource: true}
 }
 
-func (e *grantKeywordSourceUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	perm := g.FindPermanent(sourceID)
+func (e *grantKeywordUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	var perm *Permanent
+	if e.applyToSource {
+		perm = g.FindPermanent(sourceID)
+	} else {
+		if len(targets) == 0 {
+			return fmt.Errorf("no target for keyword grant")
+		}
+		perm = g.FindPermanent(targets[0])
+	}
 	if perm == nil {
 		return nil
 	}
@@ -1435,8 +1336,11 @@ func (e *grantKeywordSourceUntilEndOfTurnEffect) Apply(g *Game, sourceID, contro
 	return nil
 }
 
-func (e *grantKeywordSourceUntilEndOfTurnEffect) Text() string {
-	return fmt.Sprintf("~ gains %s until end of turn", e.keyword)
+func (e *grantKeywordUntilEndOfTurnEffect) Text() string {
+	if e.applyToSource {
+		return fmt.Sprintf("~ gains %s until end of turn", e.keyword)
+	}
+	return fmt.Sprintf("target creature gains %s until end of turn", e.keyword)
 }
 
 // regenerateSourceEffect sets a regeneration shield on the source.
@@ -1590,45 +1494,6 @@ func (e *destroyTargetAtEndOfTurnEffect) Text() string {
 	return "Destroy target creature at end of turn"
 }
 
-// boostTargetXEffect gives +X/+0 to a target creature until end of turn.
-type boostTargetXEffect struct {
-	power     bool // if true, boost power by X
-	toughness bool // if true, boost toughness by X
-}
-
-func BoostTargetXUntilEndOfTurn(power, toughness bool) Effect {
-	return &boostTargetXEffect{power: power, toughness: toughness}
-}
-
-func (e *boostTargetXEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 {
-		return nil
-	}
-	perm := g.FindPermanent(targets[0])
-	if perm == nil {
-		return nil
-	}
-	p, t := 0, 0
-	if e.power {
-		p = g.CurrentX
-	}
-	if e.toughness {
-		t = g.CurrentX
-	}
-	eff := &temporaryBoostEffect{
-		targetID:  perm.ID(),
-		power:     p,
-		toughness: t,
-		effectSource: effectSource{sourceID: sourceID},
-	}
-	g.Effects.Add(eff)
-	g.Effects.Apply(g)
-	return nil
-}
-
-func (e *boostTargetXEffect) Text() string {
-	return "Target creature gets +X/+0 until end of turn"
-}
 
 // discardHandAndDrawEffect makes each player discard their hand and draw N cards.
 type discardHandAndDrawEffect struct {

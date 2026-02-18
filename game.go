@@ -516,7 +516,7 @@ func (g *Game) PutTriggersOnStack() {
 		// For triggers that need to pass the event's player as a target
 		// (e.g., "deal damage to that land's controller"), store the event
 		// PlayerID as a target on the stack object.
-		if _, ok := pt.ability.(*WheneverLandEntersBattlefieldTriggered); ok {
+		if gt, ok := pt.ability.(*GenericTriggered); ok && gt.eventType == EvtEntersBattlefield {
 			if pt.event != nil && pt.event.PlayerID != uuid.Nil {
 				obj.Targets = []uuid.UUID{pt.event.PlayerID}
 			}
