@@ -111,18 +111,13 @@ func TestBirdsOfParadise(t *testing.T) {
 			t.Run(tc.name, func(t *testing.T) {
 				g := mage.NewTestGame(t)
 				g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Birds of Paradise")
+				g.ChooseManaColor(mage.PlayerA, tc.color)
 				g.ActivateAbility(1, mage.PrecombatMain, mage.PlayerA, "Birds of Paradise")
 				g.StopAt(1, mage.BeginCombat)
 				g.Execute()
-				// With a true any-color mana ability, the player should be able to
-				// choose the color. The stub always produces Green.
-				// We check that at least 1 mana of the requested color is in the pool.
-				// Auto-mana adds 5 of each + 10 colorless for ActivateAbility.
-				// The Birds itself should add 1 more of the chosen color.
+				// Auto-mana gives 5 of each color. Birds adds 1 of chosen color.
+				// For non-green colors, count should be 6 if Birds works correctly.
 				pool := g.Players[0].ManaPool()
-				// Auto-mana gives 5 of each color. Birds adds 1 Green (stub) or
-				// 1 of chosen color (correct). For non-green colors, count should be 6
-				// if Birds works correctly, or 5 if it only produces green.
 				if tc.color != mage.Green {
 					if pool.Count(tc.color) < 6 {
 						t.Errorf("Birds of Paradise should produce %s mana; pool has %d, want >= 6",

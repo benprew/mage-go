@@ -473,8 +473,8 @@ func registerAlphaCreatures() {
 	mage.Register("Birds of Paradise", func() mage.Card {
 		c := mage.NewCreature("Birds of Paradise", "{G}", 0, 1, "Bird")
 		c.AddAbility(mage.HasKeyword(mage.Flying))
-		// Tap: Add one mana of any color (simplified: add Green for testing)
-		c.AddAbility(mage.NewManaAbility(mage.Green))
+		// {T}: Add one mana of any color.
+		c.AddAbility(mage.NewAnyColorManaAbility())
 		return c
 	})
 

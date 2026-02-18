@@ -753,9 +753,13 @@ func (g *Game) ActivateAbilityByText(playerID uuid.UUID, permName string, target
 		perm.Tapped = true
 		p := g.GetPlayer(playerID)
 		if p != nil {
-			p.ManaPool().Add(ma.Color, 1)
+			color := ma.Color
+			if ma.AnyColor {
+				color = p.ChooseManaColor("add mana")
+			}
+			p.ManaPool().Add(color, 1)
 			// Check for mana bonus effects (e.g. Gauntlet of Might)
-			g.applyManaBonuses(perm, ma.Color, p)
+			g.applyManaBonuses(perm, color, p)
 		}
 		g.FireEvent(GameEvent{
 			Type:     EvtAbilityActivated,

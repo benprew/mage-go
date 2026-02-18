@@ -128,16 +128,29 @@ func StaticAbility(effects ...ContinuousEffect) *StaticAbilityHolder {
 // ManaAbility is a mana ability that taps to add mana.
 type ManaAbility struct {
 	BaseAbility
-	Color Color
+	Color    Color
+	AnyColor bool // player chooses color when activated
 }
 
 func NewManaAbility(c Color) *ManaAbility {
 	return &ManaAbility{
 		BaseAbility: BaseAbility{
-			id:   uuid.New(),
+			id:          uuid.New(),
 			abilityType: AbilityMana,
 		},
 		Color: c,
+	}
+}
+
+// NewAnyColorManaAbility creates a mana ability that lets the player choose
+// which color of mana to add (e.g. Birds of Paradise).
+func NewAnyColorManaAbility() *ManaAbility {
+	return &ManaAbility{
+		BaseAbility: BaseAbility{
+			id:          uuid.New(),
+			abilityType: AbilityMana,
+		},
+		AnyColor: true,
 	}
 }
 
