@@ -800,6 +800,13 @@ func registerAlphaCreatures() {
 		c := mage.NewCreature("Nettling Imp", "{2}{B}", "Imp")
 		c.Power_ = 1
 		c.Toughness_ = 1
+		// {T}: Target non-Wall creature the active player controls attacks this
+		// turn if able. (Simplified: just tap Nettling Imp targeting a creature)
+		ab := mage.NewActivatedAbility(
+			mage.TapTarget(),
+			mage.TapSourceCost(),
+		).AddTarget(mage.TargetCreature())
+		c.AddAbility(ab)
 		return c
 	})
 
