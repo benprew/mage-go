@@ -592,11 +592,13 @@ func registerAlphaCreatures() {
 	})
 
 	mage.Register("Keldon Warlord", func() mage.Card {
-		// P/T = number of non-Wall creatures you control
-		// Simplified: 0/0 base
 		c := mage.NewCreature("Keldon Warlord", "{2}{R}{R}", "Human", "Barbarian")
 		c.Power_ = 0
 		c.Toughness_ = 0
+		// P/T equal to number of non-Wall creatures you control
+		c.AddAbility(mage.StaticAbility(
+			mage.PTEqualsControlledCount(mage.And(mage.IsCreature, mage.Not(mage.HasSubType("Wall")))),
+		))
 		return c
 	})
 
