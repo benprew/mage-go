@@ -117,6 +117,12 @@ func (g *Game) FindCardAnywhere(id uuid.UUID) Card {
 			return p.Card
 		}
 	}
+	// Search the stack (spells that have been cast but not yet resolved)
+	for _, obj := range g.Stack.Objects() {
+		if obj.Card != nil && obj.Card.ID() == id {
+			return obj.Card
+		}
+	}
 	for _, pl := range g.Players {
 		for _, c := range pl.Hand() {
 			if c.ID() == id {
@@ -659,7 +665,7 @@ func (g *Game) ActivateAbilityByText(playerID uuid.UUID, permName string, target
 		if wrapped, ok := inner.(*grantedByEffect); ok {
 			inner = wrapped.Ability
 		}
-		aa, ok := inner.(ActivatedAbilityI)
+		aa, ok := inner.(ActivatedAbility)
 		if !ok {
 			continue
 		}
@@ -855,14 +861,14 @@ func (g *Game) doDeclareAttackers() {
 
 func (g *Game) doDeclareBlockers() {
 	nonActive := g.NonActivePlayerObj()
-	blockers := nonActive.DeclareBlockers(g)
-	if blockers == nil {
+	assignments := nonActive.DeclareBlockers(g)
+	if assignments == nil {
 		return
 	}
 
-	for blockerID, attackerID := range blockers {
-		blocker := g.FindPermanent(blockerID)
-		attacker := g.FindPermanent(attackerID)
+	for _, ba := range assignments {
+		blocker := g.FindPermanent(ba.BlockerID)
+		attacker := g.FindPermanent(ba.AttackerID)
 		if blocker == nil || attacker == nil {
 			continue
 		}
@@ -876,11 +882,11 @@ func (g *Game) doDeclareBlockers() {
 		if HasLandwalkEvasion(attacker, nonActive.PlayerID(), g) {
 			continue
 		}
-		g.Combat.AddBlocker(blockerID, attackerID)
+		g.Combat.AddBlocker(ba.BlockerID, ba.AttackerID)
 		g.FireEvent(GameEvent{
 			Type:     EvtDeclaredBlocker,
-			SourceID: blockerID,
-			TargetID: attackerID,
+			SourceID: ba.BlockerID,
+			TargetID: ba.AttackerID,
 			PlayerID: nonActive.PlayerID(),
 		})
 	}
@@ -1274,7 +1280,7 @@ func (g *Game) GetActivatableAbilities(playerID uuid.UUID) []ActivatableInfo {
 			continue
 		}
 		for i, a := range perm.RuntimeAbilities {
-			aa, ok := a.(ActivatedAbilityI)
+			aa, ok := a.(ActivatedAbility)
 			if !ok {
 				continue
 			}
@@ -1386,7 +1392,7 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	}
 
 	a := perm.RuntimeAbilities[abilityIndex]
-	aa, ok := a.(ActivatedAbilityI)
+	aa, ok := a.(ActivatedAbility)
 	if !ok {
 		return fmt.Errorf("not an activated ability")
 	}
