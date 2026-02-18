@@ -586,15 +586,25 @@ func (e *boostAllCreaturesIncludingSelfEffect) Apply(g *Game) error {
 // matching permanents on the battlefield. Used for Plague Rats, etc.
 // Each creature with this effect gets its own instance, which boosts only itself.
 type ptEqualsCountEffect struct {
-	countFilter PermanentFilter // what to count
-	sourceID_   uuid.UUID
+	countFilter    PermanentFilter // what to count
+	controllerOnly bool            // if true, only count permanents you control
+	sourceID_      uuid.UUID
 }
 
 // PTEqualsCount creates a continuous effect where the source creature gets
-// +N/+N where N is the count of permanents matching countFilter.
+// +N/+N where N is the count of permanents matching countFilter (on whole battlefield).
 func PTEqualsCount(countFilter PermanentFilter) ContinuousEffect {
 	return &ptEqualsCountEffect{
 		countFilter: countFilter,
+	}
+}
+
+// PTEqualsControlledCount creates a continuous effect where the source creature gets
+// +N/+N where N is the count of permanents matching countFilter that you control.
+func PTEqualsControlledCount(countFilter PermanentFilter) ContinuousEffect {
+	return &ptEqualsCountEffect{
+		countFilter:    countFilter,
+		controllerOnly: true,
 	}
 }
 
@@ -607,17 +617,21 @@ func (e *ptEqualsCountEffect) IsActive(g *Game) bool {
 }
 
 func (e *ptEqualsCountEffect) Apply(g *Game) error {
+	src := g.FindPermanent(e.sourceID_)
+	if src == nil {
+		return nil
+	}
 	count := 0
 	for _, p := range g.Battlefield {
+		if e.controllerOnly && p.Controller != src.Controller {
+			continue
+		}
 		if e.countFilter(p, g) {
 			count++
 		}
 	}
-	src := g.FindPermanent(e.sourceID_)
-	if src != nil {
-		g.Effects.powerBonuses[src.ID()] += count
-		g.Effects.toughBonuses[src.ID()] += count
-	}
+	g.Effects.powerBonuses[src.ID()] += count
+	g.Effects.toughBonuses[src.ID()] += count
 	return nil
 }
 

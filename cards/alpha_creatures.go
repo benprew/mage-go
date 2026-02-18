@@ -204,12 +204,14 @@ func registerAlphaCreatures() {
 	})
 
 	mage.Register("Nightmare", func() mage.Card {
-		// Nightmare's power and toughness are each equal to the number of Swamps you control.
-		// Simplified: base 0/0 (would need dynamic P/T continuous effect)
 		c := mage.NewCreature("Nightmare", "{5}{B}", "Nightmare", "Horse")
 		c.Power_ = 0
 		c.Toughness_ = 0
 		c.AddAbility(mage.HasKeyword(mage.Flying))
+		// P/T equal to number of Swamps you control
+		c.AddAbility(mage.StaticAbility(
+			mage.PTEqualsControlledCount(mage.HasSubType("Swamp")),
+		))
 		return c
 	})
 
