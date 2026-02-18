@@ -448,9 +448,9 @@ func registerAlphaCreatures() {
 		c.Power_ = 8
 		c.Toughness_ = 8
 		c.AddAbility(mage.HasKeyword(mage.Trample))
-		// At the beginning of your upkeep, you lose 8 life unless you pay {G}{G}{G}{G}
-		// Simplified: lose 1 life on upkeep
-		c.AddAbility(mage.BeginningOfUpkeepTrigger(mage.LoseLife(1), false))
+		// At the beginning of your upkeep, Force of Nature deals 8 damage to you
+		// unless you pay {G}{G}{G}{G}.
+		c.AddAbility(mage.BeginningOfUpkeepTrigger(mage.DealDamageToSourceController(8), false))
 		return c
 	})
 
