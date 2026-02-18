@@ -283,11 +283,11 @@ func registerAlphaCreatures() {
 		c.Power_ = 2
 		c.Toughness_ = 3
 		c.AddAbility(mage.HasKeyword(mage.Flying))
-		// {R}: +1/+0 until end of turn
+		// {R}: +1/+0 until end of turn. If activated 4+ times, destroy at EOT.
 		ab := mage.NewActivatedAbility(
 			mage.BoostSourceUntilEndOfTurn(1, 0),
 			mage.ManaCostOf("{R}"),
-		)
+		).AddEffect(mage.MarkDestroyAtEOTAfterNActivations(4))
 		c.AddAbility(ab)
 		return c
 	})

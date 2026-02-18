@@ -2,8 +2,8 @@ package mage
 
 import "github.com/google/uuid"
 
-// ActivatedAbilityI is the interface for activated abilities.
-type ActivatedAbilityI interface {
+// ActivatedAbility is the interface for activated abilities.
+type ActivatedAbility interface {
 	Ability
 	CanActivate(controller uuid.UUID, g *Game) bool
 	Effects() []Effect
@@ -34,6 +34,11 @@ func NewActivatedAbility(effect Effect, cost Cost) *SimpleActivatedAbility {
 
 func (a *SimpleActivatedAbility) AddCost(c Cost) *SimpleActivatedAbility {
 	a.Csts = append(a.Csts, c)
+	return a
+}
+
+func (a *SimpleActivatedAbility) AddEffect(e Effect) *SimpleActivatedAbility {
+	a.Effs = append(a.Effs, e)
 	return a
 }
 

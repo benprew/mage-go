@@ -978,6 +978,8 @@ func (g *Game) doCleanup() {
 		if p.DestroyAtEndOfTurn {
 			toDestroy = append(toDestroy, p)
 		}
+		// Clear activation tracking (Charge counters used for per-turn counts)
+		delete(p.Counters, Charge)
 		// Clear unblockable flag
 		p.Unblockable = false
 		// Clear damage prevention shields

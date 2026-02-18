@@ -406,6 +406,32 @@ func (e *boostSourceEffect) Text() string {
 	return fmt.Sprintf("this creature gets +%d/+%d until end of turn", e.power, e.toughness)
 }
 
+// markDestroyAtEOTAfterNActivationsEffect tracks pump activations using Charge
+// counters. When the count reaches the threshold, sets DestroyAtEndOfTurn.
+type markDestroyAtEOTAfterNActivationsEffect struct {
+	threshold int
+}
+
+func MarkDestroyAtEOTAfterNActivations(threshold int) Effect {
+	return &markDestroyAtEOTAfterNActivationsEffect{threshold: threshold}
+}
+
+func (e *markDestroyAtEOTAfterNActivationsEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	perm := g.FindPermanent(sourceID)
+	if perm == nil {
+		return nil
+	}
+	perm.AddCounter(Charge, 1)
+	if perm.Counters[Charge] >= e.threshold {
+		perm.DestroyAtEndOfTurn = true
+	}
+	return nil
+}
+
+func (e *markDestroyAtEOTAfterNActivationsEffect) Text() string {
+	return fmt.Sprintf("if activated %d+ times, destroy at end of turn", e.threshold)
+}
+
 // destroyTargetPermanentEffect destroys a target permanent matching a filter.
 type destroyTargetPermanentEffect struct {
 	text string
