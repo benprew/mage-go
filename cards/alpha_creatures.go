@@ -129,8 +129,7 @@ func registerAlphaCreatures() {
 		c.Toughness_ = 1
 		c.AddAbility(mage.HasKeyword(mage.Flying))
 		// At the beginning of your upkeep, sacrifice Phantasmal Forces unless you pay {U}.
-		// Simplified: upkeep trigger that deals damage to controller (or just lose life)
-		c.AddAbility(mage.BeginningOfUpkeepTrigger(mage.LoseLife(1), false))
+		c.AddAbility(mage.BeginningOfUpkeepTrigger(mage.SacrificeSource(), false))
 		return c
 	})
 
