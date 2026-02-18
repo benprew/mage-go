@@ -184,8 +184,8 @@ func registerAlphaEnchantments() {
 
 	mage.Register("Wild Growth", func() mage.Card {
 		c := mage.NewAura("Wild Growth", "{G}")
-		// Enchanted land taps for an additional G
-		// Simplified: static effect on the enchantment
+		// Whenever enchanted land is tapped for mana, its controller adds {G}.
+		c.AddAbility(mage.NewAttachedManaBonusAbility(mage.Green))
 		return c
 	})
 

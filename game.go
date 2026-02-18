@@ -778,7 +778,12 @@ func (g *Game) applyManaBonuses(tappedPerm *Permanent, producedColor Color, p Pl
 		for _, a := range perm.RuntimeAbilities {
 			inner := UnwrapAbility(a)
 			if mb, ok := inner.(*ManaBonusAbility); ok {
-				if mb.Filter(tappedPerm, g) {
+				if mb.AttachedOnly {
+					// Only triggers for the permanent this aura is attached to
+					if perm.AttachedTo == tappedPerm.ID() {
+						p.ManaPool().Add(mb.BonusMana, 1)
+					}
+				} else if mb.Filter(tappedPerm, g) {
 					p.ManaPool().Add(mb.BonusMana, 1)
 				}
 			}

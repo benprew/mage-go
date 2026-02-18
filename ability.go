@@ -156,10 +156,13 @@ func NewAnyColorManaAbility() *ManaAbility {
 
 // ManaBonusAbility grants bonus mana when matching permanents are tapped for mana.
 // E.g. Gauntlet of Might: "Whenever a Mountain is tapped for mana, add {R}."
+// If AttachedOnly is true, the filter is ignored and only the attached permanent
+// triggers the bonus (for auras like Wild Growth).
 type ManaBonusAbility struct {
 	BaseAbility
-	Filter    PermanentFilter
-	BonusMana Color
+	Filter       PermanentFilter
+	BonusMana    Color
+	AttachedOnly bool
 }
 
 // UnwrapAbility returns the inner ability if wrapped by a grantedByEffect, otherwise returns a itself.
@@ -173,11 +176,24 @@ func UnwrapAbility(a Ability) Ability {
 func NewManaBonusAbility(filter PermanentFilter, bonusMana Color) *ManaBonusAbility {
 	return &ManaBonusAbility{
 		BaseAbility: BaseAbility{
-			id:   uuid.New(),
+			id:          uuid.New(),
 			abilityType: AbilityStatic,
 		},
 		Filter:    filter,
 		BonusMana: bonusMana,
+	}
+}
+
+// NewAttachedManaBonusAbility creates a mana bonus that triggers only when the
+// permanent this aura is attached to is tapped for mana (e.g. Wild Growth).
+func NewAttachedManaBonusAbility(bonusMana Color) *ManaBonusAbility {
+	return &ManaBonusAbility{
+		BaseAbility: BaseAbility{
+			id:          uuid.New(),
+			abilityType: AbilityStatic,
+		},
+		BonusMana:    bonusMana,
+		AttachedOnly: true,
 	}
 }
 

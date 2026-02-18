@@ -78,13 +78,12 @@ func TestWildGrowth(t *testing.T) {
 		g.ActivateAbility(1, mage.PrecombatMain, mage.PlayerA, "Forest")
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
-		// Forest tapped for {G}. Wild Growth adds another {G}. Total from Forest = 2G.
-		// Auto-mana adds 5G (for CastSpell) + 5G (for ActivateAbility) = 10G.
-		// Plus Forest = 1G + Wild Growth bonus = 1G. Total = 12G.
-		// Stub: no bonus. Total = 11G.
+		// Auto-mana adds {G} to pay for Wild Growth. Forest taps for {G},
+		// Wild Growth adds another {G}. Total: 1 (auto) + 1 (Forest) + 1 (bonus) = 3G.
+		// Without bonus: 1 + 1 = 2G.
 		pool := g.Players[0].ManaPool()
-		if pool.Count(mage.Green) < 12 {
-			t.Errorf("Wild Growth should add extra {G} when Forest taps; expected >= 12 green, got %d", pool.Count(mage.Green))
+		if pool.Count(mage.Green) < 3 {
+			t.Errorf("Wild Growth should add extra {G} when Forest taps; expected >= 3 green, got %d", pool.Count(mage.Green))
 		}
 	})
 }
