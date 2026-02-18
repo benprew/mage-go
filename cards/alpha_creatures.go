@@ -798,10 +798,7 @@ func registerAlphaCreatures() {
 	})
 
 	mage.Register("Aspect of Wolf", func() mage.Card {
-		// Actually an enchantment - aura
-		c := mage.NewCreature("Aspect of Wolf", "{1}{G}", "Wolf")
-		c.Power_ = 1
-		c.Toughness_ = 1
+		c := mage.NewAura("Aspect of Wolf", "{1}{G}")
 		return c
 	})
 }
