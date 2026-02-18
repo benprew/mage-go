@@ -31,6 +31,9 @@ type Game struct {
 	// X value for the currently resolving spell
 	CurrentX int
 
+	// Card currently being resolved (set during ResolveStackObject)
+	ResolvingCard Card
+
 	// Interactive play tracking
 	LandsPlayedThisTurn int
 
@@ -556,6 +559,7 @@ func (g *Game) ResolveStack() {
 // ResolveStackObject resolves a single stack object.
 func (g *Game) ResolveStackObject(obj *StackObject) {
 	g.CurrentX = obj.XValue
+	g.ResolvingCard = obj.Card
 	for _, eff := range obj.Effects {
 		eff.Apply(g, obj.SourceID, obj.Controller, obj.Targets)
 	}
@@ -589,6 +593,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 	}
 
 	g.CurrentX = 0
+	g.ResolvingCard = nil
 
 	g.CheckStateBasedActions()
 }

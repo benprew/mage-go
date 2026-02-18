@@ -134,10 +134,13 @@ func registerAlphaCreatures() {
 	})
 
 	mage.Register("Clone", func() mage.Card {
-		// Simplified: Clone enters as a 0/0 - real copy is too complex
 		c := mage.NewCreature("Clone", "{3}{U}", "Shapeshifter")
 		c.Power_ = 0
 		c.Toughness_ = 0
+		// As Clone enters, choose a creature on the battlefield; Clone becomes a copy of that creature
+		sa := mage.NewSpellAbility(mage.CloneTargetCreature()).
+			AddTarget(mage.TargetCreature())
+		c.AddAbility(sa)
 		return c
 	})
 

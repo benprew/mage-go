@@ -82,6 +82,51 @@ func (e *addXCountersToSourceEffect) Text() string {
 	return fmt.Sprintf("put X %s counters on it", e.ct)
 }
 
+// cloneTargetCreatureEffect copies target creature's characteristics onto the source card.
+// This runs during spell resolution before the card enters the battlefield.
+type cloneTargetCreatureEffect struct{}
+
+func CloneTargetCreature() Effect {
+	return &cloneTargetCreatureEffect{}
+}
+
+func (e *cloneTargetCreatureEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	if len(targets) == 0 {
+		return nil
+	}
+	// Use the resolving card (the card is popped from stack during resolution)
+	if g.ResolvingCard == nil {
+		return nil
+	}
+	bc, ok := g.ResolvingCard.(*BaseCard)
+	if !ok {
+		return nil
+	}
+
+	// Find the target creature on the battlefield
+	target := g.FindPermanent(targets[0])
+	if target == nil {
+		return nil
+	}
+
+	// Copy the target's characteristics onto Clone
+	tc := target.Card
+	bc.Power_ = tc.Power()
+	bc.Toughness_ = tc.Toughness()
+	bc.Types_ = tc.Types()
+	bc.SubTypes_ = tc.SubTypes()
+	// Copy abilities from the target card
+	bc.Abilities_ = nil
+	for _, a := range tc.Abilities() {
+		bc.Abilities_ = append(bc.Abilities_, a)
+	}
+	return nil
+}
+
+func (e *cloneTargetCreatureEffect) Text() string {
+	return "enters the battlefield as a copy of target creature"
+}
+
 // removeCountersFromSourceEffect removes counters from the source permanent.
 type removeCountersFromSourceEffect struct {
 	ct     CounterType
