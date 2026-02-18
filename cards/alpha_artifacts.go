@@ -57,17 +57,25 @@ func registerAlphaArtifacts() {
 
 	mage.Register("Basalt Monolith", func() mage.Card {
 		c := mage.NewArtifact("Basalt Monolith", "{3}")
+		c.IntrinsicDoesNotUntap_ = true // doesn't untap during untap step
 		// {T}: Add {C}{C}{C}
 		ab := mage.NewActivatedAbility(
 			mage.AddMana(mage.Colorless, 3),
 			mage.TapSourceCost(),
 		)
 		c.AddAbility(ab)
+		// {3}: Untap Basalt Monolith
+		untap := mage.NewActivatedAbility(
+			mage.UntapSource(),
+			mage.GenericCost(3),
+		)
+		c.AddAbility(untap)
 		return c
 	})
 
 	mage.Register("Mana Vault", func() mage.Card {
 		c := mage.NewArtifact("Mana Vault", "{1}")
+		c.IntrinsicDoesNotUntap_ = true // doesn't untap during untap step
 		// {T}: Add {C}{C}{C}
 		ab := mage.NewActivatedAbility(
 			mage.AddMana(mage.Colorless, 3),
@@ -259,9 +267,9 @@ func registerAlphaArtifacts() {
 
 	mage.Register("Deathgrip", func() mage.Card {
 		c := mage.NewEnchantment("Deathgrip", "{B}{B}")
-		// {B}{B}: Counter target green spell
+		// {B}{B}: Counter target green spell (only counters if green)
 		ab := mage.NewActivatedAbility(
-			mage.CounterSpell(),
+			mage.CounterSpellIfColor(mage.Green),
 			mage.ManaCostOf("{B}{B}"),
 		).AddTarget(mage.TargetSpellOnStack())
 		c.AddAbility(ab)
@@ -270,9 +278,9 @@ func registerAlphaArtifacts() {
 
 	mage.Register("Lifeforce", func() mage.Card {
 		c := mage.NewEnchantment("Lifeforce", "{G}{G}")
-		// {G}{G}: Counter target black spell
+		// {G}{G}: Counter target black spell (only counters if black)
 		ab := mage.NewActivatedAbility(
-			mage.CounterSpell(),
+			mage.CounterSpellIfColor(mage.Black),
 			mage.ManaCostOf("{G}{G}"),
 		).AddTarget(mage.TargetSpellOnStack())
 		c.AddAbility(ab)
