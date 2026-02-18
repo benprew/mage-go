@@ -267,9 +267,9 @@ func registerAlphaEnchantments() {
 
 	mage.Register("Black Vise", func() mage.Card {
 		c := mage.NewArtifact("Black Vise", "{1}")
-		// At the beginning of each opponent's upkeep, deal damage equal to cards in hand minus 4
-		// Simplified: deal 1 on upkeep
-		c.AddAbility(mage.BeginningOfUpkeepTrigger(mage.DealDamageToSourceController(1), false))
+		// At the beginning of each opponent's upkeep, Black Vise deals X damage to
+		// that player, where X is the number of cards in their hand minus 4, minimum 0.
+		c.AddAbility(mage.BeginningOfEachUpkeepTrigger(mage.BlackViseEffect(), false))
 		return c
 	})
 
