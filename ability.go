@@ -167,3 +167,54 @@ func NewManaBonusAbility(filter PermanentFilter, bonusMana Color) *ManaBonusAbil
 		BonusMana: bonusMana,
 	}
 }
+
+// SacrificeUnlessLandAbility requires the controller to control a land of a
+// specific subtype or the permanent is sacrificed as a state-based action.
+type SacrificeUnlessLandAbility struct {
+	BaseAbility
+	LandSubtype string
+}
+
+func SacrificeUnlessLand(subtype string) *SacrificeUnlessLandAbility {
+	return &SacrificeUnlessLandAbility{
+		BaseAbility: BaseAbility{
+			id:          uuid.New(),
+			abilityType: AbilityStatic,
+		},
+		LandSubtype: subtype,
+	}
+}
+
+// EntersWithXCountersAbility is a replacement effect that adds X counters when
+// the permanent enters the battlefield.
+type EntersWithXCountersAbility struct {
+	BaseAbility
+	CounterType CounterType
+}
+
+func EntersWithXCounters(ct CounterType) *EntersWithXCountersAbility {
+	return &EntersWithXCountersAbility{
+		BaseAbility: BaseAbility{
+			id:          uuid.New(),
+			abilityType: AbilityStatic,
+		},
+		CounterType: ct,
+	}
+}
+
+// GraveyardReturnAbility allows a creature card in the graveyard to return to
+// the battlefield if enough creature cards are above it in the graveyard.
+type GraveyardReturnAbility struct {
+	BaseAbility
+	MinCreaturesAbove int
+}
+
+func GraveyardReturnIfCreaturesAbove(n int) *GraveyardReturnAbility {
+	return &GraveyardReturnAbility{
+		BaseAbility: BaseAbility{
+			id:          uuid.New(),
+			abilityType: AbilityStatic,
+		},
+		MinCreaturesAbove: n,
+	}
+}

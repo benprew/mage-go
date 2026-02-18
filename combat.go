@@ -119,7 +119,7 @@ func CanBlock(blocker, attacker *Permanent, g *Game) bool {
 		return false
 	}
 	// CantBeBlockedByWalls creatures can't be blocked by Walls
-	if attacker.CantBeBlockedByWalls && blocker.HasSubType("Wall") {
+	if attacker.HasAbility(CantBeBlockedByWalls) && blocker.HasSubType("Wall") {
 		return false
 	}
 	// Defender creatures can't attack (checked elsewhere), but they CAN block.

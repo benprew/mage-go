@@ -25,6 +25,9 @@ const (
 	Swampwalk
 	Mountainwalk
 	Plainswalk
+	CantBeBlockedByWalls
+	EntersTapped
+	DoesNotUntapKW
 )
 
 func (k Keyword) String() string {
@@ -71,6 +74,12 @@ func (k Keyword) String() string {
 		return "Mountainwalk"
 	case Plainswalk:
 		return "Plainswalk"
+	case CantBeBlockedByWalls:
+		return "Can't Be Blocked by Walls"
+	case EntersTapped:
+		return "Enters Tapped"
+	case DoesNotUntapKW:
+		return "Does Not Untap"
 	default:
 		return "Unknown"
 	}

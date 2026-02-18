@@ -541,3 +541,154 @@ func TestCardTemplateHelpers(t *testing.T) {
 		tg.AssertLife(PlayerB, 16)
 	})
 }
+
+// TestPermanentPropertyMigration verifies that permanent property flags have
+// been successfully migrated from ad-hoc BaseCard fields to the ability system.
+func TestPermanentPropertyMigration(t *testing.T) {
+	t.Run("CantBeBlockedByWalls keyword on Juggernaut", func(t *testing.T) {
+		name := "DSL CantBlock Wall Test"
+		wallName := "DSL Wall Blocker"
+		for _, reg := range []struct {
+			n string
+			f func() Card
+		}{
+			{name, func() Card {
+				c := NewCreature(name, "{4}", 5, 3, "Juggernaut")
+				c.AddType(TypeArtifact)
+				c.AddAbility(HasKeyword(CantBeBlockedByWalls))
+				return c
+			}},
+			{wallName, func() Card {
+				c := NewCreature(wallName, "{2}{W}", 0, 5, "Wall")
+				c.AddAbility(HasKeyword(Defender))
+				return c
+			}},
+		} {
+			if !CardRegistered(reg.n) {
+				Register(reg.n, reg.f)
+			}
+		}
+
+		tg := NewTestGame(t)
+		tg.AddCard(ZoneBattlefield, PlayerA, name)
+		tg.AddCard(ZoneBattlefield, PlayerB, wallName)
+		tg.Attack(1, PlayerA, name)
+		tg.Block(1, PlayerB, wallName, name)
+		tg.StopAt(1, EndCombat)
+		tg.Execute()
+
+		// Wall can't block Juggernaut, so 5 damage goes through
+		tg.AssertLife(PlayerB, 15)
+	})
+
+	t.Run("EntersTapped keyword", func(t *testing.T) {
+		name := "DSL Enters Tapped"
+		if !CardRegistered(name) {
+			Register(name, func() Card {
+				c := NewArtifact(name, "{4}")
+				c.AddAbility(HasKeyword(EntersTapped))
+				return c
+			})
+		}
+
+		tg := NewTestGame(t)
+		tg.AddCard(ZoneHand, PlayerA, name)
+		tg.CastSpell(1, PrecombatMain, PlayerA, name)
+		tg.StopAt(1, EndCombat)
+		tg.Execute()
+
+		tg.AssertTapped(PlayerA, name, true)
+	})
+
+	t.Run("DoesNotUntapKW keyword", func(t *testing.T) {
+		name := "DSL Does Not Untap"
+		if !CardRegistered(name) {
+			Register(name, func() Card {
+				c := NewArtifact(name, "{3}")
+				c.AddAbility(HasKeyword(DoesNotUntapKW))
+				return c
+			})
+		}
+
+		tg := NewTestGame(t)
+		tg.AddCard(ZoneBattlefield, PlayerA, name)
+		tg.StopAt(1, PrecombatMain)
+		tg.Execute()
+
+		tg.AssertHasAbility(PlayerA, name, DoesNotUntapKW, true)
+	})
+
+	t.Run("EntersWithXCounters ability", func(t *testing.T) {
+		name := "DSL X Counter Creature"
+		if !CardRegistered(name) {
+			Register(name, func() Card {
+				c := NewCreature(name, "{X}{R}{R}", 0, 0, "Hydra")
+				c.AddAbility(EntersWithXCounters(P1P1))
+				return c
+			})
+		}
+
+		tg := NewTestGame(t)
+		tg.AddCard(ZoneHand, PlayerA, name)
+		tg.CastSpellWithX(1, PrecombatMain, PlayerA, name, 3)
+		tg.StopAt(1, EndCombat)
+		tg.Execute()
+
+		tg.AssertPermanentCount(PlayerA, name, 1)
+		tg.AssertCounterCount(PlayerA, name, P1P1, 3)
+	})
+
+	t.Run("SacrificeUnlessLand ability", func(t *testing.T) {
+		name := "DSL Sacrifice Unless Island"
+		if !CardRegistered(name) {
+			Register(name, func() Card {
+				c := NewCreature(name, "{5}{U}", 5, 5, "Serpent")
+				c.AddAbility(SacrificeUnlessLand("Island"))
+				return c
+			})
+		}
+
+		// Without an Island, the creature should be sacrificed
+		tg := NewTestGame(t)
+		tg.AddCard(ZoneBattlefield, PlayerA, name)
+		tg.StopAt(1, PrecombatMain)
+		tg.Execute()
+
+		tg.AssertPermanentCount(PlayerA, name, 0)
+	})
+
+	t.Run("GraveyardReturnIfCreaturesAbove ability", func(t *testing.T) {
+		name := "DSL Graveyard Return"
+		bearName := "DSL GY Bear"
+		for _, reg := range []struct {
+			n string
+			f func() Card
+		}{
+			{name, func() Card {
+				c := NewCreature(name, "{B}{B}", 1, 1, "Spirit")
+				c.AddAbility(HasKeyword(Haste))
+				c.AddAbility(GraveyardReturnIfCreaturesAbove(2))
+				return c
+			}},
+			{bearName, func() Card {
+				c := NewCreature(bearName, "{1}{G}", 2, 2, "Bear")
+				return c
+			}},
+		} {
+			if !CardRegistered(reg.n) {
+				Register(reg.n, reg.f)
+			}
+		}
+
+		tg := NewTestGame(t)
+		// Put the returner in graveyard, then 2 creatures above it
+		tg.AddCard(ZoneGraveyard, PlayerA, name)
+		tg.AddCard(ZoneGraveyard, PlayerA, bearName)
+		tg.AddCard(ZoneGraveyard, PlayerA, bearName)
+		tg.StopAt(2, PrecombatMain) // upkeep of turn 2 checks graveyard
+		tg.Execute()
+
+		// Should have returned to battlefield
+		tg.AssertPermanentCount(PlayerA, name, 1)
+	})
+}

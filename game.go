@@ -164,10 +164,17 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 		a.SetController(controller)
 	}
 
+	// EntersTapped keyword check
+	if perm.HasAbility(EntersTapped) {
+		perm.Tapped = true
+	}
+
 	// Add X counters if configured (replacement effect, not a trigger)
-	props := card.Props()
-	if props.EntersWithXCountersSet && g.CurrentX > 0 {
-		perm.AddCounter(props.EntersWithXCounters, g.CurrentX)
+	for _, a := range perm.RuntimeAbilities {
+		if xc, ok := a.(*EntersWithXCountersAbility); ok && g.CurrentX > 0 {
+			perm.AddCounter(xc.CounterType, g.CurrentX)
+			break
+		}
 	}
 
 	g.Battlefield = append(g.Battlefield, perm)
@@ -775,12 +782,19 @@ func (g *Game) CheckStateBasedActions() {
 		// Sacrifice creatures that require a land type the controller doesn't have
 		var toSacrifice []*Permanent
 		for _, p := range g.Battlefield {
-			if p.SacrificeUnlessLand == "" {
+			var landSubtype string
+			for _, a := range p.RuntimeAbilities {
+				if sa, ok := a.(*SacrificeUnlessLandAbility); ok {
+					landSubtype = sa.LandSubtype
+					break
+				}
+			}
+			if landSubtype == "" {
 				continue
 			}
 			hasLand := false
 			for _, other := range g.Battlefield {
-				if other.Controller == p.Controller && other.HasSubType(p.SacrificeUnlessLand) {
+				if other.Controller == p.Controller && other.HasSubType(landSubtype) {
 					hasLand = true
 					break
 				}
@@ -880,8 +894,14 @@ func (g *Game) checkGraveyardReturns(p Player) {
 	var toReturn []uuid.UUID
 
 	for i, card := range graveyard {
-		props := card.Props()
-		if props.GraveyardReturnMinCreatures <= 0 {
+		var minCreatures int
+		for _, a := range card.Abilities() {
+			if gra, ok := a.(*GraveyardReturnAbility); ok {
+				minCreatures = gra.MinCreaturesAbove
+				break
+			}
+		}
+		if minCreatures <= 0 {
 			continue
 		}
 		// Count creature cards above this one (higher indices = more recently added)
@@ -891,7 +911,7 @@ func (g *Game) checkGraveyardReturns(p Player) {
 				creaturesAbove++
 			}
 		}
-		if creaturesAbove >= props.GraveyardReturnMinCreatures {
+		if creaturesAbove >= minCreatures {
 			toReturn = append(toReturn, card.ID())
 		}
 	}
