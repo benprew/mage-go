@@ -85,7 +85,7 @@ func registerAlphaArtifacts() {
 		)
 		c.AddAbility(ab)
 		// At the beginning of your upkeep, deal 1 damage to you
-		c.AddAbility(mage.BeginningOfUpkeepTrigger(mage.DealDamageToSourceController(1), false))
+		c.AddAbility(mage.BeginningOfUpkeepTrigger(mage.DealDamageToPlayers(mage.Fixed(1), mage.SelectController()), false))
 		return c
 	})
 
@@ -95,7 +95,7 @@ func registerAlphaArtifacts() {
 		c := mage.NewArtifact("Jayemdae Tome", "{4}")
 		// {4}, {T}: Draw a card
 		ab := mage.NewActivatedAbility(
-			mage.DrawCards(1),
+			mage.DrawCards(mage.Fixed(1)),
 			mage.GenericCost(4),
 		
 			mage.WithCost(mage.TapSourceCost()),
@@ -108,7 +108,7 @@ func registerAlphaArtifacts() {
 		c := mage.NewArtifact("Disrupting Scepter", "{3}")
 		// {3}, {T}: Target player discards a card
 		ab := mage.NewActivatedAbility(
-			mage.DiscardCards(1),
+			mage.DiscardCards(mage.Fixed(1)),
 			mage.GenericCost(3),
 		
 			mage.WithCost(mage.TapSourceCost()),
@@ -138,7 +138,7 @@ func registerAlphaArtifacts() {
 		c := mage.NewArtifact("Rod of Ruin", "{4}")
 		// {3}, {T}: Deal 1 damage to any target
 		ab := mage.NewActivatedAbility(
-			mage.DealDamage(1),
+			mage.DealDamage(mage.Fixed(1)),
 			mage.GenericCost(3),
 		
 			mage.WithCost(mage.TapSourceCost()),
@@ -226,7 +226,7 @@ func registerAlphaArtifacts() {
 		c := mage.NewArtifact("Ankh of Mishra", "{2}")
 		// Whenever a land enters the battlefield, deal 2 damage to that land's controller
 		c.AddAbility(mage.WheneverLandEntersBattlefieldTrigger(
-			mage.DealDamageToEventController(2), false,
+			mage.DealDamageToPlayers(mage.Fixed(2), mage.SelectEventController()), false,
 		))
 		return c
 	})

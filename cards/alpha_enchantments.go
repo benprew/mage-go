@@ -66,7 +66,7 @@ func registerAlphaEnchantments() {
 		// Enchanted creature has "{W}: +1/+1 until end of turn"
 		c.AddAbility(mage.StaticAbility(
 			mage.GrantActivatedAbilityToAttached(
-				mage.BoostSourceUntilEndOfTurn(1, 1),
+				mage.BoostUntilEndOfTurn(mage.Fixed(1), mage.Fixed(1), mage.SelectSource),
 				mage.ManaCostOf("{W}"),
 				mage.AttachAura,
 			),
@@ -96,7 +96,7 @@ func registerAlphaEnchantments() {
 		// Enchanted creature has "{R}: +1/+0 until end of turn"
 		c.AddAbility(mage.StaticAbility(
 			mage.GrantActivatedAbilityToAttached(
-				mage.BoostSourceUntilEndOfTurn(1, 0),
+				mage.BoostUntilEndOfTurn(mage.Fixed(1), mage.Fixed(0), mage.SelectSource),
 				mage.ManaCostOf("{R}"),
 				mage.AttachAura,
 			),
@@ -115,7 +115,7 @@ func registerAlphaEnchantments() {
 	mage.Register("Jump", func() mage.Card {
 		c := mage.NewInstant("Jump", "{U}")
 		// Target creature gains flying until end of turn
-		sa := mage.NewTargetedSpell(mage.TargetCreature(), mage.GrantKeywordTargetUntilEndOfTurn(mage.Flying))
+		sa := mage.NewTargetedSpell(mage.TargetCreature(), mage.GrantKeywordUntilEndOfTurn(mage.Flying, mage.SelectTarget))
 		c.AddAbility(sa)
 		return c
 	})
@@ -261,7 +261,7 @@ func registerAlphaEnchantments() {
 	mage.Register("Copper Tablet", func() mage.Card {
 		c := mage.NewArtifact("Copper Tablet", "{2}")
 		// At the beginning of each player's upkeep, Copper Tablet deals 1 damage to that player.
-		c.AddAbility(mage.BeginningOfEachUpkeepTrigger(mage.DealDamageToActivePlayer(1), false))
+		c.AddAbility(mage.BeginningOfEachUpkeepTrigger(mage.DealDamageToPlayers(mage.Fixed(1), mage.SelectActivePlayer()), false))
 		return c
 	})
 
@@ -277,7 +277,7 @@ func registerAlphaEnchantments() {
 		c := mage.NewAura("Wanderlust", "{2}{G}")
 		// At the beginning of enchanted creature's controller's upkeep, deal 1 damage
 		c.AddAbility(mage.BeginningOfAttachedControllerUpkeepTrigger(
-			mage.DealDamageToAttachedController(1), false,
+			mage.DealDamageToPlayers(mage.Fixed(1), mage.SelectAttachedController()), false,
 		))
 		return c
 	})
@@ -286,7 +286,7 @@ func registerAlphaEnchantments() {
 		c := mage.NewAura("Cursed Land", "{2}{B}{B}")
 		// At the beginning of enchanted land's controller's upkeep, deal 1 damage
 		c.AddAbility(mage.BeginningOfAttachedControllerUpkeepTrigger(
-			mage.DealDamageToAttachedController(1), false,
+			mage.DealDamageToPlayers(mage.Fixed(1), mage.SelectAttachedController()), false,
 		))
 		return c
 	})
@@ -295,7 +295,7 @@ func registerAlphaEnchantments() {
 		c := mage.NewAura("Feedback", "{2}{U}")
 		// At the beginning of enchanted enchantment's controller's upkeep, deal 1 damage
 		c.AddAbility(mage.BeginningOfAttachedControllerUpkeepTrigger(
-			mage.DealDamageToAttachedController(1), false,
+			mage.DealDamageToPlayers(mage.Fixed(1), mage.SelectAttachedController()), false,
 		))
 		return c
 	})
@@ -304,7 +304,7 @@ func registerAlphaEnchantments() {
 		c := mage.NewAura("Warp Artifact", "{B}{B}")
 		// At the beginning of enchanted artifact's controller's upkeep, deal 1 damage
 		c.AddAbility(mage.BeginningOfAttachedControllerUpkeepTrigger(
-			mage.DealDamageToAttachedController(1), false,
+			mage.DealDamageToPlayers(mage.Fixed(1), mage.SelectAttachedController()), false,
 		))
 		return c
 	})

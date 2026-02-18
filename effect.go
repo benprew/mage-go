@@ -57,34 +57,20 @@ func (e *gainLifeEffect) Text() string {
 }
 
 // addCountersEffect adds counters to the source or a target permanent.
-// When applyToSource is true, counters go on the source; otherwise on the
-// first target. When useX is true, the count is read from g.CurrentX.
 type addCountersEffect struct {
-	ct            CounterType
-	amount        int
-	applyToSource bool
-	useX          bool
+	ct     CounterType
+	amount ValueSource
+	target PermanentSelector
 }
 
-// AddCountersToSource creates an effect that adds counters to the source permanent.
-func AddCountersToSource(ct CounterType, amount int) Effect {
-	return &addCountersEffect{ct: ct, amount: amount, applyToSource: true}
-}
-
-// AddCountersToTarget creates an effect that adds counters to a target permanent.
-func AddCountersToTarget(ct CounterType, amount int) Effect {
-	return &addCountersEffect{ct: ct, amount: amount}
-}
-
-// AddXCountersToSource creates an effect that adds X counters to the source permanent,
-// where X is the value of g.CurrentX when the spell resolves.
-func AddXCountersToSource(ct CounterType) Effect {
-	return &addCountersEffect{ct: ct, applyToSource: true, useX: true}
+// AddCounters creates an effect that adds counters to the selected permanent.
+func AddCounters(ct CounterType, amount ValueSource, target PermanentSelector) Effect {
+	return &addCountersEffect{ct: ct, amount: amount, target: target}
 }
 
 func (e *addCountersEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	var perm *Permanent
-	if e.applyToSource {
+	if e.target == SelectSource {
 		perm = g.FindPermanent(sourceID)
 	} else {
 		if len(targets) == 0 {
@@ -95,10 +81,7 @@ func (e *addCountersEffect) Apply(g *Game, sourceID, controller uuid.UUID, targe
 	if perm == nil {
 		return nil
 	}
-	amount := e.amount
-	if e.useX {
-		amount = g.CurrentX
-	}
+	amount := e.amount.Resolve(g, sourceID, controller)
 	if amount > 0 {
 		perm.AddCounter(e.ct, amount)
 	}
@@ -106,13 +89,14 @@ func (e *addCountersEffect) Apply(g *Game, sourceID, controller uuid.UUID, targe
 }
 
 func (e *addCountersEffect) Text() string {
-	if e.useX {
+	if _, ok := e.amount.(xValue); ok {
 		return fmt.Sprintf("put X %s counters on it", e.ct)
 	}
-	if e.applyToSource {
-		return fmt.Sprintf("put %d %s counter(s) on it", e.amount, e.ct)
+	n := e.amount.Resolve(nil, uuid.Nil, uuid.Nil)
+	if e.target == SelectSource {
+		return fmt.Sprintf("put %d %s counter(s) on it", n, e.ct)
 	}
-	return fmt.Sprintf("put %d %s counter(s) on target", e.amount, e.ct)
+	return fmt.Sprintf("put %d %s counter(s) on target", n, e.ct)
 }
 
 // cloneTargetCreatureEffect copies target creature's characteristics onto the source card.
@@ -166,38 +150,22 @@ func (e *removeCountersFromSourceEffect) Text() string {
 	return fmt.Sprintf("remove %d %s counter(s) from it", e.amount, e.ct)
 }
 
-// dealDamageEffect deals damage to the target.
-// dealDamageEffect deals a fixed or X-based amount of damage to a target.
-// When useX is true, the amount is read from g.CurrentX.
+// dealDamageEffect deals damage to a target (creature, player, or planeswalker).
 type dealDamageEffect struct {
-	amount int
-	useX   bool
+	amount ValueSource
 }
 
-// DealDamage creates an effect that deals a fixed amount of damage to a target.
-func DealDamage(amount int) Effect {
+// DealDamage creates an effect that deals damage to a target.
+func DealDamage(amount ValueSource) Effect {
 	return &dealDamageEffect{amount: amount}
-}
-
-// DealXDamage creates an effect that deals X damage to a target,
-// where X is the value of g.CurrentX when the spell resolves.
-func DealXDamage() Effect {
-	return &dealDamageEffect{useX: true}
-}
-
-func (e *dealDamageEffect) resolveAmount(g *Game) int {
-	if e.useX {
-		return g.CurrentX
-	}
-	return e.amount
 }
 
 func (e *dealDamageEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return fmt.Errorf("no target for damage")
 	}
-	amount := e.resolveAmount(g)
-	if amount <= 0 && e.useX {
+	amount := e.amount.Resolve(g, sourceID, controller)
+	if amount <= 0 {
 		return nil
 	}
 	targetID := targets[0]
@@ -227,10 +195,10 @@ func (e *dealDamageEffect) Apply(g *Game, sourceID, controller uuid.UUID, target
 }
 
 func (e *dealDamageEffect) Text() string {
-	if e.useX {
+	if _, ok := e.amount.(xValue); ok {
 		return "deal X damage to target"
 	}
-	return fmt.Sprintf("deal %d damage to target", e.amount)
+	return fmt.Sprintf("deal %d damage to target", e.amount.Resolve(nil, uuid.Nil, uuid.Nil))
 }
 
 // destroyTargetEffect destroys the target permanent.
@@ -257,29 +225,6 @@ func (e *destroyTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, tar
 
 func (e *destroyTargetEffect) Text() string { return "destroy target" }
 
-// drawCardsEffect draws cards for the controller.
-type drawCardsEffect struct {
-	amount int
-}
-
-func DrawCards(amount int) Effect {
-	return &drawCardsEffect{amount: amount}
-}
-
-func (e *drawCardsEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	p := g.GetPlayer(controller)
-	if p == nil {
-		return ErrPlayerNotFound
-	}
-	for i := 0; i < e.amount; i++ {
-		p.DrawCard()
-	}
-	return nil
-}
-
-func (e *drawCardsEffect) Text() string {
-	return fmt.Sprintf("draw %d card(s)", e.amount)
-}
 
 // returnFromGraveyardEffect returns a target creature from graveyard to battlefield.
 type returnFromGraveyardEffect struct{}
@@ -434,37 +379,20 @@ func (e *returnFromGraveyardToHandTargetEffect) Text() string {
 }
 
 // boostUntilEndOfTurnEffect boosts a creature's P/T until end of turn.
-// When applyToSource is true, it boosts the source permanent; otherwise it
-// boosts the first target. When useX is true, the boost values are derived
-// from g.CurrentX (using the xPower/xToughness flags).
 type boostUntilEndOfTurnEffect struct {
-	power         int
-	toughness     int
-	applyToSource bool
-	useX          bool
-	xPower        bool // if useX, whether to boost power by X
-	xToughness    bool // if useX, whether to boost toughness by X
+	power     ValueSource
+	toughness ValueSource
+	target    PermanentSelector
 }
 
-// BoostTargetUntilEndOfTurn creates an effect that boosts a target creature's P/T until end of turn.
-func BoostTargetUntilEndOfTurn(power, toughness int) Effect {
-	return &boostUntilEndOfTurnEffect{power: power, toughness: toughness}
-}
-
-// BoostSourceUntilEndOfTurn creates an effect that boosts the source creature's P/T until end of turn.
-func BoostSourceUntilEndOfTurn(power, toughness int) Effect {
-	return &boostUntilEndOfTurnEffect{power: power, toughness: toughness, applyToSource: true}
-}
-
-// BoostTargetXUntilEndOfTurn creates an effect that boosts a target creature by X
-// in the specified dimensions until end of turn.
-func BoostTargetXUntilEndOfTurn(power, toughness bool) Effect {
-	return &boostUntilEndOfTurnEffect{useX: true, xPower: power, xToughness: toughness}
+// BoostUntilEndOfTurn creates an effect that boosts the selected creature's P/T until end of turn.
+func BoostUntilEndOfTurn(power, toughness ValueSource, target PermanentSelector) Effect {
+	return &boostUntilEndOfTurnEffect{power: power, toughness: toughness, target: target}
 }
 
 func (e *boostUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	var perm *Permanent
-	if e.applyToSource {
+	if e.target == SelectSource {
 		perm = g.FindPermanent(sourceID)
 	} else {
 		if len(targets) == 0 {
@@ -475,15 +403,8 @@ func (e *boostUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUI
 	if perm == nil {
 		return nil
 	}
-	p, t := e.power, e.toughness
-	if e.useX {
-		if e.xPower {
-			p = g.CurrentX
-		}
-		if e.xToughness {
-			t = g.CurrentX
-		}
-	}
+	p := e.power.Resolve(g, sourceID, controller)
+	t := e.toughness.Resolve(g, sourceID, controller)
 	eff := &temporaryBoostEffect{
 		targetID:  perm.ID(),
 		power:     p,
@@ -496,13 +417,17 @@ func (e *boostUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUI
 }
 
 func (e *boostUntilEndOfTurnEffect) Text() string {
-	if e.useX {
+	_, pIsX := e.power.(xValue)
+	_, tIsX := e.toughness.(xValue)
+	if pIsX || tIsX {
 		return "Target creature gets +X/+0 until end of turn"
 	}
-	if e.applyToSource {
-		return fmt.Sprintf("this creature gets +%d/+%d until end of turn", e.power, e.toughness)
+	p := e.power.Resolve(nil, uuid.Nil, uuid.Nil)
+	t := e.toughness.Resolve(nil, uuid.Nil, uuid.Nil)
+	if e.target == SelectSource {
+		return fmt.Sprintf("this creature gets +%d/+%d until end of turn", p, t)
 	}
-	return fmt.Sprintf("target creature gets +%d/+%d until end of turn", e.power, e.toughness)
+	return fmt.Sprintf("target creature gets +%d/+%d until end of turn", p, t)
 }
 
 // markDestroyAtEOTAfterNActivationsEffect tracks pump activations using Charge
@@ -681,23 +606,14 @@ func (e *discardRandomEffect) Text() string {
 	return fmt.Sprintf("discard %d card(s) at random", e.amount)
 }
 
-// discardCardsEffect forces a player to discard N cards.
 // discardCardsEffect forces a target player to discard cards.
-// When useX is true, the amount is read from g.CurrentX.
 type discardCardsEffect struct {
-	amount int
-	useX   bool
+	amount ValueSource
 }
 
-// DiscardCards creates an effect that forces a target player to discard a fixed number of cards.
-func DiscardCards(amount int) Effect {
+// DiscardCards creates an effect that forces a target player to discard cards.
+func DiscardCards(amount ValueSource) Effect {
 	return &discardCardsEffect{amount: amount}
-}
-
-// DiscardXCards creates an effect that forces a target player to discard X cards,
-// where X is the value of g.CurrentX when the spell resolves.
-func DiscardXCards() Effect {
-	return &discardCardsEffect{useX: true}
 }
 
 func (e *discardCardsEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -711,10 +627,7 @@ func (e *discardCardsEffect) Apply(g *Game, sourceID, controller uuid.UUID, targ
 	if targetPlayer == nil {
 		return nil
 	}
-	amount := e.amount
-	if e.useX {
-		amount = g.CurrentX
-	}
+	amount := e.amount.Resolve(g, sourceID, controller)
 	chosen := targetPlayer.ChooseCardsFromHand(amount, "discard", g)
 	for _, card := range chosen {
 		targetPlayer.RemoveFromHand(card.ID())
@@ -724,10 +637,10 @@ func (e *discardCardsEffect) Apply(g *Game, sourceID, controller uuid.UUID, targ
 }
 
 func (e *discardCardsEffect) Text() string {
-	if e.useX {
+	if _, ok := e.amount.(xValue); ok {
 		return "target player discards X cards"
 	}
-	return fmt.Sprintf("target player discards %d card(s)", e.amount)
+	return fmt.Sprintf("target player discards %d card(s)", e.amount.Resolve(nil, uuid.Nil, uuid.Nil))
 }
 
 // addManaEffect adds mana to the controller's pool.
@@ -776,23 +689,14 @@ func (e *addAnyManaEffect) Text() string {
 	return fmt.Sprintf("add %d mana of any one color", e.amount)
 }
 
-// drawCardsTargetEffect draws cards for a target player.
 // drawCardsTargetEffect draws cards for a target player (or controller as fallback).
-// When useX is true, the amount is read from g.CurrentX.
 type drawCardsTargetEffect struct {
-	amount int
-	useX   bool
+	amount ValueSource
 }
 
-// DrawCardsTarget creates an effect that draws a fixed number of cards for a target player.
-func DrawCardsTarget(amount int) Effect {
+// DrawCards creates an effect that draws cards for a target player (or controller as fallback).
+func DrawCards(amount ValueSource) Effect {
 	return &drawCardsTargetEffect{amount: amount}
-}
-
-// DrawXCards creates an effect that draws X cards for a target player,
-// where X is the value of g.CurrentX when the spell resolves.
-func DrawXCards() Effect {
-	return &drawCardsTargetEffect{useX: true}
 }
 
 func (e *drawCardsTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -806,10 +710,7 @@ func (e *drawCardsTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, t
 	if targetPlayer == nil {
 		return ErrPlayerNotFound
 	}
-	amount := e.amount
-	if e.useX {
-		amount = g.CurrentX
-	}
+	amount := e.amount.Resolve(g, sourceID, controller)
 	for i := 0; i < amount; i++ {
 		targetPlayer.DrawCard()
 	}
@@ -817,10 +718,10 @@ func (e *drawCardsTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, t
 }
 
 func (e *drawCardsTargetEffect) Text() string {
-	if e.useX {
+	if _, ok := e.amount.(xValue); ok {
 		return "target player draws X cards"
 	}
-	return fmt.Sprintf("target player draws %d card(s)", e.amount)
+	return fmt.Sprintf("target player draws %d card(s)", e.amount.Resolve(nil, uuid.Nil, uuid.Nil))
 }
 
 // exileTargetEffect exiles a target permanent (removes from game).
@@ -844,54 +745,15 @@ func (e *exileTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targe
 
 func (e *exileTargetEffect) Text() string { return "exile target permanent" }
 
-// exileAndGainLifeEffect exiles target creature and its controller gains life equal to its power.
-type exileAndGainLifeEffect struct{}
 
-func ExileTargetCreatureGainLife() Effect {
-	return &exileAndGainLifeEffect{}
-}
-
-func (e *exileAndGainLifeEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 {
-		return fmt.Errorf("no target")
-	}
-	perm := g.FindPermanent(targets[0])
-	if perm == nil {
-		return nil
-	}
-	power := perm.CurrentPower(g)
-	permController := perm.Controller
-	g.ExilePermanent(perm)
-	// Controller of the exiled creature gains life equal to its power
-	p := g.GetPlayer(permController)
-	if p != nil && power > 0 {
-		p.GainLife(power)
-		g.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: permController, Amount: power})
-	}
-	return nil
-}
-
-func (e *exileAndGainLifeEffect) Text() string {
-	return "exile target creature. Its controller gains life equal to its power"
-}
-
-// gainLifeTargetEffect gains life for the target player.
 // gainLifeTargetEffect gains life for a target player (or controller as fallback).
-// When useX is true, the amount is read from g.CurrentX.
 type gainLifeTargetEffect struct {
-	amount int
-	useX   bool
+	amount ValueSource
 }
 
-// GainLifeTarget creates an effect that gains a fixed amount of life for a target player.
-func GainLifeTarget(amount int) Effect {
+// GainLifeTarget creates an effect that gains life for a target player (or controller as fallback).
+func GainLifeTarget(amount ValueSource) Effect {
 	return &gainLifeTargetEffect{amount: amount}
-}
-
-// GainXLife creates an effect that gains X life for a target player,
-// where X is the value of g.CurrentX when the spell resolves.
-func GainXLife() Effect {
-	return &gainLifeTargetEffect{useX: true}
 }
 
 func (e *gainLifeTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -905,20 +767,17 @@ func (e *gainLifeTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, ta
 	if targetPlayer == nil {
 		return ErrPlayerNotFound
 	}
-	amount := e.amount
-	if e.useX {
-		amount = g.CurrentX
-	}
+	amount := e.amount.Resolve(g, sourceID, controller)
 	targetPlayer.GainLife(amount)
 	g.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: targetPlayer.PlayerID(), Amount: amount})
 	return nil
 }
 
 func (e *gainLifeTargetEffect) Text() string {
-	if e.useX {
+	if _, ok := e.amount.(xValue); ok {
 		return "target player gains X life"
 	}
-	return fmt.Sprintf("target player gains %d life", e.amount)
+	return fmt.Sprintf("target player gains %d life", e.amount.Resolve(nil, uuid.Nil, uuid.Nil))
 }
 
 // loseLifeEffect causes the controller to lose life.
@@ -944,32 +803,20 @@ func (e *loseLifeEffect) Text() string {
 	return fmt.Sprintf("you lose %d life", e.amount)
 }
 
-// dealDamageToAllCreaturesEffect deals damage to all creatures.
 // dealDamageToAllCreaturesEffect deals damage to all creatures matching an optional filter.
-// When useX is true, the amount is read from g.CurrentX.
 type dealDamageToAllCreaturesEffect struct {
-	amount int
-	useX   bool
-	filter PermanentFilter // optional filter (e.g., without flying)
+	amount ValueSource
+	filter PermanentFilter
 }
 
-// DealDamageToAllCreatures creates an effect that deals a fixed amount of damage to all matching creatures.
-func DealDamageToAllCreatures(amount int, filter PermanentFilter) Effect {
+// DealDamageToAllCreatures creates an effect that deals damage to all matching creatures.
+func DealDamageToAllCreatures(amount ValueSource, filter PermanentFilter) Effect {
 	return &dealDamageToAllCreaturesEffect{amount: amount, filter: filter}
 }
 
-// DealXDamageToAllCreatures creates an effect that deals X damage to all matching creatures,
-// where X is the value of g.CurrentX when the spell resolves.
-func DealXDamageToAllCreatures(filter PermanentFilter) Effect {
-	return &dealDamageToAllCreaturesEffect{useX: true, filter: filter}
-}
-
 func (e *dealDamageToAllCreaturesEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	amount := e.amount
-	if e.useX {
-		amount = g.CurrentX
-	}
-	if amount <= 0 && e.useX {
+	amount := e.amount.Resolve(g, sourceID, controller)
+	if amount <= 0 {
 		return nil
 	}
 	var creatures []*Permanent
@@ -989,49 +836,41 @@ func (e *dealDamageToAllCreaturesEffect) Apply(g *Game, sourceID, controller uui
 }
 
 func (e *dealDamageToAllCreaturesEffect) Text() string {
-	if e.useX {
+	if _, ok := e.amount.(xValue); ok {
 		return "deal X damage to each creature"
 	}
-	return fmt.Sprintf("deal %d damage to each creature", e.amount)
+	return fmt.Sprintf("deal %d damage to each creature", e.amount.Resolve(nil, uuid.Nil, uuid.Nil))
 }
 
-// dealDamageToEachPlayerEffect deals damage to each player.
-// When useX is true, the amount is read from g.CurrentX.
-type dealDamageToEachPlayerEffect struct {
-	amount int
-	useX   bool
+// dealDamageToPlayersEffect deals damage to players selected by a PlayerSelector.
+type dealDamageToPlayersEffect struct {
+	amount   ValueSource
+	selector PlayerSelector
 }
 
-// DealDamageToEachPlayer creates an effect that deals a fixed amount of damage to each player.
-func DealDamageToEachPlayer(amount int) Effect {
-	return &dealDamageToEachPlayerEffect{amount: amount}
+// DealDamageToPlayers creates an effect that deals damage to players selected by the selector.
+func DealDamageToPlayers(amount ValueSource, selector PlayerSelector) Effect {
+	return &dealDamageToPlayersEffect{amount: amount, selector: selector}
 }
 
-// DealXDamageToEachPlayer creates an effect that deals X damage to each player,
-// where X is the value of g.CurrentX when the spell resolves.
-func DealXDamageToEachPlayer() Effect {
-	return &dealDamageToEachPlayerEffect{useX: true}
-}
 
-func (e *dealDamageToEachPlayerEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	amount := e.amount
-	if e.useX {
-		amount = g.CurrentX
-	}
-	if amount <= 0 && e.useX {
+func (e *dealDamageToPlayersEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	amount := e.amount.Resolve(g, sourceID, controller)
+	if amount <= 0 {
 		return nil
 	}
-	for _, p := range g.Players {
-		g.DealDamageToPlayer(p, amount, sourceID)
+	playerIDs := e.selector.Select(g, sourceID, controller, targets)
+	for _, pid := range playerIDs {
+		p := g.GetPlayer(pid)
+		if p != nil {
+			g.DealDamageToPlayer(p, amount, sourceID)
+		}
 	}
 	return nil
 }
 
-func (e *dealDamageToEachPlayerEffect) Text() string {
-	if e.useX {
-		return "deal X damage to each player"
-	}
-	return fmt.Sprintf("deal %d damage to each player", e.amount)
+func (e *dealDamageToPlayersEffect) Text() string {
+	return fmt.Sprintf("deal %s damage to %s", e.amount.Text(), e.selector.Text())
 }
 
 // sacrificeSourceEffect sacrifices the source permanent.
@@ -1156,170 +995,22 @@ func (e *controlChangeTargetEffect) Apply(g *Game, sourceID, controller uuid.UUI
 
 func (e *controlChangeTargetEffect) Text() string { return "gain control of target permanent" }
 
-// dealDamageToSourceControllerEffect deals damage to the controller of the source.
-type dealDamageToSourceControllerEffect struct {
-	amount int
-}
 
-func DealDamageToSourceController(amount int) Effect {
-	return &dealDamageToSourceControllerEffect{amount: amount}
-}
-
-func (e *dealDamageToSourceControllerEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	p := g.GetPlayer(controller)
-	if p == nil {
-		return nil
-	}
-	g.DealDamageToPlayer(p, e.amount, sourceID)
-	return nil
-}
-
-func (e *dealDamageToSourceControllerEffect) Text() string {
-	return fmt.Sprintf("deal %d damage to you", e.amount)
-}
-
-// dealDamageToEachOpponentEffect deals damage to each opponent.
-type dealDamageToEachOpponentEffect struct {
-	amount int
-}
-
-func DealDamageToEachOpponent(amount int) Effect {
-	return &dealDamageToEachOpponentEffect{amount: amount}
-}
-
-func (e *dealDamageToEachOpponentEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	for _, p := range g.Players {
-		if p.PlayerID() != controller {
-			g.DealDamageToPlayer(p, e.amount, sourceID)
-		}
-	}
-	return nil
-}
-
-func (e *dealDamageToEachOpponentEffect) Text() string {
-	return fmt.Sprintf("deal %d damage to each opponent", e.amount)
-}
-
-
-// drainXLifeEffect deals X damage to target and gains X life.
-type drainXLifeEffect struct{}
-
-func DrainXLife() Effect {
-	return &drainXLifeEffect{}
-}
-
-func (e *drainXLifeEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 {
-		return fmt.Errorf("no target")
-	}
-	x := g.CurrentX
-	if x <= 0 {
-		return nil
-	}
-	targetID := targets[0]
-	for _, pl := range g.Players {
-		if pl.PlayerID() == targetID {
-			g.DealDamageToPlayer(pl, x, sourceID)
-			p := g.GetPlayer(controller)
-			if p != nil {
-				p.GainLife(x)
-			}
-			return nil
-		}
-	}
-	perm := g.FindPermanent(targetID)
-	if perm == nil {
-		return nil
-	}
-	g.DealDamageToPermanent(perm, x, sourceID)
-	p := g.GetPlayer(controller)
-	if p != nil {
-		p.GainLife(x)
-	}
-	return nil
-}
-
-func (e *drainXLifeEffect) Text() string { return "deal X damage to target and gain X life" }
-
-// dealDamageToAttachedControllerEffect deals damage to the controller of the
-// permanent that the source aura is attached to.
-type dealDamageToAttachedControllerEffect struct {
-	amount int
-}
-
-func DealDamageToAttachedController(amount int) Effect {
-	return &dealDamageToAttachedControllerEffect{amount: amount}
-}
-
-func (e *dealDamageToAttachedControllerEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	src := g.FindPermanent(sourceID)
-	if src == nil || !src.IsAttached() {
-		return nil
-	}
-	host := g.FindPermanent(src.AttachedTo)
-	if host == nil {
-		return nil
-	}
-	p := g.GetPlayer(host.Controller)
-	if p == nil {
-		return nil
-	}
-	g.DealDamageToPlayer(p, e.amount, sourceID)
-	return nil
-}
-
-func (e *dealDamageToAttachedControllerEffect) Text() string {
-	return fmt.Sprintf("deal %d damage to enchanted permanent's controller", e.amount)
-}
-
-// dealDamageToEventControllerEffect deals damage to the controller of the
-// permanent that triggered the event (used with land ETB triggers).
-type dealDamageToEventControllerEffect struct {
-	amount int
-}
-
-func DealDamageToEventController(amount int) Effect {
-	return &dealDamageToEventControllerEffect{amount: amount}
-}
-
-func (e *dealDamageToEventControllerEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	// The event's PlayerID (the entering permanent's controller) is passed through
-	// as a target on the StackObject by PutTriggersOnStack.
-	if len(targets) > 0 {
-		p := g.GetPlayer(targets[0])
-		if p != nil {
-			g.DealDamageToPlayer(p, e.amount, sourceID)
-		}
-	}
-	return nil
-}
-
-func (e *dealDamageToEventControllerEffect) Text() string {
-	return fmt.Sprintf("deal %d damage to that permanent's controller", e.amount)
-}
-
-// grantKeywordTargetUntilEndOfTurnEffect grants a keyword to a target creature until end of turn.
 // grantKeywordUntilEndOfTurnEffect grants a keyword to the source or a target
-// creature until end of turn. When applyToSource is true, the keyword goes on
-// the source; otherwise on the first target.
+// creature until end of turn.
 type grantKeywordUntilEndOfTurnEffect struct {
-	keyword       Keyword
-	applyToSource bool
+	keyword Keyword
+	target  PermanentSelector
 }
 
-// GrantKeywordTargetUntilEndOfTurn creates an effect that grants a keyword to a target creature until end of turn.
-func GrantKeywordTargetUntilEndOfTurn(kw Keyword) Effect {
-	return &grantKeywordUntilEndOfTurnEffect{keyword: kw}
-}
-
-// GrantKeywordSourceUntilEndOfTurn creates an effect that grants a keyword to the source creature until end of turn.
-func GrantKeywordSourceUntilEndOfTurn(kw Keyword) Effect {
-	return &grantKeywordUntilEndOfTurnEffect{keyword: kw, applyToSource: true}
+// GrantKeywordUntilEndOfTurn creates an effect that grants a keyword to the selected creature until end of turn.
+func GrantKeywordUntilEndOfTurn(kw Keyword, target PermanentSelector) Effect {
+	return &grantKeywordUntilEndOfTurnEffect{keyword: kw, target: target}
 }
 
 func (e *grantKeywordUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	var perm *Permanent
-	if e.applyToSource {
+	if e.target == SelectSource {
 		perm = g.FindPermanent(sourceID)
 	} else {
 		if len(targets) == 0 {
@@ -1341,7 +1032,7 @@ func (e *grantKeywordUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller u
 }
 
 func (e *grantKeywordUntilEndOfTurnEffect) Text() string {
-	if e.applyToSource {
+	if e.target == SelectSource {
 		return fmt.Sprintf("~ gains %s until end of turn", e.keyword)
 	}
 	return fmt.Sprintf("target creature gains %s until end of turn", e.keyword)
@@ -1367,10 +1058,11 @@ func (e *regenerateSourceEffect) Text() string { return "Regenerate ~" }
 
 // preventDamageToTargetEffect sets a damage prevention shield on a target.
 type preventDamageToTargetEffect struct {
-	amount int
+	amount ValueSource
 }
 
-func PreventDamageToTarget(amount int) Effect {
+// PreventDamageToTarget creates an effect that prevents damage to a target.
+func PreventDamageToTarget(amount ValueSource) Effect {
 	return &preventDamageToTargetEffect{amount: amount}
 }
 
@@ -1378,9 +1070,10 @@ func (e *preventDamageToTargetEffect) Apply(g *Game, sourceID, controller uuid.U
 	if len(targets) == 0 {
 		return nil
 	}
+	amount := e.amount.Resolve(g, sourceID, controller)
 	perm := g.FindPermanent(targets[0])
 	if perm != nil {
-		perm.DamagePreventionShield += e.amount
+		perm.DamagePreventionShield += amount
 		return nil
 	}
 	// Could also prevent damage to player - not implemented yet
@@ -1388,30 +1081,10 @@ func (e *preventDamageToTargetEffect) Apply(g *Game, sourceID, controller uuid.U
 }
 
 func (e *preventDamageToTargetEffect) Text() string {
-	return fmt.Sprintf("Prevent the next %d damage to target", e.amount)
-}
-
-// preventXDamageToTargetEffect prevents X damage to a target.
-type preventXDamageToTargetEffect struct{}
-
-func PreventXDamageToTarget() Effect {
-	return &preventXDamageToTargetEffect{}
-}
-
-func (e *preventXDamageToTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 {
-		return nil
+	if _, ok := e.amount.(xValue); ok {
+		return "Prevent the next X damage to target"
 	}
-	perm := g.FindPermanent(targets[0])
-	if perm != nil {
-		perm.DamagePreventionShield += g.CurrentX
-		return nil
-	}
-	return nil
-}
-
-func (e *preventXDamageToTargetEffect) Text() string {
-	return "Prevent the next X damage to target"
+	return fmt.Sprintf("Prevent the next %d damage to target", e.amount.Resolve(nil, uuid.Nil, uuid.Nil))
 }
 
 // sacrificeOrDamageEffect sacrifices a creature you control, or deals damage
@@ -1746,24 +1419,6 @@ func (e *untapSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targe
 
 func (e *untapSourceEffect) Text() string { return "Untap this permanent" }
 
-// dealDamageToActivePlayerEffect deals damage to the active player (the one whose upkeep it is).
-type dealDamageToActivePlayerEffect struct {
-	amount int
-}
-
-func DealDamageToActivePlayer(amount int) Effect {
-	return &dealDamageToActivePlayerEffect{amount: amount}
-}
-
-func (e *dealDamageToActivePlayerEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	active := g.ActivePlayerObj()
-	active.LoseLife(e.amount)
-	return nil
-}
-
-func (e *dealDamageToActivePlayerEffect) Text() string {
-	return fmt.Sprintf("Deal %d damage to active player", e.amount)
-}
 
 // dealDamagePerSwampEffect deals damage to the active player equal to the number of Swamps they control.
 type dealDamagePerSwampEffect struct{}
@@ -1811,3 +1466,114 @@ func (e *blackViseEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets
 func (e *blackViseEffect) Text() string {
 	return "Deal damage to active player equal to cards in hand minus 4"
 }
+
+// --- ValueSource, PlayerSelector, PermanentSelector ---
+
+// ValueSource resolves a dynamic integer value for an effect.
+type ValueSource interface {
+	Resolve(g *Game, sourceID, controller uuid.UUID) int
+	Text() string
+}
+
+// PlayerSelector picks one or more players for an effect.
+type PlayerSelector interface {
+	Select(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) []uuid.UUID
+	Text() string
+}
+
+// PermanentSelector chooses between the target permanent and the source permanent.
+type PermanentSelector int
+
+const (
+	SelectTarget PermanentSelector = iota
+	SelectSource
+)
+
+// fixedValue is a ValueSource that always returns a constant.
+type fixedValue struct{ n int }
+
+func Fixed(n int) ValueSource                           { return fixedValue{n: n} }
+func (v fixedValue) Resolve(_ *Game, _, _ uuid.UUID) int { return v.n }
+func (v fixedValue) Text() string                        { return fmt.Sprintf("%d", v.n) }
+
+// xValue is a ValueSource that reads g.CurrentX.
+type xValue struct{}
+
+func XValue() ValueSource                              { return xValue{} }
+func (v xValue) Resolve(g *Game, _, _ uuid.UUID) int   { return g.CurrentX }
+func (v xValue) Text() string                          { return "X" }
+
+// selectController returns the effect's controller.
+type selectController struct{}
+
+func SelectController() PlayerSelector { return selectController{} }
+func (s selectController) Select(_ *Game, _, controller uuid.UUID, _ []uuid.UUID) []uuid.UUID {
+	return []uuid.UUID{controller}
+}
+func (s selectController) Text() string { return "controller" }
+
+// selectActivePlayer returns the active player (whose turn it is).
+type selectActivePlayer struct{}
+
+func SelectActivePlayer() PlayerSelector { return selectActivePlayer{} }
+func (s selectActivePlayer) Select(g *Game, _, _ uuid.UUID, _ []uuid.UUID) []uuid.UUID {
+	return []uuid.UUID{g.ActivePlayerObj().PlayerID()}
+}
+func (s selectActivePlayer) Text() string { return "active player" }
+
+// selectEachPlayer returns all players.
+type selectEachPlayer struct{}
+
+func SelectEachPlayer() PlayerSelector { return selectEachPlayer{} }
+func (s selectEachPlayer) Select(g *Game, _, _ uuid.UUID, _ []uuid.UUID) []uuid.UUID {
+	ids := make([]uuid.UUID, len(g.Players))
+	for i, p := range g.Players {
+		ids[i] = p.PlayerID()
+	}
+	return ids
+}
+func (s selectEachPlayer) Text() string { return "each player" }
+
+// selectEachOpponent returns all players other than the controller.
+type selectEachOpponent struct{}
+
+func SelectEachOpponent() PlayerSelector { return selectEachOpponent{} }
+func (s selectEachOpponent) Select(g *Game, _, controller uuid.UUID, _ []uuid.UUID) []uuid.UUID {
+	var ids []uuid.UUID
+	for _, p := range g.Players {
+		if p.PlayerID() != controller {
+			ids = append(ids, p.PlayerID())
+		}
+	}
+	return ids
+}
+func (s selectEachOpponent) Text() string { return "each opponent" }
+
+// selectAttachedController follows source → AttachedTo → Controller.
+type selectAttachedController struct{}
+
+func SelectAttachedController() PlayerSelector { return selectAttachedController{} }
+func (s selectAttachedController) Select(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) []uuid.UUID {
+	src := g.FindPermanent(sourceID)
+	if src == nil || !src.IsAttached() {
+		return nil
+	}
+	target := g.FindPermanent(src.AttachedTo)
+	if target == nil {
+		return nil
+	}
+	return []uuid.UUID{target.Controller}
+}
+func (s selectAttachedController) Text() string { return "enchanted creature's controller" }
+
+// selectEventController reads targets[0] as a player ID (for event-based triggers).
+type selectEventController struct{}
+
+func SelectEventController() PlayerSelector { return selectEventController{} }
+func (s selectEventController) Select(_ *Game, _, _ uuid.UUID, targets []uuid.UUID) []uuid.UUID {
+	if len(targets) == 0 {
+		return nil
+	}
+	return []uuid.UUID{targets[0]}
+}
+func (s selectEventController) Text() string { return "that player" }
