@@ -22,6 +22,7 @@ const (
 	EvtDetach
 	EvtPutIntoGraveyardFromBattlefield
 	EvtUpkeep
+	EvtDrawStep
 	EvtEndStep
 )
 

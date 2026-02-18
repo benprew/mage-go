@@ -556,11 +556,14 @@ func (g *Game) PutTriggersOnStack() {
 			obj.Effects = append(obj.Effects, e)
 		}
 		// For triggers that need to pass the event's player as a target
-		// (e.g., "deal damage to that land's controller"), store the event
-		// PlayerID as a target on the stack object.
-		if gt, ok := pt.ability.(*GenericTriggered); ok && gt.eventType == EvtEntersBattlefield {
-			if pt.event != nil && pt.event.PlayerID != uuid.Nil {
-				obj.Targets = []uuid.UUID{pt.event.PlayerID}
+		// (e.g., "deal damage to that land's controller", "that player draws"),
+		// store the event PlayerID as a target on the stack object.
+		if pt.event != nil && pt.event.PlayerID != uuid.Nil {
+			if gt, ok := pt.ability.(*GenericTriggered); ok {
+				switch gt.eventType {
+				case EvtEntersBattlefield, EvtDrawStep:
+					obj.Targets = []uuid.UUID{pt.event.PlayerID}
+				}
 			}
 		}
 		g.Stack.Push(obj)
@@ -986,7 +989,18 @@ func (g *Game) doDraw() {
 	if g.Turn == 1 && g.ActivePlayer == 0 {
 		return // first player doesn't draw on turn 1
 	}
-	g.ActivePlayerObj().DrawCard()
+
+	active := g.ActivePlayerObj()
+
+	// Fire draw step event before the normal draw so triggers can queue
+	g.FireEvent(GameEvent{
+		Type:     EvtDrawStep,
+		PlayerID: active.PlayerID(),
+	})
+	g.PutTriggersOnStack()
+	g.ResolveStack()
+
+	active.DrawCard()
 }
 
 func (g *Game) doDeclareAttackers() {

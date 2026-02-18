@@ -136,6 +136,17 @@ func BeginningOfEachUpkeepTrigger(effect Effect, optional bool) *GenericTriggere
 	// nil condition = always fires
 }
 
+// BeginningOfEachDrawStepTrigger fires at the beginning of every player's draw step.
+// The effect receives the active player's ID in the event's PlayerID field.
+// Only triggers while the source permanent is untapped.
+func BeginningOfEachDrawStepTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtDrawStep, optional, effect).
+		SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+			src := g.FindPermanent(sourceID)
+			return src != nil && !src.Tapped
+		})
+}
+
 // DealsDamageToOpponentTrigger fires when the source deals damage to an opponent.
 func DealsDamageToOpponentTrigger(effect Effect, optional bool) *GenericTriggered {
 	return NewTriggered(EvtDamageDealt, optional, effect).

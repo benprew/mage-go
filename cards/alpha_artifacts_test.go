@@ -142,13 +142,18 @@ func TestHowlingMine(t *testing.T) {
 			g.AddCard(mage.ZoneLibrary, mage.PlayerA, "Forest")
 			g.AddCard(mage.ZoneLibrary, mage.PlayerB, "Forest")
 		}
-		g.StopAt(1, mage.PrecombatMain)
+		// Turn 1 doesn't draw for first player; check turn 3 (PlayerA's second turn).
+		g.StopAt(3, mage.PrecombatMain)
 		g.Execute()
-		// Turn 1 draw step: PlayerA draws 1 (normal) + 1 (Mine) = 2 cards.
-		// Stub does nothing; PlayerA draws only 1.
+		// By turn 3, PlayerA has drawn: turn 3 draw = 1 (normal) + 1 (Mine) = 2.
+		// PlayerB drew on turn 2: 1 (normal) + 1 (Mine) = 2.
 		playerA := g.Players[0]
+		playerB := g.Players[1]
 		if len(playerA.Hand()) < 2 {
-			t.Errorf("Howling Mine should give extra draw; hand has %d cards, want >= 2", len(playerA.Hand()))
+			t.Errorf("Howling Mine should give PlayerA extra draw; hand has %d cards, want >= 2", len(playerA.Hand()))
+		}
+		if len(playerB.Hand()) < 2 {
+			t.Errorf("Howling Mine should give PlayerB extra draw; hand has %d cards, want >= 2", len(playerB.Hand()))
 		}
 	})
 

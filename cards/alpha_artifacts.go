@@ -184,7 +184,9 @@ func registerAlphaArtifacts() {
 
 	mage.Register("Howling Mine", func() mage.Card {
 		c := mage.NewArtifact("Howling Mine", "{2}")
-		// At the beginning of each player's draw step, that player draws an additional card
+		// At the beginning of each player's draw step, that player draws an additional card.
+		// Only triggers while Howling Mine is untapped.
+		c.AddAbility(mage.BeginningOfEachDrawStepTrigger(mage.DrawCards(mage.Fixed(1)), false))
 		return c
 	})
 
