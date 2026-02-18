@@ -239,11 +239,10 @@ func registerAlphaSpells() {
 
 	mage.Register("Animate Dead", func() mage.Card {
 		c := mage.NewAura("Animate Dead", "{1}{B}")
-		// When Animate Dead enters the battlefield, return target creature from a graveyard
-		// to the battlefield. Enchanted creature gets -1/-0.
-		c.AddAbility(mage.EntersBattlefieldTrigger(
-			mage.ReturnFromGraveyardToBattlefield(), false,
-		))
+		// Return target creature card from a graveyard to the battlefield.
+		// Animate Dead attaches to it. Enchanted creature gets -1/-0.
+		sa := mage.NewSpellAbility(mage.ReturnFromGraveyardToBattlefield())
+		c.AddAbility(sa)
 		c.AddAbility(mage.StaticAbility(
 			mage.BoostAttached(-1, 0, mage.AttachAura),
 		))

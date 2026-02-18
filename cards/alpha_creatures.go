@@ -134,10 +134,13 @@ func registerAlphaCreatures() {
 	})
 
 	mage.Register("Clone", func() mage.Card {
-		// Simplified: Clone enters as a 0/0 - real copy is too complex
 		c := mage.NewCreature("Clone", "{3}{U}", "Shapeshifter")
 		c.Power_ = 0
 		c.Toughness_ = 0
+		// As Clone enters, choose a creature on the battlefield; Clone becomes a copy of that creature
+		sa := mage.NewSpellAbility(mage.CloneTargetCreature()).
+			AddTarget(mage.TargetCreature())
+		c.AddAbility(sa)
 		return c
 	})
 
@@ -200,16 +203,21 @@ func registerAlphaCreatures() {
 		c.Power_ = 1
 		c.Toughness_ = 1
 		c.AddAbility(mage.HasKeyword(mage.Haste))
+		// At beginning of your upkeep, if Nether Shadow is in your graveyard
+		// with three or more creature cards above it, put it onto the battlefield.
+		c.GraveyardReturnMinCreatures_ = 3
 		return c
 	})
 
 	mage.Register("Nightmare", func() mage.Card {
-		// Nightmare's power and toughness are each equal to the number of Swamps you control.
-		// Simplified: base 0/0 (would need dynamic P/T continuous effect)
 		c := mage.NewCreature("Nightmare", "{5}{B}", "Nightmare", "Horse")
 		c.Power_ = 0
 		c.Toughness_ = 0
 		c.AddAbility(mage.HasKeyword(mage.Flying))
+		// P/T equal to number of Swamps you control
+		c.AddAbility(mage.StaticAbility(
+			mage.PTEqualsControlledCount(mage.HasSubType("Swamp")),
+		))
 		return c
 	})
 
@@ -590,11 +598,13 @@ func registerAlphaCreatures() {
 	})
 
 	mage.Register("Keldon Warlord", func() mage.Card {
-		// P/T = number of non-Wall creatures you control
-		// Simplified: 0/0 base
 		c := mage.NewCreature("Keldon Warlord", "{2}{R}{R}", "Human", "Barbarian")
 		c.Power_ = 0
 		c.Toughness_ = 0
+		// P/T equal to number of non-Wall creatures you control
+		c.AddAbility(mage.StaticAbility(
+			mage.PTEqualsControlledCount(mage.And(mage.IsCreature, mage.Not(mage.HasSubType("Wall")))),
+		))
 		return c
 	})
 
@@ -767,9 +777,14 @@ func registerAlphaCreatures() {
 		c := mage.NewCreature("Zombie Master", "{1}{B}{B}", "Zombie")
 		c.Power_ = 2
 		c.Toughness_ = 3
-		// Other Zombie creatures have swampwalk
+		// Other Zombie creatures have swampwalk and "{B}: Regenerate"
 		c.AddAbility(mage.StaticAbility(
 			mage.GrantKeywordToAll(mage.Swampwalk, mage.HasSubType("Zombie")),
+			mage.GrantActivatedAbilityToAll(
+				mage.RegenerateSource(),
+				mage.ManaCostOf("{B}"),
+				mage.HasSubType("Zombie"),
+			),
 		))
 		return c
 	})
@@ -835,10 +850,12 @@ func registerAlphaCreatures() {
 	})
 
 	mage.Register("Rock Hydra", func() mage.Card {
-		// Enters with X +1/+1 counters
 		c := mage.NewCreature("Rock Hydra", "{X}{R}{R}", "Hydra")
 		c.Power_ = 0
 		c.Toughness_ = 0
+		// Enters with X +1/+1 counters (replacement effect)
+		c.EntersWithXCounters_ = mage.P1P1
+		c.EntersWithXCountersSet = true
 		return c
 	})
 

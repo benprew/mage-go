@@ -346,6 +346,50 @@ func (e *grantActivatedAbilityAttachedEffect) Apply(g *Game) error {
 	return nil
 }
 
+// grantActivatedAbilityToAllEffect grants an activated ability to all creatures matching a filter.
+type grantActivatedAbilityToAllEffect struct {
+	effect    Effect
+	cost      Cost
+	filter    PermanentFilter
+	sourceID_ uuid.UUID
+}
+
+// GrantActivatedAbilityToAll grants an activated ability to all creatures matching filter.
+func GrantActivatedAbilityToAll(effect Effect, cost Cost, filter PermanentFilter) ContinuousEffect {
+	return &grantActivatedAbilityToAllEffect{
+		effect: effect,
+		cost:   cost,
+		filter: filter,
+	}
+}
+
+func (e *grantActivatedAbilityToAllEffect) GetLayer() Layer      { return LayerAbility }
+func (e *grantActivatedAbilityToAllEffect) GetDuration() Duration { return WhileOnBattlefield }
+func (e *grantActivatedAbilityToAllEffect) SourceID() uuid.UUID   { return e.sourceID_ }
+
+func (e *grantActivatedAbilityToAllEffect) IsActive(g *Game) bool {
+	return g.FindPermanent(e.sourceID_) != nil
+}
+
+func (e *grantActivatedAbilityToAllEffect) Apply(g *Game) error {
+	for _, p := range g.Battlefield {
+		if !p.HasType(TypeCreature) {
+			continue
+		}
+		if p.ID() == e.sourceID_ {
+			continue // typically "other" creatures
+		}
+		if e.filter != nil && !e.filter(p, g) {
+			continue
+		}
+		ab := NewActivatedAbility(e.effect, e.cost)
+		ab.Source_ = p.ID()
+		ab.Controller_ = p.Controller
+		p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{ab})
+	}
+	return nil
+}
+
 // PreventAttachedFromUntapping creates a continuous effect preventing the attached creature from untapping.
 func PreventAttachedFromUntapping(at AttachType) ContinuousEffect {
 	return &preventUntapEffect{
@@ -542,15 +586,25 @@ func (e *boostAllCreaturesIncludingSelfEffect) Apply(g *Game) error {
 // matching permanents on the battlefield. Used for Plague Rats, etc.
 // Each creature with this effect gets its own instance, which boosts only itself.
 type ptEqualsCountEffect struct {
-	countFilter PermanentFilter // what to count
-	sourceID_   uuid.UUID
+	countFilter    PermanentFilter // what to count
+	controllerOnly bool            // if true, only count permanents you control
+	sourceID_      uuid.UUID
 }
 
 // PTEqualsCount creates a continuous effect where the source creature gets
-// +N/+N where N is the count of permanents matching countFilter.
+// +N/+N where N is the count of permanents matching countFilter (on whole battlefield).
 func PTEqualsCount(countFilter PermanentFilter) ContinuousEffect {
 	return &ptEqualsCountEffect{
 		countFilter: countFilter,
+	}
+}
+
+// PTEqualsControlledCount creates a continuous effect where the source creature gets
+// +N/+N where N is the count of permanents matching countFilter that you control.
+func PTEqualsControlledCount(countFilter PermanentFilter) ContinuousEffect {
+	return &ptEqualsCountEffect{
+		countFilter:    countFilter,
+		controllerOnly: true,
 	}
 }
 
@@ -563,17 +617,21 @@ func (e *ptEqualsCountEffect) IsActive(g *Game) bool {
 }
 
 func (e *ptEqualsCountEffect) Apply(g *Game) error {
+	src := g.FindPermanent(e.sourceID_)
+	if src == nil {
+		return nil
+	}
 	count := 0
 	for _, p := range g.Battlefield {
+		if e.controllerOnly && p.Controller != src.Controller {
+			continue
+		}
 		if e.countFilter(p, g) {
 			count++
 		}
 	}
-	src := g.FindPermanent(e.sourceID_)
-	if src != nil {
-		g.Effects.powerBonuses[src.ID()] += count
-		g.Effects.toughBonuses[src.ID()] += count
-	}
+	g.Effects.powerBonuses[src.ID()] += count
+	g.Effects.toughBonuses[src.ID()] += count
 	return nil
 }
 

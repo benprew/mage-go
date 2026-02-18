@@ -31,6 +31,9 @@ type Game struct {
 	// X value for the currently resolving spell
 	CurrentX int
 
+	// Card currently being resolved (set during ResolveStackObject)
+	ResolvingCard Card
+
 	// Interactive play tracking
 	LandsPlayedThisTurn int
 
@@ -149,6 +152,11 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 		a.SetController(controller)
 	}
 
+	// Add X counters if configured (replacement effect, not a trigger)
+	if bc, ok := card.(*BaseCard); ok && bc.EntersWithXCountersSet && g.CurrentX > 0 {
+		perm.AddCounter(bc.EntersWithXCounters_, g.CurrentX)
+	}
+
 	g.Battlefield = append(g.Battlefield, perm)
 
 	// Register continuous effects from static abilities
@@ -205,6 +213,8 @@ func (g *Game) setEffectSource(e ContinuousEffect, id uuid.UUID) {
 	case *ptEqualsCountEffect:
 		eff.sourceID_ = id
 	case *powerEqualsCountEffect:
+		eff.sourceID_ = id
+	case *grantActivatedAbilityToAllEffect:
 		eff.sourceID_ = id
 	}
 }
@@ -549,10 +559,10 @@ func (g *Game) ResolveStack() {
 // ResolveStackObject resolves a single stack object.
 func (g *Game) ResolveStackObject(obj *StackObject) {
 	g.CurrentX = obj.XValue
+	g.ResolvingCard = obj.Card
 	for _, eff := range obj.Effects {
 		eff.Apply(g, obj.SourceID, obj.Controller, obj.Targets)
 	}
-	g.CurrentX = 0
 
 	// If this was a spell (not an ability), put the card in the graveyard
 	if obj.Card != nil && !obj.IsAbility {
@@ -570,6 +580,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 				g.Attach(perm.ID(), obj.Targets[0])
 			}
 
+			g.CurrentX = 0
 			g.CheckStateBasedActions()
 			return
 		}
@@ -580,6 +591,9 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 			p.AddToGraveyard(obj.Card)
 		}
 	}
+
+	g.CurrentX = 0
+	g.ResolvingCard = nil
 
 	g.CheckStateBasedActions()
 }
@@ -877,12 +891,47 @@ func (g *Game) doUntap() {
 
 func (g *Game) doUpkeep() {
 	active := g.ActivePlayerObj()
+
+	// Check for graveyard returns (e.g. Nether Shadow)
+	g.checkGraveyardReturns(active)
+
 	g.FireEvent(GameEvent{
 		Type:     EvtUpkeep,
 		PlayerID: active.PlayerID(),
 	})
 	g.PutTriggersOnStack()
 	g.ResolveStack()
+}
+
+// checkGraveyardReturns checks for cards in the graveyard that can return to the
+// battlefield at the beginning of their controller's upkeep (e.g. Nether Shadow).
+func (g *Game) checkGraveyardReturns(p Player) {
+	graveyard := p.Graveyard()
+	var toReturn []uuid.UUID
+
+	for i, card := range graveyard {
+		bc, ok := card.(*BaseCard)
+		if !ok || bc.GraveyardReturnMinCreatures_ <= 0 {
+			continue
+		}
+		// Count creature cards above this one (higher indices = more recently added)
+		creaturesAbove := 0
+		for j := i + 1; j < len(graveyard); j++ {
+			if graveyard[j].HasType(TypeCreature) {
+				creaturesAbove++
+			}
+		}
+		if creaturesAbove >= bc.GraveyardReturnMinCreatures_ {
+			toReturn = append(toReturn, bc.ID())
+		}
+	}
+
+	for _, id := range toReturn {
+		card, ok := p.RemoveFromGraveyard(id)
+		if ok {
+			g.PutOnBattlefield(card, p.PlayerID())
+		}
+	}
 }
 
 func (g *Game) doDraw() {
