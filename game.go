@@ -1,9 +1,21 @@
 package mage
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
+)
+
+// Sentinel errors for common failure conditions.
+var (
+	ErrPlayerNotFound    = errors.New("player not found")
+	ErrSourceNotFound    = errors.New("source not found on battlefield")
+	ErrPermanentNotFound = errors.New("permanent not found")
+	ErrCardNotInHand     = errors.New("card not found in hand")
+	ErrSourceTapped      = errors.New("source is already tapped")
+	ErrNoCreature        = errors.New("no creature to sacrifice")
+	ErrSorcerySpeed      = errors.New("can only activate at sorcery speed")
 )
 
 // Game is the central game state and engine.
@@ -602,7 +614,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.UUID, xValues ...int) error {
 	p := g.GetPlayer(playerID)
 	if p == nil {
-		return fmt.Errorf("player not found")
+		return ErrPlayerNotFound
 	}
 
 	// Find card in hand
@@ -694,7 +706,7 @@ func (g *Game) ActivateAbilityByText(playerID uuid.UUID, permName string, target
 
 		// Check sorcery speed
 		if aa.SorcerySpeed() && !g.Step.IsMainPhase() {
-			return fmt.Errorf("can only activate at sorcery speed")
+			return ErrSorcerySpeed
 		}
 
 		// Pay costs
@@ -1166,12 +1178,12 @@ func (g *Game) PlayLand(playerID, cardID uuid.UUID) error {
 
 	p := g.GetPlayer(playerID)
 	if p == nil {
-		return fmt.Errorf("player not found")
+		return ErrPlayerNotFound
 	}
 
 	card, ok := p.RemoveFromHand(cardID)
 	if !ok {
-		return fmt.Errorf("card not found in hand")
+		return ErrCardNotInHand
 	}
 	if !card.HasType(TypeLand) {
 		p.AddToHand(card)
@@ -1187,7 +1199,7 @@ func (g *Game) PlayLand(playerID, cardID uuid.UUID) error {
 func (g *Game) TapForMana(playerID, permanentID uuid.UUID) error {
 	perm := g.FindPermanent(permanentID)
 	if perm == nil {
-		return fmt.Errorf("permanent not found")
+		return ErrPermanentNotFound
 	}
 	if perm.Controller != playerID {
 		return fmt.Errorf("you don't control that permanent")
@@ -1439,7 +1451,7 @@ func (g *Game) GetActivatableAbilities(playerID uuid.UUID) []ActivatableInfo {
 func (g *Game) CastSpellByID(playerID, cardID uuid.UUID, targets []uuid.UUID, xValue int) error {
 	p := g.GetPlayer(playerID)
 	if p == nil {
-		return fmt.Errorf("player not found")
+		return ErrPlayerNotFound
 	}
 
 	// Find card in hand
@@ -1451,7 +1463,7 @@ func (g *Game) CastSpellByID(playerID, cardID uuid.UUID, targets []uuid.UUID, xV
 		}
 	}
 	if card == nil {
-		return fmt.Errorf("card not found in hand")
+		return ErrCardNotInHand
 	}
 
 	// Compute payment mana cost
@@ -1508,7 +1520,7 @@ func (g *Game) CastSpellByID(playerID, cardID uuid.UUID, targets []uuid.UUID, xV
 func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIndex int, targets []uuid.UUID) error {
 	perm := g.FindPermanent(permanentID)
 	if perm == nil {
-		return fmt.Errorf("permanent not found")
+		return ErrPermanentNotFound
 	}
 	if abilityIndex < 0 || abilityIndex >= len(perm.RuntimeAbilities) {
 		return fmt.Errorf("invalid ability index")
@@ -1523,7 +1535,7 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		return fmt.Errorf("cannot activate ability")
 	}
 	if aa.SorcerySpeed() && !g.Step.IsMainPhase() {
-		return fmt.Errorf("can only activate at sorcery speed")
+		return ErrSorcerySpeed
 	}
 
 	// Pay costs

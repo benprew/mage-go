@@ -37,7 +37,7 @@ func (c *ManaCostPayment) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 func (c *ManaCostPayment) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	p := g.GetPlayer(controller)
 	if p == nil {
-		return fmt.Errorf("player not found")
+		return ErrPlayerNotFound
 	}
 	return p.ManaPool().Pay(c.MC)
 }
@@ -59,10 +59,10 @@ func (c *tapSourceCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 func (c *tapSourceCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	p := g.FindPermanent(sourceID)
 	if p == nil {
-		return fmt.Errorf("source not found on battlefield")
+		return ErrSourceNotFound
 	}
 	if p.Tapped {
-		return fmt.Errorf("source is already tapped")
+		return ErrSourceTapped
 	}
 	p.Tapped = true
 	return nil
@@ -88,7 +88,7 @@ func (c *removeCountersCost) CanPay(sourceID, controller uuid.UUID, g *Game) boo
 func (c *removeCountersCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	p := g.FindPermanent(sourceID)
 	if p == nil {
-		return fmt.Errorf("source not found on battlefield")
+		return ErrSourceNotFound
 	}
 	if !p.RemoveCounter(c.ct, c.amount) {
 		return fmt.Errorf("not enough %s counters", c.ct)
@@ -112,7 +112,7 @@ func (c *sacrificeSourceCost) CanPay(sourceID, controller uuid.UUID, g *Game) bo
 func (c *sacrificeSourceCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	p := g.FindPermanent(sourceID)
 	if p == nil {
-		return fmt.Errorf("source not found on battlefield")
+		return ErrSourceNotFound
 	}
 	g.Sacrifice(p)
 	return nil
@@ -137,7 +137,7 @@ func (c *lifePayCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 func (c *lifePayCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	p := g.GetPlayer(controller)
 	if p == nil {
-		return fmt.Errorf("player not found")
+		return ErrPlayerNotFound
 	}
 	p.LoseLife(c.amount)
 	return nil
@@ -171,7 +171,7 @@ func (c *sacrificeCreatureCost) Pay(sourceID, controller uuid.UUID, g *Game) err
 			return nil
 		}
 	}
-	return fmt.Errorf("no creature to sacrifice")
+	return ErrNoCreature
 }
 
 func (c *sacrificeCreatureCost) Text() string { return "Sacrifice a creature" }

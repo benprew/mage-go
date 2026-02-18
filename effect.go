@@ -24,7 +24,7 @@ func GainLife(amount int) Effect {
 func (e *gainLifeEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	p := g.GetPlayer(controller)
 	if p == nil {
-		return fmt.Errorf("player not found")
+		return ErrPlayerNotFound
 	}
 	p.GainLife(e.amount)
 	g.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: controller, Amount: e.amount})
@@ -229,7 +229,7 @@ func DrawCards(amount int) Effect {
 func (e *drawCardsEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	p := g.GetPlayer(controller)
 	if p == nil {
-		return fmt.Errorf("player not found")
+		return ErrPlayerNotFound
 	}
 	for i := 0; i < e.amount; i++ {
 		p.DrawCard()
@@ -254,7 +254,7 @@ func (e *returnFromGraveyardEffect) Apply(g *Game, sourceID, controller uuid.UUI
 	}
 	p := g.GetPlayer(controller)
 	if p == nil {
-		return fmt.Errorf("player not found")
+		return ErrPlayerNotFound
 	}
 	card, ok := p.RemoveFromGraveyard(targets[0])
 	if !ok {
@@ -278,7 +278,7 @@ func ReturnSourceToHand() Effect {
 func (e *returnSourceToHandEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	p := g.GetPlayer(controller)
 	if p == nil {
-		return fmt.Errorf("player not found")
+		return ErrPlayerNotFound
 	}
 	card, ok := p.RemoveFromGraveyard(sourceID)
 	if !ok {
@@ -397,7 +397,7 @@ func (e *returnFromGraveyardToHandTargetEffect) Apply(g *Game, sourceID, control
 	}
 	p := g.GetPlayer(controller)
 	if p == nil {
-		return fmt.Errorf("player not found")
+		return ErrPlayerNotFound
 	}
 	card, ok := p.RemoveFromGraveyard(targets[0])
 	if !ok {
@@ -732,7 +732,7 @@ func AddMana(color Color, amount int) Effect {
 func (e *addManaEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	p := g.GetPlayer(controller)
 	if p == nil {
-		return fmt.Errorf("player not found")
+		return ErrPlayerNotFound
 	}
 	p.ManaPool().Add(e.color, e.amount)
 	return nil
@@ -755,7 +755,7 @@ func AddAnyMana(amount int, color Color) Effect {
 func (e *addAnyManaEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	p := g.GetPlayer(controller)
 	if p == nil {
-		return fmt.Errorf("player not found")
+		return ErrPlayerNotFound
 	}
 	p.ManaPool().Add(e.color, e.amount)
 	return nil
@@ -783,7 +783,7 @@ func (e *drawCardsTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, t
 		targetPlayer = g.GetPlayer(controller)
 	}
 	if targetPlayer == nil {
-		return fmt.Errorf("player not found")
+		return ErrPlayerNotFound
 	}
 	for i := 0; i < e.amount; i++ {
 		targetPlayer.DrawCard()
@@ -865,7 +865,7 @@ func (e *gainLifeTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, ta
 		targetPlayer = g.GetPlayer(controller)
 	}
 	if targetPlayer == nil {
-		return fmt.Errorf("player not found")
+		return ErrPlayerNotFound
 	}
 	targetPlayer.GainLife(e.amount)
 	g.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: targetPlayer.PlayerID(), Amount: e.amount})
@@ -888,7 +888,7 @@ func LoseLife(amount int) Effect {
 func (e *loseLifeEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	p := g.GetPlayer(controller)
 	if p == nil {
-		return fmt.Errorf("player not found")
+		return ErrPlayerNotFound
 	}
 	p.LoseLife(e.amount)
 	g.FireEvent(GameEvent{Type: EvtLifeLost, PlayerID: controller, Amount: e.amount})
@@ -974,7 +974,7 @@ func SearchLibraryToHand() Effect {
 func (e *searchLibraryEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	p := g.GetPlayer(controller)
 	if p == nil {
-		return fmt.Errorf("player not found")
+		return ErrPlayerNotFound
 	}
 	lib := p.Library()
 	if len(lib) == 0 {
@@ -1179,7 +1179,7 @@ func (e *drawXCardsEffect) Apply(g *Game, sourceID, controller uuid.UUID, target
 		targetPlayer = g.GetPlayer(controller)
 	}
 	if targetPlayer == nil {
-		return fmt.Errorf("player not found")
+		return ErrPlayerNotFound
 	}
 	for i := 0; i < g.CurrentX; i++ {
 		targetPlayer.DrawCard()
@@ -1237,7 +1237,7 @@ func (e *gainXLifeEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets
 		targetPlayer = g.GetPlayer(controller)
 	}
 	if targetPlayer == nil {
-		return fmt.Errorf("player not found")
+		return ErrPlayerNotFound
 	}
 	targetPlayer.GainLife(g.CurrentX)
 	g.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: targetPlayer.PlayerID(), Amount: g.CurrentX})
