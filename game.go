@@ -742,6 +742,28 @@ func (g *Game) CheckStateBasedActions() {
 			g.DestroyPermanent(a)
 		}
 
+		// Sacrifice creatures that require a land type the controller doesn't have
+		var toSacrifice []*Permanent
+		for _, p := range g.Battlefield {
+			if p.SacrificeUnlessLand == "" {
+				continue
+			}
+			hasLand := false
+			for _, other := range g.Battlefield {
+				if other.Controller == p.Controller && other.HasSubType(p.SacrificeUnlessLand) {
+					hasLand = true
+					break
+				}
+			}
+			if !hasLand {
+				toSacrifice = append(toSacrifice, p)
+				actions = true
+			}
+		}
+		for _, p := range toSacrifice {
+			g.Sacrifice(p)
+		}
+
 		// Check for player death (life <= 0)
 		// (Not destroying anything, just noting)
 

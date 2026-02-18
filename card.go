@@ -62,6 +62,14 @@ type BaseCard struct {
 	Owner_     uuid.UUID
 	Power_     int
 	Toughness_ int
+
+	// Permanent properties set at card creation time
+	CantBeBlockedByWalls_  bool   // e.g. Juggernaut
+	CanBlockAdditional_    int    // e.g. Two-Headed Giant can block 1 additional creature
+	EntersTapped_          bool   // e.g. Nevinyrral's Disk
+	IntrinsicDoesNotUntap_ bool   // e.g. Basalt Monolith
+	DestroyAtEndOfTurn_    bool   // e.g. Berserk
+	SacrificeUnlessLand_   string // e.g. "Island" for Sea Serpent
 }
 
 func (c *BaseCard) ID() uuid.UUID         { return c.ID_ }
@@ -203,9 +211,10 @@ type Permanent struct {
 	IntrinsicDoesNotUntap  bool // permanent property (e.g. Basalt Monolith)
 	DamagePreventionShield int  // amount of damage to prevent
 	DestroyAtEndOfTurn     bool // if true, destroy during cleanup
-	Unblockable            bool // if true, can't be blocked this turn
-	CantBeBlockedByWalls   bool // if true, can't be blocked by Walls (e.g. Juggernaut)
-	CanBlockAdditional     int  // number of additional creatures this can block (e.g. Two-Headed Giant)
+	Unblockable            bool   // if true, can't be blocked this turn
+	CantBeBlockedByWalls   bool   // if true, can't be blocked by Walls (e.g. Juggernaut)
+	CanBlockAdditional     int    // number of additional creatures this can block (e.g. Two-Headed Giant)
+	SacrificeUnlessLand    string // sacrifice if controller has no land of this subtype
 }
 
 // NewPermanent creates a permanent from a card.
@@ -220,6 +229,18 @@ func NewPermanent(card Card, controller uuid.UUID) *Permanent {
 	for _, a := range card.Abilities() {
 		cp := a
 		p.RuntimeAbilities = append(p.RuntimeAbilities, cp)
+	}
+	// Copy card-level permanent properties
+	if bc, ok := card.(*BaseCard); ok {
+		p.CantBeBlockedByWalls = bc.CantBeBlockedByWalls_
+		p.CanBlockAdditional = bc.CanBlockAdditional_
+		p.IntrinsicDoesNotUntap = bc.IntrinsicDoesNotUntap_
+		p.DoesNotUntap = bc.IntrinsicDoesNotUntap_
+		p.DestroyAtEndOfTurn = bc.DestroyAtEndOfTurn_
+		p.SacrificeUnlessLand = bc.SacrificeUnlessLand_
+		if bc.EntersTapped_ {
+			p.Tapped = true
+		}
 	}
 	return p
 }

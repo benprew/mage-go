@@ -807,6 +807,7 @@ func registerAlphaCreatures() {
 		c.Power_ = 5
 		c.Toughness_ = 5
 		c.AddAbility(mage.HasKeyword(mage.Islandwalk))
+		c.SacrificeUnlessLand_ = "Island"
 		return c
 	})
 
