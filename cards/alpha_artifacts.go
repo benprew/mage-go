@@ -250,6 +250,7 @@ func registerAlphaArtifacts() {
 
 	mage.Register("Nevinyrral's Disk", func() mage.Card {
 		c := mage.NewArtifact("Nevinyrral's Disk", "{4}")
+		c.EntersTapped_ = true
 		// {1}, {T}: Destroy all artifacts, creatures, and enchantments
 		ab := mage.NewActivatedAbility(
 			mage.CompositeEffects("destroy all artifacts, creatures, and enchantments",
