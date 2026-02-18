@@ -194,6 +194,46 @@ func TestForcefield(t *testing.T) {
 	})
 }
 
+func TestForcefieldBlockedCreature(t *testing.T) {
+	t.Run("does_not_reduce_blocked_damage", func(t *testing.T) {
+		// Forcefield only prevents unblocked combat damage.
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerB, "Forcefield")
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Craw Wurm")    // 6/4
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerB, "Grizzly Bears") // 2/2
+		g.ActivateAbility(1, mage.DeclareBlockers, mage.PlayerB, "Forcefield")
+		g.Attack(1, mage.PlayerA, "Craw Wurm")
+		g.Block(1, mage.PlayerB, "Grizzly Bears", "Craw Wurm")
+		g.StopAt(1, mage.EndCombat)
+		g.Execute()
+		// Craw Wurm is blocked, so Forcefield doesn't apply. No player damage.
+		g.AssertLife(mage.PlayerB, 20)
+	})
+
+	t.Run("does_not_affect_1_power_creature", func(t *testing.T) {
+		// A 1/1 unblocked creature deals 1 damage; Forcefield allows 1 through, so no change.
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerB, "Forcefield")
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Llanowar Elves") // 1/1
+		g.ActivateAbility(1, mage.DeclareBlockers, mage.PlayerB, "Forcefield")
+		g.Attack(1, mage.PlayerA, "Llanowar Elves")
+		g.StopAt(1, mage.EndCombat)
+		g.Execute()
+		g.AssertLife(mage.PlayerB, 19)
+	})
+
+	t.Run("no_effect_without_activation", func(t *testing.T) {
+		// If not activated, full damage goes through.
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerB, "Forcefield")
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Craw Wurm") // 6/4
+		g.Attack(1, mage.PlayerA, "Craw Wurm")
+		g.StopAt(1, mage.EndCombat)
+		g.Execute()
+		g.AssertLife(mage.PlayerB, 14)
+	})
+}
+
 func TestTheHive(t *testing.T) {
 	t.Run("creates_wasp_token", func(t *testing.T) {
 		// The Hive: {5}, {T}: Create a 1/1 colorless Insect artifact creature

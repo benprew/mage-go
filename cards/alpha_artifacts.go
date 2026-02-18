@@ -192,7 +192,13 @@ func registerAlphaArtifacts() {
 
 	mage.Register("Forcefield", func() mage.Card {
 		c := mage.NewArtifact("Forcefield", "{3}")
-		// {1}: The next time an unblocked creature would deal combat damage to you, prevent all but 1
+		// {1}: If an unblocked creature would deal combat damage to you this turn,
+		// prevent all but 1 of that damage.
+		ab := mage.NewActivatedAbility(
+			mage.ForcefieldEffect(),
+			mage.GenericCost(1),
+		)
+		c.AddAbility(ab)
 		return c
 	})
 

@@ -62,6 +62,7 @@ type EffectManager struct {
 	regenerationShields map[uuid.UUID]int
 	preventionShields   map[uuid.UUID]int
 	landUntapLimit      int // -1 = no limit; >= 0 = max lands that may untap per turn
+	forcefieldShields   map[uuid.UUID]bool // players with Forcefield active this turn
 }
 
 func NewEffectManager() *EffectManager {
@@ -74,7 +75,23 @@ func NewEffectManager() *EffectManager {
 		regenerationShields: make(map[uuid.UUID]int),
 		preventionShields:   make(map[uuid.UUID]int),
 		landUntapLimit:      -1,
+		forcefieldShields:   make(map[uuid.UUID]bool),
 	}
+}
+
+// AddForcefieldShield marks a player as having Forcefield active this turn.
+func (em *EffectManager) AddForcefieldShield(playerID uuid.UUID) {
+	em.forcefieldShields[playerID] = true
+}
+
+// HasForcefieldShield returns true if the player has Forcefield active this turn.
+func (em *EffectManager) HasForcefieldShield(playerID uuid.UUID) bool {
+	return em.forcefieldShields[playerID]
+}
+
+// ClearForcefieldShields resets Forcefield shields at end of turn.
+func (em *EffectManager) ClearForcefieldShields() {
+	em.forcefieldShields = make(map[uuid.UUID]bool)
 }
 
 // LandUntapLimit returns the current land untap limit. -1 means no limit.

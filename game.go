@@ -1091,6 +1091,10 @@ func (g *Game) doCombatDamage(isFirstStrikeStep bool) {
 				defender := g.GetPlayer(group.DefenderID)
 				if defender != nil {
 					dmg := atk.CurrentPower(g)
+					// Forcefield: reduce unblocked combat damage to 1
+					if dmg > 1 && g.Effects.HasForcefieldShield(group.DefenderID) {
+						dmg = 1
+					}
 					g.DealDamageToPlayer(defender, dmg, atk.ID())
 				}
 			}
@@ -1155,8 +1159,9 @@ func (g *Game) doCleanup() {
 	g.PreventCombatDamage = false
 	// Clear damage tracking
 	g.DamageDealtBy = make(map[uuid.UUID]map[uuid.UUID]bool)
-	// Clear damage prevention shields
+	// Clear damage prevention and Forcefield shields
 	g.Effects.ClearPreventionShields()
+	g.Effects.ClearForcefieldShields()
 	for _, p := range g.Battlefield {
 		// Clear activation tracking (Charge counters used for per-turn counts)
 		delete(p.Counters, Charge)

@@ -1485,6 +1485,22 @@ func (e *blackViseEffect) Text() string {
 	return "Deal damage to active player equal to cards in hand minus 4"
 }
 
+// forcefieldEffect activates a Forcefield shield on the controller for this turn.
+type forcefieldEffect struct{}
+
+func ForcefieldEffect() Effect {
+	return &forcefieldEffect{}
+}
+
+func (e *forcefieldEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	g.Effects.AddForcefieldShield(controller)
+	return nil
+}
+
+func (e *forcefieldEffect) Text() string {
+	return "prevent all but 1 combat damage from each unblocked creature this turn"
+}
+
 // --- ValueSource, PlayerSelector, PermanentSelector ---
 
 // ValueSource resolves a dynamic integer value for an effect.
