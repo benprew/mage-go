@@ -196,13 +196,11 @@ func (tg *TestGame) Attack(turn int, p PlayerRef, creatures ...string) {
 	tg.getPlayer(p).SetAttackers(turn, creatures)
 }
 
-// Block scripts blocks for a turn.
+// Block scripts blocks for a turn. The same blocker can block multiple
+// attackers if it has the ability to do so (e.g. Two-Headed Giant).
 func (tg *TestGame) Block(turn int, p PlayerRef, blocker, attacker string) {
 	tp := tg.getPlayer(p)
-	if tp.blockActions[turn] == nil {
-		tp.blockActions[turn] = make(map[string]string)
-	}
-	tp.blockActions[turn][blocker] = attacker
+	tp.blockActions[turn] = append(tp.blockActions[turn], blockPair{blocker, attacker})
 }
 
 // ChoosePermanent scripts which permanent a player will choose when asked to sacrifice/pick.

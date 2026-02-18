@@ -377,6 +377,8 @@ func registerAlphaCreatures() {
 	mage.Register("Two-Headed Giant of Foriys", func() mage.Card {
 		c := mage.NewCreature("Two-Headed Giant of Foriys", "{4}{R}", 4, 4, "Giant")
 		c.AddAbility(mage.HasKeyword(mage.Trample))
+		// Two-Headed Giant of Foriys can block an additional creature each combat.
+		c.AddAbility(mage.HasKeyword(mage.CanBlockAdditional))
 		return c
 	})
 

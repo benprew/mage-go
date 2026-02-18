@@ -1053,6 +1053,7 @@ func (g *Game) doDeclareBlockers() {
 		return
 	}
 
+	blockerCount := make(map[uuid.UUID]int) // how many attackers each blocker is assigned to
 	for _, ba := range assignments {
 		blocker := g.FindPermanent(ba.BlockerID)
 		attacker := g.FindPermanent(ba.AttackerID)
@@ -1069,6 +1070,15 @@ func (g *Game) doDeclareBlockers() {
 		if HasLandwalkEvasion(attacker, nonActive.PlayerID(), g) {
 			continue
 		}
+		// Check multi-block limit: normally a creature can only block one attacker
+		maxBlocks := 1
+		if blocker.HasAbility(CanBlockAdditional) {
+			maxBlocks = 2
+		}
+		if blockerCount[ba.BlockerID] >= maxBlocks {
+			continue
+		}
+		blockerCount[ba.BlockerID]++
 		g.Combat.AddBlocker(ba.BlockerID, ba.AttackerID)
 		g.FireEvent(GameEvent{
 			Type:     EvtDeclaredBlocker,

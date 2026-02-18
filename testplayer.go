@@ -11,23 +11,29 @@ type ScriptedAction struct {
 	Targets  []string // target names (resolved to UUIDs at execution)
 }
 
+// blockPair represents a single blocker → attacker assignment.
+type blockPair struct {
+	blocker  string
+	attacker string
+}
+
 // TestPlayer is a scripted player for testing.
 type TestPlayer struct {
 	*BasePlayer
 	actions            []ScriptedAction
-	attackActions      map[int][]string         // turn → creature names to attack with
-	blockActions       map[int]map[string]string // turn → blocker name → attacker name
-	choosePermanent    []string                 // queue of permanent names
-	chooseDiscard      [][]string               // queue of card name lists
-	chooseManaColor    []Color                  // queue of colors
-	chooseFromLibrary  []string                 // queue of card names
+	attackActions      map[int][]string      // turn → creature names to attack with
+	blockActions       map[int][]blockPair   // turn → blocker/attacker pairs
+	choosePermanent    []string              // queue of permanent names
+	chooseDiscard      [][]string            // queue of card name lists
+	chooseManaColor    []Color               // queue of colors
+	chooseFromLibrary  []string              // queue of card names
 }
 
 func NewTestPlayer(name string) *TestPlayer {
 	return &TestPlayer{
-		BasePlayer:   NewBasePlayer(name),
+		BasePlayer:    NewBasePlayer(name),
 		attackActions: make(map[int][]string),
-		blockActions:  make(map[int]map[string]string),
+		blockActions:  make(map[int][]blockPair),
 	}
 }
 
@@ -40,7 +46,9 @@ func (tp *TestPlayer) SetAttackers(turn int, creatures []string) {
 }
 
 func (tp *TestPlayer) SetBlockers(turn int, blockers map[string]string) {
-	tp.blockActions[turn] = blockers
+	for blocker, attacker := range blockers {
+		tp.blockActions[turn] = append(tp.blockActions[turn], blockPair{blocker, attacker})
+	}
 }
 
 // DeclareAttackers returns the list of creature IDs to attack with.
@@ -61,17 +69,17 @@ func (tp *TestPlayer) DeclareAttackers(g *Game) []uuid.UUID {
 
 // DeclareBlockers returns blocker-attacker assignments for the current turn.
 func (tp *TestPlayer) DeclareBlockers(g *Game) []BlockAssignment {
-	blockers, ok := tp.blockActions[g.Turn]
+	pairs, ok := tp.blockActions[g.Turn]
 	if !ok {
 		return nil
 	}
 	var result []BlockAssignment
-	for blockerName, attackerName := range blockers {
-		blocker := g.FindPermanentByName(blockerName, tp.PlayerID())
+	for _, bp := range pairs {
+		blocker := g.FindPermanentByName(bp.blocker, tp.PlayerID())
 		// Attacker could be controlled by any player
 		var attacker *Permanent
 		for _, p := range g.Battlefield {
-			if p.Name() == attackerName && g.Combat.IsAttacking(p.ID()) {
+			if p.Name() == bp.attacker && g.Combat.IsAttacking(p.ID()) {
 				attacker = p
 				break
 			}
