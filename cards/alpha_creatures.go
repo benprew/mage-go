@@ -696,12 +696,38 @@ func registerAlphaCreatures() {
 	mage.Register("Nettling Imp", func() mage.Card {
 		c := mage.NewCreature("Nettling Imp", "{2}{B}", 1, 1, "Imp")
 		// {T}: Target non-Wall creature the active player controls attacks this
-		// turn if able. (Simplified: just tap Nettling Imp targeting a creature)
+		// turn if able. Destroy it at end of turn if it didn't attack.
 		ab := mage.NewActivatedAbility(
-			mage.TapTarget(),
+			mage.FuncEffect("force creature to attack or destroy at EOT",
+				func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					if len(targets) == 0 {
+						return nil
+					}
+					targetID := targets[0]
+					// Grant MustAttack until end of turn
+					mage.GrantKeywordUntilEndOfTurn(mage.MustAttack, mage.SelectTarget).Apply(g, sourceID, controller, targets)
+					// Register delayed trigger: at end of turn, destroy if didn't attack
+					g.RegisterDelayedTrigger(&mage.DelayedTrigger{
+						EventType:  mage.EvtEndStep,
+						SourceID:   sourceID,
+						Controller: controller,
+						Effects: []mage.Effect{mage.FuncEffect(
+							"destroy creature that didn't attack",
+							func(g2 *mage.Game, srcID, ctrlID uuid.UUID, _ []uuid.UUID) error {
+								if !g2.AttackedThisTurn[targetID] {
+									perm := g2.FindPermanent(targetID)
+									if perm != nil {
+										g2.DestroyPermanent(perm)
+									}
+								}
+								return nil
+							}),
+						},
+					})
+					return nil
+				}),
 			mage.TapSourceCost(),
-		
-			mage.WithTarget(mage.TargetCreature()),
+			mage.WithTarget(mage.TargetCreature(mage.Not(mage.HasSubType("Wall")))),
 		)
 		c.AddAbility(ab)
 		return c
@@ -760,11 +786,33 @@ func registerAlphaCreatures() {
 
 	mage.Register("Personal Incarnation", func() mage.Card {
 		c := mage.NewCreature("Personal Incarnation", "{3}{W}{W}{W}", 6, 6, "Avatar", "Incarnation")
+		c.AddAbility(mage.HasKeyword(mage.Flying))
+		// All damage that would be dealt to you is dealt to Personal Incarnation instead.
+		c.AddAbility(mage.StaticAbility(mage.PersonalIncarnationRedirect()))
+		// When Personal Incarnation dies, you lose half your life (rounded up).
+		c.AddAbility(mage.PutIntoGraveyardFromBattlefieldTrigger(mage.FuncEffect(
+			"lose half your life rounded up",
+			func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				p := g.GetPlayer(controller)
+				if p == nil {
+					return nil
+				}
+				halfLife := (p.Life() + 1) / 2
+				if halfLife > 0 {
+					p.LoseLife(halfLife)
+				}
+				return nil
+			}), false))
 		return c
 	})
 
 	mage.Register("Veteran Bodyguard", func() mage.Card {
 		c := mage.NewCreature("Veteran Bodyguard", "{3}{W}{W}", 2, 5, "Human")
+		// As long as Veteran Bodyguard is untapped, all combat damage that would
+		// be dealt to you is dealt to Veteran Bodyguard instead.
+		c.AddAbility(mage.StaticAbility(
+			mage.BodyguardContinuous(),
+		))
 		return c
 	})
 

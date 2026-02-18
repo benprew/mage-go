@@ -246,6 +246,7 @@ type Permanent struct {
 	TypesAdded       []CardType  // types added by continuous effects (e.g. Living Lands)
 	BasePTOverride   *[2]int     // if set, overrides base P/T (for animate effects)
 	ColorOverride    *[]Color    // if set, replaces card's colors (from lace effects)
+	FaceDown         bool        // true when face-down (e.g. Illusionary Mask)
 }
 
 // NewPermanent creates a permanent from a card.
@@ -268,6 +269,9 @@ func (p *Permanent) ID() uuid.UUID     { return p.Card.ID() }
 func (p *Permanent) Name() string      { return p.Card.Name() }
 
 func (p *Permanent) HasType(t CardType) bool {
+	if p.FaceDown {
+		return t == TypeCreature
+	}
 	for _, added := range p.TypesAdded {
 		if added == t {
 			return true
@@ -278,6 +282,9 @@ func (p *Permanent) HasType(t CardType) bool {
 
 // Colors returns the permanent's current colors, considering color overrides.
 func (p *Permanent) Colors() []Color {
+	if p.FaceDown {
+		return nil // face-down creatures are colorless
+	}
 	if p.ColorOverride != nil {
 		return *p.ColorOverride
 	}
@@ -285,6 +292,9 @@ func (p *Permanent) Colors() []Color {
 }
 
 func (p *Permanent) HasSubType(s string) bool {
+	if p.FaceDown {
+		return false // face-down creatures have no subtypes
+	}
 	subs := p.Card.SubTypes()
 	if len(p.SubTypeOverride) > 0 {
 		subs = p.SubTypeOverride
@@ -299,6 +309,9 @@ func (p *Permanent) HasSubType(s string) bool {
 
 // HasAbility checks if this permanent currently has the given keyword.
 func (p *Permanent) HasAbility(kw Keyword) bool {
+	if p.FaceDown {
+		return false // face-down creatures have no abilities
+	}
 	for _, a := range p.RuntimeAbilities {
 		ab := UnwrapAbility(a)
 		if ka, ok := ab.(*KeywordAbility); ok && ka.Keyword == kw {
@@ -310,6 +323,9 @@ func (p *Permanent) HasAbility(kw Keyword) bool {
 
 // HasProtectionFrom checks if this permanent has protection that blocks the given card.
 func (p *Permanent) HasProtectionFrom(card Card) bool {
+	if p.FaceDown {
+		return false // face-down creatures have no protection
+	}
 	for _, a := range p.RuntimeAbilities {
 		if pa, ok := a.(*ProtectionAbility); ok {
 			if pa.Blocks(card) {

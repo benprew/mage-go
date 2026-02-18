@@ -6,10 +6,8 @@ import (
 	"github.com/mage/mage"
 )
 
-// Tests for stubbed/incomplete cards registered in alpha_artifacts.go (and a few
+// Tests for cards registered in alpha_artifacts.go (and a few
 // from alpha_spells.go / alpha_enchantments.go that are closely related).
-// These tests define the correct Oracle text behavior and should FAIL until
-// each card's implementation is completed.
 
 // ---------------------------------------------------------------------------
 // Artifacts
@@ -31,7 +29,6 @@ func TestWinterOrb(t *testing.T) {
 		g.StopAt(3, mage.PrecombatMain)
 		g.Execute()
 		// With Winter Orb, at most 1 land untaps; 2 should remain tapped.
-		// Stub has no restriction -- all 3 untap.
 		tapped := 0
 		playerAID := g.Players[0].PlayerID()
 		for _, perm := range g.Battlefield {
@@ -116,7 +113,6 @@ func TestMeekstone(t *testing.T) {
 		g.StopAt(3, mage.PrecombatMain)
 		g.Execute()
 		// Hill Giant (power 3) should NOT untap with Meekstone.
-		// Stub has no restriction; it untaps normally.
 		g.AssertTapped(mage.PlayerA, "Hill Giant", true)
 	})
 
@@ -189,7 +185,6 @@ func TestForcefield(t *testing.T) {
 		g.StopAt(1, mage.EndCombat)
 		g.Execute()
 		// Forcefield should reduce 6 unblocked damage to 1.
-		// Stub does nothing; PlayerB takes full 6.
 		g.AssertLife(mage.PlayerB, 19)
 	})
 }
@@ -244,7 +239,6 @@ func TestTheHive(t *testing.T) {
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
 		// Should have created a 1/1 Wasp token.
-		// Stub gains 1 life instead.
 		g.AssertPermanentCount(mage.PlayerA, "Wasp", 1)
 	})
 
@@ -302,7 +296,6 @@ func TestCopyArtifact(t *testing.T) {
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
 		// Should have 2 Sol Rings (original + copy).
-		// Stub doesn't copy anything.
 		solCount := 0
 		playerAID := g.Players[0].PlayerID()
 		for _, perm := range g.Battlefield {
@@ -391,7 +384,6 @@ func TestLivingLands(t *testing.T) {
 		g.StopAt(1, mage.PrecombatMain)
 		g.Execute()
 		// Forest should be a 1/1 creature.
-		// Stub does nothing; Forest is not a creature.
 		perm := g.FindPermanentByName("Forest", g.Players[0].PlayerID())
 		if perm == nil {
 			t.Fatal("Forest not found")
@@ -410,7 +402,6 @@ func TestLivingLands(t *testing.T) {
 		g.StopAt(1, mage.EndCombat)
 		g.Execute()
 		// Animated Forest should deal 1 damage.
-		// Stub: Forest is not a creature, can't attack.
 		g.AssertLife(mage.PlayerB, 19)
 	})
 
@@ -443,7 +434,6 @@ func TestManaFlare(t *testing.T) {
 		g.Execute()
 		// Mountain tapped for {R}. Mana Flare adds another {R}.
 		// Auto-mana adds 5R. Mountain = 1R + 1R (Mana Flare) = 2R. Total = 7R.
-		// Stub: no bonus. Mountain = 1R. Total = 6R.
 		pool := g.Players[0].ManaPool()
 		if pool.Count(mage.Red) < 7 {
 			t.Errorf("Mana Flare should double land mana; expected >= 7 red, got %d", pool.Count(mage.Red))
@@ -466,7 +456,6 @@ func TestSacrifice(t *testing.T) {
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
 		// Hill Giant (CMC 4) sacrificed -> add {B}{B}{B}{B}.
-		// Stub adds 1 black mana and doesn't sacrifice.
 		g.AssertPermanentCount(mage.PlayerA, "Hill Giant", 0)
 		pool := g.Players[0].ManaPool()
 		if pool.Count(mage.Black) < 4 { // 4 from sacrificed Hill Giant (CMC 4)
@@ -487,7 +476,6 @@ func TestWordOfCommand(t *testing.T) {
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
 		// Word of Command should force PlayerB to cast Lightning Bolt.
-		// Stub does nothing (GainLife(0)); Bolt stays in hand.
 		g.AssertHandCount(mage.PlayerB, "Lightning Bolt", 0)
 	})
 }
@@ -507,7 +495,6 @@ func TestCamouflage(t *testing.T) {
 		g.StopAt(1, mage.EndCombat)
 		g.Execute()
 		// Camouflage should let the attacker assign blockers.
-		// Stub does nothing; defenders choose normally (no blocks scripted here).
 		// At least one attacker should deal damage (5 total unblocked).
 		g.AssertLife(mage.PlayerB, 15) // 2 + 3 = 5 damage
 	})
@@ -531,8 +518,6 @@ func TestRagingRiver(t *testing.T) {
 		g.Execute()
 		// With Raging River, at most one pile can block each attacker.
 		// If only one of {Hill Giant, Gray Ogre} can block, Bears might get through.
-		// Stub: no pile restriction; both block normally.
-		// For a correct Raging River, we expect the block to be restricted.
 		if g.Players[1].Life() == 20 {
 			t.Errorf("Raging River should restrict blocking; both blockers should not be able to block the same creature simultaneously in the same pile")
 		}
@@ -540,23 +525,24 @@ func TestRagingRiver(t *testing.T) {
 }
 
 func TestNaturalSelection(t *testing.T) {
-	t.Run("rearranges_top_three_cards", func(t *testing.T) {
+	t.Run("shuffles_library", func(t *testing.T) {
 		// Natural Selection: Look at the top 3 cards of target player's library,
 		// then put them back in any order. You may have that player shuffle.
+		// In an automated engine, the rearrange has no effect, so we always shuffle.
 		g := mage.NewTestGame(t)
 		g.AddCard(mage.ZoneHand, mage.PlayerA, "Natural Selection")
 		g.AddCard(mage.ZoneLibrary, mage.PlayerA, "Lightning Bolt")
 		g.AddCard(mage.ZoneLibrary, mage.PlayerA, "Grizzly Bears")
 		g.AddCard(mage.ZoneLibrary, mage.PlayerA, "Hill Giant")
+		g.AddCard(mage.ZoneLibrary, mage.PlayerA, "Craw Wurm")
+		g.AddCard(mage.ZoneLibrary, mage.PlayerA, "Forest")
 		g.CastSpell(1, mage.PrecombatMain, mage.PlayerA, "Natural Selection", "PlayerA")
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
-		// Should have rearranged top 3 cards. Since it's a stub (GainLife(0)),
-		// the library is unchanged. We verify the spell at least interacts
-		// with the library by checking cards remain accessible.
+		// Library should still have all 5 cards (shuffle doesn't lose cards)
 		playerA := g.Players[0]
-		if len(playerA.Library()) < 3 {
-			t.Errorf("Natural Selection should leave at least 3 cards in library, got %d", len(playerA.Library()))
+		if len(playerA.Library()) < 5 {
+			t.Errorf("Natural Selection should preserve all library cards; got %d, want >= 5", len(playerA.Library()))
 		}
 	})
 }
@@ -571,7 +557,6 @@ func TestLich(t *testing.T) {
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
 		// Life should become 0 (but you don't lose the game due to Lich).
-		// Stub: no ETB effect; life stays at 20.
 		g.AssertLife(mage.PlayerA, 0)
 	})
 
@@ -589,7 +574,6 @@ func TestLich(t *testing.T) {
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
 		// Should have drawn 3 cards (not gained life).
-		// Stub: no replacement effect; Healing Salve gains 3 life normally.
 		playerA := g.Players[0]
 		if len(playerA.Hand()) < 3 {
 			t.Errorf("Lich should replace life gain with card draw; hand has %d, want >= 3", len(playerA.Hand()))
@@ -609,7 +593,6 @@ func TestLich(t *testing.T) {
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
 		// 3 damage -> sacrifice 3 permanents. Only Lich + 2 Plains = 3 total.
-		// Stub: no replacement; life goes to -3.
 		g.AssertLife(mage.PlayerA, 0) // Lich prevents life loss
 	})
 
@@ -623,7 +606,6 @@ func TestLich(t *testing.T) {
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
 		// PlayerA should lose the game when Lich is destroyed.
-		// Stub: no lose-game trigger.
 		g.AssertPermanentCount(mage.PlayerA, "Lich", 0)
 	})
 }
@@ -645,7 +627,6 @@ func TestIslandSanctuary(t *testing.T) {
 		g.StopAt(2, mage.EndCombat)
 		g.Execute()
 		// Grizzly Bears (no flying/islandwalk) can't attack PlayerA.
-		// Stub: no restriction; Bears deal 2 damage.
 		g.AssertLife(mage.PlayerA, 20)
 	})
 }
@@ -662,7 +643,6 @@ func TestManaShort(t *testing.T) {
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
 		// All of PlayerB's lands should be tapped.
-		// Stub does nothing (GainLife(0)).
 		g.AssertTapped(mage.PlayerB, "Plains", true)
 		g.AssertTapped(mage.PlayerB, "Island", true)
 	})
@@ -681,7 +661,6 @@ func TestDrainPower(t *testing.T) {
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
 		// PlayerB's lands tapped, PlayerA gets the mana.
-		// Stub does nothing; PlayerB's lands remain untapped.
 		g.AssertTapped(mage.PlayerB, "Plains", true)
 		g.AssertTapped(mage.PlayerB, "Mountain", true)
 	})
@@ -705,7 +684,6 @@ func TestSimulacrum(t *testing.T) {
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
 		// Took 3 damage this turn -> gain 3 life (14 -> 17) and deal 3 to Hill Giant.
-		// Stub does nothing.
 		g.AssertLife(mage.PlayerA, 17)
 	})
 }
@@ -727,7 +705,6 @@ func TestBlazeOfGlory(t *testing.T) {
 		g.Execute()
 		// Hill Giant blocks both attackers (2 + 2 = 4 damage, lethal to 3/3).
 		// With Blaze of Glory enabling multi-block, no damage gets through.
-		// Stub does nothing; Hill Giant might only block one.
 		g.AssertLife(mage.PlayerB, 20)
 	})
 }
@@ -748,7 +725,6 @@ func TestFalseOrders(t *testing.T) {
 		g.StopAt(1, mage.EndCombat)
 		g.Execute()
 		// Hill Giant removed from combat -> Craw Wurm becomes unblocked -> 6 damage.
-		// Stub does nothing; Craw Wurm is still blocked.
 		g.AssertLife(mage.PlayerB, 14)
 	})
 }
@@ -770,7 +746,6 @@ func TestSirensCall(t *testing.T) {
 		g.StopAt(2, mage.Cleanup)
 		g.Execute()
 		// Non-attackers should be destroyed at end of turn.
-		// Stub does nothing; creatures survive.
 		g.AssertPermanentCount(mage.PlayerB, "Grizzly Bears", 0)
 		g.AssertPermanentCount(mage.PlayerB, "Hill Giant", 0)
 	})
@@ -788,7 +763,6 @@ func TestMagicalHack(t *testing.T) {
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
 		// Bog Wraith should have forestwalk instead of swampwalk.
-		// Stub does nothing.
 		g.AssertHasAbility(mage.PlayerA, "Bog Wraith", mage.Forestwalk, true)
 		g.AssertHasAbility(mage.PlayerA, "Bog Wraith", mage.Swampwalk, false)
 	})
@@ -805,7 +779,6 @@ func TestChaosOrb(t *testing.T) {
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
 		// Should destroy a random permanent then destroy itself.
-		// Stub: no abilities, nothing happens.
 		g.AssertPermanentCount(mage.PlayerA, "Chaos Orb", 0)
 		g.AssertPermanentCount(mage.PlayerB, "Hill Giant", 0)
 	})
@@ -830,7 +803,6 @@ func TestPowerSurge(t *testing.T) {
 		g.StopAt(2, mage.PrecombatMain)
 		g.Execute()
 		// PlayerB had 3 untapped lands -> takes 3 damage at upkeep.
-		// Stub: no trigger.
 		g.AssertLife(mage.PlayerB, 17)
 	})
 }
@@ -846,7 +818,6 @@ func TestLifetap(t *testing.T) {
 		g.StopAt(2, mage.BeginCombat)
 		g.Execute()
 		// Opponent tapped Forest -> gain 1 life.
-		// Stub: no trigger.
 		g.AssertLife(mage.PlayerA, 21)
 	})
 }
@@ -878,7 +849,6 @@ func TestConversion(t *testing.T) {
 		g.StopAt(1, mage.PrecombatMain)
 		g.Execute()
 		// No {W}{W} paid -> Conversion sacrificed.
-		// Stub: no upkeep trigger.
 		g.AssertPermanentCount(mage.PlayerA, "Conversion", 0)
 	})
 }
@@ -897,7 +867,6 @@ func TestGloom(t *testing.T) {
 		g.Execute()
 		// With Gloom, StP can't be cast (not enough mana from auto-mana for the
 		// extra {3}), so Hill Giant should survive.
-		// Stub: no cost increase; StP exiles Hill Giant normally.
 		g.AssertPermanentCount(mage.PlayerB, "Hill Giant", 1)
 	})
 }
@@ -914,7 +883,6 @@ func TestMagneticMountain(t *testing.T) {
 		g.StopAt(4, mage.PrecombatMain)
 		g.Execute()
 		// Air Elemental (blue) should NOT untap.
-		// Stub: no restriction; it untaps normally.
 		g.AssertTapped(mage.PlayerB, "Air Elemental", true)
 	})
 }
@@ -932,7 +900,6 @@ func TestConsecratedLand(t *testing.T) {
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
 		// Armageddon destroys all lands, but Consecrate Land makes Plains indestructible.
-		// Stub: no indestructible effect; Plains is destroyed.
 		g.AssertPermanentCount(mage.PlayerA, "Plains", 1)
 	})
 }
@@ -950,7 +917,6 @@ func TestFastbond(t *testing.T) {
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
 		// Should be able to play all 3 lands.
-		// Stub: normal land-per-turn limit; only 1 land played.
 		g.AssertPermanentCount(mage.PlayerA, "Forest", 1)
 		g.AssertPermanentCount(mage.PlayerA, "Plains", 1)
 		g.AssertPermanentCount(mage.PlayerA, "Mountain", 1)
@@ -965,7 +931,6 @@ func TestFastbond(t *testing.T) {
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
 		// 1st land: free. 2nd and 3rd: 1 damage each = 2 total.
-		// Stub: no damage trigger.
 		g.AssertLife(mage.PlayerA, 18)
 	})
 }
@@ -984,7 +949,6 @@ func TestKudzu(t *testing.T) {
 		g.StopAt(2, mage.BeginCombat)
 		g.Execute()
 		// Forest tapped -> destroyed. Kudzu moves to Plains.
-		// Stub: no trigger.
 		g.AssertPermanentCount(mage.PlayerB, "Forest", 0)
 		g.AssertAttachedTo(mage.PlayerB, "Kudzu", "Plains")
 	})
@@ -1004,7 +968,6 @@ func TestRegenerationAura(t *testing.T) {
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
 		// Grizzly Bears should regenerate from Bolt damage.
-		// Stub: no activated ability granted; Bears die.
 		g.AssertPermanentCount(mage.PlayerA, "Grizzly Bears", 1)
 	})
 }
@@ -1025,7 +988,6 @@ func TestPsychicVenom(t *testing.T) {
 		g.StopAt(2, mage.BeginCombat)
 		g.Execute()
 		// Forest tapped -> Psychic Venom deals 2 to PlayerB.
-		// Stub: no trigger.
 		g.AssertLife(mage.PlayerB, 18)
 	})
 }
@@ -1040,7 +1002,6 @@ func TestEvilPresence(t *testing.T) {
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
 		// Forest should now be a Swamp (produce {B} instead of {G}).
-		// Stub: no type-changing effect.
 		perm := g.FindPermanentByName("Forest", g.Players[1].PlayerID())
 		if perm == nil {
 			t.Fatal("Forest not found")
@@ -1062,7 +1023,6 @@ func TestPhantasmalTerrain(t *testing.T) {
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
 		// Mountain should become an Island (default choice).
-		// Stub: no type-changing effect.
 		perm := g.FindPermanentByName("Mountain", g.Players[1].PlayerID())
 		if perm == nil {
 			t.Fatal("Mountain not found")
@@ -1070,5 +1030,449 @@ func TestPhantasmalTerrain(t *testing.T) {
 		if !perm.HasSubType("Island") {
 			t.Errorf("Phantasmal Terrain should change Mountain to Island")
 		}
+	})
+}
+
+func TestKormusBell(t *testing.T) {
+	t.Run("swamps_become_creatures", func(t *testing.T) {
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Kormus Bell")
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Swamp")
+		g.StopAt(1, mage.PrecombatMain)
+		g.Execute()
+		perm := g.FindPermanentByName("Swamp", g.Players[0].PlayerID())
+		if perm == nil {
+			t.Fatal("Swamp not found")
+		}
+		if !perm.HasType(mage.TypeCreature) {
+			t.Errorf("Kormus Bell should make Swamp a creature")
+		}
+		g.AssertPowerToughness(mage.PlayerA, "Swamp", 1, 1)
+	})
+
+	t.Run("swamps_can_attack", func(t *testing.T) {
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Kormus Bell")
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Swamp")
+		g.Attack(1, mage.PlayerA, "Swamp")
+		g.StopAt(1, mage.EndCombat)
+		g.Execute()
+		g.AssertLife(mage.PlayerB, 19)
+	})
+
+	t.Run("non_swamps_unaffected", func(t *testing.T) {
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Kormus Bell")
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Forest")
+		g.StopAt(1, mage.PrecombatMain)
+		g.Execute()
+		perm := g.FindPermanentByName("Forest", g.Players[0].PlayerID())
+		if perm == nil {
+			t.Fatal("Forest not found")
+		}
+		if perm.HasType(mage.TypeCreature) {
+			t.Errorf("Kormus Bell should not affect non-Swamp lands")
+		}
+	})
+}
+
+func TestHelmOfChatzuk(t *testing.T) {
+	t.Run("grants_banding", func(t *testing.T) {
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Helm of Chatzuk")
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Grizzly Bears")
+		g.ActivateAbility(1, mage.PrecombatMain, mage.PlayerA, "Helm of Chatzuk", "Grizzly Bears")
+		g.StopAt(1, mage.BeginCombat)
+		g.Execute()
+		g.AssertHasAbility(mage.PlayerA, "Grizzly Bears", mage.Banding, true)
+		g.AssertTapped(mage.PlayerA, "Helm of Chatzuk", true)
+	})
+}
+
+func TestGlassesOfUrza(t *testing.T) {
+	t.Run("taps_to_look", func(t *testing.T) {
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Glasses of Urza")
+		g.ActivateAbility(1, mage.PrecombatMain, mage.PlayerA, "Glasses of Urza", "PlayerB")
+		g.StopAt(1, mage.BeginCombat)
+		g.Execute()
+		g.AssertTapped(mage.PlayerA, "Glasses of Urza", true)
+	})
+}
+
+func TestSunglassesOfUrza(t *testing.T) {
+	t.Run("red_mana_as_white", func(t *testing.T) {
+		// Sunglasses of Urza lets you spend red mana as white.
+		// Cast Swords to Plowshares ({W}) using only red mana sources.
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Sunglasses of Urza")
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Mountain")
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerB, "Grizzly Bears")
+		g.AddCard(mage.ZoneHand, mage.PlayerA, "Swords to Plowshares")
+		g.CastSpell(1, mage.PrecombatMain, mage.PlayerA, "Swords to Plowshares", "Grizzly Bears")
+		g.StopAt(1, mage.BeginCombat)
+		g.Execute()
+		// Swords should exile Grizzly Bears using red mana as white.
+		g.AssertPermanentCount(mage.PlayerB, "Grizzly Bears", 0)
+	})
+}
+
+func TestJadeStatue(t *testing.T) {
+	t.Run("becomes_creature", func(t *testing.T) {
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Jade Statue")
+		g.ActivateAbility(1, mage.PrecombatMain, mage.PlayerA, "Jade Statue")
+		g.StopAt(1, mage.BeginCombat)
+		g.Execute()
+		perm := g.FindPermanentByName("Jade Statue", g.Players[0].PlayerID())
+		if perm == nil {
+			t.Fatal("Jade Statue not found")
+		}
+		if !perm.HasType(mage.TypeCreature) {
+			t.Errorf("Jade Statue should become a creature after activation")
+		}
+		g.AssertPowerToughness(mage.PlayerA, "Jade Statue", 3, 6)
+	})
+
+	t.Run("creature_until_end_of_combat", func(t *testing.T) {
+		// Jade Statue should be a creature during combat (DeclareAttackers)
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Jade Statue")
+		g.ActivateAbility(1, mage.PrecombatMain, mage.PlayerA, "Jade Statue")
+		g.StopAt(1, mage.DeclareAttackers)
+		g.Execute()
+		perm := g.FindPermanentByName("Jade Statue", g.Players[0].PlayerID())
+		if perm == nil {
+			t.Fatal("Jade Statue not found")
+		}
+		if !perm.HasType(mage.TypeCreature) {
+			t.Errorf("Jade Statue should be a creature during combat")
+		}
+	})
+
+	t.Run("not_creature_after_combat", func(t *testing.T) {
+		// Jade Statue should revert to non-creature after EndCombat
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Jade Statue")
+		g.ActivateAbility(1, mage.PrecombatMain, mage.PlayerA, "Jade Statue")
+		g.StopAt(1, mage.PostcombatMain)
+		g.Execute()
+		perm := g.FindPermanentByName("Jade Statue", g.Players[0].PlayerID())
+		if perm == nil {
+			t.Fatal("Jade Statue not found")
+		}
+		if perm.HasType(mage.TypeCreature) {
+			t.Errorf("Jade Statue should NOT be a creature during postcombat main")
+		}
+	})
+
+	t.Run("reverts_at_end_of_turn", func(t *testing.T) {
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Jade Statue")
+		g.ActivateAbility(1, mage.PrecombatMain, mage.PlayerA, "Jade Statue")
+		g.StopAt(2, mage.PrecombatMain)
+		g.Execute()
+		perm := g.FindPermanentByName("Jade Statue", g.Players[0].PlayerID())
+		if perm == nil {
+			t.Fatal("Jade Statue not found")
+		}
+		if perm.HasType(mage.TypeCreature) {
+			t.Errorf("Jade Statue should revert to non-creature at end of turn")
+		}
+	})
+}
+
+func TestJadeMonolith(t *testing.T) {
+	t.Run("redirects_creature_damage_to_player", func(t *testing.T) {
+		// {1}: The next time a source of your choice would deal damage to
+		// target creature this turn, that damage is dealt to target player instead.
+		g := mage.NewTestGame(t)
+		g.SetLife(mage.PlayerB, 20)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Jade Monolith")
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Grizzly Bears") // 2/2
+		g.AddCard(mage.ZoneHand, mage.PlayerB, "Lightning Bolt")
+		// Activate Jade Monolith targeting Grizzly Bears and PlayerB
+		g.ActivateAbility(1, mage.PrecombatMain, mage.PlayerA, "Jade Monolith", "Grizzly Bears", "PlayerB")
+		// Lightning Bolt targets Grizzly Bears — damage redirected to PlayerB
+		g.CastSpell(1, mage.PrecombatMain, mage.PlayerB, "Lightning Bolt", "Grizzly Bears")
+		g.StopAt(1, mage.BeginCombat)
+		g.Execute()
+		// Bears should survive (damage redirected), PlayerB takes 3
+		g.AssertPermanentCount(mage.PlayerA, "Grizzly Bears", 1)
+		g.AssertLife(mage.PlayerB, 17)
+	})
+}
+
+func TestPersonalIncarnation(t *testing.T) {
+	t.Run("has_flying", func(t *testing.T) {
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Personal Incarnation")
+		g.StopAt(1, mage.PrecombatMain)
+		g.Execute()
+		g.AssertHasAbility(mage.PlayerA, "Personal Incarnation", mage.Flying, true)
+		g.AssertPowerToughness(mage.PlayerA, "Personal Incarnation", 6, 6)
+	})
+
+	t.Run("lose_half_life_on_death", func(t *testing.T) {
+		g := mage.NewTestGame(t)
+		g.SetLife(mage.PlayerA, 20)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Personal Incarnation")
+		g.AddCard(mage.ZoneHand, mage.PlayerB, "Terror")
+		g.CastSpell(1, mage.PrecombatMain, mage.PlayerB, "Terror", "Personal Incarnation")
+		g.StopAt(1, mage.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(mage.PlayerA, "Personal Incarnation", 0)
+		// 20 / 2 = 10 life lost, so 10 remaining
+		g.AssertLife(mage.PlayerA, 10)
+	})
+
+	t.Run("redirects_damage_from_controller", func(t *testing.T) {
+		// All damage that would be dealt to you is dealt to Personal Incarnation instead.
+		g := mage.NewTestGame(t)
+		g.SetLife(mage.PlayerA, 20)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Personal Incarnation") // 6/6 flying
+		g.AddCard(mage.ZoneHand, mage.PlayerB, "Lightning Bolt")
+		// Lightning Bolt targeting PlayerA — damage should redirect to Personal Incarnation
+		g.CastSpell(1, mage.PrecombatMain, mage.PlayerB, "Lightning Bolt", "PlayerA")
+		g.StopAt(1, mage.BeginCombat)
+		g.Execute()
+		// Player A should still be at 20 life (damage redirected)
+		g.AssertLife(mage.PlayerA, 20)
+		// Personal Incarnation should have taken 3 damage (6/6 with 3 damage = alive)
+		g.AssertPermanentCount(mage.PlayerA, "Personal Incarnation", 1)
+	})
+
+	t.Run("dies_when_lethal_redirected", func(t *testing.T) {
+		// If enough damage is redirected, Personal Incarnation dies and
+		// the controller loses half their life.
+		g := mage.NewTestGame(t)
+		g.SetLife(mage.PlayerA, 20)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Personal Incarnation") // 6/6 flying
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerB, "Craw Wurm")            // 6/4
+		// Turn 2 is PlayerB's turn; Craw Wurm attacks PlayerA.
+		g.Attack(2, mage.PlayerB, "Craw Wurm")
+		g.StopAt(2, mage.EndCombat)
+		g.Execute()
+		// 6 damage redirected kills PI (6/6 with 6 damage). Death trigger: lose half life = 10.
+		g.AssertPermanentCount(mage.PlayerA, "Personal Incarnation", 0)
+		g.AssertLife(mage.PlayerA, 10)
+	})
+}
+
+func TestVeteranBodyguard(t *testing.T) {
+	t.Run("redirects_combat_damage", func(t *testing.T) {
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerB, "Veteran Bodyguard") // 2/5
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Hill Giant")       // 3/3
+		g.Attack(1, mage.PlayerA, "Hill Giant")
+		g.StopAt(1, mage.EndCombat)
+		g.Execute()
+		// Veteran Bodyguard should absorb the 3 combat damage
+		g.AssertLife(mage.PlayerB, 20)
+		// Bodyguard should have taken 3 damage (5 toughness - 3 = 2 remaining)
+		g.AssertPermanentCount(mage.PlayerB, "Veteran Bodyguard", 1)
+	})
+
+	t.Run("no_redirect_when_tapped", func(t *testing.T) {
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerB, "Veteran Bodyguard") // 2/5
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerB, "Icy Manipulator")
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Hill Giant") // 3/3
+		// Tap bodyguard before combat
+		g.ActivateAbility(1, mage.PrecombatMain, mage.PlayerB, "Icy Manipulator", "Veteran Bodyguard")
+		g.Attack(1, mage.PlayerA, "Hill Giant")
+		g.StopAt(1, mage.EndCombat)
+		g.Execute()
+		// Bodyguard is tapped, so damage goes through to player
+		g.AssertLife(mage.PlayerB, 17)
+	})
+}
+
+func TestNettlingImpForceAttack(t *testing.T) {
+	t.Run("forces_creature_to_attack", func(t *testing.T) {
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Nettling Imp")
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerB, "Hill Giant") // 3/3
+		// Nettling Imp gives MustAttack to Hill Giant
+		g.ActivateAbility(2, mage.PrecombatMain, mage.PlayerA, "Nettling Imp", "Hill Giant")
+		g.StopAt(2, mage.EndCombat)
+		g.Execute()
+		// Hill Giant should have been forced to attack
+		g.AssertTapped(mage.PlayerA, "Nettling Imp", true)
+		// Hill Giant should be tapped (it attacked)
+		g.AssertTapped(mage.PlayerB, "Hill Giant", true)
+		// PlayerA should have taken 3 damage from the forced attack
+		g.AssertLife(mage.PlayerA, 17)
+	})
+
+	t.Run("cannot_target_wall", func(t *testing.T) {
+		// Nettling Imp cannot target Wall creatures
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Nettling Imp")
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerB, "Wall of Stone") // 0/8 Wall
+		// Try to target a Wall — should fail; Imp won't tap
+		g.ActivateAbility(2, mage.PrecombatMain, mage.PlayerA, "Nettling Imp", "Wall of Stone")
+		g.StopAt(2, mage.Cleanup)
+		g.Execute()
+		// Nettling Imp should NOT have tapped (no valid target)
+		g.AssertTapped(mage.PlayerA, "Nettling Imp", false)
+	})
+
+	t.Run("destroy_if_didnt_attack", func(t *testing.T) {
+		// If the target creature didn't attack this turn, destroy it at end of turn.
+		// Use Meekstone to keep Hill Giant tapped (power >= 3 can't untap).
+		// Hill Giant attacks on turn 2, gets tapped. Meekstone prevents untap.
+		// On turn 4 (PlayerB's next turn), Hill Giant is still tapped.
+		// Nettling Imp targets Hill Giant -> can't attack -> destroyed at EOT.
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Nettling Imp")
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Meekstone")
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerB, "Hill Giant") // 3/3
+		// Turn 2: Hill Giant attacks (forced or voluntary), gets tapped
+		g.Attack(2, mage.PlayerB, "Hill Giant")
+		// Turn 4: Meekstone keeps Hill Giant tapped. Nettling Imp targets it.
+		g.ActivateAbility(4, mage.PrecombatMain, mage.PlayerA, "Nettling Imp", "Hill Giant")
+		g.StopAt(4, mage.Cleanup)
+		g.Execute()
+		// Hill Giant was tapped and couldn't attack, so it should be destroyed at end of turn
+		g.AssertPermanentCount(mage.PlayerB, "Hill Giant", 0)
+	})
+}
+
+func TestCyclopeanTomb(t *testing.T) {
+	t.Run("turns_land_into_swamp", func(t *testing.T) {
+		// {2}, {T}: Put a mire counter on target non-Swamp land.
+		// As long as Cyclopean Tomb is on the battlefield, that land is a Swamp.
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Cyclopean Tomb")
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerB, "Forest")
+		g.ActivateAbility(1, mage.PrecombatMain, mage.PlayerA, "Cyclopean Tomb", "Forest")
+		g.StopAt(1, mage.BeginCombat)
+		g.Execute()
+		perm := g.FindPermanentByName("Forest", g.Players[1].PlayerID())
+		if perm == nil {
+			t.Fatal("Forest not found")
+		}
+		if !perm.HasSubType("Swamp") {
+			t.Errorf("Cyclopean Tomb should make Forest a Swamp")
+		}
+		// Forest should have a Mire counter
+		if perm.Counters[mage.Mire] < 1 {
+			t.Errorf("Forest should have a Mire counter, got %d", perm.Counters[mage.Mire])
+		}
+	})
+
+	t.Run("reverts_when_tomb_leaves", func(t *testing.T) {
+		// When Cyclopean Tomb leaves the battlefield, the subtype override ends.
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Cyclopean Tomb")
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerB, "Forest")
+		g.AddCard(mage.ZoneHand, mage.PlayerB, "Disenchant")
+		g.ActivateAbility(1, mage.PrecombatMain, mage.PlayerA, "Cyclopean Tomb", "Forest")
+		// Destroy Cyclopean Tomb
+		g.CastSpell(1, mage.PrecombatMain, mage.PlayerB, "Disenchant", "Cyclopean Tomb")
+		g.StopAt(1, mage.BeginCombat)
+		g.Execute()
+		perm := g.FindPermanentByName("Forest", g.Players[1].PlayerID())
+		if perm == nil {
+			t.Fatal("Forest not found")
+		}
+		if perm.HasSubType("Swamp") {
+			t.Errorf("Forest should revert to non-Swamp after Cyclopean Tomb leaves")
+		}
+	})
+
+	t.Run("cannot_target_swamp", func(t *testing.T) {
+		// Can only target non-Swamp lands
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Cyclopean Tomb")
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerB, "Swamp")
+		g.ActivateAbility(1, mage.PrecombatMain, mage.PlayerA, "Cyclopean Tomb", "Swamp")
+		g.StopAt(1, mage.BeginCombat)
+		g.Execute()
+		// Cyclopean Tomb should NOT have tapped (no valid target)
+		g.AssertTapped(mage.PlayerA, "Cyclopean Tomb", false)
+	})
+}
+
+func TestIllusionaryMask(t *testing.T) {
+	t.Run("enters_as_0_1_face_down", func(t *testing.T) {
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Illusionary Mask")
+		g.AddCard(mage.ZoneHand, mage.PlayerA, "Serra Angel")
+		g.ActivateAbility(1, mage.PrecombatMain, mage.PlayerA, "Illusionary Mask", "Serra Angel")
+		g.StopAt(1, mage.BeginCombat)
+		g.Execute()
+		// Serra Angel should be on the battlefield as a face-down 0/1
+		g.AssertPermanentCount(mage.PlayerA, "Serra Angel", 1)
+		g.AssertPowerToughness(mage.PlayerA, "Serra Angel", 0, 1)
+		perm := g.FindPermanentByName("Serra Angel", g.Players[0].PlayerID())
+		if perm == nil {
+			t.Fatal("Serra Angel not found on battlefield")
+		}
+		if !perm.FaceDown {
+			t.Error("Serra Angel should be face down")
+		}
+	})
+
+	t.Run("flips_when_dealt_damage", func(t *testing.T) {
+		// Put Craw Wurm (6/4) face-down via Mask, then Bolt it.
+		// 3 damage flips it to 6/4 — survives (3 < 4 toughness).
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Illusionary Mask")
+		g.AddCard(mage.ZoneHand, mage.PlayerA, "Craw Wurm")
+		g.AddCard(mage.ZoneHand, mage.PlayerA, "Lightning Bolt")
+		g.ActivateAbility(1, mage.PrecombatMain, mage.PlayerA, "Illusionary Mask", "Craw Wurm")
+		g.CastSpell(1, mage.PrecombatMain, mage.PlayerA, "Lightning Bolt", "Craw Wurm")
+		g.StopAt(1, mage.BeginCombat)
+		g.Execute()
+		// Craw Wurm should have flipped face up: 6/4 with 3 damage — survives
+		g.AssertPermanentCount(mage.PlayerA, "Craw Wurm", 1)
+		perm := g.FindPermanentByName("Craw Wurm", g.Players[0].PlayerID())
+		if perm == nil {
+			t.Fatal("Craw Wurm not found on battlefield")
+		}
+		if perm.FaceDown {
+			t.Error("Craw Wurm should be face up after taking damage")
+		}
+		g.AssertPowerToughness(mage.PlayerA, "Craw Wurm", 6, 4)
+	})
+
+	t.Run("dies_if_flip_reveals_lethal", func(t *testing.T) {
+		// Put Hill Giant (3/3) face-down. Bolt it (3 damage).
+		// Flips to 3/3 with 3 damage — lethal, SBA destroys it.
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Illusionary Mask")
+		g.AddCard(mage.ZoneHand, mage.PlayerA, "Hill Giant")
+		g.AddCard(mage.ZoneHand, mage.PlayerA, "Lightning Bolt")
+		g.ActivateAbility(1, mage.PrecombatMain, mage.PlayerA, "Illusionary Mask", "Hill Giant")
+		g.CastSpell(1, mage.PrecombatMain, mage.PlayerA, "Lightning Bolt", "Hill Giant")
+		g.StopAt(1, mage.BeginCombat)
+		g.Execute()
+		// Hill Giant should be dead: 3/3 with 3 damage
+		g.AssertPermanentCount(mage.PlayerA, "Hill Giant", 0)
+		g.AssertGraveyardCount(mage.PlayerA, "Hill Giant", 1)
+	})
+
+	t.Run("no_abilities_while_face_down", func(t *testing.T) {
+		// Put Serra Angel (flying, vigilance) face-down.
+		// Verify it does NOT have Flying while face-down.
+		// Then deal 1 damage (Prodigal Sorcerer) to flip it.
+		// After flip, verify it HAS Flying.
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Illusionary Mask")
+		g.AddCard(mage.ZoneHand, mage.PlayerA, "Serra Angel")
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerB, "Prodigal Sorcerer")
+		g.ActivateAbility(1, mage.PrecombatMain, mage.PlayerA, "Illusionary Mask", "Serra Angel")
+		g.StopAt(1, mage.BeginCombat)
+		g.Execute()
+		// Face-down: no Flying
+		g.AssertHasAbility(mage.PlayerA, "Serra Angel", mage.Flying, false)
+		// Now deal 1 damage with Prodigal Sorcerer to flip it
+		g.ActivateAbility(1, mage.BeginCombat, mage.PlayerB, "Prodigal Sorcerer", "Serra Angel")
+		g.StopAt(1, mage.DeclareAttackers)
+		g.Execute()
+		// Face-up: has Flying
+		g.AssertHasAbility(mage.PlayerA, "Serra Angel", mage.Flying, true)
 	})
 }

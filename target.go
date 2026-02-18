@@ -67,6 +67,21 @@ func (t *CreatureTarget) Choose(controller uuid.UUID, sourceCard Card, g *Game, 
 	return nil
 }
 
+// Filter returns a combined PermanentFilter that checks creature type and all filters.
+func (t *CreatureTarget) Filter() PermanentFilter {
+	return func(p *Permanent, g *Game) bool {
+		if !p.HasType(TypeCreature) {
+			return false
+		}
+		for _, f := range t.Filters {
+			if !f(p, g) {
+				return false
+			}
+		}
+		return true
+	}
+}
+
 // PlayerTarget targets a player.
 type PlayerTarget struct {
 	BaseTarget
@@ -214,6 +229,18 @@ func (t *PermanentTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen [
 	return nil
 }
 
+// Filter returns a combined PermanentFilter that checks all filters.
+func (t *PermanentTarget) Filter() PermanentFilter {
+	return func(p *Permanent, g *Game) bool {
+		for _, f := range t.Filters {
+			if !f(p, g) {
+				return false
+			}
+		}
+		return true
+	}
+}
+
 // LandTarget targets a land on the battlefield.
 type LandTarget struct {
 	BaseTarget
@@ -342,6 +369,36 @@ func (t *GraveyardCardTarget) Possible(controller uuid.UUID, _ Card, g *Game) []
 }
 
 func (t *GraveyardCardTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
+	t.chosen = chosen
+	return nil
+}
+
+// HandCreatureTarget targets a creature card in the controller's hand.
+type HandCreatureTarget struct {
+	BaseTarget
+}
+
+func TargetCreatureInHand() Target {
+	return &HandCreatureTarget{
+		BaseTarget: BaseTarget{min: 1, max: 1},
+	}
+}
+
+func (t *HandCreatureTarget) Possible(controller uuid.UUID, _ Card, g *Game) []uuid.UUID {
+	p := g.GetPlayer(controller)
+	if p == nil {
+		return nil
+	}
+	var result []uuid.UUID
+	for _, c := range p.Hand() {
+		if c.HasType(TypeCreature) {
+			result = append(result, c.ID())
+		}
+	}
+	return result
+}
+
+func (t *HandCreatureTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
 	t.chosen = chosen
 	return nil
 }

@@ -320,6 +320,36 @@ func (g *Game) setEffectSource(e ContinuousEffect, id uuid.UUID) {
 	e.SetSourceID(id)
 }
 
+// TurnFaceUp flips a face-down permanent face up, restoring its original characteristics.
+func (g *Game) TurnFaceUp(perm *Permanent) {
+	if !perm.FaceDown {
+		return
+	}
+	perm.FaceDown = false
+	perm.BasePTOverride = nil
+	// Restore original abilities from the card
+	perm.RuntimeAbilities = nil
+	for _, a := range perm.Card.Abilities() {
+		cp := a
+		perm.RuntimeAbilities = append(perm.RuntimeAbilities, cp)
+	}
+	// Set ability sources
+	for _, a := range perm.RuntimeAbilities {
+		a.SetSource(perm.ID())
+		a.SetController(perm.Controller)
+	}
+	// Register continuous effects from static abilities
+	for _, a := range perm.RuntimeAbilities {
+		if sa, ok := a.(*StaticAbilityHolder); ok {
+			for _, e := range sa.Effects {
+				g.setEffectSource(e, perm.ID())
+				g.Effects.Add(e)
+			}
+		}
+	}
+	g.Effects.Apply(g)
+}
+
 // RemoveFromBattlefield removes a permanent and handles cleanup.
 func (g *Game) RemoveFromBattlefield(perm *Permanent) {
 	// Remove continuous effects sourced from this permanent
@@ -556,6 +586,14 @@ func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
 	if amount <= 0 {
 		return
 	}
+	// Personal Incarnation: redirect all damage to the creature instead
+	if redirectID := g.Effects.GetPlayerDamageRedirect(p.PlayerID()); redirectID != uuid.Nil {
+		redirectPerm := g.FindPermanent(redirectID)
+		if redirectPerm != nil {
+			g.DealDamageToPermanent(redirectPerm, amount, sourceID)
+			return
+		}
+	}
 	// Lich replacement: instead of losing life, sacrifice permanents
 	if g.Effects.IsLichActive(p.PlayerID()) {
 		g.sacrificePermanents(p.PlayerID(), amount)
@@ -578,6 +616,10 @@ func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
 			srcPlayer.GainLife(amount)
 		}
 	}
+	// Face-down: flip the source if it dealt damage to a player
+	if src != nil && src.FaceDown {
+		g.TurnFaceUp(src)
+	}
 }
 
 // DealDamageToPermanent deals damage to a permanent.
@@ -591,6 +633,15 @@ func (g *Game) DealDamageToPermanent(perm *Permanent, amount int, sourceID uuid.
 	}
 	if amount <= 0 {
 		return
+	}
+	// Jade Monolith: redirect creature damage to a player instead (one-shot)
+	if redirectPlayerID := g.Effects.GetCreatureDamageRedirect(perm.ID()); redirectPlayerID != uuid.Nil {
+		g.Effects.ClearCreatureDamageRedirect(perm.ID())
+		targetPlayer := g.GetPlayer(redirectPlayerID)
+		if targetPlayer != nil {
+			g.DealDamageToPlayer(targetPlayer, amount, sourceID)
+			return
+		}
 	}
 	perm.Damage += amount
 	// Track which sources dealt damage to this permanent
@@ -619,6 +670,14 @@ func (g *Game) DealDamageToPermanent(perm *Permanent, amount int, sourceID uuid.
 		if srcPlayer != nil {
 			srcPlayer.GainLife(amount)
 		}
+	}
+	// Face-down: flip the target if it was dealt damage
+	if perm.FaceDown {
+		g.TurnFaceUp(perm)
+	}
+	// Face-down: flip the source if it dealt damage
+	if src != nil && src.FaceDown {
+		g.TurnFaceUp(src)
 	}
 }
 
@@ -823,8 +882,8 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		}
 	}
 
-	// Channel: pay life for X costs instead of mana
-	if mc.HasX && xValue > 0 && g.Effects.IsChannelActive(playerID) {
+	// Channel: pay life for generic/X costs instead of mana
+	if g.Effects.IsChannelActive(playerID) && (mc.Generic > 0 || (mc.HasX && xValue > 0)) {
 		// Pay colored portion from pool
 		colorMC := mc
 		colorMC.Generic = 0
@@ -837,8 +896,11 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 				return err
 			}
 		}
-		// Pay X from life
-		lifeCost := xValue * mc.XCount
+		// Pay generic + X from life
+		lifeCost := mc.Generic
+		if mc.HasX {
+			lifeCost += xValue * mc.XCount
+		}
 		p.LoseLife(lifeCost)
 	} else {
 		// Pay mana cost (auto-pay from pool)
@@ -908,6 +970,26 @@ func (g *Game) ActivateAbilityByText(playerID uuid.UUID, permName string, target
 		// Check sorcery speed
 		if aa.SorcerySpeed() && !g.Step.IsMainPhase() {
 			return ErrSorcerySpeed
+		}
+
+		// Validate targets against the ability's target filters
+		if len(aa.Targets()) > 0 && len(targets) > 0 {
+			validTargets := true
+			for i, t := range aa.Targets() {
+				if i >= len(targets) {
+					break
+				}
+				if tf, ok := t.(interface{ Filter() PermanentFilter }); ok {
+					targetPerm := g.FindPermanent(targets[i])
+					if targetPerm != nil && tf.Filter() != nil && !tf.Filter()(targetPerm, g) {
+						validTargets = false
+						break
+					}
+				}
+			}
+			if !validTargets {
+				continue
+			}
 		}
 
 		// Pay costs
@@ -1090,6 +1172,8 @@ func (g *Game) RunStep(step PhaseStep) {
 	case CombatDamage:
 		g.doCombatDamage(false)
 	case EndCombat:
+		g.Effects.RemoveEndOfCombat()
+		g.Effects.Apply(g)
 		g.Combat.Reset()
 	case EndStep:
 		g.doEndStep()
@@ -1222,6 +1306,21 @@ func (g *Game) doDeclareAttackers() {
 	attackerIDs := active.DeclareAttackers(g)
 	defender := g.NonActivePlayerObj()
 
+	// Auto-add creatures with MustAttack keyword (from Nettling Imp, etc.)
+	declared := make(map[uuid.UUID]bool)
+	for _, id := range attackerIDs {
+		declared[id] = true
+	}
+	for _, p := range g.Battlefield {
+		if p.Controller == active.PlayerID() && p.HasType(TypeCreature) &&
+			p.HasAbility(MustAttack) && !declared[p.ID()] {
+			if !p.Tapped && (!p.SummonSick || p.HasAbility(Haste)) &&
+				g.Effects.CanAttack(p.ID()) && CanAttackCheck(p, g) {
+				attackerIDs = append(attackerIDs, p.ID())
+			}
+		}
+	}
+
 	for _, id := range attackerIDs {
 		atk := g.FindPermanent(id)
 		if atk == nil {
@@ -1348,6 +1447,14 @@ func (g *Game) doCombatDamage(isFirstStrikeStep bool) {
 					// Forcefield: reduce unblocked combat damage to 1
 					if dmg > 1 && g.Effects.HasForcefieldShield(group.DefenderID) {
 						dmg = 1
+					}
+					// Veteran Bodyguard: redirect combat damage to bodyguard
+					if bgID := g.Effects.GetBodyguard(group.DefenderID); bgID != uuid.Nil {
+						bg := g.FindPermanent(bgID)
+						if bg != nil && !bg.Tapped {
+							g.DealDamageToPermanent(bg, dmg, atk.ID())
+							continue
+						}
 					}
 					g.DealDamageToPlayer(defender, dmg, atk.ID())
 				}

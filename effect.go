@@ -230,7 +230,6 @@ func (e *destroyTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, tar
 
 func (e *destroyTargetEffect) Text() string { return "destroy target" }
 
-
 // returnFromGraveyardEffect returns a target creature from graveyard to battlefield.
 type returnFromGraveyardEffect struct{}
 
@@ -354,7 +353,9 @@ func (e *returnToHandTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID
 	return nil
 }
 
-func (e *returnToHandTargetEffect) Text() string { return "return target permanent to its owner's hand" }
+func (e *returnToHandTargetEffect) Text() string {
+	return "return target permanent to its owner's hand"
+}
 
 // returnFromGraveyardToHandTargetEffect returns a target card from graveyard to hand.
 type returnFromGraveyardToHandTargetEffect struct{}
@@ -381,6 +382,39 @@ func (e *returnFromGraveyardToHandTargetEffect) Apply(g *Game, sourceID, control
 
 func (e *returnFromGraveyardToHandTargetEffect) Text() string {
 	return "return target card from your graveyard to your hand"
+}
+
+// boostMatchingUntilEndOfTurnEffect boosts the P/T of all creatures matching a predicate until end of turn
+type boostMatchingUntilEndOfTurnEffect struct {
+	power     ValueSource
+	toughness ValueSource
+	predicate PermanentFilter
+}
+
+func BoostMatchingUntilEndOfTurn(power, toughness ValueSource, predicate PermanentFilter) Effect {
+	return &boostMatchingUntilEndOfTurnEffect{power: power, toughness: toughness, predicate: predicate}
+}
+
+func (e *boostMatchingUntilEndOfTurnEffect) Apply(g *Game, sourceID uuid.UUID, controller uuid.UUID, targets []uuid.UUID) error {
+	for _, perm := range g.Battlefield {
+		if perm.Controller == controller && perm.HasType(TypeCreature) && e.predicate(perm, g) {
+			p := e.power.Resolve(g, sourceID, controller)
+			t := e.toughness.Resolve(g, sourceID, controller)
+			eff := &temporaryBoostEffect{
+				targetID:     perm.ID(),
+				power:        p,
+				toughness:    t,
+				effectSource: effectSource{sourceID: sourceID},
+			}
+			g.Effects.Add(eff)
+		}
+	}
+	g.Effects.Apply(g)
+	return nil
+}
+
+func (e *boostMatchingUntilEndOfTurnEffect) Text() string {
+	panic("implement me")
 }
 
 // boostUntilEndOfTurnEffect boosts a creature's P/T until end of turn.
@@ -411,9 +445,9 @@ func (e *boostUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUI
 	p := e.power.Resolve(g, sourceID, controller)
 	t := e.toughness.Resolve(g, sourceID, controller)
 	eff := &temporaryBoostEffect{
-		targetID:  perm.ID(),
-		power:     p,
-		toughness: t,
+		targetID:     perm.ID(),
+		power:        p,
+		toughness:    t,
 		effectSource: effectSource{sourceID: sourceID},
 	}
 	g.Effects.Add(eff)
@@ -782,7 +816,6 @@ func (e *exileTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targe
 
 func (e *exileTargetEffect) Text() string { return "exile target permanent" }
 
-
 // gainLifeTargetEffect gains life for a target player (or controller as fallback).
 type gainLifeTargetEffect struct {
 	amount ValueSource
@@ -891,7 +924,6 @@ type dealDamageToPlayersEffect struct {
 func DealDamageToPlayers(amount ValueSource, selector PlayerSelector) Effect {
 	return &dealDamageToPlayersEffect{amount: amount, selector: selector}
 }
-
 
 func (e *dealDamageToPlayersEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	amount := e.amount.Resolve(g, sourceID, controller)
@@ -1034,7 +1066,6 @@ func (e *controlChangeTargetEffect) Apply(g *Game, sourceID, controller uuid.UUI
 
 func (e *controlChangeTargetEffect) Text() string { return "gain control of target permanent" }
 
-
 // grantKeywordUntilEndOfTurnEffect grants a keyword to the source or a target
 // creature until end of turn.
 type grantKeywordUntilEndOfTurnEffect struct {
@@ -1061,8 +1092,8 @@ func (e *grantKeywordUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller u
 		return nil
 	}
 	eff := &temporaryKeywordEffect{
-		targetID:  perm.ID(),
-		keyword:   e.keyword,
+		targetID:     perm.ID(),
+		keyword:      e.keyword,
 		effectSource: effectSource{sourceID: sourceID},
 	}
 	g.Effects.Add(eff)
@@ -1202,9 +1233,9 @@ func (e *doubleSourcePowerEffect) Apply(g *Game, sourceID, controller uuid.UUID,
 	}
 	currentPower := perm.CurrentPower(g)
 	eff := &temporaryBoostEffect{
-		targetID:  perm.ID(),
-		power:     currentPower,
-		toughness: 0,
+		targetID:     perm.ID(),
+		power:        currentPower,
+		toughness:    0,
 		effectSource: effectSource{sourceID: sourceID},
 	}
 	g.Effects.Add(eff)
@@ -1244,7 +1275,6 @@ func (e *destroyTargetAtEndOfTurnEffect) Apply(g *Game, sourceID, controller uui
 func (e *destroyTargetAtEndOfTurnEffect) Text() string {
 	return "Destroy target creature at end of turn"
 }
-
 
 // discardHandAndDrawEffect makes each player discard their hand and draw N cards.
 type discardHandAndDrawEffect struct {
@@ -1491,7 +1521,6 @@ func (e *untapSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targe
 
 func (e *untapSourceEffect) Text() string { return "Untap this permanent" }
 
-
 // dealDamagePerSwampEffect deals damage to the active player equal to the number of Swamps they control.
 type dealDamagePerSwampEffect struct{}
 
@@ -1613,16 +1642,16 @@ const (
 // fixedValue is a ValueSource that always returns a constant.
 type fixedValue struct{ n int }
 
-func Fixed(n int) ValueSource                           { return fixedValue{n: n} }
+func Fixed(n int) ValueSource                            { return fixedValue{n: n} }
 func (v fixedValue) Resolve(_ *Game, _, _ uuid.UUID) int { return v.n }
 func (v fixedValue) Text() string                        { return fmt.Sprintf("%d", v.n) }
 
 // xValue is a ValueSource that reads g.CurrentX.
 type xValue struct{}
 
-func XValue() ValueSource                              { return xValue{} }
-func (v xValue) Resolve(g *Game, _, _ uuid.UUID) int   { return g.CurrentX }
-func (v xValue) Text() string                          { return "X" }
+func XValue() ValueSource                            { return xValue{} }
+func (v xValue) Resolve(g *Game, _, _ uuid.UUID) int { return g.CurrentX }
+func (v xValue) Text() string                        { return "X" }
 
 // selectController returns the effect's controller.
 type selectController struct{}

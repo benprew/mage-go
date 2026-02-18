@@ -189,7 +189,8 @@ type Mana struct {
 
 // ManaPool tracks available mana for a player.
 type ManaPool struct {
-	pool []Mana
+	pool            []Mana
+	ManaConversions map[Color]Color // from → to (set by Sunglasses of Urza etc.)
 }
 
 func NewManaPool() *ManaPool {
@@ -228,34 +229,84 @@ func (mp *ManaPool) DrainGeneric(n int) {
 	}
 }
 
+// availableAs returns the count of mana available to pay as the given color,
+// including mana that can be converted via ManaConversions.
+func (mp *ManaPool) availableAs(avail map[Color]int, color Color) int {
+	count := avail[color]
+	// Check if any conversion allows another color to be used as this one
+	for from, to := range mp.ManaConversions {
+		if to == color && from != color {
+			count += avail[from]
+		}
+	}
+	return count
+}
+
 // CanPay returns true if the pool can pay the given mana cost.
 func (mp *ManaPool) CanPay(mc ManaCost) bool {
 	avail := map[Color]int{}
 	for _, m := range mp.pool {
 		avail[m.Color]++
 	}
+
+	// With mana conversion, we need to track which mana is "spent" from convertible sources
+	// For simplicity: check each colored requirement can be met, then check generic
+	type colorReq struct {
+		color  Color
+		needed int
+	}
+	reqs := []colorReq{
+		{White, mc.White},
+		{Blue, mc.Blue},
+		{Black, mc.Black},
+		{Red, mc.Red},
+		{Green, mc.Green},
+	}
+
+	if len(mp.ManaConversions) == 0 {
+		// Fast path: no conversions
+		remaining := 0
+		for _, r := range reqs {
+			if avail[r.color] < r.needed {
+				return false
+			}
+			remaining += avail[r.color] - r.needed
+		}
+		remaining += avail[Colorless]
+		return remaining >= mc.Generic
+	}
+
+	// Slow path with conversions: consume from exact matches first, then conversions
+	used := map[Color]int{}
+	for _, r := range reqs {
+		need := r.needed
+		// First use exact color
+		exact := min(avail[r.color]-used[r.color], need)
+		if exact > 0 {
+			used[r.color] += exact
+			need -= exact
+		}
+		// Then use converted mana
+		if need > 0 {
+			for from, to := range mp.ManaConversions {
+				if to == r.color && from != r.color {
+					conv := min(avail[from]-used[from], need)
+					if conv > 0 {
+						used[from] += conv
+						need -= conv
+					}
+				}
+			}
+		}
+		if need > 0 {
+			return false
+		}
+	}
+	// Count remaining for generic
 	remaining := 0
-	if avail[White] < mc.White {
-		return false
+	for c, count := range avail {
+		remaining += count - used[c]
 	}
-	remaining += avail[White] - mc.White
-	if avail[Blue] < mc.Blue {
-		return false
-	}
-	remaining += avail[Blue] - mc.Blue
-	if avail[Black] < mc.Black {
-		return false
-	}
-	remaining += avail[Black] - mc.Black
-	if avail[Red] < mc.Red {
-		return false
-	}
-	remaining += avail[Red] - mc.Red
-	if avail[Green] < mc.Green {
-		return false
-	}
-	remaining += avail[Green] - mc.Green
-	remaining += avail[Colorless]
 	return remaining >= mc.Generic
 }
 
@@ -264,11 +315,35 @@ func (mp *ManaPool) Pay(mc ManaCost) error {
 	if !mp.CanPay(mc) {
 		return fmt.Errorf("insufficient mana to pay %s", mc)
 	}
-	mp.removeColor(White, mc.White)
-	mp.removeColor(Blue, mc.Blue)
-	mp.removeColor(Black, mc.Black)
-	mp.removeColor(Red, mc.Red)
-	mp.removeColor(Green, mc.Green)
+	// Pay each colored requirement, using conversions if needed
+	type colorReq struct {
+		color  Color
+		needed int
+	}
+	reqs := []colorReq{
+		{White, mc.White},
+		{Blue, mc.Blue},
+		{Black, mc.Black},
+		{Red, mc.Red},
+		{Green, mc.Green},
+	}
+	for _, r := range reqs {
+		need := r.needed
+		// First remove exact color
+		removed := mp.removeUpTo(r.color, need)
+		need = removed // removeUpTo returns remaining
+		// If still need more, use converted mana
+		if need > 0 {
+			for from, to := range mp.ManaConversions {
+				if to == r.color && from != r.color {
+					need = mp.removeUpTo(from, need)
+					if need <= 0 {
+						break
+					}
+				}
+			}
+		}
+	}
 	// Pay generic with any color (prefer colorless first)
 	generic := mc.Generic
 	generic = mp.removeUpTo(Colorless, generic)

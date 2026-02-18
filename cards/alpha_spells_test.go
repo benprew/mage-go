@@ -6,9 +6,7 @@ import (
 	"github.com/mage/mage"
 )
 
-// Tests for stubbed/incomplete cards registered in alpha_spells.go.
-// These tests define the correct Oracle text behavior and should FAIL
-// until each card's implementation is completed.
+// Tests for cards registered in alpha_spells.go.
 
 func TestBalance(t *testing.T) {
 	t.Run("equalizes_lands", func(t *testing.T) {
@@ -99,7 +97,6 @@ func TestHealingSalve(t *testing.T) {
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
 		// 3 damage from Bolt prevented -> Hill Giant survives.
-		// Stub has TargetPlayer + GainLife, so Bolt kills Hill Giant.
 		g.AssertPermanentCount(mage.PlayerA, "Hill Giant", 1)
 	})
 }
@@ -118,7 +115,6 @@ func TestReverseDamage(t *testing.T) {
 		g.StopAt(1, mage.EndCombat)
 		g.Execute()
 		// Reverse Damage prevents 6 combat damage and gains 6 life: 20 + 6 = 26.
-		// Stub does nothing (GainLife(0)), so PlayerB takes 6: life = 14.
 		g.AssertLife(mage.PlayerB, 26)
 	})
 }
@@ -135,7 +131,6 @@ func TestDeathWard(t *testing.T) {
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
 		// Death Ward should regenerate Bears -- they survive lethal damage.
-		// Stub does nothing (GainLife(0)), so Bolt kills Bears.
 		g.AssertPermanentCount(mage.PlayerA, "Grizzly Bears", 1)
 	})
 }
@@ -152,7 +147,6 @@ func TestSleightOfMind(t *testing.T) {
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
 		// Bog Wraith should now have forestwalk instead of swampwalk.
-		// Stub does nothing; Bog Wraith retains swampwalk.
 		g.AssertHasAbility(mage.PlayerA, "Bog Wraith", mage.Forestwalk, true)
 		g.AssertHasAbility(mage.PlayerA, "Bog Wraith", mage.Swampwalk, false)
 	})
@@ -184,7 +178,6 @@ func TestStasis(t *testing.T) {
 		g.StopAt(1, mage.PrecombatMain)
 		g.Execute()
 		// Stasis should be sacrificed at upkeep (no {U} paid).
-		// Stub has no upkeep sacrifice trigger.
 		g.AssertPermanentCount(mage.PlayerA, "Stasis", 0)
 	})
 }
@@ -202,7 +195,6 @@ func TestFork(t *testing.T) {
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
 		// Fork copies Lightning Bolt -> both resolve -> 3 + 3 = 6 damage.
-		// Stub does nothing (GainLife(0)); only the original Bolt deals 3.
 		g.AssertLife(mage.PlayerB, 14)
 	})
 }
@@ -221,7 +213,22 @@ func TestChannel(t *testing.T) {
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
 		// Channel should enable paying 5 life (20 -> 15) to fuel Fireball.
-		// Stub does nothing (GainLife(0)); PlayerA keeps 20 life.
 		g.AssertLife(mage.PlayerA, 15)
+	})
+
+	t.Run("pay_life_for_generic_mana", func(t *testing.T) {
+		// Channel should also pay generic mana costs from life (not just X).
+		// Cast Channel, then cast a non-X spell with a generic cost.
+		g := mage.NewTestGame(t)
+		g.SetLife(mage.PlayerA, 20)
+		g.AddCard(mage.ZoneHand, mage.PlayerA, "Channel")
+		g.AddCard(mage.ZoneHand, mage.PlayerA, "Hill Giant") // {3}{R} = 3 generic + 1 red
+		g.CastSpell(1, mage.PrecombatMain, mage.PlayerA, "Channel")
+		g.CastSpell(1, mage.PrecombatMain, mage.PlayerA, "Hill Giant")
+		g.StopAt(1, mage.BeginCombat)
+		g.Execute()
+		// Channel pays 3 generic from life (20 -> 17). Red is paid from auto-mana.
+		g.AssertLife(mage.PlayerA, 17)
+		g.AssertPermanentCount(mage.PlayerA, "Hill Giant", 1)
 	})
 }

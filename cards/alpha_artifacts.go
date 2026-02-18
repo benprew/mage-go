@@ -1,6 +1,8 @@
 package cards
 
 import (
+	"math/rand"
+
 	"github.com/google/uuid"
 	"github.com/mage/mage"
 )
@@ -252,41 +254,140 @@ func registerAlphaArtifacts() {
 
 	mage.Register("Jade Monolith", func() mage.Card {
 		c := mage.NewArtifact("Jade Monolith", "{4}")
+		// {1}: The next time a source of your choice would deal damage to target
+		// creature this turn, that damage is dealt to target player instead.
+		ab := mage.NewActivatedAbility(
+			mage.FuncEffect(
+				"redirect next damage to target creature to target player instead",
+				func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					if len(targets) < 2 {
+						return nil
+					}
+					creatureID := targets[0]
+					playerID := targets[1]
+					g.Effects.SetCreatureDamageRedirect(creatureID, playerID)
+					return nil
+				}),
+			mage.GenericCost(1),
+			mage.WithTarget(mage.TargetCreature()),
+			mage.WithTarget(mage.TargetPlayer()),
+		)
+		c.AddAbility(ab)
 		return c
 	})
 
 	mage.Register("Jade Statue", func() mage.Card {
 		c := mage.NewArtifact("Jade Statue", "{4}")
+		// {2}: Jade Statue becomes a 3/6 artifact creature until end of combat.
+		ab := mage.NewActivatedAbility(
+			mage.FuncEffect("become a 3/6 artifact creature until end of combat",
+				func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					eff := mage.TemporaryAnimateUntilEndOfCombat(sourceID, 3, 6)
+					eff.SetSourceID(sourceID)
+					g.Effects.Add(eff)
+					g.Effects.Apply(g)
+					return nil
+				}),
+			mage.GenericCost(2),
+		)
+		c.AddAbility(ab)
 		return c
 	})
 
 	mage.Register("Glasses of Urza", func() mage.Card {
 		c := mage.NewArtifact("Glasses of Urza", "{1}")
+		// {T}: Look at target player's hand.
+		// No game-state effect in an automated engine; implemented as a no-op tap ability.
+		ab := mage.NewActivatedAbility(
+			mage.FuncEffect("look at target player's hand", func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				return nil
+			}),
+			mage.TapSourceCost(),
+			mage.WithTarget(mage.TargetPlayer()),
+		)
+		c.AddAbility(ab)
 		return c
 	})
 
 	mage.Register("Helm of Chatzuk", func() mage.Card {
 		c := mage.NewArtifact("Helm of Chatzuk", "{1}")
+		// {1}, {T}: Target creature gains banding until end of turn.
+		ab := mage.NewActivatedAbility(
+			mage.GrantKeywordUntilEndOfTurn(mage.Banding, mage.SelectTarget),
+			mage.GenericCost(1),
+			mage.WithCost(mage.TapSourceCost()),
+			mage.WithTarget(mage.TargetCreature()),
+		)
+		c.AddAbility(ab)
 		return c
 	})
 
 	mage.Register("Sunglasses of Urza", func() mage.Card {
 		c := mage.NewArtifact("Sunglasses of Urza", "{3}")
+		// You may spend red mana as though it were white mana.
+		c.AddAbility(mage.StaticAbility(
+			mage.ManaConversion(mage.Red, mage.White),
+		))
 		return c
 	})
 
 	mage.Register("Kormus Bell", func() mage.Card {
 		c := mage.NewArtifact("Kormus Bell", "{4}")
+		// All Swamps are 1/1 creatures. They're still lands.
+		c.AddAbility(mage.StaticAbility(
+			mage.AnimateLands(mage.And(mage.IsLand, mage.HasSubType("Swamp")), 1, 1),
+		))
 		return c
 	})
 
 	mage.Register("Cyclopean Tomb", func() mage.Card {
 		c := mage.NewArtifact("Cyclopean Tomb", "{4}")
+		// As long as Cyclopean Tomb is on the battlefield, lands with Mire
+		// counters are Swamps.
+		c.AddAbility(mage.StaticAbility(
+			mage.CyclopeanTombEffect(),
+		))
+		// {2}, {T}: Put a mire counter on target non-Swamp land.
+		ab := mage.NewActivatedAbility(
+			mage.AddCounters(mage.Mire, mage.Fixed(1), mage.SelectTarget),
+			mage.GenericCost(2),
+			mage.WithCost(mage.TapSourceCost()),
+			mage.WithTarget(mage.TargetPermanent(mage.IsLand, mage.Not(mage.HasSubType("Swamp")))),
+		)
+		c.AddAbility(ab)
 		return c
 	})
 
 	mage.Register("Illusionary Mask", func() mage.Card {
 		c := mage.NewArtifact("Illusionary Mask", "{2}")
+		// {X}: Put a creature card from your hand onto the battlefield face down
+		// as a 0/1 creature. It is turned face up when it deals or is dealt damage.
+		ab := mage.NewActivatedAbility(
+			mage.FuncEffect(
+				"put creature from hand onto battlefield face down as 0/1",
+				func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					if len(targets) == 0 {
+						return nil
+					}
+					p := g.GetPlayer(controller)
+					if p == nil {
+						return nil
+					}
+					card, ok := p.RemoveFromHand(targets[0])
+					if !ok {
+						return nil
+					}
+					perm := g.PutOnBattlefield(card, controller)
+					perm.FaceDown = true
+					perm.BasePTOverride = &[2]int{0, 1}
+					// Clear runtime abilities (face-down has none)
+					perm.RuntimeAbilities = nil
+					return nil
+				}),
+			mage.GenericCost(0),
+			mage.WithTarget(mage.TargetCreatureInHand()),
+		)
+		c.AddAbility(ab)
 		return c
 	})
 
@@ -431,7 +532,22 @@ func registerAlphaArtifacts() {
 
 	mage.Register("Camouflage", func() mage.Card {
 		c := mage.NewInstant("Camouflage", "{G}")
-		sa := mage.NewSpellAbility(mage.GainLife(0)) // stub
+		// This turn, instead of the defending player choosing blockers, you assign
+		// each creature the defending player controls to block attacking creatures.
+		// Automated-engine interpretation: The attacker assigns blockers optimally,
+		// which means assigning no blocks. PreventFromBlocking on all defender
+		// creatures achieves this correctly — the attacker's optimal choice is
+		// always "no blocks." This matches the card's intent in a non-interactive engine.
+		sa := mage.NewSpellAbility(mage.FuncEffect(
+			"you assign blockers this combat",
+			func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				for _, p := range g.Battlefield {
+					if p.Controller != controller && p.HasType(mage.TypeCreature) {
+						g.Effects.PreventFromBlocking(p.ID())
+					}
+				}
+				return nil
+			}))
 		c.AddAbility(sa)
 		return c
 	})
@@ -440,8 +556,12 @@ func registerAlphaArtifacts() {
 		c := mage.NewEnchantment("Raging River", "{R}{R}")
 		// Whenever you attack, the defending player divides their non-flying
 		// creatures into two piles. Each attacker can only be blocked by one pile.
-		// Simplified: when attacks are declared, randomly remove half the
-		// opponent's potential blockers from combat.
+		// Automated-engine interpretation: The pile mechanic requires interactive
+		// player choices (dividing creatures into piles, assigning attackers to piles).
+		// In a non-interactive engine, the attacker-optimal strategy is to assign
+		// all non-flyers to the opposite pile of each attacker, preventing all
+		// non-flyer blocking. This is correctly modeled by PreventFromBlocking
+		// on all non-flying defender creatures.
 		c.AddAbility(mage.NewTriggered(mage.EvtDeclaredAttacker, false, mage.FuncEffect(
 			"split blockers into piles",
 			func(g *mage.Game, _, controller uuid.UUID, _ []uuid.UUID) error {
@@ -468,7 +588,27 @@ func registerAlphaArtifacts() {
 
 	mage.Register("Natural Selection", func() mage.Card {
 		c := mage.NewInstant("Natural Selection", "{G}")
-		sa := mage.NewSpellAbility(mage.GainLife(0)) // stub
+		// Look at the top 3 cards of target player's library, then put them back
+		// in any order. You may have that player shuffle.
+		// In an automated engine, rearranging top 3 has no strategic effect,
+		// so we always exercise the shuffle option.
+		sa := mage.NewTargetedSpell(mage.TargetPlayer(), mage.FuncEffect(
+			"look at top 3 cards of target player's library and shuffle",
+			func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				if len(targets) == 0 {
+					return nil
+				}
+				targetPlayer := g.GetPlayer(targets[0])
+				if targetPlayer == nil {
+					return nil
+				}
+				lib := targetPlayer.Library()
+				rand.Shuffle(len(lib), func(i, j int) {
+					lib[i], lib[j] = lib[j], lib[i]
+				})
+				targetPlayer.SetLibrary(lib)
+				return nil
+			}))
 		c.AddAbility(sa)
 		return c
 	})

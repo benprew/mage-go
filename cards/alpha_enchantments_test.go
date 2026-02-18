@@ -6,9 +6,7 @@ import (
 	"github.com/mage/mage"
 )
 
-// Tests for stubbed/incomplete cards registered in alpha_enchantments.go.
-// These tests define the correct Oracle text behavior and should FAIL until
-// each card's implementation is completed.
+// Tests for cards registered in alpha_enchantments.go.
 
 func TestInvisibility(t *testing.T) {
 	t.Run("creature_unblockable_except_walls", func(t *testing.T) {
@@ -24,7 +22,6 @@ func TestInvisibility(t *testing.T) {
 		g.Execute()
 		// Hill Giant is not a Wall, so it can't block invisible creature.
 		// Bears should deal 2 damage unblocked.
-		// Stub: no blocking restriction; Hill Giant blocks normally.
 		g.AssertLife(mage.PlayerB, 18)
 	})
 
@@ -62,7 +59,6 @@ func TestLure(t *testing.T) {
 		g.Execute()
 		// All of PlayerB's creatures must block the Lured creature (Grizzly Bears),
 		// not Hill Giant. So Hill Giant gets through unblocked for 3 damage.
-		// Stub: no Lure forcing; blocks on Hill Giant are legal.
 		g.AssertLife(mage.PlayerB, 17)
 	})
 }
@@ -100,7 +96,6 @@ func TestCircleOfProtection(t *testing.T) {
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
 		// CoP:Red should prevent the 3 red damage.
-		// Stub: no abilities.
 		g.AssertLife(mage.PlayerB, 20)
 	})
 
@@ -132,7 +127,6 @@ func TestColorWards(t *testing.T) {
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
 		// Protection from black: can't be targeted by Terror (black).
-		// Stub: no protection granted; Terror destroys Bears.
 		g.AssertPermanentCount(mage.PlayerA, "Grizzly Bears", 1)
 	})
 
@@ -146,7 +140,6 @@ func TestColorWards(t *testing.T) {
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
 		// Black Ward should still be attached even though it grants protection from black.
-		// Stub: no attachment effect.
 		g.AssertPermanentCount(mage.PlayerA, "Black Ward", 1)
 		g.AssertAttachedTo(mage.PlayerA, "Black Ward", "Grizzly Bears")
 	})
@@ -163,7 +156,6 @@ func TestLaceCycle(t *testing.T) {
 		g.StopAt(1, mage.BeginCombat)
 		g.Execute()
 		// Grizzly Bears should now be black.
-		// Stub does nothing (GainLife(0)); Bears remain green.
 		perm := g.FindPermanentByName("Grizzly Bears", g.Players[0].PlayerID())
 		if perm == nil {
 			t.Fatal("Grizzly Bears not found")

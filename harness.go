@@ -577,6 +577,22 @@ func (tg *TestGame) resolveTargets(names []string, controllerID uuid.UUID) []uui
 				break
 			}
 		}
+		if found {
+			continue
+		}
+		// Check hand
+		for _, pl := range tg.Players {
+			for _, c := range pl.Hand() {
+				if c.Name() == name {
+					targets = append(targets, c.ID())
+					found = true
+					break
+				}
+			}
+			if found {
+				break
+			}
+		}
 	}
 	return targets
 }

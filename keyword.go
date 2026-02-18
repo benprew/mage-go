@@ -34,6 +34,7 @@ const (
 	UnblockableKW
 	CanBlockAny    // can block any number of creatures (Blaze of Glory)
 	MustBeBlocked  // all creatures able to block this creature must do so (Lure)
+	MustAttack     // this creature must attack this turn if able (Nettling Imp)
 )
 
 func (k Keyword) String() string {
@@ -96,6 +97,8 @@ func (k Keyword) String() string {
 		return "Can Block Any Number"
 	case MustBeBlocked:
 		return "Must Be Blocked"
+	case MustAttack:
+		return "Must Attack"
 	default:
 		return "Unknown"
 	}

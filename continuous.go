@@ -21,6 +21,7 @@ type Duration int
 const (
 	WhileOnBattlefield Duration = iota
 	EndOfTurn
+	EndOfCombat
 	UntilYourNextTurn
 	Indefinite // persists until target leaves battlefield (e.g. Sleight of Mind)
 )
@@ -74,6 +75,10 @@ type EffectManager struct {
 	lichActive           map[uuid.UUID]bool      // player -> if true, Lich replacement effects apply
 	skipNextDraw         map[uuid.UUID]bool      // player -> if true, skip normal draw in draw step
 	preventBlock         map[uuid.UUID]bool      // permanent -> can't block this turn (Raging River)
+	manaConversion       map[Color]Color          // from color -> to color (Sunglasses of Urza)
+	bodyguard            map[uuid.UUID]uuid.UUID  // controller -> bodyguard permanent ID (Veteran Bodyguard)
+	playerDamageRedirect map[uuid.UUID]uuid.UUID  // controller -> creature that absorbs ALL damage to player
+	creatureDamageRedirect map[uuid.UUID]uuid.UUID // creature -> player who receives damage instead of creature (one-shot)
 }
 
 func NewEffectManager() *EffectManager {
@@ -96,6 +101,10 @@ func NewEffectManager() *EffectManager {
 		lichActive:           make(map[uuid.UUID]bool),
 		skipNextDraw:         make(map[uuid.UUID]bool),
 		preventBlock:         make(map[uuid.UUID]bool),
+		manaConversion:       make(map[Color]Color),
+		bodyguard:              make(map[uuid.UUID]uuid.UUID),
+		playerDamageRedirect:   make(map[uuid.UUID]uuid.UUID),
+		creatureDamageRedirect: make(map[uuid.UUID]uuid.UUID),
 	}
 }
 
@@ -191,6 +200,63 @@ func (em *EffectManager) CanBlockCheck(permID uuid.UUID) bool {
 // ClearBlockPrevention clears all block prevention.
 func (em *EffectManager) ClearBlockPrevention() {
 	em.preventBlock = make(map[uuid.UUID]bool)
+}
+
+// SetManaConversion sets a mana color conversion (e.g. Red→White for Sunglasses of Urza).
+func (em *EffectManager) SetManaConversion(from, to Color) {
+	em.manaConversion[from] = to
+}
+
+// GetManaConversion returns the converted color for a given color, if any.
+func (em *EffectManager) GetManaConversion(from Color) (Color, bool) {
+	to, ok := em.manaConversion[from]
+	return to, ok
+}
+
+// ClearManaConversion clears all mana conversions.
+func (em *EffectManager) ClearManaConversion() {
+	em.manaConversion = make(map[Color]Color)
+}
+
+// SetBodyguard marks a bodyguard permanent for a player (Veteran Bodyguard).
+func (em *EffectManager) SetBodyguard(controllerID, permID uuid.UUID) {
+	em.bodyguard[controllerID] = permID
+}
+
+// GetBodyguard returns the bodyguard permanent ID for a player, or uuid.Nil if none.
+func (em *EffectManager) GetBodyguard(controllerID uuid.UUID) uuid.UUID {
+	return em.bodyguard[controllerID]
+}
+
+// ClearBodyguard clears the bodyguard for a player.
+func (em *EffectManager) ClearBodyguard(controllerID uuid.UUID) {
+	delete(em.bodyguard, controllerID)
+}
+
+// SetPlayerDamageRedirect sets a creature that absorbs ALL damage dealt to a player.
+func (em *EffectManager) SetPlayerDamageRedirect(controllerID, permID uuid.UUID) {
+	em.playerDamageRedirect[controllerID] = permID
+}
+
+// GetPlayerDamageRedirect returns the creature absorbing damage for a player, or uuid.Nil.
+func (em *EffectManager) GetPlayerDamageRedirect(controllerID uuid.UUID) uuid.UUID {
+	return em.playerDamageRedirect[controllerID]
+}
+
+// SetCreatureDamageRedirect sets a one-shot redirect: next damage dealt to creatureID
+// is dealt to targetPlayerID instead (Jade Monolith).
+func (em *EffectManager) SetCreatureDamageRedirect(creatureID, targetPlayerID uuid.UUID) {
+	em.creatureDamageRedirect[creatureID] = targetPlayerID
+}
+
+// GetCreatureDamageRedirect returns the player who should receive damage instead of a creature, or uuid.Nil.
+func (em *EffectManager) GetCreatureDamageRedirect(creatureID uuid.UUID) uuid.UUID {
+	return em.creatureDamageRedirect[creatureID]
+}
+
+// ClearCreatureDamageRedirect clears the one-shot creature damage redirect.
+func (em *EffectManager) ClearCreatureDamageRedirect(creatureID uuid.UUID) {
+	delete(em.creatureDamageRedirect, creatureID)
 }
 
 // AddRegenerationShield increments the regeneration shield count for a permanent.
@@ -319,6 +385,17 @@ func (em *EffectManager) RemoveEndOfTurn() {
 	em.effects = filtered
 }
 
+// RemoveEndOfCombat removes all effects with EndOfCombat duration.
+func (em *EffectManager) RemoveEndOfCombat() {
+	filtered := em.effects[:0]
+	for _, e := range em.effects {
+		if e.GetDuration() != EndOfCombat {
+			filtered = append(filtered, e)
+		}
+	}
+	em.effects = filtered
+}
+
 // Apply resets computed bonuses and reapplies all active effects in layer order.
 func (em *EffectManager) Apply(g *Game) {
 	em.powerBonuses = make(map[uuid.UUID]int)
@@ -330,9 +407,16 @@ func (em *EffectManager) Apply(g *Game) {
 	em.landUntapLimit = -1
 	em.unlimitedLandPlays = false
 	em.spellCostIncrease = make(map[Color]int)
+	em.manaConversion = make(map[Color]Color)
+	em.bodyguard = make(map[uuid.UUID]uuid.UUID)
+	em.playerDamageRedirect = make(map[uuid.UUID]uuid.UUID)
 
 	// Reset granted runtime abilities and subtype overrides from effects
 	for _, p := range g.Battlefield {
+		if p.FaceDown {
+			// Face-down permanents keep their overrides and empty abilities
+			continue
+		}
 		var base []Ability
 		for _, a := range p.RuntimeAbilities {
 			if _, ok := a.(*grantedByEffect); !ok {
@@ -347,12 +431,12 @@ func (em *EffectManager) Apply(g *Game) {
 	}
 
 	// Remove effects whose source is no longer on the battlefield
-	// EndOfTurn effects persist until cleanup regardless of source (e.g., Giant Growth)
+	// EndOfTurn and EndOfCombat effects persist until cleanup regardless of source (e.g., Giant Growth, Jade Statue)
 	// Indefinite effects persist as long as they self-report active (e.g., Sleight of Mind)
 	active := em.effects[:0]
 	for _, e := range em.effects {
 		dur := e.GetDuration()
-		if dur == EndOfTurn || dur == Indefinite || g.FindPermanent(e.SourceID()) != nil {
+		if dur == EndOfTurn || dur == EndOfCombat || dur == Indefinite || g.FindPermanent(e.SourceID()) != nil {
 			active = append(active, e)
 		}
 	}
@@ -364,6 +448,15 @@ func (em *EffectManager) Apply(g *Game) {
 			if e.GetLayer() == layer && e.IsActive(g) {
 				e.Apply(g)
 			}
+		}
+	}
+
+	// Sync mana conversions to all player mana pools
+	for _, p := range g.Players {
+		if len(em.manaConversion) > 0 {
+			p.ManaPool().ManaConversions = em.manaConversion
+		} else {
+			p.ManaPool().ManaConversions = nil
 		}
 	}
 
@@ -1218,6 +1311,42 @@ func (e *changeSubTypesForAllEffect) Apply(g *Game) error {
 	return nil
 }
 
+// CyclopeanTombEffect overrides subtypes of all permanents with Mire counters to Swamp.
+// Sourced from Cyclopean Tomb; pruned when the Tomb leaves the battlefield.
+type cyclopeanTombEffect struct {
+	effectSource
+}
+
+func CyclopeanTombEffect() ContinuousEffect {
+	return &cyclopeanTombEffect{}
+}
+
+func (e *cyclopeanTombEffect) GetLayer() Layer      { return LayerType }
+func (e *cyclopeanTombEffect) GetDuration() Duration { return WhileOnBattlefield }
+
+func (e *cyclopeanTombEffect) IsActive(g *Game) bool {
+	return g.FindPermanent(e.sourceID) != nil
+}
+
+func (e *cyclopeanTombEffect) Apply(g *Game) error {
+	for _, p := range g.Battlefield {
+		if p.HasType(TypeLand) && p.Counters[Mire] > 0 {
+			p.SubTypeOverride = []string{"Swamp"}
+			// Replace mana ability with Black
+			var filtered []Ability
+			for _, a := range p.RuntimeAbilities {
+				inner := UnwrapAbility(a)
+				if _, ok := inner.(*ManaAbility); !ok {
+					filtered = append(filtered, a)
+				}
+			}
+			p.RuntimeAbilities = filtered
+			p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{NewManaAbility(Black)})
+		}
+	}
+	return nil
+}
+
 // keywordReplacementContinuous replaces one keyword with another on a target
 // (e.g. swampwalk -> forestwalk via Sleight of Mind / Magical Hack).
 type keywordReplacementContinuous struct {
@@ -1495,4 +1624,132 @@ func extractKeywords(p *Permanent) []Keyword {
 		}
 	}
 	return keywords
+}
+
+// manaConversionEffect sets a mana conversion on the EffectManager while the
+// source permanent is on the battlefield (e.g. Sunglasses of Urza: red→white).
+type manaConversionEffect struct {
+	from Color
+	to   Color
+	effectSource
+}
+
+// ManaConversion creates a continuous effect that allows spending one color as another.
+func ManaConversion(from, to Color) ContinuousEffect {
+	return &manaConversionEffect{from: from, to: to}
+}
+
+func (e *manaConversionEffect) GetLayer() Layer      { return LayerAbility }
+func (e *manaConversionEffect) GetDuration() Duration { return WhileOnBattlefield }
+
+func (e *manaConversionEffect) IsActive(g *Game) bool {
+	return g.FindPermanent(e.sourceID) != nil
+}
+
+func (e *manaConversionEffect) Apply(g *Game) error {
+	g.Effects.SetManaConversion(e.from, e.to)
+	return nil
+}
+
+// bodyguardEffect makes an untapped creature redirect combat damage from its
+// controller to itself (Veteran Bodyguard).
+type bodyguardEffect struct {
+	effectSource
+}
+
+// BodyguardContinuous creates a continuous effect for Veteran Bodyguard.
+func BodyguardContinuous() ContinuousEffect {
+	return &bodyguardEffect{}
+}
+
+func (e *bodyguardEffect) GetLayer() Layer      { return LayerAbility }
+func (e *bodyguardEffect) GetDuration() Duration { return WhileOnBattlefield }
+
+func (e *bodyguardEffect) IsActive(g *Game) bool {
+	src := g.FindPermanent(e.sourceID)
+	return src != nil && !src.Tapped
+}
+
+func (e *bodyguardEffect) Apply(g *Game) error {
+	src := g.FindPermanent(e.sourceID)
+	if src == nil || src.Tapped {
+		return nil
+	}
+	g.Effects.SetBodyguard(src.Controller, src.ID())
+	return nil
+}
+
+// personalIncarnationEffect redirects ALL damage from a player to Personal Incarnation.
+// Unlike bodyguardEffect (combat damage only), this applies to all damage sources.
+type personalIncarnationEffect struct {
+	effectSource
+}
+
+// PersonalIncarnationRedirect creates a continuous effect for Personal Incarnation.
+func PersonalIncarnationRedirect() ContinuousEffect {
+	return &personalIncarnationEffect{}
+}
+
+func (e *personalIncarnationEffect) GetLayer() Layer      { return LayerAbility }
+func (e *personalIncarnationEffect) GetDuration() Duration { return WhileOnBattlefield }
+
+func (e *personalIncarnationEffect) IsActive(g *Game) bool {
+	src := g.FindPermanent(e.sourceID)
+	return src != nil
+}
+
+func (e *personalIncarnationEffect) Apply(g *Game) error {
+	src := g.FindPermanent(e.sourceID)
+	if src == nil {
+		return nil
+	}
+	g.Effects.SetPlayerDamageRedirect(src.Controller, src.ID())
+	return nil
+}
+
+// temporaryAnimateEffect turns a specific permanent into a creature with given
+// P/T until end of turn (e.g. Jade Statue becoming a 3/6 creature).
+type temporaryAnimateEffect struct {
+	targetID  uuid.UUID
+	power     int
+	toughness int
+	duration  Duration
+	effectSource
+}
+
+// TemporaryAnimate creates an end-of-turn effect that animates a permanent.
+func TemporaryAnimate(targetID uuid.UUID, power, toughness int) ContinuousEffect {
+	return &temporaryAnimateEffect{
+		targetID:  targetID,
+		power:     power,
+		toughness: toughness,
+		duration:  EndOfTurn,
+	}
+}
+
+// TemporaryAnimateUntilEndOfCombat creates an end-of-combat effect that animates a permanent.
+func TemporaryAnimateUntilEndOfCombat(targetID uuid.UUID, power, toughness int) ContinuousEffect {
+	return &temporaryAnimateEffect{
+		targetID:  targetID,
+		power:     power,
+		toughness: toughness,
+		duration:  EndOfCombat,
+	}
+}
+
+func (e *temporaryAnimateEffect) GetLayer() Layer      { return LayerType }
+func (e *temporaryAnimateEffect) GetDuration() Duration { return e.duration }
+
+func (e *temporaryAnimateEffect) IsActive(g *Game) bool {
+	return g.FindPermanent(e.targetID) != nil
+}
+
+func (e *temporaryAnimateEffect) Apply(g *Game) error {
+	perm := g.FindPermanent(e.targetID)
+	if perm == nil {
+		return nil
+	}
+	perm.TypesAdded = append(perm.TypesAdded, TypeCreature)
+	perm.BasePTOverride = &[2]int{e.power, e.toughness}
+	return nil
 }
