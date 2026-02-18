@@ -496,3 +496,41 @@ func (e *controlChangeEffect) Apply(g *Game) error {
 	target.Controller = src.Controller
 	return nil
 }
+
+// boostAttachedByForestCountEffect boosts the attached creature by Forests controlled.
+type boostAttachedByForestCountEffect struct {
+	sourceID uuid.UUID
+}
+
+func BoostAttachedByForestCount() ContinuousEffect {
+	return &boostAttachedByForestCountEffect{}
+}
+
+func (e *boostAttachedByForestCountEffect) GetLayer() Layer      { return LayerPT }
+func (e *boostAttachedByForestCountEffect) GetDuration() Duration { return WhileOnBattlefield }
+func (e *boostAttachedByForestCountEffect) SourceID() uuid.UUID   { return e.sourceID }
+
+func (e *boostAttachedByForestCountEffect) IsActive(g *Game) bool {
+	src := g.FindPermanent(e.sourceID)
+	return src != nil && src.IsAttached()
+}
+
+func (e *boostAttachedByForestCountEffect) Apply(g *Game) error {
+	src := g.FindPermanent(e.sourceID)
+	if src == nil || !src.IsAttached() {
+		return nil
+	}
+	// Count Forests controlled by the aura's controller
+	forests := 0
+	for _, p := range g.Battlefield {
+		if p.Controller == src.Controller && p.HasType(TypeLand) && p.HasSubType("Forest") {
+			forests++
+		}
+	}
+	// +X/+Y where X = forests/2 rounded down, Y = forests/2 rounded up
+	powerBoost := forests / 2
+	toughBoost := (forests + 1) / 2
+	g.Effects.powerBonuses[src.AttachedTo] += powerBoost
+	g.Effects.toughBonuses[src.AttachedTo] += toughBoost
+	return nil
+}

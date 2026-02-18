@@ -803,6 +803,11 @@ func registerAlphaCreatures() {
 
 	mage.Register("Aspect of Wolf", func() mage.Card {
 		c := mage.NewAura("Aspect of Wolf", "{1}{G}")
+		// Enchanted creature gets +X/+Y where X is half Forests you control
+		// (rounded down) and Y is half (rounded up).
+		c.AddAbility(mage.StaticAbility(
+			mage.BoostAttachedByForestCount(),
+		))
 		return c
 	})
 }

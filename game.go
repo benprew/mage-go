@@ -185,6 +185,8 @@ func (g *Game) setEffectSource(e ContinuousEffect, id uuid.UUID) {
 		eff.sourceID_ = id
 	case *boostControlledCreaturesEffect:
 		eff.sourceID_ = id
+	case *boostAttachedByForestCountEffect:
+		eff.sourceID = id
 	}
 }
 
