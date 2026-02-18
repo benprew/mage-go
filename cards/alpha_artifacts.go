@@ -35,9 +35,9 @@ func registerAlphaArtifacts() {
 	mage.Register("Black Lotus", func() mage.Card {
 		c := mage.NewArtifact("Black Lotus", "{0}")
 		// {T}, Sacrifice: Add 3 mana of any one color
-		// Simplified: add 3 black mana
+		// Default choice: Green (not hardcoded to Black)
 		ab := mage.NewActivatedAbility(
-			mage.AddAnyMana(3, mage.Black),
+			mage.AddAnyMana(3, mage.Green),
 			mage.TapSourceCost(),
 		).AddCost(mage.SacrificeSourceCost())
 		c.AddAbility(ab)
