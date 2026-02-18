@@ -189,6 +189,12 @@ func (g *Game) setEffectSource(e ContinuousEffect, id uuid.UUID) {
 		eff.sourceID = id
 	case *boostSelfWhileControllingEffect:
 		eff.sourceID_ = id
+	case *grantActivatedAbilityAttachedEffect:
+		eff.sourceID = id
+	case *removeKeywordAttachedEffect:
+		eff.sourceID = id
+	case *preventUntapEffect:
+		eff.sourceID = id
 	}
 }
 
@@ -648,7 +654,12 @@ func (g *Game) ActivateAbilityByText(playerID uuid.UUID, permName string, target
 	}
 
 	for _, a := range perm.RuntimeAbilities {
-		aa, ok := a.(ActivatedAbilityI)
+		// Unwrap grantedByEffect wrapper
+		inner := a
+		if wrapped, ok := inner.(*grantedByEffect); ok {
+			inner = wrapped.Ability
+		}
+		aa, ok := inner.(ActivatedAbilityI)
 		if !ok {
 			continue
 		}

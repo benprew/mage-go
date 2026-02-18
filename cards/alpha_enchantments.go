@@ -75,8 +75,13 @@ func registerAlphaEnchantments() {
 
 	mage.Register("Blessing", func() mage.Card {
 		c := mage.NewAura("Blessing", "{W}{W}")
+		// Enchanted creature has "{W}: +1/+1 until end of turn"
 		c.AddAbility(mage.StaticAbility(
-			mage.BoostAttached(1, 1, mage.AttachAura),
+			mage.GrantActivatedAbilityToAttached(
+				mage.BoostSourceUntilEndOfTurn(1, 1),
+				mage.ManaCostOf("{W}"),
+				mage.AttachAura,
+			),
 		))
 		return c
 	})
@@ -100,10 +105,13 @@ func registerAlphaEnchantments() {
 
 	mage.Register("Firebreathing", func() mage.Card {
 		c := mage.NewAura("Firebreathing", "{R}")
-		// Enchanted creature has "{R}: +1/+0"
-		// Simplified: +1/+0 static boost
+		// Enchanted creature has "{R}: +1/+0 until end of turn"
 		c.AddAbility(mage.StaticAbility(
-			mage.BoostAttached(1, 0, mage.AttachAura),
+			mage.GrantActivatedAbilityToAttached(
+				mage.BoostSourceUntilEndOfTurn(1, 0),
+				mage.ManaCostOf("{R}"),
+				mage.AttachAura,
+			),
 		))
 		return c
 	})
@@ -157,19 +165,20 @@ func registerAlphaEnchantments() {
 
 	mage.Register("Paralyze", func() mage.Card {
 		c := mage.NewAura("Paralyze", "{B}")
-		// Enchanted creature doesn't untap; pay 4 to untap
+		// When Paralyze enters the battlefield, tap enchanted creature.
+		// Enchanted creature doesn't untap during its controller's untap step.
+		c.AddAbility(mage.EntersBattlefieldTrigger(mage.TapAttachedCreature(), false))
 		c.AddAbility(mage.StaticAbility(
-			mage.PreventAttachedFromAttacking(mage.AttachAura),
+			mage.PreventAttachedFromUntapping(mage.AttachAura),
 		))
 		return c
 	})
 
 	mage.Register("Earthbind", func() mage.Card {
 		c := mage.NewAura("Earthbind", "{R}")
-		// Remove flying from enchanted creature
-		// Simplified: just a -0/-1 debuff
+		// Enchanted creature loses flying
 		c.AddAbility(mage.StaticAbility(
-			mage.BoostAttached(0, -1, mage.AttachAura),
+			mage.RemoveKeywordFromAttached(mage.Flying, mage.AttachAura),
 		))
 		return c
 	})

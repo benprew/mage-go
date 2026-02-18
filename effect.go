@@ -1729,3 +1729,24 @@ func (e *makeUnblockableUntilEndOfTurnEffect) Apply(g *Game, sourceID, controlle
 func (e *makeUnblockableUntilEndOfTurnEffect) Text() string {
 	return "Target creature can't be blocked this turn"
 }
+
+// tapAttachedCreatureEffect taps the creature attached to the source aura.
+type tapAttachedCreatureEffect struct{}
+
+func TapAttachedCreature() Effect {
+	return &tapAttachedCreatureEffect{}
+}
+
+func (e *tapAttachedCreatureEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	src := g.FindPermanent(sourceID)
+	if src == nil || !src.IsAttached() {
+		return nil
+	}
+	target := g.FindPermanent(src.AttachedTo)
+	if target != nil {
+		target.Tapped = true
+	}
+	return nil
+}
+
+func (e *tapAttachedCreatureEffect) Text() string { return "Tap enchanted creature" }

@@ -73,8 +73,9 @@ func registerAlphaSpells() {
 
 	mage.Register("Guardian Angel", func() mage.Card {
 		c := mage.NewInstant("Guardian Angel", "{X}{W}")
-		sa := mage.NewSpellAbility(mage.GainXLife())
-		sa.AddTarget(mage.TargetPlayer())
+		// Prevent the next X damage that would be dealt to any target this turn
+		sa := mage.NewSpellAbility(mage.PreventXDamageToTarget())
+		sa.AddTarget(mage.TargetAnyTarget())
 		c.AddAbility(sa)
 		return c
 	})
@@ -115,7 +116,8 @@ func registerAlphaSpells() {
 
 	mage.Register("Spell Blast", func() mage.Card {
 		c := mage.NewInstant("Spell Blast", "{X}{U}")
-		sa := mage.NewSpellAbility(mage.CounterSpell())
+		// Counter target spell with mana value X
+		sa := mage.NewSpellAbility(mage.CounterSpellIfXMeetsCMC())
 		sa.AddTarget(mage.TargetSpellOnStack())
 		c.AddAbility(sa)
 		return c
@@ -123,7 +125,8 @@ func registerAlphaSpells() {
 
 	mage.Register("Power Sink", func() mage.Card {
 		c := mage.NewInstant("Power Sink", "{X}{U}")
-		sa := mage.NewSpellAbility(mage.CounterSpell())
+		// Counter target spell unless its controller pays {X}
+		sa := mage.NewSpellAbility(mage.PowerSinkEffect())
 		sa.AddTarget(mage.TargetSpellOnStack())
 		c.AddAbility(sa)
 		return c
@@ -131,8 +134,8 @@ func registerAlphaSpells() {
 
 	mage.Register("Blue Elemental Blast", func() mage.Card {
 		c := mage.NewInstant("Blue Elemental Blast", "{U}")
-		// Counter target red spell
-		sa := mage.NewSpellAbility(mage.CounterSpell())
+		// Counter target red spell (only counters if the spell is red)
+		sa := mage.NewSpellAbility(mage.CounterSpellIfColor(mage.Red))
 		sa.AddTarget(mage.TargetSpellOnStack())
 		c.AddAbility(sa)
 		return c
@@ -140,8 +143,8 @@ func registerAlphaSpells() {
 
 	mage.Register("Twiddle", func() mage.Card {
 		c := mage.NewInstant("Twiddle", "{U}")
-		// Tap or untap target permanent (simplified: tap)
-		sa := mage.NewSpellAbility(mage.TapTarget())
+		// You may tap or untap target artifact, creature, or land
+		sa := mage.NewSpellAbility(mage.TapOrUntapTarget())
 		sa.AddTarget(mage.TargetPermanent())
 		c.AddAbility(sa)
 		return c
@@ -150,7 +153,7 @@ func registerAlphaSpells() {
 	mage.Register("Timetwister", func() mage.Card {
 		// Each player shuffles their hand and graveyard into library, then draws 7
 		c := mage.NewSorcery("Timetwister", "{2}{U}")
-		sa := mage.NewSpellAbility(mage.DrawCards(7)) // stub
+		sa := mage.NewSpellAbility(mage.ShuffleGraveyardIntoLibraryAndDraw(7))
 		c.AddAbility(sa)
 		return c
 	})
@@ -236,8 +239,11 @@ func registerAlphaSpells() {
 
 	mage.Register("Animate Dead", func() mage.Card {
 		c := mage.NewAura("Animate Dead", "{1}{B}")
-		// When Animate Dead enters the battlefield, return target creature card from a graveyard
-		// Simplified: put on battlefield
+		// When Animate Dead enters the battlefield, return target creature from a graveyard
+		// to the battlefield. Enchanted creature gets -1/-0.
+		c.AddAbility(mage.EntersBattlefieldTrigger(
+			mage.ReturnFromGraveyardToBattlefield(), false,
+		))
 		c.AddAbility(mage.StaticAbility(
 			mage.BoostAttached(-1, 0, mage.AttachAura),
 		))
@@ -260,7 +266,8 @@ func registerAlphaSpells() {
 
 	mage.Register("Red Elemental Blast", func() mage.Card {
 		c := mage.NewInstant("Red Elemental Blast", "{R}")
-		sa := mage.NewSpellAbility(mage.CounterSpell())
+		// Counter target blue spell (only counters if the spell is blue)
+		sa := mage.NewSpellAbility(mage.CounterSpellIfColor(mage.Blue))
 		sa.AddTarget(mage.TargetSpellOnStack())
 		c.AddAbility(sa)
 		return c
@@ -327,9 +334,8 @@ func registerAlphaSpells() {
 
 	mage.Register("Wheel of Fortune", func() mage.Card {
 		c := mage.NewSorcery("Wheel of Fortune", "{2}{R}")
-		// Each player discards their hand and draws 7
-		// Simplified: draw 7 cards
-		sa := mage.NewSpellAbility(mage.DrawCards(7))
+		// Each player discards their hand, then draws seven cards
+		sa := mage.NewSpellAbility(mage.DiscardHandAndDraw(7))
 		c.AddAbility(sa)
 		return c
 	})
@@ -344,9 +350,12 @@ func registerAlphaSpells() {
 
 	mage.Register("Berserk", func() mage.Card {
 		c := mage.NewInstant("Berserk", "{G}")
-		// Double target creature's power, destroy it at end of turn
-		// Simplified: boost +3/+0
-		sa := mage.NewSpellAbility(mage.BoostTargetUntilEndOfTurn(3, 0))
+		// Double target creature's power until end of turn, destroy it at end of turn
+		sa := mage.NewSpellAbility(mage.CompositeEffects(
+			"Target creature's power is doubled. Destroy it at end of turn.",
+			mage.DoubleTargetPower(),
+			mage.DestroyTargetAtEndOfTurn(),
+		))
 		sa.AddTarget(mage.TargetCreature())
 		c.AddAbility(sa)
 		return c
@@ -427,7 +436,8 @@ func registerAlphaSpells() {
 
 	mage.Register("Howl from Beyond", func() mage.Card {
 		c := mage.NewInstant("Howl from Beyond", "{X}{B}")
-		sa := mage.NewSpellAbility(mage.BoostTargetUntilEndOfTurn(1, 0)) // simplified
+		// Target creature gets +X/+0 until end of turn
+		sa := mage.NewSpellAbility(mage.BoostTargetXUntilEndOfTurn(true, false))
 		sa.AddTarget(mage.TargetCreature())
 		c.AddAbility(sa)
 		return c

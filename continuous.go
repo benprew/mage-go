@@ -47,6 +47,7 @@ type EffectManager struct {
 	powerBonuses map[uuid.UUID]int
 	toughBonuses map[uuid.UUID]int
 	grantedKW    map[uuid.UUID][]Keyword
+	removedKW    map[uuid.UUID][]Keyword
 	preventAttack map[uuid.UUID]bool
 }
 
@@ -55,6 +56,7 @@ func NewEffectManager() *EffectManager {
 		powerBonuses:  make(map[uuid.UUID]int),
 		toughBonuses:  make(map[uuid.UUID]int),
 		grantedKW:     make(map[uuid.UUID][]Keyword),
+		removedKW:     make(map[uuid.UUID][]Keyword),
 		preventAttack: make(map[uuid.UUID]bool),
 	}
 }
@@ -89,6 +91,7 @@ func (em *EffectManager) Apply(g *Game) {
 	em.powerBonuses = make(map[uuid.UUID]int)
 	em.toughBonuses = make(map[uuid.UUID]int)
 	em.grantedKW = make(map[uuid.UUID][]Keyword)
+	em.removedKW = make(map[uuid.UUID][]Keyword)
 	em.preventAttack = make(map[uuid.UUID]bool)
 
 	// Reset granted runtime abilities from effects (will be re-granted below)
@@ -100,6 +103,8 @@ func (em *EffectManager) Apply(g *Game) {
 			}
 		}
 		p.RuntimeAbilities = base
+		// Reset DoesNotUntap to intrinsic value (will be re-set by effects if applicable)
+		p.DoesNotUntap = p.IntrinsicDoesNotUntap
 	}
 
 	// Remove effects whose source is no longer on the battlefield
@@ -119,6 +124,35 @@ func (em *EffectManager) Apply(g *Game) {
 				e.Apply(g)
 			}
 		}
+	}
+
+	// Remove keywords that were stripped by effects (e.g. Earthbind removes Flying)
+	for permID, keywords := range em.removedKW {
+		perm := g.FindPermanent(permID)
+		if perm == nil {
+			continue
+		}
+		filtered := perm.RuntimeAbilities[:0]
+		for _, a := range perm.RuntimeAbilities {
+			ab := a
+			if ge, ok := ab.(*grantedByEffect); ok {
+				ab = ge.Ability
+			}
+			if ka, ok := ab.(*KeywordAbility); ok {
+				removed := false
+				for _, kw := range keywords {
+					if ka.Keyword == kw {
+						removed = true
+						break
+					}
+				}
+				if removed {
+					continue
+				}
+			}
+			filtered = append(filtered, a)
+		}
+		perm.RuntimeAbilities = filtered
 	}
 }
 
@@ -219,6 +253,129 @@ func (e *grantKeywordAttachedEffect) Apply(g *Game) error {
 	g.Effects.grantedKW[target.ID()] = append(g.Effects.grantedKW[target.ID()], e.keyword)
 	// Also add to runtime abilities so HasAbility works (wrapped so it can be removed on reapply)
 	target.RuntimeAbilities = append(target.RuntimeAbilities, &grantedByEffect{HasKeyword(e.keyword)})
+	return nil
+}
+
+// RemoveKeywordFromAttached creates a continuous effect removing a keyword from the attached creature.
+func RemoveKeywordFromAttached(kw Keyword, at AttachType) ContinuousEffect {
+	return &removeKeywordAttachedEffect{
+		keyword:    kw,
+		attachType: at,
+	}
+}
+
+type removeKeywordAttachedEffect struct {
+	keyword    Keyword
+	attachType AttachType
+	sourceID   uuid.UUID
+}
+
+func (e *removeKeywordAttachedEffect) GetLayer() Layer      { return LayerAbility }
+func (e *removeKeywordAttachedEffect) GetDuration() Duration { return WhileOnBattlefield }
+func (e *removeKeywordAttachedEffect) SourceID() uuid.UUID   { return e.sourceID }
+
+func (e *removeKeywordAttachedEffect) IsActive(g *Game) bool {
+	src := g.FindPermanent(e.sourceID)
+	return src != nil && src.IsAttached()
+}
+
+func (e *removeKeywordAttachedEffect) Apply(g *Game) error {
+	src := g.FindPermanent(e.sourceID)
+	if src == nil || !src.IsAttached() {
+		return nil
+	}
+	target := g.FindPermanent(src.AttachedTo)
+	if target == nil {
+		return nil
+	}
+	// Remove the keyword from runtime abilities
+	var filtered []Ability
+	for _, a := range target.RuntimeAbilities {
+		ab := a
+		if ge, ok := ab.(*grantedByEffect); ok {
+			ab = ge.Ability
+		}
+		if ka, ok := ab.(*KeywordAbility); ok && ka.Keyword == e.keyword {
+			continue // remove this keyword
+		}
+		filtered = append(filtered, a)
+	}
+	target.RuntimeAbilities = filtered
+	return nil
+}
+
+// GrantActivatedAbilityToAttached grants an activated ability to the attached creature.
+func GrantActivatedAbilityToAttached(effect Effect, cost Cost, at AttachType) ContinuousEffect {
+	return &grantActivatedAbilityAttachedEffect{
+		effect:     effect,
+		cost:       cost,
+		attachType: at,
+	}
+}
+
+type grantActivatedAbilityAttachedEffect struct {
+	effect     Effect
+	cost       Cost
+	attachType AttachType
+	sourceID   uuid.UUID
+}
+
+func (e *grantActivatedAbilityAttachedEffect) GetLayer() Layer      { return LayerAbility }
+func (e *grantActivatedAbilityAttachedEffect) GetDuration() Duration { return WhileOnBattlefield }
+func (e *grantActivatedAbilityAttachedEffect) SourceID() uuid.UUID   { return e.sourceID }
+
+func (e *grantActivatedAbilityAttachedEffect) IsActive(g *Game) bool {
+	src := g.FindPermanent(e.sourceID)
+	return src != nil && src.IsAttached()
+}
+
+func (e *grantActivatedAbilityAttachedEffect) Apply(g *Game) error {
+	src := g.FindPermanent(e.sourceID)
+	if src == nil || !src.IsAttached() {
+		return nil
+	}
+	target := g.FindPermanent(src.AttachedTo)
+	if target == nil {
+		return nil
+	}
+	// Create the activated ability and assign it to the target
+	ab := NewActivatedAbility(e.effect, e.cost)
+	ab.Source_ = target.ID()
+	ab.Controller_ = target.Controller
+	target.RuntimeAbilities = append(target.RuntimeAbilities, &grantedByEffect{ab})
+	return nil
+}
+
+// PreventAttachedFromUntapping creates a continuous effect preventing the attached creature from untapping.
+func PreventAttachedFromUntapping(at AttachType) ContinuousEffect {
+	return &preventUntapEffect{
+		attachType: at,
+	}
+}
+
+type preventUntapEffect struct {
+	attachType AttachType
+	sourceID   uuid.UUID
+}
+
+func (e *preventUntapEffect) GetLayer() Layer      { return LayerAbility }
+func (e *preventUntapEffect) GetDuration() Duration { return WhileOnBattlefield }
+func (e *preventUntapEffect) SourceID() uuid.UUID   { return e.sourceID }
+
+func (e *preventUntapEffect) IsActive(g *Game) bool {
+	src := g.FindPermanent(e.sourceID)
+	return src != nil && src.IsAttached()
+}
+
+func (e *preventUntapEffect) Apply(g *Game) error {
+	src := g.FindPermanent(e.sourceID)
+	if src == nil || !src.IsAttached() {
+		return nil
+	}
+	target := g.FindPermanent(src.AttachedTo)
+	if target != nil {
+		target.DoesNotUntap = true
+	}
 	return nil
 }
 

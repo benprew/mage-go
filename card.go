@@ -200,6 +200,7 @@ type Permanent struct {
 
 	RegenerationShield     bool // if true, the next destruction is replaced by tap + remove damage
 	DoesNotUntap           bool // if true, does not untap during untap step
+	IntrinsicDoesNotUntap  bool // permanent property (e.g. Basalt Monolith)
 	DamagePreventionShield int  // amount of damage to prevent
 	DestroyAtEndOfTurn     bool // if true, destroy during cleanup
 	Unblockable            bool // if true, can't be blocked this turn
