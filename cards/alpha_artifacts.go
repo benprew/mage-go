@@ -231,7 +231,7 @@ func registerAlphaArtifacts() {
 		c := mage.NewArtifact("Copy Artifact", "{1}{U}")
 		// You may have Copy Artifact enter the battlefield as a copy of any artifact
 		// on the battlefield, except it's an enchantment in addition to its other types.
-		sa := mage.NewTargetedSpell(mage.TargetArtifact(), mage.CloneTargetArtifact())
+		sa := mage.NewTargetedSpell(mage.TargetArtifact(), mage.CloneTarget(mage.TypeEnchantment))
 		c.AddAbility(sa)
 		return c
 	})

@@ -99,43 +99,19 @@ func (e *addCountersEffect) Text() string {
 	return fmt.Sprintf("put %d %s counter(s) on target", n, e.ct)
 }
 
-// cloneTargetCreatureEffect copies target creature's characteristics onto the source card.
-// This runs during spell resolution before the card enters the battlefield.
-type cloneTargetCreatureEffect struct{}
-
-func CloneTargetCreature() Effect {
-	return &cloneTargetCreatureEffect{}
+// cloneTargetEffect copies target permanent's characteristics onto the source
+// card. If additionalTypes are provided, they are added after cloning (e.g.
+// Copy Artifact adds TypeEnchantment). Target filtering is handled by the
+// Target passed to NewTargetedSpell, not by this effect.
+type cloneTargetEffect struct {
+	additionalTypes []CardType
 }
 
-func (e *cloneTargetCreatureEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 || g.ResolvingCard == nil {
-		return nil
-	}
-
-	// Find the target creature on the battlefield
-	target := g.FindPermanent(targets[0])
-	if target == nil {
-		return nil
-	}
-
-	// Copy the target's characteristics onto the resolving card
-	g.ResolvingCard.CloneFrom(target.Card)
-	return nil
+func CloneTarget(additionalTypes ...CardType) Effect {
+	return &cloneTargetEffect{additionalTypes: additionalTypes}
 }
 
-func (e *cloneTargetCreatureEffect) Text() string {
-	return "enters the battlefield as a copy of target creature"
-}
-
-// cloneTargetArtifactEffect copies target artifact's characteristics onto the
-// source card, then adds TypeEnchantment (for Copy Artifact).
-type cloneTargetArtifactEffect struct{}
-
-func CloneTargetArtifact() Effect {
-	return &cloneTargetArtifactEffect{}
-}
-
-func (e *cloneTargetArtifactEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *cloneTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 || g.ResolvingCard == nil {
 		return nil
 	}
@@ -144,13 +120,14 @@ func (e *cloneTargetArtifactEffect) Apply(g *Game, sourceID, controller uuid.UUI
 		return nil
 	}
 	g.ResolvingCard.CloneFrom(target.Card)
-	// Add Enchantment type in addition to copied types
-	g.ResolvingCard.AddType(TypeEnchantment)
+	for _, t := range e.additionalTypes {
+		g.ResolvingCard.AddType(t)
+	}
 	return nil
 }
 
-func (e *cloneTargetArtifactEffect) Text() string {
-	return "enters the battlefield as a copy of any artifact, except it's also an enchantment"
+func (e *cloneTargetEffect) Text() string {
+	return "enters the battlefield as a copy of target permanent"
 }
 
 // removeCountersFromSourceEffect removes counters from the source permanent.
