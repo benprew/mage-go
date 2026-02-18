@@ -165,8 +165,9 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 	}
 
 	// Add X counters if configured (replacement effect, not a trigger)
-	if bc, ok := card.(*BaseCard); ok && bc.entersWithXCountersSet && g.CurrentX > 0 {
-		perm.AddCounter(bc.entersWithXCounters, g.CurrentX)
+	props := card.Props()
+	if props.EntersWithXCountersSet && g.CurrentX > 0 {
+		perm.AddCounter(props.EntersWithXCounters, g.CurrentX)
 	}
 
 	g.Battlefield = append(g.Battlefield, perm)
@@ -195,40 +196,7 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 
 // setEffectSource sets the source ID on a continuous effect.
 func (g *Game) setEffectSource(e ContinuousEffect, id uuid.UUID) {
-	switch eff := e.(type) {
-	case *boostAttachedEffect:
-		eff.sourceID = id
-	case *grantKeywordAttachedEffect:
-		eff.sourceID = id
-	case *preventAttackEffect:
-		eff.sourceID = id
-	case *boostAllCreaturesEffect:
-		eff.sourceID = id
-	case *boostAllCreaturesIncludingSelfEffect:
-		eff.sourceID = id
-	case *grantKeywordToAllEffect:
-		eff.sourceID = id
-	case *controlChangeEffect:
-		eff.sourceID = id
-	case *boostControlledCreaturesEffect:
-		eff.sourceID = id
-	case *boostAttachedByForestCountEffect:
-		eff.sourceID = id
-	case *boostSelfWhileControllingEffect:
-		eff.sourceID = id
-	case *grantActivatedAbilityAttachedEffect:
-		eff.sourceID = id
-	case *removeKeywordAttachedEffect:
-		eff.sourceID = id
-	case *preventUntapEffect:
-		eff.sourceID = id
-	case *ptEqualsCountEffect:
-		eff.sourceID = id
-	case *powerEqualsCountEffect:
-		eff.sourceID = id
-	case *grantActivatedAbilityToAllEffect:
-		eff.sourceID = id
-	}
+	e.SetSourceID(id)
 }
 
 // RemoveFromBattlefield removes a permanent and handles cleanup.
@@ -691,11 +659,7 @@ func (g *Game) ActivateAbilityByText(playerID uuid.UUID, permName string, target
 	}
 
 	for _, a := range perm.RuntimeAbilities {
-		// Unwrap grantedByEffect wrapper
-		inner := a
-		if wrapped, ok := inner.(*grantedByEffect); ok {
-			inner = wrapped.Ability
-		}
+		inner := UnwrapAbility(a)
 		aa, ok := inner.(ActivatedAbility)
 		if !ok {
 			continue
@@ -733,10 +697,7 @@ func (g *Game) ActivateAbilityByText(playerID uuid.UUID, permName string, target
 
 	// Try mana abilities (these don't use the stack)
 	for _, a := range perm.RuntimeAbilities {
-		inner := a
-		if wrapped, ok := inner.(*grantedByEffect); ok {
-			inner = wrapped.Ability
-		}
+		inner := UnwrapAbility(a)
 		ma, ok := inner.(*ManaAbility)
 		if !ok {
 			continue
@@ -766,10 +727,7 @@ func (g *Game) ActivateAbilityByText(playerID uuid.UUID, permName string, target
 func (g *Game) applyManaBonuses(tappedPerm *Permanent, producedColor Color, p Player) {
 	for _, perm := range g.Battlefield {
 		for _, a := range perm.RuntimeAbilities {
-			inner := a
-			if wrapped, ok := inner.(*grantedByEffect); ok {
-				inner = wrapped.Ability
-			}
+			inner := UnwrapAbility(a)
 			if mb, ok := inner.(*ManaBonusAbility); ok {
 				if mb.Filter(tappedPerm, g) {
 					p.ManaPool().Add(mb.BonusMana, 1)
@@ -922,8 +880,8 @@ func (g *Game) checkGraveyardReturns(p Player) {
 	var toReturn []uuid.UUID
 
 	for i, card := range graveyard {
-		bc, ok := card.(*BaseCard)
-		if !ok || bc.graveyardReturnMinCreatures <= 0 {
+		props := card.Props()
+		if props.GraveyardReturnMinCreatures <= 0 {
 			continue
 		}
 		// Count creature cards above this one (higher indices = more recently added)
@@ -933,8 +891,8 @@ func (g *Game) checkGraveyardReturns(p Player) {
 				creaturesAbove++
 			}
 		}
-		if creaturesAbove >= bc.graveyardReturnMinCreatures {
-			toReturn = append(toReturn, bc.ID())
+		if creaturesAbove >= props.GraveyardReturnMinCreatures {
+			toReturn = append(toReturn, card.ID())
 		}
 	}
 

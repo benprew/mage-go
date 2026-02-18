@@ -42,8 +42,12 @@ func registerAlphaCreatures() {
 		ab := mage.NewActivatedAbility(
 			mage.DestroyTargetPermanent(),
 			mage.ManaCostOf("{W}{W}"),
-		).AddCost(mage.TapSourceCost()).AddTarget(
+		
+			mage.WithCost(mage.TapSourceCost()),
+		
+			mage.WithTarget(
 			mage.TargetPermanent(mage.HasColorFilter(mage.Black)),
+		),
 		)
 		c.AddAbility(ab)
 		return c
@@ -84,7 +88,9 @@ func registerAlphaCreatures() {
 		ab := mage.NewActivatedAbility(
 			mage.DealDamage(1),
 			mage.TapSourceCost(),
-		).AddTarget(mage.TargetAnyTarget())
+		
+			mage.WithTarget(mage.TargetAnyTarget()),
+		)
 		c.AddAbility(ab)
 		return c
 	})
@@ -94,7 +100,9 @@ func registerAlphaCreatures() {
 		ab := mage.NewActivatedAbility(
 			mage.DealDamage(1),
 			mage.TapSourceCost(),
-		).AddTarget(mage.TargetAnyTarget())
+		
+			mage.WithTarget(mage.TargetAnyTarget()),
+		)
 		c.AddAbility(ab)
 		return c
 	})
@@ -110,8 +118,7 @@ func registerAlphaCreatures() {
 	mage.Register("Clone", func() mage.Card {
 		c := mage.NewCreature("Clone", "{3}{U}", 0, 0, "Shapeshifter")
 		// As Clone enters, choose a creature on the battlefield; Clone becomes a copy of that creature
-		sa := mage.NewSpellAbility(mage.CloneTargetCreature()).
-			AddTarget(mage.TargetCreature())
+		sa := mage.NewTargetedSpell(mage.TargetCreature(), mage.CloneTargetCreature())
 		c.AddAbility(sa)
 		return c
 	})
@@ -194,7 +201,9 @@ func registerAlphaCreatures() {
 		ab := mage.NewActivatedAbility(
 			mage.DestroyTarget(),
 			mage.TapSourceCost(),
-		).AddTarget(mage.TargetCreature(mage.IsTapped))
+		
+			mage.WithTarget(mage.TargetCreature(mage.IsTapped)),
+		)
 		c.AddAbility(ab)
 		return c
 	})
@@ -243,7 +252,9 @@ func registerAlphaCreatures() {
 		ab := mage.NewActivatedAbility(
 			mage.BoostSourceUntilEndOfTurn(1, 0),
 			mage.ManaCostOf("{R}"),
-		).AddEffect(mage.MarkDestroyAtEOTAfterNActivations(4))
+		
+			mage.WithEffect(mage.MarkDestroyAtEOTAfterNActivations(4)),
+		)
 		c.AddAbility(ab)
 		return c
 	})
@@ -254,7 +265,9 @@ func registerAlphaCreatures() {
 		ab := mage.NewActivatedAbility(
 			mage.MakeUnblockableUntilEndOfTurn(),
 			mage.TapSourceCost(),
-		).AddTarget(mage.TargetCreature())
+		
+			mage.WithTarget(mage.TargetCreature()),
+		)
 		c.AddAbility(ab)
 		return c
 	})
@@ -647,7 +660,9 @@ func registerAlphaCreatures() {
 		ab := mage.NewActivatedAbility(
 			mage.PreventDamageToTarget(1),
 			mage.TapSourceCost(),
-		).AddTarget(mage.TargetAnyTarget())
+		
+			mage.WithTarget(mage.TargetAnyTarget()),
+		)
 		c.AddAbility(ab)
 		return c
 	})
@@ -658,7 +673,9 @@ func registerAlphaCreatures() {
 		ab := mage.NewActivatedAbility(
 			mage.UntapTarget(),
 			mage.TapSourceCost(),
-		).AddTarget(mage.TargetLand())
+		
+			mage.WithTarget(mage.TargetLand()),
+		)
 		c.AddAbility(ab)
 		return c
 	})
@@ -677,7 +694,9 @@ func registerAlphaCreatures() {
 		ab := mage.NewActivatedAbility(
 			mage.TapTarget(),
 			mage.TapSourceCost(),
-		).AddTarget(mage.TargetCreature())
+		
+			mage.WithTarget(mage.TargetCreature()),
+		)
 		c.AddAbility(ab)
 		return c
 	})

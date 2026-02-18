@@ -91,15 +91,7 @@ func CloneTargetCreature() Effect {
 }
 
 func (e *cloneTargetCreatureEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 {
-		return nil
-	}
-	// Use the resolving card (the card is popped from stack during resolution)
-	if g.ResolvingCard == nil {
-		return nil
-	}
-	bc, ok := g.ResolvingCard.(*BaseCard)
-	if !ok {
+	if len(targets) == 0 || g.ResolvingCard == nil {
 		return nil
 	}
 
@@ -109,17 +101,8 @@ func (e *cloneTargetCreatureEffect) Apply(g *Game, sourceID, controller uuid.UUI
 		return nil
 	}
 
-	// Copy the target's characteristics onto Clone
-	tc := target.Card
-	bc.power = tc.Power()
-	bc.toughness = tc.Toughness()
-	bc.types = tc.Types()
-	bc.subTypes = tc.SubTypes()
-	// Copy abilities from the target card
-	bc.abilities = nil
-	for _, a := range tc.Abilities() {
-		bc.abilities = append(bc.abilities, a)
-	}
+	// Copy the target's characteristics onto the resolving card
+	g.ResolvingCard.CloneFrom(target.Card)
 	return nil
 }
 
@@ -434,7 +417,7 @@ func (e *boostTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targe
 		targetID:  perm.ID(),
 		power:     e.power,
 		toughness: e.toughness,
-		sourceID: sourceID,
+		effectSource: effectSource{sourceID: sourceID},
 	}
 	g.Effects.Add(eff)
 	g.Effects.Apply(g)
@@ -464,7 +447,7 @@ func (e *boostSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targe
 		targetID:  perm.ID(),
 		power:     e.power,
 		toughness: e.toughness,
-		sourceID: sourceID,
+		effectSource: effectSource{sourceID: sourceID},
 	}
 	g.Effects.Add(eff)
 	g.Effects.Apply(g)
@@ -1417,7 +1400,7 @@ func (e *grantKeywordTargetUntilEndOfTurnEffect) Apply(g *Game, sourceID, contro
 	eff := &temporaryKeywordEffect{
 		targetID:  perm.ID(),
 		keyword:   e.keyword,
-		sourceID: sourceID,
+		effectSource: effectSource{sourceID: sourceID},
 	}
 	g.Effects.Add(eff)
 	g.Effects.Apply(g)
@@ -1445,7 +1428,7 @@ func (e *grantKeywordSourceUntilEndOfTurnEffect) Apply(g *Game, sourceID, contro
 	eff := &temporaryKeywordEffect{
 		targetID:  perm.ID(),
 		keyword:   e.keyword,
-		sourceID: sourceID,
+		effectSource: effectSource{sourceID: sourceID},
 	}
 	g.Effects.Add(eff)
 	g.Effects.Apply(g)
@@ -1573,7 +1556,7 @@ func (e *doubleSourcePowerEffect) Apply(g *Game, sourceID, controller uuid.UUID,
 		targetID:  perm.ID(),
 		power:     currentPower,
 		toughness: 0,
-		sourceID: sourceID,
+		effectSource: effectSource{sourceID: sourceID},
 	}
 	g.Effects.Add(eff)
 	g.Effects.Apply(g)
@@ -1636,7 +1619,7 @@ func (e *boostTargetXEffect) Apply(g *Game, sourceID, controller uuid.UUID, targ
 		targetID:  perm.ID(),
 		power:     p,
 		toughness: t,
-		sourceID: sourceID,
+		effectSource: effectSource{sourceID: sourceID},
 	}
 	g.Effects.Add(eff)
 	g.Effects.Apply(g)

@@ -9,16 +9,14 @@ func init() {
 func registerSpells() {
 	mage.Register("Doom Blade", func() mage.Card {
 		c := mage.NewInstant("Doom Blade", "{1}{B}")
-		sa := mage.NewSpellAbility(mage.DestroyTarget())
-		sa.AddTarget(mage.TargetCreature(mage.Not(mage.HasColorFilter(mage.Black))))
+		sa := mage.NewTargetedSpell(mage.TargetCreature(mage.Not(mage.HasColorFilter(mage.Black))), mage.DestroyTarget())
 		c.AddAbility(sa)
 		return c
 	})
 
 	mage.Register("Lightning Bolt", func() mage.Card {
 		c := mage.NewInstant("Lightning Bolt", "{R}")
-		sa := mage.NewSpellAbility(mage.DealDamage(3))
-		sa.AddTarget(mage.TargetAnyTarget())
+		sa := mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(3))
 		c.AddAbility(sa)
 		return c
 	})
@@ -33,8 +31,7 @@ func registerSpells() {
 
 	mage.Register("Giant Growth", func() mage.Card {
 		c := mage.NewInstant("Giant Growth", "{G}")
-		sa := mage.NewSpellAbility(mage.BoostTargetUntilEndOfTurn(3, 3))
-		sa.AddTarget(mage.TargetCreature())
+		sa := mage.NewTargetedSpell(mage.TargetCreature(), mage.BoostTargetUntilEndOfTurn(3, 3))
 		c.AddAbility(sa)
 		return c
 	})

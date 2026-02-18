@@ -64,16 +64,6 @@ func DiesCreatureTrigger(effect Effect, optional bool, filter PermanentFilter) *
 	}
 }
 
-func (t *DiesCreatureTriggered) AddEffect(e Effect) *DiesCreatureTriggered {
-	t.effects = append(t.effects, e)
-	return t
-}
-
-func (t *DiesCreatureTriggered) AddTarget(tgt Target) *DiesCreatureTriggered {
-	t.targets = append(t.targets, tgt)
-	return t
-}
-
 func (t *DiesCreatureTriggered) CheckEventType(et EventType) bool {
 	return et == EvtCreatureDied
 }
@@ -114,16 +104,6 @@ func EntersBattlefieldTrigger(effect Effect, optional bool) *ETBTriggered {
 	}
 }
 
-func (t *ETBTriggered) AddEffect(e Effect) *ETBTriggered {
-	t.effects = append(t.effects, e)
-	return t
-}
-
-func (t *ETBTriggered) AddTarget(tgt Target) *ETBTriggered {
-	t.targets = append(t.targets, tgt)
-	return t
-}
-
 func (t *ETBTriggered) CheckEventType(et EventType) bool {
 	return et == EvtEntersBattlefield
 }
@@ -155,11 +135,6 @@ func PutIntoGraveyardFromBattlefieldTrigger(effect Effect, optional bool) *PutIn
 	}
 }
 
-func (t *PutIntoGraveyardFromBattlefieldTriggered) AddEffect(e Effect) *PutIntoGraveyardFromBattlefieldTriggered {
-	t.effects = append(t.effects, e)
-	return t
-}
-
 func (t *PutIntoGraveyardFromBattlefieldTriggered) CheckEventType(et EventType) bool {
 	return et == EvtPutIntoGraveyardFromBattlefield
 }
@@ -189,11 +164,6 @@ func BeginningOfUpkeepTrigger(effect Effect, optional bool) *BeginningOfUpkeepTr
 		Optional: optional,
 		effects:     []Effect{effect},
 	}
-}
-
-func (t *BeginningOfUpkeepTriggered) AddEffect(e Effect) *BeginningOfUpkeepTriggered {
-	t.effects = append(t.effects, e)
-	return t
 }
 
 func (t *BeginningOfUpkeepTriggered) CheckEventType(et EventType) bool {

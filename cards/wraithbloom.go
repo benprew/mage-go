@@ -28,9 +28,11 @@ func registerWraithbloom() {
 			mage.NewActivatedAbility(
 				mage.ReturnFromGraveyardToBattlefield(),
 				mage.GenericCost(2),
-			).AddCost(mage.TapSourceCost()).
-				AddCost(mage.RemoveCountersCost(mage.P1P1, 3)).
-				AddTarget(mage.TargetCreatureInYourGraveyard()),
+
+				mage.WithCost(mage.TapSourceCost()),
+				mage.WithCost(mage.RemoveCountersCost(mage.P1P1, 3)),
+				mage.WithTarget(mage.TargetCreatureInYourGraveyard()),
+			),
 		)
 
 		return c

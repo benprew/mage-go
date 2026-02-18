@@ -126,11 +126,7 @@ func restoreFromUndo(g *Game, playerID uuid.UUID, snap undoSnapshot) {
 	if p == nil || !snap.valid {
 		return
 	}
-	if bp, ok := p.(*BasePlayer); ok {
-		bp.hand = snap.hand
-	} else if ai, ok := p.(*AIPlayer); ok {
-		ai.hand = snap.hand
-	}
+	p.SetHand(snap.hand)
 	p.ManaPool().pool = snap.manaPool
 	g.LandsPlayedThisTurn = snap.landsPlayed
 	if len(g.Battlefield) > snap.battlefieldLen {

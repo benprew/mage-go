@@ -33,6 +33,19 @@ func (ct CardType) String() string {
 	}
 }
 
+// PermanentProps holds card-level properties that transfer to a Permanent on the battlefield.
+type PermanentProps struct {
+	CantBeBlockedByWalls        bool
+	CanBlockAdditional          int
+	EntersTapped                bool
+	IntrinsicDoesNotUntap       bool
+	DestroyAtEndOfTurn          bool
+	SacrificeUnlessLand         string
+	EntersWithXCounters         CounterType
+	EntersWithXCountersSet      bool
+	GraveyardReturnMinCreatures int
+}
+
 // Card is the interface for all cards.
 type Card interface {
 	ID() uuid.UUID
@@ -49,6 +62,8 @@ type Card interface {
 	SetID(uuid.UUID)
 	HasType(CardType) bool
 	AddAbility(Ability)
+	Props() PermanentProps
+	CloneFrom(Card)
 }
 
 // BaseCard provides the common card implementation.
@@ -102,6 +117,31 @@ func (c *BaseCard) AddType(t CardType) {
 
 func (c *BaseCard) AddAbility(a Ability) {
 	c.abilities = append(c.abilities, a)
+}
+
+func (c *BaseCard) Props() PermanentProps {
+	return PermanentProps{
+		CantBeBlockedByWalls:        c.cantBeBlockedByWalls,
+		CanBlockAdditional:          c.canBlockAdditional,
+		EntersTapped:                c.entersTapped,
+		IntrinsicDoesNotUntap:       c.intrinsicDoesNotUntap,
+		DestroyAtEndOfTurn:          c.destroyAtEndOfTurn,
+		SacrificeUnlessLand:         c.sacrificeUnlessLand,
+		EntersWithXCounters:         c.entersWithXCounters,
+		EntersWithXCountersSet:      c.entersWithXCountersSet,
+		GraveyardReturnMinCreatures: c.graveyardReturnMinCreatures,
+	}
+}
+
+func (c *BaseCard) CloneFrom(other Card) {
+	c.power = other.Power()
+	c.toughness = other.Toughness()
+	c.types = make([]CardType, len(other.Types()))
+	copy(c.types, other.Types())
+	c.subTypes = make([]string, len(other.SubTypes()))
+	copy(c.subTypes, other.SubTypes())
+	c.abilities = make([]Ability, len(other.Abilities()))
+	copy(c.abilities, other.Abilities())
 }
 
 func (c *BaseCard) Copy() Card {
@@ -255,16 +295,15 @@ func NewPermanent(card Card, controller uuid.UUID) *Permanent {
 		p.RuntimeAbilities = append(p.RuntimeAbilities, cp)
 	}
 	// Copy card-level permanent properties
-	if bc, ok := card.(*BaseCard); ok {
-		p.CantBeBlockedByWalls = bc.cantBeBlockedByWalls
-		p.CanBlockAdditional = bc.canBlockAdditional
-		p.IntrinsicDoesNotUntap = bc.intrinsicDoesNotUntap
-		p.DoesNotUntap = bc.intrinsicDoesNotUntap
-		p.DestroyAtEndOfTurn = bc.destroyAtEndOfTurn
-		p.SacrificeUnlessLand = bc.sacrificeUnlessLand
-		if bc.entersTapped {
-			p.Tapped = true
-		}
+	props := card.Props()
+	p.CantBeBlockedByWalls = props.CantBeBlockedByWalls
+	p.CanBlockAdditional = props.CanBlockAdditional
+	p.IntrinsicDoesNotUntap = props.IntrinsicDoesNotUntap
+	p.DoesNotUntap = props.IntrinsicDoesNotUntap
+	p.DestroyAtEndOfTurn = props.DestroyAtEndOfTurn
+	p.SacrificeUnlessLand = props.SacrificeUnlessLand
+	if props.EntersTapped {
+		p.Tapped = true
 	}
 	return p
 }
@@ -288,11 +327,7 @@ func (p *Permanent) HasSubType(s string) bool {
 // HasAbility checks if this permanent currently has the given keyword.
 func (p *Permanent) HasAbility(kw Keyword) bool {
 	for _, a := range p.RuntimeAbilities {
-		ab := a
-		// Unwrap granted-by-effect wrapper
-		if ge, ok := ab.(*grantedByEffect); ok {
-			ab = ge.Ability
-		}
+		ab := UnwrapAbility(a)
 		if ka, ok := ab.(*KeywordAbility); ok && ka.Keyword == kw {
 			return true
 		}

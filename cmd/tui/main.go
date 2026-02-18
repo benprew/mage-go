@@ -22,10 +22,10 @@ func main() {
 
 	// Load libraries
 	for _, c := range humanCards {
-		human.Library_ = append(human.Library_, c)
+		human.AddToLibrary(c)
 	}
 	for _, c := range aiCards {
-		ai.Library_ = append(ai.Library_, c)
+		ai.AddToLibrary(c)
 	}
 
 	// Create game

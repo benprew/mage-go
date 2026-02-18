@@ -27,6 +27,7 @@ type Player interface {
 	IsAlive() bool
 	Hand() []Card
 	AddToHand(Card)
+	SetHand([]Card)
 	RemoveFromHand(uuid.UUID) (Card, bool)
 	Graveyard() []Card
 	AddToGraveyard(Card)
@@ -85,6 +86,10 @@ func (p *BasePlayer) Hand() []Card { return p.hand }
 
 func (p *BasePlayer) AddToHand(c Card) {
 	p.hand = append(p.hand, c)
+}
+
+func (p *BasePlayer) SetHand(cards []Card) {
+	p.hand = cards
 }
 
 func (p *BasePlayer) RemoveFromHand(id uuid.UUID) (Card, bool) {

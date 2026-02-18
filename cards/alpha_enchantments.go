@@ -127,8 +127,7 @@ func registerAlphaEnchantments() {
 	mage.Register("Jump", func() mage.Card {
 		c := mage.NewInstant("Jump", "{U}")
 		// Target creature gains flying until end of turn
-		sa := mage.NewSpellAbility(mage.GrantKeywordTargetUntilEndOfTurn(mage.Flying))
-		sa.AddTarget(mage.TargetCreature())
+		sa := mage.NewTargetedSpell(mage.TargetCreature(), mage.GrantKeywordTargetUntilEndOfTurn(mage.Flying))
 		c.AddAbility(sa)
 		return c
 	})

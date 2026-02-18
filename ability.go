@@ -149,6 +149,14 @@ type ManaBonusAbility struct {
 	BonusMana Color
 }
 
+// UnwrapAbility returns the inner ability if wrapped by a grantedByEffect, otherwise returns a itself.
+func UnwrapAbility(a Ability) Ability {
+	if ge, ok := a.(*grantedByEffect); ok {
+		return ge.Ability
+	}
+	return a
+}
+
 func NewManaBonusAbility(filter PermanentFilter, bonusMana Color) *ManaBonusAbility {
 	return &ManaBonusAbility{
 		BaseAbility: BaseAbility{

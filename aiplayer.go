@@ -172,8 +172,13 @@ func (ai *AIPlayer) DeclareAttackers(g *Game) []uuid.UUID {
 }
 
 // DeclareBlockers implements the Player interface for AI.
-func (ai *AIPlayer) DeclareBlockers(g *Game) map[uuid.UUID]uuid.UUID {
-	return ai.AIBlockers(g)
+func (ai *AIPlayer) DeclareBlockers(g *Game) []BlockAssignment {
+	m := ai.AIBlockers(g)
+	var assignments []BlockAssignment
+	for blockerID, attackerID := range m {
+		assignments = append(assignments, BlockAssignment{BlockerID: blockerID, AttackerID: attackerID})
+	}
+	return assignments
 }
 
 // autoSelectTargets picks targets automatically for AI spells.

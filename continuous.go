@@ -39,7 +39,17 @@ type ContinuousEffect interface {
 	GetDuration() Duration
 	IsActive(g *Game) bool
 	SourceID() uuid.UUID
+	SetSourceID(uuid.UUID)
 }
+
+// effectSource provides SourceID/SetSourceID to all continuous effects.
+type effectSource struct {
+	sourceID uuid.UUID
+}
+
+func (s *effectSource) SourceID() uuid.UUID     { return s.sourceID }
+func (s *effectSource) SetSourceID(id uuid.UUID) { s.sourceID = id }
+
 
 // EffectManager manages and applies continuous effects.
 type EffectManager struct {
@@ -134,10 +144,7 @@ func (em *EffectManager) Apply(g *Game) {
 		}
 		filtered := perm.RuntimeAbilities[:0]
 		for _, a := range perm.RuntimeAbilities {
-			ab := a
-			if ge, ok := ab.(*grantedByEffect); ok {
-				ab = ge.Ability
-			}
+			ab := UnwrapAbility(a)
 			if ka, ok := ab.(*KeywordAbility); ok {
 				removed := false
 				for _, kw := range keywords {
@@ -190,12 +197,11 @@ type boostAttachedEffect struct {
 	power      int
 	toughness  int
 	attachType AttachType
-	sourceID   uuid.UUID
+	effectSource
 }
 
 func (e *boostAttachedEffect) GetLayer() Layer      { return LayerPT }
 func (e *boostAttachedEffect) GetDuration() Duration { return WhileOnBattlefield }
-func (e *boostAttachedEffect) SourceID() uuid.UUID   { return e.sourceID }
 
 func (e *boostAttachedEffect) IsActive(g *Game) bool {
 	src := g.FindPermanent(e.sourceID)
@@ -226,12 +232,11 @@ func GrantAbilityToAttached(kw Keyword, at AttachType) ContinuousEffect {
 type grantKeywordAttachedEffect struct {
 	keyword    Keyword
 	attachType AttachType
-	sourceID   uuid.UUID
+	effectSource
 }
 
 func (e *grantKeywordAttachedEffect) GetLayer() Layer      { return LayerAbility }
 func (e *grantKeywordAttachedEffect) GetDuration() Duration { return WhileOnBattlefield }
-func (e *grantKeywordAttachedEffect) SourceID() uuid.UUID   { return e.sourceID }
 
 func (e *grantKeywordAttachedEffect) IsActive(g *Game) bool {
 	src := g.FindPermanent(e.sourceID)
@@ -267,12 +272,11 @@ func RemoveKeywordFromAttached(kw Keyword, at AttachType) ContinuousEffect {
 type removeKeywordAttachedEffect struct {
 	keyword    Keyword
 	attachType AttachType
-	sourceID   uuid.UUID
+	effectSource
 }
 
 func (e *removeKeywordAttachedEffect) GetLayer() Layer      { return LayerAbility }
 func (e *removeKeywordAttachedEffect) GetDuration() Duration { return WhileOnBattlefield }
-func (e *removeKeywordAttachedEffect) SourceID() uuid.UUID   { return e.sourceID }
 
 func (e *removeKeywordAttachedEffect) IsActive(g *Game) bool {
 	src := g.FindPermanent(e.sourceID)
@@ -291,10 +295,7 @@ func (e *removeKeywordAttachedEffect) Apply(g *Game) error {
 	// Remove the keyword from runtime abilities
 	var filtered []Ability
 	for _, a := range target.RuntimeAbilities {
-		ab := a
-		if ge, ok := ab.(*grantedByEffect); ok {
-			ab = ge.Ability
-		}
+		ab := UnwrapAbility(a)
 		if ka, ok := ab.(*KeywordAbility); ok && ka.Keyword == e.keyword {
 			continue // remove this keyword
 		}
@@ -317,12 +318,11 @@ type grantActivatedAbilityAttachedEffect struct {
 	effect     Effect
 	cost       Cost
 	attachType AttachType
-	sourceID   uuid.UUID
+	effectSource
 }
 
 func (e *grantActivatedAbilityAttachedEffect) GetLayer() Layer      { return LayerAbility }
 func (e *grantActivatedAbilityAttachedEffect) GetDuration() Duration { return WhileOnBattlefield }
-func (e *grantActivatedAbilityAttachedEffect) SourceID() uuid.UUID   { return e.sourceID }
 
 func (e *grantActivatedAbilityAttachedEffect) IsActive(g *Game) bool {
 	src := g.FindPermanent(e.sourceID)
@@ -351,7 +351,7 @@ type grantActivatedAbilityToAllEffect struct {
 	effect    Effect
 	cost      Cost
 	filter    PermanentFilter
-	sourceID uuid.UUID
+	effectSource
 }
 
 // GrantActivatedAbilityToAll grants an activated ability to all creatures matching filter.
@@ -365,7 +365,6 @@ func GrantActivatedAbilityToAll(effect Effect, cost Cost, filter PermanentFilter
 
 func (e *grantActivatedAbilityToAllEffect) GetLayer() Layer      { return LayerAbility }
 func (e *grantActivatedAbilityToAllEffect) GetDuration() Duration { return WhileOnBattlefield }
-func (e *grantActivatedAbilityToAllEffect) SourceID() uuid.UUID   { return e.sourceID }
 
 func (e *grantActivatedAbilityToAllEffect) IsActive(g *Game) bool {
 	return g.FindPermanent(e.sourceID) != nil
@@ -399,12 +398,11 @@ func PreventAttachedFromUntapping(at AttachType) ContinuousEffect {
 
 type preventUntapEffect struct {
 	attachType AttachType
-	sourceID   uuid.UUID
+	effectSource
 }
 
 func (e *preventUntapEffect) GetLayer() Layer      { return LayerAbility }
 func (e *preventUntapEffect) GetDuration() Duration { return WhileOnBattlefield }
-func (e *preventUntapEffect) SourceID() uuid.UUID   { return e.sourceID }
 
 func (e *preventUntapEffect) IsActive(g *Game) bool {
 	src := g.FindPermanent(e.sourceID)
@@ -432,12 +430,11 @@ func PreventAttachedFromAttacking(at AttachType) ContinuousEffect {
 
 type preventAttackEffect struct {
 	attachType AttachType
-	sourceID   uuid.UUID
+	effectSource
 }
 
 func (e *preventAttackEffect) GetLayer() Layer      { return LayerAbility }
 func (e *preventAttackEffect) GetDuration() Duration { return WhileOnBattlefield }
-func (e *preventAttackEffect) SourceID() uuid.UUID   { return e.sourceID }
 
 func (e *preventAttackEffect) IsActive(g *Game) bool {
 	src := g.FindPermanent(e.sourceID)
@@ -461,12 +458,11 @@ type temporaryBoostEffect struct {
 	targetID  uuid.UUID
 	power     int
 	toughness int
-	sourceID uuid.UUID
+	effectSource
 }
 
 func (e *temporaryBoostEffect) GetLayer() Layer      { return LayerPT }
 func (e *temporaryBoostEffect) GetDuration() Duration { return EndOfTurn }
-func (e *temporaryBoostEffect) SourceID() uuid.UUID   { return e.sourceID }
 
 func (e *temporaryBoostEffect) IsActive(g *Game) bool {
 	return g.FindPermanent(e.targetID) != nil
@@ -482,12 +478,11 @@ func (e *temporaryBoostEffect) Apply(g *Game) error {
 type temporaryKeywordEffect struct {
 	targetID  uuid.UUID
 	keyword   Keyword
-	sourceID uuid.UUID
+	effectSource
 }
 
 func (e *temporaryKeywordEffect) GetLayer() Layer      { return LayerAbility }
 func (e *temporaryKeywordEffect) GetDuration() Duration { return EndOfTurn }
-func (e *temporaryKeywordEffect) SourceID() uuid.UUID   { return e.sourceID }
 
 func (e *temporaryKeywordEffect) IsActive(g *Game) bool {
 	return g.FindPermanent(e.targetID) != nil
@@ -508,7 +503,7 @@ type boostAllCreaturesEffect struct {
 	power     int
 	toughness int
 	filter    PermanentFilter
-	sourceID uuid.UUID
+	effectSource
 }
 
 func BoostAllCreatures(power, toughness int, filter PermanentFilter) ContinuousEffect {
@@ -521,7 +516,6 @@ func BoostAllCreatures(power, toughness int, filter PermanentFilter) ContinuousE
 
 func (e *boostAllCreaturesEffect) GetLayer() Layer      { return LayerPT }
 func (e *boostAllCreaturesEffect) GetDuration() Duration { return WhileOnBattlefield }
-func (e *boostAllCreaturesEffect) SourceID() uuid.UUID   { return e.sourceID }
 
 func (e *boostAllCreaturesEffect) IsActive(g *Game) bool {
 	return g.FindPermanent(e.sourceID) != nil
@@ -549,7 +543,7 @@ type boostAllCreaturesIncludingSelfEffect struct {
 	power     int
 	toughness int
 	filter    PermanentFilter
-	sourceID uuid.UUID
+	effectSource
 }
 
 func BoostAllCreaturesIncludingSelf(power, toughness int, filter PermanentFilter) ContinuousEffect {
@@ -562,7 +556,6 @@ func BoostAllCreaturesIncludingSelf(power, toughness int, filter PermanentFilter
 
 func (e *boostAllCreaturesIncludingSelfEffect) GetLayer() Layer      { return LayerPT }
 func (e *boostAllCreaturesIncludingSelfEffect) GetDuration() Duration { return WhileOnBattlefield }
-func (e *boostAllCreaturesIncludingSelfEffect) SourceID() uuid.UUID   { return e.sourceID }
 
 func (e *boostAllCreaturesIncludingSelfEffect) IsActive(g *Game) bool {
 	return g.FindPermanent(e.sourceID) != nil
@@ -588,7 +581,7 @@ func (e *boostAllCreaturesIncludingSelfEffect) Apply(g *Game) error {
 type ptEqualsCountEffect struct {
 	countFilter    PermanentFilter // what to count
 	controllerOnly bool            // if true, only count permanents you control
-	sourceID      uuid.UUID
+	effectSource
 }
 
 // PTEqualsCount creates a continuous effect where the source creature gets
@@ -610,7 +603,6 @@ func PTEqualsControlledCount(countFilter PermanentFilter) ContinuousEffect {
 
 func (e *ptEqualsCountEffect) GetLayer() Layer      { return LayerPT }
 func (e *ptEqualsCountEffect) GetDuration() Duration { return WhileOnBattlefield }
-func (e *ptEqualsCountEffect) SourceID() uuid.UUID   { return e.sourceID }
 
 func (e *ptEqualsCountEffect) IsActive(g *Game) bool {
 	return g.FindPermanent(e.sourceID) != nil
@@ -638,7 +630,7 @@ func (e *ptEqualsCountEffect) Apply(g *Game) error {
 // powerEqualsCountEffect sets only a permanent's power bonus equal to a count.
 type powerEqualsCountEffect struct {
 	countFilter PermanentFilter
-	sourceID   uuid.UUID
+	effectSource
 }
 
 // PowerEqualsCount creates a continuous effect where the source creature gets
@@ -651,7 +643,6 @@ func PowerEqualsCount(countFilter PermanentFilter) ContinuousEffect {
 
 func (e *powerEqualsCountEffect) GetLayer() Layer      { return LayerPT }
 func (e *powerEqualsCountEffect) GetDuration() Duration { return WhileOnBattlefield }
-func (e *powerEqualsCountEffect) SourceID() uuid.UUID   { return e.sourceID }
 
 func (e *powerEqualsCountEffect) IsActive(g *Game) bool {
 	return g.FindPermanent(e.sourceID) != nil
@@ -676,7 +667,7 @@ func (e *powerEqualsCountEffect) Apply(g *Game) error {
 type grantKeywordToAllEffect struct {
 	keyword   Keyword
 	filter    PermanentFilter
-	sourceID uuid.UUID
+	effectSource
 }
 
 func GrantKeywordToAll(kw Keyword, filter PermanentFilter) ContinuousEffect {
@@ -688,7 +679,6 @@ func GrantKeywordToAll(kw Keyword, filter PermanentFilter) ContinuousEffect {
 
 func (e *grantKeywordToAllEffect) GetLayer() Layer      { return LayerAbility }
 func (e *grantKeywordToAllEffect) GetDuration() Duration { return WhileOnBattlefield }
-func (e *grantKeywordToAllEffect) SourceID() uuid.UUID   { return e.sourceID }
 
 func (e *grantKeywordToAllEffect) IsActive(g *Game) bool {
 	return g.FindPermanent(e.sourceID) != nil
@@ -717,7 +707,7 @@ type boostControlledCreaturesEffect struct {
 	power     int
 	toughness int
 	filter    PermanentFilter
-	sourceID uuid.UUID
+	effectSource
 }
 
 func BoostControlledCreatures(power, toughness int, filter PermanentFilter) ContinuousEffect {
@@ -730,7 +720,6 @@ func BoostControlledCreatures(power, toughness int, filter PermanentFilter) Cont
 
 func (e *boostControlledCreaturesEffect) GetLayer() Layer      { return LayerPT }
 func (e *boostControlledCreaturesEffect) GetDuration() Duration { return WhileOnBattlefield }
-func (e *boostControlledCreaturesEffect) SourceID() uuid.UUID   { return e.sourceID }
 
 func (e *boostControlledCreaturesEffect) IsActive(g *Game) bool {
 	return g.FindPermanent(e.sourceID) != nil
@@ -759,7 +748,7 @@ func (e *boostControlledCreaturesEffect) Apply(g *Game) error {
 
 // controlChangeEffect is a continuous control change effect (e.g., Control Magic).
 type controlChangeEffect struct {
-	sourceID uuid.UUID
+	effectSource
 }
 
 func ControlChangeContinuous() ContinuousEffect {
@@ -768,7 +757,6 @@ func ControlChangeContinuous() ContinuousEffect {
 
 func (e *controlChangeEffect) GetLayer() Layer      { return LayerControl }
 func (e *controlChangeEffect) GetDuration() Duration { return WhileOnBattlefield }
-func (e *controlChangeEffect) SourceID() uuid.UUID   { return e.sourceID }
 
 func (e *controlChangeEffect) IsActive(g *Game) bool {
 	src := g.FindPermanent(e.sourceID)
@@ -790,7 +778,7 @@ func (e *controlChangeEffect) Apply(g *Game) error {
 
 // boostAttachedByForestCountEffect boosts the attached creature by Forests controlled.
 type boostAttachedByForestCountEffect struct {
-	sourceID uuid.UUID
+	effectSource
 }
 
 func BoostAttachedByForestCount() ContinuousEffect {
@@ -799,7 +787,6 @@ func BoostAttachedByForestCount() ContinuousEffect {
 
 func (e *boostAttachedByForestCountEffect) GetLayer() Layer      { return LayerPT }
 func (e *boostAttachedByForestCountEffect) GetDuration() Duration { return WhileOnBattlefield }
-func (e *boostAttachedByForestCountEffect) SourceID() uuid.UUID   { return e.sourceID }
 
 func (e *boostAttachedByForestCountEffect) IsActive(g *Game) bool {
 	src := g.FindPermanent(e.sourceID)
@@ -832,7 +819,7 @@ type boostSelfWhileControllingEffect struct {
 	power     int
 	toughness int
 	condition PermanentFilter
-	sourceID uuid.UUID
+	effectSource
 }
 
 func BoostSelfWhileControlling(power, toughness int, condition PermanentFilter) ContinuousEffect {
@@ -845,7 +832,6 @@ func BoostSelfWhileControlling(power, toughness int, condition PermanentFilter) 
 
 func (e *boostSelfWhileControllingEffect) GetLayer() Layer      { return LayerPT }
 func (e *boostSelfWhileControllingEffect) GetDuration() Duration { return WhileOnBattlefield }
-func (e *boostSelfWhileControllingEffect) SourceID() uuid.UUID   { return e.sourceID }
 
 func (e *boostSelfWhileControllingEffect) IsActive(g *Game) bool {
 	return g.FindPermanent(e.sourceID) != nil
