@@ -1485,6 +1485,39 @@ func (e *blackViseEffect) Text() string {
 	return "Deal damage to active player equal to cards in hand minus 4"
 }
 
+// createTokenEffect creates a token creature on the battlefield.
+type createTokenEffect struct {
+	name      string
+	power     int
+	toughness int
+	types     []CardType
+	subTypes  []string
+	keywords  []Keyword
+}
+
+// CreateToken creates an effect that puts a token creature onto the battlefield.
+func CreateToken(name string, power, toughness int, types []CardType, subTypes []string, keywords ...Keyword) Effect {
+	return &createTokenEffect{
+		name:      name,
+		power:     power,
+		toughness: toughness,
+		types:     types,
+		subTypes:  subTypes,
+		keywords:  keywords,
+	}
+}
+
+func (e *createTokenEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	token := NewToken(e.name, e.power, e.toughness, e.types, e.subTypes, e.keywords...)
+	token.SetOwner(controller)
+	g.PutOnBattlefield(token, controller)
+	return nil
+}
+
+func (e *createTokenEffect) Text() string {
+	return fmt.Sprintf("create a %d/%d %s token", e.power, e.toughness, e.name)
+}
+
 // forcefieldEffect activates a Forcefield shield on the controller for this turn.
 type forcefieldEffect struct{}
 

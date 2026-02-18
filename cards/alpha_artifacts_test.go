@@ -256,6 +256,38 @@ func TestTheHive(t *testing.T) {
 		g.Execute()
 		g.AssertHasAbility(mage.PlayerA, "Wasp", mage.Flying, true)
 	})
+
+	t.Run("token_is_artifact_creature", func(t *testing.T) {
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "The Hive")
+		g.ActivateAbility(1, mage.PrecombatMain, mage.PlayerA, "The Hive")
+		g.StopAt(1, mage.BeginCombat)
+		g.Execute()
+		perm := g.FindPermanentByName("Wasp", g.Players[0].PlayerID())
+		if perm == nil {
+			t.Fatal("Wasp token not found")
+		}
+		if !perm.HasType(mage.TypeArtifact) {
+			t.Error("Wasp should be an artifact")
+		}
+		if !perm.HasType(mage.TypeCreature) {
+			t.Error("Wasp should be a creature")
+		}
+		if perm.CurrentPower(g.Game) != 1 || perm.CurrentToughness(g.Game) != 1 {
+			t.Errorf("Wasp should be 1/1, got %d/%d", perm.CurrentPower(g.Game), perm.CurrentToughness(g.Game))
+		}
+	})
+
+	t.Run("token_can_attack", func(t *testing.T) {
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "The Hive")
+		g.ActivateAbility(1, mage.PrecombatMain, mage.PlayerA, "The Hive")
+		// Token has summoning sickness on turn 1; attack on turn 3.
+		g.Attack(3, mage.PlayerA, "Wasp")
+		g.StopAt(3, mage.EndCombat)
+		g.Execute()
+		g.AssertLife(mage.PlayerB, 19)
+	})
 }
 
 func TestCopyArtifact(t *testing.T) {

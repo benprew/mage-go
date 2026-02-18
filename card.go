@@ -63,7 +63,7 @@ type BaseCard struct {
 	owner     uuid.UUID
 	power     int
 	toughness int
-
+	isToken   bool
 }
 
 func (c *BaseCard) ID() uuid.UUID         { return c.id }
@@ -129,6 +129,23 @@ func NewCreature(name, cost string, power, toughness int, subTypes ...string) *B
 		power:     power,
 		toughness: toughness,
 	}
+}
+
+// NewToken creates a token creature card. Tokens have no mana cost.
+func NewToken(name string, power, toughness int, types []CardType, subTypes []string, keywords ...Keyword) *BaseCard {
+	c := &BaseCard{
+		id:        uuid.New(),
+		name:      name,
+		types:     types,
+		subTypes:  subTypes,
+		power:     power,
+		toughness: toughness,
+		isToken:   true,
+	}
+	for _, kw := range keywords {
+		c.AddAbility(HasKeyword(kw))
+	}
+	return c
 }
 
 // Setter methods for cross-package access to unexported fields.

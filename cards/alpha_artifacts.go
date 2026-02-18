@@ -151,12 +151,14 @@ func registerAlphaArtifacts() {
 
 	mage.Register("The Hive", func() mage.Card {
 		c := mage.NewArtifact("The Hive", "{5}")
-		// {5}, {T}: Create a 1/1 colorless Insect artifact creature token with flying named Wasp
-		// Simplified: draw a card (token creation is complex)
+		// {5}, {T}: Create a 1/1 colorless Insect artifact creature token with flying named Wasp.
 		ab := mage.NewActivatedAbility(
-			mage.GainLife(1), // stub
+			mage.CreateToken("Wasp", 1, 1,
+				[]mage.CardType{mage.TypeArtifact, mage.TypeCreature},
+				[]string{"Insect"},
+				mage.Flying,
+			),
 			mage.GenericCost(5),
-		
 			mage.WithCost(mage.TapSourceCost()),
 		)
 		c.AddAbility(ab)
