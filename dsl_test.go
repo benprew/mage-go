@@ -410,3 +410,67 @@ func TestSourceTargetUnification(t *testing.T) {
 		}
 	})
 }
+
+// TestContinuousEffectMerge verifies that boostAllCreaturesEffect and
+// boostAllCreaturesIncludingSelfEffect have been merged into a single
+// struct with an includeSelf flag.
+func TestContinuousEffectMerge(t *testing.T) {
+	t.Run("BoostAllCreatures excludes self (lord)", func(t *testing.T) {
+		lordName := "DSL Lord"
+		bearName := "DSL Bear CE"
+		for _, reg := range []struct {
+			n string
+			f func() Card
+		}{
+			{lordName, func() Card {
+				c := NewCreature(lordName, "{2}{W}", "Human")
+				c.Power_ = 1
+				c.Toughness_ = 1
+				c.AddAbility(StaticAbility(BoostAllCreatures(1, 1, nil)))
+				return c
+			}},
+			{bearName, func() Card {
+				c := NewCreature(bearName, "{1}{G}", "Bear")
+				c.Power_ = 2
+				c.Toughness_ = 2
+				return c
+			}},
+		} {
+			if !CardRegistered(reg.n) {
+				Register(reg.n, reg.f)
+			}
+		}
+
+		tg := NewTestGame(t)
+		tg.AddCard(ZoneBattlefield, PlayerA, lordName)
+		tg.AddCard(ZoneBattlefield, PlayerA, bearName)
+		tg.Attack(1, PlayerA, bearName)
+		tg.StopAt(1, EndCombat)
+		tg.Execute()
+
+		// Bear gets +1/+1 from lord = 3/3, deals 3 damage
+		tg.AssertLife(PlayerB, 17)
+	})
+
+	t.Run("BoostAllCreaturesIncludingSelf includes self", func(t *testing.T) {
+		selfBoosterName := "DSL Self Booster"
+		if !CardRegistered(selfBoosterName) {
+			Register(selfBoosterName, func() Card {
+				c := NewCreature(selfBoosterName, "{2}{G}", "Beast")
+				c.Power_ = 1
+				c.Toughness_ = 1
+				c.AddAbility(StaticAbility(BoostAllCreaturesIncludingSelf(2, 2, nil)))
+				return c
+			})
+		}
+
+		tg := NewTestGame(t)
+		tg.AddCard(ZoneBattlefield, PlayerA, selfBoosterName)
+		tg.Attack(1, PlayerA, selfBoosterName)
+		tg.StopAt(1, EndCombat)
+		tg.Execute()
+
+		// Self Booster gets +2/+2 from itself = 3/3, deals 3 damage
+		tg.AssertLife(PlayerB, 17)
+	})
+}

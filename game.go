@@ -192,8 +192,6 @@ func (g *Game) setEffectSource(e ContinuousEffect, id uuid.UUID) {
 		eff.sourceID = id
 	case *boostAllCreaturesEffect:
 		eff.sourceID_ = id
-	case *boostAllCreaturesIncludingSelfEffect:
-		eff.sourceID_ = id
 	case *grantKeywordToAllEffect:
 		eff.sourceID_ = id
 	case *controlChangeEffect:
