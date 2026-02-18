@@ -213,10 +213,7 @@ func registerAlphaSpells() {
 	})
 
 	mage.Register("Sinkhole", func() mage.Card {
-		c := mage.NewSorcery("Sinkhole", "{B}{B}")
-		sa := mage.NewTargetedSpell(mage.TargetLand(), mage.DestroyTargetLand())
-		c.AddAbility(sa)
-		return c
+		return mage.NewLandDestruction("Sinkhole", "{B}{B}")
 	})
 
 	mage.Register("Animate Dead", func() mage.Card {
@@ -291,10 +288,7 @@ func registerAlphaSpells() {
 	})
 
 	mage.Register("Stone Rain", func() mage.Card {
-		c := mage.NewSorcery("Stone Rain", "{2}{R}")
-		sa := mage.NewTargetedSpell(mage.TargetLand(), mage.DestroyTargetLand())
-		c.AddAbility(sa)
-		return c
+		return mage.NewLandDestruction("Stone Rain", "{2}{R}")
 	})
 
 	mage.Register("Flashfires", func() mage.Card {
@@ -378,10 +372,7 @@ func registerAlphaSpells() {
 	})
 
 	mage.Register("Ice Storm", func() mage.Card {
-		c := mage.NewSorcery("Ice Storm", "{2}{G}")
-		sa := mage.NewTargetedSpell(mage.TargetLand(), mage.DestroyTargetLand())
-		c.AddAbility(sa)
-		return c
+		return mage.NewLandDestruction("Ice Storm", "{2}{G}")
 	})
 
 	mage.Register("Stream of Life", func() mage.Card {

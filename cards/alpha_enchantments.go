@@ -50,27 +50,15 @@ func registerAlphaEnchantments() {
 	// Holy Strength already registered in enchantments.go
 
 	mage.Register("Unholy Strength", func() mage.Card {
-		c := mage.NewAura("Unholy Strength", "{B}")
-		c.AddAbility(mage.StaticAbility(
-			mage.BoostAttached(2, 1, mage.AttachAura),
-		))
-		return c
+		return mage.NewBoostAura("Unholy Strength", "{B}", 2, 1)
 	})
 
 	mage.Register("Weakness", func() mage.Card {
-		c := mage.NewAura("Weakness", "{B}")
-		c.AddAbility(mage.StaticAbility(
-			mage.BoostAttached(-2, -1, mage.AttachAura),
-		))
-		return c
+		return mage.NewBoostAura("Weakness", "{B}", -2, -1)
 	})
 
 	mage.Register("Holy Armor", func() mage.Card {
-		c := mage.NewAura("Holy Armor", "{W}")
-		c.AddAbility(mage.StaticAbility(
-			mage.BoostAttached(0, 2, mage.AttachAura),
-		))
-		return c
+		return mage.NewBoostAura("Holy Armor", "{W}", 0, 2)
 	})
 
 	mage.Register("Blessing", func() mage.Card {
@@ -340,38 +328,23 @@ func registerAlphaEnchantments() {
 	// ===== LUCKY CHARMS =====
 
 	mage.Register("Crystal Rod", func() mage.Card {
-		c := mage.NewArtifact("Crystal Rod", "{1}")
-		blue := mage.Blue
-		c.AddAbility(mage.WheneverSpellCastTrigger(mage.GainLife(1), true, &blue))
-		return c
+		return mage.NewLuckyCharm("Crystal Rod", "{1}", mage.Blue)
 	})
 
 	mage.Register("Iron Star", func() mage.Card {
-		c := mage.NewArtifact("Iron Star", "{1}")
-		red := mage.Red
-		c.AddAbility(mage.WheneverSpellCastTrigger(mage.GainLife(1), true, &red))
-		return c
+		return mage.NewLuckyCharm("Iron Star", "{1}", mage.Red)
 	})
 
 	mage.Register("Ivory Cup", func() mage.Card {
-		c := mage.NewArtifact("Ivory Cup", "{1}")
-		white := mage.White
-		c.AddAbility(mage.WheneverSpellCastTrigger(mage.GainLife(1), true, &white))
-		return c
+		return mage.NewLuckyCharm("Ivory Cup", "{1}", mage.White)
 	})
 
 	mage.Register("Throne of Bone", func() mage.Card {
-		c := mage.NewArtifact("Throne of Bone", "{1}")
-		black := mage.Black
-		c.AddAbility(mage.WheneverSpellCastTrigger(mage.GainLife(1), true, &black))
-		return c
+		return mage.NewLuckyCharm("Throne of Bone", "{1}", mage.Black)
 	})
 
 	mage.Register("Wooden Sphere", func() mage.Card {
-		c := mage.NewArtifact("Wooden Sphere", "{1}")
-		green := mage.Green
-		c.AddAbility(mage.WheneverSpellCastTrigger(mage.GainLife(1), true, &green))
-		return c
+		return mage.NewLuckyCharm("Wooden Sphere", "{1}", mage.Green)
 	})
 
 	mage.Register("Soul Net", func() mage.Card {
