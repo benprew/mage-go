@@ -201,6 +201,10 @@ func (g *Game) setEffectSource(e ContinuousEffect, id uuid.UUID) {
 		eff.sourceID = id
 	case *preventUntapEffect:
 		eff.sourceID = id
+	case *ptEqualsCountEffect:
+		eff.sourceID_ = id
+	case *powerEqualsCountEffect:
+		eff.sourceID_ = id
 	}
 }
 

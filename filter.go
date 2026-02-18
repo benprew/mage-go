@@ -109,6 +109,13 @@ func HasSubType(subType string) PermanentFilter {
 	}
 }
 
+// Named returns a filter matching permanents with the given name.
+func Named(name string) PermanentFilter {
+	return func(p *Permanent, _ *Game) bool {
+		return p.Name() == name
+	}
+}
+
 // IsTapped matches tapped permanents.
 var IsTapped PermanentFilter = func(p *Permanent, _ *Game) bool {
 	return p.Tapped

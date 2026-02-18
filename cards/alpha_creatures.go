@@ -215,8 +215,12 @@ func registerAlphaCreatures() {
 
 	mage.Register("Plague Rats", func() mage.Card {
 		c := mage.NewCreature("Plague Rats", "{2}{B}", "Rat")
-		c.Power_ = 1
-		c.Toughness_ = 1
+		c.Power_ = 0
+		c.Toughness_ = 0
+		// P/T equal to number of Plague Rats on the battlefield
+		c.AddAbility(mage.StaticAbility(
+			mage.PTEqualsCount(mage.Named("Plague Rats")),
+		))
 		return c
 	})
 

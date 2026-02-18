@@ -538,6 +538,82 @@ func (e *boostAllCreaturesIncludingSelfEffect) Apply(g *Game) error {
 	return nil
 }
 
+// ptEqualsCountEffect sets the source permanent's P/T bonus equal to the count of
+// matching permanents on the battlefield. Used for Plague Rats, etc.
+// Each creature with this effect gets its own instance, which boosts only itself.
+type ptEqualsCountEffect struct {
+	countFilter PermanentFilter // what to count
+	sourceID_   uuid.UUID
+}
+
+// PTEqualsCount creates a continuous effect where the source creature gets
+// +N/+N where N is the count of permanents matching countFilter.
+func PTEqualsCount(countFilter PermanentFilter) ContinuousEffect {
+	return &ptEqualsCountEffect{
+		countFilter: countFilter,
+	}
+}
+
+func (e *ptEqualsCountEffect) GetLayer() Layer      { return LayerPT }
+func (e *ptEqualsCountEffect) GetDuration() Duration { return WhileOnBattlefield }
+func (e *ptEqualsCountEffect) SourceID() uuid.UUID   { return e.sourceID_ }
+
+func (e *ptEqualsCountEffect) IsActive(g *Game) bool {
+	return g.FindPermanent(e.sourceID_) != nil
+}
+
+func (e *ptEqualsCountEffect) Apply(g *Game) error {
+	count := 0
+	for _, p := range g.Battlefield {
+		if e.countFilter(p, g) {
+			count++
+		}
+	}
+	src := g.FindPermanent(e.sourceID_)
+	if src != nil {
+		g.Effects.powerBonuses[src.ID()] += count
+		g.Effects.toughBonuses[src.ID()] += count
+	}
+	return nil
+}
+
+// powerEqualsCountEffect sets only a permanent's power bonus equal to a count.
+type powerEqualsCountEffect struct {
+	countFilter PermanentFilter
+	sourceID_   uuid.UUID
+}
+
+// PowerEqualsCount creates a continuous effect where the source creature gets
+// power bonus equal to count of permanents matching countFilter. Toughness is unchanged.
+func PowerEqualsCount(countFilter PermanentFilter) ContinuousEffect {
+	return &powerEqualsCountEffect{
+		countFilter: countFilter,
+	}
+}
+
+func (e *powerEqualsCountEffect) GetLayer() Layer      { return LayerPT }
+func (e *powerEqualsCountEffect) GetDuration() Duration { return WhileOnBattlefield }
+func (e *powerEqualsCountEffect) SourceID() uuid.UUID   { return e.sourceID_ }
+
+func (e *powerEqualsCountEffect) IsActive(g *Game) bool {
+	return g.FindPermanent(e.sourceID_) != nil
+}
+
+func (e *powerEqualsCountEffect) Apply(g *Game) error {
+	count := 0
+	for _, p := range g.Battlefield {
+		if e.countFilter(p, g) {
+			count++
+		}
+	}
+	src := g.FindPermanent(e.sourceID_)
+	if src != nil {
+		g.Effects.powerBonuses[src.ID()] += count
+		g.Effects.toughBonuses[src.ID()] += count
+	}
+	return nil
+}
+
 // grantKeywordToAllEffect grants a keyword ability to all matching creatures.
 type grantKeywordToAllEffect struct {
 	keyword   Keyword
