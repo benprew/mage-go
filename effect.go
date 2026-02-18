@@ -38,6 +38,7 @@ type gainLifeEffect struct {
 	amount int
 }
 
+// GainLife creates an effect that gains life for the controller.
 func GainLife(amount int) Effect {
 	return &gainLifeEffect{amount: amount}
 }
@@ -109,6 +110,8 @@ type cloneTargetEffect struct {
 	additionalTypes []CardType
 }
 
+// CloneTarget creates an effect that copies a target permanent's characteristics onto the source.
+// Additional types (e.g. TypeEnchantment for Copy Artifact) are added after cloning.
 func CloneTarget(additionalTypes ...CardType) Effect {
 	return &cloneTargetEffect{additionalTypes: additionalTypes}
 }
@@ -138,6 +141,7 @@ type removeCountersFromSourceEffect struct {
 	amount int
 }
 
+// RemoveCountersFromSource creates an effect that removes counters from the source permanent.
 func RemoveCountersFromSource(ct CounterType, amount int) Effect {
 	return &removeCountersFromSourceEffect{ct: ct, amount: amount}
 }
@@ -209,6 +213,7 @@ func (e *dealDamageEffect) Text() string {
 // destroyTargetEffect destroys the target permanent.
 type destroyTargetEffect struct{}
 
+// DestroyTarget creates an effect that destroys the first target permanent.
 func DestroyTarget() Effect {
 	return &destroyTargetEffect{}
 }
@@ -233,6 +238,8 @@ func (e *destroyTargetEffect) Text() string { return "destroy target" }
 // returnFromGraveyardEffect returns a target creature from graveyard to battlefield.
 type returnFromGraveyardEffect struct{}
 
+// ReturnFromGraveyardToBattlefield creates an effect that returns a target creature card
+// from the controller's graveyard directly to the battlefield (e.g. Animate Dead, Resurrection).
 func ReturnFromGraveyardToBattlefield() Effect {
 	return &returnFromGraveyardEffect{}
 }
@@ -260,6 +267,8 @@ func (e *returnFromGraveyardEffect) Text() string {
 // returnSourceToHandEffect returns the source card from graveyard to hand.
 type returnSourceToHandEffect struct{}
 
+// ReturnSourceToHand creates an effect that returns the source card from the graveyard
+// to its owner's hand (e.g. Rancor's triggered ability).
 func ReturnSourceToHand() Effect {
 	return &returnSourceToHandEffect{}
 }
@@ -293,6 +302,7 @@ type compositeEffect struct {
 	text    string
 }
 
+// CompositeEffects creates an effect that applies multiple effects in sequence.
 func CompositeEffects(text string, effects ...Effect) Effect {
 	return &compositeEffect{effects: effects, text: text}
 }
@@ -311,6 +321,7 @@ func (e *compositeEffect) Text() string { return e.text }
 // attachToTargetEffect attaches the source (aura/equipment) to the target.
 type attachToTargetEffect struct{}
 
+// AttachToTarget creates an effect that attaches the source (aura or equipment) to the target permanent.
 func AttachToTarget() Effect {
 	return &attachToTargetEffect{}
 }
@@ -328,6 +339,7 @@ func (e *attachToTargetEffect) Text() string { return "attach to target" }
 // returnToHandTargetEffect bounces a target permanent to its owner's hand.
 type returnToHandTargetEffect struct{}
 
+// ReturnToHandTarget creates an effect that bounces a target permanent to its owner's hand.
 func ReturnToHandTarget() Effect {
 	return &returnToHandTargetEffect{}
 }
@@ -360,6 +372,8 @@ func (e *returnToHandTargetEffect) Text() string {
 // returnFromGraveyardToHandTargetEffect returns a target card from graveyard to hand.
 type returnFromGraveyardToHandTargetEffect struct{}
 
+// ReturnFromGraveyardToHandTarget creates an effect that returns a target card
+// from the controller's graveyard to their hand (e.g. Raise Dead, Regrowth).
 func ReturnFromGraveyardToHandTarget() Effect {
 	return &returnFromGraveyardToHandTargetEffect{}
 }
@@ -391,6 +405,8 @@ type boostMatchingUntilEndOfTurnEffect struct {
 	predicate PermanentFilter
 }
 
+// BoostMatchingUntilEndOfTurn creates an effect that gives +P/+T until end of turn to all
+// creatures the controller owns that match the predicate (e.g. Crusade, Bad Moon).
 func BoostMatchingUntilEndOfTurn(power, toughness ValueSource, predicate PermanentFilter) Effect {
 	return &boostMatchingUntilEndOfTurnEffect{power: power, toughness: toughness, predicate: predicate}
 }
@@ -475,6 +491,8 @@ type markDestroyAtEOTAfterNActivationsEffect struct {
 	threshold int
 }
 
+// MarkDestroyAtEOTAfterNActivations creates an effect that tracks activations via Charge counters.
+// When the count reaches the threshold, the source is destroyed at end of turn (e.g. Basalt Monolith variant).
 func MarkDestroyAtEOTAfterNActivations(threshold int) Effect {
 	return &markDestroyAtEOTAfterNActivationsEffect{threshold: threshold}
 }
@@ -506,14 +524,17 @@ type destroyTargetPermanentEffect struct {
 	text string
 }
 
+// DestroyTargetPermanent creates an effect that destroys a target permanent.
 func DestroyTargetPermanent() Effect {
 	return &destroyTargetPermanentEffect{text: "destroy target permanent"}
 }
 
+// DestroyTargetLand creates an effect that destroys a target land (e.g. Stone Rain, Sinkhole).
 func DestroyTargetLand() Effect {
 	return &destroyTargetPermanentEffect{text: "destroy target land"}
 }
 
+// DestroyTargetArtifact creates an effect that destroys a target artifact (e.g. Shatter).
 func DestroyTargetArtifact() Effect {
 	return &destroyTargetPermanentEffect{text: "destroy target artifact"}
 }
@@ -553,6 +574,8 @@ type destroyAllMatchingEffect struct {
 	text   string
 }
 
+// DestroyAllMatching creates an effect that destroys all permanents matching the filter.
+// The text parameter is used for rules text display.
 func DestroyAllMatching(filter PermanentFilter, text string) Effect {
 	return &destroyAllMatchingEffect{filter: filter, text: text}
 }
@@ -575,6 +598,7 @@ func (e *destroyAllMatchingEffect) Text() string { return e.text }
 // tapTargetEffect taps a target permanent.
 type tapTargetEffect struct{}
 
+// TapTarget creates an effect that taps a target permanent.
 func TapTarget() Effect {
 	return &tapTargetEffect{}
 }
@@ -596,6 +620,7 @@ func (e *tapTargetEffect) Text() string { return "tap target permanent" }
 // untapTargetEffect untaps a target permanent.
 type untapTargetEffect struct{}
 
+// UntapTarget creates an effect that untaps a target permanent.
 func UntapTarget() Effect {
 	return &untapTargetEffect{}
 }
@@ -619,6 +644,7 @@ type discardRandomEffect struct {
 	amount int
 }
 
+// DiscardRandom creates an effect that forces a target player (or opponent) to discard cards at random.
 func DiscardRandom(amount int) Effect {
 	return &discardRandomEffect{amount: amount}
 }
@@ -694,6 +720,7 @@ type addManaEffect struct {
 	amount int
 }
 
+// AddMana creates an effect that adds mana of the given color to the controller's pool.
 func AddMana(color Color, amount int) Effect {
 	return &addManaEffect{color: color, amount: amount}
 }
@@ -716,6 +743,7 @@ type addAnyManaEffect struct {
 	amount int
 }
 
+// AddAnyMana creates an effect that adds mana of any one color (player chooses) to the controller's pool.
 func AddAnyMana(amount int, _ Color) Effect {
 	return &addAnyManaEffect{amount: amount}
 }
@@ -798,6 +826,7 @@ func (e *drawCardsActivePlayerEffect) Text() string {
 // exileTargetEffect exiles a target permanent (removes from game).
 type exileTargetEffect struct{}
 
+// ExileTarget creates an effect that exiles a target permanent (e.g. Swords to Plowshares).
 func ExileTarget() Effect {
 	return &exileTargetEffect{}
 }
@@ -857,6 +886,7 @@ type loseLifeEffect struct {
 	amount int
 }
 
+// LoseLife creates an effect that causes the controller to lose life.
 func LoseLife(amount int) Effect {
 	return &loseLifeEffect{amount: amount}
 }
@@ -947,6 +977,7 @@ func (e *dealDamageToPlayersEffect) Text() string {
 // sacrificeSourceEffect sacrifices the source permanent.
 type sacrificeSourceEffect struct{}
 
+// SacrificeSource creates an effect that sacrifices the source permanent.
 func SacrificeSource() Effect {
 	return &sacrificeSourceEffect{}
 }
@@ -965,6 +996,8 @@ func (e *sacrificeSourceEffect) Text() string { return "sacrifice this permanent
 // searchLibraryEffect lets the controller search their library and put a card in hand.
 type searchLibraryEffect struct{}
 
+// SearchLibraryToHand creates an effect that lets the controller search their library for a card
+// and put it into their hand (e.g. Demonic Tutor).
 func SearchLibraryToHand() Effect {
 	return &searchLibraryEffect{}
 }
@@ -1001,6 +1034,7 @@ func (e *searchLibraryEffect) Text() string {
 // counterSpellEffect counters a target spell on the stack.
 type counterSpellEffect struct{}
 
+// CounterSpell creates an effect that counters a target spell on the stack.
 func CounterSpell() Effect {
 	return &counterSpellEffect{}
 }
@@ -1018,6 +1052,7 @@ func (e *counterSpellEffect) Text() string { return "counter target spell" }
 // preventAllCombatDamageEffect prevents all combat damage this turn (Fog).
 type preventAllCombatDamageEffect struct{}
 
+// PreventAllCombatDamage creates an effect that prevents all combat damage this turn (e.g. Fog).
 func PreventAllCombatDamage() Effect {
 	return &preventAllCombatDamageEffect{}
 }
@@ -1034,6 +1069,7 @@ func (e *preventAllCombatDamageEffect) Text() string {
 // extraTurnEffect gives the controller an extra turn.
 type extraTurnEffect struct{}
 
+// ExtraTurn creates an effect that gives the controller an extra turn (e.g. Time Walk).
 func ExtraTurn() Effect {
 	return &extraTurnEffect{}
 }
@@ -1048,6 +1084,7 @@ func (e *extraTurnEffect) Text() string { return "take an extra turn after this 
 // controlChangeTargetEffect gains control of a target permanent.
 type controlChangeTargetEffect struct{}
 
+// ControlChangeTarget creates an effect that gives the controller permanent control of a target (e.g. Control Magic).
 func ControlChangeTarget() Effect {
 	return &controlChangeTargetEffect{}
 }
@@ -1111,6 +1148,7 @@ func (e *grantKeywordUntilEndOfTurnEffect) Text() string {
 // regenerateSourceEffect sets a regeneration shield on the source.
 type regenerateSourceEffect struct{}
 
+// RegenerateSource creates an effect that sets a regeneration shield on the source permanent.
 func RegenerateSource() Effect {
 	return &regenerateSourceEffect{}
 }
@@ -1129,6 +1167,7 @@ func (e *regenerateSourceEffect) Text() string { return "Regenerate ~" }
 // regenerateTargetEffect sets a regeneration shield on the target.
 type regenerateTargetEffect struct{}
 
+// RegenerateTarget creates an effect that sets a regeneration shield on a target creature.
 func RegenerateTarget() Effect {
 	return &regenerateTargetEffect{}
 }
@@ -1184,6 +1223,8 @@ type sacrificeOrDamageEffect struct {
 	damage int
 }
 
+// SacrificeCreatureOrDamage creates an effect where the controller sacrifices a creature,
+// or takes damage if no creature is available (e.g. Lord of the Pit upkeep).
 func SacrificeCreatureOrDamage(damage int) Effect {
 	return &sacrificeOrDamageEffect{damage: damage}
 }
@@ -1219,6 +1260,7 @@ func (e *sacrificeOrDamageEffect) Text() string {
 // doubleSourcePowerEffect doubles the source creature's power until end of turn.
 type doubleSourcePowerEffect struct{}
 
+// DoubleTargetPower creates an effect that doubles a target creature's power until end of turn (e.g. Berserk).
 func DoubleTargetPower() Effect {
 	return &doubleSourcePowerEffect{}
 }
@@ -1250,6 +1292,8 @@ func (e *doubleSourcePowerEffect) Text() string {
 // destroyTargetAtEndOfTurnEffect marks a creature for destruction at end of turn.
 type destroyTargetAtEndOfTurnEffect struct{}
 
+// DestroyTargetAtEndOfTurn creates an effect that registers a delayed trigger to destroy
+// the target creature at the next end step.
 func DestroyTargetAtEndOfTurn() Effect {
 	return &destroyTargetAtEndOfTurnEffect{}
 }

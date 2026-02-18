@@ -18,10 +18,12 @@ type ManaCostPayment struct {
 	MC ManaCost
 }
 
+// ManaCostOf creates a cost that requires paying the given mana cost string (e.g. "{1}{R}").
 func ManaCostOf(s string) Cost {
 	return &ManaCostPayment{MC: ParseManaCost(s)}
 }
 
+// GenericCost creates a cost that requires paying n generic mana.
 func GenericCost(n int) Cost {
 	return &ManaCostPayment{MC: ManaCost{Generic: n}}
 }
@@ -49,6 +51,7 @@ func (c *ManaCostPayment) Text() string {
 // tapSourceCost requires tapping the source permanent.
 type tapSourceCost struct{}
 
+// TapSourceCost creates a cost that requires tapping the source permanent ({T}).
 func TapSourceCost() Cost { return &tapSourceCost{} }
 
 func (c *tapSourceCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
@@ -76,6 +79,7 @@ type removeCountersCost struct {
 	amount int
 }
 
+// RemoveCountersCost creates a cost that requires removing n counters of the given type from the source.
 func RemoveCountersCost(ct CounterType, n int) Cost {
 	return &removeCountersCost{ct: ct, amount: n}
 }
@@ -103,6 +107,7 @@ func (c *removeCountersCost) Text() string {
 // sacrificeSourceCost requires sacrificing the source.
 type sacrificeSourceCost struct{}
 
+// SacrificeSourceCost creates a cost that requires sacrificing the source permanent.
 func SacrificeSourceCost() Cost { return &sacrificeSourceCost{} }
 
 func (c *sacrificeSourceCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
@@ -125,6 +130,7 @@ type lifePayCost struct {
 	amount int
 }
 
+// LifePayCost creates a cost that requires the controller to pay life.
 func LifePayCost(amount int) Cost {
 	return &lifePayCost{amount: amount}
 }
@@ -150,6 +156,7 @@ func (c *lifePayCost) Text() string {
 // sacrificeCreatureCost requires sacrificing a creature you control.
 type sacrificeCreatureCost struct{}
 
+// SacrificeCreatureCost creates a cost that requires sacrificing a creature you control (other than the source).
 func SacrificeCreatureCost() Cost {
 	return &sacrificeCreatureCost{}
 }

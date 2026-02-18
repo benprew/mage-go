@@ -1,6 +1,9 @@
 package arabian
 
-import "github.com/mage/mage"
+import (
+	"github.com/google/uuid"
+	"github.com/mage/mage"
+)
 
 func init() {
 	registerCreatures()
@@ -13,7 +16,38 @@ func registerCreatures() {
 		// When Abu Ja'far dies, destroy all creatures blocking or blocked by it.
 		// They can't be regenerated.
 		c := mage.NewCreature("Abu Ja'far", "{W}", 0, 1, "Human")
-		mage.NewTriggered(mage.EvtCreatureDied, false, mage.DestroyAllMatching(mage.Or()))
+		c.AddAbility(
+			mage.NewTriggered(mage.EvtCreatureDied, false,
+				mage.FuncEffect("destroy all creatures blocking or blocked by Abu Ja'far",
+					func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if g.Combat == nil {
+							return nil
+						}
+						var toDestroy []uuid.UUID
+						for _, group := range g.Combat.Groups {
+							// Abu Ja'far was the attacker — destroy its blockers
+							if group.AttackerID == sourceID {
+								toDestroy = append(toDestroy, group.BlockerIDs...)
+							}
+							// Abu Ja'far was a blocker — destroy the attacker
+							for _, bid := range group.BlockerIDs {
+								if bid == sourceID {
+									toDestroy = append(toDestroy, group.AttackerID)
+								}
+							}
+						}
+						for _, id := range toDestroy {
+							p := g.FindPermanent(id)
+							if p != nil {
+								g.DestroyPermanent(p)
+							}
+						}
+						return nil
+					}),
+			).SetCondition(func(evt *mage.GameEvent, g *mage.Game, sourceID, _ uuid.UUID) bool {
+				return evt.SourceID == sourceID
+			}),
+		)
 		return c
 	})
 

@@ -81,6 +81,8 @@ type EquipAbility struct {
 	SimpleActivatedAbility
 }
 
+// NewEquipAbility creates a sorcery-speed activated ability that attaches the source
+// equipment to a target creature the controller owns. Used by Equipment cards.
 func NewEquipAbility(cost Cost) *EquipAbility {
 	ea := &EquipAbility{
 		SimpleActivatedAbility: SimpleActivatedAbility{

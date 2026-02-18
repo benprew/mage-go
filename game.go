@@ -448,6 +448,7 @@ func (g *Game) DestroyPermanent(perm *Permanent) {
 			PlayerID: controller,
 		}
 		g.FireEvent(diedEvt)
+		g.checkAbilitiesForEvent(selfAbilities, &diedEvt, permID, controller)
 	}
 
 	// Handle attached auras going to graveyard

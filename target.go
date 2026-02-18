@@ -32,6 +32,8 @@ type CreatureTarget struct {
 	Filters []PermanentFilter
 }
 
+// TargetCreature creates a target that selects a creature on the battlefield,
+// optionally narrowed by PermanentFilter predicates.
 func TargetCreature(filters ...PermanentFilter) Target {
 	return &CreatureTarget{
 		BaseTarget: BaseTarget{min: 1, max: 1},
@@ -87,6 +89,7 @@ type PlayerTarget struct {
 	BaseTarget
 }
 
+// TargetPlayer creates a target that selects any player in the game.
 func TargetPlayer() Target {
 	return &PlayerTarget{
 		BaseTarget: BaseTarget{min: 1, max: 1},
@@ -111,6 +114,7 @@ type AnyTarget struct {
 	BaseTarget
 }
 
+// TargetAnyTarget creates a target that selects any creature or player ("any target").
 func TargetAnyTarget() Target {
 	return &AnyTarget{
 		BaseTarget: BaseTarget{min: 1, max: 1},
@@ -140,6 +144,7 @@ type GraveyardCreatureTarget struct {
 	BaseTarget
 }
 
+// TargetCreatureInYourGraveyard creates a target that selects a creature card in the controller's graveyard.
 func TargetCreatureInYourGraveyard() Target {
 	return &GraveyardCreatureTarget{
 		BaseTarget: BaseTarget{min: 1, max: 1},
@@ -170,6 +175,7 @@ type ControlledCreatureTarget struct {
 	BaseTarget
 }
 
+// TargetControlledCreature creates a target that selects a creature the controller owns.
 func TargetControlledCreature() Target {
 	return &ControlledCreatureTarget{
 		BaseTarget: BaseTarget{min: 1, max: 1},
@@ -197,6 +203,8 @@ type PermanentTarget struct {
 	Filters []PermanentFilter
 }
 
+// TargetPermanent creates a target that selects any permanent on the battlefield,
+// optionally narrowed by PermanentFilter predicates.
 func TargetPermanent(filters ...PermanentFilter) Target {
 	return &PermanentTarget{
 		BaseTarget: BaseTarget{min: 1, max: 1},
@@ -246,6 +254,7 @@ type LandTarget struct {
 	BaseTarget
 }
 
+// TargetLand creates a target that selects a land on the battlefield.
 func TargetLand() Target {
 	return &LandTarget{
 		BaseTarget: BaseTarget{min: 1, max: 1},
@@ -272,6 +281,7 @@ type ArtifactTarget struct {
 	BaseTarget
 }
 
+// TargetArtifact creates a target that selects an artifact on the battlefield.
 func TargetArtifact() Target {
 	return &ArtifactTarget{
 		BaseTarget: BaseTarget{min: 1, max: 1},
@@ -298,6 +308,7 @@ type ArtifactOrEnchantmentTarget struct {
 	BaseTarget
 }
 
+// TargetArtifactOrEnchantment creates a target that selects an artifact or enchantment on the battlefield.
 func TargetArtifactOrEnchantment() Target {
 	return &ArtifactOrEnchantmentTarget{
 		BaseTarget: BaseTarget{min: 1, max: 1},
@@ -324,6 +335,7 @@ type SpellOnStackTarget struct {
 	BaseTarget
 }
 
+// TargetSpellOnStack creates a target that selects a spell currently on the stack (for counterspells).
 func TargetSpellOnStack() Target {
 	return &SpellOnStackTarget{
 		BaseTarget: BaseTarget{min: 1, max: 1},
@@ -350,6 +362,7 @@ type GraveyardCardTarget struct {
 	BaseTarget
 }
 
+// TargetCardInYourGraveyard creates a target that selects any card in the controller's graveyard.
 func TargetCardInYourGraveyard() Target {
 	return &GraveyardCardTarget{
 		BaseTarget: BaseTarget{min: 1, max: 1},
@@ -378,6 +391,7 @@ type HandCreatureTarget struct {
 	BaseTarget
 }
 
+// TargetCreatureInHand creates a target that selects a creature card in the controller's hand.
 func TargetCreatureInHand() Target {
 	return &HandCreatureTarget{
 		BaseTarget: BaseTarget{min: 1, max: 1},
@@ -408,6 +422,7 @@ type OpponentTarget struct {
 	BaseTarget
 }
 
+// TargetOpponent creates a target that selects an opponent (any player other than the controller).
 func TargetOpponent() Target {
 	return &OpponentTarget{
 		BaseTarget: BaseTarget{min: 1, max: 1},

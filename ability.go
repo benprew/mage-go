@@ -44,6 +44,7 @@ type KeywordAbility struct {
 	Keyword Keyword
 }
 
+// HasKeyword creates a static ability that grants the given keyword (e.g. Flying, Trample).
 func HasKeyword(k Keyword) *KeywordAbility {
 	return &KeywordAbility{
 		BaseAbility: BaseAbility{
@@ -61,6 +62,7 @@ type ProtectionAbility struct {
 	Filter     func(Card) bool
 }
 
+// ProtectionFromColor creates a static ability granting protection from a single color.
 func ProtectionFromColor(c Color) *ProtectionAbility {
 	return &ProtectionAbility{
 		BaseAbility: BaseAbility{
@@ -79,6 +81,7 @@ func ProtectionFromColor(c Color) *ProtectionAbility {
 	}
 }
 
+// ProtectionFromColors creates a static ability granting protection from multiple colors.
 func ProtectionFromColors(cs ...Color) *ProtectionAbility {
 	colorSet := make(map[Color]bool)
 	for _, c := range cs {
@@ -115,6 +118,7 @@ type StaticAbilityHolder struct {
 	Effects []ContinuousEffect
 }
 
+// StaticAbility creates a static ability that applies continuous effects while the source is on the battlefield.
 func StaticAbility(effects ...ContinuousEffect) *StaticAbilityHolder {
 	return &StaticAbilityHolder{
 		BaseAbility: BaseAbility{
@@ -132,6 +136,7 @@ type ManaAbility struct {
 	AnyColor bool // player chooses color when activated
 }
 
+// NewManaAbility creates a tap-for-mana ability that produces one mana of the given color.
 func NewManaAbility(c Color) *ManaAbility {
 	return &ManaAbility{
 		BaseAbility: BaseAbility{
@@ -173,6 +178,8 @@ func UnwrapAbility(a Ability) Ability {
 	return a
 }
 
+// NewManaBonusAbility creates a static ability that grants bonus mana when a permanent
+// matching the filter is tapped for mana (e.g. Gauntlet of Might for Mountains).
 func NewManaBonusAbility(filter PermanentFilter, bonusMana Color) *ManaBonusAbility {
 	return &ManaBonusAbility{
 		BaseAbility: BaseAbility{
@@ -204,6 +211,8 @@ type SacrificeUnlessLandAbility struct {
 	LandSubtype string
 }
 
+// SacrificeUnlessLand creates a static ability that sacrifices the source as a state-based action
+// if the controller doesn't control a land of the given subtype (e.g. "Island" for Dandân).
 func SacrificeUnlessLand(subtype string) *SacrificeUnlessLandAbility {
 	return &SacrificeUnlessLandAbility{
 		BaseAbility: BaseAbility{
@@ -221,6 +230,8 @@ type EntersWithXCountersAbility struct {
 	CounterType CounterType
 }
 
+// EntersWithXCounters creates a replacement effect that puts X counters of the given
+// type on the permanent as it enters the battlefield (e.g. Rock Hydra).
 func EntersWithXCounters(ct CounterType) *EntersWithXCountersAbility {
 	return &EntersWithXCountersAbility{
 		BaseAbility: BaseAbility{
@@ -237,6 +248,8 @@ type CopyCreatureOnETBAbility struct {
 	BaseAbility
 }
 
+// CopyCreatureOnETB creates a replacement effect that copies a target creature
+// when this permanent enters the battlefield (e.g. Vesuvan Doppelganger, Clone).
 func CopyCreatureOnETB() *CopyCreatureOnETBAbility {
 	return &CopyCreatureOnETBAbility{
 		BaseAbility: BaseAbility{
@@ -253,6 +266,8 @@ type GraveyardReturnAbility struct {
 	MinCreaturesAbove int
 }
 
+// GraveyardReturnIfCreaturesAbove creates a static ability that returns this creature card
+// from the graveyard to the battlefield if at least n creature cards are above it (e.g. Nether Shadow).
 func GraveyardReturnIfCreaturesAbove(n int) *GraveyardReturnAbility {
 	return &GraveyardReturnAbility{
 		BaseAbility: BaseAbility{
