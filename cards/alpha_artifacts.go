@@ -473,6 +473,10 @@ func registerAlphaArtifacts() {
 
 	mage.Register("Consecrate Land", func() mage.Card {
 		c := mage.NewAura("Consecrate Land", "{W}")
+		// Enchanted land has indestructible.
+		c.AddAbility(mage.StaticAbility(
+			mage.GrantAbilityToAttached(mage.Indestructible, mage.AttachAura),
+		))
 		return c
 	})
 
