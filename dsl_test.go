@@ -474,3 +474,97 @@ func TestContinuousEffectMerge(t *testing.T) {
 		tg.AssertLife(PlayerB, 17)
 	})
 }
+
+// TestCardTemplateHelpers verifies that card template helpers produce
+// correctly configured cards with minimal boilerplate.
+func TestCardTemplateHelpers(t *testing.T) {
+	t.Run("NewLuckyCharm creates color-triggered life gain artifact", func(t *testing.T) {
+		name := "DSL Lucky Charm"
+		if !CardRegistered(name) {
+			Register(name, func() Card {
+				return NewLuckyCharm(name, "{1}", Blue)
+			})
+		}
+
+		spellName := "DSL Blue Spell"
+		if !CardRegistered(spellName) {
+			Register(spellName, func() Card {
+				return NewSorcery(spellName, "{U}")
+			})
+		}
+
+		tg := NewTestGame(t)
+		tg.AddCard(ZoneBattlefield, PlayerA, name)
+		tg.AddCard(ZoneHand, PlayerA, spellName)
+		tg.CastSpell(1, PrecombatMain, PlayerA, spellName)
+		tg.StopAt(1, EndCombat)
+		tg.Execute()
+
+		tg.AssertLife(PlayerA, 21) // 20 + 1 from lucky charm trigger
+	})
+
+	t.Run("NewLandDestruction creates land destruction sorcery", func(t *testing.T) {
+		name := "DSL Land Destroy"
+		landName := "DSL Target Land"
+		for _, reg := range []struct {
+			n string
+			f func() Card
+		}{
+			{name, func() Card {
+				return NewLandDestruction(name, "{2}{R}")
+			}},
+			{landName, func() Card {
+				c := NewLand(landName, "Mountain")
+				c.AddAbility(NewManaAbility(Red))
+				return c
+			}},
+		} {
+			if !CardRegistered(reg.n) {
+				Register(reg.n, reg.f)
+			}
+		}
+
+		tg := NewTestGame(t)
+		tg.AddCard(ZoneBattlefield, PlayerB, landName)
+		tg.AddCard(ZoneHand, PlayerA, name)
+		tg.CastSpell(1, PrecombatMain, PlayerA, name, landName)
+		tg.StopAt(1, EndCombat)
+		tg.Execute()
+
+		tg.AssertPermanentCount(PlayerB, landName, 0)
+	})
+
+	t.Run("NewBoostAura creates aura that boosts attached creature", func(t *testing.T) {
+		auraName := "DSL Boost Aura"
+		bearName := "DSL Aura Bear"
+		for _, reg := range []struct {
+			n string
+			f func() Card
+		}{
+			{auraName, func() Card {
+				return NewBoostAura(auraName, "{G}", 2, 2)
+			}},
+			{bearName, func() Card {
+				c := NewCreature(bearName, "{1}{G}", "Bear")
+				c.Power_ = 2
+				c.Toughness_ = 2
+				return c
+			}},
+		} {
+			if !CardRegistered(reg.n) {
+				Register(reg.n, reg.f)
+			}
+		}
+
+		tg := NewTestGame(t)
+		tg.AddCard(ZoneBattlefield, PlayerA, bearName)
+		tg.AddCard(ZoneHand, PlayerA, auraName)
+		tg.CastSpell(1, PrecombatMain, PlayerA, auraName, bearName)
+		tg.Attack(1, PlayerA, bearName)
+		tg.StopAt(1, EndCombat)
+		tg.Execute()
+
+		// Bear 2/2 + aura +2/+2 = 4/4, deals 4 damage
+		tg.AssertLife(PlayerB, 16)
+	})
+}
