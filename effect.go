@@ -414,7 +414,7 @@ func (e *boostMatchingUntilEndOfTurnEffect) Apply(g *Game, sourceID uuid.UUID, c
 }
 
 func (e *boostMatchingUntilEndOfTurnEffect) Text() string {
-	panic("implement me")
+	return "XXX populate filter predicate text"
 }
 
 // boostUntilEndOfTurnEffect boosts a creature's P/T until end of turn.
