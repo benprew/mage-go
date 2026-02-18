@@ -311,9 +311,9 @@ func registerAlphaEnchantments() {
 
 	mage.Register("Karma", func() mage.Card {
 		c := mage.NewEnchantment("Karma", "{2}{W}{W}")
-		// Upkeep: deal damage to each player equal to the number of Swamps they control
-		// Simplified: deal 1 to each player on upkeep
-		c.AddAbility(mage.BeginningOfUpkeepTrigger(mage.DealDamageToSourceController(1), false))
+		// At the beginning of each player's upkeep, Karma deals damage to that player
+		// equal to the number of Swamps they control.
+		c.AddAbility(mage.BeginningOfEachUpkeepTrigger(mage.DealDamagePerSwamp(), false))
 		return c
 	})
 
