@@ -86,7 +86,7 @@ func registerAlphaCreatures() {
 	mage.Register("Prodigal Sorcerer", func() mage.Card {
 		c := mage.NewCreature("Prodigal Sorcerer", "{2}{U}", 1, 1, "Human", "Wizard")
 		ab := mage.NewActivatedAbility(
-			mage.DealDamage(1),
+			mage.DealDamage(mage.Fixed(1)),
 			mage.TapSourceCost(),
 		
 			mage.WithTarget(mage.TargetAnyTarget()),
@@ -98,7 +98,7 @@ func registerAlphaCreatures() {
 	mage.Register("Pirate Ship", func() mage.Card {
 		c := mage.NewCreature("Pirate Ship", "{4}{U}", 4, 3, "Human", "Pirate")
 		ab := mage.NewActivatedAbility(
-			mage.DealDamage(1),
+			mage.DealDamage(mage.Fixed(1)),
 			mage.TapSourceCost(),
 		
 			mage.WithTarget(mage.TargetAnyTarget()),
@@ -153,7 +153,7 @@ func registerAlphaCreatures() {
 		c := mage.NewCreature("Frozen Shade", "{2}{B}", 0, 1, "Shade")
 		// {B}: +1/+1 until end of turn
 		ab := mage.NewActivatedAbility(
-			mage.BoostSourceUntilEndOfTurn(1, 1),
+			mage.BoostUntilEndOfTurn(mage.Fixed(1), mage.Fixed(1), mage.SelectSource),
 			mage.ManaCostOf("{B}"),
 		)
 		c.AddAbility(ab)
@@ -217,7 +217,7 @@ func registerAlphaCreatures() {
 		c := mage.NewCreature("Sengir Vampire", "{3}{B}{B}", 4, 4, "Vampire")
 		c.AddAbility(mage.HasKeyword(mage.Flying))
 		// Whenever a creature dealt damage by Sengir Vampire this turn dies, put a +1/+1 counter on Sengir Vampire
-		c.AddAbility(mage.CreatureDealtDamageBySourceDiesTrigger(mage.AddCountersToSource(mage.P1P1, 1), false))
+		c.AddAbility(mage.CreatureDealtDamageBySourceDiesTrigger(mage.AddCounters(mage.P1P1, mage.Fixed(1), mage.SelectSource), false))
 		return c
 	})
 
@@ -250,7 +250,7 @@ func registerAlphaCreatures() {
 		c.AddAbility(mage.HasKeyword(mage.Flying))
 		// {R}: +1/+0 until end of turn. If activated 4+ times, destroy at EOT.
 		ab := mage.NewActivatedAbility(
-			mage.BoostSourceUntilEndOfTurn(1, 0),
+			mage.BoostUntilEndOfTurn(mage.Fixed(1), mage.Fixed(0), mage.SelectSource),
 			mage.ManaCostOf("{R}"),
 		
 			mage.WithEffect(mage.MarkDestroyAtEOTAfterNActivations(4)),
@@ -286,7 +286,7 @@ func registerAlphaCreatures() {
 		c := mage.NewCreature("Goblin Balloon Brigade", "{R}", 1, 1, "Goblin", "Warrior")
 		// {R}: Goblin Balloon Brigade gains flying until end of turn.
 		ab := mage.NewActivatedAbility(
-			mage.GrantKeywordSourceUntilEndOfTurn(mage.Flying),
+			mage.GrantKeywordUntilEndOfTurn(mage.Flying, mage.SelectSource),
 			mage.ManaCostOf("{R}"),
 		)
 		c.AddAbility(ab)
@@ -298,7 +298,7 @@ func registerAlphaCreatures() {
 		c.AddAbility(mage.HasKeyword(mage.Flying))
 		// {R}: +0/+1 until end of turn
 		ab := mage.NewActivatedAbility(
-			mage.BoostSourceUntilEndOfTurn(0, 1),
+			mage.BoostUntilEndOfTurn(mage.Fixed(0), mage.Fixed(1), mage.SelectSource),
 			mage.ManaCostOf("{R}"),
 		)
 		c.AddAbility(ab)
@@ -341,7 +341,7 @@ func registerAlphaCreatures() {
 		c.AddAbility(mage.HasKeyword(mage.Flying))
 		// {R}: +1/+0 until end of turn (firebreathing)
 		ab := mage.NewActivatedAbility(
-			mage.BoostSourceUntilEndOfTurn(1, 0),
+			mage.BoostUntilEndOfTurn(mage.Fixed(1), mage.Fixed(0), mage.SelectSource),
 			mage.ManaCostOf("{R}"),
 		)
 		c.AddAbility(ab)
@@ -408,14 +408,14 @@ func registerAlphaCreatures() {
 		c.AddAbility(mage.HasKeyword(mage.Trample))
 		// At the beginning of your upkeep, Force of Nature deals 8 damage to you
 		// unless you pay {G}{G}{G}{G}.
-		c.AddAbility(mage.BeginningOfUpkeepTrigger(mage.DealDamageToSourceController(8), false))
+		c.AddAbility(mage.BeginningOfUpkeepTrigger(mage.DealDamageToPlayers(mage.Fixed(8), mage.SelectController()), false))
 		return c
 	})
 
 	mage.Register("Fungusaur", func() mage.Card {
 		c := mage.NewCreature("Fungusaur", "{3}{G}", 2, 2, "Fungus", "Dinosaur")
 		// Whenever Fungusaur is dealt damage, put a +1/+1 counter on it.
-		c.AddAbility(mage.WhenDamageDealtToThisTrigger(mage.AddCountersToSource(mage.P1P1, 1), false))
+		c.AddAbility(mage.WhenDamageDealtToThisTrigger(mage.AddCounters(mage.P1P1, mage.Fixed(1), mage.SelectSource), false))
 		return c
 	})
 
@@ -488,7 +488,7 @@ func registerAlphaCreatures() {
 	mage.Register("Verduran Enchantress", func() mage.Card {
 		c := mage.NewCreature("Verduran Enchantress", "{1}{G}{G}", 0, 2, "Human", "Druid")
 		// Whenever you cast an enchantment spell, draw a card (any color enchantment)
-		c.AddAbility(mage.WheneverEnchantmentCastTrigger(mage.DrawCards(1), true))
+		c.AddAbility(mage.WheneverEnchantmentCastTrigger(mage.DrawCards(mage.Fixed(1)), true))
 		return c
 	})
 
@@ -539,7 +539,7 @@ func registerAlphaCreatures() {
 		c.AddAbility(mage.HasKeyword(mage.Defender))
 		// {R}: +1/+0 until end of turn
 		ab := mage.NewActivatedAbility(
-			mage.BoostSourceUntilEndOfTurn(1, 0),
+			mage.BoostUntilEndOfTurn(mage.Fixed(1), mage.Fixed(0), mage.SelectSource),
 			mage.ManaCostOf("{R}"),
 		)
 		c.AddAbility(ab)
@@ -570,7 +570,7 @@ func registerAlphaCreatures() {
 		c.AddAbility(mage.HasKeyword(mage.Defender))
 		// {U}: +1/+0 until end of turn
 		ab := mage.NewActivatedAbility(
-			mage.BoostSourceUntilEndOfTurn(1, 0),
+			mage.BoostUntilEndOfTurn(mage.Fixed(1), mage.Fixed(0), mage.SelectSource),
 			mage.ManaCostOf("{U}"),
 		)
 		c.AddAbility(ab)
@@ -596,7 +596,7 @@ func registerAlphaCreatures() {
 		c.AddType(mage.TypeArtifact)
 		// Enters with 7 +1/+0 counters
 		c.AddAbility(mage.EntersBattlefieldTrigger(
-			mage.AddCountersToSource(mage.P1P0, 7), false,
+			mage.AddCounters(mage.P1P0, mage.Fixed(7), mage.SelectSource), false,
 		))
 		// Loses a +1/+0 counter whenever it attacks
 		c.AddAbility(mage.AttacksTrigger(
@@ -658,7 +658,7 @@ func registerAlphaCreatures() {
 		c := mage.NewCreature("Samite Healer", "{1}{W}", 1, 1, "Human", "Cleric")
 		// {T}: Prevent the next 1 damage that would be dealt to any target this turn.
 		ab := mage.NewActivatedAbility(
-			mage.PreventDamageToTarget(1),
+			mage.PreventDamageToTarget(mage.Fixed(1)),
 			mage.TapSourceCost(),
 		
 			mage.WithTarget(mage.TargetAnyTarget()),
@@ -704,7 +704,7 @@ func registerAlphaCreatures() {
 	mage.Register("Scavenging Ghoul", func() mage.Card {
 		c := mage.NewCreature("Scavenging Ghoul", "{3}{B}", 2, 2, "Zombie")
 		// Whenever another creature dies, put a +1/+1 counter on Scavenging Ghoul
-		c.AddAbility(mage.AnyCreatureDiesTrigger(mage.AddCountersToSource(mage.P1P1, 1), true))
+		c.AddAbility(mage.AnyCreatureDiesTrigger(mage.AddCounters(mage.P1P1, mage.Fixed(1), mage.SelectSource), true))
 		return c
 	})
 

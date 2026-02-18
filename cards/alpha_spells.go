@@ -1,6 +1,11 @@
 package cards
 
-import "github.com/mage/mage"
+import (
+	"fmt"
+
+	"github.com/google/uuid"
+	"github.com/mage/mage"
+)
 
 func init() {
 	registerAlphaSpells()
@@ -11,7 +16,26 @@ func registerAlphaSpells() {
 
 	mage.Register("Swords to Plowshares", func() mage.Card {
 		c := mage.NewInstant("Swords to Plowshares", "{W}")
-		sa := mage.NewTargetedSpell(mage.TargetCreature(), mage.ExileTargetCreatureGainLife())
+		sa := mage.NewTargetedSpell(mage.TargetCreature(), mage.FuncEffect(
+			"exile target creature. Its controller gains life equal to its power",
+			func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				if len(targets) == 0 {
+					return fmt.Errorf("no target")
+				}
+				perm := g.FindPermanent(targets[0])
+				if perm == nil {
+					return nil
+				}
+				power := perm.CurrentPower(g)
+				permController := perm.Controller
+				g.ExilePermanent(perm)
+				p := g.GetPlayer(permController)
+				if p != nil && power > 0 {
+					p.GainLife(power)
+					g.FireEvent(mage.GameEvent{Type: mage.EvtLifeGained, PlayerID: permController, Amount: power})
+				}
+				return nil
+			}))
 		c.AddAbility(sa)
 		return c
 	})
@@ -26,7 +50,7 @@ func registerAlphaSpells() {
 	mage.Register("Healing Salve", func() mage.Card {
 		c := mage.NewInstant("Healing Salve", "{W}")
 		// Target player gains 3 life (one of two modes, simplified)
-		sa := mage.NewTargetedSpell(mage.TargetPlayer(), mage.GainLifeTarget(3))
+		sa := mage.NewTargetedSpell(mage.TargetPlayer(), mage.GainLifeTarget(mage.Fixed(3)))
 		c.AddAbility(sa)
 		return c
 	})
@@ -70,7 +94,7 @@ func registerAlphaSpells() {
 	mage.Register("Guardian Angel", func() mage.Card {
 		c := mage.NewInstant("Guardian Angel", "{X}{W}")
 		// Prevent the next X damage that would be dealt to any target this turn
-		sa := mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.PreventXDamageToTarget())
+		sa := mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.PreventDamageToTarget(mage.XValue()))
 		c.AddAbility(sa)
 		return c
 	})
@@ -79,14 +103,14 @@ func registerAlphaSpells() {
 
 	mage.Register("Ancestral Recall", func() mage.Card {
 		c := mage.NewInstant("Ancestral Recall", "{U}")
-		sa := mage.NewTargetedSpell(mage.TargetPlayer(), mage.DrawCardsTarget(3))
+		sa := mage.NewTargetedSpell(mage.TargetPlayer(), mage.DrawCards(mage.Fixed(3)))
 		c.AddAbility(sa)
 		return c
 	})
 
 	mage.Register("Braingeyser", func() mage.Card {
 		c := mage.NewSorcery("Braingeyser", "{X}{U}{U}")
-		sa := mage.NewTargetedSpell(mage.TargetPlayer(), mage.DrawXCards())
+		sa := mage.NewTargetedSpell(mage.TargetPlayer(), mage.DrawCards(mage.XValue()))
 		c.AddAbility(sa)
 		return c
 	})
@@ -200,14 +224,40 @@ func registerAlphaSpells() {
 
 	mage.Register("Drain Life", func() mage.Card {
 		c := mage.NewSorcery("Drain Life", "{X}{1}{B}")
-		sa := mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DrainXLife())
+		sa := mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.FuncEffect(
+			"deal X damage to target and gain X life",
+			func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				if len(targets) == 0 {
+					return fmt.Errorf("no target for drain life")
+				}
+				amount := g.CurrentX
+				if amount <= 0 {
+					return nil
+				}
+				target := targets[0]
+				perm := g.FindPermanent(target)
+				if perm != nil {
+					g.DealDamageToPermanent(perm, amount, sourceID)
+				} else {
+					p := g.GetPlayer(target)
+					if p != nil {
+						g.DealDamageToPlayer(p, amount, sourceID)
+					}
+				}
+				caster := g.GetPlayer(controller)
+				if caster != nil {
+					caster.GainLife(amount)
+					g.FireEvent(mage.GameEvent{Type: mage.EvtLifeGained, PlayerID: controller, Amount: amount})
+				}
+				return nil
+			}))
 		c.AddAbility(sa)
 		return c
 	})
 
 	mage.Register("Mind Twist", func() mage.Card {
 		c := mage.NewSorcery("Mind Twist", "{X}{B}")
-		sa := mage.NewTargetedSpell(mage.TargetPlayer(), mage.DiscardXCards())
+		sa := mage.NewTargetedSpell(mage.TargetPlayer(), mage.DiscardCards(mage.XValue()))
 		c.AddAbility(sa)
 		return c
 	})
@@ -233,8 +283,8 @@ func registerAlphaSpells() {
 		// {B}: Deal 1 damage to each creature and each player
 		ab := mage.NewActivatedAbility(
 			mage.CompositeEffects("deal 1 damage to each creature and each player",
-				mage.DealDamageToAllCreatures(1, nil),
-				mage.DealDamageToEachPlayer(1),
+				mage.DealDamageToAllCreatures(mage.Fixed(1), nil),
+				mage.DealDamageToPlayers(mage.Fixed(1), mage.SelectEachPlayer()),
 			),
 			mage.ManaCostOf("{B}"),
 		)
@@ -256,14 +306,14 @@ func registerAlphaSpells() {
 
 	mage.Register("Fireball", func() mage.Card {
 		c := mage.NewSorcery("Fireball", "{X}{R}")
-		sa := mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealXDamage())
+		sa := mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.XValue()))
 		c.AddAbility(sa)
 		return c
 	})
 
 	mage.Register("Disintegrate", func() mage.Card {
 		c := mage.NewSorcery("Disintegrate", "{X}{R}")
-		sa := mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealXDamage())
+		sa := mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.XValue()))
 		c.AddAbility(sa)
 		return c
 	})
@@ -273,8 +323,8 @@ func registerAlphaSpells() {
 		// Deal X damage to each creature without flying and each player
 		sa := mage.NewSpellAbility(mage.CompositeEffects(
 			"deal X damage to each creature without flying and each player",
-			mage.DealXDamageToAllCreatures(mage.NotHasKeywordFilter(mage.Flying)),
-			mage.DealXDamageToEachPlayer(),
+			mage.DealDamageToAllCreatures(mage.XValue(),mage.NotHasKeywordFilter(mage.Flying)),
+			mage.DealDamageToPlayers(mage.XValue(), mage.SelectEachPlayer()),
 		))
 		c.AddAbility(sa)
 		return c
@@ -346,8 +396,8 @@ func registerAlphaSpells() {
 		// Deal X damage to each creature with flying and each player
 		sa := mage.NewSpellAbility(mage.CompositeEffects(
 			"deal X damage to each creature with flying and each player",
-			mage.DealXDamageToAllCreatures(mage.HasKeywordFilter(mage.Flying)),
-			mage.DealXDamageToEachPlayer(),
+			mage.DealDamageToAllCreatures(mage.XValue(),mage.HasKeywordFilter(mage.Flying)),
+			mage.DealDamageToPlayers(mage.XValue(), mage.SelectEachPlayer()),
 		))
 		c.AddAbility(sa)
 		return c
@@ -377,7 +427,7 @@ func registerAlphaSpells() {
 
 	mage.Register("Stream of Life", func() mage.Card {
 		c := mage.NewSorcery("Stream of Life", "{X}{G}")
-		sa := mage.NewTargetedSpell(mage.TargetPlayer(), mage.GainXLife())
+		sa := mage.NewTargetedSpell(mage.TargetPlayer(), mage.GainLifeTarget(mage.XValue()))
 		c.AddAbility(sa)
 		return c
 	})
@@ -400,14 +450,14 @@ func registerAlphaSpells() {
 	mage.Register("Howl from Beyond", func() mage.Card {
 		c := mage.NewInstant("Howl from Beyond", "{X}{B}")
 		// Target creature gets +X/+0 until end of turn
-		sa := mage.NewTargetedSpell(mage.TargetCreature(), mage.BoostTargetXUntilEndOfTurn(true, false))
+		sa := mage.NewTargetedSpell(mage.TargetCreature(), mage.BoostUntilEndOfTurn(mage.XValue(), mage.Fixed(0), mage.SelectTarget))
 		c.AddAbility(sa)
 		return c
 	})
 
 	mage.Register("Righteousness", func() mage.Card {
 		c := mage.NewInstant("Righteousness", "{W}")
-		sa := mage.NewTargetedSpell(mage.TargetCreature(), mage.BoostTargetUntilEndOfTurn(7, 7))
+		sa := mage.NewTargetedSpell(mage.TargetCreature(), mage.BoostUntilEndOfTurn(mage.Fixed(7), mage.Fixed(7), mage.SelectTarget))
 		c.AddAbility(sa)
 		return c
 	})

@@ -16,7 +16,7 @@ func registerSpells() {
 
 	mage.Register("Lightning Bolt", func() mage.Card {
 		c := mage.NewInstant("Lightning Bolt", "{R}")
-		sa := mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(3))
+		sa := mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3)))
 		c.AddAbility(sa)
 		return c
 	})
@@ -31,7 +31,7 @@ func registerSpells() {
 
 	mage.Register("Giant Growth", func() mage.Card {
 		c := mage.NewInstant("Giant Growth", "{G}")
-		sa := mage.NewTargetedSpell(mage.TargetCreature(), mage.BoostTargetUntilEndOfTurn(3, 3))
+		sa := mage.NewTargetedSpell(mage.TargetCreature(), mage.BoostUntilEndOfTurn(mage.Fixed(3), mage.Fixed(3), mage.SelectTarget))
 		c.AddAbility(sa)
 		return c
 	})

@@ -43,7 +43,7 @@ func TestGenericTriggered(t *testing.T) {
 				c.AddAbility(NewTriggered(
 					EvtUpkeep,
 					false,
-					DealDamageToSourceController(1),
+					DealDamageToPlayers(Fixed(1), SelectController()),
 				).SetCondition(func(evt *GameEvent, _ *Game, _, controllerID uuid.UUID) bool {
 					return evt.PlayerID == controllerID
 				}))
@@ -72,7 +72,7 @@ func TestGenericTriggered(t *testing.T) {
 				c.AddAbility(NewTriggered(
 					EvtCreatureDied,
 					false,
-					AddCountersToSource(P1P1, 1),
+					AddCounters(P1P1, Fixed(1), SelectSource),
 				).SetCondition(func(evt *GameEvent, _ *Game, sourceID, controllerID uuid.UUID) bool {
 					if evt.SourceID == sourceID {
 						return false
@@ -87,7 +87,7 @@ func TestGenericTriggered(t *testing.T) {
 			}},
 			{boltName, func() Card {
 				c := NewInstant(boltName, "{R}")
-				c.AddAbility(NewTargetedSpell(TargetCreature(), DealDamage(3)))
+				c.AddAbility(NewTargetedSpell(TargetCreature(), DealDamage(Fixed(3))))
 				return c
 			}},
 		} {
@@ -115,7 +115,7 @@ func TestGenericTriggered(t *testing.T) {
 				c.AddAbility(NewTriggered(
 					EvtDeclaredAttacker,
 					false,
-					BoostSourceUntilEndOfTurn(2, 0),
+					BoostUntilEndOfTurn(Fixed(2), Fixed(0), SelectSource),
 				).SetCondition(func(evt *GameEvent, _ *Game, sourceID, _ uuid.UUID) bool {
 					return evt.SourceID == sourceID
 				}))
@@ -238,7 +238,7 @@ func TestXVariantCollapse(t *testing.T) {
 		if !CardRegistered(name) {
 			Register(name, func() Card {
 				c := NewSorcery(name, "{X}{R}")
-				c.AddAbility(NewTargetedSpell(TargetAnyTarget(), DealXDamage()))
+				c.AddAbility(NewTargetedSpell(TargetAnyTarget(), DealDamage(XValue())))
 				return c
 			})
 		}
@@ -253,9 +253,9 @@ func TestXVariantCollapse(t *testing.T) {
 	})
 
 	t.Run("DealDamage fixed amount still works", func(t *testing.T) {
-		eff := DealDamage(3)
+		eff := DealDamage(Fixed(3))
 		if eff.Text() != "deal 3 damage to target" {
-			t.Errorf("DealDamage(3).Text() = %q", eff.Text())
+			t.Errorf("DealDamage(Fixed(3)).Text() = %q", eff.Text())
 		}
 	})
 
@@ -264,7 +264,7 @@ func TestXVariantCollapse(t *testing.T) {
 		if !CardRegistered(name) {
 			Register(name, func() Card {
 				c := NewSorcery(name, "{X}{U}")
-				c.AddAbility(NewTargetedSpell(TargetPlayer(), DrawXCards()))
+				c.AddAbility(NewTargetedSpell(TargetPlayer(), DrawCards(XValue())))
 				return c
 			})
 		}
@@ -339,7 +339,7 @@ func TestSourceTargetUnification(t *testing.T) {
 				c.AddAbility(NewTriggered(
 					EvtDeclaredAttacker,
 					false,
-					BoostSourceUntilEndOfTurn(1, 0),
+					BoostUntilEndOfTurn(Fixed(1), Fixed(0), SelectSource),
 				).SetCondition(func(evt *GameEvent, _ *Game, sourceID, _ uuid.UUID) bool {
 					return evt.SourceID == sourceID
 				}))
@@ -357,35 +357,35 @@ func TestSourceTargetUnification(t *testing.T) {
 	})
 
 	t.Run("BoostTargetUntilEndOfTurn pumps target", func(t *testing.T) {
-		eff := BoostTargetUntilEndOfTurn(2, 2)
+		eff := BoostUntilEndOfTurn(Fixed(2), Fixed(2), SelectTarget)
 		if eff.Text() != "target creature gets +2/+2 until end of turn" {
 			t.Errorf("BoostTargetUntilEndOfTurn(2,2).Text() = %q", eff.Text())
 		}
 	})
 
 	t.Run("AddCountersToSource adds to source", func(t *testing.T) {
-		eff := AddCountersToSource(P1P1, 2)
+		eff := AddCounters(P1P1, Fixed(2), SelectSource)
 		if eff.Text() != "put 2 +1/+1 counter(s) on it" {
 			t.Errorf("AddCountersToSource.Text() = %q", eff.Text())
 		}
 	})
 
 	t.Run("AddCountersToTarget adds to target", func(t *testing.T) {
-		eff := AddCountersToTarget(P1P1, 1)
+		eff := AddCounters(P1P1, Fixed(1), SelectTarget)
 		if eff.Text() != "put 1 +1/+1 counter(s) on target" {
 			t.Errorf("AddCountersToTarget.Text() = %q", eff.Text())
 		}
 	})
 
 	t.Run("GrantKeywordSourceUntilEndOfTurn Text()", func(t *testing.T) {
-		eff := GrantKeywordSourceUntilEndOfTurn(Flying)
+		eff := GrantKeywordUntilEndOfTurn(Flying, SelectSource)
 		if eff.Text() != "~ gains Flying until end of turn" {
 			t.Errorf("GrantKeywordSource.Text() = %q", eff.Text())
 		}
 	})
 
 	t.Run("GrantKeywordTargetUntilEndOfTurn Text()", func(t *testing.T) {
-		eff := GrantKeywordTargetUntilEndOfTurn(Flying)
+		eff := GrantKeywordUntilEndOfTurn(Flying, SelectTarget)
 		if eff.Text() != "target creature gains Flying until end of turn" {
 			t.Errorf("GrantKeywordTarget.Text() = %q", eff.Text())
 		}
@@ -690,5 +690,220 @@ func TestPermanentPropertyMigration(t *testing.T) {
 
 		// Should have returned to battlefield
 		tg.AssertPermanentCount(PlayerA, name, 1)
+	})
+}
+
+// TestValueSource verifies Fixed and XValue resolve correctly.
+func TestValueSource(t *testing.T) {
+	t.Run("Fixed returns constant", func(t *testing.T) {
+		v := Fixed(7)
+		got := v.Resolve(nil, uuid.Nil, uuid.Nil)
+		if got != 7 {
+			t.Errorf("Fixed(7).Resolve() = %d, want 7", got)
+		}
+	})
+
+	t.Run("Fixed text shows number", func(t *testing.T) {
+		v := Fixed(3)
+		if v.Text() != "3" {
+			t.Errorf("Fixed(3).Text() = %q, want %q", v.Text(), "3")
+		}
+	})
+
+	t.Run("XValue reads CurrentX", func(t *testing.T) {
+		g := &Game{CurrentX: 5}
+		v := XValue()
+		got := v.Resolve(g, uuid.Nil, uuid.Nil)
+		if got != 5 {
+			t.Errorf("XValue().Resolve() with CurrentX=5 = %d, want 5", got)
+		}
+	})
+
+	t.Run("XValue text is X", func(t *testing.T) {
+		v := XValue()
+		if v.Text() != "X" {
+			t.Errorf("XValue().Text() = %q, want %q", v.Text(), "X")
+		}
+	})
+}
+
+// TestPlayerSelector verifies all PlayerSelector implementations.
+func TestPlayerSelector(t *testing.T) {
+	t.Run("SelectController returns controller", func(t *testing.T) {
+		controllerID := uuid.New()
+		s := SelectController()
+		ids := s.Select(nil, uuid.Nil, controllerID, nil)
+		if len(ids) != 1 || ids[0] != controllerID {
+			t.Errorf("SelectController().Select() = %v, want [%v]", ids, controllerID)
+		}
+	})
+
+	t.Run("SelectActivePlayer returns active player", func(t *testing.T) {
+		tg := NewTestGame(t)
+		tg.StopAt(1, PrecombatMain)
+		tg.Execute()
+		s := SelectActivePlayer()
+		ids := s.Select(tg.Game, uuid.Nil, uuid.Nil, nil)
+		if len(ids) != 1 {
+			t.Fatalf("SelectActivePlayer returned %d IDs, want 1", len(ids))
+		}
+		activeID := tg.Game.ActivePlayerObj().PlayerID()
+		if ids[0] != activeID {
+			t.Errorf("SelectActivePlayer returned %v, want %v", ids[0], activeID)
+		}
+	})
+
+	t.Run("SelectEachPlayer returns all players", func(t *testing.T) {
+		tg := NewTestGame(t)
+		tg.StopAt(1, PrecombatMain)
+		tg.Execute()
+		s := SelectEachPlayer()
+		ids := s.Select(tg.Game, uuid.Nil, uuid.Nil, nil)
+		if len(ids) != 2 {
+			t.Errorf("SelectEachPlayer returned %d IDs, want 2", len(ids))
+		}
+	})
+
+	t.Run("SelectEachOpponent excludes controller", func(t *testing.T) {
+		tg := NewTestGame(t)
+		tg.StopAt(1, PrecombatMain)
+		tg.Execute()
+		controllerID := tg.Game.Players[0].PlayerID()
+		s := SelectEachOpponent()
+		ids := s.Select(tg.Game, uuid.Nil, controllerID, nil)
+		if len(ids) != 1 {
+			t.Fatalf("SelectEachOpponent returned %d IDs, want 1", len(ids))
+		}
+		if ids[0] == controllerID {
+			t.Errorf("SelectEachOpponent should not return the controller")
+		}
+	})
+
+	t.Run("SelectEventController reads targets[0]", func(t *testing.T) {
+		playerID := uuid.New()
+		s := SelectEventController()
+		ids := s.Select(nil, uuid.Nil, uuid.Nil, []uuid.UUID{playerID})
+		if len(ids) != 1 || ids[0] != playerID {
+			t.Errorf("SelectEventController() = %v, want [%v]", ids, playerID)
+		}
+	})
+
+	t.Run("SelectEventController with no targets returns nil", func(t *testing.T) {
+		s := SelectEventController()
+		ids := s.Select(nil, uuid.Nil, uuid.Nil, nil)
+		if len(ids) != 0 {
+			t.Errorf("SelectEventController() with no targets = %v, want empty", ids)
+		}
+	})
+}
+
+// TestPermanentSelector verifies SelectTarget vs SelectSource constants.
+func TestPermanentSelector(t *testing.T) {
+	if SelectTarget == SelectSource {
+		t.Error("SelectTarget and SelectSource should be different values")
+	}
+}
+
+// TestDealDamageToPlayers verifies the unified damage-to-players effect
+// works with different selectors.
+func TestDealDamageToPlayers(t *testing.T) {
+	t.Run("damage to each player", func(t *testing.T) {
+		name := "DTP Each Player Test"
+		if !CardRegistered(name) {
+			Register(name, func() Card {
+				c := NewSorcery(name, "{R}")
+				c.AddAbility(NewSpellAbility(DealDamageToPlayers(Fixed(3), SelectEachPlayer())))
+				return c
+			})
+		}
+		tg := NewTestGame(t)
+		tg.AddCard(ZoneHand, PlayerA, name)
+		tg.CastSpell(1, PrecombatMain, PlayerA, name)
+		tg.StopAt(1, EndCombat)
+		tg.Execute()
+		tg.AssertLife(PlayerA, 17)
+		tg.AssertLife(PlayerB, 17)
+	})
+
+	t.Run("damage to each opponent", func(t *testing.T) {
+		name := "DTP Each Opponent Test"
+		if !CardRegistered(name) {
+			Register(name, func() Card {
+				c := NewSorcery(name, "{R}")
+				c.AddAbility(NewSpellAbility(DealDamageToPlayers(Fixed(4), SelectEachOpponent())))
+				return c
+			})
+		}
+		tg := NewTestGame(t)
+		tg.AddCard(ZoneHand, PlayerA, name)
+		tg.CastSpell(1, PrecombatMain, PlayerA, name)
+		tg.StopAt(1, EndCombat)
+		tg.Execute()
+		tg.AssertLife(PlayerA, 20)
+		tg.AssertLife(PlayerB, 16)
+	})
+}
+
+// TestValueSourceEffects verifies that effects using ValueSource resolve
+// both Fixed and XValue correctly.
+func TestValueSourceEffects(t *testing.T) {
+	t.Run("DealDamage with Fixed", func(t *testing.T) {
+		name := "VS DealDamage Fixed"
+		if !CardRegistered(name) {
+			Register(name, func() Card {
+				c := NewInstant(name, "{R}")
+				sa := NewTargetedSpell(TargetAnyTarget(), DealDamage(Fixed(3)))
+				c.AddAbility(sa)
+				return c
+			})
+		}
+		tg := NewTestGame(t)
+		tg.AddCard(ZoneHand, PlayerA, name)
+		tg.CastSpell(1, PrecombatMain, PlayerA, name, "PlayerB")
+		tg.StopAt(1, EndCombat)
+		tg.Execute()
+		tg.AssertLife(PlayerB, 17)
+	})
+
+	t.Run("GainLifeTarget with Fixed", func(t *testing.T) {
+		name := "VS GainLife Fixed"
+		if !CardRegistered(name) {
+			Register(name, func() Card {
+				c := NewInstant(name, "{W}")
+				sa := NewTargetedSpell(TargetPlayer(), GainLifeTarget(Fixed(5)))
+				c.AddAbility(sa)
+				return c
+			})
+		}
+		tg := NewTestGame(t)
+		tg.AddCard(ZoneHand, PlayerA, name)
+		tg.CastSpell(1, PrecombatMain, PlayerA, name, "PlayerA")
+		tg.StopAt(1, EndCombat)
+		tg.Execute()
+		tg.AssertLife(PlayerA, 25)
+	})
+
+	t.Run("BoostTarget with Fixed", func(t *testing.T) {
+		name := "VS Boost Fixed"
+		bearName := "Boost Test Bear"
+		if !CardRegistered(name) {
+			Register(name, func() Card {
+				c := NewInstant(name, "{G}")
+				sa := NewTargetedSpell(TargetCreature(), BoostUntilEndOfTurn(Fixed(3), Fixed(3), SelectTarget))
+				c.AddAbility(sa)
+				return c
+			})
+			Register(bearName, func() Card {
+				c := NewCreature(bearName, "{1}{G}", 2, 2, "Bear")
+				return c
+			})
+		}
+		tg := NewTestGame(t)
+		tg.AddCard(ZoneBattlefield, PlayerA, bearName)
+		tg.AddCard(ZoneHand, PlayerA, name)
+		tg.CastSpell(1, PrecombatMain, PlayerA, name, bearName)
+		tg.StopAt(1, EndCombat)
+		tg.Execute()
+		tg.AssertPowerToughness(PlayerA, bearName, 5, 5)
 	})
 }

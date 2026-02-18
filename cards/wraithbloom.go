@@ -16,7 +16,7 @@ func registerWraithbloom() {
 			mage.DiesCreatureTrigger(
 				mage.CompositeEffects("gain 1 life and put a +1/+1 counter on this",
 					mage.GainLife(1),
-					mage.AddCountersToSource(mage.P1P1, 1),
+					mage.AddCounters(mage.P1P1, mage.Fixed(1), mage.SelectSource),
 				),
 				false, nil,
 			),
