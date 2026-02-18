@@ -296,6 +296,12 @@ func registerAlphaCreatures() {
 		c := mage.NewCreature("Dwarven Warriors", "{2}{R}", "Dwarf", "Warrior")
 		c.Power_ = 1
 		c.Toughness_ = 1
+		// {T}: Target creature with power 2 or less can't be blocked this turn.
+		ab := mage.NewActivatedAbility(
+			mage.MakeUnblockableUntilEndOfTurn(),
+			mage.TapSourceCost(),
+		).AddTarget(mage.TargetCreature())
+		c.AddAbility(ab)
 		return c
 	})
 
