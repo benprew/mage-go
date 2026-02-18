@@ -109,7 +109,7 @@ func (tg *TestGame) AddCard(zone Zone, p PlayerRef, name string, count ...int) {
 		case ZoneGraveyard:
 			player.AddToGraveyard(card)
 		case ZoneLibrary:
-			player.Library_ = append(player.Library_, card)
+			player.library = append(player.library, card)
 		}
 	}
 }

@@ -12,53 +12,68 @@ type ActivatedAbility interface {
 	SorcerySpeed() bool
 }
 
-// SimpleActivatedAbility is a basic activated ability.
-type SimpleActivatedAbility struct {
-	BaseAbility
-	Effs         []Effect
-	Csts         []Cost
-	Tgts         []Target
-	SorceryOnly  bool
-}
+// AbilityOption configures an activated ability during construction.
+type AbilityOption func(*SimpleActivatedAbility)
 
-func NewActivatedAbility(effect Effect, cost Cost) *SimpleActivatedAbility {
-	return &SimpleActivatedAbility{
-		BaseAbility: BaseAbility{
-			ID_:   uuid.New(),
-			Type_: AbilityActivated,
-		},
-		Effs: []Effect{effect},
-		Csts: []Cost{cost},
+// WithCost adds an additional cost to an activated ability.
+func WithCost(c Cost) AbilityOption {
+	return func(a *SimpleActivatedAbility) {
+		a.costs = append(a.costs, c)
 	}
 }
 
-func (a *SimpleActivatedAbility) AddCost(c Cost) *SimpleActivatedAbility {
-	a.Csts = append(a.Csts, c)
-	return a
+// WithTarget adds a target to an activated ability.
+func WithTarget(t Target) AbilityOption {
+	return func(a *SimpleActivatedAbility) {
+		a.targets = append(a.targets, t)
+	}
 }
 
-func (a *SimpleActivatedAbility) AddEffect(e Effect) *SimpleActivatedAbility {
-	a.Effs = append(a.Effs, e)
-	return a
+// WithEffect adds an additional effect to an activated ability.
+func WithEffect(e Effect) AbilityOption {
+	return func(a *SimpleActivatedAbility) {
+		a.effects = append(a.effects, e)
+	}
 }
 
-func (a *SimpleActivatedAbility) AddTarget(t Target) *SimpleActivatedAbility {
-	a.Tgts = append(a.Tgts, t)
+// SimpleActivatedAbility is a basic activated ability.
+type SimpleActivatedAbility struct {
+	BaseAbility
+	effects     []Effect
+	costs       []Cost
+	targets     []Target
+	SorceryOnly bool
+}
+
+// NewActivatedAbility creates an activated ability with a primary effect, a primary cost,
+// and optional additional costs, targets, or effects via AbilityOption functions.
+func NewActivatedAbility(effect Effect, cost Cost, opts ...AbilityOption) *SimpleActivatedAbility {
+	a := &SimpleActivatedAbility{
+		BaseAbility: BaseAbility{
+			id:          uuid.New(),
+			abilityType: AbilityActivated,
+		},
+		effects: []Effect{effect},
+		costs:   []Cost{cost},
+	}
+	for _, opt := range opts {
+		opt(a)
+	}
 	return a
 }
 
 func (a *SimpleActivatedAbility) CanActivate(controller uuid.UUID, g *Game) bool {
-	for _, c := range a.Csts {
-		if !c.CanPay(a.Source_, controller, g) {
+	for _, c := range a.costs {
+		if !c.CanPay(a.source, controller, g) {
 			return false
 		}
 	}
 	return true
 }
 
-func (a *SimpleActivatedAbility) Effects() []Effect { return a.Effs }
-func (a *SimpleActivatedAbility) Costs() []Cost     { return a.Csts }
-func (a *SimpleActivatedAbility) Targets() []Target { return a.Tgts }
+func (a *SimpleActivatedAbility) Effects() []Effect  { return a.effects }
+func (a *SimpleActivatedAbility) Costs() []Cost      { return a.costs }
+func (a *SimpleActivatedAbility) Targets() []Target  { return a.targets }
 func (a *SimpleActivatedAbility) SorcerySpeed() bool { return a.SorceryOnly }
 
 // EquipAbility is an activated ability for equipment (sorcery speed, targets creature you control).
@@ -70,12 +85,12 @@ func NewEquipAbility(cost Cost) *EquipAbility {
 	ea := &EquipAbility{
 		SimpleActivatedAbility: SimpleActivatedAbility{
 			BaseAbility: BaseAbility{
-				ID_:   uuid.New(),
-				Type_: AbilityActivated,
+				id:          uuid.New(),
+				abilityType: AbilityActivated,
 			},
-			Effs:        []Effect{AttachToTarget()},
-			Csts:        []Cost{cost},
-			Tgts:        []Target{TargetControlledCreature()},
+			effects:     []Effect{AttachToTarget()},
+			costs:       []Cost{cost},
+			targets:     []Target{TargetControlledCreature()},
 			SorceryOnly: true,
 		},
 	}

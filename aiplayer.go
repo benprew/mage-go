@@ -116,8 +116,8 @@ func (ai *AIPlayer) AIAttackers(g *Game) []uuid.UUID {
 }
 
 // AIBlockers returns a blocker->attacker mapping for the AI's blocking decisions.
-func (ai *AIPlayer) AIBlockers(g *Game) map[uuid.UUID]uuid.UUID {
-	blockers := make(map[uuid.UUID]uuid.UUID)
+func (ai *AIPlayer) AIBlockers(g *Game) []BlockAssignment {
+	var assignments []BlockAssignment
 
 	// Get available blockers
 	var available []*Permanent
@@ -156,14 +156,17 @@ func (ai *AIPlayer) AIBlockers(g *Game) map[uuid.UUID]uuid.UUID {
 
 			// Block if we can kill the attacker or if the attacker would deal significant damage
 			if blkPow >= atkTough || atkPow >= 3 {
-				blockers[blk.ID()] = atk.ID()
+				assignments = append(assignments, BlockAssignment{
+					BlockerID:  blk.ID(),
+					AttackerID: atk.ID(),
+				})
 				available[i] = nil // used
 				break
 			}
 		}
 	}
 
-	return blockers
+	return assignments
 }
 
 // DeclareAttackers implements the Player interface for AI.
@@ -172,7 +175,7 @@ func (ai *AIPlayer) DeclareAttackers(g *Game) []uuid.UUID {
 }
 
 // DeclareBlockers implements the Player interface for AI.
-func (ai *AIPlayer) DeclareBlockers(g *Game) map[uuid.UUID]uuid.UUID {
+func (ai *AIPlayer) DeclareBlockers(g *Game) []BlockAssignment {
 	return ai.AIBlockers(g)
 }
 
@@ -192,7 +195,7 @@ func (ai *AIPlayer) autoSelectTargets(g *Game, card Card) []uuid.UUID {
 			}
 
 			switch t.(type) {
-			case *AnyTargetImpl:
+			case *AnyTarget:
 				// For damage spells: prefer opponent's creature, else opponent's face
 				// First look for an opponent creature we can kill
 				for _, id := range possible {

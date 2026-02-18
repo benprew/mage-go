@@ -1,9 +1,21 @@
 package mage
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
+)
+
+// Sentinel errors for common failure conditions.
+var (
+	ErrPlayerNotFound    = errors.New("player not found")
+	ErrSourceNotFound    = errors.New("source not found on battlefield")
+	ErrPermanentNotFound = errors.New("permanent not found")
+	ErrCardNotInHand     = errors.New("card not found in hand")
+	ErrSourceTapped      = errors.New("source is already tapped")
+	ErrNoCreature        = errors.New("no creature to sacrifice")
+	ErrSorcerySpeed      = errors.New("can only activate at sorcery speed")
 )
 
 // Game is the central game state and engine.
@@ -153,8 +165,9 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 	}
 
 	// Add X counters if configured (replacement effect, not a trigger)
-	if bc, ok := card.(*BaseCard); ok && bc.EntersWithXCountersSet && g.CurrentX > 0 {
-		perm.AddCounter(bc.EntersWithXCounters_, g.CurrentX)
+	props := card.Props()
+	if props.EntersWithXCountersSet && g.CurrentX > 0 {
+		perm.AddCounter(props.EntersWithXCounters, g.CurrentX)
 	}
 
 	g.Battlefield = append(g.Battlefield, perm)
@@ -183,40 +196,7 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 
 // setEffectSource sets the source ID on a continuous effect.
 func (g *Game) setEffectSource(e ContinuousEffect, id uuid.UUID) {
-	switch eff := e.(type) {
-	case *boostAttachedEffect:
-		eff.sourceID = id
-	case *grantKeywordAttachedEffect:
-		eff.sourceID = id
-	case *preventAttackEffect:
-		eff.sourceID = id
-	case *boostAllCreaturesEffect:
-		eff.sourceID_ = id
-	case *boostAllCreaturesIncludingSelfEffect:
-		eff.sourceID_ = id
-	case *grantKeywordToAllEffect:
-		eff.sourceID_ = id
-	case *controlChangeEffect:
-		eff.sourceID_ = id
-	case *boostControlledCreaturesEffect:
-		eff.sourceID_ = id
-	case *boostAttachedByForestCountEffect:
-		eff.sourceID = id
-	case *boostSelfWhileControllingEffect:
-		eff.sourceID_ = id
-	case *grantActivatedAbilityAttachedEffect:
-		eff.sourceID = id
-	case *removeKeywordAttachedEffect:
-		eff.sourceID = id
-	case *preventUntapEffect:
-		eff.sourceID = id
-	case *ptEqualsCountEffect:
-		eff.sourceID_ = id
-	case *powerEqualsCountEffect:
-		eff.sourceID_ = id
-	case *grantActivatedAbilityToAllEffect:
-		eff.sourceID_ = id
-	}
+	e.SetSourceID(id)
 }
 
 // RemoveFromBattlefield removes a permanent and handles cleanup.
@@ -536,7 +516,7 @@ func (g *Game) PutTriggersOnStack() {
 		// For triggers that need to pass the event's player as a target
 		// (e.g., "deal damage to that land's controller"), store the event
 		// PlayerID as a target on the stack object.
-		if _, ok := pt.ability.(*WheneverLandEntersBattlefieldTriggered); ok {
+		if gt, ok := pt.ability.(*GenericTriggered); ok && gt.eventType == EvtEntersBattlefield {
 			if pt.event != nil && pt.event.PlayerID != uuid.Nil {
 				obj.Targets = []uuid.UUID{pt.event.PlayerID}
 			}
@@ -602,7 +582,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.UUID, xValues ...int) error {
 	p := g.GetPlayer(playerID)
 	if p == nil {
-		return fmt.Errorf("player not found")
+		return ErrPlayerNotFound
 	}
 
 	// Find card in hand
@@ -679,11 +659,7 @@ func (g *Game) ActivateAbilityByText(playerID uuid.UUID, permName string, target
 	}
 
 	for _, a := range perm.RuntimeAbilities {
-		// Unwrap grantedByEffect wrapper
-		inner := a
-		if wrapped, ok := inner.(*grantedByEffect); ok {
-			inner = wrapped.Ability
-		}
+		inner := UnwrapAbility(a)
 		aa, ok := inner.(ActivatedAbility)
 		if !ok {
 			continue
@@ -694,7 +670,7 @@ func (g *Game) ActivateAbilityByText(playerID uuid.UUID, permName string, target
 
 		// Check sorcery speed
 		if aa.SorcerySpeed() && !g.Step.IsMainPhase() {
-			return fmt.Errorf("can only activate at sorcery speed")
+			return ErrSorcerySpeed
 		}
 
 		// Pay costs
@@ -721,11 +697,8 @@ func (g *Game) ActivateAbilityByText(playerID uuid.UUID, permName string, target
 
 	// Try mana abilities (these don't use the stack)
 	for _, a := range perm.RuntimeAbilities {
-		inner := a
-		if wrapped, ok := inner.(*grantedByEffect); ok {
-			inner = wrapped.Ability
-		}
-		ma, ok := inner.(*ManaAbilityImpl)
+		inner := UnwrapAbility(a)
+		ma, ok := inner.(*ManaAbility)
 		if !ok {
 			continue
 		}
@@ -754,10 +727,7 @@ func (g *Game) ActivateAbilityByText(playerID uuid.UUID, permName string, target
 func (g *Game) applyManaBonuses(tappedPerm *Permanent, producedColor Color, p Player) {
 	for _, perm := range g.Battlefield {
 		for _, a := range perm.RuntimeAbilities {
-			inner := a
-			if wrapped, ok := inner.(*grantedByEffect); ok {
-				inner = wrapped.Ability
-			}
+			inner := UnwrapAbility(a)
 			if mb, ok := inner.(*ManaBonusAbility); ok {
 				if mb.Filter(tappedPerm, g) {
 					p.ManaPool().Add(mb.BonusMana, 1)
@@ -910,8 +880,8 @@ func (g *Game) checkGraveyardReturns(p Player) {
 	var toReturn []uuid.UUID
 
 	for i, card := range graveyard {
-		bc, ok := card.(*BaseCard)
-		if !ok || bc.GraveyardReturnMinCreatures_ <= 0 {
+		props := card.Props()
+		if props.GraveyardReturnMinCreatures <= 0 {
 			continue
 		}
 		// Count creature cards above this one (higher indices = more recently added)
@@ -921,8 +891,8 @@ func (g *Game) checkGraveyardReturns(p Player) {
 				creaturesAbove++
 			}
 		}
-		if creaturesAbove >= bc.GraveyardReturnMinCreatures_ {
-			toReturn = append(toReturn, bc.ID())
+		if creaturesAbove >= props.GraveyardReturnMinCreatures {
+			toReturn = append(toReturn, card.ID())
 		}
 	}
 
@@ -1166,12 +1136,12 @@ func (g *Game) PlayLand(playerID, cardID uuid.UUID) error {
 
 	p := g.GetPlayer(playerID)
 	if p == nil {
-		return fmt.Errorf("player not found")
+		return ErrPlayerNotFound
 	}
 
 	card, ok := p.RemoveFromHand(cardID)
 	if !ok {
-		return fmt.Errorf("card not found in hand")
+		return ErrCardNotInHand
 	}
 	if !card.HasType(TypeLand) {
 		p.AddToHand(card)
@@ -1187,7 +1157,7 @@ func (g *Game) PlayLand(playerID, cardID uuid.UUID) error {
 func (g *Game) TapForMana(playerID, permanentID uuid.UUID) error {
 	perm := g.FindPermanent(permanentID)
 	if perm == nil {
-		return fmt.Errorf("permanent not found")
+		return ErrPermanentNotFound
 	}
 	if perm.Controller != playerID {
 		return fmt.Errorf("you don't control that permanent")
@@ -1198,7 +1168,7 @@ func (g *Game) TapForMana(playerID, permanentID uuid.UUID) error {
 
 	// Find a mana ability
 	for _, a := range perm.RuntimeAbilities {
-		if ma, ok := a.(*ManaAbilityImpl); ok {
+		if ma, ok := a.(*ManaAbility); ok {
 			// Creatures with mana abilities need to not be summoning sick
 			if perm.HasType(TypeCreature) && perm.SummonSick && !perm.HasAbility(Haste) {
 				return fmt.Errorf("creature has summoning sickness")
@@ -1233,7 +1203,7 @@ func (g *Game) GetUntappedManaSources(playerID uuid.UUID) []ManaSourceInfo {
 			continue
 		}
 		for _, a := range perm.RuntimeAbilities {
-			if ma, ok := a.(*ManaAbilityImpl); ok {
+			if ma, ok := a.(*ManaAbility); ok {
 				sources = append(sources, ManaSourceInfo{
 					PermanentID: perm.ID(),
 					Name:        perm.Name(),
@@ -1408,7 +1378,7 @@ func (g *Game) GetActivatableAbilities(playerID uuid.UUID) []ActivatableInfo {
 				continue
 			}
 			// Skip mana abilities - those are handled separately
-			if _, isMana := a.(*ManaAbilityImpl); isMana {
+			if _, isMana := a.(*ManaAbility); isMana {
 				continue
 			}
 			if !aa.CanActivate(playerID, g) {
@@ -1439,7 +1409,7 @@ func (g *Game) GetActivatableAbilities(playerID uuid.UUID) []ActivatableInfo {
 func (g *Game) CastSpellByID(playerID, cardID uuid.UUID, targets []uuid.UUID, xValue int) error {
 	p := g.GetPlayer(playerID)
 	if p == nil {
-		return fmt.Errorf("player not found")
+		return ErrPlayerNotFound
 	}
 
 	// Find card in hand
@@ -1451,7 +1421,7 @@ func (g *Game) CastSpellByID(playerID, cardID uuid.UUID, targets []uuid.UUID, xV
 		}
 	}
 	if card == nil {
-		return fmt.Errorf("card not found in hand")
+		return ErrCardNotInHand
 	}
 
 	// Compute payment mana cost
@@ -1508,7 +1478,7 @@ func (g *Game) CastSpellByID(playerID, cardID uuid.UUID, targets []uuid.UUID, xV
 func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIndex int, targets []uuid.UUID) error {
 	perm := g.FindPermanent(permanentID)
 	if perm == nil {
-		return fmt.Errorf("permanent not found")
+		return ErrPermanentNotFound
 	}
 	if abilityIndex < 0 || abilityIndex >= len(perm.RuntimeAbilities) {
 		return fmt.Errorf("invalid ability index")
@@ -1523,7 +1493,7 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		return fmt.Errorf("cannot activate ability")
 	}
 	if aa.SorcerySpeed() && !g.Step.IsMainPhase() {
-		return fmt.Errorf("can only activate at sorcery speed")
+		return ErrSorcerySpeed
 	}
 
 	// Pay costs

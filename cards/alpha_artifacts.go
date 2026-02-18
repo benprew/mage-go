@@ -39,7 +39,9 @@ func registerAlphaArtifacts() {
 		ab := mage.NewActivatedAbility(
 			mage.AddAnyMana(3, mage.Green),
 			mage.TapSourceCost(),
-		).AddCost(mage.SacrificeSourceCost())
+		
+			mage.WithCost(mage.SacrificeSourceCost()),
+		)
 		c.AddAbility(ab)
 		return c
 	})
@@ -57,7 +59,7 @@ func registerAlphaArtifacts() {
 
 	mage.Register("Basalt Monolith", func() mage.Card {
 		c := mage.NewArtifact("Basalt Monolith", "{3}")
-		c.IntrinsicDoesNotUntap_ = true // doesn't untap during untap step
+		c.SetIntrinsicDoesNotUntap(true) // doesn't untap during untap step
 		// {T}: Add {C}{C}{C}
 		ab := mage.NewActivatedAbility(
 			mage.AddMana(mage.Colorless, 3),
@@ -75,7 +77,7 @@ func registerAlphaArtifacts() {
 
 	mage.Register("Mana Vault", func() mage.Card {
 		c := mage.NewArtifact("Mana Vault", "{1}")
-		c.IntrinsicDoesNotUntap_ = true // doesn't untap during untap step
+		c.SetIntrinsicDoesNotUntap(true) // doesn't untap during untap step
 		// {T}: Add {C}{C}{C}
 		ab := mage.NewActivatedAbility(
 			mage.AddMana(mage.Colorless, 3),
@@ -95,7 +97,9 @@ func registerAlphaArtifacts() {
 		ab := mage.NewActivatedAbility(
 			mage.DrawCards(1),
 			mage.GenericCost(4),
-		).AddCost(mage.TapSourceCost())
+		
+			mage.WithCost(mage.TapSourceCost()),
+		)
 		c.AddAbility(ab)
 		return c
 	})
@@ -106,7 +110,11 @@ func registerAlphaArtifacts() {
 		ab := mage.NewActivatedAbility(
 			mage.DiscardCards(1),
 			mage.GenericCost(3),
-		).AddCost(mage.TapSourceCost()).AddTarget(mage.TargetPlayer())
+		
+			mage.WithCost(mage.TapSourceCost()),
+		
+			mage.WithTarget(mage.TargetPlayer()),
+		)
 		c.AddAbility(ab)
 		return c
 	})
@@ -117,7 +125,11 @@ func registerAlphaArtifacts() {
 		ab := mage.NewActivatedAbility(
 			mage.TapTarget(),
 			mage.GenericCost(1),
-		).AddCost(mage.TapSourceCost()).AddTarget(mage.TargetPermanent())
+		
+			mage.WithCost(mage.TapSourceCost()),
+		
+			mage.WithTarget(mage.TargetPermanent()),
+		)
 		c.AddAbility(ab)
 		return c
 	})
@@ -128,7 +140,11 @@ func registerAlphaArtifacts() {
 		ab := mage.NewActivatedAbility(
 			mage.DealDamage(1),
 			mage.GenericCost(3),
-		).AddCost(mage.TapSourceCost()).AddTarget(mage.TargetAnyTarget())
+		
+			mage.WithCost(mage.TapSourceCost()),
+		
+			mage.WithTarget(mage.TargetAnyTarget()),
+		)
 		c.AddAbility(ab)
 		return c
 	})
@@ -140,7 +156,9 @@ func registerAlphaArtifacts() {
 		ab := mage.NewActivatedAbility(
 			mage.GainLife(1), // stub
 			mage.GenericCost(5),
-		).AddCost(mage.TapSourceCost())
+		
+			mage.WithCost(mage.TapSourceCost()),
+		)
 		c.AddAbility(ab)
 		return c
 	})
@@ -252,7 +270,7 @@ func registerAlphaArtifacts() {
 
 	mage.Register("Nevinyrral's Disk", func() mage.Card {
 		c := mage.NewArtifact("Nevinyrral's Disk", "{4}")
-		c.EntersTapped_ = true
+		c.SetEntersTapped(true)
 		// {1}, {T}: Destroy all artifacts, creatures, and enchantments
 		ab := mage.NewActivatedAbility(
 			mage.CompositeEffects("destroy all artifacts, creatures, and enchantments",
@@ -261,7 +279,9 @@ func registerAlphaArtifacts() {
 				mage.DestroyAllMatching(mage.IsArtifact, "destroy all artifacts"),
 			),
 			mage.GenericCost(1),
-		).AddCost(mage.TapSourceCost())
+		
+			mage.WithCost(mage.TapSourceCost()),
+		)
 		c.AddAbility(ab)
 		return c
 	})
@@ -274,7 +294,9 @@ func registerAlphaArtifacts() {
 		ab := mage.NewActivatedAbility(
 			mage.CounterSpellIfColor(mage.Green),
 			mage.ManaCostOf("{B}{B}"),
-		).AddTarget(mage.TargetSpellOnStack())
+		
+			mage.WithTarget(mage.TargetSpellOnStack()),
+		)
 		c.AddAbility(ab)
 		return c
 	})
@@ -285,7 +307,9 @@ func registerAlphaArtifacts() {
 		ab := mage.NewActivatedAbility(
 			mage.CounterSpellIfColor(mage.Black),
 			mage.ManaCostOf("{G}{G}"),
-		).AddTarget(mage.TargetSpellOnStack())
+		
+			mage.WithTarget(mage.TargetSpellOnStack()),
+		)
 		c.AddAbility(ab)
 		return c
 	})

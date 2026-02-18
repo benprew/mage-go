@@ -30,10 +30,6 @@ func registerEnchantments() {
 	})
 
 	mage.Register("Holy Strength", func() mage.Card {
-		c := mage.NewAura("Holy Strength", "{W}")
-		c.AddAbility(mage.StaticAbility(
-			mage.BoostAttached(1, 2, mage.AttachAura),
-		))
-		return c
+		return mage.NewBoostAura("Holy Strength", "{W}", 1, 2)
 	})
 }

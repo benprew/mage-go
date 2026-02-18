@@ -27,6 +27,7 @@ type Player interface {
 	IsAlive() bool
 	Hand() []Card
 	AddToHand(Card)
+	SetHand([]Card)
 	RemoveFromHand(uuid.UUID) (Card, bool)
 	Graveyard() []Card
 	AddToGraveyard(Card)
@@ -48,88 +49,92 @@ type Player interface {
 
 // BasePlayer implements Player with basic functionality.
 type BasePlayer struct {
-	ID_       uuid.UUID
-	Name_     string
-	Life_     int
-	Hand_     []Card
-	Graveyard_ []Card
-	Library_  []Card
-	ManaPool_ *ManaPool
+	id       uuid.UUID
+	name     string
+	life     int
+	hand     []Card
+	graveyard []Card
+	library  []Card
+	manaPool *ManaPool
 }
 
 func NewBasePlayer(name string) *BasePlayer {
 	return &BasePlayer{
-		ID_:       uuid.New(),
-		Name_:     name,
-		Life_:     20,
-		ManaPool_: NewManaPool(),
+		id:       uuid.New(),
+		name:     name,
+		life:     20,
+		manaPool: NewManaPool(),
 	}
 }
 
-func (p *BasePlayer) PlayerID() uuid.UUID { return p.ID_ }
-func (p *BasePlayer) Name() string        { return p.Name_ }
-func (p *BasePlayer) Life() int           { return p.Life_ }
-func (p *BasePlayer) SetLife(n int)       { p.Life_ = n }
-func (p *BasePlayer) IsAlive() bool       { return p.Life_ > 0 }
-func (p *BasePlayer) ManaPool() *ManaPool { return p.ManaPool_ }
+func (p *BasePlayer) PlayerID() uuid.UUID { return p.id }
+func (p *BasePlayer) Name() string        { return p.name }
+func (p *BasePlayer) Life() int           { return p.life }
+func (p *BasePlayer) SetLife(n int)       { p.life = n }
+func (p *BasePlayer) IsAlive() bool       { return p.life > 0 }
+func (p *BasePlayer) ManaPool() *ManaPool { return p.manaPool }
 
 func (p *BasePlayer) GainLife(n int) {
-	p.Life_ += n
+	p.life += n
 }
 
 func (p *BasePlayer) LoseLife(n int) {
-	p.Life_ -= n
+	p.life -= n
 }
 
-func (p *BasePlayer) Hand() []Card { return p.Hand_ }
+func (p *BasePlayer) Hand() []Card { return p.hand }
 
 func (p *BasePlayer) AddToHand(c Card) {
-	p.Hand_ = append(p.Hand_, c)
+	p.hand = append(p.hand, c)
+}
+
+func (p *BasePlayer) SetHand(cards []Card) {
+	p.hand = cards
 }
 
 func (p *BasePlayer) RemoveFromHand(id uuid.UUID) (Card, bool) {
-	for i, c := range p.Hand_ {
+	for i, c := range p.hand {
 		if c.ID() == id {
-			p.Hand_ = append(p.Hand_[:i], p.Hand_[i+1:]...)
+			p.hand = append(p.hand[:i], p.hand[i+1:]...)
 			return c, true
 		}
 	}
 	return nil, false
 }
 
-func (p *BasePlayer) Graveyard() []Card { return p.Graveyard_ }
+func (p *BasePlayer) Graveyard() []Card { return p.graveyard }
 
 func (p *BasePlayer) AddToGraveyard(c Card) {
-	p.Graveyard_ = append(p.Graveyard_, c)
+	p.graveyard = append(p.graveyard, c)
 }
 
 func (p *BasePlayer) RemoveFromGraveyard(id uuid.UUID) (Card, bool) {
-	for i, c := range p.Graveyard_ {
+	for i, c := range p.graveyard {
 		if c.ID() == id {
-			p.Graveyard_ = append(p.Graveyard_[:i], p.Graveyard_[i+1:]...)
+			p.graveyard = append(p.graveyard[:i], p.graveyard[i+1:]...)
 			return c, true
 		}
 	}
 	return nil, false
 }
 
-func (p *BasePlayer) Library() []Card    { return p.Library_ }
-func (p *BasePlayer) SetLibrary(l []Card) { p.Library_ = l }
+func (p *BasePlayer) Library() []Card    { return p.library }
+func (p *BasePlayer) SetLibrary(l []Card) { p.library = l }
 
 func (p *BasePlayer) AddToLibrary(c Card) {
-	p.Library_ = append(p.Library_, c)
+	p.library = append(p.library, c)
 }
 
 func (p *BasePlayer) ClearGraveyard() {
-	p.Graveyard_ = nil
+	p.graveyard = nil
 }
 
 func (p *BasePlayer) DrawCard() (Card, bool) {
-	if len(p.Library_) == 0 {
+	if len(p.library) == 0 {
 		return nil, false
 	}
-	c := p.Library_[0]
-	p.Library_ = p.Library_[1:]
+	c := p.library[0]
+	p.library = p.library[1:]
 	p.AddToHand(c)
 	return c, true
 }

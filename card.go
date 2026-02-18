@@ -33,6 +33,19 @@ func (ct CardType) String() string {
 	}
 }
 
+// PermanentProps holds card-level properties that transfer to a Permanent on the battlefield.
+type PermanentProps struct {
+	CantBeBlockedByWalls        bool
+	CanBlockAdditional          int
+	EntersTapped                bool
+	IntrinsicDoesNotUntap       bool
+	DestroyAtEndOfTurn          bool
+	SacrificeUnlessLand         string
+	EntersWithXCounters         CounterType
+	EntersWithXCountersSet      bool
+	GraveyardReturnMinCreatures int
+}
+
 // Card is the interface for all cards.
 type Card interface {
 	ID() uuid.UUID
@@ -49,46 +62,48 @@ type Card interface {
 	SetID(uuid.UUID)
 	HasType(CardType) bool
 	AddAbility(Ability)
+	Props() PermanentProps
+	CloneFrom(Card)
 }
 
 // BaseCard provides the common card implementation.
 type BaseCard struct {
-	ID_        uuid.UUID
-	Name_      string
-	ManaCost_  ManaCost
-	Types_     []CardType
-	SubTypes_  []string
-	Abilities_ []Ability
-	Owner_     uuid.UUID
-	Power_     int
-	Toughness_ int
+	id        uuid.UUID
+	name      string
+	manaCost  ManaCost
+	types     []CardType
+	subTypes  []string
+	abilities []Ability
+	owner     uuid.UUID
+	power     int
+	toughness int
 
 	// Permanent properties set at card creation time
-	CantBeBlockedByWalls_  bool   // e.g. Juggernaut
-	CanBlockAdditional_    int    // e.g. Two-Headed Giant can block 1 additional creature
-	EntersTapped_          bool   // e.g. Nevinyrral's Disk
-	IntrinsicDoesNotUntap_ bool   // e.g. Basalt Monolith
-	DestroyAtEndOfTurn_    bool   // e.g. Berserk
-	SacrificeUnlessLand_   string      // e.g. "Island" for Sea Serpent
-	EntersWithXCounters_   CounterType // if non-zero, add X counters of this type on ETB
-	EntersWithXCountersSet bool        // whether EntersWithXCounters is configured
-	GraveyardReturnMinCreatures_ int  // e.g. 3 for Nether Shadow: return from graveyard if N creatures above
+	cantBeBlockedByWalls  bool   // e.g. Juggernaut
+	canBlockAdditional    int    // e.g. Two-Headed Giant can block 1 additional creature
+	entersTapped          bool   // e.g. Nevinyrral's Disk
+	intrinsicDoesNotUntap bool   // e.g. Basalt Monolith
+	destroyAtEndOfTurn    bool   // e.g. Berserk
+	sacrificeUnlessLand   string      // e.g. "Island" for Sea Serpent
+	entersWithXCounters   CounterType // if non-zero, add X counters of this type on ETB
+	entersWithXCountersSet bool        // whether EntersWithXCounters is configured
+	graveyardReturnMinCreatures int  // e.g. 3 for Nether Shadow: return from graveyard if N creatures above
 }
 
-func (c *BaseCard) ID() uuid.UUID         { return c.ID_ }
-func (c *BaseCard) Name() string           { return c.Name_ }
-func (c *BaseCard) ManaCost() ManaCost     { return c.ManaCost_ }
-func (c *BaseCard) Types() []CardType      { return c.Types_ }
-func (c *BaseCard) SubTypes() []string     { return c.SubTypes_ }
-func (c *BaseCard) Abilities() []Ability   { return c.Abilities_ }
-func (c *BaseCard) Owner() uuid.UUID       { return c.Owner_ }
-func (c *BaseCard) Power() int             { return c.Power_ }
-func (c *BaseCard) Toughness() int         { return c.Toughness_ }
-func (c *BaseCard) SetOwner(id uuid.UUID)  { c.Owner_ = id }
-func (c *BaseCard) SetID(id uuid.UUID)     { c.ID_ = id }
+func (c *BaseCard) ID() uuid.UUID         { return c.id }
+func (c *BaseCard) Name() string           { return c.name }
+func (c *BaseCard) ManaCost() ManaCost     { return c.manaCost }
+func (c *BaseCard) Types() []CardType      { return c.types }
+func (c *BaseCard) SubTypes() []string     { return c.subTypes }
+func (c *BaseCard) Abilities() []Ability   { return c.abilities }
+func (c *BaseCard) Owner() uuid.UUID       { return c.owner }
+func (c *BaseCard) Power() int             { return c.power }
+func (c *BaseCard) Toughness() int         { return c.toughness }
+func (c *BaseCard) SetOwner(id uuid.UUID)  { c.owner = id }
+func (c *BaseCard) SetID(id uuid.UUID)     { c.id = id }
 
 func (c *BaseCard) HasType(t CardType) bool {
-	for _, ct := range c.Types_ {
+	for _, ct := range c.types {
 		if ct == t {
 			return true
 		}
@@ -96,102 +111,148 @@ func (c *BaseCard) HasType(t CardType) bool {
 	return false
 }
 
+func (c *BaseCard) AddType(t CardType) {
+	c.types = append(c.types, t)
+}
+
 func (c *BaseCard) AddAbility(a Ability) {
-	c.Abilities_ = append(c.Abilities_, a)
+	c.abilities = append(c.abilities, a)
+}
+
+func (c *BaseCard) Props() PermanentProps {
+	return PermanentProps{
+		CantBeBlockedByWalls:        c.cantBeBlockedByWalls,
+		CanBlockAdditional:          c.canBlockAdditional,
+		EntersTapped:                c.entersTapped,
+		IntrinsicDoesNotUntap:       c.intrinsicDoesNotUntap,
+		DestroyAtEndOfTurn:          c.destroyAtEndOfTurn,
+		SacrificeUnlessLand:         c.sacrificeUnlessLand,
+		EntersWithXCounters:         c.entersWithXCounters,
+		EntersWithXCountersSet:      c.entersWithXCountersSet,
+		GraveyardReturnMinCreatures: c.graveyardReturnMinCreatures,
+	}
+}
+
+func (c *BaseCard) CloneFrom(other Card) {
+	c.power = other.Power()
+	c.toughness = other.Toughness()
+	c.types = make([]CardType, len(other.Types()))
+	copy(c.types, other.Types())
+	c.subTypes = make([]string, len(other.SubTypes()))
+	copy(c.subTypes, other.SubTypes())
+	c.abilities = make([]Ability, len(other.Abilities()))
+	copy(c.abilities, other.Abilities())
 }
 
 func (c *BaseCard) Copy() Card {
 	cp := *c
-	cp.ID_ = uuid.New()
-	cp.Types_ = make([]CardType, len(c.Types_))
-	copy(cp.Types_, c.Types_)
-	cp.SubTypes_ = make([]string, len(c.SubTypes_))
-	copy(cp.SubTypes_, c.SubTypes_)
-	cp.Abilities_ = make([]Ability, len(c.Abilities_))
-	copy(cp.Abilities_, c.Abilities_)
+	cp.id = uuid.New()
+	cp.types = make([]CardType, len(c.types))
+	copy(cp.types, c.types)
+	cp.subTypes = make([]string, len(c.subTypes))
+	copy(cp.subTypes, c.subTypes)
+	cp.abilities = make([]Ability, len(c.abilities))
+	copy(cp.abilities, c.abilities)
 	return &cp
 }
 
 // NewCreature creates a new creature card.
-func NewCreature(name, cost string, subTypes ...string) *BaseCard {
+func NewCreature(name, cost string, power, toughness int, subTypes ...string) *BaseCard {
 	return &BaseCard{
-		ID_:       uuid.New(),
-		Name_:     name,
-		ManaCost_: ParseManaCost(cost),
-		Types_:    []CardType{TypeCreature},
-		SubTypes_: subTypes,
+		id:        uuid.New(),
+		name:      name,
+		manaCost:  ParseManaCost(cost),
+		types:     []CardType{TypeCreature},
+		subTypes:  subTypes,
+		power:     power,
+		toughness: toughness,
 	}
+}
+
+// Setter methods for cross-package access to unexported fields.
+
+func (c *BaseCard) SetPower(p int)                       { c.power = p }
+func (c *BaseCard) SetToughness(t int)                   { c.toughness = t }
+func (c *BaseCard) SetEntersTapped(v bool)               { c.entersTapped = v }
+func (c *BaseCard) SetIntrinsicDoesNotUntap(v bool)      { c.intrinsicDoesNotUntap = v }
+func (c *BaseCard) SetCantBeBlockedByWalls(v bool)       { c.cantBeBlockedByWalls = v }
+func (c *BaseCard) SetDestroyAtEndOfTurn(v bool)         { c.destroyAtEndOfTurn = v }
+func (c *BaseCard) SetSacrificeUnlessLand(subtype string) { c.sacrificeUnlessLand = subtype }
+func (c *BaseCard) SetGraveyardReturnMinCreatures(n int) { c.graveyardReturnMinCreatures = n }
+func (c *BaseCard) SetEntersWithXCounters(ct CounterType) {
+	c.entersWithXCounters = ct
+	c.entersWithXCountersSet = true
 }
 
 // NewInstant creates a new instant card.
 func NewInstant(name, cost string) *BaseCard {
 	return &BaseCard{
-		ID_:       uuid.New(),
-		Name_:     name,
-		ManaCost_: ParseManaCost(cost),
-		Types_:    []CardType{TypeInstant},
+		id:       uuid.New(),
+		name:     name,
+		manaCost: ParseManaCost(cost),
+		types:    []CardType{TypeInstant},
 	}
 }
 
 // NewSorcery creates a new sorcery card.
 func NewSorcery(name, cost string) *BaseCard {
 	return &BaseCard{
-		ID_:       uuid.New(),
-		Name_:     name,
-		ManaCost_: ParseManaCost(cost),
-		Types_:    []CardType{TypeSorcery},
+		id:       uuid.New(),
+		name:     name,
+		manaCost: ParseManaCost(cost),
+		types:    []CardType{TypeSorcery},
 	}
 }
 
 // NewLand creates a new land card.
 func NewLand(name string, subTypes ...string) *BaseCard {
 	return &BaseCard{
-		ID_:       uuid.New(),
-		Name_:     name,
-		Types_:    []CardType{TypeLand},
-		SubTypes_: subTypes,
+		id:       uuid.New(),
+		name:     name,
+		types:    []CardType{TypeLand},
+		subTypes: subTypes,
 	}
 }
 
 // NewArtifact creates a new artifact card.
 func NewArtifact(name, cost string) *BaseCard {
 	return &BaseCard{
-		ID_:       uuid.New(),
-		Name_:     name,
-		ManaCost_: ParseManaCost(cost),
-		Types_:    []CardType{TypeArtifact},
+		id:       uuid.New(),
+		name:     name,
+		manaCost: ParseManaCost(cost),
+		types:    []CardType{TypeArtifact},
 	}
 }
 
 // NewEnchantment creates a new enchantment card.
 func NewEnchantment(name, cost string) *BaseCard {
 	return &BaseCard{
-		ID_:       uuid.New(),
-		Name_:     name,
-		ManaCost_: ParseManaCost(cost),
-		Types_:    []CardType{TypeEnchantment},
+		id:       uuid.New(),
+		name:     name,
+		manaCost: ParseManaCost(cost),
+		types:    []CardType{TypeEnchantment},
 	}
 }
 
 // NewAura creates a new aura enchantment card.
 func NewAura(name, cost string) *BaseCard {
 	return &BaseCard{
-		ID_:       uuid.New(),
-		Name_:     name,
-		ManaCost_: ParseManaCost(cost),
-		Types_:    []CardType{TypeEnchantment},
-		SubTypes_: []string{"Aura"},
+		id:       uuid.New(),
+		name:     name,
+		manaCost: ParseManaCost(cost),
+		types:    []CardType{TypeEnchantment},
+		subTypes: []string{"Aura"},
 	}
 }
 
 // NewEquipment creates a new equipment artifact card.
 func NewEquipment(name, cost string) *BaseCard {
 	return &BaseCard{
-		ID_:       uuid.New(),
-		Name_:     name,
-		ManaCost_: ParseManaCost(cost),
-		Types_:    []CardType{TypeArtifact},
-		SubTypes_: []string{"Equipment"},
+		id:       uuid.New(),
+		name:     name,
+		manaCost: ParseManaCost(cost),
+		types:    []CardType{TypeArtifact},
+		subTypes: []string{"Equipment"},
 	}
 }
 
@@ -234,16 +295,15 @@ func NewPermanent(card Card, controller uuid.UUID) *Permanent {
 		p.RuntimeAbilities = append(p.RuntimeAbilities, cp)
 	}
 	// Copy card-level permanent properties
-	if bc, ok := card.(*BaseCard); ok {
-		p.CantBeBlockedByWalls = bc.CantBeBlockedByWalls_
-		p.CanBlockAdditional = bc.CanBlockAdditional_
-		p.IntrinsicDoesNotUntap = bc.IntrinsicDoesNotUntap_
-		p.DoesNotUntap = bc.IntrinsicDoesNotUntap_
-		p.DestroyAtEndOfTurn = bc.DestroyAtEndOfTurn_
-		p.SacrificeUnlessLand = bc.SacrificeUnlessLand_
-		if bc.EntersTapped_ {
-			p.Tapped = true
-		}
+	props := card.Props()
+	p.CantBeBlockedByWalls = props.CantBeBlockedByWalls
+	p.CanBlockAdditional = props.CanBlockAdditional
+	p.IntrinsicDoesNotUntap = props.IntrinsicDoesNotUntap
+	p.DoesNotUntap = props.IntrinsicDoesNotUntap
+	p.DestroyAtEndOfTurn = props.DestroyAtEndOfTurn
+	p.SacrificeUnlessLand = props.SacrificeUnlessLand
+	if props.EntersTapped {
+		p.Tapped = true
 	}
 	return p
 }
@@ -267,11 +327,7 @@ func (p *Permanent) HasSubType(s string) bool {
 // HasAbility checks if this permanent currently has the given keyword.
 func (p *Permanent) HasAbility(kw Keyword) bool {
 	for _, a := range p.RuntimeAbilities {
-		ab := a
-		// Unwrap granted-by-effect wrapper
-		if ge, ok := ab.(*grantedByEffect); ok {
-			ab = ge.Ability
-		}
+		ab := UnwrapAbility(a)
 		if ka, ok := ab.(*KeywordAbility); ok && ka.Keyword == kw {
 			return true
 		}
@@ -355,4 +411,35 @@ func (p *Permanent) RemoveCounter(ct CounterType, n int) bool {
 // IsAttached returns true if this permanent is attached to something.
 func (p *Permanent) IsAttached() bool {
 	return p.AttachedTo != uuid.Nil
+}
+
+// ---------------------------------------------------------------------------
+// Card template helpers: pre-assembled cards for common patterns.
+// These reduce boilerplate for cards that follow well-known formulas.
+// ---------------------------------------------------------------------------
+
+// NewLuckyCharm creates a {1} artifact that optionally gains 1 life whenever a
+// spell of the given color is cast (e.g. Crystal Rod, Iron Star, Ivory Cup).
+func NewLuckyCharm(name, cost string, color Color) *BaseCard {
+	c := NewArtifact(name, cost)
+	c.AddAbility(WheneverSpellCastTrigger(GainLife(1), true, &color))
+	return c
+}
+
+// NewLandDestruction creates a sorcery that destroys target land
+// (e.g. Stone Rain, Sinkhole, Ice Storm).
+func NewLandDestruction(name, cost string) *BaseCard {
+	c := NewSorcery(name, cost)
+	c.AddAbility(NewTargetedSpell(TargetLand(), DestroyTargetLand()))
+	return c
+}
+
+// NewBoostAura creates an aura enchantment that gives the enchanted creature
+// +power/+toughness (e.g. Holy Strength, Unholy Strength, Giant Growth-style auras).
+func NewBoostAura(name, cost string, power, toughness int) *BaseCard {
+	c := NewAura(name, cost)
+	c.AddAbility(StaticAbility(
+		BoostAttached(power, toughness, AttachAura),
+	))
+	return c
 }

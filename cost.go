@@ -37,7 +37,7 @@ func (c *ManaCostPayment) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 func (c *ManaCostPayment) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	p := g.GetPlayer(controller)
 	if p == nil {
-		return fmt.Errorf("player not found")
+		return ErrPlayerNotFound
 	}
 	return p.ManaPool().Pay(c.MC)
 }
@@ -46,115 +46,115 @@ func (c *ManaCostPayment) Text() string {
 	return c.MC.String()
 }
 
-// TapSourceCost requires tapping the source permanent.
-type TapSourceCostImpl struct{}
+// tapSourceCost requires tapping the source permanent.
+type tapSourceCost struct{}
 
-func TapSourceCost() Cost { return &TapSourceCostImpl{} }
+func TapSourceCost() Cost { return &tapSourceCost{} }
 
-func (c *TapSourceCostImpl) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+func (c *tapSourceCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	p := g.FindPermanent(sourceID)
 	return p != nil && !p.Tapped
 }
 
-func (c *TapSourceCostImpl) Pay(sourceID, controller uuid.UUID, g *Game) error {
+func (c *tapSourceCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	p := g.FindPermanent(sourceID)
 	if p == nil {
-		return fmt.Errorf("source not found on battlefield")
+		return ErrSourceNotFound
 	}
 	if p.Tapped {
-		return fmt.Errorf("source is already tapped")
+		return ErrSourceTapped
 	}
 	p.Tapped = true
 	return nil
 }
 
-func (c *TapSourceCostImpl) Text() string { return "{T}" }
+func (c *tapSourceCost) Text() string { return "{T}" }
 
-// RemoveCountersCostImpl requires removing counters from the source.
-type RemoveCountersCostImpl struct {
-	CT     CounterType
-	Amount int
+// removeCountersCost requires removing counters from the source.
+type removeCountersCost struct {
+	ct     CounterType
+	amount int
 }
 
 func RemoveCountersCost(ct CounterType, n int) Cost {
-	return &RemoveCountersCostImpl{CT: ct, Amount: n}
+	return &removeCountersCost{ct: ct, amount: n}
 }
 
-func (c *RemoveCountersCostImpl) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+func (c *removeCountersCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	p := g.FindPermanent(sourceID)
-	return p != nil && p.Counters[c.CT] >= c.Amount
+	return p != nil && p.Counters[c.ct] >= c.amount
 }
 
-func (c *RemoveCountersCostImpl) Pay(sourceID, controller uuid.UUID, g *Game) error {
+func (c *removeCountersCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	p := g.FindPermanent(sourceID)
 	if p == nil {
-		return fmt.Errorf("source not found on battlefield")
+		return ErrSourceNotFound
 	}
-	if !p.RemoveCounter(c.CT, c.Amount) {
-		return fmt.Errorf("not enough %s counters", c.CT)
+	if !p.RemoveCounter(c.ct, c.amount) {
+		return fmt.Errorf("not enough %s counters", c.ct)
 	}
 	return nil
 }
 
-func (c *RemoveCountersCostImpl) Text() string {
-	return fmt.Sprintf("Remove %d %s counter(s)", c.Amount, c.CT)
+func (c *removeCountersCost) Text() string {
+	return fmt.Sprintf("Remove %d %s counter(s)", c.amount, c.ct)
 }
 
-// SacrificeSourceCostImpl requires sacrificing the source.
-type SacrificeSourceCostImpl struct{}
+// sacrificeSourceCost requires sacrificing the source.
+type sacrificeSourceCost struct{}
 
-func SacrificeSourceCost() Cost { return &SacrificeSourceCostImpl{} }
+func SacrificeSourceCost() Cost { return &sacrificeSourceCost{} }
 
-func (c *SacrificeSourceCostImpl) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+func (c *sacrificeSourceCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	return g.FindPermanent(sourceID) != nil
 }
 
-func (c *SacrificeSourceCostImpl) Pay(sourceID, controller uuid.UUID, g *Game) error {
+func (c *sacrificeSourceCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	p := g.FindPermanent(sourceID)
 	if p == nil {
-		return fmt.Errorf("source not found on battlefield")
+		return ErrSourceNotFound
 	}
 	g.Sacrifice(p)
 	return nil
 }
 
-func (c *SacrificeSourceCostImpl) Text() string { return "Sacrifice ~" }
+func (c *sacrificeSourceCost) Text() string { return "Sacrifice ~" }
 
-// LifePayCostImpl requires paying life.
-type LifePayCostImpl struct {
-	Amount int
+// lifePayCost requires paying life.
+type lifePayCost struct {
+	amount int
 }
 
 func LifePayCost(amount int) Cost {
-	return &LifePayCostImpl{Amount: amount}
+	return &lifePayCost{amount: amount}
 }
 
-func (c *LifePayCostImpl) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+func (c *lifePayCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	p := g.GetPlayer(controller)
-	return p != nil && p.Life() > c.Amount // must have more life than cost
+	return p != nil && p.Life() > c.amount // must have more life than cost
 }
 
-func (c *LifePayCostImpl) Pay(sourceID, controller uuid.UUID, g *Game) error {
+func (c *lifePayCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	p := g.GetPlayer(controller)
 	if p == nil {
-		return fmt.Errorf("player not found")
+		return ErrPlayerNotFound
 	}
-	p.LoseLife(c.Amount)
+	p.LoseLife(c.amount)
 	return nil
 }
 
-func (c *LifePayCostImpl) Text() string {
-	return fmt.Sprintf("Pay %d life", c.Amount)
+func (c *lifePayCost) Text() string {
+	return fmt.Sprintf("Pay %d life", c.amount)
 }
 
-// SacrificeCreatureCostImpl requires sacrificing a creature you control.
-type SacrificeCreatureCostImpl struct{}
+// sacrificeCreatureCost requires sacrificing a creature you control.
+type sacrificeCreatureCost struct{}
 
 func SacrificeCreatureCost() Cost {
-	return &SacrificeCreatureCostImpl{}
+	return &sacrificeCreatureCost{}
 }
 
-func (c *SacrificeCreatureCostImpl) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+func (c *sacrificeCreatureCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	for _, p := range g.Battlefield {
 		if p.Controller == controller && p.HasType(TypeCreature) && p.ID() != sourceID {
 			return true
@@ -163,7 +163,7 @@ func (c *SacrificeCreatureCostImpl) CanPay(sourceID, controller uuid.UUID, g *Ga
 	return false
 }
 
-func (c *SacrificeCreatureCostImpl) Pay(sourceID, controller uuid.UUID, g *Game) error {
+func (c *sacrificeCreatureCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	// Sacrifice the first creature controlled that isn't the source
 	for _, p := range g.Battlefield {
 		if p.Controller == controller && p.HasType(TypeCreature) && p.ID() != sourceID {
@@ -171,7 +171,7 @@ func (c *SacrificeCreatureCostImpl) Pay(sourceID, controller uuid.UUID, g *Game)
 			return nil
 		}
 	}
-	return fmt.Errorf("no creature to sacrifice")
+	return ErrNoCreature
 }
 
-func (c *SacrificeCreatureCostImpl) Text() string { return "Sacrifice a creature" }
+func (c *sacrificeCreatureCost) Text() string { return "Sacrifice a creature" }

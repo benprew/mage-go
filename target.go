@@ -92,17 +92,17 @@ func (t *PlayerTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uu
 }
 
 // AnyTarget targets a creature or player.
-type AnyTargetImpl struct {
+type AnyTarget struct {
 	BaseTarget
 }
 
 func TargetAnyTarget() Target {
-	return &AnyTargetImpl{
+	return &AnyTarget{
 		BaseTarget: BaseTarget{min: 1, max: 1},
 	}
 }
 
-func (t *AnyTargetImpl) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+func (t *AnyTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
 	for _, p := range g.Battlefield {
 		if p.HasType(TypeCreature) && p.CanBeTargetedBy(sourceCard, controller, g) {
@@ -115,7 +115,7 @@ func (t *AnyTargetImpl) Possible(controller uuid.UUID, sourceCard Card, g *Game)
 	return result
 }
 
-func (t *AnyTargetImpl) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
+func (t *AnyTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
 	t.chosen = chosen
 	return nil
 }

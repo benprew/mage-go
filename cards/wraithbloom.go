@@ -8,9 +8,7 @@ func init() {
 
 func registerWraithbloom() {
 	mage.Register("Wraithbloom Cultivator", func() mage.Card {
-		c := mage.NewCreature("Wraithbloom Cultivator", "{1}{B}{G}", "Elf", "Shaman")
-		c.Power_ = 2
-		c.Toughness_ = 3
+		c := mage.NewCreature("Wraithbloom Cultivator", "{1}{B}{G}", 2, 3, "Elf", "Shaman")
 
 		// Whenever another creature you control dies, you gain 1 life and
 		// put a +1/+1 counter on Wraithbloom Cultivator.
@@ -30,9 +28,11 @@ func registerWraithbloom() {
 			mage.NewActivatedAbility(
 				mage.ReturnFromGraveyardToBattlefield(),
 				mage.GenericCost(2),
-			).AddCost(mage.TapSourceCost()).
-				AddCost(mage.RemoveCountersCost(mage.P1P1, 3)).
-				AddTarget(mage.TargetCreatureInYourGraveyard()),
+
+				mage.WithCost(mage.TapSourceCost()),
+				mage.WithCost(mage.RemoveCountersCost(mage.P1P1, 3)),
+				mage.WithTarget(mage.TargetCreatureInYourGraveyard()),
+			),
 		)
 
 		return c

@@ -43,7 +43,7 @@ This is a Go library (`github.com/mage/mage`) implementing the MTG game engine. 
 
 **Card system**: The `Card` interface (card.go) is implemented by `BaseCard`. Cards are created through factory functions registered with `Register(name, factory)` in registry.go and instantiated with `CreateCard(name)`. Card constructors like `NewCreature(name, manaCost, subtypes...)` are in card.go.
 
-**Abilities**: Three-layer hierarchy — `Ability` interface (ability.go) for keywords/static abilities, `ActivatedAbilityI` (activated.go) for activated abilities with costs/targets/effects, and `TriggeredAbility` (triggered.go) for event-driven triggers. All use builder-pattern chaining (`AddCost`, `AddTarget`, `AddEffect`).
+**Abilities**: Three-layer hierarchy — `Ability` interface (ability.go) for keywords/static abilities, `ActivatedAbility` (activated.go) for activated abilities with costs/targets/effects, and `TriggeredAbility` (triggered.go) for event-driven triggers. All use builder-pattern chaining (`AddCost`, `AddTarget`, `AddEffect`).
 
 **Effects**: One-shot effects implement the `Effect` interface (effect.go). Continuous effects use the MTG layer system (copy→control→text→type→color→ability→P/T) managed by `EffectManager` (continuous.go).
 
