@@ -172,7 +172,10 @@ func registerAlphaArtifacts() {
 
 	mage.Register("Meekstone", func() mage.Card {
 		c := mage.NewArtifact("Meekstone", "{1}")
-		// Creatures with power 3 or greater don't untap during their controller's untap step
+		// Creatures with power 3 or greater don't untap during their controller's untap step.
+		c.AddAbility(mage.StaticAbility(
+			mage.PreventUntapForMatching(mage.And(mage.IsCreature, mage.HasPowerGTE(3))),
+		))
 		return c
 	})
 
