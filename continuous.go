@@ -534,3 +534,44 @@ func (e *boostAttachedByForestCountEffect) Apply(g *Game) error {
 	g.Effects.toughBonuses[src.AttachedTo] += toughBoost
 	return nil
 }
+
+// boostSelfWhileControllingEffect boosts the source +P/+T while the controller
+// controls a permanent matching a filter.
+type boostSelfWhileControllingEffect struct {
+	power     int
+	toughness int
+	condition PermanentFilter
+	sourceID_ uuid.UUID
+}
+
+func BoostSelfWhileControlling(power, toughness int, condition PermanentFilter) ContinuousEffect {
+	return &boostSelfWhileControllingEffect{
+		power:     power,
+		toughness: toughness,
+		condition: condition,
+	}
+}
+
+func (e *boostSelfWhileControllingEffect) GetLayer() Layer      { return LayerPT }
+func (e *boostSelfWhileControllingEffect) GetDuration() Duration { return WhileOnBattlefield }
+func (e *boostSelfWhileControllingEffect) SourceID() uuid.UUID   { return e.sourceID_ }
+
+func (e *boostSelfWhileControllingEffect) IsActive(g *Game) bool {
+	return g.FindPermanent(e.sourceID_) != nil
+}
+
+func (e *boostSelfWhileControllingEffect) Apply(g *Game) error {
+	src := g.FindPermanent(e.sourceID_)
+	if src == nil {
+		return nil
+	}
+	// Check if controller controls a matching permanent
+	for _, p := range g.Battlefield {
+		if p.Controller == src.Controller && e.condition(p, g) {
+			g.Effects.powerBonuses[src.ID()] += e.power
+			g.Effects.toughBonuses[src.ID()] += e.toughness
+			return nil
+		}
+	}
+	return nil
+}
