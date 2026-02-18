@@ -242,6 +242,67 @@ func TestDestroyAllCollapse(t *testing.T) {
 	})
 }
 
+// TestXVariantCollapse verifies that X-variant effects still work after
+// being collapsed into the base effect types (e.g., DealXDamage → DealDamage with useX).
+func TestXVariantCollapse(t *testing.T) {
+	t.Run("DealXDamage still works", func(t *testing.T) {
+		name := "DSL X Damage"
+		if !CardRegistered(name) {
+			Register(name, func() Card {
+				c := NewSorcery(name, "{X}{R}")
+				sa := NewSpellAbility(DealXDamage())
+				sa.AddTarget(TargetAnyTarget())
+				c.AddAbility(sa)
+				return c
+			})
+		}
+
+		tg := NewTestGame(t)
+		tg.AddCard(ZoneHand, PlayerA, name)
+		tg.CastSpellWithX(1, PrecombatMain, PlayerA, name, 5, "PlayerB")
+		tg.StopAt(1, EndCombat)
+		tg.Execute()
+
+		tg.AssertLife(PlayerB, 15) // 20 - 5 = 15
+	})
+
+	t.Run("DealDamage fixed amount still works", func(t *testing.T) {
+		eff := DealDamage(3)
+		if eff.Text() != "deal 3 damage to target" {
+			t.Errorf("DealDamage(3).Text() = %q", eff.Text())
+		}
+	})
+
+	t.Run("DrawXCards still works", func(t *testing.T) {
+		name := "DSL X Draw"
+		if !CardRegistered(name) {
+			Register(name, func() Card {
+				c := NewSorcery(name, "{X}{U}")
+				sa := NewSpellAbility(DrawXCards())
+				sa.AddTarget(TargetPlayer())
+				c.AddAbility(sa)
+				return c
+			})
+		}
+
+		tg := NewTestGame(t)
+		// Put cards in library
+		for i := 0; i < 5; i++ {
+			tg.getPlayer(PlayerA).Library_ = append(tg.getPlayer(PlayerA).Library_,
+				&BaseCard{Name_: "Library Card", ID_: uuid.New()})
+		}
+		tg.AddCard(ZoneHand, PlayerA, name)
+		tg.CastSpellWithX(1, PrecombatMain, PlayerA, name, 3, "PlayerA")
+		tg.StopAt(1, EndCombat)
+		tg.Execute()
+
+		// Started with 0 hand cards (name was cast), drew 3
+		if len(tg.getPlayer(PlayerA).Hand()) != 3 {
+			t.Errorf("expected 3 cards in hand, got %d", len(tg.getPlayer(PlayerA).Hand()))
+		}
+	})
+}
+
 // TestFuncEffect verifies that anonymous functions can be used as effects.
 func TestFuncEffect(t *testing.T) {
 	t.Run("inline effect via FuncEffect", func(t *testing.T) {
