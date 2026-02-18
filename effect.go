@@ -1325,6 +1325,7 @@ type discardHandAndDrawEffect struct {
 	drawCount int
 }
 
+// DiscardHandAndDraw creates an effect where each player discards their hand then draws n cards (e.g. Timetwister, Wheel of Fortune).
 func DiscardHandAndDraw(n int) Effect {
 	return &discardHandAndDrawEffect{drawCount: n}
 }
@@ -1355,6 +1356,8 @@ type shuffleGraveyardIntoLibraryAndDrawEffect struct {
 	drawCount int
 }
 
+// ShuffleGraveyardIntoLibraryAndDraw creates an effect where each player shuffles their graveyard
+// into their library, then draws n cards (e.g. Feldon's Cane variant).
 func ShuffleGraveyardIntoLibraryAndDraw(n int) Effect {
 	return &shuffleGraveyardIntoLibraryAndDrawEffect{drawCount: n}
 }
@@ -1383,6 +1386,8 @@ type counterSpellIfColorEffect struct {
 	color Color
 }
 
+// CounterSpellIfColor creates an effect that counters a target spell only if it matches the given color
+// (e.g. Blue Elemental Blast, Red Elemental Blast).
 func CounterSpellIfColor(c Color) Effect {
 	return &counterSpellIfColorEffect{color: c}
 }
@@ -1414,6 +1419,8 @@ func (e *counterSpellIfColorEffect) Text() string {
 // counterSpellIfXMeetsOrExceedsCMCEffect counters a spell only if X >= its CMC.
 type counterSpellIfXMeetsOrExceedsCMCEffect struct{}
 
+// CounterSpellIfXMeetsCMC creates an effect that counters a target spell only if X >= its mana value
+// (e.g. Spell Blast).
 func CounterSpellIfXMeetsCMC() Effect {
 	return &counterSpellIfXMeetsOrExceedsCMCEffect{}
 }
@@ -1440,6 +1447,8 @@ func (e *counterSpellIfXMeetsOrExceedsCMCEffect) Text() string {
 // powerSinkEffect counters a spell unless its controller pays X mana.
 type powerSinkEffect struct{}
 
+// PowerSinkEffect creates an effect that counters a spell unless its controller pays X mana,
+// draining their pool either way (Power Sink).
 func PowerSinkEffect() Effect {
 	return &powerSinkEffect{}
 }
@@ -1477,6 +1486,7 @@ func (e *powerSinkEffect) Text() string {
 // tapOrUntapTargetEffect lets you tap or untap a target permanent.
 type tapOrUntapTargetEffect struct{}
 
+// TapOrUntapTarget creates an effect that toggles a target permanent's tapped state (e.g. Twiddle).
 func TapOrUntapTarget() Effect {
 	return &tapOrUntapTargetEffect{}
 }
@@ -1501,6 +1511,7 @@ func (e *tapOrUntapTargetEffect) Text() string {
 // makeUnblockableUntilEndOfTurnEffect makes a target creature unblockable until end of turn.
 type makeUnblockableUntilEndOfTurnEffect struct{}
 
+// MakeUnblockableUntilEndOfTurn creates an effect that makes a target creature unblockable until end of turn.
 func MakeUnblockableUntilEndOfTurn() Effect {
 	return &makeUnblockableUntilEndOfTurnEffect{}
 }
@@ -1530,6 +1541,7 @@ func (e *makeUnblockableUntilEndOfTurnEffect) Text() string {
 // tapAttachedCreatureEffect taps the creature attached to the source aura.
 type tapAttachedCreatureEffect struct{}
 
+// TapAttachedCreature creates an effect that taps the creature the source aura is attached to.
 func TapAttachedCreature() Effect {
 	return &tapAttachedCreatureEffect{}
 }
@@ -1551,6 +1563,7 @@ func (e *tapAttachedCreatureEffect) Text() string { return "Tap enchanted creatu
 // untapSourceEffect untaps the source permanent.
 type untapSourceEffect struct{}
 
+// UntapSource creates an effect that untaps the source permanent.
 func UntapSource() Effect {
 	return &untapSourceEffect{}
 }
@@ -1568,6 +1581,8 @@ func (e *untapSourceEffect) Text() string { return "Untap this permanent" }
 // dealDamagePerSwampEffect deals damage to the active player equal to the number of Swamps they control.
 type dealDamagePerSwampEffect struct{}
 
+// DealDamagePerSwamp creates an effect that deals damage to the active player equal to the
+// number of Swamps they control (e.g. Karma).
 func DealDamagePerSwamp() Effect {
 	return &dealDamagePerSwampEffect{}
 }
@@ -1594,6 +1609,8 @@ func (e *dealDamagePerSwampEffect) Text() string {
 // blackViseEffect deals damage to the active player based on hand size > 4.
 type blackViseEffect struct{}
 
+// BlackViseEffect creates an effect that deals damage to the active player equal to
+// cards in hand minus 4 (Black Vise).
 func BlackViseEffect() Effect {
 	return &blackViseEffect{}
 }
@@ -1648,6 +1665,8 @@ func (e *createTokenEffect) Text() string {
 // forcefieldEffect activates a Forcefield shield on the controller for this turn.
 type forcefieldEffect struct{}
 
+// ForcefieldEffect creates an effect that reduces all unblocked combat damage to the controller
+// to 1 for this turn (Forcefield).
 func ForcefieldEffect() Effect {
 	return &forcefieldEffect{}
 }
@@ -1686,6 +1705,7 @@ const (
 // fixedValue is a ValueSource that always returns a constant.
 type fixedValue struct{ n int }
 
+// Fixed creates a ValueSource that always returns the constant n.
 func Fixed(n int) ValueSource                            { return fixedValue{n: n} }
 func (v fixedValue) Resolve(_ *Game, _, _ uuid.UUID) int { return v.n }
 func (v fixedValue) Text() string                        { return fmt.Sprintf("%d", v.n) }
@@ -1693,6 +1713,7 @@ func (v fixedValue) Text() string                        { return fmt.Sprintf("%
 // xValue is a ValueSource that reads g.CurrentX.
 type xValue struct{}
 
+// XValue creates a ValueSource that reads the X value from the current spell/ability (g.CurrentX).
 func XValue() ValueSource                            { return xValue{} }
 func (v xValue) Resolve(g *Game, _, _ uuid.UUID) int { return g.CurrentX }
 func (v xValue) Text() string                        { return "X" }
@@ -1700,6 +1721,7 @@ func (v xValue) Text() string                        { return "X" }
 // selectController returns the effect's controller.
 type selectController struct{}
 
+// SelectController creates a PlayerSelector that returns the effect's controller.
 func SelectController() PlayerSelector { return selectController{} }
 func (s selectController) Select(_ *Game, _, controller uuid.UUID, _ []uuid.UUID) []uuid.UUID {
 	return []uuid.UUID{controller}
@@ -1709,6 +1731,7 @@ func (s selectController) Text() string { return "controller" }
 // selectActivePlayer returns the active player (whose turn it is).
 type selectActivePlayer struct{}
 
+// SelectActivePlayer creates a PlayerSelector that returns the active player (whose turn it is).
 func SelectActivePlayer() PlayerSelector { return selectActivePlayer{} }
 func (s selectActivePlayer) Select(g *Game, _, _ uuid.UUID, _ []uuid.UUID) []uuid.UUID {
 	return []uuid.UUID{g.ActivePlayerObj().PlayerID()}
@@ -1718,6 +1741,7 @@ func (s selectActivePlayer) Text() string { return "active player" }
 // selectEachPlayer returns all players.
 type selectEachPlayer struct{}
 
+// SelectEachPlayer creates a PlayerSelector that returns all players in the game.
 func SelectEachPlayer() PlayerSelector { return selectEachPlayer{} }
 func (s selectEachPlayer) Select(g *Game, _, _ uuid.UUID, _ []uuid.UUID) []uuid.UUID {
 	ids := make([]uuid.UUID, len(g.Players))
@@ -1731,6 +1755,7 @@ func (s selectEachPlayer) Text() string { return "each player" }
 // selectEachOpponent returns all players other than the controller.
 type selectEachOpponent struct{}
 
+// SelectEachOpponent creates a PlayerSelector that returns all opponents of the controller.
 func SelectEachOpponent() PlayerSelector { return selectEachOpponent{} }
 func (s selectEachOpponent) Select(g *Game, _, controller uuid.UUID, _ []uuid.UUID) []uuid.UUID {
 	var ids []uuid.UUID
@@ -1746,6 +1771,8 @@ func (s selectEachOpponent) Text() string { return "each opponent" }
 // selectAttachedController follows source → AttachedTo → Controller.
 type selectAttachedController struct{}
 
+// SelectAttachedController creates a PlayerSelector that returns the controller of the permanent
+// the source is attached to (for aura-based effects like Psychic Venom).
 func SelectAttachedController() PlayerSelector { return selectAttachedController{} }
 func (s selectAttachedController) Select(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) []uuid.UUID {
 	src := g.FindPermanent(sourceID)
@@ -1763,6 +1790,8 @@ func (s selectAttachedController) Text() string { return "enchanted creature's c
 // selectEventController reads targets[0] as a player ID (for event-based triggers).
 type selectEventController struct{}
 
+// SelectEventController creates a PlayerSelector that reads targets[0] as a player ID,
+// used for event-based triggers that pass the relevant player through the target list.
 func SelectEventController() PlayerSelector { return selectEventController{} }
 func (s selectEventController) Select(_ *Game, _, _ uuid.UUID, targets []uuid.UUID) []uuid.UUID {
 	if len(targets) == 0 {
@@ -1775,6 +1804,7 @@ func (s selectEventController) Text() string { return "that player" }
 // tapAllLandsEffect taps all lands target player controls.
 type tapAllLandsEffect struct{}
 
+// TapAllLands creates an effect that taps all lands a target player controls (e.g. Mana Short).
 func TapAllLands() Effect { return &tapAllLandsEffect{} }
 
 func (e *tapAllLandsEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -1794,6 +1824,8 @@ func (e *tapAllLandsEffect) Text() string { return "Tap all lands target player 
 // balanceEffect equalizes lands, creatures, and hand sizes.
 type balanceEffect struct{}
 
+// BalanceEffect creates an effect that equalizes lands, creatures, and hand sizes across all
+// players by having each player sacrifice/discard down to the minimum (Balance).
 func BalanceEffect() Effect { return &balanceEffect{} }
 
 func (e *balanceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -1883,6 +1915,8 @@ func (e *balanceEffect) Text() string {
 // opponent controls, then destroys the source.
 type chaosOrbEffect struct{}
 
+// ChaosOrbEffect creates an effect that destroys a random nontoken permanent an opponent
+// controls, then destroys the source (Chaos Orb).
 func ChaosOrbEffect() Effect { return &chaosOrbEffect{} }
 
 func (e *chaosOrbEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -1908,6 +1942,7 @@ func (e *chaosOrbEffect) Text() string { return "Destroy a random nontoken perma
 // removeFromCombatEffect removes a target creature from combat.
 type removeFromCombatEffect struct{}
 
+// RemoveFromCombat creates an effect that removes a target creature from combat.
 func RemoveFromCombat() Effect { return &removeFromCombatEffect{} }
 
 func (e *removeFromCombatEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -1929,6 +1964,8 @@ type replaceKeywordEffect struct {
 	to   Keyword
 }
 
+// ReplaceKeywordEffect creates an effect that replaces one keyword with another on a target permanent
+// as a continuous effect (e.g. replacing Flying with a different evasion).
 func ReplaceKeywordEffect(from, to Keyword) Effect {
 	return &replaceKeywordEffect{from: from, to: to}
 }
