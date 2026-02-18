@@ -205,6 +205,30 @@ func (tg *TestGame) Block(turn int, p PlayerRef, blocker, attacker string) {
 	tp.blockActions[turn][blocker] = attacker
 }
 
+// ChoosePermanent scripts which permanent a player will choose when asked to sacrifice/pick.
+func (tg *TestGame) ChoosePermanent(p PlayerRef, name string) {
+	tp := tg.getPlayer(p)
+	tp.choosePermanent = append(tp.choosePermanent, name)
+}
+
+// ChooseDiscard scripts which card(s) a player will discard when asked.
+func (tg *TestGame) ChooseDiscard(p PlayerRef, names ...string) {
+	tp := tg.getPlayer(p)
+	tp.chooseDiscard = append(tp.chooseDiscard, names)
+}
+
+// ChooseManaColor scripts what mana color a player will choose when asked.
+func (tg *TestGame) ChooseManaColor(p PlayerRef, color Color) {
+	tp := tg.getPlayer(p)
+	tp.chooseManaColor = append(tp.chooseManaColor, color)
+}
+
+// ChooseFromLibrary scripts which card a player will find when searching library.
+func (tg *TestGame) ChooseFromLibrary(p PlayerRef, name string) {
+	tp := tg.getPlayer(p)
+	tp.chooseFromLibrary = append(tp.chooseFromLibrary, name)
+}
+
 // StopAt sets when the game should stop.
 func (tg *TestGame) StopAt(turn int, step PhaseStep) {
 	tg.stopAt.turn = turn

@@ -2,6 +2,7 @@ package mage
 
 import (
 	"fmt"
+	"math/rand"
 
 	"github.com/google/uuid"
 )
@@ -668,8 +669,8 @@ func (e *discardRandomEffect) Apply(g *Game, sourceID, controller uuid.UUID, tar
 		if len(hand) == 0 {
 			break
 		}
-		// Discard the first card (deterministic for testing)
-		card := hand[0]
+		idx := rand.Intn(len(hand))
+		card := hand[idx]
 		targetPlayer.RemoveFromHand(card.ID())
 		targetPlayer.AddToGraveyard(card)
 	}
@@ -714,12 +715,8 @@ func (e *discardCardsEffect) Apply(g *Game, sourceID, controller uuid.UUID, targ
 	if e.useX {
 		amount = g.CurrentX
 	}
-	for i := 0; i < amount; i++ {
-		hand := targetPlayer.Hand()
-		if len(hand) == 0 {
-			break
-		}
-		card := hand[0]
+	chosen := targetPlayer.ChooseCardsFromHand(amount, "discard", g)
+	for _, card := range chosen {
 		targetPlayer.RemoveFromHand(card.ID())
 		targetPlayer.AddToGraveyard(card)
 	}
@@ -759,11 +756,10 @@ func (e *addManaEffect) Text() string {
 // addAnyManaEffect adds mana of any one color to the controller's pool.
 type addAnyManaEffect struct {
 	amount int
-	color  Color // chosen color (default to the first needed)
 }
 
-func AddAnyMana(amount int, color Color) Effect {
-	return &addAnyManaEffect{amount: amount, color: color}
+func AddAnyMana(amount int, _ Color) Effect {
+	return &addAnyManaEffect{amount: amount}
 }
 
 func (e *addAnyManaEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -771,7 +767,8 @@ func (e *addAnyManaEffect) Apply(g *Game, sourceID, controller uuid.UUID, target
 	if p == nil {
 		return ErrPlayerNotFound
 	}
-	p.ManaPool().Add(e.color, e.amount)
+	color := p.ChooseManaColor("add mana")
+	p.ManaPool().Add(color, e.amount)
 	return nil
 }
 
@@ -1071,10 +1068,17 @@ func (e *searchLibraryEffect) Apply(g *Game, sourceID, controller uuid.UUID, tar
 	if len(lib) == 0 {
 		return nil
 	}
-	// In testing, just take the first card from library
-	card := lib[0]
-	newLib := make([]Card, len(lib)-1)
-	copy(newLib, lib[1:])
+	card := p.ChooseCardFromLibrary(lib, "search", g)
+	if card == nil {
+		return nil
+	}
+	// Remove the chosen card from library
+	newLib := make([]Card, 0, len(lib)-1)
+	for _, c := range lib {
+		if c.ID() != card.ID() {
+			newLib = append(newLib, c)
+		}
+	}
 	p.SetLibrary(newLib)
 	p.AddToHand(card)
 	return nil
@@ -1421,10 +1425,18 @@ func SacrificeCreatureOrDamage(damage int) Effect {
 }
 
 func (e *sacrificeOrDamageEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	// Try to find a creature to sacrifice (not the source itself)
+	// Collect creatures that can be sacrificed (not the source itself)
+	var candidates []*Permanent
 	for _, p := range g.Battlefield {
 		if p.Controller == controller && p.HasType(TypeCreature) && p.ID() != sourceID {
-			g.Sacrifice(p)
+			candidates = append(candidates, p)
+		}
+	}
+	if len(candidates) > 0 {
+		player := g.GetPlayer(controller)
+		chosen := player.ChoosePermanent(candidates, "sacrifice", g)
+		if chosen != nil {
+			g.Sacrifice(chosen)
 			return nil
 		}
 	}

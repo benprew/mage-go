@@ -14,9 +14,13 @@ type ScriptedAction struct {
 // TestPlayer is a scripted player for testing.
 type TestPlayer struct {
 	*BasePlayer
-	actions       []ScriptedAction
-	attackActions map[int][]string             // turn → creature names to attack with
-	blockActions  map[int]map[string]string     // turn → blocker name → attacker name
+	actions            []ScriptedAction
+	attackActions      map[int][]string         // turn → creature names to attack with
+	blockActions       map[int]map[string]string // turn → blocker name → attacker name
+	choosePermanent    []string                 // queue of permanent names
+	chooseDiscard      [][]string               // queue of card name lists
+	chooseManaColor    []Color                  // queue of colors
+	chooseFromLibrary  []string                 // queue of card names
 }
 
 func NewTestPlayer(name string) *TestPlayer {
@@ -97,4 +101,80 @@ func (tp *TestPlayer) ChooseTargets(possible []uuid.UUID, min, max int, g *Game)
 // ChooseMayAbility always accepts optional abilities.
 func (tp *TestPlayer) ChooseMayAbility(description string) bool {
 	return true
+}
+
+// ChoosePermanent picks a permanent from candidates. If the queue has a scripted
+// name, find the matching candidate; otherwise fall back to first candidate.
+func (tp *TestPlayer) ChoosePermanent(candidates []*Permanent, reason string, g *Game) *Permanent {
+	if len(candidates) == 0 {
+		return nil
+	}
+	if len(tp.choosePermanent) > 0 {
+		name := tp.choosePermanent[0]
+		tp.choosePermanent = tp.choosePermanent[1:]
+		for _, c := range candidates {
+			if c.Name() == name {
+				return c
+			}
+		}
+	}
+	return candidates[0]
+}
+
+// ChooseCardsFromHand picks cards from hand by name. If the queue has scripted
+// names, find matching cards; otherwise fall back to first N cards.
+func (tp *TestPlayer) ChooseCardsFromHand(amount int, reason string, g *Game) []Card {
+	hand := tp.Hand()
+	if amount > len(hand) {
+		amount = len(hand)
+	}
+	if len(tp.chooseDiscard) > 0 {
+		names := tp.chooseDiscard[0]
+		tp.chooseDiscard = tp.chooseDiscard[1:]
+		var result []Card
+		for _, name := range names {
+			for _, c := range hand {
+				if c.Name() == name {
+					result = append(result, c)
+					break
+				}
+			}
+		}
+		if len(result) > amount {
+			result = result[:amount]
+		}
+		return result
+	}
+	result := make([]Card, amount)
+	copy(result, hand[:amount])
+	return result
+}
+
+// ChooseManaColor picks a mana color. If the queue has a scripted color, use it;
+// otherwise fall back to White.
+func (tp *TestPlayer) ChooseManaColor(reason string) Color {
+	if len(tp.chooseManaColor) > 0 {
+		c := tp.chooseManaColor[0]
+		tp.chooseManaColor = tp.chooseManaColor[1:]
+		return c
+	}
+	return White
+}
+
+// ChooseCardFromLibrary picks a card from candidates. If the queue has a scripted
+// name, find the matching candidate; otherwise fall back to first candidate.
+func (tp *TestPlayer) ChooseCardFromLibrary(candidates []Card, reason string, g *Game) Card {
+	if len(candidates) == 0 {
+		return nil
+	}
+	if len(tp.chooseFromLibrary) > 0 {
+		name := tp.chooseFromLibrary[0]
+		tp.chooseFromLibrary = tp.chooseFromLibrary[1:]
+		for _, c := range candidates {
+			if c.Name() == name {
+				return c
+			}
+		}
+	}
+	return candidates[0]
 }
