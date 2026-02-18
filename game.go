@@ -53,8 +53,21 @@ type Game struct {
 	DamageDealtBy map[uuid.UUID]map[uuid.UUID]bool
 
 
+	// Delayed triggers
+	delayedTriggers []*DelayedTrigger
+
 	// Control flags
 	stopped bool
+}
+
+// DelayedTrigger represents a one-shot triggered ability that fires when
+// a specific event occurs (e.g., "destroy this creature at end of turn").
+type DelayedTrigger struct {
+	EventType  EventType
+	TargetID   uuid.UUID
+	Effects    []Effect
+	SourceID   uuid.UUID
+	Controller uuid.UUID
 }
 
 type pendingTrigger struct {
@@ -256,8 +269,7 @@ func (g *Game) DestroyPermanent(perm *Permanent) {
 		return
 	}
 	// Regeneration replaces destruction: tap, remove damage, remove from combat
-	if perm.RegenerationShield {
-		perm.RegenerationShield = false
+	if g.Effects.ConsumeRegenerationShield(perm.ID()) {
 		perm.Tapped = true
 		perm.Damage = 0
 		// Remove from combat if attacking/blocking
@@ -416,9 +428,7 @@ func (g *Game) DealDamageToPermanent(perm *Permanent, amount int, sourceID uuid.
 		return
 	}
 	// Apply damage prevention shield
-	if perm.DamagePreventionShield > 0 {
-		prevented := min(amount, perm.DamagePreventionShield)
-		perm.DamagePreventionShield -= prevented
+	if prevented := g.Effects.PreventDamage(perm.ID(), amount); prevented > 0 {
 		amount -= prevented
 	}
 	if amount <= 0 {
@@ -485,6 +495,12 @@ func (g *Game) Attach(sourceID, targetID uuid.UUID) {
 	})
 }
 
+// RegisterDelayedTrigger registers a one-shot delayed trigger that will fire
+// when the specified event type occurs.
+func (g *Game) RegisterDelayedTrigger(dt *DelayedTrigger) {
+	g.delayedTriggers = append(g.delayedTriggers, dt)
+}
+
 // FireEvent dispatches an event and checks triggered abilities.
 func (g *Game) FireEvent(evt GameEvent) {
 	for _, perm := range g.Battlefield {
@@ -506,6 +522,25 @@ func (g *Game) FireEvent(evt GameEvent) {
 			}
 		}
 	}
+
+	// Check delayed triggers (one-shot, removed after matching)
+	remaining := g.delayedTriggers[:0]
+	for _, dt := range g.delayedTriggers {
+		if dt.EventType == evt.Type {
+			obj := &StackObject{
+				ID:         uuid.New(),
+				Controller: dt.Controller,
+				SourceID:   dt.SourceID,
+				IsAbility:  true,
+				Effects:    dt.Effects,
+				Targets:    []uuid.UUID{dt.TargetID},
+			}
+			g.Stack.Push(obj)
+		} else {
+			remaining = append(remaining, dt)
+		}
+	}
+	g.delayedTriggers = remaining
 }
 
 // PutTriggersOnStack puts all pending triggers onto the stack.
@@ -847,6 +882,8 @@ func (g *Game) RunStep(step PhaseStep) {
 		g.doCombatDamage(false)
 	case EndCombat:
 		g.Combat.Reset()
+	case EndStep:
+		g.doEndStep()
 	case Cleanup:
 		g.doCleanup()
 	}
@@ -858,16 +895,25 @@ func (g *Game) RunStep(step PhaseStep) {
 	g.ResolveStack()
 }
 
+func (g *Game) doEndStep() {
+	active := g.ActivePlayerObj()
+	g.FireEvent(GameEvent{
+		Type:     EvtEndStep,
+		PlayerID: active.PlayerID(),
+	})
+	g.PutTriggersOnStack()
+	g.ResolveStack()
+}
+
 func (g *Game) doUntap() {
 	active := g.ActivePlayerObj()
+	g.Effects.ClearRegenerationShields(active.PlayerID(), g)
 	for _, p := range g.Battlefield {
 		if p.Controller == active.PlayerID() {
-			if !p.DoesNotUntap {
+			if !p.HasAbility(DoesNotUntapKW) {
 				p.Tapped = false
 			}
 			p.SummonSick = false
-			// Clear regeneration shields at start of turn
-			p.RegenerationShield = false
 		}
 	}
 	g.LandsPlayedThisTurn = 0
@@ -1083,21 +1129,11 @@ func (g *Game) doCleanup() {
 	g.PreventCombatDamage = false
 	// Clear damage tracking
 	g.DamageDealtBy = make(map[uuid.UUID]map[uuid.UUID]bool)
-	// Destroy permanents marked for end-of-turn destruction
-	var toDestroy []*Permanent
+	// Clear damage prevention shields
+	g.Effects.ClearPreventionShields()
 	for _, p := range g.Battlefield {
-		if p.DestroyAtEndOfTurn {
-			toDestroy = append(toDestroy, p)
-		}
 		// Clear activation tracking (Charge counters used for per-turn counts)
 		delete(p.Counters, Charge)
-		// Clear unblockable flag
-		p.Unblockable = false
-		// Clear damage prevention shields
-		p.DamagePreventionShield = 0
-	}
-	for _, p := range toDestroy {
-		g.DestroyPermanent(p)
 	}
 }
 

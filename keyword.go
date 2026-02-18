@@ -28,6 +28,7 @@ const (
 	CantBeBlockedByWalls
 	EntersTapped
 	DoesNotUntapKW
+	UnblockableKW
 )
 
 func (k Keyword) String() string {
@@ -80,6 +81,8 @@ func (k Keyword) String() string {
 		return "Enters Tapped"
 	case DoesNotUntapKW:
 		return "Does Not Untap"
+	case UnblockableKW:
+		return "Can't Be Blocked"
 	default:
 		return "Unknown"
 	}

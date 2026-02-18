@@ -521,7 +521,13 @@ func (e *markDestroyAtEOTAfterNActivationsEffect) Apply(g *Game, sourceID, contr
 	}
 	perm.AddCounter(Charge, 1)
 	if perm.Counters[Charge] >= e.threshold {
-		perm.DestroyAtEndOfTurn = true
+		g.RegisterDelayedTrigger(&DelayedTrigger{
+			EventType:  EvtEndStep,
+			TargetID:   perm.ID(),
+			Effects:    []Effect{DestroyTarget()},
+			SourceID:   sourceID,
+			Controller: controller,
+		})
 	}
 	return nil
 }
@@ -1355,7 +1361,7 @@ func (e *regenerateSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, 
 	if perm == nil {
 		return nil
 	}
-	perm.RegenerationShield = true
+	g.Effects.AddRegenerationShield(sourceID)
 	return nil
 }
 
@@ -1376,7 +1382,7 @@ func (e *preventDamageToTargetEffect) Apply(g *Game, sourceID, controller uuid.U
 	}
 	perm := g.FindPermanent(targets[0])
 	if perm != nil {
-		perm.DamagePreventionShield += e.amount
+		g.Effects.AddPreventionShield(perm.ID(), e.amount)
 		return nil
 	}
 	// Could also prevent damage to player - not implemented yet
@@ -1400,7 +1406,7 @@ func (e *preventXDamageToTargetEffect) Apply(g *Game, sourceID, controller uuid.
 	}
 	perm := g.FindPermanent(targets[0])
 	if perm != nil {
-		perm.DamagePreventionShield += g.CurrentX
+		g.Effects.AddPreventionShield(perm.ID(), g.CurrentX)
 		return nil
 	}
 	return nil
@@ -1486,7 +1492,13 @@ func (e *destroyTargetAtEndOfTurnEffect) Apply(g *Game, sourceID, controller uui
 	if perm == nil {
 		return nil
 	}
-	perm.DestroyAtEndOfTurn = true
+	g.RegisterDelayedTrigger(&DelayedTrigger{
+		EventType:  EvtEndStep,
+		TargetID:   perm.ID(),
+		Effects:    []Effect{DestroyTarget()},
+		SourceID:   sourceID,
+		Controller: controller,
+	})
 	return nil
 }
 
@@ -1688,7 +1700,13 @@ func (e *makeUnblockableUntilEndOfTurnEffect) Apply(g *Game, sourceID, controlle
 	if perm == nil {
 		return nil
 	}
-	perm.Unblockable = true
+	eff := &temporaryKeywordEffect{
+		targetID:     perm.ID(),
+		keyword:      UnblockableKW,
+		effectSource: effectSource{sourceID: sourceID},
+	}
+	g.Effects.Add(eff)
+	g.Effects.Apply(g)
 	return nil
 }
 

@@ -221,12 +221,6 @@ type Permanent struct {
 	Attachments []uuid.UUID // what's attached to this permanent
 
 	RuntimeAbilities []Ability // base + granted by effects
-
-	RegenerationShield     bool // if true, the next destruction is replaced by tap + remove damage
-	DoesNotUntap           bool // if true, does not untap during untap step
-	DamagePreventionShield int  // amount of damage to prevent
-	DestroyAtEndOfTurn     bool // if true, destroy during cleanup
-	Unblockable            bool   // if true, can't be blocked this turn
 }
 
 // NewPermanent creates a permanent from a card.
@@ -242,8 +236,6 @@ func NewPermanent(card Card, controller uuid.UUID) *Permanent {
 		cp := a
 		p.RuntimeAbilities = append(p.RuntimeAbilities, cp)
 	}
-	// Initialize DoesNotUntap from keyword
-	p.DoesNotUntap = p.HasAbility(DoesNotUntapKW)
 	return p
 }
 

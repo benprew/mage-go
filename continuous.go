@@ -59,16 +59,66 @@ type EffectManager struct {
 	grantedKW    map[uuid.UUID][]Keyword
 	removedKW    map[uuid.UUID][]Keyword
 	preventAttack map[uuid.UUID]bool
+	regenerationShields map[uuid.UUID]int
+	preventionShields   map[uuid.UUID]int
 }
 
 func NewEffectManager() *EffectManager {
 	return &EffectManager{
-		powerBonuses:  make(map[uuid.UUID]int),
-		toughBonuses:  make(map[uuid.UUID]int),
-		grantedKW:     make(map[uuid.UUID][]Keyword),
-		removedKW:     make(map[uuid.UUID][]Keyword),
-		preventAttack: make(map[uuid.UUID]bool),
+		powerBonuses:        make(map[uuid.UUID]int),
+		toughBonuses:        make(map[uuid.UUID]int),
+		grantedKW:           make(map[uuid.UUID][]Keyword),
+		removedKW:           make(map[uuid.UUID][]Keyword),
+		preventAttack:       make(map[uuid.UUID]bool),
+		regenerationShields: make(map[uuid.UUID]int),
+		preventionShields:   make(map[uuid.UUID]int),
 	}
+}
+
+// AddRegenerationShield increments the regeneration shield count for a permanent.
+func (em *EffectManager) AddRegenerationShield(targetID uuid.UUID) {
+	em.regenerationShields[targetID]++
+}
+
+// ConsumeRegenerationShield returns true and decrements if a shield is available.
+func (em *EffectManager) ConsumeRegenerationShield(targetID uuid.UUID) bool {
+	if em.regenerationShields[targetID] > 0 {
+		em.regenerationShields[targetID]--
+		return true
+	}
+	return false
+}
+
+// ClearRegenerationShields clears all regeneration shields for permanents
+// controlled by the given player (per MTG rules, cleared during untap step).
+func (em *EffectManager) ClearRegenerationShields(playerID uuid.UUID, g *Game) {
+	for _, p := range g.Battlefield {
+		if p.Controller == playerID {
+			delete(em.regenerationShields, p.ID())
+		}
+	}
+}
+
+// AddPreventionShield adds to the damage prevention shield for a permanent.
+func (em *EffectManager) AddPreventionShield(targetID uuid.UUID, amount int) {
+	em.preventionShields[targetID] += amount
+}
+
+// PreventDamage consumes prevention shields to prevent damage, returning the
+// amount actually prevented.
+func (em *EffectManager) PreventDamage(targetID uuid.UUID, amount int) int {
+	shield := em.preventionShields[targetID]
+	if shield <= 0 {
+		return 0
+	}
+	prevented := min(amount, shield)
+	em.preventionShields[targetID] -= prevented
+	return prevented
+}
+
+// ClearPreventionShields resets all damage prevention shields.
+func (em *EffectManager) ClearPreventionShields() {
+	em.preventionShields = make(map[uuid.UUID]int)
 }
 
 func (em *EffectManager) Add(e ContinuousEffect) {
@@ -113,8 +163,6 @@ func (em *EffectManager) Apply(g *Game) {
 			}
 		}
 		p.RuntimeAbilities = base
-		// Reset DoesNotUntap to intrinsic value (will be re-set by effects if applicable)
-		p.DoesNotUntap = p.HasAbility(DoesNotUntapKW)
 	}
 
 	// Remove effects whose source is no longer on the battlefield
@@ -416,7 +464,8 @@ func (e *preventUntapEffect) Apply(g *Game) error {
 	}
 	target := g.FindPermanent(src.AttachedTo)
 	if target != nil {
-		target.DoesNotUntap = true
+		g.Effects.grantedKW[target.ID()] = append(g.Effects.grantedKW[target.ID()], DoesNotUntapKW)
+		target.RuntimeAbilities = append(target.RuntimeAbilities, &grantedByEffect{HasKeyword(DoesNotUntapKW)})
 	}
 	return nil
 }

@@ -115,7 +115,7 @@ func (c *Combat) DealsDamageInStep(p *Permanent, isFirstStrikeStep bool) bool {
 // CanBlock returns true if blocker can legally block the attacker.
 func CanBlock(blocker, attacker *Permanent, g *Game) bool {
 	// Unblockable creatures can't be blocked
-	if attacker.Unblockable {
+	if attacker.HasAbility(UnblockableKW) {
 		return false
 	}
 	// CantBeBlockedByWalls creatures can't be blocked by Walls
