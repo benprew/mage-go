@@ -891,12 +891,47 @@ func (g *Game) doUntap() {
 
 func (g *Game) doUpkeep() {
 	active := g.ActivePlayerObj()
+
+	// Check for graveyard returns (e.g. Nether Shadow)
+	g.checkGraveyardReturns(active)
+
 	g.FireEvent(GameEvent{
 		Type:     EvtUpkeep,
 		PlayerID: active.PlayerID(),
 	})
 	g.PutTriggersOnStack()
 	g.ResolveStack()
+}
+
+// checkGraveyardReturns checks for cards in the graveyard that can return to the
+// battlefield at the beginning of their controller's upkeep (e.g. Nether Shadow).
+func (g *Game) checkGraveyardReturns(p Player) {
+	graveyard := p.Graveyard()
+	var toReturn []uuid.UUID
+
+	for i, card := range graveyard {
+		bc, ok := card.(*BaseCard)
+		if !ok || bc.GraveyardReturnMinCreatures_ <= 0 {
+			continue
+		}
+		// Count creature cards above this one (higher indices = more recently added)
+		creaturesAbove := 0
+		for j := i + 1; j < len(graveyard); j++ {
+			if graveyard[j].HasType(TypeCreature) {
+				creaturesAbove++
+			}
+		}
+		if creaturesAbove >= bc.GraveyardReturnMinCreatures_ {
+			toReturn = append(toReturn, bc.ID())
+		}
+	}
+
+	for _, id := range toReturn {
+		card, ok := p.RemoveFromGraveyard(id)
+		if ok {
+			g.PutOnBattlefield(card, p.PlayerID())
+		}
+	}
 }
 
 func (g *Game) doDraw() {

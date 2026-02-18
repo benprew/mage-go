@@ -203,6 +203,9 @@ func registerAlphaCreatures() {
 		c.Power_ = 1
 		c.Toughness_ = 1
 		c.AddAbility(mage.HasKeyword(mage.Haste))
+		// At beginning of your upkeep, if Nether Shadow is in your graveyard
+		// with three or more creature cards above it, put it onto the battlefield.
+		c.GraveyardReturnMinCreatures_ = 3
 		return c
 	})
 
