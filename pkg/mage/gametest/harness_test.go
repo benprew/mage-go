@@ -10,8 +10,7 @@ import (
 func TestHarnessSmokeTest(t *testing.T) {
 	if !mage.CardRegistered("Smoke Test Creature") {
 		mage.Register("Smoke Test Creature", func() mage.Card {
-			c := mage.NewCreature("Smoke Test Creature", "{1}{G}", 2, 2, "Beast")
-			return c
+			return mage.NewCreature("Smoke Test Creature", "{1}{G}", 2, 2, mage.WithSubTypes("Beast"))
 		})
 	}
 

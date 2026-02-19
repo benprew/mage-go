@@ -13,15 +13,16 @@ func TestGenericTriggered(t *testing.T) {
 		name := "DSL ETB Creature"
 		if !mage.CardRegistered(name) {
 			mage.Register(name, func() mage.Card {
-				c := mage.NewCreature(name, "{2}{G}", 3, 3, "Beast")
-				c.AddAbility(mage.NewTriggered(
-					core.EvtEntersBattlefield,
-					false,
-					mage.GainLife(3),
-				).SetCondition(func(evt *core.GameEvent, _ *mage.Game, sourceID, _ uuid.UUID) bool {
-					return evt.SourceID == sourceID
-				}))
-				return c
+				return mage.NewCreature(name, "{2}{G}", 3, 3,
+					mage.WithSubTypes("Beast"),
+					mage.WithAbility(mage.NewTriggered(
+						core.EvtEntersBattlefield,
+						false,
+						mage.GainLife(3),
+					).SetCondition(func(evt *core.GameEvent, _ *mage.Game, sourceID, _ uuid.UUID) bool {
+						return evt.SourceID == sourceID
+					})),
+				)
 			})
 		}
 
@@ -39,15 +40,15 @@ func TestGenericTriggered(t *testing.T) {
 		name := "DSL Upkeep Damager"
 		if !mage.CardRegistered(name) {
 			mage.Register(name, func() mage.Card {
-				c := mage.NewArtifact(name, "{2}")
-				c.AddAbility(mage.NewTriggered(
-					core.EvtUpkeep,
-					false,
-					mage.DealDamageToPlayers(mage.Fixed(1), mage.SelectController()),
-				).SetCondition(func(evt *core.GameEvent, _ *mage.Game, _, controllerID uuid.UUID) bool {
-					return evt.PlayerID == controllerID
-				}))
-				return c
+				return mage.NewArtifact(name, "{2}",
+					mage.WithAbility(mage.NewTriggered(
+						core.EvtUpkeep,
+						false,
+						mage.DealDamageToPlayers(mage.Fixed(1), mage.SelectController()),
+					).SetCondition(func(evt *core.GameEvent, _ *mage.Game, _, controllerID uuid.UUID) bool {
+						return evt.PlayerID == controllerID
+					})),
+				)
 			})
 		}
 
@@ -68,27 +69,27 @@ func TestGenericTriggered(t *testing.T) {
 			f func() mage.Card
 		}{
 			{name, func() mage.Card {
-				c := mage.NewCreature(name, "{1}{B}", 1, 1, "Zombie")
-				c.AddAbility(mage.NewTriggered(
-					core.EvtCreatureDied,
-					false,
-					mage.AddCounters(core.P1P1, mage.Fixed(1), mage.SelectSource),
-				).SetCondition(func(evt *core.GameEvent, _ *mage.Game, sourceID, controllerID uuid.UUID) bool {
-					if evt.SourceID == sourceID {
-						return false
-					}
-					return evt.PlayerID == controllerID
-				}))
-				return c
+				return mage.NewCreature(name, "{1}{B}", 1, 1,
+					mage.WithSubTypes("Zombie"),
+					mage.WithAbility(mage.NewTriggered(
+						core.EvtCreatureDied,
+						false,
+						mage.AddCounters(core.P1P1, mage.Fixed(1), mage.SelectSource),
+					).SetCondition(func(evt *core.GameEvent, _ *mage.Game, sourceID, controllerID uuid.UUID) bool {
+						if evt.SourceID == sourceID {
+							return false
+						}
+						return evt.PlayerID == controllerID
+					})),
+				)
 			}},
 			{victimName, func() mage.Card {
-				c := mage.NewCreature(victimName, "{1}{G}", 2, 2, "Bear")
-				return c
+				return mage.NewCreature(victimName, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 			}},
 			{boltName, func() mage.Card {
-				c := mage.NewInstant(boltName, "{R}")
-				c.AddAbility(mage.NewTargetedSpell(mage.TargetCreature(), mage.DealDamage(mage.Fixed(3))))
-				return c
+				return mage.NewInstant(boltName, "{R}",
+					mage.WithAbility(mage.NewTargetedSpell(mage.TargetCreature(), mage.DealDamage(mage.Fixed(3)))),
+				)
 			}},
 		} {
 			if !mage.CardRegistered(reg.n) {
@@ -111,15 +112,16 @@ func TestGenericTriggered(t *testing.T) {
 		name := "DSL Attack Pumper"
 		if !mage.CardRegistered(name) {
 			mage.Register(name, func() mage.Card {
-				c := mage.NewCreature(name, "{1}{R}", 2, 2, "Warrior")
-				c.AddAbility(mage.NewTriggered(
-					core.EvtDeclaredAttacker,
-					false,
-					mage.BoostUntilEndOfTurn(mage.Fixed(2), mage.Fixed(0), mage.SelectSource),
-				).SetCondition(func(evt *core.GameEvent, _ *mage.Game, sourceID, _ uuid.UUID) bool {
-					return evt.SourceID == sourceID
-				}))
-				return c
+				return mage.NewCreature(name, "{1}{R}", 2, 2,
+					mage.WithSubTypes("Warrior"),
+					mage.WithAbility(mage.NewTriggered(
+						core.EvtDeclaredAttacker,
+						false,
+						mage.BoostUntilEndOfTurn(mage.Fixed(2), mage.Fixed(0), mage.SelectSource),
+					).SetCondition(func(evt *core.GameEvent, _ *mage.Game, sourceID, _ uuid.UUID) bool {
+						return evt.SourceID == sourceID
+					})),
+				)
 			})
 		}
 
@@ -138,15 +140,15 @@ func TestDestroyAllCollapse(t *testing.T) {
 		name := "DSL Wrath"
 		if !mage.CardRegistered(name) {
 			mage.Register(name, func() mage.Card {
-				c := mage.NewSorcery(name, "{2}{W}{W}")
-				c.AddAbility(mage.NewSpellAbility(mage.DestroyAllCreatures()))
-				return c
+				return mage.NewSorcery(name, "{2}{W}{W}",
+					mage.WithAbility(mage.NewSpellAbility(mage.DestroyAllCreatures())),
+				)
 			})
 		}
 		creatureName := "DSL Bear"
 		if !mage.CardRegistered(creatureName) {
 			mage.Register(creatureName, func() mage.Card {
-				return mage.NewCreature(creatureName, "{1}{G}", 2, 2, "Bear")
+				return mage.NewCreature(creatureName, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 			})
 		}
 
@@ -168,9 +170,9 @@ func TestXVariantCollapse(t *testing.T) {
 		name := "DSL X Damage"
 		if !mage.CardRegistered(name) {
 			mage.Register(name, func() mage.Card {
-				c := mage.NewSorcery(name, "{X}{R}")
-				c.AddAbility(mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.XValue())))
-				return c
+				return mage.NewSorcery(name, "{X}{R}",
+					mage.WithAbility(mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.XValue()))),
+				)
 			})
 		}
 
@@ -187,9 +189,9 @@ func TestXVariantCollapse(t *testing.T) {
 		name := "DSL X Draw"
 		if !mage.CardRegistered(name) {
 			mage.Register(name, func() mage.Card {
-				c := mage.NewSorcery(name, "{X}{U}")
-				c.AddAbility(mage.NewTargetedSpell(mage.TargetPlayer(), mage.DrawCards(mage.XValue())))
-				return c
+				return mage.NewSorcery(name, "{X}{U}",
+					mage.WithAbility(mage.NewTargetedSpell(mage.TargetPlayer(), mage.DrawCards(mage.XValue()))),
+				)
 			})
 		}
 
@@ -213,18 +215,17 @@ func TestFuncEffect(t *testing.T) {
 		name := "DSL Func Spell"
 		if !mage.CardRegistered(name) {
 			mage.Register(name, func() mage.Card {
-				c := mage.NewSorcery(name, "{R}")
-				sa := mage.NewSpellAbility(mage.FuncEffect(
-					"deal 3 damage to each player",
-					func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						for _, p := range g.Players {
-							g.DealDamageToPlayer(p, 3, sourceID)
-						}
-						return nil
-					},
-				))
-				c.AddAbility(sa)
-				return c
+				return mage.NewSorcery(name, "{R}",
+					mage.WithAbility(mage.NewSpellAbility(mage.FuncEffect(
+						"deal 3 damage to each player",
+						func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+							for _, p := range g.Players {
+								g.DealDamageToPlayer(p, 3, sourceID)
+							}
+							return nil
+						},
+					))),
+				)
 			})
 		}
 
@@ -244,15 +245,16 @@ func TestSourceTargetUnification(t *testing.T) {
 		name := "DSL Boost Source"
 		if !mage.CardRegistered(name) {
 			mage.Register(name, func() mage.Card {
-				c := mage.NewCreature(name, "{1}{R}", 2, 2, "Warrior")
-				c.AddAbility(mage.NewTriggered(
-					core.EvtDeclaredAttacker,
-					false,
-					mage.BoostUntilEndOfTurn(mage.Fixed(1), mage.Fixed(0), mage.SelectSource),
-				).SetCondition(func(evt *core.GameEvent, _ *mage.Game, sourceID, _ uuid.UUID) bool {
-					return evt.SourceID == sourceID
-				}))
-				return c
+				return mage.NewCreature(name, "{1}{R}", 2, 2,
+					mage.WithSubTypes("Warrior"),
+					mage.WithAbility(mage.NewTriggered(
+						core.EvtDeclaredAttacker,
+						false,
+						mage.BoostUntilEndOfTurn(mage.Fixed(1), mage.Fixed(0), mage.SelectSource),
+					).SetCondition(func(evt *core.GameEvent, _ *mage.Game, sourceID, _ uuid.UUID) bool {
+						return evt.SourceID == sourceID
+					})),
+				)
 			})
 		}
 

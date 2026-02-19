@@ -5,17 +5,20 @@ combat, targeting, and the rules layer system.
 
 # Defining Cards
 
-Cards are registered with [Register] and constructed with type-specific helpers:
+Cards are registered with [Register] and constructed with type-specific helpers
+using the functional options pattern ([CardOption]):
 
 	mage.Register("Serra Angel", func() mage.Card {
-	    c := mage.NewCreature("Serra Angel", "{3}{W}{W}", 4, 4, "Angel")
-	    c.AddAbility(mage.HasKeyword(mage.Flying))
-	    c.AddAbility(mage.HasKeyword(mage.Vigilance))
-	    return c
+	    return mage.NewCreature("Serra Angel", "{3}{W}{W}", 4, 4,
+	        mage.WithSubTypes("Angel"),
+	        mage.WithKeyword(mage.Flying),
+	        mage.WithKeyword(mage.Vigilance),
+	    )
 	})
 
 Card constructors: [NewCreature], [NewInstant], [NewSorcery], [NewEnchantment],
-[NewAura], [NewArtifact]. Abilities are attached with AddAbility.
+[NewAura], [NewArtifact], [NewEquipment], [NewLand]. Options include [WithSubTypes],
+[WithKeyword], [WithAbility], [WithCardType], [WithManaAbility], and [WithAnyColorMana].
 
 # Spells and Effects
 
@@ -24,12 +27,14 @@ Instants and sorceries use [NewSpellAbility] (no targets) or [NewTargetedSpell]
 actions: deal damage, destroy, draw cards, etc.
 
 	// Lightning Bolt: deal 3 damage to any target
-	c := mage.NewInstant("Lightning Bolt", "{R}")
-	c.AddAbility(mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))))
+	mage.NewInstant("Lightning Bolt", "{R}",
+	    mage.WithAbility(mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3)))),
+	)
 
 	// Wrath of God: destroy all creatures (no target)
-	c := mage.NewSorcery("Wrath of God", "{2}{W}{W}")
-	c.AddAbility(mage.NewSpellAbility(mage.DestroyAllCreatures()))
+	mage.NewSorcery("Wrath of God", "{2}{W}{W}",
+	    mage.WithAbility(mage.NewSpellAbility(mage.DestroyAllCreatures())),
+	)
 
 # Targets
 

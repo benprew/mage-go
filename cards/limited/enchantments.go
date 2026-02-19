@@ -14,39 +14,35 @@ func registerEnchantments() {
 	// ===== GLOBAL ENCHANTMENTS =====
 
 	mage.Register("Crusade", func() mage.Card {
-		c := mage.NewEnchantment("Crusade", "{W}{W}")
-		// White creatures get +1/+1
-		c.AddAbility(mage.StaticAbility(
-			mage.BoostAllCreaturesIncludingSelf(1, 1, mage.HasColorFilter(core.White)),
-		))
-		return c
+		return mage.NewEnchantment("Crusade", "{W}{W}",
+			mage.WithAbility(mage.StaticAbility(
+				mage.BoostAllCreaturesIncludingSelf(1, 1, mage.HasColorFilter(core.White)),
+			)),
+		)
 	})
 
 	mage.Register("Bad Moon", func() mage.Card {
-		c := mage.NewEnchantment("Bad Moon", "{1}{B}")
-		// Black creatures get +1/+1
-		c.AddAbility(mage.StaticAbility(
-			mage.BoostAllCreaturesIncludingSelf(1, 1, mage.HasColorFilter(core.Black)),
-		))
-		return c
+		return mage.NewEnchantment("Bad Moon", "{1}{B}",
+			mage.WithAbility(mage.StaticAbility(
+				mage.BoostAllCreaturesIncludingSelf(1, 1, mage.HasColorFilter(core.Black)),
+			)),
+		)
 	})
 
 	mage.Register("Orcish Oriflamme", func() mage.Card {
-		c := mage.NewEnchantment("Orcish Oriflamme", "{3}{R}")
-		// Attacking creatures you control get +1/+0
-		c.AddAbility(mage.StaticAbility(
-			mage.BoostControlledCreatures(1, 0, mage.IsAttacking),
-		))
-		return c
+		return mage.NewEnchantment("Orcish Oriflamme", "{3}{R}",
+			mage.WithAbility(mage.StaticAbility(
+				mage.BoostControlledCreatures(1, 0, mage.IsAttacking),
+			)),
+		)
 	})
 
 	mage.Register("Castle", func() mage.Card {
-		c := mage.NewEnchantment("Castle", "{3}{W}")
-		// Untapped creatures you control get +0/+2
-		c.AddAbility(mage.StaticAbility(
-			mage.BoostControlledCreatures(0, 2, mage.IsUntapped),
-		))
-		return c
+		return mage.NewEnchantment("Castle", "{3}{W}",
+			mage.WithAbility(mage.StaticAbility(
+				mage.BoostControlledCreatures(0, 2, mage.IsUntapped),
+			)),
+		)
 	})
 
 	// ===== AURAS (CREATURE ENCHANTMENTS) =====
@@ -68,163 +64,147 @@ func registerEnchantments() {
 	})
 
 	mage.Register("Blessing", func() mage.Card {
-		c := mage.NewAura("Blessing", "{W}{W}")
-		// Enchanted creature has "{W}: +1/+1 until end of turn"
-		c.AddAbility(mage.StaticAbility(
-			mage.GrantActivatedAbilityToAttached(
-				mage.BoostUntilEndOfTurn(mage.Fixed(1), mage.Fixed(1), mage.SelectSource),
-				mage.ManaCostOf("{W}"),
-				core.AttachAura,
-			),
-		))
-		return c
+		return mage.NewAura("Blessing", "{W}{W}",
+			mage.WithAbility(mage.StaticAbility(
+				mage.GrantActivatedAbilityToAttached(
+					mage.BoostUntilEndOfTurn(mage.Fixed(1), mage.Fixed(1), mage.SelectSource),
+					mage.ManaCostOf("{W}"),
+					core.AttachAura,
+				),
+			)),
+		)
 	})
 
 	mage.Register("Lance", func() mage.Card {
-		c := mage.NewAura("Lance", "{W}")
-		c.AddAbility(mage.StaticAbility(
-			mage.GrantAbilityToAttached(core.FirstStrike, core.AttachAura),
-		))
-		return c
+		return mage.NewAura("Lance", "{W}",
+			mage.WithAbility(mage.StaticAbility(
+				mage.GrantAbilityToAttached(core.FirstStrike, core.AttachAura),
+			)),
+		)
 	})
 
 	mage.Register("Web", func() mage.Card {
-		c := mage.NewAura("Web", "{G}")
-		c.AddAbility(mage.StaticAbility(
-			mage.BoostAttached(0, 2, core.AttachAura),
-			mage.GrantAbilityToAttached(core.Reach, core.AttachAura),
-		))
-		return c
+		return mage.NewAura("Web", "{G}",
+			mage.WithAbility(mage.StaticAbility(
+				mage.BoostAttached(0, 2, core.AttachAura),
+				mage.GrantAbilityToAttached(core.Reach, core.AttachAura),
+			)),
+		)
 	})
 
 	mage.Register("Firebreathing", func() mage.Card {
-		c := mage.NewAura("Firebreathing", "{R}")
-		// Enchanted creature has "{R}: +1/+0 until end of turn"
-		c.AddAbility(mage.StaticAbility(
-			mage.GrantActivatedAbilityToAttached(
-				mage.BoostUntilEndOfTurn(mage.Fixed(1), mage.Fixed(0), mage.SelectSource),
-				mage.ManaCostOf("{R}"),
-				core.AttachAura,
-			),
-		))
-		return c
+		return mage.NewAura("Firebreathing", "{R}",
+			mage.WithAbility(mage.StaticAbility(
+				mage.GrantActivatedAbilityToAttached(
+					mage.BoostUntilEndOfTurn(mage.Fixed(1), mage.Fixed(0), mage.SelectSource),
+					mage.ManaCostOf("{R}"),
+					core.AttachAura,
+				),
+			)),
+		)
 	})
 
 	mage.Register("Flight", func() mage.Card {
-		c := mage.NewAura("Flight", "{U}")
-		c.AddAbility(mage.StaticAbility(
-			mage.GrantAbilityToAttached(core.Flying, core.AttachAura),
-		))
-		return c
+		return mage.NewAura("Flight", "{U}",
+			mage.WithAbility(mage.StaticAbility(
+				mage.GrantAbilityToAttached(core.Flying, core.AttachAura),
+			)),
+		)
 	})
 
 	mage.Register("Jump", func() mage.Card {
-		c := mage.NewInstant("Jump", "{U}")
-		// Target creature gains flying until end of turn
-		sa := mage.NewTargetedSpell(mage.TargetCreature(), mage.GrantKeywordUntilEndOfTurn(core.Flying, mage.SelectTarget))
-		c.AddAbility(sa)
-		return c
+		return mage.NewInstant("Jump", "{U}",
+			mage.WithAbility(mage.NewTargetedSpell(mage.TargetCreature(), mage.GrantKeywordUntilEndOfTurn(core.Flying, mage.SelectTarget))),
+		)
 	})
 
 	mage.Register("Fear", func() mage.Card {
-		c := mage.NewAura("Fear", "{B}{B}")
-		c.AddAbility(mage.StaticAbility(
-			mage.GrantAbilityToAttached(core.Fear, core.AttachAura),
-		))
-		return c
+		return mage.NewAura("Fear", "{B}{B}",
+			mage.WithAbility(mage.StaticAbility(
+				mage.GrantAbilityToAttached(core.Fear, core.AttachAura),
+			)),
+		)
 	})
 
 	mage.Register("Burrowing", func() mage.Card {
-		c := mage.NewAura("Burrowing", "{R}")
-		c.AddAbility(mage.StaticAbility(
-			mage.GrantAbilityToAttached(core.Mountainwalk, core.AttachAura),
-		))
-		return c
+		return mage.NewAura("Burrowing", "{R}",
+			mage.WithAbility(mage.StaticAbility(
+				mage.GrantAbilityToAttached(core.Mountainwalk, core.AttachAura),
+			)),
+		)
 	})
 
 	mage.Register("Invisibility", func() mage.Card {
-		c := mage.NewAura("Invisibility", "{U}{U}")
-		// Enchanted creature can't be blocked except by Walls.
-		c.AddAbility(mage.StaticAbility(
-			mage.GrantAbilityToAttached(core.CantBeBlockedExceptByWalls, core.AttachAura),
-		))
-		return c
+		return mage.NewAura("Invisibility", "{U}{U}",
+			mage.WithAbility(mage.StaticAbility(
+				mage.GrantAbilityToAttached(core.CantBeBlockedExceptByWalls, core.AttachAura),
+			)),
+		)
 	})
 
 	mage.Register("Lure", func() mage.Card {
-		c := mage.NewAura("Lure", "{1}{G}{G}")
-		// All creatures able to block enchanted creature do so.
-		c.AddAbility(mage.StaticAbility(
-			mage.GrantAbilityToAttached(core.MustBeBlocked, core.AttachAura),
-		))
-		return c
+		return mage.NewAura("Lure", "{1}{G}{G}",
+			mage.WithAbility(mage.StaticAbility(
+				mage.GrantAbilityToAttached(core.MustBeBlocked, core.AttachAura),
+			)),
+		)
 	})
 
 	mage.Register("Paralyze", func() mage.Card {
-		c := mage.NewAura("Paralyze", "{B}")
-		// When Paralyze enters the battlefield, tap enchanted creature.
-		// Enchanted creature doesn't untap during its controller's untap step.
-		c.AddAbility(mage.EntersBattlefieldTrigger(mage.TapAttachedCreature(), false))
-		c.AddAbility(mage.StaticAbility(
-			mage.PreventAttachedFromUntapping(core.AttachAura),
-		))
-		return c
+		return mage.NewAura("Paralyze", "{B}",
+			mage.WithAbility(mage.EntersBattlefieldTrigger(mage.TapAttachedCreature(), false)),
+			mage.WithAbility(mage.StaticAbility(
+				mage.PreventAttachedFromUntapping(core.AttachAura),
+			)),
+		)
 	})
 
 	mage.Register("Earthbind", func() mage.Card {
-		c := mage.NewAura("Earthbind", "{R}")
-		// Enchanted creature loses flying
-		c.AddAbility(mage.StaticAbility(
-			mage.RemoveKeywordFromAttached(core.Flying, core.AttachAura),
-		))
-		return c
+		return mage.NewAura("Earthbind", "{R}",
+			mage.WithAbility(mage.StaticAbility(
+				mage.RemoveKeywordFromAttached(core.Flying, core.AttachAura),
+			)),
+		)
 	})
 
 	mage.Register("Control Magic", func() mage.Card {
-		c := mage.NewAura("Control Magic", "{2}{U}{U}")
-		c.AddAbility(mage.StaticAbility(
-			mage.ControlChangeContinuous(),
-		))
-		return c
+		return mage.NewAura("Control Magic", "{2}{U}{U}",
+			mage.WithAbility(mage.StaticAbility(mage.ControlChangeContinuous())),
+		)
 	})
 
-	// Animate Dead is registered in alpha_spells.go
+	// Animate Dead is registered in spells.go
 
 	// ===== ENCHANT LAND =====
 
 	mage.Register("Wild Growth", func() mage.Card {
-		c := mage.NewAura("Wild Growth", "{G}")
-		// Whenever enchanted land is tapped for mana, its controller adds {G}.
-		c.AddAbility(mage.NewAttachedManaBonusAbility(core.Green))
-		return c
+		return mage.NewAura("Wild Growth", "{G}",
+			mage.WithAbility(mage.NewAttachedManaBonusAbility(core.Green)),
+		)
 	})
 
 	mage.Register("Evil Presence", func() mage.Card {
-		c := mage.NewAura("Evil Presence", "{B}")
-		// Enchanted land is a Swamp.
-		c.AddAbility(mage.StaticAbility(
-			mage.ChangeAttachedSubTypes([]string{"Swamp"}),
-		))
-		return c
+		return mage.NewAura("Evil Presence", "{B}",
+			mage.WithAbility(mage.StaticAbility(
+				mage.ChangeAttachedSubTypes([]string{"Swamp"}),
+			)),
+		)
 	})
 
 	mage.Register("Phantasmal Terrain", func() mage.Card {
-		c := mage.NewAura("Phantasmal Terrain", "{U}{U}")
-		// Enchanted land is the basic land type of your choice.
-		// Default choice: Island.
-		c.AddAbility(mage.StaticAbility(
-			mage.ChangeAttachedSubTypes([]string{"Island"}),
-		))
-		return c
+		return mage.NewAura("Phantasmal Terrain", "{U}{U}",
+			mage.WithAbility(mage.StaticAbility(
+				mage.ChangeAttachedSubTypes([]string{"Island"}),
+			)),
+		)
 	})
 
 	mage.Register("Psychic Venom", func() mage.Card {
-		c := mage.NewAura("Psychic Venom", "{1}{U}")
-		// Whenever enchanted land becomes tapped, deal 2 damage to its controller.
-		c.AddAbility(mage.WhenAttachedBecomesTappedTrigger(
-			mage.DealDamageToPlayers(mage.Fixed(2), mage.SelectAttachedController()), false,
-		))
-		return c
+		return mage.NewAura("Psychic Venom", "{1}{U}",
+			mage.WithAbility(mage.WhenAttachedBecomesTappedTrigger(
+				mage.DealDamageToPlayers(mage.Fixed(2), mage.SelectAttachedController()), false,
+			)),
+		)
 	})
 
 	// ===== WARD/PROTECTION ENCHANTMENTS =====
@@ -242,118 +222,107 @@ func registerEnchantments() {
 		name := cop.name
 		color := cop.color
 		mage.Register(name, func() mage.Card {
-			c := mage.NewEnchantment(name, "{1}{W}")
-			// {1}: Prevent all damage from one source of this color this turn.
-			ab := mage.NewActivatedAbility(
-				mage.FuncEffect(
-					"prevent all damage from one source of the chosen color",
-					func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						g.Effects.AddColorPrevention(controller, color)
-						return nil
-					}),
-				mage.GenericCost(1),
+			return mage.NewEnchantment(name, "{1}{W}",
+				// {1}: Prevent all damage from one source of this color this turn.
+				mage.WithAbility(mage.NewActivatedAbility(
+					mage.FuncEffect(
+						"prevent all damage from one source of the chosen color",
+						func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+							g.Effects.AddColorPrevention(controller, color)
+							return nil
+						}),
+					mage.GenericCost(1),
+				)),
 			)
-			c.AddAbility(ab)
-			return c
 		})
 	}
 
 	mage.Register("Black Ward", func() mage.Card {
-		c := mage.NewAura("Black Ward", "{W}")
-		c.AddAbility(mage.StaticAbility(mage.GrantProtectionToAttached(core.Black, core.AttachAura)))
-		return c
+		return mage.NewAura("Black Ward", "{W}",
+			mage.WithAbility(mage.StaticAbility(mage.GrantProtectionToAttached(core.Black, core.AttachAura))),
+		)
 	})
 
 	mage.Register("Blue Ward", func() mage.Card {
-		c := mage.NewAura("Blue Ward", "{W}")
-		c.AddAbility(mage.StaticAbility(mage.GrantProtectionToAttached(core.Blue, core.AttachAura)))
-		return c
+		return mage.NewAura("Blue Ward", "{W}",
+			mage.WithAbility(mage.StaticAbility(mage.GrantProtectionToAttached(core.Blue, core.AttachAura))),
+		)
 	})
 
 	mage.Register("Green Ward", func() mage.Card {
-		c := mage.NewAura("Green Ward", "{W}")
-		c.AddAbility(mage.StaticAbility(mage.GrantProtectionToAttached(core.Green, core.AttachAura)))
-		return c
+		return mage.NewAura("Green Ward", "{W}",
+			mage.WithAbility(mage.StaticAbility(mage.GrantProtectionToAttached(core.Green, core.AttachAura))),
+		)
 	})
 
 	mage.Register("Red Ward", func() mage.Card {
-		c := mage.NewAura("Red Ward", "{W}")
-		c.AddAbility(mage.StaticAbility(mage.GrantProtectionToAttached(core.Red, core.AttachAura)))
-		return c
+		return mage.NewAura("Red Ward", "{W}",
+			mage.WithAbility(mage.StaticAbility(mage.GrantProtectionToAttached(core.Red, core.AttachAura))),
+		)
 	})
 
 	mage.Register("White Ward", func() mage.Card {
-		c := mage.NewAura("White Ward", "{W}")
-		c.AddAbility(mage.StaticAbility(mage.GrantProtectionToAttached(core.White, core.AttachAura)))
-		return c
+		return mage.NewAura("White Ward", "{W}",
+			mage.WithAbility(mage.StaticAbility(mage.GrantProtectionToAttached(core.White, core.AttachAura))),
+		)
 	})
 
 	// ===== TRIGGERED ENCHANTMENTS =====
 
 	mage.Register("Copper Tablet", func() mage.Card {
-		c := mage.NewArtifact("Copper Tablet", "{2}")
-		// At the beginning of each player's upkeep, Copper Tablet deals 1 damage to that player.
-		c.AddAbility(mage.BeginningOfEachUpkeepTrigger(mage.DealDamageToPlayers(mage.Fixed(1), mage.SelectActivePlayer()), false))
-		return c
+		return mage.NewArtifact("Copper Tablet", "{2}",
+			mage.WithAbility(mage.BeginningOfEachUpkeepTrigger(mage.DealDamageToPlayers(mage.Fixed(1), mage.SelectActivePlayer()), false)),
+		)
 	})
 
 	mage.Register("Black Vise", func() mage.Card {
-		c := mage.NewArtifact("Black Vise", "{1}")
-		// At the beginning of each opponent's upkeep, Black Vise deals X damage to
-		// that player, where X is the number of cards in their hand minus 4, minimum 0.
-		c.AddAbility(mage.BeginningOfEachUpkeepTrigger(mage.BlackViseEffect(), false))
-		return c
+		return mage.NewArtifact("Black Vise", "{1}",
+			mage.WithAbility(mage.BeginningOfEachUpkeepTrigger(mage.BlackViseEffect(), false)),
+		)
 	})
 
 	mage.Register("Wanderlust", func() mage.Card {
-		c := mage.NewAura("Wanderlust", "{2}{G}")
-		// At the beginning of enchanted creature's controller's upkeep, deal 1 damage
-		c.AddAbility(mage.BeginningOfAttachedControllerUpkeepTrigger(
-			mage.DealDamageToPlayers(mage.Fixed(1), mage.SelectAttachedController()), false,
-		))
-		return c
+		return mage.NewAura("Wanderlust", "{2}{G}",
+			mage.WithAbility(mage.BeginningOfAttachedControllerUpkeepTrigger(
+				mage.DealDamageToPlayers(mage.Fixed(1), mage.SelectAttachedController()), false,
+			)),
+		)
 	})
 
 	mage.Register("Cursed Land", func() mage.Card {
-		c := mage.NewAura("Cursed Land", "{2}{B}{B}")
-		// At the beginning of enchanted land's controller's upkeep, deal 1 damage
-		c.AddAbility(mage.BeginningOfAttachedControllerUpkeepTrigger(
-			mage.DealDamageToPlayers(mage.Fixed(1), mage.SelectAttachedController()), false,
-		))
-		return c
+		return mage.NewAura("Cursed Land", "{2}{B}{B}",
+			mage.WithAbility(mage.BeginningOfAttachedControllerUpkeepTrigger(
+				mage.DealDamageToPlayers(mage.Fixed(1), mage.SelectAttachedController()), false,
+			)),
+		)
 	})
 
 	mage.Register("Feedback", func() mage.Card {
-		c := mage.NewAura("Feedback", "{2}{U}")
-		// At the beginning of enchanted enchantment's controller's upkeep, deal 1 damage
-		c.AddAbility(mage.BeginningOfAttachedControllerUpkeepTrigger(
-			mage.DealDamageToPlayers(mage.Fixed(1), mage.SelectAttachedController()), false,
-		))
-		return c
+		return mage.NewAura("Feedback", "{2}{U}",
+			mage.WithAbility(mage.BeginningOfAttachedControllerUpkeepTrigger(
+				mage.DealDamageToPlayers(mage.Fixed(1), mage.SelectAttachedController()), false,
+			)),
+		)
 	})
 
 	mage.Register("Warp Artifact", func() mage.Card {
-		c := mage.NewAura("Warp Artifact", "{B}{B}")
-		// At the beginning of enchanted artifact's controller's upkeep, deal 1 damage
-		c.AddAbility(mage.BeginningOfAttachedControllerUpkeepTrigger(
-			mage.DealDamageToPlayers(mage.Fixed(1), mage.SelectAttachedController()), false,
-		))
-		return c
+		return mage.NewAura("Warp Artifact", "{B}{B}",
+			mage.WithAbility(mage.BeginningOfAttachedControllerUpkeepTrigger(
+				mage.DealDamageToPlayers(mage.Fixed(1), mage.SelectAttachedController()), false,
+			)),
+		)
 	})
 
 	mage.Register("Karma", func() mage.Card {
-		c := mage.NewEnchantment("Karma", "{2}{W}{W}")
-		// At the beginning of each player's upkeep, Karma deals damage to that player
-		// equal to the number of Swamps they control.
-		c.AddAbility(mage.BeginningOfEachUpkeepTrigger(mage.DealDamagePerSwamp(), false))
-		return c
+		return mage.NewEnchantment("Karma", "{2}{W}{W}",
+			mage.WithAbility(mage.BeginningOfEachUpkeepTrigger(mage.DealDamagePerSwamp(), false)),
+		)
 	})
 
 	mage.Register("Farmstead", func() mage.Card {
-		c := mage.NewAura("Farmstead", "{1}{W}{W}")
-		// At the beginning of your upkeep, gain 1 life
-		c.AddAbility(mage.BeginningOfUpkeepTrigger(mage.GainLife(1), false))
-		return c
+		return mage.NewAura("Farmstead", "{1}{W}{W}",
+			mage.WithAbility(mage.BeginningOfUpkeepTrigger(mage.GainLife(1), false)),
+		)
 	})
 
 	// ===== LUCKY CHARMS =====
@@ -379,15 +348,13 @@ func registerEnchantments() {
 	})
 
 	mage.Register("Soul Net", func() mage.Card {
-		c := mage.NewArtifact("Soul Net", "{1}")
-		// Whenever a creature dies, you may pay {1}. If you do, gain 1 life.
-		c.AddAbility(mage.AnyCreatureDiesTrigger(mage.GainLife(1), true))
-		return c
+		return mage.NewArtifact("Soul Net", "{1}",
+			mage.WithAbility(mage.AnyCreatureDiesTrigger(mage.GainLife(1), true)),
+		)
 	})
 
 	// ===== LACE CYCLE =====
 
-	// Lace cycle: target permanent becomes the specified color.
 	laces := []struct {
 		name  string
 		cost  string
@@ -404,10 +371,9 @@ func registerEnchantments() {
 		color := lace.color
 		cost := lace.cost
 		mage.Register(name, func() mage.Card {
-			c := mage.NewInstant(name, cost)
-			sa := mage.NewTargetedSpell(mage.TargetPermanent(), mage.ChangeColorEffect(color))
-			c.AddAbility(sa)
-			return c
+			return mage.NewInstant(name, cost,
+				mage.WithAbility(mage.NewTargetedSpell(mage.TargetPermanent(), mage.ChangeColorEffect(color))),
+			)
 		})
 	}
 }

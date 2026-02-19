@@ -93,17 +93,57 @@ func (c *BaseCard) Copy() Card {
 	return &cp
 }
 
+// CardOption configures a card during construction.
+type CardOption func(*BaseCard)
+
+// WithSubTypes adds creature/land subtypes to a card.
+func WithSubTypes(subTypes ...string) CardOption {
+	return func(c *BaseCard) { c.subTypes = append(c.subTypes, subTypes...) }
+}
+
+// WithKeyword adds a keyword ability to a card.
+func WithKeyword(kw Keyword) CardOption {
+	return func(c *BaseCard) { c.AddAbility(NewKeywordAbility(kw)) }
+}
+
+// WithAbility adds an ability to a card.
+func WithAbility(a Ability) CardOption {
+	return func(c *BaseCard) { c.AddAbility(a) }
+}
+
+// WithCardType adds an additional card type (e.g. TypeArtifact on a creature).
+func WithCardType(t CardType) CardOption {
+	return func(c *BaseCard) { c.AddType(t) }
+}
+
+// WithManaAbility adds a mana ability for the given color.
+func WithManaAbility(color Color) CardOption {
+	return func(c *BaseCard) { c.AddAbility(NewManaAbility(color)) }
+}
+
+// WithAnyColorMana adds an any-color mana ability.
+func WithAnyColorMana() CardOption {
+	return func(c *BaseCard) { c.AddAbility(NewAnyColorManaAbility()) }
+}
+
+func applyCardOpts(c *BaseCard, opts []CardOption) {
+	for _, opt := range opts {
+		opt(c)
+	}
+}
+
 // NewCreature creates a new creature card.
-func NewCreature(name, cost string, power, toughness int, subTypes ...string) *BaseCard {
-	return &BaseCard{
+func NewCreature(name, cost string, power, toughness int, opts ...CardOption) *BaseCard {
+	c := &BaseCard{
 		id:        uuid.New(),
 		name:      name,
 		manaCost:  ParseManaCost(cost),
 		types:     []CardType{TypeCreature},
-		subTypes:  subTypes,
 		power:     power,
 		toughness: toughness,
 	}
+	applyCardOpts(c, opts)
+	return c
 }
 
 // NewToken creates a token creature card. Tokens have no mana cost.
@@ -130,75 +170,88 @@ func (c *BaseCard) SetToughness(t int) { c.toughness = t }
 func (c *BaseCard) IsToken() bool      { return c.isToken }
 
 // NewInstant creates a new instant card.
-func NewInstant(name, cost string) *BaseCard {
-	return &BaseCard{
+func NewInstant(name, cost string, opts ...CardOption) *BaseCard {
+	c := &BaseCard{
 		id:       uuid.New(),
 		name:     name,
 		manaCost: ParseManaCost(cost),
 		types:    []CardType{TypeInstant},
 	}
+	applyCardOpts(c, opts)
+	return c
 }
 
 // NewSorcery creates a new sorcery card.
-func NewSorcery(name, cost string) *BaseCard {
-	return &BaseCard{
+func NewSorcery(name, cost string, opts ...CardOption) *BaseCard {
+	c := &BaseCard{
 		id:       uuid.New(),
 		name:     name,
 		manaCost: ParseManaCost(cost),
 		types:    []CardType{TypeSorcery},
 	}
+	applyCardOpts(c, opts)
+	return c
 }
 
 // NewLand creates a new land card.
-func NewLand(name string, subTypes ...string) *BaseCard {
-	return &BaseCard{
-		id:       uuid.New(),
-		name:     name,
-		types:    []CardType{TypeLand},
-		subTypes: subTypes,
+func NewLand(name string, opts ...CardOption) *BaseCard {
+	c := &BaseCard{
+		id:    uuid.New(),
+		name:  name,
+		types: []CardType{TypeLand},
 	}
+	applyCardOpts(c, opts)
+	return c
 }
 
 // NewArtifact creates a new artifact card.
-func NewArtifact(name, cost string) *BaseCard {
-	return &BaseCard{
+func NewArtifact(name, cost string, opts ...CardOption) *BaseCard {
+	c := &BaseCard{
 		id:       uuid.New(),
 		name:     name,
 		manaCost: ParseManaCost(cost),
 		types:    []CardType{TypeArtifact},
 	}
+	applyCardOpts(c, opts)
+	return c
 }
 
 // NewEnchantment creates a new enchantment card.
-func NewEnchantment(name, cost string) *BaseCard {
-	return &BaseCard{
+func NewEnchantment(name, cost string, opts ...CardOption) *BaseCard {
+	c := &BaseCard{
 		id:       uuid.New(),
 		name:     name,
 		manaCost: ParseManaCost(cost),
 		types:    []CardType{TypeEnchantment},
 	}
+	applyCardOpts(c, opts)
+	return c
 }
 
 // NewAura creates a new aura enchantment card.
-func NewAura(name, cost string) *BaseCard {
-	return &BaseCard{
+func NewAura(name, cost string, opts ...CardOption) *BaseCard {
+	c := &BaseCard{
 		id:       uuid.New(),
 		name:     name,
 		manaCost: ParseManaCost(cost),
 		types:    []CardType{TypeEnchantment},
 		subTypes: []string{"Aura"},
 	}
+	applyCardOpts(c, opts)
+	return c
 }
 
 // NewEquipment creates a new equipment artifact card.
-func NewEquipment(name, cost string) *BaseCard {
-	return &BaseCard{
+func NewEquipment(name, cost string, opts ...CardOption) *BaseCard {
+	c := &BaseCard{
 		id:       uuid.New(),
 		name:     name,
 		manaCost: ParseManaCost(cost),
 		types:    []CardType{TypeArtifact},
 		subTypes: []string{"Equipment"},
 	}
+	applyCardOpts(c, opts)
+	return c
 }
 
 // Permanent represents a card on the battlefield.
@@ -388,25 +441,25 @@ func (p *Permanent) IsAttached() bool {
 // NewLuckyCharm creates a {1} artifact that optionally gains 1 life whenever a
 // spell of the given color is cast (e.g. Crystal Rod, Iron Star, Ivory Cup).
 func NewLuckyCharm(name, cost string, color Color) *BaseCard {
-	c := NewArtifact(name, cost)
-	c.AddAbility(WheneverSpellCastTrigger(GainLife(1), true, &color))
-	return c
+	return NewArtifact(name, cost,
+		WithAbility(WheneverSpellCastTrigger(GainLife(1), true, &color)),
+	)
 }
 
 // NewLandDestruction creates a sorcery that destroys target land
 // (e.g. Stone Rain, Sinkhole, Ice Storm).
 func NewLandDestruction(name, cost string) *BaseCard {
-	c := NewSorcery(name, cost)
-	c.AddAbility(NewTargetedSpell(TargetLand(), DestroyTargetLand()))
-	return c
+	return NewSorcery(name, cost,
+		WithAbility(NewTargetedSpell(TargetLand(), DestroyTargetLand())),
+	)
 }
 
 // NewBoostAura creates an aura enchantment that gives the enchanted creature
 // +power/+toughness (e.g. Holy Strength, Unholy Strength, Giant Growth-style auras).
 func NewBoostAura(name, cost string, power, toughness int) *BaseCard {
-	c := NewAura(name, cost)
-	c.AddAbility(StaticAbility(
-		BoostAttached(power, toughness, AttachAura),
-	))
-	return c
+	return NewAura(name, cost,
+		WithAbility(StaticAbility(
+			BoostAttached(power, toughness, AttachAura),
+		)),
+	)
 }

@@ -12,8 +12,9 @@ import (
 
 func TestMain(m *testing.M) {
 	mage.Register("Centaur Courser", func() mage.Card {
-		c := mage.NewCreature("Centaur Courser", "{2}{G}", 3, 3, "Centaur", "Warrior")
-		return c
+		return mage.NewCreature("Centaur Courser", "{2}{G}", 3, 3,
+			mage.WithSubTypes("Centaur", "Warrior"),
+		)
 	})
 	os.Exit(m.Run())
 }

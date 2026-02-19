@@ -14,79 +14,84 @@ func init() {
 func registerBandingTestCards() {
 	if !mage.CardRegistered("Benalish Hero") {
 		mage.Register("Benalish Hero", func() mage.Card {
-			c := mage.NewCreature("Benalish Hero", "{W}", 1, 1, "Human", "Soldier")
-			c.AddAbility(mage.NewKeywordAbility(core.Banding))
-			return c
+			return mage.NewCreature("Benalish Hero", "{W}", 1, 1,
+				mage.WithSubTypes("Human", "Soldier"),
+				mage.WithKeyword(core.Banding),
+			)
 		})
 	}
 	if !mage.CardRegistered("Mesa Pegasus") {
 		mage.Register("Mesa Pegasus", func() mage.Card {
-			c := mage.NewCreature("Mesa Pegasus", "{1}{W}", 1, 1, "Pegasus")
-			c.AddAbility(mage.NewKeywordAbility(core.Flying))
-			c.AddAbility(mage.NewKeywordAbility(core.Banding))
-			return c
+			return mage.NewCreature("Mesa Pegasus", "{1}{W}", 1, 1,
+				mage.WithSubTypes("Pegasus"),
+				mage.WithKeyword(core.Flying),
+				mage.WithKeyword(core.Banding),
+			)
 		})
 	}
 	if !mage.CardRegistered("Timber Wolves") {
 		mage.Register("Timber Wolves", func() mage.Card {
-			c := mage.NewCreature("Timber Wolves", "{G}", 1, 1, "Wolf")
-			c.AddAbility(mage.NewKeywordAbility(core.Banding))
-			return c
+			return mage.NewCreature("Timber Wolves", "{G}", 1, 1,
+				mage.WithSubTypes("Wolf"),
+				mage.WithKeyword(core.Banding),
+			)
 		})
 	}
 	if !mage.CardRegistered("Grizzly Bears") {
 		mage.Register("Grizzly Bears", func() mage.Card {
-			return mage.NewCreature("Grizzly Bears", "{1}{G}", 2, 2, "Bear")
+			return mage.NewCreature("Grizzly Bears", "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
 		})
 	}
 	if !mage.CardRegistered("Hill Giant") {
 		mage.Register("Hill Giant", func() mage.Card {
-			return mage.NewCreature("Hill Giant", "{3}{R}", 3, 3, "Giant")
+			return mage.NewCreature("Hill Giant", "{3}{R}", 3, 3, mage.WithSubTypes("Giant"))
 		})
 	}
 	if !mage.CardRegistered("Gray Ogre") {
 		mage.Register("Gray Ogre", func() mage.Card {
-			return mage.NewCreature("Gray Ogre", "{2}{R}", 2, 2, "Ogre")
+			return mage.NewCreature("Gray Ogre", "{2}{R}", 2, 2, mage.WithSubTypes("Ogre"))
 		})
 	}
 	if !mage.CardRegistered("Craw Wurm") {
 		mage.Register("Craw Wurm", func() mage.Card {
-			return mage.NewCreature("Craw Wurm", "{4}{G}{G}", 6, 4, "Wurm")
+			return mage.NewCreature("Craw Wurm", "{4}{G}{G}", 6, 4, mage.WithSubTypes("Wurm"))
 		})
 	}
 	if !mage.CardRegistered("War Mammoth") {
 		mage.Register("War Mammoth", func() mage.Card {
-			c := mage.NewCreature("War Mammoth", "{3}{G}", 3, 3, "Elephant")
-			c.AddAbility(mage.NewKeywordAbility(core.Trample))
-			return c
+			return mage.NewCreature("War Mammoth", "{3}{G}", 3, 3,
+				mage.WithSubTypes("Elephant"),
+				mage.WithKeyword(core.Trample),
+			)
 		})
 	}
 	if !mage.CardRegistered("Black Knight") {
 		mage.Register("Black Knight", func() mage.Card {
-			c := mage.NewCreature("Black Knight", "{B}{B}", 2, 2, "Human", "Knight")
-			c.AddAbility(mage.NewKeywordAbility(core.FirstStrike))
-			c.AddAbility(mage.ProtectionFromColor(core.White))
-			return c
+			return mage.NewCreature("Black Knight", "{B}{B}", 2, 2,
+				mage.WithSubTypes("Human", "Knight"),
+				mage.WithKeyword(core.FirstStrike),
+				mage.WithAbility(mage.ProtectionFromColor(core.White)),
+			)
 		})
 	}
 	if !mage.CardRegistered("Helm of Chatzuk") {
 		mage.Register("Helm of Chatzuk", func() mage.Card {
-			c := mage.NewArtifact("Helm of Chatzuk", "{1}")
-			ab := mage.NewActivatedAbility(
-				mage.GrantKeywordUntilEndOfTurn(core.Banding, mage.SelectTarget),
-				mage.GenericCost(1),
-				mage.WithCost(mage.TapSourceCost()),
-				mage.WithTarget(mage.TargetCreature()),
+			return mage.NewArtifact("Helm of Chatzuk", "{1}",
+				mage.WithAbility(mage.NewActivatedAbility(
+					mage.GrantKeywordUntilEndOfTurn(core.Banding, mage.SelectTarget),
+					mage.GenericCost(1),
+					mage.WithCost(mage.TapSourceCost()),
+					mage.WithTarget(mage.TargetCreature()),
+				)),
 			)
-			c.AddAbility(ab)
-			return c
 		})
 	}
 	if !mage.CardRegistered("Camel") {
 		mage.Register("Camel", func() mage.Card {
-			c := mage.NewCreature("Camel", "{W}", 0, 1, "Camel")
-			c.AddAbility(mage.NewKeywordAbility(core.Banding))
-			return c
+			return mage.NewCreature("Camel", "{W}", 0, 1,
+				mage.WithSubTypes("Camel"),
+				mage.WithKeyword(core.Banding),
+			)
 		})
 	}
 }

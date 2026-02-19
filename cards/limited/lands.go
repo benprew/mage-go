@@ -24,9 +24,10 @@ func registerLands() {
 		name := land.name
 		color := land.color
 		mage.Register(name, func() mage.Card {
-			c := mage.NewLand(name, name) // subtype matches name (e.g., Plains has subtype "Plains")
-			c.AddAbility(mage.NewManaAbility(color))
-			return c
+			return mage.NewLand(name,
+				mage.WithSubTypes(name),
+				mage.WithManaAbility(color),
+			)
 		})
 	}
 
@@ -57,10 +58,11 @@ func registerLands() {
 		color1 := d.color1
 		color2 := d.color2
 		mage.Register(name, func() mage.Card {
-			c := mage.NewLand(name, sub1, sub2)
-			c.AddAbility(mage.NewManaAbility(color1))
-			c.AddAbility(mage.NewManaAbility(color2))
-			return c
+			return mage.NewLand(name,
+				mage.WithSubTypes(sub1, sub2),
+				mage.WithManaAbility(color1),
+				mage.WithManaAbility(color2),
+			)
 		})
 	}
 }

@@ -14,377 +14,267 @@ func registerCreatures() {
 	// ===== WHITE CREATURES =====
 
 	mage.Register("Abu Ja'far", func() mage.Card {
-		// When Abu Ja'far dies, destroy all creatures blocking or blocked by it.
-		// They can't be regenerated.
-		c := mage.NewCreature("Abu Ja'far", "{W}", 0, 1, "Human")
-		c.AddAbility(
-			mage.NewTriggered(core.EvtCreatureDied, false,
-				mage.FuncEffect("destroy all creatures blocking or blocked by Abu Ja'far",
-					func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if g.Combat == nil {
-							return nil
-						}
-						var toDestroy []uuid.UUID
-						// simple predicate filter doesn't work since attacker/blocker state isn't on the permanent
-						// ZZZ for now....
-						for _, group := range g.Combat.Groups {
-							// Abu Ja'far was the attacker — destroy its blockers
-							if group.AttackerID == sourceID {
-								toDestroy = append(toDestroy, group.BlockerIDs...)
+		return mage.NewCreature("Abu Ja'far", "{W}", 0, 1,
+			mage.WithSubTypes("Human"),
+			mage.WithAbility(
+				mage.NewTriggered(core.EvtCreatureDied, false,
+					mage.FuncEffect("destroy all creatures blocking or blocked by Abu Ja'far",
+						func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+							if g.Combat == nil {
+								return nil
 							}
-							// Abu Ja'far was a blocker — destroy the attacker
-							for _, bid := range group.BlockerIDs {
-								if bid == sourceID {
-									toDestroy = append(toDestroy, group.AttackerID)
+							var toDestroy []uuid.UUID
+							for _, group := range g.Combat.Groups {
+								if group.AttackerID == sourceID {
+									toDestroy = append(toDestroy, group.BlockerIDs...)
+								}
+								for _, bid := range group.BlockerIDs {
+									if bid == sourceID {
+										toDestroy = append(toDestroy, group.AttackerID)
+									}
 								}
 							}
-						}
-						for _, id := range toDestroy {
-							p := g.FindPermanent(id)
-							if p != nil {
-								g.DestroyPermanent(p)
+							for _, id := range toDestroy {
+								p := g.FindPermanent(id)
+								if p != nil {
+									g.DestroyPermanent(p)
+								}
 							}
-						}
-						return nil
-					}),
-			).SetCondition(mage.IsThisSource),
+							return nil
+						}),
+				).SetCondition(mage.IsThisSource),
+			),
 		)
-		return c
 	})
 
 	mage.Register("Camel", func() mage.Card {
-		// Banding
-		// As long as Camel is attacking, prevent all damage Deserts would deal to
-		// Camel and to creatures banded with Camel.
-		c := mage.NewCreature("Camel", "{W}", 0, 1, "Camel")
-		c.AddAbility(mage.NewKeywordAbility(core.Banding))
-		c.AddAbility(mage.StaticAbility(mage.PreventDamageFromTo(
-			mage.HasSubType("Desert"),
-			func(sourceID uuid.UUID) mage.PermanentFilter {
-				return mage.Or(mage.IsID(sourceID), mage.IsBandedWith(sourceID))
-			},
-			mage.WhileSourceAttacking,
-		)))
-		return c
+		return mage.NewCreature("Camel", "{W}", 0, 1,
+			mage.WithSubTypes("Camel"),
+			mage.WithKeyword(core.Banding),
+			mage.WithAbility(mage.StaticAbility(mage.PreventDamageFromTo(
+				mage.HasSubType("Desert"),
+				func(sourceID uuid.UUID) mage.PermanentFilter {
+					return mage.Or(mage.IsID(sourceID), mage.IsBandedWith(sourceID))
+				},
+				mage.WhileSourceAttacking,
+			))),
+		)
 	})
 
 	mage.Register("King Suleiman", func() mage.Card {
-		// {T}: Destroy target Djinn or Efreet.
-		c := mage.NewCreature("King Suleiman", "{1}{W}", 1, 1, "Human", "Noble")
-		ab := mage.NewActivatedAbility(
-			mage.DestroyTarget(),
-			mage.TapSourceCost(),
-			mage.WithTarget(mage.TargetCreature(
-				mage.Or(mage.HasSubType("Djinn"), mage.HasSubType("Efreet")),
+		return mage.NewCreature("King Suleiman", "{1}{W}", 1, 1,
+			mage.WithSubTypes("Human", "Noble"),
+			mage.WithAbility(mage.NewActivatedAbility(
+				mage.DestroyTarget(),
+				mage.TapSourceCost(),
+				mage.WithTarget(mage.TargetCreature(
+					mage.Or(mage.HasSubType("Djinn"), mage.HasSubType("Efreet")),
+				)),
 			)),
 		)
-		c.AddAbility(ab)
-		return c
 	})
 
 	mage.Register("Moorish Cavalry", func() mage.Card {
-		// Trample
-		c := mage.NewCreature("Moorish Cavalry", "{2}{W}{W}", 3, 3, "Human", "Knight")
-		c.AddAbility(mage.NewKeywordAbility(core.Trample))
-		return c
+		return mage.NewCreature("Moorish Cavalry", "{2}{W}{W}", 3, 3,
+			mage.WithSubTypes("Human", "Knight"),
+			mage.WithKeyword(core.Trample),
+		)
 	})
 
 	mage.Register("Repentant Blacksmith", func() mage.Card {
-		// Protection from red
-		c := mage.NewCreature("Repentant Blacksmith", "{1}{W}", 1, 2, "Human")
-		c.AddAbility(mage.ProtectionFromColor(core.Red))
-		return c
+		return mage.NewCreature("Repentant Blacksmith", "{1}{W}", 1, 2,
+			mage.WithSubTypes("Human"),
+			mage.WithAbility(mage.ProtectionFromColor(core.Red)),
+		)
 	})
 
 	mage.Register("War Elephant", func() mage.Card {
-		// Trample; banding
-		c := mage.NewCreature("War Elephant", "{3}{W}", 2, 2, "Elephant")
-		c.AddAbility(mage.NewKeywordAbility(core.Trample))
-		c.AddAbility(mage.NewKeywordAbility(core.Banding))
-		return c
+		return mage.NewCreature("War Elephant", "{3}{W}", 2, 2,
+			mage.WithSubTypes("Elephant"),
+			mage.WithKeyword(core.Trample),
+			mage.WithKeyword(core.Banding),
+		)
 	})
 
 	// ===== BLUE CREATURES =====
 
 	mage.Register("Dandân", func() mage.Card {
-		// Dandân can't attack unless defending player controls an Island.
-		// When you control no Islands, sacrifice Dandân.
-		c := mage.NewCreature("Dandân", "{U}{U}", 4, 1, "Fish")
-		c.AddAbility(mage.StaticAbility(mage.PreventFromAttackingIfDefendingPlayerControls(mage.HasSubType("Island"))))
-		sa := mage.NewTriggered(core.EvtLeavesBattlefield,
-			false,
-			mage.SacrificeSource()).
-			SetCondition(func(evt *core.GameEvent, g *mage.Game, sourceID, controllerID uuid.UUID) bool {
-				for _, p := range g.Battlefield {
-					if p.Controller == controllerID && p.HasSubType("Island") {
-						return false
+		return mage.NewCreature("Dandân", "{U}{U}", 4, 1,
+			mage.WithSubTypes("Fish"),
+			mage.WithAbility(mage.StaticAbility(mage.PreventFromAttackingIfDefendingPlayerControls(mage.HasSubType("Island")))),
+			mage.WithAbility(mage.NewTriggered(core.EvtLeavesBattlefield, false, mage.SacrificeSource()).
+				SetCondition(func(evt *core.GameEvent, g *mage.Game, sourceID, controllerID uuid.UUID) bool {
+					for _, p := range g.Battlefield {
+						if p.Controller == controllerID && p.HasSubType("Island") {
+							return false
+						}
 					}
-				}
-				return true
-			})
-		c.AddAbility(sa)
-		return c
+					return true
+				})),
+		)
 	})
 
 	mage.Register("Flying Men", func() mage.Card {
-		// Flying
-		c := mage.NewCreature("Flying Men", "{U}", 1, 1, "Human")
-		c.AddAbility(mage.NewKeywordAbility(core.Flying))
-		return c
+		return mage.NewCreature("Flying Men", "{U}", 1, 1,
+			mage.WithSubTypes("Human"),
+			mage.WithKeyword(core.Flying),
+		)
 	})
 
 	mage.Register("Giant Tortoise", func() mage.Card {
-		// Giant Tortoise gets +0/+3 as long as it's untapped.
-		c := mage.NewCreature("Giant Tortoise", "{1}{U}", 1, 1, "Turtle")
-		c.AddAbility(mage.StaticAbility(mage.BoostSelf(0, 3, mage.WhileSourceUntapped)))
-		return c
+		return mage.NewCreature("Giant Tortoise", "{1}{U}", 1, 1,
+			mage.WithSubTypes("Turtle"),
+			mage.WithAbility(mage.StaticAbility(mage.BoostSelf(0, 3, mage.WhileSourceUntapped))),
+		)
 	})
 
 	mage.Register("Island Fish Jasconius", func() mage.Card {
-		// Island Fish Jasconius doesn't untap during your untap step.
-		// At the beginning of your upkeep, you may pay {U}{U}{U}. If you do, untap
-		// Island Fish Jasconius.
-		// Island Fish Jasconius can't attack unless defending player controls an Island.
-		// When you control no Islands, sacrifice Island Fish Jasconius.
-		c := mage.NewCreature("Island Fish Jasconius", "{4}{U}{U}{U}", 6, 8, "Fish")
-		return c
+		return mage.NewCreature("Island Fish Jasconius", "{4}{U}{U}{U}", 6, 8, mage.WithSubTypes("Fish"))
 	})
 
 	mage.Register("Merchant Ship", func() mage.Card {
-		// Merchant Ship can't attack unless defending player controls an Island.
-		// Whenever Merchant Ship attacks and isn't blocked, you gain 2 life.
-		// When you control no Islands, sacrifice Merchant Ship.
-		c := mage.NewCreature("Merchant Ship", "{U}", 0, 2, "Human")
-		return c
+		return mage.NewCreature("Merchant Ship", "{U}", 0, 2, mage.WithSubTypes("Human"))
 	})
 
 	mage.Register("Old Man of the Sea", func() mage.Card {
-		// You may choose not to untap Old Man of the Sea during your untap step.
-		// {T}: Gain control of target creature with power less than or equal to
-		// Old Man of the Sea's power for as long as Old Man of the Sea remains tapped
-		// and that creature's power remains less than or equal to Old Man of the Sea's power.
-		c := mage.NewCreature("Old Man of the Sea", "{1}{U}{U}", 2, 3, "Djinn")
-		return c
+		return mage.NewCreature("Old Man of the Sea", "{1}{U}{U}", 2, 3, mage.WithSubTypes("Djinn"))
 	})
 
 	mage.Register("Serendib Djinn", func() mage.Card {
-		// Flying
-		// At the beginning of your upkeep, sacrifice a land. If you sacrifice an
-		// Island this way, Serendib Djinn deals 3 damage to you.
-		// When you control no lands, sacrifice Serendib Djinn.
-		c := mage.NewCreature("Serendib Djinn", "{2}{U}{U}", 5, 6, "Djinn")
-		return c
+		return mage.NewCreature("Serendib Djinn", "{2}{U}{U}", 5, 6, mage.WithSubTypes("Djinn"))
 	})
 
 	mage.Register("Serendib Efreet", func() mage.Card {
-		// Flying
-		// At the beginning of your upkeep, Serendib Efreet deals 1 damage to you.
-		c := mage.NewCreature("Serendib Efreet", "{2}{U}", 3, 4, "Efreet")
-		return c
+		return mage.NewCreature("Serendib Efreet", "{2}{U}", 3, 4, mage.WithSubTypes("Efreet"))
 	})
 
 	mage.Register("Sindbad", func() mage.Card {
-		// {T}: Draw a card and reveal it. If it isn't a land card, discard it.
-		c := mage.NewCreature("Sindbad", "{1}{U}", 1, 1, "Human")
-		return c
+		return mage.NewCreature("Sindbad", "{1}{U}", 1, 1, mage.WithSubTypes("Human"))
 	})
 
 	// ===== BLACK CREATURES =====
 
 	mage.Register("Cuombajj Witches", func() mage.Card {
-		// {T}: Cuombajj Witches deals 1 damage to any target and 1 damage to any
-		// target of an opponent's choice.
-		c := mage.NewCreature("Cuombajj Witches", "{B}{B}", 1, 3, "Human", "Wizard")
-		return c
+		return mage.NewCreature("Cuombajj Witches", "{B}{B}", 1, 3, mage.WithSubTypes("Human", "Wizard"))
 	})
 
 	mage.Register("El-Hajjâj", func() mage.Card {
-		// Whenever El-Hajjâj deals damage, you gain that much life.
-		c := mage.NewCreature("El-Hajjâj", "{1}{B}{B}", 1, 1, "Human", "Wizard")
-		return c
+		return mage.NewCreature("El-Hajjâj", "{1}{B}{B}", 1, 1, mage.WithSubTypes("Human", "Wizard"))
 	})
 
 	mage.Register("Erg Raiders", func() mage.Card {
-		// At the beginning of your end step, if Erg Raiders didn't attack this turn,
-		// Erg Raiders deals 2 damage to you unless it came under your control this turn.
-		c := mage.NewCreature("Erg Raiders", "{1}{B}", 2, 3, "Human", "Warrior")
-		return c
+		return mage.NewCreature("Erg Raiders", "{1}{B}", 2, 3, mage.WithSubTypes("Human", "Warrior"))
 	})
 
 	mage.Register("Guardian Beast", func() mage.Card {
-		// As long as Guardian Beast is untapped, noncreature artifacts you control
-		// can't be enchanted, they have indestructible, and other players can't gain
-		// control of them. This effect doesn't remove Auras already attached to
-		// those artifacts.
-		c := mage.NewCreature("Guardian Beast", "{3}{B}", 2, 4, "Beast")
-		return c
+		return mage.NewCreature("Guardian Beast", "{3}{B}", 2, 4, mage.WithSubTypes("Beast"))
 	})
 
 	mage.Register("Hasran Ogress", func() mage.Card {
-		// Whenever Hasran Ogress attacks, it deals 3 damage to you unless you pay {2}.
-		c := mage.NewCreature("Hasran Ogress", "{B}{B}", 3, 2, "Ogre")
-		return c
+		return mage.NewCreature("Hasran Ogress", "{B}{B}", 3, 2, mage.WithSubTypes("Ogre"))
 	})
 
 	mage.Register("Junún Efreet", func() mage.Card {
-		// Flying
-		// At the beginning of your upkeep, sacrifice Junún Efreet unless you pay {B}{B}.
-		c := mage.NewCreature("Junún Efreet", "{1}{B}{B}", 3, 3, "Efreet")
-		return c
+		return mage.NewCreature("Junún Efreet", "{1}{B}{B}", 3, 3, mage.WithSubTypes("Efreet"))
 	})
 
 	mage.Register("Juzám Djinn", func() mage.Card {
-		// At the beginning of your upkeep, Juzám Djinn deals 1 damage to you.
-		c := mage.NewCreature("Juzám Djinn", "{2}{B}{B}", 5, 5, "Djinn")
-		return c
+		return mage.NewCreature("Juzám Djinn", "{2}{B}{B}", 5, 5, mage.WithSubTypes("Djinn"))
 	})
 
 	mage.Register("Khabál Ghoul", func() mage.Card {
-		// At the beginning of each end step, put a +1/+1 counter on Khabál Ghoul
-		// for each creature that died this turn.
-		c := mage.NewCreature("Khabál Ghoul", "{2}{B}", 1, 1, "Zombie")
-		return c
+		return mage.NewCreature("Khabál Ghoul", "{2}{B}", 1, 1, mage.WithSubTypes("Zombie"))
 	})
 
 	mage.Register("Sorceress Queen", func() mage.Card {
-		// {T}: Target creature other than Sorceress Queen has base power and
-		// toughness 0/2 until end of turn.
-		c := mage.NewCreature("Sorceress Queen", "{1}{B}{B}", 1, 1, "Human", "Wizard")
-		return c
+		return mage.NewCreature("Sorceress Queen", "{1}{B}{B}", 1, 1, mage.WithSubTypes("Human", "Wizard"))
 	})
 
 	mage.Register("Stone-Throwing Devils", func() mage.Card {
-		// First strike
-		c := mage.NewCreature("Stone-Throwing Devils", "{B}", 1, 1, "Devil")
-		return c
+		return mage.NewCreature("Stone-Throwing Devils", "{B}", 1, 1, mage.WithSubTypes("Devil"))
 	})
 
 	// ===== RED CREATURES =====
 
 	mage.Register("Aladdin", func() mage.Card {
-		// {1}{R}{R}, {T}: Gain control of target artifact for as long as you
-		// control Aladdin.
-		c := mage.NewCreature("Aladdin", "{2}{R}{R}", 1, 1, "Human", "Rogue")
-		return c
+		return mage.NewCreature("Aladdin", "{2}{R}{R}", 1, 1, mage.WithSubTypes("Human", "Rogue"))
 	})
 
 	mage.Register("Ali Baba", func() mage.Card {
-		// {R}: Tap target Wall.
-		c := mage.NewCreature("Ali Baba", "{R}", 1, 1, "Human", "Rogue")
-		return c
+		return mage.NewCreature("Ali Baba", "{R}", 1, 1, mage.WithSubTypes("Human", "Rogue"))
 	})
 
 	mage.Register("Ali from Cairo", func() mage.Card {
-		// Damage that would reduce your life total to less than 1 reduces it to 1 instead.
-		c := mage.NewCreature("Ali from Cairo", "{2}{R}{R}", 0, 1, "Human")
-		return c
+		return mage.NewCreature("Ali from Cairo", "{2}{R}{R}", 0, 1, mage.WithSubTypes("Human"))
 	})
 
 	mage.Register("Bird Maiden", func() mage.Card {
-		// Flying
-		c := mage.NewCreature("Bird Maiden", "{2}{R}", 1, 2, "Human", "Bird")
-		return c
+		return mage.NewCreature("Bird Maiden", "{2}{R}", 1, 2, mage.WithSubTypes("Human", "Bird"))
 	})
 
 	mage.Register("Desert Nomads", func() mage.Card {
-		// Desertwalk
-		// Prevent all damage that would be dealt to Desert Nomads by Deserts.
-		c := mage.NewCreature("Desert Nomads", "{2}{R}", 2, 2, "Human", "Nomad")
-		return c
+		return mage.NewCreature("Desert Nomads", "{2}{R}", 2, 2, mage.WithSubTypes("Human", "Nomad"))
 	})
 
 	mage.Register("Hurr Jackal", func() mage.Card {
-		// {T}: Target creature can't be regenerated this turn.
-		c := mage.NewCreature("Hurr Jackal", "{R}", 1, 1, "Jackal")
-		return c
+		return mage.NewCreature("Hurr Jackal", "{R}", 1, 1, mage.WithSubTypes("Jackal"))
 	})
 
 	mage.Register("Kird Ape", func() mage.Card {
-		// Kird Ape gets +1/+2 as long as you control a Forest.
-		c := mage.NewCreature("Kird Ape", "{R}", 1, 1, "Ape")
-		return c
+		return mage.NewCreature("Kird Ape", "{R}", 1, 1, mage.WithSubTypes("Ape"))
 	})
 
 	mage.Register("Mijae Djinn", func() mage.Card {
-		// Whenever Mijae Djinn attacks, flip a coin. If you lose the flip, remove
-		// Mijae Djinn from combat and tap it.
-		c := mage.NewCreature("Mijae Djinn", "{R}{R}{R}", 6, 3, "Djinn")
-		return c
+		return mage.NewCreature("Mijae Djinn", "{R}{R}{R}", 6, 3, mage.WithSubTypes("Djinn"))
 	})
 
 	mage.Register("Rukh Egg", func() mage.Card {
-		// When Rukh Egg dies, create a 4/4 red Bird creature token with flying at
-		// the beginning of the next end step.
-		c := mage.NewCreature("Rukh Egg", "{3}{R}", 0, 3, "Bird", "Egg")
-		return c
+		return mage.NewCreature("Rukh Egg", "{3}{R}", 0, 3, mage.WithSubTypes("Bird", "Egg"))
 	})
 
 	mage.Register("Ydwen Efreet", func() mage.Card {
-		// Whenever Ydwen Efreet blocks, flip a coin. If you lose the flip, remove
-		// Ydwen Efreet from combat and it can't block this turn. Creatures it was
-		// blocking that had become blocked by only Ydwen Efreet this combat become
-		// unblocked.
-		c := mage.NewCreature("Ydwen Efreet", "{R}{R}{R}", 3, 6, "Efreet")
-		return c
+		return mage.NewCreature("Ydwen Efreet", "{R}{R}{R}", 3, 6, mage.WithSubTypes("Efreet"))
 	})
 
 	// ===== GREEN CREATURES =====
 
 	mage.Register("Erhnam Djinn", func() mage.Card {
-		// At the beginning of your upkeep, target non-Wall creature an opponent
-		// controls gains forestwalk until your next upkeep.
-		c := mage.NewCreature("Erhnam Djinn", "{3}{G}", 4, 5, "Djinn")
-		return c
+		return mage.NewCreature("Erhnam Djinn", "{3}{G}", 4, 5, mage.WithSubTypes("Djinn"))
 	})
 
 	mage.Register("Ghazbán Ogre", func() mage.Card {
-		// At the beginning of your upkeep, if a player has more life than each other
-		// player, the player with the most life gains control of Ghazbán Ogre.
-		c := mage.NewCreature("Ghazbán Ogre", "{G}", 2, 2, "Ogre")
-		return c
+		return mage.NewCreature("Ghazbán Ogre", "{G}", 2, 2, mage.WithSubTypes("Ogre"))
 	})
 
 	mage.Register("Ifh-Bíff Efreet", func() mage.Card {
-		// Flying
-		// {G}: Ifh-Bíff Efreet deals 1 damage to each creature with flying and each
-		// player. Any player may activate this ability.
-		c := mage.NewCreature("Ifh-Bíff Efreet", "{2}{G}{G}", 3, 3, "Efreet")
-		return c
+		return mage.NewCreature("Ifh-Bíff Efreet", "{2}{G}{G}", 3, 3, mage.WithSubTypes("Efreet"))
 	})
 
 	mage.Register("Nafs Asp", func() mage.Card {
-		// Whenever Nafs Asp deals damage to a player, that player loses 1 life at the
-		// beginning of their next draw step unless they pay {1} before that draw step.
-		c := mage.NewCreature("Nafs Asp", "{G}", 1, 1, "Snake")
-		return c
+		return mage.NewCreature("Nafs Asp", "{G}", 1, 1, mage.WithSubTypes("Snake"))
 	})
 
 	mage.Register("Singing Tree", func() mage.Card {
-		// {T}: Target attacking creature has base power 0 until end of turn.
-		c := mage.NewCreature("Singing Tree", "{3}{G}", 0, 3, "Plant")
-		return c
+		return mage.NewCreature("Singing Tree", "{3}{G}", 0, 3, mage.WithSubTypes("Plant"))
 	})
 
 	mage.Register("Wyluli Wolf", func() mage.Card {
-		// {T}: Target creature gets +1/+1 until end of turn.
-		c := mage.NewCreature("Wyluli Wolf", "{1}{G}", 1, 1, "Wolf")
-		return c
+		return mage.NewCreature("Wyluli Wolf", "{1}{G}", 1, 1, mage.WithSubTypes("Wolf"))
 	})
 
 	// ===== ARTIFACT CREATURES =====
 
 	mage.Register("Brass Man", func() mage.Card {
-		// Brass Man doesn't untap during your untap step.
-		// At the beginning of your upkeep, you may pay {1}. If you do, untap Brass Man.
-		c := mage.NewCreature("Brass Man", "{1}", 1, 3, "Construct")
-		c.AddType(core.TypeArtifact)
-		return c
+		return mage.NewCreature("Brass Man", "{1}", 1, 3,
+			mage.WithSubTypes("Construct"),
+			mage.WithCardType(core.TypeArtifact),
+		)
 	})
 
 	mage.Register("Dancing Scimitar", func() mage.Card {
-		// Flying
-		c := mage.NewCreature("Dancing Scimitar", "{4}", 1, 5, "Spirit")
-		c.AddType(core.TypeArtifact)
-		return c
+		return mage.NewCreature("Dancing Scimitar", "{4}", 1, 5,
+			mage.WithSubTypes("Spirit"),
+			mage.WithCardType(core.TypeArtifact),
+		)
 	})
 }
