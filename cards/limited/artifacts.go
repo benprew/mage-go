@@ -569,7 +569,7 @@ func registerArtifacts() {
 				var nonFlyers []*mage.Permanent
 				for _, p := range g.Battlefield {
 					if p.Controller != controller && p.HasType(mage.TypeCreature) &&
-						!p.HasAbility(mage.Flying) {
+						!p.HasKeyword(mage.Flying) {
 						nonFlyers = append(nonFlyers, p)
 					}
 				}

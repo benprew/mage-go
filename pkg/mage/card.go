@@ -2,6 +2,8 @@ package mage
 
 import "github.com/google/uuid"
 
+//go:generate enumer -type=CardType -trimprefix=Type
+
 // CardType represents a card's type.
 type CardType int
 
@@ -14,24 +16,6 @@ const (
 	TypeEnchantment
 )
 
-func (ct CardType) String() string {
-	switch ct {
-	case TypeCreature:
-		return "Creature"
-	case TypeInstant:
-		return "Instant"
-	case TypeSorcery:
-		return "Sorcery"
-	case TypeLand:
-		return "Land"
-	case TypeArtifact:
-		return "Artifact"
-	case TypeEnchantment:
-		return "Enchantment"
-	default:
-		return "Unknown"
-	}
-}
 
 // Card is the interface for all cards.
 type Card interface {
@@ -308,7 +292,7 @@ func (p *Permanent) HasSubType(s string) bool {
 }
 
 // HasAbility checks if this permanent currently has the given keyword.
-func (p *Permanent) HasAbility(kw Keyword) bool {
+func (p *Permanent) HasKeyword(kw Keyword) bool {
 	if p.FaceDown {
 		return false // face-down creatures have no abilities
 	}
@@ -338,10 +322,10 @@ func (p *Permanent) HasProtectionFrom(card Card) bool {
 
 // CanBeTargetedBy checks hexproof, shroud, and protection.
 func (p *Permanent) CanBeTargetedBy(source Card, sourceController uuid.UUID, g *Game) bool {
-	if p.HasAbility(Shroud) {
+	if p.HasKeyword(Shroud) {
 		return false
 	}
-	if p.HasAbility(Hexproof) && p.Controller != sourceController {
+	if p.HasKeyword(Hexproof) && p.Controller != sourceController {
 		return false
 	}
 	if source != nil && p.HasProtectionFrom(source) {

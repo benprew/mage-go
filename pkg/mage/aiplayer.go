@@ -101,7 +101,7 @@ func (ai *AIPlayer) AIAttackers(g *Game) []uuid.UUID {
 		if !perm.HasType(TypeCreature) {
 			continue
 		}
-		if perm.Tapped || (perm.SummonSick && !perm.HasAbility(Haste)) {
+		if perm.Tapped || (perm.SummonSick && !perm.HasKeyword(Haste)) {
 			continue
 		}
 		if !g.Effects.CanAttack(perm.ID()) {

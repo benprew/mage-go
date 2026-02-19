@@ -134,14 +134,14 @@ var IsAttacking PermanentFilter = func(p *Permanent, g *Game) bool {
 // HasKeywordFilter returns a filter matching permanents with the given keyword.
 func HasKeywordFilter(kw Keyword) PermanentFilter {
 	return func(p *Permanent, _ *Game) bool {
-		return p.HasAbility(kw)
+		return p.HasKeyword(kw)
 	}
 }
 
 // NotHasKeywordFilter returns a filter matching permanents without the given keyword.
 func NotHasKeywordFilter(kw Keyword) PermanentFilter {
 	return func(p *Permanent, _ *Game) bool {
-		return !p.HasAbility(kw)
+		return !p.HasKeyword(kw)
 	}
 }
 

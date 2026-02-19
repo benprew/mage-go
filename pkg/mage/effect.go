@@ -226,7 +226,7 @@ func (e *destroyTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, tar
 	if perm == nil {
 		return nil // target gone, fizzle
 	}
-	if perm.HasAbility(Indestructible) {
+	if perm.HasKeyword(Indestructible) {
 		return nil
 	}
 	g.DestroyPermanent(perm)
@@ -537,7 +537,7 @@ func (e *destroyTargetPermanentEffect) Apply(g *Game, sourceID, controller uuid.
 	if perm == nil {
 		return nil
 	}
-	if perm.HasAbility(Indestructible) {
+	if perm.HasKeyword(Indestructible) {
 		return nil
 	}
 	g.DestroyPermanent(perm)

@@ -300,7 +300,7 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 	}
 
 	// EntersTapped keyword check
-	if perm.HasAbility(EntersTapped) {
+	if perm.HasKeyword(EntersTapped) {
 		perm.Tapped = true
 	}
 
@@ -428,7 +428,7 @@ func (g *Game) RemoveFromBattlefield(perm *Permanent) {
 
 // DestroyPermanent destroys a permanent (sends to graveyard).
 func (g *Game) DestroyPermanent(perm *Permanent) {
-	if perm.HasAbility(Indestructible) {
+	if perm.HasKeyword(Indestructible) {
 		return
 	}
 	// Regeneration replaces destruction: tap, remove damage, remove from combat
@@ -643,7 +643,7 @@ func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
 	})
 	// Lifelink
 	src := g.FindPermanent(sourceID)
-	if src != nil && src.HasAbility(Lifelink) {
+	if src != nil && src.HasKeyword(Lifelink) {
 		srcPlayer := g.GetPlayer(src.Controller)
 		if srcPlayer != nil {
 			srcPlayer.GainLife(amount)
@@ -698,14 +698,14 @@ func (g *Game) DealDamageToPermanent(perm *Permanent, amount int, sourceID uuid.
 	// Deathtouch / BasiliskTouch
 	src := g.FindPermanent(sourceID)
 	if src != nil && amount > 0 {
-		if src.HasAbility(Deathtouch) {
+		if src.HasKeyword(Deathtouch) {
 			perm.Damage = perm.CurrentToughness(g)
-		} else if src.HasAbility(BasiliskTouch) && !perm.HasSubType("Wall") {
+		} else if src.HasKeyword(BasiliskTouch) && !perm.HasSubType("Wall") {
 			perm.Damage = perm.CurrentToughness(g)
 		}
 	}
 	// Lifelink
-	if src != nil && src.HasAbility(Lifelink) {
+	if src != nil && src.HasKeyword(Lifelink) {
 		srcPlayer := g.GetPlayer(src.Controller)
 		if srcPlayer != nil {
 			srcPlayer.GainLife(amount)
@@ -1245,7 +1245,7 @@ func (g *Game) doUntap() {
 
 	for _, p := range g.Battlefield {
 		if p.Controller == active.PlayerID() {
-			if p.HasAbility(DoesNotUntapKW) {
+			if p.HasKeyword(DoesNotUntapKW) {
 				// Does not untap keyword — skip
 			} else if p.HasType(TypeLand) && landUntapLimit >= 0 {
 				// Land with untap limit in effect
@@ -1349,8 +1349,8 @@ func (g *Game) doDeclareAttackers() {
 	}
 	for _, p := range g.Battlefield {
 		if p.Controller == active.PlayerID() && p.HasType(TypeCreature) &&
-			p.HasAbility(MustAttack) && !declared[p.ID()] {
-			if !p.Tapped && (!p.SummonSick || p.HasAbility(Haste)) &&
+			p.HasKeyword(MustAttack) && !declared[p.ID()] {
+			if !p.Tapped && (!p.SummonSick || p.HasKeyword(Haste)) &&
 				g.Effects.CanAttack(p.ID()) && CanAttackCheck(p, g) {
 				attackerIDs = append(attackerIDs, p.ID())
 			}
@@ -1366,7 +1366,7 @@ func (g *Game) doDeclareAttackers() {
 		if atk.Tapped {
 			continue
 		}
-		if atk.SummonSick && !atk.HasAbility(Haste) {
+		if atk.SummonSick && !atk.HasKeyword(Haste) {
 			continue
 		}
 		if !g.Effects.CanAttack(id) {
@@ -1378,13 +1378,13 @@ func (g *Game) doDeclareAttackers() {
 		}
 		// Island Sanctuary: only flying or islandwalk creatures can attack
 		if g.Effects.IsSanctuaryActive(defender.PlayerID()) {
-			if !atk.HasAbility(Flying) && !atk.HasAbility(Islandwalk) {
+			if !atk.HasKeyword(Flying) && !atk.HasKeyword(Islandwalk) {
 				continue
 			}
 		}
 
 		// Tap attacker (unless vigilance)
-		if !atk.HasAbility(Vigilance) {
+		if !atk.HasKeyword(Vigilance) {
 			atk.Tapped = true
 		}
 
@@ -1424,7 +1424,7 @@ func (g *Game) isValidBand(memberIDs []uuid.UUID) bool {
 		if perm == nil || !g.Combat.IsAttacking(id) {
 			return false
 		}
-		if perm.HasAbility(Banding) {
+		if perm.HasKeyword(Banding) {
 			bandingCount++
 		} else {
 			nonBandingCount++
@@ -1444,7 +1444,7 @@ func (g *Game) doDeclareBlockers() {
 	var luredAttackerID uuid.UUID
 	for _, group := range g.Combat.Groups {
 		atk := g.FindPermanent(group.AttackerID)
-		if atk != nil && atk.HasAbility(MustBeBlocked) {
+		if atk != nil && atk.HasKeyword(MustBeBlocked) {
 			luredAttackerID = group.AttackerID
 			break
 		}
@@ -1477,9 +1477,9 @@ func (g *Game) doDeclareBlockers() {
 		}
 		// Check multi-block limit: normally a creature can only block one attacker
 		maxBlocks := 1
-		if blocker.HasAbility(CanBlockAny) {
+		if blocker.HasKeyword(CanBlockAny) {
 			maxBlocks = 999
-		} else if blocker.HasAbility(CanBlockAdditional) {
+		} else if blocker.HasKeyword(CanBlockAdditional) {
 			maxBlocks = 2
 		}
 		if blockerCount[ba.BlockerID] >= maxBlocks {
@@ -1562,7 +1562,7 @@ func (g *Game) isBlockingBand(blockerIDs []uuid.UUID) bool {
 	}
 	for _, bid := range blockerIDs {
 		blk := g.FindPermanent(bid)
-		if blk != nil && blk.HasAbility(Banding) {
+		if blk != nil && blk.HasKeyword(Banding) {
 			return true
 		}
 	}
@@ -1589,7 +1589,7 @@ func (g *Game) doNormalBlockedDamage(atk *Permanent, group *CombatGroup, isFirst
 				break
 			}
 		}
-		if remainingDmg > 0 && atk.HasAbility(Trample) {
+		if remainingDmg > 0 && atk.HasKeyword(Trample) {
 			defender := g.GetPlayer(group.DefenderID)
 			if defender != nil {
 				g.DealDamageToPlayer(defender, remainingDmg, atk.ID())
@@ -1645,7 +1645,7 @@ func (g *Game) doBlockingBandDamage(atk *Permanent, group *CombatGroup, isFirstS
 				}
 			}
 			// Trample: any damage beyond what was distributed goes to the defending player.
-			if atk.HasAbility(Trample) {
+			if atk.HasKeyword(Trample) {
 				if trampleDmg := atkPower - usedDmg; trampleDmg > 0 {
 					defender := g.GetPlayer(group.DefenderID)
 					if defender != nil {
@@ -1668,7 +1668,7 @@ func (g *Game) doBlockingBandDamage(atk *Permanent, group *CombatGroup, isFirstS
 					break
 				}
 			}
-			if remainingDmg > 0 && atk.HasAbility(Trample) {
+			if remainingDmg > 0 && atk.HasKeyword(Trample) {
 				defender := g.GetPlayer(group.DefenderID)
 				if defender != nil {
 					g.DealDamageToPlayer(defender, remainingDmg, atk.ID())
@@ -1710,7 +1710,7 @@ func (g *Game) doBandedAttackDamage(bandMemberIDs []uuid.UUID, defenderID uuid.U
 	hasTrample := false
 	for _, memberID := range bandMemberIDs {
 		member := g.FindPermanent(memberID)
-		if member != nil && member.HasAbility(Trample) {
+		if member != nil && member.HasKeyword(Trample) {
 			hasTrample = true
 			break
 		}
@@ -1981,7 +1981,7 @@ func (g *Game) TapForMana(playerID, permanentID uuid.UUID) error {
 	for _, a := range perm.RuntimeAbilities {
 		if ma, ok := a.(*ManaAbility); ok {
 			// Creatures with mana abilities need to not be summoning sick
-			if perm.HasType(TypeCreature) && perm.SummonSick && !perm.HasAbility(Haste) {
+			if perm.HasType(TypeCreature) && perm.SummonSick && !perm.HasKeyword(Haste) {
 				return fmt.Errorf("creature has summoning sickness")
 			}
 			perm.Tapped = true
@@ -2010,7 +2010,7 @@ func (g *Game) GetUntappedManaSources(playerID uuid.UUID) []ManaSourceInfo {
 			continue
 		}
 		// Skip summoning-sick creatures without haste
-		if perm.HasType(TypeCreature) && perm.SummonSick && !perm.HasAbility(Haste) {
+		if perm.HasType(TypeCreature) && perm.SummonSick && !perm.HasKeyword(Haste) {
 			continue
 		}
 		for _, a := range perm.RuntimeAbilities {

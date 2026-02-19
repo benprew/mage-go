@@ -2,6 +2,8 @@ package mage
 
 import "github.com/google/uuid"
 
+//go:generate enumer -type=AbilityType -trimprefix=Ability
+
 // AbilityType classifies abilities.
 type AbilityType int
 

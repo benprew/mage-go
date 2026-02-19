@@ -6,6 +6,8 @@ import (
 	"github.com/google/uuid"
 )
 
+//go:generate enumer -type=ActionType -trimprefix=Action
+
 // ActionType identifies what kind of action a player is taking.
 type ActionType int
 
@@ -827,7 +829,7 @@ func getEligibleAttackers(g *Game, playerID uuid.UUID) []*Permanent {
 		if perm.Tapped {
 			continue
 		}
-		if perm.SummonSick && !perm.HasAbility(Haste) {
+		if perm.SummonSick && !perm.HasKeyword(Haste) {
 			continue
 		}
 		if !g.Effects.CanAttack(perm.ID()) {
@@ -861,7 +863,7 @@ func performAttack(g *Game, attackerIDs []uuid.UUID, addLog func(string)) {
 		if atk == nil {
 			continue
 		}
-		if !atk.HasAbility(Vigilance) {
+		if !atk.HasKeyword(Vigilance) {
 			atk.Tapped = true
 		}
 		g.Combat.AddAttacker(id, defender.PlayerID())

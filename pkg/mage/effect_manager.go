@@ -2,6 +2,9 @@ package mage
 
 import "github.com/google/uuid"
 
+//go:generate enumer -type=Layer -trimprefix=Layer
+//go:generate enumer -type=Duration
+
 // Layer represents a layer in the layer system.
 type Layer int
 

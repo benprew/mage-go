@@ -761,7 +761,7 @@ func (tg *TestGame) AssertHasAbility(p PlayerRef, name string, kw Keyword, has b
 		tg.t.Errorf("AssertHasAbility(%v, %s): permanent not found", p, name)
 		return
 	}
-	got := perm.HasAbility(kw)
+	got := perm.HasKeyword(kw)
 	if got != has {
 		tg.t.Errorf("AssertHasAbility(%v, %s, %s): got %v, want %v", p, name, kw, got, has)
 	}

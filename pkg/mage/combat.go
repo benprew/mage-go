@@ -110,12 +110,12 @@ func (c *Combat) GroupFor(attackerID uuid.UUID) *CombatGroup {
 func (c *Combat) HasFirstStrikers(g *Game) bool {
 	for _, group := range c.Groups {
 		atk := g.FindPermanent(group.AttackerID)
-		if atk != nil && (atk.HasAbility(FirstStrike) || atk.HasAbility(DoubleStrike)) {
+		if atk != nil && (atk.HasKeyword(FirstStrike) || atk.HasKeyword(DoubleStrike)) {
 			return true
 		}
 		for _, bid := range group.BlockerIDs {
 			blk := g.FindPermanent(bid)
-			if blk != nil && (blk.HasAbility(FirstStrike) || blk.HasAbility(DoubleStrike)) {
+			if blk != nil && (blk.HasKeyword(FirstStrike) || blk.HasKeyword(DoubleStrike)) {
 				return true
 			}
 		}
@@ -125,8 +125,8 @@ func (c *Combat) HasFirstStrikers(g *Game) bool {
 
 // DealsDamageInStep returns whether a permanent deals damage in the given step.
 func (c *Combat) DealsDamageInStep(p *Permanent, isFirstStrikeStep bool) bool {
-	hasFS := p.HasAbility(FirstStrike)
-	hasDS := p.HasAbility(DoubleStrike)
+	hasFS := p.HasKeyword(FirstStrike)
+	hasDS := p.HasKeyword(DoubleStrike)
 
 	if isFirstStrikeStep {
 		if hasFS || hasDS {
@@ -145,11 +145,11 @@ func (c *Combat) DealsDamageInStep(p *Permanent, isFirstStrikeStep bool) bool {
 // CanBlock returns true if blocker can legally block the attacker.
 func CanBlock(blocker, attacker *Permanent, g *Game) bool {
 	// Unblockable creatures can't be blocked
-	if attacker.HasAbility(UnblockableKW) {
+	if attacker.HasKeyword(UnblockableKW) {
 		return false
 	}
 	// CantBeBlockedByWalls creatures can't be blocked by Walls
-	if attacker.HasAbility(CantBeBlockedByWalls) && blocker.HasSubType("Wall") {
+	if attacker.HasKeyword(CantBeBlockedByWalls) && blocker.HasSubType("Wall") {
 		return false
 	}
 	// Defender creatures can't attack (checked elsewhere), but they CAN block.
@@ -158,13 +158,13 @@ func CanBlock(blocker, attacker *Permanent, g *Game) bool {
 		return false
 	}
 	// Flying: can only be blocked by creatures with flying or reach
-	if attacker.HasAbility(Flying) {
-		if !blocker.HasAbility(Flying) && !blocker.HasAbility(Reach) {
+	if attacker.HasKeyword(Flying) {
+		if !blocker.HasKeyword(Flying) && !blocker.HasKeyword(Reach) {
 			return false
 		}
 	}
 	// Fear: can only be blocked by artifact creatures or black creatures
-	if attacker.HasAbility(Fear) {
+	if attacker.HasKeyword(Fear) {
 		isArtifact := blocker.HasType(TypeArtifact)
 		isBlack := false
 		for _, col := range blocker.Card.ManaCost().Colors() {
@@ -178,7 +178,7 @@ func CanBlock(blocker, attacker *Permanent, g *Game) bool {
 		}
 	}
 	// CantBeBlockedExceptByWalls: can only be blocked by Walls (e.g. Invisibility)
-	if attacker.HasAbility(CantBeBlockedExceptByWalls) && !blocker.HasSubType("Wall") {
+	if attacker.HasKeyword(CantBeBlockedExceptByWalls) && !blocker.HasSubType("Wall") {
 		return false
 	}
 	// Menace: must be blocked by two or more creatures (simplified - we don't enforce here)
@@ -187,14 +187,14 @@ func CanBlock(blocker, attacker *Permanent, g *Game) bool {
 
 // CanAttackCheck returns true if a creature is allowed to attack (checks Defender, etc.).
 func CanAttackCheck(perm *Permanent, g *Game) bool {
-	return !perm.HasAbility(Defender)
+	return !perm.HasKeyword(Defender)
 }
 
 // HasLandwalkEvasion returns true if the attacker has a landwalk ability
 // and the defending player controls a land of the matching subtype.
 func HasLandwalkEvasion(attacker *Permanent, defenderID uuid.UUID, g *Game) bool {
 	for _, kw := range []Keyword{Forestwalk, Islandwalk, Swampwalk, Mountainwalk, Plainswalk} {
-		if attacker.HasAbility(kw) {
+		if attacker.HasKeyword(kw) {
 			subtype := kw.LandwalkSubtype()
 			for _, p := range g.Battlefield {
 				if p.Controller == defenderID && p.HasType(TypeLand) && p.HasSubType(subtype) {

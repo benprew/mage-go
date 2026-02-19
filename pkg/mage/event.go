@@ -2,6 +2,8 @@ package mage
 
 import "github.com/google/uuid"
 
+//go:generate enumer -type=EventType -trimprefix=Evt
+
 // EventType identifies game events.
 type EventType int
 

@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+//go:generate enumer -type=Color
+
 // Color represents a Magic color.
 type Color int
 
@@ -18,24 +20,6 @@ const (
 	Green
 )
 
-func (c Color) String() string {
-	switch c {
-	case Colorless:
-		return "Colorless"
-	case White:
-		return "White"
-	case Blue:
-		return "Blue"
-	case Black:
-		return "Black"
-	case Red:
-		return "Red"
-	case Green:
-		return "Green"
-	default:
-		return "Unknown"
-	}
-}
 
 func ColorFromSymbol(s string) (Color, bool) {
 	switch strings.ToUpper(s) {
