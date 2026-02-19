@@ -1,14 +1,26 @@
-package mage
+package gametest
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+	"github.com/mage/mage/pkg/mage"
+	"github.com/mage/mage/pkg/mage/core"
+)
+
+// PlayerRef is used in test harness to refer to players.
+type PlayerRef int
+
+const (
+	PlayerA PlayerRef = iota
+	PlayerB
+)
 
 // ScriptedAction represents a scripted action for the test player.
 type ScriptedAction struct {
 	Turn     int
-	Step     PhaseStep
-	Action   string   // "cast", "activate", "attack", "block"
+	Step     core.PhaseStep
+	Action   string
 	CardName string
-	Targets  []string // target names (resolved to UUIDs at execution)
+	Targets  []string
 }
 
 // blockPair represents a single blocker → attacker assignment.
@@ -19,21 +31,21 @@ type blockPair struct {
 
 // TestPlayer is a scripted player for testing.
 type TestPlayer struct {
-	*BasePlayer
-	actions                  []ScriptedAction
-	attackActions            map[int][]string    // turn → creature names to attack with
-	blockActions             map[int][]blockPair // turn → blocker/attacker pairs
-	bandFormations           map[int][][]string  // turn → list of bands (each band is a list of creature names)
-	choosePermanent          []string            // queue of permanent names
-	chooseDiscard            [][]string          // queue of card name lists
-	chooseManaColor          []Color             // queue of colors
-	chooseFromLibrary        []string            // queue of card names
-	chooseBandingDistribution []map[string]int   // queue of banding damage distributions (creature name → damage)
+	*mage.BasePlayer
+	actions                   []ScriptedAction
+	attackActions             map[int][]string
+	blockActions              map[int][]blockPair
+	bandFormations            map[int][][]string
+	choosePermanent           []string
+	chooseDiscard             [][]string
+	chooseManaColor           []core.Color
+	chooseFromLibrary         []string
+	chooseBandingDistribution []map[string]int
 }
 
 func NewTestPlayer(name string) *TestPlayer {
 	return &TestPlayer{
-		BasePlayer:     NewBasePlayer(name),
+		BasePlayer:     mage.NewBasePlayer(name),
 		attackActions:  make(map[int][]string),
 		blockActions:   make(map[int][]blockPair),
 		bandFormations: make(map[int][][]string),
@@ -46,7 +58,7 @@ func (tp *TestPlayer) AddBandFormation(turn int, creatures []string) {
 }
 
 // GetBandFormations implements BandFormer. Resolves scripted creature names to IDs.
-func (tp *TestPlayer) GetBandFormations(turn int, g *Game) [][]uuid.UUID {
+func (tp *TestPlayer) GetBandFormations(turn int, g *mage.Game) [][]uuid.UUID {
 	formations, ok := tp.bandFormations[turn]
 	if !ok {
 		return nil
@@ -68,8 +80,7 @@ func (tp *TestPlayer) GetBandFormations(turn int, g *Game) [][]uuid.UUID {
 }
 
 // GetBandingDamageDistribution returns the scripted damage distribution for a banded group.
-// Returns nil if no distribution has been scripted, in which case the engine uses its default.
-func (tp *TestPlayer) GetBandingDamageDistribution(members []*Permanent) map[uuid.UUID]int {
+func (tp *TestPlayer) GetBandingDamageDistribution(members []*mage.Permanent) map[uuid.UUID]int {
 	if len(tp.chooseBandingDistribution) == 0 {
 		return nil
 	}
@@ -99,7 +110,7 @@ func (tp *TestPlayer) SetBlockers(turn int, blockers map[string]string) {
 }
 
 // DeclareAttackers returns the list of creature IDs to attack with.
-func (tp *TestPlayer) DeclareAttackers(g *Game) []uuid.UUID {
+func (tp *TestPlayer) DeclareAttackers(g *mage.Game) []uuid.UUID {
 	creatures, ok := tp.attackActions[g.Turn]
 	if !ok {
 		return nil
@@ -115,16 +126,15 @@ func (tp *TestPlayer) DeclareAttackers(g *Game) []uuid.UUID {
 }
 
 // DeclareBlockers returns blocker-attacker assignments for the current turn.
-func (tp *TestPlayer) DeclareBlockers(g *Game) []BlockAssignment {
+func (tp *TestPlayer) DeclareBlockers(g *mage.Game) []mage.BlockAssignment {
 	pairs, ok := tp.blockActions[g.Turn]
 	if !ok {
 		return nil
 	}
-	var result []BlockAssignment
+	var result []mage.BlockAssignment
 	for _, bp := range pairs {
 		blocker := g.FindPermanentByName(bp.blocker, tp.PlayerID())
-		// Attacker could be controlled by any player
-		var attacker *Permanent
+		var attacker *mage.Permanent
 		for _, p := range g.Battlefield {
 			if p.Name() == bp.attacker && g.Combat.IsAttacking(p.ID()) {
 				attacker = p
@@ -132,7 +142,7 @@ func (tp *TestPlayer) DeclareBlockers(g *Game) []BlockAssignment {
 			}
 		}
 		if blocker != nil && attacker != nil {
-			result = append(result, BlockAssignment{
+			result = append(result, mage.BlockAssignment{
 				BlockerID:  blocker.ID(),
 				AttackerID: attacker.ID(),
 			})
@@ -142,7 +152,7 @@ func (tp *TestPlayer) DeclareBlockers(g *Game) []BlockAssignment {
 }
 
 // ChooseTargets selects from possible targets (for auto-targeting).
-func (tp *TestPlayer) ChooseTargets(possible []uuid.UUID, min, max int, g *Game) []uuid.UUID {
+func (tp *TestPlayer) ChooseTargets(possible []uuid.UUID, min, max int, g *mage.Game) []uuid.UUID {
 	if len(possible) >= min {
 		n := min
 		if n > len(possible) {
@@ -158,9 +168,8 @@ func (tp *TestPlayer) ChooseMayAbility(description string) bool {
 	return true
 }
 
-// ChoosePermanent picks a permanent from candidates. If the queue has a scripted
-// name, find the matching candidate; otherwise fall back to first candidate.
-func (tp *TestPlayer) ChoosePermanent(candidates []*Permanent, reason string, g *Game) *Permanent {
+// ChoosePermanent picks a permanent from candidates.
+func (tp *TestPlayer) ChoosePermanent(candidates []*mage.Permanent, reason string, g *mage.Game) *mage.Permanent {
 	if len(candidates) == 0 {
 		return nil
 	}
@@ -176,9 +185,8 @@ func (tp *TestPlayer) ChoosePermanent(candidates []*Permanent, reason string, g 
 	return candidates[0]
 }
 
-// ChooseCardsFromHand picks cards from hand by name. If the queue has scripted
-// names, find matching cards; otherwise fall back to first N cards.
-func (tp *TestPlayer) ChooseCardsFromHand(amount int, reason string, g *Game) []Card {
+// ChooseCardsFromHand picks cards from hand by name.
+func (tp *TestPlayer) ChooseCardsFromHand(amount int, reason string, g *mage.Game) []mage.Card {
 	hand := tp.Hand()
 	if amount > len(hand) {
 		amount = len(hand)
@@ -186,7 +194,7 @@ func (tp *TestPlayer) ChooseCardsFromHand(amount int, reason string, g *Game) []
 	if len(tp.chooseDiscard) > 0 {
 		names := tp.chooseDiscard[0]
 		tp.chooseDiscard = tp.chooseDiscard[1:]
-		var result []Card
+		var result []mage.Card
 		for _, name := range names {
 			for _, c := range hand {
 				if c.Name() == name {
@@ -200,25 +208,23 @@ func (tp *TestPlayer) ChooseCardsFromHand(amount int, reason string, g *Game) []
 		}
 		return result
 	}
-	result := make([]Card, amount)
+	result := make([]mage.Card, amount)
 	copy(result, hand[:amount])
 	return result
 }
 
-// ChooseManaColor picks a mana color. If the queue has a scripted color, use it;
-// otherwise fall back to White.
-func (tp *TestPlayer) ChooseManaColor(reason string) Color {
+// ChooseManaColor picks a mana color.
+func (tp *TestPlayer) ChooseManaColor(reason string) core.Color {
 	if len(tp.chooseManaColor) > 0 {
 		c := tp.chooseManaColor[0]
 		tp.chooseManaColor = tp.chooseManaColor[1:]
 		return c
 	}
-	return White
+	return core.White
 }
 
-// ChooseCardFromLibrary picks a card from candidates. If the queue has a scripted
-// name, find the matching candidate; otherwise fall back to first candidate.
-func (tp *TestPlayer) ChooseCardFromLibrary(candidates []Card, reason string, g *Game) Card {
+// ChooseCardFromLibrary picks a card from candidates.
+func (tp *TestPlayer) ChooseCardFromLibrary(candidates []mage.Card, reason string, g *mage.Game) mage.Card {
 	if len(candidates) == 0 {
 		return nil
 	}

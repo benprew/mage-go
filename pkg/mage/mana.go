@@ -1,175 +1,9 @@
 package mage
 
 import (
+	. "github.com/mage/mage/pkg/mage/core"
 	"fmt"
-	"strconv"
-	"strings"
 )
-
-//go:generate enumer -type=Color -output=mana_enumer.go
-
-// Color represents a Magic color.
-type Color int
-
-const (
-	Colorless Color = iota
-	White
-	Blue
-	Black
-	Red
-	Green
-)
-
-
-func ColorFromSymbol(s string) (Color, bool) {
-	switch strings.ToUpper(s) {
-	case "W":
-		return White, true
-	case "U":
-		return Blue, true
-	case "B":
-		return Black, true
-	case "R":
-		return Red, true
-	case "G":
-		return Green, true
-	default:
-		return Colorless, false
-	}
-}
-
-func (c Color) Symbol() string {
-	switch c {
-	case White:
-		return "W"
-	case Blue:
-		return "U"
-	case Black:
-		return "B"
-	case Red:
-		return "R"
-	case Green:
-		return "G"
-	default:
-		return "C"
-	}
-}
-
-// ManaCost represents a parsed mana cost.
-type ManaCost struct {
-	Generic int
-	White   int
-	Blue    int
-	Black   int
-	Red     int
-	Green   int
-	HasX    bool // whether this cost includes {X}
-	XCount  int  // number of X's (usually 1)
-}
-
-// CMC returns the converted mana cost (total mana value).
-func (mc ManaCost) CMC() int {
-	return mc.Generic + mc.White + mc.Blue + mc.Black + mc.Red + mc.Green
-}
-
-// Colors returns the set of colors in this mana cost.
-func (mc ManaCost) Colors() []Color {
-	var colors []Color
-	if mc.White > 0 {
-		colors = append(colors, White)
-	}
-	if mc.Blue > 0 {
-		colors = append(colors, Blue)
-	}
-	if mc.Black > 0 {
-		colors = append(colors, Black)
-	}
-	if mc.Red > 0 {
-		colors = append(colors, Red)
-	}
-	if mc.Green > 0 {
-		colors = append(colors, Green)
-	}
-	return colors
-}
-
-// IsZero returns true if the mana cost is empty (e.g., for lands).
-func (mc ManaCost) IsZero() bool {
-	return mc.Generic == 0 && mc.White == 0 && mc.Blue == 0 && mc.Black == 0 && mc.Red == 0 && mc.Green == 0
-}
-
-func (mc ManaCost) String() string {
-	var parts []string
-	for i := 0; i < mc.XCount; i++ {
-		parts = append(parts, "{X}")
-	}
-	if mc.Generic > 0 || (mc.CMC() == 0 && !mc.HasX) {
-		parts = append(parts, fmt.Sprintf("{%d}", mc.Generic))
-	}
-	for i := 0; i < mc.White; i++ {
-		parts = append(parts, "{W}")
-	}
-	for i := 0; i < mc.Blue; i++ {
-		parts = append(parts, "{U}")
-	}
-	for i := 0; i < mc.Black; i++ {
-		parts = append(parts, "{B}")
-	}
-	for i := 0; i < mc.Red; i++ {
-		parts = append(parts, "{R}")
-	}
-	for i := 0; i < mc.Green; i++ {
-		parts = append(parts, "{G}")
-	}
-	return strings.Join(parts, "")
-}
-
-// ParseManaCost parses a mana cost string like "{1}{B}{G}" into a ManaCost.
-func ParseManaCost(s string) ManaCost {
-	mc := ManaCost{}
-	if s == "" {
-		return mc
-	}
-	s = strings.TrimSpace(s)
-	i := 0
-	for i < len(s) {
-		if s[i] == '{' {
-			end := strings.IndexByte(s[i:], '}')
-			if end == -1 {
-				break
-			}
-			symbol := s[i+1 : i+end]
-			if n, err := strconv.Atoi(symbol); err == nil {
-				mc.Generic += n
-			} else {
-				switch strings.ToUpper(symbol) {
-				case "W":
-					mc.White++
-				case "U":
-					mc.Blue++
-				case "B":
-					mc.Black++
-				case "R":
-					mc.Red++
-				case "G":
-					mc.Green++
-				case "X":
-					mc.HasX = true
-					mc.XCount++
-				}
-			}
-			i += end + 1
-		} else {
-			i++
-		}
-	}
-	return mc
-}
-
-// Mana represents a single unit of mana with a color.
-type Mana struct {
-	Color Color
-}
 
 // ManaPool tracks available mana for a player.
 type ManaPool struct {
@@ -179,6 +13,18 @@ type ManaPool struct {
 
 func NewManaPool() *ManaPool {
 	return &ManaPool{}
+}
+
+// SnapshotPool returns a copy of the internal mana pool for undo support.
+func (mp *ManaPool) SnapshotPool() []Mana {
+	s := make([]Mana, len(mp.pool))
+	copy(s, mp.pool)
+	return s
+}
+
+// RestorePool replaces the internal mana pool from a snapshot.
+func (mp *ManaPool) RestorePool(snap []Mana) {
+	mp.pool = snap
 }
 
 func (mp *ManaPool) Add(c Color, amount int) {
@@ -221,8 +67,6 @@ func (mp *ManaPool) CanPay(mc ManaCost) bool {
 		avail[m.Color]++
 	}
 
-	// With mana conversion, we need to track which mana is "spent" from convertible sources
-	// For simplicity: check each colored requirement can be met, then check generic
 	type colorReq struct {
 		color  Color
 		needed int
@@ -236,7 +80,6 @@ func (mp *ManaPool) CanPay(mc ManaCost) bool {
 	}
 
 	if len(mp.ManaConversions) == 0 {
-		// Fast path: no conversions
 		remaining := 0
 		for _, r := range reqs {
 			if avail[r.color] < r.needed {
@@ -248,17 +91,14 @@ func (mp *ManaPool) CanPay(mc ManaCost) bool {
 		return remaining >= mc.Generic
 	}
 
-	// Slow path with conversions: consume from exact matches first, then conversions
 	used := map[Color]int{}
 	for _, r := range reqs {
 		need := r.needed
-		// First use exact color
 		exact := min(avail[r.color]-used[r.color], need)
 		if exact > 0 {
 			used[r.color] += exact
 			need -= exact
 		}
-		// Then use converted mana
 		if need > 0 {
 			for from, to := range mp.ManaConversions {
 				if to == r.color && from != r.color {
@@ -274,7 +114,6 @@ func (mp *ManaPool) CanPay(mc ManaCost) bool {
 			return false
 		}
 	}
-	// Count remaining for generic
 	remaining := 0
 	for c, count := range avail {
 		remaining += count - used[c]
@@ -287,7 +126,6 @@ func (mp *ManaPool) Pay(mc ManaCost) error {
 	if !mp.CanPay(mc) {
 		return fmt.Errorf("insufficient mana to pay %s", mc)
 	}
-	// Pay each colored requirement, using conversions if needed
 	type colorReq struct {
 		color  Color
 		needed int
@@ -301,10 +139,8 @@ func (mp *ManaPool) Pay(mc ManaCost) error {
 	}
 	for _, r := range reqs {
 		need := r.needed
-		// First remove exact color
 		removed := mp.removeUpTo(r.color, need)
-		need = removed // removeUpTo returns remaining
-		// If still need more, use converted mana
+		need = removed
 		if need > 0 {
 			for from, to := range mp.ManaConversions {
 				if to == r.color && from != r.color {
@@ -316,7 +152,6 @@ func (mp *ManaPool) Pay(mc ManaCost) error {
 			}
 		}
 	}
-	// Pay generic with any color (prefer colorless first)
 	generic := mc.Generic
 	generic = mp.removeUpTo(Colorless, generic)
 	for _, c := range []Color{White, Blue, Black, Red, Green} {

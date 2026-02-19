@@ -1,6 +1,9 @@
 package mage
 
-import "github.com/google/uuid"
+import (
+	. "github.com/mage/mage/pkg/mage/core"
+	"github.com/google/uuid"
+)
 
 // BandFormer is an optional interface for players that declare attacking bands.
 // The game engine calls GetBandFormations after attackers are declared.
@@ -21,14 +24,6 @@ type BlockAssignment struct {
 	BlockerID  uuid.UUID
 	AttackerID uuid.UUID
 }
-
-// PlayerRef is used in test harness to refer to players.
-type PlayerRef int
-
-const (
-	PlayerA PlayerRef = iota
-	PlayerB
-)
 
 // Player interface for game players.
 type Player interface {

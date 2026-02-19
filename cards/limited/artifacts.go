@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/mage/mage/pkg/mage"
+	"github.com/mage/mage/pkg/mage/core"
 )
 
 func init() {
@@ -16,13 +17,13 @@ func registerArtifacts() {
 
 	moxen := []struct {
 		name  string
-		color mage.Color
+		color core.Color
 	}{
-		{"Mox Pearl", mage.White},
-		{"Mox Sapphire", mage.Blue},
-		{"Mox Jet", mage.Black},
-		{"Mox Ruby", mage.Red},
-		{"Mox Emerald", mage.Green},
+		{"Mox Pearl", core.White},
+		{"Mox Sapphire", core.Blue},
+		{"Mox Jet", core.Black},
+		{"Mox Ruby", core.Red},
+		{"Mox Emerald", core.Green},
 	}
 
 	for _, m := range moxen {
@@ -42,7 +43,7 @@ func registerArtifacts() {
 		// {T}, Sacrifice: Add 3 mana of any one color
 		// Default choice: Green (not hardcoded to Black)
 		ab := mage.NewActivatedAbility(
-			mage.AddAnyMana(3, mage.Green),
+			mage.AddAnyMana(3, core.Green),
 			mage.TapSourceCost(),
 
 			mage.WithCost(mage.SacrificeSourceCost()),
@@ -55,7 +56,7 @@ func registerArtifacts() {
 		c := mage.NewArtifact("Sol Ring", "{1}")
 		// {T}: Add {C}{C}
 		ab := mage.NewActivatedAbility(
-			mage.AddMana(mage.Colorless, 2),
+			mage.AddMana(core.Colorless, 2),
 			mage.TapSourceCost(),
 		)
 		c.AddAbility(ab)
@@ -64,10 +65,10 @@ func registerArtifacts() {
 
 	mage.Register("Basalt Monolith", func() mage.Card {
 		c := mage.NewArtifact("Basalt Monolith", "{3}")
-		c.AddAbility(mage.NewKeywordAbility(mage.DoesNotUntapKW)) // doesn't untap during untap step
+		c.AddAbility(mage.NewKeywordAbility(core.DoesNotUntapKW)) // doesn't untap during untap step
 		// {T}: Add {C}{C}{C}
 		ab := mage.NewActivatedAbility(
-			mage.AddMana(mage.Colorless, 3),
+			mage.AddMana(core.Colorless, 3),
 			mage.TapSourceCost(),
 		)
 		c.AddAbility(ab)
@@ -82,10 +83,10 @@ func registerArtifacts() {
 
 	mage.Register("Mana Vault", func() mage.Card {
 		c := mage.NewArtifact("Mana Vault", "{1}")
-		c.AddAbility(mage.NewKeywordAbility(mage.DoesNotUntapKW)) // doesn't untap during untap step
+		c.AddAbility(mage.NewKeywordAbility(core.DoesNotUntapKW)) // doesn't untap during untap step
 		// {T}: Add {C}{C}{C}
 		ab := mage.NewActivatedAbility(
-			mage.AddMana(mage.Colorless, 3),
+			mage.AddMana(core.Colorless, 3),
 			mage.TapSourceCost(),
 		)
 		c.AddAbility(ab)
@@ -159,9 +160,9 @@ func registerArtifacts() {
 		// {5}, {T}: Create a 1/1 colorless Insect artifact creature token with flying named Wasp.
 		ab := mage.NewActivatedAbility(
 			mage.CreateToken("Wasp", 1, 1,
-				[]mage.CardType{mage.TypeArtifact, mage.TypeCreature},
+				[]core.CardType{core.TypeArtifact, core.TypeCreature},
 				[]string{"Insect"},
-				mage.Flying,
+				core.Flying,
 			),
 			mage.GenericCost(5),
 			mage.WithCost(mage.TapSourceCost()),
@@ -215,10 +216,10 @@ func registerArtifacts() {
 		c := mage.NewArtifact("Gauntlet of Might", "{4}")
 		// Red creatures get +1/+1
 		c.AddAbility(mage.StaticAbility(
-			mage.BoostAllCreaturesIncludingSelf(1, 1, mage.HasColorFilter(mage.Red)),
+			mage.BoostAllCreaturesIncludingSelf(1, 1, mage.HasColorFilter(core.Red)),
 		))
 		// Whenever a Mountain is tapped for mana, its controller adds an additional {R}
-		c.AddAbility(mage.NewManaBonusAbility(mage.HasSubType("Mountain"), mage.Red))
+		c.AddAbility(mage.NewManaBonusAbility(mage.HasSubType("Mountain"), core.Red))
 		return c
 	})
 
@@ -236,7 +237,7 @@ func registerArtifacts() {
 		c := mage.NewArtifact("Copy Artifact", "{1}{U}")
 		// You may have Copy Artifact enter the battlefield as a copy of any artifact
 		// on the battlefield, except it's an enchantment in addition to its other types.
-		sa := mage.NewTargetedSpell(mage.TargetArtifact(), mage.CloneTarget(mage.TypeEnchantment))
+		sa := mage.NewTargetedSpell(mage.TargetArtifact(), mage.CloneTarget(core.TypeEnchantment))
 		c.AddAbility(sa)
 		return c
 	})
@@ -313,7 +314,7 @@ func registerArtifacts() {
 		c := mage.NewArtifact("Helm of Chatzuk", "{1}")
 		// {1}, {T}: Target creature gains banding until end of turn.
 		ab := mage.NewActivatedAbility(
-			mage.GrantKeywordUntilEndOfTurn(mage.Banding, mage.SelectTarget),
+			mage.GrantKeywordUntilEndOfTurn(core.Banding, mage.SelectTarget),
 			mage.GenericCost(1),
 			mage.WithCost(mage.TapSourceCost()),
 			mage.WithTarget(mage.TargetCreature()),
@@ -326,7 +327,7 @@ func registerArtifacts() {
 		c := mage.NewArtifact("Sunglasses of Urza", "{3}")
 		// You may spend red mana as though it were white mana.
 		c.AddAbility(mage.StaticAbility(
-			mage.ManaConversion(mage.Red, mage.White),
+			mage.ManaConversion(core.Red, core.White),
 		))
 		return c
 	})
@@ -349,7 +350,7 @@ func registerArtifacts() {
 		))
 		// {2}, {T}: Put a mire counter on target non-Swamp land.
 		ab := mage.NewActivatedAbility(
-			mage.AddCounters(mage.Mire, mage.Fixed(1), mage.SelectTarget),
+			mage.AddCounters(core.Mire, mage.Fixed(1), mage.SelectTarget),
 			mage.GenericCost(2),
 			mage.WithCost(mage.TapSourceCost()),
 			mage.WithTarget(mage.TargetPermanent(mage.IsLand, mage.Not(mage.HasSubType("Swamp")))),
@@ -393,7 +394,7 @@ func registerArtifacts() {
 
 	mage.Register("Nevinyrral's Disk", func() mage.Card {
 		c := mage.NewArtifact("Nevinyrral's Disk", "{4}")
-		c.AddAbility(mage.NewKeywordAbility(mage.EntersTapped))
+		c.AddAbility(mage.NewKeywordAbility(core.EntersTapped))
 		// {1}, {T}: Destroy all artifacts, creatures, and enchantments
 		ab := mage.NewActivatedAbility(
 			mage.CompositeEffects("destroy all artifacts, creatures, and enchantments",
@@ -415,7 +416,7 @@ func registerArtifacts() {
 		c := mage.NewEnchantment("Deathgrip", "{B}{B}")
 		// {B}{B}: Counter target green spell (only counters if green)
 		ab := mage.NewActivatedAbility(
-			mage.CounterSpellIfColor(mage.Green),
+			mage.CounterSpellIfColor(core.Green),
 			mage.ManaCostOf("{B}{B}"),
 
 			mage.WithTarget(mage.TargetSpellOnStack()),
@@ -428,7 +429,7 @@ func registerArtifacts() {
 		c := mage.NewEnchantment("Lifeforce", "{G}{G}")
 		// {G}{G}: Counter target black spell (only counters if black)
 		ab := mage.NewActivatedAbility(
-			mage.CounterSpellIfColor(mage.Black),
+			mage.CounterSpellIfColor(core.Black),
 			mage.ManaCostOf("{G}{G}"),
 
 			mage.WithTarget(mage.TargetSpellOnStack()),
@@ -451,7 +452,7 @@ func registerArtifacts() {
 	mage.Register("Instill Energy", func() mage.Card {
 		c := mage.NewAura("Instill Energy", "{G}")
 		c.AddAbility(mage.StaticAbility(
-			mage.GrantAbilityToAttached(mage.Haste, mage.AttachAura),
+			mage.GrantAbilityToAttached(core.Haste, core.AttachAura),
 		))
 		return c
 	})
@@ -461,11 +462,11 @@ func registerArtifacts() {
 		// Whenever a player taps a land for mana, that player adds one additional
 		// mana of any type that land produced.
 		// We approximate by adding bonus for each basic land type.
-		c.AddAbility(mage.NewManaBonusAbility(mage.HasSubType("Plains"), mage.White))
-		c.AddAbility(mage.NewManaBonusAbility(mage.HasSubType("Island"), mage.Blue))
-		c.AddAbility(mage.NewManaBonusAbility(mage.HasSubType("Swamp"), mage.Black))
-		c.AddAbility(mage.NewManaBonusAbility(mage.HasSubType("Mountain"), mage.Red))
-		c.AddAbility(mage.NewManaBonusAbility(mage.HasSubType("Forest"), mage.Green))
+		c.AddAbility(mage.NewManaBonusAbility(mage.HasSubType("Plains"), core.White))
+		c.AddAbility(mage.NewManaBonusAbility(mage.HasSubType("Island"), core.Blue))
+		c.AddAbility(mage.NewManaBonusAbility(mage.HasSubType("Swamp"), core.Black))
+		c.AddAbility(mage.NewManaBonusAbility(mage.HasSubType("Mountain"), core.Red))
+		c.AddAbility(mage.NewManaBonusAbility(mage.HasSubType("Forest"), core.Green))
 		return c
 	})
 
@@ -486,7 +487,7 @@ func registerArtifacts() {
 				g.Sacrifice(perm)
 				p := g.GetPlayer(controller)
 				if p != nil {
-					p.ManaPool().Add(mage.Black, cmc)
+					p.ManaPool().Add(core.Black, cmc)
 				}
 				return nil
 			}))
@@ -511,12 +512,12 @@ func registerArtifacts() {
 				hand := targetPlayer.Hand()
 				for _, card := range hand {
 					// Try to cast the card with auto-mana
-					targetPlayer.ManaPool().Add(mage.Red, 10)
-					targetPlayer.ManaPool().Add(mage.Blue, 10)
-					targetPlayer.ManaPool().Add(mage.Black, 10)
-					targetPlayer.ManaPool().Add(mage.White, 10)
-					targetPlayer.ManaPool().Add(mage.Green, 10)
-					targetPlayer.ManaPool().Add(mage.Colorless, 10)
+					targetPlayer.ManaPool().Add(core.Red, 10)
+					targetPlayer.ManaPool().Add(core.Blue, 10)
+					targetPlayer.ManaPool().Add(core.Black, 10)
+					targetPlayer.ManaPool().Add(core.White, 10)
+					targetPlayer.ManaPool().Add(core.Green, 10)
+					targetPlayer.ManaPool().Add(core.Colorless, 10)
 					// Cast with no specific target (auto-target controller of Word)
 					autoTargets := []uuid.UUID{controller}
 					err := g.CastSpellByName(targetPlayer.PlayerID(), card.Name(), autoTargets)
@@ -542,7 +543,7 @@ func registerArtifacts() {
 			"you assign blockers this combat",
 			func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 				for _, p := range g.Battlefield {
-					if p.Controller != controller && p.HasType(mage.TypeCreature) {
+					if p.Controller != controller && p.HasType(core.TypeCreature) {
 						g.Effects.PreventFromBlocking(p.ID())
 					}
 				}
@@ -562,14 +563,14 @@ func registerArtifacts() {
 		// all non-flyers to the opposite pile of each attacker, preventing all
 		// non-flyer blocking. This is correctly modeled by PreventFromBlocking
 		// on all non-flying defender creatures.
-		c.AddAbility(mage.NewTriggered(mage.EvtDeclaredAttacker, false, mage.FuncEffect(
+		c.AddAbility(mage.NewTriggered(core.EvtDeclaredAttacker, false, mage.FuncEffect(
 			"split blockers into piles",
 			func(g *mage.Game, _, controller uuid.UUID, _ []uuid.UUID) error {
 				// Find all non-flying creatures the defending player controls
 				var nonFlyers []*mage.Permanent
 				for _, p := range g.Battlefield {
-					if p.Controller != controller && p.HasType(mage.TypeCreature) &&
-						!p.HasKeyword(mage.Flying) {
+					if p.Controller != controller && p.HasType(core.TypeCreature) &&
+						!p.HasKeyword(core.Flying) {
 						nonFlyers = append(nonFlyers, p)
 					}
 				}
@@ -579,7 +580,7 @@ func registerArtifacts() {
 					g.Effects.PreventFromBlocking(p.ID())
 				}
 				return nil
-			})).SetCondition(func(evt *mage.GameEvent, g *mage.Game, sourceID, controllerID uuid.UUID) bool {
+			})).SetCondition(func(evt *core.GameEvent, g *mage.Game, sourceID, controllerID uuid.UUID) bool {
 			// Only trigger once for the first attacker declared
 			return evt.PlayerID == controllerID && g.FindPermanent(sourceID) != nil && len(g.Combat.Groups) == 1
 		}))
@@ -648,13 +649,13 @@ func registerArtifacts() {
 	mage.Register("Island Sanctuary", func() mage.Card {
 		c := mage.NewEnchantment("Island Sanctuary", "{1}{W}")
 		// At the beginning of your draw step, skip the draw and activate sanctuary protection.
-		c.AddAbility(mage.NewTriggered(mage.EvtDrawStep, false, mage.FuncEffect(
+		c.AddAbility(mage.NewTriggered(core.EvtDrawStep, false, mage.FuncEffect(
 			"skip draw, only flying/islandwalk can attack you until your next turn",
 			func(g *mage.Game, _, controller uuid.UUID, _ []uuid.UUID) error {
 				g.Effects.SetSkipNextDraw(controller)
 				g.Effects.SetSanctuaryActive(controller)
 				return nil
-			})).SetCondition(func(evt *mage.GameEvent, g *mage.Game, sourceID, controllerID uuid.UUID) bool {
+			})).SetCondition(func(evt *core.GameEvent, g *mage.Game, sourceID, controllerID uuid.UUID) bool {
 			src := g.FindPermanent(sourceID)
 			return src != nil && evt.PlayerID == controllerID
 		}))
@@ -672,7 +673,7 @@ func registerArtifacts() {
 				activeID := active.PlayerID()
 				untapped := 0
 				for _, p := range g.Battlefield {
-					if p.Controller == activeID && p.HasType(mage.TypeLand) && !p.Tapped {
+					if p.Controller == activeID && p.HasType(core.TypeLand) && !p.Tapped {
 						untapped++
 					}
 				}
@@ -712,7 +713,7 @@ func registerArtifacts() {
 					p := g.GetPlayer(controller)
 					if p != nil {
 						p.GainLife(dmg)
-						g.FireEvent(mage.GameEvent{Type: mage.EvtLifeGained, PlayerID: controller, Amount: dmg})
+						g.FireEvent(core.GameEvent{Type: core.EvtLifeGained, PlayerID: controller, Amount: dmg})
 					}
 					if len(targets) > 0 {
 						perm := g.FindPermanent(targets[0])
@@ -730,7 +731,7 @@ func registerArtifacts() {
 	mage.Register("Blaze of Glory", func() mage.Card {
 		c := mage.NewInstant("Blaze of Glory", "{W}")
 		// Target creature can block any number of creatures this turn.
-		sa := mage.NewTargetedSpell(mage.TargetCreature(), mage.GrantKeywordUntilEndOfTurn(mage.CanBlockAny, mage.SelectTarget))
+		sa := mage.NewTargetedSpell(mage.TargetCreature(), mage.GrantKeywordUntilEndOfTurn(core.CanBlockAny, mage.SelectTarget))
 		c.AddAbility(sa)
 		return c
 	})
@@ -776,7 +777,7 @@ func registerArtifacts() {
 		c := mage.NewEnchantment("Gloom", "{2}{B}")
 		// White spells cost {3} more to cast.
 		c.AddAbility(mage.StaticAbility(
-			mage.IncreaseSpellCostForColor(mage.White, 3),
+			mage.IncreaseSpellCostForColor(core.White, 3),
 		))
 		return c
 	})
@@ -785,7 +786,7 @@ func registerArtifacts() {
 		c := mage.NewEnchantment("Magnetic Mountain", "{1}{R}{R}")
 		// Blue creatures don't untap during their controller's untap step.
 		c.AddAbility(mage.StaticAbility(
-			mage.PreventUntapForMatching(mage.And(mage.IsCreature, mage.HasColorFilter(mage.Blue))),
+			mage.PreventUntapForMatching(mage.And(mage.IsCreature, mage.HasColorFilter(core.Blue))),
 		))
 		return c
 	})
@@ -794,7 +795,7 @@ func registerArtifacts() {
 		c := mage.NewAura("Consecrate Land", "{W}")
 		// Enchanted land has indestructible.
 		c.AddAbility(mage.StaticAbility(
-			mage.GrantAbilityToAttached(mage.Indestructible, mage.AttachAura),
+			mage.GrantAbilityToAttached(core.Indestructible, core.AttachAura),
 		))
 		return c
 	})
@@ -804,9 +805,9 @@ func registerArtifacts() {
 		// You may play any number of lands on each of your turns.
 		c.AddAbility(mage.StaticAbility(mage.AllowUnlimitedLandPlays()))
 		// Whenever a land enters under your control (after the first), deal 1 damage to you.
-		c.AddAbility(mage.NewTriggered(mage.EvtLandPlayed, false,
+		c.AddAbility(mage.NewTriggered(core.EvtLandPlayed, false,
 			mage.DealDamageToPlayers(mage.Fixed(1), mage.SelectController()),
-		).SetCondition(func(evt *mage.GameEvent, g *mage.Game, sourceID, controllerID uuid.UUID) bool {
+		).SetCondition(func(evt *core.GameEvent, g *mage.Game, sourceID, controllerID uuid.UUID) bool {
 			// Only trigger for the controller's lands, and only after the first
 			return evt.PlayerID == controllerID && evt.Amount > 1
 		}))
@@ -843,7 +844,7 @@ func registerArtifacts() {
 				g.DestroyPermanent(attached)
 				// Find another land to move Kudzu to
 				for _, p := range g.Battlefield {
-					if p.HasType(mage.TypeLand) && p.ID() != attachedID {
+					if p.HasType(core.TypeLand) && p.ID() != attachedID {
 						g.Attach(sourceID, p.ID())
 						return nil
 					}
@@ -860,7 +861,7 @@ func registerArtifacts() {
 			mage.GrantActivatedAbilityToAttached(
 				mage.RegenerateSource(),
 				mage.ManaCostOf("{G}"),
-				mage.AttachAura,
+				core.AttachAura,
 			),
 		))
 		return c
@@ -876,7 +877,7 @@ func registerArtifacts() {
 				active := g.ActivePlayerObj()
 				activeID := active.PlayerID()
 				g.RegisterDelayedTrigger(&mage.DelayedTrigger{
-					EventType:  mage.EvtEndStep,
+					EventType:  core.EvtEndStep,
 					SourceID:   sourceID,
 					Controller: controller,
 					Effects: []mage.Effect{mage.FuncEffect(
@@ -884,7 +885,7 @@ func registerArtifacts() {
 						func(g2 *mage.Game, srcID, ctrlID uuid.UUID, _ []uuid.UUID) error {
 							var toDestroy []*mage.Permanent
 							for _, p := range g2.Battlefield {
-								if p.Controller == activeID && p.HasType(mage.TypeCreature) &&
+								if p.Controller == activeID && p.HasType(core.TypeCreature) &&
 									!p.HasSubType("Wall") && !g2.AttackedThisTurn[p.ID()] {
 									toDestroy = append(toDestroy, p)
 								}
@@ -905,7 +906,7 @@ func registerArtifacts() {
 	mage.Register("Magical Hack", func() mage.Card {
 		c := mage.NewInstant("Magical Hack", "{U}")
 		// Change land type word on target permanent. Default: swamp->forest.
-		sa := mage.NewTargetedSpell(mage.TargetPermanent(), mage.ReplaceKeywordEffect(mage.Swampwalk, mage.Forestwalk))
+		sa := mage.NewTargetedSpell(mage.TargetPermanent(), mage.ReplaceKeywordEffect(core.Swampwalk, core.Forestwalk))
 		c.AddAbility(sa)
 		return c
 	})

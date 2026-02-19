@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mage/mage/pkg/mage"
+	"github.com/mage/mage/pkg/mage/interactive"
 )
 
 func (m Model) View() string {
@@ -164,22 +164,22 @@ func (m Model) View() string {
 			b.WriteString(menuNormalStyle.Render("Done (submit blocks)"))
 		}
 		b.WriteString("\n")
-	} else if m.prompt != mage.PromptNone && len(m.options) > 0 {
+	} else if m.prompt != interactive.PromptNone && len(m.options) > 0 {
 		promptLabel := "Actions"
 		switch m.prompt {
-		case mage.PromptMainPhaseAction:
+		case interactive.PromptMainPhaseAction:
 			promptLabel = "Main Phase Actions"
-		case mage.PromptPriority:
+		case interactive.PromptPriority:
 			promptLabel = "Priority (instant speed)"
-		case mage.PromptDeclareAttackers:
+		case interactive.PromptDeclareAttackers:
 			promptLabel = "Select Attackers (space=toggle, enter=confirm)"
-		case mage.PromptDeclareBlockers:
+		case interactive.PromptDeclareBlockers:
 			promptLabel = "Select Blockers (enter=assign, then pick attacker)"
 		}
 		b.WriteString(labelStyle.Render(promptLabel))
 		b.WriteString("\n")
 
-		isMultiSelect := m.prompt == mage.PromptDeclareAttackers
+		isMultiSelect := m.prompt == interactive.PromptDeclareAttackers
 
 		for i, opt := range m.options {
 			if isMultiSelect {
@@ -232,7 +232,7 @@ func (m Model) View() string {
 	return b.String()
 }
 
-func renderBattlefieldTo(b *strings.Builder, perms []mage.PermanentState) {
+func renderBattlefieldTo(b *strings.Builder, perms []interactive.PermanentState) {
 	if len(perms) == 0 {
 		b.WriteString("   (empty)\n")
 		return
@@ -268,7 +268,7 @@ func renderBattlefieldTo(b *strings.Builder, perms []mage.PermanentState) {
 	}
 }
 
-func renderPerm(p mage.PermanentState) string {
+func renderPerm(p interactive.PermanentState) string {
 	var parts []string
 	parts = append(parts, p.Name)
 
@@ -299,7 +299,7 @@ func renderPerm(p mage.PermanentState) string {
 	return permStyle.Render(text)
 }
 
-func renderManaPool(mp mage.ManaPoolState) string {
+func renderManaPool(mp interactive.ManaPoolState) string {
 	var parts []string
 	if mp.White > 0 {
 		parts = append(parts, manaSymbolStyle.Foreground(colorManaW).Render(fmt.Sprintf("W:%d", mp.White)))

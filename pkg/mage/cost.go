@@ -1,6 +1,7 @@
 package mage
 
 import (
+	. "github.com/mage/mage/pkg/mage/core"
 	"fmt"
 
 	"github.com/google/uuid"

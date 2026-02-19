@@ -3,6 +3,7 @@ package limited
 import (
 	"github.com/google/uuid"
 	"github.com/mage/mage/pkg/mage"
+	"github.com/mage/mage/pkg/mage/core"
 )
 
 func init() {
@@ -14,14 +15,14 @@ func registerCreatures() {
 
 	mage.Register("Benalish Hero", func() mage.Card {
 		c := mage.NewCreature("Benalish Hero", "{W}", 1, 1, "Human", "Soldier")
-		c.AddAbility(mage.NewKeywordAbility(mage.Banding))
+		c.AddAbility(mage.NewKeywordAbility(core.Banding))
 		return c
 	})
 
 	mage.Register("Mesa Pegasus", func() mage.Card {
 		c := mage.NewCreature("Mesa Pegasus", "{1}{W}", 1, 1, "Pegasus")
-		c.AddAbility(mage.NewKeywordAbility(mage.Flying))
-		c.AddAbility(mage.NewKeywordAbility(mage.Banding))
+		c.AddAbility(mage.NewKeywordAbility(core.Flying))
+		c.AddAbility(mage.NewKeywordAbility(core.Banding))
 		return c
 	})
 
@@ -37,15 +38,15 @@ func registerCreatures() {
 
 	mage.Register("Serra Angel", func() mage.Card {
 		c := mage.NewCreature("Serra Angel", "{3}{W}{W}", 4, 4, "Angel")
-		c.AddAbility(mage.NewKeywordAbility(mage.Flying))
-		c.AddAbility(mage.NewKeywordAbility(mage.Vigilance))
+		c.AddAbility(mage.NewKeywordAbility(core.Flying))
+		c.AddAbility(mage.NewKeywordAbility(core.Vigilance))
 		return c
 	})
 
 	mage.Register("White Knight", func() mage.Card {
 		c := mage.NewCreature("White Knight", "{W}{W}", 2, 2, "Human", "Knight")
-		c.AddAbility(mage.NewKeywordAbility(mage.FirstStrike))
-		c.AddAbility(mage.ProtectionFromColor(mage.Black))
+		c.AddAbility(mage.NewKeywordAbility(core.FirstStrike))
+		c.AddAbility(mage.ProtectionFromColor(core.Black))
 		return c
 	})
 
@@ -59,7 +60,7 @@ func registerCreatures() {
 			mage.WithCost(mage.TapSourceCost()),
 
 			mage.WithTarget(
-				mage.TargetPermanent(mage.HasColorFilter(mage.Black)),
+				mage.TargetPermanent(mage.HasColorFilter(core.Black)),
 			),
 		)
 		c.AddAbility(ab)
@@ -70,19 +71,19 @@ func registerCreatures() {
 
 	mage.Register("Air Elemental", func() mage.Card {
 		c := mage.NewCreature("Air Elemental", "{3}{U}{U}", 4, 4, "Elemental")
-		c.AddAbility(mage.NewKeywordAbility(mage.Flying))
+		c.AddAbility(mage.NewKeywordAbility(core.Flying))
 		return c
 	})
 
 	mage.Register("Mahamoti Djinn", func() mage.Card {
 		c := mage.NewCreature("Mahamoti Djinn", "{4}{U}{U}", 5, 6, "Djinn")
-		c.AddAbility(mage.NewKeywordAbility(mage.Flying))
+		c.AddAbility(mage.NewKeywordAbility(core.Flying))
 		return c
 	})
 
 	mage.Register("Phantom Monster", func() mage.Card {
 		c := mage.NewCreature("Phantom Monster", "{3}{U}", 3, 3, "Illusion")
-		c.AddAbility(mage.NewKeywordAbility(mage.Flying))
+		c.AddAbility(mage.NewKeywordAbility(core.Flying))
 		return c
 	})
 
@@ -122,7 +123,7 @@ func registerCreatures() {
 
 	mage.Register("Phantasmal Forces", func() mage.Card {
 		c := mage.NewCreature("Phantasmal Forces", "{3}{U}", 4, 1, "Illusion")
-		c.AddAbility(mage.NewKeywordAbility(mage.Flying))
+		c.AddAbility(mage.NewKeywordAbility(core.Flying))
 		// At the beginning of your upkeep, sacrifice Phantasmal Forces unless you pay {U}.
 		c.AddAbility(mage.BeginningOfUpkeepTrigger(mage.SacrificeSource(), false))
 		return c
@@ -140,14 +141,14 @@ func registerCreatures() {
 
 	mage.Register("Black Knight", func() mage.Card {
 		c := mage.NewCreature("Black Knight", "{B}{B}", 2, 2, "Human", "Knight")
-		c.AddAbility(mage.NewKeywordAbility(mage.FirstStrike))
-		c.AddAbility(mage.ProtectionFromColor(mage.White))
+		c.AddAbility(mage.NewKeywordAbility(core.FirstStrike))
+		c.AddAbility(mage.ProtectionFromColor(core.White))
 		return c
 	})
 
 	mage.Register("Bog Wraith", func() mage.Card {
 		c := mage.NewCreature("Bog Wraith", "{3}{B}", 3, 3, "Wraith")
-		c.AddAbility(mage.NewKeywordAbility(mage.Swampwalk))
+		c.AddAbility(mage.NewKeywordAbility(core.Swampwalk))
 		return c
 	})
 
@@ -175,14 +176,14 @@ func registerCreatures() {
 
 	mage.Register("Hypnotic Specter", func() mage.Card {
 		c := mage.NewCreature("Hypnotic Specter", "{1}{B}{B}", 2, 2, "Specter")
-		c.AddAbility(mage.NewKeywordAbility(mage.Flying))
+		c.AddAbility(mage.NewKeywordAbility(core.Flying))
 		c.AddAbility(mage.DealsDamageToOpponentTrigger(mage.DiscardRandom(1), false))
 		return c
 	})
 
 	mage.Register("Nether Shadow", func() mage.Card {
 		c := mage.NewCreature("Nether Shadow", "{B}{B}", 1, 1, "Spirit")
-		c.AddAbility(mage.NewKeywordAbility(mage.Haste))
+		c.AddAbility(mage.NewKeywordAbility(core.Haste))
 		// At beginning of your upkeep, if Nether Shadow is in your graveyard
 		// with three or more creature cards above it, put it onto the battlefield.
 		c.AddAbility(mage.GraveyardReturnIfCreaturesAbove(3))
@@ -191,7 +192,7 @@ func registerCreatures() {
 
 	mage.Register("Nightmare", func() mage.Card {
 		c := mage.NewCreature("Nightmare", "{5}{B}", 0, 0, "Nightmare", "Horse")
-		c.AddAbility(mage.NewKeywordAbility(mage.Flying))
+		c.AddAbility(mage.NewKeywordAbility(core.Flying))
 		// P/T equal to number of Swamps you control
 		c.AddAbility(mage.StaticAbility(
 			mage.PTEqualsControlledCount(mage.HasSubType("Swamp")),
@@ -228,15 +229,15 @@ func registerCreatures() {
 
 	mage.Register("Sengir Vampire", func() mage.Card {
 		c := mage.NewCreature("Sengir Vampire", "{3}{B}{B}", 4, 4, "Vampire")
-		c.AddAbility(mage.NewKeywordAbility(mage.Flying))
+		c.AddAbility(mage.NewKeywordAbility(core.Flying))
 		// Whenever a creature dealt damage by Sengir Vampire this turn dies, put a +1/+1 counter on Sengir Vampire
-		c.AddAbility(mage.CreatureDealtDamageBySourceDiesTrigger(mage.AddCounters(mage.P1P1, mage.Fixed(1), mage.SelectSource), false))
+		c.AddAbility(mage.CreatureDealtDamageBySourceDiesTrigger(mage.AddCounters(core.P1P1, mage.Fixed(1), mage.SelectSource), false))
 		return c
 	})
 
 	mage.Register("Will-o'-the-Wisp", func() mage.Card {
 		c := mage.NewCreature("Will-o'-the-Wisp", "{B}", 0, 1, "Spirit")
-		c.AddAbility(mage.NewKeywordAbility(mage.Flying))
+		c.AddAbility(mage.NewKeywordAbility(core.Flying))
 		// {B}: Regenerate Will-o'-the-Wisp.
 		ab := mage.NewActivatedAbility(
 			mage.RegenerateSource(),
@@ -248,8 +249,8 @@ func registerCreatures() {
 
 	mage.Register("Lord of the Pit", func() mage.Card {
 		c := mage.NewCreature("Lord of the Pit", "{4}{B}{B}{B}", 7, 7, "Demon")
-		c.AddAbility(mage.NewKeywordAbility(mage.Flying))
-		c.AddAbility(mage.NewKeywordAbility(mage.Trample))
+		c.AddAbility(mage.NewKeywordAbility(core.Flying))
+		c.AddAbility(mage.NewKeywordAbility(core.Trample))
 		// At the beginning of your upkeep, sacrifice a creature other than Lord of the Pit.
 		// If you can't, Lord of the Pit deals 7 damage to you.
 		c.AddAbility(mage.BeginningOfUpkeepTrigger(mage.SacrificeCreatureOrDamage(7), false))
@@ -260,7 +261,7 @@ func registerCreatures() {
 
 	mage.Register("Dragon Whelp", func() mage.Card {
 		c := mage.NewCreature("Dragon Whelp", "{2}{R}{R}", 2, 3, "Dragon")
-		c.AddAbility(mage.NewKeywordAbility(mage.Flying))
+		c.AddAbility(mage.NewKeywordAbility(core.Flying))
 		// {R}: +1/+0 until end of turn. If activated 4+ times, destroy at EOT.
 		ab := mage.NewActivatedAbility(
 			mage.BoostUntilEndOfTurn(mage.Fixed(1), mage.Fixed(0), mage.SelectSource),
@@ -299,7 +300,7 @@ func registerCreatures() {
 		c := mage.NewCreature("Goblin Balloon Brigade", "{R}", 1, 1, "Goblin", "Warrior")
 		// {R}: Goblin Balloon Brigade gains flying until end of turn.
 		ab := mage.NewActivatedAbility(
-			mage.GrantKeywordUntilEndOfTurn(mage.Flying, mage.SelectSource),
+			mage.GrantKeywordUntilEndOfTurn(core.Flying, mage.SelectSource),
 			mage.ManaCostOf("{R}"),
 		)
 		c.AddAbility(ab)
@@ -308,7 +309,7 @@ func registerCreatures() {
 
 	mage.Register("Granite Gargoyle", func() mage.Card {
 		c := mage.NewCreature("Granite Gargoyle", "{2}{R}", 2, 2, "Gargoyle")
-		c.AddAbility(mage.NewKeywordAbility(mage.Flying))
+		c.AddAbility(mage.NewKeywordAbility(core.Flying))
 		// {R}: +0/+1 until end of turn
 		ab := mage.NewActivatedAbility(
 			mage.BoostUntilEndOfTurn(mage.Fixed(0), mage.Fixed(1), mage.SelectSource),
@@ -345,13 +346,13 @@ func registerCreatures() {
 
 	mage.Register("Roc of Kher Ridges", func() mage.Card {
 		c := mage.NewCreature("Roc of Kher Ridges", "{3}{R}", 3, 3, "Bird")
-		c.AddAbility(mage.NewKeywordAbility(mage.Flying))
+		c.AddAbility(mage.NewKeywordAbility(core.Flying))
 		return c
 	})
 
 	mage.Register("Shivan Dragon", func() mage.Card {
 		c := mage.NewCreature("Shivan Dragon", "{4}{R}{R}", 5, 5, "Dragon")
-		c.AddAbility(mage.NewKeywordAbility(mage.Flying))
+		c.AddAbility(mage.NewKeywordAbility(core.Flying))
 		// {R}: +1/+0 until end of turn (firebreathing)
 		ab := mage.NewActivatedAbility(
 			mage.BoostUntilEndOfTurn(mage.Fixed(1), mage.Fixed(0), mage.SelectSource),
@@ -389,9 +390,9 @@ func registerCreatures() {
 
 	mage.Register("Two-Headed Giant of Foriys", func() mage.Card {
 		c := mage.NewCreature("Two-Headed Giant of Foriys", "{4}{R}", 4, 4, "Giant")
-		c.AddAbility(mage.NewKeywordAbility(mage.Trample))
+		c.AddAbility(mage.NewKeywordAbility(core.Trample))
 		// Two-Headed Giant of Foriys can block an additional creature each combat.
-		c.AddAbility(mage.NewKeywordAbility(mage.CanBlockAdditional))
+		c.AddAbility(mage.NewKeywordAbility(core.CanBlockAdditional))
 		return c
 	})
 
@@ -400,7 +401,7 @@ func registerCreatures() {
 		// Other Goblin creatures get +1/+1 and mountainwalk
 		c.AddAbility(mage.StaticAbility(
 			mage.BoostAllCreatures(1, 1, mage.HasSubType("Goblin")),
-			mage.GrantKeywordToAll(mage.Mountainwalk, mage.HasSubType("Goblin")),
+			mage.GrantKeywordToAll(core.Mountainwalk, mage.HasSubType("Goblin")),
 		))
 		return c
 	})
@@ -414,13 +415,13 @@ func registerCreatures() {
 
 	mage.Register("Elvish Archers", func() mage.Card {
 		c := mage.NewCreature("Elvish Archers", "{1}{G}", 2, 1, "Elf", "Archer")
-		c.AddAbility(mage.NewKeywordAbility(mage.FirstStrike))
+		c.AddAbility(mage.NewKeywordAbility(core.FirstStrike))
 		return c
 	})
 
 	mage.Register("Force of Nature", func() mage.Card {
 		c := mage.NewCreature("Force of Nature", "{2}{G}{G}{G}{G}", 8, 8, "Elemental")
-		c.AddAbility(mage.NewKeywordAbility(mage.Trample))
+		c.AddAbility(mage.NewKeywordAbility(core.Trample))
 		// At the beginning of your upkeep, Force of Nature deals 8 damage to you
 		// unless you pay {G}{G}{G}{G}.
 		c.AddAbility(mage.BeginningOfUpkeepTrigger(mage.DealDamageToPlayers(mage.Fixed(8), mage.SelectController()), false))
@@ -430,7 +431,7 @@ func registerCreatures() {
 	mage.Register("Fungusaur", func() mage.Card {
 		c := mage.NewCreature("Fungusaur", "{3}{G}", 2, 2, "Fungus", "Dinosaur")
 		// Whenever Fungusaur is dealt damage, put a +1/+1 counter on it.
-		c.AddAbility(mage.WhenDamageDealtToThisTrigger(mage.AddCounters(mage.P1P1, mage.Fixed(1), mage.SelectSource), false))
+		c.AddAbility(mage.WhenDamageDealtToThisTrigger(mage.AddCounters(core.P1P1, mage.Fixed(1), mage.SelectSource), false))
 		return c
 	})
 
@@ -446,25 +447,25 @@ func registerCreatures() {
 
 	mage.Register("Llanowar Elves", func() mage.Card {
 		c := mage.NewCreature("Llanowar Elves", "{G}", 1, 1, "Elf", "Druid")
-		c.AddAbility(mage.NewManaAbility(mage.Green))
+		c.AddAbility(mage.NewManaAbility(core.Green))
 		return c
 	})
 
 	mage.Register("Scryb Sprites", func() mage.Card {
 		c := mage.NewCreature("Scryb Sprites", "{G}", 1, 1, "Faerie")
-		c.AddAbility(mage.NewKeywordAbility(mage.Flying))
+		c.AddAbility(mage.NewKeywordAbility(core.Flying))
 		return c
 	})
 
 	mage.Register("Shanodin Dryads", func() mage.Card {
 		c := mage.NewCreature("Shanodin Dryads", "{G}", 1, 1, "Nymph", "Dryad")
-		c.AddAbility(mage.NewKeywordAbility(mage.Forestwalk))
+		c.AddAbility(mage.NewKeywordAbility(core.Forestwalk))
 		return c
 	})
 
 	mage.Register("Timber Wolves", func() mage.Card {
 		c := mage.NewCreature("Timber Wolves", "{G}", 1, 1, "Wolf")
-		c.AddAbility(mage.NewKeywordAbility(mage.Banding))
+		c.AddAbility(mage.NewKeywordAbility(core.Banding))
 		return c
 	})
 
@@ -473,25 +474,25 @@ func registerCreatures() {
 		// Whenever Thicket Basilisk blocks or becomes blocked by a non-Wall creature,
 		// destroy that creature at end of combat.
 		// Implemented as BasiliskTouch: deathtouch that doesn't kill Walls.
-		c.AddAbility(mage.NewKeywordAbility(mage.BasiliskTouch))
+		c.AddAbility(mage.NewKeywordAbility(core.BasiliskTouch))
 		return c
 	})
 
 	mage.Register("War Mammoth", func() mage.Card {
 		c := mage.NewCreature("War Mammoth", "{3}{G}", 3, 3, "Elephant")
-		c.AddAbility(mage.NewKeywordAbility(mage.Trample))
+		c.AddAbility(mage.NewKeywordAbility(core.Trample))
 		return c
 	})
 
 	mage.Register("Giant Spider", func() mage.Card {
 		c := mage.NewCreature("Giant Spider", "{3}{G}", 2, 4, "Spider")
-		c.AddAbility(mage.NewKeywordAbility(mage.Reach))
+		c.AddAbility(mage.NewKeywordAbility(core.Reach))
 		return c
 	})
 
 	mage.Register("Birds of Paradise", func() mage.Card {
 		c := mage.NewCreature("Birds of Paradise", "{G}", 0, 1, "Bird")
-		c.AddAbility(mage.NewKeywordAbility(mage.Flying))
+		c.AddAbility(mage.NewKeywordAbility(core.Flying))
 		// {T}: Add one mana of any color.
 		c.AddAbility(mage.NewAnyColorManaAbility())
 		return c
@@ -499,8 +500,8 @@ func registerCreatures() {
 
 	mage.Register("Cockatrice", func() mage.Card {
 		c := mage.NewCreature("Cockatrice", "{3}{G}{G}", 2, 4, "Cockatrice")
-		c.AddAbility(mage.NewKeywordAbility(mage.Flying))
-		c.AddAbility(mage.NewKeywordAbility(mage.Deathtouch))
+		c.AddAbility(mage.NewKeywordAbility(core.Flying))
+		c.AddAbility(mage.NewKeywordAbility(core.Deathtouch))
 		return c
 	})
 
@@ -524,14 +525,14 @@ func registerCreatures() {
 
 	mage.Register("Wall of Air", func() mage.Card {
 		c := mage.NewCreature("Wall of Air", "{1}{U}{U}", 1, 5, "Wall")
-		c.AddAbility(mage.NewKeywordAbility(mage.Defender))
-		c.AddAbility(mage.NewKeywordAbility(mage.Flying))
+		c.AddAbility(mage.NewKeywordAbility(core.Defender))
+		c.AddAbility(mage.NewKeywordAbility(core.Flying))
 		return c
 	})
 
 	mage.Register("Wall of Bone", func() mage.Card {
 		c := mage.NewCreature("Wall of Bone", "{2}{B}", 1, 4, "Wall", "Skeleton")
-		c.AddAbility(mage.NewKeywordAbility(mage.Defender))
+		c.AddAbility(mage.NewKeywordAbility(core.Defender))
 		// {B}: Regenerate Wall of Bone.
 		ab := mage.NewActivatedAbility(
 			mage.RegenerateSource(),
@@ -543,7 +544,7 @@ func registerCreatures() {
 
 	mage.Register("Wall of Brambles", func() mage.Card {
 		c := mage.NewCreature("Wall of Brambles", "{2}{G}", 2, 3, "Wall", "Plant")
-		c.AddAbility(mage.NewKeywordAbility(mage.Defender))
+		c.AddAbility(mage.NewKeywordAbility(core.Defender))
 		// {G}: Regenerate Wall of Brambles.
 		ab := mage.NewActivatedAbility(
 			mage.RegenerateSource(),
@@ -555,7 +556,7 @@ func registerCreatures() {
 
 	mage.Register("Wall of Fire", func() mage.Card {
 		c := mage.NewCreature("Wall of Fire", "{1}{R}{R}", 0, 5, "Wall")
-		c.AddAbility(mage.NewKeywordAbility(mage.Defender))
+		c.AddAbility(mage.NewKeywordAbility(core.Defender))
 		// {R}: +1/+0 until end of turn
 		ab := mage.NewActivatedAbility(
 			mage.BoostUntilEndOfTurn(mage.Fixed(1), mage.Fixed(0), mage.SelectSource),
@@ -567,26 +568,26 @@ func registerCreatures() {
 
 	mage.Register("Wall of Ice", func() mage.Card {
 		c := mage.NewCreature("Wall of Ice", "{2}{G}", 0, 7, "Wall")
-		c.AddAbility(mage.NewKeywordAbility(mage.Defender))
+		c.AddAbility(mage.NewKeywordAbility(core.Defender))
 		return c
 	})
 
 	mage.Register("Wall of Stone", func() mage.Card {
 		c := mage.NewCreature("Wall of Stone", "{1}{R}{R}", 0, 8, "Wall")
-		c.AddAbility(mage.NewKeywordAbility(mage.Defender))
+		c.AddAbility(mage.NewKeywordAbility(core.Defender))
 		return c
 	})
 
 	mage.Register("Wall of Swords", func() mage.Card {
 		c := mage.NewCreature("Wall of Swords", "{3}{W}", 3, 5, "Wall")
-		c.AddAbility(mage.NewKeywordAbility(mage.Defender))
-		c.AddAbility(mage.NewKeywordAbility(mage.Flying))
+		c.AddAbility(mage.NewKeywordAbility(core.Defender))
+		c.AddAbility(mage.NewKeywordAbility(core.Flying))
 		return c
 	})
 
 	mage.Register("Wall of Water", func() mage.Card {
 		c := mage.NewCreature("Wall of Water", "{1}{U}{U}", 0, 5, "Wall")
-		c.AddAbility(mage.NewKeywordAbility(mage.Defender))
+		c.AddAbility(mage.NewKeywordAbility(core.Defender))
 		// {U}: +1/+0 until end of turn
 		ab := mage.NewActivatedAbility(
 			mage.BoostUntilEndOfTurn(mage.Fixed(1), mage.Fixed(0), mage.SelectSource),
@@ -598,7 +599,7 @@ func registerCreatures() {
 
 	mage.Register("Wall of Wood", func() mage.Card {
 		c := mage.NewCreature("Wall of Wood", "{G}", 0, 3, "Wall")
-		c.AddAbility(mage.NewKeywordAbility(mage.Defender))
+		c.AddAbility(mage.NewKeywordAbility(core.Defender))
 		return c
 	})
 
@@ -606,36 +607,36 @@ func registerCreatures() {
 
 	mage.Register("Obsianus Golem", func() mage.Card {
 		c := mage.NewCreature("Obsianus Golem", "{6}", 4, 6, "Golem")
-		c.AddType(mage.TypeArtifact)
+		c.AddType(core.TypeArtifact)
 		return c
 	})
 
 	mage.Register("Clockwork Beast", func() mage.Card {
 		c := mage.NewCreature("Clockwork Beast", "{6}", 0, 4, "Beast")
-		c.AddType(mage.TypeArtifact)
+		c.AddType(core.TypeArtifact)
 		// Enters with 7 +1/+0 counters
 		c.AddAbility(mage.EntersBattlefieldTrigger(
-			mage.AddCounters(mage.P1P0, mage.Fixed(7), mage.SelectSource), false,
+			mage.AddCounters(core.P1P0, mage.Fixed(7), mage.SelectSource), false,
 		))
 		// Loses a +1/+0 counter whenever it attacks
 		c.AddAbility(mage.AttacksTrigger(
-			mage.RemoveCountersFromSource(mage.P1P0, 1), false,
+			mage.RemoveCountersFromSource(core.P1P0, 1), false,
 		))
 		return c
 	})
 
 	mage.Register("Juggernaut", func() mage.Card {
 		c := mage.NewCreature("Juggernaut", "{4}", 5, 3, "Juggernaut")
-		c.AddType(mage.TypeArtifact)
+		c.AddType(core.TypeArtifact)
 		// Juggernaut attacks each combat if able. Can't be blocked by Walls.
-		c.AddAbility(mage.NewKeywordAbility(mage.CantBeBlockedByWalls))
+		c.AddAbility(mage.NewKeywordAbility(core.CantBeBlockedByWalls))
 		return c
 	})
 
 	mage.Register("Living Wall", func() mage.Card {
 		c := mage.NewCreature("Living Wall", "{4}", 0, 6, "Wall")
-		c.AddType(mage.TypeArtifact)
-		c.AddAbility(mage.NewKeywordAbility(mage.Defender))
+		c.AddType(core.TypeArtifact)
+		c.AddAbility(mage.NewKeywordAbility(core.Defender))
 		// {1}: Regenerate Living Wall.
 		ab := mage.NewActivatedAbility(
 			mage.RegenerateSource(),
@@ -652,7 +653,7 @@ func registerCreatures() {
 		// Other Merfolk creatures get +1/+1 and islandwalk
 		c.AddAbility(mage.StaticAbility(
 			mage.BoostAllCreatures(1, 1, mage.HasSubType("Merfolk")),
-			mage.GrantKeywordToAll(mage.Islandwalk, mage.HasSubType("Merfolk")),
+			mage.GrantKeywordToAll(core.Islandwalk, mage.HasSubType("Merfolk")),
 		))
 		return c
 	})
@@ -661,7 +662,7 @@ func registerCreatures() {
 		c := mage.NewCreature("Zombie Master", "{1}{B}{B}", 2, 3, "Zombie")
 		// Other Zombie creatures have swampwalk and "{B}: Regenerate"
 		c.AddAbility(mage.StaticAbility(
-			mage.GrantKeywordToAll(mage.Swampwalk, mage.HasSubType("Zombie")),
+			mage.GrantKeywordToAll(core.Swampwalk, mage.HasSubType("Zombie")),
 			mage.GrantActivatedAbilityToAll(
 				mage.RegenerateSource(),
 				mage.ManaCostOf("{B}"),
@@ -701,7 +702,7 @@ func registerCreatures() {
 
 	mage.Register("Sea Serpent", func() mage.Card {
 		c := mage.NewCreature("Sea Serpent", "{5}{U}", 5, 5, "Serpent")
-		c.AddAbility(mage.NewKeywordAbility(mage.Islandwalk))
+		c.AddAbility(mage.NewKeywordAbility(core.Islandwalk))
 		c.AddAbility(mage.SacrificeUnlessLand("Island"))
 		return c
 	})
@@ -718,10 +719,10 @@ func registerCreatures() {
 					}
 					targetID := targets[0]
 					// Grant MustAttack until end of turn
-					mage.GrantKeywordUntilEndOfTurn(mage.MustAttack, mage.SelectTarget).Apply(g, sourceID, controller, targets)
+					mage.GrantKeywordUntilEndOfTurn(core.MustAttack, mage.SelectTarget).Apply(g, sourceID, controller, targets)
 					// Register delayed trigger: at end of turn, destroy if didn't attack
 					g.RegisterDelayedTrigger(&mage.DelayedTrigger{
-						EventType:  mage.EvtEndStep,
+						EventType:  core.EvtEndStep,
 						SourceID:   sourceID,
 						Controller: controller,
 						Effects: []mage.Effect{mage.FuncEffect(
@@ -749,14 +750,14 @@ func registerCreatures() {
 	mage.Register("Scavenging Ghoul", func() mage.Card {
 		c := mage.NewCreature("Scavenging Ghoul", "{3}{B}", 2, 2, "Zombie")
 		// Whenever another creature dies, put a +1/+1 counter on Scavenging Ghoul
-		c.AddAbility(mage.AnyCreatureDiesTrigger(mage.AddCounters(mage.P1P1, mage.Fixed(1), mage.SelectSource), true))
+		c.AddAbility(mage.AnyCreatureDiesTrigger(mage.AddCounters(core.P1P1, mage.Fixed(1), mage.SelectSource), true))
 		return c
 	})
 
 	mage.Register("Rock Hydra", func() mage.Card {
 		c := mage.NewCreature("Rock Hydra", "{X}{R}{R}", 0, 0, "Hydra")
 		// Enters with X +1/+1 counters (replacement effect)
-		c.AddAbility(mage.EntersWithXCounters(mage.P1P1))
+		c.AddAbility(mage.EntersWithXCounters(core.P1P1))
 		return c
 	})
 
@@ -779,7 +780,7 @@ func registerCreatures() {
 					if p.ID() == perm.ID() {
 						continue
 					}
-					if !p.HasType(mage.TypeCreature) {
+					if !p.HasType(core.TypeCreature) {
 						continue
 					}
 					if p.Name() == currentName {
@@ -799,7 +800,7 @@ func registerCreatures() {
 
 	mage.Register("Personal Incarnation", func() mage.Card {
 		c := mage.NewCreature("Personal Incarnation", "{3}{W}{W}{W}", 6, 6, "Avatar", "Incarnation")
-		c.AddAbility(mage.NewKeywordAbility(mage.Flying))
+		c.AddAbility(mage.NewKeywordAbility(core.Flying))
 		// All damage that would be dealt to you is dealt to Personal Incarnation instead.
 		c.AddAbility(mage.StaticAbility(mage.PersonalIncarnationRedirect()))
 		// When Personal Incarnation dies, you lose half your life (rounded up).

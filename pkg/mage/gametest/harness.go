@@ -1,52 +1,53 @@
-package mage
+package gametest
 
 import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/mage/mage/pkg/mage"
+	"github.com/mage/mage/pkg/mage/core"
 )
 
 // TestGame provides a DSL for scripting and asserting game states.
 type TestGame struct {
-	*Game
+	*mage.Game
 	t       *testing.T
 	playerA *TestPlayer
 	playerB *TestPlayer
 	stopAt  struct {
 		turn int
-		step PhaseStep
+		step core.PhaseStep
 	}
 
-	// Scripted cast/activate actions
 	castActions     []castAction
 	activateActions []activateAction
 	counterActions  []counterAction
-	actionSeq       int // global insertion order counter
+	actionSeq       int
 }
 
 type castAction struct {
-	seq       int // global insertion order
+	seq       int
 	turn      int
-	step      PhaseStep
+	step      core.PhaseStep
 	player    PlayerRef
 	spell     string
 	targets   []string
-	xValue    int              // X value for X-cost spells
-	responses []responseAction // spells/abilities cast in response before resolution
+	xValue    int
+	responses []responseAction
 }
 
 type responseAction struct {
 	player  PlayerRef
-	spell   string   // for spell responses
-	perm    string   // for activated ability responses
-	targets []string // explicit targets (empty = auto-target spell on stack)
+	spell   string
+	perm    string
+	targets []string
 	xValue  int
 }
 
 type activateAction struct {
-	seq      int // global insertion order
+	seq      int
 	turn     int
-	step     PhaseStep
+	step     core.PhaseStep
 	player   PlayerRef
 	permName string
 	targets  []string
@@ -54,10 +55,10 @@ type activateAction struct {
 
 type counterAction struct {
 	turn   int
-	step   PhaseStep
+	step   core.PhaseStep
 	player PlayerRef
 	card   string
-	ct     CounterType
+	ct     core.CounterType
 	n      int
 }
 
@@ -66,7 +67,7 @@ func NewTestGame(t *testing.T) *TestGame {
 	t.Helper()
 	pA := NewTestPlayer("PlayerA")
 	pB := NewTestPlayer("PlayerB")
-	g := NewGame(pA, pB)
+	g := mage.NewGame(pA, pB)
 	return &TestGame{
 		Game:    g,
 		t:       t,
@@ -75,7 +76,7 @@ func NewTestGame(t *testing.T) *TestGame {
 	}
 }
 
-func (tg *TestGame) getPlayer(ref PlayerRef) *TestPlayer {
+func (tg *TestGame) GetPlayer(ref PlayerRef) *TestPlayer {
 	if ref == PlayerA {
 		return tg.playerA
 	}
@@ -83,38 +84,38 @@ func (tg *TestGame) getPlayer(ref PlayerRef) *TestPlayer {
 }
 
 func (tg *TestGame) getPlayerID(ref PlayerRef) uuid.UUID {
-	return tg.getPlayer(ref).PlayerID()
+	return tg.GetPlayer(ref).PlayerID()
 }
 
 // AddCard adds a card to a zone for a player.
-func (tg *TestGame) AddCard(zone Zone, p PlayerRef, name string, count ...int) uuid.UUID {
+func (tg *TestGame) AddCard(zone core.Zone, p PlayerRef, name string, count ...int) uuid.UUID {
 	tg.t.Helper()
 	n := 1
 	if len(count) > 0 {
 		n = count[0]
 	}
-	player := tg.getPlayer(p)
+	player := tg.GetPlayer(p)
 	playerID := player.PlayerID()
 
 	var lastID uuid.UUID
 	for i := 0; i < n; i++ {
-		card, err := CreateCard(name)
+		card, err := mage.CreateCard(name)
 		if err != nil {
 			tg.t.Fatalf("AddCard: %v", err)
 		}
 		card.SetOwner(playerID)
 
 		switch zone {
-		case ZoneBattlefield:
+		case core.ZoneBattlefield:
 			perm := tg.Game.PutOnBattlefield(card, playerID)
-			perm.SummonSick = false // test cards are not summoning sick
+			perm.SummonSick = false
 			lastID = perm.ID()
-		case ZoneHand:
+		case core.ZoneHand:
 			player.AddToHand(card)
-		case ZoneGraveyard:
+		case core.ZoneGraveyard:
 			player.AddToGraveyard(card)
-		case ZoneLibrary:
-			player.library = append(player.library, card)
+		case core.ZoneLibrary:
+			player.AddToLibrary(card)
 		}
 	}
 	return lastID
@@ -122,18 +123,18 @@ func (tg *TestGame) AddCard(zone Zone, p PlayerRef, name string, count ...int) u
 
 // SetLife sets a player's life total.
 func (tg *TestGame) SetLife(p PlayerRef, life int) {
-	tg.getPlayer(p).SetLife(life)
+	tg.GetPlayer(p).SetLife(life)
 }
 
 // AddCounters schedules adding counters during execution.
-func (tg *TestGame) AddCounters(turn int, step PhaseStep, p PlayerRef, card string, ct CounterType, n int) {
+func (tg *TestGame) AddCounters(turn int, step core.PhaseStep, p PlayerRef, card string, ct core.CounterType, n int) {
 	tg.counterActions = append(tg.counterActions, counterAction{
 		turn: turn, step: step, player: p, card: card, ct: ct, n: n,
 	})
 }
 
 // CastSpell scripts a spell cast at a specific turn/step.
-func (tg *TestGame) CastSpell(turn int, step PhaseStep, p PlayerRef, spell string, targets ...string) {
+func (tg *TestGame) CastSpell(turn int, step core.PhaseStep, p PlayerRef, spell string, targets ...string) {
 	tg.actionSeq++
 	tg.castActions = append(tg.castActions, castAction{
 		seq: tg.actionSeq, turn: turn, step: step, player: p, spell: spell, targets: targets,
@@ -141,17 +142,14 @@ func (tg *TestGame) CastSpell(turn int, step PhaseStep, p PlayerRef, spell strin
 }
 
 // CastSpellWithX scripts an X-cost spell cast at a specific turn/step with a given X value.
-func (tg *TestGame) CastSpellWithX(turn int, step PhaseStep, p PlayerRef, spell string, xValue int, targets ...string) {
+func (tg *TestGame) CastSpellWithX(turn int, step core.PhaseStep, p PlayerRef, spell string, xValue int, targets ...string) {
 	tg.actionSeq++
 	tg.castActions = append(tg.castActions, castAction{
 		seq: tg.actionSeq, turn: turn, step: step, player: p, spell: spell, targets: targets, xValue: xValue,
 	})
 }
 
-// CastInResponseTo scripts a spell cast in response to the most recently scripted
-// cast action. The response spell is cast while the original spell is still on the
-// stack, then both resolve LIFO. If no explicit targets are given, the response
-// automatically targets the original spell on the stack.
+// CastInResponseTo scripts a spell cast in response to the most recently scripted cast action.
 func (tg *TestGame) CastInResponseTo(p PlayerRef, spell string, targets ...string) {
 	if len(tg.castActions) == 0 {
 		return
@@ -178,8 +176,7 @@ func (tg *TestGame) CastInResponseToWithX(p PlayerRef, spell string, xValue int,
 	})
 }
 
-// ActivateInResponseTo scripts an activated ability in response to the most recently
-// scripted cast action. If no explicit targets are given, it auto-targets the spell on stack.
+// ActivateInResponseTo scripts an activated ability in response to the most recently scripted cast action.
 func (tg *TestGame) ActivateInResponseTo(p PlayerRef, permName string, targets ...string) {
 	if len(tg.castActions) == 0 {
 		return
@@ -193,7 +190,7 @@ func (tg *TestGame) ActivateInResponseTo(p PlayerRef, permName string, targets .
 }
 
 // ActivateAbility scripts an ability activation at a specific turn/step.
-func (tg *TestGame) ActivateAbility(turn int, step PhaseStep, p PlayerRef, permName string, targets ...string) {
+func (tg *TestGame) ActivateAbility(turn int, step core.PhaseStep, p PlayerRef, permName string, targets ...string) {
 	tg.actionSeq++
 	tg.activateActions = append(tg.activateActions, activateAction{
 		seq: tg.actionSeq, turn: turn, step: step, player: p, permName: permName, targets: targets,
@@ -202,51 +199,47 @@ func (tg *TestGame) ActivateAbility(turn int, step PhaseStep, p PlayerRef, permN
 
 // Attack scripts attacks for a turn.
 func (tg *TestGame) Attack(turn int, p PlayerRef, creatures ...string) {
-	tg.getPlayer(p).SetAttackers(turn, creatures)
+	tg.GetPlayer(p).SetAttackers(turn, creatures)
 }
 
-// Block scripts blocks for a turn. The same blocker can block multiple
-// attackers if it has the ability to do so (e.g. Two-Headed Giant).
+// Block scripts blocks for a turn.
 func (tg *TestGame) Block(turn int, p PlayerRef, blocker, attacker string) {
-	tp := tg.getPlayer(p)
+	tp := tg.GetPlayer(p)
 	tp.blockActions[turn] = append(tp.blockActions[turn], blockPair{blocker, attacker})
 }
 
-// ChoosePermanent scripts which permanent a player will choose when asked to sacrifice/pick.
+// ChoosePermanent scripts which permanent a player will choose when asked.
 func (tg *TestGame) ChoosePermanent(p PlayerRef, name string) {
-	tp := tg.getPlayer(p)
+	tp := tg.GetPlayer(p)
 	tp.choosePermanent = append(tp.choosePermanent, name)
 }
 
 // ChooseDiscard scripts which card(s) a player will discard when asked.
 func (tg *TestGame) ChooseDiscard(p PlayerRef, names ...string) {
-	tp := tg.getPlayer(p)
+	tp := tg.GetPlayer(p)
 	tp.chooseDiscard = append(tp.chooseDiscard, names)
 }
 
 // ChooseManaColor scripts what mana color a player will choose when asked.
-func (tg *TestGame) ChooseManaColor(p PlayerRef, color Color) {
-	tp := tg.getPlayer(p)
+func (tg *TestGame) ChooseManaColor(p PlayerRef, color core.Color) {
+	tp := tg.GetPlayer(p)
 	tp.chooseManaColor = append(tp.chooseManaColor, color)
 }
 
 // ChooseFromLibrary scripts which card a player will find when searching library.
 func (tg *TestGame) ChooseFromLibrary(p PlayerRef, name string) {
-	tp := tg.getPlayer(p)
+	tp := tg.GetPlayer(p)
 	tp.chooseFromLibrary = append(tp.chooseFromLibrary, name)
 }
 
 // FormBand scripts which creatures form an attacking band on the given turn.
-// At least one creature must have banding; at most one may lack banding.
 func (tg *TestGame) FormBand(turn int, p PlayerRef, creatures ...string) {
-	tg.getPlayer(p).AddBandFormation(turn, creatures)
+	tg.GetPlayer(p).AddBandFormation(turn, creatures)
 }
 
-// ChooseBandingDistribution scripts how a player distributes incoming damage
-// among their banded creatures. The distribution maps creature name → damage.
-// This is consumed when the game asks the player to distribute banding damage.
+// ChooseBandingDistribution scripts how a player distributes incoming damage among banded creatures.
 func (tg *TestGame) ChooseBandingDistribution(p PlayerRef, distribution map[string]int) {
-	tp := tg.getPlayer(p)
+	tp := tg.GetPlayer(p)
 	tp.chooseBandingDistribution = append(tp.chooseBandingDistribution, distribution)
 }
 
@@ -272,7 +265,7 @@ func (tg *TestGame) AssertBanded(p1 PlayerRef, name1 string, p2 PlayerRef, name2
 }
 
 // StopAt sets when the game should stop.
-func (tg *TestGame) StopAt(turn int, step PhaseStep) {
+func (tg *TestGame) StopAt(turn int, step core.PhaseStep) {
 	tg.stopAt.turn = turn
 	tg.stopAt.step = step
 }
@@ -281,37 +274,27 @@ func (tg *TestGame) StopAt(turn int, step PhaseStep) {
 func (tg *TestGame) Execute() {
 	tg.t.Helper()
 
-	// Add mana to pools for all scripted casts (auto-mana)
 	tg.autoAddMana()
 
-	// Hook into the game loop to execute scripted actions
 	maxTurns := tg.stopAt.turn + 5
 	for tg.Turn <= maxTurns {
-		for _, step := range AllSteps() {
+		for _, step := range core.AllSteps() {
 			if tg.Turn == tg.stopAt.turn && step == tg.stopAt.step {
 				tg.Step = step
 				tg.Effects.Apply(tg.Game)
 				return
 			}
 
-			// Set step before executing actions so sorcery-speed checks work
 			tg.Step = step
-
-			// Execute scripted counter additions
 			tg.executeCounterActions(tg.Turn, step)
-
-			// Execute scripted casts and activations in the order they
-			// were scripted (sequence number preserves insertion order).
 			tg.executeOrderedActions(tg.Turn, step)
 
-			// Auto-play lands from hand during PrecombatMain
-			if step == PrecombatMain {
+			if step == core.PrecombatMain {
 				tg.autoPlayLands()
 			}
 
 			tg.RunStep(step)
 		}
-		// Check for extra turns
 		if len(tg.ExtraTurns) > 0 {
 			extraPlayerID := tg.ExtraTurns[0]
 			tg.ExtraTurns = tg.ExtraTurns[1:]
@@ -328,7 +311,6 @@ func (tg *TestGame) Execute() {
 	}
 }
 
-// autoPlayLands plays all land cards from the active player's hand (respecting limits).
 func (tg *TestGame) autoPlayLands() {
 	active := tg.Game.ActivePlayerObj()
 	for {
@@ -337,7 +319,7 @@ func (tg *TestGame) autoPlayLands() {
 		}
 		var landID uuid.UUID
 		for _, c := range active.Hand() {
-			if c.HasType(TypeLand) {
+			if c.HasType(core.TypeLand) {
 				landID = c.ID()
 				break
 			}
@@ -352,24 +334,21 @@ func (tg *TestGame) autoPlayLands() {
 	}
 }
 
-// ensureManaForCast tops up a player's pool so they can afford a scripted spell.
-// This handles spells cast on later turns when the pool may have been cleared.
 func (tg *TestGame) ensureManaForCast(ca castAction) {
-	player := tg.getPlayer(ca.player)
-	card, err := CreateCard(ca.spell)
+	player := tg.GetPlayer(ca.player)
+	card, err := mage.CreateCard(ca.spell)
 	if err != nil {
 		return
 	}
 	mc := card.ManaCost()
 	pool := player.ManaPool()
 
-	// Ensure enough of each colored mana
 	colors := []struct {
-		color Color
+		color core.Color
 		need  int
 	}{
-		{White, mc.White}, {Blue, mc.Blue}, {Black, mc.Black},
-		{Red, mc.Red}, {Green, mc.Green},
+		{core.White, mc.White}, {core.Blue, mc.Blue}, {core.Black, mc.Black},
+		{core.Red, mc.Red}, {core.Green, mc.Green},
 	}
 	for _, c := range colors {
 		have := pool.Count(c.color)
@@ -378,85 +357,77 @@ func (tg *TestGame) ensureManaForCast(ca castAction) {
 		}
 	}
 
-	// Ensure enough for generic + X cost
 	genericNeeded := mc.Generic
 	if mc.HasX {
 		genericNeeded += ca.xValue * mc.XCount
 	}
 	if genericNeeded > 0 {
-		pool.Add(Colorless, genericNeeded)
+		pool.Add(core.Colorless, genericNeeded)
 	}
 }
 
-// autoAddMana adds enough mana to cast all scripted spells.
 func (tg *TestGame) autoAddMana() {
 	for _, ca := range tg.castActions {
-		player := tg.getPlayer(ca.player)
-		card, err := CreateCard(ca.spell)
+		player := tg.GetPlayer(ca.player)
+		card, err := mage.CreateCard(ca.spell)
 		if err != nil {
 			continue
 		}
 		mc := card.ManaCost()
 		pool := player.ManaPool()
-		pool.Add(White, mc.White)
-		pool.Add(Blue, mc.Blue)
-		pool.Add(Black, mc.Black)
-		pool.Add(Red, mc.Red)
-		pool.Add(Green, mc.Green)
-		pool.Add(Colorless, mc.Generic)
-		// Add mana for X costs
+		pool.Add(core.White, mc.White)
+		pool.Add(core.Blue, mc.Blue)
+		pool.Add(core.Black, mc.Black)
+		pool.Add(core.Red, mc.Red)
+		pool.Add(core.Green, mc.Green)
+		pool.Add(core.Colorless, mc.Generic)
 		if mc.HasX {
-			pool.Add(Colorless, ca.xValue*mc.XCount)
+			pool.Add(core.Colorless, ca.xValue*mc.XCount)
 		}
 
-		// Add mana for response spells
 		for _, r := range ca.responses {
 			if r.spell != "" {
-				rCard, err := CreateCard(r.spell)
+				rCard, err := mage.CreateCard(r.spell)
 				if err != nil {
 					continue
 				}
 				rmc := rCard.ManaCost()
-				rPlayer := tg.getPlayer(r.player)
+				rPlayer := tg.GetPlayer(r.player)
 				rPool := rPlayer.ManaPool()
-				rPool.Add(White, rmc.White)
-				rPool.Add(Blue, rmc.Blue)
-				rPool.Add(Black, rmc.Black)
-				rPool.Add(Red, rmc.Red)
-				rPool.Add(Green, rmc.Green)
-				rPool.Add(Colorless, rmc.Generic)
+				rPool.Add(core.White, rmc.White)
+				rPool.Add(core.Blue, rmc.Blue)
+				rPool.Add(core.Black, rmc.Black)
+				rPool.Add(core.Red, rmc.Red)
+				rPool.Add(core.Green, rmc.Green)
+				rPool.Add(core.Colorless, rmc.Generic)
 				if rmc.HasX {
-					rPool.Add(Colorless, r.xValue*rmc.XCount)
+					rPool.Add(core.Colorless, r.xValue*rmc.XCount)
 				}
 			}
 			if r.perm != "" {
-				// Add mana for activated ability responses
-				rPlayer := tg.getPlayer(r.player)
-				rPlayer.ManaPool().Add(White, 5)
-				rPlayer.ManaPool().Add(Blue, 5)
-				rPlayer.ManaPool().Add(Black, 5)
-				rPlayer.ManaPool().Add(Red, 5)
-				rPlayer.ManaPool().Add(Green, 5)
-				rPlayer.ManaPool().Add(Colorless, 10)
+				rPlayer := tg.GetPlayer(r.player)
+				rPlayer.ManaPool().Add(core.White, 5)
+				rPlayer.ManaPool().Add(core.Blue, 5)
+				rPlayer.ManaPool().Add(core.Black, 5)
+				rPlayer.ManaPool().Add(core.Red, 5)
+				rPlayer.ManaPool().Add(core.Green, 5)
+				rPlayer.ManaPool().Add(core.Colorless, 10)
 			}
 		}
 	}
 
 	for _, aa := range tg.activateActions {
-		player := tg.getPlayer(aa.player)
-		// Add colored and colorless mana so activated abilities with colored costs work
-		player.ManaPool().Add(White, 5)
-		player.ManaPool().Add(Blue, 5)
-		player.ManaPool().Add(Black, 5)
-		player.ManaPool().Add(Red, 5)
-		player.ManaPool().Add(Green, 5)
-		player.ManaPool().Add(Colorless, 10)
+		player := tg.GetPlayer(aa.player)
+		player.ManaPool().Add(core.White, 5)
+		player.ManaPool().Add(core.Blue, 5)
+		player.ManaPool().Add(core.Black, 5)
+		player.ManaPool().Add(core.Red, 5)
+		player.ManaPool().Add(core.Green, 5)
+		player.ManaPool().Add(core.Colorless, 10)
 	}
 }
 
-// executeOrderedActions processes cast and activate actions for the given
-// turn/step in the order they were scripted (by sequence number).
-func (tg *TestGame) executeOrderedActions(turn int, step PhaseStep) {
+func (tg *TestGame) executeOrderedActions(turn int, step core.PhaseStep) {
 	type ordered struct {
 		seq    int
 		isCast bool
@@ -475,7 +446,6 @@ func (tg *TestGame) executeOrderedActions(turn int, step PhaseStep) {
 		}
 	}
 
-	// Sort by sequence number to preserve scripting order
 	for i := 1; i < len(actions); i++ {
 		for j := i; j > 0 && actions[j].seq < actions[j-1].seq; j-- {
 			actions[j], actions[j-1] = actions[j-1], actions[j]
@@ -495,16 +465,13 @@ func (tg *TestGame) executeSingleCast(ca castAction) {
 	playerID := tg.getPlayerID(ca.player)
 	targets := tg.resolveTargets(ca.targets, playerID)
 
-	// Just-in-time mana: ensure the player can afford the spell right now.
-	// This handles spells cast on later turns whose mana may have been cleared.
 	tg.ensureManaForCast(ca)
 
-	// Validate targets against targeting restrictions
-	card, _ := CreateCard(ca.spell)
+	card, _ := mage.CreateCard(ca.spell)
 	if card != nil {
 		validTargets := tg.validateTargets(card, targets, playerID)
 		if len(validTargets) == 0 && len(targets) > 0 {
-			return // All targets illegal, spell fizzles
+			return
 		}
 		targets = validTargets
 	}
@@ -514,7 +481,6 @@ func (tg *TestGame) executeSingleCast(ca castAction) {
 		tg.t.Logf("CastSpell %s failed: %v", ca.spell, err)
 	}
 
-	// If there are responses, cast them before resolving the stack
 	if len(ca.responses) > 0 {
 		tg.executeResponses(ca.responses)
 	}
@@ -536,23 +502,19 @@ func (tg *TestGame) executeResponses(responses []responseAction) {
 	for _, r := range responses {
 		respPlayerID := tg.getPlayerID(r.player)
 
-		// Resolve explicit targets, or auto-target the top spell on the stack
 		var targets []uuid.UUID
 		if len(r.targets) > 0 {
 			targets = tg.resolveTargets(r.targets, respPlayerID)
 		} else if tg.Game.Stack.Peek() != nil {
-			// Auto-target the top spell on the stack
 			targets = []uuid.UUID{tg.Game.Stack.Peek().SourceID}
 		}
 
 		if r.perm != "" {
-			// Activated ability response
 			err := tg.Game.ActivateAbilityByText(respPlayerID, r.perm, targets)
 			if err != nil {
 				tg.t.Logf("ActivateInResponseTo %s failed: %v", r.perm, err)
 			}
 		} else {
-			// Spell response
 			err := tg.Game.CastSpellByName(respPlayerID, r.spell, targets, r.xValue)
 			if err != nil {
 				tg.t.Logf("CastInResponseTo %s failed: %v", r.spell, err)
@@ -561,7 +523,7 @@ func (tg *TestGame) executeResponses(responses []responseAction) {
 	}
 }
 
-func (tg *TestGame) executeCounterActions(turn int, step PhaseStep) {
+func (tg *TestGame) executeCounterActions(turn int, step core.PhaseStep) {
 	for _, ca := range tg.counterActions {
 		if ca.turn != turn || ca.step != step {
 			continue
@@ -578,7 +540,6 @@ func (tg *TestGame) resolveTargets(names []string, controllerID uuid.UUID) []uui
 	var targets []uuid.UUID
 	for _, name := range names {
 		found := false
-		// Check battlefield
 		for _, p := range tg.Battlefield {
 			if p.Name() == name {
 				targets = append(targets, p.ID())
@@ -589,7 +550,6 @@ func (tg *TestGame) resolveTargets(names []string, controllerID uuid.UUID) []uui
 		if found {
 			continue
 		}
-		// Check players
 		for _, p := range tg.Players {
 			if p.Name() == name {
 				targets = append(targets, p.PlayerID())
@@ -600,7 +560,6 @@ func (tg *TestGame) resolveTargets(names []string, controllerID uuid.UUID) []uui
 		if found {
 			continue
 		}
-		// Check graveyard
 		for _, pl := range tg.Players {
 			if pl.PlayerID() == controllerID {
 				for _, c := range pl.Graveyard() {
@@ -618,7 +577,6 @@ func (tg *TestGame) resolveTargets(names []string, controllerID uuid.UUID) []uui
 		if found {
 			continue
 		}
-		// Check hand
 		for _, pl := range tg.Players {
 			for _, c := range pl.Hand() {
 				if c.Name() == name {
@@ -635,7 +593,7 @@ func (tg *TestGame) resolveTargets(names []string, controllerID uuid.UUID) []uui
 	return targets
 }
 
-func (tg *TestGame) validateTargets(sourceCard Card, targets []uuid.UUID, controllerID uuid.UUID) []uuid.UUID {
+func (tg *TestGame) validateTargets(sourceCard mage.Card, targets []uuid.UUID, controllerID uuid.UUID) []uuid.UUID {
 	var valid []uuid.UUID
 	for _, tid := range targets {
 		perm := tg.Game.FindPermanent(tid)
@@ -645,7 +603,6 @@ func (tg *TestGame) validateTargets(sourceCard Card, targets []uuid.UUID, contro
 			}
 			continue
 		}
-		// Players are always valid targets
 		valid = append(valid, tid)
 	}
 	return valid
@@ -656,7 +613,7 @@ func (tg *TestGame) validateTargets(sourceCard Card, targets []uuid.UUID, contro
 // AssertLife checks that a player's life total matches the expected value.
 func (tg *TestGame) AssertLife(p PlayerRef, want int) {
 	tg.t.Helper()
-	got := tg.getPlayer(p).Life()
+	got := tg.GetPlayer(p).Life()
 	if got != want {
 		tg.t.Errorf("AssertLife(%v): got %d, want %d", p, got, want)
 	}
@@ -680,7 +637,7 @@ func (tg *TestGame) AssertPermanentCount(p PlayerRef, name string, want int) {
 // AssertGraveyardCount checks the number of cards with a given name in graveyard.
 func (tg *TestGame) AssertGraveyardCount(p PlayerRef, name string, want int) {
 	tg.t.Helper()
-	player := tg.getPlayer(p)
+	player := tg.GetPlayer(p)
 	got := 0
 	for _, c := range player.Graveyard() {
 		if c.Name() == name {
@@ -695,7 +652,7 @@ func (tg *TestGame) AssertGraveyardCount(p PlayerRef, name string, want int) {
 // AssertHandCount checks the number of cards with a given name in hand.
 func (tg *TestGame) AssertHandCount(p PlayerRef, name string, want int) {
 	tg.t.Helper()
-	player := tg.getPlayer(p)
+	player := tg.GetPlayer(p)
 	got := 0
 	for _, c := range player.Hand() {
 		if c.Name() == name {
@@ -724,7 +681,7 @@ func (tg *TestGame) AssertPowerToughness(p PlayerRef, name string, power, tough 
 }
 
 // AssertCounterCount checks the number of counters of a type on a permanent.
-func (tg *TestGame) AssertCounterCount(p PlayerRef, name string, ct CounterType, want int) {
+func (tg *TestGame) AssertCounterCount(p PlayerRef, name string, ct core.CounterType, want int) {
 	tg.t.Helper()
 	playerID := tg.getPlayerID(p)
 	perm := tg.Game.FindPermanentByName(name, playerID)
@@ -753,7 +710,7 @@ func (tg *TestGame) AssertTapped(p PlayerRef, name string, tapped bool) {
 }
 
 // AssertHasAbility checks if a permanent has a keyword ability.
-func (tg *TestGame) AssertHasAbility(p PlayerRef, name string, kw Keyword, has bool) {
+func (tg *TestGame) AssertHasAbility(p PlayerRef, name string, kw core.Keyword, has bool) {
 	tg.t.Helper()
 	playerID := tg.getPlayerID(p)
 	perm := tg.Game.FindPermanentByName(name, playerID)

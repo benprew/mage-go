@@ -7,19 +7,20 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/google/uuid"
 	"github.com/mage/mage/pkg/mage"
+	"github.com/mage/mage/pkg/mage/interactive"
 )
 
 // gameStateMsg wraps a GameMsg from the game goroutine for bubbletea.
-type gameStateMsg mage.GameMsg
+type gameStateMsg interactive.GameMsg
 
 // Model is the bubbletea model for the TUI.
 type Model struct {
-	toGame   chan<- mage.PriorityAction
-	fromGame <-chan mage.GameMsg
+	toGame   chan<- interactive.PriorityAction
+	fromGame <-chan interactive.GameMsg
 
-	state    *mage.GameState
-	prompt   mage.PromptType
-	options  []mage.ActionOption
+	state    *interactive.GameState
+	prompt   interactive.PromptType
+	options  []interactive.ActionOption
 	cursor   int
 	selected map[int]bool // for multi-select (attackers/blockers)
 	log      []string
@@ -34,7 +35,7 @@ type Model struct {
 
 	// For target selection
 	selectingTarget    bool
-	pendingAction      mage.PriorityAction
+	pendingAction      interactive.PriorityAction
 	targetOptions      []uuid.UUID
 	targetLabels       []string
 	targetCursor       int
@@ -70,7 +71,7 @@ type cardDetail struct {
 }
 
 // NewModel creates a new TUI model.
-func NewModel(toGame chan<- mage.PriorityAction, fromGame <-chan mage.GameMsg) Model {
+func NewModel(toGame chan<- interactive.PriorityAction, fromGame <-chan interactive.GameMsg) Model {
 	return Model{
 		toGame:     toGame,
 		fromGame:   fromGame,
@@ -83,11 +84,11 @@ func (m Model) Init() tea.Cmd {
 	return waitForGameState(m.fromGame)
 }
 
-func waitForGameState(ch <-chan mage.GameMsg) tea.Cmd {
+func waitForGameState(ch <-chan interactive.GameMsg) tea.Cmd {
 	return func() tea.Msg {
 		msg, ok := <-ch
 		if !ok {
-			return gameStateMsg(mage.GameMsg{GameOver: true})
+			return gameStateMsg(interactive.GameMsg{GameOver: true})
 		}
 		return gameStateMsg(msg)
 	}
@@ -101,7 +102,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case gameStateMsg:
-		gm := mage.GameMsg(msg)
+		gm := interactive.GameMsg(msg)
 		m.state = gm.State
 		m.prompt = gm.Prompt
 		m.options = gm.Options
@@ -120,7 +121,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		// If no prompt, just listen for next state
-		if m.prompt == mage.PromptNone {
+		if m.prompt == interactive.PromptNone {
 			return m, waitForGameState(m.fromGame)
 		}
 
@@ -169,13 +170,13 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	case "space":
 		// Toggle selection for multi-select (attackers)
-		if m.prompt == mage.PromptDeclareAttackers {
+		if m.prompt == interactive.PromptDeclareAttackers {
 			m.selected[m.cursor] = !m.selected[m.cursor]
 		}
 
 	case "u":
 		if m.canUndo {
-			m.toGame <- mage.PriorityAction{Type: mage.ActionUndo}
+			m.toGame <- interactive.PriorityAction{Type: interactive.ActionUndo}
 			return m, waitForGameState(m.fromGame)
 		}
 
@@ -197,7 +198,7 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 	}
 
 	switch m.prompt {
-	case mage.PromptDeclareAttackers:
+	case interactive.PromptDeclareAttackers:
 		// Collect selected attackers and send
 		var attackers []uuid.UUID
 		for i, opt := range m.options {
@@ -205,19 +206,19 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 				attackers = append(attackers, opt.PermanentID)
 			}
 		}
-		m.toGame <- mage.PriorityAction{
-			Type:      mage.ActionSelectAttackers,
+		m.toGame <- interactive.PriorityAction{
+			Type:      interactive.ActionSelectAttackers,
 			Attackers: attackers,
 		}
 		return m, waitForGameState(m.fromGame)
 
-	case mage.PromptDeclareBlockers:
+	case interactive.PromptDeclareBlockers:
 		if m.cursor < len(m.options) {
 			opt := m.options[m.cursor]
-			if opt.Type == mage.ActionPass {
+			if opt.Type == interactive.ActionPass {
 				// "Done" option — submit all accumulated blockers
-				m.toGame <- mage.PriorityAction{
-					Type:     mage.ActionSelectBlockers,
+				m.toGame <- interactive.PriorityAction{
+					Type:     interactive.ActionSelectBlockers,
 					Blockers: m.blockerAssignments,
 				}
 				m.blockerAssignments = nil
@@ -236,24 +237,24 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 		opt := m.options[m.cursor]
 
 		switch opt.Type {
-		case mage.ActionPass:
-			m.toGame <- mage.PriorityAction{Type: mage.ActionPass}
+		case interactive.ActionPass:
+			m.toGame <- interactive.PriorityAction{Type: interactive.ActionPass}
 			return m, waitForGameState(m.fromGame)
 
-		case mage.ActionPlayLand:
-			m.toGame <- mage.PriorityAction{
-				Type:     mage.ActionPlayLand,
+		case interactive.ActionPlayLand:
+			m.toGame <- interactive.PriorityAction{
+				Type:     interactive.ActionPlayLand,
 				CardID:   opt.CardID,
 				CardName: opt.Label,
 			}
 			return m, waitForGameState(m.fromGame)
 
-		case mage.ActionCastSpell:
+		case interactive.ActionCastSpell:
 			if opt.NeedsTarget && opt.TargetType != nil && m.state != nil {
 				// Need to select a target first
 				m.selectingTarget = true
-				m.pendingAction = mage.PriorityAction{
-					Type:     mage.ActionCastSpell,
+				m.pendingAction = interactive.PriorityAction{
+					Type:     interactive.ActionCastSpell,
 					CardID:   opt.CardID,
 					CardName: opt.Label,
 				}
@@ -267,16 +268,16 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 				}
 				return m, nil
 			}
-			m.toGame <- mage.PriorityAction{
-				Type:     mage.ActionCastSpell,
+			m.toGame <- interactive.PriorityAction{
+				Type:     interactive.ActionCastSpell,
 				CardID:   opt.CardID,
 				CardName: opt.Label,
 			}
 			return m, waitForGameState(m.fromGame)
 
-		case mage.ActionActivateAbility:
-			m.toGame <- mage.PriorityAction{
-				Type:         mage.ActionActivateAbility,
+		case interactive.ActionActivateAbility:
+			m.toGame <- interactive.PriorityAction{
+				Type:         interactive.ActionActivateAbility,
 				PermanentID:  opt.PermanentID,
 				AbilityIndex: opt.AbilityIndex,
 				CardName:     opt.Label,
@@ -330,8 +331,8 @@ func (m Model) handleBlockerAssignKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if m.blockerAssignCursor == len(attackers) {
 			// "Done" option - submit all blockers
 			m.assigningBlocker = false
-			m.toGame <- mage.PriorityAction{
-				Type:     mage.ActionSelectBlockers,
+			m.toGame <- interactive.PriorityAction{
+				Type:     interactive.ActionSelectBlockers,
 				Blockers: m.blockerAssignments,
 			}
 			m.blockerAssignments = nil
@@ -483,7 +484,7 @@ func (m Model) handleBrowseKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 // getTargetChoices builds target choices from the game state snapshot.
-func getTargetChoices(state *mage.GameState, opt mage.ActionOption) ([]uuid.UUID, []string) {
+func getTargetChoices(state *interactive.GameState, opt interactive.ActionOption) ([]uuid.UUID, []string) {
 	var ids []uuid.UUID
 	var labels []string
 
@@ -517,7 +518,7 @@ type attackerInfo struct {
 	Name string
 }
 
-func getAttackers(state *mage.GameState) []attackerInfo {
+func getAttackers(state *interactive.GameState) []attackerInfo {
 	var attackers []attackerInfo
 	for _, p := range state.Opponent.Battlefield {
 		if p.Attacking {

@@ -1,6 +1,9 @@
 package mage
 
-import "github.com/google/uuid"
+import (
+	. "github.com/mage/mage/pkg/mage/core"
+	"github.com/google/uuid"
+)
 
 // TriggeredAbility checks events and produces effects.
 type TriggeredAbility interface {

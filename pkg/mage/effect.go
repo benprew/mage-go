@@ -1,6 +1,7 @@
 package mage
 
 import (
+	. "github.com/mage/mage/pkg/mage/core"
 	"fmt"
 	"math/rand"
 
@@ -157,6 +158,12 @@ func (e *removeCountersFromSourceEffect) Apply(g *Game, sourceID, controller uui
 
 func (e *removeCountersFromSourceEffect) Text() string {
 	return fmt.Sprintf("remove %d %s counter(s) from it", e.amount, e.ct)
+}
+
+// IsDamageEffect returns true if the given effect is a damage-dealing effect.
+func IsDamageEffect(e Effect) bool {
+	_, ok := e.(*dealDamageEffect)
+	return ok
 }
 
 // dealDamageEffect deals damage to a target (creature, player, or planeswalker).

@@ -1,4 +1,4 @@
-package mage
+package core
 
 // PhaseStep represents a phase or step in a turn.
 type PhaseStep int

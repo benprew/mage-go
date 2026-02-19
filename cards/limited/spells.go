@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/mage/mage/pkg/mage"
+	"github.com/mage/mage/pkg/mage/core"
 )
 
 func init() {
@@ -32,7 +33,7 @@ func registerSpells() {
 				p := g.GetPlayer(permController)
 				if p != nil && power > 0 {
 					p.GainLife(power)
-					g.FireEvent(mage.GameEvent{Type: mage.EvtLifeGained, PlayerID: permController, Amount: power})
+					g.FireEvent(core.GameEvent{Type: core.EvtLifeGained, PlayerID: permController, Amount: power})
 				}
 				return nil
 			}))
@@ -173,7 +174,7 @@ func registerSpells() {
 	mage.Register("Blue Elemental Blast", func() mage.Card {
 		c := mage.NewInstant("Blue Elemental Blast", "{U}")
 		// Counter target red spell (only counters if the spell is red)
-		sa := mage.NewTargetedSpell(mage.TargetSpellOnStack(), mage.CounterSpellIfColor(mage.Red))
+		sa := mage.NewTargetedSpell(mage.TargetSpellOnStack(), mage.CounterSpellIfColor(core.Red))
 		c.AddAbility(sa)
 		return c
 	})
@@ -205,7 +206,7 @@ func registerSpells() {
 		c := mage.NewInstant("Sleight of Mind", "{U}")
 		// Change the text of target permanent by replacing all instances of one
 		// color word with another. Default: swamp->forest (swampwalk->forestwalk).
-		sa := mage.NewTargetedSpell(mage.TargetPermanent(), mage.ReplaceKeywordEffect(mage.Swampwalk, mage.Forestwalk))
+		sa := mage.NewTargetedSpell(mage.TargetPermanent(), mage.ReplaceKeywordEffect(core.Swampwalk, core.Forestwalk))
 		c.AddAbility(sa)
 		return c
 	})
@@ -225,7 +226,7 @@ func registerSpells() {
 
 	mage.Register("Dark Ritual", func() mage.Card {
 		c := mage.NewInstant("Dark Ritual", "{B}")
-		sa := mage.NewSpellAbility(mage.AddMana(mage.Black, 3))
+		sa := mage.NewSpellAbility(mage.AddMana(core.Black, 3))
 		c.AddAbility(sa)
 		return c
 	})
@@ -233,7 +234,7 @@ func registerSpells() {
 	mage.Register("Terror", func() mage.Card {
 		c := mage.NewInstant("Terror", "{1}{B}")
 		sa := mage.NewTargetedSpell(mage.TargetCreature(
-			mage.Not(mage.HasColorFilter(mage.Black)),
+			mage.Not(mage.HasColorFilter(core.Black)),
 			mage.Not(mage.IsArtifact),
 		), mage.DestroyTarget())
 		c.AddAbility(sa)
@@ -279,7 +280,7 @@ func registerSpells() {
 				caster := g.GetPlayer(controller)
 				if caster != nil {
 					caster.GainLife(amount)
-					g.FireEvent(mage.GameEvent{Type: mage.EvtLifeGained, PlayerID: controller, Amount: amount})
+					g.FireEvent(core.GameEvent{Type: core.EvtLifeGained, PlayerID: controller, Amount: amount})
 				}
 				return nil
 			}))
@@ -305,7 +306,7 @@ func registerSpells() {
 		sa := mage.NewSpellAbility(mage.ReturnFromGraveyardToBattlefield())
 		c.AddAbility(sa)
 		c.AddAbility(mage.StaticAbility(
-			mage.BoostAttached(-1, 0, mage.AttachAura),
+			mage.BoostAttached(-1, 0, core.AttachAura),
 		))
 		return c
 	})
@@ -327,7 +328,7 @@ func registerSpells() {
 	mage.Register("Red Elemental Blast", func() mage.Card {
 		c := mage.NewInstant("Red Elemental Blast", "{R}")
 		// Counter target blue spell (only counters if the spell is blue)
-		sa := mage.NewTargetedSpell(mage.TargetSpellOnStack(), mage.CounterSpellIfColor(mage.Blue))
+		sa := mage.NewTargetedSpell(mage.TargetSpellOnStack(), mage.CounterSpellIfColor(core.Blue))
 		c.AddAbility(sa)
 		return c
 	})
@@ -360,7 +361,7 @@ func registerSpells() {
 		// Deal X damage to each creature without flying and each player
 		sa := mage.NewSpellAbility(mage.CompositeEffects(
 			"deal X damage to each creature without flying and each player",
-			mage.DealDamageToAllCreatures(mage.XValue(), mage.NotHasKeywordFilter(mage.Flying)),
+			mage.DealDamageToAllCreatures(mage.XValue(), mage.NotHasKeywordFilter(core.Flying)),
 			mage.DealDamageToPlayers(mage.XValue(), mage.SelectEachPlayer()),
 		))
 		c.AddAbility(sa)
@@ -438,7 +439,7 @@ func registerSpells() {
 		// Deal X damage to each creature with flying and each player
 		sa := mage.NewSpellAbility(mage.CompositeEffects(
 			"deal X damage to each creature with flying and each player",
-			mage.DealDamageToAllCreatures(mage.XValue(), mage.HasKeywordFilter(mage.Flying)),
+			mage.DealDamageToAllCreatures(mage.XValue(), mage.HasKeywordFilter(core.Flying)),
 			mage.DealDamageToPlayers(mage.XValue(), mage.SelectEachPlayer()),
 		))
 		c.AddAbility(sa)

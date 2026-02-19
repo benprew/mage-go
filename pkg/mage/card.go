@@ -1,21 +1,9 @@
 package mage
 
-import "github.com/google/uuid"
-
-//go:generate enumer -type=CardType -trimprefix=Type -output=card_enumer.go
-
-// CardType represents a card's type.
-type CardType int
-
-const (
-	TypeCreature CardType = iota
-	TypeInstant
-	TypeSorcery
-	TypeLand
-	TypeArtifact
-	TypeEnchantment
+import (
+	. "github.com/mage/mage/pkg/mage/core"
+	"github.com/google/uuid"
 )
-
 
 // Card is the interface for all cards.
 type Card interface {

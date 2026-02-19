@@ -3,6 +3,7 @@ package arabian
 import (
 	"github.com/google/uuid"
 	"github.com/mage/mage/pkg/mage"
+	"github.com/mage/mage/pkg/mage/core"
 )
 
 func init() {
@@ -17,7 +18,7 @@ func registerCreatures() {
 		// They can't be regenerated.
 		c := mage.NewCreature("Abu Ja'far", "{W}", 0, 1, "Human")
 		c.AddAbility(
-			mage.NewTriggered(mage.EvtCreatureDied, false,
+			mage.NewTriggered(core.EvtCreatureDied, false,
 				mage.FuncEffect("destroy all creatures blocking or blocked by Abu Ja'far",
 					func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if g.Combat == nil {
@@ -56,7 +57,7 @@ func registerCreatures() {
 		// As long as Camel is attacking, prevent all damage Deserts would deal to
 		// Camel and to creatures banded with Camel.
 		c := mage.NewCreature("Camel", "{W}", 0, 1, "Camel")
-		c.AddAbility(mage.NewKeywordAbility(mage.Banding))
+		c.AddAbility(mage.NewKeywordAbility(core.Banding))
 		c.AddAbility(mage.StaticAbility(mage.PreventDamageFromTo(
 			mage.HasSubType("Desert"),
 			func(sourceID uuid.UUID) mage.PermanentFilter {
@@ -84,22 +85,22 @@ func registerCreatures() {
 	mage.Register("Moorish Cavalry", func() mage.Card {
 		// Trample
 		c := mage.NewCreature("Moorish Cavalry", "{2}{W}{W}", 3, 3, "Human", "Knight")
-		c.AddAbility(mage.NewKeywordAbility(mage.Trample))
+		c.AddAbility(mage.NewKeywordAbility(core.Trample))
 		return c
 	})
 
 	mage.Register("Repentant Blacksmith", func() mage.Card {
 		// Protection from red
 		c := mage.NewCreature("Repentant Blacksmith", "{1}{W}", 1, 2, "Human")
-		c.AddAbility(mage.ProtectionFromColor(mage.Red))
+		c.AddAbility(mage.ProtectionFromColor(core.Red))
 		return c
 	})
 
 	mage.Register("War Elephant", func() mage.Card {
 		// Trample; banding
 		c := mage.NewCreature("War Elephant", "{3}{W}", 2, 2, "Elephant")
-		c.AddAbility(mage.NewKeywordAbility(mage.Trample))
-		c.AddAbility(mage.NewKeywordAbility(mage.Banding))
+		c.AddAbility(mage.NewKeywordAbility(core.Trample))
+		c.AddAbility(mage.NewKeywordAbility(core.Banding))
 		return c
 	})
 
@@ -110,10 +111,10 @@ func registerCreatures() {
 		// When you control no Islands, sacrifice Dandân.
 		c := mage.NewCreature("Dandân", "{U}{U}", 4, 1, "Fish")
 		c.AddAbility(mage.StaticAbility(mage.PreventFromAttackingIfDefendingPlayerControls(mage.HasSubType("Island"))))
-		sa := mage.NewTriggered(mage.EvtLeavesBattlefield,
+		sa := mage.NewTriggered(core.EvtLeavesBattlefield,
 			false,
 			mage.SacrificeSource()).
-			SetCondition(func(evt *mage.GameEvent, g *mage.Game, sourceID, controllerID uuid.UUID) bool {
+			SetCondition(func(evt *core.GameEvent, g *mage.Game, sourceID, controllerID uuid.UUID) bool {
 				for _, p := range g.Battlefield {
 					if p.Controller == controllerID && p.HasSubType("Island") {
 						return false
@@ -128,7 +129,7 @@ func registerCreatures() {
 	mage.Register("Flying Men", func() mage.Card {
 		// Flying
 		c := mage.NewCreature("Flying Men", "{U}", 1, 1, "Human")
-		c.AddAbility(mage.NewKeywordAbility(mage.Flying))
+		c.AddAbility(mage.NewKeywordAbility(core.Flying))
 		return c
 	})
 
@@ -376,14 +377,14 @@ func registerCreatures() {
 		// Brass Man doesn't untap during your untap step.
 		// At the beginning of your upkeep, you may pay {1}. If you do, untap Brass Man.
 		c := mage.NewCreature("Brass Man", "{1}", 1, 3, "Construct")
-		c.AddType(mage.TypeArtifact)
+		c.AddType(core.TypeArtifact)
 		return c
 	})
 
 	mage.Register("Dancing Scimitar", func() mage.Card {
 		// Flying
 		c := mage.NewCreature("Dancing Scimitar", "{4}", 1, 5, "Spirit")
-		c.AddType(mage.TypeArtifact)
+		c.AddType(core.TypeArtifact)
 		return c
 	})
 }

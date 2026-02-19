@@ -1,6 +1,9 @@
 package arabian
 
-import "github.com/mage/mage/pkg/mage"
+import (
+	"github.com/mage/mage/pkg/mage"
+	"github.com/mage/mage/pkg/mage/core"
+)
 
 func init() {
 	registerLands()
@@ -27,7 +30,7 @@ func registerLands() {
 		// {T}: Desert deals 1 damage to target attacking creature. Activate only
 		// during the end of combat step.
 		c := mage.NewLand("Desert", "Desert")
-		c.AddAbility(mage.NewManaAbility(mage.Colorless))
+		c.AddAbility(mage.NewManaAbility(core.Colorless))
 		c.AddAbility(mage.NewActivatedAbility(
 			mage.DealDamage(mage.Fixed(1)),
 			mage.TapSourceCost(),

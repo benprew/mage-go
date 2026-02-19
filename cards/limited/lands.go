@@ -1,6 +1,9 @@
 package limited
 
-import "github.com/mage/mage/pkg/mage"
+import (
+	"github.com/mage/mage/pkg/mage"
+	"github.com/mage/mage/pkg/mage/core"
+)
 
 func init() {
 	registerLands()
@@ -10,13 +13,13 @@ func registerLands() {
 	// Basic lands
 	for _, land := range []struct {
 		name  string
-		color mage.Color
+		color core.Color
 	}{
-		{"Plains", mage.White},
-		{"Island", mage.Blue},
-		{"Swamp", mage.Black},
-		{"Mountain", mage.Red},
-		{"Forest", mage.Green},
+		{"Plains", core.White},
+		{"Island", core.Blue},
+		{"Swamp", core.Black},
+		{"Mountain", core.Red},
+		{"Forest", core.Green},
 	} {
 		name := land.name
 		color := land.color
@@ -32,19 +35,19 @@ func registerLands() {
 		name   string
 		sub1   string
 		sub2   string
-		color1 mage.Color
-		color2 mage.Color
+		color1 core.Color
+		color2 core.Color
 	}{
-		{"Badlands", "Swamp", "Mountain", mage.Black, mage.Red},
-		{"Bayou", "Swamp", "Forest", mage.Black, mage.Green},
-		{"Plateau", "Mountain", "Plains", mage.Red, mage.White},
-		{"Savannah", "Forest", "Plains", mage.Green, mage.White},
-		{"Scrubland", "Plains", "Swamp", mage.White, mage.Black},
-		{"Taiga", "Mountain", "Forest", mage.Red, mage.Green},
-		{"Tropical Island", "Forest", "Island", mage.Green, mage.Blue},
-		{"Tundra", "Plains", "Island", mage.White, mage.Blue},
-		{"Underground Sea", "Island", "Swamp", mage.Blue, mage.Black},
-		{"Volcanic Island", "Island", "Mountain", mage.Blue, mage.Red},
+		{"Badlands", "Swamp", "Mountain", core.Black, core.Red},
+		{"Bayou", "Swamp", "Forest", core.Black, core.Green},
+		{"Plateau", "Mountain", "Plains", core.Red, core.White},
+		{"Savannah", "Forest", "Plains", core.Green, core.White},
+		{"Scrubland", "Plains", "Swamp", core.White, core.Black},
+		{"Taiga", "Mountain", "Forest", core.Red, core.Green},
+		{"Tropical Island", "Forest", "Island", core.Green, core.Blue},
+		{"Tundra", "Plains", "Island", core.White, core.Blue},
+		{"Underground Sea", "Island", "Swamp", core.Blue, core.Black},
+		{"Volcanic Island", "Island", "Mountain", core.Blue, core.Red},
 	}
 
 	for _, d := range duals {

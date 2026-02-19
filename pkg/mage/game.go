@@ -1,6 +1,7 @@
 package mage
 
 import (
+	. "github.com/mage/mage/pkg/mage/core"
 	"errors"
 	"fmt"
 
@@ -1191,11 +1192,11 @@ func (g *Game) RunStep(step PhaseStep) {
 
 	switch step {
 	case Untap:
-		g.doUntap()
+		g.DoUntap()
 	case Upkeep:
-		g.doUpkeep()
+		g.DoUpkeep()
 	case Draw:
-		g.doDraw()
+		g.DoDraw()
 	case DeclareAttackers:
 		g.doDeclareAttackers()
 	case DeclareBlockers:
@@ -1204,17 +1205,17 @@ func (g *Game) RunStep(step PhaseStep) {
 		if !g.Combat.HasFirstStrikers(g) {
 			return // skip if no first strikers
 		}
-		g.doCombatDamage(true)
+		g.DoCombatDamage(true)
 	case CombatDamage:
-		g.doCombatDamage(false)
+		g.DoCombatDamage(false)
 	case EndCombat:
 		g.Effects.RemoveEndOfCombat()
 		g.Effects.Apply(g)
 		g.Combat.Reset()
 	case EndStep:
-		g.doEndStep()
+		g.DoEndStep()
 	case Cleanup:
-		g.doCleanup()
+		g.DoCleanup()
 	}
 
 	// Check SBAs after each step
@@ -1224,7 +1225,7 @@ func (g *Game) RunStep(step PhaseStep) {
 	g.ResolveStack()
 }
 
-func (g *Game) doEndStep() {
+func (g *Game) DoEndStep() {
 	active := g.ActivePlayerObj()
 	g.FireEvent(GameEvent{
 		Type:     EvtEndStep,
@@ -1234,7 +1235,7 @@ func (g *Game) doEndStep() {
 	g.ResolveStack()
 }
 
-func (g *Game) doUntap() {
+func (g *Game) DoUntap() {
 	active := g.ActivePlayerObj()
 	g.Effects.ClearRegenerationShields(active.PlayerID(), g)
 	// Island Sanctuary: clear protection at the start of the player's turn
@@ -1262,7 +1263,7 @@ func (g *Game) doUntap() {
 	g.LandsPlayedThisTurn = 0
 }
 
-func (g *Game) doUpkeep() {
+func (g *Game) DoUpkeep() {
 	active := g.ActivePlayerObj()
 
 	// Check for graveyard returns (e.g. Nether Shadow)
@@ -1313,7 +1314,7 @@ func (g *Game) checkGraveyardReturns(p Player) {
 	}
 }
 
-func (g *Game) doDraw() {
+func (g *Game) DoDraw() {
 	active := g.ActivePlayerObj()
 
 	// Fire draw step event before the normal draw so triggers can queue
@@ -1496,7 +1497,7 @@ func (g *Game) doDeclareBlockers() {
 	}
 }
 
-func (g *Game) doCombatDamage(isFirstStrikeStep bool) {
+func (g *Game) DoCombatDamage(isFirstStrikeStep bool) {
 	if g.PreventCombatDamage {
 		return
 	}
@@ -1845,7 +1846,7 @@ func (g *Game) doBandedAttackDamage(bandMemberIDs []uuid.UUID, defenderID uuid.U
 	}
 }
 
-func (g *Game) doCleanup() {
+func (g *Game) DoCleanup() {
 	// Clear damage from all creatures
 	for _, p := range g.Battlefield {
 		p.Damage = 0

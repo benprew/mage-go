@@ -3,6 +3,7 @@ package limited
 import (
 	"github.com/google/uuid"
 	"github.com/mage/mage/pkg/mage"
+	"github.com/mage/mage/pkg/mage/core"
 )
 
 func init() {
@@ -16,7 +17,7 @@ func registerEnchantments() {
 		c := mage.NewEnchantment("Crusade", "{W}{W}")
 		// White creatures get +1/+1
 		c.AddAbility(mage.StaticAbility(
-			mage.BoostAllCreaturesIncludingSelf(1, 1, mage.HasColorFilter(mage.White)),
+			mage.BoostAllCreaturesIncludingSelf(1, 1, mage.HasColorFilter(core.White)),
 		))
 		return c
 	})
@@ -25,7 +26,7 @@ func registerEnchantments() {
 		c := mage.NewEnchantment("Bad Moon", "{1}{B}")
 		// Black creatures get +1/+1
 		c.AddAbility(mage.StaticAbility(
-			mage.BoostAllCreaturesIncludingSelf(1, 1, mage.HasColorFilter(mage.Black)),
+			mage.BoostAllCreaturesIncludingSelf(1, 1, mage.HasColorFilter(core.Black)),
 		))
 		return c
 	})
@@ -73,7 +74,7 @@ func registerEnchantments() {
 			mage.GrantActivatedAbilityToAttached(
 				mage.BoostUntilEndOfTurn(mage.Fixed(1), mage.Fixed(1), mage.SelectSource),
 				mage.ManaCostOf("{W}"),
-				mage.AttachAura,
+				core.AttachAura,
 			),
 		))
 		return c
@@ -82,7 +83,7 @@ func registerEnchantments() {
 	mage.Register("Lance", func() mage.Card {
 		c := mage.NewAura("Lance", "{W}")
 		c.AddAbility(mage.StaticAbility(
-			mage.GrantAbilityToAttached(mage.FirstStrike, mage.AttachAura),
+			mage.GrantAbilityToAttached(core.FirstStrike, core.AttachAura),
 		))
 		return c
 	})
@@ -90,8 +91,8 @@ func registerEnchantments() {
 	mage.Register("Web", func() mage.Card {
 		c := mage.NewAura("Web", "{G}")
 		c.AddAbility(mage.StaticAbility(
-			mage.BoostAttached(0, 2, mage.AttachAura),
-			mage.GrantAbilityToAttached(mage.Reach, mage.AttachAura),
+			mage.BoostAttached(0, 2, core.AttachAura),
+			mage.GrantAbilityToAttached(core.Reach, core.AttachAura),
 		))
 		return c
 	})
@@ -103,7 +104,7 @@ func registerEnchantments() {
 			mage.GrantActivatedAbilityToAttached(
 				mage.BoostUntilEndOfTurn(mage.Fixed(1), mage.Fixed(0), mage.SelectSource),
 				mage.ManaCostOf("{R}"),
-				mage.AttachAura,
+				core.AttachAura,
 			),
 		))
 		return c
@@ -112,7 +113,7 @@ func registerEnchantments() {
 	mage.Register("Flight", func() mage.Card {
 		c := mage.NewAura("Flight", "{U}")
 		c.AddAbility(mage.StaticAbility(
-			mage.GrantAbilityToAttached(mage.Flying, mage.AttachAura),
+			mage.GrantAbilityToAttached(core.Flying, core.AttachAura),
 		))
 		return c
 	})
@@ -120,7 +121,7 @@ func registerEnchantments() {
 	mage.Register("Jump", func() mage.Card {
 		c := mage.NewInstant("Jump", "{U}")
 		// Target creature gains flying until end of turn
-		sa := mage.NewTargetedSpell(mage.TargetCreature(), mage.GrantKeywordUntilEndOfTurn(mage.Flying, mage.SelectTarget))
+		sa := mage.NewTargetedSpell(mage.TargetCreature(), mage.GrantKeywordUntilEndOfTurn(core.Flying, mage.SelectTarget))
 		c.AddAbility(sa)
 		return c
 	})
@@ -128,7 +129,7 @@ func registerEnchantments() {
 	mage.Register("Fear", func() mage.Card {
 		c := mage.NewAura("Fear", "{B}{B}")
 		c.AddAbility(mage.StaticAbility(
-			mage.GrantAbilityToAttached(mage.Fear, mage.AttachAura),
+			mage.GrantAbilityToAttached(core.Fear, core.AttachAura),
 		))
 		return c
 	})
@@ -136,7 +137,7 @@ func registerEnchantments() {
 	mage.Register("Burrowing", func() mage.Card {
 		c := mage.NewAura("Burrowing", "{R}")
 		c.AddAbility(mage.StaticAbility(
-			mage.GrantAbilityToAttached(mage.Mountainwalk, mage.AttachAura),
+			mage.GrantAbilityToAttached(core.Mountainwalk, core.AttachAura),
 		))
 		return c
 	})
@@ -145,7 +146,7 @@ func registerEnchantments() {
 		c := mage.NewAura("Invisibility", "{U}{U}")
 		// Enchanted creature can't be blocked except by Walls.
 		c.AddAbility(mage.StaticAbility(
-			mage.GrantAbilityToAttached(mage.CantBeBlockedExceptByWalls, mage.AttachAura),
+			mage.GrantAbilityToAttached(core.CantBeBlockedExceptByWalls, core.AttachAura),
 		))
 		return c
 	})
@@ -154,7 +155,7 @@ func registerEnchantments() {
 		c := mage.NewAura("Lure", "{1}{G}{G}")
 		// All creatures able to block enchanted creature do so.
 		c.AddAbility(mage.StaticAbility(
-			mage.GrantAbilityToAttached(mage.MustBeBlocked, mage.AttachAura),
+			mage.GrantAbilityToAttached(core.MustBeBlocked, core.AttachAura),
 		))
 		return c
 	})
@@ -165,7 +166,7 @@ func registerEnchantments() {
 		// Enchanted creature doesn't untap during its controller's untap step.
 		c.AddAbility(mage.EntersBattlefieldTrigger(mage.TapAttachedCreature(), false))
 		c.AddAbility(mage.StaticAbility(
-			mage.PreventAttachedFromUntapping(mage.AttachAura),
+			mage.PreventAttachedFromUntapping(core.AttachAura),
 		))
 		return c
 	})
@@ -174,7 +175,7 @@ func registerEnchantments() {
 		c := mage.NewAura("Earthbind", "{R}")
 		// Enchanted creature loses flying
 		c.AddAbility(mage.StaticAbility(
-			mage.RemoveKeywordFromAttached(mage.Flying, mage.AttachAura),
+			mage.RemoveKeywordFromAttached(core.Flying, core.AttachAura),
 		))
 		return c
 	})
@@ -194,7 +195,7 @@ func registerEnchantments() {
 	mage.Register("Wild Growth", func() mage.Card {
 		c := mage.NewAura("Wild Growth", "{G}")
 		// Whenever enchanted land is tapped for mana, its controller adds {G}.
-		c.AddAbility(mage.NewAttachedManaBonusAbility(mage.Green))
+		c.AddAbility(mage.NewAttachedManaBonusAbility(core.Green))
 		return c
 	})
 
@@ -230,12 +231,12 @@ func registerEnchantments() {
 
 	copColors := []struct {
 		name  string
-		color mage.Color
+		color core.Color
 	}{
-		{"Circle of Protection: Blue", mage.Blue},
-		{"Circle of Protection: Green", mage.Green},
-		{"Circle of Protection: Red", mage.Red},
-		{"Circle of Protection: White", mage.White},
+		{"Circle of Protection: Blue", core.Blue},
+		{"Circle of Protection: Green", core.Green},
+		{"Circle of Protection: Red", core.Red},
+		{"Circle of Protection: White", core.White},
 	}
 	for _, cop := range copColors {
 		name := cop.name
@@ -259,31 +260,31 @@ func registerEnchantments() {
 
 	mage.Register("Black Ward", func() mage.Card {
 		c := mage.NewAura("Black Ward", "{W}")
-		c.AddAbility(mage.StaticAbility(mage.GrantProtectionToAttached(mage.Black, mage.AttachAura)))
+		c.AddAbility(mage.StaticAbility(mage.GrantProtectionToAttached(core.Black, core.AttachAura)))
 		return c
 	})
 
 	mage.Register("Blue Ward", func() mage.Card {
 		c := mage.NewAura("Blue Ward", "{W}")
-		c.AddAbility(mage.StaticAbility(mage.GrantProtectionToAttached(mage.Blue, mage.AttachAura)))
+		c.AddAbility(mage.StaticAbility(mage.GrantProtectionToAttached(core.Blue, core.AttachAura)))
 		return c
 	})
 
 	mage.Register("Green Ward", func() mage.Card {
 		c := mage.NewAura("Green Ward", "{W}")
-		c.AddAbility(mage.StaticAbility(mage.GrantProtectionToAttached(mage.Green, mage.AttachAura)))
+		c.AddAbility(mage.StaticAbility(mage.GrantProtectionToAttached(core.Green, core.AttachAura)))
 		return c
 	})
 
 	mage.Register("Red Ward", func() mage.Card {
 		c := mage.NewAura("Red Ward", "{W}")
-		c.AddAbility(mage.StaticAbility(mage.GrantProtectionToAttached(mage.Red, mage.AttachAura)))
+		c.AddAbility(mage.StaticAbility(mage.GrantProtectionToAttached(core.Red, core.AttachAura)))
 		return c
 	})
 
 	mage.Register("White Ward", func() mage.Card {
 		c := mage.NewAura("White Ward", "{W}")
-		c.AddAbility(mage.StaticAbility(mage.GrantProtectionToAttached(mage.White, mage.AttachAura)))
+		c.AddAbility(mage.StaticAbility(mage.GrantProtectionToAttached(core.White, core.AttachAura)))
 		return c
 	})
 
@@ -358,23 +359,23 @@ func registerEnchantments() {
 	// ===== LUCKY CHARMS =====
 
 	mage.Register("Crystal Rod", func() mage.Card {
-		return mage.NewLuckyCharm("Crystal Rod", "{1}", mage.Blue)
+		return mage.NewLuckyCharm("Crystal Rod", "{1}", core.Blue)
 	})
 
 	mage.Register("Iron Star", func() mage.Card {
-		return mage.NewLuckyCharm("Iron Star", "{1}", mage.Red)
+		return mage.NewLuckyCharm("Iron Star", "{1}", core.Red)
 	})
 
 	mage.Register("Ivory Cup", func() mage.Card {
-		return mage.NewLuckyCharm("Ivory Cup", "{1}", mage.White)
+		return mage.NewLuckyCharm("Ivory Cup", "{1}", core.White)
 	})
 
 	mage.Register("Throne of Bone", func() mage.Card {
-		return mage.NewLuckyCharm("Throne of Bone", "{1}", mage.Black)
+		return mage.NewLuckyCharm("Throne of Bone", "{1}", core.Black)
 	})
 
 	mage.Register("Wooden Sphere", func() mage.Card {
-		return mage.NewLuckyCharm("Wooden Sphere", "{1}", mage.Green)
+		return mage.NewLuckyCharm("Wooden Sphere", "{1}", core.Green)
 	})
 
 	mage.Register("Soul Net", func() mage.Card {
@@ -390,13 +391,13 @@ func registerEnchantments() {
 	laces := []struct {
 		name  string
 		cost  string
-		color mage.Color
+		color core.Color
 	}{
-		{"Chaoslace", "{R}", mage.Red},
-		{"Deathlace", "{B}", mage.Black},
-		{"Lifelace", "{G}", mage.Green},
-		{"Purelace", "{W}", mage.White},
-		{"Thoughtlace", "{U}", mage.Blue},
+		{"Chaoslace", "{R}", core.Red},
+		{"Deathlace", "{B}", core.Black},
+		{"Lifelace", "{G}", core.Green},
+		{"Purelace", "{W}", core.White},
+		{"Thoughtlace", "{U}", core.Blue},
 	}
 	for _, lace := range laces {
 		name := lace.name

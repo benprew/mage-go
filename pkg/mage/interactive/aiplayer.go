@@ -1,28 +1,31 @@
-package mage
+package interactive
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+	"github.com/mage/mage/pkg/mage"
+	"github.com/mage/mage/pkg/mage/core"
+)
 
 // AIPlayer is a computer-controlled player with simple decision-making.
 type AIPlayer struct {
-	*BasePlayer
+	*mage.BasePlayer
 }
 
 // NewAIPlayer creates a new AI player.
 func NewAIPlayer(name string) *AIPlayer {
 	return &AIPlayer{
-		BasePlayer: NewBasePlayer(name),
+		BasePlayer: mage.NewBasePlayer(name),
 	}
 }
 
 // GetPriorityAction decides what the AI should do when it has priority.
-func (ai *AIPlayer) GetPriorityAction(g *Game, landsPlayed int, mainPhase bool) PriorityAction {
+func (ai *AIPlayer) GetPriorityAction(g *mage.Game, landsPlayed int, mainPhase bool) PriorityAction {
 	playerID := ai.PlayerID()
 
 	if mainPhase {
-		// Play a land if we haven't yet
 		if landsPlayed < 1 {
 			for _, c := range ai.Hand() {
-				if c.HasType(TypeLand) {
+				if c.HasType(core.TypeLand) {
 					return PriorityAction{
 						Type:     ActionPlayLand,
 						CardID:   c.ID(),
@@ -32,12 +35,11 @@ func (ai *AIPlayer) GetPriorityAction(g *Game, landsPlayed int, mainPhase bool) 
 			}
 		}
 
-		// Try to cast the most expensive affordable creature or sorcery
-		var bestCard Card
+		var bestCard mage.Card
 		bestCMC := -1
 		for _, card := range g.GetCastableSpells(playerID) {
-			if card.HasType(TypeInstant) {
-				continue // save instants for later
+			if card.HasType(core.TypeInstant) {
+				continue
 			}
 			cmc := card.ManaCost().CMC()
 			if cmc > bestCMC {
@@ -56,20 +58,18 @@ func (ai *AIPlayer) GetPriorityAction(g *Game, landsPlayed int, mainPhase bool) 
 		}
 	}
 
-	// Check if we should cast an instant (damage spell at opponent's creature or face)
 	for _, card := range ai.Hand() {
-		if !card.HasType(TypeInstant) {
+		if !card.HasType(core.TypeInstant) {
 			continue
 		}
 		if !g.CanAfford(playerID, card.ManaCost()) {
 			continue
 		}
-		// Only cast damage-dealing instants proactively
 		hasDamage := false
 		for _, a := range card.Abilities() {
-			if sa, ok := a.(*SpellAbility); ok {
+			if sa, ok := a.(*mage.SpellAbility); ok {
 				for _, e := range sa.Effects() {
-					if _, isDmg := e.(*dealDamageEffect); isDmg {
+					if mage.IsDamageEffect(e) {
 						hasDamage = true
 					}
 				}
@@ -92,22 +92,22 @@ func (ai *AIPlayer) GetPriorityAction(g *Game, landsPlayed int, mainPhase bool) 
 }
 
 // AIAttackers returns the IDs of creatures the AI wants to attack with.
-func (ai *AIPlayer) AIAttackers(g *Game) []uuid.UUID {
+func (ai *AIPlayer) AIAttackers(g *mage.Game) []uuid.UUID {
 	var attackers []uuid.UUID
 	for _, perm := range g.Battlefield {
 		if perm.Controller != ai.PlayerID() {
 			continue
 		}
-		if !perm.HasType(TypeCreature) {
+		if !perm.HasType(core.TypeCreature) {
 			continue
 		}
-		if perm.Tapped || (perm.SummonSick && !perm.HasKeyword(Haste)) {
+		if perm.Tapped || (perm.SummonSick && !perm.HasKeyword(core.Haste)) {
 			continue
 		}
 		if !g.Effects.CanAttack(perm.ID()) {
 			continue
 		}
-		if !CanAttackCheck(perm, g) {
+		if !mage.CanAttackCheck(perm, g) {
 			continue
 		}
 		attackers = append(attackers, perm.ID())
@@ -116,19 +116,17 @@ func (ai *AIPlayer) AIAttackers(g *Game) []uuid.UUID {
 }
 
 // AIBlockers returns a blocker->attacker mapping for the AI's blocking decisions.
-func (ai *AIPlayer) AIBlockers(g *Game) []BlockAssignment {
-	var assignments []BlockAssignment
+func (ai *AIPlayer) AIBlockers(g *mage.Game) []mage.BlockAssignment {
+	var assignments []mage.BlockAssignment
 
-	// Get available blockers
-	var available []*Permanent
+	var available []*mage.Permanent
 	for _, perm := range g.Battlefield {
-		if perm.Controller != ai.PlayerID() || !perm.HasType(TypeCreature) || perm.Tapped {
+		if perm.Controller != ai.PlayerID() || !perm.HasType(core.TypeCreature) || perm.Tapped {
 			continue
 		}
 		available = append(available, perm)
 	}
 
-	// For each attacker, try to assign a blocker
 	for _, group := range g.Combat.Groups {
 		if group.DefenderID != ai.PlayerID() {
 			continue
@@ -138,29 +136,26 @@ func (ai *AIPlayer) AIBlockers(g *Game) []BlockAssignment {
 			continue
 		}
 
-		// Find the first available blocker that can legally block
 		for i, blk := range available {
 			if blk == nil {
 				continue
 			}
-			if !CanBlock(blk, atk, g) {
+			if !mage.CanBlock(blk, atk, g) {
 				continue
 			}
-			if HasLandwalkEvasion(atk, ai.PlayerID(), g) {
+			if mage.HasLandwalkEvasion(atk, ai.PlayerID(), g) {
 				continue
 			}
-			// Only block if our blocker can survive or trade
 			atkPow := atk.CurrentPower(g)
 			blkPow := blk.CurrentPower(g)
 			atkTough := atk.CurrentToughness(g)
 
-			// Block if we can kill the attacker or if the attacker would deal significant damage
 			if blkPow >= atkTough || atkPow >= 3 {
-				assignments = append(assignments, BlockAssignment{
+				assignments = append(assignments, mage.BlockAssignment{
 					BlockerID:  blk.ID(),
 					AttackerID: atk.ID(),
 				})
-				available[i] = nil // used
+				available[i] = nil
 				break
 			}
 		}
@@ -170,21 +165,20 @@ func (ai *AIPlayer) AIBlockers(g *Game) []BlockAssignment {
 }
 
 // DeclareAttackers implements the Player interface for AI.
-func (ai *AIPlayer) DeclareAttackers(g *Game) []uuid.UUID {
+func (ai *AIPlayer) DeclareAttackers(g *mage.Game) []uuid.UUID {
 	return ai.AIAttackers(g)
 }
 
 // DeclareBlockers implements the Player interface for AI.
-func (ai *AIPlayer) DeclareBlockers(g *Game) []BlockAssignment {
+func (ai *AIPlayer) DeclareBlockers(g *mage.Game) []mage.BlockAssignment {
 	return ai.AIBlockers(g)
 }
 
-// autoSelectTargets picks targets automatically for AI spells.
-func (ai *AIPlayer) autoSelectTargets(g *Game, card Card) []uuid.UUID {
+func (ai *AIPlayer) autoSelectTargets(g *mage.Game, card mage.Card) []uuid.UUID {
 	playerID := ai.PlayerID()
 
 	for _, a := range card.Abilities() {
-		sa, ok := a.(*SpellAbility)
+		sa, ok := a.(*mage.SpellAbility)
 		if !ok {
 			continue
 		}
@@ -195,23 +189,19 @@ func (ai *AIPlayer) autoSelectTargets(g *Game, card Card) []uuid.UUID {
 			}
 
 			switch t.(type) {
-			case *AnyTarget:
-				// For damage spells: prefer opponent's creature, else opponent's face
-				// First look for an opponent creature we can kill
+			case *mage.AnyTarget:
 				for _, id := range possible {
 					perm := g.FindPermanent(id)
-					if perm != nil && perm.Controller != playerID && perm.HasType(TypeCreature) {
+					if perm != nil && perm.Controller != playerID && perm.HasType(core.TypeCreature) {
 						return []uuid.UUID{id}
 					}
 				}
-				// Otherwise target opponent
 				opponent := g.GetOpponent(playerID)
 				if opponent != nil {
 					return []uuid.UUID{opponent.PlayerID()}
 				}
 
-			case *CreatureTarget:
-				// Target opponent's best creature (highest power)
+			case *mage.CreatureTarget:
 				var bestID uuid.UUID
 				bestPow := -1
 				for _, id := range possible {
@@ -227,7 +217,6 @@ func (ai *AIPlayer) autoSelectTargets(g *Game, card Card) []uuid.UUID {
 				if bestID != uuid.Nil {
 					return []uuid.UUID{bestID}
 				}
-				// If targeting own creature (buff spell), pick our strongest
 				for _, id := range possible {
 					perm := g.FindPermanent(id)
 					if perm != nil && perm.Controller == playerID {
@@ -235,15 +224,13 @@ func (ai *AIPlayer) autoSelectTargets(g *Game, card Card) []uuid.UUID {
 					}
 				}
 
-			case *PlayerTarget, *OpponentTarget:
-				// Target opponent
+			case *mage.PlayerTarget, *mage.OpponentTarget:
 				opponent := g.GetOpponent(playerID)
 				if opponent != nil {
 					return []uuid.UUID{opponent.PlayerID()}
 				}
 
 			default:
-				// Generic: pick first possible
 				if len(possible) > 0 {
 					return []uuid.UUID{possible[0]}
 				}

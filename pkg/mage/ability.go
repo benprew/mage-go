@@ -1,18 +1,8 @@
 package mage
 
-import "github.com/google/uuid"
-
-//go:generate enumer -type=AbilityType -trimprefix=Ability -output=ability_enumer.go
-
-// AbilityType classifies abilities.
-type AbilityType int
-
-const (
-	AbilitySpell AbilityType = iota
-	AbilityActivated
-	AbilityTriggered
-	AbilityMana
-	AbilityStatic
+import (
+	. "github.com/mage/mage/pkg/mage/core"
+	"github.com/google/uuid"
 )
 
 // Ability is the base interface for all abilities.

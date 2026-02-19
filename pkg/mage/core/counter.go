@@ -1,4 +1,4 @@
-package mage
+package core
 
 // CounterType represents a type of counter.
 type CounterType int

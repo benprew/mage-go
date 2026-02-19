@@ -1,9 +1,11 @@
-package mage
+package interactive
 
 import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/mage/mage/pkg/mage"
+	"github.com/mage/mage/pkg/mage/core"
 )
 
 //go:generate enumer -type=ActionType -trimprefix=Action -output=interactive_enumer.go
@@ -23,15 +25,15 @@ const (
 
 // PriorityAction is a decision sent from the TUI (or AI) to the game loop.
 type PriorityAction struct {
-	Type          ActionType
-	CardID        uuid.UUID
-	CardName      string
-	Targets       []uuid.UUID
-	PermanentID   uuid.UUID
-	AbilityIndex  int
-	XValue        int
-	Attackers     []uuid.UUID
-	Blockers      []BlockAssignment // blocker -> attacker pairs
+	Type         ActionType
+	CardID       uuid.UUID
+	CardName     string
+	Targets      []uuid.UUID
+	PermanentID  uuid.UUID
+	AbilityIndex int
+	XValue       int
+	Attackers    []uuid.UUID
+	Blockers     []mage.BlockAssignment
 }
 
 // PromptType tells the TUI what kind of input is needed.
@@ -65,14 +67,14 @@ func (pt PromptType) String() string {
 
 // ActionOption describes one available action in the TUI menu.
 type ActionOption struct {
-	Type          ActionType
-	Label         string
-	CardID        uuid.UUID
-	PermanentID   uuid.UUID
-	AbilityIndex  int
-	NeedsTarget   bool
-	TargetType    Target // for target selection
-	ManaCost      string
+	Type         ActionType
+	Label        string
+	CardID       uuid.UUID
+	PermanentID  uuid.UUID
+	AbilityIndex int
+	NeedsTarget  bool
+	TargetType   mage.Target
+	ManaCost     string
 }
 
 // GameMsg is sent from the game goroutine to the TUI.
@@ -86,11 +88,10 @@ type GameMsg struct {
 	CanUndo  bool
 }
 
-// undoSnapshot captures game state before a human action for potential undo.
 type undoSnapshot struct {
 	valid          bool
-	hand           []Card
-	manaPool       []Mana
+	hand           []mage.Card
+	manaPool       []core.Mana
 	landsPlayed    int
 	battlefieldLen int
 	stackSize      int
@@ -98,15 +99,14 @@ type undoSnapshot struct {
 	logLen         int
 }
 
-func captureForUndo(g *Game, playerID uuid.UUID, logLen int) undoSnapshot {
+func captureForUndo(g *mage.Game, playerID uuid.UUID, logLen int) undoSnapshot {
 	p := g.GetPlayer(playerID)
 	if p == nil {
 		return undoSnapshot{}
 	}
-	hand := make([]Card, len(p.Hand()))
+	hand := make([]mage.Card, len(p.Hand()))
 	copy(hand, p.Hand())
-	pool := make([]Mana, len(p.ManaPool().pool))
-	copy(pool, p.ManaPool().pool)
+	pool := p.ManaPool().SnapshotPool()
 	tapped := make(map[uuid.UUID]bool)
 	for _, perm := range g.Battlefield {
 		tapped[perm.ID()] = perm.Tapped
@@ -123,13 +123,13 @@ func captureForUndo(g *Game, playerID uuid.UUID, logLen int) undoSnapshot {
 	}
 }
 
-func restoreFromUndo(g *Game, playerID uuid.UUID, snap undoSnapshot) {
+func restoreFromUndo(g *mage.Game, playerID uuid.UUID, snap undoSnapshot) {
 	p := g.GetPlayer(playerID)
 	if p == nil || !snap.valid {
 		return
 	}
 	p.SetHand(snap.hand)
-	p.ManaPool().pool = snap.manaPool
+	p.ManaPool().RestorePool(snap.manaPool)
 	g.LandsPlayedThisTurn = snap.landsPlayed
 	if len(g.Battlefield) > snap.battlefieldLen {
 		g.Battlefield = g.Battlefield[:snap.battlefieldLen]
@@ -196,7 +196,7 @@ type CardState struct {
 	SubTypes  string
 	Power     int
 	Toughness int
-	RulesText string // ability descriptions
+	RulesText string
 }
 
 // ManaPoolState is a snapshot of a mana pool.
@@ -216,24 +216,23 @@ type StackItemState struct {
 	IsAbility  bool
 }
 
-// buildRulesText generates a human-readable rules text from a card's abilities.
-func buildRulesText(c Card) string {
+func buildRulesText(c mage.Card) string {
 	var parts []string
 	for _, a := range c.Abilities() {
 		switch ab := a.(type) {
-		case *KeywordAbility:
+		case *mage.KeywordAbility:
 			parts = append(parts, ab.Keyword.String())
-		case *ProtectionAbility:
+		case *mage.ProtectionAbility:
 			var colors []string
 			for _, col := range ab.FromColors {
 				colors = append(colors, col.String())
 			}
 			parts = append(parts, fmt.Sprintf("Protection from %s", joinStrings(colors)))
-		case *SpellAbility:
+		case *mage.SpellAbility:
 			for _, eff := range ab.Effects() {
 				parts = append(parts, eff.Text())
 			}
-		case ActivatedAbility:
+		case mage.ActivatedAbility:
 			var costParts []string
 			for _, cost := range ab.Costs() {
 				costParts = append(costParts, cost.Text())
@@ -260,7 +259,7 @@ func joinStrings(ss []string) string {
 }
 
 // SnapshotGameState creates a read-only snapshot of the game for the TUI.
-func SnapshotGameState(g *Game, humanIndex int) *GameState {
+func SnapshotGameState(g *mage.Game, humanIndex int) *GameState {
 	human := g.Players[humanIndex]
 	aiIndex := (humanIndex + 1) % 2
 	ai := g.Players[aiIndex]
@@ -275,7 +274,7 @@ func SnapshotGameState(g *Game, humanIndex int) *GameState {
 	}
 }
 
-func snapshotPlayer(g *Game, p Player, showHand bool) PlayerState {
+func snapshotPlayer(g *mage.Game, p mage.Player, showHand bool) PlayerState {
 	ps := PlayerState{
 		Name:           p.Name(),
 		Life:           p.Life(),
@@ -291,7 +290,7 @@ func snapshotPlayer(g *Game, p Player, showHand bool) PlayerState {
 				ID:        c.ID(),
 				Name:      c.Name(),
 				ManaCost:  c.ManaCost().String(),
-				IsLand:    c.HasType(TypeLand),
+				IsLand:    c.HasType(core.TypeLand),
 				Power:     c.Power(),
 				Toughness: c.Toughness(),
 				RulesText: buildRulesText(c),
@@ -323,9 +322,9 @@ func snapshotPlayer(g *Game, p Player, showHand bool) PlayerState {
 			Toughness:  perm.CurrentToughness(g),
 			Tapped:     perm.Tapped,
 			SummonSick: perm.SummonSick,
-			IsCreature: perm.HasType(TypeCreature),
-			IsLand:     perm.HasType(TypeLand),
-			IsArtifact: perm.HasType(TypeArtifact),
+			IsCreature: perm.HasType(core.TypeCreature),
+			IsLand:     perm.HasType(core.TypeLand),
+			IsArtifact: perm.HasType(core.TypeArtifact),
 			Attacking:  g.Combat.IsAttacking(perm.ID()),
 			ManaCost:   perm.Card.ManaCost().String(),
 			RulesText:  buildRulesText(perm.Card),
@@ -349,7 +348,7 @@ func snapshotPlayer(g *Game, p Player, showHand bool) PlayerState {
 			}
 		}
 		for _, a := range perm.RuntimeAbilities {
-			if ka, ok := a.(*KeywordAbility); ok {
+			if ka, ok := a.(*mage.KeywordAbility); ok {
 				permState.Keywords = append(permState.Keywords, ka.Keyword.String())
 			}
 		}
@@ -359,18 +358,18 @@ func snapshotPlayer(g *Game, p Player, showHand bool) PlayerState {
 	return ps
 }
 
-func snapshotManaPool(mp *ManaPool) ManaPoolState {
+func snapshotManaPool(mp *mage.ManaPool) ManaPoolState {
 	return ManaPoolState{
-		White:     mp.Count(White),
-		Blue:      mp.Count(Blue),
-		Black:     mp.Count(Black),
-		Red:       mp.Count(Red),
-		Green:     mp.Count(Green),
-		Colorless: mp.Count(Colorless),
+		White:     mp.Count(core.White),
+		Blue:      mp.Count(core.Blue),
+		Black:     mp.Count(core.Black),
+		Red:       mp.Count(core.Red),
+		Green:     mp.Count(core.Green),
+		Colorless: mp.Count(core.Colorless),
 	}
 }
 
-func snapshotStack(g *Game) []StackItemState {
+func snapshotStack(g *mage.Game) []StackItemState {
 	var items []StackItemState
 	for _, obj := range g.Stack.Objects() {
 		name := "Ability"
@@ -392,16 +391,15 @@ func snapshotStack(g *Game) []StackItemState {
 }
 
 // GetAvailableActions returns the actions available to a player right now.
-func GetAvailableActions(g *Game, playerID uuid.UUID, landsPlayed int, mainPhase bool) []ActionOption {
+func GetAvailableActions(g *mage.Game, playerID uuid.UUID, landsPlayed int, mainPhase bool) []ActionOption {
 	var options []ActionOption
 
 	if mainPhase {
-		// Land drop
 		if landsPlayed < 1 {
 			p := g.GetPlayer(playerID)
 			if p != nil {
 				for _, c := range p.Hand() {
-					if c.HasType(TypeLand) {
+					if c.HasType(core.TypeLand) {
 						options = append(options, ActionOption{
 							Type:   ActionPlayLand,
 							Label:  fmt.Sprintf("Play %s", c.Name()),
@@ -412,12 +410,11 @@ func GetAvailableActions(g *Game, playerID uuid.UUID, landsPlayed int, mainPhase
 			}
 		}
 
-		// Castable spells (at sorcery speed during main phase)
 		for _, card := range g.GetCastableSpells(playerID) {
 			needsTarget := false
-			var targetType Target
+			var targetType mage.Target
 			for _, a := range card.Abilities() {
-				if sa, ok := a.(*SpellAbility); ok {
+				if sa, ok := a.(*mage.SpellAbility); ok {
 					for _, t := range sa.Targets() {
 						needsTarget = true
 						targetType = t
@@ -435,20 +432,19 @@ func GetAvailableActions(g *Game, playerID uuid.UUID, landsPlayed int, mainPhase
 			})
 		}
 	} else {
-		// Priority only: instants
 		p := g.GetPlayer(playerID)
 		if p != nil {
 			for _, card := range p.Hand() {
-				if !card.HasType(TypeInstant) {
+				if !card.HasType(core.TypeInstant) {
 					continue
 				}
 				if !g.CanAfford(playerID, card.ManaCost()) {
 					continue
 				}
 				needsTarget := false
-				var targetType Target
+				var targetType mage.Target
 				for _, a := range card.Abilities() {
-					if sa, ok := a.(*SpellAbility); ok {
+					if sa, ok := a.(*mage.SpellAbility); ok {
 						for _, t := range sa.Targets() {
 							needsTarget = true
 							targetType = t
@@ -468,7 +464,6 @@ func GetAvailableActions(g *Game, playerID uuid.UUID, landsPlayed int, mainPhase
 		}
 	}
 
-	// Activated abilities (available in both main and priority)
 	for _, info := range g.GetActivatableAbilities(playerID) {
 		options = append(options, ActionOption{
 			Type:         ActionActivateAbility,
@@ -478,7 +473,6 @@ func GetAvailableActions(g *Game, playerID uuid.UUID, landsPlayed int, mainPhase
 		})
 	}
 
-	// Pass is always an option
 	options = append(options, ActionOption{
 		Type:  ActionPass,
 		Label: "Pass",
@@ -488,7 +482,7 @@ func GetAvailableActions(g *Game, playerID uuid.UUID, landsPlayed int, mainPhase
 }
 
 // RunGameLoop is the main interactive game loop running in a goroutine.
-func RunGameLoop(g *Game, humanIdx int, toTUI chan<- GameMsg, fromTUI <-chan PriorityAction) {
+func RunGameLoop(g *mage.Game, humanIdx int, toTUI chan<- GameMsg, fromTUI <-chan PriorityAction) {
 	defer close(toTUI)
 
 	aiIdx := (humanIdx + 1) % 2
@@ -511,18 +505,16 @@ func RunGameLoop(g *Game, humanIdx int, toTUI chan<- GameMsg, fromTUI <-chan Pri
 			State:    state,
 			Prompt:   prompt,
 			Options:  options,
-			Log:      append([]string{}, gameLog...), // copy
+			Log:      append([]string{}, gameLog...),
 			GameOver: g.IsGameOver(),
 			Winner:   g.Winner(),
 			CanUndo:  lastUndo.valid,
 		}
 	}
 
-	// Get action from a player. AI computes inline; human gets a TUI prompt.
 	getHumanAction := func(mainPhase bool) PriorityAction {
 		playerID := g.Players[humanIdx].PlayerID()
 		options := GetAvailableActions(g, playerID, g.LandsPlayedThisTurn, mainPhase)
-		// Auto-pass if the only option is Pass AND no undo available
 		if len(options) == 1 && options[0].Type == ActionPass && !lastUndo.valid {
 			return PriorityAction{Type: ActionPass}
 		}
@@ -541,7 +533,6 @@ func RunGameLoop(g *Game, humanIdx int, toTUI chan<- GameMsg, fromTUI <-chan Pri
 		action := aiPlayer.GetPriorityAction(g, g.LandsPlayedThisTurn, mainPhase)
 		if action.Type != ActionPass {
 			addLog(fmt.Sprintf("AI: %s", describeAction(action)))
-			// Send a state update so the TUI shows what the AI did
 			send(PromptNone, nil)
 		}
 		return action
@@ -554,7 +545,6 @@ func RunGameLoop(g *Game, humanIdx int, toTUI chan<- GameMsg, fromTUI <-chan Pri
 		return getAIAction(mainPhase)
 	}
 
-	// Priority loop: both players get to act, stack resolves when both pass
 	runPriorityLoop := func(mainPhase bool) {
 		for {
 			if g.IsGameOver() {
@@ -564,7 +554,6 @@ func RunGameLoop(g *Game, humanIdx int, toTUI chan<- GameMsg, fromTUI <-chan Pri
 			activeIdx := g.ActivePlayer
 			nonActiveIdx := (g.ActivePlayer + 1) % 2
 
-			// Active player gets priority
 			action := getAction(activeIdx, mainPhase)
 			if action.Type == ActionUndo && lastUndo.valid {
 				restoreFromUndo(g, g.Players[humanIdx].PlayerID(), lastUndo)
@@ -579,17 +568,16 @@ func RunGameLoop(g *Game, humanIdx int, toTUI chan<- GameMsg, fromTUI <-chan Pri
 				if activeIdx == humanIdx {
 					lastUndo = captureForUndo(g, g.Players[humanIdx].PlayerID(), len(gameLog))
 				} else {
-					lastUndo.valid = false // AI acted, clear undo
+					lastUndo.valid = false
 				}
 				executeAction(g, g.Players[activeIdx].PlayerID(), action, addLog)
 				g.CheckStateBasedActions()
 				if g.IsGameOver() {
 					return
 				}
-				continue // restart priority — both must pass again
+				continue
 			}
 
-			// Non-active player gets priority (always instant-speed only)
 			action = getAction(nonActiveIdx, false)
 			if action.Type == ActionUndo && lastUndo.valid {
 				restoreFromUndo(g, g.Players[humanIdx].PlayerID(), lastUndo)
@@ -604,7 +592,7 @@ func RunGameLoop(g *Game, humanIdx int, toTUI chan<- GameMsg, fromTUI <-chan Pri
 				if nonActiveIdx == humanIdx {
 					lastUndo = captureForUndo(g, g.Players[humanIdx].PlayerID(), len(gameLog))
 				} else {
-					lastUndo.valid = false // AI acted, clear undo
+					lastUndo.valid = false
 				}
 				executeAction(g, g.Players[nonActiveIdx].PlayerID(), action, addLog)
 				g.CheckStateBasedActions()
@@ -614,13 +602,11 @@ func RunGameLoop(g *Game, humanIdx int, toTUI chan<- GameMsg, fromTUI <-chan Pri
 				continue
 			}
 
-			// Both passed in succession
 			lastUndo.valid = false
 			if g.Stack.IsEmpty() {
-				return // move to next step/phase
+				return
 			}
 
-			// Resolve top of stack
 			top := g.Stack.Peek()
 			topName := "ability"
 			if top.Card != nil {
@@ -632,13 +618,11 @@ func RunGameLoop(g *Game, humanIdx int, toTUI chan<- GameMsg, fromTUI <-chan Pri
 			if g.IsGameOver() {
 				return
 			}
-			// After resolving, active player gets priority again
 		}
 	}
 
-	// Main game loop
 	for g.Turn <= 100 {
-		for _, step := range AllSteps() {
+		for _, step := range core.AllSteps() {
 			g.Step = step
 			g.Effects.Apply(g)
 
@@ -648,28 +632,28 @@ func RunGameLoop(g *Game, humanIdx int, toTUI chan<- GameMsg, fromTUI <-chan Pri
 			}
 
 			switch step {
-			case Untap:
-				g.doUntap()
+			case core.Untap:
+				g.DoUntap()
 				addLog(fmt.Sprintf("── Turn %d: %s ──", g.Turn, g.ActivePlayerObj().Name()))
 
-			case Upkeep:
-				g.doUpkeep()
+			case core.Upkeep:
+				g.DoUpkeep()
 
-			case Draw:
-				g.doDraw()
+			case core.Draw:
+				g.DoDraw()
 				if g.ActivePlayer == humanIdx {
 					addLog("You draw a card")
 				} else {
 					addLog(fmt.Sprintf("%s draws a card", g.ActivePlayerObj().Name()))
 				}
 
-			case PrecombatMain:
+			case core.PrecombatMain:
 				runPriorityLoop(true)
 
-			case BeginCombat:
+			case core.BeginCombat:
 				// nothing
 
-			case DeclareAttackers:
+			case core.DeclareAttackers:
 				activeIdx := g.ActivePlayer
 				if activeIdx == humanIdx {
 					eligible := getEligibleAttackers(g, g.Players[humanIdx].PlayerID())
@@ -690,12 +674,11 @@ func RunGameLoop(g *Game, humanIdx int, toTUI chan<- GameMsg, fromTUI <-chan Pri
 						performAttack(g, attackerIDs, addLog)
 					}
 				}
-				// Priority after attackers declared (if any attackers)
 				if len(g.Combat.Groups) > 0 {
 					runPriorityLoop(false)
 				}
 
-			case DeclareBlockers:
+			case core.DeclareBlockers:
 				if len(g.Combat.Groups) == 0 {
 					continue
 				}
@@ -715,33 +698,32 @@ func RunGameLoop(g *Game, humanIdx int, toTUI chan<- GameMsg, fromTUI <-chan Pri
 						performBlock(g, blockers, addLog)
 					}
 				}
-				// Priority after blockers declared
 				if len(g.Combat.Groups) > 0 {
 					runPriorityLoop(false)
 				}
 
-			case FirstStrikeDamage:
+			case core.FirstStrikeDamage:
 				if g.Combat.HasFirstStrikers(g) {
-					g.doCombatDamage(true)
+					g.DoCombatDamage(true)
 					g.CheckStateBasedActions()
 				}
 
-			case CombatDamage:
+			case core.CombatDamage:
 				if len(g.Combat.Groups) > 0 {
-					g.doCombatDamage(false)
+					g.DoCombatDamage(false)
 					g.CheckStateBasedActions()
 					reportCombatResults(g, humanIdx, addLog)
 				}
 
-			case EndCombat:
+			case core.EndCombat:
 				g.Combat.Reset()
 
-			case PostcombatMain:
+			case core.PostcombatMain:
 				runPriorityLoop(true)
 
-			case EndStep:
-				g.FireEvent(GameEvent{
-					Type:     EvtEndStep,
+			case core.EndStep:
+				g.FireEvent(core.GameEvent{
+					Type:     core.EvtEndStep,
 					PlayerID: g.ActivePlayerObj().PlayerID(),
 				})
 				g.PutTriggersOnStack()
@@ -749,8 +731,8 @@ func RunGameLoop(g *Game, humanIdx int, toTUI chan<- GameMsg, fromTUI <-chan Pri
 					runPriorityLoop(false)
 				}
 
-			case Cleanup:
-				g.doCleanup()
+			case core.Cleanup:
+				g.DoCleanup()
 			}
 
 			g.CheckStateBasedActions()
@@ -760,7 +742,6 @@ func RunGameLoop(g *Game, humanIdx int, toTUI chan<- GameMsg, fromTUI <-chan Pri
 			}
 		}
 
-		// Next turn
 		if len(g.ExtraTurns) > 0 {
 			extraPlayerID := g.ExtraTurns[0]
 			g.ExtraTurns = g.ExtraTurns[1:]
@@ -790,7 +771,7 @@ func describeAction(action PriorityAction) string {
 	}
 }
 
-func executeAction(g *Game, playerID uuid.UUID, action PriorityAction, addLog func(string)) {
+func executeAction(g *mage.Game, playerID uuid.UUID, action PriorityAction, addLog func(string)) {
 	var err error
 	switch action.Type {
 	case ActionPlayLand:
@@ -820,22 +801,22 @@ func executeAction(g *Game, playerID uuid.UUID, action PriorityAction, addLog fu
 	}
 }
 
-func getEligibleAttackers(g *Game, playerID uuid.UUID) []*Permanent {
-	var eligible []*Permanent
+func getEligibleAttackers(g *mage.Game, playerID uuid.UUID) []*mage.Permanent {
+	var eligible []*mage.Permanent
 	for _, perm := range g.Battlefield {
-		if perm.Controller != playerID || !perm.HasType(TypeCreature) {
+		if perm.Controller != playerID || !perm.HasType(core.TypeCreature) {
 			continue
 		}
 		if perm.Tapped {
 			continue
 		}
-		if perm.SummonSick && !perm.HasKeyword(Haste) {
+		if perm.SummonSick && !perm.HasKeyword(core.Haste) {
 			continue
 		}
 		if !g.Effects.CanAttack(perm.ID()) {
 			continue
 		}
-		if !CanAttackCheck(perm, g) {
+		if !mage.CanAttackCheck(perm, g) {
 			continue
 		}
 		eligible = append(eligible, perm)
@@ -843,7 +824,7 @@ func getEligibleAttackers(g *Game, playerID uuid.UUID) []*Permanent {
 	return eligible
 }
 
-func attackerOptions(eligible []*Permanent) []ActionOption {
+func attackerOptions(eligible []*mage.Permanent) []ActionOption {
 	var options []ActionOption
 	for _, perm := range eligible {
 		options = append(options, ActionOption{
@@ -855,7 +836,7 @@ func attackerOptions(eligible []*Permanent) []ActionOption {
 	return options
 }
 
-func performAttack(g *Game, attackerIDs []uuid.UUID, addLog func(string)) {
+func performAttack(g *mage.Game, attackerIDs []uuid.UUID, addLog func(string)) {
 	defender := g.NonActivePlayerObj()
 	active := g.ActivePlayerObj()
 	for _, id := range attackerIDs {
@@ -863,24 +844,24 @@ func performAttack(g *Game, attackerIDs []uuid.UUID, addLog func(string)) {
 		if atk == nil {
 			continue
 		}
-		if !atk.HasKeyword(Vigilance) {
+		if !atk.HasKeyword(core.Vigilance) {
 			atk.Tapped = true
 		}
 		g.Combat.AddAttacker(id, defender.PlayerID())
 		addLog(fmt.Sprintf("%s attacks with %s %d/%d",
 			active.Name(), atk.Name(), atk.CurrentPower(g), atk.CurrentToughness(g)))
-		g.FireEvent(GameEvent{
-			Type:     EvtDeclaredAttacker,
+		g.FireEvent(core.GameEvent{
+			Type:     core.EvtDeclaredAttacker,
 			SourceID: id,
 			PlayerID: active.PlayerID(),
 		})
 	}
 }
 
-func getEligibleBlockers(g *Game, playerID uuid.UUID) []*Permanent {
-	var eligible []*Permanent
+func getEligibleBlockers(g *mage.Game, playerID uuid.UUID) []*mage.Permanent {
+	var eligible []*mage.Permanent
 	for _, perm := range g.Battlefield {
-		if perm.Controller != playerID || !perm.HasType(TypeCreature) {
+		if perm.Controller != playerID || !perm.HasType(core.TypeCreature) {
 			continue
 		}
 		if perm.Tapped {
@@ -891,7 +872,7 @@ func getEligibleBlockers(g *Game, playerID uuid.UUID) []*Permanent {
 	return eligible
 }
 
-func blockerOptions(g *Game, eligible []*Permanent) []ActionOption {
+func blockerOptions(g *mage.Game, eligible []*mage.Permanent) []ActionOption {
 	var options []ActionOption
 	for _, perm := range eligible {
 		options = append(options, ActionOption{
@@ -900,7 +881,6 @@ func blockerOptions(g *Game, eligible []*Permanent) []ActionOption {
 			PermanentID: perm.ID(),
 		})
 	}
-	// Add "Done" option to finalize blocking
 	options = append(options, ActionOption{
 		Type:  ActionPass,
 		Label: "Done (confirm blocks)",
@@ -908,7 +888,7 @@ func blockerOptions(g *Game, eligible []*Permanent) []ActionOption {
 	return options
 }
 
-func performBlock(g *Game, blockers []BlockAssignment, addLog func(string)) {
+func performBlock(g *mage.Game, blockers []mage.BlockAssignment, addLog func(string)) {
 	nonActive := g.NonActivePlayerObj()
 	for _, ba := range blockers {
 		blocker := g.FindPermanent(ba.BlockerID)
@@ -916,17 +896,17 @@ func performBlock(g *Game, blockers []BlockAssignment, addLog func(string)) {
 		if blocker == nil || attacker == nil {
 			continue
 		}
-		if !CanBlock(blocker, attacker, g) {
+		if !mage.CanBlock(blocker, attacker, g) {
 			continue
 		}
-		if HasLandwalkEvasion(attacker, nonActive.PlayerID(), g) {
+		if mage.HasLandwalkEvasion(attacker, nonActive.PlayerID(), g) {
 			continue
 		}
 		g.Combat.AddBlocker(ba.BlockerID, ba.AttackerID)
 		addLog(fmt.Sprintf("%s blocks %s with %s",
 			nonActive.Name(), attacker.Name(), blocker.Name()))
-		g.FireEvent(GameEvent{
-			Type:     EvtDeclaredBlocker,
+		g.FireEvent(core.GameEvent{
+			Type:     core.EvtDeclaredBlocker,
 			SourceID: ba.BlockerID,
 			TargetID: ba.AttackerID,
 			PlayerID: nonActive.PlayerID(),
@@ -934,7 +914,7 @@ func performBlock(g *Game, blockers []BlockAssignment, addLog func(string)) {
 	}
 }
 
-func reportCombatResults(g *Game, humanIdx int, addLog func(string)) {
+func reportCombatResults(g *mage.Game, humanIdx int, addLog func(string)) {
 	for _, p := range g.Players {
 		addLog(fmt.Sprintf("%s: %d life", p.Name(), p.Life()))
 	}

@@ -1,4 +1,4 @@
-package mage
+package core
 
 import "github.com/google/uuid"
 

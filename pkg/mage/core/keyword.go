@@ -1,4 +1,4 @@
-package mage
+package core
 
 // Keyword represents a keyword ability.
 type Keyword int

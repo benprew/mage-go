@@ -6,6 +6,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/mage/mage/pkg/mage"
+	"github.com/mage/mage/pkg/mage/interactive"
 
 	// Register all cards
 	_ "github.com/mage/mage/cards/limited"
@@ -14,7 +15,7 @@ import (
 func main() {
 	// Create players
 	human := mage.NewBasePlayer("You")
-	ai := mage.NewAIPlayer("AI")
+	ai := interactive.NewAIPlayer("AI")
 
 	// Build decks
 	humanCards := buildDeck(humanDeck, human.PlayerID())
@@ -36,11 +37,11 @@ func main() {
 	drawOpeningHand(ai)
 
 	// Channels for communication
-	toTUI := make(chan mage.GameMsg, 1)
-	fromTUI := make(chan mage.PriorityAction, 1)
+	toTUI := make(chan interactive.GameMsg, 1)
+	fromTUI := make(chan interactive.PriorityAction, 1)
 
 	// Start game loop in goroutine
-	go mage.RunGameLoop(g, 0, toTUI, fromTUI)
+	go interactive.RunGameLoop(g, 0, toTUI, fromTUI)
 
 	// Start bubbletea
 	model := NewModel(fromTUI, toTUI)

@@ -1,4 +1,4 @@
-package mage
+package core
 
 //go:generate enumer -type=Zone -trimprefix=Zone -output=zone_enumer.go
 
@@ -14,4 +14,3 @@ const (
 	ZoneExile
 	ZoneCommand
 )
-
