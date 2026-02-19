@@ -52,6 +52,130 @@ type effectSource struct {
 func (s *effectSource) SourceID() uuid.UUID      { return s.sourceID }
 func (s *effectSource) SetSourceID(id uuid.UUID) { s.sourceID = id }
 
+// ---------------------------------------------------------------------------
+// Compositional continuous effect primitives
+// ---------------------------------------------------------------------------
+
+// ActiveCondition determines when a continuous effect is active.
+type ActiveCondition func(g *Game, sourceID uuid.UUID) bool
+
+// SourceOnBattlefield is active while the source permanent exists on the battlefield.
+// This is the default for FuncContinuousEffect so you rarely need to pass it explicitly.
+var SourceOnBattlefield ActiveCondition = func(g *Game, sourceID uuid.UUID) bool {
+	return g.FindPermanent(sourceID) != nil
+}
+
+// SourceAttached is active while the source is on the battlefield and attached to another permanent.
+var SourceAttached ActiveCondition = func(g *Game, sourceID uuid.UUID) bool {
+	src := g.FindPermanent(sourceID)
+	return src != nil && src.IsAttached()
+}
+
+// SourceUntapped is active while the source is on the battlefield and untapped.
+var SourceUntapped ActiveCondition = func(g *Game, sourceID uuid.UUID) bool {
+	src := g.FindPermanent(sourceID)
+	return src != nil && !src.Tapped
+}
+
+// TargetOnBattlefield returns an ActiveCondition that's active while a specific permanent exists.
+func TargetOnBattlefield(targetID uuid.UUID) ActiveCondition {
+	return func(g *Game, _ uuid.UUID) bool {
+		return g.FindPermanent(targetID) != nil
+	}
+}
+
+// WithSourceCondition bridges the existing SourceCondition type to ActiveCondition.
+func WithSourceCondition(cond SourceCondition) ActiveCondition {
+	return func(g *Game, sourceID uuid.UUID) bool {
+		src := g.FindPermanent(sourceID)
+		if src == nil {
+			return false
+		}
+		return cond(src, g)
+	}
+}
+
+// ContinuousApplyFunc is the apply function for a functional continuous effect.
+type ContinuousApplyFunc func(g *Game, sourceID uuid.UUID) error
+
+// funcContinuousEffect implements ContinuousEffect using a function and metadata.
+type funcContinuousEffect struct {
+	layer    Layer
+	duration Duration
+	apply    ContinuousApplyFunc
+	active   ActiveCondition // nil means SourceOnBattlefield
+	effectSource
+}
+
+// FuncContinuousEffect creates a ContinuousEffect from a layer, duration, and apply function.
+// By default, it's active while the source permanent is on the battlefield.
+// Pass an optional ActiveCondition to customize when it's active.
+func FuncContinuousEffect(layer Layer, duration Duration, apply ContinuousApplyFunc, condition ...ActiveCondition) ContinuousEffect {
+	var cond ActiveCondition
+	if len(condition) > 0 {
+		cond = condition[0]
+	}
+	return &funcContinuousEffect{
+		layer:    layer,
+		duration: duration,
+		apply:    apply,
+		active:   cond,
+	}
+}
+
+func (e *funcContinuousEffect) GetLayer() Layer       { return e.layer }
+func (e *funcContinuousEffect) GetDuration() Duration { return e.duration }
+
+func (e *funcContinuousEffect) IsActive(g *Game) bool {
+	if e.active != nil {
+		return e.active(g, e.sourceID)
+	}
+	return g.FindPermanent(e.sourceID) != nil
+}
+
+func (e *funcContinuousEffect) Apply(g *Game) error {
+	return e.apply(g, e.sourceID)
+}
+
+// AttachedApplyFunc receives both the source and the attached target.
+type AttachedApplyFunc func(g *Game, source, target *Permanent) error
+
+// attachedEffect implements ContinuousEffect for aura/equipment patterns.
+type attachedEffect struct {
+	layer Layer
+	apply AttachedApplyFunc
+	effectSource
+}
+
+// AttachedEffect creates a ContinuousEffect that applies while the source is
+// attached to another permanent. The apply function receives both source and target.
+func AttachedEffect(layer Layer, apply AttachedApplyFunc) ContinuousEffect {
+	return &attachedEffect{
+		layer: layer,
+		apply: apply,
+	}
+}
+
+func (e *attachedEffect) GetLayer() Layer       { return e.layer }
+func (e *attachedEffect) GetDuration() Duration { return WhileOnBattlefield }
+
+func (e *attachedEffect) IsActive(g *Game) bool {
+	src := g.FindPermanent(e.sourceID)
+	return src != nil && src.IsAttached()
+}
+
+func (e *attachedEffect) Apply(g *Game) error {
+	src := g.FindPermanent(e.sourceID)
+	if src == nil || !src.IsAttached() {
+		return nil
+	}
+	target := g.FindPermanent(src.AttachedTo)
+	if target == nil {
+		return nil
+	}
+	return e.apply(g, src, target)
+}
+
 // EffectManager manages and applies continuous effects.
 type EffectManager struct {
 	effects                []ContinuousEffect
@@ -723,117 +847,36 @@ func (e *grantKeywordAttachedEffect) Apply(g *Game) error {
 // GrantProtectionToAttached creates a continuous effect granting protection from
 // a color to the attached creature (e.g. Black Ward, Blue Ward).
 func GrantProtectionToAttached(color Color, at AttachType) ContinuousEffect {
-	return &grantProtectionAttachedEffect{
-		color:      color,
-		attachType: at,
-	}
-}
-
-type grantProtectionAttachedEffect struct {
-	color      Color
-	attachType AttachType
-	effectSource
-}
-
-func (e *grantProtectionAttachedEffect) GetLayer() Layer       { return LayerAbility }
-func (e *grantProtectionAttachedEffect) GetDuration() Duration { return WhileOnBattlefield }
-
-func (e *grantProtectionAttachedEffect) IsActive(g *Game) bool {
-	src := g.FindPermanent(e.sourceID)
-	if src == nil {
-		return false
-	}
-	return src.IsAttached()
-}
-
-func (e *grantProtectionAttachedEffect) Apply(g *Game) error {
-	src := g.FindPermanent(e.sourceID)
-	if src == nil || !src.IsAttached() {
+	return AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
+		target.RuntimeAbilities = append(target.RuntimeAbilities, ProtectionFromColor(color))
 		return nil
-	}
-	target := g.FindPermanent(src.AttachedTo)
-	if target == nil {
-		return nil
-	}
-	target.RuntimeAbilities = append(target.RuntimeAbilities, ProtectionFromColor(e.color))
-	return nil
+	})
 }
 
 // RemoveKeywordFromAttached creates a continuous effect removing a keyword from the attached creature.
 func RemoveKeywordFromAttached(kw Keyword, at AttachType) ContinuousEffect {
-	return &removeKeywordAttachedEffect{
-		keyword:    kw,
-		attachType: at,
-	}
-}
-
-type removeKeywordAttachedEffect struct {
-	keyword    Keyword
-	attachType AttachType
-	effectSource
-}
-
-func (e *removeKeywordAttachedEffect) GetLayer() Layer       { return LayerAbility }
-func (e *removeKeywordAttachedEffect) GetDuration() Duration { return WhileOnBattlefield }
-
-func (e *removeKeywordAttachedEffect) IsActive(g *Game) bool {
-	src := g.FindPermanent(e.sourceID)
-	return src != nil && src.IsAttached()
-}
-
-func (e *removeKeywordAttachedEffect) Apply(g *Game) error {
-	src := g.FindPermanent(e.sourceID)
-	if src == nil || !src.IsAttached() {
-		return nil
-	}
-	target := g.FindPermanent(src.AttachedTo)
-	if target == nil {
-		return nil
-	}
-	// Remove the keyword from runtime abilities
-	var filtered []Ability
-	for _, a := range target.RuntimeAbilities {
-		ab := UnwrapAbility(a)
-		if ka, ok := ab.(*KeywordAbility); ok && ka.Keyword == e.keyword {
-			continue // remove this keyword
+	return AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
+		var filtered []Ability
+		for _, a := range target.RuntimeAbilities {
+			ab := UnwrapAbility(a)
+			if ka, ok := ab.(*KeywordAbility); ok && ka.Keyword == kw {
+				continue // remove this keyword
+			}
+			filtered = append(filtered, a)
 		}
-		filtered = append(filtered, a)
-	}
-	target.RuntimeAbilities = filtered
-	return nil
+		target.RuntimeAbilities = filtered
+		return nil
+	})
 }
 
 // ChangeAttachedSubTypes replaces the subtypes of the attached permanent (e.g. Evil Presence
 // makes enchanted land a Swamp, Phantasmal Terrain makes it a chosen type).
 func ChangeAttachedSubTypes(newSubTypes []string) ContinuousEffect {
-	return &changeAttachedSubTypesEffect{newSubTypes: newSubTypes}
-}
-
-type changeAttachedSubTypesEffect struct {
-	newSubTypes []string
-	effectSource
-}
-
-func (e *changeAttachedSubTypesEffect) GetLayer() Layer       { return LayerType }
-func (e *changeAttachedSubTypesEffect) GetDuration() Duration { return WhileOnBattlefield }
-
-func (e *changeAttachedSubTypesEffect) IsActive(g *Game) bool {
-	src := g.FindPermanent(e.sourceID)
-	return src != nil && src.IsAttached()
-}
-
-func (e *changeAttachedSubTypesEffect) Apply(g *Game) error {
-	src := g.FindPermanent(e.sourceID)
-	if src == nil || !src.IsAttached() {
+	return AttachedEffect(LayerType, func(g *Game, source, target *Permanent) error {
+		target.SubTypeOverride = make([]string, len(newSubTypes))
+		copy(target.SubTypeOverride, newSubTypes)
 		return nil
-	}
-	target := g.FindPermanent(src.AttachedTo)
-	if target == nil {
-		return nil
-	}
-	target.SubTypeOverride = make([]string, len(e.newSubTypes))
-	copy(target.SubTypeOverride, e.newSubTypes)
-	return nil
+	})
 }
 
 // GrantActivatedAbilityToAttached grants an activated ability to the attached creature.
@@ -922,35 +965,11 @@ func (e *grantActivatedAbilityToAllEffect) Apply(g *Game) error {
 
 // PreventAttachedFromUntapping creates a continuous effect preventing the attached creature from untapping.
 func PreventAttachedFromUntapping(at AttachType) ContinuousEffect {
-	return &preventUntapEffect{
-		attachType: at,
-	}
-}
-
-type preventUntapEffect struct {
-	attachType AttachType
-	effectSource
-}
-
-func (e *preventUntapEffect) GetLayer() Layer       { return LayerAbility }
-func (e *preventUntapEffect) GetDuration() Duration { return WhileOnBattlefield }
-
-func (e *preventUntapEffect) IsActive(g *Game) bool {
-	src := g.FindPermanent(e.sourceID)
-	return src != nil && src.IsAttached()
-}
-
-func (e *preventUntapEffect) Apply(g *Game) error {
-	src := g.FindPermanent(e.sourceID)
-	if src == nil || !src.IsAttached() {
-		return nil
-	}
-	target := g.FindPermanent(src.AttachedTo)
-	if target != nil {
+	return AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
 		g.Effects.grantedKW[target.ID()] = append(g.Effects.grantedKW[target.ID()], DoesNotUntapKW)
 		target.RuntimeAbilities = append(target.RuntimeAbilities, &grantedByEffect{NewKeywordAbility(DoesNotUntapKW)})
-	}
-	return nil
+		return nil
+	})
 }
 
 // PreventFromAttackingIfDefendingPlayerControls creates a continuous effect preventing the creature from
@@ -1007,34 +1026,10 @@ func (p *preventFromAttackingIf) IsActive(g *Game) bool {
 
 // PreventAttachedFromAttacking creates a continuous effect preventing the attached creature from attacking.
 func PreventAttachedFromAttacking(at AttachType) ContinuousEffect {
-	return &preventAttachedAttackEffect{
-		attachType: at,
-	}
-}
-
-type preventAttachedAttackEffect struct {
-	attachType AttachType
-	effectSource
-}
-
-func (e *preventAttachedAttackEffect) GetLayer() Layer       { return LayerAbility }
-func (e *preventAttachedAttackEffect) GetDuration() Duration { return WhileOnBattlefield }
-
-func (e *preventAttachedAttackEffect) IsActive(g *Game) bool {
-	src := g.FindPermanent(e.sourceID)
-	if src == nil {
-		return false
-	}
-	return src.IsAttached()
-}
-
-func (e *preventAttachedAttackEffect) Apply(g *Game) error {
-	src := g.FindPermanent(e.sourceID)
-	if src == nil || !src.IsAttached() {
+	return AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
+		g.Effects.preventAttack[target.ID()] = true
 		return nil
-	}
-	g.Effects.preventAttack[src.AttachedTo] = true
-	return nil
+	})
 }
 
 // temporaryBoostEffect boosts a specific creature until end of turn.
@@ -1303,34 +1298,12 @@ func (e *boostControlledCreaturesEffect) Apply(g *Game) error {
 	return nil
 }
 
-// controlChangeEffect is a continuous control change effect (e.g., Control Magic).
-type controlChangeEffect struct {
-	effectSource
-}
-
+// ControlChangeContinuous creates a continuous control change effect (e.g., Control Magic).
 func ControlChangeContinuous() ContinuousEffect {
-	return &controlChangeEffect{}
-}
-
-func (e *controlChangeEffect) GetLayer() Layer       { return LayerControl }
-func (e *controlChangeEffect) GetDuration() Duration { return WhileOnBattlefield }
-
-func (e *controlChangeEffect) IsActive(g *Game) bool {
-	src := g.FindPermanent(e.sourceID)
-	return src != nil && src.IsAttached()
-}
-
-func (e *controlChangeEffect) Apply(g *Game) error {
-	src := g.FindPermanent(e.sourceID)
-	if src == nil || !src.IsAttached() {
+	return AttachedEffect(LayerControl, func(g *Game, source, target *Permanent) error {
+		target.Controller = source.Controller
 		return nil
-	}
-	target := g.FindPermanent(src.AttachedTo)
-	if target == nil {
-		return nil
-	}
-	target.Controller = src.Controller
-	return nil
+	})
 }
 
 // boostAttachedByForestCountEffect boosts the attached creature by Forests controlled.
@@ -1401,25 +1374,10 @@ func (em *EffectManager) SpellCostIncrease(c Color) int {
 // IncreaseSpellCostForColor is a continuous effect that increases the cost of
 // spells of a given color (e.g. Gloom makes white spells cost {3} more).
 func IncreaseSpellCostForColor(color Color, amount int) ContinuousEffect {
-	return &increaseSpellCostEffect{color: color, amount: amount}
-}
-
-type increaseSpellCostEffect struct {
-	color  Color
-	amount int
-	effectSource
-}
-
-func (e *increaseSpellCostEffect) GetLayer() Layer       { return LayerAbility }
-func (e *increaseSpellCostEffect) GetDuration() Duration { return WhileOnBattlefield }
-
-func (e *increaseSpellCostEffect) IsActive(g *Game) bool {
-	return g.FindPermanent(e.sourceID) != nil
-}
-
-func (e *increaseSpellCostEffect) Apply(g *Game) error {
-	g.Effects.spellCostIncrease[e.color] += e.amount
-	return nil
+	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
+		g.Effects.spellCostIncrease[color] += amount
+		return nil
+	})
 }
 
 // ChangeSubTypesForAll changes subtypes of all permanents matching fromSubTypes
@@ -1570,28 +1528,15 @@ func (e *colorOverrideContinuous) Apply(g *Game) error {
 	return nil
 }
 
-// preventAllUntapsEffect prevents ALL permanents from untapping during untap steps (Stasis).
-type preventAllUntapsEffect struct {
-	effectSource
-}
-
+// PreventAllUntaps prevents ALL permanents from untapping during untap steps (Stasis).
 func PreventAllUntaps() ContinuousEffect {
-	return &preventAllUntapsEffect{}
-}
-
-func (e *preventAllUntapsEffect) GetLayer() Layer       { return LayerAbility }
-func (e *preventAllUntapsEffect) GetDuration() Duration { return WhileOnBattlefield }
-
-func (e *preventAllUntapsEffect) IsActive(g *Game) bool {
-	return g.FindPermanent(e.sourceID) != nil
-}
-
-func (e *preventAllUntapsEffect) Apply(g *Game) error {
-	for _, p := range g.Battlefield {
-		g.Effects.grantedKW[p.ID()] = append(g.Effects.grantedKW[p.ID()], DoesNotUntapKW)
-		p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{NewKeywordAbility(DoesNotUntapKW)})
-	}
-	return nil
+	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
+		for _, p := range g.Battlefield {
+			g.Effects.grantedKW[p.ID()] = append(g.Effects.grantedKW[p.ID()], DoesNotUntapKW)
+			p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{NewKeywordAbility(DoesNotUntapKW)})
+		}
+		return nil
+	})
 }
 
 // boostSelfEffect boosts the source P/T while the SourceCondition passes
@@ -1630,32 +1575,15 @@ func (e boostSelfEffect) IsActive(g *Game) bool {
 	return g.FindPermanent(e.sourceID) != nil
 }
 
-// limitLandUntapsEffect limits how many lands each player can untap per turn
-// (e.g. Winter Orb). Only active while the source is untapped.
-type limitLandUntapsEffect struct {
-	limit int
-	effectSource
-}
-
-// LimitLandUntaps creates a continuous effect that limits land untaps per turn.
-// Only active while the source permanent is untapped.
+// LimitLandUntaps creates a continuous effect that limits land untaps per turn
+// (e.g. Winter Orb). Only active while the source permanent is untapped.
 func LimitLandUntaps(limit int) ContinuousEffect {
-	return &limitLandUntapsEffect{limit: limit}
-}
-
-func (e *limitLandUntapsEffect) GetLayer() Layer       { return LayerAbility }
-func (e *limitLandUntapsEffect) GetDuration() Duration { return WhileOnBattlefield }
-
-func (e *limitLandUntapsEffect) IsActive(g *Game) bool {
-	src := g.FindPermanent(e.sourceID)
-	return src != nil && !src.Tapped
-}
-
-func (e *limitLandUntapsEffect) Apply(g *Game) error {
-	if g.Effects.landUntapLimit < 0 || e.limit < g.Effects.landUntapLimit {
-		g.Effects.landUntapLimit = e.limit
-	}
-	return nil
+	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
+		if g.Effects.landUntapLimit < 0 || limit < g.Effects.landUntapLimit {
+			g.Effects.landUntapLimit = limit
+		}
+		return nil
+	}, SourceUntapped)
 }
 
 // animateLandsEffect makes matching permanents into creatures with given P/T.
@@ -1687,27 +1615,13 @@ func (e *animateLandsEffect) Apply(g *Game) error {
 	return nil
 }
 
-// allowUnlimitedLandPlaysEffect lets the controller play any number of lands.
-// Used by Fastbond.
-type allowUnlimitedLandPlaysEffect struct {
-	effectSource
-}
-
 // AllowUnlimitedLandPlays creates a continuous effect that removes the land play limit.
+// Used by Fastbond.
 func AllowUnlimitedLandPlays() ContinuousEffect {
-	return &allowUnlimitedLandPlaysEffect{}
-}
-
-func (e *allowUnlimitedLandPlaysEffect) GetLayer() Layer       { return LayerAbility }
-func (e *allowUnlimitedLandPlaysEffect) GetDuration() Duration { return WhileOnBattlefield }
-
-func (e *allowUnlimitedLandPlaysEffect) IsActive(g *Game) bool {
-	return g.FindPermanent(e.sourceID) != nil
-}
-
-func (e *allowUnlimitedLandPlaysEffect) Apply(g *Game) error {
-	g.Effects.unlimitedLandPlays = true
-	return nil
+	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
+		g.Effects.unlimitedLandPlays = true
+		return nil
+	})
 }
 
 // doppelgangerCopyEffect copies another creature's P/T and keyword abilities
@@ -1792,85 +1706,40 @@ func extractKeywords(p *Permanent) []Keyword {
 	return keywords
 }
 
-// manaConversionEffect sets a mana conversion on the EffectManager while the
-// source permanent is on the battlefield (e.g. Sunglasses of Urza: red→white).
-type manaConversionEffect struct {
-	from Color
-	to   Color
-	effectSource
-}
-
-// ManaConversion creates a continuous effect that allows spending one color as another.
+// ManaConversion creates a continuous effect that allows spending one color as another
+// (e.g. Sunglasses of Urza: red→white).
 func ManaConversion(from, to Color) ContinuousEffect {
-	return &manaConversionEffect{from: from, to: to}
-}
-
-func (e *manaConversionEffect) GetLayer() Layer       { return LayerAbility }
-func (e *manaConversionEffect) GetDuration() Duration { return WhileOnBattlefield }
-
-func (e *manaConversionEffect) IsActive(g *Game) bool {
-	return g.FindPermanent(e.sourceID) != nil
-}
-
-func (e *manaConversionEffect) Apply(g *Game) error {
-	g.Effects.SetManaConversion(e.from, e.to)
-	return nil
-}
-
-// bodyguardEffect makes an untapped creature redirect combat damage from its
-// controller to itself (Veteran Bodyguard).
-type bodyguardEffect struct {
-	effectSource
+	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
+		g.Effects.SetManaConversion(from, to)
+		return nil
+	})
 }
 
 // BodyguardContinuous creates a continuous effect for Veteran Bodyguard.
+// Only active while the source is untapped.
 func BodyguardContinuous() ContinuousEffect {
-	return &bodyguardEffect{}
-}
-
-func (e *bodyguardEffect) GetLayer() Layer       { return LayerAbility }
-func (e *bodyguardEffect) GetDuration() Duration { return WhileOnBattlefield }
-
-func (e *bodyguardEffect) IsActive(g *Game) bool {
-	src := g.FindPermanent(e.sourceID)
-	return src != nil && !src.Tapped
-}
-
-func (e *bodyguardEffect) Apply(g *Game) error {
-	src := g.FindPermanent(e.sourceID)
-	if src == nil || src.Tapped {
+	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+		src := g.FindPermanent(sourceID)
+		if src == nil {
+			return nil
+		}
+		g.Effects.SetBodyguard(src.Controller, src.ID())
 		return nil
-	}
-	g.Effects.SetBodyguard(src.Controller, src.ID())
-	return nil
-}
-
-// personalIncarnationEffect redirects ALL damage from a player to Personal Incarnation.
-// Unlike bodyguardEffect (combat damage only), this applies to all damage sources.
-type personalIncarnationEffect struct {
-	effectSource
+	}, SourceUntapped)
 }
 
 // PersonalIncarnationRedirect creates a continuous effect for Personal Incarnation.
+// Redirects ALL damage from a player to Personal Incarnation (unlike Veteran Bodyguard
+// which only redirects combat damage).
 func PersonalIncarnationRedirect() ContinuousEffect {
-	return &personalIncarnationEffect{}
-}
-
-func (e *personalIncarnationEffect) GetLayer() Layer       { return LayerAbility }
-func (e *personalIncarnationEffect) GetDuration() Duration { return WhileOnBattlefield }
-
-func (e *personalIncarnationEffect) IsActive(g *Game) bool {
-	src := g.FindPermanent(e.sourceID)
-	return src != nil
-}
-
-func (e *personalIncarnationEffect) Apply(g *Game) error {
-	src := g.FindPermanent(e.sourceID)
-	if src == nil {
+	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+		src := g.FindPermanent(sourceID)
+		if src == nil {
+			return nil
+		}
+		g.Effects.SetPlayerDamageRedirect(src.Controller, src.ID())
 		return nil
-	}
-	g.Effects.SetPlayerDamageRedirect(src.Controller, src.ID())
-	return nil
+	})
 }
 
 // temporaryAnimateEffect turns a specific permanent into a creature with given
