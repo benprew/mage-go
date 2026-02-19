@@ -426,6 +426,20 @@ func WhileSourceAttacking(source *Permanent, g *Game) bool {
 	return g.Combat != nil && g.Combat.IsAttacking(source.ID())
 }
 
+// WhileSourceUntapped is a SourceCondition true only when the source permanent
+// is untapped.
+func WhileSourceUntapped(source *Permanent, g *Game) bool {
+	return !source.Tapped
+}
+
+// WhileControlling is a SourceCondition factory, it creates a SourceCondition that
+// ensures the source's controller controls a permanent that matches the filter.
+func WhileControlling(filter PermanentFilter) SourceCondition {
+	return func(source *Permanent, g *Game) bool {
+		return g.AnyBattlefield(And(ControlledBy(source.Controller), filter))
+	}
+}
+
 // preventDamageRuleContinuous registers a damage prevention rule each Apply()
 // cycle. The toFactory receives the source permanent's ID so filters can
 // reference "self" dynamically.
@@ -1580,41 +1594,40 @@ func (e *preventAllUntapsEffect) Apply(g *Game) error {
 	return nil
 }
 
-// boostSelfWhileControllingEffect boosts the source +P/+T while the controller
-// controls a permanent matching a filter.
-type boostSelfWhileControllingEffect struct {
+// boostSelfEffect boosts the source P/T while the SourceCondition passes
+type boostSelfEffect struct {
 	power     int
 	toughness int
-	condition PermanentFilter
+	condition SourceCondition
 	effectSource
 }
 
-func BoostSelfWhileControlling(power, toughness int, condition PermanentFilter) ContinuousEffect {
-	return &boostSelfWhileControllingEffect{
+// BoostSelf creates a ContinuousEffect boosts the source P/T while the SourceCondition passes
+func BoostSelf(power, toughness int, condition SourceCondition) ContinuousEffect {
+	return &boostSelfEffect{
 		power:     power,
 		toughness: toughness,
 		condition: condition,
 	}
 }
-
-func (e *boostSelfWhileControllingEffect) GetLayer() Layer       { return LayerPT }
-func (e *boostSelfWhileControllingEffect) GetDuration() Duration { return WhileOnBattlefield }
-
-func (e *boostSelfWhileControllingEffect) IsActive(g *Game) bool {
-	return g.FindPermanent(e.sourceID) != nil
-}
-
-func (e *boostSelfWhileControllingEffect) Apply(g *Game) error {
+func (e boostSelfEffect) Apply(g *Game) error {
 	src := g.FindPermanent(e.sourceID)
 	if src == nil {
 		return nil
 	}
-	// Check if controller controls a matching permanent
-	if g.AnyBattlefield(And(ControlledBy(src.Controller), e.condition)) {
-		g.Effects.powerBonuses[src.ID()] += e.power
-		g.Effects.toughBonuses[src.ID()] += e.toughness
+	if e.condition != nil && !e.condition(src, g) {
+		return nil
 	}
+	g.Effects.powerBonuses[src.ID()] += e.power
+	g.Effects.toughBonuses[src.ID()] += e.toughness
 	return nil
+}
+
+func (e *boostSelfEffect) GetLayer() Layer       { return LayerPT }
+func (e *boostSelfEffect) GetDuration() Duration { return WhileOnBattlefield }
+
+func (e boostSelfEffect) IsActive(g *Game) bool {
+	return g.FindPermanent(e.sourceID) != nil
 }
 
 // limitLandUntapsEffect limits how many lands each player can untap per turn

@@ -135,6 +135,7 @@ func registerCreatures() {
 	mage.Register("Giant Tortoise", func() mage.Card {
 		// Giant Tortoise gets +0/+3 as long as it's untapped.
 		c := mage.NewCreature("Giant Tortoise", "{1}{U}", 1, 1, "Turtle")
+		c.AddAbility(mage.StaticAbility(mage.BoostSelf(0, 3, mage.WhileSourceUntapped)))
 		return c
 	})
 

@@ -116,6 +116,25 @@ func TestAbuJafar(t *testing.T) {
 	})
 }
 
+func TestGiantTortoise(t *testing.T) {
+	t.Run("Giant Tortoise gets +0/+3 when untapped", func(t *testing.T) {
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Giant Tortoise")
+		g.StopAt(1, mage.EndCombat)
+		g.Execute()
+		g.AssertPowerToughness(mage.PlayerA, "Giant Tortoise", 1, 4)
+	})
+
+	t.Run("Giant Tortoise doesn't get it when tapped", func(t *testing.T) {
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Giant Tortoise")
+		g.Attack(1, mage.PlayerA, "Giant Tortoise")
+		g.StopAt(1, mage.EndStep)
+		g.Execute()
+		g.AssertPowerToughness(mage.PlayerA, "Giant Tortoise", 1, 1)
+	})
+}
+
 func TestDanDan(t *testing.T) {
 	t.Run("sacrifice_when_you_control_no_islands", func(t *testing.T) {
 		g := mage.NewTestGame(t)

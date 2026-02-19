@@ -366,7 +366,7 @@ func registerAlphaCreatures() {
 		c := mage.NewCreature("Sedge Troll", "{2}{R}", 2, 2, "Troll")
 		// Sedge Troll gets +1/+1 as long as you control a Swamp.
 		c.AddAbility(mage.StaticAbility(
-			mage.BoostSelfWhileControlling(1, 1, mage.And(mage.IsLand, mage.HasSubType("Swamp"))),
+			mage.BoostSelf(1, 1, mage.WhileControlling(mage.And(mage.IsLand, mage.HasSubType("Swamp")))),
 		))
 		// {B}: Regenerate Sedge Troll.
 		ab := mage.NewActivatedAbility(
