@@ -17,7 +17,7 @@ func registerTestCards() {
 	registerOnce.Do(func() {
 		mage.Register("Doom Blade", func() mage.Card {
 			return mage.NewInstant("Doom Blade", "{1}{B}",
-				mage.WithAbility(mage.NewTargetedSpell(mage.TargetCreature(mage.Not(mage.HasColorFilter(core.Black))), mage.DestroyTarget())),
+				mage.NewTargetedSpell(mage.TargetCreature(mage.Not(mage.HasColorFilter(core.Black))), mage.DestroyTarget()),
 			)
 		})
 
@@ -77,10 +77,10 @@ func registerTestCards() {
 
 		mage.Register("Rancor", func() mage.Card {
 			return mage.NewAura("Rancor", "{G}",
-				mage.WithAbility(mage.StaticAbility(
+				mage.WithStaticAbility(
 					mage.BoostAttached(2, 0, core.AttachAura),
 					mage.GrantAbilityToAttached(core.Trample, core.AttachAura),
-				)),
+				),
 				mage.WithAbility(mage.PutIntoGraveyardFromBattlefieldTrigger(
 					mage.ReturnSourceToHand(), false,
 				)),
@@ -89,27 +89,27 @@ func registerTestCards() {
 
 		mage.Register("Pacifism", func() mage.Card {
 			return mage.NewAura("Pacifism", "{1}{W}",
-				mage.WithAbility(mage.StaticAbility(
+				mage.WithStaticAbility(
 					mage.PreventAttachedFromAttacking(core.AttachAura),
-				)),
+				),
 			)
 		})
 
 		mage.Register("Bonesplitter", func() mage.Card {
 			return mage.NewEquipment("Bonesplitter", "{1}",
-				mage.WithAbility(mage.StaticAbility(
+				mage.WithStaticAbility(
 					mage.BoostAttached(2, 0, core.AttachEquipment),
-				)),
+				),
 				mage.WithAbility(mage.NewEquipAbility(mage.GenericCost(1))),
 			)
 		})
 
 		mage.Register("Lightning Greaves", func() mage.Card {
 			return mage.NewEquipment("Lightning Greaves", "{2}",
-				mage.WithAbility(mage.StaticAbility(
+				mage.WithStaticAbility(
 					mage.GrantAbilityToAttached(core.Haste, core.AttachEquipment),
 					mage.GrantAbilityToAttached(core.Shroud, core.AttachEquipment),
-				)),
+				),
 				mage.WithAbility(mage.NewEquipAbility(mage.GenericCost(0))),
 			)
 		})

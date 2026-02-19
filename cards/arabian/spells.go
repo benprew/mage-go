@@ -1,6 +1,6 @@
 package arabian
 
-import "github.com/mage/mage/pkg/mage"
+import . "github.com/mage/mage/pkg/mage"
 
 func init() {
 	registerSpells()
@@ -9,33 +9,33 @@ func init() {
 func registerSpells() {
 	// ===== WHITE SPELLS =====
 
-	mage.Register("Army of Allah", func() mage.Card {
-		return mage.NewInstant("Army of Allah", "{1}{W}{W}")
+	Register("Army of Allah", func() Card {
+		return NewInstant("Army of Allah", "{1}{W}{W}", nil)
 	})
 
-	mage.Register("Eye for an Eye", func() mage.Card {
-		return mage.NewInstant("Eye for an Eye", "{W}{W}")
+	Register("Eye for an Eye", func() Card {
+		return NewInstant("Eye for an Eye", "{W}{W}", nil)
 	})
 
-	mage.Register("Piety", func() mage.Card {
-		return mage.NewInstant("Piety", "{2}{W}")
+	Register("Piety", func() Card {
+		return NewInstant("Piety", "{2}{W}", nil)
 	})
 
-	mage.Register("Shahrazad", func() mage.Card {
-		return mage.NewSorcery("Shahrazad", "{W}{W}")
+	Register("Shahrazad", func() Card {
+		return NewSorcery("Shahrazad", "{W}{W}", nil)
 	})
 
 	// ===== GREEN SPELLS =====
 
-	mage.Register("Desert Twister", func() mage.Card {
-		return mage.NewSorcery("Desert Twister", "{4}{G}{G}")
+	Register("Desert Twister", func() Card {
+		return NewSorcery("Desert Twister", "{4}{G}{G}", nil)
 	})
 
-	mage.Register("Metamorphosis", func() mage.Card {
-		return mage.NewSorcery("Metamorphosis", "{G}")
+	Register("Metamorphosis", func() Card {
+		return NewSorcery("Metamorphosis", "{G}", nil)
 	})
 
-	mage.Register("Sandstorm", func() mage.Card {
-		return mage.NewInstant("Sandstorm", "{G}")
+	Register("Sandstorm", func() Card {
+		return NewInstant("Sandstorm", "{G}", nil)
 	})
 }

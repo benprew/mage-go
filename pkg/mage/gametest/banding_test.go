@@ -77,12 +77,12 @@ func registerBandingTestCards() {
 	if !mage.CardRegistered("Helm of Chatzuk") {
 		mage.Register("Helm of Chatzuk", func() mage.Card {
 			return mage.NewArtifact("Helm of Chatzuk", "{1}",
-				mage.WithAbility(mage.NewActivatedAbility(
+				mage.WithActivatedAbility(
 					mage.GrantKeywordUntilEndOfTurn(core.Banding, mage.SelectTarget),
 					mage.GenericCost(1),
 					mage.WithCost(mage.TapSourceCost()),
 					mage.WithTarget(mage.TargetCreature()),
-				)),
+				),
 			)
 		})
 	}

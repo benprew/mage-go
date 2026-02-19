@@ -88,7 +88,7 @@ func TestGenericTriggered(t *testing.T) {
 			}},
 			{boltName, func() mage.Card {
 				return mage.NewInstant(boltName, "{R}",
-					mage.WithAbility(mage.NewTargetedSpell(mage.TargetCreature(), mage.DealDamage(mage.Fixed(3)))),
+					mage.NewTargetedSpell(mage.TargetCreature(), mage.DealDamage(mage.Fixed(3))),
 				)
 			}},
 		} {
@@ -141,7 +141,7 @@ func TestDestroyAllCollapse(t *testing.T) {
 		if !mage.CardRegistered(name) {
 			mage.Register(name, func() mage.Card {
 				return mage.NewSorcery(name, "{2}{W}{W}",
-					mage.WithAbility(mage.NewSpellAbility(mage.DestroyAllCreatures())),
+					mage.NewSpellAbility(mage.DestroyAllCreatures()),
 				)
 			})
 		}
@@ -171,7 +171,7 @@ func TestXVariantCollapse(t *testing.T) {
 		if !mage.CardRegistered(name) {
 			mage.Register(name, func() mage.Card {
 				return mage.NewSorcery(name, "{X}{R}",
-					mage.WithAbility(mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.XValue()))),
+					mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.XValue())),
 				)
 			})
 		}
@@ -190,14 +190,14 @@ func TestXVariantCollapse(t *testing.T) {
 		if !mage.CardRegistered(name) {
 			mage.Register(name, func() mage.Card {
 				return mage.NewSorcery(name, "{X}{U}",
-					mage.WithAbility(mage.NewTargetedSpell(mage.TargetPlayer(), mage.DrawCards(mage.XValue()))),
+					mage.NewTargetedSpell(mage.TargetPlayer(), mage.DrawCards(mage.XValue())),
 				)
 			})
 		}
 
 		tg := NewTestGame(t)
 		for i := 0; i < 5; i++ {
-			tg.GetPlayer(PlayerA).AddToLibrary(mage.NewSorcery("Library Card", "{0}"))
+			tg.GetPlayer(PlayerA).AddToLibrary(mage.NewSorcery("Library Card", "{0}", nil))
 		}
 		tg.AddCard(core.ZoneHand, PlayerA, name)
 		tg.CastSpellWithX(1, core.PrecombatMain, PlayerA, name, 3, "PlayerA")
@@ -216,7 +216,7 @@ func TestFuncEffect(t *testing.T) {
 		if !mage.CardRegistered(name) {
 			mage.Register(name, func() mage.Card {
 				return mage.NewSorcery(name, "{R}",
-					mage.WithAbility(mage.NewSpellAbility(mage.FuncEffect(
+					mage.NewSpellAbility(mage.FuncEffect(
 						"deal 3 damage to each player",
 						func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 							for _, p := range g.Players {
@@ -224,7 +224,7 @@ func TestFuncEffect(t *testing.T) {
 							}
 							return nil
 						},
-					))),
+					)),
 				)
 			})
 		}

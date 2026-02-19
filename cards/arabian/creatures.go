@@ -2,8 +2,8 @@ package arabian
 
 import (
 	"github.com/google/uuid"
-	"github.com/mage/mage/pkg/mage"
-	"github.com/mage/mage/pkg/mage/core"
+	. "github.com/mage/mage/pkg/mage"
+	. "github.com/mage/mage/pkg/mage/core"
 )
 
 func init() {
@@ -13,13 +13,13 @@ func init() {
 func registerCreatures() {
 	// ===== WHITE CREATURES =====
 
-	mage.Register("Abu Ja'far", func() mage.Card {
-		return mage.NewCreature("Abu Ja'far", "{W}", 0, 1,
-			mage.WithSubTypes("Human"),
-			mage.WithAbility(
-				mage.NewTriggered(core.EvtCreatureDied, false,
-					mage.FuncEffect("destroy all creatures blocking or blocked by Abu Ja'far",
-						func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	Register("Abu Ja'far", func() Card {
+		return NewCreature("Abu Ja'far", "{W}", 0, 1,
+			WithSubTypes("Human"),
+			WithAbility(
+				NewTriggered(EvtCreatureDied, false,
+					FuncEffect("destroy all creatures blocking or blocked by Abu Ja'far",
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 							if g.Combat == nil {
 								return nil
 							}
@@ -42,68 +42,68 @@ func registerCreatures() {
 							}
 							return nil
 						}),
-				).SetCondition(mage.IsThisSource),
+				).SetCondition(IsThisSource),
 			),
 		)
 	})
 
-	mage.Register("Camel", func() mage.Card {
-		return mage.NewCreature("Camel", "{W}", 0, 1,
-			mage.WithSubTypes("Camel"),
-			mage.WithKeyword(core.Banding),
-			mage.WithAbility(mage.StaticAbility(mage.PreventDamageFromTo(
-				mage.HasSubType("Desert"),
-				func(sourceID uuid.UUID) mage.PermanentFilter {
-					return mage.Or(mage.IsID(sourceID), mage.IsBandedWith(sourceID))
+	Register("Camel", func() Card {
+		return NewCreature("Camel", "{W}", 0, 1,
+			WithSubTypes("Camel"),
+			WithKeyword(Banding),
+			WithStaticAbility(PreventDamageFromTo(
+				HasSubType("Desert"),
+				func(sourceID uuid.UUID) PermanentFilter {
+					return Or(IsID(sourceID), IsBandedWith(sourceID))
 				},
-				mage.WhileSourceAttacking,
-			))),
-		)
-	})
-
-	mage.Register("King Suleiman", func() mage.Card {
-		return mage.NewCreature("King Suleiman", "{1}{W}", 1, 1,
-			mage.WithSubTypes("Human", "Noble"),
-			mage.WithAbility(mage.NewActivatedAbility(
-				mage.DestroyTarget(),
-				mage.TapSourceCost(),
-				mage.WithTarget(mage.TargetCreature(
-					mage.Or(mage.HasSubType("Djinn"), mage.HasSubType("Efreet")),
-				)),
+				WhileSourceAttacking,
 			)),
 		)
 	})
 
-	mage.Register("Moorish Cavalry", func() mage.Card {
-		return mage.NewCreature("Moorish Cavalry", "{2}{W}{W}", 3, 3,
-			mage.WithSubTypes("Human", "Knight"),
-			mage.WithKeyword(core.Trample),
+	Register("King Suleiman", func() Card {
+		return NewCreature("King Suleiman", "{1}{W}", 1, 1,
+			WithSubTypes("Human", "Noble"),
+			WithActivatedAbility(
+				DestroyTarget(),
+				TapSourceCost(),
+				WithTarget(TargetCreature(
+					Or(HasSubType("Djinn"), HasSubType("Efreet")),
+				)),
+			),
 		)
 	})
 
-	mage.Register("Repentant Blacksmith", func() mage.Card {
-		return mage.NewCreature("Repentant Blacksmith", "{1}{W}", 1, 2,
-			mage.WithSubTypes("Human"),
-			mage.WithAbility(mage.ProtectionFromColor(core.Red)),
+	Register("Moorish Cavalry", func() Card {
+		return NewCreature("Moorish Cavalry", "{2}{W}{W}", 3, 3,
+			WithSubTypes("Human", "Knight"),
+			WithKeyword(Trample),
 		)
 	})
 
-	mage.Register("War Elephant", func() mage.Card {
-		return mage.NewCreature("War Elephant", "{3}{W}", 2, 2,
-			mage.WithSubTypes("Elephant"),
-			mage.WithKeyword(core.Trample),
-			mage.WithKeyword(core.Banding),
+	Register("Repentant Blacksmith", func() Card {
+		return NewCreature("Repentant Blacksmith", "{1}{W}", 1, 2,
+			WithSubTypes("Human"),
+			WithAbility(ProtectionFromColor(Red)),
+		)
+	})
+
+	Register("War Elephant", func() Card {
+		return NewCreature("War Elephant", "{3}{W}", 2, 2,
+			WithSubTypes("Elephant"),
+			WithKeyword(Trample),
+			WithKeyword(Banding),
 		)
 	})
 
 	// ===== BLUE CREATURES =====
 
-	mage.Register("Dandân", func() mage.Card {
-		return mage.NewCreature("Dandân", "{U}{U}", 4, 1,
-			mage.WithSubTypes("Fish"),
-			mage.WithAbility(mage.StaticAbility(mage.PreventFromAttackingIfDefendingPlayerControls(mage.HasSubType("Island")))),
-			mage.WithAbility(mage.NewTriggered(core.EvtLeavesBattlefield, false, mage.SacrificeSource()).
-				SetCondition(func(evt *core.GameEvent, g *mage.Game, sourceID, controllerID uuid.UUID) bool {
+	Register("Dandân", func() Card {
+		return NewCreature("Dandân", "{U}{U}", 4, 1,
+			WithSubTypes("Fish"),
+			WithStaticAbility(PreventFromAttackingIfDefendingPlayerControls(HasSubType("Island"))),
+			WithAbility(NewTriggered(EvtLeavesBattlefield, false, SacrificeSource()).
+				SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
 					for _, p := range g.Battlefield {
 						if p.Controller == controllerID && p.HasSubType("Island") {
 							return false
@@ -114,167 +114,167 @@ func registerCreatures() {
 		)
 	})
 
-	mage.Register("Flying Men", func() mage.Card {
-		return mage.NewCreature("Flying Men", "{U}", 1, 1,
-			mage.WithSubTypes("Human"),
-			mage.WithKeyword(core.Flying),
+	Register("Flying Men", func() Card {
+		return NewCreature("Flying Men", "{U}", 1, 1,
+			WithSubTypes("Human"),
+			WithKeyword(Flying),
 		)
 	})
 
-	mage.Register("Giant Tortoise", func() mage.Card {
-		return mage.NewCreature("Giant Tortoise", "{1}{U}", 1, 1,
-			mage.WithSubTypes("Turtle"),
-			mage.WithAbility(mage.StaticAbility(mage.BoostSelf(0, 3, mage.WhileSourceUntapped))),
+	Register("Giant Tortoise", func() Card {
+		return NewCreature("Giant Tortoise", "{1}{U}", 1, 1,
+			WithSubTypes("Turtle"),
+			WithStaticAbility(BoostSelf(0, 3, WhileSourceUntapped)),
 		)
 	})
 
-	mage.Register("Island Fish Jasconius", func() mage.Card {
-		return mage.NewCreature("Island Fish Jasconius", "{4}{U}{U}{U}", 6, 8, mage.WithSubTypes("Fish"))
+	Register("Island Fish Jasconius", func() Card {
+		return NewCreature("Island Fish Jasconius", "{4}{U}{U}{U}", 6, 8, WithSubTypes("Fish"))
 	})
 
-	mage.Register("Merchant Ship", func() mage.Card {
-		return mage.NewCreature("Merchant Ship", "{U}", 0, 2, mage.WithSubTypes("Human"))
+	Register("Merchant Ship", func() Card {
+		return NewCreature("Merchant Ship", "{U}", 0, 2, WithSubTypes("Human"))
 	})
 
-	mage.Register("Old Man of the Sea", func() mage.Card {
-		return mage.NewCreature("Old Man of the Sea", "{1}{U}{U}", 2, 3, mage.WithSubTypes("Djinn"))
+	Register("Old Man of the Sea", func() Card {
+		return NewCreature("Old Man of the Sea", "{1}{U}{U}", 2, 3, WithSubTypes("Djinn"))
 	})
 
-	mage.Register("Serendib Djinn", func() mage.Card {
-		return mage.NewCreature("Serendib Djinn", "{2}{U}{U}", 5, 6, mage.WithSubTypes("Djinn"))
+	Register("Serendib Djinn", func() Card {
+		return NewCreature("Serendib Djinn", "{2}{U}{U}", 5, 6, WithSubTypes("Djinn"))
 	})
 
-	mage.Register("Serendib Efreet", func() mage.Card {
-		return mage.NewCreature("Serendib Efreet", "{2}{U}", 3, 4, mage.WithSubTypes("Efreet"))
+	Register("Serendib Efreet", func() Card {
+		return NewCreature("Serendib Efreet", "{2}{U}", 3, 4, WithSubTypes("Efreet"))
 	})
 
-	mage.Register("Sindbad", func() mage.Card {
-		return mage.NewCreature("Sindbad", "{1}{U}", 1, 1, mage.WithSubTypes("Human"))
+	Register("Sindbad", func() Card {
+		return NewCreature("Sindbad", "{1}{U}", 1, 1, WithSubTypes("Human"))
 	})
 
 	// ===== BLACK CREATURES =====
 
-	mage.Register("Cuombajj Witches", func() mage.Card {
-		return mage.NewCreature("Cuombajj Witches", "{B}{B}", 1, 3, mage.WithSubTypes("Human", "Wizard"))
+	Register("Cuombajj Witches", func() Card {
+		return NewCreature("Cuombajj Witches", "{B}{B}", 1, 3, WithSubTypes("Human", "Wizard"))
 	})
 
-	mage.Register("El-Hajjâj", func() mage.Card {
-		return mage.NewCreature("El-Hajjâj", "{1}{B}{B}", 1, 1, mage.WithSubTypes("Human", "Wizard"))
+	Register("El-Hajjâj", func() Card {
+		return NewCreature("El-Hajjâj", "{1}{B}{B}", 1, 1, WithSubTypes("Human", "Wizard"))
 	})
 
-	mage.Register("Erg Raiders", func() mage.Card {
-		return mage.NewCreature("Erg Raiders", "{1}{B}", 2, 3, mage.WithSubTypes("Human", "Warrior"))
+	Register("Erg Raiders", func() Card {
+		return NewCreature("Erg Raiders", "{1}{B}", 2, 3, WithSubTypes("Human", "Warrior"))
 	})
 
-	mage.Register("Guardian Beast", func() mage.Card {
-		return mage.NewCreature("Guardian Beast", "{3}{B}", 2, 4, mage.WithSubTypes("Beast"))
+	Register("Guardian Beast", func() Card {
+		return NewCreature("Guardian Beast", "{3}{B}", 2, 4, WithSubTypes("Beast"))
 	})
 
-	mage.Register("Hasran Ogress", func() mage.Card {
-		return mage.NewCreature("Hasran Ogress", "{B}{B}", 3, 2, mage.WithSubTypes("Ogre"))
+	Register("Hasran Ogress", func() Card {
+		return NewCreature("Hasran Ogress", "{B}{B}", 3, 2, WithSubTypes("Ogre"))
 	})
 
-	mage.Register("Junún Efreet", func() mage.Card {
-		return mage.NewCreature("Junún Efreet", "{1}{B}{B}", 3, 3, mage.WithSubTypes("Efreet"))
+	Register("Junún Efreet", func() Card {
+		return NewCreature("Junún Efreet", "{1}{B}{B}", 3, 3, WithSubTypes("Efreet"))
 	})
 
-	mage.Register("Juzám Djinn", func() mage.Card {
-		return mage.NewCreature("Juzám Djinn", "{2}{B}{B}", 5, 5, mage.WithSubTypes("Djinn"))
+	Register("Juzám Djinn", func() Card {
+		return NewCreature("Juzám Djinn", "{2}{B}{B}", 5, 5, WithSubTypes("Djinn"))
 	})
 
-	mage.Register("Khabál Ghoul", func() mage.Card {
-		return mage.NewCreature("Khabál Ghoul", "{2}{B}", 1, 1, mage.WithSubTypes("Zombie"))
+	Register("Khabál Ghoul", func() Card {
+		return NewCreature("Khabál Ghoul", "{2}{B}", 1, 1, WithSubTypes("Zombie"))
 	})
 
-	mage.Register("Sorceress Queen", func() mage.Card {
-		return mage.NewCreature("Sorceress Queen", "{1}{B}{B}", 1, 1, mage.WithSubTypes("Human", "Wizard"))
+	Register("Sorceress Queen", func() Card {
+		return NewCreature("Sorceress Queen", "{1}{B}{B}", 1, 1, WithSubTypes("Human", "Wizard"))
 	})
 
-	mage.Register("Stone-Throwing Devils", func() mage.Card {
-		return mage.NewCreature("Stone-Throwing Devils", "{B}", 1, 1, mage.WithSubTypes("Devil"))
+	Register("Stone-Throwing Devils", func() Card {
+		return NewCreature("Stone-Throwing Devils", "{B}", 1, 1, WithSubTypes("Devil"))
 	})
 
 	// ===== RED CREATURES =====
 
-	mage.Register("Aladdin", func() mage.Card {
-		return mage.NewCreature("Aladdin", "{2}{R}{R}", 1, 1, mage.WithSubTypes("Human", "Rogue"))
+	Register("Aladdin", func() Card {
+		return NewCreature("Aladdin", "{2}{R}{R}", 1, 1, WithSubTypes("Human", "Rogue"))
 	})
 
-	mage.Register("Ali Baba", func() mage.Card {
-		return mage.NewCreature("Ali Baba", "{R}", 1, 1, mage.WithSubTypes("Human", "Rogue"))
+	Register("Ali Baba", func() Card {
+		return NewCreature("Ali Baba", "{R}", 1, 1, WithSubTypes("Human", "Rogue"))
 	})
 
-	mage.Register("Ali from Cairo", func() mage.Card {
-		return mage.NewCreature("Ali from Cairo", "{2}{R}{R}", 0, 1, mage.WithSubTypes("Human"))
+	Register("Ali from Cairo", func() Card {
+		return NewCreature("Ali from Cairo", "{2}{R}{R}", 0, 1, WithSubTypes("Human"))
 	})
 
-	mage.Register("Bird Maiden", func() mage.Card {
-		return mage.NewCreature("Bird Maiden", "{2}{R}", 1, 2, mage.WithSubTypes("Human", "Bird"))
+	Register("Bird Maiden", func() Card {
+		return NewCreature("Bird Maiden", "{2}{R}", 1, 2, WithSubTypes("Human", "Bird"))
 	})
 
-	mage.Register("Desert Nomads", func() mage.Card {
-		return mage.NewCreature("Desert Nomads", "{2}{R}", 2, 2, mage.WithSubTypes("Human", "Nomad"))
+	Register("Desert Nomads", func() Card {
+		return NewCreature("Desert Nomads", "{2}{R}", 2, 2, WithSubTypes("Human", "Nomad"))
 	})
 
-	mage.Register("Hurr Jackal", func() mage.Card {
-		return mage.NewCreature("Hurr Jackal", "{R}", 1, 1, mage.WithSubTypes("Jackal"))
+	Register("Hurr Jackal", func() Card {
+		return NewCreature("Hurr Jackal", "{R}", 1, 1, WithSubTypes("Jackal"))
 	})
 
-	mage.Register("Kird Ape", func() mage.Card {
-		return mage.NewCreature("Kird Ape", "{R}", 1, 1, mage.WithSubTypes("Ape"))
+	Register("Kird Ape", func() Card {
+		return NewCreature("Kird Ape", "{R}", 1, 1, WithSubTypes("Ape"))
 	})
 
-	mage.Register("Mijae Djinn", func() mage.Card {
-		return mage.NewCreature("Mijae Djinn", "{R}{R}{R}", 6, 3, mage.WithSubTypes("Djinn"))
+	Register("Mijae Djinn", func() Card {
+		return NewCreature("Mijae Djinn", "{R}{R}{R}", 6, 3, WithSubTypes("Djinn"))
 	})
 
-	mage.Register("Rukh Egg", func() mage.Card {
-		return mage.NewCreature("Rukh Egg", "{3}{R}", 0, 3, mage.WithSubTypes("Bird", "Egg"))
+	Register("Rukh Egg", func() Card {
+		return NewCreature("Rukh Egg", "{3}{R}", 0, 3, WithSubTypes("Bird", "Egg"))
 	})
 
-	mage.Register("Ydwen Efreet", func() mage.Card {
-		return mage.NewCreature("Ydwen Efreet", "{R}{R}{R}", 3, 6, mage.WithSubTypes("Efreet"))
+	Register("Ydwen Efreet", func() Card {
+		return NewCreature("Ydwen Efreet", "{R}{R}{R}", 3, 6, WithSubTypes("Efreet"))
 	})
 
 	// ===== GREEN CREATURES =====
 
-	mage.Register("Erhnam Djinn", func() mage.Card {
-		return mage.NewCreature("Erhnam Djinn", "{3}{G}", 4, 5, mage.WithSubTypes("Djinn"))
+	Register("Erhnam Djinn", func() Card {
+		return NewCreature("Erhnam Djinn", "{3}{G}", 4, 5, WithSubTypes("Djinn"))
 	})
 
-	mage.Register("Ghazbán Ogre", func() mage.Card {
-		return mage.NewCreature("Ghazbán Ogre", "{G}", 2, 2, mage.WithSubTypes("Ogre"))
+	Register("Ghazbán Ogre", func() Card {
+		return NewCreature("Ghazbán Ogre", "{G}", 2, 2, WithSubTypes("Ogre"))
 	})
 
-	mage.Register("Ifh-Bíff Efreet", func() mage.Card {
-		return mage.NewCreature("Ifh-Bíff Efreet", "{2}{G}{G}", 3, 3, mage.WithSubTypes("Efreet"))
+	Register("Ifh-Bíff Efreet", func() Card {
+		return NewCreature("Ifh-Bíff Efreet", "{2}{G}{G}", 3, 3, WithSubTypes("Efreet"))
 	})
 
-	mage.Register("Nafs Asp", func() mage.Card {
-		return mage.NewCreature("Nafs Asp", "{G}", 1, 1, mage.WithSubTypes("Snake"))
+	Register("Nafs Asp", func() Card {
+		return NewCreature("Nafs Asp", "{G}", 1, 1, WithSubTypes("Snake"))
 	})
 
-	mage.Register("Singing Tree", func() mage.Card {
-		return mage.NewCreature("Singing Tree", "{3}{G}", 0, 3, mage.WithSubTypes("Plant"))
+	Register("Singing Tree", func() Card {
+		return NewCreature("Singing Tree", "{3}{G}", 0, 3, WithSubTypes("Plant"))
 	})
 
-	mage.Register("Wyluli Wolf", func() mage.Card {
-		return mage.NewCreature("Wyluli Wolf", "{1}{G}", 1, 1, mage.WithSubTypes("Wolf"))
+	Register("Wyluli Wolf", func() Card {
+		return NewCreature("Wyluli Wolf", "{1}{G}", 1, 1, WithSubTypes("Wolf"))
 	})
 
 	// ===== ARTIFACT CREATURES =====
 
-	mage.Register("Brass Man", func() mage.Card {
-		return mage.NewCreature("Brass Man", "{1}", 1, 3,
-			mage.WithSubTypes("Construct"),
-			mage.WithCardType(core.TypeArtifact),
+	Register("Brass Man", func() Card {
+		return NewCreature("Brass Man", "{1}", 1, 3,
+			WithSubTypes("Construct"),
+			WithCardType(TypeArtifact),
 		)
 	})
 
-	mage.Register("Dancing Scimitar", func() mage.Card {
-		return mage.NewCreature("Dancing Scimitar", "{4}", 1, 5,
-			mage.WithSubTypes("Spirit"),
-			mage.WithCardType(core.TypeArtifact),
+	Register("Dancing Scimitar", func() Card {
+		return NewCreature("Dancing Scimitar", "{4}", 1, 5,
+			WithSubTypes("Spirit"),
+			WithCardType(TypeArtifact),
 		)
 	})
 }

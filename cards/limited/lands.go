@@ -1,8 +1,8 @@
 package limited
 
 import (
-	"github.com/mage/mage/pkg/mage"
-	"github.com/mage/mage/pkg/mage/core"
+	. "github.com/mage/mage/pkg/mage"
+	. "github.com/mage/mage/pkg/mage/core"
 )
 
 func init() {
@@ -13,20 +13,20 @@ func registerLands() {
 	// Basic lands
 	for _, land := range []struct {
 		name  string
-		color core.Color
+		color Color
 	}{
-		{"Plains", core.White},
-		{"Island", core.Blue},
-		{"Swamp", core.Black},
-		{"Mountain", core.Red},
-		{"Forest", core.Green},
+		{"Plains", White},
+		{"Island", Blue},
+		{"Swamp", Black},
+		{"Mountain", Red},
+		{"Forest", Green},
 	} {
 		name := land.name
 		color := land.color
-		mage.Register(name, func() mage.Card {
-			return mage.NewLand(name,
-				mage.WithSubTypes(name),
-				mage.WithManaAbility(color),
+		Register(name, func() Card {
+			return NewLand(name,
+				WithSubTypes(name),
+				WithManaAbility(color),
 			)
 		})
 	}
@@ -36,19 +36,19 @@ func registerLands() {
 		name   string
 		sub1   string
 		sub2   string
-		color1 core.Color
-		color2 core.Color
+		color1 Color
+		color2 Color
 	}{
-		{"Badlands", "Swamp", "Mountain", core.Black, core.Red},
-		{"Bayou", "Swamp", "Forest", core.Black, core.Green},
-		{"Plateau", "Mountain", "Plains", core.Red, core.White},
-		{"Savannah", "Forest", "Plains", core.Green, core.White},
-		{"Scrubland", "Plains", "Swamp", core.White, core.Black},
-		{"Taiga", "Mountain", "Forest", core.Red, core.Green},
-		{"Tropical Island", "Forest", "Island", core.Green, core.Blue},
-		{"Tundra", "Plains", "Island", core.White, core.Blue},
-		{"Underground Sea", "Island", "Swamp", core.Blue, core.Black},
-		{"Volcanic Island", "Island", "Mountain", core.Blue, core.Red},
+		{"Badlands", "Swamp", "Mountain", Black, Red},
+		{"Bayou", "Swamp", "Forest", Black, Green},
+		{"Plateau", "Mountain", "Plains", Red, White},
+		{"Savannah", "Forest", "Plains", Green, White},
+		{"Scrubland", "Plains", "Swamp", White, Black},
+		{"Taiga", "Mountain", "Forest", Red, Green},
+		{"Tropical Island", "Forest", "Island", Green, Blue},
+		{"Tundra", "Plains", "Island", White, Blue},
+		{"Underground Sea", "Island", "Swamp", Blue, Black},
+		{"Volcanic Island", "Island", "Mountain", Blue, Red},
 	}
 
 	for _, d := range duals {
@@ -57,11 +57,11 @@ func registerLands() {
 		sub2 := d.sub2
 		color1 := d.color1
 		color2 := d.color2
-		mage.Register(name, func() mage.Card {
-			return mage.NewLand(name,
-				mage.WithSubTypes(sub1, sub2),
-				mage.WithManaAbility(color1),
-				mage.WithManaAbility(color2),
+		Register(name, func() Card {
+			return NewLand(name,
+				WithSubTypes(sub1, sub2),
+				WithManaAbility(color1),
+				WithManaAbility(color2),
 			)
 		})
 	}

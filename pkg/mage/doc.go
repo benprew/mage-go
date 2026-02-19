@@ -18,22 +18,24 @@ using the functional options pattern ([CardOption]):
 
 Card constructors: [NewCreature], [NewInstant], [NewSorcery], [NewEnchantment],
 [NewAura], [NewArtifact], [NewEquipment], [NewLand]. Options include [WithSubTypes],
-[WithKeyword], [WithAbility], [WithCardType], [WithManaAbility], and [WithAnyColorMana].
+[WithKeyword], [WithAbility], [WithCardType], [WithManaAbility], [WithAnyColorMana],
+and convenience wrappers [WithActivatedAbility] and [WithStaticAbility].
 
 # Spells and Effects
 
-Instants and sorceries use [NewSpellAbility] (no targets) or [NewTargetedSpell]
-(with a target) to define what happens on resolution. Effects are the individual
-actions: deal damage, destroy, draw cards, etc.
+[NewInstant] and [NewSorcery] take a required [*SpellAbility] parameter that defines
+what happens on resolution. Use [NewTargetedSpell] (with a target) or [NewSpellAbility]
+(no targets) to build it. Effects are the individual actions: deal damage, destroy,
+draw cards, etc.
 
 	// Lightning Bolt: deal 3 damage to any target
 	mage.NewInstant("Lightning Bolt", "{R}",
-	    mage.WithAbility(mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3)))),
+	    mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 	)
 
 	// Wrath of God: destroy all creatures (no target)
 	mage.NewSorcery("Wrath of God", "{2}{W}{W}",
-	    mage.WithAbility(mage.NewSpellAbility(mage.DestroyAllCreatures())),
+	    mage.NewSpellAbility(mage.DestroyAllCreatures()),
 	)
 
 # Targets

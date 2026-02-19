@@ -126,6 +126,18 @@ func WithAnyColorMana() CardOption {
 	return func(c *BaseCard) { c.AddAbility(NewAnyColorManaAbility()) }
 }
 
+// WithActivatedAbility adds an activated ability built from the given effect,
+// primary cost, and optional AbilityOption modifiers.
+func WithActivatedAbility(effect Effect, cost Cost, opts ...AbilityOption) CardOption {
+	return func(c *BaseCard) { c.AddAbility(NewActivatedAbility(effect, cost, opts...)) }
+}
+
+
+// WithStaticAbility adds a static ability that applies continuous effects.
+func WithStaticAbility(effects ...ContinuousEffect) CardOption {
+	return func(c *BaseCard) { c.AddAbility(StaticAbility(effects...)) }
+}
+
 func applyCardOpts(c *BaseCard, opts []CardOption) {
 	for _, opt := range opts {
 		opt(c)
@@ -169,25 +181,35 @@ func (c *BaseCard) SetPower(p int)     { c.power = p }
 func (c *BaseCard) SetToughness(t int) { c.toughness = t }
 func (c *BaseCard) IsToken() bool      { return c.isToken }
 
-// NewInstant creates a new instant card.
-func NewInstant(name, cost string, opts ...CardOption) *BaseCard {
+// NewInstant creates a new instant card. The spell parameter defines what
+// happens when the spell resolves (use [NewTargetedSpell] or [NewSpellAbility]).
+// Pass nil for placeholder cards with no effect.
+func NewInstant(name, cost string, spell *SpellAbility, opts ...CardOption) *BaseCard {
 	c := &BaseCard{
 		id:       uuid.New(),
 		name:     name,
 		manaCost: ParseManaCost(cost),
 		types:    []CardType{TypeInstant},
 	}
+	if spell != nil {
+		c.AddAbility(spell)
+	}
 	applyCardOpts(c, opts)
 	return c
 }
 
-// NewSorcery creates a new sorcery card.
-func NewSorcery(name, cost string, opts ...CardOption) *BaseCard {
+// NewSorcery creates a new sorcery card. The spell parameter defines what
+// happens when the spell resolves (use [NewTargetedSpell] or [NewSpellAbility]).
+// Pass nil for placeholder cards with no effect.
+func NewSorcery(name, cost string, spell *SpellAbility, opts ...CardOption) *BaseCard {
 	c := &BaseCard{
 		id:       uuid.New(),
 		name:     name,
 		manaCost: ParseManaCost(cost),
 		types:    []CardType{TypeSorcery},
+	}
+	if spell != nil {
+		c.AddAbility(spell)
 	}
 	applyCardOpts(c, opts)
 	return c
@@ -449,9 +471,7 @@ func NewLuckyCharm(name, cost string, color Color) *BaseCard {
 // NewLandDestruction creates a sorcery that destroys target land
 // (e.g. Stone Rain, Sinkhole, Ice Storm).
 func NewLandDestruction(name, cost string) *BaseCard {
-	return NewSorcery(name, cost,
-		WithAbility(NewTargetedSpell(TargetLand(), DestroyTargetLand())),
-	)
+	return NewSorcery(name, cost, NewTargetedSpell(TargetLand(), DestroyTargetLand()))
 }
 
 // NewBoostAura creates an aura enchantment that gives the enchanted creature

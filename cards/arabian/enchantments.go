@@ -1,6 +1,6 @@
 package arabian
 
-import "github.com/mage/mage/pkg/mage"
+import . "github.com/mage/mage/pkg/mage"
 
 func init() {
 	registerEnchantments()
@@ -9,29 +9,29 @@ func init() {
 func registerEnchantments() {
 	// ===== GLOBAL ENCHANTMENTS =====
 
-	mage.Register("Cyclone", func() mage.Card {
-		return mage.NewEnchantment("Cyclone", "{2}{G}{G}")
+	Register("Cyclone", func() Card {
+		return NewEnchantment("Cyclone", "{2}{G}{G}")
 	})
 
-	mage.Register("Drop of Honey", func() mage.Card {
-		return mage.NewEnchantment("Drop of Honey", "{G}")
+	Register("Drop of Honey", func() Card {
+		return NewEnchantment("Drop of Honey", "{G}")
 	})
 
-	mage.Register("Jihad", func() mage.Card {
-		return mage.NewEnchantment("Jihad", "{W}{W}{W}")
+	Register("Jihad", func() Card {
+		return NewEnchantment("Jihad", "{W}{W}{W}")
 	})
 
-	mage.Register("Oubliette", func() mage.Card {
-		return mage.NewEnchantment("Oubliette", "{1}{B}{B}")
+	Register("Oubliette", func() Card {
+		return NewEnchantment("Oubliette", "{1}{B}{B}")
 	})
 
 	// ===== AURAS =====
 
-	mage.Register("Fishliver Oil", func() mage.Card {
-		return mage.NewAura("Fishliver Oil", "{1}{U}")
+	Register("Fishliver Oil", func() Card {
+		return NewAura("Fishliver Oil", "{1}{U}")
 	})
 
-	mage.Register("Unstable Mutation", func() mage.Card {
-		return mage.NewAura("Unstable Mutation", "{U}")
+	Register("Unstable Mutation", func() Card {
+		return NewAura("Unstable Mutation", "{U}")
 	})
 }
