@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-//go:generate enumer -type=ActionType -trimprefix=Action
+//go:generate enumer -type=ActionType -trimprefix=Action -output=interactive_enumer.go
 
 // ActionType identifies what kind of action a player is taking.
 type ActionType int

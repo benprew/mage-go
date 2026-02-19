@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-//go:generate enumer -type=Color
+//go:generate enumer -type=Color -output=mana_enumer.go
 
 // Color represents a Magic color.
 type Color int

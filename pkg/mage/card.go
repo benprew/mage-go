@@ -2,7 +2,7 @@ package mage
 
 import "github.com/google/uuid"
 
-//go:generate enumer -type=CardType -trimprefix=Type
+//go:generate enumer -type=CardType -trimprefix=Type -output=card_enumer.go
 
 // CardType represents a card's type.
 type CardType int
