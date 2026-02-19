@@ -412,18 +412,16 @@ func BoostMatchingUntilEndOfTurn(power, toughness ValueSource, predicate Permane
 }
 
 func (e *boostMatchingUntilEndOfTurnEffect) Apply(g *Game, sourceID uuid.UUID, controller uuid.UUID, targets []uuid.UUID) error {
-	for _, perm := range g.Battlefield {
-		if perm.Controller == controller && perm.HasType(TypeCreature) && e.predicate(perm, g) {
-			p := e.power.Resolve(g, sourceID, controller)
-			t := e.toughness.Resolve(g, sourceID, controller)
-			eff := &temporaryBoostEffect{
-				targetID:     perm.ID(),
-				power:        p,
-				toughness:    t,
-				effectSource: effectSource{sourceID: sourceID},
-			}
-			g.Effects.Add(eff)
+	for _, perm := range g.FilterBattlefield(And(ControlledBy(controller), IsCreature, e.predicate)) {
+		p := e.power.Resolve(g, sourceID, controller)
+		t := e.toughness.Resolve(g, sourceID, controller)
+		eff := &temporaryBoostEffect{
+			targetID:     perm.ID(),
+			power:        p,
+			toughness:    t,
+			effectSource: effectSource{sourceID: sourceID},
 		}
+		g.Effects.Add(eff)
 	}
 	g.Effects.Apply(g)
 	return nil
@@ -581,12 +579,7 @@ func DestroyAllMatching(filter PermanentFilter, text string) Effect {
 }
 
 func (e *destroyAllMatchingEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	var toDestroy []*Permanent
-	for _, p := range g.Battlefield {
-		if e.filter(p, g) && !p.HasAbility(Indestructible) {
-			toDestroy = append(toDestroy, p)
-		}
-	}
+	toDestroy := g.FilterBattlefield(And(e.filter, Not(HasKeywordFilter(Indestructible))))
 	for _, p := range toDestroy {
 		g.DestroyPermanent(p)
 	}
@@ -921,17 +914,11 @@ func (e *dealDamageToAllCreaturesEffect) Apply(g *Game, sourceID, controller uui
 	if amount <= 0 {
 		return nil
 	}
-	var creatures []*Permanent
-	for _, p := range g.Battlefield {
-		if !p.HasType(TypeCreature) {
-			continue
-		}
-		if e.filter != nil && !e.filter(p, g) {
-			continue
-		}
-		creatures = append(creatures, p)
+	f := IsCreature
+	if e.filter != nil {
+		f = And(IsCreature, e.filter)
 	}
-	for _, p := range creatures {
+	for _, p := range g.FilterBattlefield(f) {
 		g.DealDamageToPermanent(p, amount, sourceID)
 	}
 	return nil
@@ -1231,12 +1218,7 @@ func SacrificeCreatureOrDamage(damage int) Effect {
 
 func (e *sacrificeOrDamageEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	// Collect creatures that can be sacrificed (not the source itself)
-	var candidates []*Permanent
-	for _, p := range g.Battlefield {
-		if p.Controller == controller && p.HasType(TypeCreature) && p.ID() != sourceID {
-			candidates = append(candidates, p)
-		}
-	}
+	candidates := g.FilterBattlefield(And(ControlledBy(controller), IsCreature, NotID(sourceID)))
 	if len(candidates) > 0 {
 		player := g.GetPlayer(controller)
 		chosen := player.ChoosePermanent(candidates, "sacrifice", g)
@@ -1590,12 +1572,7 @@ func DealDamagePerSwamp() Effect {
 func (e *dealDamagePerSwampEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	active := g.ActivePlayerObj()
 	activeID := active.PlayerID()
-	swampCount := 0
-	for _, p := range g.Battlefield {
-		if p.Controller == activeID && p.HasSubType("Swamp") {
-			swampCount++
-		}
-	}
+	swampCount := g.CountBattlefield(And(ControlledBy(activeID), HasSubType("Swamp")))
 	if swampCount > 0 {
 		active.LoseLife(swampCount)
 	}

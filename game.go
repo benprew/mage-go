@@ -148,6 +148,38 @@ func (g *Game) FindPermanentByName(name string, controller uuid.UUID) *Permanent
 	return nil
 }
 
+// AnyBattlefield returns true if any permanent on the battlefield matches f.
+func (g *Game) AnyBattlefield(f PermanentFilter) bool {
+	for _, p := range g.Battlefield {
+		if f(p, g) {
+			return true
+		}
+	}
+	return false
+}
+
+// FilterBattlefield returns all permanents on the battlefield matching f.
+func (g *Game) FilterBattlefield(f PermanentFilter) []*Permanent {
+	var result []*Permanent
+	for _, p := range g.Battlefield {
+		if f(p, g) {
+			result = append(result, p)
+		}
+	}
+	return result
+}
+
+// CountBattlefield returns the number of permanents on the battlefield matching f.
+func (g *Game) CountBattlefield(f PermanentFilter) int {
+	n := 0
+	for _, p := range g.Battlefield {
+		if f(p, g) {
+			n++
+		}
+	}
+	return n
+}
+
 // FindCardAnywhere finds a card by ID anywhere in the game.
 func (g *Game) FindCardAnywhere(id uuid.UUID) Card {
 	for _, p := range g.Battlefield {

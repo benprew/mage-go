@@ -968,11 +968,9 @@ func (p *preventFromAttackingIf) Apply(g *Game) error {
 		who = g.ActivePlayerObj()
 	}
 	whoID := who.PlayerID()
-	for _, perm := range g.Battlefield {
-		if perm.Controller == whoID && p.filter(perm, g) {
-			// `who` player controls a matching permanent, so attacks ARE allowed
-			return nil
-		}
+	if g.AnyBattlefield(And(ControlledBy(whoID), p.filter)) {
+		// `who` player controls a matching permanent, so attacks ARE allowed
+		return nil
 	}
 	// `who` player does NOT control a matching permanent, so we prevent attacks
 	src := g.FindPermanent(p.sourceID)
@@ -1166,15 +1164,11 @@ func (e *ptEqualsCountEffect) Apply(g *Game) error {
 	if src == nil {
 		return nil
 	}
-	count := 0
-	for _, p := range g.Battlefield {
-		if e.controllerOnly && p.Controller != src.Controller {
-			continue
-		}
-		if e.countFilter(p, g) {
-			count++
-		}
+	f := e.countFilter
+	if e.controllerOnly {
+		f = And(ControlledBy(src.Controller), e.countFilter)
 	}
+	count := g.CountBattlefield(f)
 	g.Effects.powerBonuses[src.ID()] += count
 	g.Effects.toughBonuses[src.ID()] += count
 	return nil
@@ -1202,17 +1196,13 @@ func (e *powerEqualsCountEffect) IsActive(g *Game) bool {
 }
 
 func (e *powerEqualsCountEffect) Apply(g *Game) error {
-	count := 0
-	for _, p := range g.Battlefield {
-		if e.countFilter(p, g) {
-			count++
-		}
-	}
 	src := g.FindPermanent(e.sourceID)
-	if src != nil {
-		g.Effects.powerBonuses[src.ID()] += count
-		g.Effects.toughBonuses[src.ID()] += count
+	if src == nil {
+		return nil
 	}
+	count := g.CountBattlefield(e.countFilter)
+	g.Effects.powerBonuses[src.ID()] += count
+	g.Effects.toughBonuses[src.ID()] += count
 	return nil
 }
 
@@ -1352,12 +1342,7 @@ func (e *boostAttachedByForestCountEffect) Apply(g *Game) error {
 		return nil
 	}
 	// Count Forests controlled by the aura's controller
-	forests := 0
-	for _, p := range g.Battlefield {
-		if p.Controller == src.Controller && p.HasType(TypeLand) && p.HasSubType("Forest") {
-			forests++
-		}
-	}
+	forests := g.CountBattlefield(And(ControlledBy(src.Controller), IsLand, HasSubType("Forest")))
 	// +X/+Y where X = forests/2 rounded down, Y = forests/2 rounded up
 	powerBoost := forests / 2
 	toughBoost := (forests + 1) / 2
@@ -1387,11 +1372,9 @@ func (e *preventUntapForMatchingEffect) IsActive(g *Game) bool {
 }
 
 func (e *preventUntapForMatchingEffect) Apply(g *Game) error {
-	for _, p := range g.Battlefield {
-		if e.filter(p, g) {
-			g.Effects.grantedKW[p.ID()] = append(g.Effects.grantedKW[p.ID()], DoesNotUntapKW)
-			p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{NewKeywordAbility(DoesNotUntapKW)})
-		}
+	for _, p := range g.FilterBattlefield(e.filter) {
+		g.Effects.grantedKW[p.ID()] = append(g.Effects.grantedKW[p.ID()], DoesNotUntapKW)
+		p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{NewKeywordAbility(DoesNotUntapKW)})
 	}
 	return nil
 }
@@ -1627,12 +1610,9 @@ func (e *boostSelfWhileControllingEffect) Apply(g *Game) error {
 		return nil
 	}
 	// Check if controller controls a matching permanent
-	for _, p := range g.Battlefield {
-		if p.Controller == src.Controller && e.condition(p, g) {
-			g.Effects.powerBonuses[src.ID()] += e.power
-			g.Effects.toughBonuses[src.ID()] += e.toughness
-			return nil
-		}
+	if g.AnyBattlefield(And(ControlledBy(src.Controller), e.condition)) {
+		g.Effects.powerBonuses[src.ID()] += e.power
+		g.Effects.toughBonuses[src.ID()] += e.toughness
 	}
 	return nil
 }
@@ -1687,11 +1667,9 @@ func (e *animateLandsEffect) IsActive(g *Game) bool {
 }
 
 func (e *animateLandsEffect) Apply(g *Game) error {
-	for _, p := range g.Battlefield {
-		if e.filter(p, g) {
-			p.TypesAdded = append(p.TypesAdded, TypeCreature)
-			p.BasePTOverride = &[2]int{e.power, e.toughness}
-		}
+	for _, p := range g.FilterBattlefield(e.filter) {
+		p.TypesAdded = append(p.TypesAdded, TypeCreature)
+		p.BasePTOverride = &[2]int{e.power, e.toughness}
 	}
 	return nil
 }
