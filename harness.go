@@ -96,6 +96,7 @@ func (tg *TestGame) AddCard(zone Zone, p PlayerRef, name string, count ...int) u
 	player := tg.getPlayer(p)
 	playerID := player.PlayerID()
 
+	var lastID uuid.UUID
 	for i := 0; i < n; i++ {
 		card, err := CreateCard(name)
 		if err != nil {
@@ -107,19 +108,16 @@ func (tg *TestGame) AddCard(zone Zone, p PlayerRef, name string, count ...int) u
 		case ZoneBattlefield:
 			perm := tg.Game.PutOnBattlefield(card, playerID)
 			perm.SummonSick = false // test cards are not summoning sick
-			return perm.ID()
+			lastID = perm.ID()
 		case ZoneHand:
 			player.AddToHand(card)
-			return uuid.Nil
 		case ZoneGraveyard:
 			player.AddToGraveyard(card)
-			return uuid.Nil
 		case ZoneLibrary:
 			player.library = append(player.library, card)
-			return uuid.Nil
 		}
 	}
-	return uuid.Nil
+	return lastID
 }
 
 // SetLife sets a player's life total.
