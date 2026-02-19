@@ -2,6 +2,20 @@ package mage
 
 import "github.com/google/uuid"
 
+// BandFormer is an optional interface for players that declare attacking bands.
+// The game engine calls GetBandFormations after attackers are declared.
+type BandFormer interface {
+	GetBandFormations(turn int, g *Game) [][]uuid.UUID
+}
+
+// BandingDamageDistributor is an optional interface for players that control
+// how incoming combat damage is distributed across banded creatures.
+// The attacking player uses this for an attacking band; the defending player
+// uses this for a blocking band.
+type BandingDamageDistributor interface {
+	GetBandingDamageDistribution(members []*Permanent) map[uuid.UUID]int
+}
+
 // BlockAssignment represents a single blocker-attacker pair.
 type BlockAssignment struct {
 	BlockerID  uuid.UUID

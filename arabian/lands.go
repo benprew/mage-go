@@ -27,6 +27,11 @@ func registerLands() {
 		// {T}: Desert deals 1 damage to target attacking creature. Activate only
 		// during the end of combat step.
 		c := mage.NewLand("Desert", "Desert")
+		c.AddAbility(mage.NewManaAbility(mage.Colorless))
+		c.AddAbility(mage.NewActivatedAbility(
+			mage.DealDamage(mage.Fixed(1)),
+			mage.TapSourceCost(),
+			mage.WithTarget(mage.TargetCreature(mage.IsAttacking))))
 		return c
 	})
 

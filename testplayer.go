@@ -20,21 +20,68 @@ type blockPair struct {
 // TestPlayer is a scripted player for testing.
 type TestPlayer struct {
 	*BasePlayer
-	actions            []ScriptedAction
-	attackActions      map[int][]string      // turn → creature names to attack with
-	blockActions       map[int][]blockPair   // turn → blocker/attacker pairs
-	choosePermanent    []string              // queue of permanent names
-	chooseDiscard      [][]string            // queue of card name lists
-	chooseManaColor    []Color               // queue of colors
-	chooseFromLibrary  []string              // queue of card names
+	actions                  []ScriptedAction
+	attackActions            map[int][]string    // turn → creature names to attack with
+	blockActions             map[int][]blockPair // turn → blocker/attacker pairs
+	bandFormations           map[int][][]string  // turn → list of bands (each band is a list of creature names)
+	choosePermanent          []string            // queue of permanent names
+	chooseDiscard            [][]string          // queue of card name lists
+	chooseManaColor          []Color             // queue of colors
+	chooseFromLibrary        []string            // queue of card names
+	chooseBandingDistribution []map[string]int   // queue of banding damage distributions (creature name → damage)
 }
 
 func NewTestPlayer(name string) *TestPlayer {
 	return &TestPlayer{
-		BasePlayer:    NewBasePlayer(name),
-		attackActions: make(map[int][]string),
-		blockActions:  make(map[int][]blockPair),
+		BasePlayer:     NewBasePlayer(name),
+		attackActions:  make(map[int][]string),
+		blockActions:   make(map[int][]blockPair),
+		bandFormations: make(map[int][][]string),
 	}
+}
+
+// AddBandFormation records that the given creatures should attack as a band on the given turn.
+func (tp *TestPlayer) AddBandFormation(turn int, creatures []string) {
+	tp.bandFormations[turn] = append(tp.bandFormations[turn], creatures)
+}
+
+// GetBandFormations implements BandFormer. Resolves scripted creature names to IDs.
+func (tp *TestPlayer) GetBandFormations(turn int, g *Game) [][]uuid.UUID {
+	formations, ok := tp.bandFormations[turn]
+	if !ok {
+		return nil
+	}
+	var result [][]uuid.UUID
+	for _, names := range formations {
+		var ids []uuid.UUID
+		for _, name := range names {
+			perm := g.FindPermanentByName(name, tp.PlayerID())
+			if perm != nil {
+				ids = append(ids, perm.ID())
+			}
+		}
+		if len(ids) >= 2 {
+			result = append(result, ids)
+		}
+	}
+	return result
+}
+
+// GetBandingDamageDistribution returns the scripted damage distribution for a banded group.
+// Returns nil if no distribution has been scripted, in which case the engine uses its default.
+func (tp *TestPlayer) GetBandingDamageDistribution(members []*Permanent) map[uuid.UUID]int {
+	if len(tp.chooseBandingDistribution) == 0 {
+		return nil
+	}
+	choice := tp.chooseBandingDistribution[0]
+	tp.chooseBandingDistribution = tp.chooseBandingDistribution[1:]
+	result := make(map[uuid.UUID]int)
+	for _, m := range members {
+		if dmg, ok := choice[m.Name()]; ok {
+			result[m.ID()] = dmg
+		}
+	}
+	return result
 }
 
 func (tp *TestPlayer) AddAction(a ScriptedAction) {

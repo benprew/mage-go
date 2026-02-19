@@ -24,6 +24,8 @@ func registerCreatures() {
 							return nil
 						}
 						var toDestroy []uuid.UUID
+						// simple predicate filter doesn't work since attacker/blocker state isn't on the permanent
+						// ZZZ for now....
 						for _, group := range g.Combat.Groups {
 							// Abu Ja'far was the attacker — destroy its blockers
 							if group.AttackerID == sourceID {
@@ -55,7 +57,13 @@ func registerCreatures() {
 		// Camel and to creatures banded with Camel.
 		c := mage.NewCreature("Camel", "{W}", 0, 1, "Camel")
 		c.AddAbility(mage.NewKeywordAbility(mage.Banding))
-		c.AddAbility(mage.NewTriggered(mage.EvtDeclaredAttacker, false, mage.))
+		c.AddAbility(mage.StaticAbility(mage.PreventDamageFromTo(
+			mage.HasSubType("Desert"),
+			func(sourceID uuid.UUID) mage.PermanentFilter {
+				return mage.Or(mage.IsID(sourceID), mage.IsBandedWith(sourceID))
+			},
+			mage.WhileSourceAttacking,
+		)))
 		return c
 	})
 
@@ -76,18 +84,22 @@ func registerCreatures() {
 	mage.Register("Moorish Cavalry", func() mage.Card {
 		// Trample
 		c := mage.NewCreature("Moorish Cavalry", "{2}{W}{W}", 3, 3, "Human", "Knight")
+		c.AddAbility(mage.NewKeywordAbility(mage.Trample))
 		return c
 	})
 
 	mage.Register("Repentant Blacksmith", func() mage.Card {
 		// Protection from red
 		c := mage.NewCreature("Repentant Blacksmith", "{1}{W}", 1, 2, "Human")
+		c.AddAbility(mage.ProtectionFromColor(mage.Red))
 		return c
 	})
 
 	mage.Register("War Elephant", func() mage.Card {
 		// Trample; banding
 		c := mage.NewCreature("War Elephant", "{3}{W}", 2, 2, "Elephant")
+		c.AddAbility(mage.NewKeywordAbility(mage.Trample))
+		c.AddAbility(mage.NewKeywordAbility(mage.Banding))
 		return c
 	})
 

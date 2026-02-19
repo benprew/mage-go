@@ -145,6 +145,24 @@ func NotHasKeywordFilter(kw Keyword) PermanentFilter {
 	}
 }
 
+// IsID returns a filter matching a specific permanent by ID.
+func IsID(id uuid.UUID) PermanentFilter {
+	return func(p *Permanent, _ *Game) bool {
+		return p.ID() == id
+	}
+}
+
+// IsBandedWith returns a filter matching permanents that are banded with the
+// given permanent in the current combat.
+func IsBandedWith(id uuid.UUID) PermanentFilter {
+	return func(p *Permanent, g *Game) bool {
+		if g.Combat == nil {
+			return false
+		}
+		return g.Combat.IsBandedWith(p.ID(), id)
+	}
+}
+
 // HasPowerGTE returns a filter matching creatures with power >= n.
 func HasPowerGTE(n int) PermanentFilter {
 	return func(p *Permanent, g *Game) bool {

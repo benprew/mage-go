@@ -7,6 +7,7 @@ type Combat struct {
 	Groups      []*CombatGroup
 	Attackers   map[uuid.UUID]bool
 	FirstStruck map[uuid.UUID]bool
+	Bands       map[uuid.UUID][]uuid.UUID // band leader -> members (all creatures in the band)
 }
 
 // CombatGroup represents an attacker and its blockers.
@@ -20,6 +21,7 @@ func NewCombat() *Combat {
 	return &Combat{
 		Attackers:   make(map[uuid.UUID]bool),
 		FirstStruck: make(map[uuid.UUID]bool),
+		Bands:       make(map[uuid.UUID][]uuid.UUID),
 	}
 }
 
@@ -27,6 +29,7 @@ func (c *Combat) Reset() {
 	c.Groups = nil
 	c.Attackers = make(map[uuid.UUID]bool)
 	c.FirstStruck = make(map[uuid.UUID]bool)
+	c.Bands = make(map[uuid.UUID][]uuid.UUID)
 }
 
 func (c *Combat) AddAttacker(attackerID, defenderID uuid.UUID) {
@@ -48,6 +51,33 @@ func (c *Combat) AddBlocker(blockerID, attackerID uuid.UUID) {
 
 func (c *Combat) IsAttacking(id uuid.UUID) bool {
 	return c.Attackers[id]
+}
+
+// AddBand records a group of creatures attacking as a band.
+func (c *Combat) AddBand(members []uuid.UUID) {
+	for _, id := range members {
+		c.Bands[id] = members
+	}
+}
+
+// IsInBand returns true if the creature with the given ID is part of an attacking band.
+func (c *Combat) IsInBand(id uuid.UUID) bool {
+	members, ok := c.Bands[id]
+	return ok && len(members) > 0
+}
+
+// IsBandedWith returns true if id1 and id2 are in the same attacking band.
+func (c *Combat) IsBandedWith(id1, id2 uuid.UUID) bool {
+	members, ok := c.Bands[id1]
+	if !ok {
+		return false
+	}
+	for _, m := range members {
+		if m == id2 {
+			return true
+		}
+	}
+	return false
 }
 
 // RemoveFromCombat removes a permanent from combat (attacker or blocker).

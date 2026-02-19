@@ -233,6 +233,41 @@ func (tg *TestGame) ChooseFromLibrary(p PlayerRef, name string) {
 	tp.chooseFromLibrary = append(tp.chooseFromLibrary, name)
 }
 
+// FormBand scripts which creatures form an attacking band on the given turn.
+// At least one creature must have banding; at most one may lack banding.
+func (tg *TestGame) FormBand(turn int, p PlayerRef, creatures ...string) {
+	tg.getPlayer(p).AddBandFormation(turn, creatures)
+}
+
+// ChooseBandingDistribution scripts how a player distributes incoming damage
+// among their banded creatures. The distribution maps creature name → damage.
+// This is consumed when the game asks the player to distribute banding damage.
+func (tg *TestGame) ChooseBandingDistribution(p PlayerRef, distribution map[string]int) {
+	tp := tg.getPlayer(p)
+	tp.chooseBandingDistribution = append(tp.chooseBandingDistribution, distribution)
+}
+
+// AssertBanded checks whether two named permanents are in the same attacking band.
+func (tg *TestGame) AssertBanded(p1 PlayerRef, name1 string, p2 PlayerRef, name2 string, want bool) {
+	tg.t.Helper()
+	pid1 := tg.getPlayerID(p1)
+	pid2 := tg.getPlayerID(p2)
+	perm1 := tg.Game.FindPermanentByName(name1, pid1)
+	perm2 := tg.Game.FindPermanentByName(name2, pid2)
+	if perm1 == nil {
+		tg.t.Errorf("AssertBanded: %s not found for %v", name1, p1)
+		return
+	}
+	if perm2 == nil {
+		tg.t.Errorf("AssertBanded: %s not found for %v", name2, p2)
+		return
+	}
+	got := tg.Game.Combat.IsBandedWith(perm1.ID(), perm2.ID())
+	if got != want {
+		tg.t.Errorf("AssertBanded(%s, %s): got %v, want %v", name1, name2, got, want)
+	}
+}
+
 // StopAt sets when the game should stop.
 func (tg *TestGame) StopAt(turn int, step PhaseStep) {
 	tg.stopAt.turn = turn

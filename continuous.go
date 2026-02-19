@@ -368,16 +368,22 @@ type damagePreventionRule struct {
 
 type damagePreventionRuleOption func(*damagePreventionRule)
 
-func (dpr *damagePreventionRule) WithFrom(from PermanentFilter) {
-	dpr.from = from
+func WithFrom(from PermanentFilter) damagePreventionRuleOption {
+	return func(dpr *damagePreventionRule) {
+		dpr.from = from
+	}
 }
 
-func (dpr *damagePreventionRule) WithTo(to PermanentFilter) {
-	dpr.to = to
+func WithTo(to PermanentFilter) damagePreventionRuleOption {
+	return func(dpr *damagePreventionRule) {
+		dpr.to = to
+	}
 }
 
-func (dpr *damagePreventionRule) WithOneShot(oneshot bool) {
-	dpr.oneShot = oneshot
+func WithOneShot(oneshot bool) damagePreventionRuleOption {
+	return func(dpr *damagePreventionRule) {
+		dpr.oneShot = oneshot
+	}
 }
 
 func (em *EffectManager) AddDamagePreventionRule(opts ...damagePreventionRuleOption) {
@@ -391,6 +397,80 @@ func (em *EffectManager) AddDamagePreventionRule(opts ...damagePreventionRuleOpt
 
 func (em *EffectManager) ClearDamagePreventionRules() {
 	em.preventionRules = make([]damagePreventionRule, 0)
+}
+
+// CheckDamagePreventionRules returns true if any rule matches the given
+// source and target permanents, meaning all damage should be prevented.
+// One-shot rules are consumed on use.
+func (em *EffectManager) CheckDamagePreventionRules(source, target *Permanent, g *Game) bool {
+	for i, rule := range em.preventionRules {
+		fromMatch := rule.from == nil || (source != nil && rule.from(source, g))
+		toMatch := rule.to == nil || rule.to(target, g)
+		if fromMatch && toMatch {
+			if rule.oneShot {
+				em.preventionRules = append(em.preventionRules[:i], em.preventionRules[i+1:]...)
+			}
+			return true
+		}
+	}
+	return false
+}
+
+// SourceCondition is a predicate checked by preventDamageRuleContinuous to
+// decide whether the rule is active. It receives the source permanent and the game.
+type SourceCondition func(source *Permanent, g *Game) bool
+
+// WhileSourceAttacking is a SourceCondition that is true only while the source
+// permanent is declared as an attacker.
+func WhileSourceAttacking(source *Permanent, g *Game) bool {
+	return g.Combat != nil && g.Combat.IsAttacking(source.ID())
+}
+
+// preventDamageRuleContinuous registers a damage prevention rule each Apply()
+// cycle. The toFactory receives the source permanent's ID so filters can
+// reference "self" dynamically.
+type preventDamageRuleContinuous struct {
+	from      PermanentFilter
+	toFactory func(sourceID uuid.UUID) PermanentFilter
+	condition SourceCondition // optional; nil means always active while on battlefield
+	effectSource
+}
+
+// PreventDamageFromTo creates a continuous effect that prevents all damage
+// from permanents matching `from` to permanents matching the filter produced
+// by `toFactory(sourceID)`. The toFactory pattern lets filters like
+// IsBandedWith reference the source permanent's ID. An optional SourceCondition
+// controls when the rule is active (e.g. WhileSourceAttacking for Camel).
+func PreventDamageFromTo(from PermanentFilter, toFactory func(uuid.UUID) PermanentFilter, condition ...SourceCondition) ContinuousEffect {
+	var cond SourceCondition
+	if len(condition) > 0 {
+		cond = condition[0]
+	}
+	return &preventDamageRuleContinuous{
+		from:      from,
+		toFactory: toFactory,
+		condition: cond,
+	}
+}
+
+func (e *preventDamageRuleContinuous) GetLayer() Layer       { return LayerAbility }
+func (e *preventDamageRuleContinuous) GetDuration() Duration { return WhileOnBattlefield }
+
+func (e *preventDamageRuleContinuous) IsActive(g *Game) bool {
+	src := g.FindPermanent(e.sourceID)
+	if src == nil {
+		return false
+	}
+	if e.condition != nil {
+		return e.condition(src, g)
+	}
+	return true
+}
+
+func (e *preventDamageRuleContinuous) Apply(g *Game) error {
+	toFilter := e.toFactory(e.sourceID)
+	g.Effects.AddDamagePreventionRule(WithFrom(e.from), WithTo(toFilter))
+	return nil
 }
 
 func (em *EffectManager) Add(e ContinuousEffect) {
@@ -443,6 +523,14 @@ func (em *EffectManager) Apply(g *Game) {
 	em.manaConversion = make(map[Color]Color)
 	em.bodyguard = make(map[uuid.UUID]uuid.UUID)
 	em.playerDamageRedirect = make(map[uuid.UUID]uuid.UUID)
+	// Rebuild prevention rules from continuous effects; preserve one-shot rules (e.g. CoP)
+	var oneShotRules []damagePreventionRule
+	for _, r := range em.preventionRules {
+		if r.oneShot {
+			oneShotRules = append(oneShotRules, r)
+		}
+	}
+	em.preventionRules = oneShotRules
 
 	// Reset granted runtime abilities and subtype overrides from effects
 	for _, p := range g.Battlefield {
