@@ -7,11 +7,13 @@ import (
 )
 
 // Ensure all Alpha card packages are imported.
-var __ = registerAlphaCreatures
-var ___ = registerAlphaSpells
-var ____ = registerAlphaEnchantments
-var _____ = registerAlphaArtifacts
-var ______ = registerAlphaLands
+var (
+	_ = registerAlphaCreatures     //nolint:unused
+	_ = registerAlphaSpells        //nolint:unused
+	_ = registerAlphaEnchantments  //nolint:unused
+	_ = registerAlphaArtifacts     //nolint:unused
+	_ = registerAlphaLands         //nolint:unused
+)
 
 // =============================================================================
 // Per-card correctness tests. Each function validates the correct MTG behavior

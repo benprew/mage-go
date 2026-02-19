@@ -229,18 +229,6 @@ func (mp *ManaPool) DrainGeneric(n int) {
 	}
 }
 
-// availableAs returns the count of mana available to pay as the given color,
-// including mana that can be converted via ManaConversions.
-func (mp *ManaPool) availableAs(avail map[Color]int, color Color) int {
-	count := avail[color]
-	// Check if any conversion allows another color to be used as this one
-	for from, to := range mp.ManaConversions {
-		if to == color && from != color {
-			count += avail[from]
-		}
-	}
-	return count
-}
 
 // CanPay returns true if the pool can pay the given mana cost.
 func (mp *ManaPool) CanPay(mc ManaCost) bool {
@@ -356,16 +344,6 @@ func (mp *ManaPool) Pay(mc ManaCost) error {
 	return nil
 }
 
-func (mp *ManaPool) removeColor(c Color, n int) {
-	for i := 0; i < n; i++ {
-		for j, m := range mp.pool {
-			if m.Color == c {
-				mp.pool = append(mp.pool[:j], mp.pool[j+1:]...)
-				break
-			}
-		}
-	}
-}
 
 func (mp *ManaPool) removeUpTo(c Color, n int) int {
 	for n > 0 {

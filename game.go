@@ -812,9 +812,7 @@ func (g *Game) PutTriggersOnStack() {
 			SourceID:   pt.sourceID,
 			IsAbility:  true,
 		}
-		for _, e := range pt.ability.Effects() {
-			obj.Effects = append(obj.Effects, e)
-		}
+		obj.Effects = append(obj.Effects, pt.ability.Effects()...)
 		// For triggers that need to pass the event's player as a target
 		// (e.g., "deal damage to that land's controller", "that player draws"),
 		// store the event PlayerID as a target on the stack object.
@@ -847,7 +845,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 	g.ResolvingCard = obj.Card
 	g.ResolvingTargets = obj.Targets
 	for _, eff := range obj.Effects {
-		eff.Apply(g, obj.SourceID, obj.Controller, obj.Targets)
+		_ = eff.Apply(g, obj.SourceID, obj.Controller, obj.Targets)
 	}
 
 	// If this was a spell (not an ability), put the card in the graveyard
@@ -1046,9 +1044,7 @@ func (g *Game) ActivateAbilityByText(playerID uuid.UUID, permName string, target
 			IsAbility:  true,
 			Targets:    targets,
 		}
-		for _, e := range aa.Effects() {
-			obj.Effects = append(obj.Effects, e)
-		}
+		obj.Effects = append(obj.Effects, aa.Effects()...)
 
 		g.Stack.Push(obj)
 		return nil
@@ -2325,9 +2321,7 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		IsAbility:  true,
 		Targets:    targets,
 	}
-	for _, e := range aa.Effects() {
-		obj.Effects = append(obj.Effects, e)
-	}
+	obj.Effects = append(obj.Effects, aa.Effects()...)
 
 	g.Stack.Push(obj)
 	return nil

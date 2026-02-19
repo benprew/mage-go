@@ -415,12 +415,8 @@ func (e *boostMatchingUntilEndOfTurnEffect) Apply(g *Game, sourceID uuid.UUID, c
 	for _, perm := range g.FilterBattlefield(And(ControlledBy(controller), IsCreature, e.predicate)) {
 		p := e.power.Resolve(g, sourceID, controller)
 		t := e.toughness.Resolve(g, sourceID, controller)
-		eff := &temporaryBoostEffect{
-			targetID:     perm.ID(),
-			power:        p,
-			toughness:    t,
-			effectSource: effectSource{sourceID: sourceID},
-		}
+		eff := TemporaryBoost(perm.ID(), p, t)
+		eff.SetSourceID(sourceID)
 		g.Effects.Add(eff)
 	}
 	g.Effects.Apply(g)
@@ -458,12 +454,8 @@ func (e *boostUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUI
 	}
 	p := e.power.Resolve(g, sourceID, controller)
 	t := e.toughness.Resolve(g, sourceID, controller)
-	eff := &temporaryBoostEffect{
-		targetID:     perm.ID(),
-		power:        p,
-		toughness:    t,
-		effectSource: effectSource{sourceID: sourceID},
-	}
+	eff := TemporaryBoost(perm.ID(), p, t)
+	eff.SetSourceID(sourceID)
 	g.Effects.Add(eff)
 	g.Effects.Apply(g)
 	return nil
@@ -1115,11 +1107,8 @@ func (e *grantKeywordUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller u
 	if perm == nil {
 		return nil
 	}
-	eff := &temporaryKeywordEffect{
-		targetID:     perm.ID(),
-		keyword:      e.keyword,
-		effectSource: effectSource{sourceID: sourceID},
-	}
+	eff := TemporaryKeyword(perm.ID(), e.keyword)
+	eff.SetSourceID(sourceID)
 	g.Effects.Add(eff)
 	g.Effects.Apply(g)
 	return nil
@@ -1256,12 +1245,8 @@ func (e *doubleSourcePowerEffect) Apply(g *Game, sourceID, controller uuid.UUID,
 		return nil
 	}
 	currentPower := perm.CurrentPower(g)
-	eff := &temporaryBoostEffect{
-		targetID:     perm.ID(),
-		power:        currentPower,
-		toughness:    0,
-		effectSource: effectSource{sourceID: sourceID},
-	}
+	eff := TemporaryBoost(perm.ID(), currentPower, 0)
+	eff.SetSourceID(sourceID)
 	g.Effects.Add(eff)
 	g.Effects.Apply(g)
 	return nil
@@ -1506,11 +1491,8 @@ func (e *makeUnblockableUntilEndOfTurnEffect) Apply(g *Game, sourceID, controlle
 	if perm == nil {
 		return nil
 	}
-	eff := &temporaryKeywordEffect{
-		targetID:     perm.ID(),
-		keyword:      UnblockableKW,
-		effectSource: effectSource{sourceID: sourceID},
-	}
+	eff := TemporaryKeyword(perm.ID(), UnblockableKW)
+	eff.SetSourceID(sourceID)
 	g.Effects.Add(eff)
 	g.Effects.Apply(g)
 	return nil
@@ -1956,12 +1938,8 @@ func (e *replaceKeywordEffect) Apply(g *Game, sourceID, controller uuid.UUID, ta
 		return nil
 	}
 	// Remove the old keyword and add the new one as a continuous effect
-	eff := &keywordReplacementContinuous{
-		from:         e.from,
-		to:           e.to,
-		targetID:     perm.ID(),
-		effectSource: effectSource{sourceID: sourceID},
-	}
+	eff := KeywordReplacement(perm.ID(), e.from, e.to)
+	eff.SetSourceID(sourceID)
 	g.Effects.Add(eff)
 	g.Effects.Apply(g)
 	return nil
@@ -1990,11 +1968,8 @@ func (e *changeColorEffect) Apply(g *Game, sourceID, _ uuid.UUID, targets []uuid
 		return nil
 	}
 	// Register as a continuous effect so the color change persists
-	ce := &colorOverrideContinuous{
-		color:    e.color,
-		targetID: perm.ID(),
-	}
-	ce.sourceID = sourceID
+	ce := ColorOverride(perm.ID(), e.color)
+	ce.SetSourceID(sourceID)
 	g.Effects.Add(ce)
 	return nil
 }
@@ -2031,12 +2006,8 @@ func (e *copySpellOnStackEffect) Apply(g *Game, _, ctrl uuid.UUID, targets []uui
 		IsAbility:  original.IsAbility,
 		XValue:     original.XValue,
 	}
-	for i, eff := range original.Effects {
-		cp.Effects[i] = eff
-	}
-	for i, t := range original.Targets {
-		cp.Targets[i] = t
-	}
+	copy(cp.Effects, original.Effects)
+	copy(cp.Targets, original.Targets)
 	g.Stack.Push(cp)
 	return nil
 }
