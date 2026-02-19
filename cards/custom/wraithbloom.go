@@ -1,6 +1,6 @@
-package cards
+package custom
 
-import "github.com/mage/mage"
+import "github.com/mage/mage/pkg/mage"
 
 func init() {
 	registerWraithbloom()

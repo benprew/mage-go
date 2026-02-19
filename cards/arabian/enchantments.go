@@ -1,6 +1,6 @@
 package arabian
 
-import "github.com/mage/mage"
+import "github.com/mage/mage/pkg/mage"
 
 func init() {
 	registerEnchantments()

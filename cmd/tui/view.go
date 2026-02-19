@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mage/mage"
+	"github.com/mage/mage/pkg/mage"
 )
 
 func (m Model) View() string {

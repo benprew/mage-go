@@ -1,15 +1,15 @@
-package cards
+package limited
 
 import (
 	"github.com/google/uuid"
-	"github.com/mage/mage"
+	"github.com/mage/mage/pkg/mage"
 )
 
 func init() {
-	registerAlphaEnchantments()
+	registerEnchantments()
 }
 
-func registerAlphaEnchantments() {
+func registerEnchantments() {
 	// ===== GLOBAL ENCHANTMENTS =====
 
 	mage.Register("Crusade", func() mage.Card {
@@ -50,7 +50,9 @@ func registerAlphaEnchantments() {
 
 	// ===== AURAS (CREATURE ENCHANTMENTS) =====
 
-	// Holy Strength already registered in enchantments.go
+	mage.Register("Holy Strength", func() mage.Card {
+		return mage.NewBoostAura("Holy Strength", "{W}", 1, 2)
+	})
 
 	mage.Register("Unholy Strength", func() mage.Card {
 		return mage.NewBoostAura("Unholy Strength", "{B}", 2, 1)

@@ -1,17 +1,17 @@
-package cards
+package limited
 
 import (
 	"math/rand"
 
 	"github.com/google/uuid"
-	"github.com/mage/mage"
+	"github.com/mage/mage/pkg/mage"
 )
 
 func init() {
-	registerAlphaArtifacts()
+	registerArtifacts()
 }
 
-func registerAlphaArtifacts() {
+func registerArtifacts() {
 	// ===== MOX CYCLE =====
 
 	moxen := []struct {

@@ -9,13 +9,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 go test ./...
 
 # Run only the core engine tests
-go test .
+go test ./pkg/mage/
 
 # Run only the cards package tests
 go test ./cards/...
 
 # Run a single test by name
-go test ./cards/... -run TestAlphaWalls
+go test ./cards/limited/ -run TestAlphaWalls
 
 # Build check (library only, no binary)
 go build ./...
@@ -34,14 +34,18 @@ This is a Go library (`github.com/mage/mage`) implementing the MTG game engine. 
 
 ### Package Layout
 
-- **Root package (`mage`)**: The entire game engine — game state, cards, abilities, effects, combat, mana, targeting, the stack, and the test harness.
-- **`cards/`**: Card definitions organized by set and type. Registers cards into the global registry via `init()` functions.
+- **`pkg/mage/` (package `mage`)**: The entire game engine — game state, cards, abilities, effects, combat, mana, targeting, the stack, and the test harness.
+- **`cards/limited/` (package `limited`)**: Alpha (Limited Edition) card definitions. Registers cards into the global registry via `init()`.
+- **`cards/arabian/` (package `arabian`)**: Arabian Nights card definitions.
+- **`cards/custom/` (package `custom`)**: Custom/test cards (e.g., Wraithbloom).
+- **`cmd/tui/`**: Terminal UI (package `main`).
+- **`cmd/fetchset/`**: Set fetcher utility (package `main`).
 
 ### Core Types and Their Relationships
 
-**Game loop**: `Game` (game.go) holds all state — players, battlefield, exile, stack, combat, effects. Turns progress through `PhaseStep` values defined in turn.go. The game fires `GameEvent` values (event.go) that triggered abilities listen for.
+**Game loop**: `Game` (pkg/mage/game.go) holds all state — players, battlefield, exile, stack, combat, effects. Turns progress through `PhaseStep` values defined in turn.go. The game fires `GameEvent` values (event.go) that triggered abilities listen for.
 
-**Card system**: The `Card` interface (card.go) is implemented by `BaseCard`. Cards are created through factory functions registered with `Register(name, factory)` in registry.go and instantiated with `CreateCard(name)`. Card constructors like `NewCreature(name, manaCost, subtypes...)` are in card.go.
+**Card system**: The `Card` interface (pkg/mage/card.go) is implemented by `BaseCard`. Cards are created through factory functions registered with `Register(name, factory)` in registry.go and instantiated with `CreateCard(name)`. Card constructors like `NewCreature(name, manaCost, subtypes...)` are in card.go.
 
 **Abilities**: Three-layer hierarchy — `Ability` interface (ability.go) for keywords/static abilities, `ActivatedAbility` (activated.go) for activated abilities with costs/targets/effects, and `TriggeredAbility` (triggered.go) for event-driven triggers. All use builder-pattern chaining (`AddCost`, `AddTarget`, `AddEffect`).
 
@@ -55,7 +59,7 @@ This is a Go library (`github.com/mage/mage`) implementing the MTG game engine. 
 
 ### Adding a New Card
 
-Register a factory in the appropriate file under `cards/` (e.g., `cards/creatures.go`, `cards/alpha_spells.go`):
+Register a factory in the appropriate file under `cards/` (e.g., `cards/limited/creatures.go`, `cards/limited/spells.go`):
 
 ```go
 mage.Register("Card Name", func() mage.Card {
@@ -67,11 +71,11 @@ mage.Register("Card Name", func() mage.Card {
 })
 ```
 
-Registration functions are called from `init()` in each file. Alpha set cards use separate `registerAlpha*` functions referenced by blank identifiers in test files to ensure loading.
+Registration functions are called from `init()` in each file. The `cards/limited/test.go` file holds blank-identifier references (e.g., `var _ = registerCreatures`) to ensure all registration functions are called even when only test files import the package.
 
 ### Test Harness DSL
 
-Tests use `TestGame` (harness.go) with two scripted `TestPlayer` instances (`PlayerA`, `PlayerB`). The DSL supports:
+Tests use `TestGame` (pkg/mage/harness.go) with two scripted `TestPlayer` instances (`PlayerA`, `PlayerB`). The DSL supports:
 
 ```go
 g := mage.NewTestGame(t)

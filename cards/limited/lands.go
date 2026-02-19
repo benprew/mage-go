@@ -1,19 +1,39 @@
-package cards
+package limited
 
-import "github.com/mage/mage"
+import "github.com/mage/mage/pkg/mage"
 
 func init() {
-	registerAlphaLands()
+	registerLands()
 }
 
-func registerAlphaLands() {
+func registerLands() {
+	// Basic lands
+	for _, land := range []struct {
+		name  string
+		color mage.Color
+	}{
+		{"Plains", mage.White},
+		{"Island", mage.Blue},
+		{"Swamp", mage.Black},
+		{"Mountain", mage.Red},
+		{"Forest", mage.Green},
+	} {
+		name := land.name
+		color := land.color
+		mage.Register(name, func() mage.Card {
+			c := mage.NewLand(name, name) // subtype matches name (e.g., Plains has subtype "Plains")
+			c.AddAbility(mage.NewManaAbility(color))
+			return c
+		})
+	}
+
 	// Dual lands - each taps for one of two colors
 	duals := []struct {
-		name     string
-		sub1     string
-		sub2     string
-		color1   mage.Color
-		color2   mage.Color
+		name   string
+		sub1   string
+		sub2   string
+		color1 mage.Color
+		color2 mage.Color
 	}{
 		{"Badlands", "Swamp", "Mountain", mage.Black, mage.Red},
 		{"Bayou", "Swamp", "Forest", mage.Black, mage.Green},

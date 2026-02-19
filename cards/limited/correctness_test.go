@@ -1,18 +1,18 @@
-package cards
+package limited
 
 import (
 	"testing"
 
-	"github.com/mage/mage"
+	"github.com/mage/mage/pkg/mage"
 )
 
 // Ensure all Alpha card packages are imported.
 var (
-	_ = registerAlphaCreatures     //nolint:unused
-	_ = registerAlphaSpells        //nolint:unused
-	_ = registerAlphaEnchantments  //nolint:unused
-	_ = registerAlphaArtifacts     //nolint:unused
-	_ = registerAlphaLands         //nolint:unused
+	_ = registerCreatures     //nolint:unused
+	_ = registerSpells        //nolint:unused
+	_ = registerEnchantments  //nolint:unused
+	_ = registerArtifacts     //nolint:unused
+	_ = registerLands         //nolint:unused
 )
 
 // =============================================================================

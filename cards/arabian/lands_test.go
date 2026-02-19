@@ -3,8 +3,8 @@ package arabian
 import (
 	"testing"
 
-	"github.com/mage/mage"
-	_ "github.com/mage/mage/cards" // register base cards for test creatures
+	"github.com/mage/mage/pkg/mage"
+	_ "github.com/mage/mage/cards/limited" // register base cards for test creatures
 )
 
 func TestDesert(t *testing.T) {

@@ -1,13 +1,114 @@
-package cards_test
+package limited_test
 
 import (
+	"sync"
 	"testing"
 
-	"github.com/mage/mage"
-	_ "github.com/mage/mage/cards" // register all cards
+	"github.com/mage/mage/pkg/mage"
+	_ "github.com/mage/mage/cards/custom"  // register Wraithbloom Cultivator
+	_ "github.com/mage/mage/cards/limited" // register Alpha cards
 )
 
+var registerOnce sync.Once
+
+func registerTestCards() {
+	registerOnce.Do(func() {
+		mage.Register("Doom Blade", func() mage.Card {
+			c := mage.NewInstant("Doom Blade", "{1}{B}")
+			sa := mage.NewTargetedSpell(mage.TargetCreature(mage.Not(mage.HasColorFilter(mage.Black))), mage.DestroyTarget())
+			c.AddAbility(sa)
+			return c
+		})
+
+		mage.Register("Elvish Mystic", func() mage.Card {
+			c := mage.NewCreature("Elvish Mystic", "{G}", 1, 1, "Elf", "Druid")
+			c.AddAbility(mage.NewManaAbility(mage.Green))
+			return c
+		})
+
+		mage.Register("Fencing Ace", func() mage.Card {
+			c := mage.NewCreature("Fencing Ace", "{1}{W}", 1, 1, "Human", "Soldier")
+			c.AddAbility(mage.NewKeywordAbility(mage.DoubleStrike))
+			return c
+		})
+
+		mage.Register("Boros Swiftblade", func() mage.Card {
+			c := mage.NewCreature("Boros Swiftblade", "{R}{W}", 1, 2, "Human", "Soldier")
+			c.AddAbility(mage.NewKeywordAbility(mage.DoubleStrike))
+			return c
+		})
+
+		mage.Register("Gladecover Scout", func() mage.Card {
+			c := mage.NewCreature("Gladecover Scout", "{G}", 1, 1, "Elf", "Scout")
+			c.AddAbility(mage.NewKeywordAbility(mage.Hexproof))
+			return c
+		})
+
+		mage.Register("Blurred Mongoose", func() mage.Card {
+			c := mage.NewCreature("Blurred Mongoose", "{1}{G}", 2, 1, "Mongoose")
+			c.AddAbility(mage.NewKeywordAbility(mage.Shroud))
+			return c
+		})
+
+		mage.Register("Kor Firewalker", func() mage.Card {
+			c := mage.NewCreature("Kor Firewalker", "{W}{W}", 2, 2, "Kor", "Soldier")
+			c.AddAbility(mage.ProtectionFromColor(mage.Red))
+			return c
+		})
+
+		mage.Register("Centaur Courser", func() mage.Card {
+			c := mage.NewCreature("Centaur Courser", "{2}{G}", 3, 3, "Centaur", "Warrior")
+			return c
+		})
+
+		mage.Register("Goblin Piker", func() mage.Card {
+			c := mage.NewCreature("Goblin Piker", "{1}{R}", 2, 1, "Goblin", "Warrior")
+			return c
+		})
+
+		mage.Register("Rancor", func() mage.Card {
+			c := mage.NewAura("Rancor", "{G}")
+			c.AddAbility(mage.StaticAbility(
+				mage.BoostAttached(2, 0, mage.AttachAura),
+				mage.GrantAbilityToAttached(mage.Trample, mage.AttachAura),
+			))
+			c.AddAbility(mage.PutIntoGraveyardFromBattlefieldTrigger(
+				mage.ReturnSourceToHand(), false,
+			))
+			return c
+		})
+
+		mage.Register("Pacifism", func() mage.Card {
+			c := mage.NewAura("Pacifism", "{1}{W}")
+			c.AddAbility(mage.StaticAbility(
+				mage.PreventAttachedFromAttacking(mage.AttachAura),
+			))
+			return c
+		})
+
+		mage.Register("Bonesplitter", func() mage.Card {
+			c := mage.NewEquipment("Bonesplitter", "{1}")
+			c.AddAbility(mage.StaticAbility(
+				mage.BoostAttached(2, 0, mage.AttachEquipment),
+			))
+			c.AddAbility(mage.NewEquipAbility(mage.GenericCost(1)))
+			return c
+		})
+
+		mage.Register("Lightning Greaves", func() mage.Card {
+			c := mage.NewEquipment("Lightning Greaves", "{2}")
+			c.AddAbility(mage.StaticAbility(
+				mage.GrantAbilityToAttached(mage.Haste, mage.AttachEquipment),
+				mage.GrantAbilityToAttached(mage.Shroud, mage.AttachEquipment),
+			))
+			c.AddAbility(mage.NewEquipAbility(mage.GenericCost(0)))
+			return c
+		})
+	})
+}
+
 func TestWraithbloomCultivator(t *testing.T) {
+	registerTestCards()
 	tests := []struct {
 		name   string
 		setup  func(*mage.TestGame)
@@ -102,6 +203,7 @@ func TestWraithbloomCultivator(t *testing.T) {
 }
 
 func TestHexproof(t *testing.T) {
+	registerTestCards()
 	tests := []struct {
 		name   string
 		setup  func(*mage.TestGame)
@@ -155,6 +257,7 @@ func TestHexproof(t *testing.T) {
 }
 
 func TestShroud(t *testing.T) {
+	registerTestCards()
 	tests := []struct {
 		name   string
 		setup  func(*mage.TestGame)
@@ -208,6 +311,7 @@ func TestShroud(t *testing.T) {
 }
 
 func TestProtection(t *testing.T) {
+	registerTestCards()
 	tests := []struct {
 		name   string
 		setup  func(*mage.TestGame)
@@ -294,6 +398,7 @@ func TestProtection(t *testing.T) {
 }
 
 func TestFirstStrike(t *testing.T) {
+	registerTestCards()
 	tests := []struct {
 		name   string
 		setup  func(*mage.TestGame)
@@ -303,8 +408,8 @@ func TestFirstStrike(t *testing.T) {
 		{
 			name: "first strike kills before normal damage",
 			setup: func(g *mage.TestGame) {
-				g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "White Knight")   // 2/2 first strike
-				g.AddCard(mage.ZoneBattlefield, mage.PlayerB, "Grizzly Bears")  // 2/2 vanilla
+				g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "White Knight")  // 2/2 first strike
+				g.AddCard(mage.ZoneBattlefield, mage.PlayerB, "Grizzly Bears") // 2/2 vanilla
 			},
 			script: func(g *mage.TestGame) {
 				g.Attack(1, mage.PlayerA, "White Knight")
@@ -351,6 +456,7 @@ func TestFirstStrike(t *testing.T) {
 }
 
 func TestDoubleStrike(t *testing.T) {
+	registerTestCards()
 	tests := []struct {
 		name   string
 		setup  func(*mage.TestGame)
@@ -405,6 +511,7 @@ func TestDoubleStrike(t *testing.T) {
 }
 
 func TestAuras(t *testing.T) {
+	registerTestCards()
 	tests := []struct {
 		name   string
 		setup  func(*mage.TestGame)
@@ -513,6 +620,7 @@ func TestAuras(t *testing.T) {
 }
 
 func TestEquipment(t *testing.T) {
+	registerTestCards()
 	tests := []struct {
 		name   string
 		setup  func(*mage.TestGame)
@@ -602,6 +710,7 @@ func TestEquipment(t *testing.T) {
 }
 
 func TestBasicCombat(t *testing.T) {
+	registerTestCards()
 	tests := []struct {
 		name   string
 		setup  func(*mage.TestGame)

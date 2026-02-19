@@ -1,15 +1,15 @@
-package cards
+package limited
 
 import (
 	"github.com/google/uuid"
-	"github.com/mage/mage"
+	"github.com/mage/mage/pkg/mage"
 )
 
 func init() {
-	registerAlphaCreatures()
+	registerCreatures()
 }
 
-func registerAlphaCreatures() {
+func registerCreatures() {
 	// ===== WHITE CREATURES =====
 
 	mage.Register("Benalish Hero", func() mage.Card {
@@ -35,9 +35,19 @@ func registerAlphaCreatures() {
 		return c
 	})
 
-	// Serra Angel already registered in creatures.go
+	mage.Register("Serra Angel", func() mage.Card {
+		c := mage.NewCreature("Serra Angel", "{3}{W}{W}", 4, 4, "Angel")
+		c.AddAbility(mage.NewKeywordAbility(mage.Flying))
+		c.AddAbility(mage.NewKeywordAbility(mage.Vigilance))
+		return c
+	})
 
-	// White Knight already registered in creatures.go
+	mage.Register("White Knight", func() mage.Card {
+		c := mage.NewCreature("White Knight", "{W}{W}", 2, 2, "Human", "Knight")
+		c.AddAbility(mage.NewKeywordAbility(mage.FirstStrike))
+		c.AddAbility(mage.ProtectionFromColor(mage.Black))
+		return c
+	})
 
 	mage.Register("Northern Paladin", func() mage.Card {
 		c := mage.NewCreature("Northern Paladin", "{2}{W}{W}", 3, 3, "Human", "Knight")
@@ -424,7 +434,10 @@ func registerAlphaCreatures() {
 		return c
 	})
 
-	// Grizzly Bears already registered in creatures.go
+	mage.Register("Grizzly Bears", func() mage.Card {
+		c := mage.NewCreature("Grizzly Bears", "{1}{G}", 2, 2, "Bear")
+		return c
+	})
 
 	mage.Register("Ironroot Treefolk", func() mage.Card {
 		c := mage.NewCreature("Ironroot Treefolk", "{4}{G}", 3, 5, "Treefolk")

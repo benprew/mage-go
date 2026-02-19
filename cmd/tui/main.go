@@ -5,10 +5,10 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/mage/mage"
+	"github.com/mage/mage/pkg/mage"
 
 	// Register all cards
-	_ "github.com/mage/mage/cards"
+	_ "github.com/mage/mage/cards/limited"
 )
 
 func main() {

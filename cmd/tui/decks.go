@@ -4,7 +4,7 @@ import (
 	"math/rand"
 
 	"github.com/google/uuid"
-	"github.com/mage/mage"
+	"github.com/mage/mage/pkg/mage"
 )
 
 // deckList defines card names and counts.

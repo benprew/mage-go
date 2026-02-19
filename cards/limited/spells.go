@@ -1,17 +1,17 @@
-package cards
+package limited
 
 import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/mage/mage"
+	"github.com/mage/mage/pkg/mage"
 )
 
 func init() {
-	registerAlphaSpells()
+	registerSpells()
 }
 
-func registerAlphaSpells() {
+func registerSpells() {
 	// ===== WHITE SPELLS =====
 
 	mage.Register("Swords to Plowshares", func() mage.Card {
@@ -334,7 +334,12 @@ func registerAlphaSpells() {
 
 	// ===== RED SPELLS =====
 
-	// Lightning Bolt already registered in spells.go
+	mage.Register("Lightning Bolt", func() mage.Card {
+		c := mage.NewInstant("Lightning Bolt", "{R}")
+		sa := mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3)))
+		c.AddAbility(sa)
+		return c
+	})
 
 	mage.Register("Fireball", func() mage.Card {
 		c := mage.NewSorcery("Fireball", "{X}{R}")
@@ -355,7 +360,7 @@ func registerAlphaSpells() {
 		// Deal X damage to each creature without flying and each player
 		sa := mage.NewSpellAbility(mage.CompositeEffects(
 			"deal X damage to each creature without flying and each player",
-			mage.DealDamageToAllCreatures(mage.XValue(),mage.NotHasKeywordFilter(mage.Flying)),
+			mage.DealDamageToAllCreatures(mage.XValue(), mage.NotHasKeywordFilter(mage.Flying)),
 			mage.DealDamageToPlayers(mage.XValue(), mage.SelectEachPlayer()),
 		))
 		c.AddAbility(sa)
@@ -414,7 +419,12 @@ func registerAlphaSpells() {
 
 	// ===== GREEN SPELLS =====
 
-	// Giant Growth already registered in spells.go
+	mage.Register("Giant Growth", func() mage.Card {
+		c := mage.NewInstant("Giant Growth", "{G}")
+		sa := mage.NewTargetedSpell(mage.TargetCreature(), mage.BoostUntilEndOfTurn(mage.Fixed(3), mage.Fixed(3), mage.SelectTarget))
+		c.AddAbility(sa)
+		return c
+	})
 
 	mage.Register("Regrowth", func() mage.Card {
 		c := mage.NewSorcery("Regrowth", "{1}{G}")
@@ -428,7 +438,7 @@ func registerAlphaSpells() {
 		// Deal X damage to each creature with flying and each player
 		sa := mage.NewSpellAbility(mage.CompositeEffects(
 			"deal X damage to each creature with flying and each player",
-			mage.DealDamageToAllCreatures(mage.XValue(),mage.HasKeywordFilter(mage.Flying)),
+			mage.DealDamageToAllCreatures(mage.XValue(), mage.HasKeywordFilter(mage.Flying)),
 			mage.DealDamageToPlayers(mage.XValue(), mage.SelectEachPlayer()),
 		))
 		c.AddAbility(sa)
@@ -512,6 +522,13 @@ func registerAlphaSpells() {
 			mage.WithCost(mage.TapSourceCost()),
 		)
 		c.AddAbility(ab)
+		return c
+	})
+
+	mage.Register("Wrath of God", func() mage.Card {
+		c := mage.NewSorcery("Wrath of God", "{2}{W}{W}")
+		sa := mage.NewSpellAbility(mage.DestroyAllCreatures())
+		c.AddAbility(sa)
 		return c
 	})
 }

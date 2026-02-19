@@ -1,17 +1,17 @@
-package cards
+package limited
 
 import (
 	"testing"
 
-	"github.com/mage/mage"
+	"github.com/mage/mage/pkg/mage"
 )
 
 // Ensure all Alpha card packages are imported.
-var _ = registerAlphaCreatures
-var _ = registerAlphaSpells
-var _ = registerAlphaEnchantments
-var _ = registerAlphaArtifacts
-var _ = registerAlphaLands
+var _ = registerCreatures
+var _ = registerSpells
+var _ = registerEnchantments
+var _ = registerArtifacts
+var _ = registerLands
 
 // ===== VANILLA CREATURES =====
 

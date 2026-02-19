@@ -1,11 +1,20 @@
 package arabian
 
 import (
+	"os"
 	"testing"
 
-	"github.com/mage/mage"
-	_ "github.com/mage/mage/cards" // register base cards for test creatures
+	"github.com/mage/mage/pkg/mage"
+	_ "github.com/mage/mage/cards/limited" // register base cards for test creatures
 )
+
+func TestMain(m *testing.M) {
+	mage.Register("Centaur Courser", func() mage.Card {
+		c := mage.NewCreature("Centaur Courser", "{2}{G}", 3, 3, "Centaur", "Warrior")
+		return c
+	})
+	os.Exit(m.Run())
+}
 
 func TestCamel(t *testing.T) {
 	t.Run("desert_damage_prevented_while_attacking", func(t *testing.T) {

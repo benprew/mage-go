@@ -1,9 +1,9 @@
-package cards
+package limited
 
 import (
 	"testing"
 
-	"github.com/mage/mage"
+	"github.com/mage/mage/pkg/mage"
 )
 
 // Tests for cards registered in alpha_artifacts.go (and a few
