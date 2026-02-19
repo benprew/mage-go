@@ -939,22 +939,76 @@ func (e *preventUntapEffect) Apply(g *Game) error {
 	return nil
 }
 
+// PreventFromAttackingIfDefendingPlayerControls creates a continuous effect preventing the creature from
+// attacking if the defender controls a certain type of card.
+// XXX: should this be player select instead of hardcoded defender? tbd.
+func PreventFromAttackingIfDefendingPlayerControls(filter PermanentFilter) ContinuousEffect {
+	return &preventFromAttackingIf{filter: filter, who: Defending}
+}
+
+type AttackerDefender int
+
+const (
+	Attacking AttackerDefender = iota
+	Defending
+)
+
+type preventFromAttackingIf struct {
+	filter PermanentFilter
+	who    AttackerDefender
+	effectSource
+}
+
+func (p *preventFromAttackingIf) Apply(g *Game) error {
+	var who Player
+	switch p.who {
+	case Defending:
+		who = g.NonActivePlayerObj()
+	case Attacking:
+		who = g.ActivePlayerObj()
+	}
+	whoID := who.PlayerID()
+	for _, perm := range g.Battlefield {
+		if perm.Controller == whoID && p.filter(perm, g) {
+			// `who` player controls a matching permanent, so attacks ARE allowed
+			return nil
+		}
+	}
+	// `who` player does NOT control a matching permanent, so we prevent attacks
+	src := g.FindPermanent(p.sourceID)
+	if src != nil {
+		g.Effects.preventAttack[p.sourceID] = true
+	}
+	return nil
+}
+
+func (e *preventFromAttackingIf) GetLayer() Layer       { return LayerAbility }
+func (e *preventFromAttackingIf) GetDuration() Duration { return WhileOnBattlefield }
+
+func (p *preventFromAttackingIf) IsActive(g *Game) bool {
+	src := g.FindPermanent(p.sourceID)
+	if src == nil {
+		return false
+	}
+	return true
+}
+
 // PreventAttachedFromAttacking creates a continuous effect preventing the attached creature from attacking.
 func PreventAttachedFromAttacking(at AttachType) ContinuousEffect {
-	return &preventAttackEffect{
+	return &preventAttachedAttackEffect{
 		attachType: at,
 	}
 }
 
-type preventAttackEffect struct {
+type preventAttachedAttackEffect struct {
 	attachType AttachType
 	effectSource
 }
 
-func (e *preventAttackEffect) GetLayer() Layer       { return LayerAbility }
-func (e *preventAttackEffect) GetDuration() Duration { return WhileOnBattlefield }
+func (e *preventAttachedAttackEffect) GetLayer() Layer       { return LayerAbility }
+func (e *preventAttachedAttackEffect) GetDuration() Duration { return WhileOnBattlefield }
 
-func (e *preventAttackEffect) IsActive(g *Game) bool {
+func (e *preventAttachedAttackEffect) IsActive(g *Game) bool {
 	src := g.FindPermanent(e.sourceID)
 	if src == nil {
 		return false
@@ -962,7 +1016,7 @@ func (e *preventAttackEffect) IsActive(g *Game) bool {
 	return src.IsAttached()
 }
 
-func (e *preventAttackEffect) Apply(g *Game) error {
+func (e *preventAttachedAttackEffect) Apply(g *Game) error {
 	src := g.FindPermanent(e.sourceID)
 	if src == nil || !src.IsAttached() {
 		return nil

@@ -31,16 +31,16 @@ type castAction struct {
 	player    PlayerRef
 	spell     string
 	targets   []string
-	xValue    int // X value for X-cost spells
+	xValue    int              // X value for X-cost spells
 	responses []responseAction // spells/abilities cast in response before resolution
 }
 
 type responseAction struct {
-	player   PlayerRef
-	spell    string   // for spell responses
-	perm     string   // for activated ability responses
-	targets  []string // explicit targets (empty = auto-target spell on stack)
-	xValue   int
+	player  PlayerRef
+	spell   string   // for spell responses
+	perm    string   // for activated ability responses
+	targets []string // explicit targets (empty = auto-target spell on stack)
+	xValue  int
 }
 
 type activateAction struct {
@@ -87,7 +87,7 @@ func (tg *TestGame) getPlayerID(ref PlayerRef) uuid.UUID {
 }
 
 // AddCard adds a card to a zone for a player.
-func (tg *TestGame) AddCard(zone Zone, p PlayerRef, name string, count ...int) {
+func (tg *TestGame) AddCard(zone Zone, p PlayerRef, name string, count ...int) uuid.UUID {
 	tg.t.Helper()
 	n := 1
 	if len(count) > 0 {
@@ -107,14 +107,19 @@ func (tg *TestGame) AddCard(zone Zone, p PlayerRef, name string, count ...int) {
 		case ZoneBattlefield:
 			perm := tg.Game.PutOnBattlefield(card, playerID)
 			perm.SummonSick = false // test cards are not summoning sick
+			return perm.ID()
 		case ZoneHand:
 			player.AddToHand(card)
+			return uuid.Nil
 		case ZoneGraveyard:
 			player.AddToGraveyard(card)
+			return uuid.Nil
 		case ZoneLibrary:
 			player.library = append(player.library, card)
+			return uuid.Nil
 		}
 	}
+	return uuid.Nil
 }
 
 // SetLife sets a player's life total.

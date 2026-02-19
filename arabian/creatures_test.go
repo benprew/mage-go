@@ -115,3 +115,44 @@ func TestAbuJafar(t *testing.T) {
 		g.AssertPermanentCount(mage.PlayerB, "Grizzly Bears", 1)
 	})
 }
+
+func TestDanDan(t *testing.T) {
+	t.Run("sacrifice_when_you_control_no_islands", func(t *testing.T) {
+		g := mage.NewTestGame(t)
+		island := g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Island")
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Dandân")
+
+		g.ExilePermanent(g.FindPermanent(island))
+
+		g.StopAt(1, mage.EndStep)
+		g.Execute()
+
+		g.AssertPermanentCount(mage.PlayerA, "Island", 0)
+		g.AssertPermanentCount(mage.PlayerA, "Dandân", 0)
+	})
+	t.Run("cannot_attack_if_defender_controls_no_island", func(t *testing.T) {
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Island")
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Dandân")
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerB, "Mountain")
+
+		g.Attack(1, mage.PlayerA, "Dandân")
+		g.StopAt(1, mage.EndStep)
+		g.Execute()
+
+		g.AssertLife(mage.PlayerB, 20)
+	})
+
+	t.Run("can_attack_if_defender_controls_island", func(t *testing.T) {
+		g := mage.NewTestGame(t)
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Island")
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerA, "Dandân")
+		g.AddCard(mage.ZoneBattlefield, mage.PlayerB, "Island")
+
+		g.Attack(1, mage.PlayerA, "Dandân")
+		g.StopAt(1, mage.EndStep)
+		g.Execute()
+
+		g.AssertLife(mage.PlayerB, 16)
+	})
+}

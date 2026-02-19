@@ -109,12 +109,26 @@ func registerCreatures() {
 		// Dandân can't attack unless defending player controls an Island.
 		// When you control no Islands, sacrifice Dandân.
 		c := mage.NewCreature("Dandân", "{U}{U}", 4, 1, "Fish")
+		c.AddAbility(mage.StaticAbility(mage.PreventFromAttackingIfDefendingPlayerControls(mage.HasSubType("Island"))))
+		sa := mage.NewTriggered(mage.EvtLeavesBattlefield,
+			false,
+			mage.SacrificeSource()).
+			SetCondition(func(evt *mage.GameEvent, g *mage.Game, sourceID, controllerID uuid.UUID) bool {
+				for _, p := range g.Battlefield {
+					if p.Controller == controllerID && p.HasSubType("Island") {
+						return false
+					}
+				}
+				return true
+			})
+		c.AddAbility(sa)
 		return c
 	})
 
 	mage.Register("Flying Men", func() mage.Card {
 		// Flying
 		c := mage.NewCreature("Flying Men", "{U}", 1, 1, "Human")
+		c.AddAbility(mage.NewKeywordAbility(mage.Flying))
 		return c
 	})
 
