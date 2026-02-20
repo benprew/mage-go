@@ -47,24 +47,32 @@ func registerSpells() {
 	})
 
 	Register("Healing Salve", func() Card {
-		return NewInstant("Healing Salve", "{W}",
+		c := NewInstant("Healing Salve", "{W}",
 			NewTargetedSpell(TargetAnyTarget(), FuncEffect(
-				"gain 3 life or prevent 3 damage",
+				"target player gains 3 life or prevent the next 3 damage that would be dealt to any target this turn",
 				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
-					for _, pl := range g.Players {
-						if pl.PlayerID() == targets[0] {
-							g.PlayerGainLife(pl, 3)
-							return nil
+					if g.CurrentMode == 0 {
+						for _, pl := range g.Players {
+							if pl.PlayerID() == targets[0] {
+								g.PlayerGainLife(pl, 3)
+								return nil
+							}
 						}
+					} else {
+						g.Effects.AddPreventionShield(targets[0], 3)
 					}
-					g.Effects.AddPreventionShield(targets[0], 3)
 					return nil
 				},
 			)),
 		)
+		c.SetModes([]string{
+			"Target player gains 3 life",
+			"Prevent the next 3 damage that would be dealt to any target this turn",
+		})
+		return c
 	})
 
 	Register("Armageddon", func() Card {

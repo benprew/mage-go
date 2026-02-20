@@ -12,6 +12,7 @@ type StackObject struct {
 	Targets    []uuid.UUID
 	IsAbility  bool
 	XValue     int        // value of X for X-cost spells
+	ModeChoice int        // chosen mode for modal spells (0-indexed)
 }
 
 // Stack represents the game stack.

@@ -32,6 +32,7 @@ type PriorityAction struct {
 	PermanentID  uuid.UUID
 	AbilityIndex int
 	XValue       int
+	ModeChoice   int
 	Attackers    []uuid.UUID
 	Blockers     []mage.BlockAssignment
 }
@@ -75,6 +76,7 @@ type ActionOption struct {
 	NeedsTarget  bool
 	TargetType   mage.Target
 	ManaCost     string
+	Modes        []string
 }
 
 // GameMsg is sent from the game goroutine to the TUI.
@@ -429,6 +431,7 @@ func GetAvailableActions(g *mage.Game, playerID uuid.UUID, landsPlayed int, main
 				NeedsTarget: needsTarget,
 				TargetType:  targetType,
 				ManaCost:    card.ManaCost().String(),
+				Modes:       card.Modes(),
 			})
 		}
 	} else {
@@ -459,6 +462,7 @@ func GetAvailableActions(g *mage.Game, playerID uuid.UUID, landsPlayed int, main
 					NeedsTarget: needsTarget,
 					TargetType:  targetType,
 					ManaCost:    card.ManaCost().String(),
+					Modes:       card.Modes(),
 				})
 			}
 		}
@@ -488,6 +492,12 @@ func RunGameLoop(g *mage.Game, humanIdx int, toTUI chan<- GameMsg, fromTUI <-cha
 	aiIdx := (humanIdx + 1) % 2
 	aiPlayer, isAI := g.Players[aiIdx].(*AIPlayer)
 	_ = aiPlayer
+
+	setPendingMode := func(action PriorityAction) {
+		if hp, ok := g.Players[humanIdx].(*HumanPlayer); ok {
+			hp.PendingMode = action.ModeChoice
+		}
+	}
 
 	var gameLog []string
 	var lastUndo undoSnapshot
@@ -567,6 +577,7 @@ func RunGameLoop(g *mage.Game, humanIdx int, toTUI chan<- GameMsg, fromTUI <-cha
 			if action.Type != ActionPass {
 				if activeIdx == humanIdx {
 					lastUndo = captureForUndo(g, g.Players[humanIdx].PlayerID(), len(gameLog))
+					setPendingMode(action)
 				} else {
 					lastUndo.valid = false
 				}
@@ -591,6 +602,7 @@ func RunGameLoop(g *mage.Game, humanIdx int, toTUI chan<- GameMsg, fromTUI <-cha
 			if action.Type != ActionPass {
 				if nonActiveIdx == humanIdx {
 					lastUndo = captureForUndo(g, g.Players[humanIdx].PlayerID(), len(gameLog))
+					setPendingMode(action)
 				} else {
 					lastUndo.valid = false
 				}

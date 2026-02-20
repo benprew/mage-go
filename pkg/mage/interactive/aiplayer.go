@@ -6,6 +6,26 @@ import (
 	"github.com/mage/mage/pkg/mage/core"
 )
 
+// HumanPlayer wraps BasePlayer for interactive TUI play. It overrides
+// ChooseMode so the game loop can pre-set the mode before casting.
+type HumanPlayer struct {
+	*mage.BasePlayer
+	PendingMode int
+}
+
+// NewHumanPlayer creates a new human player for the TUI.
+func NewHumanPlayer(name string) *HumanPlayer {
+	return &HumanPlayer{
+		BasePlayer: mage.NewBasePlayer(name),
+	}
+}
+
+func (p *HumanPlayer) ChooseMode(modes []string, reason string) int {
+	mode := p.PendingMode
+	p.PendingMode = 0
+	return mode
+}
+
 // AIPlayer is a computer-controlled player with simple decision-making.
 type AIPlayer struct {
 	*mage.BasePlayer

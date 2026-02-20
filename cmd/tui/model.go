@@ -33,6 +33,12 @@ type Model struct {
 	blockerAssignCursor int
 	blockerAssignments  []mage.BlockAssignment // accumulated blocker->attacker pairs
 
+	// For mode selection (modal spells)
+	selectingMode  bool
+	modeOptions    []string
+	modeCursor     int
+	pendingModeOpt *interactive.ActionOption
+
 	// For target selection
 	selectingTarget    bool
 	pendingAction      interactive.PriorityAction
@@ -112,6 +118,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.cursor = 0
 		m.selected = make(map[int]bool)
 		m.assigningBlocker = false
+		m.selectingMode = false
 		m.selectingTarget = false
 		m.browsing = false
 		m.canUndo = gm.CanUndo
@@ -146,6 +153,11 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	// Card browser mode
 	if m.browsing {
 		return m.handleBrowseKey(msg)
+	}
+
+	// Mode selection mode (modal spells)
+	if m.selectingMode {
+		return m.handleModeKey(msg)
 	}
 
 	// Target selection mode
@@ -250,29 +262,30 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 			return m, waitForGameState(m.fromGame)
 
 		case interactive.ActionCastSpell:
-			if opt.NeedsTarget && opt.TargetType != nil && m.state != nil {
-				// Need to select a target first
-				m.selectingTarget = true
-				m.pendingAction = interactive.PriorityAction{
-					Type:     interactive.ActionCastSpell,
-					CardID:   opt.CardID,
-					CardName: opt.Label,
-				}
-				// Get possible targets
-				// We need to retrieve them from the game - we'll use the snapshot
-				m.targetOptions, m.targetLabels = getTargetChoices(m.state, opt)
-				m.targetCursor = 0
-				if len(m.targetOptions) == 0 {
-					// No valid targets, cancel
-					m.selectingTarget = false
-				}
-				return m, nil
-			}
-			m.toGame <- interactive.PriorityAction{
+			m.pendingAction = interactive.PriorityAction{
 				Type:     interactive.ActionCastSpell,
 				CardID:   opt.CardID,
 				CardName: opt.Label,
 			}
+
+			if len(opt.Modes) > 0 {
+				m.selectingMode = true
+				m.modeOptions = opt.Modes
+				m.modeCursor = 0
+				m.pendingModeOpt = &opt
+				return m, nil
+			}
+
+			if opt.NeedsTarget && opt.TargetType != nil && m.state != nil {
+				m.selectingTarget = true
+				m.targetOptions, m.targetLabels = getTargetChoices(m.state, opt)
+				m.targetCursor = 0
+				if len(m.targetOptions) == 0 {
+					m.selectingTarget = false
+				}
+				return m, nil
+			}
+			m.toGame <- m.pendingAction
 			return m, waitForGameState(m.fromGame)
 
 		case interactive.ActionActivateAbility:
@@ -286,6 +299,41 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 		}
 	}
 
+	return m, nil
+}
+
+func (m Model) handleModeKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "up", "k":
+		if m.modeCursor > 0 {
+			m.modeCursor--
+		}
+	case "down", "j":
+		if m.modeCursor < len(m.modeOptions)-1 {
+			m.modeCursor++
+		}
+	case "esc":
+		m.selectingMode = false
+		m.pendingModeOpt = nil
+	case "enter":
+		m.pendingAction.ModeChoice = m.modeCursor
+		m.selectingMode = false
+		opt := m.pendingModeOpt
+		m.pendingModeOpt = nil
+
+		if opt != nil && opt.NeedsTarget && opt.TargetType != nil && m.state != nil {
+			m.selectingTarget = true
+			m.targetOptions, m.targetLabels = getTargetChoices(m.state, *opt)
+			m.targetCursor = 0
+			if len(m.targetOptions) == 0 {
+				m.selectingTarget = false
+			}
+			return m, nil
+		}
+
+		m.toGame <- m.pendingAction
+		return m, waitForGameState(m.fromGame)
+	}
 	return m, nil
 }
 

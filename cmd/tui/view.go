@@ -134,6 +134,17 @@ func (m Model) View() string {
 		}
 		b.WriteString(gameOverStyle.Render(result))
 		b.WriteString("\n  Press q to quit\n")
+	} else if m.selectingMode {
+		b.WriteString(labelStyle.Render("Choose Mode (esc to cancel)"))
+		b.WriteString("\n")
+		for i, label := range m.modeOptions {
+			if i == m.modeCursor {
+				b.WriteString(menuCursorStyle.Render(fmt.Sprintf("> %s", label)))
+			} else {
+				b.WriteString(menuNormalStyle.Render(label))
+			}
+			b.WriteString("\n")
+		}
 	} else if m.selectingTarget {
 		b.WriteString(labelStyle.Render("Choose Target (esc to cancel)"))
 		b.WriteString("\n")

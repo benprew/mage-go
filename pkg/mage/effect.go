@@ -1473,8 +1473,16 @@ func (e *tapOrUntapTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, 
 	if perm == nil {
 		return nil
 	}
-	// Toggle: if tapped, untap; if untapped, tap
-	perm.Tapped = !perm.Tapped
+	caster := g.GetPlayer(controller)
+	if caster == nil {
+		return nil
+	}
+	mode := caster.ChooseMode([]string{"Tap", "Untap"}, "Twiddle")
+	if mode == 0 {
+		perm.Tapped = true
+	} else {
+		perm.Tapped = false
+	}
 	return nil
 }
 

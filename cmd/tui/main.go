@@ -14,7 +14,7 @@ import (
 
 func main() {
 	// Create players
-	human := mage.NewBasePlayer("You")
+	human := interactive.NewHumanPlayer("You")
 	ai := interactive.NewAIPlayer("AI")
 
 	// Build decks

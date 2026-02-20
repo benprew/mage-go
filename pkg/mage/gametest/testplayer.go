@@ -41,6 +41,7 @@ type TestPlayer struct {
 	chooseManaColor           []core.Color
 	chooseFromLibrary         []string
 	chooseBandingDistribution []map[string]int
+	chooseMode                []int
 }
 
 func NewTestPlayer(name string) *TestPlayer {
@@ -166,6 +167,16 @@ func (tp *TestPlayer) ChooseTargets(possible []uuid.UUID, min, max int, g *mage.
 // ChooseMayAbility always accepts optional abilities.
 func (tp *TestPlayer) ChooseMayAbility(description string) bool {
 	return true
+}
+
+// ChooseMode picks a mode from a list of options.
+func (tp *TestPlayer) ChooseMode(modes []string, reason string) int {
+	if len(tp.chooseMode) > 0 {
+		choice := tp.chooseMode[0]
+		tp.chooseMode = tp.chooseMode[1:]
+		return choice
+	}
+	return 0
 }
 
 // ChoosePermanent picks a permanent from candidates.
