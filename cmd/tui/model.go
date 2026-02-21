@@ -13,10 +13,20 @@ import (
 // gameStateMsg wraps a GameMsg from the game goroutine for bubbletea.
 type gameStateMsg interactive.GameMsg
 
+// choiceRequestMsg wraps a ChoiceRequest sent from the game goroutine.
+type choiceRequestMsg interactive.ChoiceRequest
+
+// choiceChannelDoneMsg signals the choice channel was closed (game over).
+type choiceChannelDoneMsg struct{}
+
 // Model is the bubbletea model for the TUI.
 type Model struct {
 	toGame   chan<- interactive.PriorityAction
 	fromGame <-chan interactive.GameMsg
+
+	// Channels bridging the game goroutine's HumanPlayer choice calls to the TUI.
+	fromChoiceReqs <-chan interactive.ChoiceRequest
+	toChoiceResps  chan<- interactive.ChoiceResponse
 
 	state    *interactive.GameState
 	prompt   interactive.PromptType
@@ -40,12 +50,24 @@ type Model struct {
 	targetLabels       []string
 	targetCursor       int
 
+	// For interactive player choices (sacrifice, discard, mana color, tutor, may)
+	pendingChoice   *interactive.ChoiceRequest
+	choiceCursor    int
+	choiceSelected  map[int]bool // for multi-select (ChoiceCardsFromHand)
+
 	canUndo bool
 
 	// Card browser
 	browsing      bool
 	browseItems   []browseItem
 	browseCursor  int
+
+	// Full log viewer
+	logBrowsing bool
+	logScroll   int // index of top visible line
+
+	// Help screen
+	helpVisible bool
 
 	width, height int
 }
@@ -71,17 +93,22 @@ type cardDetail struct {
 }
 
 // NewModel creates a new TUI model.
-func NewModel(toGame chan<- interactive.PriorityAction, fromGame <-chan interactive.GameMsg) Model {
+func NewModel(toGame chan<- interactive.PriorityAction, fromGame <-chan interactive.GameMsg,
+	fromChoiceReqs <-chan interactive.ChoiceRequest, toChoiceResps chan<- interactive.ChoiceResponse) Model {
 	return Model{
-		toGame:     toGame,
-		fromGame:   fromGame,
-		selected:   make(map[int]bool),
-		blockerAssignments: nil,
+		toGame:         toGame,
+		fromGame:       fromGame,
+		fromChoiceReqs: fromChoiceReqs,
+		toChoiceResps:  toChoiceResps,
+		selected:       make(map[int]bool),
 	}
 }
 
 func (m Model) Init() tea.Cmd {
-	return waitForGameState(m.fromGame)
+	return tea.Batch(
+		waitForGameState(m.fromGame),
+		waitForChoiceRequest(m.fromChoiceReqs),
+	)
 }
 
 func waitForGameState(ch <-chan interactive.GameMsg) tea.Cmd {
@@ -91,6 +118,16 @@ func waitForGameState(ch <-chan interactive.GameMsg) tea.Cmd {
 			return gameStateMsg(interactive.GameMsg{GameOver: true})
 		}
 		return gameStateMsg(msg)
+	}
+}
+
+func waitForChoiceRequest(ch <-chan interactive.ChoiceRequest) tea.Cmd {
+	return func() tea.Msg {
+		req, ok := <-ch
+		if !ok {
+			return choiceChannelDoneMsg{}
+		}
+		return choiceRequestMsg(req)
 	}
 }
 
@@ -113,6 +150,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.selected = make(map[int]bool)
 		m.assigningBlocker = false
 		m.selectingTarget = false
+		m.pendingChoice = nil
 		m.browsing = false
 		m.canUndo = gm.CanUndo
 
@@ -120,11 +158,21 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
-		// If no prompt, just listen for next state
+		// If no prompt, keep listening for next state.
 		if m.prompt == interactive.PromptNone {
 			return m, waitForGameState(m.fromGame)
 		}
 
+		return m, nil
+
+	case choiceRequestMsg:
+		req := interactive.ChoiceRequest(msg)
+		m.pendingChoice = &req
+		m.choiceCursor = 0
+		m.choiceSelected = make(map[int]bool)
+		return m, nil
+
+	case choiceChannelDoneMsg:
 		return m, nil
 
 	case tea.KeyMsg:
@@ -143,9 +191,28 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
+	// Help screen
+	if m.helpVisible {
+		switch msg.String() {
+		case "esc", "?", "q":
+			m.helpVisible = false
+		}
+		return m, nil
+	}
+
+	// Full log viewer
+	if m.logBrowsing {
+		return m.handleLogKey(msg)
+	}
+
 	// Card browser mode
 	if m.browsing {
 		return m.handleBrowseKey(msg)
+	}
+
+	// Player choice (sacrifice, discard, mana color, tutor, may) — from game goroutine
+	if m.pendingChoice != nil {
+		return m.handleChoiceKey(msg)
 	}
 
 	// Target selection mode
@@ -168,7 +235,7 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.cursor++
 		}
 
-	case "space":
+	case " ":
 		// Toggle selection for multi-select (attackers)
 		if m.prompt == interactive.PromptDeclareAttackers {
 			m.selected[m.cursor] = !m.selected[m.cursor]
@@ -184,6 +251,15 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if m.state != nil {
 			m.openBrowser()
 		}
+
+	case "l":
+		if len(m.log) > 0 {
+			m.logBrowsing = true
+			m.logScroll = len(m.log) - 1 // start at bottom
+		}
+
+	case "?":
+		m.helpVisible = true
 
 	case "enter":
 		return m.handleEnter()
@@ -250,29 +326,22 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 			return m, waitForGameState(m.fromGame)
 
 		case interactive.ActionCastSpell:
+			m.pendingAction = interactive.PriorityAction{
+				Type:     interactive.ActionCastSpell,
+				CardID:   opt.CardID,
+				CardName: opt.CardName,
+			}
+
 			if opt.NeedsTarget && opt.TargetType != nil && m.state != nil {
-				// Need to select a target first
 				m.selectingTarget = true
-				m.pendingAction = interactive.PriorityAction{
-					Type:     interactive.ActionCastSpell,
-					CardID:   opt.CardID,
-					CardName: opt.Label,
-				}
-				// Get possible targets
-				// We need to retrieve them from the game - we'll use the snapshot
-				m.targetOptions, m.targetLabels = getTargetChoices(m.state, opt)
+				m.targetOptions, m.targetLabels = interactive.GetTargetChoices(m.state, opt)
 				m.targetCursor = 0
 				if len(m.targetOptions) == 0 {
-					// No valid targets, cancel
 					m.selectingTarget = false
 				}
 				return m, nil
 			}
-			m.toGame <- interactive.PriorityAction{
-				Type:     interactive.ActionCastSpell,
-				CardID:   opt.CardID,
-				CardName: opt.Label,
-			}
+			m.toGame <- m.pendingAction
 			return m, waitForGameState(m.fromGame)
 
 		case interactive.ActionActivateAbility:
@@ -287,6 +356,80 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 	}
 
 	return m, nil
+}
+
+func (m Model) handleChoiceKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	req := m.pendingChoice
+	isMulti := req.Type == interactive.ChoiceCardsFromHand
+
+	switch msg.String() {
+	case "up", "k":
+		if m.choiceCursor > 0 {
+			m.choiceCursor--
+		}
+	case "down", "j":
+		if m.choiceCursor < len(req.Options)-1 {
+			m.choiceCursor++
+		}
+	case " ":
+		if isMulti {
+			m.choiceSelected[m.choiceCursor] = !m.choiceSelected[m.choiceCursor]
+		}
+	case "esc":
+		// Fall back to first option — don't leave the game stuck.
+		m.submitChoice(req, 0, nil)
+		return m, waitForChoiceRequest(m.fromChoiceReqs)
+	case "enter":
+		if isMulti {
+			var selectedIdx []int
+			for i := range req.Options {
+				if m.choiceSelected[i] {
+					selectedIdx = append(selectedIdx, i)
+				}
+			}
+			// Enforce amount: if not enough selected, auto-fill from top
+			if len(selectedIdx) < req.Amount {
+				selectedIdx = nil
+				for i := 0; i < req.Amount && i < len(req.Options); i++ {
+					selectedIdx = append(selectedIdx, i)
+				}
+			}
+			m.submitChoice(req, 0, selectedIdx)
+		} else {
+			m.submitChoice(req, m.choiceCursor, nil)
+		}
+		return m, waitForChoiceRequest(m.fromChoiceReqs)
+	}
+	return m, nil
+}
+
+// submitChoice builds and sends a ChoiceResponse for the pending choice.
+// singleIdx is used for single-select; multiIdxs is used for multi-select.
+func (m *Model) submitChoice(req *interactive.ChoiceRequest, singleIdx int, multiIdxs []int) {
+	var resp interactive.ChoiceResponse
+	switch req.Type {
+	case interactive.ChoicePermanent, interactive.ChoiceCardFromLibrary:
+		if singleIdx < len(req.Options) {
+			resp.SelectedIDs = []uuid.UUID{req.Options[singleIdx].ID}
+		}
+	case interactive.ChoiceCardsFromHand:
+		for _, idx := range multiIdxs {
+			if idx < len(req.Options) {
+				resp.SelectedIDs = append(resp.SelectedIDs, req.Options[idx].ID)
+			}
+		}
+	case interactive.ChoiceManaColor:
+		if singleIdx < len(req.Options) {
+			resp.SelectedColor = req.Options[singleIdx].Color
+		}
+	case interactive.ChoiceMay:
+		resp.Accepted = singleIdx == 0 // option 0 is "Yes"
+	case interactive.ChoiceMode:
+		resp.SelectedIndex = singleIdx
+	}
+	m.pendingChoice = nil
+	m.choiceSelected = nil
+	m.toChoiceResps <- resp
 }
 
 func (m Model) handleTargetKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
@@ -436,6 +579,55 @@ func (m *Model) openBrowser() {
 		}
 	}
 
+	// Your Graveyard
+	if len(m.state.You.Graveyard) > 0 {
+		items = append(items, browseItem{label: "── Your Graveyard ──", isHeader: true})
+		for _, c := range m.state.You.Graveyard {
+			label := c.Name
+			if c.ManaCost != "" {
+				label += "  " + c.ManaCost
+			}
+			items = append(items, browseItem{
+				label: label,
+				detail: cardDetail{
+					Name:       c.Name,
+					ManaCost:   c.ManaCost,
+					Types:      c.Types,
+					SubTypes:   c.SubTypes,
+					Power:      c.Power,
+					Toughness:  c.Toughness,
+					IsCreature: strings.Contains(c.Types, "Creature"),
+				},
+			})
+		}
+	}
+
+	// Opponent Graveyard
+	if len(m.state.Opponent.Graveyard) > 0 {
+		items = append(items, browseItem{
+			label:    fmt.Sprintf("── %s's Graveyard ──", m.state.Opponent.Name),
+			isHeader: true,
+		})
+		for _, c := range m.state.Opponent.Graveyard {
+			label := c.Name
+			if c.ManaCost != "" {
+				label += "  " + c.ManaCost
+			}
+			items = append(items, browseItem{
+				label: label,
+				detail: cardDetail{
+					Name:       c.Name,
+					ManaCost:   c.ManaCost,
+					Types:      c.Types,
+					SubTypes:   c.SubTypes,
+					Power:      c.Power,
+					Toughness:  c.Toughness,
+					IsCreature: strings.Contains(c.Types, "Creature"),
+				},
+			})
+		}
+	}
+
 	if len(items) == 0 {
 		return
 	}
@@ -447,6 +639,24 @@ func (m *Model) openBrowser() {
 		m.browseCursor++
 	}
 	m.browsing = true
+}
+
+func (m Model) handleLogKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "esc", "l", "q":
+		m.logBrowsing = false
+	case "up", "k":
+		if m.logScroll > 0 {
+			m.logScroll--
+		}
+	case "down", "j":
+		if m.logScroll < len(m.log)-1 {
+			m.logScroll++
+		}
+	case "ctrl+c":
+		return m, tea.Quit
+	}
+	return m, nil
 }
 
 func (m Model) handleBrowseKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
@@ -483,34 +693,20 @@ func (m Model) handleBrowseKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-// getTargetChoices builds target choices from the game state snapshot.
-func getTargetChoices(state *interactive.GameState, opt interactive.ActionOption) ([]uuid.UUID, []string) {
-	var ids []uuid.UUID
-	var labels []string
 
-	// Include all creatures from both sides
-	for _, p := range state.Opponent.Battlefield {
-		if p.IsCreature {
-			ids = append(ids, p.ID)
-			labels = append(labels, fmt.Sprintf("%s %d/%d (%s)", p.Name, p.Power, p.Toughness, state.Opponent.Name))
-		}
-	}
+// permanentNameFromState resolves a permanent ID to its name by searching both battlefields.
+func permanentNameFromState(state *interactive.GameState, id uuid.UUID) string {
 	for _, p := range state.You.Battlefield {
-		if p.IsCreature {
-			ids = append(ids, p.ID)
-			labels = append(labels, fmt.Sprintf("%s %d/%d (You)", p.Name, p.Power, p.Toughness))
+		if p.ID == id {
+			return p.Name
 		}
 	}
-
-	// Also include players as targets for "any target" spells
-	// We'll use a nil UUID convention - the game loop will need to resolve
-	// For simplicity, just show creatures. The opponent player UUID isn't in the snapshot.
-	// We'll add a "Target opponent" option.
-	// We don't have the player UUIDs in the snapshot, but we can use a sentinel.
-	ids = append(ids, uuid.Nil) // sentinel for "target opponent"
-	labels = append(labels, fmt.Sprintf("Target %s (player)", state.Opponent.Name))
-
-	return ids, labels
+	for _, p := range state.Opponent.Battlefield {
+		if p.ID == id {
+			return p.Name
+		}
+	}
+	return "?"
 }
 
 type attackerInfo struct {

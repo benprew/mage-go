@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/mage/mage/pkg/mage"
@@ -14,7 +15,7 @@ import (
 
 func main() {
 	// Create players
-	human := mage.NewBasePlayer("You")
+	human := interactive.NewHumanPlayer("You")
 	ai := interactive.NewAIPlayer("AI")
 
 	// Build decks
@@ -41,10 +42,11 @@ func main() {
 	fromTUI := make(chan interactive.PriorityAction, 1)
 
 	// Start game loop in goroutine
-	go interactive.RunGameLoop(g, 0, toTUI, fromTUI)
+	const aiPause = 400 * time.Millisecond
+	go interactive.RunGameLoop(g, 0, toTUI, fromTUI, aiPause)
 
 	// Start bubbletea
-	model := NewModel(fromTUI, toTUI)
+	model := NewModel(fromTUI, toTUI, human.ChoiceRequests(), human.ChoiceResponses())
 	p := tea.NewProgram(model, tea.WithAltScreen())
 
 	if _, err := p.Run(); err != nil {

@@ -16,6 +16,7 @@ type Card interface {
 	Owner() uuid.UUID
 	Power() int
 	Toughness() int
+	Modes() []string
 	Copy() Card
 	SetOwner(uuid.UUID)
 	SetID(uuid.UUID)
@@ -37,6 +38,7 @@ type BaseCard struct {
 	power     int
 	toughness int
 	isToken   bool
+	modes     []string
 }
 
 func (c *BaseCard) ID() uuid.UUID         { return c.id }
@@ -48,8 +50,10 @@ func (c *BaseCard) Abilities() []Ability  { return c.abilities }
 func (c *BaseCard) Owner() uuid.UUID      { return c.owner }
 func (c *BaseCard) Power() int            { return c.power }
 func (c *BaseCard) Toughness() int        { return c.toughness }
-func (c *BaseCard) SetOwner(id uuid.UUID) { c.owner = id }
-func (c *BaseCard) SetID(id uuid.UUID)    { c.id = id }
+func (c *BaseCard) Modes() []string         { return c.modes }
+func (c *BaseCard) SetModes(m []string)      { c.modes = m }
+func (c *BaseCard) SetOwner(id uuid.UUID)    { c.owner = id }
+func (c *BaseCard) SetID(id uuid.UUID)       { c.id = id }
 
 func (c *BaseCard) HasType(t CardType) bool {
 	for _, ct := range c.types {
@@ -79,6 +83,10 @@ func (c *BaseCard) CloneFrom(other Card) {
 	copy(c.subTypes, other.SubTypes())
 	c.abilities = make([]Ability, len(other.Abilities()))
 	copy(c.abilities, other.Abilities())
+	if m := other.Modes(); len(m) > 0 {
+		c.modes = make([]string, len(m))
+		copy(c.modes, m)
+	}
 }
 
 func (c *BaseCard) Copy() Card {
@@ -90,6 +98,10 @@ func (c *BaseCard) Copy() Card {
 	copy(cp.subTypes, c.subTypes)
 	cp.abilities = make([]Ability, len(c.abilities))
 	copy(cp.abilities, c.abilities)
+	if len(c.modes) > 0 {
+		cp.modes = make([]string, len(c.modes))
+		copy(cp.modes, c.modes)
+	}
 	return &cp
 }
 

@@ -13,26 +13,33 @@ type deckEntry struct {
 	count int
 }
 
+// humanDeck: White/Green aggro with Healing Salve as a key modal spell.
+// Against the AI's red burn + black removal, both modes are live:
+//   mode 0 (gain 3 life) — recover from Lightning Bolt to the face
+//   mode 1 (prevent 3 damage) — save a creature from Terror / Bolt
 var humanDeck = []deckEntry{
-	{"Forest", 8},
-	{"Plains", 8},
-	{"Grizzly Bears", 4},
-	{"Elvish Mystic", 4},
-	{"Serra Angel", 4},
-	{"Giant Growth", 4},
-	{"White Knight", 4},
-	{"Savannah Lions", 4},
+	{"Plains", 9},
+	{"Forest", 7},
+	{"Savannah Lions", 4},  // 1/1 for W — fast start
+	{"White Knight", 3},    // 2/2 first strike, protection from black
+	{"Llanowar Elves", 4},  // mana acceleration
+	{"Grizzly Bears", 3},   // reliable 2/2
+	{"Serra Angel", 2},     // top-end threat
+	{"Healing Salve", 4},   // the modal spell under test
+	{"Giant Growth", 2},    // instant pump
+	{"Swords to Plowshares", 2}, // premium removal
 }
 
+// aiDeck: Red/Black aggro with burn and removal — makes both Healing Salve modes relevant.
 var aiDeck = []deckEntry{
 	{"Mountain", 8},
 	{"Swamp", 8},
-	{"Lightning Bolt", 4},
-	{"Black Knight", 4},
-	{"Hypnotic Specter", 4},
-	{"Goblin Piker", 4},
-	{"Ironclaw Orcs", 4},
-	{"Doom Blade", 4},
+	{"Lightning Bolt", 4},   // 3 damage — exactly what Healing Salve prevents
+	{"Terror", 4},           // creature removal
+	{"Black Knight", 4},     // 2/2 first strike, protection from white
+	{"Ironclaw Orcs", 4},    // 2/2 for 1R
+	{"Hill Giant", 4},       // 3/3 for 3R — solid threat
+	{"Hypnotic Specter", 4}, // flying, discard
 }
 
 // buildDeck creates a shuffled deck of cards from a deck list, setting card owners.

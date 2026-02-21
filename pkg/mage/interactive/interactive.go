@@ -2,6 +2,8 @@ package interactive
 
 import (
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/mage/mage/pkg/mage"
@@ -69,6 +71,7 @@ func (pt PromptType) String() string {
 type ActionOption struct {
 	Type         ActionType
 	Label        string
+	CardName     string // raw card/permanent name, without cost prefix
 	CardID       uuid.UUID
 	PermanentID  uuid.UUID
 	AbilityIndex int
@@ -156,11 +159,13 @@ type GameState struct {
 
 // PlayerState is a snapshot of a player.
 type PlayerState struct {
+	ID             uuid.UUID
 	Name           string
 	Life           int
 	HandCount      int
 	Hand           []CardState
 	Battlefield    []PermanentState
+	Graveyard      []CardState
 	GraveyardCount int
 	ManaPool       ManaPoolState
 	LibraryCount   int
@@ -214,6 +219,43 @@ type StackItemState struct {
 	Name       string
 	Controller string
 	IsAbility  bool
+	Targets    []string // human-readable target names
+}
+
+// ChoiceType identifies what kind of interactive choice the human player must make.
+type ChoiceType int
+
+const (
+	ChoicePermanent      ChoiceType = iota // pick one permanent from candidates
+	ChoiceCardsFromHand                    // pick N cards from hand (multi-select)
+	ChoiceManaColor                        // pick a mana color
+	ChoiceCardFromLibrary                  // pick one card from library candidates
+	ChoiceMay                              // yes/no for an optional ability
+	ChoiceMode                             // pick one mode from a modal spell/ability
+)
+
+// ChoiceOption is one selectable item in a ChoiceRequest.
+type ChoiceOption struct {
+	ID    uuid.UUID  // permanent or card ID (zero for color/boolean options)
+	Label string
+	Color core.Color // populated for ChoiceManaColor options
+}
+
+// ChoiceRequest is sent by HumanPlayer to the TUI when a player decision is needed
+// during game resolution.
+type ChoiceRequest struct {
+	Type    ChoiceType
+	Reason  string
+	Amount  int          // for ChoiceCardsFromHand: how many to select
+	Options []ChoiceOption
+}
+
+// ChoiceResponse is sent by the TUI back to the waiting HumanPlayer.
+type ChoiceResponse struct {
+	SelectedIDs   []uuid.UUID // for permanent/card choices
+	SelectedColor core.Color  // for ChoiceManaColor
+	Accepted      bool        // for ChoiceMay: true = yes
+	SelectedIndex int         // for ChoiceMode: index of chosen mode
 }
 
 func buildRulesText(c mage.Card) string {
@@ -276,6 +318,7 @@ func SnapshotGameState(g *mage.Game, humanIndex int) *GameState {
 
 func snapshotPlayer(g *mage.Game, p mage.Player, showHand bool) PlayerState {
 	ps := PlayerState{
+		ID:             p.PlayerID(),
 		Name:           p.Name(),
 		Life:           p.Life(),
 		HandCount:      len(p.Hand()),
@@ -309,6 +352,31 @@ func snapshotPlayer(g *mage.Game, p mage.Player, showHand bool) PlayerState {
 			}
 			ps.Hand = append(ps.Hand, cs)
 		}
+	}
+
+	for _, c := range p.Graveyard() {
+		cs := CardState{
+			ID:        c.ID(),
+			Name:      c.Name(),
+			ManaCost:  c.ManaCost().String(),
+			IsLand:    c.HasType(core.TypeLand),
+			Power:     c.Power(),
+			Toughness: c.Toughness(),
+			RulesText: buildRulesText(c),
+		}
+		for _, t := range c.Types() {
+			if cs.Types != "" {
+				cs.Types += " "
+			}
+			cs.Types += t.String()
+		}
+		for _, st := range c.SubTypes() {
+			if cs.SubTypes != "" {
+				cs.SubTypes += " "
+			}
+			cs.SubTypes += st
+		}
+		ps.Graveyard = append(ps.Graveyard, cs)
 	}
 
 	for _, perm := range g.Battlefield {
@@ -381,10 +449,15 @@ func snapshotStack(g *mage.Game) []StackItemState {
 		if p != nil {
 			controller = p.Name()
 		}
+		var targetNames []string
+		for _, tid := range obj.Targets {
+			targetNames = append(targetNames, resolveTargetName(g, tid))
+		}
 		items = append(items, StackItemState{
 			Name:       name,
 			Controller: controller,
 			IsAbility:  obj.IsAbility,
+			Targets:    targetNames,
 		})
 	}
 	return items
@@ -404,6 +477,7 @@ func GetAvailableActions(g *mage.Game, playerID uuid.UUID, landsPlayed int, main
 							Type:   ActionPlayLand,
 							Label:  fmt.Sprintf("Play %s", c.Name()),
 							CardID: c.ID(),
+							CardName: c.Name(),
 						})
 					}
 				}
@@ -426,6 +500,7 @@ func GetAvailableActions(g *mage.Game, playerID uuid.UUID, landsPlayed int, main
 				Type:        ActionCastSpell,
 				Label:       fmt.Sprintf("Cast %s %s", card.Name(), card.ManaCost()),
 				CardID:      card.ID(),
+				CardName:    card.Name(),
 				NeedsTarget: needsTarget,
 				TargetType:  targetType,
 				ManaCost:    card.ManaCost().String(),
@@ -457,6 +532,7 @@ func GetAvailableActions(g *mage.Game, playerID uuid.UUID, landsPlayed int, main
 					Label:       fmt.Sprintf("Cast %s %s", card.Name(), card.ManaCost()),
 					CardID:      card.ID(),
 					NeedsTarget: needsTarget,
+					CardName:    card.Name(),
 					TargetType:  targetType,
 					ManaCost:    card.ManaCost().String(),
 				})
@@ -481,9 +557,49 @@ func GetAvailableActions(g *mage.Game, playerID uuid.UUID, landsPlayed int, main
 	return options
 }
 
+// GetTargetChoices builds the list of valid target IDs and display labels for
+// a spell or ability that needs a target. It always includes both players (with
+// real UUIDs from the snapshot) and any creatures on the battlefield.
+func GetTargetChoices(state *GameState, opt ActionOption) ([]uuid.UUID, []string) {
+	var ids []uuid.UUID
+	var labels []string
+
+	// Creatures from both sides
+	for _, p := range state.Opponent.Battlefield {
+		if p.IsCreature {
+			ids = append(ids, p.ID)
+			labels = append(labels, fmt.Sprintf("%s %d/%d (%s)", p.Name, p.Power, p.Toughness, state.Opponent.Name))
+		}
+	}
+	for _, p := range state.You.Battlefield {
+		if p.IsCreature {
+			ids = append(ids, p.ID)
+			labels = append(labels, fmt.Sprintf("%s %d/%d (You)", p.Name, p.Power, p.Toughness))
+		}
+	}
+
+	// Both players — only if we have real UUIDs
+	if state.Opponent.ID != uuid.Nil {
+		ids = append(ids, state.Opponent.ID)
+		labels = append(labels, fmt.Sprintf("%s (player)", state.Opponent.Name))
+	}
+	if state.You.ID != uuid.Nil {
+		ids = append(ids, state.You.ID)
+		labels = append(labels, "You (player)")
+	}
+
+	return ids, labels
+}
+
 // RunGameLoop is the main interactive game loop running in a goroutine.
-func RunGameLoop(g *mage.Game, humanIdx int, toTUI chan<- GameMsg, fromTUI <-chan PriorityAction) {
+// RunGameLoop runs the game until it ends, communicating state to/from the TUI.
+// aiActionPause is how long to pause after each visible AI action so the player
+// can see what happened; 0 means no pause (useful for testing).
+func RunGameLoop(g *mage.Game, humanIdx int, toTUI chan<- GameMsg, fromTUI <-chan PriorityAction, aiActionPause time.Duration) {
 	defer close(toTUI)
+	if hp, ok := g.Players[humanIdx].(*HumanPlayer); ok {
+		defer close(hp.choiceReqs)
+	}
 
 	aiIdx := (humanIdx + 1) % 2
 	aiPlayer, isAI := g.Players[aiIdx].(*AIPlayer)
@@ -530,12 +646,16 @@ func RunGameLoop(g *mage.Game, humanIdx int, toTUI chan<- GameMsg, fromTUI <-cha
 		if !isAI {
 			return PriorityAction{Type: ActionPass}
 		}
-		action := aiPlayer.GetPriorityAction(g, g.LandsPlayedThisTurn, mainPhase)
-		if action.Type != ActionPass {
-			addLog(fmt.Sprintf("AI: %s", describeAction(action)))
-			send(PromptNone, nil)
+		return aiPlayer.GetPriorityAction(g, g.LandsPlayedThisTurn, mainPhase)
+	}
+
+	// showAIAction sends an updated game state snapshot and briefly pauses so the
+	// player can see the result of each AI action before the game moves on.
+	showAIAction := func() {
+		send(PromptNone, nil)
+		if aiActionPause > 0 {
+			time.Sleep(aiActionPause)
 		}
-		return action
 	}
 
 	getAction := func(playerIdx int, mainPhase bool) PriorityAction {
@@ -575,6 +695,9 @@ func RunGameLoop(g *mage.Game, humanIdx int, toTUI chan<- GameMsg, fromTUI <-cha
 				if g.IsGameOver() {
 					return
 				}
+				if activeIdx != humanIdx {
+					showAIAction()
+				}
 				continue
 			}
 
@@ -599,6 +722,9 @@ func RunGameLoop(g *mage.Game, humanIdx int, toTUI chan<- GameMsg, fromTUI <-cha
 				if g.IsGameOver() {
 					return
 				}
+				if nonActiveIdx != humanIdx {
+					showAIAction()
+				}
 				continue
 			}
 
@@ -612,7 +738,7 @@ func RunGameLoop(g *mage.Game, humanIdx int, toTUI chan<- GameMsg, fromTUI <-cha
 			if top.Card != nil {
 				topName = top.Card.Name()
 			}
-			addLog(fmt.Sprintf("Resolving %s", topName))
+			addLog(fmt.Sprintf("Resolving %s%s", topName, targetSuffix(g, top.Targets)))
 			g.ResolveTopOfStack()
 			g.CheckStateBasedActions()
 			if g.IsGameOver() {
@@ -635,6 +761,9 @@ func RunGameLoop(g *mage.Game, humanIdx int, toTUI chan<- GameMsg, fromTUI <-cha
 			case core.Untap:
 				g.DoUntap()
 				addLog(fmt.Sprintf("── Turn %d: %s ──", g.Turn, g.ActivePlayerObj().Name()))
+				if g.ActivePlayer != humanIdx {
+					send(PromptNone, nil) // show state at start of AI's turn
+				}
 
 			case core.Upkeep:
 				g.DoUpkeep()
@@ -672,6 +801,7 @@ func RunGameLoop(g *mage.Game, humanIdx int, toTUI chan<- GameMsg, fromTUI <-cha
 					attackerIDs := aiPlayer.AIAttackers(g)
 					if len(attackerIDs) > 0 {
 						performAttack(g, attackerIDs, addLog)
+						showAIAction()
 					}
 				}
 				if len(g.Combat.Groups) > 0 {
@@ -696,6 +826,7 @@ func RunGameLoop(g *mage.Game, humanIdx int, toTUI chan<- GameMsg, fromTUI <-cha
 					blockers := aiPlayer.AIBlockers(g)
 					if len(blockers) > 0 {
 						performBlock(g, blockers, addLog)
+						showAIAction()
 					}
 				}
 				if len(g.Combat.Groups) > 0 {
@@ -710,9 +841,12 @@ func RunGameLoop(g *mage.Game, humanIdx int, toTUI chan<- GameMsg, fromTUI <-cha
 
 			case core.CombatDamage:
 				if len(g.Combat.Groups) > 0 {
+					addLog("── Combat damage ──")
+					logCombatPreview(g, addLog)
 					g.DoCombatDamage(false)
 					g.CheckStateBasedActions()
 					reportCombatResults(g, humanIdx, addLog)
+					showAIAction() // always show damage result
 				}
 
 			case core.EndCombat:
@@ -771,6 +905,29 @@ func describeAction(action PriorityAction) string {
 	}
 }
 
+// resolveTargetName returns a human-readable name for a target UUID (permanent or player).
+func resolveTargetName(g *mage.Game, id uuid.UUID) string {
+	if perm := g.FindPermanent(id); perm != nil {
+		return perm.Name()
+	}
+	if player := g.GetPlayer(id); player != nil {
+		return player.Name()
+	}
+	return "unknown"
+}
+
+// targetSuffix builds " targeting X, Y" for a list of target IDs, or "" if none.
+func targetSuffix(g *mage.Game, targets []uuid.UUID) string {
+	if len(targets) == 0 {
+		return ""
+	}
+	names := make([]string, len(targets))
+	for i, id := range targets {
+		names[i] = resolveTargetName(g, id)
+	}
+	return " targeting " + strings.Join(names, ", ")
+}
+
 func executeAction(g *mage.Game, playerID uuid.UUID, action PriorityAction, addLog func(string)) {
 	var err error
 	switch action.Type {
@@ -788,12 +945,19 @@ func executeAction(g *mage.Game, playerID uuid.UUID, action PriorityAction, addL
 		err = g.CastSpellByID(playerID, action.CardID, action.Targets, action.XValue)
 		if err == nil {
 			p := g.GetPlayer(playerID)
-			addLog(fmt.Sprintf("%s casts %s", p.Name(), action.CardName))
+			// Use the card name from the stack object — action.CardName may be a
+			// display label like "Cast Giant Growth {G}" from the TUI option.
+			name := action.CardName
+			obj := g.Stack.Peek()
+			if obj != nil && obj.Card != nil {
+				name = obj.Card.Name()
+			}
+			addLog(fmt.Sprintf("%s casts %s%s", p.Name(), name, targetSuffix(g, action.Targets)))
 		}
 	case ActionActivateAbility:
 		err = g.ActivateAbilityByIndex(playerID, action.PermanentID, action.AbilityIndex, action.Targets)
 		if err == nil {
-			addLog(fmt.Sprintf("Activated ability: %s", action.CardName))
+			addLog(fmt.Sprintf("Activated ability: %s%s", action.CardName, targetSuffix(g, action.Targets)))
 		}
 	}
 	if err != nil {
@@ -917,5 +1081,34 @@ func performBlock(g *mage.Game, blockers []mage.BlockAssignment, addLog func(str
 func reportCombatResults(g *mage.Game, humanIdx int, addLog func(string)) {
 	for _, p := range g.Players {
 		addLog(fmt.Sprintf("%s: %d life", p.Name(), p.Life()))
+	}
+}
+
+// logCombatPreview logs a summary of each combat group before damage is dealt.
+func logCombatPreview(g *mage.Game, addLog func(string)) {
+	for _, grp := range g.Combat.Groups {
+		atk := g.FindPermanent(grp.AttackerID)
+		if atk == nil {
+			continue
+		}
+		defender := g.GetPlayer(grp.DefenderID)
+		defName := "player"
+		if defender != nil {
+			defName = defender.Name()
+		}
+		if len(grp.BlockerIDs) == 0 {
+			addLog(fmt.Sprintf("  %s (%d/%d) → %s unblocked",
+				atk.Name(), atk.Card.Power(), atk.Card.Toughness(), defName))
+		} else {
+			parts := make([]string, 0, len(grp.BlockerIDs))
+			for _, bid := range grp.BlockerIDs {
+				blk := g.FindPermanent(bid)
+				if blk != nil {
+					parts = append(parts, fmt.Sprintf("%s (%d/%d)", blk.Name(), blk.Card.Power(), blk.Card.Toughness()))
+				}
+			}
+			addLog(fmt.Sprintf("  %s (%d/%d) blocked by %s",
+				atk.Name(), atk.Card.Power(), atk.Card.Toughness(), strings.Join(parts, ", ")))
+		}
 	}
 }

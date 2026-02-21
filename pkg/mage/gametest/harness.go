@@ -237,6 +237,12 @@ func (tg *TestGame) FormBand(turn int, p PlayerRef, creatures ...string) {
 	tg.GetPlayer(p).AddBandFormation(turn, creatures)
 }
 
+// ChooseMode scripts which mode a player will choose when a modal spell or ability asks.
+func (tg *TestGame) ChooseMode(p PlayerRef, mode int) {
+	tp := tg.GetPlayer(p)
+	tp.chooseMode = append(tp.chooseMode, mode)
+}
+
 // ChooseBandingDistribution scripts how a player distributes incoming damage among banded creatures.
 func (tg *TestGame) ChooseBandingDistribution(p PlayerRef, distribution map[string]int) {
 	tp := tg.GetPlayer(p)

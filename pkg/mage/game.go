@@ -44,6 +44,9 @@ type Game struct {
 	// X value for the currently resolving spell
 	CurrentX int
 
+	// Chosen mode for the currently resolving modal spell (0-indexed)
+	CurrentMode int
+
 	// Card currently being resolved (set during ResolveStackObject)
 	ResolvingCard Card
 
@@ -843,6 +846,7 @@ func (g *Game) ResolveStack() {
 // ResolveStackObject resolves a single stack object.
 func (g *Game) ResolveStackObject(obj *StackObject) {
 	g.CurrentX = obj.XValue
+	g.CurrentMode = obj.ModeChoice
 	g.ResolvingCard = obj.Card
 	g.ResolvingTargets = obj.Targets
 	for _, eff := range obj.Effects {
@@ -866,6 +870,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 			}
 
 			g.CurrentX = 0
+			g.CurrentMode = 0
 			g.ResolvingTargets = nil
 			g.CheckStateBasedActions()
 			return
@@ -879,6 +884,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 	}
 
 	g.CurrentX = 0
+	g.CurrentMode = 0
 	g.ResolvingCard = nil
 	g.ResolvingTargets = nil
 
@@ -976,6 +982,10 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		Effects:    effects,
 		Targets:    targets,
 		XValue:     xValue,
+	}
+
+	if modes := card.Modes(); len(modes) > 0 {
+		obj.ModeChoice = p.ChooseMode(modes, card.Name())
 	}
 
 	g.Stack.Push(obj)
@@ -2273,6 +2283,10 @@ func (g *Game) CastSpellByID(playerID, cardID uuid.UUID, targets []uuid.UUID, xV
 		Effects:    effects,
 		Targets:    targets,
 		XValue:     xValue,
+	}
+
+	if modes := card.Modes(); len(modes) > 0 {
+		obj.ModeChoice = p.ChooseMode(modes, card.Name())
 	}
 
 	g.Stack.Push(obj)

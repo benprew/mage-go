@@ -56,6 +56,7 @@ type Player interface {
 	ChooseMayAbility(description string) bool
 
 	// Player choice methods (overridden by TestPlayer for scripted choices)
+	ChooseMode(modes []string, reason string) int
 	ChoosePermanent(candidates []*Permanent, reason string, g *Game) *Permanent
 	ChooseCardsFromHand(amount int, reason string, g *Game) []Card
 	ChooseManaColor(reason string) Color
@@ -175,6 +176,10 @@ func (p *BasePlayer) ChooseMayAbility(description string) bool {
 }
 
 // Default choice implementations (pick first available option).
+
+func (p *BasePlayer) ChooseMode(modes []string, reason string) int {
+	return 0
+}
 
 func (p *BasePlayer) ChoosePermanent(candidates []*Permanent, reason string, g *Game) *Permanent {
 	if len(candidates) > 0 {

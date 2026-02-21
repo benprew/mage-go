@@ -85,20 +85,41 @@ func TestBalance(t *testing.T) {
 }
 
 func TestHealingSalve(t *testing.T) {
-	t.Run("prevents_3_damage", func(t *testing.T) {
-		// Healing Salve mode 2: Prevent the next 3 damage that would be dealt
-		// to any target this turn. (The gain-3-life mode already works.)
+	t.Run("gain_3_life", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.SetLife(gametest.PlayerA, 17)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Healing Salve")
+		g.ChooseMode(gametest.PlayerA, 0) // choose "gain 3 life"
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Healing Salve", "PlayerA")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 20)
+	})
+
+	t.Run("prevent_3_damage_to_creature", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant") // 3/3
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Healing Salve")
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
-		// Cast Healing Salve in prevent mode targeting Hill Giant
+		g.ChooseMode(gametest.PlayerA, 1) // choose "prevent 3 damage"
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Healing Salve", "Hill Giant")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Hill Giant")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		// 3 damage from Bolt prevented -> Hill Giant survives.
 		g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 1)
+	})
+
+	t.Run("prevent_3_damage_to_player", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.SetLife(gametest.PlayerA, 20)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant") // 3/3
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Healing Salve")
+		g.ChooseMode(gametest.PlayerA, 1) // choose "prevent 3 damage"
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Healing Salve", "PlayerA")
+		g.Attack(1, gametest.PlayerB, "Hill Giant")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 20)
 	})
 }
 
