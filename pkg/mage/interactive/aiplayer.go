@@ -6,24 +6,137 @@ import (
 	"github.com/mage/mage/pkg/mage/core"
 )
 
-// HumanPlayer wraps BasePlayer for interactive TUI play. It overrides
-// ChooseMode so the game loop can pre-set the mode before casting.
+// HumanPlayer wraps BasePlayer for interactive TUI play. It channels all
+// player decisions through the TUI rather than using silent defaults.
 type HumanPlayer struct {
 	*mage.BasePlayer
-	PendingMode int
+	choiceReqs  chan ChoiceRequest
+	choiceResps chan ChoiceResponse
 }
 
 // NewHumanPlayer creates a new human player for the TUI.
 func NewHumanPlayer(name string) *HumanPlayer {
 	return &HumanPlayer{
-		BasePlayer: mage.NewBasePlayer(name),
+		BasePlayer:  mage.NewBasePlayer(name),
+		choiceReqs:  make(chan ChoiceRequest, 1),
+		choiceResps: make(chan ChoiceResponse, 1),
 	}
 }
 
+// ChoiceRequests returns a channel the TUI should read for incoming choice requests.
+func (p *HumanPlayer) ChoiceRequests() <-chan ChoiceRequest {
+	return p.choiceReqs
+}
+
+// ChoiceResponses returns a channel the TUI should write choice responses to.
+func (p *HumanPlayer) ChoiceResponses() chan<- ChoiceResponse {
+	return p.choiceResps
+}
+
 func (p *HumanPlayer) ChooseMode(modes []string, reason string) int {
-	mode := p.PendingMode
-	p.PendingMode = 0
-	return mode
+	opts := make([]ChoiceOption, len(modes))
+	for i, m := range modes {
+		opts[i] = ChoiceOption{Label: m}
+	}
+	p.choiceReqs <- ChoiceRequest{Type: ChoiceMode, Reason: reason, Options: opts}
+	resp := <-p.choiceResps
+	return resp.SelectedIndex
+}
+
+func (p *HumanPlayer) ChoosePermanent(candidates []*mage.Permanent, reason string, g *mage.Game) *mage.Permanent {
+	if len(candidates) == 0 {
+		return nil
+	}
+	opts := make([]ChoiceOption, len(candidates))
+	for i, c := range candidates {
+		opts[i] = ChoiceOption{ID: c.ID(), Label: c.Name()}
+	}
+	p.choiceReqs <- ChoiceRequest{Type: ChoicePermanent, Reason: reason, Options: opts}
+	resp := <-p.choiceResps
+	if len(resp.SelectedIDs) > 0 {
+		for _, c := range candidates {
+			if c.ID() == resp.SelectedIDs[0] {
+				return c
+			}
+		}
+	}
+	return candidates[0]
+}
+
+func (p *HumanPlayer) ChooseCardsFromHand(amount int, reason string, g *mage.Game) []mage.Card {
+	hand := p.Hand()
+	if amount <= 0 || len(hand) == 0 {
+		return nil
+	}
+	if amount > len(hand) {
+		amount = len(hand)
+	}
+	opts := make([]ChoiceOption, len(hand))
+	for i, c := range hand {
+		opts[i] = ChoiceOption{ID: c.ID(), Label: c.Name() + " " + c.ManaCost().String()}
+	}
+	p.choiceReqs <- ChoiceRequest{Type: ChoiceCardsFromHand, Reason: reason, Amount: amount, Options: opts}
+	resp := <-p.choiceResps
+	idSet := make(map[uuid.UUID]bool, len(resp.SelectedIDs))
+	for _, id := range resp.SelectedIDs {
+		idSet[id] = true
+	}
+	var result []mage.Card
+	for _, c := range hand {
+		if idSet[c.ID()] {
+			result = append(result, c)
+		}
+	}
+	if len(result) > amount {
+		result = result[:amount]
+	}
+	return result
+}
+
+func (p *HumanPlayer) ChooseManaColor(reason string) core.Color {
+	opts := []ChoiceOption{
+		{Label: "White", Color: core.White},
+		{Label: "Blue", Color: core.Blue},
+		{Label: "Black", Color: core.Black},
+		{Label: "Red", Color: core.Red},
+		{Label: "Green", Color: core.Green},
+	}
+	p.choiceReqs <- ChoiceRequest{Type: ChoiceManaColor, Reason: reason, Options: opts}
+	resp := <-p.choiceResps
+	return resp.SelectedColor
+}
+
+func (p *HumanPlayer) ChooseCardFromLibrary(candidates []mage.Card, reason string, g *mage.Game) mage.Card {
+	if len(candidates) == 0 {
+		return nil
+	}
+	opts := make([]ChoiceOption, len(candidates))
+	for i, c := range candidates {
+		opts[i] = ChoiceOption{ID: c.ID(), Label: c.Name() + " " + c.ManaCost().String()}
+	}
+	p.choiceReqs <- ChoiceRequest{Type: ChoiceCardFromLibrary, Reason: reason, Options: opts}
+	resp := <-p.choiceResps
+	if len(resp.SelectedIDs) > 0 {
+		for _, c := range candidates {
+			if c.ID() == resp.SelectedIDs[0] {
+				return c
+			}
+		}
+	}
+	return candidates[0]
+}
+
+func (p *HumanPlayer) ChooseMayAbility(description string) bool {
+	p.choiceReqs <- ChoiceRequest{
+		Type:   ChoiceMay,
+		Reason: description,
+		Options: []ChoiceOption{
+			{Label: "Yes"},
+			{Label: "No"},
+		},
+	}
+	resp := <-p.choiceResps
+	return resp.Accepted
 }
 
 // AIPlayer is a computer-controlled player with simple decision-making.
@@ -36,6 +149,21 @@ func NewAIPlayer(name string) *AIPlayer {
 	return &AIPlayer{
 		BasePlayer: mage.NewBasePlayer(name),
 	}
+}
+
+// ChooseMode implements the Player interface for AI mode selection.
+// It uses card-name-based heuristics combined with game state where accessible.
+func (ai *AIPlayer) ChooseMode(modes []string, reason string) int {
+	switch reason {
+	case "Healing Salve":
+		// mode 0: gain 3 life; mode 1: prevent the next 3 damage
+		// Prefer gaining life when low; prefer prevention when healthy (saves creatures/shields combat)
+		if ai.Life() <= 10 {
+			return 0
+		}
+		return 1
+	}
+	return 0
 }
 
 // GetPriorityAction decides what the AI should do when it has priority.

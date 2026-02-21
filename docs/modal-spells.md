@@ -58,7 +58,10 @@ AI:            BasePlayer.ChooseMode() returns 0 → StackObject.ModeChoice → 
 ## What's Left
 
 - Manual TUI testing with Healing Salve in a deck
-- AI heuristics for mode selection (currently always picks mode 0)
+
+## Done (additional)
+
+- **AI heuristics for mode selection**: `AIPlayer.ChooseMode` overrides `BasePlayer` with card-name-based logic. For Healing Salve: picks mode 0 (gain 3 life) when life ≤ 10, mode 1 (prevent 3 damage) when life is comfortable. Falls back to mode 0 for unknown cards.
 
 ## Design Notes
 
