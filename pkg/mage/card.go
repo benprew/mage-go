@@ -370,11 +370,9 @@ func NewPermanent(card Card, controller uuid.UUID) *Permanent {
 			p.baseAttrs[AttrIsEnchantment]++
 		}
 	}
-	// Populate baseAttrs from card's keyword seeds.
-	if bc, ok := card.(*BaseCard); ok {
-		for a, count := range bc.AttrSeeds() {
-			p.baseAttrs[a] += count
-		}
+	// Populate baseAttrs from card's keyword seeds via the Card interface.
+	for a, count := range card.AttrSeeds() {
+		p.baseAttrs[a] += count
 	}
 	return p
 }

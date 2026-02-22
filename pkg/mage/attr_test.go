@@ -194,6 +194,31 @@ func TestIsKeywordAttr(t *testing.T) {
 	}
 }
 
+// TestKeywordAttrBoundary_NonKeywordAttrsBelowFlying asserts that all capability
+// and type-identity attrs remain below Flying in the iota ordering.
+// IsKeywordAttr uses (a >= Flying) as its boundary; this test will fail at
+// compile+run time if someone inserts a new attr before Flying and shifts it.
+func TestKeywordAttrBoundary_NonKeywordAttrsBelowFlying(t *testing.T) {
+	nonKeyword := []Attr{
+		AttrCanAttack, AttrCanBlock, AttrHasPowerToughness, AttrSummonSick,
+		AttrDoesNotUntap, AttrEntersTapped, AttrMustAttack, AttrMustBeBlocked,
+		AttrIsCreature, AttrIsLand, AttrIsArtifact, AttrIsEnchantment,
+	}
+	for _, a := range nonKeyword {
+		if IsKeywordAttr(a) {
+			t.Errorf("attr %v must be below Flying in the iota (IsKeywordAttr should be false); "+
+				"Flying must remain the first keyword attr", a)
+		}
+	}
+	// Aliases must also be non-keyword
+	if IsKeywordAttr(DoesNotUntapKW) {
+		t.Error("DoesNotUntapKW (=AttrDoesNotUntap) must not be a keyword attr")
+	}
+	if IsKeywordAttr(EntersTapped) {
+		t.Error("EntersTapped (=AttrEntersTapped) must not be a keyword attr")
+	}
+}
+
 // TestNewPermanentInitializesMaps verifies that NewPermanent initializes both maps.
 func TestNewPermanentInitializesMaps(t *testing.T) {
 	card := NewCreature("Test", "{1}", 1, 1)

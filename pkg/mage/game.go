@@ -300,9 +300,10 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 		a.SetController(controller)
 	}
 
-	// EntersTapped keyword check
+	// EntersTapped keyword check — consumed on entry, attr cleared immediately after.
 	if perm.HasKeyword(EntersTapped) {
 		perm.Tapped = true
+		perm.RevokeBaseAttr(EntersTapped)
 	}
 
 	// Add X counters if configured (replacement effect, not a trigger)
@@ -1065,8 +1066,8 @@ func (g *Game) ActivateAbilityByText(playerID uuid.UUID, permName string, target
 		if !ok {
 			continue
 		}
-		if perm.Tapped {
-			continue // already tapped
+		if perm.Tapped || !perm.CanTapForEffect(g) {
+			continue // already tapped or summoning sick without haste
 		}
 		perm.Tapped = true
 		p := g.GetPlayer(playerID)

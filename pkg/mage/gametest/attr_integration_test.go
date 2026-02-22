@@ -40,14 +40,36 @@ func TestSummonSickness_CreatureCanAttackNextTurn(t *testing.T) {
 }
 
 // TestHaste_CreatureCanAttackTurnPlayed verifies Haste bypasses summoning sickness.
+// Nether Shadow ({B}{B}, 1/1, Haste) is cast from hand and attacks in the same turn.
 func TestHaste_CreatureCanAttackTurnPlayed(t *testing.T) {
-	t.Skip("Haste turn-played attack covered by existing mechanics tests")
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Nether Shadow") // {B}{B}, 1/1, Haste
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Nether Shadow")
+	g.Attack(1, gametest.PlayerA, "Nether Shadow")
+	g.StopAt(1, core.EndCombat)
+	g.Execute()
+	// Nether Shadow has Haste — bypasses summoning sickness and attacks for 1.
+	g.AssertLife(gametest.PlayerB, 19)
 }
 
-// TestSummonSickness_CreatureCannotTapForManaTurnPlayed tests summoning sickness
-// for mana tapping.
+// TestSummonSickness_CreatureCannotTapForManaTurnPlayed verifies that a creature
+// cast this turn cannot tap to produce mana (ActivateAbilityByText mana-ability guard).
+// Llanowar Elves is cast from hand; it is summoning sick, so a direct activation
+// of its {T}: Add {G} ability should be rejected — the Elves remain untapped.
 func TestSummonSickness_CreatureCannotTapForManaTurnPlayed(t *testing.T) {
-	t.Skip("Mana tapping with summoning sickness covered by existing mechanics tests")
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Llanowar Elves") // {G}, {T}: Add {G}
+	// Cast Llanowar Elves on turn 1 (Forest provides the {G}).
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Llanowar Elves")
+	// Attempt to directly activate Elves' mana ability — should be blocked by summoning sickness.
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Llanowar Elves")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Elves should remain untapped: summoning sickness prevented the tap.
+	g.AssertTapped(gametest.PlayerA, "Llanowar Elves", false)
 }
 
 // TestLandAlwaysCanTap_NeverSummonSick verifies lands can tap on turn played.
@@ -142,4 +164,48 @@ func TestPreventFromBlocking_CreatureCannotBlock(t *testing.T) {
 	g.StopAt(1, core.EndCombat)
 	g.Execute()
 	g.AssertLife(gametest.PlayerB, 18) // White Knight got through unblocked
+}
+
+// TestRemoveKeyword_EarthbindRemovesFlyingFromSerraAngel verifies that RevokeAttr
+// correctly removes Flying from a creature that intrinsically has it.
+// Without Earthbind, Serra Angel (Flying) is unblockable by Hill Giant.
+// With Earthbind, Flying is revoked each Apply() cycle → Hill Giant can block.
+func TestRemoveKeyword_EarthbindRemovesFlyingFromSerraAngel(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Serra Angel")  // 4/4 Flying, Vigilance
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")     // {R} for Earthbind
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Earthbind")           // {R} aura: loses Flying
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")   // 3/3 ground creature
+	// Cast Earthbind on Serra Angel to remove Flying.
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Earthbind", "Serra Angel")
+	// Serra Angel attacks; Hill Giant can now block because Flying was removed.
+	g.Attack(1, gametest.PlayerA, "Serra Angel")
+	g.Block(1, gametest.PlayerB, "Hill Giant", "Serra Angel")
+	g.StopAt(1, core.EndCombat)
+	g.Execute()
+	// Serra Angel (4/4) kills Hill Giant (3/3); takes 3 damage but survives (4 toughness).
+	// PlayerB stays at 20 — Hill Giant blocked successfully (proving Flying was removed).
+	g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 0)
+	g.AssertPermanentCount(gametest.PlayerA, "Serra Angel", 1)
+	g.AssertLife(gametest.PlayerB, 20)
+}
+
+// TestAnimateLands_CanAttackAndBlock verifies that the AnimateLands continuous
+// effect correctly grants AttrCanAttack and AttrCanBlock to matching lands.
+// Living Lands animates all Forests into 1/1 creatures; the animated Forest
+// attacks and is blocked in combat confirming both attrs are in effect.
+func TestAnimateLands_CanAttackAndBlock(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Living Lands") // Forests become 1/1
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")       // becomes 1/1 creature
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")   // 3/3
+	// Animated Forest (1/1) attacks; Hill Giant blocks.
+	g.Attack(1, gametest.PlayerA, "Forest")
+	g.Block(1, gametest.PlayerB, "Hill Giant", "Forest")
+	g.StopAt(1, core.EndCombat)
+	g.Execute()
+	// Forest (1/1) dies to Hill Giant (3/3); Hill Giant takes 1 damage but survives.
+	g.AssertPermanentCount(gametest.PlayerA, "Forest", 0) // died in combat
+	g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 1)
+	g.AssertLife(gametest.PlayerB, 20) // Hill Giant blocked; no direct damage
 }

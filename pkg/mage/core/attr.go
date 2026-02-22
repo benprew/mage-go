@@ -13,7 +13,7 @@ const (
 	AttrHasPowerToughness  // has P/T; takes combat damage; subject to SBAs
 	AttrSummonSick         // set on ETB for creatures; cleared at untap; Haste bypasses check
 	AttrDoesNotUntap       // replaces DoesNotUntapKW
-	AttrEntersTapped       // consumed on ETB; not persistent
+	AttrEntersTapped       // set on entry; cleared by PutOnBattlefield after tapping
 	AttrMustAttack         // replaces MustAttack keyword
 	AttrMustBeBlocked      // replaces MustBeBlocked keyword
 

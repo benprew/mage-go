@@ -57,7 +57,7 @@ func TapSourceCost() Cost { return &tapSourceCost{} }
 
 func (c *tapSourceCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	p := g.FindPermanent(sourceID)
-	return p != nil && !p.Tapped
+	return p != nil && !p.Tapped && p.CanTapForEffect(g)
 }
 
 func (c *tapSourceCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
