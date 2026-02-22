@@ -187,11 +187,8 @@ func (e *targetEffect) Apply(g *Game) error {
 
 // EffectManager manages and applies continuous effects.
 type EffectManager struct {
-	effects                []ContinuousEffect
-	powerBonuses           map[uuid.UUID]int
-	toughBonuses           map[uuid.UUID]int
-	removedKW              map[uuid.UUID][]Keyword
-	preventAttack          map[uuid.UUID]bool
+	effects    []ContinuousEffect
+	attrDeltas map[uuid.UUID]map[Attr]int // deltas accumulated during Apply(); written to perm.grantedAttrs
 	regenerationShields    map[uuid.UUID]int
 	preventionShields      map[uuid.UUID]int
 	preventionRules        []damagePreventionRule
@@ -205,7 +202,6 @@ type EffectManager struct {
 	sanctuaryActive        map[uuid.UUID]bool      // player -> if true, only flying/islandwalk can attack them
 	lichActive             map[uuid.UUID]uuid.UUID // player -> source permanent ID of active Lich
 	skipNextDraw           map[uuid.UUID]bool      // player -> if true, skip normal draw in draw step
-	preventBlock           map[uuid.UUID]bool      // permanent -> can't block this turn (Raging River)
 	manaConversion         map[Color]Color         // from color -> to color (Sunglasses of Urza)
 	bodyguard              map[uuid.UUID]uuid.UUID // controller -> bodyguard permanent ID (Veteran Bodyguard)
 	playerDamageRedirect   map[uuid.UUID]uuid.UUID // controller -> creature that absorbs ALL damage to player
@@ -215,10 +211,7 @@ type EffectManager struct {
 
 func NewEffectManager() *EffectManager {
 	return &EffectManager{
-		powerBonuses:           make(map[uuid.UUID]int),
-		toughBonuses:           make(map[uuid.UUID]int),
-		removedKW:              make(map[uuid.UUID][]Keyword),
-		preventAttack:          make(map[uuid.UUID]bool),
+		attrDeltas: make(map[uuid.UUID]map[Attr]int),
 		regenerationShields:    make(map[uuid.UUID]int),
 		preventionShields:      make(map[uuid.UUID]int),
 		landUntapLimit:         -1,
@@ -231,7 +224,6 @@ func NewEffectManager() *EffectManager {
 		sanctuaryActive:        make(map[uuid.UUID]bool),
 		lichActive:             make(map[uuid.UUID]uuid.UUID),
 		skipNextDraw:           make(map[uuid.UUID]bool),
-		preventBlock:           make(map[uuid.UUID]bool),
 		manaConversion:         make(map[Color]Color),
 		bodyguard:              make(map[uuid.UUID]uuid.UUID),
 		playerDamageRedirect:   make(map[uuid.UUID]uuid.UUID),
@@ -312,20 +304,6 @@ func (em *EffectManager) ShouldSkipDraw(playerID uuid.UUID) bool {
 	return false
 }
 
-// PreventFromBlocking prevents a creature from blocking this turn (Raging River).
-func (em *EffectManager) PreventFromBlocking(permID uuid.UUID) {
-	em.preventBlock[permID] = true
-}
-
-// CanBlock returns true if the creature is not prevented from blocking.
-func (em *EffectManager) CanBlockCheck(permID uuid.UUID) bool {
-	return !em.preventBlock[permID]
-}
-
-// ClearBlockPrevention clears all block prevention.
-func (em *EffectManager) ClearBlockPrevention() {
-	em.preventBlock = make(map[uuid.UUID]bool)
-}
 
 // SetManaConversion sets a mana color conversion (e.g. Red→White for Sunglasses of Urza).
 func (em *EffectManager) SetManaConversion(from, to Color) {
@@ -612,6 +590,25 @@ func (e *preventDamageRuleContinuous) Apply(g *Game) error {
 	return nil
 }
 
+// GrantAttr records a positive delta for the given attr on the given permanent.
+// Called by continuous effects during Apply(); the delta is written to
+// perm.grantedAttrs at the end of the Apply() cycle.
+func (em *EffectManager) GrantAttr(permID uuid.UUID, a Attr) {
+	if em.attrDeltas[permID] == nil {
+		em.attrDeltas[permID] = make(map[Attr]int)
+	}
+	em.attrDeltas[permID][a]++
+}
+
+// RevokeAttr records a negative delta for the given attr on the given permanent.
+// Combined with the permanent's baseAttrs, a net value <= 0 means HasAttr returns false.
+func (em *EffectManager) RevokeAttr(permID uuid.UUID, a Attr) {
+	if em.attrDeltas[permID] == nil {
+		em.attrDeltas[permID] = make(map[Attr]int)
+	}
+	em.attrDeltas[permID][a]--
+}
+
 func (em *EffectManager) Add(e ContinuousEffect) {
 	em.effects = append(em.effects, e)
 }
@@ -650,10 +647,7 @@ func (em *EffectManager) RemoveEndOfCombat() {
 
 // Apply resets computed bonuses and reapplies all active effects in layer order.
 func (em *EffectManager) Apply(g *Game) {
-	em.powerBonuses = make(map[uuid.UUID]int)
-	em.toughBonuses = make(map[uuid.UUID]int)
-	em.removedKW = make(map[uuid.UUID][]Keyword)
-	em.preventAttack = make(map[uuid.UUID]bool)
+	em.attrDeltas = make(map[uuid.UUID]map[Attr]int)
 	em.landUntapLimit = -1
 	em.unlimitedLandPlays = false
 	em.spellCostIncrease = make(map[Color]int)
@@ -669,7 +663,7 @@ func (em *EffectManager) Apply(g *Game) {
 	}
 	em.preventionRules = oneShotRules
 
-	// Reset granted runtime abilities and subtype overrides from effects
+	// Reset granted runtime abilities, subtype overrides, and grantedAttrs from effects.
 	for _, p := range g.Battlefield {
 		if p.FaceDown {
 			// Face-down permanents keep their overrides and empty abilities
@@ -684,9 +678,12 @@ func (em *EffectManager) Apply(g *Game) {
 		p.RuntimeAbilities = base
 		p.Controller = p.Card.Owner()
 		p.SubTypeOverride = nil
-		p.TypesAdded = nil
 		p.BasePTOverride = nil
 		p.ColorOverride = nil
+		// Reset grantedAttrs and P/T bonuses so each Apply() cycle starts fresh.
+		p.grantedAttrs = make(map[Attr]int)
+		p.powerBonus = 0
+		p.toughBonus = 0
 	}
 
 	// Remove effects whose source is no longer on the battlefield
@@ -719,44 +716,19 @@ func (em *EffectManager) Apply(g *Game) {
 		}
 	}
 
-	// Remove keywords that were stripped by effects (e.g. Earthbind removes Flying)
-	for permID, keywords := range em.removedKW {
+	// Write attrDeltas accumulated by GrantAttr/RevokeAttr calls during this cycle
+	// into each permanent's grantedAttrs.
+	for permID, deltas := range em.attrDeltas {
 		perm := g.FindPermanent(permID)
 		if perm == nil {
 			continue
 		}
-		filtered := perm.RuntimeAbilities[:0]
-		for _, a := range perm.RuntimeAbilities {
-			ab := UnwrapAbility(a)
-			if ka, ok := ab.(*KeywordAbility); ok {
-				removed := false
-				for _, kw := range keywords {
-					if ka.Keyword == kw {
-						removed = true
-						break
-					}
-				}
-				if removed {
-					continue
-				}
-			}
-			filtered = append(filtered, a)
+		for a, delta := range deltas {
+			perm.grantedAttrs[a] += delta
 		}
-		perm.RuntimeAbilities = filtered
 	}
 }
 
-func (em *EffectManager) PowerBonus(id uuid.UUID) int {
-	return em.powerBonuses[id]
-}
-
-func (em *EffectManager) ToughnessBonus(id uuid.UUID) int {
-	return em.toughBonuses[id]
-}
-
-func (em *EffectManager) CanAttack(id uuid.UUID) bool {
-	return !em.preventAttack[id]
-}
 
 // SpellCostIncrease returns the additional generic cost for spells of the given color.
 func (em *EffectManager) SpellCostIncrease(c Color) int {

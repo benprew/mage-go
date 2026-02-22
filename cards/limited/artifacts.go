@@ -467,9 +467,12 @@ func registerArtifacts() {
 				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					for _, p := range g.Battlefield {
 						if p.Controller != controller && p.HasType(TypeCreature) {
-							g.Effects.PreventFromBlocking(p.ID())
+							eff := PreventBlockingUntilEndOfCombat(p.ID())
+							eff.SetSourceID(sourceID)
+							g.Effects.Add(eff)
 						}
 					}
+					g.Effects.Apply(g)
 					return nil
 				})),
 		)
@@ -480,7 +483,7 @@ func registerArtifacts() {
 		WithAbility(NewTriggered(EvtDeclaredAttacker, false, FuncEffect(
 			"split blockers into piles",
 			EffectProperties{},
-			func(g *Game, _, controller uuid.UUID, _ []uuid.UUID) error {
+			func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 				var nonFlyers []*Permanent
 				for _, p := range g.Battlefield {
 					if p.Controller != controller && p.HasType(TypeCreature) &&
@@ -489,8 +492,11 @@ func registerArtifacts() {
 					}
 				}
 				for _, p := range nonFlyers {
-					g.Effects.PreventFromBlocking(p.ID())
+					eff := PreventBlockingUntilEndOfCombat(p.ID())
+					eff.SetSourceID(sourceID)
+					g.Effects.Add(eff)
 				}
+				g.Effects.Apply(g)
 				return nil
 			})).SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
 			return evt.PlayerID == controllerID && g.FindPermanent(sourceID) != nil && len(g.Combat.Groups) == 1

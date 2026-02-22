@@ -268,10 +268,14 @@ type ChoiceResponse struct {
 
 func buildRulesText(c mage.Card) string {
 	var parts []string
+	// Keywords come from the card's attr seeds (canonical storage).
+	for a, count := range c.AttrSeeds() {
+		if count > 0 && core.IsKeywordAttr(a) {
+			parts = append(parts, a.String())
+		}
+	}
 	for _, a := range c.Abilities() {
 		switch ab := a.(type) {
-		case *mage.KeywordAbility:
-			parts = append(parts, ab.Keyword.String())
 		case *mage.ProtectionAbility:
 			var colors []string
 			for _, col := range ab.FromColors {
@@ -397,7 +401,7 @@ func snapshotPlayer(g *mage.Game, p mage.Player, showHand bool) PlayerState {
 			Power:      perm.CurrentPower(g),
 			Toughness:  perm.CurrentToughness(g),
 			Tapped:     perm.Tapped,
-			SummonSick: perm.SummonSick,
+			SummonSick: perm.HasAttr(core.AttrSummonSick),
 			IsCreature: perm.HasType(core.TypeCreature),
 			IsLand:     perm.HasType(core.TypeLand),
 			IsArtifact: perm.HasType(core.TypeArtifact),
@@ -423,11 +427,7 @@ func snapshotPlayer(g *mage.Game, p mage.Player, showHand bool) PlayerState {
 				permState.Counters[ct.String()] = n
 			}
 		}
-		for _, a := range perm.RuntimeAbilities {
-			if ka, ok := a.(*mage.KeywordAbility); ok {
-				permState.Keywords = append(permState.Keywords, ka.Keyword.String())
-			}
-		}
+		permState.Keywords = perm.KeywordNames()
 		ps.Battlefield = append(ps.Battlefield, permState)
 	}
 
@@ -967,19 +967,7 @@ func executeAction(g *mage.Game, playerID uuid.UUID, action PriorityAction, addL
 func getEligibleAttackers(g *mage.Game, playerID uuid.UUID) []*mage.Permanent {
 	var eligible []*mage.Permanent
 	for _, perm := range g.Battlefield {
-		if perm.Controller != playerID || !perm.HasType(core.TypeCreature) {
-			continue
-		}
-		if perm.Tapped {
-			continue
-		}
-		if perm.SummonSick && !perm.HasKeyword(core.Haste) {
-			continue
-		}
-		if !g.Effects.CanAttack(perm.ID()) {
-			continue
-		}
-		if !mage.CanAttackCheck(perm, g) {
+		if perm.Controller != playerID || !perm.CanDeclareAsAttacker(g) {
 			continue
 		}
 		eligible = append(eligible, perm)
@@ -1024,10 +1012,7 @@ func performAttack(g *mage.Game, attackerIDs []uuid.UUID, addLog func(string)) {
 func getEligibleBlockers(g *mage.Game, playerID uuid.UUID) []*mage.Permanent {
 	var eligible []*mage.Permanent
 	for _, perm := range g.Battlefield {
-		if perm.Controller != playerID || !perm.HasType(core.TypeCreature) {
-			continue
-		}
-		if perm.Tapped {
+		if perm.Controller != playerID || !perm.CanDeclareAsBlocker(g) {
 			continue
 		}
 		eligible = append(eligible, perm)

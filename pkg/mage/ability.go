@@ -32,23 +32,6 @@ func (a *BaseAbility) Controller() uuid.UUID      { return a.controller }
 func (a *BaseAbility) SetController(id uuid.UUID) { a.controller = id }
 func (a *BaseAbility) Type() AbilityType          { return a.abilityType }
 
-// KeywordAbility is a static ability granting a keyword.
-type KeywordAbility struct {
-	BaseAbility
-	Keyword Keyword
-}
-
-// NewKeywordAbility creates a static ability that grants the given keyword (e.g. Flying, Trample).
-func NewKeywordAbility(k Keyword) *KeywordAbility {
-	return &KeywordAbility{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityStatic,
-		},
-		Keyword: k,
-	}
-}
-
 // ProtectionAbility grants protection from specific colors.
 type ProtectionAbility struct {
 	BaseAbility

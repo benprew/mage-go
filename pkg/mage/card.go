@@ -13,6 +13,7 @@ type Card interface {
 	Types() []CardType
 	SubTypes() []string
 	Abilities() []Ability
+	AttrSeeds() map[Attr]int // keyword/attr seeds (for display and permanent creation)
 	Owner() uuid.UUID
 	Power() int
 	Toughness() int
@@ -39,7 +40,12 @@ type BaseCard struct {
 	toughness int
 	isToken   bool
 	modes     []string
+	attrSeeds map[Attr]int // keyword/attr seeds; NewPermanent copies these to baseAttrs
 }
+
+// AttrSeeds returns the keyword/attr seeds for this card.
+// NewPermanent uses these to populate the permanent's baseAttrs.
+func (c *BaseCard) AttrSeeds() map[Attr]int { return c.attrSeeds }
 
 func (c *BaseCard) ID() uuid.UUID         { return c.id }
 func (c *BaseCard) Name() string          { return c.name }
@@ -87,6 +93,12 @@ func (c *BaseCard) CloneFrom(other Card) {
 		c.modes = make([]string, len(m))
 		copy(c.modes, m)
 	}
+	if bc, ok := other.(*BaseCard); ok && len(bc.attrSeeds) > 0 {
+		c.attrSeeds = make(map[Attr]int, len(bc.attrSeeds))
+		for k, v := range bc.attrSeeds {
+			c.attrSeeds[k] = v
+		}
+	}
 }
 
 func (c *BaseCard) Copy() Card {
@@ -102,6 +114,12 @@ func (c *BaseCard) Copy() Card {
 		cp.modes = make([]string, len(c.modes))
 		copy(cp.modes, c.modes)
 	}
+	if len(c.attrSeeds) > 0 {
+		cp.attrSeeds = make(map[Attr]int, len(c.attrSeeds))
+		for k, v := range c.attrSeeds {
+			cp.attrSeeds[k] = v
+		}
+	}
 	return &cp
 }
 
@@ -114,8 +132,14 @@ func WithSubTypes(subTypes ...string) CardOption {
 }
 
 // WithKeyword adds a keyword ability to a card.
+// Seeds the card's attrSeeds so that NewPermanent can populate baseAttrs.
 func WithKeyword(kw Keyword) CardOption {
-	return func(c *BaseCard) { c.AddAbility(NewKeywordAbility(kw)) }
+	return func(c *BaseCard) {
+		if c.attrSeeds == nil {
+			c.attrSeeds = make(map[Attr]int)
+		}
+		c.attrSeeds[kw]++
+	}
 }
 
 // WithAbility adds an ability to a card.
@@ -182,7 +206,10 @@ func NewToken(name string, power, toughness int, types []CardType, subTypes []st
 		isToken:   true,
 	}
 	for _, kw := range keywords {
-		c.AddAbility(NewKeywordAbility(kw))
+		if c.attrSeeds == nil {
+			c.attrSeeds = make(map[Attr]int)
+		}
+		c.attrSeeds[kw]++
 	}
 	return c
 }
@@ -295,33 +322,95 @@ type Permanent struct {
 	Tapped     bool
 	Damage     int
 	Counters   map[CounterType]int
-	SummonSick bool
 
 	AttachedTo  uuid.UUID   // what this permanent is attached to
 	Attachments []uuid.UUID // what's attached to this permanent
 
 	RuntimeAbilities []Ability  // base + granted by effects
 	SubTypeOverride  []string   // if set, replaces card's subtypes (from continuous effects)
-	TypesAdded       []CardType // types added by continuous effects (e.g. Living Lands)
 	BasePTOverride   *[2]int    // if set, overrides base P/T (for animate effects)
 	ColorOverride    *[]Color   // if set, replaces card's colors (from lace effects)
 	FaceDown         bool       // true when face-down (e.g. Illusionary Mask)
+
+	// Attr system: additive/subtractive attribute counts.
+	// baseAttrs holds intrinsic attrs (set at creation/ETB; persists until explicitly revoked).
+	// grantedAttrs holds effect-cycle deltas (reset and recomputed each Apply() cycle).
+	baseAttrs    map[Attr]int
+	grantedAttrs map[Attr]int
+
+	// P/T bonuses from continuous effects (LayerPT). Reset and recomputed each Apply() cycle.
+	powerBonus int
+	toughBonus int
 }
 
 // NewPermanent creates a permanent from a card.
 func NewPermanent(card Card, controller uuid.UUID) *Permanent {
 	p := &Permanent{
-		Card:       card,
-		Controller: controller,
-		Counters:   make(map[CounterType]int),
-		SummonSick: true,
+		Card:         card,
+		Controller:   controller,
+		Counters:     make(map[CounterType]int),
+		baseAttrs:    make(map[Attr]int),
+		grantedAttrs: make(map[Attr]int),
 	}
 	// Copy base abilities
 	for _, a := range card.Abilities() {
 		cp := a
 		p.RuntimeAbilities = append(p.RuntimeAbilities, cp)
 	}
+	// Populate baseAttrs from card types.
+	for _, t := range card.Types() {
+		switch t {
+		case TypeCreature:
+			p.baseAttrs[AttrIsCreature]++
+			p.baseAttrs[AttrCanAttack]++
+			p.baseAttrs[AttrCanBlock]++
+			p.baseAttrs[AttrHasPowerToughness]++
+			p.baseAttrs[AttrSummonSick]++
+		case TypeLand:
+			p.baseAttrs[AttrIsLand]++
+		case TypeArtifact:
+			p.baseAttrs[AttrIsArtifact]++
+		case TypeEnchantment:
+			p.baseAttrs[AttrIsEnchantment]++
+		}
+	}
+	// Populate baseAttrs from card's keyword seeds via the Card interface.
+	for a, count := range card.AttrSeeds() {
+		p.baseAttrs[a] += count
+	}
 	return p
+}
+
+// HasAttr returns true if this permanent currently has the given attribute.
+// Face-down permanents only expose basic creature attrs (they are 2/2 colorless creatures
+// with no other properties).
+func (p *Permanent) HasAttr(a Attr) bool {
+	if p.FaceDown {
+		switch a {
+		case AttrIsCreature, AttrCanAttack, AttrCanBlock, AttrHasPowerToughness:
+			return true
+		default:
+			return false
+		}
+	}
+	return p.baseAttrs[a]+p.grantedAttrs[a] > 0
+}
+
+// GrantBaseAttr increments the intrinsic count for attr a on this permanent.
+// Use this for attrs that are part of the card's identity (e.g. AttrIsCreature, Flying).
+func (p *Permanent) GrantBaseAttr(a Attr) {
+	p.baseAttrs[a]++
+}
+
+// RevokeBaseAttr decrements the intrinsic count, flooring at zero.
+// Used to clear transient base attrs such as AttrSummonSick at untap.
+func (p *Permanent) RevokeBaseAttr(a Attr) {
+	if p.baseAttrs[a] > 0 {
+		p.baseAttrs[a]--
+		if p.baseAttrs[a] == 0 {
+			delete(p.baseAttrs, a)
+		}
+	}
 }
 
 func (p *Permanent) ID() uuid.UUID { return p.Card.ID() }
@@ -331,11 +420,19 @@ func (p *Permanent) HasType(t CardType) bool {
 	if p.FaceDown {
 		return t == TypeCreature
 	}
-	for _, added := range p.TypesAdded {
-		if added == t {
-			return true
-		}
+	// Check attr-based identity for the four main battlefield types.
+	// grantedAttrs (written by EffectManager.Apply()) allows effects to add/remove types.
+	switch t {
+	case TypeCreature:
+		return p.HasAttr(AttrIsCreature)
+	case TypeLand:
+		return p.HasAttr(AttrIsLand)
+	case TypeArtifact:
+		return p.HasAttr(AttrIsArtifact)
+	case TypeEnchantment:
+		return p.HasAttr(AttrIsEnchantment)
 	}
+	// For other types (Instant, Sorcery, Planeswalker, etc.), fall through to card.
 	return p.Card.HasType(t)
 }
 
@@ -366,18 +463,33 @@ func (p *Permanent) HasSubType(s string) bool {
 	return false
 }
 
-// HasAbility checks if this permanent currently has the given keyword.
+// HasKeyword checks if this permanent currently has the given keyword ability.
+// Delegates to HasAttr: all keyword storage is now in baseAttrs/grantedAttrs.
 func (p *Permanent) HasKeyword(kw Keyword) bool {
+	return p.HasAttr(kw)
+}
+
+// KeywordNames returns the display names of all active keyword attrs on this permanent.
+// Includes both intrinsic keywords (baseAttrs) and those granted by effects (grantedAttrs).
+func (p *Permanent) KeywordNames() []string {
 	if p.FaceDown {
-		return false // face-down creatures have no abilities
+		return nil
 	}
-	for _, a := range p.RuntimeAbilities {
-		ab := UnwrapAbility(a)
-		if ka, ok := ab.(*KeywordAbility); ok && ka.Keyword == kw {
-			return true
+	seen := make(map[Attr]bool)
+	var result []string
+	check := func(a Attr) {
+		if !seen[a] && IsKeywordAttr(a) && p.HasAttr(a) {
+			seen[a] = true
+			result = append(result, a.String())
 		}
 	}
-	return false
+	for a := range p.baseAttrs {
+		check(a)
+	}
+	for a := range p.grantedAttrs {
+		check(a)
+	}
+	return result
 }
 
 // HasProtectionFrom checks if this permanent has protection that blocks the given card.
@@ -420,7 +532,7 @@ func (p *Permanent) CurrentPower(g *Game) int {
 	}
 	// Continuous effects are applied by the EffectManager
 	if g != nil {
-		pw += g.Effects.PowerBonus(p.ID())
+		pw += p.powerBonus
 	}
 	return pw
 }
@@ -435,7 +547,7 @@ func (p *Permanent) CurrentToughness(g *Game) int {
 		tg += ct.ToughnessBoost() * n
 	}
 	if g != nil {
-		tg += g.Effects.ToughnessBonus(p.ID())
+		tg += p.toughBonus
 	}
 	return tg
 }
@@ -465,6 +577,35 @@ func (p *Permanent) RemoveCounter(ct CounterType, n int) bool {
 // IsAttached returns true if this permanent is attached to something.
 func (p *Permanent) IsAttached() bool {
 	return p.AttachedTo != uuid.Nil
+}
+
+// CanDeclareAsAttacker returns true if this permanent may be declared as an attacker.
+// Reads like the rulebook: must be a creature (AttrCanAttack), must be untapped,
+// must not be summoning sick (unless it has Haste), must not have Defender.
+// Attack prevention by effects writes a negative attrDelta for AttrCanAttack, so
+// HasAttr(AttrCanAttack) returning false captures both "not a creature" and "prevented".
+func (p *Permanent) CanDeclareAsAttacker(g *Game) bool {
+	return p.HasAttr(AttrCanAttack) &&
+		!p.Tapped &&
+		(!p.HasAttr(AttrSummonSick) || p.HasAttr(Haste)) &&
+		!p.HasAttr(Defender)
+}
+
+// CanDeclareAsBlocker returns true if this permanent may be declared as a blocker.
+func (p *Permanent) CanDeclareAsBlocker(g *Game) bool {
+	return p.HasAttr(AttrCanBlock) &&
+		!p.Tapped
+}
+
+// CanTapForEffect returns true if this permanent may tap to activate an ability
+// (mana ability, activated ability). For permanents with AttrHasPowerToughness
+// (creatures), summoning sickness applies unless they have Haste. For permanents
+// without AttrHasPowerToughness (lands, non-creature artifacts), they tap freely.
+func (p *Permanent) CanTapForEffect(g *Game) bool {
+	if p.HasAttr(AttrHasPowerToughness) {
+		return !p.HasAttr(AttrSummonSick) || p.HasAttr(Haste)
+	}
+	return true // lands, non-creature artifacts tap freely
 }
 
 // ---------------------------------------------------------------------------

@@ -300,9 +300,10 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 		a.SetController(controller)
 	}
 
-	// EntersTapped keyword check
+	// EntersTapped keyword check — consumed on entry, attr cleared immediately after.
 	if perm.HasKeyword(EntersTapped) {
 		perm.Tapped = true
+		perm.RevokeBaseAttr(EntersTapped)
 	}
 
 	// Add X counters if configured (replacement effect, not a trigger)
@@ -1065,8 +1066,8 @@ func (g *Game) ActivateAbilityByText(playerID uuid.UUID, permName string, target
 		if !ok {
 			continue
 		}
-		if perm.Tapped {
-			continue // already tapped
+		if perm.Tapped || !perm.CanTapForEffect(g) {
+			continue // already tapped or summoning sick without haste
 		}
 		perm.Tapped = true
 		p := g.GetPlayer(playerID)
@@ -1253,8 +1254,8 @@ func (g *Game) DoUntap() {
 
 	for _, p := range g.Battlefield {
 		if p.Controller == active.PlayerID() {
-			if p.HasKeyword(DoesNotUntapKW) {
-				// Does not untap keyword — skip
+			if p.HasAttr(AttrDoesNotUntap) {
+				// Does not untap — skip
 			} else if p.HasType(TypeLand) && landUntapLimit >= 0 {
 				// Land with untap limit in effect
 				if p.Tapped && landsUntapped < landUntapLimit {
@@ -1264,7 +1265,7 @@ func (g *Game) DoUntap() {
 			} else {
 				p.Tapped = false
 			}
-			p.SummonSick = false
+			p.RevokeBaseAttr(AttrSummonSick)
 		}
 	}
 	g.LandsPlayedThisTurn = 0
@@ -1356,10 +1357,8 @@ func (g *Game) doDeclareAttackers() {
 		declared[id] = true
 	}
 	for _, p := range g.Battlefield {
-		if p.Controller == active.PlayerID() && p.HasType(TypeCreature) &&
-			p.HasKeyword(MustAttack) && !declared[p.ID()] {
-			if !p.Tapped && (!p.SummonSick || p.HasKeyword(Haste)) &&
-				g.Effects.CanAttack(p.ID()) && CanAttackCheck(p, g) {
+		if p.Controller == active.PlayerID() && p.HasAttr(AttrMustAttack) && !declared[p.ID()] {
+			if p.CanDeclareAsAttacker(g) {
 				attackerIDs = append(attackerIDs, p.ID())
 			}
 		}
@@ -1370,18 +1369,7 @@ func (g *Game) doDeclareAttackers() {
 		if atk == nil {
 			continue
 		}
-		// Can't attack if tapped, summoning sick (without haste), or prevented
-		if atk.Tapped {
-			continue
-		}
-		if atk.SummonSick && !atk.HasKeyword(Haste) {
-			continue
-		}
-		if !g.Effects.CanAttack(id) {
-			continue
-		}
-		// Defender: creature with defender can't attack
-		if !CanAttackCheck(atk, g) {
+		if !atk.CanDeclareAsAttacker(g) {
 			continue
 		}
 		// Island Sanctuary: only flying or islandwalk creatures can attack
@@ -1470,10 +1458,7 @@ func (g *Game) doDeclareBlockers() {
 		if blocker == nil || attacker == nil {
 			continue
 		}
-		if blocker.Tapped {
-			continue
-		}
-		if !g.Effects.CanBlockCheck(blocker.ID()) {
+		if !blocker.CanDeclareAsBlocker(g) {
 			continue
 		}
 		if !CanBlock(blocker, attacker, g) {
@@ -1520,7 +1505,6 @@ func (g *Game) DoCleanup() {
 	g.DamageDealtBy = make(map[uuid.UUID]map[uuid.UUID]bool)
 	g.DamageTakenThisTurn = make(map[uuid.UUID]int)
 	g.AttackedThisTurn = make(map[uuid.UUID]bool)
-	g.Effects.ClearBlockPrevention()
 	// Clear damage prevention and Forcefield shields
 	g.Effects.ClearPreventionShields()
 	g.Effects.ClearDamagePreventionRules()
@@ -1639,7 +1623,7 @@ func (g *Game) TapForMana(playerID, permanentID uuid.UUID) error {
 	for _, a := range perm.RuntimeAbilities {
 		if ma, ok := a.(*ManaAbility); ok {
 			// Creatures with mana abilities need to not be summoning sick
-			if perm.HasType(TypeCreature) && perm.SummonSick && !perm.HasKeyword(Haste) {
+			if !perm.CanTapForEffect(g) {
 				return fmt.Errorf("creature has summoning sickness")
 			}
 			perm.Tapped = true
@@ -1668,7 +1652,7 @@ func (g *Game) GetUntappedManaSources(playerID uuid.UUID) []ManaSourceInfo {
 			continue
 		}
 		// Skip summoning-sick creatures without haste
-		if perm.HasType(TypeCreature) && perm.SummonSick && !perm.HasKeyword(Haste) {
+		if !perm.CanTapForEffect(g) {
 			continue
 		}
 		for _, a := range perm.RuntimeAbilities {

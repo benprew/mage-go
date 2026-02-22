@@ -188,11 +188,6 @@ func CanBlock(blocker, attacker *Permanent, g *Game) bool {
 	return true
 }
 
-// CanAttackCheck returns true if a creature is allowed to attack (checks Defender, etc.).
-func CanAttackCheck(perm *Permanent, g *Game) bool {
-	return !perm.HasKeyword(Defender)
-}
-
 // HasLandwalkEvasion returns true if the attacker has a landwalk ability
 // and the defending player controls a land of the matching subtype.
 func HasLandwalkEvasion(attacker *Permanent, defenderID uuid.UUID, g *Game) bool {
