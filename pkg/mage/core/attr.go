@@ -154,28 +154,42 @@ func (a Attr) String() string {
 	}
 }
 
+// landwalkSubtypes maps each landwalk Attr to the land subtype string it cares about.
+// To add new landwalk variants (e.g. Desertwalk for Arabian Nights), add an entry here
+// rather than adding switch cases — no other code needs updating.
+var landwalkSubtypes = map[Attr]string{
+	Forestwalk:   "Forest",
+	Islandwalk:   "Island",
+	Swampwalk:    "Swamp",
+	Mountainwalk: "Mountain",
+	Plainswalk:   "Plains",
+}
+
+// subtypeToLandwalk is the reverse of landwalkSubtypes, built once at init.
+var subtypeToLandwalk map[string]Attr
+
+func init() {
+	subtypeToLandwalk = make(map[string]Attr, len(landwalkSubtypes))
+	for attr, subtype := range landwalkSubtypes {
+		subtypeToLandwalk[subtype] = attr
+	}
+}
+
 // IsLandwalk returns true if this attr is a landwalk ability.
 func (a Attr) IsLandwalk() bool {
-	switch a {
-	case Forestwalk, Islandwalk, Swampwalk, Mountainwalk, Plainswalk:
-		return true
-	}
-	return false
+	_, ok := landwalkSubtypes[a]
+	return ok
 }
 
 // LandwalkSubtype returns the land subtype that this landwalk cares about.
+// Returns "" if a is not a landwalk attr.
 func (a Attr) LandwalkSubtype() string {
-	switch a {
-	case Forestwalk:
-		return "Forest"
-	case Islandwalk:
-		return "Island"
-	case Swampwalk:
-		return "Swamp"
-	case Mountainwalk:
-		return "Mountain"
-	case Plainswalk:
-		return "Plains"
-	}
-	return ""
+	return landwalkSubtypes[a]
+}
+
+// LandwalkAttr returns the Attr for a given land subtype (e.g. "Swamp" → Swampwalk).
+// Returns 0 if no landwalk attr is registered for that subtype.
+// Use this when registering new cards with landwalk from new sets.
+func LandwalkAttr(subtype string) Attr {
+	return subtypeToLandwalk[subtype]
 }

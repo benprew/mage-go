@@ -187,10 +187,8 @@ func (e *targetEffect) Apply(g *Game) error {
 
 // EffectManager manages and applies continuous effects.
 type EffectManager struct {
-	effects                []ContinuousEffect
-	powerBonuses           map[uuid.UUID]int
-	toughBonuses           map[uuid.UUID]int
-	attrDeltas             map[uuid.UUID]map[Attr]int // deltas accumulated during Apply(); written to perm.grantedAttrs
+	effects    []ContinuousEffect
+	attrDeltas map[uuid.UUID]map[Attr]int // deltas accumulated during Apply(); written to perm.grantedAttrs
 	regenerationShields    map[uuid.UUID]int
 	preventionShields      map[uuid.UUID]int
 	preventionRules        []damagePreventionRule
@@ -213,9 +211,7 @@ type EffectManager struct {
 
 func NewEffectManager() *EffectManager {
 	return &EffectManager{
-		powerBonuses:           make(map[uuid.UUID]int),
-		toughBonuses:           make(map[uuid.UUID]int),
-		attrDeltas:             make(map[uuid.UUID]map[Attr]int),
+		attrDeltas: make(map[uuid.UUID]map[Attr]int),
 		regenerationShields:    make(map[uuid.UUID]int),
 		preventionShields:      make(map[uuid.UUID]int),
 		landUntapLimit:         -1,
@@ -651,8 +647,6 @@ func (em *EffectManager) RemoveEndOfCombat() {
 
 // Apply resets computed bonuses and reapplies all active effects in layer order.
 func (em *EffectManager) Apply(g *Game) {
-	em.powerBonuses = make(map[uuid.UUID]int)
-	em.toughBonuses = make(map[uuid.UUID]int)
 	em.attrDeltas = make(map[uuid.UUID]map[Attr]int)
 	em.landUntapLimit = -1
 	em.unlimitedLandPlays = false
@@ -686,8 +680,10 @@ func (em *EffectManager) Apply(g *Game) {
 		p.SubTypeOverride = nil
 		p.BasePTOverride = nil
 		p.ColorOverride = nil
-		// Reset grantedAttrs so each Apply() cycle starts fresh.
+		// Reset grantedAttrs and P/T bonuses so each Apply() cycle starts fresh.
 		p.grantedAttrs = make(map[Attr]int)
+		p.powerBonus = 0
+		p.toughBonus = 0
 	}
 
 	// Remove effects whose source is no longer on the battlefield
@@ -733,13 +729,6 @@ func (em *EffectManager) Apply(g *Game) {
 	}
 }
 
-func (em *EffectManager) PowerBonus(id uuid.UUID) int {
-	return em.powerBonuses[id]
-}
-
-func (em *EffectManager) ToughnessBonus(id uuid.UUID) int {
-	return em.toughBonuses[id]
-}
 
 // SpellCostIncrease returns the additional generic cost for spells of the given color.
 func (em *EffectManager) SpellCostIncrease(c Color) int {

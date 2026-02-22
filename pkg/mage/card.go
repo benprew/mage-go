@@ -337,6 +337,10 @@ type Permanent struct {
 	// grantedAttrs holds effect-cycle deltas (reset and recomputed each Apply() cycle).
 	baseAttrs    map[Attr]int
 	grantedAttrs map[Attr]int
+
+	// P/T bonuses from continuous effects (LayerPT). Reset and recomputed each Apply() cycle.
+	powerBonus int
+	toughBonus int
 }
 
 // NewPermanent creates a permanent from a card.
@@ -528,7 +532,7 @@ func (p *Permanent) CurrentPower(g *Game) int {
 	}
 	// Continuous effects are applied by the EffectManager
 	if g != nil {
-		pw += g.Effects.PowerBonus(p.ID())
+		pw += p.powerBonus
 	}
 	return pw
 }
@@ -543,7 +547,7 @@ func (p *Permanent) CurrentToughness(g *Game) int {
 		tg += ct.ToughnessBoost() * n
 	}
 	if g != nil {
-		tg += g.Effects.ToughnessBonus(p.ID())
+		tg += p.toughBonus
 	}
 	return tg
 }

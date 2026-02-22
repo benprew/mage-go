@@ -12,8 +12,8 @@ import (
 // BoostAttached creates a continuous effect that boosts the attached creature's P/T.
 func BoostAttached(power, toughness int, at AttachType) ContinuousEffect {
 	return AttachedEffect(LayerPT, func(g *Game, source, target *Permanent) error {
-		g.Effects.powerBonuses[target.ID()] += power
-		g.Effects.toughBonuses[target.ID()] += toughness
+		target.powerBonus += power
+		target.toughBonus += toughness
 		return nil
 	})
 }
@@ -92,8 +92,8 @@ func ControlChangeContinuous() ContinuousEffect {
 func BoostAttachedByForestCount() ContinuousEffect {
 	return AttachedEffect(LayerPT, func(g *Game, source, target *Permanent) error {
 		forests := g.CountBattlefield(And(ControlledBy(source.Controller), IsLand, HasSubType("Forest")))
-		g.Effects.powerBonuses[target.ID()] += forests / 2
-		g.Effects.toughBonuses[target.ID()] += (forests + 1) / 2
+		target.powerBonus += forests / 2
+		target.toughBonus += (forests + 1) / 2
 		return nil
 	})
 }
@@ -105,8 +105,8 @@ func BoostAttachedByForestCount() ContinuousEffect {
 // TemporaryBoost creates a continuous effect that boosts a specific creature until end of turn.
 func TemporaryBoost(targetID uuid.UUID, power, toughness int) ContinuousEffect {
 	return TargetEffect(LayerPT, EndOfTurn, targetID, func(g *Game, target *Permanent) error {
-		g.Effects.powerBonuses[target.ID()] += power
-		g.Effects.toughBonuses[target.ID()] += toughness
+		target.powerBonus += power
+		target.toughBonus += toughness
 		return nil
 	})
 }
@@ -224,8 +224,8 @@ func BoostAllCreatures(power, toughness int, filter PermanentFilter) ContinuousE
 			if !filter.Match(p, g) {
 				continue
 			}
-			g.Effects.powerBonuses[p.ID()] += power
-			g.Effects.toughBonuses[p.ID()] += toughness
+			p.powerBonus += power
+			p.toughBonus += toughness
 		}
 		return nil
 	})
@@ -242,8 +242,8 @@ func BoostAllCreaturesIncludingSelf(power, toughness int, filter PermanentFilter
 			if !filter.Match(p, g) {
 				continue
 			}
-			g.Effects.powerBonuses[p.ID()] += power
-			g.Effects.toughBonuses[p.ID()] += toughness
+			p.powerBonus += power
+			p.toughBonus += toughness
 		}
 		return nil
 	})
@@ -259,8 +259,8 @@ func PTEqualsCount(countFilter PermanentFilter) ContinuousEffect {
 			return nil
 		}
 		count := g.CountBattlefield(countFilter)
-		g.Effects.powerBonuses[src.ID()] += count
-		g.Effects.toughBonuses[src.ID()] += count
+		src.powerBonus += count
+		src.toughBonus += count
 		return nil
 	})
 }
@@ -274,8 +274,8 @@ func PTEqualsControlledCount(countFilter PermanentFilter) ContinuousEffect {
 			return nil
 		}
 		count := g.CountBattlefield(And(ControlledBy(src.Controller), countFilter))
-		g.Effects.powerBonuses[src.ID()] += count
-		g.Effects.toughBonuses[src.ID()] += count
+		src.powerBonus += count
+		src.toughBonus += count
 		return nil
 	})
 }
@@ -289,8 +289,8 @@ func PowerEqualsCount(countFilter PermanentFilter) ContinuousEffect {
 			return nil
 		}
 		count := g.CountBattlefield(countFilter)
-		g.Effects.powerBonuses[src.ID()] += count
-		g.Effects.toughBonuses[src.ID()] += count
+		src.powerBonus += count
+		src.toughBonus += count
 		return nil
 	})
 }
@@ -326,8 +326,8 @@ func BoostControlledCreatures(power, toughness int, filter PermanentFilter) Cont
 			if !filter.Match(p, g) {
 				continue
 			}
-			g.Effects.powerBonuses[p.ID()] += power
-			g.Effects.toughBonuses[p.ID()] += toughness
+			p.powerBonus += power
+			p.toughBonus += toughness
 		}
 		return nil
 	})
@@ -435,8 +435,8 @@ func BoostSelf(power, toughness int, condition SourceCondition) ContinuousEffect
 		if condition != nil && !condition(src, g) {
 			return nil
 		}
-		g.Effects.powerBonuses[src.ID()] += power
-		g.Effects.toughBonuses[src.ID()] += toughness
+		src.powerBonus += power
+		src.toughBonus += toughness
 		return nil
 	})
 }
