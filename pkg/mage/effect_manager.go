@@ -204,7 +204,6 @@ type EffectManager struct {
 	sanctuaryActive        map[uuid.UUID]bool      // player -> if true, only flying/islandwalk can attack them
 	lichActive             map[uuid.UUID]uuid.UUID // player -> source permanent ID of active Lich
 	skipNextDraw           map[uuid.UUID]bool      // player -> if true, skip normal draw in draw step
-	preventBlock           map[uuid.UUID]bool      // permanent -> can't block this turn (Raging River)
 	manaConversion         map[Color]Color         // from color -> to color (Sunglasses of Urza)
 	bodyguard              map[uuid.UUID]uuid.UUID // controller -> bodyguard permanent ID (Veteran Bodyguard)
 	playerDamageRedirect   map[uuid.UUID]uuid.UUID // controller -> creature that absorbs ALL damage to player
@@ -229,7 +228,6 @@ func NewEffectManager() *EffectManager {
 		sanctuaryActive:        make(map[uuid.UUID]bool),
 		lichActive:             make(map[uuid.UUID]uuid.UUID),
 		skipNextDraw:           make(map[uuid.UUID]bool),
-		preventBlock:           make(map[uuid.UUID]bool),
 		manaConversion:         make(map[Color]Color),
 		bodyguard:              make(map[uuid.UUID]uuid.UUID),
 		playerDamageRedirect:   make(map[uuid.UUID]uuid.UUID),
@@ -310,20 +308,6 @@ func (em *EffectManager) ShouldSkipDraw(playerID uuid.UUID) bool {
 	return false
 }
 
-// PreventFromBlocking prevents a creature from blocking this turn (Raging River).
-func (em *EffectManager) PreventFromBlocking(permID uuid.UUID) {
-	em.preventBlock[permID] = true
-}
-
-// CanBlock returns true if the creature is not prevented from blocking.
-func (em *EffectManager) CanBlockCheck(permID uuid.UUID) bool {
-	return !em.preventBlock[permID]
-}
-
-// ClearBlockPrevention clears all block prevention.
-func (em *EffectManager) ClearBlockPrevention() {
-	em.preventBlock = make(map[uuid.UUID]bool)
-}
 
 // SetManaConversion sets a mana color conversion (e.g. Red→White for Sunglasses of Urza).
 func (em *EffectManager) SetManaConversion(from, to Color) {

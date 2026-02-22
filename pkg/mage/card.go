@@ -590,8 +590,7 @@ func (p *Permanent) CanDeclareAsAttacker(g *Game) bool {
 // CanDeclareAsBlocker returns true if this permanent may be declared as a blocker.
 func (p *Permanent) CanDeclareAsBlocker(g *Game) bool {
 	return p.HasAttr(AttrCanBlock) &&
-		!p.Tapped &&
-		g.Effects.CanBlockCheck(p.ID())
+		!p.Tapped
 }
 
 // CanTapForEffect returns true if this permanent may tap to activate an ability

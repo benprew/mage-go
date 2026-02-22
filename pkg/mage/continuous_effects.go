@@ -160,6 +160,18 @@ func TemporaryAnimateUntilEndOfCombat(targetID uuid.UUID, power, toughness int) 
 	return temporaryAnimate(targetID, power, toughness, EndOfCombat)
 }
 
+// PreventBlockingUntilEndOfCombat creates an EndOfCombat-scoped continuous effect
+// that revokes AttrCanBlock from a specific creature. Re-fires on each Apply() cycle
+// (surviving grantedAttrs reset) and expires at EndCombat via RemoveEndOfCombat().
+// Use this instead of the imperative preventBlock map so block-prevention goes through
+// the attr system like every other capability restriction.
+func PreventBlockingUntilEndOfCombat(permID uuid.UUID) ContinuousEffect {
+	return TargetEffect(LayerAbility, EndOfCombat, permID, func(g *Game, target *Permanent) error {
+		g.Effects.RevokeAttr(target.ID(), AttrCanBlock)
+		return nil
+	})
+}
+
 // ---------------------------------------------------------------------------
 // FuncContinuousEffect-based effects (source on battlefield)
 // ---------------------------------------------------------------------------

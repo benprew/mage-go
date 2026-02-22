@@ -118,13 +118,16 @@ func TestCreature_CannotDeclareAsBlocker_WhenTapped(t *testing.T) {
 	}
 }
 
-// TestCreature_CannotDeclareAsBlocker_WhenBlockPrevented verifies prevention.
+// TestCreature_CannotDeclareAsBlocker_WhenBlockPrevented verifies prevention via attr.
+// PreventBlockingUntilEndOfCombat revokes AttrCanBlock via grantedAttrs; simulate that
+// by directly writing grantedAttrs (the continuous effect does this each Apply cycle).
 func TestCreature_CannotDeclareAsBlocker_WhenBlockPrevented(t *testing.T) {
 	g := makeTestGame()
 	card := NewCreature("Test", "{2}", 2, 2)
 	p := NewPermanent(card, uuid.New())
 	g.Battlefield = append(g.Battlefield, p)
-	g.Effects.PreventFromBlocking(p.ID())
+	// Simulate RevokeAttr(AttrCanBlock): net = base(1) + granted(-1) = 0 → HasAttr false
+	p.grantedAttrs[AttrCanBlock] = -1
 	if p.CanDeclareAsBlocker(g) {
 		t.Error("expected CanDeclareAsBlocker false when blocking prevented")
 	}

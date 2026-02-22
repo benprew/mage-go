@@ -1505,7 +1505,6 @@ func (g *Game) DoCleanup() {
 	g.DamageDealtBy = make(map[uuid.UUID]map[uuid.UUID]bool)
 	g.DamageTakenThisTurn = make(map[uuid.UUID]int)
 	g.AttackedThisTurn = make(map[uuid.UUID]bool)
-	g.Effects.ClearBlockPrevention()
 	// Clear damage prevention and Forcefield shields
 	g.Effects.ClearPreventionShields()
 	g.Effects.ClearDamagePreventionRules()
