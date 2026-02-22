@@ -461,7 +461,7 @@ func (s *HeuristicStrategy) autoSelectTargets(p mage.Player, g *mage.Game, card 
 					for _, id := range possible {
 						perm := g.FindPermanent(id)
 						if perm != nil && perm.Controller == playerID && perm.HasType(core.TypeCreature) {
-							score := threatScore(perm, g)
+							score := evalCreature(perm)
 							if score > ownBestScore {
 								ownBestScore = score
 								ownBest = id
@@ -492,8 +492,8 @@ func (s *HeuristicStrategy) autoSelectTargets(p mage.Player, g *mage.Game, card 
 				for _, ab := range card.Abilities() {
 					if sa, ok := ab.(*mage.SpellAbility); ok {
 						for _, e := range sa.Effects() {
-							if d := e.Properties().Damage; d > 0 {
-								spellDamage = d
+							if dv := e.Properties().DamageValue; dv != nil {
+								spellDamage = dv.Resolve(g, card.ID(), playerID)
 							}
 						}
 					}
@@ -506,7 +506,7 @@ func (s *HeuristicStrategy) autoSelectTargets(p mage.Player, g *mage.Game, card 
 						perm := g.FindPermanent(id)
 						if perm != nil && perm.Controller == opponent.PlayerID() && perm.HasType(core.TypeCreature) {
 							if spellDamage >= perm.CurrentToughness(g) {
-								tpm := ThreatPerMana(perm, g)
+								tpm := ThreatPerMana(perm)
 								if tpm > bestLethalTPM {
 									bestLethalTPM = tpm
 									bestLethalID = id
@@ -524,7 +524,7 @@ func (s *HeuristicStrategy) autoSelectTargets(p mage.Player, g *mage.Game, card 
 				for _, id := range possible {
 					perm := g.FindPermanent(id)
 					if perm != nil && perm.Controller != playerID && perm.HasType(core.TypeCreature) {
-						score := threatScore(perm, g)
+						score := evalCreature(perm)
 						if score > bestScore {
 							bestScore = score
 							bestID = id
@@ -546,7 +546,7 @@ func (s *HeuristicStrategy) autoSelectTargets(p mage.Player, g *mage.Game, card 
 					for _, id := range possible {
 						perm := g.FindPermanent(id)
 						if perm != nil && perm.Controller == playerID {
-							score := threatScore(perm, g)
+							score := evalCreature(perm)
 							if score > ownBestScore {
 								ownBestScore = score
 								ownBest = id
@@ -563,7 +563,7 @@ func (s *HeuristicStrategy) autoSelectTargets(p mage.Player, g *mage.Game, card 
 				for _, id := range possible {
 					perm := g.FindPermanent(id)
 					if perm != nil && perm.Controller != playerID {
-						score := threatScore(perm, g)
+						score := evalCreature(perm)
 						if score > bestScore {
 							bestScore = score
 							bestID = id
@@ -780,7 +780,7 @@ type AdaptiveStrategy struct {
 }
 
 func (s *AdaptiveStrategy) active(p mage.Player, g *mage.Game) AIStrategy {
-	if BoardScore(p.PlayerID(), g) >= 0 {
+	if DefaultEvaluator(g, p.PlayerID()) >= 0 {
 		return s.Aggressive
 	}
 	return s.Defensive

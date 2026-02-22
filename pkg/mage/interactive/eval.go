@@ -40,12 +40,12 @@ func BoardScore(playerID uuid.UUID, g *mage.Game) int {
 // ThreatPerMana returns a permanent's threat-per-mana-spent ratio.
 // Returns 0 if the permanent has CMC 0 (tokens, lands).
 // Used by autoSelectTargets to prefer the most mana-efficient threat.
-func ThreatPerMana(perm *mage.Permanent, g *mage.Game) float64 {
+func ThreatPerMana(perm *mage.Permanent) float64 {
 	cmc := perm.Card.ManaCost().CMC()
 	if cmc == 0 {
 		return 0
 	}
-	return float64(threatScore(perm, g)) / float64(cmc)
+	return float64(evalCreature(perm)) / float64(cmc)
 }
 
 // spellIsWorthless returns true if the spell requires at least one target but
@@ -75,8 +75,8 @@ func spellIsWorthless(card mage.Card, p mage.Player, g *mage.Game) bool {
 //   - Creature:          basePower*2 + baseToughness (fallback: CMC)
 //   - DrawCount > 0:     +DrawCount*3
 //   - Damage > 0, detriment: +Damage, +2 per opponent creature it would kill
-//   - Mass == true:      +20 if behind on board (BoardScore < 0), -10 if ahead
-//   - Detriment, targeted, no damage: +threatScore of best reachable opponent permanent
+//   - Mass == true:      +20 if behind on board (DefaultEvaluator < 0), -10 if ahead
+//   - Detriment, targeted, no damage: +evalCreature score of best reachable opponent permanent
 //   - Fallback:          CMC
 func spellValue(card mage.Card, p mage.Player, g *mage.Game) int {
 	playerID := p.PlayerID()
@@ -109,14 +109,15 @@ func spellValue(card mage.Card, p mage.Player, g *mage.Game) int {
 				found = true
 			}
 
-			if props.Damage > 0 && props.Outcome == mage.OutcomeDetriment {
-				score += props.Damage
+			if props.DamageValue != nil && props.Outcome == mage.OutcomeDetriment {
+				dmg := props.DamageValue.Resolve(g, card.ID(), playerID)
+				score += dmg
 				// Bonus for lethal hits against opponent creatures
 				opponent := g.GetOpponent(playerID)
 				if opponent != nil {
 					for _, perm := range g.Battlefield {
 						if perm.Controller == opponent.PlayerID() && perm.HasType(core.TypeCreature) {
-							if props.Damage >= perm.CurrentToughness(g) {
+							if dmg >= perm.CurrentToughness(g) {
 								score += 2
 								break // count the lethality bonus once
 							}
@@ -127,7 +128,7 @@ func spellValue(card mage.Card, p mage.Player, g *mage.Game) int {
 			}
 
 			if props.Mass {
-				if BoardScore(playerID, g) < 0 {
+				if DefaultEvaluator(g, playerID) < 0 {
 					score += 20
 				} else {
 					score -= 10
@@ -136,13 +137,13 @@ func spellValue(card mage.Card, p mage.Player, g *mage.Game) int {
 			}
 
 			// Pure targeted removal (destroy, exile, bounce, etc.): value by best target
-			if props.Outcome == mage.OutcomeDetriment && !props.Mass && props.Damage == 0 {
+			if props.Outcome == mage.OutcomeDetriment && !props.Mass && props.DamageValue == nil {
 				opponent := g.GetOpponent(playerID)
 				if opponent != nil {
 					bestTS := 0
 					for _, perm := range g.Battlefield {
 						if perm.Controller == opponent.PlayerID() {
-							ts := threatScore(perm, g)
+							ts := evalCreature(perm)
 							if ts > bestTS {
 								bestTS = ts
 							}
