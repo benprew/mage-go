@@ -108,7 +108,7 @@ func (tg *TestGame) AddCard(zone core.Zone, p PlayerRef, name string, count ...i
 		switch zone {
 		case core.ZoneBattlefield:
 			perm := tg.Game.PutOnBattlefield(card, playerID)
-			perm.SummonSick = false
+			perm.RevokeBaseAttr(core.AttrSummonSick)
 			lastID = perm.ID()
 		case core.ZoneHand:
 			player.AddToHand(card)

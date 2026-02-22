@@ -85,7 +85,7 @@ func evalCreature(perm *mage.Permanent) int {
 	if perm.Tapped {
 		score = score * 2 / 3
 	}
-	if perm.SummonSick && !perm.HasKeyword(core.Haste) {
+	if perm.HasAttr(core.AttrSummonSick) && !perm.HasAttr(core.Haste) {
 		score = score / 2
 	}
 	score += keywordBonus(perm)

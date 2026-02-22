@@ -367,16 +367,7 @@ func (s *HeuristicStrategy) Attackers(p mage.Player, g *mage.Game) []uuid.UUID {
 		if perm.Controller != p.PlayerID() {
 			continue
 		}
-		if !perm.HasType(core.TypeCreature) {
-			continue
-		}
-		if perm.Tapped || (perm.SummonSick && !perm.HasKeyword(core.Haste)) {
-			continue
-		}
-		if !g.Effects.CanAttack(perm.ID()) {
-			continue
-		}
-		if !mage.CanAttackCheck(perm, g) {
+		if !perm.CanDeclareAsAttacker(g) {
 			continue
 		}
 		if s.Personality.AttackAll || profitableToAttack(perm, g, opponentID) {
@@ -391,7 +382,7 @@ func (s *HeuristicStrategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAs
 
 	var available []*mage.Permanent
 	for _, perm := range g.Battlefield {
-		if perm.Controller != p.PlayerID() || !perm.HasType(core.TypeCreature) || perm.Tapped {
+		if perm.Controller != p.PlayerID() || !perm.CanDeclareAsBlocker(g) {
 			continue
 		}
 		available = append(available, perm)
