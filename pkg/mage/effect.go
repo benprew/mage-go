@@ -12,27 +12,31 @@ import (
 type Effect interface {
 	Apply(g *Game, sourceID uuid.UUID, controller uuid.UUID, targets []uuid.UUID) error
 	Text() string
+	Properties() EffectProperties
 }
 
 // funcEffect wraps an anonymous function as an Effect. Use FuncEffect to create
 // one-off effects inline in card definitions without needing a dedicated struct.
 type funcEffect struct {
-	text string
-	fn   func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error
+	text  string
+	props EffectProperties
+	fn    func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error
 }
 
 // FuncEffect creates an Effect from an anonymous function. This is ideal for
 // card-specific effects that are used by only one card and don't warrant a
 // dedicated type. The text parameter is used for Text() (rules text display).
-func FuncEffect(text string, fn func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error) Effect {
-	return &funcEffect{text: text, fn: fn}
+// The props parameter allows callers to declare AI-visible properties (outcome, damage, etc.).
+func FuncEffect(text string, props EffectProperties, fn func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error) Effect {
+	return &funcEffect{text: text, props: props, fn: fn}
 }
 
 func (e *funcEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	return e.fn(g, sourceID, controller, targets)
 }
 
-func (e *funcEffect) Text() string { return e.text }
+func (e *funcEffect) Text() string                   { return e.text }
+func (e *funcEffect) Properties() EffectProperties   { return e.props }
 
 // gainLifeEffect gains life for the controller.
 type gainLifeEffect struct {
@@ -50,7 +54,7 @@ func (e *gainLifeEffect) Apply(g *Game, _, controller uuid.UUID, _ []uuid.UUID) 
 		return ErrPlayerNotFound
 	}
 	g.PlayerGainLife(p, e.amount)
-	if !g.Effects.IsLichActive(controller) {
+	if !g.Effects.IsLichActive(g, controller) {
 		g.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: controller, Amount: e.amount})
 	}
 	return nil
@@ -58,6 +62,9 @@ func (e *gainLifeEffect) Apply(g *Game, _, controller uuid.UUID, _ []uuid.UUID) 
 
 func (e *gainLifeEffect) Text() string {
 	return fmt.Sprintf("gain %d life", e.amount)
+}
+func (e *gainLifeEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
 // addCountersEffect adds counters to the source or a target permanent.
@@ -102,6 +109,7 @@ func (e *addCountersEffect) Text() string {
 	}
 	return fmt.Sprintf("put %d %s counter(s) on target", n, e.ct)
 }
+func (e *addCountersEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // cloneTargetEffect copies target permanent's characteristics onto the source
 // card. If additionalTypes are provided, they are added after cloning (e.g.
@@ -135,6 +143,7 @@ func (e *cloneTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targe
 func (e *cloneTargetEffect) Text() string {
 	return "enters the battlefield as a copy of target permanent"
 }
+func (e *cloneTargetEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // removeCountersFromSourceEffect removes counters from the source permanent.
 type removeCountersFromSourceEffect struct {
@@ -159,21 +168,65 @@ func (e *removeCountersFromSourceEffect) Apply(g *Game, sourceID, controller uui
 func (e *removeCountersFromSourceEffect) Text() string {
 	return fmt.Sprintf("remove %d %s counter(s) from it", e.amount, e.ct)
 }
+func (e *removeCountersFromSourceEffect) Properties() EffectProperties { return EffectProperties{} }
+
+// Outcome describes whether an effect is beneficial or detrimental to its primary target.
+// The AI uses this to choose appropriate targets.
+type Outcome int
+
+const (
+	OutcomeUnknown   Outcome = iota // context-dependent or not classifiable
+	OutcomeBenefit                  // good for the target (buff, heal, protect, untap)
+	OutcomeDetriment                // bad for the target (damage, destroy, discard, steal)
+)
+
+// EffectProperties describes the AI-visible shape of an Effect.
+// Effects declare their own properties at construction time; the AI reads
+// them without type-switching.
+type EffectProperties struct {
+	Outcome   Outcome // benefit / detriment / unknown (from target's perspective)
+	Damage    int     // fixed damage dealt; 0 for X-spells or non-damage effects
+	DrawCount int     // fixed cards drawn; 0 for X or non-draw effects
+	Mass      bool    // true if effect is board-wide (wrath, earthquake, etc.)
+}
 
 // IsDamageEffect returns true if the given effect is a damage-dealing effect.
 func IsDamageEffect(e Effect) bool {
-	_, ok := e.(*dealDamageEffect)
-	return ok
+	return e.Properties().Damage > 0
+}
+
+// EffectOutcome classifies a single effect from the primary target's perspective.
+func EffectOutcome(e Effect) Outcome {
+	return e.Properties().Outcome
+}
+
+// SpellOutcome returns the dominant outcome of a spell's effect list.
+// It returns the first non-unknown outcome found, or OutcomeUnknown if none is classifiable.
+func SpellOutcome(effects []Effect) Outcome {
+	for _, e := range effects {
+		if o := EffectOutcome(e); o != OutcomeUnknown {
+			return o
+		}
+	}
+	return OutcomeUnknown
 }
 
 // dealDamageEffect deals damage to a target (creature, player, or planeswalker).
 type dealDamageEffect struct {
+	props  EffectProperties
 	amount ValueSource
 }
 
 // DealDamage creates an effect that deals damage to a target.
 func DealDamage(amount ValueSource) Effect {
-	return &dealDamageEffect{amount: amount}
+	damage := 0
+	if fv, ok := amount.(fixedValue); ok {
+		damage = fv.n
+	}
+	return &dealDamageEffect{
+		props:  EffectProperties{Outcome: OutcomeDetriment, Damage: damage},
+		amount: amount,
+	}
 }
 
 func (e *dealDamageEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -216,6 +269,7 @@ func (e *dealDamageEffect) Text() string {
 	}
 	return fmt.Sprintf("deal %d damage to target", e.amount.Resolve(nil, uuid.Nil, uuid.Nil))
 }
+func (e *dealDamageEffect) Properties() EffectProperties { return e.props }
 
 // destroyTargetEffect destroys the target permanent.
 type destroyTargetEffect struct{}
@@ -241,6 +295,9 @@ func (e *destroyTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, tar
 }
 
 func (e *destroyTargetEffect) Text() string { return "destroy target" }
+func (e *destroyTargetEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
 
 // returnFromGraveyardEffect returns a target creature from graveyard to battlefield.
 type returnFromGraveyardEffect struct{}
@@ -270,6 +327,9 @@ func (e *returnFromGraveyardEffect) Apply(g *Game, sourceID, controller uuid.UUI
 func (e *returnFromGraveyardEffect) Text() string {
 	return "return target creature card from your graveyard to the battlefield"
 }
+func (e *returnFromGraveyardEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
 
 // returnSourceToHandEffect returns the source card from graveyard to hand.
 type returnSourceToHandEffect struct{}
@@ -296,6 +356,7 @@ func (e *returnSourceToHandEffect) Apply(g *Game, sourceID, controller uuid.UUID
 func (e *returnSourceToHandEffect) Text() string {
 	return "return this card to its owner's hand"
 }
+func (e *returnSourceToHandEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // DestroyAllCreatures destroys all creatures (board wipe).
 // This is a convenience alias for DestroyAllMatching with the IsCreature filter.
@@ -324,6 +385,7 @@ func (e *compositeEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets
 }
 
 func (e *compositeEffect) Text() string { return e.text }
+func (e *compositeEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // attachToTargetEffect attaches the source (aura/equipment) to the target.
 type attachToTargetEffect struct{}
@@ -342,6 +404,7 @@ func (e *attachToTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, ta
 }
 
 func (e *attachToTargetEffect) Text() string { return "attach to target" }
+func (e *attachToTargetEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // returnToHandTargetEffect bounces a target permanent to its owner's hand.
 type returnToHandTargetEffect struct{}
@@ -375,6 +438,9 @@ func (e *returnToHandTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID
 func (e *returnToHandTargetEffect) Text() string {
 	return "return target permanent to its owner's hand"
 }
+func (e *returnToHandTargetEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
 
 // returnFromGraveyardToHandTargetEffect returns a target card from graveyard to hand.
 type returnFromGraveyardToHandTargetEffect struct{}
@@ -404,6 +470,9 @@ func (e *returnFromGraveyardToHandTargetEffect) Apply(g *Game, sourceID, control
 func (e *returnFromGraveyardToHandTargetEffect) Text() string {
 	return "return target card from your graveyard to your hand"
 }
+func (e *returnFromGraveyardToHandTargetEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
 
 // boostMatchingUntilEndOfTurnEffect boosts the P/T of all creatures matching a predicate until end of turn
 type boostMatchingUntilEndOfTurnEffect struct {
@@ -432,6 +501,9 @@ func (e *boostMatchingUntilEndOfTurnEffect) Apply(g *Game, sourceID uuid.UUID, c
 
 func (e *boostMatchingUntilEndOfTurnEffect) Text() string {
 	return "XXX populate filter predicate text"
+}
+func (e *boostMatchingUntilEndOfTurnEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit, Mass: true}
 }
 
 // boostUntilEndOfTurnEffect boosts a creature's P/T until end of turn.
@@ -481,6 +553,9 @@ func (e *boostUntilEndOfTurnEffect) Text() string {
 	}
 	return fmt.Sprintf("target creature gets +%d/+%d until end of turn", p, t)
 }
+func (e *boostUntilEndOfTurnEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
 
 // markDestroyAtEOTAfterNActivationsEffect tracks pump activations using Charge
 // counters. When the count reaches the threshold, sets DestroyAtEndOfTurn.
@@ -514,6 +589,9 @@ func (e *markDestroyAtEOTAfterNActivationsEffect) Apply(g *Game, sourceID, contr
 
 func (e *markDestroyAtEOTAfterNActivationsEffect) Text() string {
 	return fmt.Sprintf("if activated %d+ times, destroy at end of turn", e.threshold)
+}
+func (e *markDestroyAtEOTAfterNActivationsEffect) Properties() EffectProperties {
+	return EffectProperties{}
 }
 
 // destroyTargetPermanentEffect destroys a target permanent matching a filter.
@@ -552,6 +630,9 @@ func (e *destroyTargetPermanentEffect) Apply(g *Game, sourceID, controller uuid.
 }
 
 func (e *destroyTargetPermanentEffect) Text() string { return e.text }
+func (e *destroyTargetPermanentEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
 
 // DestroyAllLands destroys all lands (Armageddon).
 // This is a convenience alias for DestroyAllMatching with the IsLand filter.
@@ -586,6 +667,9 @@ func (e *destroyAllMatchingEffect) Apply(g *Game, sourceID, controller uuid.UUID
 }
 
 func (e *destroyAllMatchingEffect) Text() string { return e.text }
+func (e *destroyAllMatchingEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment, Mass: true}
+}
 
 // tapTargetEffect taps a target permanent.
 type tapTargetEffect struct{}
@@ -608,6 +692,9 @@ func (e *tapTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets
 }
 
 func (e *tapTargetEffect) Text() string { return "tap target permanent" }
+func (e *tapTargetEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
 
 // untapTargetEffect untaps a target permanent.
 type untapTargetEffect struct{}
@@ -630,6 +717,9 @@ func (e *untapTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targe
 }
 
 func (e *untapTargetEffect) Text() string { return "untap target permanent" }
+func (e *untapTargetEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
 
 // discardRandomEffect forces an opponent to discard a card at random.
 type discardRandomEffect struct {
@@ -668,6 +758,9 @@ func (e *discardRandomEffect) Apply(g *Game, sourceID, controller uuid.UUID, tar
 func (e *discardRandomEffect) Text() string {
 	return fmt.Sprintf("discard %d card(s) at random", e.amount)
 }
+func (e *discardRandomEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
 
 // discardCardsEffect forces a target player to discard cards.
 type discardCardsEffect struct {
@@ -705,6 +798,9 @@ func (e *discardCardsEffect) Text() string {
 	}
 	return fmt.Sprintf("target player discards %d card(s)", e.amount.Resolve(nil, uuid.Nil, uuid.Nil))
 }
+func (e *discardCardsEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
 
 // addManaEffect adds mana to the controller's pool.
 type addManaEffect struct {
@@ -729,6 +825,7 @@ func (e *addManaEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets [
 func (e *addManaEffect) Text() string {
 	return fmt.Sprintf("add %d %s mana", e.amount, e.color)
 }
+func (e *addManaEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // addAnyManaEffect adds mana of any one color to the controller's pool.
 type addAnyManaEffect struct {
@@ -753,15 +850,24 @@ func (e *addAnyManaEffect) Apply(g *Game, sourceID, controller uuid.UUID, target
 func (e *addAnyManaEffect) Text() string {
 	return fmt.Sprintf("add %d mana of any one color", e.amount)
 }
+func (e *addAnyManaEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // drawCardsTargetEffect draws cards for a target player (or controller as fallback).
 type drawCardsTargetEffect struct {
+	props  EffectProperties
 	amount ValueSource
 }
 
 // DrawCards creates an effect that draws cards for a target player (or controller as fallback).
 func DrawCards(amount ValueSource) Effect {
-	return &drawCardsTargetEffect{amount: amount}
+	drawCount := 0
+	if fv, ok := amount.(fixedValue); ok {
+		drawCount = fv.n
+	}
+	return &drawCardsTargetEffect{
+		props:  EffectProperties{Outcome: OutcomeBenefit, DrawCount: drawCount},
+		amount: amount,
+	}
 }
 
 func (e *drawCardsTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -788,15 +894,24 @@ func (e *drawCardsTargetEffect) Text() string {
 	}
 	return fmt.Sprintf("target player draws %d card(s)", e.amount.Resolve(nil, uuid.Nil, uuid.Nil))
 }
+func (e *drawCardsTargetEffect) Properties() EffectProperties { return e.props }
 
 // drawCardsActivePlayerEffect draws cards for the active player (e.g. Howling Mine).
 type drawCardsActivePlayerEffect struct {
+	props  EffectProperties
 	amount ValueSource
 }
 
 // DrawCardsActivePlayer creates an effect that draws cards for the active player.
 func DrawCardsActivePlayer(amount ValueSource) Effect {
-	return &drawCardsActivePlayerEffect{amount: amount}
+	drawCount := 0
+	if fv, ok := amount.(fixedValue); ok {
+		drawCount = fv.n
+	}
+	return &drawCardsActivePlayerEffect{
+		props:  EffectProperties{Outcome: OutcomeBenefit, DrawCount: drawCount},
+		amount: amount,
+	}
 }
 
 func (e *drawCardsActivePlayerEffect) Apply(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
@@ -814,6 +929,7 @@ func (e *drawCardsActivePlayerEffect) Apply(g *Game, sourceID, _ uuid.UUID, _ []
 func (e *drawCardsActivePlayerEffect) Text() string {
 	return "that player draws an additional card"
 }
+func (e *drawCardsActivePlayerEffect) Properties() EffectProperties { return e.props }
 
 // exileTargetEffect exiles a target permanent (removes from game).
 type exileTargetEffect struct{}
@@ -836,6 +952,9 @@ func (e *exileTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targe
 }
 
 func (e *exileTargetEffect) Text() string { return "exile target permanent" }
+func (e *exileTargetEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
 
 // gainLifeTargetEffect gains life for a target player (or controller as fallback).
 type gainLifeTargetEffect struct {
@@ -860,7 +979,7 @@ func (e *gainLifeTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, ta
 	}
 	amount := e.amount.Resolve(g, sourceID, controller)
 	g.PlayerGainLife(targetPlayer, amount)
-	if !g.Effects.IsLichActive(targetPlayer.PlayerID()) {
+	if !g.Effects.IsLichActive(g, targetPlayer.PlayerID()) {
 		g.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: targetPlayer.PlayerID(), Amount: amount})
 	}
 	return nil
@@ -871,6 +990,9 @@ func (e *gainLifeTargetEffect) Text() string {
 		return "target player gains X life"
 	}
 	return fmt.Sprintf("target player gains %d life", e.amount.Resolve(nil, uuid.Nil, uuid.Nil))
+}
+func (e *gainLifeTargetEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
 // loseLifeEffect causes the controller to lose life.
@@ -896,16 +1018,27 @@ func (e *loseLifeEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets 
 func (e *loseLifeEffect) Text() string {
 	return fmt.Sprintf("you lose %d life", e.amount)
 }
+func (e *loseLifeEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
 
 // dealDamageToAllCreaturesEffect deals damage to all creatures matching an optional filter.
 type dealDamageToAllCreaturesEffect struct {
+	props  EffectProperties
 	amount ValueSource
 	filter PermanentFilter
 }
 
 // DealDamageToAllCreatures creates an effect that deals damage to all matching creatures.
 func DealDamageToAllCreatures(amount ValueSource, filter PermanentFilter) Effect {
-	return &dealDamageToAllCreaturesEffect{amount: amount, filter: filter}
+	damage := 0
+	if fv, ok := amount.(fixedValue); ok {
+		damage = fv.n
+	}
+	return &dealDamageToAllCreaturesEffect{
+		props:  EffectProperties{Outcome: OutcomeDetriment, Damage: damage, Mass: true},
+		amount: amount, filter: filter,
+	}
 }
 
 func (e *dealDamageToAllCreaturesEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -929,6 +1062,7 @@ func (e *dealDamageToAllCreaturesEffect) Text() string {
 	}
 	return fmt.Sprintf("deal %d damage to each creature", e.amount.Resolve(nil, uuid.Nil, uuid.Nil))
 }
+func (e *dealDamageToAllCreaturesEffect) Properties() EffectProperties { return e.props }
 
 // dealDamageToPlayersEffect deals damage to players selected by a PlayerSelector.
 type dealDamageToPlayersEffect struct {
@@ -959,6 +1093,9 @@ func (e *dealDamageToPlayersEffect) Apply(g *Game, sourceID, controller uuid.UUI
 func (e *dealDamageToPlayersEffect) Text() string {
 	return fmt.Sprintf("deal %s damage to %s", e.amount.Text(), e.selector.Text())
 }
+func (e *dealDamageToPlayersEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
 
 // sacrificeSourceEffect sacrifices the source permanent.
 type sacrificeSourceEffect struct{}
@@ -978,6 +1115,7 @@ func (e *sacrificeSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, t
 }
 
 func (e *sacrificeSourceEffect) Text() string { return "sacrifice this permanent" }
+func (e *sacrificeSourceEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // searchLibraryEffect lets the controller search their library and put a card in hand.
 type searchLibraryEffect struct{}
@@ -1016,6 +1154,9 @@ func (e *searchLibraryEffect) Apply(g *Game, sourceID, controller uuid.UUID, tar
 func (e *searchLibraryEffect) Text() string {
 	return "search your library for a card and put it into your hand"
 }
+func (e *searchLibraryEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
 
 // counterSpellEffect counters a target spell on the stack.
 type counterSpellEffect struct{}
@@ -1034,6 +1175,9 @@ func (e *counterSpellEffect) Apply(g *Game, sourceID, controller uuid.UUID, targ
 }
 
 func (e *counterSpellEffect) Text() string { return "counter target spell" }
+func (e *counterSpellEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
 
 // preventAllCombatDamageEffect prevents all combat damage this turn (Fog).
 type preventAllCombatDamageEffect struct{}
@@ -1044,12 +1188,15 @@ func PreventAllCombatDamage() Effect {
 }
 
 func (e *preventAllCombatDamageEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	g.PreventCombatDamage = true
+	g.Effects.SetPreventCombatDamage()
 	return nil
 }
 
 func (e *preventAllCombatDamageEffect) Text() string {
 	return "prevent all combat damage that would be dealt this turn"
+}
+func (e *preventAllCombatDamageEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
 // extraTurnEffect gives the controller an extra turn.
@@ -1066,6 +1213,9 @@ func (e *extraTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets
 }
 
 func (e *extraTurnEffect) Text() string { return "take an extra turn after this one" }
+func (e *extraTurnEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
 
 // controlChangeTargetEffect gains control of a target permanent.
 type controlChangeTargetEffect struct{}
@@ -1088,6 +1238,9 @@ func (e *controlChangeTargetEffect) Apply(g *Game, sourceID, controller uuid.UUI
 }
 
 func (e *controlChangeTargetEffect) Text() string { return "gain control of target permanent" }
+func (e *controlChangeTargetEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
 
 // grantKeywordUntilEndOfTurnEffect grants a keyword to the source or a target
 // creature until end of turn.
@@ -1127,6 +1280,9 @@ func (e *grantKeywordUntilEndOfTurnEffect) Text() string {
 	}
 	return fmt.Sprintf("target creature gains %s until end of turn", e.keyword)
 }
+func (e *grantKeywordUntilEndOfTurnEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
 
 // regenerateSourceEffect sets a regeneration shield on the source.
 type regenerateSourceEffect struct{}
@@ -1146,6 +1302,9 @@ func (e *regenerateSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, 
 }
 
 func (e *regenerateSourceEffect) Text() string { return "Regenerate ~" }
+func (e *regenerateSourceEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
 
 // regenerateTargetEffect sets a regeneration shield on the target.
 type regenerateTargetEffect struct{}
@@ -1168,6 +1327,9 @@ func (e *regenerateTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, 
 }
 
 func (e *regenerateTargetEffect) Text() string { return "Regenerate target creature" }
+func (e *regenerateTargetEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
 
 // preventDamageToTargetEffect sets a damage prevention shield on a target.
 type preventDamageToTargetEffect struct {
@@ -1198,6 +1360,9 @@ func (e *preventDamageToTargetEffect) Text() string {
 		return "Prevent the next X damage to target"
 	}
 	return fmt.Sprintf("Prevent the next %d damage to target", e.amount.Resolve(nil, uuid.Nil, uuid.Nil))
+}
+func (e *preventDamageToTargetEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
 // sacrificeOrDamageEffect sacrifices a creature you control, or deals damage
@@ -1234,6 +1399,7 @@ func (e *sacrificeOrDamageEffect) Apply(g *Game, sourceID, controller uuid.UUID,
 func (e *sacrificeOrDamageEffect) Text() string {
 	return fmt.Sprintf("Sacrifice a creature or take %d damage", e.damage)
 }
+func (e *sacrificeOrDamageEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // doubleSourcePowerEffect doubles the source creature's power until end of turn.
 type doubleSourcePowerEffect struct{}
@@ -1261,6 +1427,9 @@ func (e *doubleSourcePowerEffect) Apply(g *Game, sourceID, controller uuid.UUID,
 
 func (e *doubleSourcePowerEffect) Text() string {
 	return "Target creature's power is doubled until end of turn"
+}
+func (e *doubleSourcePowerEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
 // destroyTargetAtEndOfTurnEffect marks a creature for destruction at end of turn.
@@ -1293,6 +1462,9 @@ func (e *destroyTargetAtEndOfTurnEffect) Apply(g *Game, sourceID, controller uui
 func (e *destroyTargetAtEndOfTurnEffect) Text() string {
 	return "Destroy target creature at end of turn"
 }
+func (e *destroyTargetAtEndOfTurnEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
 
 // discardHandAndDrawEffect makes each player discard their hand and draw N cards.
 type discardHandAndDrawEffect struct {
@@ -1323,6 +1495,7 @@ func (e *discardHandAndDrawEffect) Apply(g *Game, sourceID, controller uuid.UUID
 func (e *discardHandAndDrawEffect) Text() string {
 	return fmt.Sprintf("Each player discards their hand, then draws %d cards", e.drawCount)
 }
+func (e *discardHandAndDrawEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // shuffleGraveyardIntoLibraryAndDrawEffect shuffles each player's graveyard
 // into their library, then each player draws N cards.
@@ -1353,6 +1526,9 @@ func (e *shuffleGraveyardIntoLibraryAndDrawEffect) Apply(g *Game, sourceID, cont
 
 func (e *shuffleGraveyardIntoLibraryAndDrawEffect) Text() string {
 	return fmt.Sprintf("Each player shuffles graveyard into library, then draws %d cards", e.drawCount)
+}
+func (e *shuffleGraveyardIntoLibraryAndDrawEffect) Properties() EffectProperties {
+	return EffectProperties{}
 }
 
 // counterSpellIfColorEffect counters a target spell only if it matches a specific color.
@@ -1389,6 +1565,9 @@ func (e *counterSpellIfColorEffect) Apply(g *Game, sourceID, controller uuid.UUI
 func (e *counterSpellIfColorEffect) Text() string {
 	return fmt.Sprintf("Counter target %s spell", e.color)
 }
+func (e *counterSpellIfColorEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
 
 // counterSpellIfXMeetsOrExceedsCMCEffect counters a spell only if X >= its CMC.
 type counterSpellIfXMeetsOrExceedsCMCEffect struct{}
@@ -1416,6 +1595,9 @@ func (e *counterSpellIfXMeetsOrExceedsCMCEffect) Apply(g *Game, sourceID, contro
 
 func (e *counterSpellIfXMeetsOrExceedsCMCEffect) Text() string {
 	return "Counter target spell if X >= its mana value"
+}
+func (e *counterSpellIfXMeetsOrExceedsCMCEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
 // powerSinkEffect counters a spell unless its controller pays X mana.
@@ -1456,6 +1638,9 @@ func (e *powerSinkEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets
 func (e *powerSinkEffect) Text() string {
 	return "Counter target spell unless its controller pays {X}"
 }
+func (e *powerSinkEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
 
 // tapOrUntapTargetEffect lets you tap or untap a target permanent.
 type tapOrUntapTargetEffect struct{}
@@ -1489,6 +1674,7 @@ func (e *tapOrUntapTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, 
 func (e *tapOrUntapTargetEffect) Text() string {
 	return "Tap or untap target permanent"
 }
+func (e *tapOrUntapTargetEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // makeUnblockableUntilEndOfTurnEffect makes a target creature unblockable until end of turn.
 type makeUnblockableUntilEndOfTurnEffect struct{}
@@ -1516,6 +1702,9 @@ func (e *makeUnblockableUntilEndOfTurnEffect) Apply(g *Game, sourceID, controlle
 func (e *makeUnblockableUntilEndOfTurnEffect) Text() string {
 	return "Target creature can't be blocked this turn"
 }
+func (e *makeUnblockableUntilEndOfTurnEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
 
 // tapAttachedCreatureEffect taps the creature attached to the source aura.
 type tapAttachedCreatureEffect struct{}
@@ -1538,6 +1727,9 @@ func (e *tapAttachedCreatureEffect) Apply(g *Game, sourceID, controller uuid.UUI
 }
 
 func (e *tapAttachedCreatureEffect) Text() string { return "Tap enchanted creature" }
+func (e *tapAttachedCreatureEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
 
 // untapSourceEffect untaps the source permanent.
 type untapSourceEffect struct{}
@@ -1556,6 +1748,7 @@ func (e *untapSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targe
 }
 
 func (e *untapSourceEffect) Text() string { return "Untap this permanent" }
+func (e *untapSourceEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // dealDamagePerSwampEffect deals damage to the active player equal to the number of Swamps they control.
 type dealDamagePerSwampEffect struct{}
@@ -1579,6 +1772,7 @@ func (e *dealDamagePerSwampEffect) Apply(g *Game, sourceID, controller uuid.UUID
 func (e *dealDamagePerSwampEffect) Text() string {
 	return "Deal damage to active player equal to Swamps they control"
 }
+func (e *dealDamagePerSwampEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // blackViseEffect deals damage to the active player based on hand size > 4.
 type blackViseEffect struct{}
@@ -1602,6 +1796,7 @@ func (e *blackViseEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets
 func (e *blackViseEffect) Text() string {
 	return "Deal damage to active player equal to cards in hand minus 4"
 }
+func (e *blackViseEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // createTokenEffect creates a token creature on the battlefield.
 type createTokenEffect struct {
@@ -1635,6 +1830,9 @@ func (e *createTokenEffect) Apply(g *Game, sourceID, controller uuid.UUID, targe
 func (e *createTokenEffect) Text() string {
 	return fmt.Sprintf("create a %d/%d %s token", e.power, e.toughness, e.name)
 }
+func (e *createTokenEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
 
 // forcefieldEffect activates a Forcefield shield on the controller for this turn.
 type forcefieldEffect struct{}
@@ -1652,6 +1850,9 @@ func (e *forcefieldEffect) Apply(g *Game, sourceID, controller uuid.UUID, target
 
 func (e *forcefieldEffect) Text() string {
 	return "prevent all but 1 combat damage from each unblocked creature this turn"
+}
+func (e *forcefieldEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
 // --- ValueSource, PlayerSelector, PermanentSelector ---
@@ -1794,6 +1995,9 @@ func (e *tapAllLandsEffect) Apply(g *Game, sourceID, controller uuid.UUID, targe
 	return nil
 }
 func (e *tapAllLandsEffect) Text() string { return "Tap all lands target player controls" }
+func (e *tapAllLandsEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
 
 // balanceEffect equalizes lands, creatures, and hand sizes.
 type balanceEffect struct{}
@@ -1884,6 +2088,9 @@ func (e *balanceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets [
 func (e *balanceEffect) Text() string {
 	return "Each player sacrifices to match fewest lands, creatures; discards to match smallest hand"
 }
+func (e *balanceEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment, Mass: true}
+}
 
 // destroyRandomNontokenPermanent destroys a random nontoken permanent an
 // opponent controls, then destroys the source.
@@ -1912,6 +2119,9 @@ func (e *chaosOrbEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets 
 	return nil
 }
 func (e *chaosOrbEffect) Text() string { return "Destroy a random nontoken permanent, then destroy ~" }
+func (e *chaosOrbEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
 
 // removeFromCombatEffect removes a target creature from combat.
 type removeFromCombatEffect struct{}
@@ -1931,6 +2141,7 @@ func (e *removeFromCombatEffect) Apply(g *Game, sourceID, controller uuid.UUID, 
 	return nil
 }
 func (e *removeFromCombatEffect) Text() string { return "Remove target creature from combat" }
+func (e *removeFromCombatEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // replaceKeywordEffect replaces one keyword with another on a target permanent.
 type replaceKeywordEffect struct {
@@ -1963,6 +2174,7 @@ func (e *replaceKeywordEffect) Apply(g *Game, sourceID, controller uuid.UUID, ta
 func (e *replaceKeywordEffect) Text() string {
 	return fmt.Sprintf("Replace %s with %s", e.from, e.to)
 }
+func (e *replaceKeywordEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // changeColorEffect changes a target permanent's color.
 type changeColorEffect struct {
@@ -1992,6 +2204,7 @@ func (e *changeColorEffect) Apply(g *Game, sourceID, _ uuid.UUID, targets []uuid
 func (e *changeColorEffect) Text() string {
 	return fmt.Sprintf("Target permanent becomes %s", e.color)
 }
+func (e *changeColorEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // copySpellOnStackEffect copies the top spell on the stack. Used by Fork.
 type copySpellOnStackEffect struct{}
@@ -2030,3 +2243,4 @@ func (e *copySpellOnStackEffect) Apply(g *Game, _, ctrl uuid.UUID, targets []uui
 func (e *copySpellOnStackEffect) Text() string {
 	return "copy target instant or sorcery spell"
 }
+func (e *copySpellOnStackEffect) Properties() EffectProperties { return EffectProperties{} }

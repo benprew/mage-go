@@ -10,6 +10,9 @@ import (
 // player decisions through the TUI rather than using silent defaults.
 type HumanPlayer struct {
 	*mage.BasePlayer
+	toTUI       chan GameMsg
+	fromTUI     chan PriorityAction
+	gameLog     []string // kept in sync by RunGameLoop; used when building GameMsg
 	choiceReqs  chan ChoiceRequest
 	choiceResps chan ChoiceResponse
 }
@@ -18,9 +21,73 @@ type HumanPlayer struct {
 func NewHumanPlayer(name string) *HumanPlayer {
 	return &HumanPlayer{
 		BasePlayer:  mage.NewBasePlayer(name),
+		toTUI:       make(chan GameMsg, 1),
+		fromTUI:     make(chan PriorityAction, 1),
 		choiceReqs:  make(chan ChoiceRequest, 1),
 		choiceResps: make(chan ChoiceResponse, 1),
 	}
+}
+
+// NewHumanPlayerWithChannels creates a HumanPlayer wired to pre-allocated channels.
+// Used by the SSH lobby so the TUI model can be wired before the game starts.
+func NewHumanPlayerWithChannels(name string, toTUI chan GameMsg, fromTUI chan PriorityAction, choiceReqs chan ChoiceRequest, choiceResps chan ChoiceResponse) *HumanPlayer {
+	return &HumanPlayer{
+		BasePlayer:  mage.NewBasePlayer(name),
+		toTUI:       toTUI,
+		fromTUI:     fromTUI,
+		choiceReqs:  choiceReqs,
+		choiceResps: choiceResps,
+	}
+}
+
+// ToTUI returns the read end of the game→TUI channel.
+func (p *HumanPlayer) ToTUI() <-chan GameMsg { return p.toTUI }
+
+// FromTUI returns the write end of the TUI→game channel.
+func (p *HumanPlayer) FromTUI() chan<- PriorityAction { return p.fromTUI }
+
+// DeclareAttackers implements the Player interface for human players by sending
+// eligible attackers to the TUI and waiting for the player's selection.
+func (p *HumanPlayer) DeclareAttackers(g *mage.Game) []uuid.UUID {
+	eligible := getEligibleAttackers(g, p.PlayerID())
+	if len(eligible) == 0 {
+		return nil
+	}
+	idx := findPlayerIndex(g, p.PlayerID())
+	state := SnapshotGameState(g, idx)
+	p.toTUI <- GameMsg{
+		State:   state,
+		Prompt:  PromptDeclareAttackers,
+		Options: attackerOptions(eligible),
+		Log:     append([]string(nil), p.gameLog...),
+	}
+	action := <-p.fromTUI
+	if action.Type == ActionSelectAttackers {
+		return action.Attackers
+	}
+	return nil
+}
+
+// DeclareBlockers implements the Player interface for human players by sending
+// eligible blockers to the TUI and waiting for the player's assignments.
+func (p *HumanPlayer) DeclareBlockers(g *mage.Game) []mage.BlockAssignment {
+	eligible := getEligibleBlockers(g, p.PlayerID())
+	if len(eligible) == 0 {
+		return nil
+	}
+	idx := findPlayerIndex(g, p.PlayerID())
+	state := SnapshotGameState(g, idx)
+	p.toTUI <- GameMsg{
+		State:   state,
+		Prompt:  PromptDeclareBlockers,
+		Options: blockerOptions(g, eligible),
+		Log:     append([]string(nil), p.gameLog...),
+	}
+	action := <-p.fromTUI
+	if action.Type == ActionSelectBlockers {
+		return action.Blockers
+	}
+	return nil
 }
 
 // ChoiceRequests returns a channel the TUI should read for incoming choice requests.
@@ -139,40 +206,86 @@ func (p *HumanPlayer) ChooseMayAbility(description string) bool {
 	return resp.Accepted
 }
 
-// AIPlayer is a computer-controlled player with simple decision-making.
-type AIPlayer struct {
-	*mage.BasePlayer
+// ─── AI Strategy ───────────────────────────────────────────────────────────
+
+// SpellOrder controls the order in which the AI evaluates castable spells.
+type SpellOrder int
+
+const (
+	MostExpensiveFirst SpellOrder = iota
+	CheapestFirst
+)
+
+// Personality parameterises how an AIPlayer makes decisions.
+type Personality struct {
+	Name                string
+	CastOrder           SpellOrder
+	HoldInstants        bool // if true, only cast instants in response to opponent actions
+	AttackAll           bool // if true, attack with every eligible creature; if false, only attack when profitable
+	BlockPowerThreshold int  // block attackers with power >= this (0 = block everything)
+	TargetFace          bool // if true, damage spells target the opponent player rather than creatures
 }
 
-// NewAIPlayer creates a new AI player.
-func NewAIPlayer(name string) *AIPlayer {
-	return &AIPlayer{
-		BasePlayer: mage.NewBasePlayer(name),
+// Preset personalities.
+var (
+	AggroPersonality = Personality{
+		Name:                "Aggro",
+		CastOrder:           CheapestFirst,
+		HoldInstants:        false,
+		AttackAll:           true,
+		BlockPowerThreshold: 3,
 	}
-}
-
-// ChooseMode implements the Player interface for AI mode selection.
-// It uses card-name-based heuristics combined with game state where accessible.
-func (ai *AIPlayer) ChooseMode(modes []string, reason string) int {
-	switch reason {
-	case "Healing Salve":
-		// mode 0: gain 3 life; mode 1: prevent the next 3 damage
-		// Prefer gaining life when low; prefer prevention when healthy (saves creatures/shields combat)
-		if ai.Life() <= 10 {
-			return 0
-		}
-		return 1
+	ControlPersonality = Personality{
+		Name:                "Control",
+		CastOrder:           MostExpensiveFirst,
+		HoldInstants:        true,
+		AttackAll:           false,
+		BlockPowerThreshold: 0,
 	}
-	return 0
+	MidrangePersonality = Personality{
+		Name:                "Midrange",
+		CastOrder:           MostExpensiveFirst,
+		HoldInstants:        false,
+		AttackAll:           true,
+		BlockPowerThreshold: 3,
+	}
+	TempoPersonality = Personality{
+		Name:                "Tempo",
+		CastOrder:           CheapestFirst,
+		HoldInstants:        true,
+		AttackAll:           true,
+		BlockPowerThreshold: 2,
+	}
+	// BurnPersonality represents a dedicated burn deck: race to the face,
+	// never block, always target the opponent player with damage spells.
+	BurnPersonality = Personality{
+		Name:                "Burn",
+		CastOrder:           CheapestFirst,
+		HoldInstants:        false,
+		AttackAll:           true,
+		BlockPowerThreshold: 99, // effectively never blocks
+		TargetFace:          true,
+	}
+)
+
+// AIStrategy is the decision-making interface for computer-controlled players.
+type AIStrategy interface {
+	PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, mainPhase bool) PriorityAction
+	Attackers(p mage.Player, g *mage.Game) []uuid.UUID
+	Blockers(p mage.Player, g *mage.Game) []mage.BlockAssignment
 }
 
-// GetPriorityAction decides what the AI should do when it has priority.
-func (ai *AIPlayer) GetPriorityAction(g *mage.Game, landsPlayed int, mainPhase bool) PriorityAction {
-	playerID := ai.PlayerID()
+// HeuristicStrategy implements AIStrategy using personality-driven heuristics.
+type HeuristicStrategy struct {
+	Personality Personality
+}
+
+func (s *HeuristicStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, mainPhase bool) PriorityAction {
+	playerID := p.PlayerID()
 
 	if mainPhase {
 		if landsPlayed < 1 {
-			for _, c := range ai.Hand() {
+			for _, c := range p.Hand() {
 				if c.HasType(core.TypeLand) {
 					return PriorityAction{
 						Type:     ActionPlayLand,
@@ -184,19 +297,19 @@ func (ai *AIPlayer) GetPriorityAction(g *mage.Game, landsPlayed int, mainPhase b
 		}
 
 		var bestCard mage.Card
-		bestCMC := -1
+		bestScore := -1
 		for _, card := range g.GetCastableSpells(playerID) {
 			if card.HasType(core.TypeInstant) {
 				continue
 			}
-			cmc := card.ManaCost().CMC()
-			if cmc > bestCMC {
-				bestCMC = cmc
+			score := spellValue(card, p, g)
+			if score > bestScore {
+				bestScore = score
 				bestCard = card
 			}
 		}
-		if bestCard != nil {
-			targets := ai.autoSelectTargets(g, bestCard)
+		if bestCard != nil && !spellIsWorthless(bestCard, p, g) {
+			targets := s.autoSelectTargets(p, g, bestCard)
 			return PriorityAction{
 				Type:     ActionCastSpell,
 				CardID:   bestCard.ID(),
@@ -206,31 +319,34 @@ func (ai *AIPlayer) GetPriorityAction(g *mage.Game, landsPlayed int, mainPhase b
 		}
 	}
 
-	for _, card := range ai.Hand() {
-		if !card.HasType(core.TypeInstant) {
-			continue
-		}
-		if !g.CanAfford(playerID, card.ManaCost()) {
-			continue
-		}
-		hasDamage := false
-		for _, a := range card.Abilities() {
-			if sa, ok := a.(*mage.SpellAbility); ok {
-				for _, e := range sa.Effects() {
-					if mage.IsDamageEffect(e) {
-						hasDamage = true
+	// HoldInstants: only skip instants during main phase; cast freely during
+	// opponent's turn / responses to the stack.
+	if !s.Personality.HoldInstants || !mainPhase {
+		for _, card := range p.Hand() {
+			if !card.HasType(core.TypeInstant) {
+				continue
+			}
+			if !g.CanAfford(playerID, card.ManaCost()) {
+				continue
+			}
+			hasUsableEffect := false
+			for _, a := range card.Abilities() {
+				if sa, ok := a.(*mage.SpellAbility); ok {
+					if mage.SpellOutcome(sa.Effects()) != mage.OutcomeUnknown {
+						hasUsableEffect = true
+						break
 					}
 				}
 			}
-		}
-		if hasDamage {
-			targets := ai.autoSelectTargets(g, card)
-			if len(targets) > 0 {
-				return PriorityAction{
-					Type:     ActionCastSpell,
-					CardID:   card.ID(),
-					CardName: card.Name(),
-					Targets:  targets,
+			if hasUsableEffect {
+				targets := s.autoSelectTargets(p, g, card)
+				if len(targets) > 0 {
+					return PriorityAction{
+						Type:     ActionCastSpell,
+						CardID:   card.ID(),
+						CardName: card.Name(),
+						Targets:  targets,
+					}
 				}
 			}
 		}
@@ -239,11 +355,16 @@ func (ai *AIPlayer) GetPriorityAction(g *mage.Game, landsPlayed int, mainPhase b
 	return PriorityAction{Type: ActionPass}
 }
 
-// AIAttackers returns the IDs of creatures the AI wants to attack with.
-func (ai *AIPlayer) AIAttackers(g *mage.Game) []uuid.UUID {
+func (s *HeuristicStrategy) Attackers(p mage.Player, g *mage.Game) []uuid.UUID {
+	opponent := g.GetOpponent(p.PlayerID())
+	var opponentID uuid.UUID
+	if opponent != nil {
+		opponentID = opponent.PlayerID()
+	}
+
 	var attackers []uuid.UUID
 	for _, perm := range g.Battlefield {
-		if perm.Controller != ai.PlayerID() {
+		if perm.Controller != p.PlayerID() {
 			continue
 		}
 		if !perm.HasType(core.TypeCreature) {
@@ -258,29 +379,34 @@ func (ai *AIPlayer) AIAttackers(g *mage.Game) []uuid.UUID {
 		if !mage.CanAttackCheck(perm, g) {
 			continue
 		}
-		attackers = append(attackers, perm.ID())
+		if s.Personality.AttackAll || profitableToAttack(perm, g, opponentID) {
+			attackers = append(attackers, perm.ID())
+		}
 	}
 	return attackers
 }
 
-// AIBlockers returns a blocker->attacker mapping for the AI's blocking decisions.
-func (ai *AIPlayer) AIBlockers(g *mage.Game) []mage.BlockAssignment {
+func (s *HeuristicStrategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAssignment {
 	var assignments []mage.BlockAssignment
 
 	var available []*mage.Permanent
 	for _, perm := range g.Battlefield {
-		if perm.Controller != ai.PlayerID() || !perm.HasType(core.TypeCreature) || perm.Tapped {
+		if perm.Controller != p.PlayerID() || !perm.HasType(core.TypeCreature) || perm.Tapped {
 			continue
 		}
 		available = append(available, perm)
 	}
 
 	for _, group := range g.Combat.Groups {
-		if group.DefenderID != ai.PlayerID() {
+		if group.DefenderID != p.PlayerID() {
 			continue
 		}
 		atk := g.FindPermanent(group.AttackerID)
 		if atk == nil {
+			continue
+		}
+		atkPow := atk.CurrentPower(g)
+		if s.Personality.BlockPowerThreshold > 0 && atkPow < s.Personality.BlockPowerThreshold {
 			continue
 		}
 
@@ -291,10 +417,9 @@ func (ai *AIPlayer) AIBlockers(g *mage.Game) []mage.BlockAssignment {
 			if !mage.CanBlock(blk, atk, g) {
 				continue
 			}
-			if mage.HasLandwalkEvasion(atk, ai.PlayerID(), g) {
+			if mage.HasLandwalkEvasion(atk, p.PlayerID(), g) {
 				continue
 			}
-			atkPow := atk.CurrentPower(g)
 			blkPow := blk.CurrentPower(g)
 			atkTough := atk.CurrentToughness(g)
 
@@ -312,18 +437,8 @@ func (ai *AIPlayer) AIBlockers(g *mage.Game) []mage.BlockAssignment {
 	return assignments
 }
 
-// DeclareAttackers implements the Player interface for AI.
-func (ai *AIPlayer) DeclareAttackers(g *mage.Game) []uuid.UUID {
-	return ai.AIAttackers(g)
-}
-
-// DeclareBlockers implements the Player interface for AI.
-func (ai *AIPlayer) DeclareBlockers(g *mage.Game) []mage.BlockAssignment {
-	return ai.AIBlockers(g)
-}
-
-func (ai *AIPlayer) autoSelectTargets(g *mage.Game, card mage.Card) []uuid.UUID {
-	playerID := ai.PlayerID()
+func (s *HeuristicStrategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card) []uuid.UUID {
+	playerID := p.PlayerID()
 
 	for _, a := range card.Abilities() {
 		sa, ok := a.(*mage.SpellAbility)
@@ -336,28 +451,121 @@ func (ai *AIPlayer) autoSelectTargets(g *mage.Game, card mage.Card) []uuid.UUID 
 				return nil
 			}
 
+			outcome := mage.SpellOutcome(sa.Effects())
 			switch t.(type) {
 			case *mage.AnyTarget:
-				for _, id := range possible {
-					perm := g.FindPermanent(id)
-					if perm != nil && perm.Controller != playerID && perm.HasType(core.TypeCreature) {
-						return []uuid.UUID{id}
+				if outcome == mage.OutcomeBenefit {
+					// Beneficial spell (buff, prevent damage, etc.): target own creatures first.
+					var ownBest uuid.UUID
+					ownBestScore := -1
+					for _, id := range possible {
+						perm := g.FindPermanent(id)
+						if perm != nil && perm.Controller == playerID && perm.HasType(core.TypeCreature) {
+							score := threatScore(perm, g)
+							if score > ownBestScore {
+								ownBestScore = score
+								ownBest = id
+							}
+						}
+					}
+					if ownBest != uuid.Nil {
+						return []uuid.UUID{ownBest}
+					}
+					// Fall back to targeting self.
+					for _, id := range possible {
+						if id == playerID {
+							return []uuid.UUID{id}
+						}
 					}
 				}
 				opponent := g.GetOpponent(playerID)
+				if s.Personality.TargetFace && opponent != nil {
+					// Burn strategy: always target the opponent player directly.
+					for _, id := range possible {
+						if id == opponent.PlayerID() {
+							return []uuid.UUID{id}
+						}
+					}
+				}
+				// Compute spell damage for lethal-targeting decision.
+				spellDamage := 0
+				for _, ab := range card.Abilities() {
+					if sa, ok := ab.(*mage.SpellAbility); ok {
+						for _, e := range sa.Effects() {
+							if d := e.Properties().Damage; d > 0 {
+								spellDamage = d
+							}
+						}
+					}
+				}
+				// Prefer lethal targets (highest ThreatPerMana), then fall through to raw threat.
+				if spellDamage > 0 && opponent != nil {
+					var bestLethalID uuid.UUID
+					bestLethalTPM := -1.0
+					for _, id := range possible {
+						perm := g.FindPermanent(id)
+						if perm != nil && perm.Controller == opponent.PlayerID() && perm.HasType(core.TypeCreature) {
+							if spellDamage >= perm.CurrentToughness(g) {
+								tpm := ThreatPerMana(perm, g)
+								if tpm > bestLethalTPM {
+									bestLethalTPM = tpm
+									bestLethalID = id
+								}
+							}
+						}
+					}
+					if bestLethalID != uuid.Nil {
+						return []uuid.UUID{bestLethalID}
+					}
+				}
+				// Default: prefer the highest-threat opponent creature, then opponent player.
+				var bestID uuid.UUID
+				bestScore := -1
+				for _, id := range possible {
+					perm := g.FindPermanent(id)
+					if perm != nil && perm.Controller != playerID && perm.HasType(core.TypeCreature) {
+						score := threatScore(perm, g)
+						if score > bestScore {
+							bestScore = score
+							bestID = id
+						}
+					}
+				}
+				if bestID != uuid.Nil {
+					return []uuid.UUID{bestID}
+				}
 				if opponent != nil {
 					return []uuid.UUID{opponent.PlayerID()}
 				}
 
 			case *mage.CreatureTarget:
+				if outcome == mage.OutcomeBenefit {
+					// Buff spell: target own most-threatening creature.
+					var ownBest uuid.UUID
+					ownBestScore := -1
+					for _, id := range possible {
+						perm := g.FindPermanent(id)
+						if perm != nil && perm.Controller == playerID {
+							score := threatScore(perm, g)
+							if score > ownBestScore {
+								ownBestScore = score
+								ownBest = id
+							}
+						}
+					}
+					if ownBest != uuid.Nil {
+						return []uuid.UUID{ownBest}
+					}
+				}
+				// Default/detriment: target highest-threat opponent creature.
 				var bestID uuid.UUID
-				bestPow := -1
+				bestScore := -1
 				for _, id := range possible {
 					perm := g.FindPermanent(id)
 					if perm != nil && perm.Controller != playerID {
-						pow := perm.CurrentPower(g)
-						if pow > bestPow {
-							bestPow = pow
+						score := threatScore(perm, g)
+						if score > bestScore {
+							bestScore = score
 							bestID = id
 						}
 					}
@@ -386,5 +594,242 @@ func (ai *AIPlayer) autoSelectTargets(g *mage.Game, card mage.Card) []uuid.UUID 
 		}
 	}
 
+	return nil
+}
+
+// ─── AIPlayer ──────────────────────────────────────────────────────────────
+
+// AIPlayer is a computer-controlled player with a pluggable AIStrategy.
+type AIPlayer struct {
+	*mage.BasePlayer
+	strategy AIStrategy
+}
+
+// NewAIPlayer creates an AI player with the default Midrange personality.
+func NewAIPlayer(name string) *AIPlayer {
+	return &AIPlayer{
+		BasePlayer: mage.NewBasePlayer(name),
+		strategy:   &HeuristicStrategy{Personality: MidrangePersonality},
+	}
+}
+
+// NewAggroAI creates an AI player with the Aggro personality.
+func NewAggroAI(name string) *AIPlayer {
+	return &AIPlayer{
+		BasePlayer: mage.NewBasePlayer(name),
+		strategy:   &HeuristicStrategy{Personality: AggroPersonality},
+	}
+}
+
+// NewControlAI creates an AI player with the Control personality.
+func NewControlAI(name string) *AIPlayer {
+	return &AIPlayer{
+		BasePlayer: mage.NewBasePlayer(name),
+		strategy:   &HeuristicStrategy{Personality: ControlPersonality},
+	}
+}
+
+// NewTempoAI creates an AI player with the Tempo personality.
+func NewTempoAI(name string) *AIPlayer {
+	return &AIPlayer{
+		BasePlayer: mage.NewBasePlayer(name),
+		strategy:   &HeuristicStrategy{Personality: TempoPersonality},
+	}
+}
+
+// ChooseMode implements the Player interface for AI mode selection.
+func (ai *AIPlayer) ChooseMode(modes []string, reason string) int {
+	switch reason {
+	case "Healing Salve":
+		if ai.Life() <= 10 {
+			return 0
+		}
+		return 1
+	}
+	return 0
+}
+
+// GetPriorityAction decides what the AI should do when it has priority.
+func (ai *AIPlayer) GetPriorityAction(g *mage.Game, landsPlayed int, mainPhase bool) PriorityAction {
+	return ai.strategy.PriorityAction(ai.BasePlayer, g, landsPlayed, mainPhase)
+}
+
+// AIAttackers returns the IDs of creatures the AI wants to attack with.
+func (ai *AIPlayer) AIAttackers(g *mage.Game) []uuid.UUID {
+	return ai.strategy.Attackers(ai.BasePlayer, g)
+}
+
+// AIBlockers returns a blocker->attacker mapping for the AI's blocking decisions.
+func (ai *AIPlayer) AIBlockers(g *mage.Game) []mage.BlockAssignment {
+	return ai.strategy.Blockers(ai.BasePlayer, g)
+}
+
+// DeclareAttackers implements the Player interface for AI.
+func (ai *AIPlayer) DeclareAttackers(g *mage.Game) []uuid.UUID {
+	return ai.AIAttackers(g)
+}
+
+// DeclareBlockers implements the Player interface for AI.
+func (ai *AIPlayer) DeclareBlockers(g *mage.Game) []mage.BlockAssignment {
+	return ai.AIBlockers(g)
+}
+
+// NewBurnAI creates an AI player focused on dealing direct damage to the opponent's face.
+func NewBurnAI(name string) *AIPlayer {
+	return &AIPlayer{
+		BasePlayer: mage.NewBasePlayer(name),
+		strategy:   &HeuristicStrategy{Personality: BurnPersonality},
+	}
+}
+
+// NewAdaptiveAI creates an AI that plays aggressively when ahead and switches
+// to a controlling game plan when behind on life.
+func NewAdaptiveAI(name string) *AIPlayer {
+	return &AIPlayer{
+		BasePlayer: mage.NewBasePlayer(name),
+		strategy: &AdaptiveStrategy{
+			Aggressive: &HeuristicStrategy{Personality: AggroPersonality},
+			Defensive:  &HeuristicStrategy{Personality: ControlPersonality},
+		},
+	}
+}
+
+// ─── Helper functions ───────────────────────────────────────────────────────
+
+// threatScore scores a permanent by how dangerous it is, preferring evasion
+// and raw power. Used to prioritise removal targets.
+func threatScore(perm *mage.Permanent, g *mage.Game) int {
+	score := perm.CurrentPower(g) * 2
+	if perm.HasKeyword(core.Flying) {
+		score += 4
+	}
+	if perm.HasKeyword(core.DoubleStrike) {
+		score += 3
+	}
+	if perm.HasKeyword(core.FirstStrike) {
+		score += 2
+	}
+	if perm.HasKeyword(core.Trample) {
+		score += 1
+	}
+	if perm.HasKeyword(core.Haste) {
+		score += 1
+	}
+	if perm.HasKeyword(core.Deathtouch) {
+		score += 2
+	}
+	return score
+}
+
+// profitableToAttack returns true if attacking with atk is unlikely to result
+// in an unfavorable trade. It finds the best blocker the opponent could assign
+// and checks whether the attacker survives or at least kills something of equal
+// or greater mana value.
+func profitableToAttack(atk *mage.Permanent, g *mage.Game, opponentID uuid.UUID) bool {
+	var bestBlocker *mage.Permanent
+	bestPow := -1
+	for _, perm := range g.Battlefield {
+		if perm.Controller != opponentID || !perm.HasType(core.TypeCreature) || perm.Tapped {
+			continue
+		}
+		if !mage.CanBlock(perm, atk, g) {
+			continue
+		}
+		if mage.HasLandwalkEvasion(atk, opponentID, g) {
+			continue
+		}
+		pow := perm.CurrentPower(g)
+		if pow > bestPow {
+			bestPow = pow
+			bestBlocker = perm
+		}
+	}
+
+	// No blocker available — attack is free.
+	if bestBlocker == nil {
+		return true
+	}
+
+	atkPow := atk.CurrentPower(g)
+	atkTough := atk.CurrentToughness(g)
+	blkPow := bestBlocker.CurrentPower(g)
+	blkTough := bestBlocker.CurrentToughness(g)
+
+	atkSurvives := blkPow < atkTough
+	blkDies := atkPow >= blkTough
+
+	// Attacker survives the block → always attack.
+	if atkSurvives {
+		return true
+	}
+	// Both die (trade) → only trade if the blocker costs at least as much mana.
+	if blkDies {
+		return bestBlocker.Card.ManaCost().CMC() >= atk.Card.ManaCost().CMC()
+	}
+	// Attacker dies, blocker survives → don't attack.
+	return false
+}
+
+// ─── AdaptiveStrategy ───────────────────────────────────────────────────────
+
+// AdaptiveStrategy switches between two strategies based on relative life totals.
+// When the AI is ahead on life it plays aggressively; when behind it plays defensively.
+type AdaptiveStrategy struct {
+	Aggressive AIStrategy
+	Defensive  AIStrategy
+}
+
+func (s *AdaptiveStrategy) active(p mage.Player, g *mage.Game) AIStrategy {
+	if BoardScore(p.PlayerID(), g) >= 0 {
+		return s.Aggressive
+	}
+	return s.Defensive
+}
+
+func (s *AdaptiveStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, mainPhase bool) PriorityAction {
+	return s.active(p, g).PriorityAction(p, g, landsPlayed, mainPhase)
+}
+
+func (s *AdaptiveStrategy) Attackers(p mage.Player, g *mage.Game) []uuid.UUID {
+	return s.active(p, g).Attackers(p, g)
+}
+
+func (s *AdaptiveStrategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAssignment {
+	return s.active(p, g).Blockers(p, g)
+}
+
+// ─── SequentialStrategy ─────────────────────────────────────────────────────
+
+// SequentialStrategy tries each sub-strategy in order and uses the first one
+// that produces a non-pass priority action. Attackers and blockers are taken
+// from the first strategy that returns non-empty results.
+type SequentialStrategy struct {
+	Strategies []AIStrategy
+}
+
+func (s *SequentialStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, mainPhase bool) PriorityAction {
+	for _, strat := range s.Strategies {
+		if action := strat.PriorityAction(p, g, landsPlayed, mainPhase); action.Type != ActionPass {
+			return action
+		}
+	}
+	return PriorityAction{Type: ActionPass}
+}
+
+func (s *SequentialStrategy) Attackers(p mage.Player, g *mage.Game) []uuid.UUID {
+	for _, strat := range s.Strategies {
+		if atks := strat.Attackers(p, g); len(atks) > 0 {
+			return atks
+		}
+	}
+	return nil
+}
+
+func (s *SequentialStrategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAssignment {
+	for _, strat := range s.Strategies {
+		if blks := strat.Blockers(p, g); len(blks) > 0 {
+			return blks
+		}
+	}
 	return nil
 }

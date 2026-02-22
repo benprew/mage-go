@@ -19,6 +19,7 @@ func registerSpells() {
 		return NewInstant("Swords to Plowshares", "{W}",
 			NewTargetedSpell(TargetCreature(), FuncEffect(
 				"exile target creature. Its controller gains life equal to its power",
+				EffectProperties{Outcome: OutcomeDetriment},
 				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return fmt.Errorf("no target")
@@ -50,6 +51,7 @@ func registerSpells() {
 		c := NewInstant("Healing Salve", "{W}",
 			NewTargetedSpell(TargetAnyTarget(), FuncEffect(
 				"target player gains 3 life or prevent the next 3 damage that would be dealt to any target this turn",
+				EffectProperties{Outcome: OutcomeBenefit},
 				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
@@ -97,6 +99,7 @@ func registerSpells() {
 		return NewInstant("Reverse Damage", "{1}{W}{W}",
 			NewSpellAbility(FuncEffect(
 				"prevent the next source of damage to you and gain that much life",
+				EffectProperties{Outcome: OutcomeBenefit},
 				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					g.Effects.AddPreventionShield(controller, 1000)
 					g.Effects.AddReverseDamageShield(controller)
@@ -228,6 +231,7 @@ func registerSpells() {
 		return NewSorcery("Drain Life", "{X}{1}{B}",
 			NewTargetedSpell(TargetAnyTarget(), FuncEffect(
 				"deal X damage to target and gain X life",
+				EffectProperties{Outcome: OutcomeDetriment},
 				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return fmt.Errorf("no target for drain life")
@@ -424,6 +428,7 @@ func registerSpells() {
 		return NewSorcery("Channel", "{G}{G}",
 			NewSpellAbility(FuncEffect(
 				"until end of turn, pay 1 life to add {C}",
+				EffectProperties{},
 				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					g.Effects.SetChannelActive(controller)
 					return nil

@@ -227,6 +227,7 @@ func registerEnchantments() {
 				WithActivatedAbility(
 					FuncEffect(
 						"prevent all damage from one source of the chosen color",
+						EffectProperties{},
 						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 							g.Effects.AddColorPrevention(controller, color)
 							return nil

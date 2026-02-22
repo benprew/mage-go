@@ -19,6 +19,7 @@ func registerCreatures() {
 			WithAbility(
 				NewTriggered(EvtCreatureDied, false,
 					FuncEffect("destroy all creatures blocking or blocked by Abu Ja'far",
+						EffectProperties{},
 						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 							if g.Combat == nil {
 								return nil

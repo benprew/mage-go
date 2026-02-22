@@ -218,6 +218,7 @@ func TestFuncEffect(t *testing.T) {
 				return mage.NewSorcery(name, "{R}",
 					mage.NewSpellAbility(mage.FuncEffect(
 						"deal 3 damage to each player",
+						mage.EffectProperties{Outcome: mage.OutcomeDetriment, Damage: 3},
 						func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 							for _, p := range g.Players {
 								g.DealDamageToPlayer(p, 3, sourceID)

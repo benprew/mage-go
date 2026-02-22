@@ -727,6 +727,7 @@ func registerCreatures() {
 			// turn if able. Destroy it at end of turn if it didn't attack.
 			WithActivatedAbility(
 				FuncEffect("force creature to attack or destroy at EOT",
+					EffectProperties{},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
@@ -739,6 +740,7 @@ func registerCreatures() {
 							Controller: controller,
 							Effects: []Effect{FuncEffect(
 								"destroy creature that didn't attack",
+								EffectProperties{},
 								func(g2 *Game, srcID, ctrlID uuid.UUID, _ []uuid.UUID) error {
 									if !g2.AttackedThisTurn[targetID] {
 										perm := g2.FindPermanent(targetID)
@@ -782,6 +784,7 @@ func registerCreatures() {
 			// At the beginning of your upkeep, you may have this become a copy of another creature
 			WithAbility(BeginningOfUpkeepTrigger(FuncEffect(
 				"become a copy of target creature",
+				EffectProperties{},
 				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					perm := g.FindPermanent(sourceID)
 					if perm == nil {
@@ -820,6 +823,7 @@ func registerCreatures() {
 			// When Personal Incarnation dies, you lose half your life (rounded up).
 			WithAbility(PutIntoGraveyardFromBattlefieldTrigger(FuncEffect(
 				"lose half your life rounded up",
+				EffectProperties{},
 				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					p := g.GetPlayer(controller)
 					if p == nil {
