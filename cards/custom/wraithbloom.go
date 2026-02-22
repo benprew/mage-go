@@ -21,7 +21,7 @@ func registerWraithbloom() {
 					GainLife(1),
 					AddCounters(P1P1, Fixed(1), SelectSource),
 				),
-				false, nil,
+				false, PermanentFilter{},
 			)),
 
 			// {2}, {T}, Remove three +1/+1 counters from Wraithbloom Cultivator:

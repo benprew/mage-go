@@ -1039,7 +1039,7 @@ func (e *dealDamageToAllCreaturesEffect) Apply(g *Game, sourceID, controller uui
 		return nil
 	}
 	f := IsCreature
-	if e.filter != nil {
+	if !e.filter.IsZero() {
 		f = And(IsCreature, e.filter)
 	}
 	for _, p := range g.FilterBattlefield(f) {
@@ -1886,10 +1886,14 @@ func (v countBattlefieldValue) Resolve(g *Game, sourceID, controller uuid.UUID) 
 	return total
 }
 func (v countBattlefieldValue) Text() string {
-	if v.who != nil {
-		return fmt.Sprintf("the number of matching permanents the %s controls", v.who.Text())
+	noun := v.filter.Text()
+	if noun == "" {
+		noun = "permanent"
 	}
-	return "the number of matching permanents on the battlefield"
+	if v.who != nil {
+		return fmt.Sprintf("the number of %ss the %s controls", noun, v.who.Text())
+	}
+	return fmt.Sprintf("the number of %ss on the battlefield", noun)
 }
 
 // countZoneValue is a ValueSource that counts cards in a player zone (hand, graveyard, library).
@@ -1921,7 +1925,7 @@ func (v countZoneValue) Resolve(g *Game, sourceID, controller uuid.UUID) int {
 			cards = p.Library()
 		}
 		for _, c := range cards {
-			if v.filter == nil || v.filter(c) {
+			if v.filter.Match(c) {
 				total++
 			}
 		}
@@ -1938,7 +1942,11 @@ func (v countZoneValue) Text() string {
 	case ZoneLibrary:
 		zone = "library"
 	}
-	return fmt.Sprintf("the number of cards in the %s's %s", v.who.Text(), zone)
+	noun := v.filter.Text()
+	if noun == "" {
+		noun = "card"
+	}
+	return fmt.Sprintf("the number of %ss in the %s's %s", noun, v.who.Text(), zone)
 }
 
 // selectController returns the effect's controller.

@@ -179,7 +179,7 @@ func GrantActivatedAbilityToAll(effect Effect, cost Cost, filter PermanentFilter
 			if p.ID() == sourceID {
 				continue // typically "other" creatures
 			}
-			if filter != nil && !filter(p, g) {
+			if !filter.Match(p, g) {
 				continue
 			}
 			ab := NewActivatedAbility(effect, cost)
@@ -214,7 +214,7 @@ func BoostAllCreatures(power, toughness int, filter PermanentFilter) ContinuousE
 			if !p.HasType(TypeCreature) || p.ID() == sourceID {
 				continue
 			}
-			if filter != nil && !filter(p, g) {
+			if !filter.Match(p, g) {
 				continue
 			}
 			g.Effects.powerBonuses[p.ID()] += power
@@ -232,7 +232,7 @@ func BoostAllCreaturesIncludingSelf(power, toughness int, filter PermanentFilter
 			if !p.HasType(TypeCreature) {
 				continue
 			}
-			if filter != nil && !filter(p, g) {
+			if !filter.Match(p, g) {
 				continue
 			}
 			g.Effects.powerBonuses[p.ID()] += power
@@ -295,7 +295,7 @@ func GrantKeywordToAll(kw Keyword, filter PermanentFilter) ContinuousEffect {
 			if !p.HasType(TypeCreature) || p.ID() == sourceID {
 				continue
 			}
-			if filter != nil && !filter(p, g) {
+			if !filter.Match(p, g) {
 				continue
 			}
 			p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{NewKeywordAbility(kw)})
@@ -316,7 +316,7 @@ func BoostControlledCreatures(power, toughness int, filter PermanentFilter) Cont
 			if !p.HasType(TypeCreature) || p.Controller != src.Controller {
 				continue
 			}
-			if filter != nil && !filter(p, g) {
+			if !filter.Match(p, g) {
 				continue
 			}
 			g.Effects.powerBonuses[p.ID()] += power

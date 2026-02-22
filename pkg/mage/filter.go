@@ -1,174 +1,241 @@
 package mage
 
 import (
+	"fmt"
+	"strings"
+
 	. "github.com/mage/mage/pkg/mage/core"
 	"github.com/google/uuid"
 )
 
-// PermanentFilter is a predicate on permanents.
-type PermanentFilter func(*Permanent, *Game) bool
+// PermanentFilter is a labeled predicate on permanents.
+// The zero value matches all permanents.
+type PermanentFilter struct {
+	label string
+	fn    func(*Permanent, *Game) bool
+}
 
-// CardFilter is a predicate on cards.
-type CardFilter func(Card) bool
+// Match reports whether p satisfies this filter.
+// A zero-value filter (nil fn) matches all permanents.
+func (f PermanentFilter) Match(p *Permanent, g *Game) bool {
+	if f.fn == nil {
+		return true
+	}
+	return f.fn(p, g)
+}
+
+// Text returns a human-readable description of what this filter matches.
+func (f PermanentFilter) Text() string { return f.label }
+
+// IsZero reports whether this is the zero-value filter (matches all permanents).
+func (f PermanentFilter) IsZero() bool { return f.fn == nil }
+
+// NewPermanentFilter creates a PermanentFilter with the given label and predicate.
+func NewPermanentFilter(label string, fn func(*Permanent, *Game) bool) PermanentFilter {
+	return PermanentFilter{label: label, fn: fn}
+}
+
+// CardFilter is a labeled predicate on cards.
+// The zero value matches all cards.
+type CardFilter struct {
+	label string
+	fn    func(Card) bool
+}
+
+// Match reports whether c satisfies this filter.
+// A zero-value filter (nil fn) matches all cards.
+func (f CardFilter) Match(c Card) bool {
+	if f.fn == nil {
+		return true
+	}
+	return f.fn(c)
+}
+
+// Text returns a human-readable description of what this filter matches.
+func (f CardFilter) Text() string { return f.label }
+
+// IsZero reports whether this is the zero-value filter (matches all cards).
+func (f CardFilter) IsZero() bool { return f.fn == nil }
+
+// NewCardFilter creates a CardFilter with the given label and predicate.
+func NewCardFilter(label string, fn func(Card) bool) CardFilter {
+	return CardFilter{label: label, fn: fn}
+}
 
 // IsCreature matches creature permanents.
-var IsCreature PermanentFilter = func(p *Permanent, _ *Game) bool {
+var IsCreature = NewPermanentFilter("creature", func(p *Permanent, _ *Game) bool {
 	return p.HasType(TypeCreature)
-}
+})
 
 // IsArtifact matches artifact permanents.
-var IsArtifact PermanentFilter = func(p *Permanent, _ *Game) bool {
+var IsArtifact = NewPermanentFilter("artifact", func(p *Permanent, _ *Game) bool {
 	return p.HasType(TypeArtifact)
-}
+})
 
 // IsEnchantment matches enchantment permanents.
-var IsEnchantment PermanentFilter = func(p *Permanent, _ *Game) bool {
+var IsEnchantment = NewPermanentFilter("enchantment", func(p *Permanent, _ *Game) bool {
 	return p.HasType(TypeEnchantment)
-}
+})
 
 // IsLand matches land permanents.
-var IsLand PermanentFilter = func(p *Permanent, _ *Game) bool {
+var IsLand = NewPermanentFilter("land", func(p *Permanent, _ *Game) bool {
 	return p.HasType(TypeLand)
-}
+})
 
 // IsCreatureCard matches creature cards.
-var IsCreatureCard CardFilter = func(c Card) bool {
+var IsCreatureCard = NewCardFilter("creature card", func(c Card) bool {
 	for _, t := range c.Types() {
 		if t == TypeCreature {
 			return true
 		}
 	}
 	return false
-}
+})
 
 // ControlledBy returns a filter matching permanents controlled by the given player.
 func ControlledBy(playerID uuid.UUID) PermanentFilter {
-	return func(p *Permanent, _ *Game) bool {
+	return NewPermanentFilter("you control", func(p *Permanent, _ *Game) bool {
 		return p.Controller == playerID
-	}
+	})
 }
 
 // NotControlledBy returns a filter matching permanents not controlled by the given player.
 func NotControlledBy(playerID uuid.UUID) PermanentFilter {
-	return func(p *Permanent, _ *Game) bool {
+	return NewPermanentFilter("opponent controls", func(p *Permanent, _ *Game) bool {
 		return p.Controller != playerID
-	}
+	})
 }
 
-// HasColor returns a filter matching permanents whose card has the given color.
+// HasColorFilter returns a filter matching permanents whose card has the given color.
 func HasColorFilter(c Color) PermanentFilter {
-	return func(p *Permanent, _ *Game) bool {
+	return NewPermanentFilter(c.String(), func(p *Permanent, _ *Game) bool {
 		for _, col := range p.Card.ManaCost().Colors() {
 			if col == c {
 				return true
 			}
 		}
 		return false
-	}
+	})
 }
 
 // NotID returns a filter that excludes a specific permanent.
 func NotID(id uuid.UUID) PermanentFilter {
-	return func(p *Permanent, _ *Game) bool {
+	return NewPermanentFilter("", func(p *Permanent, _ *Game) bool {
 		return p.ID() != id
-	}
+	})
 }
 
 // Not negates a filter.
 func Not(f PermanentFilter) PermanentFilter {
-	return func(p *Permanent, g *Game) bool {
-		return !f(p, g)
+	label := "non-" + f.label
+	if f.label == "" {
+		label = ""
 	}
+	return NewPermanentFilter(label, func(p *Permanent, g *Game) bool {
+		return !f.Match(p, g)
+	})
 }
 
 // And combines filters with logical AND.
 func And(fs ...PermanentFilter) PermanentFilter {
-	return func(p *Permanent, g *Game) bool {
+	parts := make([]string, 0, len(fs))
+	for _, f := range fs {
+		if f.label != "" {
+			parts = append(parts, f.label)
+		}
+	}
+	return NewPermanentFilter(strings.Join(parts, " "), func(p *Permanent, g *Game) bool {
 		for _, f := range fs {
-			if !f(p, g) {
+			if !f.Match(p, g) {
 				return false
 			}
 		}
 		return true
-	}
+	})
 }
 
 // Or combines filters with logical OR.
 func Or(fs ...PermanentFilter) PermanentFilter {
-	return func(p *Permanent, g *Game) bool {
+	parts := make([]string, 0, len(fs))
+	for _, f := range fs {
+		if f.label != "" {
+			parts = append(parts, f.label)
+		}
+	}
+	return NewPermanentFilter(strings.Join(parts, " or "), func(p *Permanent, g *Game) bool {
 		for _, f := range fs {
-			if f(p, g) {
+			if f.Match(p, g) {
 				return true
 			}
 		}
 		return false
-	}
+	})
 }
 
 // HasSubType returns a filter matching permanents with the given subtype.
 func HasSubType(subType string) PermanentFilter {
-	return func(p *Permanent, _ *Game) bool {
+	return NewPermanentFilter(subType, func(p *Permanent, _ *Game) bool {
 		return p.HasSubType(subType)
-	}
+	})
 }
 
 // Named returns a filter matching permanents with the given name.
 func Named(name string) PermanentFilter {
-	return func(p *Permanent, _ *Game) bool {
+	return NewPermanentFilter(name, func(p *Permanent, _ *Game) bool {
 		return p.Name() == name
-	}
+	})
 }
 
 // IsTapped matches tapped permanents.
-var IsTapped PermanentFilter = func(p *Permanent, _ *Game) bool {
+var IsTapped = NewPermanentFilter("tapped", func(p *Permanent, _ *Game) bool {
 	return p.Tapped
-}
+})
 
 // IsUntapped matches untapped permanents.
-var IsUntapped PermanentFilter = func(p *Permanent, _ *Game) bool {
+var IsUntapped = NewPermanentFilter("untapped", func(p *Permanent, _ *Game) bool {
 	return !p.Tapped
-}
+})
 
 // IsAttacking matches creatures currently declared as attackers.
-var IsAttacking PermanentFilter = func(p *Permanent, g *Game) bool {
+var IsAttacking = NewPermanentFilter("attacking", func(p *Permanent, g *Game) bool {
 	return g.Combat.IsAttacking(p.ID())
-}
+})
 
 // HasKeywordFilter returns a filter matching permanents with the given keyword.
 func HasKeywordFilter(kw Keyword) PermanentFilter {
-	return func(p *Permanent, _ *Game) bool {
+	return NewPermanentFilter("with "+kw.String(), func(p *Permanent, _ *Game) bool {
 		return p.HasKeyword(kw)
-	}
+	})
 }
 
 // NotHasKeywordFilter returns a filter matching permanents without the given keyword.
 func NotHasKeywordFilter(kw Keyword) PermanentFilter {
-	return func(p *Permanent, _ *Game) bool {
+	return NewPermanentFilter("without "+kw.String(), func(p *Permanent, _ *Game) bool {
 		return !p.HasKeyword(kw)
-	}
+	})
 }
 
 // IsID returns a filter matching a specific permanent by ID.
 func IsID(id uuid.UUID) PermanentFilter {
-	return func(p *Permanent, _ *Game) bool {
+	return NewPermanentFilter("", func(p *Permanent, _ *Game) bool {
 		return p.ID() == id
-	}
+	})
 }
 
 // IsBandedWith returns a filter matching permanents that are banded with the
 // given permanent in the current combat.
 func IsBandedWith(id uuid.UUID) PermanentFilter {
-	return func(p *Permanent, g *Game) bool {
+	return NewPermanentFilter("", func(p *Permanent, g *Game) bool {
 		if g.Combat == nil {
 			return false
 		}
 		return g.Combat.IsBandedWith(p.ID(), id)
-	}
+	})
 }
 
 // HasPowerGTE returns a filter matching creatures with power >= n.
 func HasPowerGTE(n int) PermanentFilter {
-	return func(p *Permanent, g *Game) bool {
+	return NewPermanentFilter(fmt.Sprintf("with power %d or greater", n), func(p *Permanent, g *Game) bool {
 		return p.CurrentPower(g) >= n
-	}
+	})
 }

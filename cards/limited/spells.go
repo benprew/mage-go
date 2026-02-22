@@ -284,7 +284,7 @@ func registerSpells() {
 			// {B}: Deal 1 damage to each creature and each player
 			WithActivatedAbility(
 				CompositeEffects("deal 1 damage to each creature and each player",
-					DealDamageToAllCreatures(Fixed(1), nil),
+					DealDamageToAllCreatures(Fixed(1), PermanentFilter{}),
 					DealDamageToPlayers(Fixed(1), SelectEachPlayer()),
 				),
 				ManaCostOf("{B}"),

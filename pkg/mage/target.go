@@ -55,7 +55,7 @@ func (t *CreatureTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game
 		}
 		match := true
 		for _, f := range t.Filters {
-			if !f(p, g) {
+			if !f.Match(p, g) {
 				match = false
 				break
 			}
@@ -74,17 +74,7 @@ func (t *CreatureTarget) Choose(controller uuid.UUID, sourceCard Card, g *Game, 
 
 // Filter returns a combined PermanentFilter that checks creature type and all filters.
 func (t *CreatureTarget) Filter() PermanentFilter {
-	return func(p *Permanent, g *Game) bool {
-		if !p.HasType(TypeCreature) {
-			return false
-		}
-		for _, f := range t.Filters {
-			if !f(p, g) {
-				return false
-			}
-		}
-		return true
-	}
+	return And(append([]PermanentFilter{IsCreature}, t.Filters...)...)
 }
 
 // PlayerTarget targets a player.
@@ -161,7 +151,7 @@ func (t *GraveyardCreatureTarget) Possible(controller uuid.UUID, _ Card, g *Game
 	}
 	var result []uuid.UUID
 	for _, c := range p.Graveyard() {
-		if IsCreatureCard(c) {
+		if IsCreatureCard.Match(c) {
 			result = append(result, c.ID())
 		}
 	}
@@ -223,7 +213,7 @@ func (t *PermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Gam
 		}
 		match := true
 		for _, f := range t.Filters {
-			if !f(p, g) {
+			if !f.Match(p, g) {
 				match = false
 				break
 			}
@@ -242,14 +232,7 @@ func (t *PermanentTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen [
 
 // Filter returns a combined PermanentFilter that checks all filters.
 func (t *PermanentTarget) Filter() PermanentFilter {
-	return func(p *Permanent, g *Game) bool {
-		for _, f := range t.Filters {
-			if !f(p, g) {
-				return false
-			}
-		}
-		return true
-	}
+	return And(t.Filters...)
 }
 
 // LandTarget targets a land on the battlefield.

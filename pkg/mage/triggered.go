@@ -308,6 +308,6 @@ func WhenOpponentPermanentBecomesTappedTrigger(effect Effect, optional bool, fil
 			if perm.Controller == controllerID {
 				return false // not an opponent's permanent
 			}
-			return filter(perm, g)
+			return filter.Match(perm, g)
 		})
 }

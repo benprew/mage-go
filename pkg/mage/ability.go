@@ -1,6 +1,8 @@
 package mage
 
 import (
+	"strings"
+
 	. "github.com/mage/mage/pkg/mage/core"
 	"github.com/google/uuid"
 )
@@ -51,7 +53,7 @@ func NewKeywordAbility(k Keyword) *KeywordAbility {
 type ProtectionAbility struct {
 	BaseAbility
 	FromColors []Color
-	Filter     func(Card) bool
+	Filter     CardFilter
 }
 
 // ProtectionFromColor creates a static ability granting protection from a single color.
@@ -62,14 +64,14 @@ func ProtectionFromColor(c Color) *ProtectionAbility {
 			abilityType: AbilityStatic,
 		},
 		FromColors: []Color{c},
-		Filter: func(card Card) bool {
+		Filter: NewCardFilter(c.String(), func(card Card) bool {
 			for _, col := range card.ManaCost().Colors() {
 				if col == c {
 					return true
 				}
 			}
 			return false
-		},
+		}),
 	}
 }
 
@@ -79,29 +81,30 @@ func ProtectionFromColors(cs ...Color) *ProtectionAbility {
 	for _, c := range cs {
 		colorSet[c] = true
 	}
+	labels := make([]string, len(cs))
+	for i, c := range cs {
+		labels[i] = c.String()
+	}
 	return &ProtectionAbility{
 		BaseAbility: BaseAbility{
 			id:          uuid.New(),
 			abilityType: AbilityStatic,
 		},
 		FromColors: cs,
-		Filter: func(card Card) bool {
+		Filter: NewCardFilter(strings.Join(labels, " and "), func(card Card) bool {
 			for _, col := range card.ManaCost().Colors() {
 				if colorSet[col] {
 					return true
 				}
 			}
 			return false
-		},
+		}),
 	}
 }
 
 // Blocks returns true if this protection prevents interaction with the given card.
 func (pa *ProtectionAbility) Blocks(card Card) bool {
-	if pa.Filter != nil {
-		return pa.Filter(card)
-	}
-	return false
+	return pa.Filter.Match(card)
 }
 
 // StaticAbilityHolder holds continuous effects as a static ability.

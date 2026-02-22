@@ -152,7 +152,7 @@ func (g *Game) FindPermanentByName(name string, controller uuid.UUID) *Permanent
 // AnyBattlefield returns true if any permanent on the battlefield matches f.
 func (g *Game) AnyBattlefield(f PermanentFilter) bool {
 	for _, p := range g.Battlefield {
-		if f(p, g) {
+		if f.Match(p, g) {
 			return true
 		}
 	}
@@ -163,7 +163,7 @@ func (g *Game) AnyBattlefield(f PermanentFilter) bool {
 func (g *Game) FilterBattlefield(f PermanentFilter) []*Permanent {
 	var result []*Permanent
 	for _, p := range g.Battlefield {
-		if f(p, g) {
+		if f.Match(p, g) {
 			result = append(result, p)
 		}
 	}
@@ -174,7 +174,7 @@ func (g *Game) FilterBattlefield(f PermanentFilter) []*Permanent {
 func (g *Game) CountBattlefield(f PermanentFilter) int {
 	n := 0
 	for _, p := range g.Battlefield {
-		if f(p, g) {
+		if f.Match(p, g) {
 			n++
 		}
 	}
@@ -1027,7 +1027,7 @@ func (g *Game) ActivateAbilityByText(playerID uuid.UUID, permName string, target
 				}
 				if tf, ok := t.(interface{ Filter() PermanentFilter }); ok {
 					targetPerm := g.FindPermanent(targets[i])
-					if targetPerm != nil && tf.Filter() != nil && !tf.Filter()(targetPerm, g) {
+					if targetPerm != nil && !tf.Filter().Match(targetPerm, g) {
 						validTargets = false
 						break
 					}
@@ -1106,7 +1106,7 @@ func (g *Game) applyManaBonuses(tappedPerm *Permanent, producedColor Color, p Pl
 					if perm.AttachedTo == tappedPerm.ID() {
 						p.ManaPool().Add(mb.BonusMana, 1)
 					}
-				} else if mb.Filter(tappedPerm, g) {
+				} else if mb.Filter.Match(tappedPerm, g) {
 					p.ManaPool().Add(mb.BonusMana, 1)
 				}
 			}

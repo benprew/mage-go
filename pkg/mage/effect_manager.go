@@ -529,8 +529,8 @@ func (em *EffectManager) ClearDamagePreventionRules() {
 // One-shot rules are consumed on use.
 func (em *EffectManager) CheckDamagePreventionRules(source, target *Permanent, g *Game) bool {
 	for i, rule := range em.preventionRules {
-		fromMatch := rule.from == nil || (source != nil && rule.from(source, g))
-		toMatch := rule.to == nil || rule.to(target, g)
+		fromMatch := rule.from.IsZero() || (source != nil && rule.from.Match(source, g))
+		toMatch := rule.to.Match(target, g)
 		if fromMatch && toMatch {
 			if rule.oneShot {
 				em.preventionRules = append(em.preventionRules[:i], em.preventionRules[i+1:]...)
