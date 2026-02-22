@@ -10,9 +10,23 @@ import (
 	"github.com/mage/mage/pkg/mage/interactive"
 )
 
+// frame applies terminal-size constraints so shorter views fully overwrite
+// taller previous views (prevents SSH rendering bleed-through).
+func (m Model) frame(content string) string {
+	w := m.width
+	if w <= 0 {
+		w = 80
+	}
+	h := m.height
+	if h <= 0 {
+		h = 24
+	}
+	return lipgloss.NewStyle().Width(w).Height(h).Render(content)
+}
+
 func (m Model) View() string {
 	if m.state == nil {
-		return "\n  Waiting for game to start...\n"
+		return m.frame("\n  Waiting for game to start...\n")
 	}
 
 	w := m.width
@@ -24,11 +38,27 @@ func (m Model) View() string {
 
 	// ── Title bar ──
 	stepName := m.state.Step
+	youAreActive := m.state.ActivePlayer == m.state.You.Name
 	activeMarker := ""
-	if m.state.ActivePlayer == m.state.You.Name {
-		activeMarker = " (your turn)"
-	} else {
-		activeMarker = fmt.Sprintf(" (%s's turn)", m.state.ActivePlayer)
+	switch m.state.Step {
+	case "Declare Blockers":
+		if youAreActive {
+			activeMarker = " (you attack)"
+		} else {
+			activeMarker = " (declare blockers)"
+		}
+	case "Declare Attackers":
+		if youAreActive {
+			activeMarker = " (declare attackers)"
+		} else {
+			activeMarker = fmt.Sprintf(" (%s attacks)", m.state.ActivePlayer)
+		}
+	default:
+		if youAreActive {
+			activeMarker = " (your turn)"
+		} else {
+			activeMarker = fmt.Sprintf(" (%s's turn)", m.state.ActivePlayer)
+		}
 	}
 
 	youLife := lifeStr(m.state.You.Life)
