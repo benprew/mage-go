@@ -696,31 +696,6 @@ func NewAdaptiveAI(name string) *AIPlayer {
 
 // ─── Helper functions ───────────────────────────────────────────────────────
 
-// threatScore scores a permanent by how dangerous it is, preferring evasion
-// and raw power. Used to prioritise removal targets.
-func threatScore(perm *mage.Permanent, g *mage.Game) int {
-	score := perm.CurrentPower(g) * 2
-	if perm.HasKeyword(core.Flying) {
-		score += 4
-	}
-	if perm.HasKeyword(core.DoubleStrike) {
-		score += 3
-	}
-	if perm.HasKeyword(core.FirstStrike) {
-		score += 2
-	}
-	if perm.HasKeyword(core.Trample) {
-		score += 1
-	}
-	if perm.HasKeyword(core.Haste) {
-		score += 1
-	}
-	if perm.HasKeyword(core.Deathtouch) {
-		score += 2
-	}
-	return score
-}
-
 // profitableToAttack returns true if attacking with atk is unlikely to result
 // in an unfavorable trade. It finds the best blocker the opponent could assign
 // and checks whether the attacker survives or at least kills something of equal

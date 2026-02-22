@@ -104,9 +104,6 @@ evaluator to be tested independently of a full [mage.Game]:
 	    CountBattlefield(mage.PermanentFilter) int
 	}
 
-[BoardScore] is a simpler, legacy evaluator (power × 2 + evasion keywords, life/4,
-hand × 2) kept for reference but no longer used by any AI decision path.
-
 # Game Loops
 
 [RunGameLoop] drives a single human-vs-AI game in its own goroutine. It owns the

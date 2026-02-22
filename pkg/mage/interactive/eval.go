@@ -1,41 +1,9 @@
 package interactive
 
 import (
-	"github.com/google/uuid"
 	"github.com/mage/mage/pkg/mage"
 	"github.com/mage/mage/pkg/mage/core"
 )
-
-// BoardScore returns a heuristic board evaluation for playerID. Positive values
-// mean the player is ahead; negative values mean they are behind.
-//
-// Components:
-//   - Permanent score: +threatScore for own permanents, -threatScore for opponents
-//   - Life advantage: (myLife - opponentLife) / 4
-//   - Hand advantage: (len(myHand) - len(opponentHand)) * 2
-func BoardScore(playerID uuid.UUID, g *mage.Game) int {
-	opponent := g.GetOpponent(playerID)
-	if opponent == nil {
-		return 0
-	}
-	opponentID := opponent.PlayerID()
-
-	score := 0
-	for _, perm := range g.Battlefield {
-		if perm.Controller == playerID {
-			score += threatScore(perm, g)
-		} else if perm.Controller == opponentID {
-			score -= threatScore(perm, g)
-		}
-	}
-
-	myPlayer := g.GetPlayer(playerID)
-	if myPlayer != nil {
-		score += (myPlayer.Life() - opponent.Life()) / 4
-		score += (len(myPlayer.Hand()) - len(opponent.Hand())) * 2
-	}
-	return score
-}
 
 // ThreatPerMana returns a permanent's threat-per-mana-spent ratio.
 // Returns 0 if the permanent has CMC 0 (tokens, lands).
