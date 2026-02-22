@@ -37,10 +37,6 @@ These were built for card mechanics not yet implemented. Review before deleting.
 | `effect.go` | 929 | `LoseLife` | Effect factory (`Player.LoseLife` is used; this wrapper is not) |
 | `effect.go` | 1141 | `ControlChangeTarget` | One-shot control change (only `ControlChangeContinuous` is used) |
 | `effect.go` | 1186 | `DealDamageToEachOpponent` | Damage effect factory |
-| `filter.go` | 42 | `ControlledBy` | Permanent filter |
-| `filter.go` | 49 | `NotControlledBy` | Permanent filter |
-| `filter.go` | 68 | `NotID` | Permanent filter |
-| `filter.go` | 94 | `Or` | Filter combinator |
 | `target.go` | 354 | `TargetOpponent` | Targeting factory |
 | `ability.go` | 82 | `ProtectionFromColors` | Multi-color protection factory |
 | `continuous.go` | 619 | `PowerEqualsCount` | P/T-equals-counter-count effect |
@@ -56,7 +52,6 @@ These don't correspond to obvious future card needs.
 | `card.go` | 136 | `SetPower` | BaseCard setter, not in Card interface |
 | `card.go` | 137 | `SetToughness` | BaseCard setter, not in Card interface |
 | `combat.go` | 70 | `GroupFor` | Combat blocker grouping, never called |
-| `continuous.go` | 174 | `GrantedKeywords` | EffectManager query, never called |
 | `keyword.go` | 89 | `IsLandwalk` | Keyword classification method |
 | `mana.go` | 40 | `ColorFromSymbol` | Parse color from mana symbol string |
 | `mana.go` | 57 | `Symbol` | Color-to-symbol-string method |

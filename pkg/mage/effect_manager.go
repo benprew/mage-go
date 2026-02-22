@@ -190,7 +190,6 @@ type EffectManager struct {
 	effects                []ContinuousEffect
 	powerBonuses           map[uuid.UUID]int
 	toughBonuses           map[uuid.UUID]int
-	grantedKW              map[uuid.UUID][]Keyword
 	removedKW              map[uuid.UUID][]Keyword
 	preventAttack          map[uuid.UUID]bool
 	regenerationShields    map[uuid.UUID]int
@@ -198,40 +197,39 @@ type EffectManager struct {
 	preventionRules        []damagePreventionRule
 	landUntapLimit         int                     // -1 = no limit; >= 0 = max lands that may untap per turn
 	forcefieldShields      map[uuid.UUID]bool      // players with Forcefield active this turn
-	subtypeOverrides       map[uuid.UUID][]string  // permanent ID -> replacement subtypes
 	reverseDamageShields   map[uuid.UUID]bool      // players with Reverse Damage active this turn
 	channelActive          map[uuid.UUID]bool      // players with Channel active this turn
 	colorPrevention        map[uuid.UUID][]Color   // player -> colors that prevent next damage source
 	spellCostIncrease      map[Color]int           // color -> additional generic cost for spells of that color
 	unlimitedLandPlays     bool                    // true if a player can play unlimited lands (Fastbond)
 	sanctuaryActive        map[uuid.UUID]bool      // player -> if true, only flying/islandwalk can attack them
-	lichActive             map[uuid.UUID]bool      // player -> if true, Lich replacement effects apply
+	lichActive             map[uuid.UUID]uuid.UUID // player -> source permanent ID of active Lich
 	skipNextDraw           map[uuid.UUID]bool      // player -> if true, skip normal draw in draw step
 	preventBlock           map[uuid.UUID]bool      // permanent -> can't block this turn (Raging River)
 	manaConversion         map[Color]Color         // from color -> to color (Sunglasses of Urza)
 	bodyguard              map[uuid.UUID]uuid.UUID // controller -> bodyguard permanent ID (Veteran Bodyguard)
 	playerDamageRedirect   map[uuid.UUID]uuid.UUID // controller -> creature that absorbs ALL damage to player
 	creatureDamageRedirect map[uuid.UUID]uuid.UUID // creature -> player who receives damage instead of creature (one-shot)
+	preventCombatDamage    bool                    // true if all combat damage is prevented this turn (Fog, etc.)
 }
 
 func NewEffectManager() *EffectManager {
 	return &EffectManager{
 		powerBonuses:           make(map[uuid.UUID]int),
 		toughBonuses:           make(map[uuid.UUID]int),
-		grantedKW:              make(map[uuid.UUID][]Keyword),
 		removedKW:              make(map[uuid.UUID][]Keyword),
 		preventAttack:          make(map[uuid.UUID]bool),
 		regenerationShields:    make(map[uuid.UUID]int),
 		preventionShields:      make(map[uuid.UUID]int),
 		landUntapLimit:         -1,
 		forcefieldShields:      make(map[uuid.UUID]bool),
-		subtypeOverrides:       make(map[uuid.UUID][]string),
+
 		reverseDamageShields:   make(map[uuid.UUID]bool),
 		channelActive:          make(map[uuid.UUID]bool),
 		colorPrevention:        make(map[uuid.UUID][]Color),
 		spellCostIncrease:      make(map[Color]int),
 		sanctuaryActive:        make(map[uuid.UUID]bool),
-		lichActive:             make(map[uuid.UUID]bool),
+		lichActive:             make(map[uuid.UUID]uuid.UUID),
 		skipNextDraw:           make(map[uuid.UUID]bool),
 		preventBlock:           make(map[uuid.UUID]bool),
 		manaConversion:         make(map[Color]Color),
@@ -239,16 +237,6 @@ func NewEffectManager() *EffectManager {
 		playerDamageRedirect:   make(map[uuid.UUID]uuid.UUID),
 		creatureDamageRedirect: make(map[uuid.UUID]uuid.UUID),
 	}
-}
-
-// SetSubTypeOverride replaces the subtypes of a permanent (e.g. Evil Presence, Phantasmal Terrain).
-func (em *EffectManager) SetSubTypeOverride(permID uuid.UUID, subTypes []string) {
-	em.subtypeOverrides[permID] = subTypes
-}
-
-// SubTypeOverride returns the overridden subtypes for a permanent, or nil if none.
-func (em *EffectManager) SubTypeOverride(permID uuid.UUID) []string {
-	return em.subtypeOverrides[permID]
 }
 
 // AddForcefieldShield marks a player as having Forcefield active this turn.
@@ -291,14 +279,18 @@ func (em *EffectManager) ClearSanctuary(playerID uuid.UUID) {
 	delete(em.sanctuaryActive, playerID)
 }
 
-// SetLichActive marks a player as having Lich replacement effects.
-func (em *EffectManager) SetLichActive(playerID uuid.UUID) {
-	em.lichActive[playerID] = true
+// SetLichActive records the source permanent ID of a Lich controlled by playerID.
+func (em *EffectManager) SetLichActive(playerID, sourceID uuid.UUID) {
+	em.lichActive[playerID] = sourceID
 }
 
-// IsLichActive returns true if the player has Lich replacement effects.
-func (em *EffectManager) IsLichActive(playerID uuid.UUID) bool {
-	return em.lichActive[playerID]
+// IsLichActive returns true if the player has an active Lich still on the battlefield.
+func (em *EffectManager) IsLichActive(g *Game, playerID uuid.UUID) bool {
+	sourceID, ok := em.lichActive[playerID]
+	if !ok {
+		return false
+	}
+	return g.FindPermanent(sourceID) != nil
 }
 
 // ClearLich clears Lich replacement effects for a player.
@@ -660,10 +652,8 @@ func (em *EffectManager) RemoveEndOfCombat() {
 func (em *EffectManager) Apply(g *Game) {
 	em.powerBonuses = make(map[uuid.UUID]int)
 	em.toughBonuses = make(map[uuid.UUID]int)
-	em.grantedKW = make(map[uuid.UUID][]Keyword)
 	em.removedKW = make(map[uuid.UUID][]Keyword)
 	em.preventAttack = make(map[uuid.UUID]bool)
-	em.subtypeOverrides = make(map[uuid.UUID][]string)
 	em.landUntapLimit = -1
 	em.unlimitedLandPlays = false
 	em.spellCostIncrease = make(map[Color]int)
@@ -692,6 +682,7 @@ func (em *EffectManager) Apply(g *Game) {
 			}
 		}
 		p.RuntimeAbilities = base
+		p.Controller = p.Card.Owner()
 		p.SubTypeOverride = nil
 		p.TypesAdded = nil
 		p.BasePTOverride = nil
@@ -763,10 +754,6 @@ func (em *EffectManager) ToughnessBonus(id uuid.UUID) int {
 	return em.toughBonuses[id]
 }
 
-func (em *EffectManager) GrantedKeywords(id uuid.UUID) []Keyword {
-	return em.grantedKW[id]
-}
-
 func (em *EffectManager) CanAttack(id uuid.UUID) bool {
 	return !em.preventAttack[id]
 }
@@ -774,6 +761,21 @@ func (em *EffectManager) CanAttack(id uuid.UUID) bool {
 // SpellCostIncrease returns the additional generic cost for spells of the given color.
 func (em *EffectManager) SpellCostIncrease(c Color) int {
 	return em.spellCostIncrease[c]
+}
+
+// SetPreventCombatDamage marks all combat damage as prevented this turn (Fog, etc.).
+func (em *EffectManager) SetPreventCombatDamage() {
+	em.preventCombatDamage = true
+}
+
+// PreventsCombatDamage returns true if all combat damage is prevented this turn.
+func (em *EffectManager) PreventsCombatDamage() bool {
+	return em.preventCombatDamage
+}
+
+// ClearPreventCombatDamage resets combat damage prevention at end of turn.
+func (em *EffectManager) ClearPreventCombatDamage() {
+	em.preventCombatDamage = false
 }
 
 // grantedByEffect is a marker wrapper to identify abilities granted by continuous effects.

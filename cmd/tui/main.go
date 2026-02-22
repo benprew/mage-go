@@ -6,6 +6,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/mage/mage/internal/tui"
 	"github.com/mage/mage/pkg/mage"
 	"github.com/mage/mage/pkg/mage/interactive"
 
@@ -19,8 +20,8 @@ func main() {
 	ai := interactive.NewAIPlayer("AI")
 
 	// Build decks
-	humanCards := buildDeck(humanDeck, human.PlayerID())
-	aiCards := buildDeck(aiDeck, ai.PlayerID())
+	humanCards := tui.BuildDeck(tui.Archetypes[0].Entries, human.PlayerID())
+	aiCards := tui.BuildDeck(tui.Archetypes[1].Entries, ai.PlayerID())
 
 	// Load libraries
 	for _, c := range humanCards {
@@ -34,19 +35,15 @@ func main() {
 	g := mage.NewGame(human, ai)
 
 	// Draw opening hands
-	drawOpeningHand(human)
-	drawOpeningHand(ai)
-
-	// Channels for communication
-	toTUI := make(chan interactive.GameMsg, 1)
-	fromTUI := make(chan interactive.PriorityAction, 1)
+	tui.DrawOpeningHand(human)
+	tui.DrawOpeningHand(ai)
 
 	// Start game loop in goroutine
 	const aiPause = 400 * time.Millisecond
-	go interactive.RunGameLoop(g, 0, toTUI, fromTUI, aiPause)
+	go interactive.RunGameLoop(g, 0, aiPause)
 
 	// Start bubbletea
-	model := NewModel(fromTUI, toTUI, human.ChoiceRequests(), human.ChoiceResponses())
+	model := tui.NewModel(human.FromTUI(), human.ToTUI(), human.ChoiceRequests(), human.ChoiceResponses())
 	p := tea.NewProgram(model, tea.WithAltScreen())
 
 	if _, err := p.Run(); err != nil {

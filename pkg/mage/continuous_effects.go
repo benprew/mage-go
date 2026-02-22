@@ -21,7 +21,6 @@ func BoostAttached(power, toughness int, at AttachType) ContinuousEffect {
 // GrantAbilityToAttached creates a continuous effect granting a keyword to the attached creature.
 func GrantAbilityToAttached(kw Keyword, at AttachType) ContinuousEffect {
 	return AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
-		g.Effects.grantedKW[target.ID()] = append(g.Effects.grantedKW[target.ID()], kw)
 		target.RuntimeAbilities = append(target.RuntimeAbilities, &grantedByEffect{NewKeywordAbility(kw)})
 		return nil
 	})
@@ -76,7 +75,6 @@ func GrantActivatedAbilityToAttached(effect Effect, cost Cost, at AttachType) Co
 // PreventAttachedFromUntapping creates a continuous effect preventing the attached creature from untapping.
 func PreventAttachedFromUntapping(at AttachType) ContinuousEffect {
 	return AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
-		g.Effects.grantedKW[target.ID()] = append(g.Effects.grantedKW[target.ID()], DoesNotUntapKW)
 		target.RuntimeAbilities = append(target.RuntimeAbilities, &grantedByEffect{NewKeywordAbility(DoesNotUntapKW)})
 		return nil
 	})
@@ -124,7 +122,6 @@ func TemporaryBoost(targetID uuid.UUID, power, toughness int) ContinuousEffect {
 // TemporaryKeyword creates a continuous effect granting a keyword to a creature until end of turn.
 func TemporaryKeyword(targetID uuid.UUID, kw Keyword) ContinuousEffect {
 	return TargetEffect(LayerAbility, EndOfTurn, targetID, func(g *Game, target *Permanent) error {
-		g.Effects.grantedKW[target.ID()] = append(g.Effects.grantedKW[target.ID()], kw)
 		target.RuntimeAbilities = append(target.RuntimeAbilities, &grantedByEffect{NewKeywordAbility(kw)})
 		return nil
 	})
@@ -135,7 +132,6 @@ func TemporaryKeyword(targetID uuid.UUID, kw Keyword) ContinuousEffect {
 func KeywordReplacement(targetID uuid.UUID, from, to Keyword) ContinuousEffect {
 	return TargetEffect(LayerAbility, Indefinite, targetID, func(g *Game, target *Permanent) error {
 		g.Effects.removedKW[target.ID()] = append(g.Effects.removedKW[target.ID()], from)
-		g.Effects.grantedKW[target.ID()] = append(g.Effects.grantedKW[target.ID()], to)
 		target.RuntimeAbilities = append(target.RuntimeAbilities, &grantedByEffect{NewKeywordAbility(to)})
 		return nil
 	})
@@ -302,7 +298,6 @@ func GrantKeywordToAll(kw Keyword, filter PermanentFilter) ContinuousEffect {
 			if filter != nil && !filter(p, g) {
 				continue
 			}
-			g.Effects.grantedKW[p.ID()] = append(g.Effects.grantedKW[p.ID()], kw)
 			p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{NewKeywordAbility(kw)})
 		}
 		return nil
@@ -336,7 +331,6 @@ func BoostControlledCreatures(power, toughness int, filter PermanentFilter) Cont
 func PreventUntapForMatching(filter PermanentFilter) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
 		for _, p := range g.FilterBattlefield(filter) {
-			g.Effects.grantedKW[p.ID()] = append(g.Effects.grantedKW[p.ID()], DoesNotUntapKW)
 			p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{NewKeywordAbility(DoesNotUntapKW)})
 		}
 		return nil
@@ -418,7 +412,6 @@ func CyclopeanTombEffect() ContinuousEffect {
 func PreventAllUntaps() ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
 		for _, p := range g.Battlefield {
-			g.Effects.grantedKW[p.ID()] = append(g.Effects.grantedKW[p.ID()], DoesNotUntapKW)
 			p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{NewKeywordAbility(DoesNotUntapKW)})
 		}
 		return nil
