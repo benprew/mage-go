@@ -572,23 +572,11 @@ func registerArtifacts() {
 
 	Register("Power Surge", func() Card {
 		return NewEnchantment("Power Surge", "{R}{R}",
-			WithAbility(BeginningOfEachUpkeepTrigger(FuncEffect(
-				"deal damage equal to untapped lands",
-				EffectProperties{},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					active := g.ActivePlayerObj()
-					activeID := active.PlayerID()
-					untapped := 0
-					for _, p := range g.Battlefield {
-						if p.Controller == activeID && p.HasType(TypeLand) && !p.Tapped {
-							untapped++
-						}
-					}
-					if untapped > 0 {
-						g.DealDamageToPlayer(active, untapped, sourceID)
-					}
-					return nil
-				}), false)),
+			WithAbility(BeginningOfEachUpkeepTrigger(
+				DealDamageToPlayers(
+					CountBattlefield(SelectActivePlayer(), And(IsLand, Not(IsTapped))),
+					SelectActivePlayer(),
+				), false)),
 		)
 	})
 

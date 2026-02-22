@@ -316,7 +316,11 @@ func registerEnchantments() {
 
 	Register("Karma", func() Card {
 		return NewEnchantment("Karma", "{2}{W}{W}",
-			WithAbility(BeginningOfEachUpkeepTrigger(DealDamagePerSwamp(), false)),
+			WithAbility(BeginningOfEachUpkeepTrigger(
+				DealDamageToPlayers(
+					CountBattlefield(SelectActivePlayer(), HasSubType("Swamp")),
+					SelectActivePlayer(),
+				), false)),
 		)
 	})
 

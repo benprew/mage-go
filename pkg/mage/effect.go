@@ -184,15 +184,15 @@ const (
 // Effects declare their own properties at construction time; the AI reads
 // them without type-switching.
 type EffectProperties struct {
-	Outcome   Outcome // benefit / detriment / unknown (from target's perspective)
-	Damage    int     // fixed damage dealt; 0 for X-spells or non-damage effects
-	DrawCount int     // fixed cards drawn; 0 for X or non-draw effects
-	Mass      bool    // true if effect is board-wide (wrath, earthquake, etc.)
+	Outcome     Outcome     // benefit / detriment / unknown (from target's perspective)
+	DamageValue ValueSource // non-nil if this effect deals damage; call Resolve for amount
+	DrawCount   int         // fixed cards drawn; 0 for X or non-draw effects
+	Mass        bool        // true if effect is board-wide (wrath, earthquake, etc.)
 }
 
 // IsDamageEffect returns true if the given effect is a damage-dealing effect.
 func IsDamageEffect(e Effect) bool {
-	return e.Properties().Damage > 0
+	return e.Properties().DamageValue != nil
 }
 
 // EffectOutcome classifies a single effect from the primary target's perspective.
@@ -219,12 +219,8 @@ type dealDamageEffect struct {
 
 // DealDamage creates an effect that deals damage to a target.
 func DealDamage(amount ValueSource) Effect {
-	damage := 0
-	if fv, ok := amount.(fixedValue); ok {
-		damage = fv.n
-	}
 	return &dealDamageEffect{
-		props:  EffectProperties{Outcome: OutcomeDetriment, Damage: damage},
+		props:  EffectProperties{Outcome: OutcomeDetriment, DamageValue: amount},
 		amount: amount,
 	}
 }
@@ -1031,12 +1027,8 @@ type dealDamageToAllCreaturesEffect struct {
 
 // DealDamageToAllCreatures creates an effect that deals damage to all matching creatures.
 func DealDamageToAllCreatures(amount ValueSource, filter PermanentFilter) Effect {
-	damage := 0
-	if fv, ok := amount.(fixedValue); ok {
-		damage = fv.n
-	}
 	return &dealDamageToAllCreaturesEffect{
-		props:  EffectProperties{Outcome: OutcomeDetriment, Damage: damage, Mass: true},
+		props:  EffectProperties{Outcome: OutcomeDetriment, DamageValue: amount, Mass: true},
 		amount: amount, filter: filter,
 	}
 }
@@ -1094,7 +1086,7 @@ func (e *dealDamageToPlayersEffect) Text() string {
 	return fmt.Sprintf("deal %s damage to %s", e.amount.Text(), e.selector.Text())
 }
 func (e *dealDamageToPlayersEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment}
+	return EffectProperties{Outcome: OutcomeDetriment, DamageValue: e.amount}
 }
 
 // sacrificeSourceEffect sacrifices the source permanent.
@@ -1750,29 +1742,6 @@ func (e *untapSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targe
 func (e *untapSourceEffect) Text() string { return "Untap this permanent" }
 func (e *untapSourceEffect) Properties() EffectProperties { return EffectProperties{} }
 
-// dealDamagePerSwampEffect deals damage to the active player equal to the number of Swamps they control.
-type dealDamagePerSwampEffect struct{}
-
-// DealDamagePerSwamp creates an effect that deals damage to the active player equal to the
-// number of Swamps they control (e.g. Karma).
-func DealDamagePerSwamp() Effect {
-	return &dealDamagePerSwampEffect{}
-}
-
-func (e *dealDamagePerSwampEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	active := g.ActivePlayerObj()
-	activeID := active.PlayerID()
-	swampCount := g.CountBattlefield(And(ControlledBy(activeID), HasSubType("Swamp")))
-	if swampCount > 0 {
-		active.LoseLife(swampCount)
-	}
-	return nil
-}
-
-func (e *dealDamagePerSwampEffect) Text() string {
-	return "Deal damage to active player equal to Swamps they control"
-}
-func (e *dealDamagePerSwampEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // blackViseEffect deals damage to the active player based on hand size > 4.
 type blackViseEffect struct{}
@@ -1892,6 +1861,85 @@ type xValue struct{}
 func XValue() ValueSource                            { return xValue{} }
 func (v xValue) Resolve(g *Game, _, _ uuid.UUID) int { return g.CurrentX }
 func (v xValue) Text() string                        { return "X" }
+
+// countBattlefieldValue is a ValueSource that counts permanents on the battlefield.
+// If who is nil, all permanents are counted regardless of controller.
+type countBattlefieldValue struct {
+	who    PlayerSelector
+	filter PermanentFilter
+}
+
+// CountBattlefield creates a ValueSource that counts permanents on the battlefield
+// matching the filter, optionally restricted to those controlled by who.
+// Pass who=nil to count across all players.
+func CountBattlefield(who PlayerSelector, f PermanentFilter) ValueSource {
+	return countBattlefieldValue{who: who, filter: f}
+}
+func (v countBattlefieldValue) Resolve(g *Game, sourceID, controller uuid.UUID) int {
+	if v.who == nil {
+		return g.CountBattlefield(v.filter)
+	}
+	total := 0
+	for _, pid := range v.who.Select(g, sourceID, controller, nil) {
+		total += g.CountBattlefield(And(v.filter, ControlledBy(pid)))
+	}
+	return total
+}
+func (v countBattlefieldValue) Text() string {
+	if v.who != nil {
+		return fmt.Sprintf("the number of matching permanents the %s controls", v.who.Text())
+	}
+	return "the number of matching permanents on the battlefield"
+}
+
+// countZoneValue is a ValueSource that counts cards in a player zone (hand, graveyard, library).
+type countZoneValue struct {
+	zone   Zone
+	who    PlayerSelector
+	filter CardFilter // nil matches any card
+}
+
+// CountZone creates a ValueSource that counts cards in the given zone for the selected
+// players. Pass filter=nil to count all cards in the zone.
+func CountZone(zone Zone, who PlayerSelector, f CardFilter) ValueSource {
+	return countZoneValue{zone: zone, who: who, filter: f}
+}
+func (v countZoneValue) Resolve(g *Game, sourceID, controller uuid.UUID) int {
+	total := 0
+	for _, pid := range v.who.Select(g, sourceID, controller, nil) {
+		p := g.GetPlayer(pid)
+		if p == nil {
+			continue
+		}
+		var cards []Card
+		switch v.zone {
+		case ZoneHand:
+			cards = p.Hand()
+		case ZoneGraveyard:
+			cards = p.Graveyard()
+		case ZoneLibrary:
+			cards = p.Library()
+		}
+		for _, c := range cards {
+			if v.filter == nil || v.filter(c) {
+				total++
+			}
+		}
+	}
+	return total
+}
+func (v countZoneValue) Text() string {
+	zone := "zone"
+	switch v.zone {
+	case ZoneHand:
+		zone = "hand"
+	case ZoneGraveyard:
+		zone = "graveyard"
+	case ZoneLibrary:
+		zone = "library"
+	}
+	return fmt.Sprintf("the number of cards in the %s's %s", v.who.Text(), zone)
+}
 
 // selectController returns the effect's controller.
 type selectController struct{}
