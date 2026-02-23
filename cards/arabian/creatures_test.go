@@ -191,6 +191,87 @@ func TestDancingScimitar(t *testing.T) {
 	})
 }
 
+func TestJuzamDjinn(t *testing.T) {
+	t.Run("upkeep_deals_1_to_controller", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Juzám Djinn")
+		g.StopAt(3, core.PrecombatMain) // PlayerA's turn 3 = 2nd upkeep
+		g.Execute()
+		// Turn 1 upkeep: 20→19, Turn 3 upkeep: 19→18
+		g.AssertLife(gametest.PlayerA, 18)
+	})
+
+	t.Run("opponent_unaffected", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Juzám Djinn")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 20)
+	})
+}
+
+func TestSerendibEfreet(t *testing.T) {
+	t.Run("upkeep_deals_1_to_controller", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Serendib Efreet")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 19)
+	})
+
+	t.Run("has_flying", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Serendib Efreet")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.Attack(1, gametest.PlayerA, "Serendib Efreet")
+		g.Block(1, gametest.PlayerB, "Grizzly Bears", "Serendib Efreet")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+		// Can't block flyer
+		g.AssertLife(gametest.PlayerB, 17)
+	})
+}
+
+func TestJununEfreet(t *testing.T) {
+	t.Run("survives_if_can_pay_BB", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Junún Efreet")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Junún Efreet", 1)
+	})
+
+	t.Run("sacrificed_if_no_black_mana", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Junún Efreet")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Junún Efreet", 0)
+	})
+}
+
+func TestErgRaiders(t *testing.T) {
+	t.Run("didnt_attack_takes_2", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Erg Raiders")
+		// Don't attack — end step should deal 2 to controller
+		g.StopAt(2, core.Upkeep) // stop at opponent's upkeep to see end step resolved
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 18)
+	})
+
+	t.Run("attacked_no_damage", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Erg Raiders")
+		g.Attack(1, gametest.PlayerA, "Erg Raiders")
+		g.StopAt(2, core.Upkeep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 20)
+	})
+}
+
 func TestDanDan(t *testing.T) {
 	t.Run("sacrifice_when_you_control_no_islands", func(t *testing.T) {
 		g := gametest.NewTestGame(t)

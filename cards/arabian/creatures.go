@@ -146,7 +146,13 @@ func registerCreatures() {
 	})
 
 	Register("Serendib Efreet", func() Card {
-		return NewCreature("Serendib Efreet", "{2}{U}", 3, 4, WithSubTypes("Efreet"))
+		return NewCreature("Serendib Efreet", "{2}{U}", 3, 4,
+			WithSubTypes("Efreet"),
+			WithKeyword(Flying),
+			WithAbility(BeginningOfUpkeepTrigger(
+				DealDamageToPlayers(Fixed(1), SelectController()), false,
+			)),
+		)
 	})
 
 	Register("Sindbad", func() Card {
@@ -164,7 +170,16 @@ func registerCreatures() {
 	})
 
 	Register("Erg Raiders", func() Card {
-		return NewCreature("Erg Raiders", "{1}{B}", 2, 3, WithSubTypes("Human", "Warrior"))
+		return NewCreature("Erg Raiders", "{1}{B}", 2, 3,
+			WithSubTypes("Human", "Warrior"),
+			WithAbility(
+				NewTriggered(EvtEndStep, false,
+					DealDamageToPlayers(Fixed(2), SelectController()),
+				).SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+					return evt.PlayerID == controllerID && !g.HasAttackedThisTurn(sourceID)
+				}),
+			),
+		)
 	})
 
 	Register("Guardian Beast", func() Card {
@@ -176,11 +191,20 @@ func registerCreatures() {
 	})
 
 	Register("Junún Efreet", func() Card {
-		return NewCreature("Junún Efreet", "{1}{B}{B}", 3, 3, WithSubTypes("Efreet"))
+		return NewCreature("Junún Efreet", "{1}{B}{B}", 3, 3,
+			WithSubTypes("Efreet"),
+			WithKeyword(Flying),
+			WithAbility(SacrificeAtUpkeepUnlessPay("{B}{B}")),
+		)
 	})
 
 	Register("Juzám Djinn", func() Card {
-		return NewCreature("Juzám Djinn", "{2}{B}{B}", 5, 5, WithSubTypes("Djinn"))
+		return NewCreature("Juzám Djinn", "{2}{B}{B}", 5, 5,
+			WithSubTypes("Djinn"),
+			WithAbility(BeginningOfUpkeepTrigger(
+				DealDamageToPlayers(Fixed(1), SelectController()), false,
+			)),
+		)
 	})
 
 	Register("Khabál Ghoul", func() Card {
