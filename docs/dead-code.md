@@ -21,8 +21,13 @@ grep -rn 'FunctionName' --include='*.go' .
 
 ## Confirmed dead functions
 
-These 24 functions are defined but never referenced anywhere in the codebase
+These 12 functions are defined but never referenced anywhere in the codebase
 (including tests), and are not interface implementations.
+
+Note: `GroupFor` was previously listed as dead but has an internal caller
+(`doBandedAttackDamage`). The original audit missed this. The remaining
+"safe to delete" entries (`SetPower`, `SetToughness`, `IsLandwalk`,
+`ColorFromSymbol`, `Symbol`, `Total`) were deleted in the 2026-02-23 cleanup.
 
 ### Likely needed for future cards
 
@@ -42,17 +47,3 @@ These were built for card mechanics not yet implemented. Review before deleting.
 | `continuous.go` | 619 | `PowerEqualsCount` | P/T-equals-counter-count effect |
 | `triggered.go` | 56 | `AddEffect` | Builder method on `GenericTriggered` |
 | `triggered.go` | 62 | `AddTarget` | Builder method on `GenericTriggered` |
-
-### Likely safe to delete
-
-These don't correspond to obvious future card needs.
-
-| File | Line | Function | Purpose |
-|------|------|----------|---------|
-| `card.go` | 136 | `SetPower` | BaseCard setter, not in Card interface |
-| `card.go` | 137 | `SetToughness` | BaseCard setter, not in Card interface |
-| `combat.go` | 70 | `GroupFor` | Combat blocker grouping, never called |
-| `keyword.go` | 89 | `IsLandwalk` | Keyword classification method |
-| `mana.go` | 40 | `ColorFromSymbol` | Parse color from mana symbol string |
-| `mana.go` | 57 | `Symbol` | Color-to-symbol-string method |
-| `mana.go` | 215 | `Total` | ManaPool total count (use `TotalMana` instead) |

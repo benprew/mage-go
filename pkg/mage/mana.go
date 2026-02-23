@@ -43,11 +43,7 @@ func (mp *ManaPool) Count(c Color) int {
 	return n
 }
 
-func (mp *ManaPool) Total() int {
-	return len(mp.pool)
-}
-
-// TotalMana returns the total mana in the pool (alias for Total).
+// TotalMana returns the total mana in the pool.
 func (mp *ManaPool) TotalMana() int {
 	return len(mp.pool)
 }

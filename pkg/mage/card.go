@@ -214,11 +214,7 @@ func NewToken(name string, power, toughness int, types []CardType, subTypes []st
 	return c
 }
 
-// Setter methods for cross-package access to unexported fields.
-
-func (c *BaseCard) SetPower(p int)     { c.power = p }
-func (c *BaseCard) SetToughness(t int) { c.toughness = t }
-func (c *BaseCard) IsToken() bool      { return c.isToken }
+func (c *BaseCard) IsToken() bool { return c.isToken }
 
 // NewInstant creates a new instant card. The spell parameter defines what
 // happens when the spell resolves (use [NewTargetedSpell] or [NewSpellAbility]).
