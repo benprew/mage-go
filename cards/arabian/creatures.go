@@ -130,7 +130,24 @@ func registerCreatures() {
 	})
 
 	Register("Island Fish Jasconius", func() Card {
-		return NewCreature("Island Fish Jasconius", "{4}{U}{U}{U}", 6, 8, WithSubTypes("Fish"))
+		return NewCreature("Island Fish Jasconius", "{4}{U}{U}{U}", 6, 8,
+			WithSubTypes("Fish"),
+			WithKeyword(DoesNotUntapKW),
+			WithActivatedAbility(
+				UntapSource(),
+				ManaCostOf("{U}{U}{U}"),
+			),
+			WithStaticAbility(PreventFromAttackingIfDefendingPlayerControls(HasSubType("Island"))),
+			WithAbility(NewTriggered(EvtLeavesBattlefield, false, SacrificeSource()).
+				SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+					for _, p := range g.FilterBattlefield(AnyPermanent) {
+						if p.Controller == controllerID && p.HasSubType("Island") {
+							return false
+						}
+					}
+					return true
+				})),
+		)
 	})
 
 	Register("Merchant Ship", func() Card {
@@ -316,6 +333,19 @@ func registerCreatures() {
 		return NewCreature("Brass Man", "{1}", 1, 3,
 			WithSubTypes("Construct"),
 			WithCardType(TypeArtifact),
+			WithKeyword(DoesNotUntapKW),
+			WithAbility(BeginningOfUpkeepTrigger(
+				FuncEffect("pay {1} to untap", EffectProperties{},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						if g.TryPayCostFromLands(controller, "{1}") {
+							perm := g.FindPermanent(sourceID)
+							if perm != nil {
+								perm.Tapped = false
+							}
+						}
+						return nil
+					}), false,
+			)),
 		)
 	})
 

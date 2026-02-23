@@ -351,6 +351,52 @@ func TestAliBaba(t *testing.T) {
 	})
 }
 
+func TestBrassMan(t *testing.T) {
+	t.Run("doesnt_untap_normally", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Brass Man")
+		g.Attack(1, gametest.PlayerA, "Brass Man")
+		// Turn 3 is PlayerA's next turn — Brass Man should still be tapped if no mana
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertTapped(gametest.PlayerA, "Brass Man", true)
+	})
+
+	t.Run("pays_1_to_untap_at_upkeep", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Brass Man")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.Attack(1, gametest.PlayerA, "Brass Man")
+		// Turn 3 upkeep: pays {1} from Mountain → untaps
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertTapped(gametest.PlayerA, "Brass Man", false)
+	})
+}
+
+func TestIslandFishJasconius(t *testing.T) {
+	t.Run("sacrificed_when_no_islands", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		island := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island Fish Jasconius")
+		g.ExilePermanent(g.FindPermanent(island))
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Island Fish Jasconius", 0)
+	})
+
+	t.Run("cant_attack_if_defender_has_no_island", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island Fish Jasconius")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+		g.Attack(1, gametest.PlayerA, "Island Fish Jasconius")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 20)
+	})
+}
+
 func TestKirdApe(t *testing.T) {
 	t.Run("with_forest_is_2_3", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
