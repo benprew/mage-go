@@ -56,6 +56,18 @@ func (c *Combat) IsAttacking(id uuid.UUID) bool {
 	return c.Attackers[id]
 }
 
+// IsBlocking returns true if the creature with the given ID is a declared blocker.
+func (c *Combat) IsBlocking(id uuid.UUID) bool {
+	for _, g := range c.Groups {
+		for _, bid := range g.BlockerIDs {
+			if bid == id {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // AddBand records a group of creatures attacking as a band.
 func (c *Combat) AddBand(members []uuid.UUID) {
 	for _, id := range members {

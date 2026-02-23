@@ -204,6 +204,11 @@ var IsAttacking = NewPermanentFilter("attacking", func(p *Permanent, g *Game) bo
 	return g.Combat.IsAttacking(p.ID())
 })
 
+// IsBlocking matches creatures currently declared as blockers.
+var IsBlocking = NewPermanentFilter("blocking", func(p *Permanent, g *Game) bool {
+	return g.Combat != nil && g.Combat.IsBlocking(p.ID())
+})
+
 // HasKeywordFilter returns a filter matching permanents with the given keyword.
 func HasKeywordFilter(kw Keyword) PermanentFilter {
 	return NewPermanentFilter("with "+kw.String(), func(p *Permanent, _ *Game) bool {

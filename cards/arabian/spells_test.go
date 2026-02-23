@@ -1,0 +1,113 @@
+package arabian
+
+import (
+	"testing"
+
+	"github.com/mage/mage/pkg/mage/core"
+	"github.com/mage/mage/pkg/mage/gametest"
+)
+
+func TestPiety(t *testing.T) {
+	t.Run("blocking_creatures_get_plus_0_plus_3", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")                // 2/2 attacker
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Merfolk of the Pearl Trident") // 1/1 blocker
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Piety")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Plains")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Plains")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Plains")
+		g.Attack(1, gametest.PlayerA, "Grizzly Bears")
+		g.Block(1, gametest.PlayerB, "Merfolk of the Pearl Trident", "Grizzly Bears")
+		// Cast after blockers are declared (FirstStrikeDamage runs after DeclareBlockers)
+		g.CastSpell(1, core.FirstStrikeDamage, gametest.PlayerB, "Piety")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		// 1/1 becomes 1/4 with Piety — survives blocking a 2/2
+		g.AssertPermanentCount(gametest.PlayerB, "Merfolk of the Pearl Trident", 1)
+	})
+
+	t.Run("non_blocking_creatures_unaffected", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant") // 3/3, not blocking
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Piety")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Plains")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Plains")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Plains")
+		g.Attack(1, gametest.PlayerA, "Grizzly Bears")
+		// Hill Giant does NOT block
+		g.CastSpell(1, core.FirstStrikeDamage, gametest.PlayerB, "Piety")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		// Bears hits through unblocked — 2 damage to PlayerB
+		g.AssertLife(gametest.PlayerB, 18)
+	})
+}
+
+func TestArmyOfAllah(t *testing.T) {
+	t.Run("attacking_creatures_get_plus_2_plus_0", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Army of Allah")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+		g.Attack(1, gametest.PlayerA, "Grizzly Bears")
+		// Cast after attackers declared
+		g.CastSpell(1, core.DeclareBlockers, gametest.PlayerA, "Army of Allah")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		// 2/2 becomes 4/2 with Army of Allah — deals 4 damage
+		g.AssertLife(gametest.PlayerB, 16)
+	})
+
+	t.Run("non_attacking_creatures_unaffected", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2 attacker
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")    // 3/3 stays back
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Army of Allah")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+		g.Attack(1, gametest.PlayerA, "Grizzly Bears")
+		g.CastSpell(1, core.DeclareBlockers, gametest.PlayerA, "Army of Allah")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+		// Only Bears attacked (boosted to 4/2), Hill Giant stayed back
+		g.AssertLife(gametest.PlayerB, 16)
+		g.AssertPowerToughness(gametest.PlayerA, "Hill Giant", 3, 3)
+	})
+}
+
+func TestSandstorm(t *testing.T) {
+	t.Run("deals_1_to_each_attacker", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Flying Men")    // 1/1
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Sandstorm")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forest")
+		g.Attack(1, gametest.PlayerA, "Grizzly Bears", "Flying Men")
+		// Cast after attackers declared
+		g.CastSpell(1, core.DeclareBlockers, gametest.PlayerB, "Sandstorm")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		// Flying Men (1/1) dies to 1 damage
+		g.AssertPermanentCount(gametest.PlayerA, "Flying Men", 0)
+		// Grizzly Bears (2/2) survives but took 1
+		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
+	})
+
+	t.Run("non_attacking_creatures_unaffected", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // attacking
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Flying Men")    // defender's 1/1, not attacking
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Sandstorm")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forest")
+		g.Attack(1, gametest.PlayerA, "Grizzly Bears")
+		g.CastSpell(1, core.DeclareBlockers, gametest.PlayerB, "Sandstorm")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		// Defender's Flying Men unaffected
+		g.AssertPermanentCount(gametest.PlayerB, "Flying Men", 1)
+	})
+}

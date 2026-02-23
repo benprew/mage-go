@@ -358,6 +358,39 @@ func (e *boostMatchingUntilEndOfTurnEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit, Mass: true}
 }
 
+// boostAllMatchingUntilEndOfTurnEffect boosts the P/T of all creatures matching a predicate until end of turn,
+// regardless of controller (e.g. Piety, Army of Allah).
+type boostAllMatchingUntilEndOfTurnEffect struct {
+	power     ValueSource
+	toughness ValueSource
+	predicate PermanentFilter
+}
+
+// BoostAllMatchingUntilEndOfTurn creates an effect that gives +P/+T until end of turn to all
+// creatures on the battlefield that match the predicate, regardless of controller.
+func BoostAllMatchingUntilEndOfTurn(power, toughness ValueSource, predicate PermanentFilter) Effect {
+	return &boostAllMatchingUntilEndOfTurnEffect{power: power, toughness: toughness, predicate: predicate}
+}
+
+func (e *boostAllMatchingUntilEndOfTurnEffect) Apply(g GameMutator, sourceID uuid.UUID, controller uuid.UUID, targets []uuid.UUID) error {
+	for _, perm := range g.FilterBattlefield(And(IsCreature, e.predicate)) {
+		p := e.power.Resolve(g, sourceID, controller)
+		t := e.toughness.Resolve(g, sourceID, controller)
+		eff := TemporaryBoost(perm.ID(), p, t)
+		eff.SetSourceID(sourceID)
+		g.AddContinuousEffect(eff)
+	}
+	g.ApplyContinuousEffects()
+	return nil
+}
+
+func (e *boostAllMatchingUntilEndOfTurnEffect) Text() string {
+	return "matching creatures get a boost until end of turn"
+}
+func (e *boostAllMatchingUntilEndOfTurnEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit, Mass: true}
+}
+
 // doubleSourcePowerEffect doubles the source creature's power until end of turn.
 type doubleSourcePowerEffect struct{}
 
