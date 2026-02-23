@@ -190,10 +190,11 @@ func CanBlock(blocker, attacker *Permanent, g *Game) bool {
 
 // HasLandwalkEvasion returns true if the attacker has a landwalk ability
 // and the defending player controls a land of the matching subtype.
+// Uses the data-driven landwalkSubtypes map so new landwalk variants
+// (e.g. Desertwalk) work automatically.
 func HasLandwalkEvasion(attacker *Permanent, defenderID uuid.UUID, g *Game) bool {
-	for _, kw := range []Keyword{Forestwalk, Islandwalk, Swampwalk, Mountainwalk, Plainswalk} {
+	for kw, subtype := range LandwalkAttrs() {
 		if attacker.HasKeyword(kw) {
-			subtype := kw.LandwalkSubtype()
 			for _, p := range g.Battlefield {
 				if p.Controller == defenderID && p.HasType(TypeLand) && p.HasSubType(subtype) {
 					return true

@@ -397,6 +397,45 @@ func TestIslandFishJasconius(t *testing.T) {
 	})
 }
 
+func TestDesertNomads(t *testing.T) {
+	t.Run("unblockable_if_defender_controls_desert", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Desert Nomads")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Desert")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.Attack(1, gametest.PlayerA, "Desert Nomads")
+		g.Block(1, gametest.PlayerB, "Grizzly Bears", "Desert Nomads")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+		// Desertwalk — can't be blocked
+		g.AssertLife(gametest.PlayerB, 18)
+	})
+
+	t.Run("blockable_if_no_desert", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Desert Nomads")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.Attack(1, gametest.PlayerA, "Desert Nomads")
+		g.Block(1, gametest.PlayerB, "Grizzly Bears", "Desert Nomads")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+		// Blocked normally — both trade (2/2 vs 2/2)
+		g.AssertLife(gametest.PlayerB, 20)
+	})
+
+	t.Run("desert_damage_prevented", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Desert Nomads")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Desert")
+		g.Attack(1, gametest.PlayerA, "Desert Nomads")
+		g.ActivateAbility(1, core.EndCombat, gametest.PlayerB, "Desert", "Desert Nomads")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+		// Desert damage should be prevented
+		g.AssertPermanentCount(gametest.PlayerA, "Desert Nomads", 1)
+	})
+}
+
 func TestKirdApe(t *testing.T) {
 	t.Run("with_forest_is_2_3", func(t *testing.T) {
 		g := gametest.NewTestGame(t)

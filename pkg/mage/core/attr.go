@@ -53,6 +53,7 @@ const (
 	CanBlockAny
 	CanBlockAdditional
 	BasiliskTouch
+	Desertwalk
 )
 
 // Backward-compat aliases: capability attrs that replaced old keyword constants.
@@ -149,6 +150,8 @@ func (a Attr) String() string {
 		return "Can Block Any Number"
 	case BasiliskTouch:
 		return "Basilisk Touch"
+	case Desertwalk:
+		return "Desertwalk"
 	default:
 		return "Unknown"
 	}
@@ -163,6 +166,7 @@ var landwalkSubtypes = map[Attr]string{
 	Swampwalk:    "Swamp",
 	Mountainwalk: "Mountain",
 	Plainswalk:   "Plains",
+	Desertwalk:   "Desert",
 }
 
 // subtypeToLandwalk is the reverse of landwalkSubtypes, built once at init.
@@ -185,6 +189,12 @@ func (a Attr) IsLandwalk() bool {
 // Returns "" if a is not a landwalk attr.
 func (a Attr) LandwalkSubtype() string {
 	return landwalkSubtypes[a]
+}
+
+// LandwalkAttrs returns the full landwalk attr → subtype map. Used by combat code
+// to iterate over all registered landwalk variants.
+func LandwalkAttrs() map[Attr]string {
+	return landwalkSubtypes
 }
 
 // LandwalkAttr returns the Attr for a given land subtype (e.g. "Swamp" → Swampwalk).

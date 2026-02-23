@@ -268,7 +268,16 @@ func registerCreatures() {
 	})
 
 	Register("Desert Nomads", func() Card {
-		return NewCreature("Desert Nomads", "{2}{R}", 2, 2, WithSubTypes("Human", "Nomad"))
+		return NewCreature("Desert Nomads", "{2}{R}", 2, 2,
+			WithSubTypes("Human", "Nomad"),
+			WithKeyword(Desertwalk),
+			WithStaticAbility(PreventDamageFromTo(
+				HasSubType("Desert"),
+				func(sourceID uuid.UUID) PermanentFilter {
+					return IsID(sourceID)
+				},
+			)),
+		)
 	})
 
 	Register("Hurr Jackal", func() Card {
