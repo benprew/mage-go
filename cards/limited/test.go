@@ -303,7 +303,7 @@ func TestAlphaXSpells(t *testing.T) {
 		g.Execute()
 		// PlayerB had 3 cards, discarded 2
 		// Count remaining hand
-		player := g.Players[1]
+		player := g.AllPlayers()[1]
 		if len(player.Hand()) != 1 {
 			t.Errorf("expected 1 card in hand, got %d", len(player.Hand()))
 		}
@@ -319,7 +319,7 @@ func TestAlphaXSpells(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		// PlayerA cast Braingeyser (removed from hand), drew 2 cards
-		player := g.Players[0]
+		player := g.AllPlayers()[0]
 		if len(player.Hand()) != 2 {
 			t.Errorf("expected 2 cards in hand, got %d", len(player.Hand()))
 		}
@@ -369,7 +369,7 @@ func TestAlphaDiscard(t *testing.T) {
 		g.Execute()
 		// Hypnotic Specter deals 2 damage and forces discard
 		g.AssertLife(gametest.PlayerB, 18)
-		player := g.Players[1]
+		player := g.AllPlayers()[1]
 		if len(player.Hand()) != 1 {
 			t.Errorf("expected 1 card in hand after discard, got %d", len(player.Hand()))
 		}
@@ -416,7 +416,7 @@ func TestAlphaDualLands(t *testing.T) {
 				g.AddCard(core.ZoneBattlefield, gametest.PlayerA, d.name)
 				g.StopAt(1, core.PrecombatMain)
 				g.Execute()
-				perm := g.FindPermanentByName(d.name, g.Players[0].PlayerID())
+				perm := g.FindPermanentByName(d.name, g.AllPlayers()[0].PlayerID())
 				if perm == nil {
 					t.Fatalf("%s not found on battlefield", d.name)
 				}
@@ -670,7 +670,7 @@ func TestAlphaDarkRitual(t *testing.T) {
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Dark Ritual")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		pool := g.Players[0].ManaPool()
+		pool := g.AllPlayers()[0].ManaPool()
 		if pool.Count(core.Black) < 3 {
 			t.Errorf("expected at least 3 black mana, got %d", pool.Count(core.Black))
 		}
@@ -689,7 +689,7 @@ func TestAlphaAncestralRecall(t *testing.T) {
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Ancestral Recall", "PlayerA")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		player := g.Players[0]
+		player := g.AllPlayers()[0]
 		if len(player.Hand()) != 3 {
 			t.Errorf("expected 3 cards in hand, got %d", len(player.Hand()))
 		}

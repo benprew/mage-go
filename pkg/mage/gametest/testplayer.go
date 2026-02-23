@@ -180,7 +180,7 @@ func (tp *TestPlayer) ChooseMode(modes []string, reason string) int {
 }
 
 // ChoosePermanent picks a permanent from candidates.
-func (tp *TestPlayer) ChoosePermanent(candidates []*mage.Permanent, reason string, g *mage.Game) *mage.Permanent {
+func (tp *TestPlayer) ChoosePermanent(candidates []*mage.Permanent, reason string, g mage.GameReader) *mage.Permanent {
 	if len(candidates) == 0 {
 		return nil
 	}
@@ -197,7 +197,7 @@ func (tp *TestPlayer) ChoosePermanent(candidates []*mage.Permanent, reason strin
 }
 
 // ChooseCardsFromHand picks cards from hand by name.
-func (tp *TestPlayer) ChooseCardsFromHand(amount int, reason string, g *mage.Game) []mage.Card {
+func (tp *TestPlayer) ChooseCardsFromHand(amount int, reason string, g mage.GameReader) []mage.Card {
 	hand := tp.Hand()
 	if amount > len(hand) {
 		amount = len(hand)
@@ -235,7 +235,7 @@ func (tp *TestPlayer) ChooseManaColor(reason string) core.Color {
 }
 
 // ChooseCardFromLibrary picks a card from candidates.
-func (tp *TestPlayer) ChooseCardFromLibrary(candidates []mage.Card, reason string, g *mage.Game) mage.Card {
+func (tp *TestPlayer) ChooseCardFromLibrary(candidates []mage.Card, reason string, g mage.GameReader) mage.Card {
 	if len(candidates) == 0 {
 		return nil
 	}

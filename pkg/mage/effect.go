@@ -10,7 +10,7 @@ import (
 
 // Effect represents a one-shot effect that resolves.
 type Effect interface {
-	Apply(g *Game, sourceID uuid.UUID, controller uuid.UUID, targets []uuid.UUID) error
+	Apply(g GameMutator, sourceID uuid.UUID, controller uuid.UUID, targets []uuid.UUID) error
 	Text() string
 	Properties() EffectProperties
 }
@@ -20,18 +20,18 @@ type Effect interface {
 type funcEffect struct {
 	text  string
 	props EffectProperties
-	fn    func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error
+	fn    func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error
 }
 
 // FuncEffect creates an Effect from an anonymous function. This is ideal for
 // card-specific effects that are used by only one card and don't warrant a
 // dedicated type. The text parameter is used for Text() (rules text display).
 // The props parameter allows callers to declare AI-visible properties (outcome, damage, etc.).
-func FuncEffect(text string, props EffectProperties, fn func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error) Effect {
+func FuncEffect(text string, props EffectProperties, fn func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error) Effect {
 	return &funcEffect{text: text, props: props, fn: fn}
 }
 
-func (e *funcEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *funcEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	return e.fn(g, sourceID, controller, targets)
 }
 
@@ -48,13 +48,13 @@ func GainLife(amount int) Effect {
 	return &gainLifeEffect{amount: amount}
 }
 
-func (e *gainLifeEffect) Apply(g *Game, _, controller uuid.UUID, _ []uuid.UUID) error {
+func (e *gainLifeEffect) Apply(g GameMutator, _, controller uuid.UUID, _ []uuid.UUID) error {
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return ErrPlayerNotFound
 	}
 	g.PlayerGainLife(p, e.amount)
-	if !g.Effects.IsLichActive(g, controller) {
+	if !g.IsLichActive(controller) {
 		g.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: controller, Amount: e.amount})
 	}
 	return nil
@@ -79,7 +79,7 @@ func AddCounters(ct CounterType, amount ValueSource, target PermanentSelector) E
 	return &addCountersEffect{ct: ct, amount: amount, target: target}
 }
 
-func (e *addCountersEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *addCountersEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	var perm *Permanent
 	if e.target == SelectSource {
 		perm = g.FindPermanent(sourceID)
@@ -125,17 +125,17 @@ func CloneTarget(additionalTypes ...CardType) Effect {
 	return &cloneTargetEffect{additionalTypes: additionalTypes}
 }
 
-func (e *cloneTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 || g.ResolvingCard == nil {
+func (e *cloneTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	if len(targets) == 0 || g.GetResolvingCard() == nil {
 		return nil
 	}
 	target := g.FindPermanent(targets[0])
 	if target == nil {
 		return nil
 	}
-	g.ResolvingCard.CloneFrom(target.Card)
+	g.GetResolvingCard().CloneFrom(target.Card)
 	for _, t := range e.additionalTypes {
-		g.ResolvingCard.AddType(t)
+		g.GetResolvingCard().AddType(t)
 	}
 	return nil
 }
@@ -156,7 +156,7 @@ func RemoveCountersFromSource(ct CounterType, amount int) Effect {
 	return &removeCountersFromSourceEffect{ct: ct, amount: amount}
 }
 
-func (e *removeCountersFromSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *removeCountersFromSourceEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	p := g.FindPermanent(sourceID)
 	if p == nil {
 		return nil
@@ -225,7 +225,7 @@ func DealDamage(amount ValueSource) Effect {
 	}
 }
 
-func (e *dealDamageEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *dealDamageEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return fmt.Errorf("no target for damage")
 	}
@@ -236,7 +236,7 @@ func (e *dealDamageEffect) Apply(g *Game, sourceID, controller uuid.UUID, target
 	targetID := targets[0]
 
 	// Check if target is a player
-	for _, pl := range g.Players {
+	for _, pl := range g.AllPlayers() {
 		if pl.PlayerID() == targetID {
 			g.DealDamageToPlayer(pl, amount, sourceID)
 			return nil
@@ -275,7 +275,7 @@ func DestroyTarget() Effect {
 	return &destroyTargetEffect{}
 }
 
-func (e *destroyTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *destroyTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return fmt.Errorf("no target for destroy")
 	}
@@ -304,7 +304,7 @@ func ReturnFromGraveyardToBattlefield() Effect {
 	return &returnFromGraveyardEffect{}
 }
 
-func (e *returnFromGraveyardEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *returnFromGraveyardEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return fmt.Errorf("no target for reanimate")
 	}
@@ -336,7 +336,7 @@ func ReturnSourceToHand() Effect {
 	return &returnSourceToHandEffect{}
 }
 
-func (e *returnSourceToHandEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *returnSourceToHandEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return ErrPlayerNotFound
@@ -371,7 +371,7 @@ func CompositeEffects(text string, effects ...Effect) Effect {
 	return &compositeEffect{effects: effects, text: text}
 }
 
-func (e *compositeEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *compositeEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	for _, eff := range e.effects {
 		if err := eff.Apply(g, sourceID, controller, targets); err != nil {
 			return err
@@ -391,7 +391,7 @@ func AttachToTarget() Effect {
 	return &attachToTargetEffect{}
 }
 
-func (e *attachToTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *attachToTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return fmt.Errorf("no target for attach")
 	}
@@ -410,7 +410,7 @@ func ReturnToHandTarget() Effect {
 	return &returnToHandTargetEffect{}
 }
 
-func (e *returnToHandTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *returnToHandTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return fmt.Errorf("no target for bounce")
 	}
@@ -447,7 +447,7 @@ func ReturnFromGraveyardToHandTarget() Effect {
 	return &returnFromGraveyardToHandTargetEffect{}
 }
 
-func (e *returnFromGraveyardToHandTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *returnFromGraveyardToHandTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return fmt.Errorf("no target for raise dead")
 	}
@@ -483,15 +483,15 @@ func BoostMatchingUntilEndOfTurn(power, toughness ValueSource, predicate Permane
 	return &boostMatchingUntilEndOfTurnEffect{power: power, toughness: toughness, predicate: predicate}
 }
 
-func (e *boostMatchingUntilEndOfTurnEffect) Apply(g *Game, sourceID uuid.UUID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *boostMatchingUntilEndOfTurnEffect) Apply(g GameMutator, sourceID uuid.UUID, controller uuid.UUID, targets []uuid.UUID) error {
 	for _, perm := range g.FilterBattlefield(And(ControlledBy(controller), IsCreature, e.predicate)) {
 		p := e.power.Resolve(g, sourceID, controller)
 		t := e.toughness.Resolve(g, sourceID, controller)
 		eff := TemporaryBoost(perm.ID(), p, t)
 		eff.SetSourceID(sourceID)
-		g.Effects.Add(eff)
+		g.AddContinuousEffect(eff)
 	}
-	g.Effects.Apply(g)
+	g.ApplyContinuousEffects()
 	return nil
 }
 
@@ -514,7 +514,7 @@ func BoostUntilEndOfTurn(power, toughness ValueSource, target PermanentSelector)
 	return &boostUntilEndOfTurnEffect{power: power, toughness: toughness, target: target}
 }
 
-func (e *boostUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *boostUntilEndOfTurnEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	var perm *Permanent
 	if e.target == SelectSource {
 		perm = g.FindPermanent(sourceID)
@@ -531,8 +531,8 @@ func (e *boostUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUI
 	t := e.toughness.Resolve(g, sourceID, controller)
 	eff := TemporaryBoost(perm.ID(), p, t)
 	eff.SetSourceID(sourceID)
-	g.Effects.Add(eff)
-	g.Effects.Apply(g)
+	g.AddContinuousEffect(eff)
+	g.ApplyContinuousEffects()
 	return nil
 }
 
@@ -565,7 +565,7 @@ func MarkDestroyAtEOTAfterNActivations(threshold int) Effect {
 	return &markDestroyAtEOTAfterNActivationsEffect{threshold: threshold}
 }
 
-func (e *markDestroyAtEOTAfterNActivationsEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *markDestroyAtEOTAfterNActivationsEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	perm := g.FindPermanent(sourceID)
 	if perm == nil {
 		return nil
@@ -610,7 +610,7 @@ func DestroyTargetArtifact() Effect {
 	return &destroyTargetPermanentEffect{text: "destroy target artifact"}
 }
 
-func (e *destroyTargetPermanentEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *destroyTargetPermanentEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return fmt.Errorf("no target for destroy")
 	}
@@ -654,7 +654,7 @@ func DestroyAllMatching(filter PermanentFilter, text string) Effect {
 	return &destroyAllMatchingEffect{filter: filter, text: text}
 }
 
-func (e *destroyAllMatchingEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *destroyAllMatchingEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	toDestroy := g.FilterBattlefield(And(e.filter, Not(HasKeywordFilter(Indestructible))))
 	for _, p := range toDestroy {
 		g.DestroyPermanent(p)
@@ -675,7 +675,7 @@ func TapTarget() Effect {
 	return &tapTargetEffect{}
 }
 
-func (e *tapTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *tapTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return fmt.Errorf("no target for tap")
 	}
@@ -700,7 +700,7 @@ func UntapTarget() Effect {
 	return &untapTargetEffect{}
 }
 
-func (e *untapTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *untapTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return fmt.Errorf("no target for untap")
 	}
@@ -727,7 +727,7 @@ func DiscardRandom(amount int) Effect {
 	return &discardRandomEffect{amount: amount}
 }
 
-func (e *discardRandomEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *discardRandomEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	var targetPlayer Player
 	if len(targets) > 0 {
 		targetPlayer = g.GetPlayer(targets[0])
@@ -768,7 +768,7 @@ func DiscardCards(amount ValueSource) Effect {
 	return &discardCardsEffect{amount: amount}
 }
 
-func (e *discardCardsEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *discardCardsEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	var targetPlayer Player
 	if len(targets) > 0 {
 		targetPlayer = g.GetPlayer(targets[0])
@@ -809,7 +809,7 @@ func AddMana(color Color, amount int) Effect {
 	return &addManaEffect{color: color, amount: amount}
 }
 
-func (e *addManaEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *addManaEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return ErrPlayerNotFound
@@ -833,7 +833,7 @@ func AddAnyMana(amount int, _ Color) Effect {
 	return &addAnyManaEffect{amount: amount}
 }
 
-func (e *addAnyManaEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *addAnyManaEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return ErrPlayerNotFound
@@ -866,7 +866,7 @@ func DrawCards(amount ValueSource) Effect {
 	}
 }
 
-func (e *drawCardsTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *drawCardsTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	var targetPlayer Player
 	if len(targets) > 0 {
 		targetPlayer = g.GetPlayer(targets[0])
@@ -910,7 +910,7 @@ func DrawCardsActivePlayer(amount ValueSource) Effect {
 	}
 }
 
-func (e *drawCardsActivePlayerEffect) Apply(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
+func (e *drawCardsActivePlayerEffect) Apply(g GameMutator, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
 	active := g.ActivePlayerObj()
 	if active == nil {
 		return ErrPlayerNotFound
@@ -935,7 +935,7 @@ func ExileTarget() Effect {
 	return &exileTargetEffect{}
 }
 
-func (e *exileTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *exileTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return fmt.Errorf("no target for exile")
 	}
@@ -962,7 +962,7 @@ func GainLifeTarget(amount ValueSource) Effect {
 	return &gainLifeTargetEffect{amount: amount}
 }
 
-func (e *gainLifeTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *gainLifeTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	var targetPlayer Player
 	if len(targets) > 0 {
 		targetPlayer = g.GetPlayer(targets[0])
@@ -975,7 +975,7 @@ func (e *gainLifeTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, ta
 	}
 	amount := e.amount.Resolve(g, sourceID, controller)
 	g.PlayerGainLife(targetPlayer, amount)
-	if !g.Effects.IsLichActive(g, targetPlayer.PlayerID()) {
+	if !g.IsLichActive(targetPlayer.PlayerID()) {
 		g.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: targetPlayer.PlayerID(), Amount: amount})
 	}
 	return nil
@@ -1001,7 +1001,7 @@ func LoseLife(amount int) Effect {
 	return &loseLifeEffect{amount: amount}
 }
 
-func (e *loseLifeEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *loseLifeEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return ErrPlayerNotFound
@@ -1033,7 +1033,7 @@ func DealDamageToAllCreatures(amount ValueSource, filter PermanentFilter) Effect
 	}
 }
 
-func (e *dealDamageToAllCreaturesEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *dealDamageToAllCreaturesEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	amount := e.amount.Resolve(g, sourceID, controller)
 	if amount <= 0 {
 		return nil
@@ -1067,7 +1067,7 @@ func DealDamageToPlayers(amount ValueSource, selector PlayerSelector) Effect {
 	return &dealDamageToPlayersEffect{amount: amount, selector: selector}
 }
 
-func (e *dealDamageToPlayersEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *dealDamageToPlayersEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	amount := e.amount.Resolve(g, sourceID, controller)
 	if amount <= 0 {
 		return nil
@@ -1097,7 +1097,7 @@ func SacrificeSource() Effect {
 	return &sacrificeSourceEffect{}
 }
 
-func (e *sacrificeSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *sacrificeSourceEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	perm := g.FindPermanent(sourceID)
 	if perm == nil {
 		return nil
@@ -1118,7 +1118,7 @@ func SearchLibraryToHand() Effect {
 	return &searchLibraryEffect{}
 }
 
-func (e *searchLibraryEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *searchLibraryEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return ErrPlayerNotFound
@@ -1158,7 +1158,7 @@ func CounterSpell() Effect {
 	return &counterSpellEffect{}
 }
 
-func (e *counterSpellEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *counterSpellEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return fmt.Errorf("no target spell to counter")
 	}
@@ -1179,8 +1179,8 @@ func PreventAllCombatDamage() Effect {
 	return &preventAllCombatDamageEffect{}
 }
 
-func (e *preventAllCombatDamageEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	g.Effects.SetPreventCombatDamage()
+func (e *preventAllCombatDamageEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	g.SetPreventCombatDamage()
 	return nil
 }
 
@@ -1199,8 +1199,8 @@ func ExtraTurn() Effect {
 	return &extraTurnEffect{}
 }
 
-func (e *extraTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	g.ExtraTurns = append(g.ExtraTurns, controller)
+func (e *extraTurnEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	g.GrantExtraTurn(controller)
 	return nil
 }
 
@@ -1217,7 +1217,7 @@ func ControlChangeTarget() Effect {
 	return &controlChangeTargetEffect{}
 }
 
-func (e *controlChangeTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *controlChangeTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return fmt.Errorf("no target for control change")
 	}
@@ -1246,7 +1246,7 @@ func GrantKeywordUntilEndOfTurn(kw Keyword, target PermanentSelector) Effect {
 	return &grantKeywordUntilEndOfTurnEffect{keyword: kw, target: target}
 }
 
-func (e *grantKeywordUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *grantKeywordUntilEndOfTurnEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	var perm *Permanent
 	if e.target == SelectSource {
 		perm = g.FindPermanent(sourceID)
@@ -1261,8 +1261,8 @@ func (e *grantKeywordUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller u
 	}
 	eff := TemporaryKeyword(perm.ID(), e.keyword)
 	eff.SetSourceID(sourceID)
-	g.Effects.Add(eff)
-	g.Effects.Apply(g)
+	g.AddContinuousEffect(eff)
+	g.ApplyContinuousEffects()
 	return nil
 }
 
@@ -1284,12 +1284,12 @@ func RegenerateSource() Effect {
 	return &regenerateSourceEffect{}
 }
 
-func (e *regenerateSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *regenerateSourceEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	perm := g.FindPermanent(sourceID)
 	if perm == nil {
 		return nil
 	}
-	g.Effects.AddRegenerationShield(sourceID)
+	g.AddRegenerationShield(sourceID)
 	return nil
 }
 
@@ -1306,7 +1306,7 @@ func RegenerateTarget() Effect {
 	return &regenerateTargetEffect{}
 }
 
-func (e *regenerateTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *regenerateTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return nil
 	}
@@ -1314,7 +1314,7 @@ func (e *regenerateTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, 
 	if perm == nil {
 		return nil
 	}
-	g.Effects.AddRegenerationShield(perm.ID())
+	g.AddRegenerationShield(perm.ID())
 	return nil
 }
 
@@ -1333,14 +1333,14 @@ func PreventDamageToTarget(amount ValueSource) Effect {
 	return &preventDamageToTargetEffect{amount: amount}
 }
 
-func (e *preventDamageToTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *preventDamageToTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return nil
 	}
 	amount := e.amount.Resolve(g, sourceID, controller)
 	perm := g.FindPermanent(targets[0])
 	if perm != nil {
-		g.Effects.AddPreventionShield(perm.ID(), amount)
+		g.AddPreventionShield(perm.ID(), amount)
 		return nil
 	}
 	// Could also prevent damage to player - not implemented yet
@@ -1369,7 +1369,7 @@ func SacrificeCreatureOrDamage(damage int) Effect {
 	return &sacrificeOrDamageEffect{damage: damage}
 }
 
-func (e *sacrificeOrDamageEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *sacrificeOrDamageEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	// Collect creatures that can be sacrificed (not the source itself)
 	candidates := g.FilterBattlefield(And(ControlledBy(controller), IsCreature, NotID(sourceID)))
 	if len(candidates) > 0 {
@@ -1401,7 +1401,7 @@ func DoubleTargetPower() Effect {
 	return &doubleSourcePowerEffect{}
 }
 
-func (e *doubleSourcePowerEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *doubleSourcePowerEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return nil
 	}
@@ -1412,8 +1412,8 @@ func (e *doubleSourcePowerEffect) Apply(g *Game, sourceID, controller uuid.UUID,
 	currentPower := perm.CurrentPower(g)
 	eff := TemporaryBoost(perm.ID(), currentPower, 0)
 	eff.SetSourceID(sourceID)
-	g.Effects.Add(eff)
-	g.Effects.Apply(g)
+	g.AddContinuousEffect(eff)
+	g.ApplyContinuousEffects()
 	return nil
 }
 
@@ -1433,7 +1433,7 @@ func DestroyTargetAtEndOfTurn() Effect {
 	return &destroyTargetAtEndOfTurnEffect{}
 }
 
-func (e *destroyTargetAtEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *destroyTargetAtEndOfTurnEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return nil
 	}
@@ -1468,8 +1468,8 @@ func DiscardHandAndDraw(n int) Effect {
 	return &discardHandAndDrawEffect{drawCount: n}
 }
 
-func (e *discardHandAndDrawEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	for _, p := range g.Players {
+func (e *discardHandAndDrawEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	for _, p := range g.AllPlayers() {
 		// Discard entire hand
 		hand := p.Hand()
 		for _, c := range hand {
@@ -1501,8 +1501,8 @@ func ShuffleGraveyardIntoLibraryAndDraw(n int) Effect {
 	return &shuffleGraveyardIntoLibraryAndDrawEffect{drawCount: n}
 }
 
-func (e *shuffleGraveyardIntoLibraryAndDrawEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	for _, p := range g.Players {
+func (e *shuffleGraveyardIntoLibraryAndDrawEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	for _, p := range g.AllPlayers() {
 		// Move graveyard into library
 		for _, c := range p.Graveyard() {
 			p.AddToLibrary(c)
@@ -1534,12 +1534,12 @@ func CounterSpellIfColor(c Color) Effect {
 	return &counterSpellIfColorEffect{color: c}
 }
 
-func (e *counterSpellIfColorEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *counterSpellIfColorEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return nil
 	}
 	// Find the spell on the stack
-	obj := g.Stack.FindBySourceID(targets[0])
+	obj := g.FindStackObject(targets[0])
 	if obj == nil || obj.Card == nil {
 		return nil
 	}
@@ -1570,16 +1570,16 @@ func CounterSpellIfXMeetsCMC() Effect {
 	return &counterSpellIfXMeetsOrExceedsCMCEffect{}
 }
 
-func (e *counterSpellIfXMeetsOrExceedsCMCEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *counterSpellIfXMeetsOrExceedsCMCEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return nil
 	}
-	obj := g.Stack.FindBySourceID(targets[0])
+	obj := g.FindStackObject(targets[0])
 	if obj == nil || obj.Card == nil {
 		return nil
 	}
 	cmc := obj.Card.ManaCost().CMC()
-	if g.CurrentX >= cmc {
+	if g.XValue() >= cmc {
 		g.CounterSpellOnStack(targets[0])
 	}
 	return nil
@@ -1601,11 +1601,11 @@ func PowerSinkEffect() Effect {
 	return &powerSinkEffect{}
 }
 
-func (e *powerSinkEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *powerSinkEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return nil
 	}
-	obj := g.Stack.FindBySourceID(targets[0])
+	obj := g.FindStackObject(targets[0])
 	if obj == nil {
 		return nil
 	}
@@ -1616,9 +1616,9 @@ func (e *powerSinkEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets
 	}
 	// If they have enough mana in pool, they pay and spell resolves
 	totalMana := spellController.ManaPool().TotalMana()
-	if totalMana >= g.CurrentX {
+	if totalMana >= g.XValue() {
 		// Opponent can pay - drain X mana but don't counter
-		spellController.ManaPool().DrainGeneric(g.CurrentX)
+		spellController.ManaPool().DrainGeneric(g.XValue())
 		return nil
 	}
 	// Can't pay - counter the spell and drain all mana
@@ -1642,7 +1642,7 @@ func TapOrUntapTarget() Effect {
 	return &tapOrUntapTargetEffect{}
 }
 
-func (e *tapOrUntapTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *tapOrUntapTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return nil
 	}
@@ -1676,7 +1676,7 @@ func MakeUnblockableUntilEndOfTurn() Effect {
 	return &makeUnblockableUntilEndOfTurnEffect{}
 }
 
-func (e *makeUnblockableUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *makeUnblockableUntilEndOfTurnEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return nil
 	}
@@ -1686,8 +1686,8 @@ func (e *makeUnblockableUntilEndOfTurnEffect) Apply(g *Game, sourceID, controlle
 	}
 	eff := TemporaryKeyword(perm.ID(), UnblockableKW)
 	eff.SetSourceID(sourceID)
-	g.Effects.Add(eff)
-	g.Effects.Apply(g)
+	g.AddContinuousEffect(eff)
+	g.ApplyContinuousEffects()
 	return nil
 }
 
@@ -1706,7 +1706,7 @@ func TapAttachedCreature() Effect {
 	return &tapAttachedCreatureEffect{}
 }
 
-func (e *tapAttachedCreatureEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *tapAttachedCreatureEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	src := g.FindPermanent(sourceID)
 	if src == nil || !src.IsAttached() {
 		return nil
@@ -1731,7 +1731,7 @@ func UntapSource() Effect {
 	return &untapSourceEffect{}
 }
 
-func (e *untapSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *untapSourceEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	perm := g.FindPermanent(sourceID)
 	if perm != nil {
 		perm.Tapped = false
@@ -1752,7 +1752,7 @@ func BlackViseEffect() Effect {
 	return &blackViseEffect{}
 }
 
-func (e *blackViseEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *blackViseEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	active := g.ActivePlayerObj()
 	handSize := len(active.Hand())
 	if handSize > 4 {
@@ -1789,7 +1789,7 @@ func CreateToken(name string, power, toughness int, types []CardType, subTypes [
 	}
 }
 
-func (e *createTokenEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *createTokenEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	token := NewToken(e.name, e.power, e.toughness, e.types, e.subTypes, e.keywords...)
 	token.SetOwner(controller)
 	g.PutOnBattlefield(token, controller)
@@ -1812,8 +1812,8 @@ func ForcefieldEffect() Effect {
 	return &forcefieldEffect{}
 }
 
-func (e *forcefieldEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	g.Effects.AddForcefieldShield(controller)
+func (e *forcefieldEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	g.AddForcefieldShield(controller)
 	return nil
 }
 
@@ -1827,14 +1827,16 @@ func (e *forcefieldEffect) Properties() EffectProperties {
 // --- ValueSource, PlayerSelector, PermanentSelector ---
 
 // ValueSource resolves a dynamic integer value for an effect.
+// It receives a GameReader (read-only view) since value resolution never mutates state.
 type ValueSource interface {
-	Resolve(g *Game, sourceID, controller uuid.UUID) int
+	Resolve(g GameReader, sourceID, controller uuid.UUID) int
 	Text() string
 }
 
 // PlayerSelector picks one or more players for an effect.
+// It receives a GameReader (read-only view) since player selection never mutates state.
 type PlayerSelector interface {
-	Select(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) []uuid.UUID
+	Select(g GameReader, sourceID, controller uuid.UUID, targets []uuid.UUID) []uuid.UUID
 	Text() string
 }
 
@@ -1851,7 +1853,7 @@ type fixedValue struct{ n int }
 
 // Fixed creates a ValueSource that always returns the constant n.
 func Fixed(n int) ValueSource                            { return fixedValue{n: n} }
-func (v fixedValue) Resolve(_ *Game, _, _ uuid.UUID) int { return v.n }
+func (v fixedValue) Resolve(_ GameReader, _, _ uuid.UUID) int { return v.n }
 func (v fixedValue) Text() string                        { return fmt.Sprintf("%d", v.n) }
 
 // xValue is a ValueSource that reads g.CurrentX.
@@ -1859,7 +1861,7 @@ type xValue struct{}
 
 // XValue creates a ValueSource that reads the X value from the current spell/ability (g.CurrentX).
 func XValue() ValueSource                            { return xValue{} }
-func (v xValue) Resolve(g *Game, _, _ uuid.UUID) int { return g.CurrentX }
+func (v xValue) Resolve(g GameReader, _, _ uuid.UUID) int { return g.XValue() }
 func (v xValue) Text() string                        { return "X" }
 
 // countBattlefieldValue is a ValueSource that counts permanents on the battlefield.
@@ -1875,7 +1877,7 @@ type countBattlefieldValue struct {
 func CountBattlefield(who PlayerSelector, f PermanentFilter) ValueSource {
 	return countBattlefieldValue{who: who, filter: f}
 }
-func (v countBattlefieldValue) Resolve(g *Game, sourceID, controller uuid.UUID) int {
+func (v countBattlefieldValue) Resolve(g GameReader, sourceID, controller uuid.UUID) int {
 	if v.who == nil {
 		return g.CountBattlefield(v.filter)
 	}
@@ -1908,7 +1910,7 @@ type countZoneValue struct {
 func CountZone(zone Zone, who PlayerSelector, f CardFilter) ValueSource {
 	return countZoneValue{zone: zone, who: who, filter: f}
 }
-func (v countZoneValue) Resolve(g *Game, sourceID, controller uuid.UUID) int {
+func (v countZoneValue) Resolve(g GameReader, sourceID, controller uuid.UUID) int {
 	total := 0
 	for _, pid := range v.who.Select(g, sourceID, controller, nil) {
 		p := g.GetPlayer(pid)
@@ -1954,7 +1956,7 @@ type selectController struct{}
 
 // SelectController creates a PlayerSelector that returns the effect's controller.
 func SelectController() PlayerSelector { return selectController{} }
-func (s selectController) Select(_ *Game, _, controller uuid.UUID, _ []uuid.UUID) []uuid.UUID {
+func (s selectController) Select(_ GameReader, _, controller uuid.UUID, _ []uuid.UUID) []uuid.UUID {
 	return []uuid.UUID{controller}
 }
 func (s selectController) Text() string { return "controller" }
@@ -1964,7 +1966,7 @@ type selectActivePlayer struct{}
 
 // SelectActivePlayer creates a PlayerSelector that returns the active player (whose turn it is).
 func SelectActivePlayer() PlayerSelector { return selectActivePlayer{} }
-func (s selectActivePlayer) Select(g *Game, _, _ uuid.UUID, _ []uuid.UUID) []uuid.UUID {
+func (s selectActivePlayer) Select(g GameReader, _, _ uuid.UUID, _ []uuid.UUID) []uuid.UUID {
 	return []uuid.UUID{g.ActivePlayerObj().PlayerID()}
 }
 func (s selectActivePlayer) Text() string { return "active player" }
@@ -1974,9 +1976,10 @@ type selectEachPlayer struct{}
 
 // SelectEachPlayer creates a PlayerSelector that returns all players in the game.
 func SelectEachPlayer() PlayerSelector { return selectEachPlayer{} }
-func (s selectEachPlayer) Select(g *Game, _, _ uuid.UUID, _ []uuid.UUID) []uuid.UUID {
-	ids := make([]uuid.UUID, len(g.Players))
-	for i, p := range g.Players {
+func (s selectEachPlayer) Select(g GameReader, _, _ uuid.UUID, _ []uuid.UUID) []uuid.UUID {
+	players := g.AllPlayers()
+	ids := make([]uuid.UUID, len(players))
+	for i, p := range players {
 		ids[i] = p.PlayerID()
 	}
 	return ids
@@ -1988,9 +1991,9 @@ type selectEachOpponent struct{}
 
 // SelectEachOpponent creates a PlayerSelector that returns all opponents of the controller.
 func SelectEachOpponent() PlayerSelector { return selectEachOpponent{} }
-func (s selectEachOpponent) Select(g *Game, _, controller uuid.UUID, _ []uuid.UUID) []uuid.UUID {
+func (s selectEachOpponent) Select(g GameReader, _, controller uuid.UUID, _ []uuid.UUID) []uuid.UUID {
 	var ids []uuid.UUID
-	for _, p := range g.Players {
+	for _, p := range g.AllPlayers() {
 		if p.PlayerID() != controller {
 			ids = append(ids, p.PlayerID())
 		}
@@ -2005,7 +2008,7 @@ type selectAttachedController struct{}
 // SelectAttachedController creates a PlayerSelector that returns the controller of the permanent
 // the source is attached to (for aura-based effects like Psychic Venom).
 func SelectAttachedController() PlayerSelector { return selectAttachedController{} }
-func (s selectAttachedController) Select(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) []uuid.UUID {
+func (s selectAttachedController) Select(g GameReader, sourceID, _ uuid.UUID, _ []uuid.UUID) []uuid.UUID {
 	src := g.FindPermanent(sourceID)
 	if src == nil || !src.IsAttached() {
 		return nil
@@ -2024,7 +2027,7 @@ type selectEventController struct{}
 // SelectEventController creates a PlayerSelector that reads targets[0] as a player ID,
 // used for event-based triggers that pass the relevant player through the target list.
 func SelectEventController() PlayerSelector { return selectEventController{} }
-func (s selectEventController) Select(_ *Game, _, _ uuid.UUID, targets []uuid.UUID) []uuid.UUID {
+func (s selectEventController) Select(_ GameReader, _, _ uuid.UUID, targets []uuid.UUID) []uuid.UUID {
 	if len(targets) == 0 {
 		return nil
 	}
@@ -2038,15 +2041,13 @@ type tapAllLandsEffect struct{}
 // TapAllLands creates an effect that taps all lands a target player controls (e.g. Mana Short).
 func TapAllLands() Effect { return &tapAllLandsEffect{} }
 
-func (e *tapAllLandsEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *tapAllLandsEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return nil
 	}
 	playerID := targets[0]
-	for _, p := range g.Battlefield {
-		if p.Controller == playerID && p.HasType(TypeLand) {
-			p.Tapped = true
-		}
+	for _, p := range g.FilterBattlefield(And(ControlledBy(playerID), IsLand)) {
+		p.Tapped = true
 	}
 	return nil
 }
@@ -2062,24 +2063,22 @@ type balanceEffect struct{}
 // players by having each player sacrifice/discard down to the minimum (Balance).
 func BalanceEffect() Effect { return &balanceEffect{} }
 
-func (e *balanceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *balanceEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	// Count lands for each player
 	landCounts := make(map[uuid.UUID]int)
 	creatureCounts := make(map[uuid.UUID]int)
-	for _, p := range g.Battlefield {
-		if p.HasType(TypeLand) {
-			landCounts[p.Controller]++
-		}
-		if p.HasType(TypeCreature) {
-			creatureCounts[p.Controller]++
-		}
+	for _, p := range g.FilterBattlefield(IsLand) {
+		landCounts[p.Controller]++
+	}
+	for _, p := range g.FilterBattlefield(IsCreature) {
+		creatureCounts[p.Controller]++
 	}
 
 	// Find minimums
 	minLands := -1
 	minCreatures := -1
 	minHand := -1
-	for _, p := range g.Players {
+	for _, p := range g.AllPlayers() {
 		pid := p.PlayerID()
 		if minLands < 0 || landCounts[pid] < minLands {
 			minLands = landCounts[pid]
@@ -2093,12 +2092,12 @@ func (e *balanceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets [
 	}
 
 	// Sacrifice lands down to minimum
-	for _, p := range g.Players {
+	for _, p := range g.AllPlayers() {
 		pid := p.PlayerID()
 		toSac := landCounts[pid] - minLands
 		for toSac > 0 {
-			for _, perm := range g.Battlefield {
-				if perm.Controller == pid && perm.HasType(TypeLand) {
+			for _, perm := range g.FilterBattlefield(And(ControlledBy(pid), IsLand)) {
+				if true {
 					g.Sacrifice(perm)
 					toSac--
 					break
@@ -2108,12 +2107,12 @@ func (e *balanceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets [
 	}
 
 	// Sacrifice creatures down to minimum
-	for _, p := range g.Players {
+	for _, p := range g.AllPlayers() {
 		pid := p.PlayerID()
 		toSac := creatureCounts[pid] - minCreatures
 		for toSac > 0 {
-			for _, perm := range g.Battlefield {
-				if perm.Controller == pid && perm.HasType(TypeCreature) {
+			for _, perm := range g.FilterBattlefield(And(ControlledBy(pid), IsCreature)) {
+				if true {
 					g.Sacrifice(perm)
 					toSac--
 					break
@@ -2123,7 +2122,7 @@ func (e *balanceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets [
 	}
 
 	// Discard down to minimum hand size
-	for _, p := range g.Players {
+	for _, p := range g.AllPlayers() {
 		for len(p.Hand()) > minHand {
 			hand := p.Hand()
 			if len(hand) == 0 {
@@ -2156,10 +2155,10 @@ type chaosOrbEffect struct{}
 // controls, then destroys the source (Chaos Orb).
 func ChaosOrbEffect() Effect { return &chaosOrbEffect{} }
 
-func (e *chaosOrbEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *chaosOrbEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	var candidates []*Permanent
-	for _, p := range g.Battlefield {
-		if p.Controller != controller && !p.Card.(*BaseCard).IsToken() {
+	for _, p := range g.FilterBattlefield(Not(ControlledBy(controller))) {
+		if !p.Card.(*BaseCard).IsToken() {
 			candidates = append(candidates, p)
 		}
 	}
@@ -2185,7 +2184,7 @@ type removeFromCombatEffect struct{}
 // RemoveFromCombat creates an effect that removes a target creature from combat.
 func RemoveFromCombat() Effect { return &removeFromCombatEffect{} }
 
-func (e *removeFromCombatEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *removeFromCombatEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return nil
 	}
@@ -2193,7 +2192,7 @@ func (e *removeFromCombatEffect) Apply(g *Game, sourceID, controller uuid.UUID, 
 	if perm == nil {
 		return nil
 	}
-	g.Combat.RemoveFromCombat(perm.ID())
+	g.RemoveFromCombat(perm.ID())
 	return nil
 }
 func (e *removeFromCombatEffect) Text() string { return "Remove target creature from combat" }
@@ -2211,7 +2210,7 @@ func ReplaceKeywordEffect(from, to Keyword) Effect {
 	return &replaceKeywordEffect{from: from, to: to}
 }
 
-func (e *replaceKeywordEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *replaceKeywordEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return nil
 	}
@@ -2222,8 +2221,8 @@ func (e *replaceKeywordEffect) Apply(g *Game, sourceID, controller uuid.UUID, ta
 	// Remove the old keyword and add the new one as a continuous effect
 	eff := KeywordReplacement(perm.ID(), e.from, e.to)
 	eff.SetSourceID(sourceID)
-	g.Effects.Add(eff)
-	g.Effects.Apply(g)
+	g.AddContinuousEffect(eff)
+	g.ApplyContinuousEffects()
 	return nil
 }
 
@@ -2242,7 +2241,7 @@ func ChangeColorEffect(color Color) Effect {
 	return &changeColorEffect{color: color}
 }
 
-func (e *changeColorEffect) Apply(g *Game, sourceID, _ uuid.UUID, targets []uuid.UUID) error {
+func (e *changeColorEffect) Apply(g GameMutator, sourceID, _ uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return nil
 	}
@@ -2253,7 +2252,7 @@ func (e *changeColorEffect) Apply(g *Game, sourceID, _ uuid.UUID, targets []uuid
 	// Register as a continuous effect so the color change persists
 	ce := ColorOverride(perm.ID(), e.color)
 	ce.SetSourceID(sourceID)
-	g.Effects.Add(ce)
+	g.AddContinuousEffect(ce)
 	return nil
 }
 
@@ -2270,12 +2269,12 @@ func CopySpellOnStack() Effect {
 	return &copySpellOnStackEffect{}
 }
 
-func (e *copySpellOnStackEffect) Apply(g *Game, _, ctrl uuid.UUID, targets []uuid.UUID) error {
+func (e *copySpellOnStackEffect) Apply(g GameMutator, _, ctrl uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return nil
 	}
 	// Find the target spell on the stack
-	original := g.Stack.FindBySourceID(targets[0])
+	original := g.FindStackObject(targets[0])
 	if original == nil {
 		return nil
 	}
@@ -2292,7 +2291,7 @@ func (e *copySpellOnStackEffect) Apply(g *Game, _, ctrl uuid.UUID, targets []uui
 	}
 	copy(cp.Effects, original.Effects)
 	copy(cp.Targets, original.Targets)
-	g.Stack.Push(cp)
+	g.PushStack(cp)
 	return nil
 }
 

@@ -522,7 +522,7 @@ func (p *Permanent) CanBeTargetedBy(source Card, sourceController uuid.UUID, g *
 }
 
 // CurrentPower returns power including counters and continuous effects.
-func (p *Permanent) CurrentPower(g *Game) int {
+func (p *Permanent) CurrentPower(g GameReader) int {
 	pw := p.Card.Power()
 	if p.BasePTOverride != nil {
 		pw = p.BasePTOverride[0]
@@ -538,7 +538,7 @@ func (p *Permanent) CurrentPower(g *Game) int {
 }
 
 // CurrentToughness returns toughness including counters and continuous effects.
-func (p *Permanent) CurrentToughness(g *Game) int {
+func (p *Permanent) CurrentToughness(g GameReader) int {
 	tg := p.Card.Toughness()
 	if p.BasePTOverride != nil {
 		tg = p.BasePTOverride[1]
@@ -553,7 +553,7 @@ func (p *Permanent) CurrentToughness(g *Game) int {
 }
 
 // LethalDamage returns true if damage >= current toughness.
-func (p *Permanent) LethalDamage(g *Game) bool {
+func (p *Permanent) LethalDamage(g GameReader) bool {
 	return p.Damage >= p.CurrentToughness(g)
 }
 

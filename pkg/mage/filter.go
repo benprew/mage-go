@@ -62,6 +62,9 @@ func NewCardFilter(label string, fn func(Card) bool) CardFilter {
 	return CardFilter{label: label, fn: fn}
 }
 
+// AnyPermanent matches all permanents without restriction.
+var AnyPermanent = NewPermanentFilter("permanent", func(_ *Permanent, _ *Game) bool { return true })
+
 // IsCreature matches creature permanents.
 var IsCreature = NewPermanentFilter("creature", func(p *Permanent, _ *Game) bool {
 	return p.HasType(TypeCreature)

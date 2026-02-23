@@ -31,7 +31,7 @@ func TestWinterOrb(t *testing.T) {
 		g.Execute()
 		// With Winter Orb, at most 1 land untaps; 2 should remain tapped.
 		tapped := 0
-		playerAID := g.Players[0].PlayerID()
+		playerAID := g.AllPlayers()[0].PlayerID()
 		for _, perm := range g.Battlefield {
 			if perm.Controller == playerAID && perm.HasType(core.TypeLand) && perm.Tapped {
 				tapped++
@@ -55,7 +55,7 @@ func TestWinterOrb(t *testing.T) {
 		g.StopAt(4, core.PrecombatMain)
 		g.Execute()
 		tapped := 0
-		playerBID := g.Players[1].PlayerID()
+		playerBID := g.AllPlayers()[1].PlayerID()
 		for _, perm := range g.Battlefield {
 			if perm.Controller == playerBID && perm.HasType(core.TypeLand) && perm.Tapped {
 				tapped++
@@ -144,8 +144,8 @@ func TestHowlingMine(t *testing.T) {
 		g.Execute()
 		// By turn 3, PlayerA has drawn: turn 3 draw = 1 (normal) + 1 (Mine) = 2.
 		// PlayerB drew on turn 2: 1 (normal) + 1 (Mine) = 2.
-		playerA := g.Players[0]
-		playerB := g.Players[1]
+		playerA := g.AllPlayers()[0]
+		playerB := g.AllPlayers()[1]
 		if len(playerA.Hand()) < 2 {
 			t.Errorf("Howling Mine should give PlayerA extra draw; hand has %d cards, want >= 2", len(playerA.Hand()))
 		}
@@ -167,7 +167,7 @@ func TestHowlingMine(t *testing.T) {
 		g.StopAt(1, core.PrecombatMain)
 		g.Execute()
 		// Howling Mine is tapped, so no extra draw. Normal draw of 1.
-		playerA := g.Players[0]
+		playerA := g.AllPlayers()[0]
 		if len(playerA.Hand()) > 1 {
 			t.Errorf("Tapped Howling Mine should not give extra draw; hand has %d cards, want 1", len(playerA.Hand()))
 		}
@@ -258,7 +258,7 @@ func TestTheHive(t *testing.T) {
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "The Hive")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		perm := g.FindPermanentByName("Wasp", g.Players[0].PlayerID())
+		perm := g.FindPermanentByName("Wasp", g.AllPlayers()[0].PlayerID())
 		if perm == nil {
 			t.Fatal("Wasp token not found")
 		}
@@ -298,7 +298,7 @@ func TestCopyArtifact(t *testing.T) {
 		g.Execute()
 		// Should have 2 Sol Rings (original + copy).
 		solCount := 0
-		playerAID := g.Players[0].PlayerID()
+		playerAID := g.AllPlayers()[0].PlayerID()
 		for _, perm := range g.Battlefield {
 			if perm.Controller == playerAID && perm.Name() == "Sol Ring" {
 				solCount++
@@ -318,7 +318,7 @@ func TestCopyArtifact(t *testing.T) {
 		g.Execute()
 		// The copy becomes "Sol Ring" but is also an Enchantment.
 		// Find the Sol Ring that has the Enchantment type.
-		playerAID := g.Players[0].PlayerID()
+		playerAID := g.AllPlayers()[0].PlayerID()
 		found := false
 		for _, perm := range g.Battlefield {
 			if perm.Controller == playerAID && perm.Name() == "Sol Ring" && perm.HasType(core.TypeEnchantment) {
@@ -339,7 +339,7 @@ func TestCopyArtifact(t *testing.T) {
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Copy Artifact", "Sol Ring")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		playerAID := g.Players[0].PlayerID()
+		playerAID := g.AllPlayers()[0].PlayerID()
 		found := false
 		for _, perm := range g.Battlefield {
 			if perm.Controller == playerAID && perm.Name() == "Sol Ring" &&
@@ -363,7 +363,7 @@ func TestCopyArtifact(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		// Find the copy (Sol Ring with Enchantment type) and verify it has abilities
-		playerAID := g.Players[0].PlayerID()
+		playerAID := g.AllPlayers()[0].PlayerID()
 		for _, perm := range g.Battlefield {
 			if perm.Controller == playerAID && perm.Name() == "Sol Ring" && perm.HasType(core.TypeEnchantment) {
 				if len(perm.RuntimeAbilities) == 0 {
@@ -385,7 +385,7 @@ func TestLivingLands(t *testing.T) {
 		g.StopAt(1, core.PrecombatMain)
 		g.Execute()
 		// Forest should be a 1/1 creature.
-		perm := g.FindPermanentByName("Forest", g.Players[0].PlayerID())
+		perm := g.FindPermanentByName("Forest", g.AllPlayers()[0].PlayerID())
 		if perm == nil {
 			t.Fatal("Forest not found")
 		}
@@ -413,7 +413,7 @@ func TestLivingLands(t *testing.T) {
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Forest")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		perm := g.FindPermanentByName("Forest", g.Players[0].PlayerID())
+		perm := g.FindPermanentByName("Forest", g.AllPlayers()[0].PlayerID())
 		if perm == nil {
 			t.Fatal("Forest not found")
 		}
@@ -435,7 +435,7 @@ func TestManaFlare(t *testing.T) {
 		g.Execute()
 		// Mountain tapped for {R}. Mana Flare adds another {R}.
 		// Auto-mana adds 5R. Mountain = 1R + 1R (Mana Flare) = 2R. Total = 7R.
-		pool := g.Players[0].ManaPool()
+		pool := g.AllPlayers()[0].ManaPool()
 		if pool.Count(core.Red) < 7 {
 			t.Errorf("Mana Flare should double land mana; expected >= 7 red, got %d", pool.Count(core.Red))
 		}
@@ -458,7 +458,7 @@ func TestSacrifice(t *testing.T) {
 		g.Execute()
 		// Hill Giant (CMC 4) sacrificed -> add {B}{B}{B}{B}.
 		g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 0)
-		pool := g.Players[0].ManaPool()
+		pool := g.AllPlayers()[0].ManaPool()
 		if pool.Count(core.Black) < 4 { // 4 from sacrificed Hill Giant (CMC 4)
 			t.Errorf("Sacrifice should add 4 black (CMC of Hill Giant); expected >= 4 black, got %d", pool.Count(core.Black))
 		}
@@ -519,7 +519,7 @@ func TestRagingRiver(t *testing.T) {
 		g.Execute()
 		// With Raging River, at most one pile can block each attacker.
 		// If only one of {Hill Giant, Gray Ogre} can block, Bears might get through.
-		if g.Players[1].Life() == 20 {
+		if g.AllPlayers()[1].Life() == 20 {
 			t.Errorf("Raging River should restrict blocking; both blockers should not be able to block the same creature simultaneously in the same pile")
 		}
 	})
@@ -541,7 +541,7 @@ func TestNaturalSelection(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		// Library should still have all 5 cards (shuffle doesn't lose cards)
-		playerA := g.Players[0]
+		playerA := g.AllPlayers()[0]
 		if len(playerA.Library()) < 5 {
 			t.Errorf("Natural Selection should preserve all library cards; got %d, want >= 5", len(playerA.Library()))
 		}
@@ -575,7 +575,7 @@ func TestLich(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		// Should have drawn 3 cards (not gained life).
-		playerA := g.Players[0]
+		playerA := g.AllPlayers()[0]
 		if len(playerA.Hand()) < 3 {
 			t.Errorf("Lich should replace life gain with card draw; hand has %d, want >= 3", len(playerA.Hand()))
 		}
@@ -837,7 +837,7 @@ func TestConversion(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		// Mountain should produce {W} instead of {R}.
-		pool := g.Players[0].ManaPool()
+		pool := g.AllPlayers()[0].ManaPool()
 		if pool.Count(core.White) < 6 { // 5 auto + 1 from converted Mountain
 			t.Errorf("Conversion should make Mountain produce {W}; expected >= 6 white, got %d", pool.Count(core.White))
 		}
@@ -1003,7 +1003,7 @@ func TestEvilPresence(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		// Forest should now be a Swamp (produce {B} instead of {G}).
-		perm := g.FindPermanentByName("Forest", g.Players[1].PlayerID())
+		perm := g.FindPermanentByName("Forest", g.AllPlayers()[1].PlayerID())
 		if perm == nil {
 			t.Fatal("Forest not found")
 		}
@@ -1024,7 +1024,7 @@ func TestPhantasmalTerrain(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		// Mountain should become an Island (default choice).
-		perm := g.FindPermanentByName("Mountain", g.Players[1].PlayerID())
+		perm := g.FindPermanentByName("Mountain", g.AllPlayers()[1].PlayerID())
 		if perm == nil {
 			t.Fatal("Mountain not found")
 		}
@@ -1041,7 +1041,7 @@ func TestKormusBell(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
 		g.StopAt(1, core.PrecombatMain)
 		g.Execute()
-		perm := g.FindPermanentByName("Swamp", g.Players[0].PlayerID())
+		perm := g.FindPermanentByName("Swamp", g.AllPlayers()[0].PlayerID())
 		if perm == nil {
 			t.Fatal("Swamp not found")
 		}
@@ -1067,7 +1067,7 @@ func TestKormusBell(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
 		g.StopAt(1, core.PrecombatMain)
 		g.Execute()
-		perm := g.FindPermanentByName("Forest", g.Players[0].PlayerID())
+		perm := g.FindPermanentByName("Forest", g.AllPlayers()[0].PlayerID())
 		if perm == nil {
 			t.Fatal("Forest not found")
 		}
@@ -1125,7 +1125,7 @@ func TestJadeStatue(t *testing.T) {
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Jade Statue")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		perm := g.FindPermanentByName("Jade Statue", g.Players[0].PlayerID())
+		perm := g.FindPermanentByName("Jade Statue", g.AllPlayers()[0].PlayerID())
 		if perm == nil {
 			t.Fatal("Jade Statue not found")
 		}
@@ -1142,7 +1142,7 @@ func TestJadeStatue(t *testing.T) {
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Jade Statue")
 		g.StopAt(1, core.DeclareAttackers)
 		g.Execute()
-		perm := g.FindPermanentByName("Jade Statue", g.Players[0].PlayerID())
+		perm := g.FindPermanentByName("Jade Statue", g.AllPlayers()[0].PlayerID())
 		if perm == nil {
 			t.Fatal("Jade Statue not found")
 		}
@@ -1158,7 +1158,7 @@ func TestJadeStatue(t *testing.T) {
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Jade Statue")
 		g.StopAt(1, core.PostcombatMain)
 		g.Execute()
-		perm := g.FindPermanentByName("Jade Statue", g.Players[0].PlayerID())
+		perm := g.FindPermanentByName("Jade Statue", g.AllPlayers()[0].PlayerID())
 		if perm == nil {
 			t.Fatal("Jade Statue not found")
 		}
@@ -1173,7 +1173,7 @@ func TestJadeStatue(t *testing.T) {
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Jade Statue")
 		g.StopAt(2, core.PrecombatMain)
 		g.Execute()
-		perm := g.FindPermanentByName("Jade Statue", g.Players[0].PlayerID())
+		perm := g.FindPermanentByName("Jade Statue", g.AllPlayers()[0].PlayerID())
 		if perm == nil {
 			t.Fatal("Jade Statue not found")
 		}
@@ -1350,7 +1350,7 @@ func TestCyclopeanTomb(t *testing.T) {
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Cyclopean Tomb", "Forest")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		perm := g.FindPermanentByName("Forest", g.Players[1].PlayerID())
+		perm := g.FindPermanentByName("Forest", g.AllPlayers()[1].PlayerID())
 		if perm == nil {
 			t.Fatal("Forest not found")
 		}
@@ -1374,7 +1374,7 @@ func TestCyclopeanTomb(t *testing.T) {
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Disenchant", "Cyclopean Tomb")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		perm := g.FindPermanentByName("Forest", g.Players[1].PlayerID())
+		perm := g.FindPermanentByName("Forest", g.AllPlayers()[1].PlayerID())
 		if perm == nil {
 			t.Fatal("Forest not found")
 		}
@@ -1407,7 +1407,7 @@ func TestIllusionaryMask(t *testing.T) {
 		// Serra Angel should be on the battlefield as a face-down 0/1
 		g.AssertPermanentCount(gametest.PlayerA, "Serra Angel", 1)
 		g.AssertPowerToughness(gametest.PlayerA, "Serra Angel", 0, 1)
-		perm := g.FindPermanentByName("Serra Angel", g.Players[0].PlayerID())
+		perm := g.FindPermanentByName("Serra Angel", g.AllPlayers()[0].PlayerID())
 		if perm == nil {
 			t.Fatal("Serra Angel not found on battlefield")
 		}
@@ -1429,7 +1429,7 @@ func TestIllusionaryMask(t *testing.T) {
 		g.Execute()
 		// Craw Wurm should have flipped face up: 6/4 with 3 damage — survives
 		g.AssertPermanentCount(gametest.PlayerA, "Craw Wurm", 1)
-		perm := g.FindPermanentByName("Craw Wurm", g.Players[0].PlayerID())
+		perm := g.FindPermanentByName("Craw Wurm", g.AllPlayers()[0].PlayerID())
 		if perm == nil {
 			t.Fatal("Craw Wurm not found on battlefield")
 		}

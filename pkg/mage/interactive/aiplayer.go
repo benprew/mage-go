@@ -110,7 +110,7 @@ func (p *HumanPlayer) ChooseMode(modes []string, reason string) int {
 	return resp.SelectedIndex
 }
 
-func (p *HumanPlayer) ChoosePermanent(candidates []*mage.Permanent, reason string, g *mage.Game) *mage.Permanent {
+func (p *HumanPlayer) ChoosePermanent(candidates []*mage.Permanent, reason string, g mage.GameReader) *mage.Permanent {
 	if len(candidates) == 0 {
 		return nil
 	}
@@ -130,7 +130,7 @@ func (p *HumanPlayer) ChoosePermanent(candidates []*mage.Permanent, reason strin
 	return candidates[0]
 }
 
-func (p *HumanPlayer) ChooseCardsFromHand(amount int, reason string, g *mage.Game) []mage.Card {
+func (p *HumanPlayer) ChooseCardsFromHand(amount int, reason string, g mage.GameReader) []mage.Card {
 	hand := p.Hand()
 	if amount <= 0 || len(hand) == 0 {
 		return nil
@@ -173,7 +173,7 @@ func (p *HumanPlayer) ChooseManaColor(reason string) core.Color {
 	return resp.SelectedColor
 }
 
-func (p *HumanPlayer) ChooseCardFromLibrary(candidates []mage.Card, reason string, g *mage.Game) mage.Card {
+func (p *HumanPlayer) ChooseCardFromLibrary(candidates []mage.Card, reason string, g mage.GameReader) mage.Card {
 	if len(candidates) == 0 {
 		return nil
 	}

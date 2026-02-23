@@ -20,12 +20,12 @@ func registerCreatures() {
 				NewTriggered(EvtCreatureDied, false,
 					FuncEffect("destroy all creatures blocking or blocked by Abu Ja'far",
 						EffectProperties{},
-						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-							if g.Combat == nil {
+						func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+							if len(g.CombatGroups()) == 0 {
 								return nil
 							}
 							var toDestroy []uuid.UUID
-							for _, group := range g.Combat.Groups {
+							for _, group := range g.CombatGroups() {
 								if group.AttackerID == sourceID {
 									toDestroy = append(toDestroy, group.BlockerIDs...)
 								}
@@ -105,7 +105,7 @@ func registerCreatures() {
 			WithStaticAbility(PreventFromAttackingIfDefendingPlayerControls(HasSubType("Island"))),
 			WithAbility(NewTriggered(EvtLeavesBattlefield, false, SacrificeSource()).
 				SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
-					for _, p := range g.Battlefield {
+					for _, p := range g.FilterBattlefield(AnyPermanent) {
 						if p.Controller == controllerID && p.HasSubType("Island") {
 							return false
 						}

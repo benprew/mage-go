@@ -20,7 +20,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetCreature(), FuncEffect(
 				"exile target creature. Its controller gains life equal to its power",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return fmt.Errorf("no target")
 					}
@@ -52,19 +52,19 @@ func registerSpells() {
 			NewTargetedSpell(TargetAnyTarget(), FuncEffect(
 				"target player gains 3 life or prevent the next 3 damage that would be dealt to any target this turn",
 				EffectProperties{Outcome: OutcomeBenefit},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
-					if g.CurrentMode == 0 {
-						for _, pl := range g.Players {
+					if g.ModeValue() == 0 {
+						for _, pl := range g.AllPlayers() {
 							if pl.PlayerID() == targets[0] {
 								g.PlayerGainLife(pl, 3)
 								return nil
 							}
 						}
 					} else {
-						g.Effects.AddPreventionShield(targets[0], 3)
+						g.AddPreventionShield(targets[0], 3)
 					}
 					return nil
 				},
@@ -100,9 +100,9 @@ func registerSpells() {
 			NewSpellAbility(FuncEffect(
 				"prevent the next source of damage to you and gain that much life",
 				EffectProperties{Outcome: OutcomeBenefit},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					g.Effects.AddPreventionShield(controller, 1000)
-					g.Effects.AddReverseDamageShield(controller)
+				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					g.AddPreventionShield(controller, 1000)
+					g.AddReverseDamageShield(controller)
 					return nil
 				})),
 		)
@@ -232,11 +232,11 @@ func registerSpells() {
 			NewTargetedSpell(TargetAnyTarget(), FuncEffect(
 				"deal X damage to target and gain X life",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return fmt.Errorf("no target for drain life")
 					}
-					amount := g.CurrentX
+					amount := g.XValue()
 					if amount <= 0 {
 						return nil
 					}
@@ -429,8 +429,8 @@ func registerSpells() {
 			NewSpellAbility(FuncEffect(
 				"until end of turn, pay 1 life to add {C}",
 				EffectProperties{},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					g.Effects.SetChannelActive(controller)
+				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					g.SetChannelActive(controller)
 					return nil
 				})),
 		)

@@ -728,7 +728,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				FuncEffect("force creature to attack or destroy at EOT",
 					EffectProperties{},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
 						}
@@ -741,8 +741,8 @@ func registerCreatures() {
 							Effects: []Effect{FuncEffect(
 								"destroy creature that didn't attack",
 								EffectProperties{},
-								func(g2 *Game, srcID, ctrlID uuid.UUID, _ []uuid.UUID) error {
-									if !g2.AttackedThisTurn[targetID] {
+								func(g2 GameMutator, srcID, ctrlID uuid.UUID, _ []uuid.UUID) error {
+									if !g2.HasAttackedThisTurn(targetID) {
 										perm := g2.FindPermanent(targetID)
 										if perm != nil {
 											g2.DestroyPermanent(perm)
@@ -785,14 +785,14 @@ func registerCreatures() {
 			WithAbility(BeginningOfUpkeepTrigger(FuncEffect(
 				"become a copy of target creature",
 				EffectProperties{},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					perm := g.FindPermanent(sourceID)
 					if perm == nil {
 						return nil
 					}
-					currentName := g.Effects.CopyEffectCurrentName(perm.ID())
+					currentName := g.CopyEffectCurrentName(perm.ID())
 					var best *Permanent
-					for _, p := range g.Battlefield {
+					for _, p := range g.FilterBattlefield(AnyPermanent) {
 						if p.ID() == perm.ID() {
 							continue
 						}
@@ -806,7 +806,7 @@ func registerCreatures() {
 						break
 					}
 					if best != nil {
-						g.Effects.UpdateCopyEffect(perm.ID(), best)
+						g.UpdateCopyEffect(perm.ID(), best)
 					}
 					return nil
 				},
@@ -824,7 +824,7 @@ func registerCreatures() {
 			WithAbility(PutIntoGraveyardFromBattlefieldTrigger(FuncEffect(
 				"lose half your life rounded up",
 				EffectProperties{},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					p := g.GetPlayer(controller)
 					if p == nil {
 						return nil

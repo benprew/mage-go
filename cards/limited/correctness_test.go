@@ -42,7 +42,7 @@ func TestBlackLotus(t *testing.T) {
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Black Lotus")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		pool := g.Players[0].ManaPool()
+		pool := g.AllPlayers()[0].ManaPool()
 		blackCount := pool.Count(core.Black)
 		if blackCount > 5 {
 			t.Errorf("Black Lotus is hardcoded to produce Black; got %d Black (5 auto + 3 Lotus). Should allow any color choice", blackCount)
@@ -87,7 +87,7 @@ func TestWheelOfFortune(t *testing.T) {
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Wheel of Fortune")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		playerA := g.Players[0]
+		playerA := g.AllPlayers()[0]
 		if len(playerA.Hand()) != 7 {
 			t.Errorf("expected 7 cards in hand after Wheel, got %d", len(playerA.Hand()))
 		}
@@ -336,7 +336,7 @@ func TestVerduranEnchantress(t *testing.T) {
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Holy Armor", "Grizzly Bears")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		playerA := g.Players[0]
+		playerA := g.AllPlayers()[0]
 		if len(playerA.Hand()) < 1 {
 			t.Errorf("Verduran Enchantress should draw on any enchantment cast, hand has %d cards", len(playerA.Hand()))
 		}
@@ -421,7 +421,7 @@ func TestPowerSink(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Giant Growth")
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Power Sink")
-		g.Players[0].ManaPool().Add(core.Colorless, 5) // extra mana to pay
+		g.AllPlayers()[0].ManaPool().Add(core.Colorless, 5) // extra mana to pay
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Giant Growth", "Grizzly Bears")
 		g.CastInResponseToWithX(gametest.PlayerB, "Power Sink", 1)
 		g.StopAt(1, core.BeginCombat)
@@ -488,7 +488,7 @@ func TestGauntletOfMight(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		// Auto-mana adds 5R. Mountain tapped for 1R + Gauntlet bonus 1R = 7R total.
-		pool := g.Players[0].ManaPool()
+		pool := g.AllPlayers()[0].ManaPool()
 		if pool.Count(core.Red) < 7 {
 			t.Errorf("Gauntlet should make Mountain produce extra {R}; expected >=7 red mana, got %d", pool.Count(core.Red))
 		}
@@ -722,7 +722,7 @@ func TestClone(t *testing.T) {
 		// Should have two 4/4 creatures (original + clone)
 		count44 := 0
 		for _, perm := range g.Battlefield {
-			if perm.Controller == g.Players[0].PlayerID() {
+			if perm.Controller == g.AllPlayers()[0].PlayerID() {
 				if perm.CurrentPower(g.Game) == 4 && perm.CurrentToughness(g.Game) == 4 {
 					count44++
 				}

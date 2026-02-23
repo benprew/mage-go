@@ -57,10 +57,10 @@ type Player interface {
 
 	// Player choice methods (overridden by TestPlayer for scripted choices)
 	ChooseMode(modes []string, reason string) int
-	ChoosePermanent(candidates []*Permanent, reason string, g *Game) *Permanent
-	ChooseCardsFromHand(amount int, reason string, g *Game) []Card
+	ChoosePermanent(candidates []*Permanent, reason string, g GameReader) *Permanent
+	ChooseCardsFromHand(amount int, reason string, g GameReader) []Card
 	ChooseManaColor(reason string) Color
-	ChooseCardFromLibrary(candidates []Card, reason string, g *Game) Card
+	ChooseCardFromLibrary(candidates []Card, reason string, g GameReader) Card
 }
 
 // BasePlayer implements Player with basic functionality.
@@ -181,14 +181,14 @@ func (p *BasePlayer) ChooseMode(modes []string, reason string) int {
 	return 0
 }
 
-func (p *BasePlayer) ChoosePermanent(candidates []*Permanent, reason string, g *Game) *Permanent {
+func (p *BasePlayer) ChoosePermanent(candidates []*Permanent, reason string, g GameReader) *Permanent {
 	if len(candidates) > 0 {
 		return candidates[0]
 	}
 	return nil
 }
 
-func (p *BasePlayer) ChooseCardsFromHand(amount int, reason string, g *Game) []Card {
+func (p *BasePlayer) ChooseCardsFromHand(amount int, reason string, g GameReader) []Card {
 	hand := p.Hand()
 	if amount > len(hand) {
 		amount = len(hand)
@@ -202,7 +202,7 @@ func (p *BasePlayer) ChooseManaColor(reason string) Color {
 	return White // default to White
 }
 
-func (p *BasePlayer) ChooseCardFromLibrary(candidates []Card, reason string, g *Game) Card {
+func (p *BasePlayer) ChooseCardFromLibrary(candidates []Card, reason string, g GameReader) Card {
 	if len(candidates) > 0 {
 		return candidates[0]
 	}

@@ -78,7 +78,7 @@ func TestWildGrowth(t *testing.T) {
 		// Auto-mana adds {G} to pay for Wild Growth. Forest taps for {G},
 		// Wild Growth adds another {G}. Total: 1 (auto) + 1 (Forest) + 1 (bonus) = 3G.
 		// Without bonus: 1 + 1 = 2G.
-		pool := g.Players[0].ManaPool()
+		pool := g.AllPlayers()[0].ManaPool()
 		if pool.Count(core.Green) < 3 {
 			t.Errorf("Wild Growth should add extra {G} when Forest taps; expected >= 3 green, got %d", pool.Count(core.Green))
 		}
@@ -157,7 +157,7 @@ func TestLaceCycle(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		// Grizzly Bears should now be black.
-		perm := g.FindPermanentByName("Grizzly Bears", g.Players[0].PlayerID())
+		perm := g.FindPermanentByName("Grizzly Bears", g.AllPlayers()[0].PlayerID())
 		if perm == nil {
 			t.Fatal("Grizzly Bears not found")
 		}

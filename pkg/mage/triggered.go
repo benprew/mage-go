@@ -268,7 +268,7 @@ func SacrificeAtUpkeepUnlessPay(cost string) *GenericTriggered {
 	return NewTriggered(EvtUpkeep, false, FuncEffect(
 		"Sacrifice unless pay "+cost,
 		EffectProperties{},
-		func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+		func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 			if cost != "" && g.TryPayCostFromLands(controller, cost) {
 				return nil // paid, keep the permanent
 			}

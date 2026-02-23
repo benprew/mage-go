@@ -36,7 +36,7 @@ func TestBalance(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		// A had 3 creatures, B had 1 -> A sacrifices 2.
-		playerA := g.Players[0]
+		playerA := g.AllPlayers()[0]
 		creatureCount := 0
 		for _, perm := range g.Battlefield {
 			if perm.Controller == playerA.PlayerID() && perm.HasType(core.TypeCreature) {
@@ -58,8 +58,8 @@ func TestBalance(t *testing.T) {
 		g.Execute()
 		// A had 5 cards (Balance + 4 Bolts), casts Balance (now 4 in hand), B has 2.
 		// Balance resolves: A discards down to 2.
-		playerA := g.Players[0]
-		playerB := g.Players[1]
+		playerA := g.AllPlayers()[0]
+		playerB := g.AllPlayers()[1]
 		if len(playerA.Hand()) != len(playerB.Hand()) {
 			t.Errorf("Balance should equalize hand sizes: A has %d, B has %d",
 				len(playerA.Hand()), len(playerB.Hand()))

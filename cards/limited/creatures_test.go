@@ -102,7 +102,7 @@ func TestBirdsOfParadise(t *testing.T) {
 				g.Execute()
 				// Auto-mana gives 5 of each color. Birds adds 1 of chosen color.
 				// For non-green colors, count should be 6 if Birds works correctly.
-				pool := g.Players[0].ManaPool()
+				pool := g.AllPlayers()[0].ManaPool()
 				if tc.color != core.Green {
 					if pool.Count(tc.color) < 6 {
 						t.Errorf("Birds of Paradise should produce %s mana; pool has %d, want >= 6",
