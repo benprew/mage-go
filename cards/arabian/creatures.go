@@ -259,7 +259,10 @@ func registerCreatures() {
 	})
 
 	Register("Kird Ape", func() Card {
-		return NewCreature("Kird Ape", "{R}", 1, 1, WithSubTypes("Ape"))
+		return NewCreature("Kird Ape", "{R}", 1, 1,
+			WithSubTypes("Ape"),
+			WithStaticAbility(BoostSelf(1, 2, WhileControlling(HasSubType("Forest")))),
+		)
 	})
 
 	Register("Mijae Djinn", func() Card {

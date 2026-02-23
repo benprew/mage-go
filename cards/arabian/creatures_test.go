@@ -351,6 +351,26 @@ func TestAliBaba(t *testing.T) {
 	})
 }
 
+func TestKirdApe(t *testing.T) {
+	t.Run("with_forest_is_2_3", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Kird Ape")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Kird Ape", 2, 3)
+	})
+
+	t.Run("without_forest_is_1_1", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Kird Ape")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Kird Ape", 1, 1)
+	})
+}
+
 func TestDanDan(t *testing.T) {
 	t.Run("sacrifice_when_you_control_no_islands", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
