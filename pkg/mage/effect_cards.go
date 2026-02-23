@@ -1,0 +1,401 @@
+package mage
+
+import (
+	"fmt"
+	"math/rand"
+
+	"github.com/google/uuid"
+)
+
+// drawCardsTargetEffect draws cards for a target player (or controller as fallback).
+type drawCardsTargetEffect struct {
+	props  EffectProperties
+	amount ValueSource
+}
+
+// DrawCards creates an effect that draws cards for a target player (or controller as fallback).
+func DrawCards(amount ValueSource) Effect {
+	drawCount := 0
+	if fv, ok := amount.(fixedValue); ok {
+		drawCount = fv.n
+	}
+	return &drawCardsTargetEffect{
+		props:  EffectProperties{Outcome: OutcomeBenefit, DrawCount: drawCount},
+		amount: amount,
+	}
+}
+
+func (e *drawCardsTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	var targetPlayer Player
+	if len(targets) > 0 {
+		targetPlayer = g.GetPlayer(targets[0])
+	}
+	if targetPlayer == nil {
+		targetPlayer = g.GetPlayer(controller)
+	}
+	if targetPlayer == nil {
+		return ErrPlayerNotFound
+	}
+	amount := e.amount.Resolve(g, sourceID, controller)
+	for i := 0; i < amount; i++ {
+		targetPlayer.DrawCard()
+	}
+	return nil
+}
+
+func (e *drawCardsTargetEffect) Text() string {
+	if _, ok := e.amount.(xValue); ok {
+		return "target player draws X cards"
+	}
+	return fmt.Sprintf("target player draws %d card(s)", e.amount.Resolve(nil, uuid.Nil, uuid.Nil))
+}
+func (e *drawCardsTargetEffect) Properties() EffectProperties { return e.props }
+
+// drawCardsActivePlayerEffect draws cards for the active player (e.g. Howling Mine).
+type drawCardsActivePlayerEffect struct {
+	props  EffectProperties
+	amount ValueSource
+}
+
+// DrawCardsActivePlayer creates an effect that draws cards for the active player.
+func DrawCardsActivePlayer(amount ValueSource) Effect {
+	drawCount := 0
+	if fv, ok := amount.(fixedValue); ok {
+		drawCount = fv.n
+	}
+	return &drawCardsActivePlayerEffect{
+		props:  EffectProperties{Outcome: OutcomeBenefit, DrawCount: drawCount},
+		amount: amount,
+	}
+}
+
+func (e *drawCardsActivePlayerEffect) Apply(g GameMutator, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
+	active := g.ActivePlayerObj()
+	if active == nil {
+		return ErrPlayerNotFound
+	}
+	amount := e.amount.Resolve(g, sourceID, active.PlayerID())
+	for i := 0; i < amount; i++ {
+		active.DrawCard()
+	}
+	return nil
+}
+
+func (e *drawCardsActivePlayerEffect) Text() string {
+	return "that player draws an additional card"
+}
+func (e *drawCardsActivePlayerEffect) Properties() EffectProperties { return e.props }
+
+// discardCardsEffect forces a target player to discard cards.
+type discardCardsEffect struct {
+	amount ValueSource
+}
+
+// DiscardCards creates an effect that forces a target player to discard cards.
+func DiscardCards(amount ValueSource) Effect {
+	return &discardCardsEffect{amount: amount}
+}
+
+func (e *discardCardsEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	var targetPlayer Player
+	if len(targets) > 0 {
+		targetPlayer = g.GetPlayer(targets[0])
+	}
+	if targetPlayer == nil {
+		targetPlayer = g.GetOpponent(controller)
+	}
+	if targetPlayer == nil {
+		return nil
+	}
+	amount := e.amount.Resolve(g, sourceID, controller)
+	chosen := targetPlayer.ChooseCardsFromHand(amount, "discard", g)
+	for _, card := range chosen {
+		targetPlayer.RemoveFromHand(card.ID())
+		targetPlayer.AddToGraveyard(card)
+	}
+	return nil
+}
+
+func (e *discardCardsEffect) Text() string {
+	if _, ok := e.amount.(xValue); ok {
+		return "target player discards X cards"
+	}
+	return fmt.Sprintf("target player discards %d card(s)", e.amount.Resolve(nil, uuid.Nil, uuid.Nil))
+}
+func (e *discardCardsEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
+
+// discardRandomEffect forces an opponent to discard a card at random.
+type discardRandomEffect struct {
+	amount int
+}
+
+// DiscardRandom creates an effect that forces a target player (or opponent) to discard cards at random.
+func DiscardRandom(amount int) Effect {
+	return &discardRandomEffect{amount: amount}
+}
+
+func (e *discardRandomEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	var targetPlayer Player
+	if len(targets) > 0 {
+		targetPlayer = g.GetPlayer(targets[0])
+	}
+	if targetPlayer == nil {
+		targetPlayer = g.GetOpponent(controller)
+	}
+	if targetPlayer == nil {
+		return nil
+	}
+	for i := 0; i < e.amount; i++ {
+		hand := targetPlayer.Hand()
+		if len(hand) == 0 {
+			break
+		}
+		idx := rand.Intn(len(hand))
+		card := hand[idx]
+		targetPlayer.RemoveFromHand(card.ID())
+		targetPlayer.AddToGraveyard(card)
+	}
+	return nil
+}
+
+func (e *discardRandomEffect) Text() string {
+	return fmt.Sprintf("discard %d card(s) at random", e.amount)
+}
+func (e *discardRandomEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
+
+// returnFromGraveyardEffect returns a target creature from graveyard to battlefield.
+type returnFromGraveyardEffect struct{}
+
+// ReturnFromGraveyardToBattlefield creates an effect that returns a target creature card
+// from the controller's graveyard directly to the battlefield (e.g. Animate Dead, Resurrection).
+func ReturnFromGraveyardToBattlefield() Effect {
+	return &returnFromGraveyardEffect{}
+}
+
+func (e *returnFromGraveyardEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	if len(targets) == 0 {
+		return fmt.Errorf("no target for reanimate")
+	}
+	p := g.GetPlayer(controller)
+	if p == nil {
+		return ErrPlayerNotFound
+	}
+	card, ok := p.RemoveFromGraveyard(targets[0])
+	if !ok {
+		return nil // target gone
+	}
+	g.PutOnBattlefield(card, controller)
+	return nil
+}
+
+func (e *returnFromGraveyardEffect) Text() string {
+	return "return target creature card from your graveyard to the battlefield"
+}
+func (e *returnFromGraveyardEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
+
+// returnSourceToHandEffect returns the source card from graveyard to hand.
+type returnSourceToHandEffect struct{}
+
+// ReturnSourceToHand creates an effect that returns the source card from the graveyard
+// to its owner's hand (e.g. Rancor's triggered ability).
+func ReturnSourceToHand() Effect {
+	return &returnSourceToHandEffect{}
+}
+
+func (e *returnSourceToHandEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	p := g.GetPlayer(controller)
+	if p == nil {
+		return ErrPlayerNotFound
+	}
+	card, ok := p.RemoveFromGraveyard(sourceID)
+	if !ok {
+		return nil // not in graveyard
+	}
+	p.AddToHand(card)
+	return nil
+}
+
+func (e *returnSourceToHandEffect) Text() string {
+	return "return this card to its owner's hand"
+}
+func (e *returnSourceToHandEffect) Properties() EffectProperties { return EffectProperties{} }
+
+// returnToHandTargetEffect bounces a target permanent to its owner's hand.
+type returnToHandTargetEffect struct{}
+
+// ReturnToHandTarget creates an effect that bounces a target permanent to its owner's hand.
+func ReturnToHandTarget() Effect {
+	return &returnToHandTargetEffect{}
+}
+
+func (e *returnToHandTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	if len(targets) == 0 {
+		return fmt.Errorf("no target for bounce")
+	}
+	perm := g.FindPermanent(targets[0])
+	if perm == nil {
+		return nil // target gone, fizzle
+	}
+	card := perm.Card
+	owner := card.Owner()
+	if owner == uuid.Nil {
+		owner = perm.Controller
+	}
+	g.RemoveFromBattlefield(perm)
+	p := g.GetPlayer(owner)
+	if p != nil {
+		p.AddToHand(card)
+	}
+	return nil
+}
+
+func (e *returnToHandTargetEffect) Text() string {
+	return "return target permanent to its owner's hand"
+}
+func (e *returnToHandTargetEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
+
+// returnFromGraveyardToHandTargetEffect returns a target card from graveyard to hand.
+type returnFromGraveyardToHandTargetEffect struct{}
+
+// ReturnFromGraveyardToHandTarget creates an effect that returns a target card
+// from the controller's graveyard to their hand (e.g. Raise Dead, Regrowth).
+func ReturnFromGraveyardToHandTarget() Effect {
+	return &returnFromGraveyardToHandTargetEffect{}
+}
+
+func (e *returnFromGraveyardToHandTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	if len(targets) == 0 {
+		return fmt.Errorf("no target for raise dead")
+	}
+	p := g.GetPlayer(controller)
+	if p == nil {
+		return ErrPlayerNotFound
+	}
+	card, ok := p.RemoveFromGraveyard(targets[0])
+	if !ok {
+		return nil // target gone
+	}
+	p.AddToHand(card)
+	return nil
+}
+
+func (e *returnFromGraveyardToHandTargetEffect) Text() string {
+	return "return target card from your graveyard to your hand"
+}
+func (e *returnFromGraveyardToHandTargetEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
+
+// searchLibraryEffect lets the controller search their library and put a card in hand.
+type searchLibraryEffect struct{}
+
+// SearchLibraryToHand creates an effect that lets the controller search their library for a card
+// and put it into their hand (e.g. Demonic Tutor).
+func SearchLibraryToHand() Effect {
+	return &searchLibraryEffect{}
+}
+
+func (e *searchLibraryEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	p := g.GetPlayer(controller)
+	if p == nil {
+		return ErrPlayerNotFound
+	}
+	lib := p.Library()
+	if len(lib) == 0 {
+		return nil
+	}
+	card := p.ChooseCardFromLibrary(lib, "search", g)
+	if card == nil {
+		return nil
+	}
+	// Remove the chosen card from library
+	newLib := make([]Card, 0, len(lib)-1)
+	for _, c := range lib {
+		if c.ID() != card.ID() {
+			newLib = append(newLib, c)
+		}
+	}
+	p.SetLibrary(newLib)
+	p.AddToHand(card)
+	return nil
+}
+
+func (e *searchLibraryEffect) Text() string {
+	return "search your library for a card and put it into your hand"
+}
+func (e *searchLibraryEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
+
+// discardHandAndDrawEffect makes each player discard their hand and draw N cards.
+type discardHandAndDrawEffect struct {
+	drawCount int
+}
+
+// DiscardHandAndDraw creates an effect where each player discards their hand then draws n cards (e.g. Timetwister, Wheel of Fortune).
+func DiscardHandAndDraw(n int) Effect {
+	return &discardHandAndDrawEffect{drawCount: n}
+}
+
+func (e *discardHandAndDrawEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	for _, p := range g.AllPlayers() {
+		// Discard entire hand
+		hand := p.Hand()
+		for _, c := range hand {
+			p.RemoveFromHand(c.ID())
+			p.AddToGraveyard(c)
+		}
+		// Draw N cards
+		for i := 0; i < e.drawCount; i++ {
+			p.DrawCard()
+		}
+	}
+	return nil
+}
+
+func (e *discardHandAndDrawEffect) Text() string {
+	return fmt.Sprintf("Each player discards their hand, then draws %d cards", e.drawCount)
+}
+func (e *discardHandAndDrawEffect) Properties() EffectProperties { return EffectProperties{} }
+
+// shuffleGraveyardIntoLibraryAndDrawEffect shuffles each player's graveyard
+// into their library, then each player draws N cards.
+type shuffleGraveyardIntoLibraryAndDrawEffect struct {
+	drawCount int
+}
+
+// ShuffleGraveyardIntoLibraryAndDraw creates an effect where each player shuffles their graveyard
+// into their library, then draws n cards (e.g. Feldon's Cane variant).
+func ShuffleGraveyardIntoLibraryAndDraw(n int) Effect {
+	return &shuffleGraveyardIntoLibraryAndDrawEffect{drawCount: n}
+}
+
+func (e *shuffleGraveyardIntoLibraryAndDrawEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	for _, p := range g.AllPlayers() {
+		// Move graveyard into library
+		for _, c := range p.Graveyard() {
+			p.AddToLibrary(c)
+		}
+		p.ClearGraveyard()
+		// Draw N cards
+		for i := 0; i < e.drawCount; i++ {
+			p.DrawCard()
+		}
+	}
+	return nil
+}
+
+func (e *shuffleGraveyardIntoLibraryAndDrawEffect) Text() string {
+	return fmt.Sprintf("Each player shuffles graveyard into library, then draws %d cards", e.drawCount)
+}
+func (e *shuffleGraveyardIntoLibraryAndDrawEffect) Properties() EffectProperties {
+	return EffectProperties{}
+}

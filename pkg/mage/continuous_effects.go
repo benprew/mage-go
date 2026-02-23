@@ -348,7 +348,7 @@ func PreventUntapForMatching(filter PermanentFilter) ContinuousEffect {
 // spells of a given color (e.g. Gloom makes white spells cost {3} more).
 func IncreaseSpellCostForColor(color Color, amount int) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
-		g.Effects.spellCostIncrease[color] += amount
+		g.Effects.rules.spellCostIncrease[color] += amount
 		return nil
 	})
 }
@@ -445,8 +445,8 @@ func BoostSelf(power, toughness int, condition SourceCondition) ContinuousEffect
 // (e.g. Winter Orb). Only active while the source permanent is untapped.
 func LimitLandUntaps(limit int) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
-		if g.Effects.landUntapLimit < 0 || limit < g.Effects.landUntapLimit {
-			g.Effects.landUntapLimit = limit
+		if g.Effects.rules.landUntapLimit < 0 || limit < g.Effects.rules.landUntapLimit {
+			g.Effects.rules.landUntapLimit = limit
 		}
 		return nil
 	}, SourceUntapped)
@@ -471,7 +471,7 @@ func AnimateLands(filter PermanentFilter, power, toughness int) ContinuousEffect
 // Used by Fastbond.
 func AllowUnlimitedLandPlays() ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
-		g.Effects.unlimitedLandPlays = true
+		g.Effects.rules.unlimitedLandPlays = true
 		return nil
 	})
 }

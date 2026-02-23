@@ -1,0 +1,342 @@
+package interactive
+
+import (
+	"fmt"
+
+	"github.com/google/uuid"
+	"github.com/mage/mage/pkg/mage"
+	"github.com/mage/mage/pkg/mage/core"
+)
+
+func buildRulesText(c mage.Card) string {
+	var parts []string
+	// Keywords come from the card's attr seeds (canonical storage).
+	for a, count := range c.AttrSeeds() {
+		if count > 0 && core.IsKeywordAttr(a) {
+			parts = append(parts, a.String())
+		}
+	}
+	for _, a := range c.Abilities() {
+		switch ab := a.(type) {
+		case *mage.ProtectionAbility:
+			var colors []string
+			for _, col := range ab.FromColors {
+				colors = append(colors, col.String())
+			}
+			parts = append(parts, fmt.Sprintf("Protection from %s", joinStrings(colors)))
+		case *mage.SpellAbility:
+			for _, eff := range ab.Effects() {
+				parts = append(parts, eff.Text())
+			}
+		case mage.ActivatedAbility:
+			var costParts []string
+			for _, cost := range ab.Costs() {
+				costParts = append(costParts, cost.Text())
+			}
+			var effParts []string
+			for _, eff := range ab.Effects() {
+				effParts = append(effParts, eff.Text())
+			}
+			parts = append(parts, fmt.Sprintf("%s: %s", joinStrings(costParts), joinStrings(effParts)))
+		}
+	}
+	return joinStrings(parts)
+}
+
+func joinStrings(ss []string) string {
+	result := ""
+	for i, s := range ss {
+		if i > 0 {
+			result += ", "
+		}
+		result += s
+	}
+	return result
+}
+
+// SnapshotGameState creates a read-only snapshot of the game for the TUI.
+func SnapshotGameState(g *mage.Game, humanIndex int) *GameState {
+	human := g.Players[humanIndex]
+	aiIndex := (humanIndex + 1) % 2
+	ai := g.Players[aiIndex]
+
+	return &GameState{
+		Turn:         g.Turn,
+		Step:         g.Step.String(),
+		ActivePlayer: g.ActivePlayerObj().Name(),
+		You:          snapshotPlayer(g, human, true),
+		Opponent:     snapshotPlayer(g, ai, false),
+		StackItems:   snapshotStack(g),
+	}
+}
+
+func snapshotPlayer(g *mage.Game, p mage.Player, showHand bool) PlayerState {
+	ps := PlayerState{
+		ID:             p.PlayerID(),
+		Name:           p.Name(),
+		Life:           p.Life(),
+		HandCount:      len(p.Hand()),
+		GraveyardCount: len(p.Graveyard()),
+		LibraryCount:   len(p.Library()),
+		ManaPool:       snapshotManaPool(p.ManaPool()),
+	}
+
+	if showHand {
+		for _, c := range p.Hand() {
+			cs := CardState{
+				ID:        c.ID(),
+				Name:      c.Name(),
+				ManaCost:  c.ManaCost().String(),
+				IsLand:    c.HasType(core.TypeLand),
+				Power:     c.Power(),
+				Toughness: c.Toughness(),
+				RulesText: buildRulesText(c),
+			}
+			for _, t := range c.Types() {
+				if cs.Types != "" {
+					cs.Types += " "
+				}
+				cs.Types += t.String()
+			}
+			for _, st := range c.SubTypes() {
+				if cs.SubTypes != "" {
+					cs.SubTypes += " "
+				}
+				cs.SubTypes += st
+			}
+			ps.Hand = append(ps.Hand, cs)
+		}
+	}
+
+	for _, c := range p.Graveyard() {
+		cs := CardState{
+			ID:        c.ID(),
+			Name:      c.Name(),
+			ManaCost:  c.ManaCost().String(),
+			IsLand:    c.HasType(core.TypeLand),
+			Power:     c.Power(),
+			Toughness: c.Toughness(),
+			RulesText: buildRulesText(c),
+		}
+		for _, t := range c.Types() {
+			if cs.Types != "" {
+				cs.Types += " "
+			}
+			cs.Types += t.String()
+		}
+		for _, st := range c.SubTypes() {
+			if cs.SubTypes != "" {
+				cs.SubTypes += " "
+			}
+			cs.SubTypes += st
+		}
+		ps.Graveyard = append(ps.Graveyard, cs)
+	}
+
+	for _, perm := range g.Battlefield {
+		if perm.Controller != p.PlayerID() {
+			continue
+		}
+		permState := PermanentState{
+			ID:         perm.ID(),
+			Name:       perm.Name(),
+			Power:      perm.CurrentPower(g),
+			Toughness:  perm.CurrentToughness(g),
+			Tapped:     perm.Tapped,
+			SummonSick: perm.HasAttr(core.AttrSummonSick),
+			IsCreature: perm.HasType(core.TypeCreature),
+			IsLand:     perm.HasType(core.TypeLand),
+			IsArtifact: perm.HasType(core.TypeArtifact),
+			Attacking:  g.Combat.IsAttacking(perm.ID()),
+			ManaCost:   perm.Card.ManaCost().String(),
+			RulesText:  buildRulesText(perm.Card),
+		}
+		for _, t := range perm.Card.Types() {
+			if permState.Types != "" {
+				permState.Types += " "
+			}
+			permState.Types += t.String()
+		}
+		for _, st := range perm.Card.SubTypes() {
+			if permState.SubTypes != "" {
+				permState.SubTypes += " "
+			}
+			permState.SubTypes += st
+		}
+		if len(perm.Counters) > 0 {
+			permState.Counters = make(map[string]int)
+			for ct, n := range perm.Counters {
+				permState.Counters[ct.String()] = n
+			}
+		}
+		permState.Keywords = perm.KeywordNames()
+		ps.Battlefield = append(ps.Battlefield, permState)
+	}
+
+	return ps
+}
+
+func snapshotManaPool(mp *mage.ManaPool) ManaPoolState {
+	return ManaPoolState{
+		White:     mp.Count(core.White),
+		Blue:      mp.Count(core.Blue),
+		Black:     mp.Count(core.Black),
+		Red:       mp.Count(core.Red),
+		Green:     mp.Count(core.Green),
+		Colorless: mp.Count(core.Colorless),
+	}
+}
+
+func snapshotStack(g *mage.Game) []StackItemState {
+	var items []StackItemState
+	for _, obj := range g.Stack.Objects() {
+		name := "Ability"
+		if obj.Card != nil {
+			name = obj.Card.Name()
+		}
+		controller := ""
+		p := g.GetPlayer(obj.Controller)
+		if p != nil {
+			controller = p.Name()
+		}
+		var targetNames []string
+		for _, tid := range obj.Targets {
+			targetNames = append(targetNames, resolveTargetName(g, tid))
+		}
+		items = append(items, StackItemState{
+			Name:       name,
+			Controller: controller,
+			IsAbility:  obj.IsAbility,
+			Targets:    targetNames,
+		})
+	}
+	return items
+}
+
+// GetAvailableActions returns the actions available to a player right now.
+func GetAvailableActions(g *mage.Game, playerID uuid.UUID, landsPlayed int, mainPhase bool) []ActionOption {
+	var options []ActionOption
+
+	if mainPhase {
+		if landsPlayed < 1 {
+			p := g.GetPlayer(playerID)
+			if p != nil {
+				for _, c := range p.Hand() {
+					if c.HasType(core.TypeLand) {
+						options = append(options, ActionOption{
+							Type:   ActionPlayLand,
+							Label:  fmt.Sprintf("Play %s", c.Name()),
+							CardID: c.ID(),
+							CardName: c.Name(),
+						})
+					}
+				}
+			}
+		}
+
+		for _, card := range g.GetCastableSpells(playerID) {
+			needsTarget := false
+			var targetType mage.Target
+			for _, a := range card.Abilities() {
+				if sa, ok := a.(*mage.SpellAbility); ok {
+					for _, t := range sa.Targets() {
+						needsTarget = true
+						targetType = t
+						break
+					}
+				}
+			}
+			options = append(options, ActionOption{
+				Type:        ActionCastSpell,
+				Label:       fmt.Sprintf("Cast %s %s", card.Name(), card.ManaCost()),
+				CardID:      card.ID(),
+				CardName:    card.Name(),
+				NeedsTarget: needsTarget,
+				TargetType:  targetType,
+				ManaCost:    card.ManaCost().String(),
+			})
+		}
+	} else {
+		p := g.GetPlayer(playerID)
+		if p != nil {
+			for _, card := range p.Hand() {
+				if !card.HasType(core.TypeInstant) {
+					continue
+				}
+				if !g.CanAfford(playerID, card.ManaCost()) {
+					continue
+				}
+				needsTarget := false
+				var targetType mage.Target
+				for _, a := range card.Abilities() {
+					if sa, ok := a.(*mage.SpellAbility); ok {
+						for _, t := range sa.Targets() {
+							needsTarget = true
+							targetType = t
+							break
+						}
+					}
+				}
+				options = append(options, ActionOption{
+					Type:        ActionCastSpell,
+					Label:       fmt.Sprintf("Cast %s %s", card.Name(), card.ManaCost()),
+					CardID:      card.ID(),
+					NeedsTarget: needsTarget,
+					CardName:    card.Name(),
+					TargetType:  targetType,
+					ManaCost:    card.ManaCost().String(),
+				})
+			}
+		}
+	}
+
+	for _, info := range g.GetActivatableAbilities(playerID) {
+		options = append(options, ActionOption{
+			Type:         ActionActivateAbility,
+			Label:        fmt.Sprintf("Activate %s: %s", info.PermanentName, info.Description),
+			PermanentID:  info.PermanentID,
+			AbilityIndex: info.AbilityIndex,
+		})
+	}
+
+	options = append(options, ActionOption{
+		Type:  ActionPass,
+		Label: "Pass",
+	})
+
+	return options
+}
+
+// GetTargetChoices builds the list of valid target IDs and display labels for
+// a spell or ability that needs a target. It always includes both players (with
+// real UUIDs from the snapshot) and any creatures on the battlefield.
+func GetTargetChoices(state *GameState, opt ActionOption) ([]uuid.UUID, []string) {
+	var ids []uuid.UUID
+	var labels []string
+
+	// Creatures from both sides
+	for _, p := range state.Opponent.Battlefield {
+		if p.IsCreature {
+			ids = append(ids, p.ID)
+			labels = append(labels, fmt.Sprintf("%s %d/%d (%s)", p.Name, p.Power, p.Toughness, state.Opponent.Name))
+		}
+	}
+	for _, p := range state.You.Battlefield {
+		if p.IsCreature {
+			ids = append(ids, p.ID)
+			labels = append(labels, fmt.Sprintf("%s %d/%d (You)", p.Name, p.Power, p.Toughness))
+		}
+	}
+
+	// Both players — only if we have real UUIDs
+	if state.Opponent.ID != uuid.Nil {
+		ids = append(ids, state.Opponent.ID)
+		labels = append(labels, fmt.Sprintf("%s (player)", state.Opponent.Name))
+	}
+	if state.You.ID != uuid.Nil {
+		ids = append(ids, state.You.ID)
+		labels = append(labels, "You (player)")
+	}
+
+	return ids, labels
+}
