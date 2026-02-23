@@ -192,7 +192,10 @@ func registerCreatures() {
 	})
 
 	Register("Stone-Throwing Devils", func() Card {
-		return NewCreature("Stone-Throwing Devils", "{B}", 1, 1, WithSubTypes("Devil"))
+		return NewCreature("Stone-Throwing Devils", "{B}", 1, 1,
+			WithSubTypes("Devil"),
+			WithKeyword(FirstStrike),
+		)
 	})
 
 	// ===== RED CREATURES =====
@@ -210,7 +213,10 @@ func registerCreatures() {
 	})
 
 	Register("Bird Maiden", func() Card {
-		return NewCreature("Bird Maiden", "{2}{R}", 1, 2, WithSubTypes("Human", "Bird"))
+		return NewCreature("Bird Maiden", "{2}{R}", 1, 2,
+			WithSubTypes("Human", "Bird"),
+			WithKeyword(Flying),
+		)
 	})
 
 	Register("Desert Nomads", func() Card {
@@ -276,6 +282,7 @@ func registerCreatures() {
 		return NewCreature("Dancing Scimitar", "{4}", 1, 5,
 			WithSubTypes("Spirit"),
 			WithCardType(TypeArtifact),
+			WithKeyword(Flying),
 		)
 	})
 }

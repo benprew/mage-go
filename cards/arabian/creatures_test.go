@@ -147,6 +147,50 @@ func TestGiantTortoise(t *testing.T) {
 	})
 }
 
+func TestStoneThrowingDevils(t *testing.T) {
+	t.Run("first_strike_kills_blocker_before_normal_damage", func(t *testing.T) {
+		// Stone-Throwing Devils (1/1 first strike) blocks a 2/1.
+		// Devils deals 1 first strike damage, killing the 2/1 before it strikes back.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Stone-Throwing Devils")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Savannah Lions") // 2/1
+		g.Attack(2, gametest.PlayerB, "Savannah Lions")
+		g.Block(2, gametest.PlayerA, "Stone-Throwing Devils", "Savannah Lions")
+		g.StopAt(2, core.PostcombatMain)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Stone-Throwing Devils", 1)
+		g.AssertGraveyardCount(gametest.PlayerB, "Savannah Lions", 1)
+	})
+}
+
+func TestBirdMaiden(t *testing.T) {
+	t.Run("cannot_be_blocked_by_ground_creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Bird Maiden")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.Attack(1, gametest.PlayerA, "Bird Maiden")
+		g.Block(1, gametest.PlayerB, "Grizzly Bears", "Bird Maiden")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+		// Grizzly Bears can't block a flyer — Bird Maiden deals 1 to player
+		g.AssertLife(gametest.PlayerB, 19)
+	})
+}
+
+func TestDancingScimitar(t *testing.T) {
+	t.Run("has_flying", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Dancing Scimitar")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.Attack(1, gametest.PlayerA, "Dancing Scimitar")
+		g.Block(1, gametest.PlayerB, "Grizzly Bears", "Dancing Scimitar")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+		// Can't block flyer — deals 1 to player
+		g.AssertLife(gametest.PlayerB, 19)
+	})
+}
+
 func TestDanDan(t *testing.T) {
 	t.Run("sacrifice_when_you_control_no_islands", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
