@@ -183,7 +183,12 @@ func registerCreatures() {
 	})
 
 	Register("El-Hajjâj", func() Card {
-		return NewCreature("El-Hajjâj", "{1}{B}{B}", 1, 1, WithSubTypes("Human", "Wizard"))
+		// Oracle text: "Whenever El-Hajjâj deals damage, you gain that much life."
+		// Functionally equivalent to lifelink.
+		return NewCreature("El-Hajjâj", "{1}{B}{B}", 1, 1,
+			WithSubTypes("Human", "Wizard"),
+			WithKeyword(Lifelink),
+		)
 	})
 
 	Register("Erg Raiders", func() Card {
@@ -204,7 +209,23 @@ func registerCreatures() {
 	})
 
 	Register("Hasran Ogress", func() Card {
-		return NewCreature("Hasran Ogress", "{B}{B}", 3, 2, WithSubTypes("Ogre"))
+		return NewCreature("Hasran Ogress", "{B}{B}", 3, 2,
+			WithSubTypes("Ogre"),
+			WithAbility(AttacksTrigger(
+				FuncEffect("pay {2} or take 3 damage",
+					EffectProperties{},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						if g.TryPayCostFromLands(controller, "{2}") {
+							return nil
+						}
+						p := g.GetPlayer(controller)
+						if p != nil {
+							g.DealDamageToPlayer(p, 3, sourceID)
+						}
+						return nil
+					}), false,
+			)),
+		)
 	})
 
 	Register("Junún Efreet", func() Card {
@@ -296,7 +317,14 @@ func registerCreatures() {
 	})
 
 	Register("Rukh Egg", func() Card {
-		return NewCreature("Rukh Egg", "{3}{R}", 0, 3, WithSubTypes("Bird", "Egg"))
+		return NewCreature("Rukh Egg", "{3}{R}", 0, 3,
+			WithSubTypes("Bird", "Egg"),
+			WithAbility(
+				NewTriggered(EvtCreatureDied, false,
+					CreateToken("Bird", 4, 4, []CardType{TypeCreature}, []string{"Bird"}, Flying),
+				).SetCondition(IsThisSource),
+			),
+		)
 	})
 
 	Register("Ydwen Efreet", func() Card {

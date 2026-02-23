@@ -397,6 +397,55 @@ func TestIslandFishJasconius(t *testing.T) {
 	})
 }
 
+func TestElHajjaj(t *testing.T) {
+	t.Run("gains_life_when_deals_combat_damage", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "El-Hajjâj")
+		g.SetLife(gametest.PlayerA, 15)
+		g.Attack(1, gametest.PlayerA, "El-Hajjâj")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+		// Deals 1 damage to PlayerB, gains 1 life (lifelink)
+		g.AssertLife(gametest.PlayerB, 19)
+		g.AssertLife(gametest.PlayerA, 16)
+	})
+}
+
+func TestRukhEgg(t *testing.T) {
+	t.Run("creates_token_when_dies", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rukh Egg")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Rukh Egg")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertGraveyardCount(gametest.PlayerA, "Rukh Egg", 1)
+		g.AssertPermanentCount(gametest.PlayerA, "Bird", 1)
+	})
+}
+
+func TestHasranOgress(t *testing.T) {
+	t.Run("attacks_pays_2_no_damage", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hasran Ogress")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+		g.Attack(1, gametest.PlayerA, "Hasran Ogress")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 20) // paid {2}, no self-damage
+	})
+
+	t.Run("attacks_cant_pay_takes_3", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hasran Ogress")
+		g.Attack(1, gametest.PlayerA, "Hasran Ogress")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 17) // took 3 damage
+	})
+}
+
 func TestDesertNomads(t *testing.T) {
 	t.Run("unblockable_if_defender_controls_desert", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
