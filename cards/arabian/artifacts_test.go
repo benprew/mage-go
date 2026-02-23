@@ -53,6 +53,40 @@ func TestJandorsSaddlebags(t *testing.T) {
 	})
 }
 
+func TestBottleOfSuleiman(t *testing.T) {
+	t.Run("win_flip_creates_djinn_token", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Bottle of Suleiman")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains") // {1} to activate
+		g.CoinFlipResults = []bool{true}                            // win
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Bottle of Suleiman")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Bottle sacrificed
+		g.AssertPermanentCount(gametest.PlayerA, "Bottle of Suleiman", 0)
+		// 5/5 Djinn token created
+		g.AssertPermanentCount(gametest.PlayerA, "Djinn", 1)
+		// No damage taken
+		g.AssertLife(gametest.PlayerA, 20)
+	})
+
+	t.Run("lose_flip_deals_5_damage", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Bottle of Suleiman")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+		g.CoinFlipResults = []bool{false} // lose
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Bottle of Suleiman")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Bottle sacrificed
+		g.AssertPermanentCount(gametest.PlayerA, "Bottle of Suleiman", 0)
+		// No token
+		g.AssertPermanentCount(gametest.PlayerA, "Djinn", 0)
+		// Took 5 damage
+		g.AssertLife(gametest.PlayerA, 15)
+	})
+}
+
 func TestFlyingCarpet(t *testing.T) {
 	t.Run("grants_flying_until_eot", func(t *testing.T) {
 		g := gametest.NewTestGame(t)

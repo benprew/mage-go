@@ -1,6 +1,7 @@
 package arabian
 
 import (
+	"github.com/google/uuid"
 	. "github.com/mage/mage/pkg/mage"
 	. "github.com/mage/mage/pkg/mage/core"
 )
@@ -33,7 +34,27 @@ func registerArtifacts() {
 	// create a 5/5 colorless Djinn artifact creature token with flying. If you lose
 	// the flip, Bottle of Suleiman deals 5 damage to you."
 	Register("Bottle of Suleiman", func() Card {
-		return NewArtifact("Bottle of Suleiman", "{4}")
+		return NewArtifact("Bottle of Suleiman", "{4}",
+			WithActivatedAbility(
+				FuncEffect("flip coin: 5/5 Djinn or 5 damage",
+					EffectProperties{},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						if g.FlipCoin(controller) {
+							// Win — create 5/5 Djinn artifact creature token with flying
+							token := CreateToken("Djinn", 5, 5, []CardType{TypeArtifact, TypeCreature}, []string{"Djinn"}, Flying)
+							return token.Apply(g, sourceID, controller, nil)
+						}
+						// Lose — take 5 damage
+						p := g.GetPlayer(controller)
+						if p != nil {
+							g.DealDamageToPlayer(p, 5, sourceID)
+						}
+						return nil
+					}),
+				ManaCostOf("{1}"),
+				WithCost(SacrificeSourceCost()),
+			),
+		)
 	})
 
 	// Oracle: "Whenever one or more other nontoken permanents with a name originally

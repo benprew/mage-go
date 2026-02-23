@@ -373,7 +373,23 @@ func registerCreatures() {
 	// Oracle: "Whenever Mijae Djinn attacks, flip a coin. If you lose the flip,
 	// remove Mijae Djinn from combat and tap it."
 	Register("Mijae Djinn", func() Card {
-		return NewCreature("Mijae Djinn", "{R}{R}{R}", 6, 3, WithSubTypes("Djinn"))
+		return NewCreature("Mijae Djinn", "{R}{R}{R}", 6, 3,
+			WithSubTypes("Djinn"),
+			WithAbility(AttacksTrigger(
+				FuncEffect("flip coin or remove from combat",
+					EffectProperties{},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						if !g.FlipCoin(controller) {
+							g.RemoveFromCombat(sourceID)
+							perm := g.FindPermanent(sourceID)
+							if perm != nil {
+								perm.Tapped = true
+							}
+						}
+						return nil
+					}), false,
+			)),
+		)
 	})
 
 	// Oracle: "When Rukh Egg dies, create a 4/4 red Bird creature token with flying
@@ -392,7 +408,19 @@ func registerCreatures() {
 	// Oracle: "Whenever Ydwen Efreet blocks, flip a coin. If you lose the flip,
 	// remove Ydwen Efreet from combat and it can't block this turn."
 	Register("Ydwen Efreet", func() Card {
-		return NewCreature("Ydwen Efreet", "{R}{R}{R}", 3, 6, WithSubTypes("Efreet"))
+		return NewCreature("Ydwen Efreet", "{R}{R}{R}", 3, 6,
+			WithSubTypes("Efreet"),
+			WithAbility(BlocksTrigger(
+				FuncEffect("flip coin or remove from combat",
+					EffectProperties{},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						if !g.FlipCoin(controller) {
+							g.RemoveFromCombat(sourceID)
+						}
+						return nil
+					}), false,
+			)),
+		)
 	})
 
 	// ===== GREEN CREATURES =====

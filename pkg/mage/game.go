@@ -4,6 +4,7 @@ import (
 	. "github.com/mage/mage/pkg/mage/core"
 	"errors"
 	"fmt"
+	"math/rand"
 
 	"github.com/google/uuid"
 )
@@ -64,6 +65,9 @@ type Game struct {
 
 	// Delayed triggers
 	delayedTriggers []*DelayedTrigger
+
+	// Coin flip results (for test determinism; popped in order)
+	CoinFlipResults []bool
 
 	// Control flags
 	stopped bool
@@ -224,6 +228,17 @@ func (g *Game) FindCardForDamageSource(sourceID uuid.UUID) Card {
 
 // TryPayCostFromLands attempts to pay a mana cost by tapping untapped lands
 // controlled by the player. Returns true if the cost was fully paid.
+// FlipCoin simulates a coin flip. Returns true for "win" (heads).
+// If CoinFlipResults is non-empty, pops from the front (for test determinism).
+func (g *Game) FlipCoin(playerID uuid.UUID) bool {
+	if len(g.CoinFlipResults) > 0 {
+		result := g.CoinFlipResults[0]
+		g.CoinFlipResults = g.CoinFlipResults[1:]
+		return result
+	}
+	return rand.Intn(2) == 0
+}
+
 func (g *Game) TryPayCostFromLands(playerID uuid.UUID, manaCostStr string) bool {
 	cost := ParseManaCost(manaCostStr)
 

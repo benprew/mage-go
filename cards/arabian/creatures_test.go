@@ -546,6 +546,61 @@ func TestDanDan(t *testing.T) {
 	})
 }
 
+func TestMijaeDjinn(t *testing.T) {
+	t.Run("win_flip_stays_in_combat", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mijae Djinn") // 6/3
+		g.CoinFlipResults = []bool{true}                                  // win
+		g.Attack(1, gametest.PlayerA, "Mijae Djinn")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		// Won flip — stays in combat, deals 6 damage
+		g.AssertLife(gametest.PlayerB, 14)
+	})
+
+	t.Run("lose_flip_removed_and_tapped", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mijae Djinn") // 6/3
+		g.CoinFlipResults = []bool{false}                                 // lose
+		g.Attack(1, gametest.PlayerA, "Mijae Djinn")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		// Lost flip — removed from combat, no damage dealt
+		g.AssertLife(gametest.PlayerB, 20)
+		g.AssertTapped(gametest.PlayerA, "Mijae Djinn", true)
+	})
+}
+
+func TestYdwenEfreet(t *testing.T) {
+	t.Run("win_flip_blocks_normally", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Ydwen Efreet")  // 3/6
+		g.CoinFlipResults = []bool{true}                                    // win
+		g.Attack(1, gametest.PlayerA, "Grizzly Bears")
+		g.Block(1, gametest.PlayerB, "Ydwen Efreet", "Grizzly Bears")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		// Won flip — blocks normally, kills Bears
+		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
+		g.AssertLife(gametest.PlayerB, 20)
+	})
+
+	t.Run("lose_flip_removed_attacker_hits_through", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Ydwen Efreet")  // 3/6
+		g.CoinFlipResults = []bool{false}                                   // lose
+		g.Attack(1, gametest.PlayerA, "Grizzly Bears")
+		g.Block(1, gametest.PlayerB, "Ydwen Efreet", "Grizzly Bears")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		// Lost flip — removed from combat, attacker hits through
+		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
+		g.AssertLife(gametest.PlayerB, 18)
+	})
+}
+
 func TestSorceressQueen(t *testing.T) {
 	t.Run("sets_target_to_0_2", func(t *testing.T) {
 		g := gametest.NewTestGame(t)

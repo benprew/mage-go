@@ -82,6 +82,9 @@ type GameMutator interface {
 	CopyEffectCurrentName(uuid.UUID) string
 	UpdateCopyEffect(uuid.UUID, *Permanent)
 
+	// Coin flip
+	FlipCoin(playerID uuid.UUID) bool
+
 	// Mana payment
 	TryPayCostFromLands(playerID uuid.UUID, manaCostStr string) bool
 

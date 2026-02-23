@@ -102,6 +102,14 @@ func AttacksTrigger(effect Effect, optional bool) *GenericTriggered {
 		})
 }
 
+// BlocksTrigger fires when the source creature is declared as a blocker.
+func BlocksTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtDeclaredBlocker, optional, effect).
+		SetCondition(func(evt *GameEvent, _ *Game, sourceID, _ uuid.UUID) bool {
+			return evt.SourceID == sourceID
+		})
+}
+
 // DiesCreatureTrigger fires when another creature you control dies.
 // The filter parameter is reserved for future use.
 func DiesCreatureTrigger(effect Effect, optional bool, filter PermanentFilter) *GenericTriggered {
