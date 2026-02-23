@@ -229,7 +229,14 @@ func registerCreatures() {
 	})
 
 	Register("Ali Baba", func() Card {
-		return NewCreature("Ali Baba", "{R}", 1, 1, WithSubTypes("Human", "Rogue"))
+		return NewCreature("Ali Baba", "{R}", 1, 1,
+			WithSubTypes("Human", "Rogue"),
+			WithActivatedAbility(
+				TapTarget(),
+				ManaCostOf("{R}"),
+				WithTarget(TargetCreature(HasSubType("Wall"))),
+			),
+		)
 	})
 
 	Register("Ali from Cairo", func() Card {
@@ -290,7 +297,14 @@ func registerCreatures() {
 	})
 
 	Register("Wyluli Wolf", func() Card {
-		return NewCreature("Wyluli Wolf", "{1}{G}", 1, 1, WithSubTypes("Wolf"))
+		return NewCreature("Wyluli Wolf", "{1}{G}", 1, 1,
+			WithSubTypes("Wolf"),
+			WithActivatedAbility(
+				BoostUntilEndOfTurn(Fixed(1), Fixed(1), SelectTarget),
+				TapSourceCost(),
+				WithTarget(TargetCreature()),
+			),
+		)
 	})
 
 	// ===== ARTIFACT CREATURES =====

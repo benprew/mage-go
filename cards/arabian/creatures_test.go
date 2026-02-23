@@ -272,6 +272,85 @@ func TestErgRaiders(t *testing.T) {
 	})
 }
 
+func TestKingSuleiman(t *testing.T) {
+	t.Run("destroys_djinn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "King Suleiman")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Juzám Djinn")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "King Suleiman", "Juzám Djinn")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertGraveyardCount(gametest.PlayerB, "Juzám Djinn", 1)
+	})
+
+	t.Run("destroys_efreet", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "King Suleiman")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Serendib Efreet")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "King Suleiman", "Serendib Efreet")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertGraveyardCount(gametest.PlayerB, "Serendib Efreet", 1)
+	})
+
+	t.Run("cannot_target_non_djinn_efreet", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "King Suleiman")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "King Suleiman", "Grizzly Bears")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Grizzly Bears should survive — not a valid target
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
+	})
+}
+
+func TestWyluliWolf(t *testing.T) {
+	t.Run("boosts_target_until_eot", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Wyluli Wolf")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Wyluli Wolf", "Grizzly Bears")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 3, 3)
+	})
+
+	t.Run("boost_expires_at_eot", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Wyluli Wolf")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Wyluli Wolf", "Grizzly Bears")
+		g.StopAt(2, core.Upkeep) // next turn
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 2)
+	})
+}
+
+func TestAliBaba(t *testing.T) {
+	t.Run("taps_a_wall", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ali Baba")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Wall of Stone")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Ali Baba", "Wall of Stone")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertTapped(gametest.PlayerB, "Wall of Stone", true)
+	})
+
+	t.Run("cannot_target_non_wall", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ali Baba")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Ali Baba", "Grizzly Bears")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertTapped(gametest.PlayerB, "Grizzly Bears", false)
+	})
+}
+
 func TestDanDan(t *testing.T) {
 	t.Run("sacrifice_when_you_control_no_islands", func(t *testing.T) {
 		g := gametest.NewTestGame(t)

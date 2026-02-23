@@ -35,7 +35,14 @@ func registerLands() {
 	})
 
 	Register("Elephant Graveyard", func() Card {
-		return NewLand("Elephant Graveyard")
+		return NewLand("Elephant Graveyard",
+			WithManaAbility(Colorless),
+			WithActivatedAbility(
+				RegenerateTarget(),
+				TapSourceCost(),
+				WithTarget(TargetCreature(HasSubType("Elephant"))),
+			),
+		)
 	})
 
 	Register("Island of Wak-Wak", func() Card {
@@ -47,6 +54,12 @@ func registerLands() {
 	})
 
 	Register("Oasis", func() Card {
-		return NewLand("Oasis")
+		return NewLand("Oasis",
+			WithActivatedAbility(
+				PreventDamageToTarget(Fixed(1)),
+				TapSourceCost(),
+				WithTarget(TargetCreature()),
+			),
+		)
 	})
 }
