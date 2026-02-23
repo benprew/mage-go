@@ -614,3 +614,70 @@ func (e *destroyTargetAtEndOfTurnEffect) Text() string {
 func (e *destroyTargetAtEndOfTurnEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
+
+// setBasePTUntilEndOfTurnEffect sets a target creature's base P/T until end of turn.
+type setBasePTUntilEndOfTurnEffect struct {
+	power     int
+	toughness int
+}
+
+// SetPTUntilEndOfTurn creates an effect that sets the target creature's base P/T
+// until end of turn (e.g. Sorceress Queen: 0/2).
+func SetPTUntilEndOfTurn(power, toughness int, target PermanentSelector) Effect {
+	return &setBasePTUntilEndOfTurnEffect{power: power, toughness: toughness}
+}
+
+func (e *setBasePTUntilEndOfTurnEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	if len(targets) == 0 {
+		return fmt.Errorf("no target for set P/T")
+	}
+	perm := g.FindPermanent(targets[0])
+	if perm == nil {
+		return nil
+	}
+	eff := SetBasePT(perm.ID(), e.power, e.toughness)
+	eff.SetSourceID(sourceID)
+	g.AddContinuousEffect(eff)
+	g.ApplyContinuousEffects()
+	return nil
+}
+
+func (e *setBasePTUntilEndOfTurnEffect) Text() string {
+	return fmt.Sprintf("target creature has base power and toughness %d/%d until end of turn", e.power, e.toughness)
+}
+func (e *setBasePTUntilEndOfTurnEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
+
+// setBasePowerUntilEndOfTurnEffect sets a target creature's base power until end of turn.
+type setBasePowerUntilEndOfTurnEffect struct {
+	power int
+}
+
+// SetPowerUntilEndOfTurn creates an effect that sets the target creature's base power
+// until end of turn (e.g. Singing Tree, Island of Wak-Wak: power becomes 0).
+func SetPowerUntilEndOfTurn(power int, target PermanentSelector) Effect {
+	return &setBasePowerUntilEndOfTurnEffect{power: power}
+}
+
+func (e *setBasePowerUntilEndOfTurnEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	if len(targets) == 0 {
+		return fmt.Errorf("no target for set power")
+	}
+	perm := g.FindPermanent(targets[0])
+	if perm == nil {
+		return nil
+	}
+	eff := SetBasePower(perm.ID(), e.power)
+	eff.SetSourceID(sourceID)
+	g.AddContinuousEffect(eff)
+	g.ApplyContinuousEffects()
+	return nil
+}
+
+func (e *setBasePowerUntilEndOfTurnEffect) Text() string {
+	return fmt.Sprintf("target creature has base power %d until end of turn", e.power)
+}
+func (e *setBasePowerUntilEndOfTurnEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}

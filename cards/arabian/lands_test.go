@@ -52,6 +52,30 @@ func TestElephantGraveyard(t *testing.T) {
 	})
 }
 
+func TestIslandOfWakWak(t *testing.T) {
+	t.Run("sets_flyer_power_to_0", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island of Wak-Wak")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Serra Angel") // 4/4 flying
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerB, "Island of Wak-Wak", "Serra Angel")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Power set to 0, toughness unchanged (4)
+		g.AssertPowerToughness(gametest.PlayerA, "Serra Angel", 0, 4)
+	})
+
+	t.Run("cannot_target_non_flyer", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island of Wak-Wak")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // no flying
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerB, "Island of Wak-Wak", "Grizzly Bears")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Can't target non-flyer — should remain 2/2
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 2)
+	})
+}
+
 func TestDesert(t *testing.T) {
 	t.Run("desert_does_damage", func(t *testing.T) {
 		g := gametest.NewTestGame(t)

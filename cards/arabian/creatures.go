@@ -292,7 +292,14 @@ func registerCreatures() {
 	// Oracle: "{T}: Target creature other than Sorceress Queen has base power and
 	// toughness 0/2 until end of turn."
 	Register("Sorceress Queen", func() Card {
-		return NewCreature("Sorceress Queen", "{1}{B}{B}", 1, 1, WithSubTypes("Human", "Wizard"))
+		return NewCreature("Sorceress Queen", "{1}{B}{B}", 1, 1,
+			WithSubTypes("Human", "Wizard", "Sorcerer"),
+			WithActivatedAbility(
+				SetPTUntilEndOfTurn(0, 2, SelectTarget),
+				TapSourceCost(),
+				WithTarget(TargetCreature()),
+			),
+		)
 	})
 
 	// Oracle: "First strike"
@@ -416,7 +423,14 @@ func registerCreatures() {
 
 	// Oracle: "{T}: Target attacking creature has base power 0 until end of turn."
 	Register("Singing Tree", func() Card {
-		return NewCreature("Singing Tree", "{3}{G}", 0, 3, WithSubTypes("Plant"))
+		return NewCreature("Singing Tree", "{3}{G}", 0, 3,
+			WithSubTypes("Plant"),
+			WithActivatedAbility(
+				SetPowerUntilEndOfTurn(0, SelectTarget),
+				TapSourceCost(),
+				WithTarget(TargetCreature(IsAttacking)),
+			),
+		)
 	})
 
 	// Oracle: "{T}: Target creature gets +1/+1 until end of turn."

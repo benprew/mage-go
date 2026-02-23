@@ -55,7 +55,13 @@ func registerLands() {
 
 	// Oracle: "{T}: Target creature with flying has base power 0 until end of turn."
 	Register("Island of Wak-Wak", func() Card {
-		return NewLand("Island of Wak-Wak")
+		return NewLand("Island of Wak-Wak",
+			WithActivatedAbility(
+				SetPowerUntilEndOfTurn(0, SelectTarget),
+				TapSourceCost(),
+				WithTarget(TargetCreature(HasKeywordFilter(Flying))),
+			),
+		)
 	})
 
 	// Oracle: "{T}: Add {C}. {T}: Draw a card. Activate only if you have exactly

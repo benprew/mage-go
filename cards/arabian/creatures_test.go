@@ -545,3 +545,53 @@ func TestDanDan(t *testing.T) {
 		g.AssertLife(gametest.PlayerB, 16)
 	})
 }
+
+func TestSorceressQueen(t *testing.T) {
+	t.Run("sets_target_to_0_2", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sorceress Queen")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant") // 3/3
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Sorceress Queen", "Hill Giant")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerB, "Hill Giant", 0, 2)
+	})
+
+	t.Run("reverts_after_end_of_turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sorceress Queen")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant") // 3/3
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Sorceress Queen", "Hill Giant")
+		g.StopAt(2, core.PrecombatMain) // next turn
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerB, "Hill Giant", 3, 3)
+	})
+}
+
+func TestSingingTree(t *testing.T) {
+	t.Run("sets_attacker_power_to_0", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Singing Tree")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Juzám Djinn") // 5/5
+		g.Attack(1, gametest.PlayerA, "Juzám Djinn")
+		// Activate after attackers declared
+		g.ActivateAbility(1, core.DeclareBlockers, gametest.PlayerB, "Singing Tree", "Juzám Djinn")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		// Power set to 0, toughness unchanged (5)
+		g.AssertPowerToughness(gametest.PlayerA, "Juzám Djinn", 0, 5)
+		// 0 power = no combat damage
+		g.AssertLife(gametest.PlayerB, 20)
+	})
+
+	t.Run("reverts_after_end_of_turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Singing Tree")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant") // 3/3
+		g.Attack(1, gametest.PlayerA, "Hill Giant")
+		g.ActivateAbility(1, core.DeclareBlockers, gametest.PlayerB, "Singing Tree", "Hill Giant")
+		g.StopAt(2, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Hill Giant", 3, 3)
+	})
+}

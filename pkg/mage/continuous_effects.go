@@ -129,6 +129,28 @@ func KeywordReplacement(targetID uuid.UUID, from, to Keyword) ContinuousEffect {
 	})
 }
 
+// SetBasePT creates a continuous effect that sets a creature's base P/T until end of turn.
+// Used by Sorceress Queen ({T}: target creature has base P/T 0/2 until EOT).
+func SetBasePT(targetID uuid.UUID, power, toughness int) ContinuousEffect {
+	return TargetEffect(LayerPT, EndOfTurn, targetID, func(g *Game, target *Permanent) error {
+		target.BasePTOverride = &[2]int{power, toughness}
+		return nil
+	})
+}
+
+// SetBasePower creates a continuous effect that sets a creature's base power until end of turn,
+// leaving toughness unchanged. Used by Singing Tree and Island of Wak-Wak.
+func SetBasePower(targetID uuid.UUID, power int) ContinuousEffect {
+	return TargetEffect(LayerPT, EndOfTurn, targetID, func(g *Game, target *Permanent) error {
+		currentToughness := target.Card.Toughness()
+		if target.BasePTOverride != nil {
+			currentToughness = target.BasePTOverride[1]
+		}
+		target.BasePTOverride = &[2]int{power, currentToughness}
+		return nil
+	})
+}
+
 // ColorOverride permanently changes a target permanent's color (Lace cycle).
 func ColorOverride(targetID uuid.UUID, color Color) ContinuousEffect {
 	return TargetEffect(LayerColor, Indefinite, targetID, func(g *Game, target *Permanent) error {
