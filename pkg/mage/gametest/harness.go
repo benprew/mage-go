@@ -372,6 +372,38 @@ func (tg *TestGame) ensureManaForCast(ca castAction) {
 	}
 }
 
+func (tg *TestGame) ensureManaForResponse(r responseAction) {
+	player := tg.GetPlayer(r.player)
+	card, err := mage.CreateCard(r.spell)
+	if err != nil {
+		return
+	}
+	mc := card.ManaCost()
+	pool := player.ManaPool()
+
+	colors := []struct {
+		color core.Color
+		need  int
+	}{
+		{core.White, mc.White}, {core.Blue, mc.Blue}, {core.Black, mc.Black},
+		{core.Red, mc.Red}, {core.Green, mc.Green},
+	}
+	for _, c := range colors {
+		have := pool.Count(c.color)
+		if have < c.need {
+			pool.Add(c.color, c.need-have)
+		}
+	}
+
+	genericNeeded := mc.Generic
+	if mc.HasX {
+		genericNeeded += r.xValue * mc.XCount
+	}
+	if genericNeeded > 0 {
+		pool.Add(core.Colorless, genericNeeded)
+	}
+}
+
 func (tg *TestGame) autoAddMana() {
 	for _, ca := range tg.castActions {
 		player := tg.GetPlayer(ca.player)
@@ -521,6 +553,7 @@ func (tg *TestGame) executeResponses(responses []responseAction) {
 				tg.t.Logf("ActivateInResponseTo %s failed: %v", r.perm, err)
 			}
 		} else {
+			tg.ensureManaForResponse(r)
 			err := tg.Game.CastSpellByName(respPlayerID, r.spell, targets, r.xValue)
 			if err != nil {
 				tg.t.Logf("CastInResponseTo %s failed: %v", r.spell, err)

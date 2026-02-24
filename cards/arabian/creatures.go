@@ -269,7 +269,29 @@ func registerCreatures() {
 
 	// Oracle: "{T}: Draw a card and reveal it. If it isn't a land card, discard it."
 	Register("Sindbad", func() Card {
-		return NewCreature("Sindbad", "{1}{U}", 1, 1, WithSubTypes("Human"))
+		return NewCreature("Sindbad", "{1}{U}", 1, 1,
+			WithSubTypes("Human"),
+			WithActivatedAbility(
+				FuncEffect("draw and reveal; discard if not land",
+					EffectProperties{},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						card, ok := p.DrawCard()
+						if !ok {
+							return nil
+						}
+						if !card.HasType(TypeLand) {
+							p.RemoveFromHand(card.ID())
+							p.AddToGraveyard(card)
+						}
+						return nil
+					}),
+				TapSourceCost(),
+			),
+		)
 	})
 
 	// ===== BLACK CREATURES =====

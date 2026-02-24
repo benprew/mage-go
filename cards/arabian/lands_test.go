@@ -8,6 +8,60 @@ import (
 	_ "github.com/mage/mage/cards/limited" // register base cards for test creatures
 )
 
+func TestBazaarOfBaghdad(t *testing.T) {
+	t.Run("draw_2_discard_3", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Bazaar of Baghdad")
+		// Start with 3 non-land cards in hand (lands get auto-played)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Grizzly Bears")
+		// Put 2 cards in library to draw
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Hill Giant")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Hill Giant")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Bazaar of Baghdad")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Started with 3 Bears, drew 2 Giants (=5), discarded 3 (=2 remain)
+		// AI discards first 3 chosen → 2 Hill Giants remain
+		g.AssertHandCount(gametest.PlayerA, "Hill Giant", 2)
+	})
+}
+
+func TestLibraryOfAlexandria(t *testing.T) {
+	t.Run("draws_card_with_7_in_hand", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Library of Alexandria")
+		// Put exactly 7 non-land cards in hand
+		for i := 0; i < 7; i++ {
+			g.AddCard(core.ZoneHand, gametest.PlayerA, "Grizzly Bears")
+		}
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Hill Giant")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Library of Alexandria")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Drew 1 Hill Giant
+		g.AssertHandCount(gametest.PlayerA, "Hill Giant", 1)
+		g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 7)
+	})
+
+	t.Run("does_nothing_without_7_in_hand", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Library of Alexandria")
+		// Only 3 non-land cards in hand
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Hill Giant")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Library of Alexandria")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Should not draw — only 3 in hand, not 7
+		g.AssertHandCount(gametest.PlayerA, "Hill Giant", 0)
+		g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 3)
+	})
+}
+
 func TestOasis(t *testing.T) {
 	t.Run("prevents_1_damage_from_desert", func(t *testing.T) {
 		g := gametest.NewTestGame(t)

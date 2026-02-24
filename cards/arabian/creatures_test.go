@@ -505,6 +505,32 @@ func TestKirdApe(t *testing.T) {
 	})
 }
 
+func TestSindbad(t *testing.T) {
+	t.Run("draws_land_keeps_it", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sindbad")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Forest") // land on top
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Sindbad")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Drew a land — kept it (not discarded). autoPlayLands puts it on battlefield.
+		g.AssertGraveyardCount(gametest.PlayerA, "Forest", 0)
+		g.AssertPermanentCount(gametest.PlayerA, "Forest", 1)
+	})
+
+	t.Run("draws_nonland_discards_it", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sindbad")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears") // non-land on top
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Sindbad")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Drew a non-land — discard it
+		g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 0)
+		g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 1)
+	})
+}
+
 func TestMerchantShip(t *testing.T) {
 	t.Run("cant_attack_without_defender_island", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
