@@ -623,6 +623,130 @@ func TestSorceressQueen(t *testing.T) {
 	})
 }
 
+func TestSerendibDjinn(t *testing.T) {
+	t.Run("sacrifices_land_at_upkeep", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Serendib Djinn")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		// Turn 1 upkeep: sacrifice a land (non-Island, no extra damage)
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// One Forest sacrificed, one remains
+		g.AssertPermanentCount(gametest.PlayerA, "Forest", 1)
+		g.AssertLife(gametest.PlayerA, 20) // no damage (not Island)
+	})
+
+	t.Run("sacrifices_island_takes_3_damage", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Serendib Djinn")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island")
+		g.ChoosePermanent(gametest.PlayerA, "Island")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// One Island sacrificed, takes 3 damage
+		g.AssertPermanentCount(gametest.PlayerA, "Island", 1)
+		g.AssertLife(gametest.PlayerA, 17)
+	})
+
+	t.Run("no_lands_sacrifice_self_and_take_3", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Serendib Djinn")
+		// No lands — sacrifice Djinn and take 3
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Serendib Djinn", 0)
+		g.AssertLife(gametest.PlayerA, 17)
+	})
+
+	t.Run("has_flying", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Serendib Djinn")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // no flying
+		g.Attack(1, gametest.PlayerA, "Serendib Djinn")
+		g.Block(1, gametest.PlayerB, "Grizzly Bears", "Serendib Djinn")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		// Bears can't block flyer
+		g.AssertLife(gametest.PlayerB, 15)
+	})
+}
+
+func TestGhazbanOgre(t *testing.T) {
+	t.Run("stays_if_controller_has_more_life", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ghazbán Ogre")
+		g.SetLife(gametest.PlayerA, 20)
+		g.SetLife(gametest.PlayerB, 15)
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// PlayerA has more life — keeps control
+		g.AssertPermanentCount(gametest.PlayerA, "Ghazbán Ogre", 1)
+	})
+
+	t.Run("stays_if_life_tied", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ghazbán Ogre")
+		g.SetLife(gametest.PlayerA, 20)
+		g.SetLife(gametest.PlayerB, 20)
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// Tied — no one has strictly more, control stays
+		g.AssertPermanentCount(gametest.PlayerA, "Ghazbán Ogre", 1)
+	})
+
+	t.Run("opponent_gains_control_if_more_life", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ghazbán Ogre")
+		g.SetLife(gametest.PlayerA, 15)
+		g.SetLife(gametest.PlayerB, 20)
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// Opponent has more life — gains control
+		g.AssertPermanentCount(gametest.PlayerA, "Ghazbán Ogre", 0)
+		g.AssertPermanentCount(gametest.PlayerB, "Ghazbán Ogre", 1)
+	})
+}
+
+func TestErhnamDjinn(t *testing.T) {
+	t.Run("grants_forestwalk_to_opponent_creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Erhnam Djinn")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		// Upkeep: opponent's creature gains forestwalk
+		// Bears attacks — PlayerA controls Forest, so forestwalk is unblockable
+		g.Attack(2, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Wall of Stone")
+		g.Block(2, gametest.PlayerA, "Wall of Stone", "Grizzly Bears")
+		g.StopAt(2, core.EndCombat)
+		g.Execute()
+		// Bears has forestwalk, PlayerA controls Forest → can't be blocked
+		g.AssertLife(gametest.PlayerA, 18)
+	})
+
+	t.Run("no_opponent_creatures_nothing_happens", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Erhnam Djinn")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// No crash, Djinn still on battlefield
+		g.AssertPermanentCount(gametest.PlayerA, "Erhnam Djinn", 1)
+	})
+
+	t.Run("wall_excluded_from_forestwalk", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Erhnam Djinn")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Wall of Stone") // Wall — excluded
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// Wall should NOT have forestwalk (it's excluded from the trigger)
+		g.AssertPermanentCount(gametest.PlayerA, "Erhnam Djinn", 1)
+	})
+}
+
 func TestSingingTree(t *testing.T) {
 	t.Run("sets_attacker_power_to_0", func(t *testing.T) {
 		g := gametest.NewTestGame(t)

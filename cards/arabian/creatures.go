@@ -185,7 +185,43 @@ func registerCreatures() {
 	// an Island this way, Serendib Djinn deals 3 damage to you.
 	// When you control no lands, sacrifice Serendib Djinn."
 	Register("Serendib Djinn", func() Card {
-		return NewCreature("Serendib Djinn", "{2}{U}{U}", 5, 6, WithSubTypes("Djinn"))
+		return NewCreature("Serendib Djinn", "{2}{U}{U}", 5, 6,
+			WithSubTypes("Djinn"),
+			WithKeyword(Flying),
+			WithAbility(BeginningOfUpkeepTrigger(
+				FuncEffect("sacrifice a land or self-destruct",
+					EffectProperties{},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						lands := g.FilterBattlefield(And(ControlledBy(controller), IsLand))
+						if len(lands) == 0 {
+							// No lands: take 3 damage and sacrifice Djinn
+							p := g.GetPlayer(controller)
+							if p != nil {
+								g.DealDamageToPlayer(p, 3, sourceID)
+							}
+							perm := g.FindPermanent(sourceID)
+							if perm != nil {
+								g.Sacrifice(perm)
+							}
+							return nil
+						}
+						// Choose a land to sacrifice
+						player := g.GetPlayer(controller)
+						chosen := player.ChoosePermanent(lands, "sacrifice", g)
+						if chosen == nil {
+							chosen = lands[0]
+						}
+						wasIsland := chosen.HasSubType("Island")
+						g.Sacrifice(chosen)
+						if wasIsland {
+							if player != nil {
+								g.DealDamageToPlayer(player, 3, sourceID)
+							}
+						}
+						return nil
+					}), false,
+			)),
+		)
 	})
 
 	// Oracle: "Flying. At the beginning of your upkeep, Serendib Efreet deals 1 damage to you."
@@ -428,13 +464,72 @@ func registerCreatures() {
 	// Oracle: "At the beginning of your upkeep, target non-Wall creature an opponent
 	// controls gains forestwalk until your next upkeep."
 	Register("Erhnam Djinn", func() Card {
-		return NewCreature("Erhnam Djinn", "{3}{G}", 4, 5, WithSubTypes("Djinn"))
+		return NewCreature("Erhnam Djinn", "{3}{G}", 4, 5,
+			WithSubTypes("Djinn"),
+			WithAbility(BeginningOfUpkeepTrigger(
+				FuncEffect("grant forestwalk to opponent creature",
+					EffectProperties{},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						// Find non-Wall creatures opponents control
+						candidates := g.FilterBattlefield(And(
+							NotControlledBy(controller),
+							IsCreature,
+							Not(HasSubType("Wall")),
+						))
+						if len(candidates) == 0 {
+							return nil
+						}
+						// Pick one (first candidate — AI/test deterministic)
+						target := candidates[0]
+						eff := TargetEffect(LayerAbility, UntilYourNextTurn, target.ID(),
+							func(g *Game, target *Permanent) error {
+								g.Effects.GrantAttr(target.ID(), Forestwalk)
+								return nil
+							})
+						eff.SetSourceID(sourceID)
+						g.AddContinuousEffect(eff)
+						g.ApplyContinuousEffects()
+						return nil
+					}), false,
+			)),
+		)
 	})
 
 	// Oracle: "At the beginning of your upkeep, if a player has more life than each
 	// other player, the player with the most life gains control of Ghazbán Ogre."
 	Register("Ghazbán Ogre", func() Card {
-		return NewCreature("Ghazbán Ogre", "{G}", 2, 2, WithSubTypes("Ogre"))
+		return NewCreature("Ghazbán Ogre", "{G}", 2, 2,
+			WithSubTypes("Ogre"),
+			// Static continuous effect at LayerControl: each EM cycle, set controller
+			// to the player with the most life (if strictly more than all others).
+			WithStaticAbility(FuncContinuousEffect(LayerControl, WhileOnBattlefield,
+				func(g *Game, sourceID uuid.UUID) error {
+					perm := g.FindPermanent(sourceID)
+					if perm == nil {
+						return nil
+					}
+					players := g.Players
+					if len(players) < 2 {
+						return nil
+					}
+					var maxLife int
+					var maxPlayer Player
+					tied := false
+					for _, p := range players {
+						if maxPlayer == nil || p.Life() > maxLife {
+							maxLife = p.Life()
+							maxPlayer = p
+							tied = false
+						} else if p.Life() == maxLife {
+							tied = true
+						}
+					}
+					if !tied && maxPlayer != nil {
+						perm.Controller = maxPlayer.PlayerID()
+					}
+					return nil
+				})),
+		)
 	})
 
 	// Oracle: "Flying. {G}: Ifh-Bíff Efreet deals 1 damage to each creature with flying
