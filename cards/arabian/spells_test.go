@@ -79,6 +79,56 @@ func TestArmyOfAllah(t *testing.T) {
 	})
 }
 
+func TestDesertTwister(t *testing.T) {
+	t.Run("destroys_creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Desert Twister")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Desert Twister", "Grizzly Bears")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+	})
+
+	t.Run("destroys_enchantment", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Fishliver Oil")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Desert Twister")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Desert Twister", "Fishliver Oil")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertGraveyardCount(gametest.PlayerB, "Fishliver Oil", 1)
+	})
+
+	t.Run("destroys_land", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Desert Twister")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Desert Twister", "Island")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertGraveyardCount(gametest.PlayerB, "Island", 1)
+	})
+}
+
 func TestSandstorm(t *testing.T) {
 	t.Run("deals_1_to_each_attacker", func(t *testing.T) {
 		g := gametest.NewTestGame(t)

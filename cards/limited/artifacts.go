@@ -675,6 +675,21 @@ func registerArtifacts() {
 			WithStaticAbility(
 				PreventUntapForMatching(And(IsCreature, HasColorFilter(Blue))),
 			),
+			WithAbility(BeginningOfEachUpkeepTrigger(
+				FuncEffect("pay {4} to untap blue creatures",
+					EffectProperties{},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						// Find the active player (whose upkeep it is)
+						activePlayer := g.ActivePlayerObj().PlayerID()
+						blues := g.FilterBattlefield(And(IsCreature, HasColorFilter(Blue), ControlledBy(activePlayer), IsTapped))
+						for _, blue := range blues {
+							if g.TryPayCostFromLands(activePlayer, "{4}") {
+								blue.Tapped = false
+							}
+						}
+						return nil
+					}), false,
+			)),
 		)
 	})
 

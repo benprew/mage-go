@@ -1446,6 +1446,11 @@ func (g *Game) doDeclareBlockers() {
 	nonActive := g.NonActivePlayerObj()
 	assignments := nonActive.DeclareBlockers(g)
 	if assignments == nil {
+		// No blockers, but still fire the event so "attacks and isn't blocked" triggers work
+		g.FireEvent(GameEvent{
+			Type:     EvtBlockersDecl,
+			PlayerID: nonActive.PlayerID(),
+		})
 		return
 	}
 
@@ -1500,6 +1505,12 @@ func (g *Game) doDeclareBlockers() {
 			PlayerID: nonActive.PlayerID(),
 		})
 	}
+
+	// Fire EvtBlockersDecl once after all blockers are assigned
+	g.FireEvent(GameEvent{
+		Type:     EvtBlockersDecl,
+		PlayerID: nonActive.PlayerID(),
+	})
 }
 
 func (g *Game) DoCleanup() {

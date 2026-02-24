@@ -170,7 +170,39 @@ func registerCreatures() {
 	// Whenever Merchant Ship attacks and isn't blocked, you gain 2 life.
 	// When you control no Islands, sacrifice Merchant Ship."
 	Register("Merchant Ship", func() Card {
-		return NewCreature("Merchant Ship", "{U}", 0, 2, WithSubTypes("Human"))
+		return NewCreature("Merchant Ship", "{U}", 0, 2,
+			WithSubTypes("Human"),
+			WithStaticAbility(PreventFromAttackingIfDefendingPlayerControls(HasSubType("Island"))),
+			WithAbility(
+				NewTriggered(EvtBlockersDecl, false,
+					FuncEffect("gain 2 life when unblocked",
+						EffectProperties{},
+						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+							p := g.GetPlayer(controller)
+							if p != nil {
+								p.GainLife(2)
+							}
+							return nil
+						}),
+				).SetCondition(func(_ *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+					for _, group := range g.CombatGroups() {
+						if group.AttackerID == sourceID && len(group.BlockerIDs) == 0 {
+							return true
+						}
+					}
+					return false
+				}),
+			),
+			WithAbility(NewTriggered(EvtLeavesBattlefield, false, SacrificeSource()).
+				SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+					for _, p := range g.FilterBattlefield(AnyPermanent) {
+						if p.Controller == controllerID && p.HasSubType("Island") {
+							return false
+						}
+					}
+					return true
+				})),
+		)
 	})
 
 	// Oracle: "You may choose not to untap Old Man of the Sea during your untap step.

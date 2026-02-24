@@ -7,6 +7,46 @@ import (
 	"github.com/mage/mage/pkg/mage/gametest"
 )
 
+func TestMagneticMountain(t *testing.T) {
+	t.Run("blue_creature_doesnt_untap", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Magnetic Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Flying Men") // blue 1/1
+		// Attack to tap Flying Men
+		g.Attack(1, gametest.PlayerA, "Flying Men")
+		// Turn 3 is PlayerA's next turn — blue creature should NOT untap
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertTapped(gametest.PlayerA, "Flying Men", true)
+	})
+
+	t.Run("blue_creature_untaps_if_pay_4", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Magnetic Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Flying Men") // blue 1/1
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.Attack(1, gametest.PlayerA, "Flying Men")
+		// Turn 3 upkeep: pay {4} to untap
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertTapped(gametest.PlayerA, "Flying Men", false)
+	})
+
+	t.Run("non_blue_creature_unaffected", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Magnetic Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // green 2/2
+		g.Attack(1, gametest.PlayerA, "Grizzly Bears")
+		// Turn 3: non-blue creature should untap normally
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertTapped(gametest.PlayerA, "Grizzly Bears", false)
+	})
+}
+
 func TestFishliverOil(t *testing.T) {
 	t.Run("grants_islandwalk", func(t *testing.T) {
 		g := gametest.NewTestGame(t)

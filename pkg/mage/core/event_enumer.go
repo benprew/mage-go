@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _EventTypeName = "ZoneChangeCreatureDiedEntersBattlefieldLeavesBattlefieldDeclaredAttackerDeclaredBlockerDamageDealtLifeGainedLifeLostCardDrawnSpellCastAbilityActivatedAttachDetachPutIntoGraveyardFromBattlefieldUpkeepDrawStepEndStepTappedLandPlayed"
+const _EventTypeName = "ZoneChangeCreatureDiedEntersBattlefieldLeavesBattlefieldDeclaredAttackerDeclaredBlockerDamageDealtLifeGainedLifeLostCardDrawnSpellCastAbilityActivatedAttachDetachPutIntoGraveyardFromBattlefieldUpkeepDrawStepEndStepTappedLandPlayedBlockersDecl"
 
-var _EventTypeIndex = [...]uint8{0, 10, 22, 39, 56, 72, 87, 98, 108, 116, 125, 134, 150, 156, 162, 193, 199, 207, 214, 220, 230}
+var _EventTypeIndex = [...]uint16{0, 10, 22, 39, 56, 72, 87, 98, 108, 116, 125, 134, 150, 156, 162, 193, 199, 207, 214, 220, 230, 242}
 
-const _EventTypeLowerName = "zonechangecreaturediedentersbattlefieldleavesbattlefielddeclaredattackerdeclaredblockerdamagedealtlifegainedlifelostcarddrawnspellcastabilityactivatedattachdetachputintograveyardfrombattlefieldupkeepdrawstependsteptappedlandplayed"
+const _EventTypeLowerName = "zonechangecreaturediedentersbattlefieldleavesbattlefielddeclaredattackerdeclaredblockerdamagedealtlifegainedlifelostcarddrawnspellcastabilityactivatedattachdetachputintograveyardfrombattlefieldupkeepdrawstependsteptappedlandplayedblockersdecl"
 
 func (i EventType) String() string {
 	if i < 0 || i >= EventType(len(_EventTypeIndex)-1) {
@@ -42,9 +42,10 @@ func _EventTypeNoOp() {
 	_ = x[EvtEndStep-(17)]
 	_ = x[EvtTapped-(18)]
 	_ = x[EvtLandPlayed-(19)]
+	_ = x[EvtBlockersDecl-(20)]
 }
 
-var _EventTypeValues = []EventType{EvtZoneChange, EvtCreatureDied, EvtEntersBattlefield, EvtLeavesBattlefield, EvtDeclaredAttacker, EvtDeclaredBlocker, EvtDamageDealt, EvtLifeGained, EvtLifeLost, EvtCardDrawn, EvtSpellCast, EvtAbilityActivated, EvtAttach, EvtDetach, EvtPutIntoGraveyardFromBattlefield, EvtUpkeep, EvtDrawStep, EvtEndStep, EvtTapped, EvtLandPlayed}
+var _EventTypeValues = []EventType{EvtZoneChange, EvtCreatureDied, EvtEntersBattlefield, EvtLeavesBattlefield, EvtDeclaredAttacker, EvtDeclaredBlocker, EvtDamageDealt, EvtLifeGained, EvtLifeLost, EvtCardDrawn, EvtSpellCast, EvtAbilityActivated, EvtAttach, EvtDetach, EvtPutIntoGraveyardFromBattlefield, EvtUpkeep, EvtDrawStep, EvtEndStep, EvtTapped, EvtLandPlayed, EvtBlockersDecl}
 
 var _EventTypeNameToValueMap = map[string]EventType{
 	_EventTypeName[0:10]:         EvtZoneChange,
@@ -87,6 +88,8 @@ var _EventTypeNameToValueMap = map[string]EventType{
 	_EventTypeLowerName[214:220]: EvtTapped,
 	_EventTypeName[220:230]:      EvtLandPlayed,
 	_EventTypeLowerName[220:230]: EvtLandPlayed,
+	_EventTypeName[230:242]:      EvtBlockersDecl,
+	_EventTypeLowerName[230:242]: EvtBlockersDecl,
 }
 
 var _EventTypeNames = []string{
@@ -110,6 +113,7 @@ var _EventTypeNames = []string{
 	_EventTypeName[207:214],
 	_EventTypeName[214:220],
 	_EventTypeName[220:230],
+	_EventTypeName[230:242],
 }
 
 func EventTypeString(s string) (EventType, error) {

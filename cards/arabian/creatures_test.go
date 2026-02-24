@@ -505,6 +505,56 @@ func TestKirdApe(t *testing.T) {
 	})
 }
 
+func TestMerchantShip(t *testing.T) {
+	t.Run("cant_attack_without_defender_island", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Merchant Ship")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+		g.Attack(1, gametest.PlayerA, "Merchant Ship")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 20)
+	})
+
+	t.Run("gains_2_life_when_unblocked", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Merchant Ship")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island")
+		g.Attack(1, gametest.PlayerA, "Merchant Ship")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		// 0/2 deals no damage, but gains 2 life when unblocked
+		g.AssertLife(gametest.PlayerA, 22)
+		g.AssertLife(gametest.PlayerB, 20)
+	})
+
+	t.Run("no_life_gain_when_blocked", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Merchant Ship")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.Attack(1, gametest.PlayerA, "Merchant Ship")
+		g.Block(1, gametest.PlayerB, "Grizzly Bears", "Merchant Ship")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		// Blocked — no life gain
+		g.AssertLife(gametest.PlayerA, 20)
+	})
+
+	t.Run("sacrifice_when_no_islands", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		island := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Merchant Ship")
+		g.ExilePermanent(g.FindPermanent(island))
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Merchant Ship", 0)
+	})
+}
+
 func TestDanDan(t *testing.T) {
 	t.Run("sacrifice_when_you_control_no_islands", func(t *testing.T) {
 		g := gametest.NewTestGame(t)

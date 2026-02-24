@@ -41,7 +41,9 @@ func registerSpells() {
 
 	// Oracle: "Destroy target permanent."
 	Register("Desert Twister", func() Card {
-		return NewSorcery("Desert Twister", "{4}{G}{G}", nil)
+		return NewSorcery("Desert Twister", "{4}{G}{G}",
+			NewTargetedSpell(TargetPermanent(), DestroyTargetPermanent()),
+		)
 	})
 
 	// Oracle: "As an additional cost to cast this spell, sacrifice a creature.
