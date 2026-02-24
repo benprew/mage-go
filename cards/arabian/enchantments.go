@@ -18,7 +18,39 @@ func registerEnchantments() {
 	// Cyclone deals damage equal to the number of wind counters on it to each creature
 	// and each player."
 	Register("Cyclone", func() Card {
-		return NewEnchantment("Cyclone", "{2}{G}{G}")
+		return NewEnchantment("Cyclone", "{2}{G}{G}",
+			WithAbility(
+				BeginningOfUpkeepTrigger(
+					FuncEffect("add wind counter, pay or sacrifice, deal damage",
+						EffectProperties{Outcome: OutcomeDetriment},
+						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+							perm := g.FindPermanent(sourceID)
+							if perm == nil {
+								return nil
+							}
+							perm.AddCounter(Wind, 1)
+							count := perm.Counters[Wind]
+							// Build the mana cost: {G} per wind counter
+							cost := ""
+							for range count {
+								cost += "{G}"
+							}
+							if g.TryPayCostFromLands(controller, cost) {
+								// Deal damage equal to wind counters to each creature and player
+								for _, c := range g.FilterBattlefield(IsCreature) {
+									g.DealDamageToPermanent(c, count, sourceID)
+								}
+								for _, p := range g.AllPlayers() {
+									g.DealDamageToPlayer(p, count, sourceID)
+								}
+							} else {
+								g.Sacrifice(perm)
+							}
+							return nil
+						}), false,
+				),
+			),
+		)
 	})
 
 	// Oracle: "At the beginning of your upkeep, destroy the creature with the least power.
@@ -80,7 +112,55 @@ func registerEnchantments() {
 	// When the chosen player controls no nontoken permanents of the chosen color,
 	// sacrifice Jihad."
 	Register("Jihad", func() Card {
-		return NewEnchantment("Jihad", "{W}{W}{W}")
+		return NewEnchantment("Jihad", "{W}{W}{W}",
+			WithAbility(
+				EntersBattlefieldTrigger(
+					FuncEffect("choose color and opponent",
+						EffectProperties{},
+						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+							perm := g.FindPermanent(sourceID)
+							if perm == nil {
+								return nil
+							}
+							p := g.GetPlayer(controller)
+							if p == nil {
+								return nil
+							}
+							perm.ChosenColor = p.ChooseManaColor("Jihad: choose a color")
+							opp := g.GetOpponent(controller)
+							if opp != nil {
+								perm.ChosenPlayer = opp.PlayerID()
+							}
+							return nil
+						}), false,
+				),
+			),
+			WithStaticAbility(
+				FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+					perm := g.FindPermanent(sourceID)
+					if perm == nil {
+						return nil
+					}
+					chosenColor := perm.ChosenColor
+					chosenPlayer := perm.ChosenPlayer
+					if chosenColor == 0 || chosenPlayer == uuid.Nil {
+						return nil
+					}
+					// Check if chosen player controls a permanent of chosen color
+					if !g.AnyBattlefield(And(ControlledBy(chosenPlayer), HasColorFilter(chosenColor))) {
+						g.Sacrifice(perm)
+						return nil
+					}
+					// Boost all white creatures +2/+1
+					for _, p := range g.Battlefield {
+						if p.HasType(TypeCreature) && HasColorFilter(White).Match(p, g) {
+							p.BoostPT(2, 1)
+						}
+					}
+					return nil
+				}),
+			),
+		)
 	})
 
 	// Oracle: "When Oubliette enters, target creature phases out until Oubliette leaves

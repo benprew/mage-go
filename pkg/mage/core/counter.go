@@ -10,6 +10,7 @@ const (
 	Loyalty
 	Charge
 	Mire // Cyclopean Tomb mire counters
+	Wind // Cyclone wind counters
 )
 
 func (ct CounterType) String() string {
@@ -26,6 +27,8 @@ func (ct CounterType) String() string {
 		return "Charge"
 	case Mire:
 		return "Mire"
+	case Wind:
+		return "Wind"
 	default:
 		return "Unknown"
 	}

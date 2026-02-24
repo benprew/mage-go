@@ -131,3 +131,59 @@ func TestDropOfHoney(t *testing.T) {
 		g.AssertPermanentCount(gametest.PlayerA, "Drop of Honey", 0)
 	})
 }
+
+func TestCyclone(t *testing.T) {
+	t.Run("adds_counter_and_deals_damage_if_paid", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Cyclone")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest") // to pay {G}
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+		// Turn 1 upkeep: add 1 wind counter, pay {G} → deal 1 to all creatures/players
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// 1 damage to each creature and player
+		g.AssertLife(gametest.PlayerA, 19)
+		g.AssertLife(gametest.PlayerB, 19)
+		// Cyclone should still be on the battlefield
+		g.AssertPermanentCount(gametest.PlayerA, "Cyclone", 1)
+	})
+
+	t.Run("sacrifices_if_cant_pay", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Cyclone")
+		// No forests to pay — Cyclone should be sacrificed
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Cyclone", 0)
+	})
+}
+
+func TestJihad(t *testing.T) {
+	t.Run("boosts_white_creatures", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Savannah Lions") // 2/1 white
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")  // green permanent
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Jihad")
+		g.ChooseManaColor(gametest.PlayerA, core.Green) // Jihad ETB: choose Green
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Jihad")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Chose Green, opponent has Grizzly Bears (green) → white creatures get +2/+1
+		g.AssertPowerToughness(gametest.PlayerA, "Savannah Lions", 4, 2)
+	})
+
+	t.Run("sacrifices_when_condition_fails", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Jihad")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+		g.ChooseManaColor(gametest.PlayerA, core.Green) // Jihad ETB: choose Green
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Jihad")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Grizzly Bears")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Grizzly Bears destroyed → opponent has no green permanents → Jihad sacrificed
+		g.AssertPermanentCount(gametest.PlayerA, "Jihad", 0)
+	})
+}

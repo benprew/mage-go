@@ -337,6 +337,10 @@ type Permanent struct {
 	// P/T bonuses from continuous effects (LayerPT). Reset and recomputed each Apply() cycle.
 	powerBonus int
 	toughBonus int
+
+	// ETB choices (e.g. Jihad: choose a color and an opponent)
+	ChosenColor  Color
+	ChosenPlayer uuid.UUID
 }
 
 // NewPermanent creates a permanent from a card.
@@ -546,6 +550,13 @@ func (p *Permanent) CurrentToughness(g GameReader) int {
 		tg += p.toughBonus
 	}
 	return tg
+}
+
+// BoostPT adds power and toughness bonuses during continuous effect application.
+// Only meaningful within a FuncContinuousEffect callback at LayerPT.
+func (p *Permanent) BoostPT(power, toughness int) {
+	p.powerBonus += power
+	p.toughBonus += toughness
 }
 
 // LethalDamage returns true if damage >= current toughness.
