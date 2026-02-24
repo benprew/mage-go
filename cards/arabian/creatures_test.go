@@ -939,6 +939,65 @@ func TestNafsAsp(t *testing.T) {
 	})
 }
 
+func TestIfhBiffEfreet(t *testing.T) {
+	t.Run("deals_1_to_flyers_and_players", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ifh-Bíff Efreet") // 3/3 flying
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Bird Maiden") // 1/2 flying
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Ifh-Bíff Efreet")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// 1 damage to each creature with flying: Efreet (3/3→2 damage taken), Bird Maiden (1/2→1 damage taken)
+		// 1 damage to each player: A=19, B=19
+		// Grizzly Bears unaffected
+		g.AssertLife(gametest.PlayerA, 19)
+		g.AssertLife(gametest.PlayerB, 19)
+	})
+
+	t.Run("has_flying", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ifh-Bíff Efreet")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // no flying
+		g.Attack(1, gametest.PlayerA, "Ifh-Bíff Efreet")
+		g.Block(1, gametest.PlayerB, "Grizzly Bears", "Ifh-Bíff Efreet")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		// Bears can't block flyer
+		g.AssertLife(gametest.PlayerB, 17)
+	})
+}
+
+func TestCuombajjWitches(t *testing.T) {
+	t.Run("deals_1_to_target_and_opponent_chosen", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Cuombajj Witches")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // 2/2
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")    // 3/3
+		// Controller targets Grizzly Bears, opponent chooses Hill Giant
+		g.ChoosePermanent(gametest.PlayerB, "Hill Giant")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Cuombajj Witches", "Grizzly Bears")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Both creatures took 1 damage but survived
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
+		g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 1)
+	})
+
+	t.Run("opponent_chooses_default_when_no_script", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Cuombajj Witches")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // 2/2
+		// No ChoosePermanent scripted — opponent defaults to first creature
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Cuombajj Witches", "Grizzly Bears")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// 1 damage to Grizzly Bears (explicit target), opponent chooses a creature for second 1 damage
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
+	})
+}
+
 func TestHurrJackal(t *testing.T) {
 	t.Run("prevents_regeneration", func(t *testing.T) {
 		g := gametest.NewTestGame(t)

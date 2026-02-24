@@ -299,7 +299,48 @@ func registerCreatures() {
 	// Oracle: "{T}: Cuombajj Witches deals 1 damage to any target and 1 damage to any
 	// target of an opponent's choice."
 	Register("Cuombajj Witches", func() Card {
-		return NewCreature("Cuombajj Witches", "{B}{B}", 1, 3, WithSubTypes("Human", "Wizard"))
+		return NewCreature("Cuombajj Witches", "{B}{B}", 1, 3,
+			WithSubTypes("Human", "Wizard"),
+			WithActivatedAbility(
+				FuncEffect("deal 1 to target, 1 to opponent's choice",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						// Deal 1 damage to controller's chosen target
+						if len(targets) > 0 {
+							targetID := targets[0]
+							dealt := false
+							for _, pl := range g.AllPlayers() {
+								if pl.PlayerID() == targetID {
+									g.DealDamageToPlayer(pl, 1, sourceID)
+									dealt = true
+									break
+								}
+							}
+							if !dealt {
+								perm := g.FindPermanent(targetID)
+								if perm != nil {
+									g.DealDamageToPermanent(perm, 1, sourceID)
+								}
+							}
+						}
+						// Opponent chooses a target for the second 1 damage
+						opp := g.GetOpponent(controller)
+						if opp == nil {
+							return nil
+						}
+						creatures := g.FilterBattlefield(IsCreature)
+						if len(creatures) > 0 {
+							chosen := opp.ChoosePermanent(creatures, "Cuombajj Witches", g)
+							if chosen != nil {
+								g.DealDamageToPermanent(chosen, 1, sourceID)
+							}
+						}
+						return nil
+					}),
+				TapSourceCost(),
+				WithTarget(TargetAnyTarget()),
+			),
+		)
 	})
 
 	Register("El-Hajjâj", func() Card {
@@ -625,7 +666,24 @@ func registerCreatures() {
 	// Oracle: "Flying. {G}: Ifh-Bíff Efreet deals 1 damage to each creature with flying
 	// and each player. Any player may activate this ability."
 	Register("Ifh-Bíff Efreet", func() Card {
-		return NewCreature("Ifh-Bíff Efreet", "{2}{G}{G}", 3, 3, WithSubTypes("Efreet"))
+		return NewCreature("Ifh-Bíff Efreet", "{2}{G}{G}", 3, 3,
+			WithSubTypes("Efreet"),
+			WithKeyword(Flying),
+			WithActivatedAbility(
+				FuncEffect("deal 1 to each flyer and each player",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						for _, c := range g.FilterBattlefield(HasKeywordFilter(Flying)) {
+							g.DealDamageToPermanent(c, 1, sourceID)
+						}
+						for _, p := range g.AllPlayers() {
+							g.DealDamageToPlayer(p, 1, sourceID)
+						}
+						return nil
+					}),
+				ManaCostOf("{G}"),
+			),
+		)
 	})
 
 	// Oracle: "Whenever Nafs Asp deals damage to a player, that player loses 1 life at
