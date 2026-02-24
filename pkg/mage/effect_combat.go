@@ -93,6 +93,11 @@ func (e *tapTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, t
 		return nil
 	}
 	perm.Tapped = true
+	g.FireEvent(GameEvent{
+		Type:     EvtTapped,
+		SourceID: perm.ID(),
+		PlayerID: perm.Controller,
+	})
 	return nil
 }
 

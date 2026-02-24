@@ -62,6 +62,19 @@ func TestLibraryOfAlexandria(t *testing.T) {
 	})
 }
 
+func TestCityOfBrass(t *testing.T) {
+	t.Run("tapping_for_mana_deals_1_damage", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "City of Brass")
+		// Explicitly tap City of Brass for mana
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "City of Brass")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Tapping City of Brass for mana should deal 1 damage to controller
+		g.AssertLife(gametest.PlayerA, 19)
+	})
+}
+
 func TestOasis(t *testing.T) {
 	t.Run("prevents_1_damage_from_desert", func(t *testing.T) {
 		g := gametest.NewTestGame(t)

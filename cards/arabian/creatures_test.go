@@ -850,3 +850,34 @@ func TestSingingTree(t *testing.T) {
 		g.AssertPowerToughness(gametest.PlayerA, "Hill Giant", 3, 3)
 	})
 }
+
+func TestHurrJackal(t *testing.T) {
+	t.Run("prevents_regeneration", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hurr Jackal")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Drudge Skeletons") // 1/1 with {B}: Regenerate
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+		// Hurr Jackal prevents regen, Skeletons tries to set up regen, bolt kills
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Hurr Jackal", "Drudge Skeletons")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerB, "Drudge Skeletons")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Drudge Skeletons")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Drudge Skeletons should die — can't regenerate this turn
+		g.AssertPermanentCount(gametest.PlayerB, "Drudge Skeletons", 0)
+		g.AssertGraveyardCount(gametest.PlayerB, "Drudge Skeletons", 1)
+	})
+
+	t.Run("without_hurr_jackal_regen_saves", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Drudge Skeletons") // 1/1 with {B}: Regenerate
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+		// Skeletons sets up regen, bolt hits but regen saves it
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerB, "Drudge Skeletons")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Drudge Skeletons")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Drudge Skeletons should survive via regeneration
+		g.AssertPermanentCount(gametest.PlayerB, "Drudge Skeletons", 1)
+	})
+}

@@ -54,6 +54,7 @@ const (
 	CanBlockAdditional
 	BasiliskTouch
 	Desertwalk
+	CantRegenerate
 )
 
 // Backward-compat aliases: capability attrs that replaced old keyword constants.
@@ -152,6 +153,8 @@ func (a Attr) String() string {
 		return "Basilisk Touch"
 	case Desertwalk:
 		return "Desertwalk"
+	case CantRegenerate:
+		return "Can't Be Regenerated"
 	default:
 		return "Unknown"
 	}

@@ -450,7 +450,7 @@ func (g *Game) DestroyPermanent(perm *Permanent) {
 		return
 	}
 	// Regeneration replaces destruction: tap, remove damage, remove from combat
-	if g.Effects.ConsumeRegenerationShield(perm.ID()) {
+	if !perm.HasKeyword(CantRegenerate) && g.Effects.ConsumeRegenerationShield(perm.ID()) {
 		perm.Tapped = true
 		perm.Damage = 0
 		// Remove from combat if attacking/blocking

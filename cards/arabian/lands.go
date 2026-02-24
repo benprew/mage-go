@@ -39,7 +39,16 @@ func registerLands() {
 	// Oracle: "Whenever City of Brass becomes tapped, it deals 1 damage to you.
 	// {T}: Add one mana of any color."
 	Register("City of Brass", func() Card {
-		return NewLand("City of Brass")
+		return NewLand("City of Brass",
+			WithAnyColorMana(),
+			WithAbility(
+				NewTriggered(EvtTapped, false,
+					DealDamageToPlayers(Fixed(1), SelectController()),
+				).SetCondition(func(evt *GameEvent, _ *Game, sourceID, _ uuid.UUID) bool {
+					return evt.SourceID == sourceID
+				}),
+			),
+		)
 	})
 
 	// Oracle: "{T}: Add {C}. {T}: Desert deals 1 damage to target attacking creature.

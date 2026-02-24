@@ -69,6 +69,11 @@ func (c *tapSourceCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 		return ErrSourceTapped
 	}
 	p.Tapped = true
+	g.FireEvent(GameEvent{
+		Type:     EvtTapped,
+		SourceID: sourceID,
+		PlayerID: controller,
+	})
 	return nil
 }
 
