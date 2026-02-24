@@ -440,7 +440,18 @@ func registerCreatures() {
 
 	// Oracle: "Damage that would reduce your life total to less than 1 reduces it to 1 instead."
 	Register("Ali from Cairo", func() Card {
-		return NewCreature("Ali from Cairo", "{2}{R}{R}", 0, 1, WithSubTypes("Human"))
+		return NewCreature("Ali from Cairo", "{2}{R}{R}", 0, 1,
+			WithSubTypes("Human"),
+			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield,
+				func(g *Game, sourceID uuid.UUID) error {
+					perm := g.FindPermanent(sourceID)
+					if perm == nil {
+						return nil
+					}
+					g.Effects.SetMinimumLife(perm.Controller)
+					return nil
+				})),
+		)
 	})
 
 	// Oracle: "Flying"
@@ -620,7 +631,38 @@ func registerCreatures() {
 	// Oracle: "Whenever Nafs Asp deals damage to a player, that player loses 1 life at
 	// the beginning of their next draw step unless they pay {1} before that draw step."
 	Register("Nafs Asp", func() Card {
-		return NewCreature("Nafs Asp", "{G}", 1, 1, WithSubTypes("Snake"))
+		return NewCreature("Nafs Asp", "{G}", 1, 1,
+			WithSubTypes("Snake"),
+			WithAbility(DealsDamageToOpponentTrigger(
+				FuncEffect("register delayed draw-step penalty",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						// targets[0] is the damaged player (from EvtDamageDealt.TargetID)
+						if len(targets) == 0 {
+							return nil
+						}
+						damagedPlayerID := targets[0]
+						g.RegisterDelayedTrigger(&DelayedTrigger{
+							EventType:     EvtDrawStep,
+							MatchPlayerID: damagedPlayerID,
+							SourceID:      sourceID,
+							Controller:    controller,
+							Effects: []Effect{FuncEffect("lose 1 life unless pay {1}",
+								EffectProperties{Outcome: OutcomeDetriment},
+								func(g GameMutator, sourceID2, controller2 uuid.UUID, _ []uuid.UUID) error {
+									p := g.GetPlayer(damagedPlayerID)
+									if p == nil {
+										return nil
+									}
+									if !g.TryPayCostFromLands(damagedPlayerID, "{1}") {
+										g.DealDamageToPlayer(p, 1, sourceID2)
+									}
+									return nil
+								})},
+						})
+						return nil
+					}), false)),
+		)
 	})
 
 	// Oracle: "{T}: Target attacking creature has base power 0 until end of turn."

@@ -80,6 +80,7 @@ type GameMutator interface {
 	SetCreatureDamageRedirect(uuid.UUID, uuid.UUID)
 	SetSkipNextDraw(uuid.UUID)
 	SetSanctuaryActive(uuid.UUID)
+	SetMinimumLife(uuid.UUID)
 	CopyEffectCurrentName(uuid.UUID) string
 	UpdateCopyEffect(uuid.UUID, *Permanent)
 
@@ -230,6 +231,11 @@ func (g *Game) SetSkipNextDraw(playerID uuid.UUID) {
 // SetSanctuaryActive marks the Ivory Tower sanctuary effect as active.
 func (g *Game) SetSanctuaryActive(playerID uuid.UUID) {
 	g.Effects.SetSanctuaryActive(playerID)
+}
+
+// SetMinimumLife marks a player as having minimum-life protection (Ali from Cairo).
+func (g *Game) SetMinimumLife(playerID uuid.UUID) {
+	g.Effects.SetMinimumLife(playerID)
 }
 
 // CopyEffectCurrentName returns the name of the creature currently being copied

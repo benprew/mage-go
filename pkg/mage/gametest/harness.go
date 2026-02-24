@@ -647,7 +647,80 @@ func (tg *TestGame) validateTargets(sourceCard mage.Card, targets []uuid.UUID, c
 	return valid
 }
 
+// PlayToEnd runs the game until IsGameOver() returns true or maxTurns is reached.
+// If no maxTurns argument is given, defaults to 50.
+func (tg *TestGame) PlayToEnd(maxTurns ...int) {
+	tg.t.Helper()
+
+	limit := 50
+	if len(maxTurns) > 0 {
+		limit = maxTurns[0]
+	}
+
+	tg.autoAddMana()
+
+	for tg.Turn <= limit {
+		for _, step := range core.AllSteps() {
+			tg.Step = step
+			tg.executeCounterActions(tg.Turn, step)
+			tg.executeOrderedActions(tg.Turn, step)
+
+			if step == core.PrecombatMain {
+				tg.autoPlayLands()
+			}
+
+			tg.RunStep(step)
+
+			if tg.Game.IsGameOver() {
+				return
+			}
+		}
+		if len(tg.ExtraTurns) > 0 {
+			extraPlayerID := tg.ExtraTurns[0]
+			tg.ExtraTurns = tg.ExtraTurns[1:]
+			for i, p := range tg.Players {
+				if p.PlayerID() == extraPlayerID {
+					tg.ActivePlayer = i
+					break
+				}
+			}
+		} else {
+			tg.ActivePlayer = (tg.ActivePlayer + 1) % len(tg.Players)
+		}
+		tg.Turn++
+	}
+	tg.t.Fatalf("PlayToEnd: game did not end within %d turns", limit)
+}
+
 // Assertions
+
+// AssertWinner checks that the winner matches the expected player.
+func (tg *TestGame) AssertWinner(p PlayerRef) {
+	tg.t.Helper()
+	want := tg.GetPlayer(p).Name()
+	got := tg.Game.Winner()
+	if got != want {
+		tg.t.Errorf("AssertWinner: got %q, want %q", got, want)
+	}
+}
+
+// AssertGameOver checks whether the game has ended.
+func (tg *TestGame) AssertGameOver(want bool) {
+	tg.t.Helper()
+	got := tg.Game.IsGameOver()
+	if got != want {
+		tg.t.Errorf("AssertGameOver: got %v, want %v", got, want)
+	}
+}
+
+// AssertTotalTurns checks the current turn number.
+func (tg *TestGame) AssertTotalTurns(want int) {
+	tg.t.Helper()
+	got := tg.Turn
+	if got != want {
+		tg.t.Errorf("AssertTotalTurns: got %d, want %d", got, want)
+	}
+}
 
 // AssertLife checks that a player's life total matches the expected value.
 func (tg *TestGame) AssertLife(p PlayerRef, want int) {

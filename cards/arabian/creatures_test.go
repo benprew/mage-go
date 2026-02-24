@@ -867,6 +867,78 @@ func TestKhabalGhoul(t *testing.T) {
 	})
 }
 
+func TestAliFromCairo(t *testing.T) {
+	t.Run("damage_cannot_reduce_below_1", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ali from Cairo")
+		g.SetLife(gametest.PlayerA, 5)
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		// Bolt 1: 5 → 2. Bolt 2: 2 → 1 (capped, not 0 or below)
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "PlayerA")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "PlayerA")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 1)
+	})
+
+	t.Run("combat_damage_capped_at_1", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ali from Cairo")
+		g.SetLife(gametest.PlayerA, 3)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant") // 3/3
+		g.Attack(2, gametest.PlayerB, "Hill Giant")
+		g.StopAt(2, core.PostcombatMain)
+		g.Execute()
+		// 3 damage would reduce to 0, but Ali caps at 1
+		g.AssertLife(gametest.PlayerA, 1)
+	})
+
+	t.Run("no_protection_if_ali_removed", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ali from Cairo")
+		g.SetLife(gametest.PlayerA, 5)
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		// Bolt Ali to kill him (0/1 dies to 3 damage), then bolt player twice
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Ali from Cairo")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "PlayerA")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "PlayerA")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Ali dead → no protection → 5 - 3 - 3 = -1 → player loses
+		g.AssertLife(gametest.PlayerA, -1)
+	})
+}
+
+func TestNafsAsp(t *testing.T) {
+	t.Run("deals_1_damage_at_draw_step_if_cant_pay", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Nafs Asp")
+		g.Attack(1, gametest.PlayerA, "Nafs Asp")
+		// Nafs Asp deals 1 combat damage to PlayerB
+		// At PlayerB's next draw step (turn 2), lose 1 life unless pay {1}
+		// PlayerB has no lands → can't pay → loses 1 life
+		g.StopAt(2, core.PrecombatMain)
+		g.Execute()
+		// 20 - 1 (combat) - 1 (draw step) = 18
+		g.AssertLife(gametest.PlayerB, 18)
+	})
+
+	t.Run("no_life_loss_if_pays_1", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Nafs Asp")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forest") // can pay {1}
+		g.Attack(1, gametest.PlayerA, "Nafs Asp")
+		// PlayerB has Forest → pays {1} → no extra life loss
+		g.StopAt(2, core.PrecombatMain)
+		g.Execute()
+		// 20 - 1 (combat) = 19, no draw step penalty
+		g.AssertLife(gametest.PlayerB, 19)
+	})
+}
+
 func TestHurrJackal(t *testing.T) {
 	t.Run("prevents_regeneration", func(t *testing.T) {
 		g := gametest.NewTestGame(t)

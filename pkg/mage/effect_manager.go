@@ -218,6 +218,7 @@ type gameRuleModifiers struct {
 	lichActive         map[uuid.UUID]uuid.UUID // player -> source permanent ID of active Lich
 	skipNextDraw       map[uuid.UUID]bool      // player -> if true, skip normal draw in draw step
 	channelActive      map[uuid.UUID]bool      // players with Channel active this turn
+	minimumLife        map[uuid.UUID]bool      // players whose life can't go below 1 (Ali from Cairo)
 }
 
 func NewEffectManager() *EffectManager {
@@ -241,6 +242,7 @@ func NewEffectManager() *EffectManager {
 			lichActive:        make(map[uuid.UUID]uuid.UUID),
 			skipNextDraw:      make(map[uuid.UUID]bool),
 			manaConversion:    make(map[Color]Color),
+			minimumLife:        make(map[uuid.UUID]bool),
 		},
 	}
 }
@@ -449,6 +451,21 @@ func (em *EffectManager) IsChannelActive(playerID uuid.UUID) bool {
 // ClearChannelActive clears Channel state (called at end of turn).
 func (em *EffectManager) ClearChannelActive() {
 	em.rules.channelActive = make(map[uuid.UUID]bool)
+}
+
+// SetMinimumLife marks a player as having minimum-life protection (Ali from Cairo).
+func (em *EffectManager) SetMinimumLife(playerID uuid.UUID) {
+	em.rules.minimumLife[playerID] = true
+}
+
+// IsMinimumLifeActive returns true if the player's life can't go below 1.
+func (em *EffectManager) IsMinimumLifeActive(playerID uuid.UUID) bool {
+	return em.rules.minimumLife[playerID]
+}
+
+// ClearMinimumLife resets minimum-life state (called when effect source leaves).
+func (em *EffectManager) ClearMinimumLife() {
+	em.rules.minimumLife = make(map[uuid.UUID]bool)
 }
 
 // AddColorPrevention adds a color prevention shield (prevents all damage from one source of that color).
@@ -667,6 +684,7 @@ func (em *EffectManager) Apply(g *Game) {
 	em.rules.manaConversion = make(map[Color]Color)
 	em.damage.bodyguard = make(map[uuid.UUID]uuid.UUID)
 	em.damage.playerDamageRedirect = make(map[uuid.UUID]uuid.UUID)
+	em.rules.minimumLife = make(map[uuid.UUID]bool)
 	// Rebuild prevention rules from continuous effects; preserve one-shot rules (e.g. CoP)
 	var oneShotRules []damagePreventionRule
 	for _, r := range em.damage.preventionRules {

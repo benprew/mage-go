@@ -84,7 +84,8 @@ type DelayedTrigger struct {
 	Effects      []Effect
 	SourceID     uuid.UUID
 	Controller   uuid.UUID
-	MatchEventID uuid.UUID // if set, only fire when evt.SourceID matches
+	MatchEventID  uuid.UUID // if set, only fire when evt.SourceID matches
+	MatchPlayerID uuid.UUID // if set, only fire when evt.PlayerID matches
 }
 
 type pendingTrigger struct {
@@ -651,6 +652,19 @@ func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
 			return
 		}
 	}
+	// Minimum life floor (Ali from Cairo): cap damage so life doesn't go below 1
+	if g.Effects.IsMinimumLifeActive(p.PlayerID()) {
+		maxDamage := p.Life() - 1
+		if maxDamage < 0 {
+			maxDamage = 0
+		}
+		if amount > maxDamage {
+			amount = maxDamage
+		}
+		if amount <= 0 {
+			return
+		}
+	}
 	// Lich replacement: instead of losing life, sacrifice permanents
 	if g.Effects.IsLichActive(g, p.PlayerID()) {
 		g.sacrificePermanents(p.PlayerID(), amount)
@@ -815,6 +829,10 @@ func (g *Game) FireEvent(evt GameEvent) {
 				remaining = append(remaining, dt)
 				continue
 			}
+			if dt.MatchPlayerID != uuid.Nil && evt.PlayerID != dt.MatchPlayerID {
+				remaining = append(remaining, dt)
+				continue
+			}
 			obj := &StackObject{
 				ID:         uuid.New(),
 				Controller: dt.Controller,
@@ -844,11 +862,17 @@ func (g *Game) PutTriggersOnStack() {
 		// For triggers that need to pass the event's player as a target
 		// (e.g., "deal damage to that land's controller", "that player draws"),
 		// store the event PlayerID as a target on the stack object.
-		if pt.event != nil && pt.event.PlayerID != uuid.Nil {
+		if pt.event != nil {
 			if gt, ok := pt.ability.(*GenericTriggered); ok {
 				switch gt.eventType {
 				case EvtEntersBattlefield, EvtDrawStep:
-					obj.Targets = []uuid.UUID{pt.event.PlayerID}
+					if pt.event.PlayerID != uuid.Nil {
+						obj.Targets = []uuid.UUID{pt.event.PlayerID}
+					}
+				case EvtDamageDealt:
+					if pt.event.TargetID != uuid.Nil {
+						obj.Targets = []uuid.UUID{pt.event.TargetID}
+					}
 				}
 			}
 		}
