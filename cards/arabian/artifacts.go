@@ -14,6 +14,7 @@ func registerArtifacts() {
 	// Oracle: "{X}, {T}: The next time you would draw a card this turn, instead look at
 	// the top X cards of your library, put all but one of them on the bottom of your
 	// library in a random order, then draw a card. X can't be 0."
+	// XXX: Aladdin's Lamp deferred — needs library peek + draw replacement effect
 	Register("Aladdin's Lamp", func() Card {
 		return NewArtifact("Aladdin's Lamp", "{10}")
 	})
@@ -61,13 +62,14 @@ func registerArtifacts() {
 	// printed in the Arabian Nights expansion are on the battlefield, their controllers
 	// sacrifice them. Players can't cast spells or play lands with a name originally
 	// printed in the Arabian Nights expansion."
-	// SKIP: Requires set identity tracking.
+	// XXX: City in a Bottle skipped — requires set identity tracking
 	Register("City in a Bottle", func() Card {
 		return NewArtifact("City in a Bottle", "{2}")
 	})
 
 	// Oracle: "{2}, {T}: Untap target attacking creature you control. Prevent all combat
 	// damage that would be dealt to and dealt by that creature this turn."
+	// XXX: Ebony Horse simplified — untaps and removes from combat but does not prevent combat damage
 	Register("Ebony Horse", func() Card {
 		return NewArtifact("Ebony Horse", "{3}",
 			WithActivatedAbility(
@@ -105,6 +107,7 @@ func registerArtifacts() {
 	})
 
 	// Oracle: "{2}, {T}, Discard the last card you drew this turn: Draw a card."
+	// XXX: Jandor's Ring deferred — needs "last card drawn this turn" tracking
 	Register("Jandor's Ring", func() Card {
 		return NewArtifact("Jandor's Ring", "{6}")
 	})
@@ -123,20 +126,21 @@ func registerArtifacts() {
 
 	// Oracle: "Remove Jeweled Bird from your deck before playing if you're not playing
 	// for ante. {T}: Ante Jeweled Bird."
-	// SKIP: Ante mechanic.
+	// XXX: Jeweled Bird skipped — ante mechanic
 	Register("Jeweled Bird", func() Card {
 		return NewArtifact("Jeweled Bird", "{1}")
 	})
 
 	// Oracle: "{2}: Choose one — Destroy target Aura attached to a land. / The next time
 	// target land would be destroyed this turn, remove all damage marked on it instead."
+	// XXX: Pyramids deferred — needs modal ability + land-destruction prevention
 	Register("Pyramids", func() Card {
 		return NewArtifact("Pyramids", "{6}")
 	})
 
 	// Oracle: "{5}, {T}, Exile Ring of Ma'rûf: The next time you would draw a card this
 	// turn, instead put a card you own from outside the game into your hand."
-	// SKIP: Wish/sideboard mechanic.
+	// XXX: Ring of Ma'rûf skipped — wish/sideboard mechanic
 	Register("Ring of Ma'rûf", func() Card {
 		return NewArtifact("Ring of Ma'rûf", "{5}")
 	})

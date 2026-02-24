@@ -19,6 +19,7 @@ func registerSpells() {
 	// Oracle: "The next time a source of your choice would deal damage to you this turn,
 	// instead that source deals that much damage to you and Eye for an Eye deals that much
 	// damage to that source's controller."
+	// XXX: Eye for an Eye deferred — needs damage source tracking + replacement effect
 	Register("Eye for an Eye", func() Card {
 		return NewInstant("Eye for an Eye", "{W}{W}", nil)
 	})
@@ -32,7 +33,7 @@ func registerSpells() {
 
 	// Oracle: "Players play a Magic subgame, using their libraries as their decks.
 	// Each player who doesn't win the subgame loses half their life, rounded up."
-	// SKIP: Subgame mechanic, banned in all formats.
+	// XXX: Shahrazad skipped — subgame mechanic, banned in all formats
 	Register("Shahrazad", func() Card {
 		return NewSorcery("Shahrazad", "{W}{W}", nil)
 	})
@@ -49,6 +50,7 @@ func registerSpells() {
 	// Oracle: "As an additional cost to cast this spell, sacrifice a creature.
 	// Add X mana of any one color, where X is 1 plus the sacrificed creature's mana value.
 	// Spend this mana only to cast creature spells."
+	// XXX: Metamorphosis deferred — needs sacrifice as additional cost + restricted mana generation
 	Register("Metamorphosis", func() Card {
 		return NewSorcery("Metamorphosis", "{G}", nil)
 	})

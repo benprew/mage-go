@@ -187,3 +187,32 @@ func TestJihad(t *testing.T) {
 		g.AssertPermanentCount(gametest.PlayerA, "Jihad", 0)
 	})
 }
+
+func TestOubliette(t *testing.T) {
+	t.Run("exiles_creature_on_etb", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Oubliette")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Oubliette", "Grizzly Bears")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Grizzly Bears should be exiled
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+		g.AssertPermanentCount(gametest.PlayerA, "Oubliette", 1)
+	})
+
+	t.Run("returns_creature_when_oubliette_destroyed", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Oubliette")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Desert Twister")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Oubliette", "Grizzly Bears")
+		// Destroy Oubliette — creature should return
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Desert Twister", "Oubliette")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Grizzly Bears should be back on the battlefield
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
+		g.AssertPermanentCount(gametest.PlayerA, "Oubliette", 0)
+	})
+}

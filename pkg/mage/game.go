@@ -359,6 +359,14 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 		}
 	}
 
+	// Run ETB-with-targets effects (e.g. Oubliette exile on entry)
+	for _, a := range perm.RuntimeAbilities {
+		if etb, ok := a.(*ETBWithTargetsAbility); ok && len(g.ResolvingTargets) > 0 {
+			_ = etb.Effect.Apply(g, perm.ID(), controller, g.ResolvingTargets)
+			break
+		}
+	}
+
 	g.Effects.Apply(g)
 
 	g.FireEvent(GameEvent{
@@ -912,9 +920,14 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 		if obj.Card.HasType(TypeCreature) || obj.Card.HasType(TypeArtifact) || obj.Card.HasType(TypeEnchantment) {
 			perm := g.PutOnBattlefield(obj.Card, obj.Controller)
 
-			// Handle aura attachment
+			// Handle aura attachment (only for Aura subtype, not all enchantments)
 			if obj.Card.HasType(TypeEnchantment) && len(obj.Targets) > 0 {
-				g.Attach(perm.ID(), obj.Targets[0])
+				for _, st := range obj.Card.SubTypes() {
+					if st == "Aura" {
+						g.Attach(perm.ID(), obj.Targets[0])
+						break
+					}
+				}
 			}
 
 			g.CurrentX = 0

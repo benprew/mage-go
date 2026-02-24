@@ -416,7 +416,25 @@ func registerCreatures() {
 	// can't be enchanted, they have indestructible, and other players can't gain control
 	// of them."
 	Register("Guardian Beast", func() Card {
-		return NewCreature("Guardian Beast", "{3}{B}", 2, 4, WithSubTypes("Beast"))
+		return NewCreature("Guardian Beast", "{3}{B}", 2, 4,
+			WithSubTypes("Beast"),
+			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield,
+				func(g *Game, sourceID uuid.UUID) error {
+					src := g.FindPermanent(sourceID)
+					if src == nil || src.Tapped {
+						return nil
+					}
+					// Grant indestructible to noncreature artifacts controlled by the same player
+					for _, p := range g.Battlefield {
+						if p.Controller == src.Controller &&
+							p.HasType(TypeArtifact) && !p.HasType(TypeCreature) &&
+							p.ID() != sourceID {
+							g.Effects.GrantAttr(p.ID(), Indestructible)
+						}
+					}
+					return nil
+				})),
+		)
 	})
 
 	// Oracle: "Whenever Hasran Ogress attacks, it deals 3 damage to you unless you pay {2}."

@@ -165,8 +165,48 @@ func registerEnchantments() {
 
 	// Oracle: "When Oubliette enters, target creature phases out until Oubliette leaves
 	// the battlefield. Tap that creature as it phases in this way."
+	// XXX: Oubliette simplified — uses exile + return on leave instead of true phasing
 	Register("Oubliette", func() Card {
-		return NewEnchantment("Oubliette", "{1}{B}{B}")
+		return NewEnchantment("Oubliette", "{1}{B}{B}",
+			WithETBEffect(FuncEffect("exile target creature until Oubliette leaves",
+				EffectProperties{Outcome: OutcomeDetriment},
+				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					if len(targets) == 0 {
+						return nil
+					}
+					src := g.FindPermanent(sourceID)
+					target := g.FindPermanent(targets[0])
+					if src == nil || target == nil {
+						return nil
+					}
+					targetOwner := target.Card.Owner()
+					targetCardID := target.Card.ID()
+					g.ExilePermanent(target)
+					src.ControlledPermanent = targetCardID
+					// Register delayed trigger: when Oubliette leaves, return the creature
+					g.RegisterDelayedTrigger(&DelayedTrigger{
+						EventType:    EvtLeavesBattlefield,
+						MatchEventID: sourceID,
+						SourceID:     sourceID,
+						Controller:   controller,
+						Effects: []Effect{FuncEffect("return exiled creature",
+							EffectProperties{Outcome: OutcomeBenefit},
+							func(g GameMutator, _, _ uuid.UUID, _ []uuid.UUID) error {
+								// Find the exiled card and return it
+								for i, c := range g.(*Game).Exile {
+									if c.ID() == targetCardID {
+										g.(*Game).Exile = append(g.(*Game).Exile[:i], g.(*Game).Exile[i+1:]...)
+										perm := g.PutOnBattlefield(c, targetOwner)
+										perm.Tapped = true
+										return nil
+									}
+								}
+								return nil
+							})},
+					})
+					return nil
+				})),
+		)
 	})
 
 	// ===== AURAS =====

@@ -939,6 +939,48 @@ func TestNafsAsp(t *testing.T) {
 	})
 }
 
+func TestGuardianBeast(t *testing.T) {
+	t.Run("noncreature_artifacts_indestructible_while_untapped", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Guardian Beast")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Jayemdae Tome") // noncreature artifact
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Desert Twister")       // destroy target permanent
+		// Try to destroy Jayemdae Tome
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Desert Twister", "Jayemdae Tome")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Jayemdae Tome should survive — indestructible while Guardian Beast is untapped
+		g.AssertPermanentCount(gametest.PlayerA, "Jayemdae Tome", 1)
+	})
+
+	t.Run("no_protection_when_tapped", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Guardian Beast")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Jayemdae Tome")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Desert Twister")
+		// Attack with Guardian Beast to tap it
+		g.Attack(1, gametest.PlayerA, "Guardian Beast")
+		// Then destroy Jayemdae Tome in postcombat main
+		g.CastSpell(1, core.PostcombatMain, gametest.PlayerB, "Desert Twister", "Jayemdae Tome")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Guardian Beast is tapped — no indestructible
+		g.AssertPermanentCount(gametest.PlayerA, "Jayemdae Tome", 0)
+	})
+
+	t.Run("creature_artifacts_not_protected", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Guardian Beast")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Brass Man") // artifact creature
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Brass Man")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Brass Man is an artifact creature — not protected
+		g.AssertPermanentCount(gametest.PlayerA, "Brass Man", 0)
+	})
+}
+
 func TestOldManOfTheSea(t *testing.T) {
 	t.Run("gains_control_of_creature", func(t *testing.T) {
 		g := gametest.NewTestGame(t)

@@ -147,6 +147,13 @@ func WithAbility(a Ability) CardOption {
 	return func(c *BaseCard) { c.AddAbility(a) }
 }
 
+// WithETBEffect adds an effect that runs inline when this permanent enters
+// the battlefield, receiving the spell's targets. Used for non-aura permanents
+// that need to act on their spell targets on entry (e.g. Oubliette).
+func WithETBEffect(effect Effect) CardOption {
+	return func(c *BaseCard) { c.AddAbility(ETBWithTargets(effect)) }
+}
+
 // WithCardType adds an additional card type (e.g. TypeArtifact on a creature).
 func WithCardType(t CardType) CardOption {
 	return func(c *BaseCard) { c.AddType(t) }

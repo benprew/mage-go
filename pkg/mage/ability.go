@@ -237,6 +237,26 @@ func CopyCreatureOnETB() *CopyCreatureOnETBAbility {
 	}
 }
 
+// ETBWithTargetsAbility runs an effect inline during PutOnBattlefield,
+// receiving the spell's targets (g.ResolvingTargets). Used for permanents
+// that need to act on their spell targets when they enter (e.g. Oubliette).
+type ETBWithTargetsAbility struct {
+	BaseAbility
+	Effect Effect
+}
+
+// ETBWithTargets creates an ability that runs the given effect when this
+// permanent enters the battlefield, passing the spell's resolving targets.
+func ETBWithTargets(effect Effect) *ETBWithTargetsAbility {
+	return &ETBWithTargetsAbility{
+		BaseAbility: BaseAbility{
+			id:          uuid.New(),
+			abilityType: AbilityStatic,
+		},
+		Effect: effect,
+	}
+}
+
 // GraveyardReturnAbility allows a creature card in the graveyard to return to
 // the battlefield if enough creature cards are above it in the graveyard.
 type GraveyardReturnAbility struct {
