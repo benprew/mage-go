@@ -200,7 +200,8 @@ func GrantActivatedAbilityToAll(effect Effect, cost Cost, filter PermanentFilter
 
 // PreventFromAttackingIfDefendingPlayerControls creates a continuous effect preventing the creature from
 // attacking if the defender controls a certain type of card.
-// XXX: should this be player select instead of hardcoded defender? tbd.
+// In a 2-player game the defending player is always the non-active player.
+// Multiplayer will need a PlayerSelector parameter here.
 func PreventFromAttackingIfDefendingPlayerControls(filter PermanentFilter) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
 		who := g.NonActivePlayerObj()

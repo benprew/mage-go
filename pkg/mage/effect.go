@@ -496,7 +496,13 @@ func (e *boostMatchingUntilEndOfTurnEffect) Apply(g *Game, sourceID uuid.UUID, c
 }
 
 func (e *boostMatchingUntilEndOfTurnEffect) Text() string {
-	return "XXX populate filter predicate text"
+	p := e.power.Resolve(nil, uuid.Nil, uuid.Nil)
+	t := e.toughness.Resolve(nil, uuid.Nil, uuid.Nil)
+	noun := e.predicate.Text()
+	if noun == "" {
+		noun = "creatures"
+	}
+	return fmt.Sprintf("%s you control get +%d/+%d until end of turn", noun, p, t)
 }
 func (e *boostMatchingUntilEndOfTurnEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit, Mass: true}
