@@ -179,12 +179,6 @@ func init() {
 	}
 }
 
-// IsLandwalk returns true if this attr is a landwalk ability.
-func (a Attr) IsLandwalk() bool {
-	_, ok := landwalkSubtypes[a]
-	return ok
-}
-
 // LandwalkSubtype returns the land subtype that this landwalk cares about.
 // Returns "" if a is not a landwalk attr.
 func (a Attr) LandwalkSubtype() string {

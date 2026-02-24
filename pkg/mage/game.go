@@ -100,6 +100,7 @@ func NewGame(playerA, playerB Player) *Game {
 		Turn:                1,
 		DamageDealtBy:       make(map[uuid.UUID]map[uuid.UUID]bool),
 		DamageTakenThisTurn: make(map[uuid.UUID]int),
+		AttackedThisTurn:    make(map[uuid.UUID]bool),
 	}
 }
 
@@ -1400,9 +1401,6 @@ func (g *Game) doDeclareAttackers() {
 		}
 
 		g.Combat.AddAttacker(id, defender.PlayerID())
-		if g.AttackedThisTurn == nil {
-			g.AttackedThisTurn = make(map[uuid.UUID]bool)
-		}
 		g.AttackedThisTurn[id] = true
 		g.FireEvent(GameEvent{
 			Type:     EvtDeclaredAttacker,
