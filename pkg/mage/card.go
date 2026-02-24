@@ -341,6 +341,9 @@ type Permanent struct {
 	// ETB choices (e.g. Jihad: choose a color and an opponent)
 	ChosenColor  Color
 	ChosenPlayer uuid.UUID
+
+	// Control-change tracking (e.g. Old Man of the Sea, Aladdin)
+	ControlledPermanent uuid.UUID
 }
 
 // NewPermanent creates a permanent from a card.

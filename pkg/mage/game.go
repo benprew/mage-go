@@ -1082,6 +1082,20 @@ func (g *Game) ActivateAbilityByText(playerID uuid.UUID, permName string, target
 						validTargets = false
 						break
 					}
+				} else {
+					// Fallback: check if the target is in the Possible() list
+					possible := t.Possible(playerID, perm.Card, g)
+					found := false
+					for _, pid := range possible {
+						if pid == targets[i] {
+							found = true
+							break
+						}
+					}
+					if !found {
+						validTargets = false
+						break
+					}
 				}
 			}
 			if !validTargets {

@@ -210,7 +210,52 @@ func registerCreatures() {
 	// the Sea's power for as long as Old Man of the Sea remains tapped and that creature's
 	// power remains less than or equal to Old Man of the Sea's power."
 	Register("Old Man of the Sea", func() Card {
-		return NewCreature("Old Man of the Sea", "{1}{U}{U}", 2, 3, WithSubTypes("Djinn"))
+		return NewCreature("Old Man of the Sea", "{1}{U}{U}", 2, 3,
+			WithSubTypes("Djinn"),
+			WithActivatedAbility(
+				FuncEffect("gain control of target creature",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						src := g.FindPermanent(sourceID)
+						target := g.FindPermanent(targets[0])
+						if src == nil || target == nil {
+							return nil
+						}
+						// Check power restriction on resolution
+						if target.CurrentPower(g) > src.CurrentPower(g) {
+							return nil
+						}
+						src.ControlledPermanent = targets[0]
+						return nil
+					}),
+				TapSourceCost(),
+				WithTarget(TargetCreature()),
+			),
+			WithStaticAbility(FuncContinuousEffect(LayerControl, WhileOnBattlefield,
+				func(g *Game, sourceID uuid.UUID) error {
+					src := g.FindPermanent(sourceID)
+					if src == nil || src.ControlledPermanent == uuid.Nil {
+						return nil
+					}
+					target := g.FindPermanent(src.ControlledPermanent)
+					if target == nil {
+						src.ControlledPermanent = uuid.Nil
+						return nil
+					}
+					// Control ends if Old Man is untapped or target's power exceeds
+					if !src.Tapped || target.CurrentPower(g) > src.CurrentPower(g) {
+						src.ControlledPermanent = uuid.Nil
+						return nil
+					}
+					target.Controller = src.Controller
+					// Keep Old Man from untapping while controlling
+					g.Effects.GrantAttr(sourceID, AttrDoesNotUntap)
+					return nil
+				})),
+		)
 	})
 
 	// Oracle: "Flying. At the beginning of your upkeep, sacrifice a land. If you sacrifice
@@ -464,7 +509,41 @@ func registerCreatures() {
 	// Oracle: "{1}{R}{R}, {T}: Gain control of target artifact for as long as you
 	// control Aladdin."
 	Register("Aladdin", func() Card {
-		return NewCreature("Aladdin", "{2}{R}{R}", 1, 1, WithSubTypes("Human", "Rogue"))
+		return NewCreature("Aladdin", "{2}{R}{R}", 1, 1,
+			WithSubTypes("Human", "Rogue"),
+			WithActivatedAbility(
+				FuncEffect("gain control of target artifact",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						src := g.FindPermanent(sourceID)
+						if src == nil {
+							return nil
+						}
+						src.ControlledPermanent = targets[0]
+						return nil
+					}),
+				TapSourceCost(),
+				WithCost(ManaCostOf("{1}{R}{R}")),
+				WithTarget(TargetArtifact()),
+			),
+			WithStaticAbility(FuncContinuousEffect(LayerControl, WhileOnBattlefield,
+				func(g *Game, sourceID uuid.UUID) error {
+					src := g.FindPermanent(sourceID)
+					if src == nil || src.ControlledPermanent == uuid.Nil {
+						return nil
+					}
+					target := g.FindPermanent(src.ControlledPermanent)
+					if target == nil {
+						src.ControlledPermanent = uuid.Nil
+						return nil
+					}
+					target.Controller = src.Controller
+					return nil
+				})),
+		)
 	})
 
 	// Oracle: "{R}: Tap target Wall."

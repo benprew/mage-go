@@ -939,6 +939,63 @@ func TestNafsAsp(t *testing.T) {
 	})
 }
 
+func TestOldManOfTheSea(t *testing.T) {
+	t.Run("gains_control_of_creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Old Man of the Sea")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // 2/2, power ≤ 2
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Old Man of the Sea", "Grizzly Bears")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Grizzly Bears now controlled by PlayerA
+		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+	})
+
+	t.Run("cannot_steal_too_powerful", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Old Man of the Sea") // 2/3
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")          // 3/3 — power > 2
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Old Man of the Sea", "Hill Giant")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Hill Giant's power (3) > Old Man's power (2) — can't target
+		g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 1)
+	})
+}
+
+func TestAladdin(t *testing.T) {
+	t.Run("gains_control_of_artifact", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Aladdin")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Jayemdae Tome") // artifact
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Aladdin", "Jayemdae Tome")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Jayemdae Tome now controlled by PlayerA
+		g.AssertPermanentCount(gametest.PlayerA, "Jayemdae Tome", 1)
+		g.AssertPermanentCount(gametest.PlayerB, "Jayemdae Tome", 0)
+	})
+
+	t.Run("cannot_target_non_artifact", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Aladdin")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant") // non-artifact creature
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Aladdin", "Hill Giant")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Can't target non-artifact — Hill Giant stays with PlayerB
+		g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 1)
+		g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 0)
+	})
+}
+
 func TestIfhBiffEfreet(t *testing.T) {
 	t.Run("deals_1_to_flyers_and_players", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
