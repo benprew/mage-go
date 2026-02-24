@@ -376,7 +376,25 @@ func registerCreatures() {
 	// Oracle: "At the beginning of each end step, put a +1/+1 counter on Khabál Ghoul
 	// for each creature that died this turn."
 	Register("Khabál Ghoul", func() Card {
-		return NewCreature("Khabál Ghoul", "{2}{B}", 1, 1, WithSubTypes("Zombie"))
+		return NewCreature("Khabál Ghoul", "{2}{B}", 1, 1,
+			WithSubTypes("Zombie"),
+			WithAbility(
+				NewTriggered(EvtEndStep, false,
+					FuncEffect("put +1/+1 counters for deaths",
+						EffectProperties{},
+						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+							count := g.CreatureDeaths()
+							if count > 0 {
+								perm := g.FindPermanent(sourceID)
+								if perm != nil {
+									perm.AddCounter(P1P1, count)
+								}
+							}
+							return nil
+						}),
+				),
+			),
+		)
 	})
 
 	// Oracle: "{T}: Target creature other than Sorceress Queen has base power and

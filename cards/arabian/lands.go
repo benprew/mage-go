@@ -68,7 +68,36 @@ func registerLands() {
 	// Oracle: "{T}, Sacrifice a creature: You gain life equal to the sacrificed
 	// creature's toughness."
 	Register("Diamond Valley", func() Card {
-		return NewLand("Diamond Valley")
+		return NewLand("Diamond Valley",
+			WithActivatedAbility(
+				FuncEffect("sacrifice creature, gain life equal to toughness",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						var creatures []*Permanent
+						for _, perm := range g.FilterBattlefield(And(IsCreature, ControlledBy(controller))) {
+							if perm.ID() != sourceID {
+								creatures = append(creatures, perm)
+							}
+						}
+						if len(creatures) == 0 {
+							return nil
+						}
+						chosen := p.ChoosePermanent(creatures, "sacrifice", g)
+						if chosen == nil {
+							return nil
+						}
+						toughness := chosen.CurrentToughness(g)
+						g.Sacrifice(chosen)
+						g.PlayerGainLife(p, toughness)
+						return nil
+					}),
+				TapSourceCost(),
+			),
+		)
 	})
 
 	// Oracle: "{T}: Add {C}. {T}: Regenerate target Elephant."

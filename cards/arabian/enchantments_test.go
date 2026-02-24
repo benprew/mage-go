@@ -107,3 +107,27 @@ func TestUnstableMutation(t *testing.T) {
 		g.AssertPowerToughness(gametest.PlayerA, "Flying Men", 3, 3)
 	})
 }
+
+func TestDropOfHoney(t *testing.T) {
+	t.Run("destroys_least_power_creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Drop of Honey")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")    // 3/3
+		// At PlayerA's upkeep (turn 1), destroy least power creature
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// Grizzly Bears (power 2) should be destroyed, Hill Giant (power 3) survives
+		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
+		g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 1)
+	})
+
+	t.Run("sacrifices_self_when_no_creatures", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Drop of Honey")
+		// No creatures on battlefield — Drop of Honey should sacrifice itself
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Drop of Honey", 0)
+	})
+}

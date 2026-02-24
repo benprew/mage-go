@@ -75,6 +75,20 @@ func TestCityOfBrass(t *testing.T) {
 	})
 }
 
+func TestDiamondValley(t *testing.T) {
+	t.Run("gain_life_equal_to_toughness", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Diamond Valley")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant") // 3/3
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Diamond Valley")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Sacrificed Hill Giant (3 toughness), gain 3 life
+		g.AssertLife(gametest.PlayerA, 23)
+		g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 0)
+	})
+}
+
 func TestOasis(t *testing.T) {
 	t.Run("prevents_1_damage_from_desert", func(t *testing.T) {
 		g := gametest.NewTestGame(t)

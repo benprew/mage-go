@@ -27,6 +27,7 @@ type GameReader interface {
 	CombatGroups() []*CombatGroup
 	DamageTakenByPlayer(uuid.UUID) int
 	HasAttackedThisTurn(uuid.UUID) bool
+	CreatureDeaths() int
 }
 
 // GameMutator is the mutation surface passed to Effect.Apply. It embeds GameReader
@@ -132,6 +133,11 @@ func (g *Game) DamageTakenByPlayer(playerID uuid.UUID) int {
 // HasAttackedThisTurn reports whether the permanent with the given ID attacked this turn.
 func (g *Game) HasAttackedThisTurn(permID uuid.UUID) bool {
 	return g.AttackedThisTurn[permID]
+}
+
+// CreatureDeaths returns the number of creatures that died this turn.
+func (g *Game) CreatureDeaths() int {
+	return g.CreatureDeathsThisTurn
 }
 
 // --- GameMutator proxy methods on *Game ---

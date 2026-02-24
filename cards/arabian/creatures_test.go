@@ -851,6 +851,22 @@ func TestSingingTree(t *testing.T) {
 	})
 }
 
+func TestKhabalGhoul(t *testing.T) {
+	t.Run("gains_counters_for_deaths", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Khabál Ghoul") // 1/1
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+		// Kill Grizzly Bears during main phase
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Grizzly Bears")
+		// At end step, Ghoul gets +1/+1 counter for each creature that died
+		g.StopAt(2, core.Upkeep)
+		g.Execute()
+		// 1 creature died → 1 counter → 2/2
+		g.AssertPowerToughness(gametest.PlayerA, "Khabál Ghoul", 2, 2)
+	})
+}
+
 func TestHurrJackal(t *testing.T) {
 	t.Run("prevents_regeneration", func(t *testing.T) {
 		g := gametest.NewTestGame(t)

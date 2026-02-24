@@ -60,6 +60,9 @@ type Game struct {
 	// Creatures that attacked this turn (survives combat reset for end-of-turn checks)
 	AttackedThisTurn map[uuid.UUID]bool
 
+	// Creature deaths this turn (total count across all players)
+	CreatureDeathsThisTurn int
+
 	// Targets of the spell currently being resolved (for ETB copy effects)
 	ResolvingTargets []uuid.UUID
 
@@ -492,6 +495,7 @@ func (g *Game) DestroyPermanent(perm *Permanent) {
 	g.checkAbilitiesForEvent(selfAbilities, &graveyardEvt, permID, controller)
 
 	if isCreature {
+		g.CreatureDeathsThisTurn++
 		diedEvt := GameEvent{
 			Type:     EvtCreatureDied,
 			SourceID: permID,
@@ -561,6 +565,7 @@ func (g *Game) Sacrifice(perm *Permanent) {
 	})
 
 	if isCreature {
+		g.CreatureDeathsThisTurn++
 		g.FireEvent(GameEvent{
 			Type:     EvtCreatureDied,
 			SourceID: permID,
@@ -1529,6 +1534,7 @@ func (g *Game) DoCleanup() {
 	g.DamageDealtBy = make(map[uuid.UUID]map[uuid.UUID]bool)
 	g.DamageTakenThisTurn = make(map[uuid.UUID]int)
 	g.AttackedThisTurn = make(map[uuid.UUID]bool)
+	g.CreatureDeathsThisTurn = 0
 	// Clear damage prevention and Forcefield shields
 	g.Effects.ClearPreventionShields()
 	g.Effects.ClearDamagePreventionRules()
