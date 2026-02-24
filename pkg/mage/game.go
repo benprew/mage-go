@@ -79,11 +79,12 @@ type Game struct {
 // DelayedTrigger represents a one-shot triggered ability that fires when
 // a specific event occurs (e.g., "destroy this creature at end of turn").
 type DelayedTrigger struct {
-	EventType  EventType
-	TargetID   uuid.UUID
-	Effects    []Effect
-	SourceID   uuid.UUID
-	Controller uuid.UUID
+	EventType    EventType
+	TargetID     uuid.UUID
+	Effects      []Effect
+	SourceID     uuid.UUID
+	Controller   uuid.UUID
+	MatchEventID uuid.UUID // if set, only fire when evt.SourceID matches
 }
 
 type pendingTrigger struct {
@@ -810,6 +811,10 @@ func (g *Game) FireEvent(evt GameEvent) {
 	remaining := g.delayedTriggers[:0]
 	for _, dt := range g.delayedTriggers {
 		if dt.EventType == evt.Type {
+			if dt.MatchEventID != uuid.Nil && evt.SourceID != dt.MatchEventID {
+				remaining = append(remaining, dt)
+				continue
+			}
 			obj := &StackObject{
 				ID:         uuid.New(),
 				Controller: dt.Controller,

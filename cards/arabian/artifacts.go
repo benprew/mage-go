@@ -69,7 +69,27 @@ func registerArtifacts() {
 	// Oracle: "{2}, {T}: Untap target attacking creature you control. Prevent all combat
 	// damage that would be dealt to and dealt by that creature this turn."
 	Register("Ebony Horse", func() Card {
-		return NewArtifact("Ebony Horse", "{3}")
+		return NewArtifact("Ebony Horse", "{3}",
+			WithActivatedAbility(
+				FuncEffect("untap and remove from combat",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						perm := g.FindPermanent(targets[0])
+						if perm == nil {
+							return nil
+						}
+						perm.Tapped = false
+						g.RemoveFromCombat(perm.ID())
+						return nil
+					}),
+				TapSourceCost(),
+				WithCost(ManaCostOf("{2}")),
+				WithTarget(TargetCreature(IsAttacking)),
+			),
+		)
 	})
 
 	// Oracle: "{2}, {T}: Target creature gains flying until end of turn."
@@ -124,6 +144,31 @@ func registerArtifacts() {
 	// Oracle: "{2}, {T}: Target creature gains islandwalk until end of turn. When that
 	// creature dies this turn, destroy Sandals of Abdallah."
 	Register("Sandals of Abdallah", func() Card {
-		return NewArtifact("Sandals of Abdallah", "{4}")
+		return NewArtifact("Sandals of Abdallah", "{4}",
+			WithActivatedAbility(
+				FuncEffect("grant islandwalk, destroy self if creature dies",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						// Grant islandwalk
+						GrantKeywordUntilEndOfTurn(Islandwalk, SelectTarget).Apply(g, sourceID, controller, targets)
+						// Register delayed trigger: if that creature dies, destroy Sandals
+						g.RegisterDelayedTrigger(&DelayedTrigger{
+							EventType:    EvtCreatureDied,
+							MatchEventID: targets[0],
+							TargetID:     sourceID,
+							Effects:      []Effect{DestroyTarget()},
+							SourceID:     sourceID,
+							Controller:   controller,
+						})
+						return nil
+					}),
+				TapSourceCost(),
+				WithCost(ManaCostOf("{2}")),
+				WithTarget(TargetCreature()),
+			),
+		)
 	})
 }

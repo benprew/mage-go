@@ -105,3 +105,53 @@ func TestFlyingCarpet(t *testing.T) {
 		g.AssertLife(gametest.PlayerB, 18)
 	})
 }
+
+func TestEbonyHorse(t *testing.T) {
+	t.Run("untaps_and_removes_from_combat", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ebony Horse")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant") // 3/3
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.Attack(1, gametest.PlayerA, "Hill Giant")
+		g.Block(1, gametest.PlayerB, "Grizzly Bears", "Hill Giant")
+		// Activate Ebony Horse on Hill Giant after blocks declared
+		g.ActivateAbility(1, core.DeclareBlockers, gametest.PlayerA, "Ebony Horse", "Hill Giant")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+		// Hill Giant removed from combat — no damage dealt, both survive
+		g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 1)
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
+		g.AssertLife(gametest.PlayerB, 20)
+	})
+}
+
+func TestSandalsOfAbdallah(t *testing.T) {
+	t.Run("grants_islandwalk", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sandals of Abdallah")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Sandals of Abdallah", "Grizzly Bears")
+		g.Attack(1, gametest.PlayerA, "Grizzly Bears")
+		g.Block(1, gametest.PlayerB, "Hill Giant", "Grizzly Bears")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+		// Bears have islandwalk, defender controls Island — unblockable
+		g.AssertLife(gametest.PlayerB, 18)
+	})
+
+	t.Run("destroys_self_when_creature_dies", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sandals of Abdallah")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Sandals of Abdallah", "Grizzly Bears")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Grizzly Bears")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Bears die → Sandals should be destroyed too
+		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
+		g.AssertPermanentCount(gametest.PlayerA, "Sandals of Abdallah", 0)
+	})
+}
