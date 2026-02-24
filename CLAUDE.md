@@ -66,11 +66,10 @@ Register a factory in the appropriate file under `cards/` (e.g., `cards/limited/
 
 ```go
 mage.Register("Card Name", func() mage.Card {
-    c := mage.NewCreature("Card Name", "{2}{G}", "Beast")
-    c.Power_ = 3
-    c.Toughness_ = 3
-    c.AddAbility(mage.HasKeyword(core.Trample))
-    return c
+    return mage.NewCreature("Card Name", "{2}{G}", 3, 3,
+        mage.WithSubTypes("Beast"),
+        mage.WithKeyword(core.Trample),
+    )
 })
 ```
 
