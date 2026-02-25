@@ -1138,6 +1138,18 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		}
 	}
 
+	// Apply spell cost reductions
+	for _, col := range mc.Colors() {
+		reduction := g.Effects.SpellCostReduction(col)
+		if reduction > 0 {
+			mc.Generic -= reduction
+			if mc.Generic < 0 {
+				mc.Generic = 0
+			}
+			break // only apply once per spell
+		}
+	}
+
 	// Channel: pay life for generic/X costs instead of mana
 	if g.Effects.IsChannelActive(playerID) && (mc.Generic > 0 || (mc.HasX && xValue > 0)) {
 		// Pay colored portion from pool
@@ -1369,6 +1381,27 @@ func (g *Game) CheckStateBasedActions() {
 		}
 		for _, p := range zeroToughness {
 			g.PutPermanentIntoGraveyard(p)
+		}
+
+		// MTG rule 704.5q: +1/+1 and -1/-1 counter annihilation
+		for _, p := range g.Battlefield {
+			plus := p.Counters[P1P1]
+			minus := p.Counters[M1M1]
+			if plus > 0 && minus > 0 {
+				remove := plus
+				if minus < remove {
+					remove = minus
+				}
+				p.Counters[P1P1] -= remove
+				p.Counters[M1M1] -= remove
+				if p.Counters[P1P1] == 0 {
+					delete(p.Counters, P1P1)
+				}
+				if p.Counters[M1M1] == 0 {
+					delete(p.Counters, M1M1)
+				}
+				actions = true
+			}
 		}
 
 		// Check for auras attached to nothing or illegal targets

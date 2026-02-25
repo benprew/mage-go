@@ -376,6 +376,15 @@ func IncreaseSpellCostForColor(color Color, amount int) ContinuousEffect {
 	})
 }
 
+// ReduceSpellCostForColor is a continuous effect that reduces the cost of
+// spells of a given color (e.g. "Blue spells cost {1} less to cast").
+func ReduceSpellCostForColor(color Color, amount int) ContinuousEffect {
+	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
+		g.Effects.rules.spellCostReduction[color] += amount
+		return nil
+	})
+}
+
 // ChangeSubTypesForAll changes subtypes of all permanents matching fromSubTypes
 // to toSubTypes (e.g. Conversion: all Mountains become Plains).
 func ChangeSubTypesForAll(fromSubTypes, toSubTypes []string) ContinuousEffect {

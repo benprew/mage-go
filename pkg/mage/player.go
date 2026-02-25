@@ -1,8 +1,10 @@
 package mage
 
 import (
-	. "github.com/mage/mage/pkg/mage/core"
+	"math/rand"
+
 	"github.com/google/uuid"
+	. "github.com/mage/mage/pkg/mage/core"
 )
 
 // BandFormer is an optional interface for players that declare attacking bands.
@@ -50,6 +52,7 @@ type Player interface {
 	ManaPool() *ManaPool
 
 	AddToLibrary(Card)
+	ShuffleLibrary()
 	ClearGraveyard()
 
 	// Decision-making (overridden by TestPlayer)
@@ -151,6 +154,12 @@ func (p *BasePlayer) AddToLibrary(c Card) {
 
 func (p *BasePlayer) ClearGraveyard() {
 	p.graveyard = nil
+}
+
+func (p *BasePlayer) ShuffleLibrary() {
+	rand.Shuffle(len(p.library), func(i, j int) {
+		p.library[i], p.library[j] = p.library[j], p.library[i]
+	})
 }
 
 func (p *BasePlayer) DrawCard() (Card, bool) {

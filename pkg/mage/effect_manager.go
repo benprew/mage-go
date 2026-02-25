@@ -212,6 +212,7 @@ type damageModifiers struct {
 type gameRuleModifiers struct {
 	manaConversion     map[Color]Color         // from color -> to color (Sunglasses of Urza)
 	spellCostIncrease  map[Color]int           // color -> additional generic cost for spells of that color
+	spellCostReduction map[Color]int           // color -> generic cost reduction for spells of that color
 	landUntapLimit     int                     // -1 = no limit; >= 0 = max lands that may untap per turn
 	unlimitedLandPlays bool                    // true if a player can play unlimited lands (Fastbond)
 	sanctuaryActive    map[uuid.UUID]bool      // player -> if true, only flying/islandwalk can attack them
@@ -237,7 +238,8 @@ func NewEffectManager() *EffectManager {
 		rules: gameRuleModifiers{
 			landUntapLimit:    -1,
 			channelActive:     make(map[uuid.UUID]bool),
-			spellCostIncrease: make(map[Color]int),
+			spellCostIncrease:  make(map[Color]int),
+			spellCostReduction: make(map[Color]int),
 			sanctuaryActive:   make(map[uuid.UUID]bool),
 			lichActive:        make(map[uuid.UUID]uuid.UUID),
 			skipNextDraw:      make(map[uuid.UUID]bool),
@@ -681,6 +683,7 @@ func (em *EffectManager) Apply(g *Game) {
 	em.rules.landUntapLimit = -1
 	em.rules.unlimitedLandPlays = false
 	em.rules.spellCostIncrease = make(map[Color]int)
+	em.rules.spellCostReduction = make(map[Color]int)
 	em.rules.manaConversion = make(map[Color]Color)
 	em.damage.bodyguard = make(map[uuid.UUID]uuid.UUID)
 	em.damage.playerDamageRedirect = make(map[uuid.UUID]uuid.UUID)
@@ -764,6 +767,11 @@ func (em *EffectManager) Apply(g *Game) {
 // SpellCostIncrease returns the additional generic cost for spells of the given color.
 func (em *EffectManager) SpellCostIncrease(c Color) int {
 	return em.rules.spellCostIncrease[c]
+}
+
+// SpellCostReduction returns the generic cost reduction for spells of the given color.
+func (em *EffectManager) SpellCostReduction(c Color) int {
+	return em.rules.spellCostReduction[c]
 }
 
 // SetPreventCombatDamage marks all combat damage as prevented this turn (Fog, etc.).

@@ -196,3 +196,131 @@ func (c *sacrificeCreatureCost) Pay(sourceID, controller uuid.UUID, g *Game) err
 }
 
 func (c *sacrificeCreatureCost) Text() string { return "Sacrifice a creature" }
+
+// discardCost requires discarding cards from hand.
+type discardCost struct {
+	amount int
+}
+
+// DiscardCost creates a cost that requires the controller to discard n cards.
+func DiscardCost(n int) Cost {
+	return &discardCost{amount: n}
+}
+
+func (c *discardCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+	p := g.GetPlayer(controller)
+	return p != nil && len(p.Hand()) >= c.amount
+}
+
+func (c *discardCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
+	p := g.GetPlayer(controller)
+	if p == nil {
+		return ErrPlayerNotFound
+	}
+	chosen := p.ChooseCardsFromHand(c.amount, "discard cost", g)
+	for _, card := range chosen {
+		p.RemoveFromHand(card.ID())
+		p.AddToGraveyard(card)
+	}
+	return nil
+}
+
+func (c *discardCost) Text() string {
+	if c.amount == 1 {
+		return "Discard a card"
+	}
+	return fmt.Sprintf("Discard %d cards", c.amount)
+}
+
+// exileFromGraveyardCost requires exiling cards from your graveyard.
+type exileFromGraveyardCost struct {
+	amount int
+}
+
+// ExileFromGraveyardCost creates a cost that requires the controller to exile n cards from their graveyard.
+func ExileFromGraveyardCost(n int) Cost {
+	return &exileFromGraveyardCost{amount: n}
+}
+
+func (c *exileFromGraveyardCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+	p := g.GetPlayer(controller)
+	return p != nil && len(p.Graveyard()) >= c.amount
+}
+
+func (c *exileFromGraveyardCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
+	p := g.GetPlayer(controller)
+	if p == nil {
+		return ErrPlayerNotFound
+	}
+	gy := p.Graveyard()
+	n := c.amount
+	if n > len(gy) {
+		n = len(gy)
+	}
+	for i := 0; i < n; i++ {
+		card := gy[i]
+		if _, ok := p.RemoveFromGraveyard(card.ID()); ok {
+			g.Exile = append(g.Exile, ExiledCard{Card: card, ExiledBy: sourceID})
+		}
+	}
+	return nil
+}
+
+func (c *exileFromGraveyardCost) Text() string {
+	if c.amount == 1 {
+		return "Exile a card from your graveyard"
+	}
+	return fmt.Sprintf("Exile %d cards from your graveyard", c.amount)
+}
+
+// returnToHandCost requires returning a permanent you control to its owner's hand.
+type returnToHandCost struct {
+	filter *PermanentFilter
+}
+
+// ReturnToHandCost creates a cost that requires bouncing a permanent you control to hand.
+// Pass nil for filter to allow any permanent.
+func ReturnToHandCost(filter *PermanentFilter) Cost {
+	return &returnToHandCost{filter: filter}
+}
+
+func (c *returnToHandCost) matchFilter(p *Permanent, g *Game) bool {
+	if c.filter == nil {
+		return true
+	}
+	return c.filter.Match(p, g)
+}
+
+func (c *returnToHandCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+	for _, p := range g.Battlefield {
+		if p.Controller == controller && p.ID() != sourceID && c.matchFilter(p, g) {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *returnToHandCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
+	var candidates []*Permanent
+	for _, p := range g.Battlefield {
+		if p.Controller == controller && p.ID() != sourceID && c.matchFilter(p, g) {
+			candidates = append(candidates, p)
+		}
+	}
+	if len(candidates) == 0 {
+		return fmt.Errorf("no permanent to return")
+	}
+	player := g.GetPlayer(controller)
+	chosen := player.ChoosePermanent(candidates, "return to hand cost", g)
+	if chosen == nil {
+		return fmt.Errorf("no permanent chosen")
+	}
+	g.RemoveFromBattlefield(chosen)
+	owner := g.GetPlayer(chosen.Card.Owner())
+	if owner != nil {
+		owner.AddToHand(chosen.Card)
+	}
+	return nil
+}
+
+func (c *returnToHandCost) Text() string { return "Return a permanent you control to its owner's hand" }

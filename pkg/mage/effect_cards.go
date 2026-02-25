@@ -324,6 +324,7 @@ func (e *searchLibraryEffect) Apply(g GameMutator, sourceID, controller uuid.UUI
 		}
 	}
 	p.SetLibrary(newLib)
+	p.ShuffleLibrary()
 	p.AddToHand(card)
 	return nil
 }
@@ -385,6 +386,7 @@ func (e *shuffleGraveyardIntoLibraryAndDrawEffect) Apply(g GameMutator, sourceID
 			p.AddToLibrary(c)
 		}
 		p.ClearGraveyard()
+		p.ShuffleLibrary()
 		// Draw N cards
 		for i := 0; i < e.drawCount; i++ {
 			p.DrawCard()
@@ -399,3 +401,23 @@ func (e *shuffleGraveyardIntoLibraryAndDrawEffect) Text() string {
 func (e *shuffleGraveyardIntoLibraryAndDrawEffect) Properties() EffectProperties {
 	return EffectProperties{}
 }
+
+// shuffleLibraryEffect shuffles the controller's library.
+type shuffleLibraryEffect struct{}
+
+// ShuffleLibrary creates an effect that shuffles the controller's library.
+func ShuffleLibrary() Effect {
+	return &shuffleLibraryEffect{}
+}
+
+func (e *shuffleLibraryEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	p := g.GetPlayer(controller)
+	if p == nil {
+		return ErrPlayerNotFound
+	}
+	p.ShuffleLibrary()
+	return nil
+}
+
+func (e *shuffleLibraryEffect) Text() string              { return "shuffle your library" }
+func (e *shuffleLibraryEffect) Properties() EffectProperties { return EffectProperties{} }
