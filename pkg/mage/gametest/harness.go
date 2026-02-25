@@ -295,6 +295,7 @@ func (tg *TestGame) Execute() {
 
 	tg.padLibraries()
 	tg.autoAddMana()
+	tg.Game.OnPriority = autoPassHandler()
 
 	maxTurns := tg.stopAt.turn + 5
 	for tg.Turn <= maxTurns {
@@ -313,7 +314,7 @@ func (tg *TestGame) Execute() {
 				tg.autoPlayLands()
 			}
 
-			tg.RunStep(step)
+			tg.Game.RunStepWithPriority(step)
 		}
 		if len(tg.ExtraTurns) > 0 {
 			extraPlayerID := tg.ExtraTurns[0]
@@ -328,6 +329,13 @@ func (tg *TestGame) Execute() {
 			tg.ActivePlayer = (tg.ActivePlayer + 1) % len(tg.Players)
 		}
 		tg.Turn++
+	}
+}
+
+// autoPassHandler returns a PriorityHandler that always passes priority.
+func autoPassHandler() mage.PriorityHandler {
+	return func(g *mage.Game, playerIdx int, mainPhase bool) mage.PriorityAction {
+		return mage.PriorityAction{Type: mage.PriorityPass}
 	}
 }
 
@@ -673,6 +681,7 @@ func (tg *TestGame) PlayToEnd(maxTurns ...int) {
 
 	tg.padLibraries()
 	tg.autoAddMana()
+	tg.Game.OnPriority = autoPassHandler()
 
 	for tg.Turn <= limit {
 		for _, step := range core.AllSteps() {
@@ -684,7 +693,7 @@ func (tg *TestGame) PlayToEnd(maxTurns ...int) {
 				tg.autoPlayLands()
 			}
 
-			tg.RunStep(step)
+			tg.Game.RunStepWithPriority(step)
 
 			if tg.Game.IsGameOver() {
 				return

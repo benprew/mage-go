@@ -83,191 +83,112 @@ func RunGameLoop(g *mage.Game, humanIdx int, aiActionPause time.Duration) {
 		return getAIAction(mainPhase)
 	}
 
-	runPriorityLoop := func(mainPhase bool) {
-		for {
-			if g.IsGameOver() {
-				return
-			}
+	// --- Install priority handler on the engine ---
+	g.OnPriority = func(g *mage.Game, playerIdx int, mainPhase bool) mage.PriorityAction {
+		action := getAction(playerIdx, mainPhase)
 
-			activeIdx := g.ActivePlayer
-			nonActiveIdx := (g.ActivePlayer + 1) % 2
-
-			action := getAction(activeIdx, mainPhase)
-			if action.Type == ActionUndo && lastUndo.valid {
-				restoreFromUndo(g, g.Players[humanIdx].PlayerID(), lastUndo)
-				if len(gameLog) > lastUndo.logLen {
-					gameLog = gameLog[:lastUndo.logLen]
-				}
-				lastUndo.valid = false
-				addLog("Undid last action")
-				continue
+		// Handle undo (loop until real action)
+		for action.Type == ActionUndo && lastUndo.valid {
+			restoreFromUndo(g, g.Players[humanIdx].PlayerID(), lastUndo)
+			if len(gameLog) > lastUndo.logLen {
+				gameLog = gameLog[:lastUndo.logLen]
 			}
-			if action.Type != ActionPass {
-				if activeIdx == humanIdx {
-					lastUndo = captureForUndo(g, g.Players[humanIdx].PlayerID(), len(gameLog))
-				} else {
-					lastUndo.valid = false
-				}
-				executeAction(g, g.Players[activeIdx].PlayerID(), action, addLog)
-				g.CheckStateBasedActions()
-				if g.IsGameOver() {
-					return
-				}
-				if activeIdx != humanIdx {
-					showAIAction()
-				}
-				continue
-			}
-
-			action = getAction(nonActiveIdx, false)
-			if action.Type == ActionUndo && lastUndo.valid {
-				restoreFromUndo(g, g.Players[humanIdx].PlayerID(), lastUndo)
-				if len(gameLog) > lastUndo.logLen {
-					gameLog = gameLog[:lastUndo.logLen]
-				}
-				lastUndo.valid = false
-				addLog("Undid last action")
-				continue
-			}
-			if action.Type != ActionPass {
-				if nonActiveIdx == humanIdx {
-					lastUndo = captureForUndo(g, g.Players[humanIdx].PlayerID(), len(gameLog))
-				} else {
-					lastUndo.valid = false
-				}
-				executeAction(g, g.Players[nonActiveIdx].PlayerID(), action, addLog)
-				g.CheckStateBasedActions()
-				if g.IsGameOver() {
-					return
-				}
-				if nonActiveIdx != humanIdx {
-					showAIAction()
-				}
-				continue
-			}
-
 			lastUndo.valid = false
-			if g.Stack.IsEmpty() {
-				return
-			}
+			addLog("Undid last action")
+			action = getAction(playerIdx, mainPhase)
+		}
 
-			top := g.Stack.Peek()
-			topName := "ability"
-			if top.Card != nil {
-				topName = top.Card.Name()
+		if action.Type != ActionPass {
+			// Capture undo state before action executes
+			if playerIdx == humanIdx {
+				lastUndo = captureForUndo(g, g.Players[humanIdx].PlayerID(), len(gameLog))
+			} else {
+				lastUndo.valid = false
 			}
-			addLog(fmt.Sprintf("Resolving %s%s", topName, targetSuffix(g, top.Targets)))
-			g.ResolveTopOfStack()
-			g.CheckStateBasedActions()
-			if g.IsGameOver() {
-				return
+		}
+
+		return convertToEngineAction(action)
+	}
+
+	// Log actions after they execute
+	g.AfterPriorityAction = func(g *mage.Game, playerIdx int, action mage.PriorityAction) {
+		p := g.Players[playerIdx]
+		switch action.Type {
+		case mage.PriorityPlayLand:
+			perm := g.FindPermanent(action.CardID)
+			name := "a land"
+			if perm != nil {
+				name = perm.Name()
 			}
+			addLog(fmt.Sprintf("%s plays %s", p.Name(), name))
+		case mage.PriorityCastSpell:
+			obj := g.Stack.Peek()
+			name := "a spell"
+			if obj != nil && obj.Card != nil {
+				name = obj.Card.Name()
+			}
+			addLog(fmt.Sprintf("%s casts %s%s", p.Name(), name, targetSuffix(g, action.Targets)))
+		case mage.PriorityActivateAbility:
+			perm := g.FindPermanent(action.PermanentID)
+			name := "permanent"
+			if perm != nil {
+				name = perm.Name()
+			}
+			addLog(fmt.Sprintf("Activated ability: %s%s", name, targetSuffix(g, action.Targets)))
+		}
+		if playerIdx != humanIdx {
+			showAIAction()
 		}
 	}
 
+	// Log stack resolution
+	g.BeforeStackResolve = func(g *mage.Game) {
+		lastUndo.valid = false
+		top := g.Stack.Peek()
+		if top == nil {
+			return
+		}
+		topName := "ability"
+		if top.Card != nil {
+			topName = top.Card.Name()
+		}
+		addLog(fmt.Sprintf("Resolving %s%s", topName, targetSuffix(g, top.Targets)))
+	}
+
+	// --- Main turn loop ---
 	for g.Turn <= 100 {
 		for _, step := range core.AllSteps() {
-			g.Step = step
-			g.Effects.Apply(g)
-
-			if g.IsGameOver() {
-				send(PromptNone, nil)
-				return
+			// Pre-step logging
+			switch step {
+			case core.CombatDamage:
+				if len(g.Combat.Groups) > 0 {
+					addLog("── Combat damage ──")
+					logCombatPreview(g, addLog)
+				}
 			}
 
+			g.RunStepWithPriority(step)
+
+			// Post-step logging and display
 			switch step {
 			case core.Untap:
-				g.DoUntap()
 				addLog(fmt.Sprintf("── Turn %d: %s ──", g.Turn, g.ActivePlayerObj().Name()))
 				if g.ActivePlayer != humanIdx {
-					send(PromptNone, nil) // show state at start of AI's turn
+					send(PromptNone, nil)
 				}
-
-			case core.Upkeep:
-				g.DoUpkeep()
-
 			case core.Draw:
-				g.DoDraw()
 				if g.ActivePlayer == humanIdx {
 					addLog("You draw a card")
 				} else {
 					addLog(fmt.Sprintf("%s draws a card", g.ActivePlayerObj().Name()))
 				}
-
-			case core.PrecombatMain:
-				runPriorityLoop(true)
-
-			case core.BeginCombat:
-				// nothing
-
-			case core.DeclareAttackers:
-				activeIdx := g.ActivePlayer
-				attackerIDs := g.Players[activeIdx].DeclareAttackers(g)
-				if len(attackerIDs) > 0 {
-					performAttack(g, attackerIDs, addLog)
-					if activeIdx != humanIdx {
-						showAIAction()
-					}
-				} else if activeIdx == humanIdx {
-					addLog("You choose not to attack")
-				}
-				if len(g.Combat.Groups) > 0 {
-					runPriorityLoop(false)
-				}
-
-			case core.DeclareBlockers:
-				if len(g.Combat.Groups) == 0 {
-					continue
-				}
-				nonActiveIdx := (g.ActivePlayer + 1) % 2
-				blockers := g.Players[nonActiveIdx].DeclareBlockers(g)
-				if len(blockers) > 0 {
-					performBlock(g, blockers, addLog)
-					if nonActiveIdx != humanIdx {
-						showAIAction()
-					}
-				}
-				if len(g.Combat.Groups) > 0 {
-					runPriorityLoop(false)
-				}
-
-			case core.FirstStrikeDamage:
-				if g.Combat.HasFirstStrikers(g) {
-					g.Combat.ResolveDamage(g, true)
-					g.CheckStateBasedActions()
-				}
-
 			case core.CombatDamage:
 				if len(g.Combat.Groups) > 0 {
-					addLog("── Combat damage ──")
-					logCombatPreview(g, addLog)
-					g.Combat.ResolveDamage(g, false)
-					g.CheckStateBasedActions()
 					reportCombatResults(g, humanIdx, addLog)
-					showAIAction() // always show damage result
+					showAIAction()
 				}
-
-			case core.EndCombat:
-				g.Combat.Reset()
-
-			case core.PostcombatMain:
-				runPriorityLoop(true)
-
-			case core.EndStep:
-				g.FireEvent(core.GameEvent{
-					Type:     core.EvtEndStep,
-					PlayerID: g.ActivePlayerObj().PlayerID(),
-				})
-				g.PutTriggersOnStack()
-				if !g.Stack.IsEmpty() {
-					runPriorityLoop(false)
-				}
-
-			case core.Cleanup:
-				g.DoCleanup()
 			}
 
-			g.CheckStateBasedActions()
 			if g.IsGameOver() {
 				send(PromptNone, nil)
 				return
@@ -287,5 +208,32 @@ func RunGameLoop(g *mage.Game, humanIdx int, aiActionPause time.Duration) {
 			g.ActivePlayer = (g.ActivePlayer + 1) % len(g.Players)
 		}
 		g.Turn++
+	}
+}
+
+// convertToEngineAction converts an interactive PriorityAction to an engine PriorityAction.
+func convertToEngineAction(action PriorityAction) mage.PriorityAction {
+	switch action.Type {
+	case ActionPlayLand:
+		return mage.PriorityAction{
+			Type:   mage.PriorityPlayLand,
+			CardID: action.CardID,
+		}
+	case ActionCastSpell:
+		return mage.PriorityAction{
+			Type:    mage.PriorityCastSpell,
+			CardID:  action.CardID,
+			Targets: action.Targets,
+			XValue:  action.XValue,
+		}
+	case ActionActivateAbility:
+		return mage.PriorityAction{
+			Type:        mage.PriorityActivateAbility,
+			PermanentID: action.PermanentID,
+			AbilityIdx:  action.AbilityIndex,
+			Targets:     action.Targets,
+		}
+	default:
+		return mage.PriorityAction{Type: mage.PriorityPass}
 	}
 }

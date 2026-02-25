@@ -57,8 +57,12 @@ func RunMultiplayerGameLoop(g *mage.Game, channels [2]PlayerChannels) {
 		return action, ok
 	}
 
+	// disconnected tracks whether a player has disconnected so we can abort cleanly.
+	disconnected := false
+
 	// handleDisconnect sends a game-over message to the surviving player.
 	handleDisconnect := func(disconnectedIdx int) {
+		disconnected = true
 		survivorIdx := (disconnectedIdx + 1) % 2
 		survivor := g.Players[survivorIdx]
 		func() {
@@ -85,184 +89,95 @@ func RunMultiplayerGameLoop(g *mage.Game, channels [2]PlayerChannels) {
 		return readFrom(idx)
 	}
 
-	runPriorityLoop := func(mainPhase bool) bool {
-		for {
-			if g.IsGameOver() {
-				return true
-			}
-
-			activeIdx := g.ActivePlayer
-			nonActiveIdx := (g.ActivePlayer + 1) % 2
-
-			action, ok := getAction(activeIdx, mainPhase)
-			if !ok {
-				handleDisconnect(activeIdx)
-				return false
-			}
-			if action.Type != ActionPass {
-				executeAction(g, g.Players[activeIdx].PlayerID(), action, addLog)
-				g.CheckStateBasedActions()
-				if g.IsGameOver() {
-					return true
-				}
-				broadcast()
-				continue
-			}
-
-			action, ok = getAction(nonActiveIdx, false)
-			if !ok {
-				handleDisconnect(nonActiveIdx)
-				return false
-			}
-			if action.Type != ActionPass {
-				executeAction(g, g.Players[nonActiveIdx].PlayerID(), action, addLog)
-				g.CheckStateBasedActions()
-				if g.IsGameOver() {
-					return true
-				}
-				broadcast()
-				continue
-			}
-
-			if g.Stack.IsEmpty() {
-				return true
-			}
-
-			top := g.Stack.Peek()
-			topName := "ability"
-			if top.Card != nil {
-				topName = top.Card.Name()
-			}
-			addLog(fmt.Sprintf("Resolving %s%s", topName, targetSuffix(g, top.Targets)))
-			g.ResolveTopOfStack()
-			g.CheckStateBasedActions()
-			if g.IsGameOver() {
-				return true
-			}
+	// --- Install priority handler on the engine ---
+	g.OnPriority = func(g *mage.Game, playerIdx int, mainPhase bool) mage.PriorityAction {
+		if disconnected {
+			return mage.PriorityAction{Type: mage.PriorityPass}
 		}
+		action, ok := getAction(playerIdx, mainPhase)
+		if !ok {
+			handleDisconnect(playerIdx)
+			return mage.PriorityAction{Type: mage.PriorityPass}
+		}
+		return convertToEngineAction(action)
 	}
 
+	// Log actions after they execute
+	g.AfterPriorityAction = func(g *mage.Game, playerIdx int, action mage.PriorityAction) {
+		p := g.Players[playerIdx]
+		switch action.Type {
+		case mage.PriorityPlayLand:
+			perm := g.FindPermanent(action.CardID)
+			name := "a land"
+			if perm != nil {
+				name = perm.Name()
+			}
+			addLog(fmt.Sprintf("%s plays %s", p.Name(), name))
+		case mage.PriorityCastSpell:
+			obj := g.Stack.Peek()
+			name := "a spell"
+			if obj != nil && obj.Card != nil {
+				name = obj.Card.Name()
+			}
+			addLog(fmt.Sprintf("%s casts %s%s", p.Name(), name, targetSuffix(g, action.Targets)))
+		case mage.PriorityActivateAbility:
+			perm := g.FindPermanent(action.PermanentID)
+			name := "permanent"
+			if perm != nil {
+				name = perm.Name()
+			}
+			addLog(fmt.Sprintf("Activated ability: %s%s", name, targetSuffix(g, action.Targets)))
+		}
+		broadcast()
+	}
+
+	// Log stack resolution
+	g.BeforeStackResolve = func(g *mage.Game) {
+		top := g.Stack.Peek()
+		if top == nil {
+			return
+		}
+		topName := "ability"
+		if top.Card != nil {
+			topName = top.Card.Name()
+		}
+		addLog(fmt.Sprintf("Resolving %s%s", topName, targetSuffix(g, top.Targets)))
+	}
+
+	// --- Main turn loop ---
 	for g.Turn <= 100 {
 		for _, step := range core.AllSteps() {
-			g.Step = step
-			g.Effects.Apply(g)
-
-			if g.IsGameOver() {
-				broadcast()
+			if disconnected {
 				return
 			}
 
+			// Pre-step logging
 			switch step {
-			case core.Untap:
-				g.DoUntap()
-				addLog(fmt.Sprintf("── Turn %d: %s ──", g.Turn, g.ActivePlayerObj().Name()))
-				broadcast()
-
-			case core.Upkeep:
-				g.DoUpkeep()
-
-			case core.Draw:
-				g.DoDraw()
-				addLog(fmt.Sprintf("%s draws a card", g.ActivePlayerObj().Name()))
-
-			case core.PrecombatMain:
-				if !runPriorityLoop(true) {
-					return
-				}
-
-			case core.BeginCombat:
-				// nothing
-
-			case core.DeclareAttackers:
-				activeIdx := g.ActivePlayer
-				eligible := getEligibleAttackers(g, g.Players[activeIdx].PlayerID())
-				if len(eligible) > 0 {
-					sendTo(activeIdx, PromptDeclareAttackers, attackerOptions(eligible))
-					sendTo((activeIdx+1)%2, PromptNone, nil)
-					action, ok := readFrom(activeIdx)
-					if !ok {
-						handleDisconnect(activeIdx)
-						return
-					}
-					if action.Type == ActionSelectAttackers && len(action.Attackers) > 0 {
-						performAttack(g, action.Attackers, addLog)
-					} else {
-						addLog(fmt.Sprintf("%s chooses not to attack", g.Players[activeIdx].Name()))
-					}
-				}
-				if len(g.Combat.Groups) > 0 {
-					if !runPriorityLoop(false) {
-						return
-					}
-				}
-
-			case core.DeclareBlockers:
-				if len(g.Combat.Groups) == 0 {
-					continue
-				}
-				nonActiveIdx := (g.ActivePlayer + 1) % 2
-				eligible := getEligibleBlockers(g, g.Players[nonActiveIdx].PlayerID())
-				if len(eligible) > 0 {
-					sendTo(nonActiveIdx, PromptDeclareBlockers, blockerOptions(g, eligible))
-					sendTo(g.ActivePlayer, PromptNone, nil)
-					action, ok := readFrom(nonActiveIdx)
-					if !ok {
-						handleDisconnect(nonActiveIdx)
-						return
-					}
-					if action.Type == ActionSelectBlockers && len(action.Blockers) > 0 {
-						performBlock(g, action.Blockers, addLog)
-					}
-				}
-				if len(g.Combat.Groups) > 0 {
-					if !runPriorityLoop(false) {
-						return
-					}
-				}
-
-			case core.FirstStrikeDamage:
-				if g.Combat.HasFirstStrikers(g) {
-					g.Combat.ResolveDamage(g, true)
-					g.CheckStateBasedActions()
-				}
-
 			case core.CombatDamage:
 				if len(g.Combat.Groups) > 0 {
 					addLog("── Combat damage ──")
 					logCombatPreview(g, addLog)
-					g.Combat.ResolveDamage(g, false)
-					g.CheckStateBasedActions()
+				}
+			}
+
+			g.RunStepWithPriority(step)
+
+			// Post-step logging and display
+			switch step {
+			case core.Untap:
+				addLog(fmt.Sprintf("── Turn %d: %s ──", g.Turn, g.ActivePlayerObj().Name()))
+				broadcast()
+			case core.Draw:
+				addLog(fmt.Sprintf("%s draws a card", g.ActivePlayerObj().Name()))
+			case core.CombatDamage:
+				if len(g.Combat.Groups) > 0 {
 					for _, p := range g.Players {
 						addLog(fmt.Sprintf("%s: %d life", p.Name(), p.Life()))
 					}
 					broadcast()
 				}
-
-			case core.EndCombat:
-				g.Combat.Reset()
-
-			case core.PostcombatMain:
-				if !runPriorityLoop(true) {
-					return
-				}
-
-			case core.EndStep:
-				g.FireEvent(core.GameEvent{
-					Type:     core.EvtEndStep,
-					PlayerID: g.ActivePlayerObj().PlayerID(),
-				})
-				g.PutTriggersOnStack()
-				if !g.Stack.IsEmpty() {
-					if !runPriorityLoop(false) {
-						return
-					}
-				}
-
-			case core.Cleanup:
-				g.DoCleanup()
 			}
 
-			g.CheckStateBasedActions()
 			if g.IsGameOver() {
 				broadcast()
 				return

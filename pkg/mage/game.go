@@ -78,6 +78,18 @@ type Game struct {
 	// Coin flip results (for test determinism; popped in order)
 	CoinFlipResults []bool
 
+	// Priority handler — called when a player receives priority.
+	// If nil, the engine drains the stack atomically (legacy behavior).
+	OnPriority PriorityHandler
+
+	// AfterPriorityAction is called after a non-pass priority action is executed.
+	// Used by the interactive layer for logging and display.
+	AfterPriorityAction func(g *Game, playerIdx int, action PriorityAction)
+
+	// BeforeStackResolve is called before the top of the stack is resolved
+	// during a priority round. Used by the interactive layer for logging.
+	BeforeStackResolve func(g *Game)
+
 	// Control flags
 	stopped bool
 }
@@ -1580,23 +1592,31 @@ func (g *Game) RunStep(step PhaseStep) {
 	g.ResolveStack()
 }
 
-func (g *Game) DoBeginCombat() {
+func (g *Game) doBeginCombatActions() {
 	active := g.ActivePlayerObj()
 	g.FireEvent(GameEvent{
 		Type:     EvtBeginCombat,
 		PlayerID: active.PlayerID(),
 	})
 	g.PutTriggersOnStack()
+}
+
+func (g *Game) DoBeginCombat() {
+	g.doBeginCombatActions()
 	g.ResolveStack()
 }
 
-func (g *Game) DoEndStep() {
+func (g *Game) doEndStepActions() {
 	active := g.ActivePlayerObj()
 	g.FireEvent(GameEvent{
 		Type:     EvtEndStep,
 		PlayerID: active.PlayerID(),
 	})
 	g.PutTriggersOnStack()
+}
+
+func (g *Game) DoEndStep() {
+	g.doEndStepActions()
 	g.ResolveStack()
 }
 
@@ -1628,7 +1648,7 @@ func (g *Game) DoUntap() {
 	g.LandsPlayedThisTurn = 0
 }
 
-func (g *Game) DoUpkeep() {
+func (g *Game) doUpkeepActions() {
 	active := g.ActivePlayerObj()
 
 	// Check for graveyard returns (e.g. Nether Shadow)
@@ -1639,6 +1659,10 @@ func (g *Game) DoUpkeep() {
 		PlayerID: active.PlayerID(),
 	})
 	g.PutTriggersOnStack()
+}
+
+func (g *Game) DoUpkeep() {
+	g.doUpkeepActions()
 	g.ResolveStack()
 }
 
@@ -1679,7 +1703,7 @@ func (g *Game) checkGraveyardReturns(p Player) {
 	}
 }
 
-func (g *Game) DoDraw() {
+func (g *Game) doDrawActions() {
 	active := g.ActivePlayerObj()
 
 	// Fire draw step event before the normal draw so triggers can queue
@@ -1688,7 +1712,10 @@ func (g *Game) DoDraw() {
 		PlayerID: active.PlayerID(),
 	})
 	g.PutTriggersOnStack()
-	g.ResolveStack()
+}
+
+func (g *Game) doDrawNormalDraw() {
+	active := g.ActivePlayerObj()
 
 	// First player doesn't draw on turn 1
 	if g.Turn == 1 && g.ActivePlayer == 0 {
@@ -1701,6 +1728,12 @@ func (g *Game) DoDraw() {
 	}
 
 	active.DrawCard()
+}
+
+func (g *Game) DoDraw() {
+	g.doDrawActions()
+	g.ResolveStack()
+	g.doDrawNormalDraw()
 }
 
 func (g *Game) doDeclareAttackers() {
@@ -1854,7 +1887,9 @@ func (g *Game) doDeclareBlockers() {
 	})
 }
 
-func (g *Game) DoCleanup() {
+// doCleanupActions performs cleanup housekeeping and places any triggers on the stack.
+// Returns true if triggers were placed on the stack (requiring priority + another cleanup).
+func (g *Game) doCleanupActions() bool {
 	// Clear damage from all creatures
 	for _, p := range g.Battlefield {
 		p.Damage = 0
@@ -1879,10 +1914,14 @@ func (g *Game) DoCleanup() {
 		// Clear activation tracking (Charge counters used for per-turn counts)
 		delete(p.Counters, Charge)
 	}
-	// MTG 514.3a: if triggers fire during cleanup, put them on stack,
-	// resolve, then do another cleanup step.
+	// MTG 514.3a: if triggers fire during cleanup, put them on stack
 	g.PutTriggersOnStack()
-	if !g.Stack.IsEmpty() {
+	return !g.Stack.IsEmpty()
+}
+
+func (g *Game) DoCleanup() {
+	if g.doCleanupActions() {
+		// Triggers fired — resolve, check SBAs, then do another cleanup step.
 		g.ResolveStack()
 		g.CheckStateBasedActions()
 		g.DoCleanup()
@@ -1939,8 +1978,10 @@ func (g *Game) MaxLandPlays() int {
 	return limit
 }
 
-// PlayLand moves a land from a player's hand to the battlefield.
-func (g *Game) PlayLand(playerID, cardID uuid.UUID) error {
+// playLandCore moves a land from a player's hand to the battlefield and fires
+// landfall triggers, but does NOT resolve the stack. Callers are responsible
+// for draining the stack (via ResolveStack or RunPriorityRound).
+func (g *Game) playLandCore(playerID, cardID uuid.UUID) error {
 	if !g.Step.IsMainPhase() {
 		return fmt.Errorf("can only play lands during a main phase")
 	}
@@ -1975,8 +2016,16 @@ func (g *Game) PlayLand(playerID, cardID uuid.UUID) error {
 		Amount:   g.LandsPlayedThisTurn, // which land number this was
 	})
 	g.PutTriggersOnStack()
-	g.ResolveStack()
 
+	return nil
+}
+
+// PlayLand moves a land from a player's hand to the battlefield.
+func (g *Game) PlayLand(playerID, cardID uuid.UUID) error {
+	if err := g.playLandCore(playerID, cardID); err != nil {
+		return err
+	}
+	g.ResolveStack()
 	return nil
 }
 

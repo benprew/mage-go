@@ -57,6 +57,12 @@ func (ps PhaseStep) IsMainPhase() bool {
 	return ps == PrecombatMain || ps == PostcombatMain
 }
 
+// StepHasPriority returns true if players receive priority during this step.
+// Only Untap has no priority round.
+func (ps PhaseStep) StepHasPriority() bool {
+	return ps != Untap
+}
+
 // AllSteps returns the normal step order for a turn.
 func AllSteps() []PhaseStep {
 	return []PhaseStep{
