@@ -181,7 +181,7 @@ func registerEnchantments() {
 					}
 					targetOwner := target.Card.Owner()
 					targetCardID := target.Card.ID()
-					g.ExilePermanent(target)
+					g.(*Game).ExilePermanentBy(target, sourceID)
 					src.ControlledPermanent = targetCardID
 					// Register delayed trigger: when Oubliette leaves, return the creature
 					g.RegisterDelayedTrigger(&DelayedTrigger{
@@ -192,14 +192,10 @@ func registerEnchantments() {
 						Effects: []Effect{FuncEffect("return exiled creature",
 							EffectProperties{Outcome: OutcomeBenefit},
 							func(g GameMutator, _, _ uuid.UUID, _ []uuid.UUID) error {
-								// Find the exiled card and return it
-								for i, c := range g.(*Game).Exile {
-									if c.ID() == targetCardID {
-										g.(*Game).Exile = append(g.(*Game).Exile[:i], g.(*Game).Exile[i+1:]...)
-										perm := g.PutOnBattlefield(c, targetOwner)
-										perm.Tapped = true
-										return nil
-									}
+								card, ok := g.(*Game).RemoveFromExile(targetCardID)
+								if ok {
+									perm := g.PutOnBattlefield(card, targetOwner)
+									perm.Tapped = true
 								}
 								return nil
 							})},

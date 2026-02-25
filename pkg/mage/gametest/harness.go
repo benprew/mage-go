@@ -276,10 +276,24 @@ func (tg *TestGame) StopAt(turn int, step core.PhaseStep) {
 	tg.stopAt.step = step
 }
 
+// padLibraries ensures each player has enough library cards to not deck out
+// during normal test execution. Tests that explicitly test deck-out should
+// not call this (or should empty the library after setup).
+func (tg *TestGame) padLibraries() {
+	for _, p := range tg.Players {
+		if len(p.Library()) == 0 {
+			for i := 0; i < 60; i++ {
+				p.AddToLibrary(mage.NewLand("Plains"))
+			}
+		}
+	}
+}
+
 // Execute runs the game with all scripted actions.
 func (tg *TestGame) Execute() {
 	tg.t.Helper()
 
+	tg.padLibraries()
 	tg.autoAddMana()
 
 	maxTurns := tg.stopAt.turn + 5
@@ -657,6 +671,7 @@ func (tg *TestGame) PlayToEnd(maxTurns ...int) {
 		limit = maxTurns[0]
 	}
 
+	tg.padLibraries()
 	tg.autoAddMana()
 
 	for tg.Turn <= limit {
@@ -860,5 +875,74 @@ func (tg *TestGame) AssertAttachedTo(p PlayerRef, attachment, host string) {
 	}
 	if att.AttachedTo != hostPerm.ID() {
 		tg.t.Errorf("AssertAttachedTo(%v, %s, %s): not attached", p, attachment, host)
+	}
+}
+
+// AssertExileCount checks the number of cards with a given name in exile.
+func (tg *TestGame) AssertExileCount(name string, want int) {
+	tg.t.Helper()
+	got := 0
+	for _, ec := range tg.Game.Exile {
+		if ec.Card.Name() == name {
+			got++
+		}
+	}
+	if got != want {
+		tg.t.Errorf("AssertExileCount(%s): got %d, want %d", name, got, want)
+	}
+}
+
+// AssertLibraryCount checks the number of cards with a given name in a player's library.
+func (tg *TestGame) AssertLibraryCount(p PlayerRef, name string, want int) {
+	tg.t.Helper()
+	player := tg.GetPlayer(p)
+	got := 0
+	for _, c := range player.Library() {
+		if c.Name() == name {
+			got++
+		}
+	}
+	if got != want {
+		tg.t.Errorf("AssertLibraryCount(%v, %s): got %d, want %d", p, name, got, want)
+	}
+}
+
+// AssertLibraryTop checks that the top N cards of a player's library match
+// the expected names in order (index 0 = top of library).
+func (tg *TestGame) AssertLibraryTop(p PlayerRef, names ...string) {
+	tg.t.Helper()
+	player := tg.GetPlayer(p)
+	lib := player.Library()
+	if len(lib) < len(names) {
+		tg.t.Errorf("AssertLibraryTop(%v): library has %d cards, want at least %d", p, len(lib), len(names))
+		return
+	}
+	for i, want := range names {
+		got := lib[i].Name()
+		if got != want {
+			tg.t.Errorf("AssertLibraryTop(%v): position %d: got %q, want %q", p, i, got, want)
+		}
+	}
+}
+
+// AssertGraveyardOrder checks that a player's graveyard contains exactly the
+// named cards in the given order (index 0 = bottom of graveyard, last = top).
+func (tg *TestGame) AssertGraveyardOrder(p PlayerRef, names ...string) {
+	tg.t.Helper()
+	player := tg.GetPlayer(p)
+	gy := player.Graveyard()
+	if len(gy) != len(names) {
+		actual := make([]string, len(gy))
+		for i, c := range gy {
+			actual[i] = c.Name()
+		}
+		tg.t.Errorf("AssertGraveyardOrder(%v): got %d cards %v, want %d cards %v", p, len(gy), actual, len(names), names)
+		return
+	}
+	for i, want := range names {
+		got := gy[i].Name()
+		if got != want {
+			tg.t.Errorf("AssertGraveyardOrder(%v): position %d: got %q, want %q", p, i, got, want)
+		}
 	}
 }

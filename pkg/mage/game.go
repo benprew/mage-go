@@ -20,11 +20,17 @@ var (
 	ErrSorcerySpeed      = errors.New("can only activate at sorcery speed")
 )
 
+// ExiledCard tracks a card in exile along with metadata about why it was exiled.
+type ExiledCard struct {
+	Card     Card
+	ExiledBy uuid.UUID // ID of the permanent/spell that caused the exile
+}
+
 // Game is the central game state and engine.
 type Game struct {
 	Players     []Player
 	Battlefield []*Permanent
-	Exile       []Card // exile zone
+	Exile       []ExiledCard // exile zone with metadata
 	Stack       *Stack
 	Combat      *Combat
 	Effects     *EffectManager
@@ -214,6 +220,11 @@ func (g *Game) FindCardAnywhere(id uuid.UUID) Card {
 			if c.ID() == id {
 				return c
 			}
+		}
+	}
+	for _, ec := range g.Exile {
+		if ec.Card.ID() == id {
+			return ec.Card
 		}
 	}
 	return nil
@@ -549,6 +560,52 @@ func (g *Game) checkAbilitiesForEvent(abilities []Ability, evt *GameEvent, sourc
 	}
 }
 
+// PutPermanentIntoGraveyard puts a permanent into its owner's graveyard without
+// destroying it. This bypasses indestructible and regeneration. Used by SBAs
+// (e.g., 0-toughness creatures) and other rules that move permanents to the
+// graveyard without destruction.
+func (g *Game) PutPermanentIntoGraveyard(perm *Permanent) {
+	controller := perm.Controller
+	owner := perm.Card.Owner()
+	if owner == uuid.Nil {
+		owner = controller
+	}
+
+	isCreature := perm.HasType(TypeCreature)
+	permID := perm.ID()
+	card := perm.Card
+
+	// Capture abilities before removal (for "leaves battlefield" / "dies" triggers on self)
+	selfAbilities := make([]Ability, len(perm.RuntimeAbilities))
+	copy(selfAbilities, perm.RuntimeAbilities)
+
+	g.RemoveFromBattlefield(perm)
+
+	p := g.GetPlayer(owner)
+	if p != nil {
+		p.AddToGraveyard(card)
+	}
+
+	graveyardEvt := GameEvent{
+		Type:     EvtPutIntoGraveyardFromBattlefield,
+		SourceID: permID,
+		PlayerID: controller,
+	}
+	g.FireEvent(graveyardEvt)
+	g.checkAbilitiesForEvent(selfAbilities, &graveyardEvt, permID, controller)
+
+	if isCreature {
+		g.CreatureDeathsThisTurn++
+		diedEvt := GameEvent{
+			Type:     EvtCreatureDied,
+			SourceID: permID,
+			PlayerID: controller,
+		}
+		g.FireEvent(diedEvt)
+		g.checkAbilitiesForEvent(selfAbilities, &diedEvt, permID, controller)
+	}
+}
+
 // Sacrifice sacrifices a permanent (like destroy but doesn't check indestructible).
 func (g *Game) Sacrifice(perm *Permanent) {
 	controller := perm.Controller
@@ -620,9 +677,36 @@ func (g *Game) sacrificePermanents(playerID uuid.UUID, count int) {
 
 // ExilePermanent removes a permanent from the battlefield to exile.
 func (g *Game) ExilePermanent(perm *Permanent) {
+	g.ExilePermanentBy(perm, uuid.Nil)
+}
+
+// ExilePermanentBy removes a permanent from the battlefield to exile,
+// recording the source that caused the exile.
+func (g *Game) ExilePermanentBy(perm *Permanent, exiledBy uuid.UUID) {
 	card := perm.Card
 	g.RemoveFromBattlefield(perm)
-	g.Exile = append(g.Exile, card)
+	g.Exile = append(g.Exile, ExiledCard{Card: card, ExiledBy: exiledBy})
+}
+
+// FindExiledCard finds an exiled card by its ID.
+func (g *Game) FindExiledCard(cardID uuid.UUID) *ExiledCard {
+	for i := range g.Exile {
+		if g.Exile[i].Card.ID() == cardID {
+			return &g.Exile[i]
+		}
+	}
+	return nil
+}
+
+// RemoveFromExile removes a card from exile by ID and returns it.
+func (g *Game) RemoveFromExile(cardID uuid.UUID) (Card, bool) {
+	for i, ec := range g.Exile {
+		if ec.Card.ID() == cardID {
+			g.Exile = append(g.Exile[:i], g.Exile[i+1:]...)
+			return ec.Card, true
+		}
+	}
+	return nil, false
 }
 
 // CounterSpellOnStack removes a spell from the stack by its source ID.
@@ -899,8 +983,74 @@ func (g *Game) ResolveStack() {
 	}
 }
 
+// isTargetStillLegal checks whether a target is still legal at resolution time.
+func (g *Game) isTargetStillLegal(targetID uuid.UUID, sourceCard Card, controller uuid.UUID) bool {
+	// Players are always legal targets (targeting doesn't check life/loss status)
+	if g.GetPlayer(targetID) != nil {
+		return true
+	}
+	// Permanents must still be on the battlefield and targetable
+	if perm := g.FindPermanent(targetID); perm != nil {
+		return perm.CanBeTargetedBy(sourceCard, controller, g)
+	}
+	// Cards in hand are legal if still in hand
+	for _, p := range g.Players {
+		for _, c := range p.Hand() {
+			if c.ID() == targetID {
+				return true
+			}
+		}
+	}
+	// Graveyard cards are legal if still in graveyard
+	for _, p := range g.Players {
+		for _, c := range p.Graveyard() {
+			if c.ID() == targetID {
+				return true
+			}
+		}
+	}
+	// Stack spells are legal if still on the stack
+	if g.Stack.FindBySourceID(targetID) != nil {
+		return true
+	}
+	// Target no longer exists in any known zone
+	return false
+}
+
 // ResolveStackObject resolves a single stack object.
 func (g *Game) ResolveStackObject(obj *StackObject) {
+	// Check for fizzle: if the spell/ability has targets but all are now illegal,
+	// it fails to resolve (MTG rule 608.2b)
+	if len(obj.Targets) > 0 {
+		hasRealTargets := false
+		anyLegal := false
+		for _, t := range obj.Targets {
+			if t == uuid.Nil {
+				continue // skip nil targets (used as data slots, not real targets)
+			}
+			hasRealTargets = true
+			if g.isTargetStillLegal(t, obj.Card, obj.Controller) {
+				anyLegal = true
+				break
+			}
+		}
+		if hasRealTargets && !anyLegal {
+			// Spell fizzles — put card in graveyard without resolving effects
+			if obj.Card != nil && !obj.IsAbility {
+				owner := obj.Card.Owner()
+				if owner == uuid.Nil {
+					owner = obj.Controller
+				}
+				p := g.GetPlayer(owner)
+				if p != nil {
+					p.AddToGraveyard(obj.Card)
+				}
+			}
+			g.CheckStateBasedActions()
+			return
+		}
+	}
+
 	g.CurrentX = obj.XValue
 	g.CurrentMode = obj.ModeChoice
 	g.ResolvingCard = obj.Card
@@ -1209,6 +1359,18 @@ func (g *Game) CheckStateBasedActions() {
 			g.DestroyPermanent(p)
 		}
 
+		// Check for creatures with 0 or less toughness (not destruction — bypasses indestructible)
+		var zeroToughness []*Permanent
+		for _, p := range g.Battlefield {
+			if p.HasType(TypeCreature) && p.CurrentToughness(g) <= 0 {
+				zeroToughness = append(zeroToughness, p)
+				actions = true
+			}
+		}
+		for _, p := range zeroToughness {
+			g.PutPermanentIntoGraveyard(p)
+		}
+
 		// Check for auras attached to nothing or illegal targets
 		var aurasToDrop []*Permanent
 		for _, p := range g.Battlefield {
@@ -1256,8 +1418,13 @@ func (g *Game) CheckStateBasedActions() {
 			g.Sacrifice(p)
 		}
 
-		// Check for player death (life <= 0)
-		// (Not destroying anything, just noting)
+		// MTG rule 704.5b: player who attempted to draw from empty library loses
+		for _, p := range g.Players {
+			if p.DrewFromEmpty() {
+				p.ClearDrewFromEmpty()
+				p.SetLost()
+			}
+		}
 
 		if !actions {
 			break

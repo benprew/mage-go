@@ -34,6 +34,9 @@ type Player interface {
 	GainLife(int)
 	LoseLife(int)
 	IsAlive() bool
+	DrewFromEmpty() bool
+	ClearDrewFromEmpty()
+	SetLost()
 	Hand() []Card
 	AddToHand(Card)
 	SetHand([]Card)
@@ -65,13 +68,15 @@ type Player interface {
 
 // BasePlayer implements Player with basic functionality.
 type BasePlayer struct {
-	id       uuid.UUID
-	name     string
-	life     int
-	hand     []Card
-	graveyard []Card
-	library  []Card
-	manaPool *ManaPool
+	id            uuid.UUID
+	name          string
+	life          int
+	lost          bool // true if the player has lost the game (e.g. deck-out)
+	drewFromEmpty bool // set when a draw is attempted from an empty library
+	hand          []Card
+	graveyard     []Card
+	library       []Card
+	manaPool      *ManaPool
 }
 
 func NewBasePlayer(name string) *BasePlayer {
@@ -87,7 +92,10 @@ func (p *BasePlayer) PlayerID() uuid.UUID { return p.id }
 func (p *BasePlayer) Name() string        { return p.name }
 func (p *BasePlayer) Life() int           { return p.life }
 func (p *BasePlayer) SetLife(n int)       { p.life = n }
-func (p *BasePlayer) IsAlive() bool       { return p.life > 0 }
+func (p *BasePlayer) IsAlive() bool         { return p.life > 0 && !p.lost }
+func (p *BasePlayer) DrewFromEmpty() bool   { return p.drewFromEmpty }
+func (p *BasePlayer) ClearDrewFromEmpty()   { p.drewFromEmpty = false }
+func (p *BasePlayer) SetLost()              { p.lost = true }
 func (p *BasePlayer) ManaPool() *ManaPool { return p.manaPool }
 
 func (p *BasePlayer) GainLife(n int) {
@@ -147,6 +155,7 @@ func (p *BasePlayer) ClearGraveyard() {
 
 func (p *BasePlayer) DrawCard() (Card, bool) {
 	if len(p.library) == 0 {
+		p.drewFromEmpty = true
 		return nil, false
 	}
 	c := p.library[0]
