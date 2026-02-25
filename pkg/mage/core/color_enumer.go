@@ -20,6 +20,8 @@ func (i Color) String() string {
 	return _ColorName[_ColorIndex[i]:_ColorIndex[i+1]]
 }
 
+// An "invalid array index" compiler error signifies that the constant values have changed.
+// Re-run the stringer command to generate them again.
 func _ColorNoOp() {
 	var x [1]struct{}
 	_ = x[Colorless-(0)]
@@ -56,26 +58,32 @@ var _ColorNames = []string{
 	_ColorName[26:31],
 }
 
+// ColorString retrieves an enum value from the enum constants string name.
+// Throws an error if the param is not part of the enum.
 func ColorString(s string) (Color, error) {
 	if val, ok := _ColorNameToValueMap[s]; ok {
 		return val, nil
 	}
+
 	if val, ok := _ColorNameToValueMap[strings.ToLower(s)]; ok {
 		return val, nil
 	}
 	return 0, fmt.Errorf("%s does not belong to Color values", s)
 }
 
+// ColorValues returns all values of the enum
 func ColorValues() []Color {
 	return _ColorValues
 }
 
+// ColorStrings returns a slice of all String values of the enum
 func ColorStrings() []string {
 	strs := make([]string, len(_ColorNames))
 	copy(strs, _ColorNames)
 	return strs
 }
 
+// IsAColor returns "true" if the value is listed in the enum definition. "false" otherwise
 func (i Color) IsAColor() bool {
 	for _, v := range _ColorValues {
 		if i == v {

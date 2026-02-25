@@ -20,6 +20,8 @@ func (i CardType) String() string {
 	return _CardTypeName[_CardTypeIndex[i]:_CardTypeIndex[i+1]]
 }
 
+// An "invalid array index" compiler error signifies that the constant values have changed.
+// Re-run the stringer command to generate them again.
 func _CardTypeNoOp() {
 	var x [1]struct{}
 	_ = x[TypeCreature-(0)]
@@ -56,26 +58,32 @@ var _CardTypeNames = []string{
 	_CardTypeName[34:45],
 }
 
+// CardTypeString retrieves an enum value from the enum constants string name.
+// Throws an error if the param is not part of the enum.
 func CardTypeString(s string) (CardType, error) {
 	if val, ok := _CardTypeNameToValueMap[s]; ok {
 		return val, nil
 	}
+
 	if val, ok := _CardTypeNameToValueMap[strings.ToLower(s)]; ok {
 		return val, nil
 	}
 	return 0, fmt.Errorf("%s does not belong to CardType values", s)
 }
 
+// CardTypeValues returns all values of the enum
 func CardTypeValues() []CardType {
 	return _CardTypeValues
 }
 
+// CardTypeStrings returns a slice of all String values of the enum
 func CardTypeStrings() []string {
 	strs := make([]string, len(_CardTypeNames))
 	copy(strs, _CardTypeNames)
 	return strs
 }
 
+// IsACardType returns "true" if the value is listed in the enum definition. "false" otherwise
 func (i CardType) IsACardType() bool {
 	for _, v := range _CardTypeValues {
 		if i == v {

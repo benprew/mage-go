@@ -20,6 +20,8 @@ func (i AbilityType) String() string {
 	return _AbilityTypeName[_AbilityTypeIndex[i]:_AbilityTypeIndex[i+1]]
 }
 
+// An "invalid array index" compiler error signifies that the constant values have changed.
+// Re-run the stringer command to generate them again.
 func _AbilityTypeNoOp() {
 	var x [1]struct{}
 	_ = x[AbilitySpell-(0)]
@@ -52,26 +54,32 @@ var _AbilityTypeNames = []string{
 	_AbilityTypeName[27:33],
 }
 
+// AbilityTypeString retrieves an enum value from the enum constants string name.
+// Throws an error if the param is not part of the enum.
 func AbilityTypeString(s string) (AbilityType, error) {
 	if val, ok := _AbilityTypeNameToValueMap[s]; ok {
 		return val, nil
 	}
+
 	if val, ok := _AbilityTypeNameToValueMap[strings.ToLower(s)]; ok {
 		return val, nil
 	}
 	return 0, fmt.Errorf("%s does not belong to AbilityType values", s)
 }
 
+// AbilityTypeValues returns all values of the enum
 func AbilityTypeValues() []AbilityType {
 	return _AbilityTypeValues
 }
 
+// AbilityTypeStrings returns a slice of all String values of the enum
 func AbilityTypeStrings() []string {
 	strs := make([]string, len(_AbilityTypeNames))
 	copy(strs, _AbilityTypeNames)
 	return strs
 }
 
+// IsAAbilityType returns "true" if the value is listed in the enum definition. "false" otherwise
 func (i AbilityType) IsAAbilityType() bool {
 	for _, v := range _AbilityTypeValues {
 		if i == v {

@@ -21,6 +21,8 @@ func (i Layer) String() string {
 	return _LayerName[_LayerIndex[i]:_LayerIndex[i+1]]
 }
 
+// An "invalid array index" compiler error signifies that the constant values have changed.
+// Re-run the stringer command to generate them again.
 func _LayerNoOp() {
 	var x [1]struct{}
 	_ = x[LayerCopy-(1)]
@@ -61,26 +63,32 @@ var _LayerNames = []string{
 	_LayerName[31:33],
 }
 
+// LayerString retrieves an enum value from the enum constants string name.
+// Throws an error if the param is not part of the enum.
 func LayerString(s string) (Layer, error) {
 	if val, ok := _LayerNameToValueMap[s]; ok {
 		return val, nil
 	}
+
 	if val, ok := _LayerNameToValueMap[strings.ToLower(s)]; ok {
 		return val, nil
 	}
 	return 0, fmt.Errorf("%s does not belong to Layer values", s)
 }
 
+// LayerValues returns all values of the enum
 func LayerValues() []Layer {
 	return _LayerValues
 }
 
+// LayerStrings returns a slice of all String values of the enum
 func LayerStrings() []string {
 	strs := make([]string, len(_LayerNames))
 	copy(strs, _LayerNames)
 	return strs
 }
 
+// IsALayer returns "true" if the value is listed in the enum definition. "false" otherwise
 func (i Layer) IsALayer() bool {
 	for _, v := range _LayerValues {
 		if i == v {
@@ -103,6 +111,8 @@ func (i Duration) String() string {
 	return _DurationName[_DurationIndex[i]:_DurationIndex[i+1]]
 }
 
+// An "invalid array index" compiler error signifies that the constant values have changed.
+// Re-run the stringer command to generate them again.
 func _DurationNoOp() {
 	var x [1]struct{}
 	_ = x[WhileOnBattlefield-(0)]
@@ -135,26 +145,32 @@ var _DurationNames = []string{
 	_DurationName[55:65],
 }
 
+// DurationString retrieves an enum value from the enum constants string name.
+// Throws an error if the param is not part of the enum.
 func DurationString(s string) (Duration, error) {
 	if val, ok := _DurationNameToValueMap[s]; ok {
 		return val, nil
 	}
+
 	if val, ok := _DurationNameToValueMap[strings.ToLower(s)]; ok {
 		return val, nil
 	}
 	return 0, fmt.Errorf("%s does not belong to Duration values", s)
 }
 
+// DurationValues returns all values of the enum
 func DurationValues() []Duration {
 	return _DurationValues
 }
 
+// DurationStrings returns a slice of all String values of the enum
 func DurationStrings() []string {
 	strs := make([]string, len(_DurationNames))
 	copy(strs, _DurationNames)
 	return strs
 }
 
+// IsADuration returns "true" if the value is listed in the enum definition. "false" otherwise
 func (i Duration) IsADuration() bool {
 	for _, v := range _DurationValues {
 		if i == v {
