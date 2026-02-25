@@ -11,6 +11,7 @@ type Card interface {
 	Name() string
 	ManaCost() ManaCost
 	Types() []CardType
+	SuperTypes() []SuperType
 	SubTypes() []string
 	Abilities() []Ability
 	AttrSeeds() map[Attr]int // keyword/attr seeds (for display and permanent creation)
@@ -22,6 +23,7 @@ type Card interface {
 	SetOwner(uuid.UUID)
 	SetID(uuid.UUID)
 	HasType(CardType) bool
+	HasSuperType(SuperType) bool
 	AddType(CardType)
 	AddAbility(Ability)
 	CloneFrom(Card)
@@ -29,18 +31,20 @@ type Card interface {
 
 // BaseCard provides the common card implementation.
 type BaseCard struct {
-	id        uuid.UUID
-	name      string
-	manaCost  ManaCost
-	types     []CardType
-	subTypes  []string
-	abilities []Ability
-	owner     uuid.UUID
-	power     int
-	toughness int
-	isToken   bool
-	modes     []string
-	attrSeeds map[Attr]int // keyword/attr seeds; NewPermanent copies these to baseAttrs
+	id         uuid.UUID
+	name       string
+	manaCost   ManaCost
+	types      []CardType
+	superTypes []SuperType
+	subTypes   []string
+	abilities  []Ability
+	owner      uuid.UUID
+	power      int
+	toughness  int
+	isToken        bool
+	modes          []string
+	attrSeeds      map[Attr]int // keyword/attr seeds; NewPermanent copies these to baseAttrs
+	additionalCosts []Cost      // additional costs paid when casting (sacrifice, discard, etc.)
 }
 
 // AttrSeeds returns the keyword/attr seeds for this card.
@@ -50,8 +54,9 @@ func (c *BaseCard) AttrSeeds() map[Attr]int { return c.attrSeeds }
 func (c *BaseCard) ID() uuid.UUID         { return c.id }
 func (c *BaseCard) Name() string          { return c.name }
 func (c *BaseCard) ManaCost() ManaCost    { return c.manaCost }
-func (c *BaseCard) Types() []CardType     { return c.types }
-func (c *BaseCard) SubTypes() []string    { return c.subTypes }
+func (c *BaseCard) Types() []CardType       { return c.types }
+func (c *BaseCard) SuperTypes() []SuperType { return c.superTypes }
+func (c *BaseCard) SubTypes() []string      { return c.subTypes }
 func (c *BaseCard) Abilities() []Ability  { return c.abilities }
 func (c *BaseCard) Owner() uuid.UUID      { return c.owner }
 func (c *BaseCard) Power() int            { return c.power }
@@ -64,6 +69,15 @@ func (c *BaseCard) SetID(id uuid.UUID)       { c.id = id }
 func (c *BaseCard) HasType(t CardType) bool {
 	for _, ct := range c.types {
 		if ct == t {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *BaseCard) HasSuperType(st SuperType) bool {
+	for _, s := range c.superTypes {
+		if s == st {
 			return true
 		}
 	}
@@ -85,6 +99,8 @@ func (c *BaseCard) CloneFrom(other Card) {
 	c.toughness = other.Toughness()
 	c.types = make([]CardType, len(other.Types()))
 	copy(c.types, other.Types())
+	c.superTypes = make([]SuperType, len(other.SuperTypes()))
+	copy(c.superTypes, other.SuperTypes())
 	c.subTypes = make([]string, len(other.SubTypes()))
 	copy(c.subTypes, other.SubTypes())
 	c.abilities = make([]Ability, len(other.Abilities()))
@@ -106,6 +122,8 @@ func (c *BaseCard) Copy() Card {
 	cp.id = uuid.New()
 	cp.types = make([]CardType, len(c.types))
 	copy(cp.types, c.types)
+	cp.superTypes = make([]SuperType, len(c.superTypes))
+	copy(cp.superTypes, c.superTypes)
 	cp.subTypes = make([]string, len(c.subTypes))
 	copy(cp.subTypes, c.subTypes)
 	cp.abilities = make([]Ability, len(c.abilities))
@@ -125,6 +143,20 @@ func (c *BaseCard) Copy() Card {
 
 // CardOption configures a card during construction.
 type CardOption func(*BaseCard)
+
+// WithAdditionalCost adds an additional cost that must be paid when casting this spell
+// (e.g. sacrifice a creature, discard a card, pay life).
+func WithAdditionalCost(cost Cost) CardOption {
+	return func(c *BaseCard) { c.additionalCosts = append(c.additionalCosts, cost) }
+}
+
+// AdditionalCosts returns the additional costs for this card.
+func (c *BaseCard) AdditionalCosts() []Cost { return c.additionalCosts }
+
+// WithSuperTypes adds supertypes (Legendary, Basic, Snow, World) to a card.
+func WithSuperTypes(sts ...SuperType) CardOption {
+	return func(c *BaseCard) { c.superTypes = append(c.superTypes, sts...) }
+}
 
 // WithSubTypes adds creature/land subtypes to a card.
 func WithSubTypes(subTypes ...string) CardOption {
@@ -152,6 +184,39 @@ func WithAbility(a Ability) CardOption {
 // that need to act on their spell targets on entry (e.g. Oubliette).
 func WithETBEffect(effect Effect) CardOption {
 	return func(c *BaseCard) { c.AddAbility(ETBWithTargets(effect)) }
+}
+
+// WithCumulativeUpkeep adds a cumulative upkeep trigger to a card.
+// Each upkeep, an age counter is added, then the controller must pay the cost
+// multiplied by the number of age counters, or sacrifice the permanent.
+// costPerAge is a mana cost string (e.g. "{1}" or "{G}") paid per age counter.
+func WithCumulativeUpkeep(costPerAge string) CardOption {
+	return func(c *BaseCard) {
+		c.AddAbility(
+			BeginningOfUpkeepTrigger(
+				FuncEffect("cumulative upkeep",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						perm := g.FindPermanent(sourceID)
+						if perm == nil {
+							return nil
+						}
+						perm.AddCounter(Age, 1)
+						count := perm.Counters[Age]
+						// Build total cost: costPerAge repeated count times
+						totalCost := ""
+						for range count {
+							totalCost += costPerAge
+						}
+						if g.TryPayCostFromLands(controller, totalCost) {
+							return nil
+						}
+						g.Sacrifice(perm)
+						return nil
+					}), false,
+			),
+		)
+	}
 }
 
 // WithCardType adds an additional card type (e.g. TypeArtifact on a creature).

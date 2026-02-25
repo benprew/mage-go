@@ -197,6 +197,50 @@ func (c *sacrificeCreatureCost) Pay(sourceID, controller uuid.UUID, g *Game) err
 
 func (c *sacrificeCreatureCost) Text() string { return "Sacrifice a creature" }
 
+// tapCreatureCost requires tapping an untapped creature you control.
+type tapCreatureCost struct{}
+
+// TapCreatureCost creates a cost that requires tapping an untapped creature you control
+// (other than the source). Used by convoke-like abilities and tap-creature costs.
+func TapCreatureCost() Cost {
+	return &tapCreatureCost{}
+}
+
+func (c *tapCreatureCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+	for _, p := range g.Battlefield {
+		if p.Controller == controller && p.HasType(TypeCreature) && p.ID() != sourceID && !p.Tapped && p.CanTapForEffect(g) {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *tapCreatureCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
+	var candidates []*Permanent
+	for _, p := range g.Battlefield {
+		if p.Controller == controller && p.HasType(TypeCreature) && p.ID() != sourceID && !p.Tapped && p.CanTapForEffect(g) {
+			candidates = append(candidates, p)
+		}
+	}
+	if len(candidates) == 0 {
+		return ErrNoCreature
+	}
+	player := g.GetPlayer(controller)
+	chosen := player.ChoosePermanent(candidates, "tap creature cost", g)
+	if chosen == nil {
+		return ErrNoCreature
+	}
+	chosen.Tapped = true
+	g.FireEvent(GameEvent{
+		Type:     EvtTapped,
+		SourceID: chosen.ID(),
+		PlayerID: controller,
+	})
+	return nil
+}
+
+func (c *tapCreatureCost) Text() string { return "Tap an untapped creature you control" }
+
 // discardCost requires discarding cards from hand.
 type discardCost struct {
 	amount int

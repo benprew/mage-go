@@ -25,6 +25,7 @@ const (
 	EvtPutIntoGraveyardFromBattlefield
 	EvtUpkeep
 	EvtDrawStep
+	EvtBeginCombat
 	EvtEndStep
 	EvtTapped             // fired when a permanent becomes tapped
 	EvtLandPlayed         // fired when a land is played from hand

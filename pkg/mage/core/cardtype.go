@@ -13,3 +13,27 @@ const (
 	TypeArtifact
 	TypeEnchantment
 )
+
+// SuperType represents a card's supertype.
+type SuperType int
+
+const (
+	SuperLegendary SuperType = iota + 1
+	SuperBasic
+	SuperSnow
+	SuperWorld
+)
+
+func (s SuperType) String() string {
+	switch s {
+	case SuperLegendary:
+		return "Legendary"
+	case SuperBasic:
+		return "Basic"
+	case SuperSnow:
+		return "Snow"
+	case SuperWorld:
+		return "World"
+	}
+	return "Unknown"
+}

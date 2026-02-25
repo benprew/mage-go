@@ -1186,6 +1186,18 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		}
 	}
 
+	// Pay additional costs (sacrifice, discard, etc.)
+	if bc, ok := card.(*BaseCard); ok {
+		for _, cost := range bc.AdditionalCosts() {
+			if !cost.CanPay(card.ID(), playerID, g) {
+				return fmt.Errorf("cannot pay additional cost for %s: %s", name, cost.Text())
+			}
+			if err := cost.Pay(card.ID(), playerID, g); err != nil {
+				return err
+			}
+		}
+	}
+
 	// Remove from hand
 	p.RemoveFromHand(card.ID())
 
@@ -1422,6 +1434,17 @@ func (g *Game) CheckStateBasedActions() {
 			g.DestroyPermanent(a)
 		}
 
+		// Equipment attached to a non-creature becomes unattached
+		for _, p := range g.Battlefield {
+			if p.HasSubType("Equipment") && p.IsAttached() {
+				host := g.FindPermanent(p.AttachedTo)
+				if host != nil && !host.HasType(TypeCreature) {
+					p.AttachedTo = uuid.Nil
+					actions = true
+				}
+			}
+		}
+
 		// Sacrifice creatures that require a land type the controller doesn't have
 		var toSacrifice []*Permanent
 		for _, p := range g.Battlefield {
@@ -1449,6 +1472,51 @@ func (g *Game) CheckStateBasedActions() {
 		}
 		for _, p := range toSacrifice {
 			g.Sacrifice(p)
+		}
+
+		// MTG rule 704.5j: Legend rule — if a player controls two or more legendary
+		// permanents with the same name, they choose one and sacrifice the rest.
+		legendCounts := make(map[uuid.UUID]map[string][]*Permanent) // controller -> name -> perms
+		for _, p := range g.Battlefield {
+			if p.Card.HasSuperType(SuperLegendary) {
+				if legendCounts[p.Controller] == nil {
+					legendCounts[p.Controller] = make(map[string][]*Permanent)
+				}
+				legendCounts[p.Controller][p.Name()] = append(legendCounts[p.Controller][p.Name()], p)
+			}
+		}
+		for ctrlID, byName := range legendCounts {
+			for _, perms := range byName {
+				if len(perms) > 1 {
+					player := g.GetPlayer(ctrlID)
+					keep := player.ChoosePermanent(perms, "legend rule: keep one", g)
+					for _, p := range perms {
+						if p != keep {
+							g.Sacrifice(p)
+						}
+					}
+					actions = true
+				}
+			}
+		}
+
+		// MTG rule 704.5k: World rule — if two or more permanents have the World
+		// supertype, all except the most recent one are put into their owners' graveyards.
+		var worldPerms []*Permanent
+		for _, p := range g.Battlefield {
+			if p.Card.HasSuperType(SuperWorld) {
+				worldPerms = append(worldPerms, p)
+			}
+		}
+		if len(worldPerms) > 1 {
+			// Keep the most recently entered one (last in Battlefield slice)
+			keep := worldPerms[len(worldPerms)-1]
+			for _, p := range worldPerms {
+				if p != keep {
+					g.PutPermanentIntoGraveyard(p)
+				}
+			}
+			actions = true
 		}
 
 		// MTG rule 704.5b: player who attempted to draw from empty library loses
@@ -1482,6 +1550,8 @@ func (g *Game) RunStep(step PhaseStep) {
 		g.DoUpkeep()
 	case Draw:
 		g.DoDraw()
+	case BeginCombat:
+		g.DoBeginCombat()
 	case DeclareAttackers:
 		g.doDeclareAttackers()
 	case DeclareBlockers:
@@ -1507,6 +1577,16 @@ func (g *Game) RunStep(step PhaseStep) {
 	g.CheckStateBasedActions()
 
 	// Resolve stack
+	g.ResolveStack()
+}
+
+func (g *Game) DoBeginCombat() {
+	active := g.ActivePlayerObj()
+	g.FireEvent(GameEvent{
+		Type:     EvtBeginCombat,
+		PlayerID: active.PlayerID(),
+	})
+	g.PutTriggersOnStack()
 	g.ResolveStack()
 }
 
@@ -1798,6 +1878,14 @@ func (g *Game) DoCleanup() {
 	for _, p := range g.Battlefield {
 		// Clear activation tracking (Charge counters used for per-turn counts)
 		delete(p.Counters, Charge)
+	}
+	// MTG 514.3a: if triggers fire during cleanup, put them on stack,
+	// resolve, then do another cleanup step.
+	g.PutTriggersOnStack()
+	if !g.Stack.IsEmpty() {
+		g.ResolveStack()
+		g.CheckStateBasedActions()
+		g.DoCleanup()
 	}
 }
 

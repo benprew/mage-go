@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _EventTypeName = "ZoneChangeCreatureDiedEntersBattlefieldLeavesBattlefieldDeclaredAttackerDeclaredBlockerDamageDealtLifeGainedLifeLostCardDrawnSpellCastAbilityActivatedAttachDetachPutIntoGraveyardFromBattlefieldUpkeepDrawStepEndStepTappedLandPlayedBlockersDecl"
+const _EventTypeName = "ZoneChangeCreatureDiedEntersBattlefieldLeavesBattlefieldDeclaredAttackerDeclaredBlockerDamageDealtLifeGainedLifeLostCardDrawnSpellCastAbilityActivatedAttachDetachPutIntoGraveyardFromBattlefieldUpkeepDrawStepBeginCombatEndStepTappedLandPlayedBlockersDecl"
 
-var _EventTypeIndex = [...]uint16{0, 10, 22, 39, 56, 72, 87, 98, 108, 116, 125, 134, 150, 156, 162, 193, 199, 207, 214, 220, 230, 242}
+var _EventTypeIndex = [...]uint8{0, 10, 22, 39, 56, 72, 87, 98, 108, 116, 125, 134, 150, 156, 162, 193, 199, 207, 218, 225, 231, 241, 253}
 
-const _EventTypeLowerName = "zonechangecreaturediedentersbattlefieldleavesbattlefielddeclaredattackerdeclaredblockerdamagedealtlifegainedlifelostcarddrawnspellcastabilityactivatedattachdetachputintograveyardfrombattlefieldupkeepdrawstependsteptappedlandplayedblockersdecl"
+const _EventTypeLowerName = "zonechangecreaturediedentersbattlefieldleavesbattlefielddeclaredattackerdeclaredblockerdamagedealtlifegainedlifelostcarddrawnspellcastabilityactivatedattachdetachputintograveyardfrombattlefieldupkeepdrawstepbegincombatendsteptappedlandplayedblockersdecl"
 
 func (i EventType) String() string {
 	if i < 0 || i >= EventType(len(_EventTypeIndex)-1) {
@@ -20,6 +20,8 @@ func (i EventType) String() string {
 	return _EventTypeName[_EventTypeIndex[i]:_EventTypeIndex[i+1]]
 }
 
+// An "invalid array index" compiler error signifies that the constant values have changed.
+// Re-run the stringer command to generate them again.
 func _EventTypeNoOp() {
 	var x [1]struct{}
 	_ = x[EvtZoneChange-(0)]
@@ -39,13 +41,14 @@ func _EventTypeNoOp() {
 	_ = x[EvtPutIntoGraveyardFromBattlefield-(14)]
 	_ = x[EvtUpkeep-(15)]
 	_ = x[EvtDrawStep-(16)]
-	_ = x[EvtEndStep-(17)]
-	_ = x[EvtTapped-(18)]
-	_ = x[EvtLandPlayed-(19)]
-	_ = x[EvtBlockersDecl-(20)]
+	_ = x[EvtBeginCombat-(17)]
+	_ = x[EvtEndStep-(18)]
+	_ = x[EvtTapped-(19)]
+	_ = x[EvtLandPlayed-(20)]
+	_ = x[EvtBlockersDecl-(21)]
 }
 
-var _EventTypeValues = []EventType{EvtZoneChange, EvtCreatureDied, EvtEntersBattlefield, EvtLeavesBattlefield, EvtDeclaredAttacker, EvtDeclaredBlocker, EvtDamageDealt, EvtLifeGained, EvtLifeLost, EvtCardDrawn, EvtSpellCast, EvtAbilityActivated, EvtAttach, EvtDetach, EvtPutIntoGraveyardFromBattlefield, EvtUpkeep, EvtDrawStep, EvtEndStep, EvtTapped, EvtLandPlayed, EvtBlockersDecl}
+var _EventTypeValues = []EventType{EvtZoneChange, EvtCreatureDied, EvtEntersBattlefield, EvtLeavesBattlefield, EvtDeclaredAttacker, EvtDeclaredBlocker, EvtDamageDealt, EvtLifeGained, EvtLifeLost, EvtCardDrawn, EvtSpellCast, EvtAbilityActivated, EvtAttach, EvtDetach, EvtPutIntoGraveyardFromBattlefield, EvtUpkeep, EvtDrawStep, EvtBeginCombat, EvtEndStep, EvtTapped, EvtLandPlayed, EvtBlockersDecl}
 
 var _EventTypeNameToValueMap = map[string]EventType{
 	_EventTypeName[0:10]:         EvtZoneChange,
@@ -82,14 +85,16 @@ var _EventTypeNameToValueMap = map[string]EventType{
 	_EventTypeLowerName[193:199]: EvtUpkeep,
 	_EventTypeName[199:207]:      EvtDrawStep,
 	_EventTypeLowerName[199:207]: EvtDrawStep,
-	_EventTypeName[207:214]:      EvtEndStep,
-	_EventTypeLowerName[207:214]: EvtEndStep,
-	_EventTypeName[214:220]:      EvtTapped,
-	_EventTypeLowerName[214:220]: EvtTapped,
-	_EventTypeName[220:230]:      EvtLandPlayed,
-	_EventTypeLowerName[220:230]: EvtLandPlayed,
-	_EventTypeName[230:242]:      EvtBlockersDecl,
-	_EventTypeLowerName[230:242]: EvtBlockersDecl,
+	_EventTypeName[207:218]:      EvtBeginCombat,
+	_EventTypeLowerName[207:218]: EvtBeginCombat,
+	_EventTypeName[218:225]:      EvtEndStep,
+	_EventTypeLowerName[218:225]: EvtEndStep,
+	_EventTypeName[225:231]:      EvtTapped,
+	_EventTypeLowerName[225:231]: EvtTapped,
+	_EventTypeName[231:241]:      EvtLandPlayed,
+	_EventTypeLowerName[231:241]: EvtLandPlayed,
+	_EventTypeName[241:253]:      EvtBlockersDecl,
+	_EventTypeLowerName[241:253]: EvtBlockersDecl,
 }
 
 var _EventTypeNames = []string{
@@ -110,32 +115,39 @@ var _EventTypeNames = []string{
 	_EventTypeName[162:193],
 	_EventTypeName[193:199],
 	_EventTypeName[199:207],
-	_EventTypeName[207:214],
-	_EventTypeName[214:220],
-	_EventTypeName[220:230],
-	_EventTypeName[230:242],
+	_EventTypeName[207:218],
+	_EventTypeName[218:225],
+	_EventTypeName[225:231],
+	_EventTypeName[231:241],
+	_EventTypeName[241:253],
 }
 
+// EventTypeString retrieves an enum value from the enum constants string name.
+// Throws an error if the param is not part of the enum.
 func EventTypeString(s string) (EventType, error) {
 	if val, ok := _EventTypeNameToValueMap[s]; ok {
 		return val, nil
 	}
+
 	if val, ok := _EventTypeNameToValueMap[strings.ToLower(s)]; ok {
 		return val, nil
 	}
 	return 0, fmt.Errorf("%s does not belong to EventType values", s)
 }
 
+// EventTypeValues returns all values of the enum
 func EventTypeValues() []EventType {
 	return _EventTypeValues
 }
 
+// EventTypeStrings returns a slice of all String values of the enum
 func EventTypeStrings() []string {
 	strs := make([]string, len(_EventTypeNames))
 	copy(strs, _EventTypeNames)
 	return strs
 }
 
+// IsAEventType returns "true" if the value is listed in the enum definition. "false" otherwise
 func (i EventType) IsAEventType() bool {
 	for _, v := range _EventTypeValues {
 		if i == v {

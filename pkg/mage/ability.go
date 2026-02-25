@@ -85,6 +85,53 @@ func ProtectionFromColors(cs ...Color) *ProtectionAbility {
 	}
 }
 
+// ProtectionFromCardType creates a static ability granting protection from a card type
+// (e.g. "protection from creatures", "protection from artifacts").
+func ProtectionFromCardType(ct CardType) *ProtectionAbility {
+	return &ProtectionAbility{
+		BaseAbility: BaseAbility{
+			id:          uuid.New(),
+			abilityType: AbilityStatic,
+		},
+		Filter: NewCardFilter(ct.String(), func(card Card) bool {
+			return card.HasType(ct)
+		}),
+	}
+}
+
+// ProtectionFromSubType creates a static ability granting protection from a subtype
+// (e.g. "protection from Goblins", "protection from Zombies").
+func ProtectionFromSubType(subtype string) *ProtectionAbility {
+	return &ProtectionAbility{
+		BaseAbility: BaseAbility{
+			id:          uuid.New(),
+			abilityType: AbilityStatic,
+		},
+		Filter: NewCardFilter(subtype, func(card Card) bool {
+			for _, st := range card.SubTypes() {
+				if st == subtype {
+					return true
+				}
+			}
+			return false
+		}),
+	}
+}
+
+// ProtectionFromAll creates a static ability granting protection from everything
+// (e.g. Progenitus). Matches all cards.
+func ProtectionFromAll() *ProtectionAbility {
+	return &ProtectionAbility{
+		BaseAbility: BaseAbility{
+			id:          uuid.New(),
+			abilityType: AbilityStatic,
+		},
+		Filter: NewCardFilter("everything", func(card Card) bool {
+			return true
+		}),
+	}
+}
+
 // Blocks returns true if this protection prevents interaction with the given card.
 func (pa *ProtectionAbility) Blocks(card Card) bool {
 	return pa.Filter.Match(card)

@@ -336,6 +336,47 @@ func (e *searchLibraryEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
+// searchLibraryToTopEffect lets the controller search their library and put a card on top.
+type searchLibraryToTopEffect struct{}
+
+// SearchLibraryToTop creates an effect that lets the controller search their library for a card
+// and put it on top of their library (e.g. Worldly Tutor, Vampiric Tutor).
+func SearchLibraryToTop() Effect {
+	return &searchLibraryToTopEffect{}
+}
+
+func (e *searchLibraryToTopEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	p := g.GetPlayer(controller)
+	if p == nil {
+		return ErrPlayerNotFound
+	}
+	lib := p.Library()
+	if len(lib) == 0 {
+		return nil
+	}
+	card := p.ChooseCardFromLibrary(lib, "search to top", g)
+	if card == nil {
+		return nil
+	}
+	// Remove the chosen card from library
+	newLib := make([]Card, 0, len(lib))
+	newLib = append(newLib, card)
+	for _, c := range lib {
+		if c.ID() != card.ID() {
+			newLib = append(newLib, c)
+		}
+	}
+	p.SetLibrary(newLib)
+	return nil
+}
+
+func (e *searchLibraryToTopEffect) Text() string {
+	return "search your library for a card and put it on top"
+}
+func (e *searchLibraryToTopEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
+
 // discardHandAndDrawEffect makes each player discard their hand and draw N cards.
 type discardHandAndDrawEffect struct {
 	drawCount int
@@ -421,3 +462,73 @@ func (e *shuffleLibraryEffect) Apply(g GameMutator, sourceID, controller uuid.UU
 
 func (e *shuffleLibraryEffect) Text() string              { return "shuffle your library" }
 func (e *shuffleLibraryEffect) Properties() EffectProperties { return EffectProperties{} }
+
+// putFromHandOntoBattlefieldEffect lets the controller put a card from hand onto the battlefield.
+type putFromHandOntoBattlefieldEffect struct {
+	filter CardFilter
+}
+
+// PutFromHandOntoBattlefield creates an effect that lets the controller put a card from hand
+// onto the battlefield (e.g. Elvish Piper, Show and Tell). Pass a zero CardFilter to allow any card.
+func PutFromHandOntoBattlefield(filter CardFilter) Effect {
+	return &putFromHandOntoBattlefieldEffect{filter: filter}
+}
+
+func (e *putFromHandOntoBattlefieldEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	p := g.GetPlayer(controller)
+	if p == nil {
+		return ErrPlayerNotFound
+	}
+	hand := p.Hand()
+	var candidates []Card
+	for _, c := range hand {
+		if e.filter.Match(c) {
+			candidates = append(candidates, c)
+		}
+	}
+	if len(candidates) == 0 {
+		return nil
+	}
+	chosen := p.ChooseCardFromLibrary(candidates, "put onto battlefield", g)
+	if chosen == nil {
+		return nil
+	}
+	if _, ok := p.RemoveFromHand(chosen.ID()); ok {
+		g.PutOnBattlefield(chosen, controller)
+	}
+	return nil
+}
+
+func (e *putFromHandOntoBattlefieldEffect) Text() string {
+	return "put a card from your hand onto the battlefield"
+}
+func (e *putFromHandOntoBattlefieldEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
+
+// chooseColorEffect lets the controller choose a color and stores it on the source permanent.
+type chooseColorEffect struct {
+	reason string
+}
+
+// ChooseColor creates an effect that asks the controller to choose a color,
+// storing the result on the source permanent's ChosenColor field.
+func ChooseColor(reason string) Effect {
+	return &chooseColorEffect{reason: reason}
+}
+
+func (e *chooseColorEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	p := g.GetPlayer(controller)
+	if p == nil {
+		return ErrPlayerNotFound
+	}
+	perm := g.FindPermanent(sourceID)
+	if perm == nil {
+		return nil
+	}
+	perm.ChosenColor = p.ChooseManaColor(e.reason)
+	return nil
+}
+
+func (e *chooseColorEffect) Text() string              { return "choose a color" }
+func (e *chooseColorEffect) Properties() EffectProperties { return EffectProperties{} }

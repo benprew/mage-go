@@ -11,6 +11,7 @@ const (
 	Charge
 	Mire // Cyclopean Tomb mire counters
 	Wind // Cyclone wind counters
+	Age  // Cumulative upkeep age counters
 )
 
 func (ct CounterType) String() string {
@@ -29,6 +30,8 @@ func (ct CounterType) String() string {
 		return "Mire"
 	case Wind:
 		return "Wind"
+	case Age:
+		return "Age"
 	default:
 		return "Unknown"
 	}
