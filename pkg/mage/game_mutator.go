@@ -84,6 +84,16 @@ type GameMutator interface {
 	CopyEffectCurrentName(uuid.UUID) string
 	UpdateCopyEffect(uuid.UUID, *Permanent)
 
+	// Damage prevention / redirection
+	AddTypePrevention(uuid.UUID, CardType)
+	SetArtifactDamageRedirect(controllerID, permID uuid.UUID)
+
+	// Mana restriction
+	SetArtifactManaOnly(uuid.UUID)
+
+	// Artifact damage tracking
+	GetArtifactDamageTaken(uuid.UUID) int
+
 	// Coin flip
 	FlipCoin(playerID uuid.UUID) bool
 
@@ -236,6 +246,29 @@ func (g *Game) SetSanctuaryActive(playerID uuid.UUID) {
 // SetMinimumLife marks a player as having minimum-life protection (Ali from Cairo).
 func (g *Game) SetMinimumLife(playerID uuid.UUID) {
 	g.Effects.SetMinimumLife(playerID)
+}
+
+// AddTypePrevention adds a card-type damage prevention rule for the player.
+func (g *Game) AddTypePrevention(playerID uuid.UUID, ct CardType) {
+	g.Effects.AddTypePrevention(playerID, ct)
+}
+
+// SetArtifactDamageRedirect sets a creature that absorbs artifact damage dealt to a player.
+func (g *Game) SetArtifactDamageRedirect(controllerID, permID uuid.UUID) {
+	g.Effects.SetArtifactDamageRedirect(controllerID, permID)
+}
+
+// SetArtifactManaOnly marks a player as having artifact-only mana restriction active.
+func (g *Game) SetArtifactManaOnly(playerID uuid.UUID) {
+	if g.ArtifactManaOnly == nil {
+		g.ArtifactManaOnly = make(map[uuid.UUID]bool)
+	}
+	g.ArtifactManaOnly[playerID] = true
+}
+
+// GetArtifactDamageTaken returns the artifact damage the player has taken this turn.
+func (g *Game) GetArtifactDamageTaken(playerID uuid.UUID) int {
+	return g.ArtifactDamageTakenThisTurn[playerID]
 }
 
 // CopyEffectCurrentName returns the name of the creature currently being copied

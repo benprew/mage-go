@@ -776,6 +776,16 @@ func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
 	if amount <= 0 {
 		return
 	}
+	// Martyrs of Korlis: redirect artifact damage to creature
+	if sourceCard != nil && sourceCard.HasType(TypeArtifact) {
+		if redirectID := g.Effects.GetArtifactDamageRedirect(p.PlayerID()); redirectID != uuid.Nil {
+			redirectPerm := g.FindPermanent(redirectID)
+			if redirectPerm != nil {
+				g.DealDamageToPermanent(redirectPerm, amount, sourceID)
+				return
+			}
+		}
+	}
 	// Personal Incarnation: redirect all damage to the creature instead
 	if redirectID := g.Effects.GetPlayerDamageRedirect(p.PlayerID()); redirectID != uuid.Nil {
 		redirectPerm := g.FindPermanent(redirectID)

@@ -187,10 +187,11 @@ func (e *targetEffect) Apply(g *Game) error {
 
 // EffectManager manages and applies continuous effects.
 type EffectManager struct {
-	effects    []ContinuousEffect
-	attrDeltas map[uuid.UUID]map[Attr]int // deltas accumulated during Apply(); written to perm.grantedAttrs
-	damage     damageModifiers
-	rules      gameRuleModifiers
+	effects               []ContinuousEffect
+	attrDeltas            map[uuid.UUID]map[Attr]int        // deltas accumulated during Apply(); written to perm.grantedAttrs
+	blockPairRestrictions map[uuid.UUID]map[uuid.UUID]bool  // attacker -> set of blockers that can't block it; reset each Apply
+	damage                damageModifiers
+	rules                 gameRuleModifiers
 }
 
 // damageModifiers groups EffectManager fields related to damage prevention,
@@ -199,13 +200,15 @@ type damageModifiers struct {
 	regenerationShields    map[uuid.UUID]int
 	preventionShields      map[uuid.UUID]int
 	preventionRules        []damagePreventionRule
-	colorPrevention        map[uuid.UUID][]Color   // player -> colors that prevent next damage source
-	reverseDamageShields   map[uuid.UUID]bool      // players with Reverse Damage active this turn
-	forcefieldShields      map[uuid.UUID]bool      // players with Forcefield active this turn
-	preventCombatDamage    bool                    // true if all combat damage is prevented this turn (Fog, etc.)
-	bodyguard              map[uuid.UUID]uuid.UUID // controller -> bodyguard permanent ID (Veteran Bodyguard)
-	playerDamageRedirect   map[uuid.UUID]uuid.UUID // controller -> creature that absorbs ALL damage to player
-	creatureDamageRedirect map[uuid.UUID]uuid.UUID // creature -> player who receives damage instead of creature (one-shot)
+	colorPrevention        map[uuid.UUID][]Color      // player -> colors that prevent next damage source
+	typePrevention         map[uuid.UUID][]CardType   // player -> card types that prevent next damage source
+	reverseDamageShields   map[uuid.UUID]bool         // players with Reverse Damage active this turn
+	forcefieldShields      map[uuid.UUID]bool         // players with Forcefield active this turn
+	preventCombatDamage    bool                       // true if all combat damage is prevented this turn (Fog, etc.)
+	bodyguard              map[uuid.UUID]uuid.UUID    // controller -> bodyguard permanent ID (Veteran Bodyguard)
+	playerDamageRedirect   map[uuid.UUID]uuid.UUID    // controller -> creature that absorbs ALL damage to player
+	artifactDamageRedirect map[uuid.UUID]uuid.UUID    // controller -> creature that absorbs artifact damage to player (Martyrs of Korlis)
+	creatureDamageRedirect map[uuid.UUID]uuid.UUID    // creature -> player who receives damage instead of creature (one-shot)
 }
 
 // gameRuleModifiers groups EffectManager fields related to game rule modifications.
@@ -214,12 +217,14 @@ type gameRuleModifiers struct {
 	spellCostIncrease  map[Color]int           // color -> additional generic cost for spells of that color
 	spellCostReduction map[Color]int           // color -> generic cost reduction for spells of that color
 	landUntapLimit     int                     // -1 = no limit; >= 0 = max lands that may untap per turn
+	artifactUntapLimit int                     // -1 = no limit; >= 0 = max artifacts that may untap per turn
 	unlimitedLandPlays bool                    // true if a player can play unlimited lands (Fastbond)
 	sanctuaryActive    map[uuid.UUID]bool      // player -> if true, only flying/islandwalk can attack them
 	lichActive         map[uuid.UUID]uuid.UUID // player -> source permanent ID of active Lich
 	skipNextDraw       map[uuid.UUID]bool      // player -> if true, skip normal draw in draw step
 	channelActive      map[uuid.UUID]bool      // players with Channel active this turn
 	minimumLife        map[uuid.UUID]bool      // players whose life can't go below 1 (Ali from Cairo)
+	maxHandSize        map[uuid.UUID]int       // player -> max hand size override (Cursed Rack)
 }
 
 func NewEffectManager() *EffectManager {
@@ -231,20 +236,24 @@ func NewEffectManager() *EffectManager {
 			forcefieldShields:      make(map[uuid.UUID]bool),
 			reverseDamageShields:   make(map[uuid.UUID]bool),
 			colorPrevention:        make(map[uuid.UUID][]Color),
+			typePrevention:         make(map[uuid.UUID][]CardType),
 			bodyguard:              make(map[uuid.UUID]uuid.UUID),
 			playerDamageRedirect:   make(map[uuid.UUID]uuid.UUID),
+			artifactDamageRedirect: make(map[uuid.UUID]uuid.UUID),
 			creatureDamageRedirect: make(map[uuid.UUID]uuid.UUID),
 		},
 		rules: gameRuleModifiers{
-			landUntapLimit:    -1,
-			channelActive:     make(map[uuid.UUID]bool),
+			landUntapLimit:     -1,
+			artifactUntapLimit: -1,
+			channelActive:      make(map[uuid.UUID]bool),
 			spellCostIncrease:  make(map[Color]int),
 			spellCostReduction: make(map[Color]int),
-			sanctuaryActive:   make(map[uuid.UUID]bool),
-			lichActive:        make(map[uuid.UUID]uuid.UUID),
-			skipNextDraw:      make(map[uuid.UUID]bool),
-			manaConversion:    make(map[Color]Color),
+			sanctuaryActive:    make(map[uuid.UUID]bool),
+			lichActive:         make(map[uuid.UUID]uuid.UUID),
+			skipNextDraw:       make(map[uuid.UUID]bool),
+			manaConversion:     make(map[Color]Color),
 			minimumLife:        make(map[uuid.UUID]bool),
+			maxHandSize:        make(map[uuid.UUID]int),
 		},
 	}
 }
@@ -363,6 +372,16 @@ func (em *EffectManager) GetPlayerDamageRedirect(controllerID uuid.UUID) uuid.UU
 	return em.damage.playerDamageRedirect[controllerID]
 }
 
+// SetArtifactDamageRedirect sets a creature that absorbs artifact damage dealt to a player.
+func (em *EffectManager) SetArtifactDamageRedirect(controllerID, permID uuid.UUID) {
+	em.damage.artifactDamageRedirect[controllerID] = permID
+}
+
+// GetArtifactDamageRedirect returns the creature absorbing artifact damage for a player, or uuid.Nil.
+func (em *EffectManager) GetArtifactDamageRedirect(controllerID uuid.UUID) uuid.UUID {
+	return em.damage.artifactDamageRedirect[controllerID]
+}
+
 // SetCreatureDamageRedirect sets a one-shot redirect: next damage dealt to creatureID
 // is dealt to targetPlayerID instead (Jade Monolith).
 func (em *EffectManager) SetCreatureDamageRedirect(creatureID, targetPlayerID uuid.UUID) {
@@ -468,6 +487,51 @@ func (em *EffectManager) IsMinimumLifeActive(playerID uuid.UUID) bool {
 // ClearMinimumLife resets minimum-life state (called when effect source leaves).
 func (em *EffectManager) ClearMinimumLife() {
 	em.rules.minimumLife = make(map[uuid.UUID]bool)
+}
+
+// ArtifactUntapLimit returns the current artifact untap limit. -1 means no limit.
+func (em *EffectManager) ArtifactUntapLimit() int {
+	return em.rules.artifactUntapLimit
+}
+
+// SetArtifactUntapLimit sets the artifact untap limit.
+func (em *EffectManager) SetArtifactUntapLimit(limit int) {
+	em.rules.artifactUntapLimit = limit
+}
+
+// SetMaxHandSize sets the max hand size override for a player.
+func (em *EffectManager) SetMaxHandSize(playerID uuid.UUID, size int) {
+	em.rules.maxHandSize[playerID] = size
+}
+
+// MaxHandSize returns the max hand size for a player (default 7).
+func (em *EffectManager) MaxHandSize(playerID uuid.UUID) int {
+	if size, ok := em.rules.maxHandSize[playerID]; ok {
+		return size
+	}
+	return 7
+}
+
+// AddTypePrevention adds a card-type prevention shield (prevents all damage from one source of that type).
+func (em *EffectManager) AddTypePrevention(playerID uuid.UUID, ct CardType) {
+	em.damage.typePrevention[playerID] = append(em.damage.typePrevention[playerID], ct)
+}
+
+// CheckTypePrevention returns true and consumes a shield if the player has
+// type prevention matching the source's card type.
+func (em *EffectManager) CheckTypePrevention(playerID uuid.UUID, sourceCard Card) bool {
+	types := em.damage.typePrevention[playerID]
+	if len(types) == 0 || sourceCard == nil {
+		return false
+	}
+	for i, shield := range types {
+		if sourceCard.HasType(shield) {
+			// Consume this shield
+			em.damage.typePrevention[playerID] = append(types[:i], types[i+1:]...)
+			return true
+		}
+	}
+	return false
 }
 
 // AddColorPrevention adds a color prevention shield (prevents all damage from one source of that color).
@@ -641,6 +705,26 @@ func (em *EffectManager) RevokeAttr(permID uuid.UUID, a Attr) {
 	em.attrDeltas[permID][a]--
 }
 
+// PreventBlockPair records that the given blocker cannot block the given attacker.
+// Reset each Apply cycle; set by continuous effects (e.g. Argothian Pixies).
+func (em *EffectManager) PreventBlockPair(blockerID, attackerID uuid.UUID) {
+	if em.blockPairRestrictions == nil {
+		em.blockPairRestrictions = make(map[uuid.UUID]map[uuid.UUID]bool)
+	}
+	if em.blockPairRestrictions[attackerID] == nil {
+		em.blockPairRestrictions[attackerID] = make(map[uuid.UUID]bool)
+	}
+	em.blockPairRestrictions[attackerID][blockerID] = true
+}
+
+// IsBlockPrevented returns true if the blocker is prevented from blocking the attacker.
+func (em *EffectManager) IsBlockPrevented(blockerID, attackerID uuid.UUID) bool {
+	if em.blockPairRestrictions == nil {
+		return false
+	}
+	return em.blockPairRestrictions[attackerID][blockerID]
+}
+
 func (em *EffectManager) Add(e ContinuousEffect) {
 	em.effects = append(em.effects, e)
 }
@@ -680,13 +764,17 @@ func (em *EffectManager) RemoveEndOfCombat() {
 // Apply resets computed bonuses and reapplies all active effects in layer order.
 func (em *EffectManager) Apply(g *Game) {
 	em.attrDeltas = make(map[uuid.UUID]map[Attr]int)
+	em.blockPairRestrictions = nil
 	em.rules.landUntapLimit = -1
+	em.rules.artifactUntapLimit = -1
 	em.rules.unlimitedLandPlays = false
+	em.rules.maxHandSize = make(map[uuid.UUID]int)
 	em.rules.spellCostIncrease = make(map[Color]int)
 	em.rules.spellCostReduction = make(map[Color]int)
 	em.rules.manaConversion = make(map[Color]Color)
 	em.damage.bodyguard = make(map[uuid.UUID]uuid.UUID)
 	em.damage.playerDamageRedirect = make(map[uuid.UUID]uuid.UUID)
+	em.damage.artifactDamageRedirect = make(map[uuid.UUID]uuid.UUID)
 	em.rules.minimumLife = make(map[uuid.UUID]bool)
 	// Rebuild prevention rules from continuous effects; preserve one-shot rules (e.g. CoP)
 	var oneShotRules []damagePreventionRule

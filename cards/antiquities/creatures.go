@@ -83,10 +83,19 @@ func registerCreatures() {
 	// Creature — Human
 	// As long as Martyrs of Korlis is untapped, all damage that would be dealt to you by
 	// artifacts is dealt to Martyrs of Korlis instead.
-	// XXX: damage redirect from artifacts while untapped
 	Register("Martyrs of Korlis", func() Card {
 		return NewCreature("Martyrs of Korlis", "{3}{W}{W}", 1, 6,
 			WithSubTypes("Human"),
+			WithStaticAbility(
+				FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+					src := g.FindPermanent(sourceID)
+					if src == nil || src.Tapped {
+						return nil
+					}
+					g.Effects.SetArtifactDamageRedirect(src.Controller, src.ID())
+					return nil
+				}),
+			),
 		)
 	})
 
