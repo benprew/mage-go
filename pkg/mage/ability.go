@@ -304,6 +304,25 @@ func ETBWithTargets(effect Effect) *ETBWithTargetsAbility {
 	}
 }
 
+// ETBEffectAbility runs an effect inline during PutOnBattlefield without
+// requiring targets. Used for replacement effects like Primal Clay's form choice.
+type ETBEffectAbility struct {
+	BaseAbility
+	Effect Effect
+}
+
+// ETBEffect creates an ability that runs the given effect unconditionally when
+// this permanent enters the battlefield.
+func ETBEffect(effect Effect) *ETBEffectAbility {
+	return &ETBEffectAbility{
+		BaseAbility: BaseAbility{
+			id:          uuid.New(),
+			abilityType: AbilityStatic,
+		},
+		Effect: effect,
+	}
+}
+
 // GraveyardReturnAbility allows a creature card in the graveyard to return to
 // the battlefield if enough creature cards are above it in the graveyard.
 type GraveyardReturnAbility struct {

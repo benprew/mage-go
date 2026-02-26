@@ -12,6 +12,7 @@ const (
 	Mire // Cyclopean Tomb mire counters
 	Wind // Cyclone wind counters
 	Age  // Cumulative upkeep age counters
+	Doom // Armageddon Clock doom counters
 )
 
 func (ct CounterType) String() string {
@@ -32,6 +33,8 @@ func (ct CounterType) String() string {
 		return "Wind"
 	case Age:
 		return "Age"
+	case Doom:
+		return "Doom"
 	default:
 		return "Unknown"
 	}

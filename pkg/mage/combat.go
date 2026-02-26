@@ -167,6 +167,10 @@ func CanBlock(blocker, attacker *Permanent, g *Game) bool {
 	if attacker.HasKeyword(CantBeBlockedByWalls) && blocker.HasSubType("Wall") {
 		return false
 	}
+	// Per-pair block restrictions from continuous effects (e.g. Argothian Pixies)
+	if g.Effects.IsBlockPrevented(blocker.ID(), attacker.ID()) {
+		return false
+	}
 	// Defender creatures can't attack (checked elsewhere), but they CAN block.
 	// Protection: creature with protection from X can't be blocked by X
 	if attacker.HasProtectionFrom(blocker.Card) {

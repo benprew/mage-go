@@ -266,3 +266,12 @@ func HasPowerGTE(n int) PermanentFilter {
 		return p.CurrentPower(g) >= n
 	})
 }
+
+// IsAuraOnLand matches enchantments (auras) attached to land permanents.
+var IsAuraOnLand = NewPermanentFilter("Aura attached to a land", func(p *Permanent, g *Game) bool {
+	if !p.HasType(TypeEnchantment) || !p.IsAttached() {
+		return false
+	}
+	host := g.FindPermanent(p.AttachedTo)
+	return host != nil && host.HasType(TypeLand)
+})

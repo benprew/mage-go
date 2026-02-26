@@ -16,6 +16,7 @@ const (
 	AttrEntersTapped       // set on entry; cleared by PutOnBattlefield after tapping
 	AttrMustAttack         // replaces MustAttack keyword
 	AttrMustBeBlocked      // replaces MustBeBlocked keyword
+	AttrMayNotUntap        // player may choose not to untap during untap step
 
 	// Type-identity attrs (battlefield) — replaces TypesAdded []CardType on Permanent.
 	AttrIsCreature
@@ -89,6 +90,8 @@ func (a Attr) String() string {
 		return "Must Attack"
 	case AttrMustBeBlocked:
 		return "Must Be Blocked"
+	case AttrMayNotUntap:
+		return "May Not Untap"
 	case AttrIsCreature:
 		return "IsCreature"
 	case AttrIsLand:

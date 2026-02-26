@@ -293,7 +293,11 @@ func (e *preventDamageToTargetEffect) Apply(g GameMutator, sourceID, controller 
 		g.AddPreventionShield(perm.ID(), amount)
 		return nil
 	}
-	// Could also prevent damage to player - not implemented yet
+	// Prevent damage to player
+	player := g.GetPlayer(targets[0])
+	if player != nil {
+		g.AddPreventionShield(player.PlayerID(), amount)
+	}
 	return nil
 }
 

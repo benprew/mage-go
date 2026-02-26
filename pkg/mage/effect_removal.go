@@ -119,6 +119,32 @@ func DestroyAllCreatures() Effect {
 	return DestroyAllMatching(IsCreature, "destroy all creatures")
 }
 
+// destroyAllMatchingNoRegenEffect destroys all matching permanents with "can't be regenerated".
+type destroyAllMatchingNoRegenEffect struct {
+	filter PermanentFilter
+	text   string
+}
+
+// DestroyAllMatchingNoRegen creates an effect that destroys all permanents matching the filter.
+// The destroyed permanents can't be regenerated (e.g. Shatterstorm).
+func DestroyAllMatchingNoRegen(filter PermanentFilter, text string) Effect {
+	return &destroyAllMatchingNoRegenEffect{filter: filter, text: text}
+}
+
+func (e *destroyAllMatchingNoRegenEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	toDestroy := g.FilterBattlefield(And(e.filter, Not(HasKeywordFilter(Indestructible))))
+	for _, p := range toDestroy {
+		p.GrantBaseAttr(CantRegenerate)
+		g.DestroyPermanent(p)
+	}
+	return nil
+}
+
+func (e *destroyAllMatchingNoRegenEffect) Text() string { return e.text }
+func (e *destroyAllMatchingNoRegenEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment, Mass: true}
+}
+
 // exileTargetEffect exiles a target permanent (removes from game).
 type exileTargetEffect struct{}
 

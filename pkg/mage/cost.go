@@ -1,10 +1,11 @@
 package mage
 
 import (
-	. "github.com/mage/mage/pkg/mage/core"
 	"fmt"
+	"math/rand"
 
 	"github.com/google/uuid"
+	. "github.com/mage/mage/pkg/mage/core"
 )
 
 // Cost represents a cost to pay for a spell or ability.
@@ -158,6 +159,44 @@ func (c *lifePayCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 func (c *lifePayCost) Text() string {
 	return fmt.Sprintf("Pay %d life", c.amount)
 }
+
+// sacrificeArtifactCost requires sacrificing an artifact you control.
+type sacrificeArtifactCost struct{}
+
+// SacrificeArtifactCost creates a cost that requires sacrificing an artifact you control (other than the source).
+func SacrificeArtifactCost() Cost {
+	return &sacrificeArtifactCost{}
+}
+
+func (c *sacrificeArtifactCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+	for _, p := range g.Battlefield {
+		if p.Controller == controller && p.HasType(TypeArtifact) && p.ID() != sourceID {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *sacrificeArtifactCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
+	var candidates []*Permanent
+	for _, p := range g.Battlefield {
+		if p.Controller == controller && p.HasType(TypeArtifact) && p.ID() != sourceID {
+			candidates = append(candidates, p)
+		}
+	}
+	if len(candidates) == 0 {
+		return fmt.Errorf("no artifact to sacrifice")
+	}
+	player := g.GetPlayer(controller)
+	chosen := player.ChoosePermanent(candidates, "sacrifice artifact cost", g)
+	if chosen == nil {
+		return fmt.Errorf("no artifact chosen")
+	}
+	g.Sacrifice(chosen)
+	return nil
+}
+
+func (c *sacrificeArtifactCost) Text() string { return "Sacrifice an artifact" }
 
 // sacrificeCreatureCost requires sacrificing a creature you control.
 type sacrificeCreatureCost struct{}
@@ -368,3 +407,94 @@ func (c *returnToHandCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 }
 
 func (c *returnToHandCost) Text() string { return "Return a permanent you control to its owner's hand" }
+
+// exileSourceCost requires exiling the source permanent.
+type exileSourceCost struct{}
+
+// ExileSourceCost creates a cost that requires exiling the source permanent.
+func ExileSourceCost() Cost { return &exileSourceCost{} }
+
+func (c *exileSourceCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+	return g.FindPermanent(sourceID) != nil
+}
+
+func (c *exileSourceCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
+	p := g.FindPermanent(sourceID)
+	if p == nil {
+		return ErrSourceNotFound
+	}
+	g.ExilePermanent(p)
+	return nil
+}
+
+func (c *exileSourceCost) Text() string { return "Exile ~" }
+
+// xManaCost requires paying X generic mana, where X is set by the game/harness.
+type xManaCost struct{}
+
+// XManaCost creates a cost that requires paying X generic mana.
+// The X value must be set on g.CurrentX before activation.
+func XManaCost() Cost { return &xManaCost{} }
+
+func (c *xManaCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+	return true // X can always be 0
+}
+
+func (c *xManaCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
+	x := g.CurrentX
+	if x <= 0 {
+		return nil
+	}
+	p := g.GetPlayer(controller)
+	if p == nil {
+		return ErrPlayerNotFound
+	}
+	mc := ManaCost{Generic: x}
+	if !p.ManaPool().CanPay(mc) {
+		return fmt.Errorf("cannot pay {%d}", x)
+	}
+	return p.ManaPool().Pay(mc)
+}
+
+func (c *xManaCost) Text() string { return "{X}" }
+
+// discardRandomCost requires discarding n cards at random from hand.
+type discardRandomCost struct {
+	amount int
+}
+
+// DiscardRandomCost creates a cost that requires the controller to discard n cards at random.
+func DiscardRandomCost(n int) Cost {
+	return &discardRandomCost{amount: n}
+}
+
+func (c *discardRandomCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+	p := g.GetPlayer(controller)
+	return p != nil && len(p.Hand()) >= c.amount
+}
+
+func (c *discardRandomCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
+	p := g.GetPlayer(controller)
+	if p == nil {
+		return ErrPlayerNotFound
+	}
+	hand := p.Hand()
+	if len(hand) < c.amount {
+		return fmt.Errorf("not enough cards in hand to discard")
+	}
+	for i := 0; i < c.amount; i++ {
+		hand = p.Hand()
+		idx := rand.Intn(len(hand))
+		card := hand[idx]
+		p.RemoveFromHand(card.ID())
+		p.AddToGraveyard(card)
+	}
+	return nil
+}
+
+func (c *discardRandomCost) Text() string {
+	if c.amount == 1 {
+		return "Discard a card at random"
+	}
+	return fmt.Sprintf("Discard %d cards at random", c.amount)
+}
