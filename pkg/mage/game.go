@@ -547,7 +547,7 @@ func (g *Game) DestroyPermanent(perm *Permanent) {
 		return
 	}
 	// Regeneration replaces destruction: tap, remove damage, remove from combat
-	if !perm.HasKeyword(CantRegenerate) && g.Effects.ConsumeRegenerationShield(perm.ID()) {
+	if !perm.HasKeyword(CantRegenerate) && g.Effects.Damage.ConsumeRegenerationShield(perm.ID()) {
 		perm.Tapped = true
 		perm.Damage = 0
 		// Remove from combat if attacking/blocking
@@ -818,20 +818,20 @@ func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
 	}
 	// Check color prevention (Circle of Protection)
 	sourceCard := g.FindCardForDamageSource(sourceID)
-	if g.Effects.CheckColorPrevention(p.PlayerID(), sourceCard) {
+	if g.Effects.Damage.CheckColorPrevention(p.PlayerID(), sourceCard) {
 		return // all damage from this source prevented
 	}
 	// Check type prevention (Circle of Protection: Artifacts)
-	if g.Effects.CheckTypePrevention(p.PlayerID(), sourceCard) {
+	if g.Effects.Damage.CheckTypePrevention(p.PlayerID(), sourceCard) {
 		return // all damage from this source prevented
 	}
 	// Apply damage prevention shield (also used for player)
-	if prevented := g.Effects.PreventDamage(p.PlayerID(), amount); prevented > 0 {
+	if prevented := g.Effects.Damage.PreventDamage(p.PlayerID(), amount); prevented > 0 {
 		amount -= prevented
 		// If there's a "reverse damage" effect, gain life equal to prevented
-		if g.Effects.HasReverseDamageShield(p.PlayerID()) {
+		if g.Effects.Damage.HasReverseDamageShield(p.PlayerID()) {
 			p.GainLife(prevented)
-			g.Effects.ClearReverseDamageShield(p.PlayerID())
+			g.Effects.Damage.ClearReverseDamageShield(p.PlayerID())
 		}
 	}
 	if amount <= 0 {
@@ -839,7 +839,7 @@ func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
 	}
 	// Martyrs of Korlis: redirect artifact damage to creature
 	if sourceCard != nil && sourceCard.HasType(TypeArtifact) {
-		if redirectID := g.Effects.GetArtifactDamageRedirect(p.PlayerID()); redirectID != uuid.Nil {
+		if redirectID := g.Effects.Damage.GetArtifactDamageRedirect(p.PlayerID()); redirectID != uuid.Nil {
 			redirectPerm := g.FindPermanent(redirectID)
 			if redirectPerm != nil {
 				g.DealDamageToPermanent(redirectPerm, amount, sourceID)
@@ -848,7 +848,7 @@ func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
 		}
 	}
 	// Personal Incarnation: redirect all damage to the creature instead
-	if redirectID := g.Effects.GetPlayerDamageRedirect(p.PlayerID()); redirectID != uuid.Nil {
+	if redirectID := g.Effects.Damage.GetPlayerDamageRedirect(p.PlayerID()); redirectID != uuid.Nil {
 		redirectPerm := g.FindPermanent(redirectID)
 		if redirectPerm != nil {
 			g.DealDamageToPermanent(redirectPerm, amount, sourceID)
@@ -899,9 +899,9 @@ func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
 		g.TurnFaceUp(src)
 	}
 	// Eye for an Eye: reflect damage to source's controller
-	if reflectEntry, ok := g.Effects.GetDamageReflection(p.PlayerID()); ok {
+	if reflectEntry, ok := g.Effects.Damage.GetDamageReflection(p.PlayerID()); ok {
 		if reflectEntry.chosenSource == uuid.Nil || reflectEntry.chosenSource == sourceID {
-			g.Effects.ClearDamageReflection(p.PlayerID())
+			g.Effects.Damage.ClearDamageReflection(p.PlayerID())
 			// Find the controller of the original damage source
 			sourceCard := g.FindCardForDamageSource(sourceID)
 			if sourceCard != nil {
@@ -925,20 +925,20 @@ func (g *Game) DealDamageToPermanent(perm *Permanent, amount int, sourceID uuid.
 
 	// if any damage prevention rule blocks this interaction, no damage done.
 	source := g.FindPermanent(sourceID)
-	if g.Effects.CheckDamagePreventionRules(source, perm, g) {
+	if g.Effects.Damage.CheckDamagePreventionRules(source, perm, g) {
 		return
 	}
 
 	// Apply damage prevention shield
-	if prevented := g.Effects.PreventDamage(perm.ID(), amount); prevented > 0 {
+	if prevented := g.Effects.Damage.PreventDamage(perm.ID(), amount); prevented > 0 {
 		amount -= prevented
 	}
 	if amount <= 0 {
 		return
 	}
 	// Jade Monolith: redirect creature damage to a player instead (one-shot)
-	if redirectPlayerID := g.Effects.GetCreatureDamageRedirect(perm.ID()); redirectPlayerID != uuid.Nil {
-		g.Effects.ClearCreatureDamageRedirect(perm.ID())
+	if redirectPlayerID := g.Effects.Damage.GetCreatureDamageRedirect(perm.ID()); redirectPlayerID != uuid.Nil {
+		g.Effects.Damage.ClearCreatureDamageRedirect(perm.ID())
 		targetPlayer := g.GetPlayer(redirectPlayerID)
 		if targetPlayer != nil {
 			g.DealDamageToPlayer(targetPlayer, amount, sourceID)
@@ -1794,7 +1794,7 @@ func (g *Game) DoEndStep() {
 
 func (g *Game) DoUntap() {
 	active := g.ActivePlayerObj()
-	g.Effects.ClearRegenerationShields(active.PlayerID(), g)
+	g.Effects.Damage.ClearRegenerationShields(active.PlayerID(), g)
 	// Island Sanctuary: clear protection at the start of the player's turn
 	g.Effects.ClearSanctuary(active.PlayerID())
 
@@ -1914,8 +1914,8 @@ func (g *Game) doDrawNormalDraw() {
 	}
 
 	// Aladdin's Lamp: replace draw with library peek + choice
-	if count, ok := g.Effects.GetDrawReplacement(active.PlayerID()); ok {
-		g.Effects.ClearDrawReplacement(active.PlayerID())
+	if count, ok := g.Effects.Damage.GetDrawReplacement(active.PlayerID()); ok {
+		g.Effects.Damage.ClearDrawReplacement(active.PlayerID())
 		g.applyDrawReplacement(active, count)
 		return
 	}
@@ -2135,7 +2135,7 @@ func (g *Game) doCleanupActions() bool {
 	}
 	// Remove end-of-turn effects
 	g.Effects.RemoveEndOfTurn()
-	g.Effects.ClearPreventCombatDamage()
+	g.Effects.Damage.ClearPreventCombatDamage()
 	// Clear damage tracking
 	g.DamageDealtBy = make(map[uuid.UUID]map[uuid.UUID]bool)
 	g.DamageTakenThisTurn = make(map[uuid.UUID]int)
@@ -2150,11 +2150,11 @@ func (g *Game) doCleanupActions() bool {
 		p.ClearLastDrawnCard()
 	}
 	// Clear damage prevention and Forcefield shields
-	g.Effects.ClearPreventionShields()
-	g.Effects.ClearDamagePreventionRules()
-	g.Effects.ClearForcefieldShields()
-	g.Effects.ClearAllDrawReplacements()
-	g.Effects.ClearAllDamageReflections()
+	g.Effects.Damage.ClearPreventionShields()
+	g.Effects.Damage.ClearDamagePreventionRules()
+	g.Effects.Damage.ClearForcefieldShields()
+	g.Effects.Damage.ClearAllDrawReplacements()
+	g.Effects.Damage.ClearAllDamageReflections()
 	for _, p := range g.Battlefield {
 		// Clear activation tracking (Charge counters used for per-turn counts)
 		delete(p.Counters, Charge)

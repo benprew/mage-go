@@ -225,7 +225,7 @@ func HasLandwalkEvasion(attacker *Permanent, defenderID uuid.UUID, g *Game) bool
 // old Game.DoCombatDamage method and operates on the Combat receiver so the
 // logic lives alongside the rest of the combat state.
 func (c *Combat) ResolveDamage(g *Game, isFirstStrikeStep bool) {
-	if g.Effects.PreventsCombatDamage() {
+	if g.Effects.Damage.PreventsCombatDamage() {
 		return
 	}
 
@@ -257,10 +257,10 @@ func (c *Combat) ResolveDamage(g *Game, isFirstStrikeStep bool) {
 				defender := g.GetPlayer(group.DefenderID)
 				if defender != nil {
 					dmg := atk.CurrentPower(g)
-					if dmg > 1 && g.Effects.HasForcefieldShield(group.DefenderID) {
+					if dmg > 1 && g.Effects.Damage.HasForcefieldShield(group.DefenderID) {
 						dmg = 1
 					}
-					if bgID := g.Effects.GetBodyguard(group.DefenderID); bgID != uuid.Nil {
+					if bgID := g.Effects.Damage.GetBodyguard(group.DefenderID); bgID != uuid.Nil {
 						bg := g.FindPermanent(bgID)
 						if bg != nil && !bg.Tapped {
 							g.DealDamageToPermanent(bg, dmg, atk.ID())
@@ -462,10 +462,10 @@ func (c *Combat) doBandedAttackDamage(g *Game, bandMemberIDs []uuid.UUID, defend
 			if defender == nil {
 				continue
 			}
-			if dmg > 1 && g.Effects.HasForcefieldShield(defenderID) {
+			if dmg > 1 && g.Effects.Damage.HasForcefieldShield(defenderID) {
 				dmg = 1
 			}
-			if bgID := g.Effects.GetBodyguard(defenderID); bgID != uuid.Nil {
+			if bgID := g.Effects.Damage.GetBodyguard(defenderID); bgID != uuid.Nil {
 				bg := g.FindPermanent(bgID)
 				if bg != nil && !bg.Tapped {
 					g.DealDamageToPermanent(bg, dmg, member.ID())

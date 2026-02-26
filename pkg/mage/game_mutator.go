@@ -185,22 +185,22 @@ func (g *Game) ApplyContinuousEffects() {
 
 // SetPreventCombatDamage flags that all combat damage is prevented this turn.
 func (g *Game) SetPreventCombatDamage() {
-	g.Effects.SetPreventCombatDamage()
+	g.Effects.Damage.SetPreventCombatDamage()
 }
 
 // AddRegenerationShield adds a regeneration shield to the specified permanent.
 func (g *Game) AddRegenerationShield(id uuid.UUID) {
-	g.Effects.AddRegenerationShield(id)
+	g.Effects.Damage.AddRegenerationShield(id)
 }
 
 // AddPreventionShield adds a damage prevention shield to the specified permanent.
 func (g *Game) AddPreventionShield(id uuid.UUID, amount int) {
-	g.Effects.AddPreventionShield(id, amount)
+	g.Effects.Damage.AddPreventionShield(id, amount)
 }
 
 // AddForcefieldShield adds a Forcefield shield for the specified player.
 func (g *Game) AddForcefieldShield(id uuid.UUID) {
-	g.Effects.AddForcefieldShield(id)
+	g.Effects.Damage.AddForcefieldShield(id)
 }
 
 // IsLichActive reports whether the Lich enchantment is active for the player.
@@ -220,12 +220,12 @@ func (g *Game) ClearLich(playerID uuid.UUID) {
 
 // AddColorPrevention adds a color-based damage prevention rule for the player.
 func (g *Game) AddColorPrevention(playerID uuid.UUID, color Color) {
-	g.Effects.AddColorPrevention(playerID, color)
+	g.Effects.Damage.AddColorPrevention(playerID, color)
 }
 
 // AddReverseDamageShield adds a reverse-damage shield for the player.
 func (g *Game) AddReverseDamageShield(playerID uuid.UUID) {
-	g.Effects.AddReverseDamageShield(playerID)
+	g.Effects.Damage.AddReverseDamageShield(playerID)
 }
 
 // SetChannelActive marks the Channel ability as active for the player.
@@ -235,7 +235,7 @@ func (g *Game) SetChannelActive(playerID uuid.UUID) {
 
 // SetCreatureDamageRedirect redirects damage dealt to a creature to a player.
 func (g *Game) SetCreatureDamageRedirect(creatureID, playerID uuid.UUID) {
-	g.Effects.SetCreatureDamageRedirect(creatureID, playerID)
+	g.Effects.Damage.SetCreatureDamageRedirect(creatureID, playerID)
 }
 
 // SetSkipNextDraw sets a flag to skip the next draw step for the player.
@@ -255,22 +255,22 @@ func (g *Game) SetMinimumLife(playerID uuid.UUID) {
 
 // AddTypePrevention adds a card-type damage prevention rule for the player.
 func (g *Game) AddTypePrevention(playerID uuid.UUID, ct CardType) {
-	g.Effects.AddTypePrevention(playerID, ct)
+	g.Effects.Damage.AddTypePrevention(playerID, ct)
 }
 
 // SetArtifactDamageRedirect sets a creature that absorbs artifact damage dealt to a player.
 func (g *Game) SetArtifactDamageRedirect(controllerID, permID uuid.UUID) {
-	g.Effects.SetArtifactDamageRedirect(controllerID, permID)
+	g.Effects.Damage.SetArtifactDamageRedirect(controllerID, permID)
 }
 
 // SetDamageReflection sets a one-shot damage reflection for a player (Eye for an Eye).
 func (g *Game) SetDamageReflection(playerID, eyeSourceID, chosenSourceID uuid.UUID) {
-	g.Effects.SetDamageReflection(playerID, eyeSourceID, chosenSourceID)
+	g.Effects.Damage.SetDamageReflection(playerID, eyeSourceID, chosenSourceID)
 }
 
 // SetDrawReplacement stores a pending draw replacement for a player (Aladdin's Lamp).
 func (g *Game) SetDrawReplacement(playerID uuid.UUID, count int) {
-	g.Effects.SetDrawReplacement(playerID, count)
+	g.Effects.Damage.SetDrawReplacement(playerID, count)
 }
 
 // SetArtifactManaOnly marks a player as having artifact-only mana restriction active.

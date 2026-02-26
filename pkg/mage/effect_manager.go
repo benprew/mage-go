@@ -190,33 +190,8 @@ type EffectManager struct {
 	effects               []ContinuousEffect
 	attrDeltas            map[uuid.UUID]map[Attr]int        // deltas accumulated during Apply(); written to perm.grantedAttrs
 	blockPairRestrictions map[uuid.UUID]map[uuid.UUID]bool  // attacker -> set of blockers that can't block it; reset each Apply
-	damage                damageModifiers
+	Damage                *DamageSystem
 	rules                 gameRuleModifiers
-}
-
-// damageReflectionEntry tracks the Eye for an Eye reflection state for a player.
-type damageReflectionEntry struct {
-	eyeSourceID  uuid.UUID // the Eye for an Eye card (used as damage source attribution)
-	chosenSource uuid.UUID // the source the player chose (uuid.Nil = any source)
-}
-
-// damageModifiers groups EffectManager fields related to damage prevention,
-// redirection, and regeneration.
-type damageModifiers struct {
-	regenerationShields    map[uuid.UUID]int
-	preventionShields      map[uuid.UUID]int
-	preventionRules        []damagePreventionRule
-	colorPrevention        map[uuid.UUID][]Color      // player -> colors that prevent next damage source
-	typePrevention         map[uuid.UUID][]CardType   // player -> card types that prevent next damage source
-	reverseDamageShields   map[uuid.UUID]bool         // players with Reverse Damage active this turn
-	forcefieldShields      map[uuid.UUID]bool         // players with Forcefield active this turn
-	preventCombatDamage    bool                       // true if all combat damage is prevented this turn (Fog, etc.)
-	bodyguard              map[uuid.UUID]uuid.UUID    // controller -> bodyguard permanent ID (Veteran Bodyguard)
-	playerDamageRedirect   map[uuid.UUID]uuid.UUID    // controller -> creature that absorbs ALL damage to player
-	artifactDamageRedirect map[uuid.UUID]uuid.UUID    // controller -> creature that absorbs artifact damage to player (Martyrs of Korlis)
-	creatureDamageRedirect map[uuid.UUID]uuid.UUID    // creature -> player who receives damage instead of creature (one-shot)
-	damageReflection       map[uuid.UUID]damageReflectionEntry // player -> Eye for an Eye reflection info (one-shot)
-	drawReplacement        map[uuid.UUID]int                  // player -> X value for Aladdin's Lamp draw replacement
 }
 
 // gameRuleModifiers groups EffectManager fields related to game rule modifications.
@@ -239,20 +214,7 @@ type gameRuleModifiers struct {
 func NewEffectManager() *EffectManager {
 	return &EffectManager{
 		attrDeltas: make(map[uuid.UUID]map[Attr]int),
-		damage: damageModifiers{
-			regenerationShields:    make(map[uuid.UUID]int),
-			preventionShields:      make(map[uuid.UUID]int),
-			forcefieldShields:      make(map[uuid.UUID]bool),
-			reverseDamageShields:   make(map[uuid.UUID]bool),
-			colorPrevention:        make(map[uuid.UUID][]Color),
-			typePrevention:         make(map[uuid.UUID][]CardType),
-			bodyguard:              make(map[uuid.UUID]uuid.UUID),
-			playerDamageRedirect:   make(map[uuid.UUID]uuid.UUID),
-			artifactDamageRedirect: make(map[uuid.UUID]uuid.UUID),
-			creatureDamageRedirect: make(map[uuid.UUID]uuid.UUID),
-			damageReflection:       make(map[uuid.UUID]damageReflectionEntry),
-			drawReplacement:        make(map[uuid.UUID]int),
-		},
+		Damage:     NewDamageSystem(),
 		rules: gameRuleModifiers{
 			landUntapLimit:     -1,
 			artifactUntapLimit: -1,
@@ -267,21 +229,6 @@ func NewEffectManager() *EffectManager {
 			maxHandSize:        make(map[uuid.UUID]int),
 		},
 	}
-}
-
-// AddForcefieldShield marks a player as having Forcefield active this turn.
-func (em *EffectManager) AddForcefieldShield(playerID uuid.UUID) {
-	em.damage.forcefieldShields[playerID] = true
-}
-
-// HasForcefieldShield returns true if the player has Forcefield active this turn.
-func (em *EffectManager) HasForcefieldShield(playerID uuid.UUID) bool {
-	return em.damage.forcefieldShields[playerID]
-}
-
-// ClearForcefieldShields resets Forcefield shields at end of turn.
-func (em *EffectManager) ClearForcefieldShields() {
-	em.damage.forcefieldShields = make(map[uuid.UUID]bool)
 }
 
 // LandUntapLimit returns the current land untap limit. -1 means no limit.
@@ -358,166 +305,6 @@ func (em *EffectManager) ClearManaConversion() {
 	em.rules.manaConversion = make(map[Color]Color)
 }
 
-// SetBodyguard marks a bodyguard permanent for a player (Veteran Bodyguard).
-func (em *EffectManager) SetBodyguard(controllerID, permID uuid.UUID) {
-	em.damage.bodyguard[controllerID] = permID
-}
-
-// GetBodyguard returns the bodyguard permanent ID for a player, or uuid.Nil if none.
-func (em *EffectManager) GetBodyguard(controllerID uuid.UUID) uuid.UUID {
-	return em.damage.bodyguard[controllerID]
-}
-
-// ClearBodyguard clears the bodyguard for a player.
-func (em *EffectManager) ClearBodyguard(controllerID uuid.UUID) {
-	delete(em.damage.bodyguard, controllerID)
-}
-
-// SetPlayerDamageRedirect sets a creature that absorbs ALL damage dealt to a player.
-func (em *EffectManager) SetPlayerDamageRedirect(controllerID, permID uuid.UUID) {
-	em.damage.playerDamageRedirect[controllerID] = permID
-}
-
-// GetPlayerDamageRedirect returns the creature absorbing damage for a player, or uuid.Nil.
-func (em *EffectManager) GetPlayerDamageRedirect(controllerID uuid.UUID) uuid.UUID {
-	return em.damage.playerDamageRedirect[controllerID]
-}
-
-// SetArtifactDamageRedirect sets a creature that absorbs artifact damage dealt to a player.
-func (em *EffectManager) SetArtifactDamageRedirect(controllerID, permID uuid.UUID) {
-	em.damage.artifactDamageRedirect[controllerID] = permID
-}
-
-// GetArtifactDamageRedirect returns the creature absorbing artifact damage for a player, or uuid.Nil.
-func (em *EffectManager) GetArtifactDamageRedirect(controllerID uuid.UUID) uuid.UUID {
-	return em.damage.artifactDamageRedirect[controllerID]
-}
-
-// SetCreatureDamageRedirect sets a one-shot redirect: next damage dealt to creatureID
-// is dealt to targetPlayerID instead (Jade Monolith).
-func (em *EffectManager) SetCreatureDamageRedirect(creatureID, targetPlayerID uuid.UUID) {
-	em.damage.creatureDamageRedirect[creatureID] = targetPlayerID
-}
-
-// GetCreatureDamageRedirect returns the player who should receive damage instead of a creature, or uuid.Nil.
-func (em *EffectManager) GetCreatureDamageRedirect(creatureID uuid.UUID) uuid.UUID {
-	return em.damage.creatureDamageRedirect[creatureID]
-}
-
-// ClearCreatureDamageRedirect clears the one-shot creature damage redirect.
-func (em *EffectManager) ClearCreatureDamageRedirect(creatureID uuid.UUID) {
-	delete(em.damage.creatureDamageRedirect, creatureID)
-}
-
-// SetDamageReflection sets a one-shot damage reflection for a player (Eye for an Eye).
-// eyeSourceID is the Eye for an Eye card's ID (used as damage source attribution).
-// chosenSourceID is the specific source the player chose (uuid.Nil = any source).
-func (em *EffectManager) SetDamageReflection(playerID, eyeSourceID, chosenSourceID uuid.UUID) {
-	em.damage.damageReflection[playerID] = damageReflectionEntry{
-		eyeSourceID:  eyeSourceID,
-		chosenSource: chosenSourceID,
-	}
-}
-
-// GetDamageReflection returns the reflection entry if reflection is active for the player.
-func (em *EffectManager) GetDamageReflection(playerID uuid.UUID) (damageReflectionEntry, bool) {
-	entry, ok := em.damage.damageReflection[playerID]
-	return entry, ok
-}
-
-// ClearDamageReflection clears the damage reflection for a player.
-func (em *EffectManager) ClearDamageReflection(playerID uuid.UUID) {
-	delete(em.damage.damageReflection, playerID)
-}
-
-// ClearAllDamageReflections resets all damage reflections at end of turn.
-func (em *EffectManager) ClearAllDamageReflections() {
-	em.damage.damageReflection = make(map[uuid.UUID]damageReflectionEntry)
-}
-
-// SetDrawReplacement stores a pending draw replacement for a player (Aladdin's Lamp).
-// count is the number of cards to look at (X value).
-func (em *EffectManager) SetDrawReplacement(playerID uuid.UUID, count int) {
-	em.damage.drawReplacement[playerID] = count
-}
-
-// GetDrawReplacement returns the pending draw replacement count, or 0 if none.
-func (em *EffectManager) GetDrawReplacement(playerID uuid.UUID) (int, bool) {
-	count, ok := em.damage.drawReplacement[playerID]
-	return count, ok
-}
-
-// ClearDrawReplacement clears the pending draw replacement for a player.
-func (em *EffectManager) ClearDrawReplacement(playerID uuid.UUID) {
-	delete(em.damage.drawReplacement, playerID)
-}
-
-// ClearAllDrawReplacements resets all draw replacements at end of turn.
-func (em *EffectManager) ClearAllDrawReplacements() {
-	em.damage.drawReplacement = make(map[uuid.UUID]int)
-}
-
-// AddRegenerationShield increments the regeneration shield count for a permanent.
-func (em *EffectManager) AddRegenerationShield(targetID uuid.UUID) {
-	em.damage.regenerationShields[targetID]++
-}
-
-// ConsumeRegenerationShield returns true and decrements if a shield is available.
-func (em *EffectManager) ConsumeRegenerationShield(targetID uuid.UUID) bool {
-	if em.damage.regenerationShields[targetID] > 0 {
-		em.damage.regenerationShields[targetID]--
-		return true
-	}
-	return false
-}
-
-// ClearRegenerationShields clears all regeneration shields for permanents
-// controlled by the given player (per MTG rules, cleared during untap step).
-func (em *EffectManager) ClearRegenerationShields(playerID uuid.UUID, g *Game) {
-	for _, p := range g.Battlefield {
-		if p.Controller == playerID {
-			delete(em.damage.regenerationShields, p.ID())
-		}
-	}
-}
-
-// AddPreventionShield adds to the damage prevention shield for a permanent.
-func (em *EffectManager) AddPreventionShield(targetID uuid.UUID, amount int) {
-	em.damage.preventionShields[targetID] += amount
-}
-
-// PreventDamage consumes prevention shields to prevent damage, returning the
-// amount actually prevented.
-func (em *EffectManager) PreventDamage(targetID uuid.UUID, amount int) int {
-	shield := em.damage.preventionShields[targetID]
-	if shield <= 0 {
-		return 0
-	}
-	prevented := min(amount, shield)
-	em.damage.preventionShields[targetID] -= prevented
-	return prevented
-}
-
-// ClearPreventionShields resets all damage prevention shields.
-func (em *EffectManager) ClearPreventionShields() {
-	em.damage.preventionShields = make(map[uuid.UUID]int)
-}
-
-// AddReverseDamageShield marks a player as having Reverse Damage active.
-func (em *EffectManager) AddReverseDamageShield(playerID uuid.UUID) {
-	em.damage.reverseDamageShields[playerID] = true
-}
-
-// HasReverseDamageShield returns true if the player has Reverse Damage active.
-func (em *EffectManager) HasReverseDamageShield(playerID uuid.UUID) bool {
-	return em.damage.reverseDamageShields[playerID]
-}
-
-// ClearReverseDamageShield clears Reverse Damage shield for a player.
-func (em *EffectManager) ClearReverseDamageShield(playerID uuid.UUID) {
-	delete(em.damage.reverseDamageShields, playerID)
-}
-
 // SetChannelActive marks a player as having Channel active this turn.
 func (em *EffectManager) SetChannelActive(playerID uuid.UUID) {
 	em.rules.channelActive[playerID] = true
@@ -584,109 +371,6 @@ func (em *EffectManager) MaxHandSize(playerID uuid.UUID) int {
 		return size
 	}
 	return 7
-}
-
-// AddTypePrevention adds a card-type prevention shield (prevents all damage from one source of that type).
-func (em *EffectManager) AddTypePrevention(playerID uuid.UUID, ct CardType) {
-	em.damage.typePrevention[playerID] = append(em.damage.typePrevention[playerID], ct)
-}
-
-// CheckTypePrevention returns true and consumes a shield if the player has
-// type prevention matching the source's card type.
-func (em *EffectManager) CheckTypePrevention(playerID uuid.UUID, sourceCard Card) bool {
-	types := em.damage.typePrevention[playerID]
-	if len(types) == 0 || sourceCard == nil {
-		return false
-	}
-	for i, shield := range types {
-		if sourceCard.HasType(shield) {
-			// Consume this shield
-			em.damage.typePrevention[playerID] = append(types[:i], types[i+1:]...)
-			return true
-		}
-	}
-	return false
-}
-
-// AddColorPrevention adds a color prevention shield (prevents all damage from one source of that color).
-func (em *EffectManager) AddColorPrevention(playerID uuid.UUID, color Color) {
-	em.damage.colorPrevention[playerID] = append(em.damage.colorPrevention[playerID], color)
-}
-
-// CheckColorPrevention returns true and consumes a shield if the player has
-// color prevention matching the source's color.
-func (em *EffectManager) CheckColorPrevention(playerID uuid.UUID, sourceCard Card) bool {
-	colors := em.damage.colorPrevention[playerID]
-	if len(colors) == 0 || sourceCard == nil {
-		return false
-	}
-	sourceColors := sourceCard.ManaCost().Colors()
-	for i, shield := range colors {
-		for _, sc := range sourceColors {
-			if sc == shield {
-				// Consume this shield
-				em.damage.colorPrevention[playerID] = append(colors[:i], colors[i+1:]...)
-				return true
-			}
-		}
-	}
-	return false
-}
-
-type damagePreventionRule struct {
-	from    PermanentFilter
-	to      PermanentFilter
-	oneShot bool
-}
-
-type damagePreventionRuleOption func(*damagePreventionRule)
-
-func WithFrom(from PermanentFilter) damagePreventionRuleOption {
-	return func(dpr *damagePreventionRule) {
-		dpr.from = from
-	}
-}
-
-func WithTo(to PermanentFilter) damagePreventionRuleOption {
-	return func(dpr *damagePreventionRule) {
-		dpr.to = to
-	}
-}
-
-func WithOneShot(oneshot bool) damagePreventionRuleOption {
-	return func(dpr *damagePreventionRule) {
-		dpr.oneShot = oneshot
-	}
-}
-
-func (em *EffectManager) AddDamagePreventionRule(opts ...damagePreventionRuleOption) {
-	dpr := &damagePreventionRule{}
-	for _, opt := range opts {
-		opt(dpr)
-	}
-
-	em.damage.preventionRules = append(em.damage.preventionRules, *dpr)
-}
-
-func (em *EffectManager) ClearDamagePreventionRules() {
-	em.damage.preventionRules = make([]damagePreventionRule, 0)
-}
-
-// CheckDamagePreventionRules returns true if any rule matches the given
-// source and target permanents, meaning all damage should be prevented.
-// One-shot rules are consumed on use.
-func (em *EffectManager) CheckDamagePreventionRules(source, target *Permanent, g *Game) bool {
-	for i, rule := range em.damage.preventionRules {
-		fromMatch := rule.from.IsZero() || (source != nil && rule.from.Match(source, g))
-		toMatch := rule.to.Match(target, g)
-		if fromMatch && toMatch {
-			if rule.oneShot {
-				em.damage.preventionRules = append(em.damage.preventionRules[:i], em.damage.preventionRules[i+1:]...)
-			}
-			return true
-		}
-	}
-	return false
 }
 
 // SourceCondition is a predicate checked by preventDamageRuleContinuous to
@@ -756,7 +440,7 @@ func (e *preventDamageRuleContinuous) IsActive(g *Game) bool {
 
 func (e *preventDamageRuleContinuous) Apply(g *Game) error {
 	toFilter := e.toFactory(e.sourceID)
-	g.Effects.AddDamagePreventionRule(WithFrom(e.from), WithTo(toFilter))
+	g.Effects.Damage.AddDamagePreventionRule(WithFrom(e.from), WithTo(toFilter))
 	return nil
 }
 
@@ -846,19 +530,9 @@ func (em *EffectManager) Apply(g *Game) {
 	em.rules.spellCostIncrease = make(map[Color]int)
 	em.rules.spellCostReduction = make(map[Color]int)
 	em.rules.manaConversion = make(map[Color]Color)
-	em.damage.bodyguard = make(map[uuid.UUID]uuid.UUID)
-	em.damage.playerDamageRedirect = make(map[uuid.UUID]uuid.UUID)
-	em.damage.artifactDamageRedirect = make(map[uuid.UUID]uuid.UUID)
 	em.rules.minimumLife = make(map[uuid.UUID]bool)
 	em.rules.expansionCastBlock = nil
-	// Rebuild prevention rules from continuous effects; preserve one-shot rules (e.g. CoP)
-	var oneShotRules []damagePreventionRule
-	for _, r := range em.damage.preventionRules {
-		if r.oneShot {
-			oneShotRules = append(oneShotRules, r)
-		}
-	}
-	em.damage.preventionRules = oneShotRules
+	em.Damage.ResetPerCycle()
 
 	// Reset granted runtime abilities, subtype overrides, and grantedAttrs from effects.
 	for _, p := range g.Battlefield {
@@ -935,21 +609,6 @@ func (em *EffectManager) SpellCostIncrease(c Color) int {
 // SpellCostReduction returns the generic cost reduction for spells of the given color.
 func (em *EffectManager) SpellCostReduction(c Color) int {
 	return em.rules.spellCostReduction[c]
-}
-
-// SetPreventCombatDamage marks all combat damage as prevented this turn (Fog, etc.).
-func (em *EffectManager) SetPreventCombatDamage() {
-	em.damage.preventCombatDamage = true
-}
-
-// PreventsCombatDamage returns true if all combat damage is prevented this turn.
-func (em *EffectManager) PreventsCombatDamage() bool {
-	return em.damage.preventCombatDamage
-}
-
-// ClearPreventCombatDamage resets combat damage prevention at end of turn.
-func (em *EffectManager) ClearPreventCombatDamage() {
-	em.damage.preventCombatDamage = false
 }
 
 // grantedByEffect is a marker wrapper to identify abilities granted by continuous effects.

@@ -92,7 +92,7 @@ func registerCreatures() {
 					if src == nil || src.Tapped {
 						return nil
 					}
-					g.Effects.SetArtifactDamageRedirect(src.Controller, src.ID())
+					g.Effects.Damage.SetArtifactDamageRedirect(src.Controller, src.ID())
 					return nil
 				}),
 			),

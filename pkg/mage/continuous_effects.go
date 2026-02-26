@@ -525,7 +525,7 @@ func BodyguardContinuous() ContinuousEffect {
 		if src == nil {
 			return nil
 		}
-		g.Effects.SetBodyguard(src.Controller, src.ID())
+		g.Effects.Damage.SetBodyguard(src.Controller, src.ID())
 		return nil
 	}, SourceUntapped)
 }
@@ -539,7 +539,7 @@ func PersonalIncarnationRedirect() ContinuousEffect {
 		if src == nil {
 			return nil
 		}
-		g.Effects.SetPlayerDamageRedirect(src.Controller, src.ID())
+		g.Effects.Damage.SetPlayerDamageRedirect(src.Controller, src.ID())
 		return nil
 	})
 }
