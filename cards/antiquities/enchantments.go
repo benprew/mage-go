@@ -96,8 +96,8 @@ func registerEnchantments() {
 			WithStaticAbility(
 				FuncContinuousEffect(LayerAbility, WhileOnBattlefield,
 					func(g *Game, _ uuid.UUID) error {
-						if g.Effects.ArtifactUntapLimit() < 0 || 1 < g.Effects.ArtifactUntapLimit() {
-							g.Effects.SetArtifactUntapLimit(1)
+						if g.Effects.Rules.ArtifactUntapMax < 0 || 1 < g.Effects.Rules.ArtifactUntapMax {
+							g.Effects.Rules.ArtifactUntapMax = 1
 						}
 						return nil
 					}),

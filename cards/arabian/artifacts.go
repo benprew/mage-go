@@ -165,7 +165,7 @@ func registerArtifacts() {
 			WithStaticAbility(
 				FuncContinuousEffect(LayerAbility, WhileOnBattlefield,
 					func(g *Game, sourceID uuid.UUID) error {
-						g.Effects.AddExpansionCastBlock(expansionName)
+						g.Effects.Rules.AddExpansionCastBlock(expansionName)
 						return nil
 					},
 				),

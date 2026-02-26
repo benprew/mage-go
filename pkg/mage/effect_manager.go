@@ -191,186 +191,15 @@ type EffectManager struct {
 	attrDeltas            map[uuid.UUID]map[Attr]int        // deltas accumulated during Apply(); written to perm.grantedAttrs
 	blockPairRestrictions map[uuid.UUID]map[uuid.UUID]bool  // attacker -> set of blockers that can't block it; reset each Apply
 	Damage                *DamageSystem
-	rules                 gameRuleModifiers
-}
-
-// gameRuleModifiers groups EffectManager fields related to game rule modifications.
-type gameRuleModifiers struct {
-	manaConversion     map[Color]Color         // from color -> to color (Sunglasses of Urza)
-	spellCostIncrease  map[Color]int           // color -> additional generic cost for spells of that color
-	spellCostReduction map[Color]int           // color -> generic cost reduction for spells of that color
-	landUntapLimit     int                     // -1 = no limit; >= 0 = max lands that may untap per turn
-	artifactUntapLimit int                     // -1 = no limit; >= 0 = max artifacts that may untap per turn
-	unlimitedLandPlays bool                    // true if a player can play unlimited lands (Fastbond)
-	sanctuaryActive    map[uuid.UUID]bool      // player -> if true, only flying/islandwalk can attack them
-	lichActive         map[uuid.UUID]uuid.UUID // player -> source permanent ID of active Lich
-	skipNextDraw       map[uuid.UUID]bool      // player -> if true, skip normal draw in draw step
-	channelActive      map[uuid.UUID]bool      // players with Channel active this turn
-	minimumLife        map[uuid.UUID]bool      // players whose life can't go below 1 (Ali from Cairo)
-	maxHandSize        map[uuid.UUID]int       // player -> max hand size override (Cursed Rack)
-	expansionCastBlock []string                // expansion names blocked from casting/playing
+	Rules                 *GameRules
 }
 
 func NewEffectManager() *EffectManager {
 	return &EffectManager{
 		attrDeltas: make(map[uuid.UUID]map[Attr]int),
 		Damage:     NewDamageSystem(),
-		rules: gameRuleModifiers{
-			landUntapLimit:     -1,
-			artifactUntapLimit: -1,
-			channelActive:      make(map[uuid.UUID]bool),
-			spellCostIncrease:  make(map[Color]int),
-			spellCostReduction: make(map[Color]int),
-			sanctuaryActive:    make(map[uuid.UUID]bool),
-			lichActive:         make(map[uuid.UUID]uuid.UUID),
-			skipNextDraw:       make(map[uuid.UUID]bool),
-			manaConversion:     make(map[Color]Color),
-			minimumLife:        make(map[uuid.UUID]bool),
-			maxHandSize:        make(map[uuid.UUID]int),
-		},
+		Rules:      NewGameRules(),
 	}
-}
-
-// LandUntapLimit returns the current land untap limit. -1 means no limit.
-func (em *EffectManager) LandUntapLimit() int {
-	return em.rules.landUntapLimit
-}
-
-// HasUnlimitedLandPlays returns true if a player can play unlimited lands this turn.
-func (em *EffectManager) HasUnlimitedLandPlays() bool {
-	return em.rules.unlimitedLandPlays
-}
-
-// SetSanctuaryActive marks a player as protected by Island Sanctuary.
-func (em *EffectManager) SetSanctuaryActive(playerID uuid.UUID) {
-	em.rules.sanctuaryActive[playerID] = true
-}
-
-// IsSanctuaryActive returns true if the player is protected by Island Sanctuary.
-func (em *EffectManager) IsSanctuaryActive(playerID uuid.UUID) bool {
-	return em.rules.sanctuaryActive[playerID]
-}
-
-// ClearSanctuary clears Island Sanctuary protection for a player.
-func (em *EffectManager) ClearSanctuary(playerID uuid.UUID) {
-	delete(em.rules.sanctuaryActive, playerID)
-}
-
-// SetLichActive records the source permanent ID of a Lich controlled by playerID.
-func (em *EffectManager) SetLichActive(playerID, sourceID uuid.UUID) {
-	em.rules.lichActive[playerID] = sourceID
-}
-
-// IsLichActive returns true if the player has an active Lich still on the battlefield.
-func (em *EffectManager) IsLichActive(g *Game, playerID uuid.UUID) bool {
-	sourceID, ok := em.rules.lichActive[playerID]
-	if !ok {
-		return false
-	}
-	return g.FindPermanent(sourceID) != nil
-}
-
-// ClearLich clears Lich replacement effects for a player.
-func (em *EffectManager) ClearLich(playerID uuid.UUID) {
-	delete(em.rules.lichActive, playerID)
-}
-
-// SetSkipNextDraw marks a player to skip their next draw step draw.
-func (em *EffectManager) SetSkipNextDraw(playerID uuid.UUID) {
-	em.rules.skipNextDraw[playerID] = true
-}
-
-// ShouldSkipDraw returns true and clears the flag if the player should skip their draw.
-func (em *EffectManager) ShouldSkipDraw(playerID uuid.UUID) bool {
-	if em.rules.skipNextDraw[playerID] {
-		delete(em.rules.skipNextDraw, playerID)
-		return true
-	}
-	return false
-}
-
-// SetManaConversion sets a mana color conversion (e.g. Red→White for Sunglasses of Urza).
-func (em *EffectManager) SetManaConversion(from, to Color) {
-	em.rules.manaConversion[from] = to
-}
-
-// GetManaConversion returns the converted color for a given color, if any.
-func (em *EffectManager) GetManaConversion(from Color) (Color, bool) {
-	to, ok := em.rules.manaConversion[from]
-	return to, ok
-}
-
-// ClearManaConversion clears all mana conversions.
-func (em *EffectManager) ClearManaConversion() {
-	em.rules.manaConversion = make(map[Color]Color)
-}
-
-// SetChannelActive marks a player as having Channel active this turn.
-func (em *EffectManager) SetChannelActive(playerID uuid.UUID) {
-	em.rules.channelActive[playerID] = true
-}
-
-// IsChannelActive returns true if the player has Channel active.
-func (em *EffectManager) IsChannelActive(playerID uuid.UUID) bool {
-	return em.rules.channelActive[playerID]
-}
-
-// ClearChannelActive clears Channel state (called at end of turn).
-func (em *EffectManager) ClearChannelActive() {
-	em.rules.channelActive = make(map[uuid.UUID]bool)
-}
-
-// SetMinimumLife marks a player as having minimum-life protection (Ali from Cairo).
-func (em *EffectManager) SetMinimumLife(playerID uuid.UUID) {
-	em.rules.minimumLife[playerID] = true
-}
-
-// IsMinimumLifeActive returns true if the player's life can't go below 1.
-func (em *EffectManager) IsMinimumLifeActive(playerID uuid.UUID) bool {
-	return em.rules.minimumLife[playerID]
-}
-
-// ClearMinimumLife resets minimum-life state (called when effect source leaves).
-func (em *EffectManager) ClearMinimumLife() {
-	em.rules.minimumLife = make(map[uuid.UUID]bool)
-}
-
-// AddExpansionCastBlock registers an expansion name as blocked for casting/playing.
-func (em *EffectManager) AddExpansionCastBlock(expansion string) {
-	em.rules.expansionCastBlock = append(em.rules.expansionCastBlock, expansion)
-}
-
-// IsExpansionBlocked returns true if the given expansion is blocked from casting/playing.
-func (em *EffectManager) IsExpansionBlocked(expansion string) bool {
-	for _, e := range em.rules.expansionCastBlock {
-		if e == expansion {
-			return true
-		}
-	}
-	return false
-}
-
-// ArtifactUntapLimit returns the current artifact untap limit. -1 means no limit.
-func (em *EffectManager) ArtifactUntapLimit() int {
-	return em.rules.artifactUntapLimit
-}
-
-// SetArtifactUntapLimit sets the artifact untap limit.
-func (em *EffectManager) SetArtifactUntapLimit(limit int) {
-	em.rules.artifactUntapLimit = limit
-}
-
-// SetMaxHandSize sets the max hand size override for a player.
-func (em *EffectManager) SetMaxHandSize(playerID uuid.UUID, size int) {
-	em.rules.maxHandSize[playerID] = size
-}
-
-// MaxHandSize returns the max hand size for a player (default 7).
-func (em *EffectManager) MaxHandSize(playerID uuid.UUID) int {
-	if size, ok := em.rules.maxHandSize[playerID]; ok {
-		return size
-	}
-	return 7
 }
 
 // SourceCondition is a predicate checked by preventDamageRuleContinuous to
@@ -523,15 +352,7 @@ func (em *EffectManager) RemoveEndOfCombat() {
 func (em *EffectManager) Apply(g *Game) {
 	em.attrDeltas = make(map[uuid.UUID]map[Attr]int)
 	em.blockPairRestrictions = nil
-	em.rules.landUntapLimit = -1
-	em.rules.artifactUntapLimit = -1
-	em.rules.unlimitedLandPlays = false
-	em.rules.maxHandSize = make(map[uuid.UUID]int)
-	em.rules.spellCostIncrease = make(map[Color]int)
-	em.rules.spellCostReduction = make(map[Color]int)
-	em.rules.manaConversion = make(map[Color]Color)
-	em.rules.minimumLife = make(map[uuid.UUID]bool)
-	em.rules.expansionCastBlock = nil
+	em.Rules.ResetPerCycle()
 	em.Damage.ResetPerCycle()
 
 	// Reset granted runtime abilities, subtype overrides, and grantedAttrs from effects.
@@ -579,13 +400,7 @@ func (em *EffectManager) Apply(g *Game) {
 	}
 
 	// Sync mana conversions to all player mana pools
-	for _, p := range g.Players {
-		if len(em.rules.manaConversion) > 0 {
-			p.ManaPool().ManaConversions = em.rules.manaConversion
-		} else {
-			p.ManaPool().ManaConversions = nil
-		}
-	}
+	em.Rules.SyncManaConversions(g.Players)
 
 	// Write attrDeltas accumulated by GrantAttr/RevokeAttr calls during this cycle
 	// into each permanent's grantedAttrs.
@@ -600,16 +415,6 @@ func (em *EffectManager) Apply(g *Game) {
 	}
 }
 
-
-// SpellCostIncrease returns the additional generic cost for spells of the given color.
-func (em *EffectManager) SpellCostIncrease(c Color) int {
-	return em.rules.spellCostIncrease[c]
-}
-
-// SpellCostReduction returns the generic cost reduction for spells of the given color.
-func (em *EffectManager) SpellCostReduction(c Color) int {
-	return em.rules.spellCostReduction[c]
-}
 
 // grantedByEffect is a marker wrapper to identify abilities granted by continuous effects.
 type grantedByEffect struct {

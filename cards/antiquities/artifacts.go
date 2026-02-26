@@ -205,7 +205,7 @@ func registerArtifacts() {
 						}
 						opponent := g.GetOpponent(src.Controller)
 						if opponent != nil {
-							g.Effects.SetMaxHandSize(opponent.PlayerID(), 4)
+							g.Effects.Rules.SetMaxHandSize(opponent.PlayerID(), 4)
 						}
 						return nil
 					}),

@@ -205,17 +205,17 @@ func (g *Game) AddForcefieldShield(id uuid.UUID) {
 
 // IsLichActive reports whether the Lich enchantment is active for the player.
 func (g *Game) IsLichActive(playerID uuid.UUID) bool {
-	return g.Effects.IsLichActive(g, playerID)
+	return g.Effects.Rules.IsLichActive(g, playerID)
 }
 
 // SetLichActive marks the Lich enchantment as active for the player.
 func (g *Game) SetLichActive(playerID, sourceID uuid.UUID) {
-	g.Effects.SetLichActive(playerID, sourceID)
+	g.Effects.Rules.SetLichActive(playerID, sourceID)
 }
 
 // ClearLich removes the Lich enchantment state for the player.
 func (g *Game) ClearLich(playerID uuid.UUID) {
-	g.Effects.ClearLich(playerID)
+	g.Effects.Rules.ClearLich(playerID)
 }
 
 // AddColorPrevention adds a color-based damage prevention rule for the player.
@@ -230,7 +230,7 @@ func (g *Game) AddReverseDamageShield(playerID uuid.UUID) {
 
 // SetChannelActive marks the Channel ability as active for the player.
 func (g *Game) SetChannelActive(playerID uuid.UUID) {
-	g.Effects.SetChannelActive(playerID)
+	g.Effects.Rules.SetChannelActive(playerID)
 }
 
 // SetCreatureDamageRedirect redirects damage dealt to a creature to a player.
@@ -240,17 +240,17 @@ func (g *Game) SetCreatureDamageRedirect(creatureID, playerID uuid.UUID) {
 
 // SetSkipNextDraw sets a flag to skip the next draw step for the player.
 func (g *Game) SetSkipNextDraw(playerID uuid.UUID) {
-	g.Effects.SetSkipNextDraw(playerID)
+	g.Effects.Rules.SetSkipNextDraw(playerID)
 }
 
 // SetSanctuaryActive marks the Ivory Tower sanctuary effect as active.
 func (g *Game) SetSanctuaryActive(playerID uuid.UUID) {
-	g.Effects.SetSanctuaryActive(playerID)
+	g.Effects.Rules.SetSanctuaryActive(playerID)
 }
 
 // SetMinimumLife marks a player as having minimum-life protection (Ali from Cairo).
 func (g *Game) SetMinimumLife(playerID uuid.UUID) {
-	g.Effects.SetMinimumLife(playerID)
+	g.Effects.Rules.SetMinimumLife(playerID)
 }
 
 // AddTypePrevention adds a card-type damage prevention rule for the player.

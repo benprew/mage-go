@@ -720,7 +720,7 @@ func (g *Game) PlayerGainLife(p Player, amount int) {
 	if amount <= 0 {
 		return
 	}
-	if g.Effects.IsLichActive(g, p.PlayerID()) {
+	if g.Effects.Rules.IsLichActive(g, p.PlayerID()) {
 		// Lich replacement: draw cards instead of gaining life
 		for i := 0; i < amount; i++ {
 			p.DrawCard()
@@ -856,7 +856,7 @@ func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
 		}
 	}
 	// Minimum life floor (Ali from Cairo): cap damage so life doesn't go below 1
-	if g.Effects.IsMinimumLifeActive(p.PlayerID()) {
+	if g.Effects.Rules.IsMinimumLifeActive(p.PlayerID()) {
 		maxDamage := p.Life() - 1
 		if maxDamage < 0 {
 			maxDamage = 0
@@ -869,7 +869,7 @@ func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
 		}
 	}
 	// Lich replacement: instead of losing life, sacrifice permanents
-	if g.Effects.IsLichActive(g, p.PlayerID()) {
+	if g.Effects.Rules.IsLichActive(g, p.PlayerID()) {
 		g.sacrificePermanents(p.PlayerID(), amount)
 	} else {
 		p.LoseLife(amount)
@@ -1264,7 +1264,7 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	}
 
 	// Check expansion block (City in a Bottle)
-	if exp := card.Expansion(); exp != "" && g.Effects.IsExpansionBlocked(exp) {
+	if exp := card.Expansion(); exp != "" && g.Effects.Rules.IsExpansionBlocked(exp) {
 		return fmt.Errorf("can't cast %s: expansion %s is blocked", name, exp)
 	}
 	// Check artifact mana restriction (Mishra's Workshop)
@@ -1286,7 +1286,7 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 
 	// Apply spell cost increases (e.g. Gloom)
 	for _, col := range mc.Colors() {
-		increase := g.Effects.SpellCostIncrease(col)
+		increase := g.Effects.Rules.SpellCostIncrease(col)
 		if increase > 0 {
 			mc.Generic += increase
 			break // only apply once per spell
@@ -1295,7 +1295,7 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 
 	// Apply spell cost reductions
 	for _, col := range mc.Colors() {
-		reduction := g.Effects.SpellCostReduction(col)
+		reduction := g.Effects.Rules.SpellCostReduction(col)
 		if reduction > 0 {
 			mc.Generic -= reduction
 			if mc.Generic < 0 {
@@ -1306,7 +1306,7 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	}
 
 	// Channel: pay life for generic/X costs instead of mana
-	if g.Effects.IsChannelActive(playerID) && (mc.Generic > 0 || (mc.HasX && xValue > 0)) {
+	if g.Effects.Rules.IsChannelActive(playerID) && (mc.Generic > 0 || (mc.HasX && xValue > 0)) {
 		// Pay colored portion from pool
 		colorMC := mc
 		colorMC.Generic = 0
@@ -1796,11 +1796,11 @@ func (g *Game) DoUntap() {
 	active := g.ActivePlayerObj()
 	g.Effects.Damage.ClearRegenerationShields(active.PlayerID(), g)
 	// Island Sanctuary: clear protection at the start of the player's turn
-	g.Effects.ClearSanctuary(active.PlayerID())
+	g.Effects.Rules.ClearSanctuary(active.PlayerID())
 
-	landUntapLimit := g.Effects.LandUntapLimit()
+	landUntapLimit := g.Effects.Rules.LandUntapMax
 	landsUntapped := 0
-	artifactUntapLimit := g.Effects.ArtifactUntapLimit()
+	artifactUntapLimit := g.Effects.Rules.ArtifactUntapMax
 	artifactsUntapped := 0
 
 	for _, p := range g.Battlefield {
@@ -1909,7 +1909,7 @@ func (g *Game) doDrawNormalDraw() {
 	}
 
 	// Island Sanctuary: skip the normal draw if flagged
-	if g.Effects.ShouldSkipDraw(active.PlayerID()) {
+	if g.Effects.Rules.ShouldSkipDraw(active.PlayerID()) {
 		return
 	}
 
@@ -1986,7 +1986,7 @@ func (g *Game) doDeclareAttackers() {
 			continue
 		}
 		// Island Sanctuary: only flying or islandwalk creatures can attack
-		if g.Effects.IsSanctuaryActive(defender.PlayerID()) {
+		if g.Effects.Rules.IsSanctuaryActive(defender.PlayerID()) {
 			if !atk.HasKeyword(Flying) && !atk.HasKeyword(Islandwalk) {
 				continue
 			}
@@ -2115,7 +2115,7 @@ func (g *Game) doDeclareBlockers() {
 func (g *Game) doCleanupActions() bool {
 	// Hand size discard: each player discards down to max hand size
 	for _, p := range g.Players {
-		maxHS := g.Effects.MaxHandSize(p.PlayerID())
+		maxHS := g.Effects.Rules.MaxHandSize(p.PlayerID())
 		for len(p.Hand()) > maxHS {
 			chosen := p.ChooseCardsFromHand(1, "discard to hand size", g)
 			if len(chosen) == 0 {
@@ -2223,7 +2223,7 @@ func (g *Game) Run(stopTurn int, stopStep PhaseStep, maxTurns int) {
 // MaxLandPlays returns the maximum number of lands that can be played this turn.
 func (g *Game) MaxLandPlays() int {
 	limit := 1
-	if g.Effects.HasUnlimitedLandPlays() {
+	if g.Effects.Rules.UnlimitedLandPlays {
 		limit = 999
 	}
 	return limit
@@ -2257,7 +2257,7 @@ func (g *Game) playLandCore(playerID, cardID uuid.UUID) error {
 		return fmt.Errorf("card is not a land")
 	}
 	// Check expansion block (City in a Bottle)
-	if exp := card.Expansion(); exp != "" && g.Effects.IsExpansionBlocked(exp) {
+	if exp := card.Expansion(); exp != "" && g.Effects.Rules.IsExpansionBlocked(exp) {
 		p.AddToHand(card)
 		return fmt.Errorf("can't play %s: expansion %s is blocked", card.Name(), exp)
 	}
@@ -2562,7 +2562,7 @@ func (g *Game) CastSpellByID(playerID, cardID uuid.UUID, targets []uuid.UUID, xV
 	}
 
 	// Check expansion block (City in a Bottle)
-	if exp := card.Expansion(); exp != "" && g.Effects.IsExpansionBlocked(exp) {
+	if exp := card.Expansion(); exp != "" && g.Effects.Rules.IsExpansionBlocked(exp) {
 		return fmt.Errorf("can't cast %s: expansion %s is blocked", card.Name(), exp)
 	}
 

@@ -371,7 +371,7 @@ func PreventUntapForMatching(filter PermanentFilter) ContinuousEffect {
 // spells of a given color (e.g. Gloom makes white spells cost {3} more).
 func IncreaseSpellCostForColor(color Color, amount int) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
-		g.Effects.rules.spellCostIncrease[color] += amount
+		g.Effects.Rules.SpellCostIncreases[color] += amount
 		return nil
 	})
 }
@@ -380,7 +380,7 @@ func IncreaseSpellCostForColor(color Color, amount int) ContinuousEffect {
 // spells of a given color (e.g. "Blue spells cost {1} less to cast").
 func ReduceSpellCostForColor(color Color, amount int) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
-		g.Effects.rules.spellCostReduction[color] += amount
+		g.Effects.Rules.SpellCostReductions[color] += amount
 		return nil
 	})
 }
@@ -477,8 +477,8 @@ func BoostSelf(power, toughness int, condition SourceCondition) ContinuousEffect
 // (e.g. Winter Orb). Only active while the source permanent is untapped.
 func LimitLandUntaps(limit int) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
-		if g.Effects.rules.landUntapLimit < 0 || limit < g.Effects.rules.landUntapLimit {
-			g.Effects.rules.landUntapLimit = limit
+		if g.Effects.Rules.LandUntapMax < 0 || limit < g.Effects.Rules.LandUntapMax {
+			g.Effects.Rules.LandUntapMax = limit
 		}
 		return nil
 	}, SourceUntapped)
@@ -503,7 +503,7 @@ func AnimateLands(filter PermanentFilter, power, toughness int) ContinuousEffect
 // Used by Fastbond.
 func AllowUnlimitedLandPlays() ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
-		g.Effects.rules.unlimitedLandPlays = true
+		g.Effects.Rules.UnlimitedLandPlays = true
 		return nil
 	})
 }
@@ -512,7 +512,7 @@ func AllowUnlimitedLandPlays() ContinuousEffect {
 // (e.g. Sunglasses of Urza: red→white).
 func ManaConversion(from, to Color) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
-		g.Effects.SetManaConversion(from, to)
+		g.Effects.Rules.SetManaConversion(from, to)
 		return nil
 	})
 }

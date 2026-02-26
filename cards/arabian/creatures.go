@@ -586,7 +586,7 @@ func registerCreatures() {
 					if perm == nil {
 						return nil
 					}
-					g.Effects.SetMinimumLife(perm.Controller)
+					g.Effects.Rules.SetMinimumLife(perm.Controller)
 					return nil
 				})),
 		)
