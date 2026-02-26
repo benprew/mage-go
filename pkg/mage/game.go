@@ -172,7 +172,21 @@ func (g *Game) NonActivePlayerObj() Player {
 }
 
 // FindPermanent finds a permanent by ID on the battlefield.
+// Phased-out permanents are invisible.
 func (g *Game) FindPermanent(id uuid.UUID) *Permanent {
+	for _, p := range g.Battlefield {
+		if p.PhasedOut {
+			continue
+		}
+		if p.ID() == id {
+			return p
+		}
+	}
+	return nil
+}
+
+// FindPermanentIncludingPhased finds a permanent by ID even if phased out.
+func (g *Game) FindPermanentIncludingPhased(id uuid.UUID) *Permanent {
 	for _, p := range g.Battlefield {
 		if p.ID() == id {
 			return p
@@ -182,8 +196,12 @@ func (g *Game) FindPermanent(id uuid.UUID) *Permanent {
 }
 
 // FindPermanentByName finds a permanent by name on the battlefield (first match).
+// Phased-out permanents are invisible.
 func (g *Game) FindPermanentByName(name string, controller uuid.UUID) *Permanent {
 	for _, p := range g.Battlefield {
+		if p.PhasedOut {
+			continue
+		}
 		if p.Name() == name && p.Controller == controller {
 			return p
 		}
@@ -192,8 +210,12 @@ func (g *Game) FindPermanentByName(name string, controller uuid.UUID) *Permanent
 }
 
 // AnyBattlefield returns true if any permanent on the battlefield matches f.
+// Phased-out permanents are invisible.
 func (g *Game) AnyBattlefield(f PermanentFilter) bool {
 	for _, p := range g.Battlefield {
+		if p.PhasedOut {
+			continue
+		}
 		if f.Match(p, g) {
 			return true
 		}
@@ -202,9 +224,13 @@ func (g *Game) AnyBattlefield(f PermanentFilter) bool {
 }
 
 // FilterBattlefield returns all permanents on the battlefield matching f.
+// Phased-out permanents are invisible.
 func (g *Game) FilterBattlefield(f PermanentFilter) []*Permanent {
 	var result []*Permanent
 	for _, p := range g.Battlefield {
+		if p.PhasedOut {
+			continue
+		}
 		if f.Match(p, g) {
 			result = append(result, p)
 		}
@@ -213,9 +239,13 @@ func (g *Game) FilterBattlefield(f PermanentFilter) []*Permanent {
 }
 
 // CountBattlefield returns the number of permanents on the battlefield matching f.
+// Phased-out permanents are invisible.
 func (g *Game) CountBattlefield(f PermanentFilter) int {
 	n := 0
 	for _, p := range g.Battlefield {
+		if p.PhasedOut {
+			continue
+		}
 		if f.Match(p, g) {
 			n++
 		}

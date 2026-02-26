@@ -24,8 +24,11 @@ type Card interface {
 	SetID(uuid.UUID)
 	HasType(CardType) bool
 	HasSuperType(SuperType) bool
+	HasSubType(string) bool
+	Expansion() string
 	AddType(CardType)
 	AddAbility(Ability)
+	AddSubType(string)
 	CloneFrom(Card)
 	SetBasePT(power, toughness int)
 	SetModes([]string)
@@ -45,6 +48,7 @@ type BaseCard struct {
 	toughness  int
 	isToken        bool
 	modes          []string
+	expansion      string       // set/expansion name (e.g. "Arabian Nights")
 	attrSeeds      map[Attr]int // keyword/attr seeds; NewPermanent copies these to baseAttrs
 	additionalCosts []Cost      // additional costs paid when casting (sacrifice, discard, etc.)
 }
@@ -66,6 +70,7 @@ func (c *BaseCard) Toughness() int        { return c.toughness }
 func (c *BaseCard) Modes() []string         { return c.modes }
 func (c *BaseCard) SetModes(m []string)      { c.modes = m }
 func (c *BaseCard) SetBasePT(p, t int)       { c.power = p; c.toughness = t }
+func (c *BaseCard) Expansion() string           { return c.expansion }
 func (c *BaseCard) SetOwner(id uuid.UUID)    { c.owner = id }
 func (c *BaseCard) SetID(id uuid.UUID)       { c.id = id }
 
@@ -80,6 +85,15 @@ func (c *BaseCard) HasType(t CardType) bool {
 
 func (c *BaseCard) HasSuperType(st SuperType) bool {
 	for _, s := range c.superTypes {
+		if s == st {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *BaseCard) HasSubType(st string) bool {
+	for _, s := range c.subTypes {
 		if s == st {
 			return true
 		}
@@ -116,6 +130,7 @@ func (c *BaseCard) CloneFrom(other Card) {
 		c.modes = make([]string, len(m))
 		copy(c.modes, m)
 	}
+	c.expansion = other.Expansion()
 	if bc, ok := other.(*BaseCard); ok && len(bc.attrSeeds) > 0 {
 		c.attrSeeds = make(map[Attr]int, len(bc.attrSeeds))
 		for k, v := range bc.attrSeeds {
@@ -161,6 +176,10 @@ func WithAdditionalCost(cost Cost) CardOption {
 func (c *BaseCard) AdditionalCosts() []Cost { return c.additionalCosts }
 
 // WithSuperTypes adds supertypes (Legendary, Basic, Snow, World) to a card.
+func WithExpansion(name string) CardOption {
+	return func(c *BaseCard) { c.expansion = name }
+}
+
 func WithSuperTypes(sts ...SuperType) CardOption {
 	return func(c *BaseCard) { c.superTypes = append(c.superTypes, sts...) }
 }
@@ -395,6 +414,7 @@ type Permanent struct {
 	Card       Card
 	Controller uuid.UUID
 	Tapped     bool
+	PhasedOut  bool // true when phased out (treated as though it doesn't exist)
 	Damage     int
 	Counters   map[CounterType]int
 

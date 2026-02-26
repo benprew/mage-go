@@ -15,12 +15,12 @@ func registerArtifacts() {
 	// the top X cards of your library, put all but one of them on the bottom of your
 	// library in a random order, then draw a card. X can't be 0."
 	// XXX: Aladdin's Lamp deferred — needs library peek + draw replacement effect
-	Register("Aladdin's Lamp", func() Card {
+	Register("Aladdin's Lamp", withExpansion(func() Card {
 		return NewArtifact("Aladdin's Lamp", "{10}")
-	})
+	}))
 
 	// Oracle: "{8}, {T}: Aladdin's Ring deals 4 damage to any target."
-	Register("Aladdin's Ring", func() Card {
+	Register("Aladdin's Ring", withExpansion(func() Card {
 		return NewArtifact("Aladdin's Ring", "{8}",
 			WithActivatedAbility(
 				DealDamage(Fixed(4)),
@@ -29,12 +29,12 @@ func registerArtifacts() {
 				WithTarget(TargetAnyTarget()),
 			),
 		)
-	})
+	}))
 
 	// Oracle: "{1}, Sacrifice Bottle of Suleiman: Flip a coin. If you win the flip,
 	// create a 5/5 colorless Djinn artifact creature token with flying. If you lose
 	// the flip, Bottle of Suleiman deals 5 damage to you."
-	Register("Bottle of Suleiman", func() Card {
+	Register("Bottle of Suleiman", withExpansion(func() Card {
 		return NewArtifact("Bottle of Suleiman", "{4}",
 			WithActivatedAbility(
 				FuncEffect("flip coin: 5/5 Djinn or 5 damage",
@@ -56,21 +56,70 @@ func registerArtifacts() {
 				WithCost(SacrificeSourceCost()),
 			),
 		)
-	})
+	}))
 
 	// Oracle: "Whenever one or more other nontoken permanents with a name originally
 	// printed in the Arabian Nights expansion are on the battlefield, their controllers
 	// sacrifice them. Players can't cast spells or play lands with a name originally
 	// printed in the Arabian Nights expansion."
-	// XXX: City in a Bottle skipped — requires set identity tracking
-	Register("City in a Bottle", func() Card {
-		return NewArtifact("City in a Bottle", "{2}")
-	})
+	Register("City in a Bottle", withExpansion(func() Card {
+		return NewArtifact("City in a Bottle", "{2}",
+			// ETB: sacrifice all other nontoken Arabian Nights permanents
+			WithAbility(
+				EntersBattlefieldTrigger(
+					FuncEffect("sacrifice all other Arabian Nights nontoken permanents",
+						EffectProperties{Outcome: OutcomeDetriment},
+						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+							for _, p := range g.FilterBattlefield(HasExpansion(expansionName)) {
+								if p.ID() == sourceID {
+									continue
+								}
+								if p.Card.(*BaseCard).IsToken() {
+									continue
+								}
+								g.Sacrifice(p)
+							}
+							return nil
+						}),
+					false,
+				),
+			),
+			// Whenever any nontoken Arabian Nights permanent enters (not self), sacrifice it
+			WithAbility(
+				NewTriggered(EvtEntersBattlefield, false,
+					FuncEffect("sacrifice entering Arabian Nights permanent",
+						EffectProperties{Outcome: OutcomeDetriment},
+						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+							for _, p := range g.FilterBattlefield(HasExpansion(expansionName)) {
+								if p.ID() == sourceID {
+									continue
+								}
+								if p.Card.(*BaseCard).IsToken() {
+									continue
+								}
+								g.Sacrifice(p)
+							}
+							return nil
+						}),
+				).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+					if evt.SourceID == sourceID {
+						return false // don't trigger on self entering
+					}
+					perm := g.FindPermanent(evt.SourceID)
+					if perm == nil {
+						return false
+					}
+					return perm.Card.Expansion() == expansionName && !perm.Card.(*BaseCard).IsToken()
+				}),
+			),
+		)
+	}))
 
 	// Oracle: "{2}, {T}: Untap target attacking creature you control. Prevent all combat
 	// damage that would be dealt to and dealt by that creature this turn."
-	// XXX: Ebony Horse simplified — untaps and removes from combat but does not prevent combat damage
-	Register("Ebony Horse", func() Card {
+	// Combat damage prevention achieved via RemoveFromCombat — once removed, no damage
+	// is assigned to or by the creature.
+	Register("Ebony Horse", withExpansion(func() Card {
 		return NewArtifact("Ebony Horse", "{3}",
 			WithActivatedAbility(
 				FuncEffect("untap and remove from combat",
@@ -92,10 +141,10 @@ func registerArtifacts() {
 				WithTarget(TargetCreature(IsAttacking)),
 			),
 		)
-	})
+	}))
 
 	// Oracle: "{2}, {T}: Target creature gains flying until end of turn."
-	Register("Flying Carpet", func() Card {
+	Register("Flying Carpet", withExpansion(func() Card {
 		return NewArtifact("Flying Carpet", "{4}",
 			WithActivatedAbility(
 				GrantKeywordUntilEndOfTurn(Flying, SelectTarget),
@@ -104,16 +153,16 @@ func registerArtifacts() {
 				WithTarget(TargetCreature()),
 			),
 		)
-	})
+	}))
 
 	// Oracle: "{2}, {T}, Discard the last card you drew this turn: Draw a card."
 	// XXX: Jandor's Ring deferred — needs "last card drawn this turn" tracking
-	Register("Jandor's Ring", func() Card {
+	Register("Jandor's Ring", withExpansion(func() Card {
 		return NewArtifact("Jandor's Ring", "{6}")
-	})
+	}))
 
 	// Oracle: "{3}, {T}: Untap target creature."
-	Register("Jandor's Saddlebags", func() Card {
+	Register("Jandor's Saddlebags", withExpansion(func() Card {
 		return NewArtifact("Jandor's Saddlebags", "{2}",
 			WithActivatedAbility(
 				UntapTarget(),
@@ -122,32 +171,67 @@ func registerArtifacts() {
 				WithTarget(TargetCreature()),
 			),
 		)
-	})
+	}))
 
 	// Oracle: "Remove Jeweled Bird from your deck before playing if you're not playing
-	// for ante. {T}: Ante Jeweled Bird."
-	// XXX: Jeweled Bird skipped — ante mechanic
-	Register("Jeweled Bird", func() Card {
-		return NewArtifact("Jeweled Bird", "{1}")
-	})
+	// for ante. {T}: Ante Jeweled Bird. If you do, put all other cards you own from
+	// the ante zone into your graveyard, then draw a card."
+	Register("Jeweled Bird", withExpansion(func() Card {
+		return NewArtifact("Jeweled Bird", "{1}",
+			WithActivatedAbility(
+				FuncEffect("ante Jeweled Bird, return other ante to graveyard, draw",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						perm := g.FindPermanent(sourceID)
+						if perm == nil {
+							return nil
+						}
+						card := perm.Card
+						g.RemoveFromBattlefield(perm)
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						// Put Jeweled Bird into ante
+						p.AddToAnte(card)
+						// Move all other cards from ante to graveyard
+						var toReturn []Card
+						for _, c := range p.Ante() {
+							if c.ID() != card.ID() {
+								toReturn = append(toReturn, c)
+							}
+						}
+						for _, c := range toReturn {
+							if removed, ok := p.RemoveFromAnte(c.ID()); ok {
+								p.AddToGraveyard(removed)
+							}
+						}
+						// Draw a card
+						p.DrawCard()
+						return nil
+					}),
+				TapSourceCost(),
+			),
+		)
+	}))
 
 	// Oracle: "{2}: Choose one — Destroy target Aura attached to a land. / The next time
 	// target land would be destroyed this turn, remove all damage marked on it instead."
 	// XXX: Pyramids deferred — needs modal ability + land-destruction prevention
-	Register("Pyramids", func() Card {
+	Register("Pyramids", withExpansion(func() Card {
 		return NewArtifact("Pyramids", "{6}")
-	})
+	}))
 
 	// Oracle: "{5}, {T}, Exile Ring of Ma'rûf: The next time you would draw a card this
 	// turn, instead put a card you own from outside the game into your hand."
 	// XXX: Ring of Ma'rûf skipped — wish/sideboard mechanic
-	Register("Ring of Ma'rûf", func() Card {
+	Register("Ring of Ma'rûf", withExpansion(func() Card {
 		return NewArtifact("Ring of Ma'rûf", "{5}")
-	})
+	}))
 
 	// Oracle: "{2}, {T}: Target creature gains islandwalk until end of turn. When that
 	// creature dies this turn, destroy Sandals of Abdallah."
-	Register("Sandals of Abdallah", func() Card {
+	Register("Sandals of Abdallah", withExpansion(func() Card {
 		return NewArtifact("Sandals of Abdallah", "{4}",
 			WithActivatedAbility(
 				FuncEffect("grant islandwalk, destroy self if creature dies",
@@ -174,5 +258,5 @@ func registerArtifacts() {
 				WithTarget(TargetCreature()),
 			),
 		)
-	})
+	}))
 }

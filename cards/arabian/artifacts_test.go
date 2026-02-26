@@ -125,6 +125,32 @@ func TestEbonyHorse(t *testing.T) {
 	})
 }
 
+func TestCityInABottle(t *testing.T) {
+	t.Run("sacrifices other Arabian Nights permanents when it enters", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Flying Carpet") // Arabian Nights artifact
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "City in a Bottle")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "City in a Bottle")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Flying Carpet is Arabian Nights — should be sacrificed
+		g.AssertPermanentCount(gametest.PlayerB, "Flying Carpet", 0)
+		// City in a Bottle itself stays
+		g.AssertPermanentCount(gametest.PlayerA, "City in a Bottle", 1)
+	})
+
+	t.Run("non-Arabian permanents are unaffected", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // not Arabian
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "City in a Bottle")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "City in a Bottle")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Grizzly Bears stays
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
+	})
+}
+
 func TestSandalsOfAbdallah(t *testing.T) {
 	t.Run("grants_islandwalk", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
@@ -153,5 +179,40 @@ func TestSandalsOfAbdallah(t *testing.T) {
 		// Bears die → Sandals should be destroyed too
 		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
 		g.AssertPermanentCount(gametest.PlayerA, "Sandals of Abdallah", 0)
+	})
+}
+
+func TestJeweledBird(t *testing.T) {
+	t.Run("antes_bird_returns_other_ante_cards_draws", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Jeweled Bird")
+		// Player A has a card in ante (simulating the initial ante)
+		g.AddCard(core.ZoneAnte, gametest.PlayerA, "Grizzly Bears")
+		// Use a non-land card so autoPlayLands doesn't steal it from hand
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Hill Giant")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Jeweled Bird")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Jeweled Bird should be in ante
+		g.AssertAnteCount(gametest.PlayerA, "Jeweled Bird", 1)
+		// Original ante card should be in graveyard
+		g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 1)
+		// Player drew Hill Giant from Bird's effect
+		g.AssertHandCount(gametest.PlayerA, "Hill Giant", 1)
+		// Bird is no longer on battlefield
+		g.AssertPermanentCount(gametest.PlayerA, "Jeweled Bird", 0)
+	})
+
+	t.Run("works_with_empty_ante", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Jeweled Bird")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Hill Giant")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Jeweled Bird")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Bird in ante, drew a card
+		g.AssertAnteCount(gametest.PlayerA, "Jeweled Bird", 1)
+		g.AssertHandCount(gametest.PlayerA, "Hill Giant", 1)
+		g.AssertPermanentCount(gametest.PlayerA, "Jeweled Bird", 0)
 	})
 }

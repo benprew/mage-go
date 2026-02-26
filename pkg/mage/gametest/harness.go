@@ -51,6 +51,7 @@ type activateAction struct {
 	player   PlayerRef
 	permName string
 	targets  []string
+	xValue   int
 }
 
 type counterAction struct {
@@ -116,9 +117,26 @@ func (tg *TestGame) AddCard(zone core.Zone, p PlayerRef, name string, count ...i
 			player.AddToGraveyard(card)
 		case core.ZoneLibrary:
 			player.AddToLibrary(card)
+		case core.ZoneAnte:
+			player.AddToAnte(card)
 		}
 	}
 	return lastID
+}
+
+// AddCardControlledBy adds a card owned by one player but controlled by another on the battlefield.
+func (tg *TestGame) AddCardControlledBy(zone core.Zone, owner PlayerRef, controller PlayerRef, name string) uuid.UUID {
+	tg.t.Helper()
+	ownerPlayer := tg.GetPlayer(owner)
+	controllerPlayer := tg.GetPlayer(controller)
+	card, err := mage.CreateCard(name)
+	if err != nil {
+		tg.t.Fatalf("AddCardControlledBy: %v", err)
+	}
+	card.SetOwner(ownerPlayer.PlayerID())
+	perm := tg.Game.PutOnBattlefield(card, controllerPlayer.PlayerID())
+	perm.RevokeBaseAttr(core.AttrSummonSick)
+	return perm.ID()
 }
 
 // SetLife sets a player's life total.
@@ -194,6 +212,14 @@ func (tg *TestGame) ActivateAbility(turn int, step core.PhaseStep, p PlayerRef, 
 	tg.actionSeq++
 	tg.activateActions = append(tg.activateActions, activateAction{
 		seq: tg.actionSeq, turn: turn, step: step, player: p, permName: permName, targets: targets,
+	})
+}
+
+// ActivateAbilityWithX scripts an ability activation with a specific X value.
+func (tg *TestGame) ActivateAbilityWithX(turn int, step core.PhaseStep, p PlayerRef, permName string, x int, targets ...string) {
+	tg.actionSeq++
+	tg.activateActions = append(tg.activateActions, activateAction{
+		seq: tg.actionSeq, turn: turn, step: step, player: p, permName: permName, targets: targets, xValue: x,
 	})
 }
 
@@ -476,15 +502,7 @@ func (tg *TestGame) autoAddMana() {
 		}
 	}
 
-	for _, aa := range tg.activateActions {
-		player := tg.GetPlayer(aa.player)
-		player.ManaPool().Add(core.White, 5)
-		player.ManaPool().Add(core.Blue, 5)
-		player.ManaPool().Add(core.Black, 5)
-		player.ManaPool().Add(core.Red, 5)
-		player.ManaPool().Add(core.Green, 5)
-		player.ManaPool().Add(core.Colorless, 10)
-	}
+	// Activation mana is added just-in-time in ensureManaForActivate.
 }
 
 func (tg *TestGame) executeOrderedActions(turn int, step core.PhaseStep) {
@@ -548,9 +566,22 @@ func (tg *TestGame) executeSingleCast(ca castAction) {
 	tg.Game.ResolveStack()
 }
 
+func (tg *TestGame) ensureManaForActivate(aa activateAction) {
+	player := tg.GetPlayer(aa.player)
+	pool := player.ManaPool()
+	pool.Add(core.White, 5)
+	pool.Add(core.Blue, 5)
+	pool.Add(core.Black, 5)
+	pool.Add(core.Red, 5)
+	pool.Add(core.Green, 5)
+	pool.Add(core.Colorless, 10)
+}
+
 func (tg *TestGame) executeSingleActivate(aa activateAction) {
 	playerID := tg.getPlayerID(aa.player)
 	targets := tg.resolveTargets(aa.targets, playerID)
+	tg.ensureManaForActivate(aa)
+	tg.Game.CurrentX = aa.xValue
 	err := tg.Game.ActivateAbilityByText(playerID, aa.permName, targets)
 	if err != nil {
 		tg.t.Logf("ActivateAbility %s failed: %v", aa.permName, err)
@@ -602,6 +633,9 @@ func (tg *TestGame) resolveTargets(names []string, controllerID uuid.UUID) []uui
 	for _, name := range names {
 		found := false
 		for _, p := range tg.Battlefield {
+			if p.PhasedOut {
+				continue
+			}
 			if p.Name() == name {
 				targets = append(targets, p.ID())
 				found = true
@@ -761,6 +795,9 @@ func (tg *TestGame) AssertPermanentCount(p PlayerRef, name string, want int) {
 	playerID := tg.getPlayerID(p)
 	got := 0
 	for _, perm := range tg.Battlefield {
+		if perm.PhasedOut {
+			continue
+		}
 		if perm.Name() == name && perm.Controller == playerID {
 			got++
 		}
@@ -953,5 +990,21 @@ func (tg *TestGame) AssertGraveyardOrder(p PlayerRef, names ...string) {
 		if got != want {
 			tg.t.Errorf("AssertGraveyardOrder(%v): position %d: got %q, want %q", p, i, got, want)
 		}
+	}
+}
+
+// AssertAnteCount checks that a player's ante zone contains the expected number
+// of cards with the given name.
+func (tg *TestGame) AssertAnteCount(p PlayerRef, name string, want int) {
+	tg.t.Helper()
+	player := tg.GetPlayer(p)
+	got := 0
+	for _, c := range player.Ante() {
+		if c.Name() == name {
+			got++
+		}
+	}
+	if got != want {
+		tg.t.Errorf("AssertAnteCount(%v, %s): got %d, want %d", p, name, got, want)
 	}
 }

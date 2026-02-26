@@ -13,4 +13,5 @@ const (
 	ZoneStack
 	ZoneExile
 	ZoneCommand
+	ZoneAnte
 )

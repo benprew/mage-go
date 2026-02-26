@@ -17,7 +17,7 @@ func registerEnchantments() {
 	// sacrifice Cyclone unless you pay {G} for each wind counter on it. If you pay,
 	// Cyclone deals damage equal to the number of wind counters on it to each creature
 	// and each player."
-	Register("Cyclone", func() Card {
+	Register("Cyclone", withExpansion(func() Card {
 		return NewEnchantment("Cyclone", "{2}{G}{G}",
 			WithAbility(
 				BeginningOfUpkeepTrigger(
@@ -51,12 +51,12 @@ func registerEnchantments() {
 				),
 			),
 		)
-	})
+	}))
 
 	// Oracle: "At the beginning of your upkeep, destroy the creature with the least power.
 	// It can't be regenerated. If two or more creatures are tied for least power, you choose
 	// one of them. When there are no creatures on the battlefield, sacrifice Drop of Honey."
-	Register("Drop of Honey", func() Card {
+	Register("Drop of Honey", withExpansion(func() Card {
 		return NewEnchantment("Drop of Honey", "{G}",
 			WithAbility(
 				BeginningOfUpkeepTrigger(
@@ -105,13 +105,13 @@ func registerEnchantments() {
 				),
 			),
 		)
-	})
+	}))
 
 	// Oracle: "As Jihad enters, choose a color and an opponent. White creatures get +2/+1
 	// as long as the chosen player controls a nontoken permanent of the chosen color.
 	// When the chosen player controls no nontoken permanents of the chosen color,
 	// sacrifice Jihad."
-	Register("Jihad", func() Card {
+	Register("Jihad", withExpansion(func() Card {
 		return NewEnchantment("Jihad", "{W}{W}{W}",
 			WithAbility(
 				EntersBattlefieldTrigger(
@@ -161,14 +161,13 @@ func registerEnchantments() {
 				}),
 			),
 		)
-	})
+	}))
 
 	// Oracle: "When Oubliette enters, target creature phases out until Oubliette leaves
 	// the battlefield. Tap that creature as it phases in this way."
-	// XXX: Oubliette simplified — uses exile + return on leave instead of true phasing
-	Register("Oubliette", func() Card {
+	Register("Oubliette", withExpansion(func() Card {
 		return NewEnchantment("Oubliette", "{1}{B}{B}",
-			WithETBEffect(FuncEffect("exile target creature until Oubliette leaves",
+			WithETBEffect(FuncEffect("phase out target creature until Oubliette leaves",
 				EffectProperties{Outcome: OutcomeDetriment},
 				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
@@ -179,22 +178,22 @@ func registerEnchantments() {
 					if src == nil || target == nil {
 						return nil
 					}
-					targetOwner := target.Card.Owner()
-					targetCardID := target.Card.ID()
-					g.(*Game).ExilePermanentBy(target, sourceID)
-					src.ControlledPermanent = targetCardID
-					// Register delayed trigger: when Oubliette leaves, return the creature
+					targetID := target.ID()
+					// Phase out the target creature (retains counters, auras, etc.)
+					target.PhasedOut = true
+					src.ControlledPermanent = targetID
+					// Register delayed trigger: when Oubliette leaves, phase creature back in
 					g.RegisterDelayedTrigger(&DelayedTrigger{
 						EventType:    EvtLeavesBattlefield,
 						MatchEventID: sourceID,
 						SourceID:     sourceID,
 						Controller:   controller,
-						Effects: []Effect{FuncEffect("return exiled creature",
+						Effects: []Effect{FuncEffect("phase in creature",
 							EffectProperties{Outcome: OutcomeBenefit},
 							func(g GameMutator, _, _ uuid.UUID, _ []uuid.UUID) error {
-								card, ok := g.(*Game).RemoveFromExile(targetCardID)
-								if ok {
-									perm := g.PutOnBattlefield(card, targetOwner)
+								perm := g.(*Game).FindPermanentIncludingPhased(targetID)
+								if perm != nil && perm.PhasedOut {
+									perm.PhasedOut = false
 									perm.Tapped = true
 								}
 								return nil
@@ -203,20 +202,20 @@ func registerEnchantments() {
 					return nil
 				})),
 		)
-	})
+	}))
 
 	// ===== AURAS =====
 
 	// Oracle: "Enchant creature. Enchanted creature has islandwalk."
-	Register("Fishliver Oil", func() Card {
+	Register("Fishliver Oil", withExpansion(func() Card {
 		return NewAura("Fishliver Oil", "{1}{U}",
 			WithAbility(StaticAbility(GrantAbilityToAttached(Islandwalk, AttachAura))),
 		)
-	})
+	}))
 
 	// Oracle: "Enchant creature. Enchanted creature gets +3/+3. At the beginning of the
 	// upkeep of enchanted creature's controller, put a -1/-1 counter on that creature."
-	Register("Unstable Mutation", func() Card {
+	Register("Unstable Mutation", withExpansion(func() Card {
 		return NewAura("Unstable Mutation", "{U}",
 			WithAbility(StaticAbility(BoostAttached(3, 3, AttachAura))),
 			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
@@ -235,5 +234,5 @@ func registerEnchantments() {
 					}), false,
 			)),
 		)
-	})
+	}))
 }

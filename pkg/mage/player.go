@@ -55,6 +55,11 @@ type Player interface {
 	ShuffleLibrary()
 	ClearGraveyard()
 
+	// Ante zone
+	Ante() []Card
+	AddToAnte(Card)
+	RemoveFromAnte(uuid.UUID) (Card, bool)
+
 	// Decision-making (overridden by TestPlayer)
 	ChooseTargets(possible []uuid.UUID, min, max int, g *Game) []uuid.UUID
 	DeclareAttackers(g *Game) []uuid.UUID
@@ -79,6 +84,7 @@ type BasePlayer struct {
 	hand          []Card
 	graveyard     []Card
 	library       []Card
+	ante          []Card
 	manaPool      *ManaPool
 }
 
@@ -154,6 +160,22 @@ func (p *BasePlayer) AddToLibrary(c Card) {
 
 func (p *BasePlayer) ClearGraveyard() {
 	p.graveyard = nil
+}
+
+func (p *BasePlayer) Ante() []Card { return p.ante }
+
+func (p *BasePlayer) AddToAnte(c Card) {
+	p.ante = append(p.ante, c)
+}
+
+func (p *BasePlayer) RemoveFromAnte(id uuid.UUID) (Card, bool) {
+	for i, c := range p.ante {
+		if c.ID() == id {
+			p.ante = append(p.ante[:i], p.ante[i+1:]...)
+			return c, true
+		}
+	}
+	return nil, false
 }
 
 func (p *BasePlayer) ShuffleLibrary() {

@@ -241,6 +241,25 @@ func IsBandedWith(id uuid.UUID) PermanentFilter {
 	})
 }
 
+// IsArtifactCard matches artifact cards (for graveyard/stack filtering).
+var IsArtifactCard = NewCardFilter("artifact card", func(c Card) bool {
+	return c.HasType(TypeArtifact)
+})
+
+// HasExpansion returns a filter matching permanents from a specific expansion.
+func HasExpansion(name string) PermanentFilter {
+	return NewPermanentFilter(fmt.Sprintf("from %s", name), func(p *Permanent, g *Game) bool {
+		return p.Card.Expansion() == name
+	})
+}
+
+// HasPowerLTE returns a filter matching creatures with power <= n.
+func HasPowerLTE(n int) PermanentFilter {
+	return NewPermanentFilter(fmt.Sprintf("with power %d or less", n), func(p *Permanent, g *Game) bool {
+		return p.CurrentPower(g) <= n
+	})
+}
+
 // HasPowerGTE returns a filter matching creatures with power >= n.
 func HasPowerGTE(n int) PermanentFilter {
 	return NewPermanentFilter(fmt.Sprintf("with power %d or greater", n), func(p *Permanent, g *Game) bool {

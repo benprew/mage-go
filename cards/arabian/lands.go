@@ -12,7 +12,7 @@ func init() {
 
 func registerLands() {
 	// Oracle: "{T}: Draw two cards, then discard three cards."
-	Register("Bazaar of Baghdad", func() Card {
+	Register("Bazaar of Baghdad", withExpansion(func() Card {
 		return NewLand("Bazaar of Baghdad",
 			WithActivatedAbility(
 				FuncEffect("draw 2, discard 3",
@@ -34,11 +34,11 @@ func registerLands() {
 				TapSourceCost(),
 			),
 		)
-	})
+	}))
 
 	// Oracle: "Whenever City of Brass becomes tapped, it deals 1 damage to you.
 	// {T}: Add one mana of any color."
-	Register("City of Brass", func() Card {
+	Register("City of Brass", withExpansion(func() Card {
 		return NewLand("City of Brass",
 			WithAnyColorMana(),
 			WithAbility(
@@ -49,11 +49,11 @@ func registerLands() {
 				}),
 			),
 		)
-	})
+	}))
 
 	// Oracle: "{T}: Add {C}. {T}: Desert deals 1 damage to target attacking creature.
 	// Activate only during the end of combat step."
-	Register("Desert", func() Card {
+	Register("Desert", withExpansion(func() Card {
 		return NewLand("Desert",
 			WithSubTypes("Desert"),
 			WithManaAbility(Colorless),
@@ -63,11 +63,11 @@ func registerLands() {
 				WithTarget(TargetCreature(IsAttacking)),
 			),
 		)
-	})
+	}))
 
 	// Oracle: "{T}, Sacrifice a creature: You gain life equal to the sacrificed
 	// creature's toughness."
-	Register("Diamond Valley", func() Card {
+	Register("Diamond Valley", withExpansion(func() Card {
 		return NewLand("Diamond Valley",
 			WithActivatedAbility(
 				FuncEffect("sacrifice creature, gain life equal to toughness",
@@ -98,10 +98,10 @@ func registerLands() {
 				TapSourceCost(),
 			),
 		)
-	})
+	}))
 
 	// Oracle: "{T}: Add {C}. {T}: Regenerate target Elephant."
-	Register("Elephant Graveyard", func() Card {
+	Register("Elephant Graveyard", withExpansion(func() Card {
 		return NewLand("Elephant Graveyard",
 			WithManaAbility(Colorless),
 			WithActivatedAbility(
@@ -110,10 +110,10 @@ func registerLands() {
 				WithTarget(TargetCreature(HasSubType("Elephant"))),
 			),
 		)
-	})
+	}))
 
 	// Oracle: "{T}: Target creature with flying has base power 0 until end of turn."
-	Register("Island of Wak-Wak", func() Card {
+	Register("Island of Wak-Wak", withExpansion(func() Card {
 		return NewLand("Island of Wak-Wak",
 			WithActivatedAbility(
 				SetPowerUntilEndOfTurn(0, SelectTarget),
@@ -121,11 +121,11 @@ func registerLands() {
 				WithTarget(TargetCreature(HasKeywordFilter(Flying))),
 			),
 		)
-	})
+	}))
 
 	// Oracle: "{T}: Add {C}. {T}: Draw a card. Activate only if you have exactly
 	// seven cards in hand."
-	Register("Library of Alexandria", func() Card {
+	Register("Library of Alexandria", withExpansion(func() Card {
 		return NewLand("Library of Alexandria",
 			WithManaAbility(Colorless),
 			WithActivatedAbility(
@@ -145,11 +145,11 @@ func registerLands() {
 				TapSourceCost(),
 			),
 		)
-	})
+	}))
 
 	// Oracle: "{T}: Prevent the next 1 damage that would be dealt to target creature
 	// this turn."
-	Register("Oasis", func() Card {
+	Register("Oasis", withExpansion(func() Card {
 		return NewLand("Oasis",
 			WithActivatedAbility(
 				PreventDamageToTarget(Fixed(1)),
@@ -157,5 +157,5 @@ func registerLands() {
 				WithTarget(TargetCreature()),
 			),
 		)
-	})
+	}))
 }
