@@ -545,6 +545,85 @@ func PersonalIncarnationRedirect() ContinuousEffect {
 }
 
 // ---------------------------------------------------------------------------
+// Source conditions (predicates for conditional continuous effects)
+// ---------------------------------------------------------------------------
+
+// SourceCondition is a predicate checked by continuous effects to
+// decide whether the effect is active. It receives the source permanent and the game.
+type SourceCondition func(source *Permanent, g *Game) bool
+
+// WhileSourceAttacking is a SourceCondition that is true only while the source
+// permanent is declared as an attacker.
+func WhileSourceAttacking(source *Permanent, g *Game) bool {
+	return g.Combat != nil && g.Combat.IsAttacking(source.ID())
+}
+
+// WhileSourceUntapped is a SourceCondition true only when the source permanent
+// is untapped.
+func WhileSourceUntapped(source *Permanent, g *Game) bool {
+	return !source.Tapped
+}
+
+// WhileControlling is a SourceCondition factory, it creates a SourceCondition that
+// ensures the source's controller controls a permanent that matches the filter.
+func WhileControlling(filter PermanentFilter) SourceCondition {
+	return func(source *Permanent, g *Game) bool {
+		return g.AnyBattlefield(And(ControlledBy(source.Controller), filter))
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Damage prevention continuous effect
+// ---------------------------------------------------------------------------
+
+// preventDamageRuleContinuous registers a damage prevention rule each Apply()
+// cycle. The toFactory receives the source permanent's ID so filters can
+// reference "self" dynamically.
+type preventDamageRuleContinuous struct {
+	from      PermanentFilter
+	toFactory func(sourceID uuid.UUID) PermanentFilter
+	condition SourceCondition // optional; nil means always active while on battlefield
+	effectSource
+}
+
+// PreventDamageFromTo creates a continuous effect that prevents all damage
+// from permanents matching `from` to permanents matching the filter produced
+// by `toFactory(sourceID)`. The toFactory pattern lets filters like
+// IsBandedWith reference the source permanent's ID. An optional SourceCondition
+// controls when the rule is active (e.g. WhileSourceAttacking for Camel).
+func PreventDamageFromTo(from PermanentFilter, toFactory func(uuid.UUID) PermanentFilter, condition ...SourceCondition) ContinuousEffect {
+	var cond SourceCondition
+	if len(condition) > 0 {
+		cond = condition[0]
+	}
+	return &preventDamageRuleContinuous{
+		from:      from,
+		toFactory: toFactory,
+		condition: cond,
+	}
+}
+
+func (e *preventDamageRuleContinuous) GetLayer() Layer       { return LayerAbility }
+func (e *preventDamageRuleContinuous) GetDuration() Duration { return WhileOnBattlefield }
+
+func (e *preventDamageRuleContinuous) IsActive(g *Game) bool {
+	src := g.FindPermanent(e.sourceID)
+	if src == nil {
+		return false
+	}
+	if e.condition != nil {
+		return e.condition(src, g)
+	}
+	return true
+}
+
+func (e *preventDamageRuleContinuous) Apply(g *Game) error {
+	toFilter := e.toFactory(e.sourceID)
+	g.Effects.Damage.AddDamagePreventionRule(WithFrom(e.from), WithTo(toFilter))
+	return nil
+}
+
+// ---------------------------------------------------------------------------
 // Doppelganger copy effect (mutable state, not convertible to primitives)
 // ---------------------------------------------------------------------------
 
