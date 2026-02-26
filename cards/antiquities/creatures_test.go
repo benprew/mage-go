@@ -581,7 +581,6 @@ func TestPrimalClay(t *testing.T) {
 }
 
 func TestShapeshifterCreature(t *testing.T) {
-	// XXX: dynamic P/T based on chosen number
 	t.Run("is artifact creature", func(t *testing.T) {
 		card, err := mage.CreateCard("Shapeshifter")
 		if err != nil {
@@ -593,6 +592,49 @@ func TestShapeshifterCreature(t *testing.T) {
 		if !card.HasType(core.TypeCreature) {
 			t.Errorf("Shapeshifter should be a Creature")
 		}
+	})
+
+	t.Run("ETB chooses a number and sets P/T accordingly", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Shapeshifter")
+		// ChooseMode returns 0 by default (first option) which is "0" → P=0, T=7
+		g.ChooseMode(gametest.PlayerA, 0)
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Shapeshifter")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Shapeshifter", 0, 7)
+	})
+
+	t.Run("ETB with choice 5 gives 5/2", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Shapeshifter")
+		g.ChooseMode(gametest.PlayerA, 5) // choose "5" → P=5, T=2
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Shapeshifter")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Shapeshifter", 5, 2)
+	})
+
+	t.Run("ETB with choice 7 gives 7/0 and dies to SBA", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Shapeshifter")
+		g.ChooseMode(gametest.PlayerA, 7) // choose "7" → P=7, T=0 → dies
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Shapeshifter")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Shapeshifter", 0)
+	})
+
+	t.Run("upkeep allows re-choosing number", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Shapeshifter")
+		g.ChooseMode(gametest.PlayerA, 3) // ETB: choose "3" → 3/4
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Shapeshifter")
+		// On turn 3 (next PlayerA upkeep), re-choose
+		g.ChooseMode(gametest.PlayerA, 6) // upkeep: choose "6" → 6/1
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Shapeshifter", 6, 1)
 	})
 }
 

@@ -705,12 +705,71 @@ func registerCreatures() {
 	// At the beginning of your upkeep, you may choose a number between 0 and 7.
 	// Shapeshifter's power is equal to the last chosen number and its toughness is equal to
 	// 7 minus that number.
-	// XXX: dynamic P/T based on chosen number
+	shapeshifterModes := []string{"0", "1", "2", "3", "4", "5", "6", "7"}
 	Register("Shapeshifter", func() Card {
-		return NewCreature("Shapeshifter", "{6}", 3, 4,
+		c := NewCreature("Shapeshifter", "{6}", 0, 7, // base P/T overridden by continuous effect
 			WithSubTypes("Shapeshifter"),
 			WithCardType(TypeArtifact),
+			// ETB: choose a number 0-7
+			WithAbility(ETBEffect(FuncEffect("choose a number between 0 and 7",
+				EffectProperties{},
+				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					perm := g.FindPermanent(sourceID)
+					if perm == nil {
+						return nil
+					}
+					choice := g.ModeValue() // 0-7
+					if choice < 0 {
+						choice = 0
+					}
+					if choice > 7 {
+						choice = 7
+					}
+					perm.StoredValue = choice
+					return nil
+				}))),
+			// Upkeep: may re-choose
+			WithAbility(BeginningOfUpkeepTrigger(
+				FuncEffect("you may choose a new number between 0 and 7",
+					EffectProperties{},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						perm := g.FindPermanent(sourceID)
+						if perm == nil {
+							return nil
+						}
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						if p.ChooseMayAbility("choose a new number for Shapeshifter") {
+							choice := p.ChooseMode(shapeshifterModes, "choose number 0-7")
+							if choice < 0 {
+								choice = 0
+							}
+							if choice > 7 {
+								choice = 7
+							}
+							perm.StoredValue = choice
+						}
+						return nil
+					}), false,
+			)),
+			// Static: P/T = chosen / (7 - chosen)
+			WithStaticAbility(
+				FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+					src := g.FindPermanent(sourceID)
+					if src == nil {
+						return nil
+					}
+					chosen := src.StoredValue
+					// Override base P/T to chosen / (7-chosen)
+					src.BasePTOverride = &[2]int{chosen, 7 - chosen}
+					return nil
+				}),
+			),
 		)
+		c.SetModes(shapeshifterModes)
+		return c
 	})
 
 	// Su-Chi {4}

@@ -428,6 +428,10 @@ type Permanent struct {
 	// control. Used by cards like Rocket Launcher ("activate only if controlled since
 	// the beginning of your most recent turn").
 	TurnControlGained int
+
+	// StoredValue holds an arbitrary numeric value chosen at ETB or during upkeep.
+	// Used by cards like Shapeshifter (chosen number 0-7 for dynamic P/T).
+	StoredValue int
 }
 
 // NewPermanent creates a permanent from a card.
