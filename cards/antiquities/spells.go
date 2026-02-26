@@ -204,10 +204,10 @@ func registerSpells() {
 
 	// Transmute Artifact {U}{U}
 	// Sorcery
-	// Sacrifice an artifact. If you do, search your library for an artifact card and put it
-	// onto the battlefield. Then shuffle.
-	// XXX: missing CMC comparison — should only be free if found artifact's CMC <= sacrificed CMC,
-	// otherwise must pay the difference or put it into graveyard
+	// Sacrifice an artifact. If you do, search your library for an artifact card. If that card's
+	// mana value is less than or equal to the sacrificed artifact's mana value, put it onto the
+	// battlefield. If not, you may pay {X}, where X is the difference. If you pay, put it onto
+	// the battlefield. If you don't, put it into its owner's graveyard. Then shuffle.
 	Register("Transmute Artifact", func() Card {
 		return NewSorcery("Transmute Artifact", "{U}{U}",
 			NewSpellAbility(FuncEffect("search library for artifact, put on battlefield",
@@ -217,6 +217,7 @@ func registerSpells() {
 					if p == nil {
 						return nil
 					}
+					sacrificedCMC := g.XValue()
 					lib := p.Library()
 					var candidates []Card
 					for _, c := range lib {
@@ -225,10 +226,12 @@ func registerSpells() {
 						}
 					}
 					if len(candidates) == 0 {
+						p.ShuffleLibrary()
 						return nil
 					}
 					chosen := p.ChooseCardFromLibrary(candidates, "search for artifact", g)
 					if chosen == nil {
+						p.ShuffleLibrary()
 						return nil
 					}
 					// Remove from library
@@ -240,10 +243,23 @@ func registerSpells() {
 					}
 					p.SetLibrary(newLib)
 					p.ShuffleLibrary()
-					g.PutOnBattlefield(chosen, controller)
+					chosenCMC := chosen.ManaCost().CMC()
+					if chosenCMC <= sacrificedCMC {
+						// Free — put directly onto battlefield
+						g.PutOnBattlefield(chosen, controller)
+					} else {
+						// Must pay the difference or put into graveyard
+						difference := chosenCMC - sacrificedCMC
+						if p.ManaPool().TotalMana() >= difference {
+							p.ManaPool().DrainGeneric(difference)
+							g.PutOnBattlefield(chosen, controller)
+						} else {
+							p.AddToGraveyard(chosen)
+						}
+					}
 					return nil
 				})),
-			WithAdditionalCost(SacrificeArtifactCost()),
+			WithAdditionalCost(&sacrificeArtifactCaptureCMCCost{}),
 		)
 	})
 }

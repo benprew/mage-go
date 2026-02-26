@@ -193,16 +193,44 @@ func TestTransmuteArtifact(t *testing.T) {
 		}
 	})
 
-	t.Run("sacrifice artifact and search for replacement", func(t *testing.T) {
+	t.Run("free when found artifact CMC <= sacrificed CMC", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ornithopter") // CMC 0, sacrifice this
-		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Jalum Tome")      // CMC 3, find this
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Su-Chi")  // CMC 4, sacrifice this
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Jalum Tome")  // CMC 3, find this
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Transmute Artifact")
+		g.ChooseFromLibrary(gametest.PlayerA, "Jalum Tome")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Transmute Artifact")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		g.AssertPermanentCount(gametest.PlayerA, "Ornithopter", 0)
-		// Jalum Tome should be on battlefield (if paid difference) or in graveyard
-		// For now this tests the basic flow
+		g.AssertPermanentCount(gametest.PlayerA, "Su-Chi", 0)           // sacrificed
+		g.AssertPermanentCount(gametest.PlayerA, "Jalum Tome", 1)       // on battlefield for free
+	})
+
+	t.Run("free when found artifact CMC equals sacrificed CMC", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Jalum Tome") // CMC 3, sacrifice
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Staff of Zegon") // CMC 4... need CMC 3
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Coral Helm")     // CMC 3, find this
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Transmute Artifact")
+		g.ChooseFromLibrary(gametest.PlayerA, "Coral Helm")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Transmute Artifact")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Jalum Tome", 0)   // sacrificed
+		g.AssertPermanentCount(gametest.PlayerA, "Coral Helm", 1)   // on battlefield
+	})
+
+	t.Run("more expensive goes to graveyard when cannot pay difference", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ornithopter") // CMC 0, sacrifice
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Su-Chi")          // CMC 4, find this
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Transmute Artifact")
+		g.ChooseFromLibrary(gametest.PlayerA, "Su-Chi")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Transmute Artifact")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Ornithopter", 0)    // sacrificed
+		g.AssertPermanentCount(gametest.PlayerA, "Su-Chi", 0)         // NOT on battlefield
+		g.AssertGraveyardCount(gametest.PlayerA, "Su-Chi", 1)         // went to graveyard
 	})
 }
