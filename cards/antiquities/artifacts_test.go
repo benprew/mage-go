@@ -320,7 +320,6 @@ func TestRakalite(t *testing.T) {
 }
 
 func TestRocketLauncher(t *testing.T) {
-	// XXX: self-destruct at end step + haste restriction
 	t.Run("is a 4-cost artifact", func(t *testing.T) {
 		card, err := mage.CreateCard("Rocket Launcher")
 		if err != nil {
@@ -329,6 +328,49 @@ func TestRocketLauncher(t *testing.T) {
 		if card.ManaCost().CMC() != 4 {
 			t.Errorf("expected CMC 4, got %d", card.ManaCost().CMC())
 		}
+	})
+
+	t.Run("deals 1 damage to target player", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rocket Launcher")
+		// Can't activate turn 1 (just gained control), need to wait until turn 3
+		g.ActivateAbility(3, core.PrecombatMain, gametest.PlayerA, "Rocket Launcher", "PlayerB")
+		g.StopAt(3, core.BeginCombat)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 19)
+	})
+
+	t.Run("cannot activate on the turn it entered", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Rocket Launcher")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Rocket Launcher")
+		// Try to activate same turn — should fail because not controlled since turn start
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Rocket Launcher", "PlayerB")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Activation should have failed — life unchanged
+		g.AssertLife(gametest.PlayerB, 20)
+	})
+
+	t.Run("destroys self at end step after activation", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rocket Launcher")
+		g.ActivateAbility(3, core.PrecombatMain, gametest.PlayerA, "Rocket Launcher", "PlayerB")
+		g.StopAt(4, core.Upkeep) // after end step
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Rocket Launcher", 0)
+	})
+
+	t.Run("deals 1 damage to target creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rocket Launcher")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // 2/2
+		g.ActivateAbility(3, core.PrecombatMain, gametest.PlayerA, "Rocket Launcher", "Grizzly Bears")
+		g.StopAt(3, core.BeginCombat)
+		g.Execute()
+		// 1 damage to 2/2 — survives
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
+		g.AssertLife(gametest.PlayerB, 20)
 	})
 }
 

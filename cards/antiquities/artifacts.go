@@ -394,9 +394,40 @@ func registerArtifacts() {
 	// {2}: Rocket Launcher deals 1 damage to any target. Destroy Rocket Launcher at the beginning
 	// of the next end step. Activate only if you've controlled Rocket Launcher continuously since
 	// the beginning of your most recent turn.
-	// XXX: self-destruct at end step + haste restriction
 	Register("Rocket Launcher", func() Card {
-		return NewArtifact("Rocket Launcher", "{4}")
+		return NewArtifact("Rocket Launcher", "{4}",
+			WithActivatedAbility(
+				FuncEffect("deal 1 damage to any target; destroy self at next end step",
+					EffectProperties{Outcome: OutcomeDetriment, DamageValue: Fixed(1)},
+					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						// Deal 1 damage
+						targetPerm := g.FindPermanent(targets[0])
+						if targetPerm != nil {
+							g.DealDamageToPermanent(targetPerm, 1, sourceID)
+						} else {
+							targetPlayer := g.GetPlayer(targets[0])
+							if targetPlayer != nil {
+								g.DealDamageToPlayer(targetPlayer, 1, sourceID)
+							}
+						}
+						// Register delayed trigger: destroy self at next end step
+						g.RegisterDelayedTrigger(&DelayedTrigger{
+							EventType:  EvtEndStep,
+							TargetID:   sourceID,
+							Effects:    []Effect{DestroyTarget()},
+							SourceID:   sourceID,
+							Controller: controller,
+						})
+						return nil
+					}),
+				GenericCost(2),
+				WithTarget(TargetAnyTarget()),
+				WithControlledSinceTurnStart(),
+			),
+		)
 	})
 
 	// Staff of Zegon {4}

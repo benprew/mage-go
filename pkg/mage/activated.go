@@ -39,13 +39,47 @@ func WithEffect(e Effect) AbilityOption {
 	}
 }
 
+// WithUpkeepOnly restricts an activated ability to only be activatable during an upkeep step.
+func WithUpkeepOnly() AbilityOption {
+	return func(a *SimpleActivatedAbility) {
+		a.UpkeepOnly = true
+	}
+}
+
+// WithOncePerTurn restricts an activated ability to once per turn.
+func WithOncePerTurn() AbilityOption {
+	return func(a *SimpleActivatedAbility) {
+		a.OncePerTurn = true
+	}
+}
+
+// WithAnyPlayerMay allows any player (not just the controller) to activate the ability.
+func WithAnyPlayerMay() AbilityOption {
+	return func(a *SimpleActivatedAbility) {
+		a.AnyPlayerMayUse = true
+	}
+}
+
+// WithControlledSinceTurnStart restricts activation to only when the source has been
+// continuously controlled since the beginning of the controller's most recent turn.
+func WithControlledSinceTurnStart() AbilityOption {
+	return func(a *SimpleActivatedAbility) {
+		a.ControlledSinceTurnStart = true
+	}
+}
+
 // SimpleActivatedAbility is a basic activated ability.
 type SimpleActivatedAbility struct {
 	BaseAbility
-	effects     []Effect
-	costs       []Cost
-	targets     []Target
-	SorceryOnly bool
+	effects            []Effect
+	costs              []Cost
+	targets            []Target
+	SorceryOnly              bool
+	UpkeepOnly               bool // Can only be activated during an upkeep step
+	OncePerTurn              bool // Can only be activated once per turn
+	AnyPlayerMayUse          bool // Any player may activate this ability
+	ControlledSinceTurnStart bool // Only if controlled since beginning of most recent turn
+	activatedThisTurn        bool // Tracks whether this ability has been activated this turn
 }
 
 // NewActivatedAbility creates an activated ability with a primary effect, a primary cost,
@@ -66,12 +100,41 @@ func NewActivatedAbility(effect Effect, cost Cost, opts ...AbilityOption) *Simpl
 }
 
 func (a *SimpleActivatedAbility) CanActivate(controller uuid.UUID, g *Game) bool {
+	if a.UpkeepOnly && g.Step != Upkeep {
+		return false
+	}
+	if a.OncePerTurn && a.activatedThisTurn {
+		return false
+	}
+	if a.ControlledSinceTurnStart {
+		perm := g.FindPermanent(a.source)
+		if perm == nil || perm.TurnControlGained >= g.Turn {
+			return false
+		}
+	}
 	for _, c := range a.costs {
 		if !c.CanPay(a.source, controller, g) {
 			return false
 		}
 	}
 	return true
+}
+
+// MarkActivated sets the once-per-turn flag. Called after the ability is paid for.
+func (a *SimpleActivatedAbility) MarkActivated() {
+	if a.OncePerTurn {
+		a.activatedThisTurn = true
+	}
+}
+
+// ResetActivation clears the once-per-turn flag. Called at the beginning of each turn.
+func (a *SimpleActivatedAbility) ResetActivation() {
+	a.activatedThisTurn = false
+}
+
+// IsAnyPlayerAbility returns true if any player may activate this ability.
+func (a *SimpleActivatedAbility) IsAnyPlayerAbility() bool {
+	return a.AnyPlayerMayUse
 }
 
 func (a *SimpleActivatedAbility) Effects() []Effect  { return a.effects }

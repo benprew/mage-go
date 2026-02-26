@@ -63,6 +63,12 @@ type Game struct {
 	// Player damage tracking: maps player ID -> total damage taken this turn
 	DamageTakenThisTurn map[uuid.UUID]int
 
+	// Artifact damage tracking: maps player ID -> artifact damage taken this turn
+	ArtifactDamageTakenThisTurn map[uuid.UUID]int
+
+	// Artifact mana restriction: players who have activated artifact-only mana sources
+	ArtifactManaOnly map[uuid.UUID]bool
+
 	// Creatures that attacked this turn (survives combat reset for end-of-turn checks)
 	AttackedThisTurn map[uuid.UUID]bool
 
@@ -116,14 +122,16 @@ type pendingTrigger struct {
 // NewGame creates a new 2-player game.
 func NewGame(playerA, playerB Player) *Game {
 	return &Game{
-		Players:             []Player{playerA, playerB},
-		Stack:               NewStack(),
-		Combat:              NewCombat(),
-		Effects:             NewEffectManager(),
-		Turn:                1,
-		DamageDealtBy:       make(map[uuid.UUID]map[uuid.UUID]bool),
-		DamageTakenThisTurn: make(map[uuid.UUID]int),
-		AttackedThisTurn:    make(map[uuid.UUID]bool),
+		Players:                    []Player{playerA, playerB},
+		Stack:                      NewStack(),
+		Combat:                     NewCombat(),
+		Effects:                    NewEffectManager(),
+		Turn:                       1,
+		DamageDealtBy:              make(map[uuid.UUID]map[uuid.UUID]bool),
+		DamageTakenThisTurn:        make(map[uuid.UUID]int),
+		ArtifactDamageTakenThisTurn: make(map[uuid.UUID]int),
+		AttackedThisTurn:           make(map[uuid.UUID]bool),
+		ArtifactManaOnly:           make(map[uuid.UUID]bool),
 	}
 }
 
@@ -337,6 +345,7 @@ func (g *Game) TryPayCostFromLands(playerID uuid.UUID, manaCostStr string) bool 
 // PutOnBattlefield puts a card onto the battlefield under the given controller.
 func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 	perm := NewPermanent(card, controller)
+	perm.TurnControlGained = g.Turn
 
 	// Set ability sources and controllers
 	for _, a := range perm.RuntimeAbilities {
@@ -379,6 +388,13 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 				g.setEffectSource(e, perm.ID())
 				g.Effects.Add(e)
 			}
+		}
+	}
+
+	// Run unconditional ETB effects (e.g. Primal Clay mode choice)
+	for _, a := range perm.RuntimeAbilities {
+		if etb, ok := a.(*ETBEffectAbility); ok {
+			_ = etb.Effect.Apply(g, perm.ID(), controller, nil)
 		}
 	}
 
@@ -641,6 +657,7 @@ func (g *Game) Sacrifice(perm *Permanent) {
 		Type:     EvtPutIntoGraveyardFromBattlefield,
 		SourceID: permID,
 		PlayerID: controller,
+		Flag:     true, // Flag=true means this was a sacrifice (not destroy)
 	})
 
 	if isCreature {
@@ -722,8 +739,15 @@ func (g *Game) RemoveFromExile(cardID uuid.UUID) (Card, bool) {
 }
 
 // CounterSpellOnStack removes a spell from the stack by its source ID.
+// The countered spell's card goes to its owner's graveyard.
 func (g *Game) CounterSpellOnStack(spellID uuid.UUID) {
-	g.Stack.RemoveBySourceID(spellID)
+	obj := g.Stack.RemoveBySourceID(spellID)
+	if obj != nil && obj.Card != nil {
+		owner := g.GetPlayer(obj.Card.Owner())
+		if owner != nil {
+			owner.AddToGraveyard(obj.Card)
+		}
+	}
 }
 
 // DealDamageToPlayer deals damage to a player.
@@ -734,6 +758,10 @@ func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
 	// Check color prevention (Circle of Protection)
 	sourceCard := g.FindCardForDamageSource(sourceID)
 	if g.Effects.CheckColorPrevention(p.PlayerID(), sourceCard) {
+		return // all damage from this source prevented
+	}
+	// Check type prevention (Circle of Protection: Artifacts)
+	if g.Effects.CheckTypePrevention(p.PlayerID(), sourceCard) {
 		return // all damage from this source prevented
 	}
 	// Apply damage prevention shield (also used for player)
@@ -776,6 +804,10 @@ func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
 		p.LoseLife(amount)
 	}
 	g.DamageTakenThisTurn[p.PlayerID()] += amount
+	// Track artifact damage separately (for Reverse Polarity)
+	if sourceCard != nil && sourceCard.HasType(TypeArtifact) {
+		g.ArtifactDamageTakenThisTurn[p.PlayerID()] += amount
+	}
 	g.FireEvent(GameEvent{
 		Type:     EvtDamageDealt,
 		SourceID: sourceID,
@@ -977,6 +1009,16 @@ func (g *Game) PutTriggersOnStack() {
 					if pt.event.TargetID != uuid.Nil {
 						obj.Targets = []uuid.UUID{pt.event.TargetID}
 					}
+				case EvtTapped:
+					// Pass the tapped permanent's ID so effects can identify it
+					if pt.event.SourceID != uuid.Nil {
+						obj.Targets = []uuid.UUID{pt.event.SourceID}
+					}
+				case EvtDeclaredBlocker:
+					// Pass the blocker's ID so effects can identify it
+					if pt.event.SourceID != uuid.Nil {
+						obj.Targets = []uuid.UUID{pt.event.SourceID}
+					}
 				}
 			}
 		}
@@ -1133,6 +1175,11 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		return fmt.Errorf("card %s not found in hand", name)
 	}
 
+	// Check artifact mana restriction (Mishra's Workshop)
+	if g.ArtifactManaOnly[playerID] && !card.HasType(TypeArtifact) {
+		return fmt.Errorf("mana restriction: can only cast artifact spells")
+	}
+
 	// Determine X value
 	xValue := 0
 	if len(xValues) > 0 {
@@ -1250,6 +1297,15 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 func (g *Game) ActivateAbilityByText(playerID uuid.UUID, permName string, targets []uuid.UUID) error {
 	perm := g.FindPermanentByName(permName, playerID)
 	if perm == nil {
+		// Try finding any permanent with this name (for AnyPlayerMayUse abilities)
+		for _, p := range g.Battlefield {
+			if p.Name() == permName {
+				perm = p
+				break
+			}
+		}
+	}
+	if perm == nil {
 		return fmt.Errorf("permanent %s not found", permName)
 	}
 
@@ -1309,12 +1365,18 @@ func (g *Game) ActivateAbilityByText(playerID uuid.UUID, permName string, target
 			}
 		}
 
+		// Mark once-per-turn abilities as used
+		if saa, ok := aa.(*SimpleActivatedAbility); ok {
+			saa.MarkActivated()
+		}
+
 		obj := &StackObject{
 			ID:         uuid.New(),
 			Controller: playerID,
 			SourceID:   perm.ID(),
 			IsAbility:  true,
 			Targets:    targets,
+			XValue:     g.CurrentX,
 		}
 		obj.Effects = append(obj.Effects, aa.Effects()...)
 
@@ -1628,16 +1690,30 @@ func (g *Game) DoUntap() {
 
 	landUntapLimit := g.Effects.LandUntapLimit()
 	landsUntapped := 0
+	artifactUntapLimit := g.Effects.ArtifactUntapLimit()
+	artifactsUntapped := 0
 
 	for _, p := range g.Battlefield {
 		if p.Controller == active.PlayerID() {
 			if p.HasAttr(AttrDoesNotUntap) {
 				// Does not untap — skip
+			} else if p.Tapped && p.HasAttr(AttrMayNotUntap) {
+				// Player may choose not to untap
+				if !active.ChooseMayAbility("untap " + p.Name()) {
+					continue
+				}
+				p.Tapped = false
 			} else if p.HasType(TypeLand) && landUntapLimit >= 0 {
 				// Land with untap limit in effect
 				if p.Tapped && landsUntapped < landUntapLimit {
 					p.Tapped = false
 					landsUntapped++
+				}
+			} else if p.HasType(TypeArtifact) && !p.HasType(TypeLand) && artifactUntapLimit >= 0 {
+				// Artifact (non-land) with untap limit in effect (Damping Field)
+				if p.Tapped && artifactsUntapped < artifactUntapLimit {
+					p.Tapped = false
+					artifactsUntapped++
 				}
 			} else {
 				p.Tapped = false
@@ -1890,6 +1966,18 @@ func (g *Game) doDeclareBlockers() {
 // doCleanupActions performs cleanup housekeeping and places any triggers on the stack.
 // Returns true if triggers were placed on the stack (requiring priority + another cleanup).
 func (g *Game) doCleanupActions() bool {
+	// Hand size discard: each player discards down to max hand size
+	for _, p := range g.Players {
+		maxHS := g.Effects.MaxHandSize(p.PlayerID())
+		for len(p.Hand()) > maxHS {
+			chosen := p.ChooseCardsFromHand(1, "discard to hand size", g)
+			if len(chosen) == 0 {
+				break
+			}
+			p.RemoveFromHand(chosen[0].ID())
+			p.AddToGraveyard(chosen[0])
+		}
+	}
 	// Clear damage from all creatures
 	for _, p := range g.Battlefield {
 		p.Damage = 0
@@ -1904,8 +1992,11 @@ func (g *Game) doCleanupActions() bool {
 	// Clear damage tracking
 	g.DamageDealtBy = make(map[uuid.UUID]map[uuid.UUID]bool)
 	g.DamageTakenThisTurn = make(map[uuid.UUID]int)
+	g.ArtifactDamageTakenThisTurn = make(map[uuid.UUID]int)
 	g.AttackedThisTurn = make(map[uuid.UUID]bool)
 	g.CreatureDeathsThisTurn = 0
+	// Clear artifact mana restriction
+	g.ArtifactManaOnly = make(map[uuid.UUID]bool)
 	// Clear damage prevention and Forcefield shields
 	g.Effects.ClearPreventionShields()
 	g.Effects.ClearDamagePreventionRules()
@@ -1913,6 +2004,12 @@ func (g *Game) doCleanupActions() bool {
 	for _, p := range g.Battlefield {
 		// Clear activation tracking (Charge counters used for per-turn counts)
 		delete(p.Counters, Charge)
+		// Reset once-per-turn activated abilities
+		for _, a := range p.RuntimeAbilities {
+			if aa, ok := UnwrapAbility(a).(*SimpleActivatedAbility); ok {
+				aa.ResetActivation()
+			}
+		}
 	}
 	// MTG 514.3a: if triggers fire during cleanup, put them on stack
 	g.PutTriggersOnStack()
@@ -2245,13 +2342,18 @@ func (g *Game) GetCastableSpells(playerID uuid.UUID) []Card {
 func (g *Game) GetActivatableAbilities(playerID uuid.UUID) []ActivatableInfo {
 	var result []ActivatableInfo
 	for _, perm := range g.Battlefield {
-		if perm.Controller != playerID {
-			continue
-		}
+		isOwner := perm.Controller == playerID
 		for i, a := range perm.RuntimeAbilities {
 			aa, ok := a.(ActivatedAbility)
 			if !ok {
 				continue
+			}
+			// Check if this ability can be used by non-controllers
+			if !isOwner {
+				saa, isSAA := UnwrapAbility(a).(*SimpleActivatedAbility)
+				if !isSAA || !saa.AnyPlayerMayUse {
+					continue
+				}
 			}
 			// Skip mana abilities - those are handled separately
 			if _, isMana := a.(*ManaAbility); isMana {
@@ -2381,6 +2483,11 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		if err := c.Pay(perm.ID(), playerID, g); err != nil {
 			return err
 		}
+	}
+
+	// Mark once-per-turn abilities as used
+	if saa, ok := aa.(*SimpleActivatedAbility); ok {
+		saa.MarkActivated()
 	}
 
 	obj := &StackObject{

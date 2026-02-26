@@ -27,6 +27,8 @@ type Card interface {
 	AddType(CardType)
 	AddAbility(Ability)
 	CloneFrom(Card)
+	SetBasePT(power, toughness int)
+	SetModes([]string)
 }
 
 // BaseCard provides the common card implementation.
@@ -63,6 +65,7 @@ func (c *BaseCard) Power() int            { return c.power }
 func (c *BaseCard) Toughness() int        { return c.toughness }
 func (c *BaseCard) Modes() []string         { return c.modes }
 func (c *BaseCard) SetModes(m []string)      { c.modes = m }
+func (c *BaseCard) SetBasePT(p, t int)       { c.power = p; c.toughness = t }
 func (c *BaseCard) SetOwner(id uuid.UUID)    { c.owner = id }
 func (c *BaseCard) SetID(id uuid.UUID)       { c.id = id }
 
@@ -86,6 +89,10 @@ func (c *BaseCard) HasSuperType(st SuperType) bool {
 
 func (c *BaseCard) AddType(t CardType) {
 	c.types = append(c.types, t)
+}
+
+func (c *BaseCard) AddSubType(st string) {
+	c.subTypes = append(c.subTypes, st)
 }
 
 func (c *BaseCard) AddAbility(a Ability) {
@@ -416,6 +423,11 @@ type Permanent struct {
 
 	// Control-change tracking (e.g. Old Man of the Sea, Aladdin)
 	ControlledPermanent uuid.UUID
+
+	// TurnControlGained records the turn number on which the current controller gained
+	// control. Used by cards like Rocket Launcher ("activate only if controlled since
+	// the beginning of your most recent turn").
+	TurnControlGained int
 }
 
 // NewPermanent creates a permanent from a card.
