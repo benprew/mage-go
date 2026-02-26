@@ -278,7 +278,6 @@ func registerCreatures() {
 	// Creature — Dwarf Artificer
 	// {T}, Sacrifice an artifact: Put a +1/+1 counter on target creature.
 	// Activate only during your upkeep.
-	// XXX: upkeep-only activation restriction
 	Register("Dwarven Weaponsmith", func() Card {
 		return NewCreature("Dwarven Weaponsmith", "{1}{R}", 1, 1,
 			WithSubTypes("Dwarf", "Artificer"),
@@ -375,7 +374,6 @@ func registerCreatures() {
 	// Argothian Treefolk {3}{G}{G}
 	// Creature — Treefolk
 	// Prevent all damage that would be dealt to Argothian Treefolk by artifact sources.
-	// XXX: prevent damage from artifact sources
 	Register("Argothian Treefolk", func() Card {
 		return NewCreature("Argothian Treefolk", "{3}{G}{G}", 3, 5,
 			WithSubTypes("Treefolk"),
@@ -512,7 +510,6 @@ func registerCreatures() {
 	// At end of combat, if Clockwork Avian attacked or blocked this combat, remove a +1/+0 counter.
 	// {X}, {T}: Put up to X +1/+0 counters on Clockwork Avian (max 4 total). Activate only
 	// during your upkeep.
-	// XXX: capped counter addition during upkeep
 	Register("Clockwork Avian", func() Card {
 		return NewCreature("Clockwork Avian", "{5}", 0, 4,
 			WithSubTypes("Bird"),
@@ -564,7 +561,6 @@ func registerCreatures() {
 	// Trample
 	// Colossus of Sardia doesn't untap during your untap step.
 	// {9}: Untap Colossus of Sardia. Activate only during your upkeep.
-	// XXX: upkeep-only activation restriction on untap
 	Register("Colossus of Sardia", func() Card {
 		return NewCreature("Colossus of Sardia", "{9}", 9, 9,
 			WithSubTypes("Golem"),

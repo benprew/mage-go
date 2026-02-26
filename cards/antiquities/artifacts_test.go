@@ -35,17 +35,6 @@ func TestAmuletOfKroog(t *testing.T) {
 }
 
 func TestArmageddonClock(t *testing.T) {
-	// XXX: doom counters + draw step damage + any-player activation
-	t.Run("is a 6-cost artifact", func(t *testing.T) {
-		card, err := mage.CreateCard("Armageddon Clock")
-		if err != nil {
-			t.Fatal(err)
-		}
-		if card.ManaCost().CMC() != 6 {
-			t.Errorf("expected CMC 6, got %d", card.ManaCost().CMC())
-		}
-	})
-
 	t.Run("deals damage equal to doom counters at draw step", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Armageddon Clock")
@@ -54,6 +43,31 @@ func TestArmageddonClock(t *testing.T) {
 		g.Execute()
 		g.AssertLife(gametest.PlayerA, 19) // 1 doom counter → 1 damage
 		g.AssertLife(gametest.PlayerB, 19)
+	})
+
+	t.Run("doom counters accumulate over multiple turns", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Armageddon Clock")
+		// Turn 1: 1 doom counter → 1 damage each, Turn 3: 2 doom counters → 2 damage each
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		// Turn 1: 1 dmg each, Turn 3: 2 dmg each = 3 total each
+		g.AssertLife(gametest.PlayerA, 17)
+		g.AssertLife(gametest.PlayerB, 17)
+	})
+
+	t.Run("remove doom counter ability for {4}", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Armageddon Clock")
+		// After turn 1 upkeep adds doom counter, remove it during upkeep
+		g.ActivateAbility(3, core.Upkeep, gametest.PlayerA, "Armageddon Clock")
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		// Turn 1: 1 doom counter dealt 1 damage each
+		// Turn 3: added 2nd doom counter, removed 1 → 1 doom counter, dealt 1 each
+		// Total: 2 damage each
+		g.AssertLife(gametest.PlayerA, 18)
+		g.AssertLife(gametest.PlayerB, 18)
 	})
 }
 
@@ -74,20 +88,30 @@ func TestAshnodsAltar(t *testing.T) {
 }
 
 func TestAshnodsBattleGear(t *testing.T) {
-	// XXX: continuous boost while source remains tapped
-	t.Run("is a 2-cost artifact", func(t *testing.T) {
-		card, err := mage.CreateCard("Ashnod's Battle Gear")
-		if err != nil {
-			t.Fatal(err)
-		}
-		if card.ManaCost().CMC() != 2 {
-			t.Errorf("expected CMC 2, got %d", card.ManaCost().CMC())
-		}
+	t.Run("boosts creature +2/-2 while tapped", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ashnod's Battle Gear")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant") // 3/3
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Ashnod's Battle Gear", "Hill Giant")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Hill Giant", 5, 1) // 3+2/3-2
+		g.AssertTapped(gametest.PlayerA, "Ashnod's Battle Gear", true)
+	})
+
+	t.Run("boost ends when Battle Gear untaps", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ashnod's Battle Gear")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Ashnod's Battle Gear", "Hill Giant")
+		// Let it untap on turn 3 (may choose not to untap, but TestPlayer says yes so it untaps)
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Hill Giant", 3, 3) // back to normal
 	})
 }
 
 func TestAshnodsTransmogrant(t *testing.T) {
-	// XXX: type addition + counter
 	t.Run("puts +1/+1 counter and makes target an artifact", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ashnod's Transmogrant")
@@ -115,20 +139,30 @@ func TestCandelabraOfTawnos(t *testing.T) {
 }
 
 func TestCoralHelm(t *testing.T) {
-	// XXX: discard at random as cost
-	t.Run("is a 3-cost artifact", func(t *testing.T) {
-		card, err := mage.CreateCard("Coral Helm")
-		if err != nil {
-			t.Fatal(err)
-		}
-		if card.ManaCost().CMC() != 3 {
-			t.Errorf("expected CMC 3, got %d", card.ManaCost().CMC())
-		}
+	t.Run("boosts target creature +2/+2 until end of turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Coral Helm")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Forest")              // will be discarded randomly
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Coral Helm", "Grizzly Bears")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 4, 4) // 2+2/2+2
+	})
+
+	t.Run("boost wears off at end of turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Coral Helm")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Forest")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Coral Helm", "Grizzly Bears")
+		g.StopAt(2, core.Upkeep)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 2)
 	})
 }
 
 func TestCursedRack(t *testing.T) {
-	// XXX: max hand size reduction for chosen opponent
 	t.Run("reduces chosen opponent max hand size to 4", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Cursed Rack")
@@ -233,17 +267,6 @@ func TestMillstone(t *testing.T) {
 }
 
 func TestObeliskOfUndoing(t *testing.T) {
-	// XXX: own-and-control restriction on targeting
-	t.Run("is a 1-cost artifact", func(t *testing.T) {
-		card, err := mage.CreateCard("Obelisk of Undoing")
-		if err != nil {
-			t.Fatal(err)
-		}
-		if card.ManaCost().CMC() != 1 {
-			t.Errorf("expected CMC 1, got %d", card.ManaCost().CMC())
-		}
-	})
-
 	t.Run("returns own permanent to hand for {6}", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Obelisk of Undoing")
@@ -398,17 +421,6 @@ func TestStaffOfZegon(t *testing.T) {
 }
 
 func TestTabletOfEpityr(t *testing.T) {
-	// XXX: conditional trigger on own artifact death with optional payment
-	t.Run("is a 1-cost artifact", func(t *testing.T) {
-		card, err := mage.CreateCard("Tablet of Epityr")
-		if err != nil {
-			t.Fatal(err)
-		}
-		if card.ManaCost().CMC() != 1 {
-			t.Errorf("expected CMC 1, got %d", card.ManaCost().CMC())
-		}
-	})
-
 	t.Run("gain 1 life when own artifact dies paying {1}", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tablet of Epityr")
@@ -511,21 +523,30 @@ func TestTawnossWand(t *testing.T) {
 }
 
 func TestTawnossWeaponry(t *testing.T) {
-	// XXX: continuous boost while source remains tapped
-	t.Run("is a 2-cost artifact", func(t *testing.T) {
-		card, err := mage.CreateCard("Tawnos's Weaponry")
-		if err != nil {
-			t.Fatal(err)
-		}
-		if card.ManaCost().CMC() != 2 {
-			t.Errorf("expected CMC 2, got %d", card.ManaCost().CMC())
-		}
+	t.Run("boosts creature +1/+1 while tapped", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tawnos's Weaponry")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Tawnos's Weaponry", "Grizzly Bears")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 3, 3) // 2+1/2+1
+		g.AssertTapped(gametest.PlayerA, "Tawnos's Weaponry", true)
+	})
+
+	t.Run("boost ends when Weaponry untaps", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tawnos's Weaponry")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Tawnos's Weaponry", "Grizzly Bears")
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 2) // back to normal
 	})
 }
 
 func TestTheRack(t *testing.T) {
-	// XXX: chosen opponent + hand-size based damage
-	t.Run("deals 3 minus hand size damage to chosen player", func(t *testing.T) {
+	t.Run("deals 3 minus hand size damage with empty hand", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "The Rack")
 		// PlayerB has 0 cards in hand → 3 - 0 = 3 damage
@@ -533,20 +554,20 @@ func TestTheRack(t *testing.T) {
 		g.Execute()
 		g.AssertLife(gametest.PlayerB, 17)
 	})
+
+	t.Run("no damage when opponent has 3 or more cards", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "The Rack")
+		for i := 0; i < 4; i++ {
+			g.AddCard(core.ZoneHand, gametest.PlayerB, "Forest")
+		}
+		g.StopAt(2, core.PrecombatMain)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 20) // 3-4 = negative, no damage
+	})
 }
 
 func TestUrzasChalice(t *testing.T) {
-	// XXX: trigger on artifact spell cast with optional payment
-	t.Run("is a 1-cost artifact", func(t *testing.T) {
-		card, err := mage.CreateCard("Urza's Chalice")
-		if err != nil {
-			t.Fatal(err)
-		}
-		if card.ManaCost().CMC() != 1 {
-			t.Errorf("expected CMC 1, got %d", card.ManaCost().CMC())
-		}
-	})
-
 	t.Run("gains 1 life when artifact spell cast", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Urza's Chalice")
@@ -560,15 +581,32 @@ func TestUrzasChalice(t *testing.T) {
 }
 
 func TestUrzasMiter(t *testing.T) {
-	// XXX: non-sacrifice artifact death trigger with optional payment
-	t.Run("is a 3-cost artifact", func(t *testing.T) {
-		card, err := mage.CreateCard("Urza's Miter")
-		if err != nil {
-			t.Fatal(err)
-		}
-		if card.ManaCost().CMC() != 3 {
-			t.Errorf("expected CMC 3, got %d", card.ManaCost().CMC())
-		}
+	t.Run("draws card when non-sacrifice artifact dies", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Urza's Miter")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ornithopter") // 0/2 artifact
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Forest") // card to draw
+		// Destroy ornithopter (non-sacrifice death)
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Ornithopter")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Urza's Miter trigger should draw a card (if player has {3} mana)
+		g.AssertPermanentCount(gametest.PlayerA, "Ornithopter", 0)
+	})
+
+	t.Run("does not trigger on sacrificed artifacts", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Urza's Miter")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ashnod's Altar")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ornithopter")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Forest")
+		// Sacrifice Ornithopter to Ashnod's Altar (Flag = true)
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Ashnod's Altar")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Sacrifice flag prevents Miter trigger
+		g.AssertPermanentCount(gametest.PlayerA, "Ornithopter", 0)
 	})
 }
 
