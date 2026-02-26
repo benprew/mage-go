@@ -2133,9 +2133,10 @@ func (g *Game) doCleanupActions() bool {
 	for _, p := range g.Players {
 		p.ManaPool().Clear()
 	}
-	// Remove end-of-turn effects
+	// Remove end-of-turn effects and clear turn-scoped state
 	g.Effects.RemoveEndOfTurn()
-	g.Effects.Damage.ClearPreventCombatDamage()
+	g.Effects.Damage.ClearEndOfTurn()
+	g.Effects.Rules.ClearEndOfTurn()
 	// Clear damage tracking
 	g.DamageDealtBy = make(map[uuid.UUID]map[uuid.UUID]bool)
 	g.DamageTakenThisTurn = make(map[uuid.UUID]int)
@@ -2149,12 +2150,6 @@ func (g *Game) doCleanupActions() bool {
 	for _, p := range g.Players {
 		p.ClearLastDrawnCard()
 	}
-	// Clear damage prevention and Forcefield shields
-	g.Effects.Damage.ClearPreventionShields()
-	g.Effects.Damage.ClearDamagePreventionRules()
-	g.Effects.Damage.ClearForcefieldShields()
-	g.Effects.Damage.ClearAllDrawReplacements()
-	g.Effects.Damage.ClearAllDamageReflections()
 	for _, p := range g.Battlefield {
 		// Clear activation tracking (Charge counters used for per-turn counts)
 		delete(p.Counters, Charge)
