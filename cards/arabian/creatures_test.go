@@ -1127,3 +1127,72 @@ func TestHurrJackal(t *testing.T) {
 		g.AssertPermanentCount(gametest.PlayerB, "Drudge Skeletons", 1)
 	})
 }
+
+func TestMoorishCavalry(t *testing.T) {
+	t.Run("has_trample", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Moorish Cavalry")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // 2/2
+		g.Attack(1, gametest.PlayerA, "Moorish Cavalry")
+		g.Block(1, gametest.PlayerB, "Grizzly Bears", "Moorish Cavalry")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		// 3/3 trample vs 2/2 blocker: 2 to kill Bears, 1 tramples through
+		g.AssertLife(gametest.PlayerB, 19)
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+	})
+}
+
+func TestRepentantBlacksmith(t *testing.T) {
+	t.Run("protection_from_red_prevents_damage", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Repentant Blacksmith")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Repentant Blacksmith")
+		g.StopAt(2, core.BeginCombat)
+		g.Execute()
+		// Protection from red prevents all damage from red sources
+		g.AssertPermanentCount(gametest.PlayerA, "Repentant Blacksmith", 1)
+	})
+
+	t.Run("cannot_be_blocked_by_red_creatures", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Repentant Blacksmith")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mijae Djinn") // red creature
+		g.Attack(1, gametest.PlayerA, "Repentant Blacksmith")
+		g.Block(1, gametest.PlayerB, "Mijae Djinn", "Repentant Blacksmith")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		// Pro-red means can't be blocked by red creatures; 1 damage gets through
+		g.AssertLife(gametest.PlayerB, 19)
+	})
+}
+
+func TestWarElephant(t *testing.T) {
+	t.Run("has_trample", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "War Elephant")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Flying Men") // 1/1
+		g.Attack(1, gametest.PlayerA, "War Elephant")
+		g.Block(1, gametest.PlayerB, "Flying Men", "War Elephant")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		// 2/2 trample vs 1/1 blocker: 1 to kill, 1 tramples
+		g.AssertLife(gametest.PlayerB, 19)
+		g.AssertPermanentCount(gametest.PlayerB, "Flying Men", 0)
+	})
+}
+
+func TestFlyingMen(t *testing.T) {
+	t.Run("has_flying", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Flying Men")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // no flying/reach
+		g.Attack(1, gametest.PlayerA, "Flying Men")
+		g.Block(1, gametest.PlayerB, "Grizzly Bears", "Flying Men")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		// Grizzly Bears can't block Flying Men (no reach/flying)
+		g.AssertLife(gametest.PlayerB, 19)
+	})
+}

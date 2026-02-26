@@ -129,6 +129,23 @@ func TestDesertTwister(t *testing.T) {
 	})
 }
 
+func TestMetamorphosis(t *testing.T) {
+	t.Run("sacrifices creature and adds mana equal to 1 plus CMC", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // CMC 2
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Metamorphosis")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Metamorphosis")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Grizzly Bears (CMC 2) sacrificed → 1+2 = 3 green mana added
+		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
+		pool := g.AllPlayers()[0].ManaPool()
+		if pool.Count(core.Green) < 3 {
+			t.Errorf("expected at least 3 green mana from Metamorphosis, got %d", pool.Count(core.Green))
+		}
+	})
+}
+
 func TestSandstorm(t *testing.T) {
 	t.Run("deals_1_to_each_attacker", func(t *testing.T) {
 		g := gametest.NewTestGame(t)

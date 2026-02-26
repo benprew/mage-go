@@ -90,6 +90,7 @@ type GameMutator interface {
 
 	// Mana restriction
 	SetArtifactManaOnly(uuid.UUID)
+	SetCreatureManaOnly(uuid.UUID)
 
 	// Artifact damage tracking
 	GetArtifactDamageTaken(uuid.UUID) int
@@ -264,6 +265,14 @@ func (g *Game) SetArtifactManaOnly(playerID uuid.UUID) {
 		g.ArtifactManaOnly = make(map[uuid.UUID]bool)
 	}
 	g.ArtifactManaOnly[playerID] = true
+}
+
+// SetCreatureManaOnly marks a player as having creature-only mana restriction active.
+func (g *Game) SetCreatureManaOnly(playerID uuid.UUID) {
+	if g.CreatureManaOnly == nil {
+		g.CreatureManaOnly = make(map[uuid.UUID]bool)
+	}
+	g.CreatureManaOnly[playerID] = true
 }
 
 // GetArtifactDamageTaken returns the artifact damage the player has taken this turn.

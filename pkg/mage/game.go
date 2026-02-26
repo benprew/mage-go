@@ -71,6 +71,9 @@ type Game struct {
 	// Artifact mana restriction: players who have activated artifact-only mana sources
 	ArtifactManaOnly map[uuid.UUID]bool
 
+	// Creature mana restriction: players who have creature-only mana (Metamorphosis)
+	CreatureManaOnly map[uuid.UUID]bool
+
 	// Creatures that attacked this turn (survives combat reset for end-of-turn checks)
 	AttackedThisTurn map[uuid.UUID]bool
 
@@ -134,6 +137,7 @@ func NewGame(playerA, playerB Player) *Game {
 		ArtifactDamageTakenThisTurn: make(map[uuid.UUID]int),
 		AttackedThisTurn:           make(map[uuid.UUID]bool),
 		ArtifactManaOnly:           make(map[uuid.UUID]bool),
+		CreatureManaOnly:           make(map[uuid.UUID]bool),
 	}
 }
 
@@ -1216,6 +1220,10 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	if g.ArtifactManaOnly[playerID] && !card.HasType(TypeArtifact) {
 		return fmt.Errorf("mana restriction: can only cast artifact spells")
 	}
+	// Check creature mana restriction (Metamorphosis)
+	if g.CreatureManaOnly[playerID] && !card.HasType(TypeCreature) {
+		return fmt.Errorf("mana restriction: can only cast creature spells")
+	}
 
 	// Determine X value
 	xValue := 0
@@ -1292,6 +1300,12 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 				return err
 			}
 		}
+	}
+
+	// If an additional cost set g.CurrentX (e.g. sacrifice-capture-CMC), use it
+	if g.CurrentX != 0 && xValue == 0 {
+		xValue = g.CurrentX
+		g.CurrentX = 0
 	}
 
 	// Remove from hand
@@ -2032,8 +2046,9 @@ func (g *Game) doCleanupActions() bool {
 	g.ArtifactDamageTakenThisTurn = make(map[uuid.UUID]int)
 	g.AttackedThisTurn = make(map[uuid.UUID]bool)
 	g.CreatureDeathsThisTurn = 0
-	// Clear artifact mana restriction
+	// Clear mana restrictions
 	g.ArtifactManaOnly = make(map[uuid.UUID]bool)
+	g.CreatureManaOnly = make(map[uuid.UUID]bool)
 	// Clear damage prevention and Forcefield shields
 	g.Effects.ClearPreventionShields()
 	g.Effects.ClearDamagePreventionRules()
