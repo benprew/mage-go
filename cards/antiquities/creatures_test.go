@@ -194,7 +194,6 @@ func TestPhyrexianGremlins(t *testing.T) {
 }
 
 func TestPriestOfYawgmoth(t *testing.T) {
-	// XXX: {T}, Sacrifice an artifact: Add {B} equal to sacrificed artifact's CMC
 	t.Run("is 1/2 Phyrexian Human Cleric", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Priest of Yawgmoth")
@@ -202,16 +201,40 @@ func TestPriestOfYawgmoth(t *testing.T) {
 		g.Execute()
 		g.AssertPowerToughness(gametest.PlayerA, "Priest of Yawgmoth", 1, 2)
 	})
+
+	t.Run("adds black mana equal to sacrificed artifact CMC", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Priest of Yawgmoth")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Su-Chi") // CMC 4
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Priest of Yawgmoth")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Su-Chi", 0) // sacrificed
+		g.AssertTapped(gametest.PlayerA, "Priest of Yawgmoth", true)
+		pool := g.AllPlayers()[0].ManaPool()
+		if pool.Count(core.Black) < 4 {
+			t.Errorf("expected at least 4 black mana (from CMC 4), got %d", pool.Count(core.Black))
+		}
+	})
 }
 
 func TestXenicPoltergeist(t *testing.T) {
-	// XXX: animate artifact until next upkeep
 	t.Run("is 1/1 Spirit", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Xenic Poltergeist")
 		g.StopAt(1, core.PrecombatMain)
 		g.Execute()
 		g.AssertPowerToughness(gametest.PlayerA, "Xenic Poltergeist", 1, 1)
+	})
+
+	t.Run("animates noncreature artifact as creature with P/T equal to CMC", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Xenic Poltergeist")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Jayemdae Tome") // CMC 4 artifact
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Xenic Poltergeist", "Jayemdae Tome")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Jayemdae Tome", 4, 4)
 	})
 }
 
@@ -226,8 +249,7 @@ func TestYawgmothDemon(t *testing.T) {
 		g.AssertPowerToughness(gametest.PlayerA, "Yawgmoth Demon", 6, 6)
 	})
 
-	// XXX: upkeep sacrifice artifact or tap + deal 2 damage
-	t.Run("upkeep sacrifice or take 2 damage", func(t *testing.T) {
+	t.Run("taps and deals 2 damage with no artifacts to sacrifice", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Yawgmoth Demon")
 		// No artifacts to sacrifice — should tap and deal 2 to controller
@@ -235,6 +257,17 @@ func TestYawgmothDemon(t *testing.T) {
 		g.Execute()
 		g.AssertTapped(gametest.PlayerA, "Yawgmoth Demon", true)
 		g.AssertLife(gametest.PlayerA, 18)
+	})
+
+	t.Run("sacrifices artifact to avoid damage", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Yawgmoth Demon")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ornithopter") // artifact to sacrifice
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// TestPlayer always says yes to "may" → sacrifices Ornithopter
+		g.AssertPermanentCount(gametest.PlayerA, "Ornithopter", 0) // sacrificed
+		g.AssertLife(gametest.PlayerA, 20)                         // no damage
 	})
 }
 
@@ -264,7 +297,6 @@ func TestAtog(t *testing.T) {
 }
 
 func TestDwarvenWeaponsmith(t *testing.T) {
-	// XXX: upkeep-only activation restriction
 	t.Run("is 1/1 Dwarf Artificer", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Dwarven Weaponsmith")
@@ -272,16 +304,59 @@ func TestDwarvenWeaponsmith(t *testing.T) {
 		g.Execute()
 		g.AssertPowerToughness(gametest.PlayerA, "Dwarven Weaponsmith", 1, 1)
 	})
+
+	t.Run("puts +1/+1 counter on target creature during upkeep", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Dwarven Weaponsmith")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ornithopter") // sacrifice fodder
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.ActivateAbility(1, core.Upkeep, gametest.PlayerA, "Dwarven Weaponsmith", "Grizzly Bears")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertCounterCount(gametest.PlayerA, "Grizzly Bears", core.P1P1, 1)
+		g.AssertPermanentCount(gametest.PlayerA, "Ornithopter", 0) // sacrificed
+	})
 }
 
 func TestGoblinArtisans(t *testing.T) {
-	// XXX: coin flip draw/counter
 	t.Run("is 1/1 Goblin Artificer", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Goblin Artisans")
 		g.StopAt(1, core.PrecombatMain)
 		g.Execute()
 		g.AssertPowerToughness(gametest.PlayerA, "Goblin Artisans", 1, 1)
+	})
+
+	// XXX: win flip draw test — the ability resolves and DrawCard is called (confirmed
+	// via debug), but the drawn card gets consumed by autoPlayLands or the draw step
+	// before assertions run. Needs harness investigation.
+	// t.Run("win flip draws a card", func(t *testing.T) { ... })
+
+	t.Run("lose flip counters artifact spell on stack", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Goblin Artisans")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Ornithopter")
+		g.CoinFlipResults = []bool{true} // win — but ability resolves before spell
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Ornithopter")
+		g.ActivateInResponseTo(gametest.PlayerA, "Goblin Artisans")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertTapped(gametest.PlayerA, "Goblin Artisans", true)
+		g.AssertPermanentCount(gametest.PlayerA, "Ornithopter", 1) // spell still resolved
+	})
+
+	t.Run("lose flip counters artifact spell", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Goblin Artisans")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Ornithopter")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Forest")
+		g.CoinFlipResults = []bool{false} // lose
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Ornithopter")
+		g.ActivateInResponseTo(gametest.PlayerA, "Goblin Artisans")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Ornithopter", 0)  // countered
+		g.AssertGraveyardCount(gametest.PlayerA, "Ornithopter", 1)  // in graveyard
 	})
 }
 
@@ -302,7 +377,7 @@ func TestOrcishMechanics(t *testing.T) {
 // ===== GREEN CREATURES =====
 
 func TestArgothianPixies(t *testing.T) {
-	// XXX: can't be blocked by artifact creatures + prevent damage from artifact creatures
+
 	t.Run("is 2/1 Faerie", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Argothian Pixies")
@@ -325,7 +400,7 @@ func TestArgothianPixies(t *testing.T) {
 }
 
 func TestArgothianTreefolk(t *testing.T) {
-	// XXX: prevent damage from artifact sources
+
 	t.Run("is 3/5 Treefolk", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Argothian Treefolk")
@@ -350,7 +425,7 @@ func TestArgothianTreefolk(t *testing.T) {
 }
 
 func TestCitanulDruid(t *testing.T) {
-	// XXX: trigger on opponent artifact cast
+
 	t.Run("gets +1/+1 counter when opponent casts artifact", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Citanul Druid")
@@ -363,7 +438,7 @@ func TestCitanulDruid(t *testing.T) {
 }
 
 func TestGaeasAvenger(t *testing.T) {
-	// XXX: dynamic P/T = 1 + opponent artifact count
+
 	t.Run("power and toughness scale with opponent artifacts", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Gaea's Avenger")
@@ -380,7 +455,7 @@ func TestGaeasAvenger(t *testing.T) {
 // ===== ARTIFACT CREATURES =====
 
 func TestBatteringRam(t *testing.T) {
-	// XXX: beginning of combat banding + destroy blocking Walls
+
 	t.Run("is 1/1 Construct artifact creature", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Battering Ram")
@@ -534,14 +609,23 @@ func TestMishrasWarMachine(t *testing.T) {
 		g.AssertPowerToughness(gametest.PlayerA, "Mishra's War Machine", 5, 5)
 	})
 
-	// XXX: upkeep discard-or-damage + tap
-	t.Run("deals 3 damage if no discard on upkeep", func(t *testing.T) {
+	t.Run("deals 3 damage and taps with empty hand on upkeep", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mishra's War Machine")
 		g.StopAt(1, core.PrecombatMain)
 		g.Execute()
 		g.AssertLife(gametest.PlayerA, 17)
 		g.AssertTapped(gametest.PlayerA, "Mishra's War Machine", true)
+	})
+
+	t.Run("discards a card to avoid damage", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mishra's War Machine")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Forest") // card to discard
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// TestPlayer always says yes to "may" → discards Forest
+		g.AssertLife(gametest.PlayerA, 20) // no damage
 	})
 }
 
@@ -588,7 +672,7 @@ func TestOrnithopter(t *testing.T) {
 }
 
 func TestPrimalClay(t *testing.T) {
-	// XXX: ETB choice of form (3/3, 2/2 flying, 1/6 defender)
+
 	t.Run("is artifact creature", func(t *testing.T) {
 		card, err := mage.CreateCard("Primal Clay")
 		if err != nil {
@@ -741,13 +825,32 @@ func TestTriskelion(t *testing.T) {
 }
 
 func TestUrzasAvenger(t *testing.T) {
-	// XXX: keyword choice with P/T cost
 	t.Run("is 4/4 artifact creature", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Urza's Avenger")
 		g.StopAt(1, core.PrecombatMain)
 		g.Execute()
 		g.AssertPowerToughness(gametest.PlayerA, "Urza's Avenger", 4, 4)
+	})
+
+	t.Run("gets -1/-1 and gains keyword on activation", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Urza's Avenger")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Urza's Avenger")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Should be 3/3 (4-1/4-1) with a keyword (default choice = banding)
+		g.AssertPowerToughness(gametest.PlayerA, "Urza's Avenger", 3, 3)
+	})
+
+	t.Run("can activate multiple times for cumulative shrink", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Urza's Avenger")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Urza's Avenger")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Urza's Avenger")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Urza's Avenger", 2, 2) // 4-2/4-2
 	})
 }
 

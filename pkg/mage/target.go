@@ -319,7 +319,8 @@ func (t *ArtifactOrEnchantmentTarget) Choose(controller uuid.UUID, _ Card, g *Ga
 // SpellOnStackTarget targets a spell on the stack, optionally filtered by CardFilter predicates.
 type SpellOnStackTarget struct {
 	BaseTarget
-	Filters []CardFilter
+	Filters         []CardFilter
+	controlledByYou bool
 }
 
 // TargetSpellOnStack creates a target that selects a spell currently on the stack (for counterspells),
@@ -331,10 +332,23 @@ func TargetSpellOnStack(filters ...CardFilter) Target {
 	}
 }
 
+// TargetOwnSpellOnStack creates a target that selects a spell you control on the stack,
+// optionally narrowed by CardFilter predicates.
+func TargetOwnSpellOnStack(filters ...CardFilter) Target {
+	return &SpellOnStackTarget{
+		BaseTarget:      BaseTarget{min: 1, max: 1},
+		Filters:         filters,
+		controlledByYou: true,
+	}
+}
+
 func (t *SpellOnStackTarget) Possible(controller uuid.UUID, _ Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
 	for _, obj := range g.Stack.Objects() {
 		if !obj.IsAbility && obj.Card != nil {
+			if t.controlledByYou && obj.Controller != controller {
+				continue
+			}
 			match := true
 			for _, f := range t.Filters {
 				if !f.Match(obj.Card) {
