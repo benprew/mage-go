@@ -22,6 +22,17 @@ java/**/target/
 .project
 .classpath
 
+# Binaries
+tui
+server
+cardgen
+fetchset
+
+# Coverage
+coverage.html
+coverage.out
+*.coverprofile
+
 # OS
 .DS_Store
 Thumbs.db

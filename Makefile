@@ -1,4 +1,4 @@
-.PHONY: test build vet lint
+.PHONY: test build vet lint clean
 
 test:
 	go test ./...
@@ -12,3 +12,7 @@ vet:
 lint:
 	golangci-lint run ./...
 	staticcheck ./...
+
+clean:
+	go clean ./...
+	rm -f tui server cardgen fetchset
