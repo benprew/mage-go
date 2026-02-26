@@ -17,6 +17,7 @@ func registerEnchantments() {
 	// Whenever enchanted artifact becomes tapped or a player activates an ability of enchanted
 	// artifact without {T} in its activation cost, Artifact Possession deals 2 damage to that
 	// artifact's controller.
+	// XXX: missing "activates ability without {T} in its activation cost" trigger
 	Register("Artifact Possession", func() Card {
 		return NewAura("Artifact Possession", "{2}{B}",
 			WithAbility(
@@ -48,6 +49,7 @@ func registerEnchantments() {
 	// Enchanted creature can't be blocked by artifact creatures.
 	// Prevent all damage that would be dealt to enchanted creature by artifact sources.
 	// Enchanted creature can't be the target of abilities from artifact sources.
+	// XXX: missing damage prevention from artifact sources and targeting restriction from artifact sources
 	Register("Artifact Ward", func() Card {
 		return NewAura("Artifact Ward", "{W}",
 			WithStaticAbility(
@@ -71,6 +73,7 @@ func registerEnchantments() {
 	// Enchantment
 	// {2}: The next time an artifact source of your choice would deal damage to you this turn,
 	// prevent that damage.
+	// XXX: prevents all artifact damage rather than "next time from a chosen source" per Oracle
 	Register("Circle of Protection: Artifacts", func() Card {
 		return NewEnchantment("Circle of Protection: Artifacts", "{1}{W}",
 			WithActivatedAbility(
@@ -106,6 +109,7 @@ func registerEnchantments() {
 	// Enchantment
 	// All artifacts have "At the beginning of your upkeep, sacrifice this artifact unless you
 	// pay {2}."
+	// XXX: auto-pays sequentially from mana pool instead of per-artifact player choice
 	Register("Energy Flux", func() Card {
 		return NewEnchantment("Energy Flux", "{2}{U}",
 			WithAbility(
@@ -165,6 +169,7 @@ func registerEnchantments() {
 	// Enchantment
 	// Whenever an artifact becomes tapped or a player activates an artifact's ability without
 	// {T} in its activation cost, Haunting Wind deals 1 damage to that artifact's controller.
+	// XXX: missing "activates ability without {T} in its activation cost" trigger
 	Register("Haunting Wind", func() Card {
 		return NewEnchantment("Haunting Wind", "{3}{B}",
 			WithAbility(
@@ -208,6 +213,7 @@ func registerEnchantments() {
 	// Enchantment
 	// Whenever an artifact an opponent controls becomes tapped or an opponent activates an
 	// artifact's ability without {T} in its activation cost, you gain 1 life.
+	// XXX: missing "activates ability without {T} in its activation cost" trigger
 	Register("Powerleech", func() Card {
 		return NewEnchantment("Powerleech", "{G}{G}",
 			WithAbility(
@@ -230,6 +236,7 @@ func registerEnchantments() {
 	// Each noncreature artifact loses all abilities and becomes an artifact creature with power
 	// and toughness each equal to its mana value. If Titania's Song leaves the battlefield, this
 	// effect continues until end of turn.
+	// XXX: missing "loses all abilities"; missing "effect continues until end of turn" after leaving
 	Register("Titania's Song", func() Card {
 		return NewEnchantment("Titania's Song", "{3}{G}",
 			WithStaticAbility(

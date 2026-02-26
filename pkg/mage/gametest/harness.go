@@ -124,21 +124,6 @@ func (tg *TestGame) AddCard(zone core.Zone, p PlayerRef, name string, count ...i
 	return lastID
 }
 
-// AddCardControlledBy adds a card owned by one player but controlled by another on the battlefield.
-func (tg *TestGame) AddCardControlledBy(zone core.Zone, owner PlayerRef, controller PlayerRef, name string) uuid.UUID {
-	tg.t.Helper()
-	ownerPlayer := tg.GetPlayer(owner)
-	controllerPlayer := tg.GetPlayer(controller)
-	card, err := mage.CreateCard(name)
-	if err != nil {
-		tg.t.Fatalf("AddCardControlledBy: %v", err)
-	}
-	card.SetOwner(ownerPlayer.PlayerID())
-	perm := tg.Game.PutOnBattlefield(card, controllerPlayer.PlayerID())
-	perm.RevokeBaseAttr(core.AttrSummonSick)
-	return perm.ID()
-}
-
 // SetLife sets a player's life total.
 func (tg *TestGame) SetLife(p PlayerRef, life int) {
 	tg.GetPlayer(p).SetLife(life)

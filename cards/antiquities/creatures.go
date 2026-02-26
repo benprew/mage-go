@@ -195,6 +195,7 @@ func registerCreatures() {
 	// Creature — Spirit
 	// {T}: Until your next upkeep, target noncreature artifact becomes an artifact creature with
 	// power and toughness each equal to its mana value.
+	// XXX: duration should be "until your next upkeep", not end of turn
 	Register("Xenic Poltergeist", func() Card {
 		return NewCreature("Xenic Poltergeist", "{1}{B}{B}", 1, 1,
 			WithSubTypes("Spirit"),
@@ -295,6 +296,7 @@ func registerCreatures() {
 	// Creature — Goblin Artificer
 	// {T}: Flip a coin. If you win the flip, draw a card. If you lose the flip, counter target
 	// artifact spell you control.
+	// XXX: missing "that isn't the target of an ability from another creature named Goblin Artisans" filter
 	Register("Goblin Artisans", func() Card {
 		return NewCreature("Goblin Artisans", "{R}", 1, 1,
 			WithSubTypes("Goblin", "Artificer"),
@@ -462,7 +464,7 @@ func registerCreatures() {
 					return evt.PlayerID == controllerID
 				}),
 			),
-			// Whenever blocked by a Wall, destroy that Wall
+			// XXX: wall destruction happens immediately instead of "at end of combat" per Oracle
 			WithAbility(
 				NewTriggered(EvtDeclaredBlocker, false,
 					FuncEffect("destroy blocking Wall",
@@ -518,7 +520,7 @@ func registerCreatures() {
 			WithAbility(EntersBattlefieldTrigger(
 				AddCounters(P1P0, Fixed(4), SelectSource), false,
 			)),
-			// Remove a +1/+0 counter at end of combat if attacked or blocked
+			// XXX: counter removal triggers on attack/block declaration instead of "at end of combat" per Oracle
 			WithAbility(AttacksTrigger(
 				RemoveCountersFromSource(P1P0, 1), false,
 			)),

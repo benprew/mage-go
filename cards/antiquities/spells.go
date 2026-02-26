@@ -206,6 +206,8 @@ func registerSpells() {
 	// Sorcery
 	// Sacrifice an artifact. If you do, search your library for an artifact card and put it
 	// onto the battlefield. Then shuffle.
+	// XXX: missing CMC comparison — should only be free if found artifact's CMC <= sacrificed CMC,
+	// otherwise must pay the difference or put it into graveyard
 	Register("Transmute Artifact", func() Card {
 		return NewSorcery("Transmute Artifact", "{U}{U}",
 			NewSpellAbility(FuncEffect("search library for artifact, put on battlefield",

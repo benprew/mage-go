@@ -277,6 +277,11 @@ func TestObeliskOfUndoing(t *testing.T) {
 		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
 		g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 1)
 	})
+
+	// NOTE: The "own AND control" restriction in the target filter is implemented
+	// but cannot be tested without a control-stealing effect (Control Magic), since
+	// the engine resets Controller=Owner each effect cycle. The fix in
+	// ControlledPermanentTarget.Possible correctly checks both ownership and control.
 }
 
 func TestRakalite(t *testing.T) {

@@ -316,15 +316,18 @@ func (t *ArtifactOrEnchantmentTarget) Choose(controller uuid.UUID, _ Card, g *Ga
 	return nil
 }
 
-// SpellOnStackTarget targets a spell on the stack.
+// SpellOnStackTarget targets a spell on the stack, optionally filtered by CardFilter predicates.
 type SpellOnStackTarget struct {
 	BaseTarget
+	Filters []CardFilter
 }
 
-// TargetSpellOnStack creates a target that selects a spell currently on the stack (for counterspells).
-func TargetSpellOnStack() Target {
+// TargetSpellOnStack creates a target that selects a spell currently on the stack (for counterspells),
+// optionally narrowed by CardFilter predicates.
+func TargetSpellOnStack(filters ...CardFilter) Target {
 	return &SpellOnStackTarget{
 		BaseTarget: BaseTarget{min: 1, max: 1},
+		Filters:    filters,
 	}
 }
 
@@ -332,7 +335,16 @@ func (t *SpellOnStackTarget) Possible(controller uuid.UUID, _ Card, g *Game) []u
 	var result []uuid.UUID
 	for _, obj := range g.Stack.Objects() {
 		if !obj.IsAbility && obj.Card != nil {
-			result = append(result, obj.SourceID)
+			match := true
+			for _, f := range t.Filters {
+				if !f.Match(obj.Card) {
+					match = false
+					break
+				}
+			}
+			if match {
+				result = append(result, obj.SourceID)
+			}
 		}
 	}
 	return result
@@ -343,15 +355,19 @@ func (t *SpellOnStackTarget) Choose(controller uuid.UUID, _ Card, g *Game, chose
 	return nil
 }
 
-// GraveyardCardTarget targets any card in your graveyard (not just creatures).
+// GraveyardCardTarget targets any card in your graveyard (not just creatures),
+// optionally filtered by CardFilter predicates.
 type GraveyardCardTarget struct {
 	BaseTarget
+	Filters []CardFilter
 }
 
-// TargetCardInYourGraveyard creates a target that selects any card in the controller's graveyard.
-func TargetCardInYourGraveyard() Target {
+// TargetCardInYourGraveyard creates a target that selects any card in the controller's graveyard,
+// optionally narrowed by CardFilter predicates.
+func TargetCardInYourGraveyard(filters ...CardFilter) Target {
 	return &GraveyardCardTarget{
 		BaseTarget: BaseTarget{min: 1, max: 1},
+		Filters:    filters,
 	}
 }
 
@@ -362,7 +378,16 @@ func (t *GraveyardCardTarget) Possible(controller uuid.UUID, _ Card, g *Game) []
 	}
 	var result []uuid.UUID
 	for _, c := range p.Graveyard() {
-		result = append(result, c.ID())
+		match := true
+		for _, f := range t.Filters {
+			if !f.Match(c) {
+				match = false
+				break
+			}
+		}
+		if match {
+			result = append(result, c.ID())
+		}
 	}
 	return result
 }
@@ -399,6 +424,33 @@ func (t *HandCreatureTarget) Possible(controller uuid.UUID, _ Card, g *Game) []u
 }
 
 func (t *HandCreatureTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
+	t.chosen = chosen
+	return nil
+}
+
+// ControlledPermanentTarget targets a permanent you control.
+type ControlledPermanentTarget struct {
+	BaseTarget
+}
+
+// TargetControlledPermanent creates a target that selects a permanent the controller owns.
+func TargetControlledPermanent() Target {
+	return &ControlledPermanentTarget{
+		BaseTarget: BaseTarget{min: 1, max: 1},
+	}
+}
+
+func (t *ControlledPermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+	var result []uuid.UUID
+	for _, p := range g.Battlefield {
+		if p.Controller == controller && p.Card.Owner() == controller && p.CanBeTargetedBy(sourceCard, controller, g) {
+			result = append(result, p.ID())
+		}
+	}
+	return result
+}
+
+func (t *ControlledPermanentTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
 	t.chosen = chosen
 	return nil
 }

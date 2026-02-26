@@ -193,6 +193,7 @@ func registerArtifacts() {
 	// Artifact
 	// As Cursed Rack enters the battlefield, choose an opponent.
 	// The chosen player's maximum hand size is four.
+	// XXX: no ETB opponent choice; auto-picks opponent (correct for 2-player, gap for multiplayer)
 	Register("Cursed Rack", func() Card {
 		return NewArtifact("Cursed Rack", "{4}",
 			WithStaticAbility(
@@ -338,6 +339,7 @@ func registerArtifacts() {
 	// Obelisk of Undoing {1}
 	// Artifact
 	// {6}, {T}: Return target permanent you both own and control to your hand.
+	// Target checks both "own AND control" per Oracle via ControlledPermanentTarget
 	Register("Obelisk of Undoing", func() Card {
 		return NewArtifact("Obelisk of Undoing", "{1}",
 			WithActivatedAbility(
@@ -488,6 +490,7 @@ func registerArtifacts() {
 	// counters that were on that creature. When Tawnos's Coffin leaves the battlefield or becomes
 	// untapped, return that exiled card to the battlefield under its owner's control tapped with the
 	// noted number and kind of counters on it.
+	// XXX: does not exile/return Auras attached to the creature
 	Register("Tawnos's Coffin", func() Card {
 		// coffinReturnExiled is a helper closure that returns all exiled cards from a Coffin.
 		coffinReturnExiled := func(g GameMutator, coffinID uuid.UUID) {
@@ -636,6 +639,7 @@ func registerArtifacts() {
 	// As The Rack enters the battlefield, choose an opponent.
 	// At the beginning of the chosen player's upkeep, The Rack deals X damage to that player,
 	// where X is 3 minus the number of cards in their hand.
+	// XXX: no ETB opponent choice; auto-picks opponent (correct for 2-player, gap for multiplayer)
 	Register("The Rack", func() Card {
 		return NewArtifact("The Rack", "{1}",
 			WithAbility(
