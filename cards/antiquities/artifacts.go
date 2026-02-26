@@ -488,9 +488,93 @@ func registerArtifacts() {
 	// counters that were on that creature. When Tawnos's Coffin leaves the battlefield or becomes
 	// untapped, return that exiled card to the battlefield under its owner's control tapped with the
 	// noted number and kind of counters on it.
-	// XXX: complex exile/return with counter/aura tracking
 	Register("Tawnos's Coffin", func() Card {
-		return NewArtifact("Tawnos's Coffin", "{4}")
+		// coffinReturnExiled is a helper closure that returns all exiled cards from a Coffin.
+		coffinReturnExiled := func(g GameMutator, coffinID uuid.UUID) {
+			// Use the concrete *Game to access RemoveExiledCardBySource
+			game, ok := g.(*Game)
+			if !ok {
+				return
+			}
+			exiled := game.RemoveExiledCardBySource(coffinID)
+			for _, ec := range exiled {
+				owner := ec.Owner
+				if owner == (uuid.UUID{}) {
+					owner = ec.Card.Owner()
+				}
+				perm := g.PutOnBattlefield(ec.Card, owner)
+				if perm != nil {
+					perm.Tapped = true
+					// Restore noted counters
+					for ct, count := range ec.Counters {
+						perm.AddCounter(ct, count)
+					}
+				}
+			}
+		}
+
+		return NewArtifact("Tawnos's Coffin", "{4}",
+			WithKeyword(AttrMayNotUntap),
+			WithActivatedAbility(
+				FuncEffect("exile target creature; return when Coffin leaves or untaps",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						target := g.FindPermanent(targets[0])
+						if target == nil {
+							return nil
+						}
+						// Note counters before exile
+						counters := make(map[CounterType]int)
+						for ct, count := range target.Counters {
+							counters[ct] = count
+						}
+						owner := target.Controller
+						card := target.Card
+						g.RemoveFromBattlefield(target)
+						// Add to exile with counter metadata
+						game, ok := g.(*Game)
+						if ok {
+							game.Exile = append(game.Exile, ExiledCard{
+								Card:     card,
+								ExiledBy: sourceID,
+								Counters: counters,
+								Owner:    owner,
+							})
+						}
+						return nil
+					}),
+				GenericCost(3),
+				WithCost(TapSourceCost()),
+				WithTarget(TargetCreature()),
+			),
+			// When Tawnos's Coffin leaves the battlefield, return exiled creature
+			WithAbility(
+				NewTriggered(EvtLeavesBattlefield, false,
+					FuncEffect("return exiled creature to battlefield",
+						EffectProperties{},
+						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+							coffinReturnExiled(g, sourceID)
+							return nil
+						}),
+				).SetCondition(IsThisSource),
+			),
+			// At the beginning of your upkeep, if Coffin is untapped and has exiled cards, return them
+			WithAbility(BeginningOfUpkeepTrigger(
+				FuncEffect("return exiled creature if Coffin is untapped",
+					EffectProperties{},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						perm := g.FindPermanent(sourceID)
+						if perm == nil || perm.Tapped {
+							return nil
+						}
+						coffinReturnExiled(g, sourceID)
+						return nil
+					}), false,
+			)),
+		)
 	})
 
 	// Tawnos's Wand {4}

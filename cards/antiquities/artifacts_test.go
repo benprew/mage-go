@@ -424,7 +424,6 @@ func TestTabletOfEpityr(t *testing.T) {
 }
 
 func TestTawnossCoffin(t *testing.T) {
-	// XXX: complex exile/return with counter/aura tracking
 	t.Run("is a 4-cost artifact", func(t *testing.T) {
 		card, err := mage.CreateCard("Tawnos's Coffin")
 		if err != nil {
@@ -433,6 +432,66 @@ func TestTawnossCoffin(t *testing.T) {
 		if card.ManaCost().CMC() != 4 {
 			t.Errorf("expected CMC 4, got %d", card.ManaCost().CMC())
 		}
+	})
+
+	t.Run("exiles target creature when activated", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tawnos's Coffin")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant") // 3/3
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Tawnos's Coffin", "Hill Giant")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 0)
+		g.AssertTapped(gametest.PlayerA, "Tawnos's Coffin", true)
+	})
+
+	t.Run("returns creature when Coffin is untapped", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tawnos's Coffin")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Tawnos's Coffin", "Hill Giant")
+		// TestPlayer always says yes to ChooseMayAbility, so Coffin will untap on turn 3
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		// Coffin untaps → creature returns
+		g.AssertTapped(gametest.PlayerA, "Tawnos's Coffin", false)
+		g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 1)
+	})
+
+	t.Run("returns creature when Coffin leaves battlefield", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tawnos's Coffin")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Shatter") // destroy artifact
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Tawnos's Coffin", "Hill Giant")
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Shatter", "Tawnos's Coffin")
+		g.StopAt(2, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Tawnos's Coffin", 0)
+		g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 1)
+	})
+
+	t.Run("creature returns tapped", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tawnos's Coffin")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Tawnos's Coffin", "Hill Giant")
+		// Let Coffin untap on turn 3
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertTapped(gametest.PlayerB, "Hill Giant", true) // returns tapped
+	})
+
+	t.Run("preserves counters on returned creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tawnos's Coffin")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+		g.AddCounters(1, core.PrecombatMain, gametest.PlayerB, "Hill Giant", core.P1P1, 3)
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Tawnos's Coffin", "Hill Giant")
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		// Hill Giant returns with the noted 3 +1/+1 counters
+		g.AssertCounterCount(gametest.PlayerB, "Hill Giant", core.P1P1, 3)
 	})
 }
 

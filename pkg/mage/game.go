@@ -23,7 +23,9 @@ var (
 // ExiledCard tracks a card in exile along with metadata about why it was exiled.
 type ExiledCard struct {
 	Card     Card
-	ExiledBy uuid.UUID // ID of the permanent/spell that caused the exile
+	ExiledBy uuid.UUID              // ID of the permanent/spell that caused the exile
+	Counters map[CounterType]int    // noted counter state (e.g. Tawnos's Coffin)
+	Owner    uuid.UUID              // original controller when exiled
 }
 
 // Game is the central game state and engine.
@@ -454,6 +456,12 @@ func (g *Game) TurnFaceUp(perm *Permanent) {
 
 // RemoveFromBattlefield removes a permanent and handles cleanup.
 func (g *Game) RemoveFromBattlefield(perm *Permanent) {
+	// Capture abilities before removal (for "leaves battlefield" triggers on self)
+	selfAbilities := make([]Ability, len(perm.RuntimeAbilities))
+	copy(selfAbilities, perm.RuntimeAbilities)
+	permID := perm.ID()
+	controller := perm.Controller
+
 	// Remove continuous effects sourced from this permanent
 	g.Effects.Remove(perm.ID())
 
@@ -489,11 +497,14 @@ func (g *Game) RemoveFromBattlefield(perm *Permanent) {
 
 	g.Effects.Apply(g)
 
-	g.FireEvent(GameEvent{
+	evt := GameEvent{
 		Type:     EvtLeavesBattlefield,
-		SourceID: perm.ID(),
-		PlayerID: perm.Controller,
-	})
+		SourceID: permID,
+		PlayerID: controller,
+	}
+	g.FireEvent(evt)
+	// Also check the removed permanent's own triggers (since it's no longer on battlefield)
+	g.checkAbilitiesForEvent(selfAbilities, &evt, permID, controller)
 }
 
 // DestroyPermanent destroys a permanent (sends to graveyard).
@@ -736,6 +747,22 @@ func (g *Game) RemoveFromExile(cardID uuid.UUID) (Card, bool) {
 		}
 	}
 	return nil, false
+}
+
+// RemoveExiledCardBySource removes all exiled cards with the given ExiledBy ID
+// and returns them. Used by Tawnos's Coffin and similar cards.
+func (g *Game) RemoveExiledCardBySource(exiledBy uuid.UUID) []ExiledCard {
+	var found []ExiledCard
+	remaining := g.Exile[:0]
+	for _, ec := range g.Exile {
+		if ec.ExiledBy == exiledBy {
+			found = append(found, ec)
+		} else {
+			remaining = append(remaining, ec)
+		}
+	}
+	g.Exile = remaining
+	return found
 }
 
 // CounterSpellOnStack removes a spell from the stack by its source ID.
