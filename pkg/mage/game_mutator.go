@@ -87,7 +87,7 @@ type GameMutator interface {
 	// Damage prevention / redirection / reflection
 	AddTypePrevention(uuid.UUID, CardType)
 	SetArtifactDamageRedirect(controllerID, permID uuid.UUID)
-	SetDamageReflection(playerID, sourceID uuid.UUID)
+	SetDamageReflection(playerID, eyeSourceID, chosenSourceID uuid.UUID)
 
 	// Draw replacement (Aladdin's Lamp)
 	SetDrawReplacement(playerID uuid.UUID, count int)
@@ -264,8 +264,8 @@ func (g *Game) SetArtifactDamageRedirect(controllerID, permID uuid.UUID) {
 }
 
 // SetDamageReflection sets a one-shot damage reflection for a player (Eye for an Eye).
-func (g *Game) SetDamageReflection(playerID, sourceID uuid.UUID) {
-	g.Effects.SetDamageReflection(playerID, sourceID)
+func (g *Game) SetDamageReflection(playerID, eyeSourceID, chosenSourceID uuid.UUID) {
+	g.Effects.SetDamageReflection(playerID, eyeSourceID, chosenSourceID)
 }
 
 // SetDrawReplacement stores a pending draw replacement for a player (Aladdin's Lamp).

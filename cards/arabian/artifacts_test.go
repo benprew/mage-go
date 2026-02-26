@@ -149,6 +149,35 @@ func TestCityInABottle(t *testing.T) {
 		// Grizzly Bears stays
 		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
 	})
+
+	t.Run("prevents_casting_Arabian_Nights_spells", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "City in a Bottle")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Flying Carpet") // Arabian Nights artifact
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island")
+		// Try to cast an Arabian Nights spell — should be blocked
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Flying Carpet")
+		g.StopAt(2, core.BeginCombat)
+		g.Execute()
+		// Flying Carpet should still be in hand (cast blocked)
+		g.AssertPermanentCount(gametest.PlayerB, "Flying Carpet", 0)
+	})
+
+	t.Run("non_Arabian_spells_still_castable", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "City in a Bottle")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Grizzly Bears") // not Arabian
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forest")
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Grizzly Bears")
+		g.StopAt(2, core.BeginCombat)
+		g.Execute()
+		// Grizzly Bears should be on battlefield (non-Arabian, not blocked)
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
+	})
 }
 
 func TestSandalsOfAbdallah(t *testing.T) {
@@ -259,18 +288,42 @@ func TestAladdinsLamp(t *testing.T) {
 		for i := 0; i < 3; i++ {
 			g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
 		}
-		// Library: top to bottom
-		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Hill Giant")
-		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
+		// Library: top to bottom — put a different card on top so replacement
+		// produces a different result than a normal draw.
 		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Lightning Bolt")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Hill Giant")
 		// Activate lamp with X=3 during upkeep of turn 3 (PlayerA's second turn)
 		// so the draw replacement fires on turn 3's draw step
 		g.ActivateAbilityWithX(3, core.Upkeep, gametest.PlayerA, "Aladdin's Lamp", 3)
+		// TestPlayer picks first candidate from the top 3 — Lightning Bolt
 		g.StopAt(3, core.PrecombatMain)
 		g.Execute()
-		// Draw replacement: look at top 3, TestPlayer chooses first (Hill Giant),
+		// Draw replacement: look at top 3, TestPlayer chooses first (Lightning Bolt),
 		// rest go to bottom in random order
-		g.AssertHandCount(gametest.PlayerA, "Hill Giant", 1)
+		g.AssertHandCount(gametest.PlayerA, "Lightning Bolt", 1)
+	})
+
+	t.Run("replacement_expires_at_end_of_turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Aladdin's Lamp")
+		for i := 0; i < 3; i++ {
+			g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		}
+		// Library: several cards
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Lightning Bolt")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Hill Giant")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Shivan Dragon")
+		// Activate lamp in turn 1 main phase — but don't draw this turn
+		// (draw step already passed). The replacement should expire at end of turn.
+		g.ActivateAbilityWithX(1, core.PrecombatMain, gametest.PlayerA, "Aladdin's Lamp", 3)
+		// Stop at turn 3 draw step after cleanup clears the replacement
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		// Turn 3 draw should be a normal draw (Lightning Bolt, top of library)
+		// because the replacement expired at end of turn 1
+		g.AssertHandCount(gametest.PlayerA, "Lightning Bolt", 1)
 	})
 }
 

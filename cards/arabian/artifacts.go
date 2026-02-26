@@ -161,6 +161,15 @@ func registerArtifacts() {
 					return perm.Card.Expansion() == expansionName && !perm.Card.(*BaseCard).IsToken()
 				}),
 			),
+			// Continuous: block casting/playing Arabian Nights cards
+			WithStaticAbility(
+				FuncContinuousEffect(LayerAbility, WhileOnBattlefield,
+					func(g *Game, sourceID uuid.UUID) error {
+						g.Effects.AddExpansionCastBlock(expansionName)
+						return nil
+					},
+				),
+			),
 		)
 	}))
 

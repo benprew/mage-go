@@ -194,6 +194,12 @@ type EffectManager struct {
 	rules                 gameRuleModifiers
 }
 
+// damageReflectionEntry tracks the Eye for an Eye reflection state for a player.
+type damageReflectionEntry struct {
+	eyeSourceID  uuid.UUID // the Eye for an Eye card (used as damage source attribution)
+	chosenSource uuid.UUID // the source the player chose (uuid.Nil = any source)
+}
+
 // damageModifiers groups EffectManager fields related to damage prevention,
 // redirection, and regeneration.
 type damageModifiers struct {
@@ -209,8 +215,8 @@ type damageModifiers struct {
 	playerDamageRedirect   map[uuid.UUID]uuid.UUID    // controller -> creature that absorbs ALL damage to player
 	artifactDamageRedirect map[uuid.UUID]uuid.UUID    // controller -> creature that absorbs artifact damage to player (Martyrs of Korlis)
 	creatureDamageRedirect map[uuid.UUID]uuid.UUID    // creature -> player who receives damage instead of creature (one-shot)
-	damageReflection       map[uuid.UUID]uuid.UUID    // player -> Eye for an Eye source card ID (one-shot)
-	drawReplacement        map[uuid.UUID]int          // player -> X value for Aladdin's Lamp draw replacement
+	damageReflection       map[uuid.UUID]damageReflectionEntry // player -> Eye for an Eye reflection info (one-shot)
+	drawReplacement        map[uuid.UUID]int                  // player -> X value for Aladdin's Lamp draw replacement
 }
 
 // gameRuleModifiers groups EffectManager fields related to game rule modifications.
@@ -227,6 +233,7 @@ type gameRuleModifiers struct {
 	channelActive      map[uuid.UUID]bool      // players with Channel active this turn
 	minimumLife        map[uuid.UUID]bool      // players whose life can't go below 1 (Ali from Cairo)
 	maxHandSize        map[uuid.UUID]int       // player -> max hand size override (Cursed Rack)
+	expansionCastBlock []string                // expansion names blocked from casting/playing
 }
 
 func NewEffectManager() *EffectManager {
@@ -243,7 +250,7 @@ func NewEffectManager() *EffectManager {
 			playerDamageRedirect:   make(map[uuid.UUID]uuid.UUID),
 			artifactDamageRedirect: make(map[uuid.UUID]uuid.UUID),
 			creatureDamageRedirect: make(map[uuid.UUID]uuid.UUID),
-			damageReflection:       make(map[uuid.UUID]uuid.UUID),
+			damageReflection:       make(map[uuid.UUID]damageReflectionEntry),
 			drawReplacement:        make(map[uuid.UUID]int),
 		},
 		rules: gameRuleModifiers{
@@ -403,20 +410,29 @@ func (em *EffectManager) ClearCreatureDamageRedirect(creatureID uuid.UUID) {
 }
 
 // SetDamageReflection sets a one-shot damage reflection for a player (Eye for an Eye).
-// sourceID is the Eye for an Eye card's ID (used as damage source attribution).
-func (em *EffectManager) SetDamageReflection(playerID, sourceID uuid.UUID) {
-	em.damage.damageReflection[playerID] = sourceID
+// eyeSourceID is the Eye for an Eye card's ID (used as damage source attribution).
+// chosenSourceID is the specific source the player chose (uuid.Nil = any source).
+func (em *EffectManager) SetDamageReflection(playerID, eyeSourceID, chosenSourceID uuid.UUID) {
+	em.damage.damageReflection[playerID] = damageReflectionEntry{
+		eyeSourceID:  eyeSourceID,
+		chosenSource: chosenSourceID,
+	}
 }
 
-// GetDamageReflection returns the Eye for an Eye source ID if reflection is active for the player.
-func (em *EffectManager) GetDamageReflection(playerID uuid.UUID) (uuid.UUID, bool) {
-	id, ok := em.damage.damageReflection[playerID]
-	return id, ok
+// GetDamageReflection returns the reflection entry if reflection is active for the player.
+func (em *EffectManager) GetDamageReflection(playerID uuid.UUID) (damageReflectionEntry, bool) {
+	entry, ok := em.damage.damageReflection[playerID]
+	return entry, ok
 }
 
 // ClearDamageReflection clears the damage reflection for a player.
 func (em *EffectManager) ClearDamageReflection(playerID uuid.UUID) {
 	delete(em.damage.damageReflection, playerID)
+}
+
+// ClearAllDamageReflections resets all damage reflections at end of turn.
+func (em *EffectManager) ClearAllDamageReflections() {
+	em.damage.damageReflection = make(map[uuid.UUID]damageReflectionEntry)
 }
 
 // SetDrawReplacement stores a pending draw replacement for a player (Aladdin's Lamp).
@@ -434,6 +450,11 @@ func (em *EffectManager) GetDrawReplacement(playerID uuid.UUID) (int, bool) {
 // ClearDrawReplacement clears the pending draw replacement for a player.
 func (em *EffectManager) ClearDrawReplacement(playerID uuid.UUID) {
 	delete(em.damage.drawReplacement, playerID)
+}
+
+// ClearAllDrawReplacements resets all draw replacements at end of turn.
+func (em *EffectManager) ClearAllDrawReplacements() {
+	em.damage.drawReplacement = make(map[uuid.UUID]int)
 }
 
 // AddRegenerationShield increments the regeneration shield count for a permanent.
@@ -525,6 +546,21 @@ func (em *EffectManager) IsMinimumLifeActive(playerID uuid.UUID) bool {
 // ClearMinimumLife resets minimum-life state (called when effect source leaves).
 func (em *EffectManager) ClearMinimumLife() {
 	em.rules.minimumLife = make(map[uuid.UUID]bool)
+}
+
+// AddExpansionCastBlock registers an expansion name as blocked for casting/playing.
+func (em *EffectManager) AddExpansionCastBlock(expansion string) {
+	em.rules.expansionCastBlock = append(em.rules.expansionCastBlock, expansion)
+}
+
+// IsExpansionBlocked returns true if the given expansion is blocked from casting/playing.
+func (em *EffectManager) IsExpansionBlocked(expansion string) bool {
+	for _, e := range em.rules.expansionCastBlock {
+		if e == expansion {
+			return true
+		}
+	}
+	return false
 }
 
 // ArtifactUntapLimit returns the current artifact untap limit. -1 means no limit.
@@ -813,9 +849,8 @@ func (em *EffectManager) Apply(g *Game) {
 	em.damage.bodyguard = make(map[uuid.UUID]uuid.UUID)
 	em.damage.playerDamageRedirect = make(map[uuid.UUID]uuid.UUID)
 	em.damage.artifactDamageRedirect = make(map[uuid.UUID]uuid.UUID)
-	em.damage.damageReflection = make(map[uuid.UUID]uuid.UUID)
-	em.damage.drawReplacement = make(map[uuid.UUID]int)
 	em.rules.minimumLife = make(map[uuid.UUID]bool)
+	em.rules.expansionCastBlock = nil
 	// Rebuild prevention rules from continuous effects; preserve one-shot rules (e.g. CoP)
 	var oneShotRules []damagePreventionRule
 	for _, r := range em.damage.preventionRules {

@@ -899,16 +899,18 @@ func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
 		g.TurnFaceUp(src)
 	}
 	// Eye for an Eye: reflect damage to source's controller
-	if reflectSource, ok := g.Effects.GetDamageReflection(p.PlayerID()); ok {
-		g.Effects.ClearDamageReflection(p.PlayerID())
-		// Find the controller of the original damage source
-		sourceCard := g.FindCardForDamageSource(sourceID)
-		if sourceCard != nil {
-			sourceOwner := sourceCard.Owner()
-			if sourceOwner != uuid.Nil {
-				ownerPlayer := g.GetPlayer(sourceOwner)
-				if ownerPlayer != nil {
-					g.DealDamageToPlayer(ownerPlayer, amount, reflectSource)
+	if reflectEntry, ok := g.Effects.GetDamageReflection(p.PlayerID()); ok {
+		if reflectEntry.chosenSource == uuid.Nil || reflectEntry.chosenSource == sourceID {
+			g.Effects.ClearDamageReflection(p.PlayerID())
+			// Find the controller of the original damage source
+			sourceCard := g.FindCardForDamageSource(sourceID)
+			if sourceCard != nil {
+				sourceOwner := sourceCard.Owner()
+				if sourceOwner != uuid.Nil {
+					ownerPlayer := g.GetPlayer(sourceOwner)
+					if ownerPlayer != nil {
+						g.DealDamageToPlayer(ownerPlayer, amount, reflectEntry.eyeSourceID)
+					}
 				}
 			}
 		}
@@ -1261,6 +1263,10 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		return fmt.Errorf("card %s not found in hand", name)
 	}
 
+	// Check expansion block (City in a Bottle)
+	if exp := card.Expansion(); exp != "" && g.Effects.IsExpansionBlocked(exp) {
+		return fmt.Errorf("can't cast %s: expansion %s is blocked", name, exp)
+	}
 	// Check artifact mana restriction (Mishra's Workshop)
 	if g.ArtifactManaOnly[playerID] && !card.HasType(TypeArtifact) {
 		return fmt.Errorf("mana restriction: can only cast artifact spells")
@@ -2147,6 +2153,8 @@ func (g *Game) doCleanupActions() bool {
 	g.Effects.ClearPreventionShields()
 	g.Effects.ClearDamagePreventionRules()
 	g.Effects.ClearForcefieldShields()
+	g.Effects.ClearAllDrawReplacements()
+	g.Effects.ClearAllDamageReflections()
 	for _, p := range g.Battlefield {
 		// Clear activation tracking (Charge counters used for per-turn counts)
 		delete(p.Counters, Charge)
@@ -2247,6 +2255,11 @@ func (g *Game) playLandCore(playerID, cardID uuid.UUID) error {
 	if !card.HasType(TypeLand) {
 		p.AddToHand(card)
 		return fmt.Errorf("card is not a land")
+	}
+	// Check expansion block (City in a Bottle)
+	if exp := card.Expansion(); exp != "" && g.Effects.IsExpansionBlocked(exp) {
+		p.AddToHand(card)
+		return fmt.Errorf("can't play %s: expansion %s is blocked", card.Name(), exp)
 	}
 
 	g.PutOnBattlefield(card, playerID)
@@ -2546,6 +2559,11 @@ func (g *Game) CastSpellByID(playerID, cardID uuid.UUID, targets []uuid.UUID, xV
 	}
 	if card == nil {
 		return ErrCardNotInHand
+	}
+
+	// Check expansion block (City in a Bottle)
+	if exp := card.Expansion(); exp != "" && g.Effects.IsExpansionBlocked(exp) {
+		return fmt.Errorf("can't cast %s: expansion %s is blocked", card.Name(), exp)
 	}
 
 	// Compute payment mana cost

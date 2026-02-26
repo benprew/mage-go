@@ -194,4 +194,22 @@ func TestEyeForAnEye(t *testing.T) {
 		// PlayerA took 3 damage reflected by Eye for an Eye
 		g.AssertLife(gametest.PlayerA, 17)
 	})
+
+	t.Run("reflects_combat_damage_from_chosen_source", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant") // 3/3
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Eye for an Eye")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Plains")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Plains")
+		// Cast Eye for an Eye before combat; ChoosePermanent selects Hill Giant
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Eye for an Eye")
+		g.ChoosePermanent(gametest.PlayerB, "Hill Giant")
+		g.Attack(1, gametest.PlayerA, "Hill Giant")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+		// PlayerB took 3 combat damage from Hill Giant
+		g.AssertLife(gametest.PlayerB, 17)
+		// PlayerA took 3 reflected damage
+		g.AssertLife(gametest.PlayerA, 17)
+	})
 }

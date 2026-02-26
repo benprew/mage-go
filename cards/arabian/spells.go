@@ -65,7 +65,21 @@ func registerSpells() {
 			NewSpellAbility(FuncEffect("reflect next damage to source's controller",
 				EffectProperties{Outcome: OutcomeDetriment},
 				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					g.SetDamageReflection(controller, sourceID)
+					// Let the player choose a damage source (permanent) if any exist
+					opponent := g.GetOpponent(controller)
+					var candidates []*Permanent
+					if opponent != nil {
+						candidates = g.FilterBattlefield(ControlledBy(opponent.PlayerID()))
+					}
+					var chosenSourceID uuid.UUID
+					if len(candidates) > 0 {
+						player := g.GetPlayer(controller)
+						chosen := player.ChoosePermanent(candidates, "choose damage source", g)
+						if chosen != nil {
+							chosenSourceID = chosen.ID()
+						}
+					}
+					g.SetDamageReflection(controller, sourceID, chosenSourceID)
 					return nil
 				})),
 		)
