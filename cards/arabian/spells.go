@@ -60,9 +60,15 @@ func registerSpells() {
 	// Oracle: "The next time a source of your choice would deal damage to you this turn,
 	// instead that source deals that much damage to you and Eye for an Eye deals that much
 	// damage to that source's controller."
-	// XXX: Eye for an Eye deferred — needs damage source tracking + replacement effect
 	Register("Eye for an Eye", withExpansion(func() Card {
-		return NewInstant("Eye for an Eye", "{W}{W}", nil)
+		return NewInstant("Eye for an Eye", "{W}{W}",
+			NewSpellAbility(FuncEffect("reflect next damage to source's controller",
+				EffectProperties{Outcome: OutcomeDetriment},
+				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					g.SetDamageReflection(controller, sourceID)
+					return nil
+				})),
+		)
 	}))
 
 	// Oracle: "Blocking creatures get +0/+3 until end of turn."

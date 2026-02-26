@@ -6,6 +6,41 @@ import (
 	. "github.com/mage/mage/pkg/mage/core"
 )
 
+// discardLastDrawnCost is an additional cost: discard the last card drawn this turn.
+type discardLastDrawnCost struct{}
+
+func (c *discardLastDrawnCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+	p := g.GetPlayer(controller)
+	if p == nil {
+		return false
+	}
+	lastID := p.LastDrawnCardID()
+	if lastID == uuid.Nil {
+		return false
+	}
+	for _, card := range p.Hand() {
+		if card.ID() == lastID {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *discardLastDrawnCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
+	p := g.GetPlayer(controller)
+	if p == nil {
+		return nil
+	}
+	card, ok := p.RemoveFromHand(p.LastDrawnCardID())
+	if !ok {
+		return nil
+	}
+	p.AddToGraveyard(card)
+	return nil
+}
+
+func (c *discardLastDrawnCost) Text() string { return "Discard the last card you drew this turn" }
+
 func init() {
 	registerArtifacts()
 }
@@ -14,9 +49,23 @@ func registerArtifacts() {
 	// Oracle: "{X}, {T}: The next time you would draw a card this turn, instead look at
 	// the top X cards of your library, put all but one of them on the bottom of your
 	// library in a random order, then draw a card. X can't be 0."
-	// XXX: Aladdin's Lamp deferred — needs library peek + draw replacement effect
 	Register("Aladdin's Lamp", withExpansion(func() Card {
-		return NewArtifact("Aladdin's Lamp", "{10}")
+		return NewArtifact("Aladdin's Lamp", "{10}",
+			WithActivatedAbility(
+				FuncEffect("set up draw replacement",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						x := g.XValue()
+						if x <= 0 {
+							return nil // X can't be 0
+						}
+						g.SetDrawReplacement(controller, x)
+						return nil
+					}),
+				TapSourceCost(),
+				WithCost(ManaCostOf("{X}")),
+			),
+		)
 	}))
 
 	// Oracle: "{8}, {T}: Aladdin's Ring deals 4 damage to any target."
@@ -156,9 +205,15 @@ func registerArtifacts() {
 	}))
 
 	// Oracle: "{2}, {T}, Discard the last card you drew this turn: Draw a card."
-	// XXX: Jandor's Ring deferred — needs "last card drawn this turn" tracking
 	Register("Jandor's Ring", withExpansion(func() Card {
-		return NewArtifact("Jandor's Ring", "{6}")
+		return NewArtifact("Jandor's Ring", "{6}",
+			WithActivatedAbility(
+				DrawCards(Fixed(1)),
+				TapSourceCost(),
+				WithCost(ManaCostOf("{2}")),
+				WithCost(&discardLastDrawnCost{}),
+			),
+		)
 	}))
 
 	// Oracle: "{3}, {T}: Untap target creature."
@@ -217,9 +272,38 @@ func registerArtifacts() {
 
 	// Oracle: "{2}: Choose one — Destroy target Aura attached to a land. / The next time
 	// target land would be destroyed this turn, remove all damage marked on it instead."
-	// XXX: Pyramids deferred — needs modal ability + land-destruction prevention
 	Register("Pyramids", withExpansion(func() Card {
-		return NewArtifact("Pyramids", "{6}")
+		c := NewArtifact("Pyramids", "{6}",
+			WithActivatedAbility(
+				FuncEffect("destroy aura on land or protect land from destruction",
+					EffectProperties{},
+					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						target := g.FindPermanent(targets[0])
+						if target == nil {
+							return nil
+						}
+						if g.ModeValue() == 0 {
+							// Mode 1: Destroy target Aura attached to a land
+							g.DestroyPermanent(target)
+						} else {
+							// Mode 2: Make target land indestructible until end of turn
+							GrantKeywordUntilEndOfTurn(Indestructible, SelectTarget).
+								Apply(g, sourceID, controller, targets)
+						}
+						return nil
+					}),
+				ManaCostOf("{2}"),
+				WithTarget(TargetPermanent(Or(IsAuraOnLand, IsLand))),
+			),
+		)
+		c.SetModes([]string{
+			"Destroy target Aura attached to a land",
+			"Target land becomes indestructible this turn",
+		})
+		return c
 	}))
 
 	// Oracle: "{5}, {T}, Exile Ring of Ma'rûf: The next time you would draw a card this

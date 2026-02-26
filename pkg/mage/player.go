@@ -66,6 +66,10 @@ type Player interface {
 	DeclareBlockers(g *Game) []BlockAssignment
 	ChooseMayAbility(description string) bool
 
+	// Last drawn card tracking (for Jandor's Ring)
+	LastDrawnCardID() uuid.UUID
+	ClearLastDrawnCard()
+
 	// Player choice methods (overridden by TestPlayer for scripted choices)
 	ChooseMode(modes []string, reason string) int
 	ChoosePermanent(candidates []*Permanent, reason string, g GameReader) *Permanent
@@ -76,16 +80,17 @@ type Player interface {
 
 // BasePlayer implements Player with basic functionality.
 type BasePlayer struct {
-	id            uuid.UUID
-	name          string
-	life          int
-	lost          bool // true if the player has lost the game (e.g. deck-out)
-	drewFromEmpty bool // set when a draw is attempted from an empty library
-	hand          []Card
-	graveyard     []Card
-	library       []Card
-	ante          []Card
-	manaPool      *ManaPool
+	id              uuid.UUID
+	name            string
+	life            int
+	lost            bool // true if the player has lost the game (e.g. deck-out)
+	drewFromEmpty   bool // set when a draw is attempted from an empty library
+	hand            []Card
+	graveyard       []Card
+	library         []Card
+	ante            []Card
+	manaPool        *ManaPool
+	lastDrawnCardID uuid.UUID // ID of the last card drawn this turn (for Jandor's Ring)
 }
 
 func NewBasePlayer(name string) *BasePlayer {
@@ -192,8 +197,15 @@ func (p *BasePlayer) DrawCard() (Card, bool) {
 	c := p.library[0]
 	p.library = p.library[1:]
 	p.AddToHand(c)
+	p.lastDrawnCardID = c.ID()
 	return c, true
 }
+
+// LastDrawnCardID returns the ID of the last card drawn this turn.
+func (p *BasePlayer) LastDrawnCardID() uuid.UUID { return p.lastDrawnCardID }
+
+// ClearLastDrawnCard resets the last drawn card tracking (called at turn start).
+func (p *BasePlayer) ClearLastDrawnCard() { p.lastDrawnCardID = uuid.Nil }
 
 // Default decision implementations (overridden by TestPlayer).
 func (p *BasePlayer) ChooseTargets(possible []uuid.UUID, min, max int, g *Game) []uuid.UUID {

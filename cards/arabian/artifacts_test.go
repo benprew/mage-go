@@ -216,3 +216,81 @@ func TestJeweledBird(t *testing.T) {
 		g.AssertPermanentCount(gametest.PlayerA, "Jeweled Bird", 0)
 	})
 }
+
+func TestPyramids(t *testing.T) {
+	t.Run("mode_1_destroys_aura_on_land", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Pyramids")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forest")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Psychic Venom")
+		// Enchant opponent's Forest with Psychic Venom
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Psychic Venom", "Forest")
+		// Use Pyramids to destroy the aura
+		g.ChooseMode(gametest.PlayerA, 0) // Mode 1: destroy aura on land
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Pyramids", "Psychic Venom")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Psychic Venom destroyed, Forest still there
+		g.AssertPermanentCount(gametest.PlayerA, "Psychic Venom", 0)
+		g.AssertPermanentCount(gametest.PlayerB, "Forest", 1)
+	})
+
+	t.Run("mode_2_prevents_land_destruction", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Pyramids")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Desert Twister")
+		// Use Pyramids to protect the Forest
+		g.ChooseMode(gametest.PlayerA, 1) // Mode 2: prevent land destruction
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Pyramids", "Forest")
+		// Try to destroy the Forest
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Desert Twister", "Forest")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Forest survives thanks to Pyramids
+		g.AssertPermanentCount(gametest.PlayerA, "Forest", 1)
+	})
+}
+
+func TestAladdinsLamp(t *testing.T) {
+	t.Run("replaces_draw_with_filtered_draw", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Aladdin's Lamp")
+		for i := 0; i < 3; i++ {
+			g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		}
+		// Library: top to bottom
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Hill Giant")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Lightning Bolt")
+		// Activate lamp with X=3 during upkeep of turn 3 (PlayerA's second turn)
+		// so the draw replacement fires on turn 3's draw step
+		g.ActivateAbilityWithX(3, core.Upkeep, gametest.PlayerA, "Aladdin's Lamp", 3)
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		// Draw replacement: look at top 3, TestPlayer chooses first (Hill Giant),
+		// rest go to bottom in random order
+		g.AssertHandCount(gametest.PlayerA, "Hill Giant", 1)
+	})
+}
+
+func TestJandorsRing(t *testing.T) {
+	t.Run("discard_last_drawn_to_draw", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Jandor's Ring")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		// Put cards in library: first will be drawn in draw step on turn 3
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Hill Giant")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
+		// Turn 3 (PlayerA's second turn): draws Hill Giant, then activate Ring:
+		// discard Hill Giant (last drawn), draw Grizzly Bears
+		g.ActivateAbility(3, core.PrecombatMain, gametest.PlayerA, "Jandor's Ring")
+		g.StopAt(3, core.BeginCombat)
+		g.Execute()
+		// Hill Giant should be in graveyard (discarded as cost)
+		g.AssertGraveyardCount(gametest.PlayerA, "Hill Giant", 1)
+		// Grizzly Bears should be in hand (drawn by Ring)
+		g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 1)
+	})
+}

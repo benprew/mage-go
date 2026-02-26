@@ -178,3 +178,20 @@ func TestSandstorm(t *testing.T) {
 		g.AssertPermanentCount(gametest.PlayerB, "Flying Men", 1)
 	})
 }
+
+func TestEyeForAnEye(t *testing.T) {
+	t.Run("reflects_damage_to_sources_controller", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Eye for an Eye")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+		// Cast Eye for an Eye in response to Lightning Bolt targeting PlayerB
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
+		g.CastInResponseTo(gametest.PlayerB, "Eye for an Eye")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// PlayerB took 3 damage from Bolt
+		g.AssertLife(gametest.PlayerB, 17)
+		// PlayerA took 3 damage reflected by Eye for an Eye
+		g.AssertLife(gametest.PlayerA, 17)
+	})
+}

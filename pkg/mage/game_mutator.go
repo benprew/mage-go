@@ -84,9 +84,13 @@ type GameMutator interface {
 	CopyEffectCurrentName(uuid.UUID) string
 	UpdateCopyEffect(uuid.UUID, *Permanent)
 
-	// Damage prevention / redirection
+	// Damage prevention / redirection / reflection
 	AddTypePrevention(uuid.UUID, CardType)
 	SetArtifactDamageRedirect(controllerID, permID uuid.UUID)
+	SetDamageReflection(playerID, sourceID uuid.UUID)
+
+	// Draw replacement (Aladdin's Lamp)
+	SetDrawReplacement(playerID uuid.UUID, count int)
 
 	// Mana restriction
 	SetArtifactManaOnly(uuid.UUID)
@@ -257,6 +261,16 @@ func (g *Game) AddTypePrevention(playerID uuid.UUID, ct CardType) {
 // SetArtifactDamageRedirect sets a creature that absorbs artifact damage dealt to a player.
 func (g *Game) SetArtifactDamageRedirect(controllerID, permID uuid.UUID) {
 	g.Effects.SetArtifactDamageRedirect(controllerID, permID)
+}
+
+// SetDamageReflection sets a one-shot damage reflection for a player (Eye for an Eye).
+func (g *Game) SetDamageReflection(playerID, sourceID uuid.UUID) {
+	g.Effects.SetDamageReflection(playerID, sourceID)
+}
+
+// SetDrawReplacement stores a pending draw replacement for a player (Aladdin's Lamp).
+func (g *Game) SetDrawReplacement(playerID uuid.UUID, count int) {
+	g.Effects.SetDrawReplacement(playerID, count)
 }
 
 // SetArtifactManaOnly marks a player as having artifact-only mana restriction active.

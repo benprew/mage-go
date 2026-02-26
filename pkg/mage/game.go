@@ -898,6 +898,21 @@ func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
 	if src != nil && src.FaceDown {
 		g.TurnFaceUp(src)
 	}
+	// Eye for an Eye: reflect damage to source's controller
+	if reflectSource, ok := g.Effects.GetDamageReflection(p.PlayerID()); ok {
+		g.Effects.ClearDamageReflection(p.PlayerID())
+		// Find the controller of the original damage source
+		sourceCard := g.FindCardForDamageSource(sourceID)
+		if sourceCard != nil {
+			sourceOwner := sourceCard.Owner()
+			if sourceOwner != uuid.Nil {
+				ownerPlayer := g.GetPlayer(sourceOwner)
+				if ownerPlayer != nil {
+					g.DealDamageToPlayer(ownerPlayer, amount, reflectSource)
+				}
+			}
+		}
+	}
 }
 
 // DealDamageToPermanent deals damage to a permanent.
@@ -1461,6 +1476,14 @@ func (g *Game) ActivateAbilityByText(playerID uuid.UUID, permName string, target
 		}
 		obj.Effects = append(obj.Effects, aa.Effects()...)
 
+		// Modal abilities: choose mode at activation time
+		if modes := perm.Card.Modes(); len(modes) > 0 {
+			p := g.GetPlayer(playerID)
+			if p != nil {
+				obj.ModeChoice = p.ChooseMode(modes, perm.Card.Name())
+			}
+		}
+
 		g.Stack.Push(obj)
 		return nil
 	}
@@ -1884,7 +1907,44 @@ func (g *Game) doDrawNormalDraw() {
 		return
 	}
 
+	// Aladdin's Lamp: replace draw with library peek + choice
+	if count, ok := g.Effects.GetDrawReplacement(active.PlayerID()); ok {
+		g.Effects.ClearDrawReplacement(active.PlayerID())
+		g.applyDrawReplacement(active, count)
+		return
+	}
+
 	active.DrawCard()
+}
+
+// applyDrawReplacement handles Aladdin's Lamp draw replacement.
+// Look at top X cards, choose one, put rest on bottom randomly, draw the chosen card.
+func (g *Game) applyDrawReplacement(p Player, count int) {
+	lib := p.Library()
+	if count > len(lib) {
+		count = len(lib)
+	}
+	if count == 0 {
+		return
+	}
+	candidates := make([]Card, count)
+	copy(candidates, lib[:count])
+	chosen := p.ChooseCardFromLibrary(candidates, "choose card from Aladdin's Lamp", g)
+	if chosen == nil {
+		chosen = candidates[0]
+	}
+	var rest []Card
+	for _, c := range candidates {
+		if c.ID() != chosen.ID() {
+			rest = append(rest, c)
+		}
+	}
+	rand.Shuffle(len(rest), func(i, j int) { rest[i], rest[j] = rest[j], rest[i] })
+	newLib := []Card{chosen}
+	newLib = append(newLib, lib[count:]...)
+	newLib = append(newLib, rest...)
+	p.SetLibrary(newLib)
+	p.DrawCard()
 }
 
 func (g *Game) DoDraw() {
@@ -2079,6 +2139,10 @@ func (g *Game) doCleanupActions() bool {
 	// Clear mana restrictions
 	g.ArtifactManaOnly = make(map[uuid.UUID]bool)
 	g.CreatureManaOnly = make(map[uuid.UUID]bool)
+	// Clear last-drawn-card tracking for all players
+	for _, p := range g.Players {
+		p.ClearLastDrawnCard()
+	}
 	// Clear damage prevention and Forcefield shields
 	g.Effects.ClearPreventionShields()
 	g.Effects.ClearDamagePreventionRules()

@@ -209,6 +209,8 @@ type damageModifiers struct {
 	playerDamageRedirect   map[uuid.UUID]uuid.UUID    // controller -> creature that absorbs ALL damage to player
 	artifactDamageRedirect map[uuid.UUID]uuid.UUID    // controller -> creature that absorbs artifact damage to player (Martyrs of Korlis)
 	creatureDamageRedirect map[uuid.UUID]uuid.UUID    // creature -> player who receives damage instead of creature (one-shot)
+	damageReflection       map[uuid.UUID]uuid.UUID    // player -> Eye for an Eye source card ID (one-shot)
+	drawReplacement        map[uuid.UUID]int          // player -> X value for Aladdin's Lamp draw replacement
 }
 
 // gameRuleModifiers groups EffectManager fields related to game rule modifications.
@@ -241,6 +243,8 @@ func NewEffectManager() *EffectManager {
 			playerDamageRedirect:   make(map[uuid.UUID]uuid.UUID),
 			artifactDamageRedirect: make(map[uuid.UUID]uuid.UUID),
 			creatureDamageRedirect: make(map[uuid.UUID]uuid.UUID),
+			damageReflection:       make(map[uuid.UUID]uuid.UUID),
+			drawReplacement:        make(map[uuid.UUID]int),
 		},
 		rules: gameRuleModifiers{
 			landUntapLimit:     -1,
@@ -396,6 +400,40 @@ func (em *EffectManager) GetCreatureDamageRedirect(creatureID uuid.UUID) uuid.UU
 // ClearCreatureDamageRedirect clears the one-shot creature damage redirect.
 func (em *EffectManager) ClearCreatureDamageRedirect(creatureID uuid.UUID) {
 	delete(em.damage.creatureDamageRedirect, creatureID)
+}
+
+// SetDamageReflection sets a one-shot damage reflection for a player (Eye for an Eye).
+// sourceID is the Eye for an Eye card's ID (used as damage source attribution).
+func (em *EffectManager) SetDamageReflection(playerID, sourceID uuid.UUID) {
+	em.damage.damageReflection[playerID] = sourceID
+}
+
+// GetDamageReflection returns the Eye for an Eye source ID if reflection is active for the player.
+func (em *EffectManager) GetDamageReflection(playerID uuid.UUID) (uuid.UUID, bool) {
+	id, ok := em.damage.damageReflection[playerID]
+	return id, ok
+}
+
+// ClearDamageReflection clears the damage reflection for a player.
+func (em *EffectManager) ClearDamageReflection(playerID uuid.UUID) {
+	delete(em.damage.damageReflection, playerID)
+}
+
+// SetDrawReplacement stores a pending draw replacement for a player (Aladdin's Lamp).
+// count is the number of cards to look at (X value).
+func (em *EffectManager) SetDrawReplacement(playerID uuid.UUID, count int) {
+	em.damage.drawReplacement[playerID] = count
+}
+
+// GetDrawReplacement returns the pending draw replacement count, or 0 if none.
+func (em *EffectManager) GetDrawReplacement(playerID uuid.UUID) (int, bool) {
+	count, ok := em.damage.drawReplacement[playerID]
+	return count, ok
+}
+
+// ClearDrawReplacement clears the pending draw replacement for a player.
+func (em *EffectManager) ClearDrawReplacement(playerID uuid.UUID) {
+	delete(em.damage.drawReplacement, playerID)
 }
 
 // AddRegenerationShield increments the regeneration shield count for a permanent.
@@ -775,6 +813,8 @@ func (em *EffectManager) Apply(g *Game) {
 	em.damage.bodyguard = make(map[uuid.UUID]uuid.UUID)
 	em.damage.playerDamageRedirect = make(map[uuid.UUID]uuid.UUID)
 	em.damage.artifactDamageRedirect = make(map[uuid.UUID]uuid.UUID)
+	em.damage.damageReflection = make(map[uuid.UUID]uuid.UUID)
+	em.damage.drawReplacement = make(map[uuid.UUID]int)
 	em.rules.minimumLife = make(map[uuid.UUID]bool)
 	// Rebuild prevention rules from continuous effects; preserve one-shot rules (e.g. CoP)
 	var oneShotRules []damagePreventionRule
