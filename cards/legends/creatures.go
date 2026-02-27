@@ -52,10 +52,21 @@ func registerCreatures() {
 // Creature — Kithkin
 // 1/1
 // This creature can't be blocked by creatures with power 3 or greater.
-// TODO: implement — needs engine support for "can't be blocked by creatures with power >= 3" restriction
 	Register("Amrou Kithkin", withExpansion(func() Card {
 		return NewCreature("Amrou Kithkin", "{W}{W}", 1, 1,
 			WithSubTypes("Kithkin"),
+			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+				src := g.FindPermanent(sourceID)
+				if src == nil {
+					return nil
+				}
+				for _, p := range g.Battlefield {
+					if p.HasType(TypeCreature) && p.CurrentPower(g) >= 3 {
+						g.Effects.PreventBlockPair(p.ID(), sourceID)
+					}
+				}
+				return nil
+			})),
 		)
 	}))
 
@@ -380,11 +391,31 @@ func registerCreatures() {
 // 1/5
 // Defender (This creature can't attack.)
 // {2}{U}{U}: This creature gets +4/-4 until end of turn and can attack this turn as though it didn't have defender.
-// TODO: implement — needs engine support for "can attack as though it didn't have defender" override
 	Register("Wall of Wonder", withExpansion(func() Card {
 		return NewCreature("Wall of Wonder", "{2}{U}{U}", 1, 5,
 			WithSubTypes("Wall"),
 			WithKeyword(Defender),
+			WithActivatedAbility(
+				FuncEffect(
+					"this creature gets +4/-4 until end of turn and can attack this turn as though it didn't have defender",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						// +4/-4 boost
+						boost := TemporaryBoost(sourceID, 4, -4)
+						boost.SetSourceID(sourceID)
+						g.AddContinuousEffect(boost)
+						// Revoke Defender so it can attack this turn
+						canAttack := TargetEffect(LayerAbility, EndOfTurn, sourceID, func(g *Game, target *Permanent) error {
+							g.Effects.RevokeAttr(target.ID(), Defender)
+							return nil
+						})
+						canAttack.SetSourceID(sourceID)
+						g.AddContinuousEffect(canAttack)
+						return nil
+					},
+				),
+				ManaCostOf("{2}{U}{U}"),
+			),
 		)
 	}))
 

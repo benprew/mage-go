@@ -70,6 +70,33 @@ func TestHammerheim(t *testing.T) {
 	})
 }
 
+func TestTheTabernacleAtPendrellVale(t *testing.T) {
+	t.Run("destroys creatures that cannot pay upkeep", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "The Tabernacle at Pendrell Vale")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		// PlayerB has no lands to pay {1} during upkeep
+		// Turn 2 is PlayerB's turn — upkeep triggers
+		g.StopAt(2, core.PrecombatMain)
+		g.Execute()
+		// Bears should be destroyed (couldn't pay {1})
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+		g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+	})
+
+	t.Run("creatures survive if controller can pay", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "The Tabernacle at Pendrell Vale")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forest")
+		// PlayerB has a Forest to pay {1}
+		g.StopAt(2, core.PrecombatMain)
+		g.Execute()
+		// Bears survive because controller could pay {1}
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
+	})
+}
+
 func TestTolaria(t *testing.T) {
 	t.Run("taps for blue mana", func(t *testing.T) {
 		g := gametest.NewTestGame(t)

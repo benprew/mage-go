@@ -1502,6 +1502,46 @@ func TestTetsuoUmezawa(t *testing.T) {
 	})
 }
 
+func TestAmrouKithkin(t *testing.T) {
+	t.Run("cannot be blocked by power 3 or greater", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Amrou Kithkin")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Craw Wurm") // 6/4, power >= 3
+		g.Attack(1, gametest.PlayerA, "Amrou Kithkin")
+		g.Block(1, gametest.PlayerB, "Craw Wurm", "Amrou Kithkin")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Craw Wurm can't block Amrou Kithkin — 1 damage to player B
+		g.AssertLife(gametest.PlayerB, 19)
+	})
+
+	t.Run("can be blocked by power 2", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Amrou Kithkin")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // 2/2
+		g.Attack(1, gametest.PlayerA, "Amrou Kithkin")
+		g.Block(1, gametest.PlayerB, "Grizzly Bears", "Amrou Kithkin")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Grizzly Bears can block — no damage to player B
+		g.AssertLife(gametest.PlayerB, 20)
+	})
+}
+
+func TestWallOfWonder(t *testing.T) {
+	t.Run("can attack with ability and gets +4/-4", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Wall of Wonder")
+		// Activate to get +4/-4 and attack ability
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Wall of Wonder")
+		g.Attack(1, gametest.PlayerA, "Wall of Wonder")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// 1+4=5 power, 5-4=1 toughness → deals 5 damage
+		g.AssertLife(gametest.PlayerB, 15)
+	})
+}
+
 func TestLivonyaSilone(t *testing.T) {
 	t.Run("has first strike", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
