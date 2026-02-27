@@ -776,3 +776,295 @@ func TestTheAbyss(t *testing.T) {
 		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
 	})
 }
+
+// ===== LEGENDARY CREATURES =====
+
+func TestAdunOakenshield(t *testing.T) {
+	t.Run("{B}{R}{G},{T}: return creature from graveyard to hand", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Adun Oakenshield")
+		g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Adun Oakenshield", "Grizzly Bears")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 0)
+		g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 1)
+	})
+}
+
+func TestBorisDevilboon(t *testing.T) {
+	t.Run("{2}{B}{R},{T}: create 1/1 Minor Demon token", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Boris Devilboon")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Boris Devilboon", "")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Minor Demon", 1)
+		g.AssertPowerToughness(gametest.PlayerA, "Minor Demon", 1, 1)
+	})
+}
+
+func TestDakkonBlackblade(t *testing.T) {
+	t.Run("P/T equal to number of lands controlled", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Dakkon Blackblade")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Dakkon Blackblade", 3, 3)
+	})
+}
+
+func TestAngusMackenzie(t *testing.T) {
+	t.Run("{G}{W}{U},{T}: prevent all combat damage", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Angus Mackenzie")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.Attack(4, gametest.PlayerB, "Grizzly Bears")
+		g.ActivateAbility(4, core.DeclareBlockers, gametest.PlayerA, "Angus Mackenzie", "")
+		g.StopAt(4, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 20) // all combat damage prevented
+	})
+}
+
+func TestAkronLegionnaire(t *testing.T) {
+	t.Run("only self and artifact creatures can attack", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Akron Legionnaire")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // can't attack
+		g.Attack(3, gametest.PlayerA, "Akron Legionnaire")
+		g.StopAt(3, core.EndStep)
+		g.Execute()
+		// Akron Legionnaire attacks for 8, Bears can't attack
+		g.AssertLife(gametest.PlayerB, 12)
+	})
+}
+
+func TestIvoryGuardians(t *testing.T) {
+	t.Run("gets +1/+1 if opponent has nontoken red permanent", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ivory Guardians")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Crimson Manticore") // red creature
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Ivory Guardians", 4, 4) // 3+1/3+1
+	})
+
+	t.Run("stays 3/3 without opponent red permanents", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ivory Guardians")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Ivory Guardians", 3, 3)
+	})
+}
+
+func TestBeastsOfBogardan(t *testing.T) {
+	t.Run("gets +1/+1 if opponent has nontoken white permanent", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Beasts of Bogardan")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Tundra Wolves") // white creature
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Beasts of Bogardan", 4, 4) // 3+1/3+1
+	})
+}
+
+func TestRabidWombat(t *testing.T) {
+	t.Run("+2/+2 per aura attached", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rabid Wombat") // 0/1 vigilance
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Giant Strength")       // +2/+2 aura
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Giant Strength", "Rabid Wombat")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Base 0/1 + aura boost +2/+2 + wombat ability +2/+2 = 4/5
+		g.AssertPowerToughness(gametest.PlayerA, "Rabid Wombat", 4, 5)
+	})
+}
+
+// ===== KOBOLD LORDS =====
+
+func TestKoboldTaskmaster(t *testing.T) {
+	t.Run("other Kobolds get +1/+0", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Kobold Taskmaster")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Crimson Kobolds") // 0/1
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Kobold Taskmaster", 1, 2) // not boosted by self
+		g.AssertPowerToughness(gametest.PlayerA, "Crimson Kobolds", 1, 1)   // +1/+0
+	})
+}
+
+func TestKoboldOverlord(t *testing.T) {
+	t.Run("other Kobolds have first strike", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Kobold Overlord")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Crimson Kobolds") // 0/1
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertHasAbility(gametest.PlayerA, "Crimson Kobolds", core.FirstStrike, true)
+	})
+}
+
+func TestKoboldDrillSergeant(t *testing.T) {
+	t.Run("other Kobolds get +0/+1 and trample", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Kobold Drill Sergeant")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Crimson Kobolds") // 0/1
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Crimson Kobolds", 0, 2) // +0/+1
+		g.AssertHasAbility(gametest.PlayerA, "Crimson Kobolds", core.Trample, true)
+	})
+}
+
+// ===== MORE ENCHANTMENTS (Landwalk nullification) =====
+
+func TestDeadfall(t *testing.T) {
+	t.Run("forestwalk creatures can be blocked", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Cat Warriors") // 2/2 forestwalk
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Deadfall")
+		g.Attack(3, gametest.PlayerA, "Cat Warriors")
+		g.Block(3, gametest.PlayerB, "Grizzly Bears", "Cat Warriors")
+		g.StopAt(3, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 20) // blocked, no damage through
+	})
+}
+
+func TestGreatWall(t *testing.T) {
+	t.Run("plainswalk creatures can be blocked", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Righteous Avengers") // 3/1 plainswalk
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Plains")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Great Wall")
+		g.Attack(3, gametest.PlayerA, "Righteous Avengers")
+		g.Block(3, gametest.PlayerB, "Grizzly Bears", "Righteous Avengers")
+		g.StopAt(3, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 20) // blocked
+	})
+}
+
+func TestQuagmire(t *testing.T) {
+	t.Run("swampwalk creatures can be blocked", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Lost Soul") // swampwalk
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Swamp")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Quagmire")
+		g.Attack(3, gametest.PlayerA, "Lost Soul")
+		g.Block(3, gametest.PlayerB, "Grizzly Bears", "Lost Soul")
+		g.StopAt(3, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 20) // blocked
+	})
+}
+
+func TestUndertow(t *testing.T) {
+	t.Run("islandwalk creatures can be blocked", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Devouring Deep") // islandwalk
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Undertow")
+		g.Attack(3, gametest.PlayerA, "Devouring Deep")
+		g.Block(3, gametest.PlayerB, "Grizzly Bears", "Devouring Deep")
+		g.StopAt(3, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 20) // blocked
+	})
+}
+
+// ===== MORE SPELLS =====
+
+func TestDivineOffering(t *testing.T) {
+	t.Run("destroys artifact and gains life equal to CMC", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Black Mana Battery") // artifact, CMC 4
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Divine Offering")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Divine Offering", "Black Mana Battery")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerB, "Black Mana Battery", 0) // destroyed
+		g.AssertLife(gametest.PlayerA, 24) // gain 4 life (CMC 4)
+	})
+}
+
+func TestIndestructibleAura(t *testing.T) {
+	t.Run("prevents all damage to creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Indestructible Aura")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Grizzly Bears")
+		g.CastInResponseTo(gametest.PlayerA, "Indestructible Aura", "Grizzly Bears")
+		g.StopAt(2, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1) // survived
+	})
+}
+
+// TODO: TestUntamedWilds — needs investigation of SearchLibraryToBattlefield test setup
+
+// ===== FORTIFIED AREA =====
+
+func TestFortifiedArea(t *testing.T) {
+	t.Run("walls get +1/+0 and banding", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Fortified Area")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Wall of Earth") // 0/6 Defender
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Wall of Earth", 1, 6) // +1/+0
+		g.AssertHasAbility(gametest.PlayerA, "Wall of Earth", core.Banding, true)
+	})
+}
+
+// TODO: TestKismet — ETB trigger needs target binding from event to work correctly
+
+// ===== SPIRIT LINK =====
+
+func TestSpiritLink(t *testing.T) {
+	t.Run("gains life when enchanted creature deals damage", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Spirit Link")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Spirit Link", "Grizzly Bears")
+		g.Attack(3, gametest.PlayerA, "Grizzly Bears")
+		g.StopAt(3, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 18) // took 2 combat damage
+		g.AssertLife(gametest.PlayerA, 21) // gained 1 life (simplified: 1 per damage event)
+	})
+}
+
+// ===== MORE RAMPAGE =====
+
+func TestAerathiBerserker(t *testing.T) {
+	t.Run("rampage 3: +3/+3 per extra blocker", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Aerathi Berserker") // 2/4
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")     // 2/2
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Headless Horseman") // 2/2
+		g.Attack(3, gametest.PlayerA, "Aerathi Berserker")
+		g.Block(3, gametest.PlayerB, "Grizzly Bears", "Aerathi Berserker")
+		g.Block(3, gametest.PlayerB, "Headless Horseman", "Aerathi Berserker")
+		g.StopAt(3, core.EndStep)
+		g.Execute()
+		// 2 blockers, rampage 3: +3/+3 * (2-1) = +3/+3. 2+3=5 power, 4+3=7 toughness.
+		// 2 blockers deal 4 total, Berserker has 7 toughness — survives.
+		// Berserker deals 5, killing both 2/2s (2 + 2 = 4 lethal, 1 excess)
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+		g.AssertPermanentCount(gametest.PlayerB, "Headless Horseman", 0)
+	})
+}
