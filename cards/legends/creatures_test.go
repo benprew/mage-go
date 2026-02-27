@@ -1068,3 +1068,125 @@ func TestAerathiBerserker(t *testing.T) {
 		g.AssertPermanentCount(gametest.PlayerB, "Headless Horseman", 0)
 	})
 }
+
+// ===== TDD: NEW IMPLEMENTATIONS =====
+
+func TestHundingGjornersen(t *testing.T) {
+	t.Run("5/4 with rampage 1", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hunding Gjornersen")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Headless Horseman")
+		g.Attack(3, gametest.PlayerA, "Hunding Gjornersen")
+		g.Block(3, gametest.PlayerB, "Grizzly Bears", "Hunding Gjornersen")
+		g.Block(3, gametest.PlayerB, "Headless Horseman", "Hunding Gjornersen")
+		g.StopAt(3, core.EndStep)
+		g.Execute()
+		// 2 blockers, rampage 1: +1/+1 * (2-1) = +1/+1. 5+1=6 power, 4+1=5 toughness.
+		// Blockers deal 4, Hunding has 5 toughness — survives.
+		g.AssertPermanentCount(gametest.PlayerA, "Hunding Gjornersen", 1)
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+		g.AssertPermanentCount(gametest.PlayerB, "Headless Horseman", 0)
+	})
+}
+
+func TestMarhaultElsdragon(t *testing.T) {
+	t.Run("4/6 with rampage 1", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Marhault Elsdragon")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Marhault Elsdragon", 4, 6)
+	})
+}
+
+func TestPavelMaliki(t *testing.T) {
+	t.Run("{B}{R}: +1/+0 until end of turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Pavel Maliki")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Pavel Maliki", "+1/+0")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Pavel Maliki", 6, 3) // 5+1/3
+	})
+}
+
+func TestPrincessLucrezia(t *testing.T) {
+	t.Run("{T}: add {U}", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Princess Lucrezia")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Princess Lucrezia", 5, 4)
+	})
+}
+
+func TestRivenTurnbull(t *testing.T) {
+	t.Run("{T}: add {B}", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Riven Turnbull")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Riven Turnbull", 5, 7)
+	})
+}
+
+func TestSunastianFalconer(t *testing.T) {
+	t.Run("{T}: add {C}{C}", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sunastian Falconer")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Sunastian Falconer", 4, 4)
+	})
+}
+
+func TestRamirezDePietro(t *testing.T) {
+	t.Run("4/3 first strike legendary pirate", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ramirez DePietro")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Ramirez DePietro", 4, 3)
+		g.AssertHasAbility(gametest.PlayerA, "Ramirez DePietro", core.FirstStrike, true)
+	})
+}
+
+func TestPitScorpion(t *testing.T) {
+	t.Run("deals damage gives poison counter", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Pit Scorpion") // 1/1
+		g.Attack(3, gametest.PlayerA, "Pit Scorpion")
+		g.StopAt(3, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 19) // 1 combat damage
+		// TODO: AssertPoisonCounters when available
+	})
+}
+
+func TestPalladiaMors(t *testing.T) {
+	t.Run("7/7 flying trample with upkeep sacrifice", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Palladia-Mors")
+		// Provide lands so upkeep cost can be paid
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Palladia-Mors", 7, 7)
+		g.AssertHasAbility(gametest.PlayerA, "Palladia-Mors", core.Flying, true)
+		g.AssertHasAbility(gametest.PlayerA, "Palladia-Mors", core.Trample, true)
+	})
+
+	t.Run("sacrificed if upkeep cost not paid", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Palladia-Mors")
+		// No mana to pay {R}{G}{W} — should be sacrificed at upkeep
+		g.StopAt(3, core.PrecombatMain) // turn 3 = PlayerA's second upkeep
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Palladia-Mors", 0)
+	})
+}

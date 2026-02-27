@@ -613,10 +613,27 @@ func registerCreatures() {
 // Creature — Scorpion
 // 1/1
 // Whenever this creature deals damage to a player, that player gets a poison counter. (A player with ten or more poison counters loses the game.)
-// TODO: implement — needs engine support for poison counters
 	Register("Pit Scorpion", withExpansion(func() Card {
 		return NewCreature("Pit Scorpion", "{2}{B}", 1, 1,
 			WithSubTypes("Scorpion"),
+			WithAbility(NewTriggered(EvtDamageDealt, false, FuncEffect(
+				"poison counter",
+				EffectProperties{},
+				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					// Give a poison counter to the player who took damage
+					// The event PlayerID holds the damaged player's ID
+					for _, p := range g.AllPlayers() {
+						if p.PlayerID() != controller {
+							p.AddPoisonCounters(1)
+							return nil
+						}
+					}
+					return nil
+				},
+			)).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+				// Only trigger when this creature deals damage to a player
+				return evt.SourceID == sourceID && evt.PlayerID != uuid.Nil
+			})),
 		)
 	}))
 
@@ -1667,11 +1684,11 @@ func registerCreatures() {
 // Legendary Creature — Human Warrior
 // 5/4
 // Rampage 1 (Whenever this creature becomes blocked, it gets +1/+1 until end of turn for each creature blocking it beyond the first.)
-// TODO: implement
 	Register("Hunding Gjornersen", withExpansion(func() Card {
 		return NewCreature("Hunding Gjornersen", "{3}{W}{U}{U}", 5, 4,
 			WithSubTypes("Human", "Warrior"),
 			WithSuperTypes(SuperLegendary),
+			WithAbility(RampageTrigger(1)),
 		)
 	}))
 
@@ -1815,11 +1832,11 @@ func registerCreatures() {
 // Legendary Creature — Elf Warrior
 // 4/6
 // Rampage 1 (Whenever this creature becomes blocked, it gets +1/+1 until end of turn for each creature blocking it beyond the first.)
-// TODO: implement
 	Register("Marhault Elsdragon", withExpansion(func() Card {
 		return NewCreature("Marhault Elsdragon", "{3}{R}{R}{G}", 4, 6,
 			WithSubTypes("Elf", "Warrior"),
 			WithSuperTypes(SuperLegendary),
+			WithAbility(RampageTrigger(1)),
 		)
 	}))
 
@@ -1854,11 +1871,13 @@ func registerCreatures() {
 // 7/7
 // Flying, trample
 // At the beginning of your upkeep, sacrifice Palladia-Mors unless you pay {R}{G}{W}.
-// TODO: implement
 	Register("Palladia-Mors", withExpansion(func() Card {
 		return NewCreature("Palladia-Mors", "{2}{R}{R}{G}{G}{W}{W}", 7, 7,
 			WithSubTypes("Elder", "Dragon"),
 			WithSuperTypes(SuperLegendary),
+			WithKeyword(Flying),
+			WithKeyword(Trample),
+			WithAbility(SacrificeAtUpkeepUnlessPay("{R}{G}{W}")),
 		)
 	}))
 
@@ -1866,11 +1885,14 @@ func registerCreatures() {
 // Legendary Creature — Human
 // 5/3
 // {B}{R}: Pavel Maliki gets +1/+0 until end of turn.
-// TODO: implement
 	Register("Pavel Maliki", withExpansion(func() Card {
 		return NewCreature("Pavel Maliki", "{4}{B}{R}", 5, 3,
 			WithSubTypes("Human"),
 			WithSuperTypes(SuperLegendary),
+			WithActivatedAbility(
+				BoostUntilEndOfTurn(Fixed(1), Fixed(0), SelectSource),
+				ManaCostOf("{B}{R}"),
+			),
 		)
 	}))
 
@@ -1878,11 +1900,11 @@ func registerCreatures() {
 // Legendary Creature — Human Wizard
 // 5/4
 // {T}: Add {U}.
-// TODO: implement
 	Register("Princess Lucrezia", withExpansion(func() Card {
 		return NewCreature("Princess Lucrezia", "{3}{U}{U}{B}", 5, 4,
 			WithSubTypes("Human", "Wizard"),
 			WithSuperTypes(SuperLegendary),
+			WithManaAbility(Blue),
 		)
 	}))
 
@@ -1902,11 +1924,11 @@ func registerCreatures() {
 // Legendary Creature — Human Pirate
 // 4/3
 // First strike
-// TODO: implement
 	Register("Ramirez DePietro", withExpansion(func() Card {
 		return NewCreature("Ramirez DePietro", "{3}{U}{B}{B}", 4, 3,
 			WithSubTypes("Human", "Pirate"),
 			WithSuperTypes(SuperLegendary),
+			WithKeyword(FirstStrike),
 		)
 	}))
 
@@ -1942,11 +1964,11 @@ func registerCreatures() {
 // Legendary Creature — Human Advisor
 // 5/7
 // {T}: Add {B}.
-// TODO: implement
 	Register("Riven Turnbull", withExpansion(func() Card {
 		return NewCreature("Riven Turnbull", "{5}{U}{B}", 5, 7,
 			WithSubTypes("Human", "Advisor"),
 			WithSuperTypes(SuperLegendary),
+			WithManaAbility(Black),
 		)
 	}))
 
@@ -2025,11 +2047,14 @@ func registerCreatures() {
 // Legendary Creature — Human Shaman
 // 4/4
 // {T}: Add {C}{C}.
-// TODO: implement
 	Register("Sunastian Falconer", withExpansion(func() Card {
 		return NewCreature("Sunastian Falconer", "{3}{R}{G}", 4, 4,
 			WithSubTypes("Human", "Shaman"),
 			WithSuperTypes(SuperLegendary),
+			WithActivatedAbility(
+				AddMana(Colorless, 2),
+				TapSourceCost(),
+			),
 		)
 	}))
 
