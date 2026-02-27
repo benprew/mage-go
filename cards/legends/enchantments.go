@@ -961,9 +961,35 @@ func registerEnchantments() {
 // Enchantment — Aura
 // Enchant creature
 // Enchanted creature can't be blocked except by artifact creatures and/or white creatures.
-// XXX: needs custom evasion blocking restriction
 	Register("Seeker", withExpansion(func() Card {
-		return NewAura("Seeker", "{2}{W}{W}")
+		return NewAura("Seeker", "{2}{W}{W}",
+			WithStaticAbility(
+				AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
+					for _, p := range g.Battlefield {
+						if !p.HasType(TypeCreature) {
+							continue
+						}
+						// Allow artifact creatures and white creatures to block
+						if p.HasType(TypeArtifact) {
+							continue
+						}
+						isWhite := false
+						for _, c := range p.Colors() {
+							if c == White {
+								isWhite = true
+								break
+							}
+						}
+						if isWhite {
+							continue
+						}
+						// This creature can't block the enchanted creature
+						g.Effects.PreventBlockPair(p.ID(), target.ID())
+					}
+					return nil
+				}),
+			),
+		)
 	}))
 
 

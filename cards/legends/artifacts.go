@@ -10,6 +10,45 @@ func init() {
 	registerArtifacts()
 }
 
+// manaBattery creates a Mana Battery artifact with two abilities:
+// {2}, {T}: Put a charge counter on this artifact.
+// {T}, Remove any number of charge counters: Add one colored mana + one per counter removed.
+func manaBattery(name string, color Color) Card {
+	return NewArtifact(name, "{4}",
+		// {2}, {T}: Put a charge counter on this artifact.
+		WithActivatedAbility(
+			AddCounters(Charge, Fixed(1), SelectSource),
+			ManaCostOf("{2}"),
+			WithCost(TapSourceCost()),
+		),
+		// {T}, Remove any number of charge counters: Add colored mana = counters removed + 1
+		WithActivatedAbility(
+			FuncEffect(
+				"add mana equal to charge counters removed plus one",
+				EffectProperties{},
+				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					p := g.FindPermanent(sourceID)
+					if p == nil {
+						return nil
+					}
+					counters := p.Counters[Charge]
+					if counters > 0 {
+						p.RemoveCounter(Charge, counters)
+					}
+					// Add 1 base + 1 per counter removed
+					total := 1 + counters
+					player := g.GetPlayer(controller)
+					if player != nil {
+						player.ManaPool().Add(color, total)
+					}
+					return nil
+				},
+			),
+			TapSourceCost(),
+		),
+	)
+}
+
 func registerArtifacts() {
 
 // Al-abara's Carpet {5}
@@ -83,9 +122,8 @@ func registerArtifacts() {
 // Artifact
 // {2}, {T}: Put a charge counter on this artifact.
 // {T}, Remove any number of charge counters from this artifact: Add {B}, then add an additional {B} for each charge counter removed this way.
-// TODO: implement
 	Register("Black Mana Battery", withExpansion(func() Card {
-		return NewArtifact("Black Mana Battery", "{4}")
+		return manaBattery("Black Mana Battery", Black)
 	}))
 
 
@@ -93,9 +131,8 @@ func registerArtifacts() {
 // Artifact
 // {2}, {T}: Put a charge counter on this artifact.
 // {T}, Remove any number of charge counters from this artifact: Add {U}, then add an additional {U} for each charge counter removed this way.
-// TODO: implement
 	Register("Blue Mana Battery", withExpansion(func() Card {
-		return NewArtifact("Blue Mana Battery", "{4}")
+		return manaBattery("Blue Mana Battery", Blue)
 	}))
 
 
@@ -122,9 +159,8 @@ func registerArtifacts() {
 // Artifact
 // {2}, {T}: Put a charge counter on this artifact.
 // {T}, Remove any number of charge counters from this artifact: Add {G}, then add an additional {G} for each charge counter removed this way.
-// TODO: implement
 	Register("Green Mana Battery", withExpansion(func() Card {
-		return NewArtifact("Green Mana Battery", "{4}")
+		return manaBattery("Green Mana Battery", Green)
 	}))
 
 
@@ -326,9 +362,8 @@ func registerArtifacts() {
 // Artifact
 // {2}, {T}: Put a charge counter on this artifact.
 // {T}, Remove any number of charge counters from this artifact: Add {R}, then add an additional {R} for each charge counter removed this way.
-// TODO: implement
 	Register("Red Mana Battery", withExpansion(func() Card {
-		return NewArtifact("Red Mana Battery", "{4}")
+		return manaBattery("Red Mana Battery", Red)
 	}))
 
 
@@ -432,9 +467,8 @@ func registerArtifacts() {
 // Artifact
 // {2}, {T}: Put a charge counter on this artifact.
 // {T}, Remove any number of charge counters from this artifact: Add {W}, then add an additional {W} for each charge counter removed this way.
-// TODO: implement
 	Register("White Mana Battery", withExpansion(func() Card {
-		return NewArtifact("White Mana Battery", "{4}")
+		return manaBattery("White Mana Battery", White)
 	}))
 
 }

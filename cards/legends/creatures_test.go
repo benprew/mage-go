@@ -1755,3 +1755,103 @@ func TestEnchantedBeing(t *testing.T) {
 		g.AssertGraveyardCount(gametest.PlayerA, "Enchanted Being", 1)
 	})
 }
+
+func TestElvenRiders(t *testing.T) {
+	t.Run("cannot be blocked by non-Wall non-flying creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Elven Riders")   // 3/3
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")  // 2/2 no flying, not Wall
+		g.Attack(1, gametest.PlayerA, "Elven Riders")
+		g.Block(1, gametest.PlayerB, "Grizzly Bears", "Elven Riders")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Grizzly Bears can't block Elven Riders — 3 damage to PlayerB
+		g.AssertLife(gametest.PlayerB, 17)
+	})
+
+	t.Run("can be blocked by Wall", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Elven Riders") // 3/3
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Wall of Earth") // 0/6 Wall
+		g.Attack(1, gametest.PlayerA, "Elven Riders")
+		g.Block(1, gametest.PlayerB, "Wall of Earth", "Elven Riders")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Wall of Earth blocks — no damage to PlayerB
+		g.AssertLife(gametest.PlayerB, 20)
+	})
+
+	t.Run("can be blocked by flying creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Elven Riders")  // 3/3
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Azure Drake")   // 2/4 flying
+		g.Attack(1, gametest.PlayerA, "Elven Riders")
+		g.Block(1, gametest.PlayerB, "Azure Drake", "Elven Riders")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Azure Drake has flying — can block Elven Riders
+		g.AssertLife(gametest.PlayerB, 20)
+	})
+}
+
+func TestElderSpawn(t *testing.T) {
+	t.Run("survives upkeep if Island is sacrificed", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Elder Spawn")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// Elder Spawn stays, Island sacrificed
+		g.AssertPermanentCount(gametest.PlayerA, "Elder Spawn", 1)
+		g.AssertPermanentCount(gametest.PlayerA, "Island", 0)
+	})
+
+	t.Run("sacrificed and deals 6 damage if no Island", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Elder Spawn")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// No Island — Elder Spawn sacrificed + 6 damage to controller
+		g.AssertPermanentCount(gametest.PlayerA, "Elder Spawn", 0)
+		g.AssertLife(gametest.PlayerA, 14)
+	})
+
+	t.Run("cannot be blocked by red creatures", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Elder Spawn")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island") // survive upkeep
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Raging Bull") // 2/2 red creature
+		g.Attack(1, gametest.PlayerA, "Elder Spawn")
+		g.Block(1, gametest.PlayerB, "Raging Bull", "Elder Spawn")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Raging Bull is red — can't block Elder Spawn — 6 damage to PlayerB
+		g.AssertLife(gametest.PlayerB, 14)
+	})
+}
+
+func TestMoldDemon(t *testing.T) {
+	t.Run("survives ETB if two Swamps sacrificed", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Mold Demon")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Mold Demon")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Mold Demon enters, two Swamps sacrificed, Mold Demon stays
+		g.AssertPermanentCount(gametest.PlayerA, "Mold Demon", 1)
+		g.AssertPermanentCount(gametest.PlayerA, "Swamp", 0)
+	})
+
+	t.Run("sacrificed if fewer than two Swamps", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Mold Demon")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp") // only 1 Swamp
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Mold Demon")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Can't sacrifice two Swamps — Mold Demon is sacrificed
+		g.AssertPermanentCount(gametest.PlayerA, "Mold Demon", 0)
+	})
+}

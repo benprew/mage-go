@@ -170,3 +170,16 @@ func TestArenaOfTheAncients(t *testing.T) {
 		g.AssertTapped(gametest.PlayerA, "Sol'kanar the Swamp King", true)
 	})
 }
+
+func TestBlackManaBattery(t *testing.T) {
+	t.Run("adds charge counter", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Black Mana Battery")
+		// Charge on turn 1 (first ability: {2}, {T}: put a charge counter)
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Black Mana Battery")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertCounterCount(gametest.PlayerA, "Black Mana Battery", core.Charge, 1)
+		g.AssertTapped(gametest.PlayerA, "Black Mana Battery", true)
+	})
+}

@@ -331,10 +331,49 @@ func registerCreatures() {
 // 6/6
 // At the beginning of your upkeep, unless you sacrifice an Island, sacrifice this creature and it deals 6 damage to you.
 // This creature can't be blocked by red creatures.
-// TODO: implement — needs engine support for "sacrifice a land" upkeep cost and "can't be blocked by red creatures"
 	Register("Elder Spawn", withExpansion(func() Card {
 		return NewCreature("Elder Spawn", "{4}{U}{U}{U}", 6, 6,
 			WithSubTypes("Spawn"),
+			// Upkeep: sacrifice an Island or sacrifice self + 6 damage
+			WithAbility(NewTriggered(EvtUpkeep, false, FuncEffect(
+				"sacrifice an Island or sacrifice this creature and it deals 6 damage to you",
+				EffectProperties{Outcome: OutcomeDetriment},
+				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					// Try to find and sacrifice an Island
+					for _, p := range g.FilterBattlefield(NewPermanentFilter("Island", func(p *Permanent, _ *Game) bool {
+						return p.Controller == controller && p.HasSubType("Island")
+					})) {
+						g.Sacrifice(p)
+						return nil
+					}
+					// No Island — sacrifice self and deal 6 damage
+					perm := g.FindPermanent(sourceID)
+					if perm != nil {
+						g.Sacrifice(perm)
+						p := g.GetPlayer(controller)
+						if p != nil {
+							g.DealDamageToPlayer(p, 6, sourceID)
+						}
+					}
+					return nil
+				},
+			)).SetCondition(func(evt *GameEvent, _ *Game, _, controllerID uuid.UUID) bool {
+				return evt.PlayerID == controllerID
+			})),
+			// Can't be blocked by red creatures
+			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+				for _, p := range g.Battlefield {
+					if p.HasType(TypeCreature) {
+						for _, c := range p.Colors() {
+							if c == Red {
+								g.Effects.PreventBlockPair(p.ID(), sourceID)
+								break
+							}
+						}
+					}
+				}
+				return nil
+			})),
 		)
 	}))
 
@@ -676,10 +715,36 @@ func registerCreatures() {
 // Creature — Fungus Demon
 // 6/6
 // When this creature enters, sacrifice it unless you sacrifice two Swamps.
-// TODO: implement — needs engine support for "sacrifice two Swamps" ETB cost
 	Register("Mold Demon", withExpansion(func() Card {
 		return NewCreature("Mold Demon", "{5}{B}{B}", 6, 6,
 			WithSubTypes("Fungus", "Demon"),
+			WithAbility(EntersBattlefieldTrigger(FuncEffect(
+				"sacrifice this creature unless you sacrifice two Swamps",
+				EffectProperties{Outcome: OutcomeDetriment},
+				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					// Find Swamps to sacrifice
+					var swamps []*Permanent
+					for _, p := range g.FilterBattlefield(NewPermanentFilter("Swamp", func(p *Permanent, _ *Game) bool {
+						return p.Controller == controller && p.HasSubType("Swamp")
+					})) {
+						swamps = append(swamps, p)
+						if len(swamps) == 2 {
+							break
+						}
+					}
+					if len(swamps) >= 2 {
+						g.Sacrifice(swamps[0])
+						g.Sacrifice(swamps[1])
+						return nil
+					}
+					// Can't sacrifice two Swamps — sacrifice self
+					perm := g.FindPermanent(sourceID)
+					if perm != nil {
+						g.Sacrifice(perm)
+					}
+					return nil
+				},
+			), false)),
 		)
 	}))
 
@@ -1275,10 +1340,17 @@ func registerCreatures() {
 // Creature — Elf
 // 3/3
 // This creature can't be blocked except by Walls and/or creatures with flying.
-// TODO: implement — needs engine support for "can't be blocked except by Walls and/or creatures with flying"
 	Register("Elven Riders", withExpansion(func() Card {
 		return NewCreature("Elven Riders", "{3}{G}{G}", 3, 3,
 			WithSubTypes("Elf"),
+			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+				for _, p := range g.Battlefield {
+					if p.HasType(TypeCreature) && !p.HasSubType("Wall") && !p.HasKeyword(Flying) {
+						g.Effects.PreventBlockPair(p.ID(), sourceID)
+					}
+				}
+				return nil
+			})),
 		)
 	}))
 
@@ -2584,12 +2656,23 @@ func registerCreatures() {
 // Artifact Creature — Cleric
 // 3/3
 // All Walls able to block this creature do so.
+// XXX: "All Walls able to block this creature do so" forced-block not implemented
 // Prevent all combat damage that would be dealt to this creature by Walls.
-// TODO: implement
 	Register("Marble Priest", withExpansion(func() Card {
 		return NewCreature("Marble Priest", "{5}", 3, 3,
 			WithSubTypes("Cleric"),
 			WithCardType(TypeArtifact),
+			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+				g.Effects.Damage.AddDamagePreventionRule(
+					WithFrom(NewPermanentFilter("Wall", func(p *Permanent, _ *Game) bool {
+						return p.HasSubType("Wall")
+					})),
+					WithTo(NewPermanentFilter("self", func(p *Permanent, _ *Game) bool {
+						return p.ID() == sourceID
+					})),
+				)
+				return nil
+			})),
 		)
 	}))
 
