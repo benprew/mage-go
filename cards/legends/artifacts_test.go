@@ -81,6 +81,68 @@ func TestSerpentGenerator(t *testing.T) {
 	})
 }
 
+func TestAlAbarasCarpet(t *testing.T) {
+	t.Run("prevents damage from non-flying attackers", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Al-abara's Carpet")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // 2/2 no flying
+		// Activate Carpet before combat on PlayerB's turn
+		g.ActivateAbility(2, core.BeginCombat, gametest.PlayerA, "Al-abara's Carpet")
+		g.Attack(2, gametest.PlayerB, "Grizzly Bears")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		// Bears' damage should be prevented (non-flying attacker)
+		g.AssertLife(gametest.PlayerA, 20)
+	})
+
+	t.Run("does not prevent damage from flying attackers", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Al-abara's Carpet")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Azure Drake") // 2/4 flying
+		// Activate Carpet before combat on PlayerB's turn
+		g.ActivateAbility(2, core.BeginCombat, gametest.PlayerA, "Al-abara's Carpet")
+		g.Attack(2, gametest.PlayerB, "Azure Drake")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		// Azure Drake has flying — damage should NOT be prevented
+		g.AssertLife(gametest.PlayerA, 18)
+	})
+}
+
+func TestLifeChisel(t *testing.T) {
+	t.Run("sacrifice creature gains life equal to toughness", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Life Chisel")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Craw Wurm") // 6/4
+		g.SetLife(gametest.PlayerA, 10)
+		// Activate during upkeep (turn 1)
+		g.ActivateAbility(1, core.Upkeep, gametest.PlayerA, "Life Chisel")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// Sacrificed Craw Wurm (toughness 4), gained 4 life: 10 + 4 = 14
+		g.AssertLife(gametest.PlayerA, 14)
+		g.AssertPermanentCount(gametest.PlayerA, "Craw Wurm", 0)
+	})
+}
+
+func TestKryShield(t *testing.T) {
+	t.Run("prevents damage from creature and boosts toughness", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Kry Shield")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2, CMC 2
+		// Use Kry Shield on Bears — prevents Bears from dealing damage + gives +0/+2
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Kry Shield", "Grizzly Bears")
+		// Bears attack — they deal 0 damage (prevented)
+		g.Attack(1, gametest.PlayerA, "Grizzly Bears")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Bears' damage should be prevented — PlayerB takes 0
+		g.AssertLife(gametest.PlayerB, 20)
+		// Bears should have +0/+2 from CMC boost: 2/4
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 4)
+	})
+}
+
 func TestArenaOfTheAncients(t *testing.T) {
 	t.Run("taps legendary creatures on ETB", func(t *testing.T) {
 		g := gametest.NewTestGame(t)

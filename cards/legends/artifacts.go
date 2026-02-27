@@ -15,9 +15,28 @@ func registerArtifacts() {
 // Al-abara's Carpet {5}
 // Artifact
 // {5}, {T}: Prevent all damage that would be dealt to you this turn by attacking creatures without flying.
-// TODO: implement
 	Register("Al-abara's Carpet", withExpansion(func() Card {
-		return NewArtifact("Al-abara's Carpet", "{5}")
+		return NewArtifact("Al-abara's Carpet", "{5}",
+			WithActivatedAbility(
+				FuncEffect(
+					"prevent all damage that would be dealt to you this turn by attacking creatures without flying",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						eff := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, srcID uuid.UUID) error {
+							g.Effects.Damage.AddDamagePreventionRule(
+								WithFrom(And(IsAttacking, Not(HasKeywordFilter(Flying)))),
+							)
+							return nil
+						})
+						eff.SetSourceID(sourceID)
+						g.AddContinuousEffect(eff)
+						return nil
+					},
+				),
+				ManaCostOf("{5}"),
+				WithCost(TapSourceCost()),
+			),
+		)
 	}))
 
 
@@ -155,18 +174,76 @@ func registerArtifacts() {
 // Kry Shield {2}
 // Artifact
 // {2}, {T}: Prevent all damage that would be dealt this turn by target creature you control. That creature gets +0/+X until end of turn, where X is its mana value.
-// TODO: implement
 	Register("Kry Shield", withExpansion(func() Card {
-		return NewArtifact("Kry Shield", "{2}")
+		return NewArtifact("Kry Shield", "{2}",
+			WithActivatedAbility(
+				FuncEffect(
+					"prevent all damage that would be dealt this turn by target creature you control; that creature gets +0/+X until end of turn, where X is its mana value",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						target := g.FindPermanent(targets[0])
+						if target == nil {
+							return nil
+						}
+						cmc := target.Card.ManaCost().CMC()
+						// Prevent all damage from target creature this turn
+						eff := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, srcID uuid.UUID) error {
+							g.Effects.Damage.AddDamagePreventionRule(WithFrom(NewPermanentFilter("prevented source", func(p *Permanent, _ *Game) bool {
+								return p.ID() == targets[0]
+							})))
+							return nil
+						})
+						eff.SetSourceID(sourceID)
+						g.AddContinuousEffect(eff)
+						// Target creature gets +0/+X where X is mana value
+						boost := TemporaryBoost(targets[0], 0, cmc)
+						boost.SetSourceID(sourceID)
+						g.AddContinuousEffect(boost)
+						return nil
+					},
+				),
+				ManaCostOf("{2}"),
+				WithCost(TapSourceCost()),
+				WithTarget(TargetCreature()),
+			),
+		)
 	}))
 
 
 // Life Chisel {4}
 // Artifact
 // Sacrifice a creature: You gain life equal to the sacrificed creature's toughness. Activate only during your upkeep.
-// TODO: implement
 	Register("Life Chisel", withExpansion(func() Card {
-		return NewArtifact("Life Chisel", "{4}")
+		return NewArtifact("Life Chisel", "{4}",
+			WithActivatedAbility(
+				FuncEffect(
+					"you gain life equal to the sacrificed creature's toughness",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						// The sacrifice cost has already moved a creature to the graveyard.
+						// Find the most recently added creature in controller's graveyard.
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						gy := p.Graveyard()
+						for i := len(gy) - 1; i >= 0; i-- {
+							if gy[i].HasType(TypeCreature) {
+								toughness := gy[i].Toughness()
+								p.GainLife(toughness)
+								return nil
+							}
+						}
+						return nil
+					},
+				),
+				SacrificeCreatureCost(),
+				WithUpkeepOnly(),
+			),
+		)
 	}))
 
 
