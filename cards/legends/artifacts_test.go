@@ -36,6 +36,51 @@ func TestHornOfDeafening(t *testing.T) {
 	})
 }
 
+func TestMirrorUniverse(t *testing.T) {
+	t.Run("exchanges life totals", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mirror Universe")
+		g.SetLife(gametest.PlayerA, 5)
+		g.SetLife(gametest.PlayerB, 18)
+		// Activate during PlayerA's upkeep (turn 3 — need to wait since it enters tapped? No, it's on battlefield)
+		g.ActivateAbility(1, core.Upkeep, gametest.PlayerA, "Mirror Universe")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// Life totals should be swapped
+		g.AssertLife(gametest.PlayerA, 18)
+		g.AssertLife(gametest.PlayerB, 5)
+		// Mirror Universe should be sacrificed
+		g.AssertPermanentCount(gametest.PlayerA, "Mirror Universe", 0)
+	})
+}
+
+func TestSerpentGenerator(t *testing.T) {
+	t.Run("creates snake token", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Serpent Generator")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Serpent Generator")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Should have a 1/1 Snake token
+		g.AssertPermanentCount(gametest.PlayerA, "Snake", 1)
+		g.AssertPowerToughness(gametest.PlayerA, "Snake", 1, 1)
+	})
+
+	t.Run("snake token gives poison counter on damage", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Serpent Generator")
+		// Create the token on turn 1
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Serpent Generator")
+		// Attack with the Snake on turn 3 (needs to lose summoning sickness)
+		g.Attack(3, gametest.PlayerA, "Snake")
+		g.StopAt(3, core.EndStep)
+		g.Execute()
+		// Snake dealt 1 combat damage + gave poison counter
+		g.AssertLife(gametest.PlayerB, 19)
+		g.AssertPoisonCounters(gametest.PlayerB, 1)
+	})
+}
+
 func TestArenaOfTheAncients(t *testing.T) {
 	t.Run("taps legendary creatures on ETB", func(t *testing.T) {
 		g := gametest.NewTestGame(t)

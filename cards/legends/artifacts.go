@@ -191,9 +191,30 @@ func registerArtifacts() {
 // Mirror Universe {6}
 // Artifact
 // {T}, Sacrifice this artifact: Exchange life totals with target opponent. Activate only during your upkeep.
-// TODO: implement
 	Register("Mirror Universe", withExpansion(func() Card {
-		return NewArtifact("Mirror Universe", "{6}")
+		return NewArtifact("Mirror Universe", "{6}",
+			WithActivatedAbility(
+				FuncEffect(
+					"exchange life totals with target opponent",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						me := g.GetPlayer(controller)
+						opp := g.GetOpponent(controller)
+						if me == nil || opp == nil {
+							return nil
+						}
+						myLife := me.Life()
+						oppLife := opp.Life()
+						me.SetLife(oppLife)
+						opp.SetLife(myLife)
+						return nil
+					},
+				),
+				TapSourceCost(),
+				WithCost(SacrificeSourceCost()),
+				WithUpkeepOnly(),
+			),
+		)
 	}))
 
 
@@ -260,9 +281,40 @@ func registerArtifacts() {
 // Serpent Generator {6}
 // Artifact
 // {4}, {T}: Create a 1/1 colorless Snake artifact creature token. It has "Whenever this creature deals damage to a player, that player gets a poison counter." (A player with ten or more poison counters loses the game.)
-// TODO: implement
 	Register("Serpent Generator", withExpansion(func() Card {
-		return NewArtifact("Serpent Generator", "{6}")
+		return NewArtifact("Serpent Generator", "{6}",
+			WithActivatedAbility(
+				FuncEffect(
+					"create a 1/1 colorless Snake artifact creature token with poison",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						token := NewToken("Snake", 1, 1, []CardType{TypeArtifact, TypeCreature}, []string{"Snake"})
+						token.SetOwner(controller)
+						// Add poison trigger: whenever this creature deals damage to a player, that player gets a poison counter
+						token.AddAbility(NewTriggered(EvtDamageDealt, false, FuncEffect(
+							"poison counter",
+							EffectProperties{},
+							func(g GameMutator, srcID, ctrl uuid.UUID, _ []uuid.UUID) error {
+								for _, p := range g.AllPlayers() {
+									if p.PlayerID() != ctrl {
+										p.AddPoisonCounters(1)
+										return nil
+									}
+								}
+								return nil
+							},
+						)).SetCondition(func(evt *GameEvent, g *Game, srcID, _ uuid.UUID) bool {
+							// Only trigger when this creature deals damage to a player (not a permanent)
+							return evt.SourceID == srcID && g.GetPlayer(evt.TargetID) != nil
+						}))
+						g.PutOnBattlefield(token, controller)
+						return nil
+					},
+				),
+				ManaCostOf("{4}"),
+				WithCost(TapSourceCost()),
+			),
+		)
 	}))
 
 

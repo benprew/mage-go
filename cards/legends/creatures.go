@@ -2073,11 +2073,62 @@ func registerCreatures() {
 // Remove a dream counter from Rasputin: Prevent the next 1 damage that would be dealt to Rasputin this turn.
 // At the beginning of your upkeep, if Rasputin started the turn untapped, put a dream counter on it.
 // Rasputin can't have more than seven dream counters on it.
-// TODO: implement
 	Register("Rasputin Dreamweaver", withExpansion(func() Card {
 		return NewCreature("Rasputin Dreamweaver", "{4}{W}{U}", 4, 1,
 			WithSubTypes("Human", "Wizard"),
 			WithSuperTypes(SuperLegendary),
+			// Enters with seven dream counters
+			WithAbility(ETBEffect(AddCounters(Dream, Fixed(7), SelectSource))),
+			// Remove a dream counter: Add {C}
+			WithActivatedAbility(
+				FuncEffect(
+					"add {C}",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p != nil {
+							p.ManaPool().Add(Colorless, 1)
+						}
+						return nil
+					},
+				),
+				RemoveCountersCost(Dream, 1),
+			),
+			// Remove a dream counter: Prevent the next 1 damage to Rasputin this turn
+			WithActivatedAbility(
+				FuncEffect(
+					"prevent the next 1 damage that would be dealt to Rasputin this turn",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						g.AddPreventionShield(sourceID, 1)
+						return nil
+					},
+				),
+				RemoveCountersCost(Dream, 1),
+			),
+			// At the beginning of your upkeep, if Rasputin started the turn untapped, put a dream counter on it (max 7)
+			WithAbility(NewTriggered(EvtUpkeep, false, FuncEffect(
+				"put a dream counter on Rasputin",
+				EffectProperties{},
+				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					perm := g.FindPermanent(sourceID)
+					if perm == nil {
+						return nil
+					}
+					if perm.Counters[Dream] < 7 {
+						perm.AddCounter(Dream, 1)
+					}
+					return nil
+				},
+			)).SetCondition(func(evt *GameEvent, g *Game, sourceID, controller uuid.UUID) bool {
+				// Only trigger on controller's upkeep
+				if evt.PlayerID != controller {
+					return false
+				}
+				// Check if Rasputin is untapped (started the turn untapped)
+				perm := g.FindPermanent(sourceID)
+				return perm != nil && !perm.Tapped
+			})),
 		)
 	}))
 

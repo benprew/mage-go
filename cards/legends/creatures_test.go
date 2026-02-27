@@ -1580,6 +1580,39 @@ func TestLivonyaSilone(t *testing.T) {
 	})
 }
 
+func TestRasputinDreamweaver(t *testing.T) {
+	t.Run("enters with seven dream counters", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rasputin Dreamweaver")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertCounterCount(gametest.PlayerA, "Rasputin Dreamweaver", core.Dream, 7)
+	})
+
+	t.Run("remove dream counter for colorless mana", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rasputin Dreamweaver")
+		// Remove a dream counter to add {C}
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Rasputin Dreamweaver")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Should have 6 dream counters remaining
+		g.AssertCounterCount(gametest.PlayerA, "Rasputin Dreamweaver", core.Dream, 6)
+	})
+
+	t.Run("upkeep restores a dream counter if untapped", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rasputin Dreamweaver")
+		// Remove a counter on turn 1
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Rasputin Dreamweaver")
+		// Turn 3 upkeep (PlayerA's next turn) — should regain a counter
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		// Had 6 after removal, should be back to 7 after upkeep
+		g.AssertCounterCount(gametest.PlayerA, "Rasputin Dreamweaver", core.Dream, 7)
+	})
+}
+
 func TestLadyEvangela(t *testing.T) {
 	t.Run("prevents combat damage from target creature", func(t *testing.T) {
 		g := gametest.NewTestGame(t)

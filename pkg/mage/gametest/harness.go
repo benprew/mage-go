@@ -774,6 +774,15 @@ func (tg *TestGame) AssertLife(p PlayerRef, want int) {
 	}
 }
 
+// AssertPoisonCounters checks that a player has the expected number of poison counters.
+func (tg *TestGame) AssertPoisonCounters(p PlayerRef, want int) {
+	tg.t.Helper()
+	got := tg.GetPlayer(p).PoisonCounters()
+	if got != want {
+		tg.t.Errorf("AssertPoisonCounters(%v): got %d, want %d", p, got, want)
+	}
+}
+
 // AssertPermanentCount checks the number of permanents with a given name.
 func (tg *TestGame) AssertPermanentCount(p PlayerRef, name string, want int) {
 	tg.t.Helper()
