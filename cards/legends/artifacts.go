@@ -190,9 +190,14 @@ func registerArtifacts() {
 // Relic Barrier {2}
 // Artifact
 // {T}: Tap target artifact.
-// TODO: implement
 	Register("Relic Barrier", withExpansion(func() Card {
-		return NewArtifact("Relic Barrier", "{2}")
+		return NewArtifact("Relic Barrier", "{2}",
+			WithActivatedAbility(
+				TapTarget(),
+				TapSourceCost(),
+				WithTarget(TargetArtifact()),
+			),
+		)
 	}))
 
 

@@ -41,14 +41,21 @@ func registerLands() {
 	}))
 
 
-// Karakas 
+// Karakas
 // Legendary Land
 // {T}: Add {W}.
 // {T}: Return target legendary creature to its owner's hand.
-// TODO: implement
 	Register("Karakas", withExpansion(func() Card {
 		return NewLand("Karakas",
 			WithSuperTypes(SuperLegendary),
+			WithManaAbility(White),
+			WithActivatedAbility(
+				ReturnToHandTarget(),
+				TapSourceCost(),
+				WithTarget(TargetCreature(NewPermanentFilter("legendary", func(p *Permanent, _ *Game) bool {
+					return p.Card.HasSuperType(SuperLegendary)
+				}))),
+			),
 		)
 	}))
 
@@ -62,14 +69,21 @@ func registerLands() {
 	}))
 
 
-// Pendelhaven 
+// Pendelhaven
 // Legendary Land
 // {T}: Add {G}.
 // {T}: Target 1/1 creature gets +1/+2 until end of turn.
-// TODO: implement
 	Register("Pendelhaven", withExpansion(func() Card {
 		return NewLand("Pendelhaven",
 			WithSuperTypes(SuperLegendary),
+			WithManaAbility(Green),
+			WithActivatedAbility(
+				BoostUntilEndOfTurn(Fixed(1), Fixed(2), SelectTarget),
+				TapSourceCost(),
+				WithTarget(TargetCreature(NewPermanentFilter("1/1", func(p *Permanent, g *Game) bool {
+					return p.CurrentPower(g) == 1 && p.CurrentToughness(g) == 1
+				}))),
+			),
 		)
 	}))
 
