@@ -1681,3 +1681,77 @@ func TestStangg(t *testing.T) {
 		g.AssertPowerToughness(gametest.PlayerA, "Stangg Twin", 3, 4)
 	})
 }
+
+func TestWallOfVapor(t *testing.T) {
+	t.Run("takes no damage from creature it blocks", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Wall of Vapor") // 0/1 Defender
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")    // 3/3
+		g.Attack(2, gametest.PlayerB, "Hill Giant")
+		g.Block(2, gametest.PlayerA, "Wall of Vapor", "Hill Giant")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		// Wall of Vapor prevents all damage from creatures it blocks — survives
+		g.AssertPermanentCount(gametest.PlayerA, "Wall of Vapor", 1)
+	})
+
+	t.Run("still deals its own damage to attacker", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Wall of Vapor") // 0/1 Defender
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // 2/2
+		g.Attack(2, gametest.PlayerB, "Grizzly Bears")
+		g.Block(2, gametest.PlayerA, "Wall of Vapor", "Grizzly Bears")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		// Wall of Vapor is 0 power so deals 0 — Bears survive, Wall survives
+		g.AssertPermanentCount(gametest.PlayerA, "Wall of Vapor", 1)
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
+	})
+}
+
+func TestWallOfShadows(t *testing.T) {
+	t.Run("takes no damage from creature it blocks", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Wall of Shadows") // 0/1 Defender
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Craw Wurm")      // 6/4
+		g.Attack(2, gametest.PlayerB, "Craw Wurm")
+		g.Block(2, gametest.PlayerA, "Wall of Shadows", "Craw Wurm")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		// Wall of Shadows prevents all damage from creatures it blocks — survives
+		g.AssertPermanentCount(gametest.PlayerA, "Wall of Shadows", 1)
+	})
+}
+
+func TestEnchantedBeing(t *testing.T) {
+	t.Run("prevents combat damage from enchanted creatures", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Enchanted Being") // 2/2
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")   // 2/2
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Giant Strength")         // aura +2/+2
+		// Enchant Bears to make them "enchanted"
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Giant Strength", "Grizzly Bears")
+		// Attack with enchanted Bears (now 4/4)
+		g.Attack(2, gametest.PlayerB, "Grizzly Bears")
+		g.Block(2, gametest.PlayerA, "Enchanted Being", "Grizzly Bears")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		// Enchanted Being prevents combat damage from enchanted creatures — survives
+		// But Enchanted Being deals 2 damage to Bears (4/4), not lethal
+		g.AssertPermanentCount(gametest.PlayerA, "Enchanted Being", 1)
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
+	})
+
+	t.Run("takes damage from non-enchanted creatures normally", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Enchanted Being") // 2/2
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")      // 3/3
+		// Hill Giant is not enchanted — attacks normally
+		g.Attack(2, gametest.PlayerB, "Hill Giant")
+		g.Block(2, gametest.PlayerA, "Enchanted Being", "Hill Giant")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		// Enchanted Being takes 3 damage from non-enchanted Hill Giant — dies
+		g.AssertGraveyardCount(gametest.PlayerA, "Enchanted Being", 1)
+	})
+}

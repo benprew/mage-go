@@ -121,10 +121,30 @@ func registerCreatures() {
 // Creature — Human
 // 2/2
 // Prevent all combat damage that would be dealt to this creature by enchanted creatures.
-// TODO: implement — needs engine support for preventing combat damage from enchanted creatures specifically
 	Register("Enchanted Being", withExpansion(func() Card {
 		return NewCreature("Enchanted Being", "{1}{W}{W}", 2, 2,
 			WithSubTypes("Human"),
+			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+				// Prevent damage from enchanted creatures (creatures with auras attached)
+				g.Effects.Damage.AddDamagePreventionRule(
+					WithFrom(NewPermanentFilter("enchanted creature", func(p *Permanent, g *Game) bool {
+						if !p.HasType(TypeCreature) {
+							return false
+						}
+						for _, attachID := range p.Attachments {
+							attached := g.FindPermanent(attachID)
+							if attached != nil && attached.HasType(TypeEnchantment) {
+								return true
+							}
+						}
+						return false
+					})),
+					WithTo(NewPermanentFilter("self", func(p *Permanent, _ *Game) bool {
+						return p.ID() == sourceID
+					})),
+				)
+				return nil
+			})),
 		)
 	}))
 
@@ -378,11 +398,34 @@ func registerCreatures() {
 // 0/1
 // Defender (This creature can't attack.)
 // Prevent all damage that would be dealt to this creature by creatures it's blocking.
-// TODO: implement — needs engine support for preventing damage from creatures this is blocking
 	Register("Wall of Vapor", withExpansion(func() Card {
 		return NewCreature("Wall of Vapor", "{3}{U}", 0, 1,
 			WithSubTypes("Wall"),
 			WithKeyword(Defender),
+			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+				// Prevent all damage from creatures this wall is blocking
+				g.Effects.Damage.AddDamagePreventionRule(
+					WithFrom(NewPermanentFilter("blocked by this wall", func(p *Permanent, g *Game) bool {
+						if g.Combat == nil {
+							return false
+						}
+						for _, grp := range g.Combat.Groups {
+							if grp.AttackerID == p.ID() {
+								for _, bid := range grp.BlockerIDs {
+									if bid == sourceID {
+										return true
+									}
+								}
+							}
+						}
+						return false
+					})),
+					WithTo(NewPermanentFilter("self", func(p *Permanent, _ *Game) bool {
+						return p.ID() == sourceID
+					})),
+				)
+				return nil
+			})),
 		)
 	}))
 
@@ -727,12 +770,31 @@ func registerCreatures() {
 // Defender (This creature can't attack.)
 // Protection from white
 // Prevent all damage that would be dealt to this creature by enchanted creatures.
-// Note: "prevent damage from enchanted creatures" is not implemented (needs engine support)
 	Register("Wall of Putrid Flesh", withExpansion(func() Card {
 		return NewCreature("Wall of Putrid Flesh", "{2}{B}", 2, 4,
 			WithSubTypes("Wall"),
 			WithKeyword(Defender),
 			WithAbility(ProtectionFromColor(White)),
+			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+				g.Effects.Damage.AddDamagePreventionRule(
+					WithFrom(NewPermanentFilter("enchanted creature", func(p *Permanent, g *Game) bool {
+						if !p.HasType(TypeCreature) {
+							return false
+						}
+						for _, attachID := range p.Attachments {
+							attached := g.FindPermanent(attachID)
+							if attached != nil && attached.HasType(TypeEnchantment) {
+								return true
+							}
+						}
+						return false
+					})),
+					WithTo(NewPermanentFilter("self", func(p *Permanent, _ *Game) bool {
+						return p.ID() == sourceID
+					})),
+				)
+				return nil
+			})),
 		)
 	}))
 
@@ -742,11 +804,34 @@ func registerCreatures() {
 // Defender (This creature can't attack.)
 // Prevent all damage that would be dealt to this creature by creatures it's blocking.
 // This creature can't be the target of spells that can target only Walls or of abilities that can target only Walls.
-// TODO: implement — needs engine support for preventing damage from blocked creatures and Wall-only targeting restriction
+// XXX: "can't be the target of spells that can target only Walls" not yet implemented
 	Register("Wall of Shadows", withExpansion(func() Card {
 		return NewCreature("Wall of Shadows", "{1}{B}{B}", 0, 1,
 			WithSubTypes("Wall"),
 			WithKeyword(Defender),
+			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+				g.Effects.Damage.AddDamagePreventionRule(
+					WithFrom(NewPermanentFilter("blocked by this wall", func(p *Permanent, g *Game) bool {
+						if g.Combat == nil {
+							return false
+						}
+						for _, grp := range g.Combat.Groups {
+							if grp.AttackerID == p.ID() {
+								for _, bid := range grp.BlockerIDs {
+									if bid == sourceID {
+										return true
+									}
+								}
+							}
+						}
+						return false
+					})),
+					WithTo(NewPermanentFilter("self", func(p *Permanent, _ *Game) bool {
+						return p.ID() == sourceID
+					})),
+				)
+				return nil
+			})),
 		)
 	}))
 
