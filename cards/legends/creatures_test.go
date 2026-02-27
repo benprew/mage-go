@@ -511,3 +511,268 @@ func TestConcordantCrossroads(t *testing.T) {
 		g.AssertLife(gametest.PlayerB, 18)
 	})
 }
+
+// ===== MORE SPELLS =====
+
+func TestBloodLust(t *testing.T) {
+	t.Run("creature with toughness >= 5 gets +4/-4", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Craw Giant") // 6/4... wait, 4 < 5
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Wall of Earth") // 0/6
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Blood Lust")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Blood Lust", "Wall of Earth")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// 0/6 with +4/-4 = 4/2
+		g.AssertPowerToughness(gametest.PlayerA, "Wall of Earth", 4, 2)
+	})
+
+	t.Run("creature with toughness < 5 gets +4/-(toughness-1)", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Blood Lust")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Blood Lust", "Grizzly Bears")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// 2/2 with +4/-(2-1) = +4/-1 → 6/1
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 6, 1)
+	})
+}
+
+func TestHellSwarm(t *testing.T) {
+	t.Run("all creatures get -1/-0", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Azure Drake") // 2/4
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Hell Swarm")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Hell Swarm")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 1, 2)
+		g.AssertPowerToughness(gametest.PlayerB, "Azure Drake", 1, 4)
+	})
+}
+
+func TestHellfire(t *testing.T) {
+	t.Run("destroys nonblack creatures and deals damage to caster", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")   // green
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Azure Drake")     // blue
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Walking Dead")    // black, should survive
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Hellfire")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Hellfire")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
+		g.AssertPermanentCount(gametest.PlayerB, "Azure Drake", 0)
+		g.AssertPermanentCount(gametest.PlayerA, "Walking Dead", 1) // black survives
+		// 2 creatures destroyed + 3 = 5 damage to caster
+		g.AssertLife(gametest.PlayerA, 15)
+	})
+}
+
+func TestStormSeeker(t *testing.T) {
+	t.Run("deals damage equal to hand size", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Storm Seeker")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Storm Seeker", "PlayerB")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// PlayerB has 3 cards in hand → 3 damage
+		g.AssertLife(gametest.PlayerB, 17)
+	})
+}
+
+func TestChainLightning(t *testing.T) {
+	t.Run("deals 3 damage to target", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Chain Lightning")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Chain Lightning", "PlayerB")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 17)
+	})
+}
+
+func TestSyphonSoul(t *testing.T) {
+	t.Run("deals 2 to opponent and gains 2 life", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Syphon Soul")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Syphon Soul")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 18)
+		g.AssertLife(gametest.PlayerA, 22)
+	})
+}
+
+func TestShieldWall(t *testing.T) {
+	t.Run("your creatures get +0/+2", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Azure Drake") // opponent's
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Shield Wall")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Shield Wall")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 4) // +0/+2
+		g.AssertPowerToughness(gametest.PlayerB, "Azure Drake", 2, 4)   // not affected
+	})
+}
+
+func TestTransmutation(t *testing.T) {
+	t.Run("swaps power and toughness", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Azure Drake") // 2/4
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Transmutation")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Transmutation", "Azure Drake")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Azure Drake", 4, 2)
+	})
+}
+
+// ===== MORE CREATURES =====
+
+func TestCyclopeanMummy(t *testing.T) {
+	t.Run("exiles when it dies", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Cyclopean Mummy")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Cyclopean Mummy")
+		g.StopAt(2, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Cyclopean Mummy", 0)
+		g.AssertGraveyardCount(gametest.PlayerA, "Cyclopean Mummy", 0) // not in graveyard
+		g.AssertExileCount("Cyclopean Mummy", 1)     // exiled
+	})
+}
+
+func TestFallenAngel(t *testing.T) {
+	t.Run("sacrifice creature for +2/+1", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Fallen Angel")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Fallen Angel", "+2/+1")
+		g.ChoosePermanent(gametest.PlayerA, "Grizzly Bears")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Fallen Angel", 5, 4) // 3+2/3+1
+		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
+	})
+}
+
+func TestVampireBats(t *testing.T) {
+	t.Run("flying 0/1 that pumps with {B}", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Vampire Bats")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Vampire Bats", 0, 1)
+		g.AssertHasAbility(gametest.PlayerA, "Vampire Bats", core.Flying, true)
+	})
+}
+
+func TestEmeraldDragonfly(t *testing.T) {
+	t.Run("{G}{G}: gains first strike", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Emerald Dragonfly")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Emerald Dragonfly", "first strike")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertHasAbility(gametest.PlayerA, "Emerald Dragonfly", core.FirstStrike, true)
+	})
+}
+
+// ===== MORE ENCHANTMENTS =====
+
+func TestMoat(t *testing.T) {
+	t.Run("creatures without flying can't attack", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Moat")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // no flying
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Azure Drake")   // has flying
+		g.Attack(4, gametest.PlayerB, "Azure Drake")
+		// Bears can't attack due to Moat
+		g.StopAt(4, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 18) // only Drake's 2 damage
+	})
+}
+
+func TestGravitySphere(t *testing.T) {
+	t.Run("all creatures lose flying", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Gravity Sphere")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Azure Drake") // normally has flying
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertHasAbility(gametest.PlayerA, "Azure Drake", core.Flying, false) // flying removed
+	})
+}
+
+func TestGreed(t *testing.T) {
+	t.Run("{B}, pay 2 life: draw a card", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Greed")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Greed", "Draw")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 18) // paid 2 life
+		g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 1) // drew 1 card
+	})
+}
+
+func TestAntiMagicAura(t *testing.T) {
+	t.Run("grants shroud to enchanted creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Anti-Magic Aura")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Anti-Magic Aura", "Grizzly Bears")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", core.Shroud, true)
+	})
+}
+
+func TestAngelicVoices(t *testing.T) {
+	t.Run("boosts creatures if no nonartifact nonwhite creatures", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Angelic Voices")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tundra Wolves") // white 1/1
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// Only white creature → bonus applies
+		g.AssertPowerToughness(gametest.PlayerA, "Tundra Wolves", 2, 2) // 1+1/1+1
+	})
+
+	t.Run("no boost if nonwhite creature present", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Angelic Voices")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tundra Wolves") // white
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // green, nonartifact
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Tundra Wolves", 1, 1) // no bonus
+	})
+}
+
+func TestTheAbyss(t *testing.T) {
+	t.Run("destroys nonartifact creature at upkeep", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "The Abyss")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.ChoosePermanent(gametest.PlayerA, "Grizzly Bears")
+		g.StopAt(3, core.PrecombatMain) // after PlayerA's upkeep on turn 3
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
+	})
+}
