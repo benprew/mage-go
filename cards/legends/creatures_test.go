@@ -1627,3 +1627,57 @@ func TestLadyEvangela(t *testing.T) {
 		g.AssertLife(gametest.PlayerA, 20)
 	})
 }
+
+func TestRohgahhOfKherKeep(t *testing.T) {
+	t.Run("kobolds of kher keep get +2/+2", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rohgahh of Kher Keep")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Kobolds of Kher Keep") // 0/1
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// Kobolds of Kher Keep should be 2/3 (0+2/1+2)
+		g.AssertPowerToughness(gametest.PlayerA, "Kobolds of Kher Keep", 2, 3)
+	})
+
+	t.Run("survives upkeep if can pay", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rohgahh of Kher Keep")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		// Turn 3 is PlayerA's next turn — upkeep triggers, pays {R}{R}{R}
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		// Rohgahh should still be under PlayerA's control
+		g.AssertPermanentCount(gametest.PlayerA, "Rohgahh of Kher Keep", 1)
+	})
+
+	t.Run("loses control if cannot pay", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rohgahh of Kher Keep")
+		// No Mountains — can't pay {R}{R}{R}
+		// Turn 1 upkeep — can't pay → tap + opponent gains control
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// Rohgahh should now be under PlayerB's control (tapped)
+		g.AssertPermanentCount(gametest.PlayerA, "Rohgahh of Kher Keep", 0)
+		g.AssertPermanentCount(gametest.PlayerB, "Rohgahh of Kher Keep", 1)
+		g.AssertTapped(gametest.PlayerB, "Rohgahh of Kher Keep", true)
+	})
+}
+
+func TestStangg(t *testing.T) {
+	t.Run("creates stangg twin token on ETB", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Stangg")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// Should have both Stangg and Stangg Twin
+		g.AssertPermanentCount(gametest.PlayerA, "Stangg", 1)
+		g.AssertPermanentCount(gametest.PlayerA, "Stangg Twin", 1)
+		g.AssertPowerToughness(gametest.PlayerA, "Stangg Twin", 3, 4)
+	})
+}

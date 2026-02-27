@@ -2149,11 +2149,69 @@ func registerCreatures() {
 // 5/5
 // At the beginning of your upkeep, you may pay {R}{R}{R}. If you don't, tap Rohgahh and all creatures named Kobolds of Kher Keep, then an opponent gains control of them.
 // Creatures you control named Kobolds of Kher Keep get +2/+2.
-// TODO: implement
 	Register("Rohgahh of Kher Keep", withExpansion(func() Card {
 		return NewCreature("Rohgahh of Kher Keep", "{2}{B}{B}{R}{R}", 5, 5,
 			WithSubTypes("Kobold"),
 			WithSuperTypes(SuperLegendary),
+			// Static: Kobolds of Kher Keep you control get +2/+2
+			WithStaticAbility(FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+				src := g.FindPermanent(sourceID)
+				if src == nil {
+					return nil
+				}
+				for _, p := range g.Battlefield {
+					if p.Controller == src.Controller && p.Name() == "Kobolds of Kher Keep" {
+						p.BoostPT(2, 2)
+					}
+				}
+				return nil
+			})),
+			// Upkeep: pay {R}{R}{R} or tap + lose control
+			WithAbility(NewTriggered(EvtUpkeep, false, FuncEffect(
+				"pay {R}{R}{R} or tap and lose control",
+				EffectProperties{Outcome: OutcomeDetriment},
+				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					if g.TryPayCostFromLands(controller, "{R}{R}{R}") {
+						return nil
+					}
+					opponent := g.GetOpponent(controller)
+					if opponent == nil {
+						return nil
+					}
+					oppID := opponent.PlayerID()
+					perm := g.FindPermanent(sourceID)
+					if perm != nil {
+						perm.Tapped = true
+					}
+					// Tap Kobolds of Kher Keep
+					for _, p := range g.FilterBattlefield(NewPermanentFilter("Kobolds of Kher Keep", func(p *Permanent, _ *Game) bool {
+						return p.Name() == "Kobolds of Kher Keep" && p.Controller == controller
+					})) {
+						p.Tapped = true
+					}
+					// Use continuous effect at LayerControl to change controller
+					// (direct assignment gets reset each Apply cycle)
+					eff := FuncContinuousEffect(LayerControl, Indefinite, func(g *Game, srcID uuid.UUID) error {
+						// Change controller of Rohgahh
+						rohgahh := g.FindPermanent(sourceID)
+						if rohgahh != nil {
+							rohgahh.Controller = oppID
+						}
+						// Change controller of all Kobolds of Kher Keep
+						for _, p := range g.Battlefield {
+							if p.Name() == "Kobolds of Kher Keep" && p.Card.Owner() == controller {
+								p.Controller = oppID
+							}
+						}
+						return nil
+					})
+					eff.SetSourceID(sourceID)
+					g.AddContinuousEffect(eff)
+					return nil
+				},
+			)).SetCondition(func(evt *GameEvent, g *Game, sourceID, controller uuid.UUID) bool {
+				return evt.PlayerID == controller
+			})),
 		)
 	}))
 
@@ -2209,11 +2267,54 @@ func registerCreatures() {
 // Legendary Creature — Human Warrior
 // 3/4
 // When Stangg enters, create Stangg Twin, a legendary 3/4 red and green Human Warrior creature token. Exile that token when Stangg leaves the battlefield. Sacrifice Stangg when that token leaves the battlefield.
-// TODO: implement
 	Register("Stangg", withExpansion(func() Card {
+		var twinID uuid.UUID
 		return NewCreature("Stangg", "{4}{R}{G}", 3, 4,
 			WithSubTypes("Human", "Warrior"),
 			WithSuperTypes(SuperLegendary),
+			// ETB: create Stangg Twin token
+			WithAbility(EntersBattlefieldTrigger(FuncEffect(
+				"create Stangg Twin token",
+				EffectProperties{Outcome: OutcomeBenefit},
+				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					token := NewToken("Stangg Twin", 3, 4, []CardType{TypeCreature}, []string{"Human", "Warrior"})
+					token.SetOwner(controller)
+					WithSuperTypes(SuperLegendary)(token)
+					perm := g.PutOnBattlefield(token, controller)
+					colors := []Color{Red, Green}
+					perm.ColorOverride = &colors
+					twinID = perm.ID()
+					return nil
+				},
+			), false)),
+			// When Stangg leaves, exile the token
+			WithAbility(NewTriggered(EvtLeavesBattlefield, false, FuncEffect(
+				"exile Stangg Twin",
+				EffectProperties{},
+				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					twin := g.FindPermanent(twinID)
+					if twin != nil {
+						g.ExilePermanent(twin)
+					}
+					return nil
+				},
+			)).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+				return evt.SourceID == sourceID
+			})),
+			// When the token leaves, sacrifice Stangg
+			WithAbility(NewTriggered(EvtLeavesBattlefield, false, FuncEffect(
+				"sacrifice Stangg",
+				EffectProperties{},
+				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					perm := g.FindPermanent(sourceID)
+					if perm != nil {
+						g.Sacrifice(perm)
+					}
+					return nil
+				},
+			)).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+				return evt.SourceID == twinID && evt.SourceID != sourceID
+			})),
 		)
 	}))
 
