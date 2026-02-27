@@ -1443,3 +1443,76 @@ func TestKeiTakahashi(t *testing.T) {
 		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
 	})
 }
+
+func TestRamsesOverdark(t *testing.T) {
+	t.Run("destroys enchanted creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ramses Overdark")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		// Cast Holy Strength on Bears to make them "enchanted"
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Holy Strength")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Holy Strength", "Grizzly Bears")
+		// Then use Ramses to destroy the enchanted creature
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Ramses Overdark", "Grizzly Bears")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Grizzly Bears should be destroyed
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+		g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+	})
+
+	t.Run("cannot target non-enchanted creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ramses Overdark")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		// No aura → not enchanted → ability should fail to find valid target
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Ramses Overdark", "Grizzly Bears")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Bears still alive since they are not a valid target
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
+	})
+}
+
+func TestTetsuoUmezawa(t *testing.T) {
+	t.Run("destroys tapped creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tetsuo Umezawa")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		// Bears attack on turn 2 (PlayerB's turn), becoming tapped
+		g.Attack(2, gametest.PlayerB, "Grizzly Bears")
+		// Tetsuo destroys tapped Bears after blockers
+		g.ActivateAbility(2, core.DeclareBlockers, gametest.PlayerA, "Tetsuo Umezawa", "Grizzly Bears")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+		g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+	})
+
+	t.Run("cannot target untapped non-blocking creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tetsuo Umezawa")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		// Bears are untapped and not blocking → invalid target
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Tetsuo Umezawa", "Grizzly Bears")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
+	})
+}
+
+func TestLadyEvangela(t *testing.T) {
+	t.Run("prevents combat damage from target creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Lady Evangela")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Craw Wurm") // 6/4
+		// Turn 2 is PlayerB's turn — activate Lady Evangela before combat
+		g.ActivateAbility(2, core.BeginCombat, gametest.PlayerA, "Lady Evangela", "Craw Wurm")
+		g.Attack(2, gametest.PlayerB, "Craw Wurm")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		// Craw Wurm's 6 damage should be prevented — player A still at 20
+		g.AssertLife(gametest.PlayerA, 20)
+	})
+}

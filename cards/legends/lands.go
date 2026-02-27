@@ -1,6 +1,7 @@
 package legends
 
 import (
+	"github.com/google/uuid"
 	. "github.com/mage/mage/pkg/mage"
 	. "github.com/mage/mage/pkg/mage/core"
 )
@@ -29,14 +30,36 @@ func registerLands() {
 	}))
 
 
-// Hammerheim 
+// Hammerheim
 // Legendary Land
 // {T}: Add {R}.
 // {T}: Target creature loses all landwalk abilities until end of turn.
-// TODO: implement
 	Register("Hammerheim", withExpansion(func() Card {
 		return NewLand("Hammerheim",
 			WithSuperTypes(SuperLegendary),
+			WithManaAbility(Red),
+			WithActivatedAbility(
+				FuncEffect(
+					"target creature loses all landwalk abilities until end of turn",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						for kw := range LandwalkAttrs() {
+							eff := TargetEffect(LayerAbility, EndOfTurn, targets[0], func(g *Game, target *Permanent) error {
+								g.Effects.RevokeAttr(target.ID(), kw)
+								return nil
+							})
+							eff.SetSourceID(sourceID)
+							g.AddContinuousEffect(eff)
+						}
+						return nil
+					},
+				),
+				TapSourceCost(),
+				WithTarget(TargetCreature()),
+			),
 		)
 	}))
 
@@ -129,14 +152,42 @@ func registerLands() {
 	}))
 
 
-// Urborg 
+// Urborg
 // Legendary Land
 // {T}: Add {B}.
 // {T}: Target creature loses first strike or swampwalk until end of turn.
-// TODO: implement
 	Register("Urborg", withExpansion(func() Card {
 		return NewLand("Urborg",
 			WithSuperTypes(SuperLegendary),
+			WithManaAbility(Black),
+			WithActivatedAbility(
+				FuncEffect(
+					"target creature loses first strike or swampwalk until end of turn",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						// Remove first strike
+						eff1 := TargetEffect(LayerAbility, EndOfTurn, targets[0], func(g *Game, target *Permanent) error {
+							g.Effects.RevokeAttr(target.ID(), FirstStrike)
+							return nil
+						})
+						eff1.SetSourceID(sourceID)
+						g.AddContinuousEffect(eff1)
+						// Remove swampwalk
+						eff2 := TargetEffect(LayerAbility, EndOfTurn, targets[0], func(g *Game, target *Permanent) error {
+							g.Effects.RevokeAttr(target.ID(), Swampwalk)
+							return nil
+						})
+						eff2.SetSourceID(sourceID)
+						g.AddContinuousEffect(eff2)
+						return nil
+					},
+				),
+				TapSourceCost(),
+				WithTarget(TargetCreature()),
+			),
 		)
 	}))
 

@@ -407,3 +407,22 @@ func (ds *DamageSystem) CheckDamagePreventionRules(source, target *Permanent, g 
 	}
 	return false
 }
+
+// CheckSourceOnlyPrevention checks if any rule prevents all damage from the
+// given source, regardless of target. Used for player damage where there is no
+// target permanent. Only matches rules where the "to" filter is zero (meaning
+// "prevent all damage from this source to anything").
+func (ds *DamageSystem) CheckSourceOnlyPrevention(source *Permanent, g *Game) bool {
+	if source == nil {
+		return false
+	}
+	for i, rule := range ds.preventionRules {
+		if rule.to.IsZero() && !rule.from.IsZero() && rule.from.Match(source, g) {
+			if rule.oneShot {
+				ds.preventionRules = append(ds.preventionRules[:i], ds.preventionRules[i+1:]...)
+			}
+			return true
+		}
+	}
+	return false
+}

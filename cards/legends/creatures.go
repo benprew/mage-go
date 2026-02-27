@@ -1808,11 +1808,34 @@ func registerCreatures() {
 // Legendary Creature — Human Cleric
 // 1/2
 // {W}{B}, {T}: Prevent all combat damage that would be dealt by target creature this turn.
-// TODO: implement
 	Register("Lady Evangela", withExpansion(func() Card {
 		return NewCreature("Lady Evangela", "{W}{U}{B}", 1, 2,
 			WithSubTypes("Human", "Cleric"),
 			WithSuperTypes(SuperLegendary),
+			WithActivatedAbility(
+				FuncEffect(
+					"prevent all combat damage that would be dealt by target creature this turn",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						// Add a continuous effect that prevents damage from this creature until EOT
+						eff := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, srcID uuid.UUID) error {
+							g.Effects.Damage.AddDamagePreventionRule(WithFrom(NewPermanentFilter("prevented source", func(p *Permanent, _ *Game) bool {
+								return p.ID() == targets[0]
+							})))
+							return nil
+						})
+						eff.SetSourceID(sourceID)
+						g.AddContinuousEffect(eff)
+						return nil
+					},
+				),
+				ManaCostOf("{W}{B}"),
+				WithCost(TapSourceCost()),
+				WithTarget(TargetCreature()),
+			),
 		)
 	}))
 
@@ -1996,11 +2019,17 @@ func registerCreatures() {
 // Legendary Creature — Human Assassin
 // 4/3
 // {T}: Destroy target enchanted creature.
-// TODO: implement
 	Register("Ramses Overdark", withExpansion(func() Card {
 		return NewCreature("Ramses Overdark", "{2}{U}{U}{B}{B}", 4, 3,
 			WithSubTypes("Human", "Assassin"),
 			WithSuperTypes(SuperLegendary),
+			WithActivatedAbility(
+				DestroyTarget(),
+				TapSourceCost(),
+				WithTarget(TargetCreature(NewPermanentFilter("enchanted", func(p *Permanent, _ *Game) bool {
+					return len(p.Attachments) > 0
+				}))),
+			),
 		)
 	}))
 
@@ -2125,11 +2154,17 @@ func registerCreatures() {
 // 3/3
 // Tetsuo Umezawa can't be the target of Aura spells.
 // {U}{B}{B}{R}, {T}: Destroy target tapped or blocking creature.
-// TODO: implement
+// XXX: "can't be the target of Aura spells" not yet implemented
 	Register("Tetsuo Umezawa", withExpansion(func() Card {
 		return NewCreature("Tetsuo Umezawa", "{U}{B}{R}", 3, 3,
 			WithSubTypes("Human", "Archer"),
 			WithSuperTypes(SuperLegendary),
+			WithActivatedAbility(
+				DestroyTarget(),
+				ManaCostOf("{U}{B}{B}{R}"),
+				WithCost(TapSourceCost()),
+				WithTarget(TargetCreature(Or(IsTapped, IsBlocking))),
+			),
 		)
 	}))
 

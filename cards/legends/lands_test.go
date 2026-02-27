@@ -42,3 +42,52 @@ func TestKarakas(t *testing.T) {
 		g.AssertHandCount(gametest.PlayerB, "Sol'kanar the Swamp King", 1)
 	})
 }
+
+func TestHammerheim(t *testing.T) {
+	t.Run("taps for red mana", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hammerheim")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Hammerheim", 1)
+	})
+
+	t.Run("removes landwalk from creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hammerheim")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Lost Soul") // has swampwalk
+		// Use Hammerheim to remove landwalk
+		g.ActivateAbility(2, core.PrecombatMain, gametest.PlayerA, "Hammerheim", "Lost Soul")
+		// Lost Soul attacks — but without swampwalk it can be blocked
+		g.Attack(2, gametest.PlayerB, "Lost Soul")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.Block(2, gametest.PlayerA, "Grizzly Bears", "Lost Soul")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		// Lost Soul was blocked — player A takes no damage
+		g.AssertLife(gametest.PlayerA, 20)
+	})
+}
+
+func TestUrborg(t *testing.T) {
+	t.Run("taps for black mana", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Urborg")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Urborg", 1)
+	})
+
+	t.Run("removes first strike from creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Urborg")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Tundra Wolves") // 1/1 first strike
+		// Remove first strike from Tundra Wolves
+		g.ActivateAbility(2, core.PrecombatMain, gametest.PlayerA, "Urborg", "Tundra Wolves")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		// Tundra Wolves should not have first strike
+		g.AssertHasAbility(gametest.PlayerB, "Tundra Wolves", core.FirstStrike, false)
+	})
+}

@@ -87,6 +87,7 @@ type GameMutator interface {
 
 	// Damage prevention / redirection / reflection
 	AddTypePrevention(uuid.UUID, CardType)
+	PreventAllDamageFrom(sourceID uuid.UUID)
 	SetArtifactDamageRedirect(controllerID, permID uuid.UUID)
 	SetDamageReflection(playerID, eyeSourceID, chosenSourceID uuid.UUID)
 
@@ -257,6 +258,13 @@ func (g *Game) SetMinimumLife(playerID uuid.UUID) {
 // AddTypePrevention adds a card-type damage prevention rule for the player.
 func (g *Game) AddTypePrevention(playerID uuid.UUID, ct CardType) {
 	g.Effects.Damage.AddTypePrevention(playerID, ct)
+}
+
+// PreventAllDamageFrom prevents all damage from the specified source until end of turn.
+func (g *Game) PreventAllDamageFrom(sourceID uuid.UUID) {
+	g.Effects.Damage.AddDamagePreventionRule(WithFrom(NewPermanentFilter("specific source", func(p *Permanent, _ *Game) bool {
+		return p.ID() == sourceID
+	})))
 }
 
 // SetArtifactDamageRedirect sets a creature that absorbs artifact damage dealt to a player.

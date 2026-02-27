@@ -821,6 +821,11 @@ func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
 	if amount <= 0 {
 		return
 	}
+	// Check source-based prevention rules (e.g. Lady Evangela, Horn of Deafening)
+	sourcePerm := g.FindPermanent(sourceID)
+	if g.Effects.Damage.CheckSourceOnlyPrevention(sourcePerm, g) {
+		return
+	}
 	// Check color prevention (Circle of Protection)
 	sourceCard := g.FindCardForDamageSource(sourceID)
 	if g.Effects.Damage.CheckColorPrevention(p.PlayerID(), sourceCard) {
