@@ -390,6 +390,43 @@ func (e *changeColorEffect) Text() string {
 }
 func (e *changeColorEffect) Properties() EffectProperties { return EffectProperties{} }
 
+// counterUnlessPayEffect counters a target spell unless its controller pays a cost.
+type counterUnlessPayEffect struct {
+	cost string
+}
+
+// CounterUnlessPay creates an effect that counters a target spell unless its
+// controller pays the specified mana cost (e.g. Force Spike, Mana Leak).
+func CounterUnlessPay(cost string) Effect {
+	return &counterUnlessPayEffect{cost: cost}
+}
+
+func (e *counterUnlessPayEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	if len(targets) == 0 {
+		return nil
+	}
+	obj := g.FindStackObject(targets[0])
+	if obj == nil {
+		return nil
+	}
+	spellController := g.GetPlayer(obj.Controller)
+	if spellController == nil {
+		return nil
+	}
+	if g.TryPayCostFromLands(obj.Controller, e.cost) {
+		return nil // paid, spell resolves
+	}
+	g.CounterSpellOnStack(targets[0])
+	return nil
+}
+
+func (e *counterUnlessPayEffect) Text() string {
+	return fmt.Sprintf("Counter target spell unless its controller pays %s", e.cost)
+}
+func (e *counterUnlessPayEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
+
 // forcefieldEffect activates a Forcefield shield on the controller for this turn.
 type forcefieldEffect struct{}
 

@@ -506,6 +506,59 @@ func (e *putFromHandOntoBattlefieldEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
+// searchLibraryToBattlefieldEffect searches library and puts a matching card onto the battlefield.
+type searchLibraryToBattlefieldEffect struct {
+	filter CardFilter
+}
+
+// SearchLibraryToBattlefield creates an effect that searches the controller's
+// library for a card matching the filter, puts it onto the battlefield, then
+// shuffles (e.g. Untamed Wilds, Rampant Growth).
+func SearchLibraryToBattlefield(filter CardFilter) Effect {
+	return &searchLibraryToBattlefieldEffect{filter: filter}
+}
+
+func (e *searchLibraryToBattlefieldEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	p := g.GetPlayer(controller)
+	if p == nil {
+		return ErrPlayerNotFound
+	}
+	lib := p.Library()
+	var candidates []Card
+	for _, c := range lib {
+		if e.filter.Match(c) {
+			candidates = append(candidates, c)
+		}
+	}
+	if len(candidates) == 0 {
+		p.ShuffleLibrary()
+		return nil
+	}
+	card := p.ChooseCardFromLibrary(candidates, "search to battlefield", g)
+	if card == nil {
+		p.ShuffleLibrary()
+		return nil
+	}
+	// Remove from library
+	newLib := make([]Card, 0, len(lib)-1)
+	for _, c := range lib {
+		if c.ID() != card.ID() {
+			newLib = append(newLib, c)
+		}
+	}
+	p.SetLibrary(newLib)
+	p.ShuffleLibrary()
+	g.PutOnBattlefield(card, controller)
+	return nil
+}
+
+func (e *searchLibraryToBattlefieldEffect) Text() string {
+	return "search your library for a card, put it onto the battlefield, then shuffle"
+}
+func (e *searchLibraryToBattlefieldEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
+
 // chooseColorEffect lets the controller choose a color and stores it on the source permanent.
 type chooseColorEffect struct {
 	reason string

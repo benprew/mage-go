@@ -210,7 +210,7 @@ func CanBlock(blocker, attacker *Permanent, g *Game) bool {
 // (e.g. Desertwalk) work automatically.
 func HasLandwalkEvasion(attacker *Permanent, defenderID uuid.UUID, g *Game) bool {
 	for kw, subtype := range LandwalkAttrs() {
-		if attacker.HasKeyword(kw) {
+		if attacker.HasKeyword(kw) && !g.Effects.Rules.IsLandwalkNullified(kw) {
 			for _, p := range g.Battlefield {
 				if p.Controller == defenderID && p.HasType(TypeLand) && p.HasSubType(subtype) {
 					return true

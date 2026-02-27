@@ -70,6 +70,10 @@ type Player interface {
 	LastDrawnCardID() uuid.UUID
 	ClearLastDrawnCard()
 
+	// Poison counters
+	PoisonCounters() int
+	AddPoisonCounters(int)
+
 	// Player choice methods (overridden by TestPlayer for scripted choices)
 	ChooseMode(modes []string, reason string) int
 	ChoosePermanent(candidates []*Permanent, reason string, g GameReader) *Permanent
@@ -91,6 +95,7 @@ type BasePlayer struct {
 	ante            []Card
 	manaPool        *ManaPool
 	lastDrawnCardID uuid.UUID // ID of the last card drawn this turn (for Jandor's Ring)
+	poisonCounters  int
 }
 
 func NewBasePlayer(name string) *BasePlayer {
@@ -206,6 +211,12 @@ func (p *BasePlayer) LastDrawnCardID() uuid.UUID { return p.lastDrawnCardID }
 
 // ClearLastDrawnCard resets the last drawn card tracking (called at turn start).
 func (p *BasePlayer) ClearLastDrawnCard() { p.lastDrawnCardID = uuid.Nil }
+
+// PoisonCounters returns the number of poison counters this player has.
+func (p *BasePlayer) PoisonCounters() int { return p.poisonCounters }
+
+// AddPoisonCounters adds n poison counters to this player.
+func (p *BasePlayer) AddPoisonCounters(n int) { p.poisonCounters += n }
 
 // Default decision implementations (overridden by TestPlayer).
 func (p *BasePlayer) ChooseTargets(possible []uuid.UUID, min, max int, g *Game) []uuid.UUID {

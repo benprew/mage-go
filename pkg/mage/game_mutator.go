@@ -46,6 +46,7 @@ type GameMutator interface {
 	RemoveFromBattlefield(*Permanent)
 	DestroyPermanent(*Permanent)
 	ExilePermanent(*Permanent)
+	ExileCard(Card, uuid.UUID) // exile a card (from any zone) to exile zone
 	Sacrifice(*Permanent)
 
 	// Damage

@@ -334,6 +334,17 @@ func GrantKeywordToAll(kw Keyword, filter PermanentFilter) ContinuousEffect {
 	})
 }
 
+// NullifyLandwalkEffect creates a continuous effect that nullifies a specific
+// landwalk ability (e.g. Great Wall nullifies plainswalk). While the source is
+// on the battlefield, creatures with the specified landwalk can be blocked as
+// though they didn't have it.
+func NullifyLandwalkEffect(kw Attr) ContinuousEffect {
+	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+		g.Effects.Rules.NullifyLandwalk(kw)
+		return nil
+	})
+}
+
 // BoostControlledCreatures boosts creatures controlled by the source's controller
 // that match an optional filter.
 func BoostControlledCreatures(power, toughness int, filter PermanentFilter) ContinuousEffect {

@@ -762,6 +762,11 @@ func (g *Game) ExilePermanentBy(perm *Permanent, exiledBy uuid.UUID) {
 	g.Exile = append(g.Exile, ExiledCard{Card: card, ExiledBy: exiledBy})
 }
 
+// ExileCard moves a card (from any zone) to the exile zone.
+func (g *Game) ExileCard(card Card, exiledBy uuid.UUID) {
+	g.Exile = append(g.Exile, ExiledCard{Card: card, ExiledBy: exiledBy})
+}
+
 // FindExiledCard finds an exiled card by its ID.
 func (g *Game) FindExiledCard(cardID uuid.UUID) *ExiledCard {
 	for i := range g.Exile {
@@ -1701,6 +1706,13 @@ func (g *Game) CheckStateBasedActions() {
 				}
 			}
 			actions = true
+		}
+
+		// MTG rule 704.5c: player with 10 or more poison counters loses
+		for _, p := range g.Players {
+			if p.PoisonCounters() >= 10 {
+				p.SetLost()
+			}
 		}
 
 		// MTG rule 704.5b: player who attempted to draw from empty library loses

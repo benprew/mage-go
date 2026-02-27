@@ -22,7 +22,8 @@ type GameRules struct {
 	channelActive      map[uuid.UUID]bool      // players with Channel active this turn
 	minimumLife        map[uuid.UUID]bool      // players whose life can't go below 1 (Ali from Cairo)
 	maxHandSize        map[uuid.UUID]int       // player -> max hand size override (Cursed Rack)
-	expansionCastBlock []string                // expansion names blocked from casting/playing
+	expansionCastBlock   []string                // expansion names blocked from casting/playing
+	NullifiedLandwalks   map[Attr]bool           // landwalk attrs that are nullified (Great Wall, etc.)
 }
 
 // NewGameRules creates a GameRules with all maps initialized.
@@ -39,6 +40,7 @@ func NewGameRules() *GameRules {
 		channelActive:       make(map[uuid.UUID]bool),
 		minimumLife:         make(map[uuid.UUID]bool),
 		maxHandSize:         make(map[uuid.UUID]int),
+		NullifiedLandwalks:  make(map[Attr]bool),
 	}
 }
 
@@ -53,6 +55,7 @@ func (r *GameRules) ResetPerCycle() {
 	r.ManaConversion = make(map[Color]Color)
 	r.minimumLife = make(map[uuid.UUID]bool)
 	r.expansionCastBlock = nil
+	r.NullifiedLandwalks = make(map[Attr]bool)
 }
 
 // ClearEndOfTurn resets all turn-scoped game rule state.
@@ -237,4 +240,19 @@ func (r *GameRules) SpellCostIncrease(c Color) int {
 // SpellCostReduction returns the generic cost reduction for spells of the given color.
 func (r *GameRules) SpellCostReduction(c Color) int {
 	return r.SpellCostReductions[c]
+}
+
+// ---------------------------------------------------------------------------
+// Landwalk Nullification (Great Wall, Crevasse, Deadfall, Quagmire, Undertow)
+// ---------------------------------------------------------------------------
+
+// NullifyLandwalk marks a landwalk attr as nullified (can be blocked as though
+// the creature didn't have it).
+func (r *GameRules) NullifyLandwalk(kw Attr) {
+	r.NullifiedLandwalks[kw] = true
+}
+
+// IsLandwalkNullified returns true if the given landwalk attr is nullified.
+func (r *GameRules) IsLandwalkNullified(kw Attr) bool {
+	return r.NullifiedLandwalks[kw]
 }

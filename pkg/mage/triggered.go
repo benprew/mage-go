@@ -1,8 +1,10 @@
 package mage
 
 import (
-	. "github.com/mage/mage/pkg/mage/core"
+	"fmt"
+
 	"github.com/google/uuid"
+	. "github.com/mage/mage/pkg/mage/core"
 )
 
 // TriggeredAbility checks events and produces effects.
@@ -302,6 +304,41 @@ func WhenAttachedBecomesTappedTrigger(effect Effect, optional bool) *GenericTrig
 			}
 			return evt.SourceID == src.AttachedTo
 		})
+}
+
+// RampageTrigger creates a triggered ability for Rampage N. When the source
+// becomes blocked, it gets +N/+N until end of turn for each creature blocking
+// it beyond the first.
+func RampageTrigger(n int) *GenericTriggered {
+	return NewTriggered(EvtBlockersDecl, false, FuncEffect(
+		fmt.Sprintf("rampage %d", n),
+		EffectProperties{},
+		func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+			// Count how many creatures are blocking the source
+			blockerCount := 0
+			for _, group := range g.CombatGroups() {
+				if group.AttackerID == sourceID {
+					blockerCount = len(group.BlockerIDs)
+					break
+				}
+			}
+			if blockerCount <= 1 {
+				return nil // not blocked or only 1 blocker — no rampage bonus
+			}
+			bonus := n * (blockerCount - 1)
+			ce := TemporaryBoost(sourceID, bonus, bonus)
+			ce.SetSourceID(sourceID)
+			g.AddContinuousEffect(ce)
+			return nil
+		},
+	)).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+		// Only trigger if this creature is attacking and is blocked
+		if g.Combat == nil {
+			return false
+		}
+		group := g.Combat.GroupFor(sourceID)
+		return group != nil && len(group.BlockerIDs) > 0
+	})
 }
 
 // WhenOpponentPermanentBecomesTappedTrigger fires when a permanent matching the
