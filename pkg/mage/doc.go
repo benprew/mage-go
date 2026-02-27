@@ -693,17 +693,60 @@ method is called frequently and:
 2. Strips effect-granted runtime abilities.
 3. Removes effects whose source is gone (except EOT/EOC/Indefinite effects).
 4. Applies effects in layer order (1→2→4→5→6→7).
-5. Syncs mana conversions and writes attrDeltas to permanents.
+5. Calls Rules.ResetPerCycle() and Damage.ResetPerCycle() before each cycle.
+6. Syncs mana conversions and writes attrDeltas to permanents.
 
-The EffectManager also manages:
-  - Regeneration shields (AddRegenerationShield, ConsumeRegenerationShield)
-  - Damage prevention shields (AddPreventionShield, PreventDamage)
-  - Color/type prevention (AddColorPrevention, AddTypePrevention)
-  - Damage redirection (bodyguard, player redirect, creature redirect)
-  - Game rule modifiers (land untap limits, spell cost changes, mana conversion)
-  - Block pair restrictions (PreventBlockPair)
-  - Forcefield shields, Reverse Damage shields
-  - Lich, Channel, Island Sanctuary, minimum life, max hand size, skip draw
+The EffectManager owns two subsystems accessed as public fields:
+
+  g.Effects.Damage  — [DamageSystem] (damage_system.go)
+  g.Effects.Rules   — [GameRules]    (game_rules.go)
+
+Block pair restrictions (PreventBlockPair, IsBlockPrevented) and attr deltas
+(GrantAttr, RevokeAttr) remain directly on EffectManager.
+
+# DamageSystem
+
+[DamageSystem] owns all damage-related transient state. Key methods:
+
+  Regeneration:    AddRegenerationShield, ConsumeRegenerationShield, HasRegenerationShield
+  Prevention:      AddPreventionShield, PreventDamage, AddColorPrevention, AddTypePrevention
+  Prevention rules: AddDamagePreventionRule (with [WithFrom], [WithTo], [WithOneShot])
+  Redirection:     SetBodyguard, GetBodyguard, SetPlayerDamageRedirect,
+                   SetArtifactDamageRedirect, SetCreatureDamageRedirect
+  Combat damage:   SetPreventCombatDamage, PreventsCombatDamage
+  Forcefield:      SetForcefieldShield, HasForcefieldShield
+  Reverse damage:  SetReverseDamageShield, HasReverseDamageShield
+  Reflection:      SetDamageReflection, GetDamageReflection
+  Draw replacement: SetDrawReplacement, GetDrawReplacement
+
+Lifecycle: ResetPerCycle() clears per-Apply state. ClearEndOfTurn() clears
+shields and one-shot rules at end of turn.
+
+# GameRules
+
+[GameRules] owns all game-rule modifier state. Public fields set directly by
+continuous effects:
+
+  LandUntapMax       int             // max lands to untap per step (-1 = unlimited)
+  ArtifactUntapMax   int             // max artifacts to untap per step (-1 = unlimited)
+  UnlimitedLandPlays bool            // bypass one-land-per-turn
+  SpellCostIncreases map[Color]int   // per-color cost increases (Gloom, etc.)
+  SpellCostReductions map[Color]int  // per-color cost reductions
+  ManaConversion     map[Color]Color // forced mana conversion (Celestial Dawn)
+
+Methods for special rules:
+
+  Lich:      SetLichActive, IsLichActive, GetLichPermanent
+  Channel:   SetChannelActive, IsChannelActive
+  Sanctuary: SetSanctuaryActive, IsSanctuaryActive
+  Skip draw: SetSkipNextDraw, ShouldSkipDraw
+  Min life:  SetMinimumLife, HasMinimumLife
+  Max hand:  SetMaxHandSize, GetMaxHandSize
+  Cast block: AddExpansionCastBlock, IsExpansionBlocked
+
+Lifecycle: ResetPerCycle() clears per-Apply state. ClearEndOfTurn() clears
+end-of-turn flags. SyncManaConversions(players) writes mana conversions to
+player mana pools.
 
 # GameMutator — The Effect API
 
@@ -749,6 +792,11 @@ Mutation methods (GameMutator):
 	ApplyContinuousEffects()
 	TryPayCostFromLands(playerID uuid.UUID, manaCost string) bool
 	FlipCoin(playerID uuid.UUID) bool
+
+GameMutator also includes proxy methods for the DamageSystem and GameRules
+subsystems, so card effects call e.g. g.SetPreventCombatDamage() or
+g.AddRegenerationShield(id) rather than reaching through g.Effects.Damage
+directly. The full list is in game_mutator.go.
 
 # Protection
 
