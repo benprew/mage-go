@@ -1696,11 +1696,27 @@ func registerCreatures() {
 // Legendary Creature — Human Warrior
 // 3/2
 // Green creatures you control get +0/+2.
-// TODO: implement
 	Register("Jacques le Vert", withExpansion(func() Card {
 		return NewCreature("Jacques le Vert", "{1}{R}{G}{W}", 3, 2,
 			WithSubTypes("Human", "Warrior"),
 			WithSuperTypes(SuperLegendary),
+			WithStaticAbility(
+				FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+					src := g.FindPermanent(sourceID)
+					if src == nil {
+						return nil
+					}
+					for _, p := range g.Battlefield {
+						if p.Controller != src.Controller || !p.HasType(TypeCreature) {
+							continue
+						}
+						if HasColorFilter(Green).Match(p, g) {
+							p.BoostPT(0, 2)
+						}
+					}
+					return nil
+				}),
+			),
 		)
 	}))
 
@@ -1760,11 +1776,15 @@ func registerCreatures() {
 // Legendary Creature — Human Cleric
 // 2/2
 // {T}: Prevent the next 2 damage that would be dealt to target creature this turn.
-// TODO: implement
 	Register("Kei Takahashi", withExpansion(func() Card {
 		return NewCreature("Kei Takahashi", "{2}{G}{W}", 2, 2,
 			WithSubTypes("Human", "Cleric"),
 			WithSuperTypes(SuperLegendary),
+			WithActivatedAbility(
+				PreventDamageToTarget(Fixed(2)),
+				TapSourceCost(),
+				WithTarget(TargetCreature()),
+			),
 		)
 	}))
 
@@ -1772,11 +1792,15 @@ func registerCreatures() {
 // Legendary Creature — Elf Archer
 // 3/6
 // {T}: Lady Caleria deals 3 damage to target attacking or blocking creature.
-// TODO: implement
 	Register("Lady Caleria", withExpansion(func() Card {
 		return NewCreature("Lady Caleria", "{3}{G}{G}{W}{W}", 3, 6,
 			WithSubTypes("Elf", "Archer"),
 			WithSuperTypes(SuperLegendary),
+			WithActivatedAbility(
+				DealDamage(Fixed(3)),
+				TapSourceCost(),
+				WithTarget(TargetCreature(Or(IsAttacking, IsBlocking))),
+			),
 		)
 	}))
 
@@ -1820,11 +1844,13 @@ func registerCreatures() {
 // First strike
 // Creatures with plainswalk can be blocked as though they didn't have plainswalk.
 // Creatures with forestwalk can be blocked as though they didn't have forestwalk.
-// TODO: implement
 	Register("Lord Magnus", withExpansion(func() Card {
 		return NewCreature("Lord Magnus", "{3}{G}{W}{W}", 4, 3,
 			WithSubTypes("Human", "Druid"),
 			WithSuperTypes(SuperLegendary),
+			WithKeyword(FirstStrike),
+			WithStaticAbility(NullifyLandwalkEffect(Plainswalk)),
+			WithStaticAbility(NullifyLandwalkEffect(Forestwalk)),
 		)
 	}))
 
@@ -1858,11 +1884,40 @@ func registerCreatures() {
 // Flying
 // At the beginning of your upkeep, sacrifice Nicol Bolas unless you pay {U}{B}{R}.
 // Whenever Nicol Bolas deals damage to an opponent, that player discards their hand.
-// TODO: implement
 	Register("Nicol Bolas", withExpansion(func() Card {
 		return NewCreature("Nicol Bolas", "{2}{U}{U}{B}{B}{R}{R}", 7, 7,
 			WithSubTypes("Elder", "Dragon"),
 			WithSuperTypes(SuperLegendary),
+			WithKeyword(Flying),
+			WithAbility(SacrificeAtUpkeepUnlessPay("{U}{B}{R}")),
+			WithAbility(NewTriggered(EvtDamageDealt, false, FuncEffect(
+				"that player discards their hand",
+				EffectProperties{Outcome: OutcomeDetriment},
+				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					// targets[0] = damaged player (passed by trigger system from EvtDamageDealt.TargetID)
+					if len(targets) == 0 {
+						return nil
+					}
+					p := g.GetPlayer(targets[0])
+					if p == nil {
+						return nil
+					}
+					// Copy hand slice to avoid concurrent modification during removal
+					hand := make([]Card, len(p.Hand()))
+					copy(hand, p.Hand())
+					for _, c := range hand {
+						p.RemoveFromHand(c.ID())
+						p.AddToGraveyard(c)
+					}
+					return nil
+				},
+			)).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+				// EvtDamageDealt: SourceID = damage source, TargetID = damaged player/permanent
+				if evt.SourceID != sourceID {
+					return false
+				}
+				return g.GetPlayer(evt.TargetID) != nil
+			})),
 		)
 	}))
 
@@ -1912,11 +1967,16 @@ func registerCreatures() {
 // Legendary Creature — Human Cleric
 // 2/2
 // {G}{W}{U}, {T}: Regenerate target creature.
-// TODO: implement
 	Register("Ragnar", withExpansion(func() Card {
 		return NewCreature("Ragnar", "{G}{W}{U}", 2, 2,
 			WithSubTypes("Human", "Cleric"),
 			WithSuperTypes(SuperLegendary),
+			WithActivatedAbility(
+				RegenerateTarget(),
+				ManaCostOf("{G}{W}{U}"),
+				WithCost(TapSourceCost()),
+				WithTarget(TargetCreature()),
+			),
 		)
 	}))
 
@@ -2023,11 +2083,13 @@ func registerCreatures() {
 // 5/5
 // Swampwalk (This creature can't be blocked as long as defending player controls a Swamp.)
 // Whenever a player casts a black spell, you gain 1 life.
-// TODO: implement
 	Register("Sol'kanar the Swamp King", withExpansion(func() Card {
+		blackColor := Black
 		return NewCreature("Sol'kanar the Swamp King", "{2}{U}{B}{R}", 5, 5,
 			WithSubTypes("Demon"),
 			WithSuperTypes(SuperLegendary),
+			WithKeyword(Swampwalk),
+			WithAbility(WheneverSpellCastTrigger(GainLife(1), false, &blackColor)),
 		)
 	}))
 
@@ -2095,11 +2157,15 @@ func registerCreatures() {
 // Legendary Creature — Human Archer
 // 3/3
 // {T}: Tor Wauki deals 2 damage to target attacking or blocking creature.
-// TODO: implement
 	Register("Tor Wauki", withExpansion(func() Card {
 		return NewCreature("Tor Wauki", "{2}{B}{B}{R}", 3, 3,
 			WithSubTypes("Human", "Archer"),
 			WithSuperTypes(SuperLegendary),
+			WithActivatedAbility(
+				DealDamage(Fixed(2)),
+				TapSourceCost(),
+				WithTarget(TargetCreature(Or(IsAttacking, IsBlocking))),
+			),
 		)
 	}))
 
@@ -2118,11 +2184,17 @@ func registerCreatures() {
 // 2/2
 // Flying
 // {R}{G}, {T}: Target creature gets +2/+2 until end of turn.
-// TODO: implement
 	Register("Tuknir Deathlock", withExpansion(func() Card {
 		return NewCreature("Tuknir Deathlock", "{R}{R}{G}{G}", 2, 2,
 			WithSubTypes("Human", "Wizard"),
 			WithSuperTypes(SuperLegendary),
+			WithKeyword(Flying),
+			WithActivatedAbility(
+				BoostUntilEndOfTurn(Fixed(2), Fixed(2), SelectTarget),
+				ManaCostOf("{R}{G}"),
+				WithCost(TapSourceCost()),
+				WithTarget(TargetCreature()),
+			),
 		)
 	}))
 
@@ -2131,11 +2203,12 @@ func registerCreatures() {
 // 4/4
 // First strike
 // Creatures with swampwalk can be blocked as though they didn't have swampwalk.
-// TODO: implement
 	Register("Ur-Drago", withExpansion(func() Card {
 		return NewCreature("Ur-Drago", "{3}{U}{U}{B}{B}", 4, 4,
 			WithSubTypes("Elemental"),
 			WithSuperTypes(SuperLegendary),
+			WithKeyword(FirstStrike),
+			WithStaticAbility(NullifyLandwalkEffect(Swampwalk)),
 		)
 	}))
 
@@ -2147,11 +2220,24 @@ func registerCreatures() {
 // {B}: Vaevictis Asmadi gets +1/+0 until end of turn.
 // {R}: Vaevictis Asmadi gets +1/+0 until end of turn.
 // {G}: Vaevictis Asmadi gets +1/+0 until end of turn.
-// TODO: implement
 	Register("Vaevictis Asmadi", withExpansion(func() Card {
 		return NewCreature("Vaevictis Asmadi", "{2}{B}{B}{R}{R}{G}{G}", 7, 7,
 			WithSubTypes("Elder", "Dragon"),
 			WithSuperTypes(SuperLegendary),
+			WithKeyword(Flying),
+			WithAbility(SacrificeAtUpkeepUnlessPay("{B}{R}{G}")),
+			WithActivatedAbility(
+				BoostUntilEndOfTurn(Fixed(1), Fixed(0), SelectSource),
+				ManaCostOf("{B}"),
+			),
+			WithActivatedAbility(
+				BoostUntilEndOfTurn(Fixed(1), Fixed(0), SelectSource),
+				ManaCostOf("{R}"),
+			),
+			WithActivatedAbility(
+				BoostUntilEndOfTurn(Fixed(1), Fixed(0), SelectSource),
+				ManaCostOf("{G}"),
+			),
 		)
 	}))
 
@@ -2160,11 +2246,17 @@ func registerCreatures() {
 // 1/2
 // Flying
 // {B}{R}{G}, {T}: Target player draws a card.
-// TODO: implement
 	Register("Xira Arien", withExpansion(func() Card {
 		return NewCreature("Xira Arien", "{B}{R}{G}", 1, 2,
 			WithSubTypes("Insect", "Wizard"),
 			WithSuperTypes(SuperLegendary),
+			WithKeyword(Flying),
+			WithActivatedAbility(
+				DrawCards(Fixed(1)),
+				ManaCostOf("{B}{R}{G}"),
+				WithCost(TapSourceCost()),
+				WithTarget(TargetPlayer()),
+			),
 		)
 	}))
 

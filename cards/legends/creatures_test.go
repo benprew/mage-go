@@ -1190,3 +1190,256 @@ func TestPalladiaMors(t *testing.T) {
 		g.AssertPermanentCount(gametest.PlayerA, "Palladia-Mors", 0)
 	})
 }
+
+// ===== BATCH 5: TDD for legendary creatures =====
+
+func TestXiraArien(t *testing.T) {
+	t.Run("flying 1/2 with tap draw ability", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Xira Arien")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		// Put a known card on top of PlayerB's library
+		g.AddCard(core.ZoneLibrary, gametest.PlayerB, "Grizzly Bears")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Xira Arien", "PlayerB")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Xira Arien", 1, 2)
+		g.AssertHasAbility(gametest.PlayerA, "Xira Arien", core.Flying, true)
+		// PlayerB drew the Grizzly Bears
+		g.AssertHandCount(gametest.PlayerB, "Grizzly Bears", 1)
+	})
+}
+
+func TestTuknirDeathlock(t *testing.T) {
+	t.Run("flying 2/2 with tap boost ability", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tuknir Deathlock")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Tuknir Deathlock", "Grizzly Bears")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Tuknir Deathlock", 2, 2)
+		g.AssertHasAbility(gametest.PlayerA, "Tuknir Deathlock", core.Flying, true)
+		// Grizzly Bears should be 4/4 (2+2 / 2+2)
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 4, 4)
+	})
+}
+
+func TestTorWauki(t *testing.T) {
+	t.Run("tap to deal 2 to attacking or blocking creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tor Wauki")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		// PlayerB attacks with Grizzly Bears
+		g.Attack(2, gametest.PlayerB, "Grizzly Bears")
+		// PlayerA activates Tor Wauki to deal 2 to attacking Grizzly Bears
+		g.ActivateAbility(2, core.DeclareBlockers, gametest.PlayerA, "Tor Wauki", "Grizzly Bears")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		// 2 damage kills 2/2 Grizzly Bears
+		g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+	})
+}
+
+func TestLadyCaleria(t *testing.T) {
+	t.Run("tap to deal 3 to attacking or blocking creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Lady Caleria")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Headless Horseman")
+		g.Attack(2, gametest.PlayerB, "Headless Horseman")
+		g.ActivateAbility(2, core.DeclareBlockers, gametest.PlayerA, "Lady Caleria", "Headless Horseman")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		// 3 damage kills 2/2 Headless Horseman
+		g.AssertGraveyardCount(gametest.PlayerB, "Headless Horseman", 1)
+	})
+}
+
+func TestRagnar(t *testing.T) {
+	t.Run("tap to regenerate target creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ragnar")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island")
+		// Give Bears a regen shield
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Ragnar", "Grizzly Bears")
+		// Cast Lightning Bolt to deal 3 to Bears (enough to kill 2/2)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Grizzly Bears")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Bears should survive thanks to regeneration
+		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
+	})
+}
+
+func TestSolkanarTheSwampKing(t *testing.T) {
+	t.Run("5/5 swampwalk with life gain on black spell", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sol'kanar the Swamp King")
+		// Cast a black spell to trigger life gain
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Dark Ritual")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Dark Ritual")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Sol'kanar the Swamp King", 5, 5)
+		g.AssertHasAbility(gametest.PlayerA, "Sol'kanar the Swamp King", core.Swampwalk, true)
+		// Gained 1 life from casting black spell
+		g.AssertLife(gametest.PlayerA, 21)
+	})
+}
+
+func TestNicolBolas(t *testing.T) {
+	t.Run("7/7 flying elder dragon with upkeep sacrifice", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Nicol Bolas")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Nicol Bolas", 7, 7)
+		g.AssertHasAbility(gametest.PlayerA, "Nicol Bolas", core.Flying, true)
+	})
+
+	t.Run("damage to opponent discards their hand", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Nicol Bolas")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		// Give PlayerB some cards in hand (use distinct creature names)
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Headless Horseman")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Raging Bull")
+		g.Attack(1, gametest.PlayerA, "Nicol Bolas")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// PlayerB took 7 damage and discarded entire hand (3 cards → graveyard)
+		g.AssertLife(gametest.PlayerB, 13)
+		g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+		g.AssertGraveyardCount(gametest.PlayerB, "Headless Horseman", 1)
+		g.AssertGraveyardCount(gametest.PlayerB, "Raging Bull", 1)
+	})
+
+	t.Run("sacrificed if upkeep cost not paid", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Nicol Bolas")
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Nicol Bolas", 0)
+	})
+}
+
+func TestVaevictisAsmadi(t *testing.T) {
+	t.Run("7/7 flying elder dragon with three pump abilities", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Vaevictis Asmadi")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		// Activate pump ability three times (each activation is +1/+0)
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Vaevictis Asmadi")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Vaevictis Asmadi")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Vaevictis Asmadi")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Vaevictis Asmadi", 10, 7)
+		g.AssertHasAbility(gametest.PlayerA, "Vaevictis Asmadi", core.Flying, true)
+	})
+
+	t.Run("sacrificed if upkeep cost not paid", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Vaevictis Asmadi")
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Vaevictis Asmadi", 0)
+	})
+}
+
+func TestLordMagnus(t *testing.T) {
+	t.Run("4/3 first strike nullifies plainswalk and forestwalk", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Lord Magnus")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		// Cat Warriors have forestwalk — normally unblockable if opponent has Forest
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Cat Warriors")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		// Lord Magnus nullifies forestwalk
+		g.Attack(2, gametest.PlayerB, "Cat Warriors")
+		g.Block(2, gametest.PlayerA, "Grizzly Bears", "Cat Warriors")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Lord Magnus", 4, 3)
+		g.AssertHasAbility(gametest.PlayerA, "Lord Magnus", core.FirstStrike, true)
+		// Cat Warriors was blocked (forestwalk nullified)
+		g.AssertLife(gametest.PlayerA, 20)
+	})
+}
+
+func TestUrDrago(t *testing.T) {
+	t.Run("4/4 first strike nullifies swampwalk", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ur-Drago")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		// Lost Soul has swampwalk
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Lost Soul")
+		g.Attack(2, gametest.PlayerB, "Lost Soul")
+		g.Block(2, gametest.PlayerA, "Grizzly Bears", "Lost Soul")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Ur-Drago", 4, 4)
+		g.AssertHasAbility(gametest.PlayerA, "Ur-Drago", core.FirstStrike, true)
+		// Lost Soul was blocked (swampwalk nullified)
+		g.AssertLife(gametest.PlayerA, 20)
+	})
+}
+
+func TestJacquesLeVert(t *testing.T) {
+	t.Run("green creatures you control get +0/+2", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Jacques le Vert")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		// Non-green creature should NOT get boost
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Headless Horseman")
+		// Opponent's green creature should NOT get boost
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Cat Warriors")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// Jacques le Vert is 3/2 — he has red, green, and white colors. He IS green, so he gets +0/+2 = 3/4
+		g.AssertPowerToughness(gametest.PlayerA, "Jacques le Vert", 3, 4)
+		// Grizzly Bears is 2/2 green → 2/4
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 4)
+		// Headless Horseman is 2/2 black → no boost
+		g.AssertPowerToughness(gametest.PlayerA, "Headless Horseman", 2, 2)
+		// Opponent's Cat Warriors → no boost (not controlled by you)
+		g.AssertPowerToughness(gametest.PlayerB, "Cat Warriors", 2, 2)
+	})
+}
+
+func TestKeiTakahashi(t *testing.T) {
+	t.Run("tap to prevent next 2 damage to creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Kei Takahashi")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		// Prevent 2 damage to Bears
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Kei Takahashi", "Grizzly Bears")
+		// Lightning Bolt deals 3 to Bears; 2 prevented, 1 gets through
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Grizzly Bears")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Bears took 1 damage (3 - 2 prevention = 1) — still alive (2 toughness - 1 = survives)
+		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
+	})
+}
