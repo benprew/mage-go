@@ -1,6 +1,10 @@
 package legends
 
-import . "github.com/mage/mage/pkg/mage"
+import (
+	"github.com/google/uuid"
+	. "github.com/mage/mage/pkg/mage"
+	. "github.com/mage/mage/pkg/mage/core"
+)
 
 func init() {
 	registerArtifacts()
@@ -30,9 +34,29 @@ func registerArtifacts() {
 // Artifact
 // Legendary creatures don't untap during their controllers' untap steps.
 // When this artifact enters, tap all legendary creatures.
-// TODO: implement
 	Register("Arena of the Ancients", withExpansion(func() Card {
-		return NewArtifact("Arena of the Ancients", "{3}")
+		return NewArtifact("Arena of the Ancients", "{3}",
+			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+				for _, p := range g.Battlefield {
+					if p.HasType(TypeCreature) && p.Card.HasSuperType(SuperLegendary) {
+						g.Effects.GrantAttr(p.ID(), AttrDoesNotUntap)
+					}
+				}
+				return nil
+			})),
+			WithAbility(EntersBattlefieldTrigger(FuncEffect(
+				"tap all legendary creatures",
+				EffectProperties{Outcome: OutcomeDetriment},
+				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					for _, p := range g.FilterBattlefield(NewPermanentFilter("legendary creature", func(p *Permanent, _ *Game) bool {
+						return p.HasType(TypeCreature) && p.Card.HasSuperType(SuperLegendary)
+					})) {
+						p.Tapped = true
+					}
+					return nil
+				},
+			), false)),
+		)
 	}))
 
 
@@ -88,9 +112,32 @@ func registerArtifacts() {
 // Horn of Deafening {4}
 // Artifact
 // {2}, {T}: Prevent all combat damage that would be dealt by target creature this turn.
-// TODO: implement
 	Register("Horn of Deafening", withExpansion(func() Card {
-		return NewArtifact("Horn of Deafening", "{4}")
+		return NewArtifact("Horn of Deafening", "{4}",
+			WithActivatedAbility(
+				FuncEffect(
+					"prevent all combat damage that would be dealt by target creature this turn",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						eff := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, srcID uuid.UUID) error {
+							g.Effects.Damage.AddDamagePreventionRule(WithFrom(NewPermanentFilter("prevented source", func(p *Permanent, _ *Game) bool {
+								return p.ID() == targets[0]
+							})))
+							return nil
+						})
+						eff.SetSourceID(sourceID)
+						g.AddContinuousEffect(eff)
+						return nil
+					},
+				),
+				ManaCostOf("{2}"),
+				WithCost(TapSourceCost()),
+				WithTarget(TargetCreature()),
+			),
+		)
 	}))
 
 

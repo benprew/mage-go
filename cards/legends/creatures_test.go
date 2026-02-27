@@ -1502,6 +1502,44 @@ func TestTetsuoUmezawa(t *testing.T) {
 	})
 }
 
+func TestLivonyaSilone(t *testing.T) {
+	t.Run("has first strike", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Livonya Silone")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertHasAbility(gametest.PlayerA, "Livonya Silone", core.FirstStrike, true)
+	})
+
+	t.Run("legendary landwalk makes unblockable", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Livonya Silone")
+		// Defender controls a legendary land
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Karakas")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.Attack(1, gametest.PlayerA, "Livonya Silone")
+		// Bears try to block but can't — Livonya has legendary landwalk
+		g.Block(1, gametest.PlayerB, "Grizzly Bears", "Livonya Silone")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Livonya dealt 4 damage directly to player B
+		g.AssertLife(gametest.PlayerB, 16)
+	})
+
+	t.Run("can be blocked without legendary land", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Livonya Silone")
+		// Defender has no legendary land
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Craw Wurm") // 6/4
+		g.Attack(1, gametest.PlayerA, "Livonya Silone")
+		g.Block(1, gametest.PlayerB, "Craw Wurm", "Livonya Silone")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Livonya was blocked — player B takes no damage
+		g.AssertLife(gametest.PlayerB, 20)
+	})
+}
+
 func TestLadyEvangela(t *testing.T) {
 	t.Run("prevents combat damage from target creature", func(t *testing.T) {
 		g := gametest.NewTestGame(t)

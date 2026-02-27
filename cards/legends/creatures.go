@@ -1853,11 +1853,12 @@ func registerCreatures() {
 // Legendary Creature — Human Warrior
 // 4/4
 // First strike; legendary landwalk (This creature can't be blocked as long as defending player controls a legendary land.)
-// TODO: implement
 	Register("Livonya Silone", withExpansion(func() Card {
 		return NewCreature("Livonya Silone", "{2}{R}{R}{G}{G}", 4, 4,
 			WithSubTypes("Human", "Warrior"),
 			WithSuperTypes(SuperLegendary),
+			WithKeyword(FirstStrike),
+			WithKeyword(LegendaryLandwalk),
 		)
 	}))
 

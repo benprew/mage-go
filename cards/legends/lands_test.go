@@ -70,6 +70,28 @@ func TestHammerheim(t *testing.T) {
 	})
 }
 
+func TestTolaria(t *testing.T) {
+	t.Run("taps for blue mana", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tolaria")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Tolaria", 1)
+	})
+
+	t.Run("removes banding from creature during upkeep", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tolaria")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mesa Pegasus") // 1/1 banding flying
+		// Activate during PlayerB's upkeep (turn 2)
+		g.ActivateAbility(2, core.Upkeep, gametest.PlayerA, "Tolaria", "Mesa Pegasus")
+		g.StopAt(2, core.PrecombatMain)
+		g.Execute()
+		// Mesa Pegasus should have lost banding
+		g.AssertHasAbility(gametest.PlayerB, "Mesa Pegasus", core.Banding, false)
+	})
+}
+
 func TestUrborg(t *testing.T) {
 	t.Run("taps for black mana", func(t *testing.T) {
 		g := gametest.NewTestGame(t)

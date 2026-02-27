@@ -218,6 +218,14 @@ func HasLandwalkEvasion(attacker *Permanent, defenderID uuid.UUID, g *Game) bool
 			}
 		}
 	}
+	// Check legendary landwalk: unblockable if defender controls a legendary land
+	if attacker.HasKeyword(LegendaryLandwalk) {
+		for _, p := range g.Battlefield {
+			if p.Controller == defenderID && p.HasType(TypeLand) && p.Card.HasSuperType(SuperLegendary) {
+				return true
+			}
+		}
+	}
 	return false
 }
 

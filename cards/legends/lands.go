@@ -131,14 +131,35 @@ func registerLands() {
 	}))
 
 
-// Tolaria 
+// Tolaria
 // Legendary Land
 // {T}: Add {U}.
 // {T}: Target creature loses banding and all "bands with other" abilities until end of turn. Activate only during any upkeep step.
-// TODO: implement
 	Register("Tolaria", withExpansion(func() Card {
 		return NewLand("Tolaria",
 			WithSuperTypes(SuperLegendary),
+			WithManaAbility(Blue),
+			WithActivatedAbility(
+				FuncEffect(
+					"target creature loses banding until end of turn",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						eff := TargetEffect(LayerAbility, EndOfTurn, targets[0], func(g *Game, target *Permanent) error {
+							g.Effects.RevokeAttr(target.ID(), Banding)
+							return nil
+						})
+						eff.SetSourceID(sourceID)
+						g.AddContinuousEffect(eff)
+						return nil
+					},
+				),
+				TapSourceCost(),
+				WithTarget(TargetCreature()),
+				WithUpkeepOnly(),
+			),
 		)
 	}))
 
