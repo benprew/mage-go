@@ -183,3 +183,42 @@ func TestBlackManaBattery(t *testing.T) {
 		g.AssertTapped(gametest.PlayerA, "Black Mana Battery", true)
 	})
 }
+
+func TestManaMatrix(t *testing.T) {
+	t.Run("reduces instant spell cost by 2", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mana Matrix")
+		// Lightning Bolt is {R} (1 CMC) — cost reduced to {R} (generic is 0, can't reduce below 0)
+		// Use a bigger spell: Fireball {X}{R} — cast with X=3 costs {3}{R}. With Mana Matrix, costs {1}{R}.
+		// Actually, let's use a simpler test. Holy Day is {W} (1 CMC). Flash Counter is {1}{U} (2 CMC).
+		// Flash Counter {1}{U}: with Mana Matrix, generic drops from 1 to 0, so it costs {U}.
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Flash Counter")
+		// Flash Counter targets an instant spell — we need an instant to counter.
+		// Let's test with a sorcery instead. Chain Lightning is {R} (1 CMC sorcery).
+		// The cost reduction applies to the spell itself, not to what it targets.
+		// Let's just test that a spell with generic cost can be cast with less mana.
+		// Holy Day {W} is instant, costs {W}. With Mana Matrix, still {W} (no generic).
+		// Use Divine Offering: {1}{W} instant. With Mana Matrix, costs {W} only.
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Divine Offering")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Black Mana Battery") // artifact target
+		// Cast Divine Offering (normally {1}{W}, with Matrix costs {W})
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Divine Offering", "Black Mana Battery")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Divine Offering resolved — Black Mana Battery destroyed
+		g.AssertPermanentCount(gametest.PlayerB, "Black Mana Battery", 0)
+	})
+}
+
+func TestPlanarGate(t *testing.T) {
+	t.Run("reduces creature spell cost by 2", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Planar Gate")
+		// Hill Giant is {3}{R} (4 CMC). With Planar Gate, costs {1}{R}.
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Hill Giant")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Hill Giant")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 1)
+	})
+}

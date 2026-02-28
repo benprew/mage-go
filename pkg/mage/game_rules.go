@@ -13,6 +13,7 @@ type GameRules struct {
 	ManaConversion     map[Color]Color         // from color -> to color (Sunglasses of Urza)
 	SpellCostIncreases map[Color]int           // color -> additional generic cost for spells of that color
 	SpellCostReductions map[Color]int          // color -> generic cost reduction for spells of that color
+	SpellTypeCostReductions map[CardType]int   // type -> generic cost reduction for spells of that type
 	LandUntapMax       int                     // -1 = no limit; >= 0 = max lands that may untap per turn
 	ArtifactUntapMax   int                     // -1 = no limit; >= 0 = max artifacts that may untap per turn
 	UnlimitedLandPlays bool                    // true if a player can play unlimited lands (Fastbond)
@@ -29,18 +30,19 @@ type GameRules struct {
 // NewGameRules creates a GameRules with all maps initialized.
 func NewGameRules() *GameRules {
 	return &GameRules{
-		LandUntapMax:        -1,
-		ArtifactUntapMax:    -1,
-		ManaConversion:      make(map[Color]Color),
-		SpellCostIncreases:  make(map[Color]int),
-		SpellCostReductions: make(map[Color]int),
-		sanctuaryActive:     make(map[uuid.UUID]bool),
-		lichActive:          make(map[uuid.UUID]uuid.UUID),
-		skipNextDraw:        make(map[uuid.UUID]bool),
-		channelActive:       make(map[uuid.UUID]bool),
-		minimumLife:         make(map[uuid.UUID]bool),
-		maxHandSize:         make(map[uuid.UUID]int),
-		NullifiedLandwalks:  make(map[Attr]bool),
+		LandUntapMax:            -1,
+		ArtifactUntapMax:        -1,
+		ManaConversion:          make(map[Color]Color),
+		SpellCostIncreases:      make(map[Color]int),
+		SpellCostReductions:     make(map[Color]int),
+		SpellTypeCostReductions: make(map[CardType]int),
+		sanctuaryActive:         make(map[uuid.UUID]bool),
+		lichActive:              make(map[uuid.UUID]uuid.UUID),
+		skipNextDraw:            make(map[uuid.UUID]bool),
+		channelActive:           make(map[uuid.UUID]bool),
+		minimumLife:             make(map[uuid.UUID]bool),
+		maxHandSize:             make(map[uuid.UUID]int),
+		NullifiedLandwalks:      make(map[Attr]bool),
 	}
 }
 
@@ -52,6 +54,7 @@ func (r *GameRules) ResetPerCycle() {
 	r.maxHandSize = make(map[uuid.UUID]int)
 	r.SpellCostIncreases = make(map[Color]int)
 	r.SpellCostReductions = make(map[Color]int)
+	r.SpellTypeCostReductions = make(map[CardType]int)
 	r.ManaConversion = make(map[Color]Color)
 	r.minimumLife = make(map[uuid.UUID]bool)
 	r.expansionCastBlock = nil
@@ -240,6 +243,11 @@ func (r *GameRules) SpellCostIncrease(c Color) int {
 // SpellCostReduction returns the generic cost reduction for spells of the given color.
 func (r *GameRules) SpellCostReduction(c Color) int {
 	return r.SpellCostReductions[c]
+}
+
+// SpellTypeCostReduction returns the generic cost reduction for spells of the given type.
+func (r *GameRules) SpellTypeCostReduction(t CardType) int {
+	return r.SpellTypeCostReductions[t]
 }
 
 // ---------------------------------------------------------------------------

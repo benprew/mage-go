@@ -295,9 +295,14 @@ func registerArtifacts() {
 // Mana Matrix {6}
 // Artifact
 // Instant and enchantment spells you cast cost {2} less to cast.
-// TODO: implement
 	Register("Mana Matrix", withExpansion(func() Card {
-		return NewArtifact("Mana Matrix", "{6}")
+		return NewArtifact("Mana Matrix", "{6}",
+			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+				g.Effects.Rules.SpellTypeCostReductions[TypeInstant] += 2
+				g.Effects.Rules.SpellTypeCostReductions[TypeEnchantment] += 2
+				return nil
+			})),
+		)
 	}))
 
 
@@ -352,9 +357,13 @@ func registerArtifacts() {
 // Planar Gate {6}
 // Artifact
 // Creature spells you cast cost {2} less to cast.
-// TODO: implement
 	Register("Planar Gate", withExpansion(func() Card {
-		return NewArtifact("Planar Gate", "{6}")
+		return NewArtifact("Planar Gate", "{6}",
+			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+				g.Effects.Rules.SpellTypeCostReductions[TypeCreature] += 2
+				return nil
+			})),
+		)
 	}))
 
 

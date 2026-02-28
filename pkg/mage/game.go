@@ -1303,7 +1303,7 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		}
 	}
 
-	// Apply spell cost reductions
+	// Apply spell cost reductions (by color)
 	for _, col := range mc.Colors() {
 		reduction := g.Effects.Rules.SpellCostReduction(col)
 		if reduction > 0 {
@@ -1312,6 +1312,17 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 				mc.Generic = 0
 			}
 			break // only apply once per spell
+		}
+	}
+
+	// Apply spell cost reductions (by type, e.g. Mana Matrix, Planar Gate)
+	for _, ct := range card.Types() {
+		reduction := g.Effects.Rules.SpellTypeCostReduction(ct)
+		if reduction > 0 {
+			mc.Generic -= reduction
+			if mc.Generic < 0 {
+				mc.Generic = 0
+			}
 		}
 	}
 
