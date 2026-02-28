@@ -184,7 +184,7 @@ func RunGameLoop(g *mage.Game, humanIdx int, aiActionPause time.Duration) {
 				}
 			case core.CombatDamage:
 				if len(g.Combat.Groups) > 0 {
-					reportCombatResults(g, humanIdx, addLog)
+					reportCombatResults(g, addLog)
 					showAIAction()
 				}
 			}

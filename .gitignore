@@ -27,6 +27,7 @@ tui
 server
 cardgen
 fetchset
+genset
 
 # Coverage
 coverage.html

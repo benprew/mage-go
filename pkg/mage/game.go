@@ -1061,7 +1061,7 @@ func (g *Game) RegisterDelayedTrigger(dt *DelayedTrigger) {
 func (g *Game) FireEvent(evt GameEvent) {
 	for _, perm := range g.Battlefield {
 		for _, a := range perm.RuntimeAbilities {
-			ta, ok := a.(TriggeredAbility)
+			ta, ok := UnwrapAbility(a).(TriggeredAbility)
 			if !ok {
 				continue
 			}
@@ -1158,9 +1158,12 @@ func (g *Game) PutTriggersOnStack() {
 						obj.Targets = []uuid.UUID{pt.event.SourceID}
 					}
 				case EvtDeclaredBlocker:
-					// Pass the blocker's ID so effects can identify it
+					// Pass the blocker's ID and attacker's ID
 					if pt.event.SourceID != uuid.Nil {
 						obj.Targets = []uuid.UUID{pt.event.SourceID}
+						if pt.event.TargetID != uuid.Nil {
+							obj.Targets = append(obj.Targets, pt.event.TargetID)
+						}
 					}
 				}
 			}
@@ -1829,6 +1832,12 @@ func (g *Game) RunStep(step PhaseStep) {
 	case CombatDamage:
 		g.Combat.ResolveDamage(g, false)
 	case EndCombat:
+		g.FireEvent(GameEvent{
+			Type:     EvtEndOfCombat,
+			PlayerID: g.ActivePlayerObj().PlayerID(),
+		})
+		g.PutTriggersOnStack()
+		g.ResolveStack()
 		g.Effects.RemoveEndOfCombat()
 		g.Effects.Apply(g)
 		g.Combat.Reset()

@@ -107,7 +107,7 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 
 	switch step {
 	case Untap:
-		g.DoUntap()
+		g.doUntap()
 		return // no priority in untap
 
 	case Upkeep:
@@ -154,6 +154,12 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 		}
 
 	case EndCombat:
+		g.FireEvent(GameEvent{
+			Type:     EvtEndOfCombat,
+			PlayerID: g.ActivePlayerObj().PlayerID(),
+		})
+		g.PutTriggersOnStack()
+		g.RunPriorityRound(false)
 		g.Effects.RemoveEndOfCombat()
 		g.Effects.Apply(g)
 		g.Combat.Reset()
