@@ -572,10 +572,9 @@ by [EffectManager.Apply]:
 
 Controls when a FuncContinuousEffect is active:
 
-	[SourceOnBattlefield]       // default: source permanent exists
 	[SourceAttached]            // source is attached to another permanent
 	[SourceUntapped]            // source is untapped (Winter Orb)
-	[TargetOnBattlefield](id)   // specific permanent exists
+	[SourceTapped]              // source is tapped (Ashnod's Battle Gear)
 	[WithSourceCondition](cond) // bridges SourceCondition to ActiveCondition
 
 # SourceCondition
