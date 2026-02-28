@@ -286,9 +286,9 @@ func (g *Game) FindCardAnywhere(id uuid.UUID) Card {
 	return nil
 }
 
-// FindCardForDamageSource finds the Card associated with a damage source ID.
+// findCardForDamageSource finds the Card associated with a damage source ID.
 // This looks at permanents, graveyard, and the currently resolving card.
-func (g *Game) FindCardForDamageSource(sourceID uuid.UUID) Card {
+func (g *Game) findCardForDamageSource(sourceID uuid.UUID) Card {
 	perm := g.FindPermanent(sourceID)
 	if perm != nil {
 		return perm.Card
@@ -458,8 +458,8 @@ func (g *Game) setEffectSource(e ContinuousEffect, id uuid.UUID) {
 	e.SetSourceID(id)
 }
 
-// TurnFaceUp flips a face-down permanent face up, restoring its original characteristics.
-func (g *Game) TurnFaceUp(perm *Permanent) {
+// turnFaceUp flips a face-down permanent face up, restoring its original characteristics.
+func (g *Game) turnFaceUp(perm *Permanent) {
 	if !perm.FaceDown {
 		return
 	}
@@ -839,7 +839,7 @@ func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
 		return
 	}
 	// Check color prevention (Circle of Protection)
-	sourceCard := g.FindCardForDamageSource(sourceID)
+	sourceCard := g.findCardForDamageSource(sourceID)
 	if g.Effects.Damage.CheckColorPrevention(p.PlayerID(), sourceCard) {
 		return // all damage from this source prevented
 	}
@@ -918,14 +918,14 @@ func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
 	}
 	// Face-down: flip the source if it dealt damage to a player
 	if src != nil && src.FaceDown {
-		g.TurnFaceUp(src)
+		g.turnFaceUp(src)
 	}
 	// Eye for an Eye: reflect damage to source's controller
 	if reflectEntry, ok := g.Effects.Damage.GetDamageReflection(p.PlayerID()); ok {
 		if reflectEntry.chosenSource == uuid.Nil || reflectEntry.chosenSource == sourceID {
 			g.Effects.Damage.ClearDamageReflection(p.PlayerID())
 			// Find the controller of the original damage source
-			sourceCard := g.FindCardForDamageSource(sourceID)
+			sourceCard := g.findCardForDamageSource(sourceID)
 			if sourceCard != nil {
 				sourceOwner := sourceCard.Owner()
 				if sourceOwner != uuid.Nil {
@@ -997,11 +997,11 @@ func (g *Game) DealDamageToPermanent(perm *Permanent, amount int, sourceID uuid.
 	}
 	// Face-down: flip the target if it was dealt damage
 	if perm.FaceDown {
-		g.TurnFaceUp(perm)
+		g.turnFaceUp(perm)
 	}
 	// Face-down: flip the source if it dealt damage
 	if src != nil && src.FaceDown {
-		g.TurnFaceUp(src)
+		g.turnFaceUp(src)
 	}
 }
 
@@ -1111,9 +1111,19 @@ func (g *Game) PutTriggersOnStack() {
 		if pt.event != nil {
 			if gt, ok := pt.ability.(*GenericTriggered); ok {
 				switch gt.eventType {
-				case EvtEntersBattlefield, EvtDrawStep, EvtCardDrawn:
+				case EvtEntersBattlefield:
+					// Pass the entering permanent's ID so effects can tap/modify it
+					if pt.event.SourceID != uuid.Nil {
+						obj.Targets = []uuid.UUID{pt.event.SourceID}
+					}
+				case EvtDrawStep, EvtCardDrawn:
 					if pt.event.PlayerID != uuid.Nil {
 						obj.Targets = []uuid.UUID{pt.event.PlayerID}
+					}
+				case EvtSpellCast:
+					// Pass the spell's ID so effects can counter/interact with it
+					if pt.event.SourceID != uuid.Nil {
+						obj.Targets = []uuid.UUID{pt.event.SourceID}
 					}
 				case EvtDamageDealt:
 					if pt.event.TargetID != uuid.Nil {
@@ -1771,13 +1781,13 @@ func (g *Game) RunStep(step PhaseStep) {
 
 	switch step {
 	case Untap:
-		g.DoUntap()
+		g.doUntap()
 	case Upkeep:
-		g.DoUpkeep()
+		g.doUpkeep()
 	case Draw:
-		g.DoDraw()
+		g.doDraw()
 	case BeginCombat:
-		g.DoBeginCombat()
+		g.doBeginCombat()
 	case DeclareAttackers:
 		g.doDeclareAttackers()
 	case DeclareBlockers:
@@ -1794,9 +1804,9 @@ func (g *Game) RunStep(step PhaseStep) {
 		g.Effects.Apply(g)
 		g.Combat.Reset()
 	case EndStep:
-		g.DoEndStep()
+		g.doEndStep()
 	case Cleanup:
-		g.DoCleanup()
+		g.doCleanup()
 	}
 
 	// Check SBAs after each step
@@ -1815,7 +1825,7 @@ func (g *Game) doBeginCombatActions() {
 	g.PutTriggersOnStack()
 }
 
-func (g *Game) DoBeginCombat() {
+func (g *Game) doBeginCombat() {
 	g.doBeginCombatActions()
 	g.ResolveStack()
 }
@@ -1829,12 +1839,12 @@ func (g *Game) doEndStepActions() {
 	g.PutTriggersOnStack()
 }
 
-func (g *Game) DoEndStep() {
+func (g *Game) doEndStep() {
 	g.doEndStepActions()
 	g.ResolveStack()
 }
 
-func (g *Game) DoUntap() {
+func (g *Game) doUntap() {
 	active := g.ActivePlayerObj()
 	g.Effects.Damage.ClearRegenerationShields(active.PlayerID(), g)
 	// Island Sanctuary: clear protection at the start of the player's turn
@@ -1889,7 +1899,7 @@ func (g *Game) doUpkeepActions() {
 	g.PutTriggersOnStack()
 }
 
-func (g *Game) DoUpkeep() {
+func (g *Game) doUpkeep() {
 	g.doUpkeepActions()
 	g.ResolveStack()
 }
@@ -1995,7 +2005,7 @@ func (g *Game) applyDrawReplacement(p Player, count int) {
 	g.PlayerDrawCard(p)
 }
 
-func (g *Game) DoDraw() {
+func (g *Game) doDraw() {
 	g.doDrawActions()
 	g.ResolveStack()
 	g.doDrawNormalDraw()
@@ -2208,12 +2218,12 @@ func (g *Game) doCleanupActions() bool {
 	return !g.Stack.IsEmpty()
 }
 
-func (g *Game) DoCleanup() {
+func (g *Game) doCleanup() {
 	if g.doCleanupActions() {
 		// Triggers fired — resolve, check SBAs, then do another cleanup step.
 		g.ResolveStack()
 		g.CheckStateBasedActions()
-		g.DoCleanup()
+		g.doCleanup()
 	}
 }
 
@@ -2354,16 +2364,16 @@ func (g *Game) TapForMana(playerID, permanentID uuid.UUID) error {
 	return fmt.Errorf("permanent has no mana ability")
 }
 
-// ManaSourceInfo describes a mana source available for tapping.
-type ManaSourceInfo struct {
+// manaSourceInfo describes a mana source available for tapping.
+type manaSourceInfo struct {
 	PermanentID uuid.UUID
 	Name        string
 	Color       Color
 }
 
-// GetUntappedManaSources returns all untapped permanents with mana abilities for a player.
-func (g *Game) GetUntappedManaSources(playerID uuid.UUID) []ManaSourceInfo {
-	var sources []ManaSourceInfo
+// getUntappedManaSources returns all untapped permanents with mana abilities for a player.
+func (g *Game) getUntappedManaSources(playerID uuid.UUID) []manaSourceInfo {
+	var sources []manaSourceInfo
 	for _, perm := range g.Battlefield {
 		if perm.Controller != playerID || perm.Tapped {
 			continue
@@ -2374,7 +2384,7 @@ func (g *Game) GetUntappedManaSources(playerID uuid.UUID) []ManaSourceInfo {
 		}
 		for _, a := range perm.RuntimeAbilities {
 			if ma, ok := a.(*ManaAbility); ok {
-				sources = append(sources, ManaSourceInfo{
+				sources = append(sources, manaSourceInfo{
 					PermanentID: perm.ID(),
 					Name:        perm.Name(),
 					Color:       ma.Color,
@@ -2388,7 +2398,7 @@ func (g *Game) GetUntappedManaSources(playerID uuid.UUID) []ManaSourceInfo {
 
 // AutoTapForCost taps untapped lands/mana sources to pay a mana cost.
 func (g *Game) AutoTapForCost(playerID uuid.UUID, mc ManaCost) error {
-	sources := g.GetUntappedManaSources(playerID)
+	sources := g.getUntappedManaSources(playerID)
 
 	// Collect how much of each color we need
 	needed := map[Color]int{
@@ -2448,7 +2458,7 @@ func (g *Game) AutoTapForCost(playerID uuid.UUID, mc ManaCost) error {
 
 // CanAfford returns true if a player has enough untapped mana sources to pay a cost.
 func (g *Game) CanAfford(playerID uuid.UUID, mc ManaCost) bool {
-	sources := g.GetUntappedManaSources(playerID)
+	sources := g.getUntappedManaSources(playerID)
 
 	avail := map[Color]int{}
 	for _, src := range sources {
@@ -2733,11 +2743,4 @@ func (g *Game) Winner() string {
 		}
 	}
 	return ""
-}
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }

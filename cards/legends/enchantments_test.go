@@ -80,3 +80,203 @@ func TestMarblePriest(t *testing.T) {
 		g.AssertPermanentCount(gametest.PlayerA, "Marble Priest", 1)
 	})
 }
+
+func TestKismet(t *testing.T) {
+	t.Run("opponent creatures enter tapped", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Kismet")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Grizzly Bears")
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Grizzly Bears")
+		g.StopAt(2, core.BeginCombat)
+		g.Execute()
+		g.AssertTapped(gametest.PlayerB, "Grizzly Bears", true)
+	})
+}
+
+func TestStormWorld(t *testing.T) {
+	t.Run("deals damage when hand is small", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Storm World")
+		// PlayerA starts with 0 cards in hand; upkeep damage = 4-0 = 4
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// Storm World triggers at each upkeep: PlayerA has 0 cards → 4 damage
+		g.AssertLife(gametest.PlayerA, 16)
+	})
+}
+
+func TestSpiritualSanctuary(t *testing.T) {
+	t.Run("gain 1 life if active player controls Plains", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Spiritual Sanctuary")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+		// Turn 1 upkeep: PlayerA has Plains → gains 1
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 21)
+	})
+}
+
+func TestLivingPlane(t *testing.T) {
+	t.Run("lands become 1/1 creatures", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Living Plane")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Forest", 1, 1)
+	})
+}
+
+func TestTheBrute(t *testing.T) {
+	t.Run("enchanted creature gets +1/+0", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "The Brute")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "The Brute", "Grizzly Bears")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 3, 2) // +1/+0
+	})
+}
+
+func TestNetherVoid(t *testing.T) {
+	t.Run("counters spell if opponent cant pay 3", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Nether Void")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Grizzly Bears")
+		// PlayerB casts Bears, tapping their 2 lands — can't pay extra {3}
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Grizzly Bears")
+		g.StopAt(2, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+	})
+}
+
+func TestBlight(t *testing.T) {
+	t.Run("destroy enchanted land when it becomes tapped", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forest")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Blight")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Blight", "Forest")
+		// Explicitly tap Forest by activating its mana ability
+		g.ActivateAbility(2, core.PrecombatMain, gametest.PlayerB, "Forest")
+		g.StopAt(2, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerB, "Forest", 0)
+	})
+}
+
+func TestDemonicTorment(t *testing.T) {
+	t.Run("enchanted creature cannot attack", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Demonic Torment")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Demonic Torment", "Grizzly Bears")
+		g.Attack(1, gametest.PlayerA, "Grizzly Bears")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Bears can't attack due to Demonic Torment
+		g.AssertLife(gametest.PlayerB, 20)
+	})
+}
+
+func TestGaseousForm(t *testing.T) {
+	t.Run("prevents all combat damage to and from enchanted creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant") // 3/3
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Gaseous Form")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Gaseous Form", "Hill Giant")
+		g.Attack(1, gametest.PlayerA, "Hill Giant")
+		g.Block(1, gametest.PlayerB, "Grizzly Bears", "Hill Giant")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Hill Giant deals no damage (prevented), Bears deal no damage to Hill Giant (prevented)
+		g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 1)
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
+	})
+}
+
+func TestInTheEyeOfChaos(t *testing.T) {
+	t.Run("counters instant if player cant pay CMC", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "In the Eye of Chaos")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Flash Counter") // CMC 2 instant
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Grizzly Bears")
+		// PlayerA casts Bears, then PlayerB tries to Flash Counter it
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Grizzly Bears")
+		g.CastInResponseTo(gametest.PlayerB, "Flash Counter")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Flash Counter should be countered by In the Eye of Chaos (no lands to pay CMC 2)
+		// Bears should resolve
+		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
+	})
+}
+
+func TestPresenceOfTheMaster(t *testing.T) {
+	t.Run("counters enchantment spells", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Presence of the Master")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Giant Strength")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Giant Strength", "Grizzly Bears")
+		g.StopAt(2, core.BeginCombat)
+		g.Execute()
+		// Giant Strength should be countered
+		g.AssertPowerToughness(gametest.PlayerB, "Grizzly Bears", 2, 2) // no boost
+	})
+}
+
+func TestSpectralCloak(t *testing.T) {
+	t.Run("enchanted untapped creature has shroud", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Spectral Cloak")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Spectral Cloak", "Grizzly Bears")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+		g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", core.Shroud, true)
+	})
+}
+
+func TestLifeblood(t *testing.T) {
+	t.Run("gain 1 life when opponent taps Mountain", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Lifeblood")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+		// Explicitly tap Mountain by activating its mana ability
+		g.ActivateAbility(2, core.PrecombatMain, gametest.PlayerB, "Mountain")
+		g.StopAt(2, core.BeginCombat)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 21)
+	})
+}
+
+func TestCocoon(t *testing.T) {
+	t.Run("taps creature and adds pupa counters then removes them", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Cocoon")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Cocoon", "Grizzly Bears")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+		// Bears should be tapped and have 3 pupa counters
+		g.AssertTapped(gametest.PlayerA, "Grizzly Bears", true)
+		g.AssertCounterCount(gametest.PlayerA, "Cocoon", core.Pupa, 3)
+	})
+}
+
+func TestTakklemaggot(t *testing.T) {
+	t.Run("puts -0/-1 counter on enchanted creature at upkeep", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Takklemaggot")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Takklemaggot", "Grizzly Bears")
+		// Turn 2 upkeep (PlayerB's turn): should put -0/-1 on Bears
+		g.StopAt(2, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerB, "Grizzly Bears", 2, 1) // 2/2 - 0/1
+	})
+}

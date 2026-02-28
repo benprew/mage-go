@@ -136,6 +136,44 @@ func TestEnergyTap(t *testing.T) {
 	})
 }
 
+func TestActiveVolcano(t *testing.T) {
+	t.Run("destroy target blue permanent", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Azure Drake") // blue creature
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Active Volcano")
+		g.ChooseMode(gametest.PlayerA, 0) // mode 0: destroy blue permanent
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Active Volcano", "Azure Drake")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerB, "Azure Drake", 0)
+	})
+}
+
+func TestFlashFlood(t *testing.T) {
+	t.Run("destroy target red permanent", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Raging Bull") // red creature
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Flash Flood")
+		g.ChooseMode(gametest.PlayerA, 0) // mode 0: destroy red permanent
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerA, "Flash Flood", "Raging Bull")
+		g.StopAt(2, core.PostcombatMain)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerB, "Raging Bull", 0)
+	})
+}
+
+func TestSylvanParadise(t *testing.T) {
+	t.Run("target creature becomes green", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Raging Bull") // red
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Sylvan Paradise")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Sylvan Paradise", "Raging Bull")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Raging Bull", 2, 2)
+	})
+}
+
 func TestWindsOfChange(t *testing.T) {
 	t.Run("each player shuffles hand and redraws", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
