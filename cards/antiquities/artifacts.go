@@ -117,7 +117,7 @@ func registerArtifacts() {
 						eff := FuncContinuousEffect(LayerPT, WhileOnBattlefield,
 							func(g *Game, srcID uuid.UUID) error {
 								src := g.FindPermanent(srcID)
-								if src == nil || !src.Tapped {
+								if src == nil {
 									return nil
 								}
 								target := g.FindPermanent(targetID)
@@ -126,7 +126,7 @@ func registerArtifacts() {
 								}
 								target.BoostPT(2, -2)
 								return nil
-							})
+							}, SourceTapped)
 						eff.SetSourceID(sourceID)
 						g.AddContinuousEffect(eff)
 						g.ApplyContinuousEffects()

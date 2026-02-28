@@ -56,7 +56,7 @@ func registerEnchantments() {
 				FuncContinuousEffect(LayerAbility, WhileOnBattlefield,
 					func(g *Game, sourceID uuid.UUID) error {
 						src := g.FindPermanent(sourceID)
-						if src == nil || !src.IsAttached() {
+						if src == nil {
 							return nil
 						}
 						attachedID := src.AttachedTo
@@ -64,7 +64,7 @@ func registerEnchantments() {
 							g.Effects.PreventBlockPair(perm.ID(), attachedID)
 						}
 						return nil
-					}),
+					}, SourceAttached),
 			),
 		)
 	})

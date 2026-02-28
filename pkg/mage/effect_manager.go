@@ -30,12 +30,6 @@ func (s *effectSource) SetSourceID(id uuid.UUID) { s.sourceID = id }
 // ActiveCondition determines when a continuous effect is active.
 type ActiveCondition func(g *Game, sourceID uuid.UUID) bool
 
-// SourceOnBattlefield is active while the source permanent exists on the battlefield.
-// This is the default for FuncContinuousEffect so you rarely need to pass it explicitly.
-var SourceOnBattlefield ActiveCondition = func(g *Game, sourceID uuid.UUID) bool {
-	return g.FindPermanent(sourceID) != nil
-}
-
 // SourceAttached is active while the source is on the battlefield and attached to another permanent.
 var SourceAttached ActiveCondition = func(g *Game, sourceID uuid.UUID) bool {
 	src := g.FindPermanent(sourceID)
@@ -48,11 +42,10 @@ var SourceUntapped ActiveCondition = func(g *Game, sourceID uuid.UUID) bool {
 	return src != nil && !src.Tapped
 }
 
-// TargetOnBattlefield returns an ActiveCondition that's active while a specific permanent exists.
-func TargetOnBattlefield(targetID uuid.UUID) ActiveCondition {
-	return func(g *Game, _ uuid.UUID) bool {
-		return g.FindPermanent(targetID) != nil
-	}
+// SourceTapped is active while the source is on the battlefield and tapped.
+var SourceTapped ActiveCondition = func(g *Game, sourceID uuid.UUID) bool {
+	src := g.FindPermanent(sourceID)
+	return src != nil && src.Tapped
 }
 
 // WithSourceCondition bridges the existing SourceCondition type to ActiveCondition.

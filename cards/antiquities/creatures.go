@@ -89,12 +89,12 @@ func registerCreatures() {
 			WithStaticAbility(
 				FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
 					src := g.FindPermanent(sourceID)
-					if src == nil || src.Tapped {
+					if src == nil {
 						return nil
 					}
 					g.Effects.Damage.SetArtifactDamageRedirect(src.Controller, src.ID())
 					return nil
-				}),
+				}, SourceUntapped),
 			),
 		)
 	})

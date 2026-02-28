@@ -470,18 +470,19 @@ func PreventAllUntaps() ContinuousEffect {
 
 // BoostSelf creates a ContinuousEffect that boosts the source P/T while the SourceCondition passes.
 func BoostSelf(power, toughness int, condition SourceCondition) ContinuousEffect {
+	var opts []ActiveCondition
+	if condition != nil {
+		opts = append(opts, WithSourceCondition(condition))
+	}
 	return FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
 		src := g.FindPermanent(sourceID)
 		if src == nil {
 			return nil
 		}
-		if condition != nil && !condition(src, g) {
-			return nil
-		}
 		src.powerBonus += power
 		src.toughBonus += toughness
 		return nil
-	})
+	}, opts...)
 }
 
 // LimitLandUntaps creates a continuous effect that limits land untaps per turn

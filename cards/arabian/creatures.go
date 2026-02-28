@@ -421,7 +421,7 @@ func registerCreatures() {
 			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield,
 				func(g *Game, sourceID uuid.UUID) error {
 					src := g.FindPermanent(sourceID)
-					if src == nil || src.Tapped {
+					if src == nil {
 						return nil
 					}
 					// Grant indestructible to noncreature artifacts controlled by the same player
@@ -433,7 +433,7 @@ func registerCreatures() {
 						}
 					}
 					return nil
-				})),
+				}, SourceUntapped)),
 		)
 	}))
 
