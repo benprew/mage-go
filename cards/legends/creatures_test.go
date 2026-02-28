@@ -1987,3 +1987,395 @@ func TestCrimsonManticore(t *testing.T) {
 		g.AssertLife(gametest.PlayerB, 18) // 2/2 flying
 	})
 }
+
+// ===== ADDITIONAL VANILLA CREATURES =====
+
+func TestHeadlessHorseman(t *testing.T) {
+	t.Run("is 2/2 vanilla", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Headless Horseman")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Headless Horseman", 2, 2)
+	})
+}
+
+func TestRagingBull(t *testing.T) {
+	t.Run("is 2/2 vanilla", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Raging Bull")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Raging Bull", 2, 2)
+	})
+}
+
+func TestBarbaryApes(t *testing.T) {
+	t.Run("is 2/2 vanilla", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Barbary Apes")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Barbary Apes", 2, 2)
+	})
+}
+
+func TestDurkwoodBoars(t *testing.T) {
+	t.Run("is 4/4 vanilla", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Durkwood Boars")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Durkwood Boars", 4, 4)
+	})
+}
+
+func TestMossMonster(t *testing.T) {
+	t.Run("is 3/6 vanilla", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Moss Monster")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Moss Monster", 3, 6)
+	})
+}
+
+func TestCrimsonKobolds(t *testing.T) {
+	t.Run("is 0/1 for zero mana", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Crimson Kobolds")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Crimson Kobolds", 0, 1)
+	})
+}
+
+func TestCrookshankKobolds(t *testing.T) {
+	t.Run("is 0/1 for zero mana", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Crookshank Kobolds")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Crookshank Kobolds", 0, 1)
+	})
+}
+
+func TestKoboldsOfKherKeep(t *testing.T) {
+	t.Run("is 0/1 for zero mana", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Kobolds of Kher Keep")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Kobolds of Kher Keep", 0, 1)
+	})
+}
+
+// ===== VANILLA LEGENDARY CREATURES =====
+
+func TestJasmineBoreal(t *testing.T) {
+	t.Run("is 4/5 legendary", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Jasmine Boreal")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Jasmine Boreal", 4, 5)
+	})
+}
+
+func TestJeditOjanen(t *testing.T) {
+	t.Run("is 5/5 legendary", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Jedit Ojanen")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Jedit Ojanen", 5, 5)
+	})
+}
+
+func TestJerrardOfTheClosedFist(t *testing.T) {
+	t.Run("is 6/5 legendary", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Jerrard of the Closed Fist")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Jerrard of the Closed Fist", 6, 5)
+	})
+}
+
+func TestKasimirTheLoneWolf(t *testing.T) {
+	t.Run("is 5/3 legendary", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Kasimir the Lone Wolf")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Kasimir the Lone Wolf", 5, 3)
+	})
+}
+
+func TestLadyOrca(t *testing.T) {
+	t.Run("is 7/4 legendary", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Lady Orca")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Lady Orca", 7, 4)
+	})
+}
+
+func TestSivitriScarzam(t *testing.T) {
+	t.Run("is 6/4 legendary", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sivitri Scarzam")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Sivitri Scarzam", 6, 4)
+	})
+}
+
+func TestTheLadyOfTheMountain(t *testing.T) {
+	t.Run("is 5/5 legendary", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "The Lady of the Mountain")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "The Lady of the Mountain", 5, 5)
+	})
+}
+
+func TestTobiasAndrion(t *testing.T) {
+	t.Run("is 4/4 legendary", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tobias Andrion")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Tobias Andrion", 4, 4)
+	})
+}
+
+func TestTorstenVonUrsus(t *testing.T) {
+	t.Run("is 5/5 legendary", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Torsten Von Ursus")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Torsten Von Ursus", 5, 5)
+	})
+}
+
+func TestSirShandlarOfEberyn(t *testing.T) {
+	t.Run("is 4/7 legendary", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sir Shandlar of Eberyn")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Sir Shandlar of Eberyn", 4, 7)
+	})
+}
+
+// ===== KEYWORD CREATURES =====
+
+func TestHornetCobra(t *testing.T) {
+	t.Run("has first strike", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hornet Cobra")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Hornet Cobra", 2, 1)
+		g.AssertHasAbility(gametest.PlayerA, "Hornet Cobra", core.FirstStrike, true)
+	})
+}
+
+func TestSegovianLeviathan(t *testing.T) {
+	t.Run("has islandwalk", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Segovian Leviathan")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island")
+		g.Attack(3, gametest.PlayerA, "Segovian Leviathan")
+		g.StopAt(3, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 17) // 3/3 islandwalk, unblockable
+	})
+}
+
+func TestBartelRuneaxe(t *testing.T) {
+	t.Run("has vigilance", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Bartel Runeaxe")
+		g.Attack(3, gametest.PlayerA, "Bartel Runeaxe")
+		g.StopAt(3, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 14) // 6/5 attacks
+		g.AssertTapped(gametest.PlayerA, "Bartel Runeaxe", false) // vigilance
+	})
+}
+
+// ===== ACTIVATED ABILITY CREATURES =====
+
+func TestWallOfOpposition(t *testing.T) {
+	t.Run("is 0/6 defender with pump", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Wall of Opposition")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Wall of Opposition", 0, 6)
+		g.AssertHasAbility(gametest.PlayerA, "Wall of Opposition", core.Defender, true)
+	})
+}
+
+func TestPradeshGypsies(t *testing.T) {
+	t.Run("tap to give target -2/-0", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Pradesh Gypsies")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Raging Bull") // 2/2
+		g.ActivateAbility(3, core.PrecombatMain, gametest.PlayerA, "Pradesh Gypsies", "target creature gets -2/-0", "Raging Bull")
+		g.StopAt(3, core.PostcombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerB, "Raging Bull", 0, 2) // -2/-0 applied
+	})
+}
+
+func TestRadjanSpirit(t *testing.T) {
+	t.Run("tap to remove flying", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Radjan Spirit")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Azure Drake") // 2/4 flying
+		g.ActivateAbility(3, core.PrecombatMain, gametest.PlayerA, "Radjan Spirit", "target creature loses flying", "Azure Drake")
+		g.StopAt(3, core.PostcombatMain)
+		g.Execute()
+		g.AssertHasAbility(gametest.PlayerB, "Azure Drake", core.Flying, false)
+	})
+}
+
+func TestPixieQueen(t *testing.T) {
+	t.Run("grant flying to target", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Pixie Queen")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Raging Bull") // 2/2 no flying
+		g.ActivateAbility(3, core.PrecombatMain, gametest.PlayerA, "Pixie Queen", "target creature gains flying", "Raging Bull")
+		g.StopAt(3, core.PostcombatMain)
+		g.Execute()
+		g.AssertHasAbility(gametest.PlayerA, "Raging Bull", core.Flying, true)
+	})
+}
+
+func TestHyperionBlacksmith(t *testing.T) {
+	t.Run("tap target artifact", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hyperion Blacksmith")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Relic Barrier")
+		g.ActivateAbility(3, core.PrecombatMain, gametest.PlayerA, "Hyperion Blacksmith", "tap or untap", "Relic Barrier")
+		g.StopAt(3, core.PostcombatMain)
+		g.Execute()
+		g.AssertTapped(gametest.PlayerB, "Relic Barrier", true)
+	})
+}
+
+func TestMasterOfTheHunt(t *testing.T) {
+	t.Run("creates wolf token", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Master of the Hunt")
+		g.ActivateAbility(3, core.PrecombatMain, gametest.PlayerA, "Master of the Hunt", "Create", "")
+		g.StopAt(3, core.PostcombatMain)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Wolves of the Hunt", 1)
+	})
+}
+
+func TestGwendlynDiCorci(t *testing.T) {
+	t.Run("is 3/5 legendary", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Gwendlyn Di Corci")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Gwendlyn Di Corci", 3, 5)
+	})
+}
+
+// ===== ELDER DRAGONS =====
+
+func TestArcadesSabboth(t *testing.T) {
+	t.Run("sacrificed at upkeep if cant pay", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Arcades Sabboth")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// Can't pay {G}{W}{U} so sacrificed during upkeep
+		g.AssertPermanentCount(gametest.PlayerA, "Arcades Sabboth", 0)
+		g.AssertGraveyardCount(gametest.PlayerA, "Arcades Sabboth", 1)
+	})
+}
+
+func TestChromium(t *testing.T) {
+	t.Run("sacrificed at upkeep if cant pay", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Chromium")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// Can't pay {W}{U}{B} so sacrificed during upkeep
+		g.AssertPermanentCount(gametest.PlayerA, "Chromium", 0)
+		g.AssertGraveyardCount(gametest.PlayerA, "Chromium", 1)
+	})
+}
+
+// ===== WALL OF PUTRID FLESH =====
+
+func TestWallOfPutridFlesh(t *testing.T) {
+	t.Run("has defender and protection from white", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Wall of Putrid Flesh")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Wall of Putrid Flesh", 2, 4)
+		g.AssertHasAbility(gametest.PlayerA, "Wall of Putrid Flesh", core.Defender, true)
+	})
+}
+
+// ===== ELDER LAND WURM =====
+
+func TestElderLandWurm(t *testing.T) {
+	t.Run("starts with defender and trample", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Elder Land Wurm")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Elder Land Wurm", 5, 5)
+		g.AssertHasAbility(gametest.PlayerA, "Elder Land Wurm", core.Defender, true)
+		g.AssertHasAbility(gametest.PlayerA, "Elder Land Wurm", core.Trample, true)
+	})
+
+	t.Run("loses defender when it blocks", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Elder Land Wurm")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Durkwood Boars") // 4/4
+		g.Attack(2, gametest.PlayerB, "Durkwood Boars")
+		g.Block(2, gametest.PlayerA, "Elder Land Wurm", "Durkwood Boars")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		// After blocking, Elder Land Wurm loses defender
+		g.AssertHasAbility(gametest.PlayerA, "Elder Land Wurm", core.Defender, false)
+		// Now it can attack on turn 3
+		g.Attack(3, gametest.PlayerA, "Elder Land Wurm")
+		g.StopAt(3, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 15) // 5/5 trample
+	})
+}
+
+// ===== HELL'S CARETAKER =====
+
+func TestHellsCaretaker(t *testing.T) {
+	t.Run("reanimate during upkeep by sacrificing creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hell's Caretaker")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Raging Bull") // sacrifice fodder
+		g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Moss Monster")  // reanimate target
+		g.ActivateAbility(3, core.Upkeep, gametest.PlayerA, "Hell's Caretaker", "Return target creature", "Moss Monster")
+		g.ChoosePermanent(gametest.PlayerA, "Raging Bull") // sacrifice this
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Moss Monster", 1)   // reanimated
+		g.AssertPermanentCount(gametest.PlayerA, "Raging Bull", 0)    // sacrificed
+		g.AssertGraveyardCount(gametest.PlayerA, "Raging Bull", 1)
+	})
+}
+
