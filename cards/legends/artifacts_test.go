@@ -236,3 +236,25 @@ func TestPlanarGate(t *testing.T) {
 		g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 1)
 	})
 }
+
+func TestVoodooDoll(t *testing.T) {
+	t.Run("gains pin counter at upkeep", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Voodoo Doll")
+		// Turn 1 upkeep: gain a pin counter
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertCounterCount(gametest.PlayerA, "Voodoo Doll", core.Pin, 1)
+	})
+
+	t.Run("destroys itself at end step if untapped", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Voodoo Doll")
+		// Let it get a pin counter during upkeep, then end step
+		g.StopAt(2, core.PrecombatMain)
+		g.Execute()
+		// Voodoo Doll should have been destroyed at end of turn 1 (untapped) and dealt 1 damage
+		g.AssertPermanentCount(gametest.PlayerA, "Voodoo Doll", 0)
+		g.AssertLife(gametest.PlayerA, 19) // 1 pin counter = 1 damage
+	})
+}

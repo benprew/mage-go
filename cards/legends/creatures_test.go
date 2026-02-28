@@ -2379,3 +2379,97 @@ func TestHellsCaretaker(t *testing.T) {
 	})
 }
 
+func TestWhirlingDervish(t *testing.T) {
+	t.Run("gets +1/+1 counter when deals combat damage to opponent", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Whirling Dervish")
+		g.Attack(1, gametest.PlayerA, "Whirling Dervish")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 19)
+		g.AssertPowerToughness(gametest.PlayerA, "Whirling Dervish", 2, 2)
+	})
+
+	t.Run("is not damaged by black creatures", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Whirling Dervish") // 1/1
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Headless Horseman") // 2/2 black
+		g.Attack(2, gametest.PlayerB, "Headless Horseman")
+		g.Block(2, gametest.PlayerA, "Whirling Dervish", "Headless Horseman")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		// Whirling Dervish has protection from black, shouldn't take damage
+		g.AssertPermanentCount(gametest.PlayerA, "Whirling Dervish", 1)
+	})
+}
+
+func TestPrimordialOoze(t *testing.T) {
+	t.Run("gets +1/+1 counter at upkeep", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Primordial Ooze")
+		// Turn 1 upkeep: add +1/+1 counter
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertCounterCount(gametest.PlayerA, "Primordial Ooze", core.P1P1, 1)
+		g.AssertPowerToughness(gametest.PlayerA, "Primordial Ooze", 2, 2) // 1/1 base + 1 counter
+	})
+}
+
+func TestAbomination(t *testing.T) {
+	t.Run("destroys green creature that blocks it", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Abomination") // 2/6
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Durkwood Boars") // 4/4 green
+		g.Attack(1, gametest.PlayerA, "Abomination")
+		g.Block(1, gametest.PlayerB, "Durkwood Boars", "Abomination")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Durkwood Boars is green — trigger destroys it (even though combat wouldn't kill 4/4)
+		g.AssertPermanentCount(gametest.PlayerB, "Durkwood Boars", 0)
+		// Abomination survives (takes 4 damage but has 6 toughness)
+		g.AssertPermanentCount(gametest.PlayerA, "Abomination", 1)
+	})
+}
+
+func TestIchneumonDruid(t *testing.T) {
+	t.Run("deals 4 damage when opponent casts second instant", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ichneumon Druid")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Holy Day")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Darkness")
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Holy Day")
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Darkness")
+		g.StopAt(2, core.BeginCombat)
+		g.Execute()
+		// Second instant triggers 4 damage to opponent
+		g.AssertLife(gametest.PlayerB, 16)
+	})
+}
+
+func TestAislingLeprechaun(t *testing.T) {
+	t.Run("creature blocked by Aisling becomes green", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Aisling Leprechaun") // 1/1 green
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Raging Bull")        // 2/2 red
+		g.Attack(2, gametest.PlayerB, "Raging Bull")
+		g.Block(2, gametest.PlayerA, "Aisling Leprechaun", "Raging Bull")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		// Raging Bull should have been turned green indefinitely
+		// Aisling dies in combat (1/1 vs 2/2) but the color change is permanent
+	})
+}
+
+func TestWallOfTombstones(t *testing.T) {
+	t.Run("toughness equals 1 plus creature cards in graveyard", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Wall of Tombstones")
+		g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Raging Bull")
+		// Turn 1 upkeep: Wall checks graveyard, 2 creatures → toughness = 3
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Wall of Tombstones", 0, 3)
+	})
+}
+

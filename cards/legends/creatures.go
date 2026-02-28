@@ -1,6 +1,8 @@
 package legends
 
 import (
+	"fmt"
+
 	"github.com/google/uuid"
 	. "github.com/mage/mage/pkg/mage"
 	. "github.com/mage/mage/pkg/mage/core"
@@ -520,10 +522,72 @@ func registerCreatures() {
 // Creature — Horror
 // 2/6
 // Whenever this creature blocks or becomes blocked by a green or white creature, destroy that creature at end of combat.
-// TODO: implement — needs engine support for "blocks or becomes blocked by" trigger with delayed destroy at end of combat
 	Register("Abomination", withExpansion(func() Card {
 		return NewCreature("Abomination", "{3}{B}{B}", 2, 6,
 			WithSubTypes("Horror"),
+			WithAbility(
+				NewTriggered(EvtBlockersDecl, false,
+					FuncEffect("destroy green/white creature in combat with Abomination",
+						EffectProperties{Outcome: OutcomeDetriment},
+						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+							isGreenOrWhite := func(p *Permanent) bool {
+								for _, c := range p.Colors() {
+									if c == Green || c == White {
+										return true
+									}
+								}
+								return false
+							}
+							for _, group := range g.CombatGroups() {
+								if group.AttackerID == sourceID {
+									for _, bid := range group.BlockerIDs {
+										blocker := g.FindPermanent(bid)
+										if blocker != nil && isGreenOrWhite(blocker) {
+											g.DestroyPermanent(blocker)
+										}
+									}
+								}
+								for _, bid := range group.BlockerIDs {
+									if bid == sourceID {
+										attacker := g.FindPermanent(group.AttackerID)
+										if attacker != nil && isGreenOrWhite(attacker) {
+											g.DestroyPermanent(attacker)
+										}
+									}
+								}
+							}
+							return nil
+						}),
+				).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+					isGreenOrWhite := func(p *Permanent) bool {
+						for _, c := range p.Colors() {
+							if c == Green || c == White {
+								return true
+							}
+						}
+						return false
+					}
+					for _, group := range g.Combat.Groups {
+						if group.AttackerID == sourceID {
+							for _, bid := range group.BlockerIDs {
+								blocker := g.FindPermanent(bid)
+								if blocker != nil && isGreenOrWhite(blocker) {
+									return true
+								}
+							}
+						}
+						for _, bid := range group.BlockerIDs {
+							if bid == sourceID {
+								attacker := g.FindPermanent(group.AttackerID)
+								if attacker != nil && isGreenOrWhite(attacker) {
+									return true
+								}
+							}
+						}
+					}
+					return false
+				}),
+			),
 		)
 	}))
 
@@ -905,11 +969,34 @@ func registerCreatures() {
 // 0/1
 // Defender (This creature can't attack.)
 // At the beginning of your upkeep, change this creature's base toughness to 1 plus the number of creature cards in your graveyard. (This effect lasts indefinitely.)
-// TODO: implement — needs engine support for setting base toughness indefinitely (not just until EOT)
 	Register("Wall of Tombstones", withExpansion(func() Card {
 		return NewCreature("Wall of Tombstones", "{1}{B}", 0, 1,
 			WithSubTypes("Wall"),
 			WithKeyword(Defender),
+			WithAbility(BeginningOfUpkeepTrigger(
+				FuncEffect("set base toughness to 1 plus creature cards in graveyard",
+					EffectProperties{},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						creatureCount := 0
+						for _, card := range p.Graveyard() {
+							if card.HasType(TypeCreature) {
+								creatureCount++
+							}
+						}
+						newToughness := 1 + creatureCount
+						ce := TargetEffect(LayerPT, Indefinite, sourceID, func(g *Game, target *Permanent) error {
+							target.BasePTOverride = &[2]int{0, newToughness}
+							return nil
+						})
+						ce.SetSourceID(sourceID)
+						g.AddContinuousEffect(ce)
+						return nil
+					}), false,
+			)),
 		)
 	}))
 
@@ -1175,10 +1262,31 @@ func registerCreatures() {
 // 1/1
 // This creature attacks each combat if able.
 // At the beginning of your upkeep, put a +1/+1 counter on this creature. Then you may pay {X}, where X is the number of +1/+1 counters on it. If you don't, tap this creature and it deals X damage to you.
-// TODO: implement — needs engine support for mandatory attack and complex upkeep pay-or-damage trigger
 	Register("Primordial Ooze", withExpansion(func() Card {
 		return NewCreature("Primordial Ooze", "{R}", 1, 1,
 			WithSubTypes("Ooze"),
+			WithKeyword(AttrMustAttack),
+			WithAbility(BeginningOfUpkeepTrigger(
+				FuncEffect("add +1/+1 counter, pay or tap and deal damage",
+					EffectProperties{},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						perm := g.FindPermanent(sourceID)
+						if perm == nil {
+							return nil
+						}
+						perm.AddCounter(P1P1, 1)
+						counters := perm.Counters[P1P1]
+						cost := fmt.Sprintf("{%d}", counters)
+						if !g.TryPayCostFromLands(controller, cost) {
+							perm.Tapped = true
+							p := g.GetPlayer(controller)
+							if p != nil {
+								g.DealDamageToPlayer(p, counters, sourceID)
+							}
+						}
+						return nil
+					}), false,
+			)),
 		)
 	}))
 
@@ -1287,10 +1395,48 @@ func registerCreatures() {
 // Creature — Faerie
 // 1/1
 // Whenever this creature blocks or becomes blocked by a creature, that creature becomes green. (This effect lasts indefinitely.)
-// TODO: implement — needs engine support for "blocks or becomes blocked by" trigger and indefinite color change
 	Register("Aisling Leprechaun", withExpansion(func() Card {
 		return NewCreature("Aisling Leprechaun", "{G}", 1, 1,
 			WithSubTypes("Faerie"),
+			WithAbility(
+				NewTriggered(EvtBlockersDecl, false,
+					FuncEffect("make creature in combat with this green indefinitely",
+						EffectProperties{},
+						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+							for _, group := range g.CombatGroups() {
+								if group.AttackerID == sourceID {
+									// Aisling is attacking — make all blockers green
+									for _, bid := range group.BlockerIDs {
+										ce := ColorOverride(bid, Green)
+										ce.SetSourceID(sourceID)
+										g.AddContinuousEffect(ce)
+									}
+								}
+								for _, bid := range group.BlockerIDs {
+									if bid == sourceID {
+										// Aisling is blocking — make attacker green
+										ce := ColorOverride(group.AttackerID, Green)
+										ce.SetSourceID(sourceID)
+										g.AddContinuousEffect(ce)
+									}
+								}
+							}
+							return nil
+						}),
+				).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+					for _, group := range g.Combat.Groups {
+						if group.AttackerID == sourceID && len(group.BlockerIDs) > 0 {
+							return true
+						}
+						for _, bid := range group.BlockerIDs {
+							if bid == sourceID {
+								return true
+							}
+						}
+					}
+					return false
+				}),
+			),
 		)
 	}))
 
@@ -1424,10 +1570,41 @@ func registerCreatures() {
 // Creature — Human Druid
 // 1/1
 // Whenever an opponent casts an instant spell other than the first instant spell that player casts each turn, this creature deals 4 damage to that player.
-// TODO: implement — needs engine support for tracking "first instant cast this turn" per player
 	Register("Ichneumon Druid", withExpansion(func() Card {
 		return NewCreature("Ichneumon Druid", "{1}{G}{G}", 1, 1,
 			WithSubTypes("Human", "Druid"),
+			WithAbility(
+				NewTriggered(EvtSpellCast, false,
+					FuncEffect("deal 4 damage to opponent who cast second+ instant",
+						EffectProperties{Outcome: OutcomeDetriment, DamageValue: Fixed(4)},
+						func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+							if len(targets) < 2 {
+								return nil
+							}
+							casterID := targets[1]
+							p := g.GetPlayer(casterID)
+							if p != nil {
+								g.DealDamageToPlayer(p, 4, sourceID)
+							}
+							return nil
+						}),
+				).SetCondition(func(evt *GameEvent, g *Game, _, controllerID uuid.UUID) bool {
+					// Only trigger for opponents
+					if evt.PlayerID == controllerID {
+						return false
+					}
+					// Only for instant spells
+					card := g.FindCardAnywhere(evt.SourceID)
+					if card == nil {
+						return false
+					}
+					if !card.HasType(TypeInstant) {
+						return false
+					}
+					// Only trigger if this is the 2nd+ instant cast by that player this turn
+					return g.InstantsCastThisTurn[evt.PlayerID] >= 2
+				}),
+			),
 		)
 	}))
 
@@ -1577,11 +1754,13 @@ func registerCreatures() {
 // 1/1
 // Protection from black
 // At the beginning of each end step, if this creature dealt damage to an opponent this turn, put a +1/+1 counter on it.
-// TODO: implement — needs engine support for end-step trigger checking "dealt damage to opponent this turn"
 	Register("Whirling Dervish", withExpansion(func() Card {
 		return NewCreature("Whirling Dervish", "{G}{G}", 1, 1,
 			WithSubTypes("Human", "Monk"),
 			WithAbility(ProtectionFromColor(Black)),
+			WithAbility(DealsDamageToOpponentTrigger(
+				AddCounters(P1P1, Fixed(1), SelectSource), false,
+			)),
 		)
 	}))
 

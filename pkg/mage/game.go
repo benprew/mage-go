@@ -77,6 +77,9 @@ type Game struct {
 	// Creatures that attacked this turn (survives combat reset for end-of-turn checks)
 	AttackedThisTurn map[uuid.UUID]bool
 
+	// Instant spells cast this turn per player (for Ichneumon Druid, etc.)
+	InstantsCastThisTurn map[uuid.UUID]int
+
 	// Creature deaths this turn (total count across all players)
 	CreatureDeathsThisTurn int
 
@@ -136,6 +139,7 @@ func NewGame(playerA, playerB Player) *Game {
 		DamageTakenThisTurn:        make(map[uuid.UUID]int),
 		ArtifactDamageTakenThisTurn: make(map[uuid.UUID]int),
 		AttackedThisTurn:           make(map[uuid.UUID]bool),
+		InstantsCastThisTurn:       make(map[uuid.UUID]int),
 		ArtifactManaOnly:           make(map[uuid.UUID]bool),
 		CreatureManaOnly:           make(map[uuid.UUID]bool),
 	}
@@ -945,6 +949,12 @@ func (g *Game) DealDamageToPermanent(perm *Permanent, amount int, sourceID uuid.
 		return
 	}
 
+	// Protection from source prevents all damage
+	sourceCard := g.FindCardAnywhere(sourceID)
+	if sourceCard != nil && perm.HasProtectionFrom(sourceCard) {
+		return
+	}
+
 	// if any damage prevention rule blocks this interaction, no damage done.
 	source := g.FindPermanent(sourceID)
 	if g.Effects.Damage.CheckDamagePreventionRules(source, perm, g) {
@@ -1121,9 +1131,12 @@ func (g *Game) PutTriggersOnStack() {
 						obj.Targets = []uuid.UUID{pt.event.PlayerID}
 					}
 				case EvtSpellCast:
-					// Pass the spell's ID so effects can counter/interact with it
+					// Pass the spell's ID and caster's player ID
 					if pt.event.SourceID != uuid.Nil {
 						obj.Targets = []uuid.UUID{pt.event.SourceID}
+						if pt.event.PlayerID != uuid.Nil {
+							obj.Targets = append(obj.Targets, pt.event.PlayerID)
+						}
 					}
 				case EvtDamageDealt:
 					if pt.event.TargetID != uuid.Nil {
@@ -1430,6 +1443,11 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	}
 
 	g.Stack.Push(obj)
+
+	// Track instant spells cast per player this turn
+	if card.HasType(TypeInstant) {
+		g.InstantsCastThisTurn[playerID]++
+	}
 
 	g.FireEvent(GameEvent{
 		Type:     EvtSpellCast,
@@ -2195,6 +2213,7 @@ func (g *Game) doCleanupActions() bool {
 	g.DamageTakenThisTurn = make(map[uuid.UUID]int)
 	g.ArtifactDamageTakenThisTurn = make(map[uuid.UUID]int)
 	g.AttackedThisTurn = make(map[uuid.UUID]bool)
+	g.InstantsCastThisTurn = make(map[uuid.UUID]int)
 	g.CreatureDeathsThisTurn = 0
 	// Clear mana restrictions
 	g.ArtifactManaOnly = make(map[uuid.UUID]bool)
@@ -2658,6 +2677,11 @@ func (g *Game) CastSpellByID(playerID, cardID uuid.UUID, targets []uuid.UUID, xV
 	}
 
 	g.Stack.Push(obj)
+
+	// Track instant spells cast per player this turn
+	if card.HasType(TypeInstant) {
+		g.InstantsCastThisTurn[playerID]++
+	}
 
 	g.FireEvent(GameEvent{
 		Type:     EvtSpellCast,

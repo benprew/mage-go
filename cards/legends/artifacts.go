@@ -478,9 +478,53 @@ func registerArtifacts() {
 // Sacrifice this artifact: Choose one. Activate only if there are two or more hatchling counters on this artifact.
 // • You may put a creature card from your hand onto the battlefield.
 // • Return target creature card from your graveyard to the battlefield.
-// TODO: implement
 	Register("Triassic Egg", withExpansion(func() Card {
-		return NewArtifact("Triassic Egg", "{4}")
+		return NewArtifact("Triassic Egg", "{4}",
+			// {3}, {T}: Put a hatchling counter
+			WithActivatedAbility(
+				AddCounters(Hatchling, Fixed(1), SelectSource),
+				ManaCostOf("{3}"),
+				WithCost(TapSourceCost()),
+			),
+			// Sacrifice: put creature from hand onto battlefield or reanimate from graveyard
+			WithActivatedAbility(
+				FuncEffect("put creature from hand onto battlefield or reanimate",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						mode := p.ChooseMode([]string{
+							"Put a creature card from your hand onto the battlefield",
+							"Return target creature card from your graveyard to the battlefield",
+						}, "Triassic Egg")
+						if mode == 0 {
+							// Put creature from hand onto battlefield
+							for _, card := range p.Hand() {
+								if card.HasType(TypeCreature) {
+									p.RemoveFromHand(card.ID())
+									g.PutOnBattlefield(card, controller)
+									return nil
+								}
+							}
+						} else {
+							// Return creature from graveyard to battlefield
+							for i := len(p.Graveyard()) - 1; i >= 0; i-- {
+								card := p.Graveyard()[i]
+								if card.HasType(TypeCreature) {
+									p.RemoveFromGraveyard(card.ID())
+									g.PutOnBattlefield(card, controller)
+									return nil
+								}
+							}
+						}
+						return nil
+					},
+				),
+				SacrificeSourceCost(),
+			),
+		)
 	}))
 
 
@@ -489,9 +533,75 @@ func registerArtifacts() {
 // At the beginning of your upkeep, put a pin counter on this artifact.
 // At the beginning of your end step, if this artifact is untapped, destroy this artifact and it deals damage to you equal to the number of pin counters on it.
 // {X}{X}, {T}: This artifact deals damage equal to the number of pin counters on it to any target. X is the number of pin counters on this artifact.
-// TODO: implement
 	Register("Voodoo Doll", withExpansion(func() Card {
-		return NewArtifact("Voodoo Doll", "{6}")
+		return NewArtifact("Voodoo Doll", "{6}",
+			// Upkeep: put a pin counter
+			WithAbility(BeginningOfUpkeepTrigger(
+				AddCounters(Pin, Fixed(1), SelectSource), false,
+			)),
+			// End step: if untapped, destroy and deal damage
+			WithAbility(
+				NewTriggered(EvtEndStep, false,
+					FuncEffect("if untapped, destroy and deal damage equal to pin counters",
+						EffectProperties{Outcome: OutcomeDetriment},
+						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+							src := g.FindPermanent(sourceID)
+							if src == nil {
+								return nil
+							}
+							pins := src.Counters[Pin]
+							g.DestroyPermanent(src)
+							if pins > 0 {
+								p := g.GetPlayer(controller)
+								if p != nil {
+									g.DealDamageToPlayer(p, pins, sourceID)
+								}
+							}
+							return nil
+						}),
+				).SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+					// Only at your end step, if untapped
+					if evt.PlayerID != controllerID {
+						return false
+					}
+					src := g.FindPermanent(sourceID)
+					return src != nil && !src.Tapped
+				}),
+			),
+			// {X}{X}, {T}: deal damage equal to pin counters to any target
+			WithActivatedAbility(
+				FuncEffect("deal damage equal to pin counters to any target",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						src := g.FindPermanent(sourceID)
+						if src == nil {
+							return nil
+						}
+						pins := src.Counters[Pin]
+						if pins <= 0 {
+							return nil
+						}
+						// Deal damage to target
+						for _, pl := range g.AllPlayers() {
+							if pl.PlayerID() == targets[0] {
+								g.DealDamageToPlayer(pl, pins, sourceID)
+								return nil
+							}
+						}
+						perm := g.FindPermanent(targets[0])
+						if perm != nil {
+							g.DealDamageToPermanent(perm, pins, sourceID)
+						}
+						return nil
+					},
+				),
+				TapSourceCost(),
+				WithTarget(TargetAnyTarget()),
+			),
+		)
 	}))
 
 
