@@ -53,6 +53,9 @@ type Game struct {
 	// Chosen mode for the currently resolving modal spell (0-indexed)
 	CurrentMode int
 
+	// Amount from the triggering event (e.g. damage dealt) for triggered abilities
+	CurrentEventAmount int
+
 	// Card currently being resolved (set during ResolveStackObject)
 	ResolvingCard Card
 
@@ -452,6 +455,7 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 		Type:     EvtEntersBattlefield,
 		SourceID: perm.ID(),
 		PlayerID: controller,
+		Amount:   g.CurrentX, // preserve X from resolving spell for ETB triggers
 	})
 
 	return perm
@@ -503,13 +507,11 @@ func (g *Game) RemoveFromBattlefield(perm *Permanent) {
 	// Remove continuous effects sourced from this permanent
 	g.Effects.Remove(perm.ID())
 
-	// Detach anything attached to this permanent
-	for _, attID := range perm.Attachments {
-		att := g.FindPermanent(attID)
-		if att != nil {
-			att.AttachedTo = uuid.Nil
-		}
-	}
+	// Note: we do NOT clear att.AttachedTo here. The attachment relationship
+	// is preserved until the attachment itself leaves the battlefield (via SBA
+	// or direct destruction in DestroyPermanent). This allows aura triggers
+	// like "when enchanted creature dies" to use last-known information about
+	// what they were attached to when the event fires.
 
 	// If this was attached to something, remove it from that thing's attachments
 	if perm.IsAttached() {
@@ -1126,6 +1128,8 @@ func (g *Game) PutTriggersOnStack() {
 					if pt.event.SourceID != uuid.Nil {
 						obj.Targets = []uuid.UUID{pt.event.SourceID}
 					}
+					// Preserve X value from the resolving spell (for X-cost ETB triggers)
+					obj.XValue = pt.event.Amount
 				case EvtDrawStep, EvtCardDrawn:
 					if pt.event.PlayerID != uuid.Nil {
 						obj.Targets = []uuid.UUID{pt.event.PlayerID}
@@ -1142,8 +1146,14 @@ func (g *Game) PutTriggersOnStack() {
 					if pt.event.TargetID != uuid.Nil {
 						obj.Targets = []uuid.UUID{pt.event.TargetID}
 					}
+					obj.EventAmount = pt.event.Amount
 				case EvtTapped:
 					// Pass the tapped permanent's ID so effects can identify it
+					if pt.event.SourceID != uuid.Nil {
+						obj.Targets = []uuid.UUID{pt.event.SourceID}
+					}
+				case EvtCreatureDied:
+					// Pass the dead creature's ID so effects can find it in graveyard
 					if pt.event.SourceID != uuid.Nil {
 						obj.Targets = []uuid.UUID{pt.event.SourceID}
 					}
@@ -1242,6 +1252,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 
 	g.CurrentX = obj.XValue
 	g.CurrentMode = obj.ModeChoice
+	g.CurrentEventAmount = obj.EventAmount
 	g.ResolvingCard = obj.Card
 	g.ResolvingTargets = obj.Targets
 	for _, eff := range obj.Effects {
@@ -1681,11 +1692,11 @@ func (g *Game) CheckStateBasedActions() {
 			g.DestroyPermanent(a)
 		}
 
-		// Equipment attached to a non-creature becomes unattached
+		// Equipment attached to a non-creature or missing host becomes unattached
 		for _, p := range g.Battlefield {
 			if p.HasSubType("Equipment") && p.IsAttached() {
 				host := g.FindPermanent(p.AttachedTo)
-				if host != nil && !host.HasType(TypeCreature) {
+				if host == nil || !host.HasType(TypeCreature) {
 					p.AttachedTo = uuid.Nil
 					actions = true
 				}

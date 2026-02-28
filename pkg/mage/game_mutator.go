@@ -22,6 +22,7 @@ type GameReader interface {
 	AllPlayers() []Player
 	XValue() int
 	ModeValue() int
+	EventAmount() int
 	GetResolvingCard() Card
 	FindStackObject(uuid.UUID) *StackObject
 	CombatGroups() []*CombatGroup
@@ -128,6 +129,9 @@ func (g *Game) XValue() int { return g.CurrentX }
 
 // ModeValue returns the current chosen mode for the resolving modal spell.
 func (g *Game) ModeValue() int { return g.CurrentMode }
+
+// EventAmount returns the amount from the triggering event (e.g. damage dealt).
+func (g *Game) EventAmount() int { return g.CurrentEventAmount }
 
 // GetResolvingCard returns the card currently being resolved from the stack.
 func (g *Game) GetResolvingCard() Card { return g.ResolvingCard }

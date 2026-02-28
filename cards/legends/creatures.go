@@ -209,11 +209,17 @@ func registerCreatures() {
 // Flying
 // At the beginning of each end step, if a creature died this turn, put a carrion counter on this creature.
 // Remove two carrion counters from this creature: This creature gets +1/+1 until end of turn.
-// TODO: implement — needs engine support for end-step trigger checking "creature died this turn" condition
 	Register("Osai Vultures", withExpansion(func() Card {
 		return NewCreature("Osai Vultures", "{1}{W}", 1, 1,
 			WithSubTypes("Bird"),
 			WithKeyword(Flying),
+			WithAbility(
+				NewTriggered(EvtEndStep, false,
+					AddCounters(Carrion, Fixed(1), SelectSource),
+				).SetCondition(func(evt *GameEvent, g *Game, _, _ uuid.UUID) bool {
+					return g.CreatureDeathsThisTurn > 0
+				}),
+			),
 			WithActivatedAbility(
 				BoostUntilEndOfTurn(Fixed(1), Fixed(1), SelectSource),
 				RemoveCountersCost(Carrion, 2),
@@ -1769,11 +1775,43 @@ func registerCreatures() {
 // 1/1
 // You may choose not to untap this creature during your untap step.
 // {T}: Gain control of target legendary creature for as long as you control this creature and this creature remains tapped.
-// TODO: implement — needs engine support for conditional control change (while tapped and controlled)
 	Register("Willow Satyr", withExpansion(func() Card {
 		return NewCreature("Willow Satyr", "{2}{G}{G}", 1, 1,
 			WithSubTypes("Satyr"),
 			WithKeyword(AttrMayNotUntap),
+			WithActivatedAbility(
+				FuncEffect("gain control of target legendary creature while tapped",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						targetID := targets[0]
+						cancelled := false
+						ce := FuncContinuousEffect(LayerControl, Indefinite, func(g *Game, srcID uuid.UUID) error {
+							if cancelled {
+								return nil
+							}
+							src := g.FindPermanent(srcID)
+							if src == nil || !src.Tapped || src.Controller != controller {
+								cancelled = true
+								return nil
+							}
+							perm := g.FindPermanent(targetID)
+							if perm != nil {
+								perm.Controller = src.Controller
+							}
+							return nil
+						})
+						ce.SetSourceID(sourceID)
+						g.AddContinuousEffect(ce)
+						return nil
+					}),
+				TapSourceCost(),
+				WithTarget(TargetCreature(NewPermanentFilter("legendary creature", func(p *Permanent, _ *Game) bool {
+					return p.Card.HasSuperType(SuperLegendary)
+				}))),
+			),
 		)
 	}))
 
@@ -2556,11 +2594,42 @@ func registerCreatures() {
 // 2/3
 // You may choose not to untap Rubinia Soulsinger during your untap step.
 // {T}: Gain control of target creature for as long as you control Rubinia Soulsinger and Rubinia Soulsinger remains tapped.
-// TODO: implement
 	Register("Rubinia Soulsinger", withExpansion(func() Card {
 		return NewCreature("Rubinia Soulsinger", "{2}{G}{W}{U}", 2, 3,
 			WithSubTypes("Faerie"),
 			WithSuperTypes(SuperLegendary),
+			WithKeyword(AttrMayNotUntap),
+			WithActivatedAbility(
+				FuncEffect("gain control of target creature while tapped",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						targetID := targets[0]
+						cancelled := false
+						ce := FuncContinuousEffect(LayerControl, Indefinite, func(g *Game, srcID uuid.UUID) error {
+							if cancelled {
+								return nil
+							}
+							src := g.FindPermanent(srcID)
+							if src == nil || !src.Tapped || src.Controller != controller {
+								cancelled = true
+								return nil
+							}
+							perm := g.FindPermanent(targetID)
+							if perm != nil {
+								perm.Controller = src.Controller
+							}
+							return nil
+						})
+						ce.SetSourceID(sourceID)
+						g.AddContinuousEffect(ce)
+						return nil
+					}),
+				TapSourceCost(),
+				WithTarget(TargetCreature()),
+			),
 		)
 	}))
 
@@ -2828,6 +2897,7 @@ func registerCreatures() {
 		return NewCreature("Bronze Horse", "{7}", 4, 4,
 			WithSubTypes("Horse"),
 			WithCardType(TypeArtifact),
+			WithKeyword(Trample),
 		)
 	}))
 

@@ -268,6 +268,21 @@ func TestCocoon(t *testing.T) {
 	})
 }
 
+func TestBackfire(t *testing.T) {
+	t.Run("deals damage back equal to damage dealt to controller", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Craw Wurm") // 6/4
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Backfire")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Backfire", "Craw Wurm")
+		g.Attack(2, gametest.PlayerB, "Craw Wurm")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		// Craw Wurm dealt 6 to PlayerA — Backfire deals 6 to Craw Wurm's controller (PlayerB)
+		g.AssertLife(gametest.PlayerA, 14) // 20 - 6
+		g.AssertLife(gametest.PlayerB, 14) // 20 - 6
+	})
+}
+
 func TestTakklemaggot(t *testing.T) {
 	t.Run("puts -0/-1 counter on enchanted creature at upkeep", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
@@ -278,5 +293,37 @@ func TestTakklemaggot(t *testing.T) {
 		g.StopAt(2, core.PrecombatMain)
 		g.Execute()
 		g.AssertPowerToughness(gametest.PlayerB, "Grizzly Bears", 2, 1) // 2/2 - 0/1
+	})
+}
+
+func TestVenarianGold(t *testing.T) {
+	t.Run("taps creature and adds sleep counters", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Venarian Gold")
+		g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerA, "Venarian Gold", 3, "Grizzly Bears")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Bears should be tapped with 3 sleep counters
+		g.AssertTapped(gametest.PlayerB, "Grizzly Bears", true)
+		g.AssertCounterCount(gametest.PlayerB, "Grizzly Bears", core.Sleep, 3)
+	})
+}
+
+func TestPuppetMaster(t *testing.T) {
+	t.Run("returns enchanted creature to hand on death", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Puppet Master")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Craw Wurm") // 6/4
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Puppet Master", "Grizzly Bears")
+		// Bears attack and get blocked by Craw Wurm, Bears die
+		g.Attack(3, gametest.PlayerA, "Grizzly Bears")
+		g.Block(3, gametest.PlayerB, "Craw Wurm", "Grizzly Bears")
+		g.StopAt(3, core.EndStep)
+		g.Execute()
+		// Bears should be returned to hand (Puppet Master trigger)
+		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
+		g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 0)
 	})
 }

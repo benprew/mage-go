@@ -163,9 +163,11 @@ func registerArtifacts() {
 // Artifact
 // At the beginning of your upkeep, sacrifice this artifact unless you pay {3}.
 // If an instant or sorcery source would deal 3 or more damage to you, it deals 2 damage to you instead.
-// TODO: implement
+// XXX: damage cap from instants/sorceries not yet implemented — needs damage replacement engine feature
 	Register("Forethought Amulet", withExpansion(func() Card {
-		return NewArtifact("Forethought Amulet", "{5}")
+		return NewArtifact("Forethought Amulet", "{5}",
+			WithAbility(SacrificeAtUpkeepUnlessPay("{3}")),
+		)
 	}))
 
 
@@ -309,9 +311,24 @@ func registerArtifacts() {
 // Life Matrix {4}
 // Artifact
 // {4}, {T}: Put a matrix counter on target creature and that creature gains "Remove a matrix counter from this creature: Regenerate this creature." Activate only during your upkeep.
-// TODO: implement
 	Register("Life Matrix", withExpansion(func() Card {
-		return NewArtifact("Life Matrix", "{4}")
+		return NewArtifact("Life Matrix", "{4}",
+			WithActivatedAbility(
+				AddCounters(Matrix, Fixed(1), SelectTarget),
+				ManaCostOf("{4}"),
+				WithCost(TapSourceCost()),
+				WithTarget(TargetCreature()),
+				WithUpkeepOnly(),
+			),
+			// Grant "Remove a matrix counter: Regenerate" to all creatures with matrix counters
+			WithStaticAbility(GrantActivatedAbilityToAll(
+				RegenerateSource(),
+				RemoveCountersCost(Matrix, 1),
+				NewPermanentFilter("creature with matrix counter", func(p *Permanent, _ *Game) bool {
+					return p.Counters[Matrix] > 0
+				}),
+			)),
+		)
 	}))
 
 

@@ -1035,7 +1035,7 @@ func TestFortifiedArea(t *testing.T) {
 // ===== SPIRIT LINK =====
 
 func TestSpiritLink(t *testing.T) {
-	t.Run("gains life when enchanted creature deals damage", func(t *testing.T) {
+	t.Run("gains life equal to damage dealt by enchanted creature", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Spirit Link")
@@ -1044,7 +1044,7 @@ func TestSpiritLink(t *testing.T) {
 		g.StopAt(3, core.EndStep)
 		g.Execute()
 		g.AssertLife(gametest.PlayerB, 18) // took 2 combat damage
-		g.AssertLife(gametest.PlayerA, 21) // gained 1 life (simplified: 1 per damage event)
+		g.AssertLife(gametest.PlayerA, 22) // gained 2 life (equal to damage dealt)
 	})
 }
 
@@ -2460,6 +2460,22 @@ func TestAislingLeprechaun(t *testing.T) {
 	})
 }
 
+func TestOsaiVultures(t *testing.T) {
+	t.Run("gets carrion counter when creature dies", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Osai Vultures")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // 2/2
+		// Both Bears attack/block and kill each other
+		g.Attack(1, gametest.PlayerA, "Grizzly Bears")
+		g.Block(1, gametest.PlayerB, "Grizzly Bears", "Grizzly Bears")
+		g.StopAt(2, core.PrecombatMain)
+		g.Execute()
+		// Two creatures died — Osai Vultures should get a carrion counter at end step
+		g.AssertCounterCount(gametest.PlayerA, "Osai Vultures", core.Carrion, 1)
+	})
+}
+
 func TestWallOfTombstones(t *testing.T) {
 	t.Run("toughness equals 1 plus creature cards in graveyard", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
@@ -2470,6 +2486,21 @@ func TestWallOfTombstones(t *testing.T) {
 		g.StopAt(1, core.PrecombatMain)
 		g.Execute()
 		g.AssertPowerToughness(gametest.PlayerA, "Wall of Tombstones", 0, 3)
+	})
+}
+
+func TestRubiniaSoulsinger(t *testing.T) {
+	t.Run("steals creature while tapped", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rubinia Soulsinger")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		// Tap Rubinia to steal Bears
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Rubinia Soulsinger", "Grizzly Bears")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Bears should be controlled by PlayerA now
+		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
 	})
 }
 

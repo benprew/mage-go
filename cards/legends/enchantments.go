@@ -74,14 +74,17 @@ func registerEnchantments() {
 // Enchantment — Aura
 // Enchant creature
 // Whenever enchanted creature deals damage to you, this Aura deals that much damage to that creature's controller.
-// XXX: simplified - deals 1 damage per event since trigger system doesn't propagate damage amount
 	Register("Backfire", withExpansion(func() Card {
 		return NewAura("Backfire", "{U}",
 			WithAbility(
 				NewTriggered(EvtDamageDealt, false,
 					FuncEffect("deal damage to enchanted creature's controller",
-						EffectProperties{Outcome: OutcomeDetriment, DamageValue: Fixed(1)},
+						EffectProperties{Outcome: OutcomeDetriment},
 						func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+							amount := g.EventAmount()
+							if amount <= 0 {
+								return nil
+							}
 							src := g.FindPermanent(sourceID)
 							if src == nil {
 								return nil
@@ -92,7 +95,7 @@ func registerEnchantments() {
 							}
 							p := g.GetPlayer(attached.Controller)
 							if p != nil {
-								g.DealDamageToPlayer(p, 1, sourceID)
+								g.DealDamageToPlayer(p, amount, sourceID)
 							}
 							return nil
 						}),
@@ -162,7 +165,6 @@ func registerEnchantments() {
 // When this Aura enters, tap enchanted creature and put three pupa counters on this Aura.
 // Enchanted creature doesn't untap during your untap step if this Aura has a pupa counter on it.
 // At the beginning of your upkeep, remove a pupa counter from this Aura. If you can't, sacrifice it, put a +1/+1 counter on enchanted creature, and that creature gains flying.
-// XXX: needs conditional untap prevention (based on counter presence) and permanent flying grant on sacrifice
 	Register("Cocoon", withExpansion(func() Card {
 		return NewAura("Cocoon", "{G}",
 			WithAbility(EntersBattlefieldTrigger(
@@ -860,7 +862,6 @@ func registerEnchantments() {
 // Enchantment — Aura
 // Enchant creature
 // When enchanted creature dies, return that card to its owner's hand. If that card is returned to its owner's hand this way, you may pay {U}{U}{U}. If you do, return this card to its owner's hand.
-// XXX: needs returning aura from graveyard to hand
 	Register("Puppet Master", withExpansion(func() Card {
 		return NewAura("Puppet Master", "{U}{U}{U}",
 			WithAbility(
@@ -1015,12 +1016,23 @@ func registerEnchantments() {
 // Enchantment — Aura
 // Enchant creature (Target a creature as you cast this. This card enters attached to that creature.)
 // Whenever enchanted creature deals damage, you gain that much life.
-// XXX: simplified - gains 1 life per damage event since trigger system doesn't propagate damage amount
 	Register("Spirit Link", withExpansion(func() Card {
 		return NewAura("Spirit Link", "{W}",
 			WithAbility(
 				NewTriggered(EvtDamageDealt, false,
-					GainLife(1),
+					FuncEffect("gain life equal to damage dealt",
+						EffectProperties{Outcome: OutcomeBenefit},
+						func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+							amount := g.EventAmount()
+							if amount <= 0 {
+								return nil
+							}
+							p := g.GetPlayer(controller)
+							if p != nil {
+								g.PlayerGainLife(p, amount)
+							}
+							return nil
+						}),
 				).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
 					src := g.FindPermanent(sourceID)
 					if src == nil || src.AttachedTo == uuid.Nil {
@@ -1239,7 +1251,6 @@ func registerEnchantments() {
 // When this Aura enters, tap enchanted creature and put X sleep counters on it.
 // Enchanted creature doesn't untap during its controller's untap step if it has a sleep counter on it.
 // At the beginning of the upkeep of enchanted creature's controller, remove a sleep counter from that creature.
-// XXX: needs conditional untap prevention based on counter on a different permanent
 	Register("Venarian Gold", withExpansion(func() Card {
 		return NewAura("Venarian Gold", "{X}{U}{U}",
 			WithAbility(EntersBattlefieldTrigger(
@@ -1261,9 +1272,13 @@ func registerEnchantments() {
 						return nil
 					}), false,
 			)),
-			WithStaticAbility(
-				PreventAttachedFromUntapping(AttachAura),
-			),
+			// Doesn't untap if it has a sleep counter
+			WithStaticAbility(AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
+				if target.Counters[Sleep] > 0 {
+					g.Effects.GrantAttr(target.ID(), AttrDoesNotUntap)
+				}
+				return nil
+			})),
 			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
 				FuncEffect("remove sleep counter",
 					EffectProperties{},

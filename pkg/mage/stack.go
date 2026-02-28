@@ -11,8 +11,9 @@ type StackObject struct {
 	Effects    []Effect
 	Targets    []uuid.UUID
 	IsAbility  bool
-	XValue     int        // value of X for X-cost spells
-	ModeChoice int        // chosen mode for modal spells (0-indexed)
+	XValue      int        // value of X for X-cost spells
+	ModeChoice  int        // chosen mode for modal spells (0-indexed)
+	EventAmount int        // amount from triggering event (e.g. damage dealt)
 }
 
 // Stack represents the game stack.

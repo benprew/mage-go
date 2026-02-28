@@ -185,6 +185,19 @@ func TestAlchorsTomb(t *testing.T) {
 	})
 }
 
+func TestLifeMatrix(t *testing.T) {
+	t.Run("adds matrix counter and grants regeneration", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Life Matrix")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2
+		// Activate during upkeep (turn 1) to put matrix counter on Bears
+		g.ActivateAbility(1, core.Upkeep, gametest.PlayerA, "Life Matrix", "Grizzly Bears")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertCounterCount(gametest.PlayerA, "Grizzly Bears", core.Matrix, 1)
+	})
+}
+
 func TestBlackManaBattery(t *testing.T) {
 	t.Run("adds charge counter", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
