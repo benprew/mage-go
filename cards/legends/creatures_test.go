@@ -1855,3 +1855,135 @@ func TestMoldDemon(t *testing.T) {
 		g.AssertPermanentCount(gametest.PlayerA, "Mold Demon", 0)
 	})
 }
+
+func TestEvilEyeOfOrmsByGore(t *testing.T) {
+	t.Run("non-Eye creatures cannot attack", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Evil Eye of Orms-by-Gore")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		// Try to attack with Bears — should be prevented
+		g.Attack(1, gametest.PlayerA, "Grizzly Bears")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Bears can't attack when Evil Eye is out
+		g.AssertLife(gametest.PlayerB, 20)
+	})
+
+	t.Run("Evil Eye itself can attack", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Evil Eye of Orms-by-Gore")
+		g.Attack(3, gametest.PlayerA, "Evil Eye of Orms-by-Gore")
+		g.StopAt(3, core.EndStep)
+		g.Execute()
+		// Evil Eye is an Eye — can attack
+		g.AssertLife(gametest.PlayerB, 17)
+	})
+}
+
+func TestPsionicEntity(t *testing.T) {
+	t.Run("deals 2 to target and 3 to self", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Psionic Entity")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Psionic Entity", "PlayerB")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Deals 2 to PlayerB
+		g.AssertLife(gametest.PlayerB, 18)
+		// 3 damage to self (2 toughness) — should die
+		g.AssertPermanentCount(gametest.PlayerA, "Psionic Entity", 0)
+	})
+}
+
+func TestGhostsOfTheDamned(t *testing.T) {
+	t.Run("tap to give target creature -1/-0", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ghosts of the Damned")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant") // 3/3
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Ghosts of the Damned", "Hill Giant")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerB, "Hill Giant", 2, 3)
+	})
+}
+
+func TestCosmicHorror(t *testing.T) {
+	t.Run("sacrificed at upkeep if cannot pay", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Cosmic Horror")
+		// On turn 3 upkeep, Cosmic Horror's sacrifice trigger fires
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		// Can't pay {3}{B}{B}{B} — sacrificed
+		g.AssertPermanentCount(gametest.PlayerA, "Cosmic Horror", 0)
+	})
+}
+
+func TestWolverinePack(t *testing.T) {
+	t.Run("rampage 2 gives +2/+2 per extra blocker", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Wolverine Pack") // 2/4
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")  // 2/2
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")     // 3/3
+		g.Attack(3, gametest.PlayerA, "Wolverine Pack")
+		g.Block(3, gametest.PlayerB, "Grizzly Bears", "Wolverine Pack")
+		g.Block(3, gametest.PlayerB, "Hill Giant", "Wolverine Pack")
+		g.StopAt(3, core.EndStep)
+		g.Execute()
+		// Rampage 2: 2 blockers, 1 beyond first => +2/+2 => 4/6
+		// 4/6 vs (2+3=5 damage) => survives with 1 toughness
+		g.AssertPermanentCount(gametest.PlayerA, "Wolverine Pack", 1)
+	})
+}
+
+func TestFrostGiant(t *testing.T) {
+	t.Run("rampage 2", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Frost Giant") // 4/4
+		g.Attack(3, gametest.PlayerA, "Frost Giant")
+		g.StopAt(3, core.EndStep)
+		g.Execute()
+		// Unblocked — deals 4 damage
+		g.AssertLife(gametest.PlayerB, 16)
+	})
+}
+
+func TestDevouringDeep(t *testing.T) {
+	t.Run("islandwalk", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Devouring Deep") // 1/1
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.Attack(3, gametest.PlayerA, "Devouring Deep")
+		g.Block(3, gametest.PlayerB, "Grizzly Bears", "Devouring Deep")
+		g.StopAt(3, core.EndStep)
+		g.Execute()
+		// Islandwalk — can't be blocked since defender controls Island
+		g.AssertLife(gametest.PlayerB, 19)
+	})
+}
+
+func TestLostSoul(t *testing.T) {
+	t.Run("swampwalk", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Lost Soul") // 2/1
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Swamp")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.Attack(3, gametest.PlayerA, "Lost Soul")
+		g.Block(3, gametest.PlayerB, "Grizzly Bears", "Lost Soul")
+		g.StopAt(3, core.EndStep)
+		g.Execute()
+		// Swampwalk — can't be blocked since defender controls Swamp
+		g.AssertLife(gametest.PlayerB, 18)
+	})
+}
+
+func TestCrimsonManticore(t *testing.T) {
+	t.Run("flying creature attacks for 2", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Crimson Manticore")
+		g.Attack(3, gametest.PlayerA, "Crimson Manticore")
+		g.StopAt(3, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 18) // 2/2 flying
+	})
+}
