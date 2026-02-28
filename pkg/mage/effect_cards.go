@@ -38,7 +38,7 @@ func (e *drawCardsTargetEffect) Apply(g GameMutator, sourceID, controller uuid.U
 	}
 	amount := e.amount.Resolve(g, sourceID, controller)
 	for i := 0; i < amount; i++ {
-		targetPlayer.DrawCard()
+		g.PlayerDrawCard(targetPlayer)
 	}
 	return nil
 }
@@ -76,7 +76,7 @@ func (e *drawCardsActivePlayerEffect) Apply(g GameMutator, sourceID, _ uuid.UUID
 	}
 	amount := e.amount.Resolve(g, sourceID, active.PlayerID())
 	for i := 0; i < amount; i++ {
-		active.DrawCard()
+		g.PlayerDrawCard(active)
 	}
 	return nil
 }
@@ -397,7 +397,7 @@ func (e *discardHandAndDrawEffect) Apply(g GameMutator, sourceID, controller uui
 		}
 		// Draw N cards
 		for i := 0; i < e.drawCount; i++ {
-			p.DrawCard()
+			g.PlayerDrawCard(p)
 		}
 	}
 	return nil
@@ -430,7 +430,7 @@ func (e *shuffleGraveyardIntoLibraryAndDrawEffect) Apply(g GameMutator, sourceID
 		p.ShuffleLibrary()
 		// Draw N cards
 		for i := 0; i < e.drawCount; i++ {
-			p.DrawCard()
+			g.PlayerDrawCard(p)
 		}
 	}
 	return nil

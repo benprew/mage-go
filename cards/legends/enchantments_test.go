@@ -37,6 +37,28 @@ func TestSeeker(t *testing.T) {
 	})
 }
 
+func TestUnderworldDreams(t *testing.T) {
+	t.Run("deals 1 damage when opponent draws", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Underworld Dreams")
+		// PlayerB draws on turn 2 (draw step)
+		g.StopAt(2, core.PrecombatMain)
+		g.Execute()
+		// PlayerB drew 1 card — should take 1 damage
+		g.AssertLife(gametest.PlayerB, 19)
+	})
+
+	t.Run("does not damage controller on their draw", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Underworld Dreams")
+		// PlayerA draws on turn 3 (their next draw step)
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		// PlayerA should not take damage from their own Underworld Dreams
+		g.AssertLife(gametest.PlayerA, 20)
+	})
+}
+
 func TestMarblePriest(t *testing.T) {
 	t.Run("Wall combat damage to Marble Priest is prevented", func(t *testing.T) {
 		g := gametest.NewTestGame(t)

@@ -723,7 +723,7 @@ func (g *Game) PlayerGainLife(p Player, amount int) {
 	if g.Effects.Rules.IsLichActive(g, p.PlayerID()) {
 		// Lich replacement: draw cards instead of gaining life
 		for i := 0; i < amount; i++ {
-			p.DrawCard()
+			g.PlayerDrawCard(p)
 		}
 		return
 	}
@@ -814,6 +814,18 @@ func (g *Game) CounterSpellOnStack(spellID uuid.UUID) {
 			owner.AddToGraveyard(obj.Card)
 		}
 	}
+}
+
+// PlayerDrawCard draws a card for the player and fires EvtCardDrawn.
+func (g *Game) PlayerDrawCard(p Player) (Card, bool) {
+	c, ok := p.DrawCard()
+	if ok {
+		g.FireEvent(GameEvent{
+			Type:     EvtCardDrawn,
+			PlayerID: p.PlayerID(),
+		})
+	}
+	return c, ok
 }
 
 // DealDamageToPlayer deals damage to a player.
@@ -1099,7 +1111,7 @@ func (g *Game) PutTriggersOnStack() {
 		if pt.event != nil {
 			if gt, ok := pt.ability.(*GenericTriggered); ok {
 				switch gt.eventType {
-				case EvtEntersBattlefield, EvtDrawStep:
+				case EvtEntersBattlefield, EvtDrawStep, EvtCardDrawn:
 					if pt.event.PlayerID != uuid.Nil {
 						obj.Targets = []uuid.UUID{pt.event.PlayerID}
 					}
@@ -1127,6 +1139,8 @@ func (g *Game) PutTriggersOnStack() {
 
 // ResolveStack resolves all objects on the stack (simplified: no priority passing).
 func (g *Game) ResolveStack() {
+	// Move any pending triggers to the stack first (e.g. from EvtCardDrawn during draw step)
+	g.PutTriggersOnStack()
 	for !g.Stack.IsEmpty() {
 		obj := g.Stack.Pop()
 		g.ResolveStackObject(obj)
@@ -1948,7 +1962,7 @@ func (g *Game) doDrawNormalDraw() {
 		return
 	}
 
-	active.DrawCard()
+	g.PlayerDrawCard(active)
 }
 
 // applyDrawReplacement handles Aladdin's Lamp draw replacement.
@@ -1978,13 +1992,14 @@ func (g *Game) applyDrawReplacement(p Player, count int) {
 	newLib = append(newLib, lib[count:]...)
 	newLib = append(newLib, rest...)
 	p.SetLibrary(newLib)
-	p.DrawCard()
+	g.PlayerDrawCard(p)
 }
 
 func (g *Game) DoDraw() {
 	g.doDrawActions()
 	g.ResolveStack()
 	g.doDrawNormalDraw()
+	g.ResolveStack()
 }
 
 func (g *Game) doDeclareAttackers() {

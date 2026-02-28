@@ -1221,10 +1221,15 @@ func registerEnchantments() {
 
 // Underworld Dreams {B}{B}{B}
 // Enchantment
-// Whenever an opponent draws a card, this enchantment deals 1 damage to that player.
-// XXX: needs EvtCardDrawn to be fired by the engine (currently not implemented)
+// Whenever an opponent draws a card, Underworld Dreams deals 1 damage to that player.
 	Register("Underworld Dreams", withExpansion(func() Card {
-		return NewEnchantment("Underworld Dreams", "{B}{B}{B}")
+		return NewEnchantment("Underworld Dreams", "{B}{B}{B}",
+			WithAbility(NewTriggered(EvtCardDrawn, false,
+				DealDamageToPlayers(Fixed(1), SelectEventController()),
+			).SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+				return evt.PlayerID != controllerID
+			})),
+		)
 	}))
 
 

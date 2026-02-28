@@ -82,9 +82,32 @@ func registerArtifacts() {
 // Alchor's Tomb {4}
 // Artifact
 // {2}, {T}: Target permanent you control becomes the color of your choice. (This effect lasts indefinitely.)
-// TODO: implement
 	Register("Alchor's Tomb", withExpansion(func() Card {
-		return NewArtifact("Alchor's Tomb", "{4}")
+		return NewArtifact("Alchor's Tomb", "{4}",
+			WithActivatedAbility(
+				FuncEffect(
+					"target permanent you control becomes the color of your choice",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						color := p.ChooseManaColor("choose a color")
+						ce := ColorOverride(targets[0], color)
+						ce.SetSourceID(sourceID)
+						g.AddContinuousEffect(ce)
+						return nil
+					},
+				),
+				ManaCostOf("{2}"),
+				WithCost(TapSourceCost()),
+				WithTarget(TargetPermanent()),
+			),
+		)
 	}))
 
 

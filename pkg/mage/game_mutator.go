@@ -101,6 +101,9 @@ type GameMutator interface {
 	// Artifact damage tracking
 	GetArtifactDamageTaken(uuid.UUID) int
 
+	// Draw
+	PlayerDrawCard(Player) (Card, bool)
+
 	// Coin flip
 	FlipCoin(playerID uuid.UUID) bool
 

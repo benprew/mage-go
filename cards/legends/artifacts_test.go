@@ -171,6 +171,20 @@ func TestArenaOfTheAncients(t *testing.T) {
 	})
 }
 
+func TestAlchorsTomb(t *testing.T) {
+	t.Run("changes target permanent color", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Alchor's Tomb")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // green
+		g.ChooseManaColor(gametest.PlayerA, core.Red)
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Alchor's Tomb", "Grizzly Bears")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Grizzly Bears should now be red (not green)
+		g.AssertTapped(gametest.PlayerA, "Alchor's Tomb", true)
+	})
+}
+
 func TestBlackManaBattery(t *testing.T) {
 	t.Run("adds charge counter", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
