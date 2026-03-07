@@ -53,6 +53,13 @@ func WithOncePerTurn() AbilityOption {
 	}
 }
 
+// WithMaxActivationsPerTurn restricts an activated ability to n activations per turn.
+func WithMaxActivationsPerTurn(n int) AbilityOption {
+	return func(a *SimpleActivatedAbility) {
+		a.MaxActivationsPerTurn = n
+	}
+}
+
 // WithAnyPlayerMay allows any player (not just the controller) to activate the ability.
 func WithAnyPlayerMay() AbilityOption {
 	return func(a *SimpleActivatedAbility) {
@@ -77,9 +84,11 @@ type SimpleActivatedAbility struct {
 	SorceryOnly              bool
 	UpkeepOnly               bool // Can only be activated during an upkeep step
 	OncePerTurn              bool // Can only be activated once per turn
+	MaxActivationsPerTurn    int  // Max activations per turn (0 = unlimited, overrides OncePerTurn)
 	AnyPlayerMayUse          bool // Any player may activate this ability
 	ControlledSinceTurnStart bool // Only if controlled since beginning of most recent turn
 	activatedThisTurn        bool // Tracks whether this ability has been activated this turn
+	activationsThisTurn      int  // Counts activations for MaxActivationsPerTurn
 }
 
 // NewActivatedAbility creates an activated ability with a primary effect, a primary cost,
@@ -101,6 +110,9 @@ func NewActivatedAbility(effect Effect, cost Cost, opts ...AbilityOption) *Simpl
 
 func (a *SimpleActivatedAbility) CanActivate(controller uuid.UUID, g *Game) bool {
 	if a.UpkeepOnly && g.Step != Upkeep {
+		return false
+	}
+	if a.MaxActivationsPerTurn > 0 && a.activationsThisTurn >= a.MaxActivationsPerTurn {
 		return false
 	}
 	if a.OncePerTurn && a.activatedThisTurn {
@@ -125,11 +137,15 @@ func (a *SimpleActivatedAbility) MarkActivated() {
 	if a.OncePerTurn {
 		a.activatedThisTurn = true
 	}
+	if a.MaxActivationsPerTurn > 0 {
+		a.activationsThisTurn++
+	}
 }
 
 // ResetActivation clears the once-per-turn flag. Called at the beginning of each turn.
 func (a *SimpleActivatedAbility) ResetActivation() {
 	a.activatedThisTurn = false
+	a.activationsThisTurn = 0
 }
 
 // IsAnyPlayerAbility returns true if any player may activate this ability.

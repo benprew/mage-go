@@ -2504,3 +2504,560 @@ func TestRubiniaSoulsinger(t *testing.T) {
 	})
 }
 
+func TestVampireBatsActivationLimit(t *testing.T) {
+	t.Run("pump limited to twice per turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Vampire Bats")
+		// Pump twice: 0/1 → 1/1 → 2/1
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Vampire Bats")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Vampire Bats")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Should be 2/1 (pumped twice)
+		g.AssertPowerToughness(gametest.PlayerA, "Vampire Bats", 2, 1)
+	})
+}
+
+func TestBronzeHorse(t *testing.T) {
+	t.Run("prevents targeted spell damage with another creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Bronze Horse")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // another creature
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Bronze Horse")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		// Damage prevented — Bronze Horse should still be at full health (4/4, no damage)
+		g.AssertPowerToughness(gametest.PlayerA, "Bronze Horse", 4, 4)
+	})
+
+	t.Run("no prevention without another creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Bronze Horse")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Bronze Horse")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		// No other creature — damage NOT prevented, Horse takes 3 damage (4/4 → 4/1 effective)
+		g.AssertPermanentCount(gametest.PlayerA, "Bronze Horse", 1)
+	})
+}
+
+func TestWallOfDust(t *testing.T) {
+	t.Run("blocked creature cannot attack next turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Wall of Dust")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		// Bears attack on turn 2, blocked by Wall of Dust
+		g.Attack(2, gametest.PlayerB, "Grizzly Bears")
+		g.Block(2, gametest.PlayerA, "Wall of Dust", "Grizzly Bears")
+		// Bears attack again on turn 4 — should be prevented
+		g.Attack(4, gametest.PlayerB, "Grizzly Bears")
+		g.StopAt(4, core.EndStep)
+		g.Execute()
+		// Bears could not attack — PlayerA takes 0 damage on turn 4
+		g.AssertLife(gametest.PlayerA, 20)
+	})
+}
+
+func TestGiantTurtle(t *testing.T) {
+	t.Run("can't attack if it attacked last turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Giant Turtle") // 2/4
+		// Turn 1: Giant Turtle attacks
+		g.Attack(1, gametest.PlayerA, "Giant Turtle")
+		// Turn 3: Giant Turtle tries to attack again (PlayerA's next turn)
+		g.Attack(3, gametest.PlayerA, "Giant Turtle")
+		g.StopAt(3, core.EndStep)
+		g.Execute()
+		// Turn 1 attack dealt 2 damage
+		// Turn 3 attack should be prevented — no additional damage
+		g.AssertLife(gametest.PlayerB, 18) // only 2 damage from turn 1
+	})
+
+	t.Run("can attack after skipping a turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Giant Turtle")
+		// Turn 1: attacks
+		g.Attack(1, gametest.PlayerA, "Giant Turtle")
+		// Turn 3: can't attack (last turn restriction)
+		// Turn 5: should be able to attack again
+		g.Attack(5, gametest.PlayerA, "Giant Turtle")
+		g.StopAt(5, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 16) // 2 from turn 1 + 2 from turn 5
+	})
+}
+
+func TestGabrielAngelfire(t *testing.T) {
+	t.Run("choose flying at upkeep", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Gabriel Angelfire")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant") // 3/3 non-flying blocker
+		// Turn 1 upkeep: choose flying (mode 0)
+		g.ChooseMode(gametest.PlayerA, 0)
+		g.Attack(1, gametest.PlayerA, "Gabriel Angelfire")
+		g.Block(1, gametest.PlayerB, "Hill Giant", "Gabriel Angelfire")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// With flying, Hill Giant can't block — 4 damage gets through
+		g.AssertLife(gametest.PlayerB, 16)
+	})
+
+	t.Run("choose first strike at upkeep", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Gabriel Angelfire") // 4/4
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Craw Wurm")        // 6/4
+		// Turn 1 upkeep: choose first strike (mode 1)
+		g.ChooseMode(gametest.PlayerA, 1)
+		g.Attack(1, gametest.PlayerA, "Gabriel Angelfire")
+		g.Block(1, gametest.PlayerB, "Craw Wurm", "Gabriel Angelfire")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// First strike: Gabriel deals 4 to Craw Wurm first, killing it (4 toughness)
+		// Craw Wurm never deals damage
+		g.AssertPermanentCount(gametest.PlayerA, "Gabriel Angelfire", 1)
+		g.AssertGraveyardCount(gametest.PlayerB, "Craw Wurm", 1)
+	})
+
+	t.Run("choose trample at upkeep", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Gabriel Angelfire") // 4/4
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")     // 2/2
+		// Turn 1 upkeep: choose trample (mode 2)
+		g.ChooseMode(gametest.PlayerA, 2)
+		g.Attack(1, gametest.PlayerA, "Gabriel Angelfire")
+		g.Block(1, gametest.PlayerB, "Grizzly Bears", "Gabriel Angelfire")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Trample: 2 assigned to Bears, 2 tramples to player
+		g.AssertLife(gametest.PlayerB, 18)
+		g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+	})
+}
+
+func TestHalfdane(t *testing.T) {
+	t.Run("copies target creature P/T at upkeep", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Halfdane")   // 3/3
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Craw Wurm") // 6/4
+		// Turn 1 upkeep: choose Craw Wurm to copy P/T
+		g.ChoosePermanent(gametest.PlayerA, "Craw Wurm")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Halfdane", 6, 4)
+	})
+
+	t.Run("reverts after next upkeep", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Halfdane")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Craw Wurm")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // 2/2
+		// Turn 1 upkeep: copy Craw Wurm (6/4)
+		g.ChoosePermanent(gametest.PlayerA, "Craw Wurm")
+		// Turn 3 upkeep: choose Grizzly Bears (2/2) — old effect expires
+		g.ChoosePermanent(gametest.PlayerA, "Grizzly Bears")
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Halfdane", 2, 2)
+	})
+}
+
+func TestHazezonTamar(t *testing.T) {
+	t.Run("creates Sand Warrior tokens at next upkeep", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hazezon Tamar")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+		// Hazezon entered on setup, but ETB doesn't fire for pre-placed cards.
+		// Need to cast it from hand instead.
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+	})
+
+	t.Run("creates tokens when cast from hand", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Hazezon Tamar")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Hazezon Tamar")
+		// Turn 3 upkeep: delayed trigger fires, count lands (3), create 3 Sand Warriors
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Sand Warrior", 3)
+	})
+
+	t.Run("exile Sand Warriors when Hazezon leaves", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Hazezon Tamar")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Swords to Plowshares")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Hazezon Tamar")
+		// Turn 3 upkeep: creates 2 Sand Warriors (Mountain + Forest)
+		// Then exile Hazezon with Swords to Plowshares
+		g.CastSpell(3, core.PrecombatMain, gametest.PlayerB, "Swords to Plowshares", "Hazezon Tamar")
+		g.StopAt(3, core.EndStep)
+		g.Execute()
+		// Sand Warriors should be exiled
+		g.AssertPermanentCount(gametest.PlayerA, "Sand Warrior", 0)
+	})
+}
+
+func TestJohan(t *testing.T) {
+	t.Run("creatures don't tap to attack when chosen", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Johan")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		// Choose "may" at begin combat — Johan can't attack but grants vigilance
+		g.Attack(1, gametest.PlayerA, "Grizzly Bears")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Bears attacked but should be untapped (vigilance)
+		g.AssertTapped(gametest.PlayerA, "Grizzly Bears", false)
+		g.AssertLife(gametest.PlayerB, 18) // 2 damage from Bears
+	})
+}
+
+func TestAbominationEndOfCombat(t *testing.T) {
+	t.Run("destroys green blocker at end of combat after damage", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Abomination")   // 2/6
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // 2/2, green
+		g.Attack(1, gametest.PlayerA, "Abomination")
+		g.Block(1, gametest.PlayerB, "Grizzly Bears", "Abomination")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Bears should be destroyed at end of combat (green creature blocked Abomination)
+		g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+		// Abomination took 2 damage from Bears but has 6 toughness, should survive
+		g.AssertPermanentCount(gametest.PlayerA, "Abomination", 1)
+		// Bears dealt 2 combat damage to Abomination before being destroyed
+		g.AssertLife(gametest.PlayerB, 20) // Abomination was blocked, no player damage
+	})
+}
+
+func TestInfernalMedusa(t *testing.T) {
+	t.Run("destroys creature it blocks at end of combat", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")        // 3/3
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Infernal Medusa")   // 2/4
+		g.Attack(1, gametest.PlayerB)
+		g.Attack(2, gametest.PlayerA)
+		// PlayerB attacks with Hill Giant on turn 2 (their turn)
+		// Actually let's set it up properly: B attacks, A blocks with Medusa
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Turn 1 is PlayerA's turn, no attacks from B yet
+		g.AssertLife(gametest.PlayerB, 20)
+	})
+
+	t.Run("when blocking destroys attacker at end of combat", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Infernal Medusa") // 2/4
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")      // 3/3
+		// Turn 2 is PlayerB's turn — they attack with Hill Giant
+		g.Attack(2, gametest.PlayerB, "Hill Giant")
+		g.Block(2, gametest.PlayerA, "Infernal Medusa", "Hill Giant")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		// Hill Giant is destroyed at end of combat (blocked by Medusa)
+		g.AssertGraveyardCount(gametest.PlayerB, "Hill Giant", 1)
+		// Medusa took 3 damage but has 4 toughness — survives
+		g.AssertPermanentCount(gametest.PlayerA, "Infernal Medusa", 1)
+	})
+
+	t.Run("when attacking destroys non-Wall blockers at end of combat", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Infernal Medusa") // 2/4
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")   // 2/2
+		g.Attack(1, gametest.PlayerA, "Infernal Medusa")
+		g.Block(1, gametest.PlayerB, "Grizzly Bears", "Infernal Medusa")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Bears destroyed at end of combat (non-Wall blocking Medusa)
+		g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+		g.AssertPermanentCount(gametest.PlayerA, "Infernal Medusa", 1)
+	})
+
+	t.Run("does not destroy Wall blockers", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Infernal Medusa") // 2/4
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Wall of Earth")   // 0/6, Wall
+		g.Attack(1, gametest.PlayerA, "Infernal Medusa")
+		g.Block(1, gametest.PlayerB, "Wall of Earth", "Infernal Medusa")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Wall is NOT destroyed (Medusa's second ability only hits non-Walls)
+		g.AssertPermanentCount(gametest.PlayerB, "Wall of Earth", 1)
+		g.AssertPermanentCount(gametest.PlayerA, "Infernal Medusa", 1)
+	})
+}
+
+func TestTimeElemental(t *testing.T) {
+	t.Run("sacrificed at end of combat when attacks", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Time Elemental") // 0/2
+		g.Attack(1, gametest.PlayerA, "Time Elemental")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Time Elemental should be sacrificed at end of combat and deal 5 to controller
+		g.AssertGraveyardCount(gametest.PlayerA, "Time Elemental", 1)
+		g.AssertLife(gametest.PlayerA, 15) // 20 - 5 = 15
+	})
+
+	t.Run("bounces non-enchanted permanent", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Time Elemental")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Time Elemental", "Return target permanent", "Hill Giant")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 0)
+	})
+}
+
+func TestBrineHag(t *testing.T) {
+	t.Run("creatures that dealt damage become 0/2 when dies", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Brine Hag")    // 2/2
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "White Knight") // 2/2 first strike
+		// Turn 2: PlayerB attacks with White Knight, Brine Hag blocks
+		// First strike: White Knight deals 2 to Brine Hag → Brine Hag dies
+		// Brine Hag never deals damage back (dead before regular combat damage)
+		// White Knight dealt damage to Brine Hag → becomes 0/2 with 0 damage → survives
+		g.Attack(2, gametest.PlayerB, "White Knight")
+		g.Block(2, gametest.PlayerA, "Brine Hag", "White Knight")
+		g.StopAt(2, core.PostcombatMain)
+		g.Execute()
+		g.AssertGraveyardCount(gametest.PlayerA, "Brine Hag", 1)
+		g.AssertPermanentCount(gametest.PlayerB, "White Knight", 1)
+		g.AssertPowerToughness(gametest.PlayerB, "White Knight", 0, 2)
+	})
+}
+
+func TestFloralSpuzzem(t *testing.T) {
+	t.Run("destroy artifact when unblocked", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Floral Spuzzem") // 2/2
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Jayemdae Tome")  // artifact
+		// Turn 1: Floral Spuzzem attacks, unblocked
+		g.Attack(1, gametest.PlayerA, "Floral Spuzzem")
+		g.ChoosePermanent(gametest.PlayerA, "Jayemdae Tome")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Chose to destroy artifact → no combat damage dealt, artifact destroyed
+		g.AssertGraveyardCount(gametest.PlayerB, "Jayemdae Tome", 1)
+		g.AssertLife(gametest.PlayerB, 20) // no combat damage
+	})
+}
+
+func TestGiantSlug(t *testing.T) {
+	t.Run("gains landwalk at next upkeep", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Giant Slug")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Swamp")
+		// Turn 1: Activate ability for {5}
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Giant Slug", "choose a basic land type")
+		g.ChooseMode(gametest.PlayerA, 4) // mode 4 = Swamp
+		// Turn 3: Should have swampwalk at upkeep, attack and be unblockable
+		g.Attack(3, gametest.PlayerA, "Giant Slug")
+		g.StopAt(3, core.PostcombatMain)
+		g.Execute()
+		// Giant Slug has swampwalk and opponent has Swamp → unblockable
+		g.AssertLife(gametest.PlayerB, 19) // 1 damage from 1/1
+	})
+}
+
+func TestLesserWerewolf(t *testing.T) {
+	t.Run("pump down to debuff blocker", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Lesser Werewolf") // 2/4
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")      // 3/3
+		// Turn 1: attack with Lesser Werewolf
+		g.Attack(1, gametest.PlayerA, "Lesser Werewolf")
+		g.Block(1, gametest.PlayerB, "Hill Giant", "Lesser Werewolf")
+		// Activate ability targeting Hill Giant during blockers step
+		g.ActivateAbility(1, core.FirstStrikeDamage, gametest.PlayerA, "Lesser Werewolf", "gets -1/-0", "Hill Giant")
+		g.StopAt(2, core.PrecombatMain) // next turn so EOT cleanup runs
+		g.Execute()
+		// Lesser Werewolf gets -1/-0 (becomes 1/4), Hill Giant gets -0/-1 counter
+		// Combat: LW deals 1, HG deals 3 → LW survives (1/4 - 3 = 1/1), HG was 3/2 from counter, takes 1 → 3/1
+		g.AssertPermanentCount(gametest.PlayerA, "Lesser Werewolf", 1)
+		g.AssertPowerToughness(gametest.PlayerA, "Lesser Werewolf", 2, 4) // -1/-0 is EOT, so back to 2/4
+		g.AssertCounterCount(gametest.PlayerB, "Hill Giant", core.M0M1, 1)
+	})
+}
+
+func TestTheWretched(t *testing.T) {
+	t.Run("steals blocking creatures at end of combat", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "The Wretched")  // 2/5
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // 2/2
+		g.Attack(1, gametest.PlayerA, "The Wretched")
+		g.Block(1, gametest.PlayerB, "Grizzly Bears", "The Wretched")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Bears blocked The Wretched — at end of combat, The Wretched steals them
+		// Bears took 2 damage from The Wretched and dealt 2 damage back — Bears survive (2/2, 2 damage)
+		// Actually Bears die: 2 damage from The Wretched kills 2/2 Bears
+		g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+	})
+
+	t.Run("steals surviving blockers", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "The Wretched") // 2/5
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")   // 3/3
+		g.Attack(1, gametest.PlayerA, "The Wretched")
+		g.Block(1, gametest.PlayerB, "Hill Giant", "The Wretched")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Hill Giant (3/3) blocks The Wretched (2/5)
+		// Hill Giant takes 2 damage (survives at 3/1), The Wretched takes 3 damage (survives at 2/2)
+		// At end of combat, The Wretched steals Hill Giant
+		g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 1) // now under A's control
+		g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 0)
+	})
+}
+
+func TestClergyOfTheHolyNimbus(t *testing.T) {
+	t.Run("regenerates when destroyed", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Clergy of the Holy Nimbus") // 1/1
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")                // 3/3
+		// Clergy blocks Hill Giant — would be destroyed but regenerates
+		g.Attack(2, gametest.PlayerB, "Hill Giant")
+		g.Block(2, gametest.PlayerA, "Clergy of the Holy Nimbus", "Hill Giant")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		// Clergy should survive (regenerated instead of dying)
+		g.AssertPermanentCount(gametest.PlayerA, "Clergy of the Holy Nimbus", 1)
+		// Clergy is tapped (regeneration taps the creature)
+		g.AssertTapped(gametest.PlayerA, "Clergy of the Holy Nimbus", true)
+	})
+
+	t.Run("can be destroyed when opponent pays 1", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Clergy of the Holy Nimbus") // 1/1
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")                // 3/3
+		// Opponent activates {1} to prevent regeneration
+		g.ActivateAbility(2, core.PrecombatMain, gametest.PlayerB, "Clergy of the Holy Nimbus")
+		// Then attack with Hill Giant, Clergy blocks
+		g.Attack(2, gametest.PlayerB, "Hill Giant")
+		g.Block(2, gametest.PlayerA, "Clergy of the Holy Nimbus", "Hill Giant")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		// Clergy should be destroyed (can't regenerate this turn)
+		g.AssertGraveyardCount(gametest.PlayerA, "Clergy of the Holy Nimbus", 1)
+	})
+}
+
+func TestSwordOfTheAges(t *testing.T) {
+	t.Run("deals damage equal to total power of sacrificed creatures", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sword of the Ages")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")    // 3/3
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2
+		// Sword enters tapped; wait until turn 3 when it untaps
+		// Choose to sacrifice Hill Giant and Grizzly Bears
+		g.ChooseMode(gametest.PlayerA, 0)                       // 0 = "Sacrifice a creature"
+		g.ChoosePermanent(gametest.PlayerA, "Hill Giant")       // pick Hill Giant
+		g.ChooseMode(gametest.PlayerA, 0)                       // sacrifice another
+		g.ChoosePermanent(gametest.PlayerA, "Grizzly Bears")   // pick Grizzly Bears
+		g.ChooseMode(gametest.PlayerA, 1)                       // 1 = "Done"
+		g.ActivateAbility(3, core.PrecombatMain, gametest.PlayerA, "Sword of the Ages", "{T}, Sacrifice", "PlayerB")
+		g.StopAt(3, core.PostcombatMain)
+		g.Execute()
+		// 3 + 2 = 5 total power, dealt to PlayerB
+		g.AssertLife(gametest.PlayerB, 15)
+		// Sword and creatures should be exiled
+		g.AssertPermanentCount(gametest.PlayerA, "Sword of the Ages", 0)
+		g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 0)
+		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
+	})
+}
+
+func TestWallOfCaltrops(t *testing.T) {
+	t.Run("gains banding when blocking with another Wall", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Wall of Caltrops")  // 2/1 Defender
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Wall of Earth")     // 0/6 Defender
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")        // 3/3
+		g.Attack(1, gametest.PlayerA, "Hill Giant")
+		g.Block(1, gametest.PlayerB, "Wall of Caltrops", "Hill Giant")
+		g.Block(1, gametest.PlayerB, "Wall of Earth", "Hill Giant")
+		// With banding, the defender distributes damage: put all 3 on Wall of Earth
+		g.ChooseBandingDistribution(gametest.PlayerB, map[string]int{
+			"Wall of Caltrops": 0,
+			"Wall of Earth":    3,
+		})
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Both walls should survive since Wall of Earth has 6 toughness
+		g.AssertPermanentCount(gametest.PlayerB, "Wall of Caltrops", 1)
+		g.AssertPermanentCount(gametest.PlayerB, "Wall of Earth", 1)
+	})
+	t.Run("does not gain banding when blocking with non-Wall", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Wall of Caltrops")  // 2/1 Defender
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")     // 2/2
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")        // 3/3
+		g.Attack(1, gametest.PlayerA, "Hill Giant")
+		g.Block(1, gametest.PlayerB, "Wall of Caltrops", "Hill Giant")
+		g.Block(1, gametest.PlayerB, "Grizzly Bears", "Hill Giant")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// No banding — attacker distributes damage, Wall of Caltrops (1 toughness) likely dies
+		g.AssertPermanentCount(gametest.PlayerB, "Wall of Caltrops", 0)
+	})
+}
+
+func TestShimianNightStalker(t *testing.T) {
+	t.Run("redirects combat damage from attacker to self", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Shimian Night Stalker") // 4/4
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Swamp")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant") // 3/3
+		g.Attack(1, gametest.PlayerA, "Hill Giant")
+		g.ActivateAbility(1, core.DeclareBlockers, gametest.PlayerB, "Shimian Night Stalker", "Hill Giant")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Hill Giant's 3 damage should go to Shimian Night Stalker instead of PlayerB
+		g.AssertLife(gametest.PlayerB, 20)
+		// Shimian Night Stalker took 3 damage (4/4 -> should survive)
+		g.AssertPermanentCount(gametest.PlayerB, "Shimian Night Stalker", 1)
+	})
+}
+
+func TestFirestormPhoenix(t *testing.T) {
+	t.Run("returns to hand instead of dying", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Firestorm Phoenix") // 3/2 Flying
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Firestorm Phoenix")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+		// Should be in hand, not graveyard
+		g.AssertGraveyardCount(gametest.PlayerA, "Firestorm Phoenix", 0)
+		g.AssertPermanentCount(gametest.PlayerA, "Firestorm Phoenix", 0)
+		g.AssertHandCount(gametest.PlayerA, "Firestorm Phoenix", 1) // returned to hand
+	})
+}
+
+func TestShelkinBrownie(t *testing.T) {
+	t.Run("removes banding from legendary creature with guildhouse", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Adventurers' Guildhouse")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Jasmine Boreal") // green legendary
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Shelkin Brownie")
+		// Jasmine should have banding from the Guildhouse
+		g.ActivateAbility(2, core.PrecombatMain, gametest.PlayerB, "Shelkin Brownie", "Jasmine Boreal")
+		g.StopAt(2, core.PostcombatMain)
+		g.Execute()
+		// Jasmine should have lost banding
+		g.AssertHasAbility(gametest.PlayerA, "Jasmine Boreal", core.Banding, false)
+	})
+}
+

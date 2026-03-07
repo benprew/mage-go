@@ -15,18 +15,48 @@ func registerLands() {
 // Adventurers' Guildhouse 
 // Land
 // Green legendary creatures you control have "bands with other legendary creatures." (Any legendary creatures can attack in a band as long as at least one has "bands with other legendary creatures." Bands are blocked as a group. If at least two legendary creatures you control, one of which has "bands with other legendary creatures," are blocking or being blocked by the same creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)
-// TODO: implement
+// XXX: "bands with other legendary creatures" approximated as Banding
 	Register("Adventurers' Guildhouse", withExpansion(func() Card {
-		return NewLand("Adventurers' Guildhouse")
+		return NewLand("Adventurers' Guildhouse",
+			WithStaticAbility(
+				FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+					src := g.FindPermanent(sourceID)
+					if src == nil {
+						return nil
+					}
+					for _, perm := range g.FilterBattlefield(And(IsCreature, HasColorFilter(Green), ControlledBy(src.Controller))) {
+						if perm.Card.HasSuperType(SuperLegendary) {
+							g.Effects.GrantAttr(perm.ID(), Banding)
+						}
+					}
+					return nil
+				}),
+			),
+		)
 	}))
 
 
 // Cathedral of Serra 
 // Land
 // White legendary creatures you control have "bands with other legendary creatures." (Any legendary creatures can attack in a band as long as at least one has "bands with other legendary creatures." Bands are blocked as a group. If at least two legendary creatures you control, one of which has "bands with other legendary creatures," are blocking or being blocked by the same creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)
-// TODO: implement
+// XXX: "bands with other legendary creatures" approximated as Banding
 	Register("Cathedral of Serra", withExpansion(func() Card {
-		return NewLand("Cathedral of Serra")
+		return NewLand("Cathedral of Serra",
+			WithStaticAbility(
+				FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+					src := g.FindPermanent(sourceID)
+					if src == nil {
+						return nil
+					}
+					for _, perm := range g.FilterBattlefield(And(IsCreature, HasColorFilter(White), ControlledBy(src.Controller))) {
+						if perm.Card.HasSuperType(SuperLegendary) {
+							g.Effects.GrantAttr(perm.ID(), Banding)
+						}
+					}
+					return nil
+				}),
+			),
+		)
 	}))
 
 
@@ -86,9 +116,24 @@ func registerLands() {
 // Mountain Stronghold 
 // Land
 // Red legendary creatures you control have "bands with other legendary creatures." (Any legendary creatures can attack in a band as long as at least one has "bands with other legendary creatures." Bands are blocked as a group. If at least two legendary creatures you control, one of which has "bands with other legendary creatures," are blocking or being blocked by the same creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)
-// TODO: implement
+// XXX: "bands with other legendary creatures" approximated as Banding
 	Register("Mountain Stronghold", withExpansion(func() Card {
-		return NewLand("Mountain Stronghold")
+		return NewLand("Mountain Stronghold",
+			WithStaticAbility(
+				FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+					src := g.FindPermanent(sourceID)
+					if src == nil {
+						return nil
+					}
+					for _, perm := range g.FilterBattlefield(And(IsCreature, HasColorFilter(Red), ControlledBy(src.Controller))) {
+						if perm.Card.HasSuperType(SuperLegendary) {
+							g.Effects.GrantAttr(perm.ID(), Banding)
+						}
+					}
+					return nil
+				}),
+			),
+		)
 	}))
 
 
@@ -114,9 +159,24 @@ func registerLands() {
 // Seafarer's Quay 
 // Land
 // Blue legendary creatures you control have "bands with other legendary creatures." (Any legendary creatures can attack in a band as long as at least one has "bands with other legendary creatures." Bands are blocked as a group. If at least two legendary creatures you control, one of which has "bands with other legendary creatures," are blocking or being blocked by the same creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)
-// TODO: implement
+// XXX: "bands with other legendary creatures" approximated as Banding
 	Register("Seafarer's Quay", withExpansion(func() Card {
-		return NewLand("Seafarer's Quay")
+		return NewLand("Seafarer's Quay",
+			WithStaticAbility(
+				FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+					src := g.FindPermanent(sourceID)
+					if src == nil {
+						return nil
+					}
+					for _, perm := range g.FilterBattlefield(And(IsCreature, HasColorFilter(Blue), ControlledBy(src.Controller))) {
+						if perm.Card.HasSuperType(SuperLegendary) {
+							g.Effects.GrantAttr(perm.ID(), Banding)
+						}
+					}
+					return nil
+				}),
+			),
+		)
 	}))
 
 
@@ -190,9 +250,24 @@ func registerLands() {
 // Unholy Citadel 
 // Land
 // Black legendary creatures you control have "bands with other legendary creatures." (Any legendary creatures can attack in a band as long as at least one has "bands with other legendary creatures." Bands are blocked as a group. If at least two legendary creatures you control, one of which has "bands with other legendary creatures," are blocking or being blocked by the same creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)
-// TODO: implement
+// XXX: "bands with other legendary creatures" approximated as Banding
 	Register("Unholy Citadel", withExpansion(func() Card {
-		return NewLand("Unholy Citadel")
+		return NewLand("Unholy Citadel",
+			WithStaticAbility(
+				FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+					src := g.FindPermanent(sourceID)
+					if src == nil {
+						return nil
+					}
+					for _, perm := range g.FilterBattlefield(And(IsCreature, HasColorFilter(Black), ControlledBy(src.Controller))) {
+						if perm.Card.HasSuperType(SuperLegendary) {
+							g.Effects.GrantAttr(perm.ID(), Banding)
+						}
+					}
+					return nil
+				}),
+			),
+		)
 	}))
 
 

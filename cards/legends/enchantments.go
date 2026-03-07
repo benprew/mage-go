@@ -258,6 +258,12 @@ func registerEnchantments() {
 		return NewAura("Demonic Torment", "{2}{B}",
 			WithStaticAbility(
 				PreventAttachedFromAttacking(AttachAura),
+				AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
+					g.Effects.Damage.AddDamagePreventionRule(WithFrom(NewPermanentFilter("enchanted creature", func(p *Permanent, _ *Game) bool {
+						return p.ID() == target.ID()
+					})))
+					return nil
+				}),
 			),
 		)
 	}))
@@ -315,29 +321,30 @@ func registerEnchantments() {
 // Enchantment — Aura
 // Enchant creature
 // {0}: Enchanted creature becomes the color or colors of your choice. Activate only once each turn.
-// XXX: needs color choice UI and once-per-turn color change on attached creature
 	Register("Dream Coat", withExpansion(func() Card {
 		return NewAura("Dream Coat", "{U}",
-			WithStaticAbility(
-				GrantActivatedAbilityToAttached(
-					FuncEffect("change creature's color",
-						EffectProperties{Outcome: OutcomeBenefit},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							perm := g.FindPermanent(sourceID)
-							if perm == nil {
-								return nil
-							}
-							p := g.GetPlayer(controller)
-							if p == nil {
-								return nil
-							}
-							color := p.ChooseManaColor("Choose a color")
-							g.AddContinuousEffect(ColorOverride(perm.ID(), color))
+			WithActivatedAbility(
+				FuncEffect("change enchanted creature's color",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						src := g.FindPermanent(sourceID)
+						if src == nil || src.AttachedTo == uuid.Nil {
 							return nil
-						}),
-					GenericCost(0),
-					AttachAura,
-				),
+						}
+						target := g.FindPermanent(src.AttachedTo)
+						if target == nil {
+							return nil
+						}
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						color := p.ChooseManaColor("Choose a color")
+						g.AddContinuousEffect(ColorOverride(target.ID(), color))
+						return nil
+					}),
+				GenericCost(0),
+				WithMaxActivationsPerTurn(1),
 			),
 		)
 	}))
@@ -589,9 +596,131 @@ func registerEnchantments() {
 // Enchantment — Aura
 // Enchant creature
 // Whenever enchanted creature blocks or becomes blocked by a creature with toughness 3 or less, destroy the other creature at end of combat. At the beginning of the next end step, if that creature was destroyed this way, put a +1/+1 counter on the first creature.
-// XXX: needs end-of-combat delayed destroy and conditional +1/+1 counter
 	Register("Infinite Authority", withExpansion(func() Card {
-		return NewAura("Infinite Authority", "{W}{W}{W}")
+		return NewAura("Infinite Authority", "{W}{W}{W}",
+			WithAbility(
+				NewTriggered(EvtBlockersDecl, false,
+					FuncEffect("destroy creature with toughness 3 or less at end of combat",
+						EffectProperties{Outcome: OutcomeDetriment},
+						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+							src := g.FindPermanent(sourceID)
+							if src == nil || src.AttachedTo == uuid.Nil {
+								return nil
+							}
+							enchantedID := src.AttachedTo
+							for _, group := range g.CombatGroups() {
+								// Enchanted creature is attacking and blocked
+								if group.AttackerID == enchantedID {
+									for _, bid := range group.BlockerIDs {
+										blocker := g.FindPermanent(bid)
+										if blocker != nil && blocker.CurrentToughness(g) <= 3 {
+											targetID := bid
+											g.RegisterDelayedTrigger(&DelayedTrigger{
+												EventType:  EvtEndOfCombat,
+												TargetID:   targetID,
+												Effects:    []Effect{DestroyTarget()},
+												SourceID:   sourceID,
+												Controller: controller,
+											})
+											// Delayed end step: add +1/+1 to enchanted if target died
+											g.RegisterDelayedTrigger(&DelayedTrigger{
+												EventType:     EvtEndStep,
+												TargetID:      enchantedID,
+												SourceID:      sourceID,
+												Controller:    controller,
+												Effects: []Effect{FuncEffect(
+													"put +1/+1 counter if creature was destroyed",
+													EffectProperties{Outcome: OutcomeBenefit},
+													func(g GameMutator, srcID, ctrl uuid.UUID, targets []uuid.UUID) error {
+														if len(targets) == 0 {
+															return nil
+														}
+														// Check if the destroyed creature is in graveyard
+														destroyed := g.FindPermanent(targetID)
+														if destroyed == nil {
+															// Not on battlefield = was destroyed, add counter
+															perm := g.FindPermanent(targets[0])
+															if perm != nil {
+																perm.AddCounter(P1P1, 1)
+															}
+														}
+														return nil
+													},
+												)},
+											})
+										}
+									}
+								}
+								// Enchanted creature is blocking
+								for _, bid := range group.BlockerIDs {
+									if bid == enchantedID {
+										attacker := g.FindPermanent(group.AttackerID)
+										if attacker != nil && attacker.CurrentToughness(g) <= 3 {
+											targetID := group.AttackerID
+											g.RegisterDelayedTrigger(&DelayedTrigger{
+												EventType:  EvtEndOfCombat,
+												TargetID:   targetID,
+												Effects:    []Effect{DestroyTarget()},
+												SourceID:   sourceID,
+												Controller: controller,
+											})
+											g.RegisterDelayedTrigger(&DelayedTrigger{
+												EventType:     EvtEndStep,
+												TargetID:      enchantedID,
+												SourceID:      sourceID,
+												Controller:    controller,
+												Effects: []Effect{FuncEffect(
+													"put +1/+1 counter if creature was destroyed",
+													EffectProperties{Outcome: OutcomeBenefit},
+													func(g GameMutator, srcID, ctrl uuid.UUID, targets []uuid.UUID) error {
+														if len(targets) == 0 {
+															return nil
+														}
+														destroyed := g.FindPermanent(targetID)
+														if destroyed == nil {
+															perm := g.FindPermanent(targets[0])
+															if perm != nil {
+																perm.AddCounter(P1P1, 1)
+															}
+														}
+														return nil
+													},
+												)},
+											})
+										}
+									}
+								}
+							}
+							return nil
+						}),
+				).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+					src := g.FindPermanent(sourceID)
+					if src == nil || src.AttachedTo == uuid.Nil {
+						return false
+					}
+					enchantedID := src.AttachedTo
+					for _, group := range g.Combat.Groups {
+						if group.AttackerID == enchantedID {
+							for _, bid := range group.BlockerIDs {
+								blocker := g.FindPermanent(bid)
+								if blocker != nil && blocker.CurrentToughness(g) <= 3 {
+									return true
+								}
+							}
+						}
+						for _, bid := range group.BlockerIDs {
+							if bid == enchantedID {
+								attacker := g.FindPermanent(group.AttackerID)
+								if attacker != nil && attacker.CurrentToughness(g) <= 3 {
+									return true
+								}
+							}
+						}
+					}
+					return false
+				}),
+			),
+		)
 	}))
 
 
@@ -692,12 +821,11 @@ func registerEnchantments() {
 // Land Tax {W}
 // Enchantment
 // At the beginning of your upkeep, if an opponent controls more lands than you, you may search your library for up to three basic land cards, reveal them, put them into your hand, then shuffle.
-// XXX: needs search-library-for-multiple-basics engine support
 	Register("Land Tax", withExpansion(func() Card {
 		return NewEnchantment("Land Tax", "{W}",
 			WithAbility(
 				BeginningOfUpkeepTrigger(
-					FuncEffect("search for basic lands",
+					FuncEffect("search for up to three basic land cards",
 						EffectProperties{Outcome: OutcomeBenefit},
 						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							opp := g.GetOpponent(controller)
@@ -709,13 +837,35 @@ func registerEnchantments() {
 							if oppLands <= myLands {
 								return nil
 							}
-							// Search for up to 3 basic lands
 							p := g.GetPlayer(controller)
 							if p == nil {
 								return nil
 							}
-							// XXX: simplified - searches for one card via SearchLibraryToHand
-							SearchLibraryToHand().Apply(g, sourceID, controller, nil)
+							for i := 0; i < 3; i++ {
+								lib := p.Library()
+								var candidates []Card
+								for _, c := range lib {
+									if isBasicLand(c) {
+										candidates = append(candidates, c)
+									}
+								}
+								if len(candidates) == 0 {
+									break
+								}
+								card := p.ChooseCardFromLibrary(candidates, "search for basic land", g)
+								if card == nil {
+									break
+								}
+								newLib := make([]Card, 0, len(lib)-1)
+								for _, c := range lib {
+									if c.ID() != card.ID() {
+										newLib = append(newLib, c)
+									}
+								}
+								p.SetLibrary(newLib)
+								p.AddToHand(card)
+							}
+							p.ShuffleLibrary()
 							return nil
 						}), true,
 				),

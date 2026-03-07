@@ -1,0 +1,2062 @@
+[
+  {
+    "name": "Angelic Curator",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Angel Spirit",
+    "oracle_text": "Flying, protection from artifacts",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying",
+      "Protection"
+    ],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Blessed Reversal",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "You gain 3 life for each creature attacking you.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Burst of Energy",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Untap target permanent.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Cessation",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature can't attack.\nWhen this Aura is put into a graveyard from the battlefield, return it to its owner's hand.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Defender of Law",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Human Knight",
+    "oracle_text": "Flash\nProtection from red",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Protection",
+      "Flash"
+    ],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Devout Harpist",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Human",
+    "oracle_text": "{T}: Destroy target Aura attached to a creature.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Erase",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Exile target enchantment.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Expendable Troops",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "{T}, Sacrifice this creature: It deals 2 damage to target attacking or blocking creature.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Hope and Glory",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Untap two target creatures. Each of them gets +1/+1 until end of turn.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Iron Will",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Target creature gets +0/+4 until end of turn.\nCycling {2} ({2}, Discard this card: Draw a card.)",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Karmic Guide",
+    "mana_cost": "{3}{W}{W}",
+    "cmc": 5,
+    "type_line": "Creature — Angel Spirit",
+    "oracle_text": "Flying, protection from black\nEcho {3}{W}{W} (At the beginning of your upkeep, if this came under your control since the beginning of your last upkeep, sacrifice it unless you pay its echo cost.)\nWhen this creature enters, return target creature card from your graveyard to the battlefield.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Echo",
+      "Flying",
+      "Protection"
+    ],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Knighthood",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Creatures you control have first strike.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Martyr's Cause",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Sacrifice a creature: The next time a source of your choice would deal damage to any target this turn, prevent that damage.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Mother of Runes",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Human Cleric",
+    "oracle_text": "{T}: Target creature you control gains protection from the color of your choice until end of turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Opal Avenger",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "When you have 10 or less life, if this permanent is an enchantment, it becomes a 3/5 Soldier creature.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Opal Champion",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "When an opponent casts a creature spell, if this permanent is an enchantment, it becomes a 3/3 Knight creature with first strike.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Peace and Quiet",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Destroy two target enchantments.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Planar Collapse",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of your upkeep, if there are four or more creatures on the battlefield, sacrifice this enchantment and destroy all creatures. They can't be regenerated.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Purify",
+    "mana_cost": "{3}{W}{W}",
+    "cmc": 5,
+    "type_line": "Sorcery",
+    "oracle_text": "Destroy all artifacts and enchantments.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Radiant, Archangel",
+    "mana_cost": "{3}{W}{W}",
+    "cmc": 5,
+    "type_line": "Legendary Creature — Angel",
+    "oracle_text": "Flying, vigilance\nRadiant gets +1/+1 for each other creature on the battlefield with flying.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying",
+      "Vigilance"
+    ],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Radiant's Dragoons",
+    "mana_cost": "{3}{W}",
+    "cmc": 4,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "Echo {3}{W} (At the beginning of your upkeep, if this came under your control since the beginning of your last upkeep, sacrifice it unless you pay its echo cost.)\nWhen this creature enters, you gain 5 life.",
+    "power": "2",
+    "toughness": "5",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Echo"
+    ],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Radiant's Judgment",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Destroy target creature with power 4 or greater.\nCycling {2} ({2}, Discard this card: Draw a card.)",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Sustainer of the Realm",
+    "mana_cost": "{2}{W}{W}",
+    "cmc": 4,
+    "type_line": "Creature — Angel",
+    "oracle_text": "Flying\nWhenever this creature blocks, it gets +0/+2 until end of turn.",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Tragic Poet",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Human",
+    "oracle_text": "{T}, Sacrifice this creature: Return target enchantment card from your graveyard to your hand.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Anthroplasm",
+    "mana_cost": "{2}{U}{U}",
+    "cmc": 4,
+    "type_line": "Creature — Shapeshifter",
+    "oracle_text": "This creature enters with two +1/+1 counters on it.\n{X}, {T}: Remove all +1/+1 counters from this creature and put X +1/+1 counters on it.",
+    "power": "0",
+    "toughness": "0",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Archivist",
+    "mana_cost": "{2}{U}{U}",
+    "cmc": 4,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "{T}: Draw a card.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Aura Flux",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Other enchantments have \"At the beginning of your upkeep, sacrifice this enchantment unless you pay {2}.\"",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Bouncing Beebles",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Beeble",
+    "oracle_text": "This creature can't be blocked as long as defending player controls an artifact.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Cloud of Faeries",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Faerie",
+    "oracle_text": "Flying\nWhen this creature enters, untap up to two lands.\nCycling {2} ({2}, Discard this card: Draw a card.)",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying",
+      "Cycling"
+    ],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Delusions of Mediocrity",
+    "mana_cost": "{3}{U}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "When this enchantment enters, you gain 10 life.\nWhen this enchantment leaves the battlefield, you lose 10 life.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Fleeting Image",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Illusion",
+    "oracle_text": "Flying (This creature can't be blocked except by creatures with flying or reach.)\n{1}{U}: Return this creature to its owner's hand.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Frantic Search",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Draw two cards, then discard two cards. Untap up to three lands.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Intervene",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Counter target spell that targets a creature.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "King Crab",
+    "mana_cost": "{4}{U}{U}",
+    "cmc": 6,
+    "type_line": "Creature — Crab",
+    "oracle_text": "{1}{U}, {T}: Put target green creature on top of its owner's library.",
+    "power": "4",
+    "toughness": "5",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Levitation",
+    "mana_cost": "{2}{U}{U}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "Creatures you control have flying.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Miscalculation",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Counter target spell unless its controller pays {2}.\nCycling {2} ({2}, Discard this card: Draw a card.)",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Opportunity",
+    "mana_cost": "{4}{U}{U}",
+    "cmc": 6,
+    "type_line": "Instant",
+    "oracle_text": "Target player draws four cards.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Palinchron",
+    "mana_cost": "{5}{U}{U}",
+    "cmc": 7,
+    "type_line": "Creature — Illusion",
+    "oracle_text": "Flying\nWhen this creature enters, untap up to seven lands.\n{2}{U}{U}: Return this creature to its owner's hand.",
+    "power": "4",
+    "toughness": "5",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Raven Familiar",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Bird",
+    "oracle_text": "Flying\nEcho {2}{U} (At the beginning of your upkeep, if this came under your control since the beginning of your last upkeep, sacrifice it unless you pay its echo cost.)\nWhen this creature enters, look at the top three cards of your library. Put one of them into your hand and the rest on the bottom of your library in any order.",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Echo",
+      "Flying"
+    ],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Rebuild",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Return all artifacts to their owners' hands.\nCycling {2} ({2}, Discard this card: Draw a card.)",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Second Chance",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of your upkeep, if you have 5 or less life, sacrifice this enchantment and take an extra turn after this one.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Slow Motion",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nAt the beginning of the upkeep of enchanted creature's controller, that player sacrifices that creature unless they pay {2}.\nWhen this Aura is put into a graveyard from the battlefield, return it to its owner's hand.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Snap",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Return target creature to its owner's hand. Untap up to two lands.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Thornwind Faeries",
+    "mana_cost": "{1}{U}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Faerie",
+    "oracle_text": "Flying\n{T}: This creature deals 1 damage to any target.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Tinker",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "As an additional cost to cast this spell, sacrifice an artifact.\nSearch your library for an artifact card, put that card onto the battlefield, then shuffle.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Vigilant Drake",
+    "mana_cost": "{4}{U}",
+    "cmc": 5,
+    "type_line": "Creature — Drake",
+    "oracle_text": "Flying\n{2}{U}: Untap this creature.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Walking Sponge",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Sponge",
+    "oracle_text": "{T}: Target creature loses your choice of flying, first strike, or trample until end of turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Weatherseed Faeries",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Faerie",
+    "oracle_text": "Flying, protection from red",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying",
+      "Protection"
+    ],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Bone Shredder",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Phyrexian Minion",
+    "oracle_text": "Flying\nEcho {2}{B} (At the beginning of your upkeep, if this came under your control since the beginning of your last upkeep, sacrifice it unless you pay its echo cost.)\nWhen this creature enters, destroy target nonartifact, nonblack creature.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Echo",
+      "Flying"
+    ],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Brink of Madness",
+    "mana_cost": "{2}{B}{B}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of your upkeep, if you have no cards in hand, sacrifice this enchantment and target opponent discards their hand.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Engineered Plague",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "As this enchantment enters, choose a creature type.\nAll creatures of the chosen type get -1/-1.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Eviscerator",
+    "mana_cost": "{3}{B}{B}",
+    "cmc": 5,
+    "type_line": "Creature — Phyrexian Horror",
+    "oracle_text": "Protection from white\nWhen this creature enters, you lose 5 life.",
+    "power": "5",
+    "toughness": "5",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Protection"
+    ],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Fog of Gnats",
+    "mana_cost": "{B}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Insect",
+    "oracle_text": "Flying\n{B}: Regenerate this creature.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Giant Cockroach",
+    "mana_cost": "{3}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Insect",
+    "power": "4",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Lurking Skirge",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "When a creature is put into an opponent's graveyard from the battlefield, if this permanent is an enchantment, it becomes a 3/2 Phyrexian Imp creature with flying.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "No Mercy",
+    "mana_cost": "{2}{B}{B}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever a creature deals damage to you, destroy it.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Ostracize",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "Target opponent reveals their hand. You choose a creature card from it. That player discards that card.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Phyrexian Broodlings",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Phyrexian Minion",
+    "oracle_text": "{1}, Sacrifice a creature: Put a +1/+1 counter on this creature.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Phyrexian Debaser",
+    "mana_cost": "{3}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Phyrexian Carrier",
+    "oracle_text": "Flying\n{T}, Sacrifice this creature: Target creature gets -2/-2 until end of turn.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Phyrexian Defiler",
+    "mana_cost": "{2}{B}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Phyrexian Carrier",
+    "oracle_text": "{T}, Sacrifice this creature: Target creature gets -3/-3 until end of turn.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Phyrexian Denouncer",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Phyrexian Carrier",
+    "oracle_text": "{T}, Sacrifice this creature: Target creature gets -1/-1 until end of turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Phyrexian Plaguelord",
+    "mana_cost": "{3}{B}{B}",
+    "cmc": 5,
+    "type_line": "Creature — Phyrexian Carrier",
+    "oracle_text": "{T}, Sacrifice this creature: Target creature gets -4/-4 until end of turn.\nSacrifice a creature: Target creature gets -1/-1 until end of turn.",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Phyrexian Reclamation",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Enchantment",
+    "oracle_text": "{1}{B}, Pay 2 life: Return target creature card from your graveyard to your hand.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Plague Beetle",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Creature — Insect",
+    "oracle_text": "Swampwalk (This creature can't be blocked as long as defending player controls a Swamp.)",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Landwalk",
+      "Swampwalk"
+    ],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Rank and File",
+    "mana_cost": "{2}{B}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Zombie",
+    "oracle_text": "When this creature enters, green creatures get -1/-1 until end of turn.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Sick and Tired",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Two target creatures each get -1/-1 until end of turn.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Sleeper's Guile",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature has fear. (It can't be blocked except by artifact creatures and/or black creatures.)\nWhen this Aura is put into a graveyard from the battlefield, return it to its owner's hand.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Subversion",
+    "mana_cost": "{3}{B}{B}",
+    "cmc": 5,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of your upkeep, each opponent loses 1 life. You gain life equal to the life lost this way.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Swat",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Destroy target creature with power 2 or less.\nCycling {2} ({2}, Discard this card: Draw a card.)",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Tethered Skirge",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Phyrexian Imp",
+    "oracle_text": "Flying\nWhenever this creature becomes the target of a spell or ability, you lose 1 life.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Treacherous Link",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nAll damage that would be dealt to enchanted creature is dealt to its controller instead.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Unearth",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "Return target creature card with mana value 3 or less from your graveyard to the battlefield.\nCycling {2} ({2}, Discard this card: Draw a card.)",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "About Face",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Switch target creature's power and toughness until end of turn.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Avalanche Riders",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Human Nomad",
+    "oracle_text": "Haste\nEcho {3}{R} (At the beginning of your upkeep, if this came under your control since the beginning of your last upkeep, sacrifice it unless you pay its echo cost.)\nWhen this creature enters, destroy target land.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Haste",
+      "Echo"
+    ],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Defender of Chaos",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Human Knight",
+    "oracle_text": "Flash\nProtection from white",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Protection",
+      "Flash"
+    ],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Ghitu Fire-Eater",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Human Nomad",
+    "oracle_text": "{T}, Sacrifice this creature: It deals damage equal to its power to any target.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Ghitu Slinger",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Human Nomad",
+    "oracle_text": "Echo {2}{R} (At the beginning of your upkeep, if this came under your control since the beginning of your last upkeep, sacrifice it unless you pay its echo cost.)\nWhen this creature enters, it deals 2 damage to any target.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Echo"
+    ],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Ghitu War Cry",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "{R}: Target creature gets +1/+0 until end of turn.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Goblin Medics",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Goblin Shaman",
+    "oracle_text": "Whenever this creature becomes tapped, it deals 1 damage to any target.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Goblin Welder",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Creature — Goblin Artificer",
+    "oracle_text": "{T}: Choose target artifact a player controls and target artifact card in that player's graveyard. If both targets are still legal as this ability resolves, that player simultaneously sacrifices the artifact and returns the artifact card to the battlefield.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Granite Grip",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature gets +1/+0 for each Mountain you control.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Impending Disaster",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of your upkeep, if there are seven or more lands on the battlefield, sacrifice this enchantment and destroy all lands.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Last-Ditch Effort",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Sacrifice any number of creatures. Last-Ditch Effort deals that much damage to any target.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Lava Axe",
+    "mana_cost": "{4}{R}",
+    "cmc": 5,
+    "type_line": "Sorcery",
+    "oracle_text": "Lava Axe deals 5 damage to target player or planeswalker.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Molten Hydra",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Creature — Hydra",
+    "oracle_text": "{1}{R}{R}: Put a +1/+1 counter on this creature.\n{T}, Remove all +1/+1 counters from this creature: It deals damage to any target equal to the number of +1/+1 counters removed this way.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Parch",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Choose one —\n• Parch deals 2 damage to any target.\n• Parch deals 4 damage to target blue creature.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Pygmy Pyrosaur",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Creature — Lizard",
+    "oracle_text": "This creature can't block.\n{R}: This creature gets +1/+0 until end of turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Pyromancy",
+    "mana_cost": "{2}{R}{R}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "{3}, Discard a card at random: This enchantment deals damage to any target equal to the mana value of the discarded card.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Rack and Ruin",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Destroy two target artifacts.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Rivalry",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of each player's upkeep, if that player controls more lands than each other player, this enchantment deals 2 damage to them.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Shivan Phoenix",
+    "mana_cost": "{4}{R}{R}",
+    "cmc": 6,
+    "type_line": "Creature — Phoenix",
+    "oracle_text": "Flying\nWhen this creature dies, return it to its owner's hand.",
+    "power": "3",
+    "toughness": "4",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Sluggishness",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature can't block.\nWhen this Aura is put into a graveyard from the battlefield, return it to its owner's hand.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Viashino Bey",
+    "mana_cost": "{2}{R}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Lizard",
+    "oracle_text": "If this creature attacks, all creatures you control attack if able.",
+    "power": "4",
+    "toughness": "3",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Viashino Cutthroat",
+    "mana_cost": "{2}{R}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Lizard",
+    "oracle_text": "Haste\nAt the beginning of the end step, return this creature to its owner's hand.",
+    "power": "5",
+    "toughness": "3",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Haste"
+    ],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Viashino Heretic",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Lizard",
+    "oracle_text": "{1}{R}, {T}: Destroy target artifact. This creature deals damage to that artifact's controller equal to the artifact's mana value.",
+    "power": "1",
+    "toughness": "3",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Viashino Sandscout",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Creature — Lizard Scout",
+    "oracle_text": "Haste (This creature can attack and {T} as soon as it comes under your control.)\nAt the beginning of the end step, return this creature to its owner's hand. (Return it only if it's on the battlefield.)",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Haste"
+    ],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Bloated Toad",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Frog",
+    "oracle_text": "Protection from blue\nCycling {2} ({2}, Discard this card: Draw a card.)",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Protection",
+      "Cycling"
+    ],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Crop Rotation",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "As an additional cost to cast this spell, sacrifice a land.\nSearch your library for a land card, put that card onto the battlefield, then shuffle.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Darkwatch Elves",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Elf",
+    "oracle_text": "Protection from black\nCycling {2} ({2}, Discard this card: Draw a card.)",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Protection",
+      "Cycling"
+    ],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Defense of the Heart",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of your upkeep, if an opponent controls three or more creatures, sacrifice this enchantment, search your library for up to two creature cards, put those cards onto the battlefield, then shuffle.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Deranged Hermit",
+    "mana_cost": "{3}{G}{G}",
+    "cmc": 5,
+    "type_line": "Creature — Elf",
+    "oracle_text": "Echo {3}{G}{G} (At the beginning of your upkeep, if this came under your control since the beginning of your last upkeep, sacrifice it unless you pay its echo cost.)\nWhen this creature enters, create four 1/1 green Squirrel creature tokens.\nSquirrel creatures get +1/+1.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Echo"
+    ],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Gang of Elk",
+    "mana_cost": "{5}{G}",
+    "cmc": 6,
+    "type_line": "Creature — Elk Beast",
+    "oracle_text": "Whenever this creature becomes blocked, it gets +2/+2 until end of turn for each creature blocking it.",
+    "power": "5",
+    "toughness": "4",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Harmonic Convergence",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Put all enchantments on top of their owners' libraries.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Hidden Gibbons",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Enchantment",
+    "oracle_text": "When an opponent casts an instant spell, if this permanent is an enchantment, it becomes a 4/4 Ape creature.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Lone Wolf",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Wolf",
+    "oracle_text": "You may have this creature assign its combat damage as though it weren't blocked.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Might of Oaks",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Instant",
+    "oracle_text": "Target creature gets +7/+7 until end of turn.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Multani, Maro-Sorcerer",
+    "mana_cost": "{4}{G}{G}",
+    "cmc": 6,
+    "type_line": "Legendary Creature — Elemental Sorcerer",
+    "oracle_text": "Shroud (This creature can't be the target of spells or abilities.)\nMultani's power and toughness are each equal to the total number of cards in all players' hands.",
+    "power": "*",
+    "toughness": "*",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Shroud"
+    ],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Multani's Acolyte",
+    "mana_cost": "{G}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Elf",
+    "oracle_text": "Echo {G}{G} (At the beginning of your upkeep, if this came under your control since the beginning of your last upkeep, sacrifice it unless you pay its echo cost.)\nWhen this creature enters, draw a card.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Echo"
+    ],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Multani's Presence",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever a spell you've cast is countered, draw a card.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Rancor",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature gets +2/+0 and has trample.\nWhen this Aura is put into a graveyard from the battlefield, return it to its owner's hand.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Repopulate",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Shuffle all creature cards from target player's graveyard into that player's library.\nCycling {2} ({2}, Discard this card: Draw a card.)",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Silk Net",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Target creature gets +1/+1 and gains reach until end of turn. (It can block creatures with flying.)",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Simian Grunts",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Ape",
+    "oracle_text": "Flash\nEcho {2}{G} (At the beginning of your upkeep, if this came under your control since the beginning of your last upkeep, sacrifice it unless you pay its echo cost.)",
+    "power": "3",
+    "toughness": "4",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Flash",
+      "Echo"
+    ],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Treefolk Mystic",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Creature — Treefolk",
+    "oracle_text": "Whenever this creature blocks or becomes blocked by a creature, destroy all Auras attached to that creature.",
+    "power": "2",
+    "toughness": "4",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Weatherseed Elf",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Elf",
+    "oracle_text": "{T}: Target creature gains forestwalk until end of turn. (It can't be blocked as long as defending player controls a Forest.)",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Weatherseed Treefolk",
+    "mana_cost": "{2}{G}{G}{G}",
+    "cmc": 5,
+    "type_line": "Creature — Treefolk",
+    "oracle_text": "Trample\nWhen this creature dies, return it to its owner's hand.",
+    "power": "5",
+    "toughness": "3",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Trample"
+    ],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Wing Snare",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Destroy target creature with flying.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Yavimaya Granger",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Elf",
+    "oracle_text": "Echo {2}{G} (At the beginning of your upkeep, if this came under your control since the beginning of your last upkeep, sacrifice it unless you pay its echo cost.)\nWhen this creature enters, you may search your library for a basic land card, put that card onto the battlefield tapped, then shuffle.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Echo"
+    ],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Yavimaya Scion",
+    "mana_cost": "{4}{G}",
+    "cmc": 5,
+    "type_line": "Creature — Treefolk",
+    "oracle_text": "Protection from artifacts",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Protection"
+    ],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Yavimaya Wurm",
+    "mana_cost": "{4}{G}{G}",
+    "cmc": 6,
+    "type_line": "Creature — Wurm",
+    "oracle_text": "Trample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)",
+    "power": "6",
+    "toughness": "4",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Trample"
+    ],
+    "rarity": "common",
+    "set": "ulg"
+  },
+  {
+    "name": "Angel's Trumpet",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "All creatures have vigilance.\nAt the beginning of each player's end step, tap all untapped creatures that player controls that didn't attack this turn. This artifact deals damage to the player equal to the number of creatures tapped this way.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Beast of Burden",
+    "mana_cost": "{6}",
+    "cmc": 6,
+    "type_line": "Artifact Creature — Golem",
+    "oracle_text": "Beast of Burden's power and toughness are each equal to the number of creatures on the battlefield.",
+    "power": "*",
+    "toughness": "*",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Crawlspace",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "No more than two creatures can attack you each combat.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Damping Engine",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact",
+    "oracle_text": "A player who controls more permanents than each other player can't play lands or cast artifact, creature, or enchantment spells. That player may sacrifice a permanent of their choice for that player to ignore this effect until end of turn.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Defense Grid",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "Each spell costs {3} more to cast except during its controller's turn.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Grim Monolith",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "This artifact doesn't untap during your untap step.\n{T}: Add {C}{C}{C}.\n{4}: Untap this artifact.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Iron Maiden",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "At the beginning of each opponent's upkeep, this artifact deals X damage to that player, where X is the number of cards in their hand minus 4.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Jhoira's Toolbox",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact Creature — Insect",
+    "oracle_text": "{2}: Regenerate target artifact creature.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Memory Jar",
+    "mana_cost": "{5}",
+    "cmc": 5,
+    "type_line": "Artifact",
+    "oracle_text": "{T}, Sacrifice this artifact: Each player exiles all cards from their hand face down and draws seven cards. At the beginning of the next end step, each player discards their hand and returns to their hand each card they exiled this way.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Quicksilver Amulet",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact",
+    "oracle_text": "{4}, {T}: You may put a creature card from your hand onto the battlefield.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Ring of Gix",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "Echo {3} (At the beginning of your upkeep, if this came under your control since the beginning of your last upkeep, sacrifice it unless you pay its echo cost.)\n{1}, {T}: Tap target artifact, creature, or land.",
+    "colors": [],
+    "keywords": [
+      "Echo"
+    ],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Scrapheap",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "Whenever an artifact or enchantment is put into your graveyard from the battlefield, you gain 1 life.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Thran Lens",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "All permanents are colorless.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Thran War Machine",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact Creature — Construct",
+    "oracle_text": "Echo {4} (At the beginning of your upkeep, if this came under your control since the beginning of your last upkeep, sacrifice it unless you pay its echo cost.)\nThis creature attacks each combat if able.",
+    "power": "4",
+    "toughness": "5",
+    "colors": [],
+    "keywords": [
+      "Echo"
+    ],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Thran Weaponry",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact",
+    "oracle_text": "Echo {4} (At the beginning of your upkeep, if this came under your control since the beginning of your last upkeep, sacrifice it unless you pay its echo cost.)\nYou may choose not to untap this artifact during your untap step.\n{2}, {T}: All creatures get +2/+2 for as long as this artifact remains tapped.",
+    "colors": [],
+    "keywords": [
+      "Echo"
+    ],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Ticking Gnomes",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact Creature — Gnome",
+    "oracle_text": "Echo {3} (At the beginning of your upkeep, if this came under your control since the beginning of your last upkeep, sacrifice it unless you pay its echo cost.)\nSacrifice this creature: It deals 1 damage to any target.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [],
+    "keywords": [
+      "Echo"
+    ],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Urza's Blueprints",
+    "mana_cost": "{6}",
+    "cmc": 6,
+    "type_line": "Artifact",
+    "oracle_text": "Echo {6} (At the beginning of your upkeep, if this came under your control since the beginning of your last upkeep, sacrifice it unless you pay its echo cost.)\n{T}: Draw a card.",
+    "colors": [],
+    "keywords": [
+      "Echo"
+    ],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Wheel of Torture",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "At the beginning of each opponent's upkeep, this artifact deals X damage to that player, where X is 3 minus the number of cards in their hand.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ulg"
+  },
+  {
+    "name": "Faerie Conclave",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped.\n{T}: Add {U}.\n{1}{U}: This land becomes a 2/1 blue Faerie creature with flying until end of turn. It's still a land.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Forbidding Watchtower",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped.\n{T}: Add {W}.\n{1}{W}: This land becomes a 1/5 white Soldier creature until end of turn. It's still a land.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Ghitu Encampment",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped.\n{T}: Add {R}.\n{1}{R}: This land becomes a 2/1 red Warrior creature with first strike until end of turn. It's still a land. (It deals combat damage before creatures without first strike.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Spawning Pool",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped.\n{T}: Add {B}.\n{1}{B}: This land becomes a 1/1 black Skeleton creature with \"{B}: Regenerate this creature\" until end of turn. It's still a land. (If it regenerates, the next time it would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on it.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ulg"
+  },
+  {
+    "name": "Treetop Village",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped.\n{T}: Add {G}.\n{1}{G}: This land becomes a 3/3 green Ape creature with trample until end of turn. It's still a land. (It can deal excess combat damage to the player or planeswalker it's attacking.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ulg"
+  }
+]

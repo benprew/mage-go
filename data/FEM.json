@@ -1,0 +1,2654 @@
+[
+  {
+    "name": "Combat Medic",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Human Cleric Soldier",
+    "oracle_text": "{1}{W}: Prevent the next 1 damage that would be dealt to any target this turn.",
+    "power": "0",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Combat Medic",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Human Cleric Soldier",
+    "oracle_text": "{1}{W}: Prevent the next 1 damage that would be dealt to any target this turn.",
+    "power": "0",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Combat Medic",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Human Cleric Soldier",
+    "oracle_text": "{1}{W}: Prevent the next 1 damage that would be dealt to any target this turn.",
+    "power": "0",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Combat Medic",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Human Cleric Soldier",
+    "oracle_text": "{1}{W}: Prevent the next 1 damage that would be dealt to any target this turn.",
+    "power": "0",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Farrel's Mantle",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nWhenever enchanted creature attacks and isn't blocked, its controller may have it deal damage equal to its power plus 2 to another target creature. If that player does, the attacking creature assigns no combat damage this turn.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "fem"
+  },
+  {
+    "name": "Farrel's Zealot",
+    "mana_cost": "{1}{W}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Human",
+    "oracle_text": "Whenever this creature attacks and isn't blocked, you may have it deal 3 damage to target creature. If you do, this creature assigns no combat damage this turn.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Farrel's Zealot",
+    "mana_cost": "{1}{W}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Human",
+    "oracle_text": "Whenever this creature attacks and isn't blocked, you may have it deal 3 damage to target creature. If you do, this creature assigns no combat damage this turn.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Farrel's Zealot",
+    "mana_cost": "{1}{W}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Human",
+    "oracle_text": "Whenever this creature attacks and isn't blocked, you may have it deal 3 damage to target creature. If you do, this creature assigns no combat damage this turn.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Farrelite Priest",
+    "mana_cost": "{1}{W}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Human Cleric",
+    "oracle_text": "{1}: Add {W}. If this ability has been activated four or more times this turn, sacrifice this creature at the beginning of the next end step.",
+    "power": "1",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "fem"
+  },
+  {
+    "name": "Hand of Justice",
+    "mana_cost": "{5}{W}",
+    "cmc": 6,
+    "type_line": "Creature — Avatar",
+    "oracle_text": "{T}, Tap three untapped white creatures you control: Destroy target creature.",
+    "power": "2",
+    "toughness": "6",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Heroism",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Sacrifice a white creature: For each attacking red creature, prevent all combat damage that would be dealt by that creature this turn unless its controller pays {2}{R}.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "fem"
+  },
+  {
+    "name": "Icatian Infantry",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "{1}: This creature gains first strike until end of turn.\n{1}: This creature gains banding until end of turn. (Any creatures with banding, and up to one without, can attack in a band. Bands are blocked as a group. If any creatures with banding you control are blocking or being blocked by a creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Icatian Infantry",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "{1}: This creature gains first strike until end of turn.\n{1}: This creature gains banding until end of turn. (Any creatures with banding, and up to one without, can attack in a band. Bands are blocked as a group. If any creatures with banding you control are blocking or being blocked by a creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Icatian Infantry",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "{1}: This creature gains first strike until end of turn.\n{1}: This creature gains banding until end of turn. (Any creatures with banding, and up to one without, can attack in a band. Bands are blocked as a group. If any creatures with banding you control are blocking or being blocked by a creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Icatian Infantry",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "{1}: This creature gains first strike until end of turn.\n{1}: This creature gains banding until end of turn. (Any creatures with banding, and up to one without, can attack in a band. Bands are blocked as a group. If any creatures with banding you control are blocking or being blocked by a creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Icatian Javelineers",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "This creature enters with a javelin counter on it.\n{T}, Remove a javelin counter from this creature: It deals 1 damage to any target.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Icatian Javelineers",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "This creature enters with a javelin counter on it.\n{T}, Remove a javelin counter from this creature: It deals 1 damage to any target.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Icatian Javelineers",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "This creature enters with a javelin counter on it.\n{T}, Remove a javelin counter from this creature: It deals 1 damage to any target.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Icatian Lieutenant",
+    "mana_cost": "{W}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "{1}{W}: Target Soldier creature gets +1/+0 until end of turn.",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Icatian Moneychanger",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Human",
+    "oracle_text": "This creature enters with three credit counters on it.\nWhen this creature enters, it deals 3 damage to you.\nAt the beginning of your upkeep, put a credit counter on this creature.\nSacrifice this creature: You gain 1 life for each credit counter on this creature. Activate only during your upkeep.",
+    "power": "0",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Icatian Moneychanger",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Human",
+    "oracle_text": "This creature enters with three credit counters on it.\nWhen this creature enters, it deals 3 damage to you.\nAt the beginning of your upkeep, put a credit counter on this creature.\nSacrifice this creature: You gain 1 life for each credit counter on this creature. Activate only during your upkeep.",
+    "power": "0",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Icatian Moneychanger",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Human",
+    "oracle_text": "This creature enters with three credit counters on it.\nWhen this creature enters, it deals 3 damage to you.\nAt the beginning of your upkeep, put a credit counter on this creature.\nSacrifice this creature: You gain 1 life for each credit counter on this creature. Activate only during your upkeep.",
+    "power": "0",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Icatian Phalanx",
+    "mana_cost": "{4}{W}",
+    "cmc": 5,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "Banding (Any creatures with banding, and up to one without, can attack in a band. Bands are blocked as a group. If any creatures with banding you control are blocking or being blocked by a creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)",
+    "power": "2",
+    "toughness": "4",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Banding"
+    ],
+    "rarity": "uncommon",
+    "set": "fem"
+  },
+  {
+    "name": "Icatian Priest",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Human Cleric",
+    "oracle_text": "{1}{W}{W}: Target creature gets +1/+1 until end of turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "fem"
+  },
+  {
+    "name": "Icatian Scout",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Human Soldier Scout",
+    "oracle_text": "{1}, {T}: Target creature gains first strike until end of turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Icatian Scout",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Human Soldier Scout",
+    "oracle_text": "{1}, {T}: Target creature gains first strike until end of turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Icatian Scout",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Human Soldier Scout",
+    "oracle_text": "{1}, {T}: Target creature gains first strike until end of turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Icatian Scout",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Human Soldier Scout",
+    "oracle_text": "{1}, {T}: Target creature gains first strike until end of turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Icatian Skirmishers",
+    "mana_cost": "{3}{W}",
+    "cmc": 4,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "First strike; banding (Any creatures with banding, and up to one without, can attack in a band. Bands are blocked as a group. If any creatures with banding you control are blocking or being blocked by a creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)\nWhenever this creature attacks, all creatures banded with it gain first strike until end of turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "First strike",
+      "Banding"
+    ],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Icatian Town",
+    "mana_cost": "{5}{W}",
+    "cmc": 6,
+    "type_line": "Sorcery",
+    "oracle_text": "Create four 1/1 white Citizen creature tokens.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Order of Leitbur",
+    "mana_cost": "{W}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Human Cleric Knight",
+    "oracle_text": "Protection from black\n{W}: This creature gains first strike until end of turn.\n{W}{W}: This creature gets +1/+0 until end of turn.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Protection"
+    ],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Order of Leitbur",
+    "mana_cost": "{W}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Human Cleric Knight",
+    "oracle_text": "Protection from black\n{W}: This creature gains first strike until end of turn.\n{W}{W}: This creature gets +1/+0 until end of turn.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Protection"
+    ],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Order of Leitbur",
+    "mana_cost": "{W}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Human Cleric Knight",
+    "oracle_text": "Protection from black\n{W}: This creature gains first strike until end of turn.\n{W}{W}: This creature gets +1/+0 until end of turn.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Protection"
+    ],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Deep Spawn",
+    "mana_cost": "{5}{U}{U}{U}",
+    "cmc": 8,
+    "type_line": "Creature — Homarid",
+    "oracle_text": "Trample\nAt the beginning of your upkeep, sacrifice this creature unless you mill two cards.\n{U}: This creature gains shroud until end of turn and doesn't untap during your next untap step. Tap this creature. (A creature with shroud can't be the target of spells or abilities.)",
+    "power": "6",
+    "toughness": "6",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Trample",
+      "Mill"
+    ],
+    "rarity": "uncommon",
+    "set": "fem"
+  },
+  {
+    "name": "High Tide",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Until end of turn, whenever a player taps an Island for mana, that player adds an additional {U}.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "High Tide",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Until end of turn, whenever a player taps an Island for mana, that player adds an additional {U}.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "High Tide",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Until end of turn, whenever a player taps an Island for mana, that player adds an additional {U}.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Homarid",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Homarid",
+    "oracle_text": "This creature enters with a tide counter on it.\nAt the beginning of your upkeep, put a tide counter on this creature.\nAs long as there is exactly one tide counter on this creature, it gets -1/-1.\nAs long as there are exactly three tide counters on this creature, it gets +1/+1.\nWhenever there are four or more tide counters on this creature, remove all tide counters from it.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Homarid",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Homarid",
+    "oracle_text": "This creature enters with a tide counter on it.\nAt the beginning of your upkeep, put a tide counter on this creature.\nAs long as there is exactly one tide counter on this creature, it gets -1/-1.\nAs long as there are exactly three tide counters on this creature, it gets +1/+1.\nWhenever there are four or more tide counters on this creature, remove all tide counters from it.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Homarid",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Homarid",
+    "oracle_text": "This creature enters with a tide counter on it.\nAt the beginning of your upkeep, put a tide counter on this creature.\nAs long as there is exactly one tide counter on this creature, it gets -1/-1.\nAs long as there are exactly three tide counters on this creature, it gets +1/+1.\nWhenever there are four or more tide counters on this creature, remove all tide counters from it.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Homarid",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Homarid",
+    "oracle_text": "This creature enters with a tide counter on it.\nAt the beginning of your upkeep, put a tide counter on this creature.\nAs long as there is exactly one tide counter on this creature, it gets -1/-1.\nAs long as there are exactly three tide counters on this creature, it gets +1/+1.\nWhenever there are four or more tide counters on this creature, remove all tide counters from it.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Homarid Shaman",
+    "mana_cost": "{2}{U}{U}",
+    "cmc": 4,
+    "type_line": "Creature — Homarid Shaman",
+    "oracle_text": "{U}: Tap target green creature.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Homarid Spawning Bed",
+    "mana_cost": "{U}{U}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "{1}{U}{U}, Sacrifice a blue creature: Create X 1/1 blue Camarid creature tokens, where X is the sacrificed creature's mana value.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "fem"
+  },
+  {
+    "name": "Homarid Warrior",
+    "mana_cost": "{4}{U}",
+    "cmc": 5,
+    "type_line": "Creature — Homarid Warrior",
+    "oracle_text": "{U}: This creature gains shroud until end of turn and doesn't untap during your next untap step. Tap it. (A creature with shroud can't be the target of spells or abilities.)",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Homarid Warrior",
+    "mana_cost": "{4}{U}",
+    "cmc": 5,
+    "type_line": "Creature — Homarid Warrior",
+    "oracle_text": "{U}: This creature gains shroud until end of turn and doesn't untap during your next untap step. Tap it. (A creature with shroud can't be the target of spells or abilities.)",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Homarid Warrior",
+    "mana_cost": "{4}{U}",
+    "cmc": 5,
+    "type_line": "Creature — Homarid Warrior",
+    "oracle_text": "{U}: This creature gains shroud until end of turn and doesn't untap during your next untap step. Tap it. (A creature with shroud can't be the target of spells or abilities.)",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Merseine",
+    "mana_cost": "{2}{U}{U}",
+    "cmc": 4,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nThis Aura enters with three net counters on it.\nEnchanted creature doesn't untap during its controller's untap step if this Aura has a net counter on it.\nPay enchanted creature's mana cost: Remove a net counter from this Aura. Only the controller of the enchanted creature may activate this ability.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Merseine",
+    "mana_cost": "{2}{U}{U}",
+    "cmc": 4,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nThis Aura enters with three net counters on it.\nEnchanted creature doesn't untap during its controller's untap step if this Aura has a net counter on it.\nPay enchanted creature's mana cost: Remove a net counter from this Aura. Only the controller of the enchanted creature may activate this ability.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Merseine",
+    "mana_cost": "{2}{U}{U}",
+    "cmc": 4,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nThis Aura enters with three net counters on it.\nEnchanted creature doesn't untap during its controller's untap step if this Aura has a net counter on it.\nPay enchanted creature's mana cost: Remove a net counter from this Aura. Only the controller of the enchanted creature may activate this ability.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Merseine",
+    "mana_cost": "{2}{U}{U}",
+    "cmc": 4,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nThis Aura enters with three net counters on it.\nEnchanted creature doesn't untap during its controller's untap step if this Aura has a net counter on it.\nPay enchanted creature's mana cost: Remove a net counter from this Aura. Only the controller of the enchanted creature may activate this ability.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "River Merfolk",
+    "mana_cost": "{U}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Merfolk",
+    "oracle_text": "{U}: This creature gains mountainwalk until end of turn. (It can't be blocked as long as defending player controls a Mountain.)",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Seasinger",
+    "mana_cost": "{1}{U}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Merfolk",
+    "oracle_text": "When you control no Islands, sacrifice this creature.\nYou may choose not to untap this creature during your untap step.\n{T}: Gain control of target creature whose controller controls an Island for as long as you control this creature and this creature remains tapped.",
+    "power": "0",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "fem"
+  },
+  {
+    "name": "Svyelunite Priest",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Merfolk Cleric",
+    "oracle_text": "{U}{U}, {T}: Target creature gains shroud until end of turn. Activate only during your upkeep. (It can't be the target of spells or abilities.)",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "fem"
+  },
+  {
+    "name": "Tidal Flats",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Enchantment",
+    "oracle_text": "{U}{U}: For each attacking creature without flying, its controller may pay {1}. If that player doesn't, creatures you control blocking that creature gain first strike until end of turn.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Tidal Flats",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Enchantment",
+    "oracle_text": "{U}{U}: For each attacking creature without flying, its controller may pay {1}. If that player doesn't, creatures you control blocking that creature gain first strike until end of turn.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Tidal Flats",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Enchantment",
+    "oracle_text": "{U}{U}: For each attacking creature without flying, its controller may pay {1}. If that player doesn't, creatures you control blocking that creature gain first strike until end of turn.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Tidal Influence",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Cast this spell only if no permanents named Tidal Influence are on the battlefield.\nThis enchantment enters with a tide counter on it.\nAt the beginning of your upkeep, put a tide counter on this enchantment.\nAs long as there is exactly one tide counter on this enchantment, all blue creatures get -2/-0.\nAs long as there are exactly three tide counters on this enchantment, all blue creatures get +2/+0.\nWhenever there are four or more tide counters on this enchantment, remove all tide counters from it.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "fem"
+  },
+  {
+    "name": "Vodalian Knights",
+    "mana_cost": "{1}{U}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Merfolk Knight",
+    "oracle_text": "First strike\nThis creature can't attack unless defending player controls an Island.\nWhen you control no Islands, sacrifice this creature.\n{U}: This creature gains flying until end of turn.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "First strike"
+    ],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Vodalian Mage",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Merfolk Wizard",
+    "oracle_text": "{U}, {T}: Counter target spell unless its controller pays {1}.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Vodalian Mage",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Merfolk Wizard",
+    "oracle_text": "{U}, {T}: Counter target spell unless its controller pays {1}.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Vodalian Mage",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Merfolk Wizard",
+    "oracle_text": "{U}, {T}: Counter target spell unless its controller pays {1}.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Vodalian Soldiers",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Merfolk Soldier",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Vodalian Soldiers",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Merfolk Soldier",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Vodalian Soldiers",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Merfolk Soldier",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Vodalian Soldiers",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Merfolk Soldier",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Vodalian War Machine",
+    "mana_cost": "{1}{U}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Wall",
+    "oracle_text": "Defender (This creature can't attack.)\nTap an untapped Merfolk you control: This creature can attack this turn as though it didn't have defender.\nTap an untapped Merfolk you control: This creature gets +2/+1 until end of turn.\nWhen this creature dies, destroy all Merfolk tapped this turn to pay for its abilities.",
+    "power": "0",
+    "toughness": "4",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Defender"
+    ],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Armor Thrull",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Thrull",
+    "oracle_text": "{T}, Sacrifice this creature: Put a +1/+2 counter on target creature.",
+    "power": "1",
+    "toughness": "3",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Armor Thrull",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Thrull",
+    "oracle_text": "{T}, Sacrifice this creature: Put a +1/+2 counter on target creature.",
+    "power": "1",
+    "toughness": "3",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Armor Thrull",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Thrull",
+    "oracle_text": "{T}, Sacrifice this creature: Put a +1/+2 counter on target creature.",
+    "power": "1",
+    "toughness": "3",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Armor Thrull",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Thrull",
+    "oracle_text": "{T}, Sacrifice this creature: Put a +1/+2 counter on target creature.",
+    "power": "1",
+    "toughness": "3",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Basal Thrull",
+    "mana_cost": "{B}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Thrull",
+    "oracle_text": "{T}, Sacrifice this creature: Add {B}{B}.",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Basal Thrull",
+    "mana_cost": "{B}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Thrull",
+    "oracle_text": "{T}, Sacrifice this creature: Add {B}{B}.",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Basal Thrull",
+    "mana_cost": "{B}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Thrull",
+    "oracle_text": "{T}, Sacrifice this creature: Add {B}{B}.",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Basal Thrull",
+    "mana_cost": "{B}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Thrull",
+    "oracle_text": "{T}, Sacrifice this creature: Add {B}{B}.",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Breeding Pit",
+    "mana_cost": "{3}{B}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of your upkeep, sacrifice this enchantment unless you pay {B}{B}.\nAt the beginning of your end step, create a 0/1 black Thrull creature token.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "fem"
+  },
+  {
+    "name": "Derelor",
+    "mana_cost": "{3}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Thrull",
+    "oracle_text": "Black spells you cast cost {B} more to cast.",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Ebon Praetor",
+    "mana_cost": "{4}{B}{B}",
+    "cmc": 6,
+    "type_line": "Creature — Avatar Praetor",
+    "oracle_text": "First strike, trample\nAt the beginning of your upkeep, put a -2/-2 counter on this creature.\nSacrifice a creature: Remove a -2/-2 counter from this creature. If the sacrificed creature was a Thrull, put a +1/+0 counter on this creature. Activate only during your upkeep and only once each turn.",
+    "power": "5",
+    "toughness": "5",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "First strike",
+      "Trample"
+    ],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Hymn to Tourach",
+    "mana_cost": "{B}{B}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Target player discards two cards at random.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Hymn to Tourach",
+    "mana_cost": "{B}{B}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Target player discards two cards at random.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Hymn to Tourach",
+    "mana_cost": "{B}{B}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Target player discards two cards at random.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Hymn to Tourach",
+    "mana_cost": "{B}{B}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Target player discards two cards at random.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Initiates of the Ebon Hand",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Creature — Cleric",
+    "oracle_text": "{1}: Add {B}. If this ability has been activated four or more times this turn, sacrifice this creature at the beginning of the next end step.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Initiates of the Ebon Hand",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Creature — Cleric",
+    "oracle_text": "{1}: Add {B}. If this ability has been activated four or more times this turn, sacrifice this creature at the beginning of the next end step.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Initiates of the Ebon Hand",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Creature — Cleric",
+    "oracle_text": "{1}: Add {B}. If this ability has been activated four or more times this turn, sacrifice this creature at the beginning of the next end step.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Mindstab Thrull",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Thrull",
+    "oracle_text": "Whenever this creature attacks and isn't blocked, you may sacrifice it. If you do, defending player discards three cards.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Mindstab Thrull",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Thrull",
+    "oracle_text": "Whenever this creature attacks and isn't blocked, you may sacrifice it. If you do, defending player discards three cards.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Mindstab Thrull",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Thrull",
+    "oracle_text": "Whenever this creature attacks and isn't blocked, you may sacrifice it. If you do, defending player discards three cards.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Necrite",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Thrull",
+    "oracle_text": "Whenever this creature attacks and isn't blocked, you may sacrifice it. If you do, destroy target creature defending player controls. It can't be regenerated.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Necrite",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Thrull",
+    "oracle_text": "Whenever this creature attacks and isn't blocked, you may sacrifice it. If you do, destroy target creature defending player controls. It can't be regenerated.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Necrite",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Thrull",
+    "oracle_text": "Whenever this creature attacks and isn't blocked, you may sacrifice it. If you do, destroy target creature defending player controls. It can't be regenerated.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Order of the Ebon Hand",
+    "mana_cost": "{B}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Cleric Knight",
+    "oracle_text": "Protection from white\n{B}: This creature gains first strike until end of turn.\n{B}{B}: This creature gets +1/+0 until end of turn.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Protection"
+    ],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Order of the Ebon Hand",
+    "mana_cost": "{B}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Cleric Knight",
+    "oracle_text": "Protection from white\n{B}: This creature gains first strike until end of turn.\n{B}{B}: This creature gets +1/+0 until end of turn.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Protection"
+    ],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Order of the Ebon Hand",
+    "mana_cost": "{B}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Cleric Knight",
+    "oracle_text": "Protection from white\n{B}: This creature gains first strike until end of turn.\n{B}{B}: This creature gets +1/+0 until end of turn.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Protection"
+    ],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Soul Exchange",
+    "mana_cost": "{B}{B}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "As an additional cost to cast this spell, exile a creature you control.\nReturn target creature card from your graveyard to the battlefield. Put a +2/+2 counter on that creature if the exiled creature was a Thrull.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "fem"
+  },
+  {
+    "name": "Thrull Champion",
+    "mana_cost": "{4}{B}",
+    "cmc": 5,
+    "type_line": "Creature — Thrull",
+    "oracle_text": "Thrull creatures get +1/+1.\n{T}: Gain control of target Thrull for as long as you control this creature.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Thrull Retainer",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature gets +1/+1.\nSacrifice this Aura: Regenerate enchanted creature.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "fem"
+  },
+  {
+    "name": "Thrull Wizard",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Thrull Wizard",
+    "oracle_text": "{1}{B}: Counter target black spell unless that spell's controller pays {B} or {3}.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "fem"
+  },
+  {
+    "name": "Tourach's Chant",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of your upkeep, sacrifice this enchantment unless you pay {B}.\nWhenever a player puts a Forest onto the battlefield, this enchantment deals 3 damage to that player unless they put a -1/-1 counter on a creature they control.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "fem"
+  },
+  {
+    "name": "Tourach's Gate",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant land you control\nSacrifice a Thrull: Put three time counters on this Aura.\nAt the beginning of your upkeep, remove a time counter from this Aura. If there are no time counters on this Aura, sacrifice it.\nTap enchanted land: Attacking creatures you control get +2/-1 until end of turn. Activate only if enchanted land is untapped.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Brassclaw Orcs",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Orc",
+    "oracle_text": "This creature can't block creatures with power 2 or greater.",
+    "power": "3",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Brassclaw Orcs",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Orc",
+    "oracle_text": "This creature can't block creatures with power 2 or greater.",
+    "power": "3",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Brassclaw Orcs",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Orc",
+    "oracle_text": "This creature can't block creatures with power 2 or greater.",
+    "power": "3",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Brassclaw Orcs",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Orc",
+    "oracle_text": "This creature can't block creatures with power 2 or greater.",
+    "power": "3",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Dwarven Armorer",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Creature — Dwarf",
+    "oracle_text": "{R}, {T}, Discard a card: Put a +0/+1 counter or a +1/+0 counter on target creature.",
+    "power": "0",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Dwarven Catapult",
+    "mana_cost": "{X}{R}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Dwarven Catapult deals X damage divided evenly, rounded down, among all creatures target opponent controls.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "fem"
+  },
+  {
+    "name": "Dwarven Lieutenant",
+    "mana_cost": "{R}{R}",
+    "cmc": 2,
+    "type_line": "Creature — Dwarf Soldier",
+    "oracle_text": "{1}{R}: Target Dwarf creature gets +1/+0 until end of turn.",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "fem"
+  },
+  {
+    "name": "Dwarven Soldier",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Creature — Dwarf Soldier",
+    "oracle_text": "Whenever this creature blocks or becomes blocked by one or more Orcs, this creature gets +0/+2 until end of turn.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Dwarven Soldier",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Creature — Dwarf Soldier",
+    "oracle_text": "Whenever this creature blocks or becomes blocked by one or more Orcs, this creature gets +0/+2 until end of turn.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Dwarven Soldier",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Creature — Dwarf Soldier",
+    "oracle_text": "Whenever this creature blocks or becomes blocked by one or more Orcs, this creature gets +0/+2 until end of turn.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Goblin Chirurgeon",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Creature — Goblin Shaman",
+    "oracle_text": "Sacrifice a Goblin: Regenerate target creature.",
+    "power": "0",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Goblin Chirurgeon",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Creature — Goblin Shaman",
+    "oracle_text": "Sacrifice a Goblin: Regenerate target creature.",
+    "power": "0",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Goblin Chirurgeon",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Creature — Goblin Shaman",
+    "oracle_text": "Sacrifice a Goblin: Regenerate target creature.",
+    "power": "0",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Goblin Flotilla",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Goblin",
+    "oracle_text": "Islandwalk (This creature can't be blocked as long as defending player controls an Island.)\nAt the beginning of each combat, unless you pay {R}, whenever this creature blocks or becomes blocked by a creature this combat, that creature gains first strike until end of turn.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Landwalk",
+      "Islandwalk"
+    ],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Goblin Grenade",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "As an additional cost to cast this spell, sacrifice a Goblin.\nGoblin Grenade deals 5 damage to any target.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Goblin Grenade",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "As an additional cost to cast this spell, sacrifice a Goblin.\nGoblin Grenade deals 5 damage to any target.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Goblin Grenade",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "As an additional cost to cast this spell, sacrifice a Goblin.\nGoblin Grenade deals 5 damage to any target.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Goblin Kites",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "{R}: Target creature you control with toughness 2 or less gains flying until end of turn. Flip a coin at the beginning of the next end step. If you lose the flip, sacrifice that creature.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "fem"
+  },
+  {
+    "name": "Goblin War Drums",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Creatures you control have menace. (They can't be blocked except by two or more creatures.)",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Goblin War Drums",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Creatures you control have menace. (They can't be blocked except by two or more creatures.)",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Goblin War Drums",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Creatures you control have menace. (They can't be blocked except by two or more creatures.)",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Goblin War Drums",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Creatures you control have menace. (They can't be blocked except by two or more creatures.)",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Goblin Warrens",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "{2}{R}, Sacrifice two Goblins: Create three 1/1 red Goblin creature tokens.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Orcish Captain",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Creature — Orc Warrior",
+    "oracle_text": "{1}: Flip a coin. If you win the flip, target Orc creature gets +2/+0 until end of turn. If you lose the flip, it gets -0/-2 until end of turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "fem"
+  },
+  {
+    "name": "Orcish Spy",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Creature — Orc Rogue",
+    "oracle_text": "{T}: Look at the top three cards of target player's library.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Orcish Spy",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Creature — Orc Rogue",
+    "oracle_text": "{T}: Look at the top three cards of target player's library.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Orcish Spy",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Creature — Orc Rogue",
+    "oracle_text": "{T}: Look at the top three cards of target player's library.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Orcish Veteran",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Orc",
+    "oracle_text": "This creature can't block white creatures with power 2 or greater.\n{R}: This creature gains first strike until end of turn.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Orcish Veteran",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Orc",
+    "oracle_text": "This creature can't block white creatures with power 2 or greater.\n{R}: This creature gains first strike until end of turn.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Orcish Veteran",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Orc",
+    "oracle_text": "This creature can't block white creatures with power 2 or greater.\n{R}: This creature gains first strike until end of turn.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Orcish Veteran",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Orc",
+    "oracle_text": "This creature can't block white creatures with power 2 or greater.\n{R}: This creature gains first strike until end of turn.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Orgg",
+    "mana_cost": "{3}{R}{R}",
+    "cmc": 5,
+    "type_line": "Creature — Orgg",
+    "oracle_text": "Trample\nThis creature can't attack if defending player controls an untapped creature with power 3 or greater.\nThis creature can't block creatures with power 3 or greater.",
+    "power": "6",
+    "toughness": "6",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Trample"
+    ],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Raiding Party",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "This enchantment can't be the target of white spells or abilities from white sources.\nSacrifice an Orc: Each player may tap any number of untapped white creatures they control. For each creature tapped this way, that player chooses up to two Plains. Then destroy all Plains that weren't chosen this way by any player.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "fem"
+  },
+  {
+    "name": "Elven Fortress",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Enchantment",
+    "oracle_text": "{1}{G}: Target blocking creature gets +0/+1 until end of turn.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Elven Fortress",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Enchantment",
+    "oracle_text": "{1}{G}: Target blocking creature gets +0/+1 until end of turn.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Elven Fortress",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Enchantment",
+    "oracle_text": "{1}{G}: Target blocking creature gets +0/+1 until end of turn.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Elven Fortress",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Enchantment",
+    "oracle_text": "{1}{G}: Target blocking creature gets +0/+1 until end of turn.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Elvish Farmer",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Elf",
+    "oracle_text": "At the beginning of your upkeep, put a spore counter on this creature.\nRemove three spore counters from this creature: Create a 1/1 green Saproling creature token.\nSacrifice a Saproling: You gain 2 life.",
+    "power": "0",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Elvish Hunter",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Elf Archer",
+    "oracle_text": "{1}{G}, {T}: Target creature doesn't untap during its controller's next untap step.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Elvish Hunter",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Elf Archer",
+    "oracle_text": "{1}{G}, {T}: Target creature doesn't untap during its controller's next untap step.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Elvish Hunter",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Elf Archer",
+    "oracle_text": "{1}{G}, {T}: Target creature doesn't untap during its controller's next untap step.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Elvish Scout",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Elf Scout",
+    "oracle_text": "{G}, {T}: Untap target attacking creature you control. Prevent all combat damage that would be dealt to and dealt by it this turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Elvish Scout",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Elf Scout",
+    "oracle_text": "{G}, {T}: Untap target attacking creature you control. Prevent all combat damage that would be dealt to and dealt by it this turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Elvish Scout",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Elf Scout",
+    "oracle_text": "{G}, {T}: Untap target attacking creature you control. Prevent all combat damage that would be dealt to and dealt by it this turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Feral Thallid",
+    "mana_cost": "{3}{G}{G}{G}",
+    "cmc": 6,
+    "type_line": "Creature — Fungus",
+    "oracle_text": "At the beginning of your upkeep, put a spore counter on this creature.\nRemove three spore counters from this creature: Regenerate this creature.",
+    "power": "6",
+    "toughness": "3",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "fem"
+  },
+  {
+    "name": "Fungal Bloom",
+    "mana_cost": "{G}{G}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "{G}{G}: Put a spore counter on target Fungus.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Night Soil",
+    "mana_cost": "{G}{G}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "{1}, Exile two creature cards from a single graveyard: Create a 1/1 green Saproling creature token.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Night Soil",
+    "mana_cost": "{G}{G}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "{1}, Exile two creature cards from a single graveyard: Create a 1/1 green Saproling creature token.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Night Soil",
+    "mana_cost": "{G}{G}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "{1}, Exile two creature cards from a single graveyard: Create a 1/1 green Saproling creature token.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Spore Cloud",
+    "mana_cost": "{1}{G}{G}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Tap all blocking creatures. Prevent all combat damage that would be dealt this turn. Each attacking creature and each blocking creature doesn't untap during its controller's next untap step.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Spore Cloud",
+    "mana_cost": "{1}{G}{G}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Tap all blocking creatures. Prevent all combat damage that would be dealt this turn. Each attacking creature and each blocking creature doesn't untap during its controller's next untap step.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Spore Cloud",
+    "mana_cost": "{1}{G}{G}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Tap all blocking creatures. Prevent all combat damage that would be dealt this turn. Each attacking creature and each blocking creature doesn't untap during its controller's next untap step.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Spore Flower",
+    "mana_cost": "{G}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Fungus",
+    "oracle_text": "At the beginning of your upkeep, put a spore counter on this creature.\nRemove three spore counters from this creature: Prevent all combat damage that would be dealt this turn.",
+    "power": "0",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "fem"
+  },
+  {
+    "name": "Thallid",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Fungus",
+    "oracle_text": "At the beginning of your upkeep, put a spore counter on this creature.\nRemove three spore counters from this creature: Create a 1/1 green Saproling creature token.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Thallid",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Fungus",
+    "oracle_text": "At the beginning of your upkeep, put a spore counter on this creature.\nRemove three spore counters from this creature: Create a 1/1 green Saproling creature token.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Thallid",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Fungus",
+    "oracle_text": "At the beginning of your upkeep, put a spore counter on this creature.\nRemove three spore counters from this creature: Create a 1/1 green Saproling creature token.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Thallid",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Fungus",
+    "oracle_text": "At the beginning of your upkeep, put a spore counter on this creature.\nRemove three spore counters from this creature: Create a 1/1 green Saproling creature token.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Thallid Devourer",
+    "mana_cost": "{1}{G}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Fungus",
+    "oracle_text": "At the beginning of your upkeep, put a spore counter on this creature.\nRemove three spore counters from this creature: Create a 1/1 green Saproling creature token.\nSacrifice a Saproling: This creature gets +1/+2 until end of turn.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "fem"
+  },
+  {
+    "name": "Thelon's Chant",
+    "mana_cost": "{1}{G}{G}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of your upkeep, sacrifice this enchantment unless you pay {G}.\nWhenever a player puts a Swamp onto the battlefield, this enchantment deals 3 damage to that player unless the player puts a -1/-1 counter on a creature they control.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "fem"
+  },
+  {
+    "name": "Thelon's Curse",
+    "mana_cost": "{G}{G}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "Blue creatures don't untap during their controllers' untap steps.\nAt the beginning of each player's upkeep, that player may choose any number of tapped blue creatures they control and pay {U} for each creature chosen this way. If the player does, untap those creatures.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Thelonite Druid",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Human Cleric Druid",
+    "oracle_text": "{1}{G}, {T}, Sacrifice a creature: Forests you control become 2/3 creatures until end of turn. They're still lands.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "fem"
+  },
+  {
+    "name": "Thelonite Monk",
+    "mana_cost": "{2}{G}{G}",
+    "cmc": 4,
+    "type_line": "Creature — Insect Monk Cleric",
+    "oracle_text": "{T}, Sacrifice a green creature: Target land becomes a Forest. (This effect lasts indefinitely.)",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Thorn Thallid",
+    "mana_cost": "{1}{G}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Fungus",
+    "oracle_text": "At the beginning of your upkeep, put a spore counter on this creature.\nRemove three spore counters from this creature: It deals 1 damage to any target.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Thorn Thallid",
+    "mana_cost": "{1}{G}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Fungus",
+    "oracle_text": "At the beginning of your upkeep, put a spore counter on this creature.\nRemove three spore counters from this creature: It deals 1 damage to any target.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Thorn Thallid",
+    "mana_cost": "{1}{G}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Fungus",
+    "oracle_text": "At the beginning of your upkeep, put a spore counter on this creature.\nRemove three spore counters from this creature: It deals 1 damage to any target.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Thorn Thallid",
+    "mana_cost": "{1}{G}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Fungus",
+    "oracle_text": "At the beginning of your upkeep, put a spore counter on this creature.\nRemove three spore counters from this creature: It deals 1 damage to any target.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Aeolipile",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "{1}, {T}, Sacrifice this artifact: It deals 2 damage to any target.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Balm of Restoration",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "{1}, {T}, Sacrifice this artifact: Choose one —\n• You gain 2 life.\n• Prevent the next 2 damage that would be dealt to any target this turn.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Conch Horn",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "{1}, {T}, Sacrifice this artifact: Draw two cards, then put a card from your hand on top of your library.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Delif's Cone",
+    "mana_cost": "{0}",
+    "cmc": 0,
+    "type_line": "Artifact",
+    "oracle_text": "{T}, Sacrifice this artifact: This turn, when target creature you control attacks and isn't blocked, you may gain life equal to its power. If you do, it assigns no combat damage this turn.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "fem"
+  },
+  {
+    "name": "Delif's Cube",
+    "mana_cost": "{1}",
+    "cmc": 1,
+    "type_line": "Artifact",
+    "oracle_text": "{2}, {T}: This turn, when target creature you control attacks and isn't blocked, it assigns no combat damage this turn and you put a cube counter on this artifact.\n{2}, Remove a cube counter from this artifact: Regenerate target creature.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Draconian Cylix",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "{2}, {T}, Discard a card at random: Regenerate target creature.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Elven Lyre",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "{1}, {T}, Sacrifice this artifact: Target creature gets +2/+2 until end of turn.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Implements of Sacrifice",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "{1}, {T}, Sacrifice this artifact: Add two mana of any one color.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Ring of Renewal",
+    "mana_cost": "{5}",
+    "cmc": 5,
+    "type_line": "Artifact",
+    "oracle_text": "{5}, {T}: Discard a card at random, then draw two cards.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Spirit Shield",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "You may choose not to untap this artifact during your untap step.\n{2}, {T}: Target creature gets +0/+2 for as long as this artifact remains tapped.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Zelyon Sword",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "You may choose not to untap this artifact during your untap step.\n{3}, {T}: Target creature gets +2/+0 for as long as this artifact remains tapped.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Bottomless Vault",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped.\nYou may choose not to untap this land during your untap step.\nAt the beginning of your upkeep, if this land is tapped, put a storage counter on it.\n{T}, Remove any number of storage counters from this land: Add {B} for each storage counter removed this way.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Dwarven Hold",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped.\nYou may choose not to untap this land during your untap step.\nAt the beginning of your upkeep, if this land is tapped, put a storage counter on it.\n{T}, Remove any number of storage counters from this land: Add {R} for each storage counter removed this way.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Dwarven Ruins",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped.\n{T}: Add {R}.\n{T}, Sacrifice this land: Add {R}{R}.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "fem"
+  },
+  {
+    "name": "Ebon Stronghold",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped.\n{T}: Add {B}.\n{T}, Sacrifice this land: Add {B}{B}.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "fem"
+  },
+  {
+    "name": "Havenwood Battleground",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped.\n{T}: Add {G}.\n{T}, Sacrifice this land: Add {G}{G}.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "fem"
+  },
+  {
+    "name": "Hollow Trees",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped.\nYou may choose not to untap this land during your untap step.\nAt the beginning of your upkeep, if this land is tapped, put a storage counter on it.\n{T}, Remove any number of storage counters from this land: Add {G} for each storage counter removed this way.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Icatian Store",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped.\nYou may choose not to untap this land during your untap step.\nAt the beginning of your upkeep, if this land is tapped, put a storage counter on it.\n{T}, Remove any number of storage counters from this land: Add {W} for each storage counter removed this way.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Rainbow Vale",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "{T}: Add one mana of any color. An opponent gains control of this land at the beginning of the next end step.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Ruins of Trokair",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped.\n{T}: Add {W}.\n{T}, Sacrifice this land: Add {W}{W}.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "fem"
+  },
+  {
+    "name": "Sand Silos",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped.\nYou may choose not to untap this land during your untap step.\nAt the beginning of your upkeep, if this land is tapped, put a storage counter on it.\n{T}, Remove any number of storage counters from this land: Add {U} for each storage counter removed this way.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "fem"
+  },
+  {
+    "name": "Svyelunite Temple",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped.\n{T}: Add {U}.\n{T}, Sacrifice this land: Add {U}{U}.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "fem"
+  }
+]

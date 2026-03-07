@@ -29,6 +29,9 @@ type GameReader interface {
 	DamageTakenByPlayer(uuid.UUID) int
 	HasAttackedThisTurn(uuid.UUID) bool
 	CreatureDeaths() int
+	CurrentTurn() int
+	GetDamageSources(uuid.UUID) map[uuid.UUID]bool
+	GetBlockedThisTurn(uuid.UUID) []uuid.UUID
 }
 
 // GameMutator is the mutation surface passed to Effect.Apply. It embeds GameReader
@@ -80,6 +83,7 @@ type GameMutator interface {
 	AddReverseDamageShield(uuid.UUID)
 	SetChannelActive(uuid.UUID)
 	SetCreatureDamageRedirect(uuid.UUID, uuid.UUID)
+	SetAttackerDamageRedirect(uuid.UUID, uuid.UUID)
 	SetSkipNextDraw(uuid.UUID)
 	SetSanctuaryActive(uuid.UUID)
 	SetMinimumLife(uuid.UUID)
@@ -165,6 +169,22 @@ func (g *Game) CreatureDeaths() int {
 	return g.CreatureDeathsThisTurn
 }
 
+func (g *Game) CurrentTurn() int {
+	return g.Turn
+}
+
+// GetDamageSources returns the set of permanent IDs that dealt damage to the
+// given permanent this turn. Returns nil if nothing dealt damage.
+func (g *Game) GetDamageSources(permID uuid.UUID) map[uuid.UUID]bool {
+	return g.DamageDealtBy[permID]
+}
+
+// GetBlockedThisTurn returns the list of attacker IDs that the given blocker
+// blocked this turn. Returns nil if it didn't block anything.
+func (g *Game) GetBlockedThisTurn(blockerID uuid.UUID) []uuid.UUID {
+	return g.BlockedThisTurn[blockerID]
+}
+
 // --- GameMutator proxy methods on *Game ---
 
 // GrantExtraTurn gives the specified player an extra turn after the current one.
@@ -245,6 +265,12 @@ func (g *Game) SetChannelActive(playerID uuid.UUID) {
 // SetCreatureDamageRedirect redirects damage dealt to a creature to a player.
 func (g *Game) SetCreatureDamageRedirect(creatureID, playerID uuid.UUID) {
 	g.Effects.Damage.SetCreatureDamageRedirect(creatureID, playerID)
+}
+
+// SetAttackerDamageRedirect sets a redirect: damage from a specific attacking creature
+// to a player is dealt to the absorber permanent instead (Shimian Night Stalker).
+func (g *Game) SetAttackerDamageRedirect(attackerID, absorberID uuid.UUID) {
+	g.Effects.Damage.SetAttackerDamageRedirect(attackerID, absorberID)
 }
 
 // SetSkipNextDraw sets a flag to skip the next draw step for the player.

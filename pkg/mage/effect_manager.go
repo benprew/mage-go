@@ -94,6 +94,11 @@ func (e *funcContinuousEffect) IsActive(g *Game) bool {
 	if e.active != nil {
 		return e.active(g, e.sourceID)
 	}
+	// EndOfTurn/EndOfCombat effects are time-limited and don't require their source
+	// on the battlefield (e.g. effects from resolved instants/sorceries).
+	if e.duration == EndOfTurn || e.duration == EndOfCombat {
+		return true
+	}
 	return g.FindPermanent(e.sourceID) != nil
 }
 
@@ -341,4 +346,11 @@ func (em *EffectManager) Apply(g *Game) {
 // grantedByEffect is a marker wrapper to identify abilities granted by continuous effects.
 type grantedByEffect struct {
 	Ability
+}
+
+// WrapGrantedAbility wraps an ability as granted-by-effect so it is cleaned up
+// and re-applied each continuous effect cycle. Use this when a continuous effect
+// needs to grant a triggered or activated ability to a permanent.
+func WrapGrantedAbility(a Ability) Ability {
+	return &grantedByEffect{a}
 }

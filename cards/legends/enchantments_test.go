@@ -327,3 +327,78 @@ func TestPuppetMaster(t *testing.T) {
 		g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 0)
 	})
 }
+
+func TestDreamCoat(t *testing.T) {
+	t.Run("changes enchanted creature's color", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // green 2/2
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Dream Coat")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Dream Coat", "Grizzly Bears")
+		// Activate: choose red
+		g.ChooseManaColor(gametest.PlayerA, core.Red)
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Dream Coat")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Bears should still be on battlefield, P/T unchanged
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 2)
+		g.AssertAttachedTo(gametest.PlayerA, "Dream Coat", "Grizzly Bears")
+	})
+}
+
+func TestInfiniteAuthority(t *testing.T) {
+	t.Run("destroys creature with toughness 3 or less at end of combat", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")        // 3/3
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Infinite Authority")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")     // 2/2 (toughness <= 3)
+		// Cast Infinite Authority on Hill Giant
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Infinite Authority", "Hill Giant")
+		// Attack with Hill Giant, blocked by Bears
+		g.Attack(1, gametest.PlayerA, "Hill Giant")
+		g.Block(1, gametest.PlayerB, "Grizzly Bears", "Hill Giant")
+		g.StopAt(2, core.PrecombatMain) // go to next turn so EndStep triggers fire
+		g.Execute()
+		// Bears (toughness 2 <= 3) destroyed at end of combat by Infinite Authority
+		g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+		// Hill Giant survives (3/3 took 2 damage = 3/1)
+		g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 1)
+		// Hill Giant should have gotten a +1/+1 counter at end step
+		g.AssertCounterCount(gametest.PlayerA, "Hill Giant", core.P1P1, 1)
+	})
+}
+
+func TestLandTax(t *testing.T) {
+	t.Run("searches for up to three basic lands when opponent has more", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Land Tax")
+		// Opponent has 2 lands, we have 0
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+		// Put 3 basic lands in library for searching
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Plains")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Plains")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Plains")
+		// Script the library choices
+		g.ChooseFromLibrary(gametest.PlayerA, "Plains")
+		g.ChooseFromLibrary(gametest.PlayerA, "Plains")
+		g.ChooseFromLibrary(gametest.PlayerA, "Plains")
+		// Upkeep trigger fires on turn 1 (PlayerA's upkeep)
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// Should have found 3 Plains in hand
+		g.AssertHandCount(gametest.PlayerA, "Plains", 3)
+	})
+	t.Run("does not trigger when opponent has fewer lands", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Land Tax")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+		// Opponent has 1 land — fewer than us
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Plains")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// Should NOT have searched
+		g.AssertHandCount(gametest.PlayerA, "Plains", 0)
+	})
+}

@@ -1,0 +1,5048 @@
+[
+  {
+    "name": "Akroma's Blessing",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Choose a color. Creatures you control gain protection from the chosen color until end of turn.\nCycling {W} ({W}, Discard this card: Draw a card.)",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Akroma's Vengeance",
+    "mana_cost": "{4}{W}{W}",
+    "cmc": 6,
+    "type_line": "Sorcery",
+    "oracle_text": "Destroy all artifacts, creatures, and enchantments.\nCycling {3} ({3}, Discard this card: Draw a card.)",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Ancestor's Prophet",
+    "mana_cost": "{4}{W}",
+    "cmc": 5,
+    "type_line": "Creature — Human Cleric",
+    "oracle_text": "Tap five untapped Clerics you control: You gain 10 life.",
+    "power": "1",
+    "toughness": "5",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Astral Slide",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever a player cycles a card, you may exile target creature. If you do, return that card to the battlefield under its owner's control at the beginning of the next end step.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Aura Extraction",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Put target enchantment on top of its owner's library.\nCycling {2} ({2}, Discard this card: Draw a card.)",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Aurification",
+    "mana_cost": "{2}{W}{W}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever a creature deals damage to you, put a gold counter on it.\nEach creature with a gold counter on it is a Wall in addition to its other creature types and has defender. (Those creatures can't attack.)\nWhen this enchantment leaves the battlefield, remove all gold counters from all creatures.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Aven Brigadier",
+    "mana_cost": "{3}{W}{W}{W}",
+    "cmc": 6,
+    "type_line": "Creature — Bird Soldier",
+    "oracle_text": "Flying\nOther Bird creatures get +1/+1.\nOther Soldier creatures get +1/+1.",
+    "power": "3",
+    "toughness": "5",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Aven Soulgazer",
+    "mana_cost": "{3}{W}{W}",
+    "cmc": 5,
+    "type_line": "Creature — Bird Cleric",
+    "oracle_text": "Flying\n{2}{W}: Look at target face-down creature.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Battlefield Medic",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Human Cleric",
+    "oracle_text": "{T}: Prevent the next X damage that would be dealt to target creature this turn, where X is the number of Clerics on the battlefield.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Catapult Master",
+    "mana_cost": "{3}{W}{W}",
+    "cmc": 5,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "Tap five untapped Soldiers you control: Exile target creature.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Catapult Squad",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "Tap two untapped Soldiers you control: This creature deals 2 damage to target attacking or blocking creature.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Chain of Silence",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Prevent all damage target creature would deal this turn. That creature's controller may sacrifice a land of their choice. If the player does, they may copy this spell and may choose a new target for that copy.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Circle of Solace",
+    "mana_cost": "{3}{W}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "As this enchantment enters, choose a creature type.\n{1}{W}: The next time a creature of the chosen type would deal damage to you this turn, prevent that damage.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Convalescent Care",
+    "mana_cost": "{1}{W}{W}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of your upkeep, if you have 5 or less life, you gain 3 life and draw a card.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Crowd Favorites",
+    "mana_cost": "{6}{W}",
+    "cmc": 7,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "{3}{W}: Tap target creature.\n{3}{W}: This creature gets +0/+5 until end of turn.",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Crown of Awe",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature has protection from black and from red.\nSacrifice this Aura: Enchanted creature and other creatures that share a creature type with it gain protection from black and from red until end of turn.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Crude Rampart",
+    "mana_cost": "{3}{W}",
+    "cmc": 4,
+    "type_line": "Creature — Wall",
+    "oracle_text": "Defender (This creature can't attack.)\nMorph {4}{W} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "4",
+    "toughness": "5",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Morph",
+      "Defender"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Daru Cavalier",
+    "mana_cost": "{3}{W}",
+    "cmc": 4,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "First strike\nWhen this creature enters, you may search your library for a card named Daru Cavalier, reveal it, put it into your hand, then shuffle.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "First strike"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Daru Healer",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Human Cleric",
+    "oracle_text": "{T}: Prevent the next 1 damage that would be dealt to any target this turn.\nMorph {W} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Daru Lancer",
+    "mana_cost": "{4}{W}{W}",
+    "cmc": 6,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "First strike\nMorph {2}{W}{W} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "3",
+    "toughness": "4",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Morph",
+      "First strike"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Daunting Defender",
+    "mana_cost": "{4}{W}",
+    "cmc": 5,
+    "type_line": "Creature — Human Cleric",
+    "oracle_text": "If a source would deal damage to a Cleric creature you control, prevent 1 of that damage.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Dawning Purist",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Human Cleric",
+    "oracle_text": "Whenever this creature deals combat damage to a player, you may destroy target enchantment that player controls.\nMorph {1}{W} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Defensive Maneuvers",
+    "mana_cost": "{3}{W}",
+    "cmc": 4,
+    "type_line": "Instant",
+    "oracle_text": "Creatures of the creature type of your choice get +0/+4 until end of turn.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Demystify",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Destroy target enchantment.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Disciple of Grace",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Human Cleric",
+    "oracle_text": "Protection from black\nCycling {2} ({2}, Discard this card: Draw a card.)",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Protection",
+      "Cycling"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Dive Bomber",
+    "mana_cost": "{3}{W}",
+    "cmc": 4,
+    "type_line": "Creature — Bird Soldier",
+    "oracle_text": "Flying\n{T}, Sacrifice this creature: It deals 2 damage to target attacking or blocking creature.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Doubtless One",
+    "mana_cost": "{3}{W}",
+    "cmc": 4,
+    "type_line": "Creature — Cleric Avatar",
+    "oracle_text": "Doubtless One's power and toughness are each equal to the number of Clerics on the battlefield.\nWhenever this creature deals damage, you gain that much life.",
+    "power": "*",
+    "toughness": "*",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Exalted Angel",
+    "mana_cost": "{4}{W}{W}",
+    "cmc": 6,
+    "type_line": "Creature — Angel",
+    "oracle_text": "Flying\nWhenever this creature deals damage, you gain that much life.\nMorph {2}{W}{W} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "4",
+    "toughness": "5",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying",
+      "Morph"
+    ],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Foothill Guide",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Human Cleric",
+    "oracle_text": "Protection from Goblins\nMorph {W} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Morph",
+      "Protection"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Glarecaster",
+    "mana_cost": "{4}{W}{W}",
+    "cmc": 6,
+    "type_line": "Creature — Bird Cleric",
+    "oracle_text": "Flying\n{5}{W}: The next time damage would be dealt to this creature and/or you this turn, that damage is dealt to any target instead.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Glory Seeker",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Human Soldier",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Grassland Crusader",
+    "mana_cost": "{5}{W}",
+    "cmc": 6,
+    "type_line": "Creature — Human Cleric Soldier",
+    "oracle_text": "{T}: Target Elf or Soldier creature gets +2/+2 until end of turn.",
+    "power": "2",
+    "toughness": "4",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Gravel Slinger",
+    "mana_cost": "{3}{W}",
+    "cmc": 4,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "{T}: This creature deals 1 damage to target attacking or blocking creature.\nMorph {1}{W} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "1",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Gustcloak Harrier",
+    "mana_cost": "{1}{W}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Bird Soldier",
+    "oracle_text": "Flying\nWhenever this creature becomes blocked, you may untap it and remove it from combat.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Gustcloak Runner",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "Whenever this creature becomes blocked, you may untap it and remove it from combat.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Gustcloak Savior",
+    "mana_cost": "{4}{W}",
+    "cmc": 5,
+    "type_line": "Creature — Bird Soldier",
+    "oracle_text": "Flying\nWhenever a creature you control becomes blocked, you may untap that creature and remove it from combat.",
+    "power": "3",
+    "toughness": "4",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Gustcloak Sentinel",
+    "mana_cost": "{2}{W}{W}",
+    "cmc": 4,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "Whenever this creature becomes blocked, you may untap it and remove it from combat.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Gustcloak Skirmisher",
+    "mana_cost": "{3}{W}",
+    "cmc": 4,
+    "type_line": "Creature — Bird Soldier",
+    "oracle_text": "Flying\nWhenever this creature becomes blocked, you may untap it and remove it from combat.",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Harsh Mercy",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Each player chooses a creature type. Destroy all creatures that aren't of a type chosen this way. They can't be regenerated.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Improvised Armor",
+    "mana_cost": "{3}{W}",
+    "cmc": 4,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature gets +2/+5.\nCycling {3} ({3}, Discard this card: Draw a card.)",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant",
+      "Cycling"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Inspirit",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Untap target creature. It gets +2/+4 until end of turn.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Ironfist Crusher",
+    "mana_cost": "{4}{W}",
+    "cmc": 5,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "This creature can block any number of creatures.\nMorph {3}{W} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "2",
+    "toughness": "4",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Jareth, Leonine Titan",
+    "mana_cost": "{3}{W}{W}{W}",
+    "cmc": 6,
+    "type_line": "Legendary Creature — Cat Giant",
+    "oracle_text": "Whenever Jareth blocks, it gets +7/+7 until end of turn.\n{W}: Jareth gains protection from the color of your choice until end of turn.",
+    "power": "4",
+    "toughness": "7",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Mobilization",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Soldier creatures have vigilance.\n{2}{W}: Create a 1/1 white Soldier creature token.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Nova Cleric",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Human Cleric",
+    "oracle_text": "{2}{W}, {T}, Sacrifice this creature: Destroy all enchantments.",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Oblation",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "The owner of target nonland permanent shuffles it into their library, then draws two cards.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Pacifism",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature can't attack or block.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Pearlspear Courier",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "You may choose not to untap this creature during your untap step.\n{2}{W}, {T}: Target Soldier creature gets +2/+2 and has vigilance for as long as this creature remains tapped.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Piety Charm",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Choose one —\n• Destroy target Aura attached to a creature.\n• Target Soldier creature gets +2/+2 until end of turn.\n• Creatures you control gain vigilance until end of turn.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Renewed Faith",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "You gain 6 life.\nCycling {1}{W} ({1}{W}, Discard this card: Draw a card.)\nWhen you cycle this card, you may gain 2 life.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Righteous Cause",
+    "mana_cost": "{3}{W}{W}",
+    "cmc": 5,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever a creature attacks, you gain 1 life.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Sandskin",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nPrevent all combat damage that would be dealt to and dealt by enchanted creature.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Shared Triumph",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "As this enchantment enters, choose a creature type.\nCreatures of the chosen type get +1/+1.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Shieldmage Elder",
+    "mana_cost": "{5}{W}",
+    "cmc": 6,
+    "type_line": "Creature — Human Cleric Wizard",
+    "oracle_text": "Tap two untapped Clerics you control: Prevent all damage target creature would deal this turn.\nTap two untapped Wizards you control: Prevent all damage target spell would deal this turn.",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Sigil of the New Dawn",
+    "mana_cost": "{3}{W}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever a creature is put into your graveyard from the battlefield, you may pay {1}{W}. If you do, return that card to your hand.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Sunfire Balm",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Prevent the next 4 damage that would be dealt to any target this turn.\nCycling {1}{W} ({1}{W}, Discard this card: Draw a card.)\nWhen you cycle this card, you may prevent the next 1 damage that would be dealt to any target this turn.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "True Believer",
+    "mana_cost": "{W}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Human Cleric",
+    "oracle_text": "You have shroud. (You can't be the target of spells or abilities.)",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Unified Strike",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Exile target attacking creature if its power is less than or equal to the number of Soldiers on the battlefield.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Weathered Wayfarer",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Human Nomad Cleric",
+    "oracle_text": "{W}, {T}: Search your library for a land card, reveal it, put it into your hand, then shuffle. Activate only if an opponent controls more lands than you.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Whipcorder",
+    "mana_cost": "{W}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Human Soldier Rebel",
+    "oracle_text": "{W}, {T}: Tap target creature.\nMorph {W} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Words of Worship",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "{1}: The next time you would draw a card this turn, you gain 5 life instead.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Airborne Aid",
+    "mana_cost": "{3}{U}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Draw a card for each Bird on the battlefield.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Annex",
+    "mana_cost": "{2}{U}{U}",
+    "cmc": 4,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant land (Target a land as you cast this. This card enters attached to that land.)\nYou control enchanted land.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Aphetto Alchemist",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "{T}: Untap target artifact or creature.\nMorph {U} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Aphetto Grifter",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "Tap two untapped Wizards you control: Tap target permanent.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Arcanis the Omnipotent",
+    "mana_cost": "{3}{U}{U}{U}",
+    "cmc": 6,
+    "type_line": "Legendary Creature — Wizard",
+    "oracle_text": "{T}: Draw three cards.\n{2}{U}{U}: Return Arcanis to its owner's hand.",
+    "power": "3",
+    "toughness": "4",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Artificial Evolution",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Change the text of target spell or permanent by replacing all instances of one creature type with another. The new creature type can't be Wall. (This effect lasts indefinitely.)",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Ascending Aven",
+    "mana_cost": "{2}{U}{U}",
+    "cmc": 4,
+    "type_line": "Creature — Bird Soldier",
+    "oracle_text": "Flying\nThis creature can block only creatures with flying.\nMorph {2}{U} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "3",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying",
+      "Morph"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Aven Fateshaper",
+    "mana_cost": "{6}{U}",
+    "cmc": 7,
+    "type_line": "Creature — Bird Wizard",
+    "oracle_text": "Flying\nWhen this creature enters, look at the top four cards of your library, then put them back in any order.\n{4}{U}: Look at the top four cards of your library, then put them back in any order.",
+    "power": "4",
+    "toughness": "5",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Backslide",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Turn target creature with a morph ability face down.\nCycling {U} ({U}, Discard this card: Draw a card.)",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Blatant Thievery",
+    "mana_cost": "{4}{U}{U}{U}",
+    "cmc": 7,
+    "type_line": "Sorcery",
+    "oracle_text": "For each opponent, gain control of target permanent that player controls.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Callous Oppressor",
+    "mana_cost": "{1}{U}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Octopus",
+    "oracle_text": "You may choose not to untap this creature during your untap step.\nAs this creature enters, an opponent chooses a creature type.\n{T}: Gain control of target creature that isn't of the chosen type for as long as this creature remains tapped.",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Chain of Vapor",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Return target nonland permanent to its owner's hand. Then that permanent's controller may sacrifice a land of their choice. If the player does, they may copy this spell and may choose a new target for that copy.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Choking Tethers",
+    "mana_cost": "{3}{U}",
+    "cmc": 4,
+    "type_line": "Instant",
+    "oracle_text": "Tap up to four target creatures.\nCycling {1}{U} ({1}{U}, Discard this card: Draw a card.)\nWhen you cycle this card, you may tap target creature.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Clone",
+    "mana_cost": "{3}{U}",
+    "cmc": 4,
+    "type_line": "Creature — Shapeshifter",
+    "oracle_text": "You may have this creature enter as a copy of any creature on the battlefield.",
+    "power": "0",
+    "toughness": "0",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Complicate",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Counter target spell unless its controller pays {3}.\nCycling {2}{U} ({2}{U}, Discard this card: Draw a card.)\nWhen you cycle this card, you may counter target spell unless its controller pays {1}.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Crafty Pathmage",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "{T}: Target creature with power 2 or less can't be blocked this turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Crown of Ascension",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature has flying.\nSacrifice this Aura: Enchanted creature and other creatures that share a creature type with it gain flying until end of turn.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Discombobulate",
+    "mana_cost": "{2}{U}{U}",
+    "cmc": 4,
+    "type_line": "Instant",
+    "oracle_text": "Counter target spell. Look at the top four cards of your library, then put them back in any order.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Dispersing Orb",
+    "mana_cost": "{3}{U}{U}",
+    "cmc": 5,
+    "type_line": "Enchantment",
+    "oracle_text": "{3}{U}, Sacrifice a permanent: Return target permanent to its owner's hand.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Disruptive Pitmage",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "{T}: Counter target spell unless its controller pays {1}.\nMorph {U} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Essence Fracture",
+    "mana_cost": "{3}{U}{U}",
+    "cmc": 5,
+    "type_line": "Sorcery",
+    "oracle_text": "Return two target creatures to their owners' hands.\nCycling {2}{U} ({2}{U}, Discard this card: Draw a card.)",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Fleeting Aven",
+    "mana_cost": "{1}{U}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Bird Wizard",
+    "oracle_text": "Flying\nWhenever a player cycles a card, return this creature to its owner's hand.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Future Sight",
+    "mana_cost": "{2}{U}{U}{U}",
+    "cmc": 5,
+    "type_line": "Enchantment",
+    "oracle_text": "Play with the top card of your library revealed.\nYou may play lands and cast spells from the top of your library.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Ghosthelm Courier",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "You may choose not to untap this creature during your untap step.\n{2}{U}, {T}: Target Wizard creature gets +2/+2 and has shroud for as long as this creature remains tapped. (It can't be the target of spells or abilities.)",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Graxiplon",
+    "mana_cost": "{5}{U}",
+    "cmc": 6,
+    "type_line": "Creature — Beast",
+    "oracle_text": "This creature can't be blocked unless defending player controls three or more creatures that share a creature type.",
+    "power": "3",
+    "toughness": "4",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Imagecrafter",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "{T}: Choose a creature type other than Wall. Target creature becomes that type until end of turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Information Dealer",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "{T}: Look at the top X cards of your library, where X is the number of Wizards on the battlefield, then put them back in any order.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Ixidor, Reality Sculptor",
+    "mana_cost": "{3}{U}{U}",
+    "cmc": 5,
+    "type_line": "Legendary Creature — Human Wizard",
+    "oracle_text": "Face-down creatures get +1/+1.\n{2}{U}: Turn target face-down creature face up.",
+    "power": "3",
+    "toughness": "4",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Ixidor's Will",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Counter target spell unless its controller pays {2} for each Wizard on the battlefield.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Mage's Guile",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Target creature gains shroud until end of turn. (It can't be the target of spells or abilities.)\nCycling {U} ({U}, Discard this card: Draw a card.)",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Meddle",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "If target spell has only one target and that target is a creature, change that spell's target to another creature.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Mistform Dreamer",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Illusion",
+    "oracle_text": "Flying\n{1}: This creature becomes the creature type of your choice until end of turn.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Mistform Mask",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\n{1}: Enchanted creature becomes the creature type of your choice until end of turn.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Mistform Mutant",
+    "mana_cost": "{4}{U}{U}",
+    "cmc": 6,
+    "type_line": "Creature — Illusion Mutant",
+    "oracle_text": "{1}{U}: Choose a creature type other than Wall. Target creature becomes that type until end of turn.",
+    "power": "3",
+    "toughness": "4",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Mistform Shrieker",
+    "mana_cost": "{3}{U}{U}",
+    "cmc": 5,
+    "type_line": "Creature — Illusion",
+    "oracle_text": "Flying\n{1}: This creature becomes the creature type of your choice until end of turn.\nMorph {3}{U}{U} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying",
+      "Morph"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Mistform Skyreaver",
+    "mana_cost": "{5}{U}{U}",
+    "cmc": 7,
+    "type_line": "Creature — Illusion",
+    "oracle_text": "Flying\n{1}: This creature becomes the creature type of your choice until end of turn.",
+    "power": "6",
+    "toughness": "6",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Mistform Stalker",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Illusion",
+    "oracle_text": "{1}: This creature becomes the creature type of your choice until end of turn.\n{2}{U}{U}: This creature gets +2/+2 and gains flying until end of turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Mistform Wall",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Illusion Wall",
+    "oracle_text": "This creature has defender as long as it's a Wall.\n{1}: This creature becomes the creature type of your choice until end of turn.",
+    "power": "1",
+    "toughness": "4",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Nameless One",
+    "mana_cost": "{3}{U}",
+    "cmc": 4,
+    "type_line": "Creature — Wizard Avatar",
+    "oracle_text": "Nameless One's power and toughness are each equal to the number of Wizards on the battlefield.\nMorph {2}{U} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "*",
+    "toughness": "*",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Peer Pressure",
+    "mana_cost": "{3}{U}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Choose a creature type. If you control more creatures of that type than each other player, you gain control of all creatures of that type. (This effect lasts indefinitely.)",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Psychic Trance",
+    "mana_cost": "{2}{U}{U}",
+    "cmc": 4,
+    "type_line": "Instant",
+    "oracle_text": "Until end of turn, Wizards you control gain \"{T}: Counter target spell.\"",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Quicksilver Dragon",
+    "mana_cost": "{4}{U}{U}",
+    "cmc": 6,
+    "type_line": "Creature — Dragon",
+    "oracle_text": "Flying\n{U}: If target spell has only one target and that target is this creature, change that spell's target to another creature.\nMorph {4}{U} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "5",
+    "toughness": "5",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying",
+      "Morph"
+    ],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Read the Runes",
+    "mana_cost": "{X}{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Draw X cards. For each card drawn this way, discard a card unless you sacrifice a permanent.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Reminisce",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Target player shuffles their graveyard into their library.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Riptide Biologist",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "Protection from Beasts\nMorph {2}{U} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Morph",
+      "Protection"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Riptide Chronologist",
+    "mana_cost": "{3}{U}{U}",
+    "cmc": 5,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "{U}, Sacrifice this creature: Untap all creatures of the creature type of your choice.",
+    "power": "1",
+    "toughness": "3",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Riptide Entrancer",
+    "mana_cost": "{1}{U}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "Whenever this creature deals combat damage to a player, you may sacrifice it. If you do, gain control of target creature that player controls. (This effect lasts indefinitely.)\nMorph {U}{U} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Riptide Shapeshifter",
+    "mana_cost": "{3}{U}{U}",
+    "cmc": 5,
+    "type_line": "Creature — Shapeshifter",
+    "oracle_text": "{2}{U}{U}, Sacrifice this creature: Choose a creature type. Reveal cards from the top of your library until you reveal a creature card of that type. Put that card onto the battlefield and shuffle the rest into your library.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Rummaging Wizard",
+    "mana_cost": "{3}{U}",
+    "cmc": 4,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "{2}{U}: Surveil 1. (Look at the top card of your library. You may put that card into your graveyard.)",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Surveil"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Sage Aven",
+    "mana_cost": "{3}{U}",
+    "cmc": 4,
+    "type_line": "Creature — Bird Wizard",
+    "oracle_text": "Flying (This creature can't be blocked except by creatures with flying or reach.)\nWhen this creature enters, look at the top four cards of your library, then put them back in any order.",
+    "power": "1",
+    "toughness": "3",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Screaming Seahawk",
+    "mana_cost": "{4}{U}",
+    "cmc": 5,
+    "type_line": "Creature — Bird",
+    "oracle_text": "Flying\nWhen this creature enters, you may search your library for a card named Screaming Seahawk, reveal it, put it into your hand, then shuffle.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Sea's Claim",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant land (Target a land as you cast this. This card enters attached to that land.)\nEnchanted land is an Island.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Slipstream Eel",
+    "mana_cost": "{5}{U}{U}",
+    "cmc": 7,
+    "type_line": "Creature — Fish Beast",
+    "oracle_text": "This creature can't attack unless defending player controls an Island.\nCycling {1}{U} ({1}{U}, Discard this card: Draw a card.)",
+    "power": "6",
+    "toughness": "6",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Spy Network",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Look at target player's hand, the top card of that player's library, and any face-down creatures they control. Look at the top four cards of your library, then put them back in any order.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Standardize",
+    "mana_cost": "{U}{U}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Choose a creature type other than Wall. Each creature becomes that type until end of turn.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Supreme Inquisitor",
+    "mana_cost": "{3}{U}{U}",
+    "cmc": 5,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "Tap five untapped Wizards you control: Search target player's library for up to five cards and exile them. Then that player shuffles.",
+    "power": "1",
+    "toughness": "3",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Trade Secrets",
+    "mana_cost": "{1}{U}{U}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Target opponent draws two cards, then you draw up to four cards. That opponent may repeat this process as many times as they choose.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Trickery Charm",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Choose one —\n• Target creature gains flying until end of turn.\n• Target creature becomes the creature type of your choice until end of turn.\n• Look at the top four cards of your library, then put them back in any order.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Voidmage Prodigy",
+    "mana_cost": "{U}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "{U}{U}, Sacrifice a Wizard: Counter target spell.\nMorph {U} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Wheel and Deal",
+    "mana_cost": "{3}{U}",
+    "cmc": 4,
+    "type_line": "Instant",
+    "oracle_text": "Any number of target opponents each discard their hands, then draw seven cards.\nDraw a card.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Words of Wind",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "{1}: The next time you would draw a card this turn, each player returns a permanent they control to its owner's hand instead.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Accursed Centaur",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Creature — Zombie Centaur",
+    "oracle_text": "When this creature enters, sacrifice a creature.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Anurid Murkdiver",
+    "mana_cost": "{4}{B}{B}",
+    "cmc": 6,
+    "type_line": "Creature — Zombie Frog Beast",
+    "oracle_text": "Swampwalk (This creature can't be blocked as long as defending player controls a Swamp.)",
+    "power": "4",
+    "toughness": "3",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Landwalk",
+      "Swampwalk"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Aphetto Dredging",
+    "mana_cost": "{3}{B}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Return up to three target creature cards of the creature type of your choice from your graveyard to your hand.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Aphetto Vulture",
+    "mana_cost": "{4}{B}{B}",
+    "cmc": 6,
+    "type_line": "Creature — Zombie Bird",
+    "oracle_text": "Flying\nWhen this creature dies, you may put target Zombie card from your graveyard on top of your library.",
+    "power": "3",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Blackmail",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "Target player reveals three cards from their hand and you choose one of them. That player discards that card.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Boneknitter",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Zombie Cleric",
+    "oracle_text": "{1}{B}: Regenerate target Zombie.\nMorph {2}{B} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Cabal Archon",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Human Cleric",
+    "oracle_text": "{B}, Sacrifice a Cleric: Target player loses 2 life and you gain 2 life.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Cabal Executioner",
+    "mana_cost": "{2}{B}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Human Cleric",
+    "oracle_text": "Whenever this creature deals combat damage to a player, that player sacrifices a creature of their choice.\nMorph {3}{B}{B} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Cabal Slaver",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Human Cleric",
+    "oracle_text": "Whenever a Goblin deals combat damage to a player, that player discards a card.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Chain of Smog",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Target player discards two cards. That player may copy this spell and may choose a new target for that copy.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Cover of Darkness",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "As this enchantment enters, choose a creature type.\nCreatures of the chosen type have fear. (They can't be blocked except by artifact creatures and/or black creatures.)",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Crown of Suspicion",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature gets +2/-1.\nSacrifice this Aura: Enchanted creature and other creatures that share a creature type with it get +2/-1 until end of turn.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Cruel Revival",
+    "mana_cost": "{4}{B}",
+    "cmc": 5,
+    "type_line": "Instant",
+    "oracle_text": "Destroy target non-Zombie creature. It can't be regenerated. Return up to one target Zombie card from your graveyard to your hand.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Death Match",
+    "mana_cost": "{3}{B}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever a creature enters, that creature's controller may have target creature of their choice get -3/-3 until end of turn.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Death Pulse",
+    "mana_cost": "{2}{B}{B}",
+    "cmc": 4,
+    "type_line": "Instant",
+    "oracle_text": "Target creature gets -4/-4 until end of turn.\nCycling {1}{B}{B} ({1}{B}{B}, Discard this card: Draw a card.)\nWhen you cycle this card, you may have target creature get -1/-1 until end of turn.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Dirge of Dread",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "All creatures gain fear until end of turn. (They can't be blocked except by artifact creatures and/or black creatures.)\nCycling {1}{B} ({1}{B}, Discard this card: Draw a card.)\nWhen you cycle this card, you may have target creature gain fear until end of turn.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Disciple of Malice",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Human Cleric",
+    "oracle_text": "Protection from white\nCycling {2} ({2}, Discard this card: Draw a card.)",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Protection",
+      "Cycling"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Doomed Necromancer",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Human Cleric Mercenary",
+    "oracle_text": "{B}, {T}, Sacrifice this creature: Return target creature card from your graveyard to the battlefield.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Ebonblade Reaper",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Human Cleric",
+    "oracle_text": "Whenever this creature attacks, you lose half your life, rounded up.\nWhenever this creature deals combat damage to a player, that player loses half their life, rounded up.\nMorph {3}{B}{B} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Endemic Plague",
+    "mana_cost": "{3}{B}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "As an additional cost to cast this spell, sacrifice a creature.\nDestroy all creatures that share a creature type with the sacrificed creature. They can't be regenerated.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Entrails Feaster",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Creature — Zombie Cat",
+    "oracle_text": "At the beginning of your upkeep, you may exile a creature card from a graveyard. If you do, put a +1/+1 counter on this creature. If you don't, tap this creature.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Fade from Memory",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Exile target card from a graveyard.\nCycling {B} ({B}, Discard this card: Draw a card.)",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Fallen Cleric",
+    "mana_cost": "{4}{B}",
+    "cmc": 5,
+    "type_line": "Creature — Zombie Cleric",
+    "oracle_text": "Protection from Clerics\nMorph {4}{B} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "4",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Morph",
+      "Protection"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "False Cure",
+    "mana_cost": "{B}{B}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Until end of turn, whenever a player gains life, that player loses 2 life for each 1 life they gained.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Feeding Frenzy",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Target creature gets -X/-X until end of turn, where X is the number of Zombies on the battlefield.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Festering Goblin",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Creature — Zombie Goblin",
+    "oracle_text": "When this creature dies, target creature gets -1/-1 until end of turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Frightshroud Courier",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Zombie",
+    "oracle_text": "You may choose not to untap this creature during your untap step.\n{2}{B}, {T}: Target Zombie creature gets +2/+2 and has fear for as long as this creature remains tapped. (It can't be blocked except by artifact creatures and/or black creatures.)",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Gangrenous Goliath",
+    "mana_cost": "{3}{B}{B}",
+    "cmc": 5,
+    "type_line": "Creature — Zombie Giant",
+    "oracle_text": "Tap three untapped Clerics you control: Return this card from your graveyard to your hand.",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Gluttonous Zombie",
+    "mana_cost": "{4}{B}",
+    "cmc": 5,
+    "type_line": "Creature — Zombie",
+    "oracle_text": "Fear (This creature can't be blocked except by artifact creatures and/or black creatures.)",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Fear"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Gravespawn Sovereign",
+    "mana_cost": "{4}{B}{B}",
+    "cmc": 6,
+    "type_line": "Creature — Zombie",
+    "oracle_text": "Tap five untapped Zombies you control: Put target creature card from a graveyard onto the battlefield under your control.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Grinning Demon",
+    "mana_cost": "{2}{B}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Demon",
+    "oracle_text": "At the beginning of your upkeep, you lose 2 life.\nMorph {2}{B}{B} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "6",
+    "toughness": "6",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Haunted Cadaver",
+    "mana_cost": "{3}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Zombie",
+    "oracle_text": "Whenever this creature deals combat damage to a player, you may sacrifice it. If you do, that player discards three cards.\nMorph {1}{B} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Head Games",
+    "mana_cost": "{3}{B}{B}",
+    "cmc": 5,
+    "type_line": "Sorcery",
+    "oracle_text": "Target opponent puts the cards from their hand on top of their library. Search that player's library for that many cards. The player puts those cards into their hand, then shuffles.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Headhunter",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Human Cleric",
+    "oracle_text": "Whenever this creature deals combat damage to a player, that player discards a card.\nMorph {B} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Infest",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "All creatures get -2/-2 until end of turn.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Misery Charm",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Choose one —\n• Destroy target Cleric.\n• Return target Cleric card from your graveyard to your hand.\n• Target player loses 2 life.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Nantuko Husk",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Zombie Insect",
+    "oracle_text": "Sacrifice a creature: This creature gets +2/+2 until end of turn.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Oversold Cemetery",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of your upkeep, if you have four or more creature cards in your graveyard, you may return target creature card from your graveyard to your hand.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Patriarch's Bidding",
+    "mana_cost": "{3}{B}{B}",
+    "cmc": 5,
+    "type_line": "Sorcery",
+    "oracle_text": "Each player chooses a creature type. Each player returns all creature cards of a type chosen this way from their graveyard to the battlefield.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Profane Prayers",
+    "mana_cost": "{2}{B}{B}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Profane Prayers deals X damage to any target and you gain X life, where X is the number of Clerics on the battlefield.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Prowling Pangolin",
+    "mana_cost": "{3}{B}{B}",
+    "cmc": 5,
+    "type_line": "Creature — Pangolin Beast",
+    "oracle_text": "When this creature enters, any player may sacrifice two creatures of their choice. If a player does, sacrifice this creature.",
+    "power": "6",
+    "toughness": "5",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Rotlung Reanimator",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Zombie Cleric",
+    "oracle_text": "Whenever this creature or another Cleric dies, create a 2/2 black Zombie creature token.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Screeching Buzzard",
+    "mana_cost": "{3}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Bird",
+    "oracle_text": "Flying\nWhen this creature dies, each opponent discards a card.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Severed Legion",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Zombie",
+    "oracle_text": "Fear (This creature can't be blocked except by artifact creatures and/or black creatures.)",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Fear"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Shade's Breath",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Until end of turn, each creature you control becomes a black Shade and gains \"{B}: This creature gets +1/+1 until end of turn.\"",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Shepherd of Rot",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Zombie Cleric",
+    "oracle_text": "{T}: Each player loses 1 life for each Zombie on the battlefield.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Silent Specter",
+    "mana_cost": "{4}{B}{B}",
+    "cmc": 6,
+    "type_line": "Creature — Specter",
+    "oracle_text": "Flying\nWhenever this creature deals combat damage to a player, that player discards two cards.\nMorph {3}{B}{B} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Flying",
+      "Morph"
+    ],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Smother",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Destroy target creature with mana value 3 or less. It can't be regenerated.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Soulless One",
+    "mana_cost": "{3}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Zombie Avatar",
+    "oracle_text": "Soulless One's power and toughness are each equal to the number of Zombies on the battlefield plus the number of Zombie cards in all graveyards.",
+    "power": "*",
+    "toughness": "*",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Spined Basher",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Zombie Beast",
+    "oracle_text": "Morph {2}{B} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "3",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Strongarm Tactics",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Each player discards a card. Then each player who didn't discard a creature card this way loses 4 life.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Swat",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Destroy target creature with power 2 or less.\nCycling {2} ({2}, Discard this card: Draw a card.)",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Syphon Mind",
+    "mana_cost": "{3}{B}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Each other player discards a card. You draw a card for each card discarded this way.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Syphon Soul",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Syphon Soul deals 2 damage to each other player. You gain life equal to the damage dealt this way.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Thrashing Mudspawn",
+    "mana_cost": "{3}{B}{B}",
+    "cmc": 5,
+    "type_line": "Creature — Beast",
+    "oracle_text": "Whenever this creature is dealt damage, you lose that much life.\nMorph {1}{B}{B} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Undead Gladiator",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Zombie Barbarian",
+    "oracle_text": "{1}{B}, Discard a card: Return this card from your graveyard to your hand. Activate only during your upkeep.\nCycling {1}{B} ({1}{B}, Discard this card: Draw a card.)",
+    "power": "3",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Visara the Dreadful",
+    "mana_cost": "{3}{B}{B}{B}",
+    "cmc": 6,
+    "type_line": "Legendary Creature — Gorgon",
+    "oracle_text": "Flying\n{T}: Destroy target creature. It can't be regenerated.",
+    "power": "5",
+    "toughness": "5",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Walking Desecration",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Zombie",
+    "oracle_text": "{B}, {T}: Creatures of the creature type of your choice attack this turn if able.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Withering Hex",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nWhenever a player cycles a card, put a plague counter on this Aura.\nEnchanted creature gets -1/-1 for each plague counter on this Aura.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Words of Waste",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "{1}: The next time you would draw a card this turn, each opponent discards a card instead.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Wretched Anurid",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Zombie Frog Beast",
+    "oracle_text": "Whenever another creature enters, you lose 1 life.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Aether Charge",
+    "mana_cost": "{4}{R}",
+    "cmc": 5,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever a Beast you control enters, you may have it deal 4 damage to target opponent or planeswalker.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Aggravated Assault",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "{3}{R}{R}: Untap all creatures you control. After this main phase, there is an additional combat phase followed by an additional main phase. Activate only as a sorcery.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Airdrop Condor",
+    "mana_cost": "{4}{R}",
+    "cmc": 5,
+    "type_line": "Creature — Bird",
+    "oracle_text": "Flying\n{1}{R}, Sacrifice a Goblin creature: This creature deals damage equal to the sacrificed creature's power to any target.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Avarax",
+    "mana_cost": "{3}{R}{R}",
+    "cmc": 5,
+    "type_line": "Creature — Beast",
+    "oracle_text": "Haste\nWhen this creature enters, you may search your library for a card named Avarax, reveal it, put it into your hand, then shuffle.\n{1}{R}: This creature gets +1/+0 until end of turn.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Haste"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Battering Craghorn",
+    "mana_cost": "{2}{R}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Goat Beast",
+    "oracle_text": "First strike\nMorph {1}{R}{R} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "3",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Morph",
+      "First strike"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Blistering Firecat",
+    "mana_cost": "{1}{R}{R}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Elemental Cat",
+    "oracle_text": "Trample, haste\nAt the beginning of the end step, sacrifice this creature.\nMorph {R}{R} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "7",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Morph",
+      "Haste",
+      "Trample"
+    ],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Break Open",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Turn target face-down creature an opponent controls face up.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Brightstone Ritual",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Add {R} for each Goblin on the battlefield.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Butcher Orgg",
+    "mana_cost": "{4}{R}{R}{R}",
+    "cmc": 7,
+    "type_line": "Creature — Orgg",
+    "oracle_text": "You may assign this creature's combat damage divided as you choose among defending player and/or any number of creatures they control.",
+    "power": "6",
+    "toughness": "6",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Chain of Plasma",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Chain of Plasma deals 3 damage to any target. Then that player or that permanent's controller may discard a card. If the player does, they may copy this spell and may choose a new target for that copy.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Charging Slateback",
+    "mana_cost": "{4}{R}",
+    "cmc": 5,
+    "type_line": "Creature — Beast",
+    "oracle_text": "This creature can't block.\nMorph {4}{R} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "4",
+    "toughness": "3",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Commando Raid",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Until end of turn, target creature you control gains \"When this creature deals combat damage to a player, you may have it deal damage equal to its power to target creature that player controls.\"",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Crown of Fury",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature gets +1/+0 and has first strike.\nSacrifice this Aura: Enchanted creature and other creatures that share a creature type with it get +1/+0 and gain first strike until end of turn.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Custody Battle",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature has \"At the beginning of your upkeep, target opponent gains control of this creature unless you sacrifice a land.\"",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Dragon Roost",
+    "mana_cost": "{4}{R}{R}",
+    "cmc": 6,
+    "type_line": "Enchantment",
+    "oracle_text": "{5}{R}{R}: Create a 5/5 red Dragon creature token with flying. (It can't be blocked except by creatures with flying or reach.)",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Dwarven Blastminer",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Creature — Dwarf",
+    "oracle_text": "{2}{R}, {T}: Destroy target nonbasic land.\nMorph {R} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Embermage Goblin",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Goblin Wizard",
+    "oracle_text": "When this creature enters, you may search your library for a card named Embermage Goblin, reveal it, put it into your hand, then shuffle.\n{T}: This creature deals 1 damage to any target.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Erratic Explosion",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Choose any target. Reveal cards from the top of your library until you reveal a nonland card. Erratic Explosion deals damage equal to that card's mana value to that permanent or player. Put the revealed cards on the bottom of your library in any order.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Fever Charm",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Choose one —\n• Target creature gains haste until end of turn.\n• Target creature gets +2/+0 until end of turn.\n• Fever Charm deals 3 damage to target Wizard creature.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Flamestick Courier",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Goblin",
+    "oracle_text": "You may choose not to untap this creature during your untap step.\n{2}{R}, {T}: Target Goblin creature gets +2/+2 and has haste for as long as this creature remains tapped.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Goblin Machinist",
+    "mana_cost": "{4}{R}",
+    "cmc": 5,
+    "type_line": "Creature — Goblin",
+    "oracle_text": "{2}{R}: Reveal cards from the top of your library until you reveal a nonland card. This creature gets +X/+0 until end of turn, where X is that card's mana value. Put the revealed cards on the bottom of your library in any order.",
+    "power": "0",
+    "toughness": "5",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Goblin Piledriver",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Creature — Goblin Warrior",
+    "oracle_text": "Protection from blue (This creature can't be blocked, targeted, dealt damage, or enchanted by anything blue.)\nWhenever this creature attacks, it gets +2/+0 until end of turn for each other attacking Goblin.",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Protection"
+    ],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Goblin Pyromancer",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Goblin Wizard",
+    "oracle_text": "When this creature enters, Goblin creatures get +3/+0 until end of turn.\nAt the beginning of the end step, destroy all Goblins.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Goblin Sharpshooter",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Goblin",
+    "oracle_text": "This creature doesn't untap during your untap step.\nWhenever a creature dies, untap this creature.\n{T}: This creature deals 1 damage to any target.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Goblin Sky Raider",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Goblin Warrior",
+    "oracle_text": "Flying (This creature can't be blocked except by creatures with flying or reach.)",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Goblin Sledder",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Creature — Goblin",
+    "oracle_text": "Sacrifice a Goblin: Target creature gets +1/+1 until end of turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Goblin Taskmaster",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Creature — Goblin",
+    "oracle_text": "{1}{R}: Target Goblin creature gets +1/+0 until end of turn.\nMorph {R} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Grand Melee",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "All creatures attack each combat if able.\nAll creatures block each combat if able.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Gratuitous Violence",
+    "mana_cost": "{2}{R}{R}{R}",
+    "cmc": 5,
+    "type_line": "Enchantment",
+    "oracle_text": "If a creature you control would deal damage to a permanent or player, it deals double that damage instead.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Insurrection",
+    "mana_cost": "{5}{R}{R}{R}",
+    "cmc": 8,
+    "type_line": "Sorcery",
+    "oracle_text": "Untap all creatures and gain control of them until end of turn. They gain haste until end of turn.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Kaboom!",
+    "mana_cost": "{4}{R}",
+    "cmc": 5,
+    "type_line": "Sorcery",
+    "oracle_text": "Choose any number of target players or planeswalkers. For each of them, reveal cards from the top of your library until you reveal a nonland card, Kaboom! deals damage equal to that card's mana value to that player or planeswalker, then you put the revealed cards on the bottom of your library in any order.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Lavamancer's Skill",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature has \"{T}: This creature deals 1 damage to target creature.\"\nAs long as enchanted creature is a Wizard, it has \"{T}: This creature deals 2 damage to target creature.\"",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Lay Waste",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Destroy target land.\nCycling {2} ({2}, Discard this card: Draw a card.)",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Lightning Rift",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever a player cycles a card, you may pay {1}. If you do, this enchantment deals 2 damage to any target.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Mana Echoes",
+    "mana_cost": "{2}{R}{R}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever a creature enters, you may add an amount of {C} equal to the number of creatures you control that share a creature type with it.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Menacing Ogre",
+    "mana_cost": "{3}{R}{R}",
+    "cmc": 5,
+    "type_line": "Creature — Ogre",
+    "oracle_text": "Trample, haste\nWhen this creature enters, each player secretly chooses a number. Then those numbers are revealed. Each player with the highest number loses that much life. If you are one of those players, put two +1/+1 counters on this creature.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Haste",
+      "Trample"
+    ],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Nosy Goblin",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Goblin",
+    "oracle_text": "{T}, Sacrifice this creature: Destroy target face-down creature.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Pinpoint Avalanche",
+    "mana_cost": "{3}{R}{R}",
+    "cmc": 5,
+    "type_line": "Instant",
+    "oracle_text": "Pinpoint Avalanche deals 4 damage to target creature. The damage can't be prevented.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Reckless One",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Goblin Avatar",
+    "oracle_text": "Haste\nReckless One's power and toughness are each equal to the number of Goblins on the battlefield.",
+    "power": "*",
+    "toughness": "*",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Haste"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Risky Move",
+    "mana_cost": "{3}{R}{R}{R}",
+    "cmc": 6,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of each player's upkeep, that player gains control of this enchantment.\nWhen you gain control of this enchantment from another player, choose a creature you control and an opponent. Flip a coin. If you lose the flip, that opponent gains control of that creature.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Rorix Bladewing",
+    "mana_cost": "{3}{R}{R}{R}",
+    "cmc": 6,
+    "type_line": "Legendary Creature — Dragon",
+    "oracle_text": "Flying, haste",
+    "power": "6",
+    "toughness": "5",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Flying",
+      "Haste"
+    ],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Searing Flesh",
+    "mana_cost": "{6}{R}",
+    "cmc": 7,
+    "type_line": "Sorcery",
+    "oracle_text": "Searing Flesh deals 7 damage to target opponent or planeswalker.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Shaleskin Bruiser",
+    "mana_cost": "{6}{R}",
+    "cmc": 7,
+    "type_line": "Creature — Beast",
+    "oracle_text": "Trample\nWhenever this creature attacks, it gets +3/+0 until end of turn for each other attacking Beast.",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Trample"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Shock",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Shock deals 2 damage to any target.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Skirk Commando",
+    "mana_cost": "{1}{R}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Goblin",
+    "oracle_text": "Whenever this creature deals combat damage to a player, you may have it deal 2 damage to target creature that player controls.\nMorph {2}{R} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Skirk Fire Marshal",
+    "mana_cost": "{3}{R}{R}",
+    "cmc": 5,
+    "type_line": "Creature — Goblin",
+    "oracle_text": "Protection from red\nTap five untapped Goblins you control: This creature deals 10 damage to each creature and each player.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Protection"
+    ],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Skirk Prospector",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Creature — Goblin",
+    "oracle_text": "Sacrifice a Goblin: Add {R}.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Skittish Valesk",
+    "mana_cost": "{6}{R}",
+    "cmc": 7,
+    "type_line": "Creature — Beast",
+    "oracle_text": "At the beginning of your upkeep, flip a coin. If you lose the flip, turn this creature face down.\nMorph {5}{R} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "5",
+    "toughness": "5",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Slice and Dice",
+    "mana_cost": "{4}{R}{R}",
+    "cmc": 6,
+    "type_line": "Sorcery",
+    "oracle_text": "Slice and Dice deals 4 damage to each creature.\nCycling {2}{R} ({2}{R}, Discard this card: Draw a card.)\nWhen you cycle this card, you may have it deal 1 damage to each creature.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Snapping Thragg",
+    "mana_cost": "{4}{R}",
+    "cmc": 5,
+    "type_line": "Creature — Beast",
+    "oracle_text": "Whenever this creature deals combat damage to a player, you may have it deal 3 damage to target creature that player controls.\nMorph {4}{R}{R} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Solar Blast",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Instant",
+    "oracle_text": "Solar Blast deals 3 damage to any target.\nCycling {1}{R}{R} ({1}{R}{R}, Discard this card: Draw a card.)\nWhen you cycle this card, you may have it deal 1 damage to any target.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Sparksmith",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Creature — Goblin",
+    "oracle_text": "{T}: This creature deals X damage to target creature and X damage to you, where X is the number of Goblins on the battlefield.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Spitfire Handler",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Creature — Goblin",
+    "oracle_text": "This creature can't block creatures with power greater than this creature's power.\n{R}: This creature gets +1/+0 until end of turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Spurred Wolverine",
+    "mana_cost": "{4}{R}",
+    "cmc": 5,
+    "type_line": "Creature — Wolverine Beast",
+    "oracle_text": "Tap two untapped Beasts you control: Target creature gains first strike until end of turn.",
+    "power": "3",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Starstorm",
+    "mana_cost": "{X}{R}{R}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Starstorm deals X damage to each creature.\nCycling {3} ({3}, Discard this card: Draw a card.)",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Tephraderm",
+    "mana_cost": "{4}{R}",
+    "cmc": 5,
+    "type_line": "Creature — Beast",
+    "oracle_text": "Whenever a creature deals damage to this creature, this creature deals that much damage to that creature.\nWhenever a spell deals damage to this creature, this creature deals that much damage to that spell's controller.",
+    "power": "4",
+    "toughness": "5",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Thoughtbound Primoc",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Bird Beast",
+    "oracle_text": "Flying\nAt the beginning of your upkeep, if a player controls more Wizards than each other player, the player who controls the most Wizards gains control of this creature.",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Threaten",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Untap target creature and gain control of it until end of turn. That creature gains haste until end of turn. (It can attack and {T} this turn.)",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Thunder of Hooves",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Thunder of Hooves deals X damage to each creature without flying and each player, where X is the number of Beasts on the battlefield.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Wave of Indifference",
+    "mana_cost": "{X}{R}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "X target creatures can't block this turn.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Words of War",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "{1}: The next time you would draw a card this turn, this enchantment deals 2 damage to any target instead.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Animal Magnetism",
+    "mana_cost": "{4}{G}",
+    "cmc": 5,
+    "type_line": "Sorcery",
+    "oracle_text": "Reveal the top five cards of your library. An opponent chooses a creature card from among them. Put that card onto the battlefield and the rest into your graveyard.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Barkhide Mauler",
+    "mana_cost": "{4}{G}",
+    "cmc": 5,
+    "type_line": "Creature — Beast",
+    "oracle_text": "Cycling {2} ({2}, Discard this card: Draw a card.)",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Biorhythm",
+    "mana_cost": "{6}{G}{G}",
+    "cmc": 8,
+    "type_line": "Sorcery",
+    "oracle_text": "Each player's life total becomes the number of creatures they control.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Birchlore Rangers",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Elf Druid Ranger",
+    "oracle_text": "Tap two untapped Elves you control: Add one mana of any color.\nMorph {G} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Bloodline Shaman",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Elf Wizard Shaman",
+    "oracle_text": "{T}: Choose a creature type. Reveal the top card of your library. If that card is a creature card of the chosen type, put it into your hand. Otherwise, put it into your graveyard.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Broodhatch Nantuko",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Insect Druid",
+    "oracle_text": "Whenever this creature is dealt damage, you may create that many 1/1 green Insect creature tokens.\nMorph {2}{G} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Centaur Glade",
+    "mana_cost": "{3}{G}{G}",
+    "cmc": 5,
+    "type_line": "Enchantment",
+    "oracle_text": "{2}{G}{G}: Create a 3/3 green Centaur creature token.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Chain of Acid",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Destroy target noncreature permanent. Then that permanent's controller may copy this spell and may choose a new target for that copy.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Crown of Vigor",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature gets +1/+1.\nSacrifice this Aura: Enchanted creature and other creatures that share a creature type with it get +1/+1 until end of turn.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Elven Riders",
+    "mana_cost": "{3}{G}{G}",
+    "cmc": 5,
+    "type_line": "Creature — Elf",
+    "oracle_text": "This creature can't be blocked except by Walls and/or creatures with flying.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Elvish Guidance",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant land\nWhenever enchanted land is tapped for mana, its controller adds an additional {G} for each Elf on the battlefield.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Elvish Pathcutter",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Creature — Elf Scout",
+    "oracle_text": "{2}{G}: Target Elf creature gains forestwalk until end of turn. (It can't be blocked as long as defending player controls a Forest.)",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Elvish Pioneer",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Elf Druid",
+    "oracle_text": "When this creature enters, you may put a basic land card from your hand onto the battlefield tapped.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Elvish Scrapper",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Elf",
+    "oracle_text": "{G}, {T}, Sacrifice this creature: Destroy target artifact.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Elvish Vanguard",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Elf Warrior",
+    "oracle_text": "Whenever another Elf enters, put a +1/+1 counter on this creature.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Elvish Warrior",
+    "mana_cost": "{G}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Elf Warrior",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Enchantress's Presence",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever you cast an enchantment spell, draw a card.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Everglove Courier",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Elf",
+    "oracle_text": "You may choose not to untap this creature during your untap step.\n{2}{G}, {T}: Target Elf creature gets +2/+2 and has trample for as long as this creature remains tapped.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Explosive Vegetation",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Gigapede",
+    "mana_cost": "{3}{G}{G}",
+    "cmc": 5,
+    "type_line": "Creature — Insect",
+    "oracle_text": "Shroud (This creature can't be the target of spells or abilities.)\nAt the beginning of your upkeep, if this card is in your graveyard, you may discard a card. If you do, return this card to your hand.",
+    "power": "6",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Shroud"
+    ],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Heedless One",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Creature — Elf Avatar",
+    "oracle_text": "Trample\nHeedless One's power and toughness are each equal to the number of Elves on the battlefield.",
+    "power": "*",
+    "toughness": "*",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Trample"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Hystrodon",
+    "mana_cost": "{4}{G}",
+    "cmc": 5,
+    "type_line": "Creature — Beast",
+    "oracle_text": "Trample\nWhenever this creature deals combat damage to a player, you may draw a card.\nMorph {1}{G}{G} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "3",
+    "toughness": "4",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Morph",
+      "Trample"
+    ],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Invigorating Boon",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever a player cycles a card, you may put a +1/+1 counter on target creature.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Kamahl, Fist of Krosa",
+    "mana_cost": "{4}{G}{G}",
+    "cmc": 6,
+    "type_line": "Legendary Creature — Human Druid",
+    "oracle_text": "{G}: Target land becomes a 1/1 creature until end of turn. It's still a land.\n{2}{G}{G}{G}: Creatures you control get +3/+3 and gain trample until end of turn.",
+    "power": "4",
+    "toughness": "3",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Kamahl's Summons",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Each player may reveal any number of creature cards from their hand. Then each player creates a 2/2 green Bear creature token for each card they revealed this way.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Krosan Colossus",
+    "mana_cost": "{6}{G}{G}{G}",
+    "cmc": 9,
+    "type_line": "Creature — Beast",
+    "oracle_text": "Morph {6}{G}{G} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "9",
+    "toughness": "9",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Krosan Groundshaker",
+    "mana_cost": "{4}{G}{G}{G}",
+    "cmc": 7,
+    "type_line": "Creature — Beast",
+    "oracle_text": "{G}: Target Beast creature gains trample until end of turn.",
+    "power": "6",
+    "toughness": "6",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Krosan Tusker",
+    "mana_cost": "{5}{G}{G}",
+    "cmc": 7,
+    "type_line": "Creature — Boar Beast",
+    "oracle_text": "Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)\nWhen you cycle this card, you may search your library for a basic land card, reveal that card, put it into your hand, then shuffle. (Do this before you draw.)",
+    "power": "6",
+    "toughness": "5",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Leery Fogbeast",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Beast",
+    "oracle_text": "Whenever this creature becomes blocked, prevent all combat damage that would be dealt this turn.",
+    "power": "4",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Mythic Proportions",
+    "mana_cost": "{4}{G}{G}{G}",
+    "cmc": 7,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature gets +8/+8 and has trample.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Naturalize",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Destroy target artifact or enchantment.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Overwhelming Instinct",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever you attack with three or more creatures, draw a card.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Primal Boost",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Target creature gets +4/+4 until end of turn.\nCycling {2}{G} ({2}{G}, Discard this card: Draw a card.)\nWhen you cycle this card, you may have target creature get +1/+1 until end of turn.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Ravenous Baloth",
+    "mana_cost": "{2}{G}{G}",
+    "cmc": 4,
+    "type_line": "Creature — Beast",
+    "oracle_text": "Sacrifice a Beast: You gain 4 life.",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Run Wild",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Until end of turn, target creature gains trample and \"{G}: Regenerate this creature.\"",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Serpentine Basilisk",
+    "mana_cost": "{2}{G}{G}",
+    "cmc": 4,
+    "type_line": "Creature — Basilisk",
+    "oracle_text": "Whenever this creature deals combat damage to a creature, destroy that creature at end of combat.\nMorph {1}{G}{G} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Silklash Spider",
+    "mana_cost": "{3}{G}{G}",
+    "cmc": 5,
+    "type_line": "Creature — Spider",
+    "oracle_text": "Reach\n{X}{G}{G}: This creature deals X damage to each creature with flying.",
+    "power": "2",
+    "toughness": "7",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Reach"
+    ],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Silvos, Rogue Elemental",
+    "mana_cost": "{3}{G}{G}{G}",
+    "cmc": 6,
+    "type_line": "Legendary Creature — Elemental",
+    "oracle_text": "Trample\n{G}: Regenerate Silvos.",
+    "power": "8",
+    "toughness": "5",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Trample"
+    ],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Snarling Undorak",
+    "mana_cost": "{2}{G}{G}",
+    "cmc": 4,
+    "type_line": "Creature — Beast",
+    "oracle_text": "{2}{G}: Target Beast creature gets +1/+1 until end of turn.\nMorph {1}{G}{G} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Spitting Gourna",
+    "mana_cost": "{3}{G}{G}",
+    "cmc": 5,
+    "type_line": "Creature — Beast",
+    "oracle_text": "Reach (This creature can block creatures with flying.)\nMorph {4}{G} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "3",
+    "toughness": "4",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Reach",
+      "Morph"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Stag Beetle",
+    "mana_cost": "{3}{G}{G}",
+    "cmc": 5,
+    "type_line": "Creature — Insect",
+    "oracle_text": "This creature enters with X +1/+1 counters on it, where X is the number of other creatures on the battlefield.",
+    "power": "0",
+    "toughness": "0",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Steely Resolve",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "As this enchantment enters, choose a creature type.\nCreatures of the chosen type have shroud. (They can't be the targets of spells or abilities.)",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Symbiotic Beast",
+    "mana_cost": "{4}{G}{G}",
+    "cmc": 6,
+    "type_line": "Creature — Insect Beast",
+    "oracle_text": "When this creature dies, create four 1/1 green Insect creature tokens.",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Symbiotic Elf",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Creature — Elf",
+    "oracle_text": "When this creature dies, create two 1/1 green Insect creature tokens.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Symbiotic Wurm",
+    "mana_cost": "{5}{G}{G}{G}",
+    "cmc": 8,
+    "type_line": "Creature — Wurm",
+    "oracle_text": "When this creature dies, create seven 1/1 green Insect creature tokens.",
+    "power": "7",
+    "toughness": "7",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Taunting Elf",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Elf",
+    "oracle_text": "All creatures able to block this creature do so.",
+    "power": "0",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Tempting Wurm",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Wurm",
+    "oracle_text": "When this creature enters, each opponent may put any number of artifact, creature, enchantment, and/or land cards from their hand onto the battlefield.",
+    "power": "5",
+    "toughness": "5",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Towering Baloth",
+    "mana_cost": "{6}{G}{G}",
+    "cmc": 8,
+    "type_line": "Creature — Beast",
+    "oracle_text": "Morph {6}{G} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "7",
+    "toughness": "6",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Treespring Lorian",
+    "mana_cost": "{5}{G}",
+    "cmc": 6,
+    "type_line": "Creature — Beast",
+    "oracle_text": "Morph {5}{G} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "5",
+    "toughness": "4",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Tribal Unity",
+    "mana_cost": "{X}{2}{G}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Creatures of the creature type of your choice get +X/+X until end of turn.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Venomspout Brackus",
+    "mana_cost": "{6}{G}",
+    "cmc": 7,
+    "type_line": "Creature — Beast",
+    "oracle_text": "{1}{G}, {T}: This creature deals 5 damage to target attacking or blocking creature with flying.\nMorph {3}{G}{G} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "power": "5",
+    "toughness": "5",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Morph"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Vitality Charm",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Choose one —\n• Create a 1/1 green Insect creature token.\n• Target creature gets +1/+1 and gains trample until end of turn.\n• Regenerate target Beast.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Voice of the Woods",
+    "mana_cost": "{3}{G}{G}",
+    "cmc": 5,
+    "type_line": "Creature — Elf",
+    "oracle_text": "Tap five untapped Elves you control: Create a 7/7 green Elemental creature token with trample. (It can deal excess combat damage to the player or planeswalker it's attacking.)",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Wall of Mulch",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Wall",
+    "oracle_text": "Defender (This creature can't attack.)\n{G}, Sacrifice a Wall: Draw a card.",
+    "power": "0",
+    "toughness": "4",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Defender"
+    ],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Weird Harvest",
+    "mana_cost": "{X}{G}{G}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Each player may search their library for up to X creature cards, reveal those cards, put them into their hand, then shuffle.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Wellwisher",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Elf",
+    "oracle_text": "{T}: You gain 1 life for each Elf on the battlefield.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Wirewood Elf",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Elf Druid",
+    "oracle_text": "{T}: Add {G}.",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Wirewood Herald",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Elf",
+    "oracle_text": "When this creature dies, you may search your library for an Elf card, reveal that card, put it into your hand, then shuffle.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Wirewood Pride",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Target creature gets +X/+X until end of turn, where X is the number of Elves on the battlefield.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Wirewood Savage",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Elf",
+    "oracle_text": "Whenever a Beast enters, you may draw a card.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Words of Wilding",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "{1}: The next time you would draw a card this turn, create a 2/2 green Bear creature token instead.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Cryptic Gateway",
+    "mana_cost": "{5}",
+    "cmc": 5,
+    "type_line": "Artifact",
+    "oracle_text": "Tap two untapped creatures you control: You may put a creature card from your hand that shares a creature type with each creature tapped this way onto the battlefield.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Doom Cannon",
+    "mana_cost": "{6}",
+    "cmc": 6,
+    "type_line": "Artifact",
+    "oracle_text": "As this artifact enters, choose a creature type.\n{3}, {T}, Sacrifice a creature of the chosen type: This artifact deals 3 damage to any target.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Dream Chisel",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "Face-down creature spells you cast cost {1} less to cast.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Riptide Replicator",
+    "mana_cost": "{X}{4}",
+    "cmc": 4,
+    "type_line": "Artifact",
+    "oracle_text": "As this artifact enters, choose a color and a creature type.\nThis artifact enters with X charge counters on it.\n{4}, {T}: Create an X/X creature token of the chosen color and type, where X is the number of charge counters on this artifact.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Slate of Ancestry",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact",
+    "oracle_text": "{4}, {T}, Discard your hand: Draw a card for each creature you control.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Tribal Golem",
+    "mana_cost": "{6}",
+    "cmc": 6,
+    "type_line": "Artifact Creature — Golem",
+    "oracle_text": "This creature has trample as long as you control a Beast, haste as long as you control a Goblin, first strike as long as you control a Soldier, flying as long as you control a Wizard, and \"{B}: Regenerate this creature\" as long as you control a Zombie.",
+    "power": "4",
+    "toughness": "4",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Barren Moor",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped.\n{T}: Add {B}.\nCycling {B} ({B}, Discard this card: Draw a card.)",
+    "colors": [],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Bloodstained Mire",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "{T}, Pay 1 life, Sacrifice this land: Search your library for a Swamp or Mountain card, put it onto the battlefield, then shuffle.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Contested Cliffs",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "{T}: Add {C}.\n{R}{G}, {T}: Target Beast creature you control fights target creature an opponent controls. (Each deals damage equal to its power to the other.)",
+    "colors": [],
+    "keywords": [
+      "Fight"
+    ],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Daru Encampment",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "{T}: Add {C}.\n{W}, {T}: Target Soldier creature gets +1/+1 until end of turn.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Flooded Strand",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "{T}, Pay 1 life, Sacrifice this land: Search your library for a Plains or Island card, put it onto the battlefield, then shuffle.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Forgotten Cave",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped.\n{T}: Add {R}.\nCycling {R} ({R}, Discard this card: Draw a card.)",
+    "colors": [],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Goblin Burrows",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "{T}: Add {C}.\n{1}{R}, {T}: Target Goblin creature gets +2/+0 until end of turn.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Grand Coliseum",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped.\n{T}: Add {C}.\n{T}: Add one mana of any color. This land deals 1 damage to you.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Lonely Sandbar",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped.\n{T}: Add {U}.\nCycling {U} ({U}, Discard this card: Draw a card.)",
+    "colors": [],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Polluted Delta",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "{T}, Pay 1 life, Sacrifice this land: Search your library for an Island or Swamp card, put it onto the battlefield, then shuffle.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Riptide Laboratory",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "{T}: Add {C}.\n{1}{U}, {T}: Return target Wizard you control to its owner's hand.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Seaside Haven",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "{T}: Add {C}.\n{W}{U}, {T}, Sacrifice a Bird: Draw a card.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Secluded Steppe",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped.\n{T}: Add {W}.\nCycling {W} ({W}, Discard this card: Draw a card.)",
+    "colors": [],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Starlit Sanctum",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "{T}: Add {C}.\n{W}, {T}, Sacrifice a Cleric creature: You gain life equal to the sacrificed creature's toughness.\n{B}, {T}, Sacrifice a Cleric creature: Target player loses life equal to the sacrificed creature's power.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Tranquil Thicket",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped.\n{T}: Add {G}.\nCycling {G} ({G}, Discard this card: Draw a card.)",
+    "colors": [],
+    "keywords": [
+      "Cycling"
+    ],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Unholy Grotto",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "{T}: Add {C}.\n{B}, {T}: Put target Zombie card from your graveyard on top of your library.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Windswept Heath",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "{T}, Pay 1 life, Sacrifice this land: Search your library for a Forest or Plains card, put it onto the battlefield, then shuffle.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Wirewood Lodge",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "{T}: Add {C}.\n{G}, {T}: Untap target Elf.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ons"
+  },
+  {
+    "name": "Wooded Foothills",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "{T}, Pay 1 life, Sacrifice this land: Search your library for a Mountain or Forest card, put it onto the battlefield, then shuffle.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ons"
+  },
+  {
+    "name": "Plains",
+    "cmc": 0,
+    "type_line": "Basic Land — Plains",
+    "oracle_text": "({T}: Add {W}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Plains",
+    "cmc": 0,
+    "type_line": "Basic Land — Plains",
+    "oracle_text": "({T}: Add {W}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Plains",
+    "cmc": 0,
+    "type_line": "Basic Land — Plains",
+    "oracle_text": "({T}: Add {W}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Plains",
+    "cmc": 0,
+    "type_line": "Basic Land — Plains",
+    "oracle_text": "({T}: Add {W}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Island",
+    "cmc": 0,
+    "type_line": "Basic Land — Island",
+    "oracle_text": "({T}: Add {U}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Island",
+    "cmc": 0,
+    "type_line": "Basic Land — Island",
+    "oracle_text": "({T}: Add {U}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Island",
+    "cmc": 0,
+    "type_line": "Basic Land — Island",
+    "oracle_text": "({T}: Add {U}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Island",
+    "cmc": 0,
+    "type_line": "Basic Land — Island",
+    "oracle_text": "({T}: Add {U}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Swamp",
+    "cmc": 0,
+    "type_line": "Basic Land — Swamp",
+    "oracle_text": "({T}: Add {B}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Swamp",
+    "cmc": 0,
+    "type_line": "Basic Land — Swamp",
+    "oracle_text": "({T}: Add {B}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Swamp",
+    "cmc": 0,
+    "type_line": "Basic Land — Swamp",
+    "oracle_text": "({T}: Add {B}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Swamp",
+    "cmc": 0,
+    "type_line": "Basic Land — Swamp",
+    "oracle_text": "({T}: Add {B}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Mountain",
+    "cmc": 0,
+    "type_line": "Basic Land — Mountain",
+    "oracle_text": "({T}: Add {R}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Mountain",
+    "cmc": 0,
+    "type_line": "Basic Land — Mountain",
+    "oracle_text": "({T}: Add {R}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Mountain",
+    "cmc": 0,
+    "type_line": "Basic Land — Mountain",
+    "oracle_text": "({T}: Add {R}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Mountain",
+    "cmc": 0,
+    "type_line": "Basic Land — Mountain",
+    "oracle_text": "({T}: Add {R}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Forest",
+    "cmc": 0,
+    "type_line": "Basic Land — Forest",
+    "oracle_text": "({T}: Add {G}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Forest",
+    "cmc": 0,
+    "type_line": "Basic Land — Forest",
+    "oracle_text": "({T}: Add {G}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Forest",
+    "cmc": 0,
+    "type_line": "Basic Land — Forest",
+    "oracle_text": "({T}: Add {G}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  },
+  {
+    "name": "Forest",
+    "cmc": 0,
+    "type_line": "Basic Land — Forest",
+    "oracle_text": "({T}: Add {G}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ons"
+  }
+]

@@ -1,0 +1,5309 @@
+[
+  {
+    "name": "Adarkar Unicorn",
+    "mana_cost": "{1}{W}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Unicorn",
+    "oracle_text": "{T}: Add {U} or {C}{U}. Spend this mana only to pay cumulative upkeep costs.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Arctic Foxes",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Fox",
+    "oracle_text": "This creature can't be blocked by creatures with power 2 or greater as long as defending player controls a snow land.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Arenson's Aura",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "{W}, Sacrifice an enchantment: Destroy target enchantment.\n{3}{U}{U}: Counter target enchantment spell.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Armor of Faith",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature gets +1/+1.\n{W}: Enchanted creature gets +0/+1 until end of turn.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Battle Cry",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Untap all white creatures you control.\nWhenever a creature blocks this turn, it gets +0/+1 until end of turn.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Black Scarab",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature can't be blocked by black creatures.\nEnchanted creature gets +2/+2 as long as an opponent controls a black permanent.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Blessed Wine",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "You gain 1 life.\nDraw a card at the beginning of the next turn's upkeep.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Blinking Spirit",
+    "mana_cost": "{3}{W}",
+    "cmc": 4,
+    "type_line": "Creature — Spirit",
+    "oracle_text": "{0}: Return this creature to its owner's hand.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Blue Scarab",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature can't be blocked by blue creatures.\nEnchanted creature gets +2/+2 as long as an opponent controls a blue permanent.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Call to Arms",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "As this enchantment enters, choose a color and an opponent.\nWhite creatures get +1/+1 as long as the chosen color is the most common color among nontoken permanents the chosen player controls but isn't tied for most common.\nWhen the chosen color isn't the most common color among nontoken permanents the chosen player controls or is tied for most common, sacrifice this enchantment.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Caribou Range",
+    "mana_cost": "{2}{W}{W}",
+    "cmc": 4,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant land you control\nEnchanted land has \"{W}{W}, {T}: Create a 0/1 white Caribou creature token.\"\nSacrifice a Caribou token: You gain 1 life.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Circle of Protection: Black",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "{1}: The next time a black source of your choice would deal damage to you this turn, prevent that damage.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Circle of Protection: Blue",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "{1}: The next time a blue source of your choice would deal damage to you this turn, prevent that damage.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Circle of Protection: Green",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "{1}: The next time a green source of your choice would deal damage to you this turn, prevent that damage.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Circle of Protection: Red",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "{1}: The next time a red source of your choice would deal damage to you this turn, prevent that damage.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Circle of Protection: White",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "{1}: The next time a white source of your choice would deal damage to you this turn, prevent that damage.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Cold Snap",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Cumulative upkeep {2} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)\nAt the beginning of each player's upkeep, this enchantment deals damage to that player equal to the number of snow lands they control.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Cumulative upkeep"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Cooperation",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature has banding. (Any creatures with banding, and up to one without, can attack in a band. Bands are blocked as a group. If any creatures with banding a player controls are blocking or being blocked by a creature, that player divides that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Death Ward",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Regenerate target creature.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Disenchant",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Destroy target artifact or enchantment.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Drought",
+    "mana_cost": "{2}{W}{W}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of your upkeep, sacrifice this enchantment unless you pay {W}{W}.\nSpells cost an additional \"Sacrifice a Swamp\" to cast for each black mana symbol in their mana costs.\nActivated abilities cost an additional \"Sacrifice a Swamp\" to activate for each black mana symbol in their activation costs.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Elvish Healer",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Elf Cleric",
+    "oracle_text": "{T}: Prevent the next 1 damage that would be dealt to any target this turn. If it's a green creature, prevent the next 2 damage instead.",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Enduring Renewal",
+    "mana_cost": "{2}{W}{W}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "Play with your hand revealed.\nIf you would draw a card, reveal the top card of your library instead. If it's a creature card, put it into your graveyard. Otherwise, draw a card.\nWhenever a creature is put into your graveyard from the battlefield, return it to your hand.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Energy Storm",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "Cumulative upkeep {1} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)\nPrevent all damage that would be dealt by instant and sorcery spells.\nCreatures with flying don't untap during their controllers' untap steps.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Cumulative upkeep"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Formation",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Target creature gains banding until end of turn. (Any creatures with banding, and up to one without, can attack in a band. Bands are blocked as a group. If any creatures with banding a player controls are blocking or being blocked by a creature, that player divides that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)\nDraw a card at the beginning of the next turn's upkeep.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Fylgja",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nThis Aura enters with four healing counters on it.\nRemove a healing counter from this Aura: Prevent the next 1 damage that would be dealt to enchanted creature this turn.\n{2}{W}: Put a healing counter on this Aura.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "General Jarkeld",
+    "mana_cost": "{3}{W}",
+    "cmc": 4,
+    "type_line": "Legendary Creature — Human Soldier",
+    "oracle_text": "{T}: Choose two target blocked attacking creatures. If each of those creatures could be blocked by all creatures that the other is blocked by, each creature that's blocking exactly one of those attacking creatures stops blocking it and is blocking the other attacking creature. Activate only during the declare blockers step.",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Green Scarab",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature can't be blocked by green creatures.\nEnchanted creature gets +2/+2 as long as an opponent controls a green permanent.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Hallowed Ground",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "{W}{W}: Return target nonsnow land you control to its owner's hand.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Heal",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Prevent the next 1 damage that would be dealt to any target this turn.\nDraw a card at the beginning of the next turn's upkeep.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Hipparion",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Horse",
+    "oracle_text": "This creature can't block creatures with power 3 or greater unless you pay {1}.",
+    "power": "1",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Justice",
+    "mana_cost": "{2}{W}{W}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of your upkeep, sacrifice this enchantment unless you pay {W}{W}.\nWhenever a red creature or spell deals damage, this enchantment deals that much damage to that creature's or spell's controller.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Kelsinko Ranger",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Human Ranger",
+    "oracle_text": "{1}{W}: Target green creature gains first strike until end of turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Kjeldoran Elite Guard",
+    "mana_cost": "{3}{W}",
+    "cmc": 4,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "{T}: Target creature gets +2/+2 until end of turn. When that creature leaves the battlefield this turn, sacrifice this creature. Activate only during combat.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Kjeldoran Guard",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "{T}: Target creature gets +1/+1 until end of turn. When that creature leaves the battlefield this turn, sacrifice this creature. Activate only during combat and only if defending player controls no snow lands.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Kjeldoran Knight",
+    "mana_cost": "{W}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Human Knight",
+    "oracle_text": "Banding (Any creatures with banding, and up to one without, can attack in a band. Bands are blocked as a group. If any creatures with banding you control are blocking or being blocked by a creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)\n{1}{W}: This creature gets +1/+0 until end of turn.\n{W}{W}: This creature gets +0/+2 until end of turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Banding"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Kjeldoran Phalanx",
+    "mana_cost": "{5}{W}",
+    "cmc": 6,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "First strike; banding (Any creatures with banding, and up to one without, can attack in a band. Bands are blocked as a group. If any creatures with banding you control are blocking or being blocked by a creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)",
+    "power": "2",
+    "toughness": "5",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "First strike",
+      "Banding"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Kjeldoran Royal Guard",
+    "mana_cost": "{3}{W}{W}",
+    "cmc": 5,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "{T}: All combat damage that would be dealt to you by unblocked creatures this turn is dealt to this creature instead.",
+    "power": "2",
+    "toughness": "5",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Kjeldoran Skycaptain",
+    "mana_cost": "{4}{W}",
+    "cmc": 5,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "Flying; first strike; banding (Any creatures with banding, and up to one without, can attack in a band. Bands are blocked as a group. If any creatures with banding you control are blocking or being blocked by a creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying",
+      "First strike",
+      "Banding"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Kjeldoran Skyknight",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Human Knight",
+    "oracle_text": "Flying; first strike; banding (Any creatures with banding, and up to one without, can attack in a band. Bands are blocked as a group. If any creatures with banding you control are blocking or being blocked by a creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying",
+      "First strike",
+      "Banding"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Kjeldoran Warrior",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Human Warrior",
+    "oracle_text": "Banding (Any creatures with banding, and up to one without, can attack in a band. Bands are blocked as a group. If any creatures with banding you control are blocking or being blocked by a creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Banding"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Lightning Blow",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Target creature gains first strike until end of turn.\nDraw a card at the beginning of the next turn's upkeep.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Lost Order of Jarkeld",
+    "mana_cost": "{2}{W}{W}",
+    "cmc": 4,
+    "type_line": "Creature — Human Knight",
+    "oracle_text": "As this creature enters, choose an opponent.\nLost Order of Jarkeld's power and toughness are each equal to 1 plus the number of creatures the chosen player controls.",
+    "power": "1+*",
+    "toughness": "1+*",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Mercenaries",
+    "mana_cost": "{3}{W}",
+    "cmc": 4,
+    "type_line": "Creature — Human Mercenary",
+    "oracle_text": "{3}: The next time this creature would deal damage to you this turn, prevent that damage. Any player may activate this ability.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Order of the Sacred Torch",
+    "mana_cost": "{1}{W}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Human Knight",
+    "oracle_text": "{T}, Pay 1 life: Counter target black spell.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Order of the White Shield",
+    "mana_cost": "{W}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Human Knight",
+    "oracle_text": "Protection from black\n{W}: This creature gains first strike until end of turn.\n{W}{W}: This creature gets +1/+0 until end of turn.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Protection"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Prismatic Ward",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nAs this Aura enters, choose a color.\nPrevent all damage that would be dealt to enchanted creature by sources of the chosen color.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Rally",
+    "mana_cost": "{W}{W}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Blocking creatures get +1/+1 until end of turn.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Red Scarab",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature can't be blocked by red creatures.\nEnchanted creature gets +2/+2 as long as an opponent controls a red permanent.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Sacred Boon",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Prevent the next 3 damage that would be dealt to target creature this turn. At the beginning of the next end step, put a +0/+1 counter on that creature for each 1 damage prevented this way.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Seraph",
+    "mana_cost": "{6}{W}",
+    "cmc": 7,
+    "type_line": "Creature — Angel",
+    "oracle_text": "Flying\nWhenever a creature dealt damage by this creature this turn dies, put that card onto the battlefield under your control at the beginning of the next end step. Sacrifice the creature when you lose control of this creature.",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Shield Bearer",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "Banding (Any creatures with banding, and up to one without, can attack in a band. Bands are blocked as a group. If any creatures with banding you control are blocking or being blocked by a creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)",
+    "power": "0",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Banding"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Snow Hound",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Dog",
+    "oracle_text": "{1}, {T}: Return this creature and target green or blue creature you control to their owner's hand.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Swords to Plowshares",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Exile target creature. Its controller gains life equal to its power.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Warning",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Prevent all combat damage that would be dealt by target attacking creature this turn.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "White Scarab",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature can't be blocked by white creatures.\nEnchanted creature gets +2/+2 as long as an opponent controls a white permanent.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Arnjlot's Ascent",
+    "mana_cost": "{1}{U}{U}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Cumulative upkeep {U} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)\n{1}: Target creature gains flying until end of turn.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Cumulative upkeep"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Balduvian Conjurer",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "{T}: Target snow land becomes a 2/2 creature until end of turn. It's still a land.",
+    "power": "0",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Balduvian Shaman",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Creature — Human Cleric Shaman",
+    "oracle_text": "{T}: Change the text of target white enchantment you control that doesn't have cumulative upkeep by replacing all instances of one color word with another. (For example, you may change \"black creatures can't attack\" to \"blue creatures can't attack.\") That enchantment gains \"Cumulative upkeep {1}.\" (At the beginning of its controller's upkeep, that player puts an age counter on it, then sacrifices it unless they pay its upkeep cost for each age counter on it.)",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Binding Grasp",
+    "mana_cost": "{3}{U}",
+    "cmc": 4,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nAt the beginning of your upkeep, sacrifice this Aura unless you pay {1}{U}.\nYou control enchanted creature.\nEnchanted creature gets +0/+1.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Brainstorm",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Draw three cards, then put two cards from your hand on top of your library in any order.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Breath of Dreams",
+    "mana_cost": "{2}{U}{U}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "Cumulative upkeep {U} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)\nGreen creatures have \"Cumulative upkeep {1}.\"",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Cumulative upkeep"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Clairvoyance",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Look at target player's hand.\nDraw a card at the beginning of the next turn's upkeep.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Counterspell",
+    "mana_cost": "{U}{U}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Counter target spell.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Deflection",
+    "mana_cost": "{3}{U}",
+    "cmc": 4,
+    "type_line": "Instant",
+    "oracle_text": "Change the target of target spell with a single target.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Dreams of the Dead",
+    "mana_cost": "{3}{U}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "{1}{U}: Return target white or black creature card from your graveyard to the battlefield. That creature gains \"Cumulative upkeep {2}.\" If the creature would leave the battlefield, exile it instead of putting it anywhere else. (At the beginning of its controller's upkeep, that player puts an age counter on it, then sacrifices it unless they pay its upkeep cost for each age counter on it.)",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Enervate",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Tap target artifact, creature, or land.\nDraw a card at the beginning of the next turn's upkeep.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Errant Minion",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nAt the beginning of the upkeep of enchanted creature's controller, that player may pay any amount of mana. This Aura deals 2 damage to that player. Prevent X of that damage, where X is the amount of mana that player paid this way.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Essence Flare",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature gets +2/+0.\nAt the beginning of the upkeep of enchanted creature's controller, put a -0/-1 counter on that creature.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Force Void",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Counter target spell unless its controller pays {1}.\nDraw a card at the beginning of the next turn's upkeep.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Glacial Wall",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Wall",
+    "oracle_text": "Defender (This creature can't attack.)",
+    "power": "0",
+    "toughness": "7",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Defender"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Hydroblast",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Choose one —\n• Counter target spell if it's red.\n• Destroy target permanent if it's red.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Iceberg",
+    "mana_cost": "{X}{U}{U}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "This enchantment enters with X ice counters on it.\n{3}: Put an ice counter on this enchantment.\nRemove an ice counter from this enchantment: Add {C}.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Icy Prison",
+    "mana_cost": "{U}{U}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "When this enchantment enters, exile target creature.\nAt the beginning of your upkeep, sacrifice this enchantment unless any player pays {3}.\nWhen this enchantment leaves the battlefield, return the exiled card to the battlefield under its owner's control.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Illusionary Forces",
+    "mana_cost": "{3}{U}",
+    "cmc": 4,
+    "type_line": "Creature — Illusion",
+    "oracle_text": "Flying\nCumulative upkeep {U} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Cumulative upkeep",
+      "Flying"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Illusionary Presence",
+    "mana_cost": "{1}{U}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Illusion",
+    "oracle_text": "Cumulative upkeep {U} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)\nAt the beginning of your upkeep, choose a land type. This creature gains landwalk of the chosen type until end of turn. (It can't be blocked as long as defending player controls a land of that type.)",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Cumulative upkeep"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Illusionary Terrain",
+    "mana_cost": "{U}{U}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "Cumulative upkeep {2} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)\nAs this enchantment enters, choose two basic land types.\nBasic lands of the first chosen type are the second chosen type.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Cumulative upkeep"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Illusionary Wall",
+    "mana_cost": "{4}{U}",
+    "cmc": 5,
+    "type_line": "Creature — Illusion Wall",
+    "oracle_text": "Defender, flying, first strike\nCumulative upkeep {U} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)",
+    "power": "7",
+    "toughness": "4",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Cumulative upkeep",
+      "Flying",
+      "First strike",
+      "Defender"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Illusions of Grandeur",
+    "mana_cost": "{3}{U}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "Cumulative upkeep {2} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)\nWhen this enchantment enters, you gain 20 life.\nWhen this enchantment leaves the battlefield, you lose 20 life.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Cumulative upkeep"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Infuse",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Untap target artifact, creature, or land.\nDraw a card at the beginning of the next turn's upkeep.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Krovikan Sorcerer",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Human Wizard Sorcerer",
+    "oracle_text": "{T}, Discard a nonblack card: Draw a card.\n{T}, Discard a black card: Draw two cards, then discard one of them.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Magus of the Unseen",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "{1}{U}, {T}: Untap target artifact an opponent controls and gain control of it until end of turn. It gains haste until end of turn. When you lose control of the artifact, tap it.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Mesmeric Trance",
+    "mana_cost": "{1}{U}{U}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Cumulative upkeep {1} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)\n{U}, Discard a card: Draw a card.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Cumulative upkeep"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Mistfolk",
+    "mana_cost": "{U}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Illusion",
+    "oracle_text": "{U}: Counter target spell that targets this creature.",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Musician",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "Cumulative upkeep {1} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)\n{T}: Put a music counter on target creature. If it doesn't have \"At the beginning of your upkeep, destroy this creature unless you pay {1} for each music counter on it,\" it gains that ability.",
+    "power": "1",
+    "toughness": "3",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Cumulative upkeep"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Mystic Might",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant land you control\nCumulative upkeep {1}{U} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)\nEnchanted land has \"{T}: Target creature gets +2/+2 until end of turn.\"",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Enchant",
+      "Cumulative upkeep"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Mystic Remora",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Enchantment",
+    "oracle_text": "Cumulative upkeep {1} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)\nWhenever an opponent casts a noncreature spell, you may draw a card unless that player pays {4}.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Cumulative upkeep"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Phantasmal Mount",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Illusion Horse",
+    "oracle_text": "Flying\n{T}: Target creature you control with toughness 2 or less gets +1/+1 and gains flying until end of turn. When this creature leaves the battlefield this turn, sacrifice that creature. When the creature leaves the battlefield this turn, sacrifice this creature.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Polar Kraken",
+    "mana_cost": "{8}{U}{U}{U}",
+    "cmc": 11,
+    "type_line": "Creature — Kraken",
+    "oracle_text": "Trample\nThis creature enters tapped.\nCumulative upkeep—Sacrifice a land. (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)",
+    "power": "11",
+    "toughness": "11",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Trample",
+      "Cumulative upkeep"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Portent",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "Look at the top three cards of target player's library, then put them back in any order. You may have that player shuffle.\nDraw a card at the beginning of the next turn's upkeep.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Power Sink",
+    "mana_cost": "{X}{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Counter target spell unless its controller pays {X}. If that player doesn't, they tap all lands with mana abilities they control and lose all unspent mana.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Ray of Command",
+    "mana_cost": "{3}{U}",
+    "cmc": 4,
+    "type_line": "Instant",
+    "oracle_text": "Untap target creature an opponent controls and gain control of it until end of turn. That creature gains haste until end of turn. When you lose control of the creature, tap it.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Ray of Erasure",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Target player mills a card.\nDraw a card at the beginning of the next turn's upkeep.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Mill"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Reality Twist",
+    "mana_cost": "{U}{U}{U}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Cumulative upkeep {1}{U}{U} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)\nIf tapped for mana, Plains produce {R}, Swamps produce {G}, Mountains produce {W}, and Forests produce {B} instead of any other type.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Cumulative upkeep"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Sea Spirit",
+    "mana_cost": "{4}{U}",
+    "cmc": 5,
+    "type_line": "Creature — Elemental Spirit",
+    "oracle_text": "{U}: This creature gets +1/+0 until end of turn.",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Shyft",
+    "mana_cost": "{4}{U}",
+    "cmc": 5,
+    "type_line": "Creature — Shapeshifter",
+    "oracle_text": "At the beginning of your upkeep, you may have this creature become the color or colors of your choice. (This effect lasts indefinitely.)",
+    "power": "4",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Sibilant Spirit",
+    "mana_cost": "{5}{U}",
+    "cmc": 6,
+    "type_line": "Creature — Spirit",
+    "oracle_text": "Flying\nWhenever this creature attacks, defending player may draw a card.",
+    "power": "5",
+    "toughness": "6",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Silver Erne",
+    "mana_cost": "{3}{U}",
+    "cmc": 4,
+    "type_line": "Creature — Bird",
+    "oracle_text": "Flying, trample",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying",
+      "Trample"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Sleight of Mind",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Change the text of target spell or permanent by replacing all instances of one color word with another. (For example, you may change \"target black spell\" to \"target blue spell.\" This effect lasts indefinitely.)",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Snow Devil",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature has flying.\nEnchanted creature has first strike as long as it's blocking and you control a snow land.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Snowfall",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Cumulative upkeep {U} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)\nWhenever an Island is tapped for mana, its controller may add an additional {U}. If that Island is snow, its controller may add an additional {U}{U} instead. Spend this mana only to pay cumulative upkeep costs.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Cumulative upkeep"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Soldevi Machinist",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Human Wizard Artificer",
+    "oracle_text": "{T}: Add {C}{C}. Spend this mana only to activate abilities of artifacts.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Soul Barrier",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever an opponent casts a creature spell, this enchantment deals 2 damage to that player unless they pay {2}.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Thunder Wall",
+    "mana_cost": "{1}{U}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Wall",
+    "oracle_text": "Defender (This creature can't attack.)\nFlying\n{U}: This creature gets +1/+1 until end of turn.",
+    "power": "0",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying",
+      "Defender"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Updraft",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Target creature gains flying until end of turn.\nDraw a card at the beginning of the next turn's upkeep.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Wind Spirit",
+    "mana_cost": "{4}{U}",
+    "cmc": 5,
+    "type_line": "Creature — Elemental Spirit",
+    "oracle_text": "Flying\nMenace (This creature can't be blocked except by two or more creatures.)",
+    "power": "3",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying",
+      "Menace"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Winter's Chill",
+    "mana_cost": "{X}{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Cast this spell only during combat before blockers are declared.\nX can't be greater than the number of snow lands you control.\nChoose X target attacking creatures. For each of those creatures, its controller may pay {1} or {2}. If that player doesn't, destroy that creature at end of combat. If that player pays only {1}, prevent all combat damage that would be dealt to and dealt by that creature this combat.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Word of Undoing",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Return target creature and all white Auras you own attached to it to their owners' hands.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Wrath of Marit Lage",
+    "mana_cost": "{3}{U}{U}",
+    "cmc": 5,
+    "type_line": "Enchantment",
+    "oracle_text": "When this enchantment enters, tap all red creatures.\nRed creatures don't untap during their controllers' untap steps.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Zur's Weirding",
+    "mana_cost": "{3}{U}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "Players play with their hands revealed.\nIf a player would draw a card, they reveal it instead. Then any other player may pay 2 life. If a player does, put that card into its owner's graveyard. Otherwise, that player draws a card.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Zuran Enchanter",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "{2}{B}, {T}: Target player discards a card. Activate only during your turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Zuran Spellcaster",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "{T}: This creature deals 1 damage to any target.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Abyssal Specter",
+    "mana_cost": "{2}{B}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Specter",
+    "oracle_text": "Flying\nWhenever this creature deals damage to a player, that player discards a card.",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Ashen Ghoul",
+    "mana_cost": "{3}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Zombie",
+    "oracle_text": "Haste\n{B}: Return this card from your graveyard to the battlefield. Activate only during your upkeep and only if three or more creature cards are above this card.",
+    "power": "3",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Haste"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Brine Shaman",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Human Cleric Shaman",
+    "oracle_text": "{T}, Sacrifice a creature: Target creature gets +2/+2 until end of turn.\n{1}{U}{U}, Sacrifice a creature: Counter target creature spell.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Burnt Offering",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "As an additional cost to cast this spell, sacrifice a creature.\nAdd X mana in any combination of {B} and/or {R}, where X is the sacrificed creature's mana value.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Cloak of Confusion",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature you control\nWhenever enchanted creature attacks and isn't blocked, you may have it assign no combat damage this turn. If you do, defending player discards a card at random.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Dance of the Dead",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature card in a graveyard\nWhen this Aura enters, if it's on the battlefield, it loses \"enchant creature card in a graveyard\" and gains \"enchant creature put onto the battlefield with this Aura.\" Put enchanted creature card onto the battlefield tapped under your control and attach this Aura to it. When this Aura leaves the battlefield, that creature's controller sacrifices it.\nEnchanted creature gets +1/+1 and doesn't untap during its controller's untap step.\nAt the beginning of the upkeep of enchanted creature's controller, that player may pay {1}{B}. If the player does, untap that creature.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Dark Banishing",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Destroy target nonblack creature. It can't be regenerated.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Dark Ritual",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Add {B}{B}{B}.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Demonic Consultation",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Choose a card name. Exile the top six cards of your library, then reveal cards from the top of your library until you reveal a card with the chosen name. Put that card into your hand and exile all other cards revealed this way.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Dread Wight",
+    "mana_cost": "{3}{B}{B}",
+    "cmc": 5,
+    "type_line": "Creature — Zombie",
+    "oracle_text": "At end of combat, put a paralyzation counter on each creature blocking or blocked by this creature and tap those creatures. Each of those creatures doesn't untap during its controller's untap step for as long as it has a paralyzation counter on it. Each of those creatures gains \"{4}: Remove a paralyzation counter from this creature.\"",
+    "power": "3",
+    "toughness": "4",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Drift of the Dead",
+    "mana_cost": "{3}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Wall",
+    "oracle_text": "Defender (This creature can't attack.)\nDrift of the Dead's power and toughness are each equal to the number of snow lands you control.",
+    "power": "*",
+    "toughness": "*",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Defender"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Fear",
+    "mana_cost": "{B}{B}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature (Target a creature as you cast this. This card enters attached to that creature.)\nEnchanted creature has fear. (It can't be blocked except by artifact creatures and/or black creatures.)",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Flow of Maggots",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Insect",
+    "oracle_text": "Cumulative upkeep {1} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)\nThis creature can't be blocked by non-Wall creatures.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Cumulative upkeep"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Foul Familiar",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Spirit",
+    "oracle_text": "This creature can't block.\n{B}, Pay 1 life: Return this creature to its owner's hand.",
+    "power": "3",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Gangrenous Zombies",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Zombie",
+    "oracle_text": "{T}, Sacrifice this creature: This creature deals 1 damage to each creature and each player. If you control a snow Swamp, this creature deals 2 damage to each creature and each player instead.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Gaze of Pain",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Until end of turn, whenever a creature you control attacks and isn't blocked, you may choose to have it deal damage equal to its power to a target creature. If you do, it assigns no combat damage this turn.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Gravebind",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Target creature can't be regenerated this turn.\nDraw a card at the beginning of the next turn's upkeep.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Hecatomb",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "When this enchantment enters, sacrifice this enchantment unless you sacrifice four creatures.\nTap an untapped Swamp you control: This enchantment deals 1 damage to any target.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Hoar Shade",
+    "mana_cost": "{3}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Shade",
+    "oracle_text": "{B}: This creature gets +1/+1 until end of turn.",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Howl from Beyond",
+    "mana_cost": "{X}{B}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Target creature gets +X/+0 until end of turn.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Hyalopterous Lemure",
+    "mana_cost": "{4}{B}",
+    "cmc": 5,
+    "type_line": "Creature — Spirit",
+    "oracle_text": "{0}: This creature gets -1/-0 and gains flying until end of turn.",
+    "power": "4",
+    "toughness": "3",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Icequake",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Destroy target land. If that land was a snow land, Icequake deals 1 damage to that land's controller.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Infernal Darkness",
+    "mana_cost": "{2}{B}{B}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "Cumulative upkeep—Pay {B} and 1 life. (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)\nIf a land is tapped for mana, it produces {B} instead of any other type.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Cumulative upkeep"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Infernal Denizen",
+    "mana_cost": "{7}{B}",
+    "cmc": 8,
+    "type_line": "Creature — Demon",
+    "oracle_text": "At the beginning of your upkeep, sacrifice two Swamps. If you can't, tap this creature, and an opponent may gain control of a creature you control of their choice for as long as this creature remains on the battlefield.\n{T}: Gain control of target creature for as long as this creature remains on the battlefield.",
+    "power": "5",
+    "toughness": "7",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Kjeldoran Dead",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Creature — Skeleton",
+    "oracle_text": "When this creature enters, sacrifice a creature.\n{B}: Regenerate this creature.",
+    "power": "3",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Knight of Stromgald",
+    "mana_cost": "{B}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Human Knight",
+    "oracle_text": "Protection from white\n{B}: This creature gains first strike until end of turn.\n{B}{B}: This creature gets +1/+0 until end of turn.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Protection"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Krovikan Elementalist",
+    "mana_cost": "{B}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "{2}{R}: Target creature gets +1/+0 until end of turn.\n{U}{U}: Target creature you control gains flying until end of turn. Sacrifice it at the beginning of the next end step.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Krovikan Fetish",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nWhen this Aura enters, draw a card at the beginning of the next turn's upkeep.\nEnchanted creature gets +1/+1.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Krovikan Vampire",
+    "mana_cost": "{3}{B}{B}",
+    "cmc": 5,
+    "type_line": "Creature — Vampire",
+    "oracle_text": "At the beginning of each end step, if a creature dealt damage by this creature this turn died, put that card onto the battlefield under your control. Sacrifice it when you lose control of this creature.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Legions of Lim-Dûl",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Zombie",
+    "oracle_text": "Snow swampwalk (This creature can't be blocked as long as defending player controls a snow Swamp.)",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Leshrac's Rite",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature has swampwalk. (It can't be blocked as long as defending player controls a Swamp.)",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Leshrac's Sigil",
+    "mana_cost": "{B}{B}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever an opponent casts a green spell, you may pay {B}{B}. If you do, look at that player's hand and choose a card from it. The player discards that card.\n{B}{B}: Return this enchantment to its owner's hand.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Lim-Dûl's Cohort",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Zombie",
+    "oracle_text": "Whenever this creature blocks or becomes blocked by a creature, that creature can't be regenerated this turn.",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Lim-Dûl's Hex",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of your upkeep, for each player, this enchantment deals 1 damage to that player unless they pay {B} or {3}.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Mind Ravel",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Target player discards a card.\nDraw a card at the beginning of the next turn's upkeep.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Mind Warp",
+    "mana_cost": "{X}{3}{B}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Look at target player's hand and choose X cards from it. That player discards those cards.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Mind Whip",
+    "mana_cost": "{2}{B}{B}",
+    "cmc": 4,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nAt the beginning of the upkeep of enchanted creature's controller, that player may pay {3}. If they don't, this Aura deals 2 damage to that player and you tap that creature.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Minion of Leshrac",
+    "mana_cost": "{4}{B}{B}{B}",
+    "cmc": 7,
+    "type_line": "Creature — Demon Minion",
+    "oracle_text": "Protection from black\nAt the beginning of your upkeep, this creature deals 5 damage to you unless you sacrifice a creature other than this creature. If this creature deals damage to you this way, tap it.\n{T}: Destroy target creature or land.",
+    "power": "5",
+    "toughness": "5",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Protection"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Minion of Tevesh Szat",
+    "mana_cost": "{4}{B}{B}{B}",
+    "cmc": 7,
+    "type_line": "Creature — Demon Minion",
+    "oracle_text": "At the beginning of your upkeep, this creature deals 2 damage to you unless you pay {B}{B}.\n{T}: Target creature gets +3/-2 until end of turn.",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Mole Worms",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Worm",
+    "oracle_text": "You may choose not to untap this creature during your untap step.\n{T}: Tap target land. It doesn't untap during its controller's untap step for as long as this creature remains tapped.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Moor Fiend",
+    "mana_cost": "{3}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Horror",
+    "oracle_text": "Swampwalk (This creature can't be blocked as long as defending player controls a Swamp.)",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Landwalk",
+      "Swampwalk"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Necropotence",
+    "mana_cost": "{B}{B}{B}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Skip your draw step.\nWhenever you discard a card, exile that card from your graveyard.\nPay 1 life: Exile the top card of your library face down. Put that card into your hand at the beginning of your next end step.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Norritt",
+    "mana_cost": "{3}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Imp",
+    "oracle_text": "{T}: Untap target blue creature.\n{T}: Choose target non-Wall creature the active player has controlled continuously since the beginning of the turn. That creature attacks this turn if able. Destroy it at the beginning of the next end step if it didn't attack this turn. Activate only before attackers are declared.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Oath of Lim-Dûl",
+    "mana_cost": "{3}{B}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever you lose life, for each 1 life you lost, sacrifice a permanent other than this enchantment unless you discard a card. (Damage dealt to you causes you to lose life.)\n{B}{B}: Draw a card.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Pestilence Rats",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Rat",
+    "oracle_text": "Pestilence Rats's power is equal to the number of other Rats on the battlefield. (For example, as long as there are two other Rats on the battlefield, Pestilence Rats's power and toughness are 2/3.)",
+    "power": "*",
+    "toughness": "3",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Pox",
+    "mana_cost": "{B}{B}{B}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Each player loses a third of their life, then discards a third of the cards in their hand, then sacrifices a third of the creatures they control of their choice, then sacrifices a third of the lands they control of their choice. Round up each time.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Seizures",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nWhenever enchanted creature becomes tapped, this Aura deals 3 damage to that creature's controller unless that player pays {3}.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Songs of the Damned",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Add {B} for each creature card in your graveyard.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Soul Burn",
+    "mana_cost": "{X}{2}{B}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Spend only black and/or red mana on X.\nSoul Burn deals X damage to any target. You gain life equal to the damage dealt, but not more than the amount of {B} spent on X, the player's life total before the damage was dealt, the planeswalker's loyalty before the damage was dealt, or the creature's toughness.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Soul Kiss",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\n{B}, Pay 1 life: Enchanted creature gets +2/+2 until end of turn. Activate no more than three times each turn.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Spoils of Evil",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "For each artifact or creature card in target opponent's graveyard, add {C} and you gain 1 life.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Spoils of War",
+    "mana_cost": "{X}{B}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "X is the number of artifact and/or creature cards in an opponent's graveyard as you cast this spell.\nDistribute X +1/+1 counters among any number of target creatures.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Stench of Evil",
+    "mana_cost": "{2}{B}{B}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Destroy all Plains. For each land destroyed this way, Stench of Evil deals 1 damage to that land's controller unless they pay {2}.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Stromgald Cabal",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Human Knight",
+    "oracle_text": "{T}, Pay 1 life: Counter target white spell.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Touch of Death",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Touch of Death deals 1 damage to target player or planeswalker. You gain 1 life.\nDraw a card at the beginning of the next turn's upkeep.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Withering Wisps",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of the end step, if no creatures are on the battlefield, sacrifice this enchantment.\n{B}: This enchantment deals 1 damage to each creature and each player. Activate no more times each turn than the number of snow Swamps you control.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Aggression",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant non-Wall creature\nEnchanted creature has first strike and trample.\nAt the beginning of the end step of enchanted creature's controller, destroy that creature if it didn't attack this turn.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Anarchy",
+    "mana_cost": "{2}{R}{R}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Destroy all white permanents.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Avalanche",
+    "mana_cost": "{X}{2}{R}{R}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Destroy X target snow lands.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Balduvian Barbarians",
+    "mana_cost": "{1}{R}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Human Barbarian",
+    "power": "3",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Balduvian Hydra",
+    "mana_cost": "{X}{R}{R}",
+    "cmc": 2,
+    "type_line": "Creature — Hydra",
+    "oracle_text": "This creature enters with X +1/+0 counters on it.\nRemove a +1/+0 counter from this creature: Prevent the next 1 damage that would be dealt to it this turn.\n{R}{R}{R}: Put a +1/+0 counter on this creature. Activate only during your upkeep.",
+    "power": "0",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Barbarian Guides",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Human Barbarian",
+    "oracle_text": "{2}{R}, {T}: Choose a land type. Target creature you control gains snow landwalk of the chosen type until end of turn. Return that creature to its owner's hand at the beginning of the next end step. (It can't be blocked as long as defending player controls a snow land of that type.)",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Battle Frenzy",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Green creatures you control get +1/+1 until end of turn.\nNongreen creatures you control get +1/+0 until end of turn.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Bone Shaman",
+    "mana_cost": "{2}{R}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Giant Shaman",
+    "oracle_text": "{B}: Until end of turn, this creature gains \"Creatures dealt damage by this creature this turn can't be regenerated this turn.\"",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Brand of Ill Omen",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nCumulative upkeep {R} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)\nEnchanted creature's controller can't cast creature spells.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Enchant",
+      "Cumulative upkeep"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Chaos Lord",
+    "mana_cost": "{4}{R}{R}{R}",
+    "cmc": 7,
+    "type_line": "Creature — Human",
+    "oracle_text": "First strike\nAt the beginning of your upkeep, target opponent gains control of this creature if the number of permanents is even.\nThis creature can attack as though it had haste unless it entered this turn.",
+    "power": "7",
+    "toughness": "7",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "First strike"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Chaos Moon",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of each upkeep, count the number of permanents. If the number is odd, until end of turn, red creatures get +1/+1 and whenever a player taps a Mountain for mana, that player adds an additional {R}. If the number is even, until end of turn, red creatures get -1/-1 and if a player taps a Mountain for mana, that Mountain produces colorless mana instead of any other type.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Conquer",
+    "mana_cost": "{3}{R}{R}",
+    "cmc": 5,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant land\nYou control enchanted land.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Curse of Marit Lage",
+    "mana_cost": "{3}{R}{R}",
+    "cmc": 5,
+    "type_line": "Enchantment",
+    "oracle_text": "When this enchantment enters, tap all Islands.\nIslands don't untap during their controllers' untap steps.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Dwarven Armory",
+    "mana_cost": "{2}{R}{R}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "{2}, Sacrifice a land: Put a +2/+2 counter on target creature. Activate only during any upkeep step.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Errantry",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature gets +3/+0 and can only attack alone.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Flame Spirit",
+    "mana_cost": "{4}{R}",
+    "cmc": 5,
+    "type_line": "Creature — Elemental Spirit",
+    "oracle_text": "{R}: This creature gets +1/+0 until end of turn.",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Flare",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Flare deals 1 damage to any target.\nDraw a card at the beginning of the next turn's upkeep.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Game of Chaos",
+    "mana_cost": "{R}{R}{R}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Flip a coin. If you win the flip, you gain 1 life and target opponent loses 1 life, and you decide whether to flip again. If you lose the flip, you lose 1 life and that opponent gains 1 life, and that player decides whether to flip again. Double the life stakes with each flip.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Glacial Crevasses",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Sacrifice a snow Mountain: Prevent all combat damage that would be dealt this turn.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Goblin Mutant",
+    "mana_cost": "{2}{R}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Goblin Mutant",
+    "oracle_text": "Trample\nThis creature can't attack if defending player controls an untapped creature with power 3 or greater.\nThis creature can't block creatures with power 3 or greater.",
+    "power": "5",
+    "toughness": "3",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Trample"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Goblin Sappers",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Creature — Goblin",
+    "oracle_text": "{R}{R}, {T}: Target creature you control can't be blocked this turn. Destroy it and this creature at end of combat.\n{R}{R}{R}{R}, {T}: Target creature you control can't be blocked this turn. Destroy it at end of combat.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Goblin Ski Patrol",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Creature — Goblin",
+    "oracle_text": "{1}{R}: This creature gets +2/+0 and gains flying. Its controller sacrifices it at the beginning of the next end step. Activate only once and only if you control a snow Mountain.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Goblin Snowman",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Goblin",
+    "oracle_text": "Whenever this creature blocks, prevent all combat damage that would be dealt to and dealt by it this turn.\n{T}: This creature deals 1 damage to target creature it's blocking.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Grizzled Wolverine",
+    "mana_cost": "{1}{R}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Wolverine",
+    "oracle_text": "{R}: This creature gets +2/+0 until end of turn. Activate only during the declare blockers step, only if at least one creature is blocking this creature, and only once each turn.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Imposing Visage",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature has menace. (It can't be blocked except by two or more creatures.)",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Incinerate",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Incinerate deals 3 damage to any target. A creature dealt damage this way can't be regenerated this turn.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Jokulhaups",
+    "mana_cost": "{4}{R}{R}",
+    "cmc": 6,
+    "type_line": "Sorcery",
+    "oracle_text": "Destroy all artifacts, creatures, and lands. They can't be regenerated.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Karplusan Giant",
+    "mana_cost": "{6}{R}",
+    "cmc": 7,
+    "type_line": "Creature — Giant",
+    "oracle_text": "Tap an untapped snow land you control: This creature gets +1/+1 until end of turn.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Karplusan Yeti",
+    "mana_cost": "{3}{R}{R}",
+    "cmc": 5,
+    "type_line": "Creature — Yeti",
+    "oracle_text": "{T}: This creature deals damage equal to its power to target creature. That creature deals damage equal to its power to this creature.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Lava Burst",
+    "mana_cost": "{X}{R}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "Lava Burst deals X damage to any target. If Lava Burst would deal damage to a creature, that damage can't be prevented or dealt instead to another permanent or player.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Márton Stromgald",
+    "mana_cost": "{2}{R}{R}",
+    "cmc": 4,
+    "type_line": "Legendary Creature — Human Knight",
+    "oracle_text": "Whenever Márton Stromgald attacks, other attacking creatures get +1/+1 until end of turn for each attacking creature other than Márton Stromgald.\nWhenever Márton Stromgald blocks, other blocking creatures get +1/+1 until end of turn for each blocking creature other than Márton Stromgald.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Melee",
+    "mana_cost": "{4}{R}",
+    "cmc": 5,
+    "type_line": "Instant",
+    "oracle_text": "Cast this spell only during combat on your turn before blockers are declared.\nYou choose which creatures block this combat and how those creatures block.\nWhenever a creature attacks and isn't blocked this combat, untap it and remove it from combat.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Melting",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "All lands are no longer snow.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Meteor Shower",
+    "mana_cost": "{X}{X}{R}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "Meteor Shower deals X plus 1 damage divided as you choose among any number of targets.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Mountain Goat",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Creature — Goat",
+    "oracle_text": "Mountainwalk (This creature can't be blocked as long as defending player controls a Mountain.)",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Landwalk",
+      "Mountainwalk"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Mudslide",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Creatures without flying don't untap during their controllers' untap steps.\nAt the beginning of each player's upkeep, that player may choose any number of tapped creatures without flying they control and pay {2} for each creature chosen this way. If the player does, untap those creatures.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Orcish Cannoneers",
+    "mana_cost": "{1}{R}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Orc Warrior",
+    "oracle_text": "{T}: This creature deals 2 damage to any target and 3 damage to you.",
+    "power": "1",
+    "toughness": "3",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Orcish Conscripts",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Creature — Orc",
+    "oracle_text": "This creature can't attack unless at least two other creatures attack.\nThis creature can't block unless at least two other creatures block.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Orcish Farmer",
+    "mana_cost": "{1}{R}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Orc",
+    "oracle_text": "{T}: Target land becomes a Swamp until its controller's next untap step.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Orcish Healer",
+    "mana_cost": "{R}{R}",
+    "cmc": 2,
+    "type_line": "Creature — Orc Cleric",
+    "oracle_text": "{R}{R}, {T}: Target creature can't be regenerated this turn.\n{B}{B}{R}, {T}: Regenerate target black or green creature.\n{R}{G}{G}, {T}: Regenerate target black or green creature.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Orcish Librarian",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Creature — Orc",
+    "oracle_text": "{R}, {T}: Look at the top eight cards of your library. Exile four of them at random, then put the rest on top of your library in any order.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Orcish Lumberjack",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Creature — Orc",
+    "oracle_text": "{T}, Sacrifice a Forest: Add three mana in any combination of {R} and/or {G}.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Orcish Squatters",
+    "mana_cost": "{4}{R}",
+    "cmc": 5,
+    "type_line": "Creature — Orc",
+    "oracle_text": "Whenever this creature attacks and isn't blocked, you may gain control of target land defending player controls for as long as you control this creature. If you do, this creature assigns no combat damage this turn.",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Panic",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Cast this spell only during combat before blockers are declared.\nTarget creature can't block this turn.\nDraw a card at the beginning of the next turn's upkeep.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Pyroblast",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Choose one —\n• Counter target spell if it's blue.\n• Destroy target permanent if it's blue.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Pyroclasm",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Pyroclasm deals 2 damage to each creature.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Sabretooth Tiger",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Cat",
+    "oracle_text": "First strike",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "First strike"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Shatter",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Destroy target artifact.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Stone Rain",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Destroy target land.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Stone Spirit",
+    "mana_cost": "{4}{R}",
+    "cmc": 5,
+    "type_line": "Creature — Elemental Spirit",
+    "oracle_text": "This creature can't be blocked by creatures with flying.",
+    "power": "4",
+    "toughness": "3",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Stonehands",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature gets +0/+2.\n{R}: Enchanted creature gets +1/+0 until end of turn.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Tor Giant",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Giant",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Total War",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever a player attacks with one or more creatures, destroy all untapped non-Wall creatures that player controls that didn't attack, except for creatures the player hasn't controlled continuously since the beginning of the turn.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Vertigo",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Vertigo deals 2 damage to target creature with flying. That creature loses flying until end of turn.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Wall of Lava",
+    "mana_cost": "{1}{R}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Wall",
+    "oracle_text": "Defender (This creature can't attack.)\n{R}: This creature gets +1/+1 until end of turn.",
+    "power": "1",
+    "toughness": "3",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Defender"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Word of Blasting",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Destroy target Wall. It can't be regenerated. Word of Blasting deals damage equal to that Wall's mana value to the Wall's controller.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Aurochs",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Creature — Aurochs",
+    "oracle_text": "Trample\nWhenever this creature attacks, it gets +1/+0 until end of turn for each other attacking Aurochs.",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Trample"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Balduvian Bears",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Bear",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Blizzard",
+    "mana_cost": "{G}{G}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "Cast this spell only if you control a snow land.\nCumulative upkeep {2} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)\nCreatures with flying don't untap during their controllers' untap steps.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Cumulative upkeep"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Brown Ouphe",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Ouphe",
+    "oracle_text": "{1}{G}, {T}: Counter target activated ability from an artifact source. (Mana abilities can't be targeted.)",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Chub Toad",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Frog",
+    "oracle_text": "Whenever this creature blocks or becomes blocked, it gets +2/+2 until end of turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Dire Wolves",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Wolf",
+    "oracle_text": "This creature has banding as long as you control a Plains. (Any creatures with banding, and up to one without, can attack in a band. Bands are blocked as a group. If any creatures with banding you control are blocking or being blocked by a creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Earthlore",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant land you control\nTap enchanted land: Target blocking creature gets +1/+2 until end of turn. Activate only if enchanted land is untapped.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Elder Druid",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Creature — Elf Cleric Druid",
+    "oracle_text": "{3}{G}, {T}: You may tap or untap target artifact, creature, or land.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Essence Filter",
+    "mana_cost": "{1}{G}{G}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Destroy all enchantments or all nonwhite enchantments.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Fanatical Fever",
+    "mana_cost": "{2}{G}{G}",
+    "cmc": 4,
+    "type_line": "Instant",
+    "oracle_text": "Target creature gets +3/+0 and gains trample until end of turn.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Folk of the Pines",
+    "mana_cost": "{4}{G}",
+    "cmc": 5,
+    "type_line": "Creature — Dryad",
+    "oracle_text": "{1}{G}: This creature gets +1/+0 until end of turn.",
+    "power": "2",
+    "toughness": "5",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Forbidden Lore",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant land\nEnchanted land has \"{T}: Target creature gets +2/+1 until end of turn.\"",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Forgotten Lore",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "Target opponent chooses a card in your graveyard. You may pay {G}. If you do, repeat this process except that opponent can't choose a card already chosen for Forgotten Lore. Then put the last chosen card into your hand.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Foxfire",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Untap target attacking creature. Prevent all combat damage that would be dealt to and dealt by that creature this turn.\nDraw a card at the beginning of the next turn's upkeep.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Freyalise Supplicant",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Human Cleric",
+    "oracle_text": "{T}, Sacrifice a red or white creature: This creature deals damage to any target equal to half the sacrificed creature's power, rounded down.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Freyalise's Charm",
+    "mana_cost": "{G}{G}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever an opponent casts a black spell, you may pay {G}{G}. If you do, you draw a card.\n{G}{G}: Return this enchantment to its owner's hand.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Freyalise's Winds",
+    "mana_cost": "{2}{G}{G}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever a permanent becomes tapped, put a wind counter on it.\nIf a permanent with a wind counter on it would untap during its controller's untap step, remove all wind counters from it instead.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Fyndhorn Brownie",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Ouphe",
+    "oracle_text": "{2}{G}, {T}: Untap target creature.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Fyndhorn Elder",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Elf Druid",
+    "oracle_text": "{T}: Add {G}{G}.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Fyndhorn Elves",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Elf Druid",
+    "oracle_text": "{T}: Add {G}.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Fyndhorn Pollen",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Cumulative upkeep {1} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)\nAll creatures get -1/-0.\n{1}{G}: All creatures get -1/-0 until end of turn.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Cumulative upkeep"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Giant Growth",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Target creature gets +3/+3 until end of turn.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Gorilla Pack",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Ape",
+    "oracle_text": "This creature can't attack unless defending player controls a Forest.\nWhen you control no Forests, sacrifice this creature.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Hot Springs",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant land you control\nEnchanted land has \"{T}: Prevent the next 1 damage that would be dealt to any target this turn.\"",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Hurricane",
+    "mana_cost": "{X}{G}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "Hurricane deals X damage to each creature with flying and each player.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Johtull Wurm",
+    "mana_cost": "{5}{G}",
+    "cmc": 6,
+    "type_line": "Creature — Wurm",
+    "oracle_text": "Whenever this creature becomes blocked, it gets -2/-1 until end of turn for each creature blocking it beyond the first.",
+    "power": "6",
+    "toughness": "6",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Juniper Order Druid",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Human Cleric Druid",
+    "oracle_text": "{T}: Untap target land.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Lhurgoyf",
+    "mana_cost": "{2}{G}{G}",
+    "cmc": 4,
+    "type_line": "Creature — Lhurgoyf",
+    "oracle_text": "Lhurgoyf's power is equal to the number of creature cards in all graveyards and its toughness is equal to that number plus 1.",
+    "power": "*",
+    "toughness": "1+*",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Lure",
+    "mana_cost": "{1}{G}{G}",
+    "cmc": 3,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nAll creatures able to block enchanted creature do so.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Maddening Wind",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nCumulative upkeep {G} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)\nAt the beginning of the upkeep of enchanted creature's controller, this Aura deals 2 damage to that player.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Enchant",
+      "Cumulative upkeep"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Nature's Lore",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Search your library for a Forest card, put that card onto the battlefield, then shuffle.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Pale Bears",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Bear",
+    "oracle_text": "Islandwalk (This creature can't be blocked as long as defending player controls an Island.)",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Landwalk",
+      "Islandwalk"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Pygmy Allosaurus",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Dinosaur",
+    "oracle_text": "Swampwalk (This creature can't be blocked as long as defending player controls a Swamp.)",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Landwalk",
+      "Swampwalk"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Pyknite",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Ouphe",
+    "oracle_text": "When this creature enters, draw a card at the beginning of the next turn's upkeep.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Regeneration",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature (Target a creature as you cast this. This card enters attached to that creature.)\n{G}: Regenerate enchanted creature. (The next time that creature would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on it.)",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Rime Dryad",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Dryad",
+    "oracle_text": "Snow forestwalk (This creature can't be blocked as long as defending player controls a snow Forest.)",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Ritual of Subdual",
+    "mana_cost": "{4}{G}{G}",
+    "cmc": 6,
+    "type_line": "Enchantment",
+    "oracle_text": "Cumulative upkeep {2} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)\nIf a land is tapped for mana, it produces colorless mana instead of any other type.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Cumulative upkeep"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Scaled Wurm",
+    "mana_cost": "{7}{G}",
+    "cmc": 8,
+    "type_line": "Creature — Wurm",
+    "power": "7",
+    "toughness": "6",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Shambling Strider",
+    "mana_cost": "{4}{G}{G}",
+    "cmc": 6,
+    "type_line": "Creature — Yeti",
+    "oracle_text": "{R}{G}: This creature gets +1/-1 until end of turn.",
+    "power": "5",
+    "toughness": "5",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Snowblind",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature gets -X/-Y. If that creature is attacking, X is the number of snow lands defending player controls. Otherwise, X is the number of snow lands its controller controls. Y is equal to X or to enchanted creature's toughness minus 1, whichever is smaller.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Stampede",
+    "mana_cost": "{1}{G}{G}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Attacking creatures get +1/+0 and gain trample until end of turn.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Stunted Growth",
+    "mana_cost": "{3}{G}{G}",
+    "cmc": 5,
+    "type_line": "Sorcery",
+    "oracle_text": "Target player chooses three cards from their hand and puts them on top of their library in any order.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Tarpan",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Horse",
+    "oracle_text": "When this creature dies, you gain 1 life.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Thermokarst",
+    "mana_cost": "{1}{G}{G}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Destroy target land. If that land was a snow land, you gain 1 life.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Thoughtleech",
+    "mana_cost": "{G}{G}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever an Island an opponent controls becomes tapped, you may gain 1 life.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Tinder Wall",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Plant Wall",
+    "oracle_text": "Defender (This creature can't attack.)\nSacrifice this creature: Add {R}{R}.\n{R}, Sacrifice this creature: It deals 2 damage to target creature it's blocking.",
+    "power": "0",
+    "toughness": "3",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Defender"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Touch of Vitae",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Until end of turn, target creature gains haste and \"{0}: Untap this creature. Activate only once.\"\nDraw a card at the beginning of the next turn's upkeep.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Trailblazer",
+    "mana_cost": "{2}{G}{G}",
+    "cmc": 4,
+    "type_line": "Instant",
+    "oracle_text": "Target creature can't be blocked this turn.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Venomous Breath",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Instant",
+    "oracle_text": "Choose target creature. At this turn's next end of combat, destroy all creatures that blocked or were blocked by it this turn.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Wall of Pine Needles",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Creature — Plant Wall",
+    "oracle_text": "Defender (This creature can't attack.)\n{G}: Regenerate this creature.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Defender"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Whiteout",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "All creatures lose flying until end of turn.\nSacrifice a snow land: Return this card from your graveyard to your hand.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Wiitigo",
+    "mana_cost": "{3}{G}{G}{G}",
+    "cmc": 6,
+    "type_line": "Creature — Yeti",
+    "oracle_text": "This creature enters with six +1/+1 counters on it.\nAt the beginning of your upkeep, put a +1/+1 counter on this creature if it has blocked or been blocked since your last upkeep. Otherwise, remove a +1/+1 counter from it.",
+    "power": "0",
+    "toughness": "0",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Wild Growth",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant land\nWhenever enchanted land is tapped for mana, its controller adds an additional {G}.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Woolly Mammoths",
+    "mana_cost": "{1}{G}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Elephant",
+    "oracle_text": "This creature has trample as long as you control a snow land.",
+    "power": "3",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Woolly Spider",
+    "mana_cost": "{1}{G}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Spider",
+    "oracle_text": "Reach (This creature can block creatures with flying.)\nWhenever this creature blocks a creature with flying, this creature gets +0/+2 until end of turn.",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Reach"
+    ],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Yavimaya Gnats",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Insect",
+    "oracle_text": "Flying\n{G}: Regenerate this creature.",
+    "power": "0",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Altar of Bone",
+    "mana_cost": "{G}{W}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "As an additional cost to cast this spell, sacrifice a creature.\nSearch your library for a creature card, reveal it, put it into your hand, then shuffle.",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Centaur Archer",
+    "mana_cost": "{1}{R}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Centaur Archer",
+    "oracle_text": "{T}: This creature deals 1 damage to target creature with flying.",
+    "power": "3",
+    "toughness": "2",
+    "colors": [
+      "G",
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Chromatic Armor",
+    "mana_cost": "{1}{W}{U}",
+    "cmc": 3,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nAs this Aura enters, choose a color.\nThis Aura enters with a sleight counter on it.\nPrevent all damage that would be dealt to enchanted creature by sources of the last chosen color.\n{X}: Put a sleight counter on this Aura and choose a color. X is the number of sleight counters on this Aura.",
+    "colors": [
+      "U",
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Diabolic Vision",
+    "mana_cost": "{U}{B}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Look at the top five cards of your library. Put one of them into your hand and the rest on top of your library in any order.",
+    "colors": [
+      "B",
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Earthlink",
+    "mana_cost": "{3}{B}{R}{G}",
+    "cmc": 6,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of your upkeep, sacrifice this enchantment unless you pay {2}.\nWhenever a creature dies, that creature's controller sacrifices a land of their choice.",
+    "colors": [
+      "B",
+      "G",
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Elemental Augury",
+    "mana_cost": "{U}{B}{R}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "{3}: Look at the top three cards of target player's library, then put them back in any order.",
+    "colors": [
+      "B",
+      "R",
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Essence Vortex",
+    "mana_cost": "{1}{U}{B}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Destroy target creature unless its controller pays life equal to its toughness. A creature destroyed this way can't be regenerated.",
+    "colors": [
+      "B",
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Fiery Justice",
+    "mana_cost": "{R}{G}{W}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Fiery Justice deals 5 damage divided as you choose among any number of targets. Target opponent gains 5 life.",
+    "colors": [
+      "G",
+      "R",
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Fire Covenant",
+    "mana_cost": "{1}{B}{R}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "As an additional cost to cast this spell, pay X life.\nFire Covenant deals X damage divided as you choose among any number of target creatures.",
+    "colors": [
+      "B",
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Flooded Woodlands",
+    "mana_cost": "{2}{U}{B}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "Green creatures can't attack unless their controller sacrifices a land of their choice for each green creature they control that's attacking. (This cost is paid as attackers are declared.)",
+    "colors": [
+      "B",
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Fumarole",
+    "mana_cost": "{3}{B}{R}",
+    "cmc": 5,
+    "type_line": "Sorcery",
+    "oracle_text": "As an additional cost to cast this spell, pay 3 life.\nDestroy target creature and target land.",
+    "colors": [
+      "B",
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Ghostly Flame",
+    "mana_cost": "{B}{R}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "Black and/or red permanents and spells are colorless sources of damage.",
+    "colors": [
+      "B",
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Giant Trap Door Spider",
+    "mana_cost": "{1}{R}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Spider",
+    "oracle_text": "{1}{R}{G}, {T}: Exile this creature and target creature without flying that's attacking you.",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "G",
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Glaciers",
+    "mana_cost": "{2}{W}{U}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of your upkeep, sacrifice this enchantment unless you pay {W}{U}.\nAll Mountains are Plains.",
+    "colors": [
+      "U",
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Hymn of Rebirth",
+    "mana_cost": "{3}{G}{W}",
+    "cmc": 5,
+    "type_line": "Sorcery",
+    "oracle_text": "Put target creature card from a graveyard onto the battlefield under your control.",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Kjeldoran Frostbeast",
+    "mana_cost": "{3}{G}{W}",
+    "cmc": 5,
+    "type_line": "Creature — Elemental Beast",
+    "oracle_text": "At end of combat, destroy all creatures blocking or blocked by this creature.",
+    "power": "2",
+    "toughness": "4",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Merieke Ri Berit",
+    "mana_cost": "{W}{U}{B}",
+    "cmc": 3,
+    "type_line": "Legendary Creature — Human",
+    "oracle_text": "Merieke Ri Berit doesn't untap during your untap step.\n{T}: Gain control of target creature for as long as you control Merieke Ri Berit. When Merieke Ri Berit leaves the battlefield or becomes untapped, destroy that creature. It can't be regenerated.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B",
+      "U",
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Monsoon",
+    "mana_cost": "{2}{R}{G}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of each player's end step, tap all untapped Islands that player controls and this enchantment deals X damage to the player, where X is the number of Islands tapped this way.",
+    "colors": [
+      "G",
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Mountain Titan",
+    "mana_cost": "{2}{B}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Giant",
+    "oracle_text": "{1}{R}{R}: Until end of turn, whenever you cast a black spell, put a +1/+1 counter on this creature.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B",
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Reclamation",
+    "mana_cost": "{2}{G}{W}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "Black creatures can't attack unless their controller sacrifices a land of their choice for each black creature they control that's attacking. (This cost is paid as attackers are declared.)",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Skeleton Ship",
+    "mana_cost": "{3}{U}{B}",
+    "cmc": 5,
+    "type_line": "Legendary Creature — Skeleton",
+    "oracle_text": "When you control no Islands, sacrifice Skeleton Ship.\n{T}: Put a -1/-1 counter on target creature.",
+    "power": "0",
+    "toughness": "3",
+    "colors": [
+      "B",
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Spectral Shield",
+    "mana_cost": "{1}{W}{U}",
+    "cmc": 3,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature gets +0/+2 and can't be the target of spells.",
+    "colors": [
+      "U",
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Storm Spirit",
+    "mana_cost": "{3}{G}{W}{U}",
+    "cmc": 6,
+    "type_line": "Creature — Elemental Spirit",
+    "oracle_text": "Flying\n{T}: This creature deals 2 damage to target creature.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "G",
+      "U",
+      "W"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Stormbind",
+    "mana_cost": "{1}{R}{G}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "{2}, Discard a card at random: This enchantment deals 2 damage to any target.",
+    "colors": [
+      "G",
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Wings of Aesthir",
+    "mana_cost": "{W}{U}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature gets +1/+0 and has flying and first strike.",
+    "colors": [
+      "U",
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Adarkar Sentinel",
+    "mana_cost": "{5}",
+    "cmc": 5,
+    "type_line": "Artifact Creature — Soldier",
+    "oracle_text": "{1}: This creature gets +0/+1 until end of turn.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Aegis of the Meek",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "{1}, {T}: Target 1/1 creature gets +1/+2 until end of turn.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Amulet of Quoz",
+    "mana_cost": "{6}",
+    "cmc": 6,
+    "type_line": "Artifact",
+    "oracle_text": "Remove this card from your deck before playing if you're not playing for ante.\n{T}, Sacrifice this artifact: Target opponent may ante the top card of their library. If they don't, you flip a coin. If you win the flip, that player loses the game. If you lose the flip, you lose the game. Activate only during your upkeep.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Arcum's Sleigh",
+    "mana_cost": "{1}",
+    "cmc": 1,
+    "type_line": "Artifact",
+    "oracle_text": "{2}, {T}: Target creature gains vigilance until end of turn. Activate only during combat and only if defending player controls a snow land.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Arcum's Weathervane",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "{2}, {T}: Target snow land is no longer snow.\n{2}, {T}: Target nonsnow basic land becomes snow.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Arcum's Whistle",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "{3}, {T}: Choose target non-Wall creature the active player has controlled continuously since the beginning of the turn. That player may pay {X}, where X is that creature's mana value. If they don't pay, the creature attacks this turn if able, and at the beginning of the next end step, destroy it if it didn't attack this turn. Activate only before attackers are declared.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Barbed Sextant",
+    "mana_cost": "{1}",
+    "cmc": 1,
+    "type_line": "Artifact",
+    "oracle_text": "{1}, {T}, Sacrifice this artifact: Add one mana of any color. Draw a card at the beginning of the next turn's upkeep.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Baton of Morale",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "{2}: Target creature gains banding until end of turn. (Any creatures with banding, and up to one without, can attack in a band. Bands are blocked as a group. If any creatures with banding a player controls are blocking or being blocked by a creature, that player divides that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Celestial Sword",
+    "mana_cost": "{6}",
+    "cmc": 6,
+    "type_line": "Artifact",
+    "oracle_text": "{3}, {T}: Target creature you control gets +3/+3 until end of turn. Its controller sacrifices it at the beginning of the next end step.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Crown of the Ages",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "{4}, {T}: Attach target Aura attached to a creature to another creature.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Despotic Scepter",
+    "mana_cost": "{1}",
+    "cmc": 1,
+    "type_line": "Artifact",
+    "oracle_text": "{T}: Destroy target permanent you own. It can't be regenerated.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Elkin Bottle",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "{3}, {T}: Exile the top card of your library. Until the beginning of your next upkeep, you may play that card.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Fyndhorn Bow",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "{3}, {T}: Target creature gains first strike until end of turn.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Goblin Lyre",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "Sacrifice this artifact: Flip a coin. If you win the flip, this artifact deals damage to target opponent or planeswalker equal to the number of creatures you control. If you lose the flip, this artifact deals damage to you equal to the number of creatures that opponent or that planeswalker's controller controls.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Hematite Talisman",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "Whenever a player casts a red spell, you may pay {3}. If you do, untap target permanent.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Ice Cauldron",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact",
+    "oracle_text": "{X}, {T}: You may exile a nonland card from your hand. You may cast that card for as long as it remains exiled. Put a charge counter on this artifact and note the type and amount of mana spent to pay this activation cost. Activate only if there are no charge counters on this artifact.\n{T}, Remove a charge counter from this artifact: Add this artifact's last noted type and amount of mana. Spend this mana only to cast the last card exiled with this artifact.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Icy Manipulator",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact",
+    "oracle_text": "{1}, {T}: Tap target artifact, creature, or land.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Infinite Hourglass",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact",
+    "oracle_text": "At the beginning of your upkeep, put a time counter on this artifact.\nAll creatures get +1/+0 for each time counter on this artifact.\n{3}: Remove a time counter from this artifact. Any player may activate this ability but only during any upkeep step.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Jester's Cap",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact",
+    "oracle_text": "{2}, {T}, Sacrifice this artifact: Search target player's library for three cards and exile them. Then that player shuffles.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Jester's Mask",
+    "mana_cost": "{5}",
+    "cmc": 5,
+    "type_line": "Artifact",
+    "oracle_text": "This artifact enters tapped.\n{1}, {T}, Sacrifice this artifact: Target opponent puts the cards from their hand on top of their library. Search that player's library for that many cards. That player puts those cards into their hand, then shuffles.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Jeweled Amulet",
+    "mana_cost": "{0}",
+    "cmc": 0,
+    "type_line": "Artifact",
+    "oracle_text": "{1}, {T}: Put a charge counter on this artifact. Note the type of mana spent to pay this activation cost. Activate only if there are no charge counters on this artifact.\n{T}, Remove a charge counter from this artifact: Add one mana of this artifact's last noted type.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Lapis Lazuli Talisman",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "Whenever a player casts a blue spell, you may pay {3}. If you do, untap target permanent.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Malachite Talisman",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "Whenever a player casts a green spell, you may pay {3}. If you do, untap target permanent.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Nacre Talisman",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "Whenever a player casts a white spell, you may pay {3}. If you do, untap target permanent.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Naked Singularity",
+    "mana_cost": "{5}",
+    "cmc": 5,
+    "type_line": "Artifact",
+    "oracle_text": "Cumulative upkeep {3} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)\nIf tapped for mana, Plains produce {R}, Islands produce {G}, Swamps produce {W}, Mountains produce {U}, and Forests produce {B} instead of any other type.",
+    "colors": [],
+    "keywords": [
+      "Cumulative upkeep"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Onyx Talisman",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "Whenever a player casts a black spell, you may pay {3}. If you do, untap target permanent.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Pentagram of the Ages",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact",
+    "oracle_text": "{4}, {T}: The next time a source of your choice would deal damage to you this turn, prevent that damage.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Pit Trap",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "{2}, {T}, Sacrifice this artifact: Destroy target attacking creature without flying. It can't be regenerated.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Runed Arch",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "This artifact enters tapped.\n{X}, {T}, Sacrifice this artifact: X target creatures with power 2 or less can't be blocked this turn.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Shield of the Ages",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "{2}: Prevent the next 1 damage that would be dealt to you this turn.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Skull Catapult",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact",
+    "oracle_text": "{1}, {T}, Sacrifice a creature: This artifact deals 2 damage to any target.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Snow Fortress",
+    "mana_cost": "{5}",
+    "cmc": 5,
+    "type_line": "Artifact Creature — Wall",
+    "oracle_text": "Defender (This creature can't attack.)\n{1}: This creature gets +1/+0 until end of turn.\n{1}: This creature gets +0/+1 until end of turn.\n{3}: This creature deals 1 damage to target creature without flying that's attacking you.",
+    "power": "0",
+    "toughness": "4",
+    "colors": [],
+    "keywords": [
+      "Defender"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Soldevi Golem",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact Creature — Golem",
+    "oracle_text": "This creature doesn't untap during your untap step.\nAt the beginning of your upkeep, you may untap target tapped creature an opponent controls. If you do, untap this creature.",
+    "power": "5",
+    "toughness": "3",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Soldevi Simulacrum",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact Creature — Soldier",
+    "oracle_text": "Cumulative upkeep {1} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)\n{1}: This creature gets +1/+0 until end of turn.",
+    "power": "2",
+    "toughness": "4",
+    "colors": [],
+    "keywords": [
+      "Cumulative upkeep"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Staff of the Ages",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "Creatures with landwalk abilities can be blocked as though they didn't have those abilities.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Sunstone",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "{2}, Sacrifice a snow land: Prevent all combat damage that would be dealt this turn.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Time Bomb",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact",
+    "oracle_text": "At the beginning of your upkeep, put a time counter on this artifact.\n{1}, {T}, Sacrifice this artifact: This artifact deals damage equal to the number of time counters on it to each creature and each player.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Urza's Bauble",
+    "mana_cost": "{0}",
+    "cmc": 0,
+    "type_line": "Artifact",
+    "oracle_text": "{T}, Sacrifice this artifact: Look at a card at random in target player's hand. You draw a card at the beginning of the next turn's upkeep.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Vexing Arcanix",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact",
+    "oracle_text": "{3}, {T}: Target player chooses a card name, then reveals the top card of their library. If that card has the chosen name, that player puts it into their hand. Otherwise, they put it into their graveyard and this artifact deals 2 damage to them.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Vibrating Sphere",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact",
+    "oracle_text": "During your turn, creatures you control get +2/+0.\nDuring turns other than yours, creatures you control get -0/-2.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Walking Wall",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact Creature — Wall",
+    "oracle_text": "Defender\n{3}: This creature gets +3/-1 until end of turn and can attack this turn as though it didn't have defender. Activate only once each turn.",
+    "power": "0",
+    "toughness": "6",
+    "colors": [],
+    "keywords": [
+      "Defender"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Wall of Shields",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact Creature — Wall",
+    "oracle_text": "Defender (This creature can't attack.)\nBanding (If any creatures with banding you control are blocking a creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by.)",
+    "power": "0",
+    "toughness": "4",
+    "colors": [],
+    "keywords": [
+      "Banding",
+      "Defender"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "War Chariot",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "{3}, {T}: Target creature gains trample until end of turn.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Whalebone Glider",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "{2}, {T}: Target creature with power 3 or less gains flying until end of turn.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Zuran Orb",
+    "mana_cost": "{0}",
+    "cmc": 0,
+    "type_line": "Artifact",
+    "oracle_text": "Sacrifice a land: You gain 2 life.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Adarkar Wastes",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "{T}: Add {C}.\n{T}: Add {W} or {U}. This land deals 1 damage to you.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Brushland",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "{T}: Add {C}.\n{T}: Add {G} or {W}. This land deals 1 damage to you.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Glacial Chasm",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "Cumulative upkeep—Pay 2 life. (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)\nWhen this land enters, sacrifice a land.\nCreatures you control can't attack.\nPrevent all damage that would be dealt to you.",
+    "colors": [],
+    "keywords": [
+      "Cumulative upkeep"
+    ],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Halls of Mist",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "Cumulative upkeep {1} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)\nCreatures that attacked during their controller's last turn can't attack.",
+    "colors": [],
+    "keywords": [
+      "Cumulative upkeep"
+    ],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Ice Floe",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "You may choose not to untap this land during your untap step.\n{T}: Tap target creature without flying that's attacking you. It doesn't untap during its controller's untap step for as long as this land remains tapped.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "ice"
+  },
+  {
+    "name": "Karplusan Forest",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "{T}: Add {C}.\n{T}: Add {R} or {G}. This land deals 1 damage to you.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Land Cap",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land doesn't untap during your untap step if it has a depletion counter on it.\nAt the beginning of your upkeep, remove a depletion counter from this land.\n{T}: Add {W} or {U}. Put a depletion counter on this land.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Lava Tubes",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land doesn't untap during your untap step if it has a depletion counter on it.\nAt the beginning of your upkeep, remove a depletion counter from this land.\n{T}: Add {B} or {R}. Put a depletion counter on this land.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "River Delta",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land doesn't untap during your untap step if it has a depletion counter on it.\nAt the beginning of your upkeep, remove a depletion counter from this land.\n{T}: Add {U} or {B}. Put a depletion counter on this land.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Sulfurous Springs",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "{T}: Add {C}.\n{T}: Add {B} or {R}. This land deals 1 damage to you.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Timberline Ridge",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land doesn't untap during your untap step if it has a depletion counter on it.\nAt the beginning of your upkeep, remove a depletion counter from this land.\n{T}: Add {R} or {G}. Put a depletion counter on this land.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Underground River",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "{T}: Add {C}.\n{T}: Add {U} or {B}. This land deals 1 damage to you.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Veldt",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land doesn't untap during your untap step if it has a depletion counter on it.\nAt the beginning of your upkeep, remove a depletion counter from this land.\n{T}: Add {G} or {W}. Put a depletion counter on this land.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "ice"
+  },
+  {
+    "name": "Plains",
+    "cmc": 0,
+    "type_line": "Basic Land — Plains",
+    "oracle_text": "({T}: Add {W}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Plains",
+    "cmc": 0,
+    "type_line": "Basic Land — Plains",
+    "oracle_text": "({T}: Add {W}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Plains",
+    "cmc": 0,
+    "type_line": "Basic Land — Plains",
+    "oracle_text": "({T}: Add {W}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Snow-Covered Plains",
+    "cmc": 0,
+    "type_line": "Basic Snow Land — Plains",
+    "oracle_text": "({T}: Add {W}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Island",
+    "cmc": 0,
+    "type_line": "Basic Land — Island",
+    "oracle_text": "({T}: Add {U}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Island",
+    "cmc": 0,
+    "type_line": "Basic Land — Island",
+    "oracle_text": "({T}: Add {U}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Island",
+    "cmc": 0,
+    "type_line": "Basic Land — Island",
+    "oracle_text": "({T}: Add {U}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Snow-Covered Island",
+    "cmc": 0,
+    "type_line": "Basic Snow Land — Island",
+    "oracle_text": "({T}: Add {U}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Snow-Covered Swamp",
+    "cmc": 0,
+    "type_line": "Basic Snow Land — Swamp",
+    "oracle_text": "({T}: Add {B}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Swamp",
+    "cmc": 0,
+    "type_line": "Basic Land — Swamp",
+    "oracle_text": "({T}: Add {B}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Swamp",
+    "cmc": 0,
+    "type_line": "Basic Land — Swamp",
+    "oracle_text": "({T}: Add {B}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Swamp",
+    "cmc": 0,
+    "type_line": "Basic Land — Swamp",
+    "oracle_text": "({T}: Add {B}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Mountain",
+    "cmc": 0,
+    "type_line": "Basic Land — Mountain",
+    "oracle_text": "({T}: Add {R}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Mountain",
+    "cmc": 0,
+    "type_line": "Basic Land — Mountain",
+    "oracle_text": "({T}: Add {R}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Mountain",
+    "cmc": 0,
+    "type_line": "Basic Land — Mountain",
+    "oracle_text": "({T}: Add {R}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Snow-Covered Mountain",
+    "cmc": 0,
+    "type_line": "Basic Snow Land — Mountain",
+    "oracle_text": "({T}: Add {R}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Forest",
+    "cmc": 0,
+    "type_line": "Basic Land — Forest",
+    "oracle_text": "({T}: Add {G}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Forest",
+    "cmc": 0,
+    "type_line": "Basic Land — Forest",
+    "oracle_text": "({T}: Add {G}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Forest",
+    "cmc": 0,
+    "type_line": "Basic Land — Forest",
+    "oracle_text": "({T}: Add {G}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  },
+  {
+    "name": "Snow-Covered Forest",
+    "cmc": 0,
+    "type_line": "Basic Snow Land — Forest",
+    "oracle_text": "({T}: Add {G}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "ice"
+  }
+]

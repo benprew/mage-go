@@ -80,6 +80,10 @@ type Game struct {
 	// Creatures that attacked this turn (survives combat reset for end-of-turn checks)
 	AttackedThisTurn map[uuid.UUID]bool
 
+	// Blockers this turn: key = blocker ID, value = attacker IDs it blocked
+	// Survives combat reset for post-combat checks (e.g., Glyph of Reincarnation)
+	BlockedThisTurn map[uuid.UUID][]uuid.UUID
+
 	// Instant spells cast this turn per player (for Ichneumon Druid, etc.)
 	InstantsCastThisTurn map[uuid.UUID]int
 
@@ -119,8 +123,10 @@ type DelayedTrigger struct {
 	Effects      []Effect
 	SourceID     uuid.UUID
 	Controller   uuid.UUID
-	MatchEventID  uuid.UUID // if set, only fire when evt.SourceID matches
-	MatchPlayerID uuid.UUID // if set, only fire when evt.PlayerID matches
+	MatchEventID   uuid.UUID // if set, only fire when evt.SourceID matches
+	MatchPlayerID  uuid.UUID // if set, only fire when evt.PlayerID matches
+	MatchTargetID  uuid.UUID // if set, only fire when evt.TargetID matches
+	Persistent     bool      // if true, trigger is not consumed after firing
 }
 
 type pendingTrigger struct {
@@ -142,6 +148,7 @@ func NewGame(playerA, playerB Player) *Game {
 		DamageTakenThisTurn:        make(map[uuid.UUID]int),
 		ArtifactDamageTakenThisTurn: make(map[uuid.UUID]int),
 		AttackedThisTurn:           make(map[uuid.UUID]bool),
+		BlockedThisTurn:            make(map[uuid.UUID][]uuid.UUID),
 		InstantsCastThisTurn:       make(map[uuid.UUID]int),
 		ArtifactManaOnly:           make(map[uuid.UUID]bool),
 		CreatureManaOnly:           make(map[uuid.UUID]bool),
@@ -865,6 +872,14 @@ func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
 	if amount <= 0 {
 		return
 	}
+	// Shimian Night Stalker: redirect damage from a specific attacker to an absorber
+	if absorberID := g.Effects.Damage.GetAttackerDamageRedirect(sourceID); absorberID != uuid.Nil {
+		absorber := g.FindPermanent(absorberID)
+		if absorber != nil {
+			g.DealDamageToPermanent(absorber, amount, sourceID)
+			return
+		}
+	}
 	// Martyrs of Korlis: redirect artifact damage to creature
 	if sourceCard != nil && sourceCard.HasType(TypeArtifact) {
 		if redirectID := g.Effects.Damage.GetArtifactDamageRedirect(p.PlayerID()); redirectID != uuid.Nil {
@@ -1079,7 +1094,7 @@ func (g *Game) FireEvent(evt GameEvent) {
 		}
 	}
 
-	// Check delayed triggers (one-shot, removed after matching)
+	// Check delayed triggers (one-shot unless Persistent, removed after matching)
 	remaining := g.delayedTriggers[:0]
 	for _, dt := range g.delayedTriggers {
 		if dt.EventType == evt.Type {
@@ -1091,15 +1106,23 @@ func (g *Game) FireEvent(evt GameEvent) {
 				remaining = append(remaining, dt)
 				continue
 			}
+			if dt.MatchTargetID != uuid.Nil && evt.TargetID != dt.MatchTargetID {
+				remaining = append(remaining, dt)
+				continue
+			}
 			obj := &StackObject{
-				ID:         uuid.New(),
-				Controller: dt.Controller,
-				SourceID:   dt.SourceID,
-				IsAbility:  true,
-				Effects:    dt.Effects,
-				Targets:    []uuid.UUID{dt.TargetID},
+				ID:          uuid.New(),
+				Controller:  dt.Controller,
+				SourceID:    dt.SourceID,
+				IsAbility:   true,
+				Effects:     dt.Effects,
+				Targets:     []uuid.UUID{dt.TargetID},
+				EventAmount: evt.Amount,
 			}
 			g.Stack.Push(obj)
+			if dt.Persistent {
+				remaining = append(remaining, dt)
+			}
 		} else {
 			remaining = append(remaining, dt)
 		}
@@ -2186,6 +2209,7 @@ func (g *Game) doDeclareBlockers() {
 		}
 		blockerCount[ba.BlockerID]++
 		g.Combat.AddBlocker(ba.BlockerID, attackerID)
+		g.BlockedThisTurn[ba.BlockerID] = append(g.BlockedThisTurn[ba.BlockerID], attackerID)
 		g.FireEvent(GameEvent{
 			Type:     EvtDeclaredBlocker,
 			SourceID: ba.BlockerID,
@@ -2228,11 +2252,20 @@ func (g *Game) doCleanupActions() bool {
 	g.Effects.RemoveEndOfTurn()
 	g.Effects.Damage.ClearEndOfTurn()
 	g.Effects.Rules.ClearEndOfTurn()
+	// Clear persistent delayed triggers (they only last "this turn")
+	kept := g.delayedTriggers[:0]
+	for _, dt := range g.delayedTriggers {
+		if !dt.Persistent {
+			kept = append(kept, dt)
+		}
+	}
+	g.delayedTriggers = kept
 	// Clear damage tracking
 	g.DamageDealtBy = make(map[uuid.UUID]map[uuid.UUID]bool)
 	g.DamageTakenThisTurn = make(map[uuid.UUID]int)
 	g.ArtifactDamageTakenThisTurn = make(map[uuid.UUID]int)
 	g.AttackedThisTurn = make(map[uuid.UUID]bool)
+	g.BlockedThisTurn = make(map[uuid.UUID][]uuid.UUID)
 	g.InstantsCastThisTurn = make(map[uuid.UUID]int)
 	g.CreatureDeathsThisTurn = 0
 	// Clear mana restrictions

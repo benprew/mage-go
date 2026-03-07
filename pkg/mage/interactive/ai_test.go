@@ -1,0 +1,606 @@
+package interactive
+
+import (
+	"testing"
+
+	"github.com/google/uuid"
+	"github.com/mage/mage/pkg/mage"
+	"github.com/mage/mage/pkg/mage/core"
+)
+
+// ── profitableToAttack ──────────────────────────────────────────────────────
+
+func TestProfitableToAttack_NoBlockers(t *testing.T) {
+	g, pa, pb := makeGame()
+	atk := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
+	g.Battlefield = append(g.Battlefield, atk)
+	if !profitableToAttack(atk, g, pb.PlayerID()) {
+		t.Error("should be profitable when no blockers exist")
+	}
+}
+
+func TestProfitableToAttack_AttackerSurvives(t *testing.T) {
+	g, pa, pb := makeGame()
+	atk := makePerm("Giant", "{3}{G}", 4, 5, pa.PlayerID())
+	blk := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, atk, blk)
+	if !profitableToAttack(atk, g, pb.PlayerID()) {
+		t.Error("should be profitable when attacker survives block")
+	}
+}
+
+func TestProfitableToAttack_TradeUp(t *testing.T) {
+	g, pa, pb := makeGame()
+	// Our 2-CMC bear trades with their 3-CMC creature — profitable
+	atk := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
+	blk := makePerm("Hill Giant", "{2}{R}", 3, 2, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, atk, blk)
+	if !profitableToAttack(atk, g, pb.PlayerID()) {
+		t.Error("should be profitable when trading up in CMC")
+	}
+}
+
+func TestProfitableToAttack_TradeDown(t *testing.T) {
+	g, pa, pb := makeGame()
+	// Our 4-CMC creature trades with their 2-CMC creature — bad trade
+	atk := makePerm("Expensive", "{3}{G}", 2, 2, pa.PlayerID())
+	blk := makePerm("Cheap", "{1}{G}", 2, 2, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, atk, blk)
+	if profitableToAttack(atk, g, pb.PlayerID()) {
+		t.Error("should NOT be profitable when trading down in CMC")
+	}
+}
+
+func TestProfitableToAttack_AttackerDies(t *testing.T) {
+	g, pa, pb := makeGame()
+	atk := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
+	blk := makePerm("Wall", "{1}{W}", 0, 5, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, atk, blk)
+	// Attacker dies (blocker's 0 power doesn't kill attacker, but attacker can't kill blocker)
+	// Actually: atkPow=2 < blkTough=5 (blk doesn't die), blkPow=0 < atkTough=2 (atk survives)
+	// So attacker survives — this should be profitable
+	if !profitableToAttack(atk, g, pb.PlayerID()) {
+		t.Error("attacker survives the wall, should be profitable")
+	}
+}
+
+func TestProfitableToAttack_AttackerDiesBlockerSurvives(t *testing.T) {
+	g, pa, pb := makeGame()
+	atk := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
+	blk := makePerm("Big", "{3}{G}", 3, 4, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, atk, blk)
+	// blkPow=3 >= atkTough=2 (atk dies), atkPow=2 < blkTough=4 (blk survives)
+	if profitableToAttack(atk, g, pb.PlayerID()) {
+		t.Error("should NOT be profitable when attacker dies and blocker survives")
+	}
+}
+
+func TestProfitableToAttack_TappedBlockerIgnored(t *testing.T) {
+	g, pa, pb := makeGame()
+	atk := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
+	blk := makePerm("Big", "{3}{G}", 5, 5, pb.PlayerID())
+	blk.Tapped = true
+	g.Battlefield = append(g.Battlefield, atk, blk)
+	if !profitableToAttack(atk, g, pb.PlayerID()) {
+		t.Error("tapped blocker should be ignored, attack should be profitable")
+	}
+}
+
+// ── HeuristicStrategy.Attackers ─────────────────────────────────────────────
+
+func TestAttackers_AggroAttacksAll(t *testing.T) {
+	g, pa, pb := makeGame()
+	c1 := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
+	c2 := makePerm("Elf", "{G}", 1, 1, pa.PlayerID())
+	// Opponent has a big blocker — aggro attacks anyway
+	blk := makePerm("Giant", "{3}{G}", 5, 5, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, c1, c2, blk)
+
+	strat := &HeuristicStrategy{Personality: AggroPersonality}
+	attackers := strat.Attackers(pa, g)
+	if len(attackers) != 2 {
+		t.Errorf("aggro should attack with all %d eligible, got %d", 2, len(attackers))
+	}
+}
+
+func TestAttackers_ControlOnlyProfitable(t *testing.T) {
+	g, pa, pb := makeGame()
+	smallAtk := makePerm("Elf", "{G}", 1, 1, pa.PlayerID())
+	// Opponent has a 3/3 that would kill the elf
+	blk := makePerm("Bear", "{1}{G}", 3, 3, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, smallAtk, blk)
+
+	strat := &HeuristicStrategy{Personality: ControlPersonality}
+	attackers := strat.Attackers(pa, g)
+	// Elf vs 3/3 is not profitable
+	if len(attackers) != 0 {
+		t.Errorf("control should not attack with unprofitable creatures, got %d attackers", len(attackers))
+	}
+}
+
+func TestAttackers_SkipsCantAttack(t *testing.T) {
+	g, pa, _ := makeGame()
+	c1 := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
+	// Create a tapped creature — can't attack
+	c2 := makePerm("Tapped", "{1}{R}", 3, 3, pa.PlayerID())
+	c2.Tapped = true
+	g.Battlefield = append(g.Battlefield, c1, c2)
+
+	strat := &HeuristicStrategy{Personality: AggroPersonality}
+	attackers := strat.Attackers(pa, g)
+	if len(attackers) != 1 {
+		t.Errorf("should only attack with untapped creature, got %d", len(attackers))
+	}
+}
+
+// ── HeuristicStrategy.Blockers ──────────────────────────────────────────────
+
+func TestBlockers_ControlBlocksHighPower(t *testing.T) {
+	g, pa, pb := makeGame()
+	// Attacker with power >= 3 so it meets the atkPow >= 3 guard
+	atk := makePerm("Giant", "{3}{R}", 3, 3, pa.PlayerID())
+	blk := makePerm("Wall", "{W}", 0, 4, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, atk, blk)
+
+	g.Combat.AddAttacker(atk.ID(), pb.PlayerID())
+
+	strat := &HeuristicStrategy{Personality: ControlPersonality}
+	blocks := strat.Blockers(pb, g)
+	if len(blocks) != 1 {
+		t.Errorf("control should block high-power attacker, got %d blocks", len(blocks))
+	}
+}
+
+func TestBlockers_AggroSkipsWeakAttacker(t *testing.T) {
+	g, pa, pb := makeGame()
+	atk := makePerm("Elf", "{G}", 1, 1, pa.PlayerID())
+	blk := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, atk, blk)
+
+	g.Combat.AddAttacker(atk.ID(), pb.PlayerID())
+
+	strat := &HeuristicStrategy{Personality: AggroPersonality}
+	blocks := strat.Blockers(pb, g)
+	// Aggro has BlockPowerThreshold=3, so power 1 attacker is skipped
+	if len(blocks) != 0 {
+		t.Errorf("aggro should skip blocking weak attacker, got %d blocks", len(blocks))
+	}
+}
+
+func TestBlockers_KillsAttacker(t *testing.T) {
+	g, pa, pb := makeGame()
+	atk := makePerm("Bear", "{1}{G}", 3, 3, pa.PlayerID())
+	blk := makePerm("Giant", "{3}{G}", 4, 4, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, atk, blk)
+
+	g.Combat.AddAttacker(atk.ID(), pb.PlayerID())
+
+	strat := &HeuristicStrategy{Personality: ControlPersonality}
+	blocks := strat.Blockers(pb, g)
+	if len(blocks) != 1 {
+		t.Errorf("should block to kill attacker, got %d blocks", len(blocks))
+	}
+}
+
+func TestBlockers_CantBlockFlying(t *testing.T) {
+	g, pa, pb := makeGame()
+	atk := makePerm("Bird", "{1}{U}", 2, 2, pa.PlayerID(), mage.WithKeyword(core.Flying))
+	blk := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, atk, blk)
+
+	g.Combat.AddAttacker(atk.ID(), pb.PlayerID())
+
+	strat := &HeuristicStrategy{Personality: ControlPersonality}
+	blocks := strat.Blockers(pb, g)
+	if len(blocks) != 0 {
+		t.Errorf("ground creature should not block flyer, got %d blocks", len(blocks))
+	}
+}
+
+func TestBlockers_ReachCanBlockFlying(t *testing.T) {
+	g, pa, pb := makeGame()
+	atk := makePerm("Bird", "{1}{U}", 3, 3, pa.PlayerID(), mage.WithKeyword(core.Flying))
+	blk := makePerm("Spider", "{1}{G}", 1, 4, pb.PlayerID(), mage.WithKeyword(core.Reach))
+	g.Battlefield = append(g.Battlefield, atk, blk)
+
+	g.Combat.AddAttacker(atk.ID(), pb.PlayerID())
+
+	strat := &HeuristicStrategy{Personality: ControlPersonality}
+	blocks := strat.Blockers(pb, g)
+	// Spider can block flyer (has reach), atkPow=3 >= threshold=0, and atkPow=3 >= 3
+	if len(blocks) != 1 {
+		t.Errorf("reach creature should block flyer, got %d blocks", len(blocks))
+	}
+}
+
+// ── HeuristicStrategy.PriorityAction ────────────────────────────────────────
+
+func TestPriorityAction_PlaysLandFirst(t *testing.T) {
+	g, pa, _ := makeGame()
+	land := mage.NewLand("Forest")
+	land.SetOwner(pa.PlayerID())
+	pa.AddToHand(land)
+
+	strat := &HeuristicStrategy{Personality: MidrangePersonality}
+	action := strat.PriorityAction(pa, g, 0, true)
+	if action.Type != ActionPlayLand {
+		t.Errorf("expected ActionPlayLand, got %v", action.Type)
+	}
+}
+
+func TestPriorityAction_PassWhenEmpty(t *testing.T) {
+	g, pa, _ := makeGame()
+	strat := &HeuristicStrategy{Personality: MidrangePersonality}
+	action := strat.PriorityAction(pa, g, 0, true)
+	if action.Type != ActionPass {
+		t.Errorf("expected ActionPass with empty hand, got %v", action.Type)
+	}
+}
+
+func TestPriorityAction_PassOnNonMainEmptyHand(t *testing.T) {
+	g, pa, _ := makeGame()
+	strat := &HeuristicStrategy{Personality: MidrangePersonality}
+	action := strat.PriorityAction(pa, g, 0, false)
+	if action.Type != ActionPass {
+		t.Errorf("expected ActionPass on non-main with empty hand, got %v", action.Type)
+	}
+}
+
+// ── AIPlayer.ChooseMode ─────────────────────────────────────────────────────
+
+func TestAIChooseMode_HealingSalveLowLife(t *testing.T) {
+	ai := NewAIPlayer("Bot")
+	ai.SetLife(5)
+	got := ai.ChooseMode([]string{"Gain 3 life", "Prevent 3"}, "Healing Salve")
+	if got != 0 {
+		t.Errorf("ChooseMode(Healing Salve, low life) = %d, want 0", got)
+	}
+}
+
+func TestAIChooseMode_HealingSalveHighLife(t *testing.T) {
+	ai := NewAIPlayer("Bot")
+	ai.SetLife(15)
+	got := ai.ChooseMode([]string{"Gain 3 life", "Prevent 3"}, "Healing Salve")
+	if got != 1 {
+		t.Errorf("ChooseMode(Healing Salve, high life) = %d, want 1", got)
+	}
+}
+
+func TestAIChooseMode_UnknownCard(t *testing.T) {
+	ai := NewAIPlayer("Bot")
+	got := ai.ChooseMode([]string{"A", "B"}, "Unknown Card")
+	if got != 0 {
+		t.Errorf("ChooseMode(unknown) = %d, want 0", got)
+	}
+}
+
+// ── AdaptiveStrategy ────────────────────────────────────────────────────────
+
+func TestAdaptiveStrategy_AheadUsesAggressive(t *testing.T) {
+	g, pa, pb := makeGame()
+	pa.SetLife(25)
+	pb.SetLife(15)
+
+	adaptive := &AdaptiveStrategy{
+		Aggressive: &HeuristicStrategy{Personality: AggroPersonality},
+		Defensive:  &HeuristicStrategy{Personality: ControlPersonality},
+	}
+	got := adaptive.active(pa, g)
+	if got != adaptive.Aggressive {
+		t.Error("adaptive should use Aggressive when ahead")
+	}
+}
+
+func TestAdaptiveStrategy_BehindUsesDefensive(t *testing.T) {
+	g, pa, pb := makeGame()
+	pa.SetLife(5)
+	pb.SetLife(20)
+	// Give opponent a creature to make score clearly negative
+	oppCreature := makePerm("Giant", "{3}{R}", 5, 5, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, oppCreature)
+
+	adaptive := &AdaptiveStrategy{
+		Aggressive: &HeuristicStrategy{Personality: AggroPersonality},
+		Defensive:  &HeuristicStrategy{Personality: ControlPersonality},
+	}
+	got := adaptive.active(pa, g)
+	if got != adaptive.Defensive {
+		t.Error("adaptive should use Defensive when behind")
+	}
+}
+
+// ── SequentialStrategy ──────────────────────────────────────────────────────
+
+type passStrategy struct{}
+
+func (s *passStrategy) PriorityAction(_ mage.Player, _ *mage.Game, _ int, _ bool) PriorityAction {
+	return PriorityAction{Type: ActionPass}
+}
+func (s *passStrategy) Attackers(_ mage.Player, _ *mage.Game) []uuid.UUID       { return nil }
+func (s *passStrategy) Blockers(_ mage.Player, _ *mage.Game) []mage.BlockAssignment { return nil }
+
+type fixedActionStrategy struct {
+	action PriorityAction
+}
+
+func (s *fixedActionStrategy) PriorityAction(_ mage.Player, _ *mage.Game, _ int, _ bool) PriorityAction {
+	return s.action
+}
+func (s *fixedActionStrategy) Attackers(_ mage.Player, _ *mage.Game) []uuid.UUID       { return nil }
+func (s *fixedActionStrategy) Blockers(_ mage.Player, _ *mage.Game) []mage.BlockAssignment { return nil }
+
+func TestSequentialStrategy_FirstNonPassWins(t *testing.T) {
+	g, pa, _ := makeGame()
+	landAction := PriorityAction{Type: ActionPlayLand, CardName: "Forest"}
+
+	seq := &SequentialStrategy{
+		Strategies: []AIStrategy{
+			&passStrategy{},
+			&fixedActionStrategy{action: landAction},
+		},
+	}
+	got := seq.PriorityAction(pa, g, 0, true)
+	if got.Type != ActionPlayLand {
+		t.Errorf("expected first non-pass action, got %v", got.Type)
+	}
+}
+
+func TestSequentialStrategy_AllPassReturnsPass(t *testing.T) {
+	g, pa, _ := makeGame()
+	seq := &SequentialStrategy{
+		Strategies: []AIStrategy{
+			&passStrategy{},
+			&passStrategy{},
+		},
+	}
+	got := seq.PriorityAction(pa, g, 0, true)
+	if got.Type != ActionPass {
+		t.Errorf("expected pass when all strategies pass, got %v", got.Type)
+	}
+}
+
+func TestSequentialStrategy_Attackers(t *testing.T) {
+	g, pa, _ := makeGame()
+	seq := &SequentialStrategy{
+		Strategies: []AIStrategy{
+			&passStrategy{},
+			&passStrategy{},
+		},
+	}
+	atks := seq.Attackers(pa, g)
+	if len(atks) != 0 {
+		t.Errorf("expected no attackers, got %d", len(atks))
+	}
+}
+
+func TestSequentialStrategy_Blockers(t *testing.T) {
+	g, pa, _ := makeGame()
+	seq := &SequentialStrategy{
+		Strategies: []AIStrategy{
+			&passStrategy{},
+		},
+	}
+	blks := seq.Blockers(pa, g)
+	if len(blks) != 0 {
+		t.Errorf("expected no blockers, got %d", len(blks))
+	}
+}
+
+// ── autoSelectTargets ───────────────────────────────────────────────────────
+
+func TestAutoSelectTargets_AnyTargetBenefit_OwnCreature(t *testing.T) {
+	g, pa, _ := makeGame()
+	ownCreature := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
+	g.Battlefield = append(g.Battlefield, ownCreature)
+
+	card := mage.NewInstant("Heal", "{W}",
+		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DrawCards(mage.Fixed(1))),
+	)
+	card.SetOwner(pa.PlayerID())
+	pa.AddToHand(card)
+
+	strat := &HeuristicStrategy{Personality: MidrangePersonality}
+	targets := strat.autoSelectTargets(pa, g, card)
+	if len(targets) != 1 || targets[0] != ownCreature.ID() {
+		t.Errorf("benefit spell should target own creature, got %v", targets)
+	}
+}
+
+func TestAutoSelectTargets_AnyTargetDetriment_OpponentCreature(t *testing.T) {
+	g, pa, pb := makeGame()
+	oppCreature := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, oppCreature)
+
+	card := mage.NewInstant("Bolt", "{R}",
+		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+	)
+	card.SetOwner(pa.PlayerID())
+	pa.AddToHand(card)
+
+	strat := &HeuristicStrategy{Personality: MidrangePersonality}
+	targets := strat.autoSelectTargets(pa, g, card)
+	if len(targets) != 1 || targets[0] != oppCreature.ID() {
+		t.Errorf("detriment spell should target opponent creature, got %v", targets)
+	}
+}
+
+func TestAutoSelectTargets_BurnTargetsFace(t *testing.T) {
+	g, pa, pb := makeGame()
+	oppCreature := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, oppCreature)
+
+	card := mage.NewInstant("Bolt", "{R}",
+		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+	)
+	card.SetOwner(pa.PlayerID())
+	pa.AddToHand(card)
+
+	strat := &HeuristicStrategy{Personality: BurnPersonality}
+	targets := strat.autoSelectTargets(pa, g, card)
+	if len(targets) != 1 || targets[0] != pb.PlayerID() {
+		t.Errorf("burn should target opponent face, got %v", targets)
+	}
+}
+
+func TestAutoSelectTargets_CreatureTargetBenefit_OwnCreature(t *testing.T) {
+	g, pa, pb := makeGame()
+	ownCreature := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
+	oppCreature := makePerm("Ogre", "{2}{R}", 3, 3, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, ownCreature, oppCreature)
+
+	card := mage.NewInstant("Buff", "{G}",
+		mage.NewTargetedSpell(mage.TargetCreature(), mage.DrawCards(mage.Fixed(1))),
+	)
+	card.SetOwner(pa.PlayerID())
+	pa.AddToHand(card)
+
+	strat := &HeuristicStrategy{Personality: MidrangePersonality}
+	targets := strat.autoSelectTargets(pa, g, card)
+	if len(targets) != 1 || targets[0] != ownCreature.ID() {
+		t.Errorf("benefit creature target should pick own creature, got %v", targets)
+	}
+}
+
+func TestAutoSelectTargets_CreatureTargetDetriment_OpponentCreature(t *testing.T) {
+	g, pa, pb := makeGame()
+	ownCreature := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
+	oppCreature := makePerm("Ogre", "{2}{R}", 3, 3, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, ownCreature, oppCreature)
+
+	card := mage.NewSorcery("Destroy", "{1}{B}",
+		mage.NewTargetedSpell(mage.TargetCreature(), mage.DestroyTarget()),
+	)
+	card.SetOwner(pa.PlayerID())
+	pa.AddToHand(card)
+
+	strat := &HeuristicStrategy{Personality: MidrangePersonality}
+	targets := strat.autoSelectTargets(pa, g, card)
+	if len(targets) != 1 || targets[0] != oppCreature.ID() {
+		t.Errorf("detriment creature target should pick opponent creature, got %v", targets)
+	}
+}
+
+func TestAutoSelectTargets_PlayerTarget_Opponent(t *testing.T) {
+	g, pa, pb := makeGame()
+	card := mage.NewSorcery("Drain", "{B}",
+		mage.NewTargetedSpell(mage.TargetPlayer(), mage.DealDamage(mage.Fixed(2))),
+	)
+	card.SetOwner(pa.PlayerID())
+	pa.AddToHand(card)
+
+	strat := &HeuristicStrategy{Personality: MidrangePersonality}
+	targets := strat.autoSelectTargets(pa, g, card)
+	if len(targets) != 1 || targets[0] != pb.PlayerID() {
+		t.Errorf("player target should select opponent, got %v", targets)
+	}
+}
+
+func TestAutoSelectTargets_NoTargets_ReturnsNil(t *testing.T) {
+	g, pa, _ := makeGame()
+	card := mage.NewSorcery("Destroy", "{1}{B}",
+		mage.NewTargetedSpell(mage.TargetCreature(), mage.DestroyTarget()),
+	)
+	card.SetOwner(pa.PlayerID())
+	pa.AddToHand(card)
+
+	strat := &HeuristicStrategy{Personality: MidrangePersonality}
+	targets := strat.autoSelectTargets(pa, g, card)
+	if targets != nil {
+		t.Errorf("expected nil targets when no valid targets, got %v", targets)
+	}
+}
+
+func TestAutoSelectTargets_LethalPreference(t *testing.T) {
+	g, pa, pb := makeGame()
+	// Two opponent creatures: expensive 5/5 and cheap 2/2. Bolt (3 damage) kills only the 2/2.
+	big := makePerm("Giant", "{4}{G}", 5, 5, pb.PlayerID())
+	small := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, big, small)
+
+	card := mage.NewInstant("Bolt", "{R}",
+		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+	)
+	card.SetOwner(pa.PlayerID())
+	pa.AddToHand(card)
+
+	strat := &HeuristicStrategy{Personality: MidrangePersonality}
+	targets := strat.autoSelectTargets(pa, g, card)
+	// Should prefer the lethal target (bear) over non-lethal (giant)
+	if len(targets) != 1 || targets[0] != small.ID() {
+		t.Errorf("should prefer lethal target, got %v", targets)
+	}
+}
+
+func TestAutoSelectTargets_FallbackToOpponentFace(t *testing.T) {
+	g, pa, pb := makeGame()
+	// No creatures, just players as targets — should pick opponent
+	card := mage.NewInstant("Bolt", "{R}",
+		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+	)
+	card.SetOwner(pa.PlayerID())
+	pa.AddToHand(card)
+
+	strat := &HeuristicStrategy{Personality: MidrangePersonality}
+	targets := strat.autoSelectTargets(pa, g, card)
+	if len(targets) != 1 || targets[0] != pb.PlayerID() {
+		t.Errorf("with no creatures, should target opponent player, got %v", targets)
+	}
+}
+
+// ── NewAIPlayer constructors ────────────────────────────────────────────────
+
+func TestNewAIPlayer_Constructors(t *testing.T) {
+	tests := []struct {
+		name string
+		ai   *AIPlayer
+	}{
+		{"default", NewAIPlayer("Bot")},
+		{"aggro", NewAggroAI("Bot")},
+		{"control", NewControlAI("Bot")},
+		{"tempo", NewTempoAI("Bot")},
+		{"burn", NewBurnAI("Bot")},
+		{"adaptive", NewAdaptiveAI("Bot")},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.ai.Name() != "Bot" {
+				t.Errorf("name = %q, want Bot", tt.ai.Name())
+			}
+			if tt.ai.strategy == nil {
+				t.Error("strategy should not be nil")
+			}
+		})
+	}
+}
+
+func TestAIPlayer_DeclareAttackers(t *testing.T) {
+	g, _, _ := makeGame()
+	ai := NewAggroAI("Bot")
+	// Wire the AI as player A
+	g.Players[0] = ai
+	creature := makePerm("Bear", "{1}{G}", 2, 2, ai.PlayerID())
+	g.Battlefield = append(g.Battlefield, creature)
+
+	attackers := ai.DeclareAttackers(g)
+	if len(attackers) != 1 {
+		t.Errorf("expected 1 attacker, got %d", len(attackers))
+	}
+}
+
+func TestAIPlayer_DeclareBlockers(t *testing.T) {
+	g, pa, _ := makeGame()
+	ai := NewControlAI("Bot")
+	// AI is player index 1 (defender)
+	g.Players[1] = ai
+
+	// Power 3 attacker triggers the atkPow >= 3 guard in the blocker logic
+	atk := makePerm("Giant", "{2}{R}", 3, 3, pa.PlayerID())
+	blk := makePerm("Blocker", "{1}{G}", 2, 4, ai.PlayerID())
+	g.Battlefield = append(g.Battlefield, atk, blk)
+	g.Combat.AddAttacker(atk.ID(), ai.PlayerID())
+
+	blocks := ai.DeclareBlockers(g)
+	if len(blocks) != 1 {
+		t.Errorf("expected 1 block, got %d", len(blocks))
+	}
+}

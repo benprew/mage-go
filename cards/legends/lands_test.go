@@ -140,3 +140,58 @@ func TestUrborg(t *testing.T) {
 		g.AssertHasAbility(gametest.PlayerB, "Tundra Wolves", core.FirstStrike, false)
 	})
 }
+
+func TestAdventurersGuildhouse(t *testing.T) {
+	t.Run("grants banding to green legendary creatures", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Adventurers' Guildhouse")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Jasmine Boreal") // {3}{G}{W} legendary creature
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// Jasmine Boreal is green+white legendary — should have banding
+		g.AssertHasAbility(gametest.PlayerA, "Jasmine Boreal", core.Banding, true)
+	})
+	t.Run("does not grant banding to non-legendary creatures", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Adventurers' Guildhouse")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // green, not legendary
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", core.Banding, false)
+	})
+}
+
+func TestCathedralOfSerra(t *testing.T) {
+	t.Run("grants banding to white legendary creatures", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Cathedral of Serra")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sir Shandlar of Eberyn") // {3}{G}{W}{W} legendary
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertHasAbility(gametest.PlayerA, "Sir Shandlar of Eberyn", core.Banding, true)
+	})
+}
+
+func TestMountainStronghold(t *testing.T) {
+	t.Run("grants banding to red legendary creatures", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain Stronghold")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ramirez DePietro") // {3}{U}{B} legendary — NOT red
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tor Wauki")        // {2}{B}{B}{R} legendary — has red
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertHasAbility(gametest.PlayerA, "Ramirez DePietro", core.Banding, false)
+		g.AssertHasAbility(gametest.PlayerA, "Tor Wauki", core.Banding, true)
+	})
+}
+
+func TestUnholyCitadel(t *testing.T) {
+	t.Run("grants banding to black legendary creatures", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Unholy Citadel")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sol'kanar the Swamp King") // {2}{U}{B}{R} legendary — has black
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertHasAbility(gametest.PlayerA, "Sol'kanar the Swamp King", core.Banding, true)
+	})
+}

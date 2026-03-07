@@ -1,0 +1,2144 @@
+[
+  {
+    "name": "Ancestor's Chosen",
+    "mana_cost": "{5}{W}{W}",
+    "cmc": 7,
+    "type_line": "Creature — Human Cleric",
+    "oracle_text": "First strike (This creature deals combat damage before creatures without first strike.)\nWhen this creature enters, you gain 1 life for each card in your graveyard.",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "First strike"
+    ],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Aven Warcraft",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Creatures you control get +0/+2 until end of turn.\nThreshold — If there are seven or more cards in your graveyard, choose a color. Creatures you control also gain protection from the chosen color until end of turn.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Threshold"
+    ],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Battle Screech",
+    "mana_cost": "{2}{W}{W}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Create two 1/1 white Bird creature tokens with flying.\nFlashback—Tap three untapped white creatures you control. (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flashback"
+    ],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Battlewise Aven",
+    "mana_cost": "{3}{W}",
+    "cmc": 4,
+    "type_line": "Creature — Bird Soldier",
+    "oracle_text": "Flying\nThreshold — As long as there are seven or more cards in your graveyard, this creature gets +1/+1 and has first strike.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying",
+      "Threshold"
+    ],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Benevolent Bodyguard",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Human Cleric",
+    "oracle_text": "Sacrifice this creature: Target creature you control gains protection from the color of your choice until end of turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Border Patrol",
+    "mana_cost": "{4}{W}",
+    "cmc": 5,
+    "type_line": "Creature — Human Nomad",
+    "oracle_text": "Vigilance",
+    "power": "1",
+    "toughness": "6",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Vigilance"
+    ],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Cagemail",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature gets +2/+2 and can't attack.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Chastise",
+    "mana_cost": "{3}{W}",
+    "cmc": 4,
+    "type_line": "Instant",
+    "oracle_text": "Destroy target attacking creature. You gain life equal to its power.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Commander Eesha",
+    "mana_cost": "{2}{W}{W}",
+    "cmc": 4,
+    "type_line": "Legendary Creature — Bird Soldier",
+    "oracle_text": "Flying, protection from creatures",
+    "power": "2",
+    "toughness": "4",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying",
+      "Protection"
+    ],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Funeral Pyre",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Exile target card from a graveyard. Its owner creates a 1/1 white Spirit creature token with flying.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Glory",
+    "mana_cost": "{3}{W}{W}",
+    "cmc": 5,
+    "type_line": "Creature — Incarnation",
+    "oracle_text": "Flying\n{2}{W}: Choose a color. Creatures you control gain protection from the chosen color until end of turn. Activate only if this card is in your graveyard.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Golden Wish",
+    "mana_cost": "{3}{W}{W}",
+    "cmc": 5,
+    "type_line": "Sorcery",
+    "oracle_text": "You may reveal an artifact or enchantment card you own from outside the game and put it into your hand. Exile Golden Wish.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Guided Strike",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Target creature gets +1/+0 and gains first strike until end of turn.\nDraw a card.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Lead Astray",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Tap up to two target creatures.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Nomad Mythmaker",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Human Nomad Cleric",
+    "oracle_text": "{W}, {T}: Put target Aura card from a graveyard onto the battlefield under your control attached to a creature you control.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Phantom Flock",
+    "mana_cost": "{3}{W}{W}",
+    "cmc": 5,
+    "type_line": "Creature — Bird Soldier Spirit",
+    "oracle_text": "Flying\nThis creature enters with three +1/+1 counters on it.\nIf damage would be dealt to this creature, prevent that damage. Remove a +1/+1 counter from this creature.",
+    "power": "0",
+    "toughness": "0",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Phantom Nomad",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Spirit Nomad",
+    "oracle_text": "This creature enters with two +1/+1 counters on it.\nIf damage would be dealt to this creature, prevent that damage. Remove a +1/+1 counter from this creature.",
+    "power": "0",
+    "toughness": "0",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Prismatic Strands",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Prevent all damage that sources of the color of your choice would deal this turn.\nFlashback—Tap an untapped white creature you control. (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flashback"
+    ],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Pulsemage Advocate",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Human Cleric",
+    "oracle_text": "{T}: Return three target cards from an opponent's graveyard to their hand. Return target creature card from your graveyard to the battlefield.",
+    "power": "1",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Ray of Revelation",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Destroy target enchantment.\nFlashback {G} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flashback"
+    ],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Selfless Exorcist",
+    "mana_cost": "{3}{W}{W}",
+    "cmc": 5,
+    "type_line": "Creature — Human Cleric",
+    "oracle_text": "{T}: Exile target creature card from a graveyard. That card deals damage equal to its power to this creature.",
+    "power": "3",
+    "toughness": "4",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Shieldmage Advocate",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Human Cleric",
+    "oracle_text": "{T}: Return target card from an opponent's graveyard to their hand. Prevent all damage that would be dealt to any target this turn by a source of your choice.",
+    "power": "1",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Silver Seraph",
+    "mana_cost": "{5}{W}{W}{W}",
+    "cmc": 8,
+    "type_line": "Creature — Angel",
+    "oracle_text": "Flying\nThreshold — Other creatures you control get +2/+2 as long as there are seven or more cards in your graveyard.",
+    "power": "6",
+    "toughness": "6",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying",
+      "Threshold"
+    ],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Solitary Confinement",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of your upkeep, sacrifice this enchantment unless you discard a card.\nSkip your draw step.\nYou have shroud. (You can't be the target of spells or abilities.)\nPrevent all damage that would be dealt to you.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Soulcatchers' Aerie",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever a Bird is put into your graveyard from the battlefield, put a feather counter on this enchantment.\nBird creatures get +1/+1 for each feather counter on this enchantment.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Spirit Cairn",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever a player discards a card, you may pay {W}. If you do, create a 1/1 white Spirit creature token with flying.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Spurnmage Advocate",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Human Nomad",
+    "oracle_text": "{T}: Return two target cards from an opponent's graveyard to their hand. Destroy target attacking creature.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Suntail Hawk",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Bird",
+    "oracle_text": "Flying",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Test of Endurance",
+    "mana_cost": "{2}{W}{W}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of your upkeep, if you have 50 or more life, you win the game.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Trained Pronghorn",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Antelope",
+    "oracle_text": "Discard a card: Prevent all damage that would be dealt to this creature this turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Unquestioned Authority",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nWhen this Aura enters, draw a card.\nEnchanted creature has protection from creatures.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Valor",
+    "mana_cost": "{3}{W}",
+    "cmc": 4,
+    "type_line": "Creature — Incarnation",
+    "oracle_text": "First strike\nAs long as this card is in your graveyard and you control a Plains, creatures you control have first strike.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "First strike"
+    ],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Vigilant Sentry",
+    "mana_cost": "{1}{W}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Human Nomad",
+    "oracle_text": "Threshold — As long as there are seven or more cards in your graveyard, this creature gets +1/+1 and has \"{T}: Target attacking or blocking creature gets +3/+3 until end of turn.\"",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Threshold"
+    ],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Aven Fogbringer",
+    "mana_cost": "{3}{U}",
+    "cmc": 4,
+    "type_line": "Creature — Bird Wizard",
+    "oracle_text": "Flying\nWhen this creature enters, return target land to its owner's hand.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Cephalid Constable",
+    "mana_cost": "{1}{U}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Octopus Wizard",
+    "oracle_text": "Whenever this creature deals combat damage to a player, return up to that many target permanents that player controls to their owner's hand.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Cephalid Inkshrouder",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Octopus",
+    "oracle_text": "Discard a card: This creature gains shroud until end of turn and can't be blocked this turn. (A creature with shroud can't be the target of spells or abilities.)",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Cunning Wish",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "You may reveal an instant card you own from outside the game and put it into your hand. Exile Cunning Wish.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Defy Gravity",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Target creature gains flying until end of turn.\nFlashback {U} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flashback"
+    ],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Envelop",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Counter target sorcery spell.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Flash of Insight",
+    "mana_cost": "{X}{1}{U}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Look at the top X cards of your library. Put one of them into your hand and the rest on the bottom of your library in any order.\nFlashback—{1}{U}, Exile X blue cards from your graveyard. (You may cast this card from your graveyard for its flashback cost, then exile it. You can't exile Flash of Insight to pay for its own flashback cost.)",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flashback"
+    ],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Grip of Amnesia",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Counter target spell unless its controller exiles all cards from their graveyard.\nDraw a card.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Hapless Researcher",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "Sacrifice this creature: Draw a card, then discard a card.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Keep Watch",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Draw a card for each attacking creature.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Laquatus's Disdain",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Counter target spell cast from a graveyard.\nDraw a card.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Lost in Thought",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature can't attack or block, and its activated abilities can't be activated. Its controller may exile three cards from their graveyard for that player to ignore this effect until end of turn.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Mental Note",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Mill two cards.\nDraw a card.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Mill"
+    ],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Mirror Wall",
+    "mana_cost": "{3}{U}",
+    "cmc": 4,
+    "type_line": "Creature — Wall",
+    "oracle_text": "Defender (This creature can't attack.)\n{W}: This creature can attack this turn as though it didn't have defender.",
+    "power": "3",
+    "toughness": "4",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Defender"
+    ],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Mist of Stagnation",
+    "mana_cost": "{3}{U}{U}",
+    "cmc": 5,
+    "type_line": "Enchantment",
+    "oracle_text": "Permanents don't untap during their controllers' untap steps.\nAt the beginning of each player's upkeep, that player chooses a permanent for each card in their graveyard, then untaps those permanents.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Quiet Speculation",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Search target player's library for up to three cards with flashback and put them into that player's graveyard. Then the player shuffles.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Scalpelexis",
+    "mana_cost": "{4}{U}",
+    "cmc": 5,
+    "type_line": "Creature — Beast",
+    "oracle_text": "Flying (This creature can't be blocked except by creatures with flying or reach.)\nWhenever this creature deals combat damage to a player, that player exiles the top four cards of their library. If two or more of those cards have the same name, repeat this process.",
+    "power": "1",
+    "toughness": "5",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Spelljack",
+    "mana_cost": "{3}{U}{U}{U}",
+    "cmc": 6,
+    "type_line": "Instant",
+    "oracle_text": "Counter target spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard. You may play it without paying its mana cost for as long as it remains exiled. (If it has X in its mana cost, X is 0.)",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Telekinetic Bonds",
+    "mana_cost": "{2}{U}{U}{U}",
+    "cmc": 5,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever a player discards a card, you may pay {1}{U}. If you do, you may tap or untap target permanent.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Web of Inertia",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of combat on each opponent's turn, that player may exile a card from their graveyard. If the player doesn't, creatures they control can't attack you this turn.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Wonder",
+    "mana_cost": "{3}{U}",
+    "cmc": 4,
+    "type_line": "Creature — Incarnation",
+    "oracle_text": "Flying\nAs long as this card is in your graveyard and you control an Island, creatures you control have flying.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Wormfang Behemoth",
+    "mana_cost": "{3}{U}{U}",
+    "cmc": 5,
+    "type_line": "Creature — Nightmare Fish Beast",
+    "oracle_text": "When this creature enters, exile all cards from your hand.\nWhen this creature leaves the battlefield, return the exiled cards to their owner's hand.",
+    "power": "5",
+    "toughness": "5",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Wormfang Crab",
+    "mana_cost": "{3}{U}",
+    "cmc": 4,
+    "type_line": "Creature — Nightmare Crab",
+    "oracle_text": "This creature can't be blocked.\nWhen this creature enters, an opponent chooses a permanent you control other than this creature and exiles it.\nWhen this creature leaves the battlefield, return the exiled card to the battlefield under its owner's control.",
+    "power": "3",
+    "toughness": "6",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Wormfang Drake",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Nightmare Drake",
+    "oracle_text": "Flying\nWhen this creature enters, sacrifice it unless you exile a creature you control other than this creature.\nWhen this creature leaves the battlefield, return the exiled card to the battlefield under its owner's control.",
+    "power": "3",
+    "toughness": "4",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Wormfang Manta",
+    "mana_cost": "{5}{U}{U}",
+    "cmc": 7,
+    "type_line": "Creature — Nightmare Fish Beast",
+    "oracle_text": "Flying\nWhen this creature enters, you skip your next turn.\nWhen this creature leaves the battlefield, you take an extra turn after this one.",
+    "power": "6",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Wormfang Newt",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Nightmare Salamander Beast",
+    "oracle_text": "When this creature enters, exile a land you control.\nWhen this creature leaves the battlefield, return the exiled card to the battlefield under its owner's control.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Wormfang Turtle",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Nightmare Turtle Beast",
+    "oracle_text": "When this creature enters, exile a land you control.\nWhen this creature leaves the battlefield, return the exiled card to the battlefield under its owner's control.",
+    "power": "2",
+    "toughness": "4",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Balthor the Defiled",
+    "mana_cost": "{2}{B}{B}",
+    "cmc": 4,
+    "type_line": "Legendary Creature — Zombie Dwarf",
+    "oracle_text": "Minion creatures get +1/+1.\n{B}{B}{B}, Exile Balthor: Each player returns all black and all red creature cards from their graveyard to the battlefield.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Cabal Therapy",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "Choose a nonland card name. Target player reveals their hand and discards all cards with that name.\nFlashback—Sacrifice a creature. (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Flashback"
+    ],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Cabal Trainee",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Creature — Human Minion",
+    "oracle_text": "Sacrifice this creature: Target creature gets -2/-0 until end of turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Death Wish",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "You may put a card you own from outside the game into your hand. You lose half your life, rounded up. Exile Death Wish.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Earsplitting Rats",
+    "mana_cost": "{3}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Rat",
+    "oracle_text": "When this creature enters, each player discards a card.\nDiscard a card: Regenerate this creature.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Filth",
+    "mana_cost": "{3}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Incarnation",
+    "oracle_text": "Swampwalk (This creature can't be blocked as long as defending player controls a Swamp.)\nAs long as this card is in your graveyard and you control a Swamp, creatures you control have swampwalk.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Landwalk",
+      "Swampwalk"
+    ],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Grave Consequences",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Each player may exile any number of cards from their graveyard. Then each player loses 1 life for each card in their graveyard.\nDraw a card.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Guiltfeeder",
+    "mana_cost": "{3}{B}{B}",
+    "cmc": 5,
+    "type_line": "Creature — Horror",
+    "oracle_text": "Fear (This creature can't be blocked except by artifact creatures and/or black creatures.)\nWhenever this creature attacks and isn't blocked, defending player loses 1 life for each card in their graveyard.",
+    "power": "0",
+    "toughness": "4",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Fear"
+    ],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Masked Gorgon",
+    "mana_cost": "{4}{B}",
+    "cmc": 5,
+    "type_line": "Creature — Gorgon",
+    "oracle_text": "Green creatures and white creatures have protection from Gorgons.\nThreshold — This creature has protection from green and from white as long as there are seven or more cards in your graveyard.",
+    "power": "5",
+    "toughness": "5",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Threshold"
+    ],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Morality Shift",
+    "mana_cost": "{5}{B}{B}",
+    "cmc": 7,
+    "type_line": "Sorcery",
+    "oracle_text": "Exchange your graveyard and library. Then shuffle your library.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Rats' Feast",
+    "mana_cost": "{X}{B}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "Exile X target cards from a single graveyard.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Stitch Together",
+    "mana_cost": "{B}{B}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Return target creature card from your graveyard to your hand.\nThreshold — Return that card from your graveyard to the battlefield instead if there are seven or more cards in your graveyard.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Threshold"
+    ],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Sutured Ghoul",
+    "mana_cost": "{4}{B}{B}{B}",
+    "cmc": 7,
+    "type_line": "Creature — Zombie",
+    "oracle_text": "Trample\nAs this creature enters, exile any number of creature cards from your graveyard.\nSutured Ghoul's power is equal to the total power of the exiled cards and its toughness is equal to their total toughness.",
+    "power": "*",
+    "toughness": "*",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Trample"
+    ],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Toxic Stench",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Target nonblack creature gets -1/-1 until end of turn.\nThreshold — If there are seven or more cards in your graveyard, instead destroy that creature. It can't be regenerated.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Threshold"
+    ],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Treacherous Vampire",
+    "mana_cost": "{4}{B}",
+    "cmc": 5,
+    "type_line": "Creature — Vampire",
+    "oracle_text": "Flying\nWhenever this creature attacks or blocks, sacrifice it unless you exile a card from your graveyard.\nThreshold — As long as there are seven or more cards in your graveyard, this creature gets +2/+2 and has \"When this creature dies, you lose 6 life.\"",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Flying",
+      "Threshold"
+    ],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Treacherous Werewolf",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Werewolf Minion",
+    "oracle_text": "Threshold — As long as there are seven or more cards in your graveyard, this creature gets +2/+2 and has \"When this creature dies, you lose 4 life.\"",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Threshold"
+    ],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Anger",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Incarnation",
+    "oracle_text": "Haste\nAs long as this card is in your graveyard and you control a Mountain, creatures you control have haste.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Haste"
+    ],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Arcane Teachings",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature (Target a creature as you cast this. This card enters attached to that creature.)\nEnchanted creature gets +2/+2 and has \"{T}: This creature deals 1 damage to any target.\"",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Barbarian Bully",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Human Barbarian",
+    "oracle_text": "Discard a card at random: This creature gets +2/+2 until end of turn unless a player has this creature deal 4 damage to them. Activate only once each turn.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Book Burning",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Any player may have Book Burning deal 6 damage to them. If no one does, target player mills six cards.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Mill"
+    ],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Breaking Point",
+    "mana_cost": "{1}{R}{R}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Any player may have Breaking Point deal 6 damage to them. If no one does, destroy all creatures. Creatures destroyed this way can't be regenerated.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Browbeat",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Any player may have Browbeat deal 5 damage to them. If no one does, target player draws three cards.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Burning Wish",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "You may reveal a sorcery card you own from outside the game and put it into your hand. Exile Burning Wish.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Dwarven Bloodboiler",
+    "mana_cost": "{R}{R}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Dwarf",
+    "oracle_text": "Tap an untapped Dwarf you control: Target creature gets +2/+0 until end of turn.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Dwarven Driller",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Dwarf",
+    "oracle_text": "{T}: Destroy target land unless its controller has this creature deal 2 damage to them.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Dwarven Scorcher",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Creature — Dwarf",
+    "oracle_text": "Sacrifice this creature: This creature deals 1 damage to target creature unless that creature's controller has this creature deal 2 damage to them.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Ember Shot",
+    "mana_cost": "{6}{R}",
+    "cmc": 7,
+    "type_line": "Instant",
+    "oracle_text": "Ember Shot deals 3 damage to any target.\nDraw a card.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Firecat Blitz",
+    "mana_cost": "{X}{R}{R}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Create X 1/1 red Elemental Cat creature tokens with haste. Exile them at the beginning of the next end step.\nFlashback—{R}{R}, Sacrifice X Mountains. (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Flashback"
+    ],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Flaring Pain",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Damage can't be prevented this turn.\nFlashback {R} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Flashback"
+    ],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Fledgling Dragon",
+    "mana_cost": "{2}{R}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Dragon",
+    "oracle_text": "Flying\nThreshold — As long as there are seven or more cards in your graveyard, this creature gets +3/+3 and has \"{R}: This creature gets +1/+0 until end of turn.\"",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Flying",
+      "Threshold"
+    ],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Goretusk Firebeast",
+    "mana_cost": "{5}{R}",
+    "cmc": 6,
+    "type_line": "Creature — Elemental Boar Beast",
+    "oracle_text": "When this creature enters, it deals 4 damage to target player or planeswalker.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Infectious Rage",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature gets +2/-1.\nWhen enchanted creature dies, choose a creature at random this Aura can enchant. Return this card to the battlefield attached to that creature.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Jeska, Warrior Adept",
+    "mana_cost": "{2}{R}{R}",
+    "cmc": 4,
+    "type_line": "Legendary Creature — Human Barbarian Warrior",
+    "oracle_text": "First strike, haste\n{T}: Jeska deals 1 damage to any target.",
+    "power": "3",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "First strike",
+      "Haste"
+    ],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Lava Dart",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Lava Dart deals 1 damage to any target.\nFlashback—Sacrifice a Mountain. (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Flashback"
+    ],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Liberated Dwarf",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Creature — Dwarf",
+    "oracle_text": "{R}, Sacrifice this creature: Target green creature gets +1/+0 and gains first strike until end of turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Lightning Surge",
+    "mana_cost": "{3}{R}{R}",
+    "cmc": 5,
+    "type_line": "Sorcery",
+    "oracle_text": "Lightning Surge deals 4 damage to any target.\nThreshold — If there are seven or more cards in your graveyard, instead Lightning Surge deals 6 damage to that permanent or player and the damage can't be prevented.\nFlashback {5}{R}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Threshold",
+      "Flashback"
+    ],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Planar Chaos",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of your upkeep, flip a coin. If you lose the flip, sacrifice this enchantment.\nWhenever a player casts a spell, that player flips a coin. If they lose the flip, counter that spell.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Shaman's Trance",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Other players can't play lands or cast spells from their graveyards this turn. You may play lands and cast spells from other players' graveyards this turn as though those cards were in your graveyard.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Soulgorger Orgg",
+    "mana_cost": "{3}{R}{R}",
+    "cmc": 5,
+    "type_line": "Creature — Nightmare Orgg",
+    "oracle_text": "Trample\nWhen this creature enters, you lose all but 1 life.\nWhen this creature leaves the battlefield, you gain life equal to the life you lost when it entered.",
+    "power": "6",
+    "toughness": "6",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Trample"
+    ],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Spellgorger Barbarian",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Human Nightmare Barbarian",
+    "oracle_text": "When this creature enters, discard a card at random.\nWhen this creature leaves the battlefield, draw a card.",
+    "power": "3",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Swelter",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Swelter deals 2 damage to each of two target creatures.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Swirling Sandstorm",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Threshold — Swirling Sandstorm deals 5 damage to each creature without flying if there are seven or more cards in your graveyard.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Threshold"
+    ],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Worldgorger Dragon",
+    "mana_cost": "{3}{R}{R}{R}",
+    "cmc": 6,
+    "type_line": "Creature — Nightmare Dragon",
+    "oracle_text": "Flying, trample\nWhen this creature enters, exile all other permanents you control.\nWhen this creature leaves the battlefield, return the exiled cards to the battlefield under their owners' control.",
+    "power": "7",
+    "toughness": "7",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Flying",
+      "Trample"
+    ],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Anurid Barkripper",
+    "mana_cost": "{1}{G}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Frog Beast",
+    "oracle_text": "Threshold — This creature gets +2/+2 as long as there are seven or more cards in your graveyard.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Threshold"
+    ],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Anurid Swarmsnapper",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Frog Beast",
+    "oracle_text": "Reach (This creature can block creatures with flying.)\n{1}{G}: This creature can block an additional creature this turn.",
+    "power": "1",
+    "toughness": "4",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Reach"
+    ],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Battlefield Scrounger",
+    "mana_cost": "{3}{G}{G}",
+    "cmc": 5,
+    "type_line": "Creature — Centaur",
+    "oracle_text": "Threshold — Put three cards from your graveyard on the bottom of your library: This creature gets +3/+3 until end of turn. Activate only once each turn and only if there are seven or more cards in your graveyard.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Threshold"
+    ],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Brawn",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Creature — Incarnation",
+    "oracle_text": "Trample\nAs long as this card is in your graveyard and you control a Forest, creatures you control have trample.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Trample"
+    ],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Canopy Claws",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Target creature loses flying until end of turn.\nFlashback {G} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Flashback"
+    ],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Centaur Rootcaster",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Creature — Centaur Druid",
+    "oracle_text": "Whenever this creature deals combat damage to a player, you may search your library for a basic land card, put that card onto the battlefield tapped, then shuffle.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Crush of Wurms",
+    "mana_cost": "{6}{G}{G}{G}",
+    "cmc": 9,
+    "type_line": "Sorcery",
+    "oracle_text": "Create three 6/6 green Wurm creature tokens.\nFlashback {9}{G}{G}{G} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Flashback"
+    ],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Elephant Guide",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature gets +3/+3.\nWhen enchanted creature dies, create a 3/3 green Elephant creature token.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Epic Struggle",
+    "mana_cost": "{2}{G}{G}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of your upkeep, if you control twenty or more creatures, you win the game.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Erhnam Djinn",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Creature — Djinn",
+    "oracle_text": "At the beginning of your upkeep, target non-Wall creature an opponent controls gains forestwalk until your next upkeep. (It can't be blocked as long as defending player controls a Forest.)",
+    "power": "4",
+    "toughness": "5",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Exoskeletal Armor",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature gets +X/+X, where X is the number of creature cards in all graveyards.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Folk Medicine",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "You gain 1 life for each creature you control.\nFlashback {1}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Flashback"
+    ],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Forcemage Advocate",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Centaur Shaman",
+    "oracle_text": "{T}: Return target card from an opponent's graveyard to their hand. Put a +1/+1 counter on target creature.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Genesis",
+    "mana_cost": "{4}{G}",
+    "cmc": 5,
+    "type_line": "Creature — Incarnation",
+    "oracle_text": "At the beginning of your upkeep, if this creature is in your graveyard, you may pay {2}{G}. If you do, return target creature card from your graveyard to your hand.",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Giant Warthog",
+    "mana_cost": "{5}{G}",
+    "cmc": 6,
+    "type_line": "Creature — Boar Beast",
+    "oracle_text": "Trample",
+    "power": "5",
+    "toughness": "5",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Trample"
+    ],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Grizzly Fate",
+    "mana_cost": "{3}{G}{G}",
+    "cmc": 5,
+    "type_line": "Sorcery",
+    "oracle_text": "Create two 2/2 green Bear creature tokens.\nThreshold — Create four 2/2 green Bear creature tokens instead if there are seven or more cards in your graveyard.\nFlashback {5}{G}{G} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Threshold",
+      "Flashback"
+    ],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Harvester Druid",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Human Druid",
+    "oracle_text": "{T}: Add one mana of any color that a land you control could produce.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Ironshell Beetle",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Insect",
+    "oracle_text": "When this creature enters, put a +1/+1 counter on target creature.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Krosan Reclamation",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Target player shuffles up to two target cards from their graveyard into their library.\nFlashback {1}{G} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Flashback"
+    ],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Krosan Wayfarer",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Human Druid",
+    "oracle_text": "Sacrifice this creature: You may put a land card from your hand onto the battlefield.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Living Wish",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "You may reveal a creature or land card you own from outside the game and put it into your hand. Exile Living Wish.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Nantuko Tracer",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Insect Druid",
+    "oracle_text": "When this creature enters, you may put target card from a graveyard on the bottom of its owner's library.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Nullmage Advocate",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Insect Druid",
+    "oracle_text": "{T}: Return two target cards from an opponent's graveyard to their hand. Destroy target artifact or enchantment.",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Phantom Centaur",
+    "mana_cost": "{2}{G}{G}",
+    "cmc": 4,
+    "type_line": "Creature — Centaur Spirit",
+    "oracle_text": "Protection from black\nThis creature enters with three +1/+1 counters on it.\nIf damage would be dealt to this creature, prevent that damage. Remove a +1/+1 counter from this creature.",
+    "power": "2",
+    "toughness": "0",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Protection"
+    ],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Phantom Nantuko",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Insect Spirit",
+    "oracle_text": "Trample\nThis creature enters with two +1/+1 counters on it.\nIf damage would be dealt to this creature, prevent that damage. Remove a +1/+1 counter from this creature.\n{T}: Put a +1/+1 counter on this creature.",
+    "power": "0",
+    "toughness": "0",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Trample"
+    ],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Phantom Tiger",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Cat Spirit",
+    "oracle_text": "This creature enters with two +1/+1 counters on it.\nIf damage would be dealt to this creature, prevent that damage. Remove a +1/+1 counter from this creature.",
+    "power": "1",
+    "toughness": "0",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Seedtime",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Cast this spell only during your turn.\nTake an extra turn after this one if an opponent cast a blue spell this turn.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Serene Sunset",
+    "mana_cost": "{X}{G}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Prevent all combat damage X target creatures would deal this turn.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Sudden Strength",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Instant",
+    "oracle_text": "Target creature gets +3/+3 until end of turn.\nDraw a card.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Sylvan Safekeeper",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "Sacrifice a land: Target creature you control gains shroud until end of turn. (It can't be the target of spells or abilities.)",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Thriss, Nantuko Primus",
+    "mana_cost": "{5}{G}{G}",
+    "cmc": 7,
+    "type_line": "Legendary Creature — Insect Druid",
+    "oracle_text": "{G}, {T}: Target creature gets +5/+5 until end of turn.",
+    "power": "5",
+    "toughness": "5",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Tunneler Wurm",
+    "mana_cost": "{6}{G}{G}",
+    "cmc": 8,
+    "type_line": "Creature — Wurm",
+    "oracle_text": "Discard a card: Regenerate this creature.",
+    "power": "6",
+    "toughness": "6",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Venomous Vines",
+    "mana_cost": "{2}{G}{G}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Destroy target enchanted permanent.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "jud"
+  },
+  {
+    "name": "Anurid Brushhopper",
+    "mana_cost": "{1}{G}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Frog Beast",
+    "oracle_text": "Discard two cards: Exile this creature. Return it to the battlefield under its owner's control at the beginning of the next end step.",
+    "power": "3",
+    "toughness": "4",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Hunting Grounds",
+    "mana_cost": "{G}{W}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "Threshold — As long as there are seven or more cards in your graveyard, this enchantment has \"Whenever an opponent casts a spell, you may put a creature card from your hand onto the battlefield.\"",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "keywords": [
+      "Threshold"
+    ],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Mirari's Wake",
+    "mana_cost": "{3}{G}{W}",
+    "cmc": 5,
+    "type_line": "Enchantment",
+    "oracle_text": "Creatures you control get +1/+1.\nWhenever you tap a land for mana, add one mana of any type that land produced.",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Phantom Nishoba",
+    "mana_cost": "{5}{G}{W}",
+    "cmc": 7,
+    "type_line": "Creature — Cat Beast Spirit",
+    "oracle_text": "Trample\nThis creature enters with seven +1/+1 counters on it.\nWhenever this creature deals damage, you gain that much life.\nIf damage would be dealt to this creature, prevent that damage. Remove a +1/+1 counter from this creature.",
+    "power": "0",
+    "toughness": "0",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "keywords": [
+      "Trample"
+    ],
+    "rarity": "rare",
+    "set": "jud"
+  },
+  {
+    "name": "Krosan Verge",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped.\n{T}: Add {C}.\n{2}, {T}, Sacrifice this land: Search your library for a Forest card and a Plains card, put them onto the battlefield tapped, then shuffle.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Nantuko Monastery",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "{T}: Add {C}.\nThreshold — {G}{W}: This land becomes a 4/4 green and white Insect Monk creature with first strike until end of turn. It's still a land. Activate only if there are seven or more cards in your graveyard.",
+    "colors": [],
+    "keywords": [
+      "Threshold"
+    ],
+    "rarity": "uncommon",
+    "set": "jud"
+  },
+  {
+    "name": "Riftstone Portal",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "{T}: Add {C}.\nAs long as this card is in your graveyard, lands you control have \"{T}: Add {G} or {W}.\"",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "jud"
+  }
+]

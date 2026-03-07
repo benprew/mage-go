@@ -1,0 +1,2049 @@
+[
+  {
+    "name": "Angelic Favor",
+    "mana_cost": "{3}{W}",
+    "cmc": 4,
+    "type_line": "Instant",
+    "oracle_text": "If you control a Plains, you may tap an untapped creature you control rather than pay this spell's mana cost.\nCast this spell only during combat.\nCreate a 4/4 white Angel creature token with flying. Exile it at the beginning of the next end step.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Avenger en-Dal",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Human Spellshaper",
+    "oracle_text": "{2}{W}, {T}, Discard a card: Exile target attacking creature. Its controller gains life equal to its toughness.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Blinding Angel",
+    "mana_cost": "{3}{W}{W}",
+    "cmc": 5,
+    "type_line": "Creature — Angel",
+    "oracle_text": "Flying (This creature can't be blocked except by creatures with flying or reach.)\nWhenever this creature deals combat damage to a player, that player skips their next combat phase.",
+    "power": "2",
+    "toughness": "4",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Chieftain en-Dal",
+    "mana_cost": "{1}{W}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Human Knight",
+    "oracle_text": "Whenever this creature attacks, attacking creatures gain first strike until end of turn.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Defender en-Vec",
+    "mana_cost": "{3}{W}",
+    "cmc": 4,
+    "type_line": "Creature — Human Cleric",
+    "oracle_text": "Fading 4 (This creature enters with four fade counters on it. At the beginning of your upkeep, remove a fade counter from it. If you can't, sacrifice it.)\nRemove a fade counter from this creature: Prevent the next 2 damage that would be dealt to any target this turn.",
+    "power": "2",
+    "toughness": "4",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Fading"
+    ],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Defiant Falcon",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Rebel Bird",
+    "oracle_text": "Flying\n{4}, {T}: Search your library for a Rebel permanent card with mana value 3 or less, put it onto the battlefield, then shuffle.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Defiant Vanguard",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Human Rebel",
+    "oracle_text": "When this creature blocks, at end of combat, destroy it and all creatures it blocked this turn.\n{5}, {T}: Search your library for a Rebel permanent card with mana value 4 or less, put it onto the battlefield, then shuffle.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Fanatical Devotion",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Sacrifice a creature: Regenerate target creature.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Lashknife",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "If you control a Plains, you may tap an untapped creature you control rather than pay this spell's mana cost.\nEnchant creature\nEnchanted creature has first strike.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Lawbringer",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Kor Rebel",
+    "oracle_text": "{T}, Sacrifice this creature: Exile target red creature.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Lightbringer",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Kor Rebel",
+    "oracle_text": "{T}, Sacrifice this creature: Exile target black creature.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Lin Sivvi, Defiant Hero",
+    "mana_cost": "{1}{W}{W}",
+    "cmc": 3,
+    "type_line": "Legendary Creature — Human Rebel",
+    "oracle_text": "{X}, {T}: Search your library for a Rebel permanent card with mana value X or less, put it onto the battlefield, then shuffle.\n{3}: Put target Rebel card from your graveyard on the bottom of your library.",
+    "power": "1",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Netter en-Dal",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Human Spellshaper",
+    "oracle_text": "{W}, {T}, Discard a card: Target creature can't attack this turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Noble Stand",
+    "mana_cost": "{4}{W}",
+    "cmc": 5,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever a creature you control blocks, you gain 2 life.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Off Balance",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Target creature can't attack or block this turn.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Oracle's Attendants",
+    "mana_cost": "{3}{W}",
+    "cmc": 4,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "{T}: All damage that would be dealt to target creature this turn by a source of your choice is dealt to this creature instead.",
+    "power": "1",
+    "toughness": "5",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Parallax Wave",
+    "mana_cost": "{2}{W}{W}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "Fading 5 (This enchantment enters with five fade counters on it. At the beginning of your upkeep, remove a fade counter from it. If you can't, sacrifice it.)\nRemove a fade counter from this enchantment: Exile target creature.\nWhen this enchantment leaves the battlefield, each player returns to the battlefield all cards they own exiled with it.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Fading"
+    ],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Seal of Cleansing",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "Sacrifice this enchantment: Destroy target artifact or enchantment.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Silkenfist Fighter",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Kor Soldier",
+    "oracle_text": "Whenever this creature becomes blocked, untap it.",
+    "power": "1",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Silkenfist Order",
+    "mana_cost": "{3}{W}{W}",
+    "cmc": 5,
+    "type_line": "Creature — Kor Soldier",
+    "oracle_text": "Whenever this creature becomes blocked, untap it.",
+    "power": "3",
+    "toughness": "5",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Sivvi's Ruse",
+    "mana_cost": "{2}{W}{W}",
+    "cmc": 4,
+    "type_line": "Instant",
+    "oracle_text": "If an opponent controls a Mountain and you control a Plains, you may cast this spell without paying its mana cost.\nPrevent all damage that would be dealt this turn to creatures you control.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Sivvi's Valor",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "If you control a Plains, you may tap an untapped creature you control rather than pay this spell's mana cost.\nAll damage that would be dealt to target creature this turn is dealt to you instead.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Spiritual Asylum",
+    "mana_cost": "{2}{W}{W}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "Creatures and lands you control have shroud. (They can't be the targets of spells or abilities.)\nWhen a creature you control attacks, sacrifice this enchantment.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Topple",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Exile target creature with the greatest power among creatures on the battlefield. (If two or more creatures are tied for greatest power, target any one of them.)",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Voice of Truth",
+    "mana_cost": "{3}{W}",
+    "cmc": 4,
+    "type_line": "Creature — Angel",
+    "oracle_text": "Flying, protection from white",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying",
+      "Protection"
+    ],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Accumulated Knowledge",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Draw a card, then draw cards equal to the number of cards named Accumulated Knowledge in all graveyards.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Aether Barrier",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever a player casts a creature spell, that player sacrifices a permanent of their choice unless they pay {1}.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Air Bladder",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature has flying.\nEnchanted creature can block only creatures with flying.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Cloudskate",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Illusion",
+    "oracle_text": "Flying\nFading 3 (This creature enters with three fade counters on it. At the beginning of your upkeep, remove a fade counter from it. If you can't, sacrifice it.)",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying",
+      "Fading"
+    ],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Daze",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "You may return an Island you control to its owner's hand rather than pay this spell's mana cost.\nCounter target spell unless its controller pays {1}.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Dominate",
+    "mana_cost": "{X}{1}{U}{U}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Gain control of target creature with mana value X or less.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Ensnare",
+    "mana_cost": "{3}{U}",
+    "cmc": 4,
+    "type_line": "Instant",
+    "oracle_text": "You may return two Islands you control to their owner's hand rather than pay this spell's mana cost.\nTap all creatures.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Infiltrate",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Target creature can't be blocked this turn.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Jolting Merfolk",
+    "mana_cost": "{2}{U}{U}",
+    "cmc": 4,
+    "type_line": "Creature — Merfolk",
+    "oracle_text": "Fading 4 (This creature enters with four fade counters on it. At the beginning of your upkeep, remove a fade counter from it. If you can't, sacrifice it.)\nRemove a fade counter from this creature: Tap target creature.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Fading"
+    ],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Oraxid",
+    "mana_cost": "{3}{U}",
+    "cmc": 4,
+    "type_line": "Creature — Crab Beast",
+    "oracle_text": "Protection from red",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Protection"
+    ],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Pale Moon",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Until end of turn, if a player taps a nonbasic land for mana, it produces colorless mana instead of any other type.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Parallax Tide",
+    "mana_cost": "{2}{U}{U}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "Fading 5 (This enchantment enters with five fade counters on it. At the beginning of your upkeep, remove a fade counter from it. If you can't, sacrifice it.)\nRemove a fade counter from this enchantment: Exile target land.\nWhen this enchantment leaves the battlefield, each player returns to the battlefield all cards they own exiled with it.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Fading"
+    ],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Rising Waters",
+    "mana_cost": "{3}{U}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "Lands don't untap during their controllers' untap steps.\nAt the beginning of each player's upkeep, that player untaps a land they control.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Rootwater Commando",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Merfolk",
+    "oracle_text": "Islandwalk (This creature can't be blocked as long as defending player controls an Island.)",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Landwalk",
+      "Islandwalk"
+    ],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Rootwater Thief",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Merfolk Rogue",
+    "oracle_text": "{U}: This creature gains flying until end of turn.\nWhenever this creature deals combat damage to a player, you may pay {2}. If you do, search that player's library for a card and exile it, then the player shuffles.",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Seahunter",
+    "mana_cost": "{2}{U}{U}",
+    "cmc": 4,
+    "type_line": "Creature — Human Mercenary",
+    "oracle_text": "{3}, {T}: Search your library for a Merfolk permanent card, put it onto the battlefield, then shuffle.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Seal of Removal",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Enchantment",
+    "oracle_text": "Sacrifice this enchantment: Return target creature to its owner's hand.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Sliptide Serpent",
+    "mana_cost": "{4}{U}{U}",
+    "cmc": 6,
+    "type_line": "Creature — Serpent",
+    "oracle_text": "{3}{U}: Return this creature to its owner's hand.",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Sneaky Homunculus",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Homunculus Illusion",
+    "oracle_text": "This creature can't block or be blocked by creatures with power 2 or greater.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Stronghold Biologist",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Human Spellshaper",
+    "oracle_text": "{U}{U}, {T}, Discard a card: Counter target creature spell.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Stronghold Machinist",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Human Spellshaper",
+    "oracle_text": "{U}{U}, {T}, Discard a card: Counter target noncreature spell.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Stronghold Zeppelin",
+    "mana_cost": "{2}{U}{U}",
+    "cmc": 4,
+    "type_line": "Creature — Human",
+    "oracle_text": "Flying\nThis creature can block only creatures with flying.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Submerge",
+    "mana_cost": "{4}{U}",
+    "cmc": 5,
+    "type_line": "Instant",
+    "oracle_text": "If an opponent controls a Forest and you control an Island, you may cast this spell without paying its mana cost.\nPut target creature on top of its owner's library.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Trickster Mage",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Creature — Human Spellshaper",
+    "oracle_text": "{U}, {T}, Discard a card: You may tap or untap target artifact, creature, or land.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Wandering Eye",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Illusion",
+    "oracle_text": "Flying\nPlayers play with their hands revealed.",
+    "power": "1",
+    "toughness": "3",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Ascendant Evincar",
+    "mana_cost": "{4}{B}{B}",
+    "cmc": 6,
+    "type_line": "Legendary Creature — Phyrexian Vampire Noble",
+    "oracle_text": "Flying (This creature can't be blocked except by creatures with flying or reach.)\nOther black creatures get +1/+1.\nNonblack creatures get -1/-1.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Battlefield Percher",
+    "mana_cost": "{3}{B}{B}",
+    "cmc": 5,
+    "type_line": "Creature — Bird",
+    "oracle_text": "Flying\nThis creature can block only creatures with flying.\n{1}{B}: This creature gets +1/+1 until end of turn.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Belbe's Percher",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Bird",
+    "oracle_text": "Flying\nThis creature can block only creatures with flying.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Carrion Wall",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Wall",
+    "oracle_text": "Defender (This creature can't attack.)\n{1}{B}: Regenerate this creature.",
+    "power": "3",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Defender"
+    ],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Dark Triumph",
+    "mana_cost": "{4}{B}",
+    "cmc": 5,
+    "type_line": "Instant",
+    "oracle_text": "If you control a Swamp, you may sacrifice a creature rather than pay this spell's mana cost.\nCreatures you control get +2/+0 until end of turn.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Death Pit Offering",
+    "mana_cost": "{2}{B}{B}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "When this enchantment enters, sacrifice all creatures you control.\nCreatures you control get +2/+2.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Divining Witch",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Human Spellshaper",
+    "oracle_text": "{1}{B}, {T}, Discard a card: Choose a card name. Exile the top six cards of your library, then reveal cards from the top of your library until you reveal a card with the chosen name. Put that card into your hand and exile all other cards revealed this way.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Massacre",
+    "mana_cost": "{2}{B}{B}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "If an opponent controls a Plains and you control a Swamp, you may cast this spell without paying its mana cost.\nAll creatures get -2/-2 until end of turn.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Mind Slash",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "{B}, Sacrifice a creature: Target opponent reveals their hand. You choose a card from it. That player discards that card. Activate only as a sorcery.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Mind Swords",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "If you control a Swamp, you may sacrifice a creature rather than pay this spell's mana cost.\nEach player exiles two cards from their hand.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Murderous Betrayal",
+    "mana_cost": "{B}{B}{B}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "{B}{B}, Pay half your life, rounded up: Destroy target nonblack creature. It can't be regenerated.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Parallax Dementia",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nFading 1 (This enchantment enters with one fade counter on it. At the beginning of your upkeep, remove a fade counter from it. If you can't, sacrifice it.)\nEnchanted creature gets +3/+2.\nWhen this Aura leaves the battlefield, destroy enchanted creature. That creature can't be regenerated.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Fading",
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Parallax Nexus",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Fading 5 (This enchantment enters with five fade counters on it. At the beginning of your upkeep, remove a fade counter from it. If you can't, sacrifice it.)\nRemove a fade counter from this enchantment: Target opponent exiles a card from their hand. Activate only as a sorcery.\nWhen this enchantment leaves the battlefield, each player returns to their hand all cards they own exiled with it.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Fading"
+    ],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Phyrexian Driver",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Phyrexian Zombie Mercenary",
+    "oracle_text": "When this creature enters, other Mercenary creatures get +1/+1 until end of turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Phyrexian Prowler",
+    "mana_cost": "{3}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Phyrexian Zombie Mercenary",
+    "oracle_text": "Fading 3 (This creature enters with three fade counters on it. At the beginning of your upkeep, remove a fade counter from it. If you can't, sacrifice it.)\nRemove a fade counter from this creature: This creature gets +1/+1 until end of turn.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Fading"
+    ],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Plague Witch",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Elf Spellshaper",
+    "oracle_text": "{B}, {T}, Discard a card: Target creature gets -1/-1 until end of turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Rathi Assassin",
+    "mana_cost": "{2}{B}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Phyrexian Zombie Mercenary Assassin",
+    "oracle_text": "{1}{B}{B}, {T}: Destroy target tapped nonblack creature.\n{3}, {T}: Search your library for a Mercenary permanent card with mana value 3 or less, put it onto the battlefield, then shuffle.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Rathi Fiend",
+    "mana_cost": "{3}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Phyrexian Horror Mercenary",
+    "oracle_text": "When this creature enters, each player loses 3 life.\n{3}, {T}: Search your library for a Mercenary permanent card with mana value 3 or less, put it onto the battlefield, then shuffle.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Rathi Intimidator",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Phyrexian Horror Mercenary",
+    "oracle_text": "Fear (This creature can't be blocked except by artifact creatures and/or black creatures.)\n{2}, {T}: Search your library for a Mercenary permanent card with mana value 2 or less, put it onto the battlefield, then shuffle.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Fear"
+    ],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Seal of Doom",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Sacrifice this enchantment: Destroy target nonblack creature. It can't be regenerated.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Spineless Thug",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Phyrexian Zombie Mercenary",
+    "oracle_text": "This creature can't block.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Spiteful Bully",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Phyrexian Zombie Mercenary",
+    "oracle_text": "At the beginning of your upkeep, this creature deals 3 damage to target creature you control.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Stronghold Discipline",
+    "mana_cost": "{2}{B}{B}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Each player loses 1 life for each creature they control.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Vicious Hunger",
+    "mana_cost": "{B}{B}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Vicious Hunger deals 2 damage to target creature and you gain 2 life.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Volrath the Fallen",
+    "mana_cost": "{3}{B}{B}{B}",
+    "cmc": 6,
+    "type_line": "Legendary Creature — Phyrexian Shapeshifter",
+    "oracle_text": "{1}{B}, Discard a creature card: Volrath gets +X/+X until end of turn, where X is the discarded card's mana value.",
+    "power": "6",
+    "toughness": "4",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Ancient Hydra",
+    "mana_cost": "{4}{R}",
+    "cmc": 5,
+    "type_line": "Creature — Hydra",
+    "oracle_text": "Fading 5 (This creature enters with five fade counters on it. At the beginning of your upkeep, remove a fade counter from it. If you can't, sacrifice it.)\n{1}, Remove a fade counter from this creature: It deals 1 damage to any target.",
+    "power": "5",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Fading"
+    ],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Arc Mage",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Human Spellshaper",
+    "oracle_text": "{2}{R}, {T}, Discard a card: This creature deals 2 damage divided as you choose among one or two targets.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Bola Warrior",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Creature — Human Spellshaper Warrior",
+    "oracle_text": "{R}, {T}, Discard a card: Target creature can't block this turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Downhill Charge",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "You may sacrifice a Mountain rather than pay this spell's mana cost.\nTarget creature gets +X/+0 until end of turn, where X is the number of Mountains you control.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Flame Rift",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Flame Rift deals 4 damage to each player.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Flowstone Crusher",
+    "mana_cost": "{3}{R}{R}",
+    "cmc": 5,
+    "type_line": "Creature — Beast",
+    "oracle_text": "{R}: This creature gets +1/-1 until end of turn.",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Flowstone Overseer",
+    "mana_cost": "{2}{R}{R}{R}",
+    "cmc": 5,
+    "type_line": "Creature — Beast",
+    "oracle_text": "{R}{R}: Target creature gets +1/-1 until end of turn.",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Flowstone Slide",
+    "mana_cost": "{X}{2}{R}{R}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "All creatures get +X/-X until end of turn.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Flowstone Strike",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Target creature gets +1/-1 and gains haste until end of turn.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Flowstone Surge",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "Creatures you control get +1/-1.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Flowstone Wall",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Wall",
+    "oracle_text": "Defender (This creature can't attack.)\n{R}: This creature gets +1/-1 until end of turn.",
+    "power": "0",
+    "toughness": "6",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Defender"
+    ],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Laccolith Grunt",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Beast",
+    "oracle_text": "Whenever this creature becomes blocked, you may have it deal damage equal to its power to target creature. If you do, this creature assigns no combat damage this turn.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Laccolith Rig",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nWhenever enchanted creature becomes blocked, you may have it deal damage equal to its power to target creature. If you do, the first creature assigns no combat damage this turn.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Laccolith Titan",
+    "mana_cost": "{5}{R}{R}",
+    "cmc": 7,
+    "type_line": "Creature — Beast",
+    "oracle_text": "Whenever this creature becomes blocked, you may have it deal damage equal to its power to target creature. If you do, this creature assigns no combat damage this turn.",
+    "power": "6",
+    "toughness": "6",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Laccolith Warrior",
+    "mana_cost": "{2}{R}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Beast Warrior",
+    "oracle_text": "Whenever this creature becomes blocked, you may have it deal damage equal to its power to target creature. If you do, this creature assigns no combat damage this turn.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Laccolith Whelp",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Creature — Beast",
+    "oracle_text": "Whenever this creature becomes blocked, you may have it deal damage equal to its power to target creature. If you do, this creature assigns no combat damage this turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Mana Cache",
+    "mana_cost": "{1}{R}{R}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of each player's end step, put a charge counter on this enchantment for each untapped land that player controls.\nRemove a charge counter from this enchantment: Add {C}. Any player may activate this ability but only during their turn before the end step.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Mogg Alarm",
+    "mana_cost": "{1}{R}{R}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "You may sacrifice two Mountains rather than pay this spell's mana cost.\nCreate two 1/1 red Goblin creature tokens.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Mogg Salvage",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "If an opponent controls an Island and you control a Mountain, you may cast this spell without paying its mana cost.\nDestroy target artifact.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Mogg Toady",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Creature — Goblin",
+    "oracle_text": "This creature can't attack unless you control more creatures than defending player.\nThis creature can't block unless you control more creatures than attacking player.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Moggcatcher",
+    "mana_cost": "{2}{R}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Human Mercenary",
+    "oracle_text": "{3}, {T}: Search your library for a Goblin permanent card, put it onto the battlefield, then shuffle.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Rupture",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Sacrifice a creature. Rupture deals damage equal to that creature's power to each creature without flying and each player.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Seal of Fire",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Enchantment",
+    "oracle_text": "Sacrifice this enchantment: It deals 2 damage to any target.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Shrieking Mogg",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Creature — Goblin",
+    "oracle_text": "Haste\nWhen this creature enters, tap all other creatures.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Haste"
+    ],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Stronghold Gambit",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Each player chooses a card in their hand. Then each player reveals their chosen card. The owner of each creature card revealed this way with the lowest mana value puts it onto the battlefield.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Animate Land",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Until end of turn, target land becomes a 3/3 creature that's still a land.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Blastoderm",
+    "mana_cost": "{2}{G}{G}",
+    "cmc": 4,
+    "type_line": "Creature — Beast",
+    "oracle_text": "Shroud (This creature can't be the target of spells or abilities.)\nFading 3 (This creature enters with three fade counters on it. At the beginning of your upkeep, remove a fade counter from it. If you can't, sacrifice it.)",
+    "power": "5",
+    "toughness": "5",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Shroud",
+      "Fading"
+    ],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Coiling Woodworm",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Insect Worm",
+    "oracle_text": "Coiling Woodworm's power is equal to the number of Forests on the battlefield.",
+    "power": "*",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Fog Patch",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Cast this spell only during the declare blockers step.\nAttacking creatures become blocked. (This spell works on creatures that can't be blocked.)",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Harvest Mage",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Human Spellshaper",
+    "oracle_text": "{G}, {T}, Discard a card: Until end of turn, if you tap a land for mana, it produces one mana of a color of your choice instead of any other type and amount.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Mossdog",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Plant Dog",
+    "oracle_text": "Whenever this creature becomes the target of a spell or ability an opponent controls, put a +1/+1 counter on this creature.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Nesting Wurm",
+    "mana_cost": "{4}{G}{G}",
+    "cmc": 6,
+    "type_line": "Creature — Wurm",
+    "oracle_text": "Trample\nWhen this creature enters, you may search your library for up to three cards named Nesting Wurm, reveal them, put them into your hand, then shuffle.",
+    "power": "4",
+    "toughness": "3",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Trample"
+    ],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Overlaid Terrain",
+    "mana_cost": "{2}{G}{G}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "As this enchantment enters, sacrifice all lands you control.\nLands you control have \"{T}: Add two mana of any one color.\"",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Pack Hunt",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Search your library for up to three cards with the same name as target creature, reveal them, put them into your hand, then shuffle.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Refreshing Rain",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Instant",
+    "oracle_text": "If an opponent controls a Swamp and you control a Forest, you may cast this spell without paying its mana cost.\nTarget player gains 6 life.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Reverent Silence",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "If you control a Forest, rather than pay this spell's mana cost, you may have each other player gain 6 life.\nDestroy all enchantments.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Rhox",
+    "mana_cost": "{4}{G}{G}",
+    "cmc": 6,
+    "type_line": "Creature — Rhino Beast",
+    "oracle_text": "You may have this creature assign its combat damage as though it weren't blocked.\n{2}{G}: Regenerate this creature. (The next time this creature would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on it.)",
+    "power": "5",
+    "toughness": "5",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Saproling Burst",
+    "mana_cost": "{4}{G}",
+    "cmc": 5,
+    "type_line": "Enchantment",
+    "oracle_text": "Fading 7 (This enchantment enters with seven fade counters on it. At the beginning of your upkeep, remove a fade counter from it. If you can't, sacrifice it.)\nRemove a fade counter from this enchantment: Create a green Saproling creature token. It has \"This token's power and toughness are each equal to the number of fade counters on Saproling Burst.\"\nWhen this enchantment leaves the battlefield, destroy all tokens created with this enchantment. They can't be regenerated.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Fading"
+    ],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Saproling Cluster",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "{1}, Discard a card: Create a 1/1 green Saproling creature token. Any player may activate this ability.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Seal of Strength",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Enchantment",
+    "oracle_text": "Sacrifice this enchantment: Target creature gets +3/+3 until end of turn.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Skyshroud Behemoth",
+    "mana_cost": "{5}{G}{G}",
+    "cmc": 7,
+    "type_line": "Creature — Beast",
+    "oracle_text": "Fading 2 (This creature enters with two fade counters on it. At the beginning of your upkeep, remove a fade counter from it. If you can't, sacrifice it.)\nThis creature enters tapped.",
+    "power": "10",
+    "toughness": "10",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Fading"
+    ],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Skyshroud Claim",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Search your library for up to two Forest cards, put them onto the battlefield, then shuffle.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Skyshroud Cutter",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Creature — Beast",
+    "oracle_text": "If you control a Forest, rather than pay this spell's mana cost, you may have each other player gain 5 life.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Skyshroud Poacher",
+    "mana_cost": "{2}{G}{G}",
+    "cmc": 4,
+    "type_line": "Creature — Human Rebel",
+    "oracle_text": "{3}, {T}: Search your library for an Elf permanent card, put it onto the battlefield, then shuffle.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Skyshroud Ridgeback",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Beast",
+    "oracle_text": "Fading 2 (This creature enters with two fade counters on it. At the beginning of your upkeep, remove a fade counter from it. If you can't, sacrifice it.)",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Fading"
+    ],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Skyshroud Sentinel",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Elf",
+    "oracle_text": "When this creature enters, you may search your library for up to three cards named Skyshroud Sentinel, reveal them, put them into your hand, then shuffle.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Stampede Driver",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Human Spellshaper",
+    "oracle_text": "{1}{G}, {T}, Discard a card: Creatures you control get +1/+1 and gain trample until end of turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Treetop Bracers",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature (Target a creature as you cast this. This card enters attached to that creature.)\nEnchanted creature gets +1/+1 and can't be blocked except by creatures with flying.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "nem"
+  },
+  {
+    "name": "Wild Mammoth",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Elephant",
+    "oracle_text": "At the beginning of your upkeep, if a player controls more creatures than each other player, the player who controls the most creatures gains control of this creature.",
+    "power": "3",
+    "toughness": "4",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Woodripper",
+    "mana_cost": "{3}{G}{G}",
+    "cmc": 5,
+    "type_line": "Creature — Beast",
+    "oracle_text": "Fading 3 (This creature enters with three fade counters on it. At the beginning of your upkeep, remove a fade counter from it. If you can't, sacrifice it.)\n{1}, Remove a fade counter from this creature: Destroy target artifact.",
+    "power": "4",
+    "toughness": "6",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Fading"
+    ],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Belbe's Armor",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "{X}, {T}: Target creature gets -X/+X until end of turn.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Belbe's Portal",
+    "mana_cost": "{5}",
+    "cmc": 5,
+    "type_line": "Artifact",
+    "oracle_text": "As this artifact enters, choose a creature type.\n{3}, {T}: You may put a creature card of the chosen type from your hand onto the battlefield.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Complex Automaton",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact Creature — Golem",
+    "oracle_text": "At the beginning of your upkeep, if you control seven or more permanents, return this creature to its owner's hand.",
+    "power": "4",
+    "toughness": "4",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Eye of Yawgmoth",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "{3}, {T}, Sacrifice a creature: Reveal a number of cards from the top of your library equal to the sacrificed creature's power. Put one into your hand and exile the rest.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Flint Golem",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact Creature — Golem",
+    "oracle_text": "Whenever this creature becomes blocked, defending player mills three cards.",
+    "power": "2",
+    "toughness": "3",
+    "colors": [],
+    "keywords": [
+      "Mill"
+    ],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Flowstone Armor",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "You may choose not to untap this artifact during your untap step.\n{3}, {T}: Target creature gets +1/-1 for as long as this artifact remains tapped.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Flowstone Thopter",
+    "mana_cost": "{7}",
+    "cmc": 7,
+    "type_line": "Artifact Creature — Thopter",
+    "oracle_text": "{1}: This creature gets +1/-1 and gains flying until end of turn.",
+    "power": "4",
+    "toughness": "4",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Kill Switch",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "{2}, {T}: Tap all other artifacts. They don't untap during their controllers' untap steps for as long as this artifact remains tapped.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Parallax Inhibitor",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "{1}, {T}, Sacrifice this artifact: Put a fade counter on each permanent with fading you control.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Predator, Flagship",
+    "mana_cost": "{5}",
+    "cmc": 5,
+    "type_line": "Legendary Artifact",
+    "oracle_text": "{2}: Target creature gains flying until end of turn.\n{5}, {T}: Destroy target creature with flying.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Rackling",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact Creature — Phyrexian Construct",
+    "oracle_text": "At the beginning of each opponent's upkeep, this creature deals X damage to that player, where X is 3 minus the number of cards in their hand.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Rejuvenation Chamber",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "Fading 2 (This artifact enters with two fade counters on it. At the beginning of your upkeep, remove a fade counter from it. If you can't, sacrifice it.)\n{T}: You gain 2 life.",
+    "colors": [],
+    "keywords": [
+      "Fading"
+    ],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Rusting Golem",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact Creature — Golem",
+    "oracle_text": "Fading 5 (This creature enters with five fade counters on it. At the beginning of your upkeep, remove a fade counter from it. If you can't, sacrifice it.)\nRusting Golem's power and toughness are each equal to the number of fade counters on it.",
+    "power": "*",
+    "toughness": "*",
+    "colors": [],
+    "keywords": [
+      "Fading"
+    ],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Tangle Wire",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "Fading 4 (This artifact enters with four fade counters on it. At the beginning of your upkeep, remove a fade counter from it. If you can't, sacrifice it.)\nAt the beginning of each player's upkeep, that player taps an untapped artifact, creature, or land they control for each fade counter on this artifact.",
+    "colors": [],
+    "keywords": [
+      "Fading"
+    ],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Viseling",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact Creature — Phyrexian Construct",
+    "oracle_text": "At the beginning of each opponent's upkeep, this creature deals X damage to that player, where X is the number of cards in their hand minus 4.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  },
+  {
+    "name": "Kor Haven",
+    "cmc": 0,
+    "type_line": "Legendary Land",
+    "oracle_text": "{T}: Add {C}.\n{1}{W}, {T}: Prevent all combat damage that would be dealt by target attacking creature this turn.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Rath's Edge",
+    "cmc": 0,
+    "type_line": "Legendary Land",
+    "oracle_text": "{T}: Add {C}.\n{4}, {T}, Sacrifice a land: Rath's Edge deals 1 damage to any target.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "nem"
+  },
+  {
+    "name": "Terrain Generator",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "{T}: Add {C}.\n{2}, {T}: You may put a basic land card from your hand onto the battlefield tapped.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "nem"
+  }
+]

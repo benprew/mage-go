@@ -21,6 +21,7 @@ type DamageSystem struct {
 	playerDamageRedirect   map[uuid.UUID]uuid.UUID  // controller -> creature that absorbs ALL damage to player
 	artifactDamageRedirect map[uuid.UUID]uuid.UUID  // controller -> creature that absorbs artifact damage to player (Martyrs of Korlis)
 	creatureDamageRedirect map[uuid.UUID]uuid.UUID  // creature -> player who receives damage instead of creature (one-shot)
+	attackerDamageRedirect map[uuid.UUID]uuid.UUID  // attacker creature -> permanent that absorbs damage to player (Shimian Night Stalker)
 	damageReflection       map[uuid.UUID]damageReflectionEntry // player -> Eye for an Eye reflection info (one-shot)
 	drawReplacement        map[uuid.UUID]int                  // player -> X value for Aladdin's Lamp draw replacement
 }
@@ -44,6 +45,7 @@ func NewDamageSystem() *DamageSystem {
 		playerDamageRedirect:   make(map[uuid.UUID]uuid.UUID),
 		artifactDamageRedirect: make(map[uuid.UUID]uuid.UUID),
 		creatureDamageRedirect: make(map[uuid.UUID]uuid.UUID),
+		attackerDamageRedirect: make(map[uuid.UUID]uuid.UUID),
 		damageReflection:       make(map[uuid.UUID]damageReflectionEntry),
 		drawReplacement:        make(map[uuid.UUID]int),
 	}
@@ -70,6 +72,7 @@ func (ds *DamageSystem) ClearEndOfTurn() {
 	ds.preventionShields = make(map[uuid.UUID]int)
 	ds.preventionRules = nil
 	ds.forcefieldShields = make(map[uuid.UUID]bool)
+	ds.attackerDamageRedirect = make(map[uuid.UUID]uuid.UUID)
 	ds.damageReflection = make(map[uuid.UUID]damageReflectionEntry)
 	ds.drawReplacement = make(map[uuid.UUID]int)
 }
@@ -146,6 +149,18 @@ func (ds *DamageSystem) GetCreatureDamageRedirect(creatureID uuid.UUID) uuid.UUI
 // ClearCreatureDamageRedirect clears the one-shot creature damage redirect.
 func (ds *DamageSystem) ClearCreatureDamageRedirect(creatureID uuid.UUID) {
 	delete(ds.creatureDamageRedirect, creatureID)
+}
+
+// SetAttackerDamageRedirect sets a redirect: damage from attackerID to a player is
+// dealt to absorberID instead (Shimian Night Stalker). Lasts until end of turn.
+func (ds *DamageSystem) SetAttackerDamageRedirect(attackerID, absorberID uuid.UUID) {
+	ds.attackerDamageRedirect[attackerID] = absorberID
+}
+
+// GetAttackerDamageRedirect returns the permanent that absorbs damage from a specific
+// attacking creature, or uuid.Nil if none.
+func (ds *DamageSystem) GetAttackerDamageRedirect(attackerID uuid.UUID) uuid.UUID {
+	return ds.attackerDamageRedirect[attackerID]
 }
 
 // ---------------------------------------------------------------------------

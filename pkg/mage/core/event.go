@@ -30,6 +30,7 @@ const (
 	EvtTapped             // fired when a permanent becomes tapped
 	EvtLandPlayed         // fired when a land is played from hand
 	EvtBlockersDecl       // fired once after all blockers are declared
+	EvtEndOfCombat        // fired at the end of combat step, before combat groups reset
 )
 
 // GameEvent carries data about a game event.

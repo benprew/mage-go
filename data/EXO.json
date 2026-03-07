@@ -1,0 +1,2061 @@
+[
+  {
+    "name": "Allay",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Buyback {3} (You may pay an additional {3} as you cast this spell. If you do, put this card into your hand as it resolves.)\nDestroy target enchantment.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Buyback"
+    ],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Angelic Blessing",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Target creature gets +3/+3 and gains flying until end of turn. (It can't be blocked except by creatures with flying or reach.)",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Cataclysm",
+    "mana_cost": "{2}{W}{W}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Each player chooses from among the permanents they control an artifact, a creature, an enchantment, and a land, then sacrifices the rest.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Charging Paladin",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Human Knight",
+    "oracle_text": "Whenever this creature attacks, it gets +0/+3 until end of turn.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Convalescence",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of your upkeep, if you have 10 or less life, you gain 1 life.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Exalted Dragon",
+    "mana_cost": "{4}{W}{W}",
+    "cmc": 6,
+    "type_line": "Creature — Dragon",
+    "oracle_text": "Flying\nThis creature can't attack unless you sacrifice a land. (This cost is paid as attackers are declared.)",
+    "power": "5",
+    "toughness": "5",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "High Ground",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Enchantment",
+    "oracle_text": "Each creature you control can block an additional creature each combat.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Keeper of the Light",
+    "mana_cost": "{W}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "{W}, {T}: Choose target opponent who has more life than you do as you activate this ability. You gain 3 life.",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Kor Chant",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "All damage that would be dealt this turn to target creature you control by a source of your choice is dealt to another target creature instead.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Limited Resources",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Enchantment",
+    "oracle_text": "When this enchantment enters, each player chooses five lands they control and sacrifices the rest.\nPlayers can't play lands as long as ten or more lands are on the battlefield.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Oath of Lieges",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of each player's upkeep, that player chooses target player who controls more lands than they do and is their opponent. The first player may search their library for a basic land card, put that card onto the battlefield, then shuffle.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Paladin en-Vec",
+    "mana_cost": "{1}{W}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Human Knight",
+    "oracle_text": "First strike, protection from black and from red (This creature deals combat damage before creatures without first strike. It can't be blocked, targeted, dealt damage, or enchanted by anything black or red.)",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "First strike",
+      "Protection"
+    ],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Peace of Mind",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "{W}, Discard a card: You gain 3 life.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Pegasus Stampede",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Buyback—Sacrifice a land. (You may sacrifice a land in addition to any other costs as you cast this spell. If you do, put this card into your hand as it resolves.)\nCreate a 1/1 white Pegasus creature token with flying.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Buyback"
+    ],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Penance",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Put a card from your hand on top of your library: The next time a black or red source of your choice would deal damage this turn, prevent that damage.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Reaping the Rewards",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Buyback—Sacrifice a land. (You may sacrifice a land in addition to any other costs as you cast this spell. If you do, put this card into your hand as it resolves.)\nYou gain 2 life.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Buyback"
+    ],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Reconnaissance",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Enchantment",
+    "oracle_text": "{0}: Remove target attacking creature you control from combat and untap it. (If you activate during end of combat, the creature will untap after it deals combat damage.)",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Shackles",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature doesn't untap during its controller's untap step.\n{W}: Return this Aura to its owner's hand.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Shield Mate",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "Sacrifice this creature: Target creature gets +0/+4 until end of turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Soltari Visionary",
+    "mana_cost": "{1}{W}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Soltari Cleric",
+    "oracle_text": "Shadow (This creature can block or be blocked by only creatures with shadow.)\nWhenever this creature deals damage to a player, destroy target enchantment that player controls.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Shadow"
+    ],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Soul Warden",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Human Cleric",
+    "oracle_text": "Whenever another creature enters, you gain 1 life.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Standing Troops",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "Vigilance",
+    "power": "1",
+    "toughness": "4",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Vigilance"
+    ],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Treasure Hunter",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Human",
+    "oracle_text": "When this creature enters, you may return target artifact card from your graveyard to your hand.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Wall of Nets",
+    "mana_cost": "{1}{W}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Wall",
+    "oracle_text": "Defender (This creature can't attack.)\nAt end of combat, exile all creatures blocked by this creature.\nWhen this creature leaves the battlefield, return all cards exiled with it to the battlefield under their owners' control.",
+    "power": "0",
+    "toughness": "7",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Defender"
+    ],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Welkin Hawk",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Bird",
+    "oracle_text": "Flying\nWhen this creature dies, you may search your library for a card named Welkin Hawk, reveal that card, put it into your hand, then shuffle.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Zealots en-Dal",
+    "mana_cost": "{3}{W}",
+    "cmc": 4,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "At the beginning of your upkeep, if all nonland permanents you control are white, you gain 1 life.",
+    "power": "2",
+    "toughness": "4",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Aether Tide",
+    "mana_cost": "{X}{U}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "As an additional cost to cast this spell, discard X creature cards.\nReturn X target creatures to their owners' hands.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Cunning",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature gets +3/+3.\nWhen enchanted creature attacks or blocks, sacrifice this Aura at the beginning of the next cleanup step.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Curiosity",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nWhenever enchanted creature deals damage to an opponent, you may draw a card.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Dominating Licid",
+    "mana_cost": "{1}{U}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Licid",
+    "oracle_text": "{1}{U}{U}, {T}: This creature loses this ability and becomes an Aura enchantment with enchant creature. Attach it to target creature. You may pay {U} to end this effect.\nYou control enchanted creature.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Ephemeron",
+    "mana_cost": "{4}{U}{U}",
+    "cmc": 6,
+    "type_line": "Creature — Illusion",
+    "oracle_text": "Flying\nDiscard a card: Return this creature to its owner's hand.",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Equilibrium",
+    "mana_cost": "{1}{U}{U}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever you cast a creature spell, you may pay {1}. If you do, return target creature to its owner's hand.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Ertai, Wizard Adept",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Legendary Creature — Human Wizard",
+    "oracle_text": "{2}{U}{U}, {T}: Counter target spell.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Fade Away",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "For each creature, its controller sacrifices a permanent of their choice unless they pay {1}.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Forbid",
+    "mana_cost": "{1}{U}{U}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Buyback—Discard two cards. (You may discard two cards in addition to any other costs as you cast this spell. If you do, put this card into your hand as it resolves.)\nCounter target spell.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Buyback"
+    ],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Keeper of the Mind",
+    "mana_cost": "{U}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "{U}, {T}: Choose target opponent who has at least two more cards in hand than you do as you activate this ability. Draw a card.",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Killer Whale",
+    "mana_cost": "{3}{U}{U}",
+    "cmc": 5,
+    "type_line": "Creature — Whale",
+    "oracle_text": "{U}: This creature gains flying until end of turn.",
+    "power": "3",
+    "toughness": "5",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Mana Breach",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever a player casts a spell, that player returns a land they control to its owner's hand.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Merfolk Looter",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Merfolk Rogue",
+    "oracle_text": "{T}: Draw a card, then discard a card.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Mind Over Matter",
+    "mana_cost": "{2}{U}{U}{U}{U}",
+    "cmc": 6,
+    "type_line": "Enchantment",
+    "oracle_text": "Discard a card: You may tap or untap target artifact, creature, or land.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Mirozel",
+    "mana_cost": "{3}{U}",
+    "cmc": 4,
+    "type_line": "Creature — Illusion",
+    "oracle_text": "Flying\nWhen this creature becomes the target of a spell or ability, return this creature to its owner's hand.",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Oath of Scholars",
+    "mana_cost": "{3}{U}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of each player's upkeep, that player chooses target player who has more cards in hand than they do and is their opponent. The first player may discard their hand and draw three cards.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Robe of Mirrors",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature (Target a creature as you cast this. This card enters attached to that creature.)\nEnchanted creature has shroud. (It can't be the target of spells or abilities.)",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Rootwater Mystic",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Creature — Merfolk Wizard",
+    "oracle_text": "{1}{U}: Look at the top card of target player's library.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "School of Piranha",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Fish",
+    "oracle_text": "At the beginning of your upkeep, sacrifice this creature unless you pay {1}{U}.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Scrivener",
+    "mana_cost": "{4}{U}",
+    "cmc": 5,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "When this creature enters, you may return target instant card from your graveyard to your hand.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Thalakos Drifters",
+    "mana_cost": "{2}{U}{U}",
+    "cmc": 4,
+    "type_line": "Creature — Thalakos",
+    "oracle_text": "Discard a card: This creature gains shadow until end of turn. (It can block or be blocked by only creatures with shadow.)",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Thalakos Scout",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Thalakos Soldier Scout",
+    "oracle_text": "Shadow (This creature can block or be blocked by only creatures with shadow.)\nDiscard a card: Return this creature to its owner's hand.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Shadow"
+    ],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Theft of Dreams",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Draw a card for each tapped creature target opponent controls.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Treasure Trove",
+    "mana_cost": "{2}{U}{U}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "{2}{U}{U}: Draw a card.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Wayward Soul",
+    "mana_cost": "{2}{U}{U}",
+    "cmc": 4,
+    "type_line": "Creature — Spirit",
+    "oracle_text": "Flying\n{U}: Put this creature on top of its owner's library.",
+    "power": "3",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Whiptongue Frog",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Frog",
+    "oracle_text": "{U}: This creature gains flying until end of turn.",
+    "power": "1",
+    "toughness": "3",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Carnophage",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Creature — Zombie",
+    "oracle_text": "At the beginning of your upkeep, tap this creature unless you pay 1 life.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Cat Burglar",
+    "mana_cost": "{3}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Kor Rogue Minion",
+    "oracle_text": "{2}{B}, {T}: Target player discards a card. Activate only as a sorcery.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Culling the Weak",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "As an additional cost to cast this spell, sacrifice a creature.\nAdd {B}{B}{B}{B}.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Cursed Flesh",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature gets -1/-1 and has fear. (It can't be blocked except by artifact creatures and/or black creatures.)",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Dauthi Cutthroat",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Dauthi Minion",
+    "oracle_text": "Shadow (This creature can block or be blocked by only creatures with shadow.)\n{1}{B}, {T}: Destroy target creature with shadow.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Shadow"
+    ],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Dauthi Jackal",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Dauthi Jackal",
+    "oracle_text": "Shadow (This creature can block or be blocked by only creatures with shadow.)\n{B}{B}, Sacrifice this creature: Destroy target blocking creature.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Shadow"
+    ],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Dauthi Warlord",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Dauthi Soldier",
+    "oracle_text": "Shadow (This creature can block or be blocked by only creatures with shadow.)\nDauthi Warlord's power is equal to the number of creatures on the battlefield with shadow.",
+    "power": "*",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Shadow"
+    ],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Death's Duet",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Return two target creature cards from your graveyard to your hand.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Entropic Specter",
+    "mana_cost": "{3}{B}{B}",
+    "cmc": 5,
+    "type_line": "Creature — Specter Spirit",
+    "oracle_text": "Flying\nAs this creature enters, choose an opponent.\nEntropic Specter's power and toughness are each equal to the number of cards in the chosen player's hand.\nWhenever this creature deals damage to a player, that player discards a card.",
+    "power": "*",
+    "toughness": "*",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Fugue",
+    "mana_cost": "{3}{B}{B}",
+    "cmc": 5,
+    "type_line": "Sorcery",
+    "oracle_text": "Target player discards three cards.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Grollub",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Beast",
+    "oracle_text": "Whenever this creature is dealt damage, each opponent gains that much life.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Hatred",
+    "mana_cost": "{3}{B}{B}",
+    "cmc": 5,
+    "type_line": "Instant",
+    "oracle_text": "As an additional cost to cast this spell, pay X life.\nTarget creature gets +X/+0 until end of turn.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Keeper of the Dead",
+    "mana_cost": "{B}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "{B}, {T}: Choose target opponent who has at least two fewer creature cards in their graveyard than you do as you activate this ability. Destroy target nonblack creature that player controls.",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Mind Maggots",
+    "mana_cost": "{3}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Insect",
+    "oracle_text": "When this creature enters, discard any number of creature cards. For each card discarded this way, put two +1/+1 counters on this creature.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Nausea",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "All creatures get -1/-1 until end of turn.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Necrologia",
+    "mana_cost": "{3}{B}{B}",
+    "cmc": 5,
+    "type_line": "Instant",
+    "oracle_text": "Cast this spell only during your end step.\nAs an additional cost to cast this spell, pay X life.\nDraw X cards.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Oath of Ghouls",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of each player's upkeep, that player chooses target player whose graveyard has fewer creature cards in it than their graveyard does and is their opponent. The first player may return a creature card from their graveyard to their hand.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Pit Spawn",
+    "mana_cost": "{4}{B}{B}{B}",
+    "cmc": 7,
+    "type_line": "Creature — Demon",
+    "oracle_text": "First strike\nAt the beginning of your upkeep, sacrifice this creature unless you pay {B}{B}.\nWhenever this creature deals damage to a creature, exile that creature.",
+    "power": "6",
+    "toughness": "4",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "First strike"
+    ],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Plaguebearer",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Zombie",
+    "oracle_text": "{X}{X}{B}: Destroy target nonblack creature with mana value X.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Recurring Nightmare",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Sacrifice a creature, Return this enchantment to its owner's hand: Return target creature card from your graveyard to the battlefield. Activate only as a sorcery.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Scare Tactics",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Creatures you control get +1/+0 until end of turn.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Slaughter",
+    "mana_cost": "{2}{B}{B}",
+    "cmc": 4,
+    "type_line": "Instant",
+    "oracle_text": "Buyback—Pay 4 life. (You may pay 4 life in addition to any other costs as you cast this spell. If you do, put this card into your hand as it resolves.)\nDestroy target nonblack creature. It can't be regenerated.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Buyback"
+    ],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Spike Cannibal",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Spike",
+    "oracle_text": "This creature enters with a +1/+1 counter on it.\nWhen this creature enters, move all +1/+1 counters from all creatures onto it.",
+    "power": "0",
+    "toughness": "0",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Thrull Surgeon",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Thrull",
+    "oracle_text": "{1}{B}, Sacrifice this creature: Look at target player's hand and choose a card from it. That player discards that card. Activate only as a sorcery.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Vampire Hounds",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Vampire Dog",
+    "oracle_text": "Discard a creature card: This creature gets +2/+2 until end of turn.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Volrath's Dungeon",
+    "mana_cost": "{2}{B}{B}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "Pay 5 life: Destroy this enchantment. Any player may activate this ability but only during their turn.\nDiscard a card: Target player puts a card from their hand on top of their library. Activate only as a sorcery.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Anarchist",
+    "mana_cost": "{4}{R}",
+    "cmc": 5,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "When this creature enters, you may return target sorcery card from your graveyard to your hand.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Cinder Crawler",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Creature — Salamander",
+    "oracle_text": "{R}: This creature gets +1/+0 until end of turn. Activate only if this creature is blocked.",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Dizzying Gaze",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature you control\n{R}: Enchanted creature deals 1 damage to target creature with flying.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Fighting Chance",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "For each blocking creature, flip a coin. If you win the flip, prevent all combat damage that would be dealt by that creature this turn.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Flowstone Flood",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Buyback—Pay 3 life, Discard a card at random. (You may pay 3 life and discard a card at random in addition to any other costs as you cast this spell. If you do, put this card into your hand as it resolves.)\nDestroy target land.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Buyback"
+    ],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Furnace Brood",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Elemental",
+    "oracle_text": "{R}: Target creature can't be regenerated this turn.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Keeper of the Flame",
+    "mana_cost": "{R}{R}",
+    "cmc": 2,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "{R}, {T}: Choose target opponent who has more life than you do as you activate this ability. This creature deals 2 damage to that player.",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Mage il-Vec",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "{T}, Discard a card at random: This creature deals 1 damage to any target.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Maniacal Rage",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature gets +2/+2 and can't block.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Mogg Assassin",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Goblin Assassin",
+    "oracle_text": "{T}: You choose target creature an opponent controls, and that opponent chooses target creature. Flip a coin. If you win the flip, destroy the creature you chose. If you lose the flip, destroy the creature your opponent chose.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Monstrous Hound",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Dog",
+    "oracle_text": "This creature can't attack unless you control more lands than defending player.\nThis creature can't block unless you control more lands than attacking player.",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Oath of Mages",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of each player's upkeep, that player chooses target player who has more life than they do and is their opponent. The first player may have this enchantment deal 1 damage to the second player.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Ogre Shaman",
+    "mana_cost": "{3}{R}{R}",
+    "cmc": 5,
+    "type_line": "Creature — Ogre Shaman",
+    "oracle_text": "{2}, Discard a card at random: This creature deals 2 damage to any target.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Onslaught",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever you cast a creature spell, tap target creature.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Pandemonium",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever a creature enters, that creature's controller may have it deal damage equal to its power to any target of their choice.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Paroxysm",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nAt the beginning of the upkeep of enchanted creature's controller, that player reveals the top card of their library. If that card is a land card, destroy that creature. Otherwise, it gets +3/+3 until end of turn.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Price of Progress",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Price of Progress deals damage to each player equal to twice the number of nonbasic lands that player controls.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Raging Goblin",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Creature — Goblin Berserker",
+    "oracle_text": "Haste (This creature can attack and {T} as soon as it comes under your control.)",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Haste"
+    ],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Ravenous Baboons",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Monkey",
+    "oracle_text": "When this creature enters, destroy target nonbasic land.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Reckless Ogre",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Ogre",
+    "oracle_text": "Whenever this creature attacks alone, it gets +3/+0 until end of turn.",
+    "power": "3",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Sabertooth Wyvern",
+    "mana_cost": "{4}{R}",
+    "cmc": 5,
+    "type_line": "Creature — Drake",
+    "oracle_text": "Flying, first strike",
+    "power": "3",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Flying",
+      "First strike"
+    ],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Scalding Salamander",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Salamander",
+    "oracle_text": "Whenever this creature attacks, you may have it deal 1 damage to each creature without flying defending player controls.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Seismic Assault",
+    "mana_cost": "{R}{R}{R}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Discard a land card: This enchantment deals 2 damage to any target.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Shattering Pulse",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Buyback {3} (You may pay an additional {3} as you cast this spell. If you do, put this card into your hand as it resolves.)\nDestroy target artifact.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Buyback"
+    ],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Sonic Burst",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "As an additional cost to cast this spell, discard a card at random.\nSonic Burst deals 4 damage to any target.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Spellshock",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever a player casts a spell, this enchantment deals 2 damage to that player.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Avenging Druid",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Human Druid",
+    "oracle_text": "Whenever this creature deals damage to an opponent, you may reveal cards from the top of your library until you reveal a land card. If you do, put that card onto the battlefield and put all other cards revealed this way into your graveyard.",
+    "power": "1",
+    "toughness": "3",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Bequeathal",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nWhen enchanted creature dies, you draw two cards.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Cartographer",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Human",
+    "oracle_text": "When this creature enters, you may return target land card from your graveyard to your hand.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Crashing Boars",
+    "mana_cost": "{3}{G}{G}",
+    "cmc": 5,
+    "type_line": "Creature — Boar",
+    "oracle_text": "Whenever this creature attacks, defending player chooses an untapped creature they control. That creature blocks this creature this turn if able.",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Elven Palisade",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Enchantment",
+    "oracle_text": "Sacrifice a Forest: Target attacking creature gets -3/-0 until end of turn.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Elvish Berserker",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Elf Berserker",
+    "oracle_text": "Whenever this creature becomes blocked, it gets +1/+1 until end of turn for each creature blocking it.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Jackalope Herd",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Creature — Rabbit Beast",
+    "oracle_text": "When you cast a spell, return this creature to its owner's hand.",
+    "power": "4",
+    "toughness": "5",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Keeper of the Beasts",
+    "mana_cost": "{G}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "{G}, {T}: Choose target opponent who controls more creatures than you do as you activate this ability. Create a 2/2 green Beast creature token.",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Manabond",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of your end step, you may reveal your hand and put all land cards from it onto the battlefield. If you do, discard your hand.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Mirri, Cat Warrior",
+    "mana_cost": "{1}{G}{G}",
+    "cmc": 3,
+    "type_line": "Legendary Creature — Cat Warrior",
+    "oracle_text": "First strike, forestwalk, vigilance (This creature deals combat damage before creatures without first strike, it can't be blocked as long as defending player controls a Forest, and attacking doesn't cause this creature to tap.)",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Landwalk",
+      "Vigilance",
+      "First strike",
+      "Forestwalk"
+    ],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Oath of Druids",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of each player's upkeep, that player chooses target player who controls more creatures than they do and is their opponent. The first player may reveal cards from the top of their library until they reveal a creature card. If the first player does, that player puts that card onto the battlefield and all other cards revealed this way into their graveyard.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Plated Rootwalla",
+    "mana_cost": "{4}{G}",
+    "cmc": 5,
+    "type_line": "Creature — Lizard",
+    "oracle_text": "{2}{G}: This creature gets +3/+3 until end of turn. Activate only once each turn.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Predatory Hunger",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nWhenever an opponent casts a creature spell, put a +1/+1 counter on enchanted creature.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Pygmy Troll",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Troll",
+    "oracle_text": "Whenever this creature becomes blocked by a creature, this creature gets +1/+1 until end of turn.\n{G}: Regenerate this creature.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Rabid Wolverines",
+    "mana_cost": "{3}{G}{G}",
+    "cmc": 5,
+    "type_line": "Creature — Wolverine",
+    "oracle_text": "Whenever this creature becomes blocked by a creature, this creature gets +1/+1 until end of turn.",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Reclaim",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Put target card from your graveyard on top of your library.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Resuscitate",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Until end of turn, creatures you control gain \"{1}: Regenerate this creature.\"",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Rootwater Alligator",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Creature — Crocodile",
+    "oracle_text": "Sacrifice a Forest: Regenerate this creature.",
+    "power": "3",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Skyshroud Elite",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Elf",
+    "oracle_text": "This creature gets +1/+2 as long as an opponent controls a nonbasic land.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Skyshroud War Beast",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Beast",
+    "oracle_text": "Trample\nAs this creature enters, choose an opponent.\nSkyshroud War Beast's power and toughness are each equal to the number of nonbasic lands the chosen player controls.",
+    "power": "*",
+    "toughness": "*",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Trample"
+    ],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Song of Serenity",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "Creatures that are enchanted can't attack or block.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Spike Hatcher",
+    "mana_cost": "{6}{G}",
+    "cmc": 7,
+    "type_line": "Creature — Spike",
+    "oracle_text": "This creature enters with six +1/+1 counters on it.\n{2}, Remove a +1/+1 counter from this creature: Put a +1/+1 counter on target creature.\n{1}, Remove a +1/+1 counter from this creature: Regenerate this creature.",
+    "power": "0",
+    "toughness": "0",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Spike Rogue",
+    "mana_cost": "{1}{G}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Spike",
+    "oracle_text": "This creature enters with two +1/+1 counters on it.\n{2}, Remove a +1/+1 counter from this creature: Put a +1/+1 counter on target creature.\n{2}, Remove a +1/+1 counter from a creature you control: Put a +1/+1 counter on this creature.",
+    "power": "0",
+    "toughness": "0",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Spike Weaver",
+    "mana_cost": "{2}{G}{G}",
+    "cmc": 4,
+    "type_line": "Creature — Spike",
+    "oracle_text": "This creature enters with three +1/+1 counters on it.\n{2}, Remove a +1/+1 counter from this creature: Put a +1/+1 counter on target creature.\n{1}, Remove a +1/+1 counter from this creature: Prevent all combat damage that would be dealt this turn.",
+    "power": "0",
+    "toughness": "0",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Survival of the Fittest",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "{G}, Discard a creature card: Search your library for a creature card, reveal that card, put it into your hand, then shuffle.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Wood Elves",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Elf Scout",
+    "oracle_text": "When this creature enters, search your library for a Forest card, put that card onto the battlefield, then shuffle.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "exo"
+  },
+  {
+    "name": "Coat of Arms",
+    "mana_cost": "{5}",
+    "cmc": 5,
+    "type_line": "Artifact",
+    "oracle_text": "Each creature gets +1/+1 for each other creature on the battlefield that shares at least one creature type with it. (For example, if two Goblin Warriors and a Goblin Shaman are on the battlefield, each gets +2/+2.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Erratic Portal",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact",
+    "oracle_text": "{1}, {T}: Return target creature to its owner's hand unless its controller pays {1}.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Medicine Bag",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "{1}, {T}, Discard a card: Regenerate target creature.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Memory Crystal",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "Buyback costs cost {2} less.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Mindless Automaton",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact Creature — Construct",
+    "oracle_text": "This creature enters with two +1/+1 counters on it.\n{1}, Discard a card: Put a +1/+1 counter on this creature.\nRemove two +1/+1 counters from this creature: Draw a card.",
+    "power": "0",
+    "toughness": "0",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Null Brooch",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact",
+    "oracle_text": "{2}, {T}, Discard your hand: Counter target noncreature spell.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Skyshaper",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "Sacrifice this artifact: Creatures you control gain flying until end of turn.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Spellbook",
+    "mana_cost": "{0}",
+    "cmc": 0,
+    "type_line": "Artifact",
+    "oracle_text": "You have no maximum hand size.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Sphere of Resistance",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "Spells cost {1} more to cast.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Thopter Squadron",
+    "mana_cost": "{5}",
+    "cmc": 5,
+    "type_line": "Artifact Creature — Thopter",
+    "oracle_text": "Flying\nThis creature enters with three +1/+1 counters on it.\n{1}, Remove a +1/+1 counter from this creature: Create a 1/1 colorless Thopter artifact creature token with flying. Activate only as a sorcery.\n{1}, Sacrifice another Thopter: Put a +1/+1 counter on this creature. Activate only as a sorcery.",
+    "power": "0",
+    "toughness": "0",
+    "colors": [],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "Transmogrifying Licid",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact Creature — Licid",
+    "oracle_text": "{1}, {T}: This creature loses this ability and becomes an Aura enchantment with enchant creature. Attach it to target creature. You may pay {1} to end this effect.\nEnchanted creature gets +1/+1 and is an artifact in addition to its other types.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "exo"
+  },
+  {
+    "name": "Workhorse",
+    "mana_cost": "{6}",
+    "cmc": 6,
+    "type_line": "Artifact Creature — Horse",
+    "oracle_text": "This creature enters with four +1/+1 counters on it.\nRemove a +1/+1 counter from this creature: Add {C}.",
+    "power": "0",
+    "toughness": "0",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  },
+  {
+    "name": "City of Traitors",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "When you play another land, sacrifice this land.\n{T}: Add {C}{C}.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "exo"
+  }
+]

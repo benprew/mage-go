@@ -483,9 +483,72 @@ func registerArtifacts() {
 // Artifact
 // This artifact enters tapped.
 // {T}, Sacrifice this artifact and any number of creatures you control: This artifact deals X damage to any target, where X is the total power of the creatures sacrificed this way, then exile this artifact and those creature cards.
-// TODO: implement
 	Register("Sword of the Ages", withExpansion(func() Card {
-		return NewArtifact("Sword of the Ages", "{6}")
+		return NewArtifact("Sword of the Ages", "{6}",
+			WithKeyword(EntersTapped),
+			WithActivatedAbility(
+				FuncEffect("{T}, Sacrifice: deal X damage where X is total power of sacrificed creatures",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						// Sacrifice source (Sword of the Ages)
+						src := g.FindPermanent(sourceID)
+						var srcCard Card
+						if src != nil {
+							srcCard = src.Card
+							g.Sacrifice(src)
+						}
+						// Let player choose any number of creatures to sacrifice
+						var totalPower int
+						var sacrificedCards []Card
+						for {
+							creatures := g.FilterBattlefield(And(IsCreature, ControlledBy(controller)))
+							if len(creatures) == 0 {
+								break
+							}
+							mode := p.ChooseMode([]string{"Sacrifice a creature", "Done"}, "Sword of the Ages")
+							if mode != 0 {
+								break // player chose "Done"
+							}
+							chosen := p.ChoosePermanent(creatures, "Choose creature to sacrifice", g)
+							if chosen == nil {
+								break
+							}
+							totalPower += chosen.CurrentPower(g)
+							sacrificedCards = append(sacrificedCards, chosen.Card)
+							g.Sacrifice(chosen)
+						}
+						// Deal damage
+						if totalPower > 0 {
+							targetP := g.GetPlayer(targets[0])
+							if targetP != nil {
+								g.DealDamageToPlayer(targetP, totalPower, sourceID)
+							} else {
+								targetPerm := g.FindPermanent(targets[0])
+								if targetPerm != nil {
+									g.DealDamageToPermanent(targetPerm, totalPower, sourceID)
+								}
+							}
+						}
+						// Exile the artifact and creature cards
+						if srcCard != nil {
+							g.ExileCard(srcCard, controller)
+						}
+						for _, c := range sacrificedCards {
+							g.ExileCard(c, controller)
+						}
+						return nil
+					}),
+				TapSourceCost(),
+				WithTarget(TargetAnyTarget()),
+			),
+		)
 	}))
 
 

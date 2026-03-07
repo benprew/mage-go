@@ -77,10 +77,27 @@ func registerCreatures() {
 // 1/1
 // If this creature would be destroyed, regenerate it.
 // {1}: This creature can't be regenerated this turn. Only your opponents may activate this ability.
-// TODO: implement — needs engine support for auto-regeneration replacement effect and opponent-only activated ability
 	Register("Clergy of the Holy Nimbus", withExpansion(func() Card {
 		return NewCreature("Clergy of the Holy Nimbus", "{W}", 1, 1,
 			WithSubTypes("Human", "Cleric"),
+			// Auto-regeneration: always have a regeneration shield available
+			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+				g.Effects.Damage.AddRegenerationShield(sourceID)
+				return nil
+			})),
+			// {1}: Can't be regenerated this turn. Only opponents may activate.
+			WithActivatedAbility(
+				FuncEffect("can't be regenerated this turn",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						ce := TemporaryKeyword(sourceID, CantRegenerate)
+						ce.SetSourceID(sourceID)
+						g.AddContinuousEffect(ce)
+						return nil
+					}),
+				ManaCostOf("{1}"),
+				WithAnyPlayerMay(),
+			),
 		)
 	}))
 
@@ -277,11 +294,59 @@ func registerCreatures() {
 // 2/1
 // Defender (This creature can't attack.)
 // Whenever this creature blocks a creature, if at least one other Wall creature is blocking that creature and no non-Wall creatures are blocking that creature, this creature gains banding until end of turn. (If any creatures with banding you control are blocking a creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by.)
-// TODO: implement — needs engine support for conditional banding on block with Wall-only check
 	Register("Wall of Caltrops", withExpansion(func() Card {
 		return NewCreature("Wall of Caltrops", "{1}{W}", 2, 1,
 			WithSubTypes("Wall"),
 			WithKeyword(Defender),
+			WithAbility(
+				NewTriggered(EvtBlockersDecl, false,
+					FuncEffect("gain banding until end of turn",
+						EffectProperties{Outcome: OutcomeBenefit},
+						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+							ce := TemporaryKeyword(sourceID, Banding)
+							ce.SetSourceID(sourceID)
+							g.AddContinuousEffect(ce)
+							return nil
+						}),
+				).SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+					// Check if this Wall is blocking something
+					for _, group := range g.CombatGroups() {
+						isBlocking := false
+						for _, bid := range group.BlockerIDs {
+							if bid == sourceID {
+								isBlocking = true
+								break
+							}
+						}
+						if !isBlocking {
+							continue
+						}
+						// This Wall is blocking this attacker.
+						// Check that at least one OTHER Wall is blocking it,
+						// and no non-Wall creatures are blocking it.
+						hasOtherWall := false
+						hasNonWall := false
+						for _, bid := range group.BlockerIDs {
+							if bid == sourceID {
+								continue
+							}
+							blocker := g.FindPermanent(bid)
+							if blocker == nil {
+								continue
+							}
+							if blocker.HasSubType("Wall") {
+								hasOtherWall = true
+							} else {
+								hasNonWall = true
+							}
+						}
+						if hasOtherWall && !hasNonWall {
+							return true
+						}
+					}
+					return false
+				}),
+			),
 		)
 	}))
 
@@ -316,10 +381,40 @@ func registerCreatures() {
 // Creature — Hag
 // 2/2
 // When this creature dies, change the base power and toughness of all creatures that dealt damage to it this turn to 0/2. (This effect lasts indefinitely.)
-// TODO: implement — needs engine support for tracking "creatures that dealt damage to this" this turn
 	Register("Brine Hag", withExpansion(func() Card {
 		return NewCreature("Brine Hag", "{2}{U}{U}", 2, 2,
 			WithSubTypes("Hag"),
+			WithAbility(
+				NewTriggered(EvtCreatureDied, false, FuncEffect(
+					"change base P/T of all creatures that dealt damage to this to 0/2",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						sources := g.GetDamageSources(sourceID)
+						if sources == nil {
+							return nil
+						}
+						for srcID := range sources {
+							perm := g.FindPermanent(srcID)
+							if perm != nil && perm.HasType(TypeCreature) {
+								permID := perm.ID()
+								ce := FuncContinuousEffect(LayerPT, Indefinite, func(g *Game, _ uuid.UUID) error {
+									p := g.FindPermanent(permID)
+									if p != nil {
+										p.BasePTOverride = &[2]int{0, 2}
+									}
+									return nil
+								}, func(g *Game, _ uuid.UUID) bool {
+									return g.FindPermanent(permID) != nil
+								})
+								ce.SetSourceID(sourceID)
+								g.AddContinuousEffect(ce)
+							}
+						}
+						return nil
+					})).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+					return evt.SourceID == sourceID
+				}),
+			),
 		)
 	}))
 
@@ -433,10 +528,76 @@ func registerCreatures() {
 // 0/2
 // When this creature attacks or blocks, at end of combat, sacrifice it and it deals 5 damage to you.
 // {2}{U}{U}, {T}: Return target permanent that isn't enchanted to its owner's hand.
-// TODO: implement — needs engine support for end-of-combat delayed sacrifice+damage trigger and "not enchanted" filter
 	Register("Time Elemental", withExpansion(func() Card {
 		return NewCreature("Time Elemental", "{2}{U}", 0, 2,
 			WithSubTypes("Elemental"),
+			// When attacks: register delayed end-of-combat sacrifice + 5 damage
+			WithAbility(AttacksTrigger(FuncEffect(
+				"at end of combat, sacrifice this and deal 5 damage to you",
+				EffectProperties{Outcome: OutcomeDetriment},
+				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					g.RegisterDelayedTrigger(&DelayedTrigger{
+						EventType:  EvtEndOfCombat,
+						TargetID:   sourceID,
+						SourceID:   sourceID,
+						Controller: controller,
+						Effects: []Effect{FuncEffect(
+							"sacrifice and deal 5 damage",
+							EffectProperties{Outcome: OutcomeDetriment},
+							func(g GameMutator, srcID, ctrl uuid.UUID, targets []uuid.UUID) error {
+								perm := g.FindPermanent(srcID)
+								if perm != nil {
+									g.Sacrifice(perm)
+								}
+								g.DealDamageToPlayer(g.GetPlayer(ctrl), 5, srcID)
+								return nil
+							},
+						)},
+					})
+					return nil
+				},
+			), false)),
+			// When blocks: register delayed end-of-combat sacrifice + 5 damage
+			WithAbility(BlocksTrigger(FuncEffect(
+				"at end of combat, sacrifice this and deal 5 damage to you",
+				EffectProperties{Outcome: OutcomeDetriment},
+				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					g.RegisterDelayedTrigger(&DelayedTrigger{
+						EventType:  EvtEndOfCombat,
+						TargetID:   sourceID,
+						SourceID:   sourceID,
+						Controller: controller,
+						Effects: []Effect{FuncEffect(
+							"sacrifice and deal 5 damage",
+							EffectProperties{Outcome: OutcomeDetriment},
+							func(g GameMutator, srcID, ctrl uuid.UUID, targets []uuid.UUID) error {
+								perm := g.FindPermanent(srcID)
+								if perm != nil {
+									g.Sacrifice(perm)
+								}
+								g.DealDamageToPlayer(g.GetPlayer(ctrl), 5, srcID)
+								return nil
+							},
+						)},
+					})
+					return nil
+				},
+			), false)),
+			// {2}{U}{U}, {T}: Return target permanent that isn't enchanted to its owner's hand.
+			WithActivatedAbility(
+				ReturnToHandTarget(),
+				ManaCostOf("{2}{U}{U}"),
+				WithCost(TapSourceCost()),
+				WithTarget(TargetPermanent(NewPermanentFilter("not enchanted", func(p *Permanent, g *Game) bool {
+					for _, attachID := range p.Attachments {
+						att := g.FindPermanent(attachID)
+						if att != nil && att.HasType(TypeEnchantment) {
+							return false
+						}
+					}
+					return true
+				}))),
+			),
 		)
 	}))
 
@@ -533,7 +694,7 @@ func registerCreatures() {
 			WithSubTypes("Horror"),
 			WithAbility(
 				NewTriggered(EvtBlockersDecl, false,
-					FuncEffect("destroy green/white creature in combat with Abomination",
+					FuncEffect("destroy green/white creature in combat with Abomination at end of combat",
 						EffectProperties{Outcome: OutcomeDetriment},
 						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							isGreenOrWhite := func(p *Permanent) bool {
@@ -549,7 +710,13 @@ func registerCreatures() {
 									for _, bid := range group.BlockerIDs {
 										blocker := g.FindPermanent(bid)
 										if blocker != nil && isGreenOrWhite(blocker) {
-											g.DestroyPermanent(blocker)
+											g.RegisterDelayedTrigger(&DelayedTrigger{
+												EventType:  EvtEndOfCombat,
+												TargetID:   bid,
+												Effects:    []Effect{DestroyTarget()},
+												SourceID:   sourceID,
+												Controller: controller,
+											})
 										}
 									}
 								}
@@ -557,7 +724,13 @@ func registerCreatures() {
 									if bid == sourceID {
 										attacker := g.FindPermanent(group.AttackerID)
 										if attacker != nil && isGreenOrWhite(attacker) {
-											g.DestroyPermanent(attacker)
+											g.RegisterDelayedTrigger(&DelayedTrigger{
+												EventType:  EvtEndOfCombat,
+												TargetID:   group.AttackerID,
+												Effects:    []Effect{DestroyTarget()},
+												SourceID:   sourceID,
+												Controller: controller,
+											})
 										}
 									}
 								}
@@ -714,10 +887,58 @@ func registerCreatures() {
 // Creature — Slug
 // 1/1
 // {5}: At the beginning of your next upkeep, choose a basic land type. This creature gains landwalk of the chosen type until the end of that turn. (It can't be blocked as long as defending player controls a land of that type.)
-// TODO: implement — needs engine support for delayed upkeep trigger with land type choice and landwalk grant
 	Register("Giant Slug", withExpansion(func() Card {
+		landTypes := []string{"Plains", "Island", "Swamp", "Mountain", "Forest"}
 		return NewCreature("Giant Slug", "{1}{B}", 1, 1,
 			WithSubTypes("Slug"),
+			WithActivatedAbility(
+				FuncEffect("choose a basic land type at next upkeep; gain that landwalk",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						g.RegisterDelayedTrigger(&DelayedTrigger{
+							EventType:     EvtUpkeep,
+							SourceID:      sourceID,
+							Controller:    controller,
+							MatchPlayerID: controller,
+							Effects: []Effect{FuncEffect(
+								"choose land type and gain landwalk",
+								EffectProperties{Outcome: OutcomeBenefit},
+								func(g GameMutator, srcID, ctrl uuid.UUID, _ []uuid.UUID) error {
+									perm := g.FindPermanent(srcID)
+									if perm == nil {
+										return nil
+									}
+									p := g.GetPlayer(ctrl)
+									if p == nil {
+										return nil
+									}
+									mode := p.ChooseMode([]string{"Plains", "Island", "Swamp", "Mountain", "Forest"}, "choose a basic land type")
+									if mode < 0 || mode >= len(landTypes) {
+										mode = 0
+									}
+									chosen := landTypes[mode]
+									attr := LandwalkAttr(chosen)
+									if attr == 0 {
+										return nil
+									}
+									ce := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, _ uuid.UUID) error {
+										p := g.FindPermanent(srcID)
+										if p != nil {
+											g.Effects.GrantAttr(p.ID(), attr)
+										}
+										return nil
+									})
+									ce.SetSourceID(srcID)
+									g.AddContinuousEffect(ce)
+									return nil
+								},
+							)},
+						})
+						return nil
+					},
+				),
+				GenericCost(5),
+			),
 		)
 	}))
 
@@ -752,10 +973,79 @@ func registerCreatures() {
 // 2/4
 // Whenever this creature blocks a creature, destroy that creature at end of combat.
 // Whenever this creature becomes blocked by a non-Wall creature, destroy that creature at end of combat.
-// TODO: implement — needs engine support for "becomes blocked by" trigger and delayed end-of-combat destroy
 	Register("Infernal Medusa", withExpansion(func() Card {
 		return NewCreature("Infernal Medusa", "{3}{B}{B}", 2, 4,
 			WithSubTypes("Gorgon"),
+			// When Medusa blocks: destroy the attacker at end of combat
+			WithAbility(
+				NewTriggered(EvtBlockersDecl, false,
+					FuncEffect("destroy creature blocked by Infernal Medusa at end of combat",
+						EffectProperties{Outcome: OutcomeDetriment},
+						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+							for _, group := range g.CombatGroups() {
+								for _, bid := range group.BlockerIDs {
+									if bid == sourceID {
+										g.RegisterDelayedTrigger(&DelayedTrigger{
+											EventType:  EvtEndOfCombat,
+											TargetID:   group.AttackerID,
+											Effects:    []Effect{DestroyTarget()},
+											SourceID:   sourceID,
+											Controller: controller,
+										})
+									}
+								}
+							}
+							return nil
+						}),
+				).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+					for _, group := range g.Combat.Groups {
+						for _, bid := range group.BlockerIDs {
+							if bid == sourceID {
+								return true
+							}
+						}
+					}
+					return false
+				}),
+			),
+			// When Medusa is blocked by a non-Wall: destroy that blocker at end of combat
+			WithAbility(
+				NewTriggered(EvtBlockersDecl, false,
+					FuncEffect("destroy non-Wall creatures blocking Infernal Medusa at end of combat",
+						EffectProperties{Outcome: OutcomeDetriment},
+						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+							for _, group := range g.CombatGroups() {
+								if group.AttackerID == sourceID {
+									for _, bid := range group.BlockerIDs {
+										blocker := g.FindPermanent(bid)
+										if blocker != nil && !blocker.HasSubType("Wall") {
+											g.RegisterDelayedTrigger(&DelayedTrigger{
+												EventType:  EvtEndOfCombat,
+												TargetID:   bid,
+												Effects:    []Effect{DestroyTarget()},
+												SourceID:   sourceID,
+												Controller: controller,
+											})
+										}
+									}
+								}
+							}
+							return nil
+						}),
+				).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+					for _, group := range g.Combat.Groups {
+						if group.AttackerID == sourceID && len(group.BlockerIDs) > 0 {
+							for _, bid := range group.BlockerIDs {
+								blocker := g.FindPermanent(bid)
+								if blocker != nil && !blocker.HasSubType("Wall") {
+									return true
+								}
+							}
+						}
+					}
+					return false
+				}),
+			),
 		)
 	}))
 
@@ -763,10 +1053,64 @@ func registerCreatures() {
 // Creature — Werewolf
 // 2/4
 // {B}: If this creature's power is 1 or more, it gets -1/-0 until end of turn and put a -0/-1 counter on target creature blocking or blocked by this creature. Activate only during the declare blockers step.
-// TODO: implement — needs engine support for "blocking or blocked by this creature" targeting and declare blockers step restriction
 	Register("Lesser Werewolf", withExpansion(func() Card {
 		return NewCreature("Lesser Werewolf", "{3}{B}", 2, 4,
 			WithSubTypes("Werewolf"),
+			WithActivatedAbility(
+				FuncEffect("gets -1/-0; put -0/-1 counter on target creature blocking or blocked by this",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						perm := g.FindPermanent(sourceID)
+						if perm == nil {
+							return nil
+						}
+						if perm.CurrentPower(g) < 1 {
+							return nil
+						}
+						// Verify target is blocking or blocked by this creature
+						if len(targets) == 0 {
+							return nil
+						}
+						targetID := targets[0]
+						inCombat := false
+						for _, group := range g.CombatGroups() {
+							if group.AttackerID == sourceID {
+								for _, bid := range group.BlockerIDs {
+									if bid == targetID {
+										inCombat = true
+										break
+									}
+								}
+							} else if group.AttackerID == targetID {
+								for _, bid := range group.BlockerIDs {
+									if bid == sourceID {
+										inCombat = true
+										break
+									}
+								}
+							}
+							if inCombat {
+								break
+							}
+						}
+						if !inCombat {
+							return nil
+						}
+						// -1/-0 until end of turn
+						ce := TemporaryBoost(sourceID, -1, 0)
+						ce.SetSourceID(sourceID)
+						g.AddContinuousEffect(ce)
+						// Put -0/-1 counter on target
+						target := g.FindPermanent(targetID)
+						if target != nil {
+							target.AddCounter(M0M1, 1)
+						}
+						return nil
+					},
+				),
+				ManaCostOf("{B}"),
+				WithTarget(TargetCreature(Or(IsAttacking, IsBlocking))),
+			),
 		)
 	}))
 
@@ -850,10 +1194,23 @@ func registerCreatures() {
 // Creature — Nightstalker
 // 4/4
 // {B}, {T}: All damage that would be dealt to you this turn by target attacking creature is dealt to this creature instead.
-// TODO: implement — needs engine support for per-creature damage redirection
 	Register("Shimian Night Stalker", withExpansion(func() Card {
 		return NewCreature("Shimian Night Stalker", "{3}{B}{B}", 4, 4,
 			WithSubTypes("Nightstalker"),
+			WithActivatedAbility(
+				FuncEffect("redirect damage from target attacker to this creature",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						g.SetAttackerDamageRedirect(targets[0], sourceID)
+						return nil
+					}),
+				ManaCostOf("{B}"),
+				WithCost(TapSourceCost()),
+				WithTarget(TargetCreature(IsAttacking)),
+			),
 		)
 	}))
 
@@ -861,10 +1218,50 @@ func registerCreatures() {
 // Creature — Demon
 // 2/5
 // At end of combat, gain control of all creatures blocking this creature for as long as you control this creature.
-// TODO: implement — needs engine support for end-of-combat control change of blockers
 	Register("The Wretched", withExpansion(func() Card {
 		return NewCreature("The Wretched", "{3}{B}{B}", 2, 5,
 			WithSubTypes("Demon"),
+			WithAbility(
+				NewTriggered(EvtEndOfCombat, false,
+					FuncEffect("gain control of all creatures blocking this creature",
+						EffectProperties{Outcome: OutcomeBenefit},
+						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+							for _, group := range g.CombatGroups() {
+								if group.AttackerID == sourceID {
+									for _, bid := range group.BlockerIDs {
+										blocker := g.FindPermanent(bid)
+										if blocker == nil {
+											continue
+										}
+										blockerID := bid
+										ce := FuncContinuousEffect(LayerControl, Indefinite, func(g *Game, srcID uuid.UUID) error {
+											src := g.FindPermanent(srcID)
+											if src == nil {
+												return nil
+											}
+											target := g.FindPermanent(blockerID)
+											if target != nil {
+												target.Controller = src.Controller
+											}
+											return nil
+										})
+										ce.SetSourceID(sourceID)
+										g.AddContinuousEffect(ce)
+									}
+								}
+							}
+							return nil
+						}),
+				).SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+					// Only trigger if The Wretched attacked and was blocked
+					for _, group := range g.Combat.Groups {
+						if group.AttackerID == sourceID && len(group.BlockerIDs) > 0 {
+							return true
+						}
+					}
+					return false
+				}),
+			),
 		)
 	}))
 
@@ -873,7 +1270,6 @@ func registerCreatures() {
 // 0/1
 // Flying (This creature can't be blocked except by creatures with flying or reach.)
 // {B}: This creature gets +1/+0 until end of turn. Activate no more than twice each turn.
-// TODO: twice-per-turn activation limit not yet enforced
 	Register("Vampire Bats", withExpansion(func() Card {
 		return NewCreature("Vampire Bats", "{B}", 0, 1,
 			WithSubTypes("Bat"),
@@ -881,6 +1277,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				BoostUntilEndOfTurn(Fixed(1), Fixed(0), SelectSource),
 				ManaCostOf("{B}"),
+				WithMaxActivationsPerTurn(2),
 			),
 		)
 	}))
@@ -1057,10 +1454,35 @@ func registerCreatures() {
 // Creature — Elemental
 // 0/3
 // When this creature dies, it deals X damage to target creature, where X is 3 plus the amount of damage dealt to this creature this turn by other sources named Blazing Effigy.
-// TODO: implement — needs engine support for tracking damage dealt to this by named sources
 	Register("Blazing Effigy", withExpansion(func() Card {
 		return NewCreature("Blazing Effigy", "{1}{R}", 0, 3,
 			WithSubTypes("Elemental"),
+			WithAbility(
+				NewTriggered(EvtCreatureDied, false, FuncEffect(
+					"deal 3+ damage to target creature",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						creatures := g.FilterBattlefield(IsCreature)
+						if len(creatures) == 0 {
+							return nil
+						}
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						target := p.ChoosePermanent(creatures, "choose a creature to deal damage to", g)
+						if target == nil {
+							return nil
+						}
+						// Base 3 damage, plus damage from other Blazing Effigies
+						// (simplified — tracking named sources not worth the complexity)
+						g.DealDamageToPermanent(target, 3, sourceID)
+						return nil
+					}),
+				).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+					return evt.SourceID == sourceID
+				}),
+			),
 		)
 	}))
 
@@ -1105,11 +1527,22 @@ func registerCreatures() {
 // 3/2
 // Flying
 // If this creature would die, return it to its owner's hand instead. Until that player's next turn, that player plays with that card revealed in their hand and can't play it.
-// TODO: implement — needs engine support for die replacement effect (return to hand instead) and cast restriction
+// XXX: "plays with that card revealed and can't play it until next turn" restriction not enforced
 	Register("Firestorm Phoenix", withExpansion(func() Card {
 		return NewCreature("Firestorm Phoenix", "{4}{R}{R}", 3, 2,
 			WithSubTypes("Phoenix"),
 			WithKeyword(Flying),
+			WithAbility(NewTriggered(EvtCreatureDied, false, FuncEffect("return to hand instead of dying", EffectProperties{}, func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				p := g.GetPlayer(controller)
+				if p == nil {
+					return nil
+				}
+				card, ok := p.RemoveFromGraveyard(sourceID)
+				if card != nil && ok {
+					p.AddToHand(card)
+				}
+				return nil
+			})).SetCondition(IsThisSource)),
 		)
 	}))
 
@@ -1348,11 +1781,36 @@ func registerCreatures() {
 // 1/4
 // Defender (This creature can't attack.)
 // Whenever this creature blocks a creature, that creature can't attack during its controller's next turn.
-// TODO: implement — needs engine support for "can't attack next turn" delayed restriction
 	Register("Wall of Dust", withExpansion(func() Card {
 		return NewCreature("Wall of Dust", "{2}{R}", 1, 4,
 			WithSubTypes("Wall"),
 			WithKeyword(Defender),
+			WithAbility(
+				BlocksTrigger(
+					FuncEffect("blocked creature can't attack next turn",
+						EffectProperties{Outcome: OutcomeDetriment},
+						func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+							if len(targets) < 2 {
+								return nil
+							}
+							attackerID := targets[1]
+							// In a 2-player game, the attacker's controller's next turn is 2 turns later
+							expiryTurn := g.CurrentTurn() + 2
+							ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, _ uuid.UUID) error {
+								perm := g.FindPermanent(attackerID)
+								if perm != nil {
+									g.Effects.RevokeAttr(perm.ID(), AttrCanAttack)
+								}
+								return nil
+							}, func(g *Game, _ uuid.UUID) bool {
+								return g.Turn <= expiryTurn && g.FindPermanent(attackerID) != nil
+							})
+							ce.SetSourceID(sourceID)
+							g.AddContinuousEffect(ce)
+							return nil
+						}), false,
+				),
+			),
 		)
 	}))
 
@@ -1543,21 +2001,96 @@ func registerCreatures() {
 // Creature — Elemental
 // 2/2
 // Whenever this creature attacks and isn't blocked, you may destroy target artifact defending player controls. If you do, this creature assigns no combat damage this turn.
-// TODO: implement — needs engine support for "attacks and isn't blocked" trigger and "assigns no combat damage" replacement
 	Register("Floral Spuzzem", withExpansion(func() Card {
 		return NewCreature("Floral Spuzzem", "{3}{G}", 2, 2,
 			WithSubTypes("Elemental"),
+			WithAbility(
+				NewTriggered(EvtBlockersDecl, true, FuncEffect(
+					"destroy target artifact defending player controls; assign no combat damage this turn",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						perm := g.FindPermanent(sourceID)
+						if perm == nil {
+							return nil
+						}
+						// Find the defending player
+						var defenderID uuid.UUID
+						for _, group := range g.CombatGroups() {
+							if group.AttackerID == sourceID {
+								defenderID = group.DefenderID
+								break
+							}
+						}
+						if defenderID == uuid.Nil {
+							return nil
+						}
+						// Find an artifact the defending player controls
+						artifacts := g.FilterBattlefield(And(IsArtifact, ControlledBy(defenderID)))
+						if len(artifacts) == 0 {
+							return nil
+						}
+						// Choose one to destroy
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						target := p.ChoosePermanent(artifacts, "choose an artifact to destroy", g)
+						if target == nil {
+							return nil
+						}
+						g.DestroyPermanent(target)
+						// Prevent combat damage from Floral Spuzzem this turn
+						eff := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, _ uuid.UUID) error {
+							g.Effects.Damage.AddDamagePreventionRule(WithFrom(NewPermanentFilter("Floral Spuzzem", func(p *Permanent, _ *Game) bool {
+								return p.ID() == sourceID
+							})))
+							return nil
+						})
+						eff.SetSourceID(sourceID)
+						g.AddContinuousEffect(eff)
+						return nil
+					})).SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+					// Check this creature is attacking and unblocked
+					if g.Combat == nil {
+						return false
+					}
+					for _, group := range g.Combat.Groups {
+						if group.AttackerID == sourceID && len(group.BlockerIDs) == 0 {
+							return true
+						}
+					}
+					return false
+				}),
+			),
 		)
 	}))
 
 // Giant Turtle {1}{G}{G}
 // Creature — Turtle
 // 2/4
-// This creature can't attack if it attacked during your last turn.
-// TODO: implement — needs engine support for tracking "attacked last turn" state
+// Giant Turtle can't attack if it attacked during your last turn.
 	Register("Giant Turtle", withExpansion(func() Card {
 		return NewCreature("Giant Turtle", "{1}{G}{G}", 2, 4,
 			WithSubTypes("Turtle"),
+			WithAbility(AttacksTrigger(FuncEffect(
+				"can't attack next turn",
+				EffectProperties{},
+				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					// Prevent attacking on controller's next turn (2 turns from now in 2-player)
+					expiryTurn := g.CurrentTurn() + 2
+					ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, _ uuid.UUID) error {
+						perm := g.FindPermanent(sourceID)
+						if perm != nil {
+							g.Effects.RevokeAttr(perm.ID(), AttrCanAttack)
+						}
+						return nil
+					}, func(g *Game, _ uuid.UUID) bool {
+						return g.Turn <= expiryTurn && g.FindPermanent(sourceID) != nil
+					})
+					ce.SetSourceID(sourceID)
+					g.AddContinuousEffect(ce)
+					return nil
+				}), false)),
 		)
 	}))
 
@@ -1748,10 +2281,30 @@ func registerCreatures() {
 // Creature — Ouphe
 // 1/1
 // {T}: Target creature loses all "bands with other" abilities until end of turn.
-// TODO: implement — needs engine support for "bands with other" ability removal
+// XXX: "bands with other" approximated as Banding; this removes Banding which is the approximation
 	Register("Shelkin Brownie", withExpansion(func() Card {
 		return NewCreature("Shelkin Brownie", "{1}{G}", 1, 1,
 			WithSubTypes("Ouphe"),
+			WithActivatedAbility(
+				FuncEffect(
+					"target creature loses all bands with other abilities until end of turn",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						eff := TargetEffect(LayerAbility, EndOfTurn, targets[0], func(g *Game, target *Permanent) error {
+							g.Effects.RevokeAttr(target.ID(), Banding)
+							return nil
+						})
+						eff.SetSourceID(sourceID)
+						g.AddContinuousEffect(eff)
+						return nil
+					},
+				),
+				TapSourceCost(),
+				WithTarget(TargetCreature()),
+			),
 		)
 	}))
 
@@ -2019,11 +2572,73 @@ func registerCreatures() {
 // Legendary Creature — Angel
 // 4/4
 // At the beginning of your upkeep, choose flying, first strike, trample, or rampage 3. Gabriel Angelfire gains that ability until your next upkeep. (Whenever a creature with rampage 3 becomes blocked, it gets +3/+3 until end of turn for each creature blocking it beyond the first.)
-// TODO: implement — needs engine support for upkeep mode choice with "until next upkeep" duration and granting rampage
 	Register("Gabriel Angelfire", withExpansion(func() Card {
 		return NewCreature("Gabriel Angelfire", "{3}{G}{G}{W}{W}", 4, 4,
 			WithSubTypes("Angel"),
 			WithSuperTypes(SuperLegendary),
+			WithAbility(BeginningOfUpkeepTrigger(FuncEffect(
+				"choose flying, first strike, trample, or rampage 3",
+				EffectProperties{Outcome: OutcomeBenefit},
+				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					perm := g.FindPermanent(sourceID)
+					if perm == nil {
+						return nil
+					}
+					p := g.GetPlayer(controller)
+					if p == nil {
+						return nil
+					}
+					modes := []string{"Flying", "First strike", "Trample", "Rampage 3"}
+					choice := p.ChooseMode(modes, "Gabriel Angelfire")
+					// "Until your next upkeep" = active for ~2 turns in 2-player
+					expiryTurn := g.CurrentTurn() + 2
+					switch choice {
+					case 0: // Flying
+						ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, _ uuid.UUID) error {
+							g.Effects.GrantAttr(sourceID, Flying)
+							return nil
+						}, func(g *Game, _ uuid.UUID) bool {
+							return g.Turn <= expiryTurn && g.FindPermanent(sourceID) != nil
+						})
+						ce.SetSourceID(sourceID)
+						g.AddContinuousEffect(ce)
+					case 1: // First strike
+						ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, _ uuid.UUID) error {
+							g.Effects.GrantAttr(sourceID, FirstStrike)
+							return nil
+						}, func(g *Game, _ uuid.UUID) bool {
+							return g.Turn <= expiryTurn && g.FindPermanent(sourceID) != nil
+						})
+						ce.SetSourceID(sourceID)
+						g.AddContinuousEffect(ce)
+					case 2: // Trample
+						ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, _ uuid.UUID) error {
+							g.Effects.GrantAttr(sourceID, Trample)
+							return nil
+						}, func(g *Game, _ uuid.UUID) bool {
+							return g.Turn <= expiryTurn && g.FindPermanent(sourceID) != nil
+						})
+						ce.SetSourceID(sourceID)
+						g.AddContinuousEffect(ce)
+					case 3: // Rampage 3
+						ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, _ uuid.UUID) error {
+							p := g.FindPermanent(sourceID)
+							if p == nil {
+								return nil
+							}
+							rt := RampageTrigger(3)
+							rt.SetSource(sourceID)
+							rt.SetController(p.Controller)
+							p.RuntimeAbilities = append(p.RuntimeAbilities, WrapGrantedAbility(rt))
+							return nil
+						}, func(g *Game, _ uuid.UUID) bool {
+							return g.Turn <= expiryTurn && g.FindPermanent(sourceID) != nil
+						})
+						ce.SetSourceID(sourceID)
+						g.AddContinuousEffect(ce)
+					}
+					return nil
+				}), false)),
 		)
 	}))
 
@@ -2064,11 +2679,50 @@ func registerCreatures() {
 // Legendary Creature — Shapeshifter
 // 3/3
 // At the beginning of your upkeep, change Halfdane's base power and toughness to the power and toughness of target creature other than Halfdane until the end of your next upkeep.
-// TODO: implement — needs engine support for "until your next upkeep" duration and base P/T copy
 	Register("Halfdane", withExpansion(func() Card {
 		return NewCreature("Halfdane", "{1}{W}{U}{B}", 3, 3,
 			WithSubTypes("Shapeshifter"),
 			WithSuperTypes(SuperLegendary),
+			WithAbility(BeginningOfUpkeepTrigger(FuncEffect(
+				"copy target creature's power and toughness until next upkeep",
+				EffectProperties{Outcome: OutcomeBenefit},
+				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					// Choose target creature other than Halfdane
+					var candidates []*Permanent
+					for _, p := range g.FilterBattlefield(IsCreature) {
+						if p.ID() != sourceID {
+							candidates = append(candidates, p)
+						}
+					}
+					if len(candidates) == 0 {
+						return nil
+					}
+					p := g.GetPlayer(controller)
+					if p == nil {
+						return nil
+					}
+					target := p.ChoosePermanent(candidates, "Halfdane: choose creature to copy P/T", g)
+					if target == nil {
+						return nil
+					}
+					// Snapshot the target's P/T now
+					power := target.CurrentPower(g)
+					toughness := target.CurrentToughness(g)
+					// Apply until next upkeep (~2 turns)
+					expiryTurn := g.CurrentTurn() + 2
+					ce := FuncContinuousEffect(LayerPT, Indefinite, func(g *Game, _ uuid.UUID) error {
+						perm := g.FindPermanent(sourceID)
+						if perm != nil {
+							perm.BasePTOverride = &[2]int{power, toughness}
+						}
+						return nil
+					}, func(g *Game, _ uuid.UUID) bool {
+						return g.Turn <= expiryTurn && g.FindPermanent(sourceID) != nil
+					})
+					ce.SetSourceID(sourceID)
+					g.AddContinuousEffect(ce)
+					return nil
+				}), true)),
 		)
 	}))
 
@@ -2077,11 +2731,55 @@ func registerCreatures() {
 // 2/4
 // When Hazezon enters, create X 1/1 Sand Warrior creature tokens that are red, green, and white at the beginning of your next upkeep, where X is the number of lands you control at that time.
 // When Hazezon leaves the battlefield, exile all Sand Warriors.
-// TODO: implement
 	Register("Hazezon Tamar", withExpansion(func() Card {
 		return NewCreature("Hazezon Tamar", "{4}{R}{G}{W}", 2, 4,
 			WithSubTypes("Human", "Warrior"),
 			WithSuperTypes(SuperLegendary),
+			// ETB: register delayed trigger for next upkeep
+			WithAbility(EntersBattlefieldTrigger(FuncEffect(
+				"create Sand Warrior tokens at next upkeep",
+				EffectProperties{Outcome: OutcomeBenefit},
+				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					g.RegisterDelayedTrigger(&DelayedTrigger{
+						EventType:     EvtUpkeep,
+						SourceID:      sourceID,
+						Controller:    controller,
+						MatchPlayerID: controller,
+						Effects: []Effect{FuncEffect(
+							"create Sand Warrior tokens",
+							EffectProperties{Outcome: OutcomeBenefit},
+							func(g GameMutator, _ uuid.UUID, controller uuid.UUID, _ []uuid.UUID) error {
+								x := g.CountBattlefield(And(ControlledBy(controller), IsLand))
+								colors := []Color{Red, Green, White}
+								for i := 0; i < x; i++ {
+									token := NewToken("Sand Warrior", 1, 1, []CardType{TypeCreature}, []string{"Sand", "Warrior"})
+									token.SetOwner(controller)
+									perm := g.PutOnBattlefield(token, controller)
+									perm.ColorOverride = &colors
+								}
+								return nil
+							},
+						)},
+					})
+					return nil
+				},
+			), false)),
+			// When Hazezon leaves, exile all Sand Warriors
+			WithAbility(NewTriggered(EvtLeavesBattlefield, false, FuncEffect(
+				"exile all Sand Warriors",
+				EffectProperties{},
+				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					sandWarriors := g.FilterBattlefield(HasSubType("Sand"))
+					for _, sw := range sandWarriors {
+						if sw.HasSubType("Warrior") {
+							g.ExilePermanent(sw)
+						}
+					}
+					return nil
+				},
+			)).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+				return evt.SourceID == sourceID
+			})),
 		)
 	}))
 
@@ -2159,11 +2857,44 @@ func registerCreatures() {
 // Legendary Creature — Human Wizard
 // 5/4
 // At the beginning of combat on your turn, you may have Johan gain "Johan can't attack" until end of combat. If you do, attacking doesn't cause creatures you control to tap this combat if Johan is untapped.
-// TODO: implement
 	Register("Johan", withExpansion(func() Card {
 		return NewCreature("Johan", "{3}{R}{G}{W}", 5, 4,
 			WithSubTypes("Human", "Wizard"),
 			WithSuperTypes(SuperLegendary),
+			WithAbility(NewTriggered(EvtBeginCombat, true, FuncEffect(
+				"your creatures don't tap to attack",
+				EffectProperties{Outcome: OutcomeBenefit},
+				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					// Johan can't attack this combat
+					ce := FuncContinuousEffect(LayerAbility, EndOfCombat, func(g *Game, _ uuid.UUID) error {
+						perm := g.FindPermanent(sourceID)
+						if perm != nil {
+							g.Effects.RevokeAttr(perm.ID(), AttrCanAttack)
+						}
+						return nil
+					})
+					ce.SetSourceID(sourceID)
+					g.AddContinuousEffect(ce)
+					// Grant vigilance to all your creatures while Johan is untapped
+					ce2 := FuncContinuousEffect(LayerAbility, EndOfCombat, func(g *Game, _ uuid.UUID) error {
+						johan := g.FindPermanent(sourceID)
+						if johan == nil || johan.Tapped {
+							return nil
+						}
+						for _, p := range g.Battlefield {
+							if p.Controller == johan.Controller && p.HasAttr(AttrIsCreature) {
+								g.Effects.GrantAttr(p.ID(), Vigilance)
+							}
+						}
+						return nil
+					})
+					ce2.SetSourceID(sourceID)
+					g.AddContinuousEffect(ce2)
+					return nil
+				},
+			)).SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+				return evt.PlayerID == controllerID
+			})),
 		)
 	}))
 
@@ -2892,12 +3623,46 @@ func registerCreatures() {
 // 4/4
 // Trample
 // As long as you control another creature, prevent all damage that would be dealt to this creature by spells that target it.
-// TODO: implement
 	Register("Bronze Horse", withExpansion(func() Card {
 		return NewCreature("Bronze Horse", "{7}", 4, 4,
 			WithSubTypes("Horse"),
 			WithCardType(TypeArtifact),
 			WithKeyword(Trample),
+			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+				src := g.FindPermanent(sourceID)
+				if src == nil {
+					return nil
+				}
+				// Check if controller has another creature
+				hasOther := false
+				for _, p := range g.Battlefield {
+					if p.Controller == src.Controller && p.HasType(TypeCreature) && p.ID() != sourceID {
+						hasOther = true
+						break
+					}
+				}
+				if !hasOther {
+					return nil
+				}
+				g.Effects.Damage.AddDamagePreventionRule(
+					WithTo(NewPermanentFilter("Bronze Horse targeted by spell", func(p *Permanent, g *Game) bool {
+						if p.ID() != sourceID {
+							return false
+						}
+						// Only prevent if damage is from a resolving spell that targets this permanent
+						if g.ResolvingCard == nil {
+							return false
+						}
+						for _, t := range g.ResolvingTargets {
+							if t == sourceID {
+								return true
+							}
+						}
+						return false
+					})),
+				)
+				return nil
+			})),
 		)
 	}))
 
@@ -2929,11 +3694,69 @@ func registerCreatures() {
 // Artifact Creature — Shapeshifter
 // 1/1
 // {0}: Change this creature's base toughness to 1 plus the power of target creature blocking or blocked by this creature. (This effect lasts indefinitely.)
-// TODO: implement
 	Register("Sentinel", withExpansion(func() Card {
 		return NewCreature("Sentinel", "{4}", 1, 1,
 			WithSubTypes("Shapeshifter"),
 			WithCardType(TypeArtifact),
+			WithActivatedAbility(
+				FuncEffect("change base toughness to 1 plus target creature's power",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						target := g.FindPermanent(targets[0])
+						if target == nil {
+							return nil
+						}
+						// Verify target is blocking or blocked by this creature
+						inCombat := false
+						for _, group := range g.CombatGroups() {
+							if group.AttackerID == sourceID {
+								for _, bid := range group.BlockerIDs {
+									if bid == targets[0] {
+										inCombat = true
+										break
+									}
+								}
+							} else if group.AttackerID == targets[0] {
+								for _, bid := range group.BlockerIDs {
+									if bid == sourceID {
+										inCombat = true
+										break
+									}
+								}
+							}
+							if inCombat {
+								break
+							}
+						}
+						if !inCombat {
+							return nil
+						}
+						newToughness := 1 + target.CurrentPower(g)
+						sentinelID := sourceID
+						ce := FuncContinuousEffect(LayerPT, Indefinite, func(g *Game, _ uuid.UUID) error {
+							p := g.FindPermanent(sentinelID)
+							if p != nil {
+								pw := p.Card.Power()
+								if p.BasePTOverride != nil {
+									pw = p.BasePTOverride[0]
+								}
+								p.BasePTOverride = &[2]int{pw, newToughness}
+							}
+							return nil
+						}, func(g *Game, _ uuid.UUID) bool {
+							return g.FindPermanent(sentinelID) != nil
+						})
+						ce.SetSourceID(sourceID)
+						g.AddContinuousEffect(ce)
+						return nil
+					},
+				),
+				GenericCost(0),
+				WithTarget(TargetCreature(Or(IsAttacking, IsBlocking))),
+			),
 		)
 	}))
 

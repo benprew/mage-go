@@ -228,7 +228,7 @@ func registerSpells() {
 // Instant
 // Cast this spell only during combat before blockers are declared.
 // Untap target attacking creature and remove it from combat. Gain control of that creature until end of turn.
-// XXX: timing restriction (only before blockers) not enforced; gain control until EOT requires temporary control change effect
+// XXX: timing restriction (only before blockers) not enforced
 	Register("Disharmony", withExpansion(func() Card {
 		return NewInstant("Disharmony", "{2}{R}",
 			NewTargetedSpell(TargetCreature(IsAttacking), FuncEffect(
@@ -244,7 +244,17 @@ func registerSpells() {
 					}
 					perm.Tapped = false
 					g.RemoveFromCombat(perm.ID())
-					perm.Controller = controller
+					targetID := targets[0]
+					// Gain control until end of turn — controller resets to owner when EOT effect expires
+					ce := FuncContinuousEffect(LayerControl, EndOfTurn, func(g *Game, _ uuid.UUID) error {
+						p := g.FindPermanent(targetID)
+						if p != nil {
+							p.Controller = controller
+						}
+						return nil
+					})
+					ce.SetSourceID(sourceID)
+					g.AddContinuousEffect(ce)
 					return nil
 				},
 			)),
@@ -365,11 +375,46 @@ func registerSpells() {
 // Feint {R}
 // Instant
 // Tap all creatures blocking target attacking creature. Prevent all combat damage that would be dealt this turn by that creature and each creature blocking it.
-// XXX: requires identifying blockers of a specific attacker and per-creature damage prevention — engine lacks per-creature combat damage prevention
-// TODO: implement when per-creature combat damage prevention is supported
 	Register("Feint", withExpansion(func() Card {
 		return NewInstant("Feint", "{R}",
-			NewSpellAbility(),
+			NewTargetedSpell(TargetCreature(IsAttacking), FuncEffect(
+				"tap all blockers of target attacker; prevent all combat damage from it and its blockers this turn",
+				EffectProperties{Outcome: OutcomeBenefit},
+				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					if len(targets) == 0 {
+						return nil
+					}
+					attackerID := targets[0]
+					// Collect the attacker and all its blockers
+					preventIDs := map[uuid.UUID]bool{attackerID: true}
+					for _, grp := range g.CombatGroups() {
+						if grp.AttackerID == attackerID {
+							for _, bid := range grp.BlockerIDs {
+								preventIDs[bid] = true
+								// Tap each blocker
+								blocker := g.FindPermanent(bid)
+								if blocker != nil {
+									blocker.Tapped = true
+								}
+							}
+							break
+						}
+					}
+					// Prevent all combat damage from the attacker and each blocker
+					for permID := range preventIDs {
+						pid := permID
+						eff := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, _ uuid.UUID) error {
+							g.Effects.Damage.AddDamagePreventionRule(WithFrom(NewPermanentFilter("feinted creature", func(p *Permanent, _ *Game) bool {
+								return p.ID() == pid
+							})))
+							return nil
+						})
+						eff.SetSourceID(sourceID)
+						g.AddContinuousEffect(eff)
+					}
+					return nil
+				},
+			)),
 		)
 	}))
 
@@ -452,11 +497,61 @@ func registerSpells() {
 // Glyph of Delusion {U}
 // Instant
 // Put X glyph counters on target creature that target Wall blocked this turn, where X is the power of that blocked creature. The creature gains "This creature doesn't untap during your untap step if it has a glyph counter on it" and "At the beginning of your upkeep, remove a glyph counter from this creature."
-// XXX: requires tracking which creature a Wall blocked, placing glyph counters, and conditional untap prevention — engine lacks Wall-block tracking and glyph counter interactions
-// TODO: implement when Wall-block tracking and glyph counter support are available
 	Register("Glyph of Delusion", withExpansion(func() Card {
 		return NewInstant("Glyph of Delusion", "{U}",
-			NewSpellAbility(),
+			NewTargetedSpell(TargetCreature(NewPermanentFilter("Wall", func(p *Permanent, _ *Game) bool {
+				return p.HasSubType("Wall")
+			})), FuncEffect(
+				"put glyph counters on creature blocked by target Wall; it doesn't untap while it has glyph counters",
+				EffectProperties{Outcome: OutcomeDetriment},
+				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					if len(targets) == 0 {
+						return nil
+					}
+					wallID := targets[0]
+					// Find the creature(s) blocked by this Wall in combat groups
+					for _, grp := range g.CombatGroups() {
+						for _, bid := range grp.BlockerIDs {
+							if bid == wallID {
+								creature := g.FindPermanent(grp.AttackerID)
+								if creature == nil {
+									continue
+								}
+								power := creature.CurrentPower(g)
+								if power > 0 {
+									creature.AddCounter(Glyph, power)
+								}
+								creatureID := creature.ID()
+								// Grant "doesn't untap while it has glyph counters" (indefinite)
+								eff := TargetEffect(LayerAbility, Indefinite, creatureID, func(g *Game, target *Permanent) error {
+									if target.Counters[Glyph] > 0 {
+										g.Effects.GrantAttr(target.ID(), AttrDoesNotUntap)
+									}
+									return nil
+								})
+								eff.SetSourceID(sourceID)
+								g.AddContinuousEffect(eff)
+								// Grant "at beginning of your upkeep, remove a glyph counter"
+								trigger := BeginningOfUpkeepTrigger(
+									FuncEffect("remove a glyph counter",
+										EffectProperties{},
+										func(g GameMutator, srcID, ctrl uuid.UUID, _ []uuid.UUID) error {
+											perm := g.FindPermanent(srcID)
+											if perm != nil && perm.Counters[Glyph] > 0 {
+												perm.RemoveCounter(Glyph, 1)
+											}
+											return nil
+										}), false,
+								)
+								trigger.SetSource(creature.ID())
+								trigger.SetController(creature.Controller)
+								creature.RuntimeAbilities = append(creature.RuntimeAbilities, trigger)
+							}
+						}
+					}
+					return nil
+				},
+			)),
 		)
 	}))
 
@@ -464,11 +559,45 @@ func registerSpells() {
 // Glyph of Destruction {R}
 // Instant
 // Target blocking Wall you control gets +10/+0 until end of combat. Prevent all damage that would be dealt to it this turn. Destroy it at the beginning of the next end step.
-// XXX: requires targeting blocking Walls, end-of-combat boost, and delayed end-step destruction — complex interaction
-// TODO: implement when blocking-Wall targeting and delayed destruction are supported
 	Register("Glyph of Destruction", withExpansion(func() Card {
 		return NewInstant("Glyph of Destruction", "{R}",
-			NewSpellAbility(),
+			NewTargetedSpell(TargetCreature(And(IsBlocking, NewPermanentFilter("Wall you control", func(p *Permanent, g *Game) bool {
+				return p.HasSubType("Wall")
+			}))), FuncEffect(
+				"target blocking Wall gets +10/+0 until end of combat; prevent all damage to it this turn; destroy it at end step",
+				EffectProperties{Outcome: OutcomeBenefit},
+				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					if len(targets) == 0 {
+						return nil
+					}
+					wallID := targets[0]
+					// +10/+0 until end of combat
+					eff := TargetEffect(LayerPT, EndOfCombat, wallID, func(g *Game, target *Permanent) error {
+						target.BoostPT(10, 0)
+						return nil
+					})
+					eff.SetSourceID(sourceID)
+					g.AddContinuousEffect(eff)
+					// Prevent all damage to it this turn
+					prevEff := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, srcID uuid.UUID) error {
+						g.Effects.Damage.AddDamagePreventionRule(WithTo(NewPermanentFilter("target Wall", func(p *Permanent, _ *Game) bool {
+							return p.ID() == wallID
+						})))
+						return nil
+					})
+					prevEff.SetSourceID(sourceID)
+					g.AddContinuousEffect(prevEff)
+					// Destroy at beginning of next end step
+					g.RegisterDelayedTrigger(&DelayedTrigger{
+						EventType:  EvtEndStep,
+						TargetID:   wallID,
+						Effects:    []Effect{DestroyTarget()},
+						SourceID:   sourceID,
+						Controller: controller,
+					})
+					return nil
+				},
+			)),
 		)
 	}))
 
@@ -476,11 +605,35 @@ func registerSpells() {
 // Glyph of Doom {B}
 // Instant
 // Choose target Wall creature. At this turn's next end of combat, destroy all creatures that were blocked by that creature this turn.
-// XXX: requires tracking creatures blocked by a specific Wall and delayed end-of-combat destruction
-// TODO: implement when Wall-block tracking is supported
 	Register("Glyph of Doom", withExpansion(func() Card {
 		return NewInstant("Glyph of Doom", "{B}",
-			NewSpellAbility(),
+			NewTargetedSpell(TargetCreature(NewPermanentFilter("Wall", func(p *Permanent, _ *Game) bool {
+				return p.HasSubType("Wall")
+			})), FuncEffect(
+				"at end of combat, destroy all creatures blocked by target Wall",
+				EffectProperties{Outcome: OutcomeDetriment},
+				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					if len(targets) == 0 {
+						return nil
+					}
+					wallID := targets[0]
+					// Find all attackers blocked by this Wall and register delayed destruction
+					for _, group := range g.CombatGroups() {
+						for _, bid := range group.BlockerIDs {
+							if bid == wallID {
+								g.RegisterDelayedTrigger(&DelayedTrigger{
+									EventType:  EvtEndOfCombat,
+									TargetID:   group.AttackerID,
+									Effects:    []Effect{DestroyTarget()},
+									SourceID:   sourceID,
+									Controller: controller,
+								})
+							}
+						}
+					}
+					return nil
+				},
+			)),
 		)
 	}))
 
@@ -488,11 +641,44 @@ func registerSpells() {
 // Glyph of Life {W}
 // Instant
 // Choose target Wall creature. Whenever that creature is dealt damage by an attacking creature this turn, you gain that much life.
-// XXX: requires per-creature damage-dealt tracking for life gain — engine lacks per-target damage event wiring for Walls
-// TODO: implement when per-creature damage tracking triggers are supported
 	Register("Glyph of Life", withExpansion(func() Card {
 		return NewInstant("Glyph of Life", "{W}",
-			NewSpellAbility(),
+			NewTargetedSpell(TargetCreature(NewPermanentFilter("Wall", func(p *Permanent, _ *Game) bool {
+				return p.HasSubType("Wall")
+			})), FuncEffect(
+				"whenever target Wall is dealt damage by an attacking creature this turn, gain that much life",
+				EffectProperties{Outcome: OutcomeBenefit},
+				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					if len(targets) == 0 {
+						return nil
+					}
+					wallID := targets[0]
+					g.RegisterDelayedTrigger(&DelayedTrigger{
+						EventType:     EvtDamageDealt,
+						SourceID:      sourceID,
+						Controller:    controller,
+						TargetID:      controller, // pass controller as target for life gain
+						MatchTargetID: wallID,      // only fire when the wall receives damage
+						Persistent:    true,         // fires each time this turn
+						Effects: []Effect{FuncEffect(
+							"gain life equal to damage dealt",
+							EffectProperties{Outcome: OutcomeBenefit},
+							func(g GameMutator, srcID, ctrl uuid.UUID, _ []uuid.UUID) error {
+								amount := g.EventAmount()
+								if amount <= 0 {
+									return nil
+								}
+								p := g.GetPlayer(ctrl)
+								if p != nil {
+									g.PlayerGainLife(p, amount)
+								}
+								return nil
+							},
+						)},
+					})
+					return nil
+				},
+			)),
 		)
 	}))
 
@@ -501,11 +687,47 @@ func registerSpells() {
 // Instant
 // Cast this spell only after combat.
 // Destroy all creatures that were blocked by target Wall this turn. They can't be regenerated. For each creature that died this way, put a creature card from the graveyard of the player who controlled that creature the last time it became blocked by that Wall onto the battlefield under its owner's control.
-// XXX: requires Wall-block tracking, timing restriction, and per-creature reanimation from specific graveyards
-// TODO: implement when Wall-block tracking is supported
+// XXX: timing restriction (only after combat) not enforced
 	Register("Glyph of Reincarnation", withExpansion(func() Card {
 		return NewInstant("Glyph of Reincarnation", "{G}",
-			NewSpellAbility(),
+			NewTargetedSpell(TargetCreature(NewPermanentFilter("Wall", func(p *Permanent, _ *Game) bool {
+				return p.HasSubType("Wall")
+			})), FuncEffect(
+				"destroy creatures blocked by target Wall; reanimate from their owners' graveyards",
+				EffectProperties{Outcome: OutcomeDetriment},
+				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					if len(targets) == 0 {
+						return nil
+					}
+					wallID := targets[0]
+					// Find all creatures this Wall blocked this turn
+					blockedAttackers := g.GetBlockedThisTurn(wallID)
+					for _, attackerID := range blockedAttackers {
+						perm := g.FindPermanent(attackerID)
+						if perm == nil || !perm.HasType(TypeCreature) {
+							continue
+						}
+						ownerID := perm.Card.Owner()
+						// Destroy (can't be regenerated)
+						g.DestroyPermanent(perm)
+						// Reanimate a creature from the owner's graveyard
+						owner := g.GetPlayer(ownerID)
+						if owner == nil {
+							continue
+						}
+						for _, card := range owner.Graveyard() {
+							if card.HasType(TypeCreature) {
+								c, ok := owner.RemoveFromGraveyard(card.ID())
+								if ok {
+									g.PutOnBattlefield(c, ownerID)
+								}
+								break
+							}
+						}
+					}
+					return nil
+				},
+			)),
 		)
 	}))
 
@@ -664,7 +886,6 @@ func registerSpells() {
 // Mana Drain {U}{U}
 // Instant
 // Counter target spell. At the beginning of your next main phase, add an amount of {C} equal to that spell's mana value.
-// XXX: delayed mana trigger not implemented — just counters the spell
 	Register("Mana Drain", withExpansion(func() Card {
 		return NewInstant("Mana Drain", "{U}{U}",
 			NewTargetedSpell(TargetSpellOnStack(), FuncEffect(
@@ -674,8 +895,33 @@ func registerSpells() {
 					if len(targets) == 0 {
 						return nil
 					}
-					// XXX: delayed mana trigger for next main phase not implemented
+					// Get the spell's CMC before countering it
+					obj := g.FindStackObject(targets[0])
+					cmc := 0
+					if obj != nil && obj.Card != nil {
+						cmc = obj.Card.ManaCost().CMC()
+					}
 					g.CounterSpellOnStack(targets[0])
+					// Register delayed trigger: at controller's next upkeep, add colorless mana
+					if cmc > 0 {
+						g.RegisterDelayedTrigger(&DelayedTrigger{
+							EventType:     EvtUpkeep,
+							SourceID:      sourceID,
+							Controller:    controller,
+							MatchPlayerID: controller,
+							Effects: []Effect{FuncEffect(
+								fmt.Sprintf("add %d colorless mana", cmc),
+								EffectProperties{Outcome: OutcomeBenefit},
+								func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+									p := g.GetPlayer(controller)
+									if p != nil {
+										p.ManaPool().Add(Colorless, cmc)
+									}
+									return nil
+								},
+							)},
+						})
+					}
 					return nil
 				},
 			)),
@@ -722,7 +968,7 @@ func registerSpells() {
 // Instant
 // Cast this spell only before blockers are declared.
 // Target creature gains first strike until end of turn. If it doesn't have rampage, that creature gains rampage 2 until end of turn. (Whenever the creature becomes blocked, it gets +2/+2 until end of turn for each creature blocking it beyond the first.)
-// XXX: timing restriction not enforced; rampage grant requires checking if creature already has rampage
+// XXX: timing restriction not enforced; "if it doesn't have rampage" check not enforced
 	Register("Rapid Fire", withExpansion(func() Card {
 		return NewInstant("Rapid Fire", "{3}{W}",
 			NewTargetedSpell(TargetCreature(), FuncEffect(
@@ -736,11 +982,25 @@ func registerSpells() {
 					if perm == nil {
 						return nil
 					}
-					// Grant first strike
+					// Grant first strike until end of turn
 					ce := TemporaryKeyword(perm.ID(), FirstStrike)
 					ce.SetSourceID(sourceID)
 					g.AddContinuousEffect(ce)
-					// XXX: rampage 2 grant until EOT not fully supported
+					// Grant rampage 2 until end of turn
+					targetID := targets[0]
+					rampageEff := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, _ uuid.UUID) error {
+						p := g.FindPermanent(targetID)
+						if p == nil {
+							return nil
+						}
+						rt := RampageTrigger(2)
+						rt.SetSource(targetID)
+						rt.SetController(p.Controller)
+						p.RuntimeAbilities = append(p.RuntimeAbilities, WrapGrantedAbility(rt))
+						return nil
+					})
+					rampageEff.SetSourceID(sourceID)
+					g.AddContinuousEffect(rampageEff)
 					return nil
 				},
 			)),
@@ -763,11 +1023,48 @@ func registerSpells() {
 // Recall {X}{X}{U}
 // Sorcery
 // Discard X cards, then return a card from your graveyard to your hand for each card discarded this way. Exile Recall.
-// XXX: requires discarding X chosen cards and then returning X cards from graveyard to hand, plus self-exile — complex multi-step
-// TODO: implement when multi-card graveyard return with discard cost is supported
 	Register("Recall", withExpansion(func() Card {
 		return NewSorcery("Recall", "{X}{X}{U}",
-			NewSpellAbility(),
+			NewSpellAbility(FuncEffect(
+				"discard X cards, then return X cards from graveyard to hand; exile Recall",
+				EffectProperties{Outcome: OutcomeBenefit},
+				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					x := g.XValue()
+					if x <= 0 {
+						return nil
+					}
+					p := g.GetPlayer(controller)
+					if p == nil {
+						return nil
+					}
+					// Discard X cards
+					discarded := p.ChooseCardsFromHand(x, "Recall: choose cards to discard", g)
+					for _, card := range discarded {
+						p.RemoveFromHand(card.ID())
+						p.AddToGraveyard(card)
+					}
+					// Return that many cards from graveyard to hand
+					returned := 0
+					for returned < len(discarded) && len(p.Graveyard()) > 0 {
+						// Pick cards from graveyard (auto-choose first available)
+						gy := p.Graveyard()
+						if len(gy) == 0 {
+							break
+						}
+						card, ok := p.RemoveFromGraveyard(gy[0].ID())
+						if ok {
+							p.AddToHand(card)
+							returned++
+						}
+					}
+					// Exile Recall
+					recallCard := g.FindCardAnywhere(sourceID)
+					if recallCard != nil {
+						g.ExileCard(recallCard, controller)
+					}
+					return nil
+				},
+			)),
 		)
 	}))
 
@@ -775,11 +1072,51 @@ func registerSpells() {
 // Reincarnation {1}{G}{G}
 // Instant
 // Choose target creature. When that creature dies this turn, return a creature card from its owner's graveyard to the battlefield under the control of that creature's owner.
-// XXX: requires delayed death trigger on a specific creature with graveyard reanimate — engine lacks targeted delayed death triggers
-// TODO: implement when delayed death triggers for specific creatures are supported
 	Register("Reincarnation", withExpansion(func() Card {
 		return NewInstant("Reincarnation", "{1}{G}{G}",
-			NewSpellAbility(),
+			NewTargetedSpell(TargetCreature(), FuncEffect(
+				"when target creature dies this turn, reanimate from its owner's graveyard",
+				EffectProperties{Outcome: OutcomeBenefit},
+				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					if len(targets) == 0 {
+						return nil
+					}
+					targetID := targets[0]
+					perm := g.FindPermanent(targetID)
+					if perm == nil {
+						return nil
+					}
+					ownerID := perm.Card.Owner()
+					g.RegisterDelayedTrigger(&DelayedTrigger{
+						EventType:    EvtCreatureDied,
+						SourceID:     sourceID,
+						Controller:   controller,
+						MatchEventID: targetID,
+						Effects: []Effect{FuncEffect(
+							"return a creature card from owner's graveyard to the battlefield",
+							EffectProperties{Outcome: OutcomeBenefit},
+							func(g GameMutator, _ uuid.UUID, _ uuid.UUID, _ []uuid.UUID) error {
+								owner := g.GetPlayer(ownerID)
+								if owner == nil {
+									return nil
+								}
+								// Find creature cards in owner's graveyard
+								for _, card := range owner.Graveyard() {
+									if card.HasType(TypeCreature) {
+										c, ok := owner.RemoveFromGraveyard(card.ID())
+										if ok {
+											g.PutOnBattlefield(c, ownerID)
+										}
+										return nil
+									}
+								}
+								return nil
+							},
+						)},
+					})
+					return nil
+				},
+			)),
 		)
 	}))
 
@@ -931,7 +1268,6 @@ func registerSpells() {
 // Subdue {G}
 // Instant
 // Prevent all combat damage that would be dealt by target creature this turn. That creature gets +0/+X until end of turn, where X is its mana value.
-// XXX: per-creature combat damage prevention not fully supported; using prevention shield as approximation
 	Register("Subdue", withExpansion(func() Card {
 		return NewInstant("Subdue", "{G}",
 			NewTargetedSpell(TargetCreature(), FuncEffect(
@@ -945,11 +1281,20 @@ func registerSpells() {
 					if perm == nil {
 						return nil
 					}
+					targetID := perm.ID()
 					cmc := perm.Card.ManaCost().CMC()
-					// XXX: per-creature combat damage prevention approximated with large prevention shield
-					// The creature gets +0/+X where X is its mana value
+					// Prevent all combat damage dealt by this creature
+					eff := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, _ uuid.UUID) error {
+						g.Effects.Damage.AddDamagePreventionRule(WithFrom(NewPermanentFilter("subdued creature", func(p *Permanent, _ *Game) bool {
+							return p.ID() == targetID
+						})))
+						return nil
+					})
+					eff.SetSourceID(sourceID)
+					g.AddContinuousEffect(eff)
+					// +0/+X where X is its mana value
 					if cmc > 0 {
-						ce := TemporaryBoost(perm.ID(), 0, cmc)
+						ce := TemporaryBoost(targetID, 0, cmc)
 						ce.SetSourceID(sourceID)
 						g.AddContinuousEffect(ce)
 					}
@@ -1002,7 +1347,6 @@ func registerSpells() {
 // Telekinesis {U}{U}
 // Instant
 // Tap target creature. Prevent all combat damage that would be dealt by that creature this turn. It doesn't untap during its controller's next two untap steps.
-// XXX: "doesn't untap during next two untap steps" not fully supported; tapping and combat prevention approximated
 	Register("Telekinesis", withExpansion(func() Card {
 		return NewInstant("Telekinesis", "{U}{U}",
 			NewTargetedSpell(TargetCreature(), FuncEffect(
@@ -1017,7 +1361,23 @@ func registerSpells() {
 						return nil
 					}
 					perm.Tapped = true
-					// XXX: "doesn't untap during next two untap steps" not implemented
+					// Prevent combat damage from this creature this turn
+					g.PreventAllDamageFrom(targets[0])
+					// Doesn't untap during controller's next two untap steps
+					// In 2-player, that's 4 game turns from now
+					targetID := targets[0]
+					expiryTurn := g.CurrentTurn() + 4
+					ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, _ uuid.UUID) error {
+						p := g.FindPermanent(targetID)
+						if p != nil {
+							g.Effects.GrantAttr(p.ID(), AttrDoesNotUntap)
+						}
+						return nil
+					}, func(g *Game, _ uuid.UUID) bool {
+						return g.Turn <= expiryTurn && g.FindPermanent(targetID) != nil
+					})
+					ce.SetSourceID(sourceID)
+					g.AddContinuousEffect(ce)
 					return nil
 				},
 			)),
@@ -1105,9 +1465,7 @@ func registerSpells() {
 // Search your library for a basic land card, put that card onto the battlefield, then shuffle.
 	Register("Untamed Wilds", withExpansion(func() Card {
 		return NewSorcery("Untamed Wilds", "{2}{G}",
-			NewSpellAbility(SearchLibraryToBattlefield(NewCardFilter("basic land card", func(c Card) bool {
-				return c.HasType(TypeLand) && c.HasSuperType(SuperBasic)
-			}))),
+			NewSpellAbility(SearchLibraryToBattlefield(NewCardFilter("basic land card", isBasicLand))),
 		)
 	}))
 
