@@ -18,7 +18,7 @@ type GameReader interface {
 // Compile-time check that *mage.Game satisfies GameReader.
 var _ GameReader = (*mage.Game)(nil)
 
-// Evaluation weight constants — tunable parameters.
+// Evaluation weight constants — default parameters used by DefaultEvaluator.
 const (
 	LifeWeight        = 3 // multiplier for (myLife - oppLife)
 	PowerWeight       = 2 // per point of creature power
@@ -34,7 +34,16 @@ type StateEvaluator func(g GameReader, playerID uuid.UUID) int
 
 // DefaultEvaluator is the standard position evaluator. It considers life,
 // creature board state, non-creature permanents, hand size, and mana development.
+// It uses the default hardcoded weight constants.
 var DefaultEvaluator StateEvaluator = defaultEvaluate
+
+// WeightedEvaluator returns a StateEvaluator that uses the given
+// WeightedPersonality's evaluation weights instead of the default constants.
+func WeightedEvaluator(w WeightedPersonality) StateEvaluator {
+	return func(g GameReader, playerID uuid.UUID) int {
+		return weightedEvaluate(g, playerID, w)
+	}
+}
 
 func defaultEvaluate(g GameReader, playerID uuid.UUID) int {
 	me := g.GetPlayer(playerID)
@@ -77,6 +86,63 @@ func defaultEvaluate(g GameReader, playerID uuid.UUID) int {
 	score += g.CountBattlefield(mage.And(ownLand, mage.IsUntapped))
 
 	return score
+}
+
+// weightedEvaluate scores a game position using personality-specific weights.
+// The score components are:
+//   - Life difference × LifeWeight
+//   - Creature board score × BoardWeight (scaled from default PowerWeight/ToughnessWeight)
+//   - Non-creature permanents × BoardWeight / 2
+//   - Card advantage × CardWeight
+//   - Mana development (lands) × ManaWeight
+//   - Untapped land bonus × TempoWeight
+func weightedEvaluate(g GameReader, playerID uuid.UUID, w WeightedPersonality) int {
+	me := g.GetPlayer(playerID)
+	opp := g.GetOpponent(playerID)
+	if me == nil || opp == nil {
+		return 0
+	}
+	oppID := opp.PlayerID()
+
+	score := 0.0
+
+	// Life component.
+	score += float64(me.Life()-opp.Life()) * w.LifeWeight
+
+	// Creature board: own creatures add, opponent's subtract.
+	// Scale creature values by BoardWeight relative to the default (2.0).
+	boardScale := w.BoardWeight / 2.0
+	for _, perm := range g.FilterBattlefield(mage.IsCreature) {
+		v := float64(evalCreature(perm)) * boardScale
+		if perm.Controller == playerID {
+			score += v
+		} else if perm.Controller == oppID {
+			score -= v
+		}
+	}
+
+	// Non-creature, non-land permanents.
+	nonCreatureNonLand := mage.And(mage.Not(mage.IsCreature), mage.Not(mage.IsLand))
+	for _, perm := range g.FilterBattlefield(nonCreatureNonLand) {
+		v := float64(perm.Card.ManaCost().CMC()) / 2.0 * boardScale
+		if perm.Controller == playerID {
+			score += v
+		} else if perm.Controller == oppID {
+			score -= v
+		}
+	}
+
+	// Card advantage.
+	score += float64(len(me.Hand())-len(opp.Hand())) * w.CardWeight
+
+	// Mana development.
+	ownLand := mage.And(mage.IsLand, mage.ControlledBy(playerID))
+	score += float64(g.CountBattlefield(ownLand)) * w.ManaWeight
+
+	// Untapped land bonus (tempo).
+	score += float64(g.CountBattlefield(mage.And(ownLand, mage.IsUntapped))) * w.TempoWeight
+
+	return int(score)
 }
 
 // evalCreature scores a single creature permanent from its controller's perspective.

@@ -17,6 +17,8 @@ const (
 )
 
 // Personality parameterises how an AIPlayer makes decisions.
+// Deprecated: Use WeightedPersonality for new code. Personality is retained
+// for backward compatibility and can be converted via ToWeighted().
 type Personality struct {
 	Name                string
 	CastOrder           SpellOrder
@@ -26,7 +28,150 @@ type Personality struct {
 	TargetFace          bool // if true, damage spells target the opponent player rather than creatures
 }
 
-// Preset personalities.
+// ToWeighted converts a boolean Personality into a continuous WeightedPersonality.
+func (p Personality) ToWeighted() WeightedPersonality {
+	wp := WeightedPersonality{Name: p.Name}
+
+	// Map boolean AttackAll to Aggression
+	if p.AttackAll {
+		wp.Aggression = 1.0
+	} else {
+		wp.Aggression = 0.0
+	}
+
+	// Map BlockPowerThreshold to BlockThreshold (0 → 0.0, 99 → ~1.0)
+	// Threshold 0 means block everything (0.0), higher means block less.
+	if p.BlockPowerThreshold >= 99 {
+		wp.BlockThreshold = 0.95
+	} else {
+		wp.BlockThreshold = float64(p.BlockPowerThreshold) / 10.0
+		if wp.BlockThreshold > 1.0 {
+			wp.BlockThreshold = 1.0
+		}
+	}
+
+	// Map HoldInstants boolean
+	if p.HoldInstants {
+		wp.HoldInstants = 1.0
+	} else {
+		wp.HoldInstants = 0.0
+	}
+
+	// Map TargetFace boolean
+	if p.TargetFace {
+		wp.TargetFace = 1.0
+	} else {
+		wp.TargetFace = 0.0
+	}
+
+	// Map CastOrder to CurvePreference
+	if p.CastOrder == MostExpensiveFirst {
+		wp.CurvePreference = 1.0
+	} else {
+		wp.CurvePreference = 0.0
+	}
+
+	// Default evaluation weights (neutral)
+	wp.LifeWeight = 2.0
+	wp.BoardWeight = 2.0
+	wp.CardWeight = 2.0
+	wp.ManaWeight = 1.0
+	wp.TempoWeight = 1.0
+
+	return wp
+}
+
+// WeightedPersonality provides continuous-valued weights for AI decision-making.
+// Evaluation weights flow into the state evaluator. Decision weights (0.0 to 1.0)
+// control combat, targeting, and spell-casting preferences.
+type WeightedPersonality struct {
+	Name string
+
+	// Evaluation weights (flow into StateEvaluator)
+	LifeWeight  float64 // importance of life difference
+	BoardWeight float64 // importance of creature board
+	CardWeight  float64 // importance of hand advantage
+	ManaWeight  float64 // importance of mana development
+	TempoWeight float64 // importance of untapped mana
+
+	// Decision weights (0.0 to 1.0 continuous)
+	Aggression      float64 // 1.0 = attack everything, 0.0 = only profitable
+	BlockThreshold  float64 // 0.0 = block everything, 1.0 = never block
+	HoldInstants    float64 // 0.0 = cast immediately, 1.0 = always hold
+	TargetFace      float64 // 0.0 = always target creatures, 1.0 = always go face
+	CurvePreference float64 // 0.0 = cheapest first, 1.0 = most expensive first
+}
+
+// Preset weighted personalities.
+var (
+	AggroWeighted = WeightedPersonality{
+		Name:            "Aggro",
+		LifeWeight:      1.0,
+		BoardWeight:     3.0,
+		CardWeight:      0.5,
+		ManaWeight:      0.5,
+		TempoWeight:     0.5,
+		Aggression:      1.0,
+		BlockThreshold:  0.7,
+		HoldInstants:    0.0,
+		TargetFace:      0.3,
+		CurvePreference: 0.0,
+	}
+	ControlWeighted = WeightedPersonality{
+		Name:            "Control",
+		LifeWeight:      4.0,
+		BoardWeight:     1.0,
+		CardWeight:      3.0,
+		ManaWeight:      1.0,
+		TempoWeight:     2.0,
+		Aggression:      0.0,
+		BlockThreshold:  0.0,
+		HoldInstants:    1.0,
+		TargetFace:      0.0,
+		CurvePreference: 1.0,
+	}
+	MidrangeWeighted = WeightedPersonality{
+		Name:            "Midrange",
+		LifeWeight:      2.0,
+		BoardWeight:     3.0,
+		CardWeight:      2.0,
+		ManaWeight:      1.0,
+		TempoWeight:     1.0,
+		Aggression:      0.7,
+		BlockThreshold:  0.3,
+		HoldInstants:    0.0,
+		TargetFace:      0.0,
+		CurvePreference: 1.0,
+	}
+	TempoWeighted = WeightedPersonality{
+		Name:            "Tempo",
+		LifeWeight:      1.5,
+		BoardWeight:     2.0,
+		CardWeight:      1.5,
+		ManaWeight:      2.0,
+		TempoWeight:     3.0,
+		Aggression:      0.8,
+		BlockThreshold:  0.3,
+		HoldInstants:    0.7,
+		TargetFace:      0.0,
+		CurvePreference: 0.0,
+	}
+	BurnWeighted = WeightedPersonality{
+		Name:            "Burn",
+		LifeWeight:      0.5,
+		BoardWeight:     1.0,
+		CardWeight:      0.5,
+		ManaWeight:      0.5,
+		TempoWeight:     0.5,
+		Aggression:      1.0,
+		BlockThreshold:  0.95,
+		HoldInstants:    0.0,
+		TargetFace:      1.0,
+		CurvePreference: 0.0,
+	}
+)
+
+// Preset personalities (boolean, deprecated — use weighted presets for new code).
 var (
 	AggroPersonality = Personality{
 		Name:                "Aggro",
@@ -76,8 +221,33 @@ type AIStrategy interface {
 }
 
 // HeuristicStrategy implements AIStrategy using personality-driven heuristics.
+// Internally it uses WeightedPersonality for all decisions.
 type HeuristicStrategy struct {
-	Personality Personality
+	Personality Personality         // retained for backward compatibility
+	Weights     WeightedPersonality // used for all decision-making
+	weightsInit bool               // true if Weights was explicitly set
+}
+
+// NewHeuristicStrategy creates a HeuristicStrategy from a WeightedPersonality.
+func NewHeuristicStrategy(w WeightedPersonality) *HeuristicStrategy {
+	return &HeuristicStrategy{Weights: w, weightsInit: true}
+}
+
+// newHeuristicFromOld creates a HeuristicStrategy from a boolean Personality,
+// converting it to weighted form internally.
+func newHeuristicFromOld(p Personality) *HeuristicStrategy {
+	return &HeuristicStrategy{Personality: p, Weights: p.ToWeighted(), weightsInit: true}
+}
+
+// weights returns the effective WeightedPersonality. If Weights was not
+// explicitly set (e.g. struct literal with only Personality), it auto-converts
+// from the boolean Personality for backward compatibility.
+func (s *HeuristicStrategy) weights() WeightedPersonality {
+	if !s.weightsInit {
+		s.Weights = s.Personality.ToWeighted()
+		s.weightsInit = true
+	}
+	return s.Weights
 }
 
 func (s *HeuristicStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, mainPhase bool) PriorityAction {
@@ -119,9 +289,12 @@ func (s *HeuristicStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPla
 		}
 	}
 
-	// HoldInstants: only skip instants during main phase; cast freely during
-	// opponent's turn / responses to the stack.
-	if !s.Personality.HoldInstants || !mainPhase {
+	// HoldInstants: at 1.0 always hold during main phase; at 0.0 never hold.
+	// At intermediate values, hold only if we're on our main phase and the
+	// weight exceeds 0.5 (i.e., prefer to hold). Always cast freely during
+	// opponent's turn / responses.
+	holdNow := mainPhase && s.weights().HoldInstants > 0.5
+	if !holdNow {
 		for _, card := range p.Hand() {
 			if !card.HasType(core.TypeInstant) {
 				continue
@@ -170,7 +343,7 @@ func (s *HeuristicStrategy) Attackers(p mage.Player, g *mage.Game) []uuid.UUID {
 		if !perm.CanDeclareAsAttacker(g) {
 			continue
 		}
-		if s.Personality.AttackAll || profitableToAttack(perm, g, opponentID) {
+		if shouldAttack(perm, g, opponentID, s.weights().Aggression) {
 			attackers = append(attackers, perm.ID())
 		}
 	}
@@ -197,7 +370,9 @@ func (s *HeuristicStrategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAs
 			continue
 		}
 		atkPow := atk.CurrentPower(g)
-		if s.Personality.BlockPowerThreshold > 0 && atkPow < s.Personality.BlockPowerThreshold {
+		// BlockThreshold: 0.0 = block everything, 1.0 = never block.
+		// Derive a minimum power threshold from the weight.
+		if !shouldBlock(atkPow, g, p.PlayerID(), s.weights().BlockThreshold) {
 			continue
 		}
 
@@ -270,8 +445,8 @@ func (s *HeuristicStrategy) autoSelectTargets(p mage.Player, g *mage.Game, card 
 					}
 				}
 				opponent := g.GetOpponent(playerID)
-				if s.Personality.TargetFace && opponent != nil {
-					// Burn strategy: always target the opponent player directly.
+				if s.weights().TargetFace >= 0.5 && opponent != nil {
+					// High TargetFace weight: prefer targeting the opponent player directly.
 					for _, id := range possible {
 						if id == opponent.PlayerID() {
 							return []uuid.UUID{id}
@@ -400,7 +575,7 @@ type AIPlayer struct {
 func NewAIPlayer(name string) *AIPlayer {
 	return &AIPlayer{
 		BasePlayer: mage.NewBasePlayer(name),
-		strategy:   &HeuristicStrategy{Personality: MidrangePersonality},
+		strategy:   NewHeuristicStrategy(MidrangeWeighted),
 	}
 }
 
@@ -408,7 +583,7 @@ func NewAIPlayer(name string) *AIPlayer {
 func NewAggroAI(name string) *AIPlayer {
 	return &AIPlayer{
 		BasePlayer: mage.NewBasePlayer(name),
-		strategy:   &HeuristicStrategy{Personality: AggroPersonality},
+		strategy:   NewHeuristicStrategy(AggroWeighted),
 	}
 }
 
@@ -416,7 +591,7 @@ func NewAggroAI(name string) *AIPlayer {
 func NewControlAI(name string) *AIPlayer {
 	return &AIPlayer{
 		BasePlayer: mage.NewBasePlayer(name),
-		strategy:   &HeuristicStrategy{Personality: ControlPersonality},
+		strategy:   NewHeuristicStrategy(ControlWeighted),
 	}
 }
 
@@ -424,7 +599,15 @@ func NewControlAI(name string) *AIPlayer {
 func NewTempoAI(name string) *AIPlayer {
 	return &AIPlayer{
 		BasePlayer: mage.NewBasePlayer(name),
-		strategy:   &HeuristicStrategy{Personality: TempoPersonality},
+		strategy:   NewHeuristicStrategy(TempoWeighted),
+	}
+}
+
+// NewWeightedAI creates an AI player with a custom WeightedPersonality.
+func NewWeightedAI(name string, w WeightedPersonality) *AIPlayer {
+	return &AIPlayer{
+		BasePlayer: mage.NewBasePlayer(name),
+		strategy:   NewHeuristicStrategy(w),
 	}
 }
 
@@ -469,7 +652,7 @@ func (ai *AIPlayer) DeclareBlockers(g *mage.Game) []mage.BlockAssignment {
 func NewBurnAI(name string) *AIPlayer {
 	return &AIPlayer{
 		BasePlayer: mage.NewBasePlayer(name),
-		strategy:   &HeuristicStrategy{Personality: BurnPersonality},
+		strategy:   NewHeuristicStrategy(BurnWeighted),
 	}
 }
 
@@ -479,13 +662,85 @@ func NewAdaptiveAI(name string) *AIPlayer {
 	return &AIPlayer{
 		BasePlayer: mage.NewBasePlayer(name),
 		strategy: &AdaptiveStrategy{
-			Aggressive: &HeuristicStrategy{Personality: AggroPersonality},
-			Defensive:  &HeuristicStrategy{Personality: ControlPersonality},
+			Aggressive: NewHeuristicStrategy(AggroWeighted),
+			Defensive:  NewHeuristicStrategy(ControlWeighted),
 		},
 	}
 }
 
 // ─── Helper functions ───────────────────────────────────────────────────────
+
+// shouldAttack decides whether to attack with a creature based on the
+// continuous Aggression weight (0.0 to 1.0).
+//   - At 1.0: attack with everything (ignore profitability).
+//   - At 0.0: only attack when guaranteed profitable.
+//   - At intermediate values: attack if profitable, or if aggression exceeds
+//     the risk threshold from the trade analysis.
+func shouldAttack(atk *mage.Permanent, g *mage.Game, opponentID uuid.UUID, aggression float64) bool {
+	// At maximum aggression, always attack.
+	if aggression >= 1.0 {
+		return true
+	}
+	// Check base profitability (attacker survives or trades up).
+	if profitableToAttack(atk, g, opponentID) {
+		return true
+	}
+	// At aggression >= 0.7, also attack on equal trades (same CMC).
+	if aggression >= 0.7 {
+		return marginallyProfitableToAttack(atk, g, opponentID)
+	}
+	return false
+}
+
+// marginallyProfitableToAttack returns true if the attacker would trade evenly
+// (same CMC) or if no blocker exists. This is less strict than profitableToAttack.
+func marginallyProfitableToAttack(atk *mage.Permanent, g *mage.Game, opponentID uuid.UUID) bool {
+	var bestBlocker *mage.Permanent
+	bestPow := -1
+	for _, perm := range g.Battlefield {
+		if perm.Controller != opponentID || !perm.HasType(core.TypeCreature) || perm.Tapped {
+			continue
+		}
+		if !mage.CanBlock(perm, atk, g) {
+			continue
+		}
+		if mage.HasLandwalkEvasion(atk, opponentID, g) {
+			continue
+		}
+		pow := perm.CurrentPower(g)
+		if pow > bestPow {
+			bestPow = pow
+			bestBlocker = perm
+		}
+	}
+	if bestBlocker == nil {
+		return true
+	}
+	atkPow := atk.CurrentPower(g)
+	blkTough := bestBlocker.CurrentToughness(g)
+	// At least trades (kills the blocker)
+	return atkPow >= blkTough
+}
+
+// shouldBlock decides whether to block an attacker with the given power,
+// based on the continuous BlockThreshold weight (0.0 to 1.0).
+//   - At 0.0: block everything (minimum power threshold = 0).
+//   - At 0.3: block attackers with power >= 3.
+//   - At 0.7: block attackers with power >= 7.
+//   - At >= 0.95: block almost nothing (effectively never block).
+//
+// The mapping is: minPowerToBlock = BlockThreshold * 10, so the weight
+// maps directly to an absolute power threshold.
+func shouldBlock(atkPow int, _ *mage.Game, _ uuid.UUID, blockThreshold float64) bool {
+	if blockThreshold <= 0.0 {
+		return true
+	}
+	if blockThreshold >= 0.95 {
+		return false
+	}
+	minPow := int(blockThreshold * 10.0)
+	return atkPow >= minPow
+}
 
 // profitableToAttack returns true if attacking with atk is unlikely to result
 // in an unfavorable trade. It finds the best blocker the opponent could assign

@@ -36,22 +36,29 @@ scores and lethal-first [ThreatPerMana] ordering.
 
 # Personalities
 
-[Personality] parameters tune [HeuristicStrategy] behavior. Five presets are
-provided:
+[WeightedPersonality] provides continuous-valued weights for AI decision-making.
+Evaluation weights (LifeWeight, BoardWeight, CardWeight, ManaWeight, TempoWeight)
+flow into [WeightedEvaluator]. Decision weights (Aggression, BlockThreshold,
+HoldInstants, TargetFace, CurvePreference) are continuous 0.0-to-1.0 values
+that control combat, targeting, and spell-casting preferences.
 
-  - [AggroPersonality] — cheapest spells first, attack with everything,
-    block only large threats (power ≥ 3).
-  - [ControlPersonality] — most-expensive spells first, hold instants,
-    attack only when profitable, block everything.
-  - [MidrangePersonality] — most-expensive spells first, attack aggressively,
-    block large threats.
-  - [TempoPersonality] — cheapest spells first, hold instants, attack
-    aggressively, block medium threats.
-  - [BurnPersonality] — cheapest spells first, never block, always aim damage
-    at the opponent's face.
+Five weighted presets are provided:
+
+  - [AggroWeighted] — high board weight, max aggression, low blocking,
+    cheapest spells first.
+  - [ControlWeighted] — high life/card weights, no aggression, hold instants,
+    block everything, most expensive first.
+  - [MidrangeWeighted] — balanced weights, 0.7 aggression, most expensive first.
+  - [TempoWeighted] — high tempo weight, 0.8 aggression, hold instants at 0.7.
+  - [BurnWeighted] — max aggression, never block, always target face.
+
+The older boolean [Personality] type is retained for backward compatibility.
+It can be converted to [WeightedPersonality] via [Personality.ToWeighted].
+Boolean preset vars ([AggroPersonality], [ControlPersonality], etc.) still work
+and are auto-converted to weighted form when used with [HeuristicStrategy].
 
 Constructor helpers: [NewAIPlayer] (Midrange), [NewAggroAI], [NewControlAI],
-[NewTempoAI], [NewBurnAI].
+[NewTempoAI], [NewBurnAI], [NewWeightedAI] (custom weights).
 
 # Composite Strategies
 
@@ -71,8 +78,9 @@ when behind).
 
 	type StateEvaluator func(g GameReader, playerID uuid.UUID) int
 
-Higher scores are better for playerID. [DefaultEvaluator] is the standard
-implementation; it sums five components:
+Higher scores are better for playerID. [DefaultEvaluator] uses hardcoded weight
+constants; [WeightedEvaluator] returns a [StateEvaluator] parameterised by a
+[WeightedPersonality]'s evaluation weights. DefaultEvaluator sums five components:
 
   1. Life advantage: (myLife − oppLife) × [LifeWeight]
   2. Creature board: for each creature, [evalCreature] score — positive for own,
