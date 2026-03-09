@@ -28,12 +28,13 @@ func registerLands() {
 						if perm == nil {
 							return nil
 						}
-						// Animate as 2/2 creature
+						// Animate as 2/2 artifact creature
 						animEff := TemporaryAnimate(sourceID, 2, 2)
 						animEff.SetSourceID(sourceID)
 						g.AddContinuousEffect(animEff)
-						// Add Assembly-Worker subtype until end of turn
+						// Add Artifact type and Assembly-Worker subtype until end of turn
 						subEff := TargetEffect(LayerType, EndOfTurn, sourceID, func(g2 *Game, target *Permanent) error {
+							target.Card.AddType(TypeArtifact)
 							target.Card.AddSubType("Assembly-Worker")
 							return nil
 						})

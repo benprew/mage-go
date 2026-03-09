@@ -159,6 +159,9 @@ func registerEnchantments() {
 	// Enchantment
 	// All artifacts have "At the beginning of your upkeep, sacrifice this artifact unless you
 	// pay {2}."
+	// XXX: Oracle grants each artifact an individual triggered ability. Implementation uses a
+	// single batch trigger — the active player can't choose the order of individual sacrifice
+	// triggers (matters when you can only afford to pay for some).
 	Register("Energy Flux", func() Card {
 		return NewEnchantment("Energy Flux", "{2}{U}",
 			WithAbility(
@@ -320,19 +323,59 @@ func registerEnchantments() {
 	// Each noncreature artifact loses all abilities and becomes an artifact creature with power
 	// and toughness each equal to its mana value. If Titania's Song leaves the battlefield, this
 	// effect continues until end of turn.
-	titaniasSongApply := func(g *Game, _ uuid.UUID) error {
-		for _, perm := range g.FilterBattlefield(And(IsArtifact, Not(IsCreature))) {
-			cmc := perm.Card.ManaCost().CMC()
-			perm.Card.AddType(TypeCreature)
-			perm.Card.SetBasePT(cmc, cmc)
-			perm.RuntimeAbilities = nil // loses all abilities
+
+	// isNoncreatureArtifactByPrint checks if a permanent is an artifact that is NOT inherently
+	// a creature by its card's printed types. This is stable across all layers because it checks
+	// the card's base types, not granted attrs.
+	isNoncreatureArtifactByPrint := func(perm *Permanent) bool {
+		if !perm.HasType(TypeArtifact) {
+			return false
+		}
+		// Check the card's base type — HasType on the Card checks the card's registered
+		// types, not granted attrs from LayerType
+		return !perm.Card.HasType(TypeCreature)
+	}
+
+	// Three functions for the three layers:
+	titaniasSongType := func(g *Game, _ uuid.UUID) error {
+		for _, perm := range g.Battlefield {
+			if isNoncreatureArtifactByPrint(perm) {
+				g.Effects.GrantAttr(perm.ID(), AttrIsCreature)
+				g.Effects.GrantAttr(perm.ID(), AttrCanAttack)
+				g.Effects.GrantAttr(perm.ID(), AttrCanBlock)
+				g.Effects.GrantAttr(perm.ID(), AttrHasPowerToughness)
+			}
 		}
 		return nil
 	}
+	titaniasSongAbility := func(g *Game, _ uuid.UUID) error {
+		for _, perm := range g.Battlefield {
+			if isNoncreatureArtifactByPrint(perm) {
+				perm.RuntimeAbilities = nil
+			}
+		}
+		return nil
+	}
+	titaniasSongPT := func(g *Game, _ uuid.UUID) error {
+		for _, perm := range g.Battlefield {
+			if isNoncreatureArtifactByPrint(perm) {
+				cmc := perm.Card.ManaCost().CMC()
+				perm.BasePTOverride = &[2]int{cmc, cmc}
+			}
+		}
+		return nil
+	}
+
 	Register("Titania's Song", func() Card {
 		return NewEnchantment("Titania's Song", "{3}{G}",
 			WithStaticAbility(
-				FuncContinuousEffect(LayerPT, WhileOnBattlefield, titaniasSongApply),
+				FuncContinuousEffect(LayerType, WhileOnBattlefield, titaniasSongType),
+			),
+			WithStaticAbility(
+				FuncContinuousEffect(LayerAbility, WhileOnBattlefield, titaniasSongAbility),
+			),
+			WithStaticAbility(
+				FuncContinuousEffect(LayerPT, WhileOnBattlefield, titaniasSongPT),
 			),
 			// When Song leaves the battlefield, continue the effect until end of turn
 			WithAbility(
@@ -340,9 +383,15 @@ func registerEnchantments() {
 					FuncEffect("continue Titania's Song effect until end of turn",
 						EffectProperties{},
 						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							eff := FuncContinuousEffect(LayerPT, EndOfTurn, titaniasSongApply)
-							eff.SetSourceID(sourceID)
-							g.AddContinuousEffect(eff)
+							effType := FuncContinuousEffect(LayerType, EndOfTurn, titaniasSongType)
+							effType.SetSourceID(sourceID)
+							g.AddContinuousEffect(effType)
+							effAbil := FuncContinuousEffect(LayerAbility, EndOfTurn, titaniasSongAbility)
+							effAbil.SetSourceID(sourceID)
+							g.AddContinuousEffect(effAbil)
+							effPT := FuncContinuousEffect(LayerPT, EndOfTurn, titaniasSongPT)
+							effPT.SetSourceID(sourceID)
+							g.AddContinuousEffect(effPT)
 							return nil
 						}),
 				).SetCondition(func(evt *GameEvent, _ *Game, sourceID, _ uuid.UUID) bool {

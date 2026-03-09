@@ -113,6 +113,9 @@ func registerSpells() {
 	// Sorcery
 	// Destroy target artifact with mana value X. It can't be regenerated. Detonate deals X damage
 	// to that artifact's controller.
+	// XXX: "with mana value X" should be a targeting restriction (only legal targets are artifacts
+	// with CMC == X), but the engine doesn't support X-dependent target filters. Currently targets
+	// any artifact and validates CMC on resolution.
 	Register("Detonate", func() Card {
 		return NewSorcery("Detonate", "{X}{R}",
 			NewTargetedSpell(TargetArtifact(), FuncEffect(
@@ -147,6 +150,9 @@ func registerSpells() {
 	// Sorcery
 	// Put any number of target artifact cards from target player's graveyard on top of their
 	// library in any order.
+	// XXX: Oracle says "any number of target" (individual targeting) and "in any order" (player
+	// chooses order). The engine doesn't support variable-count graveyard targeting. Currently
+	// uses resolution-time choices. The order placed on top is the order chosen (last chosen = top).
 	Register("Drafna's Restoration", func() Card {
 		return NewSorcery("Drafna's Restoration", "{U}",
 			NewTargetedSpell(TargetPlayer(), FuncEffect(
@@ -160,24 +166,51 @@ func registerSpells() {
 					if targetPlayer == nil {
 						return nil
 					}
+					caster := g.GetPlayer(controller)
+					if caster == nil {
+						return nil
+					}
+					// Collect artifact cards from graveyard
 					var artifactCards []Card
-					var remaining []Card
 					for _, card := range targetPlayer.Graveyard() {
 						if card.HasType(TypeArtifact) {
 							artifactCards = append(artifactCards, card)
-						} else {
-							remaining = append(remaining, card)
 						}
 					}
 					if len(artifactCards) == 0 {
 						return nil
 					}
-					targetPlayer.ClearGraveyard()
-					for _, card := range remaining {
-						targetPlayer.AddToGraveyard(card)
+					// Caster chooses which artifact cards to put back, one at a time
+					// (last chosen ends up on top of library)
+					var chosen []Card
+					for len(artifactCards) > 0 {
+						if !caster.ChooseMayAbility("put an artifact card on top of library") {
+							break
+						}
+						pick := caster.ChooseCardFromLibrary(artifactCards, "choose artifact card to put on top", g)
+						if pick == nil {
+							break
+						}
+						chosen = append(chosen, pick)
+						// Remove from candidates
+						var remaining []Card
+						for _, c := range artifactCards {
+							if c.ID() != pick.ID() {
+								remaining = append(remaining, c)
+							}
+						}
+						artifactCards = remaining
 					}
+					if len(chosen) == 0 {
+						return nil
+					}
+					// Remove chosen cards from graveyard
+					for _, card := range chosen {
+						targetPlayer.RemoveFromGraveyard(card.ID())
+					}
+					// Put chosen cards on top of library in order (first chosen = bottom, last = top)
 					lib := targetPlayer.Library()
-					lib = append(lib, artifactCards...)
+					lib = append(lib, chosen...)
 					targetPlayer.SetLibrary(lib)
 					return nil
 				})),

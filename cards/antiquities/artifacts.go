@@ -522,10 +522,7 @@ func registerArtifacts() {
 							}
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
-					if evt.SourceID == sourceID {
-						return false // not itself
-					}
+				).SetCondition(func(evt *GameEvent, g *Game, _, controllerID uuid.UUID) bool {
 					if evt.PlayerID != controllerID {
 						return false
 					}
@@ -546,6 +543,9 @@ func registerArtifacts() {
 	// counters that were on that creature. When Tawnos's Coffin leaves the battlefield or becomes
 	// untapped, return that exiled card to the battlefield under its owner's control tapped with the
 	// noted number and kind of counters on it.
+	// XXX: "becomes untapped" return trigger is approximated as an upkeep check. The engine lacks
+	// an EvtBecameUntapped event, so if the Coffin is untapped by an external effect (e.g., Twiddle),
+	// the exiled creature won't return until the controller's next upkeep instead of immediately.
 	Register("Tawnos's Coffin", func() Card {
 		// coffinReturnExiled is a helper closure that returns all exiled cards from a Coffin.
 		coffinReturnExiled := func(g GameMutator, coffinID uuid.UUID) {
@@ -829,10 +829,23 @@ func registerArtifacts() {
 					if card == nil {
 						return false
 					}
-					return card.HasType(TypeArtifact) && card.Owner() == controllerID
+					return card.HasType(TypeArtifact) && evt.PlayerID == controllerID
 				}),
 			),
 		)
+	})
+
+	// Bronze Tablet {6}
+	// Artifact
+	// Remove this card from your deck before playing if you're not playing for ante.
+	// Bronze Tablet enters tapped.
+	// {4}, {T}: Exile Bronze Tablet and target nontoken permanent an opponent owns. That player
+	// may pay 10 life. If they do, put this card into its owner's graveyard. Otherwise, that
+	// player owns this card and you own the other exiled card.
+	// UNIMPLEMENTABLE: Ante mechanic with permanent ownership swapping between players.
+	// The engine does not support changing card ownership during a game.
+	Register("Bronze Tablet", func() Card {
+		return NewArtifact("Bronze Tablet", "{6}")
 	})
 
 	// Weakstone {4}

@@ -520,8 +520,8 @@ func TestTabletOfEpityr(t *testing.T) {
 	})
 }
 
-func TestTabletOfEpityrNegative(t *testing.T) {
-	t.Run("does not trigger when Tablet itself goes to graveyard", func(t *testing.T) {
+func TestTabletOfEpityrSelfTrigger(t *testing.T) {
+	t.Run("triggers when Tablet itself goes to graveyard", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tablet of Epityr")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest") // land to pay {1}
@@ -529,8 +529,9 @@ func TestTabletOfEpityrNegative(t *testing.T) {
 		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Shatter", "Tablet of Epityr")
 		g.StopAt(2, core.BeginCombat)
 		g.Execute()
-		// Tablet should not trigger on its own death (code excludes sourceID)
-		g.AssertLife(gametest.PlayerA, 20)
+		// Tablet triggers on its own death — Oracle says "an artifact you control"
+		// without "another", so it sees itself leaving the battlefield
+		g.AssertLife(gametest.PlayerA, 21)
 	})
 }
 

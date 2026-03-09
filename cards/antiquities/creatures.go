@@ -240,7 +240,7 @@ func registerCreatures() {
 						if player == nil {
 							return nil
 						}
-						candidates := g.FilterBattlefield(And(ControlledBy(controller), IsArtifact, NotID(sourceID)))
+						candidates := g.FilterBattlefield(And(ControlledBy(controller), IsArtifact))
 						if len(candidates) > 0 && player.ChooseMayAbility("sacrifice an artifact") {
 							chosen := player.ChoosePermanent(candidates, "sacrifice", g)
 							if chosen != nil {
