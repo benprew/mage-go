@@ -17,16 +17,22 @@ You are implementing an entire Magic: The Gathering expansion set for the mage-g
 
 ## Step 1: Fetch Card Data
 
+Resolve the set code. If `$0` was provided as a Scryfall set code (2-3 uppercase letters), use it directly. If it looks like a package name, read `data/sets.txt` and look up the package name to get the set code. The file format is:
+
+```
+package-name SET_CODE "Set Name"
+```
+
 Check if the JSON already exists in `data/`:
 
 ```bash
-ls data/$0.json 2>/dev/null
+ls data/$SET_CODE.json 2>/dev/null
 ```
 
 If not, fetch it:
 
 ```bash
-go run ./cmd/fetchset -o data/$0.json $0
+go run ./cmd/fetchset -o data/$SET_CODE.json $SET_CODE
 ```
 
 ## Step 2: Assess Existing State

@@ -1,0 +1,33 @@
+# Package name → Scryfall set code mapping
+# Used by /validate-set and /implement-set to resolve JSON filenames
+# Format: package-name set-code set-name
+limited LEA Alpha
+arabian ARN "Arabian Nights"
+antiquities ATQ Antiquities
+legends LEG Legends
+thedark DRK "The Dark"
+fallenempires FEM "Fallen Empires"
+iceage ICE "Ice Age"
+homelands HML Homelands
+alliances ALL Alliances
+mirage MIR Mirage
+visions VIS Visions
+weatherlight WTH Weatherlight
+tempest TMP Tempest
+stronghold STH Stronghold
+exodus EXO Exodus
+urzassaga USG "Urza's Saga"
+urzaslegacy ULG "Urza's Legacy"
+urzasdestiny UDS "Urza's Destiny"
+mercadian MMQ "Mercadian Masques"
+nemesis NEM Nemesis
+prophecy PCY Prophecy
+invasion INV Invasion
+planeshift PLS Planeshift
+apocalypse APC Apocalypse
+odyssey ODY Odyssey
+torment TOR Torment
+judgment JUD Judgment
+onslaught ONS Onslaught
+legions LGN Legions
+scourge SCG Scourge

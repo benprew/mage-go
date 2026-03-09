@@ -2,7 +2,7 @@
 name: validate-set
 description: "Validate completeness and correctness of an implemented Magic: The Gathering card set. Checks for stubs, missing tests, Oracle text fidelity, and simplified implementations. Use when the user wants to audit a set's implementation quality."
 allowed-tools: Read, Bash, Grep, Glob, Agent, AskUserQuestion, WebFetch
-argument-hint: <package-name>
+argument-hint: <package-name> [set-code]
 ---
 
 # Set Validation Skill
@@ -11,27 +11,62 @@ You are auditing the implementation quality and completeness of a Magic: The Gat
 
 ## Arguments
 
-- `$ARGUMENTS` — The card package name (e.g., `legends`, `arabian`, `antiquities`).
+- `$0` — The card package name (e.g., `legends`, `arabian`, `antiquities`). **Required.**
+- `$1` — Scryfall set code (e.g., `LEG`, `ARN`, `ATQ`). Optional — will be auto-detected if omitted.
+
+## Step 0: Resolve Scryfall JSON
+
+The Oracle text audit requires authoritative card data from Scryfall. Resolve the JSON file before doing anything else.
+
+### 0a. Determine the set code
+
+If `$1` was provided, use it. Otherwise, read `data/sets.txt` and look up the package name to get the set code and set name. The file format is:
+
+```
+package-name SET_CODE "Set Name"
+```
+
+If the package name isn't in `data/sets.txt`, use **AskUserQuestion** to ask the user for the set code.
+
+### 0b. Fetch if missing
+
+Check if the JSON exists:
+
+```bash
+ls data/$SET_CODE.json 2>/dev/null
+```
+
+If not, fetch it:
+
+```bash
+go run ./cmd/fetchset -o data/$SET_CODE.json $SET_CODE
+```
+
+Verify the fetch succeeded before proceeding.
 
 ## Step 1: Gather All Card Data
 
 Read every source file in the set:
 
 ```
-Read cards/$ARGUMENTS/creatures.go
-Read cards/$ARGUMENTS/artifacts.go
-Read cards/$ARGUMENTS/enchantments.go
-Read cards/$ARGUMENTS/spells.go
-Read cards/$ARGUMENTS/lands.go
+Read cards/$0/creatures.go
+Read cards/$0/artifacts.go
+Read cards/$0/enchantments.go
+Read cards/$0/spells.go
+Read cards/$0/lands.go
 ```
 
 Read all test files:
 
 ```
-Glob for cards/$ARGUMENTS/*_test.go and read each one
+Glob for cards/$0/*_test.go and read each one
 ```
 
-Find the corresponding Scryfall JSON in `data/` to get authoritative Oracle text. The JSON file may use the Scryfall set code (e.g., `LEG.json` for legends, `ARN.json` for arabian). Search `data/*.json` and match by checking the `"set"` field or card names.
+Read the Scryfall JSON resolved in Step 0:
+
+```
+Read data/$SET_CODE.json
+```
 
 ## Step 2: Build the Card Inventory
 
@@ -114,7 +149,7 @@ For each non-vanilla, non-stub card, assess test quality:
 ## Step 5: Run the Tests
 
 ```bash
-go test ./cards/$ARGUMENTS/ -v -count=1
+go test ./cards/$0/ -v -count=1
 ```
 
 Report any test failures — these indicate bugs in existing implementations.
@@ -122,7 +157,7 @@ Report any test failures — these indicate bugs in existing implementations.
 Also run:
 
 ```bash
-go vet ./cards/$ARGUMENTS/
+go vet ./cards/$0/
 ```
 
 ## Step 6: Compile the Report

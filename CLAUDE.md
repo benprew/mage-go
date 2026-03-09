@@ -52,7 +52,7 @@ Three skills automate the card implementation workflow:
 
 - **`/implement-set <set-code> [set-name] [package-name]`** — End-to-end set implementation. Runs `fetchset` and `genset`, then analyzes every card into tiers (vanilla → standard effects → complex → engine work required → out of scope). Presents the plan for approval, then works through batches via `/implement-card`, parallelizing independent work. Commits after each batch.
 
-- **`/validate-set <package-name>`** — Audits a set for completeness and correctness. Checks every card's implementation against Scryfall Oracle text for fidelity — catches missing abilities, simplified effects (e.g., "nontoken" not checked), wrong values, and missing conditions. Audits test coverage, runs the test suite, and produces a structured report with prioritized next steps.
+- **`/validate-set <package-name> [set-code]`** — Audits a set for completeness and correctness. Auto-fetches Scryfall JSON if missing (resolves set code from package name or accepts it explicitly). Checks every card's implementation against Oracle text for fidelity — catches missing abilities, simplified effects (e.g., "nontoken" not checked), wrong values, and missing conditions. Audits test coverage, runs the test suite, and produces a structured report with prioritized next steps.
 
 ### Typical Workflow
 
