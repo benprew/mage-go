@@ -363,10 +363,10 @@ func TestSpellValue_DrawSpell(t *testing.T) {
 		mage.NewSpellAbility(mage.DrawCards(mage.Fixed(2))),
 	)
 	card.SetOwner(pa.PlayerID())
-	// DrawCount=2, so 2*3 = 6
+	// DrawCount=2: 2*3=6 base + 2*2=4 empty-hand bonus = 10
 	got := SpellValue(card, pa, g)
-	if got != 6 {
-		t.Errorf("SpellValue(draw 2) = %d, want 6", got)
+	if got != 10 {
+		t.Errorf("SpellValue(draw 2) = %d, want 10", got)
 	}
 }
 
@@ -376,13 +376,12 @@ func TestSpellValue_DamageSpell(t *testing.T) {
 		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 	)
 	card.SetOwner(pa.PlayerID())
-	// Base damage: 3. With an opponent creature of toughness <= 3, +2 lethal bonus.
+	// Base damage: 3. Bear (2/2) EvalCreature=6, lethal bonus=6/2=3. Total=6.
 	oppCreature := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
 	g.Battlefield = append(g.Battlefield, oppCreature)
 	got := SpellValue(card, pa, g)
-	// 3 (damage) + 2 (lethal) = 5
-	if got != 5 {
-		t.Errorf("SpellValue(bolt with lethal target) = %d, want 5", got)
+	if got != 6 {
+		t.Errorf("SpellValue(bolt with lethal target) = %d, want 6", got)
 	}
 }
 

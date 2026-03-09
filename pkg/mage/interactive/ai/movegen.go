@@ -207,7 +207,9 @@ func expandModalSpellMoves(p mage.Player, g *mage.Game, card mage.Card, modes []
 	return allMoves
 }
 
-// expandXSpellMoves generates moves for X = 1, max/2, and max for X-cost spells.
+// expandXSpellMoves generates moves for X-cost spells with target-aware values.
+// In addition to 1, max/2, and max, it tries X values that are lethal to
+// opponent creatures or the opponent's life total.
 func expandXSpellMoves(p mage.Player, g *mage.Game, card mage.Card) []Move {
 	playerID := p.PlayerID()
 	mc := card.ManaCost()
@@ -218,7 +220,7 @@ func expandXSpellMoves(p mage.Player, g *mage.Game, card mage.Card) []Move {
 		return nil
 	}
 
-	// Generate X variants: 1, max/2, max (deduplicated)
+	// Standard X variants: 1, max/2, max
 	xValues := []int{1}
 	if half := maxX / 2; half > 1 {
 		xValues = append(xValues, half)
@@ -227,11 +229,46 @@ func expandXSpellMoves(p mage.Player, g *mage.Game, card mage.Card) []Move {
 		xValues = append(xValues, maxX)
 	}
 
+	// Target-aware X values: add toughness values of opponent creatures
+	// and opponent life total if the spell deals damage.
+	isDamageSpell := false
+	for _, a := range card.Abilities() {
+		sa, ok := a.(*mage.SpellAbility)
+		if !ok {
+			continue
+		}
+		for _, e := range sa.Effects() {
+			if e.Properties().DamageValue != nil {
+				isDamageSpell = true
+				break
+			}
+		}
+	}
+
+	if isDamageSpell {
+		opponent := g.GetOpponent(playerID)
+		if opponent != nil {
+			// Try X = opponent's life (lethal burn).
+			if oppLife := opponent.Life(); oppLife > 0 && oppLife <= maxX {
+				xValues = append(xValues, oppLife)
+			}
+			// Try X = each opponent creature's toughness (lethal removal).
+			for _, perm := range g.Battlefield {
+				if perm.Controller == opponent.PlayerID() && perm.HasType(core.TypeCreature) {
+					tough := perm.CurrentToughness(g)
+					if tough > 0 && tough <= maxX {
+						xValues = append(xValues, tough)
+					}
+				}
+			}
+		}
+	}
+
 	// Deduplicate
 	seen := make(map[int]bool)
 	var unique []int
 	for _, x := range xValues {
-		if !seen[x] {
+		if !seen[x] && x >= 1 && x <= maxX {
 			seen[x] = true
 			unique = append(unique, x)
 		}

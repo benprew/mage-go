@@ -20,9 +20,9 @@ type SearchConfig struct {
 // DefaultSearchConfig returns the default search configuration.
 func DefaultSearchConfig() SearchConfig {
 	return SearchConfig{
-		MaxDepth:  3,
-		MaxNodes:  5000,
-		TimeLimit: 500 * time.Millisecond,
+		MaxDepth:  4,
+		MaxNodes:  8000,
+		TimeLimit: 750 * time.Millisecond,
 	}
 }
 
@@ -40,7 +40,7 @@ const (
 
 // maxMoveChain limits sequential moves per player within a single search ply
 // to prevent combinatorial explosion when exploring multi-spell turns.
-const maxMoveChain = 3
+const maxMoveChain = 4
 
 func (s *SearchStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, mainPhase bool) interactive.PriorityAction {
 	moves := GeneratePriorityMoves(g, p, landsPlayed, mainPhase)
@@ -48,33 +48,51 @@ func (s *SearchStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed
 		return interactive.PriorityAction{Type: interactive.ActionPass}
 	}
 
-	nodes := 0
 	deadline := time.Now().Add(s.Config.TimeLimit)
 
-	bestScore := minScore
+	// Iterative deepening: search at increasing depths, keeping the best
+	// result found so far. This ensures we always have a result even if
+	// deeper searches time out, and shallower searches improve move ordering.
 	var bestMove *Move
+	bestScore := minScore
 
-	for i := range moves {
-		m := &moves[i]
-		if m.Type == interactive.ActionPass {
-			continue
+	for depth := 1; depth <= s.Config.MaxDepth; depth++ {
+		nodes := 0
+		depthBestScore := minScore
+		var depthBestMove *Move
+
+		for i := range moves {
+			m := &moves[i]
+			if m.Type == interactive.ActionPass {
+				continue
+			}
+
+			clone := cloneGameForSearch(g)
+			if clone == nil {
+				continue
+			}
+			applyMoveToClone(clone, p.PlayerID(), m, landsPlayed)
+
+			score := s.minimax(clone, depth-1, minScore, maxScore,
+				false, p.PlayerID(), &nodes, deadline, 1)
+
+			if score > depthBestScore {
+				depthBestScore = score
+				depthBestMove = m
+			}
+
+			if nodes >= s.Config.MaxNodes || time.Now().After(deadline) {
+				break
+			}
 		}
 
-		clone := cloneGameForSearch(g)
-		if clone == nil {
-			continue
-		}
-		applyMoveToClone(clone, p.PlayerID(), m, landsPlayed)
-
-		score := s.minimax(clone, s.Config.MaxDepth-1, minScore, maxScore,
-			false, p.PlayerID(), &nodes, deadline, 1)
-
-		if score > bestScore {
-			bestScore = score
-			bestMove = m
+		// Update overall best if this depth completed or found something better.
+		if depthBestMove != nil && depthBestScore > bestScore {
+			bestScore = depthBestScore
+			bestMove = depthBestMove
 		}
 
-		if nodes >= s.Config.MaxNodes || time.Now().After(deadline) {
+		if time.Now().After(deadline) {
 			break
 		}
 	}

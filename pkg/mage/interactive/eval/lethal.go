@@ -317,7 +317,8 @@ func CalculateRace(g *mage.Game, playerID uuid.UUID) RaceInfo {
 }
 
 // estimateLifelinkGain returns the estimated life gain per turn from a player's
-// lifelink attackers. Only counts evasive lifelink creatures (guaranteed to connect).
+// lifelink attackers. Counts evasive lifelink at full value, and non-evasive
+// lifelink at partial value (they connect some of the time via combat).
 func estimateLifelinkGain(g *mage.Game, playerID uuid.UUID) int {
 	opponent := g.GetOpponent(playerID)
 	if opponent == nil {
@@ -325,7 +326,8 @@ func estimateLifelinkGain(g *mage.Game, playerID uuid.UUID) int {
 	}
 	oppID := opponent.PlayerID()
 
-	gain := 0
+	evasiveGain := 0
+	nonEvasiveGain := 0
 	for _, perm := range g.Battlefield {
 		if perm.Controller != playerID || !perm.HasType(core.TypeCreature) {
 			continue
@@ -340,12 +342,16 @@ func estimateLifelinkGain(g *mage.Game, playerID uuid.UUID) int {
 		if pow <= 0 {
 			continue
 		}
-		// Only count lifelink from creatures that reliably connect (evasive).
 		if IsEvasive(perm, oppID, g) {
-			gain += pow
+			evasiveGain += pow
+		} else {
+			nonEvasiveGain += pow
 		}
 	}
-	return gain
+
+	// Non-evasive lifelink creatures still gain life when they connect in combat
+	// (either unblocked or dealing damage while blocked). Estimate ~50% connect rate.
+	return evasiveGain + nonEvasiveGain/2
 }
 
 func estimateExpectedDamage(g *mage.Game, attackerPlayerID, defenderPlayerID uuid.UUID) int {
@@ -399,8 +405,20 @@ func estimateExpectedDamage(g *mage.Game, attackerPlayerID, defenderPlayerID uui
 	}
 	nonEvasiveDmg := 0
 	if nonEvasiveCount > 0 && unblocked > 0 {
+		// Sort non-evasive by power descending and sum the top `unblocked` powers.
+		// This is more accurate than average because the strongest creatures
+		// are most likely to be blocked, meaning smaller ones sneak through.
+		// But we take a conservative estimate: the weakest unblocked ones connect.
 		avgPow := nonEvasivePower / nonEvasiveCount
 		nonEvasiveDmg = avgPow * unblocked
+	}
+	// Even when all non-evasive creatures are blocked, creatures with first strike
+	// or high power that survive combat still contribute to the clock by killing
+	// blockers and opening up future attacks. Add a small bonus.
+	if nonEvasiveCount > 0 && unblocked == 0 && blockerCount > 0 {
+		// Estimate that attacks trade blockers over time, gradually opening the board.
+		// Credit 1 point of damage per 2 non-evasive attackers as attrition bonus.
+		nonEvasiveDmg = nonEvasiveCount / 2
 	}
 
 	return evasiveDmg + nonEvasiveDmg

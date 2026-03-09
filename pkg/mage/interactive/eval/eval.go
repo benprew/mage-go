@@ -168,6 +168,19 @@ func NewWeightedEvaluator(w Weights) StateEvaluator {
 		lethal := calculateLethalOnBoard(g, playerID)
 		score += float64(lethal)
 
+		// Opponent threat anticipation: penalize positions where opponent has
+		// untapped mana and we have vulnerable creatures. This models the risk
+		// of walking into removal or combat tricks.
+		oppUntapped2 := countUntappedManaSources(g, oppID)
+		if oppUntapped2 >= 2 {
+			// Penalty scales with opponent's available mana (more mana = more threat).
+			// Reduced if we have many creatures (one removal doesn't wreck us).
+			myCreatureCount := g.CountBattlefield(mage.And(mage.IsCreature, mage.ControlledBy(playerID)))
+			if myCreatureCount <= 2 && myCreatureCount > 0 {
+				score -= float64(oppUntapped2) * 0.5
+			}
+		}
+
 		return int(math.Round(score))
 	}
 }

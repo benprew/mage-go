@@ -44,13 +44,11 @@ func (s *HeuristicStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPla
 
 	if mainPhase {
 		if landsPlayed < 1 {
-			for _, c := range p.Hand() {
-				if c.HasType(core.TypeLand) {
-					return interactive.PriorityAction{
-						Type:     interactive.ActionPlayLand,
-						CardID:   c.ID(),
-						CardName: c.Name(),
-					}
+			if bestLand := chooseBestLand(p, g); bestLand != nil {
+				return interactive.PriorityAction{
+					Type:     interactive.ActionPlayLand,
+					CardID:   bestLand.ID(),
+					CardName: bestLand.Name(),
 				}
 			}
 		}
@@ -328,8 +326,6 @@ func (s *HeuristicStrategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAs
 			if mage.HasLandwalkEvasion(atk, playerID, g) {
 				continue
 			}
-			blkPow := blk.CurrentPower(g)
-			atkTough := atk.CurrentToughness(g)
 
 			if theyHaveLethal {
 				assignments = append(assignments, mage.BlockAssignment{
@@ -345,7 +341,7 @@ func (s *HeuristicStrategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAs
 				continue
 			}
 
-			if blkPow >= atkTough || atkPow >= 3 {
+			if evaluateSingleBlock(atk, blk, g, playerID) {
 				assignments = append(assignments, mage.BlockAssignment{
 					BlockerID:  blk.ID(),
 					AttackerID: atk.ID(),
@@ -556,4 +552,64 @@ func (s *HeuristicStrategy) autoSelectTargets(p mage.Player, g *mage.Game, card 
 	}
 
 	return nil
+}
+
+// chooseBestLand selects the best land to play from hand.
+// Prefers lands that provide colors needed by spells in hand.
+func chooseBestLand(p mage.Player, _ *mage.Game) mage.Card {
+	hand := p.Hand()
+
+	var lands []mage.Card
+	neededColors := make(map[core.Color]int)
+
+	for _, c := range hand {
+		if c.HasType(core.TypeLand) {
+			lands = append(lands, c)
+		} else {
+			mc := c.ManaCost()
+			neededColors[core.White] += mc.White
+			neededColors[core.Blue] += mc.Blue
+			neededColors[core.Black] += mc.Black
+			neededColors[core.Red] += mc.Red
+			neededColors[core.Green] += mc.Green
+		}
+	}
+
+	if len(lands) == 0 {
+		return nil
+	}
+	if len(lands) == 1 {
+		return lands[0]
+	}
+
+	// Score each land by how many needed colors it produces.
+	var bestLand mage.Card
+	bestScore := -1
+
+	for _, land := range lands {
+		score := 0
+		for _, a := range land.Abilities() {
+			ma, ok := mage.UnwrapAbility(a).(*mage.ManaAbility)
+			if !ok {
+				continue
+			}
+			if ma.Color != core.Colorless {
+				score += neededColors[ma.Color] * 2
+			}
+			if ma.AnyColor {
+				for _, need := range neededColors {
+					score += need
+				}
+			}
+		}
+		if score > bestScore {
+			bestScore = score
+			bestLand = land
+		}
+	}
+
+	if bestLand != nil {
+		return bestLand
+	}
+	return lands[0]
 }

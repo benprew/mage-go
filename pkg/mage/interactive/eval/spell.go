@@ -34,6 +34,8 @@ func SpellIsWorthless(card mage.Card, p mage.Player, g *mage.Game) bool {
 }
 
 // SpellValue computes a context-sensitive score for a spell in the AI's hand.
+// Board-relative: mass removal is worth more when behind, damage spells get
+// lethal-enabling bonuses, and draw spells scale with hand emptiness.
 func SpellValue(card mage.Card, p mage.Player, g *mage.Game) int {
 	playerID := p.PlayerID()
 	cmc := card.ManaCost().CMC()
@@ -51,6 +53,30 @@ func SpellValue(card mage.Card, p mage.Player, g *mage.Game) int {
 	score := 0
 	found := false
 
+	opponent := g.GetOpponent(playerID)
+	var oppID uuid.UUID
+	if opponent != nil {
+		oppID = opponent.PlayerID()
+	}
+
+	// Count creatures per side for board-relative scoring.
+	myCreatures, oppCreatures := 0, 0
+	var oppBestScore int
+	for _, perm := range g.Battlefield {
+		if !perm.HasType(core.TypeCreature) {
+			continue
+		}
+		if perm.Controller == playerID {
+			myCreatures++
+		} else if perm.Controller == oppID {
+			oppCreatures++
+			ts := EvalCreature(perm)
+			if ts > oppBestScore {
+				oppBestScore = ts
+			}
+		}
+	}
+
 	for _, a := range card.Abilities() {
 		sa, ok := a.(*mage.SpellAbility)
 		if !ok {
@@ -60,52 +86,101 @@ func SpellValue(card mage.Card, p mage.Player, g *mage.Game) int {
 			props := e.Properties()
 
 			if props.DrawCount > 0 {
-				score += props.DrawCount * 3
+				drawScore := props.DrawCount * 3
+				// Draw is more valuable when hand is empty.
+				handSize := len(p.Hand())
+				if handSize <= 2 {
+					drawScore += props.DrawCount * 2
+				} else if handSize <= 4 {
+					drawScore += props.DrawCount
+				}
+				score += drawScore
 				found = true
 			}
 
 			if props.DamageValue != nil && props.Outcome == mage.OutcomeDetriment {
 				dmg := props.DamageValue.Resolve(g, card.ID(), playerID)
 				score += dmg
-				opponent := g.GetOpponent(playerID)
 				if opponent != nil {
+					// Bonus for being able to kill an opponent creature.
+					bestLethalBonus := 0
 					for _, perm := range g.Battlefield {
-						if perm.Controller == opponent.PlayerID() && perm.HasType(core.TypeCreature) {
+						if perm.Controller == oppID && perm.HasType(core.TypeCreature) {
 							if dmg >= perm.CurrentToughness(g) {
-								score += 2
-								break
+								bonus := EvalCreature(perm) / 2
+								if bonus < 2 {
+									bonus = 2
+								}
+								if bonus > bestLethalBonus {
+									bestLethalBonus = bonus
+								}
 							}
+						}
+					}
+					score += bestLethalBonus
+
+					// Bonus if this spell enables lethal next attack.
+					if dmg >= opponent.Life() {
+						score += 15
+					} else {
+						// Check if burn to face + existing attackers = lethal.
+						pushThrough, _ := estimatePushThroughDamage(g, playerID, oppID)
+						if pushThrough+dmg >= opponent.Life() {
+							score += 10
 						}
 					}
 				}
 				found = true
 			}
 
-			if props.Mass {
-				if DefaultEvaluator(g, playerID) < 0 {
-					score += 20
+			if props.Mass && props.Outcome == mage.OutcomeDetriment {
+				// Board-relative: scale mass removal with board disadvantage.
+				creatureDiff := oppCreatures - myCreatures
+				if creatureDiff >= 3 {
+					score += 25
+				} else if creatureDiff >= 1 {
+					score += 15 + creatureDiff*3
+				} else if creatureDiff == 0 {
+					score += 5
 				} else {
-					score -= 10
+					// We have more creatures — wrath hurts us.
+					score -= 5 + (-creatureDiff)*3
 				}
 				found = true
 			}
 
 			if props.Outcome == mage.OutcomeDetriment && !props.Mass && props.DamageValue == nil {
-				opponent := g.GetOpponent(playerID)
-				if opponent != nil {
-					bestTS := 0
-					for _, perm := range g.Battlefield {
-						if perm.Controller == opponent.PlayerID() {
-							ts := EvalCreature(perm)
-							if ts > bestTS {
-								bestTS = ts
-							}
-						}
+				if oppBestScore > 0 {
+					score += oppBestScore
+					found = true
+				}
+			}
+
+			if props.Outcome == mage.OutcomeBenefit && !props.Mass {
+				if props.LifeGain > 0 {
+					me := g.GetPlayer(playerID)
+					if me != nil && me.Life() <= 10 {
+						score += props.LifeGain
+					} else {
+						score += props.LifeGain / 2
 					}
-					if bestTS > 0 {
-						score += bestTS
-						found = true
-					}
+					found = true
+				}
+				if props.PowerBoost > 0 || props.ToughnessBoost > 0 {
+					score += props.PowerBoost*2 + props.ToughnessBoost
+					found = true
+				}
+				if props.TokenPower > 0 || props.TokenToughness > 0 {
+					score += props.TokenPower*2 + props.TokenToughness
+					found = true
+				}
+			}
+
+			if props.IsBounce {
+				if oppBestScore > 0 {
+					// Bounce is worth slightly less than destroy (they can replay).
+					score += oppBestScore * 3 / 4
+					found = true
 				}
 			}
 		}

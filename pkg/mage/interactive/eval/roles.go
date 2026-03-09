@@ -35,6 +35,7 @@ func (r PermanentRole) String() string {
 }
 
 // ClassifyPermanent determines the primary strategic role of a permanent.
+// Uses a scoring system across multiple dimensions to pick the best-fitting role.
 func ClassifyPermanent(p *mage.Permanent) PermanentRole {
 	isCreature := p.HasType(core.TypeCreature)
 	isLand := p.HasType(core.TypeLand)
@@ -43,33 +44,56 @@ func ClassifyPermanent(p *mage.Permanent) PermanentRole {
 		return RoleMana
 	}
 	if hasManaAbility(p) {
+		// Mana creatures with power >= 2 that can attack are partial threats.
+		if isCreature && permPower(p) >= 2 && !p.HasKeyword(core.Defender) {
+			return RoleThreat
+		}
 		return RoleMana
 	}
 
 	if !isCreature {
-		if hasTriggeredAbilities(p) {
+		// Non-creature permanents: check for engine (recurring advantage) vs utility.
+		if hasTriggeredBenefitAbility(p) {
+			return RoleEngine
+		}
+		if hasRepeatedActivatedAbility(p) {
 			return RoleEngine
 		}
 		return RoleUtility
 	}
 
-	if hasUtilityActivatedAbility(p) {
-		return RoleUtility
-	}
-
+	// Creatures: score each role dimension.
 	pw := permPower(p)
 	tg := permToughness(p)
+
+	// Defense: Defender, or high toughness relative to power.
 	if p.HasKeyword(core.Defender) {
 		return RoleDefense
 	}
-	if tg > 0 && pw >= 0 && tg > pw*2 {
+	if tg > 0 && pw >= 0 && tg > pw*2 && pw <= 1 {
 		return RoleDefense
 	}
 
-	if pw >= 3 || hasEvasion(p) {
+	// Engine: creatures with triggered benefit abilities (draw, tokens, lifegain).
+	if hasTriggeredBenefitAbility(p) {
+		return RoleEngine
+	}
+
+	// Utility: creatures with non-mana activated abilities.
+	if hasUtilityActivatedAbility(p) {
+		// High-power utility creatures are still threats first.
+		if pw >= 3 || hasEvasion(p) {
+			return RoleThreat
+		}
+		return RoleUtility
+	}
+
+	// Threat: power >= 3, evasion, double strike, or deathtouch.
+	if pw >= 3 || hasEvasion(p) || p.HasKeyword(core.DoubleStrike) || p.HasKeyword(core.Deathtouch) {
 		return RoleThreat
 	}
 
+	// Small creature with no special abilities — still a minor threat.
 	return RoleThreat
 }
 
@@ -97,11 +121,40 @@ func hasManaAbility(p *mage.Permanent) bool {
 	return false
 }
 
-func hasTriggeredAbilities(p *mage.Permanent) bool {
+// hasTriggeredBenefitAbility returns true if the permanent has a triggered
+// ability that generates incremental advantage (draw, tokens, etc.).
+func hasTriggeredBenefitAbility(p *mage.Permanent) bool {
 	for _, a := range p.RuntimeAbilities {
 		inner := mage.UnwrapAbility(a)
-		if _, ok := inner.(mage.TriggeredAbility); ok {
-			return true
+		ta, ok := inner.(mage.TriggeredAbility)
+		if !ok {
+			continue
+		}
+		for _, e := range ta.Effects() {
+			props := e.Properties()
+			if props.DrawCount > 0 || props.Outcome == mage.OutcomeBenefit ||
+				props.TokenPower > 0 || props.LifeGain > 0 {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// hasRepeatedActivatedAbility returns true if the permanent has a non-mana
+// activated ability with draw or benefit effects (card advantage engine).
+func hasRepeatedActivatedAbility(p *mage.Permanent) bool {
+	for _, a := range p.RuntimeAbilities {
+		inner := mage.UnwrapAbility(a)
+		aa, ok := inner.(mage.ActivatedAbility)
+		if !ok {
+			continue
+		}
+		for _, e := range aa.Effects() {
+			props := e.Properties()
+			if props.DrawCount > 0 {
+				return true
+			}
 		}
 	}
 	return false

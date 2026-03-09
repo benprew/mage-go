@@ -399,6 +399,17 @@ func shouldAttack(atk *mage.Permanent, g *mage.Game, opponentID uuid.UUID, aggre
 		return true
 	}
 	if profitableToAttack(atk, g, opponentID) {
+		// Even if the attack is profitable against blockers, be cautious if
+		// opponent has significant untapped mana (could have removal/combat tricks).
+		if aggression < 0.5 {
+			oppUntapped := eval.CountAvailableMana(g, opponentID)
+			atkValue := eval.EvalCreature(atk)
+			// If opponent has plenty of mana open and our creature is valuable,
+			// consider holding back. High-value creatures are worth protecting.
+			if oppUntapped >= 3 && atkValue >= 10 && !eval.IsEvasive(atk, opponentID, g) {
+				return false
+			}
+		}
 		return true
 	}
 	if aggression >= 0.7 {
@@ -443,6 +454,57 @@ func shouldBlock(atkPow int, _ *mage.Game, _ uuid.UUID, blockThreshold float64) 
 	}
 	minPow := int(blockThreshold * 10.0)
 	return atkPow >= minPow
+}
+
+// evaluateSingleBlock returns true if blocking this attacker with this blocker
+// is a net-positive trade. Uses combat simulation with first strike, deathtouch,
+// and lifelink awareness.
+func evaluateSingleBlock(atk, blk *mage.Permanent, g *mage.Game, playerID uuid.UUID) bool {
+	atkPow := atk.CurrentPower(g)
+	atkTough := atk.CurrentToughness(g)
+	blkPow := blk.CurrentPower(g)
+	blkTough := blk.CurrentToughness(g)
+
+	atkHasDT := atk.HasKeyword(core.Deathtouch)
+	blkHasDT := blk.HasKeyword(core.Deathtouch)
+	atkHasFS := atk.HasKeyword(core.FirstStrike) || atk.HasKeyword(core.DoubleStrike)
+	blkHasFS := blk.HasKeyword(core.FirstStrike) || blk.HasKeyword(core.DoubleStrike)
+
+	// Does the blocker kill the attacker?
+	blockerKillsAtk := blkPow >= atkTough || (blkHasDT && blkPow > 0)
+	// Does the attacker kill the blocker?
+	attackerKillsBlk := atkPow >= blkTough || (atkHasDT && atkPow > 0)
+
+	// First strike advantage: if blocker has FS and attacker doesn't,
+	// and blocker kills attacker, the blocker survives.
+	if blkHasFS && !atkHasFS && blockerKillsAtk {
+		return true // blocker wins before attacker deals damage
+	}
+	// Converse: attacker has FS and blocker doesn't, attacker kills blocker
+	// before blocker deals damage. Only block if we must (handled by caller).
+	if atkHasFS && !blkHasFS && attackerKillsBlk && !blockerKillsAtk {
+		return false // blocker dies for nothing
+	}
+
+	atkValue := eval.EvalCreature(atk)
+	blkValue := eval.EvalCreature(blk)
+
+	// If blocker kills attacker (mutual trade or blocker survives), check value trade.
+	if blockerKillsAtk {
+		if !attackerKillsBlk {
+			return true // blocker survives, attacker dies
+		}
+		// Mutual trade: profitable if attacker is worth at least as much.
+		return atkValue >= blkValue
+	}
+
+	// Blocker doesn't kill attacker but survives: damage soak (reduces damage to face).
+	if !attackerKillsBlk {
+		return atkPow >= 3 // worth chump-blocking big attackers to save life
+	}
+
+	// Blocker dies without killing attacker: only if damage prevented is significant.
+	return atkPow >= 4 || atkPow*2 >= g.GetPlayer(playerID).Life()
 }
 
 func profitableToAttack(atk *mage.Permanent, g *mage.Game, opponentID uuid.UUID) bool {
@@ -565,6 +627,10 @@ func (s *HeuristicStrategy) evaluateResponse(p mage.Player, g *mage.Game) *inter
 		}
 	}
 
+	// Detect combat phase — instants are more valuable during combat.
+	inCombat := g.Step == core.DeclareAttackers || g.Step == core.DeclareBlockers ||
+		g.Step == core.CombatDamage || g.Step == core.FirstStrikeDamage
+
 	var bestAction *interactive.PriorityAction
 	bestValue := 0
 
@@ -603,6 +669,14 @@ func (s *HeuristicStrategy) evaluateResponse(p mage.Player, g *mage.Game) *inter
 			outcome := mage.SpellOutcome(sa.Effects())
 			if outcome == mage.OutcomeDetriment {
 				sv += 2
+				// Removal during combat is especially valuable.
+				if inCombat {
+					sv += 3
+				}
+			}
+			// Combat tricks (buff spells) are best during combat.
+			if outcome == mage.OutcomeBenefit && inCombat {
+				sv += 4
 			}
 		}
 
