@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A Go reimplementation of [XMage](https://github.com/magefree/mage) — an open-source MTG rules engine. 2-player only. The only external dependency is `github.com/google/uuid`.
+A Magic: The Gathering rules engine in Go, inspired by XMage's architecture. 2-player only. The only external dependency is `github.com/google/uuid`.
 
 Reference XMage source lives at `~/mage`. Consult `~/mage/Mage.Sets/src/mage/cards/` and `~/mage/Mage/src/main/java/mage/` for rules behavior and card implementations.
 
@@ -38,7 +38,11 @@ pkg/mage/interactive/  # TUI/AI player layer
 cards/limited/         # Alpha cards
 cards/arabian/         # Arabian Nights cards
 cards/antiquities/     # Antiquities cards
+cards/legends/         # Legends cards
 cards/custom/          # custom/test cards
+cmd/tui/               # terminal UI
+cmd/server/            # SSH multiplayer server
+cmd/fetchset/          # set data fetcher
 ```
 
 Cards register via `Register(name, factory)` in `init()`. Each card file has a registration function called from `init()`. The `test.go` file in each card package holds blank-identifier references to ensure registration runs.
@@ -56,7 +60,7 @@ import (
 func TestCard(t *testing.T) {
     g := gametest.NewTestGame(t)
     g.AddCard(ZoneBattlefield, gametest.PlayerA, "Card Name")
-    g.StopAt(1, EndOfTurn)
+    g.StopAt(1, EndStep)
     g.Execute()
     g.AssertLife(gametest.PlayerB, 20)
 }
@@ -65,54 +69,56 @@ func TestCard(t *testing.T) {
 ### Setup
 
 - `NewTestGame(t)` — creates game, both players at 20 life, empty board
-- `AddCard(zone, player, name)` — put a card in any zone (battlefield, hand, graveyard, library, exile). Call multiple times for multiple copies.
-- `AddCardCount(zone, player, name, n)` — add n copies
+- `AddCard(zone, player, name, count...)` — put a card in any zone (battlefield, hand, graveyard, library, exile). Optional count parameter for multiple copies.
 - `SetLife(player, n)` — set starting life
-- `AddCounters(player, cardName, counterType, n)` — add counters to a permanent
+- `AddCounters(turn, step, player, cardName, counterType, n)` — add counters to a permanent
 
 ### Actions (turn number, phase/step, player, args...)
 
 - `CastSpell(turn, step, player, spellName, targets...)` — cast from hand
 - `CastSpellWithX(turn, step, player, spellName, x, targets...)` — cast with X
-- `CastInResponseTo(turn, step, player, spellName, triggerDesc, targets...)` — cast in response to a trigger/spell
-- `ActivateAbility(turn, step, player, permanentName, abilityText, targets...)` — activate an ability
-- `ActivateAbilityWithX(turn, step, player, name, text, x, targets...)` — activate with X
+- `CastInResponseTo(player, spellName, targets...)` — cast in response (no turn/step needed)
+- `CastInResponseToWithX(player, spellName, x, targets...)` — cast in response with X
+- `ActivateAbility(turn, step, player, permanentName, targets...)` — activate an ability
+- `ActivateAbilityWithX(turn, step, player, permanentName, x, targets...)` — activate with X
+- `ActivateInResponseTo(player, permanentName, targets...)` — activate in response
 - `Attack(turn, player, attackers...)` — declare attackers
 - `Block(turn, player, blocker, attacker)` — declare a block
 - `FormBand(turn, player, creatures...)` — form a band of attackers
 
 ### Choices (scripted decisions for AI-free testing)
 
-- `ChoosePermanent(turn, step, player, permanentName)` — choose a permanent when prompted
-- `ChooseDiscard(turn, step, player, cardNames...)` — choose cards to discard
-- `ChooseManaColor(turn, step, player, color)` — choose a mana color
-- `ChooseFromLibrary(turn, step, player, cardName)` — choose a card from library
-- `ChooseMode(turn, step, player, mode)` — choose a mode (e.g., charm modes)
-- `ChooseBandingDistribution(turn, player, assignments...)` — assign banding damage
+- `ChoosePermanent(player, permanentName)` — choose a permanent when prompted
+- `ChooseDiscard(player, cardNames...)` — choose cards to discard
+- `ChooseManaColor(player, color)` — choose a mana color
+- `ChooseFromLibrary(player, cardName)` — choose a card from library
+- `ChooseMode(player, mode)` — choose a mode (e.g., charm modes)
+- `ChooseBandingDistribution(player, distribution)` — assign banding damage (map[string]int)
 
 ### Control
 
 - `StopAt(turn, step)` — stop execution at this point
 - `Execute()` — run the game to the stop point
-- `PlayToEnd()` — run until game over (no stop point needed)
+- `PlayToEnd(maxTurns...)` — run until game over (optional max turns)
 
 ### Assertions
 
 - `AssertLife(player, n)`
+- `AssertPoisonCounters(player, n)`
 - `AssertPermanentCount(player, name, n)`
 - `AssertGraveyardCount(player, name, n)`
-- `AssertExileCount(player, name, n)`
-- `AssertHandCount(player, n)`
-- `AssertLibraryCount(player, n)`
+- `AssertExileCount(name, n)` — no player param, checks global exile
+- `AssertHandCount(player, name, n)`
+- `AssertLibraryCount(player, name, n)`
 - `AssertPowerToughness(player, name, power, toughness)`
 - `AssertCounterCount(player, name, counterType, n)`
 - `AssertTapped(player, name, tapped)`
-- `AssertHasAbility(player, name, attr)`
+- `AssertHasAbility(player, name, keyword, has)` — keyword is `core.Keyword`, has is bool
 - `AssertAttachedTo(player, auraName, targetName)`
-- `AssertLibraryTop(player, name)`
+- `AssertLibraryTop(player, names...)`
 - `AssertGraveyardOrder(player, names...)`
-- `AssertAnteCount(player, n)`
-- `AssertBanded(player, creature, bandmates...)`
+- `AssertAnteCount(player, name, n)`
+- `AssertBanded(player1, creature1, player2, creature2, want)` — want is bool
 - `AssertWinner(player)`
-- `AssertGameOver()`
+- `AssertGameOver(want)` — want is bool
 - `AssertTotalTurns(n)`
