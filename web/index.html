@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mage — MTG Rules Engine</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=MedievalSharp&display=swap" rel="stylesheet">
+<style>
+/* -- Visual Identity: mage-go -- */
+:root {
+  --void-black: #0a0a0c;
+  --parchment: #d4c5a0;
+  --aged-gold: #c9a84c;
+  --mana-blue: #4a82b0;
+  --blood-red: #8b2020;
+  --forest-dark: #2d4a2d;
+  --artifact-grey: #6b6b7b;
+  --enchant-purple: #5c3a6e;
+  --dim-gold: #8a7a5a;
+  --deep-border: #2a2520;
+  --code-tint: #a0c0d8;
+  --terminal-green: #6a8a6a;
+  --card-bg: linear-gradient(180deg, #12121a 0%, #0e0e14 100%);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: Georgia, 'Times New Roman', serif;
+  background: var(--void-black);
+  color: var(--parchment);
+  font-size: 14px;
+  position: relative;
+}
+
+/* Noise overlay */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  opacity: 0.03;
+  z-index: 9999;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* -- Loading -- */
+#loading {
+  text-align: center;
+  padding: 120px 20px;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 20px;
+  color: var(--aged-gold);
+  letter-spacing: 0.1em;
+}
+#loading .subtitle {
+  font-family: 'MedievalSharp', Georgia, serif;
+  color: var(--dim-gold);
+  font-size: 14px;
+  margin-top: 8px;
+  letter-spacing: 0;
+}
+
+/* -- Deck Selection -- */
+#deck-select {
+  display: none;
+  padding: 40px 20px;
+  max-width: 700px;
+  margin: 0 auto;
+}
+#deck-select h1 {
+  font-family: 'Cinzel', Georgia, serif;
+  color: var(--aged-gold);
+  font-size: 28px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 4px;
+}
+#deck-select .flavor {
+  font-family: 'MedievalSharp', Georgia, serif;
+  color: var(--dim-gold);
+  font-size: 14px;
+  margin-bottom: 24px;
+  font-style: italic;
+}
+#deck-select h2 {
+  font-family: 'Cinzel', Georgia, serif;
+  color: var(--dim-gold);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 20px 0 8px;
+}
+.ornament {
+  text-align: center;
+  color: var(--deep-border);
+  font-size: 14px;
+  margin: 16px 0;
+  letter-spacing: 0.3em;
+}
+.ornament-line {
+  height: 1px;
+  margin: 16px 0;
+  background: linear-gradient(90deg,
+    transparent 0%, #3a3020 15%, #c9a84c 40%,
+    #e8d48b 50%, #c9a84c 60%, #3a3020 85%, transparent 100%
+  );
+}
+.preset-btn {
+  background: var(--card-bg);
+  border: 1px solid var(--deep-border);
+  color: var(--parchment);
+  padding: 10px 18px;
+  margin: 4px;
+  cursor: pointer;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+.preset-btn:hover { border-color: var(--aged-gold); color: var(--aged-gold); }
+#deck-textarea {
+  width: 100%;
+  height: 200px;
+  background: var(--void-black);
+  color: var(--parchment);
+  border: 1px solid var(--deep-border);
+  padding: 10px;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 13px;
+  margin: 10px 0;
+  resize: vertical;
+}
+#deck-textarea:focus { border-color: var(--aged-gold); outline: none; }
+#start-btn {
+  background: var(--forest-dark);
+  border: 1px solid #4a8a3a;
+  color: var(--parchment);
+  padding: 12px 36px;
+  cursor: pointer;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+#start-btn:hover { border-color: var(--aged-gold); color: var(--aged-gold); }
+#deck-error { color: var(--blood-red); margin: 8px 0; font-size: 13px; }
+
+/* -- Game Layout -- */
+#game-ui { display: none; flex-direction: column; height: 100vh; overflow: hidden; }
+
+/* Top bar: life totals prominent */
+#top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(180deg, #12121a, #0a0a0c);
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--deep-border);
+}
+#turn-info {
+  font-family: 'Cinzel', Georgia, serif;
+  color: var(--dim-gold);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+#phase-info {
+  font-family: 'Cinzel', Georgia, serif;
+  color: var(--artifact-grey);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.life-display {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.life-block {
+  text-align: center;
+}
+.life-label {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 10px;
+  color: var(--dim-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.life-number {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--parchment);
+  line-height: 1;
+}
+.life-number.danger { color: var(--blood-red); }
+.life-separator {
+  color: var(--deep-border);
+  font-size: 20px;
+}
+.stat-pills {
+  display: flex;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--artifact-grey);
+}
+
+/* Status banner — explains what's happening */
+#status-banner {
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--deep-border);
+  font-family: Georgia, serif;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+}
+#status-banner .status-who {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 2px 8px;
+  border: 1px solid var(--deep-border);
+}
+#status-banner .status-who.your-turn {
+  color: var(--aged-gold);
+  border-color: rgba(201,168,76,0.3);
+  background: rgba(201,168,76,0.05);
+}
+#status-banner .status-who.ai-turn {
+  color: var(--artifact-grey);
+  border-color: rgba(107,107,123,0.3);
+  background: rgba(107,107,123,0.05);
+}
+#status-banner .status-text {
+  color: var(--parchment);
+}
+#status-banner .status-text.muted {
+  color: var(--artifact-grey);
+}
+#status-banner .status-phase {
+  margin-left: auto;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 10px;
+  color: var(--dim-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Main area */
+#main-area { display: flex; flex: 1; overflow: hidden; }
+#board { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+#sidebar {
+  width: 300px;
+  border-left: 1px solid var(--deep-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: linear-gradient(180deg, #0e0e14, #0a0a0c);
+}
+
+/* Board zones */
+.zone {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(42,37,32,0.5);
+}
+.zone-label {
+  font-family: 'Cinzel', Georgia, serif;
+  color: var(--dim-gold);
+  font-size: 10px;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+#opp-battlefield, #my-battlefield { flex: 1; overflow-y: auto; }
+#stack-zone {
+  max-height: 90px;
+  overflow-y: auto;
+  background: rgba(92,58,110,0.08);
+  border-bottom: 1px solid rgba(92,58,110,0.2);
+}
+.card-row { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* Card display — card-frame style */
+.card {
+  border: 1px solid var(--deep-border);
+  box-shadow: inset 0 0 0 1px rgba(201,168,76,0.06);
+  padding: 6px 8px;
+  font-size: 12px;
+  background: var(--card-bg);
+  min-width: 110px;
+  max-width: 170px;
+  cursor: default;
+  position: relative;
+}
+.card.tapped {
+  opacity: 0.5;
+  border-color: var(--artifact-grey);
+}
+.card.tapped .card-name::after { content: " (T)"; color: var(--blood-red); font-size: 10px; }
+.card.attacking { border-color: var(--blood-red); box-shadow: inset 0 0 0 1px rgba(139,32,32,0.3); }
+.card.summon-sick { border-color: #1a1a20; }
+.card .card-name {
+  font-family: 'Cinzel', Georgia, serif;
+  font-weight: 700;
+  color: var(--parchment);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+.card .card-pt {
+  font-family: 'Cinzel', Georgia, serif;
+  color: var(--aged-gold);
+  font-size: 12px;
+  font-weight: 700;
+}
+.card .card-cost { color: var(--dim-gold); font-size: 10px; float: right; }
+.card .card-counters { color: var(--mana-blue); font-size: 10px; }
+.card .card-keywords { color: var(--terminal-green); font-size: 10px; font-style: italic; }
+.card .card-types { color: var(--artifact-grey); font-size: 9px; }
+.card.selected { border-color: var(--aged-gold); box-shadow: inset 0 0 0 1px rgba(201,168,76,0.2); }
+.card:hover { border-color: var(--mana-blue); }
+
+/* Hand */
+#hand-zone { border-top: 1px solid var(--deep-border); max-height: 130px; overflow-y: auto; }
+.hand-card { cursor: pointer; }
+.hand-card:hover { border-color: var(--aged-gold); }
+
+/* Mana pool */
+#mana-pool {
+  padding: 4px 12px;
+  font-size: 12px;
+  background: rgba(10,10,12,0.8);
+  border-top: 1px solid var(--deep-border);
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+}
+.mana-label { color: var(--dim-gold); font-size: 10px; }
+.mana-w { color: #f8f4e0; } .mana-u { color: #6aa8d4; } .mana-b { color: #a0a0a8; }
+.mana-r { color: #c84a30; } .mana-g { color: #4a8a3a; } .mana-c { color: var(--artifact-grey); }
+
+/* -- Sidebar: Log + Actions -- */
+#sidebar-header {
+  font-family: 'Cinzel', Georgia, serif;
+  color: var(--dim-gold);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 8px 10px 4px;
+  border-bottom: 1px solid var(--deep-border);
+}
+
+/* Log area — takes most of the sidebar */
+#log-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 10px;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  min-height: 200px;
+}
+#log-area .log-entry { padding: 1px 0; color: var(--artifact-grey); }
+#log-area .log-entry:last-child { color: var(--parchment); }
+#log-area .log-entry.log-combat { color: var(--blood-red); }
+#log-area .log-entry.log-cast { color: var(--mana-blue); }
+
+/* Action bar */
+#action-bar {
+  border-top: 1px solid var(--deep-border);
+  padding: 8px 10px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+#action-bar .prompt-label {
+  font-family: 'Cinzel', Georgia, serif;
+  color: var(--aged-gold);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+.action-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--card-bg);
+  border: 1px solid var(--deep-border);
+  color: var(--parchment);
+  padding: 6px 10px;
+  margin: 3px 0;
+  cursor: pointer;
+  font-family: Georgia, serif;
+  font-size: 12px;
+}
+.action-btn:hover { border-color: var(--aged-gold); color: var(--aged-gold); }
+.action-btn.pass-btn { background: rgba(45,74,45,0.3); border-color: var(--forest-dark); }
+.action-btn.pass-btn:hover { border-color: #4a8a3a; color: #4a8a3a; }
+.action-btn.attacker-selected { border-color: var(--blood-red); background: rgba(139,32,32,0.15); }
+
+/* Auto-pass indicator */
+#auto-pass-indicator {
+  font-family: 'Cinzel', Georgia, serif;
+  color: var(--terminal-green);
+  font-size: 11px;
+  text-align: center;
+  padding: 8px;
+  letter-spacing: 0.06em;
+}
+
+/* -- Modals -- */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(10,10,12,0.85);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100;
+}
+.modal {
+  background: linear-gradient(180deg, #12121a, #0e0e14);
+  border: 1px solid var(--deep-border);
+  box-shadow: inset 0 0 0 1px rgba(201,168,76,0.08), 0 20px 60px rgba(0,0,0,0.8);
+  padding: 24px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.modal h3 {
+  font-family: 'Cinzel', Georgia, serif;
+  color: var(--aged-gold);
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.modal-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--card-bg);
+  border: 1px solid var(--deep-border);
+  color: var(--parchment);
+  padding: 10px 14px;
+  margin: 4px 0;
+  cursor: pointer;
+  font-family: Georgia, serif;
+  font-size: 13px;
+}
+.modal-option:hover { border-color: var(--aged-gold); color: var(--aged-gold); }
+.modal-option.selected { border-color: var(--aged-gold); background: rgba(201,168,76,0.08); }
+.modal-submit {
+  background: var(--forest-dark);
+  border: 1px solid #4a8a3a;
+  color: var(--parchment);
+  padding: 10px 24px;
+  cursor: pointer;
+  margin-top: 12px;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.modal-submit:hover { border-color: var(--aged-gold); color: var(--aged-gold); }
+
+/* -- Game Over overlay -- */
+#game-over-overlay {
+  display: none;
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(10,10,12,0.9);
+  z-index: 50;
+  align-items: center; justify-content: center;
+  flex-direction: column;
+}
+#game-over-overlay.visible { display: flex; }
+#game-over-text {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 32px;
+  color: var(--aged-gold);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+#game-over-detail {
+  font-family: 'MedievalSharp', Georgia, serif;
+  color: var(--dim-gold);
+  font-size: 16px;
+  margin-top: 8px;
+}
+
+/* Graveyard/Exile info strip */
+.info-strip {
+  display: flex;
+  gap: 16px;
+  padding: 4px 12px;
+  font-size: 11px;
+  color: var(--artifact-grey);
+  border-top: 1px solid rgba(42,37,32,0.3);
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+}
+.info-strip span { cursor: help; }
+
+/* Rules text tooltip panel */
+.card-tooltip {
+  display: none;
+  position: fixed;
+  background: linear-gradient(180deg, #16161e, #0e0e14);
+  border: 1px solid var(--deep-border);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.7);
+  padding: 12px;
+  max-width: 240px;
+  z-index: 200;
+  font-size: 12px;
+  pointer-events: none;
+}
+.card-tooltip .tt-name {
+  font-family: 'Cinzel', Georgia, serif;
+  color: var(--parchment);
+  font-weight: 700;
+  font-size: 12px;
+}
+.card-tooltip .tt-type { color: var(--dim-gold); font-size: 11px; margin: 2px 0; }
+.card-tooltip .tt-rules {
+  color: var(--artifact-grey);
+  font-size: 11px;
+  margin-top: 4px;
+  font-style: italic;
+  line-height: 1.4;
+}
+.card-tooltip .tt-pt {
+  font-family: 'Cinzel', Georgia, serif;
+  color: var(--aged-gold);
+  font-size: 13px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+.card-tooltip.visible { display: block; }
+</style>
+</head>
+<body>
+
+<div id="loading">
+  MAGE
+  <div class="subtitle">Summoning the engine...</div>
+</div>
+
+<div id="deck-select">
+  <h1>Mage</h1>
+  <div class="flavor">A rules engine for the gathering</div>
+  <div class="ornament-line"></div>
+  <h2>Preset Decks</h2>
+  <div id="presets"></div>
+  <div class="ornament">— ◊ —</div>
+  <h2>Custom Deck List</h2>
+  <textarea id="deck-textarea" placeholder="4 Lightning Bolt&#10;4 Mountain&#10;...&#10;&#10;One card name per line, or '4 Card Name' format."></textarea>
+  <div id="deck-error"></div>
+  <button id="start-btn" onclick="startGame()">Begin</button>
+</div>
+
+<div id="game-ui">
+  <div id="top-bar">
+    <div>
+      <span id="turn-info">Turn 1</span>
+      <span id="phase-info"></span>
+    </div>
+    <div class="life-display">
+      <div class="life-block">
+        <div class="life-label" id="opp-name">Opponent</div>
+        <div class="life-number" id="opp-life">20</div>
+      </div>
+      <div class="life-separator">◊</div>
+      <div class="life-block">
+        <div class="life-label" id="you-name">You</div>
+        <div class="life-number" id="you-life">20</div>
+      </div>
+    </div>
+    <div class="stat-pills">
+      <span id="lib-count" title="Library">Lib: 0</span>
+      <span id="gy-count" title="Graveyard">GY: 0</span>
+      <span id="opp-hand-count" title="Opponent's hand">Opp Hand: 0</span>
+    </div>
+  </div>
+  <div id="status-banner">
+    <span class="status-who" id="status-who"></span>
+    <span class="status-text" id="status-text"></span>
+    <span class="status-phase" id="status-phase"></span>
+  </div>
+  <div id="main-area">
+    <div id="board">
+      <div class="zone" id="opp-battlefield">
+        <div class="zone-label">Opponent's Battlefield</div>
+        <div class="card-row" id="opp-perms"></div>
+      </div>
+      <div class="zone" id="stack-zone" style="display:none">
+        <div class="zone-label">Stack</div>
+        <div id="stack-items"></div>
+      </div>
+      <div class="zone" id="my-battlefield">
+        <div class="zone-label">Your Battlefield</div>
+        <div class="card-row" id="my-perms"></div>
+      </div>
+      <div id="mana-pool"></div>
+      <div class="zone" id="hand-zone">
+        <div class="zone-label">Hand (<span id="hand-count">0</span>)</div>
+        <div class="card-row" id="hand-cards"></div>
+      </div>
+    </div>
+    <div id="sidebar">
+      <div id="sidebar-header">Game Log</div>
+      <div id="log-area"></div>
+      <div id="action-bar"></div>
+    </div>
+  </div>
+</div>
+
+<div id="game-over-overlay">
+  <div id="game-over-text"></div>
+  <div id="game-over-detail"></div>
+</div>
+
+<!-- Floating tooltip for card hover -->
+<div class="card-tooltip" id="card-tooltip">
+  <div class="tt-name"></div>
+  <div class="tt-type"></div>
+  <div class="tt-rules"></div>
+  <div class="tt-pt"></div>
+</div>
+
+<!-- Modal for choices and target selection -->
+<div id="modal-container"></div>
+
+<script src="wasm_exec.js"></script>
+<script src="game.js"></script>
+
+</body>
+</html>

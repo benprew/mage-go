@@ -2071,15 +2071,15 @@ g.<span class="fn">Block</span>(<span class="nu">1</span>, PB, <span class="st">
   <div data-notes="That's the whole pattern. Oracle text, test, implement, verify. Every card follows this, from Grizzly Bears to Ali from Cairo. The complete API reference is in doc.go."></div>
 </div>
 
-</div><\!-- end .slides -->
+</div><!-- end .slides -->
 
-<\!-- SPEAKER NOTES PANEL -->
+<!-- SPEAKER NOTES PANEL -->
 <div class="notes" id="notesPanel"></div>
 
-<\!-- PROGRESS BAR -->
+<!-- PROGRESS BAR -->
 <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
 
-<\!-- NAVIGATION -->
+<!-- NAVIGATION -->
 <div class="nav-controls">
   <button onclick="prev()" title="Left arrow">&larr;</button>
   <span id="slideCounter">1 / 57</span>
@@ -2098,7 +2098,7 @@ function initBuilds(slideIdx) {
   const slide = slides[slideIdx];
   const builds = slide.querySelectorAll('.build');
   if (builds.length === 0) return;
-  if (\!buildStates.has(slideIdx)) {
+  if (!buildStates.has(slideIdx)) {
     buildStates.set(slideIdx, 0);
   }
   const revealed = buildStates.get(slideIdx);
@@ -2149,7 +2149,7 @@ function updateNotes() {
 }
 
 function toggleNotes() {
-  notesVisible = \!notesVisible;
+  notesVisible = !notesVisible;
   updateNotes();
 }
 
