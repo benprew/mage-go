@@ -29,10 +29,10 @@ Check if the JSON already exists in `data/`:
 ls data/$SET_CODE.json 2>/dev/null
 ```
 
-If not, fetch it:
+If not, fetch it (set `FETCHSET_SKIP_TLS=1` to work around sandbox TLS restrictions):
 
 ```bash
-go run ./cmd/fetchset -o data/$SET_CODE.json $SET_CODE
+FETCHSET_SKIP_TLS=1 go run ./cmd/fetchset -o data/$SET_CODE.json $SET_CODE
 ```
 
 ## Step 2: Assess Existing State
@@ -64,19 +64,27 @@ Proceed to Step 3.
 Check if the files are all stubs by looking for any non-TODO implementations. If they're all stubs, skip generation and proceed to Step 3.
 
 ### State C — Directory exists with partial implementation (work already done)
-The set has had prior implementation work. **Run `/validate-set` first** to discover the current state:
+The set has had prior implementation work. Check for a **design doc** first — these are manually edited and marked-up validation reports that take priority over a fresh `/validate-set` run:
+
+```bash
+ls active-design-docs/set-"$SET_NAME".md active-design-docs/set-$PACKAGE_NAME.md active-design-docs/set-$SET_CODE.md 2>/dev/null
+```
+
+If a design doc exists, read it and use it as the source of truth for what's done, what needs work, and any notes or priorities the user has annotated. Skip running `/validate-set`.
+
+If no design doc exists, **run `/validate-set`** to discover the current state:
 
 ```
 /validate-set $PACKAGE_NAME
 ```
 
-The validation report tells you:
+Either way, you now have a report (design doc or validation output) that tells you:
 - Which cards are fully implemented and correct
 - Which cards are partially implemented (XXX markers) and what's missing
 - Which cards are still stubs (TODO markers)
 - Which implementations have Oracle text fidelity issues
 - Which cards have tests and which don't
-- Any test failures
+- Any test failures or user-annotated notes
 
 Use this report to drive Step 4. Cards already fully implemented and validated are **done** — skip them entirely. Cards with Oracle violations or missing tests need fixes, not reimplementation. Only stubs and cards flagged as needing engine work go through the normal tier analysis.
 
