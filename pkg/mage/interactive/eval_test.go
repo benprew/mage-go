@@ -1,6 +1,7 @@
 package interactive
 
 import (
+	"math"
 	"testing"
 
 	"github.com/google/uuid"
@@ -249,8 +250,9 @@ func TestAbilityBonus_ActivatedAbility(t *testing.T) {
 		mage.WithActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.TapSourceCost(),
 			mage.WithTarget(mage.TargetAnyTarget())),
 	)
-	if got := abilityBonus(p); got != 1 {
-		t.Errorf("abilityBonus(activated) = %d, want 1", got)
+	// Phase 0D: tap-to-damage scores 4 (up from flat 1)
+	if got := abilityBonus(p); got != 4 {
+		t.Errorf("abilityBonus(activated damage) = %d, want 4", got)
 	}
 }
 
@@ -480,5 +482,294 @@ func TestSpellIsWorthless_Untargeted(t *testing.T) {
 	card.SetOwner(pa.PlayerID())
 	if spellIsWorthless(card, pa, g) {
 		t.Error("spellIsWorthless should be false for untargeted spells")
+	}
+}
+
+// ── CalculateLethal (Phase 0A) ──────────────────────────────────────────────
+
+func TestCalculateLethal_EvasiveLethal(t *testing.T) {
+	g, pa, pb := makeGame()
+	pb.SetLife(5)
+	// 3/3 flyer with no opposing flyers = 3 evasive damage
+	flyer := makePerm("Bird", "{2}{U}", 3, 3, pa.PlayerID(), mage.WithKeyword(core.Flying))
+	// 2/2 unblockable = 2 evasive damage
+	rogue := makePerm("Rogue", "{1}{U}", 2, 2, pa.PlayerID(), mage.WithKeyword(core.UnblockableKW))
+	// Opponent has a ground blocker (can't block flyer or unblockable)
+	wall := makePerm("Wall", "{1}{W}", 0, 5, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, flyer, rogue, wall)
+
+	info := CalculateLethal(g, pa.PlayerID())
+	if !info.IHaveLethal {
+		t.Error("should detect lethal with 3+2 = 5 evasive damage vs 5 life")
+	}
+	if info.MyBoardDamage < 5 {
+		t.Errorf("MyBoardDamage = %d, want >= 5", info.MyBoardDamage)
+	}
+	if len(info.LethalAttackers) == 0 {
+		t.Error("LethalAttackers should not be empty")
+	}
+}
+
+func TestCalculateLethal_NoLethal(t *testing.T) {
+	g, pa, pb := makeGame()
+	pb.SetLife(20)
+	// Only 2 evasive damage, not enough for lethal against 20 life
+	rogue := makePerm("Rogue", "{1}{U}", 2, 2, pa.PlayerID(), mage.WithKeyword(core.UnblockableKW))
+	g.Battlefield = append(g.Battlefield, rogue)
+
+	info := CalculateLethal(g, pa.PlayerID())
+	if info.IHaveLethal {
+		t.Error("should not detect lethal with only 2 evasive damage vs 20 life")
+	}
+}
+
+func TestCalculateLethal_TrampleLethal(t *testing.T) {
+	g, pa, pb := makeGame()
+	pb.SetLife(3)
+	// 6/6 trampler vs 2/3 blocker = 3 trample damage
+	trampler := makePerm("Wurm", "{4}{G}{G}", 6, 6, pa.PlayerID(), mage.WithKeyword(core.Trample))
+	blocker := makePerm("Bear", "{1}{G}", 2, 3, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, trampler, blocker)
+
+	info := CalculateLethal(g, pa.PlayerID())
+	if !info.IHaveLethal {
+		t.Error("should detect lethal with 6 trample - 3 toughness = 3 vs 3 life")
+	}
+}
+
+func TestCalculateLethal_OpponentHasLethal(t *testing.T) {
+	g, pa, pb := makeGame()
+	pa.SetLife(4)
+	// Opponent has a 4/4 flyer, we have no flyers to block
+	flyer := makePerm("Dragon", "{3}{R}", 4, 4, pb.PlayerID(), mage.WithKeyword(core.Flying))
+	bear := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
+	g.Battlefield = append(g.Battlefield, flyer, bear)
+
+	info := CalculateLethal(g, pa.PlayerID())
+	if !info.TheyHaveLethal {
+		t.Error("should detect opponent has lethal with 4/4 flyer vs 4 life")
+	}
+}
+
+func TestCalculateLethal_EmptyBoard(t *testing.T) {
+	g, pa, _ := makeGame()
+	info := CalculateLethal(g, pa.PlayerID())
+	if info.IHaveLethal {
+		t.Error("should not have lethal on empty board")
+	}
+	if info.TheyHaveLethal {
+		t.Error("opponent should not have lethal on empty board")
+	}
+}
+
+func TestCalculateLethal_MinimalSet(t *testing.T) {
+	g, pa, pb := makeGame()
+	pb.SetLife(3)
+	// Two unblockable creatures: 2/2 and 3/3. Only need the 3/3 for lethal.
+	small := makePerm("Rogue", "{1}{U}", 2, 2, pa.PlayerID(), mage.WithKeyword(core.UnblockableKW))
+	big := makePerm("Assassin", "{2}{U}", 3, 3, pa.PlayerID(), mage.WithKeyword(core.UnblockableKW))
+	g.Battlefield = append(g.Battlefield, small, big)
+
+	info := CalculateLethal(g, pa.PlayerID())
+	if !info.IHaveLethal {
+		t.Error("should detect lethal")
+	}
+	// Minimal set should be just the 3/3 (enough for lethal against 3 life)
+	if len(info.LethalAttackers) != 1 {
+		t.Errorf("LethalAttackers = %d, want 1 (minimal set)", len(info.LethalAttackers))
+	}
+	if len(info.LethalAttackers) == 1 && info.LethalAttackers[0] != big.ID() {
+		t.Error("should pick the 3/3 as the minimal lethal attacker")
+	}
+}
+
+// ── CalculateRace (Phase 0B) ────────────────────────────────────────────────
+
+func TestCalculateRace_FavorableRace(t *testing.T) {
+	g, pa, pb := makeGame()
+	pa.SetLife(20)
+	pb.SetLife(6)
+	// We have a 3/3 unblockable = 3 evasive damage per turn
+	unblockable := makePerm("Rogue", "{1}{U}", 3, 3, pa.PlayerID(), mage.WithKeyword(core.UnblockableKW))
+	// Opponent has a 1/1 = 1 damage per turn (no evasion but no blockers)
+	opp := makePerm("Elf", "{G}", 1, 1, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, unblockable, opp)
+
+	race := CalculateRace(g, pa.PlayerID())
+	if race.MyClock >= race.TheirClock {
+		t.Errorf("MyClock=%d should be < TheirClock=%d", race.MyClock, race.TheirClock)
+	}
+}
+
+func TestCalculateRace_NoDamage(t *testing.T) {
+	g, pa, _ := makeGame()
+	race := CalculateRace(g, pa.PlayerID())
+	if race.MyClock != math.MaxInt32 {
+		t.Errorf("MyClock = %d, want MaxInt32 with no creatures", race.MyClock)
+	}
+}
+
+func TestCalculateRace_RacingBothLow(t *testing.T) {
+	g, pa, pb := makeGame()
+	pa.SetLife(6)
+	pb.SetLife(6)
+	// Both have 3/3 unblockables: 2-turn clocks each
+	myAttacker := makePerm("Rogue A", "{1}{U}", 3, 3, pa.PlayerID(), mage.WithKeyword(core.UnblockableKW))
+	theirAttacker := makePerm("Rogue B", "{1}{U}", 3, 3, pb.PlayerID(), mage.WithKeyword(core.UnblockableKW))
+	g.Battlefield = append(g.Battlefield, myAttacker, theirAttacker)
+
+	race := CalculateRace(g, pa.PlayerID())
+	if !race.Racing {
+		t.Error("both clocks should be < 5, Racing should be true")
+	}
+	if race.MyClock != 2 || race.TheirClock != 2 {
+		t.Errorf("MyClock=%d TheirClock=%d, want both 2", race.MyClock, race.TheirClock)
+	}
+}
+
+// ── manaCurveBonus (Phase 0C) ───────────────────────────────────────────────
+
+func TestManaCurveBonus_PreferExpensive(t *testing.T) {
+	// 5 mana available, hand has 2-drop and 5-drop
+	cmcs := []int{2, 5}
+	bonusFor5 := manaCurveBonus(5, 5, cmcs)
+	bonusFor2 := manaCurveBonus(2, 5, cmcs)
+	if bonusFor5 <= bonusFor2 {
+		t.Errorf("5-drop bonus (%.1f) should be > 2-drop bonus (%.1f) with 5 mana", bonusFor5, bonusFor2)
+	}
+}
+
+func TestManaCurveBonus_OnlyLowCMC(t *testing.T) {
+	// Only 2-drops in hand, 5 mana available
+	cmcs := []int{2, 2}
+	bonus := manaCurveBonus(2, 5, cmcs)
+	// No penalty because there's nothing better to cast
+	if bonus < 0 {
+		t.Errorf("bonus for 2-drop when only 2-drops available = %.1f, should not be negative", bonus)
+	}
+}
+
+func TestManaCurveBonus_NoMana(t *testing.T) {
+	cmcs := []int{2, 5}
+	bonus := manaCurveBonus(2, 0, cmcs)
+	if bonus != 0 {
+		t.Errorf("bonus with 0 mana = %.1f, want 0", bonus)
+	}
+}
+
+// ── abilityQuality (Phase 0D) ───────────────────────────────────────────────
+
+func TestAbilityQuality_DrawAbility(t *testing.T) {
+	p := makePerm("Sage", "{1}{U}", 1, 1, uuid.New(),
+		mage.WithActivatedAbility(mage.DrawCards(mage.Fixed(1)), mage.TapSourceCost()),
+	)
+	// The draw ability should score 5
+	for _, a := range p.RuntimeAbilities {
+		inner := mage.UnwrapAbility(a)
+		if ab, ok := inner.(mage.ActivatedAbility); ok {
+			got := abilityQuality(ab)
+			if got != 5 {
+				t.Errorf("abilityQuality(draw) = %d, want 5", got)
+			}
+			return
+		}
+	}
+	t.Fatal("no activated ability found on permanent")
+}
+
+func TestAbilityQuality_DamageAbility(t *testing.T) {
+	p := makePerm("Pinger", "{1}{R}", 1, 1, uuid.New(),
+		mage.WithActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.TapSourceCost(),
+			mage.WithTarget(mage.TargetAnyTarget())),
+	)
+	for _, a := range p.RuntimeAbilities {
+		inner := mage.UnwrapAbility(a)
+		if ab, ok := inner.(mage.ActivatedAbility); ok {
+			got := abilityQuality(ab)
+			if got != 4 {
+				t.Errorf("abilityQuality(damage) = %d, want 4", got)
+			}
+			return
+		}
+	}
+	t.Fatal("no activated ability found on permanent")
+}
+
+func TestAbilityQuality_PingerHigherThanPump(t *testing.T) {
+	pinger := makePerm("Pinger", "{1}{R}", 1, 1, uuid.New(),
+		mage.WithActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.TapSourceCost(),
+			mage.WithTarget(mage.TargetAnyTarget())),
+	)
+	pumper := makePerm("Pump", "{2}{G}", 1, 1, uuid.New(),
+		mage.WithActivatedAbility(mage.BoostUntilEndOfTurn(mage.Fixed(1), mage.Fixed(1), mage.SelectSource), mage.TapSourceCost()),
+	)
+
+	pingerScore := abilityBonus(pinger)
+	pumperScore := abilityBonus(pumper)
+	if pingerScore <= pumperScore {
+		t.Errorf("pinger score (%d) should be > pumper score (%d)", pingerScore, pumperScore)
+	}
+}
+
+// ── countAvailableMana ──────────────────────────────────────────────────────
+
+func TestCountAvailableMana_UntappedLands(t *testing.T) {
+	g, pa, _ := makeGame()
+	for i := 0; i < 3; i++ {
+		land := mage.NewLand("Forest")
+		land.SetOwner(pa.PlayerID())
+		lp := mage.NewPermanent(land, pa.PlayerID())
+		lp.RevokeBaseAttr(core.AttrSummonSick)
+		g.Battlefield = append(g.Battlefield, lp)
+	}
+	// Add one tapped land
+	tappedLand := mage.NewLand("Mountain")
+	tappedLand.SetOwner(pa.PlayerID())
+	tp := mage.NewPermanent(tappedLand, pa.PlayerID())
+	tp.RevokeBaseAttr(core.AttrSummonSick)
+	tp.Tapped = true
+	g.Battlefield = append(g.Battlefield, tp)
+
+	got := countAvailableMana(g, pa.PlayerID())
+	if got != 3 {
+		t.Errorf("countAvailableMana = %d, want 3 (3 untapped lands)", got)
+	}
+}
+
+func TestCountAvailableMana_IncludesManaCreatures(t *testing.T) {
+	g, pa, _ := makeGame()
+	land := mage.NewLand("Forest")
+	land.SetOwner(pa.PlayerID())
+	lp := mage.NewPermanent(land, pa.PlayerID())
+	lp.RevokeBaseAttr(core.AttrSummonSick)
+	g.Battlefield = append(g.Battlefield, lp)
+
+	// Mana creature
+	elf := makePerm("Llanowar Elves", "{G}", 1, 1, pa.PlayerID(), mage.WithManaAbility(core.Green))
+	g.Battlefield = append(g.Battlefield, elf)
+
+	got := countAvailableMana(g, pa.PlayerID())
+	if got != 2 {
+		t.Errorf("countAvailableMana = %d, want 2 (1 land + 1 mana creature)", got)
+	}
+}
+
+// ── clock helper ────────────────────────────────────────────────────────────
+
+func TestClock_Basic(t *testing.T) {
+	if got := clock(20, 3); got != 7 {
+		t.Errorf("clock(20, 3) = %d, want 7 (ceil(20/3))", got)
+	}
+	if got := clock(6, 3); got != 2 {
+		t.Errorf("clock(6, 3) = %d, want 2", got)
+	}
+	if got := clock(1, 3); got != 1 {
+		t.Errorf("clock(1, 3) = %d, want 1", got)
+	}
+}
+
+func TestClock_ZeroDamage(t *testing.T) {
+	if got := clock(20, 0); got != math.MaxInt32 {
+		t.Errorf("clock(20, 0) = %d, want MaxInt32", got)
 	}
 }

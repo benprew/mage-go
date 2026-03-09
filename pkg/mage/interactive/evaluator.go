@@ -291,6 +291,8 @@ func keywordBonus(perm *mage.Permanent) int {
 }
 
 // abilityBonus scores non-keyword runtime abilities on a creature.
+// Phase 0D: Enhanced to score activated abilities by effect quality rather
+// than a flat +1.
 func abilityBonus(perm *mage.Permanent) int {
 	score := 0
 	for _, a := range perm.RuntimeAbilities {
@@ -303,10 +305,51 @@ func abilityBonus(perm *mage.Permanent) int {
 				score += 2
 			}
 		case mage.ActivatedAbility:
-			score += 1
+			score += abilityQuality(ab)
 		case mage.TriggeredAbility:
 			score += 1
 		}
 	}
 	return score
+}
+
+// abilityQuality scores an activated ability by its effect properties.
+// Tap-to-draw: 5, Tap-to-damage: 4, Tap-to-destroy/exile: 3,
+// Other beneficial: 2, Minimum for any ability: 1.
+func abilityQuality(ab mage.ActivatedAbility) int {
+	bestScore := 1 // minimum score for any activated ability
+
+	for _, e := range ab.Effects() {
+		props := e.Properties()
+
+		// Tap-to-draw is very strong
+		if props.DrawCount > 0 {
+			if 5 > bestScore {
+				bestScore = 5
+			}
+		}
+
+		// Tap-to-deal-damage is strong
+		if props.DamageValue != nil && props.Outcome == mage.OutcomeDetriment {
+			if 4 > bestScore {
+				bestScore = 4
+			}
+		}
+
+		// Destruction/exile effects
+		if props.Outcome == mage.OutcomeDetriment && props.DamageValue == nil {
+			if 3 > bestScore {
+				bestScore = 3
+			}
+		}
+
+		// Other beneficial effects (lifegain, pump, etc.)
+		if props.Outcome == mage.OutcomeBenefit && props.DrawCount == 0 {
+			if 2 > bestScore {
+				bestScore = 2
+			}
+		}
+	}
+
+	return bestScore
 }

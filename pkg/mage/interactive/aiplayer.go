@@ -253,6 +253,14 @@ func (s *HeuristicStrategy) weights() WeightedPersonality {
 func (s *HeuristicStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, mainPhase bool) PriorityAction {
 	playerID := p.PlayerID()
 
+	// Phase 0A: If opponent has lethal and we have removal, prioritize it.
+	lethal := CalculateLethal(g, playerID)
+	if lethal.TheyHaveLethal {
+		if removal := s.findBestRemoval(p, g); removal != nil {
+			return *removal
+		}
+	}
+
 	if mainPhase {
 		if landsPlayed < 1 {
 			for _, c := range p.Hand() {
@@ -266,6 +274,10 @@ func (s *HeuristicStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPla
 			}
 		}
 
+		// Phase 0C: Compute available mana and hand CMCs for curve awareness.
+		availMana := countAvailableMana(g, playerID)
+		cmcs := handCMCs(p.Hand())
+
 		var bestCard mage.Card
 		bestScore := -1
 		for _, card := range g.GetCastableSpells(playerID) {
@@ -273,6 +285,9 @@ func (s *HeuristicStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPla
 				continue
 			}
 			score := spellValue(card, p, g)
+			// Phase 0C: Add mana curve bonus
+			curveBonus := manaCurveBonus(card.ManaCost().CMC(), availMana, cmcs)
+			score += int(curveBonus)
 			if score > bestScore {
 				bestScore = score
 				bestCard = card
@@ -289,10 +304,12 @@ func (s *HeuristicStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPla
 		}
 	}
 
+	// Phase 0D: Consider activating non-mana abilities.
+	if action := s.considerAbilityActivation(p, g); action != nil {
+		return *action
+	}
+
 	// HoldInstants: at 1.0 always hold during main phase; at 0.0 never hold.
-	// At intermediate values, hold only if we're on our main phase and the
-	// weight exceeds 0.5 (i.e., prefer to hold). Always cast freely during
-	// opponent's turn / responses.
 	holdNow := mainPhase && s.weights().HoldInstants > 0.5
 	if !holdNow {
 		for _, card := range p.Hand() {
@@ -328,22 +345,154 @@ func (s *HeuristicStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPla
 	return PriorityAction{Type: ActionPass}
 }
 
+// findBestRemoval searches for the best removal spell in hand that can kill
+// the opponent's biggest threat. Used when opponent has lethal on board.
+func (s *HeuristicStrategy) findBestRemoval(p mage.Player, g *mage.Game) *PriorityAction {
+	playerID := p.PlayerID()
+	opponent := g.GetOpponent(playerID)
+	if opponent == nil {
+		return nil
+	}
+
+	for _, card := range p.Hand() {
+		if !g.CanAfford(playerID, card.ManaCost()) {
+			continue
+		}
+		// Check if this spell has a detrimental effect (removal)
+		for _, a := range card.Abilities() {
+			sa, ok := a.(*mage.SpellAbility)
+			if !ok {
+				continue
+			}
+			outcome := mage.SpellOutcome(sa.Effects())
+			if outcome == mage.OutcomeDetriment {
+				targets := s.autoSelectTargets(p, g, card)
+				if len(targets) > 0 {
+					// Verify we're targeting an opponent's permanent
+					for _, tid := range targets {
+						perm := g.FindPermanent(tid)
+						if perm != nil && perm.Controller == opponent.PlayerID() {
+							return &PriorityAction{
+								Type:     ActionCastSpell,
+								CardID:   card.ID(),
+								CardName: card.Name(),
+								Targets:  targets,
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// considerAbilityActivation checks for valuable non-mana activated abilities
+// and returns an action to activate the best one. Phase 0D.
+func (s *HeuristicStrategy) considerAbilityActivation(p mage.Player, g *mage.Game) *PriorityAction {
+	playerID := p.PlayerID()
+	abilities := g.GetActivatableAbilities(playerID)
+	if len(abilities) == 0 {
+		return nil
+	}
+
+	var bestInfo *mage.ActivatableInfo
+	bestScore := 0
+
+	for i := range abilities {
+		info := &abilities[i]
+		perm := g.FindPermanent(info.PermanentID)
+		if perm == nil {
+			continue
+		}
+		// Score the ability by its effects
+		if info.AbilityIndex < 0 || info.AbilityIndex >= len(perm.RuntimeAbilities) {
+			continue
+		}
+		ab, ok := mage.UnwrapAbility(perm.RuntimeAbilities[info.AbilityIndex]).(mage.ActivatedAbility)
+		if !ok {
+			continue
+		}
+		score := abilityQuality(ab)
+		if score > bestScore {
+			bestScore = score
+			bestInfo = info
+		}
+	}
+
+	// Only activate if the ability is reasonably valuable (score >= 3)
+	if bestInfo != nil && bestScore >= 3 {
+		perm := g.FindPermanent(bestInfo.PermanentID)
+		if perm == nil {
+			return nil
+		}
+		ab, ok := mage.UnwrapAbility(perm.RuntimeAbilities[bestInfo.AbilityIndex]).(mage.ActivatedAbility)
+		if !ok {
+			return nil
+		}
+
+		// Auto-select targets for the ability
+		var targets []uuid.UUID
+		for _, t := range ab.Targets() {
+			possible := t.Possible(playerID, perm.Card, g)
+			if len(possible) == 0 {
+				return nil // can't activate, no valid targets
+			}
+			// Simple target selection: pick best opponent creature or opponent player
+			opponent := g.GetOpponent(playerID)
+			bestTarget := possible[0]
+			if opponent != nil {
+				for _, id := range possible {
+					p := g.FindPermanent(id)
+					if p != nil && p.Controller == opponent.PlayerID() {
+						bestTarget = id
+						break
+					}
+				}
+			}
+			targets = append(targets, bestTarget)
+		}
+
+		return &PriorityAction{
+			Type:         ActionActivateAbility,
+			PermanentID:  bestInfo.PermanentID,
+			AbilityIndex: bestInfo.AbilityIndex,
+			Targets:      targets,
+		}
+	}
+
+	return nil
+}
+
 func (s *HeuristicStrategy) Attackers(p mage.Player, g *mage.Game) []uuid.UUID {
-	opponent := g.GetOpponent(p.PlayerID())
+	playerID := p.PlayerID()
+	opponent := g.GetOpponent(playerID)
 	var opponentID uuid.UUID
 	if opponent != nil {
 		opponentID = opponent.PlayerID()
 	}
 
+	// Phase 0A: If I have lethal, attack with exactly the lethal set.
+	lethal := CalculateLethal(g, playerID)
+	if lethal.IHaveLethal && len(lethal.LethalAttackers) > 0 {
+		return lethal.LethalAttackers
+	}
+
+	// Phase 0B: Check race — if my clock < their clock, race aggressively.
+	race := CalculateRace(g, playerID)
+
 	var attackers []uuid.UUID
 	for _, perm := range g.Battlefield {
-		if perm.Controller != p.PlayerID() {
+		if perm.Controller != playerID {
 			continue
 		}
 		if !perm.CanDeclareAsAttacker(g) {
 			continue
 		}
-		if shouldAttack(perm, g, opponentID, s.weights().Aggression) {
+		if race.Racing && race.MyClock <= race.TheirClock {
+			// Racing favorably: attack aggressively
+			attackers = append(attackers, perm.ID())
+		} else if shouldAttack(perm, g, opponentID, s.weights().Aggression) {
 			attackers = append(attackers, perm.ID())
 		}
 	}
@@ -351,18 +500,28 @@ func (s *HeuristicStrategy) Attackers(p mage.Player, g *mage.Game) []uuid.UUID {
 }
 
 func (s *HeuristicStrategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAssignment {
+	playerID := p.PlayerID()
+
+	// Phase 0A: If opponent has lethal, block to survive even with bad trades.
+	lethal := CalculateLethal(g, playerID)
+	theyHaveLethal := lethal.TheyHaveLethal
+
+	// Phase 0B: If racing favorably, only chump-block lethal.
+	race := CalculateRace(g, playerID)
+	racingFavorably := race.Racing && race.MyClock < race.TheirClock
+
 	var assignments []mage.BlockAssignment
 
 	var available []*mage.Permanent
 	for _, perm := range g.Battlefield {
-		if perm.Controller != p.PlayerID() || !perm.CanDeclareAsBlocker(g) {
+		if perm.Controller != playerID || !perm.CanDeclareAsBlocker(g) {
 			continue
 		}
 		available = append(available, perm)
 	}
 
 	for _, group := range g.Combat.Groups {
-		if group.DefenderID != p.PlayerID() {
+		if group.DefenderID != playerID {
 			continue
 		}
 		atk := g.FindPermanent(group.AttackerID)
@@ -370,10 +529,16 @@ func (s *HeuristicStrategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAs
 			continue
 		}
 		atkPow := atk.CurrentPower(g)
-		// BlockThreshold: 0.0 = block everything, 1.0 = never block.
-		// Derive a minimum power threshold from the weight.
-		if !shouldBlock(atkPow, g, p.PlayerID(), s.weights().BlockThreshold) {
-			continue
+
+		// When facing lethal, block everything we can (ignore power threshold)
+		if !theyHaveLethal {
+			// When racing favorably, skip blocking (only block lethal)
+			if racingFavorably {
+				continue
+			}
+			if !shouldBlock(atkPow, g, p.PlayerID(), s.weights().BlockThreshold) {
+				continue
+			}
 		}
 
 		for i, blk := range available {
@@ -383,11 +548,21 @@ func (s *HeuristicStrategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAs
 			if !mage.CanBlock(blk, atk, g) {
 				continue
 			}
-			if mage.HasLandwalkEvasion(atk, p.PlayerID(), g) {
+			if mage.HasLandwalkEvasion(atk, playerID, g) {
 				continue
 			}
 			blkPow := blk.CurrentPower(g)
 			atkTough := atk.CurrentToughness(g)
+
+			// When facing lethal, block even with bad trades
+			if theyHaveLethal {
+				assignments = append(assignments, mage.BlockAssignment{
+					BlockerID:  blk.ID(),
+					AttackerID: atk.ID(),
+				})
+				available[i] = nil
+				break
+			}
 
 			if blkPow >= atkTough || atkPow >= 3 {
 				assignments = append(assignments, mage.BlockAssignment{
