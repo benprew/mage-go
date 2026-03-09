@@ -1,7 +1,7 @@
 // Package cardart generates unique deterministic pixel art for Magic: The Gathering cards.
 // Each card gets a 32x32 image composed of layers: background (from color identity),
 // silhouette (from card type), and a hash-based pattern overlay (from card name).
-package cardart
+package main
 
 import (
 	"crypto/sha256"

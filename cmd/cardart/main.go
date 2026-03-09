@@ -14,7 +14,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/mage/mage/internal/cardart"
 )
 
 func main() {
@@ -32,13 +31,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	input := cardart.CardInput{
+	input := CardInput{
 		Name:   *name,
 		Colors: parseColors(*colorStr),
 		Type:   parseType(*typeStr),
 	}
 
-	img := cardart.Generate(input)
+	img := Generate(input)
 
 	if *output != "" {
 		f, err := os.Create(*output)
@@ -50,9 +49,9 @@ func main() {
 
 		isSVG := strings.HasSuffix(strings.ToLower(*output), ".svg")
 		if isSVG {
-			err = cardart.WriteSVG(f, img, *svgScale)
+			err = WriteSVG(f, img, *svgScale)
 		} else {
-			err = cardart.WritePNG(f, img)
+			err = WritePNG(f, img)
 		}
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error writing file: %v\n", err)
@@ -62,47 +61,47 @@ func main() {
 	}
 
 	if *output == "" || *ansi {
-		fmt.Print(cardart.RenderANSI(img))
+		fmt.Print(RenderANSI(img))
 	}
 }
 
-func parseColors(s string) []cardart.Color {
+func parseColors(s string) []Color {
 	if s == "" {
 		return nil
 	}
-	var colors []cardart.Color
+	var colors []Color
 	for _, ch := range strings.ToUpper(s) {
 		switch ch {
 		case 'W':
-			colors = append(colors, cardart.ColorWhite)
+			colors = append(colors, ColorWhite)
 		case 'U':
-			colors = append(colors, cardart.ColorBlue)
+			colors = append(colors, ColorBlue)
 		case 'B':
-			colors = append(colors, cardart.ColorBlack)
+			colors = append(colors, ColorBlack)
 		case 'R':
-			colors = append(colors, cardart.ColorRed)
+			colors = append(colors, ColorRed)
 		case 'G':
-			colors = append(colors, cardart.ColorGreen)
+			colors = append(colors, ColorGreen)
 		}
 	}
 	return colors
 }
 
-func parseType(s string) cardart.CardType {
+func parseType(s string) CardType {
 	switch strings.ToLower(s) {
 	case "creature":
-		return cardart.TypeCreature
+		return TypeCreature
 	case "artifact":
-		return cardart.TypeArtifact
+		return TypeArtifact
 	case "enchantment":
-		return cardart.TypeEnchantment
+		return TypeEnchantment
 	case "instant":
-		return cardart.TypeInstant
+		return TypeInstant
 	case "sorcery":
-		return cardart.TypeSorcery
+		return TypeSorcery
 	case "land":
-		return cardart.TypeLand
+		return TypeLand
 	default:
-		return cardart.TypeCreature
+		return TypeCreature
 	}
 }

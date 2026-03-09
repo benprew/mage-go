@@ -1,4 +1,4 @@
-package cardart
+package main
 
 // Silhouette shapes derived from pixelarticons (https://github.com/halfmage/pixelarticons)
 // by Gerrit Halfmann, licensed under MIT. Original 24x24 outline icons converted to

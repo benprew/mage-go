@@ -1,4 +1,4 @@
-package cardart
+package main
 
 import (
 	"fmt"
