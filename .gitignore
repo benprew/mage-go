@@ -28,6 +28,7 @@ java/**/target/
 /cardgen
 /fetchset
 /genset
+/cardart
 
 # Coverage
 coverage.html
