@@ -958,6 +958,19 @@ func TestTetravus(t *testing.T) {
 		g.AssertHasAbility(gametest.PlayerA, "Tetravite", core.Flying, true)
 	})
 
+	t.Run("Tetravite tokens cannot be enchanted", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Tetravus")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Tetravus")
+		g.ChooseNumber(gametest.PlayerA, 1) // remove 1 counter → 1 Tetravite
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Artifact Ward") // Aura targeting creature
+		g.CastSpell(4, core.PrecombatMain, gametest.PlayerB, "Artifact Ward", "Tetravite")
+		g.StopAt(4, core.BeginCombat)
+		g.Execute()
+		// Aura should fail to attach — Tetravite can't be enchanted
+		g.AssertPermanentCount(gametest.PlayerB, "Artifact Ward", 0)
+		g.AssertPermanentCount(gametest.PlayerA, "Tetravite", 1)
+	})
 }
 
 func TestTriskelion(t *testing.T) {

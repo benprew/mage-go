@@ -871,7 +871,7 @@ func registerCreatures() {
 							token := NewToken("Tetravite", 1, 1,
 								[]CardType{TypeArtifact, TypeCreature},
 								[]string{"Tetravite"},
-								Flying,
+								Flying, AttrCantBeEnchanted,
 							)
 							token.SetOwner(controller)
 							perm := g.PutOnBattlefield(token, controller)
