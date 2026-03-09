@@ -14,6 +14,7 @@ go test ./cards/...                        # card tests only
 go test ./cards/arabian/ -run TestFooBar   # single test
 go build ./...                             # build check
 go vet ./...                               # vet
+make wasm                                  # build WASM + copy wasm_exec.js to web/
 ```
 
 ## Cardinal Rules
@@ -81,9 +82,12 @@ cards/legends/         # Legends cards
 cards/custom/          # custom/test cards
 cmd/tui/               # terminal UI
 cmd/server/            # SSH multiplayer server
+cmd/wasm/              # WebAssembly build (GOOS=js GOARCH=wasm)
 cmd/fetchset/          # set data fetcher
 cmd/genset/            # stub generator from Scryfall JSON
 data/                  # Scryfall JSON card data per set
+web/                   # browser UI (index.html, game.js, build.sh)
+docs/                  # landing page, visual identity, tutorials
 ```
 
 Cards register via `Register(name, factory)` in `init()`. Each card file has a registration function called from `init()`. The `test.go` file in each card package holds blank-identifier references to ensure registration runs.
