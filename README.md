@@ -39,7 +39,30 @@ cards/custom/          # custom/test cards
 cmd/tui/               # terminal UI
 cmd/server/            # SSH multiplayer server
 cmd/fetchset/          # set data fetcher
+cmd/genset/            # stub generator from Scryfall JSON
+data/                  # Scryfall JSON card data per set
+.claude/skills/        # Claude Code skills for card implementation
 ```
+
+## Adding a New Set
+
+The project includes a pipeline for implementing entire card sets:
+
+1. **Fetch** card data from Scryfall:
+   ```bash
+   go run ./cmd/fetchset -o data/DRK.json DRK
+   ```
+
+2. **Generate** Go stubs from the JSON. This creates one file per card type (`creatures.go`, `spells.go`, etc.) with full Oracle text as comments and `// TODO: implement` markers. Reprints already registered in other sets are automatically skipped.
+   ```bash
+   go run ./cmd/genset "The Dark" data/DRK.json cards/thedark/
+   ```
+
+3. **Implement** cards. Each card is implemented TDD-style: write a failing test that exercises the card's behavior, then implement the card to make it pass. The `pkg/mage/doc.go` file is the comprehensive API reference for all available effects, triggers, targets, and costs.
+
+4. **Validate** completeness by checking every implementation against Scryfall Oracle text, auditing test coverage, and running the full test suite.
+
+[Claude Code](https://claude.com/claude-code) skills (`.claude/skills/`) automate steps 3 and 4 — `/implement-set` handles the full implementation workflow and `/validate-set` audits the result.
 
 ## Build & Test
 

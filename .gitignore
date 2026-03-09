@@ -22,12 +22,12 @@ java/**/target/
 .project
 .classpath
 
-# Binaries
-tui
-server
-cardgen
-fetchset
-genset
+# Binaries (root-level only, so cmd/ sources aren't ignored)
+/tui
+/server
+/cardgen
+/fetchset
+/genset
 
 # Coverage
 coverage.html

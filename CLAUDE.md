@@ -28,6 +28,41 @@ go vet ./...                               # vet
 
 **Read `pkg/mage/doc.go` first.** It is the comprehensive reference for every engine subsystem: card constructors, effects (50+), targets, filters, costs, activated abilities, triggered abilities (20+ convenience constructors), continuous effects, the layer system, attrs, and the GameMutator API. It includes complete card examples.
 
+## Set Implementation Toolkit
+
+The project has a pipeline for implementing entire card sets, from fetching data through validated completion.
+
+### Tools
+
+- **`cmd/fetchset`** — Fetches card data from the Scryfall API and writes JSON to `data/`.
+  ```bash
+  go run ./cmd/fetchset -o data/DRK.json DRK
+  ```
+
+- **`cmd/genset`** — Generates Go stub files from the JSON. Creates `register.go`, `test.go`, `creatures.go`, `artifacts.go`, `enchantments.go`, `spells.go`, and `lands.go` with full Oracle text comments and `// TODO: implement` markers. Automatically skips reprints already registered in other sets.
+  ```bash
+  go run ./cmd/genset "The Dark" data/DRK.json cards/thedark/
+  ```
+
+### Claude Code Skills
+
+Three skills automate the card implementation workflow:
+
+- **`/implement-card <card names>`** — TDD workflow for a single card or batch of similar cards. Reads the stub, writes failing tests, implements the card, verifies all tests pass, and commits. Consults `doc.go` for the engine API and XMage for complex mechanics. Uses `AskUserQuestion` before cutting any scope.
+
+- **`/implement-set <set-code> [set-name] [package-name]`** — End-to-end set implementation. Runs `fetchset` and `genset`, then analyzes every card into tiers (vanilla → standard effects → complex → engine work required → out of scope). Presents the plan for approval, then works through batches via `/implement-card`, parallelizing independent work. Commits after each batch.
+
+- **`/validate-set <package-name>`** — Audits a set for completeness and correctness. Checks every card's implementation against Scryfall Oracle text for fidelity — catches missing abilities, simplified effects (e.g., "nontoken" not checked), wrong values, and missing conditions. Audits test coverage, runs the test suite, and produces a structured report with prioritized next steps.
+
+### Typical Workflow
+
+```
+1. go run ./cmd/fetchset -o data/DRK.json DRK       # fetch from Scryfall
+2. go run ./cmd/genset "The Dark" data/DRK.json cards/thedark/  # generate stubs
+3. /implement-set DRK "The Dark" thedark             # implement all cards
+4. /validate-set thedark                             # audit completeness
+```
+
 ## Package Layout
 
 ```
@@ -43,6 +78,8 @@ cards/custom/          # custom/test cards
 cmd/tui/               # terminal UI
 cmd/server/            # SSH multiplayer server
 cmd/fetchset/          # set data fetcher
+cmd/genset/            # stub generator from Scryfall JSON
+data/                  # Scryfall JSON card data per set
 ```
 
 Cards register via `Register(name, factory)` in `init()`. Each card file has a registration function called from `init()`. The `test.go` file in each card package holds blank-identifier references to ensure registration runs.

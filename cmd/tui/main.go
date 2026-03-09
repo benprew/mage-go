@@ -10,8 +10,7 @@ import (
 	"github.com/mage/mage/pkg/mage"
 	"github.com/mage/mage/pkg/mage/interactive"
 
-	// Register all cards
-	_ "github.com/mage/mage/cards/limited"
+	_ "github.com/mage/mage/cards" // register all card sets
 )
 
 func main() {
