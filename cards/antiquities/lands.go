@@ -17,7 +17,6 @@ func registerLands() {
 	// {1}: Mishra's Factory becomes a 2/2 Assembly-Worker artifact creature until end of turn.
 	// It's still a land.
 	// {T}: Target Assembly-Worker creature gets +1/+1 until end of turn.
-	// XXX: missing Assembly-Worker subtype on animate; missing {T}: +1/+1 to target Assembly-Worker ability
 	Register("Mishra's Factory", func() Card {
 		return NewLand("Mishra's Factory",
 			WithManaAbility(Colorless),
@@ -29,13 +28,26 @@ func registerLands() {
 						if perm == nil {
 							return nil
 						}
-						eff := TemporaryAnimate(sourceID, 2, 2)
-						eff.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff)
+						// Animate as 2/2 creature
+						animEff := TemporaryAnimate(sourceID, 2, 2)
+						animEff.SetSourceID(sourceID)
+						g.AddContinuousEffect(animEff)
+						// Add Assembly-Worker subtype until end of turn
+						subEff := TargetEffect(LayerType, EndOfTurn, sourceID, func(g2 *Game, target *Permanent) error {
+							target.Card.AddSubType("Assembly-Worker")
+							return nil
+						})
+						subEff.SetSourceID(sourceID)
+						g.AddContinuousEffect(subEff)
 						g.ApplyContinuousEffects()
 						return nil
 					}),
 				GenericCost(1),
+			),
+			WithActivatedAbility(
+				BoostUntilEndOfTurn(Fixed(1), Fixed(1), SelectTarget),
+				TapSourceCost(),
+				WithTarget(TargetCreature(HasSubType("Assembly-Worker"))),
 			),
 		)
 	})

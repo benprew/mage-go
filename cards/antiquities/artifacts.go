@@ -134,7 +134,7 @@ func registerArtifacts() {
 					}),
 				GenericCost(2),
 				WithCost(TapSourceCost()),
-				WithTarget(TargetCreature()),
+				WithTarget(TargetControlledCreature()),
 			),
 		)
 	})

@@ -125,6 +125,20 @@ func TestAshnodsTransmogrant(t *testing.T) {
 	})
 }
 
+func TestAshnodsTransmograntNegative(t *testing.T) {
+	t.Run("cannot target artifact creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ashnod's Transmogrant")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ornithopter") // artifact creature
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Ashnod's Transmogrant", "Ornithopter")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Cannot target artifact creature — Transmogrant should still be on battlefield
+		g.AssertPermanentCount(gametest.PlayerA, "Ashnod's Transmogrant", 1)
+		g.AssertCounterCount(gametest.PlayerA, "Ornithopter", core.P1P1, 0)
+	})
+}
+
 func TestCandelabraOfTawnos(t *testing.T) {
 	// XXX: X-targeting for untap lands
 	t.Run("is a 1-cost artifact", func(t *testing.T) {
@@ -524,6 +538,22 @@ func TestTawnossWand(t *testing.T) {
 		g.StopAt(1, core.EndCombat)
 		g.Execute()
 		g.AssertLife(gametest.PlayerB, 18) // unblockable, 2 damage
+	})
+}
+
+func TestTawnossWandNegative(t *testing.T) {
+	t.Run("cannot target creature with power greater than 2", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tawnos's Wand")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant") // 3/3, power > 2
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant") // blocker
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Tawnos's Wand", "Hill Giant")
+		g.Attack(1, gametest.PlayerA, "Hill Giant")
+		g.Block(1, gametest.PlayerB, "Hill Giant", "Hill Giant")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		// Hill Giant power 3 > 2, so Wand should fail to target — Hill Giant gets blocked
+		g.AssertLife(gametest.PlayerB, 20) // blocked, no damage through
 	})
 }
 

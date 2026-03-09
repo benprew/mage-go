@@ -97,16 +97,15 @@ func TestMartyrsOfKorlis(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Martyrs of Korlis")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Rocket Launcher")
-		// Attack with Martyrs to tap it
+		// Attack with Martyrs on turn 1 to tap it
 		g.Attack(1, gametest.PlayerA, "Martyrs of Korlis")
-		// Rocket Launcher targets PlayerA on turn 4 — Martyrs is tapped from attacking turn 1
-		// Actually Martyrs will untap on turn 3. Let me use a different approach.
-		// Use Orcish Mechanics to deal artifact damage to PlayerA on turn 2 while Martyrs is still tapped
-		g.ActivateAbility(4, core.PrecombatMain, gametest.PlayerB, "Rocket Launcher", "PlayerA")
-		g.StopAt(4, core.BeginCombat)
+		// On turn 2 (PlayerB's turn), Martyrs is still tapped (doesn't untap until PlayerA's turn 3)
+		// Activate Rocket Launcher on turn 2 targeting PlayerA while Martyrs is tapped
+		g.ActivateAbility(2, core.PrecombatMain, gametest.PlayerB, "Rocket Launcher", "PlayerA")
+		g.StopAt(2, core.BeginCombat)
 		g.Execute()
-		// Martyrs untapped on turn 3, so on turn 4 it IS untapped → redirect happens
-		g.AssertLife(gametest.PlayerA, 20)
+		// Martyrs is tapped, so redirect should NOT happen — PlayerA takes 1 damage
+		g.AssertLife(gametest.PlayerA, 19)
 	})
 }
 
@@ -315,6 +314,21 @@ func TestDwarvenWeaponsmith(t *testing.T) {
 		g.Execute()
 		g.AssertCounterCount(gametest.PlayerA, "Grizzly Bears", core.P1P1, 1)
 		g.AssertPermanentCount(gametest.PlayerA, "Ornithopter", 0) // sacrificed
+	})
+}
+
+func TestDwarvenWeaponsmithNegative(t *testing.T) {
+	t.Run("cannot activate outside upkeep", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Dwarven Weaponsmith")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ornithopter") // sacrifice fodder
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Dwarven Weaponsmith", "Grizzly Bears")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Activation should fail outside upkeep — no counter added
+		g.AssertCounterCount(gametest.PlayerA, "Grizzly Bears", core.P1P1, 0)
+		g.AssertPermanentCount(gametest.PlayerA, "Ornithopter", 1) // not sacrificed
 	})
 }
 
@@ -684,6 +698,28 @@ func TestPrimalClay(t *testing.T) {
 		if !card.HasType(core.TypeCreature) {
 			t.Errorf("Primal Clay should be a Creature")
 		}
+	})
+
+	t.Run("defaults to 3/3 artifact creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Primal Clay")
+		g.ChooseMode(gametest.PlayerA, 0) // default 3/3 form
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Primal Clay")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Primal Clay", 3, 3)
+		g.AssertHasAbility(gametest.PlayerA, "Primal Clay", core.Flying, false)
+	})
+
+	t.Run("can become 1/6 Wall with defender", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Primal Clay")
+		g.ChooseMode(gametest.PlayerA, 2) // 1/6 Wall form
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Primal Clay")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Primal Clay", 1, 6)
+		g.AssertHasAbility(gametest.PlayerA, "Primal Clay", core.Defender, true)
 	})
 
 	t.Run("can become 2/2 with flying", func(t *testing.T) {
