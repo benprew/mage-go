@@ -144,8 +144,9 @@ func registerCreatures() {
 		return NewCreature("Enchanted Being", "{1}{W}{W}", 2, 2,
 			WithSubTypes("Human"),
 			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-				// Prevent damage from enchanted creatures (creatures with auras attached)
+				// Prevent combat damage from enchanted creatures (creatures with auras attached)
 				g.Effects.Damage.AddDamagePreventionRule(
+					WithCombatOnly(),
 					WithFrom(NewPermanentFilter("enchanted creature", func(p *Permanent, g *Game) bool {
 						if !p.HasType(TypeCreature) {
 							return false
@@ -442,14 +443,21 @@ func registerCreatures() {
 				"sacrifice an Island or sacrifice this creature and it deals 6 damage to you",
 				EffectProperties{Outcome: OutcomeDetriment},
 				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					// Try to find and sacrifice an Island
-					for _, p := range g.FilterBattlefield(NewPermanentFilter("Island", func(p *Permanent, _ *Game) bool {
-						return p.Controller == controller && p.HasSubType("Island")
-					})) {
-						g.Sacrifice(p)
+					player := g.GetPlayer(controller)
+					if player == nil {
 						return nil
 					}
-					// No Island — sacrifice self and deal 6 damage
+					candidates := g.FilterBattlefield(NewPermanentFilter("Island", func(p *Permanent, _ *Game) bool {
+						return p.Controller == controller && p.HasSubType("Island")
+					}))
+					if len(candidates) > 0 && player.ChooseMayAbility("sacrifice an Island") {
+						chosen := player.ChoosePermanent(candidates, "sacrifice Island", g)
+						if chosen != nil {
+							g.Sacrifice(chosen)
+							return nil
+						}
+					}
+					// No Island or chose not to — sacrifice self and deal 6 damage
 					perm := g.FindPermanent(sourceID)
 					if perm != nil {
 						g.Sacrifice(perm)
@@ -804,11 +812,15 @@ func registerCreatures() {
 					}
 					perm := g.FindPermanent(sourceID)
 					if perm != nil {
+						// "destroy ... it can't be regenerated" (implicit from Oracle "destroyed this way")
+						perm.GrantBaseAttr(CantRegenerate)
 						g.DestroyPermanent(perm)
-						// If destroyed this way, deal 7 damage to controller
-						p := g.GetPlayer(controller)
-						if p != nil {
-							g.DealDamageToPlayer(p, 7, sourceID)
+						// If actually destroyed (not indestructible), deal 7 damage
+						if g.FindPermanent(sourceID) == nil {
+							p := g.GetPlayer(controller)
+							if p != nil {
+								g.DealDamageToPlayer(p, 7, sourceID)
+							}
 						}
 					}
 					return nil
@@ -1130,9 +1142,7 @@ func registerCreatures() {
 					},
 				),
 				ManaCostOf("{B}"),
-				// XXX: Target filter allows any attacking/blocking creature, not just "blocking or blocked by this creature"
-				// (effect body validates combat relationship, but target list is broader than Oracle text)
-				WithTarget(TargetCreature(Or(IsAttacking, IsBlocking))),
+				WithTarget(TargetCreatureBlockingOrBlockedBySource()),
 			),
 		)
 	})
@@ -1159,22 +1169,31 @@ func registerCreatures() {
 				"sacrifice this creature unless you sacrifice two Swamps",
 				EffectProperties{Outcome: OutcomeDetriment},
 				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					// Find Swamps to sacrifice
-					var swamps []*Permanent
-					for _, p := range g.FilterBattlefield(NewPermanentFilter("Swamp", func(p *Permanent, _ *Game) bool {
-						return p.Controller == controller && p.HasSubType("Swamp")
-					})) {
-						swamps = append(swamps, p)
-						if len(swamps) == 2 {
-							break
-						}
-					}
-					if len(swamps) >= 2 {
-						g.Sacrifice(swamps[0])
-						g.Sacrifice(swamps[1])
+					player := g.GetPlayer(controller)
+					if player == nil {
 						return nil
 					}
-					// Can't sacrifice two Swamps — sacrifice self
+					candidates := g.FilterBattlefield(NewPermanentFilter("Swamp", func(p *Permanent, _ *Game) bool {
+						return p.Controller == controller && p.HasSubType("Swamp")
+					}))
+					if len(candidates) >= 2 && player.ChooseMayAbility("sacrifice two Swamps") {
+						first := player.ChoosePermanent(candidates, "sacrifice Swamp (1 of 2)", g)
+						if first != nil {
+							g.Sacrifice(first)
+							// Refresh candidates after first sacrifice
+							remaining := g.FilterBattlefield(NewPermanentFilter("Swamp", func(p *Permanent, _ *Game) bool {
+								return p.Controller == controller && p.HasSubType("Swamp")
+							}))
+							if len(remaining) > 0 {
+								second := player.ChoosePermanent(remaining, "sacrifice Swamp (2 of 2)", g)
+								if second != nil {
+									g.Sacrifice(second)
+									return nil
+								}
+							}
+						}
+					}
+					// Can't or chose not to sacrifice two Swamps — sacrifice self
 					perm := g.FindPermanent(sourceID)
 					if perm != nil {
 						g.Sacrifice(perm)
@@ -1592,7 +1611,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				TapOrUntapTarget(),
 				TapSourceCost(),
-				WithTarget(TargetPermanent(IsArtifact)),
+				WithTarget(TargetPermanentOpponentControls(IsArtifact)),
 			),
 		)
 	})
@@ -1741,11 +1760,15 @@ func registerCreatures() {
 						perm.AddCounter(P1P1, 1)
 						counters := perm.Counters[P1P1]
 						cost := fmt.Sprintf("{%d}", counters)
-						if !g.TryPayCostFromLands(controller, cost) {
+						player := g.GetPlayer(controller)
+						paid := false
+						if player != nil && player.ChooseMayAbility(fmt.Sprintf("pay {%d}", counters)) {
+							paid = g.TryPayCostFromLands(controller, cost)
+						}
+						if !paid {
 							perm.Tapped = true
-							p := g.GetPlayer(controller)
-							if p != nil {
-								g.DealDamageToPlayer(p, counters, sourceID)
+							if player != nil {
+								g.DealDamageToPlayer(player, counters, sourceID)
 							}
 						}
 						return nil
@@ -2201,8 +2224,14 @@ func registerCreatures() {
 					token := NewToken("Wolves of the Hunt", 1, 1, []CardType{TypeCreature}, []string{"Wolf"}, Banding)
 					token.SetOwner(controller)
 					perm := g.PutOnBattlefield(token, controller)
-					colors := []Color{Green}
-					perm.ColorOverride = &colors
+					tokenID := perm.ID()
+					ce := TargetEffect(LayerColor, Indefinite, tokenID, func(g *Game, target *Permanent) error {
+						colors := []Color{Green}
+						target.ColorOverride = &colors
+						return nil
+					})
+					ce.SetSourceID(tokenID)
+					g.AddContinuousEffect(ce)
 					return nil
 				}),
 				ManaCostOf("{2}{G}{G}"),
@@ -2508,12 +2537,12 @@ func registerCreatures() {
 			WithSuperTypes(SuperLegendary),
 			WithKeyword(Trample),
 			WithAbility(CreatureDealtDamageBySourceDiesTrigger(
-				CompositeEffects("gain 1 life and deal 1 damage to opponent",
+				CompositeEffects("gain 1 life and deal 1 damage to target player",
 					GainLife(1),
-					DealDamageToPlayers(Fixed(1), SelectEachOpponent()),
+					DealDamage(Fixed(1)),
 				),
 				false,
-			)),
+			).AddTarget(TargetPlayer())),
 		)
 	})
 
@@ -2568,8 +2597,14 @@ func registerCreatures() {
 					token := NewToken("Minor Demon", 1, 1, []CardType{TypeCreature}, []string{"Demon"})
 					token.SetOwner(controller)
 					perm := g.PutOnBattlefield(token, controller)
-					colors := []Color{Black, Red}
-					perm.ColorOverride = &colors
+					tokenID := perm.ID()
+					ce := TargetEffect(LayerColor, Indefinite, tokenID, func(g *Game, target *Permanent) error {
+						colors := []Color{Black, Red}
+						target.ColorOverride = &colors
+						return nil
+					})
+					ce.SetSourceID(tokenID)
+					g.AddContinuousEffect(ce)
 					return nil
 				}),
 				ManaCostOf("{2}{B}{R}"),
@@ -3320,7 +3355,8 @@ func registerCreatures() {
 				"pay {R}{R}{R} or tap and lose control",
 				EffectProperties{Outcome: OutcomeDetriment},
 				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					if g.TryPayCostFromLands(controller, "{R}{R}{R}") {
+					player := g.GetPlayer(controller)
+					if player != nil && player.ChooseMayAbility("pay {R}{R}{R}") && g.TryPayCostFromLands(controller, "{R}{R}{R}") {
 						return nil
 					}
 					opponent := g.GetOpponent(controller)
@@ -3721,6 +3757,7 @@ func registerCreatures() {
 			WithCardType(TypeArtifact),
 			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
 				g.Effects.Damage.AddDamagePreventionRule(
+					WithCombatOnly(),
 					WithFrom(NewPermanentFilter("Wall", func(p *Permanent, _ *Game) bool {
 						return p.HasSubType("Wall")
 					})),
@@ -3798,9 +3835,7 @@ func registerCreatures() {
 					},
 				),
 				GenericCost(0),
-				// XXX: Target filter allows any attacking/blocking creature, not just "blocking or blocked by this creature"
-				// (effect body validates combat relationship, but target list is broader than Oracle text)
-				WithTarget(TargetCreature(Or(IsAttacking, IsBlocking))),
+				WithTarget(TargetCreatureBlockingOrBlockedBySource()),
 			),
 		)
 	})

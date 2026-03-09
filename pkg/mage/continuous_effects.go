@@ -228,6 +228,31 @@ func GrantActivatedAbilityToAll(effect Effect, cost Cost, filter PermanentFilter
 	})
 }
 
+// GrantTriggeredAbilityToAll grants a triggered ability to all permanents matching filter.
+// Each permanent gets its own copy of the triggered ability, allowing individual trigger
+// ordering (unlike a single batch trigger). The trigger is constructed from the provided
+// event type, optional flag, condition, and effects.
+func GrantTriggeredAbilityToAll(eventType EventType, optional bool, cond TriggerCondition, filter PermanentFilter, effects ...Effect) ContinuousEffect {
+	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+		for _, p := range g.Battlefield {
+			if p.ID() == sourceID {
+				continue
+			}
+			if !filter.Match(p, g) {
+				continue
+			}
+			trig := NewTriggered(eventType, optional, effects...)
+			trig.source = p.ID()
+			trig.controller = p.Controller
+			if cond != nil {
+				trig.SetCondition(cond)
+			}
+			p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{trig})
+		}
+		return nil
+	})
+}
+
 // PreventFromAttackingIfDefendingPlayerControls creates a continuous effect preventing the creature from
 // attacking if the defender controls a certain type of card.
 // In a 2-player game the defending player is always the non-active player.

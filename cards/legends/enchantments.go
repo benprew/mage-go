@@ -474,14 +474,29 @@ func registerEnchantments() {
 	Register("Greater Realm of Preservation", func() Card {
 		return NewEnchantment("Greater Realm of Preservation", "{1}{W}",
 			WithActivatedAbility(
-				FuncEffect("prevent next black or red damage to you",
+				FuncEffect("prevent next damage from a black or red source of your choice",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						// Single prevention shield that catches the next damage from any
-						// source that is black OR red (Oracle: "the next time ... a black
-						// or red source of your choice").
+						// Oracle: "a black or red source of your choice" — player picks a
+						// specific black or red permanent; shield prevents next damage from it.
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						var candidates []*Permanent
+						for _, perm := range g.FilterBattlefield(Or(HasColorFilter(Black), HasColorFilter(Red))) {
+							candidates = append(candidates, perm)
+						}
+						if len(candidates) == 0 {
+							return nil
+						}
+						chosen := p.ChoosePermanent(candidates, "Greater Realm of Preservation: choose a black or red source", g)
+						if chosen == nil {
+							return nil
+						}
 						g.AddReplacementEffect(&blackOrRedPreventionReplacement{
-							playerID: controller,
+							playerID:       controller,
+							chosenSourceID: chosen.ID(),
 						})
 						return nil
 					}),
@@ -1459,12 +1474,13 @@ func registerEnchantments() {
 
 }
 
-// blackOrRedPreventionReplacement prevents the next damage from a source that
-// is black or red. It implements ReplacementEffect as a one-shot shield.
+// blackOrRedPreventionReplacement prevents the next damage from a specific
+// chosen black or red source. It implements ReplacementEffect as a one-shot shield.
 type blackOrRedPreventionReplacement struct {
-	playerID uuid.UUID
-	consumed bool
-	sourceID uuid.UUID
+	playerID       uuid.UUID
+	chosenSourceID uuid.UUID
+	consumed       bool
+	sourceID       uuid.UUID
 }
 
 func (r *blackOrRedPreventionReplacement) SourceID() uuid.UUID { return r.sourceID }
@@ -1477,16 +1493,8 @@ func (r *blackOrRedPreventionReplacement) Matches(a Action, g GameReader) bool {
 	if act.PlayerID() != r.playerID {
 		return false
 	}
-	sourceCard := g.FindCardAnywhere(act.ActionSource())
-	if sourceCard == nil {
-		return false
-	}
-	for _, c := range sourceCard.ManaCost().Colors() {
-		if c == Black || c == Red {
-			return true
-		}
-	}
-	return false
+	// Only prevent damage from the specific source the player chose
+	return act.ActionSource() == r.chosenSourceID
 }
 
 func (r *blackOrRedPreventionReplacement) Replace(a Action, g GameMutator) Action {

@@ -159,30 +159,28 @@ func registerEnchantments() {
 	// Enchantment
 	// All artifacts have "At the beginning of your upkeep, sacrifice this artifact unless you
 	// pay {2}."
-	// XXX: Oracle grants each artifact an individual triggered ability. Implementation uses a
-	// single batch trigger — the active player can't choose the order of individual sacrifice
-	// triggers (matters when you can only afford to pay for some).
 	Register("Energy Flux", func() Card {
 		return NewEnchantment("Energy Flux", "{2}{U}",
-			WithAbility(
-				BeginningOfEachUpkeepTrigger(
-					FuncEffect("sacrifice artifacts unless {2} paid",
+			WithStaticAbility(
+				GrantTriggeredAbilityToAll(
+					EvtUpkeep, false,
+					func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+						return evt.PlayerID == controllerID
+					},
+					IsArtifact,
+					FuncEffect("sacrifice this artifact unless you pay {2}",
 						EffectProperties{Outcome: OutcomeDetriment},
 						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							active := g.ActivePlayerObj()
-							activeID := active.PlayerID()
-							var toSacrifice []*Permanent
-							for _, perm := range g.FilterBattlefield(And(IsArtifact, ControlledBy(activeID))) {
-								if !g.TryPayCostFromLands(activeID, "{2}") {
-									toSacrifice = append(toSacrifice, perm)
-								}
+							perm := g.FindPermanent(sourceID)
+							if perm == nil {
+								return nil
 							}
-							for _, perm := range toSacrifice {
+							if !g.TryPayCostFromLands(controller, "{2}") {
 								g.Sacrifice(perm)
 							}
 							return nil
 						}),
-					false),
+				),
 			),
 		)
 	})

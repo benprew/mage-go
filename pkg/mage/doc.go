@@ -252,6 +252,7 @@ Battlefield targets:
 	[TargetControlledPermanent]()                          // permanent you control
 	[TargetPermanent](IsLand)                              // land (= TargetLand)
 	[TargetPermanent](IsArtifact)                          // artifact (= TargetArtifact)
+	[TargetArtifactWithManaValueX]()                       // artifact with CMC == g.CurrentX (Detonate)
 	[TargetPermanent](Or(IsArtifact, IsEnchantment))       // artifact or enchantment
 
 Player targets:
@@ -266,8 +267,9 @@ Stack targets:
 
 Zone targets:
 
-	[TargetCardInYourGraveyard](filters ...CardFilter)  // any card in your graveyard (pass IsCreatureCard for creatures)
-	[TargetCardInHand](filters ...CardFilter)           // any card in your hand (pass IsCreatureCard for creatures)
+	[TargetCardInYourGraveyard](filters ...CardFilter)        // any card in your graveyard (pass IsCreatureCard for creatures)
+	[TargetAnyNumberOfCardsInYourGraveyard](filters)         // any number (0+) of cards in your graveyard
+	[TargetCardInHand](filters ...CardFilter)                // any card in your hand (pass IsCreatureCard for creatures)
 
 Restrict with filters:
 
@@ -490,6 +492,9 @@ Convenience constructors (set condition automatically):
 	[PutIntoGraveyardFromBattlefieldTrigger](effect, optional)  // EvtPutIntoGraveyardFromBattlefield, self
 	[SacrificeAtUpkeepUnlessPay](manaCost)                      // sacrifice unless pay at upkeep
 
+EvtBecameUntapped fires whenever a permanent becomes untapped (during the untap step or
+by an effect like Twiddle). Use with NewTriggered for "when this becomes untapped" triggers.
+
 Custom triggers with SetCondition:
 
 	// When this creature dies (not "another" — self)
@@ -622,6 +627,7 @@ Global/source-based effects (while source on battlefield):
 	[PTEqualsControlledCount](filter)                      // P/T = count you control
 	[GrantKeywordToAll](keyword, filter)                   // grant keyword to matching
 	[GrantActivatedAbilityToAll](effect, cost, filter)     // grant ability to matching
+	[GrantTriggeredAbilityToAll](evt, opt, cond, filter, effects...) // grant trigger to matching
 	[PreventUntapForMatching](filter)                      // Meekstone
 	[PreventAllUntaps]()                                   // Stasis
 	[AnimateLands](filter, power, toughness)               // Living Lands
@@ -791,6 +797,27 @@ GameMutator also includes proxy methods for the DamageSystem and GameRules
 subsystems, so card effects call e.g. g.SetPreventCombatDamage() or
 g.AddRegenerationShield(id) rather than reaching through g.Effects.Damage
 directly. The full list is in game_mutator.go.
+
+# Game Cloning & Search Execution (execute.go, clone.go)
+
+[Game.Clone]() deep-copies the entire game state for AI search. Players are
+wrapped in [SearchPlayer] for non-interactive choice defaults. All mutable state
+(permanents, effects, stack, combat, exile) is deep-copied; immutable Card refs
+are shared.
+
+Headless execution methods drive cloned games programmatically (no player callbacks):
+
+	g.ExecuteAttackers(playerID, attackerIDs)  // declare attackers + tap + events
+	g.ExecuteBlockers(assignments)             // declare blockers + events
+	g.ExecuteCombatDamage()                    // resolve first strike + normal damage
+	g.RunRemainingSteps()                      // fast-forward from current step to end of turn
+
+For spell/land/ability execution on clones, use the standard methods:
+
+	g.PlayLand(playerID, cardID)                          // play + resolve stack
+	g.CastSpellByID(playerID, cardID, targets, xValue)    // put on stack (call ResolveStack after)
+	g.ActivateAbilityByIndex(playerID, permID, idx, tgts) // put on stack
+	g.ResolveStack()                                      // drain stack atomically
 
 # Replacement Effect System
 

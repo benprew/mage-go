@@ -122,7 +122,10 @@ func (e *untapTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID,
 	if perm == nil {
 		return nil
 	}
-	perm.Tapped = false
+	if perm.Tapped {
+		perm.Tapped = false
+		g.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: perm.ID()})
+	}
 	return nil
 }
 
@@ -141,8 +144,9 @@ func UntapSource() Effect {
 
 func (e *untapSourceEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	perm := g.FindPermanent(sourceID)
-	if perm != nil {
+	if perm != nil && perm.Tapped {
 		perm.Tapped = false
+		g.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: perm.ID()})
 	}
 	return nil
 }

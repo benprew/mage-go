@@ -543,9 +543,6 @@ func registerArtifacts() {
 	// counters that were on that creature. When Tawnos's Coffin leaves the battlefield or becomes
 	// untapped, return that exiled card to the battlefield under its owner's control tapped with the
 	// noted number and kind of counters on it.
-	// XXX: "becomes untapped" return trigger is approximated as an upkeep check. The engine lacks
-	// an EvtBecameUntapped event, so if the Coffin is untapped by an external effect (e.g., Twiddle),
-	// the exiled creature won't return until the controller's next upkeep instead of immediately.
 	Register("Tawnos's Coffin", func() Card {
 		// coffinReturnExiled is a helper closure that returns all exiled cards from a Coffin.
 		coffinReturnExiled := func(g GameMutator, coffinID uuid.UUID) {
@@ -667,19 +664,17 @@ func registerArtifacts() {
 						}),
 				).SetCondition(IsThisSource),
 			),
-			// At the beginning of your upkeep, if Coffin is untapped and has exiled cards, return them
-			WithAbility(BeginningOfUpkeepTrigger(
-				FuncEffect("return exiled creature if Coffin is untapped",
-					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						perm := g.FindPermanent(sourceID)
-						if perm == nil || perm.Tapped {
+			// When Tawnos's Coffin becomes untapped, return exiled creature
+			WithAbility(
+				NewTriggered(EvtBecameUntapped, false,
+					FuncEffect("return exiled creature when Coffin becomes untapped",
+						EffectProperties{},
+						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+							coffinReturnExiled(g, sourceID)
 							return nil
-						}
-						coffinReturnExiled(g, sourceID)
-						return nil
-					}), false,
-			)),
+						}),
+				).SetCondition(IsThisSource),
+			),
 		)
 	})
 

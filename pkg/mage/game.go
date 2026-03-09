@@ -1945,18 +1945,24 @@ func (g *Game) doUntap() {
 					continue
 				}
 				p.Tapped = false
+				g.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: p.ID()})
 			} else if p.HasType(TypeLand) && landUntapLimit >= 0 {
 				// Land with untap limit in effect
 				if p.Tapped && landsUntapped < landUntapLimit {
 					p.Tapped = false
+					g.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: p.ID()})
 					landsUntapped++
 				}
 			} else if p.HasType(TypeArtifact) && !p.HasType(TypeLand) && artifactUntapLimit >= 0 {
 				// Artifact (non-land) with untap limit in effect (Damping Field)
 				if p.Tapped && artifactsUntapped < artifactUntapLimit {
 					p.Tapped = false
+					g.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: p.ID()})
 					artifactsUntapped++
 				}
+			} else if p.Tapped {
+				p.Tapped = false
+				g.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: p.ID()})
 			} else {
 				p.Tapped = false
 			}

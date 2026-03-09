@@ -205,7 +205,7 @@ func registerArtifacts() {
 							return nil
 						}
 						eff := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, srcID uuid.UUID) error {
-							g.Effects.Damage.AddDamagePreventionRule(WithFrom(NewPermanentFilter("prevented source", func(p *Permanent, _ *Game) bool {
+							g.Effects.Damage.AddDamagePreventionRule(WithCombatOnly(), WithFrom(NewPermanentFilter("prevented source", func(p *Permanent, _ *Game) bool {
 								return p.ID() == targets[0]
 							})))
 							return nil
@@ -270,7 +270,7 @@ func registerArtifacts() {
 				),
 				ManaCostOf("{2}"),
 				WithCost(TapSourceCost()),
-				WithTarget(TargetCreature()),
+				WithTarget(TargetCreatureYouControl()),
 			),
 		)
 	})
@@ -667,6 +667,8 @@ func registerArtifacts() {
 				}),
 			),
 			// {X}{X}, {T}: deal damage equal to pin counters to any target
+			// XXX: {X}{X} mana cost (where X = pin counters) is paid inside the effect at resolution
+			// rather than as an activation cost; the engine lacks dynamic mana costs tied to counter counts
 			WithActivatedAbility(
 				FuncEffect("deal damage equal to pin counters to any target",
 					EffectProperties{Outcome: OutcomeDetriment},

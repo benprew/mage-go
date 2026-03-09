@@ -113,12 +113,9 @@ func registerSpells() {
 	// Sorcery
 	// Destroy target artifact with mana value X. It can't be regenerated. Detonate deals X damage
 	// to that artifact's controller.
-	// XXX: "with mana value X" should be a targeting restriction (only legal targets are artifacts
-	// with CMC == X), but the engine doesn't support X-dependent target filters. Currently targets
-	// any artifact and validates CMC on resolution.
 	Register("Detonate", func() Card {
 		return NewSorcery("Detonate", "{X}{R}",
-			NewTargetedSpell(TargetArtifact(), FuncEffect(
+			NewTargetedSpell(TargetArtifactWithManaValueX(), FuncEffect(
 				"destroy target artifact with CMC X; deal X damage to controller",
 				EffectProperties{Outcome: OutcomeDetriment},
 				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -128,10 +125,6 @@ func registerSpells() {
 					x := g.XValue()
 					perm := g.FindPermanent(targets[0])
 					if perm == nil {
-						return nil
-					}
-					// Validate CMC matches X
-					if perm.Card.ManaCost().CMC() != x {
 						return nil
 					}
 					perm.GrantBaseAttr(CantRegenerate)
@@ -150,9 +143,10 @@ func registerSpells() {
 	// Sorcery
 	// Put any number of target artifact cards from target player's graveyard on top of their
 	// library in any order.
-	// XXX: Oracle says "any number of target" (individual targeting) and "in any order" (player
-	// chooses order). The engine doesn't support variable-count graveyard targeting. Currently
-	// uses resolution-time choices. The order placed on top is the order chosen (last chosen = top).
+	// XXX: Oracle says "any number of target artifact cards from target player's graveyard" —
+	// this requires dependent multi-targeting (second target pool depends on chosen player).
+	// The engine doesn't support dependent targets. Currently uses resolution-time choices.
+	// The order placed on top is the order chosen (last chosen = top).
 	Register("Drafna's Restoration", func() Card {
 		return NewSorcery("Drafna's Restoration", "{U}",
 			NewTargetedSpell(TargetPlayer(), FuncEffect(

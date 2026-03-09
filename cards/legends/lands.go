@@ -186,30 +186,27 @@ func registerLands() {
 	Register("The Tabernacle at Pendrell Vale", func() Card {
 		return NewLand("The Tabernacle at Pendrell Vale",
 			WithSuperTypes(SuperLegendary),
-			WithAbility(NewTriggered(EvtUpkeep, false, FuncEffect(
-				"destroy each creature unless its controller pays {1}",
-				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					activePlayer := g.ActivePlayerObj()
-					if activePlayer == nil {
-						return nil
-					}
-					activeID := activePlayer.PlayerID()
-					// Collect creatures first to avoid modification during iteration
-					var creatures []*Permanent
-					for _, p := range g.FilterBattlefield(NewPermanentFilter("creature", func(p *Permanent, _ *Game) bool {
-						return p.HasType(TypeCreature) && p.Controller == activeID
-					})) {
-						creatures = append(creatures, p)
-					}
-					for _, p := range creatures {
-						if !g.TryPayCostFromLands(activeID, "{1}") {
-							g.DestroyPermanent(p)
-						}
-					}
-					return nil
-				},
-			))),
+			WithStaticAbility(
+				GrantTriggeredAbilityToAll(
+					EvtUpkeep, false,
+					func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+						return evt.PlayerID == controllerID
+					},
+					IsCreature,
+					FuncEffect("destroy this creature unless you pay {1}",
+						EffectProperties{Outcome: OutcomeDetriment},
+						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+							perm := g.FindPermanent(sourceID)
+							if perm == nil {
+								return nil
+							}
+							if !g.TryPayCostFromLands(controller, "{1}") {
+								g.DestroyPermanent(perm)
+							}
+							return nil
+						}),
+				),
+			),
 		)
 	})
 

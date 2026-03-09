@@ -1314,7 +1314,7 @@ func registerSpells() {
 					cmc := perm.Card.ManaCost().CMC()
 					// Prevent all combat damage dealt by this creature
 					eff := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, _ uuid.UUID) error {
-						g.Effects.Damage.AddDamagePreventionRule(WithFrom(NewPermanentFilter("subdued creature", func(p *Permanent, _ *Game) bool {
+						g.Effects.Damage.AddDamagePreventionRule(WithCombatOnly(), WithFrom(NewPermanentFilter("subdued creature", func(p *Permanent, _ *Game) bool {
 							return p.ID() == targetID
 						})))
 						return nil

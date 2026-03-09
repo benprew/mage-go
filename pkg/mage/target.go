@@ -197,7 +197,8 @@ func (t *ControlledCreatureTarget) Choose(controller uuid.UUID, _ Card, g *Game,
 // PermanentTarget targets any permanent on the battlefield with optional filters.
 type PermanentTarget struct {
 	BaseTarget
-	Filters []PermanentFilter
+	Filters      []PermanentFilter
+	opponentOnly bool
 }
 
 // TargetPermanent creates a target that selects any permanent on the battlefield,
@@ -209,9 +210,22 @@ func TargetPermanent(filters ...PermanentFilter) Target {
 	}
 }
 
+// TargetPermanentOpponentControls creates a target that selects a permanent an
+// opponent controls, optionally narrowed by PermanentFilter predicates.
+func TargetPermanentOpponentControls(filters ...PermanentFilter) Target {
+	return &PermanentTarget{
+		BaseTarget:   BaseTarget{min: 1, max: 1},
+		Filters:      filters,
+		opponentOnly: true,
+	}
+}
+
 func (t *PermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
 	for _, p := range g.Battlefield {
+		if t.opponentOnly && p.Controller == controller {
+			continue
+		}
 		if !p.CanBeTargetedBy(sourceCard, controller, g) {
 			continue
 		}
@@ -249,6 +263,42 @@ func TargetLand() Target {
 // Convenience wrapper for TargetPermanent(IsArtifact).
 func TargetArtifact() Target {
 	return TargetPermanent(IsArtifact)
+}
+
+// TargetArtifactWithManaValueX creates a target that selects an artifact on the
+// battlefield whose mana value equals the current X value (g.CurrentX). Used by
+// spells like Detonate where the targeting restriction depends on X.
+func TargetArtifactWithManaValueX() Target {
+	return &artifactWithManaValueXTarget{
+		BaseTarget: BaseTarget{min: 1, max: 1},
+	}
+}
+
+type artifactWithManaValueXTarget struct {
+	BaseTarget
+}
+
+func (t *artifactWithManaValueXTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+	x := g.CurrentX
+	var result []uuid.UUID
+	for _, p := range g.Battlefield {
+		if !p.HasType(TypeArtifact) {
+			continue
+		}
+		if !p.CanBeTargetedBy(sourceCard, controller, g) {
+			continue
+		}
+		if p.Card.ManaCost().CMC() != x {
+			continue
+		}
+		result = append(result, p.ID())
+	}
+	return result
+}
+
+func (t *artifactWithManaValueXTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
+	t.chosen = chosen
+	return nil
 }
 
 // TargetArtifactOrEnchantment creates a target that selects an artifact or enchantment on the battlefield.
@@ -350,6 +400,16 @@ func (t *GraveyardCardTarget) Possible(controller uuid.UUID, _ Card, g *Game) []
 func (t *GraveyardCardTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
 	t.chosen = chosen
 	return nil
+}
+
+// TargetAnyNumberOfCardsInYourGraveyard creates a target that selects any number
+// (0 or more) of cards from the controller's graveyard, optionally filtered by
+// CardFilter predicates.
+func TargetAnyNumberOfCardsInYourGraveyard(filters ...CardFilter) Target {
+	return &GraveyardCardTarget{
+		BaseTarget: BaseTarget{min: 0, max: 100},
+		Filters:    filters,
+	}
 }
 
 // HandCardTarget targets a card in the controller's hand, optionally filtered by CardFilter predicates.
@@ -489,6 +549,54 @@ func (t *PowerLESourceCreatureTarget) Possible(controller uuid.UUID, sourceCard 
 }
 
 func (t *PowerLESourceCreatureTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
+	t.chosen = chosen
+	return nil
+}
+
+// BlockingOrBlockedBySourceTarget targets a creature that is blocking or
+// blocked by the source creature (e.g. Lesser Werewolf, Sentinel).
+type BlockingOrBlockedBySourceTarget struct {
+	BaseTarget
+}
+
+// TargetCreatureBlockingOrBlockedBySource creates a target that selects a
+// creature blocking or blocked by the source permanent.
+func TargetCreatureBlockingOrBlockedBySource() Target {
+	return &BlockingOrBlockedBySourceTarget{
+		BaseTarget: BaseTarget{min: 1, max: 1},
+	}
+}
+
+func (t *BlockingOrBlockedBySourceTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+	sourceID := sourceCard.ID()
+	var result []uuid.UUID
+	for _, group := range g.CombatGroups() {
+		if group.AttackerID == sourceID {
+			// Source is attacking — blockers are valid targets
+			for _, bid := range group.BlockerIDs {
+				b := g.FindPermanent(bid)
+				if b != nil && b.CanBeTargetedBy(sourceCard, controller, g) {
+					result = append(result, bid)
+				}
+			}
+		} else {
+			// Check if source is a blocker in this group
+			for _, bid := range group.BlockerIDs {
+				if bid == sourceID {
+					// Source is blocking — the attacker is a valid target
+					a := g.FindPermanent(group.AttackerID)
+					if a != nil && a.CanBeTargetedBy(sourceCard, controller, g) {
+						result = append(result, group.AttackerID)
+					}
+					break
+				}
+			}
+		}
+	}
+	return result
+}
+
+func (t *BlockingOrBlockedBySourceTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
 	t.chosen = chosen
 	return nil
 }
