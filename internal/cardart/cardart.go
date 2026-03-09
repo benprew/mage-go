@@ -63,22 +63,18 @@ func Generate(input CardInput) *image.RGBA {
 
 	// Layer 3: silhouette
 	silhouette := getSilhouette(input.Type)
-	silColor := silhouetteColor(input.Colors)
 
 	// Layer 4: hash-based pattern overlay on silhouette
 	pattern := generatePattern(hash)
 
 	// Compose silhouette + pattern in the inner 24x24 region (offset 4,4)
-	patternColor := patternColorFor(input.Colors)
+	// Pattern has 4 intensity levels (0-3) for richer visual detail
+	patColors := patternPalette(input.Colors)
 	for y := 0; y < 24; y++ {
 		for x := 0; x < 24; x++ {
 			if silhouette[y][x] {
 				px, py := x+4, y+4
-				if pattern[y][x] {
-					img.Set(px, py, patternColor)
-				} else {
-					img.Set(px, py, silColor)
-				}
+				img.Set(px, py, patColors[pattern[y][x]])
 			}
 		}
 	}
@@ -171,43 +167,60 @@ func frameColorFor(colors []Color) color.RGBA {
 	}
 }
 
-func silhouetteColor(colors []Color) color.RGBA {
+// patternPalette returns 4 colors (indexed 0-3) for the pattern intensity levels.
+// Level 0 is darkest (shadow), level 3 is brightest (highlight).
+func patternPalette(colors []Color) [4]color.RGBA {
 	if len(colors) == 0 {
-		return color.RGBA{60, 60, 60, 255}
+		return [4]color.RGBA{
+			{50, 50, 50, 255},
+			{80, 80, 80, 255},
+			{130, 130, 130, 255},
+			{175, 175, 175, 255},
+		}
 	}
 	switch colors[0] {
 	case ColorWhite:
-		return color.RGBA{180, 170, 140, 255}
+		return [4]color.RGBA{
+			{170, 160, 130, 255},
+			{200, 190, 160, 255},
+			{230, 220, 190, 255},
+			{255, 248, 220, 255},
+		}
 	case ColorBlue:
-		return color.RGBA{60, 90, 170, 255}
+		return [4]color.RGBA{
+			{30, 50, 120, 255},
+			{50, 80, 160, 255},
+			{80, 120, 200, 255},
+			{120, 170, 245, 255},
+		}
 	case ColorBlack:
-		return color.RGBA{70, 50, 80, 255}
+		return [4]color.RGBA{
+			{35, 25, 40, 255},
+			{60, 45, 70, 255},
+			{90, 70, 110, 255},
+			{130, 100, 150, 255},
+		}
 	case ColorRed:
-		return color.RGBA{170, 60, 40, 255}
+		return [4]color.RGBA{
+			{100, 25, 15, 255},
+			{150, 50, 30, 255},
+			{200, 85, 55, 255},
+			{240, 130, 90, 255},
+		}
 	case ColorGreen:
-		return color.RGBA{50, 120, 55, 255}
+		return [4]color.RGBA{
+			{25, 70, 30, 255},
+			{45, 110, 50, 255},
+			{75, 155, 75, 255},
+			{115, 200, 110, 255},
+		}
 	default:
-		return color.RGBA{90, 90, 90, 255}
-	}
-}
-
-func patternColorFor(colors []Color) color.RGBA {
-	if len(colors) == 0 {
-		return color.RGBA{140, 140, 140, 255}
-	}
-	switch colors[0] {
-	case ColorWhite:
-		return color.RGBA{255, 248, 220, 255}
-	case ColorBlue:
-		return color.RGBA{100, 150, 230, 255}
-	case ColorBlack:
-		return color.RGBA{120, 90, 140, 255}
-	case ColorRed:
-		return color.RGBA{230, 120, 80, 255}
-	case ColorGreen:
-		return color.RGBA{100, 190, 100, 255}
-	default:
-		return color.RGBA{170, 170, 170, 255}
+		return [4]color.RGBA{
+			{50, 50, 50, 255},
+			{80, 80, 80, 255},
+			{130, 130, 130, 255},
+			{175, 175, 175, 255},
+		}
 	}
 }
 
@@ -228,23 +241,28 @@ func drawFrame(img *image.RGBA, c color.RGBA) {
 
 // generatePattern creates a 24x24 vertically-symmetric pattern from a hash.
 // Uses the left 12 columns, mirrored to the right, for an identicon-like feel.
-func generatePattern(hash [32]byte) [24][24]bool {
-	var pat [24][24]bool
-	// We need 24*12 = 288 bits. We have 256 bits in hash.
-	// Extend with a second round.
+// Returns intensity levels 0-3 for richer visual detail.
+func generatePattern(hash [32]byte) [24][24]uint8 {
+	var pat [24][24]uint8
+	// We need 24*12*2 = 576 bits for 2-bit values. Extend hash.
 	hash2 := sha256.Sum256(hash[:])
+	hash3 := sha256.Sum256(hash2[:])
 	bits := append(hash[:], hash2[:]...)
+	bits = append(bits, hash3[:]...)
 
 	bitIdx := 0
 	for y := 0; y < 24; y++ {
 		for x := 0; x < 12; x++ {
+			// Read 2 bits for 4 intensity levels
 			byteIdx := bitIdx / 8
 			bitOff := uint(bitIdx % 8)
-			if byteIdx < len(bits) && (bits[byteIdx]>>bitOff)&1 == 1 {
-				pat[y][x] = true
-				pat[y][23-x] = true // mirror
+			var val uint8
+			if byteIdx < len(bits) {
+				val = (bits[byteIdx] >> bitOff) & 0x3
 			}
-			bitIdx++
+			pat[y][x] = val
+			pat[y][23-x] = val // mirror
+			bitIdx += 2
 		}
 	}
 	return pat
