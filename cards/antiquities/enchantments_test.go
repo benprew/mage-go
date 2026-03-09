@@ -217,6 +217,18 @@ func TestHauntingWind(t *testing.T) {
 		g.Execute()
 		g.AssertLife(gametest.PlayerB, 19)
 	})
+
+	t.Run("deals 1 damage when artifact ability activated without tap cost", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Haunting Wind")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Ashnod's Altar") // artifact, no tap cost
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")  // sacrifice fodder
+		// Ashnod's Altar: "Sacrifice a creature: Add {C}{C}" — no tap cost
+		g.ActivateAbility(2, core.PrecombatMain, gametest.PlayerB, "Ashnod's Altar")
+		g.StopAt(2, core.BeginCombat)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 19) // 1 damage from Haunting Wind
+	})
 }
 
 func TestPowerArtifact(t *testing.T) {

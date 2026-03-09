@@ -1152,8 +1152,8 @@ func (g *Game) PutTriggersOnStack() {
 						obj.Targets = []uuid.UUID{pt.event.TargetID}
 					}
 					obj.EventAmount = pt.event.Amount
-				case EvtTapped:
-					// Pass the tapped permanent's ID so effects can identify it
+				case EvtTapped, EvtAbilityActivated:
+					// Pass the permanent's ID so effects can identify it
 					if pt.event.SourceID != uuid.Nil {
 						obj.Targets = []uuid.UUID{pt.event.SourceID}
 					}
@@ -1573,6 +1573,21 @@ func (g *Game) ActivateAbilityByText(playerID uuid.UUID, permName string, target
 		}
 
 		g.Stack.Push(obj)
+
+		// Fire EvtAbilityActivated. Flag=true if the ability had a tap cost.
+		hasTapCost := false
+		for _, c := range aa.Costs() {
+			if _, ok := c.(*tapSourceCost); ok {
+				hasTapCost = true
+				break
+			}
+		}
+		g.FireEvent(GameEvent{
+			Type:     EvtAbilityActivated,
+			SourceID: perm.ID(),
+			PlayerID: playerID,
+			Flag:     hasTapCost,
+		})
 		return nil
 	}
 

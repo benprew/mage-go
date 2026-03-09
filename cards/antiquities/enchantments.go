@@ -17,28 +17,42 @@ func registerEnchantments() {
 	// Whenever enchanted artifact becomes tapped or a player activates an ability of enchanted
 	// artifact without {T} in its activation cost, Artifact Possession deals 2 damage to that
 	// artifact's controller.
-	// XXX: missing "activates ability without {T} in its activation cost" trigger
+	artPossDmgEffect := FuncEffect("deal 2 damage to enchanted artifact's controller",
+		EffectProperties{Outcome: OutcomeDetriment},
+		func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+			src := g.FindPermanent(sourceID)
+			if src == nil || !src.IsAttached() {
+				return nil
+			}
+			attached := g.FindPermanent(src.AttachedTo)
+			if attached == nil {
+				return nil
+			}
+			p := g.GetPlayer(attached.Controller)
+			if p != nil {
+				g.DealDamageToPlayer(p, 2, sourceID)
+			}
+			return nil
+		})
 	Register("Artifact Possession", func() Card {
 		return NewAura("Artifact Possession", "{2}{B}",
+			// Trigger when enchanted artifact becomes tapped
 			WithAbility(
-				WhenAttachedBecomesTappedTrigger(
-					FuncEffect("deal 2 damage to enchanted artifact's controller",
-						EffectProperties{Outcome: OutcomeDetriment},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							src := g.FindPermanent(sourceID)
-							if src == nil || !src.IsAttached() {
-								return nil
-							}
-							attached := g.FindPermanent(src.AttachedTo)
-							if attached == nil {
-								return nil
-							}
-							p := g.GetPlayer(attached.Controller)
-							if p != nil {
-								g.DealDamageToPlayer(p, 2, sourceID)
-							}
-							return nil
-						}), false),
+				WhenAttachedBecomesTappedTrigger(artPossDmgEffect, false),
+			),
+			// Trigger when enchanted artifact's ability is activated without {T}
+			WithAbility(
+				NewTriggered(EvtAbilityActivated, false, artPossDmgEffect,
+				).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+					if evt.Flag {
+						return false // had a tap cost — already covered by EvtTapped trigger
+					}
+					src := g.FindPermanent(sourceID)
+					if src == nil {
+						return false
+					}
+					return evt.SourceID == src.AttachedTo
+				}),
 			),
 		)
 	})
@@ -169,31 +183,40 @@ func registerEnchantments() {
 	// Enchantment
 	// Whenever an artifact becomes tapped or a player activates an artifact's ability without
 	// {T} in its activation cost, Haunting Wind deals 1 damage to that artifact's controller.
-	// XXX: missing "activates ability without {T} in its activation cost" trigger
+	hauntingWindEffect := FuncEffect("deal 1 damage to artifact's controller",
+		EffectProperties{Outcome: OutcomeDetriment},
+		func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+			if len(targets) == 0 {
+				return nil
+			}
+			perm := g.FindPermanent(targets[0])
+			if perm == nil {
+				return nil
+			}
+			p := g.GetPlayer(perm.Controller)
+			if p != nil {
+				g.DealDamageToPlayer(p, 1, sourceID)
+			}
+			return nil
+		})
+	isArtifactEvt := func(evt *GameEvent, g *Game, _, _ uuid.UUID) bool {
+		perm := g.FindPermanent(evt.SourceID)
+		return perm != nil && perm.HasType(TypeArtifact)
+	}
 	Register("Haunting Wind", func() Card {
 		return NewEnchantment("Haunting Wind", "{3}{B}",
+			// Trigger when any artifact becomes tapped
 			WithAbility(
-				NewTriggered(EvtTapped, false,
-					FuncEffect("deal 1 damage to artifact's controller",
-						EffectProperties{Outcome: OutcomeDetriment},
-						func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-							if len(targets) == 0 {
-								return nil
-							}
-							// targets[0] is the tapped artifact's ID (from EvtTapped event)
-							perm := g.FindPermanent(targets[0])
-							if perm == nil {
-								return nil
-							}
-							p := g.GetPlayer(perm.Controller)
-							if p != nil {
-								g.DealDamageToPlayer(p, 1, sourceID)
-							}
-							return nil
-						}),
-				).SetCondition(func(evt *GameEvent, g *Game, _, _ uuid.UUID) bool {
-					perm := g.FindPermanent(evt.SourceID)
-					return perm != nil && perm.HasType(TypeArtifact)
+				NewTriggered(EvtTapped, false, hauntingWindEffect).SetCondition(isArtifactEvt),
+			),
+			// Trigger when any artifact's ability is activated without {T}
+			WithAbility(
+				NewTriggered(EvtAbilityActivated, false, hauntingWindEffect,
+				).SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+					if evt.Flag {
+						return false // had a tap cost — covered by EvtTapped trigger
+					}
+					return isArtifactEvt(evt, g, sourceID, controllerID)
 				}),
 			),
 		)
@@ -213,20 +236,34 @@ func registerEnchantments() {
 	// Enchantment
 	// Whenever an artifact an opponent controls becomes tapped or an opponent activates an
 	// artifact's ability without {T} in its activation cost, you gain 1 life.
-	// XXX: missing "activates ability without {T} in its activation cost" trigger
+	powerleechEffect := FuncEffect("gain 1 life",
+		EffectProperties{Outcome: OutcomeBenefit},
+		func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+			p := g.GetPlayer(controller)
+			if p != nil {
+				g.PlayerGainLife(p, 1)
+			}
+			return nil
+		})
 	Register("Powerleech", func() Card {
 		return NewEnchantment("Powerleech", "{G}{G}",
+			// Trigger when opponent's artifact becomes tapped
 			WithAbility(
-				WhenOpponentPermanentBecomesTappedTrigger(
-					FuncEffect("gain 1 life",
-						EffectProperties{Outcome: OutcomeBenefit},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							p := g.GetPlayer(controller)
-							if p != nil {
-								g.PlayerGainLife(p, 1)
-							}
-							return nil
-						}), false, IsArtifact),
+				WhenOpponentPermanentBecomesTappedTrigger(powerleechEffect, false, IsArtifact),
+			),
+			// Trigger when opponent activates artifact ability without {T}
+			WithAbility(
+				NewTriggered(EvtAbilityActivated, false, powerleechEffect,
+				).SetCondition(func(evt *GameEvent, g *Game, _, controllerID uuid.UUID) bool {
+					if evt.Flag {
+						return false // had tap cost
+					}
+					if evt.PlayerID == controllerID {
+						return false // not opponent
+					}
+					perm := g.FindPermanent(evt.SourceID)
+					return perm != nil && perm.HasType(TypeArtifact)
+				}),
 			),
 		)
 	})
