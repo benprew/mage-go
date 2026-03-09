@@ -1528,9 +1528,16 @@ func (g *Game) ActivateAbilityByText(playerID uuid.UUID, permName string, target
 				}
 				if tf, ok := t.(interface{ Filter() PermanentFilter }); ok {
 					targetPerm := g.FindPermanent(targets[i])
-					if targetPerm != nil && !tf.Filter().Match(targetPerm, g) {
-						validTargets = false
-						break
+					if targetPerm != nil {
+						if !tf.Filter().Match(targetPerm, g) {
+							validTargets = false
+							break
+						}
+						// Also check targeting legality (protection, shroud, etc.)
+						if !targetPerm.CanBeTargetedBy(perm.Card, playerID, g) {
+							validTargets = false
+							break
+						}
 					}
 				} else {
 					// Fallback: check if the target is in the Possible() list

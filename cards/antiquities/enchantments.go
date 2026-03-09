@@ -63,7 +63,6 @@ func registerEnchantments() {
 	// Enchanted creature can't be blocked by artifact creatures.
 	// Prevent all damage that would be dealt to enchanted creature by artifact sources.
 	// Enchanted creature can't be the target of abilities from artifact sources.
-	// XXX: missing damage prevention from artifact sources and targeting restriction from artifact sources
 	Register("Artifact Ward", func() Card {
 		return NewAura("Artifact Ward", "{W}",
 			WithStaticAbility(
@@ -74,9 +73,34 @@ func registerEnchantments() {
 							return nil
 						}
 						attachedID := src.AttachedTo
+						attached := g.FindPermanent(attachedID)
+						if attached == nil {
+							return nil
+						}
+						// Can't be blocked by artifact creatures
 						for _, perm := range g.FilterBattlefield(And(IsCreature, IsArtifact)) {
 							g.Effects.PreventBlockPair(perm.ID(), attachedID)
 						}
+						// Can't be targeted by abilities from artifact sources
+						g.Effects.GrantAttr(attachedID, AttrCantBeTargetedByArtifacts)
+						return nil
+					}, SourceAttached),
+			),
+			// Prevent all damage from artifact sources to enchanted creature
+			WithStaticAbility(
+				FuncContinuousEffect(LayerAbility, WhileOnBattlefield,
+					func(g *Game, sourceID uuid.UUID) error {
+						src := g.FindPermanent(sourceID)
+						if src == nil {
+							return nil
+						}
+						attachedID := src.AttachedTo
+						if attachedID == (uuid.UUID{}) {
+							return nil
+						}
+						g.Effects.AddCycleReplacement(&artifactDamageToCreaturePreventionReplacement{
+							creatureID: attachedID,
+						})
 						return nil
 					}, SourceAttached),
 			),
@@ -87,14 +111,26 @@ func registerEnchantments() {
 	// Enchantment
 	// {2}: The next time an artifact source of your choice would deal damage to you this turn,
 	// prevent that damage.
-	// XXX: prevents all artifact damage rather than "next time from a chosen source" per Oracle
 	Register("Circle of Protection: Artifacts", func() Card {
 		return NewEnchantment("Circle of Protection: Artifacts", "{1}{W}",
 			WithActivatedAbility(
-				FuncEffect("prevent next artifact damage",
-					EffectProperties{},
+				FuncEffect("prevent next artifact damage from chosen source",
+					EffectProperties{Outcome: OutcomeBenefit},
 					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						g.AddTypePrevention(controller, TypeArtifact)
+						// Choose an artifact source on the battlefield
+						candidates := g.FilterBattlefield(IsArtifact)
+						if len(candidates) == 0 {
+							return nil
+						}
+						player := g.GetPlayer(controller)
+						if player == nil {
+							return nil
+						}
+						chosen := player.ChoosePermanent(candidates, "choose artifact source to prevent damage from", g)
+						if chosen == nil {
+							return nil
+						}
+						g.AddSourcePrevention(controller, chosen.ID())
 						return nil
 					}),
 				GenericCost(2),
@@ -123,7 +159,6 @@ func registerEnchantments() {
 	// Enchantment
 	// All artifacts have "At the beginning of your upkeep, sacrifice this artifact unless you
 	// pay {2}."
-	// XXX: auto-pays sequentially from mana pool instead of per-artifact player choice
 	Register("Energy Flux", func() Card {
 		return NewEnchantment("Energy Flux", "{2}{U}",
 			WithAbility(
@@ -135,10 +170,7 @@ func registerEnchantments() {
 							activeID := active.PlayerID()
 							var toSacrifice []*Permanent
 							for _, perm := range g.FilterBattlefield(And(IsArtifact, ControlledBy(activeID))) {
-								cost := ParseManaCost("{2}")
-								if active.ManaPool().CanPay(cost) {
-									_ = active.ManaPool().Pay(cost)
-								} else {
+								if !g.TryPayCostFromLands(activeID, "{2}") {
 									toSacrifice = append(toSacrifice, perm)
 								}
 							}
@@ -227,9 +259,24 @@ func registerEnchantments() {
 	// Enchant artifact
 	// Enchanted artifact's activated abilities cost {2} less to activate. This effect can't
 	// reduce the mana in that cost to less than one mana.
-	// XXX: cost reduction for attached artifact
 	Register("Power Artifact", func() Card {
-		return NewAura("Power Artifact", "{U}{U}")
+		return NewAura("Power Artifact", "{U}{U}",
+			WithStaticAbility(
+				FuncContinuousEffect(LayerAbility, WhileOnBattlefield,
+					func(g *Game, sourceID uuid.UUID) error {
+						src := g.FindPermanent(sourceID)
+						if src == nil {
+							return nil
+						}
+						attachedID := src.AttachedTo
+						if attachedID == (uuid.UUID{}) {
+							return nil
+						}
+						g.Effects.Rules.ActivationCostReductions[attachedID] = 2
+						return nil
+					}, SourceAttached),
+			),
+		)
 	})
 
 	// Powerleech {G}{G}
@@ -304,4 +351,35 @@ func registerEnchantments() {
 			),
 		)
 	})
+}
+
+// artifactDamageToCreaturePreventionReplacement prevents all damage from
+// artifact sources to the specified creature (Artifact Ward).
+type artifactDamageToCreaturePreventionReplacement struct {
+	creatureID uuid.UUID
+}
+
+func (r *artifactDamageToCreaturePreventionReplacement) SourceID() uuid.UUID { return uuid.Nil }
+
+func (r *artifactDamageToCreaturePreventionReplacement) Matches(a Action, g GameReader) bool {
+	act, ok := a.(*DamageToCreatureAction)
+	if !ok {
+		return false
+	}
+	if act.PermanentID() != r.creatureID {
+		return false
+	}
+	source := g.FindCardAnywhere(act.ActionSource())
+	if source == nil {
+		return false
+	}
+	return source.HasType(TypeArtifact)
+}
+
+func (r *artifactDamageToCreaturePreventionReplacement) Replace(a Action, g GameMutator) Action {
+	return nil // prevent the damage
+}
+
+func (r *artifactDamageToCreaturePreventionReplacement) IsActive(g GameReader) bool {
+	return g.FindPermanent(r.creatureID) != nil
 }

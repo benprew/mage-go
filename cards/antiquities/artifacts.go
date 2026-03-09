@@ -171,9 +171,37 @@ func registerArtifacts() {
 	// Candelabra of Tawnos {1}
 	// Artifact
 	// {X}, {T}: Untap X target lands.
-	// XXX: X-targeting for untap lands
 	Register("Candelabra of Tawnos", func() Card {
-		return NewArtifact("Candelabra of Tawnos", "{1}")
+		return NewArtifact("Candelabra of Tawnos", "{1}",
+			WithActivatedAbility(
+				FuncEffect("untap X target lands",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						x := g.XValue()
+						if x <= 0 {
+							return nil
+						}
+						player := g.GetPlayer(controller)
+						if player == nil {
+							return nil
+						}
+						for i := 0; i < x; i++ {
+							candidates := g.FilterBattlefield(And(IsLand, IsTapped))
+							if len(candidates) == 0 {
+								break
+							}
+							chosen := player.ChoosePermanent(candidates, "untap land", g)
+							if chosen == nil {
+								break
+							}
+							chosen.Tapped = false
+						}
+						return nil
+					}),
+				XManaCost(),
+				WithCost(TapSourceCost()),
+			),
+		)
 	})
 
 	// Coral Helm {3}
@@ -518,7 +546,6 @@ func registerArtifacts() {
 	// counters that were on that creature. When Tawnos's Coffin leaves the battlefield or becomes
 	// untapped, return that exiled card to the battlefield under its owner's control tapped with the
 	// noted number and kind of counters on it.
-	// XXX: does not exile/return Auras attached to the creature
 	Register("Tawnos's Coffin", func() Card {
 		// coffinReturnExiled is a helper closure that returns all exiled cards from a Coffin.
 		coffinReturnExiled := func(g GameMutator, coffinID uuid.UUID) {
@@ -528,18 +555,41 @@ func registerArtifacts() {
 				return
 			}
 			exiled := game.RemoveExiledCardBySource(coffinID)
-			for _, ec := range exiled {
-				owner := ec.Owner
-				if owner == (uuid.UUID{}) {
-					owner = ec.Card.Owner()
+			// Separate creature from Auras
+			var creatureEC *ExiledCard
+			var auraECs []ExiledCard
+			for i := range exiled {
+				if exiled[i].Card.HasType(TypeCreature) {
+					creatureEC = &exiled[i]
+				} else if exiled[i].Card.HasSubType("Aura") {
+					auraECs = append(auraECs, exiled[i])
 				}
-				perm := g.PutOnBattlefield(ec.Card, owner)
-				if perm != nil {
-					perm.Tapped = true
+			}
+			// Return creature first
+			var creaturePerm *Permanent
+			if creatureEC != nil {
+				owner := creatureEC.Owner
+				if owner == (uuid.UUID{}) {
+					owner = creatureEC.Card.Owner()
+				}
+				creaturePerm = g.PutOnBattlefield(creatureEC.Card, owner)
+				if creaturePerm != nil {
+					creaturePerm.Tapped = true
 					// Restore noted counters
-					for ct, count := range ec.Counters {
-						perm.AddCounter(ct, count)
+					for ct, count := range creatureEC.Counters {
+						creaturePerm.AddCounter(ct, count)
 					}
+				}
+			}
+			// Return Auras and attach to creature
+			for _, auraEC := range auraECs {
+				owner := auraEC.Owner
+				if owner == (uuid.UUID{}) {
+					owner = auraEC.Card.Owner()
+				}
+				auraPerm := g.PutOnBattlefield(auraEC.Card, owner)
+				if auraPerm != nil && creaturePerm != nil {
+					g.Attach(auraPerm.ID(), creaturePerm.ID())
 				}
 			}
 		}
@@ -547,7 +597,7 @@ func registerArtifacts() {
 		return NewArtifact("Tawnos's Coffin", "{4}",
 			WithKeyword(AttrMayNotUntap),
 			WithActivatedAbility(
-				FuncEffect("exile target creature; return when Coffin leaves or untaps",
+				FuncEffect("exile target creature and all Auras; return when Coffin leaves or untaps",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
@@ -564,8 +614,26 @@ func registerArtifacts() {
 						}
 						owner := target.Controller
 						card := target.Card
+						// Collect attached Auras before removing creature
+						var auraCards []Card
+						var auraOwners []uuid.UUID
+						for _, attID := range target.Attachments {
+							att := g.FindPermanent(attID)
+							if att != nil && att.Card.HasSubType("Aura") {
+								auraCards = append(auraCards, att.Card)
+								auraOwners = append(auraOwners, att.Controller)
+							}
+						}
+						// Remove Auras from battlefield first
+						for _, attID := range target.Attachments {
+							att := g.FindPermanent(attID)
+							if att != nil && att.Card.HasSubType("Aura") {
+								g.RemoveFromBattlefield(att)
+							}
+						}
+						// Remove creature from battlefield
 						g.RemoveFromBattlefield(target)
-						// Add to exile with counter metadata
+						// Add creature and Auras to exile
 						game, ok := g.(*Game)
 						if ok {
 							game.Exile = append(game.Exile, ExiledCard{
@@ -574,6 +642,13 @@ func registerArtifacts() {
 								Counters: counters,
 								Owner:    owner,
 							})
+							for i, auraCard := range auraCards {
+								game.Exile = append(game.Exile, ExiledCard{
+									Card:     auraCard,
+									ExiledBy: sourceID,
+									Owner:    auraOwners[i],
+								})
+							}
 						}
 						return nil
 					}),

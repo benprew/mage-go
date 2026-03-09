@@ -140,15 +140,48 @@ func TestAshnodsTransmograntNegative(t *testing.T) {
 }
 
 func TestCandelabraOfTawnos(t *testing.T) {
-	// XXX: X-targeting for untap lands
-	t.Run("is a 1-cost artifact", func(t *testing.T) {
-		card, err := mage.CreateCard("Candelabra of Tawnos")
-		if err != nil {
-			t.Fatal(err)
+	t.Run("untaps X tapped lands with X=2", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Candelabra of Tawnos")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest") // extra land to pay X=2
+		// Tap two forests first by casting a spell that costs {G}{G} — or just use them as mana
+		// The test harness auto-taps lands for mana. Activating with X=2 will tap lands for {2}.
+		g.ActivateAbilityWithX(1, core.PrecombatMain, gametest.PlayerA, "Candelabra of Tawnos", 2)
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Candelabra taps itself + pays {2} from lands. Then untaps 2 tapped lands.
+		g.AssertTapped(gametest.PlayerA, "Candelabra of Tawnos", true)
+		// After activation, 2 lands were tapped for mana, then 2 lands untapped by the effect.
+		// The third land was not tapped. All 3 forests should be untapped.
+		tappedCount := 0
+		for _, perm := range g.Battlefield {
+			if perm.Name() == "Forest" && perm.Tapped {
+				tappedCount++
+			}
 		}
-		if card.ManaCost().CMC() != 1 {
-			t.Errorf("expected CMC 1, got %d", card.ManaCost().CMC())
+		if tappedCount != 0 {
+			t.Errorf("expected 0 tapped forests after untapping 2, got %d", tappedCount)
 		}
+	})
+
+	t.Run("X=0 does nothing", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Candelabra of Tawnos")
+		g.ActivateAbilityWithX(1, core.PrecombatMain, gametest.PlayerA, "Candelabra of Tawnos", 0)
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertTapped(gametest.PlayerA, "Candelabra of Tawnos", true)
+	})
+
+	t.Run("taps itself as part of cost", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Candelabra of Tawnos")
+		g.ActivateAbilityWithX(1, core.PrecombatMain, gametest.PlayerA, "Candelabra of Tawnos", 0)
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertTapped(gametest.PlayerA, "Candelabra of Tawnos", true)
 	})
 }
 
@@ -570,6 +603,51 @@ func TestTawnossCoffin(t *testing.T) {
 		g.Execute()
 		// Hill Giant returns with the noted 3 +1/+1 counters
 		g.AssertCounterCount(gametest.PlayerB, "Hill Giant", core.P1P1, 3)
+	})
+
+	t.Run("exiles and returns attached Aura", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tawnos's Coffin")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Flight") // a simple Aura
+		// Cast Flight on Hill Giant
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Flight", "Hill Giant")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Tawnos's Coffin", "Hill Giant")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Both Hill Giant and Flight should be gone from battlefield
+		g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 0)
+		g.AssertPermanentCount(gametest.PlayerA, "Flight", 0)
+	})
+
+	t.Run("returns attached Aura when Coffin leaves", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tawnos's Coffin")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Flight")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Shatter")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Flight", "Hill Giant")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Tawnos's Coffin", "Hill Giant")
+		// Destroy Coffin → creature and Aura should return
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Shatter", "Tawnos's Coffin")
+		g.StopAt(2, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 1)
+		g.AssertPermanentCount(gametest.PlayerA, "Flight", 1)
+		g.AssertAttachedTo(gametest.PlayerA, "Flight", "Hill Giant")
+	})
+
+	t.Run("exile without Aura still works", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tawnos's Coffin")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Shatter")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Tawnos's Coffin", "Hill Giant")
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Shatter", "Tawnos's Coffin")
+		g.StopAt(2, core.BeginCombat)
+		g.Execute()
+		// Creature returns without any Aura issues
+		g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 1)
 	})
 }
 
