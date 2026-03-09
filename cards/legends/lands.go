@@ -287,20 +287,26 @@ func registerLands() {
 						if len(targets) == 0 {
 							return nil
 						}
-						// Remove first strike
-						eff1 := TargetEffect(LayerAbility, EndOfTurn, targets[0], func(g *Game, target *Permanent) error {
-							g.Effects.RevokeAttr(target.ID(), FirstStrike)
-							return nil
-						})
-						eff1.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff1)
-						// Remove swampwalk
-						eff2 := TargetEffect(LayerAbility, EndOfTurn, targets[0], func(g *Game, target *Permanent) error {
-							g.Effects.RevokeAttr(target.ID(), Swampwalk)
-							return nil
-						})
-						eff2.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff2)
+						// Oracle says "first strike or swampwalk" — controller chooses which to remove
+						p := g.GetPlayer(controller)
+						mode := p.ChooseMode([]string{"First strike", "Swampwalk"}, "Urborg")
+						if mode == 0 {
+							// Remove first strike
+							eff := TargetEffect(LayerAbility, EndOfTurn, targets[0], func(g *Game, target *Permanent) error {
+								g.Effects.RevokeAttr(target.ID(), FirstStrike)
+								return nil
+							})
+							eff.SetSourceID(sourceID)
+							g.AddContinuousEffect(eff)
+						} else {
+							// Remove swampwalk
+							eff := TargetEffect(LayerAbility, EndOfTurn, targets[0], func(g *Game, target *Permanent) error {
+								g.Effects.RevokeAttr(target.ID(), Swampwalk)
+								return nil
+							})
+							eff.SetSourceID(sourceID)
+							g.AddContinuousEffect(eff)
+						}
 						return nil
 					},
 				),

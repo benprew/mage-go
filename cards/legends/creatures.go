@@ -96,7 +96,7 @@ func registerCreatures() {
 						return nil
 					}),
 				ManaCostOf("{1}"),
-				WithAnyPlayerMay(),
+				WithOpponentOnlyMay(),
 			),
 		)
 	})
@@ -789,12 +789,33 @@ func registerCreatures() {
 // 7/7
 // First strike
 // At the beginning of your upkeep, destroy this creature unless you pay {3}{B}{B}{B}. If this creature is destroyed this way, it deals 7 damage to you.
-// Note: The "deals 7 damage" if destroyed portion is not implemented (SacrificeAtUpkeepUnlessPay just sacrifices)
 	Register("Cosmic Horror", func() Card {
 		return NewCreature("Cosmic Horror", "{3}{B}{B}{B}", 7, 7,
 			WithSubTypes("Horror"),
 			WithKeyword(FirstStrike),
-			WithAbility(SacrificeAtUpkeepUnlessPay("{3}{B}{B}{B}")),
+			// At the beginning of your upkeep, destroy unless you pay {3}{B}{B}{B}.
+			// If destroyed this way, deals 7 damage to you.
+			WithAbility(NewTriggered(EvtUpkeep, false, FuncEffect(
+				"destroy Cosmic Horror unless you pay {3}{B}{B}{B}; if destroyed, deal 7 damage",
+				EffectProperties{Outcome: OutcomeDetriment},
+				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					if g.TryPayCostFromLands(controller, "{3}{B}{B}{B}") {
+						return nil // paid, keep the creature
+					}
+					perm := g.FindPermanent(sourceID)
+					if perm != nil {
+						g.DestroyPermanent(perm)
+						// If destroyed this way, deal 7 damage to controller
+						p := g.GetPlayer(controller)
+						if p != nil {
+							g.DealDamageToPlayer(p, 7, sourceID)
+						}
+					}
+					return nil
+				},
+			)).SetCondition(func(evt *GameEvent, _ *Game, _, controllerID uuid.UUID) bool {
+				return evt.PlayerID == controllerID
+			})),
 		)
 	})
 
@@ -1109,6 +1130,8 @@ func registerCreatures() {
 					},
 				),
 				ManaCostOf("{B}"),
+				// XXX: Target filter allows any attacking/blocking creature, not just "blocking or blocked by this creature"
+				// (effect body validates combat relationship, but target list is broader than Oracle text)
 				WithTarget(TargetCreature(Or(IsAttacking, IsBlocking))),
 			),
 		)
@@ -1172,20 +1195,21 @@ func registerCreatures() {
 			WithAbility(NewTriggered(EvtDamageDealt, false, FuncEffect(
 				"poison counter",
 				EffectProperties{},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					// Give a poison counter to the player who took damage
-					// The event PlayerID holds the damaged player's ID
-					for _, p := range g.AllPlayers() {
-						if p.PlayerID() != controller {
-							p.AddPoisonCounters(1)
-							return nil
-						}
+				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					// targets[0] = damaged player (passed by trigger system from EvtDamageDealt.TargetID)
+					if len(targets) == 0 {
+						return nil
 					}
+					p := g.GetPlayer(targets[0])
+					if p == nil {
+						return nil
+					}
+					p.AddPoisonCounters(1)
 					return nil
 				},
 			)).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
-				// Only trigger when this creature deals damage to a player
-				return evt.SourceID == sourceID && evt.PlayerID != uuid.Nil
+				// Only trigger when this creature deals damage to a player (not a permanent)
+				return evt.SourceID == sourceID && g.GetPlayer(evt.TargetID) != nil
 			})),
 		)
 	})
@@ -1527,6 +1551,7 @@ func registerCreatures() {
 // 3/2
 // Flying
 // If this creature would die, return it to its owner's hand instead. Until that player's next turn, that player plays with that card revealed in their hand and can't play it.
+// XXX: Should be a replacement effect ("would die... instead") not a dies trigger. With current implementation, other dies triggers see this creature die before it returns to hand.
 // XXX: "plays with that card revealed and can't play it until next turn" restriction not enforced
 	Register("Firestorm Phoenix", func() Card {
 		return NewCreature("Firestorm Phoenix", "{4}{R}{R}", 3, 2,
@@ -2171,7 +2196,15 @@ func registerCreatures() {
 		return NewCreature("Master of the Hunt", "{2}{G}{G}", 2, 2,
 			WithSubTypes("Human"),
 			WithActivatedAbility(
-				CreateToken("Wolves of the Hunt", 1, 1, []CardType{TypeCreature}, []string{"Wolf"}),
+				// XXX: "bands with other creatures named Wolves of the Hunt" approximated as Banding
+				FuncEffect("create a 1/1 green Wolf creature token named Wolves of the Hunt with bands with other Wolves of the Hunt", EffectProperties{Outcome: OutcomeBenefit}, func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					token := NewToken("Wolves of the Hunt", 1, 1, []CardType{TypeCreature}, []string{"Wolf"}, Banding)
+					token.SetOwner(controller)
+					perm := g.PutOnBattlefield(token, controller)
+					colors := []Color{Green}
+					perm.ColorOverride = &colors
+					return nil
+				}),
 				ManaCostOf("{2}{G}{G}"),
 			),
 		)
@@ -2513,7 +2546,7 @@ func registerCreatures() {
 // 6/5
 // Vigilance
 // Bartel Runeaxe can't be the target of Aura spells.
-// Note: "can't be target of Aura spells" is not enforced (needs engine support for aura targeting restriction)
+// XXX: "can't be target of Aura spells" is not enforced (needs engine support for aura targeting restriction)
 	Register("Bartel Runeaxe", func() Card {
 		return NewCreature("Bartel Runeaxe", "{3}{B}{R}{G}", 6, 5,
 			WithSubTypes("Giant", "Warrior"),
@@ -2531,7 +2564,14 @@ func registerCreatures() {
 			WithSubTypes("Zombie", "Wizard"),
 			WithSuperTypes(SuperLegendary),
 			WithActivatedAbility(
-				CreateToken("Minor Demon", 1, 1, []CardType{TypeCreature}, []string{"Demon"}),
+				FuncEffect("create a 1/1 black and red Demon creature token named Minor Demon", EffectProperties{Outcome: OutcomeBenefit}, func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					token := NewToken("Minor Demon", 1, 1, []CardType{TypeCreature}, []string{"Demon"})
+					token.SetOwner(controller)
+					perm := g.PutOnBattlefield(token, controller)
+					colors := []Color{Black, Red}
+					perm.ColorOverride = &colors
+					return nil
+				}),
 				ManaCostOf("{2}{B}{R}"),
 				WithCost(TapSourceCost()),
 			),
@@ -2662,7 +2702,7 @@ func registerCreatures() {
 // Legendary Creature — Human Rogue
 // 3/5
 // {T}: Target player discards a card at random. Activate only during your turn.
-// Note: "only during your turn" restriction is not enforced
+// XXX: "only during your turn" restriction is not enforced
 	Register("Gwendlyn Di Corci", func() Card {
 		return NewCreature("Gwendlyn Di Corci", "{U}{B}{B}{R}", 3, 5,
 			WithSubTypes("Human", "Rogue"),
@@ -2958,7 +2998,7 @@ func registerCreatures() {
 						}
 						// Add a continuous effect that prevents damage from this creature until EOT
 						eff := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, srcID uuid.UUID) error {
-							g.Effects.Damage.AddDamagePreventionRule(WithFrom(NewPermanentFilter("prevented source", func(p *Permanent, _ *Game) bool {
+							g.Effects.Damage.AddDamagePreventionRule(WithCombatOnly(), WithFrom(NewPermanentFilter("prevented source", func(p *Permanent, _ *Game) bool {
 								return p.ID() == targets[0]
 							})))
 							return nil
@@ -3071,12 +3111,14 @@ func registerCreatures() {
 					}
 					return nil
 				},
-			)).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+			)).SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
 				// EvtDamageDealt: SourceID = damage source, TargetID = damaged player/permanent
 				if evt.SourceID != sourceID {
 					return false
 				}
-				return g.GetPlayer(evt.TargetID) != nil
+				// Must be damage to a player, and that player must be an opponent (not the controller)
+				targetPlayer := g.GetPlayer(evt.TargetID)
+				return targetPlayer != nil && targetPlayer.PlayerID() != controllerID
 			})),
 		)
 	})
@@ -3211,6 +3253,8 @@ func registerCreatures() {
 				),
 				RemoveCountersCost(Dream, 1),
 			),
+			// XXX: "started the turn untapped" checks current tapped state at upkeep, not state at
+			// start of turn — needs engine support for start-of-turn state snapshots
 			// At the beginning of your upkeep, if Rasputin started the turn untapped, put a dream counter on it (max 7)
 			WithAbility(NewTriggered(EvtUpkeep, false, FuncEffect(
 				"put a dream counter on Rasputin",
@@ -3230,7 +3274,7 @@ func registerCreatures() {
 				if evt.PlayerID != controller {
 					return false
 				}
-				// Check if Rasputin is untapped (started the turn untapped)
+				// XXX: checks current tapped state, not whether it started the turn untapped
 				perm := g.FindPermanent(sourceID)
 				return perm != nil && !perm.Tapped
 			})),
@@ -3755,6 +3799,8 @@ func registerCreatures() {
 					},
 				),
 				GenericCost(0),
+				// XXX: Target filter allows any attacking/blocking creature, not just "blocking or blocked by this creature"
+				// (effect body validates combat relationship, but target list is broader than Oracle text)
 				WithTarget(TargetCreature(Or(IsAttacking, IsBlocking))),
 			),
 		)

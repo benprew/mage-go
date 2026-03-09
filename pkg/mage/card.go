@@ -629,6 +629,10 @@ func (p *Permanent) CanBeTargetedBy(source Card, sourceController uuid.UUID, g *
 	if source != nil && source.HasType(TypeEnchantment) && p.HasAttr(AttrCantBeEnchanted) {
 		return false
 	}
+	// "Can't be targeted by abilities from artifact sources" (Artifact Ward).
+	if source != nil && source.HasType(TypeArtifact) && p.HasAttr(AttrCantBeTargetedByArtifacts) {
+		return false
+	}
 	return true
 }
 

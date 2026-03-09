@@ -70,9 +70,10 @@ func (ds *DamageSystem) ClearDamageReflection(playerID uuid.UUID) {
 
 // damagePreventionRule is the old internal struct used by the options API.
 type damagePreventionRule struct {
-	from    PermanentFilter
-	to      PermanentFilter
-	oneShot bool
+	from       PermanentFilter
+	to         PermanentFilter
+	oneShot    bool
+	combatOnly bool
 }
 
 type damagePreventionRuleOption func(*damagePreventionRule)
@@ -98,6 +99,13 @@ func WithOneShot(oneshot bool) damagePreventionRuleOption {
 	}
 }
 
+// WithCombatOnly restricts a damage prevention rule to combat damage only.
+func WithCombatOnly() damagePreventionRuleOption {
+	return func(dpr *damagePreventionRule) {
+		dpr.combatOnly = true
+	}
+}
+
 // AddDamagePreventionRule registers a damage prevention rule by delegating to the
 // EffectManager's replacement system. This preserves the existing card API.
 func (ds *DamageSystem) AddDamagePreventionRule(opts ...damagePreventionRuleOption) {
@@ -107,9 +115,10 @@ func (ds *DamageSystem) AddDamagePreventionRule(opts ...damagePreventionRuleOpti
 	}
 	if ds.em != nil {
 		ds.em.AddCycleReplacement(&damagePreventionRuleReplacement{
-			from:    dpr.from,
-			to:      dpr.to,
-			oneShot: dpr.oneShot,
+			from:       dpr.from,
+			to:         dpr.to,
+			oneShot:    dpr.oneShot,
+			combatOnly: dpr.combatOnly,
 		})
 	}
 }

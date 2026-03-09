@@ -35,7 +35,8 @@ func (c *ManaCostPayment) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	if p == nil {
 		return false
 	}
-	return p.ManaPool().CanPay(c.MC)
+	mc := c.reducedCost(sourceID, g)
+	return p.ManaPool().CanPay(mc)
 }
 
 func (c *ManaCostPayment) Pay(sourceID, controller uuid.UUID, g *Game) error {
@@ -43,7 +44,28 @@ func (c *ManaCostPayment) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	if p == nil {
 		return ErrPlayerNotFound
 	}
-	return p.ManaPool().Pay(c.MC)
+	mc := c.reducedCost(sourceID, g)
+	return p.ManaPool().Pay(mc)
+}
+
+// reducedCost applies activation cost reductions (e.g. Power Artifact) to the mana cost.
+// The reduction lowers the generic component but can't reduce total mana below 1.
+func (c *ManaCostPayment) reducedCost(sourceID uuid.UUID, g *Game) ManaCost {
+	reduction := g.Effects.Rules.ActivationCostReductions[sourceID]
+	if reduction <= 0 {
+		return c.MC
+	}
+	mc := c.MC
+	// Total colored mana in the cost
+	coloredTotal := mc.White + mc.Blue + mc.Black + mc.Red + mc.Green
+	total := coloredTotal + mc.Generic
+	// Can't reduce below 1 total mana
+	minGeneric := 0
+	if total > 0 {
+		minGeneric = max(0, 1-coloredTotal)
+	}
+	mc.Generic = max(minGeneric, mc.Generic-reduction)
+	return mc
 }
 
 func (c *ManaCostPayment) Text() string {
@@ -109,6 +131,32 @@ func (c *removeCountersCost) Pay(sourceID, controller uuid.UUID, g *Game) error 
 
 func (c *removeCountersCost) Text() string {
 	return fmt.Sprintf("Remove %d %s counter(s)", c.amount, c.ct)
+}
+
+// requireCountersCost is a gate cost that checks for N+ counters but does not remove them.
+type requireCountersCost struct {
+	ct     CounterType
+	amount int
+}
+
+// RequireCountersCost creates a cost that requires the source to have at least n counters
+// of the given type. The counters are NOT removed when the cost is paid.
+func RequireCountersCost(ct CounterType, n int) Cost {
+	return &requireCountersCost{ct: ct, amount: n}
+}
+
+func (c *requireCountersCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+	p := g.FindPermanent(sourceID)
+	return p != nil && p.Counters[c.ct] >= c.amount
+}
+
+func (c *requireCountersCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
+	// Gate cost only — counters are not removed
+	return nil
+}
+
+func (c *requireCountersCost) Text() string {
+	return fmt.Sprintf("Requires %d+ %s counter(s)", c.amount, c.ct)
 }
 
 // sacrificeSourceCost requires sacrificing the source.

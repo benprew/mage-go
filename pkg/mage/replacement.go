@@ -184,6 +184,37 @@ func (r *colorPreventionReplacement) IsActive(_ GameReader) bool {
 }
 
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// 5b. Source prevention: prevent next damage from a specific source to a player
+// ---------------------------------------------------------------------------
+
+type sourcePreventionReplacement struct {
+	replacementBase
+	playerID  uuid.UUID
+	dmgSource uuid.UUID
+	consumed  bool
+}
+
+func (r *sourcePreventionReplacement) Matches(a Action, _ GameReader) bool {
+	act, ok := a.(*DamageToPlayerAction)
+	if !ok {
+		return false
+	}
+	if act.PlayerID() != r.playerID {
+		return false
+	}
+	return act.ActionSource() == r.dmgSource
+}
+
+func (r *sourcePreventionReplacement) Replace(a Action, g GameMutator) Action {
+	r.consumed = true
+	return nil
+}
+
+func (r *sourcePreventionReplacement) IsActive(_ GameReader) bool {
+	return !r.consumed
+}
+
 // 6. Type prevention: prevent all damage from one source of a matching card type
 // ---------------------------------------------------------------------------
 
@@ -544,10 +575,11 @@ func (r *drawReplacementEffect) IsActive(_ GameReader) bool {
 
 type damagePreventionRuleReplacement struct {
 	replacementBase
-	from     PermanentFilter
-	to       PermanentFilter
-	oneShot  bool
-	consumed bool
+	from       PermanentFilter
+	to         PermanentFilter
+	oneShot    bool
+	consumed   bool
+	combatOnly bool
 }
 
 func (r *damagePreventionRuleReplacement) Matches(a Action, g GameReader) bool {
@@ -568,7 +600,13 @@ func (r *damagePreventionRuleReplacement) Matches(a Action, g GameReader) bool {
 			return false
 		}
 		source := game.FindPermanent(act.ActionSource())
-		return source != nil && r.from.Match(source, game)
+		if source == nil || !r.from.Match(source, game) {
+			return false
+		}
+		if r.combatOnly && !act.IsCombatDamage() {
+			return false
+		}
+		return true
 	case *DamageToCreatureAction:
 		source := game.FindPermanent(act.ActionSource())
 		target := game.FindPermanent(act.PermanentID())
@@ -579,6 +617,9 @@ func (r *damagePreventionRuleReplacement) Matches(a Action, g GameReader) bool {
 		toMatch := r.to.IsZero() || r.to.Match(target, game)
 		// If both are zero, this doesn't match anything useful
 		if r.from.IsZero() && r.to.IsZero() {
+			return false
+		}
+		if r.combatOnly && !act.IsCombatDamage() {
 			return false
 		}
 		return fromMatch && toMatch

@@ -17,7 +17,8 @@ const (
 	AttrMustAttack         // replaces MustAttack keyword
 	AttrMustBeBlocked      // replaces MustBeBlocked keyword
 	AttrMayNotUntap        // player may choose not to untap during untap step
-	AttrCantBeEnchanted    // permanent can't have enchantments attached to it
+	AttrCantBeEnchanted              // permanent can't have enchantments attached to it
+	AttrCantBeTargetedByArtifacts    // permanent can't be targeted by abilities from artifact sources
 
 	// Type-identity attrs (battlefield) — replaces TypesAdded []CardType on Permanent.
 	AttrIsCreature
@@ -96,6 +97,8 @@ func (a Attr) String() string {
 		return "May Not Untap"
 	case AttrCantBeEnchanted:
 		return "Can't Be Enchanted"
+	case AttrCantBeTargetedByArtifacts:
+		return "Can't Be Targeted by Artifacts"
 	case AttrIsCreature:
 		return "IsCreature"
 	case AttrIsLand:

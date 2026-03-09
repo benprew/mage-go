@@ -1,6 +1,8 @@
 package legends
 
 import (
+	"fmt"
+
 	"github.com/google/uuid"
 	. "github.com/mage/mage/pkg/mage"
 	. "github.com/mage/mage/pkg/mage/core"
@@ -455,13 +457,16 @@ func registerArtifacts() {
 						token.AddAbility(NewTriggered(EvtDamageDealt, false, FuncEffect(
 							"poison counter",
 							EffectProperties{},
-							func(g GameMutator, srcID, ctrl uuid.UUID, _ []uuid.UUID) error {
-								for _, p := range g.AllPlayers() {
-									if p.PlayerID() != ctrl {
-										p.AddPoisonCounters(1)
-										return nil
-									}
+							func(g GameMutator, srcID, ctrl uuid.UUID, targets []uuid.UUID) error {
+								// targets[0] = damaged player (passed by trigger system from EvtDamageDealt.TargetID)
+								if len(targets) == 0 {
+									return nil
 								}
+								p := g.GetPlayer(targets[0])
+								if p == nil {
+									return nil
+								}
+								p.AddPoisonCounters(1)
 								return nil
 							},
 						)).SetCondition(func(evt *GameEvent, g *Game, srcID, _ uuid.UUID) bool {
@@ -567,6 +572,7 @@ func registerArtifacts() {
 				WithCost(TapSourceCost()),
 			),
 			// Sacrifice: put creature from hand onto battlefield or reanimate from graveyard
+			// Activate only if there are two or more hatchling counters
 			WithActivatedAbility(
 				FuncEffect("put creature from hand onto battlefield or reanimate",
 					EffectProperties{Outcome: OutcomeBenefit},
@@ -580,22 +586,33 @@ func registerArtifacts() {
 							"Return target creature card from your graveyard to the battlefield",
 						}, "Triassic Egg")
 						if mode == 0 {
-							// Put creature from hand onto battlefield
+							// Put creature from hand onto battlefield (player chooses)
+							var candidates []Card
 							for _, card := range p.Hand() {
 								if card.HasType(TypeCreature) {
-									p.RemoveFromHand(card.ID())
-									g.PutOnBattlefield(card, controller)
-									return nil
+									candidates = append(candidates, card)
+								}
+							}
+							if len(candidates) > 0 {
+								chosen := p.ChooseCardFromLibrary(candidates, "Triassic Egg: choose a creature to put onto the battlefield", g)
+								if chosen != nil {
+									p.RemoveFromHand(chosen.ID())
+									g.PutOnBattlefield(chosen, controller)
 								}
 							}
 						} else {
-							// Return creature from graveyard to battlefield
-							for i := len(p.Graveyard()) - 1; i >= 0; i-- {
-								card := p.Graveyard()[i]
+							// Return creature from graveyard to battlefield (player chooses)
+							var candidates []Card
+							for _, card := range p.Graveyard() {
 								if card.HasType(TypeCreature) {
-									p.RemoveFromGraveyard(card.ID())
-									g.PutOnBattlefield(card, controller)
-									return nil
+									candidates = append(candidates, card)
+								}
+							}
+							if len(candidates) > 0 {
+								chosen := p.ChooseCardFromLibrary(candidates, "Triassic Egg: choose a creature to return from graveyard", g)
+								if chosen != nil {
+									p.RemoveFromGraveyard(chosen.ID())
+									g.PutOnBattlefield(chosen, controller)
 								}
 							}
 						}
@@ -603,6 +620,7 @@ func registerArtifacts() {
 					},
 				),
 				SacrificeSourceCost(),
+				WithCost(RequireCountersCost(Hatchling, 2)),
 			),
 		)
 	})
@@ -663,6 +681,11 @@ func registerArtifacts() {
 						pins := src.Counters[Pin]
 						if pins <= 0 {
 							return nil
+						}
+						// Pay {X}{X} where X = pin counters (2*pins generic mana)
+						manaCost := fmt.Sprintf("{%d}", 2*pins)
+						if !g.TryPayCostFromLands(controller, manaCost) {
+							return nil // cannot pay
 						}
 						// Deal damage to target
 						for _, pl := range g.AllPlayers() {

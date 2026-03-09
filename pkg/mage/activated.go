@@ -67,6 +67,15 @@ func WithAnyPlayerMay() AbilityOption {
 	}
 }
 
+// WithOpponentOnlyMay allows only the opponents of the controller to activate the ability.
+// The controller cannot activate it.
+func WithOpponentOnlyMay() AbilityOption {
+	return func(a *SimpleActivatedAbility) {
+		a.AnyPlayerMayUse = true
+		a.OpponentOnlyMayUse = true
+	}
+}
+
 // WithControlledSinceTurnStart restricts activation to only when the source has been
 // continuously controlled since the beginning of the controller's most recent turn.
 func WithControlledSinceTurnStart() AbilityOption {
@@ -86,6 +95,7 @@ type SimpleActivatedAbility struct {
 	OncePerTurn              bool // Can only be activated once per turn
 	MaxActivationsPerTurn    int  // Max activations per turn (0 = unlimited, overrides OncePerTurn)
 	AnyPlayerMayUse          bool // Any player may activate this ability
+	OpponentOnlyMayUse       bool // Only opponents of the controller may activate
 	ControlledSinceTurnStart bool // Only if controlled since beginning of most recent turn
 	activatedThisTurn        bool // Tracks whether this ability has been activated this turn
 	activationsThisTurn      int  // Counts activations for MaxActivationsPerTurn

@@ -1507,6 +1507,12 @@ func (g *Game) ActivateAbilityByText(playerID uuid.UUID, permName string, target
 		if !aa.CanActivate(playerID, g) {
 			continue
 		}
+		// If opponent-only, the controller cannot activate it
+		if saa, isSAA := inner.(*SimpleActivatedAbility); isSAA && saa.OpponentOnlyMayUse {
+			if perm.Controller == playerID {
+				continue
+			}
+		}
 
 		// Check sorcery speed
 		if aa.SorcerySpeed() && !g.Step.IsMainPhase() {
@@ -2636,6 +2642,13 @@ func (g *Game) GetActivatableAbilities(playerID uuid.UUID) []ActivatableInfo {
 			if !isOwner {
 				saa, isSAA := UnwrapAbility(a).(*SimpleActivatedAbility)
 				if !isSAA || !saa.AnyPlayerMayUse {
+					continue
+				}
+			}
+			// If opponent-only, the controller cannot activate it
+			if isOwner {
+				saa, isSAA := UnwrapAbility(a).(*SimpleActivatedAbility)
+				if isSAA && saa.OpponentOnlyMayUse {
 					continue
 				}
 			}

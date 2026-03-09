@@ -91,6 +91,7 @@ type GameMutator interface {
 	UpdateCopyEffect(uuid.UUID, *Permanent)
 
 	// Damage prevention / redirection / reflection
+	AddSourcePrevention(playerID, sourceID uuid.UUID)
 	AddTypePrevention(uuid.UUID, CardType)
 	PreventAllDamageFrom(sourceID uuid.UUID)
 	SetArtifactDamageRedirect(controllerID, permID uuid.UUID)
@@ -320,6 +321,12 @@ func (g *Game) SetSanctuaryActive(playerID uuid.UUID) {
 // SetMinimumLife marks a player as having minimum-life protection (Ali from Cairo).
 func (g *Game) SetMinimumLife(playerID uuid.UUID) {
 	g.Effects.AddCycleReplacement(&minimumLifeReplacement{playerID: playerID})
+}
+
+// AddSourcePrevention adds a one-shot damage prevention for the next damage
+// from a specific source to the specified player (Circle of Protection: Artifacts).
+func (g *Game) AddSourcePrevention(playerID, sourceID uuid.UUID) {
+	g.Effects.AddReplacement(&sourcePreventionReplacement{playerID: playerID, dmgSource: sourceID})
 }
 
 // AddTypePrevention adds a card-type damage prevention rule for the player.

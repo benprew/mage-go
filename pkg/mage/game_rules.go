@@ -25,7 +25,8 @@ type GameRules struct {
 	minimumLife        map[uuid.UUID]bool      // players whose life can't go below 1 (Ali from Cairo)
 	maxHandSize        map[uuid.UUID]int       // player -> max hand size override (Cursed Rack)
 	expansionCastBlock   []string                // set codes blocked from casting/playing
-	NullifiedLandwalks   map[Attr]bool           // landwalk attrs that are nullified (Great Wall, etc.)
+	NullifiedLandwalks       map[Attr]bool           // landwalk attrs that are nullified (Great Wall, etc.)
+	ActivationCostReductions map[uuid.UUID]int        // permanent ID → generic mana reduction for activated abilities
 }
 
 // NewGameRules creates a GameRules with all maps initialized.
@@ -43,7 +44,8 @@ func NewGameRules() *GameRules {
 		channelActive:           make(map[uuid.UUID]bool),
 		minimumLife:             make(map[uuid.UUID]bool),
 		maxHandSize:             make(map[uuid.UUID]int),
-		NullifiedLandwalks:      make(map[Attr]bool),
+		NullifiedLandwalks:       make(map[Attr]bool),
+		ActivationCostReductions: make(map[uuid.UUID]int),
 	}
 }
 
@@ -60,6 +62,7 @@ func (r *GameRules) ResetPerCycle() {
 	r.minimumLife = make(map[uuid.UUID]bool)
 	r.expansionCastBlock = nil
 	r.NullifiedLandwalks = make(map[Attr]bool)
+	r.ActivationCostReductions = make(map[uuid.UUID]int)
 }
 
 // ClearEndOfTurn resets all turn-scoped game rule state.

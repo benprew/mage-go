@@ -184,7 +184,13 @@ func registerEnchantments() {
 					}), false,
 			)),
 			WithStaticAbility(
-				PreventAttachedFromUntapping(AttachAura),
+				AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
+					// Only prevent untap while this Aura has pupa counters
+					if source.Counters[Pupa] > 0 {
+						g.Effects.GrantAttr(target.ID(), AttrDoesNotUntap)
+					}
+					return nil
+				}),
 			),
 			WithAbility(BeginningOfUpkeepTrigger(
 				FuncEffect("remove pupa counter or sacrifice and boost",
@@ -259,7 +265,7 @@ func registerEnchantments() {
 			WithStaticAbility(
 				PreventAttachedFromAttacking(AttachAura),
 				AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
-					g.Effects.Damage.AddDamagePreventionRule(WithFrom(NewPermanentFilter("enchanted creature", func(p *Permanent, _ *Game) bool {
+					g.Effects.Damage.AddDamagePreventionRule(WithCombatOnly(), WithFrom(NewPermanentFilter("enchanted creature", func(p *Permanent, _ *Game) bool {
 						return p.ID() == target.ID()
 					})))
 					return nil
@@ -414,8 +420,8 @@ func registerEnchantments() {
 		return NewAura("Gaseous Form", "{2}{U}",
 			WithStaticAbility(
 				AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
-					g.Effects.Damage.AddDamagePreventionRule(WithFrom(IsID(target.ID())))
-					g.Effects.Damage.AddDamagePreventionRule(WithTo(IsID(target.ID())))
+					g.Effects.Damage.AddDamagePreventionRule(WithCombatOnly(), WithFrom(IsID(target.ID())))
+					g.Effects.Damage.AddDamagePreventionRule(WithCombatOnly(), WithTo(IsID(target.ID())))
 					return nil
 				}),
 			),
@@ -471,8 +477,12 @@ func registerEnchantments() {
 				FuncEffect("prevent next black or red damage to you",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						g.AddColorPrevention(controller, Black)
-						g.AddColorPrevention(controller, Red)
+						// Single prevention shield that catches the next damage from any
+						// source that is black OR red (Oracle: "the next time ... a black
+						// or red source of your choice").
+						g.AddReplacementEffect(&blackOrRedPreventionReplacement{
+							playerID: controller,
+						})
 						return nil
 					}),
 				ManaCostOf("{1}{W}"),
@@ -1447,4 +1457,43 @@ func registerEnchantments() {
 		)
 	})
 
+}
+
+// blackOrRedPreventionReplacement prevents the next damage from a source that
+// is black or red. It implements ReplacementEffect as a one-shot shield.
+type blackOrRedPreventionReplacement struct {
+	playerID uuid.UUID
+	consumed bool
+	sourceID uuid.UUID
+}
+
+func (r *blackOrRedPreventionReplacement) SourceID() uuid.UUID { return r.sourceID }
+
+func (r *blackOrRedPreventionReplacement) Matches(a Action, g GameReader) bool {
+	act, ok := a.(*DamageToPlayerAction)
+	if !ok {
+		return false
+	}
+	if act.PlayerID() != r.playerID {
+		return false
+	}
+	sourceCard := g.FindCardAnywhere(act.ActionSource())
+	if sourceCard == nil {
+		return false
+	}
+	for _, c := range sourceCard.ManaCost().Colors() {
+		if c == Black || c == Red {
+			return true
+		}
+	}
+	return false
+}
+
+func (r *blackOrRedPreventionReplacement) Replace(a Action, g GameMutator) Action {
+	r.consumed = true
+	return nil
+}
+
+func (r *blackOrRedPreventionReplacement) IsActive(_ GameReader) bool {
+	return !r.consumed
 }

@@ -2,6 +2,7 @@ package legends
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	. "github.com/mage/mage/pkg/mage"
@@ -708,7 +709,9 @@ func registerSpells() {
 							continue
 						}
 						ownerID := perm.Card.Owner()
-						// Destroy (can't be regenerated)
+						// "They can't be regenerated"
+						perm.GrantBaseAttr(CantRegenerate)
+						// Destroy the creature
 						g.DestroyPermanent(perm)
 						// Reanimate a creature from the owner's graveyard
 						owner := g.GetPlayer(ownerID)
@@ -793,8 +796,12 @@ func registerSpells() {
 					toDestroy := g.FilterBattlefield(And(IsCreature, Not(HasColorFilter(Black)), Not(HasKeywordFilter(Indestructible))))
 					destroyed := 0
 					for _, perm := range toDestroy {
+						permID := perm.ID()
 						g.DestroyPermanent(perm)
-						destroyed++
+						// Only count creatures that actually died (not saved by regeneration)
+						if g.FindPermanent(permID) == nil {
+							destroyed++
+						}
 					}
 					damage := destroyed + 3
 					p := g.GetPlayer(controller)
@@ -902,7 +909,10 @@ func registerSpells() {
 						cmc = obj.Card.ManaCost().CMC()
 					}
 					g.CounterSpellOnStack(targets[0])
-					// Register delayed trigger: at controller's next upkeep, add colorless mana
+					// XXX: Oracle says "at the beginning of your next main phase" but no EvtMainPhase
+					// event exists in the engine. Using EvtUpkeep as fallback — mana pools persist
+					// between steps so the mana will be available at main phase, but the timing is
+					// technically wrong (fires at upkeep instead of precombat main).
 					if cmc > 0 {
 						g.RegisterDelayedTrigger(&DelayedTrigger{
 							EventType:     EvtUpkeep,
@@ -968,7 +978,7 @@ func registerSpells() {
 // Instant
 // Cast this spell only before blockers are declared.
 // Target creature gains first strike until end of turn. If it doesn't have rampage, that creature gains rampage 2 until end of turn. (Whenever the creature becomes blocked, it gets +2/+2 until end of turn for each creature blocking it beyond the first.)
-// XXX: timing restriction not enforced; "if it doesn't have rampage" check not enforced
+// XXX: timing restriction not enforced
 	Register("Rapid Fire", func() Card {
 		return NewInstant("Rapid Fire", "{3}{W}",
 			NewTargetedSpell(TargetCreature(), FuncEffect(
@@ -986,7 +996,25 @@ func registerSpells() {
 					ce := TemporaryKeyword(perm.ID(), FirstStrike)
 					ce.SetSourceID(sourceID)
 					g.AddContinuousEffect(ce)
-					// Grant rampage 2 until end of turn
+					// Grant rampage 2 only if the creature doesn't already have rampage
+					hasRampage := false
+					for _, a := range perm.RuntimeAbilities {
+						inner := UnwrapAbility(a)
+						if gt, ok := inner.(*GenericTriggered); ok {
+							for _, e := range gt.Effects() {
+								if strings.HasPrefix(e.Text(), "rampage ") {
+									hasRampage = true
+									break
+								}
+							}
+						}
+						if hasRampage {
+							break
+						}
+					}
+					if hasRampage {
+						return nil
+					}
 					targetID := targets[0]
 					rampageEff := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, _ uuid.UUID) error {
 						p := g.FindPermanent(targetID)
@@ -1043,18 +1071,19 @@ func registerSpells() {
 						p.RemoveFromHand(card.ID())
 						p.AddToGraveyard(card)
 					}
-					// Return that many cards from graveyard to hand
-					returned := 0
-					for returned < len(discarded) && len(p.Graveyard()) > 0 {
-						// Pick cards from graveyard (auto-choose first available)
+					// Return that many cards from graveyard to hand (player chooses)
+					for returned := 0; returned < len(discarded); returned++ {
 						gy := p.Graveyard()
 						if len(gy) == 0 {
 							break
 						}
-						card, ok := p.RemoveFromGraveyard(gy[0].ID())
+						chosen := p.ChooseCardFromLibrary(gy, "Recall: choose a card to return from graveyard", g)
+						if chosen == nil {
+							break
+						}
+						card, ok := p.RemoveFromGraveyard(chosen.ID())
 						if ok {
 							p.AddToHand(card)
-							returned++
 						}
 					}
 					// Exile Recall
