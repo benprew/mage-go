@@ -1,91 +1,39 @@
 package antiquities
 
+import (
+	"path/filepath"
+	"runtime"
+
+	"github.com/mage/mage/pkg/catalog"
+)
+
 // antiquitiesCards contains every card name originally printed in the Antiquities expansion.
 // Used by Golgothian Sylex to identify permanents to sacrifice.
-var antiquitiesCards = map[string]bool{
-	"Amulet of Kroog":                true,
-	"Argivian Archaeologist":         true,
-	"Argivian Blacksmith":            true,
-	"Argothian Pixies":               true,
-	"Argothian Treefolk":             true,
-	"Armageddon Clock":               true,
-	"Artifact Blast":                  true,
-	"Artifact Possession":            true,
-	"Artifact Ward":                   true,
-	"Ashnod's Altar":                 true,
-	"Ashnod's Battle Gear":           true,
-	"Ashnod's Transmogrant":          true,
-	"Atog":                            true,
-	"Battering Ram":                   true,
-	"Bronze Tablet":                   true,
-	"Candelabra of Tawnos":           true,
-	"Circle of Protection: Artifacts": true,
-	"Citanul Druid":                   true,
-	"Clay Statue":                     true,
-	"Clockwork Avian":                 true,
-	"Colossus of Sardia":             true,
-	"Coral Helm":                      true,
-	"Crumble":                         true,
-	"Cursed Rack":                     true,
-	"Damping Field":                   true,
-	"Detonate":                        true,
-	"Drafna's Restoration":           true,
-	"Dragon Engine":                   true,
-	"Dwarven Weaponsmith":            true,
-	"Energy Flux":                     true,
-	"Feldon's Cane":                  true,
-	"Gaea's Avenger":                 true,
-	"Gate to Phyrexia":               true,
-	"Goblin Artisans":                true,
-	"Golgothian Sylex":               true,
-	"Grapeshot Catapult":             true,
-	"Haunting Wind":                   true,
-	"Hurkyl's Recall":                true,
-	"Ivory Tower":                     true,
-	"Jalum Tome":                      true,
-	"Martyrs of Korlis":              true,
-	"Mightstone":                      true,
-	"Millstone":                       true,
-	"Mishra's Factory":               true,
-	"Mishra's War Machine":           true,
-	"Mishra's Workshop":              true,
-	"Obelisk of Undoing":             true,
-	"Onulet":                          true,
-	"Orcish Mechanics":               true,
-	"Ornithopter":                     true,
-	"Phyrexian Gremlins":             true,
-	"Power Artifact":                  true,
-	"Powerleech":                      true,
-	"Priest of Yawgmoth":             true,
-	"Primal Clay":                     true,
-	"Rakalite":                        true,
-	"Reconstruction":                  true,
-	"Reverse Polarity":               true,
-	"Rocket Launcher":                true,
-	"Sage of Lat-Nam":                true,
-	"Shapeshifter":                    true,
-	"Shatterstorm":                    true,
-	"Staff of Zegon":                 true,
-	"Strip Mine":                      true,
-	"Su-Chi":                          true,
-	"Tablet of Epityr":               true,
-	"Tawnos's Coffin":                true,
-	"Tawnos's Wand":                  true,
-	"Tawnos's Weaponry":              true,
-	"Tetravus":                        true,
-	"The Rack":                        true,
-	"Titania's Song":                 true,
-	"Transmute Artifact":             true,
-	"Triskelion":                      true,
-	"Urza's Avenger":                 true,
-	"Urza's Chalice":                 true,
-	"Urza's Mine":                     true,
-	"Urza's Miter":                   true,
-	"Urza's Power Plant":             true,
-	"Urza's Tower":                    true,
-	"Wall of Spears":                  true,
-	"Weakstone":                       true,
-	"Xenic Poltergeist":              true,
-	"Yawgmoth Demon":                 true,
-	"Yotian Soldier":                  true,
+// Built from pkg/catalog data at init time.
+var antiquitiesCards map[string]bool
+
+func init() {
+	antiquitiesCards = loadAntiquitiesNames()
+}
+
+func loadAntiquitiesNames() map[string]bool {
+	// Locate the catalog JSON relative to this source file.
+	_, thisFile, _, _ := runtime.Caller(0)
+	root := filepath.Join(filepath.Dir(thisFile), "..", "..")
+	catalogPath := filepath.Join(root, "data", "catalog", "ATQ.json")
+
+	cat, err := catalog.LoadSet(catalogPath)
+	if err != nil {
+		panic("failed to load Antiquities catalog: " + err.Error())
+	}
+	cards := cat.CardsBySet("ATQ")
+	names := make(map[string]bool, len(cards))
+	seen := make(map[string]bool)
+	for _, c := range cards {
+		if !seen[c.Name] {
+			names[c.Name] = true
+			seen[c.Name] = true
+		}
+	}
+	return names
 }
