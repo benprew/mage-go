@@ -417,10 +417,23 @@ func TestRukhEgg(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rukh Egg")
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Rukh Egg")
-		g.StopAt(1, core.BeginCombat)
+		// Token is created at the beginning of the next end step
+		g.StopAt(2, core.Upkeep)
 		g.Execute()
 		g.AssertGraveyardCount(gametest.PlayerA, "Rukh Egg", 1)
 		g.AssertPermanentCount(gametest.PlayerA, "Bird", 1)
+	})
+
+	t.Run("no_token_before_end_step", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rukh Egg")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Rukh Egg")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Token not created yet — delayed until end step
+		g.AssertGraveyardCount(gametest.PlayerA, "Rukh Egg", 1)
+		g.AssertPermanentCount(gametest.PlayerA, "Bird", 0)
 	})
 }
 
@@ -726,20 +739,21 @@ func TestSerendibDjinn(t *testing.T) {
 		g.AssertLife(gametest.PlayerA, 17)
 	})
 
-	t.Run("no_lands_sacrifice_self_and_take_3", func(t *testing.T) {
+	t.Run("no_lands_sacrifice_self_no_damage", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Serendib Djinn")
-		// No lands — sacrifice Djinn and take 3
+		// No lands — sacrifice Djinn, no damage (damage only when Island sacrificed)
 		g.StopAt(1, core.PrecombatMain)
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerA, "Serendib Djinn", 0)
-		g.AssertLife(gametest.PlayerA, 17)
+		g.AssertLife(gametest.PlayerA, 20)
 	})
 
 	t.Run("has_flying", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Serendib Djinn")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest") // 2nd forest so Djinn survives upkeep
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // no flying
 		g.Attack(1, gametest.PlayerA, "Serendib Djinn")
 		g.Block(1, gametest.PlayerB, "Grizzly Bears", "Serendib Djinn")
@@ -979,6 +993,37 @@ func TestGuardianBeast(t *testing.T) {
 		// Brass Man is an artifact creature — not protected
 		g.AssertPermanentCount(gametest.PlayerA, "Brass Man", 0)
 	})
+
+	t.Run("noncreature_artifacts_cant_change_control", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Guardian Beast")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Jayemdae Tome") // noncreature artifact
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Aladdin")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+		// Aladdin tries to steal Jayemdae Tome
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerB, "Aladdin", "Jayemdae Tome")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Guardian Beast prevents control change — Tome stays with PlayerA
+		g.AssertPermanentCount(gametest.PlayerA, "Jayemdae Tome", 1)
+	})
+
+	t.Run("noncreature_artifacts_cant_be_enchanted", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Guardian Beast")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Jayemdae Tome") // noncreature artifact
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Fishliver Oil")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island")
+		// Try to enchant the artifact — should fail (can't be enchanted)
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Fishliver Oil", "Jayemdae Tome")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Fishliver Oil shouldn't be attached — artifact can't be enchanted
+		g.AssertPermanentCount(gametest.PlayerB, "Fishliver Oil", 0)
+	})
 }
 
 func TestOldManOfTheSea(t *testing.T) {
@@ -1196,3 +1241,20 @@ func TestFlyingMen(t *testing.T) {
 		g.AssertLife(gametest.PlayerB, 19)
 	})
 }
+
+func TestGhazbanOgreControlPersists(t *testing.T) {
+	// Verify control change persists through continuous effect application cycles
+	t.Run("opponent_keeps_control_after_gaining_it", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ghazbán Ogre")
+		g.SetLife(gametest.PlayerA, 15)
+		g.SetLife(gametest.PlayerB, 20)
+		// Turn 1 upkeep: PlayerB has more life → gains control
+		// Verify it persists into combat and beyond
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Ghazbán Ogre", 0)
+		g.AssertPermanentCount(gametest.PlayerB, "Ghazbán Ogre", 1)
+	})
+}
+

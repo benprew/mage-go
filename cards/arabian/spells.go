@@ -94,7 +94,8 @@ func registerSpells() {
 
 	// Oracle: "Players play a Magic subgame, using their libraries as their decks.
 	// Each player who doesn't win the subgame loses half their life, rounded up."
-	// XXX: Shahrazad skipped — subgame mechanic, banned in all formats
+	// UNIMPLEMENTABLE: Subgame mechanic requires recursive game instances.
+	// Banned in all sanctioned formats. Registered as a no-op spell.
 	Register("Shahrazad", func() Card {
 		return NewSorcery("Shahrazad", "{W}{W}", nil)
 	})
@@ -120,7 +121,9 @@ func registerSpells() {
 					amount := 1 + cmc
 					p := g.GetPlayer(controller)
 					if p != nil && amount > 0 {
-						p.ManaPool().Add(Green, amount)
+						// "Add X mana of any one color" — player chooses
+						color := p.ChooseManaColor("Metamorphosis: choose a color")
+						p.ManaPool().Add(color, amount)
 						g.SetCreatureManaOnly(controller)
 					}
 					return nil

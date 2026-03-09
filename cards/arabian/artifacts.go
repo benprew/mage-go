@@ -42,6 +42,43 @@ func (c *discardLastDrawnCost) Pay(sourceID, controller uuid.UUID, g *Game) erro
 
 func (c *discardLastDrawnCost) Text() string { return "Discard the last card you drew this turn" }
 
+// pyramidsDestructionReplacement prevents the next destruction of a specific land
+// and removes all damage from it instead. One-shot.
+type pyramidsDestructionReplacement struct {
+	permanentID uuid.UUID
+	sourceID    uuid.UUID
+	consumed    bool
+}
+
+func (r *pyramidsDestructionReplacement) SourceID() uuid.UUID { return r.sourceID }
+
+func (r *pyramidsDestructionReplacement) Matches(a Action, g GameReader) bool {
+	da, ok := a.(*DestroyPermanentAction)
+	if !ok {
+		return false
+	}
+	return da.PermanentID() == r.permanentID
+}
+
+func (r *pyramidsDestructionReplacement) Replace(a Action, g GameMutator) Action {
+	r.consumed = true
+	// Remove all damage marked on the land
+	perm := g.FindPermanent(r.permanentID)
+	if perm != nil {
+		perm.Damage = 0
+	}
+	return nil // prevent destruction
+}
+
+func (r *pyramidsDestructionReplacement) IsActive(_ GameReader) bool {
+	return !r.consumed
+}
+
+func (r *pyramidsDestructionReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
+}
+
 func init() {
 	registerArtifacts()
 }
@@ -197,7 +234,7 @@ func registerArtifacts() {
 					}),
 				TapSourceCost(),
 				WithCost(ManaCostOf("{2}")),
-				WithTarget(TargetCreature(IsAttacking)),
+				WithTarget(TargetCreatureYouControl(IsAttacking)),
 			),
 		)
 	})
@@ -299,9 +336,12 @@ func registerArtifacts() {
 							// Mode 1: Destroy target Aura attached to a land
 							g.DestroyPermanent(target)
 						} else {
-							// Mode 2: Make target land indestructible until end of turn
-							GrantKeywordUntilEndOfTurn(Indestructible, SelectTarget).
-								Apply(g, sourceID, controller, targets)
+							// Mode 2: The next time target land would be destroyed this
+							// turn, remove all damage marked on it instead.
+							g.AddReplacementEffect(&pyramidsDestructionReplacement{
+								permanentID: targets[0],
+								sourceID:    sourceID,
+							})
 						}
 						return nil
 					}),
@@ -311,14 +351,15 @@ func registerArtifacts() {
 		)
 		c.SetModes([]string{
 			"Destroy target Aura attached to a land",
-			"Target land becomes indestructible this turn",
+			"The next time target land would be destroyed this turn, remove all damage marked on it instead",
 		})
 		return c
 	})
 
 	// Oracle: "{5}, {T}, Exile Ring of Ma'rûf: The next time you would draw a card this
 	// turn, instead put a card you own from outside the game into your hand."
-	// XXX: Ring of Ma'rûf skipped — wish/sideboard mechanic
+	// UNIMPLEMENTABLE: Wish/sideboard mechanic requires access to cards outside
+	// the game, which the engine does not model. Registered as a no-op artifact.
 	Register("Ring of Ma'rûf", func() Card {
 		return NewArtifact("Ring of Ma'rûf", "{5}")
 	})

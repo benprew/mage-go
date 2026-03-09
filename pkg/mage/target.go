@@ -32,7 +32,9 @@ func (t *BaseTarget) Reset()              { t.chosen = nil }
 // CreatureTarget targets a creature on the battlefield.
 type CreatureTarget struct {
 	BaseTarget
-	Filters []PermanentFilter
+	Filters        []PermanentFilter
+	excludeSource  bool
+	controllerOnly bool
 }
 
 // TargetCreature creates a target that selects a creature on the battlefield,
@@ -44,10 +46,37 @@ func TargetCreature(filters ...PermanentFilter) Target {
 	}
 }
 
+// TargetOtherCreature creates a target that selects a creature other than the
+// source permanent, optionally narrowed by PermanentFilter predicates.
+func TargetOtherCreature(filters ...PermanentFilter) Target {
+	return &CreatureTarget{
+		BaseTarget:    BaseTarget{min: 1, max: 1},
+		Filters:       filters,
+		excludeSource: true,
+	}
+}
+
+// TargetCreatureYouControl creates a target that selects a creature you control,
+// optionally narrowed by PermanentFilter predicates.
+func TargetCreatureYouControl(filters ...PermanentFilter) Target {
+	return &CreatureTarget{
+		BaseTarget:     BaseTarget{min: 1, max: 1},
+		Filters:        filters,
+		controllerOnly: true,
+	}
+}
+
 func (t *CreatureTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
+	sourceID := sourceCard.ID()
 	for _, p := range g.Battlefield {
 		if !p.HasType(TypeCreature) {
+			continue
+		}
+		if t.excludeSource && p.ID() == sourceID {
+			continue
+		}
+		if t.controllerOnly && p.Controller != controller {
 			continue
 		}
 		if !p.CanBeTargetedBy(sourceCard, controller, g) {
@@ -420,6 +449,46 @@ func (t *OpponentTarget) Possible(controller uuid.UUID, _ Card, g *Game) []uuid.
 }
 
 func (t *OpponentTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
+	t.chosen = chosen
+	return nil
+}
+
+// PowerLESourceCreatureTarget targets a creature with power less than or equal to
+// the source creature's power (e.g. Old Man of the Sea).
+type PowerLESourceCreatureTarget struct {
+	BaseTarget
+}
+
+// TargetCreatureWithPowerLESource creates a target that selects a creature whose power
+// is less than or equal to the source permanent's power.
+func TargetCreatureWithPowerLESource() Target {
+	return &PowerLESourceCreatureTarget{
+		BaseTarget: BaseTarget{min: 1, max: 1},
+	}
+}
+
+func (t *PowerLESourceCreatureTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+	src := g.FindPermanent(sourceCard.ID())
+	if src == nil {
+		return nil
+	}
+	srcPower := src.CurrentPower(g)
+	var result []uuid.UUID
+	for _, p := range g.Battlefield {
+		if !p.HasType(TypeCreature) {
+			continue
+		}
+		if !p.CanBeTargetedBy(sourceCard, controller, g) {
+			continue
+		}
+		if p.CurrentPower(g) <= srcPower {
+			result = append(result, p.ID())
+		}
+	}
+	return result
+}
+
+func (t *PowerLESourceCreatureTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
 	t.chosen = chosen
 	return nil
 }

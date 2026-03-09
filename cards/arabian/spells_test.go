@@ -134,6 +134,7 @@ func TestMetamorphosis(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // CMC 2
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Metamorphosis")
+		g.ChooseManaColor(gametest.PlayerA, core.Green) // choose green mana
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Metamorphosis")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
@@ -142,6 +143,21 @@ func TestMetamorphosis(t *testing.T) {
 		pool := g.AllPlayers()[0].ManaPool()
 		if pool.Count(core.Green) < 3 {
 			t.Errorf("expected at least 3 green mana from Metamorphosis, got %d", pool.Count(core.Green))
+		}
+	})
+
+	t.Run("can_choose_different_color", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // CMC 2
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Metamorphosis")
+		g.ChooseManaColor(gametest.PlayerA, core.Red) // choose red mana
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Metamorphosis")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
+		pool := g.AllPlayers()[0].ManaPool()
+		if pool.Count(core.Red) < 3 {
+			t.Errorf("expected at least 3 red mana from Metamorphosis, got %d", pool.Count(core.Red))
 		}
 	})
 }

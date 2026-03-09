@@ -19,6 +19,7 @@ const (
 	AttrMayNotUntap        // player may choose not to untap during untap step
 	AttrCantBeEnchanted              // permanent can't have enchantments attached to it
 	AttrCantBeTargetedByArtifacts    // permanent can't be targeted by abilities from artifact sources
+	AttrCantChangeControl            // other players can't gain control (Guardian Beast)
 
 	// Type-identity attrs (battlefield) — replaces TypesAdded []CardType on Permanent.
 	AttrIsCreature
@@ -99,6 +100,8 @@ func (a Attr) String() string {
 		return "Can't Be Enchanted"
 	case AttrCantBeTargetedByArtifacts:
 		return "Can't Be Targeted by Artifacts"
+	case AttrCantChangeControl:
+		return "Can't Change Control"
 	case AttrIsCreature:
 		return "IsCreature"
 	case AttrIsLand:

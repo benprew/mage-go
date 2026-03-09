@@ -367,6 +367,15 @@ func (em *EffectManager) Apply(g *Game) {
 			perm.grantedAttrs[a] += delta
 		}
 	}
+
+	// Post-layer enforcement: AttrCantChangeControl reverts any control changes
+	// applied during LayerControl. This runs after attrs are written so that
+	// effects granted at LayerAbility (e.g. Guardian Beast) take effect.
+	for _, p := range g.Battlefield {
+		if p.HasAttr(AttrCantChangeControl) && p.Controller != p.Card.Owner() {
+			p.Controller = p.Card.Owner()
+		}
+	}
 }
 
 

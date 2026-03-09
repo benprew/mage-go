@@ -40,6 +40,8 @@ func registerCreatures() {
 							for _, id := range toDestroy {
 								p := g.FindPermanent(id)
 								if p != nil {
+									// "They can't be regenerated."
+									p.GrantBaseAttr(CantRegenerate)
 									g.DestroyPermanent(p)
 								}
 							}
@@ -149,10 +151,19 @@ func registerCreatures() {
 		return NewCreature("Island Fish Jasconius", "{4}{U}{U}{U}", 6, 8,
 			WithSubTypes("Fish"),
 			WithKeyword(DoesNotUntapKW),
-			WithActivatedAbility(
-				UntapSource(),
-				ManaCostOf("{U}{U}{U}"),
-			),
+			// "At the beginning of your upkeep, you may pay {U}{U}{U}. If you do, untap it."
+			WithAbility(BeginningOfUpkeepTrigger(
+				FuncEffect("pay {U}{U}{U} to untap", EffectProperties{},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						if g.TryPayCostFromLands(controller, "{U}{U}{U}") {
+							perm := g.FindPermanent(sourceID)
+							if perm != nil {
+								perm.Tapped = false
+							}
+						}
+						return nil
+					}), false,
+			)),
 			WithStaticAbility(PreventFromAttackingIfDefendingPlayerControls(HasSubType("Island"))),
 			WithAbility(NewTriggered(EvtLeavesBattlefield, false, SacrificeSource()).
 				SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
@@ -232,7 +243,7 @@ func registerCreatures() {
 						return nil
 					}),
 				TapSourceCost(),
-				WithTarget(TargetCreature()),
+				WithTarget(TargetCreatureWithPowerLESource()),
 			),
 			WithStaticAbility(FuncContinuousEffect(LayerControl, WhileOnBattlefield,
 				func(g *Game, sourceID uuid.UUID) error {
@@ -265,24 +276,20 @@ func registerCreatures() {
 		return NewCreature("Serendib Djinn", "{2}{U}{U}", 5, 6,
 			WithSubTypes("Djinn"),
 			WithKeyword(Flying),
+			// Upkeep: sacrifice a land, 3 damage if Island; if no lands, sacrifice self
 			WithAbility(BeginningOfUpkeepTrigger(
-				FuncEffect("sacrifice a land or self-destruct",
+				FuncEffect("sacrifice a land",
 					EffectProperties{},
 					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						lands := g.FilterBattlefield(And(ControlledBy(controller), IsLand))
 						if len(lands) == 0 {
-							// No lands: take 3 damage and sacrifice Djinn
-							p := g.GetPlayer(controller)
-							if p != nil {
-								g.DealDamageToPlayer(p, 3, sourceID)
-							}
+							// "When you control no lands, sacrifice this creature."
 							perm := g.FindPermanent(sourceID)
 							if perm != nil {
 								g.Sacrifice(perm)
 							}
 							return nil
 						}
-						// Choose a land to sacrifice
 						player := g.GetPlayer(controller)
 						chosen := player.ChoosePermanent(lands, "sacrifice", g)
 						if chosen == nil {
@@ -298,6 +305,16 @@ func registerCreatures() {
 						return nil
 					}), false,
 			)),
+			// State trigger: when you control no lands (outside upkeep), sacrifice
+			WithAbility(NewTriggered(EvtLeavesBattlefield, false, SacrificeSource()).
+				SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+					for _, p := range g.FilterBattlefield(AnyPermanent) {
+						if p.Controller == controllerID && p.HasType(TypeLand) {
+							return false
+						}
+					}
+					return true
+				})),
 		)
 	})
 
@@ -368,17 +385,24 @@ func registerCreatures() {
 								}
 							}
 						}
-						// Opponent chooses a target for the second 1 damage
+						// Opponent chooses any target for the second 1 damage
 						opp := g.GetOpponent(controller)
 						if opp == nil {
 							return nil
 						}
+						// Opponent can choose any creature or player as second target
 						creatures := g.FilterBattlefield(IsCreature)
 						if len(creatures) > 0 {
 							chosen := opp.ChoosePermanent(creatures, "Cuombajj Witches", g)
 							if chosen != nil {
 								g.DealDamageToPermanent(chosen, 1, sourceID)
+							} else {
+								// Opponent declined creature — deal to opponent themselves
+								g.DealDamageToPlayer(opp, 1, sourceID)
 							}
+						} else {
+							// No creatures — deal to opponent
+							g.DealDamageToPlayer(opp, 1, sourceID)
 						}
 						return nil
 					}),
@@ -406,7 +430,19 @@ func registerCreatures() {
 				NewTriggered(EvtEndStep, false,
 					DealDamageToPlayers(Fixed(2), SelectController()),
 				).SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
-					return evt.PlayerID == controllerID && !g.HasAttackedThisTurn(sourceID)
+					if evt.PlayerID != controllerID {
+						return false
+					}
+					if g.HasAttackedThisTurn(sourceID) {
+						return false
+					}
+					// "unless it came under your control this turn" —
+					// summoning sickness indicates the creature entered this turn
+					perm := g.FindPermanent(sourceID)
+					if perm != nil && perm.HasAttr(AttrSummonSick) {
+						return false
+					}
+					return true
 				}),
 			),
 		)
@@ -424,12 +460,18 @@ func registerCreatures() {
 					if src == nil {
 						return nil
 					}
-					// Grant indestructible to noncreature artifacts controlled by the same player
+					// Grant indestructible, can't be enchanted, and can't change control
+					// to noncreature artifacts owned by the same player.
+					// Uses Owner (not Controller) because a stealing effect at LayerControl
+					// may have already changed Controller before this LayerAbility runs.
+					// The post-layer AttrCantChangeControl check reverts any such steal.
 					for _, p := range g.Battlefield {
-						if p.Controller == src.Controller &&
+						if p.Card.Owner() == src.Controller &&
 							p.HasType(TypeArtifact) && !p.HasType(TypeCreature) &&
 							p.ID() != sourceID {
 							g.Effects.GrantAttr(p.ID(), Indestructible)
+							g.Effects.GrantAttr(p.ID(), AttrCantBeEnchanted)
+							g.Effects.GrantAttr(p.ID(), AttrCantChangeControl)
 						}
 					}
 					return nil
@@ -509,7 +551,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				SetPTUntilEndOfTurn(0, 2, SelectTarget),
 				TapSourceCost(),
-				WithTarget(TargetCreature()),
+				WithTarget(TargetOtherCreature()),
 			),
 		)
 	})
@@ -663,7 +705,19 @@ func registerCreatures() {
 			WithSubTypes("Bird", "Egg"),
 			WithAbility(
 				NewTriggered(EvtCreatureDied, false,
-					CreateToken("Bird", 4, 4, []CardType{TypeCreature}, []string{"Bird"}, Flying),
+					FuncEffect("register delayed token creation at next end step",
+						EffectProperties{},
+						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+							g.RegisterDelayedTrigger(&DelayedTrigger{
+								EventType:  EvtEndStep,
+								SourceID:   sourceID,
+								Controller: controller,
+								Effects: []Effect{
+									CreateToken("Bird", 4, 4, []CardType{TypeCreature}, []string{"Bird"}, Flying),
+								},
+							})
+							return nil
+						}),
 				).SetCondition(IsThisSource),
 			),
 		)
@@ -680,6 +734,13 @@ func registerCreatures() {
 					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						if !g.FlipCoin(controller) {
 							g.RemoveFromCombat(sourceID)
+							// "it can't block this turn"
+							eff := TargetEffect(LayerAbility, EndOfTurn, sourceID, func(g *Game, target *Permanent) error {
+								g.Effects.RevokeAttr(target.ID(), AttrCanBlock)
+								return nil
+							})
+							g.AddContinuousEffect(eff)
+							g.ApplyContinuousEffects()
 						}
 						return nil
 					}), false,
@@ -707,8 +768,15 @@ func registerCreatures() {
 						if len(candidates) == 0 {
 							return nil
 						}
-						// Pick one (first candidate — AI/test deterministic)
-						target := candidates[0]
+						// Controller chooses target
+						p := g.GetPlayer(controller)
+						var target *Permanent
+						if p != nil {
+							target = p.ChoosePermanent(candidates, "Erhnam Djinn", g)
+						}
+						if target == nil {
+							target = candidates[0]
+						}
 						eff := TargetEffect(LayerAbility, UntilYourNextTurn, target.ID(),
 							func(g *Game, target *Permanent) error {
 								g.Effects.GrantAttr(target.ID(), Forestwalk)
@@ -728,33 +796,46 @@ func registerCreatures() {
 	Register("Ghazbán Ogre", func() Card {
 		return NewCreature("Ghazbán Ogre", "{G}", 2, 2,
 			WithSubTypes("Ogre"),
-			// Static continuous effect at LayerControl: each EM cycle, set controller
-			// to the player with the most life (if strictly more than all others).
+			// Upkeep trigger: determine who should control Ghazbán Ogre based on life totals.
+			// Stores result in ChosenPlayer so the continuous effect can persist it.
+			WithAbility(BeginningOfUpkeepTrigger(
+				FuncEffect("check life totals for control change",
+					EffectProperties{},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						perm := g.FindPermanent(sourceID)
+						if perm == nil {
+							return nil
+						}
+						players := g.AllPlayers()
+						if len(players) < 2 {
+							return nil
+						}
+						var maxLife int
+						var maxPlayer Player
+						tied := false
+						for _, p := range players {
+							if maxPlayer == nil || p.Life() > maxLife {
+								maxLife = p.Life()
+								maxPlayer = p
+								tied = false
+							} else if p.Life() == maxLife {
+								tied = true
+							}
+						}
+						if !tied && maxPlayer != nil {
+							perm.ChosenPlayer = maxPlayer.PlayerID()
+						}
+						return nil
+					}), false,
+			)),
+			// Continuous effect: maintain control based on ChosenPlayer
 			WithStaticAbility(FuncContinuousEffect(LayerControl, WhileOnBattlefield,
 				func(g *Game, sourceID uuid.UUID) error {
 					perm := g.FindPermanent(sourceID)
-					if perm == nil {
+					if perm == nil || perm.ChosenPlayer == uuid.Nil {
 						return nil
 					}
-					players := g.Players
-					if len(players) < 2 {
-						return nil
-					}
-					var maxLife int
-					var maxPlayer Player
-					tied := false
-					for _, p := range players {
-						if maxPlayer == nil || p.Life() > maxLife {
-							maxLife = p.Life()
-							maxPlayer = p
-							tied = false
-						} else if p.Life() == maxLife {
-							tied = true
-						}
-					}
-					if !tied && maxPlayer != nil {
-						perm.Controller = maxPlayer.PlayerID()
-					}
+					perm.Controller = perm.ChosenPlayer
 					return nil
 				})),
 		)
@@ -779,6 +860,7 @@ func registerCreatures() {
 						return nil
 					}),
 				ManaCostOf("{G}"),
+				WithAnyPlayerMay(),
 			),
 		)
 	})
@@ -788,7 +870,7 @@ func registerCreatures() {
 	Register("Nafs Asp", func() Card {
 		return NewCreature("Nafs Asp", "{G}", 1, 1,
 			WithSubTypes("Snake"),
-			WithAbility(DealsDamageToOpponentTrigger(
+			WithAbility(NewTriggered(EvtDamageDealt, false,
 				FuncEffect("register delayed draw-step penalty",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -816,7 +898,14 @@ func registerCreatures() {
 								})},
 						})
 						return nil
-					}), false)),
+					}),
+			).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+				if evt.SourceID != sourceID {
+					return false
+				}
+				// Trigger on damage to any player (not just opponents)
+				return g.GetPlayer(evt.TargetID) != nil
+			})),
 		)
 	})
 

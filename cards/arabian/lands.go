@@ -61,6 +61,7 @@ func registerLands() {
 				DealDamage(Fixed(1)),
 				TapSourceCost(),
 				WithTarget(TargetCreature(IsAttacking)),
+				WithStepOnly(EndCombat),
 			),
 		)
 	})

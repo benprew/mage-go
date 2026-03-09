@@ -104,6 +104,17 @@ func registerEnchantments() {
 						}), false,
 				),
 			),
+			// "When there are no creatures on the battlefield, sacrifice Drop of Honey."
+			// State trigger: fires when a creature leaves and no creatures remain
+			WithAbility(NewTriggered(EvtLeavesBattlefield, false, SacrificeSource()).
+				SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+					for _, p := range g.FilterBattlefield(AnyPermanent) {
+						if p.HasType(TypeCreature) {
+							return false
+						}
+					}
+					return true
+				})),
 		)
 	})
 
@@ -135,6 +146,7 @@ func registerEnchantments() {
 						}), false,
 				),
 			),
+			// Boost white creatures while chosen player controls a nontoken permanent of chosen color
 			WithStaticAbility(
 				FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
 					perm := g.FindPermanent(sourceID)
@@ -146,10 +158,18 @@ func registerEnchantments() {
 					if chosenColor == 0 || chosenPlayer == uuid.Nil {
 						return nil
 					}
-					// Check if chosen player controls a permanent of chosen color
-					if !g.AnyBattlefield(And(ControlledBy(chosenPlayer), HasColorFilter(chosenColor))) {
-						g.Sacrifice(perm)
-						return nil
+					// Check if chosen player controls a nontoken permanent of chosen color
+					hasNontoken := false
+					for _, p := range g.Battlefield {
+						if p.Controller == chosenPlayer &&
+							HasColorFilter(chosenColor).Match(p, g) &&
+							!p.Card.(*BaseCard).IsToken() {
+							hasNontoken = true
+							break
+						}
+					}
+					if !hasNontoken {
+						return nil // condition not met, no boost (sacrifice handled by trigger below)
 					}
 					// Boost all white creatures +2/+1
 					for _, p := range g.Battlefield {
@@ -158,6 +178,30 @@ func registerEnchantments() {
 						}
 					}
 					return nil
+				}),
+			),
+			// When the chosen player controls no nontoken permanents of the chosen color, sacrifice Jihad
+			WithAbility(
+				NewTriggered(EvtLeavesBattlefield, false,
+					SacrificeSource(),
+				).SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+					perm := g.FindPermanent(sourceID)
+					if perm == nil {
+						return false
+					}
+					chosenColor := perm.ChosenColor
+					chosenPlayer := perm.ChosenPlayer
+					if chosenColor == 0 || chosenPlayer == uuid.Nil {
+						return false
+					}
+					for _, p := range g.Battlefield {
+						if p.Controller == chosenPlayer &&
+							HasColorFilter(chosenColor).Match(p, g) &&
+							!p.Card.(*BaseCard).IsToken() {
+							return false
+						}
+					}
+					return true
 				}),
 			),
 		)

@@ -130,6 +130,21 @@ func TestDropOfHoney(t *testing.T) {
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerA, "Drop of Honey", 0)
 	})
+
+	t.Run("sacrifices_self_when_last_creature_dies_mid_turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Drop of Honey")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")    // 2/2
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Flying Men")       // 1/1
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+		// Turn 1 upkeep: destroys Flying Men (least power = 1)
+		// Then cast Lightning Bolt on Grizzly Bears — last creature dies
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Grizzly Bears")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Both creatures dead, Drop of Honey should sacrifice itself
+		g.AssertPermanentCount(gametest.PlayerA, "Drop of Honey", 0)
+	})
 }
 
 func TestCyclone(t *testing.T) {
