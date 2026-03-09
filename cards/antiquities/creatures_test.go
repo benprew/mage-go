@@ -434,6 +434,19 @@ func TestArgothianPixies(t *testing.T) {
 		// Block should be illegal — 2 damage goes through to player
 		g.AssertLife(gametest.PlayerB, 18)
 	})
+
+	t.Run("prevents all damage from artifact creatures in combat", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Argothian Pixies") // 2/1
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Yotian Soldier")   // 1/4 artifact creature
+		// Yotian Soldier attacks, Pixies blocks — artifact creature damage should be prevented
+		g.Attack(1, gametest.PlayerA, "Yotian Soldier")
+		g.Block(1, gametest.PlayerB, "Argothian Pixies", "Yotian Soldier")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		// Pixies takes 0 from artifact creature (prevented), survives despite 1 toughness
+		g.AssertPermanentCount(gametest.PlayerB, "Argothian Pixies", 1)
+	})
 }
 
 func TestArgothianTreefolk(t *testing.T) {
@@ -472,6 +485,17 @@ func TestCitanulDruid(t *testing.T) {
 		g.Execute()
 		g.AssertCounterCount(gametest.PlayerA, "Citanul Druid", core.P1P1, 1)
 	})
+
+	t.Run("does not trigger on controller's own artifact spell", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Citanul Druid")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Ornithopter")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Ornithopter")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Controller's own artifact spell should not trigger
+		g.AssertCounterCount(gametest.PlayerA, "Citanul Druid", core.P1P1, 0)
+	})
 }
 
 func TestGaeasAvenger(t *testing.T) {
@@ -486,6 +510,17 @@ func TestGaeasAvenger(t *testing.T) {
 		g.Execute()
 		// 1 + 3 opponent artifacts = 4/4
 		g.AssertPowerToughness(gametest.PlayerA, "Gaea's Avenger", 4, 4)
+	})
+
+	t.Run("own artifacts do not count", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Gaea's Avenger")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ornithopter")   // own artifact — should not count
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Yotian Soldier") // opponent artifact
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// 1 + 1 opponent artifact = 2/2 (own Ornithopter doesn't count)
+		g.AssertPowerToughness(gametest.PlayerA, "Gaea's Avenger", 2, 2)
 	})
 }
 
@@ -912,6 +947,17 @@ func TestTetravus(t *testing.T) {
 		g.AssertCounterCount(gametest.PlayerA, "Tetravus", core.P1P1, 3)
 		g.AssertPermanentCount(gametest.PlayerA, "Tetravite", 0)
 	})
+
+	t.Run("Tetravite tokens have flying", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Tetravus")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Tetravus")
+		g.ChooseNumber(gametest.PlayerA, 1) // remove 1 counter → 1 Tetravite
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertHasAbility(gametest.PlayerA, "Tetravite", core.Flying, true)
+	})
+
 }
 
 func TestTriskelion(t *testing.T) {

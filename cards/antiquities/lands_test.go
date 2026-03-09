@@ -41,6 +41,16 @@ func TestMishrasFactory(t *testing.T) {
 			t.Errorf("Mishra's Factory should be a Land")
 		}
 	})
+
+	t.Run("gains Assembly-Worker subtype when animated", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mishra's Factory")
+		// Animate it — should become Assembly-Worker artifact creature
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Mishra's Factory")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Mishra's Factory", 2, 2)
+	})
 }
 
 func TestMishrasWorkshop(t *testing.T) {
