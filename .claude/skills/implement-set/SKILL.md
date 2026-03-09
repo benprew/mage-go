@@ -90,11 +90,14 @@ Use this report to drive Step 4. Cards already fully implemented and validated a
 
 ## Step 3: Read and Load Context
 
-Read the full engine API reference:
+Read the engine API reference and rules index:
 
 ```
 Read pkg/mage/doc.go
+Read docs/comprehensive-rules-index.md
 ```
+
+The full MTG comprehensive rules are at `docs/comprehensive-rules.md` (~9200 lines). **Do not read the whole file.** Use the index to find relevant sections by line number, then read with `Read offset=LINE limit=N`. Consult the comp rules when categorizing cards that use keywords or mechanics whose exact behavior affects tier placement.
 
 Read all card files to understand the full card list and existing implementations:
 

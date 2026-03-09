@@ -44,6 +44,16 @@ FETCHSET_SKIP_TLS=1 go run ./cmd/fetchset -o data/$SET_CODE.json $SET_CODE
 
 Verify the fetch succeeded before proceeding.
 
+## Step 0.5: Load Rules Index
+
+Read the comprehensive rules index so you can look up specific rules during the Oracle text audit:
+
+```
+Read docs/comprehensive-rules-index.md
+```
+
+The full rules are at `docs/comprehensive-rules.md` (~9200 lines). **Do not read the whole file.** Use the index to find section line numbers, then read with `Read offset=LINE limit=N`. During the Oracle fidelity audit (Step 3), consult the comp rules whenever you need to verify the precise behavior of a keyword, timing rule, or mechanic interaction.
+
 ## Step 1: Gather All Card Data
 
 Read every source file in the set:

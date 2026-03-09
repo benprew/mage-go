@@ -31,6 +31,8 @@ make wasm                                  # build WASM + copy wasm_exec.js to w
 
 **Read `pkg/mage/doc.go` first.** It is the comprehensive reference for every engine subsystem: card constructors, effects (50+), targets, filters, costs, activated abilities, triggered abilities (20+ convenience constructors), continuous effects, the layer system, attrs, the replacement effect system, and the GameMutator API. It includes complete card examples.
 
+**Comprehensive Rules**: The full MTG rulebook is at `docs/comprehensive-rules.md` (~9200 lines). Use `docs/comprehensive-rules-index.md` to find the relevant section by line number, then read just that section. For example, to look up trample rules: find "702. Keyword Abilities" at line 3795 in the index, then `Grep` for `702.19` in the rules file. Always consult the comp rules when Oracle text is ambiguous or a mechanic's interaction is unclear.
+
 **Replacement effects**: Cards that prevent, redirect, or replace game actions (damage prevention, regeneration, Lich, etc.) use the `ReplacementEffect` pipeline. See the "Replacement Effect System" section in `doc.go` for the `Action` types, `ReplacementEffect` interface, the 17 built-in replacements, and how to implement custom ones. Most cards use the existing `GameMutator` proxy methods (`AddPreventionShield`, `AddRegenerationShield`, etc.) which create replacements internally.
 
 ## Set Implementation Toolkit
@@ -87,7 +89,7 @@ cmd/fetchset/          # set data fetcher
 cmd/genset/            # stub generator from Scryfall JSON
 data/                  # Scryfall JSON card data per set
 web/                   # browser UI (index.html, game.js, build.sh)
-docs/                  # landing page, visual identity, tutorials
+docs/                  # landing page, visual identity, tutorials, comprehensive rules
 ```
 
 Cards register via `Register(name, factory)` in `init()`. Each card file has a registration function called from `init()`. The `test.go` file in each card package holds blank-identifier references to ensure registration runs.

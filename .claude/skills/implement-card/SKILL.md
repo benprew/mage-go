@@ -15,11 +15,17 @@ Card name(s) to implement: $ARGUMENTS
 
 ## Step 0: Load Context
 
-Read the engine API reference first:
+Read the engine API reference and rules index:
 
 ```
 Read pkg/mage/doc.go
+Read docs/comprehensive-rules-index.md
 ```
+
+The full MTG comprehensive rules are at `docs/comprehensive-rules.md` (~9200 lines). **Do not read the whole file.** Use the index to find the relevant section line number, then read just that section with `Read offset=LINE limit=N`. Consult the comp rules whenever:
+- Oracle text uses a keyword or mechanic you need to understand precisely
+- A card's interaction with game rules is unclear
+- You need to verify timing, targeting, or replacement effect behavior
 
 ## Step 1: Find the Card Stub
 
@@ -34,9 +40,13 @@ Grep for "$ARGUMENTS" or "TODO: implement" in cards/
 
 Read the stub file to get the full Oracle text. The Oracle text is the **single source of truth** for what the card does. Read it carefully and plan the implementation.
 
-## Step 2: Consult XMage (if needed)
+## Step 2: Consult Rules and XMage (if needed)
 
-For complex mechanics or ambiguous Oracle text, check XMage's implementation:
+For complex mechanics or ambiguous Oracle text:
+
+1. **Comprehensive Rules first**: Use the index (`docs/comprehensive-rules-index.md`) to find the relevant rule section, then read it from `docs/comprehensive-rules.md` with offset/limit. For example, if the card has banding, read the banding rules at line 3795+ (rule 702.21).
+
+2. **XMage second**: Check XMage's implementation for how the card is wired:
 
 ```
 Look in ~/mage/Mage.Sets/src/mage/cards/ for the card
@@ -137,3 +147,4 @@ Only commit files you changed in this session. Do not stage unrelated changes.
 5. **Ask before cutting scope.** If you think something can't be implemented, use AskUserQuestion. Don't decide on your own.
 6. **Independent commits.** Only commit your own work from this session.
 7. **Consult doc.go.** The engine API reference has 50+ effects, 20+ triggered ability constructors, targets, filters, costs, and complete examples. Use what exists before writing custom code.
+8. **Consult comprehensive rules.** When Oracle text involves keywords, timing, targeting, layers, replacement effects, or any mechanic whose exact behavior matters, look up the relevant rule in `docs/comprehensive-rules.md` using the index at `docs/comprehensive-rules-index.md`. Read only the relevant section (use offset/limit).
