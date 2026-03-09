@@ -1497,3 +1497,8 @@ func (r *blackOrRedPreventionReplacement) Replace(a Action, g GameMutator) Actio
 func (r *blackOrRedPreventionReplacement) IsActive(_ GameReader) bool {
 	return !r.consumed
 }
+
+func (r *blackOrRedPreventionReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
+}

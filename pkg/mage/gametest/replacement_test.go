@@ -386,6 +386,10 @@ func (r *doubleDamageReplacement) Replace(a mage.Action, _ mage.GameMutator) mag
 
 func (r *doubleDamageReplacement) SourceID() uuid.UUID       { return uuid.Nil }
 func (r *doubleDamageReplacement) IsActive(_ mage.GameReader) bool { return true }
+func (r *doubleDamageReplacement) Clone() mage.ReplacementEffect {
+	c := *r
+	return &c
+}
 
 // TestPreventionShieldOnCreature tests that prevention shields work on
 // creature targets, not just players.

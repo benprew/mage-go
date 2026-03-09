@@ -21,6 +21,8 @@ type ReplacementEffect interface {
 	SourceID() uuid.UUID
 	// IsActive returns true if this replacement is still valid.
 	IsActive(GameReader) bool
+	// Clone returns a deep copy of this replacement effect (for game cloning).
+	Clone() ReplacementEffect
 }
 
 // replacementBase provides a SourceID implementation for replacement effects.

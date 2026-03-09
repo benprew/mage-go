@@ -383,3 +383,8 @@ func (r *artifactDamageToCreaturePreventionReplacement) Replace(a Action, g Game
 func (r *artifactDamageToCreaturePreventionReplacement) IsActive(g GameReader) bool {
 	return g.FindPermanent(r.creatureID) != nil
 }
+
+func (r *artifactDamageToCreaturePreventionReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
+}

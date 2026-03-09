@@ -45,6 +45,11 @@ func (r *regenerationReplacement) IsActive(_ GameReader) bool {
 	return r.shields > 0
 }
 
+func (r *regenerationReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
+}
+
 // ---------------------------------------------------------------------------
 // 2. Prevention shield: absorbs damage up to remaining amount
 // ---------------------------------------------------------------------------
@@ -91,6 +96,11 @@ func (r *preventionShieldReplacement) IsActive(_ GameReader) bool {
 	return r.remaining > 0
 }
 
+func (r *preventionShieldReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
+}
+
 // ---------------------------------------------------------------------------
 // 3. Fog: prevent all combat damage
 // ---------------------------------------------------------------------------
@@ -117,6 +127,11 @@ func (r *fogReplacement) IsActive(_ GameReader) bool {
 	return true
 }
 
+func (r *fogReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
+}
+
 // ---------------------------------------------------------------------------
 // 4. Forcefield: reduce unblocked combat damage to player to 1
 // ---------------------------------------------------------------------------
@@ -141,6 +156,11 @@ func (r *forcefieldReplacement) Replace(a Action, g GameMutator) Action {
 
 func (r *forcefieldReplacement) IsActive(_ GameReader) bool {
 	return true
+}
+
+func (r *forcefieldReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
 }
 
 // ---------------------------------------------------------------------------
@@ -183,6 +203,11 @@ func (r *colorPreventionReplacement) IsActive(_ GameReader) bool {
 	return !r.consumed
 }
 
+func (r *colorPreventionReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
+}
+
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
 // 5b. Source prevention: prevent next damage from a specific source to a player
@@ -213,6 +238,11 @@ func (r *sourcePreventionReplacement) Replace(a Action, g GameMutator) Action {
 
 func (r *sourcePreventionReplacement) IsActive(_ GameReader) bool {
 	return !r.consumed
+}
+
+func (r *sourcePreventionReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
 }
 
 // 6. Type prevention: prevent all damage from one source of a matching card type
@@ -249,6 +279,11 @@ func (r *typePreventionReplacement) IsActive(_ GameReader) bool {
 	return !r.consumed
 }
 
+func (r *typePreventionReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
+}
+
 // ---------------------------------------------------------------------------
 // 7. Reverse Damage: gain life equal to prevented damage
 // ---------------------------------------------------------------------------
@@ -279,6 +314,11 @@ func (r *reverseDamageReplacement) Replace(a Action, g GameMutator) Action {
 
 func (r *reverseDamageReplacement) IsActive(_ GameReader) bool {
 	return !r.consumed
+}
+
+func (r *reverseDamageReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
 }
 
 // ---------------------------------------------------------------------------
@@ -312,6 +352,11 @@ func (r *bodyguardReplacement) IsActive(g GameReader) bool {
 	return g.FindPermanent(r.bodyguardPermID) != nil
 }
 
+func (r *bodyguardReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
+}
+
 // ---------------------------------------------------------------------------
 // 9. Player damage redirect: redirect all damage to a creature (Personal Incarnation)
 // ---------------------------------------------------------------------------
@@ -340,6 +385,11 @@ func (r *playerDamageRedirectReplacement) Replace(a Action, g GameMutator) Actio
 
 func (r *playerDamageRedirectReplacement) IsActive(g GameReader) bool {
 	return g.FindPermanent(r.redirectPermID) != nil
+}
+
+func (r *playerDamageRedirectReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
 }
 
 // ---------------------------------------------------------------------------
@@ -376,6 +426,11 @@ func (r *artifactDamageRedirectReplacement) IsActive(g GameReader) bool {
 	return g.FindPermanent(r.redirectPermID) != nil
 }
 
+func (r *artifactDamageRedirectReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
+}
+
 // ---------------------------------------------------------------------------
 // 11. Creature damage redirect: redirect creature damage to a player (Jade Monolith)
 // ---------------------------------------------------------------------------
@@ -405,6 +460,11 @@ func (r *creatureDamageRedirectReplacement) IsActive(_ GameReader) bool {
 	return !r.consumed
 }
 
+func (r *creatureDamageRedirectReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
+}
+
 // ---------------------------------------------------------------------------
 // 12. Attacker damage redirect: redirect damage from specific attacker to absorber (Shimian Night Stalker)
 // ---------------------------------------------------------------------------
@@ -430,6 +490,11 @@ func (r *attackerDamageRedirectReplacement) Replace(a Action, g GameMutator) Act
 
 func (r *attackerDamageRedirectReplacement) IsActive(g GameReader) bool {
 	return g.FindPermanent(r.absorberPermID) != nil
+}
+
+func (r *attackerDamageRedirectReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
 }
 
 // ---------------------------------------------------------------------------
@@ -463,6 +528,11 @@ func (r *lichLifeGainReplacement) Replace(a Action, g GameMutator) Action {
 func (r *lichLifeGainReplacement) IsActive(g GameReader) bool {
 	// Active while source (the Lich permanent) is on the battlefield
 	return g.FindPermanent(r.sourceID) != nil
+}
+
+func (r *lichLifeGainReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
 }
 
 // ---------------------------------------------------------------------------
@@ -505,6 +575,11 @@ func (r *minimumLifeReplacement) IsActive(_ GameReader) bool {
 	return true // per-cycle, re-registered by continuous effect
 }
 
+func (r *minimumLifeReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
+}
+
 // ---------------------------------------------------------------------------
 // 15. Skip draw: skip the next normal draw (Island Sanctuary)
 // ---------------------------------------------------------------------------
@@ -530,6 +605,11 @@ func (r *skipDrawReplacement) Replace(a Action, g GameMutator) Action {
 
 func (r *skipDrawReplacement) IsActive(_ GameReader) bool {
 	return !r.consumed
+}
+
+func (r *skipDrawReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
 }
 
 // ---------------------------------------------------------------------------
@@ -567,6 +647,11 @@ func (r *drawReplacementEffect) Replace(a Action, g GameMutator) Action {
 
 func (r *drawReplacementEffect) IsActive(_ GameReader) bool {
 	return !r.consumed
+}
+
+func (r *drawReplacementEffect) Clone() ReplacementEffect {
+	c := *r
+	return &c
 }
 
 // ---------------------------------------------------------------------------
@@ -636,4 +721,9 @@ func (r *damagePreventionRuleReplacement) Replace(a Action, g GameMutator) Actio
 
 func (r *damagePreventionRuleReplacement) IsActive(_ GameReader) bool {
 	return !r.consumed
+}
+
+func (r *damagePreventionRuleReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
 }
