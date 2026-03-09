@@ -87,13 +87,14 @@ For every card registered in the set, extract:
 3. **Implementation status**:
    - `STUB` — has `// TODO: implement` marker or the body is just a bare constructor with no abilities
    - `PARTIAL` — has `// XXX:` comments indicating incomplete implementation
-   - `COMPLETE` — no TODO/XXX markers and has non-trivial implementation (or is genuinely vanilla)
+   - `UNIMPLEMENTABLE` — has `// UNIMPLEMENTABLE:` marker; permanently out of scope (should also be in UNSUPPORTED.md)
+   - `COMPLETE` — no TODO/XXX/UNIMPLEMENTABLE markers and has non-trivial implementation (or is genuinely vanilla)
 4. **Has tests** — whether a `TestCardName` function exists in the test files
 5. **Test coverage quality** — number of test cases (sub-tests) and whether they cover positive AND negative cases
 
 ## Step 3: Oracle Text Fidelity Audit
 
-This is the most critical check. For every card that is not a STUB, compare the implementation against the Oracle text **word by word**. Look for:
+This is the most critical check. For every card that is not a STUB or UNIMPLEMENTABLE, compare the implementation against the Oracle text **word by word**. Look for:
 
 ### 3a. Missing Abilities
 Oracle text describes an ability that has no corresponding implementation code. Examples:
@@ -185,6 +186,7 @@ Organize findings into these sections:
 - Total cards in set: N
 - Fully implemented: N
 - Partially implemented (XXX): N
+- Unimplementable: N
 - Stubs (TODO): N
 - Test coverage: N of M testable cards have tests
 
@@ -201,6 +203,9 @@ For each card with XXX comments:
 - Card name
 - What's implemented vs. what's missing
 - The XXX comment text
+
+#### Unimplementable Cards
+Cards marked `UNIMPLEMENTABLE` in source. Verify each is listed in `UNSUPPORTED.md`. Flag any that are missing from the doc, or any in the doc that aren't marked in source.
 
 #### Oracle Text Violations
 For each card where implementation doesn't match Oracle:

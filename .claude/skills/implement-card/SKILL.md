@@ -149,10 +149,32 @@ Both must pass. Fix any regressions.
 
 ## Step 7: Handle Incomplete Implementations
 
-If part of the Oracle text cannot be fully implemented:
+There are two distinct cases:
+
+### Partially implementable (XXX marker)
+If part of the Oracle text cannot be fully implemented *yet* but could be with future engine work:
 1. **First, use AskUserQuestion** to ask the user whether to skip the feature or attempt it
 2. If skipping: add an `// XXX: <explanation>` comment explaining what's missing and why
 3. Never silently skip Oracle text behavior
+
+### Fundamentally unimplementable (UNIMPLEMENTABLE marker)
+Some cards have mechanics the engine *cannot* support (subgames, wish/sideboard, etc.). These are permanently out of scope, not just waiting on engine work:
+1. Mark the card with a `// UNIMPLEMENTABLE: <reason>` comment above or inside the Register call
+2. Register it as a no-op stub (e.g., `NewSorcery("Shahrazad", "{W}{W}", nil)` or `NewArtifact("Ring of Ma'rûf", "{5}")`)
+3. Add the card to `UNSUPPORTED.md` in the set's directory. Create the file if it doesn't exist:
+
+```markdown
+# [Set Name] — Unsupported Cards
+
+Cards registered as no-op stubs because their mechanics cannot be implemented
+in the current engine. Marked `UNIMPLEMENTABLE` in source.
+
+| Card | Reason |
+|------|--------|
+| Card Name | Brief explanation of why it can't be implemented. |
+```
+
+**XXX vs UNIMPLEMENTABLE**: Use `XXX` when the gap is fixable with engine work. Use `UNIMPLEMENTABLE` when the mechanic is fundamentally beyond the engine's scope (recursive subgames, cards outside the game, etc.). Never use `XXX` for permanently impossible cards, and never use `UNIMPLEMENTABLE` for cards that just need engine features built.
 
 ## Step 8: Commit
 
@@ -165,7 +187,7 @@ Only commit files you changed in this session. Do not stage unrelated changes.
 
 ## Important Rules
 
-1. **Oracle text is law.** Every behavior described in the Oracle text must be implemented or explicitly marked with XXX.
+1. **Oracle text is law.** Every behavior described in the Oracle text must be implemented, explicitly marked with `// XXX:` (partial, fixable), or marked `// UNIMPLEMENTABLE:` (permanently out of scope). Cards marked UNIMPLEMENTABLE must also be listed in the set's `UNSUPPORTED.md`.
 2. **NEVER simplify.** Do not drop conditions, skip restrictions, approximate effects, or cut corners. Every word of Oracle text matters: "nontoken," "you don't control," "with flying," "can't be regenerated," "another" — all of it. A simplified implementation is a **wrong** implementation. This is a rules engine; correctness is the entire point. If you cannot fully implement something, mark it `// XXX:` and ask the user. Never silently simplify.
 3. **TDD is mandatory.** Tests first, implementation second. No exceptions.
 4. **No multiplayer.** This engine is 2-player only. Skip multiplayer-specific effects (e.g., "each opponent" means just one opponent).

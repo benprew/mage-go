@@ -163,8 +163,13 @@ Cards that need new engine features:
 
 Group these by the shared engine feature they need.
 
-### Tier 5 — Likely Cannot Implement
-Cards with mechanics the engine fundamentally lacks support for (e.g., complex replacement effects, subgames). These should be flagged with AskUserQuestion for the user to decide.
+### Tier 5 — Unimplementable
+Cards with mechanics the engine fundamentally cannot support (e.g., subgames, wish/sideboard). These are permanently out of scope — not waiting on engine work, but genuinely impossible in this architecture. Use **AskUserQuestion** to confirm with the user, then:
+1. Mark each card with `// UNIMPLEMENTABLE: <reason>` in source
+2. Register as a no-op stub (bare constructor with no abilities)
+3. Add to `UNSUPPORTED.md` in the set directory (see Step 8)
+
+Do NOT use `// XXX:` for these — XXX means "fixable later," UNIMPLEMENTABLE means "permanently impossible."
 
 ## Step 5: Present the Analysis
 
@@ -216,7 +221,7 @@ Group cards into batches for `/implement-card`. Batching rules:
 2. **Tier 2 cards**: Group by similar mechanic (e.g., all "deal N damage" spells together, all ETB creatures together). 3-6 cards per batch.
 3. **Tier 3 cards**: 1-3 cards per batch, grouped by shared complexity type.
 4. **Tier 4 cards**: Group by the engine feature they share. The engine feature gets built once, then all cards using it are implemented together.
-5. **Tier 5 cards**: Handle last, one at a time, with user confirmation.
+5. **Tier 5 cards**: Handle last, one at a time, with user confirmation. These get UNIMPLEMENTABLE markers and UNSUPPORTED.md entries, not full implementations.
 
 ## Step 7: Execute Batches
 
@@ -278,26 +283,34 @@ go build ./...
 go vet ./...
 ```
 
-Count remaining TODO/XXX markers:
+Count remaining TODO/XXX/UNIMPLEMENTABLE markers:
 
 ```
 Grep for "TODO: implement" in cards/$PACKAGE_NAME/
 Grep for "XXX:" in cards/$PACKAGE_NAME/
+Grep for "UNIMPLEMENTABLE:" in cards/$PACKAGE_NAME/
+```
+
+Verify `UNSUPPORTED.md` exists if any cards are marked UNIMPLEMENTABLE, and that it lists all of them:
+
+```
+Read cards/$PACKAGE_NAME/UNSUPPORTED.md
 ```
 
 Present a final summary to the user:
 - Total cards implemented
 - Cards with partial implementations (XXX markers)
 - Cards left as stubs (TODO markers)
+- Unimplementable cards (UNIMPLEMENTABLE markers, listed in UNSUPPORTED.md)
 - Engine features added
 - Test count
 
 ## Important Rules
 
 1. **Always ask before proceeding past Step 5.** The user must approve the plan.
-2. **NEVER simplify card implementations.** Every condition, restriction, and edge case in Oracle text must be implemented exactly. Do not drop "nontoken" checks, skip targeting restrictions, approximate complex effects, or cut any corners. A simplified implementation is a wrong implementation — this is a rules engine and correctness is the entire point. If something can't be fully implemented, mark it `// XXX:` and ask the user. Never silently simplify.
+2. **NEVER simplify card implementations.** Every condition, restriction, and edge case in Oracle text must be implemented exactly. Do not drop "nontoken" checks, skip targeting restrictions, approximate complex effects, or cut any corners. A simplified implementation is a wrong implementation — this is a rules engine and correctness is the entire point. If something can't be fully implemented *yet*, mark it `// XXX:` and ask the user. If something is fundamentally impossible (subgames, wish/sideboard), mark it `// UNIMPLEMENTABLE:` and add it to `UNSUPPORTED.md`. Never silently simplify.
 3. **Commit after each batch**, not at the end. This keeps commits focused and reviewable.
 4. **Engine changes go through `/implement-engine`.** Card agents (`/implement-card`) must NOT edit `pkg/mage/`. If a card agent returns an engine feature request, route it to `/implement-engine` before resuming card work.
-5. **Don't skip cards silently.** Every card in the set should be either implemented, partially implemented with XXX, or explicitly confirmed as out-of-scope by the user.
+5. **Don't skip cards silently.** Every card in the set should be either implemented, partially implemented with `// XXX:`, marked `// UNIMPLEMENTABLE:` with an UNSUPPORTED.md entry, or explicitly confirmed as out-of-scope by the user.
 6. **Use AskUserQuestion liberally.** When in doubt about categorization, scope, or implementation approach, ask.
 7. **Basic lands that are reprints** will be auto-skipped by genset (it detects already-registered names). Don't worry about these.
