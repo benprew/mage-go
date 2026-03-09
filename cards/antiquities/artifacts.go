@@ -242,6 +242,33 @@ func registerArtifacts() {
 		)
 	})
 
+	// Golgothian Sylex {4}
+	// Artifact
+	// {1}, {T}: Each nontoken permanent with a name originally printed in the Antiquities
+	// expansion is sacrificed by its controller.
+	Register("Golgothian Sylex", func() Card {
+		return NewArtifact("Golgothian Sylex", "{4}",
+			WithActivatedAbility(
+				FuncEffect("sacrifice all nontoken Antiquities permanents",
+					EffectProperties{Outcome: OutcomeDetriment, Mass: true},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						var toSacrifice []*Permanent
+						for _, perm := range g.FilterBattlefield(And(Not(IsToken))) {
+							if antiquitiesCards[perm.Name()] {
+								toSacrifice = append(toSacrifice, perm)
+							}
+						}
+						for _, perm := range toSacrifice {
+							g.Sacrifice(perm)
+						}
+						return nil
+					}),
+				GenericCost(1),
+				WithCost(TapSourceCost()),
+			),
+		)
+	})
+
 	// Ivory Tower {1}
 	// Artifact
 	// At the beginning of your upkeep, you gain X life, where X is the number of cards in

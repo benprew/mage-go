@@ -210,6 +210,39 @@ func TestFeldonsCane(t *testing.T) {
 	})
 }
 
+func TestGolgothianSylex(t *testing.T) {
+	t.Run("is an artifact with CMC 4", func(t *testing.T) {
+		card, err := mage.CreateCard("Golgothian Sylex")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !card.HasType(core.TypeArtifact) {
+			t.Errorf("Golgothian Sylex should be an Artifact")
+		}
+		if card.ManaCost().CMC() != 4 {
+			t.Errorf("expected CMC 4, got %d", card.ManaCost().CMC())
+		}
+	})
+
+	t.Run("sacrifices all nontoken Antiquities permanents", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Golgothian Sylex")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ornithopter")   // Antiquities card
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Jalum Tome")    // Antiquities card
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // NOT Antiquities
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Golgothian Sylex")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Ornithopter and Jalum Tome should be sacrificed (Antiquities names)
+		g.AssertPermanentCount(gametest.PlayerA, "Ornithopter", 0)
+		g.AssertPermanentCount(gametest.PlayerB, "Jalum Tome", 0)
+		// Grizzly Bears should survive (not an Antiquities name)
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
+		// Golgothian Sylex itself is also an Antiquities card — should sacrifice itself too
+		g.AssertPermanentCount(gametest.PlayerA, "Golgothian Sylex", 0)
+	})
+}
+
 func TestIvoryTower(t *testing.T) {
 	t.Run("gains life equal to hand size minus 4 on upkeep", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
