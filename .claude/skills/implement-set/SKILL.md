@@ -1,6 +1,6 @@
 ---
 name: implement-set
-description: "Implement an entire Magic: The Gathering set. Fetches card data, generates stubs, analyzes cards, batches them by complexity and shared mechanics, then implements each batch using /implement-card. Use when the user wants to implement a full set."
+description: "Implement an entire Magic: The Gathering set (or resume implementation of a partially-complete set). Fetches card data, generates stubs, analyzes cards, batches them by complexity and shared mechanics, then implements each batch using /implement-card. Use when the user wants to implement a full set or continue work on one."
 allowed-tools: Read, Edit, Write, Bash, Grep, Glob, Agent, AskUserQuestion, Skill
 argument-hint: <set-code> [set-name] [package-name]
 ---
@@ -29,7 +29,7 @@ If not, fetch it:
 go run ./cmd/fetchset -o data/$0.json $0
 ```
 
-## Step 2: Generate Stubs
+## Step 2: Assess Existing State
 
 Check if the card package directory already exists:
 
@@ -37,9 +37,10 @@ Check if the card package directory already exists:
 ls cards/$PACKAGE_NAME/ 2>/dev/null
 ```
 
-If the directory already exists with implemented cards (not just stubs), **use AskUserQuestion** to confirm whether to regenerate or work with existing files.
+There are three possible states:
 
-If generating fresh:
+### State A — No directory exists (fresh set)
+Generate stubs:
 
 ```bash
 go run ./cmd/genset "$SET_NAME" data/$0.json cards/$PACKAGE_NAME/
@@ -51,6 +52,28 @@ Verify the generated files compile:
 go build ./cards/$PACKAGE_NAME/
 ```
 
+Proceed to Step 3.
+
+### State B — Directory exists with only stubs (generated but no implementation work)
+Check if the files are all stubs by looking for any non-TODO implementations. If they're all stubs, skip generation and proceed to Step 3.
+
+### State C — Directory exists with partial implementation (work already done)
+The set has had prior implementation work. **Run `/validate-set` first** to discover the current state:
+
+```
+/validate-set $PACKAGE_NAME
+```
+
+The validation report tells you:
+- Which cards are fully implemented and correct
+- Which cards are partially implemented (XXX markers) and what's missing
+- Which cards are still stubs (TODO markers)
+- Which implementations have Oracle text fidelity issues
+- Which cards have tests and which don't
+- Any test failures
+
+Use this report to drive Step 4. Cards already fully implemented and validated are **done** — skip them entirely. Cards with Oracle violations or missing tests need fixes, not reimplementation. Only stubs and cards flagged as needing engine work go through the normal tier analysis.
+
 ## Step 3: Read and Load Context
 
 Read the full engine API reference:
@@ -59,7 +82,7 @@ Read the full engine API reference:
 Read pkg/mage/doc.go
 ```
 
-Read all generated stub files to understand the full card list:
+Read all card files to understand the full card list and existing implementations:
 
 ```
 Read cards/$PACKAGE_NAME/creatures.go
@@ -77,7 +100,15 @@ Read data/$0.json
 
 ## Step 4: Analyze and Categorize Cards
 
-Go through every card in the set and categorize each into one of these tiers:
+**If resuming from a validation report (State C)**, start from the report's findings. Categorize only the remaining work:
+
+- **Already complete**: Cards that passed validation with correct Oracle text and adequate tests. **Skip these.**
+- **Oracle fixes needed**: Cards that are implemented but have fidelity issues from the validation report. These are typically quick fixes — group them as a "fix" batch.
+- **Missing tests**: Cards that work but lack test coverage. Group as a "test backfill" batch.
+- **Partial implementations (XXX)**: Cards with known gaps. Categorize the missing parts into the tiers below.
+- **Stubs (TODO)**: Cards not yet implemented. Categorize into tiers below.
+
+**If starting fresh (State A/B)**, categorize every card into one of these tiers:
 
 ### Tier 1 — Vanilla / Basic Keywords Only
 Cards whose Oracle text is fully covered by existing constructors with no custom logic:
@@ -120,10 +151,18 @@ Cards with mechanics the engine fundamentally lacks support for (e.g., complex r
 
 ## Step 5: Present the Analysis
 
-Present the categorization to the user as a summary:
+Present the categorization to the user as a summary. If resuming a partial set, lead with the current state:
 
 ```
-## Set Analysis: [Set Name] ([N] cards)
+## Set Analysis: [Set Name] ([N] total cards)
+
+### Already Complete ([N] cards)
+[list card names — only shown when resuming a partial set]
+
+### Needs Fixes ([N] cards)
+- Oracle violations: Card A (missing nontoken check), Card B (wrong trigger timing)
+- Missing tests: Card C, Card D
+[only shown when resuming a partial set]
 
 ### Tier 1 — Vanilla/Keywords ([N] cards)
 [list card names]
@@ -151,6 +190,11 @@ Use **AskUserQuestion** to confirm the plan with the user before proceeding. Ask
 
 Group cards into batches for `/implement-card`. Batching rules:
 
+**When resuming a partial set, handle fixes first:**
+0. **Oracle fixes**: Group by type of fix (e.g., all "missing nontoken check" cards together, all "wrong trigger" cards together). These are small targeted edits, not reimplementations.
+0. **Test backfill**: Group by card type or mechanic. Write tests for cards that already work but lack coverage.
+
+**Then proceed with remaining unimplemented cards:**
 1. **Tier 1 cards**: One large batch (or split by card type if >15 cards). These are fast.
 2. **Tier 2 cards**: Group by similar mechanic (e.g., all "deal N damage" spells together, all ETB creatures together). 3-6 cards per batch.
 3. **Tier 3 cards**: 1-3 cards per batch, grouped by shared complexity type.

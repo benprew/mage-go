@@ -15,4 +15,5 @@ lint:
 
 clean:
 	go clean ./...
-	rm -f tui server cardgen fetchset
+	rm -f tui server cardgen fetchset genset
+	rm -f coverage.html coverage.out *.coverprofile
