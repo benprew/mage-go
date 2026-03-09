@@ -88,6 +88,7 @@ Now implement the card to make the tests pass:
 3. Remove the `// TODO: implement` marker
 4. Use existing Effect constructors from doc.go whenever possible
 5. For custom behavior, use `FuncEffect` or `FuncContinuousEffect`
+6. **Implement EVERY condition, restriction, and detail from the Oracle text.** Do NOT simplify. If Oracle says "nontoken," filter for nontoken. If Oracle says "you don't control," check controller. If Oracle says "with flying," filter for flying. A simplified implementation is a wrong implementation — this is a rules engine, not a shipped game. If something truly can't be implemented, mark it with `// XXX:` and ask the user.
 
 ### If new engine features are needed:
 1. First implement everything possible with existing features
@@ -130,8 +131,9 @@ Only commit files you changed in this session. Do not stage unrelated changes.
 ## Important Rules
 
 1. **Oracle text is law.** Every behavior described in the Oracle text must be implemented or explicitly marked with XXX.
-2. **TDD is mandatory.** Tests first, implementation second. No exceptions.
-3. **No multiplayer.** This engine is 2-player only. Skip multiplayer-specific effects (e.g., "each opponent" means just one opponent).
-4. **Ask before cutting scope.** If you think something can't be implemented, use AskUserQuestion. Don't decide on your own.
-5. **Independent commits.** Only commit your own work from this session.
-6. **Consult doc.go.** The engine API reference has 50+ effects, 20+ triggered ability constructors, targets, filters, costs, and complete examples. Use what exists before writing custom code.
+2. **NEVER simplify.** Do not drop conditions, skip restrictions, approximate effects, or cut corners. Every word of Oracle text matters: "nontoken," "you don't control," "with flying," "can't be regenerated," "another" — all of it. A simplified implementation is a **wrong** implementation. This is a rules engine; correctness is the entire point. If you cannot fully implement something, mark it `// XXX:` and ask the user. Never silently simplify.
+3. **TDD is mandatory.** Tests first, implementation second. No exceptions.
+4. **No multiplayer.** This engine is 2-player only. Skip multiplayer-specific effects (e.g., "each opponent" means just one opponent).
+5. **Ask before cutting scope.** If you think something can't be implemented, use AskUserQuestion. Don't decide on your own.
+6. **Independent commits.** Only commit your own work from this session.
+7. **Consult doc.go.** The engine API reference has 50+ effects, 20+ triggered ability constructors, targets, filters, costs, and complete examples. Use what exists before writing custom code.

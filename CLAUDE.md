@@ -20,9 +20,11 @@ go vet ./...                               # vet
 
 1. **Follow Oracle text exactly.** Every card implementation must match its Oracle text word-for-word. Include the full Oracle text as a comment above each `Register()` call. If Oracle says "nontoken," check for nontoken. If it says "each," hit each. No paraphrasing, no shortcuts.
 
-2. **TDD — write the test first.** Before implementing a card, write a failing test that exercises its key behavior. Then implement the card to make the test pass. Tests catch rules bugs that code review misses.
+2. **Never simplify a card implementation.** This is a rules engine, not a game that needs to ship. Every condition, restriction, and edge case in the Oracle text matters. Do NOT drop conditions because they "rarely matter," do NOT skip targeting restrictions because they're "unlikely to come up," and do NOT approximate complex effects with simpler ones. If Oracle says "nontoken creature an opponent controls with power 3 or greater," check every single word of that. A simplified implementation is a **wrong** implementation. If a card truly cannot be fully implemented with the current engine, mark the gap with `// XXX:` and ask the user — never silently simplify.
 
-3. **Consult XMage.** When the Oracle text is ambiguous or a mechanic is complex, check how `~/mage` implements it. XMage has 15+ years of rules-correctness work.
+3. **TDD — write the test first.** Before implementing a card, write a failing test that exercises its key behavior. Then implement the card to make the test pass. Tests catch rules bugs that code review misses.
+
+4. **Consult XMage.** When the Oracle text is ambiguous or a mechanic is complex, check how `~/mage` implements it. XMage has 15+ years of rules-correctness work.
 
 ## Card Implementation Guide
 

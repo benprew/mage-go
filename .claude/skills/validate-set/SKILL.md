@@ -91,17 +91,20 @@ Oracle text describes an ability that has no corresponding implementation code. 
 - Oracle describes a triggered ability that isn't wired up
 - Oracle has an activated ability that's missing
 
-### 3b. Simplified or Paraphrased Effects
-The implementation does something *similar* to but not *exactly* what Oracle says. Common violations:
+### 3b. Simplified or Paraphrased Effects — THE MOST CRITICAL CHECK
+The implementation does something *similar* to but not *exactly* what Oracle says. **Simplified implementations are wrong implementations.** This is a rules engine — every condition matters. Flag ALL of these aggressively:
 - Oracle says "nontoken creature" but code doesn't filter for nontoken
 - Oracle says "each creature" but code only targets one
 - Oracle says "can't be regenerated" but the destroy effect doesn't prevent regeneration
 - Oracle says "at the beginning of your upkeep" but trigger is on a different step
 - Oracle says "you may" (optional) but code makes it mandatory, or vice versa
 - Oracle specifies a target restriction (e.g., "target creature with flying") but code uses a broader filter
+- Oracle says "another creature" but code doesn't exclude self
 - Oracle says "controller" but code affects "owner"
 - Oracle says "exile" but code puts in graveyard, or vice versa
 - Oracle references a specific zone (hand, library, graveyard) but code uses a different one
+- Oracle has a conditional ("if", "unless", "only when") that the code doesn't check
+- Oracle limits by color, type, subtype, power, toughness, or CMC but code doesn't filter
 
 ### 3c. Hardcoded or Approximate Values
 - Damage amounts, life totals, or counters that don't match Oracle
@@ -241,6 +244,6 @@ Use **AskUserQuestion** if you're unsure whether a discrepancy is intentional (e
 1. **Scryfall JSON is the source of truth for Oracle text.** Not the comments in the Go code.
 2. **Be precise about violations.** Quote the exact Oracle text and the exact code behavior. Don't be vague.
 3. **Don't flag multiplayer simplifications.** "Each opponent" → single opponent is expected.
-4. **Do flag silent simplifications.** If Oracle says "nontoken" and code doesn't check, that's a real bug even if it rarely matters.
+4. **Aggressively flag ALL simplifications.** This is the single most important job of validation. If Oracle says "nontoken" and code doesn't check, that's a real bug — full stop. If Oracle says "another" and code doesn't exclude self, flag it. If Oracle has a condition the code doesn't check, flag it. No simplification is acceptable, no matter how "rarely" it matters. A simplified implementation is a wrong implementation.
 5. **Read the actual implementation code**, not just the comments. The code might do something different from what the comment says.
 6. **Run the tests.** Don't just check if they exist — verify they pass.

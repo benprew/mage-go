@@ -263,8 +263,9 @@ Present a final summary to the user:
 ## Important Rules
 
 1. **Always ask before proceeding past Step 5.** The user must approve the plan.
-2. **Commit after each batch**, not at the end. This keeps commits focused and reviewable.
-3. **Engine changes get their own verification.** Always run `go test ./pkg/mage/...` after engine changes.
-4. **Don't skip cards silently.** Every card in the set should be either implemented, partially implemented with XXX, or explicitly confirmed as out-of-scope by the user.
-5. **Use AskUserQuestion liberally.** When in doubt about categorization, scope, or implementation approach, ask.
-6. **Basic lands that are reprints** will be auto-skipped by genset (it detects already-registered names). Don't worry about these.
+2. **NEVER simplify card implementations.** Every condition, restriction, and edge case in Oracle text must be implemented exactly. Do not drop "nontoken" checks, skip targeting restrictions, approximate complex effects, or cut any corners. A simplified implementation is a wrong implementation — this is a rules engine and correctness is the entire point. If something can't be fully implemented, mark it `// XXX:` and ask the user. Never silently simplify.
+3. **Commit after each batch**, not at the end. This keeps commits focused and reviewable.
+4. **Engine changes get their own verification.** Always run `go test ./pkg/mage/...` after engine changes.
+5. **Don't skip cards silently.** Every card in the set should be either implemented, partially implemented with XXX, or explicitly confirmed as out-of-scope by the user.
+6. **Use AskUserQuestion liberally.** When in doubt about categorization, scope, or implementation approach, ask.
+7. **Basic lands that are reprints** will be auto-skipped by genset (it detects already-registered names). Don't worry about these.
