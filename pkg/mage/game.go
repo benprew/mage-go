@@ -1951,6 +1951,9 @@ func (g *Game) doUntap() {
 func (g *Game) doUpkeepActions() {
 	active := g.ActivePlayerObj()
 
+	// Expire "until your next upkeep" effects for the active player.
+	g.Effects.RemoveUntilYourNextTurn(g, active.PlayerID())
+
 	// Check for graveyard returns (e.g. Nether Shadow)
 	g.checkGraveyardReturns(active)
 

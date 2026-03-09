@@ -260,6 +260,12 @@ func (tg *TestGame) ChooseBandingDistribution(p PlayerRef, distribution map[stri
 	tp.chooseBandingDistribution = append(tp.chooseBandingDistribution, distribution)
 }
 
+// ChooseNumber scripts the number a player will choose when asked to pick a number.
+func (tg *TestGame) ChooseNumber(p PlayerRef, n int) {
+	tp := tg.GetPlayer(p)
+	tp.chooseNumber = append(tp.chooseNumber, n)
+}
+
 // AssertBanded checks whether two named permanents are in the same attacking band.
 func (tg *TestGame) AssertBanded(p1 PlayerRef, name1 string, p2 PlayerRef, name2 string, want bool) {
 	tg.t.Helper()

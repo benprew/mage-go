@@ -280,6 +280,27 @@ func (em *EffectManager) RemoveEndOfCombat() {
 	em.effects = filtered
 }
 
+// RemoveUntilYourNextTurn removes all effects with UntilYourNextTurn duration
+// whose source is controlled by the given player. Called at the beginning of
+// each player's upkeep to expire "until your next upkeep" effects.
+func (em *EffectManager) RemoveUntilYourNextTurn(g *Game, controllerID uuid.UUID) {
+	filtered := em.effects[:0]
+	for _, e := range em.effects {
+		if e.GetDuration() == UntilYourNextTurn {
+			src := g.FindPermanent(e.SourceID())
+			if src != nil && src.Controller == controllerID {
+				continue // remove this effect
+			}
+			// Source left battlefield — also remove
+			if src == nil {
+				continue
+			}
+		}
+		filtered = append(filtered, e)
+	}
+	em.effects = filtered
+}
+
 // Apply resets computed bonuses and reapplies all active effects in layer order.
 func (em *EffectManager) Apply(g *Game) {
 	em.attrDeltas = make(map[uuid.UUID]map[Attr]int)

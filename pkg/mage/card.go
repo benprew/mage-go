@@ -452,6 +452,10 @@ type Permanent struct {
 	// StoredValue holds an arbitrary numeric value chosen at ETB or during upkeep.
 	// Used by cards like Shapeshifter (chosen number 0-7 for dynamic P/T).
 	StoredValue int
+
+	// CreatedBy records the permanent ID of the source that created this token.
+	// Used by cards like Tetravus that need to track their own tokens.
+	CreatedBy uuid.UUID
 }
 
 // NewPermanent creates a permanent from a card.

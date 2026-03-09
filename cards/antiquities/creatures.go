@@ -195,12 +195,11 @@ func registerCreatures() {
 	// Creature — Spirit
 	// {T}: Until your next upkeep, target noncreature artifact becomes an artifact creature with
 	// power and toughness each equal to its mana value.
-	// XXX: duration should be "until your next upkeep", not end of turn
 	Register("Xenic Poltergeist", func() Card {
 		return NewCreature("Xenic Poltergeist", "{1}{B}{B}", 1, 1,
 			WithSubTypes("Spirit"),
 			WithActivatedAbility(
-				FuncEffect("animate target noncreature artifact until end of turn",
+				FuncEffect("animate target noncreature artifact until your next upkeep",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
@@ -211,7 +210,7 @@ func registerCreatures() {
 							return nil
 						}
 						cmc := perm.Card.ManaCost().CMC()
-						eff := TemporaryAnimate(perm.ID(), cmc, cmc)
+						eff := TemporaryAnimateUntilNextUpkeep(perm.ID(), cmc, cmc)
 						eff.SetSourceID(sourceID)
 						g.AddContinuousEffect(eff)
 						g.ApplyContinuousEffects()
@@ -838,7 +837,6 @@ func registerCreatures() {
 	// If you do, create that many 1/1 colorless Tetravite artifact creature tokens with flying.
 	// At the beginning of your upkeep, you may exile any number of tokens created with Tetravus.
 	// If you do, put that many +1/+1 counters on Tetravus.
-	// XXX: create/absorb tokens during upkeep
 	Register("Tetravus", func() Card {
 		return NewCreature("Tetravus", "{6}", 1, 1,
 			WithSubTypes("Construct"),
@@ -846,6 +844,75 @@ func registerCreatures() {
 			WithKeyword(Flying),
 			WithAbility(EntersBattlefieldTrigger(
 				AddCounters(P1P1, Fixed(3), SelectSource), false,
+			)),
+			// Remove counters → create Tetravite tokens
+			WithAbility(BeginningOfUpkeepTrigger(
+				FuncEffect("remove +1/+1 counters and create Tetravite tokens",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						src := g.FindPermanent(sourceID)
+						if src == nil {
+							return nil
+						}
+						maxCounters := src.Counters[P1P1]
+						if maxCounters == 0 {
+							return nil
+						}
+						p := g.GetPlayer(controller)
+						n := p.ChooseNumber(0, maxCounters, "Remove how many +1/+1 counters from Tetravus?")
+						if n == 0 {
+							return nil
+						}
+						src.Counters[P1P1] -= n
+						if src.Counters[P1P1] == 0 {
+							delete(src.Counters, P1P1)
+						}
+						for range n {
+							token := NewToken("Tetravite", 1, 1,
+								[]CardType{TypeArtifact, TypeCreature},
+								[]string{"Tetravite"},
+								Flying,
+							)
+							token.SetOwner(controller)
+							perm := g.PutOnBattlefield(token, controller)
+							perm.CreatedBy = sourceID
+						}
+						return nil
+					}), true,
+			)),
+			// Exile Tetravite tokens → add +1/+1 counters
+			WithAbility(BeginningOfUpkeepTrigger(
+				FuncEffect("exile Tetravite tokens and add +1/+1 counters",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						src := g.FindPermanent(sourceID)
+						if src == nil {
+							return nil
+						}
+						var tetravites []*Permanent
+						for _, perm := range g.FilterBattlefield(And(
+							ControlledBy(controller),
+							IsToken,
+							CreatedByFilter(sourceID),
+						)) {
+							tetravites = append(tetravites, perm)
+						}
+						if len(tetravites) == 0 {
+							return nil
+						}
+						p := g.GetPlayer(controller)
+						n := p.ChooseNumber(0, len(tetravites), "Exile how many Tetravite tokens?")
+						if n == 0 {
+							return nil
+						}
+						for i := range n {
+							if i < len(tetravites) {
+								g.ExilePermanent(tetravites[i])
+							}
+						}
+						src.Counters[P1P1] += n
+						return nil
+					}), true,
 			)),
 		)
 	})

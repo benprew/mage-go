@@ -1,6 +1,8 @@
 package interactive
 
 import (
+	"fmt"
+
 	"github.com/google/uuid"
 	"github.com/mage/mage/pkg/mage"
 	"github.com/mage/mage/pkg/mage/core"
@@ -204,4 +206,21 @@ func (p *HumanPlayer) ChooseMayAbility(description string) bool {
 	}
 	resp := <-p.choiceResps
 	return resp.Accepted
+}
+
+func (p *HumanPlayer) ChooseNumber(min, max int, reason string) int {
+	opts := make([]ChoiceOption, max-min+1)
+	for i := min; i <= max; i++ {
+		opts[i-min] = ChoiceOption{Label: fmt.Sprintf("%d", i)}
+	}
+	p.choiceReqs <- ChoiceRequest{Type: ChoiceNumber, Reason: reason, Options: opts}
+	resp := <-p.choiceResps
+	n := resp.SelectedIndex + min
+	if n < min {
+		return min
+	}
+	if n > max {
+		return max
+	}
+	return n
 }

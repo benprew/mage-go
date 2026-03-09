@@ -235,6 +235,29 @@ func TestXenicPoltergeist(t *testing.T) {
 		g.Execute()
 		g.AssertPowerToughness(gametest.PlayerA, "Jayemdae Tome", 4, 4)
 	})
+
+	t.Run("animation lasts until controller's next upkeep", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Xenic Poltergeist")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Jayemdae Tome") // CMC 4 artifact
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Xenic Poltergeist", "Jayemdae Tome")
+		// Still animated during opponent's turn (turn 2)
+		g.StopAt(2, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Jayemdae Tome", 4, 4)
+	})
+
+	t.Run("animation expires at controller's next upkeep", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Xenic Poltergeist")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Jayemdae Tome") // CMC 4 artifact
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Xenic Poltergeist", "Jayemdae Tome")
+		// By PlayerA's next precombat main (turn 3), the effect should have expired at upkeep
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		// Jayemdae Tome should no longer be a creature — assert it has its normal 0/0 (noncreature)
+		g.AssertPowerToughness(gametest.PlayerA, "Jayemdae Tome", 0, 0)
+	})
 }
 
 func TestYawgmothDemon(t *testing.T) {
@@ -846,6 +869,48 @@ func TestTetravus(t *testing.T) {
 		g.StopAt(1, core.PrecombatMain)
 		g.Execute()
 		g.AssertHasAbility(gametest.PlayerA, "Tetravus", core.Flying, true)
+	})
+
+	t.Run("remove counters to create Tetravite tokens", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Tetravus")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Tetravus")
+		// Turn 3 upkeep: both triggers go on stack. LIFO: exile trigger resolves
+		// first (no tokens yet, skips), then remove-counters trigger resolves.
+		g.ChooseNumber(gametest.PlayerA, 2) // remove 2 of 3 counters → create 2 Tetravites
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertCounterCount(gametest.PlayerA, "Tetravus", core.P1P1, 1)
+		g.AssertPermanentCount(gametest.PlayerA, "Tetravite", 2)
+	})
+
+	t.Run("exile Tetravite tokens to add counters", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Tetravus")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Tetravus")
+		// Turn 3 upkeep: exile resolves first (no tokens, skips), then remove resolves
+		g.ChooseNumber(gametest.PlayerA, 3) // remove all 3 counters → 3 Tetravites
+		// Turn 5 upkeep (LIFO): exile resolves first, then remove resolves.
+		// Exile: 3 tokens → exile 2 → adds 2 counters to Tetravus
+		g.ChooseNumber(gametest.PlayerA, 2)
+		// Remove: Tetravus now has 2 counters (from exile) → choose 0 to keep them
+		g.ChooseNumber(gametest.PlayerA, 0)
+		g.StopAt(5, core.PrecombatMain)
+		g.Execute()
+		g.AssertCounterCount(gametest.PlayerA, "Tetravus", core.P1P1, 2)
+		g.AssertPermanentCount(gametest.PlayerA, "Tetravite", 1) // 3-2 = 1 remaining
+	})
+
+	t.Run("choose zero removes no counters", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Tetravus")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Tetravus")
+		// Turn 3 upkeep: exile resolves first (no tokens, skips), then remove resolves
+		g.ChooseNumber(gametest.PlayerA, 0) // choose to remove 0 counters
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertCounterCount(gametest.PlayerA, "Tetravus", core.P1P1, 3)
+		g.AssertPermanentCount(gametest.PlayerA, "Tetravite", 0)
 	})
 }
 

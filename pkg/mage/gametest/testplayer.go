@@ -42,6 +42,7 @@ type TestPlayer struct {
 	chooseFromLibrary         []string
 	chooseBandingDistribution []map[string]int
 	chooseMode                []int
+	chooseNumber              []int
 }
 
 func NewTestPlayer(name string) *TestPlayer {
@@ -249,4 +250,20 @@ func (tp *TestPlayer) ChooseCardFromLibrary(candidates []mage.Card, reason strin
 		}
 	}
 	return candidates[0]
+}
+
+// ChooseNumber picks a number from the given range.
+func (tp *TestPlayer) ChooseNumber(min, max int, reason string) int {
+	if len(tp.chooseNumber) > 0 {
+		n := tp.chooseNumber[0]
+		tp.chooseNumber = tp.chooseNumber[1:]
+		if n < min {
+			return min
+		}
+		if n > max {
+			return max
+		}
+		return n
+	}
+	return max // default: choose maximum
 }

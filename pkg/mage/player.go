@@ -80,6 +80,7 @@ type Player interface {
 	ChooseCardsFromHand(amount int, reason string, g GameReader) []Card
 	ChooseManaColor(reason string) Color
 	ChooseCardFromLibrary(candidates []Card, reason string, g GameReader) Card
+	ChooseNumber(min, max int, reason string) int
 }
 
 // BasePlayer implements Player with basic functionality.
@@ -270,4 +271,8 @@ func (p *BasePlayer) ChooseCardFromLibrary(candidates []Card, reason string, g G
 		return candidates[0]
 	}
 	return nil
+}
+
+func (p *BasePlayer) ChooseNumber(min, max int, reason string) int {
+	return max // default: choose maximum
 }

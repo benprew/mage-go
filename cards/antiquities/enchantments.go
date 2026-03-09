@@ -273,19 +273,34 @@ func registerEnchantments() {
 	// Each noncreature artifact loses all abilities and becomes an artifact creature with power
 	// and toughness each equal to its mana value. If Titania's Song leaves the battlefield, this
 	// effect continues until end of turn.
-	// XXX: missing "loses all abilities"; missing "effect continues until end of turn" after leaving
+	titaniasSongApply := func(g *Game, _ uuid.UUID) error {
+		for _, perm := range g.FilterBattlefield(And(IsArtifact, Not(IsCreature))) {
+			cmc := perm.Card.ManaCost().CMC()
+			perm.Card.AddType(TypeCreature)
+			perm.Card.SetBasePT(cmc, cmc)
+			perm.RuntimeAbilities = nil // loses all abilities
+		}
+		return nil
+	}
 	Register("Titania's Song", func() Card {
 		return NewEnchantment("Titania's Song", "{3}{G}",
 			WithStaticAbility(
-				FuncContinuousEffect(LayerPT, WhileOnBattlefield,
-					func(g *Game, sourceID uuid.UUID) error {
-						for _, perm := range g.FilterBattlefield(And(IsArtifact, Not(IsCreature))) {
-							cmc := perm.Card.ManaCost().CMC()
-							perm.Card.AddType(TypeCreature)
-							perm.Card.SetBasePT(cmc, cmc)
-						}
-						return nil
-					}),
+				FuncContinuousEffect(LayerPT, WhileOnBattlefield, titaniasSongApply),
+			),
+			// When Song leaves the battlefield, continue the effect until end of turn
+			WithAbility(
+				NewTriggered(EvtLeavesBattlefield, false,
+					FuncEffect("continue Titania's Song effect until end of turn",
+						EffectProperties{},
+						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+							eff := FuncContinuousEffect(LayerPT, EndOfTurn, titaniasSongApply)
+							eff.SetSourceID(sourceID)
+							g.AddContinuousEffect(eff)
+							return nil
+						}),
+				).SetCondition(func(evt *GameEvent, _ *Game, sourceID, _ uuid.UUID) bool {
+					return evt.SourceID == sourceID
+				}),
 			),
 		)
 	})

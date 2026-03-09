@@ -296,4 +296,26 @@ func TestTitaniasSong(t *testing.T) {
 		// Jalum Tome should be a 3/3 creature (CMC = P/T)
 		g.AssertPowerToughness(gametest.PlayerB, "Jalum Tome", 3, 3)
 	})
+
+	t.Run("animated artifacts lose all abilities", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Titania's Song")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Ornithopter") // has flying
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// Ornithopter is artifact creature already, so Song doesn't affect it
+		g.AssertHasAbility(gametest.PlayerB, "Ornithopter", core.Flying, true)
+	})
+
+	t.Run("effect lingers until end of turn after Song is destroyed", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Titania's Song")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Jalum Tome") // CMC 3
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Disenchant")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Disenchant", "Titania's Song")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Song was destroyed, but effect continues until end of turn
+		g.AssertPowerToughness(gametest.PlayerB, "Jalum Tome", 3, 3)
+	})
 }

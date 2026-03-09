@@ -182,6 +182,12 @@ func TemporaryAnimateUntilEndOfCombat(targetID uuid.UUID, power, toughness int) 
 	return temporaryAnimate(targetID, power, toughness, EndOfCombat)
 }
 
+// TemporaryAnimateUntilNextUpkeep creates an effect that animates a permanent until the
+// controller's next upkeep (UntilYourNextTurn duration).
+func TemporaryAnimateUntilNextUpkeep(targetID uuid.UUID, power, toughness int) ContinuousEffect {
+	return temporaryAnimate(targetID, power, toughness, UntilYourNextTurn)
+}
+
 // PreventBlockingUntilEndOfCombat creates an EndOfCombat-scoped continuous effect
 // that revokes AttrCanBlock from a specific creature. Re-fires on each Apply() cycle
 // (surviving grantedAttrs reset) and expires at EndCombat via RemoveEndOfCombat().

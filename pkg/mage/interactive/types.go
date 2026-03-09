@@ -191,6 +191,7 @@ const (
 	ChoiceCardFromLibrary                  // pick one card from library candidates
 	ChoiceMay                              // yes/no for an optional ability
 	ChoiceMode                             // pick one mode from a modal spell/ability
+	ChoiceNumber                           // pick a number from a range
 )
 
 // ChoiceOption is one selectable item in a ChoiceRequest.

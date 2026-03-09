@@ -275,3 +275,16 @@ var IsAuraOnLand = NewPermanentFilter("Aura attached to a land", func(p *Permane
 	host := g.FindPermanent(p.AttachedTo)
 	return host != nil && host.HasType(TypeLand)
 })
+
+// IsToken matches token permanents.
+var IsToken = NewPermanentFilter("token", func(p *Permanent, g *Game) bool {
+	bc, ok := p.Card.(*BaseCard)
+	return ok && bc.IsToken()
+})
+
+// CreatedByFilter matches tokens created by a specific permanent.
+func CreatedByFilter(id uuid.UUID) PermanentFilter {
+	return NewPermanentFilter("created by source", func(p *Permanent, g *Game) bool {
+		return p.CreatedBy == id
+	})
+}
