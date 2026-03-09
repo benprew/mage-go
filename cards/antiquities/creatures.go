@@ -466,19 +466,23 @@ func registerCreatures() {
 					return evt.PlayerID == controllerID
 				}),
 			),
-			// XXX: wall destruction happens immediately instead of "at end of combat" per Oracle
+			// When blocked by a Wall, destroy that Wall at end of combat
 			WithAbility(
 				NewTriggered(EvtDeclaredBlocker, false,
-					FuncEffect("destroy blocking Wall",
+					FuncEffect("destroy blocking Wall at end of combat",
 						EffectProperties{Outcome: OutcomeDetriment},
 						func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 							if len(targets) == 0 {
 								return nil
 							}
-							wall := g.FindPermanent(targets[0])
-							if wall != nil {
-								g.DestroyPermanent(wall)
-							}
+							wallID := targets[0]
+							g.RegisterDelayedTrigger(&DelayedTrigger{
+								EventType:  EvtEndOfCombat,
+								TargetID:   wallID,
+								Effects:    []Effect{DestroyTarget()},
+								SourceID:   sourceID,
+								Controller: controller,
+							})
 							return nil
 						}),
 				).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
@@ -522,12 +526,34 @@ func registerCreatures() {
 			WithAbility(EntersBattlefieldTrigger(
 				AddCounters(P1P0, Fixed(4), SelectSource), false,
 			)),
-			// XXX: counter removal triggers on attack/block declaration instead of "at end of combat" per Oracle
+			// At end of combat, if Clockwork Avian attacked or blocked, remove a +1/+0 counter
 			WithAbility(AttacksTrigger(
-				RemoveCountersFromSource(P1P0, 1), false,
+				FuncEffect("schedule counter removal at end of combat",
+					EffectProperties{},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						g.RegisterDelayedTrigger(&DelayedTrigger{
+							EventType:  EvtEndOfCombat,
+							TargetID:   sourceID,
+							Effects:    []Effect{RemoveCountersFromSource(P1P0, 1)},
+							SourceID:   sourceID,
+							Controller: controller,
+						})
+						return nil
+					}), false,
 			)),
 			WithAbility(BlocksTrigger(
-				RemoveCountersFromSource(P1P0, 1), false,
+				FuncEffect("schedule counter removal at end of combat",
+					EffectProperties{},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						g.RegisterDelayedTrigger(&DelayedTrigger{
+							EventType:  EvtEndOfCombat,
+							TargetID:   sourceID,
+							Effects:    []Effect{RemoveCountersFromSource(P1P0, 1)},
+							SourceID:   sourceID,
+							Controller: controller,
+						})
+						return nil
+					}), false,
 			)),
 			// {X}, {T}: Put up to X +1/+0 counters on Clockwork Avian (max 4 total). Upkeep only.
 			WithActivatedAbility(

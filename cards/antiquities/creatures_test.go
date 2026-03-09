@@ -485,6 +485,18 @@ func TestBatteringRam(t *testing.T) {
 		g.Execute()
 		g.AssertHasAbility(gametest.PlayerA, "Battering Ram", core.Banding, true)
 	})
+
+	t.Run("destroys blocking Wall at end of combat", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Battering Ram")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Wall of Spears") // 2/3 Wall
+		g.Attack(1, gametest.PlayerA, "Battering Ram")
+		g.Block(1, gametest.PlayerB, "Wall of Spears", "Battering Ram")
+		g.StopAt(1, core.PostcombatMain) // after end of combat delayed trigger
+		g.Execute()
+		// Wall should be destroyed at end of combat (not during combat)
+		g.AssertPermanentCount(gametest.PlayerB, "Wall of Spears", 0)
+	})
 }
 
 func TestClayStatue(t *testing.T) {
@@ -533,7 +545,7 @@ func TestClockworkAvian(t *testing.T) {
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Clockwork Avian")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Clockwork Avian")
 		g.Attack(3, gametest.PlayerA, "Clockwork Avian")
-		g.StopAt(3, core.EndCombat)
+		g.StopAt(3, core.PostcombatMain) // after end of combat delayed trigger resolves
 		g.Execute()
 		g.AssertCounterCount(gametest.PlayerA, "Clockwork Avian", core.P1P0, 3)
 	})
