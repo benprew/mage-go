@@ -53,6 +53,13 @@ func WithStepOnly(step PhaseStep) AbilityOption {
 	}
 }
 
+// WithYourTurnOnly restricts an activated ability to only be activatable during its controller's turn.
+func WithYourTurnOnly() AbilityOption {
+	return func(a *SimpleActivatedAbility) {
+		a.YourTurnOnly = true
+	}
+}
+
 // WithOncePerTurn restricts an activated ability to once per turn.
 func WithOncePerTurn() AbilityOption {
 	return func(a *SimpleActivatedAbility) {
@@ -99,6 +106,7 @@ type SimpleActivatedAbility struct {
 	targets            []Target
 	SorceryOnly              bool
 	UpkeepOnly               bool // Can only be activated during an upkeep step
+	YourTurnOnly             bool // Can only be activated during controller's turn
 	StepOnly                 PhaseStep // If non-zero, can only be activated during this step
 	OncePerTurn              bool // Can only be activated once per turn
 	MaxActivationsPerTurn    int  // Max activations per turn (0 = unlimited, overrides OncePerTurn)
@@ -128,6 +136,9 @@ func NewActivatedAbility(effect Effect, cost Cost, opts ...AbilityOption) *Simpl
 
 func (a *SimpleActivatedAbility) CanActivate(controller uuid.UUID, g *Game) bool {
 	if a.UpkeepOnly && g.Step != Upkeep {
+		return false
+	}
+	if a.YourTurnOnly && g.ActivePlayer != controller {
 		return false
 	}
 	if a.StepOnly != 0 && g.Step != a.StepOnly {

@@ -551,6 +551,33 @@ body::before {
   <div class="ornament">— ◊ —</div>
   <h2>Custom Deck List</h2>
   <textarea id="deck-textarea" placeholder="4 Lightning Bolt&#10;4 Mountain&#10;...&#10;&#10;One card name per line, or '4 Card Name' format."></textarea>
+  <div class="ornament-line"></div>
+  <h2>Opponent</h2>
+  <div style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 12px;">
+    <div>
+      <label style="font-size: 11px; color: var(--dim-gold); text-transform: uppercase; letter-spacing: 0.06em;">Personality</label><br>
+      <select id="ai-personality" style="background: var(--void-black); color: var(--parchment); border: 1px solid var(--deep-border); padding: 8px 12px; font-family: 'Cinzel', Georgia, serif; font-size: 13px; min-width: 130px;">
+        <option value="aggro">Aggro</option>
+        <option value="control">Control</option>
+        <option value="midrange" selected>Midrange</option>
+        <option value="tempo">Tempo</option>
+        <option value="burn">Burn</option>
+      </select>
+    </div>
+    <div>
+      <label style="font-size: 11px; color: var(--dim-gold); text-transform: uppercase; letter-spacing: 0.06em;">Mode</label><br>
+      <select id="ai-mode" style="background: var(--void-black); color: var(--parchment); border: 1px solid var(--deep-border); padding: 8px 12px; font-family: 'Cinzel', Georgia, serif; font-size: 13px; min-width: 130px;">
+        <option value="heuristic">Heuristic (fast)</option>
+        <option value="search">Search (minimax)</option>
+        <option value="adaptive">Adaptive</option>
+      </select>
+    </div>
+    <div>
+      <label style="font-size: 11px; color: var(--dim-gold); text-transform: uppercase; letter-spacing: 0.06em;">AI Deck</label><br>
+      <select id="ai-deck" style="background: var(--void-black); color: var(--parchment); border: 1px solid var(--deep-border); padding: 8px 12px; font-family: 'Cinzel', Georgia, serif; font-size: 13px; min-width: 130px;">
+      </select>
+    </div>
+  </div>
   <div id="deck-error"></div>
   <button id="start-btn" onclick="startGame()">Begin</button>
 </div>

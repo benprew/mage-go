@@ -112,6 +112,17 @@ function setupPresets() {
         };
         container.appendChild(btn);
     }
+
+    // Populate AI deck dropdown with the same presets.
+    const aiDeckSelect = document.getElementById("ai-deck");
+    for (const name of Object.keys(PRESETS)) {
+        const opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = name;
+        // Default AI deck to RB Burn if available.
+        if (name === "RB Burn") opt.selected = true;
+        aiDeckSelect.appendChild(opt);
+    }
 }
 
 function parseDeckList(text) {
@@ -139,8 +150,15 @@ function startGame() {
         return;
     }
 
+    // AI configuration.
+    const aiPersonality = document.getElementById("ai-personality").value;
+    const aiMode = document.getElementById("ai-mode").value;
+    const aiDeckName = document.getElementById("ai-deck").value;
+    const aiDeckCards = PRESETS[aiDeckName] || PRESETS["RB Burn"];
+    const aiDeckJSON = JSON.stringify(aiDeckCards);
+
     const deckJSON = JSON.stringify(cards);
-    const err = mageStartGame(deckJSON, onGameMsg, onChoiceReq);
+    const err = mageStartGame(deckJSON, onGameMsg, onChoiceReq, aiDeckJSON, aiPersonality, aiMode);
     if (err) {
         document.getElementById("deck-error").textContent = String(err);
         return;

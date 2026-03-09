@@ -425,7 +425,7 @@ func (s *HeuristicStrategy) autoSelectTargets(p mage.Player, g *mage.Game, card 
 					for _, id := range possible {
 						perm := g.FindPermanent(id)
 						if perm != nil && perm.Controller == playerID && perm.HasType(core.TypeCreature) {
-							score := eval.EvalCreature(perm)
+							score := eval.EvalCreatureInGame(perm, g)
 							if score > ownBestScore {
 								ownBestScore = score
 								ownBest = id
@@ -466,7 +466,7 @@ func (s *HeuristicStrategy) autoSelectTargets(p mage.Player, g *mage.Game, card 
 						perm := g.FindPermanent(id)
 						if perm != nil && perm.Controller == opponent.PlayerID() && perm.HasType(core.TypeCreature) {
 							if spellDamage >= perm.CurrentToughness(g) {
-								tpm := eval.ThreatPerMana(perm)
+								tpm := eval.ThreatPerManaInGame(perm, g)
 								if tpm > bestLethalTPM {
 									bestLethalTPM = tpm
 									bestLethalID = id
@@ -483,7 +483,7 @@ func (s *HeuristicStrategy) autoSelectTargets(p mage.Player, g *mage.Game, card 
 				for _, id := range possible {
 					perm := g.FindPermanent(id)
 					if perm != nil && perm.Controller != playerID && perm.HasType(core.TypeCreature) {
-						score := eval.EvalCreature(perm)
+						score := eval.EvalCreatureInGame(perm, g)
 						if score > bestScore {
 							bestScore = score
 							bestID = id
@@ -504,7 +504,7 @@ func (s *HeuristicStrategy) autoSelectTargets(p mage.Player, g *mage.Game, card 
 					for _, id := range possible {
 						perm := g.FindPermanent(id)
 						if perm != nil && perm.Controller == playerID {
-							score := eval.EvalCreature(perm)
+							score := eval.EvalCreatureInGame(perm, g)
 							if score > ownBestScore {
 								ownBestScore = score
 								ownBest = id
@@ -520,7 +520,7 @@ func (s *HeuristicStrategy) autoSelectTargets(p mage.Player, g *mage.Game, card 
 				for _, id := range possible {
 					perm := g.FindPermanent(id)
 					if perm != nil && perm.Controller != playerID {
-						score := eval.EvalCreature(perm)
+						score := eval.EvalCreatureInGame(perm, g)
 						if score > bestScore {
 							bestScore = score
 							bestID = id

@@ -7,12 +7,23 @@ import (
 )
 
 // ThreatPerMana returns a permanent's threat-per-mana-spent ratio.
+// Uses base stats only. Prefer ThreatPerManaInGame when a GameReader is available.
 func ThreatPerMana(perm *mage.Permanent) float64 {
 	cmc := perm.Card.ManaCost().CMC()
 	if cmc == 0 {
 		return 0
 	}
 	return float64(EvalCreature(perm)) / float64(cmc)
+}
+
+// ThreatPerManaInGame returns a permanent's threat-per-mana-spent ratio,
+// using CurrentPower/CurrentToughness for accurate continuous-effect-aware scoring.
+func ThreatPerManaInGame(perm *mage.Permanent, g mage.GameReader) float64 {
+	cmc := perm.Card.ManaCost().CMC()
+	if cmc == 0 {
+		return 0
+	}
+	return float64(EvalCreatureInGame(perm, g)) / float64(cmc)
 }
 
 // SpellIsWorthless returns true if the spell requires at least one target but
@@ -70,7 +81,7 @@ func SpellValue(card mage.Card, p mage.Player, g *mage.Game) int {
 			myCreatures++
 		} else if perm.Controller == oppID {
 			oppCreatures++
-			ts := EvalCreature(perm)
+			ts := EvalCreatureInGame(perm, g)
 			if ts > oppBestScore {
 				oppBestScore = ts
 			}
@@ -107,7 +118,7 @@ func SpellValue(card mage.Card, p mage.Player, g *mage.Game) int {
 					for _, perm := range g.Battlefield {
 						if perm.Controller == oppID && perm.HasType(core.TypeCreature) {
 							if dmg >= perm.CurrentToughness(g) {
-								bonus := EvalCreature(perm) / 2
+								bonus := EvalCreatureInGame(perm, g) / 2
 								if bonus < 2 {
 									bonus = 2
 								}

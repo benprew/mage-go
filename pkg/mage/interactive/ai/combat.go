@@ -268,7 +268,7 @@ func evaluateCombatOutcome(g *mage.Game, playerID uuid.UUID, attackers []uuid.UU
 		}
 		atkTough := atk.CurrentToughness(g)
 		if isDead(atkID, atkTough) {
-			ourLostValue += eval.EvalCreature(atk)
+			ourLostValue += eval.EvalCreatureInGame(atk, g)
 		}
 		for _, blkID := range blockerIDs {
 			blk := g.FindPermanent(blkID)
@@ -277,7 +277,7 @@ func evaluateCombatOutcome(g *mage.Game, playerID uuid.UUID, attackers []uuid.UU
 			}
 			blkTough := blk.CurrentToughness(g)
 			if isDead(blkID, blkTough) {
-				theirLostValue += eval.EvalCreature(blk)
+				theirLostValue += eval.EvalCreatureInGame(blk, g)
 			}
 		}
 	}
@@ -290,7 +290,7 @@ func evaluateCombatOutcome(g *mage.Game, playerID uuid.UUID, attackers []uuid.UU
 
 func findGangBlocks(atk *mage.Permanent, available []*mage.Permanent, g *mage.Game, playerID uuid.UUID, theyHaveLethal bool) []*mage.Permanent {
 	atkTough := atk.CurrentToughness(g)
-	atkScore := eval.EvalCreature(atk)
+	atkScore := eval.EvalCreatureInGame(atk, g)
 
 	// Try all 2-blocker combinations first.
 	for i := 0; i < len(available); i++ {
@@ -316,8 +316,8 @@ func findGangBlocks(atk *mage.Permanent, available []*mage.Permanent, g *mage.Ga
 				continue
 			}
 
-			b1Score := eval.EvalCreature(b1)
-			b2Score := eval.EvalCreature(b2)
+			b1Score := eval.EvalCreatureInGame(b1, g)
+			b2Score := eval.EvalCreatureInGame(b2, g)
 			combinedScore := b1Score + b2Score
 			// Allow gang block if attacker is worth at least 80% of blockers.
 			if !theyHaveLethal && atkScore*100 < combinedScore*80 {
@@ -361,9 +361,9 @@ func findGangBlocks(atk *mage.Permanent, available []*mage.Permanent, g *mage.Ga
 					continue
 				}
 
-				b1Score := eval.EvalCreature(b1)
-				b2Score := eval.EvalCreature(b2)
-				b3Score := eval.EvalCreature(b3)
+				b1Score := eval.EvalCreatureInGame(b1, g)
+				b2Score := eval.EvalCreatureInGame(b2, g)
+				b3Score := eval.EvalCreatureInGame(b3, g)
 				combinedScore := b1Score + b2Score + b3Score
 				// Allow gang block if attacker is worth at least 80% of blockers.
 				if !theyHaveLethal && atkScore*100 < combinedScore*80 {
@@ -403,7 +403,7 @@ func shouldAttack(atk *mage.Permanent, g *mage.Game, opponentID uuid.UUID, aggre
 		// opponent has significant untapped mana (could have removal/combat tricks).
 		if aggression < 0.5 {
 			oppUntapped := eval.CountAvailableMana(g, opponentID)
-			atkValue := eval.EvalCreature(atk)
+			atkValue := eval.EvalCreatureInGame(atk, g)
 			// If opponent has plenty of mana open and our creature is valuable,
 			// consider holding back. High-value creatures are worth protecting.
 			if oppUntapped >= 3 && atkValue >= 10 && !eval.IsEvasive(atk, opponentID, g) {
@@ -486,8 +486,8 @@ func evaluateSingleBlock(atk, blk *mage.Permanent, g *mage.Game, playerID uuid.U
 		return false // blocker dies for nothing
 	}
 
-	atkValue := eval.EvalCreature(atk)
-	blkValue := eval.EvalCreature(blk)
+	atkValue := eval.EvalCreatureInGame(atk, g)
+	blkValue := eval.EvalCreatureInGame(blk, g)
 
 	// If blocker kills attacker (mutual trade or blocker survives), check value trade.
 	if blockerKillsAtk {

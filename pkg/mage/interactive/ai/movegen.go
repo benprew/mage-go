@@ -23,6 +23,7 @@ type Move struct {
 	ModeIndex int // mode index for modal spells (0 = first mode or non-modal)
 
 	IsCreature bool
+	IsTactical bool // true for damage spells, removal, combat tricks
 	heuristic  int
 }
 
@@ -93,6 +94,7 @@ func GeneratePriorityMoves(g *mage.Game, p mage.Player, landsPlayed int, mainPha
 			PermanentID:  info.PermanentID,
 			CardName:     info.PermanentName,
 			AbilityIndex: info.AbilityIndex,
+			IsTactical:   true, // activated abilities with q>=3 are tactical (damage, draw, etc.)
 			heuristic:    q,
 		})
 	}
@@ -110,6 +112,8 @@ func GeneratePriorityMoves(g *mage.Game, p mage.Player, landsPlayed int, mainPha
 }
 
 // GenerateAttackerSets produces a pruned set of attacker combinations.
+// Generates: all, none, each solo, evasive-only, all-but-one (leave back for blocking),
+// and top-N-by-value subsets for larger boards.
 func GenerateAttackerSets(g *mage.Game, playerID uuid.UUID) [][]uuid.UUID {
 	eligible := getEligibleAttackers(g, playerID)
 	if len(eligible) == 0 {
@@ -147,6 +151,39 @@ func GenerateAttackerSets(g *mage.Game, playerID uuid.UUID) [][]uuid.UUID {
 	}
 	if len(evasive) > 0 && len(evasive) < len(eligible) {
 		sets = append(sets, evasive)
+	}
+
+	// All-but-one: leave each creature back as a potential blocker.
+	// This is key for defensive play while still pressuring.
+	if len(eligible) > 2 && len(eligible) <= 8 {
+		for skip := range eligible {
+			subset := make([]uuid.UUID, 0, len(eligible)-1)
+			for j, p := range eligible {
+				if j != skip {
+					subset = append(subset, p.ID())
+				}
+			}
+			sets = append(sets, subset)
+		}
+	}
+
+	// Value-sorted top-N subsets: attack with the N most valuable creatures.
+	// Useful when we want to hold back cheap creatures.
+	if len(eligible) > 3 {
+		sorted := make([]*mage.Permanent, len(eligible))
+		copy(sorted, eligible)
+		sort.Slice(sorted, func(i, j int) bool {
+			return eval.EvalCreatureInGame(sorted[i], g) > eval.EvalCreatureInGame(sorted[j], g)
+		})
+		// Top half by value.
+		halfN := len(sorted) / 2
+		if halfN >= 2 {
+			topHalf := make([]uuid.UUID, halfN)
+			for i := 0; i < halfN; i++ {
+				topHalf[i] = sorted[i].ID()
+			}
+			sets = append(sets, topHalf)
+		}
 	}
 
 	return sets
@@ -291,32 +328,56 @@ func expandNonXSpellMoves(p mage.Player, g *mage.Game, card mage.Card, xValue, m
 		sv += xValue
 	}
 
-	var possibleTargets []uuid.UUID
+	// Collect all target requirements for the spell.
+	var allTargetReqs []mage.Target
+	var outcome mage.Outcome
 	for _, a := range card.Abilities() {
 		sa, ok := a.(*mage.SpellAbility)
 		if !ok {
 			continue
 		}
-		for _, t := range sa.Targets() {
-			possibleTargets = t.Possible(playerID, card, g)
-			break
-		}
+		allTargetReqs = sa.Targets()
+		outcome = mage.SpellOutcome(sa.Effects())
+		break
 	}
 
-	if len(possibleTargets) == 0 {
+	// A spell is tactical if it has detriment or benefit effects (damage, removal,
+	// combat tricks, draw). Used by quiescence search to extend at leaf nodes.
+	tactical := outcome == mage.OutcomeDetriment || outcome == mage.OutcomeBenefit
+
+	if len(allTargetReqs) == 0 {
 		return []Move{{
 			Type:       interactive.ActionCastSpell,
 			CardID:     card.ID(),
 			CardName:   card.Name(),
 			IsCreature: card.HasType(core.TypeCreature),
+			IsTactical: tactical,
 			XValue:     xValue,
 			ModeIndex:  modeIndex,
 			heuristic:  sv,
 		}}
 	}
 
+	// First target: enumerate all possibilities to generate move variants.
+	firstPossible := allTargetReqs[0].Possible(playerID, card, g)
+	if len(firstPossible) == 0 {
+		return []Move{{
+			Type:       interactive.ActionCastSpell,
+			CardID:     card.ID(),
+			CardName:   card.Name(),
+			IsCreature: card.HasType(core.TypeCreature),
+			IsTactical: tactical,
+			XValue:     xValue,
+			ModeIndex:  modeIndex,
+			heuristic:  sv,
+		}}
+	}
+
+	// For additional targets (2nd, 3rd, etc.), pick the best candidate based on outcome.
+	additionalTargets := pickAdditionalTargets(g, playerID, card, allTargetReqs[1:], outcome)
+
 	var moves []Move
-	for _, tid := range possibleTargets {
+	for _, tid := range firstPossible {
 		h := sv
 		if tp := g.GetPlayer(tid); tp != nil && tp.PlayerID() != playerID {
 			for _, a := range card.Abilities() {
@@ -338,17 +399,71 @@ func expandNonXSpellMoves(p mage.Player, g *mage.Game, card mage.Card, xValue, m
 				}
 			}
 		}
+		targets := make([]uuid.UUID, 0, 1+len(additionalTargets))
+		targets = append(targets, tid)
+		targets = append(targets, additionalTargets...)
 		moves = append(moves, Move{
-			Type:      interactive.ActionCastSpell,
-			CardID:    card.ID(),
-			CardName:  card.Name(),
-			Targets:   []uuid.UUID{tid},
-			XValue:    xValue,
-			ModeIndex: modeIndex,
-			heuristic: h,
+			Type:       interactive.ActionCastSpell,
+			CardID:     card.ID(),
+			CardName:   card.Name(),
+			Targets:    targets,
+			IsTactical: tactical,
+			XValue:     xValue,
+			ModeIndex:  modeIndex,
+			heuristic:  h,
 		})
 	}
 	return moves
+}
+
+// pickAdditionalTargets selects the best target for each target requirement
+// beyond the first. For detriment spells, it picks the best opponent creature;
+// for benefit spells, it picks the best own creature. Falls back to the first
+// available candidate.
+func pickAdditionalTargets(g *mage.Game, playerID uuid.UUID, card mage.Card, reqs []mage.Target, outcome mage.Outcome) []uuid.UUID {
+	if len(reqs) == 0 {
+		return nil
+	}
+	result := make([]uuid.UUID, 0, len(reqs))
+	for _, req := range reqs {
+		possible := req.Possible(playerID, card, g)
+		if len(possible) == 0 {
+			continue
+		}
+		best := possible[0]
+		bestScore := -1
+		for _, id := range possible {
+			perm := g.FindPermanent(id)
+			if perm == nil {
+				continue
+			}
+			if !perm.HasType(core.TypeCreature) {
+				continue
+			}
+			score := eval.EvalCreature(perm)
+			switch outcome {
+			case mage.OutcomeDetriment:
+				// Pick the best opponent creature.
+				if perm.Controller != playerID && score > bestScore {
+					bestScore = score
+					best = id
+				}
+			case mage.OutcomeBenefit:
+				// Pick the best own creature.
+				if perm.Controller == playerID && score > bestScore {
+					bestScore = score
+					best = id
+				}
+			default:
+				if score > bestScore {
+					bestScore = score
+					best = id
+				}
+			}
+		}
+		result = append(result, best)
+	}
+	return result
 }
 
 // AutoSelectTargetsForSearch uses the same targeting logic as HeuristicStrategy.

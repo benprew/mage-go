@@ -32,6 +32,7 @@ const (
 	EvtBlockersDecl       // fired once after all blockers are declared
 	EvtEndOfCombat        // fired at the end of combat step, before combat groups reset
 	EvtBecameUntapped     // fired when a permanent becomes untapped
+	EvtMainPhase          // fired at the beginning of a main phase
 )
 
 // GameEvent carries data about a game event.

@@ -12,9 +12,11 @@ import (
 type lobbyState int
 
 const (
-	lobbyBrowsing   lobbyState = iota
-	lobbySelectDeck            // choosing a deck archetype
-	lobbyWaiting               // waiting for an opponent to join (pvp create)
+	lobbyBrowsing         lobbyState = iota
+	lobbySelectDeck                  // choosing a deck archetype
+	lobbySelectPersonality           // choosing AI personality (AI games only)
+	lobbySelectMode                  // choosing AI mode (heuristic/search/adaptive)
+	lobbyWaiting                     // waiting for an opponent to join (pvp create)
 )
 
 // matchReadyMsg is sent when a pvp opponent joins the slot.
@@ -40,6 +42,12 @@ type lobbyModel struct {
 	isAI       bool   // true if "A" was chosen
 	joinSlotID string // non-empty if joining an existing slot
 
+	// AI personality + mode selection state
+	personalityNames  []string
+	personalityCursor int
+	modeNames         []string
+	modeCursor        int
+
 	// Waiting state
 	slot *GameSlot // the created slot we're waiting in
 
@@ -49,11 +57,13 @@ type lobbyModel struct {
 
 func newLobbyModel(lobby *Lobby, username string) lobbyModel {
 	return lobbyModel{
-		lobby:      lobby,
-		username:   username,
-		state:      lobbyBrowsing,
-		archetypes: tui.Archetypes,
-		slots:      lobby.ListSlots(),
+		lobby:            lobby,
+		username:         username,
+		state:            lobbyBrowsing,
+		archetypes:       tui.Archetypes,
+		slots:            lobby.ListSlots(),
+		personalityNames: []string{"Aggro", "Control", "Midrange", "Tempo", "Burn"},
+		modeNames:        []string{"Heuristic (fast)", "Search (minimax)", "Adaptive (auto-switch)"},
 	}
 }
 
@@ -111,6 +121,10 @@ func (m lobbyModel) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.handleBrowsingKey(msg)
 	case lobbySelectDeck:
 		return m.handleDeckSelectKey(msg)
+	case lobbySelectPersonality:
+		return m.handlePersonalitySelectKey(msg)
+	case lobbySelectMode:
+		return m.handleModeSelectKey(msg)
 	case lobbyWaiting:
 		return m.handleWaitingKey(msg)
 	}
@@ -202,10 +216,11 @@ func (m lobbyModel) handleDeckSelectKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		sess := newPlayerSession(m.username, entries)
 
 		if m.isAI {
-			// Start AI game immediately
+			// Transition to personality selection.
 			m.session = sess
-			m.lobby.StartAIGame(sess)
-			return m, tea.Quit
+			m.state = lobbySelectPersonality
+			m.personalityCursor = 2 // default to Midrange
+			return m, nil
 		}
 
 		if m.joinSlotID != "" {
@@ -227,6 +242,68 @@ func (m lobbyModel) handleDeckSelectKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.session = sess
 		m.state = lobbyWaiting
 		return m, waitForMatchCmd(slot.ready)
+	}
+	return m, nil
+}
+
+func (m lobbyModel) handlePersonalitySelectKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "ctrl+c", "q":
+		return m, tea.Quit
+
+	case "esc":
+		m.state = lobbySelectDeck
+
+	case "up", "k":
+		if m.personalityCursor > 0 {
+			m.personalityCursor--
+		}
+
+	case "down", "j":
+		if m.personalityCursor < len(m.personalityNames)-1 {
+			m.personalityCursor++
+		}
+
+	case "enter":
+		if m.personalityCursor >= len(m.personalityNames) {
+			return m, nil
+		}
+		// Proceed to mode selection.
+		m.state = lobbySelectMode
+		m.modeCursor = 0
+		return m, nil
+	}
+	return m, nil
+}
+
+func (m lobbyModel) handleModeSelectKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "ctrl+c", "q":
+		return m, tea.Quit
+
+	case "esc":
+		m.state = lobbySelectPersonality
+
+	case "up", "k":
+		if m.modeCursor > 0 {
+			m.modeCursor--
+		}
+
+	case "down", "j":
+		if m.modeCursor < len(m.modeNames)-1 {
+			m.modeCursor++
+		}
+
+	case "enter":
+		if m.modeCursor >= len(m.modeNames) {
+			return m, nil
+		}
+		personality := m.personalityNames[m.personalityCursor]
+		// Map mode display names to internal mode names.
+		modeMap := map[int]string{0: "Heuristic", 1: "Search", 2: "Adaptive"}
+		mode := modeMap[m.modeCursor]
+		m.lobby.StartAIGame(m.session, personality, mode)
+		return m, tea.Quit
 	}
 	return m, nil
 }
@@ -256,6 +333,10 @@ func (m lobbyModel) View() string {
 		m.renderBrowsing(&b)
 	case lobbySelectDeck:
 		m.renderDeckSelect(&b)
+	case lobbySelectPersonality:
+		m.renderPersonalitySelect(&b)
+	case lobbySelectMode:
+		m.renderModeSelect(&b)
 	case lobbyWaiting:
 		m.renderWaiting(&b)
 	}
@@ -307,6 +388,30 @@ func (m lobbyModel) renderDeckSelect(b *strings.Builder) {
 			b.WriteString(fmt.Sprintf("> %s\n", arch.Name))
 		} else {
 			b.WriteString(fmt.Sprintf("  %s\n", arch.Name))
+		}
+	}
+	b.WriteString("\n  ↑/↓ navigate  enter to confirm  esc to go back\n")
+}
+
+func (m lobbyModel) renderPersonalitySelect(b *strings.Builder) {
+	b.WriteString("  Choose AI personality:\n\n")
+	for i, name := range m.personalityNames {
+		if i == m.personalityCursor {
+			b.WriteString(fmt.Sprintf("> %s\n", name))
+		} else {
+			b.WriteString(fmt.Sprintf("  %s\n", name))
+		}
+	}
+	b.WriteString("\n  ↑/↓ navigate  enter to confirm  esc to go back\n")
+}
+
+func (m lobbyModel) renderModeSelect(b *strings.Builder) {
+	b.WriteString(fmt.Sprintf("  AI: %s — Choose mode:\n\n", m.personalityNames[m.personalityCursor]))
+	for i, name := range m.modeNames {
+		if i == m.modeCursor {
+			b.WriteString(fmt.Sprintf("> %s\n", name))
+		} else {
+			b.WriteString(fmt.Sprintf("  %s\n", name))
 		}
 	}
 	b.WriteString("\n  ↑/↓ navigate  enter to confirm  esc to go back\n")

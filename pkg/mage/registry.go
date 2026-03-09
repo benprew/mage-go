@@ -64,3 +64,19 @@ func CreateCard(name string) (Card, error) {
 func CardRegistered(name string) bool {
 	return DefaultRegistry.CardRegistered(name)
 }
+
+// RegisteredCardNames returns a list of all registered card names.
+func RegisteredCardNames() []string {
+	return DefaultRegistry.RegisteredCardNames()
+}
+
+// RegisteredCardNames returns a list of all registered card names.
+func (r *Registry) RegisteredCardNames() []string {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	names := make([]string, 0, len(r.factories))
+	for name := range r.factories {
+		names = append(names, name)
+	}
+	return names
+}

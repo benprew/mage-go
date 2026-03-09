@@ -143,6 +143,6 @@ func ChooseModeForAI(modes []string, g *mage.Game, playerID uuid.UUID) int {
 
 // Ensure packages are used.
 var (
-	_ = eval.EvalCreature
+	_ = eval.EvalCreatureInGame
 	_ uuid.UUID
 )

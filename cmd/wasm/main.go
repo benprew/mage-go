@@ -46,8 +46,35 @@ func getCardList(this js.Value, args []js.Value) any {
 	return string(b)
 }
 
+// wasmPersonalities maps lowercase personality names to WeightedPersonality values.
+var wasmPersonalities = map[string]ai.WeightedPersonality{
+	"aggro":    ai.AggroWeighted,
+	"control":  ai.ControlWeighted,
+	"midrange": ai.MidrangeWeighted,
+	"tempo":    ai.TempoWeighted,
+	"burn":     ai.BurnWeighted,
+}
+
+// createWasmAI builds an AI player from personality and mode strings.
+func createWasmAI(name, personality, mode string) *ai.AIPlayer {
+	wp := ai.MidrangeWeighted
+	if w, ok := wasmPersonalities[personality]; ok {
+		wp = w
+	}
+	switch mode {
+	case "search":
+		return ai.NewSearchAI(name, ai.DefaultSearchConfig(), wp)
+	case "adaptive":
+		return ai.NewAdaptiveAI(name)
+	default:
+		return ai.NewWeightedAI(name, wp)
+	}
+}
+
 // startGame creates a new game with a human player vs AI and starts the game loop.
-// Arguments: deckJSON (string), onGameMsg (JS callback), onChoiceReq (JS callback)
+// Arguments: deckJSON (string), onGameMsg (JS callback), onChoiceReq (JS callback),
+//
+//	optionally: aiDeckJSON (string), aiPersonality (string), aiMode (string)
 func startGame(this js.Value, args []js.Value) any {
 	if len(args) < 3 {
 		return "error: need deckJSON, onGameMsg, onChoiceReq"
@@ -56,6 +83,20 @@ func startGame(this js.Value, args []js.Value) any {
 	deckJSON := args[0].String()
 	onGameMsg := args[1]
 	onChoiceReq := args[2]
+
+	// Optional: AI deck, personality, and mode.
+	var aiDeckJSON string
+	var aiPersonality string
+	var aiMode string
+	if len(args) > 3 && args[3].Type() == js.TypeString {
+		aiDeckJSON = args[3].String()
+	}
+	if len(args) > 4 && args[4].Type() == js.TypeString {
+		aiPersonality = args[4].String()
+	}
+	if len(args) > 5 && args[5].Type() == js.TypeString {
+		aiMode = args[5].String()
+	}
 
 	// Parse deck list: array of card names (one entry per copy).
 	var deckNames []string
@@ -74,7 +115,9 @@ func startGame(this js.Value, args []js.Value) any {
 	choiceResps := make(chan interactive.ChoiceResponse, 1)
 
 	human := interactive.NewHumanPlayerWithChannels("You", toTUI, fromTUI, choiceReqs, choiceResps)
-	aiPlayer := ai.NewAIPlayer("AI")
+
+	// Create AI with selected personality and mode.
+	aiPlayer := createWasmAI("AI", aiPersonality, aiMode)
 
 	// Build human deck.
 	humanDeck := buildDeck(deckNames, human.PlayerID())
@@ -82,24 +125,32 @@ func startGame(this js.Value, args []js.Value) any {
 		return "error: deck contains unknown cards"
 	}
 
-	// Build AI deck (default RB Burn).
-	aiDeckEntries := []struct {
-		Name  string
-		Count int
-	}{
-		{"Mountain", 8},
-		{"Swamp", 8},
-		{"Lightning Bolt", 4},
-		{"Terror", 4},
-		{"Black Knight", 4},
-		{"Ironclaw Orcs", 4},
-		{"Hill Giant", 4},
-		{"Hypnotic Specter", 4},
-	}
+	// Build AI deck from provided list or default RB Burn.
 	var aiDeckNames []string
-	for _, e := range aiDeckEntries {
-		for i := 0; i < e.Count; i++ {
-			aiDeckNames = append(aiDeckNames, e.Name)
+	if aiDeckJSON != "" {
+		if err := json.Unmarshal([]byte(aiDeckJSON), &aiDeckNames); err != nil {
+			return fmt.Sprintf("error: invalid AI deck JSON: %v", err)
+		}
+	}
+	if len(aiDeckNames) < 7 {
+		aiDeckEntries := []struct {
+			Name  string
+			Count int
+		}{
+			{"Mountain", 8},
+			{"Swamp", 8},
+			{"Lightning Bolt", 4},
+			{"Terror", 4},
+			{"Black Knight", 4},
+			{"Ironclaw Orcs", 4},
+			{"Hill Giant", 4},
+			{"Hypnotic Specter", 4},
+		}
+		aiDeckNames = nil
+		for _, e := range aiDeckEntries {
+			for i := 0; i < e.Count; i++ {
+				aiDeckNames = append(aiDeckNames, e.Name)
+			}
 		}
 	}
 	aiDeck := buildDeck(aiDeckNames, aiPlayer.PlayerID())

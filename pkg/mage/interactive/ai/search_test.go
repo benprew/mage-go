@@ -300,7 +300,7 @@ func TestCloneGameForSearch_PreservesLife(t *testing.T) {
 	pa.SetLife(15)
 	pb.SetLife(10)
 
-	clone := cloneGameForSearch(g)
+	clone := g.Clone()
 	clonePA := clone.GetPlayer(pa.PlayerID())
 	clonePB := clone.GetPlayer(pb.PlayerID())
 
@@ -316,7 +316,7 @@ func TestCloneGameForSearch_IndependentMutation(t *testing.T) {
 	g, pa, _ := makeGame()
 	pa.SetLife(20)
 
-	clone := cloneGameForSearch(g)
+	clone := g.Clone()
 	clonePA := clone.GetPlayer(pa.PlayerID())
 	clonePA.LoseLife(5)
 
@@ -335,7 +335,7 @@ func TestCloneGameForSearch_PreservesBattlefield(t *testing.T) {
 	c.Tapped = true
 	g.Battlefield = append(g.Battlefield, c)
 
-	clone := cloneGameForSearch(g)
+	clone := g.Clone()
 	if len(clone.Battlefield) != 1 {
 		t.Fatalf("clone battlefield should have 1 permanent, got %d", len(clone.Battlefield))
 	}
@@ -354,7 +354,7 @@ func TestCloneGameForSearch_PreservesHand(t *testing.T) {
 	card.SetOwner(pa.PlayerID())
 	pa.AddToHand(card)
 
-	clone := cloneGameForSearch(g)
+	clone := g.Clone()
 	clonePA := clone.GetPlayer(pa.PlayerID())
 	if len(clonePA.Hand()) != 1 {
 		t.Errorf("clone PA hand size = %d, want 1", len(clonePA.Hand()))
@@ -365,11 +365,13 @@ func TestCloneGameForSearch_PreservesHand(t *testing.T) {
 
 func TestApplyMoveToClone_LandPlay(t *testing.T) {
 	g, pa, _ := makeGame()
-	land := mage.NewLand("Forest")
+	g.Step = core.PrecombatMain
+	g.ActivePlayer = 0
+	land := mage.NewLand("Forest", mage.WithManaAbility(core.Green))
 	land.SetOwner(pa.PlayerID())
 	pa.AddToHand(land)
 
-	clone := cloneGameForSearch(g)
+	clone := g.Clone()
 
 	m := &Move{
 		Type:   interactive.ActionPlayLand,
@@ -398,12 +400,14 @@ func TestApplyMoveToClone_LandPlay(t *testing.T) {
 
 func TestApplyMoveToClone_CreatureCast(t *testing.T) {
 	g, pa, _ := makeGame()
+	g.Step = core.PrecombatMain
+	g.ActivePlayer = 0
 	creature := mage.NewCreature("Bear", "{1}{G}", 2, 2)
 	creature.SetOwner(pa.PlayerID())
 	pa.AddToHand(creature)
 	addLands(g, pa, "Forest", 2)
 
-	clone := cloneGameForSearch(g)
+	clone := g.Clone()
 
 	m := &Move{
 		Type:     interactive.ActionCastSpell,
@@ -430,6 +434,8 @@ func TestApplyMoveToClone_CreatureCast(t *testing.T) {
 
 func TestApplyMoveToClone_DamageSpell(t *testing.T) {
 	g, pa, pb := makeGame()
+	g.Step = core.PrecombatMain
+	g.ActivePlayer = 0
 	bolt := mage.NewInstant("Lightning Bolt", "{R}",
 		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 	)
@@ -437,7 +443,7 @@ func TestApplyMoveToClone_DamageSpell(t *testing.T) {
 	pa.AddToHand(bolt)
 	addLands(g, pa, "Mountain", 1)
 
-	clone := cloneGameForSearch(g)
+	clone := g.Clone()
 
 	m := &Move{
 		Type:     interactive.ActionCastSpell,
@@ -556,7 +562,7 @@ func TestGenerateBlockerSets_IncludesNoBlocks(t *testing.T) {
 // ── NewSearchAI Constructor ─────────────────────────────────────────────────
 
 func TestNewSearchAI_Constructor(t *testing.T) {
-	ai := NewSearchAI("SearchBot", DefaultSearchConfig(), MidrangePersonality)
+	ai := NewSearchAI("SearchBot", DefaultSearchConfig(), MidrangeWeighted)
 	if ai.Name() != "SearchBot" {
 		t.Errorf("name = %q, want SearchBot", ai.Name())
 	}
@@ -711,8 +717,10 @@ func TestXSpell_SearchPicksExactLethal(t *testing.T) {
 }
 
 func TestXSpell_ApplySpellCast_UsesXValue(t *testing.T) {
-	// Verify that applySpellCast uses m.XValue for X-cost damage.
+	// Verify that applyMoveToClone uses m.XValue for X-cost damage.
 	g, pa, pb := makeGame()
+	g.Step = core.PrecombatMain
+	g.ActivePlayer = 0
 	fireball := mage.NewSorcery("Fireball", "{X}{R}",
 		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.XValue())),
 	)
@@ -720,7 +728,7 @@ func TestXSpell_ApplySpellCast_UsesXValue(t *testing.T) {
 	pa.AddToHand(fireball)
 	addLands(g, pa, "Mountain", 4)
 
-	clone := cloneGameForSearch(g)
+	clone := g.Clone()
 	m := &Move{
 		Type:     interactive.ActionCastSpell,
 		CardID:   fireball.ID(),
@@ -758,6 +766,65 @@ func TestXSpell_NoVariantsIfCantAfford(t *testing.T) {
 	}
 }
 
+// ── History Heuristic ────────────────────────────────────────────────────────
+
+func TestSearch_HistoryHeuristicPersists(t *testing.T) {
+	// Verify that the history table is initialized and persists across calls.
+	g, pa, pb := makeGame()
+	pb.SetLife(15)
+
+	// Multiple spells to create branching that triggers cutoffs.
+	bolt := mage.NewInstant("Lightning Bolt", "{R}",
+		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+	)
+	bolt.SetOwner(pa.PlayerID())
+	pa.AddToHand(bolt)
+
+	creature := mage.NewCreature("Bear", "{1}{G}", 2, 2)
+	creature.SetOwner(pa.PlayerID())
+	pa.AddToHand(creature)
+
+	opp := makePerm("Ogre", "{2}{R}", 3, 3, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, opp)
+
+	addLands(g, pa, "Mountain", 2)
+	addLands(g, pa, "Forest", 2)
+	g.Step = core.PrecombatMain
+
+	strat := makeSearchAI(SearchConfig{MaxDepth: 4, MaxNodes: 5000, TimeLimit: 1 * time.Second})
+	_ = strat.PriorityAction(pa, g, 0, true)
+
+	// History should be initialized (even if no cutoffs occurred, the map exists).
+	if strat.history == nil {
+		t.Error("history heuristic should be initialized after search")
+	}
+}
+
+// ── Attacker Generation ──────────────────────────────────────────────────────
+
+func TestGenerateAttackerSets_IncludesAllButOne(t *testing.T) {
+	g, pa, _ := makeGame()
+	c1 := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
+	c2 := makePerm("Elf", "{G}", 1, 1, pa.PlayerID())
+	c3 := makePerm("Knight", "{1}{W}", 2, 2, pa.PlayerID())
+	g.Battlefield = append(g.Battlefield, c1, c2, c3)
+
+	sets := GenerateAttackerSets(g, pa.PlayerID())
+
+	// Should include all-but-one sets (3 of them for 3 creatures).
+	allButOneCount := 0
+	for _, set := range sets {
+		if len(set) == 2 {
+			allButOneCount++
+		}
+	}
+	if allButOneCount < 3 {
+		t.Errorf("expected at least 3 all-but-one sets for 3 creatures, got %d", allButOneCount)
+	}
+}
+
+// ── Benchmark ───────────────────────────────────────────────────────────────
+
 func BenchmarkSearch_TypicalBoard_Depth2(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		g, pa, pb := makeGame()
@@ -783,6 +850,138 @@ func BenchmarkSearch_TypicalBoard_Depth2(b *testing.B) {
 		config := SearchConfig{MaxDepth: 2, MaxNodes: 5000, TimeLimit: 500 * time.Millisecond}
 		strat := makeSearchAI(config)
 		strat.PriorityAction(pa, g, 0, true)
+	}
+}
+
+func BenchmarkSearch_TypicalBoard_Depth5(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		g, pa, pb := makeGame()
+		pa.SetLife(20)
+		pb.SetLife(15)
+
+		c1 := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
+		c2 := makePerm("Elf", "{G}", 1, 1, pa.PlayerID())
+		opp := makePerm("Ogre", "{2}{R}", 3, 3, pb.PlayerID())
+		g.Battlefield = append(g.Battlefield, c1, c2, opp)
+		addLands(g, pa, "Forest", 4)
+		addLands(g, pb, "Mountain", 3)
+
+		bolt := mage.NewInstant("Lightning Bolt", "{R}",
+			mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+		)
+		bolt.SetOwner(pa.PlayerID())
+		pa.AddToHand(bolt)
+
+		g.Step = core.PrecombatMain
+
+		config := SearchConfig{MaxDepth: 5, MaxNodes: 10000, TimeLimit: 500 * time.Millisecond}
+		strat := makeSearchAI(config)
+		strat.PriorityAction(pa, g, 0, true)
+	}
+}
+
+func BenchmarkSearch_Attackers(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		g, pa, pb := makeGame()
+		pa.SetLife(20)
+		pb.SetLife(10)
+
+		c1 := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
+		c2 := makePerm("Elf", "{G}", 1, 1, pa.PlayerID())
+		c3 := makePerm("Flyer", "{1}{U}", 2, 2, pa.PlayerID(), mage.WithKeyword(core.Flying))
+		opp1 := makePerm("Wall", "{1}{W}", 0, 4, pb.PlayerID())
+		opp2 := makePerm("Guard", "{2}{W}", 2, 3, pb.PlayerID())
+		g.Battlefield = append(g.Battlefield, c1, c2, c3, opp1, opp2)
+
+		g.Step = core.DeclareAttackers
+
+		config := SearchConfig{MaxDepth: 6, MaxNodes: 10000, TimeLimit: 1 * time.Second}
+		strat := makeSearchAI(config)
+		strat.Attackers(pa, g)
+	}
+}
+
+func BenchmarkSearch_Blockers(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		g, pa, pb := makeGame()
+		pa.SetLife(20)
+		pb.SetLife(15)
+
+		atk1 := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
+		atk2 := makePerm("Giant", "{3}{R}", 4, 4, pa.PlayerID())
+		blk1 := makePerm("Elf", "{G}", 1, 1, pb.PlayerID())
+		blk2 := makePerm("Guard", "{2}{W}", 2, 3, pb.PlayerID())
+		g.Battlefield = append(g.Battlefield, atk1, atk2, blk1, blk2)
+		g.Combat.AddAttacker(atk1.ID(), pb.PlayerID())
+		g.Combat.AddAttacker(atk2.ID(), pb.PlayerID())
+
+		config := SearchConfig{MaxDepth: 6, MaxNodes: 10000, TimeLimit: 1 * time.Second}
+		strat := makeSearchAI(config)
+		strat.Blockers(pb, g)
+	}
+}
+
+func BenchmarkSearch_LargeBoard_Depth6(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		g, pa, pb := makeGame()
+		pa.SetLife(20)
+		pb.SetLife(15)
+
+		// Larger board: 4 creatures each side
+		c1 := makePerm("Bear1", "{1}{G}", 2, 2, pa.PlayerID())
+		c2 := makePerm("Elf", "{G}", 1, 1, pa.PlayerID())
+		c3 := makePerm("Flyer", "{1}{U}", 2, 2, pa.PlayerID(), mage.WithKeyword(core.Flying))
+		c4 := makePerm("Knight", "{1}{W}", 2, 2, pa.PlayerID(), mage.WithKeyword(core.FirstStrike))
+		o1 := makePerm("Ogre", "{2}{R}", 3, 3, pb.PlayerID())
+		o2 := makePerm("Wall", "{1}{W}", 0, 4, pb.PlayerID(), mage.WithKeyword(core.Defender))
+		o3 := makePerm("Guard", "{2}{W}", 2, 3, pb.PlayerID())
+		o4 := makePerm("Bat", "{1}{B}", 1, 1, pb.PlayerID(), mage.WithKeyword(core.Flying))
+		g.Battlefield = append(g.Battlefield, c1, c2, c3, c4, o1, o2, o3, o4)
+		addLands(g, pa, "Forest", 4)
+		addLands(g, pa, "Mountain", 2)
+		addLands(g, pb, "Mountain", 3)
+		addLands(g, pb, "Swamp", 2)
+
+		bolt := mage.NewInstant("Lightning Bolt", "{R}",
+			mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+		)
+		bolt.SetOwner(pa.PlayerID())
+		pa.AddToHand(bolt)
+
+		creature := mage.NewCreature("Bear2", "{1}{G}", 2, 2)
+		creature.SetOwner(pa.PlayerID())
+		pa.AddToHand(creature)
+
+		g.Step = core.PrecombatMain
+
+		config := SearchConfig{MaxDepth: 6, MaxNodes: 15000, TimeLimit: 1 * time.Second}
+		strat := makeSearchAI(config)
+		strat.PriorityAction(pa, g, 0, true)
+	}
+}
+
+func BenchmarkSearch_Attackers_LargeBoard(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		g, pa, pb := makeGame()
+		pa.SetLife(20)
+		pb.SetLife(10)
+
+		// 5 attackers, 3 blockers
+		c1 := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
+		c2 := makePerm("Elf", "{G}", 1, 1, pa.PlayerID())
+		c3 := makePerm("Flyer", "{1}{U}", 2, 2, pa.PlayerID(), mage.WithKeyword(core.Flying))
+		c4 := makePerm("Knight", "{1}{W}", 2, 2, pa.PlayerID(), mage.WithKeyword(core.FirstStrike))
+		c5 := makePerm("Warrior", "{2}{R}", 3, 2, pa.PlayerID())
+		opp1 := makePerm("Wall", "{1}{W}", 0, 4, pb.PlayerID())
+		opp2 := makePerm("Guard", "{2}{W}", 2, 3, pb.PlayerID())
+		opp3 := makePerm("Soldier", "{W}", 1, 1, pb.PlayerID())
+		g.Battlefield = append(g.Battlefield, c1, c2, c3, c4, c5, opp1, opp2, opp3)
+
+		g.Step = core.DeclareAttackers
+
+		config := SearchConfig{MaxDepth: 6, MaxNodes: 15000, TimeLimit: 1 * time.Second}
+		strat := makeSearchAI(config)
+		strat.Attackers(pa, g)
 	}
 }
 

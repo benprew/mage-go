@@ -207,6 +207,8 @@ func TestSearchPlayer_ChoosePermanent_DestroyPicks_Highest(t *testing.T) {
 
 func TestApplySpellCast_LifeGain(t *testing.T) {
 	g, pa, _ := makeGame()
+	g.Step = core.PrecombatMain
+	g.ActivePlayer = 0
 	pa.SetLife(17)
 
 	lifeSpell := mage.NewSorcery("Healing Touch", "{W}",
@@ -216,7 +218,7 @@ func TestApplySpellCast_LifeGain(t *testing.T) {
 	pa.AddToHand(lifeSpell)
 	addLands(g, pa, "Plains", 1)
 
-	clone := cloneGameForSearch(g)
+	clone := g.Clone()
 	m := &Move{
 		Type:     interactive.ActionCastSpell,
 		CardID:   lifeSpell.ID(),
@@ -232,6 +234,8 @@ func TestApplySpellCast_LifeGain(t *testing.T) {
 
 func TestApplySpellCast_BuffEffect(t *testing.T) {
 	g, pa, _ := makeGame()
+	g.Step = core.PrecombatMain
+	g.ActivePlayer = 0
 
 	creature := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
 	g.Battlefield = append(g.Battlefield, creature)
@@ -243,7 +247,7 @@ func TestApplySpellCast_BuffEffect(t *testing.T) {
 	pa.AddToHand(buff)
 	addLands(g, pa, "Forest", 1)
 
-	clone := cloneGameForSearch(g)
+	clone := g.Clone()
 	m := &Move{
 		Type:     interactive.ActionCastSpell,
 		CardID:   buff.ID(),
@@ -265,13 +269,16 @@ func TestApplySpellCast_BuffEffect(t *testing.T) {
 
 func TestApplySpellCast_MultiEffect_DrawAndDamage(t *testing.T) {
 	g, pa, pb := makeGame()
+	g.Step = core.PrecombatMain
+	g.ActivePlayer = 0
 	pa.SetLife(20)
 	pb.SetLife(20)
 
+	// Use targeted damage + active player draw (untargeted draw goes to caster).
 	multiSpell := mage.NewSorcery("Arcane Blast", "{1}{R}",
 		mage.NewTargetedSpell(mage.TargetAnyTarget(),
 			mage.DealDamage(mage.Fixed(3)),
-			mage.DrawCards(mage.Fixed(2)),
+			mage.DrawCardsActivePlayer(mage.Fixed(2)),
 		),
 	)
 	multiSpell.SetOwner(pa.PlayerID())
@@ -285,7 +292,7 @@ func TestApplySpellCast_MultiEffect_DrawAndDamage(t *testing.T) {
 
 	addLands(g, pa, "Mountain", 2)
 
-	clone := cloneGameForSearch(g)
+	clone := g.Clone()
 	m := &Move{
 		Type:     interactive.ActionCastSpell,
 		CardID:   multiSpell.ID(),
@@ -307,6 +314,8 @@ func TestApplySpellCast_MultiEffect_DrawAndDamage(t *testing.T) {
 
 func TestApplySpellCast_BounceEffect(t *testing.T) {
 	g, pa, pb := makeGame()
+	g.Step = core.PrecombatMain
+	g.ActivePlayer = 0
 
 	target := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
 	g.Battlefield = append(g.Battlefield, target)
@@ -318,7 +327,7 @@ func TestApplySpellCast_BounceEffect(t *testing.T) {
 	pa.AddToHand(bounce)
 	addLands(g, pa, "Island", 1)
 
-	clone := cloneGameForSearch(g)
+	clone := g.Clone()
 	m := &Move{
 		Type:     interactive.ActionCastSpell,
 		CardID:   bounce.ID(),
@@ -335,6 +344,8 @@ func TestApplySpellCast_BounceEffect(t *testing.T) {
 
 func TestApplySpellCast_XSpellDamage(t *testing.T) {
 	g, pa, pb := makeGame()
+	g.Step = core.PrecombatMain
+	g.ActivePlayer = 0
 	pb.SetLife(20)
 
 	fireball := mage.NewSorcery("Fireball", "{X}{R}",
@@ -344,7 +355,7 @@ func TestApplySpellCast_XSpellDamage(t *testing.T) {
 	pa.AddToHand(fireball)
 	addLands(g, pa, "Mountain", 5)
 
-	clone := cloneGameForSearch(g)
+	clone := g.Clone()
 	m := &Move{
 		Type:     interactive.ActionCastSpell,
 		CardID:   fireball.ID(),

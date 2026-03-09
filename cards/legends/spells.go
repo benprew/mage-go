@@ -365,7 +365,7 @@ func registerSpells() {
 // Falling Star {2}{R}
 // Sorcery
 // Flip Falling Star onto the playing area from a height of at least one foot. Falling Star deals 3 damage to each creature it lands on. Tap all creatures dealt damage by Falling Star. If Falling Star doesn't turn completely over at least once during the flip, it has no effect.
-// XXX: physical dexterity card — cannot be implemented in a digital engine
+// UNIMPLEMENTABLE: Physical dexterity card — requires flipping a physical card onto the play area.
 	Register("Falling Star", func() Card {
 		return NewSorcery("Falling Star", "{2}{R}",
 			NewSpellAbility(),
@@ -1040,7 +1040,7 @@ func registerSpells() {
 // Sorcery
 // Remove this card from your deck before playing if you're not playing for ante.
 // Each player may ante the top card of their library. If a player does, that player's life total becomes 20.
-// XXX: ante card — cannot be implemented in a non-ante game
+// UNIMPLEMENTABLE: Ante mechanic — requires ante zone and permanent ownership changes.
 	Register("Rebirth", func() Card {
 		return NewSorcery("Rebirth", "{3}{G}{G}{G}",
 			NewSpellAbility(),

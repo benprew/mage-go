@@ -131,13 +131,38 @@ func (l *Lobby) removeSlot(slot *GameSlot) {
 	}
 }
 
+// weightedPersonalities maps personality names to WeightedPersonality values.
+var weightedPersonalities = map[string]ai.WeightedPersonality{
+	"Aggro":    ai.AggroWeighted,
+	"Control":  ai.ControlWeighted,
+	"Midrange": ai.MidrangeWeighted,
+	"Tempo":    ai.TempoWeighted,
+	"Burn":     ai.BurnWeighted,
+}
+
+// createAIPlayer builds an AI player from a personality name and mode name.
+func createAIPlayer(name, personality, mode string) *ai.AIPlayer {
+	wp := ai.MidrangeWeighted
+	if w, ok := weightedPersonalities[personality]; ok {
+		wp = w
+	}
+	switch mode {
+	case "Search":
+		return ai.NewSearchAI(name, ai.DefaultSearchConfig(), wp)
+	case "Adaptive":
+		return ai.NewAdaptiveAI(name)
+	default:
+		return ai.NewWeightedAI(name, wp)
+	}
+}
+
 // StartAIGame starts a game for a single human player against the AI.
 // The game runs in a goroutine; the PlayerSession channels are wired to the
 // game loop immediately so the TUI can start as soon as startAIGame returns.
-func (l *Lobby) StartAIGame(sess *PlayerSession) {
+func (l *Lobby) StartAIGame(sess *PlayerSession, personality, mode string) {
 	go func() {
 		human := interactive.NewHumanPlayerWithChannels(sess.Name, sess.FromGame, sess.ToGame, sess.ChoiceReqs, sess.ChoiceResps)
-		aiPlayer := ai.NewAggroAI("AI")
+		aiPlayer := createAIPlayer("AI", personality, mode)
 
 		humanCards := tui.BuildDeck(sess.DeckEntries, human.PlayerID())
 		for _, c := range humanCards {

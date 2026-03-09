@@ -20,12 +20,86 @@ func NewSearchPlayer(bp *BasePlayer) *SearchPlayer {
 	return &SearchPlayer{BasePlayer: bp}
 }
 
-// ChooseTargets returns the first min valid targets (first-available default).
-func (sp *SearchPlayer) ChooseTargets(possible []uuid.UUID, min, max int, g *Game) []uuid.UUID {
-	if len(possible) >= min {
-		return possible[:min]
+// permanentValue scores a permanent for targeting priority. Higher = more valuable target.
+// Uses current P/T for creatures, CMC for everything else.
+func permanentValue(p *Permanent, g *Game) int {
+	if p.HasType(TypeCreature) {
+		return p.CurrentPower(g) + p.CurrentToughness(g)
 	}
-	return nil
+	return p.Card.ManaCost().CMC()
+}
+
+// ChooseTargets selects targets with context-aware heuristics:
+//   - Prefers opponent's permanents over own (most targeted spells are removal)
+//   - Among opponent permanents, prefers highest-value creatures
+//   - If targets include player IDs, prefers the opponent
+func (sp *SearchPlayer) ChooseTargets(possible []uuid.UUID, min, max int, g *Game) []uuid.UUID {
+	if len(possible) < min {
+		return nil
+	}
+
+	// If no game context, fall back to first-available.
+	if g == nil {
+		count := min
+		if count > len(possible) {
+			count = len(possible)
+		}
+		return possible[:count]
+	}
+
+	myID := sp.PlayerID()
+
+	// Partition targets into categories.
+	type scoredTarget struct {
+		id    uuid.UUID
+		score int // higher = prefer as target
+	}
+	scored := make([]scoredTarget, 0, len(possible))
+
+	for _, id := range possible {
+		if perm := g.FindPermanent(id); perm != nil {
+			val := permanentValue(perm, g)
+			if perm.Controller != myID {
+				// Opponent's permanent: high priority (removal heuristic).
+				scored = append(scored, scoredTarget{id, 1000 + val})
+			} else {
+				// Own permanent: low priority as a target.
+				scored = append(scored, scoredTarget{id, val})
+			}
+		} else if player := g.GetPlayer(id); player != nil {
+			if player.PlayerID() != myID {
+				// Opponent player: prefer targeting them.
+				scored = append(scored, scoredTarget{id, 2000})
+			} else {
+				// Self: avoid targeting.
+				scored = append(scored, scoredTarget{id, 0})
+			}
+		} else {
+			// Unknown target (e.g., stack object): neutral priority.
+			scored = append(scored, scoredTarget{id, 500})
+		}
+	}
+
+	// Selection sort descending by score (possible list is small).
+	for i := 0; i < len(scored)-1; i++ {
+		maxIdx := i
+		for j := i + 1; j < len(scored); j++ {
+			if scored[j].score > scored[maxIdx].score {
+				maxIdx = j
+			}
+		}
+		scored[i], scored[maxIdx] = scored[maxIdx], scored[i]
+	}
+
+	count := min
+	if count > len(scored) {
+		count = len(scored)
+	}
+	result := make([]uuid.UUID, count)
+	for i := 0; i < count; i++ {
+		result[i] = scored[i].id
+	}
+	return result
 }
 
 // DeclareAttackers returns empty — search player does not attack by default.
@@ -53,8 +127,8 @@ func (sp *SearchPlayer) ChooseMode(modes []string, reason string) int {
 }
 
 // ChoosePermanent picks based on context:
-//   - "sacrifice": pick lowest-value permanent (by CMC)
-//   - "destroy": pick highest-value permanent (by CMC)
+//   - "sacrifice": pick lowest-value permanent (by P/T for creatures, CMC otherwise)
+//   - "destroy": pick highest-value permanent (by P/T for creatures, CMC otherwise)
 //   - default: first candidate
 func (sp *SearchPlayer) ChoosePermanent(candidates []*Permanent, reason string, g GameReader) *Permanent {
 	if len(candidates) == 0 {
@@ -62,32 +136,41 @@ func (sp *SearchPlayer) ChoosePermanent(candidates []*Permanent, reason string, 
 	}
 	lower := strings.ToLower(reason)
 	if strings.Contains(lower, "sacrifice") {
-		// Pick lowest-value: cheapest CMC
+		// Pick lowest-value permanent.
 		best := candidates[0]
-		bestCMC := best.Card.ManaCost().CMC()
+		bestVal := permValueForChoice(best, g)
 		for _, c := range candidates[1:] {
-			cmc := c.Card.ManaCost().CMC()
-			if cmc < bestCMC {
+			val := permValueForChoice(c, g)
+			if val < bestVal {
 				best = c
-				bestCMC = cmc
+				bestVal = val
 			}
 		}
 		return best
 	}
 	if strings.Contains(lower, "destroy") {
-		// Pick highest-value: most expensive CMC
+		// Pick highest-value permanent.
 		best := candidates[0]
-		bestCMC := best.Card.ManaCost().CMC()
+		bestVal := permValueForChoice(best, g)
 		for _, c := range candidates[1:] {
-			cmc := c.Card.ManaCost().CMC()
-			if cmc > bestCMC {
+			val := permValueForChoice(c, g)
+			if val > bestVal {
 				best = c
-				bestCMC = cmc
+				bestVal = val
 			}
 		}
 		return best
 	}
 	return candidates[0]
+}
+
+// permValueForChoice scores a permanent for sacrifice/destroy choices.
+// Uses current P/T for creatures (via GameReader), CMC for non-creatures.
+func permValueForChoice(p *Permanent, g GameReader) int {
+	if p.HasType(TypeCreature) {
+		return p.CurrentPower(g) + p.CurrentToughness(g)
+	}
+	return p.Card.ManaCost().CMC()
 }
 
 // ChooseCardsFromHand returns the cheapest cards (lowest CMC first).
@@ -137,12 +220,30 @@ func (sp *SearchPlayer) ChooseManaColor(reason string) Color {
 	return White
 }
 
-// ChooseCardFromLibrary returns the first candidate.
+// ChooseCardFromLibrary prefers non-land cards over lands (tutoring for spells
+// is usually more impactful). Among non-lands, picks the highest CMC card.
+// Among lands, picks the first available.
 func (sp *SearchPlayer) ChooseCardFromLibrary(candidates []Card, reason string, g GameReader) Card {
-	if len(candidates) > 0 {
-		return candidates[0]
+	if len(candidates) == 0 {
+		return nil
 	}
-	return nil
+
+	var bestNonLand Card
+	bestCMC := -1
+	for _, c := range candidates {
+		if !c.HasType(TypeLand) {
+			cmc := c.ManaCost().CMC()
+			if cmc > bestCMC {
+				bestNonLand = c
+				bestCMC = cmc
+			}
+		}
+	}
+	if bestNonLand != nil {
+		return bestNonLand
+	}
+	// All candidates are lands; return the first.
+	return candidates[0]
 }
 
 // ChooseNumber picks based on context:

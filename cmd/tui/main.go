@@ -15,16 +15,38 @@ import (
 )
 
 type aiPersonality struct {
-	Name   string
-	Create func(string) *ai.AIPlayer
+	Name string
+	WP   ai.WeightedPersonality
 }
 
 var personalities = []aiPersonality{
-	{"Aggro", func(n string) *ai.AIPlayer { return ai.NewWeightedAI(n, ai.AggroWeighted) }},
-	{"Control", func(n string) *ai.AIPlayer { return ai.NewWeightedAI(n, ai.ControlWeighted) }},
-	{"Midrange", func(n string) *ai.AIPlayer { return ai.NewWeightedAI(n, ai.MidrangeWeighted) }},
-	{"Tempo", func(n string) *ai.AIPlayer { return ai.NewWeightedAI(n, ai.TempoWeighted) }},
-	{"Burn", func(n string) *ai.AIPlayer { return ai.NewWeightedAI(n, ai.BurnWeighted) }},
+	{"Aggro", ai.AggroWeighted},
+	{"Control", ai.ControlWeighted},
+	{"Midrange", ai.MidrangeWeighted},
+	{"Tempo", ai.TempoWeighted},
+	{"Burn", ai.BurnWeighted},
+}
+
+type aiMode struct {
+	Name string
+}
+
+var modes = []aiMode{
+	{"Heuristic (fast)"},
+	{"Minimax Search (stronger, slower)"},
+	{"Adaptive (switches aggro/control)"},
+}
+
+func createAI(name string, persIdx, modeIdx int) *ai.AIPlayer {
+	wp := personalities[persIdx].WP
+	switch modeIdx {
+	case 1: // Search
+		return ai.NewSearchAI(name, ai.DefaultSearchConfig(), wp)
+	case 2: // Adaptive
+		return ai.NewAdaptiveAI(name)
+	default: // Heuristic
+		return ai.NewWeightedAI(name, wp)
+	}
 }
 
 func main() {
@@ -49,9 +71,16 @@ func main() {
 	}
 	aiPers := promptChoice("Personality", len(personalities))
 
+	// Pick AI mode
+	fmt.Println("\nChoose AI mode:")
+	for i, m := range modes {
+		fmt.Printf("  %d. %s\n", i+1, m.Name)
+	}
+	aiMode := promptChoice("Mode", len(modes))
+
 	// Create players
 	human := interactive.NewHumanPlayer("You")
-	aiPlayer := personalities[aiPers].Create("AI")
+	aiPlayer := createAI("AI", aiPers, aiMode)
 
 	// Build decks
 	humanCards := tui.BuildDeck(tui.Archetypes[humanDeck].Entries, human.PlayerID())

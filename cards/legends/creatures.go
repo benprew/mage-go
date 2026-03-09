@@ -1570,8 +1570,8 @@ func registerCreatures() {
 // 3/2
 // Flying
 // If this creature would die, return it to its owner's hand instead. Until that player's next turn, that player plays with that card revealed in their hand and can't play it.
-// XXX: Should be a replacement effect ("would die... instead") not a dies trigger. With current implementation, other dies triggers see this creature die before it returns to hand.
-// XXX: "plays with that card revealed and can't play it until next turn" restriction not enforced
+// XXX: Should be a replacement effect ("would die... instead") not a dies trigger. Requires engine support for "would be put into graveyard from battlefield" replacements that cover both destroy effects and lethal-damage state-based actions. With current implementation, other dies triggers incorrectly see this creature die before it returns to hand.
+// XXX: "plays with that card revealed and can't play it until next turn" restriction not enforced.
 	Register("Firestorm Phoenix", func() Card {
 		return NewCreature("Firestorm Phoenix", "{4}{R}{R}", 3, 2,
 			WithSubTypes("Phoenix"),
@@ -1817,7 +1817,7 @@ func registerCreatures() {
 // 3/3
 // Remove this card from your deck before playing if you're not playing for ante.
 // {T}, Sacrifice this creature: Target opponent may pay 10 life. If that player doesn't, they reveal a card at random from their hand. Exchange ownership of the revealed card and Tempest Efreet. Put the revealed card into your hand and Tempest Efreet from anywhere into that player's graveyard. This change in ownership is permanent.
-// XXX: ante card, not implementable
+// UNIMPLEMENTABLE: Ante mechanic — requires permanent ownership exchange between players.
 	Register("Tempest Efreet", func() Card {
 		return NewCreature("Tempest Efreet", "{1}{R}{R}{R}", 3, 3,
 			WithSubTypes("Efreet"),
@@ -2737,7 +2737,6 @@ func registerCreatures() {
 // Legendary Creature — Human Rogue
 // 3/5
 // {T}: Target player discards a card at random. Activate only during your turn.
-// XXX: "only during your turn" restriction is not enforced
 	Register("Gwendlyn Di Corci", func() Card {
 		return NewCreature("Gwendlyn Di Corci", "{U}{B}{B}{R}", 3, 5,
 			WithSubTypes("Human", "Rogue"),
@@ -2746,6 +2745,7 @@ func registerCreatures() {
 				DiscardRandom(1),
 				TapSourceCost(),
 				WithTarget(TargetPlayer()),
+				WithYourTurnOnly(),
 			),
 		)
 	})
