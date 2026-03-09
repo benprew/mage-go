@@ -1,0 +1,60 @@
+[
+  {
+    "name": "Fire // Ice",
+    "mana_cost": "",
+    "cmc": 4,
+    "type_line": "Instant // Instant",
+    "oracle_text": "",
+    "colors": [],
+    "color_identity": ["R", "U"],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "inv",
+    "set_name": "Invasion",
+    "collector_number": "295",
+    "artist": "Franz Vohwinkel",
+    "layout": "split",
+    "reserved": false,
+    "reprint": false,
+    "multiverse_ids": [27166],
+    "oracle_id": "aa1a5c7c-361a-4ccc-ae99-3d4b1f9baa3a",
+    "released_at": "2000-10-02",
+    "card_faces": [
+      {
+        "name": "Fire",
+        "mana_cost": "{1}{R}",
+        "type_line": "Instant",
+        "oracle_text": "Fire deals 2 damage divided as you choose among one or two targets.",
+        "colors": ["R"]
+      },
+      {
+        "name": "Ice",
+        "mana_cost": "{1}{U}",
+        "type_line": "Instant",
+        "oracle_text": "Tap target permanent.\nDraw a card.",
+        "colors": ["U"]
+      }
+    ]
+  },
+  {
+    "name": "Lightning Bolt",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Lightning Bolt deals 3 damage to any target.",
+    "colors": ["R"],
+    "color_identity": ["R"],
+    "keywords": [],
+    "rarity": "common",
+    "set": "inv",
+    "set_name": "Invasion",
+    "collector_number": "100",
+    "artist": "Christopher Rush",
+    "layout": "normal",
+    "reserved": false,
+    "reprint": true,
+    "multiverse_ids": [99999],
+    "oracle_id": "0cf21fad-ad0b-41e0-b7a3-3e0e3f452cf1",
+    "released_at": "2000-10-02"
+  }
+]
