@@ -82,10 +82,10 @@ func (s *SearchStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed
 	}
 
 	// Check if the best move is actually better than passing.
-	// Use strict less-than: neutral moves (same score) are worth taking
-	// since they develop the board even if the static eval doesn't see the benefit yet.
+	// Land plays and creature casts are always worth taking (develop the board
+	// even if the static eval doesn't capture the full long-term value).
 	passScore := s.eval(g, p.PlayerID())
-	if bestScore < passScore && bestMove.Type != ActionPlayLand {
+	if bestScore < passScore && bestMove.Type != ActionPlayLand && !bestMove.IsCreature {
 		return PriorityAction{Type: ActionPass}
 	}
 

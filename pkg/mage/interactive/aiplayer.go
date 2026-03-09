@@ -274,6 +274,12 @@ func (s *HeuristicStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPla
 			}
 		}
 
+		// Phase 5B: Smart hold-back heuristic. Compare holding mana for
+		// instants vs casting sorcery-speed spells.
+		if holdBackValue(p, g, s.weights()) > 0 {
+			return PriorityAction{Type: ActionPass}
+		}
+
 		// Phase 0C: Compute available mana and hand CMCs for curve awareness.
 		availMana := countAvailableMana(g, playerID)
 		cmcs := handCMCs(p.Hand())
@@ -309,9 +315,17 @@ func (s *HeuristicStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPla
 		return *action
 	}
 
-	// HoldInstants: at 1.0 always hold during main phase; at 0.0 never hold.
-	holdNow := mainPhase && s.weights().HoldInstants > 0.5
-	if !holdNow {
+	// Phase 5A: When not in main phase (opponent's turn, response window),
+	// evaluate whether to cast instants as responses.
+	if !mainPhase {
+		if response := s.evaluateResponse(p, g); response != nil {
+			return *response
+		}
+	}
+
+	// Instants during main phase: only cast if hold-back didn't trigger
+	// (holdBackValue returned 0 above) and we're not holding.
+	if mainPhase {
 		for _, card := range p.Hand() {
 			if !card.HasType(core.TypeInstant) {
 				continue
@@ -478,7 +492,7 @@ func (s *HeuristicStrategy) Attackers(p mage.Player, g *mage.Game) []uuid.UUID {
 		return lethal.LethalAttackers
 	}
 
-	// Phase 0B: Check race — if my clock < their clock, race aggressively.
+	// Phase 0B + 5E: Race-informed attack decisions.
 	race := CalculateRace(g, playerID)
 
 	var attackers []uuid.UUID
@@ -489,9 +503,12 @@ func (s *HeuristicStrategy) Attackers(p mage.Player, g *mage.Game) []uuid.UUID {
 		if !perm.CanDeclareAsAttacker(g) {
 			continue
 		}
-		if race.Racing && race.MyClock <= race.TheirClock {
-			// Racing favorably: attack aggressively
-			attackers = append(attackers, perm.ID())
+
+		// Phase 5E: Apply race-informed filter first
+		if race.Racing {
+			if raceInformedAttack(perm, g, opponentID, race) {
+				attackers = append(attackers, perm.ID())
+			}
 		} else if shouldAttack(perm, g, opponentID, s.weights().Aggression) {
 			attackers = append(attackers, perm.ID())
 		}
@@ -506,9 +523,8 @@ func (s *HeuristicStrategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAs
 	lethal := CalculateLethal(g, playerID)
 	theyHaveLethal := lethal.TheyHaveLethal
 
-	// Phase 0B: If racing favorably, only chump-block lethal.
+	// Phase 0B + 5E: Race-informed blocking decisions.
 	race := CalculateRace(g, playerID)
-	racingFavorably := race.Racing && race.MyClock < race.TheirClock
 
 	var assignments []mage.BlockAssignment
 
@@ -520,6 +536,11 @@ func (s *HeuristicStrategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAs
 		available = append(available, perm)
 	}
 
+	// Track which attackers we've already assigned a single blocker to
+	// (for gang block second pass)
+	singleBlockedAttackers := make(map[uuid.UUID]bool)
+
+	// First pass: single-blocker assignments
 	for _, group := range g.Combat.Groups {
 		if group.DefenderID != playerID {
 			continue
@@ -532,15 +553,20 @@ func (s *HeuristicStrategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAs
 
 		// When facing lethal, block everything we can (ignore power threshold)
 		if !theyHaveLethal {
-			// When racing favorably, skip blocking (only block lethal)
-			if racingFavorably {
-				continue
+			// Phase 5E: Race-informed blocking filter
+			if race.Racing && race.MyClock < race.TheirClock {
+				// Racing favorably: skip small attackers
+				me := g.GetPlayer(playerID)
+				if me != nil && atkPow*4 < me.Life() {
+					continue
+				}
 			}
 			if !shouldBlock(atkPow, g, p.PlayerID(), s.weights().BlockThreshold) {
 				continue
 			}
 		}
 
+		assigned := false
 		for i, blk := range available {
 			if blk == nil {
 				continue
@@ -561,7 +587,13 @@ func (s *HeuristicStrategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAs
 					AttackerID: atk.ID(),
 				})
 				available[i] = nil
+				assigned = true
 				break
+			}
+
+			// Phase 5E: Apply race-informed block check
+			if race.Racing && !raceInformedBlock(atk, blk, g, race) {
+				continue
 			}
 
 			if blkPow >= atkTough || atkPow >= 3 {
@@ -570,7 +602,64 @@ func (s *HeuristicStrategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAs
 					AttackerID: atk.ID(),
 				})
 				available[i] = nil
+				assigned = true
+				singleBlockedAttackers[atk.ID()] = true
 				break
+			}
+		}
+		_ = assigned
+	}
+
+	// Phase 5C: Second pass — gang blocks for unblocked attackers that
+	// no single blocker can kill.
+	for _, group := range g.Combat.Groups {
+		if group.DefenderID != playerID {
+			continue
+		}
+		atk := g.FindPermanent(group.AttackerID)
+		if atk == nil {
+			continue
+		}
+		// Skip already-blocked attackers
+		alreadyBlocked := false
+		for _, a := range assignments {
+			if a.AttackerID == atk.ID() {
+				alreadyBlocked = true
+				break
+			}
+		}
+		if alreadyBlocked {
+			continue
+		}
+
+		// Skip if a single blocker can kill it (first pass should have handled it)
+		if canSingleBlockKill(atk, available, g) {
+			continue
+		}
+
+		// Skip if landwalk evasion
+		if mage.HasLandwalkEvasion(atk, playerID, g) {
+			continue
+		}
+
+		// Try to find a gang block
+		gangBlockers := findGangBlocks(atk, available, g, playerID, theyHaveLethal)
+		if gangBlockers == nil {
+			continue
+		}
+
+		// Apply the gang block
+		for _, blk := range gangBlockers {
+			assignments = append(assignments, mage.BlockAssignment{
+				BlockerID:  blk.ID(),
+				AttackerID: atk.ID(),
+			})
+			// Mark blockers as used
+			for i, a := range available {
+				if a != nil && a.ID() == blk.ID() {
+					available[i] = nil
+					break
+				}
 			}
 		}
 	}

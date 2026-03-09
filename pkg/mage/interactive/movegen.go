@@ -19,6 +19,8 @@ type Move struct {
 	AbilityIndex int
 	Attackers    []uuid.UUID
 
+	// IsCreature marks this move as a creature cast (always worth taking).
+	IsCreature bool
 	// heuristic is a pre-computed score used for move ordering (higher = search first).
 	heuristic int
 }
@@ -86,7 +88,7 @@ func GeneratePriorityMoves(g *mage.Game, p mage.Player, landsPlayed int, mainPha
 
 	// Activated abilities (only those scoring >= 3)
 	for _, info := range g.GetActivatableAbilities(playerID) {
-		q := abilityQuality(g, info)
+		q := abilityQualityFromInfo(g, info)
 		if q < 3 {
 			continue
 		}
@@ -165,9 +167,9 @@ func GenerateAttackerSets(g *mage.Game, playerID uuid.UUID) [][]uuid.UUID {
 	return sets
 }
 
-// abilityQuality scores an activated ability for move-generation filtering.
+// abilityQualityFromInfo scores an activated ability for move-generation filtering.
 // Returns a heuristic quality score; abilities scoring < 3 are pruned from search.
-func abilityQuality(g *mage.Game, info mage.ActivatableInfo) int {
+func abilityQualityFromInfo(g *mage.Game, info mage.ActivatableInfo) int {
 	perm := g.FindPermanent(info.PermanentID)
 	if perm == nil {
 		return 0
@@ -180,24 +182,7 @@ func abilityQuality(g *mage.Game, info mage.ActivatableInfo) int {
 	if !ok {
 		return 0
 	}
-
-	score := 0
-	for _, e := range aa.Effects() {
-		props := e.Properties()
-		if props.DrawCount > 0 {
-			score += props.DrawCount * 3
-		}
-		if props.DamageValue != nil {
-			score += 4
-		}
-		if props.Outcome == mage.OutcomeDetriment {
-			score += 3
-		}
-		if props.Outcome == mage.OutcomeBenefit {
-			score += 2
-		}
-	}
-	return score
+	return abilityQuality(aa)
 }
 
 // expandSpellMoves generates Move entries for a castable spell. For targeted
@@ -223,10 +208,11 @@ func expandSpellMoves(p mage.Player, g *mage.Game, card mage.Card) []Move {
 	// Untargeted spell: one move
 	if len(possibleTargets) == 0 {
 		return []Move{{
-			Type:      ActionCastSpell,
-			CardID:    card.ID(),
-			CardName:  card.Name(),
-			heuristic: sv,
+			Type:       ActionCastSpell,
+			CardID:     card.ID(),
+			CardName:   card.Name(),
+			IsCreature: card.HasType(core.TypeCreature),
+			heuristic:  sv,
 		}}
 	}
 
