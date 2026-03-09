@@ -705,21 +705,16 @@ Block pair restrictions (PreventBlockPair, IsBlockPrevented) and attr deltas
 
 # DamageSystem
 
-[DamageSystem] owns all damage-related transient state. Key methods:
+[DamageSystem] has been largely gutted — most damage-related mechanisms are now
+[ReplacementEffect] implementations in the replacement pipeline (see
+"Replacement Effect System" above). What remains on DamageSystem:
 
-  Regeneration:    AddRegenerationShield, ConsumeRegenerationShield, HasRegenerationShield
-  Prevention:      AddPreventionShield, PreventDamage, AddColorPrevention, AddTypePrevention
-  Prevention rules: AddDamagePreventionRule (with [WithFrom], [WithTo], [WithOneShot])
-  Redirection:     SetBodyguard, GetBodyguard, SetPlayerDamageRedirect,
-                   SetArtifactDamageRedirect, SetCreatureDamageRedirect
-  Combat damage:   SetPreventCombatDamage, PreventsCombatDamage
-  Forcefield:      SetForcefieldShield, HasForcefieldShield
-  Reverse damage:  SetReverseDamageShield, HasReverseDamageShield
-  Reflection:      SetDamageReflection, GetDamageReflection
-  Draw replacement: SetDrawReplacement, GetDrawReplacement
+  Reflection:  SetDamageReflection, GetDamageReflection  — Eye for an Eye (post-damage, not a replacement)
+  Legacy API:  AddDamagePreventionRule (with [WithFrom], [WithTo], [WithOneShot]) — delegates to EffectManager.AddCycleReplacement
+               AddRegenerationShield — delegates to EffectManager.AddReplacement
+               SetArtifactDamageRedirect — delegates to EffectManager.AddCycleReplacement
 
-Lifecycle: ResetPerCycle() clears per-Apply state. ClearEndOfTurn() clears
-shields and one-shot rules at end of turn.
+Lifecycle: ResetPerCycle() is now empty. ClearEndOfTurn() clears reflection only.
 
 # GameRules
 
@@ -796,6 +791,155 @@ GameMutator also includes proxy methods for the DamageSystem and GameRules
 subsystems, so card effects call e.g. g.SetPreventCombatDamage() or
 g.AddRegenerationShield(id) rather than reaching through g.Effects.Damage
 directly. The full list is in game_mutator.go.
+
+# Replacement Effect System
+
+The engine implements a generic replacement effect pipeline (MTG rule 614).
+When a game mutation is about to happen — damage, destruction, life gain, or
+card draw — it is wrapped in an [Action] struct and run through
+[EffectManager.ApplyReplacements] before executing. Each registered
+[ReplacementEffect] can match, modify, redirect, or fully prevent the action.
+
+## Action Types
+
+Five concrete action types represent pending mutations:
+
+	[*DamageToPlayerAction]    — damage about to be dealt to a player
+	[*DamageToCreatureAction]  — damage about to be dealt to a creature
+	[*DestroyPermanentAction]  — a permanent about to be destroyed
+	[*LifeGainAction]          — a player about to gain life
+	[*DrawCardAction]          — a player about to draw a card
+
+All implement the [Action] interface (single method: ActionSource() uuid.UUID).
+Damage actions expose Amount(), IsCombatDamage(), PlayerID()/PermanentID(),
+and a WithAmount(int) copy method for partial prevention.
+
+## ReplacementEffect Interface
+
+	type ReplacementEffect interface {
+	    Matches(Action, GameReader) bool   // does this replacement apply?
+	    Replace(Action, GameMutator) Action // transform or prevent the action
+	    SourceID() uuid.UUID               // permanent/spell that created this
+	    IsActive(GameReader) bool          // still valid?
+	}
+
+Replace returns a modified action, a different action type (e.g., redirect
+damage from player to creature), or nil to fully prevent the mutation. The
+[replacementBase] struct provides a default SourceID implementation.
+
+## The ApplyReplacements Pipeline
+
+[EffectManager.ApplyReplacements](action, g) loops over all registered
+replacements. For each iteration it finds the first active, matching
+replacement that has not yet fired for this event, applies it, and restarts.
+Each replacement fires at most once per event (preventing infinite loops).
+When no more replacements match, the (possibly transformed) action executes.
+If any replacement returns nil, the action is fully prevented.
+
+## Two Replacement Lists
+
+The EffectManager holds two lists:
+
+	em.replacements       — persistent replacements (one-shot shields, turn-scoped)
+	em.cycleReplacements  — cleared each Apply() cycle, re-registered by continuous effects
+
+Persistent replacements are checked first. Use [EffectManager.AddReplacement]
+or [EffectManager.PrependReplacement] (inserts at front) for persistent ones.
+Use [EffectManager.AddCycleReplacement] for cycle-scoped ones.
+
+Continuous effects that need replacement behavior call AddCycleReplacement in
+their Apply function. The EffectManager clears cycleReplacements at the start
+of each Apply() cycle, so continuous effects re-register them every cycle.
+
+## Registration from Card Effects
+
+Card effects use GameMutator proxy methods which internally create and register
+the appropriate replacement:
+
+	g.AddPreventionShield(playerID, amount)    → preventionShieldReplacement
+	g.AddRegenerationShield(permID)            → regenerationReplacement
+	g.SetPreventCombatDamage()                 → fogReplacement
+	g.AddForcefieldShield(playerID)            → forcefieldReplacement
+	g.AddColorPrevention(playerID, color)      → colorPreventionReplacement
+	g.AddTypePrevention(playerID, cardType)    → typePreventionReplacement
+	g.AddReverseDamageShield(playerID)         → reverseDamageReplacement
+	g.SetCreatureDamageRedirect(cID, pID)      → creatureDamageRedirectReplacement
+	g.SetAttackerDamageRedirect(aID, absID)    → attackerDamageRedirectReplacement
+	g.SetSkipNextDraw(playerID)                → skipDrawReplacement
+	g.SetDrawReplacement(playerID, count)      → drawReplacementEffect
+	g.SetLichActive(playerID, sourceID)        → lichLifeGainReplacement
+	g.PreventAllDamageFrom(sourceID)           → damagePreventionRuleReplacement
+	g.SetMinimumLife(playerID)                 → minimumLifeReplacement (cycle)
+	g.SetArtifactDamageRedirect(ctrlID, pID)   → artifactDamageRedirectReplacement (cycle)
+
+For custom replacements, call [GameMutator.AddReplacementEffect](r) directly.
+
+## Built-In Replacement Implementations (17)
+
+All live in replacement.go:
+
+	regenerationReplacement            — replaces destruction with tap + remove damage
+	preventionShieldReplacement        — absorbs N damage then expires
+	fogReplacement                     — prevents all combat damage
+	forcefieldReplacement              — caps unblocked combat damage to 1
+	colorPreventionReplacement         — prevents damage from matching color source
+	typePreventionReplacement          — prevents damage from matching card type source
+	reverseDamageReplacement           — prevents damage and gains life instead
+	bodyguardReplacement               — redirects combat damage to bodyguard creature (cycle)
+	playerDamageRedirectReplacement    — redirects all damage to creature (cycle)
+	artifactDamageRedirectReplacement  — redirects artifact damage to creature (cycle)
+	creatureDamageRedirectReplacement  — redirects creature damage to player
+	attackerDamageRedirectReplacement  — redirects specific attacker damage to absorber
+	lichLifeGainReplacement            — replaces life gain with card draw
+	minimumLifeReplacement             — caps damage so life stays >= 1 (cycle)
+	skipDrawReplacement                — skips next normal draw
+	drawReplacementEffect              — Aladdin's Lamp draw replacement
+	damagePreventionRuleReplacement    — from/to PermanentFilter-based prevention (cycle)
+
+## Example: Custom Replacement on a Card
+
+	Register("Damage Halver", func() Card {
+	    return NewEnchantment("Damage Halver", "{2}{W}",
+	        WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield,
+	            func(g *Game, sourceID uuid.UUID) error {
+	                perm := g.FindPermanent(sourceID)
+	                if perm == nil { return nil }
+	                g.Effects.AddCycleReplacement(&halveDamageReplacement{
+	                    replacementBase: replacementBase{sourceID: sourceID},
+	                    playerID:        perm.Controller,
+	                })
+	                return nil
+	            })),
+	    )
+	})
+
+	type halveDamageReplacement struct {
+	    replacementBase
+	    playerID uuid.UUID
+	}
+	func (r *halveDamageReplacement) Matches(a Action, _ GameReader) bool {
+	    act, ok := a.(*DamageToPlayerAction)
+	    return ok && act.PlayerID() == r.playerID
+	}
+	func (r *halveDamageReplacement) Replace(a Action, _ GameMutator) Action {
+	    act := a.(*DamageToPlayerAction)
+	    return act.WithAmount(act.Amount() / 2)
+	}
+	func (r *halveDamageReplacement) IsActive(_ GameReader) bool { return true }
+
+## Mutation Method Integration
+
+The five Game methods that produce actions:
+
+	DealDamageToPlayer  — creates DamageToPlayerAction, runs pipeline, executes via executeDamageToPlayer
+	DealDamageToPermanent — creates DamageToCreatureAction, runs pipeline, executes via executeDamageToCreature
+	DestroyPermanent    — creates DestroyPermanentAction, runs pipeline, removes from battlefield if not replaced
+	PlayerGainLife      — creates LifeGainAction, runs pipeline, applies life gain if not replaced
+	doDrawNormalDraw    — creates DrawCardAction, runs pipeline, draws card if not replaced
+
+The executeAction dispatcher type-switches on the returned action and calls the
+appropriate executor. If a replacement changes action type (e.g., redirect
+DamageToPlayer to DamageToCreature), the dispatcher routes correctly.
 
 # Protection
 

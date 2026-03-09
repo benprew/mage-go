@@ -537,7 +537,11 @@ func BodyguardContinuous() ContinuousEffect {
 		if src == nil {
 			return nil
 		}
-		g.Effects.Damage.SetBodyguard(src.Controller, src.ID())
+		g.Effects.AddCycleReplacement(&bodyguardReplacement{
+			replacementBase: replacementBase{sourceID: sourceID},
+			controllerID:    src.Controller,
+			bodyguardPermID: src.ID(),
+		})
 		return nil
 	}, SourceUntapped)
 }
@@ -551,7 +555,11 @@ func PersonalIncarnationRedirect() ContinuousEffect {
 		if src == nil {
 			return nil
 		}
-		g.Effects.Damage.SetPlayerDamageRedirect(src.Controller, src.ID())
+		g.Effects.AddCycleReplacement(&playerDamageRedirectReplacement{
+			replacementBase: replacementBase{sourceID: sourceID},
+			controllerID:    src.Controller,
+			redirectPermID:  src.ID(),
+		})
 		return nil
 	})
 }
@@ -631,7 +639,11 @@ func (e *preventDamageRuleContinuous) IsActive(g *Game) bool {
 
 func (e *preventDamageRuleContinuous) Apply(g *Game) error {
 	toFilter := e.toFactory(e.sourceID)
-	g.Effects.Damage.AddDamagePreventionRule(WithFrom(e.from), WithTo(toFilter))
+	g.Effects.AddCycleReplacement(&damagePreventionRuleReplacement{
+		replacementBase: replacementBase{sourceID: e.sourceID},
+		from:            e.from,
+		to:              toFilter,
+	})
 	return nil
 }
 

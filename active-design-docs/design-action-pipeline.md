@@ -1,5 +1,25 @@
 # Design: Action Pipeline & Message-Passing Engine
 
+## Implementation Status
+
+| Phase | Status | Notes |
+|---|---|---|
+| Phase 1: Action type system | DONE | 5 action types: `DamageToPlayerAction`, `DamageToCreatureAction`, `DestroyPermanentAction`, `LifeGainAction`, `DrawCardAction` in `action.go`, `action_damage.go`, `action_destroy.go`, `action_life.go`, `action_draw.go` |
+| Phase 2: Pipeline core + replacement interface | DONE | `ReplacementEffect` interface in `action.go`, `ApplyReplacements` loop in `effect_manager.go`, two-list registration (persistent + cycle) |
+| Phase 3: GameMutator bridge | DONE | `DealDamageToPlayer`, `DealDamageToPermanent`, `DestroyPermanent`, `PlayerGainLife`, `doDrawNormalDraw` all create actions and run through pipeline. `executeAction` dispatcher routes by type. |
+| Phase 4: Migrate replacement effects | DONE | All 17 ad-hoc mechanisms migrated to `ReplacementEffect` implementations in `replacement.go`. DamageSystem gutted to ~140 lines (reflection only). |
+| Phase 5: Migrate effects to EffectContext | NOT YET | Effects still use `Apply(GameMutator, ...)` signature. No goroutine-per-effect or channel-based communication yet. |
+| Phase 6: Continuous effects in pipeline | NOT YET | Continuous effects still write directly to Permanent fields. No `CharacteristicAction` or `Emit` method yet. |
+
+### Deviations from Original Design
+
+- **Replace takes GameMutator, not GameReader.** The design doc specifies `Replace(Action, GameReader) Action`, but the implementation uses `Replace(Action, GameMutator) Action`. Some replacements (regeneration, Lich life gain, draw replacement) need to perform mutations during replacement (tap permanent, draw cards, choose from library).
+- **No ActionResult.** Effects do not receive results from mutations. The pipeline is synchronous and inline — mutations still happen imperatively via `GameMutator` methods that internally create actions and run the pipeline.
+- **No EffectContext / goroutines.** The pipeline runs synchronously in the calling goroutine. No channels or actor model yet.
+- **No GameLog / structured logging.** Actions are not logged. This is deferred to a future phase.
+- **Simplified action types.** Only 5 action types (damage-to-player, damage-to-creature, destroy, life-gain, draw) instead of the 12 category interfaces in the design. Zone changes, counters, tap state, characteristics, mana, tokens, combat, and game-rule mutations do not flow through the pipeline yet.
+- **Minimum life fallback.** Ali from Cairo's continuous effect sets a flag on GameRules directly (`g.Effects.Rules.SetMinimumLife`), and `executeDamageToPlayer` checks it as a fallback in addition to the replacement pipeline. This avoids requiring all continuous effects to use the proxy method.
+
 ## Motivation
 
 The engine currently has ~158 distinct mutation operations spread across

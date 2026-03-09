@@ -26,7 +26,9 @@ go vet ./...                               # vet
 
 ## Card Implementation Guide
 
-**Read `pkg/mage/doc.go` first.** It is the comprehensive reference for every engine subsystem: card constructors, effects (50+), targets, filters, costs, activated abilities, triggered abilities (20+ convenience constructors), continuous effects, the layer system, attrs, and the GameMutator API. It includes complete card examples.
+**Read `pkg/mage/doc.go` first.** It is the comprehensive reference for every engine subsystem: card constructors, effects (50+), targets, filters, costs, activated abilities, triggered abilities (20+ convenience constructors), continuous effects, the layer system, attrs, the replacement effect system, and the GameMutator API. It includes complete card examples.
+
+**Replacement effects**: Cards that prevent, redirect, or replace game actions (damage prevention, regeneration, Lich, etc.) use the `ReplacementEffect` pipeline. See the "Replacement Effect System" section in `doc.go` for the `Action` types, `ReplacementEffect` interface, the 17 built-in replacements, and how to implement custom ones. Most cards use the existing `GameMutator` proxy methods (`AddPreventionShield`, `AddRegenerationShield`, etc.) which create replacements internally.
 
 ## Set Implementation Toolkit
 

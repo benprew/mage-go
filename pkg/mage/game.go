@@ -113,6 +113,10 @@ type Game struct {
 
 	// Control flags
 	stopped bool
+
+	// resolvingCombatDamage is true while combat damage is being resolved.
+	// Used by the replacement pipeline to identify combat damage actions.
+	resolvingCombatDamage bool
 }
 
 // DelayedTrigger represents a one-shot triggered ability that fires when
@@ -268,6 +272,8 @@ func (g *Game) CountBattlefield(f PermanentFilter) int {
 }
 
 // FindCardAnywhere finds a card by ID anywhere in the game.
+// Also checks the currently resolving card (which may be in limbo between
+// stack pop and graveyard placement during resolution).
 func (g *Game) FindCardAnywhere(id uuid.UUID) Card {
 	for _, p := range g.Battlefield {
 		if p.ID() == id {
@@ -279,6 +285,10 @@ func (g *Game) FindCardAnywhere(id uuid.UUID) Card {
 		if obj.Card != nil && obj.Card.ID() == id {
 			return obj.Card
 		}
+	}
+	// Check the currently resolving card (popped from stack, not yet in graveyard)
+	if g.ResolvingCard != nil && g.ResolvingCard.ID() == id {
+		return g.ResolvingCard
 	}
 	for _, pl := range g.Players {
 		for _, c := range pl.Hand() {
@@ -559,13 +569,11 @@ func (g *Game) DestroyPermanent(perm *Permanent) {
 	if perm.HasKeyword(Indestructible) {
 		return
 	}
-	// Regeneration replaces destruction: tap, remove damage, remove from combat
-	if !perm.HasKeyword(CantRegenerate) && g.Effects.Damage.ConsumeRegenerationShield(perm.ID()) {
-		perm.Tapped = true
-		perm.Damage = 0
-		// Remove from combat if attacking/blocking
-		g.Combat.RemoveFromCombat(perm.ID())
-		return
+	// Run through the replacement pipeline (regeneration is now a replacement)
+	action := NewDestroyPermanentAction(uuid.Nil, perm.ID())
+	result := g.Effects.ApplyReplacements(action, g)
+	if result == nil {
+		return // regenerated or otherwise replaced
 	}
 	controller := perm.Controller
 	owner := perm.Card.Owner()
@@ -733,14 +741,15 @@ func (g *Game) PlayerGainLife(p Player, amount int) {
 	if amount <= 0 {
 		return
 	}
-	if g.Effects.Rules.IsLichActive(g, p.PlayerID()) {
-		// Lich replacement: draw cards instead of gaining life
-		for i := 0; i < amount; i++ {
-			g.PlayerDrawCard(p)
-		}
-		return
+	action := NewLifeGainAction(uuid.Nil, p.PlayerID(), amount)
+	result := g.Effects.ApplyReplacements(action, g)
+	if result == nil {
+		return // Lich or other replacement consumed it
 	}
-	p.GainLife(amount)
+	// If the result is still a LifeGainAction, gain the life
+	if lga, ok := result.(*LifeGainAction); ok {
+		p.GainLife(lga.Amount())
+	}
 }
 
 // sacrificePermanents sacrifices N nontoken permanents a player controls (for Lich).
@@ -841,64 +850,41 @@ func (g *Game) PlayerDrawCard(p Player) (Card, bool) {
 	return c, ok
 }
 
-// DealDamageToPlayer deals damage to a player.
+// DealDamageToPlayer deals damage to a player, running it through the replacement pipeline.
 func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
 	if amount <= 0 {
 		return
 	}
-	// Check source-based prevention rules (e.g. Lady Evangela, Horn of Deafening)
-	sourcePerm := g.FindPermanent(sourceID)
-	if g.Effects.Damage.CheckSourceOnlyPrevention(sourcePerm, g) {
+	action := NewDamageToPlayerAction(sourceID, p.PlayerID(), amount, g.resolvingCombatDamage)
+	result := g.Effects.ApplyReplacements(action, g)
+	if result == nil {
 		return
 	}
-	// Check color prevention (Circle of Protection)
-	sourceCard := g.findCardForDamageSource(sourceID)
-	if g.Effects.Damage.CheckColorPrevention(p.PlayerID(), sourceCard) {
-		return // all damage from this source prevented
+	g.executeAction(result)
+}
+
+// executeAction dispatches a post-replacement action to the appropriate executor.
+func (g *Game) executeAction(action Action) {
+	switch a := action.(type) {
+	case *DamageToPlayerAction:
+		g.executeDamageToPlayer(a)
+	case *DamageToCreatureAction:
+		g.executeDamageToCreature(a)
 	}
-	// Check type prevention (Circle of Protection: Artifacts)
-	if g.Effects.Damage.CheckTypePrevention(p.PlayerID(), sourceCard) {
-		return // all damage from this source prevented
-	}
-	// Apply damage prevention shield (also used for player)
-	if prevented := g.Effects.Damage.PreventDamage(p.PlayerID(), amount); prevented > 0 {
-		amount -= prevented
-		// If there's a "reverse damage" effect, gain life equal to prevented
-		if g.Effects.Damage.HasReverseDamageShield(p.PlayerID()) {
-			p.GainLife(prevented)
-			g.Effects.Damage.ClearReverseDamageShield(p.PlayerID())
-		}
-	}
-	if amount <= 0 {
+}
+
+// executeDamageToPlayer applies damage to a player after all replacements have been applied.
+func (g *Game) executeDamageToPlayer(a *DamageToPlayerAction) {
+	p := g.GetPlayer(a.PlayerID())
+	if p == nil {
 		return
 	}
-	// Shimian Night Stalker: redirect damage from a specific attacker to an absorber
-	if absorberID := g.Effects.Damage.GetAttackerDamageRedirect(sourceID); absorberID != uuid.Nil {
-		absorber := g.FindPermanent(absorberID)
-		if absorber != nil {
-			g.DealDamageToPermanent(absorber, amount, sourceID)
-			return
-		}
-	}
-	// Martyrs of Korlis: redirect artifact damage to creature
-	if sourceCard != nil && sourceCard.HasType(TypeArtifact) {
-		if redirectID := g.Effects.Damage.GetArtifactDamageRedirect(p.PlayerID()); redirectID != uuid.Nil {
-			redirectPerm := g.FindPermanent(redirectID)
-			if redirectPerm != nil {
-				g.DealDamageToPermanent(redirectPerm, amount, sourceID)
-				return
-			}
-		}
-	}
-	// Personal Incarnation: redirect all damage to the creature instead
-	if redirectID := g.Effects.Damage.GetPlayerDamageRedirect(p.PlayerID()); redirectID != uuid.Nil {
-		redirectPerm := g.FindPermanent(redirectID)
-		if redirectPerm != nil {
-			g.DealDamageToPermanent(redirectPerm, amount, sourceID)
-			return
-		}
-	}
-	// Minimum life floor (Ali from Cairo): cap damage so life doesn't go below 1
+	amount := a.Amount()
+	sourceID := a.ActionSource()
+
+	// Minimum life (Ali from Cairo): cap damage so life doesn't go below 1.
+	// This is checked here as a fallback for continuous effects that set the
+	// GameRules flag directly rather than registering a cycle replacement.
 	if g.Effects.Rules.IsMinimumLifeActive(p.PlayerID()) {
 		maxDamage := p.Life() - 1
 		if maxDamage < 0 {
@@ -911,6 +897,7 @@ func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
 			return
 		}
 	}
+
 	// Lich replacement: instead of losing life, sacrifice permanents
 	if g.Effects.Rules.IsLichActive(g, p.PlayerID()) {
 		g.sacrificePermanents(p.PlayerID(), amount)
@@ -919,6 +906,7 @@ func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
 	}
 	g.DamageTakenThisTurn[p.PlayerID()] += amount
 	// Track artifact damage separately (for Reverse Polarity)
+	sourceCard := g.findCardForDamageSource(sourceID)
 	if sourceCard != nil && sourceCard.HasType(TypeArtifact) {
 		g.ArtifactDamageTakenThisTurn[p.PlayerID()] += amount
 	}
@@ -927,7 +915,7 @@ func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
 		SourceID: sourceID,
 		TargetID: p.PlayerID(),
 		Amount:   amount,
-		Flag:     false, // not combat damage
+		Flag:     a.IsCombatDamage(),
 	})
 	// Lifelink
 	src := g.FindPermanent(sourceID)
@@ -941,14 +929,13 @@ func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
 	if src != nil && src.FaceDown {
 		g.turnFaceUp(src)
 	}
-	// Eye for an Eye: reflect damage to source's controller
+	// Eye for an Eye: reflect damage to source's controller (post-damage, stays inline)
 	if reflectEntry, ok := g.Effects.Damage.GetDamageReflection(p.PlayerID()); ok {
 		if reflectEntry.chosenSource == uuid.Nil || reflectEntry.chosenSource == sourceID {
 			g.Effects.Damage.ClearDamageReflection(p.PlayerID())
-			// Find the controller of the original damage source
-			sourceCard := g.findCardForDamageSource(sourceID)
-			if sourceCard != nil {
-				sourceOwner := sourceCard.Owner()
+			reflectSourceCard := g.findCardForDamageSource(sourceID)
+			if reflectSourceCard != nil {
+				sourceOwner := reflectSourceCard.Owner()
 				if sourceOwner != uuid.Nil {
 					ownerPlayer := g.GetPlayer(sourceOwner)
 					if ownerPlayer != nil {
@@ -960,40 +947,35 @@ func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
 	}
 }
 
-// DealDamageToPermanent deals damage to a permanent.
+// DealDamageToPermanent deals damage to a permanent, running it through the replacement pipeline.
 func (g *Game) DealDamageToPermanent(perm *Permanent, amount int, sourceID uuid.UUID) {
 	if amount <= 0 {
 		return
 	}
 
-	// Protection from source prevents all damage
+	// Protection from source prevents all damage (static ability, pre-pipeline)
 	sourceCard := g.FindCardAnywhere(sourceID)
 	if sourceCard != nil && perm.HasProtectionFrom(sourceCard) {
 		return
 	}
 
-	// if any damage prevention rule blocks this interaction, no damage done.
-	source := g.FindPermanent(sourceID)
-	if g.Effects.Damage.CheckDamagePreventionRules(source, perm, g) {
+	action := NewDamageToCreatureAction(sourceID, perm.ID(), amount, g.resolvingCombatDamage)
+	result := g.Effects.ApplyReplacements(action, g)
+	if result == nil {
 		return
 	}
+	g.executeAction(result)
+}
 
-	// Apply damage prevention shield
-	if prevented := g.Effects.Damage.PreventDamage(perm.ID(), amount); prevented > 0 {
-		amount -= prevented
-	}
-	if amount <= 0 {
+// executeDamageToCreature applies damage to a creature after all replacements have been applied.
+func (g *Game) executeDamageToCreature(a *DamageToCreatureAction) {
+	perm := g.FindPermanent(a.PermanentID())
+	if perm == nil {
 		return
 	}
-	// Jade Monolith: redirect creature damage to a player instead (one-shot)
-	if redirectPlayerID := g.Effects.Damage.GetCreatureDamageRedirect(perm.ID()); redirectPlayerID != uuid.Nil {
-		g.Effects.Damage.ClearCreatureDamageRedirect(perm.ID())
-		targetPlayer := g.GetPlayer(redirectPlayerID)
-		if targetPlayer != nil {
-			g.DealDamageToPlayer(targetPlayer, amount, sourceID)
-			return
-		}
-	}
+	amount := a.Amount()
+	sourceID := a.ActionSource()
+
 	perm.Damage += amount
 	// Track which sources dealt damage to this permanent
 	if g.DamageDealtBy[perm.ID()] == nil {
@@ -1851,9 +1833,13 @@ func (g *Game) RunStep(step PhaseStep) {
 		if !g.Combat.HasFirstStrikers(g) {
 			return // skip if no first strikers
 		}
+		g.resolvingCombatDamage = true
 		g.Combat.ResolveDamage(g, true)
+		g.resolvingCombatDamage = false
 	case CombatDamage:
+		g.resolvingCombatDamage = true
 		g.Combat.ResolveDamage(g, false)
+		g.resolvingCombatDamage = false
 	case EndCombat:
 		g.FireEvent(GameEvent{
 			Type:     EvtEndOfCombat,
@@ -1907,7 +1893,7 @@ func (g *Game) doEndStep() {
 
 func (g *Game) doUntap() {
 	active := g.ActivePlayerObj()
-	g.Effects.Damage.ClearRegenerationShields(active.PlayerID(), g)
+	g.Effects.ClearRegenerationReplacements(active.PlayerID(), g)
 	// Island Sanctuary: clear protection at the start of the player's turn
 	g.Effects.Rules.ClearSanctuary(active.PlayerID())
 
@@ -2021,16 +2007,11 @@ func (g *Game) doDrawNormalDraw() {
 		return
 	}
 
-	// Island Sanctuary: skip the normal draw if flagged
-	if g.Effects.Rules.ShouldSkipDraw(active.PlayerID()) {
-		return
-	}
-
-	// Aladdin's Lamp: replace draw with library peek + choice
-	if count, ok := g.Effects.Damage.GetDrawReplacement(active.PlayerID()); ok {
-		g.Effects.Damage.ClearDrawReplacement(active.PlayerID())
-		g.applyDrawReplacement(active, count)
-		return
+	// Run through replacement pipeline (skip draw, Aladdin's Lamp, etc.)
+	action := NewDrawCardAction(uuid.Nil, active.PlayerID(), true)
+	result := g.Effects.ApplyReplacements(action, g)
+	if result == nil {
+		return // draw was replaced (skip draw, Aladdin's Lamp, etc.)
 	}
 
 	g.PlayerDrawCard(active)
@@ -2250,6 +2231,7 @@ func (g *Game) doCleanupActions() bool {
 	}
 	// Remove end-of-turn effects and clear turn-scoped state
 	g.Effects.RemoveEndOfTurn()
+	g.Effects.ClearReplacementsEndOfTurn()
 	g.Effects.Damage.ClearEndOfTurn()
 	g.Effects.Rules.ClearEndOfTurn()
 	// Clear persistent delayed triggers (they only last "this turn")
