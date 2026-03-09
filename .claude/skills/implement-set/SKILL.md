@@ -222,17 +222,46 @@ Group cards into batches for `/implement-card`. Batching rules:
 
 Work through batches in tier order (1 → 2 → 3 → 4 → 5).
 
-For each batch, use the `/implement-card` skill:
+### Engine-first pipeline for Tier 4
+
+Before implementing Tier 4 card batches, run `/implement-engine` for each required engine feature. This is the orchestrator pattern — engine changes happen through a dedicated agent that only touches `pkg/mage/`, and card agents only touch `cards/`.
+
+For each Tier 4 engine feature group:
+
+1. **Run `/implement-engine`** with a description of the needed feature, the cards that need it, and the Oracle text driving the need:
+
+```
+/implement-engine Rampage N keyword — needed by Craw Giant ("Rampage 2") and Gabriel Angelfire ("Rampage 3"). Rampage N means "Whenever this creature becomes blocked, it gets +N/+N until end of turn for each creature blocking it beyond the first." See CR 702.22.
+```
+
+2. **Wait for `/implement-engine` to complete.** It will return an API summary (new constructors, attrs, etc.)
+
+3. **Then run `/implement-card`** for the cards that use the new feature, referencing the new API:
+
+```
+/implement-card Craw Giant, Gabriel Angelfire
+```
+
+The card agent will use the new API surface (e.g., `WithRampage(2)`) without needing to touch `pkg/mage/`.
+
+### Card batches (all tiers)
+
+For each card batch, use the `/implement-card` skill:
 
 ```
 /implement-card Card Name 1, Card Name 2, Card Name 3
 ```
 
+**If `/implement-card` returns an engine feature request** instead of completing (because it discovered an unanticipated engine gap):
+1. Run `/implement-engine` with the request details
+2. Resume `/implement-card` for the blocked cards
+
 **Parallelization guidance:**
 - Tier 1 batches can run in parallel using background agents since they don't interact
 - Tier 2 batches that touch different files (e.g., creatures vs. spells) can run in parallel
-- Tier 3+ batches should generally run sequentially since they may need engine changes that affect each other
-- Tier 4 batches MUST run sequentially — each may change the engine in ways that affect subsequent batches
+- Tier 3 batches should generally run sequentially since they may discover engine gaps
+- Tier 4: engine features run sequentially (each may affect subsequent features), but card batches that use *different* engine features can run in parallel after their engine feature is done
+- `/implement-engine` calls are ALWAYS sequential — engine changes must not race
 
 After each batch completes:
 - Verify `go test ./...` passes
@@ -268,7 +297,7 @@ Present a final summary to the user:
 1. **Always ask before proceeding past Step 5.** The user must approve the plan.
 2. **NEVER simplify card implementations.** Every condition, restriction, and edge case in Oracle text must be implemented exactly. Do not drop "nontoken" checks, skip targeting restrictions, approximate complex effects, or cut any corners. A simplified implementation is a wrong implementation — this is a rules engine and correctness is the entire point. If something can't be fully implemented, mark it `// XXX:` and ask the user. Never silently simplify.
 3. **Commit after each batch**, not at the end. This keeps commits focused and reviewable.
-4. **Engine changes get their own verification.** Always run `go test ./pkg/mage/...` after engine changes.
+4. **Engine changes go through `/implement-engine`.** Card agents (`/implement-card`) must NOT edit `pkg/mage/`. If a card agent returns an engine feature request, route it to `/implement-engine` before resuming card work.
 5. **Don't skip cards silently.** Every card in the set should be either implemented, partially implemented with XXX, or explicitly confirmed as out-of-scope by the user.
 6. **Use AskUserQuestion liberally.** When in doubt about categorization, scope, or implementation approach, ask.
 7. **Basic lands that are reprints** will be auto-skipped by genset (it detects already-registered names). Don't worry about these.

@@ -9,6 +9,10 @@ argument-hint: <card name(s)>
 
 You are implementing Magic: The Gathering cards for the mage-go engine. Follow TDD strictly.
 
+## Scope Boundary
+
+**You MUST only edit files in `cards/`.** Do NOT edit files in `pkg/mage/`, `pkg/mage/core/`, or any other engine directory. If you need an engine change, return a structured engine feature request (see Step 5) so the orchestrator or user can route it to `/implement-engine`.
+
 ## Arguments
 
 Card name(s) to implement: $ARGUMENTS
@@ -101,12 +105,33 @@ Now implement the card to make the tests pass:
 6. **Implement EVERY condition, restriction, and detail from the Oracle text.** Do NOT simplify. If Oracle says "nontoken," filter for nontoken. If Oracle says "you don't control," check controller. If Oracle says "with flying," filter for flying. A simplified implementation is a wrong implementation — this is a rules engine, not a shipped game. If something truly can't be implemented, mark it with `// XXX:` and ask the user.
 
 ### If new engine features are needed:
+
+**Do NOT edit `pkg/mage/` yourself.** Card agents must not modify engine code.
+
 1. First implement everything possible with existing features
 2. Run tests to see what passes and what still fails
-3. Then add the engine feature in `pkg/mage/`
-4. Write engine-level tests if the feature is general-purpose
-5. Run `go test ./pkg/mage/...` to verify engine tests pass
-6. Then complete the card implementation
+3. If a feature is missing from the engine, **stop and return a structured engine request**:
+
+```
+## Engine Feature Needed
+
+### What's missing
+[Describe the mechanic or capability the engine lacks]
+
+### Cards blocked
+[List the card(s) that need this feature]
+
+### Oracle text driving the need
+[Quote the exact Oracle text that requires this feature]
+
+### Suggested approach
+[Optional: how you think it could be implemented in pkg/mage/]
+```
+
+4. The orchestrator (`/implement-set`) or the user will route this to `/implement-engine`
+5. Once the engine feature is available, resume card implementation using the new API
+
+If you are invoked standalone (not from `/implement-set`), use **AskUserQuestion** to tell the user what engine work is needed and ask them to run `/implement-engine` first.
 
 ## Step 6: Verify All Tests Pass (GREEN)
 
