@@ -468,3 +468,486 @@ func TestAdaptiveStrategy_WeightedPresets(t *testing.T) {
 		t.Error("adaptive should use Defensive when behind")
 	}
 }
+
+// ── NewWeightedEvaluator (Phase 3: role-based) ─────────────────────────────
+
+func TestNewWeightedEvaluator_EmptyBoard(t *testing.T) {
+	g, pa, _ := makeGame()
+	eval := NewWeightedEvaluator(MidrangeWeighted)
+	got := eval(g, pa.PlayerID())
+	if got != 0 {
+		t.Errorf("NewWeightedEvaluator(empty) = %d, want 0", got)
+	}
+}
+
+func TestNewWeightedEvaluator_NilPlayer(t *testing.T) {
+	g, _, _ := makeGame()
+	eval := NewWeightedEvaluator(MidrangeWeighted)
+	got := eval(g, uuid.New())
+	if got != 0 {
+		t.Errorf("NewWeightedEvaluator(nil player) = %d, want 0", got)
+	}
+}
+
+func TestNewWeightedEvaluator_LifeAdvantage(t *testing.T) {
+	g, pa, pb := makeGame()
+	pa.SetLife(25)
+	pb.SetLife(15)
+	eval := NewWeightedEvaluator(MidrangeWeighted)
+	got := eval(g, pa.PlayerID())
+	// Life diff (10) * LifeWeight(2.0) = 20
+	if got < 15 {
+		t.Errorf("NewWeightedEvaluator(life advantage) = %d, want >= 15", got)
+	}
+}
+
+func TestNewWeightedEvaluator_AggroValuesCreatures(t *testing.T) {
+	g, pa, _ := makeGame()
+	perm := makePerm("Hill Giant", "{3}{R}", 3, 3, pa.PlayerID())
+	g.Battlefield = append(g.Battlefield, perm)
+
+	aggro := NewWeightedEvaluator(AggroWeighted)
+	control := NewWeightedEvaluator(ControlWeighted)
+
+	aggroScore := aggro(g, pa.PlayerID())
+	controlScore := control(g, pa.PlayerID())
+
+	if aggroScore <= controlScore {
+		t.Errorf("Aggro should value creatures more: aggro=%d, control=%d", aggroScore, controlScore)
+	}
+}
+
+func TestNewWeightedEvaluator_ControlValuesHand(t *testing.T) {
+	g, pa, _ := makeGame()
+	for i := 0; i < 5; i++ {
+		c := mage.NewInstant("Spell", "{1}{U}", mage.NewSpellAbility(mage.DrawCards(mage.Fixed(1))))
+		pa.AddToHand(c)
+	}
+
+	aggro := NewWeightedEvaluator(AggroWeighted)
+	control := NewWeightedEvaluator(ControlWeighted)
+
+	aggroScore := aggro(g, pa.PlayerID())
+	controlScore := control(g, pa.PlayerID())
+
+	if controlScore <= aggroScore {
+		t.Errorf("Control should value hand more: control=%d, aggro=%d", controlScore, aggroScore)
+	}
+}
+
+func TestNewWeightedEvaluator_TempoValuesUntappedMana(t *testing.T) {
+	g, pa, _ := makeGame()
+	for i := 0; i < 5; i++ {
+		land := mage.NewLand("Island")
+		land.SetOwner(pa.PlayerID())
+		lp := mage.NewPermanent(land, pa.PlayerID())
+		lp.RevokeBaseAttr(core.AttrSummonSick)
+		g.Battlefield = append(g.Battlefield, lp)
+	}
+
+	tempo := NewWeightedEvaluator(TempoWeighted)
+	aggro := NewWeightedEvaluator(AggroWeighted)
+
+	tempoScore := tempo(g, pa.PlayerID())
+	aggroScore := aggro(g, pa.PlayerID())
+
+	if tempoScore <= aggroScore {
+		t.Errorf("Tempo should value untapped mana more: tempo=%d, aggro=%d", tempoScore, aggroScore)
+	}
+}
+
+// ── Tempo Scoring (3A) ──────────────────────────────────────────────────────
+
+func TestCountUntappedManaSources_LandsOnly(t *testing.T) {
+	g, pa, _ := makeGame()
+	for i := 0; i < 3; i++ {
+		land := mage.NewLand("Forest")
+		land.SetOwner(pa.PlayerID())
+		lp := mage.NewPermanent(land, pa.PlayerID())
+		lp.RevokeBaseAttr(core.AttrSummonSick)
+		g.Battlefield = append(g.Battlefield, lp)
+	}
+	if got := countUntappedManaSources(g, pa.PlayerID()); got != 3 {
+		t.Errorf("countUntappedManaSources(3 lands) = %d, want 3", got)
+	}
+}
+
+func TestCountUntappedManaSources_IncludesManaCreatures(t *testing.T) {
+	g, pa, _ := makeGame()
+	land := mage.NewLand("Forest")
+	land.SetOwner(pa.PlayerID())
+	lp := mage.NewPermanent(land, pa.PlayerID())
+	lp.RevokeBaseAttr(core.AttrSummonSick)
+	g.Battlefield = append(g.Battlefield, lp)
+
+	elf := makePerm("Llanowar Elves", "{G}", 1, 1, pa.PlayerID(), mage.WithManaAbility(core.Green))
+	g.Battlefield = append(g.Battlefield, elf)
+
+	if got := countUntappedManaSources(g, pa.PlayerID()); got != 2 {
+		t.Errorf("countUntappedManaSources(land + elf) = %d, want 2", got)
+	}
+}
+
+func TestCountUntappedManaSources_ExcludesTapped(t *testing.T) {
+	g, pa, _ := makeGame()
+	land := mage.NewLand("Forest")
+	land.SetOwner(pa.PlayerID())
+	lp := mage.NewPermanent(land, pa.PlayerID())
+	lp.RevokeBaseAttr(core.AttrSummonSick)
+	lp.Tapped = true
+	g.Battlefield = append(g.Battlefield, lp)
+
+	if got := countUntappedManaSources(g, pa.PlayerID()); got != 0 {
+		t.Errorf("countUntappedManaSources(tapped land) = %d, want 0", got)
+	}
+}
+
+func TestCountUntappedManaSources_IncludesManaArtifacts(t *testing.T) {
+	g, pa, _ := makeGame()
+	art := mage.NewArtifact("Sol Ring", "{1}", mage.WithManaAbility(core.Colorless))
+	art.SetOwner(pa.PlayerID())
+	ap := mage.NewPermanent(art, pa.PlayerID())
+	ap.RevokeBaseAttr(core.AttrSummonSick)
+	g.Battlefield = append(g.Battlefield, ap)
+
+	if got := countUntappedManaSources(g, pa.PlayerID()); got != 1 {
+		t.Errorf("countUntappedManaSources(sol ring) = %d, want 1", got)
+	}
+}
+
+// ── Lethal-on-Board (3C) ────────────────────────────────────────────────────
+
+func TestLethalOnBoard_IHaveLethal(t *testing.T) {
+	g, pa, pb := makeGame()
+	pb.SetLife(5)
+	for i := 0; i < 2; i++ {
+		perm := makePerm("Giant", "{3}{R}", 3, 3, pa.PlayerID())
+		g.Battlefield = append(g.Battlefield, perm)
+	}
+	lethal := calculateLethalOnBoard(g, pa.PlayerID())
+	if lethal != LethalBonus {
+		t.Errorf("calculateLethalOnBoard(I have lethal) = %d, want %d", lethal, LethalBonus)
+	}
+}
+
+func TestLethalOnBoard_TheyHaveLethal(t *testing.T) {
+	g, pa, pb := makeGame()
+	pa.SetLife(3)
+	perm := makePerm("Giant", "{3}{R}", 4, 4, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, perm)
+
+	lethal := calculateLethalOnBoard(g, pa.PlayerID())
+	if lethal != -LethalBonus {
+		t.Errorf("calculateLethalOnBoard(they have lethal) = %d, want %d", lethal, -LethalBonus)
+	}
+}
+
+func TestLethalOnBoard_NoLethal(t *testing.T) {
+	g, pa, _ := makeGame()
+	perm := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
+	g.Battlefield = append(g.Battlefield, perm)
+
+	lethal := calculateLethalOnBoard(g, pa.PlayerID())
+	if lethal != 0 {
+		t.Errorf("calculateLethalOnBoard(no lethal) = %d, want 0", lethal)
+	}
+}
+
+func TestLethalOnBoard_TappedCreatureDoesntCount(t *testing.T) {
+	g, pa, pb := makeGame()
+	pb.SetLife(3)
+	perm := makePerm("Giant", "{3}{R}", 5, 5, pa.PlayerID())
+	perm.Tapped = true
+	g.Battlefield = append(g.Battlefield, perm)
+
+	lethal := calculateLethalOnBoard(g, pa.PlayerID())
+	if lethal != 0 {
+		t.Errorf("calculateLethalOnBoard(tapped 5/5 vs 3 life) = %d, want 0", lethal)
+	}
+}
+
+func TestLethalOnBoard_DefenderDoesntCount(t *testing.T) {
+	g, pa, pb := makeGame()
+	pb.SetLife(3)
+	perm := makePerm("Wall", "{1}{W}", 5, 5, pa.PlayerID(), mage.WithKeyword(core.Defender))
+	g.Battlefield = append(g.Battlefield, perm)
+
+	lethal := calculateLethalOnBoard(g, pa.PlayerID())
+	if lethal != 0 {
+		t.Errorf("calculateLethalOnBoard(defender) = %d, want 0", lethal)
+	}
+}
+
+func TestLethalOnBoard_SummonSickDoesntCount(t *testing.T) {
+	g, pa, pb := makeGame()
+	pb.SetLife(3)
+	card := mage.NewCreature("Giant", "{3}{R}", 5, 5)
+	card.SetOwner(pa.PlayerID())
+	perm := mage.NewPermanent(card, pa.PlayerID())
+	g.Battlefield = append(g.Battlefield, perm)
+
+	lethal := calculateLethalOnBoard(g, pa.PlayerID())
+	if lethal != 0 {
+		t.Errorf("calculateLethalOnBoard(summoning sick) = %d, want 0", lethal)
+	}
+}
+
+func TestLethalOnBoard_BothHaveLethal(t *testing.T) {
+	g, pa, pb := makeGame()
+	pa.SetLife(3)
+	pb.SetLife(3)
+	myGiant := makePerm("My Giant", "{3}{R}", 5, 5, pa.PlayerID())
+	theirGiant := makePerm("Their Giant", "{3}{R}", 5, 5, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, myGiant, theirGiant)
+
+	lethal := calculateLethalOnBoard(g, pa.PlayerID())
+	if lethal != 0 {
+		t.Errorf("calculateLethalOnBoard(both lethal) = %d, want 0", lethal)
+	}
+}
+
+// ── Hand Quality (3D) ───────────────────────────────────────────────────────
+
+func TestHandQuality_EmptyHand(t *testing.T) {
+	_, pa, _ := makeGame()
+	if got := handQuality(pa); got != 0 {
+		t.Errorf("handQuality(empty) = %d, want 0", got)
+	}
+}
+
+func TestHandQuality_AllLands(t *testing.T) {
+	_, pa, _ := makeGame()
+	for i := 0; i < 3; i++ {
+		land := mage.NewLand("Forest")
+		pa.AddToHand(land)
+	}
+	if got := handQuality(pa); got != 3 {
+		t.Errorf("handQuality(3 lands) = %d, want 3 (1 per land)", got)
+	}
+}
+
+func TestHandQuality_AllSpells(t *testing.T) {
+	_, pa, _ := makeGame()
+	for i := 0; i < 3; i++ {
+		spell := mage.NewInstant("Bolt", "{R}", mage.NewSpellAbility(mage.DealDamage(mage.Fixed(3))))
+		pa.AddToHand(spell)
+	}
+	if got := handQuality(pa); got != 6 {
+		t.Errorf("handQuality(3 spells) = %d, want 6 (2 per spell)", got)
+	}
+}
+
+func TestHandQuality_MixedHand(t *testing.T) {
+	_, pa, _ := makeGame()
+	land := mage.NewLand("Forest")
+	pa.AddToHand(land)
+	spell := mage.NewInstant("Bolt", "{R}", mage.NewSpellAbility(mage.DealDamage(mage.Fixed(3))))
+	pa.AddToHand(spell)
+	if got := handQuality(pa); got != 3 {
+		t.Errorf("handQuality(land + spell) = %d, want 3", got)
+	}
+}
+
+func TestHandQuality_SpellsWorthMoreThanLands(t *testing.T) {
+	_, spellPlayer, _ := makeGame()
+	_, landPlayer, _ := makeGame()
+
+	for i := 0; i < 4; i++ {
+		spell := mage.NewInstant("Spell", "{1}{U}", mage.NewSpellAbility(mage.DrawCards(mage.Fixed(1))))
+		spellPlayer.AddToHand(spell)
+	}
+	for i := 0; i < 4; i++ {
+		land := mage.NewLand("Island")
+		landPlayer.AddToHand(land)
+	}
+
+	spellQ := handQuality(spellPlayer)
+	landQ := handQuality(landPlayer)
+
+	if spellQ <= landQ {
+		t.Errorf("Spells hand (%d) should be worth more than lands hand (%d)", spellQ, landQ)
+	}
+}
+
+// ── Ability Quality (3E) ────────────────────────────────────────────────────
+
+func TestAbilityQuality_TapToDealDamage(t *testing.T) {
+	ab := mage.NewActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.TapSourceCost(),
+		mage.WithTarget(mage.TargetAnyTarget()))
+	got := abilityQuality(ab)
+	if got != 4 {
+		t.Errorf("abilityQuality(tap to ping) = %d, want 4", got)
+	}
+}
+
+func TestAbilityQuality_TapToDraw(t *testing.T) {
+	ab := mage.NewActivatedAbility(mage.DrawCards(mage.Fixed(1)), mage.TapSourceCost())
+	got := abilityQuality(ab)
+	if got != 5 {
+		t.Errorf("abilityQuality(tap to draw) = %d, want 5", got)
+	}
+}
+
+func TestAbilityQuality_ExpensiveDraw(t *testing.T) {
+	ab := mage.NewActivatedAbility(mage.DrawCards(mage.Fixed(1)), mage.ManaCostOf("{3}{U}"),
+		mage.WithCost(mage.TapSourceCost()))
+	got := abilityQuality(ab)
+	if got != 3 {
+		t.Errorf("abilityQuality(expensive draw) = %d, want 3", got)
+	}
+}
+
+func TestAbilityQuality_ExpensivePump(t *testing.T) {
+	ab := mage.NewActivatedAbility(
+		mage.FuncEffect("pump", mage.EffectProperties{Outcome: mage.OutcomeBenefit},
+			func(g mage.GameMutator, s, c uuid.UUID, t []uuid.UUID) error { return nil }),
+		mage.ManaCostOf("{5}"),
+	)
+	got := abilityQuality(ab)
+	if got != 1 {
+		t.Errorf("abilityQuality(expensive pump) = %d, want 1", got)
+	}
+}
+
+func TestAbilityQuality_CheapBenefit(t *testing.T) {
+	ab := mage.NewActivatedAbility(
+		mage.FuncEffect("buff", mage.EffectProperties{Outcome: mage.OutcomeBenefit},
+			func(g mage.GameMutator, s, c uuid.UUID, t []uuid.UUID) error { return nil }),
+		mage.ManaCostOf("{1}"),
+	)
+	got := abilityQuality(ab)
+	if got != 2 {
+		t.Errorf("abilityQuality(cheap benefit) = %d, want 2", got)
+	}
+}
+
+func TestAbilityQuality_FreeTapAbility(t *testing.T) {
+	ab := mage.NewActivatedAbility(
+		mage.FuncEffect("tap effect", mage.EffectProperties{},
+			func(g mage.GameMutator, s, c uuid.UUID, t []uuid.UUID) error { return nil }),
+		mage.TapSourceCost(),
+	)
+	got := abilityQuality(ab)
+	if got != 2 {
+		t.Errorf("abilityQuality(free tap) = %d, want 2", got)
+	}
+}
+
+func TestAbilityQuality_PingerBeatsPump(t *testing.T) {
+	pinger := mage.NewActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.TapSourceCost(),
+		mage.WithTarget(mage.TargetAnyTarget()))
+	pump := mage.NewActivatedAbility(
+		mage.FuncEffect("pump", mage.EffectProperties{Outcome: mage.OutcomeBenefit},
+			func(g mage.GameMutator, s, c uuid.UUID, t []uuid.UUID) error { return nil }),
+		mage.ManaCostOf("{5}"),
+	)
+
+	pingerQ := abilityQuality(pinger)
+	pumpQ := abilityQuality(pump)
+
+	if pingerQ <= pumpQ {
+		t.Errorf("Pinger(%d) should beat expensive pump(%d)", pingerQ, pumpQ)
+	}
+}
+
+// ── evalCreature with ability quality (3E integration) ──────────────────────
+
+func TestEvalCreature_PingerVsVanilla(t *testing.T) {
+	pinger := makePerm("Prodigal Sorcerer", "{2}{U}", 1, 1, uuid.New(),
+		mage.WithActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.TapSourceCost(),
+			mage.WithTarget(mage.TargetAnyTarget())),
+	)
+	vanilla := makePerm("Bear", "{1}{G}", 1, 1, uuid.New())
+
+	pingerScore := evalCreature(pinger)
+	vanillaScore := evalCreature(vanilla)
+
+	if pingerScore <= vanillaScore {
+		t.Errorf("Pinger(%d) should score higher than vanilla 1/1(%d)", pingerScore, vanillaScore)
+	}
+	if pingerScore-vanillaScore < 3 {
+		t.Errorf("Pinger advantage(%d) should be at least 3", pingerScore-vanillaScore)
+	}
+}
+
+func TestEvalCreature_DrawCreatureVsVanilla(t *testing.T) {
+	drawer := makePerm("Draw Engine", "{2}{U}", 1, 1, uuid.New(),
+		mage.WithActivatedAbility(mage.DrawCards(mage.Fixed(1)), mage.TapSourceCost()),
+	)
+	vanilla := makePerm("Bear", "{1}{G}", 1, 1, uuid.New())
+
+	drawerScore := evalCreature(drawer)
+	vanillaScore := evalCreature(vanilla)
+
+	if drawerScore <= vanillaScore {
+		t.Errorf("Draw creature(%d) should score higher than vanilla(%d)", drawerScore, vanillaScore)
+	}
+	if drawerScore-vanillaScore < 4 {
+		t.Errorf("Draw creature advantage(%d) should be at least 4", drawerScore-vanillaScore)
+	}
+}
+
+// ── canPotentiallyAttack ────────────────────────────────────────────────────
+
+func TestCanPotentiallyAttack_Untapped(t *testing.T) {
+	perm := makePerm("Bear", "{1}{G}", 2, 2, uuid.New())
+	if !canPotentiallyAttack(perm) {
+		t.Error("canPotentiallyAttack should be true for untapped creature")
+	}
+}
+
+func TestCanPotentiallyAttack_Tapped(t *testing.T) {
+	perm := makePerm("Bear", "{1}{G}", 2, 2, uuid.New())
+	perm.Tapped = true
+	if canPotentiallyAttack(perm) {
+		t.Error("canPotentiallyAttack should be false for tapped creature")
+	}
+}
+
+func TestCanPotentiallyAttack_Defender(t *testing.T) {
+	perm := makePerm("Wall", "{1}{W}", 0, 5, uuid.New(), mage.WithKeyword(core.Defender))
+	if canPotentiallyAttack(perm) {
+		t.Error("canPotentiallyAttack should be false for defender")
+	}
+}
+
+// ── Default evaluator integration ───────────────────────────────────────────
+
+func TestDefaultEvaluator_LethalBonusIntegrated(t *testing.T) {
+	g, pa, pb := makeGame()
+	pb.SetLife(3)
+	perm := makePerm("Giant", "{3}{R}", 5, 5, pa.PlayerID())
+	g.Battlefield = append(g.Battlefield, perm)
+
+	score := defaultEvaluate(g, pa.PlayerID())
+	if score < LethalBonus {
+		t.Errorf("defaultEvaluate with lethal should include LethalBonus, got %d", score)
+	}
+}
+
+func TestDefaultEvaluator_UntappedManaSourcesIncludeManaCreatures(t *testing.T) {
+	g1, pa1, _ := makeGame()
+	g2, pa2, _ := makeGame()
+
+	land := mage.NewLand("Forest")
+	land.SetOwner(pa1.PlayerID())
+	lp := mage.NewPermanent(land, pa1.PlayerID())
+	lp.RevokeBaseAttr(core.AttrSummonSick)
+	g1.Battlefield = append(g1.Battlefield, lp)
+
+	land2 := mage.NewLand("Forest")
+	land2.SetOwner(pa2.PlayerID())
+	lp2 := mage.NewPermanent(land2, pa2.PlayerID())
+	lp2.RevokeBaseAttr(core.AttrSummonSick)
+	g2.Battlefield = append(g2.Battlefield, lp2)
+
+	elf := makePerm("Llanowar Elves", "{G}", 1, 1, pa2.PlayerID(), mage.WithManaAbility(core.Green))
+	g2.Battlefield = append(g2.Battlefield, elf)
+
+	score1 := defaultEvaluate(g1, pa1.PlayerID())
+	score2 := defaultEvaluate(g2, pa2.PlayerID())
+
+	if score2 <= score1 {
+		t.Errorf("Board with mana elf (%d) should score higher than land only (%d)", score2, score1)
+	}
+}

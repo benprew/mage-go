@@ -327,9 +327,9 @@ func TestDefaultEvaluate_LandAdvantage(t *testing.T) {
 	lp.RevokeBaseAttr(core.AttrSummonSick)
 	g.Battlefield = append(g.Battlefield, lp)
 	got := defaultEvaluate(g, pa.PlayerID())
-	// 1 land * LandWeight + 1 untapped land bonus = 1 + 1 = 2
-	if got != 2 {
-		t.Errorf("defaultEvaluate(land) = %d, want 2", got)
+	// 1 land * LandWeight(1) + 1 untapped mana source * 2 = 3
+	if got != 3 {
+		t.Errorf("defaultEvaluate(land) = %d, want 3", got)
 	}
 }
 
