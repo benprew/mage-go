@@ -143,13 +143,17 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 
 	case FirstStrikeDamage:
 		if g.Combat.HasFirstStrikers(g) {
+			g.resolvingCombatDamage = true
 			g.Combat.ResolveDamage(g, true)
+			g.resolvingCombatDamage = false
 			g.RunPriorityRound(false)
 		}
 
 	case CombatDamage:
 		if len(g.Combat.Groups) > 0 {
+			g.resolvingCombatDamage = true
 			g.Combat.ResolveDamage(g, false)
+			g.resolvingCombatDamage = false
 			g.RunPriorityRound(false)
 		}
 

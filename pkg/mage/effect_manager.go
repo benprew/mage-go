@@ -188,16 +188,20 @@ type EffectManager struct {
 	effects               []ContinuousEffect
 	attrDeltas            map[uuid.UUID]map[Attr]int        // deltas accumulated during Apply(); written to perm.grantedAttrs
 	blockPairRestrictions map[uuid.UUID]map[uuid.UUID]bool  // attacker -> set of blockers that can't block it; reset each Apply
+	replacements          []ReplacementEffect               // persistent: one-shot, turn-scoped, while-on-battlefield
+	cycleReplacements     []ReplacementEffect               // cleared each Apply() cycle, re-registered by continuous effects
 	Damage                *DamageSystem
 	Rules                 *GameRules
 }
 
 func NewEffectManager() *EffectManager {
-	return &EffectManager{
+	em := &EffectManager{
 		attrDeltas: make(map[uuid.UUID]map[Attr]int),
 		Damage:     NewDamageSystem(),
 		Rules:      NewGameRules(),
 	}
+	em.Damage.SetEffectManager(em)
+	return em
 }
 
 // GrantAttr records a positive delta for the given attr on the given permanent.
@@ -251,6 +255,7 @@ func (em *EffectManager) Remove(sourceID uuid.UUID) {
 		}
 	}
 	em.effects = filtered
+	em.RemoveReplacements(sourceID)
 }
 
 // RemoveEndOfTurn removes all effects with EndOfTurn duration.
@@ -279,6 +284,7 @@ func (em *EffectManager) RemoveEndOfCombat() {
 func (em *EffectManager) Apply(g *Game) {
 	em.attrDeltas = make(map[uuid.UUID]map[Attr]int)
 	em.blockPairRestrictions = nil
+	em.cycleReplacements = nil
 	em.Rules.ResetPerCycle()
 	em.Damage.ResetPerCycle()
 
@@ -342,6 +348,111 @@ func (em *EffectManager) Apply(g *Game) {
 	}
 }
 
+
+// ---------------------------------------------------------------------------
+// Replacement effect management
+// ---------------------------------------------------------------------------
+
+// AddReplacement adds a persistent replacement effect.
+func (em *EffectManager) AddReplacement(r ReplacementEffect) {
+	em.replacements = append(em.replacements, r)
+}
+
+// PrependReplacement adds a persistent replacement effect at the front of the list
+// so it is checked before any existing replacements.
+func (em *EffectManager) PrependReplacement(r ReplacementEffect) {
+	em.replacements = append([]ReplacementEffect{r}, em.replacements...)
+}
+
+// AddCycleReplacement adds a replacement that is cleared each Apply() cycle.
+// Used by continuous effects that re-register their replacements each cycle.
+func (em *EffectManager) AddCycleReplacement(r ReplacementEffect) {
+	em.cycleReplacements = append(em.cycleReplacements, r)
+}
+
+// RemoveReplacements removes all replacement effects with the given sourceID.
+func (em *EffectManager) RemoveReplacements(sourceID uuid.UUID) {
+	filtered := em.replacements[:0]
+	for _, r := range em.replacements {
+		if r.SourceID() != sourceID {
+			filtered = append(filtered, r)
+		}
+	}
+	em.replacements = filtered
+
+	filtered2 := em.cycleReplacements[:0]
+	for _, r := range em.cycleReplacements {
+		if r.SourceID() != sourceID {
+			filtered2 = append(filtered2, r)
+		}
+	}
+	em.cycleReplacements = filtered2
+}
+
+// ApplyReplacements runs the replacement pipeline on an action.
+// Returns nil if the action was fully prevented/replaced.
+// Each replacement fires at most once per event to prevent infinite loops.
+func (em *EffectManager) ApplyReplacements(action Action, g GameMutator) Action {
+	applied := make(map[ReplacementEffect]bool)
+	for {
+		if action == nil {
+			return nil
+		}
+		found := false
+		// Check both lists: persistent first, then cycle
+		for _, list := range [2][]ReplacementEffect{em.replacements, em.cycleReplacements} {
+			for _, r := range list {
+				if applied[r] {
+					continue
+				}
+				if !r.IsActive(g) {
+					continue
+				}
+				if r.Matches(action, g) {
+					applied[r] = true
+					action = r.Replace(action, g)
+					found = true
+					break // restart inner loop with new action
+				}
+			}
+			if found {
+				break
+			}
+		}
+		if !found {
+			break
+		}
+	}
+	return action
+}
+
+// ClearReplacementsEndOfTurn clears turn-scoped replacement effects.
+func (em *EffectManager) ClearReplacementsEndOfTurn() {
+	// Remove consumed one-shot replacements and turn-scoped ones
+	filtered := em.replacements[:0]
+	for _, r := range em.replacements {
+		if r.IsActive(nil) {
+			filtered = append(filtered, r)
+		}
+	}
+	em.replacements = filtered
+}
+
+// ClearRegenerationReplacements clears all regeneration replacements for permanents
+// controlled by the given player (called during untap step per MTG rules).
+func (em *EffectManager) ClearRegenerationReplacements(playerID uuid.UUID, g GameReader) {
+	filtered := em.replacements[:0]
+	for _, r := range em.replacements {
+		if regen, ok := r.(*regenerationReplacement); ok {
+			perm := g.FindPermanent(regen.permanentID)
+			if perm != nil && perm.Controller == playerID {
+				continue // remove this one
+			}
+		}
+		filtered = append(filtered, r)
+	}
+	em.replacements = filtered
+}
 
 // grantedByEffect is a marker wrapper to identify abilities granted by continuous effects.
 type grantedByEffect struct {

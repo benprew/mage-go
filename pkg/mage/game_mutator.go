@@ -115,6 +115,9 @@ type GameMutator interface {
 	// Mana payment
 	TryPayCostFromLands(playerID uuid.UUID, manaCostStr string) bool
 
+	// Replacement effects
+	AddReplacementEffect(ReplacementEffect)
+
 	// Spell casting (e.g. Shahrazad)
 	CastSpellByName(playerID uuid.UUID, name string, targets []uuid.UUID, xValues ...int) error
 }
@@ -214,22 +217,36 @@ func (g *Game) ApplyContinuousEffects() {
 
 // SetPreventCombatDamage flags that all combat damage is prevented this turn.
 func (g *Game) SetPreventCombatDamage() {
-	g.Effects.Damage.SetPreventCombatDamage()
+	g.Effects.AddReplacement(&fogReplacement{replacementBase: replacementBase{sourceID: uuid.Nil}})
 }
 
 // AddRegenerationShield adds a regeneration shield to the specified permanent.
 func (g *Game) AddRegenerationShield(id uuid.UUID) {
-	g.Effects.Damage.AddRegenerationShield(id)
+	// Find existing regeneration replacement for this permanent and increment
+	for _, r := range g.Effects.replacements {
+		if regen, ok := r.(*regenerationReplacement); ok && regen.permanentID == id {
+			regen.shields++
+			return
+		}
+	}
+	g.Effects.AddReplacement(&regenerationReplacement{permanentID: id, shields: 1})
 }
 
-// AddPreventionShield adds a damage prevention shield to the specified permanent.
+// AddPreventionShield adds a damage prevention shield to the specified permanent or player.
 func (g *Game) AddPreventionShield(id uuid.UUID, amount int) {
-	g.Effects.Damage.AddPreventionShield(id, amount)
+	// Find existing prevention shield for this target and add to it
+	for _, r := range g.Effects.replacements {
+		if ps, ok := r.(*preventionShieldReplacement); ok && ps.targetID == id {
+			ps.remaining += amount
+			return
+		}
+	}
+	g.Effects.AddReplacement(&preventionShieldReplacement{targetID: id, remaining: amount})
 }
 
 // AddForcefieldShield adds a Forcefield shield for the specified player.
 func (g *Game) AddForcefieldShield(id uuid.UUID) {
-	g.Effects.Damage.AddForcefieldShield(id)
+	g.Effects.AddReplacement(&forcefieldReplacement{playerID: id})
 }
 
 // IsLichActive reports whether the Lich enchantment is active for the player.
@@ -240,21 +257,32 @@ func (g *Game) IsLichActive(playerID uuid.UUID) bool {
 // SetLichActive marks the Lich enchantment as active for the player.
 func (g *Game) SetLichActive(playerID, sourceID uuid.UUID) {
 	g.Effects.Rules.SetLichActive(playerID, sourceID)
+	// Register the life-gain replacement (Lich: draw cards instead of gaining life)
+	g.Effects.AddReplacement(&lichLifeGainReplacement{
+		replacementBase: replacementBase{sourceID: sourceID},
+		playerID:        playerID,
+	})
 }
 
 // ClearLich removes the Lich enchantment state for the player.
 func (g *Game) ClearLich(playerID uuid.UUID) {
+	// Find and remove the Lich's source ID before clearing
+	if sourceID, ok := g.Effects.Rules.lichActive[playerID]; ok {
+		g.Effects.RemoveReplacements(sourceID)
+	}
 	g.Effects.Rules.ClearLich(playerID)
 }
 
 // AddColorPrevention adds a color-based damage prevention rule for the player.
 func (g *Game) AddColorPrevention(playerID uuid.UUID, color Color) {
-	g.Effects.Damage.AddColorPrevention(playerID, color)
+	g.Effects.AddReplacement(&colorPreventionReplacement{playerID: playerID, color: color})
 }
 
 // AddReverseDamageShield adds a reverse-damage shield for the player.
+// Prepended so it is checked before any prevention shields (which would
+// otherwise absorb the damage before the reverse replacement sees it).
 func (g *Game) AddReverseDamageShield(playerID uuid.UUID) {
-	g.Effects.Damage.AddReverseDamageShield(playerID)
+	g.Effects.PrependReplacement(&reverseDamageReplacement{playerID: playerID})
 }
 
 // SetChannelActive marks the Channel ability as active for the player.
@@ -264,18 +292,24 @@ func (g *Game) SetChannelActive(playerID uuid.UUID) {
 
 // SetCreatureDamageRedirect redirects damage dealt to a creature to a player.
 func (g *Game) SetCreatureDamageRedirect(creatureID, playerID uuid.UUID) {
-	g.Effects.Damage.SetCreatureDamageRedirect(creatureID, playerID)
+	g.Effects.AddReplacement(&creatureDamageRedirectReplacement{
+		creatureID:     creatureID,
+		targetPlayerID: playerID,
+	})
 }
 
 // SetAttackerDamageRedirect sets a redirect: damage from a specific attacking creature
 // to a player is dealt to the absorber permanent instead (Shimian Night Stalker).
 func (g *Game) SetAttackerDamageRedirect(attackerID, absorberID uuid.UUID) {
-	g.Effects.Damage.SetAttackerDamageRedirect(attackerID, absorberID)
+	g.Effects.AddReplacement(&attackerDamageRedirectReplacement{
+		attackerID:     attackerID,
+		absorberPermID: absorberID,
+	})
 }
 
 // SetSkipNextDraw sets a flag to skip the next draw step for the player.
 func (g *Game) SetSkipNextDraw(playerID uuid.UUID) {
-	g.Effects.Rules.SetSkipNextDraw(playerID)
+	g.Effects.AddReplacement(&skipDrawReplacement{playerID: playerID})
 }
 
 // SetSanctuaryActive marks the Ivory Tower sanctuary effect as active.
@@ -285,34 +319,45 @@ func (g *Game) SetSanctuaryActive(playerID uuid.UUID) {
 
 // SetMinimumLife marks a player as having minimum-life protection (Ali from Cairo).
 func (g *Game) SetMinimumLife(playerID uuid.UUID) {
-	g.Effects.Rules.SetMinimumLife(playerID)
+	g.Effects.AddCycleReplacement(&minimumLifeReplacement{playerID: playerID})
 }
 
 // AddTypePrevention adds a card-type damage prevention rule for the player.
 func (g *Game) AddTypePrevention(playerID uuid.UUID, ct CardType) {
-	g.Effects.Damage.AddTypePrevention(playerID, ct)
+	g.Effects.AddReplacement(&typePreventionReplacement{playerID: playerID, cardType: ct})
 }
 
 // PreventAllDamageFrom prevents all damage from the specified source until end of turn.
 func (g *Game) PreventAllDamageFrom(sourceID uuid.UUID) {
-	g.Effects.Damage.AddDamagePreventionRule(WithFrom(NewPermanentFilter("specific source", func(p *Permanent, _ *Game) bool {
-		return p.ID() == sourceID
-	})))
+	g.Effects.AddReplacement(&damagePreventionRuleReplacement{
+		from: NewPermanentFilter("specific source", func(p *Permanent, _ *Game) bool {
+			return p.ID() == sourceID
+		}),
+	})
 }
 
 // SetArtifactDamageRedirect sets a creature that absorbs artifact damage dealt to a player.
 func (g *Game) SetArtifactDamageRedirect(controllerID, permID uuid.UUID) {
-	g.Effects.Damage.SetArtifactDamageRedirect(controllerID, permID)
+	g.Effects.AddCycleReplacement(&artifactDamageRedirectReplacement{
+		controllerID:  controllerID,
+		redirectPermID: permID,
+	})
 }
 
 // SetDamageReflection sets a one-shot damage reflection for a player (Eye for an Eye).
+// This stays as inline logic (post-damage effect, not a replacement).
 func (g *Game) SetDamageReflection(playerID, eyeSourceID, chosenSourceID uuid.UUID) {
 	g.Effects.Damage.SetDamageReflection(playerID, eyeSourceID, chosenSourceID)
 }
 
 // SetDrawReplacement stores a pending draw replacement for a player (Aladdin's Lamp).
 func (g *Game) SetDrawReplacement(playerID uuid.UUID, count int) {
-	g.Effects.Damage.SetDrawReplacement(playerID, count)
+	g.Effects.AddReplacement(&drawReplacementEffect{playerID: playerID, count: count})
+}
+
+// AddReplacementEffect adds a replacement effect to the effect manager.
+func (g *Game) AddReplacementEffect(r ReplacementEffect) {
+	g.Effects.AddReplacement(r)
 }
 
 // SetArtifactManaOnly marks a player as having artifact-only mana restriction active.
