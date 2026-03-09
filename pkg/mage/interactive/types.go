@@ -6,6 +6,13 @@ import (
 	"github.com/mage/mage/pkg/mage/core"
 )
 
+// AutoPlayer is implemented by AI players to provide priority decisions to the
+// game loop. This interface decouples the game loop from the concrete AIPlayer
+// type, which lives in the ai/ sub-package.
+type AutoPlayer interface {
+	GetPriorityAction(g *mage.Game, landsPlayed int, mainPhase bool) PriorityAction
+}
+
 // PlayerChannels bundles the communication channels between the game loop and one player's TUI.
 type PlayerChannels struct {
 	ToPlayer    chan<- GameMsg

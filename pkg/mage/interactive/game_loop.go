@@ -19,7 +19,7 @@ func RunGameLoop(g *mage.Game, humanIdx int, aiActionPause time.Duration) {
 	defer close(hp.choiceReqs)
 
 	aiIdx := (humanIdx + 1) % 2
-	aiPlayer, isAI := g.Players[aiIdx].(*AIPlayer)
+	aiPlayer, isAI := g.Players[aiIdx].(AutoPlayer)
 	_ = aiPlayer
 
 	var gameLog []string

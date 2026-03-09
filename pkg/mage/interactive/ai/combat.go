@@ -1,25 +1,21 @@
-package interactive
+package ai
 
 import (
 	"github.com/google/uuid"
 	"github.com/mage/mage/pkg/mage"
 	"github.com/mage/mage/pkg/mage/core"
+	"github.com/mage/mage/pkg/mage/interactive"
+	"github.com/mage/mage/pkg/mage/interactive/eval"
 )
-
-// ─── Combat Outcome Evaluation (Phase 5D) ───────────────────────────────────
 
 // CombatScore summarizes the outcome of a combat step.
 type CombatScore struct {
 	DamageToOpponent   int
 	OurCreaturesLost   int
 	TheirCreaturesLost int
-	Score              int // net advantage: positive = good for us
+	Score              int
 }
 
-// evaluateCombatOutcome estimates the result of an attack where `attackers` attack
-// and `blocks` describes the defender's blocking assignments. Each attacker without
-// a block assignment deals damage to the opponent. For blocked attackers, we simulate
-// damage exchange.
 func evaluateCombatOutcome(g *mage.Game, playerID uuid.UUID, attackers []uuid.UUID, blocks []mage.BlockAssignment) CombatScore {
 	opponent := g.GetOpponent(playerID)
 	if opponent == nil {
@@ -27,7 +23,6 @@ func evaluateCombatOutcome(g *mage.Game, playerID uuid.UUID, attackers []uuid.UU
 	}
 	oppID := opponent.PlayerID()
 
-	// Build a map of attacker -> blockers
 	blockerMap := make(map[uuid.UUID][]uuid.UUID)
 	for _, b := range blocks {
 		blockerMap[b.AttackerID] = append(blockerMap[b.AttackerID], b.BlockerID)
@@ -45,14 +40,12 @@ func evaluateCombatOutcome(g *mage.Game, playerID uuid.UUID, attackers []uuid.UU
 
 		blockerIDs, isBlocked := blockerMap[atkID]
 		if !isBlocked || len(blockerIDs) == 0 {
-			// Unblocked: damage to opponent
 			if atkPow > 0 {
 				cs.DamageToOpponent += atkPow
 			}
 			continue
 		}
 
-		// Blocked: simulate damage exchange
 		remainingAtkDmg := atkPow
 		totalBlockerDmg := 0
 
@@ -66,7 +59,6 @@ func evaluateCombatOutcome(g *mage.Game, playerID uuid.UUID, attackers []uuid.UU
 
 			totalBlockerDmg += blkPow
 
-			// Attacker assigns lethal to this blocker
 			if remainingAtkDmg >= blkTough {
 				cs.TheirCreaturesLost++
 				remainingAtkDmg -= blkTough
@@ -75,24 +67,19 @@ func evaluateCombatOutcome(g *mage.Game, playerID uuid.UUID, attackers []uuid.UU
 			}
 		}
 
-		// Trample overflow
 		if remainingAtkDmg > 0 && atk.HasKeyword(core.Trample) {
 			cs.DamageToOpponent += remainingAtkDmg
 		}
 
-		// Does attacker die?
 		if totalBlockerDmg >= atkTough {
 			cs.OurCreaturesLost++
 		}
 	}
 
-	// Score: creature advantage (their losses - our losses) * creature value weight,
-	// plus damage dealt
 	cs.Score = cs.DamageToOpponent +
 		cs.TheirCreaturesLost*6 -
 		cs.OurCreaturesLost*6
 
-	// Refine score by actual evalCreature values
 	var ourLostValue, theirLostValue int
 	for _, atkID := range attackers {
 		atk := g.FindPermanent(atkID)
@@ -115,32 +102,25 @@ func evaluateCombatOutcome(g *mage.Game, playerID uuid.UUID, attackers []uuid.UU
 			totalBlockerDmg += blk.CurrentPower(g)
 			blkTough := blk.CurrentToughness(g)
 			if remainingDmg >= blkTough {
-				theirLostValue += evalCreature(blk)
+				theirLostValue += eval.EvalCreature(blk)
 				remainingDmg -= blkTough
 			}
 		}
 		if totalBlockerDmg >= atkTough {
-			ourLostValue += evalCreature(atk)
+			ourLostValue += eval.EvalCreature(atk)
 		}
 	}
 
-	// Adjust score with actual creature values
 	cs.Score = cs.DamageToOpponent + theirLostValue - ourLostValue
 	_ = oppID
 
 	return cs
 }
 
-// ─── Gang Block Detection (Phase 5C) ────────────────────────────────────────
-
-// findGangBlocks finds a pair of available blockers whose combined power is
-// enough to kill the attacker. Returns nil if no viable gang block exists, or
-// if the trade is not worthwhile (attacker value <= sum of blocker values).
 func findGangBlocks(atk *mage.Permanent, available []*mage.Permanent, g *mage.Game, playerID uuid.UUID, theyHaveLethal bool) []*mage.Permanent {
 	atkTough := atk.CurrentToughness(g)
-	atkScore := evalCreature(atk)
+	atkScore := eval.EvalCreature(atk)
 
-	// Try all pairs of available blockers
 	for i := 0; i < len(available); i++ {
 		if available[i] == nil {
 			continue
@@ -164,12 +144,8 @@ func findGangBlocks(atk *mage.Permanent, available []*mage.Permanent, g *mage.Ga
 				continue
 			}
 
-			// Check if the trade is worthwhile: attacker score >= sum of blocker scores.
-			// Trading two small creatures for one big threat of equal value is
-			// worthwhile because removing a single large threat is strategically
-			// favorable. When facing lethal, gang-block regardless.
-			b1Score := evalCreature(b1)
-			b2Score := evalCreature(b2)
+			b1Score := eval.EvalCreature(b1)
+			b2Score := eval.EvalCreature(b2)
 			if !theyHaveLethal && atkScore < b1Score+b2Score {
 				continue
 			}
@@ -181,7 +157,6 @@ func findGangBlocks(atk *mage.Permanent, available []*mage.Permanent, g *mage.Ga
 	return nil
 }
 
-// canSingleBlockKill returns true if any single available blocker can kill the attacker.
 func canSingleBlockKill(atk *mage.Permanent, available []*mage.Permanent, g *mage.Game) bool {
 	atkTough := atk.CurrentToughness(g)
 	for _, blk := range available {
@@ -198,15 +173,101 @@ func canSingleBlockKill(atk *mage.Permanent, available []*mage.Permanent, g *mag
 	return false
 }
 
-// ─── Hold-Back Heuristic (Phase 5B) ─────────────────────────────────────────
+func shouldAttack(atk *mage.Permanent, g *mage.Game, opponentID uuid.UUID, aggression float64) bool {
+	if aggression >= 1.0 {
+		return true
+	}
+	if profitableToAttack(atk, g, opponentID) {
+		return true
+	}
+	if aggression >= 0.7 {
+		return marginallyProfitableToAttack(atk, g, opponentID)
+	}
+	return false
+}
 
-// holdBackValue calculates the expected value of holding mana open for instants
-// versus spending it on the best sorcery-speed play. Returns a value >= 0.
-// Higher value means stronger reason to hold mana open.
+func marginallyProfitableToAttack(atk *mage.Permanent, g *mage.Game, opponentID uuid.UUID) bool {
+	var bestBlocker *mage.Permanent
+	bestPow := -1
+	for _, perm := range g.Battlefield {
+		if perm.Controller != opponentID || !perm.HasType(core.TypeCreature) || perm.Tapped {
+			continue
+		}
+		if !mage.CanBlock(perm, atk, g) {
+			continue
+		}
+		if mage.HasLandwalkEvasion(atk, opponentID, g) {
+			continue
+		}
+		pow := perm.CurrentPower(g)
+		if pow > bestPow {
+			bestPow = pow
+			bestBlocker = perm
+		}
+	}
+	if bestBlocker == nil {
+		return true
+	}
+	atkPow := atk.CurrentPower(g)
+	blkTough := bestBlocker.CurrentToughness(g)
+	return atkPow >= blkTough
+}
+
+func shouldBlock(atkPow int, _ *mage.Game, _ uuid.UUID, blockThreshold float64) bool {
+	if blockThreshold <= 0.0 {
+		return true
+	}
+	if blockThreshold >= 0.95 {
+		return false
+	}
+	minPow := int(blockThreshold * 10.0)
+	return atkPow >= minPow
+}
+
+func profitableToAttack(atk *mage.Permanent, g *mage.Game, opponentID uuid.UUID) bool {
+	var bestBlocker *mage.Permanent
+	bestPow := -1
+	for _, perm := range g.Battlefield {
+		if perm.Controller != opponentID || !perm.HasType(core.TypeCreature) || perm.Tapped {
+			continue
+		}
+		if !mage.CanBlock(perm, atk, g) {
+			continue
+		}
+		if mage.HasLandwalkEvasion(atk, opponentID, g) {
+			continue
+		}
+		pow := perm.CurrentPower(g)
+		if pow > bestPow {
+			bestPow = pow
+			bestBlocker = perm
+		}
+	}
+
+	if bestBlocker == nil {
+		return true
+	}
+
+	atkPow := atk.CurrentPower(g)
+	atkTough := atk.CurrentToughness(g)
+	blkPow := bestBlocker.CurrentPower(g)
+	blkTough := bestBlocker.CurrentToughness(g)
+
+	atkSurvives := blkPow < atkTough
+	blkDies := atkPow >= blkTough
+
+	if atkSurvives {
+		return true
+	}
+	if blkDies {
+		return bestBlocker.Card.ManaCost().CMC() >= atk.Card.ManaCost().CMC()
+	}
+	return false
+}
+
 func holdBackValue(p mage.Player, g *mage.Game, w WeightedPersonality) float64 {
 	playerID := p.PlayerID()
 
-	// Find best instant value in hand
 	bestInstantValue := 0.0
 	for _, card := range p.Hand() {
 		if !card.HasType(core.TypeInstant) {
@@ -215,7 +276,6 @@ func holdBackValue(p mage.Player, g *mage.Game, w WeightedPersonality) float64 {
 		if !g.CanAfford(playerID, card.ManaCost()) {
 			continue
 		}
-		// Check it has usable effects
 		hasUsableEffect := false
 		for _, a := range card.Abilities() {
 			if sa, ok := a.(*mage.SpellAbility); ok {
@@ -228,18 +288,15 @@ func holdBackValue(p mage.Player, g *mage.Game, w WeightedPersonality) float64 {
 		if !hasUsableEffect {
 			continue
 		}
-		sv := float64(spellValue(card, p, g))
-		// Scale instant value by potential response benefit:
-		// - Removal is much better as an instant (can respond to threats)
-		// - Pump spells are great as combat tricks
+		sv := float64(eval.SpellValue(card, p, g))
 		for _, a := range card.Abilities() {
 			if sa, ok := a.(*mage.SpellAbility); ok {
 				outcome := mage.SpellOutcome(sa.Effects())
 				if outcome == mage.OutcomeDetriment {
-					sv *= 1.5 // removal is better saved for response
+					sv *= 1.5
 				}
 				if outcome == mage.OutcomeBenefit {
-					sv *= 1.3 // pump/protection is better as combat trick
+					sv *= 1.3
 				}
 			}
 		}
@@ -248,28 +305,21 @@ func holdBackValue(p mage.Player, g *mage.Game, w WeightedPersonality) float64 {
 		}
 	}
 
-	// Find best sorcery-speed play value
 	bestSorceryValue := 0.0
 	for _, card := range g.GetCastableSpells(playerID) {
 		if card.HasType(core.TypeInstant) {
 			continue
 		}
-		sv := float64(spellValue(card, p, g))
+		sv := float64(eval.SpellValue(card, p, g))
 		if sv > bestSorceryValue {
 			bestSorceryValue = sv
 		}
 	}
 
-	// Hold-back if instant value * HoldInstants weight > sorcery value
-	// At HoldInstants=0: never hold (threshold is infinite)
-	// At HoldInstants=0.5: hold if instant value > 2x sorcery value
-	// At HoldInstants=1.0: hold if instant value > sorcery value
 	if w.HoldInstants <= 0 {
 		return 0
 	}
 
-	// Scale: at HoldInstants=1.0, hold if instant >= sorcery
-	// At HoldInstants=0.5, hold if instant >= 2*sorcery
 	threshold := bestSorceryValue / w.HoldInstants
 	if bestInstantValue >= threshold && bestInstantValue > 0 {
 		return bestInstantValue - threshold
@@ -277,19 +327,13 @@ func holdBackValue(p mage.Player, g *mage.Game, w WeightedPersonality) float64 {
 	return 0
 }
 
-// ─── Response Evaluation (Phase 5A) ─────────────────────────────────────────
-
-// evaluateResponse checks if we have instants that could usefully respond
-// when it's not our main phase (opponent's turn, or in response to something).
-// Returns a PriorityAction to cast an instant, or nil to pass.
-func (s *HeuristicStrategy) evaluateResponse(p mage.Player, g *mage.Game) *PriorityAction {
+func (s *HeuristicStrategy) evaluateResponse(p mage.Player, g *mage.Game) *interactive.PriorityAction {
 	playerID := p.PlayerID()
 	opponent := g.GetOpponent(playerID)
 	if opponent == nil {
 		return nil
 	}
 
-	// Check if there's something on the stack we should respond to
 	stackHasThreat := false
 	if len(g.Stack.Objects()) > 0 {
 		for _, obj := range g.Stack.Objects() {
@@ -300,8 +344,7 @@ func (s *HeuristicStrategy) evaluateResponse(p mage.Player, g *mage.Game) *Prior
 		}
 	}
 
-	// Evaluate each instant in hand for response value
-	var bestAction *PriorityAction
+	var bestAction *interactive.PriorityAction
 	bestValue := 0
 
 	for _, card := range p.Hand() {
@@ -312,7 +355,6 @@ func (s *HeuristicStrategy) evaluateResponse(p mage.Player, g *mage.Game) *Prior
 			continue
 		}
 
-		// Check it has usable effects
 		hasUsableEffect := false
 		for _, a := range card.Abilities() {
 			if sa, ok := a.(*mage.SpellAbility); ok {
@@ -326,15 +368,12 @@ func (s *HeuristicStrategy) evaluateResponse(p mage.Player, g *mage.Game) *Prior
 			continue
 		}
 
-		sv := spellValue(card, p, g)
+		sv := eval.SpellValue(card, p, g)
 
-		// Boost value if there's an opponent spell on the stack
-		// (more likely our response matters)
 		if stackHasThreat {
 			sv += 3
 		}
 
-		// Check if this is removal and opponent has valuable creatures
 		for _, a := range card.Abilities() {
 			sa, ok := a.(*mage.SpellAbility)
 			if !ok {
@@ -342,7 +381,6 @@ func (s *HeuristicStrategy) evaluateResponse(p mage.Player, g *mage.Game) *Prior
 			}
 			outcome := mage.SpellOutcome(sa.Effects())
 			if outcome == mage.OutcomeDetriment {
-				// Removal: high value as response
 				sv += 2
 			}
 		}
@@ -351,8 +389,8 @@ func (s *HeuristicStrategy) evaluateResponse(p mage.Player, g *mage.Game) *Prior
 			targets := s.autoSelectTargets(p, g, card)
 			if len(targets) > 0 {
 				bestValue = sv
-				bestAction = &PriorityAction{
-					Type:     ActionCastSpell,
+				bestAction = &interactive.PriorityAction{
+					Type:     interactive.ActionCastSpell,
 					CardID:   card.ID(),
 					CardName: card.Name(),
 					Targets:  targets,
@@ -361,8 +399,6 @@ func (s *HeuristicStrategy) evaluateResponse(p mage.Player, g *mage.Game) *Prior
 		}
 	}
 
-	// Only respond if the value is high enough to be worth it
-	// (don't waste instants on marginal responses)
 	if bestAction != nil && bestValue >= 3 {
 		return bestAction
 	}
@@ -370,75 +406,54 @@ func (s *HeuristicStrategy) evaluateResponse(p mage.Player, g *mage.Game) *Prior
 	return nil
 }
 
-// ─── Race-Informed Combat Helpers (Phase 5E) ────────────────────────────────
-
-// raceInformedAttack refines the attacker list based on race state.
-// When racing favorably: attack with everything (already handled in Attackers).
-// When racing unfavorably: only attack with evasion creatures.
-// When tied: only attack with creatures that trade up or have evasion.
-func raceInformedAttack(perm *mage.Permanent, g *mage.Game, opponentID uuid.UUID, race RaceInfo) bool {
+func raceInformedAttack(perm *mage.Permanent, g *mage.Game, opponentID uuid.UUID, race eval.RaceInfo) bool {
 	if !race.Racing {
-		return true // not racing, no race filter
+		return true
 	}
-
 	if race.MyClock < race.TheirClock {
-		return true // racing favorably, attack with everything
+		return true
 	}
-
 	if race.TheirClock < race.MyClock {
-		// Racing unfavorably: only attack with evasion
-		return isEvasive(perm, opponentID, g)
+		return eval.IsEvasive(perm, opponentID, g)
 	}
-
-	// Tied: attack with evasion or profitable trades
-	if isEvasive(perm, opponentID, g) {
+	if eval.IsEvasive(perm, opponentID, g) {
 		return true
 	}
 	return profitableToAttack(perm, g, opponentID)
 }
 
-// raceInformedBlock decides if we should block this attacker given the race.
-// When racing favorably: only chump-block if it saves a clock turn
-// When racing unfavorably: block everything aggressively
-// When tied: trade up when possible
-func raceInformedBlock(atk *mage.Permanent, blk *mage.Permanent, g *mage.Game, race RaceInfo) bool {
+func raceInformedBlock(atk *mage.Permanent, blk *mage.Permanent, g *mage.Game, race eval.RaceInfo) bool {
 	if !race.Racing {
-		return true // not racing, allow block
+		return true
 	}
 
 	atkPow := atk.CurrentPower(g)
 
 	if race.MyClock < race.TheirClock {
-		// Racing favorably: skip blocking small stuff
-		// Only block if the damage would be significant (> 25% of our life)
 		me := g.GetPlayer(blk.Controller)
 		if me != nil && atkPow*4 < me.Life() {
-			return false // small attacker, ignore it
+			return false
 		}
 		return true
 	}
 
 	if race.TheirClock < race.MyClock {
-		// Racing unfavorably: block aggressively, trade up
 		blkPow := blk.CurrentPower(g)
 		atkTough := atk.CurrentToughness(g)
 		if blkPow >= atkTough {
-			return true // can kill attacker
+			return true
 		}
-		// Still block to absorb damage even if we can't kill it
 		return true
 	}
 
-	// Tied: trade up when possible
 	blkPow := blk.CurrentPower(g)
 	atkTough := atk.CurrentToughness(g)
 	blkTough := blk.CurrentToughness(g)
 	if blkPow >= atkTough {
-		return true // we kill attacker
+		return true
 	}
 	if atkPow < blkTough {
-		return true // we survive the block
+		return true
 	}
-	// Would be a bad trade, skip
 	return false
 }

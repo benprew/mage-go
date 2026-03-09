@@ -1,4 +1,15 @@
-package interactive
+// Package eval provides position evaluation and scoring for the MTG engine.
+// It is a leaf dependency — it imports only pkg/mage and pkg/mage/core.
+//
+// The core type is [StateEvaluator], a function that scores a game position
+// from a player's perspective. [DefaultEvaluator] uses hardcoded weight
+// constants; [WeightedEvaluator] and [NewWeightedEvaluator] accept a [Weights]
+// struct for personality-driven evaluation.
+//
+// Supporting functions score individual creatures ([EvalCreature]), abilities
+// ([AbilityQuality]), spells ([SpellValue]), and board positions
+// ([CalculateLethal], [CalculateRace]).
+package eval
 
 import (
 	"math"
@@ -7,6 +18,15 @@ import (
 	"github.com/mage/mage/pkg/mage"
 	"github.com/mage/mage/pkg/mage/core"
 )
+
+// Weights holds evaluation weights used by WeightedEvaluator and NewWeightedEvaluator.
+type Weights struct {
+	Life  float64 // importance of life difference
+	Board float64 // importance of creature board
+	Card  float64 // importance of hand advantage
+	Mana  float64 // importance of mana development
+	Tempo float64 // importance of untapped mana
+}
 
 // GameReader is the subset of *mage.Game methods used by StateEvaluator.
 // *mage.Game satisfies this interface automatically.
@@ -35,15 +55,12 @@ const (
 // Higher scores are better for playerID.
 type StateEvaluator func(g GameReader, playerID uuid.UUID) int
 
-// DefaultEvaluator is the standard position evaluator. It considers life,
-// creature board state, non-creature permanents, hand size, mana development,
-// untapped mana sources (tempo), lethal-on-board, and board diversity.
-// It uses the default hardcoded weight constants.
+// DefaultEvaluator is the standard position evaluator.
 var DefaultEvaluator StateEvaluator = defaultEvaluate
 
 // WeightedEvaluator returns a StateEvaluator that uses the given
-// WeightedPersonality's evaluation weights instead of the default constants.
-func WeightedEvaluator(w WeightedPersonality) StateEvaluator {
+// Weights instead of the default constants.
+func WeightedEvaluator(w Weights) StateEvaluator {
 	return func(g GameReader, playerID uuid.UUID) int {
 		return weightedEvaluate(g, playerID, w)
 	}
@@ -59,9 +76,8 @@ func defaultEvaluate(g GameReader, playerID uuid.UUID) int {
 
 	score := (me.Life() - opp.Life()) * LifeWeight
 
-	// Creature board: own creatures add, opponent's subtract.
 	for _, perm := range g.FilterBattlefield(mage.IsCreature) {
-		v := evalCreature(perm)
+		v := EvalCreature(perm)
 		if perm.Controller == playerID {
 			score += v
 		} else if perm.Controller == oppID {
@@ -69,8 +85,6 @@ func defaultEvaluate(g GameReader, playerID uuid.UUID) int {
 		}
 	}
 
-	// Non-creature, non-land permanents (enchantments, artifacts, etc.):
-	// value = CMC / NonCreatureCMCDiv.
 	nonCreatureNonLand := mage.And(mage.Not(mage.IsCreature), mage.Not(mage.IsLand))
 	for _, perm := range g.FilterBattlefield(nonCreatureNonLand) {
 		v := perm.Card.ManaCost().CMC() / NonCreatureCMCDiv
@@ -81,28 +95,24 @@ func defaultEvaluate(g GameReader, playerID uuid.UUID) int {
 		}
 	}
 
-	// Card advantage.
 	score += (len(me.Hand()) - len(opp.Hand())) * CardWeight
 
-	// Mana development: own lands × LandWeight.
 	ownLand := mage.And(mage.IsLand, mage.ControlledBy(playerID))
 	score += g.CountBattlefield(ownLand) * LandWeight
 
-	// Tempo — count untapped mana sources (lands + mana creatures + mana artifacts).
 	untappedMana := countUntappedManaSources(g, playerID)
 	score += untappedMana * 2
 
-	// Lethal-on-board detection.
 	lethal := calculateLethalOnBoard(g, playerID)
 	score += lethal
 
 	return score
 }
 
-// NewWeightedEvaluator creates a StateEvaluator that uses a WeightedPersonality
-// to scale each evaluation dimension with role-based permanent classification,
-// hand quality scoring, board diversity, tempo, and lethal detection.
-func NewWeightedEvaluator(wp WeightedPersonality) StateEvaluator {
+// NewWeightedEvaluator creates a StateEvaluator that uses Weights
+// with role-based permanent classification, hand quality scoring,
+// board diversity, tempo, and lethal detection.
+func NewWeightedEvaluator(w Weights) StateEvaluator {
 	return func(g GameReader, playerID uuid.UUID) int {
 		me := g.GetPlayer(playerID)
 		opp := g.GetOpponent(playerID)
@@ -113,15 +123,13 @@ func NewWeightedEvaluator(wp WeightedPersonality) StateEvaluator {
 
 		score := 0.0
 
-		// Life difference, scaled by LifeWeight.
-		score += float64(me.Life()-opp.Life()) * wp.LifeWeight
+		score += float64(me.Life()-opp.Life()) * w.Life
 
-		// Board: creatures evaluated and weighted by role.
 		allPerms := g.FilterBattlefield(mage.IsCreature)
 		for _, perm := range allPerms {
-			v := float64(evalCreature(perm))
+			v := float64(EvalCreature(perm))
 			role := ClassifyPermanent(perm)
-			roleWeight := roleWeightForPersonality(role, wp)
+			roleWeight := roleWeightForPersonality(role, w)
 			if perm.Controller == playerID {
 				score += v * roleWeight
 			} else if perm.Controller == oppID {
@@ -129,12 +137,11 @@ func NewWeightedEvaluator(wp WeightedPersonality) StateEvaluator {
 			}
 		}
 
-		// Non-creature, non-land permanents weighted by role.
 		nonCreatureNonLand := mage.And(mage.Not(mage.IsCreature), mage.Not(mage.IsLand))
 		for _, perm := range g.FilterBattlefield(nonCreatureNonLand) {
 			v := float64(perm.Card.ManaCost().CMC()) / float64(NonCreatureCMCDiv)
 			role := ClassifyPermanent(perm)
-			roleWeight := roleWeightForPersonality(role, wp)
+			roleWeight := roleWeightForPersonality(role, w)
 			if perm.Controller == playerID {
 				score += v * roleWeight
 			} else if perm.Controller == oppID {
@@ -142,27 +149,22 @@ func NewWeightedEvaluator(wp WeightedPersonality) StateEvaluator {
 			}
 		}
 
-		// Hand quality, not just count.
 		myHandQuality := handQuality(me)
 		oppHandQuality := handQuality(opp)
-		score += float64(myHandQuality-oppHandQuality) * wp.CardWeight
+		score += float64(myHandQuality-oppHandQuality) * w.Card
 
-		// Mana development.
 		ownLandCount := g.CountBattlefield(mage.And(mage.IsLand, mage.ControlledBy(playerID)))
 		oppLandCount := g.CountBattlefield(mage.And(mage.IsLand, mage.ControlledBy(oppID)))
-		score += float64(ownLandCount-oppLandCount) * wp.ManaWeight
+		score += float64(ownLandCount-oppLandCount) * w.Mana
 
-		// Tempo — untapped mana sources weighted by TempoWeight.
 		myUntapped := countUntappedManaSources(g, playerID)
 		oppUntapped := countUntappedManaSources(g, oppID)
-		score += float64(myUntapped-oppUntapped) * wp.TempoWeight
+		score += float64(myUntapped-oppUntapped) * w.Tempo
 
-		// Board diversity bonus.
 		myRoles := countRoles(g.FilterBattlefield(mage.ControlledBy(playerID)), func(_ *mage.Permanent) bool { return true })
 		oppRoles := countRoles(g.FilterBattlefield(mage.ControlledBy(oppID)), func(_ *mage.Permanent) bool { return true })
-		score += float64(boardDiversity(myRoles)-boardDiversity(oppRoles)) * wp.BoardWeight * 0.5
+		score += float64(boardDiversity(myRoles)-boardDiversity(oppRoles)) * w.Board * 0.5
 
-		// Lethal-on-board detection.
 		lethal := calculateLethalOnBoard(g, playerID)
 		score += float64(lethal)
 
@@ -170,26 +172,23 @@ func NewWeightedEvaluator(wp WeightedPersonality) StateEvaluator {
 	}
 }
 
-// roleWeightForPersonality returns a multiplier for a permanent role given a personality.
-func roleWeightForPersonality(role PermanentRole, wp WeightedPersonality) float64 {
+func roleWeightForPersonality(role PermanentRole, w Weights) float64 {
 	switch role {
 	case RoleThreat:
-		return wp.BoardWeight / 3.0 // normalized so default midrange ~1.0
+		return w.Board / 3.0
 	case RoleUtility:
-		return wp.CardWeight / 2.0
+		return w.Card / 2.0
 	case RoleEngine:
-		return wp.CardWeight / 2.0
+		return w.Card / 2.0
 	case RoleMana:
-		return wp.ManaWeight
+		return w.Mana
 	case RoleDefense:
-		return wp.BoardWeight / 3.0
+		return w.Board / 3.0
 	default:
 		return 1.0
 	}
 }
 
-// handQuality scores a player's hand based on the quality of cards, not just count.
-// A hand of spells is worth more than a hand of only lands.
 func handQuality(p mage.Player) int {
 	hand := p.Hand()
 	if len(hand) == 0 {
@@ -198,9 +197,8 @@ func handQuality(p mage.Player) int {
 	score := 0
 	for _, card := range hand {
 		if card.HasType(core.TypeLand) {
-			score += 1 // lands are worth less than spells
+			score += 1
 		} else {
-			// Non-land cards get a base value of 2 (like CardWeight).
 			cmc := card.ManaCost().CMC()
 			if cmc > 0 {
 				score += 2
@@ -212,8 +210,6 @@ func handQuality(p mage.Player) int {
 	return score
 }
 
-// countUntappedManaSources counts all untapped mana sources controlled by playerID:
-// untapped lands, untapped creatures with mana abilities, and untapped artifacts with mana abilities.
 func countUntappedManaSources(g GameReader, playerID uuid.UUID) int {
 	count := 0
 	own := mage.And(mage.ControlledBy(playerID), mage.IsUntapped)
@@ -222,7 +218,6 @@ func countUntappedManaSources(g GameReader, playerID uuid.UUID) int {
 			count++
 			continue
 		}
-		// Check for mana abilities on non-land permanents.
 		if hasManaAbility(perm) {
 			count++
 		}
@@ -230,8 +225,6 @@ func countUntappedManaSources(g GameReader, playerID uuid.UUID) int {
 	return count
 }
 
-// calculateLethalOnBoard returns a score adjustment based on lethal detection.
-// +LethalBonus if we have lethal on board, -LethalBonus if opponent does.
 func calculateLethalOnBoard(g GameReader, playerID uuid.UUID) int {
 	me := g.GetPlayer(playerID)
 	opp := g.GetOpponent(playerID)
@@ -242,7 +235,6 @@ func calculateLethalOnBoard(g GameReader, playerID uuid.UUID) int {
 
 	score := 0
 
-	// Check if we have lethal: sum power of our creatures that can attack.
 	myDamage := 0
 	for _, perm := range g.FilterBattlefield(mage.IsCreature) {
 		if perm.Controller == playerID && canPotentiallyAttack(perm) {
@@ -253,7 +245,6 @@ func calculateLethalOnBoard(g GameReader, playerID uuid.UUID) int {
 		score += LethalBonus
 	}
 
-	// Check if opponent has lethal.
 	theirDamage := 0
 	for _, perm := range g.FilterBattlefield(mage.IsCreature) {
 		if perm.Controller == oppID && canPotentiallyAttack(perm) {
@@ -267,8 +258,6 @@ func calculateLethalOnBoard(g GameReader, playerID uuid.UUID) int {
 	return score
 }
 
-// canPotentiallyAttack returns true if a creature could potentially attack
-// (not tapped, not summoning sick unless has haste, not defender).
 func canPotentiallyAttack(perm *mage.Permanent) bool {
 	if perm.Tapped {
 		return false
@@ -282,15 +271,7 @@ func canPotentiallyAttack(perm *mage.Permanent) bool {
 	return true
 }
 
-// weightedEvaluate scores a game position using personality-specific weights.
-// The score components are:
-//   - Life difference × LifeWeight
-//   - Creature board score × BoardWeight (scaled from default PowerWeight/ToughnessWeight)
-//   - Non-creature permanents × BoardWeight / 2
-//   - Card advantage × CardWeight
-//   - Mana development (lands) × ManaWeight
-//   - Untapped land bonus × TempoWeight
-func weightedEvaluate(g GameReader, playerID uuid.UUID, w WeightedPersonality) int {
+func weightedEvaluate(g GameReader, playerID uuid.UUID, w Weights) int {
 	me := g.GetPlayer(playerID)
 	opp := g.GetOpponent(playerID)
 	if me == nil || opp == nil {
@@ -300,14 +281,11 @@ func weightedEvaluate(g GameReader, playerID uuid.UUID, w WeightedPersonality) i
 
 	score := 0.0
 
-	// Life component.
-	score += float64(me.Life()-opp.Life()) * w.LifeWeight
+	score += float64(me.Life()-opp.Life()) * w.Life
 
-	// Creature board: own creatures add, opponent's subtract.
-	// Scale creature values by BoardWeight relative to the default (2.0).
-	boardScale := w.BoardWeight / 2.0
+	boardScale := w.Board / 2.0
 	for _, perm := range g.FilterBattlefield(mage.IsCreature) {
-		v := float64(evalCreature(perm)) * boardScale
+		v := float64(EvalCreature(perm)) * boardScale
 		if perm.Controller == playerID {
 			score += v
 		} else if perm.Controller == oppID {
@@ -315,7 +293,6 @@ func weightedEvaluate(g GameReader, playerID uuid.UUID, w WeightedPersonality) i
 		}
 	}
 
-	// Non-creature, non-land permanents.
 	nonCreatureNonLand := mage.And(mage.Not(mage.IsCreature), mage.Not(mage.IsLand))
 	for _, perm := range g.FilterBattlefield(nonCreatureNonLand) {
 		v := float64(perm.Card.ManaCost().CMC()) / 2.0 * boardScale
@@ -326,21 +303,18 @@ func weightedEvaluate(g GameReader, playerID uuid.UUID, w WeightedPersonality) i
 		}
 	}
 
-	// Card advantage.
-	score += float64(len(me.Hand())-len(opp.Hand())) * w.CardWeight
+	score += float64(len(me.Hand())-len(opp.Hand())) * w.Card
 
-	// Mana development.
 	ownLand := mage.And(mage.IsLand, mage.ControlledBy(playerID))
-	score += float64(g.CountBattlefield(ownLand)) * w.ManaWeight
+	score += float64(g.CountBattlefield(ownLand)) * w.Mana
 
-	// Untapped land bonus (tempo).
-	score += float64(g.CountBattlefield(mage.And(ownLand, mage.IsUntapped))) * w.TempoWeight
+	score += float64(g.CountBattlefield(mage.And(ownLand, mage.IsUntapped))) * w.Tempo
 
 	return int(score)
 }
 
-// evalCreature scores a single creature permanent from its controller's perspective.
-func evalCreature(perm *mage.Permanent) int {
+// EvalCreature scores a single creature permanent from its controller's perspective.
+func EvalCreature(perm *mage.Permanent) int {
 	score := permPower(perm)*PowerWeight + permToughness(perm)*ToughnessWeight
 	if perm.Tapped {
 		score = score * 2 / 3
@@ -353,8 +327,6 @@ func evalCreature(perm *mage.Permanent) int {
 	return score
 }
 
-// permPower returns the creature's power from base stats and counters.
-// Misses continuous-effect bonuses (e.g. Crusade) — acceptable for v1.
 func permPower(p *mage.Permanent) int {
 	pw := p.Card.Power()
 	if p.BasePTOverride != nil {
@@ -366,7 +338,6 @@ func permPower(p *mage.Permanent) int {
 	return pw
 }
 
-// permToughness returns the creature's toughness from base stats and counters.
 func permToughness(p *mage.Permanent) int {
 	tg := p.Card.Toughness()
 	if p.BasePTOverride != nil {
@@ -378,16 +349,12 @@ func permToughness(p *mage.Permanent) int {
 	return tg
 }
 
-// keywordBonus returns a score contribution for all keyword abilities on perm.
 func keywordBonus(perm *mage.Permanent) int {
 	score := 0
 
-	// Unblockable.
 	if perm.HasKeyword(core.UnblockableKW) {
 		score += 5
 	}
-
-	// Evasion.
 	if perm.HasKeyword(core.Flying) {
 		score += 4
 	}
@@ -414,8 +381,6 @@ func keywordBonus(perm *mage.Permanent) int {
 	if perm.HasKeyword(core.CantBeBlockedExceptByWalls) {
 		score -= 2
 	}
-
-	// Combat.
 	if perm.HasKeyword(core.DoubleStrike) {
 		score += 4
 	}
@@ -425,8 +390,6 @@ func keywordBonus(perm *mage.Permanent) int {
 	if perm.HasKeyword(core.Haste) {
 		score += 2
 	}
-
-	// Durability.
 	if perm.HasKeyword(core.Indestructible) {
 		score += 5
 	}
@@ -439,21 +402,15 @@ func keywordBonus(perm *mage.Permanent) int {
 	if perm.HasKeyword(core.BasiliskTouch) {
 		score += 2
 	}
-
-	// Damage.
 	if perm.HasKeyword(core.Deathtouch) {
 		score += 3
 	}
 	if perm.HasKeyword(core.Lifelink) {
 		score += 2
 	}
-
-	// Versatility.
 	if perm.HasKeyword(core.Vigilance) {
 		score += 2
 	}
-
-	// Defensive / utility.
 	if perm.HasKeyword(core.Reach) {
 		score += 1
 	}
@@ -469,8 +426,6 @@ func keywordBonus(perm *mage.Permanent) int {
 	if perm.HasKeyword(core.Banding) {
 		score += 1
 	}
-
-	// Drawbacks.
 	if perm.HasKeyword(core.Defender) {
 		score -= 2
 	}
@@ -484,10 +439,6 @@ func keywordBonus(perm *mage.Permanent) int {
 	return score
 }
 
-// abilityBonus scores non-keyword runtime abilities on a creature.
-// Uses abilityQuality for activated abilities and triggeredAbilityQuality
-// for triggered abilities, giving deeper scoring based on effect type and
-// cost efficiency.
 func abilityBonus(perm *mage.Permanent) int {
 	score := 0
 	for _, a := range perm.RuntimeAbilities {
@@ -500,7 +451,7 @@ func abilityBonus(perm *mage.Permanent) int {
 				score += 2
 			}
 		case mage.ActivatedAbility:
-			score += abilityQuality(ab)
+			score += AbilityQuality(ab)
 		case mage.TriggeredAbility:
 			score += triggeredAbilityQuality(ab)
 		}
@@ -508,11 +459,8 @@ func abilityBonus(perm *mage.Permanent) int {
 	return score
 }
 
-// abilityQuality scores an activated ability by its effect type and cost efficiency.
-// More impactful abilities (tap-to-draw, tap-to-deal-damage) score higher than
-// expensive pump abilities.
-func abilityQuality(ab mage.ActivatedAbility) int {
-	// Analyze costs: check if it requires tap, what mana cost, etc.
+// AbilityQuality scores an activated ability by its effect type and cost efficiency.
+func AbilityQuality(ab mage.ActivatedAbility) int {
 	hasTapCost := false
 	manaCostTotal := 0
 	for _, c := range ab.Costs() {
@@ -524,34 +472,30 @@ func abilityQuality(ab mage.ActivatedAbility) int {
 		}
 	}
 
-	// Analyze effects for quality.
 	bestScore := 0
 	for _, e := range ab.Effects() {
 		props := e.Properties()
 
-		// Tap-to-draw: very valuable.
 		if props.DrawCount > 0 {
 			s := 5
 			if manaCostTotal > 2 {
-				s = 3 // expensive draw is less good
+				s = 3
 			}
 			if s > bestScore {
 				bestScore = s
 			}
 		}
 
-		// Tap-to-deal-damage: very valuable.
 		if props.DamageValue != nil && props.Outcome == mage.OutcomeDetriment {
 			s := 4
 			if !hasTapCost && manaCostTotal >= 3 {
-				s = 2 // expensive damage is less good
+				s = 2
 			}
 			if s > bestScore {
 				bestScore = s
 			}
 		}
 
-		// Destruction / removal effects.
 		if props.Outcome == mage.OutcomeDetriment && props.DamageValue == nil && props.DrawCount == 0 {
 			s := 3
 			if manaCostTotal >= 3 {
@@ -562,7 +506,6 @@ func abilityQuality(ab mage.ActivatedAbility) int {
 			}
 		}
 
-		// Beneficial effects (buff, prevent, untap).
 		if props.Outcome == mage.OutcomeBenefit {
 			s := 2
 			if manaCostTotal >= 4 {
@@ -574,21 +517,19 @@ func abilityQuality(ab mage.ActivatedAbility) int {
 		}
 	}
 
-	// If no recognizable effect, give a small bonus based on cost.
 	if bestScore == 0 {
 		if hasTapCost && manaCostTotal == 0 {
-			return 2 // free tap ability is decent
+			return 2
 		}
 		if manaCostTotal <= 2 {
-			return 1 // cheap ability
+			return 1
 		}
-		return 1 // expensive but still an ability
+		return 1
 	}
 
 	return bestScore
 }
 
-// triggeredAbilityQuality scores a triggered ability based on its effects.
 func triggeredAbilityQuality(ab mage.TriggeredAbility) int {
 	bestScore := 0
 	for _, e := range ab.Effects() {
@@ -619,7 +560,7 @@ func triggeredAbilityQuality(ab mage.TriggeredAbility) int {
 		}
 	}
 	if bestScore == 0 {
-		return 1 // any triggered ability has some value
+		return 1
 	}
 	return bestScore
 }

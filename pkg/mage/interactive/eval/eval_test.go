@@ -1,4 +1,4 @@
-package interactive
+package eval
 
 import (
 	"math"
@@ -8,23 +8,6 @@ import (
 	"github.com/mage/mage/pkg/mage"
 	"github.com/mage/mage/pkg/mage/core"
 )
-
-// makePerm creates a creature permanent with cleared summoning sickness.
-func makePerm(name, cost string, power, toughness int, owner uuid.UUID, opts ...mage.CardOption) *mage.Permanent {
-	card := mage.NewCreature(name, cost, power, toughness, opts...)
-	card.SetOwner(owner)
-	perm := mage.NewPermanent(card, owner)
-	perm.RevokeBaseAttr(core.AttrSummonSick)
-	return perm
-}
-
-// makeGame creates a two-player game with BasePlayer instances.
-func makeGame() (*mage.Game, *mage.BasePlayer, *mage.BasePlayer) {
-	pa := mage.NewBasePlayer("Alice")
-	pb := mage.NewBasePlayer("Bob")
-	g := mage.NewGame(pa, pb)
-	return g, pa, pb
-}
 
 // ── permPower / permToughness ───────────────────────────────────────────────
 
@@ -102,14 +85,14 @@ func TestPermPower_OverridePlusCounters(t *testing.T) {
 	}
 }
 
-// ── evalCreature ────────────────────────────────────────────────────────────
+// ── EvalCreature ────────────────────────────────────────────────────────────
 
 func TestEvalCreature_Vanilla(t *testing.T) {
 	p := makePerm("Hill Giant", "{3}{R}", 3, 3, uuid.New())
 	// Expected: 3*PowerWeight + 3*ToughnessWeight = 3*2 + 3*1 = 9
-	got := evalCreature(p)
+	got := EvalCreature(p)
 	if got != 9 {
-		t.Errorf("evalCreature(3/3 vanilla) = %d, want 9", got)
+		t.Errorf("EvalCreature(3/3 vanilla) = %d, want 9", got)
 	}
 }
 
@@ -117,9 +100,9 @@ func TestEvalCreature_Tapped(t *testing.T) {
 	p := makePerm("Hill Giant", "{3}{R}", 3, 3, uuid.New())
 	p.Tapped = true
 	// Base: 9, tapped: 9 * 2/3 = 6
-	got := evalCreature(p)
+	got := EvalCreature(p)
 	if got != 6 {
-		t.Errorf("evalCreature(tapped 3/3) = %d, want 6", got)
+		t.Errorf("EvalCreature(tapped 3/3) = %d, want 6", got)
 	}
 }
 
@@ -127,9 +110,9 @@ func TestEvalCreature_SummonSick(t *testing.T) {
 	p := makePerm("Hill Giant", "{3}{R}", 3, 3, uuid.New())
 	p.GrantBaseAttr(core.AttrSummonSick)
 	// Base: 9, summon sick: 9/2 = 4
-	got := evalCreature(p)
+	got := EvalCreature(p)
 	if got != 4 {
-		t.Errorf("evalCreature(summon-sick 3/3) = %d, want 4", got)
+		t.Errorf("EvalCreature(summon-sick 3/3) = %d, want 4", got)
 	}
 }
 
@@ -137,9 +120,9 @@ func TestEvalCreature_SummonSickWithHaste(t *testing.T) {
 	p := makePerm("Hasty", "{3}{R}", 3, 3, uuid.New(), mage.WithKeyword(core.Haste))
 	p.GrantBaseAttr(core.AttrSummonSick)
 	// Haste negates summon-sick penalty; base 9 + haste bonus 2 = 11
-	got := evalCreature(p)
+	got := EvalCreature(p)
 	if got != 11 {
-		t.Errorf("evalCreature(summon-sick+haste 3/3) = %d, want 11", got)
+		t.Errorf("EvalCreature(summon-sick+haste 3/3) = %d, want 11", got)
 	}
 }
 
@@ -361,16 +344,16 @@ func TestThreatPerMana_ZeroCMC(t *testing.T) {
 	}
 }
 
-// ── spellValue ──────────────────────────────────────────────────────────────
+// ── SpellValue ──────────────────────────────────────────────────────────────
 
 func TestSpellValue_Creature(t *testing.T) {
 	g, pa, _ := makeGame()
 	card := mage.NewCreature("Hill Giant", "{3}{R}", 3, 3)
 	card.SetOwner(pa.PlayerID())
 	// Creature value: power*2 + toughness = 3*2 + 3 = 9
-	got := spellValue(card, pa, g)
+	got := SpellValue(card, pa, g)
 	if got != 9 {
-		t.Errorf("spellValue(creature 3/3) = %d, want 9", got)
+		t.Errorf("SpellValue(creature 3/3) = %d, want 9", got)
 	}
 }
 
@@ -381,9 +364,9 @@ func TestSpellValue_DrawSpell(t *testing.T) {
 	)
 	card.SetOwner(pa.PlayerID())
 	// DrawCount=2, so 2*3 = 6
-	got := spellValue(card, pa, g)
+	got := SpellValue(card, pa, g)
 	if got != 6 {
-		t.Errorf("spellValue(draw 2) = %d, want 6", got)
+		t.Errorf("SpellValue(draw 2) = %d, want 6", got)
 	}
 }
 
@@ -396,10 +379,10 @@ func TestSpellValue_DamageSpell(t *testing.T) {
 	// Base damage: 3. With an opponent creature of toughness <= 3, +2 lethal bonus.
 	oppCreature := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
 	g.Battlefield = append(g.Battlefield, oppCreature)
-	got := spellValue(card, pa, g)
+	got := SpellValue(card, pa, g)
 	// 3 (damage) + 2 (lethal) = 5
 	if got != 5 {
-		t.Errorf("spellValue(bolt with lethal target) = %d, want 5", got)
+		t.Errorf("SpellValue(bolt with lethal target) = %d, want 5", got)
 	}
 }
 
@@ -412,10 +395,10 @@ func TestSpellValue_DamageSpellNoLethal(t *testing.T) {
 	// Opponent has a 5/5 — not lethal
 	oppCreature := makePerm("Giant", "{3}{G}{G}", 5, 5, pb.PlayerID())
 	g.Battlefield = append(g.Battlefield, oppCreature)
-	got := spellValue(card, pa, g)
+	got := SpellValue(card, pa, g)
 	// Just the damage: 2
 	if got != 2 {
-		t.Errorf("spellValue(shock, no lethal) = %d, want 2", got)
+		t.Errorf("SpellValue(shock, no lethal) = %d, want 2", got)
 	}
 }
 
@@ -425,13 +408,13 @@ func TestSpellValue_PureRemoval(t *testing.T) {
 		mage.NewTargetedSpell(mage.TargetCreature(), mage.DestroyTarget()),
 	)
 	card.SetOwner(pa.PlayerID())
-	// Opponent has a 3/3 creature = evalCreature score
+	// Opponent has a 3/3 creature = EvalCreature score
 	oppCreature := makePerm("Hill Giant", "{3}{R}", 3, 3, pb.PlayerID())
 	g.Battlefield = append(g.Battlefield, oppCreature)
-	got := spellValue(card, pa, g)
-	expected := evalCreature(oppCreature)
+	got := SpellValue(card, pa, g)
+	expected := EvalCreature(oppCreature)
 	if got != expected {
-		t.Errorf("spellValue(removal) = %d, want %d", got, expected)
+		t.Errorf("SpellValue(removal) = %d, want %d", got, expected)
 	}
 }
 
@@ -440,14 +423,14 @@ func TestSpellValue_FallbackToCMC(t *testing.T) {
 	// A sorcery with no recognizable effect properties
 	card := mage.NewSorcery("Mystery", "{2}{U}", mage.NewSpellAbility())
 	card.SetOwner(pa.PlayerID())
-	got := spellValue(card, pa, g)
+	got := SpellValue(card, pa, g)
 	// Should fallback to CMC = 3
 	if got != 3 {
-		t.Errorf("spellValue(fallback) = %d, want 3 (CMC)", got)
+		t.Errorf("SpellValue(fallback) = %d, want 3 (CMC)", got)
 	}
 }
 
-// ── spellIsWorthless ────────────────────────────────────────────────────────
+// ── SpellIsWorthless ────────────────────────────────────────────────────────
 
 func TestSpellIsWorthless_TargetedNoTargets(t *testing.T) {
 	g, pa, _ := makeGame()
@@ -456,8 +439,8 @@ func TestSpellIsWorthless_TargetedNoTargets(t *testing.T) {
 	)
 	card.SetOwner(pa.PlayerID())
 	// No creatures on battlefield → no valid targets
-	if !spellIsWorthless(card, pa, g) {
-		t.Error("spellIsWorthless should be true when no valid targets exist")
+	if !SpellIsWorthless(card, pa, g) {
+		t.Error("SpellIsWorthless should be true when no valid targets exist")
 	}
 }
 
@@ -469,8 +452,8 @@ func TestSpellIsWorthless_TargetedWithTargets(t *testing.T) {
 	card.SetOwner(pa.PlayerID())
 	oppCreature := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
 	g.Battlefield = append(g.Battlefield, oppCreature)
-	if spellIsWorthless(card, pa, g) {
-		t.Error("spellIsWorthless should be false when valid targets exist")
+	if SpellIsWorthless(card, pa, g) {
+		t.Error("SpellIsWorthless should be false when valid targets exist")
 	}
 }
 
@@ -480,8 +463,8 @@ func TestSpellIsWorthless_Untargeted(t *testing.T) {
 		mage.NewSpellAbility(mage.DrawCards(mage.Fixed(2))),
 	)
 	card.SetOwner(pa.PlayerID())
-	if spellIsWorthless(card, pa, g) {
-		t.Error("spellIsWorthless should be false for untargeted spells")
+	if SpellIsWorthless(card, pa, g) {
+		t.Error("SpellIsWorthless should be false for untargeted spells")
 	}
 }
 
@@ -627,13 +610,13 @@ func TestCalculateRace_RacingBothLow(t *testing.T) {
 	}
 }
 
-// ── manaCurveBonus (Phase 0C) ───────────────────────────────────────────────
+// ── ManaCurveBonus (Phase 0C) ───────────────────────────────────────────────
 
 func TestManaCurveBonus_PreferExpensive(t *testing.T) {
 	// 5 mana available, hand has 2-drop and 5-drop
 	cmcs := []int{2, 5}
-	bonusFor5 := manaCurveBonus(5, 5, cmcs)
-	bonusFor2 := manaCurveBonus(2, 5, cmcs)
+	bonusFor5 := ManaCurveBonus(5, 5, cmcs)
+	bonusFor2 := ManaCurveBonus(2, 5, cmcs)
 	if bonusFor5 <= bonusFor2 {
 		t.Errorf("5-drop bonus (%.1f) should be > 2-drop bonus (%.1f) with 5 mana", bonusFor5, bonusFor2)
 	}
@@ -642,7 +625,7 @@ func TestManaCurveBonus_PreferExpensive(t *testing.T) {
 func TestManaCurveBonus_OnlyLowCMC(t *testing.T) {
 	// Only 2-drops in hand, 5 mana available
 	cmcs := []int{2, 2}
-	bonus := manaCurveBonus(2, 5, cmcs)
+	bonus := ManaCurveBonus(2, 5, cmcs)
 	// No penalty because there's nothing better to cast
 	if bonus < 0 {
 		t.Errorf("bonus for 2-drop when only 2-drops available = %.1f, should not be negative", bonus)
@@ -651,13 +634,13 @@ func TestManaCurveBonus_OnlyLowCMC(t *testing.T) {
 
 func TestManaCurveBonus_NoMana(t *testing.T) {
 	cmcs := []int{2, 5}
-	bonus := manaCurveBonus(2, 0, cmcs)
+	bonus := ManaCurveBonus(2, 0, cmcs)
 	if bonus != 0 {
 		t.Errorf("bonus with 0 mana = %.1f, want 0", bonus)
 	}
 }
 
-// ── abilityQuality (Phase 0D) ───────────────────────────────────────────────
+// ── AbilityQuality (Phase 0D) ───────────────────────────────────────────────
 
 func TestAbilityQuality_DrawAbility(t *testing.T) {
 	p := makePerm("Sage", "{1}{U}", 1, 1, uuid.New(),
@@ -667,9 +650,9 @@ func TestAbilityQuality_DrawAbility(t *testing.T) {
 	for _, a := range p.RuntimeAbilities {
 		inner := mage.UnwrapAbility(a)
 		if ab, ok := inner.(mage.ActivatedAbility); ok {
-			got := abilityQuality(ab)
+			got := AbilityQuality(ab)
 			if got != 5 {
-				t.Errorf("abilityQuality(draw) = %d, want 5", got)
+				t.Errorf("AbilityQuality(draw) = %d, want 5", got)
 			}
 			return
 		}
@@ -685,9 +668,9 @@ func TestAbilityQuality_DamageAbility(t *testing.T) {
 	for _, a := range p.RuntimeAbilities {
 		inner := mage.UnwrapAbility(a)
 		if ab, ok := inner.(mage.ActivatedAbility); ok {
-			got := abilityQuality(ab)
+			got := AbilityQuality(ab)
 			if got != 4 {
-				t.Errorf("abilityQuality(damage) = %d, want 4", got)
+				t.Errorf("AbilityQuality(damage) = %d, want 4", got)
 			}
 			return
 		}
@@ -711,7 +694,7 @@ func TestAbilityQuality_PingerHigherThanPump(t *testing.T) {
 	}
 }
 
-// ── countAvailableMana ──────────────────────────────────────────────────────
+// ── CountAvailableMana ──────────────────────────────────────────────────────
 
 func TestCountAvailableMana_UntappedLands(t *testing.T) {
 	g, pa, _ := makeGame()
@@ -730,9 +713,9 @@ func TestCountAvailableMana_UntappedLands(t *testing.T) {
 	tp.Tapped = true
 	g.Battlefield = append(g.Battlefield, tp)
 
-	got := countAvailableMana(g, pa.PlayerID())
+	got := CountAvailableMana(g, pa.PlayerID())
 	if got != 3 {
-		t.Errorf("countAvailableMana = %d, want 3 (3 untapped lands)", got)
+		t.Errorf("CountAvailableMana = %d, want 3 (3 untapped lands)", got)
 	}
 }
 
@@ -748,9 +731,9 @@ func TestCountAvailableMana_IncludesManaCreatures(t *testing.T) {
 	elf := makePerm("Llanowar Elves", "{G}", 1, 1, pa.PlayerID(), mage.WithManaAbility(core.Green))
 	g.Battlefield = append(g.Battlefield, elf)
 
-	got := countAvailableMana(g, pa.PlayerID())
+	got := CountAvailableMana(g, pa.PlayerID())
 	if got != 2 {
-		t.Errorf("countAvailableMana = %d, want 2 (1 land + 1 mana creature)", got)
+		t.Errorf("CountAvailableMana = %d, want 2 (1 land + 1 mana creature)", got)
 	}
 }
 

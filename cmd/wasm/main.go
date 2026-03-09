@@ -16,6 +16,7 @@ import (
 	"github.com/mage/mage/pkg/mage"
 	"github.com/mage/mage/pkg/mage/core"
 	"github.com/mage/mage/pkg/mage/interactive"
+	"github.com/mage/mage/pkg/mage/interactive/ai"
 
 	// Register all card sets.
 	_ "github.com/mage/mage/cards"
@@ -73,7 +74,7 @@ func startGame(this js.Value, args []js.Value) any {
 	choiceResps := make(chan interactive.ChoiceResponse, 1)
 
 	human := interactive.NewHumanPlayerWithChannels("You", toTUI, fromTUI, choiceReqs, choiceResps)
-	ai := interactive.NewAIPlayer("AI")
+	aiPlayer := ai.NewAIPlayer("AI")
 
 	// Build human deck.
 	humanDeck := buildDeck(deckNames, human.PlayerID())
@@ -101,25 +102,25 @@ func startGame(this js.Value, args []js.Value) any {
 			aiDeckNames = append(aiDeckNames, e.Name)
 		}
 	}
-	aiDeck := buildDeck(aiDeckNames, ai.PlayerID())
+	aiDeck := buildDeck(aiDeckNames, aiPlayer.PlayerID())
 
 	// Load libraries.
 	for _, c := range humanDeck {
 		human.AddToLibrary(c)
 	}
 	for _, c := range aiDeck {
-		ai.AddToLibrary(c)
+		aiPlayer.AddToLibrary(c)
 	}
 
 	// Create game.
-	g := mage.NewGame(human, ai)
+	g := mage.NewGame(human, aiPlayer)
 
 	// Draw opening hands.
 	for i := 0; i < 7; i++ {
 		human.DrawCard()
 	}
 	for i := 0; i < 7; i++ {
-		ai.DrawCard()
+		aiPlayer.DrawCard()
 	}
 
 	// Store channels for sendAction/sendChoice.

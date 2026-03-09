@@ -8,6 +8,7 @@ import (
 	"github.com/mage/mage/internal/tui"
 	"github.com/mage/mage/pkg/mage"
 	"github.com/mage/mage/pkg/mage/interactive"
+	"github.com/mage/mage/pkg/mage/interactive/ai"
 
 	_ "github.com/mage/mage/cards" // register all card sets
 )
@@ -136,21 +137,21 @@ func (l *Lobby) removeSlot(slot *GameSlot) {
 func (l *Lobby) StartAIGame(sess *PlayerSession) {
 	go func() {
 		human := interactive.NewHumanPlayerWithChannels(sess.Name, sess.FromGame, sess.ToGame, sess.ChoiceReqs, sess.ChoiceResps)
-		ai := interactive.NewAggroAI("AI")
+		aiPlayer := ai.NewAggroAI("AI")
 
 		humanCards := tui.BuildDeck(sess.DeckEntries, human.PlayerID())
 		for _, c := range humanCards {
 			human.AddToLibrary(c)
 		}
 		aiEntries := tui.Archetypes[1].Entries
-		aiCards := tui.BuildDeck(aiEntries, ai.PlayerID())
+		aiCards := tui.BuildDeck(aiEntries, aiPlayer.PlayerID())
 		for _, c := range aiCards {
-			ai.AddToLibrary(c)
+			aiPlayer.AddToLibrary(c)
 		}
 
-		g := mage.NewGame(human, ai)
+		g := mage.NewGame(human, aiPlayer)
 		tui.DrawOpeningHand(human)
-		tui.DrawOpeningHand(ai)
+		tui.DrawOpeningHand(aiPlayer)
 
 		const aiPause = 400 * time.Millisecond
 		interactive.RunGameLoop(g, 0, aiPause)

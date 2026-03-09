@@ -1,4 +1,4 @@
-package interactive
+package ai
 
 import (
 	"testing"
@@ -7,6 +7,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/mage/mage/pkg/mage"
 	"github.com/mage/mage/pkg/mage/core"
+	"github.com/mage/mage/pkg/mage/interactive"
+	"github.com/mage/mage/pkg/mage/interactive/eval"
 )
 
 // ── Test helpers ────────────────────────────────────────────────────────────
@@ -14,7 +16,7 @@ import (
 func makeSearchAI(config SearchConfig) *SearchStrategy {
 	return &SearchStrategy{
 		Config:    config,
-		Evaluator: DefaultEvaluator,
+		Evaluator: eval.DefaultEvaluator,
 		Fallback:  &HeuristicStrategy{Personality: MidrangePersonality},
 	}
 }
@@ -66,7 +68,7 @@ func TestSearch_FindLethal(t *testing.T) {
 	strat := makeSearchAI(DefaultSearchConfig())
 	action := strat.PriorityAction(pa, g, 0, true)
 
-	if action.Type != ActionCastSpell {
+	if action.Type != interactive.ActionCastSpell {
 		t.Fatalf("expected ActionCastSpell, got %v", action.Type)
 	}
 	if action.CardName != "Lightning Bolt" {
@@ -103,7 +105,7 @@ func TestSearch_PreferHigherValueCreature(t *testing.T) {
 	strat := makeSearchAI(DefaultSearchConfig())
 	action := strat.PriorityAction(pa, g, 0, true)
 
-	if action.Type != ActionCastSpell {
+	if action.Type != interactive.ActionCastSpell {
 		t.Fatalf("expected ActionCastSpell, got %v", action.Type)
 	}
 	// Search should cast one of the available creatures (the specific choice
@@ -136,7 +138,7 @@ func TestSearch_FallbackOnNodeBudget(t *testing.T) {
 	action := strat.PriorityAction(pa, g, 0, true)
 
 	// Should still produce a valid action (fallback to heuristic)
-	if action.Type != ActionCastSpell && action.Type != ActionPass {
+	if action.Type != interactive.ActionCastSpell && action.Type != interactive.ActionPass {
 		t.Errorf("expected valid action from fallback, got %v", action.Type)
 	}
 }
@@ -178,7 +180,7 @@ func TestGeneratePriorityMoves_IncludesLandPlay(t *testing.T) {
 	moves := GeneratePriorityMoves(g, pa, 0, true)
 	foundLand := false
 	for _, m := range moves {
-		if m.Type == ActionPlayLand {
+		if m.Type == interactive.ActionPlayLand {
 			foundLand = true
 		}
 	}
@@ -195,7 +197,7 @@ func TestGeneratePriorityMoves_NoLandIfAlreadyPlayed(t *testing.T) {
 
 	moves := GeneratePriorityMoves(g, pa, 1, true)
 	for _, m := range moves {
-		if m.Type == ActionPlayLand {
+		if m.Type == interactive.ActionPlayLand {
 			t.Error("should not offer land play when already played one")
 		}
 	}
@@ -206,7 +208,7 @@ func TestGeneratePriorityMoves_AlwaysIncludesPass(t *testing.T) {
 	moves := GeneratePriorityMoves(g, pa, 0, true)
 	foundPass := false
 	for _, m := range moves {
-		if m.Type == ActionPass {
+		if m.Type == interactive.ActionPass {
 			foundPass = true
 		}
 	}
@@ -232,7 +234,7 @@ func TestGeneratePriorityMoves_SortedByHeuristic(t *testing.T) {
 		t.Fatalf("expected at least 2 moves, got %d", len(moves))
 	}
 	lastMove := moves[len(moves)-1]
-	if lastMove.Type != ActionPass {
+	if lastMove.Type != interactive.ActionPass {
 		t.Error("pass should be last move (lowest heuristic)")
 	}
 }
@@ -370,7 +372,7 @@ func TestApplyMoveToClone_LandPlay(t *testing.T) {
 	clone := cloneGameForSearch(g)
 
 	m := &Move{
-		Type:   ActionPlayLand,
+		Type:   interactive.ActionPlayLand,
 		CardID: land.ID(),
 	}
 	applyMoveToClone(clone, pa.PlayerID(), m, 0)
@@ -404,7 +406,7 @@ func TestApplyMoveToClone_CreatureCast(t *testing.T) {
 	clone := cloneGameForSearch(g)
 
 	m := &Move{
-		Type:     ActionCastSpell,
+		Type:     interactive.ActionCastSpell,
 		CardID:   creature.ID(),
 		CardName: "Bear",
 	}
@@ -438,7 +440,7 @@ func TestApplyMoveToClone_DamageSpell(t *testing.T) {
 	clone := cloneGameForSearch(g)
 
 	m := &Move{
-		Type:     ActionCastSpell,
+		Type:     interactive.ActionCastSpell,
 		CardID:   bolt.ID(),
 		CardName: "Lightning Bolt",
 		Targets:  []uuid.UUID{pb.PlayerID()},

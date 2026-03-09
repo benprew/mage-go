@@ -1,4 +1,4 @@
-package interactive
+package ai
 
 import (
 	"testing"
@@ -6,6 +6,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/mage/mage/pkg/mage"
 	"github.com/mage/mage/pkg/mage/core"
+	"github.com/mage/mage/pkg/mage/interactive"
+	"github.com/mage/mage/pkg/mage/interactive/eval"
 )
 
 // ── evaluateCombatOutcome (Phase 5D) ─────────────────────────────────────────
@@ -198,11 +200,13 @@ func TestBlockers_GangBlockIntegration(t *testing.T) {
 		Aggression:     0.0,
 		BlockThreshold: 0.8, // minPow = 8, so won't block 6-power in single pass
 		HoldInstants:   0.0,
-		LifeWeight:     2.0,
-		BoardWeight:    2.0,
-		CardWeight:     2.0,
-		ManaWeight:     1.0,
-		TempoWeight:    1.0,
+		Weights: eval.Weights{
+			Life:  2.0,
+			Board: 2.0,
+			Card:  2.0,
+			Mana:  1.0,
+			Tempo: 1.0,
+		},
 	})
 	blocks := strat.Blockers(pb, g)
 
@@ -311,7 +315,7 @@ func TestRaceInformedAttack_FavorableRaceAttacksAll(t *testing.T) {
 	creature := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
 	g.Battlefield = append(g.Battlefield, creature)
 
-	race := RaceInfo{MyClock: 2, TheirClock: 4, Racing: true}
+	race := eval.RaceInfo{MyClock: 2, TheirClock: 4, Racing: true}
 	if !raceInformedAttack(creature, g, pb.PlayerID(), race) {
 		t.Error("should attack when racing favorably")
 	}
@@ -323,7 +327,7 @@ func TestRaceInformedAttack_UnfavorableOnlyEvasion(t *testing.T) {
 	flyer := makePerm("Bird", "{1}{U}", 2, 2, pa.PlayerID(), mage.WithKeyword(core.Flying))
 	g.Battlefield = append(g.Battlefield, ground, flyer)
 
-	race := RaceInfo{MyClock: 4, TheirClock: 2, Racing: true}
+	race := eval.RaceInfo{MyClock: 4, TheirClock: 2, Racing: true}
 
 	if raceInformedAttack(ground, g, pb.PlayerID(), race) {
 		t.Error("ground creature should not attack when racing unfavorably")
@@ -339,7 +343,7 @@ func TestRaceInformedAttack_TiedRaceTradesUp(t *testing.T) {
 	blk := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
 	g.Battlefield = append(g.Battlefield, creature, blk)
 
-	race := RaceInfo{MyClock: 3, TheirClock: 3, Racing: true}
+	race := eval.RaceInfo{MyClock: 3, TheirClock: 3, Racing: true}
 
 	// 4/5 vs 2/2 is profitable, should attack
 	if !raceInformedAttack(creature, g, pb.PlayerID(), race) {
@@ -356,7 +360,7 @@ func TestRaceInformedBlock_FavorableSkipsSmall(t *testing.T) {
 	blk := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
 	g.Battlefield = append(g.Battlefield, smallAtk, blk)
 
-	race := RaceInfo{MyClock: 2, TheirClock: 4, Racing: true}
+	race := eval.RaceInfo{MyClock: 2, TheirClock: 4, Racing: true}
 
 	// 1 damage * 4 = 4 < 20 life, should skip blocking
 	if raceInformedBlock(smallAtk, blk, g, race) {
@@ -370,7 +374,7 @@ func TestRaceInformedBlock_UnfavorableBlocksAggressively(t *testing.T) {
 	blk := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
 	g.Battlefield = append(g.Battlefield, atk, blk)
 
-	race := RaceInfo{MyClock: 4, TheirClock: 2, Racing: true}
+	race := eval.RaceInfo{MyClock: 4, TheirClock: 2, Racing: true}
 
 	if !raceInformedBlock(atk, blk, g, race) {
 		t.Error("should block aggressively when racing unfavorably")
@@ -397,7 +401,7 @@ func TestPriorityAction_ResponseOnOpponentTurn(t *testing.T) {
 	// Non-main phase: should evaluate response and cast bolt
 	action := strat.PriorityAction(pa, g, 0, false)
 
-	if action.Type != ActionCastSpell {
+	if action.Type != interactive.ActionCastSpell {
 		t.Errorf("expected ActionCastSpell response, got %v", action.Type)
 	}
 	if action.CardName != "Lightning Bolt" {

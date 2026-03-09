@@ -1,4 +1,4 @@
-package interactive
+package ai
 
 import (
 	"sort"
@@ -6,12 +6,13 @@ import (
 	"github.com/google/uuid"
 	"github.com/mage/mage/pkg/mage"
 	"github.com/mage/mage/pkg/mage/core"
+	"github.com/mage/mage/pkg/mage/interactive"
+	"github.com/mage/mage/pkg/mage/interactive/eval"
 )
 
-// Move represents a single action the AI can take during a priority window
-// or attacker declaration. Used by the search engine to enumerate legal actions.
+// Move represents a single action the AI can take during a priority window.
 type Move struct {
-	Type         ActionType
+	Type         interactive.ActionType
 	CardID       uuid.UUID
 	CardName     string
 	Targets      []uuid.UUID
@@ -19,48 +20,42 @@ type Move struct {
 	AbilityIndex int
 	Attackers    []uuid.UUID
 
-	// IsCreature marks this move as a creature cast (always worth taking).
 	IsCreature bool
-	// heuristic is a pre-computed score used for move ordering (higher = search first).
-	heuristic int
+	heuristic  int
 }
 
 // GeneratePriorityMoves enumerates legal moves for playerID at the current
-// priority window. Moves are sorted by heuristic value (descending) to
-// improve alpha-beta pruning cut-off rates.
+// priority window, sorted by heuristic value (descending).
 func GeneratePriorityMoves(g *mage.Game, p mage.Player, landsPlayed int, mainPhase bool) []Move {
 	playerID := p.PlayerID()
 	var moves []Move
 
 	if mainPhase {
-		// Land plays
 		if landsPlayed < 1 {
 			for _, c := range p.Hand() {
 				if c.HasType(core.TypeLand) {
 					moves = append(moves, Move{
-						Type:      ActionPlayLand,
+						Type:      interactive.ActionPlayLand,
 						CardID:    c.ID(),
 						CardName:  c.Name(),
-						heuristic: 10, // lands are high priority
+						heuristic: 10,
 					})
-					break // only need one land play option
+					break
 				}
 			}
 		}
 
-		// Castable spells (non-instant during main phase)
 		for _, card := range g.GetCastableSpells(playerID) {
 			if card.HasType(core.TypeInstant) {
 				continue
 			}
-			if spellIsWorthless(card, p, g) {
+			if eval.SpellIsWorthless(card, p, g) {
 				continue
 			}
 			moves = append(moves, expandSpellMoves(p, g, card)...)
 		}
 	}
 
-	// Instants (available in any phase)
 	for _, card := range p.Hand() {
 		if !card.HasType(core.TypeInstant) {
 			continue
@@ -80,20 +75,19 @@ func GeneratePriorityMoves(g *mage.Game, p mage.Player, landsPlayed int, mainPha
 		if !hasUsableEffect {
 			continue
 		}
-		if spellIsWorthless(card, p, g) {
+		if eval.SpellIsWorthless(card, p, g) {
 			continue
 		}
 		moves = append(moves, expandSpellMoves(p, g, card)...)
 	}
 
-	// Activated abilities (only those scoring >= 3)
 	for _, info := range g.GetActivatableAbilities(playerID) {
 		q := abilityQualityFromInfo(g, info)
 		if q < 3 {
 			continue
 		}
 		moves = append(moves, Move{
-			Type:         ActionActivateAbility,
+			Type:         interactive.ActionActivateAbility,
 			PermanentID:  info.PermanentID,
 			CardName:     info.PermanentName,
 			AbilityIndex: info.AbilityIndex,
@@ -101,13 +95,11 @@ func GeneratePriorityMoves(g *mage.Game, p mage.Player, landsPlayed int, mainPha
 		})
 	}
 
-	// Pass is always an option
 	moves = append(moves, Move{
-		Type:      ActionPass,
+		Type:      interactive.ActionPass,
 		heuristic: 0,
 	})
 
-	// Sort by heuristic descending for better pruning
 	sort.Slice(moves, func(i, j int) bool {
 		return moves[i].heuristic > moves[j].heuristic
 	})
@@ -116,11 +108,6 @@ func GeneratePriorityMoves(g *mage.Game, p mage.Player, landsPlayed int, mainPha
 }
 
 // GenerateAttackerSets produces a pruned set of attacker combinations.
-// Instead of enumerating all 2^N subsets, it produces:
-//   - Attack with all eligible
-//   - Attack with none
-//   - Each individual creature solo
-//   - All evasive creatures (flying, unblockable, landwalk)
 func GenerateAttackerSets(g *mage.Game, playerID uuid.UUID) [][]uuid.UUID {
 	eligible := getEligibleAttackers(g, playerID)
 	if len(eligible) == 0 {
@@ -129,24 +116,20 @@ func GenerateAttackerSets(g *mage.Game, playerID uuid.UUID) [][]uuid.UUID {
 
 	var sets [][]uuid.UUID
 
-	// Attack with all
 	all := make([]uuid.UUID, len(eligible))
 	for i, p := range eligible {
 		all[i] = p.ID()
 	}
 	sets = append(sets, all)
 
-	// Attack with none
 	sets = append(sets, nil)
 
-	// Each individual creature solo
 	if len(eligible) > 1 {
 		for _, p := range eligible {
 			sets = append(sets, []uuid.UUID{p.ID()})
 		}
 	}
 
-	// Evasive creatures only
 	var evasive []uuid.UUID
 	for _, p := range eligible {
 		if p.HasKeyword(core.Flying) ||
@@ -167,8 +150,17 @@ func GenerateAttackerSets(g *mage.Game, playerID uuid.UUID) [][]uuid.UUID {
 	return sets
 }
 
-// abilityQualityFromInfo scores an activated ability for move-generation filtering.
-// Returns a heuristic quality score; abilities scoring < 3 are pruned from search.
+func getEligibleAttackers(g *mage.Game, playerID uuid.UUID) []*mage.Permanent {
+	var eligible []*mage.Permanent
+	for _, perm := range g.Battlefield {
+		if perm.Controller != playerID || !perm.CanDeclareAsAttacker(g) {
+			continue
+		}
+		eligible = append(eligible, perm)
+	}
+	return eligible
+}
+
 func abilityQualityFromInfo(g *mage.Game, info mage.ActivatableInfo) int {
 	perm := g.FindPermanent(info.PermanentID)
 	if perm == nil {
@@ -182,17 +174,13 @@ func abilityQualityFromInfo(g *mage.Game, info mage.ActivatableInfo) int {
 	if !ok {
 		return 0
 	}
-	return abilityQuality(aa)
+	return eval.AbilityQuality(aa)
 }
 
-// expandSpellMoves generates Move entries for a castable spell. For targeted
-// spells, it creates one Move per possible target so the search can evaluate
-// different targeting choices. For untargeted spells, it creates a single Move.
 func expandSpellMoves(p mage.Player, g *mage.Game, card mage.Card) []Move {
 	playerID := p.PlayerID()
-	sv := spellValue(card, p, g)
+	sv := eval.SpellValue(card, p, g)
 
-	// Check if the spell has targets
 	var possibleTargets []uuid.UUID
 	for _, a := range card.Abilities() {
 		sa, ok := a.(*mage.SpellAbility)
@@ -201,14 +189,13 @@ func expandSpellMoves(p mage.Player, g *mage.Game, card mage.Card) []Move {
 		}
 		for _, t := range sa.Targets() {
 			possibleTargets = t.Possible(playerID, card, g)
-			break // use first target requirement
+			break
 		}
 	}
 
-	// Untargeted spell: one move
 	if len(possibleTargets) == 0 {
 		return []Move{{
-			Type:       ActionCastSpell,
+			Type:       interactive.ActionCastSpell,
 			CardID:     card.ID(),
 			CardName:   card.Name(),
 			IsCreature: card.HasType(core.TypeCreature),
@@ -216,13 +203,10 @@ func expandSpellMoves(p mage.Player, g *mage.Game, card mage.Card) []Move {
 		}}
 	}
 
-	// Targeted spell: one move per target
 	var moves []Move
 	for _, tid := range possibleTargets {
 		h := sv
-		// Boost heuristic for player targets (lethal check)
 		if tp := g.GetPlayer(tid); tp != nil && tp.PlayerID() != playerID {
-			// Check if this could be lethal
 			for _, a := range card.Abilities() {
 				sa, ok := a.(*mage.SpellAbility)
 				if !ok {
@@ -232,14 +216,14 @@ func expandSpellMoves(p mage.Player, g *mage.Game, card mage.Card) []Move {
 					if dv := e.Properties().DamageValue; dv != nil {
 						dmg := dv.Resolve(g, card.ID(), playerID)
 						if dmg >= tp.Life() {
-							h += 100 // massive bonus for lethal
+							h += 100
 						}
 					}
 				}
 			}
 		}
 		moves = append(moves, Move{
-			Type:      ActionCastSpell,
+			Type:      interactive.ActionCastSpell,
 			CardID:    card.ID(),
 			CardName:  card.Name(),
 			Targets:   []uuid.UUID{tid},
@@ -249,9 +233,8 @@ func expandSpellMoves(p mage.Player, g *mage.Game, card mage.Card) []Move {
 	return moves
 }
 
-// autoSelectTargetsForSearch uses the same targeting logic as HeuristicStrategy
-// but is callable without a strategy instance.
-func autoSelectTargetsForSearch(p mage.Player, g *mage.Game, card mage.Card) []uuid.UUID {
+// AutoSelectTargetsForSearch uses the same targeting logic as HeuristicStrategy.
+func AutoSelectTargetsForSearch(p mage.Player, g *mage.Game, card mage.Card) []uuid.UUID {
 	strat := &HeuristicStrategy{Personality: MidrangePersonality}
 	return strat.autoSelectTargets(p, g, card)
 }

@@ -1,4 +1,4 @@
-package interactive
+package ai
 
 import (
 	"testing"
@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/mage/mage/pkg/mage"
 	"github.com/mage/mage/pkg/mage/core"
+	"github.com/mage/mage/pkg/mage/interactive"
 )
 
 // ── profitableToAttack ──────────────────────────────────────────────────────
@@ -223,7 +224,7 @@ func TestPriorityAction_PlaysLandFirst(t *testing.T) {
 
 	strat := &HeuristicStrategy{Personality: MidrangePersonality}
 	action := strat.PriorityAction(pa, g, 0, true)
-	if action.Type != ActionPlayLand {
+	if action.Type != interactive.ActionPlayLand {
 		t.Errorf("expected ActionPlayLand, got %v", action.Type)
 	}
 }
@@ -232,7 +233,7 @@ func TestPriorityAction_PassWhenEmpty(t *testing.T) {
 	g, pa, _ := makeGame()
 	strat := &HeuristicStrategy{Personality: MidrangePersonality}
 	action := strat.PriorityAction(pa, g, 0, true)
-	if action.Type != ActionPass {
+	if action.Type != interactive.ActionPass {
 		t.Errorf("expected ActionPass with empty hand, got %v", action.Type)
 	}
 }
@@ -241,7 +242,7 @@ func TestPriorityAction_PassOnNonMainEmptyHand(t *testing.T) {
 	g, pa, _ := makeGame()
 	strat := &HeuristicStrategy{Personality: MidrangePersonality}
 	action := strat.PriorityAction(pa, g, 0, false)
-	if action.Type != ActionPass {
+	if action.Type != interactive.ActionPass {
 		t.Errorf("expected ActionPass on non-main with empty hand, got %v", action.Type)
 	}
 }
@@ -313,25 +314,25 @@ func TestAdaptiveStrategy_BehindUsesDefensive(t *testing.T) {
 
 type passStrategy struct{}
 
-func (s *passStrategy) PriorityAction(_ mage.Player, _ *mage.Game, _ int, _ bool) PriorityAction {
-	return PriorityAction{Type: ActionPass}
+func (s *passStrategy) PriorityAction(_ mage.Player, _ *mage.Game, _ int, _ bool) interactive.PriorityAction {
+	return interactive.PriorityAction{Type: interactive.ActionPass}
 }
-func (s *passStrategy) Attackers(_ mage.Player, _ *mage.Game) []uuid.UUID       { return nil }
-func (s *passStrategy) Blockers(_ mage.Player, _ *mage.Game) []mage.BlockAssignment { return nil }
+func (s *passStrategy) Attackers(_ mage.Player, _ *mage.Game) []uuid.UUID            { return nil }
+func (s *passStrategy) Blockers(_ mage.Player, _ *mage.Game) []mage.BlockAssignment  { return nil }
 
 type fixedActionStrategy struct {
-	action PriorityAction
+	action interactive.PriorityAction
 }
 
-func (s *fixedActionStrategy) PriorityAction(_ mage.Player, _ *mage.Game, _ int, _ bool) PriorityAction {
+func (s *fixedActionStrategy) PriorityAction(_ mage.Player, _ *mage.Game, _ int, _ bool) interactive.PriorityAction {
 	return s.action
 }
-func (s *fixedActionStrategy) Attackers(_ mage.Player, _ *mage.Game) []uuid.UUID       { return nil }
-func (s *fixedActionStrategy) Blockers(_ mage.Player, _ *mage.Game) []mage.BlockAssignment { return nil }
+func (s *fixedActionStrategy) Attackers(_ mage.Player, _ *mage.Game) []uuid.UUID            { return nil }
+func (s *fixedActionStrategy) Blockers(_ mage.Player, _ *mage.Game) []mage.BlockAssignment  { return nil }
 
 func TestSequentialStrategy_FirstNonPassWins(t *testing.T) {
 	g, pa, _ := makeGame()
-	landAction := PriorityAction{Type: ActionPlayLand, CardName: "Forest"}
+	landAction := interactive.PriorityAction{Type: interactive.ActionPlayLand, CardName: "Forest"}
 
 	seq := &SequentialStrategy{
 		Strategies: []AIStrategy{
@@ -340,7 +341,7 @@ func TestSequentialStrategy_FirstNonPassWins(t *testing.T) {
 		},
 	}
 	got := seq.PriorityAction(pa, g, 0, true)
-	if got.Type != ActionPlayLand {
+	if got.Type != interactive.ActionPlayLand {
 		t.Errorf("expected first non-pass action, got %v", got.Type)
 	}
 }
@@ -354,7 +355,7 @@ func TestSequentialStrategy_AllPassReturnsPass(t *testing.T) {
 		},
 	}
 	got := seq.PriorityAction(pa, g, 0, true)
-	if got.Type != ActionPass {
+	if got.Type != interactive.ActionPass {
 		t.Errorf("expected pass when all strategies pass, got %v", got.Type)
 	}
 }
@@ -710,13 +711,13 @@ func TestPriorityAction_PrefersCurvePlay(t *testing.T) {
 
 	strat := &HeuristicStrategy{Personality: MidrangePersonality}
 	action := strat.PriorityAction(pa, g, 1, true) // already played land
-	if action.Type == ActionCastSpell && action.CardName == "Wurm" {
+	if action.Type == interactive.ActionCastSpell && action.CardName == "Wurm" {
 		// Good - preferred the 5-drop
-	} else if action.Type == ActionCastSpell && action.CardName == "Bear" {
+	} else if action.Type == interactive.ActionCastSpell && action.CardName == "Bear" {
 		// The base spellValue for 5/5 (5*2+5=15) is much higher than 2/2 (2*2+2=6)
 		// so this shouldn't happen even without curve bonus, but verify it
 		t.Log("cast the cheaper spell (base spellValue dominates)")
-	} else if action.Type == ActionPass {
+	} else if action.Type == interactive.ActionPass {
 		t.Log("passed (might not have enough mana configured in test)")
 	}
 	// This test primarily verifies the curve bonus code path doesn't crash
@@ -741,7 +742,7 @@ func TestPriorityAction_ActivatesAbility(t *testing.T) {
 	// No spells in hand, not main phase → should consider ability activation
 	action := strat.PriorityAction(pa, g, 1, false)
 	// The AI should activate the pinger ability
-	if action.Type == ActionActivateAbility {
+	if action.Type == interactive.ActionActivateAbility {
 		if action.PermanentID != pinger.ID() {
 			t.Error("should activate the pinger's ability")
 		}
