@@ -1,0 +1,2176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Writing Cards for mage-go</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=MedievalSharp&family=Fira+Code:wght@400;500&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --void: #0a0a0c;
+  --void-light: #12121a;
+  --void-lighter: #1a1a24;
+  --parchment: #d4c5a0;
+  --parchment-dim: #9a8a6a;
+  --gold: #c9a84c;
+  --gold-dim: #8a7a4a;
+  --mana-blue: #4a82b0;
+  --mana-blue-bright: #6aa8d4;
+  --blood: #8b2020;
+  --forest: #2d4a2d;
+  --forest-bright: #4a8a3a;
+  --artifact: #6b6b7b;
+  --enchant: #5c3a6e;
+  --code-bg: #08080c;
+  --code-border: #1a1a22;
+  --code-text: #8aaa8a;
+}
+
+html { background: var(--void); }
+
+body {
+  font-family: Georgia, 'Times New Roman', serif;
+  color: var(--parchment);
+  background: var(--void);
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 10000;
+}
+
+/* ---- SLIDES ---- */
+
+.slides { position: relative; width: 100%; height: 100%; }
+
+.slide {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 4rem 8rem;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.45s ease, transform 0.45s ease;
+  pointer-events: none;
+  overflow-y: auto;
+}
+
+.slide.active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: all;
+}
+
+/* slide variants */
+.slide--title {
+  text-align: center;
+  background: radial-gradient(ellipse at 50% 40%, rgba(201,168,76,0.05) 0%, transparent 60%), var(--void);
+}
+
+.slide--section {
+  text-align: center;
+  background: radial-gradient(ellipse at 50% 50%, rgba(74,130,176,0.03) 0%, transparent 50%), var(--void);
+}
+
+.slide--code {
+  align-items: stretch;
+  padding: 3rem 6rem;
+}
+
+.slide--zoom {
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+}
+
+.slide--split {
+  flex-direction: row;
+  padding: 3rem 5rem;
+  gap: 3rem;
+  align-items: stretch;
+}
+
+.slide--split > .col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+
+/* ---- TYPOGRAPHY ---- */
+
+h1 {
+  font-family: 'Cinzel', Georgia, serif;
+  font-weight: 700;
+  font-size: 3.8rem;
+  color: var(--gold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-shadow: 0 0 50px rgba(201,168,76,0.2), 0 2px 6px rgba(0,0,0,0.8);
+  line-height: 1.15;
+}
+
+h2 {
+  font-family: 'Cinzel', Georgia, serif;
+  font-weight: 700;
+  font-size: 2.2rem;
+  color: var(--gold);
+  letter-spacing: 0.06em;
+  margin-bottom: 1.2rem;
+  text-shadow: 0 0 20px rgba(201,168,76,0.12);
+}
+
+h3 {
+  font-family: 'Cinzel', Georgia, serif;
+  font-weight: 400;
+  font-size: 1.15rem;
+  color: var(--gold);
+  letter-spacing: 0.04em;
+  margin-bottom: 0.5rem;
+  margin-top: 1rem;
+}
+
+h3:first-child { margin-top: 0; }
+
+.subtitle {
+  font-family: 'MedievalSharp', Georgia, serif;
+  font-size: 1.5rem;
+  color: var(--parchment-dim);
+  font-style: italic;
+  letter-spacing: 0.03em;
+  margin-top: 0.8rem;
+}
+
+.section-label {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.8rem;
+  color: var(--gold-dim);
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  margin-bottom: 0.6rem;
+}
+
+p {
+  font-size: 1.15rem;
+  line-height: 1.7;
+  margin-bottom: 0.5rem;
+  max-width: 800px;
+}
+
+.big-text {
+  font-size: 1.6rem;
+  line-height: 1.5;
+  max-width: 700px;
+  text-align: center;
+}
+
+.dim { color: var(--parchment-dim); }
+strong { color: var(--gold); font-weight: normal; }
+em { color: var(--parchment-dim); }
+
+.divider {
+  width: 50%;
+  max-width: 250px;
+  height: 2px;
+  margin: 1.5rem auto;
+  background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+}
+
+/* ---- SPEAKER NOTES (hidden by default, toggle with N) ---- */
+
+.notes {
+  position: fixed;
+  bottom: 3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 700px;
+  width: 90%;
+  background: rgba(18,18,26,0.95);
+  border: 1px solid #2a2520;
+  padding: 0.8rem 1.2rem;
+  font-style: italic;
+  font-size: 0.85rem;
+  color: var(--parchment-dim);
+  line-height: 1.5;
+  z-index: 9000;
+  display: none;
+  pointer-events: none;
+}
+
+.notes.visible { display: block; }
+
+/* ---- CODE ---- */
+
+code {
+  font-family: 'Fira Code', 'SF Mono', 'Consolas', monospace;
+  font-size: 0.85em;
+  background: rgba(20,20,28,0.8);
+  border: 1px solid var(--code-border);
+  padding: 0.1em 0.35em;
+  color: var(--mana-blue-bright);
+  border-radius: 2px;
+}
+
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  padding: 1.4rem 1.8rem;
+  overflow-x: auto;
+  font-family: 'Fira Code', 'SF Mono', 'Consolas', monospace;
+  line-height: 1.7;
+  color: var(--code-text);
+  margin: 0.6rem 0;
+  box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+  border-radius: 4px;
+  position: relative;
+  width: 100%;
+}
+
+pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+}
+
+/* large code for zoom slides */
+pre.zoom {
+  font-size: 1.2rem;
+  padding: 2rem 2.5rem;
+  max-width: 900px;
+}
+
+pre.medium {
+  font-size: 0.95rem;
+  padding: 1.2rem 1.6rem;
+}
+
+pre.small {
+  font-size: 0.78rem;
+  padding: 1rem 1.4rem;
+}
+
+/* syntax colors */
+.kw { color: var(--gold); }
+.fn { color: var(--parchment); }
+.tp { color: #8b9dc3; }
+.st { color: var(--mana-blue-bright); }
+.cm { color: #4a5a4a; }
+.nu { color: #c87a5a; }
+
+/* highlight pulse — lines that glow to draw attention */
+.hl {
+  background: rgba(201,168,76,0.08);
+  display: inline;
+  border-radius: 2px;
+  padding: 0 0.2em;
+  animation: hlPulse 2s ease-in-out infinite;
+}
+
+@keyframes hlPulse {
+  0%, 100% { background: rgba(201,168,76,0.06); }
+  50% { background: rgba(201,168,76,0.15); }
+}
+
+/* code callout — annotation arrow pointing to a line */
+.callout {
+  position: absolute;
+  right: -1rem;
+  background: var(--void-lighter);
+  border: 1px solid var(--gold-dim);
+  color: var(--gold);
+  font-family: 'Fira Code', monospace;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.6rem;
+  white-space: nowrap;
+  transform: translateX(100%);
+  pointer-events: none;
+}
+
+.callout::before {
+  content: '\2190';
+  margin-right: 0.3rem;
+}
+
+/* ---- ORACLE TEXT BOX ---- */
+
+.oracle {
+  background: rgba(30,28,22,0.6);
+  border: 1px solid #2a2520;
+  border-left: 3px solid var(--gold-dim);
+  padding: 1rem 1.5rem;
+  margin: 0.6rem 0;
+  max-width: 600px;
+  font-style: italic;
+  color: var(--parchment-dim);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.oracle .card-name {
+  font-weight: bold;
+  color: var(--parchment);
+  font-style: normal;
+}
+
+.oracle .mana-cost { color: var(--gold); font-style: normal; }
+.oracle .type-line { color: var(--artifact); font-style: normal; display: block; font-size: 0.9rem; margin: 0.2rem 0; }
+.oracle .pt { color: var(--parchment); font-style: normal; font-weight: bold; display: block; text-align: right; margin-top: 0.3rem; }
+
+/* large oracle for zoom slides */
+.oracle.big {
+  font-size: 1.3rem;
+  padding: 1.5rem 2rem;
+  max-width: 750px;
+}
+
+/* ---- DIAGRAMS ---- */
+
+.diagram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  margin: 1.2rem 0;
+  flex-wrap: wrap;
+}
+
+.diagram-box {
+  background: var(--void-light);
+  border: 1px solid #2a2520;
+  padding: 0.6rem 1.2rem;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.9rem;
+  color: var(--parchment);
+  text-align: center;
+}
+
+.diagram-box.gold { border-color: var(--gold-dim); color: var(--gold); box-shadow: 0 0 12px rgba(201,168,76,0.08); }
+.diagram-box.blue { border-color: var(--mana-blue); color: var(--mana-blue-bright); }
+.diagram-box.green { border-color: var(--forest); color: var(--forest-bright); }
+.diagram-box.red { border-color: var(--blood); color: #c84a4a; }
+.diagram-box.purple { border-color: var(--enchant); color: #8a6aaa; }
+
+.diagram-box.big {
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+}
+
+.diagram-arrow {
+  color: var(--artifact);
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+/* vertical diagram */
+.diagram-v {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.diagram-v .diagram-arrow { font-size: 1rem; }
+
+/* ---- GRIDS ---- */
+
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  width: 100%;
+}
+
+.three-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.2rem;
+  width: 100%;
+}
+
+/* ---- CARD FRAMES ---- */
+
+.card-frame {
+  background: linear-gradient(135deg, var(--void-light) 0%, #0e0e14 100%);
+  border: 1px solid #2a2520;
+  box-shadow: inset 0 0 25px rgba(0,0,0,0.4);
+  padding: 1.2rem 1.5rem;
+  position: relative;
+}
+
+.card-frame::before {
+  content: '';
+  position: absolute;
+  top: 4px; left: 4px; right: 4px; bottom: 4px;
+  border: 1px solid rgba(201,168,76,0.05);
+  pointer-events: none;
+}
+
+/* ---- CATALOG GRID (for effects slide) ---- */
+
+.catalog {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+  width: 100%;
+}
+
+.catalog-item {
+  background: var(--void-light);
+  border: 1px solid rgba(42,37,32,0.5);
+  padding: 0.5rem 0.8rem;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.8rem;
+  color: var(--code-text);
+}
+
+.catalog-item .label {
+  font-family: 'Cinzel', serif;
+  font-size: 0.65rem;
+  color: var(--gold-dim);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+/* ---- LAYER TABLE ---- */
+
+.layer-table {
+  border-collapse: collapse;
+  font-size: 1rem;
+  width: 100%;
+  max-width: 800px;
+}
+
+.layer-table th {
+  font-family: 'Cinzel', serif;
+  color: var(--gold);
+  text-align: left;
+  padding: 0.5rem 1rem;
+  border-bottom: 2px solid var(--gold-dim);
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.layer-table td {
+  padding: 0.45rem 1rem;
+  border-bottom: 1px solid rgba(42,37,32,0.4);
+}
+
+.layer-table td:first-child {
+  font-family: 'Cinzel', serif;
+  color: var(--gold-dim);
+  font-size: 1.3rem;
+  width: 3rem;
+  text-align: center;
+}
+
+.layer-table tr:hover td {
+  background: rgba(201,168,76,0.03);
+}
+
+/* ---- LADDER ---- */
+
+.ladder {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  width: 100%;
+  max-width: 800px;
+}
+
+.ladder-step {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.4rem 1rem;
+  background: var(--void-light);
+  border-left: 3px solid var(--gold-dim);
+  transition: all 0.15s;
+}
+
+.ladder-step:hover {
+  background: var(--void-lighter);
+  border-left-color: var(--gold);
+}
+
+.ladder-step .level {
+  font-family: 'Cinzel', serif;
+  font-size: 0.75rem;
+  color: var(--gold-dim);
+  min-width: 1.5rem;
+  text-align: right;
+}
+
+.ladder-step .desc { color: var(--parchment); flex: 1; font-size: 0.9rem; }
+
+.ladder-step .api {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.7rem;
+  color: var(--artifact);
+}
+
+/* ---- PROGRESS & NAV ---- */
+
+.progress {
+  position: fixed;
+  bottom: 0;
+  left: 0; right: 0;
+  height: 3px;
+  background: var(--void-lighter);
+  z-index: 9999;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+  transition: width 0.3s ease;
+}
+
+.nav-controls {
+  position: fixed;
+  bottom: 0.8rem;
+  right: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  z-index: 9999;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.7rem;
+  color: var(--artifact);
+}
+
+.nav-controls button {
+  background: var(--void-light);
+  border: 1px solid #2a2520;
+  color: var(--parchment-dim);
+  padding: 0.25rem 0.6rem;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.nav-controls button:hover {
+  border-color: var(--gold-dim);
+  color: var(--gold);
+}
+
+/* ---- ANIMATION CLASSES ---- */
+
+.fade-in { animation: fadeIn 0.6s ease both; }
+.fade-in-delay { animation: fadeIn 0.6s ease 0.3s both; }
+.fade-in-delay2 { animation: fadeIn 0.6s ease 0.6s both; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* build items — appear one at a time with spacebar */
+.build { opacity: 0; transform: translateY(8px); transition: all 0.4s ease; }
+.build.shown { opacity: 1; transform: translateY(0); }
+
+/* 4-col catalog for dense API slides */
+.catalog-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.catalog-4 .catalog-item { font-size: 0.72rem; padding: 0.4rem 0.6rem; }
+
+/* tiny code for very dense reference */
+pre.tiny {
+  font-size: 0.68rem;
+  padding: 0.8rem 1rem;
+  line-height: 1.5;
+}
+
+/* ---- RESPONSIVE ---- */
+
+@media (max-width: 1100px) {
+  .slide { padding: 2.5rem 3rem; }
+  h1 { font-size: 2.5rem; }
+  h2 { font-size: 1.6rem; }
+  pre.zoom { font-size: 0.95rem; }
+  .two-col { grid-template-columns: 1fr; }
+  .three-col { grid-template-columns: 1fr; }
+  .catalog { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="slides" id="slides">
+
+<!-- ============================== -->
+<!-- TITLE                          -->
+<!-- ============================== -->
+<div class="slide slide--title active" data-slide="0">
+  <h1>Writing Cards<br>for mage-go</h1>
+  <div class="divider"></div>
+  <div class="subtitle">From Grizzly Bears to custom engine events</div>
+  <p class="dim" style="margin-top: 2rem; font-size: 0.9rem;">Everything is test-driven. Every card we write, we write the test first.</p>
+  <div data-notes="Welcome! Today we're going to build MTG cards in Go. We start from the simplest vanilla creature and end up writing custom engine events and replacement effects. Every single example is TDD."></div>
+</div>
+
+<!-- ============================== -->
+<!-- CARDINAL RULES                 -->
+<!-- ============================== -->
+<div class="slide slide--section" data-slide="1">
+  <div class="section-label">The Foundation</div>
+  <h2 style="font-size: 2.5rem; margin-bottom: 1.5rem;">Four Rules</h2>
+  <div style="text-align: left; max-width: 550px;">
+    <p class="build" style="font-size: 1.4rem;"><strong>1.</strong> Follow Oracle text <em>exactly</em></p>
+    <p class="build" style="font-size: 1.4rem;"><strong>2.</strong> Never simplify</p>
+    <p class="build" style="font-size: 1.4rem;"><strong>3.</strong> TDD &mdash; test first</p>
+    <p class="build" style="font-size: 1.4rem;"><strong>4.</strong> Consult XMage</p>
+  </div>
+  <div data-notes="These are non-negotiable. If Oracle says 'nontoken creature an opponent controls with power 3 or greater' — you check every single word. A simplified implementation is a wrong implementation."></div>
+</div>
+
+<!-- ============================== -->
+<!-- PART 1: BASICS                 -->
+<!-- ============================== -->
+<div class="slide slide--section" data-slide="2">
+  <div class="section-label">Part 1</div>
+  <h1 style="font-size: 3rem;">The Basics</h1>
+  <div class="subtitle">Constructors, options, registration</div>
+</div>
+
+<!-- GRIZZLY BEARS: ORACLE -->
+<div class="slide slide--zoom" data-slide="3">
+  <h2>Your First Card</h2>
+  <div class="oracle big">
+    <span class="card-name">Grizzly Bears</span> <span class="mana-cost">{1}{G}</span>
+    <span class="type-line">Creature &mdash; Bear</span>
+    <span class="pt">2/2</span>
+  </div>
+  <p class="dim" style="margin-top: 1rem;">Let's implement this. Test first.</p>
+  <div data-notes="The simplest possible card. No abilities, just a body. But even this teaches the core pattern: Oracle text, test, implementation."></div>
+</div>
+
+<!-- GRIZZLY BEARS: TEST -->
+<div class="slide slide--zoom" data-slide="4">
+  <h2>Test First</h2>
+  <pre class="zoom"><code><span class="kw">func</span> <span class="fn">TestGrizzlyBears</span>(t *testing.T) {
+    g := gametest.<span class="fn">NewTestGame</span>(t)
+    g.<span class="fn">AddCard</span>(core.ZoneBattlefield,
+        gametest.PlayerA, <span class="st">"Grizzly Bears"</span>)
+    g.<span class="fn">StopAt</span>(<span class="nu">1</span>, core.BeginCombat)
+    g.<span class="fn">Execute</span>()
+
+    <span class="hl">g.<span class="fn">AssertPowerToughness</span>(
+        gametest.PlayerA, <span class="st">"Grizzly Bears"</span>, <span class="nu">2</span>, <span class="nu">2</span>)</span>
+}</code></pre>
+  <div data-notes="NewTestGame gives you two players at 20 life with empty boards. AddCard places cards anywhere. StopAt freezes execution. Execute runs it. Then assert."></div>
+</div>
+
+<!-- GRIZZLY BEARS: IMPLEMENTATION -->
+<div class="slide slide--zoom" data-slide="5">
+  <h2>Implementation</h2>
+  <pre class="zoom"><code>mage.<span class="fn">Register</span>(<span class="st">"Grizzly Bears"</span>, <span class="kw">func</span>() mage.Card {
+    <span class="kw">return</span> mage.<span class="fn">NewCreature</span>(
+        <span class="st">"Grizzly Bears"</span>,
+        <span class="st">"{1}{G}"</span>,
+        <span class="nu">2</span>, <span class="nu">2</span>,
+        mage.<span class="fn">WithSubTypes</span>(<span class="st">"Bear"</span>),
+    )
+})</code></pre>
+  <p class="big-text dim" style="margin-top: 1.5rem;">Five lines. That's it.</p>
+  <div data-notes="Register takes a name and factory function. NewCreature takes name, mana cost, power, toughness, and variadic options. The factory returns a fresh card each time."></div>
+</div>
+
+<!-- REGISTRATION DIAGRAM -->
+<div class="slide slide--zoom" data-slide="6">
+  <h2>How Registration Works</h2>
+  <div class="diagram" style="font-size: 1rem;">
+    <div class="diagram-box big"><code>init()</code></div>
+    <div class="diagram-arrow">&rarr;</div>
+    <div class="diagram-box big gold"><code>Register(name, factory)</code></div>
+    <div class="diagram-arrow">&rarr;</div>
+    <div class="diagram-box big"><code>DefaultRegistry</code></div>
+    <div class="diagram-arrow">&rarr;</div>
+    <div class="diagram-box big blue"><code>CreateCard(name)</code></div>
+  </div>
+  <pre class="medium" style="max-width: 600px; margin-top: 2rem;"><code><span class="cm">// cards/limited/test.go — ensures init() runs</span>
+<span class="kw">var</span> _ = registerCreatures
+<span class="kw">var</span> _ = registerSpells</code></pre>
+  <div data-notes="Without the test.go blank-id references, Go's test binary won't link the card package. Your cards literally don't exist in tests."></div>
+</div>
+
+<!-- CONSTRUCTORS & OPTIONS -->
+<div class="slide slide--split" data-slide="7">
+  <div class="col">
+    <h2>Constructors</h2>
+    <pre class="medium"><code><span class="fn">NewCreature</span>(name, cost, p, t, ...opts)
+<span class="fn">NewInstant</span>(name, cost, spell, ...opts)
+<span class="fn">NewSorcery</span>(name, cost, spell, ...opts)
+<span class="fn">NewEnchantment</span>(name, cost, ...opts)
+<span class="fn">NewAura</span>(name, cost, ...opts)
+<span class="fn">NewArtifact</span>(name, cost, ...opts)
+<span class="fn">NewEquipment</span>(name, cost, ...opts)
+<span class="fn">NewLand</span>(name, ...opts)
+<span class="fn">NewToken</span>(name, p, t, types, ...)</code></pre>
+    <h3>Template Helpers</h3>
+    <pre class="small"><code><span class="fn">NewLuckyCharm</span>(name, cost, color)
+<span class="fn">NewLandDestruction</span>(name, cost)
+<span class="fn">NewBoostAura</span>(name, cost, +P, +T)</code></pre>
+  </div>
+  <div class="col">
+    <h2>CardOption Functions</h2>
+    <pre class="medium"><code><span class="fn">WithSubTypes</span>(<span class="st">"Human"</span>, <span class="st">"Soldier"</span>)
+<span class="fn">WithSuperTypes</span>(core.Legendary)
+<span class="fn">WithKeyword</span>(core.Flying)
+<span class="fn">WithCardType</span>(core.TypeArtifact)
+<span class="fn">WithManaAbility</span>(core.Green)
+<span class="fn">WithAnyColorMana</span>()
+<span class="fn">WithAdditionalCost</span>(cost)
+<span class="fn">WithExpansion</span>(<span class="st">"Arabian Nights"</span>)
+<span class="fn">WithCumulativeUpkeep</span>(<span class="st">"{1}"</span>)
+<span class="fn">WithActivatedAbility</span>(e, c, ...o)
+<span class="fn">WithStaticAbility</span>(effects...)
+<span class="fn">WithAbility</span>(ability)
+<span class="fn">WithETBEffect</span>(effect)</code></pre>
+  </div>
+  <div data-notes="Pick the constructor for your card type. Customization happens through CardOption functions — they snap together like LEGO. No inheritance, no class hierarchy."></div>
+</div>
+
+<!-- SERRA ANGEL -->
+<div class="slide slide--split" data-slide="8">
+  <div class="col">
+    <h2>Serra Angel</h2>
+    <div class="oracle">
+      <span class="card-name">Serra Angel</span> <span class="mana-cost">{3}{W}{W}</span>
+      <span class="type-line">Creature &mdash; Angel</span>
+      Flying, vigilance
+      <span class="pt">4/4</span>
+    </div>
+    <pre class="medium" style="margin-top: 1rem;"><code>mage.<span class="fn">NewCreature</span>(
+    <span class="st">"Serra Angel"</span>, <span class="st">"{3}{W}{W}"</span>, <span class="nu">4</span>, <span class="nu">4</span>,
+    mage.<span class="fn">WithSubTypes</span>(<span class="st">"Angel"</span>),
+    <span class="hl">mage.<span class="fn">WithKeyword</span>(core.Flying)</span>,
+    <span class="hl">mage.<span class="fn">WithKeyword</span>(core.Vigilance)</span>,
+)</code></pre>
+  </div>
+  <div class="col">
+    <h3>Test the behavior, not just existence</h3>
+    <pre class="medium"><code><span class="cm">// Vigilance means she doesn't tap</span>
+g.<span class="fn">Attack</span>(<span class="nu">1</span>, gametest.PlayerA,
+    <span class="st">"Serra Angel"</span>)
+g.<span class="fn">StopAt</span>(<span class="nu">1</span>, core.EndStep)
+g.<span class="fn">Execute</span>()
+
+<span class="hl">g.<span class="fn">AssertTapped</span>(gametest.PlayerA,
+    <span class="st">"Serra Angel"</span>, <span class="nu">false</span>)</span>
+g.<span class="fn">AssertLife</span>(gametest.PlayerB, <span class="nu">16</span>)</code></pre>
+    <p class="dim" style="margin-top: 1rem; font-size: 0.95rem;">Don't just test <code>AssertHasAbility</code>. Test what the keyword <em>does</em>.</p>
+  </div>
+  <div data-notes="The test exercises the BEHAVIOR — she attacks for 4 and doesn't tap. Testing has_ability is fine for smoke tests, but behavior testing catches real bugs."></div>
+</div>
+<!-- ============================== -->
+<!-- PART 2: SPELLS & EFFECTS       -->
+<!-- ============================== -->
+<div class="slide slide--section" data-slide="9">
+  <div class="section-label">Part 2</div>
+  <h1 style="font-size: 3rem;">Spells &amp; Effects</h1>
+  <div class="subtitle">The atomic building blocks</div>
+</div>
+
+<!-- LIGHTNING BOLT PIPELINE -->
+<div class="slide slide--zoom" data-slide="10">
+  <h2>Lightning Bolt</h2>
+  <div class="diagram" style="margin-bottom: 2rem;">
+    <div class="diagram-box big gold"><code>Target</code></div>
+    <div class="diagram-arrow">+</div>
+    <div class="diagram-box big green"><code>Effect</code></div>
+    <div class="diagram-arrow">=</div>
+    <div class="diagram-box big blue"><code>Spell</code></div>
+  </div>
+  <pre class="zoom"><code>mage.<span class="fn">NewInstant</span>(<span class="st">"Lightning Bolt"</span>, <span class="st">"{R}"</span>,
+    mage.<span class="fn">NewTargetedSpell</span>(
+        <span class="hl">mage.<span class="fn">TargetAnyTarget</span>()</span>,
+        <span class="hl">mage.<span class="fn">DealDamage</span>(mage.<span class="fn">Fixed</span>(<span class="nu">3</span>))</span>,
+    ),
+)</code></pre>
+  <div data-notes="Three components. A Target — what can you aim at. An Effect — what happens. And NewTargetedSpell that wires them together. Each is a standalone, reusable building block."></div>
+</div>
+
+<!-- LIGHTNING BOLT TEST -->
+<div class="slide slide--zoom" data-slide="11">
+  <h2>Lightning Bolt: Test</h2>
+  <pre class="zoom"><code>g := gametest.<span class="fn">NewTestGame</span>(t)
+g.<span class="fn">AddCard</span>(core.ZoneHand, gametest.PlayerA,
+    <span class="st">"Lightning Bolt"</span>)
+
+g.<span class="fn">CastSpell</span>(<span class="nu">1</span>, core.PrecombatMain,
+    gametest.PlayerA,
+    <span class="st">"Lightning Bolt"</span>, <span class="hl"><span class="st">"PlayerB"</span></span>)
+
+g.<span class="fn">StopAt</span>(<span class="nu">1</span>, core.BeginCombat)
+g.<span class="fn">Execute</span>()
+g.<span class="fn">AssertLife</span>(gametest.PlayerB, <span class="hl"><span class="nu">17</span></span>)</code></pre>
+  <div data-notes="CastSpell takes turn number, phase, who's casting, what they're casting, and the target. Here we target PlayerB. 20 minus 3 is 17."></div>
+</div>
+
+<!-- EFFECTS CATALOG: DAMAGE & REMOVAL -->
+<div class="slide slide--code" data-slide="12">
+  <h2>Effects: Damage &amp; Removal</h2>
+  <div class="two-col">
+    <div>
+      <h3>Damage</h3>
+      <pre class="small"><code><span class="fn">DealDamage</span>(amount)
+<span class="fn">DealDamageToAllCreatures</span>(amount, filter)
+<span class="fn">DealDamageToPlayers</span>(amount, selector)
+<span class="fn">PreventAllCombatDamage</span>()
+<span class="fn">PreventDamageToTarget</span>(amount)</code></pre>
+    </div>
+    <div>
+      <h3>Removal</h3>
+      <pre class="small"><code><span class="fn">DestroyTarget</span>()
+<span class="fn">DestroyTargetPermanent</span>()
+<span class="fn">DestroyTargetLand</span>()
+<span class="fn">DestroyTargetArtifact</span>()
+<span class="fn">DestroyAllCreatures</span>()
+<span class="fn">DestroyAllLands</span>()
+<span class="fn">DestroyAllEnchantments</span>()
+<span class="fn">DestroyAllMatching</span>(filter, text)
+<span class="fn">DestroyAllMatchingNoRegen</span>(f, text)
+<span class="fn">ExileTarget</span>()
+<span class="fn">SacrificeSource</span>()</code></pre>
+    </div>
+  </div>
+  <div data-notes="Damage and removal — the bread and butter. DealDamage takes a ValueSource, not a raw int. DestroyAllMatchingNoRegen is for Shatterstorm-type effects where regen doesn't save."></div>
+</div>
+
+<!-- EFFECTS CATALOG: LIFE, CARDS, GRAVEYARD -->
+<div class="slide slide--code" data-slide="13">
+  <h2>Effects: Life, Cards, Graveyard</h2>
+  <div class="three-col">
+    <div>
+      <h3>Life</h3>
+      <pre class="tiny"><code><span class="fn">GainLife</span>(amount)
+<span class="fn">GainLifeTarget</span>(amount)
+<span class="fn">LoseLife</span>(amount)
+<span class="fn">SacrificeCreatureOrDamage</span>(dmg)</code></pre>
+    </div>
+    <div>
+      <h3>Card Manipulation</h3>
+      <pre class="tiny"><code><span class="fn">DrawCards</span>(amount)
+<span class="fn">DrawCardsActivePlayer</span>(amount)
+<span class="fn">DiscardCards</span>(amount)
+<span class="fn">DiscardRandom</span>(amount)
+<span class="fn">DiscardHandAndDraw</span>(n)
+<span class="fn">SearchLibraryToHand</span>()
+<span class="fn">SearchLibraryToTop</span>()
+<span class="fn">ShuffleLibrary</span>()</code></pre>
+    </div>
+    <div>
+      <h3>Graveyard</h3>
+      <pre class="tiny"><code><span class="fn">ReturnFromGraveyardToBattlefield</span>()
+<span class="fn">ReturnFromGraveyardToHandTarget</span>()
+<span class="fn">ReturnSourceToHand</span>()</code></pre>
+    </div>
+  </div>
+  <div data-notes="GainLife is controller; GainLifeTarget goes through targeting. DrawCards and DiscardCards take ValueSource — for dynamic counts. SearchLibraryToHand is Demonic Tutor. SearchLibraryToTop is Vampiric."></div>
+</div>
+
+<!-- EFFECTS CATALOG: PERMANENTS, COMBAT, MISC -->
+<div class="slide slide--code" data-slide="14">
+  <h2>Effects: Combat, Permanents, Misc</h2>
+  <div class="three-col">
+    <div>
+      <h3>Combat</h3>
+      <pre class="tiny"><code><span class="fn">BoostUntilEndOfTurn</span>(p, t, sel)
+<span class="fn">BoostMatchingUntilEndOfTurn</span>(p, t, f)
+<span class="fn">BoostAllMatchingUntilEndOfTurn</span>(...)
+<span class="fn">DoubleTargetPower</span>()
+<span class="fn">GrantKeywordUntilEndOfTurn</span>(kw, sel)
+<span class="fn">MakeUnblockableUntilEndOfTurn</span>()
+<span class="fn">SetPTUntilEndOfTurn</span>(p, t, sel)
+<span class="fn">SetPowerUntilEndOfTurn</span>(p, sel)
+<span class="fn">RemoveFromCombat</span>()</code></pre>
+      <h3>Counters</h3>
+      <pre class="tiny"><code><span class="fn">AddCounters</span>(type, amount, sel)
+<span class="fn">RemoveCountersFromSource</span>(type, n)</code></pre>
+    </div>
+    <div>
+      <h3>Permanents</h3>
+      <pre class="tiny"><code><span class="fn">TapTarget</span>()
+<span class="fn">UntapTarget</span>()
+<span class="fn">UntapSource</span>()
+<span class="fn">TapOrUntapTarget</span>()
+<span class="fn">TapAllLands</span>()
+<span class="fn">TapAttachedCreature</span>()</code></pre>
+      <h3>Tokens &amp; Copy</h3>
+      <pre class="tiny"><code><span class="fn">CreateToken</span>(name, p, t, ...)
+<span class="fn">CloneTarget</span>(types...)
+<span class="fn">CopySpellOnStack</span>()</code></pre>
+    </div>
+    <div>
+      <h3>Misc</h3>
+      <pre class="tiny"><code><span class="fn">AddMana</span>(color, amount)
+<span class="fn">AddAnyMana</span>(amount, Color)
+<span class="fn">AttachToTarget</span>()
+<span class="fn">ControlChangeTarget</span>()
+<span class="fn">ExtraTurn</span>()
+<span class="fn">ChangeColorEffect</span>(color)
+<span class="fn">CounterSpell</span>()
+<span class="fn">CounterSpellIfColor</span>(color)
+<span class="fn">CounterSpellIfXMeetsCMC</span>()
+<span class="fn">RegenerateSource</span>()
+<span class="fn">RegenerateTarget</span>()
+<span class="fn">ChooseColor</span>(reason)
+<span class="fn">DestroyTargetAtEndOfTurn</span>()
+<span class="fn">ReplaceKeywordEffect</span>(from, to)
+<span class="fn">CompositeEffects</span>(text, effects...)</code></pre>
+    </div>
+  </div>
+  <p class="dim" style="text-align: center; margin-top: 0.5rem;">50+ pre-built effects. You almost never need a custom one.</p>
+  <div data-notes="CompositeEffects lets you chain multiple effects in sequence. BoostUntilEndOfTurn uses a PermanentSelector — SelectTarget or SelectSource. CounterSpellIfXMeetsCMC is for Spell Blast pattern."></div>
+</div>
+
+<!-- VALUESOURCE -->
+<div class="slide slide--zoom" data-slide="15">
+  <h2>ValueSource &mdash; Dynamic Values</h2>
+  <p class="dim" style="margin-bottom: 1.5rem;">Many effects take <code>ValueSource</code> instead of raw <code>int</code></p>
+  <pre class="zoom" style="max-width: 750px;"><code><span class="fn">Fixed</span>(<span class="nu">3</span>)                       <span class="cm">// constant</span>
+<span class="fn">XValue</span>()                      <span class="cm">// reads g.CurrentX</span>
+<span class="fn">CountBattlefield</span>(who, filter) <span class="cm">// count permanents</span>
+<span class="fn">CountZone</span>(zone, who, filter)   <span class="cm">// count cards in zone</span></code></pre>
+  <pre class="medium" style="max-width: 750px; margin-top: 1rem;"><code><span class="cm">// Lightning Bolt: 3 damage</span>
+mage.<span class="fn">DealDamage</span>(mage.<span class="fn">Fixed</span>(<span class="nu">3</span>))
+
+<span class="cm">// Fireball: X damage</span>
+mage.<span class="fn">DealDamage</span>(<span class="hl">mage.<span class="fn">XValue</span>()</span>)
+
+<span class="cm">// Drain based on Swamps you control</span>
+mage.<span class="fn">DealDamage</span>(<span class="hl">mage.<span class="fn">CountBattlefield</span>(
+    mage.<span class="fn">SelectController</span>(),
+    mage.<span class="fn">And</span>(mage.IsLand, mage.<span class="fn">HasSubType</span>(<span class="st">"Swamp"</span>)))</span>)</code></pre>
+  <div data-notes="ValueSource is the secret to composable effects. Fixed for constants, XValue for X spells, CountBattlefield for 'damage equal to the number of lands you control' patterns."></div>
+</div>
+
+<!-- TARGETS: BATTLEFIELD -->
+<div class="slide slide--split" data-slide="16">
+  <div class="col">
+    <h2>Targets: Battlefield</h2>
+    <pre class="medium"><code><span class="fn">TargetCreature</span>(filters...)
+<span class="fn">TargetPermanent</span>(filters...)
+<span class="fn">TargetControlledCreature</span>()
+<span class="fn">TargetControlledPermanent</span>()
+<span class="fn">TargetLand</span>()
+<span class="fn">TargetArtifact</span>()
+<span class="fn">TargetArtifactOrEnchantment</span>()</code></pre>
+    <p class="dim" style="margin-top: 1rem; font-size: 0.9rem;">Auto-checks hexproof, shroud, protection via <code>CanBeTargetedBy</code></p>
+  </div>
+  <div class="col">
+    <h2>Player, Stack, Zone</h2>
+    <pre class="medium"><code><span class="cm">// Players</span>
+<span class="fn">TargetPlayer</span>()
+<span class="fn">TargetOpponent</span>()
+<span class="fn">TargetAnyTarget</span>()         <span class="cm">// creature or player</span>
+
+<span class="cm">// Stack</span>
+<span class="fn">TargetSpellOnStack</span>(filters...)
+
+<span class="cm">// Zones</span>
+<span class="fn">TargetCreatureInYourGraveyard</span>()
+<span class="fn">TargetCardInYourGraveyard</span>(filters...)
+<span class="fn">TargetCreatureInHand</span>()</code></pre>
+  </div>
+  <div data-notes="Target constructors define legal targets. The engine calls Possible() to get legal targets, then Choose() to lock in. All battlefield targets auto-filter for hexproof, shroud, and protection."></div>
+</div>
+
+<!-- FILTERS -->
+<div class="slide slide--split" data-slide="17">
+  <div class="col">
+    <h2>PermanentFilter</h2>
+    <h3>Pre-built values</h3>
+    <pre class="small"><code>AnyPermanent  IsCreature  IsArtifact
+IsEnchantment IsLand      IsTapped
+IsUntapped    IsAttacking IsBlocking</code></pre>
+    <h3>Constructors</h3>
+    <pre class="small"><code><span class="fn">HasSubType</span>(<span class="st">"Wall"</span>)
+<span class="fn">HasColorFilter</span>(core.Black)
+<span class="fn">HasKeywordFilter</span>(core.Flying)
+<span class="fn">NotHasKeywordFilter</span>(core.Flying)
+<span class="fn">HasPowerLTE</span>(<span class="nu">3</span>)  <span class="fn">HasPowerGTE</span>(<span class="nu">3</span>)
+<span class="fn">ControlledBy</span>(id) <span class="fn">NotControlledBy</span>(id)
+<span class="fn">Named</span>(<span class="st">"Sol Ring"</span>)
+<span class="fn">NotID</span>(id)  <span class="fn">IsID</span>(id)
+<span class="fn">IsBandedWith</span>(id)
+<span class="fn">HasExpansion</span>(<span class="st">"Arabian Nights"</span>)</code></pre>
+  </div>
+  <div class="col">
+    <h2>Combinators &amp; CardFilter</h2>
+    <pre class="medium"><code><span class="cm">// Combinators</span>
+<span class="fn">And</span>(filters...)
+<span class="fn">Or</span>(filters...)
+<span class="fn">Not</span>(filter)
+
+<span class="cm">// "Destroy target nonblack creature"</span>
+mage.<span class="fn">TargetCreature</span>(
+    <span class="hl">mage.<span class="fn">Not</span>(mage.<span class="fn">HasColorFilter</span>(core.Black))</span>)
+
+<span class="cm">// "target Djinn or Efreet"</span>
+mage.<span class="fn">TargetCreature</span>(
+    <span class="hl">mage.<span class="fn">Or</span>(mage.<span class="fn">HasSubType</span>(<span class="st">"Djinn"</span>),
+        mage.<span class="fn">HasSubType</span>(<span class="st">"Efreet"</span>))</span>)</code></pre>
+    <h3>CardFilter (hand/graveyard/stack)</h3>
+    <pre class="small"><code>IsCreatureCard  IsArtifactCard
+
+<span class="cm">// Custom filter</span>
+mage.<span class="fn">NewCardFilter</span>(<span class="st">"instant"</span>,
+    <span class="kw">func</span>(c mage.Card) <span class="tp">bool</span> {
+        <span class="kw">return</span> c.<span class="fn">HasType</span>(core.TypeInstant)
+    })</code></pre>
+  </div>
+  <div data-notes="Filters are labeled predicates. Oracle text maps to filters word-for-word. 'nonblack' is Not(HasColorFilter(Black)). You can compose them with And, Or, Not. Custom filters with NewPermanentFilter."></div>
+</div>
+
+<!-- SELECTORS -->
+<div class="slide slide--split" data-slide="18">
+  <div class="col">
+    <h2>PermanentSelector</h2>
+    <p class="dim" style="font-size: 0.9rem;">Who does the effect apply to?</p>
+    <pre class="medium"><code><span class="fn">SelectTarget</span>    <span class="cm">// targets[0]</span>
+<span class="fn">SelectSource</span>    <span class="cm">// source permanent</span></code></pre>
+    <pre class="medium" style="margin-top: 1rem;"><code><span class="cm">// Sengir: +1/+1 counter on SELF</span>
+mage.<span class="fn">AddCounters</span>(core.P1P1,
+    mage.<span class="fn">Fixed</span>(<span class="nu">1</span>), <span class="hl">mage.SelectSource</span>)
+
+<span class="cm">// Spell: counter on TARGET</span>
+mage.<span class="fn">AddCounters</span>(core.P1P1,
+    mage.<span class="fn">Fixed</span>(<span class="nu">1</span>), <span class="hl">mage.SelectTarget</span>)</code></pre>
+  </div>
+  <div class="col">
+    <h2>PlayerSelector</h2>
+    <p class="dim" style="font-size: 0.9rem;">Which player(s) are affected?</p>
+    <pre class="medium"><code><span class="fn">SelectController</span>()
+<span class="fn">SelectActivePlayer</span>()
+<span class="fn">SelectEachPlayer</span>()
+<span class="fn">SelectEachOpponent</span>()
+<span class="fn">SelectAttachedController</span>()
+<span class="fn">SelectEventController</span>()</code></pre>
+    <pre class="small" style="margin-top: 0.8rem;"><code><span class="cm">// Juzam: 1 damage to you each upkeep</span>
+mage.<span class="fn">DealDamageToPlayers</span>(mage.<span class="fn">Fixed</span>(<span class="nu">1</span>),
+    <span class="hl">mage.<span class="fn">SelectController</span>()</span>)
+
+<span class="cm">// Psychic Venom: 2 to enchanted land's controller</span>
+mage.<span class="fn">DealDamageToPlayers</span>(mage.<span class="fn">Fixed</span>(<span class="nu">2</span>),
+    <span class="hl">mage.<span class="fn">SelectAttachedController</span>()</span>)</code></pre>
+  </div>
+  <div data-notes="PermanentSelector picks source or target. PlayerSelector picks which player(s). SelectController is you, SelectAttachedController is whoever controls the permanent this is attached to."></div>
+</div>
+<!-- ============================== -->
+<!-- PART 3: ABILITIES              -->
+<!-- ============================== -->
+<div class="slide slide--section" data-slide="19">
+  <div class="section-label">Part 3</div>
+  <h1 style="font-size: 3rem;">Abilities</h1>
+  <div class="subtitle">Activated, triggered, static, and protection</div>
+</div>
+
+<!-- ACTIVATED: PRODIGAL SORCERER -->
+<div class="slide slide--zoom" data-slide="20">
+  <h2>Activated Abilities</h2>
+  <div class="diagram" style="margin-bottom: 1.5rem;">
+    <div class="diagram-box big red"><code>Cost</code></div>
+    <div class="diagram-arrow">&rarr;</div>
+    <div class="diagram-box big blue"><code>Target?</code></div>
+    <div class="diagram-arrow">&rarr;</div>
+    <div class="diagram-box big green"><code>Effect</code></div>
+  </div>
+  <div class="oracle" style="margin-bottom: 1rem;">
+    <span class="card-name">Prodigal Sorcerer</span> &mdash; <span class="mana-cost">{T}</span>: Deal 1 damage to any target.
+  </div>
+  <pre class="zoom"><code>mage.<span class="fn">WithActivatedAbility</span>(
+    <span class="hl">mage.<span class="fn">DealDamage</span>(mage.<span class="fn">Fixed</span>(<span class="nu">1</span>))</span>,       <span class="cm">// effect</span>
+    <span class="hl">mage.<span class="fn">TapSourceCost</span>()</span>,                 <span class="cm">// cost</span>
+    mage.<span class="fn">WithTarget</span>(mage.<span class="fn">TargetAnyTarget</span>()), <span class="cm">// target</span>
+)</code></pre>
+  <div data-notes="Effect first, then primary cost, then ability options for additional costs and targeting. The pattern: what does it do, what does it cost, what can you aim at."></div>
+</div>
+
+<!-- COSTS CATALOG -->
+<div class="slide slide--split" data-slide="21">
+  <div class="col">
+    <h2>Costs</h2>
+    <pre class="medium"><code><span class="cm">// Mana</span>
+<span class="fn">ManaCostOf</span>(<span class="st">"{1}{R}"</span>)
+<span class="fn">GenericCost</span>(n)
+<span class="fn">XManaCost</span>()
+
+<span class="cm">// Tap</span>
+<span class="fn">TapSourceCost</span>()
+
+<span class="cm">// Sacrifice</span>
+<span class="fn">SacrificeSourceCost</span>()
+<span class="fn">SacrificeCreatureCost</span>()
+<span class="fn">SacrificeArtifactCost</span>()
+
+<span class="cm">// Life</span>
+<span class="fn">LifePayCost</span>(amount)</code></pre>
+  </div>
+  <div class="col">
+    <h2>&nbsp;</h2>
+    <pre class="medium"><code><span class="cm">// Resources</span>
+<span class="fn">RemoveCountersCost</span>(ct, n)
+<span class="fn">DiscardCost</span>(n)
+<span class="fn">DiscardRandomCost</span>(n)
+<span class="fn">ExileFromGraveyardCost</span>(n)
+<span class="fn">ExileSourceCost</span>()
+<span class="fn">ReturnToHandCost</span>(filter)
+<span class="fn">TapCreatureCost</span>()</code></pre>
+    <h3>Card-level additional cost</h3>
+    <pre class="small"><code><span class="cm">// Paid when casting, not on ability</span>
+mage.<span class="fn">WithAdditionalCost</span>(
+    mage.<span class="fn">SacrificeCreatureCost</span>())</code></pre>
+  </div>
+  <div data-notes="15 cost types. ManaCostOf parses mana strings. TapSourceCost is the {T} symbol. Costs compose — an ability can have ManaCostOf plus TapSourceCost plus SacrificeCreatureCost. WithAdditionalCost is for casting costs."></div>
+</div>
+
+<!-- ABILITY OPTIONS -->
+<div class="slide slide--zoom" data-slide="22">
+  <h2>AbilityOption Modifiers</h2>
+  <pre class="zoom" style="max-width: 750px;"><code><span class="fn">WithCost</span>(cost)                    <span class="cm">// additional cost</span>
+<span class="fn">WithTarget</span>(target)                <span class="cm">// targeting</span>
+<span class="fn">WithEffect</span>(effect)                <span class="cm">// additional effect</span>
+<span class="fn">WithUpkeepOnly</span>()                  <span class="cm">// only during upkeep</span>
+<span class="fn">WithOncePerTurn</span>()                 <span class="cm">// once per turn</span>
+<span class="fn">WithAnyPlayerMay</span>()                <span class="cm">// any player can activate</span>
+<span class="fn">WithControlledSinceTurnStart</span>()    <span class="cm">// no haste</span></code></pre>
+  <pre class="medium" style="max-width: 750px; margin-top: 1rem;"><code><span class="cm">// Northern Paladin: {W}{W}, {T}: Destroy target black permanent</span>
+mage.<span class="fn">WithActivatedAbility</span>(
+    mage.<span class="fn">DestroyTargetPermanent</span>(),
+    mage.<span class="fn">ManaCostOf</span>(<span class="st">"{W}{W}"</span>),
+    <span class="hl">mage.<span class="fn">WithCost</span>(mage.<span class="fn">TapSourceCost</span>())</span>,
+    <span class="hl">mage.<span class="fn">WithTarget</span>(mage.<span class="fn">TargetPermanent</span>(
+        mage.<span class="fn">HasColorFilter</span>(core.Black)))</span>,
+)</code></pre>
+  <div data-notes="AbilityOptions compose. Northern Paladin has a mana cost PLUS a tap cost PLUS a target requirement. NewEquipAbility is a shortcut for sorcery-speed, target-creature-you-control abilities."></div>
+</div>
+
+<!-- TRIGGERED: SENGIR VAMPIRE -->
+<div class="slide slide--split" data-slide="23">
+  <div class="col">
+    <h2>Triggered Abilities</h2>
+    <div class="oracle" style="font-size: 0.95rem;">
+      <span class="card-name">Sengir Vampire</span><br>
+      Whenever a creature dealt damage by Sengir Vampire this turn dies,
+      put a +1/+1 counter on Sengir Vampire.
+    </div>
+    <pre class="medium" style="margin-top: 1rem;"><code>mage.<span class="fn">WithAbility</span>(
+  mage.<span class="fn">CreatureDealtDamageBySourceDiesTrigger</span>(
+    <span class="hl">mage.<span class="fn">AddCounters</span>(
+      core.P1P1,
+      mage.<span class="fn">Fixed</span>(<span class="nu">1</span>),
+      mage.SelectSource)</span>,
+    <span class="nu">false</span>,  <span class="cm">// mandatory</span>
+  ),
+)</code></pre>
+  </div>
+  <div class="col">
+    <h3>Test</h3>
+    <pre class="medium"><code>g.<span class="fn">AddCard</span>(core.ZoneBattlefield,
+    gametest.PlayerA, <span class="st">"Sengir Vampire"</span>)
+g.<span class="fn">AddCard</span>(core.ZoneBattlefield,
+    gametest.PlayerB, <span class="st">"Grizzly Bears"</span>)
+
+g.<span class="fn">Attack</span>(<span class="nu">1</span>, gametest.PlayerA,
+    <span class="st">"Sengir Vampire"</span>)
+g.<span class="fn">Block</span>(<span class="nu">1</span>, gametest.PlayerB,
+    <span class="st">"Grizzly Bears"</span>, <span class="st">"Sengir Vampire"</span>)
+g.<span class="fn">StopAt</span>(<span class="nu">1</span>, core.EndStep)
+g.<span class="fn">Execute</span>()
+
+<span class="hl">g.<span class="fn">AssertPowerToughness</span>(gametest.PlayerA,
+    <span class="st">"Sengir Vampire"</span>, <span class="nu">5</span>, <span class="nu">5</span>)</span></code></pre>
+  </div>
+  <div data-notes="The convenience constructor name maps to Oracle text. The effect is AddCounters on SelectSource. Bears die, Sengir gets a counter, becomes 5/5."></div>
+</div>
+
+<!-- FULL TRIGGER CONSTRUCTORS -->
+<div class="slide slide--code" data-slide="24">
+  <h2>All 20 Trigger Constructors</h2>
+  <div class="two-col">
+    <div>
+      <pre class="tiny"><code><span class="fn">EntersBattlefieldTrigger</span>(e, opt)
+<span class="fn">AttacksTrigger</span>(e, opt)
+<span class="fn">BlocksTrigger</span>(e, opt)
+<span class="fn">DiesCreatureTrigger</span>(e, opt, filter)
+<span class="fn">AnyCreatureDiesTrigger</span>(e, opt)
+<span class="fn">CreatureDealtDamageBySourceDiesTrigger</span>(e, opt)
+<span class="fn">DealsDamageToOpponentTrigger</span>(e, opt)
+<span class="fn">WhenDamageDealtToThisTrigger</span>(e, opt)
+<span class="fn">BeginningOfUpkeepTrigger</span>(e, opt)
+<span class="fn">BeginningOfEachUpkeepTrigger</span>(e, opt)</code></pre>
+    </div>
+    <div>
+      <pre class="tiny"><code><span class="fn">BeginningOfEachDrawStepTrigger</span>(e, opt)
+<span class="fn">BeginningOfAttachedControllerUpkeepTrigger</span>(e, opt)
+<span class="fn">WheneverSpellCastTrigger</span>(e, opt, *Color)
+<span class="fn">WheneverEnchantmentCastTrigger</span>(e, opt)
+<span class="fn">WhenAttachedBecomesTappedTrigger</span>(e, opt)
+<span class="fn">WheneverLandEntersBattlefieldTrigger</span>(e, opt)
+<span class="fn">WhenOpponentPermanentBecomesTappedTrigger</span>(e, opt, f)
+<span class="fn">PutIntoGraveyardFromBattlefieldTrigger</span>(e, opt)
+<span class="fn">SacrificeAtUpkeepUnlessPay</span>(manaCost)</code></pre>
+    </div>
+  </div>
+  <p class="dim" style="text-align: center; margin-top: 0.8rem;"><code>false</code> = mandatory &middot; <code>true</code> = "you may"</p>
+  <div data-notes="One convenience constructor per common trigger pattern. They handle all the event matching internally. You just provide the effect and whether it's optional. Match the Oracle text to the function name."></div>
+</div>
+
+<!-- CUSTOM TRIGGERS -->
+<div class="slide slide--zoom" data-slide="25">
+  <h2>Custom Triggers</h2>
+  <p class="dim" style="margin-bottom: 1rem;">When convenience constructors don't fit:</p>
+  <pre class="zoom"><code><span class="cm">// "Whenever an opponent's Swamp becomes tapped"</span>
+mage.<span class="fn">NewTriggered</span>(core.EvtTapped, <span class="nu">false</span>, effect).
+  <span class="fn">SetCondition</span>(<span class="kw">func</span>(evt *core.GameEvent,
+      g *mage.Game,
+      sourceID, controllerID uuid.UUID) <span class="tp">bool</span> {
+
+    perm := g.<span class="fn">FindPermanent</span>(evt.SourceID)
+    <span class="kw">return</span> perm != <span class="nu">nil</span> &&
+      <span class="hl">perm.Controller != controllerID</span> &&
+      <span class="hl">perm.<span class="fn">HasSubType</span>(<span class="st">"Swamp"</span>)</span>
+  })</code></pre>
+  <div data-notes="NewTriggered plus SetCondition. Your condition returns true to fire, false to skip. Full read access to game state."></div>
+</div>
+
+<!-- PROTECTION -->
+<div class="slide slide--zoom" data-slide="26">
+  <h2>Protection Abilities</h2>
+  <p class="dim" style="margin-bottom: 1rem;">Not keywords &mdash; runtime abilities attached with <code>WithAbility</code></p>
+  <pre class="zoom" style="max-width: 750px;"><code><span class="fn">ProtectionFromColor</span>(core.Black)
+<span class="fn">ProtectionFromColors</span>(core.Black, core.Red)
+<span class="fn">ProtectionFromCardType</span>(core.TypeArtifact)
+<span class="fn">ProtectionFromSubType</span>(<span class="st">"Goblin"</span>)
+<span class="fn">ProtectionFromAll</span>()</code></pre>
+  <pre class="medium" style="max-width: 750px; margin-top: 1rem;"><code><span class="cm">// Black Knight</span>
+mage.<span class="fn">NewCreature</span>(<span class="st">"Black Knight"</span>, <span class="st">"{B}{B}"</span>, <span class="nu">2</span>, <span class="nu">1</span>,
+    mage.<span class="fn">WithKeyword</span>(core.FirstStrike),
+    <span class="hl">mage.<span class="fn">WithAbility</span>(mage.<span class="fn">ProtectionFromColor</span>(core.White))</span>,
+)</code></pre>
+  <div data-notes="Protection prevents damage, enchanting, blocking, and targeting from the protected quality. These are runtime abilities, not keywords."></div>
+</div>
+
+<!-- SPECIAL ABILITY TYPES -->
+<div class="slide slide--code" data-slide="27">
+  <h2>Special Ability Types</h2>
+  <div class="two-col">
+    <div>
+      <h3>ETB &amp; Lifecycle</h3>
+      <pre class="small"><code><span class="fn">ETBWithTargets</span>(effect)
+<span class="fn">ETBEffect</span>(effect)
+<span class="fn">EntersWithXCounters</span>(counterType)
+<span class="fn">CopyCreatureOnETB</span>()
+<span class="fn">SacrificeUnlessLand</span>(subtype)
+<span class="fn">GraveyardReturnIfCreaturesAbove</span>(n)</code></pre>
+    </div>
+    <div>
+      <h3>Mana Abilities</h3>
+      <pre class="small"><code><span class="fn">NewManaAbility</span>(color)
+<span class="fn">NewAnyColorManaAbility</span>()
+<span class="fn">ManaBonusAbility</span>
+<span class="fn">NewManaBonusAbility</span>(filter, color)
+<span class="fn">NewAttachedManaBonusAbility</span>(color)
+
+<span class="cm">// Equipment</span>
+<span class="fn">NewEquipAbility</span>(mage.<span class="fn">ManaCostOf</span>(<span class="st">"{2}"</span>))</code></pre>
+    </div>
+  </div>
+  <div data-notes="ETBWithTargets runs when a creature enters, using the spell's targeting from the stack. CopyCreatureOnETB is for Clone effects. ManaBonusAbility adds mana when a matching land is tapped."></div>
+</div>
+<!-- ============================== -->
+<!-- PART 4: CONTINUOUS EFFECTS     -->
+<!-- ============================== -->
+<div class="slide slide--section" data-slide="28">
+  <div class="section-label">Part 4</div>
+  <h1 style="font-size: 3rem;">Continuous Effects</h1>
+  <div class="subtitle">The layer system &amp; the attr model</div>
+</div>
+
+<!-- LAYER TABLE -->
+<div class="slide slide--zoom" data-slide="29">
+  <h2>The MTG Layer System</h2>
+  <table class="layer-table">
+    <thead><tr><th></th><th>Layer</th><th>What It Does</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Copy</td><td>Copy effects</td><td>Clone, Doppelganger</td></tr>
+      <tr><td>2</td><td>Control</td><td>Controller changes</td><td>Control Magic</td></tr>
+      <tr><td>4</td><td>Type</td><td>Type/subtype changes</td><td>Animate effects</td></tr>
+      <tr><td>5</td><td>Color</td><td>Color changes</td><td>Lace effects</td></tr>
+      <tr><td>6</td><td>Ability</td><td>Add/remove abilities</td><td>Keyword grants</td></tr>
+      <tr><td>7</td><td>P/T</td><td>Power/toughness mods</td><td>Giant Growth, lords</td></tr>
+    </tbody>
+  </table>
+  <p class="dim" style="margin-top: 1.5rem; font-size: 1rem;">Effects don't go on the stack. The EffectManager re-applies them <em>from scratch</em> every cycle.</p>
+  <div data-notes="Layer order determines what wins when effects conflict. P/T is always last. The engine resets and re-applies every time state changes."></div>
+</div>
+
+<!-- THREE PRIMITIVES -->
+<div class="slide slide--code" data-slide="30">
+  <h2>Three Primitives</h2>
+  <div class="three-col">
+    <div class="card-frame">
+      <h3>FuncContinuousEffect</h3>
+      <p class="dim" style="font-size: 0.85rem;">General purpose.</p>
+      <pre class="small"><code><span class="fn">FuncContinuousEffect</span>(
+  layer, duration,
+  <span class="kw">func</span>(g *Game, srcID) <span class="tp">error</span> {
+    <span class="cm">// modify game state</span>
+  },
+  ...conditions,
+)</code></pre>
+    </div>
+    <div class="card-frame">
+      <h3>AttachedEffect</h3>
+      <p class="dim" style="font-size: 0.85rem;">Auras &amp; equipment.</p>
+      <pre class="small"><code><span class="fn">AttachedEffect</span>(
+  layer,
+  <span class="kw">func</span>(g *Game,
+       src, tgt *Permanent) <span class="tp">error</span> {
+    <span class="cm">// modify target</span>
+  },
+)</code></pre>
+    </div>
+    <div class="card-frame">
+      <h3>TargetEffect</h3>
+      <p class="dim" style="font-size: 0.85rem;">Temporary by ID.</p>
+      <pre class="small"><code><span class="fn">TargetEffect</span>(
+  layer, duration, targetID,
+  <span class="kw">func</span>(g *Game,
+       tgt *Permanent) <span class="tp">error</span> {
+    <span class="cm">// modify target</span>
+  },
+)</code></pre>
+    </div>
+  </div>
+  <p class="dim" style="margin-top: 1rem; text-align: center;">Every continuous effect wraps one of these three.</p>
+  <div data-notes="FuncContinuousEffect is the workhorse. AttachedEffect auto-resolves source and attached target. TargetEffect applies to a specific permanent by ID — for temporary buffs like Giant Growth."></div>
+</div>
+
+<!-- DURATIONS & CONDITIONS -->
+<div class="slide slide--split" data-slide="31">
+  <div class="col">
+    <h2>Durations</h2>
+    <pre class="medium"><code><span class="fn">WhileOnBattlefield</span>   <span class="cm">// permanent exists</span>
+<span class="fn">EndOfTurn</span>            <span class="cm">// cleanup step</span>
+<span class="fn">EndOfCombat</span>          <span class="cm">// end of combat</span>
+<span class="fn">Indefinite</span>           <span class="cm">// IsActive controls</span></code></pre>
+    <h3>ActiveCondition</h3>
+    <pre class="medium"><code><span class="fn">SourceAttached</span>      <span class="cm">// aura is attached</span>
+<span class="fn">SourceUntapped</span>      <span class="cm">// Winter Orb</span>
+<span class="fn">SourceTapped</span>        <span class="cm">// Ashnod's Battle Gear</span>
+<span class="fn">WithSourceCondition</span>(cond)</code></pre>
+  </div>
+  <div class="col">
+    <h2>SourceCondition</h2>
+    <pre class="medium"><code><span class="fn">WhileSourceAttacking</span>
+<span class="fn">WhileSourceUntapped</span>
+<span class="fn">WhileControlling</span>(filter)</code></pre>
+    <pre class="small" style="margin-top: 1rem;"><code><span class="cm">// Winter Orb: limit lands while untapped</span>
+mage.<span class="fn">FuncContinuousEffect</span>(
+    mage.LayerAbility,
+    mage.WhileOnBattlefield,
+    <span class="kw">func</span>(g *Game, srcID uuid.UUID) <span class="tp">error</span> {
+        g.Effects.Rules.LandUntapMax = <span class="nu">1</span>
+        <span class="kw">return</span> <span class="nu">nil</span>
+    },
+    <span class="hl">mage.SourceUntapped</span>,
+)</code></pre>
+  </div>
+  <div data-notes="Duration controls when the effect expires. ActiveCondition adds further restrictions — Winter Orb only works while untapped. SourceCondition is used by BoostSelf and damage prevention rules."></div>
+</div>
+
+<!-- GOBLIN KING -->
+<div class="slide slide--split" data-slide="32">
+  <div class="col">
+    <h2>Goblin King</h2>
+    <div class="oracle">
+      <span class="card-name">Goblin King</span> <span class="mana-cost">{1}{R}{R}</span>
+      <span class="type-line">Creature &mdash; Goblin</span>
+      Other Goblins get +1/+1 and have mountainwalk.
+      <span class="pt">2/2</span>
+    </div>
+    <pre class="medium" style="margin-top: 1rem;"><code>mage.<span class="fn">WithStaticAbility</span>(
+  <span class="hl">mage.<span class="fn">BoostAllCreatures</span>(
+    <span class="nu">1</span>, <span class="nu">1</span>,
+    mage.<span class="fn">HasSubType</span>(<span class="st">"Goblin"</span>))</span>,
+  <span class="hl">mage.<span class="fn">GrantKeywordToAll</span>(
+    core.Mountainwalk,
+    mage.<span class="fn">HasSubType</span>(<span class="st">"Goblin"</span>))</span>,
+)</code></pre>
+  </div>
+  <div class="col">
+    <h3>Test: the boost AND its removal</h3>
+    <pre class="small"><code><span class="cm">// Mons's (1/1) becomes 2/2</span>
+g.<span class="fn">AssertPowerToughness</span>(gametest.PlayerA,
+    <span class="st">"Mons's Goblin Raiders"</span>, <span class="nu">2</span>, <span class="nu">2</span>)
+<span class="cm">// King does NOT boost itself</span>
+g.<span class="fn">AssertPowerToughness</span>(gametest.PlayerA,
+    <span class="st">"Goblin King"</span>, <span class="nu">2</span>, <span class="nu">2</span>)</code></pre>
+    <h3 style="margin-top: 1.5rem;">Kill the King?</h3>
+    <pre class="small"><code><span class="cm">// Bolt the King. Boost vanishes.</span>
+g.<span class="fn">CastSpell</span>(<span class="nu">1</span>, core.PrecombatMain,
+    gametest.PlayerB,
+    <span class="st">"Lightning Bolt"</span>, <span class="st">"Goblin King"</span>)
+<span class="cm">// ...</span>
+g.<span class="fn">AssertPowerToughness</span>(gametest.PlayerA,
+    <span class="st">"Mons's Goblin Raiders"</span>, <span class="hl"><span class="nu">1</span>, <span class="nu">1</span></span>)</code></pre>
+  </div>
+  <div data-notes="BoostAllCreatures excludes self automatically. The second test verifies the system is self-cleaning. Remove the King, remove the effect source, the boost vanishes."></div>
+</div>
+
+<!-- PRE-BUILT ATTACHED EFFECTS -->
+<div class="slide slide--code" data-slide="33">
+  <h2>Pre-Built: Attached Effects</h2>
+  <p class="dim" style="margin-bottom: 0.5rem; text-align: center;">For auras and equipment — active while attached</p>
+  <pre class="medium" style="max-width: 900px;"><code><span class="fn">BoostAttached</span>(power, toughness, AttachType)          <span class="cm">// +P/+T</span>
+<span class="fn">GrantAbilityToAttached</span>(keyword, AttachType)           <span class="cm">// grant keyword</span>
+<span class="fn">GrantProtectionToAttached</span>(color, AttachType)          <span class="cm">// protection</span>
+<span class="fn">RemoveKeywordFromAttached</span>(keyword, AttachType)        <span class="cm">// remove keyword</span>
+<span class="fn">ChangeAttachedSubTypes</span>(newSubTypes)                   <span class="cm">// override subtypes</span>
+<span class="fn">GrantActivatedAbilityToAttached</span>(effect, cost, at)     <span class="cm">// grant activated</span>
+<span class="fn">PreventAttachedFromUntapping</span>(AttachType)              <span class="cm">// doesn't untap</span>
+<span class="fn">PreventAttachedFromAttacking</span>(AttachType)              <span class="cm">// can't attack</span>
+<span class="fn">ControlChangeContinuous</span>()                             <span class="cm">// steal (Control Magic)</span>
+<span class="fn">BoostAttachedByForestCount</span>()                          <span class="cm">// Aspect of Wolf</span></code></pre>
+  <pre class="small" style="max-width: 700px; margin-top: 0.8rem;"><code><span class="cm">// Holy Strength: enchanted creature gets +1/+2</span>
+mage.<span class="fn">NewBoostAura</span>(<span class="st">"Holy Strength"</span>, <span class="st">"{W}"</span>, <span class="nu">1</span>, <span class="nu">2</span>)  <span class="cm">// shortcut!</span>
+<span class="cm">// or manually:</span>
+mage.<span class="fn">WithAbility</span>(mage.<span class="fn">StaticAbility</span>(mage.<span class="fn">BoostAttached</span>(<span class="nu">1</span>, <span class="nu">2</span>, core.AttachAura)))</code></pre>
+  <div data-notes="AttachType is either AttachAura or AttachEquipment — determines when the effect is active. ControlChangeContinuous is for Control Magic type effects. NewBoostAura is the shortcut for simple auras."></div>
+</div>
+
+<!-- PRE-BUILT TARGET + GLOBAL EFFECTS -->
+<div class="slide slide--split" data-slide="34">
+  <div class="col">
+    <h2>Target Effects</h2>
+    <p class="dim" style="font-size: 0.85rem;">Apply to specific permanent by ID</p>
+    <pre class="small"><code><span class="fn">TemporaryBoost</span>(id, p, t)
+<span class="fn">TemporaryKeyword</span>(id, keyword)
+<span class="fn">KeywordReplacement</span>(id, from, to)
+<span class="fn">SetBasePT</span>(id, p, t)
+<span class="fn">SetBasePower</span>(id, power)
+<span class="fn">ColorOverride</span>(id, color)
+<span class="fn">TemporaryAnimate</span>(id, p, t)
+<span class="fn">TemporaryAnimateUntilEndOfCombat</span>(...)
+<span class="fn">PreventBlockingUntilEndOfCombat</span>(id)</code></pre>
+  </div>
+  <div class="col">
+    <h2>Global Effects</h2>
+    <p class="dim" style="font-size: 0.85rem;">While source on battlefield</p>
+    <pre class="tiny"><code><span class="fn">BoostAllCreatures</span>(p, t, filter)
+<span class="fn">BoostAllCreaturesIncludingSelf</span>(p, t, filter)
+<span class="fn">BoostControlledCreatures</span>(p, t, filter)
+<span class="fn">BoostSelf</span>(p, t, SourceCondition)
+<span class="fn">PTEqualsCount</span>(filter)
+<span class="fn">PTEqualsControlledCount</span>(filter)
+<span class="fn">GrantKeywordToAll</span>(keyword, filter)
+<span class="fn">GrantActivatedAbilityToAll</span>(e, cost, filter)
+<span class="fn">PreventUntapForMatching</span>(filter) <span class="cm">// Meekstone</span>
+<span class="fn">PreventAllUntaps</span>()              <span class="cm">// Stasis</span>
+<span class="fn">AnimateLands</span>(filter, p, t)      <span class="cm">// Living Lands</span>
+<span class="fn">LimitLandUntaps</span>(limit)          <span class="cm">// Winter Orb</span>
+<span class="fn">AllowUnlimitedLandPlays</span>()       <span class="cm">// Fastbond</span>
+<span class="fn">IncreaseSpellCostForColor</span>(c, n) <span class="cm">// Gloom</span>
+<span class="fn">ReduceSpellCostForColor</span>(c, n)
+<span class="fn">ChangeSubTypesForAll</span>(from, to)  <span class="cm">// Conversion</span>
+<span class="fn">ManaConversion</span>(from, to)        <span class="cm">// Sunglasses</span>
+<span class="fn">BodyguardContinuous</span>()
+<span class="fn">PersonalIncarnationRedirect</span>()
+<span class="fn">PreventFromAttackingIfDefendingPlayerControls</span>(f)
+<span class="fn">PreventDamageFromTo</span>(from, to, ...cond)</code></pre>
+  </div>
+  <div data-notes="Target effects are temporary — Giant Growth creates a TemporaryBoost. Global effects are lords, Stasis, Winter Orb — anything that modifies the game while the source exists. 21 pre-built global effects."></div>
+</div>
+
+<!-- ATTR SYSTEM -->
+<div class="slide slide--code" data-slide="35">
+  <h2>The Attr System</h2>
+  <div class="two-col">
+    <div>
+      <h3>Capability Attrs</h3>
+      <pre class="small"><code>AttrCanAttack
+AttrCanBlock
+AttrHasPowerToughness
+AttrSummonSick
+AttrDoesNotUntap
+AttrEntersTapped
+AttrMustAttack
+AttrMustBeBlocked
+AttrMayNotUntap</code></pre>
+      <h3>Type-Identity Attrs</h3>
+      <pre class="small"><code>AttrIsCreature  AttrIsLand
+AttrIsArtifact  AttrIsEnchantment</code></pre>
+    </div>
+    <div>
+      <h3>Keyword Attrs</h3>
+      <pre class="tiny"><code>Flying  Reach  FirstStrike  DoubleStrike
+Trample  Vigilance  Haste  Menace  Fear
+Deathtouch  Lifelink  Defender  Banding
+Indestructible  Hexproof  Shroud
+Forestwalk  Islandwalk  Swampwalk
+Mountainwalk  Plainswalk  Desertwalk
+UnblockableKW  CantBeBlockedByWalls
+CantBeBlockedExceptByWalls
+CanBlockAny  CanBlockAdditional
+BasiliskTouch  CantRegenerate</code></pre>
+      <h3>Grant/Revoke in effects</h3>
+      <pre class="tiny"><code>g.Effects.<span class="fn">GrantAttr</span>(perm.ID(), core.Flying)
+g.Effects.<span class="fn">RevokeAttr</span>(perm.ID(), core.AttrCanAttack)</code></pre>
+    </div>
+  </div>
+  <p class="dim" style="text-align: center; font-size: 0.9rem;">
+    <code>baseAttrs</code> (intrinsic) + <code>grantedAttrs</code> (effect-cycle deltas) &rarr; <code>HasAttr(a)</code> = sum &gt; 0
+  </p>
+  <div data-notes="Everything is an attr. Keywords, capabilities, even type identity. baseAttrs are set at creation. grantedAttrs are reset and recomputed each EffectManager cycle. HasAttr checks the sum."></div>
+</div>
+<!-- ============================== -->
+<!-- PART 5: FUNCEFFECT              -->
+<!-- ============================== -->
+<div class="slide slide--section" data-slide="36">
+  <div class="section-label">Part 5</div>
+  <h1 style="font-size: 3rem;">FuncEffect</h1>
+  <div class="subtitle">Custom logic &amp; the GameMutator API</div>
+</div>
+
+<!-- FUNCEFFECT ANATOMY -->
+<div class="slide slide--zoom" data-slide="37">
+  <h2>FuncEffect</h2>
+  <pre class="zoom"><code>mage.<span class="fn">FuncEffect</span>(
+    <span class="st">"description"</span>,
+    mage.EffectProperties{
+        <span class="hl">Outcome: mage.OutcomeDetriment</span>},
+    <span class="kw">func</span>(g mage.GameMutator,
+         sourceID, controller uuid.UUID,
+         targets []uuid.UUID) <span class="tp">error</span> {
+
+        <span class="cm">// full GameMutator access</span>
+        <span class="kw">return</span> <span class="nu">nil</span>
+    },
+)</code></pre>
+  <p class="dim" style="margin-top: 1rem; font-size: 1rem;">Always set <code>Outcome</code>. The AI uses it for targeting.</p>
+  <div data-notes="FuncEffect wraps a closure. You get full GameMutator access. Always set Outcome so the AI targets correctly: Detriment targets opponents, Benefit targets yourself."></div>
+</div>
+
+<!-- SWORDS TO PLOWSHARES -->
+<div class="slide slide--split" data-slide="38">
+  <div class="col">
+    <h2>Swords to Plowshares</h2>
+    <div class="oracle">
+      <span class="card-name">Swords to Plowshares</span> <span class="mana-cost">{W}</span>
+      <span class="type-line">Instant</span>
+      Exile target creature. Its controller gains life equal to its power.
+    </div>
+  </div>
+  <div class="col">
+    <pre class="small"><code>mage.<span class="fn">NewInstant</span>(<span class="st">"Swords to Plowshares"</span>, <span class="st">"{W}"</span>,
+  mage.<span class="fn">NewTargetedSpell</span>(
+    mage.<span class="fn">TargetCreature</span>(),
+    mage.<span class="fn">FuncEffect</span>(
+      <span class="st">"exile; controller gains life = power"</span>,
+      mage.EffectProperties{
+          Outcome: mage.OutcomeDetriment},
+      <span class="kw">func</span>(g mage.GameMutator,
+           srcID, ctrl uuid.UUID,
+           targets []uuid.UUID) <span class="tp">error</span> {
+        <span class="kw">if</span> len(targets) == <span class="nu">0</span> { <span class="kw">return</span> <span class="nu">nil</span> }
+        perm := g.<span class="fn">FindPermanent</span>(targets[<span class="nu">0</span>])
+        <span class="kw">if</span> perm == <span class="nu">nil</span> { <span class="kw">return</span> <span class="nu">nil</span> }
+        <span class="hl">power := perm.<span class="fn">CurrentPower</span>(g)</span>
+        <span class="hl">g.<span class="fn">ExilePermanent</span>(perm)</span>
+        p := g.<span class="fn">GetPlayer</span>(perm.Controller)
+        <span class="kw">if</span> p != <span class="nu">nil</span> && power > <span class="nu">0</span> {
+            <span class="hl">g.<span class="fn">PlayerGainLife</span>(p, power)</span>
+        }
+        <span class="kw">return</span> <span class="nu">nil</span>
+      },
+    ),
+  ),
+)</code></pre>
+  </div>
+  <div data-notes="Classic FuncEffect — needs two actions that are linked: exile the creature, then use its power for life gain. No pre-built effect does both."></div>
+</div>
+
+<!-- SERENDIB DJINN THREE BRANCHES -->
+<div class="slide slide--zoom" data-slide="39">
+  <h2>Serendib Djinn: Three Branches</h2>
+  <div class="oracle" style="font-size: 1rem; margin-bottom: 1rem;">
+    At the beginning of your upkeep, sacrifice a land. If you sacrifice an <strong>Island</strong>,
+    deal 3 damage to you. If you <strong>can't sacrifice a land</strong>, deal 3 damage and sacrifice Serendib Djinn.
+  </div>
+  <div class="three-col">
+    <div class="card-frame" style="text-align: center;">
+      <h3 style="color: var(--forest-bright);">Non-Island</h3>
+      <pre class="small"><code>g.<span class="fn">AssertLife</span>(PA, <span class="nu">20</span>)
+<span class="cm">// no damage</span></code></pre>
+    </div>
+    <div class="card-frame" style="text-align: center;">
+      <h3 style="color: var(--mana-blue-bright);">Island</h3>
+      <pre class="small"><code>g.<span class="fn">AssertLife</span>(PA, <span class="nu">17</span>)
+<span class="cm">// 3 damage</span></code></pre>
+    </div>
+    <div class="card-frame" style="text-align: center;">
+      <h3 style="color: #c84a4a;">No Lands</h3>
+      <pre class="small"><code>g.<span class="fn">AssertLife</span>(PA, <span class="nu">17</span>)
+g.<span class="fn">AssertPermanentCount</span>(
+  PA, <span class="st">"Serendib Djinn"</span>, <span class="nu">0</span>)
+<span class="cm">// damage + sacrifice self</span></code></pre>
+    </div>
+  </div>
+  <p class="big-text dim" style="margin-top: 1.2rem;">One test per Oracle clause.</p>
+  <div data-notes="TDD for complex cards: read Oracle, identify branches, write a test for each. Three branches, three tests. Written BEFORE the implementation."></div>
+</div>
+
+<!-- GAMEREADER COMPLETE -->
+<div class="slide slide--split" data-slide="40">
+  <div class="col">
+    <h2>GameReader</h2>
+    <p class="dim" style="font-size: 0.9rem;">Read-only access to game state</p>
+    <pre class="medium"><code><span class="fn">GetPlayer</span>(uuid.UUID) Player
+<span class="fn">GetOpponent</span>(uuid.UUID) Player
+<span class="fn">ActivePlayerObj</span>() Player
+<span class="fn">AllPlayers</span>() []Player
+<span class="fn">FindPermanent</span>(uuid.UUID) *Permanent
+<span class="fn">FindPermanentByName</span>(string, uuid.UUID)
+<span class="fn">FindCardAnywhere</span>(uuid.UUID) Card
+<span class="fn">AnyBattlefield</span>(PermanentFilter) <span class="tp">bool</span>
+<span class="fn">FilterBattlefield</span>(PermanentFilter)
+<span class="fn">CountBattlefield</span>(PermanentFilter)
+<span class="fn">XValue</span>() <span class="tp">int</span>
+<span class="fn">ModeValue</span>() <span class="tp">int</span>
+<span class="fn">GetResolvingCard</span>() Card
+<span class="fn">FindStackObject</span>(uuid.UUID)
+<span class="fn">CombatGroups</span>() []*CombatGroup</code></pre>
+  </div>
+  <div class="col">
+    <h2>GameMutator</h2>
+    <p class="dim" style="font-size: 0.9rem;">Read + safe mutations</p>
+    <pre class="medium"><code><span class="fn">PlayerGainLife</span>(Player, <span class="tp">int</span>)
+<span class="fn">FireEvent</span>(GameEvent)
+<span class="fn">PutOnBattlefield</span>(Card, uuid.UUID)
+<span class="fn">RemoveFromBattlefield</span>(*Permanent)
+<span class="fn">DestroyPermanent</span>(*Permanent)
+<span class="fn">ExilePermanent</span>(*Permanent)
+<span class="fn">Sacrifice</span>(*Permanent)
+<span class="fn">DealDamageToPlayer</span>(Player, <span class="tp">int</span>, src)
+<span class="fn">DealDamageToPermanent</span>(*Perm, <span class="tp">int</span>, src)
+<span class="fn">CounterSpellOnStack</span>(uuid.UUID)
+<span class="fn">PushStack</span>(*StackObject)
+<span class="fn">Attach</span>(sourceID, targetID)
+<span class="fn">RegisterDelayedTrigger</span>(*DT)
+<span class="fn">GrantExtraTurn</span>(uuid.UUID)
+<span class="fn">RemoveFromCombat</span>(uuid.UUID)
+<span class="fn">AddContinuousEffect</span>(CE)
+<span class="fn">ApplyContinuousEffects</span>()
+<span class="fn">TryPayCostFromLands</span>(id, cost)
+<span class="fn">FlipCoin</span>(uuid.UUID) <span class="tp">bool</span></code></pre>
+  </div>
+  <div data-notes="Effects receive GameMutator — read anything, mutate anything. But mutations aren't raw writes. DestroyPermanent goes through the replacement pipeline. The API is safe by design."></div>
+</div>
+<!-- ============================== -->
+<!-- PART 6: DEEP ENGINE            -->
+<!-- ============================== -->
+<div class="slide slide--section" data-slide="41">
+  <div class="section-label">Part 6</div>
+  <h1 style="font-size: 3rem;">Deep Engine</h1>
+  <div class="subtitle">Replacements, EffectManager, GameRules</div>
+</div>
+
+<!-- REPLACEMENT PIPELINE DIAGRAM -->
+<div class="slide slide--zoom" data-slide="42">
+  <h2>The Replacement Pipeline</h2>
+  <div class="diagram-v" style="margin: 1.5rem 0;">
+    <div class="diagram-box big" style="width: 350px;">Deal 5 damage to player</div>
+    <div class="diagram-arrow">&darr;</div>
+    <div class="diagram-box big gold" style="width: 350px;">DamageToPlayerAction{5}</div>
+    <div class="diagram-arrow">&darr;</div>
+    <div class="diagram-box big red" style="width: 350px;">Prevention Shield: absorb 3 &rarr; {2}</div>
+    <div class="diagram-arrow">&darr;</div>
+    <div class="diagram-box big red" style="width: 350px;">Ali from Cairo: cap at life-1 &rarr; {1}</div>
+    <div class="diagram-arrow">&darr;</div>
+    <div class="diagram-box big green" style="width: 350px;">executeAction: 1 damage</div>
+  </div>
+  <div data-notes="Every mutation — damage, destruction, life gain, card draw — gets wrapped in an Action and run through ApplyReplacements before executing. Replacements can modify, redirect, or fully prevent."></div>
+</div>
+
+<!-- ACTION TYPES -->
+<div class="slide slide--zoom" data-slide="43">
+  <h2>Action Types</h2>
+  <pre class="zoom" style="max-width: 800px;"><code><span class="kw">type</span> <span class="tp">Action</span> <span class="kw">interface</span> {
+    <span class="fn">ActionSource</span>() uuid.UUID
+}
+
+<span class="cm">// Five concrete action types:</span>
+<span class="hl">*DamageToPlayerAction</span>     <span class="cm">// damage to a player</span>
+<span class="hl">*DamageToCreatureAction</span>   <span class="cm">// damage to a creature</span>
+<span class="hl">*DestroyPermanentAction</span>   <span class="cm">// destruction</span>
+<span class="hl">*LifeGainAction</span>           <span class="cm">// life gain</span>
+<span class="hl">*DrawCardAction</span>           <span class="cm">// card draw</span>
+
+<span class="cm">// Damage actions expose:</span>
+.<span class="fn">Amount</span>() <span class="tp">int</span>
+.<span class="fn">IsCombatDamage</span>() <span class="tp">bool</span>
+.<span class="fn">WithAmount</span>(n) *Action     <span class="cm">// copy with new amount</span></code></pre>
+  <div data-notes="Five action types cover all replaceable mutations. WithAmount creates a copy — important for partial prevention. A Fog's replacement returns nil to fully prevent."></div>
+</div>
+
+<!-- REPLACEMENT INTERFACE -->
+<div class="slide slide--zoom" data-slide="44">
+  <h2>ReplacementEffect Interface</h2>
+  <pre class="zoom"><code><span class="kw">type</span> <span class="tp">ReplacementEffect</span> <span class="kw">interface</span> {
+    <span class="fn">Matches</span>(Action, GameReader) <span class="tp">bool</span>
+    <span class="fn">Replace</span>(Action, GameMutator) Action
+    <span class="fn">SourceID</span>() uuid.UUID
+    <span class="fn">IsActive</span>(GameReader) <span class="tp">bool</span>
+}</code></pre>
+  <div style="margin-top: 1.5rem;">
+    <p><code>Replace</code> returns:</p>
+    <p class="build" style="font-size: 1.1rem;"><strong>&bull;</strong> Modified action <em>(reduce damage)</em></p>
+    <p class="build" style="font-size: 1.1rem;"><strong>&bull;</strong> Different type <em>(redirect player &rarr; creature)</em></p>
+    <p class="build" style="font-size: 1.1rem;"><strong>&bull;</strong> <code>nil</code> <em>(fully prevent)</em></p>
+  </div>
+  <div data-notes="Four methods. Matches checks applicability. Replace transforms the action. SourceID identifies the creator. IsActive checks validity. 17 built-in implementations cover most cards."></div>
+</div>
+
+<!-- TWO LISTS -->
+<div class="slide slide--zoom" data-slide="45">
+  <h2>Two Replacement Lists</h2>
+  <div class="two-col" style="max-width: 850px;">
+    <div class="card-frame">
+      <h3>em.replacements</h3>
+      <p class="dim" style="font-size: 0.85rem;">Persistent</p>
+      <pre class="tiny"><code><span class="cm">// One-shot shields</span>
+<span class="fn">AddReplacement</span>(r)
+<span class="fn">PrependReplacement</span>(r) <span class="cm">// front</span>
+
+<span class="cm">// Checked first</span>
+<span class="cm">// Survive Apply() cycles</span>
+<span class="cm">// Shield → fire once → remove</span></code></pre>
+    </div>
+    <div class="card-frame">
+      <h3>em.cycleReplacements</h3>
+      <p class="dim" style="font-size: 0.85rem;">Cleared each Apply() cycle</p>
+      <pre class="tiny"><code><span class="cm">// Re-registered by continuous effects</span>
+<span class="fn">AddCycleReplacement</span>(r)
+
+<span class="cm">// Bodyguard, Ali from Cairo,</span>
+<span class="cm">// artifact redirect, damage rules</span>
+<span class="cm">// Continuous effects re-register</span>
+<span class="cm">// each Apply() cycle</span></code></pre>
+    </div>
+  </div>
+  <div data-notes="Persistent replacements are shields — regen, prevention. They fire once. Cycle replacements are for continuous effects like Bodyguard or Ali from Cairo — cleared and re-registered each EffectManager Apply cycle."></div>
+</div>
+
+<!-- BUILT-IN REPLACEMENTS -->
+<div class="slide slide--code" data-slide="46">
+  <h2>17 Built-In Replacements</h2>
+  <div class="two-col">
+    <div>
+      <h3>Damage Prevention</h3>
+      <pre class="tiny"><code>preventionShieldReplacement    <span class="cm">// absorb N</span>
+fogReplacement                 <span class="cm">// all combat dmg</span>
+forcefieldReplacement          <span class="cm">// cap unblocked to 1</span>
+colorPreventionReplacement     <span class="cm">// from color</span>
+typePreventionReplacement      <span class="cm">// from type</span>
+reverseDamageReplacement       <span class="cm">// prevent → gain life</span>
+damagePreventionRuleReplacement <span class="cm">// from/to filter</span></code></pre>
+      <h3>Damage Redirection</h3>
+      <pre class="tiny"><code>bodyguardReplacement           <span class="cm">// → bodyguard (cycle)</span>
+playerDamageRedirectReplacement <span class="cm">// → creature (cycle)</span>
+artifactDamageRedirectReplacement <span class="cm">// artifact → perm (cycle)</span>
+creatureDamageRedirectReplacement <span class="cm">// creature → player</span>
+attackerDamageRedirectReplacement <span class="cm">// attacker → absorber</span></code></pre>
+    </div>
+    <div>
+      <h3>Destruction</h3>
+      <pre class="tiny"><code>regenerationReplacement    <span class="cm">// tap + remove damage</span></code></pre>
+      <h3>Life Gain</h3>
+      <pre class="tiny"><code>lichLifeGainReplacement    <span class="cm">// life gain → draw cards</span>
+minimumLifeReplacement     <span class="cm">// cap dmg, life ≥ 1 (cycle)</span></code></pre>
+      <h3>Draw</h3>
+      <pre class="tiny"><code>skipDrawReplacement        <span class="cm">// skip next normal draw</span>
+drawReplacementEffect      <span class="cm">// Aladdin's Lamp</span></code></pre>
+    </div>
+  </div>
+  <div data-notes="These 17 cover nearly every card in Alpha through Legends. Cycle-marked ones are re-registered by continuous effects. One-shot shields fire once and are consumed."></div>
+</div>
+
+<!-- GAMEMUTATOR PROXY METHODS FOR REPLACEMENTS -->
+<div class="slide slide--code" data-slide="47">
+  <h2>GameMutator &rarr; Replacement Registration</h2>
+  <p class="dim" style="margin-bottom: 0.5rem; text-align: center;">Card effects call proxy methods. The engine creates the replacement.</p>
+  <pre class="medium" style="max-width: 900px;"><code>g.<span class="fn">AddPreventionShield</span>(playerID, amount)       <span class="cm">→ preventionShieldReplacement</span>
+g.<span class="fn">AddRegenerationShield</span>(permID)               <span class="cm">→ regenerationReplacement</span>
+g.<span class="fn">SetPreventCombatDamage</span>()                    <span class="cm">→ fogReplacement</span>
+g.<span class="fn">AddForcefieldShield</span>(playerID)               <span class="cm">→ forcefieldReplacement</span>
+g.<span class="fn">AddColorPrevention</span>(playerID, color)         <span class="cm">→ colorPreventionReplacement</span>
+g.<span class="fn">AddTypePrevention</span>(playerID, cardType)       <span class="cm">→ typePreventionReplacement</span>
+g.<span class="fn">AddReverseDamageShield</span>(playerID)            <span class="cm">→ reverseDamageReplacement</span>
+g.<span class="fn">SetCreatureDamageRedirect</span>(cID, pID)         <span class="cm">→ creatureDamageRedirectReplacement</span>
+g.<span class="fn">SetAttackerDamageRedirect</span>(aID, absID)       <span class="cm">→ attackerDamageRedirectReplacement</span>
+g.<span class="fn">SetSkipNextDraw</span>(playerID)                   <span class="cm">→ skipDrawReplacement</span>
+g.<span class="fn">SetDrawReplacement</span>(playerID, count)         <span class="cm">→ drawReplacementEffect</span>
+g.<span class="fn">SetLichActive</span>(playerID, sourceID)           <span class="cm">→ lichLifeGainReplacement</span>
+g.<span class="fn">PreventAllDamageFrom</span>(sourceID)              <span class="cm">→ damagePreventionRuleReplacement</span>
+g.<span class="fn">SetMinimumLife</span>(playerID)                    <span class="cm">→ minimumLifeReplacement (cycle)</span>
+g.<span class="fn">SetArtifactDamageRedirect</span>(ctrlID, pID)      <span class="cm">→ artifactDamageRedirectReplacement (cycle)</span>
+
+<span class="cm">// For truly custom replacements:</span>
+<span class="hl">g.<span class="fn">AddReplacementEffect</span>(r ReplacementEffect)</span></code></pre>
+  <div data-notes="Card effects call these proxy methods. The engine creates the right ReplacementEffect and registers it. You never need to construct replacement structs directly — unless you're implementing a truly novel effect."></div>
+</div>
+
+<!-- CUSTOM REPLACEMENT EXAMPLE -->
+<div class="slide slide--zoom" data-slide="48">
+  <h2>Custom Replacement</h2>
+  <pre class="medium" style="max-width: 850px;"><code><span class="kw">type</span> <span class="tp">halveDamageReplacement</span> <span class="kw">struct</span> {
+    replacementBase
+    playerID uuid.UUID
+}
+<span class="kw">func</span> (r *halveDamageReplacement) <span class="fn">Matches</span>(a Action, _ GameReader) <span class="tp">bool</span> {
+    act, ok := a.(*DamageToPlayerAction)
+    <span class="kw">return</span> ok && act.<span class="fn">PlayerID</span>() == r.playerID
+}
+<span class="kw">func</span> (r *halveDamageReplacement) <span class="fn">Replace</span>(a Action, _ GameMutator) Action {
+    act := a.(*DamageToPlayerAction)
+    <span class="kw">return</span> <span class="hl">act.<span class="fn">WithAmount</span>(act.<span class="fn">Amount</span>() / <span class="nu">2</span>)</span>
+}
+<span class="kw">func</span> (r *halveDamageReplacement) <span class="fn">IsActive</span>(_ GameReader) <span class="tp">bool</span> { <span class="kw">return</span> <span class="nu">true</span> }</code></pre>
+  <p class="dim" style="margin-top: 0.8rem; font-size: 0.9rem;">Register via <code>FuncContinuousEffect</code> + <code>AddCycleReplacement</code></p>
+  <div data-notes="Custom replacements: embed replacementBase for SourceID, implement Matches/Replace/IsActive. Register via a continuous effect that calls AddCycleReplacement in its Apply function."></div>
+</div>
+
+<!-- EFFECTMANAGER DEEP DIVE -->
+<div class="slide slide--zoom" data-slide="49">
+  <h2>EffectManager.Apply(g)</h2>
+  <div class="diagram-v" style="margin: 1rem 0;">
+    <div class="diagram-box gold" style="width: 450px;"><strong>1.</strong> Reset grantedAttrs, powerBonus, toughBonus, overrides, controller</div>
+    <div class="diagram-arrow">&darr;</div>
+    <div class="diagram-box" style="width: 450px;"><strong>2.</strong> Strip effect-granted runtime abilities</div>
+    <div class="diagram-arrow">&darr;</div>
+    <div class="diagram-box" style="width: 450px;"><strong>3.</strong> Remove effects whose source is gone</div>
+    <div class="diagram-arrow">&darr;</div>
+    <div class="diagram-box blue" style="width: 450px;"><strong>4.</strong> Apply effects in layer order: 1→2→4→5→6→7</div>
+    <div class="diagram-arrow">&darr;</div>
+    <div class="diagram-box" style="width: 450px;"><strong>5.</strong> Rules.ResetPerCycle() + Damage.ResetPerCycle()</div>
+    <div class="diagram-arrow">&darr;</div>
+    <div class="diagram-box green" style="width: 450px;"><strong>6.</strong> Sync mana conversions &amp; write attr deltas</div>
+  </div>
+  <p class="dim" style="font-size: 0.9rem;">Also: <code>GrantAttr</code> / <code>RevokeAttr</code> for attr deltas, <code>PreventBlockPair</code> / <code>IsBlockPrevented</code></p>
+  <div data-notes="Apply runs frequently. It resets everything, then re-applies all effects in layer order. This is why continuous effects are stateless — they're recomputed from scratch every cycle."></div>
+</div>
+
+<!-- EFFECTMANAGER SUBSYSTEMS -->
+<div class="slide slide--split" data-slide="50">
+  <div class="col">
+    <h2>DamageSystem</h2>
+    <p class="dim" style="font-size: 0.85rem;"><code>g.Effects.Damage</code></p>
+    <pre class="small"><code><span class="cm">// Reflection (post-damage, not replacement)</span>
+<span class="fn">SetDamageReflection</span>(playerID, sourceID)
+<span class="fn">GetDamageReflection</span>(playerID)
+
+<span class="cm">// Legacy API → delegates to EffectManager</span>
+<span class="fn">AddDamagePreventionRule</span>(
+    WithFrom(...), WithTo(...),
+    WithOneShot(...))
+<span class="fn">AddRegenerationShield</span>(permID)
+<span class="fn">SetArtifactDamageRedirect</span>(ctrlID, pID)
+
+<span class="cm">// Lifecycle</span>
+<span class="fn">ResetPerCycle</span>()    <span class="cm">// now empty</span>
+<span class="fn">ClearEndOfTurn</span>()   <span class="cm">// clears reflection</span></code></pre>
+  </div>
+  <div class="col">
+    <h2>GameRules</h2>
+    <p class="dim" style="font-size: 0.85rem;"><code>g.Effects.Rules</code></p>
+    <pre class="tiny"><code><span class="cm">// Public fields (set by continuous effects)</span>
+LandUntapMax       <span class="tp">int</span>
+ArtifactUntapMax   <span class="tp">int</span>
+UnlimitedLandPlays <span class="tp">bool</span>
+SpellCostIncreases <span class="tp">map[Color]int</span>
+SpellCostReductions <span class="tp">map[Color]int</span>
+ManaConversion     <span class="tp">map[Color]Color</span>
+
+<span class="cm">// Methods for special rules</span>
+<span class="fn">SetLichActive</span> / <span class="fn">IsLichActive</span> / <span class="fn">GetLichPermanent</span>
+<span class="fn">SetChannelActive</span> / <span class="fn">IsChannelActive</span>
+<span class="fn">SetSanctuaryActive</span> / <span class="fn">IsSanctuaryActive</span>
+<span class="fn">SetSkipNextDraw</span> / <span class="fn">ShouldSkipDraw</span>
+<span class="fn">SetMinimumLife</span> / <span class="fn">HasMinimumLife</span>
+<span class="fn">SetMaxHandSize</span> / <span class="fn">GetMaxHandSize</span>
+<span class="fn">AddExpansionCastBlock</span> / <span class="fn">IsExpansionBlocked</span>
+
+<span class="cm">// Lifecycle</span>
+<span class="fn">ResetPerCycle</span>()  <span class="fn">ClearEndOfTurn</span>()
+<span class="fn">SyncManaConversions</span>(players)</code></pre>
+  </div>
+  <div data-notes="Two subsystems on EffectManager. DamageSystem is mostly gutted — just reflection and legacy API. GameRules owns all game-rule modifiers: land limits, cost changes, Lich, Channel, mana conversion."></div>
+</div>
+
+<!-- ADDING NEW EVENTS -->
+<div class="slide slide--zoom" data-slide="51">
+  <h2>Adding a New Event</h2>
+  <div class="diagram" style="margin-bottom: 2rem;">
+    <div class="diagram-box big gold">1. Define const</div>
+    <div class="diagram-arrow">&rarr;</div>
+    <div class="diagram-box big blue">2. FireEvent</div>
+    <div class="diagram-arrow">&rarr;</div>
+    <div class="diagram-box big green">3. Cards listen</div>
+  </div>
+  <pre class="medium" style="max-width: 700px;"><code><span class="cm">// Step 1: core/events.go</span>
+<span class="kw">const</span> EvtAbilityActivated EventType = <span class="st">"ability_activated"</span>
+
+<span class="cm">// Step 2: fire in the engine</span>
+g.<span class="fn">FireEvent</span>(core.GameEvent{
+    Type: core.EvtAbilityActivated, SourceID: permID})
+
+<span class="cm">// Step 3: cards listen</span>
+mage.<span class="fn">NewTriggered</span>(core.EvtAbilityActivated, <span class="nu">false</span>, effect).
+    <span class="fn">SetCondition</span>(<span class="kw">func</span>(...) <span class="tp">bool</span> { ... })</code></pre>
+  <p class="dim" style="margin-top: 1rem;">Three steps. Fully extensible.</p>
+  <div data-notes="The event system is open. Define a constant, fire it where the action occurs, and cards listen with NewTriggered. No framework changes needed."></div>
+</div>
+<!-- ============================== -->
+<!-- TESTING                        -->
+<!-- ============================== -->
+<div class="slide slide--section" data-slide="52">
+  <div class="section-label">Testing</div>
+  <h1 style="font-size: 3rem;">TDD Best Practices</h1>
+  <div class="subtitle">The test IS the spec</div>
+</div>
+
+<!-- TDD CYCLE -->
+<div class="slide slide--zoom" data-slide="53">
+  <h2>The Cycle</h2>
+  <div class="diagram" style="margin-bottom: 2rem;">
+    <div class="diagram-box big red" style="min-width: 180px;">
+      <strong>RED</strong><br>
+      <span style="font-size: 0.8rem;">Write test from Oracle<br>Confirm it fails</span>
+    </div>
+    <div class="diagram-arrow">&rarr;</div>
+    <div class="diagram-box big green" style="min-width: 180px;">
+      <strong>GREEN</strong><br>
+      <span style="font-size: 0.8rem;">Implement card<br>Test passes</span>
+    </div>
+    <div class="diagram-arrow">&rarr;</div>
+    <div class="diagram-box big blue" style="min-width: 180px;">
+      <strong>REFACTOR</strong><br>
+      <span style="font-size: 0.8rem;">Pre-built effects?<br>Edge cases?</span>
+    </div>
+  </div>
+  <p class="big-text dim">If you can't write a test for it,<br>you don't understand the card.</p>
+  <div data-notes="Red-green-refactor, card style. Write the test from Oracle text. Watch it fail. Implement. Watch it pass. Then ask: did I use pre-built effects where I could?"></div>
+</div>
+
+<!-- TESTING PATTERNS -->
+<div class="slide slide--code" data-slide="54">
+  <h2>Five Testing Patterns</h2>
+  <div class="two-col" style="gap: 2.5rem;">
+    <div>
+      <h3>1. Positive AND negative</h3>
+      <pre class="small"><code>t.Run(<span class="st">"triggers_on_own"</span>, ...)
+t.Run(<span class="st">"NOT_on_opponent"</span>, ...)</code></pre>
+      <h3>2. Source removal</h3>
+      <pre class="small"><code>t.Run(<span class="st">"removing_king_removes_boost"</span>, ...)</code></pre>
+      <h3>3. Stack interaction</h3>
+      <pre class="small"><code>g.<span class="fn">CastSpell</span>(..., <span class="st">"Lightning Bolt"</span>, ...)
+g.<span class="fn">CastInResponseTo</span>(PA, <span class="st">"Counterspell"</span>)</code></pre>
+    </div>
+    <div>
+      <h3>4. Across turns</h3>
+      <pre class="small"><code><span class="cm">// 3 upkeeps of Juzam (1 dmg each)</span>
+g.<span class="fn">StopAt</span>(<span class="nu">5</span>, core.PrecombatMain)
+g.<span class="fn">AssertLife</span>(PA, <span class="nu">17</span>)</code></pre>
+      <h3>5. Combat math</h3>
+      <pre class="small"><code><span class="cm">// First strike kills before normal</span>
+g.<span class="fn">Attack</span>(<span class="nu">1</span>, PA, <span class="st">"White Knight"</span>)
+g.<span class="fn">Block</span>(<span class="nu">1</span>, PB, <span class="st">"Bears"</span>, <span class="st">"Knight"</span>)
+<span class="cm">// Knight survives, Bears die</span></code></pre>
+    </div>
+  </div>
+  <div data-notes="Five patterns that cover most card testing. Positive and negative cases. Source removal verifies cleanup. Stack interaction tests responses."></div>
+</div>
+
+<!-- ============================== -->
+<!-- COMPLEXITY LADDER              -->
+<!-- ============================== -->
+<div class="slide slide--code" data-slide="55">
+  <h2>The Complexity Ladder</h2>
+  <div class="ladder">
+    <div class="ladder-step"><span class="level">1</span><span class="desc">Vanilla creature</span><span class="api">NewCreature + WithSubTypes</span></div>
+    <div class="ladder-step"><span class="level">2</span><span class="desc">Keywords</span><span class="api">WithKeyword</span></div>
+    <div class="ladder-step"><span class="level">3</span><span class="desc">Pre-built effects</span><span class="api">DealDamage, DestroyTarget (50+)</span></div>
+    <div class="ladder-step"><span class="level">4</span><span class="desc">Targets + filters</span><span class="api">TargetCreature(Not(HasColor(...)))</span></div>
+    <div class="ladder-step"><span class="level">5</span><span class="desc">Costs &amp; selectors</span><span class="api">15 costs, PermanentSelector, PlayerSelector</span></div>
+    <div class="ladder-step"><span class="level">6</span><span class="desc">Activated abilities</span><span class="api">WithActivatedAbility + AbilityOptions</span></div>
+    <div class="ladder-step"><span class="level">7</span><span class="desc">Triggered abilities</span><span class="api">20 convenience constructors</span></div>
+    <div class="ladder-step"><span class="level">8</span><span class="desc">Custom triggers</span><span class="api">NewTriggered + SetCondition</span></div>
+    <div class="ladder-step"><span class="level">9</span><span class="desc">Continuous effects</span><span class="api">30+ pre-built (attached/target/global)</span></div>
+    <div class="ladder-step"><span class="level">10</span><span class="desc">FuncContinuousEffect</span><span class="api">Custom layer logic + conditions</span></div>
+    <div class="ladder-step"><span class="level">11</span><span class="desc">FuncEffect</span><span class="api">Custom one-off + GameMutator API</span></div>
+    <div class="ladder-step"><span class="level">12</span><span class="desc">Replacement effects</span><span class="api">17 built-in + ReplacementEffect interface</span></div>
+    <div class="ladder-step"><span class="level">13</span><span class="desc">Attr system</span><span class="api">GrantAttr, RevokeAttr, base/granted</span></div>
+    <div class="ladder-step"><span class="level">14</span><span class="desc">New events</span><span class="api">FireEvent, listen</span></div>
+    <div class="ladder-step"><span class="level">15</span><span class="desc">Engine rules</span><span class="api">GameRules + DamageSystem</span></div>
+  </div>
+  <p class="dim" style="text-align: center; margin-top: 0.5rem;">Most cards live in levels 1&ndash;7.</p>
+  <div data-notes="You don't need all 15 levels to be productive. Most cards use constructors, keywords, pre-built effects, and convenience triggers. You'll rarely touch replacement effects or engine rules."></div>
+</div>
+
+<!-- ============================== -->
+<!-- CLOSING                        -->
+<!-- ============================== -->
+<div class="slide slide--title" data-slide="56">
+  <div class="diagram" style="font-size: 1.2rem; margin-bottom: 2rem;">
+    <div class="diagram-box big gold">Oracle Text</div>
+    <div class="diagram-arrow">&rarr;</div>
+    <div class="diagram-box big red">Test</div>
+    <div class="diagram-arrow">&rarr;</div>
+    <div class="diagram-box big green">Implement</div>
+    <div class="diagram-arrow">&rarr;</div>
+    <div class="diagram-box big blue">Verify</div>
+  </div>
+  <div class="divider"></div>
+  <div style="text-align: left; max-width: 400px;">
+    <p style="font-size: 1.3rem;"><strong>1.</strong> Follow Oracle text exactly</p>
+    <p style="font-size: 1.3rem;"><strong>2.</strong> Never simplify</p>
+    <p style="font-size: 1.3rem;"><strong>3.</strong> Write the test first</p>
+    <p style="font-size: 1.3rem;"><strong>4.</strong> Consult XMage</p>
+  </div>
+  <p style="margin-top: 2.5rem; color: var(--artifact); font-size: 1rem;">
+    The reference: <code>pkg/mage/doc.go</code>
+  </p>
+  <p style="margin-top: 1rem; color: var(--parchment-dim); font-size: 1rem;">Happy brewing.</p>
+  <div data-notes="That's the whole pattern. Oracle text, test, implement, verify. Every card follows this, from Grizzly Bears to Ali from Cairo. The complete API reference is in doc.go."></div>
+</div>
+
+</div><\!-- end .slides -->
+
+<\!-- SPEAKER NOTES PANEL -->
+<div class="notes" id="notesPanel"></div>
+
+<\!-- PROGRESS BAR -->
+<div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+
+<\!-- NAVIGATION -->
+<div class="nav-controls">
+  <button onclick="prev()" title="Left arrow">&larr;</button>
+  <span id="slideCounter">1 / 57</span>
+  <button onclick="next()" title="Right arrow / Space">&rarr;</button>
+  <span style="margin-left: 0.5rem; opacity: 0.4;">N=notes</span>
+</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+let current = 0;
+let notesVisible = false;
+
+const buildStates = new Map();
+
+function initBuilds(slideIdx) {
+  const slide = slides[slideIdx];
+  const builds = slide.querySelectorAll('.build');
+  if (builds.length === 0) return;
+  if (\!buildStates.has(slideIdx)) {
+    buildStates.set(slideIdx, 0);
+  }
+  const revealed = buildStates.get(slideIdx);
+  builds.forEach((b, i) => {
+    if (i < revealed) b.classList.add('shown');
+    else b.classList.remove('shown');
+  });
+}
+
+function advanceBuild(slideIdx) {
+  const slide = slides[slideIdx];
+  const builds = slide.querySelectorAll('.build');
+  if (builds.length === 0) return false;
+  const revealed = buildStates.get(slideIdx) || 0;
+  if (revealed >= builds.length) return false;
+  builds[revealed].classList.add('shown');
+  buildStates.set(slideIdx, revealed + 1);
+  return true;
+}
+
+function show(n) {
+  if (n < 0 || n >= slides.length) return;
+  slides[current].classList.remove('active');
+  current = n;
+  slides[current].classList.add('active');
+  initBuilds(current);
+  updateNotes();
+  document.getElementById('slideCounter').textContent = `${current + 1} / ${slides.length}`;
+  document.getElementById('progressBar').style.width = `${((current + 1) / slides.length) * 100}%`;
+}
+
+function next() {
+  if (advanceBuild(current)) return;
+  show(current + 1);
+}
+
+function prev() { show(current - 1); }
+
+function updateNotes() {
+  const notesEl = slides[current].querySelector('[data-notes]');
+  const panel = document.getElementById('notesPanel');
+  if (notesEl && notesVisible) {
+    panel.textContent = notesEl.dataset.notes;
+    panel.classList.add('visible');
+  } else {
+    panel.classList.remove('visible');
+  }
+}
+
+function toggleNotes() {
+  notesVisible = \!notesVisible;
+  updateNotes();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'n' || e.key === 'N') { toggleNotes(); return; }
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); next(); }
+  if (e.key === 'ArrowLeft' || e.key === 'Backspace') { e.preventDefault(); prev(); }
+  if (e.key === 'Home') { e.preventDefault(); show(0); }
+  if (e.key === 'End') { e.preventDefault(); show(slides.length - 1); }
+});
+
+let touchStartX = 0;
+document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if (Math.abs(dx) > 50) { dx < 0 ? next() : prev(); }
+});
+
+initBuilds(0);
+document.getElementById('progressBar').style.width = `${(1 / slides.length) * 100}%`;
+</script>
+
+</body>
+</html>
