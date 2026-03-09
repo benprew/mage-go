@@ -183,7 +183,20 @@ func main() {
 		os.Exit(1)
 	}
 
-	writeRegister(outDir, pkgName, setName)
+	// Derive set code from JSON filename (e.g. "data/DRK.json" → "DRK").
+	setCode := strings.TrimSuffix(filepath.Base(jsonFile), filepath.Ext(jsonFile))
+	// Copy the catalog JSON into the output dir for go:embed.
+	catalogJSON := filepath.Join(filepath.Dir(jsonFile), "catalog", setCode+".json")
+	if catalogData, readErr := os.ReadFile(catalogJSON); readErr == nil {
+		catalogDst := filepath.Join(outDir, setCode+".json")
+		if writeErr := os.WriteFile(catalogDst, catalogData, 0o644); writeErr != nil {
+			fmt.Fprintf(os.Stderr, "write catalog json: %v\n", writeErr)
+			os.Exit(1)
+		}
+	} else {
+		fmt.Fprintf(os.Stderr, "warning: catalog JSON not found at %s (run fetchcatalog first)\n", catalogJSON)
+	}
+	writeSet(outDir, pkgName, setName, setCode, catalogJSON)
 	writeTest(outDir, pkgName)
 	writeCreatures(outDir, pkgName, creatures)
 	writeArtifacts(outDir, pkgName, artifacts)
@@ -257,27 +270,26 @@ func countCreatures(groups []colorGroup) int {
 	return n
 }
 
-func writeRegister(dir, pkg, setName string) {
-	path := filepath.Join(dir, "register.go")
+func writeSet(dir, pkg, setName, setCode, jsonFile string) {
+	path := filepath.Join(dir, "set.go")
 	f, _ := os.Create(path)
 	defer f.Close()
+	jsonBase := filepath.Base(jsonFile)
 	fmt.Fprintf(f, `package %s
 
-import . "github.com/mage/mage/pkg/mage"
+import (
+	_ "embed"
 
-const expansionName = %q
+	"github.com/mage/mage/pkg/catalog"
+)
 
-// withExpansion wraps a card factory to set the expansion name on all cards.
-func withExpansion(factory func() Card) func() Card {
-	return func() Card {
-		card := factory()
-		if bc, ok := card.(*BaseCard); ok {
-			WithExpansion(expansionName)(bc)
-		}
-		return card
-	}
+//go:embed %s
+var catalogData []byte
+
+func init() {
+	catalog.RegisterSet(%q, %q, catalogData)
 }
-`, pkg, setName)
+`, pkg, jsonBase, setCode, setName)
 }
 
 func writeTest(dir, pkg string) {
@@ -338,10 +350,10 @@ func creatureStub(c Card) string {
 		optStr += "\t\t"
 	}
 
-	fmt.Fprintf(&b, "\tRegister(%q, withExpansion(func() Card {\n", c.Name)
+	fmt.Fprintf(&b, "\tRegister(%q, func() Card {\n", c.Name)
 	fmt.Fprintf(&b, "\t\treturn NewCreature(%q, %q, %s, %s,%s)\n",
 		c.Name, c.ManaCost, ptValue(c.Power), ptValue(c.Toughness), optStr)
-	b.WriteString("\t}))\n")
+	b.WriteString("\t})\n")
 	return b.String()
 }
 
@@ -349,9 +361,9 @@ func artifactStub(c Card) string {
 	var b strings.Builder
 	b.WriteString(oracleComment(c))
 	b.WriteString("\n")
-	fmt.Fprintf(&b, "\tRegister(%q, withExpansion(func() Card {\n", c.Name)
+	fmt.Fprintf(&b, "\tRegister(%q, func() Card {\n", c.Name)
 	fmt.Fprintf(&b, "\t\treturn NewArtifact(%q, %q)\n", c.Name, c.ManaCost)
-	b.WriteString("\t}))\n")
+	b.WriteString("\t})\n")
 	return b.String()
 }
 
@@ -359,7 +371,7 @@ func enchantmentStub(c Card) string {
 	var b strings.Builder
 	b.WriteString(oracleComment(c))
 	b.WriteString("\n")
-	fmt.Fprintf(&b, "\tRegister(%q, withExpansion(func() Card {\n", c.Name)
+	fmt.Fprintf(&b, "\tRegister(%q, func() Card {\n", c.Name)
 	if isAura(c) {
 		fmt.Fprintf(&b, "\t\treturn NewAura(%q, %q)\n", c.Name, c.ManaCost)
 	} else if isWorld(c) {
@@ -369,7 +381,7 @@ func enchantmentStub(c Card) string {
 	} else {
 		fmt.Fprintf(&b, "\t\treturn NewEnchantment(%q, %q)\n", c.Name, c.ManaCost)
 	}
-	b.WriteString("\t}))\n")
+	b.WriteString("\t})\n")
 	return b.String()
 }
 
@@ -377,7 +389,7 @@ func spellStub(c Card) string {
 	var b strings.Builder
 	b.WriteString(oracleComment(c))
 	b.WriteString("\n")
-	fmt.Fprintf(&b, "\tRegister(%q, withExpansion(func() Card {\n", c.Name)
+	fmt.Fprintf(&b, "\tRegister(%q, func() Card {\n", c.Name)
 	if isInstant(c) {
 		fmt.Fprintf(&b, "\t\treturn NewInstant(%q, %q,\n", c.Name, c.ManaCost)
 	} else {
@@ -385,7 +397,7 @@ func spellStub(c Card) string {
 	}
 	fmt.Fprintf(&b, "\t\t\tNewSpellAbility(),\n")
 	fmt.Fprintf(&b, "\t\t)\n")
-	b.WriteString("\t}))\n")
+	b.WriteString("\t})\n")
 	return b.String()
 }
 
@@ -393,7 +405,7 @@ func landStub(c Card) string {
 	var b strings.Builder
 	b.WriteString(oracleComment(c))
 	b.WriteString("\n")
-	fmt.Fprintf(&b, "\tRegister(%q, withExpansion(func() Card {\n", c.Name)
+	fmt.Fprintf(&b, "\tRegister(%q, func() Card {\n", c.Name)
 	if isLegendary(c) {
 		fmt.Fprintf(&b, "\t\treturn NewLand(%q,\n", c.Name)
 		fmt.Fprintf(&b, "\t\t\tWithSuperTypes(SuperLegendary),\n")
@@ -401,7 +413,7 @@ func landStub(c Card) string {
 	} else {
 		fmt.Fprintf(&b, "\t\treturn NewLand(%q)\n", c.Name)
 	}
-	b.WriteString("\t}))\n")
+	b.WriteString("\t})\n")
 	return b.String()
 }
 

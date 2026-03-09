@@ -4,6 +4,7 @@ import (
 	"github.com/google/uuid"
 	. "github.com/mage/mage/pkg/mage"
 	. "github.com/mage/mage/pkg/mage/core"
+	"github.com/mage/mage/pkg/catalog"
 )
 
 func init() {
@@ -254,7 +255,7 @@ func registerArtifacts() {
 					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						var toSacrifice []*Permanent
 						for _, perm := range g.FilterBattlefield(And(Not(IsToken))) {
-							if antiquitiesCards[perm.Name()] {
+							if catalog.Global().CardInSet("ATQ", perm.Name()) {
 								toSacrifice = append(toSacrifice, perm)
 							}
 						}

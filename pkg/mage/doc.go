@@ -57,7 +57,6 @@ arguments to any card constructor:
 	[WithManaAbility](core.Green)          // tap for one mana of color
 	[WithAnyColorMana]()                   // tap for any color (Birds of Paradise)
 	[WithAdditionalCost](cost)             // extra cost when casting (sacrifice, discard)
-	[WithExpansion]("Arabian Nights")      // set name
 	[WithCumulativeUpkeep]("{1}")           // adds upkeep trigger with age counters
 
 	// Shortcuts that build and attach abilities inline:
@@ -323,7 +322,7 @@ PermanentFilter constructors:
 	[NotID](uuid.UUID)                // exclude specific permanent
 	[IsID](uuid.UUID)                 // match specific permanent
 	[IsBandedWith](uuid.UUID)         // banded with in combat
-	[HasExpansion](string)            // from a specific set
+	[PrintedInSet](string)            // card name was printed in set (by code, e.g. "ARN")
 
 Combinators:
 
@@ -736,7 +735,7 @@ Methods for special rules:
   Skip draw: SetSkipNextDraw, ShouldSkipDraw
   Min life:  SetMinimumLife, HasMinimumLife
   Max hand:  SetMaxHandSize, GetMaxHandSize
-  Cast block: AddExpansionCastBlock, IsExpansionBlocked
+  Cast block: AddExpansionCastBlock, IsCardExpansionBlocked
 
 Lifecycle: ResetPerCycle() clears per-Apply state. ClearEndOfTurn() clears
 end-of-turn flags. SyncManaConversions(players) writes mana conversions to

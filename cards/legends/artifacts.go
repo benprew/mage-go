@@ -54,7 +54,7 @@ func registerArtifacts() {
 // Al-abara's Carpet {5}
 // Artifact
 // {5}, {T}: Prevent all damage that would be dealt to you this turn by attacking creatures without flying.
-	Register("Al-abara's Carpet", withExpansion(func() Card {
+	Register("Al-abara's Carpet", func() Card {
 		return NewArtifact("Al-abara's Carpet", "{5}",
 			WithActivatedAbility(
 				FuncEffect(
@@ -76,13 +76,13 @@ func registerArtifacts() {
 				WithCost(TapSourceCost()),
 			),
 		)
-	}))
+	})
 
 
 // Alchor's Tomb {4}
 // Artifact
 // {2}, {T}: Target permanent you control becomes the color of your choice. (This effect lasts indefinitely.)
-	Register("Alchor's Tomb", withExpansion(func() Card {
+	Register("Alchor's Tomb", func() Card {
 		return NewArtifact("Alchor's Tomb", "{4}",
 			WithActivatedAbility(
 				FuncEffect(
@@ -108,14 +108,14 @@ func registerArtifacts() {
 				WithTarget(TargetPermanent()),
 			),
 		)
-	}))
+	})
 
 
 // Arena of the Ancients {3}
 // Artifact
 // Legendary creatures don't untap during their controllers' untap steps.
 // When this artifact enters, tap all legendary creatures.
-	Register("Arena of the Ancients", withExpansion(func() Card {
+	Register("Arena of the Ancients", func() Card {
 		return NewArtifact("Arena of the Ancients", "{3}",
 			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
 				for _, p := range g.Battlefield {
@@ -138,25 +138,25 @@ func registerArtifacts() {
 				},
 			), false)),
 		)
-	}))
+	})
 
 
 // Black Mana Battery {4}
 // Artifact
 // {2}, {T}: Put a charge counter on this artifact.
 // {T}, Remove any number of charge counters from this artifact: Add {B}, then add an additional {B} for each charge counter removed this way.
-	Register("Black Mana Battery", withExpansion(func() Card {
+	Register("Black Mana Battery", func() Card {
 		return manaBattery("Black Mana Battery", Black)
-	}))
+	})
 
 
 // Blue Mana Battery {4}
 // Artifact
 // {2}, {T}: Put a charge counter on this artifact.
 // {T}, Remove any number of charge counters from this artifact: Add {U}, then add an additional {U} for each charge counter removed this way.
-	Register("Blue Mana Battery", withExpansion(func() Card {
+	Register("Blue Mana Battery", func() Card {
 		return manaBattery("Blue Mana Battery", Blue)
-	}))
+	})
 
 
 // Forethought Amulet {5}
@@ -164,35 +164,35 @@ func registerArtifacts() {
 // At the beginning of your upkeep, sacrifice this artifact unless you pay {3}.
 // If an instant or sorcery source would deal 3 or more damage to you, it deals 2 damage to you instead.
 // XXX: damage cap from instants/sorceries not yet implemented — needs damage replacement engine feature
-	Register("Forethought Amulet", withExpansion(func() Card {
+	Register("Forethought Amulet", func() Card {
 		return NewArtifact("Forethought Amulet", "{5}",
 			WithAbility(SacrificeAtUpkeepUnlessPay("{3}")),
 		)
-	}))
+	})
 
 
 // Gauntlets of Chaos {5}
 // Artifact
 // {5}, Sacrifice this artifact: Exchange control of target artifact, creature, or land you control and target permanent an opponent controls that shares one of those types with it. If those permanents are exchanged this way, destroy all Auras attached to them.
 // TODO: implement
-	Register("Gauntlets of Chaos", withExpansion(func() Card {
+	Register("Gauntlets of Chaos", func() Card {
 		return NewArtifact("Gauntlets of Chaos", "{5}")
-	}))
+	})
 
 
 // Green Mana Battery {4}
 // Artifact
 // {2}, {T}: Put a charge counter on this artifact.
 // {T}, Remove any number of charge counters from this artifact: Add {G}, then add an additional {G} for each charge counter removed this way.
-	Register("Green Mana Battery", withExpansion(func() Card {
+	Register("Green Mana Battery", func() Card {
 		return manaBattery("Green Mana Battery", Green)
-	}))
+	})
 
 
 // Horn of Deafening {4}
 // Artifact
 // {2}, {T}: Prevent all combat damage that would be dealt by target creature this turn.
-	Register("Horn of Deafening", withExpansion(func() Card {
+	Register("Horn of Deafening", func() Card {
 		return NewArtifact("Horn of Deafening", "{4}",
 			WithActivatedAbility(
 				FuncEffect(
@@ -218,7 +218,7 @@ func registerArtifacts() {
 				WithTarget(TargetCreature()),
 			),
 		)
-	}))
+	})
 
 
 // Knowledge Vault {4}
@@ -227,15 +227,15 @@ func registerArtifacts() {
 // {0}: Sacrifice this artifact. If you do, discard your hand, then put all cards exiled with this artifact into their owner's hand.
 // When this artifact leaves the battlefield, put all cards exiled with it into their owner's graveyard.
 // TODO: implement
-	Register("Knowledge Vault", withExpansion(func() Card {
+	Register("Knowledge Vault", func() Card {
 		return NewArtifact("Knowledge Vault", "{4}")
-	}))
+	})
 
 
 // Kry Shield {2}
 // Artifact
 // {2}, {T}: Prevent all damage that would be dealt this turn by target creature you control. That creature gets +0/+X until end of turn, where X is its mana value.
-	Register("Kry Shield", withExpansion(func() Card {
+	Register("Kry Shield", func() Card {
 		return NewArtifact("Kry Shield", "{2}",
 			WithActivatedAbility(
 				FuncEffect(
@@ -271,13 +271,13 @@ func registerArtifacts() {
 				WithTarget(TargetCreature()),
 			),
 		)
-	}))
+	})
 
 
 // Life Chisel {4}
 // Artifact
 // Sacrifice a creature: You gain life equal to the sacrificed creature's toughness. Activate only during your upkeep.
-	Register("Life Chisel", withExpansion(func() Card {
+	Register("Life Chisel", func() Card {
 		return NewArtifact("Life Chisel", "{4}",
 			WithActivatedAbility(
 				FuncEffect(
@@ -305,13 +305,13 @@ func registerArtifacts() {
 				WithUpkeepOnly(),
 			),
 		)
-	}))
+	})
 
 
 // Life Matrix {4}
 // Artifact
 // {4}, {T}: Put a matrix counter on target creature and that creature gains "Remove a matrix counter from this creature: Regenerate this creature." Activate only during your upkeep.
-	Register("Life Matrix", withExpansion(func() Card {
+	Register("Life Matrix", func() Card {
 		return NewArtifact("Life Matrix", "{4}",
 			WithActivatedAbility(
 				AddCounters(Matrix, Fixed(1), SelectTarget),
@@ -329,13 +329,13 @@ func registerArtifacts() {
 				}),
 			)),
 		)
-	}))
+	})
 
 
 // Mana Matrix {6}
 // Artifact
 // Instant and enchantment spells you cast cost {2} less to cast.
-	Register("Mana Matrix", withExpansion(func() Card {
+	Register("Mana Matrix", func() Card {
 		return NewArtifact("Mana Matrix", "{6}",
 			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
 				g.Effects.Rules.SpellTypeCostReductions[TypeInstant] += 2
@@ -343,13 +343,13 @@ func registerArtifacts() {
 				return nil
 			})),
 		)
-	}))
+	})
 
 
 // Mirror Universe {6}
 // Artifact
 // {T}, Sacrifice this artifact: Exchange life totals with target opponent. Activate only during your upkeep.
-	Register("Mirror Universe", withExpansion(func() Card {
+	Register("Mirror Universe", func() Card {
 		return NewArtifact("Mirror Universe", "{6}",
 			WithActivatedAbility(
 				FuncEffect(
@@ -373,53 +373,53 @@ func registerArtifacts() {
 				WithUpkeepOnly(),
 			),
 		)
-	}))
+	})
 
 
 // North Star {4}
 // Artifact
 // {4}, {T}: For one spell this turn, you may spend mana as though it were mana of any type to pay that spell's mana cost. (Additional costs are still paid normally.)
 // TODO: implement
-	Register("North Star", withExpansion(func() Card {
+	Register("North Star", func() Card {
 		return NewArtifact("North Star", "{4}")
-	}))
+	})
 
 
 // Nova Pentacle {4}
 // Artifact
 // {3}, {T}: The next time a source of your choice would deal damage to you this turn, that damage is dealt to target creature of an opponent's choice instead.
 // TODO: implement
-	Register("Nova Pentacle", withExpansion(func() Card {
+	Register("Nova Pentacle", func() Card {
 		return NewArtifact("Nova Pentacle", "{4}")
-	}))
+	})
 
 
 // Planar Gate {6}
 // Artifact
 // Creature spells you cast cost {2} less to cast.
-	Register("Planar Gate", withExpansion(func() Card {
+	Register("Planar Gate", func() Card {
 		return NewArtifact("Planar Gate", "{6}",
 			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
 				g.Effects.Rules.SpellTypeCostReductions[TypeCreature] += 2
 				return nil
 			})),
 		)
-	}))
+	})
 
 
 // Red Mana Battery {4}
 // Artifact
 // {2}, {T}: Put a charge counter on this artifact.
 // {T}, Remove any number of charge counters from this artifact: Add {R}, then add an additional {R} for each charge counter removed this way.
-	Register("Red Mana Battery", withExpansion(func() Card {
+	Register("Red Mana Battery", func() Card {
 		return manaBattery("Red Mana Battery", Red)
-	}))
+	})
 
 
 // Relic Barrier {2}
 // Artifact
 // {T}: Tap target artifact.
-	Register("Relic Barrier", withExpansion(func() Card {
+	Register("Relic Barrier", func() Card {
 		return NewArtifact("Relic Barrier", "{2}",
 			WithActivatedAbility(
 				TapTarget(),
@@ -427,22 +427,22 @@ func registerArtifacts() {
 				WithTarget(TargetArtifact()),
 			),
 		)
-	}))
+	})
 
 
 // Ring of Immortals {5}
 // Artifact
 // {3}, {T}: Counter target instant or Aura spell that targets a permanent you control.
 // TODO: implement
-	Register("Ring of Immortals", withExpansion(func() Card {
+	Register("Ring of Immortals", func() Card {
 		return NewArtifact("Ring of Immortals", "{5}")
-	}))
+	})
 
 
 // Serpent Generator {6}
 // Artifact
 // {4}, {T}: Create a 1/1 colorless Snake artifact creature token. It has "Whenever this creature deals damage to a player, that player gets a poison counter." (A player with ten or more poison counters loses the game.)
-	Register("Serpent Generator", withExpansion(func() Card {
+	Register("Serpent Generator", func() Card {
 		return NewArtifact("Serpent Generator", "{6}",
 			WithActivatedAbility(
 				FuncEffect(
@@ -476,14 +476,14 @@ func registerArtifacts() {
 				WithCost(TapSourceCost()),
 			),
 		)
-	}))
+	})
 
 
 // Sword of the Ages {6}
 // Artifact
 // This artifact enters tapped.
 // {T}, Sacrifice this artifact and any number of creatures you control: This artifact deals X damage to any target, where X is the total power of the creatures sacrificed this way, then exile this artifact and those creature cards.
-	Register("Sword of the Ages", withExpansion(func() Card {
+	Register("Sword of the Ages", func() Card {
 		return NewArtifact("Sword of the Ages", "{6}",
 			WithKeyword(EntersTapped),
 			WithActivatedAbility(
@@ -549,7 +549,7 @@ func registerArtifacts() {
 				WithTarget(TargetAnyTarget()),
 			),
 		)
-	}))
+	})
 
 
 // Triassic Egg {4}
@@ -558,7 +558,7 @@ func registerArtifacts() {
 // Sacrifice this artifact: Choose one. Activate only if there are two or more hatchling counters on this artifact.
 // • You may put a creature card from your hand onto the battlefield.
 // • Return target creature card from your graveyard to the battlefield.
-	Register("Triassic Egg", withExpansion(func() Card {
+	Register("Triassic Egg", func() Card {
 		return NewArtifact("Triassic Egg", "{4}",
 			// {3}, {T}: Put a hatchling counter
 			WithActivatedAbility(
@@ -605,7 +605,7 @@ func registerArtifacts() {
 				SacrificeSourceCost(),
 			),
 		)
-	}))
+	})
 
 
 // Voodoo Doll {6}
@@ -613,7 +613,7 @@ func registerArtifacts() {
 // At the beginning of your upkeep, put a pin counter on this artifact.
 // At the beginning of your end step, if this artifact is untapped, destroy this artifact and it deals damage to you equal to the number of pin counters on it.
 // {X}{X}, {T}: This artifact deals damage equal to the number of pin counters on it to any target. X is the number of pin counters on this artifact.
-	Register("Voodoo Doll", withExpansion(func() Card {
+	Register("Voodoo Doll", func() Card {
 		return NewArtifact("Voodoo Doll", "{6}",
 			// Upkeep: put a pin counter
 			WithAbility(BeginningOfUpkeepTrigger(
@@ -682,15 +682,15 @@ func registerArtifacts() {
 				WithTarget(TargetAnyTarget()),
 			),
 		)
-	}))
+	})
 
 
 // White Mana Battery {4}
 // Artifact
 // {2}, {T}: Put a charge counter on this artifact.
 // {T}, Remove any number of charge counters from this artifact: Add {W}, then add an additional {W} for each charge counter removed this way.
-	Register("White Mana Battery", withExpansion(func() Card {
+	Register("White Mana Battery", func() Card {
 		return manaBattery("White Mana Battery", White)
-	}))
+	})
 
 }

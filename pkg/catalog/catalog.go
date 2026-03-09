@@ -81,6 +81,28 @@ func (c *Catalog) AddSet(cardFile string) error {
 	}
 
 	// Index cards.
+	c.indexCards(cards)
+
+	return nil
+}
+
+// addSetFromBytes loads card data from raw JSON bytes into the catalog.
+// code is the set code, name is the display name.
+func (c *Catalog) addSetFromBytes(code, name string, data []byte) error {
+	var cards []CardEntry
+	if err := json.Unmarshal(data, &cards); err != nil {
+		return fmt.Errorf("parsing %s catalog data: %w", code, err)
+	}
+
+	// Store set info from the provided metadata.
+	c.sets[strings.ToLower(code)] = SetInfo{Code: code, Name: name}
+
+	// Index cards.
+	c.indexCards(cards)
+	return nil
+}
+
+func (c *Catalog) indexCards(cards []CardEntry) {
 	for _, card := range cards {
 		idx := len(c.cards)
 		c.cards = append(c.cards, card)
@@ -113,8 +135,6 @@ func (c *Catalog) AddSet(cardFile string) error {
 			}
 		}
 	}
-
-	return nil
 }
 
 func newCatalog() *Catalog {

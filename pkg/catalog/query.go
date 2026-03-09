@@ -72,6 +72,12 @@ func (c *Catalog) IsReservedList(name string) bool {
 	return false
 }
 
+// CardInSet returns true if a card with the given name exists in the given set.
+func (c *Catalog) CardInSet(setCode, name string) bool {
+	_, ok := c.bySetName[strings.ToLower(setCode)+":"+strings.ToLower(name)]
+	return ok
+}
+
 // CardCount returns the total number of card entries in the catalog.
 func (c *Catalog) CardCount() int {
 	return len(c.cards)

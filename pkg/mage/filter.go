@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/mage/mage/pkg/catalog"
 	. "github.com/mage/mage/pkg/mage/core"
 	"github.com/google/uuid"
 )
@@ -246,10 +247,11 @@ var IsArtifactCard = NewCardFilter("artifact card", func(c Card) bool {
 	return c.HasType(TypeArtifact)
 })
 
-// HasExpansion returns a filter matching permanents from a specific expansion.
-func HasExpansion(name string) PermanentFilter {
-	return NewPermanentFilter(fmt.Sprintf("from %s", name), func(p *Permanent, g *Game) bool {
-		return p.Card.Expansion() == name
+// PrintedInSet returns a filter matching permanents whose card name was
+// originally printed in the given set (by set code, e.g. "ARN").
+func PrintedInSet(setCode string) PermanentFilter {
+	return NewPermanentFilter(fmt.Sprintf("printed in %s", setCode), func(p *Permanent, g *Game) bool {
+		return catalog.Global().CardInSet(setCode, p.Name())
 	})
 }
 

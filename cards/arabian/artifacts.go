@@ -4,6 +4,7 @@ import (
 	"github.com/google/uuid"
 	. "github.com/mage/mage/pkg/mage"
 	. "github.com/mage/mage/pkg/mage/core"
+	"github.com/mage/mage/pkg/catalog"
 )
 
 // discardLastDrawnCost is an additional cost: discard the last card drawn this turn.
@@ -49,7 +50,7 @@ func registerArtifacts() {
 	// Oracle: "{X}, {T}: The next time you would draw a card this turn, instead look at
 	// the top X cards of your library, put all but one of them on the bottom of your
 	// library in a random order, then draw a card. X can't be 0."
-	Register("Aladdin's Lamp", withExpansion(func() Card {
+	Register("Aladdin's Lamp", func() Card {
 		return NewArtifact("Aladdin's Lamp", "{10}",
 			WithActivatedAbility(
 				FuncEffect("set up draw replacement",
@@ -66,10 +67,10 @@ func registerArtifacts() {
 				WithCost(ManaCostOf("{X}")),
 			),
 		)
-	}))
+	})
 
 	// Oracle: "{8}, {T}: Aladdin's Ring deals 4 damage to any target."
-	Register("Aladdin's Ring", withExpansion(func() Card {
+	Register("Aladdin's Ring", func() Card {
 		return NewArtifact("Aladdin's Ring", "{8}",
 			WithActivatedAbility(
 				DealDamage(Fixed(4)),
@@ -78,12 +79,12 @@ func registerArtifacts() {
 				WithTarget(TargetAnyTarget()),
 			),
 		)
-	}))
+	})
 
 	// Oracle: "{1}, Sacrifice Bottle of Suleiman: Flip a coin. If you win the flip,
 	// create a 5/5 colorless Djinn artifact creature token with flying. If you lose
 	// the flip, Bottle of Suleiman deals 5 damage to you."
-	Register("Bottle of Suleiman", withExpansion(func() Card {
+	Register("Bottle of Suleiman", func() Card {
 		return NewArtifact("Bottle of Suleiman", "{4}",
 			WithActivatedAbility(
 				FuncEffect("flip coin: 5/5 Djinn or 5 damage",
@@ -105,13 +106,13 @@ func registerArtifacts() {
 				WithCost(SacrificeSourceCost()),
 			),
 		)
-	}))
+	})
 
 	// Oracle: "Whenever one or more other nontoken permanents with a name originally
 	// printed in the Arabian Nights expansion are on the battlefield, their controllers
 	// sacrifice them. Players can't cast spells or play lands with a name originally
 	// printed in the Arabian Nights expansion."
-	Register("City in a Bottle", withExpansion(func() Card {
+	Register("City in a Bottle", func() Card {
 		return NewArtifact("City in a Bottle", "{2}",
 			// ETB: sacrifice all other nontoken Arabian Nights permanents
 			WithAbility(
@@ -119,7 +120,7 @@ func registerArtifacts() {
 					FuncEffect("sacrifice all other Arabian Nights nontoken permanents",
 						EffectProperties{Outcome: OutcomeDetriment},
 						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							for _, p := range g.FilterBattlefield(HasExpansion(expansionName)) {
+							for _, p := range g.FilterBattlefield(PrintedInSet("ARN")) {
 								if p.ID() == sourceID {
 									continue
 								}
@@ -139,7 +140,7 @@ func registerArtifacts() {
 					FuncEffect("sacrifice entering Arabian Nights permanent",
 						EffectProperties{Outcome: OutcomeDetriment},
 						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							for _, p := range g.FilterBattlefield(HasExpansion(expansionName)) {
+							for _, p := range g.FilterBattlefield(PrintedInSet("ARN")) {
 								if p.ID() == sourceID {
 									continue
 								}
@@ -158,26 +159,26 @@ func registerArtifacts() {
 					if perm == nil {
 						return false
 					}
-					return perm.Card.Expansion() == expansionName && !perm.Card.(*BaseCard).IsToken()
+					return catalog.Global().CardInSet("ARN", perm.Name()) && !perm.Card.(*BaseCard).IsToken()
 				}),
 			),
 			// Continuous: block casting/playing Arabian Nights cards
 			WithStaticAbility(
 				FuncContinuousEffect(LayerAbility, WhileOnBattlefield,
 					func(g *Game, sourceID uuid.UUID) error {
-						g.Effects.Rules.AddExpansionCastBlock(expansionName)
+						g.Effects.Rules.AddExpansionCastBlock("ARN")
 						return nil
 					},
 				),
 			),
 		)
-	}))
+	})
 
 	// Oracle: "{2}, {T}: Untap target attacking creature you control. Prevent all combat
 	// damage that would be dealt to and dealt by that creature this turn."
 	// Combat damage prevention achieved via RemoveFromCombat — once removed, no damage
 	// is assigned to or by the creature.
-	Register("Ebony Horse", withExpansion(func() Card {
+	Register("Ebony Horse", func() Card {
 		return NewArtifact("Ebony Horse", "{3}",
 			WithActivatedAbility(
 				FuncEffect("untap and remove from combat",
@@ -199,10 +200,10 @@ func registerArtifacts() {
 				WithTarget(TargetCreature(IsAttacking)),
 			),
 		)
-	}))
+	})
 
 	// Oracle: "{2}, {T}: Target creature gains flying until end of turn."
-	Register("Flying Carpet", withExpansion(func() Card {
+	Register("Flying Carpet", func() Card {
 		return NewArtifact("Flying Carpet", "{4}",
 			WithActivatedAbility(
 				GrantKeywordUntilEndOfTurn(Flying, SelectTarget),
@@ -211,10 +212,10 @@ func registerArtifacts() {
 				WithTarget(TargetCreature()),
 			),
 		)
-	}))
+	})
 
 	// Oracle: "{2}, {T}, Discard the last card you drew this turn: Draw a card."
-	Register("Jandor's Ring", withExpansion(func() Card {
+	Register("Jandor's Ring", func() Card {
 		return NewArtifact("Jandor's Ring", "{6}",
 			WithActivatedAbility(
 				DrawCards(Fixed(1)),
@@ -223,10 +224,10 @@ func registerArtifacts() {
 				WithCost(&discardLastDrawnCost{}),
 			),
 		)
-	}))
+	})
 
 	// Oracle: "{3}, {T}: Untap target creature."
-	Register("Jandor's Saddlebags", withExpansion(func() Card {
+	Register("Jandor's Saddlebags", func() Card {
 		return NewArtifact("Jandor's Saddlebags", "{2}",
 			WithActivatedAbility(
 				UntapTarget(),
@@ -235,12 +236,12 @@ func registerArtifacts() {
 				WithTarget(TargetCreature()),
 			),
 		)
-	}))
+	})
 
 	// Oracle: "Remove Jeweled Bird from your deck before playing if you're not playing
 	// for ante. {T}: Ante Jeweled Bird. If you do, put all other cards you own from
 	// the ante zone into your graveyard, then draw a card."
-	Register("Jeweled Bird", withExpansion(func() Card {
+	Register("Jeweled Bird", func() Card {
 		return NewArtifact("Jeweled Bird", "{1}",
 			WithActivatedAbility(
 				FuncEffect("ante Jeweled Bird, return other ante to graveyard, draw",
@@ -277,11 +278,11 @@ func registerArtifacts() {
 				TapSourceCost(),
 			),
 		)
-	}))
+	})
 
 	// Oracle: "{2}: Choose one — Destroy target Aura attached to a land. / The next time
 	// target land would be destroyed this turn, remove all damage marked on it instead."
-	Register("Pyramids", withExpansion(func() Card {
+	Register("Pyramids", func() Card {
 		c := NewArtifact("Pyramids", "{6}",
 			WithActivatedAbility(
 				FuncEffect("destroy aura on land or protect land from destruction",
@@ -313,18 +314,18 @@ func registerArtifacts() {
 			"Target land becomes indestructible this turn",
 		})
 		return c
-	}))
+	})
 
 	// Oracle: "{5}, {T}, Exile Ring of Ma'rûf: The next time you would draw a card this
 	// turn, instead put a card you own from outside the game into your hand."
 	// XXX: Ring of Ma'rûf skipped — wish/sideboard mechanic
-	Register("Ring of Ma'rûf", withExpansion(func() Card {
+	Register("Ring of Ma'rûf", func() Card {
 		return NewArtifact("Ring of Ma'rûf", "{5}")
-	}))
+	})
 
 	// Oracle: "{2}, {T}: Target creature gains islandwalk until end of turn. When that
 	// creature dies this turn, destroy Sandals of Abdallah."
-	Register("Sandals of Abdallah", withExpansion(func() Card {
+	Register("Sandals of Abdallah", func() Card {
 		return NewArtifact("Sandals of Abdallah", "{4}",
 			WithActivatedAbility(
 				FuncEffect("grant islandwalk, destroy self if creature dies",
@@ -351,5 +352,5 @@ func registerArtifacts() {
 				WithTarget(TargetCreature()),
 			),
 		)
-	}))
+	})
 }

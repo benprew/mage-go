@@ -1,6 +1,7 @@
 package mage
 
 import (
+	"github.com/mage/mage/pkg/catalog"
 	. "github.com/mage/mage/pkg/mage/core"
 	"github.com/google/uuid"
 )
@@ -23,7 +24,7 @@ type GameRules struct {
 	channelActive      map[uuid.UUID]bool      // players with Channel active this turn
 	minimumLife        map[uuid.UUID]bool      // players whose life can't go below 1 (Ali from Cairo)
 	maxHandSize        map[uuid.UUID]int       // player -> max hand size override (Cursed Rack)
-	expansionCastBlock   []string                // expansion names blocked from casting/playing
+	expansionCastBlock   []string                // set codes blocked from casting/playing
 	NullifiedLandwalks   map[Attr]bool           // landwalk attrs that are nullified (Great Wall, etc.)
 }
 
@@ -196,18 +197,18 @@ func (r *GameRules) ClearMinimumLife() {
 }
 
 // ---------------------------------------------------------------------------
-// Expansion Blocking
+// Expansion Blocking (City in a Bottle, Golgothian Sylex)
 // ---------------------------------------------------------------------------
 
-// AddExpansionCastBlock registers an expansion name as blocked for casting/playing.
-func (r *GameRules) AddExpansionCastBlock(expansion string) {
-	r.expansionCastBlock = append(r.expansionCastBlock, expansion)
+// AddExpansionCastBlock registers a set code as blocked from casting/playing.
+func (r *GameRules) AddExpansionCastBlock(setCode string) {
+	r.expansionCastBlock = append(r.expansionCastBlock, setCode)
 }
 
-// IsExpansionBlocked returns true if the given expansion is blocked from casting/playing.
-func (r *GameRules) IsExpansionBlocked(expansion string) bool {
-	for _, e := range r.expansionCastBlock {
-		if e == expansion {
+// IsCardExpansionBlocked returns true if the named card belongs to any blocked set.
+func (r *GameRules) IsCardExpansionBlocked(cardName string) bool {
+	for _, setCode := range r.expansionCastBlock {
+		if catalog.Global().CardInSet(setCode, cardName) {
 			return true
 		}
 	}

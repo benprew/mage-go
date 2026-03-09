@@ -1022,6 +1022,11 @@ func (g *Game) Attach(sourceID, targetID uuid.UUID) {
 		return
 	}
 
+	// "Can't be enchanted" — prevent enchantment attachment entirely.
+	if src.HasType(TypeEnchantment) && target.HasAttr(AttrCantBeEnchanted) {
+		return
+	}
+
 	// Detach from current host if any
 	if src.IsAttached() {
 		oldHost := g.FindPermanent(src.AttachedTo)
@@ -1330,8 +1335,8 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	}
 
 	// Check expansion block (City in a Bottle)
-	if exp := card.Expansion(); exp != "" && g.Effects.Rules.IsExpansionBlocked(exp) {
-		return fmt.Errorf("can't cast %s: expansion %s is blocked", name, exp)
+	if g.Effects.Rules.IsCardExpansionBlocked(card.Name()) {
+		return fmt.Errorf("can't cast %s: card is from a blocked expansion", card.Name())
 	}
 	// Check artifact mana restriction (Mishra's Workshop)
 	if g.ArtifactManaOnly[playerID] && !card.HasType(TypeArtifact) {
@@ -2377,9 +2382,9 @@ func (g *Game) playLandCore(playerID, cardID uuid.UUID) error {
 		return fmt.Errorf("card is not a land")
 	}
 	// Check expansion block (City in a Bottle)
-	if exp := card.Expansion(); exp != "" && g.Effects.Rules.IsExpansionBlocked(exp) {
+	if g.Effects.Rules.IsCardExpansionBlocked(card.Name()) {
 		p.AddToHand(card)
-		return fmt.Errorf("can't play %s: expansion %s is blocked", card.Name(), exp)
+		return fmt.Errorf("can't play %s: card is from a blocked expansion", card.Name())
 	}
 
 	g.PutOnBattlefield(card, playerID)
@@ -2682,8 +2687,8 @@ func (g *Game) CastSpellByID(playerID, cardID uuid.UUID, targets []uuid.UUID, xV
 	}
 
 	// Check expansion block (City in a Bottle)
-	if exp := card.Expansion(); exp != "" && g.Effects.Rules.IsExpansionBlocked(exp) {
-		return fmt.Errorf("can't cast %s: expansion %s is blocked", card.Name(), exp)
+	if g.Effects.Rules.IsCardExpansionBlocked(card.Name()) {
+		return fmt.Errorf("can't cast %s: card is from a blocked expansion", card.Name())
 	}
 
 	// Compute payment mana cost
