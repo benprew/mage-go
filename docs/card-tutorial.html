@@ -1458,7 +1458,7 @@ g.<span class="fn">AssertPowerToughness</span>(gametest.PlayerA,
 <span class="fn">PreventAttachedFromUntapping</span>(AttachType)              <span class="cm">// doesn't untap</span>
 <span class="fn">PreventAttachedFromAttacking</span>(AttachType)              <span class="cm">// can't attack</span>
 <span class="fn">ControlChangeContinuous</span>()                             <span class="cm">// steal (Control Magic)</span>
-<span class="fn">BoostAttachedByForestCount</span>()                          <span class="cm">// Aspect of Wolf</span></code></pre>
+<span class="fn">BoostAttachedByCount</span>(filter, powerFn, toughFn)        <span class="cm">// P/T by controlled count</span></code></pre>
   <pre class="small" style="max-width: 700px; margin-top: 0.8rem;"><code><span class="cm">// Holy Strength: enchanted creature gets +1/+2</span>
 mage.<span class="fn">NewBoostAura</span>(<span class="st">"Holy Strength"</span>, <span class="st">"{W}"</span>, <span class="nu">1</span>, <span class="nu">2</span>)  <span class="cm">// shortcut!</span>
 <span class="cm">// or manually:</span>

@@ -854,7 +854,11 @@ func registerCreatures() {
 			// Enchanted creature gets +X/+Y where X is half Forests you control
 			// (rounded down) and Y is half (rounded up).
 			WithStaticAbility(
-				BoostAttachedByForestCount(),
+				BoostAttachedByCount(
+					And(IsLand, HasSubType("Forest")),
+					func(n int) int { return n / 2 },
+					func(n int) int { return (n + 1) / 2 },
+				),
 			),
 		)
 	})

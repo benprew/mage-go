@@ -208,114 +208,99 @@ func (c *lifePayCost) Text() string {
 	return fmt.Sprintf("Pay %d life", c.amount)
 }
 
-// sacrificeArtifactCost requires sacrificing an artifact you control.
-type sacrificeArtifactCost struct{}
+// sacrificeMatchingCost requires sacrificing a permanent you control matching a filter.
+type sacrificeMatchingCost struct {
+	filter PermanentFilter
+	text   string
+}
+
+// SacrificeMatchingCost creates a cost that requires sacrificing a permanent you control
+// (other than the source) that matches the given filter.
+func SacrificeMatchingCost(filter PermanentFilter, text string) Cost {
+	return &sacrificeMatchingCost{filter: filter, text: text}
+}
 
 // SacrificeArtifactCost creates a cost that requires sacrificing an artifact you control (other than the source).
 func SacrificeArtifactCost() Cost {
-	return &sacrificeArtifactCost{}
+	return SacrificeMatchingCost(IsArtifact, "Sacrifice an artifact")
 }
-
-func (c *sacrificeArtifactCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
-	for _, p := range g.Battlefield {
-		if p.Controller == controller && p.HasType(TypeArtifact) && p.ID() != sourceID {
-			return true
-		}
-	}
-	return false
-}
-
-func (c *sacrificeArtifactCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
-	var candidates []*Permanent
-	for _, p := range g.Battlefield {
-		if p.Controller == controller && p.HasType(TypeArtifact) && p.ID() != sourceID {
-			candidates = append(candidates, p)
-		}
-	}
-	if len(candidates) == 0 {
-		return fmt.Errorf("no artifact to sacrifice")
-	}
-	player := g.GetPlayer(controller)
-	chosen := player.ChoosePermanent(candidates, "sacrifice artifact cost", g)
-	if chosen == nil {
-		return fmt.Errorf("no artifact chosen")
-	}
-	g.Sacrifice(chosen)
-	return nil
-}
-
-func (c *sacrificeArtifactCost) Text() string { return "Sacrifice an artifact" }
-
-// sacrificeCreatureCost requires sacrificing a creature you control.
-type sacrificeCreatureCost struct{}
 
 // SacrificeCreatureCost creates a cost that requires sacrificing a creature you control (other than the source).
 func SacrificeCreatureCost() Cost {
-	return &sacrificeCreatureCost{}
+	return SacrificeMatchingCost(IsCreature, "Sacrifice a creature")
 }
 
-func (c *sacrificeCreatureCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+func (c *sacrificeMatchingCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	for _, p := range g.Battlefield {
-		if p.Controller == controller && p.HasType(TypeCreature) && p.ID() != sourceID {
+		if p.Controller == controller && p.ID() != sourceID && c.filter.Match(p, g) {
 			return true
 		}
 	}
 	return false
 }
 
-func (c *sacrificeCreatureCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
+func (c *sacrificeMatchingCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	var candidates []*Permanent
 	for _, p := range g.Battlefield {
-		if p.Controller == controller && p.HasType(TypeCreature) && p.ID() != sourceID {
+		if p.Controller == controller && p.ID() != sourceID && c.filter.Match(p, g) {
 			candidates = append(candidates, p)
 		}
 	}
 	if len(candidates) == 0 {
-		return ErrNoCreature
+		return fmt.Errorf("no permanent to sacrifice")
 	}
 	player := g.GetPlayer(controller)
-	chosen := player.ChoosePermanent(candidates, "sacrifice cost", g)
+	chosen := player.ChoosePermanent(candidates, c.text, g)
 	if chosen == nil {
-		return ErrNoCreature
+		return fmt.Errorf("no permanent chosen")
 	}
 	g.Sacrifice(chosen)
 	return nil
 }
 
-func (c *sacrificeCreatureCost) Text() string { return "Sacrifice a creature" }
+func (c *sacrificeMatchingCost) Text() string { return c.text }
 
-// tapCreatureCost requires tapping an untapped creature you control.
-type tapCreatureCost struct{}
+// tapMatchingCost requires tapping an untapped permanent you control matching a filter.
+type tapMatchingCost struct {
+	filter PermanentFilter
+	text   string
+}
+
+// TapMatchingCost creates a cost that requires tapping an untapped permanent you control
+// (other than the source) that matches the given filter.
+func TapMatchingCost(filter PermanentFilter, text string) Cost {
+	return &tapMatchingCost{filter: filter, text: text}
+}
 
 // TapCreatureCost creates a cost that requires tapping an untapped creature you control
 // (other than the source). Used by convoke-like abilities and tap-creature costs.
 func TapCreatureCost() Cost {
-	return &tapCreatureCost{}
+	return TapMatchingCost(IsCreature, "Tap an untapped creature you control")
 }
 
-func (c *tapCreatureCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+func (c *tapMatchingCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	for _, p := range g.Battlefield {
-		if p.Controller == controller && p.HasType(TypeCreature) && p.ID() != sourceID && !p.Tapped && p.CanTapForEffect(g) {
+		if p.Controller == controller && p.ID() != sourceID && !p.Tapped && p.CanTapForEffect(g) && c.filter.Match(p, g) {
 			return true
 		}
 	}
 	return false
 }
 
-func (c *tapCreatureCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
+func (c *tapMatchingCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	var candidates []*Permanent
 	for _, p := range g.Battlefield {
-		if p.Controller == controller && p.HasType(TypeCreature) && p.ID() != sourceID && !p.Tapped && p.CanTapForEffect(g) {
+		if p.Controller == controller && p.ID() != sourceID && !p.Tapped && p.CanTapForEffect(g) && c.filter.Match(p, g) {
 			candidates = append(candidates, p)
 		}
 	}
 	if len(candidates) == 0 {
-		return ErrNoCreature
+		return fmt.Errorf("no permanent to tap")
 	}
 	player := g.GetPlayer(controller)
-	chosen := player.ChoosePermanent(candidates, "tap creature cost", g)
+	chosen := player.ChoosePermanent(candidates, c.text, g)
 	if chosen == nil {
-		return ErrNoCreature
+		return fmt.Errorf("no permanent chosen")
 	}
 	chosen.Tapped = true
 	g.FireEvent(GameEvent{
@@ -326,7 +311,7 @@ func (c *tapCreatureCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	return nil
 }
 
-func (c *tapCreatureCost) Text() string { return "Tap an untapped creature you control" }
+func (c *tapMatchingCost) Text() string { return c.text }
 
 // discardCost requires discarding cards from hand.
 type discardCost struct {

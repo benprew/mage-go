@@ -247,6 +247,23 @@ var IsArtifactCard = NewCardFilter("artifact card", func(c Card) bool {
 	return c.HasType(TypeArtifact)
 })
 
+// IsEnchantmentCard matches enchantment cards.
+var IsEnchantmentCard = NewCardFilter("enchantment card", func(c Card) bool {
+	return c.HasType(TypeEnchantment)
+})
+
+// HasColorCardFilter returns a CardFilter matching cards with the given color.
+func HasColorCardFilter(color Color) CardFilter {
+	return NewCardFilter(color.String()+" card", func(c Card) bool {
+		for _, col := range c.ManaCost().Colors() {
+			if col == color {
+				return true
+			}
+		}
+		return false
+	})
+}
+
 // PrintedInSet returns a filter matching permanents whose card name was
 // originally printed in the given set (by set code, e.g. "ARN").
 func PrintedInSet(setCode string) PermanentFilter {

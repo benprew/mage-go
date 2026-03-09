@@ -547,7 +547,7 @@ GrantActivatedAbilityToAttached(effect, cost, at)
 PreventAttachedFromUntapping(AttachType)
 PreventAttachedFromAttacking(AttachType)
 ControlChangeContinuous()
-BoostAttachedByForestCount()
+BoostAttachedByCount(filter, powerFn, toughFn)
 ```
 
 Shortcut: `mage.NewBoostAura("Holy Strength", "{W}", 1, 2)`

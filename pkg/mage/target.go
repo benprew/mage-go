@@ -132,35 +132,10 @@ func (t *AnyTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.
 	return nil
 }
 
-// GraveyardCreatureTarget targets a creature card in your graveyard.
-type GraveyardCreatureTarget struct {
-	BaseTarget
-}
-
 // TargetCreatureInYourGraveyard creates a target that selects a creature card in the controller's graveyard.
+// Convenience wrapper for TargetCardInYourGraveyard(IsCreatureCard).
 func TargetCreatureInYourGraveyard() Target {
-	return &GraveyardCreatureTarget{
-		BaseTarget: BaseTarget{min: 1, max: 1},
-	}
-}
-
-func (t *GraveyardCreatureTarget) Possible(controller uuid.UUID, _ Card, g *Game) []uuid.UUID {
-	p := g.GetPlayer(controller)
-	if p == nil {
-		return nil
-	}
-	var result []uuid.UUID
-	for _, c := range p.Graveyard() {
-		if IsCreatureCard.Match(c) {
-			result = append(result, c.ID())
-		}
-	}
-	return result
-}
-
-func (t *GraveyardCreatureTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
-	t.chosen = chosen
-	return nil
+	return TargetCardInYourGraveyard(IsCreatureCard)
 }
 
 // ControlledCreatureTarget targets a creature you control.
@@ -235,85 +210,22 @@ func (t *PermanentTarget) Filter() PermanentFilter {
 	return And(t.Filters...)
 }
 
-// LandTarget targets a land on the battlefield.
-type LandTarget struct {
-	BaseTarget
-}
-
 // TargetLand creates a target that selects a land on the battlefield.
+// Convenience wrapper for TargetPermanent(IsLand).
 func TargetLand() Target {
-	return &LandTarget{
-		BaseTarget: BaseTarget{min: 1, max: 1},
-	}
-}
-
-func (t *LandTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
-	var result []uuid.UUID
-	for _, p := range g.Battlefield {
-		if p.HasType(TypeLand) {
-			result = append(result, p.ID())
-		}
-	}
-	return result
-}
-
-func (t *LandTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
-	t.chosen = chosen
-	return nil
-}
-
-// ArtifactTarget targets an artifact on the battlefield.
-type ArtifactTarget struct {
-	BaseTarget
+	return TargetPermanent(IsLand)
 }
 
 // TargetArtifact creates a target that selects an artifact on the battlefield.
+// Convenience wrapper for TargetPermanent(IsArtifact).
 func TargetArtifact() Target {
-	return &ArtifactTarget{
-		BaseTarget: BaseTarget{min: 1, max: 1},
-	}
-}
-
-func (t *ArtifactTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
-	var result []uuid.UUID
-	for _, p := range g.Battlefield {
-		if p.HasType(TypeArtifact) && p.CanBeTargetedBy(sourceCard, controller, g) {
-			result = append(result, p.ID())
-		}
-	}
-	return result
-}
-
-func (t *ArtifactTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
-	t.chosen = chosen
-	return nil
-}
-
-// ArtifactOrEnchantmentTarget targets an artifact or enchantment.
-type ArtifactOrEnchantmentTarget struct {
-	BaseTarget
+	return TargetPermanent(IsArtifact)
 }
 
 // TargetArtifactOrEnchantment creates a target that selects an artifact or enchantment on the battlefield.
+// Convenience wrapper for TargetPermanent(Or(IsArtifact, IsEnchantment)).
 func TargetArtifactOrEnchantment() Target {
-	return &ArtifactOrEnchantmentTarget{
-		BaseTarget: BaseTarget{min: 1, max: 1},
-	}
-}
-
-func (t *ArtifactOrEnchantmentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
-	var result []uuid.UUID
-	for _, p := range g.Battlefield {
-		if (p.HasType(TypeArtifact) || p.HasType(TypeEnchantment)) && p.CanBeTargetedBy(sourceCard, controller, g) {
-			result = append(result, p.ID())
-		}
-	}
-	return result
-}
-
-func (t *ArtifactOrEnchantmentTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
-	t.chosen = chosen
-	return nil
+	return TargetPermanent(Or(IsArtifact, IsEnchantment))
 }
 
 // SpellOnStackTarget targets a spell on the stack, optionally filtered by CardFilter predicates.
@@ -411,33 +323,49 @@ func (t *GraveyardCardTarget) Choose(controller uuid.UUID, _ Card, g *Game, chos
 	return nil
 }
 
-// HandCreatureTarget targets a creature card in the controller's hand.
-type HandCreatureTarget struct {
+// HandCardTarget targets a card in the controller's hand, optionally filtered by CardFilter predicates.
+type HandCardTarget struct {
 	BaseTarget
+	Filters []CardFilter
 }
 
-// TargetCreatureInHand creates a target that selects a creature card in the controller's hand.
-func TargetCreatureInHand() Target {
-	return &HandCreatureTarget{
+// TargetCardInHand creates a target that selects a card in the controller's hand,
+// optionally narrowed by CardFilter predicates.
+func TargetCardInHand(filters ...CardFilter) Target {
+	return &HandCardTarget{
 		BaseTarget: BaseTarget{min: 1, max: 1},
+		Filters:    filters,
 	}
 }
 
-func (t *HandCreatureTarget) Possible(controller uuid.UUID, _ Card, g *Game) []uuid.UUID {
+// TargetCreatureInHand creates a target that selects a creature card in the controller's hand.
+// Convenience wrapper for TargetCardInHand(IsCreatureCard).
+func TargetCreatureInHand() Target {
+	return TargetCardInHand(IsCreatureCard)
+}
+
+func (t *HandCardTarget) Possible(controller uuid.UUID, _ Card, g *Game) []uuid.UUID {
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return nil
 	}
 	var result []uuid.UUID
 	for _, c := range p.Hand() {
-		if c.HasType(TypeCreature) {
+		match := true
+		for _, f := range t.Filters {
+			if !f.Match(c) {
+				match = false
+				break
+			}
+		}
+		if match {
 			result = append(result, c.ID())
 		}
 	}
 	return result
 }
 
-func (t *HandCreatureTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
+func (t *HandCardTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
 	t.chosen = chosen
 	return nil
 }

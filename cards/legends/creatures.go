@@ -3434,12 +3434,11 @@ func registerCreatures() {
 // Swampwalk (This creature can't be blocked as long as defending player controls a Swamp.)
 // Whenever a player casts a black spell, you gain 1 life.
 	Register("Sol'kanar the Swamp King", func() Card {
-		blackColor := Black
 		return NewCreature("Sol'kanar the Swamp King", "{2}{U}{B}{R}", 5, 5,
 			WithSubTypes("Demon"),
 			WithSuperTypes(SuperLegendary),
 			WithKeyword(Swampwalk),
-			WithAbility(WheneverSpellCastTrigger(GainLife(1), false, &blackColor)),
+			WithAbility(WheneverSpellCastTrigger(GainLife(1), false, HasColorCardFilter(Black))),
 		)
 	})
 

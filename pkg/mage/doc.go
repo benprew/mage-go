@@ -250,9 +250,9 @@ Battlefield targets:
 	[TargetPermanent](filters ...PermanentFilter)         // any permanent
 	[TargetControlledCreature]()                           // creature you control
 	[TargetControlledPermanent]()                          // permanent you control
-	[TargetLand]()                                         // land
-	[TargetArtifact]()                                     // artifact
-	[TargetArtifactOrEnchantment]()                        // artifact or enchantment
+	[TargetPermanent](IsLand)                              // land (= TargetLand)
+	[TargetPermanent](IsArtifact)                          // artifact (= TargetArtifact)
+	[TargetPermanent](Or(IsArtifact, IsEnchantment))       // artifact or enchantment
 
 Player targets:
 
@@ -266,9 +266,8 @@ Stack targets:
 
 Zone targets:
 
-	[TargetCreatureInYourGraveyard]()                   // creature in your graveyard
-	[TargetCardInYourGraveyard](filters ...CardFilter)  // any card in your graveyard
-	[TargetCreatureInHand]()                             // creature in your hand
+	[TargetCardInYourGraveyard](filters ...CardFilter)  // any card in your graveyard (pass IsCreatureCard for creatures)
+	[TargetCardInHand](filters ...CardFilter)           // any card in your hand (pass IsCreatureCard for creatures)
 
 Restrict with filters:
 
@@ -401,8 +400,9 @@ The [Cost] interface has CanPay, Pay, and Text methods. Cost constructors:
 	[XManaCost]()                      // pay X generic mana (g.CurrentX)
 	[TapSourceCost]()                  // {T}: tap the source
 	[SacrificeSourceCost]()            // sacrifice self
-	[SacrificeCreatureCost]()          // sacrifice a creature you control
-	[SacrificeArtifactCost]()          // sacrifice an artifact you control
+	[SacrificeMatchingCost](filter, text)  // sacrifice a permanent matching filter
+	[SacrificeCreatureCost]()          // = SacrificeMatchingCost(IsCreature, ...)
+	[SacrificeArtifactCost]()          // = SacrificeMatchingCost(IsArtifact, ...)
 	[LifePayCost](amount)             // pay life
 	[RemoveCountersCost](ct, n)        // remove n counters of type ct
 	[DiscardCost](n)                   // discard n cards
@@ -410,11 +410,12 @@ The [Cost] interface has CanPay, Pay, and Text methods. Cost constructors:
 	[ExileFromGraveyardCost](n)        // exile n cards from your graveyard
 	[ExileSourceCost]()                // exile self
 	[ReturnToHandCost](filter)         // bounce a permanent to hand (nil = any)
-	[TapCreatureCost]()                // tap another untapped creature you control
+	[TapMatchingCost](filter, text)    // tap another untapped permanent matching filter
+	[TapCreatureCost]()                // = TapMatchingCost(IsCreature, ...)
 
 Additional costs on the card itself (paid when casting, not on an ability):
 
-	mage.WithAdditionalCost(mage.SacrificeCreatureCost())
+	mage.WithAdditionalCost(mage.SacrificeMatchingCost(mage.IsCreature, "Sacrifice a creature"))
 
 # Activated Abilities
 
@@ -481,10 +482,10 @@ Convenience constructors (set condition automatically):
 	[BeginningOfEachUpkeepTrigger](effect, optional)            // EvtUpkeep, every player
 	[BeginningOfEachDrawStepTrigger](effect, optional)          // EvtDrawStep, while untapped
 	[BeginningOfAttachedControllerUpkeepTrigger](effect, opt)   // EvtUpkeep, attached creature's controller
-	[WheneverSpellCastTrigger](effect, optional, *Color)        // EvtSpellCast, optional color filter
-	[WheneverEnchantmentCastTrigger](effect, optional)          // EvtSpellCast, controller's enchantment
+	[WheneverSpellCastTrigger](effect, optional, ...CardFilter)  // EvtSpellCast, any player, filtered
+	[WheneverYouCastSpellTrigger](effect, optional, ...CardFilter) // EvtSpellCast, controller only
 	[WhenAttachedBecomesTappedTrigger](effect, optional)        // EvtTapped, enchanted permanent
-	[WheneverLandEntersBattlefieldTrigger](effect, optional)    // EvtEntersBattlefield, any land
+	[WheneverPermanentEntersBattlefieldTrigger](e, opt, filter) // EvtEntersBattlefield, filtered
 	[WhenOpponentPermanentBecomesTappedTrigger](e, opt, filter) // EvtTapped, opponent's matching permanent
 	[PutIntoGraveyardFromBattlefieldTrigger](effect, optional)  // EvtPutIntoGraveyardFromBattlefield, self
 	[SacrificeAtUpkeepUnlessPay](manaCost)                      // sacrifice unless pay at upkeep
@@ -597,7 +598,7 @@ Attached effects (aura/equipment — active while attached):
 	[PreventAttachedFromUntapping](AttachType)          // doesn't untap
 	[PreventAttachedFromAttacking](AttachType)          // can't attack
 	[ControlChangeContinuous]()                         // steal (Control Magic)
-	[BoostAttachedByForestCount]()                      // Aspect of Wolf
+	[BoostAttachedByCount](filter, powerFn, toughFn)   // P/T by controlled count
 
 Target effects (apply to specific permanent by ID):
 

@@ -739,7 +739,7 @@ func (p *Permanent) CanTapForEffect(g *Game) bool {
 // spell of the given color is cast (e.g. Crystal Rod, Iron Star, Ivory Cup).
 func NewLuckyCharm(name, cost string, color Color) *BaseCard {
 	return NewArtifact(name, cost,
-		WithAbility(WheneverSpellCastTrigger(GainLife(1), true, &color)),
+		WithAbility(WheneverSpellCastTrigger(GainLife(1), true, HasColorCardFilter(color))),
 	)
 }
 

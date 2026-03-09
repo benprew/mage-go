@@ -181,29 +181,30 @@ func DealsDamageToOpponentTrigger(effect Effect, optional bool) *GenericTriggere
 		})
 }
 
-// WheneverSpellCastTrigger fires whenever a spell of the matching color is cast.
-// Pass nil for colorFilter to trigger on any spell.
-func WheneverSpellCastTrigger(effect Effect, optional bool, colorFilter *Color) *GenericTriggered {
+// WheneverSpellCastTrigger fires whenever any player casts a spell matching the
+// given CardFilter predicates. Pass no filters to trigger on any spell.
+func WheneverSpellCastTrigger(effect Effect, optional bool, filters ...CardFilter) *GenericTriggered {
 	return NewTriggered(EvtSpellCast, optional, effect).
 		SetCondition(func(evt *GameEvent, g *Game, _, _ uuid.UUID) bool {
-			if colorFilter == nil {
+			if len(filters) == 0 {
 				return true
 			}
 			card := g.FindCardAnywhere(evt.SourceID)
 			if card == nil {
 				return false
 			}
-			for _, c := range card.ManaCost().Colors() {
-				if c == *colorFilter {
-					return true
+			for _, f := range filters {
+				if !f.Match(card) {
+					return false
 				}
 			}
-			return false
+			return true
 		})
 }
 
-// WheneverEnchantmentCastTrigger fires whenever the controller casts an enchantment.
-func WheneverEnchantmentCastTrigger(effect Effect, optional bool) *GenericTriggered {
+// WheneverYouCastSpellTrigger fires whenever the controller casts a spell matching
+// the given CardFilter predicates. Pass no filters to trigger on any of your spells.
+func WheneverYouCastSpellTrigger(effect Effect, optional bool, filters ...CardFilter) *GenericTriggered {
 	return NewTriggered(EvtSpellCast, optional, effect).
 		SetCondition(func(evt *GameEvent, g *Game, _, controllerID uuid.UUID) bool {
 			if evt.PlayerID != controllerID {
@@ -213,8 +214,19 @@ func WheneverEnchantmentCastTrigger(effect Effect, optional bool) *GenericTrigge
 			if card == nil {
 				return false
 			}
-			return card.HasType(TypeEnchantment)
+			for _, f := range filters {
+				if !f.Match(card) {
+					return false
+				}
+			}
+			return true
 		})
+}
+
+// WheneverEnchantmentCastTrigger fires whenever the controller casts an enchantment.
+// Convenience wrapper for WheneverYouCastSpellTrigger with IsEnchantmentCard filter.
+func WheneverEnchantmentCastTrigger(effect Effect, optional bool) *GenericTriggered {
+	return WheneverYouCastSpellTrigger(effect, optional, IsEnchantmentCard)
 }
 
 // WhenDamageDealtToThisTrigger fires when damage is dealt to the source creature.
@@ -242,16 +254,23 @@ func BeginningOfAttachedControllerUpkeepTrigger(effect Effect, optional bool) *G
 		})
 }
 
-// WheneverLandEntersBattlefieldTrigger fires whenever any land enters the battlefield.
-func WheneverLandEntersBattlefieldTrigger(effect Effect, optional bool) *GenericTriggered {
+// WheneverPermanentEntersBattlefieldTrigger fires whenever a permanent matching
+// the filter enters the battlefield.
+func WheneverPermanentEntersBattlefieldTrigger(effect Effect, optional bool, filter PermanentFilter) *GenericTriggered {
 	return NewTriggered(EvtEntersBattlefield, optional, effect).
 		SetCondition(func(evt *GameEvent, g *Game, _, _ uuid.UUID) bool {
 			perm := g.FindPermanent(evt.SourceID)
 			if perm == nil {
 				return false
 			}
-			return perm.HasType(TypeLand)
+			return filter.Match(perm, g)
 		})
+}
+
+// WheneverLandEntersBattlefieldTrigger fires whenever any land enters the battlefield.
+// Convenience wrapper for WheneverPermanentEntersBattlefieldTrigger with IsLand filter.
+func WheneverLandEntersBattlefieldTrigger(effect Effect, optional bool) *GenericTriggered {
+	return WheneverPermanentEntersBattlefieldTrigger(effect, optional, IsLand)
 }
 
 // AnyCreatureDiesTrigger fires when any creature dies (regardless of controller).

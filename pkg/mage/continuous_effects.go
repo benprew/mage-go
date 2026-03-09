@@ -88,12 +88,14 @@ func ControlChangeContinuous() ContinuousEffect {
 	})
 }
 
-// BoostAttachedByForestCount boosts the attached creature by Forests controlled.
-func BoostAttachedByForestCount() ContinuousEffect {
+// BoostAttachedByCount boosts the attached creature based on the count of
+// controlled permanents matching filter. powerFn and toughFn convert the count
+// to P/T bonuses (e.g. for Aspect of Wolf: count/2 and (count+1)/2).
+func BoostAttachedByCount(filter PermanentFilter, powerFn, toughFn func(int) int) ContinuousEffect {
 	return AttachedEffect(LayerPT, func(g *Game, source, target *Permanent) error {
-		forests := g.CountBattlefield(And(ControlledBy(source.Controller), IsLand, HasSubType("Forest")))
-		target.powerBonus += forests / 2
-		target.toughBonus += (forests + 1) / 2
+		count := g.CountBattlefield(And(ControlledBy(source.Controller), filter))
+		target.powerBonus += powerFn(count)
+		target.toughBonus += toughFn(count)
 		return nil
 	})
 }
@@ -303,21 +305,6 @@ func PTEqualsControlledCount(countFilter PermanentFilter) ContinuousEffect {
 			return nil
 		}
 		count := g.CountBattlefield(And(ControlledBy(src.Controller), countFilter))
-		src.powerBonus += count
-		src.toughBonus += count
-		return nil
-	})
-}
-
-// PowerEqualsCount creates a continuous effect where the source creature gets
-// P/T bonus equal to count of permanents matching countFilter.
-func PowerEqualsCount(countFilter PermanentFilter) ContinuousEffect {
-	return FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-		src := g.FindPermanent(sourceID)
-		if src == nil {
-			return nil
-		}
-		count := g.CountBattlefield(countFilter)
 		src.powerBonus += count
 		src.toughBonus += count
 		return nil
