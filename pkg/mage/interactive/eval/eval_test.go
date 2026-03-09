@@ -566,6 +566,45 @@ func TestCalculateLethal_MinimalSet(t *testing.T) {
 	}
 }
 
+func TestEstimatePushThrough_FirstStrikeKillsBlocker(t *testing.T) {
+	g, pa, pb := makeGame()
+	pb.SetLife(5)
+	// 4/2 first striker vs 3/3 blocker: first strike kills 3-toughness blocker
+	// before it deals damage. The attacker's full power pushes through because
+	// the blocker is dead before it can block effectively.
+	fs := makePerm("Knight", "{2}{W}{W}", 4, 2, pa.PlayerID(),
+		mage.WithKeyword(core.FirstStrike))
+	blocker := makePerm("Bear", "{2}{G}", 3, 3, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, fs, blocker)
+
+	info := CalculateLethal(g, pa.PlayerID())
+	// First striker with power >= blocker toughness kills the blocker before
+	// it can deal damage. In push-through estimation, this should count as
+	// getting damage through (the blocker is dead before it matters).
+	if info.MyBoardDamage < 4 {
+		t.Errorf("MyBoardDamage = %d, want >= 4 (first striker kills blocker)", info.MyBoardDamage)
+	}
+}
+
+func TestEstimatePushThrough_DeathtouchKillsAnyBlocker(t *testing.T) {
+	g, pa, pb := makeGame()
+	pb.SetLife(3)
+	// 2/2 deathtouch + trample vs 6/6 blocker: deathtouch needs 1 to kill,
+	// remaining 1 tramples through. Without deathtouch awareness, the 6/6
+	// would fully absorb the 2/2's damage.
+	dt := makePerm("Snake", "{1}{B}{G}", 2, 2, pa.PlayerID(),
+		mage.WithKeyword(core.Deathtouch), mage.WithKeyword(core.Trample))
+	blocker := makePerm("Wurm", "{4}{G}{G}", 6, 6, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, dt, blocker)
+
+	info := CalculateLethal(g, pa.PlayerID())
+	// Deathtouch + trample: only 1 damage needed to kill blocker, rest tramples.
+	// 2 power - 1 lethal = 1 trample damage.
+	if info.MyBoardDamage < 1 {
+		t.Errorf("MyBoardDamage = %d, want >= 1 (deathtouch trample through 6/6)", info.MyBoardDamage)
+	}
+}
+
 // ── CalculateRace (Phase 0B) ────────────────────────────────────────────────
 
 func TestCalculateRace_FavorableRace(t *testing.T) {
@@ -754,5 +793,160 @@ func TestClock_Basic(t *testing.T) {
 func TestClock_ZeroDamage(t *testing.T) {
 	if got := clock(20, 0); got != math.MaxInt32 {
 		t.Errorf("clock(20, 0) = %d, want MaxInt32", got)
+	}
+}
+
+// ── handQuality ─────────────────────────────────────────────────────────────
+
+func TestHandQuality_CastableSpells(t *testing.T) {
+	g, pa, _ := makeGame()
+	// 3 untapped lands
+	for i := 0; i < 3; i++ {
+		land := mage.NewLand("Forest")
+		land.SetOwner(pa.PlayerID())
+		lp := mage.NewPermanent(land, pa.PlayerID())
+		lp.RevokeBaseAttr(core.AttrSummonSick)
+		g.Battlefield = append(g.Battlefield, lp)
+	}
+
+	c1 := mage.NewCreature("Bear", "{1}{G}", 2, 2) // CMC 2, castable
+	c2 := mage.NewCreature("Elf", "{G}", 1, 1)     // CMC 1, castable
+	pa.AddToHand(c1)
+	pa.AddToHand(c2)
+
+	got := handQuality(pa, g)
+	// Both spells castable (CMC <= 3 mana): 2 points each = 4
+	if got != 4 {
+		t.Errorf("handQuality(castable spells) = %d, want 4", got)
+	}
+}
+
+func TestHandQuality_UncastableExpensiveSpell(t *testing.T) {
+	g, pa, _ := makeGame()
+	// 2 untapped lands
+	for i := 0; i < 2; i++ {
+		land := mage.NewLand("Forest")
+		land.SetOwner(pa.PlayerID())
+		lp := mage.NewPermanent(land, pa.PlayerID())
+		lp.RevokeBaseAttr(core.AttrSummonSick)
+		g.Battlefield = append(g.Battlefield, lp)
+	}
+
+	expensive := mage.NewCreature("Wurm", "{5}{G}{G}", 7, 7) // CMC 7, not castable with 2 mana
+	pa.AddToHand(expensive)
+
+	got := handQuality(pa, g)
+	// CMC 7, available mana 2: CMC > availMana+3 (5) → dead card = 0
+	if got != 0 {
+		t.Errorf("handQuality(uncastable 7-drop with 2 mana) = %d, want 0", got)
+	}
+}
+
+func TestHandQuality_NearCastableSpell(t *testing.T) {
+	g, pa, _ := makeGame()
+	// 2 untapped lands
+	for i := 0; i < 2; i++ {
+		land := mage.NewLand("Forest")
+		land.SetOwner(pa.PlayerID())
+		lp := mage.NewPermanent(land, pa.PlayerID())
+		lp.RevokeBaseAttr(core.AttrSummonSick)
+		g.Battlefield = append(g.Battlefield, lp)
+	}
+
+	// CMC 4, available mana 2: CMC <= availMana+2 (4) → partial value = 1
+	spell := mage.NewCreature("Giant", "{3}{R}", 3, 3)
+	pa.AddToHand(spell)
+
+	got := handQuality(pa, g)
+	if got != 1 {
+		t.Errorf("handQuality(near-castable 4-drop with 2 mana) = %d, want 1", got)
+	}
+}
+
+func TestHandQuality_ExcessLands(t *testing.T) {
+	g, pa, _ := makeGame()
+	// 6 lands in hand
+	for i := 0; i < 6; i++ {
+		land := mage.NewLand("Forest")
+		pa.AddToHand(land)
+	}
+	// Lands: first 5 get 1 point each, 6th gets -1 (flood penalty)
+	got := handQuality(pa, g)
+	if got != 4 {
+		t.Errorf("handQuality(6 lands) = %d, want 4 (5*1 + 1*-1)", got)
+	}
+}
+
+func TestHandQuality_EmptyHand(t *testing.T) {
+	g, pa, _ := makeGame()
+	got := handQuality(pa, g)
+	if got != 0 {
+		t.Errorf("handQuality(empty) = %d, want 0", got)
+	}
+}
+
+// ── Lifelink in Race ────────────────────────────────────────────────────────
+
+func TestCalculateRace_LifelinkBetterClock(t *testing.T) {
+	// A 3/3 lifelink creature should have a better effective clock than a vanilla 3/3.
+	// Lifelink deals 3 to opponent AND gains 3, effectively a 6-point swing per turn.
+	// Against the same opponent board, the lifelink creature's clock should be shorter.
+	g1, pa1, pb1 := makeGame()
+	pa1.SetLife(10)
+	pb1.SetLife(10)
+	llCreature := makePerm("Lifelinker", "{1}{W}{W}", 3, 3, pa1.PlayerID(),
+		mage.WithKeyword(core.Lifelink), mage.WithKeyword(core.UnblockableKW))
+	oppAtk1 := makePerm("Opp Bear", "{1}{R}", 3, 3, pb1.PlayerID(),
+		mage.WithKeyword(core.UnblockableKW))
+	g1.Battlefield = append(g1.Battlefield, llCreature, oppAtk1)
+
+	g2, pa2, pb2 := makeGame()
+	pa2.SetLife(10)
+	pb2.SetLife(10)
+	vanillaCreature := makePerm("Vanilla", "{2}{G}", 3, 3, pa2.PlayerID(),
+		mage.WithKeyword(core.UnblockableKW))
+	oppAtk2 := makePerm("Opp Bear", "{1}{R}", 3, 3, pb2.PlayerID(),
+		mage.WithKeyword(core.UnblockableKW))
+	g2.Battlefield = append(g2.Battlefield, vanillaCreature, oppAtk2)
+
+	raceLL := CalculateRace(g1, pa1.PlayerID())
+	raceVanilla := CalculateRace(g2, pa2.PlayerID())
+
+	// With lifelink, our clock should be the same (3 damage per turn, same)
+	// but their clock should be longer (we gain life, so they need more turns)
+	if raceLL.TheirClock <= raceVanilla.TheirClock {
+		t.Errorf("lifelink TheirClock=%d should be > vanilla TheirClock=%d (we gain life)",
+			raceLL.TheirClock, raceVanilla.TheirClock)
+	}
+}
+
+func TestCalculateRace_LifelinkIncreasesEffectiveLife(t *testing.T) {
+	// Opponent has lifelink creatures — their effective life goes up each turn,
+	// meaning our clock should be longer.
+	g1, pa1, pb1 := makeGame()
+	pa1.SetLife(10)
+	pb1.SetLife(10)
+	myAtk1 := makePerm("My Rogue", "{1}{U}", 3, 3, pa1.PlayerID(),
+		mage.WithKeyword(core.UnblockableKW))
+	oppLL := makePerm("Opp Lifelinker", "{1}{W}{W}", 3, 3, pb1.PlayerID(),
+		mage.WithKeyword(core.Lifelink), mage.WithKeyword(core.UnblockableKW))
+	g1.Battlefield = append(g1.Battlefield, myAtk1, oppLL)
+
+	g2, pa2, pb2 := makeGame()
+	pa2.SetLife(10)
+	pb2.SetLife(10)
+	myAtk2 := makePerm("My Rogue", "{1}{U}", 3, 3, pa2.PlayerID(),
+		mage.WithKeyword(core.UnblockableKW))
+	oppVanilla := makePerm("Opp Vanilla", "{2}{R}", 3, 3, pb2.PlayerID(),
+		mage.WithKeyword(core.UnblockableKW))
+	g2.Battlefield = append(g2.Battlefield, myAtk2, oppVanilla)
+
+	raceOppLL := CalculateRace(g1, pa1.PlayerID())
+	raceOppVanilla := CalculateRace(g2, pa2.PlayerID())
+
+	// When opponent has lifelink, our clock to kill them should be longer
+	if raceOppLL.MyClock <= raceOppVanilla.MyClock {
+		t.Errorf("MyClock vs lifelink (%d) should be > MyClock vs vanilla (%d)",
+			raceOppLL.MyClock, raceOppVanilla.MyClock)
 	}
 }

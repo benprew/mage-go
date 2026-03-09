@@ -152,6 +152,7 @@ func (l *Lobby) StartAIGame(sess *PlayerSession) {
 		g := mage.NewGame(human, aiPlayer)
 		tui.DrawOpeningHand(human)
 		tui.DrawOpeningHand(aiPlayer)
+		ai.MulliganAI(aiPlayer)
 
 		const aiPause = 400 * time.Millisecond
 		interactive.RunGameLoop(g, 0, aiPause)

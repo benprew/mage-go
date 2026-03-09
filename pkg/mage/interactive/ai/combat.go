@@ -13,6 +13,8 @@ type CombatScore struct {
 	DamageToOpponent   int
 	OurCreaturesLost   int
 	TheirCreaturesLost int
+	LifeGained         int // life gained by our lifelink attackers
+	OpponentLifeGained int // life gained by opponent's lifelink blockers
 	Score              int
 }
 
@@ -28,58 +30,232 @@ func evaluateCombatOutcome(g *mage.Game, playerID uuid.UUID, attackers []uuid.UU
 		blockerMap[b.AttackerID] = append(blockerMap[b.AttackerID], b.BlockerID)
 	}
 
-	var cs CombatScore
-
+	// Check if any creature in this combat has first strike or double strike.
+	// If so, we need to split into two damage sub-steps.
+	hasFirstStrikeStep := false
 	for _, atkID := range attackers {
 		atk := g.FindPermanent(atkID)
 		if atk == nil {
 			continue
 		}
-		atkPow := atk.CurrentPower(g)
-		atkTough := atk.CurrentToughness(g)
-
-		blockerIDs, isBlocked := blockerMap[atkID]
-		if !isBlocked || len(blockerIDs) == 0 {
-			if atkPow > 0 {
-				cs.DamageToOpponent += atkPow
+		if atk.HasKeyword(core.FirstStrike) || atk.HasKeyword(core.DoubleStrike) {
+			hasFirstStrikeStep = true
+			break
+		}
+		for _, blkID := range blockerMap[atkID] {
+			blk := g.FindPermanent(blkID)
+			if blk != nil && (blk.HasKeyword(core.FirstStrike) || blk.HasKeyword(core.DoubleStrike)) {
+				hasFirstStrikeStep = true
+				break
 			}
-			continue
+		}
+		if hasFirstStrikeStep {
+			break
+		}
+	}
+
+	// Track accumulated damage on each creature across sub-steps.
+	dmgTaken := make(map[uuid.UUID]int)
+	// Track which creatures have been hit by deathtouch (any nonzero = lethal).
+	deathtouchMarked := make(map[uuid.UUID]bool)
+
+	var cs CombatScore
+
+	// isDead returns true if a creature has been killed by accumulated damage
+	// (including deathtouch marking from a previous step).
+	isDead := func(id uuid.UUID, toughness int) bool {
+		if deathtouchMarked[id] && dmgTaken[id] > 0 {
+			return true
+		}
+		return dmgTaken[id] >= toughness
+	}
+
+	// resolveStep applies one damage sub-step. Damage within a step is simultaneous:
+	// creatures that die this step still deal their damage. Only creatures killed
+	// in a *previous* step are excluded.
+	resolveStep := func(isFirstStrikeStep bool) {
+		// Collect new damage in a separate map, then merge after the step.
+		stepDmg := make(map[uuid.UUID]int)
+		stepDT := make(map[uuid.UUID]bool)
+
+		for _, atkID := range attackers {
+			atk := g.FindPermanent(atkID)
+			if atk == nil {
+				continue
+			}
+			atkPow := atk.CurrentPower(g)
+			atkTough := atk.CurrentToughness(g)
+			atkHasFS := atk.HasKeyword(core.FirstStrike)
+			atkHasDS := atk.HasKeyword(core.DoubleStrike)
+			atkHasDT := atk.HasKeyword(core.Deathtouch)
+			atkHasLL := atk.HasKeyword(core.Lifelink)
+
+			blockerIDs, isBlocked := blockerMap[atkID]
+			if !isBlocked || len(blockerIDs) == 0 {
+				// Unblocked attacker.
+				atkDealsThisStep := false
+				if isFirstStrikeStep {
+					atkDealsThisStep = atkHasFS || atkHasDS
+				} else {
+					atkDealsThisStep = !atkHasFS || atkHasDS
+				}
+				// Dead attackers (from a previous step) don't deal damage.
+				if isDead(atkID, atkTough) {
+					continue
+				}
+				if atkDealsThisStep && atkPow > 0 {
+					cs.DamageToOpponent += atkPow
+					if atkHasLL {
+						cs.LifeGained += atkPow
+					}
+				}
+				continue
+			}
+
+			// Determine if attacker deals damage this step.
+			atkDealsThisStep := false
+			if isFirstStrikeStep {
+				atkDealsThisStep = atkHasFS || atkHasDS
+			} else {
+				// Normal step: creatures without first strike deal damage,
+				// plus double strikers deal damage again.
+				atkDealsThisStep = !atkHasFS || atkHasDS
+			}
+
+			// Dead attackers (from a previous step) don't deal damage.
+			if isDead(atkID, atkTough) {
+				atkDealsThisStep = false
+			}
+
+			// Attacker assigns damage to blockers.
+			if atkDealsThisStep {
+				remainingAtkDmg := atkPow
+				atkDmgDealt := atkPow // attacker always deals its full power
+				for _, blkID := range blockerIDs {
+					blk := g.FindPermanent(blkID)
+					if blk == nil {
+						continue
+					}
+					blkTough := blk.CurrentToughness(g)
+
+					// Skip blockers already dead from a previous step.
+					if isDead(blkID, blkTough) {
+						continue
+					}
+
+					neededToKill := blkTough - dmgTaken[blkID]
+					if atkHasDT && neededToKill > 0 {
+						neededToKill = 1
+					}
+					if neededToKill <= 0 {
+						continue
+					}
+
+					assigned := neededToKill
+					if assigned > remainingAtkDmg {
+						assigned = remainingAtkDmg
+					}
+					stepDmg[blkID] += assigned
+					if atkHasDT && assigned > 0 {
+						stepDT[blkID] = true
+					}
+					remainingAtkDmg -= assigned
+					if remainingAtkDmg <= 0 {
+						break
+					}
+				}
+
+				// Trample: excess damage goes to opponent.
+				if remainingAtkDmg > 0 && atk.HasKeyword(core.Trample) {
+					cs.DamageToOpponent += remainingAtkDmg
+				}
+
+				// Lifelink: attacker gains life for all damage dealt.
+				if atkHasLL && atkDmgDealt > 0 {
+					cs.LifeGained += atkDmgDealt
+				}
+			}
+
+			// Blockers deal damage to attacker this step.
+			for _, blkID := range blockerIDs {
+				blk := g.FindPermanent(blkID)
+				if blk == nil {
+					continue
+				}
+				blkPow := blk.CurrentPower(g)
+				blkTough := blk.CurrentToughness(g)
+				blkHasFS := blk.HasKeyword(core.FirstStrike)
+				blkHasDS := blk.HasKeyword(core.DoubleStrike)
+				blkHasDT := blk.HasKeyword(core.Deathtouch)
+				blkHasLL := blk.HasKeyword(core.Lifelink)
+
+				// Skip blockers dead from a previous step (not this step — simultaneous).
+				if isDead(blkID, blkTough) {
+					continue
+				}
+
+				blkDealsThisStep := false
+				if isFirstStrikeStep {
+					blkDealsThisStep = blkHasFS || blkHasDS
+				} else {
+					blkDealsThisStep = !blkHasFS || blkHasDS
+				}
+
+				if blkDealsThisStep && blkPow > 0 {
+					stepDmg[atkID] += blkPow
+					if blkHasDT {
+						stepDT[atkID] = true
+					}
+					if blkHasLL {
+						cs.OpponentLifeGained += blkPow
+					}
+				}
+			}
 		}
 
-		remainingAtkDmg := atkPow
-		totalBlockerDmg := 0
+		// Merge step damage into accumulated totals.
+		for id, dmg := range stepDmg {
+			dmgTaken[id] += dmg
+		}
+		for id := range stepDT {
+			deathtouchMarked[id] = true
+		}
+	}
 
+	if hasFirstStrikeStep {
+		resolveStep(true)  // first strike sub-step
+		resolveStep(false) // normal damage sub-step
+	} else {
+		resolveStep(false) // single simultaneous step
+	}
+
+	// Tally kills from accumulated damage (including deathtouch marks).
+	for _, atkID := range attackers {
+		atk := g.FindPermanent(atkID)
+		if atk == nil {
+			continue
+		}
+		blockerIDs := blockerMap[atkID]
+		if len(blockerIDs) == 0 {
+			continue
+		}
+		atkTough := atk.CurrentToughness(g)
+		if isDead(atkID, atkTough) {
+			cs.OurCreaturesLost++
+		}
 		for _, blkID := range blockerIDs {
 			blk := g.FindPermanent(blkID)
 			if blk == nil {
 				continue
 			}
-			blkPow := blk.CurrentPower(g)
 			blkTough := blk.CurrentToughness(g)
-
-			totalBlockerDmg += blkPow
-
-			if remainingAtkDmg >= blkTough {
+			if isDead(blkID, blkTough) {
 				cs.TheirCreaturesLost++
-				remainingAtkDmg -= blkTough
-			} else {
-				remainingAtkDmg = 0
 			}
-		}
-
-		if remainingAtkDmg > 0 && atk.HasKeyword(core.Trample) {
-			cs.DamageToOpponent += remainingAtkDmg
-		}
-
-		if totalBlockerDmg >= atkTough {
-			cs.OurCreaturesLost++
 		}
 	}
 
-	cs.Score = cs.DamageToOpponent +
-		cs.TheirCreaturesLost*6 -
-		cs.OurCreaturesLost*6
-
+	// Compute score using creature values.
 	var ourLostValue, theirLostValue int
 	for _, atkID := range attackers {
 		atk := g.FindPermanent(atkID)
@@ -90,28 +266,23 @@ func evaluateCombatOutcome(g *mage.Game, playerID uuid.UUID, attackers []uuid.UU
 		if len(blockerIDs) == 0 {
 			continue
 		}
-		atkPow := atk.CurrentPower(g)
 		atkTough := atk.CurrentToughness(g)
-		totalBlockerDmg := 0
-		remainingDmg := atkPow
+		if isDead(atkID, atkTough) {
+			ourLostValue += eval.EvalCreature(atk)
+		}
 		for _, blkID := range blockerIDs {
 			blk := g.FindPermanent(blkID)
 			if blk == nil {
 				continue
 			}
-			totalBlockerDmg += blk.CurrentPower(g)
 			blkTough := blk.CurrentToughness(g)
-			if remainingDmg >= blkTough {
+			if isDead(blkID, blkTough) {
 				theirLostValue += eval.EvalCreature(blk)
-				remainingDmg -= blkTough
 			}
-		}
-		if totalBlockerDmg >= atkTough {
-			ourLostValue += eval.EvalCreature(atk)
 		}
 	}
 
-	cs.Score = cs.DamageToOpponent + theirLostValue - ourLostValue
+	cs.Score = cs.DamageToOpponent + theirLostValue - ourLostValue + cs.LifeGained - cs.OpponentLifeGained
 	_ = oppID
 
 	return cs
@@ -121,6 +292,7 @@ func findGangBlocks(atk *mage.Permanent, available []*mage.Permanent, g *mage.Ga
 	atkTough := atk.CurrentToughness(g)
 	atkScore := eval.EvalCreature(atk)
 
+	// Try all 2-blocker combinations first.
 	for i := 0; i < len(available); i++ {
 		if available[i] == nil {
 			continue
@@ -146,11 +318,60 @@ func findGangBlocks(atk *mage.Permanent, available []*mage.Permanent, g *mage.Ga
 
 			b1Score := eval.EvalCreature(b1)
 			b2Score := eval.EvalCreature(b2)
-			if !theyHaveLethal && atkScore < b1Score+b2Score {
+			combinedScore := b1Score + b2Score
+			// Allow gang block if attacker is worth at least 80% of blockers.
+			if !theyHaveLethal && atkScore*100 < combinedScore*80 {
 				continue
 			}
 
 			return []*mage.Permanent{b1, b2}
+		}
+	}
+
+	// Try all 3-blocker combinations.
+	for i := 0; i < len(available); i++ {
+		if available[i] == nil {
+			continue
+		}
+		b1 := available[i]
+		if !mage.CanBlock(b1, atk, g) {
+			continue
+		}
+
+		for j := i + 1; j < len(available); j++ {
+			if available[j] == nil {
+				continue
+			}
+			b2 := available[j]
+			if !mage.CanBlock(b2, atk, g) {
+				continue
+			}
+
+			for k := j + 1; k < len(available); k++ {
+				if available[k] == nil {
+					continue
+				}
+				b3 := available[k]
+				if !mage.CanBlock(b3, atk, g) {
+					continue
+				}
+
+				combinedPow := b1.CurrentPower(g) + b2.CurrentPower(g) + b3.CurrentPower(g)
+				if combinedPow < atkTough {
+					continue
+				}
+
+				b1Score := eval.EvalCreature(b1)
+				b2Score := eval.EvalCreature(b2)
+				b3Score := eval.EvalCreature(b3)
+				combinedScore := b1Score + b2Score + b3Score
+				// Allow gang block if attacker is worth at least 80% of blockers.
+				if !theyHaveLethal && atkScore*100 < combinedScore*80 {
+					continue
+				}
+
+				return []*mage.Permanent{b1, b2, b3}
+			}
 		}
 	}
 

@@ -328,7 +328,14 @@ func (e *boostUntilEndOfTurnEffect) Text() string {
 	return fmt.Sprintf("target creature gets +%d/+%d until end of turn", p, t)
 }
 func (e *boostUntilEndOfTurnEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeBenefit}
+	var pb, tb int
+	if _, ok := e.power.(xValue); !ok {
+		pb = e.power.Resolve(nil, uuid.Nil, uuid.Nil)
+	}
+	if _, ok := e.toughness.(xValue); !ok {
+		tb = e.toughness.Resolve(nil, uuid.Nil, uuid.Nil)
+	}
+	return EffectProperties{Outcome: OutcomeBenefit, PowerBoost: pb, ToughnessBoost: tb}
 }
 
 // boostMatchingUntilEndOfTurnEffect boosts the P/T of all creatures matching a predicate until end of turn

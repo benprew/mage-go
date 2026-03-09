@@ -259,7 +259,7 @@ func (e *returnToHandTargetEffect) Text() string {
 	return "return target permanent to its owner's hand"
 }
 func (e *returnToHandTargetEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment}
+	return EffectProperties{Outcome: OutcomeDetriment, IsBounce: true}
 }
 
 // returnFromGraveyardToHandTargetEffect returns a target card from graveyard to hand.

@@ -471,7 +471,7 @@ func TestSearch_Attackers_PrefersUnblockedDamage(t *testing.T) {
 	}
 }
 
-// ── Search Blockers ─────────────────────────────────────────────────────────
+// ── Search Blockers (Item 6) ────────────────────────────────────────────────
 
 func TestSearch_Blockers_FallsBackToHeuristic(t *testing.T) {
 	g, pa, pb := makeGame()
@@ -483,10 +483,73 @@ func TestSearch_Blockers_FallsBackToHeuristic(t *testing.T) {
 	strat := makeSearchAI(DefaultSearchConfig())
 	blocks := strat.Blockers(pb, g)
 
-	// Should delegate to heuristic (ControlPersonality blocks power >= 3, MidrangePersonality blocks >=3)
-	// MidrangePersonality has BlockPowerThreshold=3, so atkPow=3 triggers blocking
+	// Search evaluates blocking assignments; the wall (0/4) can block the 3/3
+	// and survive, so search should find that blocking is better than not blocking.
 	if len(blocks) != 1 {
-		t.Errorf("blockers should fall back to heuristic, expected 1 block, got %d", len(blocks))
+		t.Errorf("search-based blockers expected 1 block, got %d", len(blocks))
+	}
+}
+
+func TestSearch_Blockers_PreventsLethal(t *testing.T) {
+	// Opponent at 3 life with a 3/3 attacker. We have a 2/2 blocker.
+	// Blocking prevents lethal. Search should block even though the blocker dies.
+	g, pa, pb := makeGame()
+	pb.SetLife(3)
+	atk := makePerm("Giant", "{2}{R}", 3, 3, pa.PlayerID())
+	blk := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, atk, blk)
+	g.Combat.AddAttacker(atk.ID(), pb.PlayerID())
+
+	strat := makeSearchAI(DefaultSearchConfig())
+	blocks := strat.Blockers(pb, g)
+
+	if len(blocks) == 0 {
+		t.Error("search should block to prevent lethal damage")
+	}
+}
+
+func TestSearch_Blockers_GangBlocksBigThreat(t *testing.T) {
+	// 5/5 attacker. We have two 3/3 blockers. Gang block should kill the 5/5.
+	g, pa, pb := makeGame()
+	atk := makePerm("Wurm", "{3}{G}{G}", 5, 5, pa.PlayerID())
+	b1 := makePerm("Knight1", "{2}{W}", 3, 3, pb.PlayerID())
+	b2 := makePerm("Knight2", "{2}{W}", 3, 3, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, atk, b1, b2)
+	g.Combat.AddAttacker(atk.ID(), pb.PlayerID())
+
+	strat := makeSearchAI(DefaultSearchConfig())
+	blocks := strat.Blockers(pb, g)
+
+	// Search should find the gang block (2 blockers on 1 attacker) is the best option.
+	gangBlockCount := 0
+	for _, b := range blocks {
+		if b.AttackerID == atk.ID() {
+			gangBlockCount++
+		}
+	}
+	if gangBlockCount < 2 {
+		t.Errorf("search should gang-block the 5/5, got %d blockers on it", gangBlockCount)
+	}
+}
+
+func TestGenerateBlockerSets_IncludesNoBlocks(t *testing.T) {
+	g, pa, pb := makeGame()
+	atk := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
+	blk := makePerm("Elf", "{G}", 1, 1, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, atk, blk)
+	g.Combat.AddAttacker(atk.ID(), pb.PlayerID())
+
+	fallback := &HeuristicStrategy{Personality: MidrangePersonality, Weights: MidrangeWeighted, weightsInit: true}
+	sets := generateBlockerSets(g, pb.PlayerID(), fallback)
+
+	foundEmpty := false
+	for _, set := range sets {
+		if len(set) == 0 {
+			foundEmpty = true
+		}
+	}
+	if !foundEmpty {
+		t.Error("blocker sets should include the no-blocks option")
 	}
 }
 
@@ -507,6 +570,193 @@ func TestNewSearchAI_Constructor(t *testing.T) {
 }
 
 // ── Benchmark ───────────────────────────────────────────────────────────────
+
+// ── Multi-Spell Turns in Search (Item 7) ────────────────────────────────────
+
+func TestSearch_MultiSpell_BoltAndCreature(t *testing.T) {
+	// With a bolt and a creature in hand, search should be able to consider
+	// casting both in one turn (multi-spell chain).
+	g, pa, pb := makeGame()
+	pb.SetLife(20)
+
+	bolt := mage.NewInstant("Lightning Bolt", "{R}",
+		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+	)
+	bolt.SetOwner(pa.PlayerID())
+	pa.AddToHand(bolt)
+
+	creature := mage.NewCreature("Bear", "{1}{G}", 2, 2)
+	creature.SetOwner(pa.PlayerID())
+	pa.AddToHand(creature)
+
+	addLands(g, pa, "Mountain", 2)
+	addLands(g, pa, "Forest", 1)
+	g.Step = core.PrecombatMain
+
+	// Increase search budget for multi-spell exploration
+	config := SearchConfig{MaxDepth: 4, MaxNodes: 10000, TimeLimit: 2 * time.Second}
+	strat := makeSearchAI(config)
+
+	// The search should produce a valid action (not crash/hang with chaining).
+	action := strat.PriorityAction(pa, g, 0, true)
+	if action.Type == interactive.ActionPass {
+		t.Error("search should find a useful action with bolt + creature in hand")
+	}
+}
+
+func TestSearch_MultiSpell_NodeBudgetRespected(t *testing.T) {
+	// With multiple spells, multi-spell chaining should still respect node budget.
+	g, pa, _ := makeGame()
+
+	for i := 0; i < 4; i++ {
+		c := mage.NewCreature("Bear", "{1}{G}", 2, 2)
+		c.SetOwner(pa.PlayerID())
+		pa.AddToHand(c)
+	}
+	addLands(g, pa, "Forest", 8)
+	g.Step = core.PrecombatMain
+
+	config := SearchConfig{MaxDepth: 4, MaxNodes: 100, TimeLimit: 5 * time.Second}
+	strat := makeSearchAI(config)
+
+	// Should complete without hanging — chain limit + node budget cap the search.
+	action := strat.PriorityAction(pa, g, 0, true)
+	_ = action
+}
+
+func TestSearch_MultiSpell_PassEndsChain(t *testing.T) {
+	// Verify that pass moves don't cause infinite loops in multi-spell search.
+	g, pa, _ := makeGame()
+	g.Step = core.PrecombatMain
+
+	config := SearchConfig{MaxDepth: 3, MaxNodes: 500, TimeLimit: 1 * time.Second}
+	strat := makeSearchAI(config)
+
+	// Empty hand: only pass available. Should complete quickly.
+	action := strat.PriorityAction(pa, g, 0, true)
+	if action.Type != interactive.ActionPass {
+		t.Errorf("expected pass with empty hand, got %v", action.Type)
+	}
+}
+
+// ── X-Spell Move Generation (Item 8) ───────────────────────────────────────
+
+func TestXSpell_GeneratesMultipleVariants(t *testing.T) {
+	g, pa, pb := makeGame()
+
+	// Fireball: {X}{R}, deals X damage
+	fireball := mage.NewSorcery("Fireball", "{X}{R}",
+		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.XValue())),
+	)
+	fireball.SetOwner(pa.PlayerID())
+	pa.AddToHand(fireball)
+
+	// 5 mountains: available mana = 5, fixed cost = 1 (the {R}), max X = 4
+	addLands(g, pa, "Mountain", 5)
+	g.Step = core.PrecombatMain
+
+	moves := GeneratePriorityMoves(g, pa, 0, true)
+
+	// Count fireball moves with different X values
+	xValues := make(map[int]bool)
+	for _, m := range moves {
+		if m.CardName == "Fireball" {
+			xValues[m.XValue] = true
+		}
+	}
+
+	// Should have X=1, X=2 (max/2=4/2), X=4 (max)
+	if !xValues[1] {
+		t.Error("expected X=1 variant for Fireball")
+	}
+	if !xValues[4] {
+		t.Errorf("expected X=4 variant for Fireball (max), got X values: %v", xValues)
+	}
+	if len(xValues) < 2 {
+		t.Errorf("expected at least 2 X variants, got %d: %v", len(xValues), xValues)
+	}
+	_ = pb
+}
+
+func TestXSpell_SearchPicksExactLethal(t *testing.T) {
+	g, pa, pb := makeGame()
+	pb.SetLife(3) // 3 life — X=3 is exactly lethal
+
+	fireball := mage.NewSorcery("Fireball", "{X}{R}",
+		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.XValue())),
+	)
+	fireball.SetOwner(pa.PlayerID())
+	pa.AddToHand(fireball)
+
+	addLands(g, pa, "Mountain", 5)
+	g.Step = core.PrecombatMain
+
+	strat := makeSearchAI(DefaultSearchConfig())
+	action := strat.PriorityAction(pa, g, 0, true)
+
+	if action.Type != interactive.ActionCastSpell {
+		t.Fatalf("expected ActionCastSpell, got %v", action.Type)
+	}
+	if action.CardName != "Fireball" {
+		t.Fatalf("expected Fireball, got %s", action.CardName)
+	}
+	// Should target opponent for lethal
+	if len(action.Targets) != 1 || action.Targets[0] != pb.PlayerID() {
+		t.Error("search should target opponent for lethal with Fireball")
+	}
+	// XValue should be set (at least 3 for lethal)
+	if action.XValue < 3 {
+		t.Errorf("XValue should be >= 3 for lethal, got %d", action.XValue)
+	}
+}
+
+func TestXSpell_ApplySpellCast_UsesXValue(t *testing.T) {
+	// Verify that applySpellCast uses m.XValue for X-cost damage.
+	g, pa, pb := makeGame()
+	fireball := mage.NewSorcery("Fireball", "{X}{R}",
+		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.XValue())),
+	)
+	fireball.SetOwner(pa.PlayerID())
+	pa.AddToHand(fireball)
+	addLands(g, pa, "Mountain", 4)
+
+	clone := cloneGameForSearch(g)
+	m := &Move{
+		Type:     interactive.ActionCastSpell,
+		CardID:   fireball.ID(),
+		CardName: "Fireball",
+		Targets:  []uuid.UUID{pb.PlayerID()},
+		XValue:   3,
+	}
+	applyMoveToClone(clone, pa.PlayerID(), m, 0)
+
+	clonePB := clone.GetPlayer(pb.PlayerID())
+	if clonePB.Life() != 17 {
+		t.Errorf("opponent life should be 17 after X=3 fireball, got %d", clonePB.Life())
+	}
+}
+
+func TestXSpell_NoVariantsIfCantAfford(t *testing.T) {
+	g, pa, _ := makeGame()
+
+	fireball := mage.NewSorcery("Fireball", "{X}{R}",
+		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.XValue())),
+	)
+	fireball.SetOwner(pa.PlayerID())
+	pa.AddToHand(fireball)
+
+	// Only 1 mountain: can cast for X=0 but expandXSpellMoves requires maxX >= 1.
+	// Actually with 1 mountain, fixedCost=1 (the {R}), maxX = 1-1 = 0, no variants.
+	addLands(g, pa, "Mountain", 1)
+	g.Step = core.PrecombatMain
+
+	moves := GeneratePriorityMoves(g, pa, 0, true)
+	for _, m := range moves {
+		if m.CardName == "Fireball" {
+			t.Error("should not generate Fireball moves when can only afford X=0")
+		}
+	}
+}
 
 func BenchmarkSearch_TypicalBoard_Depth2(b *testing.B) {
 	for i := 0; i < b.N; i++ {

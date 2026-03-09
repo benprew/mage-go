@@ -149,8 +149,8 @@ func NewWeightedEvaluator(w Weights) StateEvaluator {
 			}
 		}
 
-		myHandQuality := handQuality(me)
-		oppHandQuality := handQuality(opp)
+		myHandQuality := handQuality(me, g)
+		oppHandQuality := handQuality(opp, g)
 		score += float64(myHandQuality-oppHandQuality) * w.Card
 
 		ownLandCount := g.CountBattlefield(mage.And(mage.IsLand, mage.ControlledBy(playerID)))
@@ -189,22 +189,32 @@ func roleWeightForPersonality(role PermanentRole, w Weights) float64 {
 	}
 }
 
-func handQuality(p mage.Player) int {
+func handQuality(p mage.Player, g GameReader) int {
 	hand := p.Hand()
 	if len(hand) == 0 {
 		return 0
 	}
+
+	availMana := countUntappedManaSources(g, p.PlayerID())
+
 	score := 0
+	landCount := 0
 	for _, card := range hand {
 		if card.HasType(core.TypeLand) {
-			score += 1
+			landCount++
+			if landCount <= 5 {
+				score += 1
+			} else {
+				score -= 1 // flood penalty
+			}
 		} else {
 			cmc := card.ManaCost().CMC()
-			if cmc > 0 {
-				score += 2
-			} else {
-				score += 1
+			if cmc <= availMana {
+				score += 2 // castable now
+			} else if cmc <= availMana+2 {
+				score += 1 // castable soon
 			}
+			// else: dead card, no value
 		}
 	}
 	return score

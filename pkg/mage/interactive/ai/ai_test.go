@@ -750,3 +750,179 @@ func TestPriorityAction_ActivatesAbility(t *testing.T) {
 	// Note: this tests the code path; the ability may or may not be activatable
 	// depending on the full game state (e.g., sorcery-speed check)
 }
+
+// ── Mulligan ─────────────────────────────────────────────────────────────────
+
+func TestShouldMulligan_ZeroLands(t *testing.T) {
+	ai := NewAIPlayer("Bot")
+	// 7-card hand with 0 lands — should mulligan
+	for i := 0; i < 7; i++ {
+		c := mage.NewCreature("Bear", "{1}{G}", 2, 2)
+		c.SetOwner(ai.PlayerID())
+		ai.AddToHand(c)
+	}
+	if !ai.ShouldMulligan(7) {
+		t.Error("should mulligan with 0 lands in a 7-card hand")
+	}
+}
+
+func TestShouldMulligan_SevenLands(t *testing.T) {
+	ai := NewAIPlayer("Bot")
+	// 7-card hand with 7 lands — should mulligan
+	for i := 0; i < 7; i++ {
+		c := mage.NewLand("Forest")
+		c.SetOwner(ai.PlayerID())
+		ai.AddToHand(c)
+	}
+	if !ai.ShouldMulligan(7) {
+		t.Error("should mulligan with 7 lands in a 7-card hand")
+	}
+}
+
+func TestShouldMulligan_ThreeLandsFourSpells(t *testing.T) {
+	ai := NewAIPlayer("Bot")
+	// 3 lands + 4 two-drop spells — should keep
+	for i := 0; i < 3; i++ {
+		c := mage.NewLand("Forest")
+		c.SetOwner(ai.PlayerID())
+		ai.AddToHand(c)
+	}
+	for i := 0; i < 4; i++ {
+		c := mage.NewCreature("Bear", "{1}{G}", 2, 2)
+		c.SetOwner(ai.PlayerID())
+		ai.AddToHand(c)
+	}
+	if ai.ShouldMulligan(7) {
+		t.Error("should keep with 3 lands and 4 castable spells")
+	}
+}
+
+func TestShouldMulligan_OneLandSixSevenDrops(t *testing.T) {
+	ai := NewAIPlayer("Bot")
+	// 1 land + 6 seven-drops — no castable spells (CMC 7 > 1+2=3)
+	c := mage.NewLand("Forest")
+	c.SetOwner(ai.PlayerID())
+	ai.AddToHand(c)
+	for i := 0; i < 6; i++ {
+		s := mage.NewCreature("Wurm", "{5}{G}{G}", 7, 7)
+		s.SetOwner(ai.PlayerID())
+		ai.AddToHand(s)
+	}
+	if !ai.ShouldMulligan(7) {
+		t.Error("should mulligan with 1 land and no castable spells")
+	}
+}
+
+func TestShouldMulligan_TwoLandsFourTwoDrops(t *testing.T) {
+	ai := NewAIPlayer("Bot")
+	// 2 lands + 4 two-drops + 1 three-drop — should keep
+	for i := 0; i < 2; i++ {
+		c := mage.NewLand("Forest")
+		c.SetOwner(ai.PlayerID())
+		ai.AddToHand(c)
+	}
+	for i := 0; i < 4; i++ {
+		c := mage.NewCreature("Bear", "{1}{G}", 2, 2)
+		c.SetOwner(ai.PlayerID())
+		ai.AddToHand(c)
+	}
+	s := mage.NewCreature("Centaur", "{2}{G}", 3, 3)
+	s.SetOwner(ai.PlayerID())
+	ai.AddToHand(s)
+	if ai.ShouldMulligan(7) {
+		t.Error("should keep with 2 lands and castable spells")
+	}
+}
+
+func TestShouldMulligan_SixCardHandOneLand(t *testing.T) {
+	ai := NewAIPlayer("Bot")
+	// 6-card hand with 1 land — more lenient, should keep
+	c := mage.NewLand("Forest")
+	c.SetOwner(ai.PlayerID())
+	ai.AddToHand(c)
+	for i := 0; i < 5; i++ {
+		s := mage.NewCreature("Bear", "{1}{G}", 2, 2)
+		s.SetOwner(ai.PlayerID())
+		ai.AddToHand(s)
+	}
+	if ai.ShouldMulligan(6) {
+		t.Error("should keep 6-card hand with 1 land")
+	}
+}
+
+func TestShouldMulligan_FiveCardHand(t *testing.T) {
+	ai := NewAIPlayer("Bot")
+	// 5-card hand — always keep regardless of contents
+	for i := 0; i < 5; i++ {
+		c := mage.NewCreature("Bear", "{1}{G}", 2, 2)
+		c.SetOwner(ai.PlayerID())
+		ai.AddToHand(c)
+	}
+	if ai.ShouldMulligan(5) {
+		t.Error("should always keep a 5-card hand")
+	}
+}
+
+func TestMulligan_ShufflesAndDrawsFewerCards(t *testing.T) {
+	ai := NewAIPlayer("Bot")
+	// Put 30 cards in library
+	for i := 0; i < 30; i++ {
+		c := mage.NewCreature("Bear", "{1}{G}", 2, 2)
+		c.SetOwner(ai.PlayerID())
+		ai.AddToLibrary(c)
+	}
+	// Draw 7 cards
+	for i := 0; i < 7; i++ {
+		ai.DrawCard()
+	}
+	if len(ai.Hand()) != 7 {
+		t.Fatalf("expected 7 cards in hand, got %d", len(ai.Hand()))
+	}
+	if len(ai.Library()) != 23 {
+		t.Fatalf("expected 23 cards in library, got %d", len(ai.Library()))
+	}
+
+	ai.Mulligan()
+
+	if len(ai.Hand()) != 6 {
+		t.Errorf("expected 6 cards in hand after mulligan, got %d", len(ai.Hand()))
+	}
+	if len(ai.Library()) != 24 {
+		t.Errorf("expected 24 cards in library after mulligan, got %d", len(ai.Library()))
+	}
+}
+
+func TestMulliganAI_KeepsGoodHand(t *testing.T) {
+	ai := NewAIPlayer("Bot")
+	// Build a library of 30 cards (mix of lands and spells)
+	for i := 0; i < 15; i++ {
+		c := mage.NewLand("Forest")
+		c.SetOwner(ai.PlayerID())
+		ai.AddToLibrary(c)
+	}
+	for i := 0; i < 15; i++ {
+		c := mage.NewCreature("Bear", "{1}{G}", 2, 2)
+		c.SetOwner(ai.PlayerID())
+		ai.AddToLibrary(c)
+	}
+	ai.ShuffleLibrary()
+	// Draw opening hand
+	for i := 0; i < 7; i++ {
+		ai.DrawCard()
+	}
+
+	startHand := len(ai.Hand())
+	startLib := len(ai.Library())
+
+	MulliganAI(ai)
+
+	// Hand should be between 5 and 7 (kept or mulliganed)
+	if len(ai.Hand()) < 5 || len(ai.Hand()) > 7 {
+		t.Errorf("hand size after mulligan loop should be 5-7, got %d", len(ai.Hand()))
+	}
+	// Total cards should be preserved
+	total := len(ai.Hand()) + len(ai.Library())
+	if total != startHand+startLib {
+		t.Errorf("total cards changed: started %d, now %d", startHand+startLib, total)
+	}
+}

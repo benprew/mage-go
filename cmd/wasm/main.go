@@ -122,6 +122,7 @@ func startGame(this js.Value, args []js.Value) any {
 	for i := 0; i < 7; i++ {
 		aiPlayer.DrawCard()
 	}
+	ai.MulliganAI(aiPlayer)
 
 	// Store channels for sendAction/sendChoice.
 	activeGame.fromTUI = fromTUI

@@ -68,6 +68,7 @@ func main() {
 	g := mage.NewGame(human, aiPlayer)
 	tui.DrawOpeningHand(human)
 	tui.DrawOpeningHand(aiPlayer)
+	ai.MulliganAI(aiPlayer)
 
 	// Start game loop in goroutine
 	const aiPause = 400 * time.Millisecond

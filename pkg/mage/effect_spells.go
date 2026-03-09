@@ -222,7 +222,7 @@ func (e *createTokenEffect) Text() string {
 	return fmt.Sprintf("create a %d/%d %s token", e.power, e.toughness, e.name)
 }
 func (e *createTokenEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeBenefit}
+	return EffectProperties{Outcome: OutcomeBenefit, TokenPower: e.power, TokenToughness: e.toughness}
 }
 
 // cloneTargetEffect copies target permanent's characteristics onto the source

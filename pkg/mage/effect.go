@@ -78,6 +78,14 @@ type EffectProperties struct {
 	DamageValue ValueSource // non-nil if this effect deals damage; call Resolve for amount
 	DrawCount   int         // fixed cards drawn; 0 for X or non-draw effects
 	Mass        bool        // true if effect is board-wide (wrath, earthquake, etc.)
+
+	// AI-search properties (used by search.go for simplified spell resolution):
+	LifeGain       int // life gained by controller; 0 if not a life-gain effect
+	PowerBoost     int // power boost for target; 0 if not a boost effect
+	ToughnessBoost int // toughness boost for target; 0 if not a boost effect
+	IsBounce       bool // true if this effect bounces a permanent to hand
+	TokenPower     int  // token creature power; 0 if not a token-creation effect
+	TokenToughness int  // token creature toughness; 0 if not a token-creation effect
 }
 
 // IsDamageEffect returns true if the given effect is a damage-dealing effect.

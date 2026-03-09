@@ -87,6 +87,15 @@ func estimatePushThroughDamage(g *mage.Game, attackerPlayerID, defenderPlayerID 
 		}
 	}
 
+	// Effective blocker toughness for trample/push-through calculations.
+	// A deathtouch attacker only needs 1 damage to kill any blocker.
+	effectiveBlockerTough := func(perm *mage.Permanent) int {
+		if perm.HasKeyword(core.Deathtouch) {
+			return 1
+		}
+		return bestBlockerToughness
+	}
+
 	for _, perm := range g.Battlefield {
 		if perm.Controller != attackerPlayerID || !perm.HasType(core.TypeCreature) {
 			continue
@@ -99,6 +108,10 @@ func estimatePushThroughDamage(g *mage.Game, attackerPlayerID, defenderPlayerID 
 			continue
 		}
 
+		hasDT := perm.HasKeyword(core.Deathtouch)
+		hasFS := perm.HasKeyword(core.FirstStrike) || perm.HasKeyword(core.DoubleStrike)
+		effBlockTough := effectiveBlockerTough(perm)
+
 		if IsEvasive(perm, defenderPlayerID, g) {
 			if perm.HasKeyword(core.Flying) && !perm.HasKeyword(core.UnblockableKW) {
 				canBeBlocked := false
@@ -109,8 +122,17 @@ func estimatePushThroughDamage(g *mage.Game, attackerPlayerID, defenderPlayerID 
 					}
 				}
 				if canBeBlocked {
-					if perm.HasKeyword(core.Trample) && pow > bestBlockerToughness {
-						totalDmg += pow - bestBlockerToughness
+					if perm.HasKeyword(core.Trample) && pow > effBlockTough {
+						totalDmg += pow - effBlockTough
+						attackerIDs = append(attackerIDs, perm.ID())
+					} else if hasFS && pow >= bestBlockerToughness {
+						// First strike kills the blocker before it can deal damage.
+						// All damage effectively pushes through.
+						totalDmg += pow
+						attackerIDs = append(attackerIDs, perm.ID())
+					} else if hasDT && hasFS {
+						// Deathtouch first striker kills any blocker before damage.
+						totalDmg += pow
 						attackerIDs = append(attackerIDs, perm.ID())
 					}
 					continue
@@ -119,10 +141,20 @@ func estimatePushThroughDamage(g *mage.Game, attackerPlayerID, defenderPlayerID 
 			totalDmg += pow
 			attackerIDs = append(attackerIDs, perm.ID())
 		} else if perm.HasKeyword(core.Trample) {
-			if pow > bestBlockerToughness {
-				totalDmg += pow - bestBlockerToughness
+			if pow > effBlockTough {
+				totalDmg += pow - effBlockTough
 				attackerIDs = append(attackerIDs, perm.ID())
 			}
+		} else if hasFS && len(blockers) > 0 && pow >= bestBlockerToughness {
+			// First striker that kills the best blocker before taking damage.
+			// Conservatively estimate full power as push-through damage since
+			// the blocker dies before dealing damage back.
+			totalDmg += pow
+			attackerIDs = append(attackerIDs, perm.ID())
+		} else if hasDT && hasFS && len(blockers) > 0 {
+			// Deathtouch + first strike: kills any blocker before damage.
+			totalDmg += pow
+			attackerIDs = append(attackerIDs, perm.ID())
 		} else if perm.HasKeyword(core.Menace) {
 			if len(blockers) < 2 {
 				totalDmg += pow
@@ -175,6 +207,13 @@ func findMinimalLethalSet(g *mage.Game, attackerPlayerID, defenderPlayerID uuid.
 			continue
 		}
 
+		hasDT := perm.HasKeyword(core.Deathtouch)
+		hasFS := perm.HasKeyword(core.FirstStrike) || perm.HasKeyword(core.DoubleStrike)
+		effBlockTough := bestBlockerToughness
+		if hasDT {
+			effBlockTough = 1
+		}
+
 		dmg := 0
 		if IsEvasive(perm, defenderPlayerID, g) {
 			if perm.HasKeyword(core.Flying) && !perm.HasKeyword(core.UnblockableKW) {
@@ -188,8 +227,12 @@ func findMinimalLethalSet(g *mage.Game, attackerPlayerID, defenderPlayerID uuid.
 					}
 				}
 				if canBeBlocked {
-					if perm.HasKeyword(core.Trample) && pow > bestBlockerToughness {
-						dmg = pow - bestBlockerToughness
+					if perm.HasKeyword(core.Trample) && pow > effBlockTough {
+						dmg = pow - effBlockTough
+					} else if hasFS && pow >= bestBlockerToughness {
+						dmg = pow
+					} else if hasDT && hasFS {
+						dmg = pow
 					}
 				} else {
 					dmg = pow
@@ -197,8 +240,12 @@ func findMinimalLethalSet(g *mage.Game, attackerPlayerID, defenderPlayerID uuid.
 			} else {
 				dmg = pow
 			}
-		} else if perm.HasKeyword(core.Trample) && pow > bestBlockerToughness {
-			dmg = pow - bestBlockerToughness
+		} else if perm.HasKeyword(core.Trample) && pow > effBlockTough {
+			dmg = pow - effBlockTough
+		} else if hasFS && blockerCount > 0 && pow >= bestBlockerToughness {
+			dmg = pow
+		} else if hasDT && hasFS && blockerCount > 0 {
+			dmg = pow
 		} else if perm.HasKeyword(core.Menace) && blockerCount < 2 {
 			dmg = pow
 		}
@@ -237,6 +284,8 @@ type RaceInfo struct {
 }
 
 // CalculateRace computes turn clocks for both players.
+// Lifelink is accounted for: a player with lifelink attackers gains life each turn,
+// making the opponent's clock longer.
 func CalculateRace(g *mage.Game, playerID uuid.UUID) RaceInfo {
 	opponent := g.GetOpponent(playerID)
 	if opponent == nil {
@@ -251,14 +300,52 @@ func CalculateRace(g *mage.Game, playerID uuid.UUID) RaceInfo {
 	myExpectedDmg := estimateExpectedDamage(g, playerID, oppID)
 	theirExpectedDmg := estimateExpectedDamage(g, oppID, playerID)
 
-	myClock := clock(opponent.Life(), myExpectedDmg)
-	theirClock := clock(me.Life(), theirExpectedDmg)
+	// Estimate lifelink life gain per turn for each player.
+	myLifelinkGain := estimateLifelinkGain(g, playerID)
+	theirLifelinkGain := estimateLifelinkGain(g, oppID)
+
+	// My clock: turns for me to kill opponent. Opponent's lifelink gain extends this.
+	myClock := clock(opponent.Life(), myExpectedDmg-theirLifelinkGain)
+	// Their clock: turns for them to kill me. My lifelink gain extends this.
+	theirClock := clock(me.Life(), theirExpectedDmg-myLifelinkGain)
 
 	return RaceInfo{
 		MyClock:    myClock,
 		TheirClock: theirClock,
 		Racing:     myClock < 5 && theirClock < 5,
 	}
+}
+
+// estimateLifelinkGain returns the estimated life gain per turn from a player's
+// lifelink attackers. Only counts evasive lifelink creatures (guaranteed to connect).
+func estimateLifelinkGain(g *mage.Game, playerID uuid.UUID) int {
+	opponent := g.GetOpponent(playerID)
+	if opponent == nil {
+		return 0
+	}
+	oppID := opponent.PlayerID()
+
+	gain := 0
+	for _, perm := range g.Battlefield {
+		if perm.Controller != playerID || !perm.HasType(core.TypeCreature) {
+			continue
+		}
+		if !perm.HasKeyword(core.Lifelink) {
+			continue
+		}
+		if !perm.CanDeclareAsAttacker(g) {
+			continue
+		}
+		pow := perm.CurrentPower(g)
+		if pow <= 0 {
+			continue
+		}
+		// Only count lifelink from creatures that reliably connect (evasive).
+		if IsEvasive(perm, oppID, g) {
+			gain += pow
+		}
+	}
+	return gain
 }
 
 func estimateExpectedDamage(g *mage.Game, attackerPlayerID, defenderPlayerID uuid.UUID) int {

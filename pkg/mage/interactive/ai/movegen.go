@@ -19,6 +19,8 @@ type Move struct {
 	PermanentID  uuid.UUID
 	AbilityIndex int
 	Attackers    []uuid.UUID
+	XValue    int // X value for X-cost spells (0 means not an X spell)
+	ModeIndex int // mode index for modal spells (0 = first mode or non-modal)
 
 	IsCreature bool
 	heuristic  int
@@ -178,8 +180,79 @@ func abilityQualityFromInfo(g *mage.Game, info mage.ActivatableInfo) int {
 }
 
 func expandSpellMoves(p mage.Player, g *mage.Game, card mage.Card) []Move {
+	mc := card.ManaCost()
+
+	// Modal spells: generate one move per mode
+	if modes := card.Modes(); len(modes) > 1 {
+		return expandModalSpellMoves(p, g, card, modes)
+	}
+
+	if mc.HasX {
+		return expandXSpellMoves(p, g, card)
+	}
+	return expandNonXSpellMoves(p, g, card, 0, 0)
+}
+
+// expandModalSpellMoves generates one set of moves per mode for modal spells.
+func expandModalSpellMoves(p mage.Player, g *mage.Game, card mage.Card, modes []string) []Move {
+	var allMoves []Move
+	maxModes := len(modes)
+	if maxModes > 3 {
+		maxModes = 3
+	}
+	for modeIdx := 0; modeIdx < maxModes; modeIdx++ {
+		baseMoves := expandNonXSpellMoves(p, g, card, 0, modeIdx)
+		allMoves = append(allMoves, baseMoves...)
+	}
+	return allMoves
+}
+
+// expandXSpellMoves generates moves for X = 1, max/2, and max for X-cost spells.
+func expandXSpellMoves(p mage.Player, g *mage.Game, card mage.Card) []Move {
+	playerID := p.PlayerID()
+	mc := card.ManaCost()
+	fixedCost := mc.CMC() // colored + generic (excluding X)
+	availMana := eval.CountAvailableMana(g, playerID)
+	maxX := availMana - fixedCost
+	if maxX < 1 {
+		return nil
+	}
+
+	// Generate X variants: 1, max/2, max (deduplicated)
+	xValues := []int{1}
+	if half := maxX / 2; half > 1 {
+		xValues = append(xValues, half)
+	}
+	if maxX > 1 {
+		xValues = append(xValues, maxX)
+	}
+
+	// Deduplicate
+	seen := make(map[int]bool)
+	var unique []int
+	for _, x := range xValues {
+		if !seen[x] {
+			seen[x] = true
+			unique = append(unique, x)
+		}
+	}
+
+	var allMoves []Move
+	for _, x := range unique {
+		moves := expandNonXSpellMoves(p, g, card, x, 0)
+		allMoves = append(allMoves, moves...)
+	}
+	return allMoves
+}
+
+// expandNonXSpellMoves generates targeting variants for a spell with an optional X value and mode index.
+func expandNonXSpellMoves(p mage.Player, g *mage.Game, card mage.Card, xValue, modeIndex int) []Move {
 	playerID := p.PlayerID()
 	sv := eval.SpellValue(card, p, g)
+	// Bonus for higher X values
+	if xValue > 0 {
+		sv += xValue
+	}
 
 	var possibleTargets []uuid.UUID
 	for _, a := range card.Abilities() {
@@ -199,6 +272,8 @@ func expandSpellMoves(p mage.Player, g *mage.Game, card mage.Card) []Move {
 			CardID:     card.ID(),
 			CardName:   card.Name(),
 			IsCreature: card.HasType(core.TypeCreature),
+			XValue:     xValue,
+			ModeIndex:  modeIndex,
 			heuristic:  sv,
 		}}
 	}
@@ -215,6 +290,10 @@ func expandSpellMoves(p mage.Player, g *mage.Game, card mage.Card) []Move {
 				for _, e := range sa.Effects() {
 					if dv := e.Properties().DamageValue; dv != nil {
 						dmg := dv.Resolve(g, card.ID(), playerID)
+						// For X spells, use the X value as estimated damage
+						if xValue > 0 {
+							dmg = xValue
+						}
 						if dmg >= tp.Life() {
 							h += 100
 						}
@@ -227,6 +306,8 @@ func expandSpellMoves(p mage.Player, g *mage.Game, card mage.Card) []Move {
 			CardID:    card.ID(),
 			CardName:  card.Name(),
 			Targets:   []uuid.UUID{tid},
+			XValue:    xValue,
+			ModeIndex: modeIndex,
 			heuristic: h,
 		})
 	}

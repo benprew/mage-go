@@ -154,6 +154,104 @@ func TestFindGangBlocks_LethalOverridesTradeCheck(t *testing.T) {
 	}
 }
 
+func TestFindGangBlocks_ThreeBlockersKillBig(t *testing.T) {
+	g, pa, pb := makeGame()
+	// 7/7 attacker: evalCreature = 7*2+7 = 21
+	// Three 3/2 blockers: evalCreature = (3*2+2) = 8 each, total = 24
+	// Combined power 9 >= 7 toughness — can kill.
+	// Value: 21*100=2100 >= 24*80=1920. Passes.
+	// No 2-blocker combo works: best pair power = 6 < 7 toughness.
+	atk := makePerm("Wurm", "{5}{G}{G}", 7, 7, pa.PlayerID())
+	b1 := makePerm("Soldier1", "{2}{W}", 3, 2, pb.PlayerID())
+	b2 := makePerm("Soldier2", "{2}{W}", 3, 2, pb.PlayerID())
+	b3 := makePerm("Soldier3", "{2}{W}", 3, 2, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, atk, b1, b2, b3)
+
+	available := []*mage.Permanent{b1, b2, b3}
+	gang := findGangBlocks(atk, available, g, pb.PlayerID(), false)
+
+	if gang == nil {
+		t.Fatal("expected 3-blocker gang block, got nil")
+	}
+	if len(gang) != 3 {
+		t.Fatalf("expected 3 gang blockers, got %d", len(gang))
+	}
+}
+
+func TestFindGangBlocks_ThreeTokensNotWorthIt(t *testing.T) {
+	g, pa, pb := makeGame()
+	// 5/5 attacker: evalCreature = 5*2+5 = 15
+	// Three 1/1 tokens: evalCreature = (1*2+1) = 3 each, total = 9
+	// Combined power 3 < 5 toughness — can't even kill it.
+	atk := makePerm("Beast", "{3}{G}{G}", 5, 5, pa.PlayerID())
+	b1 := makePerm("Token1", "{0}", 1, 1, pb.PlayerID())
+	b2 := makePerm("Token2", "{0}", 1, 1, pb.PlayerID())
+	b3 := makePerm("Token3", "{0}", 1, 1, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, atk, b1, b2, b3)
+
+	available := []*mage.Permanent{b1, b2, b3}
+	gang := findGangBlocks(atk, available, g, pb.PlayerID(), false)
+
+	if gang != nil {
+		t.Errorf("expected no gang block (can't kill 5/5 with three 1/1s), got %d blockers", len(gang))
+	}
+}
+
+func TestFindGangBlocks_ThreeBlockersLethalOverride(t *testing.T) {
+	g, pa, pb := makeGame()
+	// 7/7 attacker: evalCreature = 7*2+7 = 21
+	// Three 3/3 blockers: evalCreature = 9 each, total = 27
+	// No 2-blocker pair works: 3+3=6 < 7 toughness.
+	// Three blockers: combined power 9 >= 7 — can kill.
+	// Value: 21*100=2100 < 27*80=2160. Fails without lethal.
+	atk := makePerm("Wurm", "{5}{G}{G}", 7, 7, pa.PlayerID())
+	b1 := makePerm("Knight1", "{2}{W}", 3, 3, pb.PlayerID())
+	b2 := makePerm("Knight2", "{2}{W}", 3, 3, pb.PlayerID())
+	b3 := makePerm("Knight3", "{2}{W}", 3, 3, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, atk, b1, b2, b3)
+
+	available := []*mage.Permanent{b1, b2, b3}
+
+	// Without lethal, value check fails (21 < 80% of 27)
+	gang := findGangBlocks(atk, available, g, pb.PlayerID(), false)
+	if gang != nil {
+		t.Errorf("expected no gang block without lethal (value-negative), got %d blockers", len(gang))
+	}
+
+	// With lethal, should gang block regardless
+	gang = findGangBlocks(atk, available, g, pb.PlayerID(), true)
+	if gang == nil {
+		t.Fatal("expected gang block when facing lethal, got nil")
+	}
+	if len(gang) != 3 {
+		t.Fatalf("expected 3 gang blockers when facing lethal, got %d", len(gang))
+	}
+}
+
+func TestFindGangBlocks_TwoBlockersFail_ThreeSucceed(t *testing.T) {
+	g, pa, pb := makeGame()
+	// 6/6 attacker: evalCreature = 6*2+6 = 18
+	// Two 2/2s + one 3/3: no 2-blocker pair has combined power >= 6.
+	//   Best pair: 2+3=5 < 6, or 2+2=4 < 6. None work.
+	// Three blockers: 2+2+3 = 7 >= 6 toughness — can kill.
+	// Value: 18*100=1800. Blockers: 6+6+9=21. 21*80=1680. 1800 >= 1680. Passes.
+	atk := makePerm("Giant", "{4}{G}{G}", 6, 6, pa.PlayerID())
+	b1 := makePerm("Guard1", "{1}{W}", 2, 2, pb.PlayerID())
+	b2 := makePerm("Guard2", "{1}{W}", 2, 2, pb.PlayerID())
+	b3 := makePerm("Knight", "{2}{W}", 3, 3, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, atk, b1, b2, b3)
+
+	available := []*mage.Permanent{b1, b2, b3}
+	gang := findGangBlocks(atk, available, g, pb.PlayerID(), false)
+
+	if gang == nil {
+		t.Fatal("expected 3-blocker gang block (2 blockers can't kill 6/6), got nil")
+	}
+	if len(gang) != 3 {
+		t.Fatalf("expected 3 gang blockers, got %d", len(gang))
+	}
+}
+
 func TestFindGangBlocks_CantBlock(t *testing.T) {
 	g, pa, pb := makeGame()
 	// Flying attacker: ground blockers can't block
@@ -406,6 +504,219 @@ func TestPriorityAction_ResponseOnOpponentTurn(t *testing.T) {
 	}
 	if action.CardName != "Lightning Bolt" {
 		t.Errorf("expected Lightning Bolt, got %s", action.CardName)
+	}
+}
+
+// ── First Strike / Deathtouch combat math ─────────────────────────────────────
+
+func TestEvaluateCombatOutcome_FirstStrikeKillsBeforeDamageBack(t *testing.T) {
+	// 2/2 first striker vs 3/1 blocker: first strike deals 2, kills 1-toughness blocker.
+	// Blocker never gets to deal damage back. Attacker survives, blocker dies.
+	g, pa, pb := makeGame()
+	atk := makePerm("First Striker", "{1}{W}", 2, 2, pa.PlayerID(), mage.WithKeyword(core.FirstStrike))
+	blk := makePerm("Goblin", "{R}", 3, 1, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, atk, blk)
+
+	blocks := []mage.BlockAssignment{{
+		BlockerID:  blk.ID(),
+		AttackerID: atk.ID(),
+	}}
+	cs := evaluateCombatOutcome(g, pa.PlayerID(), []uuid.UUID{atk.ID()}, blocks)
+
+	if cs.OurCreaturesLost != 0 {
+		t.Errorf("OurCreaturesLost = %d, want 0 (first striker kills blocker first)", cs.OurCreaturesLost)
+	}
+	if cs.TheirCreaturesLost != 1 {
+		t.Errorf("TheirCreaturesLost = %d, want 1", cs.TheirCreaturesLost)
+	}
+}
+
+func TestEvaluateCombatOutcome_DeathtouchTradesWithBig(t *testing.T) {
+	// 1/1 deathtouch vs 6/6: deathtouch deals 1 damage which is lethal (deathtouch).
+	// 6/6 deals 6 back. Both die.
+	g, pa, pb := makeGame()
+	atk := makePerm("Deathtouch", "{B}", 1, 1, pa.PlayerID(), mage.WithKeyword(core.Deathtouch))
+	blk := makePerm("Wurm", "{4}{G}{G}", 6, 6, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, atk, blk)
+
+	blocks := []mage.BlockAssignment{{
+		BlockerID:  blk.ID(),
+		AttackerID: atk.ID(),
+	}}
+	cs := evaluateCombatOutcome(g, pa.PlayerID(), []uuid.UUID{atk.ID()}, blocks)
+
+	if cs.OurCreaturesLost != 1 {
+		t.Errorf("OurCreaturesLost = %d, want 1 (deathtouch creature dies to 6 damage)", cs.OurCreaturesLost)
+	}
+	if cs.TheirCreaturesLost != 1 {
+		t.Errorf("TheirCreaturesLost = %d, want 1 (deathtouch kills 6/6)", cs.TheirCreaturesLost)
+	}
+}
+
+func TestEvaluateCombatOutcome_DeathtouchFirstStrikeSurvives(t *testing.T) {
+	// 1/1 deathtouch + first strike vs 6/6: first strike deals 1 (lethal with deathtouch),
+	// 6/6 dies before dealing damage. Attacker survives.
+	g, pa, pb := makeGame()
+	atk := makePerm("Deadly Striker", "{B}{W}", 1, 1, pa.PlayerID(),
+		mage.WithKeyword(core.Deathtouch), mage.WithKeyword(core.FirstStrike))
+	blk := makePerm("Wurm", "{4}{G}{G}", 6, 6, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, atk, blk)
+
+	blocks := []mage.BlockAssignment{{
+		BlockerID:  blk.ID(),
+		AttackerID: atk.ID(),
+	}}
+	cs := evaluateCombatOutcome(g, pa.PlayerID(), []uuid.UUID{atk.ID()}, blocks)
+
+	if cs.OurCreaturesLost != 0 {
+		t.Errorf("OurCreaturesLost = %d, want 0 (deathtouch first striker kills before damage back)", cs.OurCreaturesLost)
+	}
+	if cs.TheirCreaturesLost != 1 {
+		t.Errorf("TheirCreaturesLost = %d, want 1", cs.TheirCreaturesLost)
+	}
+}
+
+func TestEvaluateCombatOutcome_DoubleStrikeVsBlocker(t *testing.T) {
+	// Double strike 3/3 vs 4/4 blocker:
+	// Step 1 (first strike): attacker deals 3, blocker at 4 toughness survives (3 < 4).
+	// Step 2 (normal): attacker deals 3 again (total 6 >= 4, blocker dies).
+	//   Blocker deals 4 (>= 3, attacker dies).
+	// Result: both die.
+	g, pa, pb := makeGame()
+	atk := makePerm("Double Striker", "{1}{R}{W}", 3, 3, pa.PlayerID(), mage.WithKeyword(core.DoubleStrike))
+	blk := makePerm("Rhino", "{2}{G}{G}", 4, 4, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, atk, blk)
+
+	blocks := []mage.BlockAssignment{{
+		BlockerID:  blk.ID(),
+		AttackerID: atk.ID(),
+	}}
+	cs := evaluateCombatOutcome(g, pa.PlayerID(), []uuid.UUID{atk.ID()}, blocks)
+
+	if cs.OurCreaturesLost != 1 {
+		t.Errorf("OurCreaturesLost = %d, want 1 (3/3 double strike dies to 4/4)", cs.OurCreaturesLost)
+	}
+	if cs.TheirCreaturesLost != 1 {
+		t.Errorf("TheirCreaturesLost = %d, want 1 (4/4 takes 6 total from double strike)", cs.TheirCreaturesLost)
+	}
+}
+
+func TestEvaluateCombatOutcome_DeathtouchTrample(t *testing.T) {
+	// 4/4 deathtouch trample vs 6/6 blocker:
+	// Deathtouch means only 1 damage needed to kill the blocker (lethal).
+	// Remaining 3 power tramples through to opponent.
+	g, pa, pb := makeGame()
+	atk := makePerm("Deadly Trampler", "{2}{B}{G}", 4, 4, pa.PlayerID(),
+		mage.WithKeyword(core.Deathtouch), mage.WithKeyword(core.Trample))
+	blk := makePerm("Wurm", "{4}{G}{G}", 6, 6, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, atk, blk)
+
+	blocks := []mage.BlockAssignment{{
+		BlockerID:  blk.ID(),
+		AttackerID: atk.ID(),
+	}}
+	cs := evaluateCombatOutcome(g, pa.PlayerID(), []uuid.UUID{atk.ID()}, blocks)
+
+	if cs.TheirCreaturesLost != 1 {
+		t.Errorf("TheirCreaturesLost = %d, want 1 (deathtouch kills 6/6)", cs.TheirCreaturesLost)
+	}
+	// 4 power - 1 lethal (deathtouch) = 3 trample damage
+	if cs.DamageToOpponent != 3 {
+		t.Errorf("DamageToOpponent = %d, want 3 (deathtouch trample: 1 to kill, 3 through)", cs.DamageToOpponent)
+	}
+	// Attacker takes 6 damage from blocker (6/6), so it dies (4 toughness)
+	if cs.OurCreaturesLost != 1 {
+		t.Errorf("OurCreaturesLost = %d, want 1 (4/4 takes 6 damage from 6/6)", cs.OurCreaturesLost)
+	}
+}
+
+// ── Lifelink in combat ─────────────────────────────────────────────────────
+
+func TestEvaluateCombatOutcome_LifelinkUnblocked(t *testing.T) {
+	// 3/3 lifelink attacking into empty board: 3 damage + LifeGained=3
+	g, pa, pb := makeGame()
+	atk := makePerm("Lifelinker", "{1}{W}{W}", 3, 3, pa.PlayerID(), mage.WithKeyword(core.Lifelink))
+	g.Battlefield = append(g.Battlefield, atk)
+
+	cs := evaluateCombatOutcome(g, pa.PlayerID(), []uuid.UUID{atk.ID()}, nil)
+	if cs.DamageToOpponent != 3 {
+		t.Errorf("DamageToOpponent = %d, want 3", cs.DamageToOpponent)
+	}
+	if cs.LifeGained != 3 {
+		t.Errorf("LifeGained = %d, want 3", cs.LifeGained)
+	}
+	_ = pb
+}
+
+func TestEvaluateCombatOutcome_LifelinkBlocked(t *testing.T) {
+	// 3/3 lifelink attacks into 2/2 blocker. Attacker deals 3 to blocker (kills it),
+	// gains 3 life from lifelink. Attacker takes 2 damage (survives).
+	g, pa, pb := makeGame()
+	atk := makePerm("Lifelinker", "{1}{W}{W}", 3, 3, pa.PlayerID(), mage.WithKeyword(core.Lifelink))
+	blk := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, atk, blk)
+
+	blocks := []mage.BlockAssignment{{
+		BlockerID:  blk.ID(),
+		AttackerID: atk.ID(),
+	}}
+	cs := evaluateCombatOutcome(g, pa.PlayerID(), []uuid.UUID{atk.ID()}, blocks)
+	if cs.LifeGained != 3 {
+		t.Errorf("LifeGained = %d, want 3 (lifelink attacker dealt 3 to blocker)", cs.LifeGained)
+	}
+}
+
+func TestEvaluateCombatOutcome_LifelinkBlocker(t *testing.T) {
+	// Opponent's 2/2 lifelink blocks our 3/3. Blocker deals 2, gains 2 for opponent.
+	g, pa, pb := makeGame()
+	atk := makePerm("Giant", "{2}{G}", 3, 3, pa.PlayerID())
+	blk := makePerm("Lifelink Bear", "{1}{W}", 2, 2, pb.PlayerID(), mage.WithKeyword(core.Lifelink))
+	g.Battlefield = append(g.Battlefield, atk, blk)
+
+	blocks := []mage.BlockAssignment{{
+		BlockerID:  blk.ID(),
+		AttackerID: atk.ID(),
+	}}
+	cs := evaluateCombatOutcome(g, pa.PlayerID(), []uuid.UUID{atk.ID()}, blocks)
+	if cs.OpponentLifeGained != 2 {
+		t.Errorf("OpponentLifeGained = %d, want 2 (lifelink blocker dealt 2)", cs.OpponentLifeGained)
+	}
+}
+
+func TestEvaluateCombatOutcome_LifelinkTrample(t *testing.T) {
+	// 5/5 lifelink trampler blocked by 1/1. Deals 1 to blocker + 4 trample.
+	// Total damage dealt = 5, lifelink gains 5.
+	g, pa, pb := makeGame()
+	atk := makePerm("Trampler", "{3}{W}{G}", 5, 5, pa.PlayerID(),
+		mage.WithKeyword(core.Lifelink), mage.WithKeyword(core.Trample))
+	blk := makePerm("Elf", "{G}", 1, 1, pb.PlayerID())
+	g.Battlefield = append(g.Battlefield, atk, blk)
+
+	blocks := []mage.BlockAssignment{{
+		BlockerID:  blk.ID(),
+		AttackerID: atk.ID(),
+	}}
+	cs := evaluateCombatOutcome(g, pa.PlayerID(), []uuid.UUID{atk.ID()}, blocks)
+	if cs.DamageToOpponent != 4 {
+		t.Errorf("DamageToOpponent = %d, want 4 (trample)", cs.DamageToOpponent)
+	}
+	if cs.LifeGained != 5 {
+		t.Errorf("LifeGained = %d, want 5 (all damage dealt gains life with lifelink)", cs.LifeGained)
+	}
+}
+
+func TestEvaluateCombatOutcome_LifelinkScoreBonus(t *testing.T) {
+	// Lifelink should make combat score higher than equivalent non-lifelink creature.
+	g, pa, _ := makeGame()
+	ll := makePerm("Lifelinker", "{1}{W}{W}", 3, 3, pa.PlayerID(), mage.WithKeyword(core.Lifelink))
+	vanilla := makePerm("Bear", "{2}{G}", 3, 3, pa.PlayerID())
+	g.Battlefield = append(g.Battlefield, ll, vanilla)
+
+	csLL := evaluateCombatOutcome(g, pa.PlayerID(), []uuid.UUID{ll.ID()}, nil)
+	csVanilla := evaluateCombatOutcome(g, pa.PlayerID(), []uuid.UUID{vanilla.ID()}, nil)
+
+	if csLL.Score <= csVanilla.Score {
+		t.Errorf("lifelink score (%d) should be > vanilla score (%d)", csLL.Score, csVanilla.Score)
 	}
 }
 

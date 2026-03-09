@@ -33,7 +33,7 @@ func (e *gainLifeEffect) Text() string {
 	return fmt.Sprintf("gain %d life", e.amount)
 }
 func (e *gainLifeEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeBenefit}
+	return EffectProperties{Outcome: OutcomeBenefit, LifeGain: e.amount}
 }
 
 // gainLifeTargetEffect gains life for a target player (or controller as fallback).
@@ -72,7 +72,11 @@ func (e *gainLifeTargetEffect) Text() string {
 	return fmt.Sprintf("target player gains %d life", e.amount.Resolve(nil, uuid.Nil, uuid.Nil))
 }
 func (e *gainLifeTargetEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeBenefit}
+	lg := 0
+	if _, ok := e.amount.(xValue); !ok {
+		lg = e.amount.Resolve(nil, uuid.Nil, uuid.Nil)
+	}
+	return EffectProperties{Outcome: OutcomeBenefit, LifeGain: lg}
 }
 
 // loseLifeEffect causes the controller to lose life.
