@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mage-go :: A Magic Rules Engine</title>
+<style>
+/* ========================================
+   MAGE-GO VISUAL IDENTITY
+
+   Color Scheme:
+     - Void Black:     #0a0a0c (backgrounds)
+     - Parchment:      #d4c5a0 (body text)
+     - Aged Gold:      #c9a84c (headings, accents)
+     - Mana Blue:      #4a82b0 (links, highlights)
+     - Blood Red:      #8b2020 (danger, power)
+     - Forest Dark:    #2d4a2d (nature accents)
+     - Artifact Grey:  #6b6b7b (secondary text)
+     - Enchant Purple: #5c3a6e (special accents)
+
+   Typography:
+     - Headings: Georgia (serif, old-world)
+     - Body: system serif stack
+     - Code: monospace
+
+   Texture:
+     - CSS noise/grain overlays
+     - Ornamental borders via box-shadow layering
+     - Card-frame inspired containers
+   ======================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=MedievalSharp&family=Cinzel:wght@400;700&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html {
+  background: #0a0a0c;
+  scrollbar-color: #c9a84c #1a1a1e;
+}
+
+body {
+  font-family: Georgia, 'Times New Roman', serif;
+  color: #d4c5a0;
+  background: #0a0a0c;
+  line-height: 1.7;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* noise overlay on body */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1000;
+}
+
+/* ---- HEADER / TITLE BANNER ---- */
+
+.banner {
+  text-align: center;
+  padding: 2.5rem 2rem 1.5rem;
+  position: relative;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.08) 0%, transparent 60%),
+    linear-gradient(180deg, #0e0e12 0%, #0a0a0c 100%);
+}
+
+.banner::after {
+  content: '';
+  display: block;
+  width: 80%;
+  max-width: 600px;
+  height: 2px;
+  margin: 1.5rem auto 0;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    #3a3020 15%,
+    #c9a84c 40%,
+    #e8d48b 50%,
+    #c9a84c 60%,
+    #3a3020 85%,
+    transparent 100%
+  );
+}
+
+.banner h1 {
+  font-family: 'Cinzel', Georgia, serif;
+  font-weight: 700;
+  font-size: 3.2rem;
+  color: #c9a84c;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-shadow:
+    0 0 40px rgba(201,168,76,0.3),
+    0 2px 4px rgba(0,0,0,0.8);
+  margin-bottom: 0.3rem;
+}
+
+.banner .subtitle {
+  font-family: 'MedievalSharp', Georgia, serif;
+  font-size: 1.15rem;
+  color: #8a7a5a;
+  font-style: italic;
+  letter-spacing: 0.05em;
+}
+
+/* mana pip row */
+.mana-pips {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: center;
+  gap: 1.2rem;
+}
+
+.mana-pip {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #2a2a2e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cinzel', serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.5), 0 0 8px rgba(0,0,0,0.3);
+}
+
+.pip-w { background: radial-gradient(circle, #f8f4e0, #d4c8a0); color: #3a3020; }
+.pip-u { background: radial-gradient(circle, #6aa8d4, #2a5a8a); color: #e0eaf4; }
+.pip-b { background: radial-gradient(circle, #4a4a52, #1a1a20); color: #a0a0a8; }
+.pip-r { background: radial-gradient(circle, #c84a30, #7a2010); color: #f4d0c0; }
+.pip-g { background: radial-gradient(circle, #4a8a3a, #1a4a10); color: #d0e8c0; }
+
+/* ---- NAVIGATION ---- */
+
+nav {
+  text-align: center;
+  padding: 0.8rem 1rem;
+  background: linear-gradient(180deg, #0a0a0c 0%, #0c0c10 100%);
+}
+
+nav a {
+  display: inline-block;
+  color: #8a7a5a;
+  text-decoration: none;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.3rem 1.2rem;
+  transition: color 0.3s, text-shadow 0.3s;
+}
+
+nav a:hover {
+  color: #c9a84c;
+  text-shadow: 0 0 12px rgba(201,168,76,0.4);
+}
+
+nav .sep {
+  color: #2a2a2e;
+  margin: 0 0.2rem;
+  user-select: none;
+}
+
+/* ---- MAIN CONTENT ---- */
+
+main {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 1rem 2rem 2.5rem;
+}
+
+/* card-frame styled sections */
+.card-frame {
+  margin: 1.2rem 0;
+  position: relative;
+  background: linear-gradient(135deg, #12121a 0%, #0e0e14 100%);
+  border: 1px solid #2a2520;
+  box-shadow:
+    inset 0 0 30px rgba(0,0,0,0.5),
+    0 0 0 1px #1a1510,
+    0 0 0 3px #0a0a0c,
+    0 0 0 4px #2a2520;
+  padding: 1.4rem 1.8rem;
+}
+
+.card-frame::before {
+  content: '';
+  position: absolute;
+  top: 6px; left: 6px; right: 6px; bottom: 6px;
+  border: 1px solid rgba(201,168,76,0.08);
+  pointer-events: none;
+}
+
+.card-frame h2 {
+  font-family: 'Cinzel', Georgia, serif;
+  font-weight: 700;
+  font-size: 1.3rem;
+  color: #c9a84c;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 0.7rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid rgba(201,168,76,0.15);
+}
+
+.card-frame p {
+  margin-bottom: 0.6rem;
+  font-size: 0.95rem;
+}
+
+.card-frame p:last-child {
+  margin-bottom: 0;
+}
+
+/* ---- FLAVOR TEXT ---- */
+
+.flavor {
+  font-style: italic;
+  color: #8a7a5a;
+  border-left: 2px solid #2a2520;
+  padding-left: 1.2rem;
+  margin: 0.6rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+/* ---- LOGO ---- */
+
+.logo {
+  display: block;
+  margin: 0 auto 1rem;
+  width: 120px;
+  height: 120px;
+}
+
+/* ---- LINKS ---- */
+
+a {
+  color: #4a82b0;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(74,130,176,0.3);
+  transition: color 0.2s, border-color 0.2s;
+}
+
+a:hover {
+  color: #6aa8d4;
+  border-bottom-color: #6aa8d4;
+}
+
+/* ---- CODE ---- */
+
+code {
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.85em;
+  background: rgba(20,20,28,0.8);
+  border: 1px solid #1a1a22;
+  padding: 0.15em 0.4em;
+  color: #a0c0d8;
+}
+
+pre {
+  background: #08080c;
+  border: 1px solid #1a1a22;
+  padding: 1.2rem 1.5rem;
+  overflow-x: auto;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: #8aaa8a;
+  margin: 0.6rem 0 0;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.4);
+}
+
+pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+}
+
+/* ---- FEATURE GRID ---- */
+
+.features {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+  margin: 0.8rem 0 0;
+}
+
+.feature {
+  background: rgba(18,18,26,0.6);
+  border: 1px solid #1a1a22;
+  padding: 0.8rem 1rem;
+  position: relative;
+}
+
+.feature::before {
+  content: attr(data-symbol);
+  position: absolute;
+  top: 0.8rem;
+  right: 1rem;
+  font-size: 1.4rem;
+  opacity: 0.15;
+  font-family: 'MedievalSharp', serif;
+}
+
+.feature h3 {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.9rem;
+  color: #c9a84c;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.5rem;
+}
+
+.feature p {
+  font-size: 0.85rem;
+  color: #9a8a6a;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ---- SET LIST ---- */
+
+.set-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.8rem;
+  margin: 1rem 0;
+}
+
+.set-list li {
+  background: rgba(18,18,26,0.4);
+  border: 1px solid #1a1a22;
+  padding: 0.6rem 1rem;
+  font-size: 0.88rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.set-list .set-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.set-alpha { background: #2a2a2e; color: #8a8a8e; }
+.set-arabian { background: #5c3a2a; color: #d4a870; }
+.set-antiquities { background: #3a3a4a; color: #8a8aaa; }
+.set-legends { background: #4a3a1a; color: #d4b860; }
+
+.set-list .set-status {
+  margin-left: auto;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #4a8a3a;
+}
+
+.set-status.wip { color: #b89a30; }
+
+/* ---- STATS BAR ---- */
+
+.stats {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  padding: 0.8rem 0;
+  margin: 0.5rem 0;
+  border-top: 1px solid rgba(201,168,76,0.08);
+  border-bottom: 1px solid rgba(201,168,76,0.08);
+}
+
+.stat {
+  text-align: center;
+}
+
+.stat-num {
+  display: block;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #c9a84c;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #6b6b7b;
+  margin-top: 0.3rem;
+}
+
+/* ---- TERMINAL PREVIEW ---- */
+
+.terminal {
+  background: #05050a;
+  border: 1px solid #2a2a2e;
+  border-radius: 6px 6px 0 0;
+  overflow: hidden;
+  margin: 0.8rem 0 0;
+}
+
+.terminal-bar {
+  background: #1a1a22;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.terminal-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.dot-red { background: #8b2020; }
+.dot-yellow { background: #8a7a2a; }
+.dot-green { background: #2d4a2d; }
+
+.terminal-title {
+  font-size: 0.72rem;
+  color: #6b6b7b;
+  font-family: monospace;
+  margin-left: 0.5rem;
+}
+
+.terminal-body {
+  padding: 1.2rem 1.5rem;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.8rem;
+  line-height: 1.7;
+  color: #6a8a6a;
+}
+
+.terminal-body .prompt { color: #4a82b0; }
+.terminal-body .cmd { color: #d4c5a0; }
+.terminal-body .comment { color: #4a4a52; }
+.terminal-body .output { color: #6a8a6a; }
+.terminal-body .pass { color: #4a8a3a; }
+.terminal-body .count { color: #c9a84c; }
+
+/* ---- FOOTER ---- */
+
+footer {
+  text-align: center;
+  padding: 1.5rem 2rem 1.2rem;
+  color: #3a3a3e;
+  font-size: 0.75rem;
+  border-top: 1px solid #1a1510;
+}
+
+footer a {
+  color: #5a5a5e;
+  border-bottom-color: transparent;
+}
+
+footer a:hover {
+  color: #8a8a8e;
+}
+
+footer .legal {
+  margin-top: 0.8rem;
+  font-size: 0.68rem;
+  color: #2a2a2e;
+}
+
+/* ---- ORNAMENTAL DIVIDER ---- */
+
+.ornament {
+  text-align: center;
+  padding: 0.6rem 0;
+  color: #2a2520;
+  font-size: 1.2rem;
+  letter-spacing: 0.5em;
+  user-select: none;
+}
+
+/* ---- RESPONSIVE ---- */
+
+@media (max-width: 640px) {
+  .banner h1 { font-size: 2rem; }
+  .features { grid-template-columns: 1fr; }
+  .stats { gap: 1.5rem; flex-wrap: wrap; }
+  main { padding: 1rem 1rem 2rem; }
+  .card-frame { padding: 1.2rem; }
+  nav a { padding: 0.3rem 0.6rem; font-size: 0.75rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============ BANNER ============ -->
+<div class="banner">
+  <!-- Logo: WUBRG pentagon with inner star and arcane circles -->
+  <svg class="logo" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <!-- outer glow -->
+      <filter id="glow">
+        <feGaussianBlur stdDeviation="2" result="blur"/>
+        <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+      </filter>
+      <filter id="pip-shadow">
+        <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#000" flood-opacity="0.6"/>
+      </filter>
+    </defs>
+
+    <!-- outer arcane circle -->
+    <circle cx="100" cy="100" r="92" fill="none" stroke="#2a2520" stroke-width="1.5"/>
+    <circle cx="100" cy="100" r="88" fill="none" stroke="rgba(201,168,76,0.12)" stroke-width="0.5"/>
+
+    <!-- inner arcane circle -->
+    <circle cx="100" cy="100" r="38" fill="none" stroke="#2a2520" stroke-width="1"/>
+    <circle cx="100" cy="100" r="35" fill="none" stroke="rgba(201,168,76,0.08)" stroke-width="0.5"/>
+
+    <!-- pentagon edges (outer ring connecting the 5 colors) -->
+    <!-- W(top) -> U(upper-right) -> B(lower-right) -> R(lower-left) -> G(upper-left) -> W -->
+    <!-- Pentagon vertices at r=75 from center:
+         W: 100, 25   (top, -90deg)
+         U: 171.3, 71.7  (upper-right, -18deg)
+         B: 144.1, 146.3 (lower-right, 54deg)
+         R: 55.9, 146.3  (lower-left, 126deg)
+         G: 28.7, 71.7   (upper-left, 198deg)
+    -->
+    <polygon
+      points="100,25 171.3,71.7 144.1,146.3 55.9,146.3 28.7,71.7"
+      fill="none" stroke="#2a2520" stroke-width="1.2"/>
+
+    <!-- inner pentagram star (the five-pointed star connecting alternate vertices) -->
+    <!-- W->B->G->U->R->W -->
+    <polygon
+      points="100,25 144.1,146.3 28.7,71.7 171.3,71.7 55.9,146.3"
+      fill="none" stroke="rgba(201,168,76,0.18)" stroke-width="0.8" filter="url(#glow)"/>
+
+    <!-- spokes from center to each vertex -->
+    <line x1="100" y1="100" x2="100" y2="25" stroke="#1a1a20" stroke-width="0.5"/>
+    <line x1="100" y1="100" x2="171.3" y2="71.7" stroke="#1a1a20" stroke-width="0.5"/>
+    <line x1="100" y1="100" x2="144.1" y2="146.3" stroke="#1a1a20" stroke-width="0.5"/>
+    <line x1="100" y1="100" x2="55.9" y2="146.3" stroke="#1a1a20" stroke-width="0.5"/>
+    <line x1="100" y1="100" x2="28.7" y2="71.7" stroke="#1a1a20" stroke-width="0.5"/>
+
+    <!-- tick marks on outer circle at each vertex angle -->
+    <line x1="100" y1="8" x2="100" y2="15" stroke="#3a3020" stroke-width="1"/>
+    <line x1="179" y1="65" x2="173" y2="69" stroke="#3a3020" stroke-width="1"/>
+    <line x1="150" y1="155" x2="146" y2="149" stroke="#3a3020" stroke-width="1"/>
+    <line x1="50" y1="155" x2="54" y2="149" stroke="#3a3020" stroke-width="1"/>
+    <line x1="21" y1="65" x2="27" y2="69" stroke="#3a3020" stroke-width="1"/>
+
+    <!-- center dot -->
+    <circle cx="100" cy="100" r="3" fill="#c9a84c" opacity="0.3"/>
+    <circle cx="100" cy="100" r="1.5" fill="#c9a84c" opacity="0.6"/>
+
+    <!-- mana pips at each vertex -->
+    <!-- White (top) -->
+    <circle cx="100" cy="25" r="12" fill="url(#grad-w)" stroke="#3a3020" stroke-width="1.5" filter="url(#pip-shadow)"/>
+    <text x="100" y="29" text-anchor="middle" font-family="'Cinzel',Georgia,serif" font-size="11" font-weight="700" fill="#3a3020">W</text>
+
+    <!-- Blue (upper-right) -->
+    <circle cx="171.3" cy="71.7" r="12" fill="url(#grad-u)" stroke="#1a3a5a" stroke-width="1.5" filter="url(#pip-shadow)"/>
+    <text x="171.3" y="75.7" text-anchor="middle" font-family="'Cinzel',Georgia,serif" font-size="11" font-weight="700" fill="#e0eaf4">U</text>
+
+    <!-- Black (lower-right) -->
+    <circle cx="144.1" cy="146.3" r="12" fill="url(#grad-b)" stroke="#2a2a30" stroke-width="1.5" filter="url(#pip-shadow)"/>
+    <text x="144.1" y="150.3" text-anchor="middle" font-family="'Cinzel',Georgia,serif" font-size="11" font-weight="700" fill="#a0a0a8">B</text>
+
+    <!-- Red (lower-left) -->
+    <circle cx="55.9" cy="146.3" r="12" fill="url(#grad-r)" stroke="#4a1008" stroke-width="1.5" filter="url(#pip-shadow)"/>
+    <text x="55.9" y="150.3" text-anchor="middle" font-family="'Cinzel',Georgia,serif" font-size="11" font-weight="700" fill="#f4d0c0">R</text>
+
+    <!-- Green (upper-left) -->
+    <circle cx="28.7" cy="71.7" r="12" fill="url(#grad-g)" stroke="#0a2a08" stroke-width="1.5" filter="url(#pip-shadow)"/>
+    <text x="28.7" y="75.7" text-anchor="middle" font-family="'Cinzel',Georgia,serif" font-size="11" font-weight="700" fill="#d0e8c0">G</text>
+
+    <!-- radial gradients for pips -->
+    <defs>
+      <radialGradient id="grad-w"><stop offset="0%" stop-color="#f8f4e0"/><stop offset="100%" stop-color="#d4c8a0"/></radialGradient>
+      <radialGradient id="grad-u"><stop offset="0%" stop-color="#6aa8d4"/><stop offset="100%" stop-color="#2a5a8a"/></radialGradient>
+      <radialGradient id="grad-b"><stop offset="0%" stop-color="#4a4a52"/><stop offset="100%" stop-color="#1a1a20"/></radialGradient>
+      <radialGradient id="grad-r"><stop offset="0%" stop-color="#c84a30"/><stop offset="100%" stop-color="#7a2010"/></radialGradient>
+      <radialGradient id="grad-g"><stop offset="0%" stop-color="#4a8a3a"/><stop offset="100%" stop-color="#1a4a10"/></radialGradient>
+    </defs>
+  </svg>
+
+  <h1>Mage</h1>
+  <div class="subtitle">A Magic: The Gathering Rules Engine in Go</div>
+</div>
+
+<!-- ============ NAV ============ -->
+<nav>
+  <a href="#engine">The Engine</a>
+  <span class="sep">&loz;</span>
+  <a href="#sets">Card Sets</a>
+  <span class="sep">&loz;</span>
+  <a href="#play">Play</a>
+  <span class="sep">&loz;</span>
+  <a href="https://github.com/cdcarter/mage-go">Source</a>
+</nav>
+
+<!-- ============ MAIN ============ -->
+<main>
+
+  <!-- INTRO -->
+  <section class="card-frame" id="engine">
+    <h2>What Is This?</h2>
+    <p>
+      <strong>mage-go</strong> is a ground-up Magic: The Gathering rules engine,
+      written in Go and inspired by <a href="https://github.com/magefree/mage">XMage</a>'s
+      fifteen years of open-source rules enforcement. It is not a port&mdash;it is a
+      reimplementation using idiomatic Go: flat interfaces, composition over
+      inheritance, and functional options instead of deep class hierarchies.
+    </p>
+    <p>
+      Two-player only. The card pool covers early Magic&mdash;from Alpha through
+      roughly the Odyssey/Onslaught block era. No planeswalkers. No energy.
+      No sagas. Just the raw, beautiful complexity of old-school Magic.
+    </p>
+    <div class="flavor">
+      "The only external dependency is <code>github.com/google/uuid</code>."
+    </div>
+  </section>
+
+  <div class="ornament">&mdash; &loz; &mdash;</div>
+
+  <!-- ENGINE ARCHITECTURE -->
+  <section class="card-frame">
+    <h2>Architecture</h2>
+    <div class="features">
+      <div class="feature" data-symbol="E">
+        <h3>Effects</h3>
+        <p>The core abstraction. One-shot effects resolve from the stack.
+           Continuous effects recompute every cycle in MTG layer order.</p>
+      </div>
+      <div class="feature" data-symbol="T">
+        <h3>Triggers</h3>
+        <p>Event-driven triggered abilities with condition predicates.
+           New triggers need no engine changes.</p>
+      </div>
+      <div class="feature" data-symbol="A">
+        <h3>Attrs</h3>
+        <p>Keywords, capabilities, and type identity unified as additive
+           integer counts. Grant and revoke compose naturally.</p>
+      </div>
+      <div class="feature" data-symbol="M">
+        <h3>Mutations</h3>
+        <p>Effects never touch <code>*Game</code> directly. GameMutator
+           keeps the set of legal mutations explicit and auditable.</p>
+      </div>
+      <div class="feature" data-symbol="S">
+        <h3>The Stack</h3>
+        <p>Standard LIFO queue unifying spells and abilities. Priority
+           passing, SBAs between resolutions. By the book.</p>
+      </div>
+      <div class="feature" data-symbol="C">
+        <h3>Combat</h3>
+        <p>Banding, first strike, double strike, trample, protection,
+           damage prevention, redirection, and reflection.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat">
+      <span class="stat-num">800+</span>
+      <span class="stat-label">Tests</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">4</span>
+      <span class="stat-label">Sets</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">1</span>
+      <span class="stat-label">Dependency</span>
+    </div>
+  </div>
+
+  <!-- SETS -->
+  <section class="card-frame" id="sets">
+    <h2>Card Sets</h2>
+    <p>Every card is implemented test-first, with full Oracle text fidelity.
+       No shortcuts, no simplifications.</p>
+    <ul class="set-list">
+      <li>
+        <span class="set-icon set-alpha">A</span>
+        <span>Limited Edition (Alpha)</span>
+        <span class="set-status">complete</span>
+      </li>
+      <li>
+        <span class="set-icon set-arabian">AN</span>
+        <span>Arabian Nights</span>
+        <span class="set-status">complete</span>
+      </li>
+      <li>
+        <span class="set-icon set-antiquities">AQ</span>
+        <span>Antiquities</span>
+        <span class="set-status wip">in progress</span>
+      </li>
+      <li>
+        <span class="set-icon set-legends">LE</span>
+        <span>Legends</span>
+        <span class="set-status wip">in progress</span>
+      </li>
+    </ul>
+  </section>
+
+  <div class="ornament">&mdash; &loz; &mdash;</div>
+
+  <!-- PLAY -->
+  <section class="card-frame" id="play">
+    <h2>Play</h2>
+    <p>
+      A terminal UI lets you play against an AI opponent locally. An SSH
+      server supports human-vs-human games over the network. Both are rough
+      prototypes&mdash;functional, not polished.
+    </p>
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span class="terminal-dot dot-red"></span>
+        <span class="terminal-dot dot-yellow"></span>
+        <span class="terminal-dot dot-green"></span>
+        <span class="terminal-title">mage-go</span>
+      </div>
+      <div class="terminal-body">
+<span class="comment"># run the test suite</span>
+<span class="prompt">$</span> <span class="cmd">go test ./...</span>
+<span class="pass">ok</span>  pkg/mage         <span class="count">0.84s</span>
+<span class="pass">ok</span>  cards/limited    <span class="count">1.21s</span>
+<span class="pass">ok</span>  cards/arabian    <span class="count">0.43s</span>
+<span class="pass">ok</span>  cards/antiquities <span class="count">0.38s</span>
+<span class="pass">ok</span>  cards/legends    <span class="count">0.62s</span>
+
+<span class="comment"># play against the AI</span>
+<span class="prompt">$</span> <span class="cmd">go run ./cmd/tui</span>
+
+<span class="comment"># host a multiplayer game</span>
+<span class="prompt">$</span> <span class="cmd">go run ./cmd/server</span>
+<span class="output">listening on :2222</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- TDD -->
+  <section class="card-frame">
+    <h2>Test-Driven, Card by Card</h2>
+    <p>Every card begins as a failing test. The test harness DSL makes it
+       natural to script game scenarios:</p>
+    <pre><code>func TestLightningBolt(t *testing.T) {
+    g := gametest.NewTestGame(t)
+    g.AddCard(ZoneHand, gametest.PlayerA, "Lightning Bolt")
+    g.CastSpell(1, Precombat, gametest.PlayerA,
+        "Lightning Bolt", gametest.PlayerB)
+    g.StopAt(1, EndStep)
+    g.Execute()
+    g.AssertLife(gametest.PlayerB, 17)
+}</code></pre>
+  </section>
+
+  <div class="ornament">&mdash; &loz; &mdash;</div>
+
+  <!-- SOURCE -->
+  <section class="card-frame">
+    <h2>Source &amp; License</h2>
+    <p>
+      GPL-2.0. The source is on
+      <a href="https://github.com/cdcarter/mage-go">GitHub</a>.
+      Contributions welcome.
+    </p>
+    <div class="flavor">
+      "Inspired by XMage, which pioneered open-source MTG rules enforcement
+      in Java. Reimplemented from scratch in idiomatic Go."
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div>mage-go &middot; a rules engine for scholars of the game</div>
+  <div class="legal">
+    Magic: The Gathering is a trademark of Wizards of the Coast LLC.
+    This project is not affiliated with or endorsed by Wizards of the Coast.
+  </div>
+</footer>
+
+</body>
+</html>
