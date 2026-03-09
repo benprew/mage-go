@@ -108,6 +108,16 @@ func NewBasePlayer(name string) *BasePlayer {
 	}
 }
 
+// NewBasePlayerWithID creates a BasePlayer with a specific ID (used for game cloning).
+func NewBasePlayerWithID(id uuid.UUID, name string) *BasePlayer {
+	return &BasePlayer{
+		id:       id,
+		name:     name,
+		life:     20,
+		manaPool: NewManaPool(),
+	}
+}
+
 func (p *BasePlayer) PlayerID() uuid.UUID { return p.id }
 func (p *BasePlayer) Name() string        { return p.name }
 func (p *BasePlayer) Life() int           { return p.life }
