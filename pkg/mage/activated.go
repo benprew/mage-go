@@ -1,8 +1,8 @@
 package mage
 
 import (
-	. "github.com/mage/mage/pkg/mage/core"
 	"github.com/google/uuid"
+	. "github.com/mage/mage/pkg/mage/core"
 )
 
 // ActivatedAbility is the interface for activated abilities.
@@ -101,20 +101,20 @@ func WithControlledSinceTurnStart() AbilityOption {
 // SimpleActivatedAbility is a basic activated ability.
 type SimpleActivatedAbility struct {
 	BaseAbility
-	effects            []Effect
-	costs              []Cost
-	targets            []Target
+	effects                  []Effect
+	costs                    []Cost
+	targets                  []Target
 	SorceryOnly              bool
-	UpkeepOnly               bool // Can only be activated during an upkeep step
-	YourTurnOnly             bool // Can only be activated during controller's turn
+	UpkeepOnly               bool      // Can only be activated during an upkeep step
+	YourTurnOnly             bool      // Can only be activated during controller's turn
 	StepOnly                 PhaseStep // If non-zero, can only be activated during this step
-	OncePerTurn              bool // Can only be activated once per turn
-	MaxActivationsPerTurn    int  // Max activations per turn (0 = unlimited, overrides OncePerTurn)
-	AnyPlayerMayUse          bool // Any player may activate this ability
-	OpponentOnlyMayUse       bool // Only opponents of the controller may activate
-	ControlledSinceTurnStart bool // Only if controlled since beginning of most recent turn
-	activatedThisTurn        bool // Tracks whether this ability has been activated this turn
-	activationsThisTurn      int  // Counts activations for MaxActivationsPerTurn
+	OncePerTurn              bool      // Can only be activated once per turn
+	MaxActivationsPerTurn    int       // Max activations per turn (0 = unlimited, overrides OncePerTurn)
+	AnyPlayerMayUse          bool      // Any player may activate this ability
+	OpponentOnlyMayUse       bool      // Only opponents of the controller may activate
+	ControlledSinceTurnStart bool      // Only if controlled since beginning of most recent turn
+	activatedThisTurn        bool      // Tracks whether this ability has been activated this turn
+	activationsThisTurn      int       // Counts activations for MaxActivationsPerTurn
 }
 
 // NewActivatedAbility creates an activated ability with a primary effect, a primary cost,
@@ -138,7 +138,7 @@ func (a *SimpleActivatedAbility) CanActivate(controller uuid.UUID, g *Game) bool
 	if a.UpkeepOnly && g.Step != Upkeep {
 		return false
 	}
-	if a.YourTurnOnly && g.ActivePlayer != controller {
+	if a.YourTurnOnly && g.ActivePlayerObj().PlayerID() != controller {
 		return false
 	}
 	if a.StepOnly != 0 && g.Step != a.StepOnly {

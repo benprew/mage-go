@@ -123,10 +123,10 @@ func (p *BasePlayer) PlayerID() uuid.UUID { return p.id }
 func (p *BasePlayer) Name() string        { return p.name }
 func (p *BasePlayer) Life() int           { return p.life }
 func (p *BasePlayer) SetLife(n int)       { p.life = n }
-func (p *BasePlayer) IsAlive() bool         { return p.life > 0 && !p.lost }
-func (p *BasePlayer) DrewFromEmpty() bool   { return p.drewFromEmpty }
-func (p *BasePlayer) ClearDrewFromEmpty()   { p.drewFromEmpty = false }
-func (p *BasePlayer) SetLost()              { p.lost = true }
+func (p *BasePlayer) IsAlive() bool       { return p.life > 0 && !p.lost }
+func (p *BasePlayer) DrewFromEmpty() bool { return p.drewFromEmpty }
+func (p *BasePlayer) ClearDrewFromEmpty() { p.drewFromEmpty = false }
+func (p *BasePlayer) SetLost()            { p.lost = true }
 func (p *BasePlayer) ManaPool() *ManaPool { return p.manaPool }
 
 func (p *BasePlayer) GainLife(n int) {
