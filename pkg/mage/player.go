@@ -1,6 +1,7 @@
 package mage
 
 import (
+	"fmt"
 	"math/rand"
 
 	"github.com/google/uuid"
@@ -139,6 +140,7 @@ func (p *BasePlayer) LoseLife(n int) {
 func (p *BasePlayer) Hand() []Card { return p.hand }
 
 func (p *BasePlayer) AddToHand(c Card) {
+	p.assertOwner(c)
 	p.hand = append(p.hand, c)
 }
 
@@ -159,6 +161,7 @@ func (p *BasePlayer) RemoveFromHand(id uuid.UUID) (Card, bool) {
 func (p *BasePlayer) Graveyard() []Card { return p.graveyard }
 
 func (p *BasePlayer) AddToGraveyard(c Card) {
+	p.assertOwner(c)
 	p.graveyard = append(p.graveyard, c)
 }
 
@@ -172,10 +175,11 @@ func (p *BasePlayer) RemoveFromGraveyard(id uuid.UUID) (Card, bool) {
 	return nil, false
 }
 
-func (p *BasePlayer) Library() []Card    { return p.library }
+func (p *BasePlayer) Library() []Card     { return p.library }
 func (p *BasePlayer) SetLibrary(l []Card) { p.library = l }
 
 func (p *BasePlayer) AddToLibrary(c Card) {
+	p.assertOwner(c)
 	p.library = append(p.library, c)
 }
 
@@ -285,4 +289,14 @@ func (p *BasePlayer) ChooseCardFromLibrary(candidates []Card, reason string, g G
 
 func (p *BasePlayer) ChooseNumber(min, max int, reason string) int {
 	return max // default: choose maximum
+}
+
+func (p *BasePlayer) assertOwner(c Card) {
+	owner := c.Owner()
+	if owner == uuid.Nil {
+		c.SetOwner(p.id)
+	} else if owner != p.id {
+		panic(fmt.Sprintf("card %s (ID %s) has owner %s, expected %s (%s)",
+			c.Name(), c.ID(), owner, p.id, p.name))
+	}
 }

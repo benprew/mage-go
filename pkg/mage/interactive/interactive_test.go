@@ -486,6 +486,8 @@ func TestHumanPlayer_ChooseCardsFromHand(t *testing.T) {
 	// Put two cards in hand
 	c1 := mage.NewInstant("Lightning Bolt", "{R}", mage.NewSpellAbility())
 	c2 := mage.NewInstant("Giant Growth", "{G}", mage.NewSpellAbility())
+	c1.SetOwner(hp.PlayerID())
+	c2.SetOwner(hp.PlayerID())
 	hp.AddToHand(c1)
 	hp.AddToHand(c2)
 
@@ -527,6 +529,7 @@ func TestHumanPlayer_ChooseCardsFromHand_Empty(t *testing.T) {
 func TestHumanPlayer_ChooseCardsFromHand_ZeroAmount(t *testing.T) {
 	hp := interactive.NewHumanPlayer("Human")
 	c := mage.NewInstant("Lightning Bolt", "{R}", mage.NewSpellAbility())
+	c.SetOwner(hp.PlayerID())
 	hp.AddToHand(c)
 	g, _, _ := newTestGame()
 	done := make(chan []mage.Card, 1)
