@@ -28,6 +28,7 @@ type Card interface {
 	AddType(CardType)
 	AddAbility(Ability)
 	AddSubType(string)
+	CastTargets() []Target
 	CloneFrom(Card)
 	SetBasePT(power, toughness int)
 	SetModes([]string)
@@ -45,10 +46,11 @@ type BaseCard struct {
 	owner      uuid.UUID
 	power      int
 	toughness  int
-	isToken        bool
-	modes          []string
-	attrSeeds      map[Attr]int // keyword/attr seeds; NewPermanent copies these to baseAttrs
-	additionalCosts []Cost      // additional costs paid when casting (sacrifice, discard, etc.)
+	isToken         bool
+	modes           []string
+	attrSeeds       map[Attr]int // keyword/attr seeds; NewPermanent copies these to baseAttrs
+	additionalCosts []Cost       // additional costs paid when casting (sacrifice, discard, etc.)
+	castTargets     []Target     // targeting requirements when casting (auras, targeted ETBs)
 }
 
 // AttrSeeds returns the keyword/attr seeds for this card.
@@ -127,6 +129,10 @@ func (c *BaseCard) CloneFrom(other Card) {
 		c.modes = make([]string, len(m))
 		copy(c.modes, m)
 	}
+	if ct := other.CastTargets(); len(ct) > 0 {
+		c.castTargets = make([]Target, len(ct))
+		copy(c.castTargets, ct)
+	}
 	if bc, ok := other.(*BaseCard); ok && len(bc.attrSeeds) > 0 {
 		c.attrSeeds = make(map[Attr]int, len(bc.attrSeeds))
 		for k, v := range bc.attrSeeds {
@@ -161,6 +167,30 @@ func (c *BaseCard) Copy() Card {
 
 // CardOption configures a card during construction.
 type CardOption func(*BaseCard)
+
+// CastTargets returns the targeting requirements for casting this card.
+// For auras, this is the enchant target. For spells with SpellAbility targets,
+// this falls back to the first SpellAbility's targets.
+func (c *BaseCard) CastTargets() []Target {
+	if len(c.castTargets) > 0 {
+		return c.castTargets
+	}
+	// Fall back to SpellAbility targets for existing spells.
+	for _, a := range c.abilities {
+		if sa, ok := a.(*SpellAbility); ok {
+			if targets := sa.Targets(); len(targets) > 0 {
+				return targets
+			}
+		}
+	}
+	return nil
+}
+
+// WithCastTarget sets the targeting requirement for casting this card.
+// Used for auras that enchant non-creature permanents (e.g. "enchant land").
+func WithCastTarget(t Target) CardOption {
+	return func(c *BaseCard) { c.castTargets = []Target{t} }
+}
 
 // WithAdditionalCost adds an additional cost that must be paid when casting this spell
 // (e.g. sacrifice a creature, discard a card, pay life).
@@ -375,14 +405,16 @@ func NewEnchantment(name, cost string, opts ...CardOption) *BaseCard {
 	return c
 }
 
-// NewAura creates a new aura enchantment card.
+// NewAura creates a new aura enchantment card. Defaults to "enchant creature"
+// targeting. Use WithCastTarget() to override (e.g. enchant land, enchant artifact).
 func NewAura(name, cost string, opts ...CardOption) *BaseCard {
 	c := &BaseCard{
-		id:       uuid.New(),
-		name:     name,
-		manaCost: ParseManaCost(cost),
-		types:    []CardType{TypeEnchantment},
-		subTypes: []string{"Aura"},
+		id:          uuid.New(),
+		name:        name,
+		manaCost:    ParseManaCost(cost),
+		types:       []CardType{TypeEnchantment},
+		subTypes:    []string{"Aura"},
+		castTargets: []Target{TargetCreature()},
 	}
 	applyCardOpts(c, opts)
 	return c

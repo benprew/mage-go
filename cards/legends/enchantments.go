@@ -117,6 +117,7 @@ func registerEnchantments() {
 // When enchanted land becomes tapped, destroy it.
 	Register("Blight", func() Card {
 		return NewAura("Blight", "{B}{B}",
+			WithCastTarget(TargetLand()),
 			WithAbility(
 				WhenAttachedBecomesTappedTrigger(
 					FuncEffect("destroy enchanted land",
@@ -362,7 +363,9 @@ func registerEnchantments() {
 // Enchanted land has "{T}: Counter target spell if it would destroy a land you control."
 // XXX: needs "would destroy a land" spell detection
 	Register("Equinox", func() Card {
-		return NewAura("Equinox", "{W}")
+		return NewAura("Equinox", "{W}",
+			WithCastTarget(TargetLand()),
+		)
 	})
 
 
@@ -1113,6 +1116,7 @@ func registerEnchantments() {
 // XXX: needs modal triggered ability and enchant-opponent's-artifact targeting
 	Register("Relic Bind", func() Card {
 		return NewAura("Relic Bind", "{2}{U}",
+			WithCastTarget(TargetPermanentOpponentControls(IsArtifact)),
 			WithAbility(
 				WhenAttachedBecomesTappedTrigger(
 					DealDamageToPlayers(Fixed(1), SelectAttachedController()), false,

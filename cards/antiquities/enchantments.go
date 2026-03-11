@@ -36,6 +36,7 @@ func registerEnchantments() {
 		})
 	Register("Artifact Possession", func() Card {
 		return NewAura("Artifact Possession", "{2}{B}",
+			WithCastTarget(TargetArtifact()),
 			// Trigger when enchanted artifact becomes tapped
 			WithAbility(
 				WhenAttachedBecomesTappedTrigger(artPossDmgEffect, false),
@@ -262,6 +263,7 @@ func registerEnchantments() {
 	// reduce the mana in that cost to less than one mana.
 	Register("Power Artifact", func() Card {
 		return NewAura("Power Artifact", "{U}{U}",
+			WithCastTarget(TargetArtifact()),
 			WithStaticAbility(
 				FuncContinuousEffect(LayerAbility, WhileOnBattlefield,
 					func(g *Game, sourceID uuid.UUID) error {

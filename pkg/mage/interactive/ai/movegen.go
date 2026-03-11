@@ -329,14 +329,13 @@ func expandNonXSpellMoves(p mage.Player, g *mage.Game, card mage.Card, xValue, m
 	}
 
 	// Collect all target requirements for the spell.
-	var allTargetReqs []mage.Target
+	allTargetReqs := card.CastTargets()
 	var outcome mage.Outcome
 	for _, a := range card.Abilities() {
 		sa, ok := a.(*mage.SpellAbility)
 		if !ok {
 			continue
 		}
-		allTargetReqs = sa.Targets()
 		outcome = mage.SpellOutcome(sa.Effects())
 		break
 	}

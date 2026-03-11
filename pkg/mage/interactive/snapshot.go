@@ -237,14 +237,9 @@ func GetAvailableActions(g *mage.Game, playerID uuid.UUID, landsPlayed int, main
 		for _, card := range g.GetCastableSpells(playerID) {
 			needsTarget := false
 			var targetType mage.Target
-			for _, a := range card.Abilities() {
-				if sa, ok := a.(*mage.SpellAbility); ok {
-					for _, t := range sa.Targets() {
-						needsTarget = true
-						targetType = t
-						break
-					}
-				}
+			if ct := card.CastTargets(); len(ct) > 0 {
+				needsTarget = true
+				targetType = ct[0]
 			}
 			options = append(options, ActionOption{
 				Type:        ActionCastSpell,
@@ -268,14 +263,9 @@ func GetAvailableActions(g *mage.Game, playerID uuid.UUID, landsPlayed int, main
 				}
 				needsTarget := false
 				var targetType mage.Target
-				for _, a := range card.Abilities() {
-					if sa, ok := a.(*mage.SpellAbility); ok {
-						for _, t := range sa.Targets() {
-							needsTarget = true
-							targetType = t
-							break
-						}
-					}
+				if ct := card.CastTargets(); len(ct) > 0 {
+					needsTarget = true
+					targetType = ct[0]
 				}
 				options = append(options, ActionOption{
 					Type:        ActionCastSpell,

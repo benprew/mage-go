@@ -196,6 +196,7 @@ func registerArtifacts() {
 
 	Register("Steal Artifact", func() Card {
 		return NewAura("Steal Artifact", "{2}{U}{U}",
+			WithCastTarget(TargetArtifact()),
 			WithStaticAbility(ControlChangeContinuous()),
 		)
 	})
@@ -695,6 +696,7 @@ func registerArtifacts() {
 
 	Register("Consecrate Land", func() Card {
 		return NewAura("Consecrate Land", "{W}",
+			WithCastTarget(TargetLand()),
 			WithStaticAbility(
 				GrantAbilityToAttached(Indestructible, AttachAura),
 			),
@@ -714,6 +716,7 @@ func registerArtifacts() {
 
 	Register("Kudzu", func() Card {
 		return NewAura("Kudzu", "{1}{G}{G}",
+			WithCastTarget(TargetLand()),
 			WithAbility(WhenAttachedBecomesTappedTrigger(FuncEffect(
 				"destroy enchanted land; attach Kudzu to another land",
 				EffectProperties{},

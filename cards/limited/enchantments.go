@@ -179,12 +179,14 @@ func registerEnchantments() {
 
 	Register("Wild Growth", func() Card {
 		return NewAura("Wild Growth", "{G}",
+			WithCastTarget(TargetLand()),
 			WithAbility(NewAttachedManaBonusAbility(Green)),
 		)
 	})
 
 	Register("Evil Presence", func() Card {
 		return NewAura("Evil Presence", "{B}",
+			WithCastTarget(TargetLand()),
 			WithStaticAbility(
 				ChangeAttachedSubTypes([]string{"Swamp"}),
 			),
@@ -193,6 +195,7 @@ func registerEnchantments() {
 
 	Register("Phantasmal Terrain", func() Card {
 		return NewAura("Phantasmal Terrain", "{U}{U}",
+			WithCastTarget(TargetLand()),
 			WithStaticAbility(
 				ChangeAttachedSubTypes([]string{"Island"}),
 			),
@@ -201,6 +204,7 @@ func registerEnchantments() {
 
 	Register("Psychic Venom", func() Card {
 		return NewAura("Psychic Venom", "{1}{U}",
+			WithCastTarget(TargetLand()),
 			WithAbility(WhenAttachedBecomesTappedTrigger(
 				DealDamageToPlayers(Fixed(2), SelectAttachedController()), false,
 			)),
@@ -292,6 +296,7 @@ func registerEnchantments() {
 
 	Register("Cursed Land", func() Card {
 		return NewAura("Cursed Land", "{2}{B}{B}",
+			WithCastTarget(TargetLand()),
 			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
 				DealDamageToPlayers(Fixed(1), SelectAttachedController()), false,
 			)),
@@ -300,6 +305,7 @@ func registerEnchantments() {
 
 	Register("Feedback", func() Card {
 		return NewAura("Feedback", "{2}{U}",
+			WithCastTarget(TargetPermanent(IsEnchantment)),
 			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
 				DealDamageToPlayers(Fixed(1), SelectAttachedController()), false,
 			)),
@@ -308,6 +314,7 @@ func registerEnchantments() {
 
 	Register("Warp Artifact", func() Card {
 		return NewAura("Warp Artifact", "{B}{B}",
+			WithCastTarget(TargetArtifact()),
 			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
 				DealDamageToPlayers(Fixed(1), SelectAttachedController()), false,
 			)),
