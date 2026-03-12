@@ -110,8 +110,7 @@ func (e *discardCardsEffect) Apply(g GameMutator, sourceID, controller uuid.UUID
 	amount := e.amount.Resolve(g, sourceID, controller)
 	chosen := targetPlayer.ChooseCardsFromHand(amount, "discard", g)
 	for _, card := range chosen {
-		targetPlayer.RemoveFromHand(card.ID())
-		targetPlayer.AddToGraveyard(card)
+		targetPlayer.DiscardCard(card.ID())
 	}
 	return nil
 }
@@ -153,9 +152,7 @@ func (e *discardRandomEffect) Apply(g GameMutator, sourceID, controller uuid.UUI
 			break
 		}
 		idx := rand.Intn(len(hand))
-		card := hand[idx]
-		targetPlayer.RemoveFromHand(card.ID())
-		targetPlayer.AddToGraveyard(card)
+		targetPlayer.DiscardCard(hand[idx].ID())
 	}
 	return nil
 }
@@ -392,8 +389,7 @@ func (e *discardHandAndDrawEffect) Apply(g GameMutator, sourceID, controller uui
 		// Discard entire hand
 		hand := p.Hand()
 		for _, c := range hand {
-			p.RemoveFromHand(c.ID())
-			p.AddToGraveyard(c)
+			p.DiscardCard(c.ID())
 		}
 		// Draw N cards
 		for i := 0; i < e.drawCount; i++ {

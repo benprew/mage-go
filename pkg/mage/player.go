@@ -44,6 +44,7 @@ type Player interface {
 	AddToHand(Card)
 	SetHand([]Card)
 	RemoveFromHand(uuid.UUID) (Card, bool)
+	DiscardCard(uuid.UUID) (Card, bool)
 	Graveyard() []Card
 	AddToGraveyard(Card)
 	RemoveFromGraveyard(uuid.UUID) (Card, bool)
@@ -156,6 +157,15 @@ func (p *BasePlayer) RemoveFromHand(id uuid.UUID) (Card, bool) {
 		}
 	}
 	return nil, false
+}
+
+func (p *BasePlayer) DiscardCard(id uuid.UUID) (Card, bool) {
+	c, ok := p.RemoveFromHand(id)
+	if !ok {
+		return nil, false
+	}
+	p.AddToGraveyard(c)
+	return c, true
 }
 
 func (p *BasePlayer) Graveyard() []Card { return p.graveyard }
