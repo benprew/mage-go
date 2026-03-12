@@ -26,7 +26,19 @@ const (
 	Glyph        // Glyph of Delusion
 	Matrix       // Life Matrix
 
+	// Fallen Empires counters
+	Spore   // Thallid spore counters
+	Tide    // Homarid / Tidal Influence tide counters
+	Storage // Storage lands (Bottomless Vault, etc.)
+	Credit  // Icatian Moneychanger credit counters
+	Javelin // Icatian Javelineers javelin counters
+	Net     // Merseine net counters
+	Time    // Tourach's Gate time counters
+	Cube    // Delif's Cube cube counters
+
 	// Generic P/T counters
+	P1P2 // +1/+2 (Armor Thrull)
+	M2M2 // -2/-2 (Ebon Praetor)
 	M0M1 // -0/-1 (Takklemaggot, Lesser Werewolf)
 	M0M2 // -0/-2 (Spirit Shackle)
 )
@@ -71,6 +83,26 @@ func (ct CounterType) String() string {
 		return "Glyph"
 	case Matrix:
 		return "Matrix"
+	case Spore:
+		return "Spore"
+	case Tide:
+		return "Tide"
+	case Storage:
+		return "Storage"
+	case Credit:
+		return "Credit"
+	case Javelin:
+		return "Javelin"
+	case Net:
+		return "Net"
+	case Time:
+		return "Time"
+	case Cube:
+		return "Cube"
+	case P1P2:
+		return "+1/+2"
+	case M2M2:
+		return "-2/-2"
 	case M0M1:
 		return "-0/-1"
 	case M0M2:
@@ -83,10 +115,12 @@ func (ct CounterType) String() string {
 // PowerBoost returns the power modification from this counter type.
 func (ct CounterType) PowerBoost() int {
 	switch ct {
-	case P1P1, P1P0:
+	case P1P1, P1P0, P1P2:
 		return 1
 	case M1M1:
 		return -1
+	case M2M2:
+		return -2
 	default:
 		return 0
 	}
@@ -97,8 +131,12 @@ func (ct CounterType) ToughnessBoost() int {
 	switch ct {
 	case P1P1:
 		return 1
+	case P1P2:
+		return 2
 	case M1M1:
 		return -1
+	case M2M2:
+		return -2
 	case M0M1:
 		return -1
 	case M0M2:
