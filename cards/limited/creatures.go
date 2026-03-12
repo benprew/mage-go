@@ -329,8 +329,22 @@ func registerCreatures() {
 		return NewCreature("Hurloon Minotaur", "{1}{R}{R}", 2, 3, WithSubTypes("Minotaur"))
 	})
 
+	// Ironclaw Orcs {1}{R}
+	// Creature — Orc
+	// 2/2
+	// This creature can't block creatures with power 2 or greater.
 	Register("Ironclaw Orcs", func() Card {
-		return NewCreature("Ironclaw Orcs", "{1}{R}", 2, 2, WithSubTypes("Orc"))
+		return NewCreature("Ironclaw Orcs", "{1}{R}", 2, 2,
+			WithSubTypes("Orc"),
+			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+				for _, p := range g.Battlefield {
+					if p.HasType(TypeCreature) && p.CurrentPower(g) >= 2 {
+						g.Effects.PreventBlockPair(sourceID, p.ID())
+					}
+				}
+				return nil
+			})),
+		)
 	})
 
 	Register("Mons's Goblin Raiders", func() Card {
