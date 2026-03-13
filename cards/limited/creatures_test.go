@@ -148,3 +148,48 @@ func TestVesuvanDoppelganger(t *testing.T) {
 		g.AssertPowerToughness(gametest.PlayerA, "Vesuvan Doppelganger", 5, 5)
 	})
 }
+
+func TestScavengingGhoul(t *testing.T) {
+	t.Run("gains_corpse_counters_when_creatures_die", func(t *testing.T) {
+		// Two creatures die in combat, Scavenging Ghoul should get 2 corpse counters at end step.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Scavenging Ghoul")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")  // 3/3
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")  // 3/3
+		// Both Hill Giants trade in combat
+		g.Attack(1, gametest.PlayerA, "Hill Giant")
+		g.Block(1, gametest.PlayerB, "Hill Giant", "Hill Giant")
+		g.StopAt(2, core.Upkeep) // stop after end step triggers resolve
+		g.Execute()
+		// Both Hill Giants died, so Scavenging Ghoul gets 2 corpse counters
+		g.AssertGraveyardCount(gametest.PlayerA, "Hill Giant", 1)
+		g.AssertGraveyardCount(gametest.PlayerB, "Hill Giant", 1)
+		g.AssertCounterCount(gametest.PlayerA, "Scavenging Ghoul", core.Corpse, 2)
+	})
+
+	t.Run("no_counters_when_no_creatures_die", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Scavenging Ghoul")
+		g.StopAt(2, core.Upkeep)
+		g.Execute()
+		g.AssertCounterCount(gametest.PlayerA, "Scavenging Ghoul", core.Corpse, 0)
+	})
+
+	t.Run("regenerate_with_corpse_counter", func(t *testing.T) {
+		// Give Scavenging Ghoul a corpse counter, then use it to regenerate when it would die.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Scavenging Ghoul") // 2/2
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")       // 3/3
+		g.AddCounters(1, core.Upkeep, gametest.PlayerA, "Scavenging Ghoul", core.Corpse, 1)
+		// Activate regeneration before combat
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Scavenging Ghoul")
+		// Attack with Hill Giant into Scavenging Ghoul as blocker
+		g.Attack(1, gametest.PlayerB, "Hill Giant")
+		g.Block(1, gametest.PlayerA, "Scavenging Ghoul", "Hill Giant")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+		// Scavenging Ghoul should survive via regeneration (corpse counter removed)
+		g.AssertPermanentCount(gametest.PlayerA, "Scavenging Ghoul", 1)
+		g.AssertCounterCount(gametest.PlayerA, "Scavenging Ghoul", core.Corpse, 0)
+	})
+}

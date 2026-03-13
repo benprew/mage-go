@@ -166,6 +166,11 @@ func BeginningOfEachDrawStepTrigger(effect Effect, optional bool) *GenericTrigge
 		})
 }
 
+// BeginningOfEachEndStepTrigger fires at the beginning of every player's end step.
+func BeginningOfEachEndStepTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtEndStep, optional, effect)
+}
+
 // DealsDamageToOpponentTrigger fires when the source deals damage to an opponent.
 func DealsDamageToOpponentTrigger(effect Effect, optional bool) *GenericTriggered {
 	return NewTriggered(EvtDamageDealt, optional, effect).

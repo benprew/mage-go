@@ -36,6 +36,8 @@ const (
 	Time    // Tourach's Gate time counters
 	Cube    // Delif's Cube cube counters
 
+	Corpse // Scavenging Ghoul corpse counters
+
 	// Generic P/T counters
 	P1P2 // +1/+2 (Armor Thrull)
 	M2M2 // -2/-2 (Ebon Praetor)
@@ -99,6 +101,8 @@ func (ct CounterType) String() string {
 		return "Time"
 	case Cube:
 		return "Cube"
+	case Corpse:
+		return "Corpse"
 	case P1P2:
 		return "+1/+2"
 	case M2M2:

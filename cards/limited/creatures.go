@@ -774,11 +774,31 @@ func registerCreatures() {
 		)
 	})
 
+	// At the beginning of each end step, put a corpse counter on this creature for each creature that died this turn.
+	// Remove a corpse counter from this creature: Regenerate this creature.
 	Register("Scavenging Ghoul", func() Card {
 		return NewCreature("Scavenging Ghoul", "{3}{B}", 2, 2,
 			WithSubTypes("Zombie"),
-			// Whenever another creature dies, put a +1/+1 counter on Scavenging Ghoul
-			WithAbility(AnyCreatureDiesTrigger(AddCounters(P1P1, Fixed(1), SelectSource), true)),
+			// End step: put corpse counters equal to creatures that died this turn
+			WithAbility(BeginningOfEachEndStepTrigger(
+				FuncEffect(
+					"put corpse counters on Scavenging Ghoul for each creature that died this turn",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						deaths := g.CreatureDeaths()
+						if deaths > 0 {
+							perm := g.FindPermanent(sourceID)
+							if perm != nil {
+								perm.AddCounter(Corpse, deaths)
+							}
+						}
+						return nil
+					},
+				),
+				false,
+			)),
+			// Remove a corpse counter: Regenerate
+			WithActivatedAbility(RegenerateSource(), RemoveCountersCost(Corpse, 1)),
 		)
 	})
 
