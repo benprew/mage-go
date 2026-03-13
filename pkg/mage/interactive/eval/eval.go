@@ -15,8 +15,8 @@ import (
 	"math"
 
 	"github.com/google/uuid"
-	"github.com/mage/mage/pkg/mage"
-	"github.com/mage/mage/pkg/mage/core"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 // Weights holds evaluation weights used by WeightedEvaluator and NewWeightedEvaluator.

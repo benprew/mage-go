@@ -2,7 +2,7 @@ package mage
 
 import (
 	"github.com/google/uuid"
-	. "github.com/mage/mage/pkg/mage/core"
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 // ActivatedAbility is the interface for activated abilities.

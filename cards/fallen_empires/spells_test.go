@@ -3,9 +3,9 @@ package fallen_empires
 import (
 	"testing"
 
-	_ "github.com/mage/mage/cards/limited" // register base cards
-	"github.com/mage/mage/pkg/mage/core"
-	"github.com/mage/mage/pkg/mage/gametest"
+	_ "git.sr.ht/~cdcarter/mage-go/cards/limited" // register base cards
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
 )
 
 func TestHymnToTourach_DiscardTwoAtRandom(t *testing.T) {

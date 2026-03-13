@@ -3,9 +3,9 @@ package custom
 import (
 	"testing"
 
-	_ "github.com/mage/mage/cards/limited" // register base cards (Plains)
-	"github.com/mage/mage/pkg/mage/core"
-	"github.com/mage/mage/pkg/mage/gametest"
+	_ "git.sr.ht/~cdcarter/mage-go/cards/limited" // register base cards (Plains)
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
 )
 
 func TestModalActivatedAbility_Mode1(t *testing.T) {

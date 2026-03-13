@@ -3,8 +3,8 @@ package limited
 import (
 	"testing"
 
-	"github.com/mage/mage/pkg/mage/core"
-	"github.com/mage/mage/pkg/mage/gametest"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
 )
 
 // Tests for cards registered in alpha_enchantments.go.

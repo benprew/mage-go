@@ -6,8 +6,8 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/google/uuid"
-	"github.com/mage/mage/pkg/mage"
-	"github.com/mage/mage/pkg/mage/interactive"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
 )
 
 // gameStateMsg wraps a GameMsg from the game goroutine for bubbletea.

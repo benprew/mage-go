@@ -4,9 +4,9 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/mage/mage/pkg/mage"
-	"github.com/mage/mage/pkg/mage/core"
-	"github.com/mage/mage/pkg/mage/interactive/eval"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/eval"
 )
 
 // ChooseModeHeuristic selects a mode for a modal spell based on the mode

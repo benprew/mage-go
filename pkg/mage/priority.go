@@ -1,7 +1,7 @@
 package mage
 
 import (
-	. "github.com/mage/mage/pkg/mage/core"
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 
 	"github.com/google/uuid"
 )

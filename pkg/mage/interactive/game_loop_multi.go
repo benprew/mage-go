@@ -3,8 +3,8 @@ package interactive
 import (
 	"fmt"
 
-	"github.com/mage/mage/pkg/mage"
-	"github.com/mage/mage/pkg/mage/core"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 // RunMultiplayerGameLoop runs a two-human-player game, communicating with each

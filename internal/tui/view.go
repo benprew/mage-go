@@ -7,7 +7,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/google/uuid"
-	"github.com/mage/mage/pkg/mage/interactive"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
 )
 
 // frame applies terminal-size constraints so shorter views fully overwrite

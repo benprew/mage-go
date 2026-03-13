@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/mage/mage/pkg/mage"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 )
 
 func captureForUndo(g *mage.Game, playerID uuid.UUID, logLen int) undoSnapshot {

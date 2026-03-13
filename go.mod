@@ -1,4 +1,4 @@
-module github.com/mage/mage
+module git.sr.ht/~cdcarter/mage-go
 
 go 1.24.1
 

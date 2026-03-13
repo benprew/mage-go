@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	. "github.com/mage/mage/pkg/mage/core"
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 // gainLifeEffect gains life for the controller.

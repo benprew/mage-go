@@ -5,7 +5,7 @@ import (
 	"math/rand"
 
 	"github.com/google/uuid"
-	. "github.com/mage/mage/pkg/mage/core"
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 // BandFormer is an optional interface for players that declare attacking bands.

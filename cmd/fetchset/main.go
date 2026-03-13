@@ -138,7 +138,7 @@ func get(client *http.Client, url string, dst any) error {
 	if err != nil {
 		return fmt.Errorf("building request: %w", err)
 	}
-	req.Header.Set("User-Agent", "mage-go/fetchset (github.com/mage/mage)")
+	req.Header.Set("User-Agent", "mage-go/fetchset (git.sr.ht/~cdcarter/mage-go)")
 	req.Header.Set("Accept", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {

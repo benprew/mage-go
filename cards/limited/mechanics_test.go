@@ -4,11 +4,11 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/mage/mage/pkg/mage"
-	"github.com/mage/mage/pkg/mage/core"
-	"github.com/mage/mage/pkg/mage/gametest"
-	_ "github.com/mage/mage/cards/custom"  // register Wraithbloom Cultivator
-	_ "github.com/mage/mage/cards/limited" // register Alpha cards
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
+	_ "git.sr.ht/~cdcarter/mage-go/cards/custom"  // register Wraithbloom Cultivator
+	_ "git.sr.ht/~cdcarter/mage-go/cards/limited" // register Alpha cards
 )
 
 var registerOnce sync.Once

@@ -18,9 +18,9 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/mage/mage/pkg/mage"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 
-	_ "github.com/mage/mage/cards" // register all card sets
+	_ "git.sr.ht/~cdcarter/mage-go/cards" // register all card sets
 )
 
 type Card struct {
@@ -280,7 +280,7 @@ func writeSet(dir, pkg, setName, setCode, jsonFile string) {
 import (
 	_ "embed"
 
-	"github.com/mage/mage/pkg/catalog"
+	"git.sr.ht/~cdcarter/mage-go/pkg/catalog"
 )
 
 //go:embed %s
@@ -420,8 +420,8 @@ func landStub(c Card) string {
 var creaturesFileTmpl = template.Must(template.New("creatures").Parse(`package {{.Pkg}}
 
 import (
-	. "github.com/mage/mage/pkg/mage"
-	. "github.com/mage/mage/pkg/mage/core"
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage"
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 func init() {
@@ -480,8 +480,8 @@ func writeFileWithCards(dir, pkg, filename, funcName string, cards []Card, stubF
 		fmt.Fprintf(f, `package %s
 
 import (
-	. "github.com/mage/mage/pkg/mage"
-	. "github.com/mage/mage/pkg/mage/core"
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage"
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 func init() {
@@ -493,7 +493,7 @@ func %s() {
 	} else {
 		fmt.Fprintf(f, `package %s
 
-import . "github.com/mage/mage/pkg/mage"
+import . "git.sr.ht/~cdcarter/mage-go/pkg/mage"
 
 func init() {
 	%s()
