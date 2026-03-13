@@ -2652,6 +2652,32 @@ func (g *Game) GetCastableSpells(playerID uuid.UUID) []Card {
 	return castable
 }
 
+// GetPlayableLands returns the lands a player can legally play right now.
+// Checks: main phase, active player, land-play limit (respects Fastbond etc.),
+// and expansion blocks.
+func (g *Game) GetPlayableLands(playerID uuid.UUID) []Card {
+	if !g.Step.IsMainPhase() {
+		return nil
+	}
+	if g.ActivePlayerObj().PlayerID() != playerID {
+		return nil
+	}
+	if g.LandsPlayedThisTurn >= g.MaxLandPlays() {
+		return nil
+	}
+	p := g.GetPlayer(playerID)
+	if p == nil {
+		return nil
+	}
+	var lands []Card
+	for _, c := range p.Hand() {
+		if c.HasType(TypeLand) {
+			lands = append(lands, c)
+		}
+	}
+	return lands
+}
+
 // GetActivatableAbilities returns activated abilities the player can currently use.
 func (g *Game) GetActivatableAbilities(playerID uuid.UUID) []ActivatableInfo {
 	var result []ActivatableInfo

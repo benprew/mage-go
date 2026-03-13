@@ -214,82 +214,40 @@ func snapshotStack(g *mage.Game) []StackItemState {
 }
 
 // GetAvailableActions returns the actions available to a player right now.
-func GetAvailableActions(g *mage.Game, playerID uuid.UUID, landsPlayed int, mainPhase bool) []ActionOption {
+func GetAvailableActions(g *mage.Game, playerID uuid.UUID) []ActionOption {
 	var options []ActionOption
 
-	if mainPhase {
-		if landsPlayed < 1 {
-			p := g.GetPlayer(playerID)
-			if p != nil {
-				for _, c := range p.Hand() {
-					if c.HasType(core.TypeLand) {
-						options = append(options, ActionOption{
-							Type:     ActionPlayLand,
-							Label:    fmt.Sprintf("Play %s", c.Name()),
-							CardID:   c.ID(),
-							CardName: c.Name(),
-						})
-					}
-				}
-			}
-		}
+	for _, c := range g.GetPlayableLands(playerID) {
+		options = append(options, ActionOption{
+			Type:     ActionPlayLand,
+			Label:    fmt.Sprintf("Play %s", c.Name()),
+			CardID:   c.ID(),
+			CardName: c.Name(),
+		})
+	}
 
-		for _, card := range g.GetCastableSpells(playerID) {
-			needsTarget := false
-			var targetType mage.Target
-			var validTargets []uuid.UUID
-			var validLabels []string
-			if ct := card.CastTargets(); len(ct) > 0 {
-				needsTarget = true
-				targetType = ct[0]
-				validTargets = targetType.Possible(playerID, card, g)
-				validLabels = buildTargetLabels(g, validTargets)
-			}
-			options = append(options, ActionOption{
-				Type:              ActionCastSpell,
-				Label:             fmt.Sprintf("Cast %s %s", card.Name(), card.ManaCost()),
-				CardID:            card.ID(),
-				CardName:          card.Name(),
-				NeedsTarget:       needsTarget,
-				TargetType:        targetType,
-				ManaCost:          card.ManaCost().String(),
-				ValidTargets:      validTargets,
-				ValidTargetLabels: validLabels,
-			})
+	for _, card := range g.GetCastableSpells(playerID) {
+		needsTarget := false
+		var targetType mage.Target
+		var validTargets []uuid.UUID
+		var validLabels []string
+		if ct := card.CastTargets(); len(ct) > 0 {
+			needsTarget = true
+			targetType = ct[0]
+			validTargets = targetType.Possible(playerID, card, g)
+			validLabels = buildTargetLabels(g, validTargets)
 		}
-	} else {
-		p := g.GetPlayer(playerID)
-		if p != nil {
-			for _, card := range p.Hand() {
-				if !card.HasType(core.TypeInstant) {
-					continue
-				}
-				if !g.CanAfford(playerID, card.ManaCost()) {
-					continue
-				}
-				needsTarget := false
-				var targetType mage.Target
-				var validTargets []uuid.UUID
-				var validLabels []string
-				if ct := card.CastTargets(); len(ct) > 0 {
-					needsTarget = true
-					targetType = ct[0]
-					validTargets = targetType.Possible(playerID, card, g)
-					validLabels = buildTargetLabels(g, validTargets)
-				}
-				options = append(options, ActionOption{
-					Type:              ActionCastSpell,
-					Label:             fmt.Sprintf("Cast %s %s", card.Name(), card.ManaCost()),
-					CardID:            card.ID(),
-					NeedsTarget:       needsTarget,
-					CardName:          card.Name(),
-					TargetType:        targetType,
-					ManaCost:          card.ManaCost().String(),
-					ValidTargets:      validTargets,
-					ValidTargetLabels: validLabels,
-				})
-			}
-		}
+		options = append(options, ActionOption{
+			Type:              ActionCastSpell,
+			Label:             fmt.Sprintf("Cast %s %s", card.Name(), card.ManaCost()),
+			CardID:            card.ID(),
+			CardName:          card.Name(),
+			NeedsTarget:       needsTarget,
+			TargetType:        targetType,
+			ManaCost:          card.ManaCost().String(),
+			ValidTargets:      validTargets,
+			ValidTargetLabels: validLabels,
+		})
 	}
 
 	for _, info := range g.GetActivatableAbilities(playerID) {

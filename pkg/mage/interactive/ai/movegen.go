@@ -33,51 +33,17 @@ func GeneratePriorityMoves(g *mage.Game, p mage.Player, landsPlayed int, mainPha
 	playerID := p.PlayerID()
 	var moves []Move
 
-	if mainPhase {
-		if landsPlayed < 1 {
-			for _, c := range p.Hand() {
-				if c.HasType(core.TypeLand) {
-					moves = append(moves, Move{
-						Type:      interactive.ActionPlayLand,
-						CardID:    c.ID(),
-						CardName:  c.Name(),
-						heuristic: 10,
-					})
-					break
-				}
-			}
-		}
-
-		for _, card := range g.GetCastableSpells(playerID) {
-			if card.HasType(core.TypeInstant) {
-				continue
-			}
-			if eval.SpellIsWorthless(card, p, g) {
-				continue
-			}
-			moves = append(moves, expandSpellMoves(p, g, card)...)
-		}
+	if lands := g.GetPlayableLands(playerID); len(lands) > 0 {
+		c := lands[0]
+		moves = append(moves, Move{
+			Type:      interactive.ActionPlayLand,
+			CardID:    c.ID(),
+			CardName:  c.Name(),
+			heuristic: 10,
+		})
 	}
 
-	for _, card := range p.Hand() {
-		if !card.HasType(core.TypeInstant) {
-			continue
-		}
-		if !g.CanAfford(playerID, card.ManaCost()) {
-			continue
-		}
-		hasUsableEffect := false
-		for _, a := range card.Abilities() {
-			if sa, ok := a.(*mage.SpellAbility); ok {
-				if mage.SpellOutcome(sa.Effects()) != mage.OutcomeUnknown {
-					hasUsableEffect = true
-					break
-				}
-			}
-		}
-		if !hasUsableEffect {
-			continue
-		}
+	for _, card := range g.GetCastableSpells(playerID) {
 		if eval.SpellIsWorthless(card, p, g) {
 			continue
 		}

@@ -43,7 +43,7 @@ func (s *HeuristicStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPla
 	}
 
 	if mainPhase {
-		if landsPlayed < 1 {
+		if lands := g.GetPlayableLands(playerID); len(lands) > 0 {
 			if bestLand := chooseBestLand(p, g); bestLand != nil {
 				return interactive.PriorityAction{
 					Type:     interactive.ActionPlayLand,

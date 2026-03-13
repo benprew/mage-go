@@ -267,11 +267,12 @@ func TestBlockerOptions_EmptyStillHasDone(t *testing.T) {
 
 func TestGetAvailableActions_MainPhaseIncludesLands(t *testing.T) {
 	g, pa, _ := makeGame()
+	g.Step = core.PrecombatMain
 	land := mage.NewLand("Forest")
 	land.SetOwner(pa.PlayerID())
 	pa.AddToHand(land)
 
-	actions := GetAvailableActions(g, pa.PlayerID(), 0, true)
+	actions := GetAvailableActions(g, pa.PlayerID())
 	foundLand := false
 	for _, a := range actions {
 		if a.Type == ActionPlayLand {
@@ -285,11 +286,13 @@ func TestGetAvailableActions_MainPhaseIncludesLands(t *testing.T) {
 
 func TestGetAvailableActions_NoLandIfAlreadyPlayed(t *testing.T) {
 	g, pa, _ := makeGame()
+	g.Step = core.PrecombatMain
 	land := mage.NewLand("Forest")
 	land.SetOwner(pa.PlayerID())
 	pa.AddToHand(land)
+	g.LandsPlayedThisTurn = 1
 
-	actions := GetAvailableActions(g, pa.PlayerID(), 1, true)
+	actions := GetAvailableActions(g, pa.PlayerID())
 	for _, a := range actions {
 		if a.Type == ActionPlayLand {
 			t.Error("should not offer land play when already played one")
@@ -297,9 +300,24 @@ func TestGetAvailableActions_NoLandIfAlreadyPlayed(t *testing.T) {
 	}
 }
 
+func TestGetAvailableActions_NoLandForNonActivePlayer(t *testing.T) {
+	g, _, pb := makeGame()
+	g.Step = core.PrecombatMain
+	land := mage.NewLand("Forest")
+	land.SetOwner(pb.PlayerID())
+	pb.AddToHand(land)
+
+	actions := GetAvailableActions(g, pb.PlayerID())
+	for _, a := range actions {
+		if a.Type == ActionPlayLand {
+			t.Error("non-active player should not be offered land plays")
+		}
+	}
+}
+
 func TestGetAvailableActions_AlwaysIncludesPass(t *testing.T) {
 	g, pa, _ := makeGame()
-	actions := GetAvailableActions(g, pa.PlayerID(), 0, true)
+	actions := GetAvailableActions(g, pa.PlayerID())
 	foundPass := false
 	for _, a := range actions {
 		if a.Type == ActionPass {
@@ -313,11 +331,12 @@ func TestGetAvailableActions_AlwaysIncludesPass(t *testing.T) {
 
 func TestGetAvailableActions_NonMainOnlyInstants(t *testing.T) {
 	g, pa, _ := makeGame()
+	g.Step = core.DeclareAttackers
 	sorcery := mage.NewSorcery("Divination", "{2}{U}", mage.NewSpellAbility(mage.DrawCards(mage.Fixed(2))))
 	sorcery.SetOwner(pa.PlayerID())
 	pa.AddToHand(sorcery)
 
-	actions := GetAvailableActions(g, pa.PlayerID(), 0, false)
+	actions := GetAvailableActions(g, pa.PlayerID())
 	for _, a := range actions {
 		if a.Type == ActionCastSpell {
 			t.Error("non-main phase should not offer sorcery-speed spells")

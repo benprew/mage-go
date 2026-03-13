@@ -77,7 +77,7 @@ func RunMultiplayerGameLoop(g *mage.Game, channels [2]PlayerChannels) {
 
 	getAction := func(idx int, mainPhase bool) (PriorityAction, bool) {
 		playerID := g.Players[idx].PlayerID()
-		options := GetAvailableActions(g, playerID, g.LandsPlayedThisTurn, mainPhase)
+		options := GetAvailableActions(g, playerID)
 		if len(options) == 1 && options[0].Type == ActionPass {
 			return PriorityAction{Type: ActionPass}, true
 		}

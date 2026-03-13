@@ -218,6 +218,7 @@ func TestBlockers_ReachCanBlockFlying(t *testing.T) {
 
 func TestPriorityAction_PlaysLandFirst(t *testing.T) {
 	g, pa, _ := makeGame()
+	g.Step = core.PrecombatMain
 	land := mage.NewLand("Forest")
 	land.SetOwner(pa.PlayerID())
 	pa.AddToHand(land)

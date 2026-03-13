@@ -48,7 +48,7 @@ func RunGameLoop(g *mage.Game, humanIdx int, aiActionPause time.Duration) {
 
 	getHumanAction := func(mainPhase bool) PriorityAction {
 		playerID := g.Players[humanIdx].PlayerID()
-		options := GetAvailableActions(g, playerID, g.LandsPlayedThisTurn, mainPhase)
+		options := GetAvailableActions(g, playerID)
 		if len(options) == 1 && options[0].Type == ActionPass && !lastUndo.valid {
 			return PriorityAction{Type: ActionPass}
 		}

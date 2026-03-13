@@ -173,6 +173,7 @@ func TestSearch_NodeBudgetRespected(t *testing.T) {
 
 func TestGeneratePriorityMoves_IncludesLandPlay(t *testing.T) {
 	g, pa, _ := makeGame()
+	g.Step = core.PrecombatMain
 	land := mage.NewLand("Forest")
 	land.SetOwner(pa.PlayerID())
 	pa.AddToHand(land)
@@ -191,9 +192,11 @@ func TestGeneratePriorityMoves_IncludesLandPlay(t *testing.T) {
 
 func TestGeneratePriorityMoves_NoLandIfAlreadyPlayed(t *testing.T) {
 	g, pa, _ := makeGame()
+	g.Step = core.PrecombatMain
 	land := mage.NewLand("Forest")
 	land.SetOwner(pa.PlayerID())
 	pa.AddToHand(land)
+	g.LandsPlayedThisTurn = 1
 
 	moves := GeneratePriorityMoves(g, pa, 1, true)
 	for _, m := range moves {
