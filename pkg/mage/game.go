@@ -2647,6 +2647,19 @@ func (g *Game) GetCastableSpells(playerID uuid.UUID) []Card {
 		if !g.CanAfford(playerID, checkMC) {
 			continue
 		}
+		// Spells with targets (e.g. auras) can't be cast if no legal targets exist
+		if ct := card.CastTargets(); len(ct) > 0 {
+			hasLegalTarget := false
+			for _, t := range ct {
+				if len(t.Possible(playerID, card, g)) > 0 {
+					hasLegalTarget = true
+					break
+				}
+			}
+			if !hasLegalTarget {
+				continue
+			}
+		}
 		castable = append(castable, card)
 	}
 	return castable

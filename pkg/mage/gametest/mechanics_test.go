@@ -604,3 +604,55 @@ func TestShuffleLibraryEffect(t *testing.T) {
 	tg.AssertLibraryCount(PlayerA, "Forest", 1)
 	tg.AssertLibraryCount(PlayerA, "Island", 1)
 }
+
+// ===== Targeted Spells Not Castable Without Targets =====
+
+func TestTargetedSpellNotCastableWithoutTargets(t *testing.T) {
+	auraName := "Test Aura No Targets"
+	crName := "Test Aura Bear"
+	if !mage.CardRegistered(auraName) {
+		mage.Register(auraName, func() mage.Card {
+			return mage.NewBoostAura(auraName, "{0}", 1, 1)
+		})
+	}
+	if !mage.CardRegistered(crName) {
+		mage.Register(crName, func() mage.Card {
+			return mage.NewCreature(crName, "{0}", 2, 2, mage.WithSubTypes("Bear"))
+		})
+	}
+
+	t.Run("aura not castable with no creatures", func(t *testing.T) {
+		tg := NewTestGame(t)
+		tg.AddCard(core.ZoneHand, PlayerA, auraName)
+		tg.StopAt(1, core.PrecombatMain)
+		tg.Execute()
+
+		playerID := tg.GetPlayer(PlayerA).PlayerID()
+		castable := tg.GetCastableSpells(playerID)
+		for _, card := range castable {
+			if card.Name() == auraName {
+				t.Errorf("aura should not be castable with no creatures on the battlefield")
+			}
+		}
+	})
+
+	t.Run("aura castable with creature on battlefield", func(t *testing.T) {
+		tg := NewTestGame(t)
+		tg.AddCard(core.ZoneHand, PlayerA, auraName)
+		tg.AddCard(core.ZoneBattlefield, PlayerA, crName)
+		tg.StopAt(1, core.PrecombatMain)
+		tg.Execute()
+
+		playerID := tg.GetPlayer(PlayerA).PlayerID()
+		castable := tg.GetCastableSpells(playerID)
+		found := false
+		for _, card := range castable {
+			if card.Name() == auraName {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("aura should be castable when a creature is on the battlefield")
+		}
+	})
+}
