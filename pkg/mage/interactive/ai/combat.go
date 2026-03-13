@@ -689,6 +689,7 @@ func (s *HeuristicStrategy) evaluateResponse(p mage.Player, g *mage.Game) *inter
 					CardID:   card.ID(),
 					CardName: card.Name(),
 					Targets:  targets,
+					XValue:   bestXValue(g, playerID, card, targets),
 				}
 			}
 		}

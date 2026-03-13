@@ -81,6 +81,7 @@ func (s *HeuristicStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPla
 				CardID:   bestCard.ID(),
 				CardName: bestCard.Name(),
 				Targets:  targets,
+				XValue:   bestXValue(g, playerID, bestCard, targets),
 			}
 		}
 	}
@@ -120,6 +121,7 @@ func (s *HeuristicStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPla
 						CardID:   card.ID(),
 						CardName: card.Name(),
 						Targets:  targets,
+						XValue:   bestXValue(g, playerID, card, targets),
 					}
 				}
 			}
@@ -157,6 +159,7 @@ func (s *HeuristicStrategy) findBestRemoval(p mage.Player, g *mage.Game) *intera
 								CardID:   card.ID(),
 								CardName: card.Name(),
 								Targets:  targets,
+								XValue:   bestXValue(g, playerID, card, targets),
 							}
 						}
 					}
@@ -560,6 +563,52 @@ func (s *HeuristicStrategy) autoSelectTargets(p mage.Player, g *mage.Game, card 
 
 // chooseBestLand selects the best land to play from hand.
 // Prefers lands that provide colors needed by spells in hand.
+// bestXValue picks the best X value for an X-cost spell.
+// For damage spells it tries lethal values; otherwise it spends all available mana.
+func bestXValue(g *mage.Game, playerID uuid.UUID, card mage.Card, targets []uuid.UUID) int {
+	mc := card.ManaCost()
+	if !mc.HasX {
+		return 0
+	}
+	fixedCost := mc.CMC()
+	availMana := eval.CountAvailableMana(g, playerID)
+	maxX := availMana - fixedCost
+	if maxX < 1 {
+		return 1
+	}
+
+	// For damage spells, try to pick a lethal X value.
+	isDamageSpell := false
+	for _, a := range card.Abilities() {
+		if sa, ok := a.(*mage.SpellAbility); ok {
+			for _, e := range sa.Effects() {
+				if e.Properties().DamageValue != nil {
+					isDamageSpell = true
+					break
+				}
+			}
+		}
+	}
+
+	if isDamageSpell && len(targets) > 0 {
+		// If targeting a player, try lethal.
+		if tp := g.GetPlayer(targets[0]); tp != nil && tp.PlayerID() != playerID {
+			if life := tp.Life(); life > 0 && life <= maxX {
+				return life
+			}
+		}
+		// If targeting a creature, try exact toughness.
+		if perm := g.FindPermanent(targets[0]); perm != nil && perm.Controller != playerID {
+			if tough := perm.CurrentToughness(g); tough > 0 && tough <= maxX {
+				return tough
+			}
+		}
+	}
+
+	// Default: spend all available mana.
+	return maxX
+}
+
 func chooseBestLand(p mage.Player, _ *mage.Game) mage.Card {
 	hand := p.Hand()
 
