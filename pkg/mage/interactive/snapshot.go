@@ -224,9 +224,9 @@ func GetAvailableActions(g *mage.Game, playerID uuid.UUID, landsPlayed int, main
 				for _, c := range p.Hand() {
 					if c.HasType(core.TypeLand) {
 						options = append(options, ActionOption{
-							Type:   ActionPlayLand,
-							Label:  fmt.Sprintf("Play %s", c.Name()),
-							CardID: c.ID(),
+							Type:     ActionPlayLand,
+							Label:    fmt.Sprintf("Play %s", c.Name()),
+							CardID:   c.ID(),
 							CardName: c.Name(),
 						})
 					}
@@ -237,18 +237,24 @@ func GetAvailableActions(g *mage.Game, playerID uuid.UUID, landsPlayed int, main
 		for _, card := range g.GetCastableSpells(playerID) {
 			needsTarget := false
 			var targetType mage.Target
+			var validTargets []uuid.UUID
+			var validLabels []string
 			if ct := card.CastTargets(); len(ct) > 0 {
 				needsTarget = true
 				targetType = ct[0]
+				validTargets = targetType.Possible(playerID, card, g)
+				validLabels = buildTargetLabels(g, validTargets)
 			}
 			options = append(options, ActionOption{
-				Type:        ActionCastSpell,
-				Label:       fmt.Sprintf("Cast %s %s", card.Name(), card.ManaCost()),
-				CardID:      card.ID(),
-				CardName:    card.Name(),
-				NeedsTarget: needsTarget,
-				TargetType:  targetType,
-				ManaCost:    card.ManaCost().String(),
+				Type:              ActionCastSpell,
+				Label:             fmt.Sprintf("Cast %s %s", card.Name(), card.ManaCost()),
+				CardID:            card.ID(),
+				CardName:          card.Name(),
+				NeedsTarget:       needsTarget,
+				TargetType:        targetType,
+				ManaCost:          card.ManaCost().String(),
+				ValidTargets:      validTargets,
+				ValidTargetLabels: validLabels,
 			})
 		}
 	} else {
@@ -263,30 +269,49 @@ func GetAvailableActions(g *mage.Game, playerID uuid.UUID, landsPlayed int, main
 				}
 				needsTarget := false
 				var targetType mage.Target
+				var validTargets []uuid.UUID
+				var validLabels []string
 				if ct := card.CastTargets(); len(ct) > 0 {
 					needsTarget = true
 					targetType = ct[0]
+					validTargets = targetType.Possible(playerID, card, g)
+					validLabels = buildTargetLabels(g, validTargets)
 				}
 				options = append(options, ActionOption{
-					Type:        ActionCastSpell,
-					Label:       fmt.Sprintf("Cast %s %s", card.Name(), card.ManaCost()),
-					CardID:      card.ID(),
-					NeedsTarget: needsTarget,
-					CardName:    card.Name(),
-					TargetType:  targetType,
-					ManaCost:    card.ManaCost().String(),
+					Type:              ActionCastSpell,
+					Label:             fmt.Sprintf("Cast %s %s", card.Name(), card.ManaCost()),
+					CardID:            card.ID(),
+					NeedsTarget:       needsTarget,
+					CardName:          card.Name(),
+					TargetType:        targetType,
+					ManaCost:          card.ManaCost().String(),
+					ValidTargets:      validTargets,
+					ValidTargetLabels: validLabels,
 				})
 			}
 		}
 	}
 
 	for _, info := range g.GetActivatableAbilities(playerID) {
-		options = append(options, ActionOption{
+		opt := ActionOption{
 			Type:         ActionActivateAbility,
 			Label:        fmt.Sprintf("Activate %s: %s", info.PermanentName, info.Description),
 			PermanentID:  info.PermanentID,
 			AbilityIndex: info.AbilityIndex,
-		})
+		}
+		perm := g.FindPermanent(info.PermanentID)
+		if perm != nil {
+			aa, ok := perm.RuntimeAbilities[info.AbilityIndex].(mage.ActivatedAbility)
+			if ok {
+				if targets := aa.Targets(); len(targets) > 0 {
+					opt.NeedsTarget = true
+					opt.TargetType = targets[0]
+					opt.ValidTargets = targets[0].Possible(perm.Controller, perm.Card, g)
+					opt.ValidTargetLabels = buildTargetLabels(g, opt.ValidTargets)
+				}
+			}
+		}
+		options = append(options, opt)
 	}
 
 	options = append(options, ActionOption{
@@ -297,36 +322,25 @@ func GetAvailableActions(g *mage.Game, playerID uuid.UUID, landsPlayed int, main
 	return options
 }
 
-// GetTargetChoices builds the list of valid target IDs and display labels for
-// a spell or ability that needs a target. It always includes both players (with
-// real UUIDs from the snapshot) and any creatures on the battlefield.
-func GetTargetChoices(state *GameState, opt ActionOption) ([]uuid.UUID, []string) {
-	var ids []uuid.UUID
-	var labels []string
-
-	// Creatures from both sides
-	for _, p := range state.Opponent.Battlefield {
-		if p.IsCreature {
-			ids = append(ids, p.ID)
-			labels = append(labels, fmt.Sprintf("%s %d/%d (%s)", p.Name, p.Power, p.Toughness, state.Opponent.Name))
+func buildTargetLabels(g *mage.Game, ids []uuid.UUID) []string {
+	labels := make([]string, len(ids))
+	for i, id := range ids {
+		for _, p := range g.Players {
+			if p.PlayerID() == id {
+				labels[i] = fmt.Sprintf("%s (player)", p.Name())
+				break
+			}
+		}
+		if labels[i] != "" {
+			continue
+		}
+		if perm := g.FindPermanent(id); perm != nil {
+			if perm.HasType(core.TypeCreature) {
+				labels[i] = fmt.Sprintf("%s %d/%d", perm.Name(), perm.CurrentPower(g), perm.CurrentToughness(g))
+			} else {
+				labels[i] = perm.Name()
+			}
 		}
 	}
-	for _, p := range state.You.Battlefield {
-		if p.IsCreature {
-			ids = append(ids, p.ID)
-			labels = append(labels, fmt.Sprintf("%s %d/%d (You)", p.Name, p.Power, p.Toughness))
-		}
-	}
-
-	// Both players — only if we have real UUIDs
-	if state.Opponent.ID != uuid.Nil {
-		ids = append(ids, state.Opponent.ID)
-		labels = append(labels, fmt.Sprintf("%s (player)", state.Opponent.Name))
-	}
-	if state.You.ID != uuid.Nil {
-		ids = append(ids, state.You.ID)
-		labels = append(labels, "You (player)")
-	}
-
-	return ids, labels
+	return labels
 }

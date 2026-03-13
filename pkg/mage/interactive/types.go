@@ -89,6 +89,9 @@ type ActionOption struct {
 	NeedsTarget  bool
 	TargetType   mage.Target
 	ManaCost     string
+
+	ValidTargets      []uuid.UUID
+	ValidTargetLabels []string
 }
 
 // GameMsg is sent from the game goroutine to the TUI.

@@ -332,9 +332,9 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 				CardName: opt.CardName,
 			}
 
-			if opt.NeedsTarget && opt.TargetType != nil && m.state != nil {
+			if opt.NeedsTarget && len(opt.ValidTargets) > 0 {
 				m.selectingTarget = true
-				m.targetOptions, m.targetLabels = interactive.GetTargetChoices(m.state, opt)
+				m.targetOptions, m.targetLabels = opt.ValidTargets, opt.ValidTargetLabels
 				m.targetCursor = 0
 				if len(m.targetOptions) == 0 {
 					m.selectingTarget = false
