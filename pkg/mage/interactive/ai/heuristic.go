@@ -530,10 +530,14 @@ func (s *HeuristicStrategy) autoSelectTargets(p mage.Player, g *mage.Game, card 
 				if bestID != uuid.Nil {
 					return []uuid.UUID{bestID}
 				}
-				for _, id := range possible {
-					perm := g.FindPermanent(id)
-					if perm != nil && perm.Controller == playerID {
-						return []uuid.UUID{id}
+				// Only fall back to own creatures for beneficial spells;
+				// never target your own creature with removal.
+				if outcome == mage.OutcomeBenefit {
+					for _, id := range possible {
+						perm := g.FindPermanent(id)
+						if perm != nil && perm.Controller == playerID {
+							return []uuid.UUID{id}
+						}
 					}
 				}
 

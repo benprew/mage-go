@@ -377,6 +377,12 @@ func expandNonXSpellMoves(p mage.Player, g *mage.Game, card mage.Card, xValue, m
 
 	var moves []Move
 	for _, tid := range firstPossible {
+		// Skip own creatures for detriment spells (don't Terror your own guys).
+		if outcome == mage.OutcomeDetriment {
+			if perm := g.FindPermanent(tid); perm != nil && perm.Controller == playerID {
+				continue
+			}
+		}
 		h := sv
 		if tp := g.GetPlayer(tid); tp != nil && tp.PlayerID() != playerID {
 			for _, a := range card.Abilities() {
