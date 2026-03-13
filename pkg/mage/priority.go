@@ -135,8 +135,9 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 		}
 
 	case DeclareBlockers:
-		g.doDeclareBlockers()
+		// 508.8: Skip if no creatures are attacking.
 		if len(g.Combat.Groups) > 0 {
+			g.doDeclareBlockers()
 			g.PutTriggersOnStack()
 			g.RunPriorityRound(false)
 		}

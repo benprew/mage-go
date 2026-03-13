@@ -1861,8 +1861,16 @@ func (g *Game) RunStep(step PhaseStep) {
 	case DeclareAttackers:
 		g.doDeclareAttackers()
 	case DeclareBlockers:
+		// 508.8: If no creatures are declared as attackers or put onto the
+		// battlefield attacking, skip the declare blockers and combat damage steps.
+		if len(g.Combat.Groups) == 0 {
+			return
+		}
 		g.doDeclareBlockers()
 	case FirstStrikeDamage:
+		if len(g.Combat.Groups) == 0 {
+			return
+		}
 		if !g.Combat.HasFirstStrikers(g) {
 			return // skip if no first strikers
 		}
@@ -1870,6 +1878,9 @@ func (g *Game) RunStep(step PhaseStep) {
 		g.Combat.ResolveDamage(g, true)
 		g.resolvingCombatDamage = false
 	case CombatDamage:
+		if len(g.Combat.Groups) == 0 {
+			return
+		}
 		g.resolvingCombatDamage = true
 		g.Combat.ResolveDamage(g, false)
 		g.resolvingCombatDamage = false
