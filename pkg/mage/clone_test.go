@@ -515,11 +515,10 @@ func TestCloneExile(t *testing.T) {
 
 	exiledCard := NewCreature("Goblin", "R", 1, 1)
 	exiledCard.SetOwner(pA.PlayerID())
+	exiledBy := uuid.New()
 	g.Exile = append(g.Exile, ExiledCard{
 		Card:     exiledCard,
-		ExiledBy: uuid.New(),
-		Owner:    pA.PlayerID(),
-		Counters: map[CounterType]int{P1P1: 3},
+		ExiledBy: exiledBy,
 	})
 
 	c := g.Clone()
@@ -529,14 +528,8 @@ func TestCloneExile(t *testing.T) {
 	if c.Exile[0].Card.ID() != exiledCard.ID() {
 		t.Error("Exile card ID mismatch")
 	}
-	if c.Exile[0].Counters[P1P1] != 3 {
-		t.Errorf("Exile counters: got %d, want 3", c.Exile[0].Counters[P1P1])
-	}
-
-	// Mutate clone exile.
-	c.Exile[0].Counters[P1P1] = 99
-	if g.Exile[0].Counters[P1P1] != 3 {
-		t.Errorf("Original exile counters should still be 3, got %d", g.Exile[0].Counters[P1P1])
+	if c.Exile[0].ExiledBy != exiledBy {
+		t.Error("Exile ExiledBy mismatch")
 	}
 }
 

@@ -43,8 +43,6 @@ func (g *Game) Clone() *Game {
 		c.Exile[i] = ExiledCard{
 			Card:     ec.Card, // shared Card ref
 			ExiledBy: ec.ExiledBy,
-			Owner:    ec.Owner,
-			Counters: cloneCounterMap(ec.Counters),
 		}
 	}
 
@@ -357,6 +355,7 @@ func cloneGameRules(gr *GameRules) *GameRules {
 	clone := &GameRules{
 		LandUntapMax:       gr.LandUntapMax,
 		ArtifactUntapMax:   gr.ArtifactUntapMax,
+		CreatureUntapMax:   gr.CreatureUntapMax,
 		UnlimitedLandPlays: gr.UnlimitedLandPlays,
 	}
 	// Clone all maps.

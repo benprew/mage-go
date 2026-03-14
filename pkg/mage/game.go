@@ -24,9 +24,7 @@ var (
 // ExiledCard tracks a card in exile along with metadata about why it was exiled.
 type ExiledCard struct {
 	Card     Card
-	ExiledBy uuid.UUID           // ID of the permanent/spell that caused the exile
-	Counters map[CounterType]int // noted counter state (e.g. Tawnos's Coffin)
-	Owner    uuid.UUID           // original controller when exiled
+	ExiledBy uuid.UUID // ID of the permanent/spell that caused the exile
 }
 
 // Game is the central game state and engine.
