@@ -19,7 +19,7 @@ func TestCounterAnnihilation(t *testing.T) {
 
 	tg := NewTestGame(t)
 	id := tg.AddCard(core.ZoneBattlefield, PlayerA, name)
-	perm := tg.Game.FindPermanent(id)
+	perm := tg.FindPermanent(id)
 	perm.AddCounter(core.P1P1, 3)
 	perm.AddCounter(core.M1M1, 2)
 	tg.StopAt(1, core.PrecombatMain)
@@ -43,7 +43,7 @@ func TestZeroToughnessDies(t *testing.T) {
 
 	tg := NewTestGame(t)
 	id := tg.AddCard(core.ZoneBattlefield, PlayerA, name)
-	perm := tg.Game.FindPermanent(id)
+	perm := tg.FindPermanent(id)
 	perm.AddCounter(core.M1M1, 1)
 	tg.StopAt(1, core.PrecombatMain)
 	tg.Execute()
@@ -164,8 +164,8 @@ func TestEquipmentStaysOnCreature(t *testing.T) {
 	tg := NewTestGame(t)
 	tg.AddCard(core.ZoneBattlefield, PlayerA, equipName)
 	tg.AddCard(core.ZoneBattlefield, PlayerA, crName)
-	equip := tg.Game.FindPermanentByName(equipName, tg.GetPlayer(PlayerA).PlayerID())
-	host := tg.Game.FindPermanentByName(crName, tg.GetPlayer(PlayerA).PlayerID())
+	equip := tg.FindPermanentByName(equipName, tg.GetPlayer(PlayerA).PlayerID())
+	host := tg.FindPermanentByName(crName, tg.GetPlayer(PlayerA).PlayerID())
 	equip.AttachedTo = host.ID()
 	tg.StopAt(1, core.PrecombatMain)
 	tg.Execute()
@@ -313,7 +313,7 @@ func TestProtectionFromCreatureType(t *testing.T) {
 
 	tg.AssertPermanentCount(PlayerA, protName, 1)
 	// Verify the permanent has a ProtectionAbility
-	perm := tg.Game.FindPermanentByName(protName, tg.GetPlayer(PlayerA).PlayerID())
+	perm := tg.FindPermanentByName(protName, tg.GetPlayer(PlayerA).PlayerID())
 	hasProtection := false
 	for _, a := range perm.Card.Abilities() {
 		if _, ok := a.(*mage.ProtectionAbility); ok {
@@ -522,7 +522,7 @@ func TestChooseColor(t *testing.T) {
 	tg.Execute()
 
 	tg.AssertPermanentCount(PlayerA, name, 1)
-	perm := tg.Game.FindPermanentByName(name, tg.GetPlayer(PlayerA).PlayerID())
+	perm := tg.FindPermanentByName(name, tg.GetPlayer(PlayerA).PlayerID())
 	if perm.ChosenColor != core.Red {
 		t.Errorf("ChosenColor: got %v, want Red", perm.ChosenColor)
 	}
@@ -546,7 +546,7 @@ func TestHasSuperType(t *testing.T) {
 	tg.StopAt(1, core.PrecombatMain)
 	tg.Execute()
 
-	perm := tg.Game.FindPermanentByName(name, tg.GetPlayer(PlayerA).PlayerID())
+	perm := tg.FindPermanentByName(name, tg.GetPlayer(PlayerA).PlayerID())
 	if !perm.Card.HasSuperType(core.SuperLegendary) {
 		t.Error("expected HasSuperType(Legendary) to be true")
 	}
@@ -685,11 +685,11 @@ func TestAttachmentsOnSacrifice(t *testing.T) {
 		tg := NewTestGame(t)
 		crID := tg.AddCard(core.ZoneBattlefield, PlayerA, crName)
 		auraID := tg.AddCard(core.ZoneBattlefield, PlayerA, auraName)
-		tg.Game.Attach(auraID, crID)
+		tg.Attach(auraID, crID)
 
-		perm := tg.Game.FindPermanent(crID)
-		tg.Game.Sacrifice(perm)
-		tg.Game.CheckStateBasedActions()
+		perm := tg.FindPermanent(crID)
+		tg.Sacrifice(perm)
+		tg.CheckStateBasedActions()
 
 		tg.AssertPermanentCount(PlayerA, crName, 0)
 		tg.AssertPermanentCount(PlayerA, auraName, 0)
@@ -700,15 +700,15 @@ func TestAttachmentsOnSacrifice(t *testing.T) {
 		tg := NewTestGame(t)
 		crID := tg.AddCard(core.ZoneBattlefield, PlayerA, crName)
 		equipID := tg.AddCard(core.ZoneBattlefield, PlayerA, equipName)
-		tg.Game.Attach(equipID, crID)
+		tg.Attach(equipID, crID)
 
-		perm := tg.Game.FindPermanent(crID)
-		tg.Game.Sacrifice(perm)
-		tg.Game.CheckStateBasedActions()
+		perm := tg.FindPermanent(crID)
+		tg.Sacrifice(perm)
+		tg.CheckStateBasedActions()
 
 		tg.AssertPermanentCount(PlayerA, crName, 0)
 		tg.AssertPermanentCount(PlayerA, equipName, 1)
-		equip := tg.Game.FindPermanentByName(equipName, tg.GetPlayer(PlayerA).PlayerID())
+		equip := tg.FindPermanentByName(equipName, tg.GetPlayer(PlayerA).PlayerID())
 		if equip.IsAttached() {
 			t.Errorf("equipment should be detached after host is sacrificed")
 		}
@@ -741,11 +741,11 @@ func TestAttachmentsOnExile(t *testing.T) {
 		tg := NewTestGame(t)
 		crID := tg.AddCard(core.ZoneBattlefield, PlayerA, crName)
 		auraID := tg.AddCard(core.ZoneBattlefield, PlayerA, auraName)
-		tg.Game.Attach(auraID, crID)
+		tg.Attach(auraID, crID)
 
-		perm := tg.Game.FindPermanent(crID)
-		tg.Game.ExilePermanent(perm)
-		tg.Game.CheckStateBasedActions()
+		perm := tg.FindPermanent(crID)
+		tg.ExilePermanent(perm)
+		tg.CheckStateBasedActions()
 
 		tg.AssertPermanentCount(PlayerA, crName, 0)
 		tg.AssertPermanentCount(PlayerA, auraName, 0)
@@ -757,15 +757,15 @@ func TestAttachmentsOnExile(t *testing.T) {
 		tg := NewTestGame(t)
 		crID := tg.AddCard(core.ZoneBattlefield, PlayerA, crName)
 		equipID := tg.AddCard(core.ZoneBattlefield, PlayerA, equipName)
-		tg.Game.Attach(equipID, crID)
+		tg.Attach(equipID, crID)
 
-		perm := tg.Game.FindPermanent(crID)
-		tg.Game.ExilePermanent(perm)
-		tg.Game.CheckStateBasedActions()
+		perm := tg.FindPermanent(crID)
+		tg.ExilePermanent(perm)
+		tg.CheckStateBasedActions()
 
 		tg.AssertPermanentCount(PlayerA, crName, 0)
 		tg.AssertPermanentCount(PlayerA, equipName, 1)
-		equip := tg.Game.FindPermanentByName(equipName, tg.GetPlayer(PlayerA).PlayerID())
+		equip := tg.FindPermanentByName(equipName, tg.GetPlayer(PlayerA).PlayerID())
 		if equip.IsAttached() {
 			t.Errorf("equipment should be detached after host is exiled")
 		}

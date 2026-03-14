@@ -1,10 +1,10 @@
 package antiquities
 
 import (
-	"github.com/google/uuid"
+	"git.sr.ht/~cdcarter/mage-go/pkg/catalog"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"git.sr.ht/~cdcarter/mage-go/pkg/catalog"
+	"github.com/google/uuid"
 )
 
 func init() {
@@ -257,9 +257,7 @@ func registerArtifacts() {
 						}
 						gy := p.Graveyard()
 						lib := p.Library()
-						for _, card := range gy {
-							lib = append(lib, card)
-						}
+						lib = append(lib, gy...)
 						p.SetLibrary(lib)
 						p.ClearGraveyard()
 						p.ShuffleLibrary()

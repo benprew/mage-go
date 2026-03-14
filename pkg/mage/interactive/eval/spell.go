@@ -1,9 +1,9 @@
 package eval
 
 import (
-	"github.com/google/uuid"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"github.com/google/uuid"
 )
 
 // ThreatPerMana returns a permanent's threat-per-mana-spent ratio.
@@ -77,9 +77,10 @@ func SpellValue(card mage.Card, p mage.Player, g *mage.Game) int {
 		if !perm.HasType(core.TypeCreature) {
 			continue
 		}
-		if perm.Controller == playerID {
+		switch perm.Controller {
+		case playerID:
 			myCreatures++
-		} else if perm.Controller == oppID {
+		case oppID:
 			oppCreatures++
 			ts := EvalCreatureInGame(perm, g)
 			if ts > oppBestScore {

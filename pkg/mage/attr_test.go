@@ -35,8 +35,8 @@ func TestAttrConstantsAreNonZeroAndUnique(t *testing.T) {
 
 // TestKeywordIsAttrAlias verifies that Keyword is an alias for Attr.
 func TestKeywordIsAttrAlias(t *testing.T) {
-	var _ Keyword = Flying        // must compile
-	var _ Attr = Flying           // Flying is an Attr
+	var _ = Flying // must compile
+	var _ = Flying // Flying is an Attr
 	if Keyword(Flying) != Attr(Flying) {
 		t.Errorf("Keyword(Flying) != Attr(Flying)")
 	}

@@ -298,17 +298,7 @@ func convertCard(sc scryfallCard) CardEntry {
 		Legalities:      sc.Legalities,
 	}
 	for _, f := range sc.CardFaces {
-		entry.CardFaces = append(entry.CardFaces, CardFace{
-			Name:       f.Name,
-			ManaCost:   f.ManaCost,
-			TypeLine:   f.TypeLine,
-			OracleText: f.OracleText,
-			Power:      f.Power,
-			Toughness:  f.Toughness,
-			Artist:     f.Artist,
-			FlavorText: f.FlavorText,
-			Colors:     f.Colors,
-		})
+		entry.CardFaces = append(entry.CardFaces, CardFace(f))
 	}
 	return entry
 }

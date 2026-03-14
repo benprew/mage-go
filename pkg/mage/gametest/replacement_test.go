@@ -4,9 +4,9 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/google/uuid"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"github.com/google/uuid"
 )
 
 // registerOnce guards one-time test card registration for replacement tests.
@@ -78,7 +78,7 @@ func TestPreventionShieldPartial(t *testing.T) {
 		g.AddCard(core.ZoneHand, PlayerA, "Big Blast")
 
 		// Give PlayerB a prevention shield of 4 (Big Blast deals 6)
-		g.Game.AddPreventionShield(g.Game.Players[1].PlayerID(), 4)
+		g.AddPreventionShield(g.Game.Players[1].PlayerID(), 4)
 
 		g.CastSpell(1, core.PrecombatMain, PlayerA, "Big Blast", "PlayerB")
 		g.StopAt(1, core.BeginCombat)
@@ -92,7 +92,7 @@ func TestPreventionShieldPartial(t *testing.T) {
 		g.AddCard(core.ZoneHand, PlayerA, "Lightning Bolt")
 
 		// Give PlayerB a prevention shield of 5 (Lightning Bolt deals 3)
-		g.Game.AddPreventionShield(g.Game.Players[1].PlayerID(), 5)
+		g.AddPreventionShield(g.Game.Players[1].PlayerID(), 5)
 
 		g.CastSpell(1, core.PrecombatMain, PlayerA, "Lightning Bolt", "PlayerB")
 		g.StopAt(1, core.BeginCombat)
@@ -111,7 +111,7 @@ func TestFogNonCombatPassesThrough(t *testing.T) {
 	g.AddCard(core.ZoneHand, PlayerA, "Lightning Bolt")
 
 	// Register fog
-	g.Game.SetPreventCombatDamage()
+	g.SetPreventCombatDamage()
 
 	g.CastSpell(1, core.PrecombatMain, PlayerA, "Lightning Bolt", "PlayerB")
 	g.StopAt(1, core.BeginCombat)
@@ -130,8 +130,8 @@ func TestMultipleReplacementsInteract(t *testing.T) {
 	g.AddCard(core.ZoneHand, PlayerA, "Big Blast")
 
 	// Give PlayerB a prevention shield of 2 AND minimum life protection
-	g.Game.AddPreventionShield(g.Game.Players[1].PlayerID(), 2)
-	g.Game.SetMinimumLife(g.Game.Players[1].PlayerID())
+	g.AddPreventionShield(g.Game.Players[1].PlayerID(), 2)
+	g.SetMinimumLife(g.Game.Players[1].PlayerID())
 
 	g.CastSpell(1, core.PrecombatMain, PlayerA, "Big Blast", "PlayerB")
 	g.StopAt(1, core.BeginCombat)
@@ -154,7 +154,7 @@ func TestRedirectionChangesActionType(t *testing.T) {
 	// Redirect all damage from Test Giant to Hill Giant
 	testGiantPerm := findPermanentByName(g, "Test Giant")
 	hillGiantPerm := findPermanentByName(g, "Hill Giant")
-	g.Game.SetAttackerDamageRedirect(testGiantPerm.ID(), hillGiantPerm.ID())
+	g.SetAttackerDamageRedirect(testGiantPerm.ID(), hillGiantPerm.ID())
 
 	g.Attack(1, PlayerA, "Test Giant")
 	g.StopAt(1, core.EndCombat)
@@ -171,13 +171,13 @@ func TestCreatureDamageRedirectToPlayer(t *testing.T) {
 	registerReplacementTestCards()
 
 	g := NewTestGame(t)
-	g.AddCard(core.ZoneBattlefield, PlayerA, "Hill Giant")   // 3/3
-	g.AddCard(core.ZoneBattlefield, PlayerB, "Test Giant")   // 5/5
+	g.AddCard(core.ZoneBattlefield, PlayerA, "Hill Giant") // 3/3
+	g.AddCard(core.ZoneBattlefield, PlayerB, "Test Giant") // 5/5
 	g.AddCard(core.ZoneHand, PlayerA, "Lightning Bolt")
 
 	// Redirect damage dealt to Test Giant → PlayerB instead
 	tg := findPermanentByName(g, "Test Giant")
-	g.Game.SetCreatureDamageRedirect(tg.ID(), g.Game.Players[1].PlayerID())
+	g.SetCreatureDamageRedirect(tg.ID(), g.Game.Players[1].PlayerID())
 
 	g.CastSpell(1, core.PrecombatMain, PlayerA, "Lightning Bolt", "Test Giant")
 	g.StopAt(1, core.BeginCombat)
@@ -217,7 +217,7 @@ func TestColorPreventionConsumed(t *testing.T) {
 	g.AddCard(core.ZoneHand, PlayerA, "Lightning Bolt")
 
 	// Add one-shot red prevention
-	g.Game.AddColorPrevention(g.Game.Players[1].PlayerID(), core.Red)
+	g.AddColorPrevention(g.Game.Players[1].PlayerID(), core.Red)
 
 	g.CastSpell(1, core.PrecombatMain, PlayerA, "Lightning Bolt", "PlayerB")
 	g.CastSpell(1, core.PrecombatMain, PlayerA, "Lightning Bolt", "PlayerB")
@@ -239,7 +239,7 @@ func TestSkipDrawReplacement(t *testing.T) {
 	g.AddCard(core.ZoneLibrary, PlayerA, "Hill Giant")
 
 	// Skip PlayerA's next normal draw
-	g.Game.SetSkipNextDraw(g.Game.Players[0].PlayerID())
+	g.SetSkipNextDraw(g.Game.Players[0].PlayerID())
 
 	// Turn 1 draw step: PlayerA's draw should be skipped
 	g.StopAt(1, core.PrecombatMain)
@@ -259,7 +259,7 @@ func TestMinimumLifeDoesNotGoBelow1(t *testing.T) {
 
 	// Set minimum life via the Rules flag directly (the same path Ali from Cairo uses).
 	// The fallback in executeDamageToPlayer checks this flag.
-	g.Game.Effects.Rules.SetMinimumLife(g.Game.Players[1].PlayerID())
+	g.Effects.Rules.SetMinimumLife(g.Game.Players[1].PlayerID())
 
 	// Normally this flag is reset each Apply() cycle and re-set by the continuous effect.
 	// For the test, set it right before the spell resolves using a static ability.
@@ -298,8 +298,8 @@ func TestReplacementPipelineDeduplication(t *testing.T) {
 
 	// Register two prevention shields on PlayerB
 	pid := g.Game.Players[1].PlayerID()
-	g.Game.AddPreventionShield(pid, 1) // absorbs 1
-	g.Game.AddPreventionShield(pid, 1) // absorbs 1
+	g.AddPreventionShield(pid, 1) // absorbs 1
+	g.AddPreventionShield(pid, 1) // absorbs 1
 
 	g.CastSpell(1, core.PrecombatMain, PlayerA, "Lightning Bolt", "PlayerB")
 	g.StopAt(1, core.BeginCombat)
@@ -315,11 +315,11 @@ func TestForcefieldDoesNotAffectBlockedDamage(t *testing.T) {
 	registerReplacementTestCards()
 
 	g := NewTestGame(t)
-	g.AddCard(core.ZoneBattlefield, PlayerA, "Test Giant")   // 5/5
-	g.AddCard(core.ZoneBattlefield, PlayerB, "Hill Giant")    // 3/3
+	g.AddCard(core.ZoneBattlefield, PlayerA, "Test Giant") // 5/5
+	g.AddCard(core.ZoneBattlefield, PlayerB, "Hill Giant") // 3/3
 
 	// Give PlayerB forcefield
-	g.Game.AddForcefieldShield(g.Game.Players[1].PlayerID())
+	g.AddForcefieldShield(g.Game.Players[1].PlayerID())
 
 	g.Attack(1, PlayerA, "Test Giant")
 	g.Block(1, PlayerB, "Hill Giant", "Test Giant")
@@ -341,7 +341,7 @@ func TestTypePreventionArtifact(t *testing.T) {
 	g.AddCard(core.ZoneBattlefield, PlayerA, "Iron Golem") // artifact creature 3/3
 
 	// Prevent artifact damage to PlayerB
-	g.Game.AddTypePrevention(g.Game.Players[1].PlayerID(), core.TypeArtifact)
+	g.AddTypePrevention(g.Game.Players[1].PlayerID(), core.TypeArtifact)
 
 	g.Attack(1, PlayerA, "Iron Golem")
 	g.StopAt(1, core.EndCombat)
@@ -360,7 +360,7 @@ func TestCustomReplacementEffect(t *testing.T) {
 
 	// Register a custom replacement that doubles all damage to PlayerB
 	pid := g.Game.Players[1].PlayerID()
-	g.Game.AddReplacementEffect(&doubleDamageReplacement{playerID: pid})
+	g.AddReplacementEffect(&doubleDamageReplacement{playerID: pid})
 
 	g.CastSpell(1, core.PrecombatMain, PlayerA, "Lightning Bolt", "PlayerB")
 	g.StopAt(1, core.BeginCombat)
@@ -384,7 +384,7 @@ func (r *doubleDamageReplacement) Replace(a mage.Action, _ mage.GameMutator) mag
 	return act.WithAmount(act.Amount() * 2)
 }
 
-func (r *doubleDamageReplacement) SourceID() uuid.UUID       { return uuid.Nil }
+func (r *doubleDamageReplacement) SourceID() uuid.UUID             { return uuid.Nil }
 func (r *doubleDamageReplacement) IsActive(_ mage.GameReader) bool { return true }
 func (r *doubleDamageReplacement) Clone() mage.ReplacementEffect {
 	c := *r
@@ -402,7 +402,7 @@ func TestPreventionShieldOnCreature(t *testing.T) {
 
 	// Add prevention shield to Hill Giant
 	hg := findPermanentByName(g, "Hill Giant")
-	g.Game.AddPreventionShield(hg.ID(), 2)
+	g.AddPreventionShield(hg.ID(), 2)
 
 	g.CastSpell(1, core.PrecombatMain, PlayerA, "Lightning Bolt", "Hill Giant")
 	g.StopAt(1, core.BeginCombat)
@@ -413,7 +413,7 @@ func TestPreventionShieldOnCreature(t *testing.T) {
 
 // findPermanentByName is a test helper to find a permanent on the battlefield.
 func findPermanentByName(g *TestGame, name string) *mage.Permanent {
-	for _, p := range g.Game.Battlefield {
+	for _, p := range g.Battlefield {
 		if p.Name() == name {
 			return p
 		}

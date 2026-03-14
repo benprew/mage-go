@@ -1,9 +1,9 @@
 package fallen_empires
 
 import (
-	"github.com/google/uuid"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"github.com/google/uuid"
 )
 
 func init() {
@@ -333,9 +333,10 @@ func registerCreatures() {
 					return nil
 				}
 				count := src.Counters[Tide]
-				if count == 1 {
+				switch count {
+				case 1:
 					src.BoostPT(-1, -1)
-				} else if count == 3 {
+				case 3:
 					src.BoostPT(1, 1)
 				}
 				return nil

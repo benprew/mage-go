@@ -4,9 +4,9 @@ import (
 	"math"
 	"testing"
 
-	"github.com/google/uuid"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"github.com/google/uuid"
 )
 
 // ── permPower / permToughness ───────────────────────────────────────────────
@@ -172,7 +172,7 @@ func TestKeywordBonus_RelativeOrder(t *testing.T) {
 	uScore := keywordBonus(u)
 	fScore := keywordBonus(f)
 	feScore := keywordBonus(fe)
-	if !(uScore > fScore && fScore > feScore) {
+	if uScore <= fScore || fScore <= feScore {
 		t.Errorf("expected unblockable(%d) > flying(%d) > fear(%d)", uScore, fScore, feScore)
 	}
 }

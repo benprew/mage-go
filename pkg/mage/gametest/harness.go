@@ -3,9 +3,9 @@ package gametest
 import (
 	"testing"
 
-	"github.com/google/uuid"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"github.com/google/uuid"
 )
 
 // TestGame provides a DSL for scripting and asserting game states.
@@ -108,7 +108,7 @@ func (tg *TestGame) AddCard(zone core.Zone, p PlayerRef, name string, count ...i
 
 		switch zone {
 		case core.ZoneBattlefield:
-			perm := tg.Game.PutOnBattlefield(card, playerID)
+			perm := tg.PutOnBattlefield(card, playerID)
 			perm.RevokeBaseAttr(core.AttrSummonSick)
 			lastID = perm.ID()
 		case core.ZoneHand:
@@ -271,8 +271,8 @@ func (tg *TestGame) AssertBanded(p1 PlayerRef, name1 string, p2 PlayerRef, name2
 	tg.t.Helper()
 	pid1 := tg.getPlayerID(p1)
 	pid2 := tg.getPlayerID(p2)
-	perm1 := tg.Game.FindPermanentByName(name1, pid1)
-	perm2 := tg.Game.FindPermanentByName(name2, pid2)
+	perm1 := tg.FindPermanentByName(name1, pid1)
+	perm2 := tg.FindPermanentByName(name2, pid2)
 	if perm1 == nil {
 		tg.t.Errorf("AssertBanded: %s not found for %v", name1, p1)
 		return
@@ -281,7 +281,7 @@ func (tg *TestGame) AssertBanded(p1 PlayerRef, name1 string, p2 PlayerRef, name2
 		tg.t.Errorf("AssertBanded: %s not found for %v", name2, p2)
 		return
 	}
-	got := tg.Game.Combat.IsBandedWith(perm1.ID(), perm2.ID())
+	got := tg.Combat.IsBandedWith(perm1.ID(), perm2.ID())
 	if got != want {
 		tg.t.Errorf("AssertBanded(%s, %s): got %v, want %v", name1, name2, got, want)
 	}
@@ -312,7 +312,7 @@ func (tg *TestGame) Execute() {
 
 	tg.padLibraries()
 	tg.autoAddMana()
-	tg.Game.OnPriority = autoPassHandler()
+	tg.OnPriority = autoPassHandler()
 
 	maxTurns := tg.stopAt.turn + 5
 	for tg.Turn <= maxTurns {
@@ -331,7 +331,7 @@ func (tg *TestGame) Execute() {
 				tg.autoPlayLands()
 			}
 
-			tg.Game.RunStepWithPriority(step)
+			tg.RunStepWithPriority(step)
 		}
 		if len(tg.ExtraTurns) > 0 {
 			extraPlayerID := tg.ExtraTurns[0]
@@ -357,11 +357,9 @@ func autoPassHandler() mage.PriorityHandler {
 }
 
 func (tg *TestGame) autoPlayLands() {
-	active := tg.Game.ActivePlayerObj()
-	for {
-		if tg.LandsPlayedThisTurn >= tg.MaxLandPlays() {
-			break
-		}
+	active := tg.ActivePlayerObj()
+	for tg.LandsPlayedThisTurn < tg.MaxLandPlays() {
+
 		var landID uuid.UUID
 		for _, c := range active.Hand() {
 			if c.HasType(core.TypeLand) {
@@ -372,7 +370,7 @@ func (tg *TestGame) autoPlayLands() {
 		if landID == uuid.Nil {
 			break
 		}
-		err := tg.Game.PlayLand(active.PlayerID(), landID)
+		err := tg.PlayLand(active.PlayerID(), landID)
 		if err != nil {
 			break
 		}
@@ -545,7 +543,7 @@ func (tg *TestGame) executeSingleCast(ca castAction) {
 		targets = validTargets
 	}
 
-	err := tg.Game.CastSpellByName(playerID, ca.spell, targets, ca.xValue)
+	err := tg.CastSpellByName(playerID, ca.spell, targets, ca.xValue)
 	if err != nil {
 		tg.t.Logf("CastSpell %s failed: %v", ca.spell, err)
 	}
@@ -554,7 +552,7 @@ func (tg *TestGame) executeSingleCast(ca castAction) {
 		tg.executeResponses(ca.responses)
 	}
 
-	tg.Game.ResolveStack()
+	tg.ResolveStack()
 }
 
 func (tg *TestGame) ensureManaForActivate(aa activateAction) {
@@ -572,12 +570,12 @@ func (tg *TestGame) executeSingleActivate(aa activateAction) {
 	playerID := tg.getPlayerID(aa.player)
 	targets := tg.resolveTargets(aa.targets, playerID)
 	tg.ensureManaForActivate(aa)
-	tg.Game.CurrentX = aa.xValue
-	err := tg.Game.ActivateAbilityByText(playerID, aa.permName, targets)
+	tg.CurrentX = aa.xValue
+	err := tg.ActivateAbilityByText(playerID, aa.permName, targets)
 	if err != nil {
 		tg.t.Logf("ActivateAbility %s failed: %v", aa.permName, err)
 	}
-	tg.Game.ResolveStack()
+	tg.ResolveStack()
 }
 
 func (tg *TestGame) executeResponses(responses []responseAction) {
@@ -587,18 +585,18 @@ func (tg *TestGame) executeResponses(responses []responseAction) {
 		var targets []uuid.UUID
 		if len(r.targets) > 0 {
 			targets = tg.resolveTargets(r.targets, respPlayerID)
-		} else if tg.Game.Stack.Peek() != nil {
+		} else if tg.Stack.Peek() != nil {
 			targets = []uuid.UUID{tg.Game.Stack.Peek().SourceID}
 		}
 
 		if r.perm != "" {
-			err := tg.Game.ActivateAbilityByText(respPlayerID, r.perm, targets)
+			err := tg.ActivateAbilityByText(respPlayerID, r.perm, targets)
 			if err != nil {
 				tg.t.Logf("ActivateInResponseTo %s failed: %v", r.perm, err)
 			}
 		} else {
 			tg.ensureManaForResponse(r)
-			err := tg.Game.CastSpellByName(respPlayerID, r.spell, targets, r.xValue)
+			err := tg.CastSpellByName(respPlayerID, r.spell, targets, r.xValue)
 			if err != nil {
 				tg.t.Logf("CastInResponseTo %s failed: %v", r.spell, err)
 			}
@@ -612,7 +610,7 @@ func (tg *TestGame) executeCounterActions(turn int, step core.PhaseStep) {
 			continue
 		}
 		playerID := tg.getPlayerID(ca.player)
-		perm := tg.Game.FindPermanentByName(ca.card, playerID)
+		perm := tg.FindPermanentByName(ca.card, playerID)
 		if perm != nil {
 			perm.AddCounter(ca.ct, ca.n)
 		}
@@ -682,7 +680,7 @@ func (tg *TestGame) resolveTargets(names []string, controllerID uuid.UUID) []uui
 func (tg *TestGame) validateTargets(sourceCard mage.Card, targets []uuid.UUID, controllerID uuid.UUID) []uuid.UUID {
 	var valid []uuid.UUID
 	for _, tid := range targets {
-		perm := tg.Game.FindPermanent(tid)
+		perm := tg.FindPermanent(tid)
 		if perm != nil {
 			if perm.CanBeTargetedBy(sourceCard, controllerID, tg.Game) {
 				valid = append(valid, tid)
@@ -706,7 +704,7 @@ func (tg *TestGame) PlayToEnd(maxTurns ...int) {
 
 	tg.padLibraries()
 	tg.autoAddMana()
-	tg.Game.OnPriority = autoPassHandler()
+	tg.OnPriority = autoPassHandler()
 
 	for tg.Turn <= limit {
 		for _, step := range core.AllSteps() {
@@ -718,9 +716,9 @@ func (tg *TestGame) PlayToEnd(maxTurns ...int) {
 				tg.autoPlayLands()
 			}
 
-			tg.Game.RunStepWithPriority(step)
+			tg.RunStepWithPriority(step)
 
-			if tg.Game.IsGameOver() {
+			if tg.IsGameOver() {
 				return
 			}
 		}
@@ -747,7 +745,7 @@ func (tg *TestGame) PlayToEnd(maxTurns ...int) {
 func (tg *TestGame) AssertWinner(p PlayerRef) {
 	tg.t.Helper()
 	want := tg.GetPlayer(p).Name()
-	got := tg.Game.Winner()
+	got := tg.Winner()
 	if got != want {
 		tg.t.Errorf("AssertWinner: got %q, want %q", got, want)
 	}
@@ -756,7 +754,7 @@ func (tg *TestGame) AssertWinner(p PlayerRef) {
 // AssertGameOver checks whether the game has ended.
 func (tg *TestGame) AssertGameOver(want bool) {
 	tg.t.Helper()
-	got := tg.Game.IsGameOver()
+	got := tg.IsGameOver()
 	if got != want {
 		tg.t.Errorf("AssertGameOver: got %v, want %v", got, want)
 	}
@@ -841,7 +839,7 @@ func (tg *TestGame) AssertHandCount(p PlayerRef, name string, want int) {
 func (tg *TestGame) AssertPowerToughness(p PlayerRef, name string, power, tough int) {
 	tg.t.Helper()
 	playerID := tg.getPlayerID(p)
-	perm := tg.Game.FindPermanentByName(name, playerID)
+	perm := tg.FindPermanentByName(name, playerID)
 	if perm == nil {
 		tg.t.Errorf("AssertPowerToughness(%v, %s): permanent not found", p, name)
 		return
@@ -857,7 +855,7 @@ func (tg *TestGame) AssertPowerToughness(p PlayerRef, name string, power, tough 
 func (tg *TestGame) AssertCounterCount(p PlayerRef, name string, ct core.CounterType, want int) {
 	tg.t.Helper()
 	playerID := tg.getPlayerID(p)
-	perm := tg.Game.FindPermanentByName(name, playerID)
+	perm := tg.FindPermanentByName(name, playerID)
 	if perm == nil {
 		tg.t.Errorf("AssertCounterCount(%v, %s): permanent not found", p, name)
 		return
@@ -872,7 +870,7 @@ func (tg *TestGame) AssertCounterCount(p PlayerRef, name string, ct core.Counter
 func (tg *TestGame) AssertTapped(p PlayerRef, name string, tapped bool) {
 	tg.t.Helper()
 	playerID := tg.getPlayerID(p)
-	perm := tg.Game.FindPermanentByName(name, playerID)
+	perm := tg.FindPermanentByName(name, playerID)
 	if perm == nil {
 		tg.t.Errorf("AssertTapped(%v, %s): permanent not found", p, name)
 		return
@@ -886,7 +884,7 @@ func (tg *TestGame) AssertTapped(p PlayerRef, name string, tapped bool) {
 func (tg *TestGame) AssertHasAbility(p PlayerRef, name string, kw core.Keyword, has bool) {
 	tg.t.Helper()
 	playerID := tg.getPlayerID(p)
-	perm := tg.Game.FindPermanentByName(name, playerID)
+	perm := tg.FindPermanentByName(name, playerID)
 	if perm == nil {
 		tg.t.Errorf("AssertHasAbility(%v, %s): permanent not found", p, name)
 		return
@@ -901,7 +899,7 @@ func (tg *TestGame) AssertHasAbility(p PlayerRef, name string, kw core.Keyword, 
 func (tg *TestGame) AssertAttachedTo(p PlayerRef, attachment, host string) {
 	tg.t.Helper()
 	playerID := tg.getPlayerID(p)
-	att := tg.Game.FindPermanentByName(attachment, playerID)
+	att := tg.FindPermanentByName(attachment, playerID)
 	if att == nil {
 		for _, perm := range tg.Battlefield {
 			if perm.Name() == attachment {
@@ -914,7 +912,7 @@ func (tg *TestGame) AssertAttachedTo(p PlayerRef, attachment, host string) {
 		tg.t.Errorf("AssertAttachedTo(%v, %s, %s): attachment not found", p, attachment, host)
 		return
 	}
-	hostPerm := tg.Game.FindPermanentByName(host, playerID)
+	hostPerm := tg.FindPermanentByName(host, playerID)
 	if hostPerm == nil {
 		tg.t.Errorf("AssertAttachedTo(%v, %s, %s): host not found", p, attachment, host)
 		return
@@ -928,7 +926,7 @@ func (tg *TestGame) AssertAttachedTo(p PlayerRef, attachment, host string) {
 func (tg *TestGame) AssertExileCount(name string, want int) {
 	tg.t.Helper()
 	got := 0
-	for _, ec := range tg.Game.Exile {
+	for _, ec := range tg.Exile {
 		if ec.Card.Name() == name {
 			got++
 		}

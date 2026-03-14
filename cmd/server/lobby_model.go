@@ -5,18 +5,18 @@ import (
 	"strings"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
 	"git.sr.ht/~cdcarter/mage-go/internal/tui"
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 type lobbyState int
 
 const (
-	lobbyBrowsing         lobbyState = iota
-	lobbySelectDeck                  // choosing a deck archetype
-	lobbySelectPersonality           // choosing AI personality (AI games only)
-	lobbySelectMode                  // choosing AI mode (heuristic/search/adaptive)
-	lobbyWaiting                     // waiting for an opponent to join (pvp create)
+	lobbyBrowsing          lobbyState = iota
+	lobbySelectDeck                   // choosing a deck archetype
+	lobbySelectPersonality            // choosing AI personality (AI games only)
+	lobbySelectMode                   // choosing AI mode (heuristic/search/adaptive)
+	lobbyWaiting                      // waiting for an opponent to join (pvp create)
 )
 
 // matchReadyMsg is sent when a pvp opponent joins the slot.
@@ -32,9 +32,9 @@ type lobbyModel struct {
 	state    lobbyState
 
 	// Browsing state
-	slots      []SlotInfo
-	cursor     int // into: slots... | "new game" | "vs AI"
-	err        string
+	slots  []SlotInfo
+	cursor int // into: slots... | "new game" | "vs AI"
+	err    string
 
 	// Deck selection state
 	archetypes []tui.DeckArchetype
@@ -346,7 +346,7 @@ func (m lobbyModel) View() string {
 
 func (m lobbyModel) renderBrowsing(b *strings.Builder) {
 	if m.err != "" {
-		b.WriteString(fmt.Sprintf("  Error: %s\n\n", m.err))
+		fmt.Fprintf(b, "  Error: %s\n\n", m.err)
 	}
 
 	if len(m.slots) == 0 {
@@ -356,9 +356,9 @@ func (m lobbyModel) renderBrowsing(b *strings.Builder) {
 		for i, s := range m.slots {
 			line := fmt.Sprintf("  Game %s  (%s waiting)", s.ID, s.Name)
 			if i == m.cursor {
-				b.WriteString(fmt.Sprintf("> %s\n", line))
+				fmt.Fprintf(b, "> %s\n", line)
 			} else {
-				b.WriteString(fmt.Sprintf("  %s\n", line))
+				fmt.Fprintf(b, "  %s\n", line)
 			}
 		}
 		b.WriteString("\n")
@@ -385,9 +385,9 @@ func (m lobbyModel) renderDeckSelect(b *strings.Builder) {
 	b.WriteString("  Choose your deck:\n\n")
 	for i, arch := range m.archetypes {
 		if i == m.deckCursor {
-			b.WriteString(fmt.Sprintf("> %s\n", arch.Name))
+			fmt.Fprintf(b, "> %s\n", arch.Name)
 		} else {
-			b.WriteString(fmt.Sprintf("  %s\n", arch.Name))
+			fmt.Fprintf(b, "  %s\n", arch.Name)
 		}
 	}
 	b.WriteString("\n  ↑/↓ navigate  enter to confirm  esc to go back\n")
@@ -397,21 +397,21 @@ func (m lobbyModel) renderPersonalitySelect(b *strings.Builder) {
 	b.WriteString("  Choose AI personality:\n\n")
 	for i, name := range m.personalityNames {
 		if i == m.personalityCursor {
-			b.WriteString(fmt.Sprintf("> %s\n", name))
+			fmt.Fprintf(b, "> %s\n", name)
 		} else {
-			b.WriteString(fmt.Sprintf("  %s\n", name))
+			fmt.Fprintf(b, "  %s\n", name)
 		}
 	}
 	b.WriteString("\n  ↑/↓ navigate  enter to confirm  esc to go back\n")
 }
 
 func (m lobbyModel) renderModeSelect(b *strings.Builder) {
-	b.WriteString(fmt.Sprintf("  AI: %s — Choose mode:\n\n", m.personalityNames[m.personalityCursor]))
+	fmt.Fprintf(b, "  AI: %s — Choose mode:\n\n", m.personalityNames[m.personalityCursor])
 	for i, name := range m.modeNames {
 		if i == m.modeCursor {
-			b.WriteString(fmt.Sprintf("> %s\n", name))
+			fmt.Fprintf(b, "> %s\n", name)
 		} else {
-			b.WriteString(fmt.Sprintf("  %s\n", name))
+			fmt.Fprintf(b, "  %s\n", name)
 		}
 	}
 	b.WriteString("\n  ↑/↓ navigate  enter to confirm  esc to go back\n")

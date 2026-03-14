@@ -14,9 +14,9 @@ package eval
 import (
 	"math"
 
-	"github.com/google/uuid"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"github.com/google/uuid"
 )
 
 // Weights holds evaluation weights used by WeightedEvaluator and NewWeightedEvaluator.
@@ -42,10 +42,10 @@ var _ GameReader = (*mage.Game)(nil)
 
 // Evaluation weight constants — default parameters used by DefaultEvaluator.
 const (
-	LifeWeight        = 3 // multiplier for (myLife - oppLife)
-	PowerWeight       = 2 // per point of creature power
-	ToughnessWeight   = 1 // per point of creature toughness
-	CardWeight        = 2 // per card of hand advantage
+	LifeWeight        = 3   // multiplier for (myLife - oppLife)
+	PowerWeight       = 2   // per point of creature power
+	ToughnessWeight   = 1   // per point of creature toughness
+	CardWeight        = 2   // per card of hand advantage
 	LandWeight        = 1   // per own land
 	NonCreatureCMCDiv = 2   // non-creature perm value = CMC / NonCreatureCMCDiv
 	LethalBonus       = 100 // bonus/penalty for having/facing lethal on board
@@ -88,9 +88,10 @@ func defaultEvaluate(g GameReader, playerID uuid.UUID) int {
 
 	for _, perm := range g.FilterBattlefield(mage.IsCreature) {
 		v := evalC(perm)
-		if perm.Controller == playerID {
+		switch perm.Controller {
+		case playerID:
 			score += v
-		} else if perm.Controller == oppID {
+		case oppID:
 			score -= v
 		}
 	}
@@ -98,9 +99,10 @@ func defaultEvaluate(g GameReader, playerID uuid.UUID) int {
 	nonCreatureNonLand := mage.And(mage.Not(mage.IsCreature), mage.Not(mage.IsLand))
 	for _, perm := range g.FilterBattlefield(nonCreatureNonLand) {
 		v := evalNonCreaturePermanent(perm)
-		if perm.Controller == playerID {
+		switch perm.Controller {
+		case playerID:
 			score += v
-		} else if perm.Controller == oppID {
+		case oppID:
 			score -= v
 		}
 	}
@@ -149,9 +151,10 @@ func NewWeightedEvaluator(w Weights) StateEvaluator {
 			v := float64(evalC(perm))
 			role := ClassifyPermanent(perm)
 			roleWeight := roleWeightForPersonality(role, w)
-			if perm.Controller == playerID {
+			switch perm.Controller {
+			case playerID:
 				score += v * roleWeight
-			} else if perm.Controller == oppID {
+			case oppID:
 				score -= v * roleWeight
 			}
 		}
@@ -161,9 +164,10 @@ func NewWeightedEvaluator(w Weights) StateEvaluator {
 			v := float64(evalNonCreaturePermanent(perm))
 			role := ClassifyPermanent(perm)
 			roleWeight := roleWeightForPersonality(role, w)
-			if perm.Controller == playerID {
+			switch perm.Controller {
+			case playerID:
 				score += v * roleWeight
-			} else if perm.Controller == oppID {
+			case oppID:
 				score -= v * roleWeight
 			}
 		}
@@ -230,14 +234,15 @@ func NewPersonalityEvaluator(w Weights, aggression float64) StateEvaluator {
 		// Penalty: opponent having untapped creatures means we're not pressuring.
 		aggrBonus := 0.0
 		for _, perm := range g.FilterBattlefield(mage.IsCreature) {
-			if perm.Controller == playerID {
+			switch perm.Controller {
+			case playerID:
 				power := float64(perm.CurrentPower(g.(mage.GameReader)))
 				if !perm.Tapped {
 					aggrBonus += power * 0.5 // untapped = ready to attack
 				} else {
 					aggrBonus += power * 0.2 // tapped = already attacked or used
 				}
-			} else if perm.Controller == oppID {
+			case oppID:
 				power := float64(perm.CurrentPower(g.(mage.GameReader)))
 				if !perm.Tapped {
 					aggrBonus -= power * 0.3 // opponent blocker threat
@@ -409,9 +414,10 @@ func weightedEvaluate(g GameReader, playerID uuid.UUID, w Weights) int {
 	boardScale := w.Board / 2.0
 	for _, perm := range g.FilterBattlefield(mage.IsCreature) {
 		v := float64(evalC(perm)) * boardScale
-		if perm.Controller == playerID {
+		switch perm.Controller {
+		case playerID:
 			score += v
-		} else if perm.Controller == oppID {
+		case oppID:
 			score -= v
 		}
 	}
@@ -419,9 +425,10 @@ func weightedEvaluate(g GameReader, playerID uuid.UUID, w Weights) int {
 	nonCreatureNonLand := mage.And(mage.Not(mage.IsCreature), mage.Not(mage.IsLand))
 	for _, perm := range g.FilterBattlefield(nonCreatureNonLand) {
 		v := float64(evalNonCreaturePermanent(perm)) * boardScale
-		if perm.Controller == playerID {
+		switch perm.Controller {
+		case playerID:
 			score += v
-		} else if perm.Controller == oppID {
+		case oppID:
 			score -= v
 		}
 	}

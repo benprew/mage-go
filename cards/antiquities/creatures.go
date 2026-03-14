@@ -3,9 +3,9 @@ package antiquities
 import (
 	"fmt"
 
-	"github.com/google/uuid"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"github.com/google/uuid"
 )
 
 func init() {
@@ -724,7 +724,7 @@ func registerCreatures() {
 							bc.AddSubType("Wall")
 						}
 						perm.GrantBaseAttr(Defender)
-					// case 0: 3/3 is the default
+						// case 0: 3/3 is the default
 					}
 					return nil
 				}))),
@@ -890,13 +890,11 @@ func registerCreatures() {
 							return nil
 						}
 						var tetravites []*Permanent
-						for _, perm := range g.FilterBattlefield(And(
+						tetravites = append(tetravites, g.FilterBattlefield(And(
 							ControlledBy(controller),
 							IsToken,
 							CreatedByFilter(sourceID),
-						)) {
-							tetravites = append(tetravites, perm)
-						}
+						))...)
 						if len(tetravites) == 0 {
 							return nil
 						}
