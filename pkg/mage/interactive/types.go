@@ -158,6 +158,7 @@ type PermanentState struct {
 	Types      string
 	SubTypes   string
 	RulesText  string
+	AttachedTo uuid.UUID
 }
 
 // CardState is a snapshot of a card in hand.

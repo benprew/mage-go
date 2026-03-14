@@ -170,6 +170,7 @@ func snapshotPlayer(g *mage.Game, p mage.Player, showHand bool) PlayerState {
 			}
 		}
 		permState.Keywords = perm.KeywordNames()
+		permState.AttachedTo = perm.AttachedTo
 		ps.Battlefield = append(ps.Battlefield, permState)
 	}
 
