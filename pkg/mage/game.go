@@ -1,10 +1,11 @@
 package mage
 
 import (
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"errors"
 	"fmt"
 	"math/rand"
+
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 
 	"github.com/google/uuid"
 )
@@ -23,9 +24,9 @@ var (
 // ExiledCard tracks a card in exile along with metadata about why it was exiled.
 type ExiledCard struct {
 	Card     Card
-	ExiledBy uuid.UUID              // ID of the permanent/spell that caused the exile
-	Counters map[CounterType]int    // noted counter state (e.g. Tawnos's Coffin)
-	Owner    uuid.UUID              // original controller when exiled
+	ExiledBy uuid.UUID           // ID of the permanent/spell that caused the exile
+	Counters map[CounterType]int // noted counter state (e.g. Tawnos's Coffin)
+	Owner    uuid.UUID           // original controller when exiled
 }
 
 // Game is the central game state and engine.
@@ -122,15 +123,15 @@ type Game struct {
 // DelayedTrigger represents a one-shot triggered ability that fires when
 // a specific event occurs (e.g., "destroy this creature at end of turn").
 type DelayedTrigger struct {
-	EventType    EventType
-	TargetID     uuid.UUID
-	Effects      []Effect
-	SourceID     uuid.UUID
-	Controller   uuid.UUID
-	MatchEventID   uuid.UUID // if set, only fire when evt.SourceID matches
-	MatchPlayerID  uuid.UUID // if set, only fire when evt.PlayerID matches
-	MatchTargetID  uuid.UUID // if set, only fire when evt.TargetID matches
-	Persistent     bool      // if true, trigger is not consumed after firing
+	EventType     EventType
+	TargetID      uuid.UUID
+	Effects       []Effect
+	SourceID      uuid.UUID
+	Controller    uuid.UUID
+	MatchEventID  uuid.UUID // if set, only fire when evt.SourceID matches
+	MatchPlayerID uuid.UUID // if set, only fire when evt.PlayerID matches
+	MatchTargetID uuid.UUID // if set, only fire when evt.TargetID matches
+	Persistent    bool      // if true, trigger is not consumed after firing
 }
 
 type pendingTrigger struct {
@@ -143,19 +144,19 @@ type pendingTrigger struct {
 // NewGame creates a new 2-player game.
 func NewGame(playerA, playerB Player) *Game {
 	return &Game{
-		Players:                    []Player{playerA, playerB},
-		Stack:                      NewStack(),
-		Combat:                     NewCombat(),
-		Effects:                    NewEffectManager(),
-		Turn:                       1,
-		DamageDealtBy:              make(map[uuid.UUID]map[uuid.UUID]bool),
-		DamageTakenThisTurn:        make(map[uuid.UUID]int),
+		Players:                     []Player{playerA, playerB},
+		Stack:                       NewStack(),
+		Combat:                      NewCombat(),
+		Effects:                     NewEffectManager(),
+		Turn:                        1,
+		DamageDealtBy:               make(map[uuid.UUID]map[uuid.UUID]bool),
+		DamageTakenThisTurn:         make(map[uuid.UUID]int),
 		ArtifactDamageTakenThisTurn: make(map[uuid.UUID]int),
-		AttackedThisTurn:           make(map[uuid.UUID]bool),
-		BlockedThisTurn:            make(map[uuid.UUID][]uuid.UUID),
-		InstantsCastThisTurn:       make(map[uuid.UUID]int),
-		ArtifactManaOnly:           make(map[uuid.UUID]bool),
-		CreatureManaOnly:           make(map[uuid.UUID]bool),
+		AttackedThisTurn:            make(map[uuid.UUID]bool),
+		BlockedThisTurn:             make(map[uuid.UUID][]uuid.UUID),
+		InstantsCastThisTurn:        make(map[uuid.UUID]int),
+		ArtifactManaOnly:            make(map[uuid.UUID]bool),
+		CreatureManaOnly:            make(map[uuid.UUID]bool),
 	}
 }
 
@@ -524,12 +525,6 @@ func (g *Game) RemoveFromBattlefield(perm *Permanent) {
 	// Remove continuous effects sourced from this permanent
 	g.Effects.Remove(perm.ID())
 
-	// Note: we do NOT clear att.AttachedTo here. The attachment relationship
-	// is preserved until the attachment itself leaves the battlefield (via SBA
-	// or direct destruction in DestroyPermanent). This allows aura triggers
-	// like "when enchanted creature dies" to use last-known information about
-	// what they were attached to when the event fires.
-
 	// If this was attached to something, remove it from that thing's attachments
 	if perm.IsAttached() {
 		host := g.FindPermanent(perm.AttachedTo)
@@ -543,6 +538,10 @@ func (g *Game) RemoveFromBattlefield(perm *Permanent) {
 			host.Attachments = filtered
 		}
 	}
+
+	// Snapshot attachments before removal so we can clean them up after
+	attachments := make([]uuid.UUID, len(perm.Attachments))
+	copy(attachments, perm.Attachments)
 
 	// Remove from battlefield
 	for i, p := range g.Battlefield {
@@ -562,6 +561,19 @@ func (g *Game) RemoveFromBattlefield(perm *Permanent) {
 	g.FireEvent(evt)
 	// Also check the removed permanent's own triggers (since it's no longer on battlefield)
 	g.checkAbilitiesForEvent(selfAbilities, &evt, permID, controller)
+
+	// Detach equipment immediately. Auras are left for SBAs to put into the
+	// graveyard so that "when enchanted creature dies" triggers can still see
+	// the attachment relationship when the host's death events fire.
+	for _, attID := range attachments {
+		att := g.FindPermanent(attID)
+		if att == nil {
+			continue
+		}
+		if !att.HasSubType("Aura") {
+			att.AttachedTo = uuid.Nil
+		}
+	}
 }
 
 // DestroyPermanent destroys a permanent (sends to graveyard).
@@ -578,7 +590,7 @@ func (g *Game) DestroyPermanent(perm *Permanent) {
 	controller := perm.Controller
 	owner := perm.Card.Owner()
 	if owner == uuid.Nil {
-		owner = controller
+		panic("DestroyPermanent: Pemanent has no owner")
 	}
 
 	isCreature := perm.HasType(TypeCreature)
@@ -588,10 +600,6 @@ func (g *Game) DestroyPermanent(perm *Permanent) {
 	// Capture abilities before removal (for "leaves battlefield" / "dies" triggers on self)
 	selfAbilities := make([]Ability, len(perm.RuntimeAbilities))
 	copy(selfAbilities, perm.RuntimeAbilities)
-
-	// Handle attached auras - they go to graveyard
-	attachments := make([]uuid.UUID, len(perm.Attachments))
-	copy(attachments, perm.Attachments)
 
 	g.RemoveFromBattlefield(perm)
 
@@ -620,17 +628,6 @@ func (g *Game) DestroyPermanent(perm *Permanent) {
 		g.checkAbilitiesForEvent(selfAbilities, &diedEvt, permID, controller)
 	}
 
-	// Handle attached auras going to graveyard
-	for _, attID := range attachments {
-		att := g.FindPermanent(attID)
-		if att == nil {
-			continue
-		}
-		if att.HasSubType("Aura") {
-			g.DestroyPermanent(att)
-		}
-		// Equipment stays on the battlefield (already detached)
-	}
 }
 
 // checkAbilitiesForEvent checks a set of abilities (from a removed permanent) for triggers.
@@ -773,15 +770,9 @@ func (g *Game) sacrificePermanents(playerID uuid.UUID, count int) {
 
 // ExilePermanent removes a permanent from the battlefield to exile.
 func (g *Game) ExilePermanent(perm *Permanent) {
-	g.ExilePermanentBy(perm, uuid.Nil)
-}
-
-// ExilePermanentBy removes a permanent from the battlefield to exile,
-// recording the source that caused the exile.
-func (g *Game) ExilePermanentBy(perm *Permanent, exiledBy uuid.UUID) {
 	card := perm.Card
 	g.RemoveFromBattlefield(perm)
-	g.Exile = append(g.Exile, ExiledCard{Card: card, ExiledBy: exiledBy})
+	g.Exile = append(g.Exile, ExiledCard{Card: card})
 }
 
 // ExileCard moves a card (from any zone) to the exile zone.

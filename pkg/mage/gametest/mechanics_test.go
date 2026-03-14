@@ -656,3 +656,119 @@ func TestTargetedSpellNotCastableWithoutTargets(t *testing.T) {
 		}
 	})
 }
+
+// ===== Attachment cleanup on host removal =====
+
+func TestAttachmentsOnSacrifice(t *testing.T) {
+	auraName := "Sac Test Aura"
+	equipName := "Sac Test Sword"
+	crName := "Sac Test Bear"
+	if !mage.CardRegistered(auraName) {
+		mage.Register(auraName, func() mage.Card {
+			return mage.NewAura(auraName, "{W}")
+		})
+	}
+	if !mage.CardRegistered(equipName) {
+		mage.Register(equipName, func() mage.Card {
+			return mage.NewEquipment(equipName, "{2}",
+				mage.WithAbility(mage.StaticAbility(mage.BoostAttached(1, 1, core.AttachEquipment))),
+			)
+		})
+	}
+	if !mage.CardRegistered(crName) {
+		mage.Register(crName, func() mage.Card {
+			return mage.NewCreature(crName, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
+		})
+	}
+
+	t.Run("aura goes to graveyard when host is sacrificed", func(t *testing.T) {
+		tg := NewTestGame(t)
+		crID := tg.AddCard(core.ZoneBattlefield, PlayerA, crName)
+		auraID := tg.AddCard(core.ZoneBattlefield, PlayerA, auraName)
+		tg.Game.Attach(auraID, crID)
+
+		perm := tg.Game.FindPermanent(crID)
+		tg.Game.Sacrifice(perm)
+		tg.Game.CheckStateBasedActions()
+
+		tg.AssertPermanentCount(PlayerA, crName, 0)
+		tg.AssertPermanentCount(PlayerA, auraName, 0)
+		tg.AssertGraveyardCount(PlayerA, auraName, 1)
+	})
+
+	t.Run("equipment detaches but stays on battlefield when host is sacrificed", func(t *testing.T) {
+		tg := NewTestGame(t)
+		crID := tg.AddCard(core.ZoneBattlefield, PlayerA, crName)
+		equipID := tg.AddCard(core.ZoneBattlefield, PlayerA, equipName)
+		tg.Game.Attach(equipID, crID)
+
+		perm := tg.Game.FindPermanent(crID)
+		tg.Game.Sacrifice(perm)
+		tg.Game.CheckStateBasedActions()
+
+		tg.AssertPermanentCount(PlayerA, crName, 0)
+		tg.AssertPermanentCount(PlayerA, equipName, 1)
+		equip := tg.Game.FindPermanentByName(equipName, tg.GetPlayer(PlayerA).PlayerID())
+		if equip.IsAttached() {
+			t.Errorf("equipment should be detached after host is sacrificed")
+		}
+	})
+}
+
+func TestAttachmentsOnExile(t *testing.T) {
+	auraName := "Exile Test Aura"
+	equipName := "Exile Test Sword"
+	crName := "Exile Test Bear"
+	if !mage.CardRegistered(auraName) {
+		mage.Register(auraName, func() mage.Card {
+			return mage.NewAura(auraName, "{W}")
+		})
+	}
+	if !mage.CardRegistered(equipName) {
+		mage.Register(equipName, func() mage.Card {
+			return mage.NewEquipment(equipName, "{2}",
+				mage.WithAbility(mage.StaticAbility(mage.BoostAttached(1, 1, core.AttachEquipment))),
+			)
+		})
+	}
+	if !mage.CardRegistered(crName) {
+		mage.Register(crName, func() mage.Card {
+			return mage.NewCreature(crName, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
+		})
+	}
+
+	t.Run("aura goes to graveyard when host is exiled", func(t *testing.T) {
+		tg := NewTestGame(t)
+		crID := tg.AddCard(core.ZoneBattlefield, PlayerA, crName)
+		auraID := tg.AddCard(core.ZoneBattlefield, PlayerA, auraName)
+		tg.Game.Attach(auraID, crID)
+
+		perm := tg.Game.FindPermanent(crID)
+		tg.Game.ExilePermanent(perm)
+		tg.Game.CheckStateBasedActions()
+
+		tg.AssertPermanentCount(PlayerA, crName, 0)
+		tg.AssertPermanentCount(PlayerA, auraName, 0)
+		tg.AssertGraveyardCount(PlayerA, auraName, 1)
+		tg.AssertExileCount(crName, 1)
+	})
+
+	t.Run("equipment detaches but stays on battlefield when host is exiled", func(t *testing.T) {
+		tg := NewTestGame(t)
+		crID := tg.AddCard(core.ZoneBattlefield, PlayerA, crName)
+		equipID := tg.AddCard(core.ZoneBattlefield, PlayerA, equipName)
+		tg.Game.Attach(equipID, crID)
+
+		perm := tg.Game.FindPermanent(crID)
+		tg.Game.ExilePermanent(perm)
+		tg.Game.CheckStateBasedActions()
+
+		tg.AssertPermanentCount(PlayerA, crName, 0)
+		tg.AssertPermanentCount(PlayerA, equipName, 1)
+		equip := tg.Game.FindPermanentByName(equipName, tg.GetPlayer(PlayerA).PlayerID())
+		if equip.IsAttached() {
+			t.Errorf("equipment should be detached after host is exiled")
+		}
+		tg.AssertExileCount(crName, 1)
+	})
+}
