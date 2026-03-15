@@ -7,6 +7,7 @@ import (
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
 	_ "git.sr.ht/~cdcarter/mage-go/cards/limited" // register base cards
 )
 
@@ -587,6 +588,28 @@ func TestClockworkAvian(t *testing.T) {
 		g.Execute()
 		g.AssertPowerToughness(gametest.PlayerA, "Clockwork Avian", 4, 4) // 0+4/4
 		g.AssertCounterCount(gametest.PlayerA, "Clockwork Avian", core.P1P0, 4)
+	})
+
+	t.Run("snapshot shows calculated power/toughness", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Clockwork Avian")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Clockwork Avian")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		snap := interactive.SnapshotGameState(g.Game, 0)
+		var found bool
+		for _, perm := range snap.You.Battlefield {
+			if perm.Name == "Clockwork Avian" {
+				found = true
+				if perm.Power != 4 || perm.Toughness != 4 {
+					t.Errorf("snapshot P/T = %d/%d, want 4/4", perm.Power, perm.Toughness)
+				}
+				break
+			}
+		}
+		if !found {
+			t.Fatal("Clockwork Avian not found in snapshot battlefield")
+		}
 	})
 
 	t.Run("has flying", func(t *testing.T) {

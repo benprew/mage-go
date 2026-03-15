@@ -522,9 +522,7 @@ func registerCreatures() {
 			WithSubTypes("Bird"),
 			WithCardType(TypeArtifact),
 			WithKeyword(Flying),
-			WithAbility(EntersBattlefieldTrigger(
-				AddCounters(P1P0, Fixed(4), SelectSource), false,
-			)),
+			WithAbility(EntersWithNCounters(P1P0, 4)),
 			// At end of combat, if Clockwork Avian attacked or blocked, remove a +1/+0 counter
 			WithAbility(AttacksTrigger(
 				FuncEffect("schedule counter removal at end of combat",
@@ -842,9 +840,7 @@ func registerCreatures() {
 			WithSubTypes("Construct"),
 			WithCardType(TypeArtifact),
 			WithKeyword(Flying),
-			WithAbility(EntersBattlefieldTrigger(
-				AddCounters(P1P1, Fixed(3), SelectSource), false,
-			)),
+			WithAbility(EntersWithNCounters(P1P1, 3)),
 			// Remove counters → create Tetravite tokens
 			WithAbility(BeginningOfUpkeepTrigger(
 				FuncEffect("remove +1/+1 counters and create Tetravite tokens",
@@ -923,9 +919,7 @@ func registerCreatures() {
 		return NewCreature("Triskelion", "{6}", 1, 1,
 			WithSubTypes("Construct"),
 			WithCardType(TypeArtifact),
-			WithAbility(EntersBattlefieldTrigger(
-				AddCounters(P1P1, Fixed(3), SelectSource), false,
-			)),
+			WithAbility(EntersWithNCounters(P1P1, 3)),
 			WithActivatedAbility(
 				DealDamage(Fixed(1)),
 				RemoveCountersCost(P1P1, 1),

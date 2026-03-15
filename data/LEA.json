@@ -1,0 +1,4028 @@
+[
+  {
+    "name": "Animate Wall",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant Wall\nEnchanted Wall can attack as though it didn't have defender.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Armageddon",
+    "mana_cost": "{3}{W}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Destroy all lands.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Balance",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Each player chooses a number of lands they control equal to the number of lands controlled by the player who controls the fewest, then sacrifices the rest. Players discard cards and sacrifice creatures the same way.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Benalish Hero",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Human Soldier",
+    "oracle_text": "Banding (Any creatures with banding, and up to one without, can attack in a band. Bands are blocked as a group. If any creatures with banding you control are blocking or being blocked by a creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Banding"
+    ],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Black Ward",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature has protection from black. This effect doesn't remove this Aura.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Blaze of Glory",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Cast this spell only during combat before blockers are declared.\nTarget creature defending player controls can block any number of creatures this turn. It blocks each attacking creature this turn if able.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Blessing",
+    "mana_cost": "{W}{W}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\n{W}: Enchanted creature gets +1/+1 until end of turn.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Blue Ward",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature has protection from blue. This effect doesn't remove this Aura.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Castle",
+    "mana_cost": "{3}{W}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "Untapped creatures you control get +0/+2.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Circle of Protection: Blue",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "{1}: The next time a blue source of your choice would deal damage to you this turn, prevent that damage.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Circle of Protection: Green",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "{1}: The next time a green source of your choice would deal damage to you this turn, prevent that damage.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Circle of Protection: Red",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "{1}: The next time a red source of your choice would deal damage to you this turn, prevent that damage.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Circle of Protection: White",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "{1}: The next time a white source of your choice would deal damage to you this turn, prevent that damage.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Consecrate Land",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant land\nEnchanted land has indestructible and can't be enchanted by other Auras.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Conversion",
+    "mana_cost": "{2}{W}{W}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of your upkeep, sacrifice this enchantment unless you pay {W}{W}.\nAll Mountains are Plains.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Crusade",
+    "mana_cost": "{W}{W}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "White creatures get +1/+1.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Death Ward",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Regenerate target creature.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Disenchant",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Destroy target artifact or enchantment.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Farmstead",
+    "mana_cost": "{W}{W}{W}",
+    "cmc": 3,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant land\nEnchanted land has \"At the beginning of your upkeep, you may pay {W}{W}. If you do, you gain 1 life.\"",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Green Ward",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature has protection from green. This effect doesn't remove this Aura.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Guardian Angel",
+    "mana_cost": "{X}{W}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Prevent the next X damage that would be dealt to any target this turn. Until end of turn, you may pay {1} any time you could cast an instant. If you do, prevent the next 1 damage that would be dealt to that permanent or player this turn.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Healing Salve",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Choose one —\n• Target player gains 3 life.\n• Prevent the next 3 damage that would be dealt to any target this turn.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Holy Armor",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature gets +0/+2.\n{W}: Enchanted creature gets +0/+1 until end of turn.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Holy Strength",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature gets +1/+2.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Island Sanctuary",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "If you would draw a card during your draw step, instead you may skip that draw. If you do, until your next turn, you can't be attacked except by creatures with flying and/or islandwalk.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Karma",
+    "mana_cost": "{2}{W}{W}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of each player's upkeep, this enchantment deals damage to that player equal to the number of Swamps they control.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Lance",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature has first strike.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Mesa Pegasus",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Pegasus",
+    "oracle_text": "Flying; banding (Any creatures with banding, and up to one without, can attack in a band. Bands are blocked as a group. If any creatures with banding you control are blocking or being blocked by a creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying",
+      "Banding"
+    ],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Northern Paladin",
+    "mana_cost": "{2}{W}{W}",
+    "cmc": 4,
+    "type_line": "Creature — Human Knight",
+    "oracle_text": "{W}{W}, {T}: Destroy target black permanent.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Pearled Unicorn",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Unicorn",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Personal Incarnation",
+    "mana_cost": "{3}{W}{W}{W}",
+    "cmc": 6,
+    "type_line": "Creature — Avatar Incarnation",
+    "oracle_text": "{0}: The next 1 damage that would be dealt to this creature this turn is dealt to its owner instead. Only this creatures owner may activate this ability.\nWhen this creature dies, its owner loses half their life, rounded up.",
+    "power": "6",
+    "toughness": "6",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Purelace",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Target spell or permanent becomes white. (Mana symbols on that permanent remain unchanged.)",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Red Ward",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature has protection from red. This effect doesn't remove this Aura.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Resurrection",
+    "mana_cost": "{2}{W}{W}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Return target creature card from your graveyard to the battlefield.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Reverse Damage",
+    "mana_cost": "{1}{W}{W}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "The next time a source of your choice would deal damage to you this turn, prevent that damage. You gain life equal to the damage prevented this way.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Righteousness",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Target blocking creature gets +7/+7 until end of turn.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Samite Healer",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Human Cleric",
+    "oracle_text": "{T}: Prevent the next 1 damage that would be dealt to any target this turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Savannah Lions",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Creature — Cat",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Serra Angel",
+    "mana_cost": "{3}{W}{W}",
+    "cmc": 5,
+    "type_line": "Creature — Angel",
+    "oracle_text": "Flying\nVigilance (Attacking doesn't cause this creature to tap.)",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying",
+      "Vigilance"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Swords to Plowshares",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Exile target creature. Its controller gains life equal to its power.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Veteran Bodyguard",
+    "mana_cost": "{3}{W}{W}",
+    "cmc": 5,
+    "type_line": "Creature — Human",
+    "oracle_text": "As long as this creature is untapped, all damage that would be dealt to you by unblocked creatures is dealt to this creature instead.",
+    "power": "2",
+    "toughness": "5",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Wall of Swords",
+    "mana_cost": "{3}{W}",
+    "cmc": 4,
+    "type_line": "Creature — Wall",
+    "oracle_text": "Defender (This creature can't attack.)\nFlying",
+    "power": "3",
+    "toughness": "5",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying",
+      "Defender"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "White Knight",
+    "mana_cost": "{W}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Human Knight",
+    "oracle_text": "First strike (This creature deals combat damage before creatures without first strike.)\nProtection from black (This creature can't be blocked, targeted, dealt damage, or enchanted by anything black.)",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "First strike",
+      "Protection"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "White Ward",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature has protection from white. This effect doesn't remove this Aura.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Wrath of God",
+    "mana_cost": "{2}{W}{W}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Destroy all creatures. They can't be regenerated.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Air Elemental",
+    "mana_cost": "{3}{U}{U}",
+    "cmc": 5,
+    "type_line": "Creature — Elemental",
+    "oracle_text": "Flying",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Ancestral Recall",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Target player draws three cards.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Animate Artifact",
+    "mana_cost": "{3}{U}",
+    "cmc": 4,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant artifact\nAs long as enchanted artifact isn't a creature, it's an artifact creature with power and toughness each equal to its mana value.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Blue Elemental Blast",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Choose one —\n• Counter target red spell.\n• Destroy target red permanent.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Braingeyser",
+    "mana_cost": "{X}{U}{U}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Target player draws X cards.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Clone",
+    "mana_cost": "{3}{U}",
+    "cmc": 4,
+    "type_line": "Creature — Shapeshifter",
+    "oracle_text": "You may have this creature enter as a copy of any creature on the battlefield.",
+    "power": "0",
+    "toughness": "0",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Control Magic",
+    "mana_cost": "{2}{U}{U}",
+    "cmc": 4,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nYou control enchanted creature.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Copy Artifact",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "You may have this enchantment enter as a copy of any artifact on the battlefield, except it's an enchantment in addition to its other types.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Counterspell",
+    "mana_cost": "{U}{U}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Counter target spell.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Creature Bond",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nWhen enchanted creature dies, this Aura deals damage equal to that creature's toughness to the creature's controller.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Drain Power",
+    "mana_cost": "{U}{U}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Target player activates a mana ability of each land they control. Then that player loses all unspent mana and you add the mana lost this way.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Feedback",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant enchantment\nAt the beginning of the upkeep of enchanted enchantment's controller, this Aura deals 1 damage to that player.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Flight",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature has flying.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Invisibility",
+    "mana_cost": "{U}{U}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature can't be blocked except by Walls.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Jump",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Target creature gains flying until end of turn.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Lifetap",
+    "mana_cost": "{U}{U}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever a Forest an opponent controls becomes tapped, you gain 1 life.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Lord of Atlantis",
+    "mana_cost": "{U}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Merfolk",
+    "oracle_text": "Other Merfolk get +1/+1 and have islandwalk. (They can't be blocked as long as defending player controls an Island.)",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Magical Hack",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Change the text of target spell or permanent by replacing all instances of one basic land type with another. (For example, you may change \"swampwalk\" to \"plainswalk.\" This effect lasts indefinitely.)",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Mahamoti Djinn",
+    "mana_cost": "{4}{U}{U}",
+    "cmc": 6,
+    "type_line": "Creature — Djinn",
+    "oracle_text": "Flying (This creature can't be blocked except by creatures with flying or reach.)",
+    "power": "5",
+    "toughness": "6",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Mana Short",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Tap all lands target player controls and that player loses all unspent mana.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Merfolk of the Pearl Trident",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Creature — Merfolk",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Phantasmal Forces",
+    "mana_cost": "{3}{U}",
+    "cmc": 4,
+    "type_line": "Creature — Illusion",
+    "oracle_text": "Flying\nAt the beginning of your upkeep, sacrifice this creature unless you pay {U}.",
+    "power": "4",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Phantasmal Terrain",
+    "mana_cost": "{U}{U}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant land\nAs this Aura enters, choose a basic land type.\nEnchanted land is the chosen type.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Phantom Monster",
+    "mana_cost": "{3}{U}",
+    "cmc": 4,
+    "type_line": "Creature — Illusion",
+    "oracle_text": "Flying",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Pirate Ship",
+    "mana_cost": "{4}{U}",
+    "cmc": 5,
+    "type_line": "Creature — Human Pirate",
+    "oracle_text": "This creature can't attack unless defending player controls an Island.\n{T}: This creature deals 1 damage to any target.\nWhen you control no Islands, sacrifice this creature.",
+    "power": "4",
+    "toughness": "3",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Power Leak",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant enchantment\nAt the beginning of the upkeep of enchanted enchantment's controller, that player may pay any amount of mana. This Aura deals 2 damage to that player. Prevent X of that damage, where X is the amount of mana that player paid this way.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Power Sink",
+    "mana_cost": "{X}{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Counter target spell unless its controller pays {X}. If that player doesn't, they tap all lands with mana abilities they control and lose all unspent mana.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Prodigal Sorcerer",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Human Wizard Sorcerer",
+    "oracle_text": "{T}: This creature deals 1 damage to any target.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Psionic Blast",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Psionic Blast deals 4 damage to any target and 2 damage to you.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Psychic Venom",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant land\nWhenever enchanted land becomes tapped, this Aura deals 2 damage to that land's controller.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Sea Serpent",
+    "mana_cost": "{5}{U}",
+    "cmc": 6,
+    "type_line": "Creature — Serpent",
+    "oracle_text": "This creature can't attack unless defending player controls an Island.\nWhen you control no Islands, sacrifice this creature.",
+    "power": "5",
+    "toughness": "5",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Siren's Call",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Cast this spell only during an opponent's turn, before attackers are declared.\nCreatures the active player controls attack this turn if able.\nAt the beginning of the next end step, destroy all non-Wall creatures that player controls that didn't attack this turn. Ignore this effect for each creature the player didn't control continuously since the beginning of the turn.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Sleight of Mind",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Change the text of target spell or permanent by replacing all instances of one color word with another. (For example, you may change \"target black spell\" to \"target blue spell.\" This effect lasts indefinitely.)",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Spell Blast",
+    "mana_cost": "{X}{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Counter target spell with mana value X. (For example, if that spell's mana cost is {3}{U}{U}, X is 5.)",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Stasis",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "Players skip their untap steps.\nAt the beginning of your upkeep, sacrifice this enchantment unless you pay {U}.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Steal Artifact",
+    "mana_cost": "{2}{U}{U}",
+    "cmc": 4,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant artifact\nYou control enchanted artifact.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Thoughtlace",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Target spell or permanent becomes blue. (Mana symbols on that permanent remain unchanged.)",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Time Walk",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Take an extra turn after this one.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Timetwister",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Each player shuffles their hand and graveyard into their library, then draws seven cards. (Then put Timetwister into its owner's graveyard.)",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Twiddle",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "You may tap or untap target artifact, creature, or land.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Unsummon",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Return target creature to its owner's hand.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Vesuvan Doppelganger",
+    "mana_cost": "{3}{U}{U}",
+    "cmc": 5,
+    "type_line": "Creature — Shapeshifter",
+    "oracle_text": "You may have this creature enter as a copy of any creature on the battlefield, except it doesn't copy that creature's color and it has \"At the beginning of your upkeep, you may have this creature become a copy of target creature, except it doesn't copy that creature's color and it has this ability.\"",
+    "power": "0",
+    "toughness": "0",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Volcanic Eruption",
+    "mana_cost": "{X}{U}{U}{U}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Destroy X target Mountains. Volcanic Eruption deals damage to each creature and each player equal to the number of Mountains put into a graveyard this way.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Wall of Air",
+    "mana_cost": "{1}{U}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Wall",
+    "oracle_text": "Defender, flying (This creature can't attack, and it can block creatures with flying.)",
+    "power": "1",
+    "toughness": "5",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying",
+      "Defender"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Wall of Water",
+    "mana_cost": "{1}{U}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Wall",
+    "oracle_text": "Defender (This creature can't attack.)\n{U}: This creature gets +1/+0 until end of turn.",
+    "power": "0",
+    "toughness": "5",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Defender"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Water Elemental",
+    "mana_cost": "{3}{U}{U}",
+    "cmc": 5,
+    "type_line": "Creature — Elemental",
+    "power": "5",
+    "toughness": "4",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Animate Dead",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature card in a graveyard\nWhen this Aura enters, if it's on the battlefield, it loses \"enchant creature card in a graveyard\" and gains \"enchant creature put onto the battlefield with this Aura.\" Return enchanted creature card to the battlefield under your control and attach this Aura to it. When this Aura leaves the battlefield, that creature's controller sacrifices it.\nEnchanted creature gets -1/-0.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Bad Moon",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "Black creatures get +1/+1.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Black Knight",
+    "mana_cost": "{B}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Human Knight",
+    "oracle_text": "First strike (This creature deals combat damage before creatures without first strike.)\nProtection from white (This creature can't be blocked, targeted, dealt damage, or enchanted by anything white.)",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "First strike",
+      "Protection"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Bog Wraith",
+    "mana_cost": "{3}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Wraith",
+    "oracle_text": "Swampwalk (This creature can't be blocked as long as defending player controls a Swamp.)",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Landwalk",
+      "Swampwalk"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Contract from Below",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "Remove this card from your deck before playing if you're not playing for ante.\nDiscard your hand, ante the top card of your library, then draw seven cards.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Cursed Land",
+    "mana_cost": "{2}{B}{B}",
+    "cmc": 4,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant land\nAt the beginning of the upkeep of enchanted land's controller, this Aura deals 1 damage to that player.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Dark Ritual",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Add {B}{B}{B}.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Darkpact",
+    "mana_cost": "{B}{B}{B}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Remove this card from your deck before playing if you're not playing for ante.\nYou own target card in the ante. Exchange that card with the top card of your library.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Deathgrip",
+    "mana_cost": "{B}{B}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "{B}{B}: Counter target green spell.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Deathlace",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Target spell or permanent becomes black. (Mana symbols on that permanent remain unchanged.)",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Demonic Attorney",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Remove this card from your deck before playing if you're not playing for ante.\nEach player antes the top card of their library.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Demonic Hordes",
+    "mana_cost": "{3}{B}{B}{B}",
+    "cmc": 6,
+    "type_line": "Creature — Demon",
+    "oracle_text": "{T}: Destroy target land.\nAt the beginning of your upkeep, unless you pay {B}{B}{B}, tap this creature and sacrifice a land of an opponent's choice.",
+    "power": "5",
+    "toughness": "5",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Demonic Tutor",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Search your library for a card, put that card into your hand, then shuffle.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Drain Life",
+    "mana_cost": "{X}{1}{B}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Spend only black mana on X.\nDrain Life deals X damage to any target. You gain life equal to the damage dealt, but not more life than the player's life total before the damage was dealt, the planeswalker's loyalty before the damage was dealt, or the creature's toughness.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Drudge Skeletons",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Skeleton",
+    "oracle_text": "{B}: Regenerate this creature. (The next time this creature would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on it.)",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Evil Presence",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant land\nEnchanted land is a Swamp.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Fear",
+    "mana_cost": "{B}{B}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature (Target a creature as you cast this. This card enters attached to that creature.)\nEnchanted creature has fear. (It can't be blocked except by artifact creatures and/or black creatures.)",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Frozen Shade",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Shade",
+    "oracle_text": "{B}: This creature gets +1/+1 until end of turn.",
+    "power": "0",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Gloom",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "White spells cost {3} more to cast.\nActivated abilities of white enchantments cost {3} more to activate.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Howl from Beyond",
+    "mana_cost": "{X}{B}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Target creature gets +X/+0 until end of turn.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Hypnotic Specter",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Specter",
+    "oracle_text": "Flying\nWhenever this creature deals damage to an opponent, that player discards a card at random.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Lich",
+    "mana_cost": "{B}{B}{B}{B}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "As this enchantment enters, you lose life equal to your life total.\nYou don't lose the game for having 0 or less life.\nIf you would gain life, draw that many cards instead.\nWhenever you're dealt damage, sacrifice that many nontoken permanents. If you can't, you lose the game.\nWhen this enchantment is put into a graveyard from the battlefield, you lose the game.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Lord of the Pit",
+    "mana_cost": "{4}{B}{B}{B}",
+    "cmc": 7,
+    "type_line": "Creature — Demon",
+    "oracle_text": "Flying, trample\nAt the beginning of your upkeep, sacrifice a creature other than this creature. If you can't, this creature deals 7 damage to you.",
+    "power": "7",
+    "toughness": "7",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Flying",
+      "Trample"
+    ],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Mind Twist",
+    "mana_cost": "{X}{B}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "Target player discards X cards at random.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Nether Shadow",
+    "mana_cost": "{B}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Spirit",
+    "oracle_text": "Haste\nAt the beginning of your upkeep, if this card is in your graveyard with three or more creature cards above it, you may put this card onto the battlefield.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Haste"
+    ],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Nettling Imp",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Imp",
+    "oracle_text": "{T}: Choose target non-Wall creature the active player has controlled continuously since the beginning of the turn. That creature attacks this turn if able. Destroy it at the beginning of the next end step if it didn't attack this turn. Activate only during an opponent's turn, before attackers are declared.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Nightmare",
+    "mana_cost": "{5}{B}",
+    "cmc": 6,
+    "type_line": "Creature — Nightmare Horse",
+    "oracle_text": "Flying (This creature can't be blocked except by creatures with flying or reach.)\nNightmare's power and toughness are each equal to the number of Swamps you control.",
+    "power": "*",
+    "toughness": "*",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Paralyze",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nWhen this Aura enters, tap enchanted creature.\nEnchanted creature doesn't untap during its controller's untap step.\nAt the beginning of the upkeep of enchanted creature's controller, that player may pay {4}. If the player does, untap the creature.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Pestilence",
+    "mana_cost": "{2}{B}{B}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of the end step, if no creatures are on the battlefield, sacrifice this enchantment.\n{B}: This enchantment deals 1 damage to each creature and each player.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Plague Rats",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Rat",
+    "oracle_text": "Plague Rats's power and toughness are each equal to the number of creatures named Plague Rats on the battlefield.",
+    "power": "*",
+    "toughness": "*",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Raise Dead",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "Return target creature card from your graveyard to your hand.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Royal Assassin",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Human Assassin",
+    "oracle_text": "{T}: Destroy target tapped creature.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Sacrifice",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "As an additional cost to cast this spell, sacrifice a creature.\nAdd an amount of {B} equal to the sacrificed creature's mana value.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Scathe Zombies",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Zombie",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Scavenging Ghoul",
+    "mana_cost": "{3}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Zombie",
+    "oracle_text": "At the beginning of each end step, put a corpse counter on this creature for each creature that died this turn.\nRemove a corpse counter from this creature: Regenerate this creature.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Sengir Vampire",
+    "mana_cost": "{3}{B}{B}",
+    "cmc": 5,
+    "type_line": "Creature — Vampire",
+    "oracle_text": "Flying (This creature can't be blocked except by creatures with flying or reach.)\nWhenever a creature dealt damage by this creature this turn dies, put a +1/+1 counter on this creature.",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Simulacrum",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "You gain life equal to the damage dealt to you this turn. Simulacrum deals damage to target creature you control equal to the damage dealt to you this turn.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Sinkhole",
+    "mana_cost": "{B}{B}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Destroy target land.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Terror",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Destroy target nonartifact, nonblack creature. It can't be regenerated.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Unholy Strength",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature gets +2/+1.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Wall of Bone",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Skeleton Wall",
+    "oracle_text": "Defender (This creature can't attack.)\n{B}: Regenerate this creature. (The next time this creature would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on it.)",
+    "power": "1",
+    "toughness": "4",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Defender"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Warp Artifact",
+    "mana_cost": "{B}{B}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant artifact\nAt the beginning of the upkeep of enchanted artifact's controller, this Aura deals 1 damage to that player.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Weakness",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature gets -2/-1.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Will-o'-the-Wisp",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Creature — Spirit",
+    "oracle_text": "Flying (This creature can't be blocked except by creatures with flying or reach.)\n{B}: Regenerate this creature. (The next time this creature would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on it.)",
+    "power": "0",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Word of Command",
+    "mana_cost": "{B}{B}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Look at target opponent's hand and choose a card from it. You control that player until Word of Command finishes resolving. The player plays that card if able. While doing so, the player can activate mana abilities only if they're from lands that player controls and only if mana they produce is spent to activate other mana abilities of lands the player controls and/or to play that card. If the chosen card is cast as a spell, you control the player while that spell is resolving.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Zombie Master",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Zombie",
+    "oracle_text": "Other Zombie creatures have swampwalk. (They can't be blocked as long as defending player controls a Swamp.)\nOther Zombies have \"{B}: Regenerate this permanent.\"",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Burrowing",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature has mountainwalk. (It can't be blocked as long as defending player controls a Mountain.)",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Chaoslace",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Target spell or permanent becomes red. (Its mana symbols remain unchanged.)",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Disintegrate",
+    "mana_cost": "{X}{R}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "Disintegrate deals X damage to any target. If it's a creature, it can't be regenerated this turn, and if it would die this turn, exile it instead.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Dragon Whelp",
+    "mana_cost": "{2}{R}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Dragon",
+    "oracle_text": "Flying\n{R}: This creature gets +1/+0 until end of turn. If this ability has been activated four or more times this turn, sacrifice this creature at the beginning of the next end step.",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Dwarven Demolition Team",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Dwarf",
+    "oracle_text": "{T}: Destroy target Wall.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Dwarven Warriors",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Dwarf Warrior",
+    "oracle_text": "{T}: Target creature with power 2 or less can't be blocked this turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Earth Elemental",
+    "mana_cost": "{3}{R}{R}",
+    "cmc": 5,
+    "type_line": "Creature — Elemental",
+    "power": "4",
+    "toughness": "5",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Earthbind",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nWhen this Aura enters, if enchanted creature has flying, this Aura deals 2 damage to that creature and this Aura gains \"Enchanted creature loses flying.\"",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Earthquake",
+    "mana_cost": "{X}{R}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "Earthquake deals X damage to each creature without flying and each player.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "False Orders",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Cast this spell only during the declare blockers step.\nRemove target creature defending player controls from combat. Creatures it was blocking that had become blocked by only that creature this combat become unblocked. You may have it block an attacking creature of your choice.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Fire Elemental",
+    "mana_cost": "{3}{R}{R}",
+    "cmc": 5,
+    "type_line": "Creature — Elemental",
+    "power": "5",
+    "toughness": "4",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Fireball",
+    "mana_cost": "{X}{R}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "This spell costs {1} more to cast for each target beyond the first.\nFireball deals X damage divided evenly, rounded down, among any number of targets.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Firebreathing",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\n{R}: Enchanted creature gets +1/+0 until end of turn.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Flashfires",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Destroy all Plains.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Fork",
+    "mana_cost": "{R}{R}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Copy target instant or sorcery spell, except that the copy is red. You may choose new targets for the copy.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Goblin Balloon Brigade",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Creature — Goblin Warrior",
+    "oracle_text": "{R}: This creature gains flying until end of turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Goblin King",
+    "mana_cost": "{1}{R}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Goblin",
+    "oracle_text": "Other Goblins get +1/+1 and have mountainwalk.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Granite Gargoyle",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Gargoyle",
+    "oracle_text": "Flying\n{R}: This creature gets +0/+1 until end of turn.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Gray Ogre",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Ogre",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Hill Giant",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Giant",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Hurloon Minotaur",
+    "mana_cost": "{1}{R}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Minotaur",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Ironclaw Orcs",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Creature — Orc",
+    "oracle_text": "This creature can't block creatures with power 2 or greater.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Keldon Warlord",
+    "mana_cost": "{2}{R}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Human Barbarian",
+    "oracle_text": "Keldon Warlord's power and toughness are each equal to the number of non-Wall creatures you control.",
+    "power": "*",
+    "toughness": "*",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Lightning Bolt",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Lightning Bolt deals 3 damage to any target.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Mana Flare",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever a player taps a land for mana, that player adds one mana of any type that land produced.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Manabarbs",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever a player taps a land for mana, this enchantment deals 1 damage to that player.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Mons's Goblin Raiders",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Creature — Goblin",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Orcish Artillery",
+    "mana_cost": "{1}{R}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Orc Warrior",
+    "oracle_text": "{T}: This creature deals 2 damage to any target and 3 damage to you.",
+    "power": "1",
+    "toughness": "3",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Orcish Oriflamme",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "Attacking creatures you control get +1/+0.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Power Surge",
+    "mana_cost": "{R}{R}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "At the beginning of each player's upkeep, this enchantment deals X damage to that player, where X is the number of untapped lands they controlled at the beginning of this turn.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Raging River",
+    "mana_cost": "{R}{R}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever one or more creatures you control attack, each defending player divides all creatures without flying they control into a \"left\" pile and a \"right\" pile. Then, for each attacking creature you control, choose \"left\" or \"right.\" That creature can't be blocked this combat except by creatures with flying and creatures in a pile with the chosen label.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Red Elemental Blast",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Choose one —\n• Counter target blue spell.\n• Destroy target blue permanent.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Roc of Kher Ridges",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Bird",
+    "oracle_text": "Flying",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Rock Hydra",
+    "mana_cost": "{X}{R}{R}",
+    "cmc": 2,
+    "type_line": "Creature — Hydra",
+    "oracle_text": "This creature enters with X +1/+1 counters on it.\nFor each 1 damage that would be dealt to this creature, if it has a +1/+1 counter on it, remove a +1/+1 counter from it and prevent that 1 damage.\n{R}: Prevent the next 1 damage that would be dealt to this creature this turn.\n{R}{R}{R}: Put a +1/+1 counter on this creature. Activate only during your upkeep.",
+    "power": "0",
+    "toughness": "0",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Sedge Troll",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Troll",
+    "oracle_text": "This creature gets +1/+1 as long as you control a Swamp.\n{B}: Regenerate this creature.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Shatter",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Destroy target artifact.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Shivan Dragon",
+    "mana_cost": "{4}{R}{R}",
+    "cmc": 6,
+    "type_line": "Creature — Dragon",
+    "oracle_text": "Flying\n{R}: This creature gets +1/+0 until end of turn.",
+    "power": "5",
+    "toughness": "5",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Smoke",
+    "mana_cost": "{R}{R}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "Players can't untap more than one creature during their untap steps.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Stone Giant",
+    "mana_cost": "{2}{R}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Giant",
+    "oracle_text": "{T}: Target creature you control with toughness less than this creature's power gains flying until end of turn. Destroy that creature at the beginning of the next end step.",
+    "power": "3",
+    "toughness": "4",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Stone Rain",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Destroy target land.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Tunnel",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Destroy target Wall. It can't be regenerated.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Two-Headed Giant of Foriys",
+    "mana_cost": "{4}{R}",
+    "cmc": 5,
+    "type_line": "Creature — Giant",
+    "oracle_text": "Trample\nThis creature can block an additional creature each combat.",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Trample"
+    ],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Uthden Troll",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Troll",
+    "oracle_text": "{R}: Regenerate this creature.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Wall of Fire",
+    "mana_cost": "{1}{R}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Wall",
+    "oracle_text": "Defender (This creature can't attack.)\n{R}: This creature gets +1/+0 until end of turn.",
+    "power": "0",
+    "toughness": "5",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Defender"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Wall of Stone",
+    "mana_cost": "{1}{R}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Wall",
+    "oracle_text": "Defender (This creature can't attack.)",
+    "power": "0",
+    "toughness": "8",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Defender"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Wheel of Fortune",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Each player discards their hand, then draws seven cards.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Aspect of Wolf",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature gets +X/+Y, where X is half the number of Forests you control, rounded down, and Y is half the number of Forests you control, rounded up.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Berserk",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Cast this spell only before the combat damage step.\nTarget creature gains trample and gets +X/+0 until end of turn, where X is its power. At the beginning of the next end step, destroy that creature if it attacked this turn.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Birds of Paradise",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Bird",
+    "oracle_text": "Flying\n{T}: Add one mana of any color.",
+    "power": "0",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Camouflage",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Cast this spell only during your declare attackers step.\nThis turn, instead of declaring blockers, each defending player chooses any number of creatures they control and divides them into a number of piles equal to the number of attacking creatures for whom that player is the defending player. Creatures those players control that can block additional creatures may likewise be put into additional piles. Assign each pile to a different one of those attacking creatures at random. Each creature in a pile that can block the creature that pile is assigned to does so. (Piles can be empty.)",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Channel",
+    "mana_cost": "{G}{G}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Until end of turn, any time you could activate a mana ability, you may pay 1 life. If you do, add {C}.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Cockatrice",
+    "mana_cost": "{3}{G}{G}",
+    "cmc": 5,
+    "type_line": "Creature — Cockatrice",
+    "oracle_text": "Flying\nWhenever this creature blocks or becomes blocked by a non-Wall creature, destroy that creature at end of combat.",
+    "power": "2",
+    "toughness": "4",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Craw Wurm",
+    "mana_cost": "{4}{G}{G}",
+    "cmc": 6,
+    "type_line": "Creature — Wurm",
+    "power": "6",
+    "toughness": "4",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Elvish Archers",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Elf Archer",
+    "oracle_text": "First strike",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "First strike"
+    ],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Fastbond",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Enchantment",
+    "oracle_text": "You may play any number of lands on each of your turns.\nWhenever you play a land, if it wasn't the first land you played this turn, this enchantment deals 1 damage to you.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Fog",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Prevent all combat damage that would be dealt this turn.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Force of Nature",
+    "mana_cost": "{2}{G}{G}{G}{G}",
+    "cmc": 6,
+    "type_line": "Creature — Elemental",
+    "oracle_text": "Trample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)\nAt the beginning of your upkeep, this creature deals 8 damage to you unless you pay {G}{G}{G}{G}.",
+    "power": "8",
+    "toughness": "8",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Trample"
+    ],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Fungusaur",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Creature — Fungus Dinosaur",
+    "oracle_text": "Whenever this creature is dealt damage, put a +1/+1 counter on it.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Gaea's Liege",
+    "mana_cost": "{3}{G}{G}{G}",
+    "cmc": 6,
+    "type_line": "Creature — Avatar",
+    "oracle_text": "As long as Gaea's Liege isn't attacking, its power and toughness are each equal to the number of Forests you control. As long as Gaea's Liege is attacking, its power and toughness are each equal to the number of Forests defending player controls.\n{T}: Target land becomes a Forest until this creature leaves the battlefield.",
+    "power": "*",
+    "toughness": "*",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Giant Growth",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Target creature gets +3/+3 until end of turn.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Giant Spider",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Creature — Spider",
+    "oracle_text": "Reach (This creature can block creatures with flying.)",
+    "power": "2",
+    "toughness": "4",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Reach"
+    ],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Grizzly Bears",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Bear",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Hurricane",
+    "mana_cost": "{X}{G}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "Hurricane deals X damage to each creature with flying and each player.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Ice Storm",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Destroy target land.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Instill Energy",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nEnchanted creature can attack as though it had haste.\n{0}: Untap enchanted creature. Activate only during your turn and only once each turn.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Ironroot Treefolk",
+    "mana_cost": "{4}{G}",
+    "cmc": 5,
+    "type_line": "Creature — Treefolk",
+    "power": "3",
+    "toughness": "5",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Kudzu",
+    "mana_cost": "{1}{G}{G}",
+    "cmc": 3,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant land\nWhen enchanted land becomes tapped, destroy it. That land's controller may attach this Aura to a land of their choice.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Ley Druid",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Human Druid",
+    "oracle_text": "{T}: Untap target land.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Lifeforce",
+    "mana_cost": "{G}{G}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "{G}{G}: Counter target black spell.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Lifelace",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Target spell or permanent becomes green. (Mana symbols on that permanent remain unchanged.)",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Living Artifact",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant artifact\nWhenever you're dealt damage, put that many vitality counters on this Aura.\nAt the beginning of your upkeep, you may remove a vitality counter from this Aura. If you do, you gain 1 life.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Living Lands",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "All Forests are 1/1 creatures that are still lands.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Llanowar Elves",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Elf Druid",
+    "oracle_text": "{T}: Add {G}.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Lure",
+    "mana_cost": "{1}{G}{G}",
+    "cmc": 3,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nAll creatures able to block enchanted creature do so.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Natural Selection",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Look at the top three cards of target player's library, then put them back in any order. You may have that player shuffle.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Regeneration",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature (Target a creature as you cast this. This card enters attached to that creature.)\n{G}: Regenerate enchanted creature. (The next time that creature would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on it.)",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Regrowth",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Return target card from your graveyard to your hand.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Scryb Sprites",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Faerie",
+    "oracle_text": "Flying",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Shanodin Dryads",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Nymph Dryad",
+    "oracle_text": "Forestwalk (This creature can't be blocked as long as defending player controls a Forest.)",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Landwalk",
+      "Forestwalk"
+    ],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Stream of Life",
+    "mana_cost": "{X}{G}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "Target player gains X life.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Thicket Basilisk",
+    "mana_cost": "{3}{G}{G}",
+    "cmc": 5,
+    "type_line": "Creature — Basilisk",
+    "oracle_text": "Whenever this creature blocks or becomes blocked by a non-Wall creature, destroy that creature at end of combat.",
+    "power": "2",
+    "toughness": "4",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Timber Wolves",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Wolf",
+    "oracle_text": "Banding (Any creatures with banding, and up to one without, can attack in a band. Bands are blocked as a group. If any creatures with banding you control are blocking or being blocked by a creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Banding"
+    ],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Tranquility",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Destroy all enchantments.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Tsunami",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Destroy all Islands.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Verduran Enchantress",
+    "mana_cost": "{1}{G}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Human Druid",
+    "oracle_text": "Whenever you cast an enchantment spell, you may draw a card.",
+    "power": "0",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Wall of Brambles",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Plant Wall",
+    "oracle_text": "Defender (This creature can't attack.)\n{G}: Regenerate this creature.",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Defender"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Wall of Ice",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Wall",
+    "oracle_text": "Defender (This creature can't attack.)",
+    "power": "0",
+    "toughness": "7",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Defender"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Wall of Wood",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Wall",
+    "oracle_text": "Defender (This creature can't attack.)",
+    "power": "0",
+    "toughness": "3",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Defender"
+    ],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Wanderlust",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature\nAt the beginning of the upkeep of enchanted creature's controller, this Aura deals 1 damage to that player.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "War Mammoth",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Creature — Elephant",
+    "oracle_text": "Trample",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Trample"
+    ],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Web",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant creature (Target a creature as you cast this. This card enters attached to that creature.)\nEnchanted creature gets +0/+2 and has reach. (It can block creatures with flying.)",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Wild Growth",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant land\nWhenever enchanted land is tapped for mana, its controller adds an additional {G}.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Enchant"
+    ],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Ankh of Mishra",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "Whenever a land enters, this artifact deals 2 damage to that land's controller.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Basalt Monolith",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "This artifact doesn't untap during your untap step.\n{T}: Add {C}{C}{C}.\n{3}: Untap this artifact.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Black Lotus",
+    "mana_cost": "{0}",
+    "cmc": 0,
+    "type_line": "Artifact",
+    "oracle_text": "{T}, Sacrifice this artifact: Add three mana of any one color.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Black Vise",
+    "mana_cost": "{1}",
+    "cmc": 1,
+    "type_line": "Artifact",
+    "oracle_text": "As this artifact enters, choose an opponent.\nAt the beginning of the chosen player's upkeep, this artifact deals X damage to that player, where X is the number of cards in their hand minus 4.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Celestial Prism",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "{2}, {T}: Add one mana of any color.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Chaos Orb",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "{1}, {T}: If this artifact is on the battlefield, flip it onto the battlefield from a height of at least one foot. If this artifact turns over completely at least once during the flip, destroy all nontoken permanents it touches. Then destroy this artifact.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Clockwork Beast",
+    "mana_cost": "{6}",
+    "cmc": 6,
+    "type_line": "Artifact Creature — Beast",
+    "oracle_text": "This creature enters with seven +1/+0 counters on it.\nAt end of combat, if this creature attacked or blocked this combat, remove a +1/+0 counter from it.\n{X}, {T}: Put up to X +1/+0 counters on this creature. This ability can't cause the total number of +1/+0 counters on this creature to be greater than seven. Activate only during your upkeep.",
+    "power": "0",
+    "toughness": "4",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Conservator",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact",
+    "oracle_text": "{3}, {T}: Prevent the next 2 damage that would be dealt to you this turn.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Copper Tablet",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "At the beginning of each player's upkeep, this artifact deals 1 damage to that player.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Crystal Rod",
+    "mana_cost": "{1}",
+    "cmc": 1,
+    "type_line": "Artifact",
+    "oracle_text": "Whenever a player casts a blue spell, you may pay {1}. If you do, you gain 1 life.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Cyclopean Tomb",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact",
+    "oracle_text": "{2}, {T}: Put a mire counter on target non-Swamp land. That land is a Swamp for as long as it has a mire counter on it. Activate only during your upkeep.\nWhen this artifact is put into a graveyard from the battlefield, at the beginning of each of your upkeeps for the rest of the game, remove all mire counters from a land that a mire counter was put onto with this artifact but that a mire counter has not been removed from with this artifact.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Dingus Egg",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact",
+    "oracle_text": "Whenever a land is put into a graveyard from the battlefield, this artifact deals 2 damage to that land's controller.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Disrupting Scepter",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "{3}, {T}: Target player discards a card. Activate only during your turn.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Forcefield",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "{1}: The next time an unblocked creature of your choice would deal combat damage to you this turn, prevent all but 1 of that damage.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Gauntlet of Might",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact",
+    "oracle_text": "Red creatures get +1/+1.\nWhenever a Mountain is tapped for mana, its controller adds an additional {R}.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Glasses of Urza",
+    "mana_cost": "{1}",
+    "cmc": 1,
+    "type_line": "Artifact",
+    "oracle_text": "{T}: Look at target player's hand.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Helm of Chatzuk",
+    "mana_cost": "{1}",
+    "cmc": 1,
+    "type_line": "Artifact",
+    "oracle_text": "{1}, {T}: Target creature gains banding until end of turn. (Any creatures with banding, and up to one without, can attack in a band. Bands are blocked as a group. If any creatures with banding a player controls are blocking or being blocked by a creature, that player divides that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Howling Mine",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "At the beginning of each player's draw step, if this artifact is untapped, that player draws an additional card.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Icy Manipulator",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact",
+    "oracle_text": "{1}, {T}: Tap target artifact, creature, or land.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Illusionary Mask",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "{X}: You may choose a creature card in your hand whose mana cost could be paid by some amount of, or all of, the mana you spent on {X}. If you do, you may cast that card face down as a 2/2 creature spell without paying its mana cost. If the creature that spell becomes as it resolves has not been turned face up and would assign or deal damage, be dealt damage, or become tapped, instead it's turned face up and assigns or deals damage, is dealt damage, or becomes tapped. Activate only as a sorcery.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Iron Star",
+    "mana_cost": "{1}",
+    "cmc": 1,
+    "type_line": "Artifact",
+    "oracle_text": "Whenever a player casts a red spell, you may pay {1}. If you do, you gain 1 life.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Ivory Cup",
+    "mana_cost": "{1}",
+    "cmc": 1,
+    "type_line": "Artifact",
+    "oracle_text": "Whenever a player casts a white spell, you may pay {1}. If you do, you gain 1 life.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Jade Monolith",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact",
+    "oracle_text": "{1}: The next time a source of your choice would deal damage to target creature this turn, that source deals that damage to you instead.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Jade Statue",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact",
+    "oracle_text": "{2}: This artifact becomes a 3/6 Golem artifact creature until end of combat. Activate only during combat.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Jayemdae Tome",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact",
+    "oracle_text": "{4}, {T}: Draw a card.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Juggernaut",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact Creature — Juggernaut",
+    "oracle_text": "This creature attacks each combat if able.\nThis creature can't be blocked by Walls.",
+    "power": "5",
+    "toughness": "3",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Kormus Bell",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact",
+    "oracle_text": "All Swamps are 1/1 black creatures that are still lands.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Library of Leng",
+    "mana_cost": "{1}",
+    "cmc": 1,
+    "type_line": "Artifact",
+    "oracle_text": "You have no maximum hand size.\nIf an effect causes you to discard a card, discard it, but you may put it on top of your library instead of into your graveyard.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Living Wall",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact Creature — Wall",
+    "oracle_text": "Defender (This creature can't attack.)\n{1}: Regenerate this creature.",
+    "power": "0",
+    "toughness": "6",
+    "colors": [],
+    "keywords": [
+      "Defender"
+    ],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Mana Vault",
+    "mana_cost": "{1}",
+    "cmc": 1,
+    "type_line": "Artifact",
+    "oracle_text": "This artifact doesn't untap during your untap step.\nAt the beginning of your upkeep, you may pay {4}. If you do, untap this artifact.\nAt the beginning of your draw step, if this artifact is tapped, it deals 1 damage to you.\n{T}: Add {C}{C}{C}.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Meekstone",
+    "mana_cost": "{1}",
+    "cmc": 1,
+    "type_line": "Artifact",
+    "oracle_text": "Creatures with power 3 or greater don't untap during their controllers' untap steps.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Mox Emerald",
+    "mana_cost": "{0}",
+    "cmc": 0,
+    "type_line": "Artifact",
+    "oracle_text": "{T}: Add {G}.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Mox Jet",
+    "mana_cost": "{0}",
+    "cmc": 0,
+    "type_line": "Artifact",
+    "oracle_text": "{T}: Add {B}.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Mox Pearl",
+    "mana_cost": "{0}",
+    "cmc": 0,
+    "type_line": "Artifact",
+    "oracle_text": "{T}: Add {W}.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Mox Ruby",
+    "mana_cost": "{0}",
+    "cmc": 0,
+    "type_line": "Artifact",
+    "oracle_text": "{T}: Add {R}.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Mox Sapphire",
+    "mana_cost": "{0}",
+    "cmc": 0,
+    "type_line": "Artifact",
+    "oracle_text": "{T}: Add {U}.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Nevinyrral's Disk",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact",
+    "oracle_text": "This artifact enters tapped.\n{1}, {T}: Destroy all artifacts, creatures, and enchantments.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Obsianus Golem",
+    "mana_cost": "{6}",
+    "cmc": 6,
+    "type_line": "Artifact Creature — Golem",
+    "power": "4",
+    "toughness": "6",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Rod of Ruin",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact",
+    "oracle_text": "{3}, {T}: This artifact deals 1 damage to any target.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Sol Ring",
+    "mana_cost": "{1}",
+    "cmc": 1,
+    "type_line": "Artifact",
+    "oracle_text": "{T}: Add {C}{C}.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Soul Net",
+    "mana_cost": "{1}",
+    "cmc": 1,
+    "type_line": "Artifact",
+    "oracle_text": "Whenever a creature dies, you may pay {1}. If you do, you gain 1 life.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Sunglasses of Urza",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "You may spend white mana as though it were red mana.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "The Hive",
+    "mana_cost": "{5}",
+    "cmc": 5,
+    "type_line": "Artifact",
+    "oracle_text": "{5}, {T}: Create a 1/1 colorless Insect artifact creature token with flying named Wasp. (It can't be blocked except by creatures with flying or reach.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Throne of Bone",
+    "mana_cost": "{1}",
+    "cmc": 1,
+    "type_line": "Artifact",
+    "oracle_text": "Whenever a player casts a black spell, you may pay {1}. If you do, you gain 1 life.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Time Vault",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "This artifact enters tapped.\nThis artifact doesn't untap during your untap step.\nIf you would begin your turn while this artifact is tapped, you may skip that turn instead. If you do, untap this artifact.\n{T}: Take an extra turn after this one.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Winter Orb",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact",
+    "oracle_text": "As long as this artifact is untapped, players can't untap more than one land during their untap steps.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Wooden Sphere",
+    "mana_cost": "{1}",
+    "cmc": 1,
+    "type_line": "Artifact",
+    "oracle_text": "Whenever a player casts a green spell, you may pay {1}. If you do, you gain 1 life.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "lea"
+  },
+  {
+    "name": "Badlands",
+    "cmc": 0,
+    "type_line": "Land — Swamp Mountain",
+    "oracle_text": "({T}: Add {B} or {R}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Bayou",
+    "cmc": 0,
+    "type_line": "Land — Swamp Forest",
+    "oracle_text": "({T}: Add {B} or {G}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Plateau",
+    "cmc": 0,
+    "type_line": "Land — Mountain Plains",
+    "oracle_text": "({T}: Add {R} or {W}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Savannah",
+    "cmc": 0,
+    "type_line": "Land — Forest Plains",
+    "oracle_text": "({T}: Add {G} or {W}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Scrubland",
+    "cmc": 0,
+    "type_line": "Land — Plains Swamp",
+    "oracle_text": "({T}: Add {W} or {B}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Taiga",
+    "cmc": 0,
+    "type_line": "Land — Mountain Forest",
+    "oracle_text": "({T}: Add {R} or {G}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Tropical Island",
+    "cmc": 0,
+    "type_line": "Land — Forest Island",
+    "oracle_text": "({T}: Add {G} or {U}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Tundra",
+    "cmc": 0,
+    "type_line": "Land — Plains Island",
+    "oracle_text": "({T}: Add {W} or {U}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Underground Sea",
+    "cmc": 0,
+    "type_line": "Land — Island Swamp",
+    "oracle_text": "({T}: Add {U} or {B}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "lea"
+  },
+  {
+    "name": "Plains",
+    "cmc": 0,
+    "type_line": "Basic Land — Plains",
+    "oracle_text": "({T}: Add {W}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Plains",
+    "cmc": 0,
+    "type_line": "Basic Land — Plains",
+    "oracle_text": "({T}: Add {W}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Island",
+    "cmc": 0,
+    "type_line": "Basic Land — Island",
+    "oracle_text": "({T}: Add {U}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Island",
+    "cmc": 0,
+    "type_line": "Basic Land — Island",
+    "oracle_text": "({T}: Add {U}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Swamp",
+    "cmc": 0,
+    "type_line": "Basic Land — Swamp",
+    "oracle_text": "({T}: Add {B}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Swamp",
+    "cmc": 0,
+    "type_line": "Basic Land — Swamp",
+    "oracle_text": "({T}: Add {B}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Mountain",
+    "cmc": 0,
+    "type_line": "Basic Land — Mountain",
+    "oracle_text": "({T}: Add {R}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Mountain",
+    "cmc": 0,
+    "type_line": "Basic Land — Mountain",
+    "oracle_text": "({T}: Add {R}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Forest",
+    "cmc": 0,
+    "type_line": "Basic Land — Forest",
+    "oracle_text": "({T}: Add {G}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  },
+  {
+    "name": "Forest",
+    "cmc": 0,
+    "type_line": "Basic Land — Forest",
+    "oracle_text": "({T}: Add {G}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "lea"
+  }
+]

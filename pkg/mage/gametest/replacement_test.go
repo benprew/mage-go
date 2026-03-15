@@ -54,6 +54,15 @@ func registerReplacementTestCards() {
 			})
 		}
 
+		// A simple destroy spell (allows regeneration) for testing regen replacement.
+		if !mage.CardRegistered("Test Destroy") {
+			mage.Register("Test Destroy", func() mage.Card {
+				return mage.NewInstant("Test Destroy", "{1}{B}",
+					mage.NewTargetedSpell(mage.TargetCreature(), mage.DestroyTarget()),
+				)
+			})
+		}
+
 		// An artifact creature for testing type prevention.
 		if !mage.CardRegistered("Iron Golem") {
 			mage.Register("Iron Golem", func() mage.Card {
@@ -195,11 +204,11 @@ func TestRegenerationSurvivesDestroy(t *testing.T) {
 
 	g := NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, PlayerA, "Regenerating Troll")
-	g.AddCard(core.ZoneHand, PlayerB, "Terror")
+	g.AddCard(core.ZoneHand, PlayerB, "Test Destroy")
 
-	// Activate regeneration to get a shield, then Terror it
+	// Activate regeneration to get a shield, then destroy it
 	g.ActivateAbility(1, core.PrecombatMain, PlayerA, "Regenerating Troll")
-	g.CastSpell(1, core.PrecombatMain, PlayerB, "Terror", "Regenerating Troll")
+	g.CastSpell(1, core.PrecombatMain, PlayerB, "Test Destroy", "Regenerating Troll")
 	g.StopAt(1, core.BeginCombat)
 	g.Execute()
 	// Regeneration shield should prevent destruction

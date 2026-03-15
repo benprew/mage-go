@@ -267,6 +267,27 @@ func EntersWithXCounters(ct CounterType) *EntersWithXCountersAbility {
 	}
 }
 
+// EntersWithNCountersAbility is a replacement effect that adds a fixed number
+// of counters when the permanent enters the battlefield.
+type EntersWithNCountersAbility struct {
+	BaseAbility
+	CounterType CounterType
+	Count       int
+}
+
+// EntersWithNCounters creates a replacement effect that puts N counters of the given
+// type on the permanent as it enters the battlefield (e.g. Clockwork Avian).
+func EntersWithNCounters(ct CounterType, n int) *EntersWithNCountersAbility {
+	return &EntersWithNCountersAbility{
+		BaseAbility: BaseAbility{
+			id:          uuid.New(),
+			abilityType: AbilityStatic,
+		},
+		CounterType: ct,
+		Count:       n,
+	}
+}
+
 // CopyCreatureOnETBAbility is a replacement effect that copies a target creature
 // when this permanent enters the battlefield (e.g., Vesuvan Doppelganger).
 type CopyCreatureOnETBAbility struct {

@@ -17,6 +17,7 @@ type GameRules struct {
 	SpellTypeCostReductions map[CardType]int   // type -> generic cost reduction for spells of that type
 	LandUntapMax       int                     // -1 = no limit; >= 0 = max lands that may untap per turn
 	ArtifactUntapMax   int                     // -1 = no limit; >= 0 = max artifacts that may untap per turn
+	CreatureUntapMax   int                     // -1 = no limit; >= 0 = max creatures that may untap per turn
 	UnlimitedLandPlays bool                    // true if a player can play unlimited lands (Fastbond)
 	sanctuaryActive    map[uuid.UUID]bool      // player -> if true, only flying/islandwalk can attack them
 	lichActive         map[uuid.UUID]uuid.UUID // player -> source permanent ID of active Lich
@@ -34,6 +35,7 @@ func NewGameRules() *GameRules {
 	return &GameRules{
 		LandUntapMax:            -1,
 		ArtifactUntapMax:        -1,
+		CreatureUntapMax:        -1,
 		ManaConversion:          make(map[Color]Color),
 		SpellCostIncreases:      make(map[Color]int),
 		SpellCostReductions:     make(map[Color]int),
@@ -53,6 +55,7 @@ func NewGameRules() *GameRules {
 func (r *GameRules) ResetPerCycle() {
 	r.LandUntapMax = -1
 	r.ArtifactUntapMax = -1
+	r.CreatureUntapMax = -1
 	r.UnlimitedLandPlays = false
 	r.maxHandSize = make(map[uuid.UUID]int)
 	r.SpellCostIncreases = make(map[Color]int)

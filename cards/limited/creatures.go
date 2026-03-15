@@ -109,11 +109,17 @@ func registerCreatures() {
 	Register("Pirate Ship", func() Card {
 		return NewCreature("Pirate Ship", "{4}{U}", 4, 3,
 			WithSubTypes("Human", "Pirate"),
+			// Pirate Ship can't attack unless defending player controls an Island.
+			WithStaticAbility(
+				PreventFromAttackingIfDefendingPlayerControls(HasSubType("Island")),
+			),
 			WithActivatedAbility(
 				DealDamage(Fixed(1)),
 				TapSourceCost(),
 				WithTarget(TargetAnyTarget()),
 			),
+			// When you control no Islands, sacrifice Pirate Ship.
+			WithAbility(SacrificeUnlessLand("Island")),
 		)
 	})
 
@@ -122,7 +128,7 @@ func registerCreatures() {
 			WithSubTypes("Illusion"),
 			WithKeyword(Flying),
 			// At the beginning of your upkeep, sacrifice Phantasmal Forces unless you pay {U}.
-			WithAbility(BeginningOfUpkeepTrigger(SacrificeSource(), false)),
+			WithAbility(SacrificeAtUpkeepUnlessPay("{U}")),
 		)
 	})
 
@@ -281,7 +287,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				MakeUnblockableUntilEndOfTurn(),
 				TapSourceCost(),
-				WithTarget(TargetCreature()),
+				WithTarget(TargetCreature(HasPowerLTE(2))),
 			),
 		)
 	})
@@ -435,7 +441,21 @@ func registerCreatures() {
 			WithKeyword(Trample),
 			// At the beginning of your upkeep, Force of Nature deals 8 damage to you
 			// unless you pay {G}{G}{G}{G}.
-			WithAbility(BeginningOfUpkeepTrigger(DealDamageToPlayers(Fixed(8), SelectController()), false)),
+			WithAbility(NewTriggered(EvtUpkeep, false, FuncEffect(
+				"deal 8 damage unless you pay {G}{G}{G}{G}",
+				EffectProperties{},
+				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					if g.TryPayCostFromLands(controller, "{G}{G}{G}{G}") {
+						return nil
+					}
+					p := g.GetPlayer(controller)
+					if p != nil {
+						g.DealDamageToPlayer(p, 8, sourceID)
+					}
+					return nil
+				})).SetCondition(func(evt *GameEvent, _ *Game, _, controllerID uuid.UUID) bool {
+				return evt.PlayerID == controllerID
+			})),
 		)
 	})
 
@@ -517,7 +537,7 @@ func registerCreatures() {
 		return NewCreature("Cockatrice", "{3}{G}{G}", 2, 4,
 			WithSubTypes("Cockatrice"),
 			WithKeyword(Flying),
-			WithKeyword(Deathtouch),
+			WithKeyword(BasiliskTouch),
 		)
 	})
 
@@ -640,11 +660,12 @@ func registerCreatures() {
 			WithSubTypes("Beast"),
 			WithCardType(TypeArtifact),
 			// Enters with 7 +1/+0 counters
-			WithAbility(EntersBattlefieldTrigger(
-				AddCounters(P1P0, Fixed(7), SelectSource), false,
-			)),
-			// Loses a +1/+0 counter whenever it attacks
+			WithAbility(EntersWithNCounters(P1P0, 7)),
+			// At end of combat, if Clockwork Beast attacked or blocked, remove a +1/+0 counter
 			WithAbility(AttacksTrigger(
+				RemoveCountersFromSource(P1P0, 1), false,
+			)),
+			WithAbility(BlocksTrigger(
 				RemoveCountersFromSource(P1P0, 1), false,
 			)),
 		)
@@ -655,6 +676,7 @@ func registerCreatures() {
 			WithSubTypes("Juggernaut"),
 			WithCardType(TypeArtifact),
 			// Juggernaut attacks each combat if able. Can't be blocked by Walls.
+			WithKeyword(MustAttack),
 			WithKeyword(CantBeBlockedByWalls),
 		)
 	})
@@ -729,7 +751,9 @@ func registerCreatures() {
 	Register("Sea Serpent", func() Card {
 		return NewCreature("Sea Serpent", "{5}{U}", 5, 5,
 			WithSubTypes("Serpent"),
-			WithKeyword(Islandwalk),
+			WithStaticAbility(
+				PreventFromAttackingIfDefendingPlayerControls(HasSubType("Island")),
+			),
 			WithAbility(SacrificeUnlessLand("Island")),
 		)
 	})
@@ -893,6 +917,37 @@ func registerCreatures() {
 					func(n int) int { return n / 2 },
 					func(n int) int { return (n + 1) / 2 },
 				),
+			),
+		)
+	})
+
+	// Dwarven Demolition Team {2}{R}
+	// Creature — Dwarf 1/1
+	// {T}: Destroy target Wall.
+	Register("Dwarven Demolition Team", func() Card {
+		return NewCreature("Dwarven Demolition Team", "{2}{R}", 1, 1,
+			WithSubTypes("Dwarf"),
+			WithActivatedAbility(
+				DestroyTarget(),
+				TapSourceCost(),
+				WithTarget(TargetCreature(HasSubType("Wall"))),
+			),
+		)
+	})
+
+	// Orcish Artillery {1}{R}{R}
+	// Creature — Orc Warrior 1/3
+	// {T}: Orcish Artillery deals 2 damage to any target and 3 damage to you.
+	Register("Orcish Artillery", func() Card {
+		return NewCreature("Orcish Artillery", "{1}{R}{R}", 1, 3,
+			WithSubTypes("Orc", "Warrior"),
+			WithActivatedAbility(
+				CompositeEffects("deal 2 damage to any target and 3 damage to you",
+					DealDamage(Fixed(2)),
+					DealDamageToPlayers(Fixed(3), SelectController()),
+				),
+				TapSourceCost(),
+				WithTarget(TargetAnyTarget()),
 			),
 		)
 	})

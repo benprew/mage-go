@@ -1397,16 +1397,16 @@ func TestCyclopeanTomb(t *testing.T) {
 }
 
 func TestIllusionaryMask(t *testing.T) {
-	t.Run("enters_as_0_1_face_down", func(t *testing.T) {
+	t.Run("enters_as_2_2_face_down", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Illusionary Mask")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Serra Angel")
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Illusionary Mask", "Serra Angel")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		// Serra Angel should be on the battlefield as a face-down 0/1
+		// Serra Angel should be on the battlefield as a face-down 2/2
 		g.AssertPermanentCount(gametest.PlayerA, "Serra Angel", 1)
-		g.AssertPowerToughness(gametest.PlayerA, "Serra Angel", 0, 1)
+		g.AssertPowerToughness(gametest.PlayerA, "Serra Angel", 2, 2)
 		perm := g.FindPermanentByName("Serra Angel", g.AllPlayers()[0].PlayerID())
 		if perm == nil {
 			t.Fatal("Serra Angel not found on battlefield")

@@ -61,14 +61,25 @@ func TestBerserk(t *testing.T) {
 		g.AssertPowerToughness(gametest.PlayerA, "Craw Wurm", 12, 4)
 	})
 
-	t.Run("destroys creature at end of turn", func(t *testing.T) {
+	t.Run("destroys creature at end of turn if it attacked", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Berserk")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Berserk", "Grizzly Bears")
+		g.Attack(1, gametest.PlayerA, "Grizzly Bears")
+		g.StopAt(2, core.Upkeep)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
+	})
+
+	t.Run("does not destroy creature if it did not attack", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Berserk")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Berserk", "Grizzly Bears")
 		g.StopAt(2, core.Upkeep)
 		g.Execute()
-		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
+		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
 	})
 }
 

@@ -514,6 +514,17 @@ func LimitLandUntaps(limit int) ContinuousEffect {
 	}, SourceUntapped)
 }
 
+// LimitCreatureUntaps creates a continuous effect that limits creature untaps per turn
+// (e.g. Smoke). Unlike Winter Orb, Smoke does not have a "while untapped" condition.
+func LimitCreatureUntaps(limit int) ContinuousEffect {
+	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
+		if g.Effects.Rules.CreatureUntapMax < 0 || limit < g.Effects.Rules.CreatureUntapMax {
+			g.Effects.Rules.CreatureUntapMax = limit
+		}
+		return nil
+	})
+}
+
 // AnimateLands creates a continuous effect that turns matching lands into creatures.
 // Used by Living Lands (Forests become 1/1 creatures).
 func AnimateLands(filter PermanentFilter, power, toughness int) ContinuousEffect {

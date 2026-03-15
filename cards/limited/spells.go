@@ -3,9 +3,9 @@ package limited
 import (
 	"fmt"
 
-	"github.com/google/uuid"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"github.com/google/uuid"
 )
 
 func init() {
@@ -211,7 +211,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetCreature(
 				Not(HasColorFilter(Black)),
 				Not(IsArtifact),
-			), DestroyTarget()),
+			), DestroyTargetNoRegen()),
 		)
 	})
 
@@ -230,7 +230,7 @@ func registerSpells() {
 	Register("Drain Life", func() Card {
 		return NewSorcery("Drain Life", "{X}{1}{B}",
 			NewTargetedSpell(TargetAnyTarget(), FuncEffect(
-				"deal X damage to target and gain X life",
+				"deal X damage to target and gain life equal to damage dealt",
 				EffectProperties{Outcome: OutcomeDetriment},
 				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
@@ -241,19 +241,28 @@ func registerSpells() {
 						return nil
 					}
 					target := targets[0]
+					lifeGain := amount
 					perm := g.FindPermanent(target)
 					if perm != nil {
+						toughness := perm.CurrentToughness(g)
+						if lifeGain > toughness {
+							lifeGain = toughness
+						}
 						g.DealDamageToPermanent(perm, amount, sourceID)
 					} else {
 						p := g.GetPlayer(target)
 						if p != nil {
+							life := p.Life()
+							if lifeGain > life {
+								lifeGain = life
+							}
 							g.DealDamageToPlayer(p, amount, sourceID)
 						}
 					}
 					caster := g.GetPlayer(controller)
-					if caster != nil {
-						caster.GainLife(amount)
-						g.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: controller, Amount: amount})
+					if caster != nil && lifeGain > 0 {
+						caster.GainLife(lifeGain)
+						g.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: controller, Amount: lifeGain})
 					}
 					return nil
 				})),
@@ -270,17 +279,23 @@ func registerSpells() {
 		return NewLandDestruction("Sinkhole", "{B}{B}")
 	})
 
-	Register("Animate Dead", func() Card {
-		return NewAura("Animate Dead", "{1}{B}",
-			WithAbility(NewSpellAbility(ReturnFromGraveyardToBattlefield())),
-			WithStaticAbility(
-				BoostAttached(-1, 0, AttachAura),
-			),
-		)
-	})
-
 	Register("Pestilence", func() Card {
 		return NewEnchantment("Pestilence", "{2}{B}{B}",
+			// At the beginning of the end step, if no creatures are on the battlefield, sacrifice Pestilence.
+			WithAbility(BeginningOfEachEndStepTrigger(
+				FuncEffect("sacrifice if no creatures", EffectProperties{}, func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					for _, p := range g.FilterBattlefield(AnyPermanent) {
+						if p.HasType(TypeCreature) {
+							return nil
+						}
+					}
+					perm := g.FindPermanent(sourceID)
+					if perm != nil {
+						g.Sacrifice(perm)
+					}
+					return nil
+				}), false,
+			)),
 			// {B}: Deal 1 damage to each creature and each player
 			WithActivatedAbility(
 				CompositeEffects("deal 1 damage to each creature and each player",
@@ -314,7 +329,27 @@ func registerSpells() {
 
 	Register("Disintegrate", func() Card {
 		return NewSorcery("Disintegrate", "{X}{R}",
-			NewTargetedSpell(TargetAnyTarget(), DealDamage(XValue())),
+			NewTargetedSpell(TargetAnyTarget(), FuncEffect(
+				"deal X damage; creature can't be regenerated this turn",
+				EffectProperties{Outcome: OutcomeDetriment},
+				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					if len(targets) == 0 {
+						return fmt.Errorf("no target for Disintegrate")
+					}
+					amount := g.XValue()
+					target := targets[0]
+					perm := g.FindPermanent(target)
+					if perm != nil {
+						perm.GrantBaseAttr(CantRegenerate)
+						g.DealDamageToPermanent(perm, amount, sourceID)
+					} else {
+						p := g.GetPlayer(target)
+						if p != nil {
+							g.DealDamageToPlayer(p, amount, sourceID)
+						}
+					}
+					return nil
+				})),
 		)
 	})
 
@@ -362,9 +397,34 @@ func registerSpells() {
 	Register("Berserk", func() Card {
 		return NewInstant("Berserk", "{G}",
 			NewTargetedSpell(TargetCreature(), CompositeEffects(
-				"Target creature's power is doubled. Destroy it at end of turn.",
+				"Target creature gains trample and gets +X/+0. Destroy at end of turn if it attacked.",
+				GrantKeywordUntilEndOfTurn(Trample, SelectTarget),
 				DoubleTargetPower(),
-				DestroyTargetAtEndOfTurn(),
+				FuncEffect("destroy at end of turn if attacked", EffectProperties{}, func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					if len(targets) == 0 {
+						return nil
+					}
+					targetID := targets[0]
+					g.RegisterDelayedTrigger(&DelayedTrigger{
+						EventType:  EvtEndStep,
+						SourceID:   sourceID,
+						Controller: controller,
+						Effects: []Effect{FuncEffect(
+							"destroy creature if it attacked",
+							EffectProperties{},
+							func(g2 GameMutator, srcID, ctrlID uuid.UUID, _ []uuid.UUID) error {
+								if g2.HasAttackedThisTurn(targetID) {
+									perm := g2.FindPermanent(targetID)
+									if perm != nil {
+										g2.DestroyPermanent(perm)
+									}
+								}
+								return nil
+							}),
+						},
+					})
+					return nil
+				}),
 			)),
 		)
 	})
@@ -444,7 +504,7 @@ func registerSpells() {
 
 	Register("Righteousness", func() Card {
 		return NewInstant("Righteousness", "{W}",
-			NewTargetedSpell(TargetCreature(), BoostUntilEndOfTurn(Fixed(7), Fixed(7), SelectTarget)),
+			NewTargetedSpell(TargetCreature(IsBlocking), BoostUntilEndOfTurn(Fixed(7), Fixed(7), SelectTarget)),
 		)
 	})
 
@@ -463,7 +523,29 @@ func registerSpells() {
 
 	Register("Wrath of God", func() Card {
 		return NewSorcery("Wrath of God", "{2}{W}{W}",
-			NewSpellAbility(DestroyAllCreatures()),
+			NewSpellAbility(DestroyAllCreaturesNoRegen()),
+		)
+	})
+
+	// Psionic Blast {2}{U}
+	// Instant
+	// Psionic Blast deals 4 damage to any target and 2 damage to you.
+	Register("Psionic Blast", func() Card {
+		return NewInstant("Psionic Blast", "{2}{U}",
+			NewTargetedSpell(TargetAnyTarget(), CompositeEffects(
+				"deal 4 damage to any target and 2 damage to you",
+				DealDamage(Fixed(4)),
+				DealDamageToPlayers(Fixed(2), SelectController()),
+			)),
+		)
+	})
+
+	// Tunnel {R}
+	// Instant
+	// Destroy target Wall. It can't be regenerated.
+	Register("Tunnel", func() Card {
+		return NewInstant("Tunnel", "{R}",
+			NewTargetedSpell(TargetCreature(HasSubType("Wall")), DestroyTargetNoRegen()),
 		)
 	})
 }

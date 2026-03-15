@@ -426,6 +426,13 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 		}
 	}
 
+	// Add fixed N counters if configured (replacement effect, not a trigger)
+	for _, a := range perm.RuntimeAbilities {
+		if nc, ok := a.(*EntersWithNCountersAbility); ok {
+			perm.AddCounter(nc.CounterType, nc.Count)
+		}
+	}
+
 	// Copy creature on ETB (Vesuvan Doppelganger): copy target creature's P/T and keywords
 	for _, a := range perm.RuntimeAbilities {
 		if _, ok := a.(*CopyCreatureOnETBAbility); ok && len(g.ResolvingTargets) > 0 {
@@ -1934,6 +1941,8 @@ func (g *Game) doUntap() {
 	landsUntapped := 0
 	artifactUntapLimit := g.Effects.Rules.ArtifactUntapMax
 	artifactsUntapped := 0
+	creatureUntapLimit := g.Effects.Rules.CreatureUntapMax
+	creaturesUntapped := 0
 
 	for _, p := range g.Battlefield {
 		if p.Controller == active.PlayerID() {
@@ -1959,6 +1968,13 @@ func (g *Game) doUntap() {
 					p.Tapped = false
 					g.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: p.ID()})
 					artifactsUntapped++
+				}
+			} else if p.HasType(TypeCreature) && creatureUntapLimit >= 0 {
+				// Creature with untap limit in effect (Smoke)
+				if p.Tapped && creaturesUntapped < creatureUntapLimit {
+					p.Tapped = false
+					g.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: p.ID()})
+					creaturesUntapped++
 				}
 			} else if p.Tapped {
 				p.Tapped = false

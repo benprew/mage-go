@@ -131,6 +131,28 @@ func (t *PlayerTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uu
 	return nil
 }
 
+// ControllerTarget auto-selects the controller as the target. Used for effects
+// that always apply to "you" (e.g. Conservator's "prevent damage to you").
+type ControllerTarget struct {
+	BaseTarget
+}
+
+// TargetController creates a target that auto-resolves to the ability's controller.
+func TargetController() Target {
+	return &ControllerTarget{
+		BaseTarget: BaseTarget{min: 1, max: 1},
+	}
+}
+
+func (t *ControllerTarget) Possible(controller uuid.UUID, _ Card, _ *Game) []uuid.UUID {
+	return []uuid.UUID{controller}
+}
+
+func (t *ControllerTarget) Choose(controller uuid.UUID, _ Card, _ *Game, _ []uuid.UUID) error {
+	t.chosen = []uuid.UUID{controller}
+	return nil
+}
+
 // AnyTarget targets a creature or player.
 type AnyTarget struct {
 	BaseTarget

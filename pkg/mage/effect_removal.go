@@ -145,6 +145,41 @@ func (e *destroyAllMatchingNoRegenEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment, Mass: true}
 }
 
+// destroyTargetNoRegenEffect destroys a target permanent, preventing regeneration.
+type destroyTargetNoRegenEffect struct{}
+
+// DestroyTargetNoRegen creates an effect that destroys the first target permanent.
+// The destroyed permanent can't be regenerated (e.g. Terror, Tunnel).
+func DestroyTargetNoRegen() Effect {
+	return &destroyTargetNoRegenEffect{}
+}
+
+func (e *destroyTargetNoRegenEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	if len(targets) == 0 {
+		return fmt.Errorf("no target for destroy")
+	}
+	perm := g.FindPermanent(targets[0])
+	if perm == nil {
+		return nil
+	}
+	if perm.HasKeyword(Indestructible) {
+		return nil
+	}
+	perm.GrantBaseAttr(CantRegenerate)
+	g.DestroyPermanent(perm)
+	return nil
+}
+
+func (e *destroyTargetNoRegenEffect) Text() string { return "destroy target (can't be regenerated)" }
+func (e *destroyTargetNoRegenEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
+
+// DestroyAllCreaturesNoRegen destroys all creatures; they can't be regenerated (e.g. Wrath of God).
+func DestroyAllCreaturesNoRegen() Effect {
+	return DestroyAllMatchingNoRegen(IsCreature, "destroy all creatures (can't be regenerated)")
+}
+
 // exileTargetEffect exiles a target permanent (removes from game).
 type exileTargetEffect struct{}
 

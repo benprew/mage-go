@@ -1,9 +1,9 @@
 package limited
 
 import (
-	"github.com/google/uuid"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"github.com/google/uuid"
 )
 
 func init() {
@@ -60,7 +60,16 @@ func registerEnchantments() {
 	})
 
 	Register("Holy Armor", func() Card {
-		return NewBoostAura("Holy Armor", "{W}", 0, 2)
+		return NewAura("Holy Armor", "{W}",
+			WithStaticAbility(
+				BoostAttached(0, 2, AttachAura),
+				GrantActivatedAbilityToAttached(
+					BoostUntilEndOfTurn(Fixed(0), Fixed(1), SelectSource),
+					ManaCostOf("{W}"),
+					AttachAura,
+				),
+			),
+		)
 	})
 
 	Register("Blessing", func() Card {
@@ -156,11 +165,46 @@ func registerEnchantments() {
 			WithStaticAbility(
 				PreventAttachedFromUntapping(AttachAura),
 			),
+			// At the beginning of enchanted creature's controller's upkeep,
+			// that player may pay {4}. If the player does, untap the creature.
+			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(FuncEffect(
+				"pay {4} to untap enchanted creature",
+				EffectProperties{},
+				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					aura := g.FindPermanent(sourceID)
+					if aura == nil {
+						return nil
+					}
+					attached := g.FindPermanent(aura.AttachedTo)
+					if attached == nil {
+						return nil
+					}
+					if g.TryPayCostFromLands(attached.Controller, "{4}") {
+						attached.Tapped = false
+					}
+					return nil
+				}), false)),
 		)
 	})
 
 	Register("Earthbind", func() Card {
 		return NewAura("Earthbind", "{R}",
+			// When Earthbind enters, if enchanted creature has flying,
+			// deal 2 damage to that creature.
+			WithAbility(EntersBattlefieldTrigger(FuncEffect(
+				"deal 2 damage to enchanted creature if it has flying",
+				EffectProperties{},
+				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					aura := g.FindPermanent(sourceID)
+					if aura == nil {
+						return nil
+					}
+					attached := g.FindPermanent(aura.AttachedTo)
+					if attached != nil && attached.HasKeyword(Flying) {
+						g.DealDamageToPermanent(attached, 2, sourceID)
+					}
+					return nil
+				}), false)),
 			WithStaticAbility(
 				RemoveKeywordFromAttached(Flying, AttachAura),
 			),
@@ -173,7 +217,14 @@ func registerEnchantments() {
 		)
 	})
 
-	// Animate Dead is registered in spells.go
+	Register("Animate Dead", func() Card {
+		return NewAura("Animate Dead", "{1}{B}",
+			WithAbility(NewSpellAbility(ReturnFromGraveyardToBattlefield())),
+			WithStaticAbility(
+				BoostAttached(-1, 0, AttachAura),
+			),
+		)
+	})
 
 	// ===== ENCHANT LAND =====
 
@@ -217,6 +268,7 @@ func registerEnchantments() {
 		name  string
 		color Color
 	}{
+		{"Circle of Protection: Black", Black},
 		{"Circle of Protection: Blue", Blue},
 		{"Circle of Protection: Green", Green},
 		{"Circle of Protection: Red", Red},
@@ -332,8 +384,20 @@ func registerEnchantments() {
 	})
 
 	Register("Farmstead", func() Card {
-		return NewAura("Farmstead", "{1}{W}{W}",
-			WithAbility(BeginningOfUpkeepTrigger(GainLife(1), false)),
+		return NewAura("Farmstead", "{W}{W}{W}",
+			WithCastTarget(TargetLand()),
+			WithAbility(BeginningOfUpkeepTrigger(FuncEffect(
+				"you may pay {W}{W} to gain 1 life",
+				EffectProperties{Outcome: OutcomeBenefit},
+				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					if g.TryPayCostFromLands(controller, "{W}{W}") {
+						p := g.GetPlayer(controller)
+						if p != nil {
+							g.PlayerGainLife(p, 1)
+						}
+					}
+					return nil
+				}), false)),
 		)
 	})
 

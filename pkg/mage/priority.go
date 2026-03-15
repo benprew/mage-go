@@ -98,6 +98,16 @@ func (g *Game) RunPriorityRound(mainPhase bool) {
 	}
 }
 
+func countBattlefield(g *Game, playerID uuid.UUID) int {
+	count := 0
+	for _, p := range g.Battlefield {
+		if p.Controller == playerID {
+			count++
+		}
+	}
+	return count
+}
+
 // RunStepWithPriority runs a single step of the turn using the priority system.
 // It sets the step, applies continuous effects, performs step-specific actions,
 // then runs a priority round (unless the step has no priority, e.g. Untap).
