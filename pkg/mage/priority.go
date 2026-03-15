@@ -1,10 +1,15 @@
 package mage
 
 import (
+	"fmt"
+
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 
 	"github.com/google/uuid"
 )
+
+// DebugPriority enables verbose logging of priority actions and errors.
+var DebugPriority bool
 
 // PriorityActionType identifies what kind of action a player takes when
 // they receive priority.
@@ -35,16 +40,36 @@ type PriorityAction struct {
 type PriorityHandler func(g *Game, playerIdx int, mainPhase bool) PriorityAction
 
 // executePriorityAction executes a non-pass priority action for the given player.
-func (g *Game) executePriorityAction(playerIdx int, action PriorityAction) {
+// Returns true if the action succeeded, false if it failed.
+func (g *Game) executePriorityAction(playerIdx int, action PriorityAction) bool {
 	playerID := g.Players[playerIdx].PlayerID()
 	switch action.Type {
 	case PriorityPlayLand:
-		_ = g.playLandCore(playerID, action.CardID)
+		if err := g.playLandCore(playerID, action.CardID); err != nil {
+			if DebugPriority {
+				fmt.Printf("[PRIORITY] PlayLand FAILED player=%s cardID=%s err=%v\n",
+					g.Players[playerIdx].Name(), action.CardID, err)
+			}
+			return false
+		}
 	case PriorityCastSpell:
-		_ = g.CastSpellByID(playerID, action.CardID, action.Targets, action.XValue)
+		if err := g.CastSpellByID(playerID, action.CardID, action.Targets, action.XValue); err != nil {
+			if DebugPriority {
+				fmt.Printf("[PRIORITY] CastSpell FAILED player=%s cardID=%s targets=%v err=%v\n",
+					g.Players[playerIdx].Name(), action.CardID, action.Targets, err)
+			}
+			return false
+		}
 	case PriorityActivateAbility:
-		_ = g.ActivateAbilityByIndex(playerID, action.PermanentID, action.AbilityIdx, action.Targets)
+		if err := g.ActivateAbilityByIndex(playerID, action.PermanentID, action.AbilityIdx, action.Targets); err != nil {
+			if DebugPriority {
+				fmt.Printf("[PRIORITY] ActivateAbility FAILED player=%s permID=%s abilityIdx=%d targets=%v err=%v\n",
+					g.Players[playerIdx].Name(), action.PermanentID, action.AbilityIdx, action.Targets, err)
+			}
+			return false
+		}
 	}
+	return true
 }
 
 // RunPriorityRound runs the full priority loop for the current step:
@@ -59,7 +84,23 @@ func (g *Game) RunPriorityRound(mainPhase bool) {
 		return
 	}
 
+	iterations := 0
 	for {
+		iterations++
+		if DebugPriority && iterations%50 == 0 {
+			fmt.Printf("[PRIORITY] WARNING: %d iterations in RunPriorityRound turn=%d step=%s mainPhase=%v stackSize=%d\n",
+				iterations, g.Turn, g.Step, mainPhase, g.Stack.Size())
+			for i, p := range g.Players {
+				fmt.Printf("[PRIORITY]   player[%d]=%s life=%d hand=%d battlefield=%d\n",
+					i, p.Name(), p.Life(), len(p.Hand()), countBattlefield(g, p.PlayerID()))
+			}
+		}
+		if iterations > 500 {
+			fmt.Printf("[PRIORITY] EMERGENCY: breaking out of priority loop after %d iterations turn=%d step=%s\n",
+				iterations, g.Turn, g.Step)
+			return
+		}
+
 		// 1. Check state-based actions (includes lethal damage, 0-toughness, etc.)
 		g.CheckStateBasedActions()
 
@@ -72,12 +113,41 @@ func (g *Game) RunPriorityRound(mainPhase bool) {
 			playerIdx := (g.ActivePlayer + i) % len(g.Players)
 			action := g.OnPriority(g, playerIdx, mainPhase)
 			if action.Type != PriorityPass {
-				g.executePriorityAction(playerIdx, action)
-				if g.AfterPriorityAction != nil {
-					g.AfterPriorityAction(g, playerIdx, action)
+				if DebugPriority {
+					actionName := "unknown"
+					cardName := ""
+					switch action.Type {
+					case PriorityPlayLand:
+						actionName = "PlayLand"
+					case PriorityCastSpell:
+						actionName = "CastSpell"
+					case PriorityActivateAbility:
+						actionName = "ActivateAbility"
+					}
+					if action.CardID != uuid.Nil {
+						for _, c := range g.Players[playerIdx].Hand() {
+							if c.ID() == action.CardID {
+								cardName = c.Name()
+								break
+							}
+						}
+					}
+					if action.PermanentID != uuid.Nil {
+						if perm := g.FindPermanent(action.PermanentID); perm != nil {
+							cardName = perm.Name()
+						}
+					}
+					fmt.Printf("[PRIORITY] player=%s action=%s card=%q targets=%v iter=%d\n",
+						g.Players[playerIdx].Name(), actionName, cardName, action.Targets, iterations)
 				}
-				allPassed = false
-				break // restart loop from SBA check
+				if g.executePriorityAction(playerIdx, action) {
+					if g.AfterPriorityAction != nil {
+						g.AfterPriorityAction(g, playerIdx, action)
+					}
+					allPassed = false
+					break // restart loop from SBA check
+				}
+				// Action failed — treat as pass for this player
 			}
 		}
 
