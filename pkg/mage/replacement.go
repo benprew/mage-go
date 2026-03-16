@@ -665,6 +665,7 @@ type damagePreventionRuleReplacement struct {
 	oneShot    bool
 	consumed   bool
 	combatOnly bool
+	playerOnly bool
 }
 
 func (r *damagePreventionRuleReplacement) Matches(a Action, g GameReader) bool {
@@ -693,6 +694,9 @@ func (r *damagePreventionRuleReplacement) Matches(a Action, g GameReader) bool {
 		}
 		return true
 	case *DamageToCreatureAction:
+		if r.playerOnly {
+			return false
+		}
 		source := game.FindPermanent(act.ActionSource())
 		target := game.FindPermanent(act.PermanentID())
 		if target == nil {

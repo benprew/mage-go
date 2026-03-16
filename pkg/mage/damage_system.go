@@ -74,6 +74,7 @@ type damagePreventionRule struct {
 	to         PermanentFilter
 	oneShot    bool
 	combatOnly bool
+	playerOnly bool
 }
 
 type damagePreventionRuleOption func(*damagePreventionRule)
@@ -106,6 +107,14 @@ func WithCombatOnly() damagePreventionRuleOption {
 	}
 }
 
+// WithPlayerOnly restricts a damage prevention rule to damage dealt to players only
+// (ignores damage dealt to permanents).
+func WithPlayerOnly() damagePreventionRuleOption {
+	return func(dpr *damagePreventionRule) {
+		dpr.playerOnly = true
+	}
+}
+
 // AddDamagePreventionRule registers a damage prevention rule by delegating to the
 // EffectManager's replacement system. This preserves the existing card API.
 func (ds *DamageSystem) AddDamagePreventionRule(opts ...damagePreventionRuleOption) {
@@ -119,6 +128,7 @@ func (ds *DamageSystem) AddDamagePreventionRule(opts ...damagePreventionRuleOpti
 			to:         dpr.to,
 			oneShot:    dpr.oneShot,
 			combatOnly: dpr.combatOnly,
+			playerOnly: dpr.playerOnly,
 		})
 	}
 }
