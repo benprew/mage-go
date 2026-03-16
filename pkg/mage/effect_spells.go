@@ -3,8 +3,8 @@ package mage
 import (
 	"fmt"
 
-	"github.com/google/uuid"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"github.com/google/uuid"
 )
 
 // counterSpellEffect counters a target spell on the stack.
@@ -197,6 +197,7 @@ type createTokenEffect struct {
 	types     []CardType
 	subTypes  []string
 	keywords  []Keyword
+	colors    []Color
 }
 
 // CreateToken creates an effect that puts a token creature onto the battlefield.
@@ -211,9 +212,26 @@ func CreateToken(name string, power, toughness int, types []CardType, subTypes [
 	}
 }
 
+// CreateColoredToken creates an effect that puts a colored token creature onto the battlefield.
+func CreateColoredToken(name string, power, toughness int, colors []Color, types []CardType, subTypes []string, keywords ...Keyword) Effect {
+	return &createTokenEffect{
+		name:      name,
+		power:     power,
+		toughness: toughness,
+		types:     types,
+		subTypes:  subTypes,
+		keywords:  keywords,
+		colors:    colors,
+	}
+}
+
 func (e *createTokenEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	token := NewToken(e.name, e.power, e.toughness, e.types, e.subTypes, e.keywords...)
 	token.SetOwner(controller)
+	if len(e.colors) > 0 {
+		token.colorOverride = make([]Color, len(e.colors))
+		copy(token.colorOverride, e.colors)
+	}
 	g.PutOnBattlefield(token, controller)
 	return nil
 }
@@ -314,7 +332,7 @@ func (e *attachToTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UU
 	return nil
 }
 
-func (e *attachToTargetEffect) Text() string { return "attach to target" }
+func (e *attachToTargetEffect) Text() string                 { return "attach to target" }
 func (e *attachToTargetEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // controlChangeTargetEffect gains control of a target permanent.

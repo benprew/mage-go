@@ -36,16 +36,17 @@ type Card interface {
 
 // BaseCard provides the common card implementation.
 type BaseCard struct {
-	id         uuid.UUID
-	name       string
-	manaCost   ManaCost
-	types      []CardType
-	superTypes []SuperType
-	subTypes   []string
-	abilities  []Ability
-	owner      uuid.UUID
-	power      int
-	toughness  int
+	id              uuid.UUID
+	name            string
+	manaCost        ManaCost
+	types           []CardType
+	superTypes      []SuperType
+	subTypes        []string
+	abilities       []Ability
+	owner           uuid.UUID
+	power           int
+	toughness       int
+	colorOverride   []Color
 	isToken         bool
 	modes           []string
 	attrSeeds       map[Attr]int // keyword/attr seeds; NewPermanent copies these to baseAttrs
@@ -57,21 +58,21 @@ type BaseCard struct {
 // NewPermanent uses these to populate the permanent's baseAttrs.
 func (c *BaseCard) AttrSeeds() map[Attr]int { return c.attrSeeds }
 
-func (c *BaseCard) ID() uuid.UUID         { return c.id }
-func (c *BaseCard) Name() string          { return c.name }
-func (c *BaseCard) ManaCost() ManaCost    { return c.manaCost }
+func (c *BaseCard) ID() uuid.UUID           { return c.id }
+func (c *BaseCard) Name() string            { return c.name }
+func (c *BaseCard) ManaCost() ManaCost      { return c.manaCost }
 func (c *BaseCard) Types() []CardType       { return c.types }
 func (c *BaseCard) SuperTypes() []SuperType { return c.superTypes }
 func (c *BaseCard) SubTypes() []string      { return c.subTypes }
-func (c *BaseCard) Abilities() []Ability  { return c.abilities }
-func (c *BaseCard) Owner() uuid.UUID      { return c.owner }
-func (c *BaseCard) Power() int            { return c.power }
-func (c *BaseCard) Toughness() int        { return c.toughness }
+func (c *BaseCard) Abilities() []Ability    { return c.abilities }
+func (c *BaseCard) Owner() uuid.UUID        { return c.owner }
+func (c *BaseCard) Power() int              { return c.power }
+func (c *BaseCard) Toughness() int          { return c.toughness }
 func (c *BaseCard) Modes() []string         { return c.modes }
-func (c *BaseCard) SetModes(m []string)      { c.modes = m }
-func (c *BaseCard) SetBasePT(p, t int)       { c.power = p; c.toughness = t }
-func (c *BaseCard) SetOwner(id uuid.UUID)    { c.owner = id }
-func (c *BaseCard) SetID(id uuid.UUID)       { c.id = id }
+func (c *BaseCard) SetModes(m []string)     { c.modes = m }
+func (c *BaseCard) SetBasePT(p, t int)      { c.power = p; c.toughness = t }
+func (c *BaseCard) SetOwner(id uuid.UUID)   { c.owner = id }
+func (c *BaseCard) SetID(id uuid.UUID)      { c.id = id }
 
 func (c *BaseCard) HasType(t CardType) bool {
 	for _, ct := range c.types {
@@ -288,7 +289,6 @@ func WithActivatedAbility(effect Effect, cost Cost, opts ...AbilityOption) CardO
 	return func(c *BaseCard) { c.AddAbility(NewActivatedAbility(effect, cost, opts...)) }
 }
 
-
 // WithStaticAbility adds a static ability that applies continuous effects.
 func WithStaticAbility(effects ...ContinuousEffect) CardOption {
 	return func(c *BaseCard) { c.AddAbility(StaticAbility(effects...)) }
@@ -445,11 +445,11 @@ type Permanent struct {
 	AttachedTo  uuid.UUID   // what this permanent is attached to
 	Attachments []uuid.UUID // what's attached to this permanent
 
-	RuntimeAbilities []Ability  // base + granted by effects
-	SubTypeOverride  []string   // if set, replaces card's subtypes (from continuous effects)
-	BasePTOverride   *[2]int    // if set, overrides base P/T (for animate effects)
-	ColorOverride    *[]Color   // if set, replaces card's colors (from lace effects)
-	FaceDown         bool       // true when face-down (e.g. Illusionary Mask)
+	RuntimeAbilities []Ability // base + granted by effects
+	SubTypeOverride  []string  // if set, replaces card's subtypes (from continuous effects)
+	BasePTOverride   *[2]int   // if set, overrides base P/T (for animate effects)
+	ColorOverride    *[]Color  // if set, replaces card's colors (from lace effects)
+	FaceDown         bool      // true when face-down (e.g. Illusionary Mask)
 
 	// Attr system: additive/subtractive attribute counts.
 	// baseAttrs holds intrinsic attrs (set at creation/ETB; persists until explicitly revoked).
@@ -582,6 +582,9 @@ func (p *Permanent) Colors() []Color {
 	}
 	if p.ColorOverride != nil {
 		return *p.ColorOverride
+	}
+	if bc, ok := p.Card.(*BaseCard); ok && len(bc.colorOverride) > 0 {
+		return bc.colorOverride
 	}
 	return p.Card.ManaCost().Colors()
 }
