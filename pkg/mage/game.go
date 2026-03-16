@@ -2544,7 +2544,7 @@ func (g *Game) GetActivatableAbilities(playerID uuid.UUID) []ActivatableInfo {
 	for _, perm := range g.Battlefield {
 		isOwner := perm.Controller == playerID
 		for i, a := range perm.RuntimeAbilities {
-			aa, ok := a.(ActivatedAbility)
+			aa, ok := UnwrapAbility(a).(ActivatedAbility)
 			if !ok {
 				continue
 			}
@@ -2563,7 +2563,7 @@ func (g *Game) GetActivatableAbilities(playerID uuid.UUID) []ActivatableInfo {
 				}
 			}
 			// Skip mana abilities - those are handled separately
-			if _, isMana := a.(*ManaAbility); isMana {
+			if _, isMana := UnwrapAbility(a).(*ManaAbility); isMana {
 				continue
 			}
 			if !aa.CanActivate(playerID, g) {
