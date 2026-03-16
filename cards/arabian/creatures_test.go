@@ -1258,3 +1258,80 @@ func TestGhazbanOgreControlPersists(t *testing.T) {
 	})
 }
 
+func TestKhabalGhoulNoDeaths(t *testing.T) {
+	t.Run("no_counters_if_no_deaths", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Khabál Ghoul")
+		g.StopAt(2, core.Upkeep)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Khabál Ghoul", 1, 1)
+	})
+}
+
+func TestAladdinControlReverts(t *testing.T) {
+	t.Run("artifact_reverts_when_aladdin_destroyed", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Aladdin")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Jayemdae Tome")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Aladdin", "Jayemdae Tome")
+		// Destroy Aladdin — control should revert
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Aladdin")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertGraveyardCount(gametest.PlayerA, "Aladdin", 1)
+		g.AssertPermanentCount(gametest.PlayerB, "Jayemdae Tome", 1)
+	})
+}
+
+func TestOldManOfTheSeaUntapReleasesControl(t *testing.T) {
+	t.Run("loses_control_when_untapped", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Old Man of the Sea") // 2/3
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Jandor's Saddlebags")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // 2/2
+		// Steal Bears
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Old Man of the Sea", "Grizzly Bears")
+		// Untap Old Man with Saddlebags — control should revert
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Jandor's Saddlebags", "Old Man of the Sea")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Old Man untapped → control reverts to PlayerB
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
+	})
+}
+
+func TestRukhEggTokenColor(t *testing.T) {
+	t.Run("token_is_red", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rukh Egg")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Rukh Egg")
+		g.StopAt(2, core.Upkeep)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Bird", 1)
+		g.AssertHasColor(gametest.PlayerA, "Bird", core.Red, true)
+	})
+}
+
+func TestIfhBiffEfreetOpponentActivation(t *testing.T) {
+	t.Run("opponent_can_activate", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ifh-Bíff Efreet") // 3/3 flying
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forest")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerB, "Ifh-Bíff Efreet")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Both players take 1 damage, Efreet takes 1 damage (flying)
+		g.AssertLife(gametest.PlayerA, 19)
+		g.AssertLife(gametest.PlayerB, 19)
+	})
+}
+
+

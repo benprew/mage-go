@@ -713,7 +713,7 @@ func registerCreatures() {
 								SourceID:   sourceID,
 								Controller: controller,
 								Effects: []Effect{
-									CreateToken("Bird", 4, 4, []CardType{TypeCreature}, []string{"Bird"}, Flying),
+									CreateColoredToken("Bird", 4, 4, []Color{Red}, []CardType{TypeCreature}, []string{"Bird"}, Flying),
 								},
 							})
 							return nil
@@ -892,7 +892,7 @@ func registerCreatures() {
 										return nil
 									}
 									if !g.TryPayCostFromLands(damagedPlayerID, "{1}") {
-										g.DealDamageToPlayer(p, 1, sourceID2)
+										p.LoseLife(1)
 									}
 									return nil
 								})},
