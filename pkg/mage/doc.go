@@ -816,7 +816,7 @@ For spell/land/ability execution on clones, use the standard methods:
 
 	g.PlayLand(playerID, cardID)                          // play + resolve stack
 	g.CastSpellByID(playerID, cardID, targets, xValue)    // put on stack (call ResolveStack after)
-	g.ActivateAbilityByIndex(playerID, permID, idx, tgts) // put on stack
+	g.ActivateAbilityByIndex(playerID, permID, idx, tgts) // put on stack (or handle mana ability)
 	g.ResolveStack()                                      // drain stack atomically
 
 # Replacement Effect System

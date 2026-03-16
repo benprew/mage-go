@@ -1,6 +1,7 @@
 package gametest
 
 import (
+	"fmt"
 	"testing"
 
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
@@ -566,12 +567,102 @@ func (tg *TestGame) ensureManaForActivate(aa activateAction) {
 	pool.Add(core.Colorless, 10)
 }
 
+// findActivatableAbilityByName finds the first activatable ability on a named permanent.
+// Prefers non-mana activated abilities, falls back to mana abilities.
+func (tg *TestGame) findActivatableAbilityByName(playerID uuid.UUID, permName string, targets []uuid.UUID) (*mage.Permanent, int, error) {
+	perm := tg.FindPermanentByName(permName, playerID)
+	if perm == nil {
+		for _, p := range tg.Battlefield {
+			if p.Name() == permName {
+				perm = p
+				break
+			}
+		}
+	}
+	if perm == nil {
+		return nil, -1, fmt.Errorf("permanent %s not found", permName)
+	}
+
+	// First pass: activated abilities (non-mana)
+	for i, a := range perm.RuntimeAbilities {
+		inner := mage.UnwrapAbility(a)
+		if _, isMana := inner.(*mage.ManaAbility); isMana {
+			continue
+		}
+		aa, ok := inner.(mage.ActivatedAbility)
+		if !ok {
+			continue
+		}
+		if !aa.CanActivate(playerID, tg.Game) {
+			continue
+		}
+		if saa, isSAA := inner.(*mage.SimpleActivatedAbility); isSAA && saa.OpponentOnlyMayUse {
+			if perm.Controller == playerID {
+				continue
+			}
+		}
+
+		if len(aa.Targets()) > 0 && len(targets) > 0 {
+			validTargets := true
+			for j, t := range aa.Targets() {
+				if j >= len(targets) {
+					break
+				}
+				if tf, ok := t.(interface{ Filter() mage.PermanentFilter }); ok {
+					targetPerm := tg.FindPermanent(targets[j])
+					if targetPerm != nil {
+						if !tf.Filter().Match(targetPerm, tg.Game) || !targetPerm.CanBeTargetedBy(perm.Card, playerID, tg.Game) {
+							validTargets = false
+							break
+						}
+					}
+				} else {
+					possible := t.Possible(playerID, perm.Card, tg.Game)
+					found := false
+					for _, pid := range possible {
+						if pid == targets[j] {
+							found = true
+							break
+						}
+					}
+					if !found {
+						validTargets = false
+						break
+					}
+				}
+			}
+			if !validTargets {
+				continue
+			}
+		}
+
+		return perm, i, nil
+	}
+
+	// Second pass: mana abilities
+	for i, a := range perm.RuntimeAbilities {
+		inner := mage.UnwrapAbility(a)
+		if _, ok := inner.(*mage.ManaAbility); ok {
+			if !perm.Tapped && perm.CanTapForEffect(tg.Game) {
+				return perm, i, nil
+			}
+		}
+	}
+
+	return nil, -1, fmt.Errorf("no activatable ability found on %s", permName)
+}
+
 func (tg *TestGame) executeSingleActivate(aa activateAction) {
 	playerID := tg.getPlayerID(aa.player)
 	targets := tg.resolveTargets(aa.targets, playerID)
 	tg.ensureManaForActivate(aa)
 	tg.CurrentX = aa.xValue
-	err := tg.ActivateAbilityByText(playerID, aa.permName, targets)
+	perm, idx, err := tg.findActivatableAbilityByName(playerID, aa.permName, targets)
+	if err != nil {
+		tg.t.Logf("ActivateAbility %s failed: %v", aa.permName, err)
+		return
+	}
+	err = tg.ActivateAbilityByIndex(playerID, perm.ID(), idx, targets)
 	if err != nil {
 		tg.t.Logf("ActivateAbility %s failed: %v", aa.permName, err)
 	}
@@ -590,9 +681,14 @@ func (tg *TestGame) executeResponses(responses []responseAction) {
 		}
 
 		if r.perm != "" {
-			err := tg.ActivateAbilityByText(respPlayerID, r.perm, targets)
+			perm, idx, err := tg.findActivatableAbilityByName(respPlayerID, r.perm, targets)
 			if err != nil {
 				tg.t.Logf("ActivateInResponseTo %s failed: %v", r.perm, err)
+			} else {
+				err = tg.ActivateAbilityByIndex(respPlayerID, perm.ID(), idx, targets)
+				if err != nil {
+					tg.t.Logf("ActivateInResponseTo %s failed: %v", r.perm, err)
+				}
 			}
 		} else {
 			tg.ensureManaForResponse(r)
@@ -988,6 +1084,36 @@ func (tg *TestGame) AssertGraveyardOrder(p PlayerRef, names ...string) {
 		if got != want {
 			tg.t.Errorf("AssertGraveyardOrder(%v): position %d: got %q, want %q", p, i, got, want)
 		}
+	}
+}
+
+// AssertHandSize checks the total number of cards in a player's hand.
+func (tg *TestGame) AssertHandSize(p PlayerRef, want int) {
+	tg.t.Helper()
+	got := len(tg.GetPlayer(p).Hand())
+	if got != want {
+		tg.t.Errorf("AssertHandSize(%v): got %d, want %d", p, got, want)
+	}
+}
+
+// AssertHasColor checks whether a permanent has a given color.
+func (tg *TestGame) AssertHasColor(p PlayerRef, name string, color core.Color, has bool) {
+	tg.t.Helper()
+	playerID := tg.getPlayerID(p)
+	perm := tg.FindPermanentByName(name, playerID)
+	if perm == nil {
+		tg.t.Errorf("AssertHasColor(%v, %s): permanent not found", p, name)
+		return
+	}
+	got := false
+	for _, c := range perm.Colors() {
+		if c == color {
+			got = true
+			break
+		}
+	}
+	if got != has {
+		tg.t.Errorf("AssertHasColor(%v, %s, %v): got %v, want %v", p, name, color, got, has)
 	}
 }
 

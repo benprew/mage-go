@@ -55,7 +55,7 @@ func TestHaste_CreatureCanAttackTurnPlayed(t *testing.T) {
 }
 
 // TestSummonSickness_CreatureCannotTapForManaTurnPlayed verifies that a creature
-// cast this turn cannot tap to produce mana (ActivateAbilityByText mana-ability guard).
+// cast this turn cannot tap to produce mana (ActivateAbilityByIndex mana-ability guard).
 // Llanowar Elves is cast from hand; it is summoning sick, so a direct activation
 // of its {T}: Add {G} ability should be rejected — the Elves remain untapped.
 func TestSummonSickness_CreatureCannotTapForManaTurnPlayed(t *testing.T) {

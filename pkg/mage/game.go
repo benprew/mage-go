@@ -1478,170 +1478,6 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	return nil
 }
 
-// ActivateAbilityByText finds and activates an activated ability on a permanent.
-func (g *Game) ActivateAbilityByText(playerID uuid.UUID, permName string, targets []uuid.UUID) error {
-	perm := g.FindPermanentByName(permName, playerID)
-	if perm == nil {
-		// Try finding any permanent with this name (for AnyPlayerMayUse abilities)
-		for _, p := range g.Battlefield {
-			if p.Name() == permName {
-				perm = p
-				break
-			}
-		}
-	}
-	if perm == nil {
-		return fmt.Errorf("permanent %s not found", permName)
-	}
-
-	for _, a := range perm.RuntimeAbilities {
-		inner := UnwrapAbility(a)
-		aa, ok := inner.(ActivatedAbility)
-		if !ok {
-			continue
-		}
-		if !aa.CanActivate(playerID, g) {
-			continue
-		}
-		// If opponent-only, the controller cannot activate it
-		if saa, isSAA := inner.(*SimpleActivatedAbility); isSAA && saa.OpponentOnlyMayUse {
-			if perm.Controller == playerID {
-				continue
-			}
-		}
-
-		// Check sorcery speed
-		if aa.SorcerySpeed() && !g.Step.IsMainPhase() {
-			return ErrSorcerySpeed
-		}
-
-		// Validate targets against the ability's target filters
-		if len(aa.Targets()) > 0 && len(targets) > 0 {
-			validTargets := true
-			for i, t := range aa.Targets() {
-				if i >= len(targets) {
-					break
-				}
-				if tf, ok := t.(interface{ Filter() PermanentFilter }); ok {
-					targetPerm := g.FindPermanent(targets[i])
-					if targetPerm != nil {
-						if !tf.Filter().Match(targetPerm, g) {
-							validTargets = false
-							break
-						}
-						// Also check targeting legality (protection, shroud, etc.)
-						if !targetPerm.CanBeTargetedBy(perm.Card, playerID, g) {
-							validTargets = false
-							break
-						}
-					}
-				} else {
-					// Fallback: check if the target is in the Possible() list
-					possible := t.Possible(playerID, perm.Card, g)
-					found := false
-					for _, pid := range possible {
-						if pid == targets[i] {
-							found = true
-							break
-						}
-					}
-					if !found {
-						validTargets = false
-						break
-					}
-				}
-			}
-			if !validTargets {
-				continue
-			}
-		}
-
-		// Pay costs
-		for _, c := range aa.Costs() {
-			if err := c.Pay(perm.ID(), playerID, g); err != nil {
-				return err
-			}
-		}
-
-		// Mark once-per-turn abilities as used
-		if saa, ok := aa.(*SimpleActivatedAbility); ok {
-			saa.MarkActivated()
-		}
-
-		obj := &StackObject{
-			ID:         uuid.New(),
-			Controller: playerID,
-			SourceID:   perm.ID(),
-			IsAbility:  true,
-			Targets:    targets,
-			XValue:     g.CurrentX,
-		}
-		obj.Effects = append(obj.Effects, aa.Effects()...)
-
-		// Modal abilities: choose mode at activation time
-		if modes := perm.Card.Modes(); len(modes) > 0 {
-			p := g.GetPlayer(playerID)
-			if p != nil {
-				obj.ModeChoice = p.ChooseMode(modes, perm.Card.Name())
-			}
-		}
-
-		g.Stack.Push(obj)
-
-		// Fire EvtAbilityActivated. Flag=true if the ability had a tap cost.
-		hasTapCost := false
-		for _, c := range aa.Costs() {
-			if _, ok := c.(*tapSourceCost); ok {
-				hasTapCost = true
-				break
-			}
-		}
-		g.FireEvent(GameEvent{
-			Type:     EvtAbilityActivated,
-			SourceID: perm.ID(),
-			PlayerID: playerID,
-			Flag:     hasTapCost,
-		})
-		return nil
-	}
-
-	// Try mana abilities (these don't use the stack)
-	for _, a := range perm.RuntimeAbilities {
-		inner := UnwrapAbility(a)
-		ma, ok := inner.(*ManaAbility)
-		if !ok {
-			continue
-		}
-		if perm.Tapped || !perm.CanTapForEffect(g) {
-			continue // already tapped or summoning sick without haste
-		}
-		perm.Tapped = true
-		p := g.GetPlayer(playerID)
-		if p != nil {
-			color := ma.Color
-			if ma.AnyColor {
-				color = p.ChooseManaColor("add mana")
-			}
-			p.ManaPool().Add(color, 1)
-			// Check for mana bonus effects (e.g. Gauntlet of Might)
-			g.applyManaBonuses(perm, color, p)
-		}
-		g.FireEvent(GameEvent{
-			Type:     EvtTapped,
-			SourceID: perm.ID(),
-			PlayerID: playerID,
-		})
-		g.FireEvent(GameEvent{
-			Type:     EvtAbilityActivated,
-			SourceID: perm.ID(),
-			PlayerID: playerID,
-		})
-		return nil
-	}
-
-	return fmt.Errorf("no activatable ability found on %s", permName)
-}
-
 // applyManaBonuses checks for mana bonus effects when a permanent is tapped for mana.
 func (g *Game) applyManaBonuses(tappedPerm *Permanent, producedColor Color, p Player) {
 	for _, perm := range g.Battlefield {
@@ -2953,10 +2789,35 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		SourceID:   perm.ID(),
 		IsAbility:  true,
 		Targets:    targets,
+		XValue:     g.CurrentX,
 	}
 	obj.Effects = append(obj.Effects, aa.Effects()...)
 
+	// Modal abilities: choose mode at activation time
+	if modes := perm.Card.Modes(); len(modes) > 0 {
+		p := g.GetPlayer(playerID)
+		if p != nil {
+			obj.ModeChoice = p.ChooseMode(modes, perm.Card.Name())
+		}
+	}
+
 	g.Stack.Push(obj)
+
+	// Fire EvtAbilityActivated
+	hasTapCost := false
+	for _, c := range aa.Costs() {
+		if _, ok := c.(*tapSourceCost); ok {
+			hasTapCost = true
+			break
+		}
+	}
+	g.FireEvent(GameEvent{
+		Type:     EvtAbilityActivated,
+		SourceID: perm.ID(),
+		PlayerID: playerID,
+		Flag:     hasTapCost,
+	})
+
 	return nil
 }
 
