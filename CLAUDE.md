@@ -2,9 +2,9 @@
 
 ## What This Is
 
-A Magic: The Gathering rules engine in Go, inspired by XMage's architecture. 2-player only. The only external dependency is `github.com/google/uuid`.
+MTG rules engine in Go (2-player, XMage-inspired). Only external dep: `github.com/google/uuid`.
 
-Reference XMage source lives at `~/mage`. Consult `~/mage/Mage.Sets/src/mage/cards/` and `~/mage/Mage/src/main/java/mage/` for rules behavior and card implementations.
+XMage reference: `~/mage/Mage.Sets/src/mage/cards/` and `~/mage/Mage/src/main/java/mage/`.
 
 ## Commands
 
@@ -14,158 +14,81 @@ go test ./cards/...                        # card tests only
 go test ./cards/arabian/ -run TestFooBar   # single test
 go build ./...                             # build check
 go vet ./...                               # vet
-make wasm                                  # build WASM + copy wasm_exec.js to web/
+make wasm                                  # WASM build
+golangci-lint run --fix                    # lint (run after changes)
 ```
+
+## Code Style
+
+- Avoid inline comments; comments explain "why" not "what"
+- Function header comments for public functions are good
+- TDD: write test first, implement, confirm tests pass
 
 ## Cardinal Rules
 
-1. **Follow Oracle text exactly.** Every card implementation must match its Oracle text word-for-word. Include the full Oracle text as a comment above each `Register()` call. If Oracle says "nontoken," check for nontoken. If it says "each," hit each. No paraphrasing, no shortcuts.
+1. **Follow Oracle text exactly.** Include full Oracle text as comment above `Register()`. Check every word — "nontoken," "each," "nonbasic," etc. No paraphrasing, no shortcuts.
 
-2. **Never simplify a card implementation.** This is a rules engine, not a game that needs to ship. Every condition, restriction, and edge case in the Oracle text matters. Do NOT drop conditions because they "rarely matter," do NOT skip targeting restrictions because they're "unlikely to come up," and do NOT approximate complex effects with simpler ones. If Oracle says "nontoken creature an opponent controls with power 3 or greater," check every single word of that. A simplified implementation is a **wrong** implementation. If a card truly cannot be fully implemented with the current engine, mark the gap with `// XXX:` and ask the user — never silently simplify.
+2. **Never simplify.** Every condition, restriction, and edge case matters. A simplified implementation is a **wrong** implementation. If the engine can't support something, mark with `// XXX:` and ask — never silently simplify.
 
-3. **TDD — write the test first.** Before implementing a card, write a failing test that exercises its key behavior. Then implement the card to make the test pass. Tests catch rules bugs that code review misses.
+3. **TDD.** Write a failing test first, then implement.
 
-4. **Consult XMage.** When the Oracle text is ambiguous or a mechanic is complex, check how `~/mage` implements it. XMage has 15+ years of rules-correctness work.
+4. **Consult XMage** (`~/mage`) when Oracle text is ambiguous or mechanics are complex.
 
 ## Card Implementation Guide
 
-**Read `pkg/mage/doc.go` first.** It is the comprehensive reference for every engine subsystem: card constructors, effects (50+), targets, filters, costs, activated abilities, triggered abilities (20+ convenience constructors), continuous effects, the layer system, attrs, the replacement effect system, and the GameMutator API. It includes complete card examples.
+**Read `pkg/mage/doc.go` first** — comprehensive reference for the engine API: card constructors, effects, targets, filters, costs, abilities, continuous effects, layers, attrs, replacement effects, and GameMutator.
 
-**Comprehensive Rules**: The full MTG rulebook is at `docs/comprehensive-rules.md` (~9200 lines). Use `docs/comprehensive-rules-index.md` to find the relevant section by line number, then read just that section. For example, to look up trample rules: find "702. Keyword Abilities" at line 3795 in the index, then `Grep` for `702.19` in the rules file. Always consult the comp rules when Oracle text is ambiguous or a mechanic's interaction is unclear.
+**Comprehensive Rules**: `docs/comprehensive-rules.md` (~9200 lines). Use `docs/comprehensive-rules-index.md` to find sections by line number, then read just that section.
 
-**Replacement effects**: Cards that prevent, redirect, or replace game actions (damage prevention, regeneration, Lich, etc.) use the `ReplacementEffect` pipeline. See the "Replacement Effect System" section in `doc.go` for the `Action` types, `ReplacementEffect` interface, the 17 built-in replacements, and how to implement custom ones. Most cards use the existing `GameMutator` proxy methods (`AddPreventionShield`, `AddRegenerationShield`, etc.) which create replacements internally.
+**Replacement effects**: See "Replacement Effect System" in `doc.go`. Most cards use `GameMutator` proxy methods (`AddPreventionShield`, `AddRegenerationShield`, etc.).
 
-## Set Implementation Toolkit
+## Set Implementation
 
-The project has a pipeline for implementing entire card sets, from fetching data through validated completion.
-
-### Tools
-
-- **`cmd/fetchset`** — Fetches card data from the Scryfall API and writes JSON to `data/`.
-  ```bash
-  go run ./cmd/fetchset -o data/DRK.json DRK
-  ```
-
-- **`cmd/genset`** — Generates Go stub files from the JSON. Creates `register.go`, `test.go`, `creatures.go`, `artifacts.go`, `enchantments.go`, `spells.go`, and `lands.go` with full Oracle text comments and `// TODO: implement` markers. Automatically skips reprints already registered in other sets.
-  ```bash
-  go run ./cmd/genset "The Dark" data/DRK.json cards/thedark/
-  ```
-
-### Claude Code Skills
-
-Three skills automate the card implementation workflow:
-
-- **`/implement-card <card names>`** — TDD workflow for a single card or batch of similar cards. Reads the stub, writes failing tests, implements the card, verifies all tests pass, and commits. Consults `doc.go` for the engine API and XMage for complex mechanics. Uses `AskUserQuestion` before cutting any scope.
-
-- **`/implement-set <set-code> [set-name] [package-name]`** — End-to-end set implementation. Runs `fetchset` and `genset`, then analyzes every card into tiers (vanilla → standard effects → complex → engine work required → out of scope). Presents the plan for approval, then works through batches via `/implement-card`, parallelizing independent work. Commits after each batch.
-
-- **`/validate-set <package-name> [set-code]`** — Audits a set for completeness and correctness. Auto-fetches Scryfall JSON if missing (resolves set code from package name or accepts it explicitly). Checks every card's implementation against Oracle text for fidelity — catches missing abilities, simplified effects (e.g., "nontoken" not checked), wrong values, and missing conditions. Audits test coverage, runs the test suite, and produces a structured report with prioritized next steps.
-
-### Typical Workflow
-
+```bash
+go run ./cmd/fetchset -o data/DRK.json DRK                       # fetch from Scryfall
+go run ./cmd/genset "The Dark" data/DRK.json cards/thedark/       # generate stubs
+# then use /implement-set, /implement-card, /validate-set skills
 ```
-1. go run ./cmd/fetchset -o data/DRK.json DRK       # fetch from Scryfall
-2. go run ./cmd/genset "The Dark" data/DRK.json cards/thedark/  # generate stubs
-3. /implement-set DRK "The Dark" thedark             # implement all cards
-4. /validate-set thedark                             # audit completeness
-```
+
+- **`cmd/genset`** creates `register.go`, `test.go`, `creatures.go`, `artifacts.go`, `enchantments.go`, `spells.go`, `lands.go` with Oracle text comments and `// TODO: implement` markers. Skips reprints from other sets.
+- **`/implement-card <names>`** — TDD workflow for one card or a batch
+- **`/implement-set <set-code> [set-name] [pkg]`** — full set implementation pipeline
+- **`/validate-set <pkg> [set-code]`** — audit completeness and Oracle fidelity
 
 ## Package Layout
 
 ```
-pkg/mage/              # engine (package mage)
-pkg/mage/core/         # enums, value types (package core)
-pkg/mage/gametest/     # test harness DSL (package gametest)
+pkg/mage/              # engine
+pkg/mage/core/         # enums, value types
+pkg/mage/gametest/     # test harness DSL
 pkg/mage/interactive/  # TUI/AI player layer
-cards/limited/         # Alpha cards
-cards/arabian/         # Arabian Nights cards
-cards/antiquities/     # Antiquities cards
-cards/legends/         # Legends cards
-cards/custom/          # custom/test cards
-cmd/tui/               # terminal UI
-cmd/server/            # SSH multiplayer server
-cmd/wasm/              # WebAssembly build (GOOS=js GOARCH=wasm)
-cmd/fetchset/          # set data fetcher
-cmd/genset/            # stub generator from Scryfall JSON
-data/                  # Scryfall JSON card data per set
-web/                   # browser UI (index.html, game.js, build.sh)
-docs/                  # landing page, visual identity, tutorials, comprehensive rules
+cards/{limited,arabian,antiquities,legends,custom}/  # card sets
+cmd/{tui,server,wasm,fetchset,genset}/               # binaries
+data/                  # Scryfall JSON per set
+web/                   # browser UI
+docs/                  # comprehensive rules, tutorials
 ```
 
-Cards register via `Register(name, factory)` in `init()`. Each card file has a registration function called from `init()`. The `test.go` file in each card package holds blank-identifier references to ensure registration runs.
+Cards register via `Register(name, factory)` in `init()`. Each set's `test.go` has blank-identifier imports to ensure registration.
 
 ## Test Harness DSL
 
-Tests use `gametest.TestGame` with two scripted players (`PlayerA`, `PlayerB`). Card test files go in the same package as the cards (e.g., `cards/arabian/creatures_test.go`).
+Tests use `gametest.TestGame` with `PlayerA`/`PlayerB`. Card tests go in the card package.
 
 ```go
-import (
-    . "github.com/mage/mage/pkg/mage/core"
-    "github.com/mage/mage/pkg/mage/gametest"
-)
-
-func TestCard(t *testing.T) {
-    g := gametest.NewTestGame(t)
-    g.AddCard(ZoneBattlefield, gametest.PlayerA, "Card Name")
-    g.StopAt(1, EndStep)
-    g.Execute()
-    g.AssertLife(gametest.PlayerB, 20)
-}
+g := gametest.NewTestGame(t)
+g.AddCard(ZoneBattlefield, gametest.PlayerA, "Card Name")
+g.StopAt(1, EndStep)
+g.Execute()
+g.AssertLife(gametest.PlayerB, 20)
 ```
 
-### Setup
+**Setup**: `NewTestGame(t)`, `AddCard(zone, player, name, count...)`, `SetLife(player, n)`, `AddCounters(turn, step, player, card, counterType, n)`
 
-- `NewTestGame(t)` — creates game, both players at 20 life, empty board
-- `AddCard(zone, player, name, count...)` — put a card in any zone (battlefield, hand, graveyard, library, exile). Optional count parameter for multiple copies.
-- `SetLife(player, n)` — set starting life
-- `AddCounters(turn, step, player, cardName, counterType, n)` — add counters to a permanent
+**Actions** (turn, step, player, args...): `CastSpell`, `CastSpellWithX`, `CastInResponseTo`, `CastInResponseToWithX`, `ActivateAbility`, `ActivateAbilityWithX`, `ActivateInResponseTo`, `Attack(turn, player, attackers...)`, `Block(turn, player, blocker, attacker)`, `FormBand(turn, player, creatures...)`
 
-### Actions (turn number, phase/step, player, args...)
+**Choices**: `ChoosePermanent`, `ChooseDiscard(player, cards...)`, `ChooseManaColor`, `ChooseFromLibrary`, `ChooseMode`, `ChooseBandingDistribution(player, map[string]int)`
 
-- `CastSpell(turn, step, player, spellName, targets...)` — cast from hand
-- `CastSpellWithX(turn, step, player, spellName, x, targets...)` — cast with X
-- `CastInResponseTo(player, spellName, targets...)` — cast in response (no turn/step needed)
-- `CastInResponseToWithX(player, spellName, x, targets...)` — cast in response with X
-- `ActivateAbility(turn, step, player, permanentName, targets...)` — activate an ability
-- `ActivateAbilityWithX(turn, step, player, permanentName, x, targets...)` — activate with X
-- `ActivateInResponseTo(player, permanentName, targets...)` — activate in response
-- `Attack(turn, player, attackers...)` — declare attackers
-- `Block(turn, player, blocker, attacker)` — declare a block
-- `FormBand(turn, player, creatures...)` — form a band of attackers
+**Control**: `StopAt(turn, step)`, `Execute()`, `PlayToEnd(maxTurns...)`
 
-### Choices (scripted decisions for AI-free testing)
-
-- `ChoosePermanent(player, permanentName)` — choose a permanent when prompted
-- `ChooseDiscard(player, cardNames...)` — choose cards to discard
-- `ChooseManaColor(player, color)` — choose a mana color
-- `ChooseFromLibrary(player, cardName)` — choose a card from library
-- `ChooseMode(player, mode)` — choose a mode (e.g., charm modes)
-- `ChooseBandingDistribution(player, distribution)` — assign banding damage (map[string]int)
-
-### Control
-
-- `StopAt(turn, step)` — stop execution at this point
-- `Execute()` — run the game to the stop point
-- `PlayToEnd(maxTurns...)` — run until game over (optional max turns)
-
-### Assertions
-
-- `AssertLife(player, n)`
-- `AssertPoisonCounters(player, n)`
-- `AssertPermanentCount(player, name, n)`
-- `AssertGraveyardCount(player, name, n)`
-- `AssertExileCount(name, n)` — no player param, checks global exile
-- `AssertHandCount(player, name, n)`
-- `AssertLibraryCount(player, name, n)`
-- `AssertPowerToughness(player, name, power, toughness)`
-- `AssertCounterCount(player, name, counterType, n)`
-- `AssertTapped(player, name, tapped)`
-- `AssertHasAbility(player, name, keyword, has)` — keyword is `core.Keyword`, has is bool
-- `AssertAttachedTo(player, auraName, targetName)`
-- `AssertLibraryTop(player, names...)`
-- `AssertGraveyardOrder(player, names...)`
-- `AssertAnteCount(player, name, n)`
-- `AssertBanded(player1, creature1, player2, creature2, want)` — want is bool
-- `AssertWinner(player)`
-- `AssertGameOver(want)` — want is bool
-- `AssertTotalTurns(n)`
+**Assertions**: `AssertLife`, `AssertPoisonCounters`, `AssertPermanentCount`, `AssertGraveyardCount`, `AssertExileCount(name, n)` (global), `AssertHandCount`, `AssertLibraryCount`, `AssertPowerToughness`, `AssertCounterCount`, `AssertTapped`, `AssertHasAbility(player, name, keyword, has)`, `AssertAttachedTo`, `AssertLibraryTop(player, names...)`, `AssertGraveyardOrder`, `AssertAnteCount`, `AssertBanded(p1, c1, p2, c2, want)`, `AssertWinner`, `AssertGameOver(want)`, `AssertTotalTurns(n)`
