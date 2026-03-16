@@ -558,6 +558,42 @@ func (s *HeuristicStrategy) autoSelectTargets(p mage.Player, g *mage.Game, card 
 		}
 	}
 
+	// Check CastTargets for auras and other cards with cast-time targeting
+	for _, t := range card.CastTargets() {
+		possible := t.Possible(playerID, card, g)
+		if len(possible) == 0 {
+			return nil
+		}
+		switch t.(type) {
+		case *mage.CreatureTarget:
+			var ownBest uuid.UUID
+			ownBestScore := -1
+			for _, id := range possible {
+				perm := g.FindPermanent(id)
+				if perm != nil && perm.Controller == playerID {
+					score := eval.EvalCreatureInGame(perm, g)
+					if score > ownBestScore {
+						ownBestScore = score
+						ownBest = id
+					}
+				}
+			}
+			if ownBest != uuid.Nil {
+				return []uuid.UUID{ownBest}
+			}
+			for _, id := range possible {
+				perm := g.FindPermanent(id)
+				if perm != nil {
+					return []uuid.UUID{id}
+				}
+			}
+		default:
+			if len(possible) > 0 {
+				return []uuid.UUID{possible[0]}
+			}
+		}
+	}
+
 	return nil
 }
 
