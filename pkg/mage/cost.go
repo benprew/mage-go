@@ -31,12 +31,8 @@ func GenericCost(n int) Cost {
 }
 
 func (c *ManaCostPayment) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
-	p := g.GetPlayer(controller)
-	if p == nil {
-		return false
-	}
 	mc := c.reducedCost(sourceID, g)
-	return p.ManaPool().CanPay(mc)
+	return g.CanAfford(controller, mc)
 }
 
 func (c *ManaCostPayment) Pay(sourceID, controller uuid.UUID, g *Game) error {

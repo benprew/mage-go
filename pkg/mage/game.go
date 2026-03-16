@@ -2508,19 +2508,37 @@ func (g *Game) getUntappedManaSources(playerID uuid.UUID) []manaSourceInfo {
 	return sources
 }
 
-// AutoTapForCost taps untapped lands/mana sources to pay a mana cost.
+// AutoTapForCost taps untapped lands/mana sources to pay a mana cost,
+// accounting for mana already in the player's pool.
 func (g *Game) AutoTapForCost(playerID uuid.UUID, mc ManaCost) error {
+	p := g.GetPlayer(playerID)
+	if p == nil {
+		return fmt.Errorf("player not found")
+	}
+	pool := p.ManaPool()
 	sources := g.getUntappedManaSources(playerID)
 
-	// Collect how much of each color we need
-	needed := map[Color]int{
-		White: mc.White,
-		Blue:  mc.Blue,
-		Black: mc.Black,
-		Red:   mc.Red,
-		Green: mc.Green,
+	// Subtract mana already in pool from what we need to tap
+	colorNeeds := []struct {
+		color Color
+		need  int
+	}{
+		{White, mc.White},
+		{Blue, mc.Blue},
+		{Black, mc.Black},
+		{Red, mc.Red},
+		{Green, mc.Green},
 	}
-	genericNeeded := mc.Generic
+	needed := map[Color]int{}
+	poolUsedForColor := 0
+	for _, cn := range colorNeeds {
+		have := pool.Count(cn.color)
+		used := min(have, cn.need)
+		poolUsedForColor += used
+		needed[cn.color] = cn.need - used
+	}
+	poolRemaining := pool.TotalMana() - poolUsedForColor
+	genericNeeded := mc.Generic - min(mc.Generic, poolRemaining)
 
 	var toTap []uuid.UUID
 
@@ -2568,37 +2586,25 @@ func (g *Game) AutoTapForCost(playerID uuid.UUID, mc ManaCost) error {
 	return nil
 }
 
-// CanAfford returns true if a player has enough untapped mana sources to pay a cost.
+// CanAfford returns true if a player has enough mana (pool + untapped sources) to pay a cost.
 func (g *Game) CanAfford(playerID uuid.UUID, mc ManaCost) bool {
-	sources := g.getUntappedManaSources(playerID)
-
-	avail := map[Color]int{}
-	for _, src := range sources {
-		avail[src.Color]++
+	p := g.GetPlayer(playerID)
+	if p == nil {
+		return false
 	}
 
-	remaining := 0
-	for _, color := range []Color{White, Blue, Black, Red, Green} {
-		need := 0
-		switch color {
-		case White:
-			need = mc.White
-		case Blue:
-			need = mc.Blue
-		case Black:
-			need = mc.Black
-		case Red:
-			need = mc.Red
-		case Green:
-			need = mc.Green
-		}
-		if avail[color] < need {
-			return false
-		}
-		remaining += avail[color] - need
+	// Build a hypothetical pool: current pool + what untapped sources would produce
+	hypothetical := NewManaPool()
+	pool := p.ManaPool()
+	for _, color := range []Color{White, Blue, Black, Red, Green, Colorless} {
+		hypothetical.Add(color, pool.Count(color))
 	}
-	remaining += avail[Colorless]
-	return remaining >= mc.Generic
+	for _, src := range g.getUntappedManaSources(playerID) {
+		hypothetical.Add(src.Color, 1)
+	}
+	hypothetical.ManaConversions = pool.ManaConversions
+
+	return hypothetical.CanPay(mc)
 }
 
 // ActivatableInfo describes an activated ability on a permanent that can currently be used.
@@ -2841,19 +2847,95 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		return fmt.Errorf("invalid ability index")
 	}
 
-	a := perm.RuntimeAbilities[abilityIndex]
-	aa, ok := a.(ActivatedAbility)
+	inner := UnwrapAbility(perm.RuntimeAbilities[abilityIndex])
+
+	// Handle mana abilities (don't use the stack)
+	if ma, ok := inner.(*ManaAbility); ok {
+		if perm.Tapped || !perm.CanTapForEffect(g) {
+			return fmt.Errorf("cannot tap %s for mana", perm.Name())
+		}
+		perm.Tapped = true
+		p := g.GetPlayer(playerID)
+		if p != nil {
+			color := ma.Color
+			if ma.AnyColor {
+				color = p.ChooseManaColor("add mana")
+			}
+			p.ManaPool().Add(color, 1)
+			g.applyManaBonuses(perm, color, p)
+		}
+		g.FireEvent(GameEvent{
+			Type:     EvtTapped,
+			SourceID: perm.ID(),
+			PlayerID: playerID,
+		})
+		g.FireEvent(GameEvent{
+			Type:     EvtAbilityActivated,
+			SourceID: perm.ID(),
+			PlayerID: playerID,
+		})
+		return nil
+	}
+
+	aa, ok := inner.(ActivatedAbility)
 	if !ok {
 		return fmt.Errorf("not an activated ability")
 	}
 	if !aa.CanActivate(playerID, g) {
 		return fmt.Errorf("cannot activate ability")
 	}
+	if saa, isSAA := inner.(*SimpleActivatedAbility); isSAA && saa.OpponentOnlyMayUse {
+		if perm.Controller == playerID {
+			return fmt.Errorf("only opponents may activate this ability")
+		}
+	}
 	if aa.SorcerySpeed() && !g.Step.IsMainPhase() {
 		return ErrSorcerySpeed
 	}
 
-	// Pay costs
+	// Validate targets
+	if len(aa.Targets()) > 0 && len(targets) > 0 {
+		for i, t := range aa.Targets() {
+			if i >= len(targets) {
+				break
+			}
+			if tf, ok := t.(interface{ Filter() PermanentFilter }); ok {
+				targetPerm := g.FindPermanent(targets[i])
+				if targetPerm != nil {
+					if !tf.Filter().Match(targetPerm, g) {
+						return fmt.Errorf("invalid target for ability")
+					}
+					if !targetPerm.CanBeTargetedBy(perm.Card, playerID, g) {
+						return fmt.Errorf("target cannot be targeted")
+					}
+				}
+			} else {
+				possible := t.Possible(playerID, perm.Card, g)
+				found := false
+				for _, pid := range possible {
+					if pid == targets[i] {
+						found = true
+						break
+					}
+				}
+				if !found {
+					return fmt.Errorf("invalid target for ability")
+				}
+			}
+		}
+	}
+
+	// Auto-tap lands to pay mana costs, then pay all costs
+	for _, c := range aa.Costs() {
+		if mc, ok := c.(*ManaCostPayment); ok {
+			reduced := mc.reducedCost(perm.ID(), g)
+			if !reduced.IsZero() {
+				if err := g.AutoTapForCost(playerID, reduced); err != nil {
+					return err
+				}
+			}
+		}
+	}
 	for _, c := range aa.Costs() {
 		if err := c.Pay(perm.ID(), playerID, g); err != nil {
 			return err
