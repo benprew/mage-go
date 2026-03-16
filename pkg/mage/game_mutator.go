@@ -398,3 +398,82 @@ func (g *Game) CopyEffectCurrentName(permID uuid.UUID) string {
 func (g *Game) UpdateCopyEffect(permID uuid.UUID, target *Permanent) {
 	g.Effects.UpdateCopyEffect(permID, target)
 }
+
+// ExecuteAttackers declares the given creatures as attackers for AI search clones.
+// It mirrors doDeclareAttackers but accepts explicit attacker IDs instead of
+// querying the player.
+func (g *Game) ExecuteAttackers(playerID uuid.UUID, attackerIDs []uuid.UUID) {
+	var defender Player
+	for _, p := range g.Players {
+		if p.PlayerID() != playerID {
+			defender = p
+			break
+		}
+	}
+	if defender == nil {
+		return
+	}
+	for _, id := range attackerIDs {
+		atk := g.FindPermanent(id)
+		if atk == nil || !atk.CanDeclareAsAttacker(g) {
+			continue
+		}
+		if !atk.HasKeyword(Vigilance) {
+			atk.Tapped = true
+		}
+		g.Combat.AddAttacker(id, defender.PlayerID())
+		g.AttackedThisTurn[id] = true
+		g.FireEvent(GameEvent{
+			Type:     EvtDeclaredAttacker,
+			SourceID: id,
+			PlayerID: playerID,
+		})
+	}
+}
+
+// ExecuteBlockers declares blockers from explicit assignments for AI search clones.
+// It mirrors doDeclareBlockers but accepts explicit block assignments.
+func (g *Game) ExecuteBlockers(assignments []BlockAssignment) {
+	if len(assignments) == 0 {
+		return
+	}
+	blockerCount := make(map[uuid.UUID]int)
+	for _, ba := range assignments {
+		blocker := g.FindPermanent(ba.BlockerID)
+		attacker := g.FindPermanent(ba.AttackerID)
+		if blocker == nil || attacker == nil {
+			continue
+		}
+		if !blocker.CanDeclareAsBlocker(g) || !CanBlock(blocker, attacker, g) {
+			continue
+		}
+		maxBlocks := 1
+		if blocker.HasKeyword(CanBlockAny) {
+			maxBlocks = 999
+		} else if blocker.HasKeyword(CanBlockAdditional) {
+			maxBlocks = 2
+		}
+		if blockerCount[ba.BlockerID] >= maxBlocks {
+			continue
+		}
+		blockerCount[ba.BlockerID]++
+		g.Combat.AddBlocker(ba.BlockerID, ba.AttackerID)
+		g.BlockedThisTurn[ba.BlockerID] = append(g.BlockedThisTurn[ba.BlockerID], ba.AttackerID)
+		g.FireEvent(GameEvent{
+			Type:     EvtDeclaredBlocker,
+			SourceID: ba.BlockerID,
+			TargetID: ba.AttackerID,
+		})
+	}
+}
+
+// ExecuteCombatDamage resolves first-strike and normal combat damage for AI search clones.
+func (g *Game) ExecuteCombatDamage() {
+	g.resolvingCombatDamage = true
+	if g.Combat.HasFirstStrikers(g) {
+		g.Combat.ResolveDamage(g, true)
+		g.CheckStateBasedActions()
+	}
+	g.Combat.ResolveDamage(g, false)
+	g.resolvingCombatDamage = false
+}
