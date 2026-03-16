@@ -16,6 +16,8 @@ func TestDwarvenSong(t *testing.T) {
 		g.StopAt(1, core.PostcombatMain)
 		g.Execute()
 		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 2)
+		g.AssertHasColor(gametest.PlayerA, "Grizzly Bears", core.Red, true)
+		g.AssertHasColor(gametest.PlayerA, "Grizzly Bears", core.Green, false)
 	})
 }
 
@@ -28,6 +30,8 @@ func TestHeavensGate(t *testing.T) {
 		g.StopAt(1, core.PostcombatMain)
 		g.Execute()
 		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 2)
+		g.AssertHasColor(gametest.PlayerA, "Grizzly Bears", core.White, true)
+		g.AssertHasColor(gametest.PlayerA, "Grizzly Bears", core.Green, false)
 	})
 }
 
@@ -40,6 +44,8 @@ func TestTouchOfDarkness(t *testing.T) {
 		g.StopAt(1, core.PostcombatMain)
 		g.Execute()
 		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 2)
+		g.AssertHasColor(gametest.PlayerA, "Grizzly Bears", core.Black, true)
+		g.AssertHasColor(gametest.PlayerA, "Grizzly Bears", core.Green, false)
 	})
 }
 
@@ -133,6 +139,10 @@ func TestEnergyTap(t *testing.T) {
 		g.StopAt(1, core.PostcombatMain)
 		g.Execute()
 		g.AssertTapped(gametest.PlayerA, "Durkwood Boars", true)
+		// XXX: Cannot assert mana pool contents -- the gametest DSL has no
+		// AssertManaPool method. The autoAddMana mechanism pre-loads mana for
+		// all scripted casts, making it impossible to indirectly test via a
+		// follow-up cast that depends on the generated mana.
 	})
 }
 
@@ -171,6 +181,21 @@ func TestSylvanParadise(t *testing.T) {
 		g.StopAt(1, core.PostcombatMain)
 		g.Execute()
 		g.AssertPowerToughness(gametest.PlayerA, "Raging Bull", 2, 2)
+		g.AssertHasColor(gametest.PlayerA, "Raging Bull", core.Green, true)
+		g.AssertHasColor(gametest.PlayerA, "Raging Bull", core.Red, false)
+	})
+}
+
+func TestSeaKingsBlessing(t *testing.T) {
+	t.Run("target creature becomes blue", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // green
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Sea Kings' Blessing")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Sea Kings' Blessing", "Grizzly Bears")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+		g.AssertHasColor(gametest.PlayerA, "Grizzly Bears", core.Blue, true)
+		g.AssertHasColor(gametest.PlayerA, "Grizzly Bears", core.Green, false)
 	})
 }
 
@@ -188,6 +213,7 @@ func TestWindsOfChange(t *testing.T) {
 		// PlayerA had 2 cards in hand after casting (Grizzly Bears + Raging Bull)
 		// Winds shuffles them in, draws 2 from library
 		// So PlayerA should still have 2 cards in hand
+		g.AssertHandSize(gametest.PlayerA, 2)
 	})
 }
 

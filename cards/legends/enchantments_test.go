@@ -262,9 +262,23 @@ func TestCocoon(t *testing.T) {
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Cocoon", "Grizzly Bears")
 		g.StopAt(1, core.PostcombatMain)
 		g.Execute()
-		// Bears should be tapped and have 3 pupa counters
 		g.AssertTapped(gametest.PlayerA, "Grizzly Bears", true)
 		g.AssertCounterCount(gametest.PlayerA, "Cocoon", core.Pupa, 3)
+	})
+
+	t.Run("sacrifice after counters removed grants +1/+1 and flying", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Cocoon")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Cocoon", "Grizzly Bears")
+		// Turn 3 upkeep: 3->2, Turn 5: 2->1, Turn 7: 1->0, Turn 9: 0 => sacrifice + boost
+		g.StopAt(9, core.PrecombatMain)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Cocoon", 0)
+		g.AssertGraveyardCount(gametest.PlayerA, "Cocoon", 1)
+		g.AssertCounterCount(gametest.PlayerA, "Grizzly Bears", core.P1P1, 1)
+		g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", core.Flying, true)
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 3, 3)
 	})
 }
 
@@ -339,9 +353,10 @@ func TestDreamCoat(t *testing.T) {
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Dream Coat")
 		g.StopAt(1, core.EndStep)
 		g.Execute()
-		// Bears should still be on battlefield, P/T unchanged
 		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 2)
 		g.AssertAttachedTo(gametest.PlayerA, "Dream Coat", "Grizzly Bears")
+		g.AssertHasColor(gametest.PlayerA, "Grizzly Bears", core.Red, true)
+		g.AssertHasColor(gametest.PlayerA, "Grizzly Bears", core.Green, false)
 	})
 }
 

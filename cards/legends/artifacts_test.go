@@ -180,8 +180,9 @@ func TestAlchorsTomb(t *testing.T) {
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Alchor's Tomb", "Grizzly Bears")
 		g.StopAt(1, core.EndStep)
 		g.Execute()
-		// Grizzly Bears should now be red (not green)
 		g.AssertTapped(gametest.PlayerA, "Alchor's Tomb", true)
+		g.AssertHasColor(gametest.PlayerA, "Grizzly Bears", core.Red, true)
+		g.AssertHasColor(gametest.PlayerA, "Grizzly Bears", core.Green, false)
 	})
 }
 

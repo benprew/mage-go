@@ -812,8 +812,6 @@ func registerCreatures() {
 					}
 					perm := g.FindPermanent(sourceID)
 					if perm != nil {
-						// "destroy ... it can't be regenerated" (implicit from Oracle "destroyed this way")
-						perm.GrantBaseAttr(CantRegenerate)
 						g.DestroyPermanent(perm)
 						// If actually destroyed (not indestructible), deal 7 damage
 						if g.FindPermanent(sourceID) == nil {
@@ -1517,8 +1515,8 @@ func registerCreatures() {
 						if target == nil {
 							return nil
 						}
-						// Base 3 damage, plus damage from other Blazing Effigies
-						// (simplified — tracking named sources not worth the complexity)
+						// XXX: should be 3 plus damage dealt to this creature by other Blazing Effigies this turn;
+						// needs per-source damage tracking by card name
 						g.DealDamageToPermanent(target, 3, sourceID)
 						return nil
 					}),
@@ -3240,8 +3238,14 @@ func registerCreatures() {
 			WithActivatedAbility(
 				DestroyTarget(),
 				TapSourceCost(),
-				WithTarget(TargetCreature(NewPermanentFilter("enchanted", func(p *Permanent, _ *Game) bool {
-					return len(p.Attachments) > 0
+				WithTarget(TargetCreature(NewPermanentFilter("enchanted", func(p *Permanent, g *Game) bool {
+					for _, attachID := range p.Attachments {
+						att := g.FindPermanent(attachID)
+						if att != nil && att.HasType(TypeEnchantment) {
+							return true
+						}
+					}
+					return false
 				}))),
 			),
 		)

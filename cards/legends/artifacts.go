@@ -66,6 +66,7 @@ func registerArtifacts() {
 						eff := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, srcID uuid.UUID) error {
 							g.Effects.Damage.AddDamagePreventionRule(
 								WithFrom(And(IsAttacking, Not(HasKeywordFilter(Flying)))),
+								WithPlayerOnly(),
 							)
 							return nil
 						})
