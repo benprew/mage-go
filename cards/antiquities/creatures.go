@@ -296,7 +296,7 @@ func registerCreatures() {
 	// {T}: Choose target artifact spell you control that isn't the target of an ability from
 	// another creature named Goblin Artisans. Flip a coin. If you win the flip, draw a card.
 	// If you lose the flip, counter that spell.
-	// Note: The "not targeted by another Goblin Artisans" restriction is not enforced (extremely
+	// XXX: The "not targeted by another Goblin Artisans" restriction is not enforced (extremely
 	// rare edge case requiring stack-targeting tracking).
 	Register("Goblin Artisans", func() Card {
 		return NewCreature("Goblin Artisans", "{R}", 1, 1,

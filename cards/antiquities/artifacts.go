@@ -171,6 +171,8 @@ func registerArtifacts() {
 	// Candelabra of Tawnos {1}
 	// Artifact
 	// {X}, {T}: Untap X target lands.
+	// XXX: Oracle says "untap X target lands" (targets declared on activation); engine uses
+	// resolution-time choices instead.
 	Register("Candelabra of Tawnos", func() Card {
 		return NewArtifact("Candelabra of Tawnos", "{1}",
 			WithActivatedAbility(
@@ -803,13 +805,11 @@ func registerArtifacts() {
 					FuncEffect("pay {3} to draw a card",
 						EffectProperties{Outcome: OutcomeBenefit},
 						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							p := g.GetPlayer(controller)
-							if p == nil {
+							if !g.TryPayCostFromLands(controller, "{3}") {
 								return nil
 							}
-							cost := ParseManaCost("{3}")
-							if p.ManaPool().CanPay(cost) {
-								_ = p.ManaPool().Pay(cost)
+							p := g.GetPlayer(controller)
+							if p != nil {
 								p.DrawCard()
 							}
 							return nil

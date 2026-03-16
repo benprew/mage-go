@@ -190,7 +190,7 @@ func TestCoralHelm(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Coral Helm")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2
-		g.AddCard(core.ZoneHand, gametest.PlayerA, "Forest")              // will be discarded randomly
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Forest")               // will be discarded randomly
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Coral Helm", "Grizzly Bears")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
@@ -746,14 +746,16 @@ func TestUrzasMiter(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Urza's Miter")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ornithopter") // 0/2 artifact
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 3)   // lands to pay {3}
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
-		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Forest") // card to draw
-		// Destroy ornithopter (non-sacrifice death)
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears") // drawn by Miter trigger
+		// Turn 1, PlayerA goes first (no draw step draw). Destroy Ornithopter via Bolt.
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Ornithopter")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		// Urza's Miter trigger should draw a card (if player has {3} mana)
+		// Urza's Miter trigger should draw a card (pays {3} from lands)
 		g.AssertPermanentCount(gametest.PlayerA, "Ornithopter", 0)
+		g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 1)
 	})
 
 	t.Run("does not trigger on sacrificed artifacts", func(t *testing.T) {

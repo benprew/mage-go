@@ -277,7 +277,7 @@ func registerSpells() {
 					} else {
 						// Must pay the difference or put into graveyard
 						difference := chosenCMC - sacrificedCMC
-						if p.ManaPool().TotalMana() >= difference {
+						if p.ManaPool().TotalMana() >= difference && p.ChooseMayAbility("pay the difference") {
 							p.ManaPool().DrainGeneric(difference)
 							g.PutOnBattlefield(chosen, controller)
 						} else {

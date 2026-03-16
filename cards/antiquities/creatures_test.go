@@ -497,6 +497,16 @@ func TestCitanulDruid(t *testing.T) {
 		// Controller's own artifact spell should not trigger
 		g.AssertCounterCount(gametest.PlayerA, "Citanul Druid", core.P1P1, 0)
 	})
+
+	t.Run("own artifact cast does not add counter", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Citanul Druid")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Ornithopter")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Ornithopter")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertCounterCount(gametest.PlayerA, "Citanul Druid", core.P1P1, 0)
+	})
 }
 
 func TestGaeasAvenger(t *testing.T) {
@@ -522,6 +532,14 @@ func TestGaeasAvenger(t *testing.T) {
 		g.Execute()
 		// 1 + 1 opponent artifact = 2/2 (own Ornithopter doesn't count)
 		g.AssertPowerToughness(gametest.PlayerA, "Gaea's Avenger", 2, 2)
+	})
+
+	t.Run("base 1/1 with no opponent artifacts", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Gaea's Avenger")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Gaea's Avenger", 1, 1)
 	})
 }
 
@@ -627,6 +645,18 @@ func TestClockworkAvian(t *testing.T) {
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Clockwork Avian")
 		g.Attack(3, gametest.PlayerA, "Clockwork Avian")
 		g.StopAt(3, core.PostcombatMain) // after end of combat delayed trigger resolves
+		g.Execute()
+		g.AssertCounterCount(gametest.PlayerA, "Clockwork Avian", core.P1P0, 3)
+	})
+
+	t.Run("loses a counter when blocking", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Clockwork Avian")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Clockwork Avian")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.Attack(2, gametest.PlayerB, "Grizzly Bears")
+		g.Block(2, gametest.PlayerA, "Clockwork Avian", "Grizzly Bears")
+		g.StopAt(2, core.PostcombatMain)
 		g.Execute()
 		g.AssertCounterCount(gametest.PlayerA, "Clockwork Avian", core.P1P0, 3)
 	})
