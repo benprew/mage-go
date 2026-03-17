@@ -3,8 +3,8 @@ package mage
 import (
 	"fmt"
 
-	"github.com/google/uuid"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"github.com/google/uuid"
 )
 
 // gainLifeEffect gains life for the controller.
@@ -233,29 +233,58 @@ func (e *dealDamageToPlayersEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment, DamageValue: e.amount}
 }
 
-// blackViseEffect deals damage to the active player based on hand size > 4.
-type blackViseEffect struct{}
-
-// BlackViseEffect creates an effect that deals damage to the active player equal to
-// cards in hand minus 4 (Black Vise).
-func BlackViseEffect() Effect {
-	return &blackViseEffect{}
+// handSizeDamageEffect deals damage to the active player based on hand size vs a threshold.
+type handSizeDamageEffect struct {
+	threshold int
+	above     bool // true = damage for cards above threshold (Black Vise); false = below (The Rack)
 }
 
-func (e *blackViseEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	active := g.ActivePlayerObj()
-	handSize := len(active.Hand())
-	if handSize > 4 {
-		damage := handSize - 4
-		active.LoseLife(damage)
+// HandSizeDamageEffect creates an effect that deals damage to the active player based on
+// their hand size relative to a threshold. If above is true, damage = hand - threshold
+// (Black Vise: threshold 4). If above is false, damage = threshold - hand (The Rack: threshold 3).
+func HandSizeDamageEffect(threshold int, above bool) Effect {
+	return &handSizeDamageEffect{threshold: threshold, above: above}
+}
+
+// BlackViseEffect creates the Black Vise damage effect (hand size minus 4).
+func BlackViseEffect() Effect {
+	return HandSizeDamageEffect(4, true)
+}
+
+// TheRackEffect creates The Rack damage effect (3 minus hand size).
+func TheRackEffect() Effect {
+	return HandSizeDamageEffect(3, false)
+}
+
+func (e *handSizeDamageEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	// Use target player if provided (Storm Seeker), otherwise active player (Vise/Rack)
+	var p Player
+	if len(targets) > 0 {
+		p = g.GetPlayer(targets[0])
+	}
+	if p == nil {
+		p = g.ActivePlayerObj()
+	}
+	handSize := len(p.Hand())
+	var damage int
+	if e.above {
+		damage = handSize - e.threshold
+	} else {
+		damage = e.threshold - handSize
+	}
+	if damage > 0 {
+		g.DealDamageToPlayer(p, damage, sourceID)
 	}
 	return nil
 }
 
-func (e *blackViseEffect) Text() string {
-	return "Deal damage to active player equal to cards in hand minus 4"
+func (e *handSizeDamageEffect) Text() string {
+	if e.above {
+		return fmt.Sprintf("deal damage to active player equal to cards in hand minus %d", e.threshold)
+	}
+	return fmt.Sprintf("deal damage to active player equal to %d minus cards in hand", e.threshold)
 }
-func (e *blackViseEffect) Properties() EffectProperties { return EffectProperties{} }
+func (e *handSizeDamageEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // preventAllCombatDamageEffect prevents all combat damage this turn (Fog).
 type preventAllCombatDamageEffect struct{}

@@ -141,6 +141,38 @@ func PutIntoGraveyardFromBattlefieldTrigger(effect Effect, optional bool) *Gener
 		})
 }
 
+// ChooseOpponentOnETB sets the permanent's ChosenPlayer to the opponent on ETB.
+// Used by Black Vise, The Rack, and similar "as this enters, choose an opponent" cards.
+func ChooseOpponentOnETB() *GenericTriggered {
+	return EntersBattlefieldTrigger(FuncEffect(
+		"choose an opponent",
+		EffectProperties{},
+		func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+			perm := g.FindPermanent(sourceID)
+			if perm == nil {
+				return nil
+			}
+			opponent := g.GetOpponent(controller)
+			if opponent != nil {
+				perm.ChosenPlayer = opponent.PlayerID()
+			}
+			return nil
+		}), false)
+}
+
+// ChosenPlayerUpkeepTrigger fires at the beginning of the chosen player's upkeep.
+// Requires ChooseOpponentOnETB to have set ChosenPlayer.
+func ChosenPlayerUpkeepTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtUpkeep, optional, effect).
+		SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+			perm := g.FindPermanent(sourceID)
+			if perm == nil {
+				return false
+			}
+			return evt.PlayerID == perm.ChosenPlayer
+		})
+}
+
 // BeginningOfUpkeepTrigger fires at the beginning of the controller's upkeep.
 func BeginningOfUpkeepTrigger(effect Effect, optional bool) *GenericTriggered {
 	return NewTriggered(EvtUpkeep, optional, effect).

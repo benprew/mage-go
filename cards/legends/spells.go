@@ -1267,29 +1267,12 @@ func registerSpells() {
 	})
 
 
-// Storm Seeker {3}{G}
-// Instant
-// Storm Seeker deals damage to target player equal to the number of cards in that player's hand.
+	// Storm Seeker {3}{G}
+	// Instant
+	// Storm Seeker deals damage to target player equal to the number of cards in that player's hand.
 	Register("Storm Seeker", func() Card {
 		return NewInstant("Storm Seeker", "{3}{G}",
-			NewTargetedSpell(TargetPlayer(), FuncEffect(
-				"deal damage to target player equal to cards in their hand",
-				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					if len(targets) == 0 {
-						return nil
-					}
-					p := g.GetPlayer(targets[0])
-					if p == nil {
-						return nil
-					}
-					handSize := len(p.Hand())
-					if handSize > 0 {
-						g.DealDamageToPlayer(p, handSize, sourceID)
-					}
-					return nil
-				},
-			)),
+			NewTargetedSpell(TargetPlayer(), HandSizeDamageEffect(0, true)),
 		)
 	})
 

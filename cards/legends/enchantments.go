@@ -1237,22 +1237,7 @@ func registerEnchantments() {
 		return NewEnchantment("Storm World", "{R}",
 			WithSuperTypes(SuperWorld),
 			WithAbility(
-				BeginningOfEachUpkeepTrigger(
-					FuncEffect("deal 4 minus hand size damage",
-						EffectProperties{Outcome: OutcomeDetriment},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							activePlayer := g.ActivePlayerObj()
-							if activePlayer == nil {
-								return nil
-							}
-							handSize := len(activePlayer.Hand())
-							dmg := 4 - handSize
-							if dmg > 0 {
-								g.DealDamageToPlayer(activePlayer, dmg, sourceID)
-							}
-							return nil
-						}), false,
-				),
+				BeginningOfEachUpkeepTrigger(HandSizeDamageEffect(4, false), false),
 			),
 		)
 	})

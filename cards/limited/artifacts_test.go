@@ -1135,6 +1135,27 @@ func TestKormusBell(t *testing.T) {
 			t.Errorf("Kormus Bell should not affect non-Swamp lands")
 		}
 	})
+
+	t.Run("swamps_are_black", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Kormus Bell")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		perm := g.FindPermanentByName("Swamp", g.AllPlayers()[0].PlayerID())
+		if perm == nil {
+			t.Fatal("Swamp not found")
+		}
+		hasBlack := false
+		for _, col := range perm.Colors() {
+			if col == core.Black {
+				hasBlack = true
+			}
+		}
+		if !hasBlack {
+			t.Error("Kormus Bell should make animated Swamps black")
+		}
+	})
 }
 
 func TestHelmOfChatzuk(t *testing.T) {

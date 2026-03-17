@@ -340,18 +340,6 @@ func registerEnchantments() {
 
 	// ===== TRIGGERED ENCHANTMENTS =====
 
-	Register("Copper Tablet", func() Card {
-		return NewArtifact("Copper Tablet", "{2}",
-			WithAbility(BeginningOfEachUpkeepTrigger(DealDamageToPlayers(Fixed(1), SelectActivePlayer()), false)),
-		)
-	})
-
-	Register("Black Vise", func() Card {
-		return NewArtifact("Black Vise", "{1}",
-			WithAbility(BeginningOfEachUpkeepTrigger(BlackViseEffect(), false)),
-		)
-	})
-
 	Register("Wanderlust", func() Card {
 		return NewAura("Wanderlust", "{2}{G}",
 			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(

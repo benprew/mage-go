@@ -738,29 +738,10 @@ func registerArtifacts() {
 	// As The Rack enters the battlefield, choose an opponent.
 	// At the beginning of the chosen player's upkeep, The Rack deals X damage to that player,
 	// where X is 3 minus the number of cards in their hand.
-	// XXX: no ETB opponent choice; auto-picks opponent (correct for 2-player, gap for multiplayer)
 	Register("The Rack", func() Card {
 		return NewArtifact("The Rack", "{1}",
-			WithAbility(
-				NewTriggered(EvtUpkeep, false,
-					FuncEffect("deal 3 minus hand size damage",
-						EffectProperties{Outcome: OutcomeDetriment},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							opponent := g.GetOpponent(controller)
-							if opponent == nil {
-								return nil
-							}
-							damage := 3 - len(opponent.Hand())
-							if damage > 0 {
-								g.DealDamageToPlayer(opponent, damage, sourceID)
-							}
-							return nil
-						}),
-				).SetCondition(func(evt *GameEvent, g *Game, _, controllerID uuid.UUID) bool {
-					opponent := g.GetOpponent(controllerID)
-					return opponent != nil && evt.PlayerID == opponent.PlayerID()
-				}),
-			),
+			WithAbility(ChooseOpponentOnETB()),
+			WithAbility(ChosenPlayerUpkeepTrigger(TheRackEffect(), false)),
 		)
 	})
 

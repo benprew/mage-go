@@ -571,6 +571,17 @@ func AnimateLands(filter PermanentFilter, power, toughness int) ContinuousEffect
 	})
 }
 
+// GrantColorToAll sets the color of all permanents matching the filter.
+func GrantColorToAll(color Color, filter PermanentFilter) ContinuousEffect {
+	return FuncContinuousEffect(LayerColor, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
+		colors := []Color{color}
+		for _, p := range g.FilterBattlefield(filter) {
+			p.ColorOverride = &colors
+		}
+		return nil
+	})
+}
+
 // AllowUnlimitedLandPlays creates a continuous effect that removes the land play limit.
 // Used by Fastbond.
 func AllowUnlimitedLandPlays() ContinuousEffect {

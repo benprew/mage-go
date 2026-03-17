@@ -240,6 +240,24 @@ func registerArtifacts() {
 		)
 	})
 
+	Register("Copper Tablet", func() Card {
+		return NewArtifact("Copper Tablet", "{2}",
+			WithAbility(BeginningOfEachUpkeepTrigger(DealDamageToPlayers(Fixed(1), SelectActivePlayer()), false)),
+		)
+	})
+
+	// Black Vise {1}
+	// Artifact
+	// As this artifact enters, choose an opponent.
+	// At the beginning of the chosen player's upkeep, this artifact deals X damage
+	// to that player, where X is the number of cards in their hand minus 4.
+	Register("Black Vise", func() Card {
+		return NewArtifact("Black Vise", "{1}",
+			WithAbility(ChooseOpponentOnETB()),
+			WithAbility(ChosenPlayerUpkeepTrigger(BlackViseEffect(), false)),
+		)
+	})
+
 	Register("Jade Monolith", func() Card {
 		return NewArtifact("Jade Monolith", "{4}",
 			WithActivatedAbility(
@@ -313,6 +331,7 @@ func registerArtifacts() {
 		return NewArtifact("Kormus Bell", "{4}",
 			WithStaticAbility(
 				AnimateLands(And(IsLand, HasSubType("Swamp")), 1, 1),
+				GrantColorToAll(Black, And(IsLand, HasSubType("Swamp"))),
 			),
 		)
 	})

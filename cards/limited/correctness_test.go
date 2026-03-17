@@ -32,20 +32,17 @@ func TestBlackLotus(t *testing.T) {
 		g.AssertPermanentCount(gametest.PlayerA, "Black Lotus", 0)
 	})
 
-	t.Run("produces 3 mana of any one color", func(t *testing.T) {
-		// Black Lotus should let the player choose a color. The current
-		// implementation hardcodes Black via AddAnyMana(3, Black).
-		// Auto-mana adds 5 of each color for ActivateAbility calls, so
-		// the Lotus's 3 Black is detectable as pool.Count(Black) == 8.
+	t.Run("produces 3 mana of chosen color", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Black Lotus")
+		g.ChooseManaColor(gametest.PlayerA, core.Blue)
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Black Lotus")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
+		// Auto-mana adds 5 of each color. Lotus adds 3 of chosen (Blue).
 		pool := g.AllPlayers()[0].ManaPool()
-		blackCount := pool.Count(core.Black)
-		if blackCount > 5 {
-			t.Errorf("Black Lotus is hardcoded to produce Black; got %d Black (5 auto + 3 Lotus). Should allow any color choice", blackCount)
+		if pool.Count(core.Blue) < 8 {
+			t.Errorf("Black Lotus should produce 3 mana of chosen color; expected >= 8 blue (5 auto + 3 Lotus), got %d", pool.Count(core.Blue))
 		}
 	})
 }
@@ -334,9 +331,10 @@ func TestKarma(t *testing.T) {
 }
 
 func TestBlackVise(t *testing.T) {
-	t.Run("deals hand-size damage to opponent", func(t *testing.T) {
+	t.Run("deals hand-size damage to chosen opponent", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Black Vise")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Black Vise")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Black Vise")
 		for i := 0; i < 7; i++ {
 			g.AddCard(core.ZoneHand, gametest.PlayerB, "Forest")
 		}
@@ -344,7 +342,19 @@ func TestBlackVise(t *testing.T) {
 		g.Execute()
 		// 7 cards - 4 threshold = 3 damage to PlayerB
 		g.AssertLife(gametest.PlayerB, 17)
-		g.AssertLife(gametest.PlayerA, 20) // controller unaffected
+	})
+
+	t.Run("does not damage controller", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Black Vise")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Black Vise")
+		for i := 0; i < 7; i++ {
+			g.AddCard(core.ZoneHand, gametest.PlayerA, "Forest")
+		}
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		// Black Vise chose PlayerB on ETB; should not damage PlayerA
+		g.AssertLife(gametest.PlayerA, 20)
 	})
 }
 
@@ -887,16 +897,3 @@ func TestNettlingImpDestroysNonAttacker(t *testing.T) {
 	})
 }
 
-func TestBlackViseControllerSafe(t *testing.T) {
-	t.Run("does not damage controller", func(t *testing.T) {
-		t.Skip("known bug: Black Vise triggers on all upkeeps instead of chosen opponent only")
-		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Black Vise")
-		for i := 0; i < 7; i++ {
-			g.AddCard(core.ZoneHand, gametest.PlayerA, "Forest")
-		}
-		g.StopAt(1, core.PrecombatMain)
-		g.Execute()
-		g.AssertLife(gametest.PlayerA, 20)
-	})
-}

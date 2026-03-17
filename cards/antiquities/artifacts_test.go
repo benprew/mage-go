@@ -709,7 +709,8 @@ func TestTawnossWeaponry(t *testing.T) {
 func TestTheRack(t *testing.T) {
 	t.Run("deals 3 minus hand size damage with empty hand", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "The Rack")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "The Rack")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "The Rack")
 		// PlayerB has 0 cards in hand → 3 - 0 = 3 damage
 		g.StopAt(2, core.PrecombatMain)
 		g.Execute()
@@ -718,13 +719,24 @@ func TestTheRack(t *testing.T) {
 
 	t.Run("no damage when opponent has 3 or more cards", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "The Rack")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "The Rack")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "The Rack")
 		for i := 0; i < 4; i++ {
 			g.AddCard(core.ZoneHand, gametest.PlayerB, "Forest")
 		}
 		g.StopAt(2, core.PrecombatMain)
 		g.Execute()
 		g.AssertLife(gametest.PlayerB, 20) // 3-4 = negative, no damage
+	})
+
+	t.Run("does not damage controller", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "The Rack")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "The Rack")
+		// Controller has empty hand → The Rack should not damage them
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 20)
 	})
 }
 
