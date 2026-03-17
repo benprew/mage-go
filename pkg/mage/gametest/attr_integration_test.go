@@ -169,24 +169,26 @@ func TestPreventFromBlocking_CreatureCannotBlock(t *testing.T) {
 // TestRemoveKeyword_EarthbindRemovesFlyingFromSerraAngel verifies that RevokeAttr
 // correctly removes Flying from a creature that intrinsically has it.
 // Without Earthbind, Serra Angel (Flying) is unblockable by Hill Giant.
-// With Earthbind, Flying is revoked each Apply() cycle → Hill Giant can block.
+// With Earthbind, Flying is revoked → Hill Giant can block.
+// Earthbind also deals 2 damage to the creature if it had flying (Oracle text).
 func TestRemoveKeyword_EarthbindRemovesFlyingFromSerraAngel(t *testing.T) {
 	g := gametest.NewTestGame(t)
-	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Serra Angel")  // 4/4 Flying, Vigilance
-	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")     // {R} for Earthbind
-	g.AddCard(core.ZoneHand, gametest.PlayerA, "Earthbind")           // {R} aura: loses Flying
-	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")   // 3/3 ground creature
-	// Cast Earthbind on Serra Angel to remove Flying.
-	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Earthbind", "Serra Angel")
-	// Serra Angel attacks; Hill Giant can now block because Flying was removed.
-	g.Attack(1, gametest.PlayerA, "Serra Angel")
-	g.Block(1, gametest.PlayerB, "Hill Giant", "Serra Angel")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mahamoti Djinn") // 5/6 Flying
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")       // {R} for Earthbind
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Earthbind")             // {R} aura: loses Flying
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")     // 3/3 ground creature
+	// Cast Earthbind on Mahamoti Djinn to remove Flying (and deal 2 damage).
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Earthbind", "Mahamoti Djinn")
+	// Mahamoti attacks; Hill Giant can now block because Flying was removed.
+	g.Attack(1, gametest.PlayerA, "Mahamoti Djinn")
+	g.Block(1, gametest.PlayerB, "Hill Giant", "Mahamoti Djinn")
 	g.StopAt(1, core.EndCombat)
 	g.Execute()
-	// Serra Angel (4/4) kills Hill Giant (3/3); takes 3 damage but survives (4 toughness).
+	// Mahamoti (5/6) takes 2 from Earthbind ETB + 3 from Hill Giant = 5 damage on 6 toughness → survives.
+	// Hill Giant (3/3) takes 5 damage → dies.
 	// PlayerB stays at 20 — Hill Giant blocked successfully (proving Flying was removed).
 	g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 0)
-	g.AssertPermanentCount(gametest.PlayerA, "Serra Angel", 1)
+	g.AssertPermanentCount(gametest.PlayerA, "Mahamoti Djinn", 1)
 	g.AssertLife(gametest.PlayerB, 20)
 }
 

@@ -554,28 +554,7 @@ func registerCreatures() {
 			)),
 			// {X}, {T}: Put up to X +1/+0 counters on Clockwork Avian (max 4 total). Upkeep only.
 			WithActivatedAbility(
-				FuncEffect("add up to X +1/+0 counters (max 4 total)",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						perm := g.FindPermanent(sourceID)
-						if perm == nil {
-							return nil
-						}
-						x := g.XValue()
-						current := perm.Counters[P1P0]
-						room := 4 - current
-						if room < 0 {
-							room = 0
-						}
-						toAdd := x
-						if toAdd > room {
-							toAdd = room
-						}
-						if toAdd > 0 {
-							perm.AddCounter(P1P0, toAdd)
-						}
-						return nil
-					}),
+				AddCountersUpToMax(P1P0, 4),
 				XManaCost(),
 				WithCost(TapSourceCost()),
 				WithUpkeepOnly(),

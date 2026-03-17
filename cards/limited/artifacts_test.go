@@ -3,6 +3,7 @@ package limited
 import (
 	"testing"
 
+	_ "git.sr.ht/~cdcarter/mage-go/cards/arabian"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
 )
@@ -438,6 +439,47 @@ func TestManaFlare(t *testing.T) {
 		pool := g.AllPlayers()[0].ManaPool()
 		if pool.Count(core.Red) < 7 {
 			t.Errorf("Mana Flare should double land mana; expected >= 7 red, got %d", pool.Count(core.Red))
+		}
+	})
+
+	t.Run("any_color_land_bonus_matches_chosen_color", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mana Flare")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "City of Brass")
+		// Script the player to choose Blue when City of Brass asks for a color
+		g.ChooseManaColor(gametest.PlayerA, core.Blue)
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "City of Brass")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// City tapped for {U} (chosen). Mana Flare matches produced -> adds {U}.
+		// Auto-mana adds 5R from Mountains. City = 1U + 1U (Mana Flare) = 2U.
+		pool := g.AllPlayers()[0].ManaPool()
+		if pool.Count(core.Blue) < 2 {
+			t.Errorf("Mana Flare should add one mana of chosen type; expected >= 2 blue, got %d", pool.Count(core.Blue))
+		}
+	})
+
+	t.Run("any_color_land_adds_only_one_bonus", func(t *testing.T) {
+		// Even though City of Brass can produce any color, Mana Flare adds
+		// exactly one mana of the type produced — not one of each.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mana Flare")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "City of Brass")
+		g.ChooseManaColor(gametest.PlayerA, core.Green)
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "City of Brass")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Auto-mana pre-loads 5 of each color.
+		// City tapped for {G}. Mana Flare adds one {G}. Green = 5 + 1 + 1 = 7.
+		// Blue stays at 5 (auto-mana only, no Mana Flare bonus).
+		pool := g.AllPlayers()[0].ManaPool()
+		green := pool.Count(core.Green)
+		blue := pool.Count(core.Blue)
+		if green < 7 {
+			t.Errorf("expected >= 7 green (5 auto + 1 City + 1 Flare), got %d", green)
+		}
+		if green-blue != 2 {
+			t.Errorf("Mana Flare should add exactly 1 bonus green, not other colors; green=%d blue=%d (diff should be 2)", green, blue)
 		}
 	})
 }
@@ -1020,16 +1062,34 @@ func TestPhantasmalTerrain(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Phantasmal Terrain")
+		g.ChooseManaColor(gametest.PlayerA, core.Blue) // choose Island
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Phantasmal Terrain", "Mountain")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		// Mountain should become an Island (default choice).
+		// Mountain should become an Island (Blue → Island).
 		perm := g.FindPermanentByName("Mountain", g.AllPlayers()[1].PlayerID())
 		if perm == nil {
 			t.Fatal("Mountain not found")
 		}
 		if !perm.HasSubType("Island") {
 			t.Errorf("Phantasmal Terrain should change Mountain to Island")
+		}
+	})
+
+	t.Run("land_becomes_swamp_when_black_chosen", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forest")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Phantasmal Terrain")
+		g.ChooseManaColor(gametest.PlayerA, core.Black) // choose Swamp
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Phantasmal Terrain", "Forest")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		perm := g.FindPermanentByName("Forest", g.AllPlayers()[1].PlayerID())
+		if perm == nil {
+			t.Fatal("Forest not found")
+		}
+		if !perm.HasSubType("Swamp") {
+			t.Errorf("Phantasmal Terrain with Black choice should change Forest to Swamp")
 		}
 	})
 }
@@ -1184,33 +1244,33 @@ func TestJadeStatue(t *testing.T) {
 }
 
 func TestJadeMonolith(t *testing.T) {
-	t.Run("redirects_creature_damage_to_player", func(t *testing.T) {
+	t.Run("redirects_creature_damage_to_controller", func(t *testing.T) {
 		// {1}: The next time a source of your choice would deal damage to
-		// target creature this turn, that damage is dealt to target player instead.
+		// target creature this turn, that source deals that damage to you instead.
 		g := gametest.NewTestGame(t)
-		g.SetLife(gametest.PlayerB, 20)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Jade Monolith")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
-		// Activate Jade Monolith targeting Grizzly Bears and PlayerB
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Jade Monolith", "Grizzly Bears", "PlayerB")
-		// Lightning Bolt targets Grizzly Bears — damage redirected to PlayerB
+		// Activate Jade Monolith targeting Grizzly Bears — damage redirects to controller (PlayerA)
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Jade Monolith", "Grizzly Bears")
+		// Lightning Bolt targets Grizzly Bears — damage redirected to PlayerA
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Grizzly Bears")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		// Bears should survive (damage redirected), PlayerB takes 3
+		// Bears should survive (damage redirected), PlayerA takes 3
 		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
-		g.AssertLife(gametest.PlayerB, 17)
+		g.AssertLife(gametest.PlayerA, 17)
 	})
 }
 
 func TestPersonalIncarnation(t *testing.T) {
-	t.Run("has_flying", func(t *testing.T) {
+	t.Run("no_flying", func(t *testing.T) {
+		// Oracle text does not grant Flying.
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Personal Incarnation")
 		g.StopAt(1, core.PrecombatMain)
 		g.Execute()
-		g.AssertHasAbility(gametest.PlayerA, "Personal Incarnation", core.Flying, true)
+		g.AssertHasAbility(gametest.PlayerA, "Personal Incarnation", core.Flying, false)
 		g.AssertPowerToughness(gametest.PlayerA, "Personal Incarnation", 6, 6)
 	})
 
@@ -1218,8 +1278,11 @@ func TestPersonalIncarnation(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.SetLife(gametest.PlayerA, 20)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Personal Incarnation")
-		g.AddCard(core.ZoneHand, gametest.PlayerB, "Terror")
-		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Terror", "Personal Incarnation")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		// Deal 6 damage to kill the 6/6
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Personal Incarnation")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Personal Incarnation")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerA, "Personal Incarnation", 0)
@@ -1227,36 +1290,23 @@ func TestPersonalIncarnation(t *testing.T) {
 		g.AssertLife(gametest.PlayerA, 10)
 	})
 
-	t.Run("redirects_damage_from_controller", func(t *testing.T) {
-		// All damage that would be dealt to you is dealt to Personal Incarnation instead.
+	t.Run("activated_redirects_creature_damage_to_owner", func(t *testing.T) {
+		// {0}: The next 1 damage that would be dealt to this creature this turn
+		// is dealt to its owner instead.
 		g := gametest.NewTestGame(t)
 		g.SetLife(gametest.PlayerA, 20)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Personal Incarnation") // 6/6 flying
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Personal Incarnation") // 6/6
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
-		// Lightning Bolt targeting PlayerA — damage should redirect to Personal Incarnation
-		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "PlayerA")
+		// Activate the {0} ability to redirect creature damage to owner
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Personal Incarnation")
+		// Bolt targets the creature — damage redirects to PlayerA
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Personal Incarnation")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		// Player A should still be at 20 life (damage redirected)
-		g.AssertLife(gametest.PlayerA, 20)
-		// Personal Incarnation should have taken 3 damage (6/6 with 3 damage = alive)
+		// Personal Incarnation should survive (damage redirected to owner)
 		g.AssertPermanentCount(gametest.PlayerA, "Personal Incarnation", 1)
-	})
-
-	t.Run("dies_when_lethal_redirected", func(t *testing.T) {
-		// If enough damage is redirected, Personal Incarnation dies and
-		// the controller loses half their life.
-		g := gametest.NewTestGame(t)
-		g.SetLife(gametest.PlayerA, 20)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Personal Incarnation") // 6/6 flying
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Craw Wurm")            // 6/4
-		// Turn 2 is PlayerB's turn; Craw Wurm attacks PlayerA.
-		g.Attack(2, gametest.PlayerB, "Craw Wurm")
-		g.StopAt(2, core.EndCombat)
-		g.Execute()
-		// 6 damage redirected kills PI (6/6 with 6 damage). Death trigger: lose half life = 10.
-		g.AssertPermanentCount(gametest.PlayerA, "Personal Incarnation", 0)
-		g.AssertLife(gametest.PlayerA, 10)
+		// PlayerA takes the 3 damage instead
+		g.AssertLife(gametest.PlayerA, 17)
 	})
 }
 

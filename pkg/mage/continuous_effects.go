@@ -53,6 +53,37 @@ func ChangeAttachedSubTypes(newSubTypes []string) ContinuousEffect {
 	})
 }
 
+// ChangeAttachedSubTypesByChosenColor replaces the subtypes of the attached permanent
+// based on the source permanent's ChosenColor (e.g. Phantasmal Terrain: "choose a
+// basic land type, enchanted land is the chosen type").
+func ChangeAttachedSubTypesByChosenColor() ContinuousEffect {
+	return AttachedEffect(LayerType, func(g *Game, source, target *Permanent) error {
+		landType := ColorToBasicLandType(source.ChosenColor)
+		if landType != "" {
+			target.SubTypeOverride = []string{landType}
+		}
+		return nil
+	})
+}
+
+// ColorToBasicLandType maps a Color to its corresponding basic land type name.
+func ColorToBasicLandType(c Color) string {
+	switch c {
+	case White:
+		return "Plains"
+	case Blue:
+		return "Island"
+	case Black:
+		return "Swamp"
+	case Red:
+		return "Mountain"
+	case Green:
+		return "Forest"
+	default:
+		return ""
+	}
+}
+
 // GrantActivatedAbilityToAttached grants an activated ability to the attached creature.
 func GrantActivatedAbilityToAttached(effect Effect, cost Cost, at AttachType) ContinuousEffect {
 	return AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {

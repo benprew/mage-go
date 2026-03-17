@@ -1,9 +1,9 @@
 package limited
 
 import (
-	"github.com/google/uuid"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"github.com/google/uuid"
 )
 
 func init() {
@@ -271,11 +271,41 @@ func registerCreatures() {
 		return NewCreature("Dragon Whelp", "{2}{R}{R}", 2, 3,
 			WithSubTypes("Dragon"),
 			WithKeyword(Flying),
-			// {R}: +1/+0 until end of turn. If activated 4+ times, destroy at EOT.
 			WithActivatedAbility(
 				BoostUntilEndOfTurn(Fixed(1), Fixed(0), SelectSource),
 				ManaCostOf("{R}"),
-				WithEffect(MarkDestroyAtEOTAfterNActivations(4)),
+				WithEffect(FuncEffect(
+					"if activated 4+ times, sacrifice at end of turn",
+					EffectProperties{},
+					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						perm := g.FindPermanent(sourceID)
+						if perm == nil {
+							return nil
+						}
+						perm.AddCounter(Charge, 1)
+						if perm.Counters[Charge] >= 4 {
+							g.RegisterDelayedTrigger(&DelayedTrigger{
+								EventType:  EvtEndStep,
+								TargetID:   perm.ID(),
+								SourceID:   sourceID,
+								Controller: controller,
+								Effects: []Effect{FuncEffect(
+									"sacrifice this creature",
+									EffectProperties{},
+									func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+										if len(targets) == 0 {
+											return nil
+										}
+										perm := g.FindPermanent(targets[0])
+										if perm != nil {
+											g.Sacrifice(perm)
+										}
+										return nil
+									})},
+							})
+						}
+						return nil
+					})),
 			),
 		)
 	})
@@ -662,12 +692,18 @@ func registerCreatures() {
 			// Enters with 7 +1/+0 counters
 			WithAbility(EntersWithNCounters(P1P0, 7)),
 			// At end of combat, if Clockwork Beast attacked or blocked, remove a +1/+0 counter
-			WithAbility(AttacksTrigger(
-				RemoveCountersFromSource(P1P0, 1), false,
-			)),
-			WithAbility(BlocksTrigger(
-				RemoveCountersFromSource(P1P0, 1), false,
-			)),
+			WithAbility(NewTriggered(EvtEndOfCombat, false,
+				RemoveCountersFromSource(P1P0, 1),
+			).SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+				return g.HasAttackedThisTurn(sourceID) || len(g.GetBlockedThisTurn(sourceID)) > 0
+			})),
+			// {X}, {T}: Put up to X +1/+0 counters on Clockwork Beast (max 7 total). Upkeep only.
+			WithActivatedAbility(
+				AddCountersUpToMax(P1P0, 7),
+				XManaCost(),
+				WithCost(TapSourceCost()),
+				WithUpkeepOnly(),
+			),
 		)
 	})
 
@@ -759,6 +795,7 @@ func registerCreatures() {
 	})
 
 	Register("Nettling Imp", func() Card {
+		// XXX: missing timing restriction (opponent's turn, before attackers) and continuous-control check
 		return NewCreature("Nettling Imp", "{2}{B}", 1, 1,
 			WithSubTypes("Imp"),
 			// {T}: Target non-Wall creature the active player controls attacks this
@@ -834,6 +871,7 @@ func registerCreatures() {
 		)
 	})
 
+	// XXX: should preserve original color when copying (Oracle: "except it doesn't copy that creature's color")
 	Register("Vesuvan Doppelganger", func() Card {
 		return NewCreature("Vesuvan Doppelganger", "{3}{U}{U}", 0, 0,
 			WithSubTypes("Shapeshifter"),
@@ -868,16 +906,24 @@ func registerCreatures() {
 					}
 					return nil
 				},
-			), false)),
+			), true)),
 		)
 	})
 
 	Register("Personal Incarnation", func() Card {
 		return NewCreature("Personal Incarnation", "{3}{W}{W}{W}", 6, 6,
 			WithSubTypes("Avatar", "Incarnation"),
-			WithKeyword(Flying),
-			// All damage that would be dealt to you is dealt to Personal Incarnation instead.
-			WithStaticAbility(PersonalIncarnationRedirect()),
+			// {0}: The next 1 damage that would be dealt to this creature this turn
+			// is dealt to its owner instead. Only this creature's owner may activate.
+			WithActivatedAbility(
+				FuncEffect("redirect next 1 damage to owner",
+					EffectProperties{},
+					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						g.SetCreatureDamageRedirect(sourceID, controller)
+						return nil
+					}),
+				GenericCost(0),
+			),
 			// When Personal Incarnation dies, you lose half your life (rounded up).
 			WithAbility(PutIntoGraveyardFromBattlefieldTrigger(FuncEffect(
 				"lose half your life rounded up",

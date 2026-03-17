@@ -76,6 +76,40 @@ func (e *removeCountersFromSourceEffect) Text() string {
 }
 func (e *removeCountersFromSourceEffect) Properties() EffectProperties { return EffectProperties{} }
 
+// AddCountersUpToMax creates an effect that adds up to X +1/+0 counters on the source,
+// capped so total counters don't exceed maxCounters.
+func AddCountersUpToMax(ct CounterType, maxCounters int) Effect {
+	return &addCountersUpToMaxEffect{ct: ct, maxCounters: maxCounters}
+}
+
+type addCountersUpToMaxEffect struct {
+	ct          CounterType
+	maxCounters int
+}
+
+func (e *addCountersUpToMaxEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+	perm := g.FindPermanent(sourceID)
+	if perm == nil {
+		return nil
+	}
+	x := g.XValue()
+	current := perm.Counters[e.ct]
+	room := max(e.maxCounters-current, 0)
+	toAdd := min(x, room)
+	if toAdd > 0 {
+		perm.AddCounter(e.ct, toAdd)
+	}
+	return nil
+}
+
+func (e *addCountersUpToMaxEffect) Text() string {
+	return fmt.Sprintf("put up to X %s counters on it (max %d total)", e.ct, e.maxCounters)
+}
+
+func (e *addCountersUpToMaxEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
+
 // tapTargetEffect taps a target permanent.
 type tapTargetEffect struct{}
 

@@ -115,6 +115,7 @@ func registerSpells() {
 	})
 
 	Register("Guardian Angel", func() Card {
+		// XXX: missing repeatable {1} prevention ability after initial X prevention
 		return NewInstant("Guardian Angel", "{X}{W}",
 			// Prevent the next X damage that would be dealt to any target this turn
 			NewTargetedSpell(TargetAnyTarget(), PreventDamageToTarget(XValue())),
@@ -159,6 +160,8 @@ func registerSpells() {
 		)
 	})
 
+	// XXX: missing destroy mode — Oracle is modal: "Counter target red spell" / "Destroy target red permanent"
+	// Engine doesn't support modal targeting across zones (spell on stack vs permanent on battlefield)
 	Register("Blue Elemental Blast", func() Card {
 		return NewInstant("Blue Elemental Blast", "{U}",
 			NewTargetedSpell(TargetSpellOnStack(), CounterSpellIfColor(Red)),
@@ -167,7 +170,7 @@ func registerSpells() {
 
 	Register("Twiddle", func() Card {
 		return NewInstant("Twiddle", "{U}",
-			NewTargetedSpell(TargetPermanent(), TapOrUntapTarget()),
+			NewTargetedSpell(TargetPermanent(Or(IsArtifact, IsCreature, IsLand)), TapOrUntapTarget()),
 		)
 	})
 
@@ -228,6 +231,7 @@ func registerSpells() {
 	})
 
 	Register("Drain Life", func() Card {
+		// XXX: missing "Spend only black mana on X" restriction
 		return NewSorcery("Drain Life", "{X}{1}{B}",
 			NewTargetedSpell(TargetAnyTarget(), FuncEffect(
 				"deal X damage to target and gain life equal to damage dealt",
@@ -307,6 +311,8 @@ func registerSpells() {
 		)
 	})
 
+	// XXX: missing destroy mode — Oracle is modal: "Counter target blue spell" / "Destroy target blue permanent"
+	// Engine doesn't support modal targeting across zones (spell on stack vs permanent on battlefield)
 	Register("Red Elemental Blast", func() Card {
 		return NewInstant("Red Elemental Blast", "{R}",
 			NewTargetedSpell(TargetSpellOnStack(), CounterSpellIfColor(Blue)),
@@ -327,6 +333,7 @@ func registerSpells() {
 		)
 	})
 
+	// XXX: missing exile-on-death replacement effect — Oracle: "if it would die this turn, exile it instead"
 	Register("Disintegrate", func() Card {
 		return NewSorcery("Disintegrate", "{X}{R}",
 			NewTargetedSpell(TargetAnyTarget(), FuncEffect(
@@ -546,6 +553,96 @@ func registerSpells() {
 	Register("Tunnel", func() Card {
 		return NewInstant("Tunnel", "{R}",
 			NewTargetedSpell(TargetCreature(HasSubType("Wall")), DestroyTargetNoRegen()),
+		)
+	})
+
+	// ===== ANTE CARDS =====
+
+	// Contract from Below {B}
+	// Sorcery
+	// Remove this card from your deck before playing if you're not playing for ante.
+	// Discard your hand, ante the top card of your library, then draw seven cards.
+	Register("Contract from Below", func() Card {
+		return NewSorcery("Contract from Below", "{B}",
+			NewSpellAbility(FuncEffect(
+				"discard hand, ante top card, draw seven",
+				EffectProperties{},
+				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					p := g.GetPlayer(controller)
+					if p == nil {
+						return nil
+					}
+					for _, c := range p.Hand() {
+						p.DiscardCard(c.ID())
+					}
+					lib := p.Library()
+					if len(lib) > 0 {
+						top := lib[0]
+						p.SetLibrary(lib[1:])
+						p.AddToAnte(top)
+					}
+					for i := 0; i < 7; i++ {
+						g.PlayerDrawCard(p)
+					}
+					return nil
+				})),
+		)
+	})
+
+	// Darkpact {B}{B}{B}
+	// Sorcery
+	// Remove this card from your deck before playing if you're not playing for ante.
+	// You own target card in the ante. Exchange that card with the top card of your library.
+	Register("Darkpact", func() Card {
+		return NewSorcery("Darkpact", "{B}{B}{B}",
+			NewSpellAbility(FuncEffect(
+				"exchange ante card with top of library",
+				EffectProperties{},
+				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					p := g.GetPlayer(controller)
+					if p == nil {
+						return nil
+					}
+					ante := p.Ante()
+					if len(ante) == 0 {
+						return nil
+					}
+					lib := p.Library()
+					if len(lib) == 0 {
+						return nil
+					}
+					anteCard, ok := p.RemoveFromAnte(ante[0].ID())
+					if !ok {
+						return nil
+					}
+					topLib := lib[0]
+					p.SetLibrary(append([]Card{anteCard}, lib[1:]...))
+					p.AddToAnte(topLib)
+					return nil
+				})),
+		)
+	})
+
+	// Demonic Attorney {1}{B}{B}
+	// Sorcery
+	// Remove this card from your deck before playing if you're not playing for ante.
+	// Each player antes the top card of their library.
+	Register("Demonic Attorney", func() Card {
+		return NewSorcery("Demonic Attorney", "{1}{B}{B}",
+			NewSpellAbility(FuncEffect(
+				"each player antes the top card of their library",
+				EffectProperties{},
+				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					for _, p := range g.AllPlayers() {
+						lib := p.Library()
+						if len(lib) > 0 {
+							top := lib[0]
+							p.SetLibrary(lib[1:])
+							p.AddToAnte(top)
+						}
+					}
+					return nil
+				})),
 		)
 	})
 }

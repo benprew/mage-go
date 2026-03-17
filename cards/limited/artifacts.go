@@ -122,6 +122,7 @@ func registerArtifacts() {
 	})
 
 	Register("Disrupting Scepter", func() Card {
+		// XXX: missing "Activate only during your turn" restriction
 		return NewArtifact("Disrupting Scepter", "{3}",
 			// {3}, {T}: Target player discards a card
 			WithActivatedAbility(
@@ -140,7 +141,7 @@ func registerArtifacts() {
 				TapTarget(),
 				GenericCost(1),
 				WithCost(TapSourceCost()),
-				WithTarget(TargetPermanent()),
+				WithTarget(TargetPermanent(Or(IsArtifact, IsCreature, IsLand))),
 			),
 		)
 	})
@@ -243,25 +244,24 @@ func registerArtifacts() {
 		return NewArtifact("Jade Monolith", "{4}",
 			WithActivatedAbility(
 				FuncEffect(
-					"redirect next damage to target creature to target player instead",
+					"redirect next damage to target creature to you instead",
 					EffectProperties{},
 					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) < 2 {
+						if len(targets) < 1 {
 							return nil
 						}
 						creatureID := targets[0]
-						playerID := targets[1]
-						g.SetCreatureDamageRedirect(creatureID, playerID)
+						g.SetCreatureDamageRedirect(creatureID, controller)
 						return nil
 					}),
 				GenericCost(1),
 				WithTarget(TargetCreature()),
-				WithTarget(TargetPlayer()),
 			),
 		)
 	})
 
 	Register("Jade Statue", func() Card {
+		// XXX: missing "Activate only during combat" restriction
 		return NewArtifact("Jade Statue", "{4}",
 			// {2}: Jade Statue becomes a 3/6 artifact creature until end of combat.
 			WithActivatedAbility(
@@ -409,6 +409,7 @@ func registerArtifacts() {
 	})
 
 	Register("Instill Energy", func() Card {
+		// XXX: missing once-per-turn restriction on untap ability
 		return NewAura("Instill Energy", "{G}",
 			WithStaticAbility(
 				GrantAbilityToAttached(Haste, AttachAura),
@@ -423,11 +424,7 @@ func registerArtifacts() {
 
 	Register("Mana Flare", func() Card {
 		return NewEnchantment("Mana Flare", "{2}{R}",
-			WithAbility(NewManaBonusAbility(HasSubType("Plains"), White)),
-			WithAbility(NewManaBonusAbility(HasSubType("Island"), Blue)),
-			WithAbility(NewManaBonusAbility(HasSubType("Swamp"), Black)),
-			WithAbility(NewManaBonusAbility(HasSubType("Mountain"), Red)),
-			WithAbility(NewManaBonusAbility(HasSubType("Forest"), Green)),
+			WithAbility(NewManaFlareAbility(IsLand)),
 		)
 	})
 
@@ -711,6 +708,7 @@ func registerArtifacts() {
 			WithStaticAbility(
 				IncreaseSpellCostForColor(White, 3),
 			),
+			// XXX: missing "Activated abilities of white enchantments cost {3} more to activate" — no engine support for increasing activated ability costs
 		)
 	})
 
@@ -810,6 +808,7 @@ func registerArtifacts() {
 	})
 
 	Register("Siren's Call", func() Card {
+		// XXX: missing cast timing restriction and "attack if able" forced attack effect
 		return NewInstant("Siren's Call", "{U}",
 			NewSpellAbility(FuncEffect(
 				"destroy non-attacking non-Wall creatures at end of turn",

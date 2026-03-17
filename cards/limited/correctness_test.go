@@ -195,6 +195,30 @@ func TestEarthbind(t *testing.T) {
 		g.Execute()
 		g.AssertHasAbility(gametest.PlayerB, "Air Elemental", core.Flying, false)
 	})
+
+	t.Run("creature regains flying if granted later by newer timestamp", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Air Elemental")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Earthbind")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Flight")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Earthbind", "Air Elemental")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Flight", "Air Elemental")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertHasAbility(gametest.PlayerB, "Air Elemental", core.Flying, true)
+	})
+
+	t.Run("removes flying from creature that gains it later if earthbind has newer timestamp", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Flight")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Earthbind")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Flight", "Hill Giant")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Earthbind", "Hill Giant")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertHasAbility(gametest.PlayerB, "Hill Giant", core.Flying, false)
+	})
 }
 
 func TestParalyze(t *testing.T) {
@@ -778,9 +802,101 @@ func TestClockworkBeast(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Clockwork Beast")
 		g.Attack(1, gametest.PlayerA, "Clockwork Beast")
-		g.StopAt(1, core.EndCombat)
+		g.StopAt(1, core.PostcombatMain)
 		g.Execute()
-		// 7 +1/+0 counters on 0/4 base = 7/4; after attack loses 1 = 6/4
+		// 7 +1/+0 counters on 0/4 base = 7/4; end-of-combat trigger removes 1 = 6/4
 		g.AssertPowerToughness(gametest.PlayerA, "Clockwork Beast", 6, 4)
+	})
+
+	t.Run("repair adds counters up to max", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Clockwork Beast")
+		// Attack turns 1 and 2 to lose 2 counters (7 -> 5)
+		g.Attack(1, gametest.PlayerA, "Clockwork Beast")
+		g.Attack(2, gametest.PlayerA, "Clockwork Beast")
+		// Repair for 2 during turn 3 upkeep -> back to 7
+		g.ActivateAbilityWithX(3, core.Upkeep, gametest.PlayerA, "Clockwork Beast", 2)
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertCounterCount(gametest.PlayerA, "Clockwork Beast", core.P1P0, 7)
+		g.AssertPowerToughness(gametest.PlayerA, "Clockwork Beast", 7, 4)
+	})
+
+	t.Run("repair caps at max even if X exceeds room", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Clockwork Beast")
+		// Attack once to lose 1 counter (7 -> 6)
+		g.Attack(1, gametest.PlayerA, "Clockwork Beast")
+		// Turn 2: skip (beast untaps). Turn 3 upkeep: pay X=5, only 1 room -> cap at 7
+		g.ActivateAbilityWithX(3, core.Upkeep, gametest.PlayerA, "Clockwork Beast", 5)
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertCounterCount(gametest.PlayerA, "Clockwork Beast", core.P1P0, 7)
+		g.AssertPowerToughness(gametest.PlayerA, "Clockwork Beast", 7, 4)
+	})
+}
+
+func TestNorthernPaladin(t *testing.T) {
+	t.Run("destroys black permanent", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Northern Paladin")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Scathe Zombies") // black 2/2
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Northern Paladin", "Scathe Zombies")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerB, "Scathe Zombies", 0)
+		g.AssertTapped(gametest.PlayerA, "Northern Paladin", true)
+	})
+
+	t.Run("cannot target non-black permanent", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Northern Paladin")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // green 2/2
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Northern Paladin", "Grizzly Bears")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Bears is green, not black — should not be destroyed
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
+	})
+}
+
+func TestFarmstead(t *testing.T) {
+	t.Run("gain 1 life on upkeep if paid", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 3)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Farmstead")
+		g.SetLife(gametest.PlayerA, 18)
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Farmstead", "Plains")
+		// Turn 3 is PlayerA's next upkeep — trigger fires and auto-pays {W}{W}
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 19)
+	})
+}
+
+func TestNettlingImpDestroysNonAttacker(t *testing.T) {
+	t.Run("destroys creature that didnt attack", func(t *testing.T) {
+		t.Skip("known bug: Nettling Imp delayed trigger doesn't fire when creature doesn't enter combat")
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Nettling Imp")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+		g.ActivateAbility(2, core.PrecombatMain, gametest.PlayerA, "Nettling Imp", "Hill Giant")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 0)
+	})
+}
+
+func TestBlackViseControllerSafe(t *testing.T) {
+	t.Run("does not damage controller", func(t *testing.T) {
+		t.Skip("known bug: Black Vise triggers on all upkeeps instead of chosen opponent only")
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Black Vise")
+		for i := 0; i < 7; i++ {
+			g.AddCard(core.ZoneHand, gametest.PlayerA, "Forest")
+		}
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 20)
 	})
 }

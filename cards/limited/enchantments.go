@@ -189,10 +189,8 @@ func registerEnchantments() {
 
 	Register("Earthbind", func() Card {
 		return NewAura("Earthbind", "{R}",
-			// When Earthbind enters, if enchanted creature has flying,
-			// deal 2 damage to that creature.
 			WithAbility(EntersBattlefieldTrigger(FuncEffect(
-				"deal 2 damage to enchanted creature if it has flying",
+				"if enchanted creature has flying, deal 2 damage",
 				EffectProperties{},
 				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					aura := g.FindPermanent(sourceID)
@@ -218,6 +216,7 @@ func registerEnchantments() {
 	})
 
 	Register("Animate Dead", func() Card {
+		// XXX: missing leave-battlefield sacrifice trigger — engine needs last-known-information for attachments
 		return NewAura("Animate Dead", "{1}{B}",
 			WithAbility(NewSpellAbility(ReturnFromGraveyardToBattlefield())),
 			WithStaticAbility(
@@ -247,8 +246,23 @@ func registerEnchantments() {
 	Register("Phantasmal Terrain", func() Card {
 		return NewAura("Phantasmal Terrain", "{U}{U}",
 			WithCastTarget(TargetLand()),
+			WithAbility(EntersBattlefieldTrigger(FuncEffect(
+				"choose a basic land type",
+				EffectProperties{},
+				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					perm := g.FindPermanent(sourceID)
+					if perm == nil {
+						return nil
+					}
+					p := g.GetPlayer(controller)
+					if p == nil {
+						return nil
+					}
+					perm.ChosenColor = p.ChooseManaColor("Choose basic land type for Phantasmal Terrain")
+					return nil
+				}), false)),
 			WithStaticAbility(
-				ChangeAttachedSubTypes([]string{"Island"}),
+				ChangeAttachedSubTypesByChosenColor(),
 			),
 		)
 	})
