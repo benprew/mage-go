@@ -594,7 +594,7 @@ func abilityBonus(perm *mage.Permanent) int {
 		inner := mage.UnwrapAbility(a)
 		switch ab := inner.(type) {
 		case *mage.ManaAbility:
-			if ab.AnyColor {
+			if ab.HasAnyColor() {
 				score += 3
 			} else {
 				score += 2
@@ -692,7 +692,7 @@ func evalNonCreaturePermanent(perm *mage.Permanent) int {
 		case *mage.ManaAbility:
 			// Mana-producing artifacts get a small bonus.
 			s := 2
-			if ab.AnyColor {
+			if ab.HasAnyColor() {
 				s = 3
 			}
 			if s > bonus {

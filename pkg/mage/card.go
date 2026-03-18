@@ -278,9 +278,14 @@ func WithManaAbility(color Color) CardOption {
 	return func(c *BaseCard) { c.AddAbility(NewManaAbility(color)) }
 }
 
+// WithMultiManaAbility adds a mana ability with custom productions.
+func WithMultiManaAbility(productions ...ManaProduction) CardOption {
+	return func(c *BaseCard) { c.AddAbility(NewMultiManaAbility(productions...)) }
+}
+
 // WithAnyColorMana adds an any-color mana ability.
 func WithAnyColorMana() CardOption {
-	return func(c *BaseCard) { c.AddAbility(NewAnyColorManaAbility()) }
+	return func(c *BaseCard) { c.AddAbility(NewManaAbility(AnyColor)) }
 }
 
 // WithActivatedAbility adds an activated ability built from the given effect,

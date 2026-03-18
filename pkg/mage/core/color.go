@@ -12,4 +12,5 @@ const (
 	Black
 	Red
 	Green
+	AnyColor
 )

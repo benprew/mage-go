@@ -173,3 +173,176 @@ func TestCanAfford_RespectsManaConversions(t *testing.T) {
 		t.Error("should not afford {R}{W} with only one Mountain")
 	}
 }
+
+func TestAutoTapForCost_ManaBonusReducesTapping(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.Players[0].PlayerID()
+
+	// Two Mountains on the battlefield
+	for i := 0; i < 2; i++ {
+		m := NewLand("Mountain", WithManaAbility(Red))
+		m.SetOwner(pid)
+		p := g.PutOnBattlefield(m, pid)
+		p.RevokeBaseAttr(AttrSummonSick)
+	}
+
+	// Add Mana Flare (doubles mana from lands)
+	flare := NewEnchantment("Mana Flare", "{2}{R}",
+		WithAbility(NewManaFlareAbility(IsLand)),
+	)
+	flare.SetOwner(pid)
+	g.PutOnBattlefield(flare, pid)
+
+	// Pay {2} — with Mana Flare, one Mountain produces {R}{R}, so only 1 should be tapped
+	cost := ManaCost{Generic: 2}
+	if err := g.AutoTapForCost(pid, cost); err != nil {
+		t.Fatalf("AutoTapForCost failed: %v", err)
+	}
+
+	tappedCount := 0
+	for _, perm := range g.Battlefield {
+		if perm.Name() == "Mountain" && perm.Tapped {
+			tappedCount++
+		}
+	}
+	if tappedCount != 1 {
+		t.Errorf("expected 1 Mountain tapped with Mana Flare, got %d", tappedCount)
+	}
+}
+
+func TestCanAfford_AccountsForManaBonus(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.Players[0].PlayerID()
+
+	// One Mountain
+	m := NewLand("Mountain", WithManaAbility(Red))
+	m.SetOwner(pid)
+	p := g.PutOnBattlefield(m, pid)
+	p.RevokeBaseAttr(AttrSummonSick)
+
+	// Add Mana Flare
+	flare := NewEnchantment("Mana Flare", "{2}{R}",
+		WithAbility(NewManaFlareAbility(IsLand)),
+	)
+	flare.SetOwner(pid)
+	g.PutOnBattlefield(flare, pid)
+
+	// Should afford {2} with one Mountain + Mana Flare (produces {R}{R})
+	if !g.CanAfford(pid, ManaCost{Generic: 2}) {
+		t.Error("should afford {2} with one Mountain + Mana Flare")
+	}
+}
+
+func TestTapForMana_MultiMana(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.Players[0].PlayerID()
+
+	// Sol Ring style: tap for 2 colorless
+	ring := NewArtifact("Sol Ring", "{1}", WithMultiManaAbility(ManaProduction{Colorless, 2}))
+	ring.SetOwner(pid)
+	perm := g.PutOnBattlefield(ring, pid)
+	perm.RevokeBaseAttr(AttrSummonSick)
+
+	if err := g.TapForMana(pid, perm.ID()); err != nil {
+		t.Fatalf("TapForMana failed: %v", err)
+	}
+
+	pool := g.Players[0].ManaPool()
+	if pool.Count(Colorless) != 2 {
+		t.Errorf("expected 2 colorless mana, got %d", pool.Count(Colorless))
+	}
+}
+
+func TestTapForMana_MultiColor(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.Players[0].PlayerID()
+
+	// Produces {G}{W} at once
+	land := NewLand("Dual Land",
+		WithMultiManaAbility(ManaProduction{Green, 1}, ManaProduction{White, 1}),
+	)
+	land.SetOwner(pid)
+	perm := g.PutOnBattlefield(land, pid)
+	perm.RevokeBaseAttr(AttrSummonSick)
+
+	if err := g.TapForMana(pid, perm.ID()); err != nil {
+		t.Fatalf("TapForMana failed: %v", err)
+	}
+
+	pool := g.Players[0].ManaPool()
+	if pool.Count(Green) != 1 {
+		t.Errorf("expected 1 green mana, got %d", pool.Count(Green))
+	}
+	if pool.Count(White) != 1 {
+		t.Errorf("expected 1 white mana, got %d", pool.Count(White))
+	}
+}
+
+func TestAutoTapForCost_MultiMana(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.Players[0].PlayerID()
+
+	// Sol Ring style: produces 2 colorless
+	ring := NewArtifact("Sol Ring", "{1}", WithMultiManaAbility(ManaProduction{Colorless, 2}))
+	ring.SetOwner(pid)
+	perm := g.PutOnBattlefield(ring, pid)
+	perm.RevokeBaseAttr(AttrSummonSick)
+
+	// Pay {2} — Sol Ring alone should cover it
+	cost := ManaCost{Generic: 2}
+	if err := g.AutoTapForCost(pid, cost); err != nil {
+		t.Fatalf("AutoTapForCost failed: %v", err)
+	}
+
+	if !perm.Tapped {
+		t.Error("expected Sol Ring to be tapped")
+	}
+}
+
+func TestCanAfford_MultiMana(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.Players[0].PlayerID()
+
+	// Sol Ring style: produces 2 colorless
+	ring := NewArtifact("Sol Ring", "{1}", WithMultiManaAbility(ManaProduction{Colorless, 2}))
+	ring.SetOwner(pid)
+	perm := g.PutOnBattlefield(ring, pid)
+	perm.RevokeBaseAttr(AttrSummonSick)
+
+	if !g.CanAfford(pid, ManaCost{Generic: 2}) {
+		t.Error("should afford {2} with Sol Ring")
+	}
+
+	// Should not afford {3} with just Sol Ring
+	if g.CanAfford(pid, ManaCost{Generic: 3}) {
+		t.Error("should not afford {3} with only Sol Ring (produces 2)")
+	}
+
+	_ = perm
+}
+
+func TestProducedAmount(t *testing.T) {
+	tests := []struct {
+		name string
+		ma   *ManaAbility
+		want int
+	}{
+		{"single color", NewManaAbility(Green), 1},
+		{"multi amount", NewMultiManaAbility(ManaProduction{Colorless, 2}), 2},
+		{"multi amount 3", NewMultiManaAbility(ManaProduction{Colorless, 3}), 3},
+		{"any color", NewManaAbility(AnyColor), 1},
+		{"multi color", NewMultiManaAbility(
+			ManaProduction{Green, 1}, ManaProduction{White, 1},
+		), 2},
+		{"multi color varied", NewMultiManaAbility(
+			ManaProduction{Colorless, 2}, ManaProduction{Red, 1},
+		), 3},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.ma.ProducedAmount(); got != tt.want {
+				t.Errorf("ProducedAmount() = %d, want %d", got, tt.want)
+			}
+		})
+	}
+}

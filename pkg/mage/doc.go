@@ -997,8 +997,9 @@ Attach with WithAbility:
 
 Mana abilities are a special ability type:
 
-	[NewManaAbility](color)         // tap for one mana of color
-	[NewAnyColorManaAbility]()      // tap for any color
+	[NewManaAbility](color)          // tap for one mana of color
+	[NewMultiManaAbility](prods...)  // custom productions (Sol Ring, dual mana, etc.)
+	[NewManaAbility](AnyColor)       // tap for any color
 
 Mana costs are parsed from strings like "{2}{W}{B}" via [ParseManaCost].
 Colors: [White], [Blue], [Black], [Red], [Green], [Colorless].

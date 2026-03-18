@@ -154,95 +154,12 @@ func StaticAbility(effects ...ContinuousEffect) *StaticAbilityHolder {
 	}
 }
 
-// ManaAbility is a mana ability that taps to add mana.
-type ManaAbility struct {
-	BaseAbility
-	Color    Color
-	AnyColor bool // player chooses color when activated
-}
-
-// NewManaAbility creates a tap-for-mana ability that produces one mana of the given color.
-func NewManaAbility(c Color) *ManaAbility {
-	return &ManaAbility{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityMana,
-		},
-		Color: c,
-	}
-}
-
-// NewAnyColorManaAbility creates a mana ability that lets the player choose
-// which color of mana to add (e.g. Birds of Paradise).
-func NewAnyColorManaAbility() *ManaAbility {
-	return &ManaAbility{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityMana,
-		},
-		AnyColor: true,
-	}
-}
-
-// ManaBonusAbility grants bonus mana when matching permanents are tapped for mana.
-// E.g. Gauntlet of Might: "Whenever a Mountain is tapped for mana, add {R}."
-// If AttachedOnly is true, the filter is ignored and only the attached permanent
-// triggers the bonus (for auras like Wild Growth).
-// If MatchProduced is true, the bonus mana color matches whatever color the land
-// produced (e.g. Mana Flare: "adds one mana of any type that land produced").
-type ManaBonusAbility struct {
-	BaseAbility
-	Filter        PermanentFilter
-	BonusMana     Color
-	AttachedOnly  bool
-	MatchProduced bool
-}
-
 // UnwrapAbility returns the inner ability if wrapped by a grantedByEffect, otherwise returns a itself.
 func UnwrapAbility(a Ability) Ability {
 	if ge, ok := a.(*grantedByEffect); ok {
 		return ge.Ability
 	}
 	return a
-}
-
-// NewManaBonusAbility creates a static ability that grants bonus mana when a permanent
-// matching the filter is tapped for mana (e.g. Gauntlet of Might for Mountains).
-func NewManaBonusAbility(filter PermanentFilter, bonusMana Color) *ManaBonusAbility {
-	return &ManaBonusAbility{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityStatic,
-		},
-		Filter:    filter,
-		BonusMana: bonusMana,
-	}
-}
-
-// NewAttachedManaBonusAbility creates a mana bonus that triggers only when the
-// permanent this aura is attached to is tapped for mana (e.g. Wild Growth).
-func NewAttachedManaBonusAbility(bonusMana Color) *ManaBonusAbility {
-	return &ManaBonusAbility{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityStatic,
-		},
-		BonusMana:    bonusMana,
-		AttachedOnly: true,
-	}
-}
-
-// NewManaFlareAbility creates a mana bonus that adds one mana of the same type
-// produced when a matching land is tapped (e.g. Mana Flare).
-func NewManaFlareAbility(filter PermanentFilter) *ManaBonusAbility {
-	return &ManaBonusAbility{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityStatic,
-		},
-		Filter:        filter,
-		MatchProduced: true,
-	}
 }
 
 // SacrificeUnlessLandAbility requires the controller to control a land of a

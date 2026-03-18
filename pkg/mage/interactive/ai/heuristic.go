@@ -682,13 +682,12 @@ func chooseBestLand(p mage.Player, _ *mage.Game) mage.Card {
 			if !ok {
 				continue
 			}
-			if ma.Color != core.Colorless {
-				score += neededColors[ma.Color] * 2
-			}
-			if ma.AnyColor {
+			if ma.HasAnyColor() {
 				for _, need := range neededColors {
 					score += need
 				}
+			} else if ma.PrimaryColor() != core.Colorless {
+				score += neededColors[ma.PrimaryColor()] * 2
 			}
 		}
 		if score > bestScore {

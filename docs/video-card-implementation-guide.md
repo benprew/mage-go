@@ -484,7 +484,7 @@ mage.NewCreature("Black Knight", "{B}{B}", 2, 1,
 
 **ETB & Lifecycle:** `ETBWithTargets`, `ETBEffect`, `EntersWithXCounters`, `CopyCreatureOnETB`, `SacrificeUnlessLand`, `GraveyardReturnIfCreaturesAbove`
 
-**Mana:** `NewManaAbility`, `NewAnyColorManaAbility`, `ManaBonusAbility`, `NewManaBonusAbility`, `NewAttachedManaBonusAbility`, `NewEquipAbility`
+**Mana:** `NewManaAbility`, `ManaBonusAbility`, `NewManaBonusAbility`, `NewAttachedManaBonusAbility`, `NewEquipAbility`
 
 ---
 

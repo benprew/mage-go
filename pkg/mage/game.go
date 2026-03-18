@@ -1478,6 +1478,23 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	return nil
 }
 
+// addManaFromAbility resolves a mana ability's productions, adding mana to the player's pool.
+// AnyColor productions prompt the player to choose a color.
+func (g *Game) addManaFromAbility(ma *ManaAbility, p Player, perm *Permanent) {
+	for _, prod := range ma.Productions {
+		color := prod.Color
+		if color == AnyColor {
+			color = p.ChooseManaColor("add mana")
+		}
+		amt := prod.Amount
+		if amt <= 0 {
+			amt = 1
+		}
+		p.ManaPool().Add(color, amt)
+		g.applyManaBonuses(perm, color, p)
+	}
+}
+
 // applyManaBonuses checks for mana bonus effects when a permanent is tapped for mana.
 func (g *Game) applyManaBonuses(tappedPerm *Permanent, producedColor Color, p Player) {
 	for _, perm := range g.Battlefield {
@@ -2300,14 +2317,13 @@ func (g *Game) TapForMana(playerID, permanentID uuid.UUID) error {
 	// Find a mana ability
 	for _, a := range perm.RuntimeAbilities {
 		if ma, ok := a.(*ManaAbility); ok {
-			// Creatures with mana abilities need to not be summoning sick
 			if !perm.CanTapForEffect(g) {
 				return fmt.Errorf("creature has summoning sickness")
 			}
 			perm.Tapped = true
 			p := g.GetPlayer(playerID)
 			if p != nil {
-				p.ManaPool().Add(ma.Color, 1)
+				g.addManaFromAbility(ma, p, perm)
 			}
 			return nil
 		}
@@ -2320,6 +2336,31 @@ type manaSourceInfo struct {
 	PermanentID uuid.UUID
 	Name        string
 	Color       Color
+	Amount      int // total mana produced (including all productions)
+}
+
+// countManaBonuses returns how many bonus mana a permanent would produce when tapped.
+func (g *Game) countManaBonuses(permanentID uuid.UUID) int {
+	tappedPerm := g.FindPermanent(permanentID)
+	if tappedPerm == nil {
+		return 0
+	}
+	bonus := 0
+	for _, perm := range g.Battlefield {
+		for _, a := range perm.RuntimeAbilities {
+			inner := UnwrapAbility(a)
+			if mb, ok := inner.(*ManaBonusAbility); ok {
+				if mb.AttachedOnly {
+					if perm.AttachedTo == tappedPerm.ID() {
+						bonus++
+					}
+				} else if mb.Filter.Match(tappedPerm, g) {
+					bonus++
+				}
+			}
+		}
+	}
+	return bonus
 }
 
 // getUntappedManaSources returns all untapped permanents with mana abilities for a player.
@@ -2338,7 +2379,8 @@ func (g *Game) getUntappedManaSources(playerID uuid.UUID) []manaSourceInfo {
 				sources = append(sources, manaSourceInfo{
 					PermanentID: perm.ID(),
 					Name:        perm.Name(),
-					Color:       ma.Color,
+					Color:       ma.PrimaryColor(),
+					Amount:      ma.ProducedAmount(),
 				})
 				break // one entry per permanent even if it has multiple mana abilities
 			}
@@ -2380,6 +2422,7 @@ func (g *Game) AutoTapForCost(playerID uuid.UUID, mc ManaCost) error {
 	genericNeeded := mc.Generic - min(mc.Generic, poolRemaining)
 
 	var toTap []uuid.UUID
+	surplusMana := 0
 
 	// First pass: tap sources for exact color requirements
 	for color, count := range needed {
@@ -2388,6 +2431,7 @@ func (g *Game) AutoTapForCost(playerID uuid.UUID, mc ManaCost) error {
 			for j, src := range sources {
 				if src.Color == color && src.PermanentID != uuid.Nil {
 					toTap = append(toTap, src.PermanentID)
+					surplusMana += g.countManaBonuses(src.PermanentID)
 					sources[j].PermanentID = uuid.Nil // mark as used
 					found = true
 					break
@@ -2399,12 +2443,17 @@ func (g *Game) AutoTapForCost(playerID uuid.UUID, mc ManaCost) error {
 		}
 	}
 
+	// Surplus mana from bonuses on color-tapped sources reduces generic need
+	genericNeeded -= min(genericNeeded, surplusMana)
+
 	// Second pass: tap remaining sources for generic mana
-	for i := 0; i < genericNeeded; i++ {
+	for genericNeeded > 0 {
 		found := false
 		for j, src := range sources {
 			if src.PermanentID != uuid.Nil {
 				toTap = append(toTap, src.PermanentID)
+				produced := src.Amount + g.countManaBonuses(src.PermanentID)
+				genericNeeded -= produced
 				sources[j].PermanentID = uuid.Nil
 				found = true
 				break
@@ -2439,7 +2488,8 @@ func (g *Game) CanAfford(playerID uuid.UUID, mc ManaCost) bool {
 		hypothetical.Add(color, pool.Count(color))
 	}
 	for _, src := range g.getUntappedManaSources(playerID) {
-		hypothetical.Add(src.Color, 1)
+		hypothetical.Add(src.Color, src.Amount)
+		hypothetical.Add(src.Color, g.countManaBonuses(src.PermanentID))
 	}
 	hypothetical.ManaConversions = pool.ManaConversions
 
@@ -2696,12 +2746,7 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		perm.Tapped = true
 		p := g.GetPlayer(playerID)
 		if p != nil {
-			color := ma.Color
-			if ma.AnyColor {
-				color = p.ChooseManaColor("add mana")
-			}
-			p.ManaPool().Add(color, 1)
-			g.applyManaBonuses(perm, color, p)
+			g.addManaFromAbility(ma, p, perm)
 		}
 		g.FireEvent(GameEvent{
 			Type:     EvtTapped,
