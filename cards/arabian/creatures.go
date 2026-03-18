@@ -412,12 +412,26 @@ func registerCreatures() {
 		)
 	})
 
+	// Oracle: "Whenever El-Hajjâj deals damage, you gain that much life."
 	Register("El-Hajjâj", func() Card {
-		// Oracle text: "Whenever El-Hajjâj deals damage, you gain that much life."
-		// Functionally equivalent to lifelink.
 		return NewCreature("El-Hajjâj", "{1}{B}{B}", 1, 1,
 			WithSubTypes("Human", "Wizard"),
-			WithKeyword(Lifelink),
+			WithAbility(NewTriggered(EvtDamageDealt, false,
+				FuncEffect("you gain that much life",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						amount := g.EventAmount()
+						if amount > 0 {
+							p := g.GetPlayer(controller)
+							if p != nil {
+								g.PlayerGainLife(p, amount)
+							}
+						}
+						return nil
+					}),
+			).SetCondition(func(evt *GameEvent, _ *Game, sourceID, _ uuid.UUID) bool {
+				return evt.SourceID == sourceID
+			})),
 		)
 	})
 

@@ -1,10 +1,25 @@
 package arabian
 
 import (
+	"fmt"
+
 	"github.com/google/uuid"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
+
+// exactHandSizeCost is a zero-cost activation condition: the ability can only
+// be activated when the controller has exactly `size` cards in hand.
+type exactHandSizeCost struct{ size int }
+
+func (c *exactHandSizeCost) CanPay(_, controller uuid.UUID, g *Game) bool {
+	p := g.GetPlayer(controller)
+	return p != nil && len(p.Hand()) == c.size
+}
+func (c *exactHandSizeCost) Pay(_, _ uuid.UUID, _ *Game) error { return nil }
+func (c *exactHandSizeCost) Text() string {
+	return fmt.Sprintf("Activate only if you have exactly %d cards in hand", c.size)
+}
 
 func init() {
 	registerLands()
@@ -130,20 +145,9 @@ func registerLands() {
 		return NewLand("Library of Alexandria",
 			WithManaAbility(Colorless),
 			WithActivatedAbility(
-				FuncEffect("draw a card (if 7 in hand)",
-					EffectProperties{Outcome: OutcomeBenefit, DrawCount: 1},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						p := g.GetPlayer(controller)
-						if p == nil {
-							return nil
-						}
-						if len(p.Hand()) != 7 {
-							return nil
-						}
-						p.DrawCard()
-						return nil
-					}),
+				DrawCards(Fixed(1)),
 				TapSourceCost(),
+				WithCost(&exactHandSizeCost{size: 7}),
 			),
 		)
 	})
