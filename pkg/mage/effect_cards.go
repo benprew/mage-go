@@ -404,20 +404,26 @@ func (e *discardHandAndDrawEffect) Text() string {
 }
 func (e *discardHandAndDrawEffect) Properties() EffectProperties { return EffectProperties{} }
 
-// shuffleGraveyardIntoLibraryAndDrawEffect shuffles each player's graveyard
-// into their library, then each player draws N cards.
-type shuffleGraveyardIntoLibraryAndDrawEffect struct {
+// shuffleHandAndGraveyardIntoLibraryAndDrawEffect shuffles each player's hand
+// and graveyard into their library, then each player draws N cards.
+type shuffleHandAndGraveyardIntoLibraryAndDrawEffect struct {
 	drawCount int
 }
 
-// ShuffleGraveyardIntoLibraryAndDraw creates an effect where each player shuffles their graveyard
-// into their library, then draws n cards (e.g. Feldon's Cane variant).
-func ShuffleGraveyardIntoLibraryAndDraw(n int) Effect {
-	return &shuffleGraveyardIntoLibraryAndDrawEffect{drawCount: n}
+// ShuffleHandAndGraveyardIntoLibraryAndDraw creates an effect where each player shuffles their
+// hand and graveyard into their library, then draws n cards (e.g. Timetwister).
+func ShuffleHandAndGraveyardIntoLibraryAndDraw(n int) Effect {
+	return &shuffleHandAndGraveyardIntoLibraryAndDrawEffect{drawCount: n}
 }
 
-func (e *shuffleGraveyardIntoLibraryAndDrawEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *shuffleHandAndGraveyardIntoLibraryAndDrawEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	for _, p := range g.AllPlayers() {
+		// Move hand into library (copy slice since RemoveFromHand modifies it)
+		hand := append([]Card(nil), p.Hand()...)
+		for _, c := range hand {
+			p.RemoveFromHand(c.ID())
+			p.AddToLibrary(c)
+		}
 		// Move graveyard into library
 		for _, c := range p.Graveyard() {
 			p.AddToLibrary(c)
@@ -432,10 +438,10 @@ func (e *shuffleGraveyardIntoLibraryAndDrawEffect) Apply(g GameMutator, sourceID
 	return nil
 }
 
-func (e *shuffleGraveyardIntoLibraryAndDrawEffect) Text() string {
-	return fmt.Sprintf("Each player shuffles graveyard into library, then draws %d cards", e.drawCount)
+func (e *shuffleHandAndGraveyardIntoLibraryAndDrawEffect) Text() string {
+	return fmt.Sprintf("Each player shuffles their hand and graveyard into their library, then draws %d cards", e.drawCount)
 }
-func (e *shuffleGraveyardIntoLibraryAndDrawEffect) Properties() EffectProperties {
+func (e *shuffleHandAndGraveyardIntoLibraryAndDrawEffect) Properties() EffectProperties {
 	return EffectProperties{}
 }
 

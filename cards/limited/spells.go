@@ -176,7 +176,7 @@ func registerSpells() {
 
 	Register("Timetwister", func() Card {
 		return NewSorcery("Timetwister", "{2}{U}",
-			NewSpellAbility(ShuffleGraveyardIntoLibraryAndDraw(7)),
+			NewSpellAbility(ShuffleHandAndGraveyardIntoLibraryAndDraw(7)),
 		)
 	})
 

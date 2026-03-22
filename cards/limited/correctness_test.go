@@ -106,10 +106,10 @@ func TestWheelOfFortune(t *testing.T) {
 }
 
 func TestTimetwister(t *testing.T) {
-	t.Run("shuffles graveyard into library", func(t *testing.T) {
+	t.Run("shuffles hand and graveyard into library", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Timetwister")
-		g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Lightning Bolt")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
 		g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
 		for i := 0; i < 10; i++ {
 			g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Forest")
@@ -120,8 +120,10 @@ func TestTimetwister(t *testing.T) {
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Timetwister")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		g.AssertGraveyardCount(gametest.PlayerA, "Lightning Bolt", 0)
+		// Graveyard cards should be shuffled into library
 		g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 0)
+		// Hand cards should be shuffled into library, not discarded to graveyard
+		g.AssertGraveyardCount(gametest.PlayerA, "Lightning Bolt", 0)
 	})
 }
 
