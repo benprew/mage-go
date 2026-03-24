@@ -779,6 +779,7 @@ Mutation methods (GameMutator):
 	RemoveFromBattlefield(*Permanent)
 	DestroyPermanent(*Permanent)
 	ExilePermanent(*Permanent)
+	TapPermanent(*Permanent)
 	Sacrifice(*Permanent)
 	DealDamageToPlayer(Player, int, uuid.UUID)
 	DealDamageToPermanent(*Permanent, int, uuid.UUID)

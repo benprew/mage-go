@@ -34,7 +34,7 @@ func (r *regenerationReplacement) Replace(a Action, g GameMutator) Action {
 	r.shields--
 	perm := g.FindPermanent(r.permanentID)
 	if perm != nil {
-		perm.Tapped = true
+		g.TapPermanent(perm)
 		perm.Damage = 0
 		g.RemoveFromCombat(perm.ID())
 	}

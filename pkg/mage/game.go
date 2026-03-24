@@ -394,7 +394,7 @@ func (g *Game) TryPayCostFromLands(playerID uuid.UUID, manaCostStr string) bool 
 	// Actually tap the selected lands
 	for _, land := range lands {
 		if used[land.ID()] {
-			land.Tapped = true
+			g.TapPermanent(land)
 		}
 	}
 
@@ -413,7 +413,7 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 	}
 
 	// EntersTapped keyword check — consumed on entry, attr cleared immediately after.
-	if perm.HasKeyword(EntersTapped) {
+	if perm.HasKeyword(EntersTapped) || g.Effects.Rules.ShouldEnterTapped(perm) {
 		perm.Tapped = true
 		perm.RevokeBaseAttr(EntersTapped)
 	}
@@ -633,6 +633,16 @@ func (g *Game) DestroyPermanent(perm *Permanent) {
 		g.checkAbilitiesForEvent(selfAbilities, &diedEvt, permID, controller)
 	}
 
+}
+
+// TapPermanent taps a permanent and fires the EvtTapped event.
+func (g *Game) TapPermanent(perm *Permanent) {
+	perm.Tapped = true
+	g.FireEvent(GameEvent{
+		Type:     EvtTapped,
+		SourceID: perm.ID(),
+		PlayerID: perm.Controller,
+	})
 }
 
 // checkAbilitiesForEvent checks a set of abilities (from a removed permanent) for triggers.
@@ -2003,7 +2013,7 @@ func (g *Game) doDeclareAttackers() {
 
 		// Tap attacker (unless vigilance)
 		if !atk.HasKeyword(Vigilance) {
-			atk.Tapped = true
+			g.TapPermanent(atk)
 		}
 
 		g.Combat.AddAttacker(id, defender.PlayerID())
@@ -2320,7 +2330,7 @@ func (g *Game) TapForMana(playerID, permanentID uuid.UUID) error {
 			if !perm.CanTapForEffect(g) {
 				return fmt.Errorf("creature has summoning sickness")
 			}
-			perm.Tapped = true
+			g.TapPermanent(perm)
 			p := g.GetPlayer(playerID)
 			if p != nil {
 				g.addManaFromAbility(ma, p, perm)
@@ -2743,16 +2753,11 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		if perm.Tapped || !perm.CanTapForEffect(g) {
 			return fmt.Errorf("cannot tap %s for mana", perm.Name())
 		}
-		perm.Tapped = true
+		g.TapPermanent(perm)
 		p := g.GetPlayer(playerID)
 		if p != nil {
 			g.addManaFromAbility(ma, p, perm)
 		}
-		g.FireEvent(GameEvent{
-			Type:     EvtTapped,
-			SourceID: perm.ID(),
-			PlayerID: playerID,
-		})
 		g.FireEvent(GameEvent{
 			Type:     EvtAbilityActivated,
 			SourceID: perm.ID(),

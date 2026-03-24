@@ -126,12 +126,7 @@ func (e *tapTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, t
 	if perm == nil {
 		return nil
 	}
-	perm.Tapped = true
-	g.FireEvent(GameEvent{
-		Type:     EvtTapped,
-		SourceID: perm.ID(),
-		PlayerID: perm.Controller,
-	})
+	g.TapPermanent(perm)
 	return nil
 }
 
@@ -203,7 +198,7 @@ func (e *tapAttachedCreatureEffect) Apply(g GameMutator, sourceID, controller uu
 	}
 	target := g.FindPermanent(src.AttachedTo)
 	if target != nil {
-		target.Tapped = true
+		g.TapPermanent(target)
 	}
 	return nil
 }
@@ -235,7 +230,7 @@ func (e *tapOrUntapTargetEffect) Apply(g GameMutator, sourceID, controller uuid.
 	}
 	mode := caster.ChooseMode([]string{"Tap", "Untap"}, "Twiddle")
 	if mode == 0 {
-		perm.Tapped = true
+		g.TapPermanent(perm)
 	} else {
 		perm.Tapped = false
 	}
@@ -259,7 +254,7 @@ func (e *tapAllLandsEffect) Apply(g GameMutator, sourceID, controller uuid.UUID,
 	}
 	playerID := targets[0]
 	for _, p := range g.FilterBattlefield(And(ControlledBy(playerID), IsLand)) {
-		p.Tapped = true
+		g.TapPermanent(p)
 	}
 	return nil
 }

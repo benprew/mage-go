@@ -335,7 +335,7 @@ func registerSpells() {
 					if perm.Tapped {
 						return nil // must be untapped
 					}
-					perm.Tapped = true
+					g.TapPermanent(perm)
 					cmc := perm.Card.ManaCost().CMC()
 					if cmc > 0 {
 						p := g.GetPlayer(controller)
@@ -395,7 +395,7 @@ func registerSpells() {
 								// Tap each blocker
 								blocker := g.FindPermanent(bid)
 								if blocker != nil {
-									blocker.Tapped = true
+									g.TapPermanent(blocker)
 								}
 							}
 							break
@@ -1372,7 +1372,7 @@ func registerSpells() {
 					if perm == nil {
 						return nil
 					}
-					perm.Tapped = true
+					g.TapPermanent(perm)
 					// Prevent combat damage from this creature this turn
 					g.PreventAllDamageFrom(targets[0])
 					// Doesn't untap during controller's next two untap steps
@@ -1547,7 +1547,7 @@ func registerSpells() {
 							break
 						}
 						if perm.Controller != controller {
-							perm.Tapped = true
+							g.TapPermanent(perm)
 							if perm.HasAttr(Flying) {
 								g.DealDamageToPermanent(perm, 2, sourceID)
 							}
@@ -1560,7 +1560,7 @@ func registerSpells() {
 							break
 						}
 						if perm.Controller == controller {
-							perm.Tapped = true
+							g.TapPermanent(perm)
 							if perm.HasAttr(Flying) {
 								g.DealDamageToPermanent(perm, 2, sourceID)
 							}

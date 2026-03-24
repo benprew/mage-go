@@ -1030,8 +1030,6 @@ func TestFortifiedArea(t *testing.T) {
 	})
 }
 
-// TODO: TestKismet — ETB trigger needs target binding from event to work correctly
-
 // ===== SPIRIT LINK =====
 
 func TestSpiritLink(t *testing.T) {

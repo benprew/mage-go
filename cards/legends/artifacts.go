@@ -135,7 +135,7 @@ func registerArtifacts() {
 					for _, p := range g.FilterBattlefield(NewPermanentFilter("legendary creature", func(p *Permanent, _ *Game) bool {
 						return p.HasType(TypeCreature) && p.Card.HasSuperType(SuperLegendary)
 					})) {
-						p.Tapped = true
+						g.TapPermanent(p)
 					}
 					return nil
 				},

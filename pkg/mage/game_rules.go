@@ -28,6 +28,7 @@ type GameRules struct {
 	expansionCastBlock   []string                // set codes blocked from casting/playing
 	NullifiedLandwalks       map[Attr]bool           // landwalk attrs that are nullified (Great Wall, etc.)
 	ActivationCostReductions map[uuid.UUID]int        // permanent ID → generic mana reduction for activated abilities
+	entersTappedRules []func(*Permanent) bool        // filters registered by continuous effects (Kismet, etc.)
 }
 
 // NewGameRules creates a GameRules with all maps initialized.
@@ -66,6 +67,22 @@ func (r *GameRules) ResetPerCycle() {
 	r.expansionCastBlock = nil
 	r.NullifiedLandwalks = make(map[Attr]bool)
 	r.ActivationCostReductions = make(map[uuid.UUID]int)
+	r.entersTappedRules = nil
+}
+
+// AddEntersTappedRule registers a filter that causes matching permanents to enter tapped.
+func (r *GameRules) AddEntersTappedRule(f func(*Permanent) bool) {
+	r.entersTappedRules = append(r.entersTappedRules, f)
+}
+
+// ShouldEnterTapped returns true if any registered rule says this permanent enters tapped.
+func (r *GameRules) ShouldEnterTapped(perm *Permanent) bool {
+	for _, f := range r.entersTappedRules {
+		if f(perm) {
+			return true
+		}
+	}
+	return false
 }
 
 // ClearEndOfTurn resets all turn-scoped game rule state.

@@ -50,6 +50,7 @@ type GameMutator interface {
 	RemoveFromBattlefield(*Permanent)
 	DestroyPermanent(*Permanent)
 	ExilePermanent(*Permanent)
+	TapPermanent(*Permanent)
 	ExileCard(Card, uuid.UUID) // exile a card (from any zone) to exile zone
 	Sacrifice(*Permanent)
 
@@ -419,7 +420,7 @@ func (g *Game) ExecuteAttackers(playerID uuid.UUID, attackerIDs []uuid.UUID) {
 			continue
 		}
 		if !atk.HasKeyword(Vigilance) {
-			atk.Tapped = true
+			g.TapPermanent(atk)
 		}
 		g.Combat.AddAttacker(id, defender.PlayerID())
 		g.AttackedThisTurn[id] = true

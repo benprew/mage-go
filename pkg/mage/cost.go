@@ -87,12 +87,7 @@ func (c *tapSourceCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	if p.Tapped {
 		return ErrSourceTapped
 	}
-	p.Tapped = true
-	g.FireEvent(GameEvent{
-		Type:     EvtTapped,
-		SourceID: sourceID,
-		PlayerID: controller,
-	})
+	g.TapPermanent(p)
 	return nil
 }
 
@@ -298,12 +293,7 @@ func (c *tapMatchingCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	if chosen == nil {
 		return fmt.Errorf("no permanent chosen")
 	}
-	chosen.Tapped = true
-	g.FireEvent(GameEvent{
-		Type:     EvtTapped,
-		SourceID: chosen.ID(),
-		PlayerID: controller,
-	})
+	g.TapPermanent(chosen)
 	return nil
 }
 

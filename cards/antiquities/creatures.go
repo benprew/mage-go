@@ -138,7 +138,7 @@ func registerCreatures() {
 						if target == nil {
 							return nil
 						}
-						target.Tapped = true
+						g.TapPermanent(target)
 						// Create continuous effect: target doesn't untap while source is tapped
 						eff := FuncContinuousEffect(LayerAbility, WhileOnBattlefield,
 							func(g *Game, srcID uuid.UUID) error {
@@ -250,7 +250,7 @@ func registerCreatures() {
 						}
 						perm := g.FindPermanent(sourceID)
 						if perm != nil {
-							perm.Tapped = true
+							g.TapPermanent(perm)
 						}
 						g.DealDamageToPlayer(player, 2, sourceID)
 						return nil
@@ -641,7 +641,7 @@ func registerCreatures() {
 						g.DealDamageToPlayer(player, 3, sourceID)
 						perm := g.FindPermanent(sourceID)
 						if perm != nil {
-							perm.Tapped = true
+							g.TapPermanent(perm)
 						}
 						return nil
 					}), false,

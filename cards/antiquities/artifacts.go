@@ -575,6 +575,7 @@ func registerArtifacts() {
 				}
 				creaturePerm = g.PutOnBattlefield(creatureEC.Card, owner)
 				if creaturePerm != nil {
+					// comes into play tapped, not comes into play then taps
 					creaturePerm.Tapped = true
 					for ct, count := range ns.counters {
 						creaturePerm.AddCounter(ct, count)

@@ -703,7 +703,7 @@ func registerCreatures() {
 							g.RemoveFromCombat(sourceID)
 							perm := g.FindPermanent(sourceID)
 							if perm != nil {
-								perm.Tapped = true
+								g.TapPermanent(perm)
 							}
 						}
 						return nil

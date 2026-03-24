@@ -171,7 +171,7 @@ func registerEnchantments() {
 						}
 						target := g.FindPermanent(src.AttachedTo)
 						if target != nil {
-							target.Tapped = true
+							g.TapPermanent(target)
 						}
 						src.AddCounter(Pupa, 3)
 						return nil
@@ -773,31 +773,21 @@ func registerEnchantments() {
 	// Artifacts, creatures, and lands your opponents control enter tapped.
 	Register("Kismet", func() Card {
 		return NewEnchantment("Kismet", "{3}{W}",
-			WithAbility(
-				NewTriggered(EvtEntersBattlefield, false,
-					FuncEffect("tap entering permanent",
-						EffectProperties{},
-						func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-							if len(targets) == 0 {
-								return nil
-							}
-							perm := g.FindPermanent(targets[0])
-							if perm != nil {
-								perm.Tapped = true
-							}
-							return nil
-						}),
-				).SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
-					perm := g.FindPermanent(evt.SourceID)
-					if perm == nil {
-						return false
+			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield,
+				func(g *Game, sourceID uuid.UUID) error {
+					src := g.FindPermanent(sourceID)
+					if src == nil {
+						return nil
 					}
-					if perm.Controller == controllerID {
-						return false // only opponents
-					}
-					return perm.HasType(TypeArtifact) || perm.HasType(TypeCreature) || perm.HasType(TypeLand)
-				}),
-			),
+					controller := src.Controller
+					g.Effects.Rules.AddEntersTappedRule(func(perm *Permanent) bool {
+						if perm.Controller == controller {
+							return false
+						}
+						return perm.HasType(TypeArtifact) || perm.HasType(TypeCreature) || perm.HasType(TypeLand)
+					})
+					return nil
+				})),
 		)
 	})
 
@@ -1367,7 +1357,7 @@ func registerEnchantments() {
 						}
 						target := g.FindPermanent(src.AttachedTo)
 						if target != nil {
-							target.Tapped = true
+							g.TapPermanent(target)
 							x := g.XValue()
 							if x > 0 {
 								target.AddCounter(Sleep, x)

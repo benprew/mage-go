@@ -91,6 +91,26 @@ func TestKismet(t *testing.T) {
 		g.Execute()
 		g.AssertTapped(gametest.PlayerB, "Grizzly Bears", true)
 	})
+
+	t.Run("own creatures do not enter tapped", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Kismet")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Grizzly Bears")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Grizzly Bears")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertTapped(gametest.PlayerA, "Grizzly Bears", false)
+	})
+
+	t.Run("opponent artifacts enter tapped", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Kismet")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Jayemdae Tome")
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Jayemdae Tome")
+		g.StopAt(2, core.BeginCombat)
+		g.Execute()
+		g.AssertTapped(gametest.PlayerB, "Jayemdae Tome", true)
+	})
 }
 
 func TestStormWorld(t *testing.T) {

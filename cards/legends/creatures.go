@@ -1764,7 +1764,7 @@ func registerCreatures() {
 							paid = g.TryPayCostFromLands(controller, cost)
 						}
 						if !paid {
-							perm.Tapped = true
+							g.TapPermanent(perm)
 							if player != nil {
 								g.DealDamageToPlayer(player, counters, sourceID)
 							}
@@ -3370,13 +3370,13 @@ func registerCreatures() {
 					oppID := opponent.PlayerID()
 					perm := g.FindPermanent(sourceID)
 					if perm != nil {
-						perm.Tapped = true
+						g.TapPermanent(perm)
 					}
 					// Tap Kobolds of Kher Keep
 					for _, p := range g.FilterBattlefield(NewPermanentFilter("Kobolds of Kher Keep", func(p *Permanent, _ *Game) bool {
 						return p.Name() == "Kobolds of Kher Keep" && p.Controller == controller
 					})) {
-						p.Tapped = true
+						g.TapPermanent(p)
 					}
 					// Use continuous effect at LayerControl to change controller
 					// (direct assignment gets reset each Apply cycle)

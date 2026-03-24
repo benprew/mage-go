@@ -178,6 +178,19 @@ func TestPhyrexianGremlins(t *testing.T) {
 		g.AssertTapped(gametest.PlayerB, "Jayemdae Tome", true)
 	})
 
+	t.Run("triggers Artifact Possession when tapping artifact", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Phyrexian Gremlins")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Jayemdae Tome")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Artifact Possession")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Artifact Possession", "Jayemdae Tome")
+		g.ActivateAbility(2, core.PrecombatMain, gametest.PlayerA, "Phyrexian Gremlins", "Jayemdae Tome")
+		g.StopAt(2, core.BeginCombat)
+		g.Execute()
+		g.AssertTapped(gametest.PlayerB, "Jayemdae Tome", true)
+		g.AssertLife(gametest.PlayerB, 18) // Artifact Possession deals 2 damage
+	})
+
 	t.Run("target artifact untaps once Gremlins untaps", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Phyrexian Gremlins")
