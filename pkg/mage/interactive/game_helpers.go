@@ -120,14 +120,24 @@ func getEligibleBlockers(g *mage.Game, playerID uuid.UUID) []*mage.Permanent {
 	return eligible
 }
 
-func blockerOptions(g *mage.Game, eligible []*mage.Permanent) []ActionOption {
+func blockerOptions(g *mage.Game, defenderID uuid.UUID, eligible []*mage.Permanent) []ActionOption {
 	var options []ActionOption
 	for _, perm := range eligible {
-		options = append(options, ActionOption{
+		opt := ActionOption{
 			Type:        ActionSelectBlockers,
 			Label:       fmt.Sprintf("%s %d/%d", perm.Name(), perm.CurrentPower(g), perm.CurrentToughness(g)),
 			PermanentID: perm.ID(),
-		})
+		}
+		for _, group := range g.Combat.Groups {
+			attacker := g.FindPermanent(group.AttackerID)
+			if attacker == nil {
+				continue
+			}
+			if mage.CanBlock(perm, attacker, g) && !mage.HasLandwalkEvasion(attacker, defenderID, g) {
+				opt.ValidTargets = append(opt.ValidTargets, group.AttackerID)
+			}
+		}
+		options = append(options, opt)
 	}
 	options = append(options, ActionOption{
 		Type:  ActionPass,

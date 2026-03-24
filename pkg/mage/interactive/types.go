@@ -152,6 +152,7 @@ type PermanentState struct {
 	IsLand     bool
 	IsArtifact bool
 	Attacking  bool
+	Blocking   uuid.UUID
 	Counters   map[string]int
 	Keywords   []string
 	ManaCost   string

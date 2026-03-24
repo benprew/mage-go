@@ -237,9 +237,9 @@ func TestAttackerOptions_Format(t *testing.T) {
 }
 
 func TestBlockerOptions_DoneOption(t *testing.T) {
-	g, _, _ := makeGame()
+	g, pa, _ := makeGame()
 	perm := makePerm("Bear", "{1}{G}", 2, 2, uuid.New())
-	opts := blockerOptions(g, []*mage.Permanent{perm})
+	opts := blockerOptions(g, pa.PlayerID(), []*mage.Permanent{perm})
 	if len(opts) != 2 {
 		t.Fatalf("expected 2 options (1 creature + done), got %d", len(opts))
 	}
@@ -253,8 +253,8 @@ func TestBlockerOptions_DoneOption(t *testing.T) {
 }
 
 func TestBlockerOptions_EmptyStillHasDone(t *testing.T) {
-	g, _, _ := makeGame()
-	opts := blockerOptions(g, nil)
+	g, pa, _ := makeGame()
+	opts := blockerOptions(g, pa.PlayerID(), nil)
 	if len(opts) != 1 {
 		t.Fatalf("expected 1 option (done only), got %d", len(opts))
 	}

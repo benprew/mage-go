@@ -171,6 +171,15 @@ func snapshotPlayer(g *mage.Game, p mage.Player, showHand bool) PlayerState {
 		}
 		permState.Keywords = perm.KeywordNames()
 		permState.AttachedTo = perm.AttachedTo
+	outer:
+		for _, group := range g.Combat.Groups {
+			for _, bid := range group.BlockerIDs {
+				if bid == perm.ID() {
+					permState.Blocking = group.AttackerID
+					break outer
+				}
+			}
+		}
 		ps.Battlefield = append(ps.Battlefield, permState)
 	}
 

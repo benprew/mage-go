@@ -82,7 +82,7 @@ func (p *HumanPlayer) DeclareBlockers(g *mage.Game) []mage.BlockAssignment {
 	p.toTUI <- GameMsg{
 		State:   state,
 		Prompt:  PromptDeclareBlockers,
-		Options: blockerOptions(g, eligible),
+		Options: blockerOptions(g, p.PlayerID(), eligible),
 		Log:     append([]string(nil), p.gameLog...),
 	}
 	action := <-p.fromTUI
