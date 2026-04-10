@@ -2133,17 +2133,15 @@ func (g *Game) doDeclareBlockers() {
 // doCleanupActions performs cleanup housekeeping and places any triggers on the stack.
 // Returns true if triggers were placed on the stack (requiring priority + another cleanup).
 func (g *Game) doCleanupActions() bool {
-	// Hand size discard: each player discards down to max hand size
-	for _, p := range g.Players {
-		maxHS := g.Effects.Rules.MaxHandSize(p.PlayerID())
-		for len(p.Hand()) > maxHS {
-			chosen := p.ChooseCardsFromHand(1, "discard to hand size", g)
-			if len(chosen) == 0 {
-				break
-			}
-			p.RemoveFromHand(chosen[0].ID())
-			p.AddToGraveyard(chosen[0])
+	// Hand size discard: active player discards down to max hand size (CR 514.1)
+	p := g.ActivePlayerObj()
+	maxHS := g.Effects.Rules.MaxHandSize(p.PlayerID())
+	for len(p.Hand()) > maxHS {
+		chosen := p.ChooseCardsFromHand(1, "discard to hand size", g)
+		if len(chosen) == 0 {
+			break
 		}
+		p.DiscardCard(chosen[0].ID())
 	}
 	// Clear damage from all creatures
 	for _, p := range g.Battlefield {

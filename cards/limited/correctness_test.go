@@ -899,3 +899,5 @@ func TestNettlingImpDestroysNonAttacker(t *testing.T) {
 	})
 }
 
+
+
