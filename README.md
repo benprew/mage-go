@@ -82,4 +82,4 @@ Magic: The Gathering is a trademark of Wizards of the Coast LLC.
 
 ## License
 
-GPL-2.0. See [LICENSE](LICENSE) for full text.
+GPL-2.0. See [LICENSE.txt](LICENSE.txt) for full text.
