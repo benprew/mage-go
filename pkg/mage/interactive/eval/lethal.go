@@ -3,9 +3,9 @@ package eval
 import (
 	"math"
 
-	"github.com/google/uuid"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"github.com/google/uuid"
 )
 
 // LethalInfo describes whether either player can push through lethal damage.
@@ -399,10 +399,7 @@ func estimateExpectedDamage(g *mage.Game, attackerPlayerID, defenderPlayerID uui
 		}
 	}
 
-	unblocked := nonEvasiveCount - blockerCount
-	if unblocked < 0 {
-		unblocked = 0
-	}
+	unblocked := max(nonEvasiveCount-blockerCount, 0)
 	nonEvasiveDmg := 0
 	if nonEvasiveCount > 0 && unblocked > 0 {
 		// Sort non-evasive by power descending and sum the top `unblocked` powers.
