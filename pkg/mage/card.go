@@ -445,7 +445,10 @@ type Permanent struct {
 	Tapped     bool
 	PhasedOut  bool // true when phased out (treated as though it doesn't exist)
 	Damage     int
-	Counters   map[CounterType]int
+	// Counters is a fixed-size array indexed by CounterType, so cloning a
+	// Permanent is a memcpy instead of a map allocation. Absent counters are
+	// zero. To iterate, loop over [0, NumCounters) and skip zeros.
+	Counters [NumCounters]int
 
 	AttachedTo  uuid.UUID   // what this permanent is attached to
 	Attachments []uuid.UUID // what's attached to this permanent
@@ -494,7 +497,6 @@ func NewPermanent(card Card, controller uuid.UUID) *Permanent {
 	p := &Permanent{
 		Card:       card,
 		Controller: controller,
-		Counters:   make(map[CounterType]int),
 	}
 	// Copy base abilities
 	for _, a := range card.Abilities() {
@@ -672,8 +674,10 @@ func (p *Permanent) CurrentPower(g GameReader) int {
 	if p.BasePTOverride != nil {
 		pw = p.BasePTOverride[0]
 	}
-	for ct, n := range p.Counters {
-		pw += ct.PowerBoost() * n
+	for ct := CounterType(0); ct < NumCounters; ct++ {
+		if n := p.Counters[ct]; n != 0 {
+			pw += ct.PowerBoost() * n
+		}
 	}
 	// Continuous effects are applied by the EffectManager
 	if g != nil {
@@ -688,8 +692,10 @@ func (p *Permanent) CurrentToughness(g GameReader) int {
 	if p.BasePTOverride != nil {
 		tg = p.BasePTOverride[1]
 	}
-	for ct, n := range p.Counters {
-		tg += ct.ToughnessBoost() * n
+	for ct := CounterType(0); ct < NumCounters; ct++ {
+		if n := p.Counters[ct]; n != 0 {
+			tg += ct.ToughnessBoost() * n
+		}
 	}
 	if g != nil {
 		tg += p.toughBonus
@@ -720,9 +726,6 @@ func (p *Permanent) RemoveCounter(ct CounterType, n int) bool {
 		return false
 	}
 	p.Counters[ct] -= n
-	if p.Counters[ct] == 0 {
-		delete(p.Counters, ct)
-	}
 	return true
 }
 

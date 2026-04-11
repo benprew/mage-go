@@ -31,10 +31,18 @@ func (g *Game) Clone() *Game {
 		c.Players[i] = clonePlayer(p)
 	}
 
-	// Deep copy battlefield (permanents share Card refs).
+	// Deep copy battlefield. Permanents are slab-allocated in one make() so
+	// the N individual heap allocations (and their GC mark cost) collapse into
+	// one contiguous allocation. Pointers into the slab are stable for its
+	// lifetime; new permanents added later to c.Battlefield escape the slab
+	// and allocate individually, which is fine.
 	c.Battlefield = make([]*Permanent, len(g.Battlefield))
-	for i, p := range g.Battlefield {
-		c.Battlefield[i] = clonePermanent(p)
+	if len(g.Battlefield) > 0 {
+		slab := make([]Permanent, len(g.Battlefield))
+		for i, p := range g.Battlefield {
+			clonePermanentInto(&slab[i], p)
+			c.Battlefield[i] = &slab[i]
+		}
 	}
 
 	// Deep copy exile zone.
@@ -184,59 +192,60 @@ func cloneBasePlayer(bp *BasePlayer) *BasePlayer {
 	return clone
 }
 
-// clonePermanent creates a deep copy of a Permanent, sharing the Card ref.
-func clonePermanent(p *Permanent) *Permanent {
-	clone := &Permanent{
-		Card:                p.Card, // shared
-		Controller:          p.Controller,
-		Tapped:              p.Tapped,
-		PhasedOut:           p.PhasedOut,
-		Damage:              p.Damage,
-		AttachedTo:          p.AttachedTo,
-		FaceDown:            p.FaceDown,
-		ChosenColor:         p.ChosenColor,
-		ChosenPlayer:        p.ChosenPlayer,
-		ControlledPermanent: p.ControlledPermanent,
-		TurnControlGained:   p.TurnControlGained,
-		StoredValue:         p.StoredValue,
-		CreatedBy:           p.CreatedBy,
-		BasePTOverride:      p.BasePTOverride, // immutable *[2]int pointer (set once)
-		ColorOverride:       p.ColorOverride,  // same — set once by continuous effect init
-		powerBonus:          p.powerBonus,
-		toughBonus:          p.toughBonus,
+// clonePermanentInto deep-copies src into dst (which may be a freshly-allocated
+// struct or a slot inside a slab). Card refs, Ability interface refs, and
+// BasePTOverride/ColorOverride pointer contents are deep-copied; slices are
+// copied only when non-empty.
+func clonePermanentInto(dst, src *Permanent) {
+	*dst = Permanent{
+		Card:                src.Card, // shared
+		Controller:          src.Controller,
+		Tapped:              src.Tapped,
+		PhasedOut:           src.PhasedOut,
+		Damage:              src.Damage,
+		AttachedTo:          src.AttachedTo,
+		FaceDown:            src.FaceDown,
+		ChosenColor:         src.ChosenColor,
+		ChosenPlayer:        src.ChosenPlayer,
+		ControlledPermanent: src.ControlledPermanent,
+		TurnControlGained:   src.TurnControlGained,
+		StoredValue:         src.StoredValue,
+		CreatedBy:           src.CreatedBy,
+		powerBonus:          src.powerBonus,
+		toughBonus:          src.toughBonus,
+		Counters:            src.Counters, // fixed-size array: value copy
+		baseAttrs:           src.baseAttrs,
+		grantedAttrs:        src.grantedAttrs,
 	}
-	// Deep copy counters.
-	clone.Counters = cloneCounterMap(p.Counters)
 	// Deep copy attachments.
-	if len(p.Attachments) > 0 {
-		clone.Attachments = make([]uuid.UUID, len(p.Attachments))
-		copy(clone.Attachments, p.Attachments)
+	if len(src.Attachments) > 0 {
+		dst.Attachments = make([]uuid.UUID, len(src.Attachments))
+		copy(dst.Attachments, src.Attachments)
 	}
-	// Deep copy runtime abilities (share Ability interface refs).
-	if len(p.RuntimeAbilities) > 0 {
-		clone.RuntimeAbilities = make([]Ability, len(p.RuntimeAbilities))
-		copy(clone.RuntimeAbilities, p.RuntimeAbilities)
+	// RuntimeAbilities: copy-on-write. Share the backing array with src but
+	// force cap == len via the three-index slice form, so any subsequent
+	// append on either side allocates a new array. All current mutation
+	// sites are either `= nil`, `= append(...)`, or `= freshSlice` — never
+	// an index assignment — so this sharing is safe.
+	if n := len(src.RuntimeAbilities); n > 0 {
+		dst.RuntimeAbilities = src.RuntimeAbilities[:n:n]
 	}
 	// Deep copy subtype override.
-	if len(p.SubTypeOverride) > 0 {
-		clone.SubTypeOverride = make([]string, len(p.SubTypeOverride))
-		copy(clone.SubTypeOverride, p.SubTypeOverride)
+	if len(src.SubTypeOverride) > 0 {
+		dst.SubTypeOverride = make([]string, len(src.SubTypeOverride))
+		copy(dst.SubTypeOverride, src.SubTypeOverride)
 	}
 	// Deep copy BasePTOverride if non-nil (it's a *[2]int).
-	if p.BasePTOverride != nil {
-		v := *p.BasePTOverride
-		clone.BasePTOverride = &v
+	if src.BasePTOverride != nil {
+		v := *src.BasePTOverride
+		dst.BasePTOverride = &v
 	}
 	// Deep copy ColorOverride if non-nil.
-	if p.ColorOverride != nil {
-		colors := make([]Color, len(*p.ColorOverride))
-		copy(colors, *p.ColorOverride)
-		clone.ColorOverride = &colors
+	if src.ColorOverride != nil {
+		colors := make([]Color, len(*src.ColorOverride))
+		copy(colors, *src.ColorOverride)
+		dst.ColorOverride = &colors
 	}
-	// Attr arrays are fixed-size value types; assignment is a memcpy.
-	clone.baseAttrs = p.baseAttrs
-	clone.grantedAttrs = p.grantedAttrs
-	return clone
 }
 
 // cloneStack deep copies the Stack.
@@ -398,17 +407,6 @@ func cloneCardSlice(src []Card) []Card {
 	}
 	dst := make([]Card, len(src))
 	copy(dst, src) // Card refs are shared (immutable)
-	return dst
-}
-
-func cloneCounterMap(src map[CounterType]int) map[CounterType]int {
-	if src == nil {
-		return make(map[CounterType]int)
-	}
-	dst := make(map[CounterType]int, len(src))
-	for k, v := range src {
-		dst[k] = v
-	}
 	return dst
 }
 

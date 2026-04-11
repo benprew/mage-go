@@ -163,11 +163,15 @@ func snapshotPlayer(g *mage.Game, p mage.Player, showHand bool) PlayerState {
 			}
 			permState.SubTypes += st
 		}
-		if len(perm.Counters) > 0 {
-			permState.Counters = make(map[string]int)
-			for ct, n := range perm.Counters {
-				permState.Counters[ct.String()] = n
+		for ct := core.CounterType(0); ct < core.NumCounters; ct++ {
+			n := perm.Counters[ct]
+			if n == 0 {
+				continue
 			}
+			if permState.Counters == nil {
+				permState.Counters = make(map[string]int)
+			}
+			permState.Counters[ct.String()] = n
 		}
 		permState.Keywords = perm.KeywordNames()
 		permState.AttachedTo = perm.AttachedTo

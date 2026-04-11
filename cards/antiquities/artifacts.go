@@ -546,7 +546,7 @@ func registerArtifacts() {
 	Register("Tawnos's Coffin", func() Card {
 		// Noted state tracked per-card-ID, shared between the activate and return closures.
 		type notedState struct {
-			counters map[CounterType]int
+			counters [NumCounters]int
 			owner    uuid.UUID
 		}
 		noted := make(map[uuid.UUID]notedState)
@@ -577,8 +577,10 @@ func registerArtifacts() {
 				if creaturePerm != nil {
 					// comes into play tapped, not comes into play then taps
 					creaturePerm.Tapped = true
-					for ct, count := range ns.counters {
-						creaturePerm.AddCounter(ct, count)
+					for ct := CounterType(0); ct < NumCounters; ct++ {
+						if count := ns.counters[ct]; count != 0 {
+							creaturePerm.AddCounter(ct, count)
+						}
 					}
 				}
 				delete(noted, creatureEC.Card.ID())
@@ -610,12 +612,8 @@ func registerArtifacts() {
 						if target == nil {
 							return nil
 						}
-						counters := make(map[CounterType]int)
-						for ct, count := range target.Counters {
-							counters[ct] = count
-						}
 						noted[target.Card.ID()] = notedState{
-							counters: counters,
+							counters: target.Counters,
 							owner:    target.Controller,
 						}
 						card := target.Card

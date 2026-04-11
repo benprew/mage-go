@@ -839,9 +839,6 @@ func registerCreatures() {
 							return nil
 						}
 						src.Counters[P1P1] -= n
-						if src.Counters[P1P1] == 0 {
-							delete(src.Counters, P1P1)
-						}
 						for range n {
 							token := NewToken("Tetravite", 1, 1,
 								[]CardType{TypeArtifact, TypeCreature},

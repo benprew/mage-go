@@ -1567,12 +1567,6 @@ func (g *Game) CheckStateBasedActions() {
 				}
 				p.Counters[P1P1] -= remove
 				p.Counters[M1M1] -= remove
-				if p.Counters[P1P1] == 0 {
-					delete(p.Counters, P1P1)
-				}
-				if p.Counters[M1M1] == 0 {
-					delete(p.Counters, M1M1)
-				}
 				actions = true
 			}
 		}
@@ -2181,7 +2175,7 @@ func (g *Game) doCleanupActions() bool {
 	}
 	for _, p := range g.Battlefield {
 		// Clear activation tracking (Charge counters used for per-turn counts)
-		delete(p.Counters, Charge)
+		p.Counters[Charge] = 0
 		// Reset once-per-turn activated abilities
 		for _, a := range p.RuntimeAbilities {
 			if aa, ok := UnwrapAbility(a).(*SimpleActivatedAbility); ok {

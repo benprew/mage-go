@@ -43,6 +43,10 @@ const (
 	M2M2 // -2/-2 (Ebon Praetor)
 	M0M1 // -0/-1 (Takklemaggot, Lesser Werewolf)
 	M0M2 // -0/-2 (Spirit Shackle)
+
+	// NumCounters must remain the last entry — it sizes the fixed-length
+	// counter array on Permanent, so clone is a memcpy instead of a map copy.
+	NumCounters
 )
 
 func (ct CounterType) String() string {
