@@ -327,7 +327,8 @@ func (em *EffectManager) Apply(g *Game) {
 		p.BasePTOverride = nil
 		p.ColorOverride = nil
 		// Reset grantedAttrs and P/T bonuses so each Apply() cycle starts fresh.
-		p.grantedAttrs = make(map[Attr]int)
+		// Assigning a zero array is a fast memcpy — no allocation.
+		p.grantedAttrs = [NumAttrs]int8{}
 		p.powerBonus = 0
 		p.toughBonus = 0
 	}
@@ -364,7 +365,9 @@ func (em *EffectManager) Apply(g *Game) {
 			continue
 		}
 		for a, delta := range deltas {
-			perm.grantedAttrs[a] += delta
+			// delta is ±1 per GrantAttr/RevokeAttr call; realistic stacking
+			// from continuous effects is well below the int8 range.
+			perm.grantedAttrs[a] += int8(delta)
 		}
 	}
 

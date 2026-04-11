@@ -459,8 +459,10 @@ type Permanent struct {
 	// Attr system: additive/subtractive attribute counts.
 	// baseAttrs holds intrinsic attrs (set at creation/ETB; persists until explicitly revoked).
 	// grantedAttrs holds effect-cycle deltas (reset and recomputed each Apply() cycle).
-	baseAttrs    map[Attr]int
-	grantedAttrs map[Attr]int
+	// Fixed arrays (not maps) so Clone is a value copy with no allocation, and
+	// HasAttr is two direct array indexes instead of two map probes.
+	baseAttrs    [NumAttrs]int8
+	grantedAttrs [NumAttrs]int8
 
 	// P/T bonuses from continuous effects (LayerPT). Reset and recomputed each Apply() cycle.
 	powerBonus int
@@ -490,11 +492,9 @@ type Permanent struct {
 // NewPermanent creates a permanent from a card.
 func NewPermanent(card Card, controller uuid.UUID) *Permanent {
 	p := &Permanent{
-		Card:         card,
-		Controller:   controller,
-		Counters:     make(map[CounterType]int),
-		baseAttrs:    make(map[Attr]int),
-		grantedAttrs: make(map[Attr]int),
+		Card:       card,
+		Controller: controller,
+		Counters:   make(map[CounterType]int),
 	}
 	// Copy base abilities
 	for _, a := range card.Abilities() {
@@ -519,8 +519,9 @@ func NewPermanent(card Card, controller uuid.UUID) *Permanent {
 		}
 	}
 	// Populate baseAttrs from card's keyword seeds via the Card interface.
+	// count is always 1 per WithKeyword call; stacking well below int8 range.
 	for a, count := range card.AttrSeeds() {
-		p.baseAttrs[a] += count
+		p.baseAttrs[a] += int8(count)
 	}
 	return p
 }
@@ -551,9 +552,6 @@ func (p *Permanent) GrantBaseAttr(a Attr) {
 func (p *Permanent) RevokeBaseAttr(a Attr) {
 	if p.baseAttrs[a] > 0 {
 		p.baseAttrs[a]--
-		if p.baseAttrs[a] == 0 {
-			delete(p.baseAttrs, a)
-		}
 	}
 }
 
@@ -622,19 +620,11 @@ func (p *Permanent) KeywordNames() []string {
 	if p.FaceDown {
 		return nil
 	}
-	seen := make(map[Attr]bool)
 	var result []string
-	check := func(a Attr) {
-		if !seen[a] && IsKeywordAttr(a) && p.HasAttr(a) {
-			seen[a] = true
+	for a := Attr(1); a < NumAttrs; a++ {
+		if IsKeywordAttr(a) && p.HasAttr(a) {
 			result = append(result, a.String())
 		}
-	}
-	for a := range p.baseAttrs {
-		check(a)
-	}
-	for a := range p.grantedAttrs {
-		check(a)
 	}
 	return result
 }

@@ -797,19 +797,11 @@ func (em *EffectManager) CopyEffectCurrentName(doppelgangerID uuid.UUID) string 
 // reading from both baseAttrs and grantedAttrs so that effect-granted keywords
 // (e.g. Flying from an equipment) are included in the Doppelganger copy snapshot.
 func extractKeywords(p *Permanent) []Keyword {
-	seen := make(map[Keyword]bool)
 	var keywords []Keyword
-	add := func(a Attr) {
-		if IsKeywordAttr(a) && !seen[a] && p.HasAttr(a) {
-			seen[a] = true
+	for a := Attr(1); a < NumAttrs; a++ {
+		if IsKeywordAttr(a) && p.HasAttr(a) {
 			keywords = append(keywords, a)
 		}
-	}
-	for a := range p.baseAttrs {
-		add(a)
-	}
-	for a := range p.grantedAttrs {
-		add(a)
 	}
 	return keywords
 }

@@ -60,7 +60,16 @@ const (
 	Desertwalk
 	CantRegenerate
 	LegendaryLandwalk
+
+	// attrCount is a sentinel marking one past the last Attr value.
+	// NumAttrs exposes this as a sized array bound for Permanent attr storage.
+	attrCount
 )
+
+// NumAttrs is the array-bound size for per-permanent attr storage.
+// Kept slightly above attrCount so future Attrs can be added without
+// resizing array fields. Must stay >= int(attrCount).
+const NumAttrs = 64
 
 // Backward-compat aliases: capability attrs that replaced old keyword constants.
 // Existing card definitions using WithKeyword(DoesNotUntapKW) etc. compile unchanged.
@@ -191,6 +200,9 @@ var landwalkSubtypes = map[Attr]string{
 var subtypeToLandwalk map[string]Attr
 
 func init() {
+	if int(attrCount) > NumAttrs {
+		panic("core: NumAttrs is smaller than attrCount; bump NumAttrs in attr.go")
+	}
 	subtypeToLandwalk = make(map[string]Attr, len(landwalkSubtypes))
 	for attr, subtype := range landwalkSubtypes {
 		subtypeToLandwalk[subtype] = attr

@@ -233,9 +233,9 @@ func clonePermanent(p *Permanent) *Permanent {
 		copy(colors, *p.ColorOverride)
 		clone.ColorOverride = &colors
 	}
-	// Deep copy attr maps.
-	clone.baseAttrs = cloneAttrMap(p.baseAttrs)
-	clone.grantedAttrs = cloneAttrMap(p.grantedAttrs)
+	// Attr arrays are fixed-size value types; assignment is a memcpy.
+	clone.baseAttrs = p.baseAttrs
+	clone.grantedAttrs = p.grantedAttrs
 	return clone
 }
 
@@ -406,17 +406,6 @@ func cloneCounterMap(src map[CounterType]int) map[CounterType]int {
 		return make(map[CounterType]int)
 	}
 	dst := make(map[CounterType]int, len(src))
-	for k, v := range src {
-		dst[k] = v
-	}
-	return dst
-}
-
-func cloneAttrMap(src map[Attr]int) map[Attr]int {
-	if src == nil {
-		return make(map[Attr]int)
-	}
-	dst := make(map[Attr]int, len(src))
 	for k, v := range src {
 		dst[k] = v
 	}

@@ -63,9 +63,7 @@ func TestAliasesMatchCapabilityAttrs(t *testing.T) {
 func TestPermanentHasAttr_FalseWhenEmpty(t *testing.T) {
 	card := NewCreature("Test", "{1}", 1, 1)
 	p := &Permanent{
-		Card:         card,
-		baseAttrs:    make(map[Attr]int),
-		grantedAttrs: make(map[Attr]int),
+		Card: card,
 	}
 	if p.HasAttr(Flying) {
 		t.Error("expected HasAttr(Flying) false for empty permanent")
@@ -79,9 +77,7 @@ func TestPermanentHasAttr_FalseWhenEmpty(t *testing.T) {
 // twice increments the count but HasAttr still returns true.
 func TestPermanentGrantBaseAttr_IsAdditive(t *testing.T) {
 	p := &Permanent{
-		Card:         NewCreature("Test", "{1}", 1, 1),
-		baseAttrs:    make(map[Attr]int),
-		grantedAttrs: make(map[Attr]int),
+		Card: NewCreature("Test", "{1}", 1, 1),
 	}
 	p.GrantBaseAttr(Flying)
 	p.GrantBaseAttr(Flying)
@@ -97,9 +93,7 @@ func TestPermanentGrantBaseAttr_IsAdditive(t *testing.T) {
 // does not produce a negative count.
 func TestPermanentRevokeBaseAttr_DoesNotGoNegative(t *testing.T) {
 	p := &Permanent{
-		Card:         NewCreature("Test", "{1}", 1, 1),
-		baseAttrs:    make(map[Attr]int),
-		grantedAttrs: make(map[Attr]int),
+		Card: NewCreature("Test", "{1}", 1, 1),
 	}
 	p.RevokeBaseAttr(Flying) // nothing to revoke
 	if p.baseAttrs[Flying] != 0 {
@@ -119,9 +113,7 @@ func TestPermanentRevokeBaseAttr_DoesNotGoNegative(t *testing.T) {
 // directly (as EffectManager.Apply will do) makes HasAttr return true.
 func TestPermanentHasAttr_TrueFromGrantedAttrs(t *testing.T) {
 	p := &Permanent{
-		Card:         NewCreature("Test", "{1}", 1, 1),
-		baseAttrs:    make(map[Attr]int),
-		grantedAttrs: make(map[Attr]int),
+		Card: NewCreature("Test", "{1}", 1, 1),
 	}
 	p.grantedAttrs[Flying] = 1
 	if !p.HasAttr(Flying) {
@@ -133,9 +125,7 @@ func TestPermanentHasAttr_TrueFromGrantedAttrs(t *testing.T) {
 // base=1, granted=-1 → net=0 → false; base=1, granted=0 → net=1 → true.
 func TestPermanentHasAttr_SumOfBaseAndGranted(t *testing.T) {
 	p := &Permanent{
-		Card:         NewCreature("Test", "{1}", 1, 1),
-		baseAttrs:    make(map[Attr]int),
-		grantedAttrs: make(map[Attr]int),
+		Card: NewCreature("Test", "{1}", 1, 1),
 	}
 	p.GrantBaseAttr(Flying)
 	p.grantedAttrs[Flying] = -1
@@ -153,10 +143,8 @@ func TestPermanentHasAttr_SumOfBaseAndGranted(t *testing.T) {
 // face-down permanent only exposes the basic creature attrs.
 func TestPermanentHasAttr_FaceDown_OnlyBasicCreatureAttrsVisible(t *testing.T) {
 	p := &Permanent{
-		Card:         NewCreature("Test", "{1}", 1, 1),
-		baseAttrs:    make(map[Attr]int),
-		grantedAttrs: make(map[Attr]int),
-		FaceDown:     true,
+		Card:     NewCreature("Test", "{1}", 1, 1),
+		FaceDown: true,
 	}
 	// These should return true for face-down
 	for _, a := range []Attr{AttrIsCreature, AttrCanAttack, AttrCanBlock, AttrHasPowerToughness} {
@@ -170,10 +158,8 @@ func TestPermanentHasAttr_FaceDown_OnlyBasicCreatureAttrsVisible(t *testing.T) {
 // on face-down permanents even if present in baseAttrs.
 func TestPermanentHasAttr_FaceDown_FlyingHidden(t *testing.T) {
 	p := &Permanent{
-		Card:         NewCreature("Test", "{1}", 1, 1),
-		baseAttrs:    make(map[Attr]int),
-		grantedAttrs: make(map[Attr]int),
-		FaceDown:     true,
+		Card:     NewCreature("Test", "{1}", 1, 1),
+		FaceDown: true,
 	}
 	p.GrantBaseAttr(Flying)
 	if p.HasAttr(Flying) {
@@ -219,14 +205,14 @@ func TestKeywordAttrBoundary_NonKeywordAttrsBelowFlying(t *testing.T) {
 	}
 }
 
-// TestNewPermanentInitializesMaps verifies that NewPermanent initializes both maps.
-func TestNewPermanentInitializesMaps(t *testing.T) {
+// TestNewPermanent_CreatureAttrSeeds verifies that NewPermanent seeds the
+// expected creature attrs from the card's types.
+func TestNewPermanent_CreatureAttrSeeds(t *testing.T) {
 	card := NewCreature("Test", "{1}", 1, 1)
 	p := NewPermanent(card, uuid.New())
-	if p.baseAttrs == nil {
-		t.Error("baseAttrs should be initialized")
-	}
-	if p.grantedAttrs == nil {
-		t.Error("grantedAttrs should be initialized")
+	for _, a := range []Attr{AttrIsCreature, AttrCanAttack, AttrCanBlock, AttrHasPowerToughness, AttrSummonSick} {
+		if !p.HasAttr(a) {
+			t.Errorf("expected fresh creature permanent to have %v", a)
+		}
 	}
 }
