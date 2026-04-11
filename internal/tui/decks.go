@@ -51,10 +51,76 @@ var aiDeckEntries = []DeckEntry{
 	{"Disintegrate", 2},
 }
 
+// agaGalneerDeckEntries: BGW midrange (Shandalar "Aga Galneer").
+// Gem Bazaar and Ashes to Ashes are not yet implemented; replaced with basics.
+var agaGalneerDeckEntries = []DeckEntry{
+	{"Swamp", 9},
+	{"Forest", 6},
+	{"Plains", 10},
+	{"Sol Ring", 1},
+	{"Unholy Strength", 2},
+	{"Erg Raiders", 2},
+	{"El-Hajjâj", 2},
+	{"Healing Salve", 2},
+	{"Stream of Life", 2},
+	{"Onulet", 3},
+	{"Greed", 2},
+	{"Jade Monolith", 2},
+	{"Spirit Link", 3},
+	{"Serra Angel", 2},
+	{"Sengir Vampire", 2},
+	{"Giant Growth", 2},
+	{"Giant Spider", 2},
+	{"Fungusaur", 2},
+	{"Savannah Lions", 2},
+	{"Hurricane", 2},
+}
+
+// guardianOfTheTuskDeckEntries: GW fatties (Shandalar "Guardian of the Tusk").
+var guardianOfTheTuskDeckEntries = []DeckEntry{
+	{"Forest", 12},
+	{"Plains", 12},
+	{"Birds of Paradise", 4},
+	{"Giant Growth", 4},
+	{"Holy Strength", 4},
+	{"Desert Twister", 2},
+	{"War Mammoth", 4},
+	{"Savannah Lions", 3},
+	{"Elder Land Wurm", 2},
+	{"Tundra Wolves", 3},
+	{"Timber Wolves", 3},
+	{"Force of Nature", 2},
+	{"Divine Transformation", 2},
+	{"Colossus of Sardia", 2},
+	{"Berserk", 1},
+}
+
+// priestessDeckEntries: mono-white walls/defense (Shandalar "Priestess").
+// Pikemen is not yet implemented; replaced with +2 Plains.
+var priestessDeckEntries = []DeckEntry{
+	{"Plains", 25},
+	{"Animate Wall", 4},
+	{"Reverse Damage", 2},
+	{"Healing Salve", 3},
+	{"Ivory Cup", 3},
+	{"Wall of Swords", 4},
+	{"Wall of Spears", 4},
+	{"Spirit Link", 3},
+	{"Fortified Area", 2},
+	{"Benalish Hero", 2},
+	{"Blessing", 2},
+	{"Mesa Pegasus", 2},
+	{"Castle", 2},
+	{"Elder Land Wurm", 2},
+}
+
 // Archetypes is the list of deck archetypes available in the lobby.
 var Archetypes = []DeckArchetype{
 	{Name: "WG Aggro", Entries: humanDeckEntries},
 	{Name: "RB Burn", Entries: aiDeckEntries},
+	{Name: "Aga Galneer (BGW)", Entries: agaGalneerDeckEntries},
+	{Name: "Guardian of the Tusk (GW)", Entries: guardianOfTheTuskDeckEntries},
+	{Name: "Priestess (W walls)", Entries: priestessDeckEntries},
 }
 
 // BuildDeck creates a shuffled deck of cards from a deck list, setting card owners.
