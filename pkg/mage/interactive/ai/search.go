@@ -49,6 +49,20 @@ type SearchStrategy struct {
 	// history tracks cutoff counts per move key for move ordering.
 	// Persists across calls within the same strategy instance.
 	history map[string]int
+
+	// Transposition table and the Zobrist tables used to key it. When either
+	// is nil the TT path is skipped entirely — the old minimax behavior.
+	tt      *TranspositionTable
+	zobrist *ZobristTables
+
+	// TT telemetry counters. Monotonic; callers may snapshot before/after a
+	// top-level decision to derive per-move hit rates.
+	TTHits   uint64
+	TTStores uint64
+	// LastNodes is the node count of the most recent PriorityAction search,
+	// summed across iterative-deepening depths. Useful for A/B measuring
+	// the effect of pruning optimizations.
+	LastNodes uint64
 }
 
 const (
@@ -166,6 +180,7 @@ func (s *SearchStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed
 	var bestMove *Move
 	bestScore := minScore
 	var pvIndex int // index of PV move for next iteration
+	var totalNodes uint64
 
 	for depth := 1; depth <= s.Config.MaxDepth; depth++ {
 		// Search PV move first (from previous iteration).
@@ -246,10 +261,14 @@ func (s *SearchStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed
 			pvIndex = depthBestIdx
 		}
 
+		totalNodes += uint64(nodes)
+
 		if time.Now().After(deadline) {
 			break
 		}
 	}
+
+	s.LastNodes = totalNodes
 
 	if bestMove == nil {
 		return s.Fallback.PriorityAction(p, g, landsPlayed, mainPhase)
@@ -467,6 +486,22 @@ func (s *SearchStrategy) minimax(g *mage.Game, depth, alpha, beta int,
 		return s.quiescence(g, alpha, beta, playerID, nodes, deadline, maxQuiescenceDepth)
 	}
 
+	var ttHash uint64
+	ttActive := s.tt != nil && s.zobrist != nil
+	if ttActive {
+		ttHash = s.zobrist.SearchKey(g, maximizing, chainCount)
+		if score, ok := s.tt.Probe(ttHash, depth, alpha, beta); ok {
+			s.TTHits++
+			return score
+		}
+	}
+	// alphaOrig/betaOrig capture the window as it stood at function entry
+	// (post-TT-probe, pre-move-loop). storeTT uses them to determine the
+	// bound flag; comparing against the tightened loop-local alpha/beta
+	// would record the wrong bound for entries that failed high or low.
+	alphaOrig := alpha
+	betaOrig := beta
+
 	var movePlayerID uuid.UUID
 	if maximizing {
 		movePlayerID = playerID
@@ -492,10 +527,18 @@ func (s *SearchStrategy) minimax(g *mage.Game, depth, alpha, beta int,
 			nullDepth = 0
 		}
 		nullScore := s.minimax(g, nullDepth, alpha, beta, !maximizing, playerID, nodes, deadline, 0)
+		// Null-move cutoffs establish a bound on the real score at this node
+		// without doing any real work, so they are high-value TT entries.
 		if maximizing && nullScore >= beta {
+			if ttActive {
+				s.storeTT(ttHash, depth, beta, alphaOrig, betaOrig)
+			}
 			return beta
 		}
 		if !maximizing && nullScore <= alpha {
+			if ttActive {
+				s.storeTT(ttHash, depth, alpha, alphaOrig, betaOrig)
+			}
 			return alpha
 		}
 	}
@@ -579,6 +622,9 @@ func (s *SearchStrategy) minimax(g *mage.Game, depth, alpha, beta int,
 				break
 			}
 		}
+		if ttActive {
+			s.storeTT(ttHash, depth, best, alphaOrig, betaOrig)
+		}
 		return best
 	}
 
@@ -643,7 +689,26 @@ func (s *SearchStrategy) minimax(g *mage.Game, depth, alpha, beta int,
 			break
 		}
 	}
+	if ttActive {
+		s.storeTT(ttHash, depth, best, alphaOrig, betaOrig)
+	}
 	return best
+}
+
+// storeTT records a minimax result to the transposition table. The flag is
+// determined by where `best` sits relative to the original alpha/beta window
+// at function entry: below alphaOrig means no move improved alpha (upper
+// bound), at/above the original beta means a beta cutoff occurred (lower
+// bound), otherwise exact.
+func (s *SearchStrategy) storeTT(hash uint64, depth, best, alphaOrig, betaOrig int) {
+	flag := TTExact
+	if best <= alphaOrig {
+		flag = TTUpperBound
+	} else if best >= betaOrig {
+		flag = TTLowerBound
+	}
+	s.tt.Store(hash, depth, best, flag)
+	s.TTStores++
 }
 
 // minimaxCombat is a minimax variant for combat-phase decisions.
@@ -1124,6 +1189,11 @@ func enumerateBlockerPermutations(attackers, blockers []*mage.Permanent,
 	generate(0, nil, make(map[int]bool), make(map[int]bool))
 }
 
+// DefaultTTSizeMB is the default transposition-table size in megabytes used
+// by NewSearchAI and NewAdaptiveSearchAI. At 16 bytes per entry this fits
+// ~262K positions in 4 MB — comfortably in L3 on modern CPUs.
+const DefaultTTSizeMB = 4
+
 // NewSearchAI creates an AI player that uses minimax search with a weighted personality.
 // The personality's decision weights flow into both the leaf evaluator (Aggression)
 // and move ordering (TargetFace, CurvePreference, HoldInstants), so each personality
@@ -1136,13 +1206,17 @@ func NewSearchAI(name string, config SearchConfig, wp WeightedPersonality) *AIPl
 			Evaluator:   eval.NewPersonalityEvaluator(wp.Weights, wp.Aggression),
 			Fallback:    NewHeuristicStrategy(wp),
 			Personality: wp,
+			tt:          NewTranspositionTable(DefaultTTSizeMB),
+			zobrist:     DefaultZobrist,
 		},
 	}
 }
 
 // NewAdaptiveSearchAI creates an AI player that uses an AdaptiveStrategy
 // where both sub-strategies are SearchStrategy instances: an aggressive
-// evaluator when ahead and a defensive evaluator when behind.
+// evaluator when ahead and a defensive evaluator when behind. Each sub-
+// strategy gets its own TT so that scores produced by one evaluator can
+// never poison probes from the other.
 func NewAdaptiveSearchAI(name string, config SearchConfig) *AIPlayer {
 	return &AIPlayer{
 		BasePlayer: mage.NewBasePlayer(name),
@@ -1151,11 +1225,15 @@ func NewAdaptiveSearchAI(name string, config SearchConfig) *AIPlayer {
 				Config:    config,
 				Evaluator: eval.NewWeightedEvaluator(AggroWeighted.Weights),
 				Fallback:  NewHeuristicStrategy(AggroWeighted),
+				tt:        NewTranspositionTable(DefaultTTSizeMB),
+				zobrist:   DefaultZobrist,
 			},
 			Defensive: &SearchStrategy{
 				Config:    config,
 				Evaluator: eval.NewWeightedEvaluator(ControlWeighted.Weights),
 				Fallback:  NewHeuristicStrategy(ControlWeighted),
+				tt:        NewTranspositionTable(DefaultTTSizeMB),
+				zobrist:   DefaultZobrist,
 			},
 		},
 	}

@@ -949,3 +949,87 @@ func TestCalculateRace_LifelinkIncreasesEffectiveLife(t *testing.T) {
 			raceOppLL.MyClock, raceOppVanilla.MyClock)
 	}
 }
+
+// ── Damage-aware creature scoring ───────────────────────────────────────────
+
+func TestEvalCreatureInGame_DamagedReducesScore(t *testing.T) {
+	g, pa, _ := makeGame()
+	fresh := makePerm("Hill Giant", "{3}{R}", 3, 3, pa.PlayerID())
+	damaged := makePerm("Hill Giant", "{3}{R}", 3, 3, pa.PlayerID())
+	damaged.Damage = 2 // one toughness from death
+
+	freshScore := EvalCreatureInGame(fresh, g)
+	damagedScore := EvalCreatureInGame(damaged, g)
+
+	if damagedScore >= freshScore {
+		t.Fatalf("damaged creature should score less than fresh: damaged=%d fresh=%d",
+			damagedScore, freshScore)
+	}
+	if damagedScore <= 0 {
+		t.Fatalf("1 effective toughness should still have positive value, got %d", damagedScore)
+	}
+}
+
+// ── handQuality in defaultEvaluate ──────────────────────────────────────────
+
+func TestDefaultEvaluate_HandQualityPrefersCastable(t *testing.T) {
+	// Two games, identical except the hand. Game 1 has a castable spell;
+	// game 2 has an uncastable spell. handQuality should make game 1 better.
+	g1, pa1, _ := makeGame()
+	addLands(g1, pa1, "Mountain", 3)
+	bolt := mage.NewInstant("Lightning Bolt", "{R}",
+		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))))
+	bolt.SetOwner(pa1.PlayerID())
+	pa1.AddToHand(bolt)
+
+	g2, pa2, _ := makeGame()
+	addLands(g2, pa2, "Mountain", 3)
+	fireball := mage.NewInstant("Fireball", "{8}{R}",
+		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(8))))
+	fireball.SetOwner(pa2.PlayerID())
+	pa2.AddToHand(fireball)
+
+	s1 := defaultEvaluate(g1, pa1.PlayerID())
+	s2 := defaultEvaluate(g2, pa2.PlayerID())
+	if s1 <= s2 {
+		t.Fatalf("castable hand (%d) should score above dead hand (%d)", s1, s2)
+	}
+}
+
+// ── Race clock integration in defaultEvaluate ───────────────────────────────
+
+func TestDefaultEvaluate_RaceFavorsShorterClock(t *testing.T) {
+	// Both players at low life with equal board size, except I have a bigger
+	// threat — my clock should be shorter, and defaultEvaluate should reward that.
+	g, pa, pb := makeGame()
+	pa.SetLife(5)
+	pb.SetLife(5)
+	g.Battlefield = append(g.Battlefield,
+		makePerm("Shivan Dragon", "{4}{R}{R}", 5, 5, pa.PlayerID()))
+	g.Battlefield = append(g.Battlefield,
+		makePerm("Grizzly Bears", "{1}{G}", 2, 2, pb.PlayerID()))
+	g.Step = core.PrecombatMain
+
+	fromA := defaultEvaluate(g, pa.PlayerID())
+	fromB := defaultEvaluate(g, pb.PlayerID())
+	if fromA <= fromB {
+		t.Fatalf("shorter-clock player should score higher: A=%d B=%d", fromA, fromB)
+	}
+}
+
+// addLands mirrors the helper in pkg/mage/interactive/ai/search_test.go.
+// Kept local to avoid a cross-package test-helper import.
+func addLands(g *mage.Game, p *mage.BasePlayer, name string, count int) {
+	colorMap := map[string]core.Color{
+		"Forest": core.Green, "Mountain": core.Red, "Plains": core.White,
+		"Island": core.Blue, "Swamp": core.Black,
+	}
+	color := colorMap[name]
+	for i := 0; i < count; i++ {
+		land := mage.NewLand(name, mage.WithManaAbility(color))
+		land.SetOwner(p.PlayerID())
+		perm := mage.NewPermanent(land, p.PlayerID())
+		perm.RevokeBaseAttr(core.AttrSummonSick)
+		g.Battlefield = append(g.Battlefield, perm)
+	}
+}

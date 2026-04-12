@@ -107,7 +107,7 @@ func defaultEvaluate(g GameReader, playerID uuid.UUID) int {
 		}
 	}
 
-	score += (len(me.Hand()) - len(opp.Hand())) * CardWeight
+	score += (handQuality(me, g) - handQuality(opp, g)) * CardWeight
 
 	ownLand := mage.And(mage.IsLand, mage.ControlledBy(playerID))
 	score += g.CountBattlefield(ownLand) * LandWeight
@@ -117,6 +117,16 @@ func defaultEvaluate(g GameReader, playerID uuid.UUID) int {
 
 	lethal := calculateLethalOnBoard(g, playerID)
 	score += lethal
+
+	// Race clock integration: when both sides are on a short clock, reward
+	// positions where our clock is shorter than theirs.
+	if fullGame, ok := g.(*mage.Game); ok {
+		race := CalculateRace(fullGame, playerID)
+		if race.Racing {
+			clockAdv := race.TheirClock - race.MyClock
+			score += clockAdv * 6
+		}
+	}
 
 	return score
 }
@@ -473,6 +483,16 @@ func EvalCreatureInGame(perm *mage.Permanent, g mage.GameReader) int {
 	}
 	score += keywordBonus(perm)
 	score += abilityBonus(perm)
+	// SBAs destroy lethally-damaged creatures before eval runs, so only
+	// sub-lethal damage reaches here. A mild penalty reflects vulnerability
+	// (one more bolt kills it) — combat damage clears at cleanup, so this
+	// is a signal, not a permanent loss.
+	if perm.Damage > 0 {
+		tough := perm.CurrentToughness(g)
+		if tough > 0 {
+			score -= score * perm.Damage / (tough * 3)
+		}
+	}
 	return score
 }
 
