@@ -106,7 +106,7 @@ func RemoveCountersCost(ct CounterType, n int) Cost {
 
 func (c *removeCountersCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	p := g.FindPermanent(sourceID)
-	return p != nil && p.Counters[c.ct] >= c.amount
+	return p != nil && int(p.Counters[c.ct]) >= c.amount
 }
 
 func (c *removeCountersCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
@@ -138,7 +138,7 @@ func RequireCountersCost(ct CounterType, n int) Cost {
 
 func (c *requireCountersCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	p := g.FindPermanent(sourceID)
-	return p != nil && p.Counters[c.ct] >= c.amount
+	return p != nil && int(p.Counters[c.ct]) >= c.amount
 }
 
 func (c *requireCountersCost) Pay(sourceID, controller uuid.UUID, g *Game) error {

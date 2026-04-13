@@ -93,7 +93,7 @@ func (e *addCountersUpToMaxEffect) Apply(g GameMutator, sourceID, controller uui
 		return nil
 	}
 	x := g.XValue()
-	current := perm.Counters[e.ct]
+	current := int(perm.Counters[e.ct])
 	room := max(e.maxCounters-current, 0)
 	toAdd := min(x, room)
 	if toAdd > 0 {
@@ -607,7 +607,7 @@ func (e *markDestroyAtEOTAfterNActivationsEffect) Apply(g GameMutator, sourceID,
 		return nil
 	}
 	perm.AddCounter(Charge, 1)
-	if perm.Counters[Charge] >= e.threshold {
+	if int(perm.Counters[Charge]) >= e.threshold {
 		g.RegisterDelayedTrigger(&DelayedTrigger{
 			EventType:  EvtEndStep,
 			TargetID:   perm.ID(),

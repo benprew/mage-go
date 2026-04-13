@@ -35,7 +35,7 @@ func moneychangerFactory() Card {
 					if perm == nil {
 						return nil
 					}
-					count := perm.Counters[Credit]
+					count := int(perm.Counters[Credit])
 					g.Sacrifice(perm)
 					if count > 0 {
 						p := g.GetPlayer(controller)
@@ -319,7 +319,7 @@ func registerCreatures() {
 						src.AddCounter(Tide, 1)
 						// Whenever there are four or more tide counters, remove all
 						if src.Counters[Tide] >= 4 {
-							src.RemoveCounter(Tide, src.Counters[Tide])
+							src.RemoveCounter(Tide, int(src.Counters[Tide]))
 						}
 						return nil
 					}),

@@ -448,7 +448,7 @@ type Permanent struct {
 	// Counters is a fixed-size array indexed by CounterType, so cloning a
 	// Permanent is a memcpy instead of a map allocation. Absent counters are
 	// zero. To iterate, loop over [0, NumCounters) and skip zeros.
-	Counters [NumCounters]int
+	Counters [NumCounters]uint8
 
 	AttachedTo  uuid.UUID   // what this permanent is attached to
 	Attachments []uuid.UUID // what's attached to this permanent
@@ -676,7 +676,7 @@ func (p *Permanent) CurrentPower(g GameReader) int {
 	}
 	for ct := CounterType(0); ct < NumCounters; ct++ {
 		if n := p.Counters[ct]; n != 0 {
-			pw += ct.PowerBoost() * n
+			pw += ct.PowerBoost() * int(n)
 		}
 	}
 	// Continuous effects are applied by the EffectManager
@@ -694,7 +694,7 @@ func (p *Permanent) CurrentToughness(g GameReader) int {
 	}
 	for ct := CounterType(0); ct < NumCounters; ct++ {
 		if n := p.Counters[ct]; n != 0 {
-			tg += ct.ToughnessBoost() * n
+			tg += ct.ToughnessBoost() * int(n)
 		}
 	}
 	if g != nil {
@@ -717,15 +717,15 @@ func (p *Permanent) LethalDamage(g GameReader) bool {
 
 // AddCounter adds counters of the given type.
 func (p *Permanent) AddCounter(ct CounterType, n int) {
-	p.Counters[ct] += n
+	p.Counters[ct] += uint8(n)
 }
 
 // RemoveCounter removes counters, returns true if successful.
 func (p *Permanent) RemoveCounter(ct CounterType, n int) bool {
-	if p.Counters[ct] < n {
+	if int(p.Counters[ct]) < n {
 		return false
 	}
-	p.Counters[ct] -= n
+	p.Counters[ct] -= uint8(n)
 	return true
 }
 

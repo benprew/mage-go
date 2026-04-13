@@ -669,7 +669,7 @@ func BenchmarkClone(b *testing.B) {
 		if i%3 == 0 {
 			perm.Tapped = true
 		}
-		perm.Counters[P1P1] = i % 4
+		perm.Counters[P1P1] = uint8(i % 4)
 		g.Battlefield = append(g.Battlefield, perm)
 	}
 
