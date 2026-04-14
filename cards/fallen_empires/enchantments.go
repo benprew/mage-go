@@ -22,7 +22,7 @@ func registerEnchantments() {
 			WithAbility(
 				NewTriggered(EvtEndStep, false,
 					CreateToken("Thrull", 0, 1, []CardType{TypeCreature}, []string{"Thrull"}),
-				).SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 					return evt.PlayerID == controllerID
 				}),
 			),

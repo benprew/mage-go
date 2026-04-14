@@ -470,7 +470,7 @@ func registerArtifacts() {
 								p.AddPoisonCounters(1)
 								return nil
 							},
-						)).SetCondition(func(evt *GameEvent, g *Game, srcID, _ uuid.UUID) bool {
+						)).SetCondition(func(evt *GameEvent, g GameReader, srcID, _ uuid.UUID) bool {
 							// Only trigger when this creature deals damage to a player (not a permanent)
 							return evt.SourceID == srcID && g.GetPlayer(evt.TargetID) != nil
 						}))
@@ -658,7 +658,7 @@ func registerArtifacts() {
 							}
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 					// Only at your end step, if untapped
 					if evt.PlayerID != controllerID {
 						return false

@@ -96,7 +96,7 @@ func registerEnchantments() {
 							}
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 					src := g.FindPermanent(sourceID)
 					if src == nil || src.AttachedTo == uuid.Nil {
 						return false
@@ -576,7 +576,7 @@ func registerEnchantments() {
 							}
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 					card := g.FindCardAnywhere(evt.SourceID)
 					if card == nil {
 						return false
@@ -688,13 +688,13 @@ func registerEnchantments() {
 							}
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 					src := g.FindPermanent(sourceID)
 					if src == nil || src.AttachedTo == uuid.Nil {
 						return false
 					}
 					enchantedID := src.AttachedTo
-					for _, group := range g.Combat.Groups {
+					for _, group := range g.CombatGroups() {
 						if group.AttackerID == enchantedID {
 							for _, bid := range group.BlockerIDs {
 								blocker := g.FindPermanent(bid)
@@ -743,7 +743,7 @@ func registerEnchantments() {
 							}
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 					// Only opponent's creature spells
 					if evt.PlayerID == controllerID {
 						return false
@@ -757,8 +757,10 @@ func registerEnchantments() {
 					cardColors := card.ManaCost().Colors()
 					for _, color := range cardColors {
 						for _, c := range myCreatures {
-							if HasColorFilter(color).Match(c, g) {
-								return false // shares a color
+							for _, col := range c.Card.ManaCost().Colors() {
+								if col == color {
+									return false // shares a color
+								}
 							}
 						}
 					}
@@ -948,7 +950,7 @@ func registerEnchantments() {
 							}
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 					return true // all spells
 				}),
 			),
@@ -971,7 +973,7 @@ func registerEnchantments() {
 							g.CounterSpellOnStack(targets[0])
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 					card := g.FindCardAnywhere(evt.SourceID)
 					if card == nil {
 						return false
@@ -1029,7 +1031,7 @@ func registerEnchantments() {
 							}
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 					src := g.FindPermanent(sourceID)
 					if src == nil || src.AttachedTo == uuid.Nil {
 						return false
@@ -1152,7 +1154,7 @@ func registerEnchantments() {
 							}
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 					src := g.FindPermanent(sourceID)
 					if src == nil || src.AttachedTo == uuid.Nil {
 						return false
@@ -1184,7 +1186,7 @@ func registerEnchantments() {
 							}
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 					src := g.FindPermanent(sourceID)
 					if src == nil || src.AttachedTo == uuid.Nil {
 						return false
@@ -1333,7 +1335,7 @@ func registerEnchantments() {
 		return NewEnchantment("Underworld Dreams", "{B}{B}{B}",
 			WithAbility(NewTriggered(EvtCardDrawn, false,
 				DealDamageToPlayers(Fixed(1), SelectEventController()),
-			).SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+			).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 				return evt.PlayerID != controllerID
 			})),
 		)

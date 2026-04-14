@@ -116,7 +116,7 @@ func registerCreatures() {
 			WithSubTypes("Fish"),
 			WithStaticAbility(PreventFromAttackingIfDefendingPlayerControls(HasSubType("Island"))),
 			WithAbility(NewTriggered(EvtLeavesBattlefield, false, SacrificeSource()).
-				SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+				SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 					for _, p := range g.FilterBattlefield(AnyPermanent) {
 						if p.Controller == controllerID && p.HasSubType("Island") {
 							return false
@@ -166,7 +166,7 @@ func registerCreatures() {
 			)),
 			WithStaticAbility(PreventFromAttackingIfDefendingPlayerControls(HasSubType("Island"))),
 			WithAbility(NewTriggered(EvtLeavesBattlefield, false, SacrificeSource()).
-				SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+				SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 					for _, p := range g.FilterBattlefield(AnyPermanent) {
 						if p.Controller == controllerID && p.HasSubType("Island") {
 							return false
@@ -195,7 +195,7 @@ func registerCreatures() {
 							}
 							return nil
 						}),
-				).SetCondition(func(_ *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+				).SetCondition(func(_ *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 					for _, group := range g.CombatGroups() {
 						if group.AttackerID == sourceID && len(group.BlockerIDs) == 0 {
 							return true
@@ -205,7 +205,7 @@ func registerCreatures() {
 				}),
 			),
 			WithAbility(NewTriggered(EvtLeavesBattlefield, false, SacrificeSource()).
-				SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+				SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 					for _, p := range g.FilterBattlefield(AnyPermanent) {
 						if p.Controller == controllerID && p.HasSubType("Island") {
 							return false
@@ -307,7 +307,7 @@ func registerCreatures() {
 			)),
 			// State trigger: when you control no lands (outside upkeep), sacrifice
 			WithAbility(NewTriggered(EvtLeavesBattlefield, false, SacrificeSource()).
-				SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+				SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 					for _, p := range g.FilterBattlefield(AnyPermanent) {
 						if p.Controller == controllerID && p.HasType(TypeLand) {
 							return false
@@ -429,7 +429,7 @@ func registerCreatures() {
 						}
 						return nil
 					}),
-			).SetCondition(func(evt *GameEvent, _ *Game, sourceID, _ uuid.UUID) bool {
+			).SetCondition(func(evt *GameEvent, _ GameReader, sourceID, _ uuid.UUID) bool {
 				return evt.SourceID == sourceID
 			})),
 		)
@@ -443,7 +443,7 @@ func registerCreatures() {
 			WithAbility(
 				NewTriggered(EvtEndStep, false,
 					DealDamageToPlayers(Fixed(2), SelectController()),
-				).SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 					if evt.PlayerID != controllerID {
 						return false
 					}
@@ -913,7 +913,7 @@ func registerCreatures() {
 						})
 						return nil
 					}),
-			).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+			).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 				if evt.SourceID != sourceID {
 					return false
 				}

@@ -26,12 +26,16 @@ type GameReader interface {
 	GetResolvingCard() Card
 	FindStackObject(uuid.UUID) *StackObject
 	CombatGroups() []*CombatGroup
+	CombatGroupFor(uuid.UUID) *CombatGroup
+	IsAttackingInCombat(uuid.UUID) bool
+	IsBlockingInCombat(uuid.UUID) bool
 	DamageTakenByPlayer(uuid.UUID) int
 	HasAttackedThisTurn(uuid.UUID) bool
 	CreatureDeaths() int
 	CurrentTurn() int
 	GetDamageSources(uuid.UUID) map[uuid.UUID]bool
 	GetBlockedThisTurn(uuid.UUID) []uuid.UUID
+	GetInstantsCastThisTurn(uuid.UUID) int
 }
 
 // GameMutator is the mutation surface passed to Effect.Apply. It embeds GameReader
@@ -159,6 +163,30 @@ func (g *Game) CombatGroups() []*CombatGroup {
 	return g.Combat.Groups
 }
 
+// CombatGroupFor returns the combat group for the given attacker, or nil.
+func (g *Game) CombatGroupFor(attackerID uuid.UUID) *CombatGroup {
+	if g.Combat == nil {
+		return nil
+	}
+	return g.Combat.GroupFor(attackerID)
+}
+
+// IsAttackingInCombat reports whether the permanent is a declared attacker.
+func (g *Game) IsAttackingInCombat(permID uuid.UUID) bool {
+	if g.Combat == nil {
+		return false
+	}
+	return g.Combat.IsAttacking(permID)
+}
+
+// IsBlockingInCombat reports whether the permanent is a declared blocker.
+func (g *Game) IsBlockingInCombat(permID uuid.UUID) bool {
+	if g.Combat == nil {
+		return false
+	}
+	return g.Combat.IsBlocking(permID)
+}
+
 // DamageTakenByPlayer returns the total damage the given player has taken this turn.
 func (g *Game) DamageTakenByPlayer(playerID uuid.UUID) int {
 	return g.DamageTakenThisTurn[playerID]
@@ -188,6 +216,11 @@ func (g *Game) GetDamageSources(permID uuid.UUID) map[uuid.UUID]bool {
 // blocked this turn. Returns nil if it didn't block anything.
 func (g *Game) GetBlockedThisTurn(blockerID uuid.UUID) []uuid.UUID {
 	return g.BlockedThisTurn[blockerID]
+}
+
+// GetInstantsCastThisTurn returns the number of instants the given player has cast this turn.
+func (g *Game) GetInstantsCastThisTurn(playerID uuid.UUID) int {
+	return g.InstantsCastThisTurn[playerID]
 }
 
 // --- GameMutator proxy methods on *Game ---

@@ -100,20 +100,16 @@ func registerCreatures() {
 						g.RemoveFromCombat(sourceID)
 						return nil
 					}),
-			).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+			).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 				src := g.FindPermanent(sourceID)
 				if src == nil {
 					return false
 				}
-				if g.Combat == nil || !g.Combat.IsAttacking(sourceID) {
+				if !g.IsAttackingInCombat(sourceID) {
 					return false
 				}
-				for _, grp := range g.Combat.Groups {
-					if grp.AttackerID == sourceID {
-						return len(grp.BlockerIDs) == 0
-					}
-				}
-				return false
+				group := g.CombatGroupFor(sourceID)
+				return group != nil && len(group.BlockerIDs) == 0
 			})),
 		)
 	}))
@@ -579,20 +575,16 @@ func registerCreatures() {
 						}
 						return nil
 					}),
-			).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+			).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 				src := g.FindPermanent(sourceID)
 				if src == nil {
 					return false
 				}
-				if g.Combat == nil || !g.Combat.IsAttacking(sourceID) {
+				if !g.IsAttackingInCombat(sourceID) {
 					return false
 				}
-				for _, grp := range g.Combat.Groups {
-					if grp.AttackerID == sourceID {
-						return len(grp.BlockerIDs) == 0
-					}
-				}
-				return false
+				group := g.CombatGroupFor(sourceID)
+				return group != nil && len(group.BlockerIDs) == 0
 			})),
 		)
 	}))
@@ -631,20 +623,16 @@ func registerCreatures() {
 						g.DestroyPermanent(chosen)
 						return nil
 					}),
-			).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+			).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 				src := g.FindPermanent(sourceID)
 				if src == nil {
 					return false
 				}
-				if g.Combat == nil || !g.Combat.IsAttacking(sourceID) {
+				if !g.IsAttackingInCombat(sourceID) {
 					return false
 				}
-				for _, grp := range g.Combat.Groups {
-					if grp.AttackerID == sourceID {
-						return len(grp.BlockerIDs) == 0
-					}
-				}
-				return false
+				group := g.CombatGroupFor(sourceID)
+				return group != nil && len(group.BlockerIDs) == 0
 			})),
 		)
 	}))
@@ -761,7 +749,7 @@ func registerCreatures() {
 			// Trigger when this creature blocks an Orc
 			WithAbility(NewTriggered(EvtDeclaredBlocker, false,
 				BoostUntilEndOfTurn(Fixed(0), Fixed(2), SelectSource),
-			).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+			).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 				if evt.SourceID == sourceID {
 					// This creature is blocking — check if the attacker is an Orc
 					attacker := g.FindPermanent(evt.TargetID)

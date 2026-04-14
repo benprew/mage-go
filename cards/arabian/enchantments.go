@@ -10,6 +10,15 @@ func init() {
 	registerEnchantments()
 }
 
+func cardHasColor(c Card, color Color) bool {
+	for _, col := range c.ManaCost().Colors() {
+		if col == color {
+			return true
+		}
+	}
+	return false
+}
+
 func registerEnchantments() {
 	// ===== GLOBAL ENCHANTMENTS =====
 
@@ -107,7 +116,7 @@ func registerEnchantments() {
 			// "When there are no creatures on the battlefield, sacrifice Drop of Honey."
 			// State trigger: fires when a creature leaves and no creatures remain
 			WithAbility(NewTriggered(EvtLeavesBattlefield, false, SacrificeSource()).
-				SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+				SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 					for _, p := range g.FilterBattlefield(AnyPermanent) {
 						if p.HasType(TypeCreature) {
 							return false
@@ -184,7 +193,7 @@ func registerEnchantments() {
 			WithAbility(
 				NewTriggered(EvtLeavesBattlefield, false,
 					SacrificeSource(),
-				).SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 					perm := g.FindPermanent(sourceID)
 					if perm == nil {
 						return false
@@ -194,9 +203,9 @@ func registerEnchantments() {
 					if chosenColor == 0 || chosenPlayer == uuid.Nil {
 						return false
 					}
-					for _, p := range g.Battlefield {
+					for _, p := range g.FilterBattlefield(AnyPermanent) {
 						if p.Controller == chosenPlayer &&
-							HasColorFilter(chosenColor).Match(p, g) &&
+							cardHasColor(p.Card, chosenColor) &&
 							!p.Card.(*BaseCard).IsToken() {
 							return false
 						}

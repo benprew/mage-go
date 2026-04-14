@@ -44,7 +44,7 @@ func registerEnchantments() {
 			// Trigger when enchanted artifact's ability is activated without {T}
 			WithAbility(
 				NewTriggered(EvtAbilityActivated, false, artPossDmgEffect,
-				).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 					if evt.Flag {
 						return false // had a tap cost — already covered by EvtTapped trigger
 					}
@@ -165,7 +165,7 @@ func registerEnchantments() {
 			WithStaticAbility(
 				GrantTriggeredAbilityToAll(
 					EvtUpkeep, false,
-					func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+					func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 						return evt.PlayerID == controllerID
 					},
 					IsArtifact,
@@ -233,7 +233,7 @@ func registerEnchantments() {
 			}
 			return nil
 		})
-	isArtifactEvt := func(evt *GameEvent, g *Game, _, _ uuid.UUID) bool {
+	isArtifactEvt := func(evt *GameEvent, g GameReader, _, _ uuid.UUID) bool {
 		perm := g.FindPermanent(evt.SourceID)
 		return perm != nil && perm.HasType(TypeArtifact)
 	}
@@ -246,7 +246,7 @@ func registerEnchantments() {
 			// Trigger when any artifact's ability is activated without {T}
 			WithAbility(
 				NewTriggered(EvtAbilityActivated, false, hauntingWindEffect,
-				).SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 					if evt.Flag {
 						return false // had a tap cost — covered by EvtTapped trigger
 					}
@@ -304,7 +304,7 @@ func registerEnchantments() {
 			// Trigger when opponent activates artifact ability without {T}
 			WithAbility(
 				NewTriggered(EvtAbilityActivated, false, powerleechEffect,
-				).SetCondition(func(evt *GameEvent, g *Game, _, controllerID uuid.UUID) bool {
+				).SetCondition(func(evt *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
 					if evt.Flag {
 						return false // had tap cost
 					}
@@ -394,7 +394,7 @@ func registerEnchantments() {
 							g.AddContinuousEffect(effPT)
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, _ *Game, sourceID, _ uuid.UUID) bool {
+				).SetCondition(func(evt *GameEvent, _ GameReader, sourceID, _ uuid.UUID) bool {
 					return evt.SourceID == sourceID
 				}),
 			),

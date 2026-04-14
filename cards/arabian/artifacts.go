@@ -188,7 +188,7 @@ func registerArtifacts() {
 							}
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 					if evt.SourceID == sourceID {
 						return false // don't trigger on self entering
 					}

@@ -399,7 +399,7 @@ func registerCreatures() {
 			WithAbility(
 				NewTriggered(EvtSpellCast, false,
 					AddCounters(P1P1, Fixed(1), SelectSource),
-				).SetCondition(func(evt *GameEvent, g *Game, _, controllerID uuid.UUID) bool {
+				).SetCondition(func(evt *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
 					if evt.PlayerID == controllerID {
 						return false
 					}
@@ -461,7 +461,7 @@ func registerCreatures() {
 							g.ApplyContinuousEffects()
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, _ *Game, _, controllerID uuid.UUID) bool {
+				).SetCondition(func(evt *GameEvent, _ GameReader, _, controllerID uuid.UUID) bool {
 					return evt.PlayerID == controllerID
 				}),
 			),
@@ -484,7 +484,7 @@ func registerCreatures() {
 							})
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 					// Battering Ram is the attacker being blocked
 					if evt.TargetID != sourceID {
 						return false

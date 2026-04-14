@@ -19,7 +19,7 @@ func TestGenericTriggered(t *testing.T) {
 						core.EvtEntersBattlefield,
 						false,
 						mage.GainLife(3),
-					).SetCondition(func(evt *core.GameEvent, _ *mage.Game, sourceID, _ uuid.UUID) bool {
+					).SetCondition(func(evt *core.GameEvent, _ mage.GameReader, sourceID, _ uuid.UUID) bool {
 						return evt.SourceID == sourceID
 					})),
 				)
@@ -45,7 +45,7 @@ func TestGenericTriggered(t *testing.T) {
 						core.EvtUpkeep,
 						false,
 						mage.DealDamageToPlayers(mage.Fixed(1), mage.SelectController()),
-					).SetCondition(func(evt *core.GameEvent, _ *mage.Game, _, controllerID uuid.UUID) bool {
+					).SetCondition(func(evt *core.GameEvent, _ mage.GameReader, _, controllerID uuid.UUID) bool {
 						return evt.PlayerID == controllerID
 					})),
 				)
@@ -75,7 +75,7 @@ func TestGenericTriggered(t *testing.T) {
 						core.EvtCreatureDied,
 						false,
 						mage.AddCounters(core.P1P1, mage.Fixed(1), mage.SelectSource),
-					).SetCondition(func(evt *core.GameEvent, _ *mage.Game, sourceID, controllerID uuid.UUID) bool {
+					).SetCondition(func(evt *core.GameEvent, _ mage.GameReader, sourceID, controllerID uuid.UUID) bool {
 						if evt.SourceID == sourceID {
 							return false
 						}
@@ -118,7 +118,7 @@ func TestGenericTriggered(t *testing.T) {
 						core.EvtDeclaredAttacker,
 						false,
 						mage.BoostUntilEndOfTurn(mage.Fixed(2), mage.Fixed(0), mage.SelectSource),
-					).SetCondition(func(evt *core.GameEvent, _ *mage.Game, sourceID, _ uuid.UUID) bool {
+					).SetCondition(func(evt *core.GameEvent, _ mage.GameReader, sourceID, _ uuid.UUID) bool {
 						return evt.SourceID == sourceID
 					})),
 				)
@@ -252,7 +252,7 @@ func TestSourceTargetUnification(t *testing.T) {
 						core.EvtDeclaredAttacker,
 						false,
 						mage.BoostUntilEndOfTurn(mage.Fixed(1), mage.Fixed(0), mage.SelectSource),
-					).SetCondition(func(evt *core.GameEvent, _ *mage.Game, sourceID, _ uuid.UUID) bool {
+					).SetCondition(func(evt *core.GameEvent, _ mage.GameReader, sourceID, _ uuid.UUID) bool {
 						return evt.SourceID == sourceID
 					})),
 				)

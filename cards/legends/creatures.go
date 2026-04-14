@@ -234,8 +234,8 @@ func registerCreatures() {
 			WithAbility(
 				NewTriggered(EvtEndStep, false,
 					AddCounters(Carrion, Fixed(1), SelectSource),
-				).SetCondition(func(evt *GameEvent, g *Game, _, _ uuid.UUID) bool {
-					return g.CreatureDeathsThisTurn > 0
+				).SetCondition(func(evt *GameEvent, g GameReader, _, _ uuid.UUID) bool {
+					return g.CreatureDeaths() > 0
 				}),
 			),
 			WithActivatedAbility(
@@ -309,7 +309,7 @@ func registerCreatures() {
 							g.AddContinuousEffect(ce)
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 					// Check if this Wall is blocking something
 					for _, group := range g.CombatGroups() {
 						isBlocking := false
@@ -412,7 +412,7 @@ func registerCreatures() {
 							}
 						}
 						return nil
-					})).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+					})).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 					return evt.SourceID == sourceID
 				}),
 			),
@@ -468,7 +468,7 @@ func registerCreatures() {
 					}
 					return nil
 				},
-			)).SetCondition(func(evt *GameEvent, _ *Game, _, controllerID uuid.UUID) bool {
+			)).SetCondition(func(evt *GameEvent, _ GameReader, _, controllerID uuid.UUID) bool {
 				return evt.PlayerID == controllerID
 			})),
 			// Can't be blocked by red creatures
@@ -745,7 +745,7 @@ func registerCreatures() {
 							}
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 					isGreenOrWhite := func(p *Permanent) bool {
 						for _, c := range p.Colors() {
 							if c == Green || c == White {
@@ -754,7 +754,7 @@ func registerCreatures() {
 						}
 						return false
 					}
-					for _, group := range g.Combat.Groups {
+					for _, group := range g.CombatGroups() {
 						if group.AttackerID == sourceID {
 							for _, bid := range group.BlockerIDs {
 								blocker := g.FindPermanent(bid)
@@ -823,7 +823,7 @@ func registerCreatures() {
 					}
 					return nil
 				},
-			)).SetCondition(func(evt *GameEvent, _ *Game, _, controllerID uuid.UUID) bool {
+			)).SetCondition(func(evt *GameEvent, _ GameReader, _, controllerID uuid.UUID) bool {
 				return evt.PlayerID == controllerID
 			})),
 		)
@@ -1028,15 +1028,8 @@ func registerCreatures() {
 							}
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
-					for _, group := range g.Combat.Groups {
-						for _, bid := range group.BlockerIDs {
-							if bid == sourceID {
-								return true
-							}
-						}
-					}
-					return false
+				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+					return g.IsBlockingInCombat(sourceID)
 				}),
 			),
 			// When Medusa is blocked by a non-Wall: destroy that blocker at end of combat
@@ -1063,8 +1056,8 @@ func registerCreatures() {
 							}
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
-					for _, group := range g.Combat.Groups {
+				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+					for _, group := range g.CombatGroups() {
 						if group.AttackerID == sourceID && len(group.BlockerIDs) > 0 {
 							for _, bid := range group.BlockerIDs {
 								blocker := g.FindPermanent(bid)
@@ -1224,7 +1217,7 @@ func registerCreatures() {
 					p.AddPoisonCounters(1)
 					return nil
 				},
-			)).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+			)).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 				// Only trigger when this creature deals damage to a player (not a permanent)
 				return evt.SourceID == sourceID && g.GetPlayer(evt.TargetID) != nil
 			})),
@@ -1293,14 +1286,9 @@ func registerCreatures() {
 							}
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
-					// Only trigger if The Wretched attacked and was blocked
-					for _, group := range g.Combat.Groups {
-						if group.AttackerID == sourceID && len(group.BlockerIDs) > 0 {
-							return true
-						}
-					}
-					return false
+				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
+					group := g.CombatGroupFor(sourceID)
+					return group != nil && len(group.BlockerIDs) > 0
 				}),
 			),
 		)
@@ -1520,7 +1508,7 @@ func registerCreatures() {
 						g.DealDamageToPermanent(target, 3, sourceID)
 						return nil
 					}),
-				).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 					return evt.SourceID == sourceID
 				}),
 			),
@@ -1933,8 +1921,8 @@ func registerCreatures() {
 							}
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
-					for _, group := range g.Combat.Groups {
+				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+					for _, group := range g.CombatGroups() {
 						if group.AttackerID == sourceID && len(group.BlockerIDs) > 0 {
 							return true
 						}
@@ -2095,17 +2083,9 @@ func registerCreatures() {
 						eff.SetSourceID(sourceID)
 						g.AddContinuousEffect(eff)
 						return nil
-					})).SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
-					// Check this creature is attacking and unblocked
-					if g.Combat == nil {
-						return false
-					}
-					for _, group := range g.Combat.Groups {
-						if group.AttackerID == sourceID && len(group.BlockerIDs) == 0 {
-							return true
-						}
-					}
-					return false
+					})).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
+					group := g.CombatGroupFor(sourceID)
+					return group != nil && len(group.BlockerIDs) == 0
 				}),
 			),
 		)
@@ -2173,7 +2153,7 @@ func registerCreatures() {
 							}
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g *Game, _, controllerID uuid.UUID) bool {
+				).SetCondition(func(evt *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
 					// Only trigger for opponents
 					if evt.PlayerID == controllerID {
 						return false
@@ -2187,7 +2167,7 @@ func registerCreatures() {
 						return false
 					}
 					// Only trigger if this is the 2nd+ instant cast by that player this turn
-					return g.InstantsCastThisTurn[evt.PlayerID] >= 2
+					return g.GetInstantsCastThisTurn(evt.PlayerID) >= 2
 				}),
 			),
 		)
@@ -2850,7 +2830,7 @@ func registerCreatures() {
 					}
 					return nil
 				},
-			)).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+			)).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 				return evt.SourceID == sourceID
 			})),
 		)
@@ -2965,7 +2945,7 @@ func registerCreatures() {
 					g.AddContinuousEffect(ce2)
 					return nil
 				},
-			)).SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+			)).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 				return evt.PlayerID == controllerID
 			})),
 		)
@@ -3144,7 +3124,7 @@ func registerCreatures() {
 					}
 					return nil
 				},
-			)).SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+			)).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 				// EvtDamageDealt: SourceID = damage source, TargetID = damaged player/permanent
 				if evt.SourceID != sourceID {
 					return false
@@ -3308,7 +3288,7 @@ func registerCreatures() {
 					}
 					return nil
 				},
-			)).SetCondition(func(evt *GameEvent, g *Game, sourceID, controller uuid.UUID) bool {
+			)).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controller uuid.UUID) bool {
 				// Only trigger on controller's upkeep
 				if evt.PlayerID != controller {
 					return false
@@ -3398,7 +3378,7 @@ func registerCreatures() {
 					g.AddContinuousEffect(eff)
 					return nil
 				},
-			)).SetCondition(func(evt *GameEvent, g *Game, sourceID, controller uuid.UUID) bool {
+			)).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controller uuid.UUID) bool {
 				return evt.PlayerID == controller
 			})),
 		)
@@ -3517,7 +3497,7 @@ func registerCreatures() {
 					}
 					return nil
 				},
-			)).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+			)).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 				return evt.SourceID == sourceID
 			})),
 			// When the token leaves, sacrifice Stangg
@@ -3531,7 +3511,7 @@ func registerCreatures() {
 					}
 					return nil
 				},
-			)).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+			)).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 				return evt.SourceID == twinID && evt.SourceID != sourceID
 			})),
 		)

@@ -483,7 +483,7 @@ func registerCreatures() {
 						g.DealDamageToPlayer(p, 8, sourceID)
 					}
 					return nil
-				})).SetCondition(func(evt *GameEvent, _ *Game, _, controllerID uuid.UUID) bool {
+				})).SetCondition(func(evt *GameEvent, _ GameReader, _, controllerID uuid.UUID) bool {
 				return evt.PlayerID == controllerID
 			})),
 		)
@@ -694,7 +694,7 @@ func registerCreatures() {
 			// At end of combat, if Clockwork Beast attacked or blocked, remove a +1/+0 counter
 			WithAbility(NewTriggered(EvtEndOfCombat, false,
 				RemoveCountersFromSource(P1P0, 1),
-			).SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+			).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 				return g.HasAttackedThisTurn(sourceID) || len(g.GetBlockedThisTurn(sourceID)) > 0
 			})),
 			// {X}, {T}: Put up to X +1/+0 counters on Clockwork Beast (max 7 total). Upkeep only.

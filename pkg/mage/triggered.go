@@ -11,21 +11,21 @@ import (
 type TriggeredAbility interface {
 	Ability
 	CheckEventType(EventType) bool
-	CheckTrigger(*GameEvent, *Game) bool
+	CheckTrigger(*GameEvent, GameReader) bool
 	IsOptional() bool
 	Effects() []Effect
 	Targets() []Target
 }
 
 // TriggerCondition is a predicate that determines whether a triggered ability
-// should fire for a given event. It receives the event, game state, the source
-// permanent's ID, and the controller's ID. Return true to trigger.
+// should fire for a given event. It receives the event, a read-only game view,
+// the source permanent's ID, and the controller's ID. Return true to trigger.
 // A nil condition always triggers.
-type TriggerCondition func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool
+type TriggerCondition func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool
 
 // Indicates the triggered ability should fire if the event source is the card
 // that this ability is attached to.
-func IsThisSource(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+func IsThisSource(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 	return evt.SourceID == sourceID
 }
 
@@ -79,7 +79,7 @@ func (t *GenericTriggered) CheckEventType(et EventType) bool {
 	return et == t.eventType
 }
 
-func (t *GenericTriggered) CheckTrigger(evt *GameEvent, g *Game) bool {
+func (t *GenericTriggered) CheckTrigger(evt *GameEvent, g GameReader) bool {
 	if t.Condition == nil {
 		return true
 	}
@@ -99,7 +99,7 @@ func (t *GenericTriggered) Targets() []Target { return t.targets }
 // AttacksTrigger fires when the source creature is declared as an attacker.
 func AttacksTrigger(effect Effect, optional bool) *GenericTriggered {
 	return NewTriggered(EvtDeclaredAttacker, optional, effect).
-		SetCondition(func(evt *GameEvent, _ *Game, sourceID, _ uuid.UUID) bool {
+		SetCondition(func(evt *GameEvent, _ GameReader, sourceID, _ uuid.UUID) bool {
 			return evt.SourceID == sourceID
 		})
 }
@@ -107,7 +107,7 @@ func AttacksTrigger(effect Effect, optional bool) *GenericTriggered {
 // BlocksTrigger fires when the source creature is declared as a blocker.
 func BlocksTrigger(effect Effect, optional bool) *GenericTriggered {
 	return NewTriggered(EvtDeclaredBlocker, optional, effect).
-		SetCondition(func(evt *GameEvent, _ *Game, sourceID, _ uuid.UUID) bool {
+		SetCondition(func(evt *GameEvent, _ GameReader, sourceID, _ uuid.UUID) bool {
 			return evt.SourceID == sourceID
 		})
 }
@@ -116,7 +116,7 @@ func BlocksTrigger(effect Effect, optional bool) *GenericTriggered {
 // The filter parameter is reserved for future use.
 func DiesCreatureTrigger(effect Effect, optional bool, filter PermanentFilter) *GenericTriggered {
 	return NewTriggered(EvtCreatureDied, optional, effect).
-		SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+		SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 			if evt.SourceID == sourceID {
 				return false // "another" creature — not itself
 			}
@@ -127,7 +127,7 @@ func DiesCreatureTrigger(effect Effect, optional bool, filter PermanentFilter) *
 // EntersBattlefieldTrigger fires when the source permanent enters the battlefield.
 func EntersBattlefieldTrigger(effect Effect, optional bool) *GenericTriggered {
 	return NewTriggered(EvtEntersBattlefield, optional, effect).
-		SetCondition(func(evt *GameEvent, _ *Game, sourceID, _ uuid.UUID) bool {
+		SetCondition(func(evt *GameEvent, _ GameReader, sourceID, _ uuid.UUID) bool {
 			return evt.SourceID == sourceID
 		})
 }
@@ -136,7 +136,7 @@ func EntersBattlefieldTrigger(effect Effect, optional bool) *GenericTriggered {
 // from the battlefield (e.g. Rancor).
 func PutIntoGraveyardFromBattlefieldTrigger(effect Effect, optional bool) *GenericTriggered {
 	return NewTriggered(EvtPutIntoGraveyardFromBattlefield, optional, effect).
-		SetCondition(func(evt *GameEvent, _ *Game, sourceID, _ uuid.UUID) bool {
+		SetCondition(func(evt *GameEvent, _ GameReader, sourceID, _ uuid.UUID) bool {
 			return evt.SourceID == sourceID
 		})
 }
@@ -164,7 +164,7 @@ func ChooseOpponentOnETB() *GenericTriggered {
 // Requires ChooseOpponentOnETB to have set ChosenPlayer.
 func ChosenPlayerUpkeepTrigger(effect Effect, optional bool) *GenericTriggered {
 	return NewTriggered(EvtUpkeep, optional, effect).
-		SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+		SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 			perm := g.FindPermanent(sourceID)
 			if perm == nil {
 				return false
@@ -176,7 +176,7 @@ func ChosenPlayerUpkeepTrigger(effect Effect, optional bool) *GenericTriggered {
 // BeginningOfUpkeepTrigger fires at the beginning of the controller's upkeep.
 func BeginningOfUpkeepTrigger(effect Effect, optional bool) *GenericTriggered {
 	return NewTriggered(EvtUpkeep, optional, effect).
-		SetCondition(func(evt *GameEvent, _ *Game, _, controllerID uuid.UUID) bool {
+		SetCondition(func(evt *GameEvent, _ GameReader, _, controllerID uuid.UUID) bool {
 			return evt.PlayerID == controllerID
 		})
 }
@@ -192,7 +192,7 @@ func BeginningOfEachUpkeepTrigger(effect Effect, optional bool) *GenericTriggere
 // Only triggers while the source permanent is untapped.
 func BeginningOfEachDrawStepTrigger(effect Effect, optional bool) *GenericTriggered {
 	return NewTriggered(EvtDrawStep, optional, effect).
-		SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+		SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 			src := g.FindPermanent(sourceID)
 			return src != nil && !src.Tapped
 		})
@@ -206,7 +206,7 @@ func BeginningOfEachEndStepTrigger(effect Effect, optional bool) *GenericTrigger
 // DealsDamageToOpponentTrigger fires when the source deals damage to an opponent.
 func DealsDamageToOpponentTrigger(effect Effect, optional bool) *GenericTriggered {
 	return NewTriggered(EvtDamageDealt, optional, effect).
-		SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+		SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 			if evt.SourceID != sourceID {
 				return false
 			}
@@ -222,7 +222,7 @@ func DealsDamageToOpponentTrigger(effect Effect, optional bool) *GenericTriggere
 // given CardFilter predicates. Pass no filters to trigger on any spell.
 func WheneverSpellCastTrigger(effect Effect, optional bool, filters ...CardFilter) *GenericTriggered {
 	return NewTriggered(EvtSpellCast, optional, effect).
-		SetCondition(func(evt *GameEvent, g *Game, _, _ uuid.UUID) bool {
+		SetCondition(func(evt *GameEvent, g GameReader, _, _ uuid.UUID) bool {
 			if len(filters) == 0 {
 				return true
 			}
@@ -243,7 +243,7 @@ func WheneverSpellCastTrigger(effect Effect, optional bool, filters ...CardFilte
 // the given CardFilter predicates. Pass no filters to trigger on any of your spells.
 func WheneverYouCastSpellTrigger(effect Effect, optional bool, filters ...CardFilter) *GenericTriggered {
 	return NewTriggered(EvtSpellCast, optional, effect).
-		SetCondition(func(evt *GameEvent, g *Game, _, controllerID uuid.UUID) bool {
+		SetCondition(func(evt *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
 			if evt.PlayerID != controllerID {
 				return false
 			}
@@ -269,7 +269,7 @@ func WheneverEnchantmentCastTrigger(effect Effect, optional bool) *GenericTrigge
 // WhenDamageDealtToThisTrigger fires when damage is dealt to the source creature.
 func WhenDamageDealtToThisTrigger(effect Effect, optional bool) *GenericTriggered {
 	return NewTriggered(EvtDamageDealt, optional, effect).
-		SetCondition(func(evt *GameEvent, _ *Game, sourceID, _ uuid.UUID) bool {
+		SetCondition(func(evt *GameEvent, _ GameReader, sourceID, _ uuid.UUID) bool {
 			return evt.TargetID == sourceID
 		})
 }
@@ -278,7 +278,7 @@ func WhenDamageDealtToThisTrigger(effect Effect, optional bool) *GenericTriggere
 // upkeep of the player who controls the permanent this aura is attached to.
 func BeginningOfAttachedControllerUpkeepTrigger(effect Effect, optional bool) *GenericTriggered {
 	return NewTriggered(EvtUpkeep, optional, effect).
-		SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+		SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 			src := g.FindPermanent(sourceID)
 			if src == nil || !src.IsAttached() {
 				return false
@@ -295,12 +295,12 @@ func BeginningOfAttachedControllerUpkeepTrigger(effect Effect, optional bool) *G
 // the filter enters the battlefield.
 func WheneverPermanentEntersBattlefieldTrigger(effect Effect, optional bool, filter PermanentFilter) *GenericTriggered {
 	return NewTriggered(EvtEntersBattlefield, optional, effect).
-		SetCondition(func(evt *GameEvent, g *Game, _, _ uuid.UUID) bool {
+		SetCondition(func(evt *GameEvent, g GameReader, _, _ uuid.UUID) bool {
 			perm := g.FindPermanent(evt.SourceID)
 			if perm == nil {
 				return false
 			}
-			return filter.Match(perm, g)
+			return filter.Match(perm, g.(*Game))
 		})
 }
 
@@ -320,8 +320,8 @@ func AnyCreatureDiesTrigger(effect Effect, optional bool) *GenericTriggered {
 // damage by the source permanent this turn dies (e.g. Sengir Vampire).
 func CreatureDealtDamageBySourceDiesTrigger(effect Effect, optional bool) *GenericTriggered {
 	return NewTriggered(EvtCreatureDied, optional, effect).
-		SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
-			sources := g.DamageDealtBy[evt.SourceID]
+		SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+			sources := g.GetDamageSources(evt.SourceID)
 			return sources != nil && sources[sourceID]
 		})
 }
@@ -344,7 +344,7 @@ func SacrificeAtUpkeepUnlessPay(cost string) *GenericTriggered {
 			}
 			return nil
 		},
-	)).SetCondition(func(evt *GameEvent, _ *Game, _, controllerID uuid.UUID) bool {
+	)).SetCondition(func(evt *GameEvent, _ GameReader, _, controllerID uuid.UUID) bool {
 		return evt.PlayerID == controllerID
 	})
 }
@@ -353,7 +353,7 @@ func SacrificeAtUpkeepUnlessPay(cost string) *GenericTriggered {
 // attached to becomes tapped (e.g. Psychic Venom, Kudzu).
 func WhenAttachedBecomesTappedTrigger(effect Effect, optional bool) *GenericTriggered {
 	return NewTriggered(EvtTapped, optional, effect).
-		SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
+		SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 			src := g.FindPermanent(sourceID)
 			if src == nil || !src.IsAttached() {
 				return false
@@ -387,12 +387,8 @@ func RampageTrigger(n int) *GenericTriggered {
 			g.AddContinuousEffect(ce)
 			return nil
 		},
-	)).SetCondition(func(evt *GameEvent, g *Game, sourceID, _ uuid.UUID) bool {
-		// Only trigger if this creature is attacking and is blocked
-		if g.Combat == nil {
-			return false
-		}
-		group := g.Combat.GroupFor(sourceID)
+	)).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+		group := g.CombatGroupFor(sourceID)
 		return group != nil && len(group.BlockerIDs) > 0
 	})
 }
@@ -401,7 +397,7 @@ func RampageTrigger(n int) *GenericTriggered {
 // filter that an opponent controls becomes tapped (e.g. Lifetap).
 func WhenOpponentPermanentBecomesTappedTrigger(effect Effect, optional bool, filter PermanentFilter) *GenericTriggered {
 	return NewTriggered(EvtTapped, optional, effect).
-		SetCondition(func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+		SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 			perm := g.FindPermanent(evt.SourceID)
 			if perm == nil {
 				return false
@@ -409,6 +405,6 @@ func WhenOpponentPermanentBecomesTappedTrigger(effect Effect, optional bool, fil
 			if perm.Controller == controllerID {
 				return false // not an opponent's permanent
 			}
-			return filter.Match(perm, g)
+			return filter.Match(perm, g.(*Game))
 		})
 }

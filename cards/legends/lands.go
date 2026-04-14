@@ -189,7 +189,7 @@ func registerLands() {
 			WithStaticAbility(
 				GrantTriggeredAbilityToAll(
 					EvtUpkeep, false,
-					func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool {
+					func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 						return evt.PlayerID == controllerID
 					},
 					IsCreature,

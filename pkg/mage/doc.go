@@ -499,13 +499,13 @@ Custom triggers with SetCondition:
 
 	// When this creature dies (not "another" — self)
 	mage.NewTriggered(core.EvtCreatureDied, false, effect).
-	    SetCondition(func(evt *core.GameEvent, g *mage.Game, sourceID, _ uuid.UUID) bool {
+	    SetCondition(func(evt *core.GameEvent, g mage.GameReader, sourceID, _ uuid.UUID) bool {
 	        return evt.SourceID == sourceID
 	    })
 
 	// Whenever an opponent's Swamp becomes tapped
 	mage.NewTriggered(core.EvtTapped, false, effect).
-	    SetCondition(func(evt *core.GameEvent, g *mage.Game, sourceID, controllerID uuid.UUID) bool {
+	    SetCondition(func(evt *core.GameEvent, g mage.GameReader, sourceID, controllerID uuid.UUID) bool {
 	        perm := g.FindPermanent(evt.SourceID)
 	        return perm != nil && perm.Controller != controllerID && perm.HasSubType("Swamp")
 	    })
@@ -515,7 +515,7 @@ false = mandatory, true = "you may" (AI/player can decline).
 
 The [TriggerCondition] signature is:
 
-	func(evt *GameEvent, g *Game, sourceID, controllerID uuid.UUID) bool
+	func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool
 
 Pre-built conditions:
 
