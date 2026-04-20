@@ -10,6 +10,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "cffi>=2.0.0",
+    "orjson>=3.9",
 ]
 
 [tool.setuptools]

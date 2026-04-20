@@ -20,11 +20,11 @@ Override the library location with the MAGE_LIB env var or mage.load("/path").
 
 from __future__ import annotations
 
-import json
 import os
 import platform
 from typing import Any
 
+import orjson
 from cffi import FFI
 
 
@@ -91,10 +91,10 @@ def _take_raw(cstr) -> Any:
     if cstr == _ffi.NULL:
         raise MageError("null response from Go")
     try:
-        raw = _ffi.string(cstr).decode("utf-8")
+        raw = _ffi.string(cstr)
     finally:
         _lib.MageFreeString(cstr)
-    return json.loads(raw)
+    return orjson.loads(raw)
 
 
 def _take(cstr) -> dict[str, Any]:
@@ -119,7 +119,7 @@ def new_game(
     hand_size: int = 7,
 ) -> "Game":
     _ensure_loaded()
-    cfg = json.dumps({
+    cfg = orjson.dumps({
         "player_a": deck_a,
         "player_b": deck_b,
         "name_a": name_a,
@@ -127,7 +127,7 @@ def new_game(
         "seed": seed,
         "shuffle": shuffle,
         "hand_size": hand_size,
-    }).encode()
+    })
     ret = _lib.MageNewGame(_ffi.new("char[]", cfg))
     resp = _take(ret.r1)
     if ret.r0 < 0:
@@ -167,15 +167,15 @@ class Game:
         if ret == _ffi.NULL:
             return None
         try:
-            raw = _ffi.string(ret).decode("utf-8")
+            raw = _ffi.string(ret)
         finally:
             _lib.MageFreeString(ret)
-        if not raw or raw == "null":
+        if not raw or raw == b"null":
             return None
-        return json.loads(raw)
+        return orjson.loads(raw)
 
     def step(self, action: dict) -> dict:
-        payload = json.dumps(action).encode()
+        payload = orjson.dumps(action)
         self._last = _take(_lib.MageStep(self._id, _ffi.new("char[]", payload)))
         return self._last
 
