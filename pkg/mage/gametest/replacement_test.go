@@ -87,7 +87,7 @@ func TestPreventionShieldPartial(t *testing.T) {
 		g.AddCard(core.ZoneHand, PlayerA, "Big Blast")
 
 		// Give PlayerB a prevention shield of 4 (Big Blast deals 6)
-		g.AddPreventionShield(g.Game.Players[1].PlayerID(), 4)
+		g.AddPreventionShield(g.AllPlayers()[1].PlayerID(), 4)
 
 		g.CastSpell(1, core.PrecombatMain, PlayerA, "Big Blast", "PlayerB")
 		g.StopAt(1, core.BeginCombat)
@@ -101,7 +101,7 @@ func TestPreventionShieldPartial(t *testing.T) {
 		g.AddCard(core.ZoneHand, PlayerA, "Lightning Bolt")
 
 		// Give PlayerB a prevention shield of 5 (Lightning Bolt deals 3)
-		g.AddPreventionShield(g.Game.Players[1].PlayerID(), 5)
+		g.AddPreventionShield(g.AllPlayers()[1].PlayerID(), 5)
 
 		g.CastSpell(1, core.PrecombatMain, PlayerA, "Lightning Bolt", "PlayerB")
 		g.StopAt(1, core.BeginCombat)
@@ -139,8 +139,8 @@ func TestMultipleReplacementsInteract(t *testing.T) {
 	g.AddCard(core.ZoneHand, PlayerA, "Big Blast")
 
 	// Give PlayerB a prevention shield of 2 AND minimum life protection
-	g.AddPreventionShield(g.Game.Players[1].PlayerID(), 2)
-	g.SetMinimumLife(g.Game.Players[1].PlayerID())
+	g.AddPreventionShield(g.AllPlayers()[1].PlayerID(), 2)
+	g.SetMinimumLife(g.AllPlayers()[1].PlayerID())
 
 	g.CastSpell(1, core.PrecombatMain, PlayerA, "Big Blast", "PlayerB")
 	g.StopAt(1, core.BeginCombat)
@@ -186,7 +186,7 @@ func TestCreatureDamageRedirectToPlayer(t *testing.T) {
 
 	// Redirect damage dealt to Test Giant → PlayerB instead
 	tg := findPermanentByName(g, "Test Giant")
-	g.SetCreatureDamageRedirect(tg.ID(), g.Game.Players[1].PlayerID())
+	g.SetCreatureDamageRedirect(tg.ID(), g.AllPlayers()[1].PlayerID())
 
 	g.CastSpell(1, core.PrecombatMain, PlayerA, "Lightning Bolt", "Test Giant")
 	g.StopAt(1, core.BeginCombat)
@@ -226,7 +226,7 @@ func TestColorPreventionConsumed(t *testing.T) {
 	g.AddCard(core.ZoneHand, PlayerA, "Lightning Bolt")
 
 	// Add one-shot red prevention
-	g.AddColorPrevention(g.Game.Players[1].PlayerID(), core.Red)
+	g.AddColorPrevention(g.AllPlayers()[1].PlayerID(), core.Red)
 
 	g.CastSpell(1, core.PrecombatMain, PlayerA, "Lightning Bolt", "PlayerB")
 	g.CastSpell(1, core.PrecombatMain, PlayerA, "Lightning Bolt", "PlayerB")
@@ -248,7 +248,7 @@ func TestSkipDrawReplacement(t *testing.T) {
 	g.AddCard(core.ZoneLibrary, PlayerA, "Hill Giant")
 
 	// Skip PlayerA's next normal draw
-	g.SetSkipNextDraw(g.Game.Players[0].PlayerID())
+	g.SetSkipNextDraw(g.AllPlayers()[0].PlayerID())
 
 	// Turn 1 draw step: PlayerA's draw should be skipped
 	g.StopAt(1, core.PrecombatMain)
@@ -268,7 +268,7 @@ func TestMinimumLifeDoesNotGoBelow1(t *testing.T) {
 
 	// Set minimum life via the Rules flag directly (the same path Ali from Cairo uses).
 	// The fallback in executeDamageToPlayer checks this flag.
-	g.Effects.Rules.SetMinimumLife(g.Game.Players[1].PlayerID())
+	g.SetMinimumLife(g.AllPlayers()[1].PlayerID())
 
 	// Normally this flag is reset each Apply() cycle and re-set by the continuous effect.
 	// For the test, set it right before the spell resolves using a static ability.
@@ -282,7 +282,7 @@ func TestMinimumLifeDoesNotGoBelow1(t *testing.T) {
 						if perm == nil {
 							return nil
 						}
-						g.Effects.Rules.SetMinimumLife(perm.Controller)
+						g.SetMinimumLife(perm.Controller)
 						return nil
 					})),
 			)
@@ -306,7 +306,7 @@ func TestReplacementPipelineDeduplication(t *testing.T) {
 	g.AddCard(core.ZoneHand, PlayerA, "Lightning Bolt")
 
 	// Register two prevention shields on PlayerB
-	pid := g.Game.Players[1].PlayerID()
+	pid := g.AllPlayers()[1].PlayerID()
 	g.AddPreventionShield(pid, 1) // absorbs 1
 	g.AddPreventionShield(pid, 1) // absorbs 1
 
@@ -328,7 +328,7 @@ func TestForcefieldDoesNotAffectBlockedDamage(t *testing.T) {
 	g.AddCard(core.ZoneBattlefield, PlayerB, "Hill Giant") // 3/3
 
 	// Give PlayerB forcefield
-	g.AddForcefieldShield(g.Game.Players[1].PlayerID())
+	g.AddForcefieldShield(g.AllPlayers()[1].PlayerID())
 
 	g.Attack(1, PlayerA, "Test Giant")
 	g.Block(1, PlayerB, "Hill Giant", "Test Giant")
@@ -350,7 +350,7 @@ func TestTypePreventionArtifact(t *testing.T) {
 	g.AddCard(core.ZoneBattlefield, PlayerA, "Iron Golem") // artifact creature 3/3
 
 	// Prevent artifact damage to PlayerB
-	g.AddTypePrevention(g.Game.Players[1].PlayerID(), core.TypeArtifact)
+	g.AddTypePrevention(g.AllPlayers()[1].PlayerID(), core.TypeArtifact)
 
 	g.Attack(1, PlayerA, "Iron Golem")
 	g.StopAt(1, core.EndCombat)
@@ -368,7 +368,7 @@ func TestCustomReplacementEffect(t *testing.T) {
 	g.AddCard(core.ZoneHand, PlayerA, "Lightning Bolt")
 
 	// Register a custom replacement that doubles all damage to PlayerB
-	pid := g.Game.Players[1].PlayerID()
+	pid := g.AllPlayers()[1].PlayerID()
 	g.AddReplacementEffect(&doubleDamageReplacement{playerID: pid})
 
 	g.CastSpell(1, core.PrecombatMain, PlayerA, "Lightning Bolt", "PlayerB")
@@ -422,7 +422,7 @@ func TestPreventionShieldOnCreature(t *testing.T) {
 
 // findPermanentByName is a test helper to find a permanent on the battlefield.
 func findPermanentByName(g *TestGame, name string) *mage.Permanent {
-	for _, p := range g.Battlefield {
+	for _, p := range g.AllBattlefield() {
 		if p.Name() == name {
 			return p
 		}

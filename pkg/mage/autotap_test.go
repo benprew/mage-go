@@ -7,7 +7,7 @@ import (
 
 func TestAutoTapForCost_UsesManaPool(t *testing.T) {
 	g := newPriorityTestGame()
-	pid := g.Players[0].PlayerID()
+	pid := g.players[0].PlayerID()
 
 	// Put one Forest on the battlefield (produces {G})
 	forest := NewLand("Forest", WithManaAbility(Green))
@@ -16,7 +16,7 @@ func TestAutoTapForCost_UsesManaPool(t *testing.T) {
 	perm.RevokeBaseAttr(AttrSummonSick)
 
 	// Add {R} to the mana pool directly
-	g.Players[0].ManaPool().Add(Red, 1)
+	g.players[0].ManaPool().Add(Red, 1)
 
 	// Try to pay {1}{G} — should tap forest for {G} and use pool {R} for generic
 	cost := ManaCost{Green: 1, Generic: 1}
@@ -31,11 +31,11 @@ func TestAutoTapForCost_UsesManaPool(t *testing.T) {
 
 func TestAutoTapForCost_PoolCoversColoredCost(t *testing.T) {
 	g := newPriorityTestGame()
-	pid := g.Players[0].PlayerID()
+	pid := g.players[0].PlayerID()
 
 	// No lands — mana pool has exactly {R}{G}
-	g.Players[0].ManaPool().Add(Red, 1)
-	g.Players[0].ManaPool().Add(Green, 1)
+	g.players[0].ManaPool().Add(Red, 1)
+	g.players[0].ManaPool().Add(Green, 1)
 
 	// Pay {R}{G} entirely from pool, no tapping needed
 	cost := ManaCost{Red: 1, Green: 1}
@@ -46,10 +46,10 @@ func TestAutoTapForCost_PoolCoversColoredCost(t *testing.T) {
 
 func TestAutoTapForCost_PoolCoversGenericCost(t *testing.T) {
 	g := newPriorityTestGame()
-	pid := g.Players[0].PlayerID()
+	pid := g.players[0].PlayerID()
 
 	// Pool has {R}{R}, no lands
-	g.Players[0].ManaPool().Add(Red, 2)
+	g.players[0].ManaPool().Add(Red, 2)
 
 	// Pay {2} entirely from pool
 	cost := ManaCost{Generic: 2}
@@ -60,7 +60,7 @@ func TestAutoTapForCost_PoolCoversGenericCost(t *testing.T) {
 
 func TestCanAfford_UsesManaPool(t *testing.T) {
 	g := newPriorityTestGame()
-	pid := g.Players[0].PlayerID()
+	pid := g.players[0].PlayerID()
 
 	// One Forest on the battlefield
 	forest := NewLand("Forest", WithManaAbility(Green))
@@ -74,7 +74,7 @@ func TestCanAfford_UsesManaPool(t *testing.T) {
 	}
 
 	// Add {R} to pool
-	g.Players[0].ManaPool().Add(Red, 1)
+	g.players[0].ManaPool().Add(Red, 1)
 
 	// Now can afford {G}{R}
 	if !g.CanAfford(pid, ManaCost{Green: 1, Red: 1}) {
@@ -84,10 +84,10 @@ func TestCanAfford_UsesManaPool(t *testing.T) {
 
 func TestCanAfford_PoolCoversEntireCost(t *testing.T) {
 	g := newPriorityTestGame()
-	pid := g.Players[0].PlayerID()
+	pid := g.players[0].PlayerID()
 
 	// No lands, just pool mana
-	g.Players[0].ManaPool().Add(Blue, 2)
+	g.players[0].ManaPool().Add(Blue, 2)
 
 	if !g.CanAfford(pid, ManaCost{Blue: 1, Generic: 1}) {
 		t.Error("should afford {1}{U} with {U}{U} in pool")
@@ -96,7 +96,7 @@ func TestCanAfford_PoolCoversEntireCost(t *testing.T) {
 
 func TestManaCostPayment_CanPay_ConsidersUntappedSources(t *testing.T) {
 	g := newPriorityTestGame()
-	pid := g.Players[0].PlayerID()
+	pid := g.players[0].PlayerID()
 
 	// One Forest on the battlefield (produces {G})
 	forest := NewLand("Forest", WithManaAbility(Green))
@@ -112,8 +112,8 @@ func TestManaCostPayment_CanPay_ConsidersUntappedSources(t *testing.T) {
 
 func TestActivateAbilityByIndex_SetsXValue(t *testing.T) {
 	g := newPriorityTestGame()
-	pid := g.Players[0].PlayerID()
-	g.Step = PrecombatMain
+	pid := g.players[0].PlayerID()
+	g.step = PrecombatMain
 
 	// Create a creature with an activated ability: {0}: gain 1 life
 	card := NewCreature("Test Creature", "{G}", 1, 1,
@@ -135,13 +135,13 @@ func TestActivateAbilityByIndex_SetsXValue(t *testing.T) {
 	}
 
 	// Set CurrentX and activate — the stack object should capture XValue
-	g.CurrentX = 5
+	g.currentX = 5
 	err := g.ActivateAbilityByIndex(pid, perm.ID(), abilityIdx, nil)
 	if err != nil {
 		t.Fatalf("ActivateAbilityByIndex failed: %v", err)
 	}
 
-	obj := g.Stack.Peek()
+	obj := g.stack.Peek()
 	if obj == nil {
 		t.Fatal("expected stack object")
 	}
@@ -152,7 +152,7 @@ func TestActivateAbilityByIndex_SetsXValue(t *testing.T) {
 
 func TestCanAfford_RespectsManaConversions(t *testing.T) {
 	g := newPriorityTestGame()
-	pid := g.Players[0].PlayerID()
+	pid := g.players[0].PlayerID()
 
 	// One Mountain on the battlefield (produces {R})
 	mountain := NewLand("Mountain", WithManaAbility(Red))
@@ -161,7 +161,7 @@ func TestCanAfford_RespectsManaConversions(t *testing.T) {
 	perm.RevokeBaseAttr(AttrSummonSick)
 
 	// Sunglasses of Urza style: Red → White conversion
-	g.Players[0].ManaPool().ManaConversions = map[Color]Color{Red: White}
+	g.players[0].ManaPool().ManaConversions = map[Color]Color{Red: White}
 
 	// Should be able to afford {W} because Mountain produces {R} which converts to {W}
 	if !g.CanAfford(pid, ManaCost{White: 1}) {
@@ -176,7 +176,7 @@ func TestCanAfford_RespectsManaConversions(t *testing.T) {
 
 func TestAutoTapForCost_ManaBonusReducesTapping(t *testing.T) {
 	g := newPriorityTestGame()
-	pid := g.Players[0].PlayerID()
+	pid := g.players[0].PlayerID()
 
 	// Two Mountains on the battlefield
 	for i := 0; i < 2; i++ {
@@ -200,7 +200,7 @@ func TestAutoTapForCost_ManaBonusReducesTapping(t *testing.T) {
 	}
 
 	tappedCount := 0
-	for _, perm := range g.Battlefield {
+	for _, perm := range g.battlefield {
 		if perm.Name() == "Mountain" && perm.Tapped {
 			tappedCount++
 		}
@@ -212,7 +212,7 @@ func TestAutoTapForCost_ManaBonusReducesTapping(t *testing.T) {
 
 func TestCanAfford_AccountsForManaBonus(t *testing.T) {
 	g := newPriorityTestGame()
-	pid := g.Players[0].PlayerID()
+	pid := g.players[0].PlayerID()
 
 	// One Mountain
 	m := NewLand("Mountain", WithManaAbility(Red))
@@ -235,7 +235,7 @@ func TestCanAfford_AccountsForManaBonus(t *testing.T) {
 
 func TestTapForMana_MultiMana(t *testing.T) {
 	g := newPriorityTestGame()
-	pid := g.Players[0].PlayerID()
+	pid := g.players[0].PlayerID()
 
 	// Sol Ring style: tap for 2 colorless
 	ring := NewArtifact("Sol Ring", "{1}", WithMultiManaAbility(ManaProduction{Colorless, 2}))
@@ -247,7 +247,7 @@ func TestTapForMana_MultiMana(t *testing.T) {
 		t.Fatalf("TapForMana failed: %v", err)
 	}
 
-	pool := g.Players[0].ManaPool()
+	pool := g.players[0].ManaPool()
 	if pool.Count(Colorless) != 2 {
 		t.Errorf("expected 2 colorless mana, got %d", pool.Count(Colorless))
 	}
@@ -255,7 +255,7 @@ func TestTapForMana_MultiMana(t *testing.T) {
 
 func TestTapForMana_MultiColor(t *testing.T) {
 	g := newPriorityTestGame()
-	pid := g.Players[0].PlayerID()
+	pid := g.players[0].PlayerID()
 
 	// Produces {G}{W} at once
 	land := NewLand("Dual Land",
@@ -269,7 +269,7 @@ func TestTapForMana_MultiColor(t *testing.T) {
 		t.Fatalf("TapForMana failed: %v", err)
 	}
 
-	pool := g.Players[0].ManaPool()
+	pool := g.players[0].ManaPool()
 	if pool.Count(Green) != 1 {
 		t.Errorf("expected 1 green mana, got %d", pool.Count(Green))
 	}
@@ -280,7 +280,7 @@ func TestTapForMana_MultiColor(t *testing.T) {
 
 func TestAutoTapForCost_MultiMana(t *testing.T) {
 	g := newPriorityTestGame()
-	pid := g.Players[0].PlayerID()
+	pid := g.players[0].PlayerID()
 
 	// Sol Ring style: produces 2 colorless
 	ring := NewArtifact("Sol Ring", "{1}", WithMultiManaAbility(ManaProduction{Colorless, 2}))
@@ -301,7 +301,7 @@ func TestAutoTapForCost_MultiMana(t *testing.T) {
 
 func TestCanAfford_MultiMana(t *testing.T) {
 	g := newPriorityTestGame()
-	pid := g.Players[0].PlayerID()
+	pid := g.players[0].PlayerID()
 
 	// Sol Ring style: produces 2 colorless
 	ring := NewArtifact("Sol Ring", "{1}", WithMultiManaAbility(ManaProduction{Colorless, 2}))

@@ -279,9 +279,10 @@ func TestValueSource(t *testing.T) {
 	})
 
 	t.Run("XValue reads CurrentX", func(t *testing.T) {
-		g := &mage.Game{CurrentX: 5}
+		tg := NewTestGame(t)
+		tg.SetXValue(5)
 		v := mage.XValue()
-		got := v.Resolve(g, uuid.Nil, uuid.Nil)
+		got := v.Resolve(tg.Game, uuid.Nil, uuid.Nil)
 		if got != 5 {
 			t.Errorf("XValue().Resolve() with CurrentX=5 = %d, want 5", got)
 		}

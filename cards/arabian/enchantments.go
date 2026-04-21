@@ -169,7 +169,7 @@ func registerEnchantments() {
 					}
 					// Check if chosen player controls a nontoken permanent of chosen color
 					hasNontoken := false
-					for _, p := range g.Battlefield {
+					for _, p := range g.AllBattlefield() {
 						if p.Controller == chosenPlayer &&
 							HasColorFilter(chosenColor).Match(p, g) &&
 							!p.Card.(*BaseCard).IsToken() {
@@ -181,7 +181,7 @@ func registerEnchantments() {
 						return nil // condition not met, no boost (sacrifice handled by trigger below)
 					}
 					// Boost all white creatures +2/+1
-					for _, p := range g.Battlefield {
+					for _, p := range g.AllBattlefield() {
 						if p.HasType(TypeCreature) && HasColorFilter(White).Match(p, g) {
 							p.BoostPT(2, 1)
 						}
@@ -244,7 +244,7 @@ func registerEnchantments() {
 						Effects: []Effect{FuncEffect("phase in creature",
 							EffectProperties{Outcome: OutcomeBenefit},
 							func(g GameMutator, _, _ uuid.UUID, _ []uuid.UUID) error {
-								perm := g.(*Game).FindPermanentIncludingPhased(targetID)
+								perm := g.FindPermanentIncludingPhased(targetID)
 								if perm != nil && perm.PhasedOut {
 									perm.PhasedOut = false
 									perm.Tapped = true

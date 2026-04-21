@@ -421,7 +421,7 @@ func shouldAttack(atk *mage.Permanent, g *mage.Game, opponentID uuid.UUID, aggre
 func marginallyProfitableToAttack(atk *mage.Permanent, g *mage.Game, opponentID uuid.UUID) bool {
 	var bestBlocker *mage.Permanent
 	bestPow := -1
-	for _, perm := range g.Battlefield {
+	for _, perm := range g.AllBattlefield() {
 		if perm.Controller != opponentID || !perm.HasType(core.TypeCreature) || perm.Tapped {
 			continue
 		}
@@ -510,7 +510,7 @@ func evaluateSingleBlock(atk, blk *mage.Permanent, g *mage.Game, playerID uuid.U
 func profitableToAttack(atk *mage.Permanent, g *mage.Game, opponentID uuid.UUID) bool {
 	var bestBlocker *mage.Permanent
 	bestPow := -1
-	for _, perm := range g.Battlefield {
+	for _, perm := range g.AllBattlefield() {
 		if perm.Controller != opponentID || !perm.HasType(core.TypeCreature) || perm.Tapped {
 			continue
 		}
@@ -618,8 +618,8 @@ func (s *HeuristicStrategy) evaluateResponse(p mage.Player, g *mage.Game) *inter
 	}
 
 	stackHasThreat := false
-	if len(g.Stack.Objects()) > 0 {
-		for _, obj := range g.Stack.Objects() {
+	if len(g.StackObjects()) > 0 {
+		for _, obj := range g.StackObjects() {
 			if obj.Controller != playerID {
 				stackHasThreat = true
 				break
@@ -628,8 +628,8 @@ func (s *HeuristicStrategy) evaluateResponse(p mage.Player, g *mage.Game) *inter
 	}
 
 	// Detect combat phase — instants are more valuable during combat.
-	inCombat := g.Step == core.DeclareAttackers || g.Step == core.DeclareBlockers ||
-		g.Step == core.CombatDamage || g.Step == core.FirstStrikeDamage
+	inCombat := g.GetStep() == core.DeclareAttackers || g.GetStep() == core.DeclareBlockers ||
+		g.GetStep() == core.CombatDamage || g.GetStep() == core.FirstStrikeDamage
 
 	var bestAction *interactive.PriorityAction
 	bestValue := 0

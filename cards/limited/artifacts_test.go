@@ -33,7 +33,7 @@ func TestWinterOrb(t *testing.T) {
 		// With Winter Orb, at most 1 land untaps; 2 should remain tapped.
 		tapped := 0
 		playerAID := g.AllPlayers()[0].PlayerID()
-		for _, perm := range g.Battlefield {
+		for _, perm := range g.AllBattlefield() {
 			if perm.Controller == playerAID && perm.HasType(core.TypeLand) && perm.Tapped {
 				tapped++
 			}
@@ -57,7 +57,7 @@ func TestWinterOrb(t *testing.T) {
 		g.Execute()
 		tapped := 0
 		playerBID := g.AllPlayers()[1].PlayerID()
-		for _, perm := range g.Battlefield {
+		for _, perm := range g.AllBattlefield() {
 			if perm.Controller == playerBID && perm.HasType(core.TypeLand) && perm.Tapped {
 				tapped++
 			}
@@ -300,7 +300,7 @@ func TestCopyArtifact(t *testing.T) {
 		// Should have 2 Sol Rings (original + copy).
 		solCount := 0
 		playerAID := g.AllPlayers()[0].PlayerID()
-		for _, perm := range g.Battlefield {
+		for _, perm := range g.AllBattlefield() {
 			if perm.Controller == playerAID && perm.Name() == "Sol Ring" {
 				solCount++
 			}
@@ -321,7 +321,7 @@ func TestCopyArtifact(t *testing.T) {
 		// Find the Sol Ring that has the Enchantment type.
 		playerAID := g.AllPlayers()[0].PlayerID()
 		found := false
-		for _, perm := range g.Battlefield {
+		for _, perm := range g.AllBattlefield() {
 			if perm.Controller == playerAID && perm.Name() == "Sol Ring" && perm.HasType(core.TypeEnchantment) {
 				found = true
 				break
@@ -342,7 +342,7 @@ func TestCopyArtifact(t *testing.T) {
 		g.Execute()
 		playerAID := g.AllPlayers()[0].PlayerID()
 		found := false
-		for _, perm := range g.Battlefield {
+		for _, perm := range g.AllBattlefield() {
 			if perm.Controller == playerAID && perm.Name() == "Sol Ring" &&
 				perm.HasType(core.TypeEnchantment) && perm.HasType(core.TypeArtifact) {
 				found = true
@@ -365,7 +365,7 @@ func TestCopyArtifact(t *testing.T) {
 		g.Execute()
 		// Find the copy (Sol Ring with Enchantment type) and verify it has abilities
 		playerAID := g.AllPlayers()[0].PlayerID()
-		for _, perm := range g.Battlefield {
+		for _, perm := range g.AllBattlefield() {
 			if perm.Controller == playerAID && perm.Name() == "Sol Ring" && perm.HasType(core.TypeEnchantment) {
 				if len(perm.RuntimeAbilities) == 0 {
 					t.Errorf("Copy Artifact should have copied Sol Ring's abilities")

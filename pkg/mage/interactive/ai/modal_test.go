@@ -23,7 +23,7 @@ func TestGeneratePriorityMoves_ModalSpellGeneratesPerModeMove(t *testing.T) {
 	pa.AddToHand(charm)
 
 	addLands(g, pa, "Plains", 1)
-	g.Step = core.PrecombatMain
+	g.SetStep(core.PrecombatMain)
 
 	moves := GeneratePriorityMoves(g, pa, 0, true)
 
@@ -56,7 +56,7 @@ func TestGeneratePriorityMoves_NonModalSpellNoModeIndex(t *testing.T) {
 	pa.AddToHand(bolt)
 
 	addLands(g, pa, "Mountain", 1)
-	g.Step = core.PrecombatMain
+	g.SetStep(core.PrecombatMain)
 
 	moves := GeneratePriorityMoves(g, pa, 0, true)
 	for _, m := range moves {
@@ -207,8 +207,8 @@ func TestSearchPlayer_ChoosePermanent_DestroyPicks_Highest(t *testing.T) {
 
 func TestApplySpellCast_LifeGain(t *testing.T) {
 	g, pa, _ := makeGame()
-	g.Step = core.PrecombatMain
-	g.ActivePlayer = 0
+	g.SetStep(core.PrecombatMain)
+	g.SetActivePlayerIndex(0)
 	pa.SetLife(17)
 
 	lifeSpell := mage.NewSorcery("Healing Touch", "{W}",
@@ -234,11 +234,11 @@ func TestApplySpellCast_LifeGain(t *testing.T) {
 
 func TestApplySpellCast_BuffEffect(t *testing.T) {
 	g, pa, _ := makeGame()
-	g.Step = core.PrecombatMain
-	g.ActivePlayer = 0
+	g.SetStep(core.PrecombatMain)
+	g.SetActivePlayerIndex(0)
 
 	creature := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
-	g.Battlefield = append(g.Battlefield, creature)
+	g.AddToBattlefield(creature)
 
 	buff := mage.NewInstant("Giant Growth", "{G}",
 		mage.NewTargetedSpell(mage.TargetCreature(), mage.BoostUntilEndOfTurn(mage.Fixed(3), mage.Fixed(3), mage.SelectTarget)),
@@ -269,8 +269,8 @@ func TestApplySpellCast_BuffEffect(t *testing.T) {
 
 func TestApplySpellCast_MultiEffect_DrawAndDamage(t *testing.T) {
 	g, pa, pb := makeGame()
-	g.Step = core.PrecombatMain
-	g.ActivePlayer = 0
+	g.SetStep(core.PrecombatMain)
+	g.SetActivePlayerIndex(0)
 	pa.SetLife(20)
 	pb.SetLife(20)
 
@@ -314,11 +314,11 @@ func TestApplySpellCast_MultiEffect_DrawAndDamage(t *testing.T) {
 
 func TestApplySpellCast_BounceEffect(t *testing.T) {
 	g, pa, pb := makeGame()
-	g.Step = core.PrecombatMain
-	g.ActivePlayer = 0
+	g.SetStep(core.PrecombatMain)
+	g.SetActivePlayerIndex(0)
 
 	target := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, target)
+	g.AddToBattlefield(target)
 
 	bounce := mage.NewInstant("Unsummon", "{U}",
 		mage.NewTargetedSpell(mage.TargetCreature(), mage.ReturnToHandTarget()),
@@ -344,8 +344,8 @@ func TestApplySpellCast_BounceEffect(t *testing.T) {
 
 func TestApplySpellCast_XSpellDamage(t *testing.T) {
 	g, pa, pb := makeGame()
-	g.Step = core.PrecombatMain
-	g.ActivePlayer = 0
+	g.SetStep(core.PrecombatMain)
+	g.SetActivePlayerIndex(0)
 	pb.SetLife(20)
 
 	fireball := mage.NewSorcery("Fireball", "{X}{R}",

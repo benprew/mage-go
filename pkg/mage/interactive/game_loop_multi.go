@@ -14,10 +14,10 @@ func RunMultiplayerGameLoop(g *mage.Game, channels [2]PlayerChannels) {
 	defer close(channels[0].ToPlayer)
 	defer close(channels[1].ToPlayer)
 	// Also close each player's choice request channel so their TUI can exit cleanly.
-	if hp, ok := g.Players[0].(*HumanPlayer); ok {
+	if hp, ok := g.PlayerAt(0).(*HumanPlayer); ok {
 		defer close(hp.choiceReqs)
 	}
-	if hp, ok := g.Players[1].(*HumanPlayer); ok {
+	if hp, ok := g.PlayerAt(1).(*HumanPlayer); ok {
 		defer close(hp.choiceReqs)
 	}
 
@@ -64,7 +64,7 @@ func RunMultiplayerGameLoop(g *mage.Game, channels [2]PlayerChannels) {
 	handleDisconnect := func(disconnectedIdx int) {
 		disconnected = true
 		survivorIdx := (disconnectedIdx + 1) % 2
-		survivor := g.Players[survivorIdx]
+		survivor := g.PlayerAt(survivorIdx)
 		func() {
 			defer func() { recover() }()
 			channels[survivorIdx].ToPlayer <- GameMsg{
@@ -76,7 +76,7 @@ func RunMultiplayerGameLoop(g *mage.Game, channels [2]PlayerChannels) {
 	}
 
 	getAction := func(idx int, mainPhase bool) (PriorityAction, bool) {
-		playerID := g.Players[idx].PlayerID()
+		playerID := g.PlayerAt(idx).PlayerID()
 		options := GetAvailableActions(g, playerID)
 		if len(options) == 1 && options[0].Type == ActionPass {
 			return PriorityAction{Type: ActionPass}, true
@@ -90,7 +90,7 @@ func RunMultiplayerGameLoop(g *mage.Game, channels [2]PlayerChannels) {
 	}
 
 	// --- Install priority handler on the engine ---
-	g.OnPriority = func(g *mage.Game, playerIdx int, mainPhase bool) mage.PriorityAction {
+	g.SetOnPriority(func(g *mage.Game, playerIdx int, mainPhase bool) mage.PriorityAction {
 		if disconnected {
 			return mage.PriorityAction{Type: mage.PriorityPass}
 		}
@@ -100,11 +100,11 @@ func RunMultiplayerGameLoop(g *mage.Game, channels [2]PlayerChannels) {
 			return mage.PriorityAction{Type: mage.PriorityPass}
 		}
 		return convertToEngineAction(action)
-	}
+	})
 
 	// Log actions after they execute
-	g.AfterPriorityAction = func(g *mage.Game, playerIdx int, action mage.PriorityAction) {
-		p := g.Players[playerIdx]
+	g.SetAfterPriorityAction(func(g *mage.Game, playerIdx int, action mage.PriorityAction) {
+		p := g.PlayerAt(playerIdx)
 		switch action.Type {
 		case mage.PriorityPlayLand:
 			perm := g.FindPermanent(action.CardID)
@@ -114,7 +114,7 @@ func RunMultiplayerGameLoop(g *mage.Game, channels [2]PlayerChannels) {
 			}
 			addLog(fmt.Sprintf("%s plays %s", p.Name(), name))
 		case mage.PriorityCastSpell:
-			obj := g.Stack.Peek()
+			obj := g.StackPeek()
 			name := "a spell"
 			if obj != nil && obj.Card != nil {
 				name = obj.Card.Name()
@@ -129,11 +129,11 @@ func RunMultiplayerGameLoop(g *mage.Game, channels [2]PlayerChannels) {
 			addLog(fmt.Sprintf("Activated ability: %s%s", name, targetSuffix(g, action.Targets)))
 		}
 		broadcast()
-	}
+	})
 
 	// Log stack resolution
-	g.BeforeStackResolve = func(g *mage.Game) {
-		top := g.Stack.Peek()
+	g.SetBeforeStackResolve(func(g *mage.Game) {
+		top := g.StackPeek()
 		if top == nil {
 			return
 		}
@@ -142,10 +142,10 @@ func RunMultiplayerGameLoop(g *mage.Game, channels [2]PlayerChannels) {
 			topName = top.Card.Name()
 		}
 		addLog(fmt.Sprintf("Resolving %s%s", topName, targetSuffix(g, top.Targets)))
-	}
+	})
 
 	// --- Main turn loop ---
-	for g.Turn <= 100 {
+	for g.CurrentTurn() <= 100 {
 		for _, step := range core.AllSteps() {
 			if disconnected {
 				return
@@ -154,7 +154,7 @@ func RunMultiplayerGameLoop(g *mage.Game, channels [2]PlayerChannels) {
 			// Pre-step logging
 			switch step {
 			case core.CombatDamage:
-				if len(g.Combat.Groups) > 0 {
+				if len(g.CombatGroups()) > 0 {
 					addLog("── Combat damage ──")
 					logCombatPreview(g, addLog)
 				}
@@ -165,13 +165,13 @@ func RunMultiplayerGameLoop(g *mage.Game, channels [2]PlayerChannels) {
 			// Post-step logging and display
 			switch step {
 			case core.Untap:
-				addLog(fmt.Sprintf("── Turn %d: %s ──", g.Turn, g.ActivePlayerObj().Name()))
+				addLog(fmt.Sprintf("── Turn %d: %s ──", g.CurrentTurn(), g.ActivePlayerObj().Name()))
 				broadcast()
 			case core.Draw:
 				addLog(fmt.Sprintf("%s draws a card", g.ActivePlayerObj().Name()))
 			case core.CombatDamage:
-				if len(g.Combat.Groups) > 0 {
-					for _, p := range g.Players {
+				if len(g.CombatGroups()) > 0 {
+					for _, p := range g.AllPlayers() {
 						addLog(fmt.Sprintf("%s: %d life", p.Name(), p.Life()))
 					}
 					broadcast()
@@ -184,18 +184,17 @@ func RunMultiplayerGameLoop(g *mage.Game, channels [2]PlayerChannels) {
 			}
 		}
 
-		if len(g.ExtraTurns) > 0 {
-			extraPlayerID := g.ExtraTurns[0]
-			g.ExtraTurns = g.ExtraTurns[1:]
-			for i, p := range g.Players {
+		if g.HasExtraTurns() {
+			extraPlayerID, _ := g.PopExtraTurn()
+			for i, p := range g.AllPlayers() {
 				if p.PlayerID() == extraPlayerID {
-					g.ActivePlayer = i
+					g.SetActivePlayerIndex(i)
 					break
 				}
 			}
 		} else {
-			g.ActivePlayer = (g.ActivePlayer + 1) % len(g.Players)
+			g.SetActivePlayerIndex((g.ActivePlayerIndex() + 1) % g.PlayerCount())
 		}
-		g.Turn++
+		g.SetTurn(g.CurrentTurn() + 1)
 	}
 }

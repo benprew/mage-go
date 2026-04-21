@@ -16,10 +16,10 @@ func newPriorityTestGame() *Game {
 	pA := NewBasePlayer("A")
 	pB := NewBasePlayer("B")
 	g := NewGame(pA, pB)
-	g.OnPriority = autoPass()
+	g.onPriority = autoPass()
 
 	// Give each player a library so they don't deck out
-	for _, p := range g.Players {
+	for _, p := range g.players {
 		for i := 0; i < 60; i++ {
 			p.AddToLibrary(NewLand("Plains"))
 		}
@@ -32,8 +32,8 @@ func TestRunStepWithPriority_Untap(t *testing.T) {
 
 	// Put a tapped creature on the battlefield
 	card := NewCreature("Bear", "{1}{G}", 2, 2)
-	card.SetOwner(g.Players[0].PlayerID())
-	perm := g.PutOnBattlefield(card, g.Players[0].PlayerID())
+	card.SetOwner(g.players[0].PlayerID())
+	perm := g.PutOnBattlefield(card, g.players[0].PlayerID())
 	perm.Tapped = true
 	perm.RevokeBaseAttr(AttrSummonSick)
 
@@ -46,11 +46,11 @@ func TestRunStepWithPriority_Untap(t *testing.T) {
 
 func TestRunStepWithPriority_Draw(t *testing.T) {
 	g := newPriorityTestGame()
-	g.Turn = 2 // not turn 1 so draw happens
+	g.turn = 2 // not turn 1 so draw happens
 
-	handBefore := len(g.Players[g.ActivePlayer].Hand())
+	handBefore := len(g.players[g.activePlayer].Hand())
 	g.RunStepWithPriority(Draw)
-	handAfter := len(g.Players[g.ActivePlayer].Hand())
+	handAfter := len(g.players[g.activePlayer].Hand())
 
 	if handAfter != handBefore+1 {
 		t.Errorf("expected hand size %d after draw, got %d", handBefore+1, handAfter)
@@ -69,8 +69,8 @@ func TestRunStepWithPriority_FullTurn(t *testing.T) {
 	}
 
 	// Verify the turn completed normally
-	if g.Step != Cleanup {
-		t.Errorf("expected step Cleanup, got %v", g.Step)
+	if g.step != Cleanup {
+		t.Errorf("expected step Cleanup, got %v", g.step)
 	}
 }
 
@@ -82,7 +82,7 @@ func TestRunStepWithPriority_MatchesRunStep(t *testing.T) {
 		pA := NewBasePlayer("A")
 		pB := NewBasePlayer("B")
 		g := NewGame(pA, pB)
-		for _, p := range g.Players {
+		for _, p := range g.players {
 			for i := 0; i < 60; i++ {
 				p.AddToLibrary(NewLand("Plains"))
 			}
@@ -92,31 +92,31 @@ func TestRunStepWithPriority_MatchesRunStep(t *testing.T) {
 
 	g1 := makeGame()
 	g2 := makeGame()
-	g2.OnPriority = autoPass()
+	g2.onPriority = autoPass()
 
 	// Run 3 turns through each
 	for turn := 0; turn < 3; turn++ {
 		for _, step := range AllSteps() {
 			g1.RunStep(step)
 		}
-		g1.ActivePlayer = (g1.ActivePlayer + 1) % 2
-		g1.Turn++
+		g1.activePlayer = (g1.activePlayer + 1) % 2
+		g1.turn++
 
 		for _, step := range AllSteps() {
 			g2.RunStepWithPriority(step)
 		}
-		g2.ActivePlayer = (g2.ActivePlayer + 1) % 2
-		g2.Turn++
+		g2.activePlayer = (g2.activePlayer + 1) % 2
+		g2.turn++
 	}
 
-	for i := range g1.Players {
-		life1 := g1.Players[i].Life()
-		life2 := g2.Players[i].Life()
+	for i := range g1.players {
+		life1 := g1.players[i].Life()
+		life2 := g2.players[i].Life()
 		if life1 != life2 {
 			t.Errorf("player %d life mismatch: RunStep=%d, RunStepWithPriority=%d", i, life1, life2)
 		}
-		hand1 := len(g1.Players[i].Hand())
-		hand2 := len(g2.Players[i].Hand())
+		hand1 := len(g1.players[i].Hand())
+		hand2 := len(g2.players[i].Hand())
 		if hand1 != hand2 {
 			t.Errorf("player %d hand size mismatch: RunStep=%d, RunStepWithPriority=%d", i, hand1, hand2)
 		}
@@ -133,15 +133,15 @@ func TestRunPriorityRound_NilHandler(t *testing.T) {
 
 func TestRunPriorityRound_ActionExecution(t *testing.T) {
 	g := newPriorityTestGame()
-	g.Step = PrecombatMain // needed for land plays
+	g.step = PrecombatMain // needed for land plays
 
 	// Add a land to hand
 	land := NewLand("Forest")
-	land.SetOwner(g.Players[0].PlayerID())
-	g.Players[0].AddToHand(land)
+	land.SetOwner(g.players[0].PlayerID())
+	g.players[0].AddToHand(land)
 
 	actionCount := 0
-	g.OnPriority = func(g *Game, playerIdx int, mainPhase bool) PriorityAction {
+	g.onPriority = func(g *Game, playerIdx int, mainPhase bool) PriorityAction {
 		if playerIdx == 0 && actionCount == 0 {
 			actionCount++
 			return PriorityAction{
@@ -154,11 +154,11 @@ func TestRunPriorityRound_ActionExecution(t *testing.T) {
 
 	g.RunPriorityRound(true)
 
-	if g.LandsPlayedThisTurn != 1 {
-		t.Errorf("expected 1 land played, got %d", g.LandsPlayedThisTurn)
+	if g.landsPlayedThisTurn != 1 {
+		t.Errorf("expected 1 land played, got %d", g.landsPlayedThisTurn)
 	}
 	found := false
-	for _, p := range g.Battlefield {
+	for _, p := range g.battlefield {
 		if p.Name() == "Forest" {
 			found = true
 			break

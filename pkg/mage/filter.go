@@ -202,12 +202,12 @@ var IsUntapped = NewPermanentFilter("untapped", func(p *Permanent, _ *Game) bool
 
 // IsAttacking matches creatures currently declared as attackers.
 var IsAttacking = NewPermanentFilter("attacking", func(p *Permanent, g *Game) bool {
-	return g.Combat.IsAttacking(p.ID())
+	return g.combat.IsAttacking(p.ID())
 })
 
 // IsBlocking matches creatures currently declared as blockers.
 var IsBlocking = NewPermanentFilter("blocking", func(p *Permanent, g *Game) bool {
-	return g.Combat != nil && g.Combat.IsBlocking(p.ID())
+	return g.combat != nil && g.combat.IsBlocking(p.ID())
 })
 
 // HasKeywordFilter returns a filter matching permanents with the given keyword.
@@ -235,10 +235,10 @@ func IsID(id uuid.UUID) PermanentFilter {
 // given permanent in the current combat.
 func IsBandedWith(id uuid.UUID) PermanentFilter {
 	return NewPermanentFilter("", func(p *Permanent, g *Game) bool {
-		if g.Combat == nil {
+		if g.combat == nil {
 			return false
 		}
-		return g.Combat.IsBandedWith(p.ID(), id)
+		return g.combat.IsBandedWith(p.ID(), id)
 	})
 }
 

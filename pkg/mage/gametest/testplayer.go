@@ -113,7 +113,7 @@ func (tp *TestPlayer) SetBlockers(turn int, blockers map[string]string) {
 
 // DeclareAttackers returns the list of creature IDs to attack with.
 func (tp *TestPlayer) DeclareAttackers(g *mage.Game) []uuid.UUID {
-	creatures, ok := tp.attackActions[g.Turn]
+	creatures, ok := tp.attackActions[g.CurrentTurn()]
 	if !ok {
 		return nil
 	}
@@ -129,7 +129,7 @@ func (tp *TestPlayer) DeclareAttackers(g *mage.Game) []uuid.UUID {
 
 // DeclareBlockers returns blocker-attacker assignments for the current turn.
 func (tp *TestPlayer) DeclareBlockers(g *mage.Game) []mage.BlockAssignment {
-	pairs, ok := tp.blockActions[g.Turn]
+	pairs, ok := tp.blockActions[g.CurrentTurn()]
 	if !ok {
 		return nil
 	}
@@ -137,8 +137,8 @@ func (tp *TestPlayer) DeclareBlockers(g *mage.Game) []mage.BlockAssignment {
 	for _, bp := range pairs {
 		blocker := g.FindPermanentByName(bp.blocker, tp.PlayerID())
 		var attacker *mage.Permanent
-		for _, p := range g.Battlefield {
-			if p.Name() == bp.attacker && g.Combat.IsAttacking(p.ID()) {
+		for _, p := range g.AllBattlefield() {
+			if p.Name() == bp.attacker && g.IsAttackingInCombat(p.ID()) {
 				attacker = p
 				break
 			}

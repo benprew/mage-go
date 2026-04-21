@@ -69,7 +69,7 @@ func TargetCreatureYouControl(filters ...PermanentFilter) Target {
 func (t *CreatureTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
 	sourceID := sourceCard.ID()
-	for _, p := range g.Battlefield {
+	for _, p := range g.battlefield {
 		if !p.HasType(TypeCreature) {
 			continue
 		}
@@ -120,7 +120,7 @@ func TargetPlayer() Target {
 
 func (t *PlayerTarget) Possible(controller uuid.UUID, _ Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
-	for _, p := range g.Players {
+	for _, p := range g.players {
 		result = append(result, p.PlayerID())
 	}
 	return result
@@ -167,12 +167,12 @@ func TargetAnyTarget() Target {
 
 func (t *AnyTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
-	for _, p := range g.Battlefield {
+	for _, p := range g.battlefield {
 		if p.HasType(TypeCreature) && p.CanBeTargetedBy(sourceCard, controller, g) {
 			result = append(result, p.ID())
 		}
 	}
-	for _, p := range g.Players {
+	for _, p := range g.players {
 		result = append(result, p.PlayerID())
 	}
 	return result
@@ -203,7 +203,7 @@ func TargetControlledCreature() Target {
 
 func (t *ControlledCreatureTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
-	for _, p := range g.Battlefield {
+	for _, p := range g.battlefield {
 		if p.HasType(TypeCreature) && p.Controller == controller && p.CanBeTargetedBy(sourceCard, controller, g) {
 			result = append(result, p.ID())
 		}
@@ -244,7 +244,7 @@ func TargetPermanentOpponentControls(filters ...PermanentFilter) Target {
 
 func (t *PermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
-	for _, p := range g.Battlefield {
+	for _, p := range g.battlefield {
 		if t.opponentOnly && p.Controller == controller {
 			continue
 		}
@@ -288,7 +288,7 @@ func TargetArtifact() Target {
 }
 
 // TargetArtifactWithManaValueX creates a target that selects an artifact on the
-// battlefield whose mana value equals the current X value (g.CurrentX). Used by
+// battlefield whose mana value equals the current X value (g.currentX). Used by
 // spells like Detonate where the targeting restriction depends on X.
 func TargetArtifactWithManaValueX() Target {
 	return &artifactWithManaValueXTarget{
@@ -301,9 +301,9 @@ type artifactWithManaValueXTarget struct {
 }
 
 func (t *artifactWithManaValueXTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
-	x := g.CurrentX
+	x := g.currentX
 	var result []uuid.UUID
-	for _, p := range g.Battlefield {
+	for _, p := range g.battlefield {
 		if !p.HasType(TypeArtifact) {
 			continue
 		}
@@ -357,7 +357,7 @@ func TargetOwnSpellOnStack(filters ...CardFilter) Target {
 
 func (t *SpellOnStackTarget) Possible(controller uuid.UUID, _ Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
-	for _, obj := range g.Stack.Objects() {
+	for _, obj := range g.stack.Objects() {
 		if !obj.IsAbility && obj.Card != nil {
 			if t.controlledByYou && obj.Controller != controller {
 				continue
@@ -495,7 +495,7 @@ func TargetControlledPermanent() Target {
 
 func (t *ControlledPermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
-	for _, p := range g.Battlefield {
+	for _, p := range g.battlefield {
 		if p.Controller == controller && p.Card.Owner() == controller && p.CanBeTargetedBy(sourceCard, controller, g) {
 			result = append(result, p.ID())
 		}
@@ -522,7 +522,7 @@ func TargetOpponent() Target {
 
 func (t *OpponentTarget) Possible(controller uuid.UUID, _ Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
-	for _, p := range g.Players {
+	for _, p := range g.players {
 		if p.PlayerID() != controller {
 			result = append(result, p.PlayerID())
 		}
@@ -556,7 +556,7 @@ func (t *PowerLESourceCreatureTarget) Possible(controller uuid.UUID, sourceCard 
 	}
 	srcPower := src.CurrentPower(g)
 	var result []uuid.UUID
-	for _, p := range g.Battlefield {
+	for _, p := range g.battlefield {
 		if !p.HasType(TypeCreature) {
 			continue
 		}

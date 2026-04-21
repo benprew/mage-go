@@ -78,7 +78,7 @@ func TestHeuristicStrategy_OldPersonalityBackwardCompat(t *testing.T) {
 	strat := &HeuristicStrategy{Personality: AggroPersonality}
 	g, pa, _ := makeGame()
 	c := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
-	g.Battlefield = append(g.Battlefield, c)
+	g.AddToBattlefield(c)
 
 	// Aggro should attack with everything.
 	attackers := strat.Attackers(pa, g)
@@ -100,7 +100,7 @@ func TestHeuristicStrategy_OldControlHoldsInstants(t *testing.T) {
 	land.SetOwner(pa.PlayerID())
 	lp := mage.NewPermanent(land, pa.PlayerID())
 	lp.RevokeBaseAttr(core.AttrSummonSick)
-	g.Battlefield = append(g.Battlefield, lp)
+	g.AddToBattlefield(lp)
 
 	action := strat.PriorityAction(pa, g, 1, true)
 	// Control holds instants during main phase.
@@ -116,7 +116,7 @@ func TestWeightedPresets_AggroAttacksAll(t *testing.T) {
 	c1 := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
 	c2 := makePerm("Elf", "{G}", 1, 1, pa.PlayerID())
 	blk := makePerm("Giant", "{3}{G}", 5, 5, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, c1, c2, blk)
+	g.AddToBattlefield(c1, c2, blk)
 
 	strat := NewHeuristicStrategy(AggroWeighted)
 	attackers := strat.Attackers(pa, g)
@@ -129,7 +129,7 @@ func TestWeightedPresets_ControlOnlyProfitable(t *testing.T) {
 	g, pa, pb := makeGame()
 	smallAtk := makePerm("Elf", "{G}", 1, 1, pa.PlayerID())
 	blk := makePerm("Bear", "{1}{G}", 3, 3, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, smallAtk, blk)
+	g.AddToBattlefield(smallAtk, blk)
 
 	strat := NewHeuristicStrategy(ControlWeighted)
 	attackers := strat.Attackers(pa, g)
@@ -141,7 +141,7 @@ func TestWeightedPresets_ControlOnlyProfitable(t *testing.T) {
 func TestWeightedPresets_BurnTargetsFace(t *testing.T) {
 	g, pa, pb := makeGame()
 	oppCreature := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, oppCreature)
+	g.AddToBattlefield(oppCreature)
 
 	card := mage.NewInstant("Bolt", "{R}",
 		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
@@ -164,12 +164,12 @@ func TestWeightedPresets_ControlHoldsInstants(t *testing.T) {
 	card.SetOwner(pa.PlayerID())
 	pa.AddToHand(card)
 	oppCreature := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, oppCreature)
+	g.AddToBattlefield(oppCreature)
 	land := mage.NewLand("Mountain")
 	land.SetOwner(pa.PlayerID())
 	lp := mage.NewPermanent(land, pa.PlayerID())
 	lp.RevokeBaseAttr(core.AttrSummonSick)
-	g.Battlefield = append(g.Battlefield, lp)
+	g.AddToBattlefield(lp)
 
 	strat := NewHeuristicStrategy(ControlWeighted)
 	action := strat.PriorityAction(pa, g, 1, true)
@@ -182,8 +182,8 @@ func TestWeightedPresets_BurnNeverBlocks(t *testing.T) {
 	g, pa, pb := makeGame()
 	atk := makePerm("Giant", "{3}{R}", 5, 5, pa.PlayerID())
 	blk := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
-	g.Combat.AddAttacker(atk.ID(), pb.PlayerID())
+	g.AddToBattlefield(atk, blk)
+	g.GetCombat().AddAttacker(atk.ID(), pb.PlayerID())
 
 	strat := NewHeuristicStrategy(BurnWeighted)
 	blocks := strat.Blockers(pb, g)
@@ -196,8 +196,8 @@ func TestWeightedPresets_ControlBlocksEverything(t *testing.T) {
 	g, pa, pb := makeGame()
 	atk := makePerm("Elf", "{G}", 1, 1, pa.PlayerID())
 	blk := makePerm("Wall", "{W}", 0, 4, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
-	g.Combat.AddAttacker(atk.ID(), pb.PlayerID())
+	g.AddToBattlefield(atk, blk)
+	g.GetCombat().AddAttacker(atk.ID(), pb.PlayerID())
 
 	strat := NewHeuristicStrategy(ControlWeighted)
 	blocks := strat.Blockers(pb, g)
@@ -219,7 +219,7 @@ func TestIntermediateAggression_AttacksMore(t *testing.T) {
 	// profitableToAttack returns false (attacker dies, trade down).
 	atk := makePerm("Expensive", "{3}{G}", 2, 2, pa.PlayerID())
 	blk := makePerm("Cheap", "{1}{G}", 2, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
+	g.AddToBattlefield(atk, blk)
 
 	// At aggression 0.0 (pure control), shouldn't attack (trade down).
 	control := NewHeuristicStrategy(WeightedPersonality{Aggression: 0.0})
@@ -245,8 +245,8 @@ func TestIntermediateBlockThreshold(t *testing.T) {
 	// Power 2 attacker.
 	atk := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
 	blk := makePerm("Giant", "{3}{G}", 4, 4, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
-	g.Combat.AddAttacker(atk.ID(), pb.PlayerID())
+	g.AddToBattlefield(atk, blk)
+	g.GetCombat().AddAttacker(atk.ID(), pb.PlayerID())
 
 	// BlockThreshold 0.0 → block everything (minPow=0, 2 >= 0).
 	low := NewHeuristicStrategy(WeightedPersonality{BlockThreshold: 0.0})
@@ -270,7 +270,7 @@ func TestIntermediateBlockThreshold(t *testing.T) {
 func TestIntermediateTargetFace(t *testing.T) {
 	g, pa, pb := makeGame()
 	oppCreature := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, oppCreature)
+	g.AddToBattlefield(oppCreature)
 
 	card := mage.NewInstant("Bolt", "{R}",
 		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
@@ -332,7 +332,7 @@ func TestWeightedEvaluator_LifeAdvantage(t *testing.T) {
 func TestWeightedEvaluator_BoardWeight(t *testing.T) {
 	g, pa, _ := makeGame()
 	perm := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
-	g.Battlefield = append(g.Battlefield, perm)
+	g.AddToBattlefield(perm)
 
 	// evalCreature(2/2 vanilla) = 2*2 + 2*1 = 6
 	// Aggro: BoardWeight=3.0, boardScale=3.0/2.0=1.5, score contribution = 6*1.5 = 9
@@ -371,7 +371,7 @@ func TestWeightedEvaluator_TempoBonus(t *testing.T) {
 	land.SetOwner(pa.PlayerID())
 	lp := mage.NewPermanent(land, pa.PlayerID())
 	lp.RevokeBaseAttr(core.AttrSummonSick)
-	g.Battlefield = append(g.Battlefield, lp)
+	g.AddToBattlefield(lp)
 
 	// Tempo: ManaWeight=2.0, TempoWeight=3.0
 	// 1 land * 2.0 + 1 untapped * 3.0 = 5
@@ -397,7 +397,7 @@ func TestShouldAttack_MaxAggression(t *testing.T) {
 	g, pa, pb := makeGame()
 	atk := makePerm("Elf", "{G}", 1, 1, pa.PlayerID())
 	blk := makePerm("Giant", "{3}{G}", 5, 5, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
+	g.AddToBattlefield(atk, blk)
 	// At max aggression, attack even into a losing fight.
 	if !shouldAttack(atk, g, pb.PlayerID(), 1.0) {
 		t.Error("aggression 1.0 should always attack")
@@ -408,7 +408,7 @@ func TestShouldAttack_ZeroAggression(t *testing.T) {
 	g, pa, pb := makeGame()
 	atk := makePerm("Elf", "{G}", 1, 1, pa.PlayerID())
 	blk := makePerm("Giant", "{3}{G}", 5, 5, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
+	g.AddToBattlefield(atk, blk)
 	if shouldAttack(atk, g, pb.PlayerID(), 0.0) {
 		t.Error("aggression 0.0 should not attack into losing trade")
 	}
@@ -466,7 +466,7 @@ func TestAdaptiveStrategy_WeightedPresets(t *testing.T) {
 	pa.SetLife(5)
 	pb.SetLife(20)
 	oppCreature := makePerm("Giant", "{3}{R}", 5, 5, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, oppCreature)
+	g.AddToBattlefield(oppCreature)
 	got = adaptive.active(pa, g)
 	if got != adaptive.Defensive {
 		t.Error("adaptive should use Defensive when behind")
@@ -508,7 +508,7 @@ func TestNewWeightedEvaluator_LifeAdvantage(t *testing.T) {
 func TestNewWeightedEvaluator_AggroValuesCreatures(t *testing.T) {
 	g, pa, _ := makeGame()
 	perm := makePerm("Hill Giant", "{3}{R}", 3, 3, pa.PlayerID())
-	g.Battlefield = append(g.Battlefield, perm)
+	g.AddToBattlefield(perm)
 
 	aggro := eval.NewWeightedEvaluator(AggroWeighted.Weights)
 	control := eval.NewWeightedEvaluator(ControlWeighted.Weights)
@@ -546,7 +546,7 @@ func TestNewWeightedEvaluator_TempoValuesUntappedMana(t *testing.T) {
 		land.SetOwner(pa.PlayerID())
 		lp := mage.NewPermanent(land, pa.PlayerID())
 		lp.RevokeBaseAttr(core.AttrSummonSick)
-		g.Battlefield = append(g.Battlefield, lp)
+		g.AddToBattlefield(lp)
 	}
 
 	tempo := eval.NewWeightedEvaluator(TempoWeighted.Weights)
@@ -684,7 +684,7 @@ func TestDefaultEvaluator_LethalBonusIntegrated(t *testing.T) {
 	g, pa, pb := makeGame()
 	pb.SetLife(3)
 	perm := makePerm("Giant", "{3}{R}", 5, 5, pa.PlayerID())
-	g.Battlefield = append(g.Battlefield, perm)
+	g.AddToBattlefield(perm)
 
 	score := eval.DefaultEvaluator(g, pa.PlayerID())
 	if score < eval.LethalBonus {
@@ -700,16 +700,16 @@ func TestDefaultEvaluator_UntappedManaSourcesIncludeManaCreatures(t *testing.T) 
 	land.SetOwner(pa1.PlayerID())
 	lp := mage.NewPermanent(land, pa1.PlayerID())
 	lp.RevokeBaseAttr(core.AttrSummonSick)
-	g1.Battlefield = append(g1.Battlefield, lp)
+	g1.AddToBattlefield(lp)
 
 	land2 := mage.NewLand("Forest")
 	land2.SetOwner(pa2.PlayerID())
 	lp2 := mage.NewPermanent(land2, pa2.PlayerID())
 	lp2.RevokeBaseAttr(core.AttrSummonSick)
-	g2.Battlefield = append(g2.Battlefield, lp2)
+	g2.AddToBattlefield(lp2)
 
 	elf := makePerm("Llanowar Elves", "{G}", 1, 1, pa2.PlayerID(), mage.WithManaAbility(core.Green))
-	g2.Battlefield = append(g2.Battlefield, elf)
+	g2.AddToBattlefield(elf)
 
 	score1 := eval.DefaultEvaluator(g1, pa1.PlayerID())
 	score2 := eval.DefaultEvaluator(g2, pa2.PlayerID())

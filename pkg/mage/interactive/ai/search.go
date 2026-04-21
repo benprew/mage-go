@@ -543,10 +543,10 @@ func (s *SearchStrategy) minimax(g *mage.Game, depth, alpha, beta int,
 		}
 	}
 
-	moves := GeneratePriorityMoves(g, movePlayer, g.LandsPlayedThisTurn, g.Step.IsMainPhase())
+	moves := GeneratePriorityMoves(g, movePlayer, g.GetLandsPlayedThisTurn(), g.GetStep().IsMainPhase())
 
 	// Apply personality-driven move ordering adjustments within search.
-	s.adjustMoveHeuristics(moves, g, movePlayerID, g.Step.IsMainPhase())
+	s.adjustMoveHeuristics(moves, g, movePlayerID, g.GetStep().IsMainPhase())
 
 	// Apply history heuristic to move ordering (skip pass which is always last).
 	if s.history != nil && len(moves) > 2 {
@@ -581,7 +581,7 @@ func (s *SearchStrategy) minimax(g *mage.Game, depth, alpha, beta int,
 			if clone == nil {
 				continue
 			}
-			applyMoveToClone(clone, movePlayerID, m, g.LandsPlayedThisTurn)
+			applyMoveToClone(clone, movePlayerID, m, g.GetLandsPlayedThisTurn())
 
 			// Late move reduction within minimax.
 			searchDepth := depth - 1
@@ -649,7 +649,7 @@ func (s *SearchStrategy) minimax(g *mage.Game, depth, alpha, beta int,
 		if clone == nil {
 			continue
 		}
-		applyMoveToClone(clone, movePlayerID, m, g.LandsPlayedThisTurn)
+		applyMoveToClone(clone, movePlayerID, m, g.GetLandsPlayedThisTurn())
 
 		// Late move reduction.
 		searchDepth := depth - 1
@@ -736,7 +736,7 @@ func (s *SearchStrategy) minimaxCombat(g *mage.Game, depth, alpha, beta int,
 
 	// If there are attackers and no blockers assigned yet, generate blocker sets
 	// for the defending player.
-	if len(g.Combat.Groups) > 0 && !combatHasBlockers(g) {
+	if len(g.CombatGroups()) > 0 && !combatHasBlockers(g) {
 		oppID := uuid.Nil
 		if opp := g.GetOpponent(playerID); opp != nil {
 			oppID = opp.PlayerID()
@@ -806,7 +806,7 @@ func (s *SearchStrategy) minimaxCombat(g *mage.Game, depth, alpha, beta int,
 
 // combatHasBlockers returns true if any combat group has blockers assigned.
 func combatHasBlockers(g *mage.Game) bool {
-	for _, group := range g.Combat.Groups {
+	for _, group := range g.CombatGroups() {
 		if len(group.BlockerIDs) > 0 {
 			return true
 		}
@@ -822,11 +822,11 @@ func (s *SearchStrategy) eval(g *mage.Game, playerID uuid.UUID) int {
 // extended quiescence search rather than a static evaluation.
 func isTactical(g *mage.Game, playerID uuid.UUID) bool {
 	// Stack is non-empty: spells pending resolution.
-	if !g.Stack.IsEmpty() {
+	if !g.GetStack().IsEmpty() {
 		return true
 	}
 	// Combat in progress with attackers declared.
-	if len(g.Combat.Groups) > 0 {
+	if len(g.CombatGroups()) > 0 {
 		return true
 	}
 	// Opponent at lethal: extending may find the kill.
@@ -900,7 +900,7 @@ func (s *SearchStrategy) quiescence(g *mage.Game, alpha, beta int,
 		return standPat
 	}
 
-	moves := GeneratePriorityMoves(g, movePlayer, g.LandsPlayedThisTurn, g.Step.IsMainPhase())
+	moves := GeneratePriorityMoves(g, movePlayer, g.GetLandsPlayedThisTurn(), g.GetStep().IsMainPhase())
 
 	for i := range moves {
 		m := &moves[i]
@@ -916,7 +916,7 @@ func (s *SearchStrategy) quiescence(g *mage.Game, alpha, beta int,
 		if clone == nil {
 			continue
 		}
-		applyMoveToClone(clone, playerID, m, g.LandsPlayedThisTurn)
+		applyMoveToClone(clone, playerID, m, g.GetLandsPlayedThisTurn())
 
 		score := s.quiescence(clone, alpha, beta, playerID, nodes, deadline, qDepth-1)
 
@@ -939,7 +939,7 @@ func (s *SearchStrategy) quiescence(g *mage.Game, alpha, beta int,
 }
 
 func gameWinner(g *mage.Game, playerID uuid.UUID) int {
-	for _, p := range g.Players {
+	for _, p := range g.AllPlayers() {
 		if !p.IsAlive() {
 			if p.PlayerID() == playerID {
 				return -1
@@ -983,7 +983,7 @@ func applyMoveToClone(g *mage.Game, playerID uuid.UUID, m *Move, _ int) {
 // generateBlockerSets produces a set of candidate blocking assignments for search evaluation.
 func generateBlockerSets(g *mage.Game, playerID uuid.UUID, fallback *HeuristicStrategy) [][]mage.BlockAssignment {
 	var attackers []*mage.Permanent
-	for _, group := range g.Combat.Groups {
+	for _, group := range g.CombatGroups() {
 		if group.DefenderID != playerID {
 			continue
 		}
@@ -997,7 +997,7 @@ func generateBlockerSets(g *mage.Game, playerID uuid.UUID, fallback *HeuristicSt
 	}
 
 	var blockers []*mage.Permanent
-	for _, perm := range g.Battlefield {
+	for _, perm := range g.AllBattlefield() {
 		if perm.Controller == playerID && perm.CanDeclareAsBlocker(g) {
 			blockers = append(blockers, perm)
 		}

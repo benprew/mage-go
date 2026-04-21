@@ -36,6 +36,11 @@ type GameReader interface {
 	GetDamageSources(uuid.UUID) map[uuid.UUID]bool
 	GetBlockedThisTurn(uuid.UUID) []uuid.UUID
 	GetInstantsCastThisTurn(uuid.UUID) int
+	AllBattlefield() []*Permanent
+	GetResolvingTargets() []uuid.UUID
+	FindPermanentIncludingPhased(uuid.UUID) *Permanent
+	GetArtifactUntapMax() int
+	ActivePlayerIndex() int
 }
 
 // GameMutator is the mutation surface passed to Effect.Apply. It embeds GameReader
@@ -126,6 +131,30 @@ type GameMutator interface {
 
 	// Spell casting (e.g. Shahrazad)
 	CastSpellByName(playerID uuid.UUID, name string, targets []uuid.UUID, xValues ...int) error
+
+	// X value setter (for cost implementations that capture CMC)
+	SetXValue(int)
+
+	// EffectManager delegators for continuous effects
+	GrantAttr(uuid.UUID, Attr)
+	RevokeAttr(uuid.UUID, Attr)
+	PreventBlockPair(blockerID, attackerID uuid.UUID)
+	AddDamagePreventionRule(opts ...damagePreventionRuleOption)
+	AddCycleReplacement(ReplacementEffect)
+
+	// Game rules modifications
+	SetArtifactUntapMax(int)
+	AddSpellTypeCostReduction(CardType, int)
+	AddActivationCostReduction(uuid.UUID, int)
+	SetMaxHandSize(uuid.UUID, int)
+	AddExpansionCastBlock(string)
+	AddEntersTappedRule(func(*Permanent) bool)
+
+	// Exile management
+	RemoveExiledCardBySource(uuid.UUID) []ExiledCard
+
+	// Test support
+	SetCoinFlipResults([]bool)
 }
 
 // Compile-time checks that *Game satisfies both interfaces.
@@ -135,165 +164,165 @@ var _ GameMutator = (*Game)(nil)
 // --- GameReader proxy methods on *Game ---
 
 // AllPlayers returns all players in the game.
-func (g *Game) AllPlayers() []Player { return g.Players }
+func (g *Game) AllPlayers() []Player { return g.players }
 
 // XValue returns the current X value for the resolving spell/ability.
-func (g *Game) XValue() int { return g.CurrentX }
+func (g *Game) XValue() int { return g.currentX }
 
 // ModeValue returns the current chosen mode for the resolving modal spell.
-func (g *Game) ModeValue() int { return g.CurrentMode }
+func (g *Game) ModeValue() int { return g.currentMode }
 
 // EventAmount returns the amount from the triggering event (e.g. damage dealt).
-func (g *Game) EventAmount() int { return g.CurrentEventAmount }
+func (g *Game) EventAmount() int { return g.currentEventAmount }
 
 // GetResolvingCard returns the card currently being resolved from the stack.
-func (g *Game) GetResolvingCard() Card { return g.ResolvingCard }
+func (g *Game) GetResolvingCard() Card { return g.resolvingCard }
 
 // FindStackObject finds a stack object by its source card ID.
 func (g *Game) FindStackObject(id uuid.UUID) *StackObject {
-	return g.Stack.FindBySourceID(id)
+	return g.stack.FindBySourceID(id)
 }
 
 // CombatGroups returns the current combat groups (attacker/blocker pairings).
 // Returns nil if combat has not been initialized.
 func (g *Game) CombatGroups() []*CombatGroup {
-	if g.Combat == nil {
+	if g.combat == nil {
 		return nil
 	}
-	return g.Combat.Groups
+	return g.combat.Groups
 }
 
 // CombatGroupFor returns the combat group for the given attacker, or nil.
 func (g *Game) CombatGroupFor(attackerID uuid.UUID) *CombatGroup {
-	if g.Combat == nil {
+	if g.combat == nil {
 		return nil
 	}
-	return g.Combat.GroupFor(attackerID)
+	return g.combat.GroupFor(attackerID)
 }
 
 // IsAttackingInCombat reports whether the permanent is a declared attacker.
 func (g *Game) IsAttackingInCombat(permID uuid.UUID) bool {
-	if g.Combat == nil {
+	if g.combat == nil {
 		return false
 	}
-	return g.Combat.IsAttacking(permID)
+	return g.combat.IsAttacking(permID)
 }
 
 // IsBlockingInCombat reports whether the permanent is a declared blocker.
 func (g *Game) IsBlockingInCombat(permID uuid.UUID) bool {
-	if g.Combat == nil {
+	if g.combat == nil {
 		return false
 	}
-	return g.Combat.IsBlocking(permID)
+	return g.combat.IsBlocking(permID)
 }
 
 // DamageTakenByPlayer returns the total damage the given player has taken this turn.
 func (g *Game) DamageTakenByPlayer(playerID uuid.UUID) int {
-	return g.DamageTakenThisTurn[playerID]
+	return g.damageTakenThisTurn[playerID]
 }
 
 // HasAttackedThisTurn reports whether the permanent with the given ID attacked this turn.
 func (g *Game) HasAttackedThisTurn(permID uuid.UUID) bool {
-	return g.AttackedThisTurn[permID]
+	return g.attackedThisTurn[permID]
 }
 
 // CreatureDeaths returns the number of creatures that died this turn.
 func (g *Game) CreatureDeaths() int {
-	return g.CreatureDeathsThisTurn
+	return g.creatureDeathsThisTurn
 }
 
 func (g *Game) CurrentTurn() int {
-	return g.Turn
+	return g.turn
 }
 
 // GetDamageSources returns the set of permanent IDs that dealt damage to the
 // given permanent this turn. Returns nil if nothing dealt damage.
 func (g *Game) GetDamageSources(permID uuid.UUID) map[uuid.UUID]bool {
-	return g.DamageDealtBy[permID]
+	return g.damageDealtBy[permID]
 }
 
 // GetBlockedThisTurn returns the list of attacker IDs that the given blocker
 // blocked this turn. Returns nil if it didn't block anything.
 func (g *Game) GetBlockedThisTurn(blockerID uuid.UUID) []uuid.UUID {
-	return g.BlockedThisTurn[blockerID]
+	return g.blockedThisTurn[blockerID]
 }
 
 // GetInstantsCastThisTurn returns the number of instants the given player has cast this turn.
 func (g *Game) GetInstantsCastThisTurn(playerID uuid.UUID) int {
-	return g.InstantsCastThisTurn[playerID]
+	return g.instantsCastThisTurn[playerID]
 }
 
 // --- GameMutator proxy methods on *Game ---
 
 // GrantExtraTurn gives the specified player an extra turn after the current one.
 func (g *Game) GrantExtraTurn(playerID uuid.UUID) {
-	g.ExtraTurns = append(g.ExtraTurns, playerID)
+	g.extraTurns = append(g.extraTurns, playerID)
 }
 
 // RemoveFromCombat removes a permanent from combat by ID.
 func (g *Game) RemoveFromCombat(id uuid.UUID) {
-	g.Combat.RemoveFromCombat(id)
+	g.combat.RemoveFromCombat(id)
 }
 
 // PushStack pushes a stack object onto the stack.
 func (g *Game) PushStack(obj *StackObject) {
-	g.Stack.Push(obj)
+	g.stack.Push(obj)
 }
 
 // AddContinuousEffect registers a continuous effect with the effect manager.
 func (g *Game) AddContinuousEffect(e ContinuousEffect) {
-	g.Effects.Add(e)
+	g.effects.Add(e)
 }
 
 // ApplyContinuousEffects re-applies all continuous effects to current permanents.
 func (g *Game) ApplyContinuousEffects() {
-	g.Effects.Apply(g)
+	g.effects.Apply(g)
 }
 
 // SetPreventCombatDamage flags that all combat damage is prevented this turn.
 func (g *Game) SetPreventCombatDamage() {
-	g.Effects.AddReplacement(&fogReplacement{replacementBase: replacementBase{sourceID: uuid.Nil}})
+	g.effects.AddReplacement(&fogReplacement{replacementBase: replacementBase{sourceID: uuid.Nil}})
 }
 
 // AddRegenerationShield adds a regeneration shield to the specified permanent.
 func (g *Game) AddRegenerationShield(id uuid.UUID) {
 	// Find existing regeneration replacement for this permanent and increment
-	for _, r := range g.Effects.replacements {
+	for _, r := range g.effects.replacements {
 		if regen, ok := r.(*regenerationReplacement); ok && regen.permanentID == id {
 			regen.shields++
 			return
 		}
 	}
-	g.Effects.AddReplacement(&regenerationReplacement{permanentID: id, shields: 1})
+	g.effects.AddReplacement(&regenerationReplacement{permanentID: id, shields: 1})
 }
 
 // AddPreventionShield adds a damage prevention shield to the specified permanent or player.
 func (g *Game) AddPreventionShield(id uuid.UUID, amount int) {
 	// Find existing prevention shield for this target and add to it
-	for _, r := range g.Effects.replacements {
+	for _, r := range g.effects.replacements {
 		if ps, ok := r.(*preventionShieldReplacement); ok && ps.targetID == id {
 			ps.remaining += amount
 			return
 		}
 	}
-	g.Effects.AddReplacement(&preventionShieldReplacement{targetID: id, remaining: amount})
+	g.effects.AddReplacement(&preventionShieldReplacement{targetID: id, remaining: amount})
 }
 
 // AddForcefieldShield adds a Forcefield shield for the specified player.
 func (g *Game) AddForcefieldShield(id uuid.UUID) {
-	g.Effects.AddReplacement(&forcefieldReplacement{playerID: id})
+	g.effects.AddReplacement(&forcefieldReplacement{playerID: id})
 }
 
 // IsLichActive reports whether the Lich enchantment is active for the player.
 func (g *Game) IsLichActive(playerID uuid.UUID) bool {
-	return g.Effects.Rules.IsLichActive(g, playerID)
+	return g.effects.Rules.IsLichActive(g, playerID)
 }
 
 // SetLichActive marks the Lich enchantment as active for the player.
 func (g *Game) SetLichActive(playerID, sourceID uuid.UUID) {
-	g.Effects.Rules.SetLichActive(playerID, sourceID)
+	g.effects.Rules.SetLichActive(playerID, sourceID)
 	// Register the life-gain replacement (Lich: draw cards instead of gaining life)
-	g.Effects.AddReplacement(&lichLifeGainReplacement{
+	g.effects.AddReplacement(&lichLifeGainReplacement{
 		replacementBase: replacementBase{sourceID: sourceID},
 		playerID:        playerID,
 	})
@@ -302,32 +331,32 @@ func (g *Game) SetLichActive(playerID, sourceID uuid.UUID) {
 // ClearLich removes the Lich enchantment state for the player.
 func (g *Game) ClearLich(playerID uuid.UUID) {
 	// Find and remove the Lich's source ID before clearing
-	if sourceID, ok := g.Effects.Rules.lichActive[playerID]; ok {
-		g.Effects.RemoveReplacements(sourceID)
+	if sourceID, ok := g.effects.Rules.lichActive[playerID]; ok {
+		g.effects.RemoveReplacements(sourceID)
 	}
-	g.Effects.Rules.ClearLich(playerID)
+	g.effects.Rules.ClearLich(playerID)
 }
 
 // AddColorPrevention adds a color-based damage prevention rule for the player.
 func (g *Game) AddColorPrevention(playerID uuid.UUID, color Color) {
-	g.Effects.AddReplacement(&colorPreventionReplacement{playerID: playerID, color: color})
+	g.effects.AddReplacement(&colorPreventionReplacement{playerID: playerID, color: color})
 }
 
 // AddReverseDamageShield adds a reverse-damage shield for the player.
 // Prepended so it is checked before any prevention shields (which would
 // otherwise absorb the damage before the reverse replacement sees it).
 func (g *Game) AddReverseDamageShield(playerID uuid.UUID) {
-	g.Effects.PrependReplacement(&reverseDamageReplacement{playerID: playerID})
+	g.effects.PrependReplacement(&reverseDamageReplacement{playerID: playerID})
 }
 
 // SetChannelActive marks the Channel ability as active for the player.
 func (g *Game) SetChannelActive(playerID uuid.UUID) {
-	g.Effects.Rules.SetChannelActive(playerID)
+	g.effects.Rules.SetChannelActive(playerID)
 }
 
 // SetCreatureDamageRedirect redirects damage dealt to a creature to a player.
 func (g *Game) SetCreatureDamageRedirect(creatureID, playerID uuid.UUID) {
-	g.Effects.AddReplacement(&creatureDamageRedirectReplacement{
+	g.effects.AddReplacement(&creatureDamageRedirectReplacement{
 		creatureID:     creatureID,
 		targetPlayerID: playerID,
 	})
@@ -336,7 +365,7 @@ func (g *Game) SetCreatureDamageRedirect(creatureID, playerID uuid.UUID) {
 // SetAttackerDamageRedirect sets a redirect: damage from a specific attacking creature
 // to a player is dealt to the absorber permanent instead (Shimian Night Stalker).
 func (g *Game) SetAttackerDamageRedirect(attackerID, absorberID uuid.UUID) {
-	g.Effects.AddReplacement(&attackerDamageRedirectReplacement{
+	g.effects.AddReplacement(&attackerDamageRedirectReplacement{
 		attackerID:     attackerID,
 		absorberPermID: absorberID,
 	})
@@ -344,33 +373,33 @@ func (g *Game) SetAttackerDamageRedirect(attackerID, absorberID uuid.UUID) {
 
 // SetSkipNextDraw sets a flag to skip the next draw step for the player.
 func (g *Game) SetSkipNextDraw(playerID uuid.UUID) {
-	g.Effects.AddReplacement(&skipDrawReplacement{playerID: playerID})
+	g.effects.AddReplacement(&skipDrawReplacement{playerID: playerID})
 }
 
 // SetSanctuaryActive marks the Ivory Tower sanctuary effect as active.
 func (g *Game) SetSanctuaryActive(playerID uuid.UUID) {
-	g.Effects.Rules.SetSanctuaryActive(playerID)
+	g.effects.Rules.SetSanctuaryActive(playerID)
 }
 
 // SetMinimumLife marks a player as having minimum-life protection (Ali from Cairo).
 func (g *Game) SetMinimumLife(playerID uuid.UUID) {
-	g.Effects.AddCycleReplacement(&minimumLifeReplacement{playerID: playerID})
+	g.effects.AddCycleReplacement(&minimumLifeReplacement{playerID: playerID})
 }
 
 // AddSourcePrevention adds a one-shot damage prevention for the next damage
 // from a specific source to the specified player (Circle of Protection: Artifacts).
 func (g *Game) AddSourcePrevention(playerID, sourceID uuid.UUID) {
-	g.Effects.AddReplacement(&sourcePreventionReplacement{playerID: playerID, dmgSource: sourceID})
+	g.effects.AddReplacement(&sourcePreventionReplacement{playerID: playerID, dmgSource: sourceID})
 }
 
 // AddTypePrevention adds a card-type damage prevention rule for the player.
 func (g *Game) AddTypePrevention(playerID uuid.UUID, ct CardType) {
-	g.Effects.AddReplacement(&typePreventionReplacement{playerID: playerID, cardType: ct})
+	g.effects.AddReplacement(&typePreventionReplacement{playerID: playerID, cardType: ct})
 }
 
 // PreventAllDamageFrom prevents all damage from the specified source until end of turn.
 func (g *Game) PreventAllDamageFrom(sourceID uuid.UUID) {
-	g.Effects.AddReplacement(&damagePreventionRuleReplacement{
+	g.effects.AddReplacement(&damagePreventionRuleReplacement{
 		from: NewPermanentFilter("specific source", func(p *Permanent, _ *Game) bool {
 			return p.ID() == sourceID
 		}),
@@ -379,7 +408,7 @@ func (g *Game) PreventAllDamageFrom(sourceID uuid.UUID) {
 
 // SetArtifactDamageRedirect sets a creature that absorbs artifact damage dealt to a player.
 func (g *Game) SetArtifactDamageRedirect(controllerID, permID uuid.UUID) {
-	g.Effects.AddCycleReplacement(&artifactDamageRedirectReplacement{
+	g.effects.AddCycleReplacement(&artifactDamageRedirectReplacement{
 		controllerID:  controllerID,
 		redirectPermID: permID,
 	})
@@ -388,57 +417,218 @@ func (g *Game) SetArtifactDamageRedirect(controllerID, permID uuid.UUID) {
 // SetDamageReflection sets a one-shot damage reflection for a player (Eye for an Eye).
 // This stays as inline logic (post-damage effect, not a replacement).
 func (g *Game) SetDamageReflection(playerID, eyeSourceID, chosenSourceID uuid.UUID) {
-	g.Effects.Damage.SetDamageReflection(playerID, eyeSourceID, chosenSourceID)
+	g.effects.Damage.SetDamageReflection(playerID, eyeSourceID, chosenSourceID)
 }
 
 // SetDrawReplacement stores a pending draw replacement for a player (Aladdin's Lamp).
 func (g *Game) SetDrawReplacement(playerID uuid.UUID, count int) {
-	g.Effects.AddReplacement(&drawReplacementEffect{playerID: playerID, count: count})
+	g.effects.AddReplacement(&drawReplacementEffect{playerID: playerID, count: count})
 }
 
 // AddReplacementEffect adds a replacement effect to the effect manager.
 func (g *Game) AddReplacementEffect(r ReplacementEffect) {
-	g.Effects.AddReplacement(r)
+	g.effects.AddReplacement(r)
 }
 
 // SetArtifactManaOnly marks a player as having artifact-only mana restriction active.
 func (g *Game) SetArtifactManaOnly(playerID uuid.UUID) {
-	if g.ArtifactManaOnly == nil {
-		g.ArtifactManaOnly = make(map[uuid.UUID]bool)
+	if g.artifactManaOnly == nil {
+		g.artifactManaOnly = make(map[uuid.UUID]bool)
 	}
-	g.ArtifactManaOnly[playerID] = true
+	g.artifactManaOnly[playerID] = true
 }
 
 // SetCreatureManaOnly marks a player as having creature-only mana restriction active.
 func (g *Game) SetCreatureManaOnly(playerID uuid.UUID) {
-	if g.CreatureManaOnly == nil {
-		g.CreatureManaOnly = make(map[uuid.UUID]bool)
+	if g.creatureManaOnly == nil {
+		g.creatureManaOnly = make(map[uuid.UUID]bool)
 	}
-	g.CreatureManaOnly[playerID] = true
+	g.creatureManaOnly[playerID] = true
 }
 
 // GetArtifactDamageTaken returns the artifact damage the player has taken this turn.
 func (g *Game) GetArtifactDamageTaken(playerID uuid.UUID) int {
-	return g.ArtifactDamageTakenThisTurn[playerID]
+	return g.artifactDamageTakenThisTurn[playerID]
 }
 
 // CopyEffectCurrentName returns the name of the creature currently being copied
 // by the Doppelganger copy effect for the specified permanent.
 func (g *Game) CopyEffectCurrentName(permID uuid.UUID) string {
-	return g.Effects.CopyEffectCurrentName(permID)
+	return g.effects.CopyEffectCurrentName(permID)
 }
 
 // UpdateCopyEffect updates the Doppelganger copy effect to copy a new target.
 func (g *Game) UpdateCopyEffect(permID uuid.UUID, target *Permanent) {
-	g.Effects.UpdateCopyEffect(permID, target)
+	g.effects.UpdateCopyEffect(permID, target)
 }
+
+// --- New Phase 1 proxy methods ---
+
+// AllBattlefield returns all permanents on the battlefield.
+func (g *Game) AllBattlefield() []*Permanent { return g.battlefield }
+
+// GetResolvingTargets returns the targets of the spell currently being resolved.
+func (g *Game) GetResolvingTargets() []uuid.UUID { return g.resolvingTargets }
+
+// GetArtifactUntapMax returns the maximum number of artifacts that may untap per turn.
+func (g *Game) GetArtifactUntapMax() int { return g.effects.Rules.ArtifactUntapMax }
+
+// ActivePlayerIndex returns the index of the active player in the Players slice.
+func (g *Game) ActivePlayerIndex() int { return g.activePlayer }
+
+// SetXValue sets the X value for the currently resolving spell.
+func (g *Game) SetXValue(x int) { g.currentX = x }
+
+// GrantAttr grants an attribute to a permanent via the effect manager.
+func (g *Game) GrantAttr(permID uuid.UUID, a Attr) { g.effects.GrantAttr(permID, a) }
+
+// RevokeAttr revokes an attribute from a permanent via the effect manager.
+func (g *Game) RevokeAttr(permID uuid.UUID, a Attr) { g.effects.RevokeAttr(permID, a) }
+
+// PreventBlockPair prevents a specific blocker from blocking a specific attacker.
+func (g *Game) PreventBlockPair(blockerID, attackerID uuid.UUID) {
+	g.effects.PreventBlockPair(blockerID, attackerID)
+}
+
+// AddDamagePreventionRule adds a damage prevention rule to the damage system.
+func (g *Game) AddDamagePreventionRule(opts ...damagePreventionRuleOption) {
+	g.effects.Damage.AddDamagePreventionRule(opts...)
+}
+
+// AddCycleReplacement adds a replacement effect that lasts for the current effect cycle.
+func (g *Game) AddCycleReplacement(r ReplacementEffect) {
+	g.effects.AddCycleReplacement(r)
+}
+
+// SetArtifactUntapMax sets the maximum number of artifacts that may untap per turn.
+func (g *Game) SetArtifactUntapMax(max int) { g.effects.Rules.ArtifactUntapMax = max }
+
+// AddSpellTypeCostReduction adds a generic cost reduction for spells of the given type.
+func (g *Game) AddSpellTypeCostReduction(ct CardType, amount int) {
+	g.effects.Rules.SpellTypeCostReductions[ct] += amount
+}
+
+// AddActivationCostReduction sets a generic mana reduction for a permanent's activated abilities.
+func (g *Game) AddActivationCostReduction(permID uuid.UUID, amount int) {
+	g.effects.Rules.ActivationCostReductions[permID] = amount
+}
+
+// SetMaxHandSize sets the maximum hand size for a player.
+func (g *Game) SetMaxHandSize(playerID uuid.UUID, size int) {
+	g.effects.Rules.SetMaxHandSize(playerID, size)
+}
+
+// AddExpansionCastBlock blocks spells from the given set code from being cast.
+func (g *Game) AddExpansionCastBlock(setCode string) {
+	g.effects.Rules.AddExpansionCastBlock(setCode)
+}
+
+// AddEntersTappedRule registers a rule that causes matching permanents to enter tapped.
+func (g *Game) AddEntersTappedRule(f func(*Permanent) bool) {
+	g.effects.Rules.AddEntersTappedRule(f)
+}
+
+// SetCoinFlipResults sets deterministic coin flip results for testing.
+func (g *Game) SetCoinFlipResults(results []bool) { g.coinFlipResults = results }
+
+// SetOnPriority sets the priority handler callback.
+func (g *Game) SetOnPriority(h PriorityHandler) { g.onPriority = h }
+
+// SetAfterPriorityAction sets the after-priority-action callback.
+func (g *Game) SetAfterPriorityAction(f func(*Game, int, PriorityAction)) {
+	g.afterPriorityAction = f
+}
+
+// SetBeforeStackResolve sets the before-stack-resolve callback.
+func (g *Game) SetBeforeStackResolve(f func(*Game)) { g.beforeStackResolve = f }
+
+// SetStep sets the current phase step.
+func (g *Game) SetStep(s PhaseStep) { g.step = s }
+
+// GetStep returns the current phase step.
+func (g *Game) GetStep() PhaseStep { return g.step }
+
+// SetTurn sets the current turn number.
+func (g *Game) SetTurn(n int) { g.turn = n }
+
+// SetActivePlayerIndex sets which player is the active player by index.
+func (g *Game) SetActivePlayerIndex(idx int) { g.activePlayer = idx }
+
+// PopExtraTurn removes and returns the next extra turn player ID, if any.
+func (g *Game) PopExtraTurn() (uuid.UUID, bool) {
+	if len(g.extraTurns) == 0 {
+		return uuid.UUID{}, false
+	}
+	id := g.extraTurns[0]
+	g.extraTurns = g.extraTurns[1:]
+	return id, true
+}
+
+// HasExtraTurns reports whether there are pending extra turns.
+func (g *Game) HasExtraTurns() bool { return len(g.extraTurns) > 0 }
+
+// GetLandsPlayedThisTurn returns the number of lands played this turn.
+func (g *Game) GetLandsPlayedThisTurn() int { return g.landsPlayedThisTurn }
+
+// ApplyEffects applies all continuous effects to current permanents.
+func (g *Game) ApplyEffects() { g.effects.Apply(g) }
+
+// StackPeek returns the top stack object without removing it, or nil.
+func (g *Game) StackPeek() *StackObject { return g.stack.Peek() }
+
+// StackSize returns the number of objects on the stack.
+func (g *Game) StackSize() int { return g.stack.Size() }
+
+// StackObjects returns all objects on the stack.
+func (g *Game) StackObjects() []*StackObject { return g.stack.Objects() }
+
+// IsBandedWith reports whether two permanents are in the same attacking band.
+func (g *Game) IsBandedWith(a, b uuid.UUID) bool {
+	if g.combat == nil {
+		return false
+	}
+	return g.combat.IsBandedWith(a, b)
+}
+
+// GetExile returns all exiled cards.
+func (g *Game) GetExile() []ExiledCard { return g.exile }
+
+// PlayerCount returns the number of players in the game.
+func (g *Game) PlayerCount() int { return len(g.players) }
+
+// PlayerAt returns the player at the given index.
+func (g *Game) PlayerAt(idx int) Player { return g.players[idx] }
+
+// GetCombat returns the current combat state, or nil.
+func (g *Game) GetCombat() *Combat { return g.combat }
+
+// GetEffects returns the effect manager.
+func (g *Game) GetEffects() *EffectManager { return g.effects }
+
+// GetStack returns the stack.
+func (g *Game) GetStack() *Stack { return g.stack }
+
+// AddToBattlefield appends permanents directly to the battlefield without ETB processing.
+// Used by tests that construct permanents manually.
+func (g *Game) AddToBattlefield(perms ...*Permanent) {
+	g.battlefield = append(g.battlefield, perms...)
+}
+
+// SetLandsPlayedThisTurn sets the number of lands played this turn.
+func (g *Game) SetLandsPlayedThisTurn(n int) { g.landsPlayedThisTurn = n }
+
+// TruncateBattlefield truncates the battlefield to the given length (for undo snapshots).
+func (g *Game) TruncateBattlefield(n int) { g.battlefield = g.battlefield[:n] }
+
+// SetPlayerAt replaces the player at the given index.
+func (g *Game) SetPlayerAt(idx int, p Player) { g.players[idx] = p }
 
 // ExecuteAttackers declares the given creatures as attackers for AI search clones.
 // It mirrors doDeclareAttackers but accepts explicit attacker IDs instead of
 // querying the player.
 func (g *Game) ExecuteAttackers(playerID uuid.UUID, attackerIDs []uuid.UUID) {
 	var defender Player
-	for _, p := range g.Players {
+	for _, p := range g.players {
 		if p.PlayerID() != playerID {
 			defender = p
 			break
@@ -455,8 +645,8 @@ func (g *Game) ExecuteAttackers(playerID uuid.UUID, attackerIDs []uuid.UUID) {
 		if !atk.HasKeyword(Vigilance) {
 			g.TapPermanent(atk)
 		}
-		g.Combat.AddAttacker(id, defender.PlayerID())
-		g.AttackedThisTurn[id] = true
+		g.combat.AddAttacker(id, defender.PlayerID())
+		g.attackedThisTurn[id] = true
 		g.FireEvent(GameEvent{
 			Type:     EvtDeclaredAttacker,
 			SourceID: id,
@@ -491,8 +681,8 @@ func (g *Game) ExecuteBlockers(assignments []BlockAssignment) {
 			continue
 		}
 		blockerCount[ba.BlockerID]++
-		g.Combat.AddBlocker(ba.BlockerID, ba.AttackerID)
-		g.BlockedThisTurn[ba.BlockerID] = append(g.BlockedThisTurn[ba.BlockerID], ba.AttackerID)
+		g.combat.AddBlocker(ba.BlockerID, ba.AttackerID)
+		g.blockedThisTurn[ba.BlockerID] = append(g.blockedThisTurn[ba.BlockerID], ba.AttackerID)
 		g.FireEvent(GameEvent{
 			Type:     EvtDeclaredBlocker,
 			SourceID: ba.BlockerID,
@@ -504,10 +694,10 @@ func (g *Game) ExecuteBlockers(assignments []BlockAssignment) {
 // ExecuteCombatDamage resolves first-strike and normal combat damage for AI search clones.
 func (g *Game) ExecuteCombatDamage() {
 	g.resolvingCombatDamage = true
-	if g.Combat.HasFirstStrikers(g) {
-		g.Combat.ResolveDamage(g, true)
+	if g.combat.HasFirstStrikers(g) {
+		g.combat.ResolveDamage(g, true)
 		g.CheckStateBasedActions()
 	}
-	g.Combat.ResolveDamage(g, false)
+	g.combat.ResolveDamage(g, false)
 	g.resolvingCombatDamage = false
 }

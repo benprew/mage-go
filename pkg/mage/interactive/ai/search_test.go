@@ -37,7 +37,7 @@ func addLands(g *mage.Game, p *mage.BasePlayer, name string, count int) {
 		land.SetOwner(p.PlayerID())
 		perm := mage.NewPermanent(land, p.PlayerID())
 		perm.RevokeBaseAttr(core.AttrSummonSick)
-		g.Battlefield = append(g.Battlefield, perm)
+		g.AddToBattlefield(perm)
 	}
 }
 
@@ -51,7 +51,7 @@ func TestSearch_FindLethal(t *testing.T) {
 
 	// Give opponent a creature (heuristic would target this)
 	oppCreature := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, oppCreature)
+	g.AddToBattlefield(oppCreature)
 
 	// Give player A a Lightning Bolt and a Mountain to cast it
 	bolt := mage.NewInstant("Lightning Bolt", "{R}",
@@ -63,7 +63,7 @@ func TestSearch_FindLethal(t *testing.T) {
 	addLands(g, pa, "Mountain", 1)
 
 	// Set up the game state for main phase
-	g.Step = core.PrecombatMain
+	g.SetStep(core.PrecombatMain)
 
 	strat := makeSearchAI(DefaultSearchConfig())
 	action := strat.PriorityAction(pa, g, 0, true)
@@ -100,7 +100,7 @@ func TestSearch_PreferHigherValueCreature(t *testing.T) {
 	// Provide enough mana for either
 	addLands(g, pa, "Forest", 5)
 
-	g.Step = core.PrecombatMain
+	g.SetStep(core.PrecombatMain)
 
 	strat := makeSearchAI(DefaultSearchConfig())
 	action := strat.PriorityAction(pa, g, 0, true)
@@ -126,7 +126,7 @@ func TestSearch_FallbackOnNodeBudget(t *testing.T) {
 	pa.AddToHand(creature)
 
 	addLands(g, pa, "Forest", 2)
-	g.Step = core.PrecombatMain
+	g.SetStep(core.PrecombatMain)
 
 	// Use MaxNodes=1 so search exhausts budget immediately
 	config := SearchConfig{
@@ -155,7 +155,7 @@ func TestSearch_NodeBudgetRespected(t *testing.T) {
 		pa.AddToHand(c)
 	}
 	addLands(g, pa, "Forest", 4)
-	g.Step = core.PrecombatMain
+	g.SetStep(core.PrecombatMain)
 
 	config := SearchConfig{
 		MaxDepth:  4,
@@ -173,7 +173,7 @@ func TestSearch_NodeBudgetRespected(t *testing.T) {
 
 func TestGeneratePriorityMoves_IncludesLandPlay(t *testing.T) {
 	g, pa, _ := makeGame()
-	g.Step = core.PrecombatMain
+	g.SetStep(core.PrecombatMain)
 	land := mage.NewLand("Forest")
 	land.SetOwner(pa.PlayerID())
 	pa.AddToHand(land)
@@ -192,11 +192,11 @@ func TestGeneratePriorityMoves_IncludesLandPlay(t *testing.T) {
 
 func TestGeneratePriorityMoves_NoLandIfAlreadyPlayed(t *testing.T) {
 	g, pa, _ := makeGame()
-	g.Step = core.PrecombatMain
+	g.SetStep(core.PrecombatMain)
 	land := mage.NewLand("Forest")
 	land.SetOwner(pa.PlayerID())
 	pa.AddToHand(land)
-	g.LandsPlayedThisTurn = 1
+	g.SetLandsPlayedThisTurn(1)
 
 	moves := GeneratePriorityMoves(g, pa, 1, true)
 	for _, m := range moves {
@@ -229,7 +229,7 @@ func TestGeneratePriorityMoves_SortedByHeuristic(t *testing.T) {
 	pa.AddToHand(creature)
 
 	addLands(g, pa, "Forest", 2)
-	g.Step = core.PrecombatMain
+	g.SetStep(core.PrecombatMain)
 
 	moves := GeneratePriorityMoves(g, pa, 0, true)
 	// Verify moves are sorted by heuristic descending (pass should be last)
@@ -255,7 +255,7 @@ func TestGenerateAttackerSets_Empty(t *testing.T) {
 func TestGenerateAttackerSets_SingleCreature(t *testing.T) {
 	g, pa, _ := makeGame()
 	c := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
-	g.Battlefield = append(g.Battlefield, c)
+	g.AddToBattlefield(c)
 
 	sets := GenerateAttackerSets(g, pa.PlayerID())
 	// Should have: all (1 creature) and none
@@ -268,7 +268,7 @@ func TestGenerateAttackerSets_MultipleCreatures(t *testing.T) {
 	g, pa, _ := makeGame()
 	c1 := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
 	c2 := makePerm("Elf", "{G}", 1, 1, pa.PlayerID())
-	g.Battlefield = append(g.Battlefield, c1, c2)
+	g.AddToBattlefield(c1, c2)
 
 	sets := GenerateAttackerSets(g, pa.PlayerID())
 	// Should have: all, none, each solo (2) = 4 minimum
@@ -281,7 +281,7 @@ func TestGenerateAttackerSets_IncludesEvasive(t *testing.T) {
 	g, pa, _ := makeGame()
 	flyer := makePerm("Bird", "{1}{U}", 2, 2, pa.PlayerID(), mage.WithKeyword(core.Flying))
 	ground := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
-	g.Battlefield = append(g.Battlefield, flyer, ground)
+	g.AddToBattlefield(flyer, ground)
 
 	sets := GenerateAttackerSets(g, pa.PlayerID())
 	// Should include an evasive-only set (just the flyer)
@@ -336,13 +336,13 @@ func TestCloneGameForSearch_PreservesBattlefield(t *testing.T) {
 	g, pa, _ := makeGame()
 	c := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
 	c.Tapped = true
-	g.Battlefield = append(g.Battlefield, c)
+	g.AddToBattlefield(c)
 
 	clone := g.Clone()
-	if len(clone.Battlefield) != 1 {
-		t.Fatalf("clone battlefield should have 1 permanent, got %d", len(clone.Battlefield))
+	if len(clone.AllBattlefield()) != 1 {
+		t.Fatalf("clone battlefield should have 1 permanent, got %d", len(clone.AllBattlefield()))
 	}
-	cp := clone.Battlefield[0]
+	cp := clone.AllBattlefield()[0]
 	if cp.Name() != "Bear" {
 		t.Errorf("clone permanent name = %q, want Bear", cp.Name())
 	}
@@ -368,8 +368,8 @@ func TestCloneGameForSearch_PreservesHand(t *testing.T) {
 
 func TestApplyMoveToClone_LandPlay(t *testing.T) {
 	g, pa, _ := makeGame()
-	g.Step = core.PrecombatMain
-	g.ActivePlayer = 0
+	g.SetStep(core.PrecombatMain)
+	g.SetActivePlayerIndex(0)
 	land := mage.NewLand("Forest", mage.WithManaAbility(core.Green))
 	land.SetOwner(pa.PlayerID())
 	pa.AddToHand(land)
@@ -386,12 +386,12 @@ func TestApplyMoveToClone_LandPlay(t *testing.T) {
 	if len(clonePA.Hand()) != 0 {
 		t.Errorf("hand should be empty after land play, got %d", len(clonePA.Hand()))
 	}
-	if clone.LandsPlayedThisTurn != 1 {
-		t.Errorf("lands played should be 1, got %d", clone.LandsPlayedThisTurn)
+	if clone.GetLandsPlayedThisTurn() != 1 {
+		t.Errorf("lands played should be 1, got %d", clone.GetLandsPlayedThisTurn())
 	}
 	// Check that a land appeared on the battlefield
 	foundLand := false
-	for _, perm := range clone.Battlefield {
+	for _, perm := range clone.AllBattlefield() {
 		if perm.HasType(core.TypeLand) {
 			foundLand = true
 		}
@@ -403,8 +403,8 @@ func TestApplyMoveToClone_LandPlay(t *testing.T) {
 
 func TestApplyMoveToClone_CreatureCast(t *testing.T) {
 	g, pa, _ := makeGame()
-	g.Step = core.PrecombatMain
-	g.ActivePlayer = 0
+	g.SetStep(core.PrecombatMain)
+	g.SetActivePlayerIndex(0)
 	creature := mage.NewCreature("Bear", "{1}{G}", 2, 2)
 	creature.SetOwner(pa.PlayerID())
 	pa.AddToHand(creature)
@@ -425,7 +425,7 @@ func TestApplyMoveToClone_CreatureCast(t *testing.T) {
 	}
 	// Check creature on battlefield
 	foundCreature := false
-	for _, perm := range clone.Battlefield {
+	for _, perm := range clone.AllBattlefield() {
 		if perm.Name() == "Bear" && perm.HasType(core.TypeCreature) {
 			foundCreature = true
 		}
@@ -437,8 +437,8 @@ func TestApplyMoveToClone_CreatureCast(t *testing.T) {
 
 func TestApplyMoveToClone_DamageSpell(t *testing.T) {
 	g, pa, pb := makeGame()
-	g.Step = core.PrecombatMain
-	g.ActivePlayer = 0
+	g.SetStep(core.PrecombatMain)
+	g.SetActivePlayerIndex(0)
 	bolt := mage.NewInstant("Lightning Bolt", "{R}",
 		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 	)
@@ -469,7 +469,7 @@ func TestSearch_Attackers_PrefersUnblockedDamage(t *testing.T) {
 	pb.SetLife(5) // low life — attacking is very valuable
 
 	c := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
-	g.Battlefield = append(g.Battlefield, c)
+	g.AddToBattlefield(c)
 
 	strat := makeSearchAI(DefaultSearchConfig())
 	attackers := strat.Attackers(pa, g)
@@ -486,8 +486,8 @@ func TestSearch_Blockers_FallsBackToHeuristic(t *testing.T) {
 	g, pa, pb := makeGame()
 	atk := makePerm("Giant", "{3}{R}", 3, 3, pa.PlayerID())
 	blk := makePerm("Wall", "{1}{W}", 0, 4, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
-	g.Combat.AddAttacker(atk.ID(), pb.PlayerID())
+	g.AddToBattlefield(atk, blk)
+	g.GetCombat().AddAttacker(atk.ID(), pb.PlayerID())
 
 	strat := makeSearchAI(DefaultSearchConfig())
 	blocks := strat.Blockers(pb, g)
@@ -506,8 +506,8 @@ func TestSearch_Blockers_PreventsLethal(t *testing.T) {
 	pb.SetLife(3)
 	atk := makePerm("Giant", "{2}{R}", 3, 3, pa.PlayerID())
 	blk := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
-	g.Combat.AddAttacker(atk.ID(), pb.PlayerID())
+	g.AddToBattlefield(atk, blk)
+	g.GetCombat().AddAttacker(atk.ID(), pb.PlayerID())
 
 	strat := makeSearchAI(DefaultSearchConfig())
 	blocks := strat.Blockers(pb, g)
@@ -523,8 +523,8 @@ func TestSearch_Blockers_GangBlocksBigThreat(t *testing.T) {
 	atk := makePerm("Wurm", "{3}{G}{G}", 5, 5, pa.PlayerID())
 	b1 := makePerm("Knight1", "{2}{W}", 3, 3, pb.PlayerID())
 	b2 := makePerm("Knight2", "{2}{W}", 3, 3, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, b1, b2)
-	g.Combat.AddAttacker(atk.ID(), pb.PlayerID())
+	g.AddToBattlefield(atk, b1, b2)
+	g.GetCombat().AddAttacker(atk.ID(), pb.PlayerID())
 
 	strat := makeSearchAI(DefaultSearchConfig())
 	blocks := strat.Blockers(pb, g)
@@ -545,8 +545,8 @@ func TestGenerateBlockerSets_IncludesNoBlocks(t *testing.T) {
 	g, pa, pb := makeGame()
 	atk := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
 	blk := makePerm("Elf", "{G}", 1, 1, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
-	g.Combat.AddAttacker(atk.ID(), pb.PlayerID())
+	g.AddToBattlefield(atk, blk)
+	g.GetCombat().AddAttacker(atk.ID(), pb.PlayerID())
 
 	fallback := &HeuristicStrategy{Personality: MidrangePersonality, Weights: MidrangeWeighted, weightsInit: true}
 	sets := generateBlockerSets(g, pb.PlayerID(), fallback)
@@ -600,7 +600,7 @@ func TestSearch_MultiSpell_BoltAndCreature(t *testing.T) {
 
 	addLands(g, pa, "Mountain", 2)
 	addLands(g, pa, "Forest", 1)
-	g.Step = core.PrecombatMain
+	g.SetStep(core.PrecombatMain)
 
 	// Increase search budget for multi-spell exploration
 	config := SearchConfig{MaxDepth: 4, MaxNodes: 10000, TimeLimit: 2 * time.Second}
@@ -623,7 +623,7 @@ func TestSearch_MultiSpell_NodeBudgetRespected(t *testing.T) {
 		pa.AddToHand(c)
 	}
 	addLands(g, pa, "Forest", 8)
-	g.Step = core.PrecombatMain
+	g.SetStep(core.PrecombatMain)
 
 	config := SearchConfig{MaxDepth: 4, MaxNodes: 100, TimeLimit: 5 * time.Second}
 	strat := makeSearchAI(config)
@@ -636,7 +636,7 @@ func TestSearch_MultiSpell_NodeBudgetRespected(t *testing.T) {
 func TestSearch_MultiSpell_PassEndsChain(t *testing.T) {
 	// Verify that pass moves don't cause infinite loops in multi-spell search.
 	g, pa, _ := makeGame()
-	g.Step = core.PrecombatMain
+	g.SetStep(core.PrecombatMain)
 
 	config := SearchConfig{MaxDepth: 3, MaxNodes: 500, TimeLimit: 1 * time.Second}
 	strat := makeSearchAI(config)
@@ -662,7 +662,7 @@ func TestXSpell_GeneratesMultipleVariants(t *testing.T) {
 
 	// 5 mountains: available mana = 5, fixed cost = 1 (the {R}), max X = 4
 	addLands(g, pa, "Mountain", 5)
-	g.Step = core.PrecombatMain
+	g.SetStep(core.PrecombatMain)
 
 	moves := GeneratePriorityMoves(g, pa, 0, true)
 
@@ -698,7 +698,7 @@ func TestXSpell_SearchPicksExactLethal(t *testing.T) {
 	pa.AddToHand(fireball)
 
 	addLands(g, pa, "Mountain", 5)
-	g.Step = core.PrecombatMain
+	g.SetStep(core.PrecombatMain)
 
 	strat := makeSearchAI(DefaultSearchConfig())
 	action := strat.PriorityAction(pa, g, 0, true)
@@ -722,8 +722,8 @@ func TestXSpell_SearchPicksExactLethal(t *testing.T) {
 func TestXSpell_ApplySpellCast_UsesXValue(t *testing.T) {
 	// Verify that applyMoveToClone uses m.XValue for X-cost damage.
 	g, pa, pb := makeGame()
-	g.Step = core.PrecombatMain
-	g.ActivePlayer = 0
+	g.SetStep(core.PrecombatMain)
+	g.SetActivePlayerIndex(0)
 	fireball := mage.NewSorcery("Fireball", "{X}{R}",
 		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.XValue())),
 	)
@@ -759,7 +759,7 @@ func TestXSpell_NoVariantsIfCantAfford(t *testing.T) {
 	// Only 1 mountain: can cast for X=0 but expandXSpellMoves requires maxX >= 1.
 	// Actually with 1 mountain, fixedCost=1 (the {R}), maxX = 1-1 = 0, no variants.
 	addLands(g, pa, "Mountain", 1)
-	g.Step = core.PrecombatMain
+	g.SetStep(core.PrecombatMain)
 
 	moves := GeneratePriorityMoves(g, pa, 0, true)
 	for _, m := range moves {
@@ -788,11 +788,11 @@ func TestSearch_HistoryHeuristicPersists(t *testing.T) {
 	pa.AddToHand(creature)
 
 	opp := makePerm("Ogre", "{2}{R}", 3, 3, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, opp)
+	g.AddToBattlefield(opp)
 
 	addLands(g, pa, "Mountain", 2)
 	addLands(g, pa, "Forest", 2)
-	g.Step = core.PrecombatMain
+	g.SetStep(core.PrecombatMain)
 
 	strat := makeSearchAI(SearchConfig{MaxDepth: 4, MaxNodes: 5000, TimeLimit: 1 * time.Second})
 	_ = strat.PriorityAction(pa, g, 0, true)
@@ -810,7 +810,7 @@ func TestGenerateAttackerSets_IncludesAllButOne(t *testing.T) {
 	c1 := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
 	c2 := makePerm("Elf", "{G}", 1, 1, pa.PlayerID())
 	c3 := makePerm("Knight", "{1}{W}", 2, 2, pa.PlayerID())
-	g.Battlefield = append(g.Battlefield, c1, c2, c3)
+	g.AddToBattlefield(c1, c2, c3)
 
 	sets := GenerateAttackerSets(g, pa.PlayerID())
 
@@ -838,7 +838,7 @@ func BenchmarkSearch_TypicalBoard_Depth2(b *testing.B) {
 		c1 := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
 		c2 := makePerm("Elf", "{G}", 1, 1, pa.PlayerID())
 		opp := makePerm("Ogre", "{2}{R}", 3, 3, pb.PlayerID())
-		g.Battlefield = append(g.Battlefield, c1, c2, opp)
+		g.AddToBattlefield(c1, c2, opp)
 		addLands(g, pa, "Forest", 4)
 		addLands(g, pb, "Mountain", 3)
 
@@ -848,7 +848,7 @@ func BenchmarkSearch_TypicalBoard_Depth2(b *testing.B) {
 		bolt.SetOwner(pa.PlayerID())
 		pa.AddToHand(bolt)
 
-		g.Step = core.PrecombatMain
+		g.SetStep(core.PrecombatMain)
 
 		config := SearchConfig{MaxDepth: 2, MaxNodes: 5000, TimeLimit: 500 * time.Millisecond}
 		strat := makeSearchAI(config)
@@ -865,7 +865,7 @@ func BenchmarkSearch_TypicalBoard_Depth5(b *testing.B) {
 		c1 := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
 		c2 := makePerm("Elf", "{G}", 1, 1, pa.PlayerID())
 		opp := makePerm("Ogre", "{2}{R}", 3, 3, pb.PlayerID())
-		g.Battlefield = append(g.Battlefield, c1, c2, opp)
+		g.AddToBattlefield(c1, c2, opp)
 		addLands(g, pa, "Forest", 4)
 		addLands(g, pb, "Mountain", 3)
 
@@ -875,7 +875,7 @@ func BenchmarkSearch_TypicalBoard_Depth5(b *testing.B) {
 		bolt.SetOwner(pa.PlayerID())
 		pa.AddToHand(bolt)
 
-		g.Step = core.PrecombatMain
+		g.SetStep(core.PrecombatMain)
 
 		config := SearchConfig{MaxDepth: 5, MaxNodes: 10000, TimeLimit: 500 * time.Millisecond}
 		strat := makeSearchAI(config)
@@ -894,9 +894,9 @@ func BenchmarkSearch_Attackers(b *testing.B) {
 		c3 := makePerm("Flyer", "{1}{U}", 2, 2, pa.PlayerID(), mage.WithKeyword(core.Flying))
 		opp1 := makePerm("Wall", "{1}{W}", 0, 4, pb.PlayerID())
 		opp2 := makePerm("Guard", "{2}{W}", 2, 3, pb.PlayerID())
-		g.Battlefield = append(g.Battlefield, c1, c2, c3, opp1, opp2)
+		g.AddToBattlefield(c1, c2, c3, opp1, opp2)
 
-		g.Step = core.DeclareAttackers
+		g.SetStep(core.DeclareAttackers)
 
 		config := SearchConfig{MaxDepth: 6, MaxNodes: 10000, TimeLimit: 1 * time.Second}
 		strat := makeSearchAI(config)
@@ -914,9 +914,9 @@ func BenchmarkSearch_Blockers(b *testing.B) {
 		atk2 := makePerm("Giant", "{3}{R}", 4, 4, pa.PlayerID())
 		blk1 := makePerm("Elf", "{G}", 1, 1, pb.PlayerID())
 		blk2 := makePerm("Guard", "{2}{W}", 2, 3, pb.PlayerID())
-		g.Battlefield = append(g.Battlefield, atk1, atk2, blk1, blk2)
-		g.Combat.AddAttacker(atk1.ID(), pb.PlayerID())
-		g.Combat.AddAttacker(atk2.ID(), pb.PlayerID())
+		g.AddToBattlefield(atk1, atk2, blk1, blk2)
+		g.GetCombat().AddAttacker(atk1.ID(), pb.PlayerID())
+		g.GetCombat().AddAttacker(atk2.ID(), pb.PlayerID())
 
 		config := SearchConfig{MaxDepth: 6, MaxNodes: 10000, TimeLimit: 1 * time.Second}
 		strat := makeSearchAI(config)
@@ -939,7 +939,7 @@ func BenchmarkSearch_LargeBoard_Depth6(b *testing.B) {
 		o2 := makePerm("Wall", "{1}{W}", 0, 4, pb.PlayerID(), mage.WithKeyword(core.Defender))
 		o3 := makePerm("Guard", "{2}{W}", 2, 3, pb.PlayerID())
 		o4 := makePerm("Bat", "{1}{B}", 1, 1, pb.PlayerID(), mage.WithKeyword(core.Flying))
-		g.Battlefield = append(g.Battlefield, c1, c2, c3, c4, o1, o2, o3, o4)
+		g.AddToBattlefield(c1, c2, c3, c4, o1, o2, o3, o4)
 		addLands(g, pa, "Forest", 4)
 		addLands(g, pa, "Mountain", 2)
 		addLands(g, pb, "Mountain", 3)
@@ -955,7 +955,7 @@ func BenchmarkSearch_LargeBoard_Depth6(b *testing.B) {
 		creature.SetOwner(pa.PlayerID())
 		pa.AddToHand(creature)
 
-		g.Step = core.PrecombatMain
+		g.SetStep(core.PrecombatMain)
 
 		config := SearchConfig{MaxDepth: 6, MaxNodes: 15000, TimeLimit: 1 * time.Second}
 		strat := makeSearchAI(config)
@@ -978,9 +978,9 @@ func BenchmarkSearch_Attackers_LargeBoard(b *testing.B) {
 		opp1 := makePerm("Wall", "{1}{W}", 0, 4, pb.PlayerID())
 		opp2 := makePerm("Guard", "{2}{W}", 2, 3, pb.PlayerID())
 		opp3 := makePerm("Soldier", "{W}", 1, 1, pb.PlayerID())
-		g.Battlefield = append(g.Battlefield, c1, c2, c3, c4, c5, opp1, opp2, opp3)
+		g.AddToBattlefield(c1, c2, c3, c4, c5, opp1, opp2, opp3)
 
-		g.Step = core.DeclareAttackers
+		g.SetStep(core.DeclareAttackers)
 
 		config := SearchConfig{MaxDepth: 6, MaxNodes: 15000, TimeLimit: 1 * time.Second}
 		strat := makeSearchAI(config)
@@ -997,7 +997,7 @@ func BenchmarkSearch_TypicalBoard_Depth3(b *testing.B) {
 		c1 := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
 		c2 := makePerm("Elf", "{G}", 1, 1, pa.PlayerID())
 		opp := makePerm("Ogre", "{2}{R}", 3, 3, pb.PlayerID())
-		g.Battlefield = append(g.Battlefield, c1, c2, opp)
+		g.AddToBattlefield(c1, c2, opp)
 		addLands(g, pa, "Forest", 4)
 		addLands(g, pb, "Mountain", 3)
 
@@ -1007,7 +1007,7 @@ func BenchmarkSearch_TypicalBoard_Depth3(b *testing.B) {
 		bolt.SetOwner(pa.PlayerID())
 		pa.AddToHand(bolt)
 
-		g.Step = core.PrecombatMain
+		g.SetStep(core.PrecombatMain)
 
 		config := SearchConfig{MaxDepth: 3, MaxNodes: 5000, TimeLimit: 500 * time.Millisecond}
 		strat := makeSearchAI(config)

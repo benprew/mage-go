@@ -282,7 +282,7 @@ func (tg *TestGame) AssertBanded(p1 PlayerRef, name1 string, p2 PlayerRef, name2
 		tg.t.Errorf("AssertBanded: %s not found for %v", name2, p2)
 		return
 	}
-	got := tg.Combat.IsBandedWith(perm1.ID(), perm2.ID())
+	got := tg.IsBandedWith(perm1.ID(), perm2.ID())
 	if got != want {
 		tg.t.Errorf("AssertBanded(%s, %s): got %v, want %v", name1, name2, got, want)
 	}
@@ -298,7 +298,7 @@ func (tg *TestGame) StopAt(turn int, step core.PhaseStep) {
 // during normal test execution. Tests that explicitly test deck-out should
 // not call this (or should empty the library after setup).
 func (tg *TestGame) padLibraries() {
-	for _, p := range tg.Players {
+	for _, p := range tg.AllPlayers() {
 		if len(p.Library()) == 0 {
 			for i := 0; i < 60; i++ {
 				p.AddToLibrary(mage.NewLand("Plains"))
@@ -313,20 +313,20 @@ func (tg *TestGame) Execute() {
 
 	tg.padLibraries()
 	tg.autoAddMana()
-	tg.OnPriority = autoPassHandler()
+	tg.SetOnPriority(autoPassHandler())
 
 	maxTurns := tg.stopAt.turn + 5
-	for tg.Turn <= maxTurns {
+	for tg.CurrentTurn() <= maxTurns {
 		for _, step := range core.AllSteps() {
-			if tg.Turn == tg.stopAt.turn && step == tg.stopAt.step {
-				tg.Step = step
-				tg.Effects.Apply(tg.Game)
+			if tg.CurrentTurn() == tg.stopAt.turn && step == tg.stopAt.step {
+				tg.SetStep(step)
+				tg.ApplyEffects()
 				return
 			}
 
-			tg.Step = step
-			tg.executeCounterActions(tg.Turn, step)
-			tg.executeOrderedActions(tg.Turn, step)
+			tg.SetStep(step)
+			tg.executeCounterActions(tg.CurrentTurn(), step)
+			tg.executeOrderedActions(tg.CurrentTurn(), step)
 
 			if step == core.PrecombatMain {
 				tg.autoPlayLands()
@@ -334,19 +334,17 @@ func (tg *TestGame) Execute() {
 
 			tg.RunStepWithPriority(step)
 		}
-		if len(tg.ExtraTurns) > 0 {
-			extraPlayerID := tg.ExtraTurns[0]
-			tg.ExtraTurns = tg.ExtraTurns[1:]
-			for i, p := range tg.Players {
+		if extraPlayerID, ok := tg.PopExtraTurn(); ok {
+			for i, p := range tg.AllPlayers() {
 				if p.PlayerID() == extraPlayerID {
-					tg.ActivePlayer = i
+					tg.SetActivePlayerIndex(i)
 					break
 				}
 			}
 		} else {
-			tg.ActivePlayer = (tg.ActivePlayer + 1) % len(tg.Players)
+			tg.SetActivePlayerIndex((tg.ActivePlayerIndex() + 1) % tg.PlayerCount())
 		}
-		tg.Turn++
+		tg.SetTurn(tg.CurrentTurn() + 1)
 	}
 }
 
@@ -359,7 +357,7 @@ func autoPassHandler() mage.PriorityHandler {
 
 func (tg *TestGame) autoPlayLands() {
 	active := tg.ActivePlayerObj()
-	for tg.LandsPlayedThisTurn < tg.MaxLandPlays() {
+	for tg.GetLandsPlayedThisTurn() < tg.MaxLandPlays() {
 
 		var landID uuid.UUID
 		for _, c := range active.Hand() {
@@ -572,7 +570,7 @@ func (tg *TestGame) ensureManaForActivate(aa activateAction) {
 func (tg *TestGame) findActivatableAbilityByName(playerID uuid.UUID, permName string, targets []uuid.UUID) (*mage.Permanent, int, error) {
 	perm := tg.FindPermanentByName(permName, playerID)
 	if perm == nil {
-		for _, p := range tg.Battlefield {
+		for _, p := range tg.AllBattlefield() {
 			if p.Name() == permName {
 				perm = p
 				break
@@ -656,7 +654,7 @@ func (tg *TestGame) executeSingleActivate(aa activateAction) {
 	playerID := tg.getPlayerID(aa.player)
 	targets := tg.resolveTargets(aa.targets, playerID)
 	tg.ensureManaForActivate(aa)
-	tg.CurrentX = aa.xValue
+	tg.SetXValue(aa.xValue)
 	perm, idx, err := tg.findActivatableAbilityByName(playerID, aa.permName, targets)
 	if err != nil {
 		tg.t.Logf("ActivateAbility %s failed: %v", aa.permName, err)
@@ -676,8 +674,8 @@ func (tg *TestGame) executeResponses(responses []responseAction) {
 		var targets []uuid.UUID
 		if len(r.targets) > 0 {
 			targets = tg.resolveTargets(r.targets, respPlayerID)
-		} else if tg.Stack.Peek() != nil {
-			targets = []uuid.UUID{tg.Game.Stack.Peek().SourceID}
+		} else if tg.StackPeek() != nil {
+			targets = []uuid.UUID{tg.StackPeek().SourceID}
 		}
 
 		if r.perm != "" {
@@ -717,7 +715,7 @@ func (tg *TestGame) resolveTargets(names []string, controllerID uuid.UUID) []uui
 	var targets []uuid.UUID
 	for _, name := range names {
 		found := false
-		for _, p := range tg.Battlefield {
+		for _, p := range tg.AllBattlefield() {
 			if p.PhasedOut {
 				continue
 			}
@@ -730,7 +728,7 @@ func (tg *TestGame) resolveTargets(names []string, controllerID uuid.UUID) []uui
 		if found {
 			continue
 		}
-		for _, p := range tg.Players {
+		for _, p := range tg.AllPlayers() {
 			if p.Name() == name {
 				targets = append(targets, p.PlayerID())
 				found = true
@@ -740,7 +738,7 @@ func (tg *TestGame) resolveTargets(names []string, controllerID uuid.UUID) []uui
 		if found {
 			continue
 		}
-		for _, pl := range tg.Players {
+		for _, pl := range tg.AllPlayers() {
 			if pl.PlayerID() == controllerID {
 				for _, c := range pl.Graveyard() {
 					if c.Name() == name {
@@ -757,7 +755,7 @@ func (tg *TestGame) resolveTargets(names []string, controllerID uuid.UUID) []uui
 		if found {
 			continue
 		}
-		for _, pl := range tg.Players {
+		for _, pl := range tg.AllPlayers() {
 			for _, c := range pl.Hand() {
 				if c.Name() == name {
 					targets = append(targets, c.ID())
@@ -800,13 +798,13 @@ func (tg *TestGame) PlayToEnd(maxTurns ...int) {
 
 	tg.padLibraries()
 	tg.autoAddMana()
-	tg.OnPriority = autoPassHandler()
+	tg.SetOnPriority(autoPassHandler())
 
-	for tg.Turn <= limit {
+	for tg.CurrentTurn() <= limit {
 		for _, step := range core.AllSteps() {
-			tg.Step = step
-			tg.executeCounterActions(tg.Turn, step)
-			tg.executeOrderedActions(tg.Turn, step)
+			tg.SetStep(step)
+			tg.executeCounterActions(tg.CurrentTurn(), step)
+			tg.executeOrderedActions(tg.CurrentTurn(), step)
 
 			if step == core.PrecombatMain {
 				tg.autoPlayLands()
@@ -818,19 +816,17 @@ func (tg *TestGame) PlayToEnd(maxTurns ...int) {
 				return
 			}
 		}
-		if len(tg.ExtraTurns) > 0 {
-			extraPlayerID := tg.ExtraTurns[0]
-			tg.ExtraTurns = tg.ExtraTurns[1:]
-			for i, p := range tg.Players {
+		if extraPlayerID, ok := tg.PopExtraTurn(); ok {
+			for i, p := range tg.AllPlayers() {
 				if p.PlayerID() == extraPlayerID {
-					tg.ActivePlayer = i
+					tg.SetActivePlayerIndex(i)
 					break
 				}
 			}
 		} else {
-			tg.ActivePlayer = (tg.ActivePlayer + 1) % len(tg.Players)
+			tg.SetActivePlayerIndex((tg.ActivePlayerIndex() + 1) % tg.PlayerCount())
 		}
-		tg.Turn++
+		tg.SetTurn(tg.CurrentTurn() + 1)
 	}
 	tg.t.Fatalf("PlayToEnd: game did not end within %d turns", limit)
 }
@@ -859,7 +855,7 @@ func (tg *TestGame) AssertGameOver(want bool) {
 // AssertTotalTurns checks the current turn number.
 func (tg *TestGame) AssertTotalTurns(want int) {
 	tg.t.Helper()
-	got := tg.Turn
+	got := tg.CurrentTurn()
 	if got != want {
 		tg.t.Errorf("AssertTotalTurns: got %d, want %d", got, want)
 	}
@@ -888,7 +884,7 @@ func (tg *TestGame) AssertPermanentCount(p PlayerRef, name string, want int) {
 	tg.t.Helper()
 	playerID := tg.getPlayerID(p)
 	got := 0
-	for _, perm := range tg.Battlefield {
+	for _, perm := range tg.AllBattlefield() {
 		if perm.PhasedOut {
 			continue
 		}
@@ -997,7 +993,7 @@ func (tg *TestGame) AssertAttachedTo(p PlayerRef, attachment, host string) {
 	playerID := tg.getPlayerID(p)
 	att := tg.FindPermanentByName(attachment, playerID)
 	if att == nil {
-		for _, perm := range tg.Battlefield {
+		for _, perm := range tg.AllBattlefield() {
 			if perm.Name() == attachment {
 				att = perm
 				break
@@ -1022,7 +1018,7 @@ func (tg *TestGame) AssertAttachedTo(p PlayerRef, attachment, host string) {
 func (tg *TestGame) AssertExileCount(name string, want int) {
 	tg.t.Helper()
 	got := 0
-	for _, ec := range tg.Exile {
+	for _, ec := range tg.GetExile() {
 		if ec.Card.Name() == name {
 			got++
 		}

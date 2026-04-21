@@ -12,67 +12,67 @@ import (
 // Players are wrapped in SearchPlayer for non-interactive choice defaults.
 func (g *Game) Clone() *Game {
 	c := &Game{
-		Turn:                  g.Turn,
-		Step:                  g.Step,
-		ActivePlayer:          g.ActivePlayer,
-		CurrentX:              g.CurrentX,
-		CurrentMode:           g.CurrentMode,
-		CurrentEventAmount:    g.CurrentEventAmount,
-		ResolvingCard:         g.ResolvingCard, // Card ref shared
-		LandsPlayedThisTurn:   g.LandsPlayedThisTurn,
-		CreatureDeathsThisTurn: g.CreatureDeathsThisTurn,
+		turn:                  g.turn,
+		step:                  g.step,
+		activePlayer:          g.activePlayer,
+		currentX:              g.currentX,
+		currentMode:           g.currentMode,
+		currentEventAmount:    g.currentEventAmount,
+		resolvingCard:         g.resolvingCard, // Card ref shared
+		landsPlayedThisTurn:   g.landsPlayedThisTurn,
+		creatureDeathsThisTurn: g.creatureDeathsThisTurn,
 		stopped:               g.stopped,
 		resolvingCombatDamage: g.resolvingCombatDamage,
 	}
 
 	// Deep copy players, wrapping in SearchPlayer for non-interactive choices.
-	c.Players = make([]Player, len(g.Players))
-	for i, p := range g.Players {
-		c.Players[i] = clonePlayer(p)
+	c.players = make([]Player, len(g.players))
+	for i, p := range g.players {
+		c.players[i] = clonePlayer(p)
 	}
 
 	// Deep copy battlefield. Permanents are slab-allocated in one make() so
 	// the N individual heap allocations (and their GC mark cost) collapse into
 	// one contiguous allocation. Pointers into the slab are stable for its
-	// lifetime; new permanents added later to c.Battlefield escape the slab
+	// lifetime; new permanents added later to c.battlefield escape the slab
 	// and allocate individually, which is fine.
-	c.Battlefield = make([]*Permanent, len(g.Battlefield))
-	if len(g.Battlefield) > 0 {
-		slab := make([]Permanent, len(g.Battlefield))
-		for i, p := range g.Battlefield {
+	c.battlefield = make([]*Permanent, len(g.battlefield))
+	if len(g.battlefield) > 0 {
+		slab := make([]Permanent, len(g.battlefield))
+		for i, p := range g.battlefield {
 			clonePermanentInto(&slab[i], p)
-			c.Battlefield[i] = &slab[i]
+			c.battlefield[i] = &slab[i]
 		}
 	}
 
 	// Deep copy exile zone.
-	c.Exile = make([]ExiledCard, len(g.Exile))
-	for i, ec := range g.Exile {
-		c.Exile[i] = ExiledCard{
+	c.exile = make([]ExiledCard, len(g.exile))
+	for i, ec := range g.exile {
+		c.exile[i] = ExiledCard{
 			Card:     ec.Card, // shared Card ref
 			ExiledBy: ec.ExiledBy,
 		}
 	}
 
 	// Deep copy stack.
-	c.Stack = cloneStack(g.Stack)
+	c.stack = cloneStack(g.stack)
 
 	// Deep copy combat.
-	c.Combat = cloneCombat(g.Combat)
+	c.combat = cloneCombat(g.combat)
 
 	// Deep copy effect manager.
-	c.Effects = cloneEffectManager(g.Effects)
+	c.effects = cloneEffectManager(g.effects)
 
 	// Deep copy extra turns.
-	if len(g.ExtraTurns) > 0 {
-		c.ExtraTurns = make([]uuid.UUID, len(g.ExtraTurns))
-		copy(c.ExtraTurns, g.ExtraTurns)
+	if len(g.extraTurns) > 0 {
+		c.extraTurns = make([]uuid.UUID, len(g.extraTurns))
+		copy(c.extraTurns, g.extraTurns)
 	}
 
 	// Deep copy resolving targets.
-	if len(g.ResolvingTargets) > 0 {
-		c.ResolvingTargets = make([]uuid.UUID, len(g.ResolvingTargets))
-		copy(c.ResolvingTargets, g.ResolvingTargets)
+	if len(g.resolvingTargets) > 0 {
+		c.resolvingTargets = make([]uuid.UUID, len(g.resolvingTargets))
+		copy(c.resolvingTargets, g.resolvingTargets)
 	}
 
 	// Deep copy pending triggers (share ability/event refs, they're read-only during search).
@@ -98,20 +98,20 @@ func (g *Game) Clone() *Game {
 	}
 
 	// Deep copy coin flip results.
-	if len(g.CoinFlipResults) > 0 {
-		c.CoinFlipResults = make([]bool, len(g.CoinFlipResults))
-		copy(c.CoinFlipResults, g.CoinFlipResults)
+	if len(g.coinFlipResults) > 0 {
+		c.coinFlipResults = make([]bool, len(g.coinFlipResults))
+		copy(c.coinFlipResults, g.coinFlipResults)
 	}
 
 	// Deep copy UUID-keyed maps.
-	c.DamageDealtBy = cloneNestedUUIDMap(g.DamageDealtBy)
-	c.DamageTakenThisTurn = cloneUUIDIntMap(g.DamageTakenThisTurn)
-	c.ArtifactDamageTakenThisTurn = cloneUUIDIntMap(g.ArtifactDamageTakenThisTurn)
-	c.ArtifactManaOnly = cloneUUIDBoolMap(g.ArtifactManaOnly)
-	c.CreatureManaOnly = cloneUUIDBoolMap(g.CreatureManaOnly)
-	c.AttackedThisTurn = cloneUUIDBoolMap(g.AttackedThisTurn)
-	c.InstantsCastThisTurn = cloneUUIDIntMap(g.InstantsCastThisTurn)
-	c.BlockedThisTurn = cloneBlockedThisTurn(g.BlockedThisTurn)
+	c.damageDealtBy = cloneNestedUUIDMap(g.damageDealtBy)
+	c.damageTakenThisTurn = cloneUUIDIntMap(g.damageTakenThisTurn)
+	c.artifactDamageTakenThisTurn = cloneUUIDIntMap(g.artifactDamageTakenThisTurn)
+	c.artifactManaOnly = cloneUUIDBoolMap(g.artifactManaOnly)
+	c.creatureManaOnly = cloneUUIDBoolMap(g.creatureManaOnly)
+	c.attackedThisTurn = cloneUUIDBoolMap(g.attackedThisTurn)
+	c.instantsCastThisTurn = cloneUUIDIntMap(g.instantsCastThisTurn)
+	c.blockedThisTurn = cloneBlockedThisTurn(g.blockedThisTurn)
 
 	// Interactive callbacks are nil'd — search clones don't call back to UI.
 	// OnPriority, AfterPriorityAction, BeforeStackResolve all remain nil.

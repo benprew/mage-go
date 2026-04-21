@@ -263,7 +263,7 @@ func registerCreatures() {
 					}
 					target.Controller = src.Controller
 					// Keep Old Man from untapping while controlling
-					g.Effects.GrantAttr(sourceID, AttrDoesNotUntap)
+					g.GrantAttr(sourceID, AttrDoesNotUntap)
 					return nil
 				})),
 		)
@@ -479,13 +479,13 @@ func registerCreatures() {
 					// Uses Owner (not Controller) because a stealing effect at LayerControl
 					// may have already changed Controller before this LayerAbility runs.
 					// The post-layer AttrCantChangeControl check reverts any such steal.
-					for _, p := range g.Battlefield {
+					for _, p := range g.AllBattlefield() {
 						if p.Card.Owner() == src.Controller &&
 							p.HasType(TypeArtifact) && !p.HasType(TypeCreature) &&
 							p.ID() != sourceID {
-							g.Effects.GrantAttr(p.ID(), Indestructible)
-							g.Effects.GrantAttr(p.ID(), AttrCantBeEnchanted)
-							g.Effects.GrantAttr(p.ID(), AttrCantChangeControl)
+							g.GrantAttr(p.ID(), Indestructible)
+							g.GrantAttr(p.ID(), AttrCantBeEnchanted)
+							g.GrantAttr(p.ID(), AttrCantChangeControl)
 						}
 					}
 					return nil
@@ -642,7 +642,7 @@ func registerCreatures() {
 					if perm == nil {
 						return nil
 					}
-					g.Effects.Rules.SetMinimumLife(perm.Controller)
+					g.SetMinimumLife(perm.Controller)
 					return nil
 				})),
 		)
@@ -750,7 +750,7 @@ func registerCreatures() {
 							g.RemoveFromCombat(sourceID)
 							// "it can't block this turn"
 							eff := TargetEffect(LayerAbility, EndOfTurn, sourceID, func(g *Game, target *Permanent) error {
-								g.Effects.RevokeAttr(target.ID(), AttrCanBlock)
+								g.RevokeAttr(target.ID(), AttrCanBlock)
 								return nil
 							})
 							g.AddContinuousEffect(eff)
@@ -793,7 +793,7 @@ func registerCreatures() {
 						}
 						eff := TargetEffect(LayerAbility, UntilYourNextTurn, target.ID(),
 							func(g *Game, target *Permanent) error {
-								g.Effects.GrantAttr(target.ID(), Forestwalk)
+								g.GrantAttr(target.ID(), Forestwalk)
 								return nil
 							})
 						eff.SetSourceID(sourceID)

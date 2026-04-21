@@ -428,7 +428,7 @@ func registerCreatures() {
 				who := g.NonActivePlayerObj()
 				whoID := who.PlayerID()
 				if !g.AnyBattlefield(And(ControlledBy(whoID), IsLand, HasSubType("Island"))) {
-					g.Effects.RevokeAttr(sourceID, AttrCanAttack)
+					g.RevokeAttr(sourceID, AttrCanAttack)
 				}
 				return nil
 			})),
@@ -672,7 +672,7 @@ func registerCreatures() {
 				if src == nil {
 					return nil
 				}
-				for _, p := range g.Battlefield {
+				for _, p := range g.AllBattlefield() {
 					if p.HasSubType("Thrull") && p.Controller == src.Controller && p.ID() != sourceID {
 						p.BoostPT(1, 1)
 					}
@@ -703,9 +703,9 @@ func registerCreatures() {
 		return NewCreature("Brassclaw Orcs", "{2}{R}", 3, 2,
 			WithSubTypes("Orc"),
 			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-				for _, p := range g.Battlefield {
+				for _, p := range g.AllBattlefield() {
 					if p.HasType(TypeCreature) && p.CurrentPower(g) >= 2 {
-						g.Effects.PreventBlockPair(sourceID, p.ID())
+						g.PreventBlockPair(sourceID, p.ID())
 					}
 				}
 				return nil
@@ -820,7 +820,7 @@ func registerCreatures() {
 			WithSubTypes("Orc"),
 			// Can't block white creatures with power 2 or greater
 			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-				for _, p := range g.Battlefield {
+				for _, p := range g.AllBattlefield() {
 					if p.HasType(TypeCreature) && p.CurrentPower(g) >= 2 {
 						isWhite := false
 						for _, c := range p.Colors() {
@@ -830,7 +830,7 @@ func registerCreatures() {
 							}
 						}
 						if isWhite {
-							g.Effects.PreventBlockPair(sourceID, p.ID())
+							g.PreventBlockPair(sourceID, p.ID())
 						}
 					}
 				}
@@ -858,15 +858,15 @@ func registerCreatures() {
 				who := g.NonActivePlayerObj()
 				whoID := who.PlayerID()
 				if g.AnyBattlefield(And(ControlledBy(whoID), IsCreature, IsUntapped, HasPowerGTE(3))) {
-					g.Effects.RevokeAttr(sourceID, AttrCanAttack)
+					g.RevokeAttr(sourceID, AttrCanAttack)
 				}
 				return nil
 			})),
 			// Can't block creatures with power 3 or greater
 			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-				for _, p := range g.Battlefield {
+				for _, p := range g.AllBattlefield() {
 					if p.HasType(TypeCreature) && p.CurrentPower(g) >= 3 {
-						g.Effects.PreventBlockPair(sourceID, p.ID())
+						g.PreventBlockPair(sourceID, p.ID())
 					}
 				}
 				return nil
@@ -916,11 +916,11 @@ func registerCreatures() {
 						ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, _ uuid.UUID) error {
 							p := g.FindPermanent(targetID)
 							if p != nil {
-								g.Effects.GrantAttr(p.ID(), AttrDoesNotUntap)
+								g.GrantAttr(p.ID(), AttrDoesNotUntap)
 							}
 							return nil
 						}, func(g *Game, _ uuid.UUID) bool {
-							return g.Turn <= expiryTurn && g.FindPermanent(targetID) != nil
+							return g.CurrentTurn() <= expiryTurn && g.FindPermanent(targetID) != nil
 						})
 						ce.SetSourceID(sourceID)
 						g.AddContinuousEffect(ce)

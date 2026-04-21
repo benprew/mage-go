@@ -78,7 +78,7 @@ func SpellValue(card mage.Card, p mage.Player, g *mage.Game) int {
 	// Count creatures per side for board-relative scoring.
 	myCreatures, oppCreatures := 0, 0
 	var oppBestScore int
-	for _, perm := range g.Battlefield {
+	for _, perm := range g.AllBattlefield() {
 		if !perm.HasType(core.TypeCreature) {
 			continue
 		}
@@ -121,7 +121,7 @@ func SpellValue(card mage.Card, p mage.Player, g *mage.Game) int {
 				if opponent != nil {
 					// Bonus for being able to kill an opponent creature.
 					bestLethalBonus := 0
-					for _, perm := range g.Battlefield {
+					for _, perm := range g.AllBattlefield() {
 						if perm.Controller == oppID && perm.HasType(core.TypeCreature) {
 							if dmg >= perm.CurrentToughness(g) {
 								bonus := EvalCreatureInGame(perm, g) / 2
@@ -212,7 +212,7 @@ func SpellValue(card mage.Card, p mage.Player, g *mage.Game) int {
 // CountAvailableMana counts the number of untapped mana sources a player controls.
 func CountAvailableMana(g *mage.Game, playerID uuid.UUID) int {
 	count := 0
-	for _, perm := range g.Battlefield {
+	for _, perm := range g.AllBattlefield() {
 		if perm.Controller != playerID {
 			continue
 		}

@@ -56,13 +56,13 @@ func joinStrings(ss []string) string {
 
 // SnapshotGameState creates a read-only snapshot of the game for the TUI.
 func SnapshotGameState(g *mage.Game, humanIndex int) *GameState {
-	human := g.Players[humanIndex]
+	human := g.PlayerAt(humanIndex)
 	aiIndex := (humanIndex + 1) % 2
-	ai := g.Players[aiIndex]
+	ai := g.PlayerAt(aiIndex)
 
 	return &GameState{
-		Turn:         g.Turn,
-		Step:         g.Step.String(),
+		Turn:         g.CurrentTurn(),
+		Step:         g.GetStep().String(),
 		ActivePlayer: g.ActivePlayerObj().Name(),
 		You:          snapshotPlayer(g, human, true),
 		Opponent:     snapshotPlayer(g, ai, false),
@@ -133,7 +133,7 @@ func snapshotPlayer(g *mage.Game, p mage.Player, showHand bool) PlayerState {
 		ps.Graveyard = append(ps.Graveyard, cs)
 	}
 
-	for _, perm := range g.Battlefield {
+	for _, perm := range g.AllBattlefield() {
 		if perm.Controller != p.PlayerID() {
 			continue
 		}
@@ -147,7 +147,7 @@ func snapshotPlayer(g *mage.Game, p mage.Player, showHand bool) PlayerState {
 			IsCreature: perm.HasType(core.TypeCreature),
 			IsLand:     perm.HasType(core.TypeLand),
 			IsArtifact: perm.HasType(core.TypeArtifact),
-			Attacking:  g.Combat.IsAttacking(perm.ID()),
+			Attacking:  g.GetCombat().IsAttacking(perm.ID()),
 			ManaCost:   perm.Card.ManaCost().String(),
 			RulesText:  buildRulesText(perm.Card),
 		}
@@ -176,7 +176,7 @@ func snapshotPlayer(g *mage.Game, p mage.Player, showHand bool) PlayerState {
 		permState.Keywords = perm.KeywordNames()
 		permState.AttachedTo = perm.AttachedTo
 	outer:
-		for _, group := range g.Combat.Groups {
+		for _, group := range g.CombatGroups() {
 			for _, bid := range group.BlockerIDs {
 				if bid == perm.ID() {
 					permState.Blocking = group.AttackerID
@@ -203,7 +203,7 @@ func snapshotManaPool(mp *mage.ManaPool) ManaPoolState {
 
 func snapshotStack(g *mage.Game) []StackItemState {
 	var items []StackItemState
-	for _, obj := range g.Stack.Objects() {
+	for _, obj := range g.StackObjects() {
 		name := "Ability"
 		if obj.Card != nil {
 			name = obj.Card.Name()
@@ -297,7 +297,7 @@ func GetAvailableActions(g *mage.Game, playerID uuid.UUID) []ActionOption {
 func buildTargetLabels(g *mage.Game, ids []uuid.UUID) []string {
 	labels := make([]string, len(ids))
 	for i, id := range ids {
-		for _, p := range g.Players {
+		for _, p := range g.AllPlayers() {
 			if p.PlayerID() == id {
 				labels[i] = fmt.Sprintf("%s (player)", p.Name())
 				break

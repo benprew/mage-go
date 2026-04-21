@@ -196,7 +196,7 @@ func TestDampingField(t *testing.T) {
 		g.Execute()
 		jTapped := false
 		mTapped := false
-		for _, perm := range g.Battlefield {
+		for _, perm := range g.AllBattlefield() {
 			if perm.Name() == "Jalum Tome" && perm.Tapped {
 				jTapped = true
 			}
@@ -276,7 +276,7 @@ func TestEnergyFlux(t *testing.T) {
 		// One should survive, one should be sacrificed
 		ornCount := 0
 		jalumCount := 0
-		for _, perm := range g.Battlefield {
+		for _, perm := range g.AllBattlefield() {
 			if perm.Name() == "Ornithopter" {
 				ornCount++
 			}

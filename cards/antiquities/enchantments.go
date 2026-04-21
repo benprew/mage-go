@@ -80,10 +80,10 @@ func registerEnchantments() {
 						}
 						// Can't be blocked by artifact creatures
 						for _, perm := range g.FilterBattlefield(And(IsCreature, IsArtifact)) {
-							g.Effects.PreventBlockPair(perm.ID(), attachedID)
+							g.PreventBlockPair(perm.ID(), attachedID)
 						}
 						// Can't be targeted by abilities from artifact sources
-						g.Effects.GrantAttr(attachedID, AttrCantBeTargetedByArtifacts)
+						g.GrantAttr(attachedID, AttrCantBeTargetedByArtifacts)
 						return nil
 					}, SourceAttached),
 			),
@@ -99,7 +99,7 @@ func registerEnchantments() {
 						if attachedID == (uuid.UUID{}) {
 							return nil
 						}
-						g.Effects.AddCycleReplacement(&artifactDamageToCreaturePreventionReplacement{
+						g.AddCycleReplacement(&artifactDamageToCreaturePreventionReplacement{
 							creatureID: attachedID,
 						})
 						return nil
@@ -147,8 +147,8 @@ func registerEnchantments() {
 			WithStaticAbility(
 				FuncContinuousEffect(LayerAbility, WhileOnBattlefield,
 					func(g *Game, _ uuid.UUID) error {
-						if g.Effects.Rules.ArtifactUntapMax < 0 || 1 < g.Effects.Rules.ArtifactUntapMax {
-							g.Effects.Rules.ArtifactUntapMax = 1
+						if g.GetArtifactUntapMax() < 0 || 1 < g.GetArtifactUntapMax() {
+							g.SetArtifactUntapMax(1)
 						}
 						return nil
 					}),
@@ -275,7 +275,7 @@ func registerEnchantments() {
 						if attachedID == (uuid.UUID{}) {
 							return nil
 						}
-						g.Effects.Rules.ActivationCostReductions[attachedID] = 2
+						g.AddActivationCostReduction(attachedID, 2)
 						return nil
 					}, SourceAttached),
 			),
@@ -338,18 +338,18 @@ func registerEnchantments() {
 
 	// Three functions for the three layers:
 	titaniasSongType := func(g *Game, _ uuid.UUID) error {
-		for _, perm := range g.Battlefield {
+		for _, perm := range g.AllBattlefield() {
 			if isNoncreatureArtifactByPrint(perm) {
-				g.Effects.GrantAttr(perm.ID(), AttrIsCreature)
-				g.Effects.GrantAttr(perm.ID(), AttrCanAttack)
-				g.Effects.GrantAttr(perm.ID(), AttrCanBlock)
-				g.Effects.GrantAttr(perm.ID(), AttrHasPowerToughness)
+				g.GrantAttr(perm.ID(), AttrIsCreature)
+				g.GrantAttr(perm.ID(), AttrCanAttack)
+				g.GrantAttr(perm.ID(), AttrCanBlock)
+				g.GrantAttr(perm.ID(), AttrHasPowerToughness)
 			}
 		}
 		return nil
 	}
 	titaniasSongAbility := func(g *Game, _ uuid.UUID) error {
-		for _, perm := range g.Battlefield {
+		for _, perm := range g.AllBattlefield() {
 			if isNoncreatureArtifactByPrint(perm) {
 				perm.RuntimeAbilities = nil
 			}
@@ -357,7 +357,7 @@ func registerEnchantments() {
 		return nil
 	}
 	titaniasSongPT := func(g *Game, _ uuid.UUID) error {
-		for _, perm := range g.Battlefield {
+		for _, perm := range g.AllBattlefield() {
 			if isNoncreatureArtifactByPrint(perm) {
 				cmc := perm.Card.ManaCost().CMC()
 				perm.BasePTOverride = &[2]int{cmc, cmc}

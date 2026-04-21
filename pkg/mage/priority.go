@@ -35,20 +35,20 @@ type PriorityAction struct {
 // PriorityHandler is called by the engine whenever a player receives priority.
 // It returns the action the player wants to take.
 //   - g is the current game state
-//   - playerIdx is the index into g.Players
+//   - playerIdx is the index into g.players
 //   - mainPhase is true during PrecombatMain and PostcombatMain
 type PriorityHandler func(g *Game, playerIdx int, mainPhase bool) PriorityAction
 
 // executePriorityAction executes a non-pass priority action for the given player.
 // Returns true if the action succeeded, false if it failed.
 func (g *Game) executePriorityAction(playerIdx int, action PriorityAction) bool {
-	playerID := g.Players[playerIdx].PlayerID()
+	playerID := g.players[playerIdx].PlayerID()
 	switch action.Type {
 	case PriorityPlayLand:
 		if err := g.playLandCore(playerID, action.CardID); err != nil {
 			if DebugPriority {
 				fmt.Printf("[PRIORITY] PlayLand FAILED player=%s cardID=%s err=%v\n",
-					g.Players[playerIdx].Name(), action.CardID, err)
+					g.players[playerIdx].Name(), action.CardID, err)
 			}
 			return false
 		}
@@ -56,7 +56,7 @@ func (g *Game) executePriorityAction(playerIdx int, action PriorityAction) bool 
 		if err := g.CastSpellByID(playerID, action.CardID, action.Targets, action.XValue); err != nil {
 			if DebugPriority {
 				fmt.Printf("[PRIORITY] CastSpell FAILED player=%s cardID=%s targets=%v err=%v\n",
-					g.Players[playerIdx].Name(), action.CardID, action.Targets, err)
+					g.players[playerIdx].Name(), action.CardID, action.Targets, err)
 			}
 			return false
 		}
@@ -64,7 +64,7 @@ func (g *Game) executePriorityAction(playerIdx int, action PriorityAction) bool 
 		if err := g.ActivateAbilityByIndex(playerID, action.PermanentID, action.AbilityIdx, action.Targets); err != nil {
 			if DebugPriority {
 				fmt.Printf("[PRIORITY] ActivateAbility FAILED player=%s permID=%s abilityIdx=%d targets=%v err=%v\n",
-					g.Players[playerIdx].Name(), action.PermanentID, action.AbilityIdx, action.Targets, err)
+					g.players[playerIdx].Name(), action.PermanentID, action.AbilityIdx, action.Targets, err)
 			}
 			return false
 		}
@@ -78,7 +78,7 @@ func (g *Game) executePriorityAction(playerIdx int, action PriorityAction) bool 
 //
 // If OnPriority is nil, falls back to draining the stack atomically (ResolveStack).
 func (g *Game) RunPriorityRound(mainPhase bool) {
-	if g.OnPriority == nil {
+	if g.onPriority == nil {
 		g.CheckStateBasedActions()
 		g.ResolveStack()
 		return
@@ -89,15 +89,15 @@ func (g *Game) RunPriorityRound(mainPhase bool) {
 		iterations++
 		if DebugPriority && iterations%50 == 0 {
 			fmt.Printf("[PRIORITY] WARNING: %d iterations in RunPriorityRound turn=%d step=%s mainPhase=%v stackSize=%d\n",
-				iterations, g.Turn, g.Step, mainPhase, g.Stack.Size())
-			for i, p := range g.Players {
+				iterations, g.turn, g.step, mainPhase, g.stack.Size())
+			for i, p := range g.players {
 				fmt.Printf("[PRIORITY]   player[%d]=%s life=%d hand=%d battlefield=%d\n",
 					i, p.Name(), p.Life(), len(p.Hand()), countBattlefield(g, p.PlayerID()))
 			}
 		}
 		if iterations > 500 {
 			fmt.Printf("[PRIORITY] EMERGENCY: breaking out of priority loop after %d iterations turn=%d step=%s\n",
-				iterations, g.Turn, g.Step)
+				iterations, g.turn, g.step)
 			return
 		}
 
@@ -109,9 +109,9 @@ func (g *Game) RunPriorityRound(mainPhase bool) {
 
 		// 3. Cycle through players starting from active player
 		allPassed := true
-		for i := 0; i < len(g.Players); i++ {
-			playerIdx := (g.ActivePlayer + i) % len(g.Players)
-			action := g.OnPriority(g, playerIdx, mainPhase)
+		for i := 0; i < len(g.players); i++ {
+			playerIdx := (g.activePlayer + i) % len(g.players)
+			action := g.onPriority(g, playerIdx, mainPhase)
 			if action.Type != PriorityPass {
 				if DebugPriority {
 					actionName := "unknown"
@@ -125,7 +125,7 @@ func (g *Game) RunPriorityRound(mainPhase bool) {
 						actionName = "ActivateAbility"
 					}
 					if action.CardID != uuid.Nil {
-						for _, c := range g.Players[playerIdx].Hand() {
+						for _, c := range g.players[playerIdx].Hand() {
 							if c.ID() == action.CardID {
 								cardName = c.Name()
 								break
@@ -138,11 +138,11 @@ func (g *Game) RunPriorityRound(mainPhase bool) {
 						}
 					}
 					fmt.Printf("[PRIORITY] player=%s action=%s card=%q targets=%v iter=%d\n",
-						g.Players[playerIdx].Name(), actionName, cardName, action.Targets, iterations)
+						g.players[playerIdx].Name(), actionName, cardName, action.Targets, iterations)
 				}
 				if g.executePriorityAction(playerIdx, action) {
-					if g.AfterPriorityAction != nil {
-						g.AfterPriorityAction(g, playerIdx, action)
+					if g.afterPriorityAction != nil {
+						g.afterPriorityAction(g, playerIdx, action)
 					}
 					allPassed = false
 					break // restart loop from SBA check
@@ -156,13 +156,13 @@ func (g *Game) RunPriorityRound(mainPhase bool) {
 		}
 
 		// All players passed in succession
-		if g.Stack.IsEmpty() {
+		if g.stack.IsEmpty() {
 			return // step proceeds
 		}
 
 		// Resolve top of stack, then restart priority
-		if g.BeforeStackResolve != nil {
-			g.BeforeStackResolve(g)
+		if g.beforeStackResolve != nil {
+			g.beforeStackResolve(g)
 		}
 		g.ResolveTopOfStack()
 	}
@@ -170,7 +170,7 @@ func (g *Game) RunPriorityRound(mainPhase bool) {
 
 func countBattlefield(g *Game, playerID uuid.UUID) int {
 	count := 0
-	for _, p := range g.Battlefield {
+	for _, p := range g.battlefield {
 		if p.Controller == playerID {
 			count++
 		}
@@ -182,8 +182,8 @@ func countBattlefield(g *Game, playerID uuid.UUID) int {
 // It sets the step, applies continuous effects, performs step-specific actions,
 // then runs a priority round (unless the step has no priority, e.g. Untap).
 func (g *Game) RunStepWithPriority(step PhaseStep) {
-	g.Step = step
-	g.Effects.Apply(g)
+	g.step = step
+	g.effects.Apply(g)
 
 	switch step {
 	case Untap:
@@ -209,31 +209,31 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 
 	case DeclareAttackers:
 		g.doDeclareAttackers()
-		if len(g.Combat.Groups) > 0 {
+		if len(g.combat.Groups) > 0 {
 			g.PutTriggersOnStack()
 			g.RunPriorityRound(false)
 		}
 
 	case DeclareBlockers:
 		// 508.8: Skip if no creatures are attacking.
-		if len(g.Combat.Groups) > 0 {
+		if len(g.combat.Groups) > 0 {
 			g.doDeclareBlockers()
 			g.PutTriggersOnStack()
 			g.RunPriorityRound(false)
 		}
 
 	case FirstStrikeDamage:
-		if g.Combat.HasFirstStrikers(g) {
+		if g.combat.HasFirstStrikers(g) {
 			g.resolvingCombatDamage = true
-			g.Combat.ResolveDamage(g, true)
+			g.combat.ResolveDamage(g, true)
 			g.resolvingCombatDamage = false
 			g.RunPriorityRound(false)
 		}
 
 	case CombatDamage:
-		if len(g.Combat.Groups) > 0 {
+		if len(g.combat.Groups) > 0 {
 			g.resolvingCombatDamage = true
-			g.Combat.ResolveDamage(g, false)
+			g.combat.ResolveDamage(g, false)
 			g.resolvingCombatDamage = false
 			g.RunPriorityRound(false)
 		}
@@ -245,9 +245,9 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 		})
 		g.PutTriggersOnStack()
 		g.RunPriorityRound(false)
-		g.Effects.RemoveEndOfCombat()
-		g.Effects.Apply(g)
-		g.Combat.Reset()
+		g.effects.RemoveEndOfCombat()
+		g.effects.Apply(g)
+		g.combat.Reset()
 
 	case PostcombatMain:
 		g.RunPriorityRound(true)

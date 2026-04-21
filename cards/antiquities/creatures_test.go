@@ -387,7 +387,7 @@ func TestGoblinArtisans(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Goblin Artisans")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Ornithopter")
-		g.CoinFlipResults = []bool{true} // win — but ability resolves before spell
+		g.SetCoinFlipResults([]bool{true}) // win — but ability resolves before spell
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Ornithopter")
 		g.ActivateInResponseTo(gametest.PlayerA, "Goblin Artisans")
 		g.StopAt(1, core.BeginCombat)
@@ -401,7 +401,7 @@ func TestGoblinArtisans(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Goblin Artisans")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Ornithopter")
 		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Forest")
-		g.CoinFlipResults = []bool{false} // lose
+		g.SetCoinFlipResults([]bool{false}) // lose
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Ornithopter")
 		g.ActivateInResponseTo(gametest.PlayerA, "Goblin Artisans")
 		g.StopAt(1, core.BeginCombat)

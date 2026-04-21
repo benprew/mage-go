@@ -15,7 +15,7 @@ func TestGetEligibleAttackers_SkipsOpponent(t *testing.T) {
 	g, pa, pb := makeGame()
 	own := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
 	opp := makePerm("Elf", "{G}", 1, 1, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, own, opp)
+	g.AddToBattlefield(own, opp)
 
 	eligible := getEligibleAttackers(g, pa.PlayerID())
 	if len(eligible) != 1 || eligible[0].ID() != own.ID() {
@@ -28,7 +28,7 @@ func TestGetEligibleAttackers_SkipsTapped(t *testing.T) {
 	untapped := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
 	tapped := makePerm("Elf", "{G}", 1, 1, pa.PlayerID())
 	tapped.Tapped = true
-	g.Battlefield = append(g.Battlefield, untapped, tapped)
+	g.AddToBattlefield(untapped, tapped)
 
 	eligible := getEligibleAttackers(g, pa.PlayerID())
 	if len(eligible) != 1 {
@@ -41,7 +41,7 @@ func TestGetEligibleAttackers_SkipsSummonSick(t *testing.T) {
 	ready := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
 	sick := makePerm("Elf", "{G}", 1, 1, pa.PlayerID())
 	sick.GrantBaseAttr(core.AttrSummonSick)
-	g.Battlefield = append(g.Battlefield, ready, sick)
+	g.AddToBattlefield(ready, sick)
 
 	eligible := getEligibleAttackers(g, pa.PlayerID())
 	if len(eligible) != 1 {
@@ -64,7 +64,7 @@ func TestGetEligibleBlockers_SkipsTapped(t *testing.T) {
 	untapped := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
 	tapped := makePerm("Elf", "{G}", 1, 1, pb.PlayerID())
 	tapped.Tapped = true
-	g.Battlefield = append(g.Battlefield, untapped, tapped)
+	g.AddToBattlefield(untapped, tapped)
 
 	eligible := getEligibleBlockers(g, pb.PlayerID())
 	if len(eligible) != 1 {
@@ -76,7 +76,7 @@ func TestGetEligibleBlockers_IncludesUntapped(t *testing.T) {
 	g, _, pb := makeGame()
 	c1 := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
 	c2 := makePerm("Elf", "{G}", 1, 1, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, c1, c2)
+	g.AddToBattlefield(c1, c2)
 
 	eligible := getEligibleBlockers(g, pb.PlayerID())
 	if len(eligible) != 2 {
@@ -89,7 +89,7 @@ func TestGetEligibleBlockers_IncludesUntapped(t *testing.T) {
 func TestResolveTargetName_Permanent(t *testing.T) {
 	g, pa, _ := makeGame()
 	perm := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
-	g.Battlefield = append(g.Battlefield, perm)
+	g.AddToBattlefield(perm)
 
 	if got := resolveTargetName(g, perm.ID()); got != "Bear" {
 		t.Errorf("resolveTargetName(permanent) = %q, want %q", got, "Bear")
@@ -173,15 +173,15 @@ func TestCaptureAndRestoreUndo(t *testing.T) {
 
 	// Mutate the game state
 	pa.SetHand(nil)
-	g.LandsPlayedThisTurn = 5
+	g.SetLandsPlayedThisTurn(5)
 
 	// Restore
 	restoreFromUndo(g, pa.PlayerID(), snap)
 	if len(pa.Hand()) != 1 {
 		t.Errorf("hand should be restored to 1 card, got %d", len(pa.Hand()))
 	}
-	if g.LandsPlayedThisTurn != 0 {
-		t.Errorf("landsPlayed should be restored to 0, got %d", g.LandsPlayedThisTurn)
+	if g.GetLandsPlayedThisTurn() != 0 {
+		t.Errorf("landsPlayed should be restored to 0, got %d", g.GetLandsPlayedThisTurn())
 	}
 }
 
@@ -206,7 +206,7 @@ func TestCaptureForUndo_NilPlayer(t *testing.T) {
 func TestCaptureUndo_TappedStatePreserved(t *testing.T) {
 	g, pa, _ := makeGame()
 	perm := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
-	g.Battlefield = append(g.Battlefield, perm)
+	g.AddToBattlefield(perm)
 
 	snap := captureForUndo(g, pa.PlayerID(), 0)
 
@@ -267,7 +267,7 @@ func TestBlockerOptions_EmptyStillHasDone(t *testing.T) {
 
 func TestGetAvailableActions_MainPhaseIncludesLands(t *testing.T) {
 	g, pa, _ := makeGame()
-	g.Step = core.PrecombatMain
+	g.SetStep(core.PrecombatMain)
 	land := mage.NewLand("Forest")
 	land.SetOwner(pa.PlayerID())
 	pa.AddToHand(land)
@@ -286,11 +286,11 @@ func TestGetAvailableActions_MainPhaseIncludesLands(t *testing.T) {
 
 func TestGetAvailableActions_NoLandIfAlreadyPlayed(t *testing.T) {
 	g, pa, _ := makeGame()
-	g.Step = core.PrecombatMain
+	g.SetStep(core.PrecombatMain)
 	land := mage.NewLand("Forest")
 	land.SetOwner(pa.PlayerID())
 	pa.AddToHand(land)
-	g.LandsPlayedThisTurn = 1
+	g.SetLandsPlayedThisTurn(1)
 
 	actions := GetAvailableActions(g, pa.PlayerID())
 	for _, a := range actions {
@@ -302,7 +302,7 @@ func TestGetAvailableActions_NoLandIfAlreadyPlayed(t *testing.T) {
 
 func TestGetAvailableActions_NoLandForNonActivePlayer(t *testing.T) {
 	g, _, pb := makeGame()
-	g.Step = core.PrecombatMain
+	g.SetStep(core.PrecombatMain)
 	land := mage.NewLand("Forest")
 	land.SetOwner(pb.PlayerID())
 	pb.AddToHand(land)
@@ -331,7 +331,7 @@ func TestGetAvailableActions_AlwaysIncludesPass(t *testing.T) {
 
 func TestGetAvailableActions_NonMainOnlyInstants(t *testing.T) {
 	g, pa, _ := makeGame()
-	g.Step = core.DeclareAttackers
+	g.SetStep(core.DeclareAttackers)
 	sorcery := mage.NewSorcery("Divination", "{2}{U}", mage.NewSpellAbility(mage.DrawCards(mage.Fixed(2))))
 	sorcery.SetOwner(pa.PlayerID())
 	pa.AddToHand(sorcery)
@@ -349,7 +349,7 @@ func TestGetAvailableActions_NonMainOnlyInstants(t *testing.T) {
 func TestSnapshotGameState_BattlefieldCreatures(t *testing.T) {
 	g, pa, _ := makeGame()
 	perm := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
-	g.Battlefield = append(g.Battlefield, perm)
+	g.AddToBattlefield(perm)
 
 	snap := SnapshotGameState(g, 0)
 	if len(snap.You.Battlefield) != 1 {
@@ -403,7 +403,7 @@ func TestSnapshotGameState_Graveyard(t *testing.T) {
 
 func TestSnapshotGameState_TurnAndStep(t *testing.T) {
 	g, _, _ := makeGame()
-	g.Turn = 5
+	g.SetTurn(5)
 	snap := SnapshotGameState(g, 0)
 	if snap.Turn != 5 {
 		t.Errorf("turn = %d, want 5", snap.Turn)
@@ -433,7 +433,7 @@ func TestSnapshotGameState_PermanentCounters(t *testing.T) {
 	g, pa, _ := makeGame()
 	perm := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
 	perm.AddCounter(core.P1P1, 3)
-	g.Battlefield = append(g.Battlefield, perm)
+	g.AddToBattlefield(perm)
 
 	snap := SnapshotGameState(g, 0)
 	ps := snap.You.Battlefield[0]
@@ -448,7 +448,7 @@ func TestSnapshotGameState_PermanentCounters(t *testing.T) {
 func TestSnapshotGameState_PermanentKeywords(t *testing.T) {
 	g, pa, _ := makeGame()
 	perm := makePerm("Bird", "{1}{W}", 1, 1, pa.PlayerID(), mage.WithKeyword(core.Flying))
-	g.Battlefield = append(g.Battlefield, perm)
+	g.AddToBattlefield(perm)
 
 	snap := SnapshotGameState(g, 0)
 	ps := snap.You.Battlefield[0]

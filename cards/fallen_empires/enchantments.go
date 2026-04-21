@@ -83,11 +83,11 @@ func registerEnchantments() {
 					if src == nil {
 						return nil
 					}
-					for _, p := range g.Battlefield {
+					for _, p := range g.AllBattlefield() {
 						if !p.HasType(TypeCreature) || p.Controller != src.Controller {
 							continue
 						}
-						g.Effects.GrantAttr(p.ID(), Menace)
+						g.GrantAttr(p.ID(), Menace)
 					}
 					return nil
 				}),

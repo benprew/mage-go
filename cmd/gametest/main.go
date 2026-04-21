@@ -134,25 +134,25 @@ func runGame(g *mage.Game, maxTurns int) {
 	lastTurn := -1
 
 	// Install priority handler: log choices and the AI's decision.
-	g.OnPriority = func(g *mage.Game, playerIdx int, mainPhase bool) mage.PriorityAction {
-		p := g.Players[playerIdx]
+	g.SetOnPriority(func(g *mage.Game, playerIdx int, mainPhase bool) mage.PriorityAction {
+		p := g.PlayerAt(playerIdx)
 		aiPlayer := p.(interactive.AutoPlayer)
 
 		// Print turn header on first priority of a new turn.
-		if g.Turn != lastTurn {
-			lastTurn = g.Turn
+		if g.CurrentTurn() != lastTurn {
+			lastTurn = g.CurrentTurn()
 			printTurnHeader(g)
 		}
 
 		// Only the active player gets main-phase privileges (land plays, sorceries).
-		isActive := playerIdx == g.ActivePlayer
+		isActive := playerIdx == g.ActivePlayerIndex()
 		effectiveMainPhase := mainPhase && isActive
 
 		// Get available actions for display.
 		options := interactive.GetAvailableActions(g, p.PlayerID())
 
 		// Get the AI's decision.
-		action := aiPlayer.GetPriorityAction(g, g.LandsPlayedThisTurn, effectiveMainPhase)
+		action := aiPlayer.GetPriorityAction(g, g.GetLandsPlayedThisTurn(), effectiveMainPhase)
 
 		// Only print non-pass actions (or pass when there were real choices).
 		hasRealChoice := len(options) > 1 || (len(options) == 1 && options[0].Type != interactive.ActionPass)
@@ -162,18 +162,18 @@ func runGame(g *mage.Game, maxTurns int) {
 				if mainPhase {
 					phase = "main phase"
 				}
-				fmt.Printf("  [%s · %s · %s] %s decides:\n", g.Step, phase, p.Name(), p.Name())
+				fmt.Printf("  [%s · %s · %s] %s decides:\n", g.GetStep(), phase, p.Name(), p.Name())
 				printOptions(options)
 				fmt.Printf("    → %s\n", describeAction(g, action))
 			}
 		}
 
 		return convertAction(action)
-	}
+	})
 
 	// Log actions after execution.
-	g.AfterPriorityAction = func(g *mage.Game, playerIdx int, action mage.PriorityAction) {
-		p := g.Players[playerIdx]
+	g.SetAfterPriorityAction(func(g *mage.Game, playerIdx int, action mage.PriorityAction) {
+		p := g.PlayerAt(playerIdx)
 		switch action.Type {
 		case mage.PriorityPlayLand:
 			perm := g.FindPermanent(action.CardID)
@@ -183,7 +183,7 @@ func runGame(g *mage.Game, maxTurns int) {
 			}
 			fmt.Printf("    ✓ %s plays %s\n", p.Name(), name)
 		case mage.PriorityCastSpell:
-			obj := g.Stack.Peek()
+			obj := g.StackPeek()
 			name := "a spell"
 			if obj != nil && obj.Card != nil {
 				name = obj.Card.Name()
@@ -197,11 +197,11 @@ func runGame(g *mage.Game, maxTurns int) {
 			}
 			fmt.Printf("    ✓ Activated %s%s\n", name, targetSuffix(g, action.Targets))
 		}
-	}
+	})
 
 	// Log stack resolution.
-	g.BeforeStackResolve = func(g *mage.Game) {
-		top := g.Stack.Peek()
+	g.SetBeforeStackResolve(func(g *mage.Game) {
+		top := g.StackPeek()
 		if top == nil {
 			return
 		}
@@ -210,13 +210,13 @@ func runGame(g *mage.Game, maxTurns int) {
 			name = top.Card.Name()
 		}
 		fmt.Printf("  ⟳ Resolving %s%s\n", name, targetSuffix(g, top.Targets))
-	}
+	})
 
 	// Main turn loop.
-	for g.Turn <= maxTurns {
+	for g.CurrentTurn() <= maxTurns {
 		for _, step := range core.AllSteps() {
 			// Combat preview.
-			if step == core.CombatDamage && len(g.Combat.Groups) > 0 {
+			if step == core.CombatDamage && len(g.CombatGroups()) > 0 {
 				fmt.Printf("  ── Combat damage ──\n")
 				printCombatPreview(g)
 			}
@@ -228,8 +228,8 @@ func runGame(g *mage.Game, maxTurns int) {
 			case core.Draw:
 				fmt.Printf("  %s draws a card\n", g.ActivePlayerObj().Name())
 			case core.CombatDamage:
-				if len(g.Combat.Groups) > 0 {
-					for _, p := range g.Players {
+				if len(g.CombatGroups()) > 0 {
+					for _, p := range g.AllPlayers() {
 						fmt.Printf("  %s: %d life\n", p.Name(), p.Life())
 					}
 				}
@@ -243,19 +243,18 @@ func runGame(g *mage.Game, maxTurns int) {
 			}
 		}
 
-		if len(g.ExtraTurns) > 0 {
-			extraPlayerID := g.ExtraTurns[0]
-			g.ExtraTurns = g.ExtraTurns[1:]
-			for i, p := range g.Players {
+		if g.HasExtraTurns() {
+			extraPlayerID, _ := g.PopExtraTurn()
+			for i, p := range g.AllPlayers() {
 				if p.PlayerID() == extraPlayerID {
-					g.ActivePlayer = i
+					g.SetActivePlayerIndex(i)
 					break
 				}
 			}
 		} else {
-			g.ActivePlayer = (g.ActivePlayer + 1) % len(g.Players)
+			g.SetActivePlayerIndex((g.ActivePlayerIndex() + 1) % g.PlayerCount())
 		}
-		g.Turn++
+		g.SetTurn(g.CurrentTurn() + 1)
 	}
 	fmt.Printf("\n=== Game ended after %d turns (no winner) ===\n", maxTurns)
 	printFinalState(g)
@@ -300,13 +299,13 @@ func handStr(hand []mage.Card) string {
 
 func printTurnHeader(g *mage.Game) {
 	active := g.ActivePlayerObj()
-	fmt.Printf("\n════ Turn %d: %s ════\n", g.Turn, active.Name())
-	for _, p := range g.Players {
+	fmt.Printf("\n════ Turn %d: %s ════\n", g.CurrentTurn(), active.Name())
+	for _, p := range g.AllPlayers() {
 		fmt.Printf("  %s: %d life, %d in library, hand: [%s]\n",
 			p.Name(), p.Life(), len(p.Library()), handStr(p.Hand()))
 	}
 	// Battlefield
-	for _, p := range g.Players {
+	for _, p := range g.AllPlayers() {
 		perms := battlefieldFor(g, p.PlayerID())
 		if len(perms) > 0 {
 			fmt.Printf("  %s's battlefield: %s\n", p.Name(), permStr(g, perms))
@@ -316,7 +315,7 @@ func printTurnHeader(g *mage.Game) {
 
 func battlefieldFor(g *mage.Game, playerID uuid.UUID) []*mage.Permanent {
 	var perms []*mage.Permanent
-	for _, perm := range g.Battlefield {
+	for _, perm := range g.AllBattlefield() {
 		if perm.Controller == playerID {
 			perms = append(perms, perm)
 		}
@@ -391,7 +390,7 @@ func targetSuffix(g *mage.Game, targets []uuid.UUID) string {
 }
 
 func printCombatPreview(g *mage.Game) {
-	for _, grp := range g.Combat.Groups {
+	for _, grp := range g.CombatGroups() {
 		atk := g.FindPermanent(grp.AttackerID)
 		if atk == nil {
 			continue
@@ -419,7 +418,7 @@ func printCombatPreview(g *mage.Game) {
 }
 
 func printFinalState(g *mage.Game) {
-	for _, p := range g.Players {
+	for _, p := range g.AllPlayers() {
 		fmt.Printf("  %s: %d life, %d cards in hand, %d in graveyard\n",
 			p.Name(), p.Life(), len(p.Hand()), len(p.Graveyard()))
 		perms := battlefieldFor(g, p.PlayerID())

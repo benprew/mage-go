@@ -38,7 +38,7 @@ func TestBalance(t *testing.T) {
 		// A had 3 creatures, B had 1 -> A sacrifices 2.
 		playerA := g.AllPlayers()[0]
 		creatureCount := 0
-		for _, perm := range g.Battlefield {
+		for _, perm := range g.AllBattlefield() {
 			if perm.Controller == playerA.PlayerID() && perm.HasType(core.TypeCreature) {
 				creatureCount++
 			}

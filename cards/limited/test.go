@@ -519,8 +519,8 @@ func TestAlphaTimeWalk(t *testing.T) {
 		g.StopAt(2, core.PrecombatMain)
 		g.Execute()
 		// Verify game is on turn 2 and active player is still PlayerA (index 0)
-		if g.ActivePlayer != 0 {
-			t.Errorf("expected active player to be PlayerA (0), got %d", g.ActivePlayer)
+		if g.ActivePlayerIndex() != 0 {
+			t.Errorf("expected active player to be PlayerA (0), got %d", g.ActivePlayerIndex())
 		}
 	})
 }

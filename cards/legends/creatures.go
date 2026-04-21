@@ -29,7 +29,7 @@ func registerCreatures() {
 					if src == nil {
 						return nil
 					}
-					for _, p := range g.Battlefield {
+					for _, p := range g.AllBattlefield() {
 						if p.Controller != src.Controller {
 							continue
 						}
@@ -42,7 +42,7 @@ func registerCreatures() {
 						if p.HasType(TypeArtifact) {
 							continue
 						}
-						g.Effects.RevokeAttr(p.ID(), AttrCanAttack)
+						g.RevokeAttr(p.ID(), AttrCanAttack)
 					}
 					return nil
 				}),
@@ -62,9 +62,9 @@ func registerCreatures() {
 				if src == nil {
 					return nil
 				}
-				for _, p := range g.Battlefield {
+				for _, p := range g.AllBattlefield() {
 					if p.HasType(TypeCreature) && p.CurrentPower(g) >= 3 {
-						g.Effects.PreventBlockPair(p.ID(), sourceID)
+						g.PreventBlockPair(p.ID(), sourceID)
 					}
 				}
 				return nil
@@ -82,7 +82,7 @@ func registerCreatures() {
 			WithSubTypes("Human", "Cleric"),
 			// Auto-regeneration: always have a regeneration shield available
 			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-				g.Effects.Damage.AddRegenerationShield(sourceID)
+				g.AddRegenerationShield(sourceID)
 				return nil
 			})),
 			// {1}: Can't be regenerated this turn. Only opponents may activate.
@@ -145,7 +145,7 @@ func registerCreatures() {
 			WithSubTypes("Human"),
 			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
 				// Prevent combat damage from enchanted creatures (creatures with auras attached)
-				g.Effects.Damage.AddDamagePreventionRule(
+				g.AddDamagePreventionRule(
 					WithCombatOnly(),
 					WithFrom(NewPermanentFilter("enchanted creature", func(p *Permanent, g *Game) bool {
 						if !p.HasType(TypeCreature) {
@@ -185,7 +185,7 @@ func registerCreatures() {
 					}
 					// Check if an opponent controls a nontoken red permanent
 					opponentHasRed := false
-					for _, p := range g.Battlefield {
+					for _, p := range g.AllBattlefield() {
 						if p.Controller == src.Controller {
 							continue
 						}
@@ -201,7 +201,7 @@ func registerCreatures() {
 						return nil
 					}
 					// Boost all creatures named Ivory Guardians (including self)
-					for _, p := range g.Battlefield {
+					for _, p := range g.AllBattlefield() {
 						if p.HasType(TypeCreature) && p.Card.Name() == "Ivory Guardians" {
 							p.BoostPT(1, 1)
 						}
@@ -473,11 +473,11 @@ func registerCreatures() {
 			})),
 			// Can't be blocked by red creatures
 			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-				for _, p := range g.Battlefield {
+				for _, p := range g.AllBattlefield() {
 					if p.HasType(TypeCreature) {
 						for _, c := range p.Colors() {
 							if c == Red {
-								g.Effects.PreventBlockPair(p.ID(), sourceID)
+								g.PreventBlockPair(p.ID(), sourceID)
 								break
 							}
 						}
@@ -620,12 +620,9 @@ func registerCreatures() {
 			WithKeyword(Defender),
 			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
 				// Prevent all damage from creatures this wall is blocking
-				g.Effects.Damage.AddDamagePreventionRule(
+				g.AddDamagePreventionRule(
 					WithFrom(NewPermanentFilter("blocked by this wall", func(p *Permanent, g *Game) bool {
-						if g.Combat == nil {
-							return false
-						}
-						for _, grp := range g.Combat.Groups {
+						for _, grp := range g.CombatGroups() {
 							if grp.AttackerID == p.ID() {
 								for _, bid := range grp.BlockerIDs {
 									if bid == sourceID {
@@ -665,7 +662,7 @@ func registerCreatures() {
 						g.AddContinuousEffect(boost)
 						// Revoke Defender so it can attack this turn
 						canAttack := TargetEffect(LayerAbility, EndOfTurn, sourceID, func(g *Game, target *Permanent) error {
-							g.Effects.RevokeAttr(target.ID(), Defender)
+							g.RevokeAttr(target.ID(), Defender)
 							return nil
 						})
 						canAttack.SetSourceID(sourceID)
@@ -865,7 +862,7 @@ func registerCreatures() {
 					if src == nil {
 						return nil
 					}
-					for _, p := range g.Battlefield {
+					for _, p := range g.AllBattlefield() {
 						if p.Controller != src.Controller {
 							continue
 						}
@@ -875,7 +872,7 @@ func registerCreatures() {
 						if p.HasSubType("Eye") {
 							continue
 						}
-						g.Effects.RevokeAttr(p.ID(), AttrCanAttack)
+						g.RevokeAttr(p.ID(), AttrCanAttack)
 					}
 					return nil
 				}),
@@ -955,7 +952,7 @@ func registerCreatures() {
 									ce := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, _ uuid.UUID) error {
 										p := g.FindPermanent(srcID)
 										if p != nil {
-											g.Effects.GrantAttr(p.ID(), attr)
+											g.GrantAttr(p.ID(), attr)
 										}
 										return nil
 									})
@@ -1337,7 +1334,7 @@ func registerCreatures() {
 			WithKeyword(Defender),
 			WithAbility(ProtectionFromColor(White)),
 			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-				g.Effects.Damage.AddDamagePreventionRule(
+				g.AddDamagePreventionRule(
 					WithFrom(NewPermanentFilter("enchanted creature", func(p *Permanent, g *Game) bool {
 						if !p.HasType(TypeCreature) {
 							return false
@@ -1371,12 +1368,9 @@ func registerCreatures() {
 			WithSubTypes("Wall"),
 			WithKeyword(Defender),
 			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-				g.Effects.Damage.AddDamagePreventionRule(
+				g.AddDamagePreventionRule(
 					WithFrom(NewPermanentFilter("blocked by this wall", func(p *Permanent, g *Game) bool {
-						if g.Combat == nil {
-							return false
-						}
-						for _, grp := range g.Combat.Groups {
+						for _, grp := range g.CombatGroups() {
 							if grp.AttackerID == p.ID() {
 								for _, bid := range grp.BlockerIDs {
 									if bid == sourceID {
@@ -1461,7 +1455,7 @@ func registerCreatures() {
 					if src == nil {
 						return nil
 					}
-					for _, p := range g.Battlefield {
+					for _, p := range g.AllBattlefield() {
 						if p.Controller == src.Controller {
 							continue
 						}
@@ -1615,7 +1609,7 @@ func registerCreatures() {
 					if src == nil {
 						return nil
 					}
-					for _, p := range g.Battlefield {
+					for _, p := range g.AllBattlefield() {
 						if p.ID() == sourceID || p.Controller != src.Controller {
 							continue
 						}
@@ -1631,14 +1625,14 @@ func registerCreatures() {
 					if src == nil {
 						return nil
 					}
-					for _, p := range g.Battlefield {
+					for _, p := range g.AllBattlefield() {
 						if p.ID() == sourceID || p.Controller != src.Controller {
 							continue
 						}
 						if !p.HasType(TypeCreature) || !p.HasSubType("Kobold") {
 							continue
 						}
-						g.Effects.GrantAttr(p.ID(), Trample)
+						g.GrantAttr(p.ID(), Trample)
 					}
 					return nil
 				}),
@@ -1661,14 +1655,14 @@ func registerCreatures() {
 					if src == nil {
 						return nil
 					}
-					for _, p := range g.Battlefield {
+					for _, p := range g.AllBattlefield() {
 						if p.ID() == sourceID || p.Controller != src.Controller {
 							continue
 						}
 						if !p.HasType(TypeCreature) || !p.HasSubType("Kobold") {
 							continue
 						}
-						g.Effects.GrantAttr(p.ID(), FirstStrike)
+						g.GrantAttr(p.ID(), FirstStrike)
 					}
 					return nil
 				}),
@@ -1689,7 +1683,7 @@ func registerCreatures() {
 					if src == nil {
 						return nil
 					}
-					for _, p := range g.Battlefield {
+					for _, p := range g.AllBattlefield() {
 						if p.ID() == sourceID || p.Controller != src.Controller {
 							continue
 						}
@@ -1833,11 +1827,11 @@ func registerCreatures() {
 							ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, _ uuid.UUID) error {
 								perm := g.FindPermanent(attackerID)
 								if perm != nil {
-									g.Effects.RevokeAttr(perm.ID(), AttrCanAttack)
+									g.RevokeAttr(perm.ID(), AttrCanAttack)
 								}
 								return nil
 							}, func(g *Game, _ uuid.UUID) bool {
-								return g.Turn <= expiryTurn && g.FindPermanent(attackerID) != nil
+								return g.CurrentTurn() <= expiryTurn && g.FindPermanent(attackerID) != nil
 							})
 							ce.SetSourceID(sourceID)
 							g.AddContinuousEffect(ce)
@@ -1988,9 +1982,9 @@ func registerCreatures() {
 		return NewCreature("Elven Riders", "{3}{G}{G}", 3, 3,
 			WithSubTypes("Elf"),
 			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-				for _, p := range g.Battlefield {
+				for _, p := range g.AllBattlefield() {
 					if p.HasType(TypeCreature) && !p.HasSubType("Wall") && !p.HasKeyword(Flying) {
-						g.Effects.PreventBlockPair(p.ID(), sourceID)
+						g.PreventBlockPair(p.ID(), sourceID)
 					}
 				}
 				return nil
@@ -2075,7 +2069,7 @@ func registerCreatures() {
 						g.DestroyPermanent(target)
 						// Prevent combat damage from Floral Spuzzem this turn
 						eff := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, _ uuid.UUID) error {
-							g.Effects.Damage.AddDamagePreventionRule(WithFrom(NewPermanentFilter("Floral Spuzzem", func(p *Permanent, _ *Game) bool {
+							g.AddDamagePreventionRule(WithFrom(NewPermanentFilter("Floral Spuzzem", func(p *Permanent, _ *Game) bool {
 								return p.ID() == sourceID
 							})))
 							return nil
@@ -2107,11 +2101,11 @@ func registerCreatures() {
 					ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, _ uuid.UUID) error {
 						perm := g.FindPermanent(sourceID)
 						if perm != nil {
-							g.Effects.RevokeAttr(perm.ID(), AttrCanAttack)
+							g.RevokeAttr(perm.ID(), AttrCanAttack)
 						}
 						return nil
 					}, func(g *Game, _ uuid.UUID) bool {
-						return g.Turn <= expiryTurn && g.FindPermanent(sourceID) != nil
+						return g.CurrentTurn() <= expiryTurn && g.FindPermanent(sourceID) != nil
 					})
 					ce.SetSourceID(sourceID)
 					g.AddContinuousEffect(ce)
@@ -2306,7 +2300,7 @@ func registerCreatures() {
 						return nil
 					}
 					g.AddContinuousEffect(TargetEffect(LayerAbility, EndOfTurn, perm.ID(), func(g *Game, target *Permanent) error {
-						g.Effects.RevokeAttr(target.ID(), Flying)
+						g.RevokeAttr(target.ID(), Flying)
 						return nil
 					}))
 					return nil
@@ -2334,7 +2328,7 @@ func registerCreatures() {
 							return nil
 						}
 						eff := TargetEffect(LayerAbility, EndOfTurn, targets[0], func(g *Game, target *Permanent) error {
-							g.Effects.RevokeAttr(target.ID(), Banding)
+							g.RevokeAttr(target.ID(), Banding)
 							return nil
 						})
 						eff.SetSourceID(sourceID)
@@ -2486,11 +2480,11 @@ func registerCreatures() {
 					if src == nil {
 						return nil
 					}
-					for _, p := range g.Battlefield {
+					for _, p := range g.AllBattlefield() {
 						if p.Controller != src.Controller || !p.HasType(TypeCreature) {
 							continue
 						}
-						if !p.Tapped && !g.Combat.IsAttacking(p.ID()) {
+						if !p.Tapped && !g.IsAttackingInCombat(p.ID()) {
 							p.BoostPT(0, 2)
 						}
 					}
@@ -2648,28 +2642,28 @@ func registerCreatures() {
 					switch choice {
 					case 0: // Flying
 						ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, _ uuid.UUID) error {
-							g.Effects.GrantAttr(sourceID, Flying)
+							g.GrantAttr(sourceID, Flying)
 							return nil
 						}, func(g *Game, _ uuid.UUID) bool {
-							return g.Turn <= expiryTurn && g.FindPermanent(sourceID) != nil
+							return g.CurrentTurn() <= expiryTurn && g.FindPermanent(sourceID) != nil
 						})
 						ce.SetSourceID(sourceID)
 						g.AddContinuousEffect(ce)
 					case 1: // First strike
 						ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, _ uuid.UUID) error {
-							g.Effects.GrantAttr(sourceID, FirstStrike)
+							g.GrantAttr(sourceID, FirstStrike)
 							return nil
 						}, func(g *Game, _ uuid.UUID) bool {
-							return g.Turn <= expiryTurn && g.FindPermanent(sourceID) != nil
+							return g.CurrentTurn() <= expiryTurn && g.FindPermanent(sourceID) != nil
 						})
 						ce.SetSourceID(sourceID)
 						g.AddContinuousEffect(ce)
 					case 2: // Trample
 						ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, _ uuid.UUID) error {
-							g.Effects.GrantAttr(sourceID, Trample)
+							g.GrantAttr(sourceID, Trample)
 							return nil
 						}, func(g *Game, _ uuid.UUID) bool {
-							return g.Turn <= expiryTurn && g.FindPermanent(sourceID) != nil
+							return g.CurrentTurn() <= expiryTurn && g.FindPermanent(sourceID) != nil
 						})
 						ce.SetSourceID(sourceID)
 						g.AddContinuousEffect(ce)
@@ -2685,7 +2679,7 @@ func registerCreatures() {
 							p.RuntimeAbilities = append(p.RuntimeAbilities, WrapGrantedAbility(rt))
 							return nil
 						}, func(g *Game, _ uuid.UUID) bool {
-							return g.Turn <= expiryTurn && g.FindPermanent(sourceID) != nil
+							return g.CurrentTurn() <= expiryTurn && g.FindPermanent(sourceID) != nil
 						})
 						ce.SetSourceID(sourceID)
 						g.AddContinuousEffect(ce)
@@ -2770,7 +2764,7 @@ func registerCreatures() {
 						}
 						return nil
 					}, func(g *Game, _ uuid.UUID) bool {
-						return g.Turn <= expiryTurn && g.FindPermanent(sourceID) != nil
+						return g.CurrentTurn() <= expiryTurn && g.FindPermanent(sourceID) != nil
 					})
 					ce.SetSourceID(sourceID)
 					g.AddContinuousEffect(ce)
@@ -2862,7 +2856,7 @@ func registerCreatures() {
 					if src == nil {
 						return nil
 					}
-					for _, p := range g.Battlefield {
+					for _, p := range g.AllBattlefield() {
 						if p.Controller != src.Controller || !p.HasType(TypeCreature) {
 							continue
 						}
@@ -2922,7 +2916,7 @@ func registerCreatures() {
 					ce := FuncContinuousEffect(LayerAbility, EndOfCombat, func(g *Game, _ uuid.UUID) error {
 						perm := g.FindPermanent(sourceID)
 						if perm != nil {
-							g.Effects.RevokeAttr(perm.ID(), AttrCanAttack)
+							g.RevokeAttr(perm.ID(), AttrCanAttack)
 						}
 						return nil
 					})
@@ -2934,9 +2928,9 @@ func registerCreatures() {
 						if johan == nil || johan.Tapped {
 							return nil
 						}
-						for _, p := range g.Battlefield {
+						for _, p := range g.AllBattlefield() {
 							if p.Controller == johan.Controller && p.HasAttr(AttrIsCreature) {
-								g.Effects.GrantAttr(p.ID(), Vigilance)
+								g.GrantAttr(p.ID(), Vigilance)
 							}
 						}
 						return nil
@@ -3011,7 +3005,7 @@ func registerCreatures() {
 						}
 						// Add a continuous effect that prevents damage from this creature until EOT
 						eff := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, srcID uuid.UUID) error {
-							g.Effects.Damage.AddDamagePreventionRule(WithCombatOnly(), WithFrom(NewPermanentFilter("prevented source", func(p *Permanent, _ *Game) bool {
+							g.AddDamagePreventionRule(WithCombatOnly(), WithFrom(NewPermanentFilter("prevented source", func(p *Permanent, _ *Game) bool {
 								return p.ID() == targets[0]
 							})))
 							return nil
@@ -3327,7 +3321,7 @@ func registerCreatures() {
 				if src == nil {
 					return nil
 				}
-				for _, p := range g.Battlefield {
+				for _, p := range g.AllBattlefield() {
 					if p.Controller == src.Controller && p.Name() == "Kobolds of Kher Keep" {
 						p.BoostPT(2, 2)
 					}
@@ -3367,7 +3361,7 @@ func registerCreatures() {
 							rohgahh.Controller = oppID
 						}
 						// Change controller of all Kobolds of Kher Keep
-						for _, p := range g.Battlefield {
+						for _, p := range g.AllBattlefield() {
 							if p.Name() == "Kobolds of Kher Keep" && p.Card.Owner() == controller {
 								p.Controller = oppID
 							}
@@ -3698,7 +3692,7 @@ func registerCreatures() {
 				}
 				// Check if controller has another creature
 				hasOther := false
-				for _, p := range g.Battlefield {
+				for _, p := range g.AllBattlefield() {
 					if p.Controller == src.Controller && p.HasType(TypeCreature) && p.ID() != sourceID {
 						hasOther = true
 						break
@@ -3707,16 +3701,16 @@ func registerCreatures() {
 				if !hasOther {
 					return nil
 				}
-				g.Effects.Damage.AddDamagePreventionRule(
+				g.AddDamagePreventionRule(
 					WithTo(NewPermanentFilter("Bronze Horse targeted by spell", func(p *Permanent, g *Game) bool {
 						if p.ID() != sourceID {
 							return false
 						}
 						// Only prevent if damage is from a resolving spell that targets this permanent
-						if g.ResolvingCard == nil {
+						if g.GetResolvingCard() == nil {
 							return false
 						}
-						for _, t := range g.ResolvingTargets {
+						for _, t := range g.GetResolvingTargets() {
 							if t == sourceID {
 								return true
 							}
@@ -3740,7 +3734,7 @@ func registerCreatures() {
 			WithSubTypes("Cleric"),
 			WithCardType(TypeArtifact),
 			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-				g.Effects.Damage.AddDamagePreventionRule(
+				g.AddDamagePreventionRule(
 					WithCombatOnly(),
 					WithFrom(NewPermanentFilter("Wall", func(p *Permanent, _ *Game) bool {
 						return p.HasSubType("Wall")

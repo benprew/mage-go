@@ -135,13 +135,13 @@ func NewActivatedAbility(effect Effect, cost Cost, opts ...AbilityOption) *Simpl
 }
 
 func (a *SimpleActivatedAbility) CanActivate(controller uuid.UUID, g *Game) bool {
-	if a.UpkeepOnly && g.Step != Upkeep {
+	if a.UpkeepOnly && g.step != Upkeep {
 		return false
 	}
 	if a.YourTurnOnly && g.ActivePlayerObj().PlayerID() != controller {
 		return false
 	}
-	if a.StepOnly != 0 && g.Step != a.StepOnly {
+	if a.StepOnly != 0 && g.step != a.StepOnly {
 		return false
 	}
 	if a.MaxActivationsPerTurn > 0 && a.activationsThisTurn >= a.MaxActivationsPerTurn {
@@ -152,7 +152,7 @@ func (a *SimpleActivatedAbility) CanActivate(controller uuid.UUID, g *Game) bool
 	}
 	if a.ControlledSinceTurnStart {
 		perm := g.FindPermanent(a.source)
-		if perm == nil || perm.TurnControlGained >= g.Turn {
+		if perm == nil || perm.TurnControlGained >= g.turn {
 			return false
 		}
 	}

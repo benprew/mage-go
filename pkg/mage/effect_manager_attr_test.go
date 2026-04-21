@@ -13,10 +13,10 @@ func makeTestGameWithPerm(t *testing.T) (*Game, *Permanent) {
 	card := NewCreature("Test", "{1}", 1, 1)
 	perm := NewPermanent(card, uuid.New())
 	g := &Game{
-		Battlefield: []*Permanent{perm},
-		Stack:       NewStack(),
-		Combat:      NewCombat(),
-		Effects:     NewEffectManager(),
+		battlefield: []*Permanent{perm},
+		stack:       NewStack(),
+		combat:      NewCombat(),
+		effects:     NewEffectManager(),
 	}
 	return g, perm
 }
@@ -47,7 +47,7 @@ func TestEffectManager_Apply_ResetsGrantedAttrsFirst(t *testing.T) {
 	g, perm := makeTestGameWithPerm(t)
 	// Set a stale value
 	perm.grantedAttrs[Flying] = 99
-	g.Effects.Apply(g)
+	g.effects.Apply(g)
 	if perm.grantedAttrs[Flying] != 0 {
 		t.Errorf("expected grantedAttrs[Flying]=0 after Apply reset, got %d", perm.grantedAttrs[Flying])
 	}
@@ -59,11 +59,11 @@ func TestEffectManager_Apply_WritesAttrDeltasToPerms(t *testing.T) {
 	g, perm := makeTestGameWithPerm(t)
 	// Use Indefinite duration so the effect isn't culled by source-on-battlefield filter.
 	ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, sourceID uuid.UUID) error {
-		g.Effects.GrantAttr(perm.ID(), Flying)
+		g.effects.GrantAttr(perm.ID(), Flying)
 		return nil
 	}, func(g *Game, _ uuid.UUID) bool { return true })
-	g.Effects.Add(ce)
-	g.Effects.Apply(g)
+	g.effects.Add(ce)
+	g.effects.Apply(g)
 	if perm.grantedAttrs[Flying] != 1 {
 		t.Errorf("expected grantedAttrs[Flying]=1 after Apply, got %d", perm.grantedAttrs[Flying])
 	}
@@ -78,11 +78,11 @@ func TestEffectManager_GrantAttr_MakesHasAttrTrue_AfterApply(t *testing.T) {
 		t.Fatal("precondition: perm should not have Flying")
 	}
 	ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, sourceID uuid.UUID) error {
-		g.Effects.GrantAttr(perm.ID(), Flying)
+		g.effects.GrantAttr(perm.ID(), Flying)
 		return nil
 	}, func(g *Game, _ uuid.UUID) bool { return true })
-	g.Effects.Add(ce)
-	g.Effects.Apply(g)
+	g.effects.Add(ce)
+	g.effects.Apply(g)
 	if !perm.HasAttr(Flying) {
 		t.Error("expected HasAttr(Flying) true after GrantAttr effect applied")
 	}
@@ -97,11 +97,11 @@ func TestEffectManager_RevokeAttr_NegatesBaseAttr_AfterApply(t *testing.T) {
 		t.Fatal("precondition: perm should have Flying")
 	}
 	ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, sourceID uuid.UUID) error {
-		g.Effects.RevokeAttr(perm.ID(), Flying)
+		g.effects.RevokeAttr(perm.ID(), Flying)
 		return nil
 	}, func(g *Game, _ uuid.UUID) bool { return true })
-	g.Effects.Add(ce)
-	g.Effects.Apply(g)
+	g.effects.Add(ce)
+	g.effects.Apply(g)
 	if perm.HasAttr(Flying) {
 		t.Error("expected HasAttr(Flying) false after RevokeAttr negates base")
 	}
@@ -113,18 +113,18 @@ func TestEffectManager_GrantedAttr_ClearedBetweenApplyCycles(t *testing.T) {
 	g, perm := makeTestGameWithPerm(t)
 	sourceID := uuid.New()
 	ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, sid uuid.UUID) error {
-		g.Effects.GrantAttr(perm.ID(), Flying)
+		g.effects.GrantAttr(perm.ID(), Flying)
 		return nil
 	}, func(g *Game, _ uuid.UUID) bool { return true })
 	ce.(*funcContinuousEffect).sourceID = sourceID
-	g.Effects.Add(ce)
-	g.Effects.Apply(g)
+	g.effects.Add(ce)
+	g.effects.Apply(g)
 	if !perm.HasAttr(Flying) {
 		t.Fatal("should have Flying after first Apply")
 	}
 	// Remove the effect and apply again
-	g.Effects.Remove(sourceID)
-	g.Effects.Apply(g)
+	g.effects.Remove(sourceID)
+	g.effects.Apply(g)
 	if perm.HasAttr(Flying) {
 		t.Error("expected Flying gone after removing effect and re-applying")
 	}
@@ -139,11 +139,11 @@ func TestEffectManager_ReplacePreventAttack_WithRevokeAttrCanAttack(t *testing.T
 		t.Fatal("precondition: creature should have AttrCanAttack")
 	}
 	ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, _ uuid.UUID) error {
-		g.Effects.RevokeAttr(perm.ID(), AttrCanAttack)
+		g.effects.RevokeAttr(perm.ID(), AttrCanAttack)
 		return nil
 	}, func(g *Game, _ uuid.UUID) bool { return true })
-	g.Effects.Add(ce)
-	g.Effects.Apply(g)
+	g.effects.Add(ce)
+	g.effects.Apply(g)
 	if perm.HasAttr(AttrCanAttack) {
 		t.Error("expected AttrCanAttack false after RevokeAttr")
 	}
@@ -155,20 +155,20 @@ func TestEffectManager_ReplaceRemovedKW_WithRevokeAttrKeyword(t *testing.T) {
 	card := NewCreature("Air Elemental", "{3}{U}{U}", 4, 4, WithKeyword(Flying))
 	perm := NewPermanent(card, uuid.New())
 	g := &Game{
-		Battlefield: []*Permanent{perm},
-		Stack:       NewStack(),
-		Combat:      NewCombat(),
-		Effects:     NewEffectManager(),
+		battlefield: []*Permanent{perm},
+		stack:       NewStack(),
+		combat:      NewCombat(),
+		effects:     NewEffectManager(),
 	}
 	if !perm.HasAttr(Flying) {
 		t.Fatal("precondition: creature should have Flying")
 	}
 	ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, _ uuid.UUID) error {
-		g.Effects.RevokeAttr(perm.ID(), Flying)
+		g.effects.RevokeAttr(perm.ID(), Flying)
 		return nil
 	}, func(g *Game, _ uuid.UUID) bool { return true })
-	g.Effects.Add(ce)
-	g.Effects.Apply(g)
+	g.effects.Add(ce)
+	g.effects.Apply(g)
 	if perm.HasAttr(Flying) {
 		t.Error("expected Flying false after RevokeAttr negates base")
 	}

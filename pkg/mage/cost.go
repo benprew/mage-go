@@ -47,7 +47,7 @@ func (c *ManaCostPayment) Pay(sourceID, controller uuid.UUID, g *Game) error {
 // reducedCost applies activation cost reductions (e.g. Power Artifact) to the mana cost.
 // The reduction lowers the generic component but can't reduce total mana below 1.
 func (c *ManaCostPayment) reducedCost(sourceID uuid.UUID, g *Game) ManaCost {
-	reduction := g.Effects.Rules.ActivationCostReductions[sourceID]
+	reduction := g.effects.Rules.ActivationCostReductions[sourceID]
 	if reduction <= 0 {
 		return c.MC
 	}
@@ -222,7 +222,7 @@ func SacrificeCreatureCost() Cost {
 }
 
 func (c *sacrificeMatchingCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
-	for _, p := range g.Battlefield {
+	for _, p := range g.battlefield {
 		if p.Controller == controller && p.ID() != sourceID && c.filter.Match(p, g) {
 			return true
 		}
@@ -232,7 +232,7 @@ func (c *sacrificeMatchingCost) CanPay(sourceID, controller uuid.UUID, g *Game) 
 
 func (c *sacrificeMatchingCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	var candidates []*Permanent
-	for _, p := range g.Battlefield {
+	for _, p := range g.battlefield {
 		if p.Controller == controller && p.ID() != sourceID && c.filter.Match(p, g) {
 			candidates = append(candidates, p)
 		}
@@ -270,7 +270,7 @@ func TapCreatureCost() Cost {
 }
 
 func (c *tapMatchingCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
-	for _, p := range g.Battlefield {
+	for _, p := range g.battlefield {
 		if p.Controller == controller && p.ID() != sourceID && !p.Tapped && p.CanTapForEffect(g) && c.filter.Match(p, g) {
 			return true
 		}
@@ -280,7 +280,7 @@ func (c *tapMatchingCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 
 func (c *tapMatchingCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	var candidates []*Permanent
-	for _, p := range g.Battlefield {
+	for _, p := range g.battlefield {
 		if p.Controller == controller && p.ID() != sourceID && !p.Tapped && p.CanTapForEffect(g) && c.filter.Match(p, g) {
 			candidates = append(candidates, p)
 		}
@@ -362,7 +362,7 @@ func (c *exileFromGraveyardCost) Pay(sourceID, controller uuid.UUID, g *Game) er
 	for i := 0; i < n; i++ {
 		card := gy[i]
 		if _, ok := p.RemoveFromGraveyard(card.ID()); ok {
-			g.Exile = append(g.Exile, ExiledCard{Card: card, ExiledBy: sourceID})
+			g.exile = append(g.exile, ExiledCard{Card: card, ExiledBy: sourceID})
 		}
 	}
 	return nil
@@ -394,7 +394,7 @@ func (c *returnToHandCost) matchFilter(p *Permanent, g *Game) bool {
 }
 
 func (c *returnToHandCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
-	for _, p := range g.Battlefield {
+	for _, p := range g.battlefield {
 		if p.Controller == controller && p.ID() != sourceID && c.matchFilter(p, g) {
 			return true
 		}
@@ -404,7 +404,7 @@ func (c *returnToHandCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool 
 
 func (c *returnToHandCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	var candidates []*Permanent
-	for _, p := range g.Battlefield {
+	for _, p := range g.battlefield {
 		if p.Controller == controller && p.ID() != sourceID && c.matchFilter(p, g) {
 			candidates = append(candidates, p)
 		}
@@ -452,7 +452,7 @@ func (c *exileSourceCost) Text() string { return "Exile ~" }
 type xManaCost struct{}
 
 // XManaCost creates a cost that requires paying X generic mana.
-// The X value must be set on g.CurrentX before activation.
+// The X value must be set on g.currentX before activation.
 func XManaCost() Cost { return &xManaCost{} }
 
 func (c *xManaCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
@@ -460,7 +460,7 @@ func (c *xManaCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 }
 
 func (c *xManaCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
-	x := g.CurrentX
+	x := g.currentX
 	if x <= 0 {
 		return nil
 	}

@@ -741,7 +741,7 @@ func TestPlagueRats(t *testing.T) {
 		g.StopAt(1, core.PrecombatMain)
 		g.Execute()
 		found := false
-		for _, perm := range g.Battlefield {
+		for _, perm := range g.AllBattlefield() {
 			if perm.Name() == "Plague Rats" {
 				p := perm.CurrentPower(g.Game)
 				tt := perm.CurrentToughness(g.Game)
@@ -768,7 +768,7 @@ func TestClone(t *testing.T) {
 		g.Execute()
 		// Should have two 4/4 creatures (original + clone)
 		count44 := 0
-		for _, perm := range g.Battlefield {
+		for _, perm := range g.AllBattlefield() {
 			if perm.Controller == g.AllPlayers()[0].PlayerID() {
 				if perm.CurrentPower(g.Game) == 4 && perm.CurrentToughness(g.Game) == 4 {
 					count44++

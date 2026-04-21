@@ -17,7 +17,7 @@ func init() {
 type sacrificeArtifactCaptureCMCCost struct{}
 
 func (c *sacrificeArtifactCaptureCMCCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
-	for _, p := range g.Battlefield {
+	for _, p := range g.AllBattlefield() {
 		if p.Controller == controller && p.HasType(TypeArtifact) && p.ID() != sourceID {
 			return true
 		}
@@ -27,7 +27,7 @@ func (c *sacrificeArtifactCaptureCMCCost) CanPay(sourceID, controller uuid.UUID,
 
 func (c *sacrificeArtifactCaptureCMCCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	var candidates []*Permanent
-	for _, p := range g.Battlefield {
+	for _, p := range g.AllBattlefield() {
 		if p.Controller == controller && p.HasType(TypeArtifact) && p.ID() != sourceID {
 			candidates = append(candidates, p)
 		}
@@ -40,7 +40,7 @@ func (c *sacrificeArtifactCaptureCMCCost) Pay(sourceID, controller uuid.UUID, g 
 	if chosen == nil {
 		return fmt.Errorf("no artifact to sacrifice")
 	}
-	g.CurrentX = chosen.Card.ManaCost().CMC()
+	g.SetXValue(chosen.Card.ManaCost().CMC())
 	g.Sacrifice(chosen)
 	return nil
 }
@@ -92,7 +92,7 @@ func registerCreatures() {
 					if src == nil {
 						return nil
 					}
-					g.Effects.Damage.SetArtifactDamageRedirect(src.Controller, src.ID())
+					g.SetArtifactDamageRedirect(src.Controller, src.ID())
 					return nil
 				}, SourceUntapped),
 			),
@@ -150,7 +150,7 @@ func registerCreatures() {
 								if t == nil {
 									return nil
 								}
-								g.Effects.GrantAttr(t.ID(), AttrDoesNotUntap)
+								g.GrantAttr(t.ID(), AttrDoesNotUntap)
 								return nil
 							})
 						eff.SetSourceID(sourceID)
@@ -356,9 +356,9 @@ func registerCreatures() {
 						return nil
 					}
 					// Can't be blocked by artifact creatures
-					for _, blocker := range g.Battlefield {
+					for _, blocker := range g.AllBattlefield() {
 						if blocker.HasType(TypeArtifact) && blocker.HasType(TypeCreature) {
-							g.Effects.PreventBlockPair(blocker.ID(), sourceID)
+							g.PreventBlockPair(blocker.ID(), sourceID)
 						}
 					}
 					return nil
@@ -453,7 +453,7 @@ func registerCreatures() {
 								return nil
 							}
 							eff := TargetEffect(LayerAbility, EndOfCombat, perm.ID(), func(g *Game, target *Permanent) error {
-								g.Effects.GrantAttr(target.ID(), Banding)
+								g.GrantAttr(target.ID(), Banding)
 								return nil
 							})
 							eff.SetSourceID(sourceID)
@@ -943,7 +943,7 @@ func registerCreatures() {
 							attr = Trample
 						}
 						kwEff := TargetEffect(LayerAbility, EndOfTurn, perm.ID(), func(g *Game, target *Permanent) error {
-							g.Effects.GrantAttr(target.ID(), attr)
+							g.GrantAttr(target.ID(), attr)
 							return nil
 						})
 						kwEff.SetSourceID(sourceID)

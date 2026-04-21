@@ -14,7 +14,7 @@ import (
 func TestProfitableToAttack_NoBlockers(t *testing.T) {
 	g, pa, pb := makeGame()
 	atk := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk)
+	g.AddToBattlefield(atk)
 	if !profitableToAttack(atk, g, pb.PlayerID()) {
 		t.Error("should be profitable when no blockers exist")
 	}
@@ -24,7 +24,7 @@ func TestProfitableToAttack_AttackerSurvives(t *testing.T) {
 	g, pa, pb := makeGame()
 	atk := makePerm("Giant", "{3}{G}", 4, 5, pa.PlayerID())
 	blk := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
+	g.AddToBattlefield(atk, blk)
 	if !profitableToAttack(atk, g, pb.PlayerID()) {
 		t.Error("should be profitable when attacker survives block")
 	}
@@ -35,7 +35,7 @@ func TestProfitableToAttack_TradeUp(t *testing.T) {
 	// Our 2-CMC bear trades with their 3-CMC creature — profitable
 	atk := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
 	blk := makePerm("Hill Giant", "{2}{R}", 3, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
+	g.AddToBattlefield(atk, blk)
 	if !profitableToAttack(atk, g, pb.PlayerID()) {
 		t.Error("should be profitable when trading up in CMC")
 	}
@@ -46,7 +46,7 @@ func TestProfitableToAttack_TradeDown(t *testing.T) {
 	// Our 4-CMC creature trades with their 2-CMC creature — bad trade
 	atk := makePerm("Expensive", "{3}{G}", 2, 2, pa.PlayerID())
 	blk := makePerm("Cheap", "{1}{G}", 2, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
+	g.AddToBattlefield(atk, blk)
 	if profitableToAttack(atk, g, pb.PlayerID()) {
 		t.Error("should NOT be profitable when trading down in CMC")
 	}
@@ -56,7 +56,7 @@ func TestProfitableToAttack_AttackerDies(t *testing.T) {
 	g, pa, pb := makeGame()
 	atk := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
 	blk := makePerm("Wall", "{1}{W}", 0, 5, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
+	g.AddToBattlefield(atk, blk)
 	// Attacker dies (blocker's 0 power doesn't kill attacker, but attacker can't kill blocker)
 	// Actually: atkPow=2 < blkTough=5 (blk doesn't die), blkPow=0 < atkTough=2 (atk survives)
 	// So attacker survives — this should be profitable
@@ -69,7 +69,7 @@ func TestProfitableToAttack_AttackerDiesBlockerSurvives(t *testing.T) {
 	g, pa, pb := makeGame()
 	atk := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
 	blk := makePerm("Big", "{3}{G}", 3, 4, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
+	g.AddToBattlefield(atk, blk)
 	// blkPow=3 >= atkTough=2 (atk dies), atkPow=2 < blkTough=4 (blk survives)
 	if profitableToAttack(atk, g, pb.PlayerID()) {
 		t.Error("should NOT be profitable when attacker dies and blocker survives")
@@ -81,7 +81,7 @@ func TestProfitableToAttack_TappedBlockerIgnored(t *testing.T) {
 	atk := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
 	blk := makePerm("Big", "{3}{G}", 5, 5, pb.PlayerID())
 	blk.Tapped = true
-	g.Battlefield = append(g.Battlefield, atk, blk)
+	g.AddToBattlefield(atk, blk)
 	if !profitableToAttack(atk, g, pb.PlayerID()) {
 		t.Error("tapped blocker should be ignored, attack should be profitable")
 	}
@@ -95,7 +95,7 @@ func TestAttackers_AggroAttacksAll(t *testing.T) {
 	c2 := makePerm("Elf", "{G}", 1, 1, pa.PlayerID())
 	// Opponent has a big blocker — aggro attacks anyway
 	blk := makePerm("Giant", "{3}{G}", 5, 5, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, c1, c2, blk)
+	g.AddToBattlefield(c1, c2, blk)
 
 	strat := &HeuristicStrategy{Personality: AggroPersonality}
 	attackers := strat.Attackers(pa, g)
@@ -109,7 +109,7 @@ func TestAttackers_ControlOnlyProfitable(t *testing.T) {
 	smallAtk := makePerm("Elf", "{G}", 1, 1, pa.PlayerID())
 	// Opponent has a 3/3 that would kill the elf
 	blk := makePerm("Bear", "{1}{G}", 3, 3, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, smallAtk, blk)
+	g.AddToBattlefield(smallAtk, blk)
 
 	strat := &HeuristicStrategy{Personality: ControlPersonality}
 	attackers := strat.Attackers(pa, g)
@@ -125,7 +125,7 @@ func TestAttackers_SkipsCantAttack(t *testing.T) {
 	// Create a tapped creature — can't attack
 	c2 := makePerm("Tapped", "{1}{R}", 3, 3, pa.PlayerID())
 	c2.Tapped = true
-	g.Battlefield = append(g.Battlefield, c1, c2)
+	g.AddToBattlefield(c1, c2)
 
 	strat := &HeuristicStrategy{Personality: AggroPersonality}
 	attackers := strat.Attackers(pa, g)
@@ -141,9 +141,9 @@ func TestBlockers_ControlBlocksHighPower(t *testing.T) {
 	// Attacker with power >= 3 so it meets the atkPow >= 3 guard
 	atk := makePerm("Giant", "{3}{R}", 3, 3, pa.PlayerID())
 	blk := makePerm("Wall", "{W}", 0, 4, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
+	g.AddToBattlefield(atk, blk)
 
-	g.Combat.AddAttacker(atk.ID(), pb.PlayerID())
+	g.GetCombat().AddAttacker(atk.ID(), pb.PlayerID())
 
 	strat := &HeuristicStrategy{Personality: ControlPersonality}
 	blocks := strat.Blockers(pb, g)
@@ -156,9 +156,9 @@ func TestBlockers_AggroSkipsWeakAttacker(t *testing.T) {
 	g, pa, pb := makeGame()
 	atk := makePerm("Elf", "{G}", 1, 1, pa.PlayerID())
 	blk := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
+	g.AddToBattlefield(atk, blk)
 
-	g.Combat.AddAttacker(atk.ID(), pb.PlayerID())
+	g.GetCombat().AddAttacker(atk.ID(), pb.PlayerID())
 
 	strat := &HeuristicStrategy{Personality: AggroPersonality}
 	blocks := strat.Blockers(pb, g)
@@ -172,9 +172,9 @@ func TestBlockers_KillsAttacker(t *testing.T) {
 	g, pa, pb := makeGame()
 	atk := makePerm("Bear", "{1}{G}", 3, 3, pa.PlayerID())
 	blk := makePerm("Giant", "{3}{G}", 4, 4, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
+	g.AddToBattlefield(atk, blk)
 
-	g.Combat.AddAttacker(atk.ID(), pb.PlayerID())
+	g.GetCombat().AddAttacker(atk.ID(), pb.PlayerID())
 
 	strat := &HeuristicStrategy{Personality: ControlPersonality}
 	blocks := strat.Blockers(pb, g)
@@ -187,9 +187,9 @@ func TestBlockers_CantBlockFlying(t *testing.T) {
 	g, pa, pb := makeGame()
 	atk := makePerm("Bird", "{1}{U}", 2, 2, pa.PlayerID(), mage.WithKeyword(core.Flying))
 	blk := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
+	g.AddToBattlefield(atk, blk)
 
-	g.Combat.AddAttacker(atk.ID(), pb.PlayerID())
+	g.GetCombat().AddAttacker(atk.ID(), pb.PlayerID())
 
 	strat := &HeuristicStrategy{Personality: ControlPersonality}
 	blocks := strat.Blockers(pb, g)
@@ -202,9 +202,9 @@ func TestBlockers_ReachCanBlockFlying(t *testing.T) {
 	g, pa, pb := makeGame()
 	atk := makePerm("Bird", "{1}{U}", 3, 3, pa.PlayerID(), mage.WithKeyword(core.Flying))
 	blk := makePerm("Spider", "{1}{G}", 1, 4, pb.PlayerID(), mage.WithKeyword(core.Reach))
-	g.Battlefield = append(g.Battlefield, atk, blk)
+	g.AddToBattlefield(atk, blk)
 
-	g.Combat.AddAttacker(atk.ID(), pb.PlayerID())
+	g.GetCombat().AddAttacker(atk.ID(), pb.PlayerID())
 
 	strat := &HeuristicStrategy{Personality: ControlPersonality}
 	blocks := strat.Blockers(pb, g)
@@ -218,7 +218,7 @@ func TestBlockers_ReachCanBlockFlying(t *testing.T) {
 
 func TestPriorityAction_PlaysLandFirst(t *testing.T) {
 	g, pa, _ := makeGame()
-	g.Step = core.PrecombatMain
+	g.SetStep(core.PrecombatMain)
 	land := mage.NewLand("Forest")
 	land.SetOwner(pa.PlayerID())
 	pa.AddToHand(land)
@@ -299,7 +299,7 @@ func TestAdaptiveStrategy_BehindUsesDefensive(t *testing.T) {
 	pb.SetLife(20)
 	// Give opponent a creature to make score clearly negative
 	oppCreature := makePerm("Giant", "{3}{R}", 5, 5, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, oppCreature)
+	g.AddToBattlefield(oppCreature)
 
 	adaptive := &AdaptiveStrategy{
 		Aggressive: &HeuristicStrategy{Personality: AggroPersonality},
@@ -393,7 +393,7 @@ func TestSequentialStrategy_Blockers(t *testing.T) {
 func TestAutoSelectTargets_AnyTargetBenefit_OwnCreature(t *testing.T) {
 	g, pa, _ := makeGame()
 	ownCreature := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
-	g.Battlefield = append(g.Battlefield, ownCreature)
+	g.AddToBattlefield(ownCreature)
 
 	card := mage.NewInstant("Heal", "{W}",
 		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DrawCards(mage.Fixed(1))),
@@ -411,7 +411,7 @@ func TestAutoSelectTargets_AnyTargetBenefit_OwnCreature(t *testing.T) {
 func TestAutoSelectTargets_AnyTargetDetriment_OpponentCreature(t *testing.T) {
 	g, pa, pb := makeGame()
 	oppCreature := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, oppCreature)
+	g.AddToBattlefield(oppCreature)
 
 	card := mage.NewInstant("Bolt", "{R}",
 		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
@@ -429,7 +429,7 @@ func TestAutoSelectTargets_AnyTargetDetriment_OpponentCreature(t *testing.T) {
 func TestAutoSelectTargets_BurnTargetsFace(t *testing.T) {
 	g, pa, pb := makeGame()
 	oppCreature := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, oppCreature)
+	g.AddToBattlefield(oppCreature)
 
 	card := mage.NewInstant("Bolt", "{R}",
 		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
@@ -448,7 +448,7 @@ func TestAutoSelectTargets_CreatureTargetBenefit_OwnCreature(t *testing.T) {
 	g, pa, pb := makeGame()
 	ownCreature := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
 	oppCreature := makePerm("Ogre", "{2}{R}", 3, 3, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, ownCreature, oppCreature)
+	g.AddToBattlefield(ownCreature, oppCreature)
 
 	card := mage.NewInstant("Buff", "{G}",
 		mage.NewTargetedSpell(mage.TargetCreature(), mage.DrawCards(mage.Fixed(1))),
@@ -467,7 +467,7 @@ func TestAutoSelectTargets_CreatureTargetDetriment_OpponentCreature(t *testing.T
 	g, pa, pb := makeGame()
 	ownCreature := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
 	oppCreature := makePerm("Ogre", "{2}{R}", 3, 3, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, ownCreature, oppCreature)
+	g.AddToBattlefield(ownCreature, oppCreature)
 
 	card := mage.NewSorcery("Destroy", "{1}{B}",
 		mage.NewTargetedSpell(mage.TargetCreature(), mage.DestroyTarget()),
@@ -517,7 +517,7 @@ func TestAutoSelectTargets_LethalPreference(t *testing.T) {
 	// Two opponent creatures: expensive 5/5 and cheap 2/2. Bolt (3 damage) kills only the 2/2.
 	big := makePerm("Giant", "{4}{G}", 5, 5, pb.PlayerID())
 	small := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, big, small)
+	g.AddToBattlefield(big, small)
 
 	card := mage.NewInstant("Bolt", "{R}",
 		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
@@ -579,9 +579,9 @@ func TestAIPlayer_DeclareAttackers(t *testing.T) {
 	g, _, _ := makeGame()
 	ai := NewAggroAI("Bot")
 	// Wire the AI as player A
-	g.Players[0] = ai
+	g.SetPlayerAt(0, ai)
 	creature := makePerm("Bear", "{1}{G}", 2, 2, ai.PlayerID())
-	g.Battlefield = append(g.Battlefield, creature)
+	g.AddToBattlefield(creature)
 
 	attackers := ai.DeclareAttackers(g)
 	if len(attackers) != 1 {
@@ -593,13 +593,13 @@ func TestAIPlayer_DeclareBlockers(t *testing.T) {
 	g, pa, _ := makeGame()
 	ai := NewControlAI("Bot")
 	// AI is player index 1 (defender)
-	g.Players[1] = ai
+	g.SetPlayerAt(1, ai)
 
 	// Power 3 attacker triggers the atkPow >= 3 guard in the blocker logic
 	atk := makePerm("Giant", "{2}{R}", 3, 3, pa.PlayerID())
 	blk := makePerm("Blocker", "{1}{G}", 2, 4, ai.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
-	g.Combat.AddAttacker(atk.ID(), ai.PlayerID())
+	g.AddToBattlefield(atk, blk)
+	g.GetCombat().AddAttacker(atk.ID(), ai.PlayerID())
 
 	blocks := ai.DeclareBlockers(g)
 	if len(blocks) != 1 {
@@ -616,7 +616,7 @@ func TestAttackers_LethalUsesMinimalSet(t *testing.T) {
 	big := makePerm("Assassin", "{2}{U}", 3, 3, pa.PlayerID(), mage.WithKeyword(core.UnblockableKW))
 	// 2/2 vanilla — should NOT be included in lethal set
 	small := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
-	g.Battlefield = append(g.Battlefield, big, small)
+	g.AddToBattlefield(big, small)
 
 	strat := &HeuristicStrategy{Personality: ControlPersonality}
 	attackers := strat.Attackers(pa, g)
@@ -636,7 +636,7 @@ func TestAttackers_LethalOverridesControlPersonality(t *testing.T) {
 	// but lethal detection should override
 	atk := makePerm("Rogue", "{1}{U}", 2, 2, pa.PlayerID(), mage.WithKeyword(core.UnblockableKW))
 	blk := makePerm("Giant", "{3}{G}", 5, 5, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
+	g.AddToBattlefield(atk, blk)
 
 	strat := &HeuristicStrategy{Personality: ControlPersonality}
 	attackers := strat.Attackers(pa, g)
@@ -654,8 +654,8 @@ func TestBlockers_BlocksToPreventLethal(t *testing.T) {
 	atk := makePerm("Giant", "{2}{R}", 3, 3, pa.PlayerID())
 	// Our 1/1 can block (bad trade normally, but prevents lethal)
 	blk := makePerm("Elf", "{G}", 1, 1, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
-	g.Combat.AddAttacker(atk.ID(), pb.PlayerID())
+	g.AddToBattlefield(atk, blk)
+	g.GetCombat().AddAttacker(atk.ID(), pb.PlayerID())
 
 	// Aggro personality normally skips blocking power < 3, but lethal override should block
 	strat := &HeuristicStrategy{Personality: AggroPersonality}
@@ -676,7 +676,7 @@ func TestAttackers_RaceFavorably(t *testing.T) {
 	ground := makePerm("Elf", "{G}", 1, 1, pa.PlayerID())
 	// Opponent has a 5/5 blocker that would kill the elf
 	bigBlocker := makePerm("Giant", "{3}{G}", 5, 5, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, unblockable, ground, bigBlocker)
+	g.AddToBattlefield(unblockable, ground, bigBlocker)
 
 	// Control personality normally wouldn't attack with the 1/1 into a 5/5
 	// But we're racing favorably so it should attack aggressively
@@ -698,7 +698,7 @@ func TestPriorityAction_PrefersCurvePlay(t *testing.T) {
 		land.SetOwner(pa.PlayerID())
 		lp := mage.NewPermanent(land, pa.PlayerID())
 		lp.RevokeBaseAttr(core.AttrSummonSick)
-		g.Battlefield = append(g.Battlefield, lp)
+		g.AddToBattlefield(lp)
 		pa.ManaPool().Add(core.Green, 1)
 	}
 
@@ -730,14 +730,14 @@ func TestPriorityAction_ActivatesAbility(t *testing.T) {
 	g, pa, pb := makeGame()
 	// Opponent has a creature for targeting
 	oppCreature := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, oppCreature)
+	g.AddToBattlefield(oppCreature)
 
 	// Player has a pinger (tap-to-deal-1-damage, quality=4, above threshold of 3)
 	pinger := makePerm("Pinger", "{1}{R}", 1, 1, pa.PlayerID(),
 		mage.WithActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.TapSourceCost(),
 			mage.WithTarget(mage.TargetAnyTarget())),
 	)
-	g.Battlefield = append(g.Battlefield, pinger)
+	g.AddToBattlefield(pinger)
 
 	strat := &HeuristicStrategy{Personality: MidrangePersonality}
 	// No spells in hand, not main phase → should consider ability activation

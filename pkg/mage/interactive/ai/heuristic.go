@@ -257,7 +257,7 @@ func (s *HeuristicStrategy) Attackers(p mage.Player, g *mage.Game) []uuid.UUID {
 	race := eval.CalculateRace(g, playerID)
 
 	var attackers []uuid.UUID
-	for _, perm := range g.Battlefield {
+	for _, perm := range g.AllBattlefield() {
 		if perm.Controller != playerID {
 			continue
 		}
@@ -287,7 +287,7 @@ func (s *HeuristicStrategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAs
 	var assignments []mage.BlockAssignment
 
 	var available []*mage.Permanent
-	for _, perm := range g.Battlefield {
+	for _, perm := range g.AllBattlefield() {
 		if perm.Controller != playerID || !perm.CanDeclareAsBlocker(g) {
 			continue
 		}
@@ -296,7 +296,7 @@ func (s *HeuristicStrategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAs
 
 	singleBlockedAttackers := make(map[uuid.UUID]bool)
 
-	for _, group := range g.Combat.Groups {
+	for _, group := range g.CombatGroups() {
 		if group.DefenderID != playerID {
 			continue
 		}
@@ -358,7 +358,7 @@ func (s *HeuristicStrategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAs
 		_ = assigned
 	}
 
-	for _, group := range g.Combat.Groups {
+	for _, group := range g.CombatGroups() {
 		if group.DefenderID != playerID {
 			continue
 		}

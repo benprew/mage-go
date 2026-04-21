@@ -405,7 +405,7 @@ func registerSpells() {
 					for permID := range preventIDs {
 						pid := permID
 						eff := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, _ uuid.UUID) error {
-							g.Effects.Damage.AddDamagePreventionRule(WithFrom(NewPermanentFilter("feinted creature", func(p *Permanent, _ *Game) bool {
+							g.AddDamagePreventionRule(WithFrom(NewPermanentFilter("feinted creature", func(p *Permanent, _ *Game) bool {
 								return p.ID() == pid
 							})))
 							return nil
@@ -526,7 +526,7 @@ func registerSpells() {
 								// Grant "doesn't untap while it has glyph counters" (indefinite)
 								eff := TargetEffect(LayerAbility, Indefinite, creatureID, func(g *Game, target *Permanent) error {
 									if target.Counters[Glyph] > 0 {
-										g.Effects.GrantAttr(target.ID(), AttrDoesNotUntap)
+										g.GrantAttr(target.ID(), AttrDoesNotUntap)
 									}
 									return nil
 								})
@@ -581,7 +581,7 @@ func registerSpells() {
 					g.AddContinuousEffect(eff)
 					// Prevent all damage to it this turn
 					prevEff := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, srcID uuid.UUID) error {
-						g.Effects.Damage.AddDamagePreventionRule(WithTo(NewPermanentFilter("target Wall", func(p *Permanent, _ *Game) bool {
+						g.AddDamagePreventionRule(WithTo(NewPermanentFilter("target Wall", func(p *Permanent, _ *Game) bool {
 							return p.ID() == wallID
 						})))
 						return nil
@@ -1297,7 +1297,7 @@ func registerSpells() {
 					cmc := perm.Card.ManaCost().CMC()
 					// Prevent all combat damage dealt by this creature
 					eff := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, _ uuid.UUID) error {
-						g.Effects.Damage.AddDamagePreventionRule(WithCombatOnly(), WithFrom(NewPermanentFilter("subdued creature", func(p *Permanent, _ *Game) bool {
+						g.AddDamagePreventionRule(WithCombatOnly(), WithFrom(NewPermanentFilter("subdued creature", func(p *Permanent, _ *Game) bool {
 							return p.ID() == targetID
 						})))
 						return nil
@@ -1382,11 +1382,11 @@ func registerSpells() {
 					ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, _ uuid.UUID) error {
 						p := g.FindPermanent(targetID)
 						if p != nil {
-							g.Effects.GrantAttr(p.ID(), AttrDoesNotUntap)
+							g.GrantAttr(p.ID(), AttrDoesNotUntap)
 						}
 						return nil
 					}, func(g *Game, _ uuid.UUID) bool {
-						return g.Turn <= expiryTurn && g.FindPermanent(targetID) != nil
+						return g.CurrentTurn() <= expiryTurn && g.FindPermanent(targetID) != nil
 					})
 					ce.SetSourceID(sourceID)
 					g.AddContinuousEffect(ce)

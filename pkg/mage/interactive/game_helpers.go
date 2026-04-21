@@ -17,16 +17,16 @@ func captureForUndo(g *mage.Game, playerID uuid.UUID, logLen int) undoSnapshot {
 	copy(hand, p.Hand())
 	pool := p.ManaPool().SnapshotPool()
 	tapped := make(map[uuid.UUID]bool)
-	for _, perm := range g.Battlefield {
+	for _, perm := range g.AllBattlefield() {
 		tapped[perm.ID()] = perm.Tapped
 	}
 	return undoSnapshot{
 		valid:          true,
 		hand:           hand,
 		manaPool:       pool,
-		landsPlayed:    g.LandsPlayedThisTurn,
-		battlefieldLen: len(g.Battlefield),
-		stackSize:      g.Stack.Size(),
+		landsPlayed:    g.GetLandsPlayedThisTurn(),
+		battlefieldLen: len(g.AllBattlefield()),
+		stackSize:      g.StackSize(),
 		tappedState:    tapped,
 		logLen:         logLen,
 	}
@@ -39,14 +39,14 @@ func restoreFromUndo(g *mage.Game, playerID uuid.UUID, snap undoSnapshot) {
 	}
 	p.SetHand(snap.hand)
 	p.ManaPool().RestorePool(snap.manaPool)
-	g.LandsPlayedThisTurn = snap.landsPlayed
-	if len(g.Battlefield) > snap.battlefieldLen {
-		g.Battlefield = g.Battlefield[:snap.battlefieldLen]
+	g.SetLandsPlayedThisTurn(snap.landsPlayed)
+	if len(g.AllBattlefield()) > snap.battlefieldLen {
+		g.TruncateBattlefield(snap.battlefieldLen)
 	}
-	for g.Stack.Size() > snap.stackSize {
-		g.Stack.Pop()
+	for g.StackSize() > snap.stackSize {
+		g.GetStack().Pop()
 	}
-	for _, perm := range g.Battlefield {
+	for _, perm := range g.AllBattlefield() {
 		if was, ok := snap.tappedState[perm.ID()]; ok {
 			perm.Tapped = was
 		}
@@ -55,7 +55,7 @@ func restoreFromUndo(g *mage.Game, playerID uuid.UUID, snap undoSnapshot) {
 
 // findPlayerIndex returns the index of the player with the given ID in g.Players.
 func findPlayerIndex(g *mage.Game, id uuid.UUID) int {
-	for i, p := range g.Players {
+	for i, p := range g.AllPlayers() {
 		if p.PlayerID() == id {
 			return i
 		}
@@ -88,7 +88,7 @@ func targetSuffix(g *mage.Game, targets []uuid.UUID) string {
 
 func getEligibleAttackers(g *mage.Game, playerID uuid.UUID) []*mage.Permanent {
 	var eligible []*mage.Permanent
-	for _, perm := range g.Battlefield {
+	for _, perm := range g.AllBattlefield() {
 		if perm.Controller != playerID || !perm.CanDeclareAsAttacker(g) {
 			continue
 		}
@@ -111,7 +111,7 @@ func attackerOptions(eligible []*mage.Permanent) []ActionOption {
 
 func getEligibleBlockers(g *mage.Game, playerID uuid.UUID) []*mage.Permanent {
 	var eligible []*mage.Permanent
-	for _, perm := range g.Battlefield {
+	for _, perm := range g.AllBattlefield() {
 		if perm.Controller != playerID || !perm.CanDeclareAsBlocker(g) {
 			continue
 		}
@@ -128,7 +128,7 @@ func blockerOptions(g *mage.Game, defenderID uuid.UUID, eligible []*mage.Permane
 			Label:       fmt.Sprintf("%s %d/%d", perm.Name(), perm.CurrentPower(g), perm.CurrentToughness(g)),
 			PermanentID: perm.ID(),
 		}
-		for _, group := range g.Combat.Groups {
+		for _, group := range g.CombatGroups() {
 			attacker := g.FindPermanent(group.AttackerID)
 			if attacker == nil {
 				continue
@@ -147,14 +147,14 @@ func blockerOptions(g *mage.Game, defenderID uuid.UUID, eligible []*mage.Permane
 }
 
 func reportCombatResults(g *mage.Game, addLog func(string)) {
-	for _, p := range g.Players {
+	for _, p := range g.AllPlayers() {
 		addLog(fmt.Sprintf("%s: %d life", p.Name(), p.Life()))
 	}
 }
 
 // logCombatPreview logs a summary of each combat group before damage is dealt.
 func logCombatPreview(g *mage.Game, addLog func(string)) {
-	for _, grp := range g.Combat.Groups {
+	for _, grp := range g.CombatGroups() {
 		atk := g.FindPermanent(grp.AttackerID)
 		if atk == nil {
 			continue

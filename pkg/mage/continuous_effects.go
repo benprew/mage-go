@@ -21,7 +21,7 @@ func BoostAttached(power, toughness int, at AttachType) ContinuousEffect {
 // GrantAbilityToAttached creates a continuous effect granting a keyword to the attached creature.
 func GrantAbilityToAttached(kw Keyword, at AttachType) ContinuousEffect {
 	return AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
-		g.Effects.GrantAttr(target.ID(), kw)
+		g.effects.GrantAttr(target.ID(), kw)
 		return nil
 	})
 }
@@ -38,7 +38,7 @@ func GrantProtectionToAttached(color Color, at AttachType) ContinuousEffect {
 // RemoveKeywordFromAttached creates a continuous effect removing a keyword from the attached creature.
 func RemoveKeywordFromAttached(kw Keyword, at AttachType) ContinuousEffect {
 	return AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
-		g.Effects.RevokeAttr(target.ID(), kw)
+		g.effects.RevokeAttr(target.ID(), kw)
 		return nil
 	})
 }
@@ -98,7 +98,7 @@ func GrantActivatedAbilityToAttached(effect Effect, cost Cost, at AttachType) Co
 // PreventAttachedFromUntapping creates a continuous effect preventing the attached creature from untapping.
 func PreventAttachedFromUntapping(at AttachType) ContinuousEffect {
 	return AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
-		g.Effects.GrantAttr(target.ID(), AttrDoesNotUntap)
+		g.effects.GrantAttr(target.ID(), AttrDoesNotUntap)
 		return nil
 	})
 }
@@ -106,7 +106,7 @@ func PreventAttachedFromUntapping(at AttachType) ContinuousEffect {
 // PreventAttachedFromAttacking creates a continuous effect preventing the attached creature from attacking.
 func PreventAttachedFromAttacking(at AttachType) ContinuousEffect {
 	return AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
-		g.Effects.RevokeAttr(target.ID(), AttrCanAttack)
+		g.effects.RevokeAttr(target.ID(), AttrCanAttack)
 		return nil
 	})
 }
@@ -147,7 +147,7 @@ func TemporaryBoost(targetID uuid.UUID, power, toughness int) ContinuousEffect {
 // TemporaryKeyword creates a continuous effect granting a keyword to a creature until end of turn.
 func TemporaryKeyword(targetID uuid.UUID, kw Keyword) ContinuousEffect {
 	return TargetEffect(LayerAbility, EndOfTurn, targetID, func(g *Game, target *Permanent) error {
-		g.Effects.GrantAttr(target.ID(), kw)
+		g.effects.GrantAttr(target.ID(), kw)
 		return nil
 	})
 }
@@ -156,8 +156,8 @@ func TemporaryKeyword(targetID uuid.UUID, kw Keyword) ContinuousEffect {
 // (e.g. swampwalk -> forestwalk via Sleight of Mind / Magical Hack).
 func KeywordReplacement(targetID uuid.UUID, from, to Keyword) ContinuousEffect {
 	return TargetEffect(LayerAbility, Indefinite, targetID, func(g *Game, target *Permanent) error {
-		g.Effects.RevokeAttr(target.ID(), from)
-		g.Effects.GrantAttr(target.ID(), to)
+		g.effects.RevokeAttr(target.ID(), from)
+		g.effects.GrantAttr(target.ID(), to)
 		return nil
 	})
 }
@@ -196,10 +196,10 @@ func ColorOverride(targetID uuid.UUID, color Color) ContinuousEffect {
 // temporaryAnimate creates a target effect that animates a permanent into a creature.
 func temporaryAnimate(targetID uuid.UUID, power, toughness int, duration Duration) ContinuousEffect {
 	return TargetEffect(LayerType, duration, targetID, func(g *Game, target *Permanent) error {
-		g.Effects.GrantAttr(target.ID(), AttrIsCreature)
-		g.Effects.GrantAttr(target.ID(), AttrCanAttack)
-		g.Effects.GrantAttr(target.ID(), AttrCanBlock)
-		g.Effects.GrantAttr(target.ID(), AttrHasPowerToughness)
+		g.effects.GrantAttr(target.ID(), AttrIsCreature)
+		g.effects.GrantAttr(target.ID(), AttrCanAttack)
+		g.effects.GrantAttr(target.ID(), AttrCanBlock)
+		g.effects.GrantAttr(target.ID(), AttrHasPowerToughness)
 		target.BasePTOverride = &[2]int{power, toughness}
 		return nil
 	})
@@ -228,7 +228,7 @@ func TemporaryAnimateUntilNextUpkeep(targetID uuid.UUID, power, toughness int) C
 // the attr system like every other capability restriction.
 func PreventBlockingUntilEndOfCombat(permID uuid.UUID) ContinuousEffect {
 	return TargetEffect(LayerAbility, EndOfCombat, permID, func(g *Game, target *Permanent) error {
-		g.Effects.RevokeAttr(target.ID(), AttrCanBlock)
+		g.effects.RevokeAttr(target.ID(), AttrCanBlock)
 		return nil
 	})
 }
@@ -240,7 +240,7 @@ func PreventBlockingUntilEndOfCombat(permID uuid.UUID) ContinuousEffect {
 // GrantActivatedAbilityToAll grants an activated ability to all creatures matching filter.
 func GrantActivatedAbilityToAll(effect Effect, cost Cost, filter PermanentFilter) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-		for _, p := range g.Battlefield {
+		for _, p := range g.battlefield {
 			if !p.HasType(TypeCreature) {
 				continue
 			}
@@ -265,7 +265,7 @@ func GrantActivatedAbilityToAll(effect Effect, cost Cost, filter PermanentFilter
 // event type, optional flag, condition, and effects.
 func GrantTriggeredAbilityToAll(eventType EventType, optional bool, cond TriggerCondition, filter PermanentFilter, effects ...Effect) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-		for _, p := range g.Battlefield {
+		for _, p := range g.battlefield {
 			if p.ID() == sourceID {
 				continue
 			}
@@ -295,7 +295,7 @@ func PreventFromAttackingIfDefendingPlayerControls(filter PermanentFilter) Conti
 		if g.AnyBattlefield(And(ControlledBy(whoID), filter)) {
 			return nil
 		}
-		g.Effects.RevokeAttr(sourceID, AttrCanAttack)
+		g.effects.RevokeAttr(sourceID, AttrCanAttack)
 		return nil
 	})
 }
@@ -304,7 +304,7 @@ func PreventFromAttackingIfDefendingPlayerControls(filter PermanentFilter) Conti
 // except the source (typical lord behavior).
 func BoostAllCreatures(power, toughness int, filter PermanentFilter) ContinuousEffect {
 	return FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-		for _, p := range g.Battlefield {
+		for _, p := range g.battlefield {
 			if !p.HasType(TypeCreature) || p.ID() == sourceID {
 				continue
 			}
@@ -322,7 +322,7 @@ func BoostAllCreatures(power, toughness int, filter PermanentFilter) ContinuousE
 // matching creatures including the source.
 func BoostAllCreaturesIncludingSelf(power, toughness int, filter PermanentFilter) ContinuousEffect {
 	return FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
-		for _, p := range g.Battlefield {
+		for _, p := range g.battlefield {
 			if !p.HasType(TypeCreature) {
 				continue
 			}
@@ -370,14 +370,14 @@ func PTEqualsControlledCount(countFilter PermanentFilter) ContinuousEffect {
 // GrantKeywordToAll grants a keyword ability to all matching creatures (excluding source).
 func GrantKeywordToAll(kw Keyword, filter PermanentFilter) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-		for _, p := range g.Battlefield {
+		for _, p := range g.battlefield {
 			if !p.HasType(TypeCreature) || p.ID() == sourceID {
 				continue
 			}
 			if !filter.Match(p, g) {
 				continue
 			}
-			g.Effects.GrantAttr(p.ID(), kw)
+			g.effects.GrantAttr(p.ID(), kw)
 		}
 		return nil
 	})
@@ -389,7 +389,7 @@ func GrantKeywordToAll(kw Keyword, filter PermanentFilter) ContinuousEffect {
 // though they didn't have it.
 func NullifyLandwalkEffect(kw Attr) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-		g.Effects.Rules.NullifyLandwalk(kw)
+		g.effects.Rules.NullifyLandwalk(kw)
 		return nil
 	})
 }
@@ -402,7 +402,7 @@ func BoostControlledCreatures(power, toughness int, filter PermanentFilter) Cont
 		if src == nil {
 			return nil
 		}
-		for _, p := range g.Battlefield {
+		for _, p := range g.battlefield {
 			if !p.HasType(TypeCreature) || p.Controller != src.Controller {
 				continue
 			}
@@ -421,7 +421,7 @@ func BoostControlledCreatures(power, toughness int, filter PermanentFilter) Cont
 func PreventUntapForMatching(filter PermanentFilter) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
 		for _, p := range g.FilterBattlefield(filter) {
-			g.Effects.GrantAttr(p.ID(), AttrDoesNotUntap)
+			g.effects.GrantAttr(p.ID(), AttrDoesNotUntap)
 		}
 		return nil
 	})
@@ -431,7 +431,7 @@ func PreventUntapForMatching(filter PermanentFilter) ContinuousEffect {
 // spells of a given color (e.g. Gloom makes white spells cost {3} more).
 func IncreaseSpellCostForColor(color Color, amount int) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
-		g.Effects.Rules.SpellCostIncreases[color] += amount
+		g.effects.Rules.SpellCostIncreases[color] += amount
 		return nil
 	})
 }
@@ -440,7 +440,7 @@ func IncreaseSpellCostForColor(color Color, amount int) ContinuousEffect {
 // spells of a given color (e.g. "Blue spells cost {1} less to cast").
 func ReduceSpellCostForColor(color Color, amount int) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
-		g.Effects.Rules.SpellCostReductions[color] += amount
+		g.effects.Rules.SpellCostReductions[color] += amount
 		return nil
 	})
 }
@@ -463,7 +463,7 @@ func ChangeSubTypesForAll(fromSubTypes, toSubTypes []string) ContinuousEffect {
 				break
 			}
 		}
-		for _, p := range g.Battlefield {
+		for _, p := range g.battlefield {
 			for _, from := range fromSubTypes {
 				if p.HasSubType(from) {
 					p.SubTypeOverride = toSubTypes
@@ -489,7 +489,7 @@ func ChangeSubTypesForAll(fromSubTypes, toSubTypes []string) ContinuousEffect {
 // CyclopeanTombEffect overrides subtypes of all permanents with Mire counters to Swamp.
 func CyclopeanTombEffect() ContinuousEffect {
 	return FuncContinuousEffect(LayerType, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
-		for _, p := range g.Battlefield {
+		for _, p := range g.battlefield {
 			if p.HasType(TypeLand) && p.Counters[Mire] > 0 {
 				p.SubTypeOverride = []string{"Swamp"}
 				var filtered []Ability
@@ -510,8 +510,8 @@ func CyclopeanTombEffect() ContinuousEffect {
 // PreventAllUntaps prevents ALL permanents from untapping during untap steps (Stasis).
 func PreventAllUntaps() ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
-		for _, p := range g.Battlefield {
-			g.Effects.GrantAttr(p.ID(), AttrDoesNotUntap)
+		for _, p := range g.battlefield {
+			g.effects.GrantAttr(p.ID(), AttrDoesNotUntap)
 		}
 		return nil
 	})
@@ -538,8 +538,8 @@ func BoostSelf(power, toughness int, condition SourceCondition) ContinuousEffect
 // (e.g. Winter Orb). Only active while the source permanent is untapped.
 func LimitLandUntaps(limit int) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
-		if g.Effects.Rules.LandUntapMax < 0 || limit < g.Effects.Rules.LandUntapMax {
-			g.Effects.Rules.LandUntapMax = limit
+		if g.effects.Rules.LandUntapMax < 0 || limit < g.effects.Rules.LandUntapMax {
+			g.effects.Rules.LandUntapMax = limit
 		}
 		return nil
 	}, SourceUntapped)
@@ -549,8 +549,8 @@ func LimitLandUntaps(limit int) ContinuousEffect {
 // (e.g. Smoke). Unlike Winter Orb, Smoke does not have a "while untapped" condition.
 func LimitCreatureUntaps(limit int) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
-		if g.Effects.Rules.CreatureUntapMax < 0 || limit < g.Effects.Rules.CreatureUntapMax {
-			g.Effects.Rules.CreatureUntapMax = limit
+		if g.effects.Rules.CreatureUntapMax < 0 || limit < g.effects.Rules.CreatureUntapMax {
+			g.effects.Rules.CreatureUntapMax = limit
 		}
 		return nil
 	})
@@ -561,10 +561,10 @@ func LimitCreatureUntaps(limit int) ContinuousEffect {
 func AnimateLands(filter PermanentFilter, power, toughness int) ContinuousEffect {
 	return FuncContinuousEffect(LayerType, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
 		for _, p := range g.FilterBattlefield(filter) {
-			g.Effects.GrantAttr(p.ID(), AttrIsCreature)
-			g.Effects.GrantAttr(p.ID(), AttrCanAttack)
-			g.Effects.GrantAttr(p.ID(), AttrCanBlock)
-			g.Effects.GrantAttr(p.ID(), AttrHasPowerToughness)
+			g.effects.GrantAttr(p.ID(), AttrIsCreature)
+			g.effects.GrantAttr(p.ID(), AttrCanAttack)
+			g.effects.GrantAttr(p.ID(), AttrCanBlock)
+			g.effects.GrantAttr(p.ID(), AttrHasPowerToughness)
 			p.BasePTOverride = &[2]int{power, toughness}
 		}
 		return nil
@@ -586,7 +586,7 @@ func GrantColorToAll(color Color, filter PermanentFilter) ContinuousEffect {
 // Used by Fastbond.
 func AllowUnlimitedLandPlays() ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
-		g.Effects.Rules.UnlimitedLandPlays = true
+		g.effects.Rules.UnlimitedLandPlays = true
 		return nil
 	})
 }
@@ -595,7 +595,7 @@ func AllowUnlimitedLandPlays() ContinuousEffect {
 // (e.g. Sunglasses of Urza: red→white).
 func ManaConversion(from, to Color) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
-		g.Effects.Rules.SetManaConversion(from, to)
+		g.effects.Rules.SetManaConversion(from, to)
 		return nil
 	})
 }
@@ -608,7 +608,7 @@ func BodyguardContinuous() ContinuousEffect {
 		if src == nil {
 			return nil
 		}
-		g.Effects.AddCycleReplacement(&bodyguardReplacement{
+		g.effects.AddCycleReplacement(&bodyguardReplacement{
 			replacementBase: replacementBase{sourceID: sourceID},
 			controllerID:    src.Controller,
 			bodyguardPermID: src.ID(),
@@ -626,7 +626,7 @@ func PersonalIncarnationRedirect() ContinuousEffect {
 		if src == nil {
 			return nil
 		}
-		g.Effects.AddCycleReplacement(&playerDamageRedirectReplacement{
+		g.effects.AddCycleReplacement(&playerDamageRedirectReplacement{
 			replacementBase: replacementBase{sourceID: sourceID},
 			controllerID:    src.Controller,
 			redirectPermID:  src.ID(),
@@ -646,7 +646,7 @@ type SourceCondition func(source *Permanent, g *Game) bool
 // WhileSourceAttacking is a SourceCondition that is true only while the source
 // permanent is declared as an attacker.
 func WhileSourceAttacking(source *Permanent, g *Game) bool {
-	return g.Combat != nil && g.Combat.IsAttacking(source.ID())
+	return g.combat != nil && g.combat.IsAttacking(source.ID())
 }
 
 // WhileSourceUntapped is a SourceCondition true only when the source permanent
@@ -710,7 +710,7 @@ func (e *preventDamageRuleContinuous) IsActive(g *Game) bool {
 
 func (e *preventDamageRuleContinuous) Apply(g *Game) error {
 	toFilter := e.toFactory(e.sourceID)
-	g.Effects.AddCycleReplacement(&damagePreventionRuleReplacement{
+	g.effects.AddCycleReplacement(&damagePreventionRuleReplacement{
 		replacementBase: replacementBase{sourceID: e.sourceID},
 		from:            e.from,
 		to:              toFilter,
@@ -747,7 +747,7 @@ func (e *doppelgangerCopyEffect) Apply(g *Game) error {
 	}
 	perm.BasePTOverride = &[2]int{e.power, e.toughness}
 	for _, kw := range e.keywords {
-		g.Effects.GrantAttr(perm.ID(), kw)
+		g.effects.GrantAttr(perm.ID(), kw)
 	}
 	return nil
 }

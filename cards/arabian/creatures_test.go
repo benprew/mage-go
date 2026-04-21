@@ -639,7 +639,7 @@ func TestMijaeDjinn(t *testing.T) {
 	t.Run("win_flip_stays_in_combat", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mijae Djinn") // 6/3
-		g.CoinFlipResults = []bool{true}                                  // win
+		g.SetCoinFlipResults([]bool{true})                                 // win
 		g.Attack(1, gametest.PlayerA, "Mijae Djinn")
 		g.StopAt(1, core.EndCombat)
 		g.Execute()
@@ -650,7 +650,7 @@ func TestMijaeDjinn(t *testing.T) {
 	t.Run("lose_flip_removed_and_tapped", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mijae Djinn") // 6/3
-		g.CoinFlipResults = []bool{false}                                 // lose
+		g.SetCoinFlipResults([]bool{false})                                // lose
 		g.Attack(1, gametest.PlayerA, "Mijae Djinn")
 		g.StopAt(1, core.EndCombat)
 		g.Execute()
@@ -665,7 +665,7 @@ func TestYdwenEfreet(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Ydwen Efreet")  // 3/6
-		g.CoinFlipResults = []bool{true}                                    // win
+		g.SetCoinFlipResults([]bool{true})                                   // win
 		g.Attack(1, gametest.PlayerA, "Grizzly Bears")
 		g.Block(1, gametest.PlayerB, "Ydwen Efreet", "Grizzly Bears")
 		g.StopAt(1, core.EndCombat)
@@ -679,7 +679,7 @@ func TestYdwenEfreet(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Ydwen Efreet")  // 3/6
-		g.CoinFlipResults = []bool{false}                                   // lose
+		g.SetCoinFlipResults([]bool{false})                                  // lose
 		g.Attack(1, gametest.PlayerA, "Grizzly Bears")
 		g.Block(1, gametest.PlayerB, "Ydwen Efreet", "Grizzly Bears")
 		g.StopAt(1, core.EndCombat)

@@ -50,7 +50,7 @@ func setupTestGame() *Game {
 	// Put permanents on the battlefield.
 	land1 := NewLand("Forest")
 	land1.SetOwner(pA.PlayerID())
-	g.Battlefield = append(g.Battlefield, NewPermanent(land1, pA.PlayerID()))
+	g.battlefield = append(g.battlefield, NewPermanent(land1, pA.PlayerID()))
 
 	creature1Card := NewCreature("Savannah Lions", "W", 2, 1)
 	creature1Card.SetOwner(pA.PlayerID())
@@ -58,20 +58,20 @@ func setupTestGame() *Game {
 	creature1.Tapped = true
 	creature1.Damage = 1
 	creature1.Counters[P1P1] = 2
-	g.Battlefield = append(g.Battlefield, creature1)
+	g.battlefield = append(g.battlefield, creature1)
 
 	creature2Card := NewCreature("Serra Angel", "3WW", 4, 4, WithKeyword(Flying))
 	creature2Card.SetOwner(pB.PlayerID())
 	creature2 := NewPermanent(creature2Card, pB.PlayerID())
-	g.Battlefield = append(g.Battlefield, creature2)
+	g.battlefield = append(g.battlefield, creature2)
 
 	// Set game state.
-	g.Turn = 5
-	g.Step = PrecombatMain
-	g.ActivePlayer = 0
-	g.LandsPlayedThisTurn = 1
-	g.AttackedThisTurn[creature1.ID()] = true
-	g.DamageTakenThisTurn[pB.PlayerID()] = 3
+	g.turn = 5
+	g.step = PrecombatMain
+	g.activePlayer = 0
+	g.landsPlayedThisTurn = 1
+	g.attackedThisTurn[creature1.ID()] = true
+	g.damageTakenThisTurn[pB.PlayerID()] = 3
 
 	// Add mana to pools.
 	pA.ManaPool().Add(Green, 2)
@@ -85,44 +85,44 @@ func TestCloneBasicFields(t *testing.T) {
 	c := g.Clone()
 
 	// Scalar fields must match.
-	if c.Turn != g.Turn {
-		t.Errorf("Turn: got %d, want %d", c.Turn, g.Turn)
+	if c.turn != g.turn {
+		t.Errorf("Turn: got %d, want %d", c.turn, g.turn)
 	}
-	if c.Step != g.Step {
-		t.Errorf("Step: got %v, want %v", c.Step, g.Step)
+	if c.step != g.step {
+		t.Errorf("Step: got %v, want %v", c.step, g.step)
 	}
-	if c.ActivePlayer != g.ActivePlayer {
-		t.Errorf("ActivePlayer: got %d, want %d", c.ActivePlayer, g.ActivePlayer)
+	if c.activePlayer != g.activePlayer {
+		t.Errorf("ActivePlayer: got %d, want %d", c.activePlayer, g.activePlayer)
 	}
-	if c.LandsPlayedThisTurn != g.LandsPlayedThisTurn {
-		t.Errorf("LandsPlayedThisTurn: got %d, want %d", c.LandsPlayedThisTurn, g.LandsPlayedThisTurn)
+	if c.landsPlayedThisTurn != g.landsPlayedThisTurn {
+		t.Errorf("LandsPlayedThisTurn: got %d, want %d", c.landsPlayedThisTurn, g.landsPlayedThisTurn)
 	}
 
 	// Players must preserve UUIDs.
-	for i, p := range g.Players {
-		if c.Players[i].PlayerID() != p.PlayerID() {
-			t.Errorf("Player %d UUID mismatch: got %s, want %s", i, c.Players[i].PlayerID(), p.PlayerID())
+	for i, p := range g.players {
+		if c.players[i].PlayerID() != p.PlayerID() {
+			t.Errorf("Player %d UUID mismatch: got %s, want %s", i, c.players[i].PlayerID(), p.PlayerID())
 		}
-		if c.Players[i].Life() != p.Life() {
-			t.Errorf("Player %d life: got %d, want %d", i, c.Players[i].Life(), p.Life())
+		if c.players[i].Life() != p.Life() {
+			t.Errorf("Player %d life: got %d, want %d", i, c.players[i].Life(), p.Life())
 		}
 	}
 
 	// Players should be SearchPlayers.
-	for i, p := range c.Players {
+	for i, p := range c.players {
 		if _, ok := p.(*SearchPlayer); !ok {
 			t.Errorf("Player %d should be *SearchPlayer, got %T", i, p)
 		}
 	}
 
 	// Battlefield count.
-	if len(c.Battlefield) != len(g.Battlefield) {
-		t.Fatalf("Battlefield length: got %d, want %d", len(c.Battlefield), len(g.Battlefield))
+	if len(c.battlefield) != len(g.battlefield) {
+		t.Fatalf("Battlefield length: got %d, want %d", len(c.battlefield), len(g.battlefield))
 	}
 
 	// Permanents match.
-	for i, p := range g.Battlefield {
-		cp := c.Battlefield[i]
+	for i, p := range g.battlefield {
+		cp := c.battlefield[i]
 		if cp.ID() != p.ID() {
 			t.Errorf("Perm %d ID mismatch", i)
 		}
@@ -138,42 +138,42 @@ func TestCloneBasicFields(t *testing.T) {
 	}
 
 	// Counters on cloned permanent.
-	origP := g.Battlefield[1]
-	cloneP := c.Battlefield[1]
+	origP := g.battlefield[1]
+	cloneP := c.battlefield[1]
 	if cloneP.Counters[P1P1] != origP.Counters[P1P1] {
 		t.Errorf("Counters: got %d, want %d", cloneP.Counters[P1P1], origP.Counters[P1P1])
 	}
 
 	// Hand cards.
-	if len(c.Players[0].Hand()) != len(g.Players[0].Hand()) {
-		t.Errorf("Hand length mismatch: got %d, want %d", len(c.Players[0].Hand()), len(g.Players[0].Hand()))
+	if len(c.players[0].Hand()) != len(g.players[0].Hand()) {
+		t.Errorf("Hand length mismatch: got %d, want %d", len(c.players[0].Hand()), len(g.players[0].Hand()))
 	}
 
 	// Mana pool.
-	if c.Players[0].ManaPool().Count(Green) != 2 {
-		t.Errorf("Green mana: got %d, want 2", c.Players[0].ManaPool().Count(Green))
+	if c.players[0].ManaPool().Count(Green) != 2 {
+		t.Errorf("Green mana: got %d, want 2", c.players[0].ManaPool().Count(Green))
 	}
-	if c.Players[0].ManaPool().Count(White) != 1 {
-		t.Errorf("White mana: got %d, want 1", c.Players[0].ManaPool().Count(White))
+	if c.players[0].ManaPool().Count(White) != 1 {
+		t.Errorf("White mana: got %d, want 1", c.players[0].ManaPool().Count(White))
 	}
 
 	// Callbacks should be nil.
-	if c.OnPriority != nil {
+	if c.onPriority != nil {
 		t.Error("OnPriority should be nil in clone")
 	}
-	if c.AfterPriorityAction != nil {
+	if c.afterPriorityAction != nil {
 		t.Error("AfterPriorityAction should be nil in clone")
 	}
-	if c.BeforeStackResolve != nil {
+	if c.beforeStackResolve != nil {
 		t.Error("BeforeStackResolve should be nil in clone")
 	}
 
 	// UUID-keyed maps.
-	pBID := g.Players[1].PlayerID()
-	if c.DamageTakenThisTurn[pBID] != 3 {
-		t.Errorf("DamageTakenThisTurn: got %d, want 3", c.DamageTakenThisTurn[pBID])
+	pBID := g.players[1].PlayerID()
+	if c.damageTakenThisTurn[pBID] != 3 {
+		t.Errorf("DamageTakenThisTurn: got %d, want 3", c.damageTakenThisTurn[pBID])
 	}
-	if !c.AttackedThisTurn[g.Battlefield[1].ID()] {
+	if !c.attackedThisTurn[g.battlefield[1].ID()] {
 		t.Error("AttackedThisTurn should be copied")
 	}
 }
@@ -183,56 +183,56 @@ func TestCloneIsolation(t *testing.T) {
 	c := g.Clone()
 
 	// Mutate clone player life.
-	c.Players[0].SetLife(1)
-	if g.Players[0].Life() != 15 {
-		t.Errorf("Original player life modified: got %d, want 15", g.Players[0].Life())
+	c.players[0].SetLife(1)
+	if g.players[0].Life() != 15 {
+		t.Errorf("Original player life modified: got %d, want 15", g.players[0].Life())
 	}
 
 	// Mutate clone permanent.
-	c.Battlefield[1].Tapped = false
-	c.Battlefield[1].Damage = 0
-	c.Battlefield[1].Counters[P1P1] = 99
-	if !g.Battlefield[1].Tapped {
+	c.battlefield[1].Tapped = false
+	c.battlefield[1].Damage = 0
+	c.battlefield[1].Counters[P1P1] = 99
+	if !g.battlefield[1].Tapped {
 		t.Error("Original perm Tapped should still be true")
 	}
-	if g.Battlefield[1].Damage != 1 {
-		t.Errorf("Original perm Damage should be 1, got %d", g.Battlefield[1].Damage)
+	if g.battlefield[1].Damage != 1 {
+		t.Errorf("Original perm Damage should be 1, got %d", g.battlefield[1].Damage)
 	}
-	if g.Battlefield[1].Counters[P1P1] != 2 {
-		t.Errorf("Original perm counters should be 2, got %d", g.Battlefield[1].Counters[P1P1])
+	if g.battlefield[1].Counters[P1P1] != 2 {
+		t.Errorf("Original perm counters should be 2, got %d", g.battlefield[1].Counters[P1P1])
 	}
 
 	// Mutate clone hand — add a card.
 	extraCard := NewCreature("Goblin", "R", 1, 1)
-	c.Players[0].AddToHand(extraCard)
-	if len(g.Players[0].Hand()) != 2 {
-		t.Errorf("Original hand should still be 2 cards, got %d", len(g.Players[0].Hand()))
+	c.players[0].AddToHand(extraCard)
+	if len(g.players[0].Hand()) != 2 {
+		t.Errorf("Original hand should still be 2 cards, got %d", len(g.players[0].Hand()))
 	}
 
 	// Mutate clone mana pool.
-	c.Players[0].ManaPool().Add(Red, 5)
-	if g.Players[0].ManaPool().Count(Red) != 0 {
-		t.Errorf("Original mana pool should have 0 Red, got %d", g.Players[0].ManaPool().Count(Red))
+	c.players[0].ManaPool().Add(Red, 5)
+	if g.players[0].ManaPool().Count(Red) != 0 {
+		t.Errorf("Original mana pool should have 0 Red, got %d", g.players[0].ManaPool().Count(Red))
 	}
 
 	// Mutate clone battlefield slice.
 	newCard := NewCreature("Goblin Token", "0", 1, 1)
-	newCard.SetOwner(c.Players[0].PlayerID())
-	c.Battlefield = append(c.Battlefield, NewPermanent(newCard, c.Players[0].PlayerID()))
-	if len(g.Battlefield) != 3 {
-		t.Errorf("Original battlefield should still have 3 perms, got %d", len(g.Battlefield))
+	newCard.SetOwner(c.players[0].PlayerID())
+	c.battlefield = append(c.battlefield, NewPermanent(newCard, c.players[0].PlayerID()))
+	if len(g.battlefield) != 3 {
+		t.Errorf("Original battlefield should still have 3 perms, got %d", len(g.battlefield))
 	}
 
 	// Mutate clone map.
-	c.DamageTakenThisTurn[g.Players[0].PlayerID()] = 99
-	if g.DamageTakenThisTurn[g.Players[0].PlayerID()] != 0 {
-		t.Errorf("Original DamageTakenThisTurn should be 0, got %d", g.DamageTakenThisTurn[g.Players[0].PlayerID()])
+	c.damageTakenThisTurn[g.players[0].PlayerID()] = 99
+	if g.damageTakenThisTurn[g.players[0].PlayerID()] != 0 {
+		t.Errorf("Original DamageTakenThisTurn should be 0, got %d", g.damageTakenThisTurn[g.players[0].PlayerID()])
 	}
 
 	// Mutate clone library.
-	c.Players[0].DrawCard()
-	if len(g.Players[0].Library()) != 5 {
-		t.Errorf("Original library should still have 5 cards, got %d", len(g.Players[0].Library()))
+	c.players[0].DrawCard()
+	if len(g.players[0].Library()) != 5 {
+		t.Errorf("Original library should still have 5 cards, got %d", len(g.players[0].Library()))
 	}
 }
 
@@ -245,11 +245,11 @@ func TestCloneWithContinuousEffects(t *testing.T) {
 	creatureCard := NewCreature("Grizzly Bears", "1G", 2, 2)
 	creatureCard.SetOwner(pA.PlayerID())
 	perm := NewPermanent(creatureCard, pA.PlayerID())
-	g.Battlefield = append(g.Battlefield, perm)
+	g.battlefield = append(g.battlefield, perm)
 
 	// Add a continuous effect that grants +1/+1.
 	eff := FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(game *Game, srcID uuid.UUID) error {
-		for _, p := range game.Battlefield {
+		for _, p := range game.battlefield {
 			if p.ID() == srcID {
 				p.powerBonus += 1
 				p.toughBonus += 1
@@ -258,8 +258,8 @@ func TestCloneWithContinuousEffects(t *testing.T) {
 		return nil
 	})
 	eff.SetSourceID(perm.ID())
-	g.Effects.Add(eff)
-	g.Effects.Apply(g)
+	g.effects.Add(eff)
+	g.effects.Apply(g)
 
 	// Verify effect applied.
 	if perm.CurrentPower(g) != 3 || perm.CurrentToughness(g) != 3 {
@@ -268,14 +268,14 @@ func TestCloneWithContinuousEffects(t *testing.T) {
 
 	// Clone and verify effects still work.
 	c := g.Clone()
-	c.Effects.Apply(c)
-	clonePerm := c.Battlefield[0]
+	c.effects.Apply(c)
+	clonePerm := c.battlefield[0]
 	if clonePerm.CurrentPower(c) != 3 || clonePerm.CurrentToughness(c) != 3 {
 		t.Errorf("After clone: expected 3/3, got %d/%d", clonePerm.CurrentPower(c), clonePerm.CurrentToughness(c))
 	}
 
 	// Verify original still works after clone Apply.
-	g.Effects.Apply(g)
+	g.effects.Apply(g)
 	if perm.CurrentPower(g) != 3 || perm.CurrentToughness(g) != 3 {
 		t.Errorf("Original after clone Apply: expected 3/3, got %d/%d", perm.CurrentPower(g), perm.CurrentToughness(g))
 	}
@@ -290,7 +290,7 @@ func TestCloneWithReplacementEffects(t *testing.T) {
 	creatureCard := NewCreature("Wall of Stone", "1RR", 0, 8)
 	creatureCard.SetOwner(pA.PlayerID())
 	perm := NewPermanent(creatureCard, pA.PlayerID())
-	g.Battlefield = append(g.Battlefield, perm)
+	g.battlefield = append(g.battlefield, perm)
 
 	// Add a regeneration shield.
 	g.AddRegenerationShield(perm.ID())
@@ -302,19 +302,19 @@ func TestCloneWithReplacementEffects(t *testing.T) {
 	c := g.Clone()
 
 	// Verify replacement effects exist in clone.
-	if len(c.Effects.replacements) != len(g.Effects.replacements) {
-		t.Fatalf("Replacement count: got %d, want %d", len(c.Effects.replacements), len(g.Effects.replacements))
+	if len(c.effects.replacements) != len(g.effects.replacements) {
+		t.Fatalf("Replacement count: got %d, want %d", len(c.effects.replacements), len(g.effects.replacements))
 	}
 
 	// Mutate a clone replacement (consume the prevention shield).
-	for _, r := range c.Effects.replacements {
+	for _, r := range c.effects.replacements {
 		if ps, ok := r.(*preventionShieldReplacement); ok {
 			ps.remaining = 0
 		}
 	}
 
 	// Original should be unchanged.
-	for _, r := range g.Effects.replacements {
+	for _, r := range g.effects.replacements {
 		if ps, ok := r.(*preventionShieldReplacement); ok {
 			if ps.remaining != 3 {
 				t.Errorf("Original prevention shield remaining: got %d, want 3", ps.remaining)
@@ -331,40 +331,40 @@ func TestCloneWithCombat(t *testing.T) {
 	attackerCard := NewCreature("Grizzly Bears", "1G", 2, 2)
 	attackerCard.SetOwner(pA.PlayerID())
 	attacker := NewPermanent(attackerCard, pA.PlayerID())
-	g.Battlefield = append(g.Battlefield, attacker)
+	g.battlefield = append(g.battlefield, attacker)
 
 	blockerCard := NewCreature("Hill Giant", "3R", 3, 3)
 	blockerCard.SetOwner(pB.PlayerID())
 	blocker := NewPermanent(blockerCard, pB.PlayerID())
-	g.Battlefield = append(g.Battlefield, blocker)
+	g.battlefield = append(g.battlefield, blocker)
 
 	// Set up combat.
-	g.Combat.AddAttacker(attacker.ID(), pB.PlayerID())
-	g.Combat.AddBlocker(blocker.ID(), attacker.ID())
+	g.combat.AddAttacker(attacker.ID(), pB.PlayerID())
+	g.combat.AddBlocker(blocker.ID(), attacker.ID())
 
 	// Clone.
 	c := g.Clone()
 
 	// Verify combat state.
-	if !c.Combat.IsAttacking(attacker.ID()) {
+	if !c.combat.IsAttacking(attacker.ID()) {
 		t.Error("Attacker should be attacking in clone")
 	}
-	if !c.Combat.IsBlocking(blocker.ID()) {
+	if !c.combat.IsBlocking(blocker.ID()) {
 		t.Error("Blocker should be blocking in clone")
 	}
-	if len(c.Combat.Groups) != 1 {
-		t.Fatalf("Combat groups: got %d, want 1", len(c.Combat.Groups))
+	if len(c.combat.Groups) != 1 {
+		t.Fatalf("Combat groups: got %d, want 1", len(c.combat.Groups))
 	}
-	if c.Combat.Groups[0].AttackerID != attacker.ID() {
+	if c.combat.Groups[0].AttackerID != attacker.ID() {
 		t.Error("Combat group attacker ID mismatch")
 	}
-	if len(c.Combat.Groups[0].BlockerIDs) != 1 || c.Combat.Groups[0].BlockerIDs[0] != blocker.ID() {
+	if len(c.combat.Groups[0].BlockerIDs) != 1 || c.combat.Groups[0].BlockerIDs[0] != blocker.ID() {
 		t.Error("Combat group blocker IDs mismatch")
 	}
 
 	// Mutate clone combat — verify isolation.
-	c.Combat.Reset()
-	if !g.Combat.IsAttacking(attacker.ID()) {
+	c.combat.Reset()
+	if !g.combat.IsAttacking(attacker.ID()) {
 		t.Error("Original combat should still have attacker")
 	}
 }
@@ -386,16 +386,16 @@ func TestCloneWithStack(t *testing.T) {
 		Targets:    []uuid.UUID{targetID},
 		XValue:     3,
 	}
-	g.Stack.Push(obj)
+	g.stack.Push(obj)
 
 	// Clone.
 	c := g.Clone()
 
 	// Verify stack.
-	if c.Stack.Size() != 1 {
-		t.Fatalf("Stack size: got %d, want 1", c.Stack.Size())
+	if c.stack.Size() != 1 {
+		t.Fatalf("Stack size: got %d, want 1", c.stack.Size())
 	}
-	cloneObj := c.Stack.Peek()
+	cloneObj := c.stack.Peek()
 	if cloneObj.ID != obj.ID {
 		t.Error("Stack object ID mismatch")
 	}
@@ -407,8 +407,8 @@ func TestCloneWithStack(t *testing.T) {
 	}
 
 	// Mutate clone stack.
-	c.Stack.Pop()
-	if g.Stack.Size() != 1 {
+	c.stack.Pop()
+	if g.stack.Size() != 1 {
 		t.Error("Original stack should still have 1 object")
 	}
 }
@@ -418,22 +418,22 @@ func TestClonePreservesUUIDs(t *testing.T) {
 	c := g.Clone()
 
 	// All player UUIDs must match.
-	for i, p := range g.Players {
-		if c.Players[i].PlayerID() != p.PlayerID() {
-			t.Errorf("Player %d UUID: got %s, want %s", i, c.Players[i].PlayerID(), p.PlayerID())
+	for i, p := range g.players {
+		if c.players[i].PlayerID() != p.PlayerID() {
+			t.Errorf("Player %d UUID: got %s, want %s", i, c.players[i].PlayerID(), p.PlayerID())
 		}
 	}
 
 	// All permanent UUIDs must match.
-	for i, p := range g.Battlefield {
-		if c.Battlefield[i].ID() != p.ID() {
-			t.Errorf("Permanent %d UUID: got %s, want %s", i, c.Battlefield[i].ID(), p.ID())
+	for i, p := range g.battlefield {
+		if c.battlefield[i].ID() != p.ID() {
+			t.Errorf("Permanent %d UUID: got %s, want %s", i, c.battlefield[i].ID(), p.ID())
 		}
 	}
 
 	// Hand card UUIDs must match.
-	for i, card := range g.Players[0].Hand() {
-		if c.Players[0].Hand()[i].ID() != card.ID() {
+	for i, card := range g.players[0].Hand() {
+		if c.players[0].Hand()[i].ID() != card.ID() {
 			t.Errorf("Hand card %d UUID mismatch", i)
 		}
 	}
@@ -444,39 +444,39 @@ func TestCloneGameRules(t *testing.T) {
 	pB := NewBasePlayer("Bob")
 	g := NewGame(pA, pB)
 
-	g.Effects.Rules.SetChannelActive(pA.PlayerID())
-	g.Effects.Rules.SetMinimumLife(pA.PlayerID())
-	g.Effects.Rules.LandUntapMax = 2
-	g.Effects.Rules.UnlimitedLandPlays = true
-	g.Effects.Rules.SpellCostIncreases[Red] = 1
+	g.effects.Rules.SetChannelActive(pA.PlayerID())
+	g.effects.Rules.SetMinimumLife(pA.PlayerID())
+	g.effects.Rules.LandUntapMax = 2
+	g.effects.Rules.UnlimitedLandPlays = true
+	g.effects.Rules.SpellCostIncreases[Red] = 1
 
 	c := g.Clone()
 
 	// Verify rules copied.
-	if !c.Effects.Rules.IsChannelActive(pA.PlayerID()) {
+	if !c.effects.Rules.IsChannelActive(pA.PlayerID()) {
 		t.Error("ChannelActive should be copied")
 	}
-	if !c.Effects.Rules.IsMinimumLifeActive(pA.PlayerID()) {
+	if !c.effects.Rules.IsMinimumLifeActive(pA.PlayerID()) {
 		t.Error("MinimumLife should be copied")
 	}
-	if c.Effects.Rules.LandUntapMax != 2 {
-		t.Errorf("LandUntapMax: got %d, want 2", c.Effects.Rules.LandUntapMax)
+	if c.effects.Rules.LandUntapMax != 2 {
+		t.Errorf("LandUntapMax: got %d, want 2", c.effects.Rules.LandUntapMax)
 	}
-	if !c.Effects.Rules.UnlimitedLandPlays {
+	if !c.effects.Rules.UnlimitedLandPlays {
 		t.Error("UnlimitedLandPlays should be true")
 	}
-	if c.Effects.Rules.SpellCostIncreases[Red] != 1 {
-		t.Errorf("SpellCostIncreases[Red]: got %d, want 1", c.Effects.Rules.SpellCostIncreases[Red])
+	if c.effects.Rules.SpellCostIncreases[Red] != 1 {
+		t.Errorf("SpellCostIncreases[Red]: got %d, want 1", c.effects.Rules.SpellCostIncreases[Red])
 	}
 
 	// Mutate clone rules.
-	c.Effects.Rules.LandUntapMax = 99
-	c.Effects.Rules.SpellCostIncreases[Blue] = 5
-	if g.Effects.Rules.LandUntapMax != 2 {
-		t.Errorf("Original LandUntapMax should still be 2, got %d", g.Effects.Rules.LandUntapMax)
+	c.effects.Rules.LandUntapMax = 99
+	c.effects.Rules.SpellCostIncreases[Blue] = 5
+	if g.effects.Rules.LandUntapMax != 2 {
+		t.Errorf("Original LandUntapMax should still be 2, got %d", g.effects.Rules.LandUntapMax)
 	}
-	if g.Effects.Rules.SpellCostIncreases[Blue] != 0 {
-		t.Errorf("Original SpellCostIncreases[Blue] should be 0, got %d", g.Effects.Rules.SpellCostIncreases[Blue])
+	if g.effects.Rules.SpellCostIncreases[Blue] != 0 {
+		t.Errorf("Original SpellCostIncreases[Blue] should be 0, got %d", g.effects.Rules.SpellCostIncreases[Blue])
 	}
 }
 
@@ -487,12 +487,12 @@ func TestCloneDamageSystem(t *testing.T) {
 
 	eyeID := uuid.New()
 	sourceID := uuid.New()
-	g.Effects.Damage.SetDamageReflection(pA.PlayerID(), eyeID, sourceID)
+	g.effects.Damage.SetDamageReflection(pA.PlayerID(), eyeID, sourceID)
 
 	c := g.Clone()
 
 	// Verify reflection copied.
-	entry, ok := c.Effects.Damage.GetDamageReflection(pA.PlayerID())
+	entry, ok := c.effects.Damage.GetDamageReflection(pA.PlayerID())
 	if !ok {
 		t.Fatal("Damage reflection should exist in clone")
 	}
@@ -501,8 +501,8 @@ func TestCloneDamageSystem(t *testing.T) {
 	}
 
 	// Mutate clone.
-	c.Effects.Damage.ClearDamageReflection(pA.PlayerID())
-	_, ok = g.Effects.Damage.GetDamageReflection(pA.PlayerID())
+	c.effects.Damage.ClearDamageReflection(pA.PlayerID())
+	_, ok = g.effects.Damage.GetDamageReflection(pA.PlayerID())
 	if !ok {
 		t.Error("Original damage reflection should still exist")
 	}
@@ -516,19 +516,19 @@ func TestCloneExile(t *testing.T) {
 	exiledCard := NewCreature("Goblin", "R", 1, 1)
 	exiledCard.SetOwner(pA.PlayerID())
 	exiledBy := uuid.New()
-	g.Exile = append(g.Exile, ExiledCard{
+	g.exile = append(g.exile, ExiledCard{
 		Card:     exiledCard,
 		ExiledBy: exiledBy,
 	})
 
 	c := g.Clone()
-	if len(c.Exile) != 1 {
-		t.Fatalf("Exile count: got %d, want 1", len(c.Exile))
+	if len(c.exile) != 1 {
+		t.Fatalf("Exile count: got %d, want 1", len(c.exile))
 	}
-	if c.Exile[0].Card.ID() != exiledCard.ID() {
+	if c.exile[0].Card.ID() != exiledCard.ID() {
 		t.Error("Exile card ID mismatch")
 	}
-	if c.Exile[0].ExiledBy != exiledBy {
+	if c.exile[0].ExiledBy != exiledBy {
 		t.Error("Exile ExiledBy mismatch")
 	}
 }
@@ -627,11 +627,11 @@ func TestCloneFromSearchPlayer(t *testing.T) {
 	c1 := g.Clone()
 	c2 := c1.Clone()
 
-	if c2.Players[0].PlayerID() != pA.PlayerID() {
-		t.Errorf("Double-clone player UUID: got %s, want %s", c2.Players[0].PlayerID(), pA.PlayerID())
+	if c2.players[0].PlayerID() != pA.PlayerID() {
+		t.Errorf("Double-clone player UUID: got %s, want %s", c2.players[0].PlayerID(), pA.PlayerID())
 	}
-	if _, ok := c2.Players[0].(*SearchPlayer); !ok {
-		t.Errorf("Double-clone player should be *SearchPlayer, got %T", c2.Players[0])
+	if _, ok := c2.players[0].(*SearchPlayer); !ok {
+		t.Errorf("Double-clone player should be *SearchPlayer, got %T", c2.players[0])
 	}
 }
 
@@ -639,21 +639,21 @@ func TestCloneNestedUUIDMapIsolation(t *testing.T) {
 	g := setupTestGame()
 
 	// Set up DamageDealtBy with nested map.
-	permID := g.Battlefield[1].ID()
+	permID := g.battlefield[1].ID()
 	sourceID := uuid.New()
-	g.DamageDealtBy[permID] = map[uuid.UUID]bool{sourceID: true}
+	g.damageDealtBy[permID] = map[uuid.UUID]bool{sourceID: true}
 
 	c := g.Clone()
 
 	// Verify nested map copied.
-	if !c.DamageDealtBy[permID][sourceID] {
+	if !c.damageDealtBy[permID][sourceID] {
 		t.Error("DamageDealtBy should be copied")
 	}
 
 	// Mutate clone inner map.
 	newSource := uuid.New()
-	c.DamageDealtBy[permID][newSource] = true
-	if g.DamageDealtBy[permID][newSource] {
+	c.damageDealtBy[permID][newSource] = true
+	if g.damageDealtBy[permID][newSource] {
 		t.Error("Original inner map should not be affected by clone mutation")
 	}
 }
@@ -664,34 +664,34 @@ func BenchmarkClone(b *testing.B) {
 	// Add more permanents for a realistic mid-game board.
 	for i := 0; i < 10; i++ {
 		card := NewCreature("Soldier Token", "0", 1, 1)
-		card.SetOwner(g.Players[i%2].PlayerID())
-		perm := NewPermanent(card, g.Players[i%2].PlayerID())
+		card.SetOwner(g.players[i%2].PlayerID())
+		perm := NewPermanent(card, g.players[i%2].PlayerID())
 		if i%3 == 0 {
 			perm.Tapped = true
 		}
 		perm.Counters[P1P1] = uint8(i % 4)
-		g.Battlefield = append(g.Battlefield, perm)
+		g.battlefield = append(g.battlefield, perm)
 	}
 
 	// Add a few replacement effects.
-	g.AddPreventionShield(g.Players[0].PlayerID(), 3)
-	g.AddRegenerationShield(g.Battlefield[0].ID())
+	g.AddPreventionShield(g.players[0].PlayerID(), 3)
+	g.AddRegenerationShield(g.battlefield[0].ID())
 
 	// Add continuous effects.
 	eff := FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(game *Game, srcID uuid.UUID) error {
 		return nil
 	})
-	eff.SetSourceID(g.Battlefield[0].ID())
-	g.Effects.Add(eff)
+	eff.SetSourceID(g.battlefield[0].ID())
+	g.effects.Add(eff)
 
 	// Stack object.
 	obj := &StackObject{
 		ID:         uuid.New(),
-		Controller: g.Players[0].PlayerID(),
+		Controller: g.players[0].PlayerID(),
 		SourceID:   uuid.New(),
-		Targets:    []uuid.UUID{g.Players[1].PlayerID()},
+		Targets:    []uuid.UUID{g.players[1].PlayerID()},
 	}
-	g.Stack.Push(obj)
+	g.stack.Push(obj)
 
 	b.ResetTimer()
 	b.ReportAllocs()

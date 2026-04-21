@@ -157,7 +157,7 @@ func GenerateAttackerSets(g *mage.Game, playerID uuid.UUID) [][]uuid.UUID {
 
 func getEligibleAttackers(g *mage.Game, playerID uuid.UUID) []*mage.Permanent {
 	var eligible []*mage.Permanent
-	for _, perm := range g.Battlefield {
+	for _, perm := range g.AllBattlefield() {
 		if perm.Controller != playerID || !perm.CanDeclareAsAttacker(g) {
 			continue
 		}
@@ -256,7 +256,7 @@ func expandXSpellMoves(p mage.Player, g *mage.Game, card mage.Card) []Move {
 				xValues = append(xValues, oppLife)
 			}
 			// Try X = each opponent creature's toughness (lethal removal).
-			for _, perm := range g.Battlefield {
+			for _, perm := range g.AllBattlefield() {
 				if perm.Controller == opponent.PlayerID() && perm.HasType(core.TypeCreature) {
 					tough := perm.CurrentToughness(g)
 					if tough > 0 && tough <= maxX {

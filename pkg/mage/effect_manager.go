@@ -310,7 +310,7 @@ func (em *EffectManager) Apply(g *Game) {
 	em.Damage.ResetPerCycle()
 
 	// Reset granted runtime abilities, subtype overrides, and grantedAttrs from effects.
-	for _, p := range g.Battlefield {
+	for _, p := range g.battlefield {
 		if p.FaceDown {
 			// Face-down permanents keep their overrides and empty abilities
 			continue
@@ -355,7 +355,7 @@ func (em *EffectManager) Apply(g *Game) {
 	}
 
 	// Sync mana conversions to all player mana pools
-	em.Rules.SyncManaConversions(g.Players)
+	em.Rules.SyncManaConversions(g.players)
 
 	// Write attrDeltas accumulated by GrantAttr/RevokeAttr calls during this cycle
 	// into each permanent's grantedAttrs.
@@ -374,7 +374,7 @@ func (em *EffectManager) Apply(g *Game) {
 	// Post-layer enforcement: AttrCantChangeControl reverts any control changes
 	// applied during LayerControl. This runs after attrs are written so that
 	// effects granted at LayerAbility (e.g. Guardian Beast) take effect.
-	for _, p := range g.Battlefield {
+	for _, p := range g.battlefield {
 		if p.HasAttr(AttrCantChangeControl) && p.Controller != p.Card.Owner() {
 			p.Controller = p.Card.Owner()
 		}

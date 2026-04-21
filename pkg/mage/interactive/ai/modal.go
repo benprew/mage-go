@@ -43,7 +43,7 @@ func ChooseModeWithContext(modes []string, g *mage.Game, playerID uuid.UUID) int
 
 	// Count board state for context.
 	myCreatures, oppCreatures := 0, 0
-	for _, perm := range g.Battlefield {
+	for _, perm := range g.AllBattlefield() {
 		if !perm.HasType(core.TypeCreature) {
 			continue
 		}

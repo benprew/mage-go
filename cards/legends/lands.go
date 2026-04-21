@@ -26,7 +26,7 @@ func registerLands() {
 					}
 					for _, perm := range g.FilterBattlefield(And(IsCreature, HasColorFilter(Green), ControlledBy(src.Controller))) {
 						if perm.Card.HasSuperType(SuperLegendary) {
-							g.Effects.GrantAttr(perm.ID(), Banding)
+							g.GrantAttr(perm.ID(), Banding)
 						}
 					}
 					return nil
@@ -50,7 +50,7 @@ func registerLands() {
 					}
 					for _, perm := range g.FilterBattlefield(And(IsCreature, HasColorFilter(White), ControlledBy(src.Controller))) {
 						if perm.Card.HasSuperType(SuperLegendary) {
-							g.Effects.GrantAttr(perm.ID(), Banding)
+							g.GrantAttr(perm.ID(), Banding)
 						}
 					}
 					return nil
@@ -78,7 +78,7 @@ func registerLands() {
 						}
 						for kw := range LandwalkAttrs() {
 							eff := TargetEffect(LayerAbility, EndOfTurn, targets[0], func(g *Game, target *Permanent) error {
-								g.Effects.RevokeAttr(target.ID(), kw)
+								g.RevokeAttr(target.ID(), kw)
 								return nil
 							})
 							eff.SetSourceID(sourceID)
@@ -127,7 +127,7 @@ func registerLands() {
 					}
 					for _, perm := range g.FilterBattlefield(And(IsCreature, HasColorFilter(Red), ControlledBy(src.Controller))) {
 						if perm.Card.HasSuperType(SuperLegendary) {
-							g.Effects.GrantAttr(perm.ID(), Banding)
+							g.GrantAttr(perm.ID(), Banding)
 						}
 					}
 					return nil
@@ -170,7 +170,7 @@ func registerLands() {
 					}
 					for _, perm := range g.FilterBattlefield(And(IsCreature, HasColorFilter(Blue), ControlledBy(src.Controller))) {
 						if perm.Card.HasSuperType(SuperLegendary) {
-							g.Effects.GrantAttr(perm.ID(), Banding)
+							g.GrantAttr(perm.ID(), Banding)
 						}
 					}
 					return nil
@@ -228,7 +228,7 @@ func registerLands() {
 							return nil
 						}
 						eff := TargetEffect(LayerAbility, EndOfTurn, targets[0], func(g *Game, target *Permanent) error {
-							g.Effects.RevokeAttr(target.ID(), Banding)
+							g.RevokeAttr(target.ID(), Banding)
 							return nil
 						})
 						eff.SetSourceID(sourceID)
@@ -258,7 +258,7 @@ func registerLands() {
 					}
 					for _, perm := range g.FilterBattlefield(And(IsCreature, HasColorFilter(Black), ControlledBy(src.Controller))) {
 						if perm.Card.HasSuperType(SuperLegendary) {
-							g.Effects.GrantAttr(perm.ID(), Banding)
+							g.GrantAttr(perm.ID(), Banding)
 						}
 					}
 					return nil
@@ -290,7 +290,7 @@ func registerLands() {
 						if mode == 0 {
 							// Remove first strike
 							eff := TargetEffect(LayerAbility, EndOfTurn, targets[0], func(g *Game, target *Permanent) error {
-								g.Effects.RevokeAttr(target.ID(), FirstStrike)
+								g.RevokeAttr(target.ID(), FirstStrike)
 								return nil
 							})
 							eff.SetSourceID(sourceID)
@@ -298,7 +298,7 @@ func registerLands() {
 						} else {
 							// Remove swampwalk
 							eff := TargetEffect(LayerAbility, EndOfTurn, targets[0], func(g *Game, target *Permanent) error {
-								g.Effects.RevokeAttr(target.ID(), Swampwalk)
+								g.RevokeAttr(target.ID(), Swampwalk)
 								return nil
 							})
 							eff.SetSourceID(sourceID)

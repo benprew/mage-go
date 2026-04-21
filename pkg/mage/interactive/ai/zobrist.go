@@ -195,20 +195,20 @@ func (z *ZobristTables) Hash(g *mage.Game) uint64 {
 
 	var h uint64
 
-	step := int(g.Step)
+	step := int(g.GetStep())
 	if step >= 0 && step < len(z.Step) {
 		h ^= z.Step[step]
 	}
 
-	if g.ActivePlayer >= 0 && g.ActivePlayer < len(z.ActivePlayer) {
-		h ^= z.ActivePlayer[g.ActivePlayer]
+	if g.ActivePlayerIndex() >= 0 && g.ActivePlayerIndex() < len(z.ActivePlayer) {
+		h ^= z.ActivePlayer[g.ActivePlayerIndex()]
 	}
 
-	if g.MaxLandPlays()-g.LandsPlayedThisTurn > 0 {
+	if g.MaxLandPlays()-g.GetLandsPlayedThisTurn() > 0 {
 		h ^= z.CanPlayLand
 	}
 
-	for pIdx, p := range g.Players {
+	for pIdx, p := range g.AllPlayers() {
 		if pIdx >= 2 {
 			break
 		}
@@ -233,14 +233,14 @@ func (z *ZobristTables) Hash(g *mage.Game) uint64 {
 		}
 	}
 
-	for _, perm := range g.Battlefield {
+	for _, perm := range g.AllBattlefield() {
 		if perm == nil || perm.PhasedOut {
 			continue
 		}
 		idx := z.nameIdx(perm.Name())
 
 		ctrl := 0
-		if len(g.Players) >= 2 && perm.Controller == g.Players[1].PlayerID() {
+		if g.PlayerCount() >= 2 && perm.Controller == g.PlayerAt(1).PlayerID() {
 			ctrl = 1
 		}
 		tapped := 0
@@ -262,14 +262,14 @@ func (z *ZobristTables) Hash(g *mage.Game) uint64 {
 		}
 	}
 
-	if g.Stack != nil {
-		for _, obj := range g.Stack.Objects() {
+	if g.GetStack() != nil {
+		for _, obj := range g.StackObjects() {
 			if obj == nil || obj.Card == nil {
 				continue
 			}
 			idx := z.nameIdx(obj.Card.Name())
 			ctrl := 0
-			if len(g.Players) >= 2 && obj.Controller == g.Players[1].PlayerID() {
+			if g.PlayerCount() >= 2 && obj.Controller == g.PlayerAt(1).PlayerID() {
 				ctrl = 1
 			}
 			h ^= z.stackItem[idx][ctrl]

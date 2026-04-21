@@ -181,7 +181,7 @@ func registerEnchantments() {
 				AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
 					// Only prevent untap while this Aura has pupa counters
 					if source.Counters[Pupa] > 0 {
-						g.Effects.GrantAttr(target.ID(), AttrDoesNotUntap)
+						g.GrantAttr(target.ID(), AttrDoesNotUntap)
 					}
 					return nil
 				}),
@@ -255,7 +255,7 @@ func registerEnchantments() {
 			WithStaticAbility(
 				PreventAttachedFromAttacking(AttachAura),
 				AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
-					g.Effects.Damage.AddDamagePreventionRule(WithCombatOnly(), WithFrom(NewPermanentFilter("enchanted creature", func(p *Permanent, _ *Game) bool {
+					g.AddDamagePreventionRule(WithCombatOnly(), WithFrom(NewPermanentFilter("enchanted creature", func(p *Permanent, _ *Game) bool {
 						return p.ID() == target.ID()
 					})))
 					return nil
@@ -388,7 +388,7 @@ func registerEnchantments() {
 						return nil
 					}
 					for _, perm := range g.FilterBattlefield(And(IsCreature, HasSubType("Wall"), ControlledBy(src.Controller))) {
-						g.Effects.GrantAttr(perm.ID(), Banding)
+						g.GrantAttr(perm.ID(), Banding)
 					}
 					return nil
 				}),
@@ -404,8 +404,8 @@ func registerEnchantments() {
 		return NewAura("Gaseous Form", "{2}{U}",
 			WithStaticAbility(
 				AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
-					g.Effects.Damage.AddDamagePreventionRule(WithCombatOnly(), WithFrom(IsID(target.ID())))
-					g.Effects.Damage.AddDamagePreventionRule(WithCombatOnly(), WithTo(IsID(target.ID())))
+					g.AddDamagePreventionRule(WithCombatOnly(), WithFrom(IsID(target.ID())))
+					g.AddDamagePreventionRule(WithCombatOnly(), WithTo(IsID(target.ID())))
 					return nil
 				}),
 			),
@@ -429,7 +429,7 @@ func registerEnchantments() {
 			WithStaticAbility(
 				FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
 					for _, perm := range g.FilterBattlefield(IsCreature) {
-						g.Effects.RevokeAttr(perm.ID(), Flying)
+						g.RevokeAttr(perm.ID(), Flying)
 					}
 					return nil
 				}),
@@ -782,7 +782,7 @@ func registerEnchantments() {
 						return nil
 					}
 					controller := src.Controller
-					g.Effects.Rules.AddEntersTappedRule(func(perm *Permanent) bool {
+					g.AddEntersTappedRule(func(perm *Permanent) bool {
 						if perm.Controller == controller {
 							return false
 						}
@@ -919,7 +919,7 @@ func registerEnchantments() {
 			WithStaticAbility(
 				FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
 					for _, perm := range g.FilterBattlefield(And(IsCreature, NotHasKeywordFilter(Flying))) {
-						g.Effects.RevokeAttr(perm.ID(), AttrCanAttack)
+						g.RevokeAttr(perm.ID(), AttrCanAttack)
 					}
 					return nil
 				}),
@@ -1089,7 +1089,7 @@ func registerEnchantments() {
 		return NewAura("Seeker", "{2}{W}{W}",
 			WithStaticAbility(
 				AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
-					for _, p := range g.Battlefield {
+					for _, p := range g.AllBattlefield() {
 						if !p.HasType(TypeCreature) {
 							continue
 						}
@@ -1108,7 +1108,7 @@ func registerEnchantments() {
 							continue
 						}
 						// This creature can't block the enchanted creature
-						g.Effects.PreventBlockPair(p.ID(), target.ID())
+						g.PreventBlockPair(p.ID(), target.ID())
 					}
 					return nil
 				}),
@@ -1125,7 +1125,7 @@ func registerEnchantments() {
 			WithStaticAbility(
 				AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
 					if !target.Tapped {
-						g.Effects.GrantAttr(target.ID(), Shroud)
+						g.GrantAttr(target.ID(), Shroud)
 					}
 					return nil
 				}),
@@ -1371,7 +1371,7 @@ func registerEnchantments() {
 			// Doesn't untap if it has a sleep counter
 			WithStaticAbility(AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
 				if target.Counters[Sleep] > 0 {
-					g.Effects.GrantAttr(target.ID(), AttrDoesNotUntap)
+					g.GrantAttr(target.ID(), AttrDoesNotUntap)
 				}
 				return nil
 			})),

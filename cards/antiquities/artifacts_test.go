@@ -156,7 +156,7 @@ func TestCandelabraOfTawnos(t *testing.T) {
 		// After activation, 2 lands were tapped for mana, then 2 lands untapped by the effect.
 		// The third land was not tapped. All 3 forests should be untapped.
 		tappedCount := 0
-		for _, perm := range g.Battlefield {
+		for _, perm := range g.AllBattlefield() {
 			if perm.Name() == "Forest" && perm.Tapped {
 				tappedCount++
 			}

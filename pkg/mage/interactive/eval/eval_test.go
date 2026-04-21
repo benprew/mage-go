@@ -270,7 +270,7 @@ func TestDefaultEvaluate_LifeAdvantage(t *testing.T) {
 func TestDefaultEvaluate_CreatureAdvantage(t *testing.T) {
 	g, pa, _ := makeGame()
 	perm := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
-	g.Battlefield = append(g.Battlefield, perm)
+	g.AddToBattlefield(perm)
 	got := defaultEvaluate(g, pa.PlayerID())
 	// Creature: 2*2 + 2*1 = 6, no keywords/abilities
 	if got < 6 {
@@ -281,7 +281,7 @@ func TestDefaultEvaluate_CreatureAdvantage(t *testing.T) {
 func TestDefaultEvaluate_OpponentCreatureSubtracts(t *testing.T) {
 	g, pa, pb := makeGame()
 	perm := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, perm)
+	g.AddToBattlefield(perm)
 	got := defaultEvaluate(g, pa.PlayerID())
 	// Opponent creature subtracts: score should be negative
 	if got >= 0 {
@@ -308,7 +308,7 @@ func TestDefaultEvaluate_LandAdvantage(t *testing.T) {
 	land.SetOwner(pa.PlayerID())
 	lp := mage.NewPermanent(land, pa.PlayerID())
 	lp.RevokeBaseAttr(core.AttrSummonSick)
-	g.Battlefield = append(g.Battlefield, lp)
+	g.AddToBattlefield(lp)
 	got := defaultEvaluate(g, pa.PlayerID())
 	// 1 land * LandWeight(1) + 1 untapped mana source * 2 = 3
 	if got != 3 {
@@ -378,7 +378,7 @@ func TestSpellValue_DamageSpell(t *testing.T) {
 	card.SetOwner(pa.PlayerID())
 	// Base damage: 3. Bear (2/2) EvalCreature=6, lethal bonus=6/2=3. Total=6.
 	oppCreature := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, oppCreature)
+	g.AddToBattlefield(oppCreature)
 	got := SpellValue(card, pa, g)
 	if got != 6 {
 		t.Errorf("SpellValue(bolt with lethal target) = %d, want 6", got)
@@ -393,7 +393,7 @@ func TestSpellValue_DamageSpellNoLethal(t *testing.T) {
 	card.SetOwner(pa.PlayerID())
 	// Opponent has a 5/5 — not lethal
 	oppCreature := makePerm("Giant", "{3}{G}{G}", 5, 5, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, oppCreature)
+	g.AddToBattlefield(oppCreature)
 	got := SpellValue(card, pa, g)
 	// Just the damage: 2
 	if got != 2 {
@@ -409,7 +409,7 @@ func TestSpellValue_PureRemoval(t *testing.T) {
 	card.SetOwner(pa.PlayerID())
 	// Opponent has a 3/3 creature = EvalCreature score
 	oppCreature := makePerm("Hill Giant", "{3}{R}", 3, 3, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, oppCreature)
+	g.AddToBattlefield(oppCreature)
 	got := SpellValue(card, pa, g)
 	expected := EvalCreature(oppCreature)
 	if got != expected {
@@ -450,7 +450,7 @@ func TestSpellIsWorthless_TargetedWithTargets(t *testing.T) {
 	)
 	card.SetOwner(pa.PlayerID())
 	oppCreature := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, oppCreature)
+	g.AddToBattlefield(oppCreature)
 	if SpellIsWorthless(card, pa, g) {
 		t.Error("SpellIsWorthless should be false when valid targets exist")
 	}
@@ -478,7 +478,7 @@ func TestCalculateLethal_EvasiveLethal(t *testing.T) {
 	rogue := makePerm("Rogue", "{1}{U}", 2, 2, pa.PlayerID(), mage.WithKeyword(core.UnblockableKW))
 	// Opponent has a ground blocker (can't block flyer or unblockable)
 	wall := makePerm("Wall", "{1}{W}", 0, 5, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, flyer, rogue, wall)
+	g.AddToBattlefield(flyer, rogue, wall)
 
 	info := CalculateLethal(g, pa.PlayerID())
 	if !info.IHaveLethal {
@@ -497,7 +497,7 @@ func TestCalculateLethal_NoLethal(t *testing.T) {
 	pb.SetLife(20)
 	// Only 2 evasive damage, not enough for lethal against 20 life
 	rogue := makePerm("Rogue", "{1}{U}", 2, 2, pa.PlayerID(), mage.WithKeyword(core.UnblockableKW))
-	g.Battlefield = append(g.Battlefield, rogue)
+	g.AddToBattlefield(rogue)
 
 	info := CalculateLethal(g, pa.PlayerID())
 	if info.IHaveLethal {
@@ -511,7 +511,7 @@ func TestCalculateLethal_TrampleLethal(t *testing.T) {
 	// 6/6 trampler vs 2/3 blocker = 3 trample damage
 	trampler := makePerm("Wurm", "{4}{G}{G}", 6, 6, pa.PlayerID(), mage.WithKeyword(core.Trample))
 	blocker := makePerm("Bear", "{1}{G}", 2, 3, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, trampler, blocker)
+	g.AddToBattlefield(trampler, blocker)
 
 	info := CalculateLethal(g, pa.PlayerID())
 	if !info.IHaveLethal {
@@ -525,7 +525,7 @@ func TestCalculateLethal_OpponentHasLethal(t *testing.T) {
 	// Opponent has a 4/4 flyer, we have no flyers to block
 	flyer := makePerm("Dragon", "{3}{R}", 4, 4, pb.PlayerID(), mage.WithKeyword(core.Flying))
 	bear := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
-	g.Battlefield = append(g.Battlefield, flyer, bear)
+	g.AddToBattlefield(flyer, bear)
 
 	info := CalculateLethal(g, pa.PlayerID())
 	if !info.TheyHaveLethal {
@@ -550,7 +550,7 @@ func TestCalculateLethal_MinimalSet(t *testing.T) {
 	// Two unblockable creatures: 2/2 and 3/3. Only need the 3/3 for lethal.
 	small := makePerm("Rogue", "{1}{U}", 2, 2, pa.PlayerID(), mage.WithKeyword(core.UnblockableKW))
 	big := makePerm("Assassin", "{2}{U}", 3, 3, pa.PlayerID(), mage.WithKeyword(core.UnblockableKW))
-	g.Battlefield = append(g.Battlefield, small, big)
+	g.AddToBattlefield(small, big)
 
 	info := CalculateLethal(g, pa.PlayerID())
 	if !info.IHaveLethal {
@@ -574,7 +574,7 @@ func TestEstimatePushThrough_FirstStrikeKillsBlocker(t *testing.T) {
 	fs := makePerm("Knight", "{2}{W}{W}", 4, 2, pa.PlayerID(),
 		mage.WithKeyword(core.FirstStrike))
 	blocker := makePerm("Bear", "{2}{G}", 3, 3, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, fs, blocker)
+	g.AddToBattlefield(fs, blocker)
 
 	info := CalculateLethal(g, pa.PlayerID())
 	// First striker with power >= blocker toughness kills the blocker before
@@ -594,7 +594,7 @@ func TestEstimatePushThrough_DeathtouchKillsAnyBlocker(t *testing.T) {
 	dt := makePerm("Snake", "{1}{B}{G}", 2, 2, pa.PlayerID(),
 		mage.WithKeyword(core.Deathtouch), mage.WithKeyword(core.Trample))
 	blocker := makePerm("Wurm", "{4}{G}{G}", 6, 6, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, dt, blocker)
+	g.AddToBattlefield(dt, blocker)
 
 	info := CalculateLethal(g, pa.PlayerID())
 	// Deathtouch + trample: only 1 damage needed to kill blocker, rest tramples.
@@ -614,7 +614,7 @@ func TestCalculateRace_FavorableRace(t *testing.T) {
 	unblockable := makePerm("Rogue", "{1}{U}", 3, 3, pa.PlayerID(), mage.WithKeyword(core.UnblockableKW))
 	// Opponent has a 1/1 = 1 damage per turn (no evasion but no blockers)
 	opp := makePerm("Elf", "{G}", 1, 1, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, unblockable, opp)
+	g.AddToBattlefield(unblockable, opp)
 
 	race := CalculateRace(g, pa.PlayerID())
 	if race.MyClock >= race.TheirClock {
@@ -637,7 +637,7 @@ func TestCalculateRace_RacingBothLow(t *testing.T) {
 	// Both have 3/3 unblockables: 2-turn clocks each
 	myAttacker := makePerm("Rogue A", "{1}{U}", 3, 3, pa.PlayerID(), mage.WithKeyword(core.UnblockableKW))
 	theirAttacker := makePerm("Rogue B", "{1}{U}", 3, 3, pb.PlayerID(), mage.WithKeyword(core.UnblockableKW))
-	g.Battlefield = append(g.Battlefield, myAttacker, theirAttacker)
+	g.AddToBattlefield(myAttacker, theirAttacker)
 
 	race := CalculateRace(g, pa.PlayerID())
 	if !race.Racing {
@@ -741,7 +741,7 @@ func TestCountAvailableMana_UntappedLands(t *testing.T) {
 		land.SetOwner(pa.PlayerID())
 		lp := mage.NewPermanent(land, pa.PlayerID())
 		lp.RevokeBaseAttr(core.AttrSummonSick)
-		g.Battlefield = append(g.Battlefield, lp)
+		g.AddToBattlefield(lp)
 	}
 	// Add one tapped land
 	tappedLand := mage.NewLand("Mountain")
@@ -749,7 +749,7 @@ func TestCountAvailableMana_UntappedLands(t *testing.T) {
 	tp := mage.NewPermanent(tappedLand, pa.PlayerID())
 	tp.RevokeBaseAttr(core.AttrSummonSick)
 	tp.Tapped = true
-	g.Battlefield = append(g.Battlefield, tp)
+	g.AddToBattlefield(tp)
 
 	got := CountAvailableMana(g, pa.PlayerID())
 	if got != 3 {
@@ -763,11 +763,11 @@ func TestCountAvailableMana_IncludesManaCreatures(t *testing.T) {
 	land.SetOwner(pa.PlayerID())
 	lp := mage.NewPermanent(land, pa.PlayerID())
 	lp.RevokeBaseAttr(core.AttrSummonSick)
-	g.Battlefield = append(g.Battlefield, lp)
+	g.AddToBattlefield(lp)
 
 	// Mana creature
 	elf := makePerm("Llanowar Elves", "{G}", 1, 1, pa.PlayerID(), mage.WithManaAbility(core.Green))
-	g.Battlefield = append(g.Battlefield, elf)
+	g.AddToBattlefield(elf)
 
 	got := CountAvailableMana(g, pa.PlayerID())
 	if got != 2 {
@@ -805,7 +805,7 @@ func TestHandQuality_CastableSpells(t *testing.T) {
 		land.SetOwner(pa.PlayerID())
 		lp := mage.NewPermanent(land, pa.PlayerID())
 		lp.RevokeBaseAttr(core.AttrSummonSick)
-		g.Battlefield = append(g.Battlefield, lp)
+		g.AddToBattlefield(lp)
 	}
 
 	c1 := mage.NewCreature("Bear", "{1}{G}", 2, 2) // CMC 2, castable
@@ -828,7 +828,7 @@ func TestHandQuality_UncastableExpensiveSpell(t *testing.T) {
 		land.SetOwner(pa.PlayerID())
 		lp := mage.NewPermanent(land, pa.PlayerID())
 		lp.RevokeBaseAttr(core.AttrSummonSick)
-		g.Battlefield = append(g.Battlefield, lp)
+		g.AddToBattlefield(lp)
 	}
 
 	expensive := mage.NewCreature("Wurm", "{5}{G}{G}", 7, 7) // CMC 7, not castable with 2 mana
@@ -849,7 +849,7 @@ func TestHandQuality_NearCastableSpell(t *testing.T) {
 		land.SetOwner(pa.PlayerID())
 		lp := mage.NewPermanent(land, pa.PlayerID())
 		lp.RevokeBaseAttr(core.AttrSummonSick)
-		g.Battlefield = append(g.Battlefield, lp)
+		g.AddToBattlefield(lp)
 	}
 
 	// CMC 4, available mana 2: CMC <= availMana+2 (4) → partial value = 1
@@ -897,7 +897,7 @@ func TestCalculateRace_LifelinkBetterClock(t *testing.T) {
 		mage.WithKeyword(core.Lifelink), mage.WithKeyword(core.UnblockableKW))
 	oppAtk1 := makePerm("Opp Bear", "{1}{R}", 3, 3, pb1.PlayerID(),
 		mage.WithKeyword(core.UnblockableKW))
-	g1.Battlefield = append(g1.Battlefield, llCreature, oppAtk1)
+	g1.AddToBattlefield(llCreature, oppAtk1)
 
 	g2, pa2, pb2 := makeGame()
 	pa2.SetLife(10)
@@ -906,7 +906,7 @@ func TestCalculateRace_LifelinkBetterClock(t *testing.T) {
 		mage.WithKeyword(core.UnblockableKW))
 	oppAtk2 := makePerm("Opp Bear", "{1}{R}", 3, 3, pb2.PlayerID(),
 		mage.WithKeyword(core.UnblockableKW))
-	g2.Battlefield = append(g2.Battlefield, vanillaCreature, oppAtk2)
+	g2.AddToBattlefield(vanillaCreature, oppAtk2)
 
 	raceLL := CalculateRace(g1, pa1.PlayerID())
 	raceVanilla := CalculateRace(g2, pa2.PlayerID())
@@ -929,7 +929,7 @@ func TestCalculateRace_LifelinkIncreasesEffectiveLife(t *testing.T) {
 		mage.WithKeyword(core.UnblockableKW))
 	oppLL := makePerm("Opp Lifelinker", "{1}{W}{W}", 3, 3, pb1.PlayerID(),
 		mage.WithKeyword(core.Lifelink), mage.WithKeyword(core.UnblockableKW))
-	g1.Battlefield = append(g1.Battlefield, myAtk1, oppLL)
+	g1.AddToBattlefield(myAtk1, oppLL)
 
 	g2, pa2, pb2 := makeGame()
 	pa2.SetLife(10)
@@ -938,7 +938,7 @@ func TestCalculateRace_LifelinkIncreasesEffectiveLife(t *testing.T) {
 		mage.WithKeyword(core.UnblockableKW))
 	oppVanilla := makePerm("Opp Vanilla", "{2}{R}", 3, 3, pb2.PlayerID(),
 		mage.WithKeyword(core.UnblockableKW))
-	g2.Battlefield = append(g2.Battlefield, myAtk2, oppVanilla)
+	g2.AddToBattlefield(myAtk2, oppVanilla)
 
 	raceOppLL := CalculateRace(g1, pa1.PlayerID())
 	raceOppVanilla := CalculateRace(g2, pa2.PlayerID())
@@ -1004,11 +1004,11 @@ func TestDefaultEvaluate_RaceFavorsShorterClock(t *testing.T) {
 	g, pa, pb := makeGame()
 	pa.SetLife(5)
 	pb.SetLife(5)
-	g.Battlefield = append(g.Battlefield,
+	g.AddToBattlefield(
 		makePerm("Shivan Dragon", "{4}{R}{R}", 5, 5, pa.PlayerID()))
-	g.Battlefield = append(g.Battlefield,
+	g.AddToBattlefield(
 		makePerm("Grizzly Bears", "{1}{G}", 2, 2, pb.PlayerID()))
-	g.Step = core.PrecombatMain
+	g.SetStep(core.PrecombatMain)
 
 	fromA := defaultEvaluate(g, pa.PlayerID())
 	fromB := defaultEvaluate(g, pb.PlayerID())
@@ -1030,6 +1030,6 @@ func addLands(g *mage.Game, p *mage.BasePlayer, name string, count int) {
 		land.SetOwner(p.PlayerID())
 		perm := mage.NewPermanent(land, p.PlayerID())
 		perm.RevokeBaseAttr(core.AttrSummonSick)
-		g.Battlefield = append(g.Battlefield, perm)
+		g.AddToBattlefield(perm)
 	}
 }

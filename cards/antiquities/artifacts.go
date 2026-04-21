@@ -236,7 +236,7 @@ func registerArtifacts() {
 						}
 						opponent := g.GetOpponent(src.Controller)
 						if opponent != nil {
-							g.Effects.Rules.SetMaxHandSize(opponent.PlayerID(), 4)
+							g.SetMaxHandSize(opponent.PlayerID(), 4)
 						}
 						return nil
 					}),
@@ -552,11 +552,7 @@ func registerArtifacts() {
 		noted := make(map[uuid.UUID]notedState)
 
 		coffinReturnExiled := func(g GameMutator, coffinID uuid.UUID) {
-			game, ok := g.(*Game)
-			if !ok {
-				return
-			}
-			exiled := game.RemoveExiledCardBySource(coffinID)
+			exiled := g.RemoveExiledCardBySource(coffinID)
 			var creatureEC *ExiledCard
 			var auraECs []ExiledCard
 			for i := range exiled {
@@ -634,18 +630,9 @@ func registerArtifacts() {
 							}
 						}
 						g.RemoveFromBattlefield(target)
-						game, ok := g.(*Game)
-						if ok {
-							game.Exile = append(game.Exile, ExiledCard{
-								Card:     card,
-								ExiledBy: sourceID,
-							})
-							for _, auraCard := range auraCards {
-								game.Exile = append(game.Exile, ExiledCard{
-									Card:     auraCard,
-									ExiledBy: sourceID,
-								})
-							}
+						g.ExileCard(card, sourceID)
+						for _, auraCard := range auraCards {
+							g.ExileCard(auraCard, sourceID)
 						}
 						return nil
 					}),

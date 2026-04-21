@@ -23,10 +23,10 @@ func buildMeasureState() (*mage.Game, *mage.BasePlayer, *mage.BasePlayer) {
 	addLands(g, pb, "Plains", 3)
 	addLands(g, pb, "Island", 2)
 
-	g.Battlefield = append(g.Battlefield, makePerm("Grizzly Bears", "{1}{G}", 2, 2, pa.PlayerID()))
-	g.Battlefield = append(g.Battlefield, makePerm("Hill Giant", "{3}{R}", 3, 3, pa.PlayerID()))
-	g.Battlefield = append(g.Battlefield, makePerm("Savannah Lions", "{W}", 2, 1, pb.PlayerID()))
-	g.Battlefield = append(g.Battlefield, makePerm("Wall of Swords", "{3}{W}", 3, 5, pb.PlayerID()))
+	g.AddToBattlefield(makePerm("Grizzly Bears", "{1}{G}", 2, 2, pa.PlayerID()))
+	g.AddToBattlefield(makePerm("Hill Giant", "{3}{R}", 3, 3, pa.PlayerID()))
+	g.AddToBattlefield(makePerm("Savannah Lions", "{W}", 2, 1, pb.PlayerID()))
+	g.AddToBattlefield(makePerm("Wall of Swords", "{3}{W}", 3, 5, pb.PlayerID()))
 
 	for i := 0; i < 4; i++ {
 		c := mage.NewCreature("Bear", "{1}{G}", 2, 2)
@@ -40,7 +40,7 @@ func buildMeasureState() (*mage.Game, *mage.BasePlayer, *mage.BasePlayer) {
 		pa.AddToHand(bolt)
 	}
 
-	g.Step = core.PrecombatMain
+	g.SetStep(core.PrecombatMain)
 	return g, pa, pb
 }
 

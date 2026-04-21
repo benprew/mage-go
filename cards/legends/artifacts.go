@@ -64,7 +64,7 @@ func registerArtifacts() {
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						eff := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, srcID uuid.UUID) error {
-							g.Effects.Damage.AddDamagePreventionRule(
+							g.AddDamagePreventionRule(
 								WithFrom(And(IsAttacking, Not(HasKeywordFilter(Flying)))),
 								WithPlayerOnly(),
 							)
@@ -121,9 +121,9 @@ func registerArtifacts() {
 	Register("Arena of the Ancients", func() Card {
 		return NewArtifact("Arena of the Ancients", "{3}",
 			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-				for _, p := range g.Battlefield {
+				for _, p := range g.AllBattlefield() {
 					if p.HasType(TypeCreature) && p.Card.HasSuperType(SuperLegendary) {
-						g.Effects.GrantAttr(p.ID(), AttrDoesNotUntap)
+						g.GrantAttr(p.ID(), AttrDoesNotUntap)
 					}
 				}
 				return nil
@@ -206,7 +206,7 @@ func registerArtifacts() {
 							return nil
 						}
 						eff := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, srcID uuid.UUID) error {
-							g.Effects.Damage.AddDamagePreventionRule(WithCombatOnly(), WithFrom(NewPermanentFilter("prevented source", func(p *Permanent, _ *Game) bool {
+							g.AddDamagePreventionRule(WithCombatOnly(), WithFrom(NewPermanentFilter("prevented source", func(p *Permanent, _ *Game) bool {
 								return p.ID() == targets[0]
 							})))
 							return nil
@@ -255,7 +255,7 @@ func registerArtifacts() {
 						cmc := target.Card.ManaCost().CMC()
 						// Prevent all damage from target creature this turn
 						eff := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, srcID uuid.UUID) error {
-							g.Effects.Damage.AddDamagePreventionRule(WithFrom(NewPermanentFilter("prevented source", func(p *Permanent, _ *Game) bool {
+							g.AddDamagePreventionRule(WithFrom(NewPermanentFilter("prevented source", func(p *Permanent, _ *Game) bool {
 								return p.ID() == targets[0]
 							})))
 							return nil
@@ -341,8 +341,8 @@ func registerArtifacts() {
 	Register("Mana Matrix", func() Card {
 		return NewArtifact("Mana Matrix", "{6}",
 			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-				g.Effects.Rules.SpellTypeCostReductions[TypeInstant] += 2
-				g.Effects.Rules.SpellTypeCostReductions[TypeEnchantment] += 2
+				g.AddSpellTypeCostReduction(TypeInstant, 2)
+				g.AddSpellTypeCostReduction(TypeEnchantment, 2)
 				return nil
 			})),
 		)
@@ -403,7 +403,7 @@ func registerArtifacts() {
 	Register("Planar Gate", func() Card {
 		return NewArtifact("Planar Gate", "{6}",
 			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-				g.Effects.Rules.SpellTypeCostReductions[TypeCreature] += 2
+				g.AddSpellTypeCostReduction(TypeCreature, 2)
 				return nil
 			})),
 		)

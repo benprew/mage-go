@@ -15,7 +15,7 @@ import (
 func TestEvaluateCombatOutcome_UnblockedDamage(t *testing.T) {
 	g, pa, pb := makeGame()
 	atk := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk)
+	g.AddToBattlefield(atk)
 
 	cs := evaluateCombatOutcome(g, pa.PlayerID(), []uuid.UUID{atk.ID()}, nil)
 	if cs.DamageToOpponent != 2 {
@@ -34,7 +34,7 @@ func TestEvaluateCombatOutcome_BlockedTrade(t *testing.T) {
 	g, pa, pb := makeGame()
 	atk := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
 	blk := makePerm("Bear2", "{1}{G}", 2, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
+	g.AddToBattlefield(atk, blk)
 
 	blocks := []mage.BlockAssignment{{
 		BlockerID:  blk.ID(),
@@ -57,7 +57,7 @@ func TestEvaluateCombatOutcome_AttackerSurvives(t *testing.T) {
 	g, pa, pb := makeGame()
 	atk := makePerm("Giant", "{3}{G}", 4, 4, pa.PlayerID())
 	blk := makePerm("Elf", "{G}", 1, 1, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
+	g.AddToBattlefield(atk, blk)
 
 	blocks := []mage.BlockAssignment{{
 		BlockerID:  blk.ID(),
@@ -80,7 +80,7 @@ func TestEvaluateCombatOutcome_Trample(t *testing.T) {
 	g, pa, pb := makeGame()
 	atk := makePerm("Trampler", "{3}{G}", 5, 5, pa.PlayerID(), mage.WithKeyword(core.Trample))
 	blk := makePerm("Elf", "{G}", 1, 1, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
+	g.AddToBattlefield(atk, blk)
 
 	blocks := []mage.BlockAssignment{{
 		BlockerID:  blk.ID(),
@@ -107,7 +107,7 @@ func TestFindGangBlocks_TwoSmallBlockBig(t *testing.T) {
 	atk := makePerm("Giant", "{3}{G}", 4, 4, pa.PlayerID())
 	b1 := makePerm("Bear1", "{1}{G}", 2, 2, pb.PlayerID())
 	b2 := makePerm("Bear2", "{1}{G}", 2, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, b1, b2)
+	g.AddToBattlefield(atk, b1, b2)
 
 	available := []*mage.Permanent{b1, b2}
 	gang := findGangBlocks(atk, available, g, pb.PlayerID(), false)
@@ -126,7 +126,7 @@ func TestFindGangBlocks_NotWorthIt(t *testing.T) {
 	atk := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
 	b1 := makePerm("Knight1", "{1}{W}", 2, 2, pb.PlayerID())
 	b2 := makePerm("Knight2", "{1}{W}", 2, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, b1, b2)
+	g.AddToBattlefield(atk, b1, b2)
 
 	available := []*mage.Permanent{b1, b2}
 	gang := findGangBlocks(atk, available, g, pb.PlayerID(), false)
@@ -144,7 +144,7 @@ func TestFindGangBlocks_LethalOverridesTradeCheck(t *testing.T) {
 	atk := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
 	b1 := makePerm("Elf1", "{G}", 1, 1, pb.PlayerID())
 	b2 := makePerm("Elf2", "{G}", 1, 1, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, b1, b2)
+	g.AddToBattlefield(atk, b1, b2)
 
 	available := []*mage.Permanent{b1, b2}
 	gang := findGangBlocks(atk, available, g, pb.PlayerID(), true) // theyHaveLethal=true
@@ -165,7 +165,7 @@ func TestFindGangBlocks_ThreeBlockersKillBig(t *testing.T) {
 	b1 := makePerm("Soldier1", "{2}{W}", 3, 2, pb.PlayerID())
 	b2 := makePerm("Soldier2", "{2}{W}", 3, 2, pb.PlayerID())
 	b3 := makePerm("Soldier3", "{2}{W}", 3, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, b1, b2, b3)
+	g.AddToBattlefield(atk, b1, b2, b3)
 
 	available := []*mage.Permanent{b1, b2, b3}
 	gang := findGangBlocks(atk, available, g, pb.PlayerID(), false)
@@ -187,7 +187,7 @@ func TestFindGangBlocks_ThreeTokensNotWorthIt(t *testing.T) {
 	b1 := makePerm("Token1", "{0}", 1, 1, pb.PlayerID())
 	b2 := makePerm("Token2", "{0}", 1, 1, pb.PlayerID())
 	b3 := makePerm("Token3", "{0}", 1, 1, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, b1, b2, b3)
+	g.AddToBattlefield(atk, b1, b2, b3)
 
 	available := []*mage.Permanent{b1, b2, b3}
 	gang := findGangBlocks(atk, available, g, pb.PlayerID(), false)
@@ -208,7 +208,7 @@ func TestFindGangBlocks_ThreeBlockersLethalOverride(t *testing.T) {
 	b1 := makePerm("Knight1", "{2}{W}", 3, 3, pb.PlayerID())
 	b2 := makePerm("Knight2", "{2}{W}", 3, 3, pb.PlayerID())
 	b3 := makePerm("Knight3", "{2}{W}", 3, 3, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, b1, b2, b3)
+	g.AddToBattlefield(atk, b1, b2, b3)
 
 	available := []*mage.Permanent{b1, b2, b3}
 
@@ -239,7 +239,7 @@ func TestFindGangBlocks_TwoBlockersFail_ThreeSucceed(t *testing.T) {
 	b1 := makePerm("Guard1", "{1}{W}", 2, 2, pb.PlayerID())
 	b2 := makePerm("Guard2", "{1}{W}", 2, 2, pb.PlayerID())
 	b3 := makePerm("Knight", "{2}{W}", 3, 3, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, b1, b2, b3)
+	g.AddToBattlefield(atk, b1, b2, b3)
 
 	available := []*mage.Permanent{b1, b2, b3}
 	gang := findGangBlocks(atk, available, g, pb.PlayerID(), false)
@@ -258,7 +258,7 @@ func TestFindGangBlocks_CantBlock(t *testing.T) {
 	atk := makePerm("Bird", "{1}{U}", 3, 3, pa.PlayerID(), mage.WithKeyword(core.Flying))
 	b1 := makePerm("Bear1", "{1}{G}", 2, 2, pb.PlayerID())
 	b2 := makePerm("Bear2", "{1}{G}", 2, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, b1, b2)
+	g.AddToBattlefield(atk, b1, b2)
 
 	available := []*mage.Permanent{b1, b2}
 	gang := findGangBlocks(atk, available, g, pb.PlayerID(), false)
@@ -287,9 +287,9 @@ func TestBlockers_GangBlockIntegration(t *testing.T) {
 	atk := makePerm("Giant", "{4}{G}", 6, 6, pa.PlayerID())
 	b1 := makePerm("Bear1", "{1}{G}", 3, 3, pb.PlayerID())
 	b2 := makePerm("Bear2", "{1}{G}", 3, 3, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, b1, b2)
+	g.AddToBattlefield(atk, b1, b2)
 
-	g.Combat.AddAttacker(atk.ID(), pb.PlayerID())
+	g.GetCombat().AddAttacker(atk.ID(), pb.PlayerID())
 
 	// Use a custom personality with block threshold high enough to skip single blocks
 	// but the gang block pass should still trigger for big attackers
@@ -333,7 +333,7 @@ func TestHoldBackValue_ControlHoldsInstant(t *testing.T) {
 
 	// Add an opponent creature so the bolt has a target
 	oppCreature := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, oppCreature)
+	g.AddToBattlefield(oppCreature)
 
 	// Add lands so we can afford it
 	addLands(g, pa, "Mountain", 3)
@@ -355,7 +355,7 @@ func TestHoldBackValue_AggroDoesNotHold(t *testing.T) {
 	pa.AddToHand(bolt)
 
 	oppCreature := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, oppCreature)
+	g.AddToBattlefield(oppCreature)
 
 	addLands(g, pa, "Mountain", 3)
 
@@ -379,7 +379,7 @@ func TestEvaluateResponse_CastsRemovalOnOpponentTurn(t *testing.T) {
 
 	// Opponent creature to target
 	oppCreature := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, oppCreature)
+	g.AddToBattlefield(oppCreature)
 
 	// Give mana
 	addLands(g, pa, "Mountain", 1)
@@ -411,7 +411,7 @@ func TestEvaluateResponse_PassWithNoInstants(t *testing.T) {
 func TestRaceInformedAttack_FavorableRaceAttacksAll(t *testing.T) {
 	g, pa, pb := makeGame()
 	creature := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
-	g.Battlefield = append(g.Battlefield, creature)
+	g.AddToBattlefield(creature)
 
 	race := eval.RaceInfo{MyClock: 2, TheirClock: 4, Racing: true}
 	if !raceInformedAttack(creature, g, pb.PlayerID(), race) {
@@ -423,7 +423,7 @@ func TestRaceInformedAttack_UnfavorableOnlyEvasion(t *testing.T) {
 	g, pa, pb := makeGame()
 	ground := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
 	flyer := makePerm("Bird", "{1}{U}", 2, 2, pa.PlayerID(), mage.WithKeyword(core.Flying))
-	g.Battlefield = append(g.Battlefield, ground, flyer)
+	g.AddToBattlefield(ground, flyer)
 
 	race := eval.RaceInfo{MyClock: 4, TheirClock: 2, Racing: true}
 
@@ -439,7 +439,7 @@ func TestRaceInformedAttack_TiedRaceTradesUp(t *testing.T) {
 	g, pa, pb := makeGame()
 	creature := makePerm("Giant", "{3}{G}", 4, 5, pa.PlayerID())
 	blk := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, creature, blk)
+	g.AddToBattlefield(creature, blk)
 
 	race := eval.RaceInfo{MyClock: 3, TheirClock: 3, Racing: true}
 
@@ -456,7 +456,7 @@ func TestRaceInformedBlock_FavorableSkipsSmall(t *testing.T) {
 	pb.SetLife(20)
 	smallAtk := makePerm("Elf", "{G}", 1, 1, uuid.New())
 	blk := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, smallAtk, blk)
+	g.AddToBattlefield(smallAtk, blk)
 
 	race := eval.RaceInfo{MyClock: 2, TheirClock: 4, Racing: true}
 
@@ -470,7 +470,7 @@ func TestRaceInformedBlock_UnfavorableBlocksAggressively(t *testing.T) {
 	g, _, pb := makeGame()
 	atk := makePerm("Giant", "{3}{R}", 4, 4, uuid.New())
 	blk := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
+	g.AddToBattlefield(atk, blk)
 
 	race := eval.RaceInfo{MyClock: 4, TheirClock: 2, Racing: true}
 
@@ -491,7 +491,7 @@ func TestPriorityAction_ResponseOnOpponentTurn(t *testing.T) {
 	pa.AddToHand(bolt)
 
 	oppCreature := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, oppCreature)
+	g.AddToBattlefield(oppCreature)
 
 	addLands(g, pa, "Mountain", 1)
 
@@ -515,7 +515,7 @@ func TestEvaluateCombatOutcome_FirstStrikeKillsBeforeDamageBack(t *testing.T) {
 	g, pa, pb := makeGame()
 	atk := makePerm("First Striker", "{1}{W}", 2, 2, pa.PlayerID(), mage.WithKeyword(core.FirstStrike))
 	blk := makePerm("Goblin", "{R}", 3, 1, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
+	g.AddToBattlefield(atk, blk)
 
 	blocks := []mage.BlockAssignment{{
 		BlockerID:  blk.ID(),
@@ -537,7 +537,7 @@ func TestEvaluateCombatOutcome_DeathtouchTradesWithBig(t *testing.T) {
 	g, pa, pb := makeGame()
 	atk := makePerm("Deathtouch", "{B}", 1, 1, pa.PlayerID(), mage.WithKeyword(core.Deathtouch))
 	blk := makePerm("Wurm", "{4}{G}{G}", 6, 6, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
+	g.AddToBattlefield(atk, blk)
 
 	blocks := []mage.BlockAssignment{{
 		BlockerID:  blk.ID(),
@@ -560,7 +560,7 @@ func TestEvaluateCombatOutcome_DeathtouchFirstStrikeSurvives(t *testing.T) {
 	atk := makePerm("Deadly Striker", "{B}{W}", 1, 1, pa.PlayerID(),
 		mage.WithKeyword(core.Deathtouch), mage.WithKeyword(core.FirstStrike))
 	blk := makePerm("Wurm", "{4}{G}{G}", 6, 6, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
+	g.AddToBattlefield(atk, blk)
 
 	blocks := []mage.BlockAssignment{{
 		BlockerID:  blk.ID(),
@@ -585,7 +585,7 @@ func TestEvaluateCombatOutcome_DoubleStrikeVsBlocker(t *testing.T) {
 	g, pa, pb := makeGame()
 	atk := makePerm("Double Striker", "{1}{R}{W}", 3, 3, pa.PlayerID(), mage.WithKeyword(core.DoubleStrike))
 	blk := makePerm("Rhino", "{2}{G}{G}", 4, 4, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
+	g.AddToBattlefield(atk, blk)
 
 	blocks := []mage.BlockAssignment{{
 		BlockerID:  blk.ID(),
@@ -609,7 +609,7 @@ func TestEvaluateCombatOutcome_DeathtouchTrample(t *testing.T) {
 	atk := makePerm("Deadly Trampler", "{2}{B}{G}", 4, 4, pa.PlayerID(),
 		mage.WithKeyword(core.Deathtouch), mage.WithKeyword(core.Trample))
 	blk := makePerm("Wurm", "{4}{G}{G}", 6, 6, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
+	g.AddToBattlefield(atk, blk)
 
 	blocks := []mage.BlockAssignment{{
 		BlockerID:  blk.ID(),
@@ -636,7 +636,7 @@ func TestEvaluateCombatOutcome_LifelinkUnblocked(t *testing.T) {
 	// 3/3 lifelink attacking into empty board: 3 damage + LifeGained=3
 	g, pa, pb := makeGame()
 	atk := makePerm("Lifelinker", "{1}{W}{W}", 3, 3, pa.PlayerID(), mage.WithKeyword(core.Lifelink))
-	g.Battlefield = append(g.Battlefield, atk)
+	g.AddToBattlefield(atk)
 
 	cs := evaluateCombatOutcome(g, pa.PlayerID(), []uuid.UUID{atk.ID()}, nil)
 	if cs.DamageToOpponent != 3 {
@@ -654,7 +654,7 @@ func TestEvaluateCombatOutcome_LifelinkBlocked(t *testing.T) {
 	g, pa, pb := makeGame()
 	atk := makePerm("Lifelinker", "{1}{W}{W}", 3, 3, pa.PlayerID(), mage.WithKeyword(core.Lifelink))
 	blk := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
+	g.AddToBattlefield(atk, blk)
 
 	blocks := []mage.BlockAssignment{{
 		BlockerID:  blk.ID(),
@@ -671,7 +671,7 @@ func TestEvaluateCombatOutcome_LifelinkBlocker(t *testing.T) {
 	g, pa, pb := makeGame()
 	atk := makePerm("Giant", "{2}{G}", 3, 3, pa.PlayerID())
 	blk := makePerm("Lifelink Bear", "{1}{W}", 2, 2, pb.PlayerID(), mage.WithKeyword(core.Lifelink))
-	g.Battlefield = append(g.Battlefield, atk, blk)
+	g.AddToBattlefield(atk, blk)
 
 	blocks := []mage.BlockAssignment{{
 		BlockerID:  blk.ID(),
@@ -690,7 +690,7 @@ func TestEvaluateCombatOutcome_LifelinkTrample(t *testing.T) {
 	atk := makePerm("Trampler", "{3}{W}{G}", 5, 5, pa.PlayerID(),
 		mage.WithKeyword(core.Lifelink), mage.WithKeyword(core.Trample))
 	blk := makePerm("Elf", "{G}", 1, 1, pb.PlayerID())
-	g.Battlefield = append(g.Battlefield, atk, blk)
+	g.AddToBattlefield(atk, blk)
 
 	blocks := []mage.BlockAssignment{{
 		BlockerID:  blk.ID(),
@@ -710,7 +710,7 @@ func TestEvaluateCombatOutcome_LifelinkScoreBonus(t *testing.T) {
 	g, pa, _ := makeGame()
 	ll := makePerm("Lifelinker", "{1}{W}{W}", 3, 3, pa.PlayerID(), mage.WithKeyword(core.Lifelink))
 	vanilla := makePerm("Bear", "{2}{G}", 3, 3, pa.PlayerID())
-	g.Battlefield = append(g.Battlefield, ll, vanilla)
+	g.AddToBattlefield(ll, vanilla)
 
 	csLL := evaluateCombatOutcome(g, pa.PlayerID(), []uuid.UUID{ll.ID()}, nil)
 	csVanilla := evaluateCombatOutcome(g, pa.PlayerID(), []uuid.UUID{vanilla.ID()}, nil)

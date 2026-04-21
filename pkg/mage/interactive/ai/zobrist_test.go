@@ -13,8 +13,8 @@ func TestZobrist_Deterministic(t *testing.T) {
 	pa.SetLife(20)
 	pb.SetLife(18)
 	addLands(g, pa, "Forest", 3)
-	g.Battlefield = append(g.Battlefield, makePerm("Grizzly Bears", "{1}{G}", 2, 2, pa.PlayerID()))
-	g.Step = core.PrecombatMain
+	g.AddToBattlefield(makePerm("Grizzly Bears", "{1}{G}", 2, 2, pa.PlayerID()))
+	g.SetStep(core.PrecombatMain)
 
 	h1 := z.Hash(g)
 	h2 := z.Hash(g)
@@ -32,9 +32,9 @@ func TestZobrist_CloneEquivalent(t *testing.T) {
 	pa.SetLife(20)
 	pb.SetLife(17)
 	addLands(g, pa, "Mountain", 2)
-	g.Battlefield = append(g.Battlefield, makePerm("Grizzly Bears", "{1}{G}", 2, 2, pa.PlayerID()))
-	g.Battlefield = append(g.Battlefield, makePerm("Savannah Lions", "{W}", 2, 1, pb.PlayerID()))
-	g.Step = core.PrecombatMain
+	g.AddToBattlefield(makePerm("Grizzly Bears", "{1}{G}", 2, 2, pa.PlayerID()))
+	g.AddToBattlefield(makePerm("Savannah Lions", "{W}", 2, 1, pb.PlayerID()))
+	g.SetStep(core.PrecombatMain)
 
 	clone := g.Clone()
 	if clone == nil {
@@ -50,7 +50,7 @@ func TestZobrist_TappedChangesHash(t *testing.T) {
 	z := NewZobristTables()
 	g, pa, _ := makeGame()
 	perm := makePerm("Grizzly Bears", "{1}{G}", 2, 2, pa.PlayerID())
-	g.Battlefield = append(g.Battlefield, perm)
+	g.AddToBattlefield(perm)
 
 	before := z.Hash(g)
 	perm.Tapped = true
@@ -75,9 +75,9 @@ func TestZobrist_LifeChangesHash(t *testing.T) {
 func TestZobrist_StepChangesHash(t *testing.T) {
 	z := NewZobristTables()
 	g, _, _ := makeGame()
-	g.Step = core.PrecombatMain
+	g.SetStep(core.PrecombatMain)
 	before := z.Hash(g)
-	g.Step = core.PostcombatMain
+	g.SetStep(core.PostcombatMain)
 	after := z.Hash(g)
 	if before == after {
 		t.Fatalf("Changing step should change the hash")
@@ -87,10 +87,10 @@ func TestZobrist_StepChangesHash(t *testing.T) {
 func TestZobrist_DifferentPermanents(t *testing.T) {
 	z := NewZobristTables()
 	g1, pa1, _ := makeGame()
-	g1.Battlefield = append(g1.Battlefield, makePerm("Grizzly Bears", "{1}{G}", 2, 2, pa1.PlayerID()))
+	g1.AddToBattlefield(makePerm("Grizzly Bears", "{1}{G}", 2, 2, pa1.PlayerID()))
 
 	g2, pa2, _ := makeGame()
-	g2.Battlefield = append(g2.Battlefield, makePerm("Savannah Lions", "{W}", 2, 1, pa2.PlayerID()))
+	g2.AddToBattlefield(makePerm("Savannah Lions", "{W}", 2, 1, pa2.PlayerID()))
 
 	if z.Hash(g1) == z.Hash(g2) {
 		t.Fatalf("Different creatures should produce different hashes")
@@ -101,7 +101,7 @@ func TestZobrist_CountersChangeHash(t *testing.T) {
 	z := NewZobristTables()
 	g, pa, _ := makeGame()
 	perm := makePerm("Grizzly Bears", "{1}{G}", 2, 2, pa.PlayerID())
-	g.Battlefield = append(g.Battlefield, perm)
+	g.AddToBattlefield(perm)
 
 	before := z.Hash(g)
 	perm.Counters[core.P1P1] = 2
@@ -133,13 +133,13 @@ func TestZobrist_HandContentsChangeHash(t *testing.T) {
 func TestZobrist_CanPlayLandBit(t *testing.T) {
 	z := NewZobristTables()
 	g, _, _ := makeGame()
-	g.Step = core.PrecombatMain
+	g.SetStep(core.PrecombatMain)
 
 	// LandsPlayedThisTurn == 0: can play land → bit set.
 	before := z.Hash(g)
 
 	// LandsPlayedThisTurn == MaxLandPlays: can no longer play land → bit cleared.
-	g.LandsPlayedThisTurn = g.MaxLandPlays()
+	g.SetLandsPlayedThisTurn(g.MaxLandPlays())
 	after := z.Hash(g)
 
 	if before == after {
