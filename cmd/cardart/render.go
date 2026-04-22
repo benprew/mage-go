@@ -55,12 +55,12 @@ func RenderANSI(img *image.RGBA) string {
 			if y+1 < h {
 				r2, g2, b2, _ := img.At(x, y+1).RGBA()
 				// Upper half = top pixel (foreground), lower half = bottom pixel (background)
-				sb.WriteString(fmt.Sprintf("\033[38;2;%d;%d;%dm\033[48;2;%d;%d;%dm▀",
+				fmt.Fprintf(&sb, "\033[38;2;%d;%d;%dm\033[48;2;%d;%d;%dm▀",
 					r1>>8, g1>>8, b1>>8,
-					r2>>8, g2>>8, b2>>8))
+					r2>>8, g2>>8, b2>>8)
 			} else {
 				// Odd height: just the top pixel
-				sb.WriteString(fmt.Sprintf("\033[38;2;%d;%d;%dm▀", r1>>8, g1>>8, b1>>8))
+				fmt.Fprintf(&sb, "\033[38;2;%d;%d;%dm▀", r1>>8, g1>>8, b1>>8)
 			}
 		}
 		sb.WriteString("\033[0m\n")

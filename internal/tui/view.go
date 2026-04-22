@@ -5,9 +5,9 @@ import (
 	"sort"
 	"strings"
 
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/google/uuid"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
 )
 
 // frame applies terminal-size constraints so shorter views fully overwrite
@@ -282,9 +282,9 @@ func (m Model) View() string {
 					check = selectedCheckStyle.Render("[x]")
 				}
 				if i == m.choiceCursor {
-					b.WriteString(fmt.Sprintf(" %s %s", check, menuCursorStyle.Render(label)))
+					fmt.Fprintf(&b, " %s %s", check, menuCursorStyle.Render(label))
 				} else {
-					b.WriteString(fmt.Sprintf(" %s %s", check, menuNormalStyle.Render(label)))
+					fmt.Fprintf(&b, " %s %s", check, menuNormalStyle.Render(label))
 				}
 			} else {
 				if i == m.choiceCursor {
@@ -374,9 +374,9 @@ func (m Model) View() string {
 					check = selectedCheckStyle.Render("[x]")
 				}
 				if i == m.cursor {
-					b.WriteString(fmt.Sprintf(" %s %s", check, menuCursorStyle.Render(opt.Label)))
+					fmt.Fprintf(&b, " %s %s", check, menuCursorStyle.Render(opt.Label))
 				} else {
-					b.WriteString(fmt.Sprintf(" %s %s", check, menuNormalStyle.Render(opt.Label)))
+					fmt.Fprintf(&b, " %s %s", check, menuNormalStyle.Render(opt.Label))
 				}
 			} else {
 				if opt.Type == interactive.ActionCastSpell && opt.CardName != "" {
