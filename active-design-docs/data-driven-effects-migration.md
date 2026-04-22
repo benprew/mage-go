@@ -70,11 +70,11 @@ The 6 remaining `SetCondition(func)` closures are genuinely card-specific or clo
 | City in a Bottle | arabian/artifacts.go:185 | Set-specific (Arabian Nights) card check |
 | Jihad | arabian/enchantments.go:192 | ChosenColor + ChosenPlayer + nontoken multi-field check |
 
-## Next Steps
+## Status
 
-1. **New card implementations** should use data-driven primitives where possible, FuncEffect only when necessary.
-2. **The migration is essentially complete at 98%.** The remaining 10 closures are card-specific edge cases that would each require a bespoke predicate with limited reuse value. They can be converted opportunistically if a general pattern emerges.
-3. **Doc.go examples** still show `SetCondition(func)` — update to show `SetConditionData` patterns.
+**The migration is complete.** 449/455 original closures converted (99%). The 6 remaining closures are genuinely card-specific and would each require a bespoke predicate with no reuse value.
+
+New card implementations should use data-driven primitives (EffectData, SetConditionData, Pipeline, etc.) where possible, and FuncEffect/SetCondition only when the engine lacks a matching primitive.
 
 ## Commits
 
@@ -86,4 +86,6 @@ fbc4211 refactor: Convert arabian/antiquities/fallen_empires FuncEffects to pipe
 21b564b refactor: Add extended pipeline primitives, convert ~24 more FuncEffects
 f8289b4 refactor: Phase 5 — composable trigger condition predicates
 b444639 refactor: Phase 4+5 card migration — convert SetCondition and FuncContinuousEffect closures
+158aa3c refactor: Phase 6 — convert 59/69 SetCondition closures to data-driven predicates
+8342ec1 refactor: Update doc.go examples and test DSL to use SetConditionData
 ```
