@@ -17,6 +17,7 @@ func registerEnchantments() {
 	// Whenever enchanted artifact becomes tapped or a player activates an ability of enchanted
 	// artifact without {T} in its activation cost, Artifact Possession deals 2 damage to that
 	// artifact's controller.
+	// TODO: convert to pipeline — needs "deal damage to attached permanent's controller" step
 	artPossDmgEffect := FuncEffect("deal 2 damage to enchanted artifact's controller",
 		EffectProperties{Outcome: OutcomeDetriment},
 		func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -115,6 +116,7 @@ func registerEnchantments() {
 	Register("Circle of Protection: Artifacts", func() Card {
 		return NewEnchantment("Circle of Protection: Artifacts", "{1}{W}",
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs "choose permanent" + "add source prevention" step
 				FuncEffect("prevent next artifact damage from chosen source",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -169,6 +171,7 @@ func registerEnchantments() {
 						return evt.PlayerID == controllerID
 					},
 					IsArtifact,
+					// TODO: convert to pipeline — needs "pay or sacrifice source" conditional
 					FuncEffect("sacrifice this artifact unless you pay {2}",
 						EffectProperties{Outcome: OutcomeDetriment},
 						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -193,18 +196,7 @@ func registerEnchantments() {
 	Register("Gate to Phyrexia", func() Card {
 		return NewEnchantment("Gate to Phyrexia", "{B}{B}",
 			WithActivatedAbility(
-				FuncEffect("destroy target artifact",
-					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 {
-							return nil
-						}
-						perm := g.FindPermanent(targets[0])
-						if perm != nil {
-							g.DestroyPermanent(perm)
-						}
-						return nil
-					}),
+				DestroyTarget(),
 				SacrificeCreatureCost(),
 				WithTarget(TargetPermanent(IsArtifact)),
 				WithUpkeepOnly(),
@@ -217,6 +209,7 @@ func registerEnchantments() {
 	// Enchantment
 	// Whenever an artifact becomes tapped or a player activates an artifact's ability without
 	// {T} in its activation cost, Haunting Wind deals 1 damage to that artifact's controller.
+	// TODO: convert to pipeline — needs "deal damage to event-source's controller" step
 	hauntingWindEffect := FuncEffect("deal 1 damage to artifact's controller",
 		EffectProperties{Outcome: OutcomeDetriment},
 		func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -286,15 +279,7 @@ func registerEnchantments() {
 	// Enchantment
 	// Whenever an artifact an opponent controls becomes tapped or an opponent activates an
 	// artifact's ability without {T} in its activation cost, you gain 1 life.
-	powerleechEffect := FuncEffect("gain 1 life",
-		EffectProperties{Outcome: OutcomeBenefit},
-		func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-			p := g.GetPlayer(controller)
-			if p != nil {
-				g.PlayerGainLife(p, 1)
-			}
-			return nil
-		})
+	powerleechEffect := GainLife(1)
 	Register("Powerleech", func() Card {
 		return NewEnchantment("Powerleech", "{G}{G}",
 			// Trigger when opponent's artifact becomes tapped
@@ -380,6 +365,7 @@ func registerEnchantments() {
 			// When Song leaves the battlefield, continue the effect until end of turn
 			WithAbility(
 				NewTriggered(EvtLeavesBattlefield, false,
+					// TODO: convert to pipeline — needs "add multiple continuous effects" step
 					FuncEffect("continue Titania's Song effect until end of turn",
 						EffectProperties{},
 						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {

@@ -62,6 +62,7 @@ func registerSpells() {
 	// damage to that source's controller."
 	Register("Eye for an Eye", func() Card {
 		return NewInstant("Eye for an Eye", "{W}{W}",
+			// TODO: convert to pipeline — needs damage reflection + choose-source primitives
 			NewSpellAbility(FuncEffect("reflect next damage to source's controller",
 				EffectProperties{Outcome: OutcomeDetriment},
 				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -114,6 +115,7 @@ func registerSpells() {
 	// Spend this mana only to cast creature spells."
 	Register("Metamorphosis", func() Card {
 		return NewSorcery("Metamorphosis", "{G}",
+			// TODO: convert to pipeline — needs dynamic mana addition + color choice + creature-mana-only primitives
 			NewSpellAbility(FuncEffect("add mana equal to 1 + sacrificed creature's CMC",
 				EffectProperties{Outcome: OutcomeBenefit},
 				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {

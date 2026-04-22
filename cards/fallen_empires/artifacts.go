@@ -36,21 +36,13 @@ func registerArtifacts() {
 	Register("Balm of Restoration", withExpansion(func() Card {
 		c := NewArtifact("Balm of Restoration", "{2}",
 			WithActivatedAbility(
-				FuncEffect("gain 2 life or prevent 2 damage",
+				Pipeline("gain 2 life or prevent 2 damage",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if g.ModeValue() == 0 {
-							p := g.GetPlayer(controller)
-							if p != nil {
-								g.PlayerGainLife(p, 2)
-							}
-						} else {
-							if len(targets) > 0 {
-								g.AddPreventionShield(targets[0], 2)
-							}
-						}
-						return nil
-					}),
+					ModalEffect("choose one",
+						UnwrapEffect(GainLife(2)),
+						UnwrapEffect(PreventDamageToTarget(Fixed(2))),
+					),
+				),
 				GenericCost(1),
 				WithCost(TapSourceCost()),
 				WithCost(SacrificeSourceCost()),
@@ -67,6 +59,7 @@ func registerArtifacts() {
 	// Conch Horn {2}
 	// Artifact
 	// {1}, {T}, Sacrifice this artifact: Draw two cards, then put a card from your hand on top of your library.
+	// TODO: convert to pipeline — needs DrawCards step + ChooseCardsFromHand + PutOnTopOfLibrary steps
 	Register("Conch Horn", withExpansion(func() Card {
 		return NewArtifact("Conch Horn", "{2}",
 			WithActivatedAbility(
@@ -167,6 +160,7 @@ func registerArtifacts() {
 	// Ring of Renewal {5}
 	// Artifact
 	// {5}, {T}: Discard a card at random, then draw two cards.
+	// TODO: convert to pipeline — needs DiscardRandom targeting controller (not opponent) + DrawCards step
 	Register("Ring of Renewal", withExpansion(func() Card {
 		return NewArtifact("Ring of Renewal", "{5}",
 			WithActivatedAbility(

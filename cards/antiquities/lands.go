@@ -21,6 +21,7 @@ func registerLands() {
 		return NewLand("Mishra's Factory",
 			WithManaAbility(Colorless),
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs "animate" + "add type/subtype until EOT" steps
 				FuncEffect("become 2/2 Assembly-Worker artifact creature until end of turn",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -59,6 +60,7 @@ func registerLands() {
 	Register("Mishra's Workshop", func() Card {
 		return NewLand("Mishra's Workshop",
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs "add restricted mana" step
 				FuncEffect("add {C}{C}{C} for artifacts only",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -82,18 +84,7 @@ func registerLands() {
 		return NewLand("Strip Mine",
 			WithManaAbility(Colorless),
 			WithActivatedAbility(
-				FuncEffect("destroy target land",
-					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 {
-							return nil
-						}
-						perm := g.FindPermanent(targets[0])
-						if perm != nil {
-							g.DestroyPermanent(perm)
-						}
-						return nil
-					}),
+				DestroyTarget(),
 				TapSourceCost(),
 				WithCost(SacrificeSourceCost()),
 				WithTarget(TargetPermanent(IsLand)),
@@ -108,6 +99,7 @@ func registerLands() {
 		return NewLand("Urza's Mine",
 			WithSubTypes("Urza's", "Mine"),
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs conditional mana amount with IfElse
 				FuncEffect("add {C} or {C}{C} with Tron",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -136,6 +128,7 @@ func registerLands() {
 		return NewLand("Urza's Power Plant",
 			WithSubTypes("Urza's", "Power-Plant"),
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs conditional mana amount with IfElse
 				FuncEffect("add {C} or {C}{C} with Tron",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -164,6 +157,7 @@ func registerLands() {
 		return NewLand("Urza's Tower",
 			WithSubTypes("Urza's", "Tower"),
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs conditional mana amount with IfElse
 				FuncEffect("add {C} or {C}{C}{C} with Tron",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {

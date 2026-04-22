@@ -55,6 +55,7 @@ func registerSpells() {
 	// Icatian Town {5}{W}
 	// Sorcery
 	// Create four 1/1 white Citizen creature tokens.
+	// TODO: convert to pipeline — needs CreateTokens(count) step (no repeat/count primitive)
 	Register("Icatian Town", withExpansion(func() Card {
 		return NewSorcery("Icatian Town", "{5}{W}",
 			NewSpellAbility(FuncEffect("create four 1/1 white Citizen creature tokens",

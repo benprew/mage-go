@@ -30,6 +30,7 @@ func registerLands() {
 	Register("Bazaar of Baghdad", func() Card {
 		return NewLand("Bazaar of Baghdad",
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs draw + ChooseCardsFromHand + discard primitives
 				FuncEffect("draw 2, discard 3",
 					EffectProperties{},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -86,6 +87,7 @@ func registerLands() {
 	Register("Diamond Valley", func() Card {
 		return NewLand("Diamond Valley",
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs ChoosePermanentStep with controller-relative filter
 				FuncEffect("sacrifice creature, gain life equal to toughness",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {

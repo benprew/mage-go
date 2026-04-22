@@ -28,27 +28,13 @@ func registerSpells() {
 	// equal to its mana value.
 	Register("Crumble", func() Card {
 		return NewInstant("Crumble", "{G}",
-			NewTargetedSpell(TargetArtifact(), FuncEffect(
+			NewTargetedSpell(TargetArtifact(), Pipeline(
 				"destroy target artifact; controller gains life equal to CMC",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					if len(targets) == 0 {
-						return nil
-					}
-					perm := g.FindPermanent(targets[0])
-					if perm == nil {
-						return nil
-					}
-					cmc := perm.Card.ManaCost().CMC()
-					permController := perm.Controller
-					perm.GrantBaseAttr(CantRegenerate)
-					g.DestroyPermanent(perm)
-					p := g.GetPlayer(permController)
-					if p != nil && cmc > 0 {
-						g.PlayerGainLife(p, cmc)
-					}
-					return nil
-				})),
+				SnapshotPermanent(SelectTarget, "target"),
+				DestroyGatheredNoRegen("target"),
+				GainLifeFromVar("target.controller", "target.cmc"),
+			)),
 		)
 	})
 
@@ -57,6 +43,7 @@ func registerSpells() {
 	// Return all artifacts target player owns to their hand.
 	Register("Hurkyl's Recall", func() Card {
 		return NewInstant("Hurkyl's Recall", "{1}{U}",
+			// TODO: convert to pipeline — needs "bounce all matching owned by target player" step
 			NewTargetedSpell(TargetPlayer(), FuncEffect(
 				"return all artifacts target player owns to their hand",
 				EffectProperties{Outcome: OutcomeDetriment},
@@ -92,6 +79,7 @@ func registerSpells() {
 	// You gain X life, where X is twice the damage dealt to you so far this turn by artifacts.
 	Register("Reverse Polarity", func() Card {
 		return NewInstant("Reverse Polarity", "{W}{W}",
+			// TODO: convert to pipeline — needs "get artifact damage taken" ValueSource
 			NewSpellAbility(FuncEffect("gain life equal to twice artifact damage",
 				EffectProperties{Outcome: OutcomeBenefit},
 				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -115,6 +103,7 @@ func registerSpells() {
 	// to that artifact's controller.
 	Register("Detonate", func() Card {
 		return NewSorcery("Detonate", "{X}{R}",
+			// TODO: convert to pipeline — needs "snapshot X value" step
 			NewTargetedSpell(TargetArtifactWithManaValueX(), FuncEffect(
 				"destroy target artifact with CMC X; deal X damage to controller",
 				EffectProperties{Outcome: OutcomeDetriment},
@@ -149,6 +138,7 @@ func registerSpells() {
 	// The order placed on top is the order chosen (last chosen = top).
 	Register("Drafna's Restoration", func() Card {
 		return NewSorcery("Drafna's Restoration", "{U}",
+			// TODO: convert to pipeline — needs "choose cards from graveyard" iterative step
 			NewTargetedSpell(TargetPlayer(), FuncEffect(
 				"put artifact cards from graveyard on top of library",
 				EffectProperties{Outcome: OutcomeBenefit},
@@ -237,6 +227,7 @@ func registerSpells() {
 	// the battlefield. If you don't, put it into its owner's graveyard. Then shuffle.
 	Register("Transmute Artifact", func() Card {
 		return NewSorcery("Transmute Artifact", "{U}{U}",
+			// TODO: convert to pipeline — needs "search library" + conditional payment steps
 			NewSpellAbility(FuncEffect("search library for artifact, put on battlefield",
 				EffectProperties{Outcome: OutcomeBenefit},
 				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {

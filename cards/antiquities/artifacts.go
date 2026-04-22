@@ -36,49 +36,22 @@ func registerArtifacts() {
 	Register("Armageddon Clock", func() Card {
 		return NewArtifact("Armageddon Clock", "{6}",
 			WithAbility(BeginningOfUpkeepTrigger(
-				FuncEffect("put a doom counter on Armageddon Clock",
-					EffectProperties{},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						perm := g.FindPermanent(sourceID)
-						if perm != nil {
-							perm.AddCounter(Doom, 1)
-						}
-						return nil
-					}), false,
+				AddCounters(Doom, Fixed(1), SelectSource), false,
 			)),
 			WithAbility(
 				NewTriggered(EvtDrawStep, false,
-					FuncEffect("deal damage equal to doom counters to each player",
+					Pipeline("deal damage equal to doom counters to each player",
 						EffectProperties{Outcome: OutcomeDetriment},
-						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							perm := g.FindPermanent(sourceID)
-							if perm == nil {
-								return nil
-							}
-							counters := int(perm.Counters[Doom])
-							if counters <= 0 {
-								return nil
-							}
-							for _, p := range g.AllPlayers() {
-								g.DealDamageToPlayer(p, counters, sourceID)
-							}
-							return nil
-						}),
+						SnapshotSourceCounter(Doom, "doom"),
+						DealDamageToPlayersFromVar("doom", SelectEachPlayer()),
+					),
 				).SetCondition(func(evt *GameEvent, _ GameReader, _, controllerID uuid.UUID) bool {
 					return evt.PlayerID == controllerID
 				}),
 			),
 			// {4}: Remove a doom counter. Any player may activate this but only during upkeep.
 			WithActivatedAbility(
-				FuncEffect("remove a doom counter from Armageddon Clock",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						perm := g.FindPermanent(sourceID)
-						if perm != nil {
-							perm.RemoveCounter(Doom, 1)
-						}
-						return nil
-					}),
+				RemoveCountersFromSource(Doom, 1),
 				GenericCost(4),
 				WithUpkeepOnly(),
 				WithAnyPlayerMay(),
@@ -107,6 +80,7 @@ func registerArtifacts() {
 		return NewArtifact("Ashnod's Battle Gear", "{2}",
 			WithKeyword(AttrMayNotUntap),
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs "add continuous effect while tapped" step
 				FuncEffect("target creature gets +2/-2 while ~ remains tapped",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -147,6 +121,7 @@ func registerArtifacts() {
 	Register("Ashnod's Transmogrant", func() Card {
 		return NewArtifact("Ashnod's Transmogrant", "{1}",
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs "add type to permanent" step
 				FuncEffect("put +1/+1 counter and make artifact",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -176,6 +151,7 @@ func registerArtifacts() {
 	Register("Candelabra of Tawnos", func() Card {
 		return NewArtifact("Candelabra of Tawnos", "{1}",
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs "repeat X times: choose and untap" step
 				FuncEffect("untap X target lands",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -250,21 +226,7 @@ func registerArtifacts() {
 	Register("Feldon's Cane", func() Card {
 		return NewArtifact("Feldon's Cane", "{1}",
 			WithActivatedAbility(
-				FuncEffect("shuffle graveyard into library",
-					EffectProperties{},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						p := g.GetPlayer(controller)
-						if p == nil {
-							return nil
-						}
-						gy := p.Graveyard()
-						lib := p.Library()
-						lib = append(lib, gy...)
-						p.SetLibrary(lib)
-						p.ClearGraveyard()
-						p.ShuffleLibrary()
-						return nil
-					}),
+				DataEffect(ShuffleGraveyardIntoLibrary()),
 				TapSourceCost(),
 				WithCost(ExileSourceCost()),
 			),
@@ -278,6 +240,7 @@ func registerArtifacts() {
 	Register("Golgothian Sylex", func() Card {
 		return NewArtifact("Golgothian Sylex", "{4}",
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs catalog-based filter as PermanentFilter
 				FuncEffect("sacrifice all nontoken Antiquities permanents",
 					EffectProperties{Outcome: OutcomeDetriment, Mass: true},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -305,6 +268,7 @@ func registerArtifacts() {
 	Register("Ivory Tower", func() Card {
 		return NewArtifact("Ivory Tower", "{1}",
 			WithAbility(BeginningOfUpkeepTrigger(
+				// TODO: convert to pipeline — needs "hand size minus N" ValueSource
 				FuncEffect("gain life equal to hand size minus 4",
 					EffectProperties{},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -328,6 +292,7 @@ func registerArtifacts() {
 	Register("Jalum Tome", func() Card {
 		return NewArtifact("Jalum Tome", "{3}",
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs "draw then choose discard" step
 				FuncEffect("draw a card, then discard a card",
 					EffectProperties{},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -366,6 +331,7 @@ func registerArtifacts() {
 	Register("Millstone", func() Card {
 		return NewArtifact("Millstone", "{2}",
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs "mill target player" step
 				FuncEffect("target player mills two cards",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -414,6 +380,7 @@ func registerArtifacts() {
 	Register("Rakalite", func() Card {
 		return NewArtifact("Rakalite", "{6}",
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs "register delayed trigger" step
 				FuncEffect("prevent 1 damage to target; bounce self at next end step",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -455,6 +422,7 @@ func registerArtifacts() {
 	Register("Rocket Launcher", func() Card {
 		return NewArtifact("Rocket Launcher", "{4}",
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs "register delayed trigger" step
 				FuncEffect("deal 1 damage to any target; destroy self at next end step",
 					EffectProperties{Outcome: OutcomeDetriment, DamageValue: Fixed(1)},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -510,18 +478,13 @@ func registerArtifacts() {
 		return NewArtifact("Tablet of Epityr", "{1}",
 			WithAbility(
 				NewTriggered(EvtPutIntoGraveyardFromBattlefield, true,
-					FuncEffect("you may pay {1}; if you do, gain 1 life",
+					Pipeline("you may pay {1}; if you do, gain 1 life",
 						EffectProperties{Outcome: OutcomeBenefit},
-						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							if !g.TryPayCostFromLands(controller, "{1}") {
-								return nil
-							}
-							p := g.GetPlayer(controller)
-							if p != nil {
-								g.PlayerGainLife(p, 1)
-							}
-							return nil
-						}),
+						IfElse("pay {1} to gain 1 life",
+							&TryPayManaCond{Cost: "{1}"},
+							UnwrapEffect(GainLife(1)),
+							nil),
+					),
 				).SetCondition(func(evt *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
 					if evt.PlayerID != controllerID {
 						return false
@@ -598,6 +561,7 @@ func registerArtifacts() {
 		return NewArtifact("Tawnos's Coffin", "{4}",
 			WithKeyword(AttrMayNotUntap),
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs exile-with-noted-state tracking
 				FuncEffect("exile target creature and all Auras; return when Coffin leaves or untaps",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -643,6 +607,7 @@ func registerArtifacts() {
 			// When Tawnos's Coffin leaves the battlefield, return exiled creature
 			WithAbility(
 				NewTriggered(EvtLeavesBattlefield, false,
+					// TODO: convert to pipeline — needs exile-with-noted-state tracking
 					FuncEffect("return exiled creature to battlefield",
 						EffectProperties{},
 						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -654,6 +619,7 @@ func registerArtifacts() {
 			// When Tawnos's Coffin becomes untapped, return exiled creature
 			WithAbility(
 				NewTriggered(EvtBecameUntapped, false,
+					// TODO: convert to pipeline — needs exile-with-noted-state tracking
 					FuncEffect("return exiled creature when Coffin becomes untapped",
 						EffectProperties{},
 						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -687,6 +653,7 @@ func registerArtifacts() {
 		return NewArtifact("Tawnos's Weaponry", "{2}",
 			WithKeyword(AttrMayNotUntap),
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs "add continuous effect while tapped" step
 				FuncEffect("target creature gets +1/+1 while ~ remains tapped",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -738,18 +705,13 @@ func registerArtifacts() {
 		return NewArtifact("Urza's Chalice", "{1}",
 			WithAbility(
 				NewTriggered(EvtSpellCast, true,
-					FuncEffect("you may pay {1}; if you do, gain 1 life",
+					Pipeline("you may pay {1}; if you do, gain 1 life",
 						EffectProperties{Outcome: OutcomeBenefit},
-						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							if !g.TryPayCostFromLands(controller, "{1}") {
-								return nil
-							}
-							p := g.GetPlayer(controller)
-							if p != nil {
-								g.PlayerGainLife(p, 1)
-							}
-							return nil
-						}),
+						IfElse("pay {1} to gain 1 life",
+							&TryPayManaCond{Cost: "{1}"},
+							UnwrapEffect(GainLife(1)),
+							nil),
+					),
 				).SetCondition(func(evt *GameEvent, g GameReader, _, _ uuid.UUID) bool {
 					card := g.FindCardAnywhere(evt.SourceID)
 					if card == nil {
@@ -769,18 +731,13 @@ func registerArtifacts() {
 		return NewArtifact("Urza's Miter", "{3}",
 			WithAbility(
 				NewTriggered(EvtPutIntoGraveyardFromBattlefield, true,
-					FuncEffect("pay {3} to draw a card",
+					Pipeline("pay {3} to draw a card",
 						EffectProperties{Outcome: OutcomeBenefit},
-						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							if !g.TryPayCostFromLands(controller, "{3}") {
-								return nil
-							}
-							p := g.GetPlayer(controller)
-							if p != nil {
-								p.DrawCard()
-							}
-							return nil
-						}),
+						IfElse("pay {3} to draw",
+							&TryPayManaCond{Cost: "{3}"},
+							UnwrapEffect(DrawCards(Fixed(1))),
+							nil),
+					),
 				).SetCondition(func(evt *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
 					// Only trigger for non-sacrifice (Flag=false) artifact deaths you control
 					if evt.Flag {

@@ -20,7 +20,8 @@ func registerCreatures() {
 			WithSubTypes("Human"),
 			WithAbility(
 				NewTriggered(EvtCreatureDied, false,
-					FuncEffect("destroy all creatures blocking or blocked by Abu Ja'far",
+					// TODO: convert to pipeline — needs combat group iteration primitive
+				FuncEffect("destroy all creatures blocking or blocked by Abu Ja'far",
 						EffectProperties{},
 						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 							if len(g.CombatGroups()) == 0 {
@@ -153,16 +154,11 @@ func registerCreatures() {
 			WithKeyword(DoesNotUntapKW),
 			// "At the beginning of your upkeep, you may pay {U}{U}{U}. If you do, untap it."
 			WithAbility(BeginningOfUpkeepTrigger(
-				FuncEffect("pay {U}{U}{U} to untap", EffectProperties{},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						if g.TryPayCostFromLands(controller, "{U}{U}{U}") {
-							perm := g.FindPermanent(sourceID)
-							if perm != nil {
-								perm.Tapped = false
-							}
-						}
-						return nil
-					}), false,
+				DataEffect(IfElse("pay {U}{U}{U} to untap",
+					&TryPayManaCond{Cost: "{U}{U}{U}"},
+					UnwrapEffect(UntapSource()),
+					nil,
+				)), false,
 			)),
 			WithStaticAbility(PreventFromAttackingIfDefendingPlayerControls(HasSubType("Island"))),
 			WithAbility(NewTriggered(EvtLeavesBattlefield, false, SacrificeSource()).
@@ -186,15 +182,7 @@ func registerCreatures() {
 			WithStaticAbility(PreventFromAttackingIfDefendingPlayerControls(HasSubType("Island"))),
 			WithAbility(
 				NewTriggered(EvtBlockersDecl, false,
-					FuncEffect("gain 2 life when unblocked",
-						EffectProperties{},
-						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							p := g.GetPlayer(controller)
-							if p != nil {
-								p.GainLife(2)
-							}
-							return nil
-						}),
+					GainLife(2),
 				).SetCondition(func(_ *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 					for _, group := range g.CombatGroups() {
 						if group.AttackerID == sourceID && len(group.BlockerIDs) == 0 {
@@ -224,6 +212,7 @@ func registerCreatures() {
 		return NewCreature("Old Man of the Sea", "{1}{U}{U}", 2, 3,
 			WithSubTypes("Djinn"),
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs ControlledPermanent assignment + power comparison primitives
 				FuncEffect("gain control of target creature",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -278,6 +267,7 @@ func registerCreatures() {
 			WithKeyword(Flying),
 			// Upkeep: sacrifice a land, 3 damage if Island; if no lands, sacrifice self
 			WithAbility(BeginningOfUpkeepTrigger(
+				// TODO: convert to pipeline — needs sacrifice-chosen-land + conditional damage based on subtype
 				FuncEffect("sacrifice a land",
 					EffectProperties{},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -334,6 +324,7 @@ func registerCreatures() {
 		return NewCreature("Sindbad", "{1}{U}", 1, 1,
 			WithSubTypes("Human"),
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs draw-and-conditional-discard primitive
 				FuncEffect("draw and reveal; discard if not land",
 					EffectProperties{},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -364,6 +355,7 @@ func registerCreatures() {
 		return NewCreature("Cuombajj Witches", "{B}{B}", 1, 3,
 			WithSubTypes("Human", "Wizard"),
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs opponent-chooses-target primitive
 				FuncEffect("deal 1 to target, 1 to opponent's choice",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -417,6 +409,7 @@ func registerCreatures() {
 		return NewCreature("El-Hajjâj", "{1}{B}{B}", 1, 1,
 			WithSubTypes("Human", "Wizard"),
 			WithAbility(NewTriggered(EvtDamageDealt, false,
+				// TODO: convert to pipeline — needs EventAmount() access primitive
 				FuncEffect("you gain that much life",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -498,18 +491,11 @@ func registerCreatures() {
 		return NewCreature("Hasran Ogress", "{B}{B}", 3, 2,
 			WithSubTypes("Ogre"),
 			WithAbility(AttacksTrigger(
-				FuncEffect("pay {2} or take 3 damage",
-					EffectProperties{},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						if g.TryPayCostFromLands(controller, "{2}") {
-							return nil
-						}
-						p := g.GetPlayer(controller)
-						if p != nil {
-							g.DealDamageToPlayer(p, 3, sourceID)
-						}
-						return nil
-					}), false,
+				DataEffect(IfElse("pay {2} or take 3 damage",
+					&TryPayManaCond{Cost: "{2}"},
+					nil,
+					UnwrapEffect(DealDamageToPlayers(Fixed(3), SelectController())),
+				)), false,
 			)),
 		)
 	})
@@ -540,6 +526,7 @@ func registerCreatures() {
 			WithSubTypes("Zombie"),
 			WithAbility(
 				NewTriggered(EvtEndStep, false,
+					// TODO: convert to pipeline — needs CreatureDeaths() access primitive
 					FuncEffect("put +1/+1 counters for deaths",
 						EffectProperties{},
 						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -586,6 +573,7 @@ func registerCreatures() {
 		return NewCreature("Aladdin", "{2}{R}{R}", 1, 1,
 			WithSubTypes("Human", "Rogue"),
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs ControlledPermanent assignment primitive
 				FuncEffect("gain control of target artifact",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -696,6 +684,7 @@ func registerCreatures() {
 		return NewCreature("Mijae Djinn", "{R}{R}{R}", 6, 3,
 			WithSubTypes("Djinn"),
 			WithAbility(AttacksTrigger(
+				// TODO: convert to pipeline — needs FlipCoin condition primitive
 				FuncEffect("flip coin or remove from combat",
 					EffectProperties{},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -719,6 +708,7 @@ func registerCreatures() {
 			WithSubTypes("Bird", "Egg"),
 			WithAbility(
 				NewTriggered(EvtCreatureDied, false,
+					// TODO: convert to pipeline — needs RegisterDelayedTrigger primitive
 					FuncEffect("register delayed token creation at next end step",
 						EffectProperties{},
 						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -743,6 +733,7 @@ func registerCreatures() {
 		return NewCreature("Ydwen Efreet", "{R}{R}{R}", 3, 6,
 			WithSubTypes("Efreet"),
 			WithAbility(BlocksTrigger(
+				// TODO: convert to pipeline — needs FlipCoin condition + cant-block-this-turn primitives
 				FuncEffect("flip coin or remove from combat",
 					EffectProperties{},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -770,6 +761,7 @@ func registerCreatures() {
 		return NewCreature("Erhnam Djinn", "{3}{G}", 4, 5,
 			WithSubTypes("Djinn"),
 			WithAbility(BeginningOfUpkeepTrigger(
+				// TODO: convert to pipeline — needs grant-keyword-until-your-next-turn + choose-opponent-creature primitives
 				FuncEffect("grant forestwalk to opponent creature",
 					EffectProperties{},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -813,6 +805,7 @@ func registerCreatures() {
 			// Upkeep trigger: determine who should control Ghazbán Ogre based on life totals.
 			// Stores result in ChosenPlayer so the continuous effect can persist it.
 			WithAbility(BeginningOfUpkeepTrigger(
+				// TODO: convert to pipeline — needs life total comparison + ChosenPlayer assignment primitives
 				FuncEffect("check life totals for control change",
 					EffectProperties{},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -862,6 +855,7 @@ func registerCreatures() {
 			WithSubTypes("Efreet"),
 			WithKeyword(Flying),
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs deal-damage-to-all-matching + deal-damage-to-all-players primitives
 				FuncEffect("deal 1 to each flyer and each player",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -885,6 +879,7 @@ func registerCreatures() {
 		return NewCreature("Nafs Asp", "{G}", 1, 1,
 			WithSubTypes("Snake"),
 			WithAbility(NewTriggered(EvtDamageDealt, false,
+				// TODO: convert to pipeline — needs RegisterDelayedTrigger primitive
 				FuncEffect("register delayed draw-step penalty",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -957,16 +952,11 @@ func registerCreatures() {
 			WithCardType(TypeArtifact),
 			WithKeyword(DoesNotUntapKW),
 			WithAbility(BeginningOfUpkeepTrigger(
-				FuncEffect("pay {1} to untap", EffectProperties{},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						if g.TryPayCostFromLands(controller, "{1}") {
-							perm := g.FindPermanent(sourceID)
-							if perm != nil {
-								perm.Tapped = false
-							}
-						}
-						return nil
-					}), false,
+				DataEffect(IfElse("pay {1} to untap",
+					&TryPayManaCond{Cost: "{1}"},
+					UnwrapEffect(UntapSource()),
+					nil,
+				)), false,
 			)),
 		)
 	})

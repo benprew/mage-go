@@ -127,6 +127,7 @@ func registerCreatures() {
 			WithSubTypes("Phyrexian", "Gremlin"),
 			WithKeyword(AttrMayNotUntap),
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs "add continuous effect" step
 				FuncEffect("tap target artifact; it doesn't untap while ~ remains tapped",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -171,6 +172,7 @@ func registerCreatures() {
 		return NewCreature("Priest of Yawgmoth", "{1}{B}", 1, 2,
 			WithSubTypes("Phyrexian", "Human", "Cleric"),
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs "add mana from variable" step
 				FuncEffect("add {B} equal to sacrificed artifact's CMC",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -199,6 +201,7 @@ func registerCreatures() {
 		return NewCreature("Xenic Poltergeist", "{1}{B}{B}", 1, 1,
 			WithSubTypes("Spirit"),
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs "animate until next upkeep" step
 				FuncEffect("animate target noncreature artifact until your next upkeep",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -233,6 +236,7 @@ func registerCreatures() {
 			WithKeyword(Flying),
 			WithKeyword(FirstStrike),
 			WithAbility(BeginningOfUpkeepTrigger(
+				// TODO: convert to pipeline — needs "may sacrifice or else" branching with interactive choice
 				FuncEffect("sacrifice an artifact or tap and take 2 damage",
 					EffectProperties{},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -302,6 +306,7 @@ func registerCreatures() {
 		return NewCreature("Goblin Artisans", "{R}", 1, 1,
 			WithSubTypes("Goblin", "Artificer"),
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs "flip coin" conditional step
 				FuncEffect("flip coin: win=draw, lose=counter own artifact spell",
 					EffectProperties{},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -445,7 +450,8 @@ func registerCreatures() {
 			WithCardType(TypeArtifact),
 			WithAbility(
 				NewTriggered(EvtBeginCombat, false,
-					FuncEffect("gain banding until end of combat",
+					// TODO: convert to pipeline — needs "grant keyword until end of combat" step
+				FuncEffect("gain banding until end of combat",
 						EffectProperties{},
 						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							perm := g.FindPermanent(sourceID)
@@ -468,7 +474,8 @@ func registerCreatures() {
 			// When blocked by a Wall, destroy that Wall at end of combat
 			WithAbility(
 				NewTriggered(EvtDeclaredBlocker, false,
-					FuncEffect("destroy blocking Wall at end of combat",
+					// TODO: convert to pipeline — needs "register delayed trigger" step
+				FuncEffect("destroy blocking Wall at end of combat",
 						EffectProperties{Outcome: OutcomeDetriment},
 						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 							if len(targets) == 0 {
@@ -524,6 +531,7 @@ func registerCreatures() {
 			WithKeyword(Flying),
 			WithAbility(EntersWithNCounters(P1P0, 4)),
 			// At end of combat, if Clockwork Avian attacked or blocked, remove a +1/+0 counter
+			// TODO: convert to pipeline — needs "register delayed trigger" step
 			WithAbility(AttacksTrigger(
 				FuncEffect("schedule counter removal at end of combat",
 					EffectProperties{},
@@ -538,6 +546,7 @@ func registerCreatures() {
 						return nil
 					}), false,
 			)),
+			// TODO: convert to pipeline — needs "register delayed trigger" step
 			WithAbility(BlocksTrigger(
 				FuncEffect("schedule counter removal at end of combat",
 					EffectProperties{},
@@ -621,6 +630,7 @@ func registerCreatures() {
 			WithCardType(TypeArtifact),
 			WithKeyword(Banding),
 			WithAbility(BeginningOfUpkeepTrigger(
+				// TODO: convert to pipeline — needs "may discard or else" branching with interactive choice
 				FuncEffect("discard a card or take 3 damage and tap",
 					EffectProperties{},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -683,6 +693,7 @@ func registerCreatures() {
 		c := NewCreature("Primal Clay", "{4}", 3, 3,
 			WithSubTypes("Shapeshifter"),
 			WithCardType(TypeArtifact),
+			// TODO: convert to pipeline — needs "set base P/T" and "add subtype" modal steps
 			WithAbility(ETBEffect(FuncEffect("choose form on ETB",
 				EffectProperties{},
 				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -722,6 +733,7 @@ func registerCreatures() {
 			WithSubTypes("Shapeshifter"),
 			WithCardType(TypeArtifact),
 			// ETB: choose a number 0-7
+			// TODO: convert to pipeline — needs "set stored value from mode" step
 			WithAbility(ETBEffect(FuncEffect("choose a number between 0 and 7",
 				EffectProperties{},
 				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -741,6 +753,7 @@ func registerCreatures() {
 				}))),
 			// Upkeep: may re-choose
 			WithAbility(BeginningOfUpkeepTrigger(
+				// TODO: convert to pipeline — needs "may choose mode" + "set stored value" steps
 				FuncEffect("you may choose a new number between 0 and 7",
 					EffectProperties{},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -792,15 +805,7 @@ func registerCreatures() {
 			WithCardType(TypeArtifact),
 			WithAbility(
 				NewTriggered(EvtCreatureDied, false,
-					FuncEffect("add {C}{C}{C}{C}",
-						EffectProperties{},
-						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-							p := g.GetPlayer(controller)
-							if p != nil {
-								p.ManaPool().Add(Colorless, 4)
-							}
-							return nil
-						}),
+					AddMana(Colorless, 4),
 				).SetCondition(IsThisSource),
 			),
 		)
@@ -822,6 +827,7 @@ func registerCreatures() {
 			WithAbility(EntersWithNCounters(P1P1, 3)),
 			// Remove counters → create Tetravite tokens
 			WithAbility(BeginningOfUpkeepTrigger(
+				// TODO: convert to pipeline — needs "choose number" + "create tokens" steps
 				FuncEffect("remove +1/+1 counters and create Tetravite tokens",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -854,6 +860,7 @@ func registerCreatures() {
 			)),
 			// Exile Tetravite tokens → add +1/+1 counters
 			WithAbility(BeginningOfUpkeepTrigger(
+				// TODO: convert to pipeline — needs "choose number of tokens to exile" step
 				FuncEffect("exile Tetravite tokens and add +1/+1 counters",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -913,6 +920,7 @@ func registerCreatures() {
 			WithSubTypes("Shapeshifter"),
 			WithCardType(TypeArtifact),
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs "choose keyword" + "grant chosen keyword until EOT" steps
 				FuncEffect("-1/-1 and gain chosen keyword until end of turn",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {

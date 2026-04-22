@@ -90,6 +90,7 @@ func registerArtifacts() {
 	Register("Aladdin's Lamp", func() Card {
 		return NewArtifact("Aladdin's Lamp", "{10}",
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs SetDrawReplacement primitive
 				FuncEffect("set up draw replacement",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -124,6 +125,7 @@ func registerArtifacts() {
 	Register("Bottle of Suleiman", func() Card {
 		return NewArtifact("Bottle of Suleiman", "{4}",
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs FlipCoin condition primitive
 				FuncEffect("flip coin: 5/5 Djinn or 5 damage",
 					EffectProperties{},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -154,6 +156,7 @@ func registerArtifacts() {
 			// ETB: sacrifice all other nontoken Arabian Nights permanents
 			WithAbility(
 				EntersBattlefieldTrigger(
+					// TODO: convert to pipeline — needs ForEach with nontoken + set filter + sacrifice-excluding-self
 					FuncEffect("sacrifice all other Arabian Nights nontoken permanents",
 						EffectProperties{Outcome: OutcomeDetriment},
 						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -174,6 +177,7 @@ func registerArtifacts() {
 			// Whenever any nontoken Arabian Nights permanent enters (not self), sacrifice it
 			WithAbility(
 				NewTriggered(EvtEntersBattlefield, false,
+					// TODO: convert to pipeline — needs ForEach with nontoken + set filter + sacrifice-excluding-self
 					FuncEffect("sacrifice entering Arabian Nights permanent",
 						EffectProperties{Outcome: OutcomeDetriment},
 						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -218,6 +222,7 @@ func registerArtifacts() {
 	Register("Ebony Horse", func() Card {
 		return NewArtifact("Ebony Horse", "{3}",
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs combined untap-target + remove-from-combat-target step
 				FuncEffect("untap and remove from combat",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -281,6 +286,7 @@ func registerArtifacts() {
 	Register("Jeweled Bird", func() Card {
 		return NewArtifact("Jeweled Bird", "{1}",
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs ante zone manipulation primitives
 				FuncEffect("ante Jeweled Bird, return other ante to graveyard, draw",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -322,6 +328,7 @@ func registerArtifacts() {
 	Register("Pyramids", func() Card {
 		c := NewArtifact("Pyramids", "{6}",
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs modal with replacement effect registration
 				FuncEffect("destroy aura on land or protect land from destruction",
 					EffectProperties{},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -369,6 +376,7 @@ func registerArtifacts() {
 	Register("Sandals of Abdallah", func() Card {
 		return NewArtifact("Sandals of Abdallah", "{4}",
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs RegisterDelayedTrigger primitive
 				FuncEffect("grant islandwalk, destroy self if creature dies",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {

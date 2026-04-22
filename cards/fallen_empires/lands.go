@@ -18,15 +18,7 @@ func sacLandFactory(name string, color Color) func() Card {
 			WithKeyword(EntersTapped),
 			WithManaAbility(color),
 			WithActivatedAbility(
-				FuncEffect("add two mana",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						p := g.GetPlayer(controller)
-						if p != nil {
-							p.ManaPool().Add(color, 2)
-						}
-						return nil
-					}),
+				AddMana(color, 2),
 				TapSourceCost(),
 				WithCost(SacrificeSourceCost()),
 			),
@@ -43,6 +35,7 @@ func storageLandFactory(name string, color Color) func() Card {
 			WithKeyword(EntersTapped),
 			WithKeyword(AttrMayNotUntap),
 			// At the beginning of your upkeep, if this land is tapped, put a storage counter on it.
+			// TODO: convert to pipeline — needs conditional "if source is tapped" check
 			WithAbility(
 				BeginningOfUpkeepTrigger(
 					FuncEffect("add storage counter if tapped",
@@ -59,6 +52,7 @@ func storageLandFactory(name string, color Color) func() Card {
 				),
 			),
 			// {T}, Remove any number of storage counters: Add {color} for each counter removed.
+			// TODO: convert to pipeline — needs RemoveAllCounters + AddManaFromVar steps
 			WithActivatedAbility(
 				FuncEffect("add mana for each storage counter removed",
 					EffectProperties{Outcome: OutcomeBenefit},

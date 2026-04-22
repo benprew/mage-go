@@ -29,22 +29,17 @@ func moneychangerFactory() Card {
 		)),
 		// Sacrifice: gain 1 life per credit counter (only during upkeep)
 		WithActivatedAbility(
-			FuncEffect("sacrifice, gain 1 life for each credit counter", EffectProperties{Outcome: OutcomeBenefit},
-				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					perm := g.FindPermanent(sourceID)
-					if perm == nil {
-						return nil
-					}
-					count := int(perm.Counters[Credit])
-					g.Sacrifice(perm)
-					if count > 0 {
-						p := g.GetPlayer(controller)
-						if p != nil {
-							g.PlayerGainLife(p, count)
-						}
-					}
-					return nil
-				}),
+			Pipeline("sacrifice, gain 1 life for each credit counter",
+				EffectProperties{Outcome: OutcomeBenefit},
+				SnapshotPermanent(SelectSource, "src"),
+				SnapshotSourceCounter(Credit, "credits"),
+				SacrificeSourceStep(),
+				IfElse("gain life if credits > 0",
+					&VarGTCond{Name: "credits", Value: 0},
+					GainLifeFromVar("src.controller", "credits"),
+					nil,
+				),
+			),
 			GenericCost(0),
 			WithUpkeepOnly(),
 		),
@@ -77,6 +72,7 @@ func registerCreatures() {
 	Register("Farrel's Zealot", withExpansion(func() Card {
 		return NewCreature("Farrel's Zealot", "{1}{W}{W}", 2, 2,
 			WithSubTypes("Human"),
+			// TODO: convert to pipeline — needs ChoosePermanentStep + DealDamageToPermanent + RemoveFromCombat steps
 			WithAbility(NewTriggered(EvtBlockersDecl, true,
 				FuncEffect("deal 3 damage to target creature, assign no combat damage",
 					EffectProperties{Outcome: OutcomeDetriment},
@@ -304,6 +300,7 @@ func registerCreatures() {
 			WithAbility(ETBEffect(AddCounters(Tide, Fixed(1), SelectSource))),
 			// At the beginning of your upkeep, put a tide counter on this creature.
 			// Also handle "whenever there are four or more tide counters, remove all."
+			// TODO: convert to pipeline — needs AddCounters + conditional counter reset (threshold check)
 			WithAbility(BeginningOfUpkeepTrigger(
 				FuncEffect("put a tide counter on Homarid and check for reset",
 					EffectProperties{Outcome: OutcomeUnknown},
@@ -500,14 +497,7 @@ func registerCreatures() {
 		return NewCreature("Basal Thrull", "{B}{B}", 1, 2,
 			WithSubTypes("Thrull"),
 			WithActivatedAbility(
-				FuncEffect("add {B}{B}", EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						p := g.GetPlayer(controller)
-						if p != nil {
-							p.ManaPool().Add(Black, 2)
-						}
-						return nil
-					}),
+				AddMana(Black, 2),
 				TapSourceCost(),
 				WithCost(SacrificeSourceCost()),
 			),
@@ -560,6 +550,7 @@ func registerCreatures() {
 	Register("Mindstab Thrull", withExpansion(func() Card {
 		return NewCreature("Mindstab Thrull", "{1}{B}{B}", 2, 2,
 			WithSubTypes("Thrull"),
+			// TODO: convert to pipeline — needs SacrificeSourceStep + DiscardCards targeting defending player
 			WithAbility(NewTriggered(EvtBlockersDecl, true,
 				FuncEffect("sacrifice, defending player discards 3",
 					EffectProperties{Outcome: OutcomeDetriment},
@@ -596,6 +587,7 @@ func registerCreatures() {
 	Register("Necrite", withExpansion(func() Card {
 		return NewCreature("Necrite", "{1}{B}{B}", 2, 2,
 			WithSubTypes("Thrull"),
+			// TODO: convert to pipeline — needs SacrificeSourceStep + ChoosePermanentStep (defending player's creatures) + DestroyGatheredNoRegen
 			WithAbility(NewTriggered(EvtBlockersDecl, true,
 				FuncEffect("sacrifice, destroy target creature defending player controls",
 					EffectProperties{Outcome: OutcomeDetriment},
@@ -903,6 +895,7 @@ func registerCreatures() {
 	Register("Elvish Hunter", withExpansion(func() Card {
 		return NewCreature("Elvish Hunter", "{1}{G}", 1, 1,
 			WithSubTypes("Elf", "Archer"),
+			// TODO: convert to pipeline — needs DoesNotUntapStep (creates FuncContinuousEffect with expiry)
 			WithActivatedAbility(
 				FuncEffect("target creature doesn't untap during its controller's next untap step",
 					EffectProperties{Outcome: OutcomeDetriment},

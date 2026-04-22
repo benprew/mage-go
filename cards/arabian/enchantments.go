@@ -30,6 +30,7 @@ func registerEnchantments() {
 		return NewEnchantment("Cyclone", "{2}{G}{G}",
 			WithAbility(
 				BeginningOfUpkeepTrigger(
+					// TODO: convert to pipeline — needs dynamic mana cost (N * {G}) + counter manipulation + ForEach damage
 					FuncEffect("add wind counter, pay or sacrifice, deal damage",
 						EffectProperties{Outcome: OutcomeDetriment},
 						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -69,6 +70,7 @@ func registerEnchantments() {
 		return NewEnchantment("Drop of Honey", "{G}",
 			WithAbility(
 				BeginningOfUpkeepTrigger(
+					// TODO: convert to pipeline — needs find-minimum-power-creature + choose-among-tied primitives
 					FuncEffect("destroy least power creature or sacrifice self",
 						EffectProperties{Outcome: OutcomeDetriment},
 						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -135,6 +137,7 @@ func registerEnchantments() {
 		return NewEnchantment("Jihad", "{W}{W}{W}",
 			WithAbility(
 				EntersBattlefieldTrigger(
+					// TODO: convert to pipeline — needs ChosenColor + ChosenPlayer assignment primitives
 					FuncEffect("choose color and opponent",
 						EffectProperties{},
 						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -220,6 +223,7 @@ func registerEnchantments() {
 	// the battlefield. Tap that creature as it phases in this way."
 	Register("Oubliette", func() Card {
 		return NewEnchantment("Oubliette", "{1}{B}{B}",
+			// TODO: convert to pipeline — needs phase-out + RegisterDelayedTrigger primitives
 			WithETBEffect(FuncEffect("phase out target creature until Oubliette leaves",
 				EffectProperties{Outcome: OutcomeDetriment},
 				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -272,6 +276,7 @@ func registerEnchantments() {
 		return NewAura("Unstable Mutation", "{U}",
 			WithAbility(StaticAbility(BoostAttached(3, 3, AttachAura))),
 			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
+				// TODO: convert to pipeline — needs add-counter-to-attached primitive
 				FuncEffect("put a -1/-1 counter on enchanted creature",
 					EffectProperties{},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {

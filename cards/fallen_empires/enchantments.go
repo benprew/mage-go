@@ -133,6 +133,7 @@ func registerEnchantments() {
 	// Night Soil {G}{G}
 	// Enchantment
 	// {1}, Exile two creature cards from a single graveyard: Create a 1/1 green Saproling creature token.
+	// TODO: convert to pipeline — needs ExileFromGraveyard + CreateToken steps (graveyard iteration/exile not available)
 	Register("Night Soil", withExpansion(func() Card {
 		return NewEnchantment("Night Soil", "{G}{G}",
 			WithActivatedAbility(
@@ -200,6 +201,7 @@ func registerEnchantments() {
 	// Enchant creature
 	// Enchanted creature gets +1/+1.
 	// Sacrifice this Aura: Regenerate enchanted creature.
+	// TODO: convert to pipeline — needs RegenerateAttached step (reads AttachedTo from source)
 	Register("Thrull Retainer", withExpansion(func() Card {
 		return NewAura("Thrull Retainer", "{B}",
 			WithStaticAbility(BoostAttached(1, 1, AttachAura)),
