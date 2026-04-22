@@ -64,6 +64,23 @@ func (e *gainLifeTargetEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit, LifeGain: lg}
 }
 
+// poisonTargetPlayerEffect gives the target player a poison counter.
+type poisonTargetPlayerEffect struct {
+	amount int
+}
+
+// PoisonTargetPlayer creates an effect that gives the target player N poison counters.
+func PoisonTargetPlayer(amount int) Effect {
+	return DataEffect(&poisonTargetPlayerEffect{amount: amount})
+}
+
+func (e *poisonTargetPlayerEffect) EffectText() string {
+	return fmt.Sprintf("target player gets %d poison counter(s)", e.amount)
+}
+func (e *poisonTargetPlayerEffect) EffectProps() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
+
 // loseLifeEffect causes the controller to lose life.
 type loseLifeEffect struct {
 	amount int

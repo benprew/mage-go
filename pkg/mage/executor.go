@@ -23,6 +23,8 @@ func ExecuteEffect(ctx *EffectContext, data EffectData) error {
 		return execGainLifeDynamic(ctx, e)
 	case *gainLifeTargetEffect:
 		return execGainLifeTarget(ctx, e)
+	case *poisonTargetPlayerEffect:
+		return execPoisonTargetPlayer(ctx, e)
 	case *loseLifeEffect:
 		return execLoseLife(ctx, e)
 	case *dealDamageEffect:
@@ -299,6 +301,18 @@ func execGainLife(ctx *EffectContext, e *gainLifeEffect) error {
 	if !ctx.Game.IsLichActive(ctx.Controller) {
 		ctx.Game.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: ctx.Controller, Amount: e.amount})
 	}
+	return nil
+}
+
+func execPoisonTargetPlayer(ctx *EffectContext, e *poisonTargetPlayerEffect) error {
+	if len(ctx.Targets) == 0 {
+		return nil
+	}
+	p := ctx.Game.GetPlayer(ctx.Targets[0])
+	if p == nil {
+		return nil
+	}
+	p.AddPoisonCounters(e.amount)
 	return nil
 }
 

@@ -1088,23 +1088,9 @@ func registerCreatures() {
 	Register("Pit Scorpion", func() Card {
 		return NewCreature("Pit Scorpion", "{2}{B}", 1, 1,
 			WithSubTypes("Scorpion"),
-			WithAbility(NewTriggered(EvtDamageDealt, false, FuncEffect(
-				"poison counter",
-				EffectProperties{},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					// targets[0] = damaged player (passed by trigger system from EvtDamageDealt.TargetID)
-					if len(targets) == 0 {
-						return nil
-					}
-					p := g.GetPlayer(targets[0])
-					if p == nil {
-						return nil
-					}
-					p.AddPoisonCounters(1)
-					return nil
-				},
-			)).
-				SetConditionData(EventSourceIsSelfDamageToPlayer{})),
+			WithAbility(NewTriggered(EvtDamageDealt, false,
+				PoisonTargetPlayer(1),
+			).SetConditionData(EventSourceIsSelfDamageToPlayer{})),
 		)
 	})
 

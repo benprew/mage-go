@@ -442,23 +442,9 @@ func registerArtifacts() {
 						token := NewToken("Snake", 1, 1, []CardType{TypeArtifact, TypeCreature}, []string{"Snake"})
 						token.SetOwner(controller)
 						// Add poison trigger: whenever this creature deals damage to a player, that player gets a poison counter
-						token.AddAbility(NewTriggered(EvtDamageDealt, false, FuncEffect(
-							"poison counter",
-							EffectProperties{},
-							func(g *Game, srcID, ctrl uuid.UUID, targets []uuid.UUID) error {
-								// targets[0] = damaged player (passed by trigger system from EvtDamageDealt.TargetID)
-								if len(targets) == 0 {
-									return nil
-								}
-								p := g.GetPlayer(targets[0])
-								if p == nil {
-									return nil
-								}
-								p.AddPoisonCounters(1)
-								return nil
-							},
-						)).
-							SetConditionData(EventSourceIsSelfDamageToPlayer{}))
+						token.AddAbility(NewTriggered(EvtDamageDealt, false,
+							PoisonTargetPlayer(1),
+						).SetConditionData(EventSourceIsSelfDamageToPlayer{}))
 						g.PutOnBattlefield(token, controller)
 						return nil
 					},
