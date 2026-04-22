@@ -98,14 +98,7 @@ func registerEnchantments() {
 							return nil
 						}),
 				).
-					// TODO: convert to data condition
-					SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-						src := g.FindPermanent(sourceID)
-						if src == nil || src.AttachedTo == uuid.Nil {
-							return false
-						}
-						return evt.SourceID == src.AttachedTo && evt.TargetID == controllerID
-					}),
+					SetConditionData(AttachedToDealsDamageToController{}),
 			),
 		)
 	})
@@ -553,14 +546,7 @@ func registerEnchantments() {
 							return nil
 						}),
 				).
-					// TODO: convert to data condition
-					SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-						card := g.FindCardAnywhere(evt.SourceID)
-						if card == nil {
-							return false
-						}
-						return card.HasType(TypeInstant)
-					}),
+					SetConditionData(SpellCastIsType{Type: TypeInstant}),
 			),
 		)
 	})
@@ -930,14 +916,7 @@ func registerEnchantments() {
 				NewTriggered(EvtSpellCast, false,
 					CounterSpell(),
 				).
-					// TODO: convert to data condition
-					SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-						card := g.FindCardAnywhere(evt.SourceID)
-						if card == nil {
-							return false
-						}
-						return card.HasType(TypeEnchantment)
-					}),
+					SetConditionData(SpellCastIsType{Type: TypeEnchantment}),
 			),
 		)
 	})

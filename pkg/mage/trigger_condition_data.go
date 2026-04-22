@@ -98,6 +98,16 @@ func (c EventSourceHasSubType) CheckTriggerCond(evt *GameEvent, g GameReader, _,
 	return perm != nil && perm.HasSubType(c.SubType)
 }
 
+// EventTargetHasSubType checks that the permanent at evt.TargetID has a subtype.
+type EventTargetHasSubType struct {
+	SubType string
+}
+
+func (c EventTargetHasSubType) CheckTriggerCond(evt *GameEvent, g GameReader, _, _ uuid.UUID) bool {
+	perm := g.FindPermanent(evt.TargetID)
+	return perm != nil && perm.HasSubType(c.SubType)
+}
+
 // EventSourceMatchesPermanentFilter checks the permanent at evt.SourceID against a filter.
 type EventSourceMatchesPermanentFilter struct {
 	Filter PermanentFilter
@@ -216,4 +226,338 @@ type NotTriggerCond struct {
 
 func (c NotTriggerCond) CheckTriggerCond(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 	return !c.Inner.CheckTriggerCond(evt, g, sourceID, controllerID)
+}
+
+// ---------------------------------------------------------------------------
+// Combat predicates
+// ---------------------------------------------------------------------------
+
+// SourceIsBlockedAttacker checks that the source is an attacker with at least
+// one blocker assigned.
+type SourceIsBlockedAttacker struct{}
+
+func (SourceIsBlockedAttacker) CheckTriggerCond(_ *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+	group := g.CombatGroupFor(sourceID)
+	return group != nil && len(group.BlockerIDs) > 0
+}
+
+// SourceIsUnblockedAttacker checks that the source is an attacker with no
+// blockers assigned.
+type SourceIsUnblockedAttacker struct{}
+
+func (SourceIsUnblockedAttacker) CheckTriggerCond(_ *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+	if !g.IsAttackingInCombat(sourceID) {
+		return false
+	}
+	group := g.CombatGroupFor(sourceID)
+	return group != nil && len(group.BlockerIDs) == 0
+}
+
+// SourceIsBlockingInCombat checks that the source is a declared blocker.
+type SourceIsBlockingInCombat struct{}
+
+func (SourceIsBlockingInCombat) CheckTriggerCond(_ *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+	return g.IsBlockingInCombat(sourceID)
+}
+
+// SourceInCombat checks that the source is either attacking or blocking.
+type SourceInCombat struct{}
+
+func (SourceInCombat) CheckTriggerCond(_ *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+	return g.IsAttackingInCombat(sourceID) || g.IsBlockingInCombat(sourceID)
+}
+
+// SourceBlockedByCreatureMatching checks that the source is an attacker and at
+// least one of its blockers matches the given PermanentFilter.
+type SourceBlockedByCreatureMatching struct {
+	Filter PermanentFilter
+}
+
+func (c SourceBlockedByCreatureMatching) CheckTriggerCond(_ *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+	group := g.CombatGroupFor(sourceID)
+	if group == nil || len(group.BlockerIDs) == 0 {
+		return false
+	}
+	for _, bid := range group.BlockerIDs {
+		blocker := g.FindPermanent(bid)
+		if blocker != nil && c.Filter.Match(blocker, g.(*Game)) {
+			return true
+		}
+	}
+	return false
+}
+
+// SourceInCombatWithMatchingCreature checks that the source is in combat
+// (attacking or blocking) and the opponent creature in the combat group
+// matches the given PermanentFilter. When attacking, checks blockers; when
+// blocking, checks the attacker.
+type SourceInCombatWithMatchingCreature struct {
+	Filter PermanentFilter
+}
+
+func (c SourceInCombatWithMatchingCreature) CheckTriggerCond(_ *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+	for _, group := range g.CombatGroups() {
+		if group.AttackerID == sourceID {
+			for _, bid := range group.BlockerIDs {
+				blocker := g.FindPermanent(bid)
+				if blocker != nil && c.Filter.Match(blocker, g.(*Game)) {
+					return true
+				}
+			}
+		}
+		for _, bid := range group.BlockerIDs {
+			if bid == sourceID {
+				attacker := g.FindPermanent(group.AttackerID)
+				if attacker != nil && c.Filter.Match(attacker, g.(*Game)) {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+// SourceOnBattlefield checks that the source permanent is still on the battlefield.
+type SourceOnBattlefield struct{}
+
+func (SourceOnBattlefield) CheckTriggerCond(_ *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+	return g.FindPermanent(sourceID) != nil
+}
+
+// CombatGroupCountEquals checks that there are exactly N combat groups.
+type CombatGroupCountEquals struct {
+	N int
+}
+
+func (c CombatGroupCountEquals) CheckTriggerCond(_ *GameEvent, g GameReader, _, _ uuid.UUID) bool {
+	return len(g.CombatGroups()) == c.N
+}
+
+// OpponentCastNthSpellOfType checks that an opponent cast a spell of the given
+// type and it is the Nth or later such spell they cast this turn.
+type OpponentCastNthSpellOfType struct {
+	Type     CardType
+	MinCount int
+}
+
+func (c OpponentCastNthSpellOfType) CheckTriggerCond(evt *GameEvent, g GameReader, _ uuid.UUID, controllerID uuid.UUID) bool {
+	if evt.PlayerID == controllerID {
+		return false
+	}
+	card := g.FindCardAnywhere(evt.SourceID)
+	if card == nil || !card.HasType(c.Type) {
+		return false
+	}
+	return g.GetInstantsCastThisTurn(evt.PlayerID) >= c.MinCount
+}
+
+// SourceAttackedOrBlockedThisTurn checks if the source attacked or blocked
+// this turn (for "end of combat" triggers like Clockwork Beast).
+type SourceAttackedOrBlockedThisTurn struct{}
+
+func (SourceAttackedOrBlockedThisTurn) CheckTriggerCond(_ *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+	return g.HasAttackedThisTurn(sourceID) || len(g.GetBlockedThisTurn(sourceID)) > 0
+}
+
+// ---------------------------------------------------------------------------
+// Damage predicates
+// ---------------------------------------------------------------------------
+
+// EventSourceIsSelfDamageToPlayer checks evt.SourceID == sourceID and the
+// target is a player (any player).
+type EventSourceIsSelfDamageToPlayer struct{}
+
+func (EventSourceIsSelfDamageToPlayer) CheckTriggerCond(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+	return evt.SourceID == sourceID && g.GetPlayer(evt.TargetID) != nil
+}
+
+// EventSourceIsSelfDamageToOpponent checks evt.SourceID == sourceID and the
+// target is an opponent (not the controller).
+type EventSourceIsSelfDamageToOpponent struct{}
+
+func (EventSourceIsSelfDamageToOpponent) CheckTriggerCond(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
+	if evt.SourceID != sourceID {
+		return false
+	}
+	p := g.GetPlayer(evt.TargetID)
+	return p != nil && p.PlayerID() != controllerID
+}
+
+// ---------------------------------------------------------------------------
+// Battlefield state predicates
+// ---------------------------------------------------------------------------
+
+// ControllerHasNoPermanentMatching checks that the controller has no permanent
+// on the battlefield matching the given filter.
+type ControllerHasNoPermanentMatching struct {
+	Filter PermanentFilter
+}
+
+func (c ControllerHasNoPermanentMatching) CheckTriggerCond(_ *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
+	for _, p := range g.FilterBattlefield(c.Filter) {
+		if p.Controller == controllerID {
+			return false
+		}
+	}
+	return true
+}
+
+// NoBattlefieldPermanentMatching checks that no permanent on the battlefield
+// matches the given filter (global, any controller).
+type NoBattlefieldPermanentMatching struct {
+	Filter PermanentFilter
+}
+
+func (c NoBattlefieldPermanentMatching) CheckTriggerCond(_ *GameEvent, g GameReader, _, _ uuid.UUID) bool {
+	return !g.AnyBattlefield(c.Filter)
+}
+
+// CreatureDeathsOccurred checks that at least one creature died this turn.
+type CreatureDeathsOccurred struct{}
+
+func (CreatureDeathsOccurred) CheckTriggerCond(_ *GameEvent, g GameReader, _, _ uuid.UUID) bool {
+	return g.CreatureDeaths() > 0
+}
+
+// ---------------------------------------------------------------------------
+// Spell-cast predicates
+// ---------------------------------------------------------------------------
+
+// SpellCastMatchesCardFilters checks that the spell referenced by evt.SourceID
+// matches all given CardFilter predicates.
+type SpellCastMatchesCardFilters struct {
+	Filters []CardFilter
+}
+
+func (c SpellCastMatchesCardFilters) CheckTriggerCond(evt *GameEvent, g GameReader, _, _ uuid.UUID) bool {
+	card := g.FindCardAnywhere(evt.SourceID)
+	if card == nil {
+		return false
+	}
+	for _, f := range c.Filters {
+		if !f.Match(card) {
+			return false
+		}
+	}
+	return true
+}
+
+// SpellCastIsType checks that the spell referenced by evt.SourceID has a
+// specific card type.
+type SpellCastIsType struct {
+	Type CardType
+}
+
+func (c SpellCastIsType) CheckTriggerCond(evt *GameEvent, g GameReader, _, _ uuid.UUID) bool {
+	card := g.FindCardAnywhere(evt.SourceID)
+	return card != nil && card.HasType(c.Type)
+}
+
+// OpponentCastSpellOfType checks that an opponent cast a spell of a given type.
+type OpponentCastSpellOfType struct {
+	Type CardType
+}
+
+func (c OpponentCastSpellOfType) CheckTriggerCond(evt *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
+	if evt.PlayerID == controllerID {
+		return false
+	}
+	card := g.FindCardAnywhere(evt.SourceID)
+	return card != nil && card.HasType(c.Type)
+}
+
+// ControllerCastSpellOfType checks that the controller cast a spell of a given type.
+type ControllerCastSpellOfType struct {
+	Type CardType
+}
+
+func (c ControllerCastSpellOfType) CheckTriggerCond(evt *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
+	if evt.PlayerID != controllerID {
+		return false
+	}
+	card := g.FindCardAnywhere(evt.SourceID)
+	return card != nil && card.HasType(c.Type)
+}
+
+// ---------------------------------------------------------------------------
+// Event amount / flag predicates
+// ---------------------------------------------------------------------------
+
+// EventAmountGreaterThan checks evt.Amount > N.
+type EventAmountGreaterThan struct {
+	N int
+}
+
+func (c EventAmountGreaterThan) CheckTriggerCond(evt *GameEvent, _ GameReader, _, _ uuid.UUID) bool {
+	return evt.Amount > c.N
+}
+
+// EventFlagIsTrue checks that evt.Flag is true.
+type EventFlagIsTrue struct{}
+
+func (EventFlagIsTrue) CheckTriggerCond(evt *GameEvent, _ GameReader, _, _ uuid.UUID) bool {
+	return evt.Flag
+}
+
+// ---------------------------------------------------------------------------
+// Aura/attachment predicates
+// ---------------------------------------------------------------------------
+
+// EventIsAttachedControllerUpkeep checks that the event player is the
+// controller of the permanent the source is attached to (for aura upkeep triggers).
+type EventIsAttachedControllerUpkeep struct{}
+
+func (EventIsAttachedControllerUpkeep) CheckTriggerCond(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+	src := g.FindPermanent(sourceID)
+	if src == nil || !src.IsAttached() {
+		return false
+	}
+	host := g.FindPermanent(src.AttachedTo)
+	if host == nil {
+		return false
+	}
+	return evt.PlayerID == host.Controller
+}
+
+// AttachedToDealsDamageToController checks that the permanent the source is
+// attached to (evt.SourceID) dealt damage to the controller (evt.TargetID).
+type AttachedToDealsDamageToController struct{}
+
+func (AttachedToDealsDamageToController) CheckTriggerCond(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
+	src := g.FindPermanent(sourceID)
+	if src == nil || src.AttachedTo == uuid.Nil {
+		return false
+	}
+	return evt.SourceID == src.AttachedTo && evt.TargetID == controllerID
+}
+
+// AttachedToIsEventSource checks that the source is attached to the permanent
+// in evt.SourceID, and that the event had no tap cost (Flag == false).
+// Used for "whenever enchanted artifact is activated" patterns.
+type AttachedToIsEventSourceNoTapCost struct{}
+
+func (AttachedToIsEventSourceNoTapCost) CheckTriggerCond(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+	if evt.Flag {
+		return false
+	}
+	src := g.FindPermanent(sourceID)
+	if src == nil {
+		return false
+	}
+	return evt.SourceID == src.AttachedTo
+}
+
+// OpponentActivatedArtifactNoTapCost checks that an opponent activated an
+// artifact ability without a tap cost.
+type OpponentActivatedArtifactNoTapCost struct{}
+
+func (OpponentActivatedArtifactNoTapCost) CheckTriggerCond(evt *GameEvent, g GameReader, _ uuid.UUID, controllerID uuid.UUID) bool {
+	if evt.Flag {
+		return false
+	}
+	if evt.PlayerID == controllerID {
+		return false
+	}
+	perm := g.FindPermanent(evt.SourceID)
+	return perm != nil && perm.HasType(TypeArtifact)
 }

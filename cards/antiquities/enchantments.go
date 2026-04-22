@@ -46,17 +46,7 @@ func registerEnchantments() {
 			WithAbility(
 				NewTriggered(EvtAbilityActivated, false, artPossDmgEffect,
 				).
-					// TODO: convert to data condition
-					SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-						if evt.Flag {
-							return false // had a tap cost — already covered by EvtTapped trigger
-						}
-						src := g.FindPermanent(sourceID)
-						if src == nil {
-							return false
-						}
-						return evt.SourceID == src.AttachedTo
-					}),
+					SetConditionData(AttachedToIsEventSourceNoTapCost{}),
 			),
 		)
 	})
@@ -228,27 +218,21 @@ func registerEnchantments() {
 			}
 			return nil
 		})
-	isArtifactEvt := func(evt *GameEvent, g GameReader, _, _ uuid.UUID) bool {
-		perm := g.FindPermanent(evt.SourceID)
-		return perm != nil && perm.HasType(TypeArtifact)
-	}
 	Register("Haunting Wind", func() Card {
 		return NewEnchantment("Haunting Wind", "{3}{B}",
 			// Trigger when any artifact becomes tapped
 			WithAbility(
-				NewTriggered(EvtTapped, false, hauntingWindEffect).SetCondition(isArtifactEvt),
+				NewTriggered(EvtTapped, false, hauntingWindEffect).
+					SetConditionData(EventSourceHasType{Type: TypeArtifact}),
 			),
 			// Trigger when any artifact's ability is activated without {T}
 			WithAbility(
 				NewTriggered(EvtAbilityActivated, false, hauntingWindEffect,
 				).
-					// TODO: convert to data condition
-					SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-						if evt.Flag {
-							return false // had a tap cost — covered by EvtTapped trigger
-						}
-						return isArtifactEvt(evt, g, sourceID, controllerID)
-					}),
+					SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+						EventFlagIsFalse{},
+						EventSourceHasType{Type: TypeArtifact},
+					}}),
 			),
 		)
 	})
@@ -294,17 +278,7 @@ func registerEnchantments() {
 			WithAbility(
 				NewTriggered(EvtAbilityActivated, false, powerleechEffect,
 				).
-					// TODO: convert to data condition
-					SetCondition(func(evt *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
-						if evt.Flag {
-							return false // had tap cost
-						}
-						if evt.PlayerID == controllerID {
-							return false // not opponent
-						}
-						perm := g.FindPermanent(evt.SourceID)
-						return perm != nil && perm.HasType(TypeArtifact)
-					}),
+					SetConditionData(OpponentActivatedArtifactNoTapCost{}),
 			),
 		)
 	})

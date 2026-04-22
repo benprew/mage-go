@@ -97,18 +97,7 @@ func registerCreatures() {
 						return nil
 					}),
 			).
-				// TODO: convert to data condition
-				SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-					src := g.FindPermanent(sourceID)
-					if src == nil {
-						return false
-					}
-					if !g.IsAttackingInCombat(sourceID) {
-						return false
-					}
-					group := g.CombatGroupFor(sourceID)
-					return group != nil && len(group.BlockerIDs) == 0
-				})),
+				SetConditionData(SourceIsUnblockedAttacker{})),
 		)
 	}))
 
@@ -562,18 +551,7 @@ func registerCreatures() {
 						return nil
 					}),
 			).
-				// TODO: convert to data condition
-				SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-					src := g.FindPermanent(sourceID)
-					if src == nil {
-						return false
-					}
-					if !g.IsAttackingInCombat(sourceID) {
-						return false
-					}
-					group := g.CombatGroupFor(sourceID)
-					return group != nil && len(group.BlockerIDs) == 0
-				})),
+				SetConditionData(SourceIsUnblockedAttacker{})),
 		)
 	}))
 
@@ -613,18 +591,7 @@ func registerCreatures() {
 						return nil
 					}),
 			).
-				// TODO: convert to data condition
-				SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-					src := g.FindPermanent(sourceID)
-					if src == nil {
-						return false
-					}
-					if !g.IsAttackingInCombat(sourceID) {
-						return false
-					}
-					group := g.CombatGroupFor(sourceID)
-					return group != nil && len(group.BlockerIDs) == 0
-				})),
+				SetConditionData(SourceIsUnblockedAttacker{})),
 		)
 	}))
 
@@ -730,20 +697,16 @@ func registerCreatures() {
 			WithAbility(NewTriggered(EvtDeclaredBlocker, false,
 				BoostUntilEndOfTurn(Fixed(0), Fixed(2), SelectSource),
 			).
-				// TODO: convert to data condition
-				SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-					if evt.SourceID == sourceID {
-						// This creature is blocking — check if the attacker is an Orc
-						attacker := g.FindPermanent(evt.TargetID)
-						return attacker != nil && attacker.HasSubType("Orc")
-					}
-					if evt.TargetID == sourceID {
-						// This creature is being blocked — check if the blocker is an Orc
-						blocker := g.FindPermanent(evt.SourceID)
-						return blocker != nil && blocker.HasSubType("Orc")
-					}
-					return false
-				})),
+				SetConditionData(OrTriggerCond{Conditions: []TriggerConditionData{
+					AndTriggerCond{Conditions: []TriggerConditionData{
+						EventSourceIsSelf{},
+						EventTargetHasSubType{SubType: "Orc"},
+					}},
+					AndTriggerCond{Conditions: []TriggerConditionData{
+						EventTargetIsSelf{},
+						EventSourceHasSubType{SubType: "Orc"},
+					}},
+				}})),
 		)
 	}))
 

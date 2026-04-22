@@ -116,16 +116,8 @@ func registerCreatures() {
 		return NewCreature("Dandân", "{U}{U}", 4, 1,
 			WithSubTypes("Fish"),
 			WithStaticAbility(PreventFromAttackingIfDefendingPlayerControls(HasSubType("Island"))),
-			// TODO: convert to data condition
 			WithAbility(NewTriggered(EvtLeavesBattlefield, false, SacrificeSource()).
-				SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-					for _, p := range g.FilterBattlefield(AnyPermanent) {
-						if p.Controller == controllerID && p.HasSubType("Island") {
-							return false
-						}
-					}
-					return true
-				})),
+				SetConditionData(ControllerHasNoPermanentMatching{Filter: HasSubType("Island")})),
 		)
 	})
 
@@ -162,16 +154,8 @@ func registerCreatures() {
 				)), false,
 			)),
 			WithStaticAbility(PreventFromAttackingIfDefendingPlayerControls(HasSubType("Island"))),
-			// TODO: convert to data condition
 			WithAbility(NewTriggered(EvtLeavesBattlefield, false, SacrificeSource()).
-				SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-					for _, p := range g.FilterBattlefield(AnyPermanent) {
-						if p.Controller == controllerID && p.HasSubType("Island") {
-							return false
-						}
-					}
-					return true
-				})),
+				SetConditionData(ControllerHasNoPermanentMatching{Filter: HasSubType("Island")})),
 		)
 	})
 
@@ -182,29 +166,13 @@ func registerCreatures() {
 		return NewCreature("Merchant Ship", "{U}", 0, 2,
 			WithSubTypes("Human"),
 			WithStaticAbility(PreventFromAttackingIfDefendingPlayerControls(HasSubType("Island"))),
-			// TODO: convert to data condition
 			WithAbility(
 				NewTriggered(EvtBlockersDecl, false,
 					GainLife(2),
-				).SetCondition(func(_ *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-					for _, group := range g.CombatGroups() {
-						if group.AttackerID == sourceID && len(group.BlockerIDs) == 0 {
-							return true
-						}
-					}
-					return false
-				}),
+				).SetConditionData(SourceIsUnblockedAttacker{}),
 			),
-			// TODO: convert to data condition
 			WithAbility(NewTriggered(EvtLeavesBattlefield, false, SacrificeSource()).
-				SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-					for _, p := range g.FilterBattlefield(AnyPermanent) {
-						if p.Controller == controllerID && p.HasSubType("Island") {
-							return false
-						}
-					}
-					return true
-				})),
+				SetConditionData(ControllerHasNoPermanentMatching{Filter: HasSubType("Island")})),
 		)
 	})
 
@@ -300,16 +268,8 @@ func registerCreatures() {
 					}), false,
 			)),
 			// State trigger: when you control no lands (outside upkeep), sacrifice
-			// TODO: convert to data condition
 			WithAbility(NewTriggered(EvtLeavesBattlefield, false, SacrificeSource()).
-				SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-					for _, p := range g.FilterBattlefield(AnyPermanent) {
-						if p.Controller == controllerID && p.HasType(TypeLand) {
-							return false
-						}
-					}
-					return true
-				})),
+				SetConditionData(ControllerHasNoPermanentMatching{Filter: IsLand})),
 		)
 	})
 
@@ -436,25 +396,14 @@ func registerCreatures() {
 	Register("Erg Raiders", func() Card {
 		return NewCreature("Erg Raiders", "{1}{B}", 2, 3,
 			WithSubTypes("Human", "Warrior"),
-			// TODO: convert to data condition
 			WithAbility(
 				NewTriggered(EvtEndStep, false,
 					DealDamageToPlayers(Fixed(2), SelectController()),
-				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-					if evt.PlayerID != controllerID {
-						return false
-					}
-					if g.HasAttackedThisTurn(sourceID) {
-						return false
-					}
-					// "unless it came under your control this turn" —
-					// summoning sickness indicates the creature entered this turn
-					perm := g.FindPermanent(sourceID)
-					if perm != nil && perm.HasAttr(AttrSummonSick) {
-						return false
-					}
-					return true
-				}),
+				).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+					EventPlayerIsController{},
+					NotTriggerCond{Inner: HasAttackedThisTurnCond{}},
+					SourceNotSummonSick{},
+				}}),
 			),
 		)
 	})
@@ -901,14 +850,7 @@ func registerCreatures() {
 						return nil
 					}),
 			).
-				// TODO: convert to data condition
-				SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-					if evt.SourceID != sourceID {
-						return false
-					}
-					// Trigger on damage to any player (not just opponents)
-					return g.GetPlayer(evt.TargetID) != nil
-			})),
+				SetConditionData(EventSourceIsSelfDamageToPlayer{})),
 		)
 	})
 

@@ -464,11 +464,7 @@ func registerArtifacts() {
 								return nil
 							},
 						)).
-							// TODO: convert to data condition
-							SetCondition(func(evt *GameEvent, g GameReader, srcID, _ uuid.UUID) bool {
-								// Only trigger when this creature deals damage to a player (not a permanent)
-								return evt.SourceID == srcID && g.GetPlayer(evt.TargetID) != nil
-							}))
+							SetConditionData(EventSourceIsSelfDamageToPlayer{}))
 						g.PutOnBattlefield(token, controller)
 						return nil
 					},

@@ -211,10 +211,7 @@ func registerCreatures() {
 				NewTriggered(EvtEndStep, false,
 					AddCounters(Carrion, Fixed(1), SelectSource),
 				).
-					// TODO: convert to data condition
-					SetCondition(func(evt *GameEvent, g GameReader, _, _ uuid.UUID) bool {
-						return g.CreatureDeaths() > 0
-					}),
+					SetConditionData(CreatureDeathsOccurred{}),
 			),
 			WithActivatedAbility(
 				BoostUntilEndOfTurn(Fixed(1), Fixed(1), SelectSource),
@@ -716,36 +713,7 @@ func registerCreatures() {
 							return nil
 						}),
 				).
-					// TODO: convert to data condition
-					SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-						isGreenOrWhite := func(p *Permanent) bool {
-						for _, c := range p.Colors() {
-							if c == Green || c == White {
-								return true
-							}
-						}
-						return false
-					}
-					for _, group := range g.CombatGroups() {
-						if group.AttackerID == sourceID {
-							for _, bid := range group.BlockerIDs {
-								blocker := g.FindPermanent(bid)
-								if blocker != nil && isGreenOrWhite(blocker) {
-									return true
-								}
-							}
-						}
-						for _, bid := range group.BlockerIDs {
-							if bid == sourceID {
-								attacker := g.FindPermanent(group.AttackerID)
-								if attacker != nil && isGreenOrWhite(attacker) {
-									return true
-								}
-							}
-						}
-					}
-					return false
-				}),
+				SetConditionData(SourceInCombatWithMatchingCreature{Filter: Or(HasColorFilter(Green), HasColorFilter(White))}),
 			),
 		)
 	})
@@ -981,10 +949,7 @@ func registerCreatures() {
 							return nil
 						}),
 				).
-					// TODO: convert to data condition
-					SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-						return g.IsBlockingInCombat(sourceID)
-					}),
+					SetConditionData(SourceIsBlockingInCombat{}),
 			),
 			// When Medusa is blocked by a non-Wall: destroy that blocker at end of combat
 			WithAbility(
@@ -1011,20 +976,7 @@ func registerCreatures() {
 							return nil
 						}),
 				).
-					// TODO: convert to data condition
-					SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-						for _, group := range g.CombatGroups() {
-							if group.AttackerID == sourceID && len(group.BlockerIDs) > 0 {
-								for _, bid := range group.BlockerIDs {
-									blocker := g.FindPermanent(bid)
-									if blocker != nil && !blocker.HasSubType("Wall") {
-										return true
-									}
-								}
-							}
-						}
-						return false
-					}),
+					SetConditionData(SourceBlockedByCreatureMatching{Filter: Not(HasSubType("Wall"))}),
 			),
 		)
 	})
@@ -1174,11 +1126,7 @@ func registerCreatures() {
 					return nil
 				},
 			)).
-				// TODO: convert to data condition
-				SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-					// Only trigger when this creature deals damage to a player (not a permanent)
-					return evt.SourceID == sourceID && g.GetPlayer(evt.TargetID) != nil
-				})),
+				SetConditionData(EventSourceIsSelfDamageToPlayer{})),
 		)
 	})
 
@@ -1246,11 +1194,7 @@ func registerCreatures() {
 							return nil
 						}),
 				).
-					// TODO: convert to data condition
-					SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-						group := g.CombatGroupFor(sourceID)
-						return group != nil && len(group.BlockerIDs) > 0
-					}),
+					SetConditionData(SourceIsBlockedAttacker{}),
 			),
 		)
 	})
@@ -1818,20 +1762,7 @@ func registerCreatures() {
 							return nil
 						}),
 				).
-					// TODO: convert to data condition
-					SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-						for _, group := range g.CombatGroups() {
-							if group.AttackerID == sourceID && len(group.BlockerIDs) > 0 {
-								return true
-							}
-							for _, bid := range group.BlockerIDs {
-								if bid == sourceID {
-									return true
-								}
-							}
-						}
-						return false
-				}),
+					SetConditionData(SourceInCombat{}),
 			),
 		)
 	})
@@ -1982,11 +1913,7 @@ func registerCreatures() {
 						g.AddContinuousEffect(eff)
 						return nil
 					})).
-					// TODO: convert to data condition
-					SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-						group := g.CombatGroupFor(sourceID)
-						return group != nil && len(group.BlockerIDs) == 0
-					}),
+					SetConditionData(SourceIsUnblockedAttacker{}),
 			),
 		)
 	})
@@ -2054,23 +1981,7 @@ func registerCreatures() {
 							return nil
 						}),
 				).
-					// TODO: convert to data condition
-					SetCondition(func(evt *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
-						// Only trigger for opponents
-						if evt.PlayerID == controllerID {
-							return false
-						}
-						// Only for instant spells
-						card := g.FindCardAnywhere(evt.SourceID)
-					if card == nil {
-						return false
-					}
-					if !card.HasType(TypeInstant) {
-						return false
-					}
-					// Only trigger if this is the 2nd+ instant cast by that player this turn
-					return g.GetInstantsCastThisTurn(evt.PlayerID) >= 2
-				}),
+				SetConditionData(OpponentCastNthSpellOfType{Type: TypeInstant, MinCount: 2}),
 			),
 		)
 	})
@@ -2961,16 +2872,7 @@ func registerCreatures() {
 					return nil
 				},
 			)).
-				// TODO: convert to data condition
-				SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-					// EvtDamageDealt: SourceID = damage source, TargetID = damaged player/permanent
-					if evt.SourceID != sourceID {
-						return false
-					}
-					// Must be damage to a player, and that player must be an opponent (not the controller)
-					targetPlayer := g.GetPlayer(evt.TargetID)
-					return targetPlayer != nil && targetPlayer.PlayerID() != controllerID
-				})),
+				SetConditionData(EventSourceIsSelfDamageToOpponent{})),
 		)
 	})
 

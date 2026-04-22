@@ -431,17 +431,10 @@ func registerArtifacts() {
 							nil),
 					),
 				).
-					// TODO: convert to data condition
-					SetCondition(func(evt *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
-						if evt.PlayerID != controllerID {
-							return false
-						}
-						card := g.FindCardAnywhere(evt.SourceID)
-						if card == nil {
-							return false
-						}
-						return card.HasType(TypeArtifact)
-					}),
+					SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+						EventPlayerIsController{},
+						SpellCastIsType{Type: TypeArtifact},
+					}}),
 			),
 		)
 	})
@@ -660,14 +653,7 @@ func registerArtifacts() {
 							nil),
 					),
 				).
-					// TODO: convert to data condition
-					SetCondition(func(evt *GameEvent, g GameReader, _, _ uuid.UUID) bool {
-						card := g.FindCardAnywhere(evt.SourceID)
-						if card == nil {
-							return false
-						}
-						return card.HasType(TypeArtifact)
-					}),
+					SetConditionData(SpellCastIsType{Type: TypeArtifact}),
 			),
 		)
 	})
@@ -688,18 +674,11 @@ func registerArtifacts() {
 							nil),
 					),
 				).
-					// TODO: convert to data condition
-					SetCondition(func(evt *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
-						// Only trigger for non-sacrifice (Flag=false) artifact deaths you control
-						if evt.Flag {
-							return false // was sacrificed
-						}
-						card := g.FindCardAnywhere(evt.SourceID)
-						if card == nil {
-							return false
-						}
-						return card.HasType(TypeArtifact) && evt.PlayerID == controllerID
-					}),
+					SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+						EventFlagIsFalse{},
+						SpellCastIsType{Type: TypeArtifact},
+						EventPlayerIsController{},
+					}}),
 			),
 		)
 	})
@@ -711,8 +690,8 @@ func registerArtifacts() {
 	// {4}, {T}: Exile Bronze Tablet and target nontoken permanent an opponent owns. That player
 	// may pay 10 life. If they do, put this card into its owner's graveyard. Otherwise, that
 	// player owns this card and you own the other exiled card.
-	// UNIMPLEMENTABLE: Ante mechanic with permanent ownership swapping between players.
-	// The engine does not support changing card ownership during a game.
+	// Ante mechanic with permanent ownership swapping between players.
+	// TODO: Add support for changing card ownership during a game.
 	Register("Bronze Tablet", func() Card {
 		return NewArtifact("Bronze Tablet", "{6}")
 	})

@@ -527,10 +527,11 @@ func registerArtifacts() {
 					g.ApplyContinuousEffects()
 					return nil
 				})).
-				// TODO: convert to data condition
-				SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-					return evt.PlayerID == controllerID && g.FindPermanent(sourceID) != nil && len(g.CombatGroups()) == 1
-				})),
+				SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+					EventPlayerIsController{},
+					SourceOnBattlefield{},
+					CombatGroupCountEquals{N: 1},
+				}})),
 		)
 	})
 
@@ -753,10 +754,7 @@ func registerArtifacts() {
 			WithAbility(NewTriggered(EvtLandPlayed, false,
 				DealDamageToPlayers(Fixed(1), SelectController()),
 			).
-				// TODO: convert to data condition
-				SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-					return evt.PlayerID == controllerID && evt.Amount > 1
-				})),
+				SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{EventPlayerIsController{}, EventAmountGreaterThan{N: 1}}})),
 		)
 	})
 

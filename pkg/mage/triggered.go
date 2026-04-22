@@ -190,16 +190,7 @@ func BeginningOfEachEndStepTrigger(effect Effect, optional bool) *GenericTrigger
 // DealsDamageToOpponentTrigger fires when the source deals damage to an opponent.
 func DealsDamageToOpponentTrigger(effect Effect, optional bool) *GenericTriggered {
 	return NewTriggered(EvtDamageDealt, optional, effect).
-		SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-			if evt.SourceID != sourceID {
-				return false
-			}
-			targetPlayer := g.GetPlayer(evt.TargetID)
-			if targetPlayer == nil {
-				return false
-			}
-			return targetPlayer.PlayerID() != controllerID
-		})
+		SetConditionData(EventSourceIsSelfDamageToOpponent{})
 }
 
 // WheneverSpellCastTrigger fires whenever any player casts a spell matching the
@@ -209,39 +200,18 @@ func WheneverSpellCastTrigger(effect Effect, optional bool, filters ...CardFilte
 		return NewTriggered(EvtSpellCast, optional, effect)
 	}
 	return NewTriggered(EvtSpellCast, optional, effect).
-		SetCondition(func(evt *GameEvent, g GameReader, _, _ uuid.UUID) bool {
-			card := g.FindCardAnywhere(evt.SourceID)
-			if card == nil {
-				return false
-			}
-			for _, f := range filters {
-				if !f.Match(card) {
-					return false
-				}
-			}
-			return true
-		})
+		SetConditionData(SpellCastMatchesCardFilters{Filters: filters})
 }
 
 // WheneverYouCastSpellTrigger fires whenever the controller casts a spell matching
 // the given CardFilter predicates. Pass no filters to trigger on any of your spells.
 func WheneverYouCastSpellTrigger(effect Effect, optional bool, filters ...CardFilter) *GenericTriggered {
+	conds := []TriggerConditionData{EventPlayerIsController{}}
+	if len(filters) > 0 {
+		conds = append(conds, SpellCastMatchesCardFilters{Filters: filters})
+	}
 	return NewTriggered(EvtSpellCast, optional, effect).
-		SetCondition(func(evt *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
-			if evt.PlayerID != controllerID {
-				return false
-			}
-			card := g.FindCardAnywhere(evt.SourceID)
-			if card == nil {
-				return false
-			}
-			for _, f := range filters {
-				if !f.Match(card) {
-					return false
-				}
-			}
-			return true
-		})
+		SetConditionData(AndTriggerCond{Conditions: conds})
 }
 
 // WheneverEnchantmentCastTrigger fires whenever the controller casts an enchantment.
@@ -259,17 +229,7 @@ func WhenDamageDealtToThisTrigger(effect Effect, optional bool) *GenericTriggere
 // upkeep of the player who controls the permanent this aura is attached to.
 func BeginningOfAttachedControllerUpkeepTrigger(effect Effect, optional bool) *GenericTriggered {
 	return NewTriggered(EvtUpkeep, optional, effect).
-		SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-			src := g.FindPermanent(sourceID)
-			if src == nil || !src.IsAttached() {
-				return false
-			}
-			host := g.FindPermanent(src.AttachedTo)
-			if host == nil {
-				return false
-			}
-			return evt.PlayerID == host.Controller
-		})
+		SetConditionData(EventIsAttachedControllerUpkeep{})
 }
 
 // WheneverPermanentEntersBattlefieldTrigger fires whenever a permanent matching
@@ -338,10 +298,7 @@ func RampageTrigger(n int) *GenericTriggered {
 			g.AddContinuousEffect(ce)
 			return nil
 		},
-	)).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-		group := g.CombatGroupFor(sourceID)
-		return group != nil && len(group.BlockerIDs) > 0
-	})
+	)).SetConditionData(SourceIsBlockedAttacker{})
 }
 
 // WhenOpponentPermanentBecomesTappedTrigger fires when a permanent matching the

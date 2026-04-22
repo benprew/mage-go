@@ -687,10 +687,7 @@ func registerCreatures() {
 			WithAbility(NewTriggered(EvtEndOfCombat, false,
 				RemoveCountersFromSource(P1P0, 1),
 			).
-				// TODO: convert to data condition
-				SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-					return g.HasAttackedThisTurn(sourceID) || len(g.GetBlockedThisTurn(sourceID)) > 0
-				})),
+				SetConditionData(SourceAttackedOrBlockedThisTurn{})),
 			// {X}, {T}: Put up to X +1/+0 counters on Clockwork Beast (max 7 total). Upkeep only.
 			WithActivatedAbility(
 				AddCountersUpToMax(P1P0, 7),
