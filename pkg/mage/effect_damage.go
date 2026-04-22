@@ -17,7 +17,7 @@ func GainLife(amount int) Effect {
 	return &gainLifeEffect{amount: amount}
 }
 
-func (e *gainLifeEffect) Apply(g GameMutator, _, controller uuid.UUID, _ []uuid.UUID) error {
+func (e *gainLifeEffect) Apply(g *Game, _, controller uuid.UUID, _ []uuid.UUID) error {
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return ErrPlayerNotFound
@@ -46,7 +46,7 @@ func GainLifeTarget(amount ValueSource) Effect {
 	return &gainLifeTargetEffect{amount: amount}
 }
 
-func (e *gainLifeTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *gainLifeTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	var targetPlayer Player
 	if len(targets) > 0 {
 		targetPlayer = g.GetPlayer(targets[0])
@@ -89,7 +89,7 @@ func LoseLife(amount int) Effect {
 	return &loseLifeEffect{amount: amount}
 }
 
-func (e *loseLifeEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *loseLifeEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return ErrPlayerNotFound
@@ -120,7 +120,7 @@ func DealDamage(amount ValueSource) Effect {
 	}
 }
 
-func (e *dealDamageEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *dealDamageEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return fmt.Errorf("no target for damage")
 	}
@@ -177,7 +177,7 @@ func DealDamageToAllCreatures(amount ValueSource, filter PermanentFilter) Effect
 	}
 }
 
-func (e *dealDamageToAllCreaturesEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *dealDamageToAllCreaturesEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	amount := e.amount.Resolve(g, sourceID, controller)
 	if amount <= 0 {
 		return nil
@@ -211,7 +211,7 @@ func DealDamageToPlayers(amount ValueSource, selector PlayerSelector) Effect {
 	return &dealDamageToPlayersEffect{amount: amount, selector: selector}
 }
 
-func (e *dealDamageToPlayersEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *dealDamageToPlayersEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	amount := e.amount.Resolve(g, sourceID, controller)
 	if amount <= 0 {
 		return nil
@@ -256,7 +256,7 @@ func TheRackEffect() Effect {
 	return HandSizeDamageEffect(3, false)
 }
 
-func (e *handSizeDamageEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *handSizeDamageEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	// Use target player if provided (Storm Seeker), otherwise active player (Vise/Rack)
 	var p Player
 	if len(targets) > 0 {
@@ -294,7 +294,7 @@ func PreventAllCombatDamage() Effect {
 	return &preventAllCombatDamageEffect{}
 }
 
-func (e *preventAllCombatDamageEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *preventAllCombatDamageEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	g.SetPreventCombatDamage()
 	return nil
 }
@@ -316,7 +316,7 @@ func PreventDamageToTarget(amount ValueSource) Effect {
 	return &preventDamageToTargetEffect{amount: amount}
 }
 
-func (e *preventDamageToTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *preventDamageToTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return nil
 	}
@@ -356,7 +356,7 @@ func SacrificeCreatureOrDamage(damage int) Effect {
 	return &sacrificeOrDamageEffect{damage: damage}
 }
 
-func (e *sacrificeOrDamageEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *sacrificeOrDamageEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	// Collect creatures that can be sacrificed (not the source itself)
 	candidates := g.FilterBattlefield(And(ControlledBy(controller), IsCreature, NotID(sourceID)))
 	if len(candidates) > 0 {

@@ -15,7 +15,7 @@ func CounterSpell() Effect {
 	return &counterSpellEffect{}
 }
 
-func (e *counterSpellEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *counterSpellEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return fmt.Errorf("no target spell to counter")
 	}
@@ -39,7 +39,7 @@ func CounterSpellIfColor(c Color) Effect {
 	return &counterSpellIfColorEffect{color: c}
 }
 
-func (e *counterSpellIfColorEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *counterSpellIfColorEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return nil
 	}
@@ -75,7 +75,7 @@ func CounterSpellIfXMeetsCMC() Effect {
 	return &counterSpellIfXMeetsOrExceedsCMCEffect{}
 }
 
-func (e *counterSpellIfXMeetsOrExceedsCMCEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *counterSpellIfXMeetsOrExceedsCMCEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return nil
 	}
@@ -106,7 +106,7 @@ func PowerSinkEffect() Effect {
 	return &powerSinkEffect{}
 }
 
-func (e *powerSinkEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *powerSinkEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return nil
 	}
@@ -150,7 +150,7 @@ func AddMana(color Color, amount int) Effect {
 	return &addManaEffect{color: color, amount: amount}
 }
 
-func (e *addManaEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *addManaEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return ErrPlayerNotFound
@@ -174,7 +174,7 @@ func AddAnyMana(amount int, _ Color) Effect {
 	return &addAnyManaEffect{amount: amount}
 }
 
-func (e *addAnyManaEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *addAnyManaEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return ErrPlayerNotFound
@@ -225,7 +225,7 @@ func CreateColoredToken(name string, power, toughness int, colors []Color, types
 	}
 }
 
-func (e *createTokenEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *createTokenEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	token := NewToken(e.name, e.power, e.toughness, e.types, e.subTypes, e.keywords...)
 	token.SetOwner(controller)
 	if len(e.colors) > 0 {
@@ -257,7 +257,7 @@ func CloneTarget(additionalTypes ...CardType) Effect {
 	return &cloneTargetEffect{additionalTypes: additionalTypes}
 }
 
-func (e *cloneTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *cloneTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 || g.GetResolvingCard() == nil {
 		return nil
 	}
@@ -285,7 +285,7 @@ func CopySpellOnStack() Effect {
 	return &copySpellOnStackEffect{}
 }
 
-func (e *copySpellOnStackEffect) Apply(g GameMutator, _, ctrl uuid.UUID, targets []uuid.UUID) error {
+func (e *copySpellOnStackEffect) Apply(g *Game, _, ctrl uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return nil
 	}
@@ -324,7 +324,7 @@ func AttachToTarget() Effect {
 	return &attachToTargetEffect{}
 }
 
-func (e *attachToTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *attachToTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return fmt.Errorf("no target for attach")
 	}
@@ -343,7 +343,7 @@ func ControlChangeTarget() Effect {
 	return &controlChangeTargetEffect{}
 }
 
-func (e *controlChangeTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *controlChangeTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return fmt.Errorf("no target for control change")
 	}
@@ -368,7 +368,7 @@ func ExtraTurn() Effect {
 	return &extraTurnEffect{}
 }
 
-func (e *extraTurnEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *extraTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	g.GrantExtraTurn(controller)
 	return nil
 }
@@ -388,7 +388,7 @@ func ChangeColorEffect(color Color) Effect {
 	return &changeColorEffect{color: color}
 }
 
-func (e *changeColorEffect) Apply(g GameMutator, sourceID, _ uuid.UUID, targets []uuid.UUID) error {
+func (e *changeColorEffect) Apply(g *Game, sourceID, _ uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return nil
 	}
@@ -419,7 +419,7 @@ func CounterUnlessPay(cost string) Effect {
 	return &counterUnlessPayEffect{cost: cost}
 }
 
-func (e *counterUnlessPayEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *counterUnlessPayEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return nil
 	}
@@ -454,7 +454,7 @@ func ForcefieldEffect() Effect {
 	return &forcefieldEffect{}
 }
 
-func (e *forcefieldEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *forcefieldEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	g.AddForcefieldShield(controller)
 	return nil
 }

@@ -360,7 +360,7 @@ func TestTypePreventionArtifact(t *testing.T) {
 }
 
 // TestCustomReplacementEffect tests registering a card-level custom
-// ReplacementEffect via the GameMutator API.
+// ReplacementEffect via the *Game API.
 func TestCustomReplacementEffect(t *testing.T) {
 	registerReplacementTestCards()
 
@@ -388,7 +388,7 @@ func (r *doubleDamageReplacement) Matches(a mage.Action, _ mage.GameReader) bool
 	return ok && act.PlayerID() == r.playerID
 }
 
-func (r *doubleDamageReplacement) Replace(a mage.Action, _ mage.GameMutator) mage.Action {
+func (r *doubleDamageReplacement) Replace(a mage.Action, _ *mage.Game) mage.Action {
 	act := a.(*mage.DamageToPlayerAction)
 	return act.WithAmount(act.Amount() * 2)
 }

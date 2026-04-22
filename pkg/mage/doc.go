@@ -6,7 +6,7 @@ combat, targeting, and the rules layer system.
 This doc is the comprehensive reference for implementing cards. It covers every
 subsystem: card constructors, the registry, spells, effects, targets, filters,
 costs, abilities (activated, triggered, static), the continuous effect / layer
-system, the attr system, and the GameMutator API that effects use to mutate
+system, the attr system, and the [*Game] API that effects use to mutate
 game state.
 
 # Card Registration and the Registry
@@ -82,7 +82,7 @@ Build one with:
 
 Effects are the atomic actions. Each implements the [Effect] interface:
 
-	Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error
+	Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error
 	Text() string
 	Properties() EffectProperties
 
@@ -213,7 +213,7 @@ For card-specific logic that doesn't fit a pre-built effect, wrap a closure:
 	mage.FuncEffect(
 	    "exile target creature; its controller gains life equal to its power",
 	    mage.EffectProperties{Outcome: mage.OutcomeDetriment},
-	    func(g mage.GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	    func(g mage.GameReader, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	        perm := g.FindPermanent(targets[0])
 	        if perm == nil { return nil }
 	        power := perm.CurrentPower(g)
@@ -748,10 +748,11 @@ Lifecycle: ResetPerCycle() clears per-Apply state. ClearEndOfTurn() clears
 end-of-turn flags. SyncManaConversions(players) writes mana conversions to
 player mana pools.
 
-# GameMutator — The Effect API
+# *Game — The Effect API
 
-Effects receive a [GameMutator] interface (satisfied by *Game). It embeds
-[GameReader] for all reads and adds mutation verbs.
+Effects receive a [*Game] pointer for mutations. Read-only callbacks (trigger
+conditions, value sources, player selectors) receive a [GameReader] interface
+to prevent accidental mutation.
 
 Read methods (GameReader):
 
@@ -771,7 +772,7 @@ Read methods (GameReader):
 	FindStackObject(uuid.UUID) *StackObject
 	CombatGroups() []*CombatGroup
 
-Mutation methods (GameMutator):
+Mutation methods:
 
 	PlayerGainLife(Player, int)
 	FireEvent(GameEvent)
@@ -794,7 +795,7 @@ Mutation methods (GameMutator):
 	TryPayCostFromLands(playerID uuid.UUID, manaCost string) bool
 	FlipCoin(playerID uuid.UUID) bool
 
-GameMutator also includes proxy methods for the DamageSystem and GameRules
+*Game also has proxy methods for the DamageSystem and GameRules
 subsystems, so card effects call e.g. g.SetPreventCombatDamage() or
 g.AddRegenerationShield(id) rather than reaching through g.Effects.Damage
 directly. The full list is in game_mutator.go.
@@ -846,7 +847,7 @@ and a WithAmount(int) copy method for partial prevention.
 
 	type ReplacementEffect interface {
 	    Matches(Action, GameReader) bool   // does this replacement apply?
-	    Replace(Action, GameMutator) Action // transform or prevent the action
+	    Replace(Action, *Game) Action      // transform or prevent the action
 	    SourceID() uuid.UUID               // permanent/spell that created this
 	    IsActive(GameReader) bool          // still valid?
 	}
@@ -881,7 +882,7 @@ of each Apply() cycle, so continuous effects re-register them every cycle.
 
 ## Registration from Card Effects
 
-Card effects use GameMutator proxy methods which internally create and register
+Card effects use *Game proxy methods which internally create and register
 the appropriate replacement:
 
 	g.AddPreventionShield(playerID, amount)    → preventionShieldReplacement
@@ -900,7 +901,7 @@ the appropriate replacement:
 	g.SetMinimumLife(playerID)                 → minimumLifeReplacement (cycle)
 	g.SetArtifactDamageRedirect(ctrlID, pID)   → artifactDamageRedirectReplacement (cycle)
 
-For custom replacements, call [GameMutator.AddReplacementEffect](r) directly.
+For custom replacements, call [*Game.AddReplacementEffect](r) directly.
 
 ## Built-In Replacement Implementations (17)
 
@@ -949,7 +950,7 @@ All live in replacement.go:
 	    act, ok := a.(*DamageToPlayerAction)
 	    return ok && act.PlayerID() == r.playerID
 	}
-	func (r *halveDamageReplacement) Replace(a Action, _ GameMutator) Action {
+	func (r *halveDamageReplacement) Replace(a Action, _ *Game) Action {
 	    act := a.(*DamageToPlayerAction)
 	    return act.WithAmount(act.Amount() / 2)
 	}
@@ -1160,7 +1161,7 @@ Complex card with FuncEffect:
 	        mage.NewTargetedSpell(mage.TargetCreature(), mage.FuncEffect(
 	            "exile target creature; controller gains life equal to its power",
 	            mage.EffectProperties{Outcome: mage.OutcomeDetriment},
-	            func(g mage.GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	            func(g mage.GameReader, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	                if len(targets) == 0 { return nil }
 	                perm := g.FindPermanent(targets[0])
 	                if perm == nil { return nil }

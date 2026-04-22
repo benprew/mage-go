@@ -32,7 +32,7 @@ func registerEnchantments() {
 				BeginningOfUpkeepTrigger(
 					FuncEffect("add wind counter, pay or sacrifice, deal damage",
 						EffectProperties{Outcome: OutcomeDetriment},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							perm := g.FindPermanent(sourceID)
 							if perm == nil {
 								return nil
@@ -71,7 +71,7 @@ func registerEnchantments() {
 				BeginningOfUpkeepTrigger(
 					FuncEffect("destroy least power creature or sacrifice self",
 						EffectProperties{Outcome: OutcomeDetriment},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							creatures := g.FilterBattlefield(IsCreature)
 							if len(creatures) == 0 {
 								src := g.FindPermanent(sourceID)
@@ -137,7 +137,7 @@ func registerEnchantments() {
 				EntersBattlefieldTrigger(
 					FuncEffect("choose color and opponent",
 						EffectProperties{},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							perm := g.FindPermanent(sourceID)
 							if perm == nil {
 								return nil
@@ -222,7 +222,7 @@ func registerEnchantments() {
 		return NewEnchantment("Oubliette", "{1}{B}{B}",
 			WithETBEffect(FuncEffect("phase out target creature until Oubliette leaves",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -243,7 +243,7 @@ func registerEnchantments() {
 						Controller:   controller,
 						Effects: []Effect{FuncEffect("phase in creature",
 							EffectProperties{Outcome: OutcomeBenefit},
-							func(g GameMutator, _, _ uuid.UUID, _ []uuid.UUID) error {
+							func(g *Game, _, _ uuid.UUID, _ []uuid.UUID) error {
 								perm := g.FindPermanentIncludingPhased(targetID)
 								if perm != nil && perm.PhasedOut {
 									perm.PhasedOut = false
@@ -274,7 +274,7 @@ func registerEnchantments() {
 			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
 				FuncEffect("put a -1/-1 counter on enchanted creature",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						src := g.FindPermanent(sourceID)
 						if src == nil || src.AttachedTo == uuid.Nil {
 							return nil

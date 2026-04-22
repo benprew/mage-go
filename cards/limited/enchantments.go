@@ -170,7 +170,7 @@ func registerEnchantments() {
 			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(FuncEffect(
 				"pay {4} to untap enchanted creature",
 				EffectProperties{},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					aura := g.FindPermanent(sourceID)
 					if aura == nil {
 						return nil
@@ -192,7 +192,7 @@ func registerEnchantments() {
 			WithAbility(EntersBattlefieldTrigger(FuncEffect(
 				"if enchanted creature has flying, deal 2 damage",
 				EffectProperties{},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					aura := g.FindPermanent(sourceID)
 					if aura == nil {
 						return nil
@@ -249,7 +249,7 @@ func registerEnchantments() {
 			WithAbility(EntersBattlefieldTrigger(FuncEffect(
 				"choose a basic land type",
 				EffectProperties{},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					perm := g.FindPermanent(sourceID)
 					if perm == nil {
 						return nil
@@ -298,7 +298,7 @@ func registerEnchantments() {
 					FuncEffect(
 						"prevent all damage from one source of the chosen color",
 						EffectProperties{},
-						func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 							g.AddColorPrevention(controller, color)
 							return nil
 						}),
@@ -391,7 +391,7 @@ func registerEnchantments() {
 			WithAbility(BeginningOfUpkeepTrigger(FuncEffect(
 				"you may pay {W}{W} to gain 1 life",
 				EffectProperties{Outcome: OutcomeBenefit},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					if g.TryPayCostFromLands(controller, "{W}{W}") {
 						p := g.GetPlayer(controller)
 						if p != nil {

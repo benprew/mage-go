@@ -76,7 +76,7 @@ when behind).
 
 [StateEvaluator] is a function type:
 
-	type StateEvaluator func(g GameReader, playerID uuid.UUID) int
+	type StateEvaluator func(g *mage.Game, playerID uuid.UUID) int
 
 Higher scores are better for playerID. [DefaultEvaluator] uses hardcoded weight
 constants; [WeightedEvaluator] returns a [StateEvaluator] parameterised by a
@@ -102,15 +102,7 @@ abilities score +1 each.
 [ThreatPerMana] divides an [evalCreature] score by CMC and is used for lethal
 target prioritisation.
 
-[GameReader] is the narrow interface [DefaultEvaluator] accepts, allowing the
-evaluator to be tested independently of a full [mage.Game]:
-
-	type GameReader interface {
-	    GetPlayer(uuid.UUID) mage.Player
-	    GetOpponent(uuid.UUID) mage.Player
-	    FilterBattlefield(mage.PermanentFilter) []*mage.Permanent
-	    CountBattlefield(mage.PermanentFilter) int
-	}
+[StateEvaluator] accepts a [*mage.Game] directly.
 
 # Game Loops
 

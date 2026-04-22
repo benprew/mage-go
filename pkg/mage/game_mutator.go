@@ -43,123 +43,8 @@ type GameReader interface {
 	ActivePlayerIndex() int
 }
 
-// GameMutator is the mutation surface passed to Effect.Apply. It embeds GameReader
-// for all read access and adds high-level mutation verbs. Using this interface
-// instead of raw *Game prevents effects from accidentally reaching into unexposed
-// fields and clarifies what effects are permitted to do.
-type GameMutator interface {
-	GameReader
-
-	// Player/life mutations
-	PlayerGainLife(Player, int)
-	FireEvent(GameEvent)
-
-	// Battlefield mutations
-	PutOnBattlefield(Card, uuid.UUID) *Permanent
-	RemoveFromBattlefield(*Permanent)
-	DestroyPermanent(*Permanent)
-	ExilePermanent(*Permanent)
-	TapPermanent(*Permanent)
-	ExileCard(Card, uuid.UUID) // exile a card (from any zone) to exile zone
-	Sacrifice(*Permanent)
-
-	// Damage
-	DealDamageToPlayer(Player, int, uuid.UUID)
-	DealDamageToPermanent(*Permanent, int, uuid.UUID)
-
-	// Stack
-	CounterSpellOnStack(uuid.UUID)
-	PushStack(*StackObject)
-
-	// Other game actions
-	Attach(sourceID, targetID uuid.UUID)
-	RegisterDelayedTrigger(*DelayedTrigger)
-	GrantExtraTurn(uuid.UUID)
-	RemoveFromCombat(uuid.UUID)
-
-	// Continuous effect management
-	AddContinuousEffect(ContinuousEffect)
-	ApplyContinuousEffects()
-
-	// EffectManager delegators
-	SetPreventCombatDamage()
-	AddRegenerationShield(uuid.UUID)
-	AddPreventionShield(uuid.UUID, int)
-	AddForcefieldShield(uuid.UUID)
-	IsLichActive(uuid.UUID) bool
-	SetLichActive(uuid.UUID, uuid.UUID)
-	ClearLich(uuid.UUID)
-	AddColorPrevention(uuid.UUID, Color)
-	AddReverseDamageShield(uuid.UUID)
-	SetChannelActive(uuid.UUID)
-	SetCreatureDamageRedirect(uuid.UUID, uuid.UUID)
-	SetAttackerDamageRedirect(uuid.UUID, uuid.UUID)
-	SetSkipNextDraw(uuid.UUID)
-	SetSanctuaryActive(uuid.UUID)
-	SetMinimumLife(uuid.UUID)
-	CopyEffectCurrentName(uuid.UUID) string
-	UpdateCopyEffect(uuid.UUID, *Permanent)
-
-	// Damage prevention / redirection / reflection
-	AddSourcePrevention(playerID, sourceID uuid.UUID)
-	AddTypePrevention(uuid.UUID, CardType)
-	PreventAllDamageFrom(sourceID uuid.UUID)
-	SetArtifactDamageRedirect(controllerID, permID uuid.UUID)
-	SetDamageReflection(playerID, eyeSourceID, chosenSourceID uuid.UUID)
-
-	// Draw replacement (Aladdin's Lamp)
-	SetDrawReplacement(playerID uuid.UUID, count int)
-
-	// Mana restriction
-	SetArtifactManaOnly(uuid.UUID)
-	SetCreatureManaOnly(uuid.UUID)
-
-	// Artifact damage tracking
-	GetArtifactDamageTaken(uuid.UUID) int
-
-	// Draw
-	PlayerDrawCard(Player) (Card, bool)
-
-	// Coin flip
-	FlipCoin(playerID uuid.UUID) bool
-
-	// Mana payment
-	TryPayCostFromLands(playerID uuid.UUID, manaCostStr string) bool
-
-	// Replacement effects
-	AddReplacementEffect(ReplacementEffect)
-
-	// Spell casting (e.g. Shahrazad)
-	CastSpellByName(playerID uuid.UUID, name string, targets []uuid.UUID, xValues ...int) error
-
-	// X value setter (for cost implementations that capture CMC)
-	SetXValue(int)
-
-	// EffectManager delegators for continuous effects
-	GrantAttr(uuid.UUID, Attr)
-	RevokeAttr(uuid.UUID, Attr)
-	PreventBlockPair(blockerID, attackerID uuid.UUID)
-	AddDamagePreventionRule(opts ...damagePreventionRuleOption)
-	AddCycleReplacement(ReplacementEffect)
-
-	// Game rules modifications
-	SetArtifactUntapMax(int)
-	AddSpellTypeCostReduction(CardType, int)
-	AddActivationCostReduction(uuid.UUID, int)
-	SetMaxHandSize(uuid.UUID, int)
-	AddExpansionCastBlock(string)
-	AddEntersTappedRule(func(*Permanent) bool)
-
-	// Exile management
-	RemoveExiledCardBySource(uuid.UUID) []ExiledCard
-
-	// Test support
-	SetCoinFlipResults([]bool)
-}
-
-// Compile-time checks that *Game satisfies both interfaces.
+// Compile-time check that *Game satisfies GameReader.
 var _ GameReader = (*Game)(nil)
-var _ GameMutator = (*Game)(nil)
 
 // --- GameReader proxy methods on *Game ---
 
@@ -252,7 +137,7 @@ func (g *Game) GetInstantsCastThisTurn(playerID uuid.UUID) int {
 	return g.instantsCastThisTurn[playerID]
 }
 
-// --- GameMutator proxy methods on *Game ---
+// --- Mutation methods on *Game ---
 
 // GrantExtraTurn gives the specified player an extra turn after the current one.
 func (g *Game) GrantExtraTurn(playerID uuid.UUID) {

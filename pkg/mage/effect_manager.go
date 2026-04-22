@@ -425,7 +425,7 @@ func (em *EffectManager) RemoveReplacements(sourceID uuid.UUID) {
 // ApplyReplacements runs the replacement pipeline on an action.
 // Returns nil if the action was fully prevented/replaced.
 // Each replacement fires at most once per event to prevent infinite loops.
-func (em *EffectManager) ApplyReplacements(action Action, g GameMutator) Action {
+func (em *EffectManager) ApplyReplacements(action Action, g *Game) Action {
 	applied := make(map[ReplacementEffect]bool)
 	for {
 		if action == nil {

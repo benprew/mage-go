@@ -64,7 +64,7 @@ func registerSpells() {
 		return NewInstant("Eye for an Eye", "{W}{W}",
 			NewSpellAbility(FuncEffect("reflect next damage to source's controller",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					// Let the player choose a damage source (permanent) if any exist
 					opponent := g.GetOpponent(controller)
 					var candidates []*Permanent
@@ -116,7 +116,7 @@ func registerSpells() {
 		return NewSorcery("Metamorphosis", "{G}",
 			NewSpellAbility(FuncEffect("add mana equal to 1 + sacrificed creature's CMC",
 				EffectProperties{Outcome: OutcomeBenefit},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					cmc := g.XValue() // captured by sacrificeCreatureCaptureCMCCost
 					amount := 1 + cmc
 					p := g.GetPlayer(controller)

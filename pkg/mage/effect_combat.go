@@ -19,7 +19,7 @@ func AddCounters(ct CounterType, amount ValueSource, target PermanentSelector) E
 	return &addCountersEffect{ct: ct, amount: amount, target: target}
 }
 
-func (e *addCountersEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *addCountersEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	var perm *Permanent
 	if e.target == SelectSource {
 		perm = g.FindPermanent(sourceID)
@@ -62,7 +62,7 @@ func RemoveCountersFromSource(ct CounterType, amount int) Effect {
 	return &removeCountersFromSourceEffect{ct: ct, amount: amount}
 }
 
-func (e *removeCountersFromSourceEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *removeCountersFromSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	p := g.FindPermanent(sourceID)
 	if p == nil {
 		return nil
@@ -87,7 +87,7 @@ type addCountersUpToMaxEffect struct {
 	maxCounters int
 }
 
-func (e *addCountersUpToMaxEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+func (e *addCountersUpToMaxEffect) Apply(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 	perm := g.FindPermanent(sourceID)
 	if perm == nil {
 		return nil
@@ -118,7 +118,7 @@ func TapTarget() Effect {
 	return &tapTargetEffect{}
 }
 
-func (e *tapTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *tapTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return fmt.Errorf("no target for tap")
 	}
@@ -143,7 +143,7 @@ func UntapTarget() Effect {
 	return &untapTargetEffect{}
 }
 
-func (e *untapTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *untapTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return fmt.Errorf("no target for untap")
 	}
@@ -171,7 +171,7 @@ func UntapSource() Effect {
 	return &untapSourceEffect{}
 }
 
-func (e *untapSourceEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *untapSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	perm := g.FindPermanent(sourceID)
 	if perm != nil && perm.Tapped {
 		perm.Tapped = false
@@ -191,7 +191,7 @@ func TapAttachedCreature() Effect {
 	return &tapAttachedCreatureEffect{}
 }
 
-func (e *tapAttachedCreatureEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *tapAttachedCreatureEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	src := g.FindPermanent(sourceID)
 	if src == nil || !src.IsAttached() {
 		return nil
@@ -216,7 +216,7 @@ func TapOrUntapTarget() Effect {
 	return &tapOrUntapTargetEffect{}
 }
 
-func (e *tapOrUntapTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *tapOrUntapTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return nil
 	}
@@ -248,7 +248,7 @@ type tapAllLandsEffect struct{}
 // TapAllLands creates an effect that taps all lands a target player controls (e.g. Mana Short).
 func TapAllLands() Effect { return &tapAllLandsEffect{} }
 
-func (e *tapAllLandsEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *tapAllLandsEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return nil
 	}
@@ -269,7 +269,7 @@ type removeFromCombatEffect struct{}
 // RemoveFromCombat creates an effect that removes a target creature from combat.
 func RemoveFromCombat() Effect { return &removeFromCombatEffect{} }
 
-func (e *removeFromCombatEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *removeFromCombatEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return nil
 	}
@@ -291,7 +291,7 @@ func MakeUnblockableUntilEndOfTurn() Effect {
 	return &makeUnblockableUntilEndOfTurnEffect{}
 }
 
-func (e *makeUnblockableUntilEndOfTurnEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *makeUnblockableUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return nil
 	}
@@ -325,7 +325,7 @@ func BoostUntilEndOfTurn(power, toughness ValueSource, target PermanentSelector)
 	return &boostUntilEndOfTurnEffect{power: power, toughness: toughness, target: target}
 }
 
-func (e *boostUntilEndOfTurnEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *boostUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	var perm *Permanent
 	if e.target == SelectSource {
 		perm = g.FindPermanent(sourceID)
@@ -384,7 +384,7 @@ func BoostMatchingUntilEndOfTurn(power, toughness ValueSource, predicate Permane
 	return &boostMatchingUntilEndOfTurnEffect{power: power, toughness: toughness, predicate: predicate}
 }
 
-func (e *boostMatchingUntilEndOfTurnEffect) Apply(g GameMutator, sourceID uuid.UUID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *boostMatchingUntilEndOfTurnEffect) Apply(g *Game, sourceID uuid.UUID, controller uuid.UUID, targets []uuid.UUID) error {
 	for _, perm := range g.FilterBattlefield(And(ControlledBy(controller), IsCreature, e.predicate)) {
 		p := e.power.Resolve(g, sourceID, controller)
 		t := e.toughness.Resolve(g, sourceID, controller)
@@ -417,7 +417,7 @@ func BoostAllMatchingUntilEndOfTurn(power, toughness ValueSource, predicate Perm
 	return &boostAllMatchingUntilEndOfTurnEffect{power: power, toughness: toughness, predicate: predicate}
 }
 
-func (e *boostAllMatchingUntilEndOfTurnEffect) Apply(g GameMutator, sourceID uuid.UUID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *boostAllMatchingUntilEndOfTurnEffect) Apply(g *Game, sourceID uuid.UUID, controller uuid.UUID, targets []uuid.UUID) error {
 	for _, perm := range g.FilterBattlefield(And(IsCreature, e.predicate)) {
 		p := e.power.Resolve(g, sourceID, controller)
 		t := e.toughness.Resolve(g, sourceID, controller)
@@ -444,7 +444,7 @@ func DoubleTargetPower() Effect {
 	return &doubleSourcePowerEffect{}
 }
 
-func (e *doubleSourcePowerEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *doubleSourcePowerEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return nil
 	}
@@ -479,7 +479,7 @@ func GrantKeywordUntilEndOfTurn(kw Keyword, target PermanentSelector) Effect {
 	return &grantKeywordUntilEndOfTurnEffect{keyword: kw, target: target}
 }
 
-func (e *grantKeywordUntilEndOfTurnEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *grantKeywordUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	var perm *Permanent
 	if e.target == SelectSource {
 		perm = g.FindPermanent(sourceID)
@@ -521,7 +521,7 @@ func ReplaceKeywordEffect(from, to Keyword) Effect {
 	return &replaceKeywordEffect{from: from, to: to}
 }
 
-func (e *replaceKeywordEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *replaceKeywordEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return nil
 	}
@@ -550,7 +550,7 @@ func RegenerateSource() Effect {
 	return &regenerateSourceEffect{}
 }
 
-func (e *regenerateSourceEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *regenerateSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	perm := g.FindPermanent(sourceID)
 	if perm == nil {
 		return nil
@@ -572,7 +572,7 @@ func RegenerateTarget() Effect {
 	return &regenerateTargetEffect{}
 }
 
-func (e *regenerateTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *regenerateTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return nil
 	}
@@ -601,7 +601,7 @@ func MarkDestroyAtEOTAfterNActivations(threshold int) Effect {
 	return &markDestroyAtEOTAfterNActivationsEffect{threshold: threshold}
 }
 
-func (e *markDestroyAtEOTAfterNActivationsEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *markDestroyAtEOTAfterNActivationsEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	perm := g.FindPermanent(sourceID)
 	if perm == nil {
 		return nil
@@ -635,7 +635,7 @@ func DestroyTargetAtEndOfTurn() Effect {
 	return &destroyTargetAtEndOfTurnEffect{}
 }
 
-func (e *destroyTargetAtEndOfTurnEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *destroyTargetAtEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return nil
 	}
@@ -672,7 +672,7 @@ func SetPTUntilEndOfTurn(power, toughness int, target PermanentSelector) Effect 
 	return &setBasePTUntilEndOfTurnEffect{power: power, toughness: toughness}
 }
 
-func (e *setBasePTUntilEndOfTurnEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *setBasePTUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return fmt.Errorf("no target for set P/T")
 	}
@@ -705,7 +705,7 @@ func SetPowerUntilEndOfTurn(power int, target PermanentSelector) Effect {
 	return &setBasePowerUntilEndOfTurnEffect{power: power}
 }
 
-func (e *setBasePowerUntilEndOfTurnEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *setBasePowerUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return fmt.Errorf("no target for set power")
 	}

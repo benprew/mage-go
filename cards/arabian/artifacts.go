@@ -60,7 +60,7 @@ func (r *pyramidsDestructionReplacement) Matches(a Action, g GameReader) bool {
 	return da.PermanentID() == r.permanentID
 }
 
-func (r *pyramidsDestructionReplacement) Replace(a Action, g GameMutator) Action {
+func (r *pyramidsDestructionReplacement) Replace(a Action, g *Game) Action {
 	r.consumed = true
 	// Remove all damage marked on the land
 	perm := g.FindPermanent(r.permanentID)
@@ -92,7 +92,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				FuncEffect("set up draw replacement",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						x := g.XValue()
 						if x <= 0 {
 							return nil // X can't be 0
@@ -126,7 +126,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				FuncEffect("flip coin: 5/5 Djinn or 5 damage",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						if g.FlipCoin(controller) {
 							// Win — create 5/5 Djinn artifact creature token with flying
 							token := CreateToken("Djinn", 5, 5, []CardType{TypeArtifact, TypeCreature}, []string{"Djinn"}, Flying)
@@ -156,7 +156,7 @@ func registerArtifacts() {
 				EntersBattlefieldTrigger(
 					FuncEffect("sacrifice all other Arabian Nights nontoken permanents",
 						EffectProperties{Outcome: OutcomeDetriment},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							for _, p := range g.FilterBattlefield(PrintedInSet("ARN")) {
 								if p.ID() == sourceID {
 									continue
@@ -176,7 +176,7 @@ func registerArtifacts() {
 				NewTriggered(EvtEntersBattlefield, false,
 					FuncEffect("sacrifice entering Arabian Nights permanent",
 						EffectProperties{Outcome: OutcomeDetriment},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							for _, p := range g.FilterBattlefield(PrintedInSet("ARN")) {
 								if p.ID() == sourceID {
 									continue
@@ -220,7 +220,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				FuncEffect("untap and remove from combat",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
 						}
@@ -283,7 +283,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				FuncEffect("ante Jeweled Bird, return other ante to graveyard, draw",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						perm := g.FindPermanent(sourceID)
 						if perm == nil {
 							return nil
@@ -324,7 +324,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				FuncEffect("destroy aura on land or protect land from destruction",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
 						}
@@ -371,7 +371,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				FuncEffect("grant islandwalk, destroy self if creature dies",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
 						}

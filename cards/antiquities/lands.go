@@ -23,7 +23,7 @@ func registerLands() {
 			WithActivatedAbility(
 				FuncEffect("become 2/2 Assembly-Worker artifact creature until end of turn",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						perm := g.FindPermanent(sourceID)
 						if perm == nil {
 							return nil
@@ -61,7 +61,7 @@ func registerLands() {
 			WithActivatedAbility(
 				FuncEffect("add {C}{C}{C} for artifacts only",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						p := g.GetPlayer(controller)
 						if p != nil {
 							p.ManaPool().Add(Colorless, 3)
@@ -84,7 +84,7 @@ func registerLands() {
 			WithActivatedAbility(
 				FuncEffect("destroy target land",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
 						}
@@ -110,7 +110,7 @@ func registerLands() {
 			WithActivatedAbility(
 				FuncEffect("add {C} or {C}{C} with Tron",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						p := g.GetPlayer(controller)
 						if p == nil {
 							return nil
@@ -138,7 +138,7 @@ func registerLands() {
 			WithActivatedAbility(
 				FuncEffect("add {C} or {C}{C} with Tron",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						p := g.GetPlayer(controller)
 						if p == nil {
 							return nil
@@ -166,7 +166,7 @@ func registerLands() {
 			WithActivatedAbility(
 				FuncEffect("add {C} or {C}{C}{C} with Tron",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						p := g.GetPlayer(controller)
 						if p == nil {
 							return nil

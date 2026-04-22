@@ -32,7 +32,7 @@ func registerLands() {
 			WithActivatedAbility(
 				FuncEffect("draw 2, discard 3",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						p := g.GetPlayer(controller)
 						if p == nil {
 							return nil
@@ -88,7 +88,7 @@ func registerLands() {
 			WithActivatedAbility(
 				FuncEffect("sacrifice creature, gain life equal to toughness",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						p := g.GetPlayer(controller)
 						if p == nil {
 							return nil

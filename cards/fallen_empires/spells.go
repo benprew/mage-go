@@ -59,7 +59,7 @@ func registerSpells() {
 		return NewSorcery("Icatian Town", "{5}{W}",
 			NewSpellAbility(FuncEffect("create four 1/1 white Citizen creature tokens",
 				EffectProperties{Outcome: OutcomeBenefit},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					for i := 0; i < 4; i++ {
 						token := NewToken("Citizen", 1, 1, []CardType{TypeCreature}, []string{"Citizen"})
 						token.SetOwner(controller)

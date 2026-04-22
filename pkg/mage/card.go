@@ -245,7 +245,7 @@ func WithCumulativeUpkeep(costPerAge string) CardOption {
 			BeginningOfUpkeepTrigger(
 				FuncEffect("cumulative upkeep",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						perm := g.FindPermanent(sourceID)
 						if perm == nil {
 							return nil

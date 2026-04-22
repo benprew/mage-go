@@ -38,7 +38,7 @@ func registerArtifacts() {
 			WithAbility(BeginningOfUpkeepTrigger(
 				FuncEffect("put a doom counter on Armageddon Clock",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						perm := g.FindPermanent(sourceID)
 						if perm != nil {
 							perm.AddCounter(Doom, 1)
@@ -50,7 +50,7 @@ func registerArtifacts() {
 				NewTriggered(EvtDrawStep, false,
 					FuncEffect("deal damage equal to doom counters to each player",
 						EffectProperties{Outcome: OutcomeDetriment},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							perm := g.FindPermanent(sourceID)
 							if perm == nil {
 								return nil
@@ -72,7 +72,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				FuncEffect("remove a doom counter from Armageddon Clock",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						perm := g.FindPermanent(sourceID)
 						if perm != nil {
 							perm.RemoveCounter(Doom, 1)
@@ -109,7 +109,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				FuncEffect("target creature gets +2/-2 while ~ remains tapped",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
 						}
@@ -149,7 +149,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				FuncEffect("put +1/+1 counter and make artifact",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
 						}
@@ -178,7 +178,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				FuncEffect("untap X target lands",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						x := g.XValue()
 						if x <= 0 {
 							return nil
@@ -252,7 +252,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				FuncEffect("shuffle graveyard into library",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						p := g.GetPlayer(controller)
 						if p == nil {
 							return nil
@@ -280,7 +280,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				FuncEffect("sacrifice all nontoken Antiquities permanents",
 					EffectProperties{Outcome: OutcomeDetriment, Mass: true},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						var toSacrifice []*Permanent
 						for _, perm := range g.FilterBattlefield(And(Not(IsToken))) {
 							if catalog.Global().CardInSet("ATQ", perm.Name()) {
@@ -307,7 +307,7 @@ func registerArtifacts() {
 			WithAbility(BeginningOfUpkeepTrigger(
 				FuncEffect("gain life equal to hand size minus 4",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						p := g.GetPlayer(controller)
 						if p == nil {
 							return nil
@@ -330,7 +330,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				FuncEffect("draw a card, then discard a card",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						p := g.GetPlayer(controller)
 						if p == nil {
 							return nil
@@ -368,7 +368,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				FuncEffect("target player mills two cards",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
 						}
@@ -416,7 +416,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				FuncEffect("prevent 1 damage to target; bounce self at next end step",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
 						}
@@ -457,7 +457,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				FuncEffect("deal 1 damage to any target; destroy self at next end step",
 					EffectProperties{Outcome: OutcomeDetriment, DamageValue: Fixed(1)},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
 						}
@@ -512,7 +512,7 @@ func registerArtifacts() {
 				NewTriggered(EvtPutIntoGraveyardFromBattlefield, true,
 					FuncEffect("you may pay {1}; if you do, gain 1 life",
 						EffectProperties{Outcome: OutcomeBenefit},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							if !g.TryPayCostFromLands(controller, "{1}") {
 								return nil
 							}
@@ -551,7 +551,7 @@ func registerArtifacts() {
 		}
 		noted := make(map[uuid.UUID]notedState)
 
-		coffinReturnExiled := func(g GameMutator, coffinID uuid.UUID) {
+		coffinReturnExiled := func(g *Game, coffinID uuid.UUID) {
 			exiled := g.RemoveExiledCardBySource(coffinID)
 			var creatureEC *ExiledCard
 			var auraECs []ExiledCard
@@ -600,7 +600,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				FuncEffect("exile target creature and all Auras; return when Coffin leaves or untaps",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
 						}
@@ -645,7 +645,7 @@ func registerArtifacts() {
 				NewTriggered(EvtLeavesBattlefield, false,
 					FuncEffect("return exiled creature to battlefield",
 						EffectProperties{},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							coffinReturnExiled(g, sourceID)
 							return nil
 						}),
@@ -656,7 +656,7 @@ func registerArtifacts() {
 				NewTriggered(EvtBecameUntapped, false,
 					FuncEffect("return exiled creature when Coffin becomes untapped",
 						EffectProperties{},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							coffinReturnExiled(g, sourceID)
 							return nil
 						}),
@@ -689,7 +689,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				FuncEffect("target creature gets +1/+1 while ~ remains tapped",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
 						}
@@ -740,7 +740,7 @@ func registerArtifacts() {
 				NewTriggered(EvtSpellCast, true,
 					FuncEffect("you may pay {1}; if you do, gain 1 life",
 						EffectProperties{Outcome: OutcomeBenefit},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							if !g.TryPayCostFromLands(controller, "{1}") {
 								return nil
 							}
@@ -771,7 +771,7 @@ func registerArtifacts() {
 				NewTriggered(EvtPutIntoGraveyardFromBattlefield, true,
 					FuncEffect("pay {3} to draw a card",
 						EffectProperties{Outcome: OutcomeBenefit},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							if !g.TryPayCostFromLands(controller, "{3}") {
 								return nil
 							}

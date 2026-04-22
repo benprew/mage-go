@@ -30,7 +30,7 @@ func (r *regenerationReplacement) Matches(a Action, g GameReader) bool {
 	return !perm.HasKeyword(CantRegenerate)
 }
 
-func (r *regenerationReplacement) Replace(a Action, g GameMutator) Action {
+func (r *regenerationReplacement) Replace(a Action, g *Game) Action {
 	r.shields--
 	perm := g.FindPermanent(r.permanentID)
 	if perm != nil {
@@ -70,7 +70,7 @@ func (r *preventionShieldReplacement) Matches(a Action, g GameReader) bool {
 	return false
 }
 
-func (r *preventionShieldReplacement) Replace(a Action, g GameMutator) Action {
+func (r *preventionShieldReplacement) Replace(a Action, g *Game) Action {
 	switch act := a.(type) {
 	case *DamageToPlayerAction:
 		prevented := min(act.Amount(), r.remaining)
@@ -119,7 +119,7 @@ func (r *fogReplacement) Matches(a Action, _ GameReader) bool {
 	return false
 }
 
-func (r *fogReplacement) Replace(a Action, g GameMutator) Action {
+func (r *fogReplacement) Replace(a Action, g *Game) Action {
 	return nil
 }
 
@@ -149,7 +149,7 @@ func (r *forcefieldReplacement) Matches(a Action, _ GameReader) bool {
 	return act.IsCombatDamage() && act.PlayerID() == r.playerID && act.Amount() > 1
 }
 
-func (r *forcefieldReplacement) Replace(a Action, g GameMutator) Action {
+func (r *forcefieldReplacement) Replace(a Action, g *Game) Action {
 	act := a.(*DamageToPlayerAction)
 	return act.WithAmount(1)
 }
@@ -194,7 +194,7 @@ func (r *colorPreventionReplacement) Matches(a Action, g GameReader) bool {
 	return false
 }
 
-func (r *colorPreventionReplacement) Replace(a Action, g GameMutator) Action {
+func (r *colorPreventionReplacement) Replace(a Action, g *Game) Action {
 	r.consumed = true
 	return nil
 }
@@ -231,7 +231,7 @@ func (r *sourcePreventionReplacement) Matches(a Action, _ GameReader) bool {
 	return act.ActionSource() == r.dmgSource
 }
 
-func (r *sourcePreventionReplacement) Replace(a Action, g GameMutator) Action {
+func (r *sourcePreventionReplacement) Replace(a Action, g *Game) Action {
 	r.consumed = true
 	return nil
 }
@@ -270,7 +270,7 @@ func (r *typePreventionReplacement) Matches(a Action, g GameReader) bool {
 	return sourceCard.HasType(r.cardType)
 }
 
-func (r *typePreventionReplacement) Replace(a Action, g GameMutator) Action {
+func (r *typePreventionReplacement) Replace(a Action, g *Game) Action {
 	r.consumed = true
 	return nil
 }
@@ -302,7 +302,7 @@ func (r *reverseDamageReplacement) Matches(a Action, _ GameReader) bool {
 	return act.PlayerID() == r.playerID
 }
 
-func (r *reverseDamageReplacement) Replace(a Action, g GameMutator) Action {
+func (r *reverseDamageReplacement) Replace(a Action, g *Game) Action {
 	act := a.(*DamageToPlayerAction)
 	p := g.GetPlayer(r.playerID)
 	if p != nil {
@@ -343,7 +343,7 @@ func (r *bodyguardReplacement) Matches(a Action, g GameReader) bool {
 	return bg != nil && !bg.Tapped
 }
 
-func (r *bodyguardReplacement) Replace(a Action, g GameMutator) Action {
+func (r *bodyguardReplacement) Replace(a Action, g *Game) Action {
 	act := a.(*DamageToPlayerAction)
 	return NewDamageToCreatureAction(act.ActionSource(), r.bodyguardPermID, act.Amount(), act.IsCombatDamage())
 }
@@ -378,7 +378,7 @@ func (r *playerDamageRedirectReplacement) Matches(a Action, g GameReader) bool {
 	return g.FindPermanent(r.redirectPermID) != nil
 }
 
-func (r *playerDamageRedirectReplacement) Replace(a Action, g GameMutator) Action {
+func (r *playerDamageRedirectReplacement) Replace(a Action, g *Game) Action {
 	act := a.(*DamageToPlayerAction)
 	return NewDamageToCreatureAction(act.ActionSource(), r.redirectPermID, act.Amount(), act.IsCombatDamage())
 }
@@ -417,7 +417,7 @@ func (r *artifactDamageRedirectReplacement) Matches(a Action, g GameReader) bool
 	return sourceCard.HasType(TypeArtifact)
 }
 
-func (r *artifactDamageRedirectReplacement) Replace(a Action, g GameMutator) Action {
+func (r *artifactDamageRedirectReplacement) Replace(a Action, g *Game) Action {
 	act := a.(*DamageToPlayerAction)
 	return NewDamageToCreatureAction(act.ActionSource(), r.redirectPermID, act.Amount(), act.IsCombatDamage())
 }
@@ -450,7 +450,7 @@ func (r *creatureDamageRedirectReplacement) Matches(a Action, _ GameReader) bool
 	return act.PermanentID() == r.creatureID
 }
 
-func (r *creatureDamageRedirectReplacement) Replace(a Action, g GameMutator) Action {
+func (r *creatureDamageRedirectReplacement) Replace(a Action, g *Game) Action {
 	act := a.(*DamageToCreatureAction)
 	r.consumed = true
 	return NewDamageToPlayerAction(act.ActionSource(), r.targetPlayerID, act.Amount(), act.IsCombatDamage())
@@ -483,7 +483,7 @@ func (r *attackerDamageRedirectReplacement) Matches(a Action, g GameReader) bool
 	return act.ActionSource() == r.attackerID
 }
 
-func (r *attackerDamageRedirectReplacement) Replace(a Action, g GameMutator) Action {
+func (r *attackerDamageRedirectReplacement) Replace(a Action, g *Game) Action {
 	act := a.(*DamageToPlayerAction)
 	return NewDamageToCreatureAction(act.ActionSource(), r.absorberPermID, act.Amount(), act.IsCombatDamage())
 }
@@ -514,7 +514,7 @@ func (r *lichLifeGainReplacement) Matches(a Action, _ GameReader) bool {
 	return act.PlayerID() == r.playerID
 }
 
-func (r *lichLifeGainReplacement) Replace(a Action, g GameMutator) Action {
+func (r *lichLifeGainReplacement) Replace(a Action, g *Game) Action {
 	act := a.(*LifeGainAction)
 	p := g.GetPlayer(r.playerID)
 	if p != nil {
@@ -552,7 +552,7 @@ func (r *minimumLifeReplacement) Matches(a Action, _ GameReader) bool {
 	return act.PlayerID() == r.playerID
 }
 
-func (r *minimumLifeReplacement) Replace(a Action, g GameMutator) Action {
+func (r *minimumLifeReplacement) Replace(a Action, g *Game) Action {
 	act := a.(*DamageToPlayerAction)
 	p := g.GetPlayer(r.playerID)
 	if p == nil {
@@ -598,7 +598,7 @@ func (r *skipDrawReplacement) Matches(a Action, _ GameReader) bool {
 	return act.IsNormalDraw() && act.PlayerID() == r.playerID
 }
 
-func (r *skipDrawReplacement) Replace(a Action, g GameMutator) Action {
+func (r *skipDrawReplacement) Replace(a Action, g *Game) Action {
 	r.consumed = true
 	return nil
 }
@@ -631,16 +631,11 @@ func (r *drawReplacementEffect) Matches(a Action, _ GameReader) bool {
 	return act.IsNormalDraw() && act.PlayerID() == r.playerID
 }
 
-func (r *drawReplacementEffect) Replace(a Action, g GameMutator) Action {
+func (r *drawReplacementEffect) Replace(a Action, g *Game) Action {
 	r.consumed = true
-	// The actual lamp logic is handled by Game.applyDrawReplacement
-	// which needs access to player choice methods. We call it via a
-	// type assertion since GameMutator is always *Game.
-	if game, ok := g.(*Game); ok {
-		p := game.GetPlayer(r.playerID)
-		if p != nil {
-			game.applyDrawReplacement(p, r.count)
-		}
+	p := g.GetPlayer(r.playerID)
+	if p != nil {
+		g.applyDrawReplacement(p, r.count)
 	}
 	return nil
 }
@@ -669,12 +664,7 @@ type damagePreventionRuleReplacement struct {
 }
 
 func (r *damagePreventionRuleReplacement) Matches(a Action, g GameReader) bool {
-	// Need access to *Game for filter matching
-	game, ok := g.(*Game)
-	if !ok {
-		return false
-	}
-
+	game := g.(*Game)
 	switch act := a.(type) {
 	case *DamageToPlayerAction:
 		// For player damage, only match rules with a "from" filter and no "to" filter
@@ -685,7 +675,7 @@ func (r *damagePreventionRuleReplacement) Matches(a Action, g GameReader) bool {
 		if r.from.IsZero() {
 			return false
 		}
-		source := game.FindPermanent(act.ActionSource())
+		source := g.FindPermanent(act.ActionSource())
 		if source == nil || !r.from.Match(source, game) {
 			return false
 		}
@@ -697,8 +687,8 @@ func (r *damagePreventionRuleReplacement) Matches(a Action, g GameReader) bool {
 		if r.playerOnly {
 			return false
 		}
-		source := game.FindPermanent(act.ActionSource())
-		target := game.FindPermanent(act.PermanentID())
+		source := g.FindPermanent(act.ActionSource())
+		target := g.FindPermanent(act.PermanentID())
 		if target == nil {
 			return false
 		}
@@ -716,7 +706,7 @@ func (r *damagePreventionRuleReplacement) Matches(a Action, g GameReader) bool {
 	return false
 }
 
-func (r *damagePreventionRuleReplacement) Replace(a Action, g GameMutator) Action {
+func (r *damagePreventionRuleReplacement) Replace(a Action, g *Game) Action {
 	if r.oneShot {
 		r.consumed = true
 	}

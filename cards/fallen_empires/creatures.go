@@ -30,7 +30,7 @@ func moneychangerFactory() Card {
 		// Sacrifice: gain 1 life per credit counter (only during upkeep)
 		WithActivatedAbility(
 			FuncEffect("sacrifice, gain 1 life for each credit counter", EffectProperties{Outcome: OutcomeBenefit},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					perm := g.FindPermanent(sourceID)
 					if perm == nil {
 						return nil
@@ -80,7 +80,7 @@ func registerCreatures() {
 			WithAbility(NewTriggered(EvtBlockersDecl, true,
 				FuncEffect("deal 3 damage to target creature, assign no combat damage",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						src := g.FindPermanent(sourceID)
 						if src == nil {
 							return nil
@@ -307,7 +307,7 @@ func registerCreatures() {
 			WithAbility(BeginningOfUpkeepTrigger(
 				FuncEffect("put a tide counter on Homarid and check for reset",
 					EffectProperties{Outcome: OutcomeUnknown},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						src := g.FindPermanent(sourceID)
 						if src == nil {
 							return nil
@@ -501,7 +501,7 @@ func registerCreatures() {
 			WithSubTypes("Thrull"),
 			WithActivatedAbility(
 				FuncEffect("add {B}{B}", EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						p := g.GetPlayer(controller)
 						if p != nil {
 							p.ManaPool().Add(Black, 2)
@@ -563,7 +563,7 @@ func registerCreatures() {
 			WithAbility(NewTriggered(EvtBlockersDecl, true,
 				FuncEffect("sacrifice, defending player discards 3",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						src := g.FindPermanent(sourceID)
 						if src == nil {
 							return nil
@@ -599,7 +599,7 @@ func registerCreatures() {
 			WithAbility(NewTriggered(EvtBlockersDecl, true,
 				FuncEffect("sacrifice, destroy target creature defending player controls",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						src := g.FindPermanent(sourceID)
 						if src == nil {
 							return nil
@@ -906,7 +906,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				FuncEffect("target creature doesn't untap during its controller's next untap step",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
 						}

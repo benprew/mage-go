@@ -277,7 +277,7 @@ func registerCreatures() {
 				WithEffect(FuncEffect(
 					"if activated 4+ times, sacrifice at end of turn",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						perm := g.FindPermanent(sourceID)
 						if perm == nil {
 							return nil
@@ -292,7 +292,7 @@ func registerCreatures() {
 								Effects: []Effect{FuncEffect(
 									"sacrifice this creature",
 									EffectProperties{},
-									func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+									func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 										if len(targets) == 0 {
 											return nil
 										}
@@ -474,7 +474,7 @@ func registerCreatures() {
 			WithAbility(NewTriggered(EvtUpkeep, false, FuncEffect(
 				"deal 8 damage unless you pay {G}{G}{G}{G}",
 				EffectProperties{},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					if g.TryPayCostFromLands(controller, "{G}{G}{G}{G}") {
 						return nil
 					}
@@ -803,7 +803,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				FuncEffect("force creature to attack or destroy at EOT",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
 						}
@@ -816,7 +816,7 @@ func registerCreatures() {
 							Effects: []Effect{FuncEffect(
 								"destroy creature that didn't attack",
 								EffectProperties{},
-								func(g2 GameMutator, srcID, ctrlID uuid.UUID, _ []uuid.UUID) error {
+								func(g2 *Game, srcID, ctrlID uuid.UUID, _ []uuid.UUID) error {
 									if !g2.HasAttackedThisTurn(targetID) {
 										perm := g2.FindPermanent(targetID)
 										if perm != nil {
@@ -845,7 +845,7 @@ func registerCreatures() {
 				FuncEffect(
 					"put corpse counters on Scavenging Ghoul for each creature that died this turn",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						deaths := g.CreatureDeaths()
 						if deaths > 0 {
 							perm := g.FindPermanent(sourceID)
@@ -881,7 +881,7 @@ func registerCreatures() {
 			WithAbility(BeginningOfUpkeepTrigger(FuncEffect(
 				"become a copy of target creature",
 				EffectProperties{},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					perm := g.FindPermanent(sourceID)
 					if perm == nil {
 						return nil
@@ -918,7 +918,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				FuncEffect("redirect next 1 damage to owner",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						g.SetCreatureDamageRedirect(sourceID, controller)
 						return nil
 					}),
@@ -928,7 +928,7 @@ func registerCreatures() {
 			WithAbility(PutIntoGraveyardFromBattlefieldTrigger(FuncEffect(
 				"lose half your life rounded up",
 				EffectProperties{},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					p := g.GetPlayer(controller)
 					if p == nil {
 						return nil

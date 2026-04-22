@@ -138,7 +138,7 @@ func registerEnchantments() {
 			WithActivatedAbility(
 				FuncEffect("exile two creature cards from a single graveyard, create a 1/1 green Saproling",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						// Find a graveyard with at least 2 creature cards
 						for _, player := range g.AllPlayers() {
 							var creatures []Card
@@ -206,7 +206,7 @@ func registerEnchantments() {
 			WithActivatedAbility(
 				FuncEffect("Regenerate enchanted creature",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						src := g.FindPermanent(sourceID)
 						if src == nil || !src.IsAttached() {
 							return nil

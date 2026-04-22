@@ -31,7 +31,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetArtifact(), FuncEffect(
 				"destroy target artifact; controller gains life equal to CMC",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -60,7 +60,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetPlayer(), FuncEffect(
 				"return all artifacts target player owns to their hand",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -94,7 +94,7 @@ func registerSpells() {
 		return NewInstant("Reverse Polarity", "{W}{W}",
 			NewSpellAbility(FuncEffect("gain life equal to twice artifact damage",
 				EffectProperties{Outcome: OutcomeBenefit},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					artDmg := g.GetArtifactDamageTaken(controller)
 					if artDmg > 0 {
 						p := g.GetPlayer(controller)
@@ -118,7 +118,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetArtifactWithManaValueX(), FuncEffect(
 				"destroy target artifact with CMC X; deal X damage to controller",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -152,7 +152,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetPlayer(), FuncEffect(
 				"put artifact cards from graveyard on top of library",
 				EffectProperties{Outcome: OutcomeBenefit},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -239,7 +239,7 @@ func registerSpells() {
 		return NewSorcery("Transmute Artifact", "{U}{U}",
 			NewSpellAbility(FuncEffect("search library for artifact, put on battlefield",
 				EffectProperties{Outcome: OutcomeBenefit},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					p := g.GetPlayer(controller)
 					if p == nil {
 						return nil

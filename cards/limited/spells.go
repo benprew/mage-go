@@ -20,7 +20,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetCreature(), FuncEffect(
 				"exile target creature. Its controller gains life equal to its power",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return fmt.Errorf("no target")
 					}
@@ -52,7 +52,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetAnyTarget(), FuncEffect(
 				"target player gains 3 life or prevent the next 3 damage that would be dealt to any target this turn",
 				EffectProperties{Outcome: OutcomeBenefit},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -100,7 +100,7 @@ func registerSpells() {
 			NewSpellAbility(FuncEffect(
 				"prevent the next source of damage to you and gain that much life",
 				EffectProperties{Outcome: OutcomeBenefit},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					g.AddPreventionShield(controller, 1000)
 					g.AddReverseDamageShield(controller)
 					return nil
@@ -236,7 +236,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetAnyTarget(), FuncEffect(
 				"deal X damage to target and gain life equal to damage dealt",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return fmt.Errorf("no target for drain life")
 					}
@@ -287,7 +287,7 @@ func registerSpells() {
 		return NewEnchantment("Pestilence", "{2}{B}{B}",
 			// At the beginning of the end step, if no creatures are on the battlefield, sacrifice Pestilence.
 			WithAbility(BeginningOfEachEndStepTrigger(
-				FuncEffect("sacrifice if no creatures", EffectProperties{}, func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				FuncEffect("sacrifice if no creatures", EffectProperties{}, func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					for _, p := range g.FilterBattlefield(AnyPermanent) {
 						if p.HasType(TypeCreature) {
 							return nil
@@ -339,7 +339,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetAnyTarget(), FuncEffect(
 				"deal X damage; creature can't be regenerated this turn",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return fmt.Errorf("no target for Disintegrate")
 					}
@@ -407,7 +407,7 @@ func registerSpells() {
 				"Target creature gains trample and gets +X/+0. Destroy at end of turn if it attacked.",
 				GrantKeywordUntilEndOfTurn(Trample, SelectTarget),
 				DoubleTargetPower(),
-				FuncEffect("destroy at end of turn if attacked", EffectProperties{}, func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				FuncEffect("destroy at end of turn if attacked", EffectProperties{}, func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -419,7 +419,7 @@ func registerSpells() {
 						Effects: []Effect{FuncEffect(
 							"destroy creature if it attacked",
 							EffectProperties{},
-							func(g2 GameMutator, srcID, ctrlID uuid.UUID, _ []uuid.UUID) error {
+							func(g2 *Game, srcID, ctrlID uuid.UUID, _ []uuid.UUID) error {
 								if g2.HasAttackedThisTurn(targetID) {
 									perm := g2.FindPermanent(targetID)
 									if perm != nil {
@@ -496,7 +496,7 @@ func registerSpells() {
 			NewSpellAbility(FuncEffect(
 				"until end of turn, pay 1 life to add {C}",
 				EffectProperties{},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					g.SetChannelActive(controller)
 					return nil
 				})),
@@ -567,7 +567,7 @@ func registerSpells() {
 			NewSpellAbility(FuncEffect(
 				"discard hand, ante top card, draw seven",
 				EffectProperties{},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					p := g.GetPlayer(controller)
 					if p == nil {
 						return nil
@@ -598,7 +598,7 @@ func registerSpells() {
 			NewSpellAbility(FuncEffect(
 				"exchange ante card with top of library",
 				EffectProperties{},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					p := g.GetPlayer(controller)
 					if p == nil {
 						return nil
@@ -632,7 +632,7 @@ func registerSpells() {
 			NewSpellAbility(FuncEffect(
 				"each player antes the top card of their library",
 				EffectProperties{},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					for _, p := range g.AllPlayers() {
 						lib := p.Library()
 						if len(lib) > 0 {

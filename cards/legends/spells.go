@@ -35,7 +35,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetPermanent(), FuncEffect(
 				"destroy target blue permanent or return target Island to its owner's hand",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -85,7 +85,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetAnyTarget(), FuncEffect(
 				"target player gains X life or prevent the next X damage to any target",
 				EffectProperties{Outcome: OutcomeBenefit},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -159,7 +159,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetCreature(), FuncEffect(
 				"target creature gets +4/-4 or +4/-(toughness-1)",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -235,7 +235,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetCreature(IsAttacking), FuncEffect(
 				"untap target attacking creature, remove from combat, gain control until end of turn",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -271,7 +271,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetArtifact(), FuncEffect(
 				"destroy target artifact; you gain life equal to its mana value",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -324,7 +324,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetControlledCreature(), FuncEffect(
 				"tap target untapped creature you control; add {C} equal to its mana value",
 				EffectProperties{Outcome: OutcomeBenefit},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -381,7 +381,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetCreature(IsAttacking), FuncEffect(
 				"tap all blockers of target attacker; prevent all combat damage from it and its blockers this turn",
 				EffectProperties{Outcome: OutcomeBenefit},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -445,7 +445,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetPermanent(), FuncEffect(
 				"destroy target red permanent or return target Mountain to its owner's hand",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -505,7 +505,7 @@ func registerSpells() {
 			})), FuncEffect(
 				"put glyph counters on creature blocked by target Wall; it doesn't untap while it has glyph counters",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -536,7 +536,7 @@ func registerSpells() {
 								trigger := BeginningOfUpkeepTrigger(
 									FuncEffect("remove a glyph counter",
 										EffectProperties{},
-										func(g GameMutator, srcID, ctrl uuid.UUID, _ []uuid.UUID) error {
+										func(g *Game, srcID, ctrl uuid.UUID, _ []uuid.UUID) error {
 											perm := g.FindPermanent(srcID)
 											if perm != nil && perm.Counters[Glyph] > 0 {
 												perm.RemoveCounter(Glyph, 1)
@@ -567,7 +567,7 @@ func registerSpells() {
 			}))), FuncEffect(
 				"target blocking Wall gets +10/+0 until end of combat; prevent all damage to it this turn; destroy it at end step",
 				EffectProperties{Outcome: OutcomeBenefit},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -613,7 +613,7 @@ func registerSpells() {
 			})), FuncEffect(
 				"at end of combat, destroy all creatures blocked by target Wall",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -649,7 +649,7 @@ func registerSpells() {
 			})), FuncEffect(
 				"whenever target Wall is dealt damage by an attacking creature this turn, gain that much life",
 				EffectProperties{Outcome: OutcomeBenefit},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -664,7 +664,7 @@ func registerSpells() {
 						Effects: []Effect{FuncEffect(
 							"gain life equal to damage dealt",
 							EffectProperties{Outcome: OutcomeBenefit},
-							func(g GameMutator, srcID, ctrl uuid.UUID, _ []uuid.UUID) error {
+							func(g *Game, srcID, ctrl uuid.UUID, _ []uuid.UUID) error {
 								amount := g.EventAmount()
 								if amount <= 0 {
 									return nil
@@ -696,7 +696,7 @@ func registerSpells() {
 			})), FuncEffect(
 				"destroy creatures blocked by target Wall; reanimate from their owners' graveyards",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -743,7 +743,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetCreature(), FuncEffect(
 				"target creature gets +0/+X until end of turn, where X is its mana value",
 				EffectProperties{Outcome: OutcomeBenefit},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -792,7 +792,7 @@ func registerSpells() {
 			NewSpellAbility(FuncEffect(
 				"destroy all nonblack creatures; Hellfire deals X plus 3 damage to you where X is the number destroyed",
 				EffectProperties{Outcome: OutcomeDetriment, Mass: true},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					toDestroy := g.FilterBattlefield(And(IsCreature, Not(HasColorFilter(Black)), Not(HasKeywordFilter(Indestructible))))
 					destroyed := 0
 					for _, perm := range toDestroy {
@@ -833,7 +833,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetCreature(), FuncEffect(
 				"prevent all damage that would be dealt to target creature this turn",
 				EffectProperties{Outcome: OutcomeBenefit},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -858,7 +858,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetOpponent(), FuncEffect(
 				"deal damage to target opponent equal to twice the number of white creatures they control",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -898,7 +898,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetSpellOnStack(), FuncEffect(
 				"counter target spell; add {C} equal to its mana value at next main phase",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -922,7 +922,7 @@ func registerSpells() {
 							Effects: []Effect{FuncEffect(
 								fmt.Sprintf("add %d colorless mana", cmc),
 								EffectProperties{Outcome: OutcomeBenefit},
-								func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+								func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 									p := g.GetPlayer(controller)
 									if p != nil {
 										p.ManaPool().Add(Colorless, cmc)
@@ -984,7 +984,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetCreature(), FuncEffect(
 				"target creature gains first strike and rampage 2 until end of turn",
 				EffectProperties{Outcome: OutcomeBenefit},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -1056,7 +1056,7 @@ func registerSpells() {
 			NewSpellAbility(FuncEffect(
 				"discard X cards, then return X cards from graveyard to hand; exile Recall",
 				EffectProperties{Outcome: OutcomeBenefit},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					x := g.XValue()
 					if x <= 0 {
 						return nil
@@ -1106,7 +1106,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetCreature(), FuncEffect(
 				"when target creature dies this turn, reanimate from its owner's graveyard",
 				EffectProperties{Outcome: OutcomeBenefit},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -1124,7 +1124,7 @@ func registerSpells() {
 						Effects: []Effect{FuncEffect(
 							"return a creature card from owner's graveyard to the battlefield",
 							EffectProperties{Outcome: OutcomeBenefit},
-							func(g GameMutator, _ uuid.UUID, _ uuid.UUID, _ []uuid.UUID) error {
+							func(g *Game, _ uuid.UUID, _ uuid.UUID, _ []uuid.UUID) error {
 								owner := g.GetPlayer(ownerID)
 								if owner == nil {
 									return nil
@@ -1187,7 +1187,7 @@ func registerSpells() {
 			NewSpellAbility(FuncEffect(
 				"untap all lands you control",
 				EffectProperties{Outcome: OutcomeBenefit},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					lands := g.FilterBattlefield(And(IsLand, ControlledBy(controller)))
 					for _, land := range lands {
 						land.Tapped = false
@@ -1241,7 +1241,7 @@ func registerSpells() {
 			NewSpellAbility(FuncEffect(
 				"creatures you control get +0/+2 until end of turn",
 				EffectProperties{Outcome: OutcomeBenefit},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					creatures := g.FilterBattlefield(And(IsCreature, ControlledBy(controller)))
 					for _, perm := range creatures {
 						ce := TemporaryBoost(perm.ID(), 0, 2)
@@ -1285,7 +1285,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetCreature(), FuncEffect(
 				"prevent all combat damage by target creature; it gets +0/+X where X is its mana value",
 				EffectProperties{Outcome: OutcomeBenefit},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -1335,7 +1335,7 @@ func registerSpells() {
 			NewSpellAbility(FuncEffect(
 				"deal 2 damage to each opponent; gain life equal to damage dealt",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					totalDamage := 0
 					for _, pl := range g.AllPlayers() {
 						if pl.PlayerID() != controller {
@@ -1364,7 +1364,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetCreature(), FuncEffect(
 				"tap target creature; prevent its combat damage; it doesn't untap during next two untap steps",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -1427,7 +1427,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetCreature(), FuncEffect(
 				"switch target creature's power and toughness until end of turn",
 				EffectProperties{Outcome: OutcomeUnknown},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -1456,7 +1456,7 @@ func registerSpells() {
 			NewSpellAbility(FuncEffect(
 				"deal damage to each opponent equal to the number of Islands they control",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					for _, pl := range g.AllPlayers() {
 						if pl.PlayerID() != controller {
 							islands := g.FilterBattlefield(And(IsLand, HasSubType("Island"), ControlledBy(pl.PlayerID())))
@@ -1502,7 +1502,7 @@ func registerSpells() {
 			NewSpellAbility(FuncEffect(
 				"each player shuffles hand into library, then draws that many cards",
 				EffectProperties{},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					for _, pl := range g.AllPlayers() {
 						hand := pl.Hand()
 						handSize := len(hand)
@@ -1533,7 +1533,7 @@ func registerSpells() {
 			NewSpellAbility(FuncEffect(
 				"tap X target creatures; deal 2 damage to each with flying",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					x := g.XValue()
 					if x <= 0 {
 						return nil

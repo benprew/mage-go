@@ -19,7 +19,7 @@ func registerEnchantments() {
 	// artifact's controller.
 	artPossDmgEffect := FuncEffect("deal 2 damage to enchanted artifact's controller",
 		EffectProperties{Outcome: OutcomeDetriment},
-		func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+		func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 			src := g.FindPermanent(sourceID)
 			if src == nil || !src.IsAttached() {
 				return nil
@@ -117,7 +117,7 @@ func registerEnchantments() {
 			WithActivatedAbility(
 				FuncEffect("prevent next artifact damage from chosen source",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						// Choose an artifact source on the battlefield
 						candidates := g.FilterBattlefield(IsArtifact)
 						if len(candidates) == 0 {
@@ -171,7 +171,7 @@ func registerEnchantments() {
 					IsArtifact,
 					FuncEffect("sacrifice this artifact unless you pay {2}",
 						EffectProperties{Outcome: OutcomeDetriment},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							perm := g.FindPermanent(sourceID)
 							if perm == nil {
 								return nil
@@ -195,7 +195,7 @@ func registerEnchantments() {
 			WithActivatedAbility(
 				FuncEffect("destroy target artifact",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
 						}
@@ -219,7 +219,7 @@ func registerEnchantments() {
 	// {T} in its activation cost, Haunting Wind deals 1 damage to that artifact's controller.
 	hauntingWindEffect := FuncEffect("deal 1 damage to artifact's controller",
 		EffectProperties{Outcome: OutcomeDetriment},
-		func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+		func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 			if len(targets) == 0 {
 				return nil
 			}
@@ -288,7 +288,7 @@ func registerEnchantments() {
 	// artifact's ability without {T} in its activation cost, you gain 1 life.
 	powerleechEffect := FuncEffect("gain 1 life",
 		EffectProperties{Outcome: OutcomeBenefit},
-		func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+		func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 			p := g.GetPlayer(controller)
 			if p != nil {
 				g.PlayerGainLife(p, 1)
@@ -382,7 +382,7 @@ func registerEnchantments() {
 				NewTriggered(EvtLeavesBattlefield, false,
 					FuncEffect("continue Titania's Song effect until end of turn",
 						EffectProperties{},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							effType := FuncContinuousEffect(LayerType, EndOfTurn, titaniasSongType)
 							effType.SetSourceID(sourceID)
 							g.AddContinuousEffect(effType)
@@ -425,7 +425,7 @@ func (r *artifactDamageToCreaturePreventionReplacement) Matches(a Action, g Game
 	return source.HasType(TypeArtifact)
 }
 
-func (r *artifactDamageToCreaturePreventionReplacement) Replace(a Action, g GameMutator) Action {
+func (r *artifactDamageToCreaturePreventionReplacement) Replace(a Action, g *Game) Action {
 	return nil // prevent the damage
 }
 

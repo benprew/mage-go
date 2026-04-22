@@ -28,7 +28,7 @@ func manaBattery(name string, color Color) Card {
 			FuncEffect(
 				"add mana equal to charge counters removed plus one",
 				EffectProperties{},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					p := g.FindPermanent(sourceID)
 					if p == nil {
 						return nil
@@ -62,7 +62,7 @@ func registerArtifacts() {
 				FuncEffect(
 					"prevent all damage that would be dealt to you this turn by attacking creatures without flying",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						eff := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, srcID uuid.UUID) error {
 							g.AddDamagePreventionRule(
 								WithFrom(And(IsAttacking, Not(HasKeywordFilter(Flying)))),
@@ -91,7 +91,7 @@ func registerArtifacts() {
 				FuncEffect(
 					"target permanent you control becomes the color of your choice",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
 						}
@@ -131,7 +131,7 @@ func registerArtifacts() {
 			WithAbility(EntersBattlefieldTrigger(FuncEffect(
 				"tap all legendary creatures",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					for _, p := range g.FilterBattlefield(NewPermanentFilter("legendary creature", func(p *Permanent, _ *Game) bool {
 						return p.HasType(TypeCreature) && p.Card.HasSuperType(SuperLegendary)
 					})) {
@@ -201,7 +201,7 @@ func registerArtifacts() {
 				FuncEffect(
 					"prevent all combat damage that would be dealt by target creature this turn",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
 						}
@@ -244,7 +244,7 @@ func registerArtifacts() {
 				FuncEffect(
 					"prevent all damage that would be dealt this turn by target creature you control; that creature gets +0/+X until end of turn, where X is its mana value",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
 						}
@@ -286,7 +286,7 @@ func registerArtifacts() {
 				FuncEffect(
 					"you gain life equal to the sacrificed creature's toughness",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						// The sacrifice cost has already moved a creature to the graveyard.
 						// Find the most recently added creature in controller's graveyard.
 						p := g.GetPlayer(controller)
@@ -358,7 +358,7 @@ func registerArtifacts() {
 				FuncEffect(
 					"exchange life totals with target opponent",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						me := g.GetPlayer(controller)
 						opp := g.GetOpponent(controller)
 						if me == nil || opp == nil {
@@ -451,14 +451,14 @@ func registerArtifacts() {
 				FuncEffect(
 					"create a 1/1 colorless Snake artifact creature token with poison",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						token := NewToken("Snake", 1, 1, []CardType{TypeArtifact, TypeCreature}, []string{"Snake"})
 						token.SetOwner(controller)
 						// Add poison trigger: whenever this creature deals damage to a player, that player gets a poison counter
 						token.AddAbility(NewTriggered(EvtDamageDealt, false, FuncEffect(
 							"poison counter",
 							EffectProperties{},
-							func(g GameMutator, srcID, ctrl uuid.UUID, targets []uuid.UUID) error {
+							func(g *Game, srcID, ctrl uuid.UUID, targets []uuid.UUID) error {
 								// targets[0] = damaged player (passed by trigger system from EvtDamageDealt.TargetID)
 								if len(targets) == 0 {
 									return nil
@@ -495,7 +495,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				FuncEffect("{T}, Sacrifice: deal X damage where X is total power of sacrificed creatures",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
 						}
@@ -577,7 +577,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				FuncEffect("put creature from hand onto battlefield or reanimate",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						p := g.GetPlayer(controller)
 						if p == nil {
 							return nil
@@ -643,7 +643,7 @@ func registerArtifacts() {
 				NewTriggered(EvtEndStep, false,
 					FuncEffect("if untapped, destroy and deal damage equal to pin counters",
 						EffectProperties{Outcome: OutcomeDetriment},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							src := g.FindPermanent(sourceID)
 							if src == nil {
 								return nil
@@ -673,7 +673,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				FuncEffect("deal damage equal to pin counters to any target",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
 						}

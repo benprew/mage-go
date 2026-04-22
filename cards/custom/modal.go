@@ -18,7 +18,7 @@ func registerModal() {
 			WithActivatedAbility(
 				FuncEffect("deal 1 damage or gain 1 life",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						if g.ModeValue() == 0 {
 							opp := g.GetOpponent(controller)
 							if opp != nil {

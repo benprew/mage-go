@@ -85,7 +85,7 @@ func registerArtifacts() {
 			WithAbility(NewTriggered(EvtUpkeep, false, FuncEffect(
 				"pay {4} to untap Mana Vault",
 				EffectProperties{},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					if g.TryPayCostFromLands(controller, "{4}") {
 						perm := g.FindPermanent(sourceID)
 						if perm != nil {
@@ -264,7 +264,7 @@ func registerArtifacts() {
 				FuncEffect(
 					"redirect next damage to target creature to you instead",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) < 1 {
 							return nil
 						}
@@ -285,7 +285,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				FuncEffect("become a 3/6 artifact creature until end of combat",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						eff := TemporaryAnimateUntilEndOfCombat(sourceID, 3, 6)
 						eff.SetSourceID(sourceID)
 						g.AddContinuousEffect(eff)
@@ -300,7 +300,7 @@ func registerArtifacts() {
 	Register("Glasses of Urza", func() Card {
 		return NewArtifact("Glasses of Urza", "{1}",
 			WithActivatedAbility(
-				FuncEffect("look at target player's hand", EffectProperties{}, func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				FuncEffect("look at target player's hand", EffectProperties{}, func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					return nil
 				}),
 				TapSourceCost(),
@@ -355,7 +355,7 @@ func registerArtifacts() {
 				FuncEffect(
 					"put creature from hand onto battlefield face down as 2/2",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
 						}
@@ -452,7 +452,7 @@ func registerArtifacts() {
 			NewTargetedSpell(TargetCreature(), FuncEffect(
 				"sacrifice creature and add black mana equal to its CMC",
 				EffectProperties{},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -476,7 +476,7 @@ func registerArtifacts() {
 			NewTargetedSpell(TargetPlayer(), FuncEffect(
 				"look at opponent's hand and force them to play a card",
 				EffectProperties{},
-				func(g GameMutator, _, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, _, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -508,7 +508,7 @@ func registerArtifacts() {
 			NewSpellAbility(FuncEffect(
 				"you assign blockers this combat",
 				EffectProperties{},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					for _, p := range g.FilterBattlefield(AnyPermanent) {
 						if p.Controller != controller && p.HasType(TypeCreature) {
 							eff := PreventBlockingUntilEndOfCombat(p.ID())
@@ -527,7 +527,7 @@ func registerArtifacts() {
 			WithAbility(NewTriggered(EvtDeclaredAttacker, false, FuncEffect(
 				"split blockers into piles",
 				EffectProperties{},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					var nonFlyers []*Permanent
 					for _, p := range g.FilterBattlefield(AnyPermanent) {
 						if p.Controller != controller && p.HasType(TypeCreature) &&
@@ -553,7 +553,7 @@ func registerArtifacts() {
 			NewTargetedSpell(TargetPlayer(), FuncEffect(
 				"look at top 3 cards of target player's library, rearrange them",
 				EffectProperties{},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -586,7 +586,7 @@ func registerArtifacts() {
 			WithAbility(EntersBattlefieldTrigger(FuncEffect(
 				"lose life equal to your life total",
 				EffectProperties{},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					p := g.GetPlayer(controller)
 					if p == nil {
 						return nil
@@ -602,7 +602,7 @@ func registerArtifacts() {
 			WithAbility(PutIntoGraveyardFromBattlefieldTrigger(FuncEffect(
 				"you lose the game",
 				EffectProperties{},
-				func(g GameMutator, _, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, _, controller uuid.UUID, _ []uuid.UUID) error {
 					g.ClearLich(controller)
 					p := g.GetPlayer(controller)
 					if p != nil {
@@ -618,7 +618,7 @@ func registerArtifacts() {
 			WithAbility(NewTriggered(EvtDrawStep, false, FuncEffect(
 				"skip draw, only flying/islandwalk can attack you until your next turn",
 				EffectProperties{},
-				func(g GameMutator, _, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, _, controller uuid.UUID, _ []uuid.UUID) error {
 					g.SetSkipNextDraw(controller)
 					g.SetSanctuaryActive(controller)
 					return nil
@@ -660,7 +660,7 @@ func registerArtifacts() {
 			NewTargetedSpell(TargetCreatureYouControl(), FuncEffect(
 				"gain life and deal damage equal to damage taken this turn",
 				EffectProperties{},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					dmg := g.DamageTakenByPlayer(controller)
 					if dmg > 0 {
 						p := g.GetPlayer(controller)
@@ -694,7 +694,7 @@ func registerArtifacts() {
 			NewTargetedSpell(TargetCreature(), FuncEffect(
 				"remove target creature from combat",
 				EffectProperties{},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -739,7 +739,7 @@ func registerArtifacts() {
 			WithAbility(BeginningOfEachUpkeepTrigger(
 				FuncEffect("pay {4} to untap blue creatures",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						// Find the active player (whose upkeep it is)
 						activePlayer := g.ActivePlayerObj().PlayerID()
 						blues := g.FilterBattlefield(And(IsCreature, HasColorFilter(Blue), ControlledBy(activePlayer), IsTapped))
@@ -784,7 +784,7 @@ func registerArtifacts() {
 			WithAbility(WhenAttachedBecomesTappedTrigger(FuncEffect(
 				"destroy enchanted land; attach Kudzu to another land",
 				EffectProperties{},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					kudzu := g.FindPermanent(sourceID)
 					if kudzu == nil {
 						return nil
@@ -832,7 +832,7 @@ func registerArtifacts() {
 			NewSpellAbility(FuncEffect(
 				"destroy non-attacking non-Wall creatures at end of turn",
 				EffectProperties{},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					active := g.ActivePlayerObj()
 					activeID := active.PlayerID()
 					g.RegisterDelayedTrigger(&DelayedTrigger{
@@ -842,7 +842,7 @@ func registerArtifacts() {
 						Effects: []Effect{FuncEffect(
 							"destroy non-attackers",
 							EffectProperties{},
-							func(g2 GameMutator, srcID, ctrlID uuid.UUID, _ []uuid.UUID) error {
+							func(g2 *Game, srcID, ctrlID uuid.UUID, _ []uuid.UUID) error {
 								var toDestroy []*Permanent
 								for _, p := range g2.FilterBattlefield(AnyPermanent) {
 									if p.Controller == activeID && p.HasType(TypeCreature) &&

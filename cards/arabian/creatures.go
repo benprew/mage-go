@@ -22,7 +22,7 @@ func registerCreatures() {
 				NewTriggered(EvtCreatureDied, false,
 					FuncEffect("destroy all creatures blocking or blocked by Abu Ja'far",
 						EffectProperties{},
-						func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 							if len(g.CombatGroups()) == 0 {
 								return nil
 							}
@@ -154,7 +154,7 @@ func registerCreatures() {
 			// "At the beginning of your upkeep, you may pay {U}{U}{U}. If you do, untap it."
 			WithAbility(BeginningOfUpkeepTrigger(
 				FuncEffect("pay {U}{U}{U} to untap", EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						if g.TryPayCostFromLands(controller, "{U}{U}{U}") {
 							perm := g.FindPermanent(sourceID)
 							if perm != nil {
@@ -188,7 +188,7 @@ func registerCreatures() {
 				NewTriggered(EvtBlockersDecl, false,
 					FuncEffect("gain 2 life when unblocked",
 						EffectProperties{},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							p := g.GetPlayer(controller)
 							if p != nil {
 								p.GainLife(2)
@@ -226,7 +226,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				FuncEffect("gain control of target creature",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
 						}
@@ -280,7 +280,7 @@ func registerCreatures() {
 			WithAbility(BeginningOfUpkeepTrigger(
 				FuncEffect("sacrifice a land",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						lands := g.FilterBattlefield(And(ControlledBy(controller), IsLand))
 						if len(lands) == 0 {
 							// "When you control no lands, sacrifice this creature."
@@ -336,7 +336,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				FuncEffect("draw and reveal; discard if not land",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						p := g.GetPlayer(controller)
 						if p == nil {
 							return nil
@@ -366,7 +366,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				FuncEffect("deal 1 to target, 1 to opponent's choice",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						// Deal 1 damage to controller's chosen target
 						if len(targets) > 0 {
 							targetID := targets[0]
@@ -419,7 +419,7 @@ func registerCreatures() {
 			WithAbility(NewTriggered(EvtDamageDealt, false,
 				FuncEffect("you gain that much life",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						amount := g.EventAmount()
 						if amount > 0 {
 							p := g.GetPlayer(controller)
@@ -500,7 +500,7 @@ func registerCreatures() {
 			WithAbility(AttacksTrigger(
 				FuncEffect("pay {2} or take 3 damage",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						if g.TryPayCostFromLands(controller, "{2}") {
 							return nil
 						}
@@ -542,7 +542,7 @@ func registerCreatures() {
 				NewTriggered(EvtEndStep, false,
 					FuncEffect("put +1/+1 counters for deaths",
 						EffectProperties{},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							count := g.CreatureDeaths()
 							if count > 0 {
 								perm := g.FindPermanent(sourceID)
@@ -588,7 +588,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				FuncEffect("gain control of target artifact",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
 						}
@@ -698,7 +698,7 @@ func registerCreatures() {
 			WithAbility(AttacksTrigger(
 				FuncEffect("flip coin or remove from combat",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						if !g.FlipCoin(controller) {
 							g.RemoveFromCombat(sourceID)
 							perm := g.FindPermanent(sourceID)
@@ -721,7 +721,7 @@ func registerCreatures() {
 				NewTriggered(EvtCreatureDied, false,
 					FuncEffect("register delayed token creation at next end step",
 						EffectProperties{},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							g.RegisterDelayedTrigger(&DelayedTrigger{
 								EventType:  EvtEndStep,
 								SourceID:   sourceID,
@@ -745,7 +745,7 @@ func registerCreatures() {
 			WithAbility(BlocksTrigger(
 				FuncEffect("flip coin or remove from combat",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						if !g.FlipCoin(controller) {
 							g.RemoveFromCombat(sourceID)
 							// "it can't block this turn"
@@ -772,7 +772,7 @@ func registerCreatures() {
 			WithAbility(BeginningOfUpkeepTrigger(
 				FuncEffect("grant forestwalk to opponent creature",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						// Find non-Wall creatures opponents control
 						candidates := g.FilterBattlefield(And(
 							NotControlledBy(controller),
@@ -815,7 +815,7 @@ func registerCreatures() {
 			WithAbility(BeginningOfUpkeepTrigger(
 				FuncEffect("check life totals for control change",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						perm := g.FindPermanent(sourceID)
 						if perm == nil {
 							return nil
@@ -864,7 +864,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				FuncEffect("deal 1 to each flyer and each player",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						for _, c := range g.FilterBattlefield(HasKeywordFilter(Flying)) {
 							g.DealDamageToPermanent(c, 1, sourceID)
 						}
@@ -887,7 +887,7 @@ func registerCreatures() {
 			WithAbility(NewTriggered(EvtDamageDealt, false,
 				FuncEffect("register delayed draw-step penalty",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						// targets[0] is the damaged player (from EvtDamageDealt.TargetID)
 						if len(targets) == 0 {
 							return nil
@@ -900,7 +900,7 @@ func registerCreatures() {
 							Controller:    controller,
 							Effects: []Effect{FuncEffect("lose 1 life unless pay {1}",
 								EffectProperties{Outcome: OutcomeDetriment},
-								func(g GameMutator, sourceID2, controller2 uuid.UUID, _ []uuid.UUID) error {
+								func(g *Game, sourceID2, controller2 uuid.UUID, _ []uuid.UUID) error {
 									p := g.GetPlayer(damagedPlayerID)
 									if p == nil {
 										return nil
@@ -958,7 +958,7 @@ func registerCreatures() {
 			WithKeyword(DoesNotUntapKW),
 			WithAbility(BeginningOfUpkeepTrigger(
 				FuncEffect("pay {1} to untap", EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						if g.TryPayCostFromLands(controller, "{1}") {
 							perm := g.FindPermanent(sourceID)
 							if perm != nil {

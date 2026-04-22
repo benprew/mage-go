@@ -16,7 +16,7 @@ func DestroyTarget() Effect {
 	return &destroyTargetEffect{}
 }
 
-func (e *destroyTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *destroyTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return fmt.Errorf("no target for destroy")
 	}
@@ -56,7 +56,7 @@ func DestroyTargetArtifact() Effect {
 	return &destroyTargetPermanentEffect{text: "destroy target artifact"}
 }
 
-func (e *destroyTargetPermanentEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *destroyTargetPermanentEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return fmt.Errorf("no target for destroy")
 	}
@@ -100,7 +100,7 @@ func DestroyAllMatching(filter PermanentFilter, text string) Effect {
 	return &destroyAllMatchingEffect{filter: filter, text: text}
 }
 
-func (e *destroyAllMatchingEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *destroyAllMatchingEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	toDestroy := g.FilterBattlefield(And(e.filter, Not(HasKeywordFilter(Indestructible))))
 	for _, p := range toDestroy {
 		g.DestroyPermanent(p)
@@ -131,7 +131,7 @@ func DestroyAllMatchingNoRegen(filter PermanentFilter, text string) Effect {
 	return &destroyAllMatchingNoRegenEffect{filter: filter, text: text}
 }
 
-func (e *destroyAllMatchingNoRegenEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *destroyAllMatchingNoRegenEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	toDestroy := g.FilterBattlefield(And(e.filter, Not(HasKeywordFilter(Indestructible))))
 	for _, p := range toDestroy {
 		p.GrantBaseAttr(CantRegenerate)
@@ -154,7 +154,7 @@ func DestroyTargetNoRegen() Effect {
 	return &destroyTargetNoRegenEffect{}
 }
 
-func (e *destroyTargetNoRegenEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *destroyTargetNoRegenEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return fmt.Errorf("no target for destroy")
 	}
@@ -188,7 +188,7 @@ func ExileTarget() Effect {
 	return &exileTargetEffect{}
 }
 
-func (e *exileTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *exileTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return fmt.Errorf("no target for exile")
 	}
@@ -213,7 +213,7 @@ func SacrificeSource() Effect {
 	return &sacrificeSourceEffect{}
 }
 
-func (e *sacrificeSourceEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *sacrificeSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	perm := g.FindPermanent(sourceID)
 	if perm == nil {
 		return nil
@@ -232,7 +232,7 @@ type balanceEffect struct{}
 // players by having each player sacrifice/discard down to the minimum (Balance).
 func BalanceEffect() Effect { return &balanceEffect{} }
 
-func (e *balanceEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *balanceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	// Count lands for each player
 	landCounts := make(map[uuid.UUID]int)
 	creatureCounts := make(map[uuid.UUID]int)
@@ -324,7 +324,7 @@ type chaosOrbEffect struct{}
 // controls, then destroys the source (Chaos Orb).
 func ChaosOrbEffect() Effect { return &chaosOrbEffect{} }
 
-func (e *chaosOrbEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *chaosOrbEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	var candidates []*Permanent
 	for _, p := range g.FilterBattlefield(Not(ControlledBy(controller))) {
 		if !p.Card.(*BaseCard).IsToken() {

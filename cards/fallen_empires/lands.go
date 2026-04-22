@@ -20,7 +20,7 @@ func sacLandFactory(name string, color Color) func() Card {
 			WithActivatedAbility(
 				FuncEffect("add two mana",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						p := g.GetPlayer(controller)
 						if p != nil {
 							p.ManaPool().Add(color, 2)
@@ -47,7 +47,7 @@ func storageLandFactory(name string, color Color) func() Card {
 				BeginningOfUpkeepTrigger(
 					FuncEffect("add storage counter if tapped",
 						EffectProperties{Outcome: OutcomeBenefit},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							perm := g.FindPermanent(sourceID)
 							if perm == nil || !perm.Tapped {
 								return nil
@@ -62,7 +62,7 @@ func storageLandFactory(name string, color Color) func() Card {
 			WithActivatedAbility(
 				FuncEffect("add mana for each storage counter removed",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						perm := g.FindPermanent(sourceID)
 						if perm == nil {
 							return nil

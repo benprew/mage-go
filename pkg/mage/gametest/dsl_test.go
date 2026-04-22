@@ -219,7 +219,7 @@ func TestFuncEffect(t *testing.T) {
 					mage.NewSpellAbility(mage.FuncEffect(
 						"deal 3 damage to each player",
 						mage.EffectProperties{Outcome: mage.OutcomeDetriment, DamageValue: mage.Fixed(3)},
-						func(g mage.GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 							for _, p := range g.AllPlayers() {
 								g.DealDamageToPlayer(p, 3, sourceID)
 							}

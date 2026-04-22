@@ -89,7 +89,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				FuncEffect("can't be regenerated this turn",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						ce := TemporaryKeyword(sourceID, CantRegenerate)
 						ce.SetSourceID(sourceID)
 						g.AddContinuousEffect(ce)
@@ -126,7 +126,7 @@ func registerCreatures() {
 			WithSubTypes("Dragon", "Wurm"),
 			WithKeyword(Defender),
 			WithKeyword(Trample),
-			WithAbility(BlocksTrigger(FuncEffect("lose defender", EffectProperties{Outcome: OutcomeBenefit}, func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+			WithAbility(BlocksTrigger(FuncEffect("lose defender", EffectProperties{Outcome: OutcomeBenefit}, func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 				perm := g.FindPermanent(sourceID)
 				if perm != nil {
 					perm.RevokeBaseAttr(Defender)
@@ -303,7 +303,7 @@ func registerCreatures() {
 				NewTriggered(EvtBlockersDecl, false,
 					FuncEffect("gain banding until end of turn",
 						EffectProperties{Outcome: OutcomeBenefit},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							ce := TemporaryKeyword(sourceID, Banding)
 							ce.SetSourceID(sourceID)
 							g.AddContinuousEffect(ce)
@@ -389,7 +389,7 @@ func registerCreatures() {
 				NewTriggered(EvtCreatureDied, false, FuncEffect(
 					"change base P/T of all creatures that dealt damage to this to 0/2",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						sources := g.GetDamageSources(sourceID)
 						if sources == nil {
 							return nil
@@ -442,7 +442,7 @@ func registerCreatures() {
 			WithAbility(NewTriggered(EvtUpkeep, false, FuncEffect(
 				"sacrifice an Island or sacrifice this creature and it deals 6 damage to you",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					player := g.GetPlayer(controller)
 					if player == nil {
 						return nil
@@ -498,7 +498,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				FuncEffect("deal 2 damage to any target and 3 damage to self",
 					EffectProperties{Outcome: OutcomeDetriment, DamageValue: Fixed(2)},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						// Deal 2 damage to target
 						if len(targets) > 0 {
 							if perm := g.FindPermanent(targets[0]); perm != nil {
@@ -543,7 +543,7 @@ func registerCreatures() {
 			WithAbility(AttacksTrigger(FuncEffect(
 				"at end of combat, sacrifice this and deal 5 damage to you",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					g.RegisterDelayedTrigger(&DelayedTrigger{
 						EventType:  EvtEndOfCombat,
 						TargetID:   sourceID,
@@ -552,7 +552,7 @@ func registerCreatures() {
 						Effects: []Effect{FuncEffect(
 							"sacrifice and deal 5 damage",
 							EffectProperties{Outcome: OutcomeDetriment},
-							func(g GameMutator, srcID, ctrl uuid.UUID, targets []uuid.UUID) error {
+							func(g *Game, srcID, ctrl uuid.UUID, targets []uuid.UUID) error {
 								perm := g.FindPermanent(srcID)
 								if perm != nil {
 									g.Sacrifice(perm)
@@ -569,7 +569,7 @@ func registerCreatures() {
 			WithAbility(BlocksTrigger(FuncEffect(
 				"at end of combat, sacrifice this and deal 5 damage to you",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					g.RegisterDelayedTrigger(&DelayedTrigger{
 						EventType:  EvtEndOfCombat,
 						TargetID:   sourceID,
@@ -578,7 +578,7 @@ func registerCreatures() {
 						Effects: []Effect{FuncEffect(
 							"sacrifice and deal 5 damage",
 							EffectProperties{Outcome: OutcomeDetriment},
-							func(g GameMutator, srcID, ctrl uuid.UUID, targets []uuid.UUID) error {
+							func(g *Game, srcID, ctrl uuid.UUID, targets []uuid.UUID) error {
 								perm := g.FindPermanent(srcID)
 								if perm != nil {
 									g.Sacrifice(perm)
@@ -655,7 +655,7 @@ func registerCreatures() {
 				FuncEffect(
 					"this creature gets +4/-4 until end of turn and can attack this turn as though it didn't have defender",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						// +4/-4 boost
 						boost := TemporaryBoost(sourceID, 4, -4)
 						boost.SetSourceID(sourceID)
@@ -701,7 +701,7 @@ func registerCreatures() {
 				NewTriggered(EvtBlockersDecl, false,
 					FuncEffect("destroy green/white creature in combat with Abomination at end of combat",
 						EffectProperties{Outcome: OutcomeDetriment},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							isGreenOrWhite := func(p *Permanent) bool {
 								for _, c := range p.Colors() {
 									if c == Green || c == White {
@@ -803,7 +803,7 @@ func registerCreatures() {
 			WithAbility(NewTriggered(EvtUpkeep, false, FuncEffect(
 				"destroy Cosmic Horror unless you pay {3}{B}{B}{B}; if destroyed, deal 7 damage",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					if g.TryPayCostFromLands(controller, "{3}{B}{B}{B}") {
 						return nil // paid, keep the creature
 					}
@@ -833,7 +833,7 @@ func registerCreatures() {
 	Register("Cyclopean Mummy", func() Card {
 		return NewCreature("Cyclopean Mummy", "{1}{B}", 2, 1,
 			WithSubTypes("Zombie"),
-			WithAbility(NewTriggered(EvtCreatureDied, false, FuncEffect("exile this", EffectProperties{}, func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+			WithAbility(NewTriggered(EvtCreatureDied, false, FuncEffect("exile this", EffectProperties{}, func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 				p := g.GetPlayer(controller)
 				if p == nil {
 					return nil
@@ -922,7 +922,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				FuncEffect("choose a basic land type at next upkeep; gain that landwalk",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						g.RegisterDelayedTrigger(&DelayedTrigger{
 							EventType:     EvtUpkeep,
 							SourceID:      sourceID,
@@ -931,7 +931,7 @@ func registerCreatures() {
 							Effects: []Effect{FuncEffect(
 								"choose land type and gain landwalk",
 								EffectProperties{Outcome: OutcomeBenefit},
-								func(g GameMutator, srcID, ctrl uuid.UUID, _ []uuid.UUID) error {
+								func(g *Game, srcID, ctrl uuid.UUID, _ []uuid.UUID) error {
 									perm := g.FindPermanent(srcID)
 									if perm == nil {
 										return nil
@@ -1009,7 +1009,7 @@ func registerCreatures() {
 				NewTriggered(EvtBlockersDecl, false,
 					FuncEffect("destroy creature blocked by Infernal Medusa at end of combat",
 						EffectProperties{Outcome: OutcomeDetriment},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							for _, group := range g.CombatGroups() {
 								for _, bid := range group.BlockerIDs {
 									if bid == sourceID {
@@ -1034,7 +1034,7 @@ func registerCreatures() {
 				NewTriggered(EvtBlockersDecl, false,
 					FuncEffect("destroy non-Wall creatures blocking Infernal Medusa at end of combat",
 						EffectProperties{Outcome: OutcomeDetriment},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							for _, group := range g.CombatGroups() {
 								if group.AttackerID == sourceID {
 									for _, bid := range group.BlockerIDs {
@@ -1080,7 +1080,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				FuncEffect("gets -1/-0; put -0/-1 counter on target creature blocking or blocked by this",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						perm := g.FindPermanent(sourceID)
 						if perm == nil {
 							return nil
@@ -1156,7 +1156,7 @@ func registerCreatures() {
 			WithAbility(EntersBattlefieldTrigger(FuncEffect(
 				"sacrifice this creature unless you sacrifice two Swamps",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					player := g.GetPlayer(controller)
 					if player == nil {
 						return nil
@@ -1202,7 +1202,7 @@ func registerCreatures() {
 			WithAbility(NewTriggered(EvtDamageDealt, false, FuncEffect(
 				"poison counter",
 				EffectProperties{},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					// targets[0] = damaged player (passed by trigger system from EvtDamageDealt.TargetID)
 					if len(targets) == 0 {
 						return nil
@@ -1231,7 +1231,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				FuncEffect("redirect damage from target attacker to this creature",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
 						}
@@ -1256,7 +1256,7 @@ func registerCreatures() {
 				NewTriggered(EvtEndOfCombat, false,
 					FuncEffect("gain control of all creatures blocking this creature",
 						EffectProperties{Outcome: OutcomeBenefit},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							for _, group := range g.CombatGroups() {
 								if group.AttackerID == sourceID {
 									for _, bid := range group.BlockerIDs {
@@ -1402,7 +1402,7 @@ func registerCreatures() {
 			WithAbility(BeginningOfUpkeepTrigger(
 				FuncEffect("set base toughness to 1 plus creature cards in graveyard",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						p := g.GetPlayer(controller)
 						if p == nil {
 							return nil
@@ -1484,7 +1484,7 @@ func registerCreatures() {
 				NewTriggered(EvtCreatureDied, false, FuncEffect(
 					"deal 3+ damage to target creature",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						creatures := g.FilterBattlefield(IsCreature)
 						if len(creatures) == 0 {
 							return nil
@@ -1556,7 +1556,7 @@ func registerCreatures() {
 		return NewCreature("Firestorm Phoenix", "{4}{R}{R}", 3, 2,
 			WithSubTypes("Phoenix"),
 			WithKeyword(Flying),
-			WithAbility(NewTriggered(EvtCreatureDied, false, FuncEffect("return to hand instead of dying", EffectProperties{}, func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+			WithAbility(NewTriggered(EvtCreatureDied, false, FuncEffect("return to hand instead of dying", EffectProperties{}, func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 				p := g.GetPlayer(controller)
 				if p == nil {
 					return nil
@@ -1732,7 +1732,7 @@ func registerCreatures() {
 			WithAbility(BeginningOfUpkeepTrigger(
 				FuncEffect("add +1/+1 counter, pay or tap and deal damage",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						perm := g.FindPermanent(sourceID)
 						if perm == nil {
 							return nil
@@ -1817,7 +1817,7 @@ func registerCreatures() {
 				BlocksTrigger(
 					FuncEffect("blocked creature can't attack next turn",
 						EffectProperties{Outcome: OutcomeDetriment},
-						func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 							if len(targets) < 2 {
 								return nil
 							}
@@ -1894,7 +1894,7 @@ func registerCreatures() {
 				NewTriggered(EvtBlockersDecl, false,
 					FuncEffect("make creature in combat with this green indefinitely",
 						EffectProperties{},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							for _, group := range g.CombatGroups() {
 								if group.AttackerID == sourceID {
 									// Aisling is attacking — make all blockers green
@@ -2036,7 +2036,7 @@ func registerCreatures() {
 				NewTriggered(EvtBlockersDecl, true, FuncEffect(
 					"destroy target artifact defending player controls; assign no combat damage this turn",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						perm := g.FindPermanent(sourceID)
 						if perm == nil {
 							return nil
@@ -2095,7 +2095,7 @@ func registerCreatures() {
 			WithAbility(AttacksTrigger(FuncEffect(
 				"can't attack next turn",
 				EffectProperties{},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					// Prevent attacking on controller's next turn (2 turns from now in 2-player)
 					expiryTurn := g.CurrentTurn() + 2
 					ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, _ uuid.UUID) error {
@@ -2136,7 +2136,7 @@ func registerCreatures() {
 				NewTriggered(EvtSpellCast, false,
 					FuncEffect("deal 4 damage to opponent who cast second+ instant",
 						EffectProperties{Outcome: OutcomeDetriment, DamageValue: Fixed(4)},
-						func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 							if len(targets) < 2 {
 								return nil
 							}
@@ -2192,7 +2192,7 @@ func registerCreatures() {
 			WithSubTypes("Human"),
 			WithActivatedAbility(
 				// XXX: "bands with other creatures named Wolves of the Hunt" approximated as Banding
-				FuncEffect("create a 1/1 green Wolf creature token named Wolves of the Hunt with bands with other Wolves of the Hunt", EffectProperties{Outcome: OutcomeBenefit}, func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				FuncEffect("create a 1/1 green Wolf creature token named Wolves of the Hunt with bands with other Wolves of the Hunt", EffectProperties{Outcome: OutcomeBenefit}, func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					token := NewToken("Wolves of the Hunt", 1, 1, []CardType{TypeCreature}, []string{"Wolf"}, Banding)
 					token.SetOwner(controller)
 					perm := g.PutOnBattlefield(token, controller)
@@ -2291,7 +2291,7 @@ func registerCreatures() {
 		return NewCreature("Radjan Spirit", "{3}{G}", 3, 2,
 			WithSubTypes("Spirit"),
 			WithActivatedAbility(
-				FuncEffect("target creature loses flying until end of turn", EffectProperties{Outcome: OutcomeDetriment}, func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				FuncEffect("target creature loses flying until end of turn", EffectProperties{Outcome: OutcomeDetriment}, func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
@@ -2323,7 +2323,7 @@ func registerCreatures() {
 				FuncEffect(
 					"target creature loses all bands with other abilities until end of turn",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
 						}
@@ -2369,7 +2369,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				FuncEffect("gain control of target legendary creature while tapped",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
 						}
@@ -2565,7 +2565,7 @@ func registerCreatures() {
 			WithSubTypes("Zombie", "Wizard"),
 			WithSuperTypes(SuperLegendary),
 			WithActivatedAbility(
-				FuncEffect("create a 1/1 black and red Demon creature token named Minor Demon", EffectProperties{Outcome: OutcomeBenefit}, func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				FuncEffect("create a 1/1 black and red Demon creature token named Minor Demon", EffectProperties{Outcome: OutcomeBenefit}, func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					token := NewToken("Minor Demon", 1, 1, []CardType{TypeCreature}, []string{"Demon"})
 					token.SetOwner(controller)
 					perm := g.PutOnBattlefield(token, controller)
@@ -2626,7 +2626,7 @@ func registerCreatures() {
 			WithAbility(BeginningOfUpkeepTrigger(FuncEffect(
 				"choose flying, first strike, trample, or rampage 3",
 				EffectProperties{Outcome: OutcomeBenefit},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					perm := g.FindPermanent(sourceID)
 					if perm == nil {
 						return nil
@@ -2733,7 +2733,7 @@ func registerCreatures() {
 			WithAbility(BeginningOfUpkeepTrigger(FuncEffect(
 				"copy target creature's power and toughness until next upkeep",
 				EffectProperties{Outcome: OutcomeBenefit},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					// Choose target creature other than Halfdane
 					var candidates []*Permanent
 					for _, p := range g.FilterBattlefield(IsCreature) {
@@ -2786,7 +2786,7 @@ func registerCreatures() {
 			WithAbility(EntersBattlefieldTrigger(FuncEffect(
 				"create Sand Warrior tokens at next upkeep",
 				EffectProperties{Outcome: OutcomeBenefit},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					g.RegisterDelayedTrigger(&DelayedTrigger{
 						EventType:     EvtUpkeep,
 						SourceID:      sourceID,
@@ -2795,7 +2795,7 @@ func registerCreatures() {
 						Effects: []Effect{FuncEffect(
 							"create Sand Warrior tokens",
 							EffectProperties{Outcome: OutcomeBenefit},
-							func(g GameMutator, _ uuid.UUID, controller uuid.UUID, _ []uuid.UUID) error {
+							func(g *Game, _ uuid.UUID, controller uuid.UUID, _ []uuid.UUID) error {
 								x := g.CountBattlefield(And(ControlledBy(controller), IsLand))
 								colors := []Color{Red, Green, White}
 								for i := 0; i < x; i++ {
@@ -2815,7 +2815,7 @@ func registerCreatures() {
 			WithAbility(NewTriggered(EvtLeavesBattlefield, false, FuncEffect(
 				"exile all Sand Warriors",
 				EffectProperties{},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					sandWarriors := g.FilterBattlefield(HasSubType("Sand"))
 					for _, sw := range sandWarriors {
 						if sw.HasSubType("Warrior") {
@@ -2911,7 +2911,7 @@ func registerCreatures() {
 			WithAbility(NewTriggered(EvtBeginCombat, true, FuncEffect(
 				"your creatures don't tap to attack",
 				EffectProperties{Outcome: OutcomeBenefit},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					// Johan can't attack this combat
 					ce := FuncContinuousEffect(LayerAbility, EndOfCombat, func(g *Game, _ uuid.UUID) error {
 						perm := g.FindPermanent(sourceID)
@@ -2999,7 +2999,7 @@ func registerCreatures() {
 				FuncEffect(
 					"prevent all combat damage that would be dealt by target creature this turn",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
 						}
@@ -3100,7 +3100,7 @@ func registerCreatures() {
 			WithAbility(NewTriggered(EvtDamageDealt, false, FuncEffect(
 				"that player discards their hand",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					// targets[0] = damaged player (passed by trigger system from EvtDamageDealt.TargetID)
 					if len(targets) == 0 {
 						return nil
@@ -3244,7 +3244,7 @@ func registerCreatures() {
 				FuncEffect(
 					"add {C}",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						p := g.GetPlayer(controller)
 						if p != nil {
 							p.ManaPool().Add(Colorless, 1)
@@ -3259,7 +3259,7 @@ func registerCreatures() {
 				FuncEffect(
 					"prevent the next 1 damage that would be dealt to Rasputin this turn",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						g.AddPreventionShield(sourceID, 1)
 						return nil
 					},
@@ -3272,7 +3272,7 @@ func registerCreatures() {
 			WithAbility(NewTriggered(EvtUpkeep, false, FuncEffect(
 				"put a dream counter on Rasputin",
 				EffectProperties{},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					perm := g.FindPermanent(sourceID)
 					if perm == nil {
 						return nil
@@ -3332,7 +3332,7 @@ func registerCreatures() {
 			WithAbility(NewTriggered(EvtUpkeep, false, FuncEffect(
 				"pay {R}{R}{R} or tap and lose control",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					player := g.GetPlayer(controller)
 					if player != nil && player.ChooseMayAbility("pay {R}{R}{R}") && g.TryPayCostFromLands(controller, "{R}{R}{R}") {
 						return nil
@@ -3391,7 +3391,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				FuncEffect("gain control of target creature while tapped",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
 						}
@@ -3469,7 +3469,7 @@ func registerCreatures() {
 			WithAbility(EntersBattlefieldTrigger(FuncEffect(
 				"create Stangg Twin token",
 				EffectProperties{Outcome: OutcomeBenefit},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					token := NewToken("Stangg Twin", 3, 4, []CardType{TypeCreature}, []string{"Human", "Warrior"})
 					token.SetOwner(controller)
 					WithSuperTypes(SuperLegendary)(token)
@@ -3484,7 +3484,7 @@ func registerCreatures() {
 			WithAbility(NewTriggered(EvtLeavesBattlefield, false, FuncEffect(
 				"exile Stangg Twin",
 				EffectProperties{},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					twin := g.FindPermanent(twinID)
 					if twin != nil {
 						g.ExilePermanent(twin)
@@ -3498,7 +3498,7 @@ func registerCreatures() {
 			WithAbility(NewTriggered(EvtLeavesBattlefield, false, FuncEffect(
 				"sacrifice Stangg",
 				EffectProperties{},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					perm := g.FindPermanent(sourceID)
 					if perm != nil {
 						g.Sacrifice(perm)
@@ -3759,7 +3759,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				FuncEffect("change base toughness to 1 plus target creature's power",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
 						}

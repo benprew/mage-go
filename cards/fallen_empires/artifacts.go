@@ -38,7 +38,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				FuncEffect("gain 2 life or prevent 2 damage",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if g.ModeValue() == 0 {
 							p := g.GetPlayer(controller)
 							if p != nil {
@@ -72,7 +72,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				FuncEffect("draw two cards, then put a card from your hand on top of your library",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						p := g.GetPlayer(controller)
 						if p == nil {
 							return nil
@@ -173,7 +173,7 @@ func registerArtifacts() {
 				FuncEffect(
 					"discard a card at random, then draw two cards",
 					EffectProperties{Outcome: OutcomeBenefit, DrawCount: 2},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						p := g.GetPlayer(controller)
 						if p == nil {
 							return nil

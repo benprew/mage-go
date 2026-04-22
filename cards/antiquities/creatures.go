@@ -129,7 +129,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				FuncEffect("tap target artifact; it doesn't untap while ~ remains tapped",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
 						}
@@ -173,7 +173,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				FuncEffect("add {B} equal to sacrificed artifact's CMC",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						// CMC was stored by the custom cost's Pay method
 						p := g.GetPlayer(controller)
 						if p == nil {
@@ -201,7 +201,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				FuncEffect("animate target noncreature artifact until your next upkeep",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil
 						}
@@ -235,7 +235,7 @@ func registerCreatures() {
 			WithAbility(BeginningOfUpkeepTrigger(
 				FuncEffect("sacrifice an artifact or tap and take 2 damage",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						player := g.GetPlayer(controller)
 						if player == nil {
 							return nil
@@ -304,7 +304,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				FuncEffect("flip coin: win=draw, lose=counter own artifact spell",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						p := g.GetPlayer(controller)
 						if p == nil {
 							return nil
@@ -447,7 +447,7 @@ func registerCreatures() {
 				NewTriggered(EvtBeginCombat, false,
 					FuncEffect("gain banding until end of combat",
 						EffectProperties{},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							perm := g.FindPermanent(sourceID)
 							if perm == nil {
 								return nil
@@ -470,7 +470,7 @@ func registerCreatures() {
 				NewTriggered(EvtDeclaredBlocker, false,
 					FuncEffect("destroy blocking Wall at end of combat",
 						EffectProperties{Outcome: OutcomeDetriment},
-						func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 							if len(targets) == 0 {
 								return nil
 							}
@@ -527,7 +527,7 @@ func registerCreatures() {
 			WithAbility(AttacksTrigger(
 				FuncEffect("schedule counter removal at end of combat",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						g.RegisterDelayedTrigger(&DelayedTrigger{
 							EventType:  EvtEndOfCombat,
 							TargetID:   sourceID,
@@ -541,7 +541,7 @@ func registerCreatures() {
 			WithAbility(BlocksTrigger(
 				FuncEffect("schedule counter removal at end of combat",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						g.RegisterDelayedTrigger(&DelayedTrigger{
 							EventType:  EvtEndOfCombat,
 							TargetID:   sourceID,
@@ -623,7 +623,7 @@ func registerCreatures() {
 			WithAbility(BeginningOfUpkeepTrigger(
 				FuncEffect("discard a card or take 3 damage and tap",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						player := g.GetPlayer(controller)
 						if player == nil {
 							return nil
@@ -685,7 +685,7 @@ func registerCreatures() {
 			WithCardType(TypeArtifact),
 			WithAbility(ETBEffect(FuncEffect("choose form on ETB",
 				EffectProperties{},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					perm := g.FindPermanent(sourceID)
 					if perm == nil {
 						return nil
@@ -724,7 +724,7 @@ func registerCreatures() {
 			// ETB: choose a number 0-7
 			WithAbility(ETBEffect(FuncEffect("choose a number between 0 and 7",
 				EffectProperties{},
-				func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					perm := g.FindPermanent(sourceID)
 					if perm == nil {
 						return nil
@@ -743,7 +743,7 @@ func registerCreatures() {
 			WithAbility(BeginningOfUpkeepTrigger(
 				FuncEffect("you may choose a new number between 0 and 7",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						perm := g.FindPermanent(sourceID)
 						if perm == nil {
 							return nil
@@ -794,7 +794,7 @@ func registerCreatures() {
 				NewTriggered(EvtCreatureDied, false,
 					FuncEffect("add {C}{C}{C}{C}",
 						EffectProperties{},
-						func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 							p := g.GetPlayer(controller)
 							if p != nil {
 								p.ManaPool().Add(Colorless, 4)
@@ -824,7 +824,7 @@ func registerCreatures() {
 			WithAbility(BeginningOfUpkeepTrigger(
 				FuncEffect("remove +1/+1 counters and create Tetravite tokens",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						src := g.FindPermanent(sourceID)
 						if src == nil {
 							return nil
@@ -856,7 +856,7 @@ func registerCreatures() {
 			WithAbility(BeginningOfUpkeepTrigger(
 				FuncEffect("exile Tetravite tokens and add +1/+1 counters",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						src := g.FindPermanent(sourceID)
 						if src == nil {
 							return nil
@@ -915,7 +915,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				FuncEffect("-1/-1 and gain chosen keyword until end of turn",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						perm := g.FindPermanent(sourceID)
 						if perm == nil {
 							return nil

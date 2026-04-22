@@ -25,7 +25,7 @@ func DrawCards(amount ValueSource) Effect {
 	}
 }
 
-func (e *drawCardsTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *drawCardsTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	var targetPlayer Player
 	if len(targets) > 0 {
 		targetPlayer = g.GetPlayer(targets[0])
@@ -69,7 +69,7 @@ func DrawCardsActivePlayer(amount ValueSource) Effect {
 	}
 }
 
-func (e *drawCardsActivePlayerEffect) Apply(g GameMutator, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
+func (e *drawCardsActivePlayerEffect) Apply(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
 	active := g.ActivePlayerObj()
 	if active == nil {
 		return ErrPlayerNotFound
@@ -96,7 +96,7 @@ func DiscardCards(amount ValueSource) Effect {
 	return &discardCardsEffect{amount: amount}
 }
 
-func (e *discardCardsEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *discardCardsEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	var targetPlayer Player
 	if len(targets) > 0 {
 		targetPlayer = g.GetPlayer(targets[0])
@@ -135,7 +135,7 @@ func DiscardRandom(amount int) Effect {
 	return &discardRandomEffect{amount: amount}
 }
 
-func (e *discardRandomEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *discardRandomEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	var targetPlayer Player
 	if len(targets) > 0 {
 		targetPlayer = g.GetPlayer(targets[0])
@@ -173,7 +173,7 @@ func ReturnFromGraveyardToBattlefield() Effect {
 	return &returnFromGraveyardEffect{}
 }
 
-func (e *returnFromGraveyardEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *returnFromGraveyardEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return fmt.Errorf("no target for reanimate")
 	}
@@ -205,7 +205,7 @@ func ReturnSourceToHand() Effect {
 	return &returnSourceToHandEffect{}
 }
 
-func (e *returnSourceToHandEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *returnSourceToHandEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return ErrPlayerNotFound
@@ -231,7 +231,7 @@ func ReturnToHandTarget() Effect {
 	return &returnToHandTargetEffect{}
 }
 
-func (e *returnToHandTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *returnToHandTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return fmt.Errorf("no target for bounce")
 	}
@@ -268,7 +268,7 @@ func ReturnFromGraveyardToHandTarget() Effect {
 	return &returnFromGraveyardToHandTargetEffect{}
 }
 
-func (e *returnFromGraveyardToHandTargetEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *returnFromGraveyardToHandTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	if len(targets) == 0 {
 		return fmt.Errorf("no target for raise dead")
 	}
@@ -300,7 +300,7 @@ func SearchLibraryToHand() Effect {
 	return &searchLibraryEffect{}
 }
 
-func (e *searchLibraryEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *searchLibraryEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return ErrPlayerNotFound
@@ -342,7 +342,7 @@ func SearchLibraryToTop() Effect {
 	return &searchLibraryToTopEffect{}
 }
 
-func (e *searchLibraryToTopEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *searchLibraryToTopEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return ErrPlayerNotFound
@@ -384,7 +384,7 @@ func DiscardHandAndDraw(n int) Effect {
 	return &discardHandAndDrawEffect{drawCount: n}
 }
 
-func (e *discardHandAndDrawEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *discardHandAndDrawEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	for _, p := range g.AllPlayers() {
 		// Discard entire hand
 		hand := p.Hand()
@@ -416,7 +416,7 @@ func ShuffleHandAndGraveyardIntoLibraryAndDraw(n int) Effect {
 	return &shuffleHandAndGraveyardIntoLibraryAndDrawEffect{drawCount: n}
 }
 
-func (e *shuffleHandAndGraveyardIntoLibraryAndDrawEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *shuffleHandAndGraveyardIntoLibraryAndDrawEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	for _, p := range g.AllPlayers() {
 		// Move hand into library (copy slice since RemoveFromHand modifies it)
 		hand := append([]Card(nil), p.Hand()...)
@@ -453,7 +453,7 @@ func ShuffleLibrary() Effect {
 	return &shuffleLibraryEffect{}
 }
 
-func (e *shuffleLibraryEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *shuffleLibraryEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return ErrPlayerNotFound
@@ -476,7 +476,7 @@ func PutFromHandOntoBattlefield(filter CardFilter) Effect {
 	return &putFromHandOntoBattlefieldEffect{filter: filter}
 }
 
-func (e *putFromHandOntoBattlefieldEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *putFromHandOntoBattlefieldEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return ErrPlayerNotFound
@@ -520,7 +520,7 @@ func SearchLibraryToBattlefield(filter CardFilter) Effect {
 	return &searchLibraryToBattlefieldEffect{filter: filter}
 }
 
-func (e *searchLibraryToBattlefieldEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *searchLibraryToBattlefieldEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return ErrPlayerNotFound
@@ -572,7 +572,7 @@ func ChooseColor(reason string) Effect {
 	return &chooseColorEffect{reason: reason}
 }
 
-func (e *chooseColorEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *chooseColorEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return ErrPlayerNotFound

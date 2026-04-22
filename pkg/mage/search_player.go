@@ -22,7 +22,7 @@ func NewSearchPlayer(bp *BasePlayer) *SearchPlayer {
 
 // permanentValue scores a permanent for targeting priority. Higher = more valuable target.
 // Uses current P/T for creatures, CMC for everything else.
-func permanentValue(p *Permanent, g *Game) int {
+func permanentValue(p *Permanent, g GameReader) int {
 	if p.HasType(TypeCreature) {
 		return p.CurrentPower(g) + p.CurrentToughness(g)
 	}
@@ -165,7 +165,7 @@ func (sp *SearchPlayer) ChoosePermanent(candidates []*Permanent, reason string, 
 }
 
 // permValueForChoice scores a permanent for sacrifice/destroy choices.
-// Uses current P/T for creatures (via GameReader), CMC for non-creatures.
+// Uses current P/T for creatures (via *Game), CMC for non-creatures.
 func permValueForChoice(p *Permanent, g GameReader) int {
 	if p.HasType(TypeCreature) {
 		return p.CurrentPower(g) + p.CurrentToughness(g)

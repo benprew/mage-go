@@ -36,11 +36,11 @@ golangci-lint run --fix                    # lint (run after changes)
 
 ## Card Implementation Guide
 
-**Read `pkg/mage/doc.go` first** — comprehensive reference for the engine API: card constructors, effects, targets, filters, costs, abilities, continuous effects, layers, attrs, replacement effects, and GameMutator.
+**Read `pkg/mage/doc.go` first** — comprehensive reference for the engine API: card constructors, effects, targets, filters, costs, abilities, continuous effects, layers, attrs, replacement effects, and `*Game` methods.
 
 **Comprehensive Rules**: `docs/comprehensive-rules.md` (~9200 lines). Use `docs/comprehensive-rules-index.md` to find sections by line number, then read just that section.
 
-**Replacement effects**: See "Replacement Effect System" in `doc.go`. Most cards use `GameMutator` proxy methods (`AddPreventionShield`, `AddRegenerationShield`, etc.).
+**Replacement effects**: See "Replacement Effect System" in `doc.go`. Most cards use `*Game` proxy methods (`AddPreventionShield`, `AddRegenerationShield`, etc.).
 
 ## Set Implementation
 

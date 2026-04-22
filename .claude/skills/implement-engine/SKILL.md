@@ -101,7 +101,7 @@ Implement the minimum engine changes needed. Common patterns:
 1. Add the replacement type in `pkg/mage/replacement.go`
 2. Add the action type in `pkg/mage/action.go` if needed
 3. Wire into `ApplyReplacements` pipeline
-4. Add GameMutator proxy method if cards need a simple API
+4. Add *Game proxy method if cards need a simple API
 
 ### New Triggered Ability Pattern
 1. Add the event type in `pkg/mage/events.go` if needed

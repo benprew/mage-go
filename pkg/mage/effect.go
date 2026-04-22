@@ -9,7 +9,7 @@ import (
 
 // Effect represents a one-shot effect that resolves.
 type Effect interface {
-	Apply(g GameMutator, sourceID uuid.UUID, controller uuid.UUID, targets []uuid.UUID) error
+	Apply(g *Game, sourceID uuid.UUID, controller uuid.UUID, targets []uuid.UUID) error
 	Text() string
 	Properties() EffectProperties
 }
@@ -19,18 +19,18 @@ type Effect interface {
 type funcEffect struct {
 	text  string
 	props EffectProperties
-	fn    func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error
+	fn    func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error
 }
 
 // FuncEffect creates an Effect from an anonymous function. This is ideal for
 // card-specific effects that are used by only one card and don't warrant a
 // dedicated type. The text parameter is used for Text() (rules text display).
 // The props parameter allows callers to declare AI-visible properties (outcome, damage, etc.).
-func FuncEffect(text string, props EffectProperties, fn func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error) Effect {
+func FuncEffect(text string, props EffectProperties, fn func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error) Effect {
 	return &funcEffect{text: text, props: props, fn: fn}
 }
 
-func (e *funcEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *funcEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	return e.fn(g, sourceID, controller, targets)
 }
 
@@ -48,7 +48,7 @@ func CompositeEffects(text string, effects ...Effect) Effect {
 	return &compositeEffect{effects: effects, text: text}
 }
 
-func (e *compositeEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func (e *compositeEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	for _, eff := range e.effects {
 		if err := eff.Apply(g, sourceID, controller, targets); err != nil {
 			return err
@@ -112,14 +112,14 @@ func SpellOutcome(effects []Effect) Outcome {
 // --- ValueSource, PlayerSelector, PermanentSelector ---
 
 // ValueSource resolves a dynamic integer value for an effect.
-// It receives a GameReader (read-only view) since value resolution never mutates state.
+// It receives a *Game (read-only view) since value resolution never mutates state.
 type ValueSource interface {
 	Resolve(g GameReader, sourceID, controller uuid.UUID) int
 	Text() string
 }
 
 // PlayerSelector picks one or more players for an effect.
-// It receives a GameReader (read-only view) since player selection never mutates state.
+// It receives a *Game (read-only view) since player selection never mutates state.
 type PlayerSelector interface {
 	Select(g GameReader, sourceID, controller uuid.UUID, targets []uuid.UUID) []uuid.UUID
 	Text() string

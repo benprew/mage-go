@@ -7,7 +7,7 @@ import (
 )
 
 // ThreatPerMana returns a permanent's threat-per-mana-spent ratio.
-// Uses base stats only. Prefer ThreatPerManaInGame when a GameReader is available.
+// Uses base stats only. Prefer ThreatPerManaInGame when a *Game is available.
 func ThreatPerMana(perm *mage.Permanent) float64 {
 	cmc := perm.Card.ManaCost().CMC()
 	if cmc == 0 {
@@ -18,7 +18,7 @@ func ThreatPerMana(perm *mage.Permanent) float64 {
 
 // ThreatPerManaInGame returns a permanent's threat-per-mana-spent ratio,
 // using CurrentPower/CurrentToughness for accurate continuous-effect-aware scoring.
-func ThreatPerManaInGame(perm *mage.Permanent, g mage.GameReader) float64 {
+func ThreatPerManaInGame(perm *mage.Permanent, g *mage.Game) float64 {
 	cmc := perm.Card.ManaCost().CMC()
 	if cmc == 0 {
 		return 0

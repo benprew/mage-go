@@ -16,7 +16,7 @@ type ReplacementEffect interface {
 	Matches(Action, GameReader) bool
 	// Replace transforms the action. Return nil to fully prevent it.
 	// The returned action may be a different type (e.g. redirect damage).
-	Replace(Action, GameMutator) Action
+	Replace(Action, *Game) Action
 	// SourceID returns the permanent/spell that created this replacement.
 	SourceID() uuid.UUID
 	// IsActive returns true if this replacement is still valid.

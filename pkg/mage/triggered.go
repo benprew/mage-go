@@ -147,7 +147,7 @@ func ChooseOpponentOnETB() *GenericTriggered {
 	return EntersBattlefieldTrigger(FuncEffect(
 		"choose an opponent",
 		EffectProperties{},
-		func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+		func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 			perm := g.FindPermanent(sourceID)
 			if perm == nil {
 				return nil
@@ -334,7 +334,7 @@ func SacrificeAtUpkeepUnlessPay(cost string) *GenericTriggered {
 	return NewTriggered(EvtUpkeep, false, FuncEffect(
 		"Sacrifice unless pay "+cost,
 		EffectProperties{},
-		func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+		func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 			if cost != "" && g.TryPayCostFromLands(controller, cost) {
 				return nil // paid, keep the permanent
 			}
@@ -369,7 +369,7 @@ func RampageTrigger(n int) *GenericTriggered {
 	return NewTriggered(EvtBlockersDecl, false, FuncEffect(
 		fmt.Sprintf("rampage %d", n),
 		EffectProperties{},
-		func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+		func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 			// Count how many creatures are blocking the source
 			blockerCount := 0
 			for _, group := range g.CombatGroups() {

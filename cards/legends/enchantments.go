@@ -77,7 +77,7 @@ func registerEnchantments() {
 				NewTriggered(EvtDamageDealt, false,
 					FuncEffect("deal damage to enchanted creature's controller",
 						EffectProperties{Outcome: OutcomeDetriment},
-						func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 							amount := g.EventAmount()
 							if amount <= 0 {
 								return nil
@@ -118,7 +118,7 @@ func registerEnchantments() {
 				WhenAttachedBecomesTappedTrigger(
 					FuncEffect("destroy enchanted land",
 						EffectProperties{Outcome: OutcomeDetriment},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							src := g.FindPermanent(sourceID)
 							if src == nil || src.AttachedTo == uuid.Nil {
 								return nil
@@ -164,7 +164,7 @@ func registerEnchantments() {
 			WithAbility(EntersBattlefieldTrigger(
 				FuncEffect("tap enchanted creature and add pupa counters",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						src := g.FindPermanent(sourceID)
 						if src == nil || src.AttachedTo == uuid.Nil {
 							return nil
@@ -189,7 +189,7 @@ func registerEnchantments() {
 			WithAbility(BeginningOfUpkeepTrigger(
 				FuncEffect("remove pupa counter or sacrifice and boost",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						src := g.FindPermanent(sourceID)
 						if src == nil {
 							return nil
@@ -275,7 +275,7 @@ func registerEnchantments() {
 			WithAbility(EntersBattlefieldTrigger(
 				FuncEffect("add intervention counters",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						perm := g.FindPermanent(sourceID)
 						if perm != nil {
 							perm.AddCounter(Intervention, 2)
@@ -286,7 +286,7 @@ func registerEnchantments() {
 			WithAbility(BeginningOfUpkeepTrigger(
 				FuncEffect("remove intervention counter",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						perm := g.FindPermanent(sourceID)
 						if perm == nil {
 							return nil
@@ -319,7 +319,7 @@ func registerEnchantments() {
 			WithActivatedAbility(
 				FuncEffect("change enchanted creature's color",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						src := g.FindPermanent(sourceID)
 						if src == nil || src.AttachedTo == uuid.Nil {
 							return nil
@@ -456,7 +456,7 @@ func registerEnchantments() {
 			WithActivatedAbility(
 				FuncEffect("prevent next damage from a black or red source of your choice",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						// Oracle: "a black or red source of your choice" — player picks a
 						// specific black or red permanent; shield prevents next damage from it.
 						p := g.GetPlayer(controller)
@@ -504,7 +504,7 @@ func registerEnchantments() {
 			WithActivatedAbility(
 				FuncEffect("sacrifice Swamp, regenerate target black creature",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						// Sacrifice a Swamp as cost
 						var swamps []*Permanent
 						swamps = append(swamps, g.FilterBattlefield(And(IsLand, HasSubType("Swamp"), ControlledBy(controller)))...)
@@ -560,7 +560,7 @@ func registerEnchantments() {
 				NewTriggered(EvtSpellCast, false,
 					FuncEffect("counter instant unless pay CMC",
 						EffectProperties{Outcome: OutcomeDetriment},
-						func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 							if len(targets) == 0 {
 								return nil
 							}
@@ -597,7 +597,7 @@ func registerEnchantments() {
 				NewTriggered(EvtBlockersDecl, false,
 					FuncEffect("destroy creature with toughness 3 or less at end of combat",
 						EffectProperties{Outcome: OutcomeDetriment},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							src := g.FindPermanent(sourceID)
 							if src == nil || src.AttachedTo == uuid.Nil {
 								return nil
@@ -626,7 +626,7 @@ func registerEnchantments() {
 												Effects: []Effect{FuncEffect(
 													"put +1/+1 counter if creature was destroyed",
 													EffectProperties{Outcome: OutcomeBenefit},
-													func(g GameMutator, srcID, ctrl uuid.UUID, targets []uuid.UUID) error {
+													func(g *Game, srcID, ctrl uuid.UUID, targets []uuid.UUID) error {
 														if len(targets) == 0 {
 															return nil
 														}
@@ -667,7 +667,7 @@ func registerEnchantments() {
 												Effects: []Effect{FuncEffect(
 													"put +1/+1 counter if creature was destroyed",
 													EffectProperties{Outcome: OutcomeBenefit},
-													func(g GameMutator, srcID, ctrl uuid.UUID, targets []uuid.UUID) error {
+													func(g *Game, srcID, ctrl uuid.UUID, targets []uuid.UUID) error {
 														if len(targets) == 0 {
 															return nil
 														}
@@ -727,7 +727,7 @@ func registerEnchantments() {
 				NewTriggered(EvtSpellCast, false,
 					FuncEffect("counter creature unless pay CMC",
 						EffectProperties{Outcome: OutcomeDetriment},
-						func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 							if len(targets) == 0 {
 								return nil
 							}
@@ -810,7 +810,7 @@ func registerEnchantments() {
 				BeginningOfUpkeepTrigger(
 					FuncEffect("search for up to three basic land cards",
 						EffectProperties{Outcome: OutcomeBenefit},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							opp := g.GetOpponent(controller)
 							if opp == nil {
 								return nil
@@ -866,7 +866,7 @@ func registerEnchantments() {
 			WithActivatedAbility(
 				FuncEffect("deal 2 if discarded land",
 					EffectProperties{Outcome: OutcomeDetriment, DamageValue: Fixed(2)},
-					func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						// The discard cost already discarded; we check if it was a land
 						// XXX: simplified - always deals 2 damage since we can't check discarded card type
 						if len(targets) == 0 {
@@ -937,7 +937,7 @@ func registerEnchantments() {
 				NewTriggered(EvtSpellCast, false,
 					FuncEffect("counter unless pay 3",
 						EffectProperties{Outcome: OutcomeDetriment},
-						func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 							if len(targets) == 0 {
 								return nil
 							}
@@ -966,7 +966,7 @@ func registerEnchantments() {
 				NewTriggered(EvtSpellCast, false,
 					FuncEffect("counter enchantment spell",
 						EffectProperties{Outcome: OutcomeDetriment},
-						func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 							if len(targets) == 0 {
 								return nil
 							}
@@ -994,7 +994,7 @@ func registerEnchantments() {
 				NewTriggered(EvtCreatureDied, false,
 					FuncEffect("return enchanted creature to hand",
 						EffectProperties{Outcome: OutcomeBenefit},
-						func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 							if len(targets) == 0 {
 								return nil
 							}
@@ -1143,7 +1143,7 @@ func registerEnchantments() {
 				NewTriggered(EvtDamageDealt, false,
 					FuncEffect("gain life equal to damage dealt",
 						EffectProperties{Outcome: OutcomeBenefit},
-						func(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 							amount := g.EventAmount()
 							if amount <= 0 {
 								return nil
@@ -1175,7 +1175,7 @@ func registerEnchantments() {
 				NewTriggered(EvtTapped, false,
 					FuncEffect("put -0/-2 counter on enchanted creature",
 						EffectProperties{Outcome: OutcomeDetriment},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							src := g.FindPermanent(sourceID)
 							if src == nil || src.AttachedTo == uuid.Nil {
 								return nil
@@ -1206,7 +1206,7 @@ func registerEnchantments() {
 				BeginningOfEachUpkeepTrigger(
 					FuncEffect("gain 1 life if you control a Plains",
 						EffectProperties{Outcome: OutcomeBenefit},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							activePlayer := g.ActivePlayerObj()
 							if activePlayer == nil {
 								return nil
@@ -1253,7 +1253,7 @@ func registerEnchantments() {
 			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
 				FuncEffect("put -0/-1 counter on enchanted creature",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						src := g.FindPermanent(sourceID)
 						if src == nil || src.AttachedTo == uuid.Nil {
 							return nil
@@ -1278,7 +1278,7 @@ func registerEnchantments() {
 				BeginningOfEachUpkeepTrigger(
 					FuncEffect("destroy nonartifact creature",
 						EffectProperties{Outcome: OutcomeDetriment},
-						func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							activePlayer := g.ActivePlayerObj()
 							if activePlayer == nil {
 								return nil
@@ -1352,7 +1352,7 @@ func registerEnchantments() {
 			WithAbility(EntersBattlefieldTrigger(
 				FuncEffect("tap creature and add sleep counters",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						src := g.FindPermanent(sourceID)
 						if src == nil || src.AttachedTo == uuid.Nil {
 							return nil
@@ -1378,7 +1378,7 @@ func registerEnchantments() {
 			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
 				FuncEffect("remove sleep counter",
 					EffectProperties{},
-					func(g GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						src := g.FindPermanent(sourceID)
 						if src == nil || src.AttachedTo == uuid.Nil {
 							return nil
@@ -1418,7 +1418,7 @@ func (r *blackOrRedPreventionReplacement) Matches(a Action, g GameReader) bool {
 	return act.ActionSource() == r.chosenSourceID
 }
 
-func (r *blackOrRedPreventionReplacement) Replace(a Action, g GameMutator) Action {
+func (r *blackOrRedPreventionReplacement) Replace(a Action, g *Game) Action {
 	r.consumed = true
 	return nil
 }

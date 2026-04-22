@@ -628,7 +628,7 @@ func TestAbilityQuality_ExpensiveDraw(t *testing.T) {
 func TestAbilityQuality_ExpensivePump(t *testing.T) {
 	ab := mage.NewActivatedAbility(
 		mage.FuncEffect("pump", mage.EffectProperties{Outcome: mage.OutcomeBenefit},
-			func(g mage.GameMutator, s, c uuid.UUID, t []uuid.UUID) error { return nil }),
+			func(g *mage.Game, s, c uuid.UUID, t []uuid.UUID) error { return nil }),
 		mage.ManaCostOf("{5}"),
 	)
 	got := eval.AbilityQuality(ab)
@@ -640,7 +640,7 @@ func TestAbilityQuality_ExpensivePump(t *testing.T) {
 func TestAbilityQuality_CheapBenefit(t *testing.T) {
 	ab := mage.NewActivatedAbility(
 		mage.FuncEffect("buff", mage.EffectProperties{Outcome: mage.OutcomeBenefit},
-			func(g mage.GameMutator, s, c uuid.UUID, t []uuid.UUID) error { return nil }),
+			func(g *mage.Game, s, c uuid.UUID, t []uuid.UUID) error { return nil }),
 		mage.ManaCostOf("{1}"),
 	)
 	got := eval.AbilityQuality(ab)
@@ -652,7 +652,7 @@ func TestAbilityQuality_CheapBenefit(t *testing.T) {
 func TestAbilityQuality_FreeTapAbility(t *testing.T) {
 	ab := mage.NewActivatedAbility(
 		mage.FuncEffect("tap effect", mage.EffectProperties{},
-			func(g mage.GameMutator, s, c uuid.UUID, t []uuid.UUID) error { return nil }),
+			func(g *mage.Game, s, c uuid.UUID, t []uuid.UUID) error { return nil }),
 		mage.TapSourceCost(),
 	)
 	got := eval.AbilityQuality(ab)
@@ -666,7 +666,7 @@ func TestAbilityQuality_PingerBeatsPump(t *testing.T) {
 		mage.WithTarget(mage.TargetAnyTarget()))
 	pump := mage.NewActivatedAbility(
 		mage.FuncEffect("pump", mage.EffectProperties{Outcome: mage.OutcomeBenefit},
-			func(g mage.GameMutator, s, c uuid.UUID, t []uuid.UUID) error { return nil }),
+			func(g *mage.Game, s, c uuid.UUID, t []uuid.UUID) error { return nil }),
 		mage.ManaCostOf("{5}"),
 	)
 
