@@ -29,7 +29,7 @@ func (e *drawCardsTargetEffect) EffectText() string {
 	if _, ok := e.amount.(xValue); ok {
 		return "target player draws X cards"
 	}
-	return fmt.Sprintf("target player draws %d card(s)", e.amount.Resolve(nil, uuid.Nil, uuid.Nil))
+	return fmt.Sprintf("target player draws %d card(s)", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil))
 }
 func (e *drawCardsTargetEffect) EffectProps() EffectProperties { return e.props }
 
@@ -70,7 +70,7 @@ func (e *discardCardsEffect) EffectText() string {
 	if _, ok := e.amount.(xValue); ok {
 		return "target player discards X cards"
 	}
-	return fmt.Sprintf("target player discards %d card(s)", e.amount.Resolve(nil, uuid.Nil, uuid.Nil))
+	return fmt.Sprintf("target player discards %d card(s)", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil))
 }
 func (e *discardCardsEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
@@ -295,7 +295,7 @@ func execDrawCardsTarget(ctx *EffectContext, e *drawCardsTargetEffect) error {
 	if targetPlayer == nil {
 		return ErrPlayerNotFound
 	}
-	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller)
+	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
 	for i := 0; i < amount; i++ {
 		ctx.Game.PlayerDrawCard(targetPlayer)
 	}
@@ -307,7 +307,7 @@ func execDrawCardsActivePlayer(ctx *EffectContext, e *drawCardsActivePlayerEffec
 	if active == nil {
 		return ErrPlayerNotFound
 	}
-	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, active.PlayerID())
+	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, active.PlayerID(), ctx.Targets)
 	for i := 0; i < amount; i++ {
 		ctx.Game.PlayerDrawCard(active)
 	}
@@ -325,7 +325,7 @@ func execDiscardCards(ctx *EffectContext, e *discardCardsEffect) error {
 	if targetPlayer == nil {
 		return nil
 	}
-	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller)
+	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
 	chosen := targetPlayer.ChooseCardsFromHand(amount, "discard", ctx.Game)
 	for _, card := range chosen {
 		targetPlayer.DiscardCard(card.ID())

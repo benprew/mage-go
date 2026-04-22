@@ -107,7 +107,7 @@ func execDealDamageToGathered(ctx *EffectContext, e *DealDamageToGatheredData) e
 	if id == uuid.Nil {
 		return nil
 	}
-	amount := e.Amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller)
+	amount := e.Amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
 	if amount <= 0 {
 		return nil
 	}
@@ -153,7 +153,7 @@ func execPreventDamageToGathered(ctx *EffectContext, e *PreventDamageToGatheredD
 	if id == uuid.Nil {
 		return nil
 	}
-	amount := e.Amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller)
+	amount := e.Amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
 	ctx.Game.AddPreventionShield(id, amount)
 	return nil
 }
@@ -206,7 +206,7 @@ func execAddCountersToGathered(ctx *EffectContext, e *AddCountersToGatheredData)
 	if perm == nil {
 		return nil
 	}
-	amount := e.Amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller)
+	amount := e.Amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
 	if amount > 0 {
 		perm.AddCounter(e.CT, amount)
 	}
@@ -423,8 +423,8 @@ func execBoostGatheredUntilEOT(ctx *EffectContext, e *BoostGatheredUntilEOTData)
 	if perm == nil {
 		return nil
 	}
-	p := e.Power.Resolve(ctx.Game, ctx.SourceID, ctx.Controller)
-	t := e.Toughness.Resolve(ctx.Game, ctx.SourceID, ctx.Controller)
+	p := e.Power.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	t := e.Toughness.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
 	eff := TemporaryBoost(perm.ID(), p, t)
 	eff.SetSourceID(ctx.SourceID)
 	ctx.Game.AddContinuousEffect(eff)

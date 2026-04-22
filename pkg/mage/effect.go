@@ -113,8 +113,9 @@ func SpellOutcome(effects []Effect) Outcome {
 
 // ValueSource resolves a dynamic integer value for an effect.
 // It receives a *Game (read-only view) since value resolution never mutates state.
+// targets contains the resolved target IDs from the spell/ability context.
 type ValueSource interface {
-	Resolve(g GameReader, sourceID, controller uuid.UUID) int
+	Resolve(g GameReader, sourceID, controller uuid.UUID, targets []uuid.UUID) int
 	Text() string
 }
 
@@ -137,16 +138,16 @@ const (
 type fixedValue struct{ n int }
 
 // Fixed creates a ValueSource that always returns the constant n.
-func Fixed(n int) ValueSource                            { return fixedValue{n: n} }
-func (v fixedValue) Resolve(_ GameReader, _, _ uuid.UUID) int { return v.n }
+func Fixed(n int) ValueSource                                            { return fixedValue{n: n} }
+func (v fixedValue) Resolve(_ GameReader, _, _ uuid.UUID, _ []uuid.UUID) int { return v.n }
 func (v fixedValue) Text() string                        { return fmt.Sprintf("%d", v.n) }
 
 // xValue is a ValueSource that reads g.CurrentX.
 type xValue struct{}
 
 // XValue creates a ValueSource that reads the X value from the current spell/ability (g.CurrentX).
-func XValue() ValueSource                            { return xValue{} }
-func (v xValue) Resolve(g GameReader, _, _ uuid.UUID) int { return g.XValue() }
+func XValue() ValueSource                                            { return xValue{} }
+func (v xValue) Resolve(g GameReader, _, _ uuid.UUID, _ []uuid.UUID) int { return g.XValue() }
 func (v xValue) Text() string                        { return "X" }
 
 // mulValue multiplies two ValueSources.
@@ -156,8 +157,8 @@ type mulValue struct {
 
 // Mul creates a ValueSource that returns a.Resolve() * b.Resolve().
 func Mul(a, b ValueSource) ValueSource { return mulValue{a: a, b: b} }
-func (v mulValue) Resolve(g GameReader, sourceID, controller uuid.UUID) int {
-	return v.a.Resolve(g, sourceID, controller) * v.b.Resolve(g, sourceID, controller)
+func (v mulValue) Resolve(g GameReader, sourceID, controller uuid.UUID, targets []uuid.UUID) int {
+	return v.a.Resolve(g, sourceID, controller, targets) * v.b.Resolve(g, sourceID, controller, targets)
 }
 func (v mulValue) Text() string { return v.a.Text() + " * " + v.b.Text() }
 
@@ -168,8 +169,8 @@ type addValue struct {
 
 // Add creates a ValueSource that returns a.Resolve() + b.Resolve().
 func Add(a, b ValueSource) ValueSource { return addValue{a: a, b: b} }
-func (v addValue) Resolve(g GameReader, sourceID, controller uuid.UUID) int {
-	return v.a.Resolve(g, sourceID, controller) + v.b.Resolve(g, sourceID, controller)
+func (v addValue) Resolve(g GameReader, sourceID, controller uuid.UUID, targets []uuid.UUID) int {
+	return v.a.Resolve(g, sourceID, controller, targets) + v.b.Resolve(g, sourceID, controller, targets)
 }
 func (v addValue) Text() string { return v.a.Text() + " + " + v.b.Text() }
 
@@ -186,12 +187,12 @@ type countBattlefieldValue struct {
 func CountBattlefield(who PlayerSelector, f PermanentFilter) ValueSource {
 	return countBattlefieldValue{who: who, filter: f}
 }
-func (v countBattlefieldValue) Resolve(g GameReader, sourceID, controller uuid.UUID) int {
+func (v countBattlefieldValue) Resolve(g GameReader, sourceID, controller uuid.UUID, targets []uuid.UUID) int {
 	if v.who == nil {
 		return g.CountBattlefield(v.filter)
 	}
 	total := 0
-	for _, pid := range v.who.Select(g, sourceID, controller, nil) {
+	for _, pid := range v.who.Select(g, sourceID, controller, targets) {
 		total += g.CountBattlefield(And(v.filter, ControlledBy(pid)))
 	}
 	return total
@@ -219,9 +220,9 @@ type countZoneValue struct {
 func CountZone(zone Zone, who PlayerSelector, f CardFilter) ValueSource {
 	return countZoneValue{zone: zone, who: who, filter: f}
 }
-func (v countZoneValue) Resolve(g GameReader, sourceID, controller uuid.UUID) int {
+func (v countZoneValue) Resolve(g GameReader, sourceID, controller uuid.UUID, targets []uuid.UUID) int {
 	total := 0
-	for _, pid := range v.who.Select(g, sourceID, controller, nil) {
+	for _, pid := range v.who.Select(g, sourceID, controller, targets) {
 		p := g.GetPlayer(pid)
 		if p == nil {
 			continue

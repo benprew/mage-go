@@ -23,7 +23,7 @@ func (e *addCountersEffect) EffectText() string {
 	if _, ok := e.amount.(xValue); ok {
 		return fmt.Sprintf("put X %s counters on it", e.ct)
 	}
-	n := e.amount.Resolve(nil, uuid.Nil, uuid.Nil)
+	n := e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil)
 	if e.target == SelectSource {
 		return fmt.Sprintf("put %d %s counter(s) on it", n, e.ct)
 	}
@@ -188,8 +188,8 @@ func (e *boostUntilEndOfTurnEffect) EffectText() string {
 	if pIsX || tIsX {
 		return "Target creature gets +X/+0 until end of turn"
 	}
-	p := e.power.Resolve(nil, uuid.Nil, uuid.Nil)
-	t := e.toughness.Resolve(nil, uuid.Nil, uuid.Nil)
+	p := e.power.Resolve(nil, uuid.Nil, uuid.Nil, nil)
+	t := e.toughness.Resolve(nil, uuid.Nil, uuid.Nil, nil)
 	if e.target == SelectSource {
 		return fmt.Sprintf("this creature gets +%d/+%d until end of turn", p, t)
 	}
@@ -198,10 +198,10 @@ func (e *boostUntilEndOfTurnEffect) EffectText() string {
 func (e *boostUntilEndOfTurnEffect) EffectProps() EffectProperties {
 	var pb, tb int
 	if _, ok := e.power.(xValue); !ok {
-		pb = e.power.Resolve(nil, uuid.Nil, uuid.Nil)
+		pb = e.power.Resolve(nil, uuid.Nil, uuid.Nil, nil)
 	}
 	if _, ok := e.toughness.(xValue); !ok {
-		tb = e.toughness.Resolve(nil, uuid.Nil, uuid.Nil)
+		tb = e.toughness.Resolve(nil, uuid.Nil, uuid.Nil, nil)
 	}
 	return EffectProperties{Outcome: OutcomeBenefit, PowerBoost: pb, ToughnessBoost: tb}
 }
@@ -414,7 +414,7 @@ func execAddCounters(ctx *EffectContext, e *addCountersEffect) error {
 	if perm == nil {
 		return nil
 	}
-	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller)
+	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
 	if amount > 0 {
 		perm.AddCounter(e.ct, amount)
 	}
@@ -565,8 +565,8 @@ func execBoostUntilEndOfTurn(ctx *EffectContext, e *boostUntilEndOfTurnEffect) e
 	if perm == nil {
 		return nil
 	}
-	p := e.power.Resolve(ctx.Game, ctx.SourceID, ctx.Controller)
-	t := e.toughness.Resolve(ctx.Game, ctx.SourceID, ctx.Controller)
+	p := e.power.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	t := e.toughness.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
 	eff := TemporaryBoost(perm.ID(), p, t)
 	eff.SetSourceID(ctx.SourceID)
 	ctx.Game.AddContinuousEffect(eff)
@@ -576,8 +576,8 @@ func execBoostUntilEndOfTurn(ctx *EffectContext, e *boostUntilEndOfTurnEffect) e
 
 func execBoostMatchingUntilEndOfTurn(ctx *EffectContext, e *boostMatchingUntilEndOfTurnEffect) error {
 	for _, perm := range ctx.Game.FilterBattlefield(And(ControlledBy(ctx.Controller), IsCreature, e.predicate)) {
-		p := e.power.Resolve(ctx.Game, ctx.SourceID, ctx.Controller)
-		t := e.toughness.Resolve(ctx.Game, ctx.SourceID, ctx.Controller)
+		p := e.power.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+		t := e.toughness.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
 		eff := TemporaryBoost(perm.ID(), p, t)
 		eff.SetSourceID(ctx.SourceID)
 		ctx.Game.AddContinuousEffect(eff)
@@ -588,8 +588,8 @@ func execBoostMatchingUntilEndOfTurn(ctx *EffectContext, e *boostMatchingUntilEn
 
 func execBoostAllMatchingUntilEndOfTurn(ctx *EffectContext, e *boostAllMatchingUntilEndOfTurnEffect) error {
 	for _, perm := range ctx.Game.FilterBattlefield(And(IsCreature, e.predicate)) {
-		p := e.power.Resolve(ctx.Game, ctx.SourceID, ctx.Controller)
-		t := e.toughness.Resolve(ctx.Game, ctx.SourceID, ctx.Controller)
+		p := e.power.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+		t := e.toughness.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
 		eff := TemporaryBoost(perm.ID(), p, t)
 		eff.SetSourceID(ctx.SourceID)
 		ctx.Game.AddContinuousEffect(eff)

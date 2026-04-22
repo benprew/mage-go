@@ -358,7 +358,7 @@ func expandNonXSpellMoves(p mage.Player, g *mage.Game, card mage.Card, xValue, m
 				}
 				for _, e := range sa.Effects() {
 					if dv := e.Properties().DamageValue; dv != nil {
-						dmg := dv.Resolve(g, card.ID(), playerID)
+						dmg := dv.Resolve(g, card.ID(), playerID, nil)
 						// For X spells, use the X value as estimated damage
 						if xValue > 0 {
 							dmg = xValue

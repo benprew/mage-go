@@ -301,7 +301,7 @@ func execGainLifeTarget(ctx *EffectContext, e *gainLifeTargetEffect) error {
 	if targetPlayer == nil {
 		return ErrPlayerNotFound
 	}
-	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller)
+	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
 	ctx.Game.PlayerGainLife(targetPlayer, amount)
 	if !ctx.Game.IsLichActive(targetPlayer.PlayerID()) {
 		ctx.Game.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: targetPlayer.PlayerID(), Amount: amount})
@@ -323,7 +323,7 @@ func execDealDamage(ctx *EffectContext, e *dealDamageEffect) error {
 	if len(ctx.Targets) == 0 {
 		return fmt.Errorf("no target for damage")
 	}
-	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller)
+	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
 	if amount <= 0 {
 		return nil
 	}
@@ -351,7 +351,7 @@ func execDealDamage(ctx *EffectContext, e *dealDamageEffect) error {
 }
 
 func execDealDamageToAllCreatures(ctx *EffectContext, e *dealDamageToAllCreaturesEffect) error {
-	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller)
+	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
 	if amount <= 0 {
 		return nil
 	}
@@ -366,7 +366,7 @@ func execDealDamageToAllCreatures(ctx *EffectContext, e *dealDamageToAllCreature
 }
 
 func execDealDamageToPlayers(ctx *EffectContext, e *dealDamageToPlayersEffect) error {
-	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller)
+	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
 	if amount <= 0 {
 		return nil
 	}
@@ -410,7 +410,7 @@ func execPreventDamageToTarget(ctx *EffectContext, e *preventDamageToTargetEffec
 	if len(ctx.Targets) == 0 {
 		return nil
 	}
-	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller)
+	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
 	perm := ctx.Game.FindPermanent(ctx.Targets[0])
 	if perm != nil {
 		ctx.Game.AddPreventionShield(perm.ID(), amount)

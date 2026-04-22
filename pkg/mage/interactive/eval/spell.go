@@ -116,7 +116,7 @@ func SpellValue(card mage.Card, p mage.Player, g *mage.Game) int {
 			}
 
 			if props.DamageValue != nil && props.Outcome == mage.OutcomeDetriment {
-				dmg := props.DamageValue.Resolve(g, card.ID(), playerID)
+				dmg := props.DamageValue.Resolve(g, card.ID(), playerID, nil)
 				score += dmg
 				if opponent != nil {
 					// Bonus for being able to kill an opponent creature.

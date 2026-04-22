@@ -457,7 +457,7 @@ func (s *HeuristicStrategy) autoSelectTargets(p mage.Player, g *mage.Game, card 
 					if sa, ok := ab.(*mage.SpellAbility); ok {
 						for _, e := range sa.Effects() {
 							if dv := e.Properties().DamageValue; dv != nil {
-								spellDamage = dv.Resolve(g, card.ID(), playerID)
+								spellDamage = dv.Resolve(g, card.ID(), playerID, nil)
 							}
 						}
 					}

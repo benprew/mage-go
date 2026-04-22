@@ -182,7 +182,6 @@ func registerArtifacts() {
 							return nil
 						}),
 				).
-					// TODO: convert to data condition
 					SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 						if evt.SourceID == sourceID {
 							return false // don't trigger on self entering

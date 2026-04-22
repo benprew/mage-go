@@ -37,12 +37,12 @@ func (e *gainLifeTargetEffect) EffectText() string {
 	if _, ok := e.amount.(xValue); ok {
 		return "target player gains X life"
 	}
-	return fmt.Sprintf("target player gains %d life", e.amount.Resolve(nil, uuid.Nil, uuid.Nil))
+	return fmt.Sprintf("target player gains %d life", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil))
 }
 func (e *gainLifeTargetEffect) EffectProps() EffectProperties {
 	lg := 0
 	if _, ok := e.amount.(xValue); !ok {
-		lg = e.amount.Resolve(nil, uuid.Nil, uuid.Nil)
+		lg = e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil)
 	}
 	return EffectProperties{Outcome: OutcomeBenefit, LifeGain: lg}
 }
@@ -78,7 +78,7 @@ func (e *dealDamageEffect) EffectText() string {
 	if _, ok := e.amount.(xValue); ok {
 		return "deal X damage to target"
 	}
-	return fmt.Sprintf("deal %d damage to target", e.amount.Resolve(nil, uuid.Nil, uuid.Nil))
+	return fmt.Sprintf("deal %d damage to target", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil))
 }
 func (e *dealDamageEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment, DamageValue: e.amount}
@@ -99,7 +99,7 @@ func (e *dealDamageToAllCreaturesEffect) EffectText() string {
 	if _, ok := e.amount.(xValue); ok {
 		return "deal X damage to each creature"
 	}
-	return fmt.Sprintf("deal %d damage to each creature", e.amount.Resolve(nil, uuid.Nil, uuid.Nil))
+	return fmt.Sprintf("deal %d damage to each creature", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil))
 }
 func (e *dealDamageToAllCreaturesEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment, DamageValue: e.amount, Mass: true}
@@ -183,7 +183,7 @@ func (e *preventDamageToTargetEffect) EffectText() string {
 	if _, ok := e.amount.(xValue); ok {
 		return "Prevent the next X damage to target"
 	}
-	return fmt.Sprintf("Prevent the next %d damage to target", e.amount.Resolve(nil, uuid.Nil, uuid.Nil))
+	return fmt.Sprintf("Prevent the next %d damage to target", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil))
 }
 func (e *preventDamageToTargetEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
