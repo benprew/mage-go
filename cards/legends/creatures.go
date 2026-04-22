@@ -760,17 +760,9 @@ func registerCreatures() {
 	Register("Cyclopean Mummy", func() Card {
 		return NewCreature("Cyclopean Mummy", "{1}{B}", 2, 1,
 			WithSubTypes("Zombie"),
-			WithAbility(NewTriggered(EvtCreatureDied, false, FuncEffect("exile this", EffectProperties{}, func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-				p := g.GetPlayer(controller)
-				if p == nil {
-					return nil
-				}
-				card, ok := p.RemoveFromGraveyard(sourceID)
-				if card != nil && ok {
-					g.ExileCard(card, sourceID)
-				}
-				return nil
-			})).SetConditionData(EventSourceIsSelf{})),
+			WithAbility(NewTriggered(EvtCreatureDied, false,
+				ExileSourceFromGraveyard(),
+			).SetConditionData(EventSourceIsSelf{})),
 		)
 	})
 
@@ -1448,17 +1440,9 @@ func registerCreatures() {
 		return NewCreature("Firestorm Phoenix", "{4}{R}{R}", 3, 2,
 			WithSubTypes("Phoenix"),
 			WithKeyword(Flying),
-			WithAbility(NewTriggered(EvtCreatureDied, false, FuncEffect("return to hand instead of dying", EffectProperties{}, func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-				p := g.GetPlayer(controller)
-				if p == nil {
-					return nil
-				}
-				card, ok := p.RemoveFromGraveyard(sourceID)
-				if card != nil && ok {
-					p.AddToHand(card)
-				}
-				return nil
-			})).SetConditionData(EventSourceIsSelf{})),
+			WithAbility(NewTriggered(EvtCreatureDied, false,
+				ReturnSourceToHand(),
+			).SetConditionData(EventSourceIsSelf{})),
 		)
 	})
 

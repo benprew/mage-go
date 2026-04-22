@@ -123,6 +123,18 @@ func (e *returnSourceToHandEffect) EffectText() string {
 }
 func (e *returnSourceToHandEffect) EffectProps() EffectProperties { return EffectProperties{} }
 
+// exileSourceFromGraveyardEffect exiles the source card from the graveyard.
+type exileSourceFromGraveyardEffect struct{}
+
+// ExileSourceFromGraveyard creates an effect that exiles the source from the graveyard
+// (e.g. Cyclopean Mummy's death trigger).
+func ExileSourceFromGraveyard() Effect {
+	return DataEffect(&exileSourceFromGraveyardEffect{})
+}
+
+func (e *exileSourceFromGraveyardEffect) EffectText() string            { return "exile this card from graveyard" }
+func (e *exileSourceFromGraveyardEffect) EffectProps() EffectProperties { return EffectProperties{} }
+
 // returnToHandTargetEffect bounces a target permanent to its owner's hand.
 type returnToHandTargetEffect struct{}
 
@@ -368,6 +380,18 @@ func execReturnFromGraveyardToBattlefield(ctx *EffectContext, _ *returnFromGrave
 		return nil // target gone
 	}
 	ctx.Game.PutOnBattlefield(card, ctx.Controller)
+	return nil
+}
+
+func execExileSourceFromGraveyard(ctx *EffectContext, _ *exileSourceFromGraveyardEffect) error {
+	p := ctx.Game.GetPlayer(ctx.Controller)
+	if p == nil {
+		return nil
+	}
+	card, ok := p.RemoveFromGraveyard(ctx.SourceID)
+	if ok && card != nil {
+		ctx.Game.ExileCard(card, ctx.SourceID)
+	}
 	return nil
 }
 

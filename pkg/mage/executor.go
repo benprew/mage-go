@@ -108,6 +108,8 @@ func ExecuteEffect(ctx *EffectContext, data EffectData) error {
 		return execReturnFromGraveyardToBattlefield(ctx, e)
 	case *returnSourceToHandEffect:
 		return execReturnSourceToHand(ctx, e)
+	case *exileSourceFromGraveyardEffect:
+		return execExileSourceFromGraveyard(ctx, e)
 	case *returnToHandTargetEffect:
 		return execReturnToHandTarget(ctx, e)
 	case *returnFromGraveyardToHandTargetEffect:
