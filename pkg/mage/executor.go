@@ -256,6 +256,12 @@ func ExecuteEffect(ctx *EffectContext, data EffectData) error {
 	case *RemoveFromCombatGatheredData:
 		return execRemoveFromCombatGathered(ctx, e)
 
+	// Attached/source operations
+	case *DestroyAttachedData:
+		return execDestroyAttached(ctx, e)
+	case *DealDamageToSourceData:
+		return execDealDamageToSource(ctx, e)
+
 	// Combat group iteration
 	case *ForEachBlockerOfSourceData:
 		return execForEachBlockerOfSource(ctx, e)

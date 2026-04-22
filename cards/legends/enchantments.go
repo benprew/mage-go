@@ -89,21 +89,8 @@ func registerEnchantments() {
 		return NewAura("Blight", "{B}{B}",
 			WithCastTarget(TargetLand()),
 			WithAbility(
-				// TODO: convert to pipeline — needs DestroyAttached primitive
 				WhenAttachedBecomesTappedTrigger(
-					FuncEffect("destroy enchanted land",
-						EffectProperties{Outcome: OutcomeDetriment},
-						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							src := g.FindPermanent(sourceID)
-							if src == nil || src.AttachedTo == uuid.Nil {
-								return nil
-							}
-							target := g.FindPermanent(src.AttachedTo)
-							if target != nil {
-								g.DestroyPermanent(target)
-							}
-							return nil
-						}), false,
+					DataEffect(DestroyAttachedStep()), false,
 				),
 			),
 		)

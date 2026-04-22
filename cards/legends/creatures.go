@@ -465,24 +465,10 @@ func registerCreatures() {
 		return NewCreature("Psionic Entity", "{4}{U}", 2, 2,
 			WithSubTypes("Illusion"),
 			WithActivatedAbility(
-				// TODO: convert to pipeline — needs DealDamageToSource(N) primitive
-				FuncEffect("deal 2 damage to any target and 3 damage to self",
+				Pipeline("deal 2 damage to any target and 3 damage to self",
 					EffectProperties{Outcome: OutcomeDetriment, DamageValue: Fixed(2)},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						// Deal 2 damage to target
-						if len(targets) > 0 {
-							if perm := g.FindPermanent(targets[0]); perm != nil {
-								g.DealDamageToPermanent(perm, 2, sourceID)
-							} else if p := g.GetPlayer(targets[0]); p != nil {
-								g.DealDamageToPlayer(p, 2, sourceID)
-							}
-						}
-						// Deal 3 damage to self
-						if self := g.FindPermanent(sourceID); self != nil {
-							g.DealDamageToPermanent(self, 3, sourceID)
-						}
-						return nil
-					},
+					DealDamageStep(Fixed(2)),
+					DealDamageToSourceStep(Fixed(3)),
 				),
 				TapSourceCost(),
 				WithTarget(TargetAnyTarget()),

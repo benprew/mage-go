@@ -578,6 +578,58 @@ func execRemoveFromCombatGathered(ctx *EffectContext, e *RemoveFromCombatGathere
 }
 
 // ---------------------------------------------------------------------------
+// Attached permanent operations
+// ---------------------------------------------------------------------------
+
+// DestroyAttachedData destroys the permanent the source is attached to.
+type DestroyAttachedData struct{}
+
+func DestroyAttachedStep() EffectData { return &DestroyAttachedData{} }
+
+func (e *DestroyAttachedData) EffectText() string            { return "destroy enchanted permanent" }
+func (e *DestroyAttachedData) EffectProps() EffectProperties { return EffectProperties{Outcome: OutcomeDetriment} }
+
+func execDestroyAttached(ctx *EffectContext, _ *DestroyAttachedData) error {
+	src := ctx.Game.FindPermanent(ctx.SourceID)
+	if src == nil || src.AttachedTo == uuid.Nil {
+		return nil
+	}
+	target := ctx.Game.FindPermanent(src.AttachedTo)
+	if target != nil {
+		ctx.Game.DestroyPermanent(target)
+	}
+	return nil
+}
+
+// ---------------------------------------------------------------------------
+// Deal damage to source
+// ---------------------------------------------------------------------------
+
+// DealDamageToSourceData deals damage to the source permanent itself.
+type DealDamageToSourceData struct {
+	Amount ValueSource
+}
+
+func DealDamageToSourceStep(amount ValueSource) EffectData {
+	return &DealDamageToSourceData{Amount: amount}
+}
+
+func (e *DealDamageToSourceData) EffectText() string            { return "deal damage to self" }
+func (e *DealDamageToSourceData) EffectProps() EffectProperties { return EffectProperties{Outcome: OutcomeDetriment} }
+
+func execDealDamageToSource(ctx *EffectContext, e *DealDamageToSourceData) error {
+	self := ctx.Game.FindPermanent(ctx.SourceID)
+	if self == nil {
+		return nil
+	}
+	amount := e.Amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	if amount > 0 {
+		ctx.Game.DealDamageToPermanent(self, amount, ctx.SourceID)
+	}
+	return nil
+}
+
+// ---------------------------------------------------------------------------
 // Combat group iteration primitives
 // ---------------------------------------------------------------------------
 

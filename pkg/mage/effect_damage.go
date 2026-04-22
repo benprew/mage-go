@@ -91,6 +91,9 @@ func DealDamage(amount ValueSource) Effect {
 	return DataEffect(&dealDamageEffect{amount: amount})
 }
 
+// DealDamageStep returns the EffectData for use in pipelines/ForEach.
+func DealDamageStep(amount ValueSource) EffectData { return &dealDamageEffect{amount: amount} }
+
 func (e *dealDamageEffect) EffectText() string {
 	if _, ok := e.amount.(xValue); ok {
 		return "deal X damage to target"
