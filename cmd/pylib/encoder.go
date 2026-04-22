@@ -41,16 +41,17 @@ const (
 )
 
 var (
-	manaSymbols       = [...]string{"W", "U", "B", "R", "G", "C"}
-	stepNames         = [...]string{"Untap", "Upkeep", "Draw", "Precombat Main", "Begin Combat", "Declare Attackers", "Declare Blockers", "Combat Damage", "End Combat", "Postcombat Main", "End", "Cleanup", "Unknown"}
-	pendingKinds      = [...]string{"priority", "attackers", "blockers", "permanent", "cards_from_hand", "mana_color", "card_from_library", "may", "mode", "number", "unknown"}
-	actionKinds       = [...]string{"pass", "play_land", "cast_spell", "activate_ability", "attacker", "blocker", "choice", "unknown"}
-	traceKinds        = [...]string{"priority", "attackers", "blockers", "choice_index", "choice_ids", "choice_color", "may"}
-	zoneSpecs         = [...]zoneSpec{{zone: "hand", owner: "self"}, {zone: "graveyard", owner: "self"}, {zone: "graveyard", owner: "opponent"}, {zone: "battlefield", owner: "self"}, {zone: "battlefield", owner: "opponent"}}
-	cardRowsOnce      sync.Once
-	cardRowByName     map[string]int64
-	cardRowOverrideMu sync.RWMutex
-	cardRowOverrides  = map[string]int64{}
+	manaSymbols        = [...]string{"W", "U", "B", "R", "G", "C"}
+	stepNames          = [...]string{"Untap", "Upkeep", "Draw", "Precombat Main", "Begin Combat", "Declare Attackers", "Declare Blockers", "Combat Damage", "End Combat", "Postcombat Main", "End", "Cleanup", "Unknown"}
+	pendingKinds       = [...]string{"priority", "attackers", "blockers", "permanent", "cards_from_hand", "mana_color", "card_from_library", "may", "mode", "number", "unknown"}
+	actionKinds        = [...]string{"pass", "play_land", "cast_spell", "activate_ability", "attacker", "blocker", "choice", "unknown"}
+	traceKinds         = [...]string{"priority", "attackers", "blockers", "choice_index", "choice_ids", "choice_color", "may"}
+	zoneSpecs          = [...]zoneSpec{{zone: "hand", owner: "self"}, {zone: "graveyard", owner: "self"}, {zone: "graveyard", owner: "opponent"}, {zone: "battlefield", owner: "self"}, {zone: "battlefield", owner: "opponent"}}
+	cardRowsOnce       sync.Once
+	cardRowByName      map[string]int64
+	cardRowOverrideMu  sync.RWMutex
+	cardRowOverrides   = map[string]int64{}
+	cardRowsOverridden bool
 )
 
 type zoneSpec struct {
@@ -166,8 +167,14 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 		}
 
 		cardIDToSlot := map[string]int64{}
-		fillStateEncoding(int64(batchIdx), state, pending, playerIdx, cfg, views, cardIDToSlot)
-		fillActionEncoding(int64(batchIdx), state, pending, playerIdx, cfg, views, cardIDToSlot)
+		if err := fillStateEncoding(int64(batchIdx), state, pending, playerIdx, cfg, views, cardIDToSlot); err != nil {
+			h.mu.Unlock()
+			return decisionCursor, err
+		}
+		if err := fillActionEncoding(int64(batchIdx), state, pending, playerIdx, cfg, views, cardIDToSlot); err != nil {
+			h.mu.Unlock()
+			return decisionCursor, err
+		}
 		written, err := fillDecisionEncoding(int64(batchIdx), pending, cfg, views, decisionCursor)
 		h.mu.Unlock()
 		if err != nil {
@@ -225,7 +232,7 @@ func resolvePerspectivePlayerIndex(state *apiGameState, pending *apiPending, req
 	return 0, nil
 }
 
-func fillStateEncoding(batchIdx int64, state *apiGameState, pending *apiPending, playerIdx int, cfg encodeConfig, view outputViews, cardIDToSlot map[string]int64) {
+func fillStateEncoding(batchIdx int64, state *apiGameState, pending *apiPending, playerIdx int, cfg encodeConfig, view outputViews, cardIDToSlot map[string]int64) *encodeError {
 	slotRows := view.slotCardRows[batchIdx*cfg.zoneSlotCount : (batchIdx+1)*cfg.zoneSlotCount]
 	slotOccupied := view.slotOccupied[batchIdx*cfg.zoneSlotCount : (batchIdx+1)*cfg.zoneSlotCount]
 	slotTapped := view.slotTapped[batchIdx*cfg.zoneSlotCount : (batchIdx+1)*cfg.zoneSlotCount]
@@ -236,7 +243,11 @@ func fillStateEncoding(batchIdx int64, state *apiGameState, pending *apiPending,
 		if card == nil {
 			continue
 		}
-		slotRows[slotIdx] = cardRowForName(card.name)
+		row, ok := cardRowForName(card.name)
+		if !ok {
+			return &encodeError{code: mageEncodeErrEncode, message: fmt.Sprintf("missing card embedding for %q", card.name)}
+		}
+		slotRows[slotIdx] = row
 		slotOccupied[slotIdx] = 1
 		occupied[slotIdx] = 1
 		if card.tapped && zoneSpecs[slotIdx/maxCardsPerZone].zone == "battlefield" {
@@ -248,6 +259,7 @@ func fillStateEncoding(batchIdx int64, state *apiGameState, pending *apiPending,
 	}
 
 	fillGameInfo(gameInfo, state, pending, playerIdx, occupied)
+	return nil
 }
 
 func collectSlotCards(state *apiGameState, perspectivePlayerIdx int) []*stateCard {
@@ -388,7 +400,7 @@ func fillGameInfo(out []float32, state *apiGameState, pending *apiPending, persp
 	copy(out[cursor:], occupied)
 }
 
-func fillActionEncoding(batchIdx int64, state *apiGameState, pending *apiPending, playerIdx int, cfg encodeConfig, view outputViews, cardIDToSlot map[string]int64) {
+func fillActionEncoding(batchIdx int64, state *apiGameState, pending *apiPending, playerIdx int, cfg encodeConfig, view outputViews, cardIDToSlot map[string]int64) *encodeError {
 	view.pendingKindID[batchIdx] = indexOrUnknown(pendingKinds[:], pending.Kind)
 	traceKind := traceKindForPending(pending)
 	view.traceKindID[batchIdx] = indexOrUnknown(traceKinds[:], traceKind)
@@ -420,7 +432,10 @@ func fillActionEncoding(batchIdx int64, state *apiGameState, pending *apiPending
 		optionKindIDs[optIdx] = indexOrUnknown(actionKinds[:], option.Kind)
 		optionMask[optIdx] = 1
 		fillOptionScalars(optionScalars[optIdx*cfg.optionScalarDim:(optIdx+1)*cfg.optionScalarDim], option, pending, optIdx, cfg)
-		slotIdx, cardRow := resolveOptionReference(option, cardIDToSlot)
+		slotIdx, cardRow, err := resolveOptionReference(option, cardIDToSlot)
+		if err != nil {
+			return err
+		}
 		if slotIdx >= 0 {
 			optionRefSlotIdx[optIdx] = slotIdx
 		} else if option.CardName != "" {
@@ -451,6 +466,7 @@ func fillActionEncoding(batchIdx int64, state *apiGameState, pending *apiPending
 			}
 		}
 	}
+	return nil
 }
 
 func fillOptionScalars(out []float32, option apiOption, pending *apiPending, optionIdx int64, cfg encodeConfig) {
@@ -519,19 +535,23 @@ func manaSymbolsFromCost(manaCost string) []string {
 	}
 }
 
-func resolveOptionReference(option apiOption, cardIDToSlot map[string]int64) (int64, int64) {
+func resolveOptionReference(option apiOption, cardIDToSlot map[string]int64) (int64, int64, *encodeError) {
 	for _, key := range []string{option.CardID, option.PermanentID, option.ID} {
 		if key == "" {
 			continue
 		}
 		if slotIdx, ok := cardIDToSlot[key]; ok {
-			return slotIdx, -1
+			return slotIdx, -1, nil
 		}
 	}
 	if option.CardName != "" {
-		return -1, cardRowForName(option.CardName)
+		row, ok := cardRowForName(option.CardName)
+		if !ok {
+			return -1, -1, &encodeError{code: mageEncodeErrEncode, message: fmt.Sprintf("missing card embedding for %q", option.CardName)}
+		}
+		return -1, row, nil
 	}
-	return -1, -1
+	return -1, -1, nil
 }
 
 func fillDecisionEncoding(batchIdx int64, pending *apiPending, cfg encodeConfig, view outputViews, cursor int64) (int64, *encodeError) {
@@ -542,7 +562,8 @@ func fillDecisionEncoding(batchIdx int64, pending *apiPending, cfg encodeConfig,
 	case "may":
 		return 0, nil
 	case "priority":
-		count := minInt64(priorityCandidateCount(pending, cfg.maxTargetsPerOption), cfg.maxCachedChoices)
+		optionCount := minInt64(int64(len(pending.Options)), cfg.maxOptions)
+		count := minInt64(priorityCandidateCount(pending, optionCount, cfg.maxTargetsPerOption), cfg.maxCachedChoices)
 		if count == 0 {
 			return 0, nil
 		}
@@ -551,13 +572,14 @@ func fillDecisionEncoding(batchIdx int64, pending *apiPending, cfg encodeConfig,
 		}
 		rowBase := cursor * cfg.maxCachedChoices
 		candidateIdx := int64(0)
-		for optIdx, option := range pending.Options {
+		for optIdx := int64(0); optIdx < optionCount; optIdx++ {
+			option := pending.Options[optIdx]
 			switch option.Kind {
 			case "pass", "play_land":
 				if candidateIdx >= count {
 					break
 				}
-				view.decisionOptionIdx[rowBase+candidateIdx] = int64(optIdx)
+				view.decisionOptionIdx[rowBase+candidateIdx] = optIdx
 				view.decisionMask[rowBase+candidateIdx] = 1
 				candidateIdx++
 			case "cast_spell", "activate_ability":
@@ -565,7 +587,7 @@ func fillDecisionEncoding(batchIdx int64, pending *apiPending, cfg encodeConfig,
 					if candidateIdx >= count {
 						break
 					}
-					view.decisionOptionIdx[rowBase+candidateIdx] = int64(optIdx)
+					view.decisionOptionIdx[rowBase+candidateIdx] = optIdx
 					view.decisionMask[rowBase+candidateIdx] = 1
 					candidateIdx++
 					continue
@@ -574,7 +596,7 @@ func fillDecisionEncoding(batchIdx int64, pending *apiPending, cfg encodeConfig,
 					if candidateIdx >= count {
 						break
 					}
-					view.decisionOptionIdx[rowBase+candidateIdx] = int64(optIdx)
+					view.decisionOptionIdx[rowBase+candidateIdx] = optIdx
 					view.decisionTargetIdx[rowBase+candidateIdx] = int64(tgtIdx)
 					view.decisionMask[rowBase+candidateIdx] = 1
 					candidateIdx++
@@ -599,6 +621,7 @@ func fillDecisionEncoding(batchIdx int64, pending *apiPending, cfg encodeConfig,
 			view.decisionMask[rowBase] = 1
 			view.decisionMask[rowBase+1] = 1
 			view.decisionOptionIdx[rowBase+1] = optIdx
+			view.usesNoneHead[cursor+optIdx] = 1
 		}
 		view.decisionCount[batchIdx] = optionCount
 		return optionCount, nil
@@ -664,12 +687,14 @@ func traceKindForPending(pending *apiPending) string {
 	}
 }
 
-func priorityCandidateCount(pending *apiPending, maxTargetsPerOption int64) int64 {
+func priorityCandidateCount(pending *apiPending, maxOptions int64, maxTargetsPerOption int64) int64 {
 	if pending == nil || pending.Kind != "priority" {
 		return 0
 	}
 	count := int64(0)
-	for _, option := range pending.Options {
+	optionCount := minInt64(int64(len(pending.Options)), maxOptions)
+	for optIdx := int64(0); optIdx < optionCount; optIdx++ {
+		option := pending.Options[optIdx]
 		switch option.Kind {
 		case "pass", "play_land":
 			count++
@@ -710,13 +735,18 @@ func normalizeKey(s string) string {
 	return strings.ToLower(strings.Join(strings.Fields(s), " "))
 }
 
-func cardRowForName(name string) int64 {
+func cardRowForName(name string) (int64, bool) {
 	key := normalizeKey(name)
+	if key == "" {
+		return 0, true
+	}
 
 	cardRowOverrideMu.RLock()
-	if row, ok := cardRowOverrides[key]; ok {
+	overridden := cardRowsOverridden
+	row, ok := cardRowOverrides[key]
+	if overridden {
 		cardRowOverrideMu.RUnlock()
-		return row
+		return row, ok
 	}
 	cardRowOverrideMu.RUnlock()
 
@@ -728,7 +758,11 @@ func cardRowForName(name string) int64 {
 			cardRowByName[normalizeKey(cardName)] = int64(idx + 1)
 		}
 	})
-	return cardRowByName[key]
+	row, ok = cardRowByName[key]
+	if !ok {
+		return 0, true
+	}
+	return row, true
 }
 
 func setCardRowOverrides(rows map[string]int64) {
@@ -738,6 +772,7 @@ func setCardRowOverrides(rows map[string]int64) {
 	}
 	cardRowOverrideMu.Lock()
 	cardRowOverrides = next
+	cardRowsOverridden = true
 	cardRowOverrideMu.Unlock()
 }
 
