@@ -33,10 +33,67 @@ struct MageNewGame_return {
     int64_t r0;
     char *r1;
 };
+typedef struct {
+    int64_t n;
+    const int64_t *handles;
+    const int64_t *perspective_player_idx;
+} MageBatchRequest;
+typedef struct {
+    int64_t max_options;
+    int64_t max_targets_per_option;
+    int64_t max_cached_choices;
+    int64_t zone_slot_count;
+    int64_t game_info_dim;
+    int64_t option_scalar_dim;
+    int64_t target_scalar_dim;
+    int64_t decision_capacity;
+} MageEncodeConfig;
+typedef struct {
+    int64_t *trace_kind_id;
+    int64_t *slot_card_rows;
+    float *slot_occupied;
+    float *slot_tapped;
+    float *game_info;
+    int64_t *pending_kind_id;
+    int64_t *num_present_options;
+    int64_t *option_kind_ids;
+    float *option_scalars;
+    float *option_mask;
+    int64_t *option_ref_slot_idx;
+    int64_t *option_ref_card_row;
+    float *target_mask;
+    int64_t *target_type_ids;
+    float *target_scalars;
+    float *target_overflow;
+    int64_t *target_ref_slot_idx;
+    uint8_t *target_ref_is_player;
+    uint8_t *target_ref_is_self;
+    uint8_t *may_mask;
+    int64_t *decision_start;
+    int64_t *decision_count;
+    int64_t *decision_option_idx;
+    int64_t *decision_target_idx;
+    uint8_t *decision_mask;
+    uint8_t *uses_none_head;
+} MageEncodeOutputs;
+typedef struct {
+    int64_t decision_rows_written;
+    int64_t error_code;
+    char *error_message;
+} MageEncodeResult;
 struct MageNewGame_return MageNewGame(char *cfgJSON);
 char *MageState(int64_t id);
 char *MageLegal(int64_t id);
 char *MageStep(int64_t id, char *actionJSON);
+char *MageSetCardNameRows(char *cardNameRowsJSON);
+MageEncodeResult MageEncodeBatch(
+    MageBatchRequest *req,
+    MageEncodeConfig *cfg,
+    MageEncodeOutputs *out
+);
+int64_t MagePendingPlayer(int64_t id);
+int64_t MageIsOver(int64_t id);
+char *MageWinner(int64_t id);
 void MageFree(int64_t id);
 void MageFreeString(char *s);
 char *MageRegisteredCards(void);
@@ -49,6 +106,7 @@ class MageError(RuntimeError):
 
 _ffi: Any = None  # set by load()
 _lib: Any = None  # set by load()
+_lib_path_used: str | None = None
 
 
 def _default_lib_path() -> str:
@@ -74,11 +132,12 @@ def _default_lib_path() -> str:
 
 def load(lib_path: str | None = None) -> None:
     """Explicitly (re)load the shared library. Called lazily by first API use."""
-    global _ffi, _lib
+    global _ffi, _lib, _lib_path_used
     ffi = FFI()
     ffi.cdef(_CDEF)
     path = lib_path or _default_lib_path()
-    _lib = ffi.dlopen(os.path.abspath(path))
+    _lib_path_used = os.path.abspath(path)
+    _lib = ffi.dlopen(_lib_path_used)
     _ffi = ffi
 
 
@@ -107,6 +166,12 @@ def _take(cstr) -> dict[str, Any]:
 def registered_cards() -> list[str]:
     _ensure_loaded()
     return _take_raw(_lib.MageRegisteredCards())
+
+
+def resolved_library_path() -> str:
+    _ensure_loaded()
+    assert _lib_path_used is not None
+    return _lib_path_used
 
 
 def new_game(
@@ -141,6 +206,10 @@ class Game:
     def __init__(self, handle: int, initial: dict):
         self._id = handle
         self._last = initial
+
+    @property
+    def handle(self) -> int:
+        return self._id
 
     @property
     def state(self) -> dict:

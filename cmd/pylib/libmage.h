@@ -12,8 +12,6 @@
 
 #ifndef GO_CGO_GOSTRING_TYPEDEF
 typedef struct { const char *p; ptrdiff_t n; } _GoString_;
-extern size_t _GoStringLen(_GoString_ s);
-extern const char *_GoStringPtr(_GoString_ s);
 #endif
 
 #endif
@@ -24,6 +22,7 @@ extern const char *_GoStringPtr(_GoString_ s);
 #line 15 "main.go"
 
 #include <stdlib.h>
+#include "abi.h"
 
 #line 1 "cgo-generated-wrapper"
 
@@ -51,15 +50,9 @@ typedef size_t GoUintptr;
 typedef float GoFloat32;
 typedef double GoFloat64;
 #ifdef _MSC_VER
-#if !defined(__cplusplus) || _MSVC_LANG <= 201402L
 #include <complex.h>
 typedef _Fcomplex GoComplex64;
 typedef _Dcomplex GoComplex128;
-#else
-#include <complex>
-typedef std::complex<float> GoComplex64;
-typedef std::complex<double> GoComplex128;
-#endif
 #else
 typedef float _Complex GoComplex64;
 typedef double _Complex GoComplex128;
@@ -99,7 +92,12 @@ extern char* MageLegal(int64_t id);
 extern char* MageStep(int64_t id, char* actionJSON);
 extern void MageFree(int64_t id);
 extern void MageFreeString(char* s);
-extern char* MageRegisteredCards(void);
+extern char* MageRegisteredCards();
+extern char* MageSetCardNameRows(char* cardNameRowsJSON);
+extern MageEncodeResult MageEncodeBatch(MageBatchRequest* req, MageEncodeConfig* cfg, MageEncodeOutputs* out);
+extern int64_t MagePendingPlayer(int64_t id);
+extern int64_t MageIsOver(int64_t id);
+extern char* MageWinner(int64_t id);
 
 #ifdef __cplusplus
 }

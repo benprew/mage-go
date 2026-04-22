@@ -22,6 +22,7 @@ typedef struct { const char *p; ptrdiff_t n; } _GoString_;
 #line 15 "main.go"
 
 #include <stdlib.h>
+#include "abi.h"
 
 #line 1 "cgo-generated-wrapper"
 
@@ -92,6 +93,11 @@ extern char* MageStep(int64_t id, char* actionJSON);
 extern void MageFree(int64_t id);
 extern void MageFreeString(char* s);
 extern char* MageRegisteredCards();
+extern char* MageSetCardNameRows(char* cardNameRowsJSON);
+extern MageEncodeResult MageEncodeBatch(MageBatchRequest* req, MageEncodeConfig* cfg, MageEncodeOutputs* out);
+extern int64_t MagePendingPlayer(int64_t id);
+extern int64_t MageIsOver(int64_t id);
+extern char* MageWinner(int64_t id);
 
 #ifdef __cplusplus
 }

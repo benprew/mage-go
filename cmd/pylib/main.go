@@ -14,6 +14,7 @@ package main
 
 /*
 #include <stdlib.h>
+#include "abi.h"
 */
 import "C"
 
@@ -21,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"sort"
 	"sync"
 	"sync/atomic"
 	"unsafe"
@@ -103,13 +105,13 @@ type deckCard struct {
 }
 
 type newGameRequest struct {
-	PlayerA   deckSpec `json:"player_a"`
-	PlayerB   deckSpec `json:"player_b"`
-	NameA     string   `json:"name_a"`
-	NameB     string   `json:"name_b"`
-	Seed      int64    `json:"seed"`
-	Shuffle   bool     `json:"shuffle"`
-	HandSize  int      `json:"hand_size"`
+	PlayerA  deckSpec `json:"player_a"`
+	PlayerB  deckSpec `json:"player_b"`
+	NameA    string   `json:"name_a"`
+	NameB    string   `json:"name_b"`
+	Seed     int64    `json:"seed"`
+	Shuffle  bool     `json:"shuffle"`
+	HandSize int      `json:"hand_size"`
 }
 
 type apiResponse struct {
@@ -193,6 +195,134 @@ func toCStringResponse(r apiResponse) *C.char {
 
 func errResponse(format string, args ...any) *C.char {
 	return toCStringResponse(apiResponse{OK: false, Error: fmt.Sprintf(format, args...)})
+}
+
+func newEncodeResult(rowsWritten int64, code int64, msg string) C.MageEncodeResult {
+	var cmsg *C.char
+	if msg != "" {
+		cmsg = C.CString(msg)
+	}
+	return C.MageEncodeResult{
+		decision_rows_written: C.int64_t(rowsWritten),
+		error_code:            C.int64_t(code),
+		error_message:         cmsg,
+	}
+}
+
+func parseEncodeConfigC(cfg *C.MageEncodeConfig) encodeConfig {
+	return encodeConfig{
+		maxOptions:          int64(cfg.max_options),
+		maxTargetsPerOption: int64(cfg.max_targets_per_option),
+		maxCachedChoices:    int64(cfg.max_cached_choices),
+		zoneSlotCount:       int64(cfg.zone_slot_count),
+		gameInfoDim:         int64(cfg.game_info_dim),
+		optionScalarDim:     int64(cfg.option_scalar_dim),
+		targetScalarDim:     int64(cfg.target_scalar_dim),
+		decisionCapacity:    int64(cfg.decision_capacity),
+	}
+}
+
+func makeOutputViewsC(n int64, cfg encodeConfig, out *C.MageEncodeOutputs) (outputViews, *encodeError) {
+	requiredI64 := func(ptr *C.int64_t, count int64, name string) ([]int64, *encodeError) {
+		if ptr == nil {
+			return nil, &encodeError{code: mageEncodeErrInvalidArgument, message: fmt.Sprintf("out.%s must be non-nil", name)}
+		}
+		return unsafe.Slice((*int64)(unsafe.Pointer(ptr)), count), nil
+	}
+	requiredF32 := func(ptr *C.float, count int64, name string) ([]float32, *encodeError) {
+		if ptr == nil {
+			return nil, &encodeError{code: mageEncodeErrInvalidArgument, message: fmt.Sprintf("out.%s must be non-nil", name)}
+		}
+		return unsafe.Slice((*float32)(unsafe.Pointer(ptr)), count), nil
+	}
+	requiredU8 := func(ptr *C.uint8_t, count int64, name string) ([]byte, *encodeError) {
+		if ptr == nil {
+			return nil, &encodeError{code: mageEncodeErrInvalidArgument, message: fmt.Sprintf("out.%s must be non-nil", name)}
+		}
+		return unsafe.Slice((*byte)(unsafe.Pointer(ptr)), count), nil
+	}
+
+	view := outputViews{}
+	var err *encodeError
+	if view.traceKindID, err = requiredI64(out.trace_kind_id, n, "trace_kind_id"); err != nil {
+		return view, err
+	}
+	if view.slotCardRows, err = requiredI64(out.slot_card_rows, n*cfg.zoneSlotCount, "slot_card_rows"); err != nil {
+		return view, err
+	}
+	if view.slotOccupied, err = requiredF32(out.slot_occupied, n*cfg.zoneSlotCount, "slot_occupied"); err != nil {
+		return view, err
+	}
+	if view.slotTapped, err = requiredF32(out.slot_tapped, n*cfg.zoneSlotCount, "slot_tapped"); err != nil {
+		return view, err
+	}
+	if view.gameInfo, err = requiredF32(out.game_info, n*cfg.gameInfoDim, "game_info"); err != nil {
+		return view, err
+	}
+	if view.pendingKindID, err = requiredI64(out.pending_kind_id, n, "pending_kind_id"); err != nil {
+		return view, err
+	}
+	if view.numPresentOptions, err = requiredI64(out.num_present_options, n, "num_present_options"); err != nil {
+		return view, err
+	}
+	if view.optionKindIDs, err = requiredI64(out.option_kind_ids, n*cfg.maxOptions, "option_kind_ids"); err != nil {
+		return view, err
+	}
+	if view.optionScalars, err = requiredF32(out.option_scalars, n*cfg.maxOptions*cfg.optionScalarDim, "option_scalars"); err != nil {
+		return view, err
+	}
+	if view.optionMask, err = requiredF32(out.option_mask, n*cfg.maxOptions, "option_mask"); err != nil {
+		return view, err
+	}
+	if view.optionRefSlotIdx, err = requiredI64(out.option_ref_slot_idx, n*cfg.maxOptions, "option_ref_slot_idx"); err != nil {
+		return view, err
+	}
+	if view.optionRefCardRow, err = requiredI64(out.option_ref_card_row, n*cfg.maxOptions, "option_ref_card_row"); err != nil {
+		return view, err
+	}
+	if view.targetMask, err = requiredF32(out.target_mask, n*cfg.maxOptions*cfg.maxTargetsPerOption, "target_mask"); err != nil {
+		return view, err
+	}
+	if view.targetTypeIDs, err = requiredI64(out.target_type_ids, n*cfg.maxOptions*cfg.maxTargetsPerOption, "target_type_ids"); err != nil {
+		return view, err
+	}
+	if view.targetScalars, err = requiredF32(out.target_scalars, n*cfg.maxOptions*cfg.maxTargetsPerOption*cfg.targetScalarDim, "target_scalars"); err != nil {
+		return view, err
+	}
+	if view.targetOverflow, err = requiredF32(out.target_overflow, n*cfg.maxOptions, "target_overflow"); err != nil {
+		return view, err
+	}
+	if view.targetRefSlotIdx, err = requiredI64(out.target_ref_slot_idx, n*cfg.maxOptions*cfg.maxTargetsPerOption, "target_ref_slot_idx"); err != nil {
+		return view, err
+	}
+	if view.targetRefIsPlayer, err = requiredU8(out.target_ref_is_player, n*cfg.maxOptions*cfg.maxTargetsPerOption, "target_ref_is_player"); err != nil {
+		return view, err
+	}
+	if view.targetRefIsSelf, err = requiredU8(out.target_ref_is_self, n*cfg.maxOptions*cfg.maxTargetsPerOption, "target_ref_is_self"); err != nil {
+		return view, err
+	}
+	if view.mayMask, err = requiredU8(out.may_mask, n, "may_mask"); err != nil {
+		return view, err
+	}
+	if view.decisionStart, err = requiredI64(out.decision_start, n, "decision_start"); err != nil {
+		return view, err
+	}
+	if view.decisionCount, err = requiredI64(out.decision_count, n, "decision_count"); err != nil {
+		return view, err
+	}
+	if view.decisionOptionIdx, err = requiredI64(out.decision_option_idx, cfg.decisionCapacity*cfg.maxCachedChoices, "decision_option_idx"); err != nil {
+		return view, err
+	}
+	if view.decisionTargetIdx, err = requiredI64(out.decision_target_idx, cfg.decisionCapacity*cfg.maxCachedChoices, "decision_target_idx"); err != nil {
+		return view, err
+	}
+	if view.decisionMask, err = requiredU8(out.decision_mask, cfg.decisionCapacity*cfg.maxCachedChoices, "decision_mask"); err != nil {
+		return view, err
+	}
+	if view.usesNoneHead, err = requiredU8(out.uses_none_head, cfg.decisionCapacity, "uses_none_head"); err != nil {
+		return view, err
+	}
+	return view, nil
 }
 
 func parseUUID(s string) (uuid.UUID, error) {
@@ -882,8 +1012,115 @@ func MageFreeString(s *C.char) {
 func MageRegisteredCards() *C.char {
 	defer func() { _ = recover() }()
 	names := mage.RegisteredCardNames()
+	sort.Strings(names)
 	b, _ := json.Marshal(names)
 	return C.CString(string(b))
+}
+
+//export MageSetCardNameRows
+func MageSetCardNameRows(cardNameRowsJSON *C.char) *C.char {
+	defer func() { _ = recover() }()
+	if cardNameRowsJSON == nil {
+		return errResponse("null card mapping")
+	}
+	var rows map[string]int64
+	if err := json.Unmarshal([]byte(C.GoString(cardNameRowsJSON)), &rows); err != nil {
+		return errResponse("parse card mapping: %v", err)
+	}
+	setCardRowOverrides(rows)
+	return toCStringResponse(apiResponse{OK: true})
+}
+
+//export MageEncodeBatch
+func MageEncodeBatch(req *C.MageBatchRequest, cfg *C.MageEncodeConfig, out *C.MageEncodeOutputs) (res C.MageEncodeResult) {
+	defer func() {
+		if r := recover(); r != nil {
+			res = newEncodeResult(0, mageEncodeErrEncodeFailure, fmt.Sprintf("panic: %v", r))
+		}
+	}()
+	if req == nil || cfg == nil || out == nil {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "req, cfg, and out must be non-nil")
+	}
+	n := int64(req.n)
+	if n < 0 {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "req.n must be non-negative")
+	}
+	cfgGo := parseEncodeConfigC(cfg)
+	if err := validateEncodeConfig(cfgGo); err != nil {
+		return newEncodeResult(0, err.code, err.message)
+	}
+	if n == 0 {
+		return newEncodeResult(0, mageEncodeErrOK, "")
+	}
+	if req.handles == nil {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "req.handles must be non-nil when n > 0")
+	}
+	reqGo := batchRequest{
+		handles: unsafe.Slice((*int64)(unsafe.Pointer(req.handles)), n),
+	}
+	if req.perspective_player_idx != nil {
+		reqGo.perspectives = unsafe.Slice((*int64)(unsafe.Pointer(req.perspective_player_idx)), n)
+	}
+	views, viewErr := makeOutputViewsC(n, cfgGo, out)
+	if viewErr != nil {
+		return newEncodeResult(0, viewErr.code, viewErr.message)
+	}
+	rowsWritten, err := encodeBatchGo(reqGo, cfgGo, views)
+	if err != nil {
+		return newEncodeResult(rowsWritten, err.code, err.message)
+	}
+	return newEncodeResult(rowsWritten, mageEncodeErrOK, "")
+}
+
+//export MagePendingPlayer
+func MagePendingPlayer(id C.int64_t) C.int64_t {
+	defer func() { _ = recover() }()
+	h := getHandle(int64(id))
+	if h == nil {
+		return -1
+	}
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if h.done {
+		return -1
+	}
+	if pending := buildPending(h.current); pending != nil {
+		return C.int64_t(pending.PlayerIdx)
+	}
+	return -1
+}
+
+//export MageIsOver
+func MageIsOver(id C.int64_t) C.int64_t {
+	defer func() { _ = recover() }()
+	h := getHandle(int64(id))
+	if h == nil {
+		return 1
+	}
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if h.done {
+		return 1
+	}
+	return 0
+}
+
+//export MageWinner
+func MageWinner(id C.int64_t) *C.char {
+	defer func() { _ = recover() }()
+	h := getHandle(int64(id))
+	if h == nil {
+		return C.CString("")
+	}
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if h.current.Winner != "" {
+		return C.CString(h.current.Winner)
+	}
+	if h.game != nil {
+		return C.CString(h.game.Winner())
+	}
+	return C.CString("")
 }
 
 func main() {} // required for c-shared
