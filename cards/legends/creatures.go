@@ -87,6 +87,7 @@ func registerCreatures() {
 			})),
 			// {1}: Can't be regenerated this turn. Only opponents may activate.
 			WithActivatedAbility(
+					// TODO: convert to pipeline — needs GrantTemporaryKeyword(kw, SelectSource) primitive
 				FuncEffect("can't be regenerated this turn",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -126,6 +127,7 @@ func registerCreatures() {
 			WithSubTypes("Dragon", "Wurm"),
 			WithKeyword(Defender),
 			WithKeyword(Trample),
+			// TODO: convert to pipeline — needs RevokeBaseAttr(kw, SelectSource) primitive
 			WithAbility(BlocksTrigger(FuncEffect("lose defender", EffectProperties{Outcome: OutcomeBenefit}, func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 				perm := g.FindPermanent(sourceID)
 				if perm != nil {
@@ -301,6 +303,7 @@ func registerCreatures() {
 			WithKeyword(Defender),
 			WithAbility(
 				NewTriggered(EvtBlockersDecl, false,
+					// TODO: convert to pipeline — needs GrantTemporaryKeyword(kw, SelectSource) primitive
 					FuncEffect("gain banding until end of turn",
 						EffectProperties{Outcome: OutcomeBenefit},
 						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -496,6 +499,7 @@ func registerCreatures() {
 		return NewCreature("Psionic Entity", "{4}{U}", 2, 2,
 			WithSubTypes("Illusion"),
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs DealDamageToSource(N) primitive
 				FuncEffect("deal 2 damage to any target and 3 damage to self",
 					EffectProperties{Outcome: OutcomeDetriment, DamageValue: Fixed(2)},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -1229,6 +1233,7 @@ func registerCreatures() {
 		return NewCreature("Shimian Night Stalker", "{3}{B}{B}", 4, 4,
 			WithSubTypes("Nightstalker"),
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs SetAttackerDamageRedirect data effect
 				FuncEffect("redirect damage from target attacker to this creature",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -2192,20 +2197,7 @@ func registerCreatures() {
 			WithSubTypes("Human"),
 			WithActivatedAbility(
 				// XXX: "bands with other creatures named Wolves of the Hunt" approximated as Banding
-				FuncEffect("create a 1/1 green Wolf creature token named Wolves of the Hunt with bands with other Wolves of the Hunt", EffectProperties{Outcome: OutcomeBenefit}, func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					token := NewToken("Wolves of the Hunt", 1, 1, []CardType{TypeCreature}, []string{"Wolf"}, Banding)
-					token.SetOwner(controller)
-					perm := g.PutOnBattlefield(token, controller)
-					tokenID := perm.ID()
-					ce := TargetEffect(LayerColor, Indefinite, tokenID, func(g *Game, target *Permanent) error {
-						colors := []Color{Green}
-						target.ColorOverride = &colors
-						return nil
-					})
-					ce.SetSourceID(tokenID)
-					g.AddContinuousEffect(ce)
-					return nil
-				}),
+				CreateColoredToken("Wolves of the Hunt", 1, 1, []Color{Green}, []CardType{TypeCreature}, []string{"Wolf"}, Banding),
 				ManaCostOf("{2}{G}{G}"),
 			),
 		)
@@ -2291,6 +2283,7 @@ func registerCreatures() {
 		return NewCreature("Radjan Spirit", "{3}{G}", 3, 2,
 			WithSubTypes("Spirit"),
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs RevokeKeywordUntilEndOfTurn(kw, SelectTarget) primitive
 				FuncEffect("target creature loses flying until end of turn", EffectProperties{Outcome: OutcomeDetriment}, func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
@@ -2320,6 +2313,7 @@ func registerCreatures() {
 		return NewCreature("Shelkin Brownie", "{1}{G}", 1, 1,
 			WithSubTypes("Ouphe"),
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs RevokeKeywordUntilEndOfTurn(kw, SelectTarget) primitive
 				FuncEffect(
 					"target creature loses all bands with other abilities until end of turn",
 					EffectProperties{Outcome: OutcomeDetriment},
@@ -2565,20 +2559,7 @@ func registerCreatures() {
 			WithSubTypes("Zombie", "Wizard"),
 			WithSuperTypes(SuperLegendary),
 			WithActivatedAbility(
-				FuncEffect("create a 1/1 black and red Demon creature token named Minor Demon", EffectProperties{Outcome: OutcomeBenefit}, func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					token := NewToken("Minor Demon", 1, 1, []CardType{TypeCreature}, []string{"Demon"})
-					token.SetOwner(controller)
-					perm := g.PutOnBattlefield(token, controller)
-					tokenID := perm.ID()
-					ce := TargetEffect(LayerColor, Indefinite, tokenID, func(g *Game, target *Permanent) error {
-						colors := []Color{Black, Red}
-						target.ColorOverride = &colors
-						return nil
-					})
-					ce.SetSourceID(tokenID)
-					g.AddContinuousEffect(ce)
-					return nil
-				}),
+				CreateColoredToken("Minor Demon", 1, 1, []Color{Black, Red}, []CardType{TypeCreature}, []string{"Demon"}),
 				ManaCostOf("{2}{B}{R}"),
 				WithCost(TapSourceCost()),
 			),
@@ -3241,20 +3222,11 @@ func registerCreatures() {
 			WithAbility(ETBEffect(AddCounters(Dream, Fixed(7), SelectSource))),
 			// Remove a dream counter: Add {C}
 			WithActivatedAbility(
-				FuncEffect(
-					"add {C}",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						p := g.GetPlayer(controller)
-						if p != nil {
-							p.ManaPool().Add(Colorless, 1)
-						}
-						return nil
-					},
-				),
+				AddMana(Colorless, 1),
 				RemoveCountersCost(Dream, 1),
 			),
 			// Remove a dream counter: Prevent the next 1 damage to Rasputin this turn
+			// TODO: convert to pipeline — needs PreventDamageToSource(N) primitive
 			WithActivatedAbility(
 				FuncEffect(
 					"prevent the next 1 damage that would be dealt to Rasputin this turn",

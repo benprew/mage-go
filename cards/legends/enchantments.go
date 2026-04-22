@@ -74,6 +74,7 @@ func registerEnchantments() {
 	Register("Backfire", func() Card {
 		return NewAura("Backfire", "{U}",
 			WithAbility(
+				// TODO: convert to pipeline — needs SnapshotAttached + EventAmount primitives
 				NewTriggered(EvtDamageDealt, false,
 					FuncEffect("deal damage to enchanted creature's controller",
 						EffectProperties{Outcome: OutcomeDetriment},
@@ -115,6 +116,7 @@ func registerEnchantments() {
 		return NewAura("Blight", "{B}{B}",
 			WithCastTarget(TargetLand()),
 			WithAbility(
+				// TODO: convert to pipeline — needs DestroyAttached primitive
 				WhenAttachedBecomesTappedTrigger(
 					FuncEffect("destroy enchanted land",
 						EffectProperties{Outcome: OutcomeDetriment},
@@ -161,6 +163,7 @@ func registerEnchantments() {
 	// At the beginning of your upkeep, remove a pupa counter from this Aura. If you can't, sacrifice it, put a +1/+1 counter on enchanted creature, and that creature gains flying.
 	Register("Cocoon", func() Card {
 		return NewAura("Cocoon", "{G}",
+			// TODO: convert to pipeline — needs TapAttached + AddCountersToSource primitives
 			WithAbility(EntersBattlefieldTrigger(
 				FuncEffect("tap enchanted creature and add pupa counters",
 					EffectProperties{},
@@ -186,6 +189,7 @@ func registerEnchantments() {
 					return nil
 				}),
 			),
+			// TODO: convert to pipeline — needs SnapshotSourceCounter + conditional sacrifice + AddCounterToAttached + GrantKeywordToAttached
 			WithAbility(BeginningOfUpkeepTrigger(
 				FuncEffect("remove pupa counter or sacrifice and boost",
 					EffectProperties{},
@@ -273,31 +277,11 @@ func registerEnchantments() {
 	Register("Divine Intervention", func() Card {
 		return NewEnchantment("Divine Intervention", "{6}{W}{W}",
 			WithAbility(EntersBattlefieldTrigger(
-				FuncEffect("add intervention counters",
-					EffectProperties{},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						perm := g.FindPermanent(sourceID)
-						if perm != nil {
-							perm.AddCounter(Intervention, 2)
-						}
-						return nil
-					}), false,
+				AddCounters(Intervention, Fixed(2), SelectSource), false,
 			)),
 			WithAbility(BeginningOfUpkeepTrigger(
-				FuncEffect("remove intervention counter",
-					EffectProperties{},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						perm := g.FindPermanent(sourceID)
-						if perm == nil {
-							return nil
-						}
-						if perm.Counters[Intervention] > 0 {
-							perm.RemoveCounter(Intervention, 1)
-							// When last counter is removed, game is a draw
-							// XXX: needs game draw mechanic
-						}
-						return nil
-					}), false,
+				RemoveCountersFromSource(Intervention, 1), false,
+				// XXX: needs game draw mechanic — when last counter is removed, game is a draw
 			)),
 		)
 	})
@@ -316,6 +300,7 @@ func registerEnchantments() {
 	// {0}: Enchanted creature becomes the color or colors of your choice. Activate only once each turn.
 	Register("Dream Coat", func() Card {
 		return NewAura("Dream Coat", "{U}",
+			// TODO: convert to pipeline — needs ChooseColor + ColorOverrideAttached primitives
 			WithActivatedAbility(
 				FuncEffect("change enchanted creature's color",
 					EffectProperties{Outcome: OutcomeBenefit},
@@ -453,6 +438,7 @@ func registerEnchantments() {
 	// {1}{W}: The next time a black or red source of your choice would deal damage to you this turn, prevent that damage.
 	Register("Greater Realm of Preservation", func() Card {
 		return NewEnchantment("Greater Realm of Preservation", "{1}{W}",
+			// TODO: convert to pipeline — needs ChoosePermanent + AddPreventionShield primitives
 			WithActivatedAbility(
 				FuncEffect("prevent next damage from a black or red source of your choice",
 					EffectProperties{Outcome: OutcomeBenefit},
@@ -501,6 +487,7 @@ func registerEnchantments() {
 	// Sacrifice a Swamp: Regenerate target black creature. (The next time that creature would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on it.)
 	Register("Horror of Horrors", func() Card {
 		return NewEnchantment("Horror of Horrors", "{3}{B}{B}",
+			// TODO: convert to pipeline — needs SacrificeChosenPermanent cost primitive
 			WithActivatedAbility(
 				FuncEffect("sacrifice Swamp, regenerate target black creature",
 					EffectProperties{Outcome: OutcomeBenefit},
@@ -557,6 +544,7 @@ func registerEnchantments() {
 		return NewEnchantment("In the Eye of Chaos", "{2}{U}",
 			WithSuperTypes(SuperWorld),
 			WithAbility(
+				// TODO: convert to pipeline — needs CounterUnlessPayCMC (variable cost from spell's CMC)
 				NewTriggered(EvtSpellCast, false,
 					FuncEffect("counter instant unless pay CMC",
 						EffectProperties{Outcome: OutcomeDetriment},
@@ -724,6 +712,7 @@ func registerEnchantments() {
 	Register("Invoke Prejudice", func() Card {
 		return NewEnchantment("Invoke Prejudice", "{U}{U}{U}{U}",
 			WithAbility(
+				// TODO: convert to pipeline — needs CounterUnlessPayCMC (variable cost from spell's CMC)
 				NewTriggered(EvtSpellCast, false,
 					FuncEffect("counter creature unless pay CMC",
 						EffectProperties{Outcome: OutcomeDetriment},
@@ -807,6 +796,7 @@ func registerEnchantments() {
 	Register("Land Tax", func() Card {
 		return NewEnchantment("Land Tax", "{W}",
 			WithAbility(
+				// TODO: convert to pipeline — needs SearchLibrary primitive with up-to-N and filter
 				BeginningOfUpkeepTrigger(
 					FuncEffect("search for up to three basic land cards",
 						EffectProperties{Outcome: OutcomeBenefit},
@@ -863,6 +853,7 @@ func registerEnchantments() {
 	Register("Land's Edge", func() Card {
 		return NewEnchantment("Land's Edge", "{1}{R}{R}",
 			WithSuperTypes(SuperWorld),
+			// TODO: convert to pipeline — needs discarded-card-type check conditional
 			WithActivatedAbility(
 				FuncEffect("deal 2 if discarded land",
 					EffectProperties{Outcome: OutcomeDetriment, DamageValue: Fixed(2)},
@@ -935,21 +926,7 @@ func registerEnchantments() {
 			WithSuperTypes(SuperWorld),
 			WithAbility(
 				NewTriggered(EvtSpellCast, false,
-					FuncEffect("counter unless pay 3",
-						EffectProperties{Outcome: OutcomeDetriment},
-						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-							if len(targets) == 0 {
-								return nil
-							}
-							so := g.FindStackObject(targets[0])
-							if so == nil {
-								return nil
-							}
-							if !g.TryPayCostFromLands(so.Controller, "{3}") {
-								g.CounterSpellOnStack(targets[0])
-							}
-							return nil
-						}),
+					CounterUnlessPay("{3}"),
 				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 					return true // all spells
 				}),
@@ -964,15 +941,7 @@ func registerEnchantments() {
 		return NewEnchantment("Presence of the Master", "{3}{W}",
 			WithAbility(
 				NewTriggered(EvtSpellCast, false,
-					FuncEffect("counter enchantment spell",
-						EffectProperties{Outcome: OutcomeDetriment},
-						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-							if len(targets) == 0 {
-								return nil
-							}
-							g.CounterSpellOnStack(targets[0])
-							return nil
-						}),
+					CounterSpell(),
 				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 					card := g.FindCardAnywhere(evt.SourceID)
 					if card == nil {
@@ -1140,6 +1109,7 @@ func registerEnchantments() {
 	Register("Spirit Link", func() Card {
 		return NewAura("Spirit Link", "{W}",
 			WithAbility(
+				// TODO: convert to pipeline — needs EventAmount + GainLifeFromEventAmount primitives
 				NewTriggered(EvtDamageDealt, false,
 					FuncEffect("gain life equal to damage dealt",
 						EffectProperties{Outcome: OutcomeBenefit},
@@ -1172,6 +1142,7 @@ func registerEnchantments() {
 	Register("Spirit Shackle", func() Card {
 		return NewAura("Spirit Shackle", "{B}{B}",
 			WithAbility(
+				// TODO: convert to pipeline — needs AddCounterToAttached primitive
 				NewTriggered(EvtTapped, false,
 					FuncEffect("put -0/-2 counter on enchanted creature",
 						EffectProperties{Outcome: OutcomeDetriment},
@@ -1203,6 +1174,7 @@ func registerEnchantments() {
 	Register("Spiritual Sanctuary", func() Card {
 		return NewEnchantment("Spiritual Sanctuary", "{2}{W}{W}",
 			WithAbility(
+				// TODO: convert to pipeline — needs ActivePlayer selector + HasMatchingPermanent condition scoped to active player
 				BeginningOfEachUpkeepTrigger(
 					FuncEffect("gain 1 life if you control a Plains",
 						EffectProperties{Outcome: OutcomeBenefit},
@@ -1250,6 +1222,7 @@ func registerEnchantments() {
 	// XXX: needs aura-to-enchantment mode change engine support
 	Register("Takklemaggot", func() Card {
 		return NewAura("Takklemaggot", "{2}{B}{B}",
+			// TODO: convert to pipeline — needs AddCounterToAttached primitive
 			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
 				FuncEffect("put -0/-1 counter on enchanted creature",
 					EffectProperties{Outcome: OutcomeDetriment},
@@ -1275,6 +1248,7 @@ func registerEnchantments() {
 		return NewEnchantment("The Abyss", "{3}{B}",
 			WithSuperTypes(SuperWorld),
 			WithAbility(
+				// TODO: convert to pipeline — needs ActivePlayerChoosePermanent + DestroyGatheredNoRegen
 				BeginningOfEachUpkeepTrigger(
 					FuncEffect("destroy nonartifact creature",
 						EffectProperties{Outcome: OutcomeDetriment},
@@ -1349,6 +1323,7 @@ func registerEnchantments() {
 	// At the beginning of the upkeep of enchanted creature's controller, remove a sleep counter from that creature.
 	Register("Venarian Gold", func() Card {
 		return NewAura("Venarian Gold", "{X}{U}{U}",
+			// TODO: convert to pipeline — needs TapAttached + AddCountersToAttachedFromX primitives
 			WithAbility(EntersBattlefieldTrigger(
 				FuncEffect("tap creature and add sleep counters",
 					EffectProperties{},
@@ -1375,6 +1350,7 @@ func registerEnchantments() {
 				}
 				return nil
 			})),
+			// TODO: convert to pipeline — needs RemoveCounterFromAttached primitive
 			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
 				FuncEffect("remove sleep counter",
 					EffectProperties{},

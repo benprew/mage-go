@@ -68,6 +68,7 @@ func registerLands() {
 		return NewLand("Hammerheim",
 			WithSuperTypes(SuperLegendary),
 			WithManaAbility(Red),
+			// TODO: convert to pipeline — needs RevokeAttrUntilEndOfTurn step (iterate LandwalkAttrs)
 			WithActivatedAbility(
 				FuncEffect(
 					"target creature loses all landwalk abilities until end of turn",
@@ -193,18 +194,14 @@ func registerLands() {
 						return evt.PlayerID == controllerID
 					},
 					IsCreature,
-					FuncEffect("destroy this creature unless you pay {1}",
+					Pipeline("destroy this creature unless you pay {1}",
 						EffectProperties{Outcome: OutcomeDetriment},
-						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							perm := g.FindPermanent(sourceID)
-							if perm == nil {
-								return nil
-							}
-							if !g.TryPayCostFromLands(controller, "{1}") {
-								g.DestroyPermanent(perm)
-							}
-							return nil
-						}),
+						SnapshotPermanent(SelectSource, "self"),
+						IfElse("pay {1} or be destroyed",
+							&NotCond{Inner: &TryPayManaCond{Cost: "{1}"}},
+							DestroyGathered("self"),
+							nil),
+					),
 				),
 			),
 		)
@@ -219,6 +216,7 @@ func registerLands() {
 		return NewLand("Tolaria",
 			WithSuperTypes(SuperLegendary),
 			WithManaAbility(Blue),
+			// TODO: convert to pipeline — needs RevokeAttrUntilEndOfTurn step
 			WithActivatedAbility(
 				FuncEffect(
 					"target creature loses banding until end of turn",
@@ -276,6 +274,7 @@ func registerLands() {
 		return NewLand("Urborg",
 			WithSuperTypes(SuperLegendary),
 			WithManaAbility(Black),
+			// TODO: convert to pipeline — needs ModalEffect + RevokeAttrUntilEndOfTurn step
 			WithActivatedAbility(
 				FuncEffect(
 					"target creature loses first strike or swampwalk until end of turn",

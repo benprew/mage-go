@@ -32,39 +32,13 @@ func registerSpells() {
 // • Return target Island to its owner's hand.
 	Register("Active Volcano", func() Card {
 		c := NewInstant("Active Volcano", "{R}",
-			NewTargetedSpell(TargetPermanent(), FuncEffect(
+			NewTargetedSpell(TargetPermanent(), Pipeline(
 				"destroy target blue permanent or return target Island to its owner's hand",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					if len(targets) == 0 {
-						return nil
-					}
-					if g.ModeValue() == 0 {
-						// Mode 1: Destroy target blue permanent
-						perm := g.FindPermanent(targets[0])
-						if perm == nil {
-							return nil
-						}
-						g.DestroyPermanent(perm)
-					} else {
-						// Mode 2: Return target Island to its owner's hand
-						perm := g.FindPermanent(targets[0])
-						if perm == nil {
-							return nil
-						}
-						card := perm.Card
-						owner := card.Owner()
-						if owner == uuid.Nil {
-							owner = perm.Controller
-						}
-						g.RemoveFromBattlefield(perm)
-						p := g.GetPlayer(owner)
-						if p != nil {
-							p.AddToHand(card)
-						}
-					}
-					return nil
-				},
+				ModalEffect("choose one",
+					UnwrapEffect(DestroyTarget()),
+					UnwrapEffect(ReturnToHandTarget()),
+				),
 			)),
 		)
 		c.SetModes([]string{
@@ -80,6 +54,7 @@ func registerSpells() {
 // Choose one —
 // • Target player gains X life.
 // • Prevent the next X damage that would be dealt to any target this turn.
+	// TODO: convert to pipeline — needs ModalEffect with XValue-based GainLifeTarget and PreventDamageToTarget
 	Register("Alabaster Potion", func() Card {
 		c := NewInstant("Alabaster Potion", "{X}{W}{W}",
 			NewTargetedSpell(TargetAnyTarget(), FuncEffect(
@@ -154,6 +129,7 @@ func registerSpells() {
 // Blood Lust {1}{R}
 // Instant
 // If target creature has toughness 5 or greater, it gets +4/-4 until end of turn. Otherwise, it gets +4/-X until end of turn, where X is its toughness minus 1.
+	// TODO: convert to pipeline — needs conditional TemporaryBoost based on current toughness
 	Register("Blood Lust", func() Card {
 		return NewInstant("Blood Lust", "{1}{R}",
 			NewTargetedSpell(TargetCreature(), FuncEffect(
@@ -266,6 +242,7 @@ func registerSpells() {
 // Divine Offering {1}{W}
 // Instant
 // Destroy target artifact. You gain life equal to its mana value.
+	// TODO: convert to pipeline — needs GainLifeFromVar with controller (not target.controller)
 	Register("Divine Offering", func() Card {
 		return NewInstant("Divine Offering", "{1}{W}",
 			NewTargetedSpell(TargetArtifact(), FuncEffect(
@@ -319,6 +296,7 @@ func registerSpells() {
 // Energy Tap {U}
 // Sorcery
 // Tap target untapped creature you control. If you do, add an amount of {C} equal to that creature's mana value.
+	// TODO: convert to pipeline — needs TapGathered step and AddManaFromVar step
 	Register("Energy Tap", func() Card {
 		return NewSorcery("Energy Tap", "{U}",
 			NewTargetedSpell(TargetControlledCreature(), FuncEffect(
@@ -442,39 +420,13 @@ func registerSpells() {
 // • Return target Mountain to its owner's hand.
 	Register("Flash Flood", func() Card {
 		c := NewInstant("Flash Flood", "{U}",
-			NewTargetedSpell(TargetPermanent(), FuncEffect(
+			NewTargetedSpell(TargetPermanent(), Pipeline(
 				"destroy target red permanent or return target Mountain to its owner's hand",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					if len(targets) == 0 {
-						return nil
-					}
-					if g.ModeValue() == 0 {
-						// Mode 1: Destroy target red permanent
-						perm := g.FindPermanent(targets[0])
-						if perm == nil {
-							return nil
-						}
-						g.DestroyPermanent(perm)
-					} else {
-						// Mode 2: Return target Mountain to its owner's hand
-						perm := g.FindPermanent(targets[0])
-						if perm == nil {
-							return nil
-						}
-						card := perm.Card
-						owner := card.Owner()
-						if owner == uuid.Nil {
-							owner = perm.Controller
-						}
-						g.RemoveFromBattlefield(perm)
-						p := g.GetPlayer(owner)
-						if p != nil {
-							p.AddToHand(card)
-						}
-					}
-					return nil
-				},
+				ModalEffect("choose one",
+					UnwrapEffect(DestroyTarget()),
+					UnwrapEffect(ReturnToHandTarget()),
+				),
 			)),
 		)
 		c.SetModes([]string{
@@ -738,6 +690,7 @@ func registerSpells() {
 // Great Defender {W}
 // Instant
 // Target creature gets +0/+X until end of turn, where X is its mana value.
+	// TODO: convert to pipeline — needs BoostUntilEndOfTurn to support VarInt context binding
 	Register("Great Defender", func() Card {
 		return NewInstant("Great Defender", "{W}",
 			NewTargetedSpell(TargetCreature(), FuncEffect(
@@ -828,6 +781,7 @@ func registerSpells() {
 // Indestructible Aura {W}
 // Instant
 // Prevent all damage that would be dealt to target creature this turn.
+	// TODO: convert to pipeline — needs PreventAllDamageToTarget step
 	Register("Indestructible Aura", func() Card {
 		return NewInstant("Indestructible Aura", "{W}",
 			NewTargetedSpell(TargetCreature(), FuncEffect(
@@ -1238,19 +1192,7 @@ func registerSpells() {
 // Creatures you control get +0/+2 until end of turn.
 	Register("Shield Wall", func() Card {
 		return NewInstant("Shield Wall", "{1}{W}",
-			NewSpellAbility(FuncEffect(
-				"creatures you control get +0/+2 until end of turn",
-				EffectProperties{Outcome: OutcomeBenefit},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					creatures := g.FilterBattlefield(And(IsCreature, ControlledBy(controller)))
-					for _, perm := range creatures {
-						ce := TemporaryBoost(perm.ID(), 0, 2)
-						ce.SetSourceID(sourceID)
-						g.AddContinuousEffect(ce)
-					}
-					return nil
-				},
-			)),
+			NewSpellAbility(BoostMatchingUntilEndOfTurn(Fixed(0), Fixed(2), AnyPermanent)),
 		)
 	})
 
