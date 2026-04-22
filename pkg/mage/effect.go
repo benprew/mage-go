@@ -357,3 +357,21 @@ func (s selectEventController) Text() string { return "that player" }
 // SelectTargetPlayer creates a PlayerSelector that reads targets[0] as a player ID.
 // Use for targeted spells that target a player.
 func SelectTargetPlayer() PlayerSelector { return selectEventController{} }
+
+// selectTargetPermanentController resolves targets[0] as a permanent and
+// returns its controller. Used for triggers where the target is a permanent
+// and the effect needs to affect that permanent's controller.
+type selectTargetPermanentController struct{}
+
+func SelectTargetPermanentController() PlayerSelector { return selectTargetPermanentController{} }
+func (s selectTargetPermanentController) Select(g GameReader, _, _ uuid.UUID, targets []uuid.UUID) []uuid.UUID {
+	if len(targets) == 0 {
+		return nil
+	}
+	perm := g.FindPermanent(targets[0])
+	if perm == nil {
+		return nil
+	}
+	return []uuid.UUID{perm.Controller}
+}
+func (s selectTargetPermanentController) Text() string { return "that permanent's controller" }

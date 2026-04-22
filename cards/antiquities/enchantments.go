@@ -17,36 +17,16 @@ func registerEnchantments() {
 	// Whenever enchanted artifact becomes tapped or a player activates an ability of enchanted
 	// artifact without {T} in its activation cost, Artifact Possession deals 2 damage to that
 	// artifact's controller.
-	// TODO: convert to pipeline — needs "deal damage to attached permanent's controller" step
-	artPossDmgEffect := FuncEffect("deal 2 damage to enchanted artifact's controller",
-		EffectProperties{Outcome: OutcomeDetriment},
-		func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-			src := g.FindPermanent(sourceID)
-			if src == nil || !src.IsAttached() {
-				return nil
-			}
-			attached := g.FindPermanent(src.AttachedTo)
-			if attached == nil {
-				return nil
-			}
-			p := g.GetPlayer(attached.Controller)
-			if p != nil {
-				g.DealDamageToPlayer(p, 2, sourceID)
-			}
-			return nil
-		})
+	artPossDmgEffect := DealDamageToPlayers(Fixed(2), SelectAttachedController())
 	Register("Artifact Possession", func() Card {
 		return NewAura("Artifact Possession", "{2}{B}",
 			WithCastTarget(TargetArtifact()),
-			// Trigger when enchanted artifact becomes tapped
 			WithAbility(
 				WhenAttachedBecomesTappedTrigger(artPossDmgEffect, false),
 			),
-			// Trigger when enchanted artifact's ability is activated without {T}
 			WithAbility(
 				NewTriggered(EvtAbilityActivated, false, artPossDmgEffect,
-				).
-					SetConditionData(AttachedToIsEventSourceNoTapCost{}),
+				).SetConditionData(AttachedToIsEventSourceNoTapCost{}),
 			),
 		)
 	})
@@ -199,23 +179,7 @@ func registerEnchantments() {
 	// Enchantment
 	// Whenever an artifact becomes tapped or a player activates an artifact's ability without
 	// {T} in its activation cost, Haunting Wind deals 1 damage to that artifact's controller.
-	// TODO: convert to pipeline — needs "deal damage to event-source's controller" step
-	hauntingWindEffect := FuncEffect("deal 1 damage to artifact's controller",
-		EffectProperties{Outcome: OutcomeDetriment},
-		func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-			if len(targets) == 0 {
-				return nil
-			}
-			perm := g.FindPermanent(targets[0])
-			if perm == nil {
-				return nil
-			}
-			p := g.GetPlayer(perm.Controller)
-			if p != nil {
-				g.DealDamageToPlayer(p, 1, sourceID)
-			}
-			return nil
-		})
+	hauntingWindEffect := DealDamageToPlayers(Fixed(1), SelectTargetPermanentController())
 	Register("Haunting Wind", func() Card {
 		return NewEnchantment("Haunting Wind", "{3}{B}",
 			// Trigger when any artifact becomes tapped
