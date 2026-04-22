@@ -106,6 +106,9 @@ func DestroyTargetNoRegen() Effect {
 	return DataEffect(&destroyTargetNoRegenEffect{})
 }
 
+// DestroyTargetNoRegenStep returns the EffectData for use in pipelines/ForEach.
+func DestroyTargetNoRegenStep() EffectData { return &destroyTargetNoRegenEffect{} }
+
 // DestroyAllCreaturesNoRegen destroys all creatures; they can't be regenerated (e.g. Wrath of God).
 func DestroyAllCreaturesNoRegen() Effect {
 	return DestroyAllMatchingNoRegen(IsCreature, "destroy all creatures (can't be regenerated)")

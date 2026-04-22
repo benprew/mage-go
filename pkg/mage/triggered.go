@@ -1,8 +1,6 @@
 package mage
 
 import (
-	"fmt"
-
 	"github.com/google/uuid"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
@@ -272,27 +270,9 @@ func WhenAttachedBecomesTappedTrigger(effect Effect, optional bool) *GenericTrig
 
 // RampageTrigger creates a triggered ability for Rampage N.
 func RampageTrigger(n int) *GenericTriggered {
-	return NewTriggered(EvtBlockersDecl, false, FuncEffect(
-		fmt.Sprintf("rampage %d", n),
-		EffectProperties{},
-		func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-			blockerCount := 0
-			for _, group := range g.CombatGroups() {
-				if group.AttackerID == sourceID {
-					blockerCount = len(group.BlockerIDs)
-					break
-				}
-			}
-			if blockerCount <= 1 {
-				return nil
-			}
-			bonus := n * (blockerCount - 1)
-			ce := TemporaryBoost(sourceID, bonus, bonus)
-			ce.SetSourceID(sourceID)
-			g.AddContinuousEffect(ce)
-			return nil
-		},
-	)).SetConditionData(SourceIsBlockedAttacker{})
+	return NewTriggered(EvtBlockersDecl, false,
+		DataEffect(RampageEffect(n)),
+	).SetConditionData(SourceIsBlockedAttacker{})
 }
 
 // WhenOpponentPermanentBecomesTappedTrigger fires when a permanent matching the

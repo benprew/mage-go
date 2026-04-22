@@ -570,7 +570,6 @@ func registerSpells() {
 						return nil
 					}
 					wallID := targets[0]
-					// Find all attackers blocked by this Wall and register delayed destruction
 					for _, group := range g.CombatGroups() {
 						for _, bid := range group.BlockerIDs {
 							if bid == wallID {

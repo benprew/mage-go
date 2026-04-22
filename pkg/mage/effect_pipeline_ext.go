@@ -1,6 +1,8 @@
 package mage
 
 import (
+	"fmt"
+
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"github.com/google/uuid"
 )
@@ -572,5 +574,240 @@ func execRemoveFromCombatGathered(ctx *EffectContext, e *RemoveFromCombatGathere
 		return nil
 	}
 	ctx.Game.RemoveFromCombat(id)
+	return nil
+}
+
+// ---------------------------------------------------------------------------
+// Combat group iteration primitives
+// ---------------------------------------------------------------------------
+
+// ForEachBlockerOfSourceData iterates all creatures blocking the source
+// attacker. Each blocker's ID is set as targets[0] for the inner effect.
+type ForEachBlockerOfSourceData struct {
+	Inner EffectData
+	Txt   string
+}
+
+func ForEachBlockerOfSource(inner EffectData, text string) EffectData {
+	return &ForEachBlockerOfSourceData{Inner: inner, Txt: text}
+}
+
+func (e *ForEachBlockerOfSourceData) EffectText() string            { return e.Txt }
+func (e *ForEachBlockerOfSourceData) EffectProps() EffectProperties { return EffectProperties{} }
+
+func execForEachBlockerOfSource(ctx *EffectContext, e *ForEachBlockerOfSourceData) error {
+	group := ctx.Game.CombatGroupFor(ctx.SourceID)
+	if group == nil {
+		return nil
+	}
+	blockerIDs := make([]uuid.UUID, len(group.BlockerIDs))
+	copy(blockerIDs, group.BlockerIDs)
+	savedTargets := ctx.Targets
+	for _, bid := range blockerIDs {
+		ctx.Targets = []uuid.UUID{bid}
+		if err := ExecuteEffect(ctx, e.Inner); err != nil {
+			return err
+		}
+	}
+	ctx.Targets = savedTargets
+	return nil
+}
+
+// ForEachAttackerBlockedBySourceData iterates all attackers that the source
+// creature is blocking. Each attacker's ID is set as targets[0].
+type ForEachAttackerBlockedBySourceData struct {
+	Inner EffectData
+	Txt   string
+}
+
+func ForEachAttackerBlockedBySource(inner EffectData, text string) EffectData {
+	return &ForEachAttackerBlockedBySourceData{Inner: inner, Txt: text}
+}
+
+func (e *ForEachAttackerBlockedBySourceData) EffectText() string            { return e.Txt }
+func (e *ForEachAttackerBlockedBySourceData) EffectProps() EffectProperties { return EffectProperties{} }
+
+func execForEachAttackerBlockedBySource(ctx *EffectContext, e *ForEachAttackerBlockedBySourceData) error {
+	var attackerIDs []uuid.UUID
+	for _, group := range ctx.Game.CombatGroups() {
+		for _, bid := range group.BlockerIDs {
+			if bid == ctx.SourceID {
+				attackerIDs = append(attackerIDs, group.AttackerID)
+				break
+			}
+		}
+	}
+	savedTargets := ctx.Targets
+	for _, aid := range attackerIDs {
+		ctx.Targets = []uuid.UUID{aid}
+		if err := ExecuteEffect(ctx, e.Inner); err != nil {
+			return err
+		}
+	}
+	ctx.Targets = savedTargets
+	return nil
+}
+
+// ForEachCombatOpponentData iterates all creatures in combat with the source
+// (blockers if source is attacking, attacker if source is blocking).
+// Each opponent's ID is set as targets[0].
+type ForEachCombatOpponentData struct {
+	Inner EffectData
+	Txt   string
+}
+
+func ForEachCombatOpponent(inner EffectData, text string) EffectData {
+	return &ForEachCombatOpponentData{Inner: inner, Txt: text}
+}
+
+func (e *ForEachCombatOpponentData) EffectText() string            { return e.Txt }
+func (e *ForEachCombatOpponentData) EffectProps() EffectProperties { return EffectProperties{} }
+
+func execForEachCombatOpponent(ctx *EffectContext, e *ForEachCombatOpponentData) error {
+	var opponentIDs []uuid.UUID
+	for _, group := range ctx.Game.CombatGroups() {
+		if group.AttackerID == ctx.SourceID {
+			opponentIDs = append(opponentIDs, group.BlockerIDs...)
+		}
+		for _, bid := range group.BlockerIDs {
+			if bid == ctx.SourceID {
+				opponentIDs = append(opponentIDs, group.AttackerID)
+			}
+		}
+	}
+	savedTargets := ctx.Targets
+	for _, id := range opponentIDs {
+		ctx.Targets = []uuid.UUID{id}
+		if err := ExecuteEffect(ctx, e.Inner); err != nil {
+			return err
+		}
+	}
+	ctx.Targets = savedTargets
+	return nil
+}
+
+// ForEachBlockerOfTargetData iterates all creatures blocking a target attacker
+// (targets[0]). Each blocker's ID replaces targets[0] for the inner effect.
+// Used by spells that target an attacker and affect its blockers (e.g. Feint).
+type ForEachBlockerOfTargetData struct {
+	Inner EffectData
+	Txt   string
+}
+
+func ForEachBlockerOfTarget(inner EffectData, text string) EffectData {
+	return &ForEachBlockerOfTargetData{Inner: inner, Txt: text}
+}
+
+func (e *ForEachBlockerOfTargetData) EffectText() string            { return e.Txt }
+func (e *ForEachBlockerOfTargetData) EffectProps() EffectProperties { return EffectProperties{} }
+
+func execForEachBlockerOfTarget(ctx *EffectContext, e *ForEachBlockerOfTargetData) error {
+	if len(ctx.Targets) == 0 {
+		return nil
+	}
+	attackerID := ctx.Targets[0]
+	group := ctx.Game.CombatGroupFor(attackerID)
+	if group == nil {
+		return nil
+	}
+	blockerIDs := make([]uuid.UUID, len(group.BlockerIDs))
+	copy(blockerIDs, group.BlockerIDs)
+	savedTargets := ctx.Targets
+	for _, bid := range blockerIDs {
+		ctx.Targets = []uuid.UUID{bid}
+		if err := ExecuteEffect(ctx, e.Inner); err != nil {
+			return err
+		}
+	}
+	ctx.Targets = savedTargets
+	return nil
+}
+
+// ForEachAttackerBlockedByTargetData iterates all attackers that a target
+// creature (targets[0]) is blocking. Each attacker's ID replaces targets[0].
+// Used by spells that target a Wall and affect creatures it blocked (Glyph of Doom).
+type ForEachAttackerBlockedByTargetData struct {
+	Inner EffectData
+	Txt   string
+}
+
+func ForEachAttackerBlockedByTarget(inner EffectData, text string) EffectData {
+	return &ForEachAttackerBlockedByTargetData{Inner: inner, Txt: text}
+}
+
+func (e *ForEachAttackerBlockedByTargetData) EffectText() string            { return e.Txt }
+func (e *ForEachAttackerBlockedByTargetData) EffectProps() EffectProperties { return EffectProperties{} }
+
+func execForEachAttackerBlockedByTarget(ctx *EffectContext, e *ForEachAttackerBlockedByTargetData) error {
+	if len(ctx.Targets) == 0 {
+		return nil
+	}
+	blockerID := ctx.Targets[0]
+	var attackerIDs []uuid.UUID
+	for _, group := range ctx.Game.CombatGroups() {
+		for _, bid := range group.BlockerIDs {
+			if bid == blockerID {
+				attackerIDs = append(attackerIDs, group.AttackerID)
+				break
+			}
+		}
+	}
+	savedTargets := ctx.Targets
+	for _, aid := range attackerIDs {
+		ctx.Targets = []uuid.UUID{aid}
+		if err := ExecuteEffect(ctx, e.Inner); err != nil {
+			return err
+		}
+	}
+	ctx.Targets = savedTargets
+	return nil
+}
+
+// BlockerCountVarData stores the number of blockers of the source attacker
+// into a context variable. Used for Rampage calculations.
+type BlockerCountVarData struct {
+	StoreAs string
+}
+
+func BlockerCountVar(storeAs string) EffectData {
+	return &BlockerCountVarData{StoreAs: storeAs}
+}
+
+func (e *BlockerCountVarData) EffectText() string            { return "count blockers" }
+func (e *BlockerCountVarData) EffectProps() EffectProperties { return EffectProperties{} }
+
+func execBlockerCountVar(ctx *EffectContext, e *BlockerCountVarData) error {
+	group := ctx.Game.CombatGroupFor(ctx.SourceID)
+	if group == nil {
+		ctx.SetInt(e.StoreAs, 0)
+		return nil
+	}
+	ctx.SetInt(e.StoreAs, len(group.BlockerIDs))
+	return nil
+}
+
+// RampageEffectData implements Rampage N: +N/+N for each blocker beyond the first.
+type RampageEffectData struct {
+	N int
+}
+
+func RampageEffect(n int) EffectData {
+	return &RampageEffectData{N: n}
+}
+
+func (e *RampageEffectData) EffectText() string {
+	return fmt.Sprintf("rampage %d", e.N)
+}
+func (e *RampageEffectData) EffectProps() EffectProperties { return EffectProperties{} }
+
+func execRampageEffect(ctx *EffectContext, e *RampageEffectData) error {
+	group := ctx.Game.CombatGroupFor(ctx.SourceID)
+	if group == nil || len(group.BlockerIDs) <= 1 {
+		return nil
+	}
+	bonus := e.N * (len(group.BlockerIDs) - 1)
+	ce := TemporaryBoost(ctx.SourceID, bonus, bonus)
+	ce.SetSourceID(ctx.SourceID)
+	ctx.Game.AddContinuousEffect(ce)
 	return nil
 }

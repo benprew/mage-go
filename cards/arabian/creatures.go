@@ -20,34 +20,10 @@ func registerCreatures() {
 			WithSubTypes("Human"),
 			WithAbility(
 				NewTriggered(EvtCreatureDied, false,
-					// TODO: convert to pipeline — needs combat group iteration primitive
-				FuncEffect("destroy all creatures blocking or blocked by Abu Ja'far",
-						EffectProperties{},
-						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-							if len(g.CombatGroups()) == 0 {
-								return nil
-							}
-							var toDestroy []uuid.UUID
-							for _, group := range g.CombatGroups() {
-								if group.AttackerID == sourceID {
-									toDestroy = append(toDestroy, group.BlockerIDs...)
-								}
-								for _, bid := range group.BlockerIDs {
-									if bid == sourceID {
-										toDestroy = append(toDestroy, group.AttackerID)
-									}
-								}
-							}
-							for _, id := range toDestroy {
-								p := g.FindPermanent(id)
-								if p != nil {
-									// "They can't be regenerated."
-									p.GrantBaseAttr(CantRegenerate)
-									g.DestroyPermanent(p)
-								}
-							}
-							return nil
-						}),
+					DataEffect(ForEachCombatOpponent(
+						DestroyTargetNoRegenStep(),
+						"destroy all creatures blocking or blocked by Abu Ja'far",
+					)),
 				).SetConditionData(EventSourceIsSelf{}),
 			),
 		)

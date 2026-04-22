@@ -254,6 +254,22 @@ func ExecuteEffect(ctx *EffectContext, data EffectData) error {
 	case *RemoveFromCombatGatheredData:
 		return execRemoveFromCombatGathered(ctx, e)
 
+	// Combat group iteration
+	case *ForEachBlockerOfSourceData:
+		return execForEachBlockerOfSource(ctx, e)
+	case *ForEachAttackerBlockedBySourceData:
+		return execForEachAttackerBlockedBySource(ctx, e)
+	case *ForEachCombatOpponentData:
+		return execForEachCombatOpponent(ctx, e)
+	case *ForEachBlockerOfTargetData:
+		return execForEachBlockerOfTarget(ctx, e)
+	case *ForEachAttackerBlockedByTargetData:
+		return execForEachAttackerBlockedByTarget(ctx, e)
+	case *BlockerCountVarData:
+		return execBlockerCountVar(ctx, e)
+	case *RampageEffectData:
+		return execRampageEffect(ctx, e)
+
 	default:
 		_ = e
 		return fmt.Errorf("executor: unhandled EffectData type %T", data)
