@@ -19,9 +19,7 @@ func TestGenericTriggered(t *testing.T) {
 						core.EvtEntersBattlefield,
 						false,
 						mage.GainLife(3),
-					).SetCondition(func(evt *core.GameEvent, _ mage.GameReader, sourceID, _ uuid.UUID) bool {
-						return evt.SourceID == sourceID
-					})),
+					).SetConditionData(mage.EventSourceIsSelf{})),
 				)
 			})
 		}
@@ -45,9 +43,7 @@ func TestGenericTriggered(t *testing.T) {
 						core.EvtUpkeep,
 						false,
 						mage.DealDamageToPlayers(mage.Fixed(1), mage.SelectController()),
-					).SetCondition(func(evt *core.GameEvent, _ mage.GameReader, _, controllerID uuid.UUID) bool {
-						return evt.PlayerID == controllerID
-					})),
+					).SetConditionData(mage.EventPlayerIsController{})),
 				)
 			})
 		}
@@ -75,12 +71,10 @@ func TestGenericTriggered(t *testing.T) {
 						core.EvtCreatureDied,
 						false,
 						mage.AddCounters(core.P1P1, mage.Fixed(1), mage.SelectSource),
-					).SetCondition(func(evt *core.GameEvent, _ mage.GameReader, sourceID, controllerID uuid.UUID) bool {
-						if evt.SourceID == sourceID {
-							return false
-						}
-						return evt.PlayerID == controllerID
-					})),
+					).SetConditionData(mage.AndTriggerCond{Conditions: []mage.TriggerConditionData{
+						mage.EventSourceNotSelf{},
+						mage.EventPlayerIsController{},
+					}})),
 				)
 			}},
 			{victimName, func() mage.Card {
@@ -118,9 +112,7 @@ func TestGenericTriggered(t *testing.T) {
 						core.EvtDeclaredAttacker,
 						false,
 						mage.BoostUntilEndOfTurn(mage.Fixed(2), mage.Fixed(0), mage.SelectSource),
-					).SetCondition(func(evt *core.GameEvent, _ mage.GameReader, sourceID, _ uuid.UUID) bool {
-						return evt.SourceID == sourceID
-					})),
+					).SetConditionData(mage.EventSourceIsSelf{})),
 				)
 			})
 		}
@@ -252,9 +244,7 @@ func TestSourceTargetUnification(t *testing.T) {
 						core.EvtDeclaredAttacker,
 						false,
 						mage.BoostUntilEndOfTurn(mage.Fixed(1), mage.Fixed(0), mage.SelectSource),
-					).SetCondition(func(evt *core.GameEvent, _ mage.GameReader, sourceID, _ uuid.UUID) bool {
-						return evt.SourceID == sourceID
-					})),
+					).SetConditionData(mage.EventSourceIsSelf{})),
 				)
 			})
 		}

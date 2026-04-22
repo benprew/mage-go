@@ -495,31 +495,52 @@ Convenience constructors (set condition automatically):
 EvtBecameUntapped fires whenever a permanent becomes untapped (during the untap step or
 by an effect like Twiddle). Use with NewTriggered for "when this becomes untapped" triggers.
 
-Custom triggers with SetCondition:
+Custom triggers with SetConditionData (composable data predicates):
 
 	// When this creature dies (not "another" — self)
 	mage.NewTriggered(core.EvtCreatureDied, false, effect).
-	    SetCondition(func(evt *core.GameEvent, g mage.GameReader, sourceID, _ uuid.UUID) bool {
-	        return evt.SourceID == sourceID
-	    })
+	    SetConditionData(mage.EventSourceIsSelf{})
 
 	// Whenever an opponent's Swamp becomes tapped
 	mage.NewTriggered(core.EvtTapped, false, effect).
-	    SetCondition(func(evt *core.GameEvent, g mage.GameReader, sourceID, controllerID uuid.UUID) bool {
-	        perm := g.FindPermanent(evt.SourceID)
-	        return perm != nil && perm.Controller != controllerID && perm.HasSubType("Swamp")
-	    })
+	    SetConditionData(mage.AndTriggerCond{Conditions: []mage.TriggerConditionData{
+	        mage.EventSourceControlledByOpponent{},
+	        mage.EventSourceHasSubType{SubType: "Swamp"},
+	    }})
+
+	// Source is attacking and blocked by a non-Wall
+	mage.NewTriggered(core.EvtBlockersDecl, false, effect).
+	    SetConditionData(mage.SourceBlockedByCreatureMatching{Filter: mage.Not(mage.HasSubType("Wall"))})
 
 The optional flag (second arg) controls whether the controller may decline:
 false = mandatory, true = "you may" (AI/player can decline).
 
-The [TriggerCondition] signature is:
+Predicates implement [TriggerConditionData]:
 
-	func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool
+	type TriggerConditionData interface {
+	    CheckTriggerCond(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool
+	}
 
-Pre-built conditions:
+Compose with [AndTriggerCond], [OrTriggerCond], [NotTriggerCond].
 
-	[IsThisSource]   // evt.SourceID == sourceID
+Common atomic predicates:
+
+	[EventSourceIsSelf]                  // evt.SourceID == sourceID
+	[EventTargetIsSelf]                  // evt.TargetID == sourceID
+	[EventPlayerIsController]            // evt.PlayerID == controllerID
+	[EventPlayerIsNotController]         // evt.PlayerID != controllerID
+	[EventSourceControlledByOpponent]    // source permanent controlled by opponent
+	[EventSourceHasType]{Type}           // source permanent has card type
+	[EventSourceHasSubType]{SubType}     // source permanent has subtype
+	[SourceIsBlockedAttacker]            // source is attacker with blockers
+	[SourceIsUnblockedAttacker]          // source is attacker with no blockers
+	[SourceInCombat]                     // source is attacking or blocking
+	[EventSourceIsSelfDamageToPlayer]    // source dealt damage to any player
+	[EventSourceIsSelfDamageToOpponent]  // source dealt damage to opponent
+	[SpellCastIsType]{Type}              // spell cast has card type
+	[ControllerHasNoPermanentMatching]{Filter} // controller has no matching permanent
+
+For rare cases needing full closure access, SetCondition is still available.
 
 # Static Abilities and Continuous Effects
 
