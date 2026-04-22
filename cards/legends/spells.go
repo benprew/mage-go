@@ -781,25 +781,9 @@ func registerSpells() {
 // Indestructible Aura {W}
 // Instant
 // Prevent all damage that would be dealt to target creature this turn.
-	// TODO: convert to pipeline — needs PreventAllDamageToTarget step
 	Register("Indestructible Aura", func() Card {
 		return NewInstant("Indestructible Aura", "{W}",
-			NewTargetedSpell(TargetCreature(), FuncEffect(
-				"prevent all damage that would be dealt to target creature this turn",
-				EffectProperties{Outcome: OutcomeBenefit},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					if len(targets) == 0 {
-						return nil
-					}
-					perm := g.FindPermanent(targets[0])
-					if perm == nil {
-						return nil
-					}
-					// Use a very large prevention shield to simulate "prevent all damage"
-					g.AddPreventionShield(perm.ID(), 999999)
-					return nil
-				},
-			)),
+			NewTargetedSpell(TargetCreature(), PreventDamageToTarget(Fixed(999999))),
 		)
 	})
 

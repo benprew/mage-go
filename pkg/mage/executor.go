@@ -211,6 +211,49 @@ func ExecuteEffect(ctx *EffectContext, data EffectData) error {
 	case *ShuffleGraveyardIntoLibraryData:
 		return execShuffleGraveyardIntoLibrary(ctx, e)
 
+	// --- Extended pipeline primitives (effect_pipeline_ext.go) ---
+
+	case *SnapshotAttachedData:
+		return execSnapshotAttached(ctx, e)
+	case *TapGatheredData:
+		return execTapGathered(ctx, e)
+	case *UntapGatheredData:
+		return execUntapGathered(ctx, e)
+	case *DealDamageToGatheredData:
+		return execDealDamageToGathered(ctx, e)
+	case *RegenerateGatheredData:
+		return execRegenerateGathered(ctx, e)
+	case *PreventDamageToGatheredData:
+		return execPreventDamageToGathered(ctx, e)
+	case *GrantAttrToGatheredData:
+		return execGrantAttrToGathered(ctx, e)
+	case *AddCountersToGatheredData:
+		return execAddCountersToGathered(ctx, e)
+	case *RegisterDelayedTriggerData:
+		return execRegisterDelayedTrigger(ctx, e)
+	case *GrantKeywordToTargetUntilEOTData:
+		return execGrantKeywordToTargetUntilEOT(ctx, e)
+	case *GrantKeywordToSourceUntilEOTData:
+		return execGrantKeywordToSourceUntilEOT(ctx, e)
+	case *RevokeKeywordFromTargetUntilEOTData:
+		return execRevokeKeywordFromTargetUntilEOT(ctx, e)
+	case *AddManaFromVarData:
+		return execAddManaFromVar(ctx, e)
+	case *BoostGatheredUntilEOTData:
+		return execBoostGatheredUntilEOT(ctx, e)
+	case *PreventAllDamageFromSourceData:
+		return execPreventAllDamageFromSource(ctx, e)
+	case *AddColorPreventionData:
+		return execAddColorPrevention(ctx, e)
+	case *AddReverseDamageShieldData:
+		return execAddReverseDamageShield(ctx, e)
+	case *SetVarFromHandSizeData:
+		return execSetVarFromHandSize(ctx, e)
+	case *ChooseColorStepData:
+		return execChooseColorStep(ctx, e)
+	case *RemoveFromCombatGatheredData:
+		return execRemoveFromCombatGathered(ctx, e)
+
 	default:
 		_ = e
 		return fmt.Errorf("executor: unhandled EffectData type %T", data)

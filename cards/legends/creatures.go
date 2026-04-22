@@ -87,15 +87,10 @@ func registerCreatures() {
 			})),
 			// {1}: Can't be regenerated this turn. Only opponents may activate.
 			WithActivatedAbility(
-					// TODO: convert to pipeline — needs GrantTemporaryKeyword(kw, SelectSource) primitive
-				FuncEffect("can't be regenerated this turn",
+				Pipeline("can't be regenerated this turn",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						ce := TemporaryKeyword(sourceID, CantRegenerate)
-						ce.SetSourceID(sourceID)
-						g.AddContinuousEffect(ce)
-						return nil
-					}),
+					GrantKeywordToSourceUntilEOT(CantRegenerate),
+				),
 				ManaCostOf("{1}"),
 				WithOpponentOnlyMay(),
 			),
@@ -303,15 +298,10 @@ func registerCreatures() {
 			WithKeyword(Defender),
 			WithAbility(
 				NewTriggered(EvtBlockersDecl, false,
-					// TODO: convert to pipeline — needs GrantTemporaryKeyword(kw, SelectSource) primitive
-					FuncEffect("gain banding until end of turn",
+					Pipeline("gain banding until end of turn",
 						EffectProperties{Outcome: OutcomeBenefit},
-						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							ce := TemporaryKeyword(sourceID, Banding)
-							ce.SetSourceID(sourceID)
-							g.AddContinuousEffect(ce)
-							return nil
-						}),
+						GrantKeywordToSourceUntilEOT(Banding),
+					),
 				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 					// Check if this Wall is blocking something
 					for _, group := range g.CombatGroups() {
@@ -2283,21 +2273,10 @@ func registerCreatures() {
 		return NewCreature("Radjan Spirit", "{3}{G}", 3, 2,
 			WithSubTypes("Spirit"),
 			WithActivatedAbility(
-				// TODO: convert to pipeline — needs RevokeKeywordUntilEndOfTurn(kw, SelectTarget) primitive
-				FuncEffect("target creature loses flying until end of turn", EffectProperties{Outcome: OutcomeDetriment}, func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					if len(targets) == 0 {
-						return nil
-					}
-					perm := g.FindPermanent(targets[0])
-					if perm == nil {
-						return nil
-					}
-					g.AddContinuousEffect(TargetEffect(LayerAbility, EndOfTurn, perm.ID(), func(g *Game, target *Permanent) error {
-						g.RevokeAttr(target.ID(), Flying)
-						return nil
-					}))
-					return nil
-				}),
+				Pipeline("target creature loses flying until end of turn",
+					EffectProperties{Outcome: OutcomeDetriment},
+					RevokeKeywordFromTargetUntilEOT(Flying),
+				),
 				TapSourceCost(),
 				WithTarget(TargetCreature()),
 			),
@@ -2313,22 +2292,9 @@ func registerCreatures() {
 		return NewCreature("Shelkin Brownie", "{1}{G}", 1, 1,
 			WithSubTypes("Ouphe"),
 			WithActivatedAbility(
-				// TODO: convert to pipeline — needs RevokeKeywordUntilEndOfTurn(kw, SelectTarget) primitive
-				FuncEffect(
-					"target creature loses all bands with other abilities until end of turn",
+				Pipeline("target creature loses all bands with other abilities until end of turn",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 {
-							return nil
-						}
-						eff := TargetEffect(LayerAbility, EndOfTurn, targets[0], func(g *Game, target *Permanent) error {
-							g.RevokeAttr(target.ID(), Banding)
-							return nil
-						})
-						eff.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff)
-						return nil
-					},
+					RevokeKeywordFromTargetUntilEOT(Banding),
 				),
 				TapSourceCost(),
 				WithTarget(TargetCreature()),

@@ -306,24 +306,14 @@ func registerCreatures() {
 		return NewCreature("Goblin Artisans", "{R}", 1, 1,
 			WithSubTypes("Goblin", "Artificer"),
 			WithActivatedAbility(
-				// TODO: convert to pipeline — needs "flip coin" conditional step
-				FuncEffect("flip coin: win=draw, lose=counter own artifact spell",
+				Pipeline("flip coin: win=draw, lose=counter own artifact spell",
 					EffectProperties{},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						p := g.GetPlayer(controller)
-						if p == nil {
-							return nil
-						}
-						if g.FlipCoin(controller) {
-							p.DrawCard()
-						} else {
-							// Counter target artifact spell on stack
-							if len(targets) > 0 {
-								g.CounterSpellOnStack(targets[0])
-							}
-						}
-						return nil
-					}),
+					IfElse("flip coin",
+						&FlipCoinCond{},
+						UnwrapEffect(DrawCards(Fixed(1))),
+						UnwrapEffect(CounterSpell()),
+					),
+				),
 				TapSourceCost(),
 				WithTarget(TargetOwnSpellOnStack(IsArtifactCard)),
 			),
@@ -474,23 +464,11 @@ func registerCreatures() {
 			// When blocked by a Wall, destroy that Wall at end of combat
 			WithAbility(
 				NewTriggered(EvtDeclaredBlocker, false,
-					// TODO: convert to pipeline — needs "register delayed trigger" step
-				FuncEffect("destroy blocking Wall at end of combat",
+				Pipeline("destroy blocking Wall at end of combat",
 						EffectProperties{Outcome: OutcomeDetriment},
-						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-							if len(targets) == 0 {
-								return nil
-							}
-							wallID := targets[0]
-							g.RegisterDelayedTrigger(&DelayedTrigger{
-								EventType:  EvtEndOfCombat,
-								TargetID:   wallID,
-								Effects:    []Effect{DestroyTarget()},
-								SourceID:   sourceID,
-								Controller: controller,
-							})
-							return nil
-						}),
+						SnapshotPermanent(SelectTarget, "wall"),
+						RegisterDelayedTriggerStep(EvtEndOfCombat, "wall", DestroyTarget()),
+					),
 				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 					// Battering Ram is the attacker being blocked
 					if evt.TargetID != sourceID {
@@ -531,35 +509,17 @@ func registerCreatures() {
 			WithKeyword(Flying),
 			WithAbility(EntersWithNCounters(P1P0, 4)),
 			// At end of combat, if Clockwork Avian attacked or blocked, remove a +1/+0 counter
-			// TODO: convert to pipeline — needs "register delayed trigger" step
 			WithAbility(AttacksTrigger(
-				FuncEffect("schedule counter removal at end of combat",
+				Pipeline("schedule counter removal at end of combat",
 					EffectProperties{},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						g.RegisterDelayedTrigger(&DelayedTrigger{
-							EventType:  EvtEndOfCombat,
-							TargetID:   sourceID,
-							Effects:    []Effect{RemoveCountersFromSource(P1P0, 1)},
-							SourceID:   sourceID,
-							Controller: controller,
-						})
-						return nil
-					}), false,
+					RegisterDelayedTriggerStep(EvtEndOfCombat, "", RemoveCountersFromSource(P1P0, 1)),
+				), false,
 			)),
-			// TODO: convert to pipeline — needs "register delayed trigger" step
 			WithAbility(BlocksTrigger(
-				FuncEffect("schedule counter removal at end of combat",
+				Pipeline("schedule counter removal at end of combat",
 					EffectProperties{},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						g.RegisterDelayedTrigger(&DelayedTrigger{
-							EventType:  EvtEndOfCombat,
-							TargetID:   sourceID,
-							Effects:    []Effect{RemoveCountersFromSource(P1P0, 1)},
-							SourceID:   sourceID,
-							Controller: controller,
-						})
-						return nil
-					}), false,
+					RegisterDelayedTriggerStep(EvtEndOfCombat, "", RemoveCountersFromSource(P1P0, 1)),
+				), false,
 			)),
 			// {X}, {T}: Put up to X +1/+0 counters on Clockwork Avian (max 4 total). Upkeep only.
 			WithActivatedAbility(

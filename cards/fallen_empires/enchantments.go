@@ -201,21 +201,15 @@ func registerEnchantments() {
 	// Enchant creature
 	// Enchanted creature gets +1/+1.
 	// Sacrifice this Aura: Regenerate enchanted creature.
-	// TODO: convert to pipeline — needs RegenerateAttached step (reads AttachedTo from source)
 	Register("Thrull Retainer", withExpansion(func() Card {
 		return NewAura("Thrull Retainer", "{B}",
 			WithStaticAbility(BoostAttached(1, 1, AttachAura)),
 			WithActivatedAbility(
-				FuncEffect("Regenerate enchanted creature",
+				Pipeline("Regenerate enchanted creature",
 					EffectProperties{},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						src := g.FindPermanent(sourceID)
-						if src == nil || !src.IsAttached() {
-							return nil
-						}
-						g.AddRegenerationShield(src.AttachedTo)
-						return nil
-					}),
+					SnapshotAttached("attached"),
+					RegenerateGathered("attached"),
+				),
 				SacrificeSourceCost(),
 			),
 		)

@@ -268,20 +268,12 @@ func registerArtifacts() {
 	Register("Ivory Tower", func() Card {
 		return NewArtifact("Ivory Tower", "{1}",
 			WithAbility(BeginningOfUpkeepTrigger(
-				// TODO: convert to pipeline — needs "hand size minus N" ValueSource
-				FuncEffect("gain life equal to hand size minus 4",
+				Pipeline("gain life equal to hand size minus 4",
 					EffectProperties{},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						p := g.GetPlayer(controller)
-						if p == nil {
-							return nil
-						}
-						excess := len(p.Hand()) - 4
-						if excess > 0 {
-							g.PlayerGainLife(p, excess)
-						}
-						return nil
-					}), false,
+					SnapshotPermanent(SelectSource, "src"),
+					SetVarFromHandSize(SelectController(), "excess", 4),
+					GainLifeFromVar("src.controller", "excess"),
+				), false,
 			)),
 		)
 	})
@@ -380,34 +372,11 @@ func registerArtifacts() {
 	Register("Rakalite", func() Card {
 		return NewArtifact("Rakalite", "{6}",
 			WithActivatedAbility(
-				// TODO: convert to pipeline — needs "register delayed trigger" step
-				FuncEffect("prevent 1 damage to target; bounce self at next end step",
+				Pipeline("prevent 1 damage to target; bounce self at next end step",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 {
-							return nil
-						}
-						// Prevent 1 damage to target
-						targetPerm := g.FindPermanent(targets[0])
-						if targetPerm != nil {
-							g.AddPreventionShield(targetPerm.ID(), 1)
-						} else {
-							// Target is a player
-							targetPlayer := g.GetPlayer(targets[0])
-							if targetPlayer != nil {
-								g.AddPreventionShield(targets[0], 1)
-							}
-						}
-						// Register delayed trigger: bounce self at next end step
-						g.RegisterDelayedTrigger(&DelayedTrigger{
-							EventType:  EvtEndStep,
-							TargetID:   sourceID,
-							Effects:    []Effect{ReturnToHandTarget()},
-							SourceID:   sourceID,
-							Controller: controller,
-						})
-						return nil
-					}),
+					UnwrapEffect(PreventDamageToTarget(Fixed(1))),
+					RegisterDelayedTriggerStep(EvtEndStep, "", ReturnToHandTarget()),
+				),
 				GenericCost(2),
 				WithTarget(TargetAnyTarget()),
 			),
@@ -422,33 +391,11 @@ func registerArtifacts() {
 	Register("Rocket Launcher", func() Card {
 		return NewArtifact("Rocket Launcher", "{4}",
 			WithActivatedAbility(
-				// TODO: convert to pipeline — needs "register delayed trigger" step
-				FuncEffect("deal 1 damage to any target; destroy self at next end step",
+				Pipeline("deal 1 damage to any target; destroy self at next end step",
 					EffectProperties{Outcome: OutcomeDetriment, DamageValue: Fixed(1)},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 {
-							return nil
-						}
-						// Deal 1 damage
-						targetPerm := g.FindPermanent(targets[0])
-						if targetPerm != nil {
-							g.DealDamageToPermanent(targetPerm, 1, sourceID)
-						} else {
-							targetPlayer := g.GetPlayer(targets[0])
-							if targetPlayer != nil {
-								g.DealDamageToPlayer(targetPlayer, 1, sourceID)
-							}
-						}
-						// Register delayed trigger: destroy self at next end step
-						g.RegisterDelayedTrigger(&DelayedTrigger{
-							EventType:  EvtEndStep,
-							TargetID:   sourceID,
-							Effects:    []Effect{DestroyTarget()},
-							SourceID:   sourceID,
-							Controller: controller,
-						})
-						return nil
-					}),
+					UnwrapEffect(DealDamage(Fixed(1))),
+					RegisterDelayedTriggerStep(EvtEndStep, "", DestroyTarget()),
+				),
 				GenericCost(2),
 				WithTarget(TargetAnyTarget()),
 				WithControlledSinceTurnStart(),

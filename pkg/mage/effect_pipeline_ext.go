@@ -1,0 +1,576 @@
+package mage
+
+import (
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"github.com/google/uuid"
+)
+
+// ---------------------------------------------------------------------------
+// SnapshotAttached: read the permanent that source is attached to
+// ---------------------------------------------------------------------------
+
+// SnapshotAttachedData reads the permanent the source is attached to and stores
+// its properties as context variables (same as SnapshotPermanent).
+type SnapshotAttachedData struct {
+	StoreAs string
+}
+
+func SnapshotAttached(storeAs string) EffectData {
+	return &SnapshotAttachedData{StoreAs: storeAs}
+}
+
+func (e *SnapshotAttachedData) EffectText() string            { return "" }
+func (e *SnapshotAttachedData) EffectProps() EffectProperties { return EffectProperties{} }
+
+func execSnapshotAttached(ctx *EffectContext, e *SnapshotAttachedData) error {
+	src := ctx.Game.FindPermanent(ctx.SourceID)
+	if src == nil || !src.IsAttached() {
+		ctx.SetBool(e.StoreAs+".missing", true)
+		return nil
+	}
+	perm := ctx.Game.FindPermanent(src.AttachedTo)
+	if perm == nil {
+		ctx.SetBool(e.StoreAs+".missing", true)
+		return nil
+	}
+	ctx.SetUUID(e.StoreAs, perm.ID())
+	ctx.SetInt(e.StoreAs+".power", perm.CurrentPower(ctx.Game))
+	ctx.SetInt(e.StoreAs+".toughness", perm.CurrentToughness(ctx.Game))
+	ctx.SetUUID(e.StoreAs+".controller", perm.Controller)
+	ctx.SetInt(e.StoreAs+".cmc", perm.Card.ManaCost().CMC())
+	ctx.Vars[e.StoreAs+".name"] = perm.Name()
+	return nil
+}
+
+// ---------------------------------------------------------------------------
+// Gathered-permanent operations: tap, untap, damage, regen, prevention
+// ---------------------------------------------------------------------------
+
+// TapGatheredData taps a var-bound permanent.
+type TapGatheredData struct{ VarName string }
+
+func TapGathered(v string) EffectData { return &TapGatheredData{VarName: v} }
+
+func (e *TapGatheredData) EffectText() string            { return "tap" }
+func (e *TapGatheredData) EffectProps() EffectProperties { return EffectProperties{Outcome: OutcomeDetriment} }
+
+func execTapGathered(ctx *EffectContext, e *TapGatheredData) error {
+	id := ctx.TryGetUUID(e.VarName)
+	if id == uuid.Nil {
+		return nil
+	}
+	perm := ctx.Game.FindPermanent(id)
+	if perm != nil {
+		ctx.Game.TapPermanent(perm)
+	}
+	return nil
+}
+
+// UntapGatheredData untaps a var-bound permanent.
+type UntapGatheredData struct{ VarName string }
+
+func UntapGathered(v string) EffectData { return &UntapGatheredData{VarName: v} }
+
+func (e *UntapGatheredData) EffectText() string            { return "untap" }
+func (e *UntapGatheredData) EffectProps() EffectProperties { return EffectProperties{Outcome: OutcomeBenefit} }
+
+func execUntapGathered(ctx *EffectContext, e *UntapGatheredData) error {
+	id := ctx.TryGetUUID(e.VarName)
+	if id == uuid.Nil {
+		return nil
+	}
+	perm := ctx.Game.FindPermanent(id)
+	if perm != nil && perm.Tapped {
+		perm.Tapped = false
+		ctx.Game.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: perm.ID()})
+	}
+	return nil
+}
+
+// DealDamageToGatheredData deals damage to a var-bound permanent.
+type DealDamageToGatheredData struct {
+	VarName string
+	Amount  ValueSource
+}
+
+func DealDamageToGathered(v string, amount ValueSource) EffectData {
+	return &DealDamageToGatheredData{VarName: v, Amount: amount}
+}
+
+func (e *DealDamageToGatheredData) EffectText() string            { return "deal damage" }
+func (e *DealDamageToGatheredData) EffectProps() EffectProperties { return EffectProperties{Outcome: OutcomeDetriment} }
+
+func execDealDamageToGathered(ctx *EffectContext, e *DealDamageToGatheredData) error {
+	id := ctx.TryGetUUID(e.VarName)
+	if id == uuid.Nil {
+		return nil
+	}
+	amount := e.Amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller)
+	if amount <= 0 {
+		return nil
+	}
+	perm := ctx.Game.FindPermanent(id)
+	if perm != nil {
+		ctx.Game.DealDamageToPermanent(perm, amount, ctx.SourceID)
+	}
+	return nil
+}
+
+// RegenerateGatheredData adds a regeneration shield to a var-bound permanent.
+type RegenerateGatheredData struct{ VarName string }
+
+func RegenerateGathered(v string) EffectData { return &RegenerateGatheredData{VarName: v} }
+
+func (e *RegenerateGatheredData) EffectText() string            { return "regenerate" }
+func (e *RegenerateGatheredData) EffectProps() EffectProperties { return EffectProperties{Outcome: OutcomeBenefit} }
+
+func execRegenerateGathered(ctx *EffectContext, e *RegenerateGatheredData) error {
+	id := ctx.TryGetUUID(e.VarName)
+	if id == uuid.Nil {
+		return nil
+	}
+	ctx.Game.AddRegenerationShield(id)
+	return nil
+}
+
+// PreventDamageToGatheredData adds a prevention shield to a var-bound permanent.
+type PreventDamageToGatheredData struct {
+	VarName string
+	Amount  ValueSource
+}
+
+func PreventDamageToGathered(v string, amount ValueSource) EffectData {
+	return &PreventDamageToGatheredData{VarName: v, Amount: amount}
+}
+
+func (e *PreventDamageToGatheredData) EffectText() string            { return "prevent damage" }
+func (e *PreventDamageToGatheredData) EffectProps() EffectProperties { return EffectProperties{Outcome: OutcomeBenefit} }
+
+func execPreventDamageToGathered(ctx *EffectContext, e *PreventDamageToGatheredData) error {
+	id := ctx.TryGetUUID(e.VarName)
+	if id == uuid.Nil {
+		return nil
+	}
+	amount := e.Amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller)
+	ctx.Game.AddPreventionShield(id, amount)
+	return nil
+}
+
+// GrantAttrToGatheredData grants an attr to a var-bound permanent.
+type GrantAttrToGatheredData struct {
+	VarName string
+	Attr    Attr
+}
+
+func GrantAttrToGathered(v string, a Attr) EffectData {
+	return &GrantAttrToGatheredData{VarName: v, Attr: a}
+}
+
+func (e *GrantAttrToGatheredData) EffectText() string            { return "" }
+func (e *GrantAttrToGatheredData) EffectProps() EffectProperties { return EffectProperties{} }
+
+func execGrantAttrToGathered(ctx *EffectContext, e *GrantAttrToGatheredData) error {
+	id := ctx.TryGetUUID(e.VarName)
+	if id == uuid.Nil {
+		return nil
+	}
+	perm := ctx.Game.FindPermanent(id)
+	if perm != nil {
+		perm.GrantBaseAttr(e.Attr)
+	}
+	return nil
+}
+
+// AddCountersToGatheredData adds counters to a var-bound permanent.
+type AddCountersToGatheredData struct {
+	VarName string
+	CT      CounterType
+	Amount  ValueSource
+}
+
+func AddCountersToGathered(v string, ct CounterType, amount ValueSource) EffectData {
+	return &AddCountersToGatheredData{VarName: v, CT: ct, Amount: amount}
+}
+
+func (e *AddCountersToGatheredData) EffectText() string            { return "" }
+func (e *AddCountersToGatheredData) EffectProps() EffectProperties { return EffectProperties{} }
+
+func execAddCountersToGathered(ctx *EffectContext, e *AddCountersToGatheredData) error {
+	id := ctx.TryGetUUID(e.VarName)
+	if id == uuid.Nil {
+		return nil
+	}
+	perm := ctx.Game.FindPermanent(id)
+	if perm == nil {
+		return nil
+	}
+	amount := e.Amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller)
+	if amount > 0 {
+		perm.AddCounter(e.CT, amount)
+	}
+	return nil
+}
+
+// ---------------------------------------------------------------------------
+// RegisterDelayedTrigger: register a delayed trigger from a pipeline
+// ---------------------------------------------------------------------------
+
+// RegisterDelayedTriggerData registers a delayed trigger that fires when the
+// specified event occurs.
+type RegisterDelayedTriggerData struct {
+	EventType     EventType
+	TargetVar     string   // read target permanent ID from context (or empty for source)
+	Effects       []Effect // effects to execute when trigger fires
+	MatchEventVar string   // optional: match evt.SourceID against this var
+	Persistent    bool
+}
+
+func RegisterDelayedTriggerStep(evtType EventType, targetVar string, effects ...Effect) EffectData {
+	return &RegisterDelayedTriggerData{EventType: evtType, TargetVar: targetVar, Effects: effects}
+}
+
+func RegisterPersistentDelayedTriggerStep(evtType EventType, targetVar string, effects ...Effect) EffectData {
+	return &RegisterDelayedTriggerData{EventType: evtType, TargetVar: targetVar, Effects: effects, Persistent: true}
+}
+
+func (e *RegisterDelayedTriggerData) EffectText() string            { return "" }
+func (e *RegisterDelayedTriggerData) EffectProps() EffectProperties { return EffectProperties{} }
+
+func execRegisterDelayedTrigger(ctx *EffectContext, e *RegisterDelayedTriggerData) error {
+	targetID := ctx.SourceID
+	if e.TargetVar != "" {
+		id := ctx.TryGetUUID(e.TargetVar)
+		if id != uuid.Nil {
+			targetID = id
+		}
+	}
+	dt := &DelayedTrigger{
+		EventType:  e.EventType,
+		TargetID:   targetID,
+		Effects:    e.Effects,
+		SourceID:   ctx.SourceID,
+		Controller: ctx.Controller,
+		Persistent: e.Persistent,
+	}
+	if e.MatchEventVar != "" {
+		dt.MatchEventID = ctx.TryGetUUID(e.MatchEventVar)
+	}
+	ctx.Game.RegisterDelayedTrigger(dt)
+	return nil
+}
+
+// ---------------------------------------------------------------------------
+// FlipCoin condition
+// ---------------------------------------------------------------------------
+
+// FlipCoinCond flips a coin; true = heads (win).
+type FlipCoinCond struct{}
+
+func (c *FlipCoinCond) Check(ctx *EffectContext) bool {
+	return ctx.Game.FlipCoin(ctx.Controller)
+}
+
+// ---------------------------------------------------------------------------
+// GrantKeyword / RevokeKeyword until end of turn (as pipeline steps)
+// ---------------------------------------------------------------------------
+
+// GrantKeywordToTargetUntilEOTData grants a keyword to targets[0] until end of turn.
+type GrantKeywordToTargetUntilEOTData struct {
+	Keyword Keyword
+}
+
+func GrantKeywordToTargetUntilEOT(kw Keyword) EffectData {
+	return &GrantKeywordToTargetUntilEOTData{Keyword: kw}
+}
+
+func (e *GrantKeywordToTargetUntilEOTData) EffectText() string { return "" }
+func (e *GrantKeywordToTargetUntilEOTData) EffectProps() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
+
+func execGrantKeywordToTargetUntilEOT(ctx *EffectContext, e *GrantKeywordToTargetUntilEOTData) error {
+	if len(ctx.Targets) == 0 {
+		return nil
+	}
+	perm := ctx.Game.FindPermanent(ctx.Targets[0])
+	if perm == nil {
+		return nil
+	}
+	eff := TemporaryKeyword(perm.ID(), e.Keyword)
+	eff.SetSourceID(ctx.SourceID)
+	ctx.Game.AddContinuousEffect(eff)
+	ctx.Game.ApplyContinuousEffects()
+	return nil
+}
+
+// GrantKeywordToSourceUntilEOTData grants a keyword to source until end of turn.
+type GrantKeywordToSourceUntilEOTData struct {
+	Keyword Keyword
+}
+
+func GrantKeywordToSourceUntilEOT(kw Keyword) EffectData {
+	return &GrantKeywordToSourceUntilEOTData{Keyword: kw}
+}
+
+func (e *GrantKeywordToSourceUntilEOTData) EffectText() string { return "" }
+func (e *GrantKeywordToSourceUntilEOTData) EffectProps() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
+
+func execGrantKeywordToSourceUntilEOT(ctx *EffectContext, e *GrantKeywordToSourceUntilEOTData) error {
+	perm := ctx.Game.FindPermanent(ctx.SourceID)
+	if perm == nil {
+		return nil
+	}
+	eff := TemporaryKeyword(perm.ID(), e.Keyword)
+	eff.SetSourceID(ctx.SourceID)
+	ctx.Game.AddContinuousEffect(eff)
+	ctx.Game.ApplyContinuousEffects()
+	return nil
+}
+
+// RevokeKeywordFromTargetUntilEOTData removes a keyword from targets[0] until EOT.
+type RevokeKeywordFromTargetUntilEOTData struct {
+	Keyword Keyword
+}
+
+func RevokeKeywordFromTargetUntilEOT(kw Keyword) EffectData {
+	return &RevokeKeywordFromTargetUntilEOTData{Keyword: kw}
+}
+
+func (e *RevokeKeywordFromTargetUntilEOTData) EffectText() string { return "" }
+func (e *RevokeKeywordFromTargetUntilEOTData) EffectProps() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
+
+func execRevokeKeywordFromTargetUntilEOT(ctx *EffectContext, e *RevokeKeywordFromTargetUntilEOTData) error {
+	if len(ctx.Targets) == 0 {
+		return nil
+	}
+	perm := ctx.Game.FindPermanent(ctx.Targets[0])
+	if perm == nil {
+		return nil
+	}
+	eff := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, _ uuid.UUID) error {
+		p := g.FindPermanent(perm.ID())
+		if p != nil {
+			g.RevokeAttr(p.ID(), Attr(e.Keyword))
+		}
+		return nil
+	})
+	eff.SetSourceID(ctx.SourceID)
+	ctx.Game.AddContinuousEffect(eff)
+	ctx.Game.ApplyContinuousEffects()
+	return nil
+}
+
+// ---------------------------------------------------------------------------
+// AddMana from a context variable
+// ---------------------------------------------------------------------------
+
+// AddManaFromVarData adds mana of the given color, amount from a context var.
+type AddManaFromVarData struct {
+	Color     Color
+	AmountVar string
+}
+
+func AddManaFromVar(color Color, amountVar string) EffectData {
+	return &AddManaFromVarData{Color: color, AmountVar: amountVar}
+}
+
+func (e *AddManaFromVarData) EffectText() string            { return "add mana" }
+func (e *AddManaFromVarData) EffectProps() EffectProperties { return EffectProperties{} }
+
+func execAddManaFromVar(ctx *EffectContext, e *AddManaFromVarData) error {
+	amount := ctx.GetInt(e.AmountVar)
+	if amount <= 0 {
+		return nil
+	}
+	p := ctx.Game.GetPlayer(ctx.Controller)
+	if p == nil {
+		return nil
+	}
+	p.ManaPool().Add(e.Color, amount)
+	return nil
+}
+
+// ---------------------------------------------------------------------------
+// BoostGathered until end of turn
+// ---------------------------------------------------------------------------
+
+// BoostGatheredUntilEOTData gives +P/+T to a var-bound permanent until EOT.
+type BoostGatheredUntilEOTData struct {
+	VarName   string
+	Power     ValueSource
+	Toughness ValueSource
+}
+
+func BoostGatheredUntilEOT(v string, power, toughness ValueSource) EffectData {
+	return &BoostGatheredUntilEOTData{VarName: v, Power: power, Toughness: toughness}
+}
+
+func (e *BoostGatheredUntilEOTData) EffectText() string            { return "" }
+func (e *BoostGatheredUntilEOTData) EffectProps() EffectProperties { return EffectProperties{Outcome: OutcomeBenefit} }
+
+func execBoostGatheredUntilEOT(ctx *EffectContext, e *BoostGatheredUntilEOTData) error {
+	id := ctx.TryGetUUID(e.VarName)
+	if id == uuid.Nil {
+		return nil
+	}
+	perm := ctx.Game.FindPermanent(id)
+	if perm == nil {
+		return nil
+	}
+	p := e.Power.Resolve(ctx.Game, ctx.SourceID, ctx.Controller)
+	t := e.Toughness.Resolve(ctx.Game, ctx.SourceID, ctx.Controller)
+	eff := TemporaryBoost(perm.ID(), p, t)
+	eff.SetSourceID(ctx.SourceID)
+	ctx.Game.AddContinuousEffect(eff)
+	ctx.Game.ApplyContinuousEffects()
+	return nil
+}
+
+// ---------------------------------------------------------------------------
+// Prevent all damage to target (for one turn)
+// ---------------------------------------------------------------------------
+
+// PreventAllDamageFromSourceData prevents all damage from the source for this turn.
+type PreventAllDamageFromSourceData struct{}
+
+func PreventAllDamageFromSource() EffectData { return &PreventAllDamageFromSourceData{} }
+
+func (e *PreventAllDamageFromSourceData) EffectText() string { return "prevent all damage from source" }
+func (e *PreventAllDamageFromSourceData) EffectProps() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
+
+func execPreventAllDamageFromSource(ctx *EffectContext, _ *PreventAllDamageFromSourceData) error {
+	ctx.Game.PreventAllDamageFrom(ctx.SourceID)
+	return nil
+}
+
+// ---------------------------------------------------------------------------
+// ColorPrevention step (Circle of Protection pattern)
+// ---------------------------------------------------------------------------
+
+// AddColorPreventionData prevents all damage from one source of the given color.
+type AddColorPreventionData struct {
+	Color Color
+}
+
+func AddColorPreventionStep(color Color) EffectData {
+	return &AddColorPreventionData{Color: color}
+}
+
+func (e *AddColorPreventionData) EffectText() string            { return "prevent damage from color" }
+func (e *AddColorPreventionData) EffectProps() EffectProperties { return EffectProperties{Outcome: OutcomeBenefit} }
+
+func execAddColorPrevention(ctx *EffectContext, e *AddColorPreventionData) error {
+	ctx.Game.AddColorPrevention(ctx.Controller, e.Color)
+	return nil
+}
+
+// ---------------------------------------------------------------------------
+// ReverseDamage step
+// ---------------------------------------------------------------------------
+
+type AddReverseDamageShieldData struct{}
+
+func AddReverseDamageShieldStep() EffectData { return &AddReverseDamageShieldData{} }
+
+func (e *AddReverseDamageShieldData) EffectText() string            { return "reverse damage" }
+func (e *AddReverseDamageShieldData) EffectProps() EffectProperties { return EffectProperties{Outcome: OutcomeBenefit} }
+
+func execAddReverseDamageShield(ctx *EffectContext, _ *AddReverseDamageShieldData) error {
+	ctx.Game.AddReverseDamageShield(ctx.Controller)
+	return nil
+}
+
+// ---------------------------------------------------------------------------
+// SetVar: store a computed int value in context
+// ---------------------------------------------------------------------------
+
+// SetVarFromHandSizeData stores hand size (minus offset) in a context variable.
+type SetVarFromHandSizeData struct {
+	Player  PlayerSelector
+	StoreAs string
+	Offset  int // result = max(0, handSize - offset)
+}
+
+func SetVarFromHandSize(player PlayerSelector, storeAs string, offset int) EffectData {
+	return &SetVarFromHandSizeData{Player: player, StoreAs: storeAs, Offset: offset}
+}
+
+func (e *SetVarFromHandSizeData) EffectText() string            { return "" }
+func (e *SetVarFromHandSizeData) EffectProps() EffectProperties { return EffectProperties{} }
+
+func execSetVarFromHandSize(ctx *EffectContext, e *SetVarFromHandSizeData) error {
+	playerIDs := e.Player.Select(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	if len(playerIDs) == 0 {
+		ctx.SetInt(e.StoreAs, 0)
+		return nil
+	}
+	p := ctx.Game.GetPlayer(playerIDs[0])
+	if p == nil {
+		ctx.SetInt(e.StoreAs, 0)
+		return nil
+	}
+	val := len(p.Hand()) - e.Offset
+	if val < 0 {
+		val = 0
+	}
+	ctx.SetInt(e.StoreAs, val)
+	return nil
+}
+
+// ---------------------------------------------------------------------------
+// ChooseColor step (stores on source permanent)
+// ---------------------------------------------------------------------------
+
+// ChooseColorStepData asks the controller to choose a color and stores it on
+// the source permanent's ChosenColor field.
+type ChooseColorStepData struct {
+	Reason string
+}
+
+func ChooseColorStep(reason string) EffectData {
+	return &ChooseColorStepData{Reason: reason}
+}
+
+func (e *ChooseColorStepData) EffectText() string            { return "choose a color" }
+func (e *ChooseColorStepData) EffectProps() EffectProperties { return EffectProperties{} }
+
+func execChooseColorStep(ctx *EffectContext, e *ChooseColorStepData) error {
+	p := ctx.Game.GetPlayer(ctx.Controller)
+	if p == nil {
+		return nil
+	}
+	perm := ctx.Game.FindPermanent(ctx.SourceID)
+	if perm == nil {
+		return nil
+	}
+	perm.ChosenColor = p.ChooseManaColor(e.Reason)
+	return nil
+}
+
+// ---------------------------------------------------------------------------
+// RemoveFromCombatGathered
+// ---------------------------------------------------------------------------
+
+type RemoveFromCombatGatheredData struct{ VarName string }
+
+func RemoveFromCombatGathered(v string) EffectData {
+	return &RemoveFromCombatGatheredData{VarName: v}
+}
+
+func (e *RemoveFromCombatGatheredData) EffectText() string            { return "remove from combat" }
+func (e *RemoveFromCombatGatheredData) EffectProps() EffectProperties { return EffectProperties{} }
+
+func execRemoveFromCombatGathered(ctx *EffectContext, e *RemoveFromCombatGatheredData) error {
+	id := ctx.TryGetUUID(e.VarName)
+	if id == uuid.Nil {
+		return nil
+	}
+	ctx.Game.RemoveFromCombat(id)
+	return nil
+}

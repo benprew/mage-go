@@ -125,22 +125,11 @@ func registerArtifacts() {
 	Register("Bottle of Suleiman", func() Card {
 		return NewArtifact("Bottle of Suleiman", "{4}",
 			WithActivatedAbility(
-				// TODO: convert to pipeline — needs FlipCoin condition primitive
-				FuncEffect("flip coin: 5/5 Djinn or 5 damage",
-					EffectProperties{},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						if g.FlipCoin(controller) {
-							// Win — create 5/5 Djinn artifact creature token with flying
-							token := CreateToken("Djinn", 5, 5, []CardType{TypeArtifact, TypeCreature}, []string{"Djinn"}, Flying)
-							return token.Apply(g, sourceID, controller, nil)
-						}
-						// Lose — take 5 damage
-						p := g.GetPlayer(controller)
-						if p != nil {
-							g.DealDamageToPlayer(p, 5, sourceID)
-						}
-						return nil
-					}),
+				DataEffect(IfElse("flip coin: 5/5 Djinn or 5 damage",
+					&FlipCoinCond{},
+					UnwrapEffect(CreateToken("Djinn", 5, 5, []CardType{TypeArtifact, TypeCreature}, []string{"Djinn"}, Flying)),
+					UnwrapEffect(DealDamageToPlayers(Fixed(5), SelectController())),
+				)),
 				ManaCostOf("{1}"),
 				WithCost(SacrificeSourceCost()),
 			),
@@ -222,21 +211,12 @@ func registerArtifacts() {
 	Register("Ebony Horse", func() Card {
 		return NewArtifact("Ebony Horse", "{3}",
 			WithActivatedAbility(
-				// TODO: convert to pipeline — needs combined untap-target + remove-from-combat-target step
-				FuncEffect("untap and remove from combat",
+				Pipeline("untap and remove from combat",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 {
-							return nil
-						}
-						perm := g.FindPermanent(targets[0])
-						if perm == nil {
-							return nil
-						}
-						perm.Tapped = false
-						g.RemoveFromCombat(perm.ID())
-						return nil
-					}),
+					SnapshotPermanent(SelectTarget, "t"),
+					UntapGathered("t"),
+					RemoveFromCombatGathered("t"),
+				),
 				TapSourceCost(),
 				WithCost(ManaCostOf("{2}")),
 				WithTarget(TargetCreatureYouControl(IsAttacking)),
@@ -376,26 +356,16 @@ func registerArtifacts() {
 	Register("Sandals of Abdallah", func() Card {
 		return NewArtifact("Sandals of Abdallah", "{4}",
 			WithActivatedAbility(
-				// TODO: convert to pipeline — needs RegisterDelayedTrigger primitive
-				FuncEffect("grant islandwalk, destroy self if creature dies",
+				Pipeline("grant islandwalk, destroy self if creature dies",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 {
-							return nil
-						}
-						// Grant islandwalk
-						GrantKeywordUntilEndOfTurn(Islandwalk, SelectTarget).Apply(g, sourceID, controller, targets)
-						// Register delayed trigger: if that creature dies, destroy Sandals
-						g.RegisterDelayedTrigger(&DelayedTrigger{
-							EventType:    EvtCreatureDied,
-							MatchEventID: targets[0],
-							TargetID:     sourceID,
-							Effects:      []Effect{DestroyTarget()},
-							SourceID:     sourceID,
-							Controller:   controller,
-						})
-						return nil
-					}),
+					SnapshotPermanent(SelectTarget, "t"),
+					GrantKeywordToTargetUntilEOT(Islandwalk),
+					&RegisterDelayedTriggerData{
+						EventType:     EvtCreatureDied,
+						MatchEventVar: "t",
+						Effects:       []Effect{DestroyTarget()},
+					},
+				),
 				TapSourceCost(),
 				WithCost(ManaCostOf("{2}")),
 				WithTarget(TargetCreature()),

@@ -248,22 +248,9 @@ func registerEnchantments() {
 	Register("Phantasmal Terrain", func() Card {
 		return NewAura("Phantasmal Terrain", "{U}{U}",
 			WithCastTarget(TargetLand()),
-			// TODO: convert to pipeline — needs ChooseColor step that writes to source permanent
-			WithAbility(EntersBattlefieldTrigger(FuncEffect(
-				"choose a basic land type",
-				EffectProperties{},
-				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					perm := g.FindPermanent(sourceID)
-					if perm == nil {
-						return nil
-					}
-					p := g.GetPlayer(controller)
-					if p == nil {
-						return nil
-					}
-					perm.ChosenColor = p.ChooseManaColor("Choose basic land type for Phantasmal Terrain")
-					return nil
-				}), false)),
+			WithAbility(EntersBattlefieldTrigger(
+				DataEffect(ChooseColorStep("Choose basic land type for Phantasmal Terrain")),
+				false)),
 			WithStaticAbility(
 				ChangeAttachedSubTypesByChosenColor(),
 			),
@@ -297,15 +284,8 @@ func registerEnchantments() {
 		Register(name, func() Card {
 			return NewEnchantment(name, "{1}{W}",
 				// {1}: Prevent all damage from one source of this color this turn.
-				// TODO: convert to pipeline — needs AddColorPrevention step
 				WithActivatedAbility(
-					FuncEffect(
-						"prevent all damage from one source of the chosen color",
-						EffectProperties{},
-						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-							g.AddColorPrevention(controller, color)
-							return nil
-						}),
+					DataEffect(AddColorPreventionStep(color)),
 					GenericCost(1),
 				),
 			)

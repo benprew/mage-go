@@ -216,23 +216,10 @@ func registerLands() {
 		return NewLand("Tolaria",
 			WithSuperTypes(SuperLegendary),
 			WithManaAbility(Blue),
-			// TODO: convert to pipeline — needs RevokeAttrUntilEndOfTurn step
 			WithActivatedAbility(
-				FuncEffect(
-					"target creature loses banding until end of turn",
+				Pipeline("target creature loses banding until end of turn",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 {
-							return nil
-						}
-						eff := TargetEffect(LayerAbility, EndOfTurn, targets[0], func(g *Game, target *Permanent) error {
-							g.RevokeAttr(target.ID(), Banding)
-							return nil
-						})
-						eff.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff)
-						return nil
-					},
+					RevokeKeywordFromTargetUntilEOT(Banding),
 				),
 				TapSourceCost(),
 				WithTarget(TargetCreature()),

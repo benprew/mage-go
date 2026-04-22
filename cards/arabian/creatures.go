@@ -684,19 +684,18 @@ func registerCreatures() {
 		return NewCreature("Mijae Djinn", "{R}{R}{R}", 6, 3,
 			WithSubTypes("Djinn"),
 			WithAbility(AttacksTrigger(
-				// TODO: convert to pipeline — needs FlipCoin condition primitive
-				FuncEffect("flip coin or remove from combat",
+				Pipeline("flip coin or remove from combat",
 					EffectProperties{},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						if !g.FlipCoin(controller) {
-							g.RemoveFromCombat(sourceID)
-							perm := g.FindPermanent(sourceID)
-							if perm != nil {
-								g.TapPermanent(perm)
-							}
-						}
-						return nil
-					}), false,
+					SnapshotPermanent(SelectSource, "self"),
+					IfElse("remove from combat and tap if lost",
+						&NotCond{Inner: &FlipCoinCond{}},
+						&PipelineData{Steps: []EffectData{
+							RemoveFromCombatGathered("self"),
+							TapGathered("self"),
+						}},
+						nil,
+					),
+				), false,
 			)),
 		)
 	})
@@ -708,20 +707,9 @@ func registerCreatures() {
 			WithSubTypes("Bird", "Egg"),
 			WithAbility(
 				NewTriggered(EvtCreatureDied, false,
-					// TODO: convert to pipeline — needs RegisterDelayedTrigger primitive
-					FuncEffect("register delayed token creation at next end step",
-						EffectProperties{},
-						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							g.RegisterDelayedTrigger(&DelayedTrigger{
-								EventType:  EvtEndStep,
-								SourceID:   sourceID,
-								Controller: controller,
-								Effects: []Effect{
-									CreateColoredToken("Bird", 4, 4, []Color{Red}, []CardType{TypeCreature}, []string{"Bird"}, Flying),
-								},
-							})
-							return nil
-						}),
+					DataEffect(RegisterDelayedTriggerStep(EvtEndStep, "",
+						CreateColoredToken("Bird", 4, 4, []Color{Red}, []CardType{TypeCreature}, []string{"Bird"}, Flying),
+					)),
 				).SetCondition(IsThisSource),
 			),
 		)

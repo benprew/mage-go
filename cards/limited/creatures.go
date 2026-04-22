@@ -472,20 +472,12 @@ func registerCreatures() {
 			WithKeyword(Trample),
 			// At the beginning of your upkeep, Force of Nature deals 8 damage to you
 			// unless you pay {G}{G}{G}{G}.
-			// TODO: convert to pipeline — needs IfElse with DealDamageToPlayers as pipeline step (unexported struct)
-			WithAbility(NewTriggered(EvtUpkeep, false, FuncEffect(
+			WithAbility(NewTriggered(EvtUpkeep, false, DataEffect(IfElse(
 				"deal 8 damage unless you pay {G}{G}{G}{G}",
-				EffectProperties{},
-				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					if g.TryPayCostFromLands(controller, "{G}{G}{G}{G}") {
-						return nil
-					}
-					p := g.GetPlayer(controller)
-					if p != nil {
-						g.DealDamageToPlayer(p, 8, sourceID)
-					}
-					return nil
-				})).SetCondition(func(evt *GameEvent, _ GameReader, _, controllerID uuid.UUID) bool {
+				&TryPayManaCond{Cost: "{G}{G}{G}{G}"},
+				nil,
+				UnwrapEffect(DealDamageToPlayers(Fixed(8), SelectController())),
+			))).SetCondition(func(evt *GameEvent, _ GameReader, _, controllerID uuid.UUID) bool {
 				return evt.PlayerID == controllerID
 			})),
 		)

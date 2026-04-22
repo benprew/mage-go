@@ -82,19 +82,16 @@ func registerArtifacts() {
 				TapSourceCost(),
 			),
 			// At the beginning of your upkeep, you may pay {4}. If you do, untap Mana Vault.
-			// TODO: convert to pipeline when UntapSourceStep EffectData is available
-			WithAbility(NewTriggered(EvtUpkeep, false, FuncEffect(
+			WithAbility(NewTriggered(EvtUpkeep, false, Pipeline(
 				"pay {4} to untap Mana Vault",
 				EffectProperties{},
-				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					if g.TryPayCostFromLands(controller, "{4}") {
-						perm := g.FindPermanent(sourceID)
-						if perm != nil {
-							perm.Tapped = false
-						}
-					}
-					return nil
-				})).SetCondition(func(evt *GameEvent, _ GameReader, _, controllerID uuid.UUID) bool {
+				SnapshotPermanent(SelectSource, "self"),
+				IfElse("pay {4} to untap",
+					&TryPayManaCond{Cost: "{4}"},
+					UntapGathered("self"),
+					nil,
+				),
+			)).SetCondition(func(evt *GameEvent, _ GameReader, _, controllerID uuid.UUID) bool {
 				return evt.PlayerID == controllerID
 			})),
 			// At the beginning of your draw step, if Mana Vault is tapped, it deals 1 damage to you.
@@ -453,26 +450,13 @@ func registerArtifacts() {
 
 	Register("Sacrifice", func() Card {
 		return NewInstant("Sacrifice", "{B}",
-			// TODO: convert to pipeline — needs SacrificeGathered + mana pool step
-			NewTargetedSpell(TargetCreature(), FuncEffect(
+			NewTargetedSpell(TargetCreature(), Pipeline(
 				"sacrifice creature and add black mana equal to its CMC",
 				EffectProperties{},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					if len(targets) == 0 {
-						return nil
-					}
-					perm := g.FindPermanent(targets[0])
-					if perm == nil {
-						return nil
-					}
-					cmc := perm.Card.ManaCost().CMC()
-					g.Sacrifice(perm)
-					p := g.GetPlayer(controller)
-					if p != nil {
-						p.ManaPool().Add(Black, cmc)
-					}
-					return nil
-				})),
+				SnapshotPermanent(SelectTarget, "t"),
+				SacrificeGathered("t"),
+				AddManaFromVar(Black, "t.cmc"),
+			)),
 		)
 	})
 
