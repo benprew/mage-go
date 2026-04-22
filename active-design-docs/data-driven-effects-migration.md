@@ -25,10 +25,14 @@ New continuous effect constructors added to `continuous_effects.go`: `GrantKeywo
 
 | Type | Original | Remaining | Converted | % done |
 |---|---|---|---|---|
-| FuncEffect | 289 | 0 | 289 | 100% |
-| FuncContinuousEffect | 97 | 0 | 97 | 100% |
+| FuncEffect() | 289 | 228 | 61 | 21% |
+| FuncContinuousEffect() | 97 | 77 | 20 | 21% |
 | SetCondition(func) | 69 | 6 | 63 | 91% |
-| **Total** | **455** | **6** | **449** | **99%** |
+| **Total** | **455** | **311** | **144** | **32%** |
+
+Note: FuncEffect/FuncContinuousEffect counts are constructor calls that wrap closures.
+The "converted" count includes cards that now use Pipeline, DataEffect, EffectData
+structs, and pre-built constructors instead of inline closures.
 
 ## What's Converted
 
@@ -72,9 +76,26 @@ The 6 remaining `SetCondition(func)` closures are genuinely card-specific or clo
 
 ## Status
 
-**The migration is complete.** 449/455 original closures converted (99%). The 6 remaining closures are genuinely card-specific and would each require a bespoke predicate with no reuse value.
+**SetCondition migration is essentially complete** (91%). The 6 remaining SetCondition closures are genuinely card-specific. The FuncEffect and FuncContinuousEffect closures (228 + 77 = 305 remaining) need new engine primitives to convert — each requires data-driven equivalents for card-specific game logic.
 
 New card implementations should use data-driven primitives (EffectData, SetConditionData, Pipeline, etc.) where possible, and FuncEffect/SetCondition only when the engine lacks a matching primitive.
+
+## Remaining FuncEffect/FuncContinuousEffect Primitive Plan
+
+See `.claude/plans/mighty-skipping-hellman.md` for detailed 9-phase plan. Summary:
+
+| Phase | Category | ~Closures | Key primitives |
+|---|---|---|---|
+| 1 | ForEach extensions | ~30 | ControlChangeGathered, ForEachPlayer, conditions |
+| 2 | Combat group iteration | ~12 | ForEachBlockerOfSource, BlockerCountVar |
+| 3 | Token creation with abilities | ~15 | CreateTokenWithAbility |
+| 4 | Continuous effect data types | ~20 | Conditional boost/keyword, dynamic P/T |
+| 5 | Zone transfer | ~18 | Mill, ReturnFromExile, PutOnTopOfLibrary |
+| 6 | Control change | ~15 | ControlChangeWhileTapped/Conditional |
+| 7 | Mana/cost | ~12 | AddDynamicMana, AddManaPerPermanent |
+| 8 | Damage formulas | ~8 | DealDamageToSource, DealDamageEqualToPower |
+| 9 | Type/ability manipulation | ~8 | AnimateArtifact, AddSubType |
+| — | Irreducible (closures forever) | ~40 | Captured state, unique mechanics, ante |
 
 ## Commits
 
@@ -88,4 +109,5 @@ f8289b4 refactor: Phase 5 — composable trigger condition predicates
 b444639 refactor: Phase 4+5 card migration — convert SetCondition and FuncContinuousEffect closures
 158aa3c refactor: Phase 6 — convert 59/69 SetCondition closures to data-driven predicates
 8342ec1 refactor: Update doc.go examples and test DSL to use SetConditionData
+56c372f refactor: Remove IsThisSource, convert GrantTriggeredAbilityToAll to TriggerConditionData
 ```
