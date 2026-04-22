@@ -792,25 +792,12 @@ func registerSpells() {
 // Jovial Evil deals X damage to target opponent, where X is twice the number of white creatures that player controls.
 	Register("Jovial Evil", func() Card {
 		return NewSorcery("Jovial Evil", "{2}{B}",
-			NewTargetedSpell(TargetOpponent(), FuncEffect(
-				"deal damage to target opponent equal to twice the number of white creatures they control",
-				EffectProperties{Outcome: OutcomeDetriment},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					if len(targets) == 0 {
-						return nil
-					}
-					targetID := targets[0]
-					whiteCreatures := g.FilterBattlefield(And(IsCreature, HasColorFilter(White), ControlledBy(targetID)))
-					damage := 2 * len(whiteCreatures)
-					if damage > 0 {
-						p := g.GetPlayer(targetID)
-						if p != nil {
-							g.DealDamageToPlayer(p, damage, sourceID)
-						}
-					}
-					return nil
-				},
-			)),
+			NewTargetedSpell(TargetOpponent(),
+				DealDamageToPlayers(
+					Mul(Fixed(2), CountBattlefield(SelectTargetPlayer(), And(IsCreature, HasColorFilter(White)))),
+					SelectTargetPlayer(),
+				),
+			),
 		)
 	})
 
