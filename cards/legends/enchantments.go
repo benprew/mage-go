@@ -74,31 +74,9 @@ func registerEnchantments() {
 	Register("Backfire", func() Card {
 		return NewAura("Backfire", "{U}",
 			WithAbility(
-				// TODO: convert to pipeline — needs SnapshotAttached + EventAmount primitives
 				NewTriggered(EvtDamageDealt, false,
-					FuncEffect("deal damage to enchanted creature's controller",
-						EffectProperties{Outcome: OutcomeDetriment},
-						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-							amount := g.EventAmount()
-							if amount <= 0 {
-								return nil
-							}
-							src := g.FindPermanent(sourceID)
-							if src == nil {
-								return nil
-							}
-							attached := g.FindPermanent(src.AttachedTo)
-							if attached == nil {
-								return nil
-							}
-							p := g.GetPlayer(attached.Controller)
-							if p != nil {
-								g.DealDamageToPlayer(p, amount, sourceID)
-							}
-							return nil
-						}),
-				).
-					SetConditionData(AttachedToDealsDamageToController{}),
+					DealDamageToPlayers(EventAmountValue(), SelectAttachedController()),
+				).SetConditionData(AttachedToDealsDamageToController{}),
 			),
 		)
 	})
@@ -1071,21 +1049,8 @@ func registerEnchantments() {
 	Register("Spirit Link", func() Card {
 		return NewAura("Spirit Link", "{W}",
 			WithAbility(
-				// TODO: convert to pipeline — needs EventAmount + GainLifeFromEventAmount primitives
 				NewTriggered(EvtDamageDealt, false,
-					FuncEffect("gain life equal to damage dealt",
-						EffectProperties{Outcome: OutcomeBenefit},
-						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-							amount := g.EventAmount()
-							if amount <= 0 {
-								return nil
-							}
-							p := g.GetPlayer(controller)
-							if p != nil {
-								g.PlayerGainLife(p, amount)
-							}
-							return nil
-						}),
+					GainLifeAmount(EventAmountValue()),
 				).SetConditionData(SourceIsAttachedToEventSource{}),
 			),
 		)

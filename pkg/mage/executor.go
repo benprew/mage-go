@@ -19,6 +19,8 @@ func ExecuteEffect(ctx *EffectContext, data EffectData) error {
 
 	case *gainLifeEffect:
 		return execGainLife(ctx, e)
+	case *gainLifeDynamicEffect:
+		return execGainLifeDynamic(ctx, e)
 	case *gainLifeTargetEffect:
 		return execGainLifeTarget(ctx, e)
 	case *loseLifeEffect:
@@ -286,6 +288,22 @@ func execGainLife(ctx *EffectContext, e *gainLifeEffect) error {
 	ctx.Game.PlayerGainLife(p, e.amount)
 	if !ctx.Game.IsLichActive(ctx.Controller) {
 		ctx.Game.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: ctx.Controller, Amount: e.amount})
+	}
+	return nil
+}
+
+func execGainLifeDynamic(ctx *EffectContext, e *gainLifeDynamicEffect) error {
+	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	if amount <= 0 {
+		return nil
+	}
+	p := ctx.Game.GetPlayer(ctx.Controller)
+	if p == nil {
+		return ErrPlayerNotFound
+	}
+	ctx.Game.PlayerGainLife(p, amount)
+	if !ctx.Game.IsLichActive(ctx.Controller) {
+		ctx.Game.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: ctx.Controller, Amount: amount})
 	}
 	return nil
 }

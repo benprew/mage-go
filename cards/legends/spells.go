@@ -612,21 +612,7 @@ func registerSpells() {
 						TargetID:      controller, // pass controller as target for life gain
 						MatchTargetID: wallID,      // only fire when the wall receives damage
 						Persistent:    true,         // fires each time this turn
-						Effects: []Effect{FuncEffect(
-							"gain life equal to damage dealt",
-							EffectProperties{Outcome: OutcomeBenefit},
-							func(g *Game, srcID, ctrl uuid.UUID, _ []uuid.UUID) error {
-								amount := g.EventAmount()
-								if amount <= 0 {
-									return nil
-								}
-								p := g.GetPlayer(ctrl)
-								if p != nil {
-									g.PlayerGainLife(p, amount)
-								}
-								return nil
-							},
-						)},
+						Effects: []Effect{GainLifeAmount(EventAmountValue())},
 					})
 					return nil
 				},

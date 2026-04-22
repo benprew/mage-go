@@ -350,19 +350,7 @@ func registerCreatures() {
 		return NewCreature("El-Hajjâj", "{1}{B}{B}", 1, 1,
 			WithSubTypes("Human", "Wizard"),
 			WithAbility(NewTriggered(EvtDamageDealt, false,
-				// TODO: convert to pipeline — needs EventAmount() access primitive
-				FuncEffect("you gain that much life",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						amount := g.EventAmount()
-						if amount > 0 {
-							p := g.GetPlayer(controller)
-							if p != nil {
-								g.PlayerGainLife(p, amount)
-							}
-						}
-						return nil
-					}),
+				GainLifeAmount(EventAmountValue()),
 			).SetConditionData(EventSourceIsSelf{})),
 		)
 	})

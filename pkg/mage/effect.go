@@ -174,6 +174,15 @@ func (v addValue) Resolve(g GameReader, sourceID, controller uuid.UUID, targets 
 }
 func (v addValue) Text() string { return v.a.Text() + " + " + v.b.Text() }
 
+// eventAmountValue is a ValueSource that reads the triggering event's amount
+// (e.g. damage dealt). Used for "gain that much life" / "deal that much damage" triggers.
+type eventAmountValue struct{}
+
+// EventAmountValue creates a ValueSource that reads g.EventAmount().
+func EventAmountValue() ValueSource                                            { return eventAmountValue{} }
+func (v eventAmountValue) Resolve(g GameReader, _, _ uuid.UUID, _ []uuid.UUID) int { return g.EventAmount() }
+func (v eventAmountValue) Text() string                                        { return "that much" }
+
 // countBattlefieldValue is a ValueSource that counts permanents on the battlefield.
 // If who is nil, all permanents are counted regardless of controller.
 type countBattlefieldValue struct {

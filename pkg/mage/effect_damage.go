@@ -23,6 +23,23 @@ func (e *gainLifeEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit, LifeGain: e.amount}
 }
 
+// gainLifeDynamicEffect gains life for the controller from a dynamic ValueSource.
+type gainLifeDynamicEffect struct {
+	amount ValueSource
+}
+
+// GainLifeAmount creates an effect that gains life for the controller equal to a dynamic value.
+func GainLifeAmount(amount ValueSource) Effect {
+	return DataEffect(&gainLifeDynamicEffect{amount: amount})
+}
+
+func (e *gainLifeDynamicEffect) EffectText() string {
+	return "gain " + e.amount.Text() + " life"
+}
+func (e *gainLifeDynamicEffect) EffectProps() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
+
 // gainLifeTargetEffect gains life for a target player (or controller as fallback).
 type gainLifeTargetEffect struct {
 	amount ValueSource
