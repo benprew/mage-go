@@ -23,12 +23,6 @@ type TriggeredAbility interface {
 // A nil condition always triggers.
 type TriggerCondition func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool
 
-// Indicates the triggered ability should fire if the event source is the card
-// that this ability is attached to.
-func IsThisSource(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-	return evt.SourceID == sourceID
-}
-
 // GenericTriggered is a universal triggered ability that replaces bespoke trigger
 // types. It listens for a single EventType and applies an optional condition
 // function to decide whether to fire. All existing trigger constructors

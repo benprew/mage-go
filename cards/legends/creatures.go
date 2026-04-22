@@ -784,7 +784,7 @@ func registerCreatures() {
 					g.ExileCard(card, sourceID)
 				}
 				return nil
-			})).SetCondition(IsThisSource)),
+			})).SetConditionData(EventSourceIsSelf{})),
 		)
 	})
 
@@ -1472,7 +1472,7 @@ func registerCreatures() {
 					p.AddToHand(card)
 				}
 				return nil
-			})).SetCondition(IsThisSource)),
+			})).SetConditionData(EventSourceIsSelf{})),
 		)
 	})
 

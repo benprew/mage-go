@@ -616,7 +616,7 @@ func registerCreatures() {
 			WithAbility(
 				NewTriggered(EvtCreatureDied, false,
 					GainLife(2),
-				).SetCondition(IsThisSource),
+				).SetConditionData(EventSourceIsSelf{}),
 			),
 		)
 	})
@@ -753,7 +753,7 @@ func registerCreatures() {
 			WithAbility(
 				NewTriggered(EvtCreatureDied, false,
 					AddMana(Colorless, 4),
-				).SetCondition(IsThisSource),
+				).SetConditionData(EventSourceIsSelf{}),
 			),
 		)
 	})

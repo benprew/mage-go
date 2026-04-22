@@ -263,7 +263,7 @@ func GrantActivatedAbilityToAll(effect Effect, cost Cost, filter PermanentFilter
 // Each permanent gets its own copy of the triggered ability, allowing individual trigger
 // ordering (unlike a single batch trigger). The trigger is constructed from the provided
 // event type, optional flag, condition, and effects.
-func GrantTriggeredAbilityToAll(eventType EventType, optional bool, cond TriggerCondition, filter PermanentFilter, effects ...Effect) ContinuousEffect {
+func GrantTriggeredAbilityToAll(eventType EventType, optional bool, cond TriggerConditionData, filter PermanentFilter, effects ...Effect) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
 		for _, p := range g.battlefield {
 			if p.ID() == sourceID {
@@ -276,7 +276,7 @@ func GrantTriggeredAbilityToAll(eventType EventType, optional bool, cond Trigger
 			trig.source = p.ID()
 			trig.controller = p.Controller
 			if cond != nil {
-				trig.SetCondition(cond)
+				trig.SetConditionData(cond)
 			}
 			p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{trig})
 		}

@@ -48,7 +48,7 @@ func registerCreatures() {
 							}
 							return nil
 						}),
-				).SetCondition(IsThisSource),
+				).SetConditionData(EventSourceIsSelf{}),
 			),
 		)
 	})
@@ -663,7 +663,7 @@ func registerCreatures() {
 					DataEffect(RegisterDelayedTriggerStep(EvtEndStep, "",
 						CreateColoredToken("Bird", 4, 4, []Color{Red}, []CardType{TypeCreature}, []string{"Bird"}, Flying),
 					)),
-				).SetCondition(IsThisSource),
+				).SetConditionData(EventSourceIsSelf{}),
 			),
 		)
 	})

@@ -146,9 +146,7 @@ func registerLands() {
 			WithStaticAbility(
 				GrantTriggeredAbilityToAll(
 					EvtUpkeep, false,
-					func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-						return evt.PlayerID == controllerID
-					},
+					EventPlayerIsController{},
 					IsCreature,
 					Pipeline("destroy this creature unless you pay {1}",
 						EffectProperties{Outcome: OutcomeDetriment},

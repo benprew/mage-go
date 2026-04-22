@@ -554,7 +554,7 @@ func registerArtifacts() {
 							coffinReturnExiled(g, sourceID)
 							return nil
 						}),
-				).SetCondition(IsThisSource),
+				).SetConditionData(EventSourceIsSelf{}),
 			),
 			// When Tawnos's Coffin becomes untapped, return exiled creature
 			WithAbility(
@@ -566,7 +566,7 @@ func registerArtifacts() {
 							coffinReturnExiled(g, sourceID)
 							return nil
 						}),
-				).SetCondition(IsThisSource),
+				).SetConditionData(EventSourceIsSelf{}),
 			),
 		)
 	})

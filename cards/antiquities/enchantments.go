@@ -159,9 +159,7 @@ func registerEnchantments() {
 			WithStaticAbility(
 				GrantTriggeredAbilityToAll(
 					EvtUpkeep, false,
-					func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-						return evt.PlayerID == controllerID
-					},
+					EventPlayerIsController{},
 					IsArtifact,
 					// TODO: convert to pipeline — needs "pay or sacrifice source" conditional
 					FuncEffect("sacrifice this artifact unless you pay {2}",
