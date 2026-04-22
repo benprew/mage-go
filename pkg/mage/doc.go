@@ -213,7 +213,7 @@ For card-specific logic that doesn't fit a pre-built effect, wrap a closure:
 	mage.FuncEffect(
 	    "exile target creature; its controller gains life equal to its power",
 	    mage.EffectProperties{Outcome: mage.OutcomeDetriment},
-	    func(g mage.GameReader, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	    func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	        perm := g.FindPermanent(targets[0])
 	        if perm == nil { return nil }
 	        power := perm.CurrentPower(g)
@@ -1161,7 +1161,7 @@ Complex card with FuncEffect:
 	        mage.NewTargetedSpell(mage.TargetCreature(), mage.FuncEffect(
 	            "exile target creature; controller gains life equal to its power",
 	            mage.EffectProperties{Outcome: mage.OutcomeDetriment},
-	            func(g mage.GameReader, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	            func(g *mage.Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 	                if len(targets) == 0 { return nil }
 	                perm := g.FindPermanent(targets[0])
 	                if perm == nil { return nil }
