@@ -125,3 +125,14 @@ func (a *dataEffectAdapter) Properties() EffectProperties { return a.data.Effect
 // Unwrap returns the underlying EffectData, allowing the executor or AI to
 // inspect the data structure without going through the Effect interface.
 func (a *dataEffectAdapter) Unwrap() EffectData { return a.data }
+
+// UnwrapEffect extracts the EffectData from an Effect that was created via
+// DataEffect(). This allows pre-built effects (DealDamage, GainLifeTarget, etc.)
+// to be used as pipeline steps inside ModalEffect or Pipeline. Panics if the
+// effect is not a dataEffectAdapter.
+func UnwrapEffect(e Effect) EffectData {
+	if a, ok := e.(*dataEffectAdapter); ok {
+		return a.data
+	}
+	panic(fmt.Sprintf("UnwrapEffect: %T is not a DataEffect", e))
+}

@@ -82,6 +82,7 @@ func registerArtifacts() {
 				TapSourceCost(),
 			),
 			// At the beginning of your upkeep, you may pay {4}. If you do, untap Mana Vault.
+			// TODO: convert to pipeline when UntapSourceStep EffectData is available
 			WithAbility(NewTriggered(EvtUpkeep, false, FuncEffect(
 				"pay {4} to untap Mana Vault",
 				EffectProperties{},
@@ -261,6 +262,7 @@ func registerArtifacts() {
 	Register("Jade Monolith", func() Card {
 		return NewArtifact("Jade Monolith", "{4}",
 			WithActivatedAbility(
+				// TODO: convert to pipeline when damage redirect step is available
 				FuncEffect(
 					"redirect next damage to target creature to you instead",
 					EffectProperties{},
@@ -283,6 +285,7 @@ func registerArtifacts() {
 		return NewArtifact("Jade Statue", "{4}",
 			// {2}: Jade Statue becomes a 3/6 artifact creature until end of combat.
 			WithActivatedAbility(
+				// TODO: convert to pipeline when animate step is available
 				FuncEffect("become a 3/6 artifact creature until end of combat",
 					EffectProperties{},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -352,6 +355,7 @@ func registerArtifacts() {
 	Register("Illusionary Mask", func() Card {
 		return NewArtifact("Illusionary Mask", "{2}",
 			WithActivatedAbility(
+				// TODO: convert to pipeline — complex face-down mechanic
 				FuncEffect(
 					"put creature from hand onto battlefield face down as 2/2",
 					EffectProperties{},
@@ -449,6 +453,7 @@ func registerArtifacts() {
 
 	Register("Sacrifice", func() Card {
 		return NewInstant("Sacrifice", "{B}",
+			// TODO: convert to pipeline — needs SacrificeGathered + mana pool step
 			NewTargetedSpell(TargetCreature(), FuncEffect(
 				"sacrifice creature and add black mana equal to its CMC",
 				EffectProperties{},
@@ -473,6 +478,7 @@ func registerArtifacts() {
 
 	Register("Word of Command", func() Card {
 		return NewInstant("Word of Command", "{B}{B}",
+			// TODO: convert to pipeline — complex hand/cast manipulation
 			NewTargetedSpell(TargetPlayer(), FuncEffect(
 				"look at opponent's hand and force them to play a card",
 				EffectProperties{},
@@ -505,6 +511,7 @@ func registerArtifacts() {
 
 	Register("Camouflage", func() Card {
 		return NewInstant("Camouflage", "{G}",
+			// TODO: convert to pipeline — needs PreventBlockingUntilEndOfCombat step
 			NewSpellAbility(FuncEffect(
 				"you assign blockers this combat",
 				EffectProperties{},
@@ -524,6 +531,7 @@ func registerArtifacts() {
 
 	Register("Raging River", func() Card {
 		return NewEnchantment("Raging River", "{R}{R}",
+			// TODO: convert to pipeline — needs PreventBlockingUntilEndOfCombat step
 			WithAbility(NewTriggered(EvtDeclaredAttacker, false, FuncEffect(
 				"split blockers into piles",
 				EffectProperties{},
@@ -550,6 +558,7 @@ func registerArtifacts() {
 
 	Register("Natural Selection", func() Card {
 		return NewInstant("Natural Selection", "{G}",
+			// TODO: convert to pipeline — needs library manipulation steps
 			NewTargetedSpell(TargetPlayer(), FuncEffect(
 				"look at top 3 cards of target player's library, rearrange them",
 				EffectProperties{},
@@ -583,6 +592,7 @@ func registerArtifacts() {
 	Register("Lich", func() Card {
 		return NewEnchantment("Lich", "{B}{B}{B}{B}",
 			// ETB: lose life equal to your life total
+			// TODO: convert to pipeline — needs Lich-specific game rule steps
 			WithAbility(EntersBattlefieldTrigger(FuncEffect(
 				"lose life equal to your life total",
 				EffectProperties{},
@@ -599,6 +609,7 @@ func registerArtifacts() {
 					return nil
 				}), false)),
 			// When Lich is put into a graveyard from the battlefield, you lose the game.
+			// TODO: convert to pipeline — needs Lich-specific game rule steps
 			WithAbility(PutIntoGraveyardFromBattlefieldTrigger(FuncEffect(
 				"you lose the game",
 				EffectProperties{},
@@ -615,6 +626,7 @@ func registerArtifacts() {
 
 	Register("Island Sanctuary", func() Card {
 		return NewEnchantment("Island Sanctuary", "{1}{W}",
+			// TODO: convert to pipeline — needs skip-draw and sanctuary game rule steps
 			WithAbility(NewTriggered(EvtDrawStep, false, FuncEffect(
 				"skip draw, only flying/islandwalk can attack you until your next turn",
 				EffectProperties{},
@@ -657,6 +669,7 @@ func registerArtifacts() {
 
 	Register("Simulacrum", func() Card {
 		return NewInstant("Simulacrum", "{1}{B}",
+			// TODO: convert to pipeline — needs DamageTakenByPlayer as ValueSource
 			NewTargetedSpell(TargetCreatureYouControl(), FuncEffect(
 				"gain life and deal damage equal to damage taken this turn",
 				EffectProperties{},
@@ -691,16 +704,7 @@ func registerArtifacts() {
 	// "Text": "Cast this spell only during the declare blockers step.\nRemove target creature defending player controls from combat. Creatures it was blocking that had become blocked by only that creature this combat become unblocked. You may have it block an attacking creature of your choice.",
 	Register("False Orders", func() Card {
 		return NewInstant("False Orders", "{R}",
-			NewTargetedSpell(TargetCreature(), FuncEffect(
-				"remove target creature from combat",
-				EffectProperties{},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					if len(targets) == 0 {
-						return nil
-					}
-					g.RemoveFromCombat(targets[0])
-					return nil
-				})),
+			NewTargetedSpell(TargetCreature(), RemoveFromCombat()),
 		)
 	})
 
@@ -736,6 +740,7 @@ func registerArtifacts() {
 			WithStaticAbility(
 				PreventUntapForMatching(And(IsCreature, HasColorFilter(Blue))),
 			),
+			// TODO: convert to pipeline — needs ForEach + TryPayMana + untap per creature
 			WithAbility(BeginningOfEachUpkeepTrigger(
 				FuncEffect("pay {4} to untap blue creatures",
 					EffectProperties{},
@@ -781,6 +786,7 @@ func registerArtifacts() {
 	Register("Kudzu", func() Card {
 		return NewAura("Kudzu", "{1}{G}{G}",
 			WithCastTarget(TargetLand()),
+			// TODO: convert to pipeline — complex attachment manipulation
 			WithAbility(WhenAttachedBecomesTappedTrigger(FuncEffect(
 				"destroy enchanted land; attach Kudzu to another land",
 				EffectProperties{},
@@ -829,6 +835,7 @@ func registerArtifacts() {
 	Register("Siren's Call", func() Card {
 		// XXX: missing cast timing restriction and "attack if able" forced attack effect
 		return NewInstant("Siren's Call", "{U}",
+			// TODO: convert to pipeline — needs delayed trigger pipeline support
 			NewSpellAbility(FuncEffect(
 				"destroy non-attacking non-Wall creatures at end of turn",
 				EffectProperties{},

@@ -274,6 +274,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				BoostUntilEndOfTurn(Fixed(1), Fixed(0), SelectSource),
 				ManaCostOf("{R}"),
+				// TODO: convert to pipeline — needs delayed trigger registration + counter tracking primitives
 				WithEffect(FuncEffect(
 					"if activated 4+ times, sacrifice at end of turn",
 					EffectProperties{},
@@ -471,6 +472,7 @@ func registerCreatures() {
 			WithKeyword(Trample),
 			// At the beginning of your upkeep, Force of Nature deals 8 damage to you
 			// unless you pay {G}{G}{G}{G}.
+			// TODO: convert to pipeline — needs IfElse with DealDamageToPlayers as pipeline step (unexported struct)
 			WithAbility(NewTriggered(EvtUpkeep, false, FuncEffect(
 				"deal 8 damage unless you pay {G}{G}{G}{G}",
 				EffectProperties{},
@@ -801,6 +803,7 @@ func registerCreatures() {
 			// {T}: Target non-Wall creature the active player controls attacks this
 			// turn if able. Destroy it at end of turn if it didn't attack.
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs delayed trigger registration + closure over targetID
 				FuncEffect("force creature to attack or destroy at EOT",
 					EffectProperties{},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -841,6 +844,7 @@ func registerCreatures() {
 		return NewCreature("Scavenging Ghoul", "{3}{B}", 2, 2,
 			WithSubTypes("Zombie"),
 			// End step: put corpse counters equal to creatures that died this turn
+			// TODO: convert to pipeline — needs CreatureDeaths() access as pipeline primitive
 			WithAbility(BeginningOfEachEndStepTrigger(
 				FuncEffect(
 					"put corpse counters on Scavenging Ghoul for each creature that died this turn",
@@ -878,6 +882,7 @@ func registerCreatures() {
 			// As Vesuvan Doppelganger enters, copy target creature's P/T and keywords
 			WithAbility(CopyCreatureOnETB()),
 			// At the beginning of your upkeep, you may have this become a copy of another creature
+			// TODO: convert to pipeline — needs CopyEffectCurrentName/UpdateCopyEffect primitives
 			WithAbility(BeginningOfUpkeepTrigger(FuncEffect(
 				"become a copy of target creature",
 				EffectProperties{},
@@ -916,6 +921,7 @@ func registerCreatures() {
 			// {0}: The next 1 damage that would be dealt to this creature this turn
 			// is dealt to its owner instead. Only this creature's owner may activate.
 			WithActivatedAbility(
+				// TODO: convert to pipeline — needs SetCreatureDamageRedirect primitive
 				FuncEffect("redirect next 1 damage to owner",
 					EffectProperties{},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -925,6 +931,7 @@ func registerCreatures() {
 				GenericCost(0),
 			),
 			// When Personal Incarnation dies, you lose half your life (rounded up).
+			// TODO: convert to pipeline — needs LoseLife with dynamic amount (half life rounded up)
 			WithAbility(PutIntoGraveyardFromBattlefieldTrigger(FuncEffect(
 				"lose half your life rounded up",
 				EffectProperties{},

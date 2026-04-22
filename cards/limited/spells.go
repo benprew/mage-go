@@ -35,26 +35,11 @@ func registerSpells() {
 
 	Register("Healing Salve", func() Card {
 		c := NewInstant("Healing Salve", "{W}",
-			NewTargetedSpell(TargetAnyTarget(), FuncEffect(
+			NewTargetedSpell(TargetAnyTarget(), DataEffect(ModalEffect(
 				"target player gains 3 life or prevent the next 3 damage that would be dealt to any target this turn",
-				EffectProperties{Outcome: OutcomeBenefit},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					if len(targets) == 0 {
-						return nil
-					}
-					if g.ModeValue() == 0 {
-						for _, pl := range g.AllPlayers() {
-							if pl.PlayerID() == targets[0] {
-								g.PlayerGainLife(pl, 3)
-								return nil
-							}
-						}
-					} else {
-						g.AddPreventionShield(targets[0], 3)
-					}
-					return nil
-				},
-			)),
+				UnwrapEffect(GainLifeTarget(Fixed(3))),
+				UnwrapEffect(PreventDamageToTarget(Fixed(3))),
+			))),
 		)
 		c.SetModes([]string{
 			"Target player gains 3 life",
@@ -82,6 +67,7 @@ func registerSpells() {
 	})
 
 	Register("Reverse Damage", func() Card {
+		// TODO: convert to pipeline — needs AddPreventionShield + AddReverseDamageShield primitives
 		return NewInstant("Reverse Damage", "{1}{W}{W}",
 			NewSpellAbility(FuncEffect(
 				"prevent the next source of damage to you and gain that much life",
@@ -218,6 +204,7 @@ func registerSpells() {
 
 	Register("Drain Life", func() Card {
 		// XXX: missing "Spend only black mana on X" restriction
+		// TODO: convert to pipeline — needs life-capping logic (cap gain at target toughness/life)
 		return NewSorcery("Drain Life", "{X}{1}{B}",
 			NewTargetedSpell(TargetAnyTarget(), FuncEffect(
 				"deal X damage to target and gain life equal to damage dealt",
@@ -313,6 +300,7 @@ func registerSpells() {
 	})
 
 	// XXX: missing exile-on-death replacement effect — Oracle: "if it would die this turn, exile it instead"
+	// TODO: convert to pipeline — needs GrantAttrToTarget primitive for CantRegenerate
 	Register("Disintegrate", func() Card {
 		return NewSorcery("Disintegrate", "{X}{R}",
 			NewTargetedSpell(TargetAnyTarget(), FuncEffect(
@@ -386,6 +374,7 @@ func registerSpells() {
 				"Target creature gains trample and gets +X/+0. Destroy at end of turn if it attacked.",
 				GrantKeywordUntilEndOfTurn(Trample, SelectTarget),
 				DoubleTargetPower(),
+				// TODO: convert to pipeline — needs DelayedTrigger + HasAttackedThisTurn primitives
 				FuncEffect("destroy at end of turn if attacked", EffectProperties{}, func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
@@ -471,6 +460,7 @@ func registerSpells() {
 	})
 
 	Register("Channel", func() Card {
+		// TODO: convert to pipeline — needs SetChannelActive primitive
 		return NewSorcery("Channel", "{G}{G}",
 			NewSpellAbility(FuncEffect(
 				"until end of turn, pay 1 life to add {C}",
@@ -541,6 +531,7 @@ func registerSpells() {
 	// Sorcery
 	// Remove this card from your deck before playing if you're not playing for ante.
 	// Discard your hand, ante the top card of your library, then draw seven cards.
+	// TODO: convert to pipeline — needs ante manipulation primitives
 	Register("Contract from Below", func() Card {
 		return NewSorcery("Contract from Below", "{B}",
 			NewSpellAbility(FuncEffect(
@@ -572,6 +563,7 @@ func registerSpells() {
 	// Sorcery
 	// Remove this card from your deck before playing if you're not playing for ante.
 	// You own target card in the ante. Exchange that card with the top card of your library.
+	// TODO: convert to pipeline — needs ante manipulation primitives
 	Register("Darkpact", func() Card {
 		return NewSorcery("Darkpact", "{B}{B}{B}",
 			NewSpellAbility(FuncEffect(
@@ -606,6 +598,7 @@ func registerSpells() {
 	// Sorcery
 	// Remove this card from your deck before playing if you're not playing for ante.
 	// Each player antes the top card of their library.
+	// TODO: convert to pipeline — needs ante manipulation primitives
 	Register("Demonic Attorney", func() Card {
 		return NewSorcery("Demonic Attorney", "{1}{B}{B}",
 			NewSpellAbility(FuncEffect(

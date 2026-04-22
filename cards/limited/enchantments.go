@@ -167,6 +167,7 @@ func registerEnchantments() {
 			),
 			// At the beginning of enchanted creature's controller's upkeep,
 			// that player may pay {4}. If the player does, untap the creature.
+			// TODO: convert to pipeline — needs UntapAttached + TryPayMana primitives
 			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(FuncEffect(
 				"pay {4} to untap enchanted creature",
 				EffectProperties{},
@@ -189,6 +190,7 @@ func registerEnchantments() {
 
 	Register("Earthbind", func() Card {
 		return NewAura("Earthbind", "{R}",
+			// TODO: convert to pipeline — needs SnapshotAttached + conditional on keyword
 			WithAbility(EntersBattlefieldTrigger(FuncEffect(
 				"if enchanted creature has flying, deal 2 damage",
 				EffectProperties{},
@@ -246,6 +248,7 @@ func registerEnchantments() {
 	Register("Phantasmal Terrain", func() Card {
 		return NewAura("Phantasmal Terrain", "{U}{U}",
 			WithCastTarget(TargetLand()),
+			// TODO: convert to pipeline — needs ChooseColor step that writes to source permanent
 			WithAbility(EntersBattlefieldTrigger(FuncEffect(
 				"choose a basic land type",
 				EffectProperties{},
@@ -294,6 +297,7 @@ func registerEnchantments() {
 		Register(name, func() Card {
 			return NewEnchantment(name, "{1}{W}",
 				// {1}: Prevent all damage from one source of this color this turn.
+				// TODO: convert to pipeline — needs AddColorPrevention step
 				WithActivatedAbility(
 					FuncEffect(
 						"prevent all damage from one source of the chosen color",
@@ -388,18 +392,12 @@ func registerEnchantments() {
 	Register("Farmstead", func() Card {
 		return NewAura("Farmstead", "{W}{W}{W}",
 			WithCastTarget(TargetLand()),
-			WithAbility(BeginningOfUpkeepTrigger(FuncEffect(
-				"you may pay {W}{W} to gain 1 life",
-				EffectProperties{Outcome: OutcomeBenefit},
-				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					if g.TryPayCostFromLands(controller, "{W}{W}") {
-						p := g.GetPlayer(controller)
-						if p != nil {
-							g.PlayerGainLife(p, 1)
-						}
-					}
-					return nil
-				}), false)),
+			WithAbility(BeginningOfUpkeepTrigger(
+				DataEffect(IfElse("you may pay {W}{W} to gain 1 life",
+					&TryPayManaCond{Cost: "{W}{W}"},
+					UnwrapEffect(GainLife(1)),
+					nil,
+				)), false)),
 		)
 	})
 
