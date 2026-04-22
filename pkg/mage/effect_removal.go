@@ -16,6 +16,9 @@ func DestroyTarget() Effect {
 	return DataEffect(&destroyTargetEffect{})
 }
 
+// DestroyTargetStep returns the EffectData for use as a pipeline/ForEach inner step.
+func DestroyTargetStep() EffectData { return &destroyTargetEffect{} }
+
 func (e *destroyTargetEffect) EffectText() string { return "destroy target" }
 func (e *destroyTargetEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
@@ -122,6 +125,9 @@ type exileTargetEffect struct{}
 func ExileTarget() Effect {
 	return DataEffect(&exileTargetEffect{})
 }
+
+// ExileTargetStep returns the EffectData for use as a pipeline/ForEach inner step.
+func ExileTargetStep() EffectData { return &exileTargetEffect{} }
 
 func (e *exileTargetEffect) EffectText() string { return "exile target permanent" }
 func (e *exileTargetEffect) EffectProps() EffectProperties {

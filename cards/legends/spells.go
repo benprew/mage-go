@@ -1122,17 +1122,12 @@ func registerSpells() {
 // XXX: timing restriction not enforced
 	Register("Reset", func() Card {
 		return NewInstant("Reset", "{U}{U}",
-			NewSpellAbility(FuncEffect(
+			NewSpellAbility(DataEffect(ForEachControlledPermanent(
+				SelectController(),
+				IsLand,
+				UntapTargetStep(),
 				"untap all lands you control",
-				EffectProperties{Outcome: OutcomeBenefit},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					lands := g.FilterBattlefield(And(IsLand, ControlledBy(controller)))
-					for _, land := range lands {
-						land.Tapped = false
-					}
-					return nil
-				},
-			)),
+			))),
 		)
 	})
 

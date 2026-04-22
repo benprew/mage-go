@@ -2583,19 +2583,13 @@ func registerCreatures() {
 				},
 			), false)),
 			// When Hazezon leaves, exile all Sand Warriors
-			WithAbility(NewTriggered(EvtLeavesBattlefield, false, FuncEffect(
-				"exile all Sand Warriors",
-				EffectProperties{},
-				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					sandWarriors := g.FilterBattlefield(HasSubType("Sand"))
-					for _, sw := range sandWarriors {
-						if sw.HasSubType("Warrior") {
-							g.ExilePermanent(sw)
-						}
-					}
-					return nil
-				},
-			)).SetConditionData(EventSourceIsSelf{})),
+			WithAbility(NewTriggered(EvtLeavesBattlefield, false,
+				DataEffect(ForEachPermanent(
+					And(HasSubType("Sand"), HasSubType("Warrior")),
+					ExileTargetStep(),
+					"exile all Sand Warriors",
+				)),
+			).SetConditionData(EventSourceIsSelf{})),
 		)
 	})
 

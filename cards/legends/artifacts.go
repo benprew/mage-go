@@ -121,18 +121,12 @@ func registerArtifacts() {
 	Register("Arena of the Ancients", func() Card {
 		return NewArtifact("Arena of the Ancients", "{3}",
 			WithStaticAbility(PreventUntapForMatching(And(IsCreature, IsLegendary))),
-			WithAbility(EntersBattlefieldTrigger(FuncEffect(
-				"tap all legendary creatures",
-				EffectProperties{Outcome: OutcomeDetriment},
-				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					for _, p := range g.FilterBattlefield(NewPermanentFilter("legendary creature", func(p *Permanent, _ *Game) bool {
-						return p.HasType(TypeCreature) && p.Card.HasSuperType(SuperLegendary)
-					})) {
-						g.TapPermanent(p)
-					}
-					return nil
-				},
-			), false)),
+			WithAbility(EntersBattlefieldTrigger(
+				DataEffect(ForEachPermanent(
+					And(IsCreature, IsLegendary),
+					TapTargetStep(),
+					"tap all legendary creatures",
+				)), false)),
 		)
 	})
 

@@ -370,8 +370,12 @@ func execDealDamageToPlayersVar(ctx *EffectContext, e *DealDamageToPlayersVarDat
 // ForEachPermanentData iterates permanents matching a filter and executes an
 // inner effect for each. The inner effect receives the iterated permanent's
 // ID as targets[0] in the context.
+//
+// If Who is non-nil, only permanents controlled by the resolved player are
+// included (e.g., SelectController for "each creature you control").
 type ForEachPermanentData struct {
 	Filter PermanentFilter
+	Who    PlayerSelector // optional: restrict to one player's permanents
 	Inner  EffectData
 	Txt    string
 }
@@ -381,15 +385,30 @@ func ForEachPermanent(filter PermanentFilter, inner EffectData, text string) Eff
 	return &ForEachPermanentData{Filter: filter, Inner: inner, Txt: text}
 }
 
+// ForEachControlledPermanent creates an effect that iterates matching permanents
+// controlled by the specified player.
+func ForEachControlledPermanent(who PlayerSelector, filter PermanentFilter, inner EffectData, text string) EffectData {
+	return &ForEachPermanentData{Filter: filter, Who: who, Inner: inner, Txt: text}
+}
+
 func (e *ForEachPermanentData) EffectText() string            { return e.Txt }
 func (e *ForEachPermanentData) EffectProps() EffectProperties { return EffectProperties{Mass: true} }
 
 func execForEachPermanent(ctx *EffectContext, e *ForEachPermanentData) error {
 	perms := ctx.Game.FilterBattlefield(e.Filter)
-	// Snapshot IDs first — inner effects may remove permanents
-	ids := make([]uuid.UUID, len(perms))
-	for i, p := range perms {
-		ids[i] = p.ID()
+	var controllerFilter uuid.UUID
+	if e.Who != nil {
+		selected := e.Who.Select(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+		if len(selected) > 0 {
+			controllerFilter = selected[0]
+		}
+	}
+	ids := make([]uuid.UUID, 0, len(perms))
+	for _, p := range perms {
+		if controllerFilter != uuid.Nil && p.Controller != controllerFilter {
+			continue
+		}
+		ids = append(ids, p.ID())
 	}
 	savedTargets := ctx.Targets
 	for _, id := range ids {

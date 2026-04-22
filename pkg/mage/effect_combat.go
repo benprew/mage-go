@@ -74,6 +74,9 @@ func TapTarget() Effect {
 	return DataEffect(&tapTargetEffect{})
 }
 
+// TapTargetStep returns the EffectData for use as a pipeline/ForEach inner step.
+func TapTargetStep() EffectData { return &tapTargetEffect{} }
+
 func (e *tapTargetEffect) EffectText() string { return "tap target permanent" }
 func (e *tapTargetEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
@@ -86,6 +89,9 @@ type untapTargetEffect struct{}
 func UntapTarget() Effect {
 	return DataEffect(&untapTargetEffect{})
 }
+
+// UntapTargetStep returns the EffectData for use as a pipeline/ForEach inner step.
+func UntapTargetStep() EffectData { return &untapTargetEffect{} }
 
 func (e *untapTargetEffect) EffectText() string { return "untap target permanent" }
 func (e *untapTargetEffect) EffectProps() EffectProperties {
