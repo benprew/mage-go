@@ -86,6 +86,11 @@ var IsLand = NewPermanentFilter("land", func(p *Permanent, _ *Game) bool {
 	return p.HasType(TypeLand)
 })
 
+// IsLegendary matches legendary permanents.
+var IsLegendary = NewPermanentFilter("legendary", func(p *Permanent, _ *Game) bool {
+	return p.Card.HasSuperType(SuperLegendary)
+})
+
 // IsCreatureCard matches creature cards.
 var IsCreatureCard = NewCardFilter("creature card", func(c Card) bool {
 	for _, t := range c.Types() {

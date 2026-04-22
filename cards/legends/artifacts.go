@@ -120,14 +120,7 @@ func registerArtifacts() {
 // When this artifact enters, tap all legendary creatures.
 	Register("Arena of the Ancients", func() Card {
 		return NewArtifact("Arena of the Ancients", "{3}",
-			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-				for _, p := range g.AllBattlefield() {
-					if p.HasType(TypeCreature) && p.Card.HasSuperType(SuperLegendary) {
-						g.GrantAttr(p.ID(), AttrDoesNotUntap)
-					}
-				}
-				return nil
-			})),
+			WithStaticAbility(PreventUntapForMatching(And(IsCreature, IsLegendary))),
 			WithAbility(EntersBattlefieldTrigger(FuncEffect(
 				"tap all legendary creatures",
 				EffectProperties{Outcome: OutcomeDetriment},
@@ -470,10 +463,12 @@ func registerArtifacts() {
 								p.AddPoisonCounters(1)
 								return nil
 							},
-						)).SetCondition(func(evt *GameEvent, g GameReader, srcID, _ uuid.UUID) bool {
-							// Only trigger when this creature deals damage to a player (not a permanent)
-							return evt.SourceID == srcID && g.GetPlayer(evt.TargetID) != nil
-						}))
+						)).
+							// TODO: convert to data condition
+							SetCondition(func(evt *GameEvent, g GameReader, srcID, _ uuid.UUID) bool {
+								// Only trigger when this creature deals damage to a player (not a permanent)
+								return evt.SourceID == srcID && g.GetPlayer(evt.TargetID) != nil
+							}))
 						g.PutOnBattlefield(token, controller)
 						return nil
 					},
@@ -658,14 +653,7 @@ func registerArtifacts() {
 							}
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-					// Only at your end step, if untapped
-					if evt.PlayerID != controllerID {
-						return false
-					}
-					src := g.FindPermanent(sourceID)
-					return src != nil && !src.Tapped
-				}),
+				).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{EventPlayerIsController{}, SourceIsUntapped{}}}),
 			),
 			// {X}{X}, {T}: deal damage equal to pin counters to any target
 			// XXX: {X}{X} mana cost (where X = pin counters) is paid inside the effect at resolution

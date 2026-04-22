@@ -19,18 +19,7 @@ func registerLands() {
 	Register("Adventurers' Guildhouse", func() Card {
 		return NewLand("Adventurers' Guildhouse",
 			WithStaticAbility(
-				FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-					src := g.FindPermanent(sourceID)
-					if src == nil {
-						return nil
-					}
-					for _, perm := range g.FilterBattlefield(And(IsCreature, HasColorFilter(Green), ControlledBy(src.Controller))) {
-						if perm.Card.HasSuperType(SuperLegendary) {
-							g.GrantAttr(perm.ID(), Banding)
-						}
-					}
-					return nil
-				}),
+				GrantKeywordToControlled(Banding, And(HasColorFilter(Green), IsLegendary)),
 			),
 		)
 	})
@@ -43,18 +32,7 @@ func registerLands() {
 	Register("Cathedral of Serra", func() Card {
 		return NewLand("Cathedral of Serra",
 			WithStaticAbility(
-				FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-					src := g.FindPermanent(sourceID)
-					if src == nil {
-						return nil
-					}
-					for _, perm := range g.FilterBattlefield(And(IsCreature, HasColorFilter(White), ControlledBy(src.Controller))) {
-						if perm.Card.HasSuperType(SuperLegendary) {
-							g.GrantAttr(perm.ID(), Banding)
-						}
-					}
-					return nil
-				}),
+				GrantKeywordToControlled(Banding, And(HasColorFilter(White), IsLegendary)),
 			),
 		)
 	})
@@ -121,18 +99,7 @@ func registerLands() {
 	Register("Mountain Stronghold", func() Card {
 		return NewLand("Mountain Stronghold",
 			WithStaticAbility(
-				FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-					src := g.FindPermanent(sourceID)
-					if src == nil {
-						return nil
-					}
-					for _, perm := range g.FilterBattlefield(And(IsCreature, HasColorFilter(Red), ControlledBy(src.Controller))) {
-						if perm.Card.HasSuperType(SuperLegendary) {
-							g.GrantAttr(perm.ID(), Banding)
-						}
-					}
-					return nil
-				}),
+				GrantKeywordToControlled(Banding, And(HasColorFilter(Red), IsLegendary)),
 			),
 		)
 	})
@@ -164,18 +131,7 @@ func registerLands() {
 	Register("Seafarer's Quay", func() Card {
 		return NewLand("Seafarer's Quay",
 			WithStaticAbility(
-				FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-					src := g.FindPermanent(sourceID)
-					if src == nil {
-						return nil
-					}
-					for _, perm := range g.FilterBattlefield(And(IsCreature, HasColorFilter(Blue), ControlledBy(src.Controller))) {
-						if perm.Card.HasSuperType(SuperLegendary) {
-							g.GrantAttr(perm.ID(), Banding)
-						}
-					}
-					return nil
-				}),
+				GrantKeywordToControlled(Banding, And(HasColorFilter(Blue), IsLegendary)),
 			),
 		)
 	})
@@ -236,18 +192,7 @@ func registerLands() {
 	Register("Unholy Citadel", func() Card {
 		return NewLand("Unholy Citadel",
 			WithStaticAbility(
-				FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-					src := g.FindPermanent(sourceID)
-					if src == nil {
-						return nil
-					}
-					for _, perm := range g.FilterBattlefield(And(IsCreature, HasColorFilter(Black), ControlledBy(src.Controller))) {
-						if perm.Card.HasSuperType(SuperLegendary) {
-							g.GrantAttr(perm.ID(), Banding)
-						}
-					}
-					return nil
-				}),
+				GrantKeywordToControlled(Banding, And(HasColorFilter(Black), IsLegendary)),
 			),
 		)
 	})

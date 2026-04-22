@@ -91,18 +91,10 @@ func registerArtifacts() {
 					UntapGathered("self"),
 					nil,
 				),
-			)).SetCondition(func(evt *GameEvent, _ GameReader, _, controllerID uuid.UUID) bool {
-				return evt.PlayerID == controllerID
-			})),
+			)).SetConditionData(EventPlayerIsController{})),
 			// At the beginning of your draw step, if Mana Vault is tapped, it deals 1 damage to you.
 			WithAbility(NewTriggered(EvtDrawStep, false, DealDamageToPlayers(Fixed(1), SelectController())).
-				SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-					if evt.PlayerID != controllerID {
-						return false
-					}
-					perm := g.FindPermanent(sourceID)
-					return perm != nil && perm.Tapped
-				})),
+				SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{EventPlayerIsController{}, SourceIsTapped{}}})),
 		)
 	})
 
@@ -534,9 +526,11 @@ func registerArtifacts() {
 					}
 					g.ApplyContinuousEffects()
 					return nil
-				})).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-				return evt.PlayerID == controllerID && g.FindPermanent(sourceID) != nil && len(g.CombatGroups()) == 1
-			})),
+				})).
+				// TODO: convert to data condition
+				SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
+					return evt.PlayerID == controllerID && g.FindPermanent(sourceID) != nil && len(g.CombatGroups()) == 1
+				})),
 		)
 	})
 
@@ -618,10 +612,7 @@ func registerArtifacts() {
 					g.SetSkipNextDraw(controller)
 					g.SetSanctuaryActive(controller)
 					return nil
-				})).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-				src := g.FindPermanent(sourceID)
-				return src != nil && evt.PlayerID == controllerID
-			})),
+				})).SetConditionData(EventPlayerIsController{})),
 		)
 	})
 
@@ -761,9 +752,11 @@ func registerArtifacts() {
 			WithStaticAbility(AllowUnlimitedLandPlays()),
 			WithAbility(NewTriggered(EvtLandPlayed, false,
 				DealDamageToPlayers(Fixed(1), SelectController()),
-			).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-				return evt.PlayerID == controllerID && evt.Amount > 1
-			})),
+			).
+				// TODO: convert to data condition
+				SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
+					return evt.PlayerID == controllerID && evt.Amount > 1
+				})),
 		)
 	})
 
@@ -875,10 +868,7 @@ func registerArtifacts() {
 		return NewEnchantment("Manabarbs", "{3}{R}",
 			WithAbility(NewTriggered(EvtTapped, false,
 				DealDamageToPlayers(Fixed(1), SelectEventController()),
-			).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-				perm := g.FindPermanent(evt.SourceID)
-				return perm != nil && perm.HasType(TypeLand)
-			})),
+			).SetConditionData(EventSourceHasType{Type: TypeLand})),
 		)
 	})
 

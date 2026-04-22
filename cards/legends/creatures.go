@@ -24,28 +24,7 @@ func registerCreatures() {
 		return NewCreature("Akron Legionnaire", "{6}{W}{W}", 8, 4,
 			WithSubTypes("Giant", "Soldier"),
 			WithStaticAbility(
-				FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-					src := g.FindPermanent(sourceID)
-					if src == nil {
-						return nil
-					}
-					for _, p := range g.AllBattlefield() {
-						if p.Controller != src.Controller {
-							continue
-						}
-						if !p.HasType(TypeCreature) {
-							continue
-						}
-						if p.Card.Name() == "Akron Legionnaire" {
-							continue
-						}
-						if p.HasType(TypeArtifact) {
-							continue
-						}
-						g.RevokeAttr(p.ID(), AttrCanAttack)
-					}
-					return nil
-				}),
+				RevokeAttrFromControlled(AttrCanAttack, And(Not(Named("Akron Legionnaire")), Not(IsArtifact))),
 			),
 		)
 	})
@@ -231,9 +210,11 @@ func registerCreatures() {
 			WithAbility(
 				NewTriggered(EvtEndStep, false,
 					AddCounters(Carrion, Fixed(1), SelectSource),
-				).SetCondition(func(evt *GameEvent, g GameReader, _, _ uuid.UUID) bool {
-					return g.CreatureDeaths() > 0
-				}),
+				).
+					// TODO: convert to data condition
+					SetCondition(func(evt *GameEvent, g GameReader, _, _ uuid.UUID) bool {
+						return g.CreatureDeaths() > 0
+					}),
 			),
 			WithActivatedAbility(
 				BoostUntilEndOfTurn(Fixed(1), Fixed(1), SelectSource),
@@ -302,9 +283,11 @@ func registerCreatures() {
 						EffectProperties{Outcome: OutcomeBenefit},
 						GrantKeywordToSourceUntilEOT(Banding),
 					),
-				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-					// Check if this Wall is blocking something
-					for _, group := range g.CombatGroups() {
+				).
+					// TODO: convert to data condition
+					SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
+						// Check if this Wall is blocking something
+						for _, group := range g.CombatGroups() {
 						isBlocking := false
 						for _, bid := range group.BlockerIDs {
 							if bid == sourceID {
@@ -405,9 +388,7 @@ func registerCreatures() {
 							}
 						}
 						return nil
-					})).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-					return evt.SourceID == sourceID
-				}),
+					})).SetConditionData(EventSourceIsSelf{}),
 			),
 		)
 	})
@@ -461,9 +442,7 @@ func registerCreatures() {
 					}
 					return nil
 				},
-			)).SetCondition(func(evt *GameEvent, _ GameReader, _, controllerID uuid.UUID) bool {
-				return evt.PlayerID == controllerID
-			})),
+			)).SetConditionData(EventPlayerIsController{})),
 			// Can't be blocked by red creatures
 			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
 				for _, p := range g.AllBattlefield() {
@@ -736,8 +715,10 @@ func registerCreatures() {
 							}
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-					isGreenOrWhite := func(p *Permanent) bool {
+				).
+					// TODO: convert to data condition
+					SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+						isGreenOrWhite := func(p *Permanent) bool {
 						for _, c := range p.Colors() {
 							if c == Green || c == White {
 								return true
@@ -814,9 +795,7 @@ func registerCreatures() {
 					}
 					return nil
 				},
-			)).SetCondition(func(evt *GameEvent, _ GameReader, _, controllerID uuid.UUID) bool {
-				return evt.PlayerID == controllerID
-			})),
+			)).SetConditionData(EventPlayerIsController{})),
 		)
 	})
 
@@ -851,25 +830,7 @@ func registerCreatures() {
 			WithSubTypes("Eye"),
 			WithKeyword(CantBeBlockedExceptByWalls),
 			WithStaticAbility(
-				FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-					src := g.FindPermanent(sourceID)
-					if src == nil {
-						return nil
-					}
-					for _, p := range g.AllBattlefield() {
-						if p.Controller != src.Controller {
-							continue
-						}
-						if !p.HasType(TypeCreature) {
-							continue
-						}
-						if p.HasSubType("Eye") {
-							continue
-						}
-						g.RevokeAttr(p.ID(), AttrCanAttack)
-					}
-					return nil
-				}),
+				RevokeAttrFromControlled(AttrCanAttack, Not(HasSubType("Eye"))),
 			),
 		)
 	})
@@ -1019,9 +980,11 @@ func registerCreatures() {
 							}
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-					return g.IsBlockingInCombat(sourceID)
-				}),
+				).
+					// TODO: convert to data condition
+					SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+						return g.IsBlockingInCombat(sourceID)
+					}),
 			),
 			// When Medusa is blocked by a non-Wall: destroy that blocker at end of combat
 			WithAbility(
@@ -1047,19 +1010,21 @@ func registerCreatures() {
 							}
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-					for _, group := range g.CombatGroups() {
-						if group.AttackerID == sourceID && len(group.BlockerIDs) > 0 {
-							for _, bid := range group.BlockerIDs {
-								blocker := g.FindPermanent(bid)
-								if blocker != nil && !blocker.HasSubType("Wall") {
-									return true
+				).
+					// TODO: convert to data condition
+					SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+						for _, group := range g.CombatGroups() {
+							if group.AttackerID == sourceID && len(group.BlockerIDs) > 0 {
+								for _, bid := range group.BlockerIDs {
+									blocker := g.FindPermanent(bid)
+									if blocker != nil && !blocker.HasSubType("Wall") {
+										return true
+									}
 								}
 							}
 						}
-					}
-					return false
-				}),
+						return false
+					}),
 			),
 		)
 	})
@@ -1208,10 +1173,12 @@ func registerCreatures() {
 					p.AddPoisonCounters(1)
 					return nil
 				},
-			)).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-				// Only trigger when this creature deals damage to a player (not a permanent)
-				return evt.SourceID == sourceID && g.GetPlayer(evt.TargetID) != nil
-			})),
+			)).
+				// TODO: convert to data condition
+				SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+					// Only trigger when this creature deals damage to a player (not a permanent)
+					return evt.SourceID == sourceID && g.GetPlayer(evt.TargetID) != nil
+				})),
 		)
 	})
 
@@ -1278,10 +1245,12 @@ func registerCreatures() {
 							}
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-					group := g.CombatGroupFor(sourceID)
-					return group != nil && len(group.BlockerIDs) > 0
-				}),
+				).
+					// TODO: convert to data condition
+					SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
+						group := g.CombatGroupFor(sourceID)
+						return group != nil && len(group.BlockerIDs) > 0
+					}),
 			),
 		)
 	})
@@ -1497,9 +1466,7 @@ func registerCreatures() {
 						g.DealDamageToPermanent(target, 3, sourceID)
 						return nil
 					}),
-				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-					return evt.SourceID == sourceID
-				}),
+				).SetConditionData(EventSourceIsSelf{}),
 			),
 		)
 	})
@@ -1599,38 +1566,8 @@ func registerCreatures() {
 		return NewCreature("Kobold Drill Sergeant", "{1}{R}", 1, 2,
 			WithSubTypes("Kobold", "Soldier"),
 			WithStaticAbility(
-				FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-					src := g.FindPermanent(sourceID)
-					if src == nil {
-						return nil
-					}
-					for _, p := range g.AllBattlefield() {
-						if p.ID() == sourceID || p.Controller != src.Controller {
-							continue
-						}
-						if !p.HasType(TypeCreature) || !p.HasSubType("Kobold") {
-							continue
-						}
-						p.BoostPT(0, 1)
-					}
-					return nil
-				}),
-				FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-					src := g.FindPermanent(sourceID)
-					if src == nil {
-						return nil
-					}
-					for _, p := range g.AllBattlefield() {
-						if p.ID() == sourceID || p.Controller != src.Controller {
-							continue
-						}
-						if !p.HasType(TypeCreature) || !p.HasSubType("Kobold") {
-							continue
-						}
-						g.GrantAttr(p.ID(), Trample)
-					}
-					return nil
-				}),
+				BoostOtherControlledCreatures(0, 1, HasSubType("Kobold")),
+				GrantKeywordToOtherControlled(Trample, HasSubType("Kobold")),
 			),
 		)
 	})
@@ -1645,22 +1582,7 @@ func registerCreatures() {
 			WithSubTypes("Kobold"),
 			WithKeyword(FirstStrike),
 			WithStaticAbility(
-				FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-					src := g.FindPermanent(sourceID)
-					if src == nil {
-						return nil
-					}
-					for _, p := range g.AllBattlefield() {
-						if p.ID() == sourceID || p.Controller != src.Controller {
-							continue
-						}
-						if !p.HasType(TypeCreature) || !p.HasSubType("Kobold") {
-							continue
-						}
-						g.GrantAttr(p.ID(), FirstStrike)
-					}
-					return nil
-				}),
+				GrantKeywordToOtherControlled(FirstStrike, HasSubType("Kobold")),
 			),
 		)
 	})
@@ -1673,22 +1595,7 @@ func registerCreatures() {
 		return NewCreature("Kobold Taskmaster", "{1}{R}", 1, 2,
 			WithSubTypes("Kobold"),
 			WithStaticAbility(
-				FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-					src := g.FindPermanent(sourceID)
-					if src == nil {
-						return nil
-					}
-					for _, p := range g.AllBattlefield() {
-						if p.ID() == sourceID || p.Controller != src.Controller {
-							continue
-						}
-						if !p.HasType(TypeCreature) || !p.HasSubType("Kobold") {
-							continue
-						}
-						p.BoostPT(1, 0)
-					}
-					return nil
-				}),
+				BoostOtherControlledCreatures(1, 0, HasSubType("Kobold")),
 			),
 		)
 	})
@@ -1910,18 +1817,20 @@ func registerCreatures() {
 							}
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-					for _, group := range g.CombatGroups() {
-						if group.AttackerID == sourceID && len(group.BlockerIDs) > 0 {
-							return true
-						}
-						for _, bid := range group.BlockerIDs {
-							if bid == sourceID {
+				).
+					// TODO: convert to data condition
+					SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+						for _, group := range g.CombatGroups() {
+							if group.AttackerID == sourceID && len(group.BlockerIDs) > 0 {
 								return true
 							}
+							for _, bid := range group.BlockerIDs {
+								if bid == sourceID {
+									return true
+								}
+							}
 						}
-					}
-					return false
+						return false
 				}),
 			),
 		)
@@ -2072,10 +1981,12 @@ func registerCreatures() {
 						eff.SetSourceID(sourceID)
 						g.AddContinuousEffect(eff)
 						return nil
-					})).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-					group := g.CombatGroupFor(sourceID)
-					return group != nil && len(group.BlockerIDs) == 0
-				}),
+					})).
+					// TODO: convert to data condition
+					SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
+						group := g.CombatGroupFor(sourceID)
+						return group != nil && len(group.BlockerIDs) == 0
+					}),
 			),
 		)
 	})
@@ -2142,13 +2053,15 @@ func registerCreatures() {
 							}
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
-					// Only trigger for opponents
-					if evt.PlayerID == controllerID {
-						return false
-					}
-					// Only for instant spells
-					card := g.FindCardAnywhere(evt.SourceID)
+				).
+					// TODO: convert to data condition
+					SetCondition(func(evt *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
+						// Only trigger for opponents
+						if evt.PlayerID == controllerID {
+							return false
+						}
+						// Only for instant spells
+						card := g.FindCardAnywhere(evt.SourceID)
 					if card == nil {
 						return false
 					}
@@ -2771,9 +2684,7 @@ func registerCreatures() {
 					}
 					return nil
 				},
-			)).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-				return evt.SourceID == sourceID
-			})),
+			)).SetConditionData(EventSourceIsSelf{})),
 		)
 	})
 
@@ -2798,21 +2709,7 @@ func registerCreatures() {
 			WithSubTypes("Human", "Warrior"),
 			WithSuperTypes(SuperLegendary),
 			WithStaticAbility(
-				FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-					src := g.FindPermanent(sourceID)
-					if src == nil {
-						return nil
-					}
-					for _, p := range g.AllBattlefield() {
-						if p.Controller != src.Controller || !p.HasType(TypeCreature) {
-							continue
-						}
-						if HasColorFilter(Green).Match(p, g) {
-							p.BoostPT(0, 2)
-						}
-					}
-					return nil
-				}),
+				BoostControlledCreatures(0, 2, HasColorFilter(Green)),
 			),
 		)
 	})
@@ -2886,9 +2783,7 @@ func registerCreatures() {
 					g.AddContinuousEffect(ce2)
 					return nil
 				},
-			)).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-				return evt.PlayerID == controllerID
-			})),
+			)).SetConditionData(EventPlayerIsController{})),
 		)
 	})
 
@@ -3065,15 +2960,17 @@ func registerCreatures() {
 					}
 					return nil
 				},
-			)).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-				// EvtDamageDealt: SourceID = damage source, TargetID = damaged player/permanent
-				if evt.SourceID != sourceID {
-					return false
-				}
-				// Must be damage to a player, and that player must be an opponent (not the controller)
-				targetPlayer := g.GetPlayer(evt.TargetID)
-				return targetPlayer != nil && targetPlayer.PlayerID() != controllerID
-			})),
+			)).
+				// TODO: convert to data condition
+				SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
+					// EvtDamageDealt: SourceID = damage source, TargetID = damaged player/permanent
+					if evt.SourceID != sourceID {
+						return false
+					}
+					// Must be damage to a player, and that player must be an opponent (not the controller)
+					targetPlayer := g.GetPlayer(evt.TargetID)
+					return targetPlayer != nil && targetPlayer.PlayerID() != controllerID
+				})),
 		)
 	})
 
@@ -3220,15 +3117,7 @@ func registerCreatures() {
 					}
 					return nil
 				},
-			)).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controller uuid.UUID) bool {
-				// Only trigger on controller's upkeep
-				if evt.PlayerID != controller {
-					return false
-				}
-				// XXX: checks current tapped state, not whether it started the turn untapped
-				perm := g.FindPermanent(sourceID)
-				return perm != nil && !perm.Tapped
-			})),
+			)).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{EventPlayerIsController{}, SourceIsUntapped{}}})),
 		)
 	})
 
@@ -3254,18 +3143,7 @@ func registerCreatures() {
 			WithSubTypes("Kobold"),
 			WithSuperTypes(SuperLegendary),
 			// Static: Kobolds of Kher Keep you control get +2/+2
-			WithStaticAbility(FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-				src := g.FindPermanent(sourceID)
-				if src == nil {
-					return nil
-				}
-				for _, p := range g.AllBattlefield() {
-					if p.Controller == src.Controller && p.Name() == "Kobolds of Kher Keep" {
-						p.BoostPT(2, 2)
-					}
-				}
-				return nil
-			})),
+			WithStaticAbility(BoostControlledCreatures(2, 2, Named("Kobolds of Kher Keep"))),
 			// Upkeep: pay {R}{R}{R} or tap + lose control
 			WithAbility(NewTriggered(EvtUpkeep, false, FuncEffect(
 				"pay {R}{R}{R} or tap and lose control",
@@ -3310,9 +3188,7 @@ func registerCreatures() {
 					g.AddContinuousEffect(eff)
 					return nil
 				},
-			)).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controller uuid.UUID) bool {
-				return evt.PlayerID == controller
-			})),
+			)).SetConditionData(EventPlayerIsController{})),
 		)
 	})
 
@@ -3429,9 +3305,7 @@ func registerCreatures() {
 					}
 					return nil
 				},
-			)).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-				return evt.SourceID == sourceID
-			})),
+			)).SetConditionData(EventSourceIsSelf{})),
 			// When the token leaves, sacrifice Stangg
 			WithAbility(NewTriggered(EvtLeavesBattlefield, false, FuncEffect(
 				"sacrifice Stangg",
@@ -3443,9 +3317,11 @@ func registerCreatures() {
 					}
 					return nil
 				},
-			)).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-				return evt.SourceID == twinID && evt.SourceID != sourceID
-			})),
+			)).
+				// TODO: convert to data condition
+				SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+					return evt.SourceID == twinID && evt.SourceID != sourceID
+				})),
 		)
 	})
 

@@ -97,13 +97,15 @@ func registerEnchantments() {
 							}
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-					src := g.FindPermanent(sourceID)
-					if src == nil || src.AttachedTo == uuid.Nil {
-						return false
-					}
-					return evt.SourceID == src.AttachedTo && evt.TargetID == controllerID
-				}),
+				).
+					// TODO: convert to data condition
+					SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
+						src := g.FindPermanent(sourceID)
+						if src == nil || src.AttachedTo == uuid.Nil {
+							return false
+						}
+						return evt.SourceID == src.AttachedTo && evt.TargetID == controllerID
+					}),
 			),
 		)
 	})
@@ -367,16 +369,7 @@ func registerEnchantments() {
 		return NewEnchantment("Fortified Area", "{1}{W}{W}",
 			WithStaticAbility(
 				BoostControlledCreatures(1, 0, HasSubType("Wall")),
-				FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-					src := g.FindPermanent(sourceID)
-					if src == nil {
-						return nil
-					}
-					for _, perm := range g.FilterBattlefield(And(IsCreature, HasSubType("Wall"), ControlledBy(src.Controller))) {
-						g.GrantAttr(perm.ID(), Banding)
-					}
-					return nil
-				}),
+				GrantKeywordToControlled(Banding, HasSubType("Wall")),
 			),
 		)
 	})
@@ -412,12 +405,7 @@ func registerEnchantments() {
 		return NewEnchantment("Gravity Sphere", "{2}{R}",
 			WithSuperTypes(SuperWorld),
 			WithStaticAbility(
-				FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-					for _, perm := range g.FilterBattlefield(IsCreature) {
-						g.RevokeAttr(perm.ID(), Flying)
-					}
-					return nil
-				}),
+				RevokeKeywordFromAll(Flying, AnyPermanent),
 			),
 		)
 	})
@@ -564,13 +552,15 @@ func registerEnchantments() {
 							}
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-					card := g.FindCardAnywhere(evt.SourceID)
-					if card == nil {
-						return false
-					}
-					return card.HasType(TypeInstant)
-				}),
+				).
+					// TODO: convert to data condition
+					SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+						card := g.FindCardAnywhere(evt.SourceID)
+						if card == nil {
+							return false
+						}
+						return card.HasType(TypeInstant)
+					}),
 			),
 		)
 	})
@@ -676,13 +666,15 @@ func registerEnchantments() {
 							}
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-					src := g.FindPermanent(sourceID)
-					if src == nil || src.AttachedTo == uuid.Nil {
-						return false
-					}
-					enchantedID := src.AttachedTo
-					for _, group := range g.CombatGroups() {
+				).
+					// TODO: convert to data condition
+					SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+						src := g.FindPermanent(sourceID)
+						if src == nil || src.AttachedTo == uuid.Nil {
+							return false
+						}
+						enchantedID := src.AttachedTo
+						for _, group := range g.CombatGroups() {
 						if group.AttackerID == enchantedID {
 							for _, bid := range group.BlockerIDs {
 								blocker := g.FindPermanent(bid)
@@ -732,9 +724,11 @@ func registerEnchantments() {
 							}
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-					// Only opponent's creature spells
-					if evt.PlayerID == controllerID {
+				).
+					// TODO: convert to data condition
+					SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
+						// Only opponent's creature spells
+						if evt.PlayerID == controllerID {
 						return false
 					}
 					card := g.FindCardAnywhere(evt.SourceID)
@@ -908,12 +902,7 @@ func registerEnchantments() {
 	Register("Moat", func() Card {
 		return NewEnchantment("Moat", "{2}{W}{W}",
 			WithStaticAbility(
-				FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-					for _, perm := range g.FilterBattlefield(And(IsCreature, NotHasKeywordFilter(Flying))) {
-						g.RevokeAttr(perm.ID(), AttrCanAttack)
-					}
-					return nil
-				}),
+				RevokeKeywordFromAll(AttrCanAttack, NotHasKeywordFilter(Flying)),
 			),
 		)
 	})
@@ -927,9 +916,7 @@ func registerEnchantments() {
 			WithAbility(
 				NewTriggered(EvtSpellCast, false,
 					CounterUnlessPay("{3}"),
-				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-					return true // all spells
-				}),
+				),
 			),
 		)
 	})
@@ -942,13 +929,15 @@ func registerEnchantments() {
 			WithAbility(
 				NewTriggered(EvtSpellCast, false,
 					CounterSpell(),
-				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-					card := g.FindCardAnywhere(evt.SourceID)
-					if card == nil {
-						return false
-					}
-					return card.HasType(TypeEnchantment)
-				}),
+				).
+					// TODO: convert to data condition
+					SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+						card := g.FindCardAnywhere(evt.SourceID)
+						if card == nil {
+							return false
+						}
+						return card.HasType(TypeEnchantment)
+					}),
 			),
 		)
 	})
@@ -1000,13 +989,7 @@ func registerEnchantments() {
 							}
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-					src := g.FindPermanent(sourceID)
-					if src == nil || src.AttachedTo == uuid.Nil {
-						return false
-					}
-					return evt.SourceID == src.AttachedTo
-				}),
+				).SetConditionData(SourceIsAttachedToEventSource{}),
 			),
 		)
 	})
@@ -1124,13 +1107,7 @@ func registerEnchantments() {
 							}
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-					src := g.FindPermanent(sourceID)
-					if src == nil || src.AttachedTo == uuid.Nil {
-						return false
-					}
-					return evt.SourceID == src.AttachedTo
-				}),
+				).SetConditionData(SourceIsAttachedToEventSource{}),
 			),
 		)
 	})
@@ -1157,13 +1134,7 @@ func registerEnchantments() {
 							}
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-					src := g.FindPermanent(sourceID)
-					if src == nil || src.AttachedTo == uuid.Nil {
-						return false
-					}
-					return evt.SourceID == src.AttachedTo
-				}),
+				).SetConditionData(SourceIsAttachedToEventSource{}),
 			),
 		)
 	})
@@ -1309,9 +1280,7 @@ func registerEnchantments() {
 		return NewEnchantment("Underworld Dreams", "{B}{B}{B}",
 			WithAbility(NewTriggered(EvtCardDrawn, false,
 				DealDamageToPlayers(Fixed(1), SelectEventController()),
-			).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-				return evt.PlayerID != controllerID
-			})),
+			).SetConditionData(EventPlayerIsNotController{})),
 		)
 	})
 

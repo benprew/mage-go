@@ -45,16 +45,18 @@ func registerEnchantments() {
 			// Trigger when enchanted artifact's ability is activated without {T}
 			WithAbility(
 				NewTriggered(EvtAbilityActivated, false, artPossDmgEffect,
-				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-					if evt.Flag {
-						return false // had a tap cost — already covered by EvtTapped trigger
-					}
-					src := g.FindPermanent(sourceID)
-					if src == nil {
-						return false
-					}
-					return evt.SourceID == src.AttachedTo
-				}),
+				).
+					// TODO: convert to data condition
+					SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+						if evt.Flag {
+							return false // had a tap cost — already covered by EvtTapped trigger
+						}
+						src := g.FindPermanent(sourceID)
+						if src == nil {
+							return false
+						}
+						return evt.SourceID == src.AttachedTo
+					}),
 			),
 		)
 	})
@@ -239,12 +241,14 @@ func registerEnchantments() {
 			// Trigger when any artifact's ability is activated without {T}
 			WithAbility(
 				NewTriggered(EvtAbilityActivated, false, hauntingWindEffect,
-				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-					if evt.Flag {
-						return false // had a tap cost — covered by EvtTapped trigger
-					}
-					return isArtifactEvt(evt, g, sourceID, controllerID)
-				}),
+				).
+					// TODO: convert to data condition
+					SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
+						if evt.Flag {
+							return false // had a tap cost — covered by EvtTapped trigger
+						}
+						return isArtifactEvt(evt, g, sourceID, controllerID)
+					}),
 			),
 		)
 	})
@@ -289,16 +293,18 @@ func registerEnchantments() {
 			// Trigger when opponent activates artifact ability without {T}
 			WithAbility(
 				NewTriggered(EvtAbilityActivated, false, powerleechEffect,
-				).SetCondition(func(evt *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
-					if evt.Flag {
-						return false // had tap cost
-					}
-					if evt.PlayerID == controllerID {
-						return false // not opponent
-					}
-					perm := g.FindPermanent(evt.SourceID)
-					return perm != nil && perm.HasType(TypeArtifact)
-				}),
+				).
+					// TODO: convert to data condition
+					SetCondition(func(evt *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
+						if evt.Flag {
+							return false // had tap cost
+						}
+						if evt.PlayerID == controllerID {
+							return false // not opponent
+						}
+						perm := g.FindPermanent(evt.SourceID)
+						return perm != nil && perm.HasType(TypeArtifact)
+					}),
 			),
 		)
 	})
@@ -380,9 +386,7 @@ func registerEnchantments() {
 							g.AddContinuousEffect(effPT)
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, _ GameReader, sourceID, _ uuid.UUID) bool {
-					return evt.SourceID == sourceID
-				}),
+				).SetConditionData(EventSourceIsSelf{}),
 			),
 		)
 	})

@@ -394,16 +394,18 @@ func registerCreatures() {
 			WithAbility(
 				NewTriggered(EvtSpellCast, false,
 					AddCounters(P1P1, Fixed(1), SelectSource),
-				).SetCondition(func(evt *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
-					if evt.PlayerID == controllerID {
-						return false
-					}
-					card := g.FindCardAnywhere(evt.SourceID)
-					if card == nil {
-						return false
-					}
-					return card.HasType(TypeArtifact)
-				}),
+				).
+					// TODO: convert to data condition
+					SetCondition(func(evt *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
+						if evt.PlayerID == controllerID {
+							return false
+						}
+						card := g.FindCardAnywhere(evt.SourceID)
+						if card == nil {
+							return false
+						}
+						return card.HasType(TypeArtifact)
+					}),
 			),
 		)
 	})
@@ -457,9 +459,7 @@ func registerCreatures() {
 							g.ApplyContinuousEffects()
 							return nil
 						}),
-				).SetCondition(func(evt *GameEvent, _ GameReader, _, controllerID uuid.UUID) bool {
-					return evt.PlayerID == controllerID
-				}),
+				).SetConditionData(EventPlayerIsController{}),
 			),
 			// When blocked by a Wall, destroy that Wall at end of combat
 			WithAbility(
@@ -469,14 +469,16 @@ func registerCreatures() {
 						SnapshotPermanent(SelectTarget, "wall"),
 						RegisterDelayedTriggerStep(EvtEndOfCombat, "wall", DestroyTarget()),
 					),
-				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-					// Battering Ram is the attacker being blocked
-					if evt.TargetID != sourceID {
-						return false
-					}
-					blocker := g.FindPermanent(evt.SourceID)
-					return blocker != nil && blocker.HasSubType("Wall")
-				}),
+				).
+					// TODO: convert to data condition
+					SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+						// Battering Ram is the attacker being blocked
+						if evt.TargetID != sourceID {
+							return false
+						}
+						blocker := g.FindPermanent(evt.SourceID)
+						return blocker != nil && blocker.HasSubType("Wall")
+					}),
 			),
 		)
 	})

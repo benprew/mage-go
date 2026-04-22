@@ -60,9 +60,7 @@ func registerLands() {
 			WithAbility(
 				NewTriggered(EvtTapped, false,
 					DealDamageToPlayers(Fixed(1), SelectController()),
-				).SetCondition(func(evt *GameEvent, _ GameReader, sourceID, _ uuid.UUID) bool {
-					return evt.SourceID == sourceID
-				}),
+				).SetConditionData(EventSourceIsSelf{}),
 			),
 		)
 	})

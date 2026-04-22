@@ -383,6 +383,106 @@ func GrantKeywordToAll(kw Keyword, filter PermanentFilter) ContinuousEffect {
 	})
 }
 
+// GrantKeywordToControlled grants a keyword ability to creatures controlled by
+// the source's controller that match an optional filter (e.g. Goblin War Drums
+// gives menace to your creatures).
+func GrantKeywordToControlled(kw Keyword, filter PermanentFilter) ContinuousEffect {
+	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+		src := g.FindPermanent(sourceID)
+		if src == nil {
+			return nil
+		}
+		for _, p := range g.battlefield {
+			if !p.HasType(TypeCreature) || p.Controller != src.Controller {
+				continue
+			}
+			if !filter.Match(p, g) {
+				continue
+			}
+			g.effects.GrantAttr(p.ID(), kw)
+		}
+		return nil
+	})
+}
+
+// GrantKeywordToOtherControlled grants a keyword ability to OTHER creatures
+// controlled by the source's controller that match an optional filter
+// (e.g. Kobold Overlord gives first strike to other Kobolds you control).
+func GrantKeywordToOtherControlled(kw Keyword, filter PermanentFilter) ContinuousEffect {
+	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+		src := g.FindPermanent(sourceID)
+		if src == nil {
+			return nil
+		}
+		for _, p := range g.battlefield {
+			if !p.HasType(TypeCreature) || p.ID() == sourceID || p.Controller != src.Controller {
+				continue
+			}
+			if !filter.Match(p, g) {
+				continue
+			}
+			g.effects.GrantAttr(p.ID(), kw)
+		}
+		return nil
+	})
+}
+
+// BoostOtherControlledCreatures boosts OTHER creatures controlled by the
+// source's controller that match an optional filter
+// (e.g. Kobold Taskmaster gives +1/+0 to other Kobolds you control).
+func BoostOtherControlledCreatures(power, toughness int, filter PermanentFilter) ContinuousEffect {
+	return FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+		src := g.FindPermanent(sourceID)
+		if src == nil {
+			return nil
+		}
+		for _, p := range g.battlefield {
+			if !p.HasType(TypeCreature) || p.ID() == sourceID || p.Controller != src.Controller {
+				continue
+			}
+			if !filter.Match(p, g) {
+				continue
+			}
+			p.powerBonus += power
+			p.toughBonus += toughness
+		}
+		return nil
+	})
+}
+
+// RevokeKeywordFromAll revokes a keyword ability from all creatures matching
+// the given filter (e.g. Gravity Sphere revokes Flying from all creatures).
+func RevokeKeywordFromAll(kw Keyword, filter PermanentFilter) ContinuousEffect {
+	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
+		for _, p := range g.FilterBattlefield(And(IsCreature, filter)) {
+			g.effects.RevokeAttr(p.ID(), kw)
+		}
+		return nil
+	})
+}
+
+// RevokeAttrFromControlled revokes an attr from all creatures controlled by
+// the source's controller that match the given filter (e.g. Akron Legionnaire
+// revokes AttrCanAttack from non-artifact, non-self creatures you control).
+func RevokeAttrFromControlled(attr Attr, filter PermanentFilter) ContinuousEffect {
+	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+		src := g.FindPermanent(sourceID)
+		if src == nil {
+			return nil
+		}
+		for _, p := range g.battlefield {
+			if !p.HasType(TypeCreature) || p.Controller != src.Controller {
+				continue
+			}
+			if !filter.Match(p, g) {
+				continue
+			}
+			g.effects.RevokeAttr(p.ID(), attr)
+		}
+		return nil
+	})
+}
+
 // NullifyLandwalkEffect creates a continuous effect that nullifies a specific
 // landwalk ability (e.g. Great Wall nullifies plainswalk). While the source is
 // on the battlefield, creatures with the specified landwalk can be blocked as

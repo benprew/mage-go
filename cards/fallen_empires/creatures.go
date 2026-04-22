@@ -96,17 +96,19 @@ func registerCreatures() {
 						g.RemoveFromCombat(sourceID)
 						return nil
 					}),
-			).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-				src := g.FindPermanent(sourceID)
-				if src == nil {
-					return false
-				}
-				if !g.IsAttackingInCombat(sourceID) {
-					return false
-				}
-				group := g.CombatGroupFor(sourceID)
-				return group != nil && len(group.BlockerIDs) == 0
-			})),
+			).
+				// TODO: convert to data condition
+				SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+					src := g.FindPermanent(sourceID)
+					if src == nil {
+						return false
+					}
+					if !g.IsAttackingInCombat(sourceID) {
+						return false
+					}
+					group := g.CombatGroupFor(sourceID)
+					return group != nil && len(group.BlockerIDs) == 0
+				})),
 		)
 	}))
 
@@ -421,14 +423,7 @@ func registerCreatures() {
 			// When you control no Islands, sacrifice this creature.
 			WithAbility(SacrificeUnlessLand("Island")),
 			// Can't attack unless defending player controls an Island.
-			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-				who := g.NonActivePlayerObj()
-				whoID := who.PlayerID()
-				if !g.AnyBattlefield(And(ControlledBy(whoID), IsLand, HasSubType("Island"))) {
-					g.RevokeAttr(sourceID, AttrCanAttack)
-				}
-				return nil
-			})),
+			WithStaticAbility(PreventFromAttackingIfDefendingPlayerControls(And(IsLand, HasSubType("Island")))),
 			// {U}: This creature gains flying until end of turn.
 			WithActivatedAbility(
 				GrantKeywordUntilEndOfTurn(Flying, SelectSource),
@@ -566,17 +561,19 @@ func registerCreatures() {
 						}
 						return nil
 					}),
-			).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-				src := g.FindPermanent(sourceID)
-				if src == nil {
-					return false
-				}
-				if !g.IsAttackingInCombat(sourceID) {
-					return false
-				}
-				group := g.CombatGroupFor(sourceID)
-				return group != nil && len(group.BlockerIDs) == 0
-			})),
+			).
+				// TODO: convert to data condition
+				SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+					src := g.FindPermanent(sourceID)
+					if src == nil {
+						return false
+					}
+					if !g.IsAttackingInCombat(sourceID) {
+						return false
+					}
+					group := g.CombatGroupFor(sourceID)
+					return group != nil && len(group.BlockerIDs) == 0
+				})),
 		)
 	}))
 
@@ -615,17 +612,19 @@ func registerCreatures() {
 						g.DestroyPermanent(chosen)
 						return nil
 					}),
-			).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-				src := g.FindPermanent(sourceID)
-				if src == nil {
-					return false
-				}
-				if !g.IsAttackingInCombat(sourceID) {
-					return false
-				}
-				group := g.CombatGroupFor(sourceID)
-				return group != nil && len(group.BlockerIDs) == 0
-			})),
+			).
+				// TODO: convert to data condition
+				SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+					src := g.FindPermanent(sourceID)
+					if src == nil {
+						return false
+					}
+					if !g.IsAttackingInCombat(sourceID) {
+						return false
+					}
+					group := g.CombatGroupFor(sourceID)
+					return group != nil && len(group.BlockerIDs) == 0
+				})),
 		)
 	}))
 
@@ -659,18 +658,7 @@ func registerCreatures() {
 		return NewCreature("Thrull Champion", "{4}{B}", 2, 2,
 			WithSubTypes("Thrull"),
 			// Thrull creatures get +1/+1 (lord effect, doesn't boost self)
-			WithStaticAbility(FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-				src := g.FindPermanent(sourceID)
-				if src == nil {
-					return nil
-				}
-				for _, p := range g.AllBattlefield() {
-					if p.HasSubType("Thrull") && p.Controller == src.Controller && p.ID() != sourceID {
-						p.BoostPT(1, 1)
-					}
-				}
-				return nil
-			})),
+			WithStaticAbility(BoostOtherControlledCreatures(1, 1, HasSubType("Thrull"))),
 		)
 	}))
 
@@ -741,19 +729,21 @@ func registerCreatures() {
 			// Trigger when this creature blocks an Orc
 			WithAbility(NewTriggered(EvtDeclaredBlocker, false,
 				BoostUntilEndOfTurn(Fixed(0), Fixed(2), SelectSource),
-			).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
-				if evt.SourceID == sourceID {
-					// This creature is blocking — check if the attacker is an Orc
-					attacker := g.FindPermanent(evt.TargetID)
-					return attacker != nil && attacker.HasSubType("Orc")
-				}
-				if evt.TargetID == sourceID {
-					// This creature is being blocked — check if the blocker is an Orc
-					blocker := g.FindPermanent(evt.SourceID)
-					return blocker != nil && blocker.HasSubType("Orc")
-				}
-				return false
-			})),
+			).
+				// TODO: convert to data condition
+				SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+					if evt.SourceID == sourceID {
+						// This creature is blocking — check if the attacker is an Orc
+						attacker := g.FindPermanent(evt.TargetID)
+						return attacker != nil && attacker.HasSubType("Orc")
+					}
+					if evt.TargetID == sourceID {
+						// This creature is being blocked — check if the blocker is an Orc
+						blocker := g.FindPermanent(evt.SourceID)
+						return blocker != nil && blocker.HasSubType("Orc")
+					}
+					return false
+				})),
 		)
 	}))
 

@@ -22,9 +22,7 @@ func registerEnchantments() {
 			WithAbility(
 				NewTriggered(EvtEndStep, false,
 					CreateToken("Thrull", 0, 1, []CardType{TypeCreature}, []string{"Thrull"}),
-				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-					return evt.PlayerID == controllerID
-				}),
+				).SetConditionData(EventPlayerIsController{}),
 			),
 		)
 	}))
@@ -78,19 +76,7 @@ func registerEnchantments() {
 	Register("Goblin War Drums", withExpansion(func() Card {
 		return NewEnchantment("Goblin War Drums", "{2}{R}",
 			WithStaticAbility(
-				FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-					src := g.FindPermanent(sourceID)
-					if src == nil {
-						return nil
-					}
-					for _, p := range g.AllBattlefield() {
-						if !p.HasType(TypeCreature) || p.Controller != src.Controller {
-							continue
-						}
-						g.GrantAttr(p.ID(), Menace)
-					}
-					return nil
-				}),
+				GrantKeywordToControlled(Menace, AnyPermanent),
 			),
 		)
 	}))

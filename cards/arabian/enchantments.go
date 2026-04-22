@@ -117,6 +117,7 @@ func registerEnchantments() {
 			),
 			// "When there are no creatures on the battlefield, sacrifice Drop of Honey."
 			// State trigger: fires when a creature leaves and no creatures remain
+			// TODO: convert to data condition
 			WithAbility(NewTriggered(EvtLeavesBattlefield, false, SacrificeSource()).
 				SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 					for _, p := range g.FilterBattlefield(AnyPermanent) {
@@ -193,6 +194,7 @@ func registerEnchantments() {
 				}),
 			),
 			// When the chosen player controls no nontoken permanents of the chosen color, sacrifice Jihad
+			// TODO: convert to data condition
 			WithAbility(
 				NewTriggered(EvtLeavesBattlefield, false,
 					SacrificeSource(),
