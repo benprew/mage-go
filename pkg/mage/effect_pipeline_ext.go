@@ -601,6 +601,31 @@ func execDestroyAttached(ctx *EffectContext, _ *DestroyAttachedData) error {
 	return nil
 }
 
+// AddCounterToAttachedData adds counters to the permanent the source is attached to.
+type AddCounterToAttachedData struct {
+	CounterType CounterType
+	Amount      int
+}
+
+func AddCounterToAttachedStep(ct CounterType, amount int) EffectData {
+	return &AddCounterToAttachedData{CounterType: ct, Amount: amount}
+}
+
+func (e *AddCounterToAttachedData) EffectText() string            { return "add counter to enchanted permanent" }
+func (e *AddCounterToAttachedData) EffectProps() EffectProperties { return EffectProperties{} }
+
+func execAddCounterToAttached(ctx *EffectContext, e *AddCounterToAttachedData) error {
+	src := ctx.Game.FindPermanent(ctx.SourceID)
+	if src == nil || src.AttachedTo == uuid.Nil {
+		return nil
+	}
+	target := ctx.Game.FindPermanent(src.AttachedTo)
+	if target != nil {
+		target.AddCounter(e.CounterType, e.Amount)
+	}
+	return nil
+}
+
 // ---------------------------------------------------------------------------
 // Deal damage to source
 // ---------------------------------------------------------------------------

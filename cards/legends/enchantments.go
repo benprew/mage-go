@@ -1050,21 +1050,8 @@ func registerEnchantments() {
 	Register("Spirit Shackle", func() Card {
 		return NewAura("Spirit Shackle", "{B}{B}",
 			WithAbility(
-				// TODO: convert to pipeline — needs AddCounterToAttached primitive
 				NewTriggered(EvtTapped, false,
-					FuncEffect("put -0/-2 counter on enchanted creature",
-						EffectProperties{Outcome: OutcomeDetriment},
-						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							src := g.FindPermanent(sourceID)
-							if src == nil || src.AttachedTo == uuid.Nil {
-								return nil
-							}
-							target := g.FindPermanent(src.AttachedTo)
-							if target != nil {
-								target.AddCounter(M0M2, 1)
-							}
-							return nil
-						}),
+					DataEffect(AddCounterToAttachedStep(M0M2, 1)),
 				).SetConditionData(SourceIsAttachedToEventSource{}),
 			),
 		)
@@ -1124,21 +1111,8 @@ func registerEnchantments() {
 	// XXX: needs aura-to-enchantment mode change engine support
 	Register("Takklemaggot", func() Card {
 		return NewAura("Takklemaggot", "{2}{B}{B}",
-			// TODO: convert to pipeline — needs AddCounterToAttached primitive
 			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
-				FuncEffect("put -0/-1 counter on enchanted creature",
-					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						src := g.FindPermanent(sourceID)
-						if src == nil || src.AttachedTo == uuid.Nil {
-							return nil
-						}
-						target := g.FindPermanent(src.AttachedTo)
-						if target != nil {
-							target.AddCounter(M0M1, 1)
-						}
-						return nil
-					}), false,
+				DataEffect(AddCounterToAttachedStep(M0M1, 1)), false,
 			)),
 		)
 	})

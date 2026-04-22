@@ -269,20 +269,7 @@ func registerEnchantments() {
 		return NewAura("Unstable Mutation", "{U}",
 			WithAbility(StaticAbility(BoostAttached(3, 3, AttachAura))),
 			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
-				// TODO: convert to pipeline — needs add-counter-to-attached primitive
-				FuncEffect("put a -1/-1 counter on enchanted creature",
-					EffectProperties{},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						src := g.FindPermanent(sourceID)
-						if src == nil || src.AttachedTo == uuid.Nil {
-							return nil
-						}
-						target := g.FindPermanent(src.AttachedTo)
-						if target != nil {
-							target.AddCounter(M1M1, 1)
-						}
-						return nil
-					}), false,
+				DataEffect(AddCounterToAttachedStep(M1M1, 1)), false,
 			)),
 		)
 	})

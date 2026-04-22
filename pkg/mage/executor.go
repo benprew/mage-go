@@ -257,6 +257,8 @@ func ExecuteEffect(ctx *EffectContext, data EffectData) error {
 		return execRemoveFromCombatGathered(ctx, e)
 
 	// Attached/source operations
+	case *AddCounterToAttachedData:
+		return execAddCounterToAttached(ctx, e)
 	case *DestroyAttachedData:
 		return execDestroyAttached(ctx, e)
 	case *DealDamageToSourceData:
