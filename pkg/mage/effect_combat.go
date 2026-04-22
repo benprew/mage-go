@@ -16,30 +16,10 @@ type addCountersEffect struct {
 
 // AddCounters creates an effect that adds counters to the selected permanent.
 func AddCounters(ct CounterType, amount ValueSource, target PermanentSelector) Effect {
-	return &addCountersEffect{ct: ct, amount: amount, target: target}
+	return DataEffect(&addCountersEffect{ct: ct, amount: amount, target: target})
 }
 
-func (e *addCountersEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	var perm *Permanent
-	if e.target == SelectSource {
-		perm = g.FindPermanent(sourceID)
-	} else {
-		if len(targets) == 0 {
-			return fmt.Errorf("no target for counters")
-		}
-		perm = g.FindPermanent(targets[0])
-	}
-	if perm == nil {
-		return nil
-	}
-	amount := e.amount.Resolve(g, sourceID, controller)
-	if amount > 0 {
-		perm.AddCounter(e.ct, amount)
-	}
-	return nil
-}
-
-func (e *addCountersEffect) Text() string {
+func (e *addCountersEffect) EffectText() string {
 	if _, ok := e.amount.(xValue); ok {
 		return fmt.Sprintf("put X %s counters on it", e.ct)
 	}
@@ -49,7 +29,7 @@ func (e *addCountersEffect) Text() string {
 	}
 	return fmt.Sprintf("put %d %s counter(s) on target", n, e.ct)
 }
-func (e *addCountersEffect) Properties() EffectProperties { return EffectProperties{} }
+func (e *addCountersEffect) EffectProps() EffectProperties { return EffectProperties{} }
 
 // removeCountersFromSourceEffect removes counters from the source permanent.
 type removeCountersFromSourceEffect struct {
@@ -59,27 +39,18 @@ type removeCountersFromSourceEffect struct {
 
 // RemoveCountersFromSource creates an effect that removes counters from the source permanent.
 func RemoveCountersFromSource(ct CounterType, amount int) Effect {
-	return &removeCountersFromSourceEffect{ct: ct, amount: amount}
+	return DataEffect(&removeCountersFromSourceEffect{ct: ct, amount: amount})
 }
 
-func (e *removeCountersFromSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	p := g.FindPermanent(sourceID)
-	if p == nil {
-		return nil
-	}
-	p.RemoveCounter(e.ct, e.amount)
-	return nil
-}
-
-func (e *removeCountersFromSourceEffect) Text() string {
+func (e *removeCountersFromSourceEffect) EffectText() string {
 	return fmt.Sprintf("remove %d %s counter(s) from it", e.amount, e.ct)
 }
-func (e *removeCountersFromSourceEffect) Properties() EffectProperties { return EffectProperties{} }
+func (e *removeCountersFromSourceEffect) EffectProps() EffectProperties { return EffectProperties{} }
 
 // AddCountersUpToMax creates an effect that adds up to X +1/+0 counters on the source,
 // capped so total counters don't exceed maxCounters.
 func AddCountersUpToMax(ct CounterType, maxCounters int) Effect {
-	return &addCountersUpToMaxEffect{ct: ct, maxCounters: maxCounters}
+	return DataEffect(&addCountersUpToMaxEffect{ct: ct, maxCounters: maxCounters})
 }
 
 type addCountersUpToMaxEffect struct {
@@ -87,26 +58,11 @@ type addCountersUpToMaxEffect struct {
 	maxCounters int
 }
 
-func (e *addCountersUpToMaxEffect) Apply(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-	perm := g.FindPermanent(sourceID)
-	if perm == nil {
-		return nil
-	}
-	x := g.XValue()
-	current := int(perm.Counters[e.ct])
-	room := max(e.maxCounters-current, 0)
-	toAdd := min(x, room)
-	if toAdd > 0 {
-		perm.AddCounter(e.ct, toAdd)
-	}
-	return nil
-}
-
-func (e *addCountersUpToMaxEffect) Text() string {
+func (e *addCountersUpToMaxEffect) EffectText() string {
 	return fmt.Sprintf("put up to X %s counters on it (max %d total)", e.ct, e.maxCounters)
 }
 
-func (e *addCountersUpToMaxEffect) Properties() EffectProperties {
+func (e *addCountersUpToMaxEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
@@ -115,23 +71,11 @@ type tapTargetEffect struct{}
 
 // TapTarget creates an effect that taps a target permanent.
 func TapTarget() Effect {
-	return &tapTargetEffect{}
+	return DataEffect(&tapTargetEffect{})
 }
 
-func (e *tapTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 {
-		return fmt.Errorf("no target for tap")
-	}
-	perm := g.FindPermanent(targets[0])
-	if perm == nil {
-		return nil
-	}
-	g.TapPermanent(perm)
-	return nil
-}
-
-func (e *tapTargetEffect) Text() string { return "tap target permanent" }
-func (e *tapTargetEffect) Properties() EffectProperties {
+func (e *tapTargetEffect) EffectText() string { return "tap target permanent" }
+func (e *tapTargetEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
@@ -140,26 +84,11 @@ type untapTargetEffect struct{}
 
 // UntapTarget creates an effect that untaps a target permanent.
 func UntapTarget() Effect {
-	return &untapTargetEffect{}
+	return DataEffect(&untapTargetEffect{})
 }
 
-func (e *untapTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 {
-		return fmt.Errorf("no target for untap")
-	}
-	perm := g.FindPermanent(targets[0])
-	if perm == nil {
-		return nil
-	}
-	if perm.Tapped {
-		perm.Tapped = false
-		g.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: perm.ID()})
-	}
-	return nil
-}
-
-func (e *untapTargetEffect) Text() string { return "untap target permanent" }
-func (e *untapTargetEffect) Properties() EffectProperties {
+func (e *untapTargetEffect) EffectText() string { return "untap target permanent" }
+func (e *untapTargetEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
@@ -168,43 +97,22 @@ type untapSourceEffect struct{}
 
 // UntapSource creates an effect that untaps the source permanent.
 func UntapSource() Effect {
-	return &untapSourceEffect{}
+	return DataEffect(&untapSourceEffect{})
 }
 
-func (e *untapSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	perm := g.FindPermanent(sourceID)
-	if perm != nil && perm.Tapped {
-		perm.Tapped = false
-		g.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: perm.ID()})
-	}
-	return nil
-}
-
-func (e *untapSourceEffect) Text() string { return "Untap this permanent" }
-func (e *untapSourceEffect) Properties() EffectProperties { return EffectProperties{} }
+func (e *untapSourceEffect) EffectText() string          { return "Untap this permanent" }
+func (e *untapSourceEffect) EffectProps() EffectProperties { return EffectProperties{} }
 
 // tapAttachedCreatureEffect taps the creature attached to the source aura.
 type tapAttachedCreatureEffect struct{}
 
 // TapAttachedCreature creates an effect that taps the creature the source aura is attached to.
 func TapAttachedCreature() Effect {
-	return &tapAttachedCreatureEffect{}
+	return DataEffect(&tapAttachedCreatureEffect{})
 }
 
-func (e *tapAttachedCreatureEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	src := g.FindPermanent(sourceID)
-	if src == nil || !src.IsAttached() {
-		return nil
-	}
-	target := g.FindPermanent(src.AttachedTo)
-	if target != nil {
-		g.TapPermanent(target)
-	}
-	return nil
-}
-
-func (e *tapAttachedCreatureEffect) Text() string { return "Tap enchanted creature" }
-func (e *tapAttachedCreatureEffect) Properties() EffectProperties {
+func (e *tapAttachedCreatureEffect) EffectText() string { return "Tap enchanted creature" }
+func (e *tapAttachedCreatureEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
@@ -213,53 +121,22 @@ type tapOrUntapTargetEffect struct{}
 
 // TapOrUntapTarget creates an effect that toggles a target permanent's tapped state (e.g. Twiddle).
 func TapOrUntapTarget() Effect {
-	return &tapOrUntapTargetEffect{}
+	return DataEffect(&tapOrUntapTargetEffect{})
 }
 
-func (e *tapOrUntapTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 {
-		return nil
-	}
-	perm := g.FindPermanent(targets[0])
-	if perm == nil {
-		return nil
-	}
-	caster := g.GetPlayer(controller)
-	if caster == nil {
-		return nil
-	}
-	mode := caster.ChooseMode([]string{"Tap", "Untap"}, "Twiddle")
-	if mode == 0 {
-		g.TapPermanent(perm)
-	} else {
-		perm.Tapped = false
-	}
-	return nil
-}
-
-func (e *tapOrUntapTargetEffect) Text() string {
+func (e *tapOrUntapTargetEffect) EffectText() string {
 	return "Tap or untap target permanent"
 }
-func (e *tapOrUntapTargetEffect) Properties() EffectProperties { return EffectProperties{} }
+func (e *tapOrUntapTargetEffect) EffectProps() EffectProperties { return EffectProperties{} }
 
 // tapAllLandsEffect taps all lands target player controls.
 type tapAllLandsEffect struct{}
 
 // TapAllLands creates an effect that taps all lands a target player controls (e.g. Mana Short).
-func TapAllLands() Effect { return &tapAllLandsEffect{} }
+func TapAllLands() Effect { return DataEffect(&tapAllLandsEffect{}) }
 
-func (e *tapAllLandsEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 {
-		return nil
-	}
-	playerID := targets[0]
-	for _, p := range g.FilterBattlefield(And(ControlledBy(playerID), IsLand)) {
-		g.TapPermanent(p)
-	}
-	return nil
-}
-func (e *tapAllLandsEffect) Text() string { return "Tap all lands target player controls" }
-func (e *tapAllLandsEffect) Properties() EffectProperties {
+func (e *tapAllLandsEffect) EffectText() string { return "Tap all lands target player controls" }
+func (e *tapAllLandsEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
@@ -267,49 +144,23 @@ func (e *tapAllLandsEffect) Properties() EffectProperties {
 type removeFromCombatEffect struct{}
 
 // RemoveFromCombat creates an effect that removes a target creature from combat.
-func RemoveFromCombat() Effect { return &removeFromCombatEffect{} }
+func RemoveFromCombat() Effect { return DataEffect(&removeFromCombatEffect{}) }
 
-func (e *removeFromCombatEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 {
-		return nil
-	}
-	perm := g.FindPermanent(targets[0])
-	if perm == nil {
-		return nil
-	}
-	g.RemoveFromCombat(perm.ID())
-	return nil
-}
-func (e *removeFromCombatEffect) Text() string { return "Remove target creature from combat" }
-func (e *removeFromCombatEffect) Properties() EffectProperties { return EffectProperties{} }
+func (e *removeFromCombatEffect) EffectText() string { return "Remove target creature from combat" }
+func (e *removeFromCombatEffect) EffectProps() EffectProperties { return EffectProperties{} }
 
 // makeUnblockableUntilEndOfTurnEffect makes a target creature unblockable until end of turn.
 type makeUnblockableUntilEndOfTurnEffect struct{}
 
 // MakeUnblockableUntilEndOfTurn creates an effect that makes a target creature unblockable until end of turn.
 func MakeUnblockableUntilEndOfTurn() Effect {
-	return &makeUnblockableUntilEndOfTurnEffect{}
+	return DataEffect(&makeUnblockableUntilEndOfTurnEffect{})
 }
 
-func (e *makeUnblockableUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 {
-		return nil
-	}
-	perm := g.FindPermanent(targets[0])
-	if perm == nil {
-		return nil
-	}
-	eff := TemporaryKeyword(perm.ID(), UnblockableKW)
-	eff.SetSourceID(sourceID)
-	g.AddContinuousEffect(eff)
-	g.ApplyContinuousEffects()
-	return nil
-}
-
-func (e *makeUnblockableUntilEndOfTurnEffect) Text() string {
+func (e *makeUnblockableUntilEndOfTurnEffect) EffectText() string {
 	return "Target creature can't be blocked this turn"
 }
-func (e *makeUnblockableUntilEndOfTurnEffect) Properties() EffectProperties {
+func (e *makeUnblockableUntilEndOfTurnEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
@@ -322,32 +173,10 @@ type boostUntilEndOfTurnEffect struct {
 
 // BoostUntilEndOfTurn creates an effect that boosts the selected creature's P/T until end of turn.
 func BoostUntilEndOfTurn(power, toughness ValueSource, target PermanentSelector) Effect {
-	return &boostUntilEndOfTurnEffect{power: power, toughness: toughness, target: target}
+	return DataEffect(&boostUntilEndOfTurnEffect{power: power, toughness: toughness, target: target})
 }
 
-func (e *boostUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	var perm *Permanent
-	if e.target == SelectSource {
-		perm = g.FindPermanent(sourceID)
-	} else {
-		if len(targets) == 0 {
-			return fmt.Errorf("no target for boost")
-		}
-		perm = g.FindPermanent(targets[0])
-	}
-	if perm == nil {
-		return nil
-	}
-	p := e.power.Resolve(g, sourceID, controller)
-	t := e.toughness.Resolve(g, sourceID, controller)
-	eff := TemporaryBoost(perm.ID(), p, t)
-	eff.SetSourceID(sourceID)
-	g.AddContinuousEffect(eff)
-	g.ApplyContinuousEffects()
-	return nil
-}
-
-func (e *boostUntilEndOfTurnEffect) Text() string {
+func (e *boostUntilEndOfTurnEffect) EffectText() string {
 	_, pIsX := e.power.(xValue)
 	_, tIsX := e.toughness.(xValue)
 	if pIsX || tIsX {
@@ -360,7 +189,7 @@ func (e *boostUntilEndOfTurnEffect) Text() string {
 	}
 	return fmt.Sprintf("target creature gets +%d/+%d until end of turn", p, t)
 }
-func (e *boostUntilEndOfTurnEffect) Properties() EffectProperties {
+func (e *boostUntilEndOfTurnEffect) EffectProps() EffectProperties {
 	var pb, tb int
 	if _, ok := e.power.(xValue); !ok {
 		pb = e.power.Resolve(nil, uuid.Nil, uuid.Nil)
@@ -381,25 +210,13 @@ type boostMatchingUntilEndOfTurnEffect struct {
 // BoostMatchingUntilEndOfTurn creates an effect that gives +P/+T until end of turn to all
 // creatures the controller owns that match the predicate (e.g. Crusade, Bad Moon).
 func BoostMatchingUntilEndOfTurn(power, toughness ValueSource, predicate PermanentFilter) Effect {
-	return &boostMatchingUntilEndOfTurnEffect{power: power, toughness: toughness, predicate: predicate}
+	return DataEffect(&boostMatchingUntilEndOfTurnEffect{power: power, toughness: toughness, predicate: predicate})
 }
 
-func (e *boostMatchingUntilEndOfTurnEffect) Apply(g *Game, sourceID uuid.UUID, controller uuid.UUID, targets []uuid.UUID) error {
-	for _, perm := range g.FilterBattlefield(And(ControlledBy(controller), IsCreature, e.predicate)) {
-		p := e.power.Resolve(g, sourceID, controller)
-		t := e.toughness.Resolve(g, sourceID, controller)
-		eff := TemporaryBoost(perm.ID(), p, t)
-		eff.SetSourceID(sourceID)
-		g.AddContinuousEffect(eff)
-	}
-	g.ApplyContinuousEffects()
-	return nil
-}
-
-func (e *boostMatchingUntilEndOfTurnEffect) Text() string {
+func (e *boostMatchingUntilEndOfTurnEffect) EffectText() string {
 	return "XXX populate filter predicate text"
 }
-func (e *boostMatchingUntilEndOfTurnEffect) Properties() EffectProperties {
+func (e *boostMatchingUntilEndOfTurnEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit, Mass: true}
 }
 
@@ -414,25 +231,13 @@ type boostAllMatchingUntilEndOfTurnEffect struct {
 // BoostAllMatchingUntilEndOfTurn creates an effect that gives +P/+T until end of turn to all
 // creatures on the battlefield that match the predicate, regardless of controller.
 func BoostAllMatchingUntilEndOfTurn(power, toughness ValueSource, predicate PermanentFilter) Effect {
-	return &boostAllMatchingUntilEndOfTurnEffect{power: power, toughness: toughness, predicate: predicate}
+	return DataEffect(&boostAllMatchingUntilEndOfTurnEffect{power: power, toughness: toughness, predicate: predicate})
 }
 
-func (e *boostAllMatchingUntilEndOfTurnEffect) Apply(g *Game, sourceID uuid.UUID, controller uuid.UUID, targets []uuid.UUID) error {
-	for _, perm := range g.FilterBattlefield(And(IsCreature, e.predicate)) {
-		p := e.power.Resolve(g, sourceID, controller)
-		t := e.toughness.Resolve(g, sourceID, controller)
-		eff := TemporaryBoost(perm.ID(), p, t)
-		eff.SetSourceID(sourceID)
-		g.AddContinuousEffect(eff)
-	}
-	g.ApplyContinuousEffects()
-	return nil
-}
-
-func (e *boostAllMatchingUntilEndOfTurnEffect) Text() string {
+func (e *boostAllMatchingUntilEndOfTurnEffect) EffectText() string {
 	return "matching creatures get a boost until end of turn"
 }
-func (e *boostAllMatchingUntilEndOfTurnEffect) Properties() EffectProperties {
+func (e *boostAllMatchingUntilEndOfTurnEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit, Mass: true}
 }
 
@@ -441,29 +246,13 @@ type doubleSourcePowerEffect struct{}
 
 // DoubleTargetPower creates an effect that doubles a target creature's power until end of turn (e.g. Berserk).
 func DoubleTargetPower() Effect {
-	return &doubleSourcePowerEffect{}
+	return DataEffect(&doubleSourcePowerEffect{})
 }
 
-func (e *doubleSourcePowerEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 {
-		return nil
-	}
-	perm := g.FindPermanent(targets[0])
-	if perm == nil {
-		return nil
-	}
-	currentPower := perm.CurrentPower(g)
-	eff := TemporaryBoost(perm.ID(), currentPower, 0)
-	eff.SetSourceID(sourceID)
-	g.AddContinuousEffect(eff)
-	g.ApplyContinuousEffects()
-	return nil
-}
-
-func (e *doubleSourcePowerEffect) Text() string {
+func (e *doubleSourcePowerEffect) EffectText() string {
 	return "Target creature's power is doubled until end of turn"
 }
-func (e *doubleSourcePowerEffect) Properties() EffectProperties {
+func (e *doubleSourcePowerEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
@@ -476,36 +265,16 @@ type grantKeywordUntilEndOfTurnEffect struct {
 
 // GrantKeywordUntilEndOfTurn creates an effect that grants a keyword to the selected creature until end of turn.
 func GrantKeywordUntilEndOfTurn(kw Keyword, target PermanentSelector) Effect {
-	return &grantKeywordUntilEndOfTurnEffect{keyword: kw, target: target}
+	return DataEffect(&grantKeywordUntilEndOfTurnEffect{keyword: kw, target: target})
 }
 
-func (e *grantKeywordUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	var perm *Permanent
-	if e.target == SelectSource {
-		perm = g.FindPermanent(sourceID)
-	} else {
-		if len(targets) == 0 {
-			return fmt.Errorf("no target for keyword grant")
-		}
-		perm = g.FindPermanent(targets[0])
-	}
-	if perm == nil {
-		return nil
-	}
-	eff := TemporaryKeyword(perm.ID(), e.keyword)
-	eff.SetSourceID(sourceID)
-	g.AddContinuousEffect(eff)
-	g.ApplyContinuousEffects()
-	return nil
-}
-
-func (e *grantKeywordUntilEndOfTurnEffect) Text() string {
+func (e *grantKeywordUntilEndOfTurnEffect) EffectText() string {
 	if e.target == SelectSource {
 		return fmt.Sprintf("~ gains %s until end of turn", e.keyword)
 	}
 	return fmt.Sprintf("target creature gains %s until end of turn", e.keyword)
 }
-func (e *grantKeywordUntilEndOfTurnEffect) Properties() EffectProperties {
+func (e *grantKeywordUntilEndOfTurnEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
@@ -518,49 +287,24 @@ type replaceKeywordEffect struct {
 // ReplaceKeywordEffect creates an effect that replaces one keyword with another on a target permanent
 // as a continuous effect (e.g. replacing Flying with a different evasion).
 func ReplaceKeywordEffect(from, to Keyword) Effect {
-	return &replaceKeywordEffect{from: from, to: to}
+	return DataEffect(&replaceKeywordEffect{from: from, to: to})
 }
 
-func (e *replaceKeywordEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 {
-		return nil
-	}
-	perm := g.FindPermanent(targets[0])
-	if perm == nil {
-		return nil
-	}
-	// Remove the old keyword and add the new one as a continuous effect
-	eff := KeywordReplacement(perm.ID(), e.from, e.to)
-	eff.SetSourceID(sourceID)
-	g.AddContinuousEffect(eff)
-	g.ApplyContinuousEffects()
-	return nil
-}
-
-func (e *replaceKeywordEffect) Text() string {
+func (e *replaceKeywordEffect) EffectText() string {
 	return fmt.Sprintf("Replace %s with %s", e.from, e.to)
 }
-func (e *replaceKeywordEffect) Properties() EffectProperties { return EffectProperties{} }
+func (e *replaceKeywordEffect) EffectProps() EffectProperties { return EffectProperties{} }
 
 // regenerateSourceEffect sets a regeneration shield on the source.
 type regenerateSourceEffect struct{}
 
 // RegenerateSource creates an effect that sets a regeneration shield on the source permanent.
 func RegenerateSource() Effect {
-	return &regenerateSourceEffect{}
+	return DataEffect(&regenerateSourceEffect{})
 }
 
-func (e *regenerateSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	perm := g.FindPermanent(sourceID)
-	if perm == nil {
-		return nil
-	}
-	g.AddRegenerationShield(sourceID)
-	return nil
-}
-
-func (e *regenerateSourceEffect) Text() string { return "Regenerate ~" }
-func (e *regenerateSourceEffect) Properties() EffectProperties {
+func (e *regenerateSourceEffect) EffectText() string { return "Regenerate ~" }
+func (e *regenerateSourceEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
@@ -569,23 +313,11 @@ type regenerateTargetEffect struct{}
 
 // RegenerateTarget creates an effect that sets a regeneration shield on a target creature.
 func RegenerateTarget() Effect {
-	return &regenerateTargetEffect{}
+	return DataEffect(&regenerateTargetEffect{})
 }
 
-func (e *regenerateTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 {
-		return nil
-	}
-	perm := g.FindPermanent(targets[0])
-	if perm == nil {
-		return nil
-	}
-	g.AddRegenerationShield(perm.ID())
-	return nil
-}
-
-func (e *regenerateTargetEffect) Text() string { return "Regenerate target creature" }
-func (e *regenerateTargetEffect) Properties() EffectProperties {
+func (e *regenerateTargetEffect) EffectText() string { return "Regenerate target creature" }
+func (e *regenerateTargetEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
@@ -598,31 +330,13 @@ type markDestroyAtEOTAfterNActivationsEffect struct {
 // MarkDestroyAtEOTAfterNActivations creates an effect that tracks activations via Charge counters.
 // When the count reaches the threshold, the source is destroyed at end of turn (e.g. Basalt Monolith variant).
 func MarkDestroyAtEOTAfterNActivations(threshold int) Effect {
-	return &markDestroyAtEOTAfterNActivationsEffect{threshold: threshold}
+	return DataEffect(&markDestroyAtEOTAfterNActivationsEffect{threshold: threshold})
 }
 
-func (e *markDestroyAtEOTAfterNActivationsEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	perm := g.FindPermanent(sourceID)
-	if perm == nil {
-		return nil
-	}
-	perm.AddCounter(Charge, 1)
-	if int(perm.Counters[Charge]) >= e.threshold {
-		g.RegisterDelayedTrigger(&DelayedTrigger{
-			EventType:  EvtEndStep,
-			TargetID:   perm.ID(),
-			Effects:    []Effect{DestroyTarget()},
-			SourceID:   sourceID,
-			Controller: controller,
-		})
-	}
-	return nil
-}
-
-func (e *markDestroyAtEOTAfterNActivationsEffect) Text() string {
+func (e *markDestroyAtEOTAfterNActivationsEffect) EffectText() string {
 	return fmt.Sprintf("if activated %d+ times, destroy at end of turn", e.threshold)
 }
-func (e *markDestroyAtEOTAfterNActivationsEffect) Properties() EffectProperties {
+func (e *markDestroyAtEOTAfterNActivationsEffect) EffectProps() EffectProperties {
 	return EffectProperties{}
 }
 
@@ -632,31 +346,13 @@ type destroyTargetAtEndOfTurnEffect struct{}
 // DestroyTargetAtEndOfTurn creates an effect that registers a delayed trigger to destroy
 // the target creature at the next end step.
 func DestroyTargetAtEndOfTurn() Effect {
-	return &destroyTargetAtEndOfTurnEffect{}
+	return DataEffect(&destroyTargetAtEndOfTurnEffect{})
 }
 
-func (e *destroyTargetAtEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 {
-		return nil
-	}
-	perm := g.FindPermanent(targets[0])
-	if perm == nil {
-		return nil
-	}
-	g.RegisterDelayedTrigger(&DelayedTrigger{
-		EventType:  EvtEndStep,
-		TargetID:   perm.ID(),
-		Effects:    []Effect{DestroyTarget()},
-		SourceID:   sourceID,
-		Controller: controller,
-	})
-	return nil
-}
-
-func (e *destroyTargetAtEndOfTurnEffect) Text() string {
+func (e *destroyTargetAtEndOfTurnEffect) EffectText() string {
 	return "Destroy target creature at end of turn"
 }
-func (e *destroyTargetAtEndOfTurnEffect) Properties() EffectProperties {
+func (e *destroyTargetAtEndOfTurnEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
@@ -669,28 +365,13 @@ type setBasePTUntilEndOfTurnEffect struct {
 // SetPTUntilEndOfTurn creates an effect that sets the target creature's base P/T
 // until end of turn (e.g. Sorceress Queen: 0/2).
 func SetPTUntilEndOfTurn(power, toughness int, target PermanentSelector) Effect {
-	return &setBasePTUntilEndOfTurnEffect{power: power, toughness: toughness}
+	return DataEffect(&setBasePTUntilEndOfTurnEffect{power: power, toughness: toughness})
 }
 
-func (e *setBasePTUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 {
-		return fmt.Errorf("no target for set P/T")
-	}
-	perm := g.FindPermanent(targets[0])
-	if perm == nil {
-		return nil
-	}
-	eff := SetBasePT(perm.ID(), e.power, e.toughness)
-	eff.SetSourceID(sourceID)
-	g.AddContinuousEffect(eff)
-	g.ApplyContinuousEffects()
-	return nil
-}
-
-func (e *setBasePTUntilEndOfTurnEffect) Text() string {
+func (e *setBasePTUntilEndOfTurnEffect) EffectText() string {
 	return fmt.Sprintf("target creature has base power and toughness %d/%d until end of turn", e.power, e.toughness)
 }
-func (e *setBasePTUntilEndOfTurnEffect) Properties() EffectProperties {
+func (e *setBasePTUntilEndOfTurnEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
@@ -702,27 +383,349 @@ type setBasePowerUntilEndOfTurnEffect struct {
 // SetPowerUntilEndOfTurn creates an effect that sets the target creature's base power
 // until end of turn (e.g. Singing Tree, Island of Wak-Wak: power becomes 0).
 func SetPowerUntilEndOfTurn(power int, target PermanentSelector) Effect {
-	return &setBasePowerUntilEndOfTurnEffect{power: power}
+	return DataEffect(&setBasePowerUntilEndOfTurnEffect{power: power})
 }
 
-func (e *setBasePowerUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 {
+func (e *setBasePowerUntilEndOfTurnEffect) EffectText() string {
+	return fmt.Sprintf("target creature has base power %d until end of turn", e.power)
+}
+func (e *setBasePowerUntilEndOfTurnEffect) EffectProps() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
+
+// --- Combat effect executors ---
+
+func execAddCounters(ctx *EffectContext, e *addCountersEffect) error {
+	var perm *Permanent
+	if e.target == SelectSource {
+		perm = ctx.Game.FindPermanent(ctx.SourceID)
+	} else {
+		if len(ctx.Targets) == 0 {
+			return fmt.Errorf("no target for counters")
+		}
+		perm = ctx.Game.FindPermanent(ctx.Targets[0])
+	}
+	if perm == nil {
+		return nil
+	}
+	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller)
+	if amount > 0 {
+		perm.AddCounter(e.ct, amount)
+	}
+	return nil
+}
+
+func execRemoveCountersFromSource(ctx *EffectContext, e *removeCountersFromSourceEffect) error {
+	p := ctx.Game.FindPermanent(ctx.SourceID)
+	if p == nil {
+		return nil
+	}
+	p.RemoveCounter(e.ct, e.amount)
+	return nil
+}
+
+func execAddCountersUpToMax(ctx *EffectContext, e *addCountersUpToMaxEffect) error {
+	perm := ctx.Game.FindPermanent(ctx.SourceID)
+	if perm == nil {
+		return nil
+	}
+	x := ctx.Game.XValue()
+	current := int(perm.Counters[e.ct])
+	room := max(e.maxCounters-current, 0)
+	toAdd := min(x, room)
+	if toAdd > 0 {
+		perm.AddCounter(e.ct, toAdd)
+	}
+	return nil
+}
+
+func execTapTarget(ctx *EffectContext, _ *tapTargetEffect) error {
+	if len(ctx.Targets) == 0 {
+		return fmt.Errorf("no target for tap")
+	}
+	perm := ctx.Game.FindPermanent(ctx.Targets[0])
+	if perm == nil {
+		return nil
+	}
+	ctx.Game.TapPermanent(perm)
+	return nil
+}
+
+func execUntapTarget(ctx *EffectContext, _ *untapTargetEffect) error {
+	if len(ctx.Targets) == 0 {
+		return fmt.Errorf("no target for untap")
+	}
+	perm := ctx.Game.FindPermanent(ctx.Targets[0])
+	if perm == nil {
+		return nil
+	}
+	if perm.Tapped {
+		perm.Tapped = false
+		ctx.Game.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: perm.ID()})
+	}
+	return nil
+}
+
+func execUntapSource(ctx *EffectContext, _ *untapSourceEffect) error {
+	perm := ctx.Game.FindPermanent(ctx.SourceID)
+	if perm != nil && perm.Tapped {
+		perm.Tapped = false
+		ctx.Game.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: perm.ID()})
+	}
+	return nil
+}
+
+func execTapAttachedCreature(ctx *EffectContext, _ *tapAttachedCreatureEffect) error {
+	src := ctx.Game.FindPermanent(ctx.SourceID)
+	if src == nil || !src.IsAttached() {
+		return nil
+	}
+	target := ctx.Game.FindPermanent(src.AttachedTo)
+	if target != nil {
+		ctx.Game.TapPermanent(target)
+	}
+	return nil
+}
+
+func execTapOrUntapTarget(ctx *EffectContext, _ *tapOrUntapTargetEffect) error {
+	if len(ctx.Targets) == 0 {
+		return nil
+	}
+	perm := ctx.Game.FindPermanent(ctx.Targets[0])
+	if perm == nil {
+		return nil
+	}
+	caster := ctx.Game.GetPlayer(ctx.Controller)
+	if caster == nil {
+		return nil
+	}
+	mode := caster.ChooseMode([]string{"Tap", "Untap"}, "Twiddle")
+	if mode == 0 {
+		ctx.Game.TapPermanent(perm)
+	} else {
+		perm.Tapped = false
+	}
+	return nil
+}
+
+func execTapAllLands(ctx *EffectContext, _ *tapAllLandsEffect) error {
+	if len(ctx.Targets) == 0 {
+		return nil
+	}
+	playerID := ctx.Targets[0]
+	for _, p := range ctx.Game.FilterBattlefield(And(ControlledBy(playerID), IsLand)) {
+		ctx.Game.TapPermanent(p)
+	}
+	return nil
+}
+
+func execRemoveFromCombat(ctx *EffectContext, _ *removeFromCombatEffect) error {
+	if len(ctx.Targets) == 0 {
+		return nil
+	}
+	perm := ctx.Game.FindPermanent(ctx.Targets[0])
+	if perm == nil {
+		return nil
+	}
+	ctx.Game.RemoveFromCombat(perm.ID())
+	return nil
+}
+
+func execMakeUnblockableUntilEndOfTurn(ctx *EffectContext, _ *makeUnblockableUntilEndOfTurnEffect) error {
+	if len(ctx.Targets) == 0 {
+		return nil
+	}
+	perm := ctx.Game.FindPermanent(ctx.Targets[0])
+	if perm == nil {
+		return nil
+	}
+	eff := TemporaryKeyword(perm.ID(), UnblockableKW)
+	eff.SetSourceID(ctx.SourceID)
+	ctx.Game.AddContinuousEffect(eff)
+	ctx.Game.ApplyContinuousEffects()
+	return nil
+}
+
+func execBoostUntilEndOfTurn(ctx *EffectContext, e *boostUntilEndOfTurnEffect) error {
+	var perm *Permanent
+	if e.target == SelectSource {
+		perm = ctx.Game.FindPermanent(ctx.SourceID)
+	} else {
+		if len(ctx.Targets) == 0 {
+			return fmt.Errorf("no target for boost")
+		}
+		perm = ctx.Game.FindPermanent(ctx.Targets[0])
+	}
+	if perm == nil {
+		return nil
+	}
+	p := e.power.Resolve(ctx.Game, ctx.SourceID, ctx.Controller)
+	t := e.toughness.Resolve(ctx.Game, ctx.SourceID, ctx.Controller)
+	eff := TemporaryBoost(perm.ID(), p, t)
+	eff.SetSourceID(ctx.SourceID)
+	ctx.Game.AddContinuousEffect(eff)
+	ctx.Game.ApplyContinuousEffects()
+	return nil
+}
+
+func execBoostMatchingUntilEndOfTurn(ctx *EffectContext, e *boostMatchingUntilEndOfTurnEffect) error {
+	for _, perm := range ctx.Game.FilterBattlefield(And(ControlledBy(ctx.Controller), IsCreature, e.predicate)) {
+		p := e.power.Resolve(ctx.Game, ctx.SourceID, ctx.Controller)
+		t := e.toughness.Resolve(ctx.Game, ctx.SourceID, ctx.Controller)
+		eff := TemporaryBoost(perm.ID(), p, t)
+		eff.SetSourceID(ctx.SourceID)
+		ctx.Game.AddContinuousEffect(eff)
+	}
+	ctx.Game.ApplyContinuousEffects()
+	return nil
+}
+
+func execBoostAllMatchingUntilEndOfTurn(ctx *EffectContext, e *boostAllMatchingUntilEndOfTurnEffect) error {
+	for _, perm := range ctx.Game.FilterBattlefield(And(IsCreature, e.predicate)) {
+		p := e.power.Resolve(ctx.Game, ctx.SourceID, ctx.Controller)
+		t := e.toughness.Resolve(ctx.Game, ctx.SourceID, ctx.Controller)
+		eff := TemporaryBoost(perm.ID(), p, t)
+		eff.SetSourceID(ctx.SourceID)
+		ctx.Game.AddContinuousEffect(eff)
+	}
+	ctx.Game.ApplyContinuousEffects()
+	return nil
+}
+
+func execDoubleTargetPower(ctx *EffectContext, _ *doubleSourcePowerEffect) error {
+	if len(ctx.Targets) == 0 {
+		return nil
+	}
+	perm := ctx.Game.FindPermanent(ctx.Targets[0])
+	if perm == nil {
+		return nil
+	}
+	currentPower := perm.CurrentPower(ctx.Game)
+	eff := TemporaryBoost(perm.ID(), currentPower, 0)
+	eff.SetSourceID(ctx.SourceID)
+	ctx.Game.AddContinuousEffect(eff)
+	ctx.Game.ApplyContinuousEffects()
+	return nil
+}
+
+func execGrantKeywordUntilEndOfTurn(ctx *EffectContext, e *grantKeywordUntilEndOfTurnEffect) error {
+	var perm *Permanent
+	if e.target == SelectSource {
+		perm = ctx.Game.FindPermanent(ctx.SourceID)
+	} else {
+		if len(ctx.Targets) == 0 {
+			return fmt.Errorf("no target for keyword grant")
+		}
+		perm = ctx.Game.FindPermanent(ctx.Targets[0])
+	}
+	if perm == nil {
+		return nil
+	}
+	eff := TemporaryKeyword(perm.ID(), e.keyword)
+	eff.SetSourceID(ctx.SourceID)
+	ctx.Game.AddContinuousEffect(eff)
+	ctx.Game.ApplyContinuousEffects()
+	return nil
+}
+
+func execReplaceKeyword(ctx *EffectContext, e *replaceKeywordEffect) error {
+	if len(ctx.Targets) == 0 {
+		return nil
+	}
+	perm := ctx.Game.FindPermanent(ctx.Targets[0])
+	if perm == nil {
+		return nil
+	}
+	eff := KeywordReplacement(perm.ID(), e.from, e.to)
+	eff.SetSourceID(ctx.SourceID)
+	ctx.Game.AddContinuousEffect(eff)
+	ctx.Game.ApplyContinuousEffects()
+	return nil
+}
+
+func execRegenerateSource(ctx *EffectContext, _ *regenerateSourceEffect) error {
+	perm := ctx.Game.FindPermanent(ctx.SourceID)
+	if perm == nil {
+		return nil
+	}
+	ctx.Game.AddRegenerationShield(ctx.SourceID)
+	return nil
+}
+
+func execRegenerateTarget(ctx *EffectContext, _ *regenerateTargetEffect) error {
+	if len(ctx.Targets) == 0 {
+		return nil
+	}
+	perm := ctx.Game.FindPermanent(ctx.Targets[0])
+	if perm == nil {
+		return nil
+	}
+	ctx.Game.AddRegenerationShield(perm.ID())
+	return nil
+}
+
+func execMarkDestroyAtEOTAfterNActivations(ctx *EffectContext, e *markDestroyAtEOTAfterNActivationsEffect) error {
+	perm := ctx.Game.FindPermanent(ctx.SourceID)
+	if perm == nil {
+		return nil
+	}
+	perm.AddCounter(Charge, 1)
+	if int(perm.Counters[Charge]) >= e.threshold {
+		ctx.Game.RegisterDelayedTrigger(&DelayedTrigger{
+			EventType:  EvtEndStep,
+			TargetID:   perm.ID(),
+			Effects:    []Effect{DestroyTarget()},
+			SourceID:   ctx.SourceID,
+			Controller: ctx.Controller,
+		})
+	}
+	return nil
+}
+
+func execDestroyTargetAtEndOfTurn(ctx *EffectContext, _ *destroyTargetAtEndOfTurnEffect) error {
+	if len(ctx.Targets) == 0 {
+		return nil
+	}
+	perm := ctx.Game.FindPermanent(ctx.Targets[0])
+	if perm == nil {
+		return nil
+	}
+	ctx.Game.RegisterDelayedTrigger(&DelayedTrigger{
+		EventType:  EvtEndStep,
+		TargetID:   perm.ID(),
+		Effects:    []Effect{DestroyTarget()},
+		SourceID:   ctx.SourceID,
+		Controller: ctx.Controller,
+	})
+	return nil
+}
+
+func execSetPTUntilEndOfTurn(ctx *EffectContext, e *setBasePTUntilEndOfTurnEffect) error {
+	if len(ctx.Targets) == 0 {
+		return fmt.Errorf("no target for set P/T")
+	}
+	perm := ctx.Game.FindPermanent(ctx.Targets[0])
+	if perm == nil {
+		return nil
+	}
+	eff := SetBasePT(perm.ID(), e.power, e.toughness)
+	eff.SetSourceID(ctx.SourceID)
+	ctx.Game.AddContinuousEffect(eff)
+	ctx.Game.ApplyContinuousEffects()
+	return nil
+}
+
+func execSetPowerUntilEndOfTurn(ctx *EffectContext, e *setBasePowerUntilEndOfTurnEffect) error {
+	if len(ctx.Targets) == 0 {
 		return fmt.Errorf("no target for set power")
 	}
-	perm := g.FindPermanent(targets[0])
+	perm := ctx.Game.FindPermanent(ctx.Targets[0])
 	if perm == nil {
 		return nil
 	}
 	eff := SetBasePower(perm.ID(), e.power)
-	eff.SetSourceID(sourceID)
-	g.AddContinuousEffect(eff)
-	g.ApplyContinuousEffects()
+	eff.SetSourceID(ctx.SourceID)
+	ctx.Game.AddContinuousEffect(eff)
+	ctx.Game.ApplyContinuousEffects()
 	return nil
-}
-
-func (e *setBasePowerUntilEndOfTurnEffect) Text() string {
-	return fmt.Sprintf("target creature has base power %d until end of turn", e.power)
-}
-func (e *setBasePowerUntilEndOfTurnEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment}
 }

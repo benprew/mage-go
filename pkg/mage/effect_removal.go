@@ -13,26 +13,11 @@ type destroyTargetEffect struct{}
 
 // DestroyTarget creates an effect that destroys the first target permanent.
 func DestroyTarget() Effect {
-	return &destroyTargetEffect{}
+	return DataEffect(&destroyTargetEffect{})
 }
 
-func (e *destroyTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 {
-		return fmt.Errorf("no target for destroy")
-	}
-	perm := g.FindPermanent(targets[0])
-	if perm == nil {
-		return nil // target gone, fizzle
-	}
-	if perm.HasKeyword(Indestructible) {
-		return nil
-	}
-	g.DestroyPermanent(perm)
-	return nil
-}
-
-func (e *destroyTargetEffect) Text() string { return "destroy target" }
-func (e *destroyTargetEffect) Properties() EffectProperties {
+func (e *destroyTargetEffect) EffectText() string { return "destroy target" }
+func (e *destroyTargetEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
@@ -43,47 +28,30 @@ type destroyTargetPermanentEffect struct {
 
 // DestroyTargetPermanent creates an effect that destroys a target permanent.
 func DestroyTargetPermanent() Effect {
-	return &destroyTargetPermanentEffect{text: "destroy target permanent"}
+	return DataEffect(&destroyTargetPermanentEffect{text: "destroy target permanent"})
 }
 
 // DestroyTargetLand creates an effect that destroys a target land (e.g. Stone Rain, Sinkhole).
 func DestroyTargetLand() Effect {
-	return &destroyTargetPermanentEffect{text: "destroy target land"}
+	return DataEffect(&destroyTargetPermanentEffect{text: "destroy target land"})
 }
 
 // DestroyTargetArtifact creates an effect that destroys a target artifact (e.g. Shatter).
 func DestroyTargetArtifact() Effect {
-	return &destroyTargetPermanentEffect{text: "destroy target artifact"}
+	return DataEffect(&destroyTargetPermanentEffect{text: "destroy target artifact"})
 }
 
-func (e *destroyTargetPermanentEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 {
-		return fmt.Errorf("no target for destroy")
-	}
-	perm := g.FindPermanent(targets[0])
-	if perm == nil {
-		return nil
-	}
-	if perm.HasKeyword(Indestructible) {
-		return nil
-	}
-	g.DestroyPermanent(perm)
-	return nil
-}
-
-func (e *destroyTargetPermanentEffect) Text() string { return e.text }
-func (e *destroyTargetPermanentEffect) Properties() EffectProperties {
+func (e *destroyTargetPermanentEffect) EffectText() string { return e.text }
+func (e *destroyTargetPermanentEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
 // DestroyAllLands destroys all lands (Armageddon).
-// This is a convenience alias for DestroyAllMatching with the IsLand filter.
 func DestroyAllLands() Effect {
 	return DestroyAllMatching(IsLand, "destroy all lands")
 }
 
 // DestroyAllEnchantments destroys all enchantments (Tranquility).
-// This is a convenience alias for DestroyAllMatching with the IsEnchantment filter.
 func DestroyAllEnchantments() Effect {
 	return DestroyAllMatching(IsEnchantment, "destroy all enchantments")
 }
@@ -95,26 +63,16 @@ type destroyAllMatchingEffect struct {
 }
 
 // DestroyAllMatching creates an effect that destroys all permanents matching the filter.
-// The text parameter is used for rules text display.
 func DestroyAllMatching(filter PermanentFilter, text string) Effect {
-	return &destroyAllMatchingEffect{filter: filter, text: text}
+	return DataEffect(&destroyAllMatchingEffect{filter: filter, text: text})
 }
 
-func (e *destroyAllMatchingEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	toDestroy := g.FilterBattlefield(And(e.filter, Not(HasKeywordFilter(Indestructible))))
-	for _, p := range toDestroy {
-		g.DestroyPermanent(p)
-	}
-	return nil
-}
-
-func (e *destroyAllMatchingEffect) Text() string { return e.text }
-func (e *destroyAllMatchingEffect) Properties() EffectProperties {
+func (e *destroyAllMatchingEffect) EffectText() string { return e.text }
+func (e *destroyAllMatchingEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment, Mass: true}
 }
 
 // DestroyAllCreatures destroys all creatures (board wipe).
-// This is a convenience alias for DestroyAllMatching with the IsCreature filter.
 func DestroyAllCreatures() Effect {
 	return DestroyAllMatching(IsCreature, "destroy all creatures")
 }
@@ -128,20 +86,11 @@ type destroyAllMatchingNoRegenEffect struct {
 // DestroyAllMatchingNoRegen creates an effect that destroys all permanents matching the filter.
 // The destroyed permanents can't be regenerated (e.g. Shatterstorm).
 func DestroyAllMatchingNoRegen(filter PermanentFilter, text string) Effect {
-	return &destroyAllMatchingNoRegenEffect{filter: filter, text: text}
+	return DataEffect(&destroyAllMatchingNoRegenEffect{filter: filter, text: text})
 }
 
-func (e *destroyAllMatchingNoRegenEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	toDestroy := g.FilterBattlefield(And(e.filter, Not(HasKeywordFilter(Indestructible))))
-	for _, p := range toDestroy {
-		p.GrantBaseAttr(CantRegenerate)
-		g.DestroyPermanent(p)
-	}
-	return nil
-}
-
-func (e *destroyAllMatchingNoRegenEffect) Text() string { return e.text }
-func (e *destroyAllMatchingNoRegenEffect) Properties() EffectProperties {
+func (e *destroyAllMatchingNoRegenEffect) EffectText() string { return e.text }
+func (e *destroyAllMatchingNoRegenEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment, Mass: true}
 }
 
@@ -151,28 +100,7 @@ type destroyTargetNoRegenEffect struct{}
 // DestroyTargetNoRegen creates an effect that destroys the first target permanent.
 // The destroyed permanent can't be regenerated (e.g. Terror, Tunnel).
 func DestroyTargetNoRegen() Effect {
-	return &destroyTargetNoRegenEffect{}
-}
-
-func (e *destroyTargetNoRegenEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 {
-		return fmt.Errorf("no target for destroy")
-	}
-	perm := g.FindPermanent(targets[0])
-	if perm == nil {
-		return nil
-	}
-	if perm.HasKeyword(Indestructible) {
-		return nil
-	}
-	perm.GrantBaseAttr(CantRegenerate)
-	g.DestroyPermanent(perm)
-	return nil
-}
-
-func (e *destroyTargetNoRegenEffect) Text() string { return "destroy target (can't be regenerated)" }
-func (e *destroyTargetNoRegenEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment}
+	return DataEffect(&destroyTargetNoRegenEffect{})
 }
 
 // DestroyAllCreaturesNoRegen destroys all creatures; they can't be regenerated (e.g. Wrath of God).
@@ -180,28 +108,23 @@ func DestroyAllCreaturesNoRegen() Effect {
 	return DestroyAllMatchingNoRegen(IsCreature, "destroy all creatures (can't be regenerated)")
 }
 
+func (e *destroyTargetNoRegenEffect) EffectText() string {
+	return "destroy target (can't be regenerated)"
+}
+func (e *destroyTargetNoRegenEffect) EffectProps() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
+
 // exileTargetEffect exiles a target permanent (removes from game).
 type exileTargetEffect struct{}
 
-// ExileTarget creates an effect that exiles a target permanent (e.g. Swords to Plowshares).
+// ExileTarget creates an effect that exiles a target permanent.
 func ExileTarget() Effect {
-	return &exileTargetEffect{}
+	return DataEffect(&exileTargetEffect{})
 }
 
-func (e *exileTargetEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 {
-		return fmt.Errorf("no target for exile")
-	}
-	perm := g.FindPermanent(targets[0])
-	if perm == nil {
-		return nil
-	}
-	g.ExilePermanent(perm)
-	return nil
-}
-
-func (e *exileTargetEffect) Text() string { return "exile target permanent" }
-func (e *exileTargetEffect) Properties() EffectProperties {
+func (e *exileTargetEffect) EffectText() string { return "exile target permanent" }
+func (e *exileTargetEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
@@ -210,30 +133,127 @@ type sacrificeSourceEffect struct{}
 
 // SacrificeSource creates an effect that sacrifices the source permanent.
 func SacrificeSource() Effect {
-	return &sacrificeSourceEffect{}
+	return DataEffect(&sacrificeSourceEffect{})
 }
 
-func (e *sacrificeSourceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	perm := g.FindPermanent(sourceID)
-	if perm == nil {
-		return nil
-	}
-	g.Sacrifice(perm)
-	return nil
-}
-
-func (e *sacrificeSourceEffect) Text() string { return "sacrifice this permanent" }
-func (e *sacrificeSourceEffect) Properties() EffectProperties { return EffectProperties{} }
+func (e *sacrificeSourceEffect) EffectText() string        { return "sacrifice this permanent" }
+func (e *sacrificeSourceEffect) EffectProps() EffectProperties { return EffectProperties{} }
 
 // balanceEffect equalizes lands, creatures, and hand sizes.
 type balanceEffect struct{}
 
 // BalanceEffect creates an effect that equalizes lands, creatures, and hand sizes across all
 // players by having each player sacrifice/discard down to the minimum (Balance).
-func BalanceEffect() Effect { return &balanceEffect{} }
+func BalanceEffect() Effect { return DataEffect(&balanceEffect{}) }
 
-func (e *balanceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	// Count lands for each player
+func (e *balanceEffect) EffectText() string {
+	return "Each player sacrifices to match fewest lands, creatures; discards to match smallest hand"
+}
+func (e *balanceEffect) EffectProps() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment, Mass: true}
+}
+
+// chaosOrbEffect destroys a random nontoken permanent an opponent controls, then destroys self.
+type chaosOrbEffect struct{}
+
+// ChaosOrbEffect creates the Chaos Orb effect.
+func ChaosOrbEffect() Effect { return DataEffect(&chaosOrbEffect{}) }
+
+func (e *chaosOrbEffect) EffectText() string {
+	return "Destroy a random nontoken permanent, then destroy ~"
+}
+func (e *chaosOrbEffect) EffectProps() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
+
+// --- Executor functions (called from executor.go) ---
+
+func execDestroyTarget(ctx *EffectContext, _ *destroyTargetEffect) error {
+	if len(ctx.Targets) == 0 {
+		return fmt.Errorf("no target for destroy")
+	}
+	perm := ctx.Game.FindPermanent(ctx.Targets[0])
+	if perm == nil {
+		return nil
+	}
+	if perm.HasKeyword(Indestructible) {
+		return nil
+	}
+	ctx.Game.DestroyPermanent(perm)
+	return nil
+}
+
+func execDestroyTargetPermanent(ctx *EffectContext, _ *destroyTargetPermanentEffect) error {
+	if len(ctx.Targets) == 0 {
+		return fmt.Errorf("no target for destroy")
+	}
+	perm := ctx.Game.FindPermanent(ctx.Targets[0])
+	if perm == nil {
+		return nil
+	}
+	if perm.HasKeyword(Indestructible) {
+		return nil
+	}
+	ctx.Game.DestroyPermanent(perm)
+	return nil
+}
+
+func execDestroyAllMatching(ctx *EffectContext, e *destroyAllMatchingEffect) error {
+	toDestroy := ctx.Game.FilterBattlefield(And(e.filter, Not(HasKeywordFilter(Indestructible))))
+	for _, p := range toDestroy {
+		ctx.Game.DestroyPermanent(p)
+	}
+	return nil
+}
+
+func execDestroyAllMatchingNoRegen(ctx *EffectContext, e *destroyAllMatchingNoRegenEffect) error {
+	toDestroy := ctx.Game.FilterBattlefield(And(e.filter, Not(HasKeywordFilter(Indestructible))))
+	for _, p := range toDestroy {
+		p.GrantBaseAttr(CantRegenerate)
+		ctx.Game.DestroyPermanent(p)
+	}
+	return nil
+}
+
+func execDestroyTargetNoRegen(ctx *EffectContext, _ *destroyTargetNoRegenEffect) error {
+	if len(ctx.Targets) == 0 {
+		return fmt.Errorf("no target for destroy")
+	}
+	perm := ctx.Game.FindPermanent(ctx.Targets[0])
+	if perm == nil {
+		return nil
+	}
+	if perm.HasKeyword(Indestructible) {
+		return nil
+	}
+	perm.GrantBaseAttr(CantRegenerate)
+	ctx.Game.DestroyPermanent(perm)
+	return nil
+}
+
+func execExileTarget(ctx *EffectContext, _ *exileTargetEffect) error {
+	if len(ctx.Targets) == 0 {
+		return fmt.Errorf("no target for exile")
+	}
+	perm := ctx.Game.FindPermanent(ctx.Targets[0])
+	if perm == nil {
+		return nil
+	}
+	ctx.Game.ExilePermanent(perm)
+	return nil
+}
+
+func execSacrificeSource(ctx *EffectContext, _ *sacrificeSourceEffect) error {
+	perm := ctx.Game.FindPermanent(ctx.SourceID)
+	if perm == nil {
+		return nil
+	}
+	ctx.Game.Sacrifice(perm)
+	return nil
+}
+
+func execBalance(ctx *EffectContext, _ *balanceEffect) error {
+	g := ctx.Game
 	landCounts := make(map[uuid.UUID]int)
 	creatureCounts := make(map[uuid.UUID]int)
 	for _, p := range g.FilterBattlefield(IsLand) {
@@ -243,7 +263,6 @@ func (e *balanceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets [
 		creatureCounts[p.Controller]++
 	}
 
-	// Find minimums
 	minLands := -1
 	minCreatures := -1
 	minHand := -1
@@ -260,7 +279,6 @@ func (e *balanceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets [
 		}
 	}
 
-	// Sacrifice lands down to minimum
 	for _, p := range g.AllPlayers() {
 		pid := p.PlayerID()
 		toSac := landCounts[pid] - minLands
@@ -275,7 +293,6 @@ func (e *balanceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets [
 		}
 	}
 
-	// Sacrifice creatures down to minimum
 	for _, p := range g.AllPlayers() {
 		pid := p.PlayerID()
 		toSac := creatureCounts[pid] - minCreatures
@@ -290,7 +307,6 @@ func (e *balanceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets [
 		}
 	}
 
-	// Discard down to minimum hand size
 	for _, p := range g.AllPlayers() {
 		for len(p.Hand()) > minHand {
 			hand := p.Hand()
@@ -309,40 +325,21 @@ func (e *balanceEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets [
 
 	return nil
 }
-func (e *balanceEffect) Text() string {
-	return "Each player sacrifices to match fewest lands, creatures; discards to match smallest hand"
-}
-func (e *balanceEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment, Mass: true}
-}
 
-// destroyRandomNontokenPermanent destroys a random nontoken permanent an
-// opponent controls, then destroys the source.
-type chaosOrbEffect struct{}
-
-// ChaosOrbEffect creates an effect that destroys a random nontoken permanent an opponent
-// controls, then destroys the source (Chaos Orb).
-func ChaosOrbEffect() Effect { return &chaosOrbEffect{} }
-
-func (e *chaosOrbEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func execChaosOrb(ctx *EffectContext, _ *chaosOrbEffect) error {
 	var candidates []*Permanent
-	for _, p := range g.FilterBattlefield(Not(ControlledBy(controller))) {
+	for _, p := range ctx.Game.FilterBattlefield(Not(ControlledBy(ctx.Controller))) {
 		if !p.Card.(*BaseCard).IsToken() {
 			candidates = append(candidates, p)
 		}
 	}
 	if len(candidates) > 0 {
 		chosen := candidates[rand.Intn(len(candidates))]
-		g.DestroyPermanent(chosen)
+		ctx.Game.DestroyPermanent(chosen)
 	}
-	// Destroy self
-	src := g.FindPermanent(sourceID)
+	src := ctx.Game.FindPermanent(ctx.SourceID)
 	if src != nil {
-		g.DestroyPermanent(src)
+		ctx.Game.DestroyPermanent(src)
 	}
 	return nil
-}
-func (e *chaosOrbEffect) Text() string { return "Destroy a random nontoken permanent, then destroy ~" }
-func (e *chaosOrbEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment}
 }

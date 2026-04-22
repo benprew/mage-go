@@ -17,27 +17,13 @@ func registerSpells() {
 
 	Register("Swords to Plowshares", func() Card {
 		return NewInstant("Swords to Plowshares", "{W}",
-			NewTargetedSpell(TargetCreature(), FuncEffect(
+			NewTargetedSpell(TargetCreature(), Pipeline(
 				"exile target creature. Its controller gains life equal to its power",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					if len(targets) == 0 {
-						return fmt.Errorf("no target")
-					}
-					perm := g.FindPermanent(targets[0])
-					if perm == nil {
-						return nil
-					}
-					power := perm.CurrentPower(g)
-					permController := perm.Controller
-					g.ExilePermanent(perm)
-					p := g.GetPlayer(permController)
-					if p != nil && power > 0 {
-						p.GainLife(power)
-						g.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: permController, Amount: power})
-					}
-					return nil
-				})),
+				SnapshotPermanent(SelectTarget, "victim"),
+				ExileGathered("victim"),
+				GainLifeFromVar("victim.controller", "victim.power"),
+			)),
 		)
 	})
 
@@ -287,18 +273,11 @@ func registerSpells() {
 		return NewEnchantment("Pestilence", "{2}{B}{B}",
 			// At the beginning of the end step, if no creatures are on the battlefield, sacrifice Pestilence.
 			WithAbility(BeginningOfEachEndStepTrigger(
-				FuncEffect("sacrifice if no creatures", EffectProperties{}, func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					for _, p := range g.FilterBattlefield(AnyPermanent) {
-						if p.HasType(TypeCreature) {
-							return nil
-						}
-					}
-					perm := g.FindPermanent(sourceID)
-					if perm != nil {
-						g.Sacrifice(perm)
-					}
-					return nil
-				}), false,
+				DataEffect(IfElse("sacrifice if no creatures",
+					&NotCond{Inner: &HasMatchingPermanentCond{Filter: IsCreature}},
+					SacrificeSourceStep(),
+					nil,
+				)), false,
 			)),
 			// {B}: Deal 1 damage to each creature and each player
 			WithActivatedAbility(
