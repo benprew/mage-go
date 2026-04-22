@@ -149,6 +149,30 @@ func XValue() ValueSource                            { return xValue{} }
 func (v xValue) Resolve(g GameReader, _, _ uuid.UUID) int { return g.XValue() }
 func (v xValue) Text() string                        { return "X" }
 
+// mulValue multiplies two ValueSources.
+type mulValue struct {
+	a, b ValueSource
+}
+
+// Mul creates a ValueSource that returns a.Resolve() * b.Resolve().
+func Mul(a, b ValueSource) ValueSource { return mulValue{a: a, b: b} }
+func (v mulValue) Resolve(g GameReader, sourceID, controller uuid.UUID) int {
+	return v.a.Resolve(g, sourceID, controller) * v.b.Resolve(g, sourceID, controller)
+}
+func (v mulValue) Text() string { return v.a.Text() + " * " + v.b.Text() }
+
+// addValue adds two ValueSources.
+type addValue struct {
+	a, b ValueSource
+}
+
+// Add creates a ValueSource that returns a.Resolve() + b.Resolve().
+func Add(a, b ValueSource) ValueSource { return addValue{a: a, b: b} }
+func (v addValue) Resolve(g GameReader, sourceID, controller uuid.UUID) int {
+	return v.a.Resolve(g, sourceID, controller) + v.b.Resolve(g, sourceID, controller)
+}
+func (v addValue) Text() string { return v.a.Text() + " + " + v.b.Text() }
+
 // countBattlefieldValue is a ValueSource that counts permanents on the battlefield.
 // If who is nil, all permanents are counted regardless of controller.
 type countBattlefieldValue struct {
@@ -319,3 +343,7 @@ func (s selectEventController) Select(_ GameReader, _, _ uuid.UUID, targets []uu
 	return []uuid.UUID{targets[0]}
 }
 func (s selectEventController) Text() string { return "that player" }
+
+// SelectTargetPlayer creates a PlayerSelector that reads targets[0] as a player ID.
+// Use for targeted spells that target a player.
+func SelectTargetPlayer() PlayerSelector { return selectEventController{} }
