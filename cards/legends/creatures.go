@@ -68,7 +68,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				Pipeline("can't be regenerated this turn",
 					EffectProperties{Outcome: OutcomeDetriment},
-					GrantKeywordToSourceUntilEOT(CantRegenerate),
+					GrantKeyword(CantRegenerate).Targeting(ToSource()),
 				),
 				ManaCostOf("{1}"),
 				WithOpponentOnlyMay(),
@@ -209,12 +209,12 @@ func registerCreatures() {
 			WithKeyword(Flying),
 			WithAbility(
 				NewTriggered(EvtEndStep, false,
-					AddCounters(Carrion, Fixed(1), SelectSource),
+					AddCounters(Carrion, Fixed(1)).Targeting(ToSource()),
 				).
 					SetConditionData(CreatureDeathsOccurred{}),
 			),
 			WithActivatedAbility(
-				BoostUntilEndOfTurn(Fixed(1), Fixed(1), SelectSource),
+				Boost(Fixed(1), Fixed(1)).Targeting(ToSource()),
 				RemoveCountersCost(Carrion, 2),
 			),
 		)
@@ -278,7 +278,7 @@ func registerCreatures() {
 				NewTriggered(EvtBlockersDecl, false,
 					Pipeline("gain banding until end of turn",
 						EffectProperties{Outcome: OutcomeBenefit},
-						GrantKeywordToSourceUntilEOT(Banding),
+						GrantKeyword(Banding).Targeting(ToSource()),
 					),
 				).
 					// TODO: convert to data condition
@@ -674,7 +674,7 @@ func registerCreatures() {
 		return NewCreature("Carrion Ants", "{2}{B}{B}", 0, 1,
 			WithSubTypes("Insect"),
 			WithActivatedAbility(
-				BoostUntilEndOfTurn(Fixed(1), Fixed(1), SelectSource),
+				Boost(Fixed(1), Fixed(1)).Targeting(ToSource()),
 				GenericCost(1),
 			),
 		)
@@ -753,7 +753,7 @@ func registerCreatures() {
 			WithSubTypes("Angel"),
 			WithKeyword(Flying),
 			WithActivatedAbility(
-				BoostUntilEndOfTurn(Fixed(2), Fixed(1), SelectSource),
+				Boost(Fixed(2), Fixed(1)).Targeting(ToSource()),
 				SacrificeCreatureCost(),
 			),
 		)
@@ -767,7 +767,7 @@ func registerCreatures() {
 		return NewCreature("Ghosts of the Damned", "{1}{B}{B}", 0, 2,
 			WithSubTypes("Spirit"),
 			WithActivatedAbility(
-				BoostUntilEndOfTurn(Fixed(-1), Fixed(0), SelectTarget),
+				Boost(Fixed(-1), Fixed(0)),
 				TapSourceCost(),
 				WithTarget(TargetCreature()),
 			),
@@ -1103,7 +1103,7 @@ func registerCreatures() {
 			WithSubTypes("Bat"),
 			WithKeyword(Flying),
 			WithActivatedAbility(
-				BoostUntilEndOfTurn(Fixed(1), Fixed(0), SelectSource),
+				Boost(Fixed(1), Fixed(0)).Targeting(ToSource()),
 				ManaCostOf("{B}"),
 				WithMaxActivationsPerTurn(2),
 			),
@@ -1606,7 +1606,7 @@ func registerCreatures() {
 			WithSubTypes("Wall"),
 			WithKeyword(Defender),
 			WithActivatedAbility(
-				BoostUntilEndOfTurn(Fixed(1), Fixed(0), SelectSource),
+				Boost(Fixed(1), Fixed(0)).Targeting(ToSource()),
 				GenericCost(1),
 			),
 		)
@@ -1723,7 +1723,7 @@ func registerCreatures() {
 			WithSubTypes("Insect"),
 			WithKeyword(Flying),
 			WithActivatedAbility(
-				GrantKeywordUntilEndOfTurn(FirstStrike, SelectSource),
+				GrantKeyword(FirstStrike).Targeting(ToSource()),
 				ManaCostOf("{G}{G}"),
 			),
 		)
@@ -1882,7 +1882,7 @@ func registerCreatures() {
 			WithSubTypes("Insect"),
 			WithKeyword(Flying),
 			WithActivatedAbility(
-				BoostUntilEndOfTurn(Fixed(1), Fixed(1), SelectSource),
+				Boost(Fixed(1), Fixed(1)).Targeting(ToSource()),
 				ManaCostOf("{G}"),
 			),
 		)
@@ -1922,7 +1922,7 @@ func registerCreatures() {
 			WithSubTypes("Faerie"),
 			WithKeyword(Flying),
 			WithActivatedAbility(
-				GrantKeywordUntilEndOfTurn(Flying, SelectTarget),
+				GrantKeyword(Flying),
 				ManaCostOf("{G}{G}{G}"),
 				WithCost(TapSourceCost()),
 				WithTarget(TargetCreature()),
@@ -1938,7 +1938,7 @@ func registerCreatures() {
 		return NewCreature("Pradesh Gypsies", "{2}{G}", 1, 1,
 			WithSubTypes("Human", "Nomad"),
 			WithActivatedAbility(
-				BoostUntilEndOfTurn(Fixed(-2), Fixed(0), SelectTarget),
+				Boost(Fixed(-2), Fixed(0)),
 				ManaCostOf("{1}{G}"),
 				WithCost(TapSourceCost()),
 				WithTarget(TargetCreature()),
@@ -2022,7 +2022,7 @@ func registerCreatures() {
 			WithSubTypes("Human", "Monk"),
 			WithAbility(ProtectionFromColor(Black)),
 			WithAbility(DealsDamageToOpponentTrigger(
-				AddCounters(P1P1, Fixed(1), SelectSource), false,
+				AddCounters(P1P1, Fixed(1)).Targeting(ToSource()), false,
 			)),
 		)
 	})
@@ -2162,7 +2162,7 @@ func registerCreatures() {
 				}),
 			),
 			WithActivatedAbility(
-				BoostUntilEndOfTurn(Fixed(0), Fixed(1), SelectSource),
+				Boost(Fixed(0), Fixed(1)).Targeting(ToSource()),
 				ManaCostOf("{W}"),
 			),
 		)
@@ -2780,7 +2780,7 @@ func registerCreatures() {
 			WithSubTypes("Human"),
 			WithSuperTypes(SuperLegendary),
 			WithActivatedAbility(
-				BoostUntilEndOfTurn(Fixed(1), Fixed(0), SelectSource),
+				Boost(Fixed(1), Fixed(0)).Targeting(ToSource()),
 				ManaCostOf("{B}{R}"),
 			),
 		)
@@ -2864,7 +2864,7 @@ func registerCreatures() {
 			WithSubTypes("Human", "Wizard"),
 			WithSuperTypes(SuperLegendary),
 			// Enters with seven dream counters
-			WithAbility(ETBEffect(AddCounters(Dream, Fixed(7), SelectSource))),
+			WithAbility(ETBEffect(AddCounters(Dream, Fixed(7)).Targeting(ToSource()))),
 			// Remove a dream counter: Add {C}
 			WithActivatedAbility(
 				AddMana(Colorless, 1),
@@ -3198,7 +3198,7 @@ func registerCreatures() {
 			WithSuperTypes(SuperLegendary),
 			WithKeyword(Flying),
 			WithActivatedAbility(
-				BoostUntilEndOfTurn(Fixed(2), Fixed(2), SelectTarget),
+				Boost(Fixed(2), Fixed(2)),
 				ManaCostOf("{R}{G}"),
 				WithCost(TapSourceCost()),
 				WithTarget(TargetCreature()),
@@ -3235,15 +3235,15 @@ func registerCreatures() {
 			WithKeyword(Flying),
 			WithAbility(SacrificeAtUpkeepUnlessPay("{B}{R}{G}")),
 			WithActivatedAbility(
-				BoostUntilEndOfTurn(Fixed(1), Fixed(0), SelectSource),
+				Boost(Fixed(1), Fixed(0)).Targeting(ToSource()),
 				ManaCostOf("{B}"),
 			),
 			WithActivatedAbility(
-				BoostUntilEndOfTurn(Fixed(1), Fixed(0), SelectSource),
+				Boost(Fixed(1), Fixed(0)).Targeting(ToSource()),
 				ManaCostOf("{R}"),
 			),
 			WithActivatedAbility(
-				BoostUntilEndOfTurn(Fixed(1), Fixed(0), SelectSource),
+				Boost(Fixed(1), Fixed(0)).Targeting(ToSource()),
 				ManaCostOf("{G}"),
 			),
 		)

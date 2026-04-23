@@ -241,7 +241,7 @@ func TestApplySpellCast_BuffEffect(t *testing.T) {
 	g.AddToBattlefield(creature)
 
 	buff := mage.NewInstant("Giant Growth", "{G}",
-		mage.NewTargetedSpell(mage.TargetCreature(), mage.BoostUntilEndOfTurn(mage.Fixed(3), mage.Fixed(3), mage.SelectTarget)),
+		mage.NewTargetedSpell(mage.TargetCreature(), mage.Boost(mage.Fixed(3), mage.Fixed(3))),
 	)
 	buff.SetOwner(pa.PlayerID())
 	pa.AddToHand(buff)

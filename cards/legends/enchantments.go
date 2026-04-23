@@ -152,12 +152,12 @@ func registerEnchantments() {
 			WithAbility(BeginningOfUpkeepTrigger(
 				DataEffect(IfElse("remove pupa counter or sacrifice and boost",
 					&SourceHasCounterCond{CounterType: Pupa, MinCount: 1},
-					RemoveCountersFromSourceStep(Pupa, 1),
+					RemoveCounters(Pupa, 1),
 					&PipelineData{
 						Steps: []EffectData{
 							SnapshotAttached("host"),
 							SacrificeSourceStep(),
-							AddCountersToGathered("host", P1P1, Fixed(1)),
+							AddCounters(P1P1, Fixed(1)).Targeting(ToGathered("host")),
 							GrantAttrToGathered("host", Flying),
 						},
 						Txt: "sacrifice Cocoon, boost creature",
@@ -229,10 +229,10 @@ func registerEnchantments() {
 	Register("Divine Intervention", func() Card {
 		return NewEnchantment("Divine Intervention", "{6}{W}{W}",
 			WithAbility(EntersBattlefieldTrigger(
-				AddCounters(Intervention, Fixed(2), SelectSource), false,
+				AddCounters(Intervention, Fixed(2)).Targeting(ToSource()), false,
 			)),
 			WithAbility(BeginningOfUpkeepTrigger(
-				RemoveCountersFromSource(Intervention, 1), false,
+				RemoveCounters(Intervention, 1), false,
 				// XXX: needs game draw mechanic — when last counter is removed, game is a draw
 			)),
 		)
@@ -1019,7 +1019,7 @@ func registerEnchantments() {
 		return NewAura("Spirit Shackle", "{B}{B}",
 			WithAbility(
 				NewTriggered(EvtTapped, false,
-					DataEffect(AddCounterToAttachedStep(M0M2, 1)),
+					AddCounters(M0M2, Fixed(1)).Targeting(ToAttached()),
 				).SetConditionData(SourceIsAttachedToEventSource{}),
 			),
 		)
@@ -1080,7 +1080,7 @@ func registerEnchantments() {
 	Register("Takklemaggot", func() Card {
 		return NewAura("Takklemaggot", "{2}{B}{B}",
 			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
-				DataEffect(AddCounterToAttachedStep(M0M1, 1)), false,
+				AddCounters(M0M1, Fixed(1)).Targeting(ToAttached()), false,
 			)),
 		)
 	})

@@ -580,7 +580,7 @@ func registerCreatures() {
 		return NewCreature("Hurr Jackal", "{R}", 1, 1,
 			WithSubTypes("Jackal"),
 			WithActivatedAbility(
-				GrantKeywordUntilEndOfTurn(CantRegenerate, SelectTarget),
+				GrantKeyword(CantRegenerate),
 				TapSourceCost(),
 				WithTarget(TargetCreature()),
 			),
@@ -835,7 +835,7 @@ func registerCreatures() {
 		return NewCreature("Wyluli Wolf", "{1}{G}", 1, 1,
 			WithSubTypes("Wolf"),
 			WithActivatedAbility(
-				BoostUntilEndOfTurn(Fixed(1), Fixed(1), SelectTarget),
+				Boost(Fixed(1), Fixed(1)),
 				TapSourceCost(),
 				WithTarget(TargetCreature()),
 			),

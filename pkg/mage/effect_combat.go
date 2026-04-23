@@ -3,73 +3,8 @@ package mage
 import (
 	"fmt"
 
-	"github.com/google/uuid"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
-
-// addCountersEffect adds counters to the source or a target permanent.
-type addCountersEffect struct {
-	ct     CounterType
-	amount ValueSource
-	target PermanentSelector
-}
-
-// AddCounters creates an effect that adds counters to the selected permanent.
-func AddCounters(ct CounterType, amount ValueSource, target PermanentSelector) Effect {
-	return DataEffect(&addCountersEffect{ct: ct, amount: amount, target: target})
-}
-
-func (e *addCountersEffect) EffectText() string {
-	if _, ok := e.amount.(xValue); ok {
-		return fmt.Sprintf("put X %s counters on it", e.ct)
-	}
-	n := e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil)
-	if e.target == SelectSource {
-		return fmt.Sprintf("put %d %s counter(s) on it", n, e.ct)
-	}
-	return fmt.Sprintf("put %d %s counter(s) on target", n, e.ct)
-}
-func (e *addCountersEffect) EffectProps() EffectProperties { return EffectProperties{} }
-
-// removeCountersFromSourceEffect removes counters from the source permanent.
-type removeCountersFromSourceEffect struct {
-	ct     CounterType
-	amount int
-}
-
-// RemoveCountersFromSource creates an effect that removes counters from the source permanent.
-func RemoveCountersFromSource(ct CounterType, amount int) Effect {
-	return DataEffect(&removeCountersFromSourceEffect{ct: ct, amount: amount})
-}
-
-// RemoveCountersFromSourceStep returns the EffectData for use in pipelines.
-func RemoveCountersFromSourceStep(ct CounterType, amount int) EffectData {
-	return &removeCountersFromSourceEffect{ct: ct, amount: amount}
-}
-
-func (e *removeCountersFromSourceEffect) EffectText() string {
-	return fmt.Sprintf("remove %d %s counter(s) from it", e.amount, e.ct)
-}
-func (e *removeCountersFromSourceEffect) EffectProps() EffectProperties { return EffectProperties{} }
-
-// AddCountersUpToMax creates an effect that adds up to X +1/+0 counters on the source,
-// capped so total counters don't exceed maxCounters.
-func AddCountersUpToMax(ct CounterType, maxCounters int) Effect {
-	return DataEffect(&addCountersUpToMaxEffect{ct: ct, maxCounters: maxCounters})
-}
-
-type addCountersUpToMaxEffect struct {
-	ct          CounterType
-	maxCounters int
-}
-
-func (e *addCountersUpToMaxEffect) EffectText() string {
-	return fmt.Sprintf("put up to X %s counters on it (max %d total)", e.ct, e.maxCounters)
-}
-
-func (e *addCountersUpToMaxEffect) EffectProps() EffectProperties {
-	return EffectProperties{Outcome: OutcomeBenefit}
-}
 
 // tapTargetEffect taps a target permanent.
 type tapTargetEffect struct{}
@@ -175,83 +110,6 @@ func (e *makeUnblockableUntilEndOfTurnEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
-// boostUntilEndOfTurnEffect boosts a creature's P/T until end of turn.
-type boostUntilEndOfTurnEffect struct {
-	power     ValueSource
-	toughness ValueSource
-	target    PermanentSelector
-}
-
-// BoostUntilEndOfTurn creates an effect that boosts the selected creature's P/T until end of turn.
-func BoostUntilEndOfTurn(power, toughness ValueSource, target PermanentSelector) Effect {
-	return DataEffect(&boostUntilEndOfTurnEffect{power: power, toughness: toughness, target: target})
-}
-
-func (e *boostUntilEndOfTurnEffect) EffectText() string {
-	_, pIsX := e.power.(xValue)
-	_, tIsX := e.toughness.(xValue)
-	if pIsX || tIsX {
-		return "Target creature gets +X/+0 until end of turn"
-	}
-	p := e.power.Resolve(nil, uuid.Nil, uuid.Nil, nil)
-	t := e.toughness.Resolve(nil, uuid.Nil, uuid.Nil, nil)
-	if e.target == SelectSource {
-		return fmt.Sprintf("this creature gets +%d/+%d until end of turn", p, t)
-	}
-	return fmt.Sprintf("target creature gets +%d/+%d until end of turn", p, t)
-}
-func (e *boostUntilEndOfTurnEffect) EffectProps() EffectProperties {
-	var pb, tb int
-	if _, ok := e.power.(xValue); !ok {
-		pb = e.power.Resolve(nil, uuid.Nil, uuid.Nil, nil)
-	}
-	if _, ok := e.toughness.(xValue); !ok {
-		tb = e.toughness.Resolve(nil, uuid.Nil, uuid.Nil, nil)
-	}
-	return EffectProperties{Outcome: OutcomeBenefit, PowerBoost: pb, ToughnessBoost: tb}
-}
-
-// boostMatchingUntilEndOfTurnEffect boosts the P/T of all creatures matching a predicate until end of turn
-type boostMatchingUntilEndOfTurnEffect struct {
-	power     ValueSource
-	toughness ValueSource
-	predicate PermanentFilter
-}
-
-// BoostMatchingUntilEndOfTurn creates an effect that gives +P/+T until end of turn to all
-// creatures the controller owns that match the predicate (e.g. Crusade, Bad Moon).
-func BoostMatchingUntilEndOfTurn(power, toughness ValueSource, predicate PermanentFilter) Effect {
-	return DataEffect(&boostMatchingUntilEndOfTurnEffect{power: power, toughness: toughness, predicate: predicate})
-}
-
-func (e *boostMatchingUntilEndOfTurnEffect) EffectText() string {
-	return "XXX populate filter predicate text"
-}
-func (e *boostMatchingUntilEndOfTurnEffect) EffectProps() EffectProperties {
-	return EffectProperties{Outcome: OutcomeBenefit, Mass: true}
-}
-
-// boostAllMatchingUntilEndOfTurnEffect boosts the P/T of all creatures matching a predicate until end of turn,
-// regardless of controller (e.g. Piety, Army of Allah).
-type boostAllMatchingUntilEndOfTurnEffect struct {
-	power     ValueSource
-	toughness ValueSource
-	predicate PermanentFilter
-}
-
-// BoostAllMatchingUntilEndOfTurn creates an effect that gives +P/+T until end of turn to all
-// creatures on the battlefield that match the predicate, regardless of controller.
-func BoostAllMatchingUntilEndOfTurn(power, toughness ValueSource, predicate PermanentFilter) Effect {
-	return DataEffect(&boostAllMatchingUntilEndOfTurnEffect{power: power, toughness: toughness, predicate: predicate})
-}
-
-func (e *boostAllMatchingUntilEndOfTurnEffect) EffectText() string {
-	return "matching creatures get a boost until end of turn"
-}
-func (e *boostAllMatchingUntilEndOfTurnEffect) EffectProps() EffectProperties {
-	return EffectProperties{Outcome: OutcomeBenefit, Mass: true}
-}
-
 // doubleSourcePowerEffect doubles the source creature's power until end of turn.
 type doubleSourcePowerEffect struct{}
 
@@ -267,27 +125,6 @@ func (e *doubleSourcePowerEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
-// grantKeywordUntilEndOfTurnEffect grants a keyword to the source or a target
-// creature until end of turn.
-type grantKeywordUntilEndOfTurnEffect struct {
-	keyword Keyword
-	target  PermanentSelector
-}
-
-// GrantKeywordUntilEndOfTurn creates an effect that grants a keyword to the selected creature until end of turn.
-func GrantKeywordUntilEndOfTurn(kw Keyword, target PermanentSelector) Effect {
-	return DataEffect(&grantKeywordUntilEndOfTurnEffect{keyword: kw, target: target})
-}
-
-func (e *grantKeywordUntilEndOfTurnEffect) EffectText() string {
-	if e.target == SelectSource {
-		return fmt.Sprintf("~ gains %s until end of turn", e.keyword)
-	}
-	return fmt.Sprintf("target creature gains %s until end of turn", e.keyword)
-}
-func (e *grantKeywordUntilEndOfTurnEffect) EffectProps() EffectProperties {
-	return EffectProperties{Outcome: OutcomeBenefit}
-}
 
 // replaceKeywordEffect replaces one keyword with another on a target permanent.
 type replaceKeywordEffect struct {
@@ -406,50 +243,6 @@ func (e *setBasePowerUntilEndOfTurnEffect) EffectProps() EffectProperties {
 
 // --- Combat effect executors ---
 
-func execAddCounters(ctx *EffectContext, e *addCountersEffect) error {
-	var perm *Permanent
-	if e.target == SelectSource {
-		perm = ctx.Game.FindPermanent(ctx.SourceID)
-	} else {
-		if len(ctx.Targets) == 0 {
-			return fmt.Errorf("no target for counters")
-		}
-		perm = ctx.Game.FindPermanent(ctx.Targets[0])
-	}
-	if perm == nil {
-		return nil
-	}
-	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
-	if amount > 0 {
-		perm.AddCounter(e.ct, amount)
-	}
-	return nil
-}
-
-func execRemoveCountersFromSource(ctx *EffectContext, e *removeCountersFromSourceEffect) error {
-	p := ctx.Game.FindPermanent(ctx.SourceID)
-	if p == nil {
-		return nil
-	}
-	p.RemoveCounter(e.ct, e.amount)
-	return nil
-}
-
-func execAddCountersUpToMax(ctx *EffectContext, e *addCountersUpToMaxEffect) error {
-	perm := ctx.Game.FindPermanent(ctx.SourceID)
-	if perm == nil {
-		return nil
-	}
-	x := ctx.Game.XValue()
-	current := int(perm.Counters[e.ct])
-	room := max(e.maxCounters-current, 0)
-	toAdd := min(x, room)
-	if toAdd > 0 {
-		perm.AddCounter(e.ct, toAdd)
-	}
-	return nil
-}
-
 func execTapTarget(ctx *EffectContext, _ *tapTargetEffect) error {
 	if len(ctx.Targets) == 0 {
 		return fmt.Errorf("no target for tap")
@@ -557,52 +350,6 @@ func execMakeUnblockableUntilEndOfTurn(ctx *EffectContext, _ *makeUnblockableUnt
 	return nil
 }
 
-func execBoostUntilEndOfTurn(ctx *EffectContext, e *boostUntilEndOfTurnEffect) error {
-	var perm *Permanent
-	if e.target == SelectSource {
-		perm = ctx.Game.FindPermanent(ctx.SourceID)
-	} else {
-		if len(ctx.Targets) == 0 {
-			return fmt.Errorf("no target for boost")
-		}
-		perm = ctx.Game.FindPermanent(ctx.Targets[0])
-	}
-	if perm == nil {
-		return nil
-	}
-	p := e.power.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
-	t := e.toughness.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
-	eff := TemporaryBoost(perm.ID(), p, t)
-	eff.SetSourceID(ctx.SourceID)
-	ctx.Game.AddContinuousEffect(eff)
-	ctx.Game.ApplyContinuousEffects()
-	return nil
-}
-
-func execBoostMatchingUntilEndOfTurn(ctx *EffectContext, e *boostMatchingUntilEndOfTurnEffect) error {
-	for _, perm := range ctx.Game.FilterBattlefield(And(ControlledBy(ctx.Controller), IsCreature, e.predicate)) {
-		p := e.power.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
-		t := e.toughness.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
-		eff := TemporaryBoost(perm.ID(), p, t)
-		eff.SetSourceID(ctx.SourceID)
-		ctx.Game.AddContinuousEffect(eff)
-	}
-	ctx.Game.ApplyContinuousEffects()
-	return nil
-}
-
-func execBoostAllMatchingUntilEndOfTurn(ctx *EffectContext, e *boostAllMatchingUntilEndOfTurnEffect) error {
-	for _, perm := range ctx.Game.FilterBattlefield(And(IsCreature, e.predicate)) {
-		p := e.power.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
-		t := e.toughness.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
-		eff := TemporaryBoost(perm.ID(), p, t)
-		eff.SetSourceID(ctx.SourceID)
-		ctx.Game.AddContinuousEffect(eff)
-	}
-	ctx.Game.ApplyContinuousEffects()
-	return nil
-}
-
 func execDoubleTargetPower(ctx *EffectContext, _ *doubleSourcePowerEffect) error {
 	if len(ctx.Targets) == 0 {
 		return nil
@@ -613,26 +360,6 @@ func execDoubleTargetPower(ctx *EffectContext, _ *doubleSourcePowerEffect) error
 	}
 	currentPower := perm.CurrentPower(ctx.Game)
 	eff := TemporaryBoost(perm.ID(), currentPower, 0)
-	eff.SetSourceID(ctx.SourceID)
-	ctx.Game.AddContinuousEffect(eff)
-	ctx.Game.ApplyContinuousEffects()
-	return nil
-}
-
-func execGrantKeywordUntilEndOfTurn(ctx *EffectContext, e *grantKeywordUntilEndOfTurnEffect) error {
-	var perm *Permanent
-	if e.target == SelectSource {
-		perm = ctx.Game.FindPermanent(ctx.SourceID)
-	} else {
-		if len(ctx.Targets) == 0 {
-			return fmt.Errorf("no target for keyword grant")
-		}
-		perm = ctx.Game.FindPermanent(ctx.Targets[0])
-	}
-	if perm == nil {
-		return nil
-	}
-	eff := TemporaryKeyword(perm.ID(), e.keyword)
 	eff.SetSourceID(ctx.SourceID)
 	ctx.Game.AddContinuousEffect(eff)
 	ctx.Game.ApplyContinuousEffects()

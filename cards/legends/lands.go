@@ -114,7 +114,7 @@ func registerLands() {
 			WithSuperTypes(SuperLegendary),
 			WithManaAbility(Green),
 			WithActivatedAbility(
-				BoostUntilEndOfTurn(Fixed(1), Fixed(2), SelectTarget),
+				Boost(Fixed(1), Fixed(2)),
 				TapSourceCost(),
 				WithTarget(TargetCreature(NewPermanentFilter("1/1", func(p *Permanent, g *Game) bool {
 					return p.CurrentPower(g) == 1 && p.CurrentToughness(g) == 1

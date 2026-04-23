@@ -47,7 +47,7 @@ func registerLands() {
 				GenericCost(1),
 			),
 			WithActivatedAbility(
-				BoostUntilEndOfTurn(Fixed(1), Fixed(1), SelectTarget),
+				Boost(Fixed(1), Fixed(1)),
 				TapSourceCost(),
 				WithTarget(TargetCreature(HasSubType("Assembly-Worker"))),
 			),

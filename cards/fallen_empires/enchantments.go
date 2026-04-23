@@ -33,7 +33,7 @@ func registerEnchantments() {
 	Register("Elven Fortress", withExpansion(func() Card {
 		return NewEnchantment("Elven Fortress", "{G}",
 			WithActivatedAbility(
-				BoostUntilEndOfTurn(Fixed(0), Fixed(1), SelectTarget),
+				Boost(Fixed(0), Fixed(1)),
 				ManaCostOf("{1}{G}"),
 				WithTarget(TargetCreature(IsBlocking)),
 			),
@@ -55,7 +55,7 @@ func registerEnchantments() {
 	Register("Fungal Bloom", withExpansion(func() Card {
 		return NewEnchantment("Fungal Bloom", "{G}{G}",
 			WithActivatedAbility(
-				AddCounters(Spore, Fixed(1), SelectTarget),
+				AddCounters(Spore, Fixed(1)),
 				ManaCostOf("{G}{G}"),
 				WithTarget(TargetCreature(HasSubType("Fungus"))),
 			),

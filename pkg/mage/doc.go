@@ -167,11 +167,13 @@ Permanent manipulation effects:
 
 Combat effects:
 
-	[BoostUntilEndOfTurn](p, t ValueSource, sel)   // +P/+T until EOT
-	[BoostMatchingUntilEndOfTurn](p, t, filter)     // boost matching creatures you control
-	[BoostAllMatchingUntilEndOfTurn](p, t, filter)  // boost matching regardless of controller
+	[Boost](p, t ValueSource)                       // +P/+T (default: target, EOT)
+	  .Targeting(ToSource()/ToTarget()/ToMatching(f)/ToAllMatching(f)/ToGathered(v))
+	  .Until(EndOfTurn/EndOfCombat)                 // composable target + duration
+	[GrantKeyword](kw)                              // grant keyword (default: target, EOT)
+	  .Targeting(ToSource()/ToTarget()/...)          // same composable pattern
+	  .Until(EndOfTurn/EndOfCombat)
 	[DoubleTargetPower]()                           // double target's power (Berserk)
-	[GrantKeywordUntilEndOfTurn](kw, sel)           // grant keyword until EOT
 	[MakeUnblockableUntilEndOfTurn]()               // can't be blocked this turn
 	[SetPTUntilEndOfTurn](p, t, sel)                // set base P/T until EOT
 	[SetPowerUntilEndOfTurn](power, sel)            // set base power only until EOT
@@ -179,8 +181,8 @@ Combat effects:
 
 Counter effects:
 
-	[AddCounters](counterType, amount ValueSource, PermanentSelector)
-	[RemoveCountersFromSource](counterType, amount int)
+	[AddCounters](counterType, amount ValueSource).Targeting(sel).Max(n)  // defaults to target
+	[RemoveCounters](counterType, amount int).Targeting(sel)             // defaults to source
 
 Misc effects:
 
@@ -368,10 +370,10 @@ Effects that can apply to either the source permanent or a resolved target use
 	[SelectSource]    // apply to the ability's source permanent
 
 	// Sengir Vampire: +1/+1 counter on self
-	mage.AddCounters(core.P1P1, mage.Fixed(1), mage.SelectSource)
+	mage.AddCounters(core.P1P1, mage.Fixed(1)).Targeting(mage.ToSource())
 
 	// Spell: +1/+1 counter on target creature
-	mage.AddCounters(core.P1P1, mage.Fixed(1), mage.SelectTarget)
+	mage.AddCounters(core.P1P1, mage.Fixed(1))
 
 # PlayerSelector — Who Is Affected
 
@@ -1068,7 +1070,7 @@ Creature with triggered ability:
 	        mage.WithKeyword(core.Flying),
 	        mage.WithAbility(
 	            mage.CreatureDealtDamageBySourceDiesTrigger(
-	                mage.AddCounters(core.P1P1, mage.Fixed(1), mage.SelectSource),
+	                mage.AddCounters(core.P1P1, mage.Fixed(1)).Targeting(mage.ToSource()),
 	                false,
 	            ),
 	        ),

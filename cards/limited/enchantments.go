@@ -64,7 +64,7 @@ func registerEnchantments() {
 			WithStaticAbility(
 				BoostAttached(0, 2, AttachAura),
 				GrantActivatedAbilityToAttached(
-					BoostUntilEndOfTurn(Fixed(0), Fixed(1), SelectSource),
+					Boost(Fixed(0), Fixed(1)).Targeting(ToSource()),
 					ManaCostOf("{W}"),
 					AttachAura,
 				),
@@ -76,7 +76,7 @@ func registerEnchantments() {
 		return NewAura("Blessing", "{W}{W}",
 			WithStaticAbility(
 				GrantActivatedAbilityToAttached(
-					BoostUntilEndOfTurn(Fixed(1), Fixed(1), SelectSource),
+					Boost(Fixed(1), Fixed(1)).Targeting(ToSource()),
 					ManaCostOf("{W}"),
 					AttachAura,
 				),
@@ -105,7 +105,7 @@ func registerEnchantments() {
 		return NewAura("Firebreathing", "{R}",
 			WithStaticAbility(
 				GrantActivatedAbilityToAttached(
-					BoostUntilEndOfTurn(Fixed(1), Fixed(0), SelectSource),
+					Boost(Fixed(1), Fixed(0)).Targeting(ToSource()),
 					ManaCostOf("{R}"),
 					AttachAura,
 				),
@@ -123,7 +123,7 @@ func registerEnchantments() {
 
 	Register("Jump", func() Card {
 		return NewInstant("Jump", "{U}",
-			NewTargetedSpell(TargetCreature(), GrantKeywordUntilEndOfTurn(Flying, SelectTarget)),
+			NewTargetedSpell(TargetCreature(), GrantKeyword(Flying)),
 		)
 	})
 

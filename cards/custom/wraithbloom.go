@@ -19,7 +19,7 @@ func registerWraithbloom() {
 			WithAbility(DiesCreatureTrigger(
 				CompositeEffects("gain 1 life and put a +1/+1 counter on this",
 					GainLife(1),
-					AddCounters(P1P1, Fixed(1), SelectSource),
+					AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
 				),
 				false, PermanentFilter{},
 			)),

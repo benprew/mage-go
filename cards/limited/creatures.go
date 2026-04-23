@@ -172,7 +172,7 @@ func registerCreatures() {
 			WithSubTypes("Shade"),
 			// {B}: +1/+1 until end of turn
 			WithActivatedAbility(
-				BoostUntilEndOfTurn(Fixed(1), Fixed(1), SelectSource),
+				Boost(Fixed(1), Fixed(1)).Targeting(ToSource()),
 				ManaCostOf("{B}"),
 			),
 		)
@@ -238,7 +238,7 @@ func registerCreatures() {
 			WithSubTypes("Vampire"),
 			WithKeyword(Flying),
 			// Whenever a creature dealt damage by Sengir Vampire this turn dies, put a +1/+1 counter on Sengir Vampire
-			WithAbility(CreatureDealtDamageBySourceDiesTrigger(AddCounters(P1P1, Fixed(1), SelectSource), false)),
+			WithAbility(CreatureDealtDamageBySourceDiesTrigger(AddCounters(P1P1, Fixed(1)).Targeting(ToSource()), false)),
 		)
 	})
 
@@ -272,7 +272,7 @@ func registerCreatures() {
 			WithSubTypes("Dragon"),
 			WithKeyword(Flying),
 			WithActivatedAbility(
-				BoostUntilEndOfTurn(Fixed(1), Fixed(0), SelectSource),
+				Boost(Fixed(1), Fixed(0)).Targeting(ToSource()),
 				ManaCostOf("{R}"),
 				// TODO: convert to pipeline — needs delayed trigger registration + counter tracking primitives
 				WithEffect(FuncEffect(
@@ -336,7 +336,7 @@ func registerCreatures() {
 			WithSubTypes("Goblin", "Warrior"),
 			// {R}: Goblin Balloon Brigade gains flying until end of turn.
 			WithActivatedAbility(
-				GrantKeywordUntilEndOfTurn(Flying, SelectSource),
+				GrantKeyword(Flying).Targeting(ToSource()),
 				ManaCostOf("{R}"),
 			),
 		)
@@ -348,7 +348,7 @@ func registerCreatures() {
 			WithKeyword(Flying),
 			// {R}: +0/+1 until end of turn
 			WithActivatedAbility(
-				BoostUntilEndOfTurn(Fixed(0), Fixed(1), SelectSource),
+				Boost(Fixed(0), Fixed(1)).Targeting(ToSource()),
 				ManaCostOf("{R}"),
 			),
 		)
@@ -401,7 +401,7 @@ func registerCreatures() {
 			WithKeyword(Flying),
 			// {R}: +1/+0 until end of turn (firebreathing)
 			WithActivatedAbility(
-				BoostUntilEndOfTurn(Fixed(1), Fixed(0), SelectSource),
+				Boost(Fixed(1), Fixed(0)).Targeting(ToSource()),
 				ManaCostOf("{R}"),
 			),
 		)
@@ -485,7 +485,7 @@ func registerCreatures() {
 		return NewCreature("Fungusaur", "{3}{G}", 2, 2,
 			WithSubTypes("Fungus", "Dinosaur"),
 			// Whenever Fungusaur is dealt damage, put a +1/+1 counter on it.
-			WithAbility(WhenDamageDealtToThisTrigger(AddCounters(P1P1, Fixed(1), SelectSource), false)),
+			WithAbility(WhenDamageDealtToThisTrigger(AddCounters(P1P1, Fixed(1)).Targeting(ToSource()), false)),
 		)
 	})
 
@@ -621,7 +621,7 @@ func registerCreatures() {
 			WithKeyword(Defender),
 			// {R}: +1/+0 until end of turn
 			WithActivatedAbility(
-				BoostUntilEndOfTurn(Fixed(1), Fixed(0), SelectSource),
+				Boost(Fixed(1), Fixed(0)).Targeting(ToSource()),
 				ManaCostOf("{R}"),
 			),
 		)
@@ -655,7 +655,7 @@ func registerCreatures() {
 			WithKeyword(Defender),
 			// {U}: +1/+0 until end of turn
 			WithActivatedAbility(
-				BoostUntilEndOfTurn(Fixed(1), Fixed(0), SelectSource),
+				Boost(Fixed(1), Fixed(0)).Targeting(ToSource()),
 				ManaCostOf("{U}"),
 			),
 		)
@@ -685,12 +685,12 @@ func registerCreatures() {
 			WithAbility(EntersWithNCounters(P1P0, 7)),
 			// At end of combat, if Clockwork Beast attacked or blocked, remove a +1/+0 counter
 			WithAbility(NewTriggered(EvtEndOfCombat, false,
-				RemoveCountersFromSource(P1P0, 1),
+				RemoveCounters(P1P0, 1),
 			).
 				SetConditionData(SourceAttackedOrBlockedThisTurn{})),
 			// {X}, {T}: Put up to X +1/+0 counters on Clockwork Beast (max 7 total). Upkeep only.
 			WithActivatedAbility(
-				AddCountersUpToMax(P1P0, 7),
+				AddCounters(P1P0, XValue()).Targeting(ToSource()).Max(7),
 				XManaCost(),
 				WithCost(TapSourceCost()),
 				WithUpkeepOnly(),
@@ -800,7 +800,7 @@ func registerCreatures() {
 							return nil
 						}
 						targetID := targets[0]
-						GrantKeywordUntilEndOfTurn(MustAttack, SelectTarget).Apply(g, sourceID, controller, targets)
+						GrantKeyword(MustAttack).Apply(g, sourceID, controller, targets)
 						g.RegisterDelayedTrigger(&DelayedTrigger{
 							EventType:  EvtEndStep,
 							SourceID:   sourceID,

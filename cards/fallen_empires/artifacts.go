@@ -134,7 +134,7 @@ func registerArtifacts() {
 	Register("Elven Lyre", withExpansion(func() Card {
 		return NewArtifact("Elven Lyre", "{2}",
 			WithActivatedAbility(
-				BoostUntilEndOfTurn(Fixed(2), Fixed(2), SelectTarget),
+				Boost(Fixed(2), Fixed(2)),
 				GenericCost(1),
 				WithCost(TapSourceCost()),
 				WithCost(SacrificeSourceCost()),

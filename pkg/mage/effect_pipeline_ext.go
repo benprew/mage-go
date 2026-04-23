@@ -183,36 +183,6 @@ func execGrantAttrToGathered(ctx *EffectContext, e *GrantAttrToGatheredData) err
 	return nil
 }
 
-// AddCountersToGatheredData adds counters to a var-bound permanent.
-type AddCountersToGatheredData struct {
-	VarName string
-	CT      CounterType
-	Amount  ValueSource
-}
-
-func AddCountersToGathered(v string, ct CounterType, amount ValueSource) EffectData {
-	return &AddCountersToGatheredData{VarName: v, CT: ct, Amount: amount}
-}
-
-func (e *AddCountersToGatheredData) EffectText() string            { return "" }
-func (e *AddCountersToGatheredData) EffectProps() EffectProperties { return EffectProperties{} }
-
-func execAddCountersToGathered(ctx *EffectContext, e *AddCountersToGatheredData) error {
-	id := ctx.TryGetUUID(e.VarName)
-	if id == uuid.Nil {
-		return nil
-	}
-	perm := ctx.Game.FindPermanent(id)
-	if perm == nil {
-		return nil
-	}
-	amount := e.Amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
-	if amount > 0 {
-		perm.AddCounter(e.CT, amount)
-	}
-	return nil
-}
-
 // ---------------------------------------------------------------------------
 // RegisterDelayedTrigger: register a delayed trigger from a pipeline
 // ---------------------------------------------------------------------------
@@ -280,89 +250,6 @@ func (c *FlipCoinCond) Check(ctx *EffectContext) bool {
 // GrantKeyword / RevokeKeyword until end of turn (as pipeline steps)
 // ---------------------------------------------------------------------------
 
-// GrantKeywordToTargetUntilEOTData grants a keyword to targets[0] until end of turn.
-type GrantKeywordToTargetUntilEOTData struct {
-	Keyword Keyword
-}
-
-func GrantKeywordToTargetUntilEOT(kw Keyword) EffectData {
-	return &GrantKeywordToTargetUntilEOTData{Keyword: kw}
-}
-
-func (e *GrantKeywordToTargetUntilEOTData) EffectText() string { return "" }
-func (e *GrantKeywordToTargetUntilEOTData) EffectProps() EffectProperties {
-	return EffectProperties{Outcome: OutcomeBenefit}
-}
-
-func execGrantKeywordToTargetUntilEOT(ctx *EffectContext, e *GrantKeywordToTargetUntilEOTData) error {
-	if len(ctx.Targets) == 0 {
-		return nil
-	}
-	perm := ctx.Game.FindPermanent(ctx.Targets[0])
-	if perm == nil {
-		return nil
-	}
-	eff := TemporaryKeyword(perm.ID(), e.Keyword)
-	eff.SetSourceID(ctx.SourceID)
-	ctx.Game.AddContinuousEffect(eff)
-	ctx.Game.ApplyContinuousEffects()
-	return nil
-}
-
-// GrantKeywordToSourceUntilEOTData grants a keyword to source until end of turn.
-type GrantKeywordToSourceUntilEOTData struct {
-	Keyword Keyword
-}
-
-func GrantKeywordToSourceUntilEOT(kw Keyword) EffectData {
-	return &GrantKeywordToSourceUntilEOTData{Keyword: kw}
-}
-
-func (e *GrantKeywordToSourceUntilEOTData) EffectText() string { return "" }
-func (e *GrantKeywordToSourceUntilEOTData) EffectProps() EffectProperties {
-	return EffectProperties{Outcome: OutcomeBenefit}
-}
-
-// GrantKeywordToSourceUntilEOCData grants a keyword to source until end of combat.
-type GrantKeywordToSourceUntilEOCData struct {
-	Keyword Keyword
-}
-
-func GrantKeywordToSourceUntilEOC(kw Keyword) EffectData {
-	return &GrantKeywordToSourceUntilEOCData{Keyword: kw}
-}
-
-func (e *GrantKeywordToSourceUntilEOCData) EffectText() string { return "" }
-func (e *GrantKeywordToSourceUntilEOCData) EffectProps() EffectProperties {
-	return EffectProperties{Outcome: OutcomeBenefit}
-}
-
-func execGrantKeywordToSourceUntilEOC(ctx *EffectContext, e *GrantKeywordToSourceUntilEOCData) error {
-	perm := ctx.Game.FindPermanent(ctx.SourceID)
-	if perm == nil {
-		return nil
-	}
-	eff := TargetEffect(LayerAbility, EndOfCombat, perm.ID(), func(g *Game, target *Permanent) error {
-		g.GrantAttr(target.ID(), e.Keyword)
-		return nil
-	})
-	eff.SetSourceID(ctx.SourceID)
-	ctx.Game.AddContinuousEffect(eff)
-	return nil
-}
-
-func execGrantKeywordToSourceUntilEOT(ctx *EffectContext, e *GrantKeywordToSourceUntilEOTData) error {
-	perm := ctx.Game.FindPermanent(ctx.SourceID)
-	if perm == nil {
-		return nil
-	}
-	eff := TemporaryKeyword(perm.ID(), e.Keyword)
-	eff.SetSourceID(ctx.SourceID)
-	ctx.Game.AddContinuousEffect(eff)
-	ctx.Game.ApplyContinuousEffects()
-	return nil
-}
-
 // RevokeKeywordFromTargetUntilEOTData removes a keyword from targets[0] until EOT.
 type RevokeKeywordFromTargetUntilEOTData struct {
 	Keyword Keyword
@@ -425,42 +312,6 @@ func execAddManaFromVar(ctx *EffectContext, e *AddManaFromVarData) error {
 		return nil
 	}
 	p.ManaPool().Add(e.Color, amount)
-	return nil
-}
-
-// ---------------------------------------------------------------------------
-// BoostGathered until end of turn
-// ---------------------------------------------------------------------------
-
-// BoostGatheredUntilEOTData gives +P/+T to a var-bound permanent until EOT.
-type BoostGatheredUntilEOTData struct {
-	VarName   string
-	Power     ValueSource
-	Toughness ValueSource
-}
-
-func BoostGatheredUntilEOT(v string, power, toughness ValueSource) EffectData {
-	return &BoostGatheredUntilEOTData{VarName: v, Power: power, Toughness: toughness}
-}
-
-func (e *BoostGatheredUntilEOTData) EffectText() string            { return "" }
-func (e *BoostGatheredUntilEOTData) EffectProps() EffectProperties { return EffectProperties{Outcome: OutcomeBenefit} }
-
-func execBoostGatheredUntilEOT(ctx *EffectContext, e *BoostGatheredUntilEOTData) error {
-	id := ctx.TryGetUUID(e.VarName)
-	if id == uuid.Nil {
-		return nil
-	}
-	perm := ctx.Game.FindPermanent(id)
-	if perm == nil {
-		return nil
-	}
-	p := e.Power.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
-	t := e.Toughness.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
-	eff := TemporaryBoost(perm.ID(), p, t)
-	eff.SetSourceID(ctx.SourceID)
-	ctx.Game.AddContinuousEffect(eff)
-	ctx.Game.ApplyContinuousEffects()
 	return nil
 }
 
@@ -650,31 +501,6 @@ func execDestroyAttached(ctx *EffectContext, _ *DestroyAttachedData) error {
 	target := ctx.Game.FindPermanent(src.AttachedTo)
 	if target != nil {
 		ctx.Game.DestroyPermanent(target)
-	}
-	return nil
-}
-
-// AddCounterToAttachedData adds counters to the permanent the source is attached to.
-type AddCounterToAttachedData struct {
-	CounterType CounterType
-	Amount      int
-}
-
-func AddCounterToAttachedStep(ct CounterType, amount int) EffectData {
-	return &AddCounterToAttachedData{CounterType: ct, Amount: amount}
-}
-
-func (e *AddCounterToAttachedData) EffectText() string            { return "add counter to enchanted permanent" }
-func (e *AddCounterToAttachedData) EffectProps() EffectProperties { return EffectProperties{} }
-
-func execAddCounterToAttached(ctx *EffectContext, e *AddCounterToAttachedData) error {
-	src := ctx.Game.FindPermanent(ctx.SourceID)
-	if src == nil || src.AttachedTo == uuid.Nil {
-		return nil
-	}
-	target := ctx.Game.FindPermanent(src.AttachedTo)
-	if target != nil {
-		target.AddCounter(e.CounterType, e.Amount)
 	}
 	return nil
 }

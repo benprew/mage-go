@@ -19,7 +19,7 @@ func manaBattery(name string, color Color) Card {
 	return NewArtifact(name, "{4}",
 		// {2}, {T}: Put a charge counter on this artifact.
 		WithActivatedAbility(
-			AddCounters(Charge, Fixed(1), SelectSource),
+			AddCounters(Charge, Fixed(1)).Targeting(ToSource()),
 			ManaCostOf("{2}"),
 			WithCost(TapSourceCost()),
 		),
@@ -304,7 +304,7 @@ func registerArtifacts() {
 	Register("Life Matrix", func() Card {
 		return NewArtifact("Life Matrix", "{4}",
 			WithActivatedAbility(
-				AddCounters(Matrix, Fixed(1), SelectTarget),
+				AddCounters(Matrix, Fixed(1)),
 				ManaCostOf("{4}"),
 				WithCost(TapSourceCost()),
 				WithTarget(TargetCreature()),
@@ -539,7 +539,7 @@ func registerArtifacts() {
 		return NewArtifact("Triassic Egg", "{4}",
 			// {3}, {T}: Put a hatchling counter
 			WithActivatedAbility(
-				AddCounters(Hatchling, Fixed(1), SelectSource),
+				AddCounters(Hatchling, Fixed(1)).Targeting(ToSource()),
 				ManaCostOf("{3}"),
 				WithCost(TapSourceCost()),
 			),
@@ -607,7 +607,7 @@ func registerArtifacts() {
 		return NewArtifact("Voodoo Doll", "{6}",
 			// Upkeep: put a pin counter
 			WithAbility(BeginningOfUpkeepTrigger(
-				AddCounters(Pin, Fixed(1), SelectSource), false,
+				AddCounters(Pin, Fixed(1)).Targeting(ToSource()), false,
 			)),
 			// End step: if untapped, destroy and deal damage
 			WithAbility(

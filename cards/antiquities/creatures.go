@@ -272,7 +272,7 @@ func registerCreatures() {
 		return NewCreature("Atog", "{1}{R}", 1, 2,
 			WithSubTypes("Atog"),
 			WithActivatedAbility(
-				BoostUntilEndOfTurn(Fixed(2), Fixed(2), SelectSource),
+				Boost(Fixed(2), Fixed(2)).Targeting(ToSource()),
 				SacrificeArtifactCost(),
 			),
 		)
@@ -286,7 +286,7 @@ func registerCreatures() {
 		return NewCreature("Dwarven Weaponsmith", "{1}{R}", 1, 1,
 			WithSubTypes("Dwarf", "Artificer"),
 			WithActivatedAbility(
-				AddCounters(P1P1, Fixed(1), SelectTarget),
+				AddCounters(P1P1, Fixed(1)),
 				TapSourceCost(),
 				WithCost(SacrificeArtifactCost()),
 				WithTarget(TargetCreature()),
@@ -393,7 +393,7 @@ func registerCreatures() {
 			WithSubTypes("Human", "Druid"),
 			WithAbility(
 				NewTriggered(EvtSpellCast, false,
-					AddCounters(P1P1, Fixed(1), SelectSource),
+					AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
 				).
 					SetConditionData(OpponentCastSpellOfType{Type: TypeArtifact}),
 			),
@@ -432,7 +432,7 @@ func registerCreatures() {
 			WithCardType(TypeArtifact),
 			WithAbility(
 				NewTriggered(EvtBeginCombat, false,
-					DataEffect(GrantKeywordToSourceUntilEOC(Banding)),
+					GrantKeyword(Banding).Targeting(ToSource()).Until(EndOfCombat),
 				).SetConditionData(EventPlayerIsController{}),
 			),
 			// When blocked by a Wall, destroy that Wall at end of combat
@@ -483,18 +483,18 @@ func registerCreatures() {
 			WithAbility(AttacksTrigger(
 				Pipeline("schedule counter removal at end of combat",
 					EffectProperties{},
-					RegisterDelayedTriggerStep(EvtEndOfCombat, "", RemoveCountersFromSource(P1P0, 1)),
+					RegisterDelayedTriggerStep(EvtEndOfCombat, "", RemoveCounters(P1P0, 1)),
 				), false,
 			)),
 			WithAbility(BlocksTrigger(
 				Pipeline("schedule counter removal at end of combat",
 					EffectProperties{},
-					RegisterDelayedTriggerStep(EvtEndOfCombat, "", RemoveCountersFromSource(P1P0, 1)),
+					RegisterDelayedTriggerStep(EvtEndOfCombat, "", RemoveCounters(P1P0, 1)),
 				), false,
 			)),
 			// {X}, {T}: Put up to X +1/+0 counters on Clockwork Avian (max 4 total). Upkeep only.
 			WithActivatedAbility(
-				AddCountersUpToMax(P1P0, 4),
+				AddCounters(P1P0, XValue()).Targeting(ToSource()).Max(4),
 				XManaCost(),
 				WithCost(TapSourceCost()),
 				WithUpkeepOnly(),
@@ -529,7 +529,7 @@ func registerCreatures() {
 			WithSubTypes("Construct"),
 			WithCardType(TypeArtifact),
 			WithActivatedAbility(
-				BoostUntilEndOfTurn(Fixed(1), Fixed(0), SelectSource),
+				Boost(Fixed(1), Fixed(0)).Targeting(ToSource()),
 				GenericCost(2),
 			),
 		)

@@ -269,7 +269,7 @@ func registerEnchantments() {
 		return NewAura("Unstable Mutation", "{U}",
 			WithAbility(StaticAbility(BoostAttached(3, 3, AttachAura))),
 			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
-				DataEffect(AddCounterToAttachedStep(M1M1, 1)), false,
+				AddCounters(M1M1, Fixed(1)).Targeting(ToAttached()), false,
 			)),
 		)
 	})

@@ -86,34 +86,6 @@ func execSnapshotPermanent(ctx *EffectContext, e *SnapshotPermanentData) error {
 }
 
 // ---------------------------------------------------------------------------
-// SnapshotSource: read the source permanent's counters into context
-// ---------------------------------------------------------------------------
-
-// SnapshotSourceCounterData reads a counter value from the source permanent.
-type SnapshotSourceCounterData struct {
-	CounterType CounterType
-	StoreAs     string
-}
-
-// SnapshotSourceCounter reads a counter count from the source permanent.
-func SnapshotSourceCounter(ct CounterType, storeAs string) EffectData {
-	return &SnapshotSourceCounterData{CounterType: ct, StoreAs: storeAs}
-}
-
-func (e *SnapshotSourceCounterData) EffectText() string          { return "" }
-func (e *SnapshotSourceCounterData) EffectProps() EffectProperties { return EffectProperties{} }
-
-func execSnapshotSourceCounter(ctx *EffectContext, e *SnapshotSourceCounterData) error {
-	perm := ctx.Game.FindPermanent(ctx.SourceID)
-	if perm == nil {
-		ctx.SetInt(e.StoreAs, 0)
-		return nil
-	}
-	ctx.SetInt(e.StoreAs, int(perm.Counters[e.CounterType]))
-	return nil
-}
-
-// ---------------------------------------------------------------------------
 // Gathered-permanent operations: act on a variable-bound permanent
 // ---------------------------------------------------------------------------
 
@@ -506,20 +478,6 @@ type VarMissingCond struct {
 
 func (c *VarMissingCond) Check(ctx *EffectContext) bool {
 	return ctx.GetBool(c.Name + ".missing")
-}
-
-// SourceHasCounterCond checks if the source permanent has at least MinCount of a counter type.
-type SourceHasCounterCond struct {
-	CounterType CounterType
-	MinCount    int
-}
-
-func (c *SourceHasCounterCond) Check(ctx *EffectContext) bool {
-	perm := ctx.Game.FindPermanent(ctx.SourceID)
-	if perm == nil {
-		return false
-	}
-	return int(perm.Counters[c.CounterType]) >= c.MinCount
 }
 
 // NotCond negates a condition.

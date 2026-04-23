@@ -143,10 +143,8 @@ func ExecuteEffect(ctx *EffectContext, data EffectData) error {
 
 	case *addCountersEffect:
 		return execAddCounters(ctx, e)
-	case *removeCountersFromSourceEffect:
-		return execRemoveCountersFromSource(ctx, e)
-	case *addCountersUpToMaxEffect:
-		return execAddCountersUpToMax(ctx, e)
+	case *removeCountersEffect:
+		return execRemoveCounters(ctx, e)
 	case *tapTargetEffect:
 		return execTapTarget(ctx, e)
 	case *untapTargetEffect:
@@ -163,16 +161,12 @@ func ExecuteEffect(ctx *EffectContext, data EffectData) error {
 		return execRemoveFromCombat(ctx, e)
 	case *makeUnblockableUntilEndOfTurnEffect:
 		return execMakeUnblockableUntilEndOfTurn(ctx, e)
-	case *boostUntilEndOfTurnEffect:
-		return execBoostUntilEndOfTurn(ctx, e)
-	case *boostMatchingUntilEndOfTurnEffect:
-		return execBoostMatchingUntilEndOfTurn(ctx, e)
-	case *boostAllMatchingUntilEndOfTurnEffect:
-		return execBoostAllMatchingUntilEndOfTurn(ctx, e)
+	case *boostEffect:
+		return execBoost(ctx, e)
 	case *doubleSourcePowerEffect:
 		return execDoubleTargetPower(ctx, e)
-	case *grantKeywordUntilEndOfTurnEffect:
-		return execGrantKeywordUntilEndOfTurn(ctx, e)
+	case *grantKeywordEffect:
+		return execGrantKeyword(ctx, e)
 	case *replaceKeywordEffect:
 		return execReplaceKeyword(ctx, e)
 	case *regenerateSourceEffect:
@@ -239,22 +233,12 @@ func ExecuteEffect(ctx *EffectContext, data EffectData) error {
 		return execPreventDamageToGathered(ctx, e)
 	case *GrantAttrToGatheredData:
 		return execGrantAttrToGathered(ctx, e)
-	case *AddCountersToGatheredData:
-		return execAddCountersToGathered(ctx, e)
 	case *RegisterDelayedTriggerData:
 		return execRegisterDelayedTrigger(ctx, e)
-	case *GrantKeywordToTargetUntilEOTData:
-		return execGrantKeywordToTargetUntilEOT(ctx, e)
-	case *GrantKeywordToSourceUntilEOCData:
-		return execGrantKeywordToSourceUntilEOC(ctx, e)
-	case *GrantKeywordToSourceUntilEOTData:
-		return execGrantKeywordToSourceUntilEOT(ctx, e)
 	case *RevokeKeywordFromTargetUntilEOTData:
 		return execRevokeKeywordFromTargetUntilEOT(ctx, e)
 	case *AddManaFromVarData:
 		return execAddManaFromVar(ctx, e)
-	case *BoostGatheredUntilEOTData:
-		return execBoostGatheredUntilEOT(ctx, e)
 	case *PreventAllDamageFromSourceData:
 		return execPreventAllDamageFromSource(ctx, e)
 	case *AddColorPreventionData:
@@ -273,8 +257,6 @@ func ExecuteEffect(ctx *EffectContext, data EffectData) error {
 		return execAddPreventionShieldToController(ctx, e)
 
 	// Attached/source operations
-	case *AddCounterToAttachedData:
-		return execAddCounterToAttached(ctx, e)
 	case *GrantAttrToAttachedData:
 		return execGrantAttrToAttached(ctx, e)
 	case *DestroyAttachedData:

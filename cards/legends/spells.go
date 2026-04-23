@@ -659,7 +659,7 @@ func registerSpells() {
 // Great Defender {W}
 // Instant
 // Target creature gets +0/+X until end of turn, where X is its mana value.
-	// TODO: convert to pipeline — needs BoostUntilEndOfTurn to support VarInt context binding
+	// TODO: convert to pipeline — needs Boost to support VarInt context binding
 	Register("Great Defender", func() Card {
 		return NewInstant("Great Defender", "{W}",
 			NewTargetedSpell(TargetCreature(), FuncEffect(
@@ -701,7 +701,7 @@ func registerSpells() {
 // All creatures get -1/-0 until end of turn.
 	Register("Hell Swarm", func() Card {
 		return NewInstant("Hell Swarm", "{B}",
-			NewSpellAbility(BoostAllMatchingUntilEndOfTurn(Fixed(-1), Fixed(0), IsCreature)),
+			NewSpellAbility(Boost(Fixed(-1), Fixed(0)).Targeting(ToAllMatching(IsCreature))),
 		)
 	})
 
@@ -1127,7 +1127,7 @@ func registerSpells() {
 // Creatures you control get +0/+2 until end of turn.
 	Register("Shield Wall", func() Card {
 		return NewInstant("Shield Wall", "{1}{W}",
-			NewSpellAbility(BoostMatchingUntilEndOfTurn(Fixed(0), Fixed(2), AnyPermanent)),
+			NewSpellAbility(Boost(Fixed(0), Fixed(2)).Targeting(ToMatching(AnyPermanent))),
 		)
 	})
 

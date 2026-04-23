@@ -305,7 +305,7 @@ func registerArtifacts() {
 		return NewArtifact("Helm of Chatzuk", "{1}",
 			// {1}, {T}: Target creature gains banding until end of turn.
 			WithActivatedAbility(
-				GrantKeywordUntilEndOfTurn(Banding, SelectTarget),
+				GrantKeyword(Banding),
 				GenericCost(1),
 				WithCost(TapSourceCost()),
 				WithTarget(TargetCreature()),
@@ -333,7 +333,7 @@ func registerArtifacts() {
 			WithStaticAbility(CyclopeanTombEffect()),
 			// {2}, {T}: Put a mire counter on target non-Swamp land.
 			WithActivatedAbility(
-				AddCounters(Mire, Fixed(1), SelectTarget),
+				AddCounters(Mire, Fixed(1)),
 				GenericCost(2),
 				WithCost(TapSourceCost()),
 				WithTarget(TargetPermanent(IsLand, Not(HasSubType("Swamp")))),
@@ -672,7 +672,7 @@ func registerArtifacts() {
 	// TODO implement "Also blocks if able"
 	Register("Blaze of Glory", func() Card {
 		return NewInstant("Blaze of Glory", "{W}",
-			NewTargetedSpell(TargetCreature(), GrantKeywordUntilEndOfTurn(CanBlockAny, SelectTarget)),
+			NewTargetedSpell(TargetCreature(), GrantKeyword(CanBlockAny)),
 		)
 	})
 

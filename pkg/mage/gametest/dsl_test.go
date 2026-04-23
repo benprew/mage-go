@@ -70,7 +70,7 @@ func TestGenericTriggered(t *testing.T) {
 					mage.WithAbility(mage.NewTriggered(
 						core.EvtCreatureDied,
 						false,
-						mage.AddCounters(core.P1P1, mage.Fixed(1), mage.SelectSource),
+						mage.AddCounters(core.P1P1, mage.Fixed(1)).Targeting(mage.ToSource()),
 					).SetConditionData(mage.AndTriggerCond{Conditions: []mage.TriggerConditionData{
 						mage.EventSourceNotSelf{},
 						mage.EventPlayerIsController{},
@@ -111,7 +111,7 @@ func TestGenericTriggered(t *testing.T) {
 					mage.WithAbility(mage.NewTriggered(
 						core.EvtDeclaredAttacker,
 						false,
-						mage.BoostUntilEndOfTurn(mage.Fixed(2), mage.Fixed(0), mage.SelectSource),
+						mage.Boost(mage.Fixed(2), mage.Fixed(0)).Targeting(mage.ToSource()),
 					).SetConditionData(mage.EventSourceIsSelf{})),
 				)
 			})
@@ -243,7 +243,7 @@ func TestSourceTargetUnification(t *testing.T) {
 					mage.WithAbility(mage.NewTriggered(
 						core.EvtDeclaredAttacker,
 						false,
-						mage.BoostUntilEndOfTurn(mage.Fixed(1), mage.Fixed(0), mage.SelectSource),
+						mage.Boost(mage.Fixed(1), mage.Fixed(0)).Targeting(mage.ToSource()),
 					).SetConditionData(mage.EventSourceIsSelf{})),
 				)
 			})

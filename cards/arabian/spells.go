@@ -53,7 +53,7 @@ func registerSpells() {
 	// Oracle: "Attacking creatures get +2/+0 until end of turn."
 	Register("Army of Allah", func() Card {
 		return NewInstant("Army of Allah", "{1}{W}{W}",
-			NewSpellAbility(BoostAllMatchingUntilEndOfTurn(Fixed(2), Fixed(0), IsAttacking)),
+			NewSpellAbility(Boost(Fixed(2), Fixed(0)).Targeting(ToAllMatching(IsAttacking))),
 		)
 	})
 
@@ -89,7 +89,7 @@ func registerSpells() {
 	// Oracle: "Blocking creatures get +0/+3 until end of turn."
 	Register("Piety", func() Card {
 		return NewInstant("Piety", "{2}{W}",
-			NewSpellAbility(BoostAllMatchingUntilEndOfTurn(Fixed(0), Fixed(3), IsBlocking)),
+			NewSpellAbility(Boost(Fixed(0), Fixed(3)).Targeting(ToAllMatching(IsBlocking))),
 		)
 	})
 

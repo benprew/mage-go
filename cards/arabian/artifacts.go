@@ -229,7 +229,7 @@ func registerArtifacts() {
 	Register("Flying Carpet", func() Card {
 		return NewArtifact("Flying Carpet", "{4}",
 			WithActivatedAbility(
-				GrantKeywordUntilEndOfTurn(Flying, SelectTarget),
+				GrantKeyword(Flying),
 				TapSourceCost(),
 				WithCost(ManaCostOf("{2}")),
 				WithTarget(TargetCreature()),
@@ -360,7 +360,7 @@ func registerArtifacts() {
 				Pipeline("grant islandwalk, destroy self if creature dies",
 					EffectProperties{Outcome: OutcomeBenefit},
 					SnapshotPermanent(SelectTarget, "t"),
-					GrantKeywordToTargetUntilEOT(Islandwalk),
+					GrantKeyword(Islandwalk),
 					&RegisterDelayedTriggerData{
 						EventType:     EvtCreatureDied,
 						MatchEventVar: "t",

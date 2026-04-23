@@ -368,7 +368,7 @@ func registerSpells() {
 		return NewInstant("Berserk", "{G}",
 			NewTargetedSpell(TargetCreature(), CompositeEffects(
 				"Target creature gains trample and gets +X/+0. Destroy at end of turn if it attacked.",
-				GrantKeywordUntilEndOfTurn(Trample, SelectTarget),
+				GrantKeyword(Trample),
 				DoubleTargetPower(),
 				// TODO: convert to pipeline — needs DelayedTrigger + HasAttackedThisTurn primitives
 				FuncEffect("destroy at end of turn if attacked", EffectProperties{}, func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -404,7 +404,7 @@ func registerSpells() {
 
 	Register("Giant Growth", func() Card {
 		return NewInstant("Giant Growth", "{G}",
-			NewTargetedSpell(TargetCreature(), BoostUntilEndOfTurn(Fixed(3), Fixed(3), SelectTarget)),
+			NewTargetedSpell(TargetCreature(), Boost(Fixed(3), Fixed(3))),
 		)
 	})
 
@@ -470,13 +470,13 @@ func registerSpells() {
 
 	Register("Howl from Beyond", func() Card {
 		return NewInstant("Howl from Beyond", "{X}{B}",
-			NewTargetedSpell(TargetCreature(), BoostUntilEndOfTurn(XValue(), Fixed(0), SelectTarget)),
+			NewTargetedSpell(TargetCreature(), Boost(XValue(), Fixed(0))),
 		)
 	})
 
 	Register("Righteousness", func() Card {
 		return NewInstant("Righteousness", "{W}",
-			NewTargetedSpell(TargetCreature(IsBlocking), BoostUntilEndOfTurn(Fixed(7), Fixed(7), SelectTarget)),
+			NewTargetedSpell(TargetCreature(IsBlocking), Boost(Fixed(7), Fixed(7))),
 		)
 	})
 

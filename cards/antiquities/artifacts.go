@@ -36,7 +36,7 @@ func registerArtifacts() {
 	Register("Armageddon Clock", func() Card {
 		return NewArtifact("Armageddon Clock", "{6}",
 			WithAbility(BeginningOfUpkeepTrigger(
-				AddCounters(Doom, Fixed(1), SelectSource), false,
+				AddCounters(Doom, Fixed(1)).Targeting(ToSource()), false,
 			)),
 			WithAbility(
 				NewTriggered(EvtDrawStep, false,
@@ -49,7 +49,7 @@ func registerArtifacts() {
 			),
 			// {4}: Remove a doom counter. Any player may activate this but only during upkeep.
 			WithActivatedAbility(
-				RemoveCountersFromSource(Doom, 1),
+				RemoveCounters(Doom, 1),
 				GenericCost(4),
 				WithUpkeepOnly(),
 				WithAnyPlayerMay(),
@@ -186,7 +186,7 @@ func registerArtifacts() {
 	Register("Coral Helm", func() Card {
 		return NewArtifact("Coral Helm", "{3}",
 			WithActivatedAbility(
-				BoostUntilEndOfTurn(Fixed(2), Fixed(2), SelectTarget),
+				Boost(Fixed(2), Fixed(2)),
 				GenericCost(3),
 				WithCost(DiscardRandomCost(1)),
 				WithTarget(TargetCreature()),
@@ -388,7 +388,7 @@ func registerArtifacts() {
 	Register("Staff of Zegon", func() Card {
 		return NewArtifact("Staff of Zegon", "{4}",
 			WithActivatedAbility(
-				BoostUntilEndOfTurn(Fixed(-2), Fixed(0), SelectTarget),
+				Boost(Fixed(-2), Fixed(0)),
 				GenericCost(3),
 				WithCost(TapSourceCost()),
 				WithTarget(TargetCreature()),
@@ -558,7 +558,7 @@ func registerArtifacts() {
 	Register("Tawnos's Wand", func() Card {
 		return NewArtifact("Tawnos's Wand", "{4}",
 			WithActivatedAbility(
-				GrantKeywordUntilEndOfTurn(UnblockableKW, SelectTarget),
+				GrantKeyword(UnblockableKW),
 				GenericCost(2),
 				WithCost(TapSourceCost()),
 				WithTarget(TargetCreature(HasPowerLTE(2))),

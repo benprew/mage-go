@@ -722,7 +722,7 @@ func TestAbilityQuality_PingerHigherThanPump(t *testing.T) {
 			mage.WithTarget(mage.TargetAnyTarget())),
 	)
 	pumper := makePerm("Pump", "{2}{G}", 1, 1, uuid.New(),
-		mage.WithActivatedAbility(mage.BoostUntilEndOfTurn(mage.Fixed(1), mage.Fixed(1), mage.SelectSource), mage.TapSourceCost()),
+		mage.WithActivatedAbility(mage.Boost(mage.Fixed(1), mage.Fixed(1)).Targeting(mage.ToSource()), mage.TapSourceCost()),
 	)
 
 	pingerScore := abilityBonus(pinger)
