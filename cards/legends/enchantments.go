@@ -433,33 +433,9 @@ func registerEnchantments() {
 	// Sacrifice a Swamp: Regenerate target black creature. (The next time that creature would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on it.)
 	Register("Horror of Horrors", func() Card {
 		return NewEnchantment("Horror of Horrors", "{3}{B}{B}",
-			// TODO: convert to pipeline — needs SacrificeChosenPermanent cost primitive
 			WithActivatedAbility(
-				FuncEffect("sacrifice Swamp, regenerate target black creature",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						// Sacrifice a Swamp as cost
-						var swamps []*Permanent
-						swamps = append(swamps, g.FilterBattlefield(And(IsLand, HasSubType("Swamp"), ControlledBy(controller)))...)
-						if len(swamps) == 0 {
-							return nil
-						}
-						p := g.GetPlayer(controller)
-						if p == nil {
-							return nil
-						}
-						chosen := p.ChoosePermanent(swamps, "sacrifice Swamp", g)
-						if chosen == nil {
-							return nil
-						}
-						g.Sacrifice(chosen)
-						// Regenerate target
-						if len(targets) > 0 {
-							RegenerateTarget().Apply(g, sourceID, controller, targets)
-						}
-						return nil
-					}),
-				GenericCost(0),
+				RegenerateTarget(),
+				SacrificeMatchingCost(And(IsLand, HasSubType("Swamp")), "Sacrifice a Swamp"),
 				WithTarget(TargetCreature(HasColorFilter(Black))),
 			),
 		)

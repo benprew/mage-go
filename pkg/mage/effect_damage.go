@@ -84,6 +84,23 @@ func (e *poisonTargetPlayerEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
+// loseLifeDynamicEffect causes the controller to lose life from a dynamic ValueSource.
+type loseLifeDynamicEffect struct {
+	amount ValueSource
+}
+
+// LoseLifeAmount creates an effect that causes the controller to lose life equal to a dynamic value.
+func LoseLifeAmount(amount ValueSource) Effect {
+	return DataEffect(&loseLifeDynamicEffect{amount: amount})
+}
+
+func (e *loseLifeDynamicEffect) EffectText() string {
+	return "lose " + e.amount.Text() + " life"
+}
+func (e *loseLifeDynamicEffect) EffectProps() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
+
 // loseLifeEffect causes the controller to lose life.
 type loseLifeEffect struct {
 	amount int

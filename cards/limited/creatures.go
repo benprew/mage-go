@@ -919,22 +919,8 @@ func registerCreatures() {
 					}),
 				GenericCost(0),
 			),
-			// When Personal Incarnation dies, you lose half your life (rounded up).
-			// TODO: convert to pipeline — needs LoseLife with dynamic amount (half life rounded up)
-			WithAbility(PutIntoGraveyardFromBattlefieldTrigger(FuncEffect(
-				"lose half your life rounded up",
-				EffectProperties{},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					p := g.GetPlayer(controller)
-					if p == nil {
-						return nil
-					}
-					halfLife := (p.Life() + 1) / 2
-					if halfLife > 0 {
-						p.LoseLife(halfLife)
-					}
-					return nil
-				}), false)),
+			WithAbility(PutIntoGraveyardFromBattlefieldTrigger(
+				LoseLifeAmount(HalfRoundUp(PlayerLifeValue())), false)),
 		)
 	})
 

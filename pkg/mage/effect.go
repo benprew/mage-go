@@ -183,6 +183,33 @@ func EventAmountValue() ValueSource                                            {
 func (v eventAmountValue) Resolve(g GameReader, _, _ uuid.UUID, _ []uuid.UUID) int { return g.EventAmount() }
 func (v eventAmountValue) Text() string                                        { return "that much" }
 
+// playerLifeValue reads the controller's current life total.
+type playerLifeValue struct{}
+
+// PlayerLifeValue creates a ValueSource returning the controller's life total.
+func PlayerLifeValue() ValueSource { return playerLifeValue{} }
+func (v playerLifeValue) Resolve(g GameReader, _, controller uuid.UUID, _ []uuid.UUID) int {
+	p := g.GetPlayer(controller)
+	if p == nil {
+		return 0
+	}
+	return p.Life()
+}
+func (v playerLifeValue) Text() string { return "your life total" }
+
+// halfRoundUpValue returns (inner + 1) / 2.
+type halfRoundUpValue struct {
+	inner ValueSource
+}
+
+// HalfRoundUp creates a ValueSource returning ceil(inner / 2).
+func HalfRoundUp(inner ValueSource) ValueSource { return halfRoundUpValue{inner: inner} }
+func (v halfRoundUpValue) Resolve(g GameReader, sourceID, controller uuid.UUID, targets []uuid.UUID) int {
+	n := v.inner.Resolve(g, sourceID, controller, targets)
+	return (n + 1) / 2
+}
+func (v halfRoundUpValue) Text() string { return "half " + v.inner.Text() + " rounded up" }
+
 // countBattlefieldValue is a ValueSource that counts permanents on the battlefield.
 // If who is nil, all permanents are counted regardless of controller.
 type countBattlefieldValue struct {
