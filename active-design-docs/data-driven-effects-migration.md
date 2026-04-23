@@ -25,10 +25,10 @@ New continuous effect constructors added to `continuous_effects.go`: `GrantKeywo
 
 | Type | Original | Remaining | Converted | % done |
 |---|---|---|---|---|
-| FuncEffect() | 289 | 228 | 61 | 21% |
+| FuncEffect() | 289 | 204 | 85 | 29% |
 | FuncContinuousEffect() | 97 | 77 | 20 | 21% |
 | SetCondition(func) | 69 | 6 | 63 | 91% |
-| **Total** | **455** | **311** | **144** | **32%** |
+| **Total** | **455** | **287** | **168** | **37%** |
 
 Note: FuncEffect/FuncContinuousEffect counts are constructor calls that wrap closures.
 The "converted" count includes cards that now use Pipeline, DataEffect, EffectData
@@ -110,4 +110,7 @@ b444639 refactor: Phase 4+5 card migration — convert SetCondition and FuncCont
 158aa3c refactor: Phase 6 — convert 59/69 SetCondition closures to data-driven predicates
 8342ec1 refactor: Update doc.go examples and test DSL to use SetConditionData
 56c372f refactor: Remove IsThisSource, convert GrantTriggeredAbilityToAll to TriggerConditionData
+e7915ef..fdec01a Phase 1+2 primitives — ForEach, combat groups, ValueSource targets,
+         EventAmountValue, GainLifeAmount, PoisonTargetPlayer, MillTargetPlayer,
+         DestroyAttached, DealDamageToSource, AddCounterToAttached, Step accessors
 ```
