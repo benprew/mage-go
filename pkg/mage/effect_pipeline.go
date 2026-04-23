@@ -238,7 +238,7 @@ type VarValue struct {
 
 func VarInt(name string) *VarValue { return &VarValue{Name: name} }
 
-func (v *VarValue) Resolve(_ GameReader, _, _ uuid.UUID) int {
+func (v *VarValue) Resolve(_ GameReader, _, _ uuid.UUID, _ []uuid.UUID) int {
 	if v.context == nil {
 		return 0
 	}
@@ -352,6 +352,9 @@ func execDealDamageToPlayersVar(ctx *EffectContext, e *DealDamageToPlayersVarDat
 	amount := ctx.GetInt(e.AmountVar)
 	if amount <= 0 {
 		return nil
+	}
+	if vps, ok := e.Selector.(*VarPlayerSelector); ok {
+		vps.context = ctx
 	}
 	playerIDs := e.Selector.Select(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
 	for _, pid := range playerIDs {

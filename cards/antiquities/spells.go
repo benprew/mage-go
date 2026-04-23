@@ -103,28 +103,13 @@ func registerSpells() {
 	// to that artifact's controller.
 	Register("Detonate", func() Card {
 		return NewSorcery("Detonate", "{X}{R}",
-			// TODO: convert to pipeline — needs "snapshot X value" step
-			NewTargetedSpell(TargetArtifactWithManaValueX(), FuncEffect(
-				"destroy target artifact with CMC X; deal X damage to controller",
-				EffectProperties{Outcome: OutcomeDetriment},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					if len(targets) == 0 {
-						return nil
-					}
-					x := g.XValue()
-					perm := g.FindPermanent(targets[0])
-					if perm == nil {
-						return nil
-					}
-					perm.GrantBaseAttr(CantRegenerate)
-					permController := perm.Controller
-					g.DestroyPermanent(perm)
-					p := g.GetPlayer(permController)
-					if p != nil && x > 0 {
-						g.DealDamageToPlayer(p, x, sourceID)
-					}
-					return nil
-				})),
+			NewTargetedSpell(TargetArtifactWithManaValueX(),
+				Pipeline("destroy target artifact with CMC X; deal X damage to controller",
+					EffectProperties{Outcome: OutcomeDetriment},
+					SnapshotPermanent(SelectTarget, "victim"),
+					DestroyTargetNoRegenStep(),
+					DealDamageToPlayersFromVar("victim.cmc", VarPlayer("victim.controller")),
+				)),
 		)
 	})
 
