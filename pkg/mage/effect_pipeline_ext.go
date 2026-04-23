@@ -323,6 +323,34 @@ func (e *GrantKeywordToSourceUntilEOTData) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
+// GrantKeywordToSourceUntilEOCData grants a keyword to source until end of combat.
+type GrantKeywordToSourceUntilEOCData struct {
+	Keyword Keyword
+}
+
+func GrantKeywordToSourceUntilEOC(kw Keyword) EffectData {
+	return &GrantKeywordToSourceUntilEOCData{Keyword: kw}
+}
+
+func (e *GrantKeywordToSourceUntilEOCData) EffectText() string { return "" }
+func (e *GrantKeywordToSourceUntilEOCData) EffectProps() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
+
+func execGrantKeywordToSourceUntilEOC(ctx *EffectContext, e *GrantKeywordToSourceUntilEOCData) error {
+	perm := ctx.Game.FindPermanent(ctx.SourceID)
+	if perm == nil {
+		return nil
+	}
+	eff := TargetEffect(LayerAbility, EndOfCombat, perm.ID(), func(g *Game, target *Permanent) error {
+		g.GrantAttr(target.ID(), e.Keyword)
+		return nil
+	})
+	eff.SetSourceID(ctx.SourceID)
+	ctx.Game.AddContinuousEffect(eff)
+	return nil
+}
+
 func execGrantKeywordToSourceUntilEOT(ctx *EffectContext, e *GrantKeywordToSourceUntilEOTData) error {
 	perm := ctx.Game.FindPermanent(ctx.SourceID)
 	if perm == nil {

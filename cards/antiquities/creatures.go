@@ -432,23 +432,7 @@ func registerCreatures() {
 			WithCardType(TypeArtifact),
 			WithAbility(
 				NewTriggered(EvtBeginCombat, false,
-					// TODO: convert to pipeline — needs "grant keyword until end of combat" step
-				FuncEffect("gain banding until end of combat",
-						EffectProperties{},
-						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							perm := g.FindPermanent(sourceID)
-							if perm == nil {
-								return nil
-							}
-							eff := TargetEffect(LayerAbility, EndOfCombat, perm.ID(), func(g *Game, target *Permanent) error {
-								g.GrantAttr(target.ID(), Banding)
-								return nil
-							})
-							eff.SetSourceID(sourceID)
-							g.AddContinuousEffect(eff)
-							g.ApplyContinuousEffects()
-							return nil
-						}),
+					DataEffect(GrantKeywordToSourceUntilEOC(Banding)),
 				).SetConditionData(EventPlayerIsController{}),
 			),
 			// When blocked by a Wall, destroy that Wall at end of combat

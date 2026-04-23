@@ -243,6 +243,8 @@ func ExecuteEffect(ctx *EffectContext, data EffectData) error {
 		return execRegisterDelayedTrigger(ctx, e)
 	case *GrantKeywordToTargetUntilEOTData:
 		return execGrantKeywordToTargetUntilEOT(ctx, e)
+	case *GrantKeywordToSourceUntilEOCData:
+		return execGrantKeywordToSourceUntilEOC(ctx, e)
 	case *GrantKeywordToSourceUntilEOTData:
 		return execGrantKeywordToSourceUntilEOT(ctx, e)
 	case *RevokeKeywordFromTargetUntilEOTData:
