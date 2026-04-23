@@ -10,6 +10,24 @@ typedef struct {
 } MageBatchRequest;
 
 typedef struct {
+    int64_t* ready;
+    int64_t* game_over;
+    int64_t* pending_player_idx;
+    int64_t* winner_player_idx;
+} MageBatchPollOutputs;
+
+typedef struct {
+    int64_t n;
+    int64_t max_options;
+    int64_t max_targets_per_option;
+    const int64_t* handles;
+    const int64_t* decision_start;
+    const int64_t* decision_count;
+    const int64_t* selected_choice_cols;
+    const int64_t* may_selected;
+} MageStepChoiceRequest;
+
+typedef struct {
     int64_t max_options;
     int64_t max_targets_per_option;
     int64_t max_cached_choices;
