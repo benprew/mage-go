@@ -645,6 +645,172 @@ func routeAction(h *handle, req actionRequest) error {
 	return fmt.Errorf("no pending request to respond to")
 }
 
+func winnerPlayerIndex(h *handle) int64 {
+	if h == nil || h.game == nil {
+		return -1
+	}
+	winner := h.current.Winner
+	if winner == "" {
+		winner = h.game.Winner()
+	}
+	if winner == "" {
+		return -1
+	}
+	for idx, player := range h.game.Players {
+		if player != nil && player.Name() == winner {
+			return int64(idx)
+		}
+	}
+	return -1
+}
+
+func priorityActionFromChoiceCol(pending *apiPending, col int64, maxOptions int64, maxTargetsPerOption int64) (actionRequest, error) {
+	optionCount := minInt64(int64(len(pending.Options)), maxOptions)
+	candidateIdx := int64(0)
+	for optIdx := int64(0); optIdx < optionCount; optIdx++ {
+		option := pending.Options[optIdx]
+		switch option.Kind {
+		case "pass":
+			if candidateIdx == col {
+				return actionRequest{Kind: "pass"}, nil
+			}
+			candidateIdx++
+		case "play_land":
+			if candidateIdx == col {
+				return actionRequest{Kind: "play_land", CardID: option.CardID}, nil
+			}
+			candidateIdx++
+		case "cast_spell", "activate_ability":
+			targetCount := minInt64(int64(len(option.ValidTargets)), maxTargetsPerOption)
+			if targetCount == 0 {
+				if candidateIdx == col {
+					req := actionRequest{Kind: option.Kind}
+					if option.Kind == "cast_spell" {
+						req.CardID = option.CardID
+					} else {
+						req.PermanentID = option.PermanentID
+						req.AbilityIndex = option.AbilityIndex
+					}
+					return req, nil
+				}
+				candidateIdx++
+				continue
+			}
+			for tgtIdx := int64(0); tgtIdx < targetCount; tgtIdx++ {
+				if candidateIdx == col {
+					req := actionRequest{
+						Kind:    option.Kind,
+						Targets: []string{option.ValidTargets[tgtIdx].ID},
+					}
+					if option.Kind == "cast_spell" {
+						req.CardID = option.CardID
+					} else {
+						req.PermanentID = option.PermanentID
+						req.AbilityIndex = option.AbilityIndex
+					}
+					return req, nil
+				}
+				candidateIdx++
+			}
+		}
+	}
+	return actionRequest{}, fmt.Errorf("priority choice column %d out of range", col)
+}
+
+func actionFromStepChoice(pending *apiPending, selectedCols []int64, maySelected int64, maxOptions int64, maxTargetsPerOption int64) (actionRequest, error) {
+	if pending == nil {
+		return actionRequest{}, fmt.Errorf("no pending request")
+	}
+	switch pending.Kind {
+	case "may":
+		return actionRequest{Accepted: maySelected != 0}, nil
+	case "priority":
+		if len(selectedCols) != 1 {
+			return actionRequest{}, fmt.Errorf("priority expects 1 selected choice column, got %d", len(selectedCols))
+		}
+		return priorityActionFromChoiceCol(pending, selectedCols[0], maxOptions, maxTargetsPerOption)
+	case "attackers":
+		optionCount := minInt64(int64(len(pending.Options)), maxOptions)
+		if len(selectedCols) != int(optionCount) {
+			return actionRequest{}, fmt.Errorf("attackers expects %d selected columns, got %d", optionCount, len(selectedCols))
+		}
+		attackers := make([]string, 0, len(selectedCols))
+		for optIdx, rawCol := range selectedCols {
+			if rawCol == 1 {
+				if id := pending.Options[optIdx].PermanentID; id != "" {
+					attackers = append(attackers, id)
+				}
+				continue
+			}
+			if rawCol != 0 {
+				return actionRequest{}, fmt.Errorf("attacker row %d selected invalid column %d", optIdx, rawCol)
+			}
+		}
+		return actionRequest{Attackers: attackers}, nil
+	case "blockers":
+		optionCount := minInt64(int64(len(pending.Options)), maxOptions)
+		if len(selectedCols) != int(optionCount) {
+			return actionRequest{}, fmt.Errorf("blockers expects %d selected columns, got %d", optionCount, len(selectedCols))
+		}
+		assignments := make([]blockerAssign, 0, len(selectedCols))
+		for optIdx, rawCol := range selectedCols {
+			if rawCol == 0 {
+				continue
+			}
+			targetIdx := rawCol - 1
+			if targetIdx < 0 || targetIdx >= minInt64(int64(len(pending.Options[optIdx].ValidTargets)), maxTargetsPerOption) {
+				return actionRequest{}, fmt.Errorf("blocker row %d selected invalid column %d", optIdx, rawCol)
+			}
+			blockerID := pending.Options[optIdx].PermanentID
+			attackerID := pending.Options[optIdx].ValidTargets[targetIdx].ID
+			if blockerID != "" && attackerID != "" {
+				assignments = append(assignments, blockerAssign{Blocker: blockerID, Attacker: attackerID})
+			}
+		}
+		return actionRequest{Blockers: assignments}, nil
+	case "mana_color":
+		if len(selectedCols) != 1 {
+			return actionRequest{}, fmt.Errorf("mana_color expects 1 selected column, got %d", len(selectedCols))
+		}
+		selectedIdx := selectedCols[0]
+		if selectedIdx < 0 || selectedIdx >= minInt64(int64(len(pending.Options)), maxOptions) {
+			return actionRequest{}, fmt.Errorf("mana_color selected invalid option %d", selectedIdx)
+		}
+		return actionRequest{SelectedColor: pending.Options[selectedIdx].Color}, nil
+	case "permanent", "cards_from_hand", "card_from_library":
+		if len(selectedCols) != 1 {
+			return actionRequest{}, fmt.Errorf("%s expects 1 selected column, got %d", pending.Kind, len(selectedCols))
+		}
+		selectedIdx := selectedCols[0]
+		if selectedIdx < 0 || selectedIdx >= minInt64(int64(len(pending.Options)), maxOptions) {
+			return actionRequest{}, fmt.Errorf("%s selected invalid option %d", pending.Kind, selectedIdx)
+		}
+		selectedID := pending.Options[selectedIdx].ID
+		if selectedID == "" {
+			return actionRequest{SelectedIDs: nil}, nil
+		}
+		return actionRequest{SelectedIDs: []string{selectedID}}, nil
+	case "mode", "number":
+		if len(selectedCols) != 1 {
+			return actionRequest{}, fmt.Errorf("%s expects 1 selected column, got %d", pending.Kind, len(selectedCols))
+		}
+		selectedIdx := selectedCols[0]
+		if selectedIdx < 0 || selectedIdx >= minInt64(int64(len(pending.Options)), maxOptions) {
+			return actionRequest{}, fmt.Errorf("%s selected invalid option %d", pending.Kind, selectedIdx)
+		}
+		return actionRequest{SelectedIndex: int(selectedIdx)}, nil
+	default:
+		if len(selectedCols) != 1 {
+			return actionRequest{}, fmt.Errorf("%s expects 1 selected column, got %d", pending.Kind, len(selectedCols))
+		}
+		selectedIdx := selectedCols[0]
+		if selectedIdx < 0 || selectedIdx >= minInt64(int64(len(pending.Options)), maxOptions) {
+			return actionRequest{}, fmt.Errorf("%s selected invalid option %d", pending.Kind, selectedIdx)
+		}
+		return actionRequest{SelectedIndex: int(selectedIdx)}, nil
+	}
+}
+
 func parseColor(s string) core.Color {
 	switch s {
 	case "white", "W":
@@ -1029,6 +1195,148 @@ func MageSetCardNameRows(cardNameRowsJSON *C.char) *C.char {
 	}
 	setCardRowOverrides(rows)
 	return toCStringResponse(apiResponse{OK: true})
+}
+
+//export MageBatchPoll
+func MageBatchPoll(req *C.MageBatchRequest, out *C.MageBatchPollOutputs) (res C.MageEncodeResult) {
+	defer func() {
+		if r := recover(); r != nil {
+			res = newEncodeResult(0, mageEncodeErrEncodeFailure, fmt.Sprintf("panic: %v", r))
+		}
+	}()
+	if req == nil || out == nil {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "req and out must be non-nil")
+	}
+	n := int64(req.n)
+	if n < 0 {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "req.n must be non-negative")
+	}
+	if n == 0 {
+		return newEncodeResult(0, mageEncodeErrOK, "")
+	}
+	if req.handles == nil {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "req.handles must be non-nil when n > 0")
+	}
+	if out.ready == nil || out.game_over == nil || out.pending_player_idx == nil || out.winner_player_idx == nil {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "poll outputs must be non-nil")
+	}
+
+	handles := unsafe.Slice((*int64)(unsafe.Pointer(req.handles)), n)
+	ready := unsafe.Slice((*int64)(unsafe.Pointer(out.ready)), n)
+	gameOver := unsafe.Slice((*int64)(unsafe.Pointer(out.game_over)), n)
+	pendingPlayerIdx := unsafe.Slice((*int64)(unsafe.Pointer(out.pending_player_idx)), n)
+	winnerPlayerIdx := unsafe.Slice((*int64)(unsafe.Pointer(out.winner_player_idx)), n)
+
+	for i, handleID := range handles {
+		h := getHandle(handleID)
+		if h == nil {
+			return newEncodeResult(0, mageEncodeErrUnknownHandle, fmt.Sprintf("unknown handle %d", handleID))
+		}
+		h.mu.Lock()
+		pending := buildPending(h.current)
+		if h.done {
+			gameOver[i] = 1
+			ready[i] = 0
+			pendingPlayerIdx[i] = -1
+			winnerPlayerIdx[i] = winnerPlayerIndex(h)
+		} else {
+			gameOver[i] = 0
+			if pending != nil {
+				ready[i] = 1
+				pendingPlayerIdx[i] = int64(pending.PlayerIdx)
+			} else {
+				ready[i] = 0
+				pendingPlayerIdx[i] = -1
+			}
+			winnerPlayerIdx[i] = -1
+		}
+		h.mu.Unlock()
+	}
+	return newEncodeResult(0, mageEncodeErrOK, "")
+}
+
+//export MageBatchStepByChoice
+func MageBatchStepByChoice(req *C.MageStepChoiceRequest) (res C.MageEncodeResult) {
+	defer func() {
+		if r := recover(); r != nil {
+			res = newEncodeResult(0, mageEncodeErrEncodeFailure, fmt.Sprintf("panic: %v", r))
+		}
+	}()
+	if req == nil {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "req must be non-nil")
+	}
+	n := int64(req.n)
+	if n < 0 {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "req.n must be non-negative")
+	}
+	if req.max_options < 0 || req.max_targets_per_option < 0 {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "max_options and max_targets_per_option must be non-negative")
+	}
+	if n == 0 {
+		return newEncodeResult(0, mageEncodeErrOK, "")
+	}
+	if req.handles == nil || req.decision_start == nil || req.decision_count == nil || req.may_selected == nil {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "handles, decision_start, decision_count, and may_selected must be non-nil")
+	}
+
+	handles := unsafe.Slice((*int64)(unsafe.Pointer(req.handles)), n)
+	decisionStart := unsafe.Slice((*int64)(unsafe.Pointer(req.decision_start)), n)
+	decisionCount := unsafe.Slice((*int64)(unsafe.Pointer(req.decision_count)), n)
+	maySelected := unsafe.Slice((*int64)(unsafe.Pointer(req.may_selected)), n)
+
+	maxSelected := int64(0)
+	for i := int64(0); i < n; i++ {
+		if decisionStart[i] < 0 || decisionCount[i] < 0 {
+			return newEncodeResult(0, mageEncodeErrInvalidArgument, "decision_start and decision_count must be non-negative")
+		}
+		if end := decisionStart[i] + decisionCount[i]; end > maxSelected {
+			maxSelected = end
+		}
+	}
+	var selectedChoiceCols []int64
+	if maxSelected > 0 {
+		if req.selected_choice_cols == nil {
+			return newEncodeResult(0, mageEncodeErrInvalidArgument, "selected_choice_cols must be non-nil when any decision_count > 0")
+		}
+		selectedChoiceCols = unsafe.Slice((*int64)(unsafe.Pointer(req.selected_choice_cols)), maxSelected)
+	}
+
+	for i, handleID := range handles {
+		h := getHandle(handleID)
+		if h == nil {
+			return newEncodeResult(0, mageEncodeErrUnknownHandle, fmt.Sprintf("unknown handle %d", handleID))
+		}
+		h.mu.Lock()
+		if h.done {
+			h.mu.Unlock()
+			return newEncodeResult(0, mageEncodeErrGameOver, fmt.Sprintf("handle %d is over", handleID))
+		}
+		pending := buildPending(h.current)
+		count := decisionCount[i]
+		start := decisionStart[i]
+		var cols []int64
+		if count > 0 {
+			if start+count > int64(len(selectedChoiceCols)) {
+				h.mu.Unlock()
+				return newEncodeResult(0, mageEncodeErrInvalidArgument, fmt.Sprintf("selection slice out of range for handle %d", handleID))
+			}
+			cols = selectedChoiceCols[start : start+count]
+		}
+		action, err := actionFromStepChoice(pending, cols, maySelected[i], int64(req.max_options), int64(req.max_targets_per_option))
+		if err != nil {
+			h.mu.Unlock()
+			return newEncodeResult(0, mageEncodeErrInvalidArgument, fmt.Sprintf("handle %d: %v", handleID, err))
+		}
+		if err := routeAction(h, action); err != nil {
+			h.mu.Unlock()
+			return newEncodeResult(0, mageEncodeErrEncodeFailure, fmt.Sprintf("handle %d: %v", handleID, err))
+		}
+		ev := waitForNext(h)
+		h.current = ev
+		h.done = ev.Over
+		h.mu.Unlock()
+	}
+	return newEncodeResult(0, mageEncodeErrOK, "")
 }
 
 //export MageEncodeBatch
