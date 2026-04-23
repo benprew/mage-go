@@ -262,6 +262,10 @@ func ExecuteEffect(ctx *EffectContext, data EffectData) error {
 	case *RemoveFromCombatGatheredData:
 		return execRemoveFromCombatGathered(ctx, e)
 
+	// Prevention/shields
+	case *AddPreventionShieldToControllerData:
+		return execAddPreventionShieldToController(ctx, e)
+
 	// Attached/source operations
 	case *AddCounterToAttachedData:
 		return execAddCounterToAttached(ctx, e)

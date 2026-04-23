@@ -67,16 +67,12 @@ func registerSpells() {
 	})
 
 	Register("Reverse Damage", func() Card {
-		// TODO: convert to pipeline — needs AddPreventionShield + AddReverseDamageShield primitives
 		return NewInstant("Reverse Damage", "{1}{W}{W}",
-			NewSpellAbility(FuncEffect(
-				"prevent the next source of damage to you and gain that much life",
+			NewSpellAbility(Pipeline("prevent the next source of damage to you and gain that much life",
 				EffectProperties{Outcome: OutcomeBenefit},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					g.AddPreventionShield(controller, 1000)
-					g.AddReverseDamageShield(controller)
-					return nil
-				})),
+				AddPreventionShieldToControllerStep(1000),
+				AddReverseDamageShieldStep(),
+			)),
 		)
 	})
 

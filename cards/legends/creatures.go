@@ -496,56 +496,18 @@ func registerCreatures() {
 		return NewCreature("Time Elemental", "{2}{U}", 0, 2,
 			WithSubTypes("Elemental"),
 			// When attacks: register delayed end-of-combat sacrifice + 5 damage
-			WithAbility(AttacksTrigger(FuncEffect(
-				"at end of combat, sacrifice this and deal 5 damage to you",
-				EffectProperties{Outcome: OutcomeDetriment},
-				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					g.RegisterDelayedTrigger(&DelayedTrigger{
-						EventType:  EvtEndOfCombat,
-						TargetID:   sourceID,
-						SourceID:   sourceID,
-						Controller: controller,
-						Effects: []Effect{FuncEffect(
-							"sacrifice and deal 5 damage",
-							EffectProperties{Outcome: OutcomeDetriment},
-							func(g *Game, srcID, ctrl uuid.UUID, targets []uuid.UUID) error {
-								perm := g.FindPermanent(srcID)
-								if perm != nil {
-									g.Sacrifice(perm)
-								}
-								g.DealDamageToPlayer(g.GetPlayer(ctrl), 5, srcID)
-								return nil
-							},
-						)},
-					})
-					return nil
-				},
+			WithAbility(AttacksTrigger(DataEffect(
+				RegisterDelayedTriggerStep(EvtEndOfCombat, "",
+					SacrificeSource(),
+					DealDamageToPlayers(Fixed(5), SelectController()),
+				),
 			), false)),
 			// When blocks: register delayed end-of-combat sacrifice + 5 damage
-			WithAbility(BlocksTrigger(FuncEffect(
-				"at end of combat, sacrifice this and deal 5 damage to you",
-				EffectProperties{Outcome: OutcomeDetriment},
-				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					g.RegisterDelayedTrigger(&DelayedTrigger{
-						EventType:  EvtEndOfCombat,
-						TargetID:   sourceID,
-						SourceID:   sourceID,
-						Controller: controller,
-						Effects: []Effect{FuncEffect(
-							"sacrifice and deal 5 damage",
-							EffectProperties{Outcome: OutcomeDetriment},
-							func(g *Game, srcID, ctrl uuid.UUID, targets []uuid.UUID) error {
-								perm := g.FindPermanent(srcID)
-								if perm != nil {
-									g.Sacrifice(perm)
-								}
-								g.DealDamageToPlayer(g.GetPlayer(ctrl), 5, srcID)
-								return nil
-							},
-						)},
-					})
-					return nil
-				},
+			WithAbility(BlocksTrigger(DataEffect(
+				RegisterDelayedTriggerStep(EvtEndOfCombat, "",
+					SacrificeSource(),
+					DealDamageToPlayers(Fixed(5), SelectController()),
+				),
 			), false)),
 			// {2}{U}{U}, {T}: Return target permanent that isn't enchanted to its owner's hand.
 			WithActivatedAbility(
