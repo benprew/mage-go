@@ -25,10 +25,10 @@ New continuous effect constructors added to `continuous_effects.go`: `GrantKeywo
 
 | Type | Original | Remaining | Converted | % done |
 |---|---|---|---|---|
-| FuncEffect() | 289 | 195 | 94 | 33% |
+| FuncEffect() | 289 | 192 | 97 | 34% |
 | FuncContinuousEffect() | 97 | 77 | 20 | 21% |
 | SetCondition(func) | 69 | 6 | 63 | 91% |
-| **Total** | **455** | **278** | **177** | **39%** |
+| **Total** | **455** | **275** | **180** | **40%** |
 
 Note: FuncEffect/FuncContinuousEffect counts are constructor calls that wrap closures.
 The "converted" count includes cards that now use Pipeline, DataEffect, EffectData
