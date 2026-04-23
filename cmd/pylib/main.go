@@ -392,6 +392,12 @@ func targetsFromActionOption(opt interactive.ActionOption) []apiTarget {
 func convertPriorityOptions(opts []interactive.ActionOption) []apiOption {
 	out := make([]apiOption, 0, len(opts))
 	for _, o := range opts {
+		// magic-ai enumerates native rollout candidates from valid_targets alone.
+		// If an option still has NeedsTarget=true but no current valid targets,
+		// exposing it here creates an un-replayable targetless candidate.
+		if o.NeedsTarget && len(o.ValidTargets) == 0 {
+			continue
+		}
 		ao := apiOption{
 			Label:        o.Label,
 			CardName:     o.CardName,
