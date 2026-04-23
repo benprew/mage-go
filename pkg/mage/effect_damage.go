@@ -16,6 +16,9 @@ func GainLife(amount int) Effect {
 	return DataEffect(&gainLifeEffect{amount: amount})
 }
 
+// GainLifeStep returns the EffectData for use in pipelines/ForEach/Modal.
+func GainLifeStep(amount int) EffectData { return &gainLifeEffect{amount: amount} }
+
 func (e *gainLifeEffect) EffectText() string {
 	return fmt.Sprintf("gain %d life", e.amount)
 }
@@ -151,6 +154,11 @@ type dealDamageToPlayersEffect struct {
 // DealDamageToPlayers creates an effect that deals damage to players selected by the selector.
 func DealDamageToPlayers(amount ValueSource, selector PlayerSelector) Effect {
 	return DataEffect(&dealDamageToPlayersEffect{amount: amount, selector: selector})
+}
+
+// DealDamageToPlayersStep returns the EffectData for use in pipelines/ForEach/Modal.
+func DealDamageToPlayersStep(amount ValueSource, selector PlayerSelector) EffectData {
+	return &dealDamageToPlayersEffect{amount: amount, selector: selector}
 }
 
 func (e *dealDamageToPlayersEffect) EffectText() string {

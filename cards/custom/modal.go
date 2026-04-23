@@ -1,7 +1,6 @@
 package custom
 
 import (
-	"github.com/google/uuid"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage"
 )
 
@@ -16,22 +15,10 @@ func registerModal() {
 	Register("Modal Test Artifact", func() Card {
 		c := NewArtifact("Modal Test Artifact", "{1}",
 			WithActivatedAbility(
-				FuncEffect("deal 1 damage or gain 1 life",
-					EffectProperties{},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						if g.ModeValue() == 0 {
-							opp := g.GetOpponent(controller)
-							if opp != nil {
-								g.DealDamageToPlayer(opp, 1, sourceID)
-							}
-						} else {
-							p := g.GetPlayer(controller)
-							if p != nil {
-								g.PlayerGainLife(p, 1)
-							}
-						}
-						return nil
-					}),
+				DataEffect(ModalEffect("deal 1 damage or gain 1 life",
+					DealDamageToPlayersStep(Fixed(1), SelectEachOpponent()),
+					GainLifeStep(1),
+				)),
 				ManaCostOf("{1}"),
 			),
 		)
