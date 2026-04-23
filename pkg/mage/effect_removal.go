@@ -148,6 +148,20 @@ func SacrificeSource() Effect {
 func (e *sacrificeSourceEffect) EffectText() string        { return "sacrifice this permanent" }
 func (e *sacrificeSourceEffect) EffectProps() EffectProperties { return EffectProperties{} }
 
+// sacrificeTargetEffect sacrifices the target permanent (targets[0]).
+type sacrificeTargetEffect struct{}
+
+// SacrificeTarget creates an effect that sacrifices the first target permanent.
+func SacrificeTarget() Effect {
+	return DataEffect(&sacrificeTargetEffect{})
+}
+
+// SacrificeTargetStep returns the EffectData for use in pipelines/ForEach.
+func SacrificeTargetStep() EffectData { return &sacrificeTargetEffect{} }
+
+func (e *sacrificeTargetEffect) EffectText() string        { return "sacrifice target permanent" }
+func (e *sacrificeTargetEffect) EffectProps() EffectProperties { return EffectProperties{} }
+
 // balanceEffect equalizes lands, creatures, and hand sizes.
 type balanceEffect struct{}
 
@@ -176,6 +190,18 @@ func (e *chaosOrbEffect) EffectProps() EffectProperties {
 }
 
 // --- Executor functions (called from executor.go) ---
+
+func execSacrificeTarget(ctx *EffectContext, _ *sacrificeTargetEffect) error {
+	if len(ctx.Targets) == 0 {
+		return nil
+	}
+	perm := ctx.Game.FindPermanent(ctx.Targets[0])
+	if perm == nil {
+		return nil
+	}
+	ctx.Game.Sacrifice(perm)
+	return nil
+}
 
 func execDestroyTarget(ctx *EffectContext, _ *destroyTargetEffect) error {
 	if len(ctx.Targets) == 0 {

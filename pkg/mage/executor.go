@@ -89,6 +89,8 @@ func ExecuteEffect(ctx *EffectContext, data EffectData) error {
 		return execDestroyTargetNoRegen(ctx, e)
 	case *exileTargetEffect:
 		return execExileTarget(ctx, e)
+	case *sacrificeTargetEffect:
+		return execSacrificeTarget(ctx, e)
 	case *sacrificeSourceEffect:
 		return execSacrificeSource(ctx, e)
 	case *balanceEffect:
