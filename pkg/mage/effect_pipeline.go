@@ -278,11 +278,21 @@ func GainLifeFromVar(playerVar, amountVar string) EffectData {
 	return &GainLifeVarData{PlayerVar: playerVar, AmountVar: amountVar}
 }
 
+// GainLifeControllerFromVar gains life for the controller from a context variable amount.
+func GainLifeControllerFromVar(amountVar string) EffectData {
+	return &GainLifeVarData{AmountVar: amountVar}
+}
+
 func (e *GainLifeVarData) EffectText() string            { return "gain life" }
 func (e *GainLifeVarData) EffectProps() EffectProperties { return EffectProperties{Outcome: OutcomeBenefit} }
 
 func execGainLifeVar(ctx *EffectContext, e *GainLifeVarData) error {
-	playerID := ctx.TryGetUUID(e.PlayerVar)
+	var playerID uuid.UUID
+	if e.PlayerVar == "" {
+		playerID = ctx.Controller
+	} else {
+		playerID = ctx.TryGetUUID(e.PlayerVar)
+	}
 	if playerID == uuid.Nil {
 		return nil
 	}

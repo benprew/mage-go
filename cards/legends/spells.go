@@ -242,31 +242,15 @@ func registerSpells() {
 // Divine Offering {1}{W}
 // Instant
 // Destroy target artifact. You gain life equal to its mana value.
-	// TODO: convert to pipeline — needs GainLifeFromVar with controller (not target.controller)
 	Register("Divine Offering", func() Card {
 		return NewInstant("Divine Offering", "{1}{W}",
-			NewTargetedSpell(TargetArtifact(), FuncEffect(
-				"destroy target artifact; you gain life equal to its mana value",
-				EffectProperties{Outcome: OutcomeDetriment},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					if len(targets) == 0 {
-						return nil
-					}
-					perm := g.FindPermanent(targets[0])
-					if perm == nil {
-						return nil
-					}
-					cmc := perm.Card.ManaCost().CMC()
-					g.DestroyPermanent(perm)
-					if cmc > 0 {
-						p := g.GetPlayer(controller)
-						if p != nil {
-							g.PlayerGainLife(p, cmc)
-						}
-					}
-					return nil
-				},
-			)),
+			NewTargetedSpell(TargetArtifact(),
+				Pipeline("destroy target artifact; you gain life equal to its mana value",
+					EffectProperties{Outcome: OutcomeDetriment},
+					SnapshotPermanent(SelectTarget, "victim"),
+					DestroyTargetStep(),
+					GainLifeControllerFromVar("victim.cmc"),
+				)),
 		)
 	})
 
