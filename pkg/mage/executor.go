@@ -275,6 +275,8 @@ func ExecuteEffect(ctx *EffectContext, data EffectData) error {
 	// Attached/source operations
 	case *AddCounterToAttachedData:
 		return execAddCounterToAttached(ctx, e)
+	case *GrantAttrToAttachedData:
+		return execGrantAttrToAttached(ctx, e)
 	case *DestroyAttachedData:
 		return execDestroyAttached(ctx, e)
 	case *DealDamageToSourceData:

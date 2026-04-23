@@ -508,6 +508,20 @@ func (c *VarMissingCond) Check(ctx *EffectContext) bool {
 	return ctx.GetBool(c.Name + ".missing")
 }
 
+// SourceHasCounterCond checks if the source permanent has at least MinCount of a counter type.
+type SourceHasCounterCond struct {
+	CounterType CounterType
+	MinCount    int
+}
+
+func (c *SourceHasCounterCond) Check(ctx *EffectContext) bool {
+	perm := ctx.Game.FindPermanent(ctx.SourceID)
+	if perm == nil {
+		return false
+	}
+	return int(perm.Counters[c.CounterType]) >= c.MinCount
+}
+
 // NotCond negates a condition.
 type NotCond struct {
 	Inner ConditionData

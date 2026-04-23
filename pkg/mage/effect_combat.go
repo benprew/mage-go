@@ -42,6 +42,11 @@ func RemoveCountersFromSource(ct CounterType, amount int) Effect {
 	return DataEffect(&removeCountersFromSourceEffect{ct: ct, amount: amount})
 }
 
+// RemoveCountersFromSourceStep returns the EffectData for use in pipelines.
+func RemoveCountersFromSourceStep(ct CounterType, amount int) EffectData {
+	return &removeCountersFromSourceEffect{ct: ct, amount: amount}
+}
+
 func (e *removeCountersFromSourceEffect) EffectText() string {
 	return fmt.Sprintf("remove %d %s counter(s) from it", e.amount, e.ct)
 }

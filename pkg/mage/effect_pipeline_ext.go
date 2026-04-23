@@ -679,6 +679,30 @@ func execAddCounterToAttached(ctx *EffectContext, e *AddCounterToAttachedData) e
 	return nil
 }
 
+// GrantAttrToAttachedData grants an attribute/keyword to the attached permanent permanently.
+type GrantAttrToAttachedData struct {
+	Attr Keyword
+}
+
+func GrantAttrToAttachedStep(attr Keyword) EffectData {
+	return &GrantAttrToAttachedData{Attr: attr}
+}
+
+func (e *GrantAttrToAttachedData) EffectText() string            { return "grant keyword to enchanted permanent" }
+func (e *GrantAttrToAttachedData) EffectProps() EffectProperties { return EffectProperties{Outcome: OutcomeBenefit} }
+
+func execGrantAttrToAttached(ctx *EffectContext, e *GrantAttrToAttachedData) error {
+	src := ctx.Game.FindPermanent(ctx.SourceID)
+	if src == nil || src.AttachedTo == uuid.Nil {
+		return nil
+	}
+	target := ctx.Game.FindPermanent(src.AttachedTo)
+	if target != nil {
+		target.GrantBaseAttr(e.Attr)
+	}
+	return nil
+}
+
 // ---------------------------------------------------------------------------
 // Deal damage to source
 // ---------------------------------------------------------------------------

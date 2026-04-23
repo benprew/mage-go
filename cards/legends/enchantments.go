@@ -149,28 +149,20 @@ func registerEnchantments() {
 					return nil
 				}),
 			),
-			// TODO: convert to pipeline — needs SnapshotSourceCounter + conditional sacrifice + AddCounterToAttached + GrantKeywordToAttached
 			WithAbility(BeginningOfUpkeepTrigger(
-				FuncEffect("remove pupa counter or sacrifice and boost",
-					EffectProperties{},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						src := g.FindPermanent(sourceID)
-						if src == nil {
-							return nil
-						}
-						if src.Counters[Pupa] > 0 {
-							src.RemoveCounter(Pupa, 1)
-						} else {
-							// Sacrifice Cocoon, boost creature
-							attached := g.FindPermanent(src.AttachedTo)
-							g.Sacrifice(src)
-							if attached != nil {
-								attached.AddCounter(P1P1, 1)
-								attached.GrantBaseAttr(Flying)
-							}
-						}
-						return nil
-					}), false,
+				DataEffect(IfElse("remove pupa counter or sacrifice and boost",
+					&SourceHasCounterCond{CounterType: Pupa, MinCount: 1},
+					RemoveCountersFromSourceStep(Pupa, 1),
+					&PipelineData{
+						Steps: []EffectData{
+							SnapshotAttached("host"),
+							SacrificeSourceStep(),
+							AddCountersToGathered("host", P1P1, Fixed(1)),
+							GrantAttrToGathered("host", Flying),
+						},
+						Txt: "sacrifice Cocoon, boost creature",
+					},
+				)), false,
 			)),
 		)
 	})
