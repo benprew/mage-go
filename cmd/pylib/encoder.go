@@ -1,0 +1,856 @@
+package main
+
+import (
+	"fmt"
+	"sort"
+	"strings"
+	"sync"
+
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
+)
+
+const (
+	zoneSlotCount                = 50
+	gameInfoDim                  = 90
+	optionScalarDim              = 14
+	targetScalarDim              = 2
+	maxCardsPerZone              = 10
+	maxLife                      = 40.0
+	maxTurn                      = 20.0
+	maxMana                      = 10.0
+	maxLibrary                   = 60.0
+	maxPendingOpt                = 20.0
+	maxAbilityIndex              = 8.0
+	maxAmount                    = 20.0
+	maxTargetOverflow            = 32.0
+	unknownTargetID              = 3
+	mageEncodeErrOK              = 0
+	mageEncodeErrArg             = 1
+	mageEncodeErrHandle          = 2
+	mageEncodeErrPlayer          = 3
+	mageEncodeErrOver            = 4
+	mageEncodeErrBuffer          = 5
+	mageEncodeErrEncode          = 6
+	mageEncodeErrInvalidArgument = mageEncodeErrArg
+	mageEncodeErrUnknownHandle   = mageEncodeErrHandle
+	mageEncodeErrInvalidPlayer   = mageEncodeErrPlayer
+	mageEncodeErrGameOver        = mageEncodeErrOver
+	mageEncodeErrBufferTooSmall  = mageEncodeErrBuffer
+	mageEncodeErrEncodeFailure   = mageEncodeErrEncode
+)
+
+var (
+	manaSymbols        = [...]string{"W", "U", "B", "R", "G", "C"}
+	stepNames          = [...]string{"Untap", "Upkeep", "Draw", "Precombat Main", "Begin Combat", "Declare Attackers", "Declare Blockers", "Combat Damage", "End Combat", "Postcombat Main", "End", "Cleanup", "Unknown"}
+	pendingKinds       = [...]string{"priority", "attackers", "blockers", "permanent", "cards_from_hand", "mana_color", "card_from_library", "may", "mode", "number", "unknown"}
+	actionKinds        = [...]string{"pass", "play_land", "cast_spell", "activate_ability", "attacker", "blocker", "choice", "unknown"}
+	traceKinds         = [...]string{"priority", "attackers", "blockers", "choice_index", "choice_ids", "choice_color", "may"}
+	zoneSpecs          = [...]zoneSpec{{zone: "hand", owner: "self"}, {zone: "graveyard", owner: "self"}, {zone: "graveyard", owner: "opponent"}, {zone: "battlefield", owner: "self"}, {zone: "battlefield", owner: "opponent"}}
+	cardRowsOnce       sync.Once
+	cardRowByName      map[string]int64
+	cardRowOverrideMu  sync.RWMutex
+	cardRowOverrides   = map[string]int64{}
+	cardRowsOverridden bool
+)
+
+type zoneSpec struct {
+	zone  string
+	owner string
+}
+
+type encodeError struct {
+	code    int64
+	message string
+}
+
+type encodeConfig struct {
+	maxOptions          int64
+	maxTargetsPerOption int64
+	maxCachedChoices    int64
+	zoneSlotCount       int64
+	gameInfoDim         int64
+	optionScalarDim     int64
+	targetScalarDim     int64
+	decisionCapacity    int64
+}
+
+type outputViews struct {
+	traceKindID       []int64
+	slotCardRows      []int64
+	slotOccupied      []float32
+	slotTapped        []float32
+	gameInfo          []float32
+	pendingKindID     []int64
+	numPresentOptions []int64
+	optionKindIDs     []int64
+	optionScalars     []float32
+	optionMask        []float32
+	optionRefSlotIdx  []int64
+	optionRefCardRow  []int64
+	targetMask        []float32
+	targetTypeIDs     []int64
+	targetScalars     []float32
+	targetOverflow    []float32
+	targetRefSlotIdx  []int64
+	targetRefIsPlayer []byte
+	targetRefIsSelf   []byte
+	mayMask           []byte
+	decisionStart     []int64
+	decisionCount     []int64
+	decisionOptionIdx []int64
+	decisionTargetIdx []int64
+	decisionMask      []byte
+	usesNoneHead      []byte
+}
+
+type batchRequest struct {
+	handles      []int64
+	perspectives []int64
+}
+
+type stateCard struct {
+	id     string
+	name   string
+	tapped bool
+}
+
+func validateEncodeConfig(cfg encodeConfig) *encodeError {
+	switch {
+	case cfg.maxOptions < 0 || cfg.maxTargetsPerOption < 0 || cfg.maxCachedChoices < 0 || cfg.decisionCapacity < 0:
+		return &encodeError{code: mageEncodeErrArg, message: "config sizes must be non-negative"}
+	case cfg.zoneSlotCount != zoneSlotCount:
+		return &encodeError{code: mageEncodeErrArg, message: fmt.Sprintf("zone_slot_count=%d, want %d", cfg.zoneSlotCount, zoneSlotCount)}
+	case cfg.gameInfoDim != gameInfoDim:
+		return &encodeError{code: mageEncodeErrArg, message: fmt.Sprintf("game_info_dim=%d, want %d", cfg.gameInfoDim, gameInfoDim)}
+	case cfg.optionScalarDim != optionScalarDim:
+		return &encodeError{code: mageEncodeErrArg, message: fmt.Sprintf("option_scalar_dim=%d, want %d", cfg.optionScalarDim, optionScalarDim)}
+	case cfg.targetScalarDim != targetScalarDim:
+		return &encodeError{code: mageEncodeErrArg, message: fmt.Sprintf("target_scalar_dim=%d, want %d", cfg.targetScalarDim, targetScalarDim)}
+	case cfg.maxCachedChoices < cfg.maxOptions:
+		return &encodeError{code: mageEncodeErrArg, message: "max_cached_choices must be >= max_options"}
+	case cfg.maxCachedChoices < cfg.maxTargetsPerOption+1:
+		return &encodeError{code: mageEncodeErrArg, message: "max_cached_choices must be >= max_targets_per_option + 1"}
+	}
+	return nil
+}
+
+func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64, *encodeError) {
+	clearOutputViews(views)
+	decisionCursor := int64(0)
+	for batchIdx, handleID := range req.handles {
+		h := getHandle(handleID)
+		if h == nil {
+			return decisionCursor, &encodeError{code: mageEncodeErrHandle, message: fmt.Sprintf("unknown handle %d", handleID)}
+		}
+
+		h.mu.Lock()
+		if h.done {
+			h.mu.Unlock()
+			return decisionCursor, &encodeError{code: mageEncodeErrOver, message: fmt.Sprintf("handle %d is over", handleID)}
+		}
+		state := snapshotState(h.game)
+		pending := buildPending(h.current)
+		if pending == nil {
+			h.mu.Unlock()
+			return decisionCursor, &encodeError{code: mageEncodeErrEncode, message: fmt.Sprintf("handle %d has no pending request", handleID)}
+		}
+
+		requestedPerspective := int64(-1)
+		if req.perspectives != nil {
+			requestedPerspective = req.perspectives[batchIdx]
+		}
+		playerIdx, err := resolvePerspectivePlayerIndex(state, pending, requestedPerspective)
+		if err != nil {
+			h.mu.Unlock()
+			return decisionCursor, err
+		}
+
+		cardIDToSlot := map[string]int64{}
+		if err := fillStateEncoding(int64(batchIdx), state, pending, playerIdx, cfg, views, cardIDToSlot); err != nil {
+			h.mu.Unlock()
+			return decisionCursor, err
+		}
+		if err := fillActionEncoding(int64(batchIdx), state, pending, playerIdx, cfg, views, cardIDToSlot); err != nil {
+			h.mu.Unlock()
+			return decisionCursor, err
+		}
+		written, err := fillDecisionEncoding(int64(batchIdx), pending, cfg, views, decisionCursor)
+		h.mu.Unlock()
+		if err != nil {
+			return decisionCursor, err
+		}
+		decisionCursor += written
+	}
+	return decisionCursor, nil
+}
+
+func clearOutputViews(view outputViews) {
+	fillInt64(view.traceKindID, 0)
+	fillInt64(view.slotCardRows, 0)
+	fillFloat32(view.slotOccupied, 0)
+	fillFloat32(view.slotTapped, 0)
+	fillFloat32(view.gameInfo, 0)
+	fillInt64(view.pendingKindID, 0)
+	fillInt64(view.numPresentOptions, 0)
+	fillInt64(view.optionKindIDs, 0)
+	fillFloat32(view.optionScalars, 0)
+	fillFloat32(view.optionMask, 0)
+	fillInt64(view.optionRefSlotIdx, -1)
+	fillInt64(view.optionRefCardRow, -1)
+	fillFloat32(view.targetMask, 0)
+	fillInt64(view.targetTypeIDs, unknownTargetID)
+	fillFloat32(view.targetScalars, 0)
+	fillFloat32(view.targetOverflow, 0)
+	fillInt64(view.targetRefSlotIdx, -1)
+	fillBytes(view.targetRefIsPlayer, 0)
+	fillBytes(view.targetRefIsSelf, 0)
+	fillBytes(view.mayMask, 0)
+	fillInt64(view.decisionStart, 0)
+	fillInt64(view.decisionCount, 0)
+	fillInt64(view.decisionOptionIdx, -1)
+	fillInt64(view.decisionTargetIdx, -1)
+	fillBytes(view.decisionMask, 0)
+	fillBytes(view.usesNoneHead, 0)
+}
+
+func resolvePerspectivePlayerIndex(state *apiGameState, pending *apiPending, requested int64) (int, *encodeError) {
+	if requested >= 0 {
+		if requested >= int64(len(state.Players)) {
+			return 0, &encodeError{code: mageEncodeErrPlayer, message: fmt.Sprintf("perspective_player_idx=%d outside players list", requested)}
+		}
+		return int(requested), nil
+	}
+	if pending != nil && pending.PlayerIdx >= 0 && pending.PlayerIdx < len(state.Players) {
+		return pending.PlayerIdx, nil
+	}
+	for idx, player := range state.Players {
+		if player.Name == state.ActivePlayer || player.ID.String() == state.ActivePlayer {
+			return idx, nil
+		}
+	}
+	return 0, nil
+}
+
+func fillStateEncoding(batchIdx int64, state *apiGameState, pending *apiPending, playerIdx int, cfg encodeConfig, view outputViews, cardIDToSlot map[string]int64) *encodeError {
+	slotRows := view.slotCardRows[batchIdx*cfg.zoneSlotCount : (batchIdx+1)*cfg.zoneSlotCount]
+	slotOccupied := view.slotOccupied[batchIdx*cfg.zoneSlotCount : (batchIdx+1)*cfg.zoneSlotCount]
+	slotTapped := view.slotTapped[batchIdx*cfg.zoneSlotCount : (batchIdx+1)*cfg.zoneSlotCount]
+	gameInfo := view.gameInfo[batchIdx*cfg.gameInfoDim : (batchIdx+1)*cfg.gameInfoDim]
+
+	occupied := make([]float32, int(cfg.zoneSlotCount))
+	for slotIdx, card := range collectSlotCards(state, playerIdx) {
+		if card == nil {
+			continue
+		}
+		row, ok := cardRowForName(card.name)
+		if !ok {
+			return &encodeError{code: mageEncodeErrEncode, message: fmt.Sprintf("missing card embedding for %q", card.name)}
+		}
+		slotRows[slotIdx] = row
+		slotOccupied[slotIdx] = 1
+		occupied[slotIdx] = 1
+		if card.tapped && zoneSpecs[slotIdx/maxCardsPerZone].zone == "battlefield" {
+			slotTapped[slotIdx] = 1
+		}
+		if card.id != "" {
+			cardIDToSlot[card.id] = int64(slotIdx)
+		}
+	}
+
+	fillGameInfo(gameInfo, state, pending, playerIdx, occupied)
+	return nil
+}
+
+func collectSlotCards(state *apiGameState, perspectivePlayerIdx int) []*stateCard {
+	player := state.Players[perspectivePlayerIdx]
+	var opponent *interactive.PlayerState
+	if len(state.Players) == 2 {
+		opponent = &state.Players[1-perspectivePlayerIdx]
+	}
+
+	out := make([]*stateCard, 0, zoneSlotCount)
+	for _, spec := range zoneSpecs {
+		var cards []*stateCard
+		switch spec.owner {
+		case "self":
+			cards = zoneCards(&player, spec.zone)
+		default:
+			cards = zoneCards(opponent, spec.zone)
+		}
+		for slotIdx := 0; slotIdx < maxCardsPerZone; slotIdx++ {
+			if slotIdx < len(cards) {
+				out = append(out, cards[slotIdx])
+			} else {
+				out = append(out, nil)
+			}
+		}
+	}
+	return out
+}
+
+func zoneCards(player *interactive.PlayerState, zone string) []*stateCard {
+	if player == nil {
+		return nil
+	}
+	switch zone {
+	case "hand":
+		out := make([]*stateCard, 0, minInt(len(player.Hand), maxCardsPerZone))
+		for idx, card := range player.Hand {
+			if idx >= maxCardsPerZone {
+				break
+			}
+			card := card
+			out = append(out, &stateCard{id: card.ID.String(), name: card.Name})
+		}
+		return out
+	case "graveyard":
+		out := make([]*stateCard, 0, minInt(len(player.Graveyard), maxCardsPerZone))
+		for idx, card := range player.Graveyard {
+			if idx >= maxCardsPerZone {
+				break
+			}
+			card := card
+			out = append(out, &stateCard{id: card.ID.String(), name: card.Name})
+		}
+		return out
+	default:
+		out := make([]*stateCard, 0, minInt(len(player.Battlefield), maxCardsPerZone))
+		for idx, perm := range player.Battlefield {
+			if idx >= maxCardsPerZone {
+				break
+			}
+			perm := perm
+			out = append(out, &stateCard{id: perm.ID.String(), name: perm.Name, tapped: perm.Tapped})
+		}
+		return out
+	}
+}
+
+func fillGameInfo(out []float32, state *apiGameState, pending *apiPending, perspectivePlayerIdx int, occupied []float32) {
+	selfPlayer := state.Players[perspectivePlayerIdx]
+	var opponent *interactive.PlayerState
+	if len(state.Players) == 2 {
+		opponent = &state.Players[1-perspectivePlayerIdx]
+	}
+
+	cursor := 0
+	out[cursor] = clipNorm(float64(state.Turn), maxTurn)
+	cursor++
+	if state.ActivePlayer == selfPlayer.Name || state.ActivePlayer == selfPlayer.ID.String() {
+		out[cursor] = 1
+	}
+	cursor++
+	if pending != nil && pending.PlayerIdx == perspectivePlayerIdx {
+		out[cursor] = 1
+	}
+	cursor++
+	out[cursor] = clipNorm(float64(selfPlayer.Life), maxLife)
+	cursor++
+	if opponent != nil {
+		out[cursor] = clipNorm(float64(opponent.Life), maxLife)
+	}
+	cursor++
+
+	for _, player := range []*interactive.PlayerState{&selfPlayer, opponent} {
+		if player == nil {
+			cursor += 4
+			continue
+		}
+		out[cursor] = clipNorm(float64(player.HandCount), maxCardsPerZone)
+		out[cursor+1] = clipNorm(float64(player.GraveyardCount), maxCardsPerZone)
+		out[cursor+2] = clipNorm(float64(len(player.Battlefield)), maxCardsPerZone)
+		out[cursor+3] = clipNorm(float64(player.LibraryCount), maxLibrary)
+		cursor += 4
+	}
+
+	for _, player := range []*interactive.PlayerState{&selfPlayer, opponent} {
+		if player == nil {
+			cursor += 6
+			continue
+		}
+		out[cursor] = clipNorm(float64(player.ManaPool.White), maxMana)
+		out[cursor+1] = clipNorm(float64(player.ManaPool.Blue), maxMana)
+		out[cursor+2] = clipNorm(float64(player.ManaPool.Black), maxMana)
+		out[cursor+3] = clipNorm(float64(player.ManaPool.Red), maxMana)
+		out[cursor+4] = clipNorm(float64(player.ManaPool.Green), maxMana)
+		out[cursor+5] = clipNorm(float64(player.ManaPool.Colorless), maxMana)
+		cursor += 6
+	}
+
+	pendingOptionCount := 0.0
+	if pending != nil {
+		pendingOptionCount = float64(len(pending.Options))
+	}
+	out[cursor] = clipNorm(pendingOptionCount, maxPendingOpt)
+	out[cursor+1] = clipNorm(float64(len(state.Stack)), maxPendingOpt)
+	cursor += 2
+
+	stepIdx := len(stepNames) - 1
+	normalizedStep := normalizeKey(state.Step)
+	for idx, stepName := range stepNames[:len(stepNames)-1] {
+		if normalizeKey(stepName) == normalizedStep {
+			stepIdx = idx
+			break
+		}
+	}
+	out[cursor+stepIdx] = 1
+	cursor += len(stepNames)
+
+	copy(out[cursor:], occupied)
+}
+
+func fillActionEncoding(batchIdx int64, state *apiGameState, pending *apiPending, playerIdx int, cfg encodeConfig, view outputViews, cardIDToSlot map[string]int64) *encodeError {
+	view.pendingKindID[batchIdx] = indexOrUnknown(pendingKinds[:], pending.Kind)
+	traceKind := traceKindForPending(pending)
+	view.traceKindID[batchIdx] = indexOrUnknown(traceKinds[:], traceKind)
+	if traceKind == "may" {
+		view.mayMask[batchIdx] = 1
+	}
+
+	options := pending.Options
+	numPresent := minInt64(int64(len(options)), cfg.maxOptions)
+	view.numPresentOptions[batchIdx] = numPresent
+	selfID, oppID := playerIDs(state, playerIdx)
+	maxTargetScalar := maxFloat64(1, float64(cfg.maxTargetsPerOption-1))
+
+	optionKindIDs := view.optionKindIDs[batchIdx*cfg.maxOptions : (batchIdx+1)*cfg.maxOptions]
+	optionScalars := view.optionScalars[batchIdx*cfg.maxOptions*cfg.optionScalarDim : (batchIdx+1)*cfg.maxOptions*cfg.optionScalarDim]
+	optionMask := view.optionMask[batchIdx*cfg.maxOptions : (batchIdx+1)*cfg.maxOptions]
+	optionRefSlotIdx := view.optionRefSlotIdx[batchIdx*cfg.maxOptions : (batchIdx+1)*cfg.maxOptions]
+	optionRefCardRow := view.optionRefCardRow[batchIdx*cfg.maxOptions : (batchIdx+1)*cfg.maxOptions]
+	targetMask := view.targetMask[batchIdx*cfg.maxOptions*cfg.maxTargetsPerOption : (batchIdx+1)*cfg.maxOptions*cfg.maxTargetsPerOption]
+	targetTypeIDs := view.targetTypeIDs[batchIdx*cfg.maxOptions*cfg.maxTargetsPerOption : (batchIdx+1)*cfg.maxOptions*cfg.maxTargetsPerOption]
+	targetScalars := view.targetScalars[batchIdx*cfg.maxOptions*cfg.maxTargetsPerOption*cfg.targetScalarDim : (batchIdx+1)*cfg.maxOptions*cfg.maxTargetsPerOption*cfg.targetScalarDim]
+	targetOverflow := view.targetOverflow[batchIdx*cfg.maxOptions : (batchIdx+1)*cfg.maxOptions]
+	targetRefSlotIdx := view.targetRefSlotIdx[batchIdx*cfg.maxOptions*cfg.maxTargetsPerOption : (batchIdx+1)*cfg.maxOptions*cfg.maxTargetsPerOption]
+	targetRefIsPlayer := view.targetRefIsPlayer[batchIdx*cfg.maxOptions*cfg.maxTargetsPerOption : (batchIdx+1)*cfg.maxOptions*cfg.maxTargetsPerOption]
+	targetRefIsSelf := view.targetRefIsSelf[batchIdx*cfg.maxOptions*cfg.maxTargetsPerOption : (batchIdx+1)*cfg.maxOptions*cfg.maxTargetsPerOption]
+
+	for optIdx := int64(0); optIdx < numPresent; optIdx++ {
+		option := options[optIdx]
+		optionKindIDs[optIdx] = indexOrUnknown(actionKinds[:], option.Kind)
+		optionMask[optIdx] = 1
+		fillOptionScalars(optionScalars[optIdx*cfg.optionScalarDim:(optIdx+1)*cfg.optionScalarDim], option, pending, optIdx, cfg)
+		slotIdx, cardRow, err := resolveOptionReference(option, cardIDToSlot)
+		if err != nil {
+			return err
+		}
+		if slotIdx >= 0 {
+			optionRefSlotIdx[optIdx] = slotIdx
+		} else if option.CardName != "" {
+			optionRefCardRow[optIdx] = cardRow
+		}
+
+		targets := option.ValidTargets
+		targetOverflow[optIdx] = clipNorm(float64(maxInt(0, len(targets)-int(cfg.maxTargetsPerOption))), maxTargetOverflow)
+		targetBase := optIdx * cfg.maxTargetsPerOption
+		targetScalarBase := optIdx * cfg.maxTargetsPerOption * cfg.targetScalarDim
+		for tgtIdx := int64(0); tgtIdx < minInt64(int64(len(targets)), cfg.maxTargetsPerOption); tgtIdx++ {
+			target := targets[tgtIdx]
+			targetMask[targetBase+tgtIdx] = 1
+			targetScalars[targetScalarBase+tgtIdx*cfg.targetScalarDim] = clipNorm(float64(tgtIdx), maxTargetScalar)
+			targetScalars[targetScalarBase+tgtIdx*cfg.targetScalarDim+1] = 1
+
+			if target.ID != "" && (target.ID == selfID || target.ID == oppID) {
+				targetTypeIDs[targetBase+tgtIdx] = 0
+				targetRefIsPlayer[targetBase+tgtIdx] = 1
+				if target.ID == selfID {
+					targetRefIsSelf[targetBase+tgtIdx] = 1
+				}
+				continue
+			}
+			if slot, ok := cardIDToSlot[target.ID]; ok {
+				targetTypeIDs[targetBase+tgtIdx] = 1
+				targetRefSlotIdx[targetBase+tgtIdx] = slot
+			}
+		}
+	}
+	return nil
+}
+
+func fillOptionScalars(out []float32, option apiOption, pending *apiPending, optionIdx int64, cfg encodeConfig) {
+	targetCount := len(option.ValidTargets)
+	overflowCount := maxInt(0, targetCount-int(cfg.maxTargetsPerOption))
+	out[0] = clipNorm(float64(optionIdx), maxFloat64(1, float64(cfg.maxOptions-1)))
+	out[1] = clipNorm(float64(option.AbilityIndex), maxAbilityIndex)
+	out[2] = clipNorm(float64(targetCount), float64(cfg.maxTargetsPerOption))
+	out[3] = clipNorm(float64(overflowCount), maxTargetOverflow)
+	if option.CardID != "" {
+		out[4] = 1
+	}
+	if option.PermanentID != "" {
+		out[5] = 1
+	}
+	if option.ID != "" {
+		out[6] = 1
+	}
+	fillManaCostFeatures(out[7:13], option.ManaCost)
+	if pending != nil {
+		out[13] = clipNorm(float64(pending.Amount), maxAmount)
+	}
+}
+
+func fillManaCostFeatures(out []float32, manaCost string) {
+	counts := map[string]float64{"W": 0, "U": 0, "B": 0, "R": 0, "G": 0, "C": 0}
+	generic := 0.0
+	for _, symbol := range manaSymbolsFromCost(manaCost) {
+		if _, ok := counts[symbol]; ok {
+			counts[symbol]++
+			continue
+		}
+		if isDigits(symbol) {
+			generic += parsePositiveFloat(symbol)
+			continue
+		}
+		if strings.Contains(symbol, "/") {
+			for _, part := range strings.Split(symbol, "/") {
+				if _, ok := counts[part]; ok {
+					counts[part] += 0.5
+				}
+			}
+		}
+	}
+	counts["C"] += generic
+	for idx, symbol := range manaSymbols {
+		out[idx] = clipNorm(counts[symbol], 10)
+	}
+}
+
+func manaSymbolsFromCost(manaCost string) []string {
+	var out []string
+	rest := manaCost
+	for {
+		start := strings.IndexByte(rest, '{')
+		if start < 0 {
+			return out
+		}
+		rest = rest[start+1:]
+		end := strings.IndexByte(rest, '}')
+		if end < 0 {
+			return out
+		}
+		out = append(out, strings.ToUpper(rest[:end]))
+		rest = rest[end+1:]
+	}
+}
+
+func resolveOptionReference(option apiOption, cardIDToSlot map[string]int64) (int64, int64, *encodeError) {
+	for _, key := range []string{option.CardID, option.PermanentID, option.ID} {
+		if key == "" {
+			continue
+		}
+		if slotIdx, ok := cardIDToSlot[key]; ok {
+			return slotIdx, -1, nil
+		}
+	}
+	if option.CardName != "" {
+		row, ok := cardRowForName(option.CardName)
+		if !ok {
+			return -1, -1, &encodeError{code: mageEncodeErrEncode, message: fmt.Sprintf("missing card embedding for %q", option.CardName)}
+		}
+		return -1, row, nil
+	}
+	return -1, -1, nil
+}
+
+func fillDecisionEncoding(batchIdx int64, pending *apiPending, cfg encodeConfig, view outputViews, cursor int64) (int64, *encodeError) {
+	traceKind := traceKindForPending(pending)
+	view.decisionStart[batchIdx] = cursor
+
+	switch traceKind {
+	case "may":
+		return 0, nil
+	case "priority":
+		optionCount := minInt64(int64(len(pending.Options)), cfg.maxOptions)
+		count := minInt64(priorityCandidateCount(pending, optionCount, cfg.maxTargetsPerOption), cfg.maxCachedChoices)
+		if count == 0 {
+			return 0, nil
+		}
+		if cursor+1 > cfg.decisionCapacity {
+			return 0, &encodeError{code: mageEncodeErrBuffer, message: "decision_capacity too small for priority rows"}
+		}
+		rowBase := cursor * cfg.maxCachedChoices
+		candidateIdx := int64(0)
+		for optIdx := int64(0); optIdx < optionCount; optIdx++ {
+			option := pending.Options[optIdx]
+			switch option.Kind {
+			case "pass", "play_land":
+				if candidateIdx >= count {
+					break
+				}
+				view.decisionOptionIdx[rowBase+candidateIdx] = optIdx
+				view.decisionMask[rowBase+candidateIdx] = 1
+				candidateIdx++
+			case "cast_spell", "activate_ability":
+				if len(option.ValidTargets) == 0 {
+					if candidateIdx >= count {
+						break
+					}
+					view.decisionOptionIdx[rowBase+candidateIdx] = optIdx
+					view.decisionMask[rowBase+candidateIdx] = 1
+					candidateIdx++
+					continue
+				}
+				for tgtIdx := 0; tgtIdx < len(option.ValidTargets) && int64(tgtIdx) < cfg.maxTargetsPerOption; tgtIdx++ {
+					if candidateIdx >= count {
+						break
+					}
+					view.decisionOptionIdx[rowBase+candidateIdx] = optIdx
+					view.decisionTargetIdx[rowBase+candidateIdx] = int64(tgtIdx)
+					view.decisionMask[rowBase+candidateIdx] = 1
+					candidateIdx++
+				}
+			}
+			if candidateIdx >= count {
+				break
+			}
+		}
+		view.decisionCount[batchIdx] = 1
+		return 1, nil
+	case "attackers":
+		optionCount := minInt64(int64(len(pending.Options)), cfg.maxOptions)
+		if optionCount == 0 {
+			return 0, nil
+		}
+		if cursor+optionCount > cfg.decisionCapacity {
+			return 0, &encodeError{code: mageEncodeErrBuffer, message: "decision_capacity too small for attacker rows"}
+		}
+		for optIdx := int64(0); optIdx < optionCount; optIdx++ {
+			rowBase := (cursor + optIdx) * cfg.maxCachedChoices
+			view.decisionMask[rowBase] = 1
+			view.decisionMask[rowBase+1] = 1
+			view.decisionOptionIdx[rowBase+1] = optIdx
+			view.usesNoneHead[cursor+optIdx] = 1
+		}
+		view.decisionCount[batchIdx] = optionCount
+		return optionCount, nil
+	case "blockers":
+		optionCount := minInt64(int64(len(pending.Options)), cfg.maxOptions)
+		if optionCount == 0 {
+			return 0, nil
+		}
+		if cursor+optionCount > cfg.decisionCapacity {
+			return 0, &encodeError{code: mageEncodeErrBuffer, message: "decision_capacity too small for blocker rows"}
+		}
+		for optIdx := int64(0); optIdx < optionCount; optIdx++ {
+			rowBase := (cursor + optIdx) * cfg.maxCachedChoices
+			view.decisionMask[rowBase] = 1
+			view.usesNoneHead[cursor+optIdx] = 1
+			targetCount := minInt64(int64(len(pending.Options[optIdx].ValidTargets)), cfg.maxTargetsPerOption)
+			for tgtIdx := int64(0); tgtIdx < targetCount; tgtIdx++ {
+				col := tgtIdx + 1
+				view.decisionOptionIdx[rowBase+col] = optIdx
+				view.decisionTargetIdx[rowBase+col] = tgtIdx
+				view.decisionMask[rowBase+col] = 1
+			}
+		}
+		view.decisionCount[batchIdx] = optionCount
+		return optionCount, nil
+	default:
+		optionCount := minInt64(int64(len(pending.Options)), cfg.maxOptions)
+		if optionCount == 0 {
+			return 0, nil
+		}
+		if cursor+1 > cfg.decisionCapacity {
+			return 0, &encodeError{code: mageEncodeErrBuffer, message: "decision_capacity too small for choice rows"}
+		}
+		rowBase := cursor * cfg.maxCachedChoices
+		for optIdx := int64(0); optIdx < optionCount; optIdx++ {
+			view.decisionOptionIdx[rowBase+optIdx] = optIdx
+			view.decisionMask[rowBase+optIdx] = 1
+		}
+		view.decisionCount[batchIdx] = 1
+		return 1, nil
+	}
+}
+
+func traceKindForPending(pending *apiPending) string {
+	if pending == nil {
+		return "choice_index"
+	}
+	switch pending.Kind {
+	case "priority":
+		return "priority"
+	case "attackers":
+		return "attackers"
+	case "blockers":
+		return "blockers"
+	case "may":
+		return "may"
+	case "mana_color":
+		return "choice_color"
+	case "cards_from_hand", "card_from_library", "permanent":
+		return "choice_ids"
+	default:
+		return "choice_index"
+	}
+}
+
+func priorityCandidateCount(pending *apiPending, maxOptions int64, maxTargetsPerOption int64) int64 {
+	if pending == nil || pending.Kind != "priority" {
+		return 0
+	}
+	count := int64(0)
+	optionCount := minInt64(int64(len(pending.Options)), maxOptions)
+	for optIdx := int64(0); optIdx < optionCount; optIdx++ {
+		option := pending.Options[optIdx]
+		switch option.Kind {
+		case "pass", "play_land":
+			count++
+		case "cast_spell", "activate_ability":
+			if len(option.ValidTargets) == 0 {
+				count++
+				continue
+			}
+			count += minInt64(int64(len(option.ValidTargets)), maxTargetsPerOption)
+		}
+	}
+	return count
+}
+
+func playerIDs(state *apiGameState, perspectivePlayerIdx int) (string, string) {
+	selfID := ""
+	if len(state.Players) > 0 {
+		selfID = state.Players[perspectivePlayerIdx].ID.String()
+	}
+	oppID := ""
+	if len(state.Players) == 2 {
+		oppID = state.Players[1-perspectivePlayerIdx].ID.String()
+	}
+	return selfID, oppID
+}
+
+func indexOrUnknown(values []string, value string) int64 {
+	key := normalizeKey(value)
+	for idx, candidate := range values {
+		if normalizeKey(candidate) == key {
+			return int64(idx)
+		}
+	}
+	return int64(len(values) - 1)
+}
+
+func normalizeKey(s string) string {
+	return strings.ToLower(strings.Join(strings.Fields(s), " "))
+}
+
+func cardRowForName(name string) (int64, bool) {
+	key := normalizeKey(name)
+	if key == "" {
+		return 0, true
+	}
+
+	cardRowOverrideMu.RLock()
+	overridden := cardRowsOverridden
+	row, ok := cardRowOverrides[key]
+	if overridden {
+		cardRowOverrideMu.RUnlock()
+		return row, ok
+	}
+	cardRowOverrideMu.RUnlock()
+
+	cardRowsOnce.Do(func() {
+		names := mage.RegisteredCardNames()
+		sort.Strings(names)
+		cardRowByName = make(map[string]int64, len(names))
+		for idx, cardName := range names {
+			cardRowByName[normalizeKey(cardName)] = int64(idx + 1)
+		}
+	})
+	row, ok = cardRowByName[key]
+	if !ok {
+		return 0, true
+	}
+	return row, true
+}
+
+func setCardRowOverrides(rows map[string]int64) {
+	next := make(map[string]int64, len(rows))
+	for name, row := range rows {
+		next[normalizeKey(name)] = row
+	}
+	cardRowOverrideMu.Lock()
+	cardRowOverrides = next
+	cardRowsOverridden = true
+	cardRowOverrideMu.Unlock()
+}
+
+func fillInt64(dst []int64, value int64) {
+	for i := range dst {
+		dst[i] = value
+	}
+}
+
+func fillFloat32(dst []float32, value float32) {
+	for i := range dst {
+		dst[i] = value
+	}
+}
+
+func fillBytes(dst []byte, value byte) {
+	for i := range dst {
+		dst[i] = value
+	}
+}
+
+func clipNorm(value float64, maximum float64) float32 {
+	if maximum <= 0 {
+		return 0
+	}
+	if value < 0 {
+		value = 0
+	}
+	if value > maximum {
+		value = maximum
+	}
+	return float32(value / maximum)
+}
+
+func minInt(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func maxInt(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func minInt64(a, b int64) int64 {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func maxFloat64(a, b float64) float64 {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func isDigits(s string) bool {
+	if s == "" {
+		return false
+	}
+	for _, r := range s {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+	return true
+}
+
+func parsePositiveFloat(s string) float64 {
+	var value float64
+	for _, r := range s {
+		value = value*10 + float64(r-'0')
+	}
+	return value
+}

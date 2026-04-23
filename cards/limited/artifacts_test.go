@@ -1548,3 +1548,41 @@ func TestIllusionaryMask(t *testing.T) {
 		g.AssertHasAbility(gametest.PlayerA, "Serra Angel", core.Flying, true)
 	})
 }
+
+func TestInstillEnergy(t *testing.T) {
+	t.Run("grants_haste_and_untap", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Instill Energy")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Instill Energy", "Grizzly Bears")
+		g.Attack(1, gametest.PlayerA, "Grizzly Bears")
+		// Untap after combat via granted ability
+		g.ActivateAbility(1, core.PostcombatMain, gametest.PlayerA, "Grizzly Bears")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertTapped(gametest.PlayerA, "Grizzly Bears", false)
+		g.AssertLife(gametest.PlayerB, 18)
+	})
+
+	t.Run("untap_limited_to_once_per_turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Instill Energy")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		// Also give PlayerA an Icy Manipulator to tap the bears a second time
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Icy Manipulator")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Instill Energy", "Grizzly Bears")
+		g.Attack(1, gametest.PlayerA, "Grizzly Bears")
+		// First untap — should work
+		g.ActivateAbility(1, core.PostcombatMain, gametest.PlayerA, "Grizzly Bears")
+		// Tap bears again with Icy Manipulator
+		g.ActivateAbility(1, core.PostcombatMain, gametest.PlayerA, "Icy Manipulator", "Grizzly Bears")
+		// Second untap attempt — should fail (once per turn)
+		g.ActivateAbility(1, core.PostcombatMain, gametest.PlayerA, "Grizzly Bears")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Bears should remain tapped
+		g.AssertTapped(gametest.PlayerA, "Grizzly Bears", true)
+	})
+}

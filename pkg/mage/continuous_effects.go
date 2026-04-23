@@ -85,9 +85,9 @@ func ColorToBasicLandType(c Color) string {
 }
 
 // GrantActivatedAbilityToAttached grants an activated ability to the attached creature.
-func GrantActivatedAbilityToAttached(effect Effect, cost Cost, at AttachType) ContinuousEffect {
+func GrantActivatedAbilityToAttached(effect Effect, cost Cost, at AttachType, opts ...AbilityOption) ContinuousEffect {
 	return AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
-		ab := NewActivatedAbility(effect, cost)
+		ab := NewActivatedAbility(effect, cost, opts...)
 		ab.source = target.ID()
 		ab.controller = target.Controller
 		target.RuntimeAbilities = append(target.RuntimeAbilities, &grantedByEffect{ab})

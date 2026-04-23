@@ -420,8 +420,11 @@ func registerArtifacts() {
 		)
 	})
 
+	// Instill Energy
+	// Enchant creature
+	// Enchanted creature can attack as though it had haste.
+	// {0}: Untap enchanted creature. Activate only once each turn.
 	Register("Instill Energy", func() Card {
-		// XXX: missing once-per-turn restriction on untap ability
 		return NewAura("Instill Energy", "{G}",
 			WithStaticAbility(
 				GrantAbilityToAttached(Haste, AttachAura),
@@ -429,6 +432,7 @@ func registerArtifacts() {
 					UntapSource(),
 					GenericCost(0),
 					AttachAura,
+					WithOncePerTurn(),
 				),
 			),
 		)
