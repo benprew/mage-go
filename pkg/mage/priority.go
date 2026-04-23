@@ -195,8 +195,8 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 		g.RunPriorityRound(false)
 
 	case Draw:
-		g.doDrawActions()
 		g.doDrawNormalDraw()
+		g.doDrawActions()
 		g.RunPriorityRound(false)
 
 	case PrecombatMain:

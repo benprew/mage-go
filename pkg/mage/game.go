@@ -632,7 +632,6 @@ func (g *Game) DestroyPermanent(perm *Permanent) {
 		g.FireEvent(diedEvt)
 		g.checkAbilitiesForEvent(selfAbilities, &diedEvt, permID, controller)
 	}
-
 }
 
 // TapPermanent taps a permanent and fires the EvtTapped event.
@@ -1909,7 +1908,7 @@ func (g *Game) checkGraveyardReturns(p Player) {
 func (g *Game) doDrawActions() {
 	active := g.ActivePlayerObj()
 
-	// Fire draw step event before the normal draw so triggers can queue
+	// Fire draw step event after the normal draw so triggers can queue
 	g.FireEvent(GameEvent{
 		Type:     EvtDrawStep,
 		PlayerID: active.PlayerID(),
