@@ -908,53 +908,21 @@ func registerCreatures() {
 			// When Medusa blocks: destroy the attacker at end of combat
 			WithAbility(
 				NewTriggered(EvtBlockersDecl, false,
-					FuncEffect("destroy creature blocked by Infernal Medusa at end of combat",
-						EffectProperties{Outcome: OutcomeDetriment},
-						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							for _, group := range g.CombatGroups() {
-								for _, bid := range group.BlockerIDs {
-									if bid == sourceID {
-										g.RegisterDelayedTrigger(&DelayedTrigger{
-											EventType:  EvtEndOfCombat,
-											TargetID:   group.AttackerID,
-											Effects:    []Effect{DestroyTarget()},
-											SourceID:   sourceID,
-											Controller: controller,
-										})
-									}
-								}
-							}
-							return nil
-						}),
-				).
-					SetConditionData(SourceIsBlockingInCombat{}),
+					DataEffect(ForEachAttackerBlockedBySource(
+						RegisterDelayedTriggerStep(EvtEndOfCombat, "_target", DestroyTarget()),
+						"destroy creature blocked by Infernal Medusa at end of combat",
+					)),
+				).SetConditionData(SourceIsBlockingInCombat{}),
 			),
 			// When Medusa is blocked by a non-Wall: destroy that blocker at end of combat
 			WithAbility(
 				NewTriggered(EvtBlockersDecl, false,
-					FuncEffect("destroy non-Wall creatures blocking Infernal Medusa at end of combat",
-						EffectProperties{Outcome: OutcomeDetriment},
-						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							for _, group := range g.CombatGroups() {
-								if group.AttackerID == sourceID {
-									for _, bid := range group.BlockerIDs {
-										blocker := g.FindPermanent(bid)
-										if blocker != nil && !blocker.HasSubType("Wall") {
-											g.RegisterDelayedTrigger(&DelayedTrigger{
-												EventType:  EvtEndOfCombat,
-												TargetID:   bid,
-												Effects:    []Effect{DestroyTarget()},
-												SourceID:   sourceID,
-												Controller: controller,
-											})
-										}
-									}
-								}
-							}
-							return nil
-						}),
-				).
-					SetConditionData(SourceBlockedByCreatureMatching{Filter: Not(HasSubType("Wall"))}),
+					DataEffect(ForEachBlockerOfSourceMatching(
+						Not(HasSubType("Wall")),
+						RegisterDelayedTriggerStep(EvtEndOfCombat, "_target", DestroyTarget()),
+						"destroy non-Wall creatures blocking Infernal Medusa at end of combat",
+					)),
+				).SetConditionData(SourceBlockedByCreatureMatching{Filter: Not(HasSubType("Wall"))}),
 			),
 		)
 	})

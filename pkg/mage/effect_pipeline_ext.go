@@ -240,7 +240,11 @@ func (e *RegisterDelayedTriggerData) EffectProps() EffectProperties { return Eff
 
 func execRegisterDelayedTrigger(ctx *EffectContext, e *RegisterDelayedTriggerData) error {
 	targetID := ctx.SourceID
-	if e.TargetVar != "" {
+	if e.TargetVar == "_target" {
+		if len(ctx.Targets) > 0 {
+			targetID = ctx.Targets[0]
+		}
+	} else if e.TargetVar != "" {
 		id := ctx.TryGetUUID(e.TargetVar)
 		if id != uuid.Nil {
 			targetID = id
@@ -660,13 +664,19 @@ func execDealDamageToSource(ctx *EffectContext, e *DealDamageToSourceData) error
 
 // ForEachBlockerOfSourceData iterates all creatures blocking the source
 // attacker. Each blocker's ID is set as targets[0] for the inner effect.
+// If Filter is set, only blockers matching the filter are included.
 type ForEachBlockerOfSourceData struct {
-	Inner EffectData
-	Txt   string
+	Filter PermanentFilter // optional: filter blockers
+	Inner  EffectData
+	Txt    string
 }
 
 func ForEachBlockerOfSource(inner EffectData, text string) EffectData {
 	return &ForEachBlockerOfSourceData{Inner: inner, Txt: text}
+}
+
+func ForEachBlockerOfSourceMatching(filter PermanentFilter, inner EffectData, text string) EffectData {
+	return &ForEachBlockerOfSourceData{Filter: filter, Inner: inner, Txt: text}
 }
 
 func (e *ForEachBlockerOfSourceData) EffectText() string            { return e.Txt }
@@ -677,8 +687,17 @@ func execForEachBlockerOfSource(ctx *EffectContext, e *ForEachBlockerOfSourceDat
 	if group == nil {
 		return nil
 	}
-	blockerIDs := make([]uuid.UUID, len(group.BlockerIDs))
-	copy(blockerIDs, group.BlockerIDs)
+	var blockerIDs []uuid.UUID
+	for _, bid := range group.BlockerIDs {
+		if e.Filter.IsZero() {
+			blockerIDs = append(blockerIDs, bid)
+		} else {
+			perm := ctx.Game.FindPermanent(bid)
+			if perm != nil && e.Filter.Match(perm, ctx.Game) {
+				blockerIDs = append(blockerIDs, bid)
+			}
+		}
+	}
 	savedTargets := ctx.Targets
 	for _, bid := range blockerIDs {
 		ctx.Targets = []uuid.UUID{bid}
