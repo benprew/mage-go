@@ -112,6 +112,8 @@ func ExecuteEffect(ctx *EffectContext, data EffectData) error {
 		return execReturnSourceToHand(ctx, e)
 	case *exileSourceFromGraveyardEffect:
 		return execExileSourceFromGraveyard(ctx, e)
+	case *millTargetPlayerEffect:
+		return execMillTargetPlayer(ctx, e)
 	case *returnToHandTargetEffect:
 		return execReturnToHandTarget(ctx, e)
 	case *returnFromGraveyardToHandTargetEffect:

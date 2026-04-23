@@ -321,26 +321,7 @@ func registerArtifacts() {
 	Register("Millstone", func() Card {
 		return NewArtifact("Millstone", "{2}",
 			WithActivatedAbility(
-				// TODO: convert to pipeline — needs "mill target player" step
-				FuncEffect("target player mills two cards",
-					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 {
-							return nil
-						}
-						p := g.GetPlayer(targets[0])
-						if p == nil {
-							return nil
-						}
-						lib := p.Library()
-						for i := 0; i < 2 && len(lib) > 0; i++ {
-							card := lib[len(lib)-1]
-							lib = lib[:len(lib)-1]
-							p.AddToGraveyard(card)
-						}
-						p.SetLibrary(lib)
-						return nil
-					}),
+				MillTargetPlayer(Fixed(2)),
 				GenericCost(2),
 				WithCost(TapSourceCost()),
 				WithTarget(TargetPlayer()),

@@ -135,6 +135,23 @@ func ExileSourceFromGraveyard() Effect {
 func (e *exileSourceFromGraveyardEffect) EffectText() string            { return "exile this card from graveyard" }
 func (e *exileSourceFromGraveyardEffect) EffectProps() EffectProperties { return EffectProperties{} }
 
+// millTargetPlayerEffect mills N cards from the target player's library.
+type millTargetPlayerEffect struct {
+	amount ValueSource
+}
+
+// MillTargetPlayer creates an effect that mills N cards from target player's library.
+func MillTargetPlayer(amount ValueSource) Effect {
+	return DataEffect(&millTargetPlayerEffect{amount: amount})
+}
+
+func (e *millTargetPlayerEffect) EffectText() string {
+	return "target player mills cards"
+}
+func (e *millTargetPlayerEffect) EffectProps() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
+
 // returnToHandTargetEffect bounces a target permanent to its owner's hand.
 type returnToHandTargetEffect struct{}
 
@@ -380,6 +397,25 @@ func execReturnFromGraveyardToBattlefield(ctx *EffectContext, _ *returnFromGrave
 		return nil // target gone
 	}
 	ctx.Game.PutOnBattlefield(card, ctx.Controller)
+	return nil
+}
+
+func execMillTargetPlayer(ctx *EffectContext, e *millTargetPlayerEffect) error {
+	if len(ctx.Targets) == 0 {
+		return nil
+	}
+	p := ctx.Game.GetPlayer(ctx.Targets[0])
+	if p == nil {
+		return nil
+	}
+	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	lib := p.Library()
+	for i := 0; i < amount && len(lib) > 0; i++ {
+		card := lib[len(lib)-1]
+		lib = lib[:len(lib)-1]
+		p.AddToGraveyard(card)
+	}
+	p.SetLibrary(lib)
 	return nil
 }
 
