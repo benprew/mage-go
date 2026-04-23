@@ -173,6 +173,9 @@ Combat effects:
 	[GrantKeyword](kw)                              // grant keyword (default: target, EOT)
 	  .Targeting(ToSource()/ToTarget()/...)          // same composable pattern
 	  .Until(EndOfTurn/EndOfCombat)
+	[GrantType](ct)                                 // grant card type (default: target, Indefinite)
+	  .Targeting(ToSource()/ToTarget()/...)          // same composable pattern
+	  .Until(Indefinite/EndOfTurn/...)              // Indefinite = lasts while target on battlefield
 	[DoubleTargetPower]()                           // double target's power (Berserk)
 	[MakeUnblockableUntilEndOfTurn]()               // can't be blocked this turn
 	[SetPTUntilEndOfTurn](p, t, sel)                // set base P/T until EOT

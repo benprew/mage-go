@@ -119,21 +119,11 @@ func registerArtifacts() {
 	Register("Ashnod's Transmogrant", func() Card {
 		return NewArtifact("Ashnod's Transmogrant", "{1}",
 			WithActivatedAbility(
-				// TODO: convert to pipeline — needs "add type to permanent" step
-				FuncEffect("put +1/+1 counter and make artifact",
+				Pipeline("put +1/+1 counter and make artifact",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 {
-							return nil
-						}
-						perm := g.FindPermanent(targets[0])
-						if perm == nil {
-							return nil
-						}
-						perm.AddCounter(P1P1, 1)
-						perm.Card.AddType(TypeArtifact)
-						return nil
-					}),
+					AddCounters(P1P1, Fixed(1)),
+					GrantType(TypeArtifact),
+				),
 				TapSourceCost(),
 				WithCost(SacrificeSourceCost()),
 				WithTarget(TargetCreature(Not(IsArtifact))),

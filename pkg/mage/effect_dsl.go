@@ -243,3 +243,95 @@ func execGrantKeyword(ctx *EffectContext, e *grantKeywordEffect) error {
 	}
 	return nil
 }
+
+// --- GrantType DSL ---
+
+// CardTypeAttr maps a CardType to the corresponding Attr for battlefield type identity.
+func CardTypeAttr(ct CardType) Attr {
+	switch ct {
+	case TypeCreature:
+		return AttrIsCreature
+	case TypeArtifact:
+		return AttrIsArtifact
+	case TypeLand:
+		return AttrIsLand
+	case TypeEnchantment:
+		return AttrIsEnchantment
+	default:
+		return 0
+	}
+}
+
+// grantTypeEffect is a composable effect that grants an additional card type
+// to a permanent via an indefinite continuous effect at LayerType.
+// It implements both EffectData (for pipelines) and Effect (for direct use).
+type grantTypeEffect struct {
+	ct       CardType
+	selector TargetSelector
+	dur      Duration
+}
+
+// GrantType creates an effect that grants an additional card type to a permanent.
+// Defaults to targeting targets[0] with Indefinite duration (lasts while target
+// remains on battlefield). Use .Targeting() and .Until() to override.
+func GrantType(ct CardType) *grantTypeEffect {
+	return &grantTypeEffect{
+		ct:       ct,
+		selector: TargetSelector{Kind: KindTarget},
+		dur:      Indefinite,
+	}
+}
+
+func (e *grantTypeEffect) Targeting(sel TargetSelector) *grantTypeEffect {
+	e.selector = sel
+	return e
+}
+
+func (e *grantTypeEffect) Until(d Duration) *grantTypeEffect {
+	e.dur = d
+	return e
+}
+
+// EffectData interface
+func (e *grantTypeEffect) EffectText() string {
+	return fmt.Sprintf("becomes a %s in addition to its other types", e.ct)
+}
+
+func (e *grantTypeEffect) EffectProps() EffectProperties {
+	return EffectProperties{}
+}
+
+// Effect interface — allows direct use without DataEffect() wrapper.
+func (e *grantTypeEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	ctx := &EffectContext{
+		Game:       g,
+		SourceID:   sourceID,
+		Controller: controller,
+		Targets:    targets,
+		Vars:       make(map[string]any),
+	}
+	return execGrantType(ctx, e)
+}
+
+func (e *grantTypeEffect) Text() string                 { return e.EffectText() }
+func (e *grantTypeEffect) Properties() EffectProperties { return e.EffectProps() }
+
+func execGrantType(ctx *EffectContext, e *grantTypeEffect) error {
+	attr := CardTypeAttr(e.ct)
+	if attr == 0 {
+		return nil
+	}
+	perms := resolvePermanents(ctx, e.selector)
+	for _, perm := range perms {
+		eff := TargetEffect(LayerType, e.dur, perm.ID(), func(g *Game, target *Permanent) error {
+			g.GrantAttr(target.ID(), attr)
+			return nil
+		})
+		eff.SetSourceID(ctx.SourceID)
+		ctx.Game.AddContinuousEffect(eff)
+	}
+	if len(perms) > 0 {
+		ctx.Game.ApplyContinuousEffects()
+	}
+	return nil
+}
