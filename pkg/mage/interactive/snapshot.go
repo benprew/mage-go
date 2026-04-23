@@ -251,17 +251,23 @@ func GetAvailableActions(g *mage.Game, playerID uuid.UUID) []ActionOption {
 			validTargets = targetType.Possible(playerID, card, g)
 			validLabels = buildTargetLabels(g, validTargets)
 		}
-		options = append(options, ActionOption{
+		mc := card.ManaCost()
+		opt := ActionOption{
 			Type:              ActionCastSpell,
-			Label:             fmt.Sprintf("Cast %s %s", card.Name(), card.ManaCost()),
+			Label:             fmt.Sprintf("Cast %s %s", card.Name(), mc),
 			CardID:            card.ID(),
 			CardName:          card.Name(),
 			NeedsTarget:       needsTarget,
 			TargetType:        targetType,
-			ManaCost:          card.ManaCost().String(),
+			ManaCost:          mc.String(),
 			ValidTargets:      validTargets,
 			ValidTargetLabels: validLabels,
-		})
+		}
+		if mc.HasX {
+			opt.NeedsX = true
+			opt.MaxXValue = g.MaxXValue(playerID, mc)
+		}
+		options = append(options, opt)
 	}
 
 	for _, info := range g.GetActivatableAbilities(playerID) {

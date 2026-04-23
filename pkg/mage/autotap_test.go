@@ -210,6 +210,107 @@ func TestAutoTapForCost_ManaBonusReducesTapping(t *testing.T) {
 	}
 }
 
+func TestMaxXValue_BasicLands(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+
+	// 3 Mountains on battlefield
+	for i := 0; i < 3; i++ {
+		m := NewLand("Mountain", WithManaAbility(Red))
+		m.SetOwner(pid)
+		p := g.PutOnBattlefield(m, pid)
+		p.RevokeBaseAttr(AttrSummonSick)
+	}
+
+	// Fireball {X}{R}: fixed cost is {R}, so maxX = 3 - 1 = 2
+	mc := ParseManaCost("{X}{R}")
+	if got := g.MaxXValue(pid, mc); got != 2 {
+		t.Errorf("MaxXValue for {X}{R} with 3 Mountains = %d, want 2", got)
+	}
+}
+
+func TestMaxXValue_WithPoolMana(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+
+	// 1 Mountain + 2 colorless in pool
+	m := NewLand("Mountain", WithManaAbility(Red))
+	m.SetOwner(pid)
+	p := g.PutOnBattlefield(m, pid)
+	p.RevokeBaseAttr(AttrSummonSick)
+	g.players[0].ManaPool().Add(Colorless, 2)
+
+	// {X}{R}: pool has 2 colorless, Mountain gives R for the colored cost, so maxX = 2
+	mc := ParseManaCost("{X}{R}")
+	if got := g.MaxXValue(pid, mc); got != 2 {
+		t.Errorf("MaxXValue = %d, want 2", got)
+	}
+}
+
+func TestMaxXValue_DoubleX(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+
+	// 5 Mountains
+	for i := 0; i < 5; i++ {
+		m := NewLand("Mountain", WithManaAbility(Red))
+		m.SetOwner(pid)
+		p := g.PutOnBattlefield(m, pid)
+		p.RevokeBaseAttr(AttrSummonSick)
+	}
+
+	// {X}{X}{R}: fixed cost {R}, 4 mana left, divided by 2 X's = maxX 2
+	mc := ParseManaCost("{X}{X}{R}")
+	if got := g.MaxXValue(pid, mc); got != 2 {
+		t.Errorf("MaxXValue for {X}{X}{R} with 5 Mountains = %d, want 2", got)
+	}
+}
+
+func TestMaxXValue_NoXInCost(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+
+	mc := ParseManaCost("{2}{R}")
+	if got := g.MaxXValue(pid, mc); got != 0 {
+		t.Errorf("MaxXValue for non-X spell = %d, want 0", got)
+	}
+}
+
+func TestMaxXValue_CantAffordBase(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+
+	// No mana sources at all
+	mc := ParseManaCost("{X}{R}")
+	if got := g.MaxXValue(pid, mc); got != 0 {
+		t.Errorf("MaxXValue with no mana = %d, want 0", got)
+	}
+}
+
+func TestMaxXValue_WithManaBonus(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+
+	// 2 Mountains + Mana Flare (doubles land mana)
+	for i := 0; i < 2; i++ {
+		m := NewLand("Mountain", WithManaAbility(Red))
+		m.SetOwner(pid)
+		p := g.PutOnBattlefield(m, pid)
+		p.RevokeBaseAttr(AttrSummonSick)
+	}
+	flare := NewEnchantment("Mana Flare", "{2}{R}",
+		WithAbility(NewManaFlareAbility(IsLand)),
+	)
+	flare.SetOwner(pid)
+	g.PutOnBattlefield(flare, pid)
+
+	// 2 Mountains each producing 2 = 4 total. {X}{R}: maxX = 4 - 1 = 3
+	mc := ParseManaCost("{X}{R}")
+	if got := g.MaxXValue(pid, mc); got != 3 {
+		t.Errorf("MaxXValue with Mana Flare = %d, want 3", got)
+	}
+}
+
 func TestCanAfford_AccountsForManaBonus(t *testing.T) {
 	g := newPriorityTestGame()
 	pid := g.players[0].PlayerID()
