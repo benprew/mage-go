@@ -25,10 +25,10 @@ New continuous effect constructors added to `continuous_effects.go`: `GrantKeywo
 
 | Type | Original | Remaining | Converted | % done |
 |---|---|---|---|---|
-| FuncEffect() | 289 | 204 | 85 | 29% |
+| FuncEffect() | 289 | 195 | 94 | 33% |
 | FuncContinuousEffect() | 97 | 77 | 20 | 21% |
 | SetCondition(func) | 69 | 6 | 63 | 91% |
-| **Total** | **455** | **287** | **168** | **37%** |
+| **Total** | **455** | **278** | **177** | **39%** |
 
 Note: FuncEffect/FuncContinuousEffect counts are constructor calls that wrap closures.
 The "converted" count includes cards that now use Pipeline, DataEffect, EffectData
@@ -113,4 +113,6 @@ b444639 refactor: Phase 4+5 card migration — convert SetCondition and FuncCont
 e7915ef..fdec01a Phase 1+2 primitives — ForEach, combat groups, ValueSource targets,
          EventAmountValue, GainLifeAmount, PoisonTargetPlayer, MillTargetPlayer,
          DestroyAttached, DealDamageToSource, AddCounterToAttached, Step accessors
+0d65216..1194abc Phase 3+5 — CreateTokens, SacrificeTarget, GrantKeywordUntilEOC,
+         AddPreventionShieldToController, GainLifeControllerFromVar, VarPlayer fix
 ```
