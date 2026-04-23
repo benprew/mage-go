@@ -1,7 +1,6 @@
 package fallen_empires
 
 import (
-	"github.com/google/uuid"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
@@ -55,19 +54,9 @@ func registerSpells() {
 	// Icatian Town {5}{W}
 	// Sorcery
 	// Create four 1/1 white Citizen creature tokens.
-	// TODO: convert to pipeline — needs CreateTokens(count) step (no repeat/count primitive)
 	Register("Icatian Town", withExpansion(func() Card {
 		return NewSorcery("Icatian Town", "{5}{W}",
-			NewSpellAbility(FuncEffect("create four 1/1 white Citizen creature tokens",
-				EffectProperties{Outcome: OutcomeBenefit},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					for i := 0; i < 4; i++ {
-						token := NewToken("Citizen", 1, 1, []CardType{TypeCreature}, []string{"Citizen"})
-						token.SetOwner(controller)
-						g.PutOnBattlefield(token, controller)
-					}
-					return nil
-				})),
+			NewSpellAbility(CreateTokens(4, "Citizen", 1, 1, []CardType{TypeCreature}, []string{"Citizen"})),
 		)
 	}))
 

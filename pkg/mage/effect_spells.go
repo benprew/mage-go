@@ -110,6 +110,7 @@ type createTokenEffect struct {
 	subTypes  []string
 	keywords  []Keyword
 	colors    []Color
+	count     int // 0 means 1
 }
 
 // CreateToken creates an effect that puts a token creature onto the battlefield.
@@ -121,6 +122,19 @@ func CreateToken(name string, power, toughness int, types []CardType, subTypes [
 		types:     types,
 		subTypes:  subTypes,
 		keywords:  keywords,
+	})
+}
+
+// CreateTokens creates an effect that puts N token creatures onto the battlefield.
+func CreateTokens(count int, name string, power, toughness int, types []CardType, subTypes []string, keywords ...Keyword) Effect {
+	return DataEffect(&createTokenEffect{
+		name:      name,
+		power:     power,
+		toughness: toughness,
+		types:     types,
+		subTypes:  subTypes,
+		keywords:  keywords,
+		count:     count,
 	})
 }
 
@@ -353,13 +367,19 @@ func execAddAnyMana(ctx *EffectContext, e *addAnyManaEffect) error {
 }
 
 func execCreateToken(ctx *EffectContext, e *createTokenEffect) error {
-	token := NewToken(e.name, e.power, e.toughness, e.types, e.subTypes, e.keywords...)
-	token.SetOwner(ctx.Controller)
-	if len(e.colors) > 0 {
-		token.colorOverride = make([]Color, len(e.colors))
-		copy(token.colorOverride, e.colors)
+	count := e.count
+	if count <= 0 {
+		count = 1
 	}
-	ctx.Game.PutOnBattlefield(token, ctx.Controller)
+	for i := 0; i < count; i++ {
+		token := NewToken(e.name, e.power, e.toughness, e.types, e.subTypes, e.keywords...)
+		token.SetOwner(ctx.Controller)
+		if len(e.colors) > 0 {
+			token.colorOverride = make([]Color, len(e.colors))
+			copy(token.colorOverride, e.colors)
+		}
+		ctx.Game.PutOnBattlefield(token, ctx.Controller)
+	}
 	return nil
 }
 
