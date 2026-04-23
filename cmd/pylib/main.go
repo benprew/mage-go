@@ -366,8 +366,8 @@ func snapshotState(g *mage.Game) *apiGameState {
 	s0 := interactive.SnapshotGameState(g, 0)
 	s1 := interactive.SnapshotGameState(g, 1)
 	return &apiGameState{
-		Turn:         g.Turn,
-		Step:         g.Step.String(),
+		Turn:         g.CurrentTurn(),
+		Step:         g.GetStep().String(),
 		ActivePlayer: g.ActivePlayerObj().Name(),
 		Players:      [2]interactive.PlayerState{s0.You, s1.You},
 		Stack:        s0.StackItems,
@@ -662,7 +662,8 @@ func winnerPlayerIndex(h *handle) int64 {
 	if winner == "" {
 		return -1
 	}
-	for idx, player := range h.game.Players {
+	for idx := 0; idx < h.game.PlayerCount(); idx++ {
+		player := h.game.PlayerAt(idx)
 		if player != nil && player.Name() == winner {
 			return int64(idx)
 		}
