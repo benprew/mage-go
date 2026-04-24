@@ -439,7 +439,11 @@ func (tg *TestGame) scriptedPriorityHandler() mage.PriorityHandler {
 
 		// Only try to fire scheduled casts / activations and lands when
 		// the stack is empty. If the stack has anything on it, and no
-		// queued response matched, pass to let it resolve.
+		// queued response matched, pass to let it resolve. Tests that
+		// need a scripted action to interact with a same-step trigger
+		// or another scripted spell must express that using
+		// CastInResponseTo / ActivateInResponseTo — which gives CR-
+		// correct response ordering (CR 117.1b).
 		if !g.Stack.IsEmpty() {
 			return mage.PriorityAction{Type: mage.PriorityPass}
 		}
@@ -766,6 +770,16 @@ func (tg *TestGame) buildPriorityActionForResponse(r responseAction, playerIdx i
 	}
 
 	if r.perm != "" {
+		// Ensure responder has enough mana to activate; CR 500.5's
+		// per-step pool empty means pre-turn top-up doesn't survive.
+		respPlayer := tg.GetPlayer(r.player)
+		pool := respPlayer.ManaPool()
+		pool.Add(core.White, 5)
+		pool.Add(core.Blue, 5)
+		pool.Add(core.Black, 5)
+		pool.Add(core.Red, 5)
+		pool.Add(core.Green, 5)
+		pool.Add(core.Colorless, 10)
 		perm, abilityIdx, err := tg.findActivatableAbilityByName(respPlayerID, r.perm, targets)
 		if err != nil {
 			tg.t.Logf("ActivateInResponseTo %s failed: %v", r.perm, err)
