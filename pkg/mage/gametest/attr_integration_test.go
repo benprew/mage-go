@@ -128,9 +128,19 @@ func TestDoesNotUntap_GrantedByEffect_CreatureStaysTapped(t *testing.T) {
 	g.AssertTapped(gametest.PlayerB, "Hill Giant", true)
 }
 
-// TestMustAttack_CreatureAttacksIfAble verifies MustAttack is handled in game loop.
+// TestMustAttack_CreatureAttacksIfAble verifies MustAttack (CR 508.1d "must
+// attack if able") is honored by the engine's declare-attackers loop. A
+// Juggernaut (intrinsic MustAttack) must be declared as an attacker on its
+// controller's turn even if the player scripts no explicit attack.
 func TestMustAttack_CreatureAttacksIfAble(t *testing.T) {
-	t.Skip("MustAttack intrinsic covered by TestNettlingImpForceAttack in cards/limited")
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Juggernaut") // 5/3 intrinsic MustAttack
+	// PlayerA scripts no explicit attack. Engine must force Juggernaut to
+	// attack on turn 1 (the single PlayerA turn in scope).
+	g.StopAt(1, core.EndCombat)
+	g.Execute()
+	g.AssertTapped(gametest.PlayerA, "Juggernaut", true) // attacked
+	g.AssertLife(gametest.PlayerB, 15)                   // took 5
 }
 
 // TestPreventFromAttacking_CreatureCannotAttack tests that a tapped creature

@@ -662,22 +662,9 @@ func TestCR205_4d_WorldRuleSecondWorldKills(t *testing.T) {
 }
 
 // ===== 206.3 — Expansion-symbol-based effects =====
-// NOTE: City in a Bottle and Golgothian Sylex tests require cards/arabian and
-// cards/antiquities which are not imported in package gametest. See
-// cards/arabian/artifacts_test.go and cards/antiquities/artifacts_test.go for
-// the canonical set-symbol rule tests (CR 206.3).
-
-func TestCR_CityInABottleExilesArabianNightsCards(t *testing.T) {
-	t.Skip("cards/arabian not imported in gametest; see cards/arabian/artifacts_test.go")
-}
-
-func TestCR_CityInABottleIgnoresNonArabianCards(t *testing.T) {
-	t.Skip("cards/arabian not imported in gametest; see cards/arabian/artifacts_test.go")
-}
-
-func TestCR_GolgothianSylexExilesAntiquitiesCards(t *testing.T) {
-	t.Skip("cards/antiquities not imported in gametest; see cards/antiquities/artifacts_test.go")
-}
+// City in a Bottle and Golgothian Sylex (CR 206.3) are covered in
+// cards/arabian/artifacts_test.go and cards/antiquities/artifacts_test.go;
+// not duplicated here to avoid an import cycle.
 
 // ===== 208.1 — Power/Toughness basics =====
 
