@@ -85,9 +85,16 @@ func ColorToBasicLandType(c Color) string {
 }
 
 // GrantActivatedAbilityToAttached grants an activated ability to the attached creature.
+// The ability instance is persisted across continuous-effect reapplications so that
+// per-turn activation tracking (OncePerTurn, MaxActivationsPerTurn) survives.
 func GrantActivatedAbilityToAttached(effect Effect, cost Cost, at AttachType, opts ...AbilityOption) ContinuousEffect {
+	abByTarget := map[uuid.UUID]*SimpleActivatedAbility{}
 	return AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
-		ab := NewActivatedAbility(effect, cost, opts...)
+		ab, ok := abByTarget[target.ID()]
+		if !ok {
+			ab = NewActivatedAbility(effect, cost, opts...)
+			abByTarget[target.ID()] = ab
+		}
 		ab.source = target.ID()
 		ab.controller = target.Controller
 		target.RuntimeAbilities = append(target.RuntimeAbilities, &grantedByEffect{ab})
