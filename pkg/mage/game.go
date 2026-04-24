@@ -110,6 +110,12 @@ type Game struct {
 	// during a priority round. Used by the interactive layer for logging.
 	beforeStackResolve func(g *Game)
 
+	// OnDamageDealt is called after damage is dealt to a player or creature.
+	// sourceName is the name of the source card/permanent, targetName is the
+	// name of the target player or creature, amount is damage dealt, and
+	// isCombat indicates whether it was combat damage.
+	onDamageDealt func(sourceName, targetName string, amount int, isCombat bool)
+
 	// Control flags
 	stopped bool
 
@@ -922,6 +928,13 @@ func (g *Game) executeDamageToPlayer(a *DamageToPlayerAction) {
 		Amount:   amount,
 		Flag:     a.IsCombatDamage(),
 	})
+	if g.onDamageDealt != nil {
+		sourceName := "unknown"
+		if sc := g.findCardForDamageSource(sourceID); sc != nil {
+			sourceName = sc.Name()
+		}
+		g.onDamageDealt(sourceName, p.Name(), amount, a.IsCombatDamage())
+	}
 	// Lifelink
 	src := g.FindPermanent(sourceID)
 	if src != nil && src.HasKeyword(Lifelink) {
@@ -993,6 +1006,13 @@ func (g *Game) executeDamageToCreature(a *DamageToCreatureAction) {
 		TargetID: perm.ID(),
 		Amount:   amount,
 	})
+	if g.onDamageDealt != nil {
+		sourceName := "unknown"
+		if sc := g.findCardForDamageSource(sourceID); sc != nil {
+			sourceName = sc.Name()
+		}
+		g.onDamageDealt(sourceName, perm.Name(), amount, g.resolvingCombatDamage)
+	}
 	// Deathtouch / BasiliskTouch
 	src := g.FindPermanent(sourceID)
 	if src != nil && amount > 0 {

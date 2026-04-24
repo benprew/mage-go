@@ -1,6 +1,7 @@
 package interactive
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -345,6 +346,58 @@ func TestGetAvailableActions_NonMainOnlyInstants(t *testing.T) {
 }
 
 // ── SnapshotGameState deeper coverage ───────────────────────────────────────
+
+// ── OnDamageDealt callback ──────────────────────────────────────────────────
+
+func TestOnDamageDealt_PlayerDamage(t *testing.T) {
+	g, pa, pb := makeGame()
+	perm := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
+	g.AddToBattlefield(perm)
+
+	var logged []string
+	g.SetOnDamageDealt(func(sourceName, targetName string, amount int, isCombat bool) {
+		logged = append(logged, fmt.Sprintf("%s deals %d damage to %s (combat=%v)", sourceName, amount, targetName, isCombat))
+	})
+
+	g.DealDamageToPlayer(pb, 2, perm.ID())
+
+	if len(logged) != 1 {
+		t.Fatalf("expected 1 log entry, got %d", len(logged))
+	}
+	if !strings.Contains(logged[0], "Bear") {
+		t.Errorf("log should mention source name Bear: %q", logged[0])
+	}
+	if !strings.Contains(logged[0], "Bob") {
+		t.Errorf("log should mention target name Bob: %q", logged[0])
+	}
+	if !strings.Contains(logged[0], "2") {
+		t.Errorf("log should mention damage amount 2: %q", logged[0])
+	}
+}
+
+func TestOnDamageDealt_CreatureDamage(t *testing.T) {
+	g, pa, pb := makeGame()
+	attacker := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
+	blocker := makePerm("Elf", "{G}", 1, 1, pb.PlayerID())
+	g.AddToBattlefield(attacker, blocker)
+
+	var logged []string
+	g.SetOnDamageDealt(func(sourceName, targetName string, amount int, isCombat bool) {
+		logged = append(logged, fmt.Sprintf("%s deals %d to %s", sourceName, amount, targetName))
+	})
+
+	g.DealDamageToPermanent(blocker, 2, attacker.ID())
+
+	if len(logged) != 1 {
+		t.Fatalf("expected 1 log entry, got %d", len(logged))
+	}
+	if !strings.Contains(logged[0], "Bear") {
+		t.Errorf("log should mention source Bear: %q", logged[0])
+	}
+	if !strings.Contains(logged[0], "Elf") {
+		t.Errorf("log should mention target Elf: %q", logged[0])
+	}
+}
 
 func TestSnapshotGameState_BattlefieldCreatures(t *testing.T) {
 	g, pa, _ := makeGame()

@@ -427,6 +427,11 @@ func (g *Game) SetAfterPriorityAction(f func(*Game, int, PriorityAction)) {
 // SetBeforeStackResolve sets the before-stack-resolve callback.
 func (g *Game) SetBeforeStackResolve(f func(*Game)) { g.beforeStackResolve = f }
 
+// SetOnDamageDealt sets the callback invoked after damage is dealt.
+func (g *Game) SetOnDamageDealt(f func(sourceName, targetName string, amount int, isCombat bool)) {
+	g.onDamageDealt = f
+}
+
 // SetStep sets the current phase step.
 func (g *Game) SetStep(s PhaseStep) { g.step = s }
 

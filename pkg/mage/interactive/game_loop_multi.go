@@ -131,6 +131,11 @@ func RunMultiplayerGameLoop(g *mage.Game, channels [2]PlayerChannels) {
 		broadcast()
 	})
 
+	// Log damage dealt by creatures and spells
+	g.SetOnDamageDealt(func(sourceName, targetName string, amount int, isCombat bool) {
+		addLog(fmt.Sprintf("  %s deals %d damage to %s", sourceName, amount, targetName))
+	})
+
 	// Log stack resolution
 	g.SetBeforeStackResolve(func(g *mage.Game) {
 		top := g.StackPeek()
