@@ -259,7 +259,9 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 
 	case Cleanup:
 		if g.doCleanupActions() {
-			// Triggers fired during cleanup — players get priority, then repeat cleanup.
+			// CR 514.3a: triggers fired during cleanup — players get priority,
+			// then another cleanup step begins.
+			g.CleanupPriorityRounds++
 			g.RunPriorityRound(false)
 			g.CheckStateBasedActions()
 			g.RunStepWithPriority(Cleanup)

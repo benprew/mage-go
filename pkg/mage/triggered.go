@@ -203,6 +203,14 @@ func BeginningOfEachEndStepTrigger(effect Effect, optional bool) *GenericTrigger
 	return NewTriggered(EvtEndStep, optional, effect)
 }
 
+// BeginningOfEachCleanupStepTrigger fires at the beginning of every player's
+// cleanup step (CR 514). Per CR 514.3a, a trigger that fires during cleanup
+// causes players to receive priority and a new cleanup step to begin after
+// the triggered ability resolves.
+func BeginningOfEachCleanupStepTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtCleanup, optional, effect)
+}
+
 // DealsDamageToOpponentTrigger fires when the source deals damage to an opponent.
 func DealsDamageToOpponentTrigger(effect Effect, optional bool) *GenericTriggered {
 	return NewTriggered(EvtDamageDealt, optional, effect).

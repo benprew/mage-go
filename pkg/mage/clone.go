@@ -21,6 +21,7 @@ func (g *Game) Clone() *Game {
 		ResolvingCard:         g.ResolvingCard, // Card ref shared
 		LandsPlayedThisTurn:   g.LandsPlayedThisTurn,
 		CreatureDeathsThisTurn: g.CreatureDeathsThisTurn,
+		CleanupPriorityRounds: g.CleanupPriorityRounds,
 		stopped:               g.stopped,
 		resolvingCombatDamage: g.resolvingCombatDamage,
 	}

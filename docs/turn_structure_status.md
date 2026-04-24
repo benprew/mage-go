@@ -26,16 +26,13 @@ Engine-internals counterparts live in `pkg/mage/priority_test.go`. Per-CR test s
 ### Done
 1. **TurnSchedule** (commit `43db1a3`) — per-turn mutable step list on `Game.Schedule`. Methods: `AppendExtraStep`, `InsertStepAfter`, `SkipNextOccurrenceOfStep`, `SkipNextCombatPhase`, `SkipNextTurnFor`. `RunTurn` / `Run` / harness `Execute` all drive off the schedule. Unblocks CR 500.7, 500.9, 500.10, 500.11, 505.1a.
 2. **Per-step mana pool empty** (commit `e7447cf`) — `Game.EmptyManaPools()` deferred at end of every `RunStep`/`RunStepWithPriority`. `ManaPool.ProducedThisTurn` tally + `CountProducedThisTurn` / `AssertManaProduced*` DSL preserves observability. Unblocks CR 500.5.
-3. **CR 509.1h (no-trample, blocker destroyed after blocks)** — not an engine bug. `doNormalBlockedDamage` already skips dead blockers via `FindPermanent(bid) == nil` and, without trample, routes 0 damage to the defender. Test: `TestTurnStructureCombatRemoval/CR_509.1h_...`. The cast is scheduled at `CombatDamage` rather than `DeclareBlockers` because of a harness ordering quirk (see below), not because of CR semantics. Trample interaction (CR 702.19b — damage that would have gone to removed blockers still "counts" against the attacker's trample accounting) is *not* yet correct; defer until #7's damage-assignment DSL lands.
+3. **`EvtCleanup` event + cleanup priority observable** (CR 514.3, 514.3a) — `core.EvtCleanup` added and fired at the top of `doCleanupActions`; `BeginningOfEachCleanupStepTrigger` helper exposes it to card code. `Game.CleanupPriorityRounds` counts how many times priority was granted during a cleanup step (normally 0; incremented only on 514.3a fallback). Both skipped cleanup tests now pass: `TestCleanup/CR_514.3_...` and `TestCleanup/CR_514.3a_...`.
+
+4. **CR 509.1h (no-trample, blocker destroyed after blocks)** — not an engine bug. `doNormalBlockedDamage` already skips dead blockers via `FindPermanent(bid) == nil` and, without trample, routes 0 damage to the defender. Test: `TestTurnStructureCombatRemoval/CR_509.1h_...`. The cast is scheduled at `CombatDamage` rather than `DeclareBlockers` because of a harness ordering quirk (see below), not because of CR semantics. Trample interaction (CR 702.19b — damage that would have gone to removed blockers still "counts" against the attacker's trample accounting) is *not* yet correct; defer until #7's damage-assignment DSL lands.
 
    **Harness ordering bug — follow-up:** `gametest/harness.go:348` runs `executeOrderedActions` before `RunStepWithPriority`, which means a `CastSpell(turn, step, ...)` resolves *before* that step's turn-based actions instead of during its priority round. Per CR, TBAs run first and priority opens afterwards (e.g. CR 509.2 grants priority only after `doDeclareBlockers`). The current inversion prevents writing the natural 509.1h test (cast at `DeclareBlockers` targeting the declared blocker). Fixing this globally would likely churn many existing tests that implicitly rely on "ordered action fires at the top of step X"; handle as its own focused change.
 
 ### Next up (priority order)
-
-4. **`EvtCleanup` event + cleanup priority round** (CR 514.3, 514.3a)
-   - Add `core.EvtCleanup` to `pkg/mage/core/event.go` / `event_enumer.go`, fired at the start of cleanup's turn-based action.
-   - Extend `RunStepWithPriority(Cleanup)` to give priority iff SBAs fired or triggers are waiting; after resolution, start another cleanup step. Today it already has partial support — see the `if g.doCleanupActions()` branch in `priority.go`. Needs an observable for "priority was denied" (a counter on `Game` the DSL can assert).
-   - Unblocks two skipped tests in `turn_cleanup_test.go`.
 
 5. **Instant-speed "can't attack / can't block" effects** (CR 506.4a)
    - Today only an attachment-based `PreventAttachedFromAttacking` exists, checked at declaration.
@@ -86,8 +83,6 @@ Engine-internals counterparts live in `pkg/mage/priority_test.go`. Per-CR test s
 | `turn_combat_blockers_test.go` | 509.1h | dedup — covered by `TestTurnStructureCombatRemoval/CR_509.1h_...` in `turn_combat_test.go` |
 | `turn_combat_attackers_test.go` | 508.2a | color override didn't apply |
 | `turn_combat_damage_test.go` | 510.1c | no multi-blocker damage-assignment DSL |
-| `turn_cleanup_test.go` | 514.3 | no observable for priority denial in cleanup |
-| `turn_cleanup_test.go` | 514.3a | no `EvtCleanup` event |
 
 Note: 503.2 also needs card-side wiring (*Paradox Haze*, *Obeka*) to be exercised end-to-end, but the engine primitive is the blocker.
 

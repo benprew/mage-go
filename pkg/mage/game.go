@@ -92,6 +92,14 @@ type Game struct {
 	// Creature deaths this turn (total count across all players)
 	CreatureDeathsThisTurn int
 
+	// CleanupPriorityRounds counts how many times players have received priority
+	// during a cleanup step in this game. Normally no priority is given during
+	// cleanup (CR 514.3); it is only granted when a state-based action fires or
+	// a triggered ability triggers during cleanup (CR 514.3a). Tests assert on
+	// this to distinguish the two cases. Not reset across turns — tests take a
+	// snapshot and compare deltas.
+	CleanupPriorityRounds int
+
 	// Targets of the spell currently being resolved (for ETB copy effects)
 	ResolvingTargets []uuid.UUID
 
@@ -2149,8 +2157,13 @@ func (g *Game) doDeclareBlockers() {
 // doCleanupActions performs cleanup housekeeping and places any triggers on the stack.
 // Returns true if triggers were placed on the stack (requiring priority + another cleanup).
 func (g *Game) doCleanupActions() bool {
+	active := g.ActivePlayerObj()
+	g.FireEvent(GameEvent{
+		Type:     EvtCleanup,
+		PlayerID: active.PlayerID(),
+	})
 	// Hand size discard: active player discards down to max hand size (CR 514.1)
-	p := g.ActivePlayerObj()
+	p := active
 	maxHS := g.Effects.Rules.MaxHandSize(p.PlayerID())
 	for len(p.Hand()) > maxHS {
 		chosen := p.ChooseCardsFromHand(1, "discard to hand size", g)

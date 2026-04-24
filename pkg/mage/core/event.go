@@ -33,6 +33,7 @@ const (
 	EvtEndOfCombat        // fired at the end of combat step, before combat groups reset
 	EvtBecameUntapped     // fired when a permanent becomes untapped
 	EvtMainPhase          // fired at the beginning of a main phase
+	EvtCleanup            // fired at the beginning of the cleanup step (CR 514)
 )
 
 // GameEvent carries data about a game event.

@@ -8,6 +8,8 @@ package gametest
 import (
 	"testing"
 
+	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
@@ -148,30 +150,64 @@ func TestCleanup(t *testing.T) {
 		tg.AssertPowerToughness(PlayerA, creature, 3, 3)
 	})
 
-	// CR 514.3 — Normally, no player receives priority during the cleanup step,
-	// so no spells can be cast and no abilities can be activated. The step
-	// ends immediately after state-based actions and triggered abilities (if
-	// any) have resolved.
-	//
-	// The DSL does not expose a way to script a cast on the cleanup step and
-	// observe it being rejected (the scheduler would never offer priority).
-	// There is no `AssertNoPriorityIn(step)` helper, so we cannot express this
-	// rule precisely at the gametest layer without engine-level instrumentation.
-	t.Run("CR 514.3 no priority during cleanup (engine gap)", func(t *testing.T) {
-		t.Skip("XXX: engine gap — no observable for priority denial in cleanup at the gametest DSL layer; see pkg/mage priority_test.go for engine-level coverage")
+	// CR 514.3 — Normally, no player receives priority during the cleanup step.
+	// Observable: Game.CleanupPriorityRounds is incremented only when priority
+	// is granted during a cleanup (CR 514.3a fallback). In a plain turn with
+	// no cleanup-step triggers, it must stay at zero.
+	t.Run("CR 514.3 no priority granted during cleanup in the normal case", func(t *testing.T) {
+		tg := NewTestGame(t)
+		tg.StopAt(3, core.Upkeep)
+		tg.Execute()
+		if tg.Game.CleanupPriorityRounds != 0 {
+			t.Errorf("CR 514.3: expected CleanupPriorityRounds=0 with no cleanup triggers, got %d",
+				tg.Game.CleanupPriorityRounds)
+		}
 	})
 
-	// CR 514.3a — "If an effect tries to create a delayed triggered ability
-	// that triggers 'at the beginning of the next cleanup step', and that
-	// cleanup step has already ended, the ability triggers at the beginning
-	// of the next turn's cleanup step instead." More fundamentally, a trigger
-	// that fires during cleanup is put on the stack, players get priority,
-	// and then a new cleanup step begins. Exercising this rule requires a
-	// triggered-ability event for the cleanup step — there is no EvtCleanup
-	// in pkg/mage/core/event.go, so we cannot construct such a trigger at
-	// the engine layer.
-	t.Run("CR 514.3a extra cleanup when triggers resolve during cleanup (engine gap)", func(t *testing.T) {
-		t.Skip("XXX: engine gap — pkg/mage/core/event.go exposes no EvtCleanup event, so we cannot express 'at the beginning of the next cleanup step' triggers in a gametest")
+	// CR 514.3a — If a triggered ability triggers during the cleanup step, the
+	// active player receives priority after it is put on the stack, and after
+	// the stack empties another cleanup step begins. Exercised here with a
+	// permanent whose ability triggers "at the beginning of each cleanup
+	// step," gated by an internal flag so it fires exactly once.
+	t.Run("CR 514.3a trigger during cleanup grants priority and starts a new cleanup", func(t *testing.T) {
+		cardName := "ECU Cleanup Trigger Source"
+		fired := false
+		if !mage.CardRegistered(cardName) {
+			mage.Register(cardName, func() mage.Card {
+				return mage.NewEnchantment(cardName, "{1}",
+					mage.WithAbility(
+						mage.BeginningOfEachCleanupStepTrigger(
+							mage.FuncEffect("gain 1 life once during cleanup",
+								mage.EffectProperties{Outcome: mage.OutcomeBenefit},
+								func(g mage.GameMutator, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+									p := g.GetPlayer(controller)
+									if p != nil {
+										g.PlayerGainLife(p, 1)
+									}
+									return nil
+								}), false,
+						).SetCondition(func(evt *core.GameEvent, _ mage.GameReader, _, controllerID uuid.UUID) bool {
+							if fired || evt.PlayerID != controllerID {
+								return false
+							}
+							fired = true
+							return true
+						}),
+					),
+				)
+			})
+		}
+
+		tg := NewTestGame(t)
+		tg.AddCard(core.ZoneBattlefield, PlayerA, cardName)
+		tg.StopAt(2, core.Upkeep)
+		tg.Execute()
+
+		tg.AssertLife(PlayerA, 21)
+		if tg.Game.CleanupPriorityRounds != 1 {
+			t.Errorf("CR 514.3a: expected exactly one cleanup priority round, got %d",
+				tg.Game.CleanupPriorityRounds)
+		}
 	})
 }
 
