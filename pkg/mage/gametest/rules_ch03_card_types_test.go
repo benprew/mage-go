@@ -168,7 +168,7 @@ func TestCR300_2a_ArtifactLandPlayedNotCast(t *testing.T) {
 	// Badlands is a Swamp Mountain dual land — it has the land type, so it is played.
 	tg := NewTestGame(t)
 	tg.AddCard(core.ZoneHand, PlayerA, "Badlands")
-	tg.StopAt(1, core.PrecombatMain)
+	tg.StopAt(1, core.EndStep)
 	tg.Execute()
 
 	tg.AssertPermanentCount(PlayerA, "Badlands", 1)
@@ -606,7 +606,7 @@ func TestCR305_1_LandPlayDoesntUseStack(t *testing.T) {
 	tg := NewTestGame(t)
 	tg.AddCard(core.ZoneHand, PlayerA, "Forest")
 	tg.AddCard(core.ZoneHand, PlayerB, "Counterspell")
-	tg.StopAt(1, core.PrecombatMain)
+	tg.StopAt(1, core.EndStep)
 	tg.Execute()
 
 	// Forest entered despite PlayerB having Counterspell (land play bypasses stack).

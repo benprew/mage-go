@@ -489,7 +489,7 @@ func TestCR701_18_PlayLandNoStack(t *testing.T) {
 
 	tg := NewTestGame(t)
 	tg.AddCard(core.ZoneHand, PlayerA, "Forest")
-	tg.StopAt(1, core.PrecombatMain)
+	tg.StopAt(1, core.EndStep)
 	tg.Execute()
 
 	// Land enters battlefield; not in graveyard, not on stack
