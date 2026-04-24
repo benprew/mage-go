@@ -39,6 +39,20 @@ func registerRemovalTapRay(name string) {
 	})
 }
 
+// registerRemovalCantAttack registers an instant that prevents a target
+// creature from attacking this turn. Used to verify CR 506.4a — applying a
+// "can't attack" effect to a creature already declared as an attacker does not
+// remove it from combat.
+func registerRemovalCantAttack(name string) {
+	if mage.CardRegistered(name) {
+		return
+	}
+	mage.Register(name, func() mage.Card {
+		return mage.NewInstant(name, "{W}",
+			mage.NewTargetedSpell(mage.TargetCreature(), mage.PreventAttackingTargetUntilEndOfTurn()))
+	})
+}
+
 // registerRemovalBear registers a vanilla creature with configurable P/T under
 // the given name. No summoning-sickness concerns because AddCard revokes
 // AttrSummonSick when placing cards on the battlefield.
@@ -216,7 +230,24 @@ func TestTurnStructureCombatRemoval(t *testing.T) {
 	// attack this turn" card. This test is skipped until such an effect is
 	// available at instant speed.
 	t.Run("CR 506.4a post-declaration cant-attack does not remove attacker", func(t *testing.T) {
-		t.Skip("XXX: engine gap — no runtime instant-speed 'cant attack' effect to apply mid-combat")
+		attacker := "Removal 506.4a Attacker 3/3"
+		cantAttack := "Removal 506.4a Pacify"
+		registerRemovalBear(attacker, 3, 3)
+		registerRemovalCantAttack(cantAttack)
+
+		tg := NewTestGame(t)
+		tg.AddCard(core.ZoneBattlefield, PlayerA, attacker)
+		tg.AddCard(core.ZoneHand, PlayerB, cantAttack)
+		tg.Attack(1, PlayerA, attacker)
+		// Apply the "can't attack this turn" effect during the declare-blockers
+		// step, after the attacker has already been declared. Per CR 506.4a the
+		// attacker remains in combat and still deals its damage.
+		tg.CastSpell(1, core.DeclareBlockers, PlayerB, cantAttack, attacker)
+		tg.StopAt(1, core.PostcombatMain)
+		tg.Execute()
+
+		tg.AssertLife(PlayerB, 17)
+		tg.AssertPermanentCount(PlayerA, attacker, 1)
 	})
 
 	// CR 506.4b — Tapping a creature that's already been declared as an

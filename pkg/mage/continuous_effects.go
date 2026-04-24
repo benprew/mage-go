@@ -221,6 +221,21 @@ func TemporaryAnimateUntilNextUpkeep(targetID uuid.UUID, power, toughness int) C
 	return temporaryAnimate(targetID, power, toughness, UntilYourNextTurn)
 }
 
+// PreventAttackingUntilEndOfTurn creates an EndOfTurn-scoped continuous effect
+// that revokes AttrCanAttack from a specific creature. Used for instant-speed
+// "target creature can't attack this turn" effects (CR 506.4a). Per CR 506.4a,
+// applying this effect to a creature that has already been declared as an
+// attacker does not remove it from combat — the engine layer handles that
+// because the AttrCanAttack check only runs at declaration time. The effect
+// keeps the attribute revoked for the rest of the turn, so the creature can't
+// be re-declared in any later combat phase this turn.
+func PreventAttackingUntilEndOfTurn(permID uuid.UUID) ContinuousEffect {
+	return TargetEffect(LayerAbility, EndOfTurn, permID, func(g *Game, target *Permanent) error {
+		g.Effects.RevokeAttr(target.ID(), AttrCanAttack)
+		return nil
+	})
+}
+
 // PreventBlockingUntilEndOfCombat creates an EndOfCombat-scoped continuous effect
 // that revokes AttrCanBlock from a specific creature. Re-fires on each Apply() cycle
 // (surviving grantedAttrs reset) and expires at EndCombat via RemoveEndOfCombat().
