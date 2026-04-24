@@ -90,21 +90,51 @@ func TestTurnStructureMain_TwoMainPhasesPerTurn(t *testing.T) {
 
 // TestTurnStructureMain_PostcombatMainAfterSkippedCombat verifies CR 505.1a:
 // "The second main phase of a turn where the combat phase was skipped is
-// still a postcombat main phase." That is, even if combat is skipped, the
-// phase after it is `PostcombatMain`, not a second `PrecombatMain`.
+// still a postcombat main phase." Even when combat is skipped, the phase
+// after PrecombatMain is still PostcombatMain — not another PrecombatMain.
 //
-// The engine currently has no primitive for skipping combat (or any phase):
-//   - no `SkipCombat`, `SkipNextCombat`, `SkipStep`, `SkipPhase`, or
-//     similar boolean / counter on Game / Turn,
-//   - no replacement-effect hook that drops a phase from the turn's step
-//     sequence,
-//   - `pkg/mage/game.go` drives the turn through `core.AllSteps()`
-//     unconditionally, so there is no code path to suppress combat.
-//
-// Without a way to skip combat, we cannot set up the scenario CR 505.1a
-// describes. Per CLAUDE.md, skip rather than fake it.
+// Uses Game.SkipNextCombatPhase() to drop the six combat steps from turn 1's
+// schedule and records the steps that actually run.
 func TestTurnStructureMain_PostcombatMainAfterSkippedCombat(t *testing.T) {
-	t.Skip("XXX: engine gap — no combat-skip primitive (no SkipCombat/SkipNextCombat/SkipStep/SkipPhase; turn driver in game.go iterates core.AllSteps() unconditionally). CR 505.1a cannot be exercised until phase-skipping is added.")
+	tg := NewTestGame(t)
+	tg.padLibraries()
+	tg.OnPriority = func(g *mage.Game, playerIdx int, mainPhase bool) mage.PriorityAction {
+		return mage.PriorityAction{Type: mage.PriorityPass}
+	}
+	tg.Schedule.BuildNextTurn()
+	tg.Game.SkipNextCombatPhase()
+
+	var observed []core.PhaseStep
+	for {
+		step, ok := tg.Schedule.PopNextStep()
+		if !ok {
+			break
+		}
+		observed = append(observed, step)
+		tg.Step = step
+		tg.RunStepWithPriority(step)
+	}
+
+	mainPhases := []core.PhaseStep{}
+	for _, s := range observed {
+		if s.IsMainPhase() {
+			mainPhases = append(mainPhases, s)
+		}
+		if s == core.BeginCombat || s == core.DeclareAttackers ||
+			s == core.DeclareBlockers || s == core.FirstStrikeDamage ||
+			s == core.CombatDamage || s == core.EndCombat {
+			t.Errorf("CR 505.1a: combat step %v ran despite SkipNextCombatPhase()", s)
+		}
+	}
+	if len(mainPhases) != 2 {
+		t.Fatalf("CR 505.1a: expected exactly 2 main phases, got %d (%v)", len(mainPhases), observed)
+	}
+	if mainPhases[0] != core.PrecombatMain {
+		t.Errorf("CR 505.1a: first main phase should be PrecombatMain, got %v", mainPhases[0])
+	}
+	if mainPhases[1] != core.PostcombatMain {
+		t.Errorf("CR 505.1a: second main phase should still be PostcombatMain after a skipped combat phase, got %v", mainPhases[1])
+	}
 }
 
 // TestTurnStructureMain_OnlyOneLandPerTurn verifies CR 505.6b: a player can

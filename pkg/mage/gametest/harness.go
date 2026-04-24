@@ -317,10 +317,26 @@ func (tg *TestGame) Execute() {
 
 	maxTurns := tg.stopAt.turn + 5
 	for tg.Turn <= maxTurns {
-		for _, step := range core.AllSteps() {
+		// Turn-skip support (CR 500.11) via the engine schedule.
+		activeID := tg.ActivePlayerObj().PlayerID()
+		if tg.Schedule != nil && tg.Schedule.ConsumeTurnSkip(activeID) {
+			tg.advanceToNextTurn()
+			continue
+		}
+		if tg.Schedule == nil {
+			tg.Schedule = mage.NewTurnSchedule()
+		}
+		tg.Schedule.BuildNextTurn()
+		for {
+			step, ok := tg.Schedule.PopNextStep()
+			if !ok {
+				break
+			}
 			if tg.Turn == tg.stopAt.turn && step == tg.stopAt.step {
 				tg.Step = step
 				tg.Effects.Apply(tg.Game)
+				// Re-queue the stop step so a subsequent Execute resumes here.
+				tg.Schedule.Remaining = append([]core.PhaseStep{step}, tg.Schedule.Remaining...)
 				return
 			}
 
@@ -334,20 +350,24 @@ func (tg *TestGame) Execute() {
 
 			tg.RunStepWithPriority(step)
 		}
-		if len(tg.ExtraTurns) > 0 {
-			extraPlayerID := tg.ExtraTurns[0]
-			tg.ExtraTurns = tg.ExtraTurns[1:]
-			for i, p := range tg.Players {
-				if p.PlayerID() == extraPlayerID {
-					tg.ActivePlayer = i
-					break
-				}
-			}
-		} else {
-			tg.ActivePlayer = (tg.ActivePlayer + 1) % len(tg.Players)
-		}
-		tg.Turn++
+		tg.advanceToNextTurn()
 	}
+}
+
+func (tg *TestGame) advanceToNextTurn() {
+	if len(tg.ExtraTurns) > 0 {
+		extraPlayerID := tg.ExtraTurns[0]
+		tg.ExtraTurns = tg.ExtraTurns[1:]
+		for i, p := range tg.Players {
+			if p.PlayerID() == extraPlayerID {
+				tg.ActivePlayer = i
+				break
+			}
+		}
+	} else {
+		tg.ActivePlayer = (tg.ActivePlayer + 1) % len(tg.Players)
+	}
+	tg.Turn++
 }
 
 // autoPassHandler returns a PriorityHandler that always passes priority.

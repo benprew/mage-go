@@ -69,6 +69,22 @@ func (g *Game) Clone() *Game {
 		copy(c.ExtraTurns, g.ExtraTurns)
 	}
 
+	// Deep copy turn schedule.
+	if g.Schedule != nil {
+		cs := newTurnSchedule()
+		if len(g.Schedule.Remaining) > 0 {
+			cs.Remaining = make([]PhaseStep, len(g.Schedule.Remaining))
+			copy(cs.Remaining, g.Schedule.Remaining)
+		}
+		for k, v := range g.Schedule.SkipNextStep {
+			cs.SkipNextStep[k] = v
+		}
+		for k, v := range g.Schedule.SkipNextTurnFor {
+			cs.SkipNextTurnFor[k] = v
+		}
+		c.Schedule = cs
+	}
+
 	// Deep copy resolving targets.
 	if len(g.ResolvingTargets) > 0 {
 		c.ResolvingTargets = make([]uuid.UUID, len(g.ResolvingTargets))

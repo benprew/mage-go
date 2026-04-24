@@ -316,14 +316,45 @@ func TestTurnPhasesAdditional(t *testing.T) {
 		}
 	})
 
-	// CR 500.11 — Effects may cause a player to skip a step, phase, or turn.
-	// The engine currently exposes no primitive for skipping a step, phase,
-	// or turn (no "skip next combat," no "skip your next turn," no
-	// equivalent on Game or Player). grep for "Skip" in pkg/mage/core/turn.go
-	// and pkg/mage/game.go turns up only unrelated matches (summoning-sick
-	// skip, mana-ability skip).
-	t.Run("CR 500.11 skip a step/phase/turn", func(t *testing.T) {
-		t.Skip("XXX: engine gap — no skip-step/phase/turn primitive. Nothing in core/turn.go or game.go to schedule a skipped phase or turn.")
+	// CR 500.11 — Skip a step (the next draw step).
+	t.Run("CR 500.11 skip next draw step", func(t *testing.T) {
+		tg := NewTestGame(t)
+		tg.padLibraries()
+		tg.OnPriority = func(g *mage.Game, playerIdx int, mainPhase bool) mage.PriorityAction {
+			return mage.PriorityAction{Type: mage.PriorityPass}
+		}
+		tg.Game.SkipNextOccurrenceOfStep(core.Draw)
+		tg.Schedule.BuildNextTurn()
+		for _, s := range tg.Schedule.Remaining {
+			if s == core.Draw {
+				t.Fatal("CR 500.11: Draw was not skipped after SkipNextOccurrenceOfStep(Draw)")
+			}
+		}
+	})
+
+	// CR 500.11 — Skip a turn.
+	t.Run("CR 500.11 skip next turn for a player", func(t *testing.T) {
+		tg := NewTestGame(t)
+		tg.padLibraries()
+		tg.OnPriority = func(g *mage.Game, playerIdx int, mainPhase bool) mage.PriorityAction {
+			return mage.PriorityAction{Type: mage.PriorityPass}
+		}
+		playerAID := tg.GetPlayer(PlayerA).PlayerID()
+		playerBID := tg.GetPlayer(PlayerB).PlayerID()
+		tg.Game.SkipNextTurnFor(playerBID)
+		// Turn 1 = PlayerA. Turn 2 would normally be PlayerB but is
+		// skipped; the driver advances straight to the next turn. Turn 3
+		// is then PlayerA again (the skipped turn was "consumed" by the
+		// standard player-toggle).
+		tg.StopAt(3, core.Upkeep)
+		tg.Execute()
+		if tg.Turn != 3 {
+			t.Fatalf("expected Turn=3, got %d", tg.Turn)
+		}
+		gotActive := tg.ActivePlayerObj().PlayerID()
+		if gotActive != playerAID {
+			t.Errorf("CR 500.11: after skipping PlayerB's turn 2, expected turn 3 active = PlayerA; got different player")
+		}
 	})
 
 	// CR 500.12 — No game events occur between steps or phases. Any ability

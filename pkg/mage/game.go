@@ -46,6 +46,9 @@ type Game struct {
 	// Extra turns
 	ExtraTurns []uuid.UUID // player IDs who get extra turns
 
+	// Per-turn step schedule and pending skips (CR 500.7–500.11).
+	Schedule *TurnSchedule
+
 	// X value for the currently resolving spell
 	CurrentX int
 
@@ -155,6 +158,7 @@ func NewGame(playerA, playerB Player) *Game {
 		InstantsCastThisTurn:        make(map[uuid.UUID]int),
 		ArtifactManaOnly:            make(map[uuid.UUID]bool),
 		CreatureManaOnly:            make(map[uuid.UUID]bool),
+		Schedule:                    newTurnSchedule(),
 	}
 }
 
@@ -2196,27 +2200,45 @@ func (g *Game) doCleanup() {
 	}
 }
 
-// RunTurn executes a complete turn for the active player.
+// RunTurn executes a complete turn for the active player, reading steps
+// from g.Schedule so that effects can skip or insert steps mid-turn.
 // stopAt is checked: if we reach the specified turn+step, we stop.
 func (g *Game) RunTurn(stopTurn int, stopStep PhaseStep) bool {
-	for _, step := range AllSteps() {
+	if g.Schedule == nil {
+		g.Schedule = newTurnSchedule()
+	}
+	g.Schedule.buildNextTurn()
+	for {
+		step, ok := g.Schedule.popNextStep()
+		if !ok {
+			return false
+		}
 		if g.Turn == stopTurn && step == stopStep {
 			g.Step = step
-			return true // signal to stop
+			// Put the stop step back so the next Run resumes correctly.
+			g.Schedule.Remaining = append([]PhaseStep{step}, g.Schedule.Remaining...)
+			return true
 		}
 		g.RunStep(step)
 		if g.stopped {
 			return true
 		}
 	}
-	return false
 }
 
 // Run executes the game until the stop condition.
 func (g *Game) Run(stopTurn int, stopStep PhaseStep, maxTurns int) {
 	for g.Turn <= maxTurns {
-		if g.RunTurn(stopTurn, stopStep) {
-			return
+		// Turn-skip (CR 500.11): if the active player's next turn is
+		// marked as skipped, consume the skip and advance past this turn
+		// without running any steps.
+		activeID := g.ActivePlayerObj().PlayerID()
+		if g.Schedule != nil && g.Schedule.consumeTurnSkip(activeID) {
+			// Fall through to the extra-turn / next-player logic below.
+		} else {
+			if g.RunTurn(stopTurn, stopStep) {
+				return
+			}
 		}
 		// Check for extra turns
 		if len(g.ExtraTurns) > 0 {
