@@ -2740,14 +2740,16 @@ func (g *Game) GetActivatableAbilities(playerID uuid.UUID) []ActivatableInfo {
 	return result
 }
 
-// CastSpellByID casts a spell from a player's hand by card ID.
+// CastSpellByID casts a spell from a player's hand by card ID. It resolves
+// the ID to the card's name and delegates to CastSpellByName, which owns the
+// full cost-modification and additional-cost pipeline. Using a thin adapter
+// here means the priority loop and scripted tests go through the same code
+// path as the harness / interactive layer.
 func (g *Game) CastSpellByID(playerID, cardID uuid.UUID, targets []uuid.UUID, xValue int) error {
 	p := g.GetPlayer(playerID)
 	if p == nil {
 		return ErrPlayerNotFound
 	}
-
-	// Find card in hand
 	var card Card
 	for _, c := range p.Hand() {
 		if c.ID() == cardID {
@@ -2758,69 +2760,21 @@ func (g *Game) CastSpellByID(playerID, cardID uuid.UUID, targets []uuid.UUID, xV
 	if card == nil {
 		return ErrCardNotInHand
 	}
-
-	// Check expansion block (City in a Bottle)
-	if g.Effects.Rules.IsCardExpansionBlocked(card.Name()) {
-		return fmt.Errorf("can't cast %s: card is from a blocked expansion", card.Name())
-	}
-
-	// Compute payment mana cost
+	// Auto-tap lands to fill the pool so CastSpellByName's pool-only
+	// CanPay check succeeds. Mana restrictions and cost modifiers are
+	// re-applied inside CastSpellByName; compute the same payment shape
+	// here for the tap step.
 	mc := card.ManaCost()
 	payMC := mc
 	if mc.HasX {
 		payMC.Generic += xValue * mc.XCount
 	}
-
-	// Auto-tap lands to pay the cost
-	if !payMC.IsZero() {
+	if !payMC.IsZero() && !p.ManaPool().CanPay(payMC) {
 		if err := g.AutoTapForCost(playerID, payMC); err != nil {
 			return fmt.Errorf("cannot pay for %s: %v", card.Name(), err)
 		}
-		// Now pay from the mana pool
-		if err := p.ManaPool().Pay(payMC); err != nil {
-			return err
-		}
 	}
-
-	// Remove from hand
-	p.RemoveFromHand(card.ID())
-
-	// Build effects from spell abilities
-	var effects []Effect
-	for _, a := range card.Abilities() {
-		if sa, ok := a.(*SpellAbility); ok {
-			effects = append(effects, sa.Effects()...)
-		}
-	}
-
-	obj := &StackObject{
-		ID:         uuid.New(),
-		Card:       card,
-		Controller: playerID,
-		SourceID:   card.ID(),
-		Effects:    effects,
-		Targets:    targets,
-		XValue:     xValue,
-	}
-
-	if modes := card.Modes(); len(modes) > 0 {
-		obj.ModeChoice = p.ChooseMode(modes, card.Name())
-	}
-
-	g.Stack.Push(obj)
-
-	// Track instant spells cast per player this turn
-	if card.HasType(TypeInstant) {
-		g.InstantsCastThisTurn[playerID]++
-	}
-
-	g.FireEvent(GameEvent{
-		Type:     EvtSpellCast,
-		SourceID: card.ID(),
-		PlayerID: playerID,
-	})
-
-	return nil
+	return g.CastSpellByName(playerID, card.Name(), targets, xValue)
 }
 
 // ActivateAbilityByIndex activates an ability on a permanent by index.
