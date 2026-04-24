@@ -300,7 +300,7 @@ func TestCR601_2g_CastSpellTapManaAbilityDuringCasting(t *testing.T) {
 	g.AddCard(core.ZoneBattlefield, PlayerA, "Ch06 Bear")
 
 	g.CastSpell(1, core.PrecombatMain, PlayerA, "Ch06 Growth", "Ch06 Bear")
-	g.StopAt(1, core.PrecombatMain)
+	g.StopAt(1, core.EndStep)
 	g.Execute()
 
 	// Bear is 5/5 during main phase (3+2 / 3+2).
