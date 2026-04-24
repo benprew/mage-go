@@ -16,10 +16,12 @@ func TestCR605_1a_ManaAbilityActivatedNoStack(t *testing.T) {
 	g := NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, PlayerA, "Forest")
 	g.ActivateAbility(1, core.PrecombatMain, PlayerA, "Forest")
-	g.StopAt(1, core.PrecombatMain)
+	// Stop at BeginCombat so PrecombatMain runs fully and the activation fires.
+	g.StopAt(1, core.BeginCombat)
 	g.Execute()
 
 	g.AssertManaProducedAtLeast(PlayerA, core.Green, 1)
+	g.AssertTapped(PlayerA, "Forest", true)
 }
 
 // TestCR605_3a_ManaAbilityActivatableDuringCasting verifies that mana can be produced
@@ -73,7 +75,7 @@ func TestCR611_2a_ContinuousStatedDuration(t *testing.T) {
 	g.AddCard(core.ZoneHand, PlayerA, "Ch06 Growth")
 
 	g.CastSpell(1, core.PrecombatMain, PlayerA, "Ch06 Growth", "Ch06 Bear")
-	g.StopAt(1, core.PrecombatMain)
+	g.StopAt(1, core.EndStep)
 	g.Execute()
 
 	g.AssertPowerToughness(PlayerA, "Ch06 Bear", 5, 5)

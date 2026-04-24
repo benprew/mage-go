@@ -487,6 +487,15 @@ func (tg *TestGame) ensureManaForCast(ca castAction) {
 	mc := card.ManaCost()
 	pool := player.ManaPool()
 
+	// Let the engine auto-tap untapped mana sources for the cost; only
+	// pre-fill the pool with what those sources cannot cover. This keeps
+	// mana-ability side effects (source becomes tapped, mana credited via
+	// the engine path) visible to tests that assert on them.
+	supply := tg.untappedManaSupply(player.PlayerID())
+	totalSupply := 0
+	for _, v := range supply {
+		totalSupply += v
+	}
 	colors := []struct {
 		color core.Color
 		need  int
@@ -496,9 +505,19 @@ func (tg *TestGame) ensureManaForCast(ca castAction) {
 	}
 	for _, c := range colors {
 		have := pool.Count(c.color)
-		if have < c.need {
-			pool.Add(c.color, c.need-have)
+		shortfall := c.need - have
+		if shortfall <= 0 {
+			continue
 		}
+		avail := supply[c.color]
+		if avail >= shortfall {
+			supply[c.color] -= shortfall
+			totalSupply -= shortfall
+			continue
+		}
+		supply[c.color] = 0
+		totalSupply -= avail
+		pool.Add(c.color, shortfall-avail)
 	}
 
 	genericNeeded := mc.Generic
@@ -506,8 +525,35 @@ func (tg *TestGame) ensureManaForCast(ca castAction) {
 		genericNeeded += ca.xValue * mc.XCount
 	}
 	if genericNeeded > 0 {
-		pool.Add(core.Colorless, genericNeeded)
+		deficit := genericNeeded - totalSupply
+		if deficit > 0 {
+			pool.Add(core.Colorless, deficit)
+		}
 	}
+}
+
+// untappedManaSupply returns the per-color production capacity available to
+// playerID from their untapped mana sources (one tap each).
+func (tg *TestGame) untappedManaSupply(playerID uuid.UUID) map[core.Color]int {
+	out := map[core.Color]int{}
+	for _, perm := range tg.Battlefield {
+		if perm.Controller != playerID || perm.Tapped {
+			continue
+		}
+		if !perm.CanTapForEffect(tg.Game) {
+			continue
+		}
+		for _, a := range perm.RuntimeAbilities {
+			inner := mage.UnwrapAbility(a)
+			ma, ok := inner.(*mage.ManaAbility)
+			if !ok {
+				continue
+			}
+			out[ma.PrimaryColor()] += ma.ProducedAmount()
+			break
+		}
+	}
+	return out
 }
 
 func (tg *TestGame) ensureManaForResponse(r responseAction) {
