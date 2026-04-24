@@ -102,7 +102,7 @@ func TestTurnStructureMain_PostcombatMainAfterSkippedCombat(t *testing.T) {
 		return mage.PriorityAction{Type: mage.PriorityPass}
 	}
 	tg.Schedule.BuildNextTurn()
-	tg.Game.SkipNextCombatPhase()
+	tg.SkipNextCombatPhase()
 
 	var observed []core.PhaseStep
 	for {

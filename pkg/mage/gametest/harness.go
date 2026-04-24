@@ -718,7 +718,7 @@ func (tg *TestGame) popResponseFor(topSourceID uuid.UUID, ref PlayerRef) *respon
 		// Find the card ID of this cast's spell by scanning the stack:
 		// we compare by name because the underlying card ID isn't
 		// preserved across the cast.
-		obj := tg.Game.Stack.Peek()
+		obj := tg.Stack.Peek()
 		if obj == nil {
 			continue
 		}

@@ -158,9 +158,9 @@ func TestCleanup(t *testing.T) {
 		tg := NewTestGame(t)
 		tg.StopAt(3, core.Upkeep)
 		tg.Execute()
-		if tg.Game.CleanupPriorityRounds != 0 {
+		if tg.CleanupPriorityRounds != 0 {
 			t.Errorf("CR 514.3: expected CleanupPriorityRounds=0 with no cleanup triggers, got %d",
-				tg.Game.CleanupPriorityRounds)
+				tg.CleanupPriorityRounds)
 		}
 	})
 
@@ -204,9 +204,9 @@ func TestCleanup(t *testing.T) {
 		tg.Execute()
 
 		tg.AssertLife(PlayerA, 21)
-		if tg.Game.CleanupPriorityRounds != 1 {
+		if tg.CleanupPriorityRounds != 1 {
 			t.Errorf("CR 514.3a: expected exactly one cleanup priority round, got %d",
-				tg.Game.CleanupPriorityRounds)
+				tg.CleanupPriorityRounds)
 		}
 	})
 }

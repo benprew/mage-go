@@ -92,9 +92,10 @@ func TestTurnStructureBeginning_Untap_UntapsOnOwnTurnAfterStayingTapped(t *testi
 // that trigger during the untap step are held and first go on the stack at
 // the beginning of the upkeep step. We use an EvtBecameUntapped trigger
 // that gains 1 life for its controller; we observe that:
-//   (a) stopping at the start of upkeep (before priority) shows life
-//       unchanged — the trigger was not able to resolve during untap.
-//   (b) stopping after upkeep shows the trigger resolved.
+//
+//	(a) stopping at the start of upkeep (before priority) shows life
+//	    unchanged — the trigger was not able to resolve during untap.
+//	(b) stopping after upkeep shows the trigger resolved.
 func TestTurnStructureBeginning_Untap_NoPriority_TriggerHeldUntilUpkeep(t *testing.T) {
 	name := "TSB Untap Life Gainer"
 	if !mage.CardRegistered(name) {
@@ -238,7 +239,7 @@ func TestTurnStructureBeginning_Upkeep_MultipleUpkeepSteps(t *testing.T) {
 
 	// The stop re-queues Upkeep at the head of Remaining. Insert an extra
 	// Upkeep right after it so the turn runs: Upkeep, Upkeep, Draw, ...
-	tg.Game.InsertStepAfter(core.Upkeep, core.Upkeep)
+	tg.InsertStepAfter(core.Upkeep, core.Upkeep)
 
 	// Drive turn 3 forward: run Upkeep (original), then Upkeep (extra),
 	// then stop before Draw so we can measure.

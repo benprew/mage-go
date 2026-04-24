@@ -322,7 +322,7 @@ func TestTurnPhasesAdditional(t *testing.T) {
 		tg.Execute()
 
 		playerAID := tg.GetPlayer(PlayerA).PlayerID()
-		tg.Game.GrantExtraTurn(playerAID)
+		tg.GrantExtraTurn(playerAID)
 
 		// Advance to turn 2 PrecombatMain. Normally turn 2 is PlayerB, but
 		// the extra turn grant should redirect turn 2 back to PlayerA.
@@ -342,7 +342,7 @@ func TestTurnPhasesAdditional(t *testing.T) {
 		tg.OnPriority = func(g *mage.Game, playerIdx int, mainPhase bool) mage.PriorityAction {
 			return mage.PriorityAction{Type: mage.PriorityPass}
 		}
-		tg.Game.SkipNextOccurrenceOfStep(core.Draw)
+		tg.SkipNextOccurrenceOfStep(core.Draw)
 		tg.Schedule.BuildNextTurn()
 		for _, s := range tg.Schedule.Remaining {
 			if s == core.Draw {
@@ -360,7 +360,7 @@ func TestTurnPhasesAdditional(t *testing.T) {
 		}
 		playerAID := tg.GetPlayer(PlayerA).PlayerID()
 		playerBID := tg.GetPlayer(PlayerB).PlayerID()
-		tg.Game.SkipNextTurnFor(playerBID)
+		tg.SkipNextTurnFor(playerBID)
 		// Turn 1 = PlayerA. Turn 2 would normally be PlayerB but is
 		// skipped; the driver advances straight to the next turn. Turn 3
 		// is then PlayerA again (the skipped turn was "consumed" by the
