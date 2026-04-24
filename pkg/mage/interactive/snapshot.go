@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/eval"
 )
 
 func buildRulesText(c mage.Card) string {
@@ -251,6 +252,15 @@ func GetAvailableActions(g *mage.Game, playerID uuid.UUID) []ActionOption {
 			validTargets = targetType.Possible(playerID, card, g)
 			validLabels = buildTargetLabels(g, validTargets)
 		}
+		mc := card.ManaCost()
+		maxX := 0
+		if mc.HasX {
+			availMana := eval.CountAvailableMana(g, playerID)
+			maxX = availMana - mc.CMC()
+			if maxX < 0 {
+				maxX = 0
+			}
+		}
 		options = append(options, ActionOption{
 			Type:              ActionCastSpell,
 			Label:             fmt.Sprintf("Cast %s %s", card.Name(), card.ManaCost()),
@@ -258,9 +268,10 @@ func GetAvailableActions(g *mage.Game, playerID uuid.UUID) []ActionOption {
 			CardName:          card.Name(),
 			NeedsTarget:       needsTarget,
 			TargetType:        targetType,
-			ManaCost:          card.ManaCost().String(),
+			ManaCost:          mc.String(),
 			ValidTargets:      validTargets,
 			ValidTargetLabels: validLabels,
+			MaxX:              maxX,
 		})
 	}
 
