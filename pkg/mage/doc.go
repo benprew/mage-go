@@ -474,7 +474,7 @@ to add targeting requirements.
 Convenience constructors (set condition automatically):
 
 	[AttacksTrigger](effect, optional)                          // EvtDeclaredAttacker, source is self
-	[BlocksTrigger](effect, optional)                           // EvtDeclaredBlocker, source is self
+	[BlocksTrigger](effect, optional)                           // EvtCreatureBlocks, source is self (CR 509.3a; fires once per combat per blocker)
 	[EntersBattlefieldTrigger](effect, optional)                // EvtEntersBattlefield, source is self
 	[DiesCreatureTrigger](effect, optional, filter)             // EvtCreatureDied, another creature you control
 	[AnyCreatureDiesTrigger](effect, optional)                  // EvtCreatureDied, any creature

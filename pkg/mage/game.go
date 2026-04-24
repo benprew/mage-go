@@ -1222,6 +1222,11 @@ func (g *Game) PutTriggersOnStack() {
 							obj.Targets = append(obj.Targets, pt.event.TargetID)
 						}
 					}
+				case EvtCreatureBlocks:
+					// Pass the blocker's ID (fired once per combat per blocker)
+					if pt.event.SourceID != uuid.Nil {
+						obj.Targets = []uuid.UUID{pt.event.SourceID}
+					}
 				}
 			}
 		}
@@ -2196,6 +2201,7 @@ func (g *Game) doDeclareBlockers() {
 	}
 
 	blockerCount := make(map[uuid.UUID]int) // how many attackers each blocker is assigned to
+	var blockerOrder []uuid.UUID            // insertion order for EvtCreatureBlocks (CR 509.3a)
 	for _, ba := range assignments {
 		blocker := g.FindPermanent(ba.BlockerID)
 		attackerID := ba.AttackerID
@@ -2227,6 +2233,9 @@ func (g *Game) doDeclareBlockers() {
 		if blockerCount[ba.BlockerID] >= maxBlocks {
 			continue
 		}
+		if blockerCount[ba.BlockerID] == 0 {
+			blockerOrder = append(blockerOrder, ba.BlockerID)
+		}
 		blockerCount[ba.BlockerID]++
 		g.Combat.AddBlocker(ba.BlockerID, attackerID)
 		g.BlockedThisTurn[ba.BlockerID] = append(g.BlockedThisTurn[ba.BlockerID], attackerID)
@@ -2234,6 +2243,16 @@ func (g *Game) doDeclareBlockers() {
 			Type:     EvtDeclaredBlocker,
 			SourceID: ba.BlockerID,
 			TargetID: attackerID,
+			PlayerID: nonActive.PlayerID(),
+		})
+	}
+
+	// CR 509.3a — "Whenever [creature] blocks" fires exactly once per combat
+	// per blocking creature, regardless of how many attackers it blocks.
+	for _, blockerID := range blockerOrder {
+		g.FireEvent(GameEvent{
+			Type:     EvtCreatureBlocks,
+			SourceID: blockerID,
 			PlayerID: nonActive.PlayerID(),
 		})
 	}

@@ -34,6 +34,7 @@ const (
 	EvtBecameUntapped     // fired when a permanent becomes untapped
 	EvtMainPhase          // fired at the beginning of a main phase
 	EvtCleanup            // fired at the beginning of the cleanup step (CR 514)
+	EvtCreatureBlocks     // fired once per blocking creature per combat (CR 509.3a)
 )
 
 // GameEvent carries data about a game event.

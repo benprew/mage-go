@@ -104,9 +104,12 @@ func AttacksTrigger(effect Effect, optional bool) *GenericTriggered {
 		})
 }
 
-// BlocksTrigger fires when the source creature is declared as a blocker.
+// BlocksTrigger fires once per combat when the source creature blocks one or
+// more attackers (CR 509.3a). For "Whenever [creature] blocks a creature"
+// (per-attacker) triggers, construct a NewTriggered on EvtDeclaredBlocker
+// directly.
 func BlocksTrigger(effect Effect, optional bool) *GenericTriggered {
-	return NewTriggered(EvtDeclaredBlocker, optional, effect).
+	return NewTriggered(EvtCreatureBlocks, optional, effect).
 		SetCondition(func(evt *GameEvent, _ GameReader, sourceID, _ uuid.UUID) bool {
 			return evt.SourceID == sourceID
 		})
