@@ -225,7 +225,7 @@ func TestDeclareAttackers(t *testing.T) {
 			}
 		}
 		if !sawGreen {
-			t.Skip("XXX: engine gap — color override did not apply; cannot exercise CR 508.2a")
+			t.Fatalf("color override did not apply; attacker colors=%v", perm.Colors())
 		}
 		// The critical assertion: watcher's trigger did NOT fire, so no 5 life
 		// was gained. PlayerA's life must still be 20. CR 508.2a forbids the
