@@ -463,6 +463,7 @@ func (g *Game) ExecuteAttackers(playerID uuid.UUID, attackerIDs []uuid.UUID) {
 			PlayerID: playerID,
 		})
 	}
+	g.Combat.SnapshotAttackedAlone()
 }
 
 // ExecuteBlockers declares blockers from explicit assignments for AI search clones.
@@ -499,6 +500,7 @@ func (g *Game) ExecuteBlockers(assignments []BlockAssignment) {
 			TargetID: ba.AttackerID,
 		})
 	}
+	g.Combat.SnapshotBlockedAlone()
 }
 
 // ExecuteCombatDamage resolves first-strike and normal combat damage for AI search clones.

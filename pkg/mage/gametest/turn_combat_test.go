@@ -276,11 +276,118 @@ func TestTurnStructureCombatRemoval(t *testing.T) {
 		tg.AssertPermanentCount(PlayerA, attacker, 1)
 	})
 
-	// CR 506.5 — "Attacks alone" / "attacking alone" / "blocks alone" /
-	// "blocking alone". The engine does not currently expose a selector or
-	// trigger that distinguishes attacking-alone from attacking-with-others.
-	// Skipped until such a selector exists.
+	// CR 506.5 — "A creature attacks alone if it's the only creature declared
+	// as an attacker during the declare attackers step. A creature is attacking
+	// alone if it's attacking but no other creatures are. A creature blocks
+	// alone if it's the only creature declared as a blocker during the declare
+	// blockers step. A creature is blocking alone if it's blocking but no other
+	// creatures are."
+	//
+	// Four selectors on Combat:
+	//   AttacksAlone(id)      — snapshot at declare-attackers
+	//   IsAttackingAlone(id)  — live, recomputed
+	//   BlocksAlone(id)       — snapshot at declare-blockers
+	//   IsBlockingAlone(id)   — live, recomputed
 	t.Run("CR 506.5 attacks-alone / blocks-alone selector", func(t *testing.T) {
-		t.Skip("XXX: engine gap — no 'attacks alone' / 'blocks alone' selector or trigger condition")
+		t.Run("single attacker and single blocker satisfy all four selectors", func(t *testing.T) {
+			attacker := "Combat 506.5 Lone Attacker"
+			blocker := "Combat 506.5 Lone Blocker"
+			registerRemovalBear(attacker, 2, 2)
+			registerRemovalBear(blocker, 2, 2)
+
+			tg := NewTestGame(t)
+			tg.AddCard(core.ZoneBattlefield, PlayerA, attacker)
+			tg.AddCard(core.ZoneBattlefield, PlayerB, blocker)
+			tg.Attack(1, PlayerA, attacker)
+			tg.Block(1, PlayerB, blocker, attacker)
+
+			// Stop right after DeclareBlockers so both snapshots are taken and
+			// Combat state is still live (Combat.Reset runs at end of EndCombat).
+			tg.StopAt(1, core.CombatDamage)
+			tg.Execute()
+
+			atk := tg.FindPermanentByName(attacker, tg.GetPlayer(PlayerA).PlayerID())
+			blk := tg.FindPermanentByName(blocker, tg.GetPlayer(PlayerB).PlayerID())
+			if atk == nil || blk == nil {
+				t.Fatalf("missing permanents: atk=%v blk=%v", atk, blk)
+			}
+
+			if !tg.Combat.AttacksAlone(atk.ID()) {
+				t.Errorf("AttacksAlone(attacker) = false, want true")
+			}
+			if !tg.Combat.IsAttackingAlone(atk.ID()) {
+				t.Errorf("IsAttackingAlone(attacker) = false, want true")
+			}
+			if !tg.Combat.BlocksAlone(blk.ID()) {
+				t.Errorf("BlocksAlone(blocker) = false, want true")
+			}
+			if !tg.Combat.IsBlockingAlone(blk.ID()) {
+				t.Errorf("IsBlockingAlone(blocker) = false, want true")
+			}
+		})
+
+		t.Run("two attackers and two blockers: snapshot stays false even after one leaves combat", func(t *testing.T) {
+			atk1 := "Combat 506.5 Pair Attacker A"
+			atk2 := "Combat 506.5 Pair Attacker B"
+			blk1 := "Combat 506.5 Pair Blocker A"
+			blk2 := "Combat 506.5 Pair Blocker B"
+			registerRemovalBear(atk1, 2, 2)
+			registerRemovalBear(atk2, 2, 2)
+			registerRemovalBear(blk1, 2, 2)
+			registerRemovalBear(blk2, 2, 2)
+
+			tg := NewTestGame(t)
+			tg.AddCard(core.ZoneBattlefield, PlayerA, atk1)
+			tg.AddCard(core.ZoneBattlefield, PlayerA, atk2)
+			tg.AddCard(core.ZoneBattlefield, PlayerB, blk1)
+			tg.AddCard(core.ZoneBattlefield, PlayerB, blk2)
+			tg.Attack(1, PlayerA, atk1, atk2)
+			tg.Block(1, PlayerB, blk1, atk1)
+			tg.Block(1, PlayerB, blk2, atk2)
+
+			tg.StopAt(1, core.CombatDamage)
+			tg.Execute()
+
+			a1 := tg.FindPermanentByName(atk1, tg.GetPlayer(PlayerA).PlayerID())
+			a2 := tg.FindPermanentByName(atk2, tg.GetPlayer(PlayerA).PlayerID())
+			b1 := tg.FindPermanentByName(blk1, tg.GetPlayer(PlayerB).PlayerID())
+			b2 := tg.FindPermanentByName(blk2, tg.GetPlayer(PlayerB).PlayerID())
+			if a1 == nil || a2 == nil || b1 == nil || b2 == nil {
+				t.Fatalf("missing permanents")
+			}
+
+			// With two attackers/two blockers, none qualify under any selector.
+			if tg.Combat.AttacksAlone(a1.ID()) || tg.Combat.AttacksAlone(a2.ID()) {
+				t.Errorf("AttacksAlone returned true with two attackers declared")
+			}
+			if tg.Combat.IsAttackingAlone(a1.ID()) || tg.Combat.IsAttackingAlone(a2.ID()) {
+				t.Errorf("IsAttackingAlone returned true with two attackers")
+			}
+			if tg.Combat.BlocksAlone(b1.ID()) || tg.Combat.BlocksAlone(b2.ID()) {
+				t.Errorf("BlocksAlone returned true with two blockers declared")
+			}
+			if tg.Combat.IsBlockingAlone(b1.ID()) || tg.Combat.IsBlockingAlone(b2.ID()) {
+				t.Errorf("IsBlockingAlone returned true with two blockers")
+			}
+
+			// Now remove one attacker and one blocker from combat.
+			tg.Combat.RemoveFromCombat(a2.ID())
+			tg.Combat.RemoveFromCombat(b2.ID())
+
+			// Live selectors flip true: a1 / b1 are now alone.
+			if !tg.Combat.IsAttackingAlone(a1.ID()) {
+				t.Errorf("IsAttackingAlone(a1) after removing a2 = false, want true")
+			}
+			if !tg.Combat.IsBlockingAlone(b1.ID()) {
+				t.Errorf("IsBlockingAlone(b1) after removing b2 = false, want true")
+			}
+			// Snapshot selectors stay false: two were declared during the step.
+			if tg.Combat.AttacksAlone(a1.ID()) {
+				t.Errorf("AttacksAlone(a1) = true after removal; snapshot must reflect declaration time")
+			}
+			if tg.Combat.BlocksAlone(b1.ID()) {
+				t.Errorf("BlocksAlone(b1) = true after removal; snapshot must reflect declaration time")
+			}
+		})
 	})
 }

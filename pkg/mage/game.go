@@ -2057,6 +2057,10 @@ func (g *Game) doDeclareAttackers() {
 			}
 		}
 	}
+
+	// CR 506.5 — snapshot "attacks alone" once all attackers have been
+	// declared this step.
+	g.Combat.SnapshotAttackedAlone()
 }
 
 // isValidBand checks that a slice of attacker IDs meets banding requirements:
@@ -2087,6 +2091,7 @@ func (g *Game) doDeclareBlockers() {
 	assignments := nonActive.DeclareBlockers(g)
 	if assignments == nil {
 		// No blockers, but still fire the event so "attacks and isn't blocked" triggers work
+		g.Combat.SnapshotBlockedAlone()
 		g.FireEvent(GameEvent{
 			Type:     EvtBlockersDecl,
 			PlayerID: nonActive.PlayerID(),
@@ -2146,6 +2151,10 @@ func (g *Game) doDeclareBlockers() {
 			PlayerID: nonActive.PlayerID(),
 		})
 	}
+
+	// CR 506.5 — snapshot "blocks alone" once all blockers have been
+	// declared this step.
+	g.Combat.SnapshotBlockedAlone()
 
 	// Fire EvtBlockersDecl once after all blockers are assigned
 	g.FireEvent(GameEvent{

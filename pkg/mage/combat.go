@@ -11,6 +11,14 @@ type Combat struct {
 	Attackers   map[uuid.UUID]bool
 	FirstStruck map[uuid.UUID]bool
 	Bands       map[uuid.UUID][]uuid.UUID // band leader -> members (all creatures in the band)
+
+	// AttackedAlone records the single creature declared as an attacker during
+	// the most recent declare-attackers step, if exactly one was declared. Used
+	// by the CR 506.5 "attacks alone" selector (e.g. Exalted, CR 702.83). Set
+	// by SnapshotAttackedAlone, cleared by Reset.
+	AttackedAlone uuid.UUID
+	// BlockedAlone is the symmetric snapshot for CR 506.5 "blocks alone".
+	BlockedAlone uuid.UUID
 }
 
 // CombatGroup represents an attacker and its blockers.
@@ -33,6 +41,8 @@ func (c *Combat) Reset() {
 	c.Attackers = make(map[uuid.UUID]bool)
 	c.FirstStruck = make(map[uuid.UUID]bool)
 	c.Bands = make(map[uuid.UUID][]uuid.UUID)
+	c.AttackedAlone = uuid.Nil
+	c.BlockedAlone = uuid.Nil
 }
 
 func (c *Combat) AddAttacker(attackerID, defenderID uuid.UUID) {
@@ -66,6 +76,83 @@ func (c *Combat) IsBlocking(id uuid.UUID) bool {
 		}
 	}
 	return false
+}
+
+// SnapshotAttackedAlone records, at the end of the declare-attackers step,
+// whether exactly one creature was declared as an attacker. CR 506.5: "A
+// creature attacks alone if it's the only creature declared as an attacker
+// during the declare attackers step."
+func (c *Combat) SnapshotAttackedAlone() {
+	if len(c.Attackers) == 1 {
+		for id := range c.Attackers {
+			c.AttackedAlone = id
+		}
+	} else {
+		c.AttackedAlone = uuid.Nil
+	}
+}
+
+// SnapshotBlockedAlone records, at the end of the declare-blockers step,
+// whether exactly one creature was declared as a blocker. CR 506.5: "A
+// creature blocks alone if it's the only creature declared as a blocker
+// during the declare blockers step."
+func (c *Combat) SnapshotBlockedAlone() {
+	var only uuid.UUID
+	count := 0
+	for _, g := range c.Groups {
+		for _, bid := range g.BlockerIDs {
+			only = bid
+			count++
+			if count > 1 {
+				c.BlockedAlone = uuid.Nil
+				return
+			}
+		}
+	}
+	if count == 1 {
+		c.BlockedAlone = only
+	} else {
+		c.BlockedAlone = uuid.Nil
+	}
+}
+
+// AttacksAlone returns true if id was the sole creature declared as an
+// attacker during the most recent declare-attackers step (CR 506.5,
+// snapshot semantics — used by Exalted, etc.).
+func (c *Combat) AttacksAlone(id uuid.UUID) bool {
+	return id != uuid.Nil && c.AttackedAlone == id
+}
+
+// IsAttackingAlone returns true if id is currently the only attacker
+// (CR 506.5, live semantics — re-evaluated whenever queried).
+func (c *Combat) IsAttackingAlone(id uuid.UUID) bool {
+	return c.Attackers[id] && len(c.Attackers) == 1
+}
+
+// BlocksAlone returns true if id was the sole creature declared as a
+// blocker during the most recent declare-blockers step (CR 506.5,
+// snapshot semantics).
+func (c *Combat) BlocksAlone(id uuid.UUID) bool {
+	return id != uuid.Nil && c.BlockedAlone == id
+}
+
+// IsBlockingAlone returns true if id is currently the only blocker
+// across all combat groups (CR 506.5, live semantics).
+func (c *Combat) IsBlockingAlone(id uuid.UUID) bool {
+	found := false
+	count := 0
+	for _, g := range c.Groups {
+		for _, bid := range g.BlockerIDs {
+			count++
+			if bid == id {
+				found = true
+			}
+			if count > 1 {
+				return false
+			}
+		}
+	}
+	return found && count == 1
 }
 
 // AddBand records a group of creatures attacking as a band.
