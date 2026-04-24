@@ -64,7 +64,6 @@ Engine-internals counterparts live in `pkg/mage/priority_test.go`. Per-CR test s
 |---|---|---|
 | `turn_general_test.go` | 500.12 | no between-steps observable (negative invariant) |
 | `turn_beginning_test.go` | 503.2 | no extra-upkeep-step primitive |
-| `turn_combat_blockers_test.go` | 509.1h | dedup — covered by `TestTurnStructureCombatRemoval/CR_509.1h_...` in `turn_combat_test.go` |
 
 Note: 503.2 also needs card-side wiring (*Paradox Haze*, *Obeka*) to be exercised end-to-end, but the engine primitive is the blocker.
 
