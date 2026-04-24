@@ -28,33 +28,19 @@ Engine-internals counterparts live in `pkg/mage/priority_test.go`. Per-CR test s
 2. **Per-step mana pool empty** (commit `e7447cf`) — `Game.EmptyManaPools()` deferred at end of every `RunStep`/`RunStepWithPriority`. `ManaPool.ProducedThisTurn` tally + `CountProducedThisTurn` / `AssertManaProduced*` DSL preserves observability. Unblocks CR 500.5.
 3. **`EvtCleanup` event + cleanup priority observable** (CR 514.3, 514.3a) — `core.EvtCleanup` added and fired at the top of `doCleanupActions`; `BeginningOfEachCleanupStepTrigger` helper exposes it to card code. `Game.CleanupPriorityRounds` counts how many times priority was granted during a cleanup step (normally 0; incremented only on 514.3a fallback). Both skipped cleanup tests now pass: `TestCleanup/CR_514.3_...` and `TestCleanup/CR_514.3a_...`.
 
-4. **CR 509.1h (no-trample, blocker destroyed after blocks)** — not an engine bug. `doNormalBlockedDamage` already skips dead blockers via `FindPermanent(bid) == nil` and, without trample, routes 0 damage to the defender. Test: `TestTurnStructureCombatRemoval/CR_509.1h_...`. The cast is scheduled at `CombatDamage` rather than `DeclareBlockers` because of a harness ordering quirk (see below), not because of CR semantics. Trample interaction (CR 702.19b — damage that would have gone to removed blockers still "counts" against the attacker's trample accounting) is *not* yet correct; defer until #7's damage-assignment DSL lands.
+4. **Instant-speed "can't attack this turn"** (commit `947a9cc`, CR 506.4a) — `PreventAttackingUntilEndOfTurn(permID)` continuous effect at `LayerAbility` revoking `AttrCanAttack`, plus `PreventAttackingTargetUntilEndOfTurn()` effect wrapper. Mirror of the existing block-prevention plumbing. Per-step continuous-effect re-application means already-declared attackers stay declared (CR 506.4a). Unskipped: `TestTurnStructureCombatRemoval/CR_506.4a_...`.
+
+5. **Attacks-alone / blocks-alone selectors** (commit `90d3753`, CR 506.5) — `Combat.AttacksAlone` / `BlocksAlone` (snapshot at declaration) and `IsAttackingAlone` / `IsBlockingAlone` (live), with `SnapshotAttackedAlone` / `SnapshotBlockedAlone` wired into both `doDeclareAttackers`/`doDeclareBlockers` and the `ExecuteAttackers`/`ExecuteBlockers` AI search-clone paths. Unskipped: `TestTurnStructureCombatRemoval/CR_506.5_...`.
+
+6. **Multi-blocker damage-assignment DSL** (commit `7940691`, CR 510.1c) — `CombatDamageAssigner` interface with `GetBlockerOrder` / `GetCombatDamageAssignment`; `doNormalBlockedDamage` consults it with CR 510.1c lethal-first / CR 702.19b trample validation, falling back to greedy split if absent or invalid. Harness exposes `tg.AssignCombatDamage(attacker, map[blocker]int)` and `tg.ChooseBlockerOrder(attacker, blockers...)`. Unskipped: `TestCombatDamage/CR_510.1c_...`.
+
+7. **Runtime color override on declared attackers** (commit `894f04a`, CR 508.2a) — investigation only; the layer-5 pipeline (`ChangeColorEffect` → `ColorOverride` → indefinite `TargetEffect`) was already correct, likely fixed indirectly by the per-step continuous-effect re-application in #2/#3. Unskipped with a hard `t.Fatalf` guard so any regression surfaces: `TestDeclareAttackers/CR_508.2a_...`.
+
+8. **CR 509.1h (no-trample, blocker destroyed after blocks)** — not an engine bug. `doNormalBlockedDamage` already skips dead blockers via `FindPermanent(bid) == nil` and, without trample, routes 0 damage to the defender. Test: `TestTurnStructureCombatRemoval/CR_509.1h_...`. The cast is scheduled at `CombatDamage` rather than `DeclareBlockers` because of a harness ordering quirk (see below), not because of CR semantics. Trample interaction (CR 702.19b — damage that would have gone to removed blockers still "counts" against the attacker's trample accounting) is *not* yet correct; defer until #7's damage-assignment DSL lands.
 
    **Harness ordering bug — follow-up:** `gametest/harness.go:348` runs `executeOrderedActions` before `RunStepWithPriority`, which means a `CastSpell(turn, step, ...)` resolves *before* that step's turn-based actions instead of during its priority round. Per CR, TBAs run first and priority opens afterwards (e.g. CR 509.2 grants priority only after `doDeclareBlockers`). The current inversion prevents writing the natural 509.1h test (cast at `DeclareBlockers` targeting the declared blocker). Fixing this globally would likely churn many existing tests that implicitly rely on "ordered action fires at the top of step X"; handle as its own focused change.
 
 ### Next up (priority order)
-
-5. **Instant-speed "can't attack / can't block" effects** (CR 506.4a)
-   - Today only an attachment-based `PreventAttachedFromAttacking` exists, checked at declaration.
-   - Add a targeted continuous effect applied at instant speed that survives post-declaration. Piggyback on the existing layered continuous-effects system.
-   - Unlocks gotcha control cards like *Marshal's Anthem*-style "target creature can't attack this turn."
-   - Unblocks one skip in `turn_combat_test.go`.
-
-6. **Attacks-alone / blocks-alone selector** (CR 506.5)
-   - Trivial: `Combat.IsAttackingAlone(permID)` / `IsBlockingAlone(permID)` given the current attacker/blocker tracking.
-   - Four variants per CR: "attacks alone," "attacking alone," "blocks alone," "blocking alone."
-   - Unlocks *Silverblade Paladin*, *Cathedral of War*, *Wingmate Roc*, etc.
-   - Unblocks one skip in `turn_combat_test.go`.
-
-7. **Multi-blocker damage-assignment DSL** (CR 510.1c)
-   - Gametest-only; engine likely already supports the mechanic.
-   - `tg.AssignCombatDamage(attacker, map[blocker]int)`.
-   - `tg.ChooseBlockerOrder(attacker, blockers...)` — damage-assignment order, needed for trample (CR 702.19b) and classic "4/4 vs two 2/3s" scenarios.
-   - Unblocks one skip in `turn_combat_damage_test.go`.
-
-8. **Runtime color-change effect** (CR 508.2a)
-   - Existing `ChangeColorEffect` / `ColorOverride` didn't apply in the failing test. Investigate layer-5 registration on resolving instants. Likely a bug or missing integration rather than a new primitive.
-   - Unblocks one skip in `turn_combat_attackers_test.go`.
 
 9. **`EvtBetweenSteps` / TBA-fence invariant** (CR 500.12)
    - Negative invariant; hardest to observe, lowest payoff.
@@ -78,11 +64,7 @@ Engine-internals counterparts live in `pkg/mage/priority_test.go`. Per-CR test s
 |---|---|---|
 | `turn_general_test.go` | 500.12 | no between-steps observable (negative invariant) |
 | `turn_beginning_test.go` | 503.2 | no extra-upkeep-step primitive |
-| `turn_combat_test.go` | 506.4a | no instant-speed "can't attack" effect |
-| `turn_combat_test.go` | 506.5 | no attacks-alone selector |
 | `turn_combat_blockers_test.go` | 509.1h | dedup — covered by `TestTurnStructureCombatRemoval/CR_509.1h_...` in `turn_combat_test.go` |
-| `turn_combat_attackers_test.go` | 508.2a | color override didn't apply |
-| `turn_combat_damage_test.go` | 510.1c | no multi-blocker damage-assignment DSL |
 
 Note: 503.2 also needs card-side wiring (*Paradox Haze*, *Obeka*) to be exercised end-to-end, but the engine primitive is the blocker.
 
