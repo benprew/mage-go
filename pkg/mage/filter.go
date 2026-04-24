@@ -110,10 +110,15 @@ func NotControlledBy(playerID uuid.UUID) PermanentFilter {
 	})
 }
 
-// HasColorFilter returns a filter matching permanents whose card has the given color.
+// HasColorFilter returns a filter matching permanents whose current effective
+// color set (honoring ColorOverride from continuous effects, CR 613 layer 5)
+// includes the given color. Reading effective colors (not the raw mana cost)
+// is what lets a later-layer effect like Crusade (+1/+1 to white creatures)
+// pick up a creature that became white earlier in the same Apply() pass via
+// a color-changing effect.
 func HasColorFilter(c Color) PermanentFilter {
 	return NewPermanentFilter(c.String(), func(p *Permanent, _ *Game) bool {
-		for _, col := range p.Card.ManaCost().Colors() {
+		for _, col := range p.Colors() {
 			if col == c {
 				return true
 			}

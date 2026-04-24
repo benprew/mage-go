@@ -425,36 +425,56 @@ func (em *EffectManager) RemoveReplacements(sourceID uuid.UUID) {
 // ApplyReplacements runs the replacement pipeline on an action.
 // Returns nil if the action was fully prevented/replaced.
 // Each replacement fires at most once per event to prevent infinite loops.
+//
+// Per CR 616.1 the affected entity chooses the order when multiple
+// replacement/prevention effects are applicable to the same event. Without an
+// interactive prompt the pipeline applies modifying replacements (damage
+// doubling, redirects, etc.) before prevention effects (shields, Fog, etc.),
+// matching the order a typical affected player would choose: preserve shield
+// capacity against the post-modification amount rather than spend it against
+// the original.
+//
+// After each replacement resolves the outer loop re-scans from the top so
+// replacements that only become applicable against the new action (CR 616.2,
+// "becomes applicable") are picked up mid-chain.
 func (em *EffectManager) ApplyReplacements(action Action, g GameMutator) Action {
 	applied := make(map[ReplacementEffect]bool)
-	for {
-		if action == nil {
-			return nil
-		}
-		found := false
-		// Check both lists: persistent first, then cycle
+	tryMatch := func(action Action, preventionOnly bool) (Action, ReplacementEffect, bool) {
 		for _, list := range [2][]ReplacementEffect{em.replacements, em.cycleReplacements} {
 			for _, r := range list {
 				if applied[r] {
+					continue
+				}
+				if isPreventionReplacement(r) != preventionOnly {
 					continue
 				}
 				if !r.IsActive(g) {
 					continue
 				}
 				if r.Matches(action, g) {
-					applied[r] = true
-					action = r.Replace(action, g)
-					found = true
-					break // restart inner loop with new action
+					return r.Replace(action, g), r, true
 				}
 			}
-			if found {
-				break
-			}
 		}
-		if !found {
-			break
+		return action, nil, false
+	}
+	for {
+		if action == nil {
+			return nil
 		}
+		newAction, r, ok := tryMatch(action, false)
+		if ok {
+			applied[r] = true
+			action = newAction
+			continue
+		}
+		newAction, r, ok = tryMatch(action, true)
+		if ok {
+			applied[r] = true
+			action = newAction
+			continue
+		}
+		break
 	}
 	return action
 }

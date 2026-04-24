@@ -731,3 +731,32 @@ func (r *damagePreventionRuleReplacement) Clone() ReplacementEffect {
 	c := *r
 	return &c
 }
+
+// ---------------------------------------------------------------------------
+// Prevention effect classification (CR 616.1 ordering helper)
+// ---------------------------------------------------------------------------
+
+// PreventionEffect is an optional marker interface. Replacement effects that
+// are conceptually "prevention" or "reduction" effects (damage prevention
+// shields, Fog, Forcefield, color/source/type-scoped damage prevention, etc.)
+// implement this so the replacement pipeline can order them after modifying
+// replacements when both are applicable to the same event.
+type PreventionEffect interface {
+	IsPreventionEffect() bool
+}
+
+// isPreventionReplacement reports whether a replacement effect is a prevention
+// effect under the PreventionEffect marker.
+func isPreventionReplacement(r ReplacementEffect) bool {
+	pe, ok := r.(PreventionEffect)
+	return ok && pe.IsPreventionEffect()
+}
+
+func (*preventionShieldReplacement) IsPreventionEffect() bool     { return true }
+func (*fogReplacement) IsPreventionEffect() bool                  { return true }
+func (*forcefieldReplacement) IsPreventionEffect() bool           { return true }
+func (*colorPreventionReplacement) IsPreventionEffect() bool      { return true }
+func (*sourcePreventionReplacement) IsPreventionEffect() bool     { return true }
+func (*typePreventionReplacement) IsPreventionEffect() bool       { return true }
+func (*damagePreventionRuleReplacement) IsPreventionEffect() bool { return true }
+
