@@ -126,6 +126,14 @@ type GameMutator interface {
 
 	// Spell casting (e.g. Shahrazad)
 	CastSpellByName(playerID uuid.UUID, name string, targets []uuid.UUID, xValues ...int) error
+
+	// Turn schedule mutations (CR 500.9, 503.2). AppendExtraStep queues step
+	// at the end of the current turn's remaining schedule. InsertStepAfter
+	// inserts step immediately after the first occurrence of anchor, or
+	// appends if anchor is no longer in the schedule. Used by cards like
+	// Paradox Haze ("additional upkeep step") and Obeka.
+	AppendExtraStep(step PhaseStep)
+	InsertStepAfter(anchor, step PhaseStep)
 }
 
 // Compile-time checks that *Game satisfies both interfaces.

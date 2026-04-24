@@ -36,6 +36,8 @@ Engine-internals counterparts live in `pkg/mage/priority_test.go`. Per-CR test s
 
 7. **Runtime color override on declared attackers** (commit `894f04a`, CR 508.2a) — investigation only; the layer-5 pipeline (`ChangeColorEffect` → `ColorOverride` → indefinite `TargetEffect`) was already correct, likely fixed indirectly by the per-step continuous-effect re-application in #2/#3. Unskipped with a hard `t.Fatalf` guard so any regression surfaces: `TestDeclareAttackers/CR_508.2a_...`.
 
+9. **Extra-upkeep-step primitive** (CR 503.2) — `Game.InsertStepAfter(anchor, step)` / `Game.AppendExtraStep(step)` already existed on `TurnSchedule` from item #1; exposed them on the `GameMutator` interface so card effects (Paradox Haze, Obeka) can insert an additional upkeep step into the current turn. Unskipped: `TestTurnStructureBeginning_Upkeep_MultipleUpkeepSteps` — installs an "at beginning of upkeep gain 1 life" pinger, stops at turn 3 Upkeep, calls `InsertStepAfter(Upkeep, Upkeep)`, drives both upkeep steps, and asserts +2 life across the pair. No new engine plumbing needed beyond the two interface methods.
+
 8. **CR 509.1h (no-trample, blocker destroyed after blocks)** — not an engine bug. `doNormalBlockedDamage` already skips dead blockers via `FindPermanent(bid) == nil` and, without trample, routes 0 damage to the defender. Test: `TestTurnStructureCombatRemoval/CR_509.1h_...`. The cast is scheduled at `CombatDamage` rather than `DeclareBlockers` because of a harness ordering quirk (see below), not because of CR semantics. Trample interaction (CR 702.19b — damage that would have gone to removed blockers still "counts" against the attacker's trample accounting) is *not* yet correct; defer until #7's damage-assignment DSL lands.
 
    **Harness ordering bug — follow-up:** `gametest/harness.go:348` runs `executeOrderedActions` before `RunStepWithPriority`, which means a `CastSpell(turn, step, ...)` resolves *before* that step's turn-based actions instead of during its priority round. Per CR, TBAs run first and priority opens afterwards (e.g. CR 509.2 grants priority only after `doDeclareBlockers`). The current inversion prevents writing the natural 509.1h test (cast at `DeclareBlockers` targeting the declared blocker). Fixing this globally would likely churn many existing tests that implicitly rely on "ordered action fires at the top of step X"; handle as its own focused change.
@@ -63,9 +65,8 @@ Engine-internals counterparts live in `pkg/mage/priority_test.go`. Per-CR test s
 | File | Rule | Gap |
 |---|---|---|
 | `turn_general_test.go` | 500.12 | no between-steps observable (negative invariant) |
-| `turn_beginning_test.go` | 503.2 | no extra-upkeep-step primitive |
 
-Note: 503.2 also needs card-side wiring (*Paradox Haze*, *Obeka*) to be exercised end-to-end, but the engine primitive is the blocker.
+Note: 503.2 is now exercised at the engine level via `GameMutator.InsertStepAfter`; card-side wiring (*Paradox Haze*, *Obeka*) can be added when those sets are implemented.
 
 ## Card-side follow-ups (not engine work)
 

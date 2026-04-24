@@ -186,24 +186,75 @@ func TestTurnStructureBeginning_Upkeep_TriggerResolvesBeforeDraw(t *testing.T) {
 }
 
 // TestTurnStructureBeginning_Upkeep_MultipleUpkeepSteps verifies CR 503.2:
-// "If a turn has multiple upkeep steps, 'until your next upkeep step'-type
-// abilities (and similar) expire at the first one." Equivalently,
-// spells/abilities with a restriction like "Cast this only after your upkeep
-// step" become legal after the *first* upkeep step, not only after the last
-// one.
+// a turn can contain more than one upkeep step. An effect that adds an extra
+// upkeep step (e.g. Paradox Haze) inserts an additional upkeep step into the
+// current turn, and "at the beginning of upkeep" triggers fire for each one.
 //
-// The engine currently has no primitive for adding an extra upkeep step:
-//   - no `ExtraUpkeep`, `AddUpkeep`, `AddStep`, or `AdditionalUpkeep` field
-//     on Game / Turn / PhaseStep plumbing,
-//   - no continuous / replacement effect type that inserts an extra step,
-//   - no card in the existing sets exercises this (verified by grep in
-//     `pkg/mage/` for those identifiers — zero hits).
-//
-// Without that primitive we cannot construct a turn with two upkeep steps,
-// so the observable behaviour CR 503.2 describes has no way to manifest.
-// Per CLAUDE.md ("never simplify"), we skip rather than fake it.
+// Engine primitive: Game.InsertStepAfter(anchor, step) on the per-turn
+// TurnSchedule, exposed via GameMutator so card effects can call it.
 func TestTurnStructureBeginning_Upkeep_MultipleUpkeepSteps(t *testing.T) {
-	t.Skip("XXX: engine gap — no extra-upkeep-step primitive (no ExtraUpkeep/AddUpkeep/AddStep on Game/Turn; no effect type that inserts steps). CR 503.2 cannot be exercised until that is added.")
+	// A pinger that gains 1 life at the beginning of its controller's
+	// upkeep. With a single upkeep step the controller gains 1 life per
+	// turn; with an extra upkeep step inserted, 2 life per turn.
+	pinger := "CR 503.2 Upkeep Lifegainer"
+	if !mage.CardRegistered(pinger) {
+		mage.Register(pinger, func() mage.Card {
+			return mage.NewArtifact(pinger, "{0}",
+				mage.WithAbility(mage.NewTriggered(
+					core.EvtUpkeep,
+					false,
+					mage.GainLife(1),
+				).SetCondition(func(evt *core.GameEvent, _ mage.GameReader, _, controllerID uuid.UUID) bool {
+					return evt.PlayerID == controllerID
+				})),
+			)
+		})
+	}
+
+	// Baseline: with a single upkeep step, PlayerA gains 1 life on their
+	// upkeep of turn 3 (turns 1 and 3 are PlayerA's). Check the delta
+	// across turn 3's upkeep specifically.
+	tgBase := NewTestGame(t)
+	tgBase.AddCard(core.ZoneBattlefield, PlayerA, pinger)
+	tgBase.StopAt(3, core.Upkeep)
+	tgBase.Execute()
+	preBase := tgBase.GetPlayer(PlayerA).Life()
+	tgBase.StopAt(3, core.Draw)
+	tgBase.Execute()
+	postBase := tgBase.GetPlayer(PlayerA).Life()
+	if postBase-preBase != 1 {
+		t.Fatalf("baseline: expected +1 life across single upkeep, got +%d (pre=%d post=%d)",
+			postBase-preBase, preBase, postBase)
+	}
+
+	// CR 503.2: insert an extra upkeep step into turn 3 immediately after
+	// the canonical upkeep. Stop before upkeep, mutate the schedule, then
+	// run through the remaining steps in the turn.
+	tg := NewTestGame(t)
+	tg.AddCard(core.ZoneBattlefield, PlayerA, pinger)
+	tg.StopAt(3, core.Upkeep)
+	tg.Execute()
+	pre := tg.GetPlayer(PlayerA).Life()
+
+	// The stop re-queues Upkeep at the head of Remaining. Insert an extra
+	// Upkeep right after it so the turn runs: Upkeep, Upkeep, Draw, ...
+	tg.Game.InsertStepAfter(core.Upkeep, core.Upkeep)
+
+	// Drive turn 3 forward: run Upkeep (original), then Upkeep (extra),
+	// then stop before Draw so we can measure.
+	tg.RunStepWithPriority(core.Upkeep)
+	step2, ok := tg.Schedule.PopNextStep()
+	if !ok || step2 != core.Upkeep {
+		t.Fatalf("CR 503.2: expected a second Upkeep step in Remaining, got step=%v ok=%v", step2, ok)
+	}
+	tg.Step = core.Upkeep
+	tg.RunStepWithPriority(core.Upkeep)
+
+	post := tg.GetPlayer(PlayerA).Life()
+	if post-pre != 2 {
+		t.Errorf("CR 503.2: expected +2 life across two upkeep steps, got +%d (pre=%d post=%d)",
+			post-pre, pre, post)
+	}
 }
 
 // CR 504.1 — First, the active player draws a card during their draw step.
