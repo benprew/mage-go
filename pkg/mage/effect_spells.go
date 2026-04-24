@@ -243,6 +243,98 @@ func (e *createTokenEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit, TokenPower: e.power, TokenToughness: e.toughness}
 }
 
+// createTokenAttackingEffect creates a token creature that enters the
+// battlefield attacking the defending player (CR 508.4). AttacksTrigger does
+// not fire for such tokens (CR 508.3a).
+type createTokenAttackingEffect struct {
+	name      string
+	power     int
+	toughness int
+	types     []CardType
+	subTypes  []string
+	keywords  []Keyword
+}
+
+// CreateTokenAttacking creates an effect that puts a creature token onto the
+// battlefield attacking the defending player (the controller's opponent in a
+// 2-player game). Per CR 508.4, such a creature is "attacking" but never
+// "attacked"; AttacksTrigger abilities do not fire.
+func CreateTokenAttacking(name string, power, toughness int, types []CardType, subTypes []string, keywords ...Keyword) Effect {
+	return &createTokenAttackingEffect{
+		name:      name,
+		power:     power,
+		toughness: toughness,
+		types:     types,
+		subTypes:  subTypes,
+		keywords:  keywords,
+	}
+}
+
+func (e *createTokenAttackingEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	token := NewToken(e.name, e.power, e.toughness, e.types, e.subTypes, e.keywords...)
+	token.SetOwner(controller)
+	var defenderID uuid.UUID
+	for _, p := range g.AllPlayers() {
+		if p.PlayerID() != controller {
+			defenderID = p.PlayerID()
+			break
+		}
+	}
+	g.PutOnBattlefieldAttacking(token, controller, defenderID)
+	return nil
+}
+
+func (e *createTokenAttackingEffect) Text() string {
+	return fmt.Sprintf("create a %d/%d %s token attacking defending player", e.power, e.toughness, e.name)
+}
+func (e *createTokenAttackingEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit, TokenPower: e.power, TokenToughness: e.toughness}
+}
+
+// createTokenBlockingEffect creates a token creature that enters the
+// battlefield blocking a target attacking creature (CR 509.4). The single
+// target is the attacker the token will block.
+type createTokenBlockingEffect struct {
+	name      string
+	power     int
+	toughness int
+	types     []CardType
+	subTypes  []string
+	keywords  []Keyword
+}
+
+// CreateTokenBlocking creates an effect that puts a creature token onto the
+// battlefield blocking a target attacking creature. Per CR 509.4 the token is
+// "blocking" but never "blocked"; BlocksTrigger abilities do not fire.
+func CreateTokenBlocking(name string, power, toughness int, types []CardType, subTypes []string, keywords ...Keyword) Effect {
+	return &createTokenBlockingEffect{
+		name:      name,
+		power:     power,
+		toughness: toughness,
+		types:     types,
+		subTypes:  subTypes,
+		keywords:  keywords,
+	}
+}
+
+func (e *createTokenBlockingEffect) Apply(g GameMutator, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	token := NewToken(e.name, e.power, e.toughness, e.types, e.subTypes, e.keywords...)
+	token.SetOwner(controller)
+	var attackerID uuid.UUID
+	if len(targets) > 0 {
+		attackerID = targets[0]
+	}
+	g.PutOnBattlefieldBlocking(token, controller, attackerID)
+	return nil
+}
+
+func (e *createTokenBlockingEffect) Text() string {
+	return fmt.Sprintf("create a %d/%d %s token blocking target attacker", e.power, e.toughness, e.name)
+}
+func (e *createTokenBlockingEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit, TokenPower: e.power, TokenToughness: e.toughness}
+}
+
 // cloneTargetEffect copies target permanent's characteristics onto the source
 // card. If additionalTypes are provided, they are added after cloning (e.g.
 // Copy Artifact adds TypeEnchantment). Target filtering is handled by the

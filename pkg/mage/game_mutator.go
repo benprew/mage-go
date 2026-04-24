@@ -51,6 +51,8 @@ type GameMutator interface {
 
 	// Battlefield mutations
 	PutOnBattlefield(Card, uuid.UUID) *Permanent
+	PutOnBattlefieldAttacking(Card, uuid.UUID, uuid.UUID) *Permanent
+	PutOnBattlefieldBlocking(Card, uuid.UUID, uuid.UUID) *Permanent
 	RemoveFromBattlefield(*Permanent)
 	DestroyPermanent(*Permanent)
 	ExilePermanent(*Permanent)

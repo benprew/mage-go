@@ -333,10 +333,83 @@ func TestCR508_3a_WhenAttacksTrigger(t *testing.T) {
 // CR 508.4 — ETB attacking (G11)
 // ---------------------------------------------------------------------------
 
-// TestCR508_4_DeclareAttackersETBAttacking: ETB-attacking not yet supported.
-// XXX: implement when the engine gains ETB-attacking support.
+// TestCR508_4_DeclareAttackersETBAttacking verifies CR 508.4: a creature put onto
+// the battlefield attacking is treated as an attacking creature (deals combat
+// damage) but per CR 508.3a does not cause AttacksTrigger abilities to fire —
+// it never "attacked."
 func TestCR508_4_DeclareAttackersETBAttacking(t *testing.T) {
-	t.Skip("CR 508.4: ETB-attacking not yet supported by the engine")
+	spellName := "CR508.4 Beckon Token"
+	if !mage.CardRegistered(spellName) {
+		mage.Register(spellName, func() mage.Card {
+			return mage.NewInstant(spellName, "{R}",
+				mage.NewSpellAbility(mage.CreateTokenAttacking("CR508.4 Marauder", 3, 3,
+					[]core.CardType{core.TypeCreature},
+					[]string{"Goblin", "Warrior"})))
+		})
+	}
+
+	triggerName := "CR508.4 Trigger Beast"
+	var attacksFires int32
+	if !mage.CardRegistered(triggerName) {
+		mage.Register(triggerName, func() mage.Card {
+			return mage.NewCreature(triggerName, "{2}{R}", 2, 2,
+				mage.WithSubTypes("Beast"),
+				mage.WithAbility(mage.AttacksTrigger(
+					mage.FuncEffect("count attacks fires", mage.EffectProperties{},
+						func(_ mage.GameMutator, _, _ uuid.UUID, _ []uuid.UUID) error {
+							atomic.AddInt32(&attacksFires, 1)
+							return nil
+						}), false)))
+		})
+	}
+	putAttackingName := "CR508.4 Put Beast Attacking"
+	if !mage.CardRegistered(putAttackingName) {
+		mage.Register(putAttackingName, func() mage.Card {
+			return mage.NewInstant(putAttackingName, "{R}",
+				mage.NewSpellAbility(mage.FuncEffect("put beast attacking", mage.EffectProperties{},
+					func(g mage.GameMutator, _, controller uuid.UUID, _ []uuid.UUID) error {
+						beast, err := mage.CreateCard(triggerName)
+						if err != nil {
+							return err
+						}
+						var defender uuid.UUID
+						for _, p := range g.AllPlayers() {
+							if p.PlayerID() != controller {
+								defender = p.PlayerID()
+								break
+							}
+						}
+						g.PutOnBattlefieldAttacking(beast, controller, defender)
+						return nil
+					})))
+		})
+	}
+
+	// Part 1: token put into play attacking deals combat damage.
+	tg := NewTestGame(t)
+	tg.AddCard(core.ZoneBattlefield, PlayerA, "Mountain")
+	tg.AddCard(core.ZoneHand, PlayerA, spellName)
+	tg.CastSpell(1, core.BeginCombat, PlayerA, spellName)
+	tg.StopAt(1, core.PostcombatMain)
+	tg.Execute()
+	tg.AssertPermanentCount(PlayerA, "CR508.4 Marauder", 1)
+	tg.AssertLife(PlayerB, 17) // 3 damage from the put-in-play attacker
+
+	// Part 2: AttacksTrigger must NOT fire when a creature with that trigger
+	// is put onto the battlefield attacking (CR 508.3a).
+	atomic.StoreInt32(&attacksFires, 0)
+	tg2 := NewTestGame(t)
+	tg2.AddCard(core.ZoneBattlefield, PlayerA, "Mountain")
+	tg2.AddCard(core.ZoneHand, PlayerA, putAttackingName)
+	tg2.CastSpell(1, core.BeginCombat, PlayerA, putAttackingName)
+	tg2.StopAt(1, core.PostcombatMain)
+	tg2.Execute()
+	tg2.AssertGraveyardCount(PlayerA, putAttackingName, 1)
+	tg2.AssertPermanentCount(PlayerA, triggerName, 1)
+	tg2.AssertLife(PlayerB, 18) // 2 damage from the 2/2, no trigger damage
+	if got := atomic.LoadInt32(&attacksFires); got != 0 {
+		t.Fatalf("CR 508.3a: AttacksTrigger fired %d time(s); must not fire for a creature put into play attacking", got)
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -851,8 +924,84 @@ func TestCR509_3g_AttacksAndIsntBlockedTrigger(t *testing.T) {
 // CR 509.4 — ETB blocking (G22)
 // ---------------------------------------------------------------------------
 
-// TestCR509_4_DeclareBlockersETBBlocking: ETB-blocking not yet supported.
-// XXX: implement when the engine gains ETB-blocking support.
+// TestCR509_4_DeclareBlockersETBBlocking verifies CR 509.4: a creature put onto
+// the battlefield blocking is treated as a blocking creature (absorbs combat
+// damage) but per CR 509.4 does not cause BlocksTrigger abilities to fire —
+// it never "blocked."
 func TestCR509_4_DeclareBlockersETBBlocking(t *testing.T) {
-	t.Skip("CR 509.4: ETB-blocking not yet supported by the engine")
+	blockTokenSpell := "CR509.4 Emergency Blocker"
+	if !mage.CardRegistered(blockTokenSpell) {
+		mage.Register(blockTokenSpell, func() mage.Card {
+			return mage.NewInstant(blockTokenSpell, "{W}",
+				mage.NewTargetedSpell(mage.TargetCreature(mage.IsAttacking),
+					mage.CreateTokenBlocking("CR509.4 Shield Drone", 0, 4,
+						[]core.CardType{core.TypeCreature},
+						[]string{"Soldier"})))
+		})
+	}
+
+	blockTriggerName := "CR509.4 Trigger Wall"
+	var blocksFires int32
+	if !mage.CardRegistered(blockTriggerName) {
+		mage.Register(blockTriggerName, func() mage.Card {
+			return mage.NewCreature(blockTriggerName, "{1}{W}", 0, 4,
+				mage.WithSubTypes("Wall"),
+				mage.WithKeyword(core.Defender),
+				mage.WithAbility(mage.BlocksTrigger(
+					mage.FuncEffect("count blocks fires", mage.EffectProperties{},
+						func(_ mage.GameMutator, _, _ uuid.UUID, _ []uuid.UUID) error {
+							atomic.AddInt32(&blocksFires, 1)
+							return nil
+						}), false)))
+		})
+	}
+	putBlockingName := "CR509.4 Put Wall Blocking"
+	if !mage.CardRegistered(putBlockingName) {
+		mage.Register(putBlockingName, func() mage.Card {
+			return mage.NewInstant(putBlockingName, "{W}",
+				mage.NewTargetedSpell(mage.TargetCreature(mage.IsAttacking),
+					mage.FuncEffect("put wall blocking", mage.EffectProperties{},
+						func(g mage.GameMutator, _, controller uuid.UUID, targets []uuid.UUID) error {
+							wall, err := mage.CreateCard(blockTriggerName)
+							if err != nil {
+								return err
+							}
+							var atkID uuid.UUID
+							if len(targets) > 0 {
+								atkID = targets[0]
+							}
+							g.PutOnBattlefieldBlocking(wall, controller, atkID)
+							return nil
+						})))
+		})
+	}
+
+	// Part 1: token put into play blocking absorbs the attacker's damage.
+	tg := NewTestGame(t)
+	tg.AddCard(core.ZoneBattlefield, PlayerA, "Grizzly Bears")
+	tg.AddCard(core.ZoneBattlefield, PlayerB, "Plains")
+	tg.AddCard(core.ZoneHand, PlayerB, blockTokenSpell)
+	tg.Attack(1, PlayerA, "Grizzly Bears")
+	tg.CastSpell(1, core.DeclareBlockers, PlayerB, blockTokenSpell, "Grizzly Bears")
+	tg.StopAt(1, core.PostcombatMain)
+	tg.Execute()
+	tg.AssertPermanentCount(PlayerB, "CR509.4 Shield Drone", 1)
+	tg.AssertLife(PlayerB, 20) // Bears' damage absorbed by the 0/4 blocker
+
+	// Part 2: BlocksTrigger must NOT fire when a creature with that trigger
+	// is put onto the battlefield blocking (CR 509.4).
+	atomic.StoreInt32(&blocksFires, 0)
+	tg2 := NewTestGame(t)
+	tg2.AddCard(core.ZoneBattlefield, PlayerA, "Grizzly Bears")
+	tg2.AddCard(core.ZoneBattlefield, PlayerB, "Plains")
+	tg2.AddCard(core.ZoneHand, PlayerB, putBlockingName)
+	tg2.Attack(1, PlayerA, "Grizzly Bears")
+	tg2.CastSpell(1, core.DeclareBlockers, PlayerB, putBlockingName, "Grizzly Bears")
+	tg2.StopAt(1, core.PostcombatMain)
+	tg2.Execute()
+	tg2.AssertPermanentCount(PlayerB, blockTriggerName, 1)
+	tg2.AssertLife(PlayerB, 20)
+	if got := atomic.LoadInt32(&blocksFires); got != 0 {
+		t.Fatalf("CR 509.4: BlocksTrigger fired %d time(s); must not fire for a creature put into play blocking", got)
+	}
 }

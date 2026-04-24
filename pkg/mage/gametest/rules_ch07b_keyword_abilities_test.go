@@ -269,14 +269,25 @@ func TestCR702_15b_LifelinkGainsLife(t *testing.T) {
 // ── 702.12 Indestructible ─────────────────────────────────────────────────────
 
 // TestCR702_12b_IndestructibleSurvivesLethalDamage verifies that an indestructible
-// creature is not destroyed by lethal damage (CR 702.12b).
-// XXX: Engine SBA loop bug — when an indestructible creature accumulates lethal
-// damage, CheckStateBasedActions repeatedly marks it for destruction and then
-// DestroyPermanent returns early, keeping actions=true and looping forever.
-// Until that engine bug is fixed this test only exercises the destroy-effect path
-// (see TestCR702_12b_IndestructibleSurvivesDestroyEffect).
+// creature accumulating lethal damage is not destroyed (CR 702.12b). Also
+// guards against an SBA infinite loop: the lethal-damage SBA must skip
+// indestructible creatures so CheckStateBasedActions terminates.
 func TestCR702_12b_IndestructibleSurvivesLethalDamage(t *testing.T) {
-	t.Skip("engine SBA infinite loop when indestructible has lethal damage — CR 702.12b gap")
+	registerCh07bTestCards()
+	tg := NewTestGame(t)
+	tg.AddCard(core.ZoneBattlefield, PlayerB, "Test Indestructible Creature") // 3/3
+	tg.AddCard(core.ZoneBattlefield, PlayerA, "Mountain")
+	tg.AddCard(core.ZoneBattlefield, PlayerA, "Mountain")
+	tg.AddCard(core.ZoneBattlefield, PlayerA, "Mountain")
+	tg.AddCard(core.ZoneBattlefield, PlayerA, "Mountain")
+	tg.AddCard(core.ZoneHand, PlayerA, "Lightning Bolt") // 3 damage
+	tg.AddCard(core.ZoneHand, PlayerA, "Lightning Bolt")
+	tg.CastSpell(1, core.PrecombatMain, PlayerA, "Lightning Bolt", "Test Indestructible Creature")
+	tg.CastSpell(1, core.PrecombatMain, PlayerA, "Lightning Bolt", "Test Indestructible Creature")
+	tg.StopAt(1, core.EndStep)
+	tg.Execute()
+	// 6 damage is lethal to a 3/3, but indestructible means it stays.
+	tg.AssertPermanentCount(PlayerB, "Test Indestructible Creature", 1)
 }
 
 // TestCR702_12b_IndestructibleSurvivesDestroyEffect verifies that an indestructible

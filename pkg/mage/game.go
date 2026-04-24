@@ -523,6 +523,63 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 	return perm
 }
 
+// PutOnBattlefieldAttacking (CR 508.4) puts a creature onto the battlefield and
+// marks it as attacking the given defender (player or planeswalker). For the
+// purpose of trigger events and effects, such a creature is "attacking" but
+// never "attacked" — AttacksTrigger does not fire. Per CR 508.4a, if the
+// specified defender is no longer in the game (zero UUID or unknown player),
+// the creature still enters but never becomes an attacking creature.
+func (g *Game) PutOnBattlefieldAttacking(card Card, controller, defenderID uuid.UUID) *Permanent {
+	if card.Owner() == uuid.Nil {
+		card.SetOwner(controller)
+	}
+	perm := g.PutOnBattlefield(card, controller)
+	if defenderID == uuid.Nil || !g.isValidDefender(defenderID) {
+		return perm
+	}
+	g.Combat.AddAttacker(perm.ID(), defenderID)
+	g.FireEvent(GameEvent{
+		Type:     EvtEntersAttacking,
+		SourceID: perm.ID(),
+		TargetID: defenderID,
+		PlayerID: controller,
+	})
+	return perm
+}
+
+// PutOnBattlefieldBlocking (CR 509.4) puts a creature onto the battlefield and
+// marks it as blocking the given attacker. Per CR 509.4, such a creature is
+// "blocking" but never "blocked" — BlocksTrigger does not fire. Per CR 509.4a,
+// if the specified attacker is no longer attacking, the creature still enters
+// but never becomes a blocking creature.
+func (g *Game) PutOnBattlefieldBlocking(card Card, controller, attackerID uuid.UUID) *Permanent {
+	if card.Owner() == uuid.Nil {
+		card.SetOwner(controller)
+	}
+	perm := g.PutOnBattlefield(card, controller)
+	if attackerID == uuid.Nil || !g.Combat.IsAttacking(attackerID) {
+		return perm
+	}
+	g.Combat.AddBlocker(perm.ID(), attackerID)
+	g.BlockedThisTurn[perm.ID()] = append(g.BlockedThisTurn[perm.ID()], attackerID)
+	g.FireEvent(GameEvent{
+		Type:     EvtEntersBlocking,
+		SourceID: perm.ID(),
+		TargetID: attackerID,
+		PlayerID: controller,
+	})
+	return perm
+}
+
+func (g *Game) isValidDefender(id uuid.UUID) bool {
+	for _, p := range g.Players {
+		if p.PlayerID() == id {
+			return true
+		}
+	}
+	return g.FindPermanent(id) != nil
+}
+
 // setEffectSource sets the source ID on a continuous effect.
 func (g *Game) setEffectSource(e ContinuousEffect, id uuid.UUID) {
 	e.SetSourceID(id)
@@ -1619,10 +1676,12 @@ func (g *Game) CheckStateBasedActions() {
 	for {
 		actions := false
 
-		// Check for creatures with lethal damage
+		// Check for creatures with lethal damage (CR 704.5h). Indestructible
+		// creatures (CR 702.12b) are skipped — the destroy would be a no-op
+		// and setting actions=true would loop the SBA forever.
 		var toDestroy []*Permanent
 		for _, p := range g.Battlefield {
-			if p.HasType(TypeCreature) && p.LethalDamage(g) {
+			if p.HasType(TypeCreature) && p.LethalDamage(g) && !p.HasKeyword(Indestructible) {
 				toDestroy = append(toDestroy, p)
 				actions = true
 			}
