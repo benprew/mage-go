@@ -42,11 +42,9 @@ Engine-internals counterparts live in `pkg/mage/priority_test.go`. Per-CR test s
 
    **Harness ordering bug — follow-up:** `gametest/harness.go:348` runs `executeOrderedActions` before `RunStepWithPriority`, which means a `CastSpell(turn, step, ...)` resolves *before* that step's turn-based actions instead of during its priority round. Per CR, TBAs run first and priority opens afterwards (e.g. CR 509.2 grants priority only after `doDeclareBlockers`). The current inversion prevents writing the natural 509.1h test (cast at `DeclareBlockers` targeting the declared blocker). Fixing this globally would likely churn many existing tests that implicitly rely on "ordered action fires at the top of step X"; handle as its own focused change.
 
-### Next up (priority order)
+9. **TBA-fence invariant / `Game.InStep()` observable** (CR 500.12) — `Game.inStep` flag set true inside `RunStep` / `RunStepWithPriority` (defer-cleared on exit); `Game.OnFireEvent func(*Game, GameEvent)` hook invoked at the top of `FireEvent`; `Game.WithInStep(fn)` helper used by the harness to mark scripted pre-step actions (`executeOrderedActions`, `autoPlayLands` in both `Execute` and `PlayToEnd`) as logically part of the enclosing step's priority round. The CR 500.12 test records every fired event together with `g.InStep()` at fire time and asserts no event escaped a step. Unskipped: `TestTurnPhasesAdditional/CR_500.12_no_game_events_between_steps`.
 
-9. **`EvtBetweenSteps` / TBA-fence invariant** (CR 500.12)
-   - Negative invariant; hardest to observe, lowest payoff.
-   - Defer until after #3–#8 land; then add a shared assertion helper that verifies events fired during a turn-based action are associated with the enclosing step.
+### Next up (priority order)
 
 10. **Harness ordering: scripted actions should fire at the player's first priority in the target step** (CR 117 / 509.2 / general priority correctness)
     - **Current behavior:** `gametest/harness.go:348` (and the `PlayToEnd` mirror near line 832) runs `executeOrderedActions` immediately before `RunStepWithPriority`. That resolves each `CastSpell(turn, step, ...)` at the top of the step — *before* the step's turn-based actions (`doUntap`, `doUpkeepActions`, `doDeclareBlockers`, …) and before upkeep/begin-combat/etc. triggers are placed on the stack. Per CR 117.1b the active player receives priority only after TBAs and after triggered abilities have been put on the stack, so the harness inverts the CR ordering on every step.
@@ -64,7 +62,6 @@ Engine-internals counterparts live in `pkg/mage/priority_test.go`. Per-CR test s
 
 | File | Rule | Gap |
 |---|---|---|
-| `turn_general_test.go` | 500.12 | no between-steps observable (negative invariant) |
 
 Note: 503.2 is now exercised at the engine level via `GameMutator.InsertStepAfter`; card-side wiring (*Paradox Haze*, *Obeka*) can be added when those sets are implemented.
 

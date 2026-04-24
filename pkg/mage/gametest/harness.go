@@ -361,12 +361,14 @@ func (tg *TestGame) Execute() {
 			}
 
 			tg.Step = step
-			tg.executeCounterActions(tg.Turn, step)
-			tg.executeOrderedActions(tg.Turn, step)
+			tg.WithInStep(func() {
+				tg.executeCounterActions(tg.Turn, step)
+				tg.executeOrderedActions(tg.Turn, step)
 
-			if step == core.PrecombatMain {
-				tg.autoPlayLands()
-			}
+				if step == core.PrecombatMain {
+					tg.autoPlayLands()
+				}
+			})
 
 			tg.RunStepWithPriority(step)
 		}
@@ -845,12 +847,14 @@ func (tg *TestGame) PlayToEnd(maxTurns ...int) {
 	for tg.Turn <= limit {
 		for _, step := range core.AllSteps() {
 			tg.Step = step
-			tg.executeCounterActions(tg.Turn, step)
-			tg.executeOrderedActions(tg.Turn, step)
+			tg.WithInStep(func() {
+				tg.executeCounterActions(tg.Turn, step)
+				tg.executeOrderedActions(tg.Turn, step)
 
-			if step == core.PrecombatMain {
-				tg.autoPlayLands()
-			}
+				if step == core.PrecombatMain {
+					tg.autoPlayLands()
+				}
+			})
 
 			tg.RunStepWithPriority(step)
 

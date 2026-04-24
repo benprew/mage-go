@@ -380,12 +380,42 @@ func TestTurnPhasesAdditional(t *testing.T) {
 	// or state-based action that would look at "events between steps" sees
 	// nothing; everything attaches to a specific step.
 	//
-	// This is essentially a negative invariant: there's no observable place
-	// "between" two steps for a trigger to land. RunStepWithPriority only
-	// runs inside a step; there is no hook between steps we can install a
-	// listener on. Without such a hook there is nothing to assert against,
-	// and no way to synthesize an "inter-step" event to prove the negative.
+	// Observable: install an OnFireEvent hook that records every event along
+	// with whether the engine was inside a step (g.InStep()) at firing time.
+	// Run a multi-turn game and assert no event was fired with InStep==false.
 	t.Run("CR 500.12 no game events between steps", func(t *testing.T) {
-		t.Skip("XXX: engine gap — no observable between-steps hook. The rule is a negative invariant; there is no API to attempt an event between steps and confirm it is delayed to the next step.")
+		tg := NewTestGame(t)
+		tg.AddCard(core.ZoneBattlefield, PlayerA, "Grizzly Bears")
+		tg.AddCard(core.ZoneBattlefield, PlayerB, "Mons's Goblin Raiders")
+
+		type firing struct {
+			evt    core.GameEvent
+			inStep bool
+			turn   int
+			step   core.PhaseStep
+		}
+		var firings []firing
+		tg.OnFireEvent = func(g *mage.Game, evt core.GameEvent) {
+			firings = append(firings, firing{
+				evt:    evt,
+				inStep: g.InStep(),
+				turn:   g.Turn,
+				step:   g.Step,
+			})
+		}
+
+		tg.Attack(1, PlayerA, "Grizzly Bears")
+		tg.StopAt(3, core.EndStep)
+		tg.Execute()
+
+		if len(firings) == 0 {
+			t.Fatalf("CR 500.12: expected some events to fire; got none (hook not wired?)")
+		}
+		for _, f := range firings {
+			if !f.inStep {
+				t.Errorf("CR 500.12: event %v fired between steps (turn=%d step=%v); all events must be associated with an enclosing step",
+					f.evt.Type, f.turn, f.step)
+			}
+		}
 	})
 }

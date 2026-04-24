@@ -183,6 +183,8 @@ func countBattlefield(g *Game, playerID uuid.UUID) int {
 // then runs a priority round (unless the step has no priority, e.g. Untap).
 func (g *Game) RunStepWithPriority(step PhaseStep) {
 	g.Step = step
+	g.inStep = true
+	defer func() { g.inStep = false }()
 	// CR 500.5: empty mana pools as the step/phase ends.
 	defer g.EmptyManaPools()
 	g.Effects.Apply(g)
