@@ -1172,6 +1172,11 @@ func (g *Game) PutTriggersOnStack() {
 					if pt.event.SourceID != uuid.Nil {
 						obj.Targets = []uuid.UUID{pt.event.SourceID}
 					}
+				case EvtPutIntoGraveyardFromBattlefield:
+					// Pass the controller's player ID so effects can deal damage/etc.
+					if pt.event.PlayerID != uuid.Nil {
+						obj.Targets = []uuid.UUID{pt.event.PlayerID}
+					}
 				case EvtDeclaredBlocker:
 					// Pass the blocker's ID and attacker's ID
 					if pt.event.SourceID != uuid.Nil {
