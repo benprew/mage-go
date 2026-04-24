@@ -720,10 +720,10 @@ func TestSimulacrum(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // 2/2
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Simulacrum")
-		// Bolt PlayerA for 3 damage (17 -> 14).
-		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "PlayerA")
-		// Cast Simulacrum targeting Hill Giant.
+		// PlayerA casts Simulacrum; PlayerB bolts in response so the
+		// 3 damage lands before Simulacrum resolves (CR 117.1b).
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Simulacrum", "Hill Giant")
+		g.CastInResponseTo(gametest.PlayerB, "Lightning Bolt", "PlayerA")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		// Took 3 damage this turn -> gain 3 life (14 -> 17) and deal 3 to Hill Giant.
@@ -764,7 +764,7 @@ func TestFalseOrders(t *testing.T) {
 		g.Attack(1, gametest.PlayerA, "Craw Wurm")
 		g.Block(1, gametest.PlayerB, "Hill Giant", "Craw Wurm")
 		// Cast False Orders after blocks to remove Hill Giant from combat.
-		g.CastSpell(1, core.FirstStrikeDamage, gametest.PlayerA, "False Orders", "Hill Giant")
+		g.CastSpell(1, core.DeclareBlockers, gametest.PlayerA, "False Orders", "Hill Giant")
 		g.StopAt(1, core.EndCombat)
 		g.Execute()
 		// Hill Giant removed from combat -> Craw Wurm becomes unblocked -> 6 damage.

@@ -92,8 +92,8 @@ func TestCircleOfProtection(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Circle of Protection: Red")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt") // red source
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerB, "Circle of Protection: Red")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
+		g.ActivateInResponseTo(gametest.PlayerB, "Circle of Protection: Red")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		// CoP:Red should prevent the 3 red damage.

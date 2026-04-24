@@ -344,7 +344,7 @@ func TestGlyphOfDestruction(t *testing.T) {
 		g.Attack(2, gametest.PlayerB, "Hill Giant")
 		g.Block(2, gametest.PlayerA, "Wall of Earth", "Hill Giant")
 		// Cast Glyph of Destruction targeting the blocking Wall (after blocks declared)
-		g.CastSpell(2, core.FirstStrikeDamage, gametest.PlayerA, "Glyph of Destruction", "Wall of Earth")
+		g.CastSpell(2, core.DeclareBlockers, gametest.PlayerA, "Glyph of Destruction", "Wall of Earth")
 		g.StopAt(3, core.PrecombatMain) // go to next turn so EndStep triggers fire
 		g.Execute()
 		// Wall got +10/+0 = 10/6, so Hill Giant should take 10 damage and die
@@ -364,7 +364,7 @@ func TestGlyphOfLife(t *testing.T) {
 		g.Attack(2, gametest.PlayerB, "Hill Giant")
 		g.Block(2, gametest.PlayerA, "Wall of Earth", "Hill Giant")
 		// Cast Glyph of Life targeting Wall of Earth (after blocks declared)
-		g.CastSpell(2, core.FirstStrikeDamage, gametest.PlayerA, "Glyph of Life", "Wall of Earth")
+		g.CastSpell(2, core.DeclareBlockers, gametest.PlayerA, "Glyph of Life", "Wall of Earth")
 		g.StopAt(2, core.EndStep)
 		g.Execute()
 		// Wall took 3 damage from Hill Giant (an attacking creature) → gain 3 life
@@ -384,7 +384,7 @@ func TestGlyphOfDoom(t *testing.T) {
 		g.Attack(2, gametest.PlayerB, "Hill Giant")
 		g.Block(2, gametest.PlayerA, "Wall of Earth", "Hill Giant")
 		// Cast Glyph of Doom targeting Wall of Earth (after blocks declared)
-		g.CastSpell(2, core.FirstStrikeDamage, gametest.PlayerA, "Glyph of Doom", "Wall of Earth")
+		g.CastSpell(2, core.DeclareBlockers, gametest.PlayerA, "Glyph of Doom", "Wall of Earth")
 		g.StopAt(2, core.EndStep)
 		g.Execute()
 		// Hill Giant was blocked by target Wall → destroyed at end of combat
@@ -404,7 +404,7 @@ func TestFeint(t *testing.T) {
 		g.Attack(1, gametest.PlayerA, "Hill Giant")
 		g.Block(1, gametest.PlayerB, "Grizzly Bears", "Hill Giant")
 		// Cast Feint targeting Hill Giant (after blocks declared)
-		g.CastSpell(1, core.FirstStrikeDamage, gametest.PlayerA, "Feint", "Hill Giant")
+		g.CastSpell(1, core.DeclareBlockers, gametest.PlayerA, "Feint", "Hill Giant")
 		g.StopAt(1, core.EndStep)
 		g.Execute()
 		// Grizzly Bears should be tapped (from Feint)
@@ -427,7 +427,7 @@ func TestGlyphOfDelusion(t *testing.T) {
 		g.Attack(2, gametest.PlayerB, "Hill Giant")
 		g.Block(2, gametest.PlayerA, "Wall of Earth", "Hill Giant")
 		// Cast Glyph of Delusion targeting Wall of Earth (after blocks declared)
-		g.CastSpell(2, core.FirstStrikeDamage, gametest.PlayerA, "Glyph of Delusion", "Wall of Earth")
+		g.CastSpell(2, core.DeclareBlockers, gametest.PlayerA, "Glyph of Delusion", "Wall of Earth")
 		// Run all the way to PlayerB's next turn, after upkeep
 		g.StopAt(4, core.PrecombatMain)
 		g.Execute()
