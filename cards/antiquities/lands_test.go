@@ -51,6 +51,33 @@ func TestMishrasFactory(t *testing.T) {
 		g.Execute()
 		g.AssertPowerToughness(gametest.PlayerA, "Mishra's Factory", 2, 2)
 	})
+
+	t.Run("animate does not tap the Factory itself", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mishra's Factory")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Mishra's Factory")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertTapped(gametest.PlayerA, "Mishra's Factory", false)
+	})
+
+	t.Run("is a creature after animating", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mishra's Factory")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Mishra's Factory")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		perm := g.FindPermanentByName("Mishra's Factory", g.GetPlayer(gametest.PlayerA).PlayerID())
+		if perm == nil {
+			t.Fatal("Mishra's Factory not found on battlefield")
+		}
+		if !perm.HasAttr(core.AttrIsCreature) {
+			t.Error("Mishra's Factory should be a creature after animating")
+		}
+		if !perm.HasAttr(core.AttrCanAttack) {
+			t.Error("Mishra's Factory should be able to attack after animating")
+		}
+	})
 }
 
 func TestMishrasWorkshop(t *testing.T) {
