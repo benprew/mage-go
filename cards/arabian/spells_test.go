@@ -141,8 +141,8 @@ func TestMetamorphosis(t *testing.T) {
 		// Grizzly Bears (CMC 2) sacrificed → 1+2 = 3 green mana added
 		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.Green) < 3 {
-			t.Errorf("expected at least 3 green mana from Metamorphosis, got %d", pool.Count(core.Green))
+		if pool.CountProducedThisTurn(core.Green) < 3 {
+			t.Errorf("expected at least 3 green mana from Metamorphosis, got %d", pool.CountProducedThisTurn(core.Green))
 		}
 	})
 
@@ -156,8 +156,8 @@ func TestMetamorphosis(t *testing.T) {
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.Red) < 3 {
-			t.Errorf("expected at least 3 red mana from Metamorphosis, got %d", pool.Count(core.Red))
+		if pool.CountProducedThisTurn(core.Red) < 3 {
+			t.Errorf("expected at least 3 red mana from Metamorphosis, got %d", pool.CountProducedThisTurn(core.Red))
 		}
 	})
 }

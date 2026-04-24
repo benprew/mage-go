@@ -81,8 +81,8 @@ func TestAshnodsAltar(t *testing.T) {
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.Colorless) < 7 { // 5 auto + 2 altar
-			t.Errorf("expected at least 7 colorless (5 auto + 2 altar), got %d", pool.Count(core.Colorless))
+		if pool.CountProducedThisTurn(core.Colorless) < 7 { // 5 auto + 2 altar
+			t.Errorf("expected at least 7 colorless (5 auto + 2 altar), got %d", pool.CountProducedThisTurn(core.Colorless))
 		}
 	})
 }

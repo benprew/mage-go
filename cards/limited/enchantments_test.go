@@ -79,8 +79,8 @@ func TestWildGrowth(t *testing.T) {
 		// Wild Growth adds another {G}. Total: 1 (auto) + 1 (Forest) + 1 (bonus) = 3G.
 		// Without bonus: 1 + 1 = 2G.
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.Green) < 3 {
-			t.Errorf("Wild Growth should add extra {G} when Forest taps; expected >= 3 green, got %d", pool.Count(core.Green))
+		if pool.CountProducedThisTurn(core.Green) < 3 {
+			t.Errorf("Wild Growth should add extra {G} when Forest taps; expected >= 3 green, got %d", pool.CountProducedThisTurn(core.Green))
 		}
 	})
 }

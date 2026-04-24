@@ -437,8 +437,8 @@ func TestManaFlare(t *testing.T) {
 		// Mountain tapped for {R}. Mana Flare adds another {R}.
 		// Auto-mana adds 5R. Mountain = 1R + 1R (Mana Flare) = 2R. Total = 7R.
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.Red) < 7 {
-			t.Errorf("Mana Flare should double land mana; expected >= 7 red, got %d", pool.Count(core.Red))
+		if pool.CountProducedThisTurn(core.Red) < 7 {
+			t.Errorf("Mana Flare should double land mana; expected >= 7 red, got %d", pool.CountProducedThisTurn(core.Red))
 		}
 	})
 
@@ -454,8 +454,8 @@ func TestManaFlare(t *testing.T) {
 		// City tapped for {U} (chosen). Mana Flare matches produced -> adds {U}.
 		// Auto-mana adds 5R from Mountains. City = 1U + 1U (Mana Flare) = 2U.
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.Blue) < 2 {
-			t.Errorf("Mana Flare should add one mana of chosen type; expected >= 2 blue, got %d", pool.Count(core.Blue))
+		if pool.CountProducedThisTurn(core.Blue) < 2 {
+			t.Errorf("Mana Flare should add one mana of chosen type; expected >= 2 blue, got %d", pool.CountProducedThisTurn(core.Blue))
 		}
 	})
 
@@ -473,8 +473,8 @@ func TestManaFlare(t *testing.T) {
 		// City tapped for {G}. Mana Flare adds one {G}. Green = 5 + 1 + 1 = 7.
 		// Blue stays at 5 (auto-mana only, no Mana Flare bonus).
 		pool := g.AllPlayers()[0].ManaPool()
-		green := pool.Count(core.Green)
-		blue := pool.Count(core.Blue)
+		green := pool.CountProducedThisTurn(core.Green)
+		blue := pool.CountProducedThisTurn(core.Blue)
 		if green < 7 {
 			t.Errorf("expected >= 7 green (5 auto + 1 City + 1 Flare), got %d", green)
 		}
@@ -501,8 +501,8 @@ func TestSacrifice(t *testing.T) {
 		// Hill Giant (CMC 4) sacrificed -> add {B}{B}{B}{B}.
 		g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 0)
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.Black) < 4 { // 4 from sacrificed Hill Giant (CMC 4)
-			t.Errorf("Sacrifice should add 4 black (CMC of Hill Giant); expected >= 4 black, got %d", pool.Count(core.Black))
+		if pool.CountProducedThisTurn(core.Black) < 4 { // 4 from sacrificed Hill Giant (CMC 4)
+			t.Errorf("Sacrifice should add 4 black (CMC of Hill Giant); expected >= 4 black, got %d", pool.CountProducedThisTurn(core.Black))
 		}
 	})
 }
@@ -880,8 +880,8 @@ func TestConversion(t *testing.T) {
 		g.Execute()
 		// Mountain should produce {W} instead of {R}.
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.White) < 6 { // 5 auto + 1 from converted Mountain
-			t.Errorf("Conversion should make Mountain produce {W}; expected >= 6 white, got %d", pool.Count(core.White))
+		if pool.CountProducedThisTurn(core.White) < 6 { // 5 auto + 1 from converted Mountain
+			t.Errorf("Conversion should make Mountain produce {W}; expected >= 6 white, got %d", pool.CountProducedThisTurn(core.White))
 		}
 	})
 

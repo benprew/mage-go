@@ -41,8 +41,8 @@ func TestBlackLotus(t *testing.T) {
 		g.Execute()
 		// Auto-mana adds 5 of each color. Lotus adds 3 of chosen (Blue).
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.Blue) < 8 {
-			t.Errorf("Black Lotus should produce 3 mana of chosen color; expected >= 8 blue (5 auto + 3 Lotus), got %d", pool.Count(core.Blue))
+		if pool.CountProducedThisTurn(core.Blue) < 8 {
+			t.Errorf("Black Lotus should produce 3 mana of chosen color; expected >= 8 blue (5 auto + 3 Lotus), got %d", pool.CountProducedThisTurn(core.Blue))
 		}
 	})
 }
@@ -466,9 +466,11 @@ func TestPowerSink(t *testing.T) {
 	t.Run("does not counter if opponent can pay X", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sol Ring")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Giant Growth")
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Power Sink")
-		g.AllPlayers()[0].ManaPool().Add(core.Colorless, 5) // extra mana to pay
+		// Produce extra mana in PlayerA's pool so they can pay X=1 at resolution.
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Sol Ring")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Giant Growth", "Grizzly Bears")
 		g.CastInResponseToWithX(gametest.PlayerB, "Power Sink", 1)
 		g.StopAt(1, core.BeginCombat)
@@ -536,8 +538,8 @@ func TestGauntletOfMight(t *testing.T) {
 		g.Execute()
 		// Auto-mana adds 5R. Mountain tapped for 1R + Gauntlet bonus 1R = 7R total.
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.Red) < 7 {
-			t.Errorf("Gauntlet should make Mountain produce extra {R}; expected >=7 red mana, got %d", pool.Count(core.Red))
+		if pool.CountProducedThisTurn(core.Red) < 7 {
+			t.Errorf("Gauntlet should make Mountain produce extra {R}; expected >=7 red mana, got %d", pool.CountProducedThisTurn(core.Red))
 		}
 	})
 }

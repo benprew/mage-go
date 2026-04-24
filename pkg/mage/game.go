@@ -1701,9 +1701,28 @@ func (g *Game) CheckStateBasedActions() {
 	g.PutTriggersOnStack()
 }
 
+// EmptyManaPools empties every player's mana pool. Called at the end of
+// every step and phase per CR 500.5.
+func (g *Game) EmptyManaPools() {
+	for _, p := range g.Players {
+		p.ManaPool().Clear()
+	}
+}
+
+// resetManaProducedThisTurn clears the per-turn mana-produced tally on
+// every player's pool. Called at the start of each turn.
+func (g *Game) resetManaProducedThisTurn() {
+	for _, p := range g.Players {
+		p.ManaPool().ResetProducedThisTurn()
+	}
+}
+
 // RunStep executes a single step of the turn.
 func (g *Game) RunStep(step PhaseStep) {
 	g.Step = step
+
+	// CR 500.5: any unspent mana empties as the step/phase ends.
+	defer g.EmptyManaPools()
 
 	// Reapply continuous effects at start of each step
 	g.Effects.Apply(g)
@@ -2207,6 +2226,7 @@ func (g *Game) RunTurn(stopTurn int, stopStep PhaseStep) bool {
 	if g.Schedule == nil {
 		g.Schedule = newTurnSchedule()
 	}
+	g.resetManaProducedThisTurn()
 	g.Schedule.buildNextTurn()
 	for {
 		step, ok := g.Schedule.popNextStep()

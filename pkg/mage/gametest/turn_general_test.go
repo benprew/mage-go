@@ -101,17 +101,36 @@ func TestTurnPhases(t *testing.T) {
 		tg.AssertLife(PlayerA, 18)
 	})
 
-	// CR 500.5 — When a phase or step ends, any unused mana in a player's
-	// mana pool empties (subject to rule 106.4; we don't exercise the
-	// exception here).
-	//
-	// XXX: engine gap — the engine does NOT empty mana pools between steps;
-	// ManaPool().Clear() is only called during doCleanupActions and after a
-	// spell is cast. There is no per-step empty-mana hook we can observe.
-	// See /home/user/mage-go/pkg/mage/game.go around doCleanup (line ~2145)
-	// and /home/user/mage-go/pkg/mage/priority.go RunStepWithPriority.
+	// CR 500.5 — As each step or phase ends, any unspent mana in each
+	// player's mana pool empties.
 	t.Run("CR 500.5 mana empties from pool at end of each step", func(t *testing.T) {
-		t.Skip("XXX: engine gap — mana pool is only cleared at Cleanup, not at the end of every step/phase. See game.go doCleanupActions; no equivalent in RunStepWithPriority for other steps.")
+		tg := NewTestGame(t)
+		tg.padLibraries()
+		tg.OnPriority = func(g *mage.Game, playerIdx int, mainPhase bool) mage.PriorityAction {
+			return mage.PriorityAction{Type: mage.PriorityPass}
+		}
+		// Seed PlayerA's pool with {2}{G} at start of Upkeep, run that
+		// step, and assert the pool is empty at the top of Draw.
+		tg.Step = core.Untap
+		tg.RunStepWithPriority(core.Untap)
+
+		pool := tg.GetPlayer(PlayerA).ManaPool()
+		pool.Add(core.Green, 1)
+		pool.Add(core.Colorless, 2)
+		if pool.TotalMana() != 3 {
+			t.Fatalf("precondition: expected 3 mana in pool, got %d", pool.TotalMana())
+		}
+		tg.RunStepWithPriority(core.Upkeep)
+		if got := pool.TotalMana(); got != 0 {
+			t.Errorf("CR 500.5: pool should empty at end of Upkeep, had %d mana remaining", got)
+		}
+
+		// And again across Draw → PrecombatMain.
+		pool.Add(core.Red, 2)
+		tg.RunStepWithPriority(core.Draw)
+		if got := pool.TotalMana(); got != 0 {
+			t.Errorf("CR 500.5: pool should empty at end of Draw, had %d mana remaining", got)
+		}
 	})
 
 	// CR 500.6 — "At the beginning of [phase/step]" abilities trigger at the

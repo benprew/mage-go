@@ -16,8 +16,8 @@ func TestDwarvenRuins(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.Red) < 1 {
-			t.Errorf("expected at least 1 red mana, got %d", pool.Count(core.Red))
+		if pool.CountProducedThisTurn(core.Red) < 1 {
+			t.Errorf("expected at least 1 red mana, got %d", pool.CountProducedThisTurn(core.Red))
 		}
 	})
 
@@ -92,8 +92,8 @@ func TestBottomlessVault_ManaAbility(t *testing.T) {
 	g.AssertCounterCount(gametest.PlayerA, "Bottomless Vault", core.Storage, 0)
 	// Should have at least 3 black mana (pool may have mana from other sources)
 	pool := g.AllPlayers()[0].ManaPool()
-	if pool.Count(core.Black) < 3 {
-		t.Errorf("expected at least 3 black mana, got %d", pool.Count(core.Black))
+	if pool.CountProducedThisTurn(core.Black) < 3 {
+		t.Errorf("expected at least 3 black mana, got %d", pool.CountProducedThisTurn(core.Black))
 	}
 }
 
@@ -153,8 +153,8 @@ func TestDwarvenHold_ManaAbility(t *testing.T) {
 	g.Execute()
 	g.AssertCounterCount(gametest.PlayerA, "Dwarven Hold", core.Storage, 0)
 	pool := g.AllPlayers()[0].ManaPool()
-	if pool.Count(core.Red) < 2 {
-		t.Errorf("expected at least 2 red mana, got %d", pool.Count(core.Red))
+	if pool.CountProducedThisTurn(core.Red) < 2 {
+		t.Errorf("expected at least 2 red mana, got %d", pool.CountProducedThisTurn(core.Red))
 	}
 }
 
@@ -168,8 +168,8 @@ func TestHollowTrees_ManaAbility(t *testing.T) {
 	g.Execute()
 	g.AssertCounterCount(gametest.PlayerA, "Hollow Trees", core.Storage, 0)
 	pool := g.AllPlayers()[0].ManaPool()
-	if pool.Count(core.Green) < 4 {
-		t.Errorf("expected at least 4 green mana, got %d", pool.Count(core.Green))
+	if pool.CountProducedThisTurn(core.Green) < 4 {
+		t.Errorf("expected at least 4 green mana, got %d", pool.CountProducedThisTurn(core.Green))
 	}
 }
 
@@ -183,8 +183,8 @@ func TestIcatianStore_ManaAbility(t *testing.T) {
 	g.Execute()
 	g.AssertCounterCount(gametest.PlayerA, "Icatian Store", core.Storage, 0)
 	pool := g.AllPlayers()[0].ManaPool()
-	if pool.Count(core.White) < 1 {
-		t.Errorf("expected at least 1 white mana, got %d", pool.Count(core.White))
+	if pool.CountProducedThisTurn(core.White) < 1 {
+		t.Errorf("expected at least 1 white mana, got %d", pool.CountProducedThisTurn(core.White))
 	}
 }
 
@@ -198,8 +198,8 @@ func TestSandSilos_ManaAbility(t *testing.T) {
 	g.Execute()
 	g.AssertCounterCount(gametest.PlayerA, "Sand Silos", core.Storage, 0)
 	pool := g.AllPlayers()[0].ManaPool()
-	if pool.Count(core.Blue) < 5 {
-		t.Errorf("expected at least 5 blue mana, got %d", pool.Count(core.Blue))
+	if pool.CountProducedThisTurn(core.Blue) < 5 {
+		t.Errorf("expected at least 5 blue mana, got %d", pool.CountProducedThisTurn(core.Blue))
 	}
 }
 

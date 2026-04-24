@@ -326,6 +326,9 @@ func (tg *TestGame) Execute() {
 		if tg.Schedule == nil {
 			tg.Schedule = mage.NewTurnSchedule()
 		}
+		for _, p := range tg.Players {
+			p.ManaPool().ResetProducedThisTurn()
+		}
 		tg.Schedule.BuildNextTurn()
 		for {
 			step, ok := tg.Schedule.PopNextStep()
@@ -1113,6 +1116,26 @@ func (tg *TestGame) AssertHandSize(p PlayerRef, want int) {
 	got := len(tg.GetPlayer(p).Hand())
 	if got != want {
 		tg.t.Errorf("AssertHandSize(%v): got %d, want %d", p, got, want)
+	}
+}
+
+// AssertManaProduced checks how much mana of the given color has been
+// added to the player's pool during the current turn. Unlike Count on the
+// live pool, this survives per-step pool emptying (CR 500.5).
+func (tg *TestGame) AssertManaProduced(p PlayerRef, color core.Color, want int) {
+	tg.t.Helper()
+	got := tg.GetPlayer(p).ManaPool().CountProducedThisTurn(color)
+	if got != want {
+		tg.t.Errorf("AssertManaProduced(%v, %v): got %d, want %d", p, color, got, want)
+	}
+}
+
+// AssertManaProducedAtLeast is the >= variant of AssertManaProduced.
+func (tg *TestGame) AssertManaProducedAtLeast(p PlayerRef, color core.Color, min int) {
+	tg.t.Helper()
+	got := tg.GetPlayer(p).ManaPool().CountProducedThisTurn(color)
+	if got < min {
+		tg.t.Errorf("AssertManaProducedAtLeast(%v, %v): got %d, want >= %d", p, color, got, min)
 	}
 }
 
