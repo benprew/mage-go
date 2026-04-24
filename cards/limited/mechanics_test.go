@@ -297,8 +297,8 @@ func TestShroud(t *testing.T) {
 				g.AddCard(core.ZoneHand, gametest.PlayerB, "Wrath of God")
 			},
 			script: func(g *gametest.TestGame) {
-				g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Wrath of God")
-				g.StopAt(1, core.BeginCombat)
+				g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Wrath of God")
+				g.StopAt(2, core.BeginCombat)
 			},
 			check: func(g *gametest.TestGame) {
 				// Wrath of God doesn't target — shroud creature dies
@@ -567,9 +567,9 @@ func TestAuras(t *testing.T) {
 				g.AddCard(core.ZoneHand, gametest.PlayerB, "Pacifism")
 			},
 			script: func(g *gametest.TestGame) {
-				g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Pacifism", "Grizzly Bears")
-				g.Attack(1, gametest.PlayerA, "Grizzly Bears")
-				g.StopAt(1, core.PostcombatMain)
+				g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Pacifism", "Grizzly Bears")
+				g.Attack(3, gametest.PlayerA, "Grizzly Bears")
+				g.StopAt(3, core.PostcombatMain)
 			},
 			check: func(g *gametest.TestGame) {
 				// Pacifism should prevent the attack

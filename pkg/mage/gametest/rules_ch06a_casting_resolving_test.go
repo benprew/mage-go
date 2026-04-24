@@ -226,7 +226,7 @@ func registerCh06Cards() {
 				mage.WithAbility(mage.NewActivatedAbility(
 					mage.GainLife(3),
 					mage.GenericCost(1),
-					mage.WithControlledSinceTurnStart())))
+					mage.WithSorcerySpeed())))
 		})
 		reg("Ch06 Sorceress Queen", func() mage.Card {
 			return mage.NewCreature("Ch06 Sorceress Queen", "{1}{B}{B}", 1, 1,

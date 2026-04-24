@@ -39,6 +39,14 @@ func WithEffect(e Effect) AbilityOption {
 	}
 }
 
+// WithSorcerySpeed marks an activated ability as "activate only as a sorcery"
+// (CR 602.5d). ActivateAbilityByIndex enforces the timing restriction.
+func WithSorcerySpeed() AbilityOption {
+	return func(a *SimpleActivatedAbility) {
+		a.SorceryOnly = true
+	}
+}
+
 // WithUpkeepOnly restricts an activated ability to only be activatable during an upkeep step.
 func WithUpkeepOnly() AbilityOption {
 	return func(a *SimpleActivatedAbility) {

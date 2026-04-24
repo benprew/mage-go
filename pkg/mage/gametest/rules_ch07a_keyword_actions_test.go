@@ -572,11 +572,11 @@ func TestCR701_19_CantRegenerateShieldIgnored(t *testing.T) {
 	tg := NewTestGame(t)
 	tg.AddCard(core.ZoneBattlefield, PlayerA, "Drudge Skeletons")
 	tg.AddCard(core.ZoneHand, PlayerB, "Disintegrate")
-	// Activate regen before Disintegrate
+	// PlayerA activates regen on their main phase; the shield survives into turn 2.
 	tg.ActivateAbility(1, core.PrecombatMain, PlayerA, "Drudge Skeletons")
-	// Disintegrate deals damage and grants CantRegenerate
-	tg.CastSpellWithX(1, core.PrecombatMain, PlayerB, "Disintegrate", 2, "Drudge Skeletons")
-	tg.StopAt(1, core.EndStep)
+	// PlayerB casts the sorcery Disintegrate on their own main phase (CR 307.1).
+	tg.CastSpellWithX(2, core.PrecombatMain, PlayerB, "Disintegrate", 2, "Drudge Skeletons")
+	tg.StopAt(2, core.EndStep)
 	tg.Execute()
 
 	// Regen shield is present but CantRegenerate prevents it from applying

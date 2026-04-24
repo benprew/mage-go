@@ -933,8 +933,8 @@ func TestSuChi(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Su-Chi") // 4/4
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Fireball")
-		g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerB, "Fireball", 4, "Su-Chi")
-		g.StopAt(1, core.BeginCombat)
+		g.CastSpellWithX(2, core.PrecombatMain, gametest.PlayerB, "Fireball", 4, "Su-Chi")
+		g.StopAt(2, core.BeginCombat)
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerA, "Su-Chi", 0)
 		pool := g.AllPlayers()[0].ManaPool()

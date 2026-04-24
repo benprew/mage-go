@@ -959,9 +959,9 @@ func TestGuardianBeast(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Guardian Beast")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Jayemdae Tome") // noncreature artifact
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Desert Twister")       // destroy target permanent
-		// Try to destroy Jayemdae Tome
-		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Desert Twister", "Jayemdae Tome")
-		g.StopAt(1, core.BeginCombat)
+		// PlayerB casts the sorcery on their own main phase.
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Desert Twister", "Jayemdae Tome")
+		g.StopAt(2, core.BeginCombat)
 		g.Execute()
 		// Jayemdae Tome should survive — indestructible while Guardian Beast is untapped
 		g.AssertPermanentCount(gametest.PlayerA, "Jayemdae Tome", 1)
@@ -972,11 +972,11 @@ func TestGuardianBeast(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Guardian Beast")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Jayemdae Tome")
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Desert Twister")
-		// Attack with Guardian Beast to tap it
+		// Tap Guardian Beast by attacking with it on PlayerA's turn.
 		g.Attack(1, gametest.PlayerA, "Guardian Beast")
-		// Then destroy Jayemdae Tome in postcombat main
-		g.CastSpell(1, core.PostcombatMain, gametest.PlayerB, "Desert Twister", "Jayemdae Tome")
-		g.StopAt(1, core.EndStep)
+		// PlayerB casts the sorcery on their own turn.
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Desert Twister", "Jayemdae Tome")
+		g.StopAt(2, core.EndStep)
 		g.Execute()
 		// Guardian Beast is tapped — no indestructible
 		g.AssertPermanentCount(gametest.PlayerA, "Jayemdae Tome", 0)

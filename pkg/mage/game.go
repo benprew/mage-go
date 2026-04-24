@@ -1386,6 +1386,22 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		return fmt.Errorf("card %s not found in hand", name)
 	}
 
+	// CR 307.1, 302.1, 303.1, 301.1 — sorcery-speed timing. Any spell that
+	// is not an instant may be cast only during its controller's main phase,
+	// when the stack is empty, and when that player is the active player
+	// (i.e. could cast a sorcery).
+	if !card.HasType(TypeInstant) {
+		if !g.Step.IsMainPhase() {
+			return ErrSorcerySpeed
+		}
+		if g.ActivePlayerObj().PlayerID() != playerID {
+			return ErrSorcerySpeed
+		}
+		if !g.Stack.IsEmpty() {
+			return ErrSorcerySpeed
+		}
+	}
+
 	// Check expansion block (City in a Bottle)
 	if g.Effects.Rules.IsCardExpansionBlocked(card.Name()) {
 		return fmt.Errorf("can't cast %s: card is from a blocked expansion", card.Name())
@@ -2892,8 +2908,19 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 			return fmt.Errorf("only opponents may activate this ability")
 		}
 	}
-	if aa.SorcerySpeed() && !g.Step.IsMainPhase() {
-		return ErrSorcerySpeed
+	// CR 307.5 / 602.5d — "activate only as a sorcery" means the ability can
+	// only be activated when its controller could cast a sorcery: main phase,
+	// active player, empty stack.
+	if aa.SorcerySpeed() {
+		if !g.Step.IsMainPhase() {
+			return ErrSorcerySpeed
+		}
+		if g.ActivePlayerObj().PlayerID() != playerID {
+			return ErrSorcerySpeed
+		}
+		if !g.Stack.IsEmpty() {
+			return ErrSorcerySpeed
+		}
 	}
 
 	// Validate targets
