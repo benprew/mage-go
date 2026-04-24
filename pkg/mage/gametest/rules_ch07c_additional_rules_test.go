@@ -395,6 +395,49 @@ func TestCR704_5m_AuraFallsOffDestroyedCreature(t *testing.T) {
 	tg.AssertGraveyardCount(PlayerA, auraName, 1)
 }
 
+// TestCR704_5m_AuraFallsOffWhenHostLosesCreatureType verifies CR 704.5m / 303.4c:
+// an Aura with "enchant creature" attached to a permanent that stops being a creature
+// (because the continuous effect animating it is removed) is put into its owner's
+// graveyard as a state-based action, since its host is no longer a legal enchantee.
+func TestCR704_5m_AuraFallsOffWhenHostLosesCreatureType(t *testing.T) {
+	// Living Lands (cards/limited): Forests you control are 1/1 creatures that are still lands.
+	// Holy Strength (cards/limited): Enchant creature. +1/+2.
+	// Both registered via the cards/limited blank import in attr_integration_test.go.
+
+	tg := NewTestGame(t)
+	forestID := tg.AddCard(core.ZoneBattlefield, PlayerA, "Forest")
+	livingLandsID := tg.AddCard(core.ZoneBattlefield, PlayerA, "Living Lands")
+	auraID := tg.AddCard(core.ZoneBattlefield, PlayerA, "Holy Strength")
+	tg.Attach(auraID, forestID)
+	tg.CheckStateBasedActions()
+
+	forest := tg.FindPermanent(forestID)
+	if forest == nil {
+		t.Fatal("Forest not found")
+	}
+	if !forest.HasType(core.TypeCreature) {
+		t.Fatal("Living Lands should make Forest a creature before destruction")
+	}
+	tg.AssertAttachedTo(PlayerA, "Holy Strength", "Forest")
+
+	livingLands := tg.FindPermanent(livingLandsID)
+	if livingLands == nil {
+		t.Fatal("Living Lands not found")
+	}
+	tg.DestroyPermanent(livingLands)
+	tg.CheckStateBasedActions()
+
+	forest = tg.FindPermanent(forestID)
+	if forest == nil {
+		t.Fatal("Forest should remain on the battlefield")
+	}
+	if forest.HasType(core.TypeCreature) {
+		t.Error("Forest should no longer be a creature once Living Lands is gone")
+	}
+	tg.AssertPermanentCount(PlayerA, "Holy Strength", 0)
+	tg.AssertGraveyardCount(PlayerA, "Holy Strength", 1)
+}
+
 // TestCR704_5n_EquipmentDetachesOnCreatureDeath verifies that Equipment becomes unattached when its
 // host creature dies, but the Equipment itself remains on the battlefield (CR 704.5n).
 func TestCR704_5n_EquipmentDetachesOnCreatureDeath(t *testing.T) {

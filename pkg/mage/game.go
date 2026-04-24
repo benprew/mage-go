@@ -1115,6 +1115,44 @@ func (g *Game) executeDamageToCreature(a *DamageToCreatureAction) {
 	}
 }
 
+// auraHostIsLegal reports whether host satisfies the aura's enchant ability
+// (CR 303.4c). It checks the aura's cast-target filter against the host,
+// ignoring targeting restrictions (shroud/hexproof don't make an already-attached
+// aura fall off — see CR 702.11b).
+func auraHostIsLegal(auraCard Card, host *Permanent, g *Game) bool {
+	targets := auraCard.CastTargets()
+	if len(targets) == 0 {
+		return true
+	}
+	for _, t := range targets {
+		switch tt := t.(type) {
+		case *CreatureTarget:
+			if !host.HasType(TypeCreature) {
+				continue
+			}
+			if filtersMatch(tt.Filters, host, g) {
+				return true
+			}
+		case *PermanentTarget:
+			if filtersMatch(tt.Filters, host, g) {
+				return true
+			}
+		default:
+			return true
+		}
+	}
+	return false
+}
+
+func filtersMatch(filters []PermanentFilter, p *Permanent, g *Game) bool {
+	for _, f := range filters {
+		if !f.Match(p, g) {
+			return false
+		}
+	}
+	return true
+}
+
 // Attach attaches source to target (for auras and equipment).
 func (g *Game) Attach(sourceID, targetID uuid.UUID) {
 	src := g.FindPermanent(sourceID)
@@ -1717,7 +1755,7 @@ func (g *Game) CheckStateBasedActions() {
 			}
 		}
 
-		// Check for auras attached to nothing or illegal targets
+		// Check for auras attached to nothing or illegal targets (CR 704.5m / 303.4c).
 		var aurasToDrop []*Permanent
 		for _, p := range g.Battlefield {
 			if p.HasSubType("Aura") && p.IsAttached() {
@@ -1726,6 +1764,9 @@ func (g *Game) CheckStateBasedActions() {
 					aurasToDrop = append(aurasToDrop, p)
 					actions = true
 				} else if host.HasProtectionFrom(p.Card) {
+					aurasToDrop = append(aurasToDrop, p)
+					actions = true
+				} else if !auraHostIsLegal(p.Card, host, g) {
 					aurasToDrop = append(aurasToDrop, p)
 					actions = true
 				}
