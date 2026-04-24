@@ -1730,6 +1730,60 @@ func (g *Game) CheckStateBasedActions() {
 			}
 		}
 
+		// MTG rule 704.5d / CR 111.7: a token in any zone other than the battlefield
+		// ceases to exist. This runs after death/graveyard movement so "dies" triggers
+		// fire normally — the trigger is tied to the event, not the card's continued
+		// existence in the graveyard.
+		for _, p := range g.Players {
+			var gyTokens []uuid.UUID
+			for _, c := range p.Graveyard() {
+				if c.IsToken() {
+					gyTokens = append(gyTokens, c.ID())
+				}
+			}
+			for _, id := range gyTokens {
+				p.RemoveFromGraveyard(id)
+				actions = true
+			}
+			var handTokens []uuid.UUID
+			for _, c := range p.Hand() {
+				if c.IsToken() {
+					handTokens = append(handTokens, c.ID())
+				}
+			}
+			for _, id := range handTokens {
+				p.RemoveFromHand(id)
+				actions = true
+			}
+			lib := p.Library()
+			kept := lib[:0]
+			removed := false
+			for _, c := range lib {
+				if c.IsToken() {
+					removed = true
+					continue
+				}
+				kept = append(kept, c)
+			}
+			if removed {
+				p.SetLibrary(kept)
+				actions = true
+			}
+		}
+		exileKept := g.Exile[:0]
+		exileRemoved := false
+		for _, ec := range g.Exile {
+			if ec.Card != nil && ec.Card.IsToken() {
+				exileRemoved = true
+				continue
+			}
+			exileKept = append(exileKept, ec)
+		}
+		if exileRemoved {
+			g.Exile = exileKept
+			actions = true
+		}
+
 		if !actions {
 			break
 		}
