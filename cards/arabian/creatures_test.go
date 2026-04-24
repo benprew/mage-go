@@ -1148,10 +1148,13 @@ func TestHurrJackal(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hurr Jackal")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Drudge Skeletons") // 1/1 with {B}: Regenerate
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
-		// Hurr Jackal prevents regen, Skeletons tries to set up regen, bolt kills
+		// PlayerA activates Hurr Jackal targeting Drudge Skeletons (this
+		// turn, that creature can't regenerate), then casts Bolt at it.
+		// PlayerB attempts to regenerate in response, but the regen shield
+		// is nullified by Hurr Jackal's CantRegenerate grant.
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Hurr Jackal", "Drudge Skeletons")
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerB, "Drudge Skeletons")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Drudge Skeletons")
+		g.ActivateInResponseTo(gametest.PlayerB, "Drudge Skeletons")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		// Drudge Skeletons should die — can't regenerate this turn
@@ -1163,9 +1166,10 @@ func TestHurrJackal(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Drudge Skeletons") // 1/1 with {B}: Regenerate
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
-		// Skeletons sets up regen, bolt hits but regen saves it
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerB, "Drudge Skeletons")
+		// PlayerA casts Bolt; PlayerB activates Regenerate in response
+		// before the Bolt resolves.
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Drudge Skeletons")
+		g.ActivateInResponseTo(gametest.PlayerB, "Drudge Skeletons")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		// Drudge Skeletons should survive via regeneration

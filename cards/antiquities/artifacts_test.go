@@ -14,8 +14,11 @@ func TestAmuletOfKroog(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Amulet of Kroog")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Amulet of Kroog", "Grizzly Bears")
+		// Activate Amulet in response to the Bolt so its shield is in
+		// place before Bolt resolves (CR 117.1b: responses resolve
+		// first, shield applies before damage).
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Grizzly Bears")
+		g.ActivateInResponseTo(gametest.PlayerA, "Amulet of Kroog", "Grizzly Bears")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		// 3 damage - 1 prevented = 2, equals toughness → creature dies
@@ -26,8 +29,8 @@ func TestAmuletOfKroog(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Amulet of Kroog")
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Amulet of Kroog", "PlayerA")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "PlayerA")
+		g.ActivateInResponseTo(gametest.PlayerA, "Amulet of Kroog", "PlayerA")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		g.AssertLife(gametest.PlayerA, 18) // 3 - 1 prevented = 2 damage
