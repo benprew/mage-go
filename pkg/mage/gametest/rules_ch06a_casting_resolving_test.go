@@ -219,7 +219,7 @@ func registerCh06Cards() {
 		reg("Ch06 APNAP B Watcher", func() mage.Card {
 			return mage.NewCreature("Ch06 APNAP B Watcher", "{1}{U}", 1, 1,
 				mage.WithAbility(mage.WheneverSpellCastTrigger(
-					mage.LoseLife(1), false)))
+					mage.DealDamageToPlayers(mage.Fixed(1), mage.SelectEachOpponent()), false)))
 		})
 		reg("Ch06 Sorcery Artifact", func() mage.Card {
 			return mage.NewArtifact("Ch06 Sorcery Artifact", "{2}",

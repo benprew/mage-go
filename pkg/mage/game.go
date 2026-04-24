@@ -1165,7 +1165,32 @@ func (g *Game) FireEvent(evt GameEvent) {
 }
 
 // PutTriggersOnStack puts all pending triggers onto the stack.
+//
+// CR 603.3b: If multiple abilities have triggered since the last time a player
+// received priority, the active player's triggered abilities are put on the
+// stack in any order the active player chooses, then each non-active player,
+// in turn order, puts their triggered abilities on the stack in any order
+// they choose. The last-put-on-stack ability ends up on top and resolves
+// first.
+//
+// We partition pendingTriggers by controller into active and non-active
+// groups, preserving source order within each group (stable), then push the
+// active group first, then the non-active group. This means the non-active
+// player's triggers end up on top of the stack and resolve first.
 func (g *Game) PutTriggersOnStack() {
+	if len(g.pendingTriggers) > 1 {
+		activeID := g.ActivePlayerObj().PlayerID()
+		active := make([]*pendingTrigger, 0, len(g.pendingTriggers))
+		nonActive := make([]*pendingTrigger, 0, len(g.pendingTriggers))
+		for _, pt := range g.pendingTriggers {
+			if pt.controller == activeID {
+				active = append(active, pt)
+			} else {
+				nonActive = append(nonActive, pt)
+			}
+		}
+		g.pendingTriggers = append(active, nonActive...)
+	}
 	for _, pt := range g.pendingTriggers {
 		obj := &StackObject{
 			ID:         uuid.New(),
