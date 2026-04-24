@@ -238,7 +238,7 @@ type SourceIsBlockedAttacker struct{}
 
 func (SourceIsBlockedAttacker) CheckTriggerCond(_ *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 	group := g.CombatGroupFor(sourceID)
-	return group != nil && len(group.BlockerIDs) > 0
+	return group != nil && group.Blocked
 }
 
 // SourceIsUnblockedAttacker checks that the source is an attacker with no
@@ -250,7 +250,7 @@ func (SourceIsUnblockedAttacker) CheckTriggerCond(_ *GameEvent, g GameReader, so
 		return false
 	}
 	group := g.CombatGroupFor(sourceID)
-	return group != nil && len(group.BlockerIDs) == 0
+	return group != nil && !group.Blocked
 }
 
 // SourceIsBlockingInCombat checks that the source is a declared blocker.

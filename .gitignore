@@ -29,6 +29,7 @@ java/**/target/
 /fetchset
 /genset
 /cardart
+/crossval
 
 # Coverage
 coverage.html

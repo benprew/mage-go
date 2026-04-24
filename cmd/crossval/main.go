@@ -23,6 +23,7 @@ func main() {
 		verbose        bool
 		games          int
 		outFile        string
+		roguesDir      string
 	)
 
 	flag.StringVar(&xmageDir, "xmage", "../xmage", "path to XMage repo")
@@ -31,6 +32,7 @@ func main() {
 	flag.BoolVar(&verbose, "verbose", false, "verbose output")
 	flag.IntVar(&games, "games", 1, "number of games to run")
 	flag.StringVar(&outFile, "out", "", "write divergence logs to this directory")
+	flag.StringVar(&roguesDir, "rogues", "", "directory of rogue deck .toml files")
 	flag.Parse()
 
 	if seed == 0 {
@@ -71,6 +73,17 @@ func main() {
 		os.MkdirAll(outFile, 0755)
 	}
 
+	var rogueDecks []rogueDeck
+	if roguesDir != "" {
+		var err error
+		rogueDecks, err = loadRogueDecks(roguesDir, available)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to load rogue decks: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Printf("  Rogue decks loaded: %d\n", len(rogueDecks))
+	}
+
 	// Step 2: Run games
 	totalDecisions := 0
 	gamesOK := 0
@@ -82,8 +95,8 @@ func main() {
 			fmt.Printf("  Game %d/%d...\n", gameNum+1, games)
 		}
 
-		deckA := buildRandomDeck(available, rng)
-		deckB := buildRandomDeck(available, rng)
+		deckA := pickDeck(rogueDecks, available, rng)
+		deckB := pickDeck(rogueDecks, available, rng)
 
 		decisions, divergences, err := runXMageDrivenGame(oracle, deckA, deckB, maxTurns, rng, verbose)
 		if err != nil {

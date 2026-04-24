@@ -18,6 +18,7 @@ type CombatGroup struct {
 	AttackerID uuid.UUID
 	BlockerIDs []uuid.UUID
 	DefenderID uuid.UUID
+	Blocked    bool
 }
 
 func NewCombat() *Combat {
@@ -47,6 +48,7 @@ func (c *Combat) AddBlocker(blockerID, attackerID uuid.UUID) {
 	for _, g := range c.Groups {
 		if g.AttackerID == attackerID {
 			g.BlockerIDs = append(g.BlockerIDs, blockerID)
+			g.Blocked = true
 			return
 		}
 	}
@@ -96,6 +98,10 @@ func (c *Combat) IsBandedWith(id1, id2 uuid.UUID) bool {
 }
 
 // RemoveFromCombat removes a permanent from combat (attacker or blocker).
+// Per Oracle text on cards like False Orders and Ydwen Efreet: "Creatures it
+// was blocking that had become blocked by only that creature this combat become
+// unblocked." If the removed creature was the sole blocker, the attacker
+// becomes unblocked (Blocked = false).
 func (c *Combat) RemoveFromCombat(id uuid.UUID) {
 	delete(c.Attackers, id)
 	for _, g := range c.Groups {
@@ -109,6 +115,10 @@ func (c *Combat) RemoveFromCombat(id uuid.UUID) {
 			}
 		}
 		g.BlockerIDs = filtered
+		// If this was the only blocker, the attacker becomes unblocked.
+		if len(g.BlockerIDs) == 0 {
+			g.Blocked = false
+		}
 	}
 }
 
@@ -255,10 +265,20 @@ func (c *Combat) ResolveDamage(g *Game, isFirstStrikeStep bool) {
 		}
 
 		// Non-banded attacker.
-		if len(group.BlockerIDs) == 0 {
+		if !group.Blocked {
 			// Unblocked — damage to defending player.
 			// Forcefield and bodyguard are now replacement effects in the pipeline.
 			if c.DealsDamageInStep(atk, isFirstStrikeStep) {
+				defender := g.GetPlayer(group.DefenderID)
+				if defender != nil {
+					dmg := atk.CurrentPower(g)
+					g.DealDamageToPlayer(defender, dmg, atk.ID())
+				}
+			}
+		} else if len(group.BlockerIDs) == 0 {
+			// CR 509.1h + 510.1c: blocked but all blockers removed.
+			// Deals no damage unless it has trample.
+			if atk.HasKeyword(Trample) && c.DealsDamageInStep(atk, isFirstStrikeStep) {
 				defender := g.GetPlayer(group.DefenderID)
 				if defender != nil {
 					dmg := atk.CurrentPower(g)
@@ -427,7 +447,15 @@ func (c *Combat) doBandedAttackDamage(g *Game, bandMemberIDs []uuid.UUID, defend
 		}
 	}
 
-	isBlocked := len(allBlockerIDs) > 0
+	// Check if any member of the band was blocked (CR 509.1h).
+	isBlocked := false
+	for _, memberID := range bandMemberIDs {
+		grp := c.GroupFor(memberID)
+		if grp != nil && grp.Blocked {
+			isBlocked = true
+			break
+		}
+	}
 
 	// Does the band contain any member with trample?
 	hasTrample := false

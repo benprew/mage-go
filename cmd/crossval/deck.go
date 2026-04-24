@@ -1,7 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"math/rand"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
 
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
@@ -168,4 +173,133 @@ func colorToLand(c core.Color) string {
 		return "Forest"
 	}
 	return "Plains"
+}
+
+// pickDeck returns a rogue deck half the time (if any are loaded), otherwise
+// builds a random deck from the available card pool.
+func pickDeck(rogues []rogueDeck, available []string, rng *rand.Rand) []string {
+	if len(rogues) > 0 && rng.Intn(2) == 0 {
+		d := rogues[rng.Intn(len(rogues))]
+		deck := make([]string, len(d.cards))
+		copy(deck, d.cards)
+		rng.Shuffle(len(deck), func(i, j int) { deck[i], deck[j] = deck[j], deck[i] })
+		return deck
+	}
+	return buildRandomDeck(available, rng)
+}
+
+type rogueDeck struct {
+	name  string
+	cards []string
+}
+
+// loadRogueDecks loads all .toml rogue deck files from a directory and filters
+// each deck to only include cards present in the available set.
+func loadRogueDecks(dir string, available []string) ([]rogueDeck, error) {
+	avail := make(map[string]bool, len(available))
+	for _, c := range available {
+		avail[c] = true
+	}
+
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, fmt.Errorf("reading rogues dir: %w", err)
+	}
+
+	var decks []rogueDeck
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".toml") {
+			continue
+		}
+		name, cards, err := parseRogueTOML(filepath.Join(dir, e.Name()))
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "warning: skipping %s: %v\n", e.Name(), err)
+			continue
+		}
+
+		var filtered []string
+		for _, c := range cards {
+			if avail[c] {
+				filtered = append(filtered, c)
+			}
+		}
+		if len(filtered) < 10 {
+			continue
+		}
+
+		// Pad with lands if we lost too many spells
+		if len(filtered) < 40 {
+			colors := detectColors(filtered)
+			lands := distributeLands(colors, 40-len(filtered))
+			filtered = append(filtered, lands...)
+		}
+
+		decks = append(decks, rogueDeck{name: name, cards: filtered})
+	}
+	return decks, nil
+}
+
+// parseRogueTOML parses a Shandalar rogue deck TOML file, returning the deck
+// name and an expanded list of card names (one entry per copy).
+func parseRogueTOML(path string) (string, []string, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return "", nil, err
+	}
+
+	var name string
+	var cards []string
+	inMainCards := false
+
+	for _, line := range strings.Split(string(data), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || line[0] == '#' {
+			continue
+		}
+
+		if inMainCards {
+			if line == "]" {
+				inMainCards = false
+				continue
+			}
+			line = strings.TrimSuffix(line, ",")
+			line = strings.TrimSpace(line)
+			if !strings.HasPrefix(line, "[") || !strings.HasSuffix(line, "]") {
+				continue
+			}
+			inner := line[1 : len(line)-1]
+			parts := strings.SplitN(inner, ",", 2)
+			if len(parts) != 2 {
+				continue
+			}
+			countStr := strings.Trim(strings.TrimSpace(parts[0]), "\"")
+			cardName := strings.Trim(strings.TrimSpace(parts[1]), "\"")
+			count, err := strconv.Atoi(countStr)
+			if err != nil {
+				continue
+			}
+			for i := 0; i < count; i++ {
+				cards = append(cards, cardName)
+			}
+			continue
+		}
+
+		if strings.HasPrefix(line, "main_cards") {
+			inMainCards = true
+			continue
+		}
+
+		if idx := strings.IndexByte(line, '='); idx >= 0 {
+			key := strings.TrimSpace(line[:idx])
+			val := strings.TrimSpace(line[idx+1:])
+			if key == "name" {
+				name = strings.Trim(val, "\"")
+			}
+		}
+	}
+
+	if name == "" {
+		name = strings.TrimSuffix(filepath.Base(path), ".toml")
+	}
+	return name, cards, nil
 }
