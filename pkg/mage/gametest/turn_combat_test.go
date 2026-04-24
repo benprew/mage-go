@@ -180,13 +180,31 @@ func TestTurnStructureCombatRemoval(t *testing.T) {
 	// this case). Without trample, the attacker deals no damage to the
 	// defending player.
 	t.Run("CR 509.1h attacker still blocked after blocker destroyed", func(t *testing.T) {
-		// XXX: engine gap — observed behavior is that when the sole blocker
-		// is destroyed mid-combat (between declare-blockers and combat damage),
-		// the attacker is treated as unblocked and deals its damage to the
-		// defending player. Per CR 509.1h a blocked creature remains blocked
-		// even if all creatures blocking it are removed from combat, so
-		// (without trample) the defending player should take 0 damage.
-		t.Skip("XXX: engine gap — blocked creature is treated as unblocked after its blocker is destroyed mid-combat (violates CR 509.1h)")
+		attacker := "Removal 509.1h Attacker 3/3"
+		blocker := "Removal 509.1h Blocker 2/2"
+		bolt := "Removal 509.1h Bolt"
+		registerRemovalBear(attacker, 3, 3)
+		registerRemovalBear(blocker, 2, 2)
+		registerRemovalBolt(bolt)
+
+		tg := NewTestGame(t)
+		tg.AddCard(core.ZoneBattlefield, PlayerA, attacker)
+		tg.AddCard(core.ZoneBattlefield, PlayerB, blocker)
+		tg.AddCard(core.ZoneHand, PlayerA, bolt)
+		tg.Attack(1, PlayerA, attacker)
+		tg.Block(1, PlayerB, blocker, attacker)
+		// Per CR 509.1h the attacker remains blocked even if its sole blocker
+		// leaves combat; without trample it deals 0 damage to the defending
+		// player. Scheduled at CombatDamage (after blocks are locked in but
+		// before damage resolves); see turn_structure_status.md on the harness
+		// ordering quirk that prevents scheduling at DeclareBlockers here.
+		tg.CastSpell(1, core.CombatDamage, PlayerA, bolt, blocker)
+		tg.StopAt(1, core.PostcombatMain)
+		tg.Execute()
+
+		tg.AssertLife(PlayerB, 20)
+		tg.AssertGraveyardCount(PlayerB, blocker, 1)
+		tg.AssertPermanentCount(PlayerA, attacker, 1)
 	})
 
 	// CR 506.4a — An effect that would prevent a creature from attacking,
