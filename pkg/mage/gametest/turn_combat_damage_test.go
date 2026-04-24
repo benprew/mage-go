@@ -148,12 +148,46 @@ func TestCombatDamage(t *testing.T) {
 	// should be able to assign 4 to exactly one blocker, killing it, and 0 to
 	// the other (the first blocker already took lethal).
 	t.Run("CR 510.1c controller divides damage among multiple blockers", func(t *testing.T) {
-		// The DSL has no AssignDamage / ChooseDamageAssignment helper; the
-		// Block() API only records blocker→attacker pairs without exposing an
-		// assignment order or per-blocker damage. Without that, the engine
-		// picks its own assignment and we cannot exercise the controller's
-		// choice. Mark as an engine/DSL gap rather than simplify.
-		t.Skip("XXX: engine gap — no damage-assignment DSL for the multi-blocker case (CR 510.1c)")
+		// 4/4 attacker blocked by two 2/3s. Attacker's controller orders the
+		// blockers and assigns 3 (lethal) to the first and 1 to the second.
+		// First blocker dies; second survives with 1 damage marked. The 4/4
+		// also takes 2+2=4 simultaneous damage from the blockers and dies.
+		atk := "510.1c Attacker 4/4"
+		blkA := "510.1c Blocker 2/3 A"
+		blkB := "510.1c Blocker 2/3 B"
+		if !mage.CardRegistered(atk) {
+			mage.Register(atk, func() mage.Card {
+				return mage.NewCreature(atk, "{2}{G}{G}", 4, 4, mage.WithSubTypes("Beast"))
+			})
+		}
+		for _, n := range []string{blkA, blkB} {
+			n := n
+			if !mage.CardRegistered(n) {
+				mage.Register(n, func() mage.Card {
+					return mage.NewCreature(n, "{1}{W}{W}", 2, 3, mage.WithSubTypes("Soldier"))
+				})
+			}
+		}
+		tg := NewTestGame(t)
+		tg.AddCard(core.ZoneBattlefield, PlayerA, atk)
+		tg.AddCard(core.ZoneBattlefield, PlayerB, blkA)
+		tg.AddCard(core.ZoneBattlefield, PlayerB, blkB)
+		tg.Attack(1, PlayerA, atk)
+		tg.Block(1, PlayerB, blkA, atk)
+		tg.Block(1, PlayerB, blkB, atk)
+		tg.ChooseBlockerOrder(atk, blkA, blkB)
+		tg.AssignCombatDamage(atk, map[string]int{
+			blkA: 3,
+			blkB: 1,
+		})
+		tg.StopAt(1, core.EndCombat)
+		tg.Execute()
+		tg.AssertPermanentCount(PlayerA, atk, 0)
+		tg.AssertGraveyardCount(PlayerA, atk, 1)
+		tg.AssertPermanentCount(PlayerB, blkA, 0)
+		tg.AssertGraveyardCount(PlayerB, blkA, 1)
+		tg.AssertPermanentCount(PlayerB, blkB, 1)
+		tg.AssertGraveyardCount(PlayerB, blkB, 0)
 	})
 
 	// CR 510.3a — After combat damage is dealt, triggers that fired during the

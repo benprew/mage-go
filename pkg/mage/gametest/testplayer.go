@@ -43,15 +43,68 @@ type TestPlayer struct {
 	chooseBandingDistribution []map[string]int
 	chooseMode                []int
 	chooseNumber              []int
+	combatBlockerOrder        map[string][]string
+	combatDamageAssignment    map[string]map[string]int
 }
 
 func NewTestPlayer(name string) *TestPlayer {
 	return &TestPlayer{
-		BasePlayer:     mage.NewBasePlayer(name),
-		attackActions:  make(map[int][]string),
-		blockActions:   make(map[int][]blockPair),
-		bandFormations: make(map[int][][]string),
+		BasePlayer:             mage.NewBasePlayer(name),
+		attackActions:          make(map[int][]string),
+		blockActions:           make(map[int][]blockPair),
+		bandFormations:         make(map[int][][]string),
+		combatBlockerOrder:     make(map[string][]string),
+		combatDamageAssignment: make(map[string]map[string]int),
 	}
+}
+
+// SetCombatBlockerOrder records the damage-assignment order the attacker's
+// controller will choose for the named attacker (CR 510.1c).
+func (tp *TestPlayer) SetCombatBlockerOrder(attackerName string, blockerNames []string) {
+	tp.combatBlockerOrder[attackerName] = blockerNames
+}
+
+// SetCombatDamageAssignment records the per-blocker damage split the attacker's
+// controller will assign for the named attacker (CR 510.1c).
+func (tp *TestPlayer) SetCombatDamageAssignment(attackerName string, distribution map[string]int) {
+	tp.combatDamageAssignment[attackerName] = distribution
+}
+
+// GetBlockerOrder implements mage.CombatDamageAssigner.
+func (tp *TestPlayer) GetBlockerOrder(attacker *mage.Permanent, blockers []*mage.Permanent) []uuid.UUID {
+	names, ok := tp.combatBlockerOrder[attacker.Name()]
+	if !ok {
+		return nil
+	}
+	idByName := make(map[string]uuid.UUID, len(blockers))
+	for _, b := range blockers {
+		idByName[b.Name()] = b.ID()
+	}
+	out := make([]uuid.UUID, 0, len(names))
+	for _, n := range names {
+		if id, ok := idByName[n]; ok {
+			out = append(out, id)
+		}
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return out
+}
+
+// GetCombatDamageAssignment implements mage.CombatDamageAssigner.
+func (tp *TestPlayer) GetCombatDamageAssignment(attacker *mage.Permanent, blockers []*mage.Permanent, totalPower int) map[uuid.UUID]int {
+	dist, ok := tp.combatDamageAssignment[attacker.Name()]
+	if !ok {
+		return nil
+	}
+	out := make(map[uuid.UUID]int, len(dist))
+	for _, b := range blockers {
+		if dmg, ok := dist[b.Name()]; ok {
+			out[b.ID()] = dmg
+		}
+	}
+	return out
 }
 
 // AddBandFormation records that the given creatures should attack as a band on the given turn.

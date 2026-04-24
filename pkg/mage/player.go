@@ -22,6 +22,17 @@ type BandingDamageDistributor interface {
 	GetBandingDamageDistribution(members []*Permanent) map[uuid.UUID]int
 }
 
+// CombatDamageAssigner is an optional interface for the attacking player to
+// (a) order multiple blockers for damage assignment (CR 510.1c, CR 702.19b)
+// and (b) divide the attacker's combat damage among them, subject to the
+// "lethal damage to each blocker before the next" constraint. Returning a
+// nil order or distribution falls back to the engine default (BlockerIDs
+// order, lethal-first greedy).
+type CombatDamageAssigner interface {
+	GetBlockerOrder(attacker *Permanent, blockers []*Permanent) []uuid.UUID
+	GetCombatDamageAssignment(attacker *Permanent, blockers []*Permanent, totalPower int) map[uuid.UUID]int
+}
+
 // BlockAssignment represents a single blocker-attacker pair.
 type BlockAssignment struct {
 	BlockerID  uuid.UUID

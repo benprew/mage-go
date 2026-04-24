@@ -267,6 +267,23 @@ func (tg *TestGame) ChooseNumber(p PlayerRef, n int) {
 	tp.chooseNumber = append(tp.chooseNumber, n)
 }
 
+// AssignCombatDamage scripts the attacker's controller's choice of how to
+// divide the attacker's combat damage among multiple blockers (CR 510.1c).
+// The owning player is inferred from whichever player controls the named
+// attacker at damage time. Distribution maps blocker names to assigned damage.
+func (tg *TestGame) AssignCombatDamage(attackerName string, distribution map[string]int) {
+	tg.playerA.SetCombatDamageAssignment(attackerName, distribution)
+	tg.playerB.SetCombatDamageAssignment(attackerName, distribution)
+}
+
+// ChooseBlockerOrder scripts the damage-assignment order the attacker's
+// controller picks for a multi-blocker block (CR 510.1c, also relevant for
+// trample CR 702.19b). Blockers are listed in the order they receive damage.
+func (tg *TestGame) ChooseBlockerOrder(attackerName string, blockerNames ...string) {
+	tg.playerA.SetCombatBlockerOrder(attackerName, blockerNames)
+	tg.playerB.SetCombatBlockerOrder(attackerName, blockerNames)
+}
+
 // AssertBanded checks whether two named permanents are in the same attacking band.
 func (tg *TestGame) AssertBanded(p1 PlayerRef, name1 string, p2 PlayerRef, name2 string, want bool) {
 	tg.t.Helper()

@@ -382,21 +382,73 @@ func (c *Combat) isBlockingBand(g *Game, blockerIDs []uuid.UUID) bool {
 // doNormalBlockedDamage handles blocked combat for a single non-banded attacker.
 func (c *Combat) doNormalBlockedDamage(g *Game, atk *Permanent, group *CombatGroup, isFirstStrikeStep bool) {
 	if c.DealsDamageInStep(atk, isFirstStrikeStep) {
-		remainingDmg := atk.CurrentPower(g)
+		atkPower := atk.CurrentPower(g)
+		// Order: ask attacker controller (CR 510.1c) for the damage-assignment
+		// order. Default is the BlockerIDs order recorded at block declaration.
+		orderedIDs := group.BlockerIDs
+		attackingPlayer := g.GetPlayer(atk.Controller)
+		blockerPerms := make([]*Permanent, 0, len(group.BlockerIDs))
 		for _, bid := range group.BlockerIDs {
-			blk := g.FindPermanent(bid)
-			if blk == nil {
-				continue
+			if blk := g.FindPermanent(bid); blk != nil {
+				blockerPerms = append(blockerPerms, blk)
 			}
-			needed := blk.CurrentToughness(g) - blk.Damage
-			if needed <= 0 {
-				continue
+		}
+		if assigner, ok := attackingPlayer.(CombatDamageAssigner); ok && len(blockerPerms) > 0 {
+			if reordered := assigner.GetBlockerOrder(atk, blockerPerms); reordered != nil {
+				orderedIDs = mergeBlockerOrder(reordered, group.BlockerIDs)
 			}
-			dealt := min(remainingDmg, needed)
-			g.DealDamageToPermanent(blk, dealt, atk.ID())
-			remainingDmg -= dealt
-			if remainingDmg <= 0 {
-				break
+		}
+
+		// Try a controller-supplied damage assignment first; fall back to the
+		// engine's lethal-first greedy split if none is provided or it is
+		// invalid per CR 510.1c (each blocker before the next must be assigned
+		// at least lethal damage; with trample, all blockers must be at lethal
+		// before any goes to the defender).
+		var assignment map[uuid.UUID]int
+		if assigner, ok := attackingPlayer.(CombatDamageAssigner); ok && len(orderedIDs) > 1 {
+			orderedPerms := make([]*Permanent, 0, len(orderedIDs))
+			for _, bid := range orderedIDs {
+				if blk := g.FindPermanent(bid); blk != nil {
+					orderedPerms = append(orderedPerms, blk)
+				}
+			}
+			assignment = assigner.GetCombatDamageAssignment(atk, orderedPerms, atkPower)
+			if assignment != nil && !validateBlockerAssignment(g, atk, orderedIDs, assignment, atkPower) {
+				assignment = nil
+			}
+		}
+
+		remainingDmg := atkPower
+		if assignment != nil {
+			usedDmg := 0
+			for _, bid := range orderedIDs {
+				blk := g.FindPermanent(bid)
+				if blk == nil {
+					continue
+				}
+				dmg := assignment[bid]
+				if dmg > 0 {
+					g.DealDamageToPermanent(blk, dmg, atk.ID())
+					usedDmg += dmg
+				}
+			}
+			remainingDmg = atkPower - usedDmg
+		} else {
+			for _, bid := range orderedIDs {
+				blk := g.FindPermanent(bid)
+				if blk == nil {
+					continue
+				}
+				needed := blk.CurrentToughness(g) - blk.Damage
+				if needed <= 0 {
+					continue
+				}
+				dealt := min(remainingDmg, needed)
+				g.DealDamageToPermanent(blk, dealt, atk.ID())
+				remainingDmg -= dealt
+				if remainingDmg <= 0 {
+					break
+				}
 			}
 		}
 		if remainingDmg > 0 && atk.HasKeyword(Trample) {
@@ -415,6 +467,74 @@ func (c *Combat) doNormalBlockedDamage(g *Game, atk *Permanent, group *CombatGro
 			g.DealDamageToPermanent(atk, blk.CurrentPower(g), blk.ID())
 		}
 	}
+}
+
+// mergeBlockerOrder returns a permutation of original such that IDs in
+// preferred come first (in their preferred order), then any IDs from original
+// not present in preferred (in their original order).
+func mergeBlockerOrder(preferred, original []uuid.UUID) []uuid.UUID {
+	origSet := make(map[uuid.UUID]bool, len(original))
+	for _, id := range original {
+		origSet[id] = true
+	}
+	seen := make(map[uuid.UUID]bool, len(original))
+	out := make([]uuid.UUID, 0, len(original))
+	for _, id := range preferred {
+		if origSet[id] && !seen[id] {
+			out = append(out, id)
+			seen[id] = true
+		}
+	}
+	for _, id := range original {
+		if !seen[id] {
+			out = append(out, id)
+			seen[id] = true
+		}
+	}
+	return out
+}
+
+// validateBlockerAssignment checks the CR 510.1c constraint: damage is
+// assigned to blockers in order, and a blocker can only be assigned non-lethal
+// damage if every blocker before it in the order has been assigned at least
+// lethal damage. With trample (CR 702.19b) all blockers must be at lethal
+// before any goes to the defender. The total assigned must not exceed
+// atkPower.
+func validateBlockerAssignment(g *Game, atk *Permanent, orderedIDs []uuid.UUID, assignment map[uuid.UUID]int, atkPower int) bool {
+	total := 0
+	prevLethal := true
+	allLethal := true
+	for _, bid := range orderedIDs {
+		blk := g.FindPermanent(bid)
+		if blk == nil {
+			continue
+		}
+		needed := blk.CurrentToughness(g) - blk.Damage
+		if needed < 0 {
+			needed = 0
+		}
+		dmg := assignment[bid]
+		if dmg < 0 {
+			return false
+		}
+		total += dmg
+		if !prevLethal && dmg > 0 {
+			return false
+		}
+		if dmg < needed {
+			prevLethal = false
+			allLethal = false
+		}
+	}
+	if total > atkPower {
+		return false
+	}
+	if total < atkPower {
+		if !atk.HasKeyword(Trample) || !allLethal {
+			return false
+		}
+	}
+	return true
 }
 
 // doBlockingBandDamage handles combat where multiple blockers with banding block
