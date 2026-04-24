@@ -775,6 +775,38 @@ func TestCountAvailableMana_IncludesManaCreatures(t *testing.T) {
 	}
 }
 
+func TestCountAvailableMana_SolRingProducesTwo(t *testing.T) {
+	g, pa, _ := makeGame()
+
+	// Sol Ring produces {C}{C}
+	ring := mage.NewArtifact("Sol Ring", "{1}",
+		mage.WithMultiManaAbility(mage.ManaProduction{Color: core.Colorless, Amount: 2}))
+	ring.SetOwner(pa.PlayerID())
+	rp := mage.NewPermanent(ring, pa.PlayerID())
+	rp.RevokeBaseAttr(core.AttrSummonSick)
+	g.AddToBattlefield(rp)
+
+	// Forest produces {G}
+	forest := mage.NewLand("Forest", mage.WithManaAbility(core.Green))
+	forest.SetOwner(pa.PlayerID())
+	fp := mage.NewPermanent(forest, pa.PlayerID())
+	fp.RevokeBaseAttr(core.AttrSummonSick)
+	g.AddToBattlefield(fp)
+
+	// Mountain produces {R}
+	mountain := mage.NewLand("Mountain", mage.WithManaAbility(core.Red))
+	mountain.SetOwner(pa.PlayerID())
+	mp := mage.NewPermanent(mountain, pa.PlayerID())
+	mp.RevokeBaseAttr(core.AttrSummonSick)
+	g.AddToBattlefield(mp)
+
+	got := CountAvailableMana(g, pa.PlayerID())
+	// Sol Ring (2) + Forest (1) + Mountain (1) = 4
+	if got != 4 {
+		t.Errorf("CountAvailableMana = %d, want 4 (Sol Ring 2 + Forest 1 + Mountain 1)", got)
+	}
+}
+
 // ── clock helper ────────────────────────────────────────────────────────────
 
 func TestClock_Basic(t *testing.T) {
