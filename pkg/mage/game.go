@@ -46,6 +46,9 @@ type Game struct {
 	// Extra turns
 	extraTurns []uuid.UUID // player IDs who get extra turns
 
+	// Per-turn step schedule and pending skips (CR 500.7–500.11).
+	schedule *TurnSchedule
+
 	// X value for the currently resolving spell
 	currentX int
 
@@ -89,6 +92,14 @@ type Game struct {
 	// Creature deaths this turn (total count across all players)
 	creatureDeathsThisTurn int
 
+	// CleanupPriorityRounds counts how many times players have received priority
+	// during a cleanup step in this game. Normally no priority is given during
+	// cleanup (CR 514.3); it is only granted when a state-based action fires or
+	// a triggered ability triggers during cleanup (CR 514.3a). Tests assert on
+	// this to distinguish the two cases. Not reset across turns — tests take a
+	// snapshot and compare deltas.
+	cleanupPriorityRounds int
+
 	// Targets of the spell currently being resolved (for ETB copy effects)
 	resolvingTargets []uuid.UUID
 
@@ -110,12 +121,49 @@ type Game struct {
 	// during a priority round. Used by the interactive layer for logging.
 	beforeStackResolve func(g *Game)
 
+	// OnDamageDealt is called after damage is dealt to a player or creature.
+	// sourceName is the name of the source card/permanent, targetName is the
+	// name of the target player or creature, amount is damage dealt, and
+	// isCombat indicates whether it was combat damage.
+	onDamageDealt func(sourceName, targetName string, amount int, isCombat bool)
+
 	// Control flags
 	stopped bool
 
 	// resolvingCombatDamage is true while combat damage is being resolved.
 	// Used by the replacement pipeline to identify combat damage actions.
 	resolvingCombatDamage bool
+
+	// inStep is true while the engine is inside RunStep / RunStepWithPriority.
+	// CR 500.12 invariant: no game events occur between steps or phases —
+	// any event fired must be associated with the enclosing step. Tests
+	// install OnFireEvent to verify this.
+	inStep bool
+
+	// OnFireEvent, if non-nil, is invoked at the top of FireEvent for every
+	// event dispatched. Test-only observable; used to enforce the CR 500.12
+	// "no events between steps" invariant.
+	OnFireEvent func(g *Game, evt GameEvent)
+}
+
+// InStep reports whether the engine is currently executing a step (i.e.,
+// inside RunStep or RunStepWithPriority). Used by tests to check the
+// CR 500.12 no-events-between-steps invariant.
+func (g *Game) InStep() bool { return g.inStep }
+
+// WithInStep runs fn with inStep=true, restoring the previous value on
+// return. Used by the test harness to ensure scripted pre-step actions
+// (which logically occur during the step's priority round) are not
+// observed as "between steps" events. CR 500.12.
+func (g *Game) WithInStep(fn func()) {
+	prev := g.inStep
+	g.inStep = true
+	defer func() { g.inStep = prev }()
+	fn()
+}
+
+func (g *Game) ActivePlayer() int {
+	return g.activePlayer
 }
 
 // DelayedTrigger represents a one-shot triggered ability that fires when
@@ -155,6 +203,7 @@ func NewGame(playerA, playerB Player) *Game {
 		instantsCastThisTurn:        make(map[uuid.UUID]int),
 		artifactManaOnly:            make(map[uuid.UUID]bool),
 		creatureManaOnly:            make(map[uuid.UUID]bool),
+		schedule:                    newTurnSchedule(),
 	}
 }
 
@@ -482,6 +531,63 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 	})
 
 	return perm
+}
+
+// PutOnBattlefieldAttacking (CR 508.4) puts a creature onto the battlefield and
+// marks it as attacking the given defender (player or planeswalker). For the
+// purpose of trigger events and effects, such a creature is "attacking" but
+// never "attacked" — AttacksTrigger does not fire. Per CR 508.4a, if the
+// specified defender is no longer in the game (zero UUID or unknown player),
+// the creature still enters but never becomes an attacking creature.
+func (g *Game) PutOnBattlefieldAttacking(card Card, controller, defenderID uuid.UUID) *Permanent {
+	if card.Owner() == uuid.Nil {
+		card.SetOwner(controller)
+	}
+	perm := g.PutOnBattlefield(card, controller)
+	if defenderID == uuid.Nil || !g.isValidDefender(defenderID) {
+		return perm
+	}
+	g.combat.AddAttacker(perm.ID(), defenderID)
+	g.FireEvent(GameEvent{
+		Type:     EvtEntersAttacking,
+		SourceID: perm.ID(),
+		TargetID: defenderID,
+		PlayerID: controller,
+	})
+	return perm
+}
+
+// PutOnBattlefieldBlocking (CR 509.4) puts a creature onto the battlefield and
+// marks it as blocking the given attacker. Per CR 509.4, such a creature is
+// "blocking" but never "blocked" — BlocksTrigger does not fire. Per CR 509.4a,
+// if the specified attacker is no longer attacking, the creature still enters
+// but never becomes a blocking creature.
+func (g *Game) PutOnBattlefieldBlocking(card Card, controller, attackerID uuid.UUID) *Permanent {
+	if card.Owner() == uuid.Nil {
+		card.SetOwner(controller)
+	}
+	perm := g.PutOnBattlefield(card, controller)
+	if attackerID == uuid.Nil || !g.combat.IsAttacking(attackerID) {
+		return perm
+	}
+	g.combat.AddBlocker(perm.ID(), attackerID)
+	g.blockedThisTurn[perm.ID()] = append(g.blockedThisTurn[perm.ID()], attackerID)
+	g.FireEvent(GameEvent{
+		Type:     EvtEntersBlocking,
+		SourceID: perm.ID(),
+		TargetID: attackerID,
+		PlayerID: controller,
+	})
+	return perm
+}
+
+func (g *Game) isValidDefender(id uuid.UUID) bool {
+	for _, p := range g.players {
+		if p.PlayerID() == id {
+			return true
+		}
+	}
+	return g.FindPermanent(id) != nil
 }
 
 // setEffectSource sets the source ID on a continuous effect.
@@ -922,6 +1028,13 @@ func (g *Game) executeDamageToPlayer(a *DamageToPlayerAction) {
 		Amount:   amount,
 		Flag:     a.IsCombatDamage(),
 	})
+	if g.onDamageDealt != nil {
+		sourceName := "unknown"
+		if sc := g.findCardForDamageSource(sourceID); sc != nil {
+			sourceName = sc.Name()
+		}
+		g.onDamageDealt(sourceName, p.Name(), amount, a.IsCombatDamage())
+	}
 	// Lifelink
 	src := g.FindPermanent(sourceID)
 	if src != nil && src.HasKeyword(Lifelink) {
@@ -993,6 +1106,13 @@ func (g *Game) executeDamageToCreature(a *DamageToCreatureAction) {
 		TargetID: perm.ID(),
 		Amount:   amount,
 	})
+	if g.onDamageDealt != nil {
+		sourceName := "unknown"
+		if sc := g.findCardForDamageSource(sourceID); sc != nil {
+			sourceName = sc.Name()
+		}
+		g.onDamageDealt(sourceName, perm.Name(), amount, g.resolvingCombatDamage)
+	}
 	// Deathtouch / BasiliskTouch
 	src := g.FindPermanent(sourceID)
 	if src != nil && amount > 0 {
@@ -1017,6 +1137,44 @@ func (g *Game) executeDamageToCreature(a *DamageToCreatureAction) {
 	if src != nil && src.FaceDown {
 		g.turnFaceUp(src)
 	}
+}
+
+// auraHostIsLegal reports whether host satisfies the aura's enchant ability
+// (CR 303.4c). It checks the aura's cast-target filter against the host,
+// ignoring targeting restrictions (shroud/hexproof don't make an already-attached
+// aura fall off — see CR 702.11b).
+func auraHostIsLegal(auraCard Card, host *Permanent, g *Game) bool {
+	targets := auraCard.CastTargets()
+	if len(targets) == 0 {
+		return true
+	}
+	for _, t := range targets {
+		switch tt := t.(type) {
+		case *CreatureTarget:
+			if !host.HasType(TypeCreature) {
+				continue
+			}
+			if filtersMatch(tt.Filters, host, g) {
+				return true
+			}
+		case *PermanentTarget:
+			if filtersMatch(tt.Filters, host, g) {
+				return true
+			}
+		default:
+			return true
+		}
+	}
+	return false
+}
+
+func filtersMatch(filters []PermanentFilter, p *Permanent, g *Game) bool {
+	for _, f := range filters {
+		if !f.Match(p, g) {
+			return false
+		}
+	}
+	return true
 }
 
 // Attach attaches source to target (for auras and equipment).
@@ -1066,6 +1224,9 @@ func (g *Game) RegisterDelayedTrigger(dt *DelayedTrigger) {
 
 // FireEvent dispatches an event and checks triggered abilities.
 func (g *Game) FireEvent(evt GameEvent) {
+	if g.OnFireEvent != nil {
+		g.OnFireEvent(g, evt)
+	}
 	for _, perm := range g.battlefield {
 		for _, a := range perm.RuntimeAbilities {
 			ta, ok := UnwrapAbility(a).(TriggeredAbility)
@@ -1123,7 +1284,32 @@ func (g *Game) FireEvent(evt GameEvent) {
 }
 
 // PutTriggersOnStack puts all pending triggers onto the stack.
+//
+// CR 603.3b: If multiple abilities have triggered since the last time a player
+// received priority, the active player's triggered abilities are put on the
+// stack in any order the active player chooses, then each non-active player,
+// in turn order, puts their triggered abilities on the stack in any order
+// they choose. The last-put-on-stack ability ends up on top and resolves
+// first.
+//
+// We partition pendingTriggers by controller into active and non-active
+// groups, preserving source order within each group (stable), then push the
+// active group first, then the non-active group. This means the non-active
+// player's triggers end up on top of the stack and resolve first.
 func (g *Game) PutTriggersOnStack() {
+	if len(g.pendingTriggers) > 1 {
+		activeID := g.ActivePlayerObj().PlayerID()
+		active := make([]*pendingTrigger, 0, len(g.pendingTriggers))
+		nonActive := make([]*pendingTrigger, 0, len(g.pendingTriggers))
+		for _, pt := range g.pendingTriggers {
+			if pt.controller == activeID {
+				active = append(active, pt)
+			} else {
+				nonActive = append(nonActive, pt)
+			}
+		}
+		g.pendingTriggers = append(active, nonActive...)
+	}
 	for _, pt := range g.pendingTriggers {
 		obj := &StackObject{
 			ID:         uuid.New(),
@@ -1172,6 +1358,11 @@ func (g *Game) PutTriggersOnStack() {
 					if pt.event.SourceID != uuid.Nil {
 						obj.Targets = []uuid.UUID{pt.event.SourceID}
 					}
+				case EvtPutIntoGraveyardFromBattlefield:
+					// Pass the controller's player ID so effects can deal damage/etc.
+					if pt.event.PlayerID != uuid.Nil {
+						obj.Targets = []uuid.UUID{pt.event.PlayerID}
+					}
 				case EvtDeclaredBlocker:
 					// Pass the blocker's ID and attacker's ID
 					if pt.event.SourceID != uuid.Nil {
@@ -1179,6 +1370,11 @@ func (g *Game) PutTriggersOnStack() {
 						if pt.event.TargetID != uuid.Nil {
 							obj.Targets = append(obj.Targets, pt.event.TargetID)
 						}
+					}
+				case EvtCreatureBlocks:
+					// Pass the blocker's ID (fired once per combat per blocker)
+					if pt.event.SourceID != uuid.Nil {
+						obj.Targets = []uuid.UUID{pt.event.SourceID}
 					}
 				}
 			}
@@ -1337,6 +1533,22 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	}
 	if card == nil {
 		return fmt.Errorf("card %s not found in hand", name)
+	}
+
+	// CR 307.1, 302.1, 303.1, 301.1 — sorcery-speed timing. Any spell that
+	// is not an instant may be cast only during its controller's main phase,
+	// when the stack is empty, and when that player is the active player
+	// (i.e. could cast a sorcery).
+	if !card.HasType(TypeInstant) {
+		if !g.step.IsMainPhase() {
+			return ErrSorcerySpeed
+		}
+		if g.ActivePlayerObj().PlayerID() != playerID {
+			return ErrSorcerySpeed
+		}
+		if !g.stack.IsEmpty() {
+			return ErrSorcerySpeed
+		}
 	}
 
 	// Check expansion block (City in a Bottle)
@@ -1531,10 +1743,12 @@ func (g *Game) CheckStateBasedActions() {
 	for {
 		actions := false
 
-		// Check for creatures with lethal damage
+		// Check for creatures with lethal damage (CR 704.5h). Indestructible
+		// creatures (CR 702.12b) are skipped — the destroy would be a no-op
+		// and setting actions=true would loop the SBA forever.
 		var toDestroy []*Permanent
 		for _, p := range g.battlefield {
-			if p.HasType(TypeCreature) && p.LethalDamage(g) {
+			if p.HasType(TypeCreature) && p.LethalDamage(g) && !p.HasKeyword(Indestructible) {
 				toDestroy = append(toDestroy, p)
 				actions = true
 			}
@@ -1570,7 +1784,7 @@ func (g *Game) CheckStateBasedActions() {
 			}
 		}
 
-		// Check for auras attached to nothing or illegal targets
+		// Check for auras attached to nothing or illegal targets (CR 704.5m / 303.4c).
 		var aurasToDrop []*Permanent
 		for _, p := range g.battlefield {
 			if p.HasSubType("Aura") && p.IsAttached() {
@@ -1579,6 +1793,9 @@ func (g *Game) CheckStateBasedActions() {
 					aurasToDrop = append(aurasToDrop, p)
 					actions = true
 				} else if host.HasProtectionFrom(p.Card) {
+					aurasToDrop = append(aurasToDrop, p)
+					actions = true
+				} else if !auraHostIsLegal(p.Card, host, g) {
 					aurasToDrop = append(aurasToDrop, p)
 					actions = true
 				}
@@ -1688,6 +1905,60 @@ func (g *Game) CheckStateBasedActions() {
 			}
 		}
 
+		// MTG rule 704.5d / CR 111.7: a token in any zone other than the battlefield
+		// ceases to exist. This runs after death/graveyard movement so "dies" triggers
+		// fire normally — the trigger is tied to the event, not the card's continued
+		// existence in the graveyard.
+		for _, p := range g.players {
+			var gyTokens []uuid.UUID
+			for _, c := range p.Graveyard() {
+				if c.IsToken() {
+					gyTokens = append(gyTokens, c.ID())
+				}
+			}
+			for _, id := range gyTokens {
+				p.RemoveFromGraveyard(id)
+				actions = true
+			}
+			var handTokens []uuid.UUID
+			for _, c := range p.Hand() {
+				if c.IsToken() {
+					handTokens = append(handTokens, c.ID())
+				}
+			}
+			for _, id := range handTokens {
+				p.RemoveFromHand(id)
+				actions = true
+			}
+			lib := p.Library()
+			kept := lib[:0]
+			removed := false
+			for _, c := range lib {
+				if c.IsToken() {
+					removed = true
+					continue
+				}
+				kept = append(kept, c)
+			}
+			if removed {
+				p.SetLibrary(kept)
+				actions = true
+			}
+		}
+		exileKept := g.exile[:0]
+		exileRemoved := false
+		for _, ec := range g.exile {
+			if ec.Card != nil && ec.Card.IsToken() {
+				exileRemoved = true
+				continue
+			}
+			exileKept = append(exileKept, ec)
+		}
+		if exileRemoved {
+			g.exile = exileKept
+			actions = true
+		}
+
 		if !actions {
 			break
 		}
@@ -1697,9 +1968,28 @@ func (g *Game) CheckStateBasedActions() {
 	g.PutTriggersOnStack()
 }
 
+// EmptyManaPools empties every player's mana pool. Called at the end of
+// every step and phase per CR 500.5.
+func (g *Game) EmptyManaPools() {
+	for _, p := range g.players {
+		p.ManaPool().Clear()
+	}
+}
+
+// resetManaProducedThisTurn clears the per-turn mana-produced tally on
+// every player's pool. Called at the start of each turn.
+func (g *Game) resetManaProducedThisTurn() {
+	for _, p := range g.players {
+		p.ManaPool().ResetProducedThisTurn()
+	}
+}
+
 // RunStep executes a single step of the turn.
 func (g *Game) RunStep(step PhaseStep) {
 	g.step = step
+
+	// CR 500.5: any unspent mana empties as the step/phase ends.
+	defer g.EmptyManaPools()
 
 	// Reapply continuous effects at start of each step
 	g.effects.Apply(g)
@@ -1971,6 +2261,8 @@ func (g *Game) doDraw() {
 	g.ResolveStack()
 }
 
+// 1. Rule 508.1: First, the active player declares attackers.
+// 2. Rule 508.2: Second, the active player gets priority.
 func (g *Game) doDeclareAttackers() {
 	active := g.ActivePlayerObj()
 	attackerIDs := active.DeclareAttackers(g)
@@ -2026,6 +2318,11 @@ func (g *Game) doDeclareAttackers() {
 			}
 		}
 	}
+
+	// CR 506.5 — snapshot "attacks alone" once all attackers have been
+	// declared this step.
+	g.combat.SnapshotAttackedAlone()
+	g.ResolveStack()
 }
 
 // isValidBand checks that a slice of attacker IDs meets banding requirements:
@@ -2056,6 +2353,7 @@ func (g *Game) doDeclareBlockers() {
 	assignments := nonActive.DeclareBlockers(g)
 	if assignments == nil {
 		// No blockers, but still fire the event so "attacks and isn't blocked" triggers work
+		g.combat.SnapshotBlockedAlone()
 		g.FireEvent(GameEvent{
 			Type:     EvtBlockersDecl,
 			PlayerID: nonActive.PlayerID(),
@@ -2074,6 +2372,7 @@ func (g *Game) doDeclareBlockers() {
 	}
 
 	blockerCount := make(map[uuid.UUID]int) // how many attackers each blocker is assigned to
+	var blockerOrder []uuid.UUID            // insertion order for EvtCreatureBlocks (CR 509.3a)
 	for _, ba := range assignments {
 		blocker := g.FindPermanent(ba.BlockerID)
 		attackerID := ba.AttackerID
@@ -2105,6 +2404,9 @@ func (g *Game) doDeclareBlockers() {
 		if blockerCount[ba.BlockerID] >= maxBlocks {
 			continue
 		}
+		if blockerCount[ba.BlockerID] == 0 {
+			blockerOrder = append(blockerOrder, ba.BlockerID)
+		}
 		blockerCount[ba.BlockerID]++
 		g.combat.AddBlocker(ba.BlockerID, attackerID)
 		g.blockedThisTurn[ba.BlockerID] = append(g.blockedThisTurn[ba.BlockerID], attackerID)
@@ -2116,6 +2418,20 @@ func (g *Game) doDeclareBlockers() {
 		})
 	}
 
+	// CR 509.3a — "Whenever [creature] blocks" fires exactly once per combat
+	// per blocking creature, regardless of how many attackers it blocks.
+	for _, blockerID := range blockerOrder {
+		g.FireEvent(GameEvent{
+			Type:     EvtCreatureBlocks,
+			SourceID: blockerID,
+			PlayerID: nonActive.PlayerID(),
+		})
+	}
+
+	// CR 506.5 — snapshot "blocks alone" once all blockers have been
+	// declared this step.
+	g.combat.SnapshotBlockedAlone()
+
 	// Fire EvtBlockersDecl once after all blockers are assigned
 	g.FireEvent(GameEvent{
 		Type:     EvtBlockersDecl,
@@ -2126,8 +2442,13 @@ func (g *Game) doDeclareBlockers() {
 // doCleanupActions performs cleanup housekeeping and places any triggers on the stack.
 // Returns true if triggers were placed on the stack (requiring priority + another cleanup).
 func (g *Game) doCleanupActions() bool {
+	active := g.ActivePlayerObj()
+	g.FireEvent(GameEvent{
+		Type:     EvtCleanup,
+		PlayerID: active.PlayerID(),
+	})
 	// Hand size discard: active player discards down to max hand size (CR 514.1)
-	p := g.ActivePlayerObj()
+	p := active
 	maxHS := g.effects.Rules.MaxHandSize(p.PlayerID())
 	for len(p.Hand()) > maxHS {
 		chosen := p.ChooseCardsFromHand(1, "discard to hand size", g)
@@ -2196,27 +2517,42 @@ func (g *Game) doCleanup() {
 	}
 }
 
-// RunTurn executes a complete turn for the active player.
+// RunTurn executes a complete turn for the active player, reading steps
+// from g.Schedule so that effects can skip or insert steps mid-turn.
 // stopAt is checked: if we reach the specified turn+step, we stop.
 func (g *Game) RunTurn(stopTurn int, stopStep PhaseStep) bool {
-	for _, step := range AllSteps() {
-		if g.turn == stopTurn && step == stopStep {
-			g.step = step
-			return true // signal to stop
+	if g.schedule == nil {
+		g.schedule = newTurnSchedule()
+	}
+	g.resetManaProducedThisTurn()
+	g.schedule.buildNextTurn()
+	for {
+		step, ok := g.schedule.popNextStep()
+		if !ok {
+			// Put the stop step back so the next Run resumes correctly.
+			g.schedule.Remaining = append([]PhaseStep{step}, g.schedule.Remaining...)
+			return false
 		}
 		g.RunStep(step)
 		if g.stopped {
 			return true
 		}
 	}
-	return false
 }
 
 // Run executes the game until the stop condition.
 func (g *Game) Run(stopTurn int, stopStep PhaseStep, maxTurns int) {
 	for g.turn <= maxTurns {
-		if g.RunTurn(stopTurn, stopStep) {
-			return
+		// Turn-skip (CR 500.11): if the active player's next turn is
+		// marked as skipped, consume the skip and advance past this turn
+		// without running any steps.
+		activeID := g.ActivePlayerObj().PlayerID()
+		if g.schedule != nil && g.schedule.consumeTurnSkip(activeID) {
+			// Fall through to the extra-turn / next-player logic below.
+		} else {
+			if g.RunTurn(stopTurn, stopStep) {
+				return
+			}
 		}
 		// Check for extra turns
 		if len(g.extraTurns) > 0 {
@@ -2644,14 +2980,16 @@ func (g *Game) GetActivatableAbilities(playerID uuid.UUID) []ActivatableInfo {
 	return result
 }
 
-// CastSpellByID casts a spell from a player's hand by card ID.
+// CastSpellByID casts a spell from a player's hand by card ID. It resolves
+// the ID to the card's name and delegates to CastSpellByName, which owns the
+// full cost-modification and additional-cost pipeline. Using a thin adapter
+// here means the priority loop and scripted tests go through the same code
+// path as the harness / interactive layer.
 func (g *Game) CastSpellByID(playerID, cardID uuid.UUID, targets []uuid.UUID, xValue int) error {
 	p := g.GetPlayer(playerID)
 	if p == nil {
 		return ErrPlayerNotFound
 	}
-
-	// Find card in hand
 	var card Card
 	for _, c := range p.Hand() {
 		if c.ID() == cardID {
@@ -2674,57 +3012,12 @@ func (g *Game) CastSpellByID(playerID, cardID uuid.UUID, targets []uuid.UUID, xV
 	if mc.HasX {
 		payMC.Generic += xValue * mc.XCount
 	}
-
-	// Auto-tap lands to pay the cost
-	if !payMC.IsZero() {
+	if !payMC.IsZero() && !p.ManaPool().CanPay(payMC) {
 		if err := g.AutoTapForCost(playerID, payMC); err != nil {
 			return fmt.Errorf("cannot pay for %s: %v", card.Name(), err)
 		}
-		// Now pay from the mana pool
-		if err := p.ManaPool().Pay(payMC); err != nil {
-			return err
-		}
 	}
-
-	// Remove from hand
-	p.RemoveFromHand(card.ID())
-
-	// Build effects from spell abilities
-	var effects []Effect
-	for _, a := range card.Abilities() {
-		if sa, ok := a.(*SpellAbility); ok {
-			effects = append(effects, sa.Effects()...)
-		}
-	}
-
-	obj := &StackObject{
-		ID:         uuid.New(),
-		Card:       card,
-		Controller: playerID,
-		SourceID:   card.ID(),
-		Effects:    effects,
-		Targets:    targets,
-		XValue:     xValue,
-	}
-
-	if modes := card.Modes(); len(modes) > 0 {
-		obj.ModeChoice = p.ChooseMode(modes, card.Name())
-	}
-
-	g.stack.Push(obj)
-
-	// Track instant spells cast per player this turn
-	if card.HasType(TypeInstant) {
-		g.instantsCastThisTurn[playerID]++
-	}
-
-	g.FireEvent(GameEvent{
-		Type:     EvtSpellCast,
-		SourceID: card.ID(),
-		PlayerID: playerID,
-	})
-
-	return nil
+	return g.CastSpellByName(playerID, card.Name(), targets, xValue)
 }
 
 // ActivateAbilityByIndex activates an ability on a permanent by index.
@@ -2769,8 +3062,19 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 			return fmt.Errorf("only opponents may activate this ability")
 		}
 	}
-	if aa.SorcerySpeed() && !g.step.IsMainPhase() {
-		return ErrSorcerySpeed
+	// CR 307.5 / 602.5d — "activate only as a sorcery" means the ability can
+	// only be activated when its controller could cast a sorcery: main phase,
+	// active player, empty stack.
+	if aa.SorcerySpeed() {
+		if !g.step.IsMainPhase() {
+			return ErrSorcerySpeed
+		}
+		if g.ActivePlayerObj().PlayerID() != playerID {
+			return ErrSorcerySpeed
+		}
+		if !g.stack.IsEmpty() {
+			return ErrSorcerySpeed
+		}
 	}
 
 	// Validate targets
@@ -2893,4 +3197,8 @@ func (g *Game) Winner() string {
 		}
 	}
 	return ""
+}
+
+func (g *Game) Stack() *Stack {
+	return g.stack
 }

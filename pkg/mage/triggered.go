@@ -100,9 +100,12 @@ func AttacksTrigger(effect Effect, optional bool) *GenericTriggered {
 		SetConditionData(EventSourceIsSelf{})
 }
 
-// BlocksTrigger fires when the source creature is declared as a blocker.
+// BlocksTrigger fires once per combat when the source creature blocks one or
+// more attackers (CR 509.3a). For "Whenever [creature] blocks a creature"
+// (per-attacker) triggers, construct a NewTriggered on EvtDeclaredBlocker
+// directly.
 func BlocksTrigger(effect Effect, optional bool) *GenericTriggered {
-	return NewTriggered(EvtDeclaredBlocker, optional, effect).
+	return NewTriggered(EvtCreatureBlocks, optional, effect).
 		SetConditionData(EventSourceIsSelf{})
 }
 
@@ -177,6 +180,14 @@ func BeginningOfEachDrawStepTrigger(effect Effect, optional bool) *GenericTrigge
 // BeginningOfEachEndStepTrigger fires at the beginning of every player's end step.
 func BeginningOfEachEndStepTrigger(effect Effect, optional bool) *GenericTriggered {
 	return NewTriggered(EvtEndStep, optional, effect)
+}
+
+// BeginningOfEachCleanupStepTrigger fires at the beginning of every player's
+// cleanup step (CR 514). Per CR 514.3a, a trigger that fires during cleanup
+// causes players to receive priority and a new cleanup step to begin after
+// the triggered ability resolves.
+func BeginningOfEachCleanupStepTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtCleanup, optional, effect)
 }
 
 // DealsDamageToOpponentTrigger fires when the source deals damage to an opponent.

@@ -224,9 +224,9 @@ func TestOubliette(t *testing.T) {
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Oubliette")
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Desert Twister")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Oubliette", "Grizzly Bears")
-		// Destroy Oubliette — creature should phase back in
-		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Desert Twister", "Oubliette")
-		g.StopAt(1, core.BeginCombat)
+		// Destroy Oubliette on PlayerB's main phase — creature should phase back in.
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Desert Twister", "Oubliette")
+		g.StopAt(2, core.BeginCombat)
 		g.Execute()
 		// Grizzly Bears should be back on the battlefield (tapped)
 		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
@@ -241,8 +241,8 @@ func TestOubliette(t *testing.T) {
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Oubliette")
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Desert Twister")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Oubliette", "Grizzly Bears")
-		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Desert Twister", "Oubliette")
-		g.StopAt(1, core.BeginCombat)
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Desert Twister", "Oubliette")
+		g.StopAt(2, core.BeginCombat)
 		g.Execute()
 		// Bears return with counters intact (phasing preserves them)
 		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)

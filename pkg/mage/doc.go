@@ -178,6 +178,7 @@ Combat effects:
 	  .Until(Indefinite/EndOfTurn/...)              // Indefinite = lasts while target on battlefield
 	[DoubleTargetPower]()                           // double target's power (Berserk)
 	[MakeUnblockableUntilEndOfTurn]()               // can't be blocked this turn
+	[PreventAttackingTargetUntilEndOfTurn]()        // target creature can't attack this turn (CR 506.4a)
 	[SetPTUntilEndOfTurn](p, t, sel)                // set base P/T until EOT
 	[SetPowerUntilEndOfTurn](power, sel)            // set base power only until EOT
 	[RemoveFromCombat]()                            // remove target from combat
@@ -478,7 +479,7 @@ to add targeting requirements.
 Convenience constructors (set condition automatically):
 
 	[AttacksTrigger](effect, optional)                          // EvtDeclaredAttacker, source is self
-	[BlocksTrigger](effect, optional)                           // EvtDeclaredBlocker, source is self
+	[BlocksTrigger](effect, optional)                           // EvtCreatureBlocks, source is self (CR 509.3a; fires once per combat per blocker)
 	[EntersBattlefieldTrigger](effect, optional)                // EvtEntersBattlefield, source is self
 	[DiesCreatureTrigger](effect, optional, filter)             // EvtCreatureDied, another creature you control
 	[AnyCreatureDiesTrigger](effect, optional)                  // EvtCreatureDied, any creature
@@ -642,6 +643,7 @@ Target effects (apply to specific permanent by ID):
 	[TemporaryAnimate](targetID, power, toughness)         // animate until EOT
 	[TemporaryAnimateUntilEndOfCombat](id, power, tough)   // animate until end combat
 	[PreventBlockingUntilEndOfCombat](permID)              // can't block until end combat
+	[PreventAttackingUntilEndOfTurn](permID)               // can't attack until EOT (CR 506.4a)
 
 Global/source-based effects (while source on battlefield):
 

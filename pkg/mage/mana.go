@@ -9,6 +9,11 @@ import (
 type ManaPool struct {
 	pool            []Mana
 	ManaConversions map[Color]Color // from → to (set by Sunglasses of Urza etc.)
+
+	// ProducedThisTurn records every unit of mana ever added to this pool
+	// during the current turn, for observability when the live pool empties
+	// between steps (CR 500.5). Reset at turn start.
+	ProducedThisTurn []Mana
 }
 
 func NewManaPool() *ManaPool {
@@ -30,7 +35,32 @@ func (mp *ManaPool) RestorePool(snap []Mana) {
 func (mp *ManaPool) Add(c Color, amount int) {
 	for i := 0; i < amount; i++ {
 		mp.pool = append(mp.pool, Mana{Color: c})
+		mp.ProducedThisTurn = append(mp.ProducedThisTurn, Mana{Color: c})
 	}
+}
+
+// CountProducedThisTurn returns how much mana of color c has been added to
+// this pool during the current turn. Survives per-step pool emptying.
+func (mp *ManaPool) CountProducedThisTurn(c Color) int {
+	n := 0
+	for _, m := range mp.ProducedThisTurn {
+		if m.Color == c {
+			n++
+		}
+	}
+	return n
+}
+
+// TotalProducedThisTurn returns the total amount of mana added to this pool
+// during the current turn.
+func (mp *ManaPool) TotalProducedThisTurn() int {
+	return len(mp.ProducedThisTurn)
+}
+
+// ResetProducedThisTurn clears the produced-this-turn tally. Called at the
+// start of each turn by the driver.
+func (mp *ManaPool) ResetProducedThisTurn() {
+	mp.ProducedThisTurn = nil
 }
 
 func (mp *ManaPool) Count(c Color) int {

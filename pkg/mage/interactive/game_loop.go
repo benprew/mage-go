@@ -141,6 +141,11 @@ func RunGameLoop(g *mage.Game, humanIdx int, aiActionPause time.Duration) {
 		}
 	})
 
+	// Log damage dealt by creatures and spells
+	g.SetOnDamageDealt(func(sourceName, targetName string, amount int, isCombat bool) {
+		addLog(fmt.Sprintf("  %s deals %d damage to %s", sourceName, amount, targetName))
+	})
+
 	// Log stack resolution
 	g.SetBeforeStackResolve(func(g *mage.Game) {
 		lastUndo.valid = false

@@ -16,8 +16,8 @@ func TestMishrasFactory(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.Colorless) < 6 { // 5 auto + 1
-			t.Errorf("expected at least 6 colorless, got %d", pool.Count(core.Colorless))
+		if pool.CountProducedThisTurn(core.Colorless) < 6 { // 5 auto + 1
+			t.Errorf("expected at least 6 colorless, got %d", pool.CountProducedThisTurn(core.Colorless))
 		}
 	})
 
@@ -51,6 +51,33 @@ func TestMishrasFactory(t *testing.T) {
 		g.Execute()
 		g.AssertPowerToughness(gametest.PlayerA, "Mishra's Factory", 2, 2)
 	})
+
+	t.Run("animate does not tap the Factory itself", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mishra's Factory")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Mishra's Factory")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertTapped(gametest.PlayerA, "Mishra's Factory", false)
+	})
+
+	t.Run("is a creature after animating", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mishra's Factory")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Mishra's Factory")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		perm := g.FindPermanentByName("Mishra's Factory", g.GetPlayer(gametest.PlayerA).PlayerID())
+		if perm == nil {
+			t.Fatal("Mishra's Factory not found on battlefield")
+		}
+		if !perm.HasAttr(core.AttrIsCreature) {
+			t.Error("Mishra's Factory should be a creature after animating")
+		}
+		if !perm.HasAttr(core.AttrCanAttack) {
+			t.Error("Mishra's Factory should be able to attack after animating")
+		}
+	})
 }
 
 func TestMishrasWorkshop(t *testing.T) {
@@ -61,8 +88,8 @@ func TestMishrasWorkshop(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.Colorless) < 8 { // 5 auto + 3
-			t.Errorf("expected at least 8 colorless, got %d", pool.Count(core.Colorless))
+		if pool.CountProducedThisTurn(core.Colorless) < 8 { // 5 auto + 3
+			t.Errorf("expected at least 8 colorless, got %d", pool.CountProducedThisTurn(core.Colorless))
 		}
 	})
 
@@ -89,8 +116,8 @@ func TestStripMine(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.Colorless) < 6 { // 5 auto + 1
-			t.Errorf("expected at least 6 colorless, got %d", pool.Count(core.Colorless))
+		if pool.CountProducedThisTurn(core.Colorless) < 6 { // 5 auto + 1
+			t.Errorf("expected at least 6 colorless, got %d", pool.CountProducedThisTurn(core.Colorless))
 		}
 	})
 
@@ -115,8 +142,8 @@ func TestUrzasMine(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.Colorless) < 6 { // 5 auto + 1
-			t.Errorf("expected at least 6 colorless, got %d", pool.Count(core.Colorless))
+		if pool.CountProducedThisTurn(core.Colorless) < 6 { // 5 auto + 1
+			t.Errorf("expected at least 6 colorless, got %d", pool.CountProducedThisTurn(core.Colorless))
 		}
 	})
 
@@ -129,8 +156,8 @@ func TestUrzasMine(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.Colorless) < 7 { // 5 auto + 2 (Tron bonus)
-			t.Errorf("Urza's Mine with Tron should produce 2 colorless; expected >=7, got %d", pool.Count(core.Colorless))
+		if pool.CountProducedThisTurn(core.Colorless) < 7 { // 5 auto + 2 (Tron bonus)
+			t.Errorf("Urza's Mine with Tron should produce 2 colorless; expected >=7, got %d", pool.CountProducedThisTurn(core.Colorless))
 		}
 	})
 }
@@ -143,8 +170,8 @@ func TestUrzasPowerPlant(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.Colorless) < 6 {
-			t.Errorf("expected at least 6 colorless, got %d", pool.Count(core.Colorless))
+		if pool.CountProducedThisTurn(core.Colorless) < 6 {
+			t.Errorf("expected at least 6 colorless, got %d", pool.CountProducedThisTurn(core.Colorless))
 		}
 	})
 
@@ -157,8 +184,8 @@ func TestUrzasPowerPlant(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.Colorless) < 7 { // 5 auto + 2
-			t.Errorf("Urza's Power Plant with Tron should produce 2 colorless; expected >=7, got %d", pool.Count(core.Colorless))
+		if pool.CountProducedThisTurn(core.Colorless) < 7 { // 5 auto + 2
+			t.Errorf("Urza's Power Plant with Tron should produce 2 colorless; expected >=7, got %d", pool.CountProducedThisTurn(core.Colorless))
 		}
 	})
 }
@@ -171,8 +198,8 @@ func TestUrzasTower(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.Colorless) < 6 {
-			t.Errorf("expected at least 6 colorless, got %d", pool.Count(core.Colorless))
+		if pool.CountProducedThisTurn(core.Colorless) < 6 {
+			t.Errorf("expected at least 6 colorless, got %d", pool.CountProducedThisTurn(core.Colorless))
 		}
 	})
 
@@ -185,8 +212,8 @@ func TestUrzasTower(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.Colorless) < 8 { // 5 auto + 3 (Tron Tower)
-			t.Errorf("Urza's Tower with Tron should produce 3 colorless; expected >=8, got %d", pool.Count(core.Colorless))
+		if pool.CountProducedThisTurn(core.Colorless) < 8 { // 5 auto + 3 (Tron Tower)
+			t.Errorf("Urza's Tower with Tron should produce 3 colorless; expected >=8, got %d", pool.CountProducedThisTurn(core.Colorless))
 		}
 	})
 }

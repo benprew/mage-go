@@ -15,6 +15,18 @@ type TestGame struct {
 	t       *testing.T
 	playerA *TestPlayer
 	playerB *TestPlayer
+	Combat  *mage.Combat
+	Effects *mage.EffectManager
+	Stack   *mage.Stack
+	Battlefield []*mage.Permanent
+	Schedule *mage.TurnSchedule
+	Players []mage.Player
+	OnPriority mage.PriorityHandler
+	Step core.PhaseStep
+	Turn int
+	ActivePlayer int
+	LandsPlayedThisTurn int
+	CleanupPriorityRounds int
 	stopAt  struct {
 		turn int
 		step core.PhaseStep
@@ -35,6 +47,12 @@ type castAction struct {
 	targets   []string
 	xValue    int
 	responses []responseAction
+
+	// fired becomes true once the handler has popped this action.
+	fired bool
+	// responsesReleased becomes true once this cast's spell has been
+	// observed on top of the stack and its responses have been enqueued.
+	responsesReleased bool
 }
 
 type responseAction struct {
@@ -43,6 +61,17 @@ type responseAction struct {
 	perm    string
 	targets []string
 	xValue  int
+
+	// parentCastIdx is the index into tg.castActions of the parent cast.
+	// A response is gated on the parent's spell being the current top of
+	// the stack (by name match), meaning no later spell/ability has been
+	// layered on top of it.
+	parentCastIdx int
+	// nextResponseIdx is the index of this response within its parent's
+	// responses slice; the response is only eligible once all prior
+	// responses in that slice have already fired, preserving scripted order.
+	nextResponseIdx int
+	fired           bool
 }
 
 type activateAction struct {
@@ -53,6 +82,7 @@ type activateAction struct {
 	permName string
 	targets  []string
 	xValue   int
+	fired    bool
 }
 
 type counterAction struct {
@@ -70,12 +100,50 @@ func NewTestGame(t *testing.T) *TestGame {
 	pA := NewTestPlayer("PlayerA")
 	pB := NewTestPlayer("PlayerB")
 	g := mage.NewGame(pA, pB)
-	return &TestGame{
+	tg := &TestGame{
 		Game:    g,
 		t:       t,
 		playerA: pA,
 		playerB: pB,
 	}
+	tg.syncFromGame()
+	return tg
+}
+
+func (tg *TestGame) syncFromGame() {
+	tg.Combat = tg.GetCombat()
+	tg.Effects = tg.GetEffects()
+	tg.Stack = tg.GetStack()
+	tg.Battlefield = tg.AllBattlefield()
+	tg.Schedule = tg.GetSchedule()
+	tg.Players = tg.AllPlayers()
+	tg.Step = tg.GetStep()
+	tg.Turn = tg.CurrentTurn()
+	tg.ActivePlayer = tg.ActivePlayerIndex()
+	tg.LandsPlayedThisTurn = tg.GetLandsPlayedThisTurn()
+	tg.CleanupPriorityRounds = tg.GetCleanupPriorityRounds()
+}
+
+func (tg *TestGame) syncToGame() {
+	tg.SetStep(tg.Step)
+	tg.SetTurn(tg.Turn)
+	tg.SetActivePlayerIndex(tg.ActivePlayer)
+	tg.SetLandsPlayedThisTurn(tg.LandsPlayedThisTurn)
+	tg.SetOnPriority(tg.OnPriority)
+}
+
+func (tg *TestGame) RunStepWithPriority(step core.PhaseStep) {
+	tg.Step = step
+	tg.syncToGame()
+	tg.Game.RunStepWithPriority(step)
+	tg.syncFromGame()
+}
+
+func (tg *TestGame) PlayLand(playerID, cardID uuid.UUID) error {
+	tg.syncToGame()
+	err := tg.Game.PlayLand(playerID, cardID)
+	tg.syncFromGame()
+	return err
 }
 
 func (tg *TestGame) GetPlayer(ref PlayerRef) *TestPlayer {
@@ -267,6 +335,23 @@ func (tg *TestGame) ChooseNumber(p PlayerRef, n int) {
 	tp.chooseNumber = append(tp.chooseNumber, n)
 }
 
+// AssignCombatDamage scripts the attacker's controller's choice of how to
+// divide the attacker's combat damage among multiple blockers (CR 510.1c).
+// The owning player is inferred from whichever player controls the named
+// attacker at damage time. Distribution maps blocker names to assigned damage.
+func (tg *TestGame) AssignCombatDamage(attackerName string, distribution map[string]int) {
+	tg.playerA.SetCombatDamageAssignment(attackerName, distribution)
+	tg.playerB.SetCombatDamageAssignment(attackerName, distribution)
+}
+
+// ChooseBlockerOrder scripts the damage-assignment order the attacker's
+// controller picks for a multi-blocker block (CR 510.1c, also relevant for
+// trample CR 702.19b). Blockers are listed in the order they receive damage.
+func (tg *TestGame) ChooseBlockerOrder(attackerName string, blockerNames ...string) {
+	tg.playerA.SetCombatBlockerOrder(attackerName, blockerNames)
+	tg.playerB.SetCombatBlockerOrder(attackerName, blockerNames)
+}
+
 // AssertBanded checks whether two named permanents are in the same attacking band.
 func (tg *TestGame) AssertBanded(p1 PlayerRef, name1 string, p2 PlayerRef, name2 string, want bool) {
 	tg.t.Helper()
@@ -313,67 +398,137 @@ func (tg *TestGame) Execute() {
 
 	tg.padLibraries()
 	tg.autoAddMana()
-	tg.SetOnPriority(autoPassHandler())
+	tg.OnPriority = tg.scriptedPriorityHandler()
+	tg.syncToGame()
 
 	maxTurns := tg.stopAt.turn + 5
-	for tg.CurrentTurn() <= maxTurns {
-		for _, step := range core.AllSteps() {
-			if tg.CurrentTurn() == tg.stopAt.turn && step == tg.stopAt.step {
+	for tg.Turn <= maxTurns {
+		// Turn-skip support (CR 500.11) via the engine schedule.
+		activeID := tg.ActivePlayerObj().PlayerID()
+		if tg.Schedule != nil && tg.Schedule.ConsumeTurnSkip(activeID) {
+			tg.advanceToNextTurn()
+			continue
+		}
+		if tg.Schedule == nil {
+			tg.Schedule = mage.NewTurnSchedule()
+		}
+		for _, p := range tg.AllPlayers() {
+			p.ManaPool().ResetProducedThisTurn()
+		}
+		tg.Schedule.BuildNextTurn()
+		for {
+			step, ok := tg.Schedule.PopNextStep()
+			if !ok {
+				break
+			}
+			if tg.Turn == tg.stopAt.turn && step == tg.stopAt.step {
+				tg.Step = step
 				tg.SetStep(step)
 				tg.ApplyEffects()
+				// Re-queue the stop step so a subsequent Execute resumes here.
+				tg.Schedule.Remaining = append([]core.PhaseStep{step}, tg.Schedule.Remaining...)
+				tg.syncFromGame()
 				return
 			}
 
-			tg.SetStep(step)
-			tg.executeCounterActions(tg.CurrentTurn(), step)
-			tg.executeOrderedActions(tg.CurrentTurn(), step)
-
-			if step == core.PrecombatMain {
-				tg.autoPlayLands()
-			}
+			tg.Step = step
+			tg.executeCounterActions(tg.Turn, step)
 
 			tg.RunStepWithPriority(step)
 		}
-		if extraPlayerID, ok := tg.PopExtraTurn(); ok {
-			for i, p := range tg.AllPlayers() {
-				if p.PlayerID() == extraPlayerID {
-					tg.SetActivePlayerIndex(i)
-					break
-				}
-			}
-		} else {
-			tg.SetActivePlayerIndex((tg.ActivePlayerIndex() + 1) % tg.PlayerCount())
-		}
-		tg.SetTurn(tg.CurrentTurn() + 1)
+		tg.advanceToNextTurn()
 	}
 }
 
+func (tg *TestGame) advanceToNextTurn() {
+	if extraPlayerID, ok := tg.PopExtraTurn(); ok {
+		for i, p := range tg.AllPlayers() {
+			if p.PlayerID() == extraPlayerID {
+				tg.ActivePlayer = i
+				break
+			}
+		}
+	} else {
+		tg.ActivePlayer = (tg.ActivePlayer + 1) % len(tg.AllPlayers())
+	}
+	tg.Turn++
+	tg.syncToGame()
+	tg.syncFromGame()
+}
+
 // autoPassHandler returns a PriorityHandler that always passes priority.
+// Used by engine-internals tests that don't want scripted-action behavior.
 func autoPassHandler() mage.PriorityHandler {
 	return func(g *mage.Game, playerIdx int, mainPhase bool) mage.PriorityAction {
 		return mage.PriorityAction{Type: mage.PriorityPass}
 	}
 }
 
-func (tg *TestGame) autoPlayLands() {
-	active := tg.ActivePlayerObj()
-	for tg.GetLandsPlayedThisTurn() < tg.MaxLandPlays() {
+// scriptedPriorityHandler returns a PriorityHandler that drives the scripted
+// cast / activate / response actions through the engine's priority loop, and
+// auto-plays lands for the active player during their main phases.
+//
+// Ordering (CR 117.1b, 509.2, etc. are respected automatically because the
+// engine now controls when priority opens):
+//  1. Responses whose parent cast is currently on top of the stack, and
+//     whose player-to-act matches, fire first.
+//  2. Otherwise, for the step's active player on an empty stack, a queued
+//     CastSpell / ActivateAbility whose (turn, step, player) gate matches
+//     fires. Among those, actions fire in the order they were scripted
+//     (via actionSeq).
+//  3. Finally, the active player auto-plays one land per priority round in
+//     a main phase if they have one in hand and haven't exceeded the cap.
+//  4. Otherwise, pass.
+func (tg *TestGame) scriptedPriorityHandler() mage.PriorityHandler {
+	return func(g *mage.Game, playerIdx int, mainPhase bool) mage.PriorityAction {
+		playerRef := tg.playerRefForIndex(playerIdx)
 
-		var landID uuid.UUID
-		for _, c := range active.Hand() {
-			if c.HasType(core.TypeLand) {
-				landID = c.ID()
-				break
+		// 1. Response actions whose parent is live on the stack.
+		if top := g.StackPeek(); top != nil {
+			if r := tg.popResponseFor(top.SourceID, playerRef); r != nil {
+				return tg.buildPriorityActionForResponse(*r, playerIdx)
 			}
 		}
-		if landID == uuid.Nil {
-			break
+
+		// Only try to fire scheduled casts / activations and lands when
+		// the stack is empty. If the stack has anything on it, and no
+		// queued response matched, pass to let it resolve. Tests that
+		// need a scripted action to interact with a same-step trigger
+		// or another scripted spell must express that using
+		// CastInResponseTo / ActivateInResponseTo — which gives CR-
+		// correct response ordering (CR 117.1b).
+		if g.StackSize() > 0 {
+			return mage.PriorityAction{Type: mage.PriorityPass}
 		}
-		err := tg.PlayLand(active.PlayerID(), landID)
-		if err != nil {
-			break
+
+		// 2. Scheduled cast / activate for this (turn, step, player).
+		if action, ok := tg.popScheduledForStep(g.CurrentTurn(), g.GetStep(), playerRef, playerIdx); ok {
+			return action
 		}
+
+		// 3. Active player auto-plays a land in a main phase.
+		if mainPhase && playerIdx == g.ActivePlayerIndex() && g.GetLandsPlayedThisTurn() < g.MaxLandPlays() {
+			active := g.PlayerAt(playerIdx)
+			for _, c := range active.Hand() {
+				if c.HasType(core.TypeLand) {
+					return mage.PriorityAction{
+						Type:   mage.PriorityPlayLand,
+						CardID: c.ID(),
+					}
+				}
+			}
+		}
+
+		return mage.PriorityAction{Type: mage.PriorityPass}
 	}
+}
+
+// playerRefForIndex maps a player index into the PlayerRef enum.
+func (tg *TestGame) playerRefForIndex(idx int) PlayerRef {
+	if idx < len(tg.AllPlayers()) && tg.PlayerAt(idx).PlayerID() == tg.playerA.PlayerID() {
+		return PlayerA
+	}
+	return PlayerB
 }
 
 func (tg *TestGame) ensureManaForCast(ca castAction) {
@@ -385,6 +540,15 @@ func (tg *TestGame) ensureManaForCast(ca castAction) {
 	mc := card.ManaCost()
 	pool := player.ManaPool()
 
+	// Let the engine auto-tap untapped mana sources for the cost; only
+	// pre-fill the pool with what those sources cannot cover. This keeps
+	// mana-ability side effects (source becomes tapped, mana credited via
+	// the engine path) visible to tests that assert on them.
+	supply := tg.untappedManaSupply(player.PlayerID())
+	totalSupply := 0
+	for _, v := range supply {
+		totalSupply += v
+	}
 	colors := []struct {
 		color core.Color
 		need  int
@@ -394,9 +558,19 @@ func (tg *TestGame) ensureManaForCast(ca castAction) {
 	}
 	for _, c := range colors {
 		have := pool.Count(c.color)
-		if have < c.need {
-			pool.Add(c.color, c.need-have)
+		shortfall := c.need - have
+		if shortfall <= 0 {
+			continue
 		}
+		avail := supply[c.color]
+		if avail >= shortfall {
+			supply[c.color] -= shortfall
+			totalSupply -= shortfall
+			continue
+		}
+		supply[c.color] = 0
+		totalSupply -= avail
+		pool.Add(c.color, shortfall-avail)
 	}
 
 	genericNeeded := mc.Generic
@@ -404,8 +578,35 @@ func (tg *TestGame) ensureManaForCast(ca castAction) {
 		genericNeeded += ca.xValue * mc.XCount
 	}
 	if genericNeeded > 0 {
-		pool.Add(core.Colorless, genericNeeded)
+		deficit := genericNeeded - totalSupply
+		if deficit > 0 {
+			pool.Add(core.Colorless, deficit)
+		}
 	}
+}
+
+// untappedManaSupply returns the per-color production capacity available to
+// playerID from their untapped mana sources (one tap each).
+func (tg *TestGame) untappedManaSupply(playerID uuid.UUID) map[core.Color]int {
+	out := map[core.Color]int{}
+	for _, perm := range tg.AllBattlefield() {
+		if perm.Controller != playerID || perm.Tapped {
+			continue
+		}
+		if !perm.CanTapForEffect(tg.Game) {
+			continue
+		}
+		for _, a := range perm.RuntimeAbilities {
+			inner := mage.UnwrapAbility(a)
+			ma, ok := inner.(*mage.ManaAbility)
+			if !ok {
+				continue
+			}
+			out[ma.PrimaryColor()] += ma.ProducedAmount()
+			break
+		}
+	}
+	return out
 }
 
 func (tg *TestGame) ensureManaForResponse(r responseAction) {
@@ -493,65 +694,228 @@ func (tg *TestGame) autoAddMana() {
 	// Activation mana is added just-in-time in ensureManaForActivate.
 }
 
-func (tg *TestGame) executeOrderedActions(turn int, step core.PhaseStep) {
-	type ordered struct {
-		seq    int
-		isCast bool
-		idx    int
-	}
-	var actions []ordered
-
-	for i, ca := range tg.castActions {
-		if ca.turn == turn && ca.step == step {
-			actions = append(actions, ordered{seq: ca.seq, isCast: true, idx: i})
+// popScheduledForStep looks for the earliest-seq queued cast/activate whose
+// (turn, step, player) matches and pops it, returning a PriorityAction.
+func (tg *TestGame) popScheduledForStep(turn int, step core.PhaseStep, ref PlayerRef, playerIdx int) (mage.PriorityAction, bool) {
+	bestSeq := -1
+	bestCastIdx := -1
+	bestActIdx := -1
+	for i := range tg.castActions {
+		ca := &tg.castActions[i]
+		if ca.fired || ca.turn != turn || ca.step != step || ca.player != ref {
+			continue
+		}
+		if bestSeq == -1 || ca.seq < bestSeq {
+			bestSeq = ca.seq
+			bestCastIdx = i
+			bestActIdx = -1
 		}
 	}
-	for i, aa := range tg.activateActions {
-		if aa.turn == turn && aa.step == step {
-			actions = append(actions, ordered{seq: aa.seq, isCast: false, idx: i})
+	for i := range tg.activateActions {
+		aa := &tg.activateActions[i]
+		if aa.fired || aa.turn != turn || aa.step != step || aa.player != ref {
+			continue
+		}
+		if bestSeq == -1 || aa.seq < bestSeq {
+			bestSeq = aa.seq
+			bestActIdx = i
+			bestCastIdx = -1
 		}
 	}
-
-	for i := 1; i < len(actions); i++ {
-		for j := i; j > 0 && actions[j].seq < actions[j-1].seq; j-- {
-			actions[j], actions[j-1] = actions[j-1], actions[j]
-		}
+	if bestCastIdx >= 0 {
+		return tg.buildPriorityActionForCast(bestCastIdx)
 	}
-
-	for _, a := range actions {
-		if a.isCast {
-			tg.executeSingleCast(tg.castActions[a.idx])
-		} else {
-			tg.executeSingleActivate(tg.activateActions[a.idx])
-		}
+	if bestActIdx >= 0 {
+		return tg.buildPriorityActionForActivate(bestActIdx)
 	}
+	return mage.PriorityAction{}, false
 }
 
-func (tg *TestGame) executeSingleCast(ca castAction) {
+// buildPriorityActionForCast prepares a scripted cast for the priority loop.
+// It resolves targets, ensures mana, finds the card by name in the player's
+// hand, and returns a PriorityCastSpell action. The cast is marked fired
+// immediately so we don't re-fire on every priority round; if the engine
+// rejects it, the action is simply lost (consistent with the prior harness
+// behavior, which logged and moved on).
+func (tg *TestGame) buildPriorityActionForCast(idx int) (mage.PriorityAction, bool) {
+	ca := &tg.castActions[idx]
+	ca.fired = true
 	playerID := tg.getPlayerID(ca.player)
 	targets := tg.resolveTargets(ca.targets, playerID)
 
-	tg.ensureManaForCast(ca)
+	tg.ensureManaForCast(*ca)
 
 	card, _ := mage.CreateCard(ca.spell)
 	if card != nil {
 		validTargets := tg.validateTargets(card, targets, playerID)
 		if len(validTargets) == 0 && len(targets) > 0 {
-			return
+			return mage.PriorityAction{}, false
 		}
 		targets = validTargets
 	}
 
-	err := tg.CastSpellByName(playerID, ca.spell, targets, ca.xValue)
+	// Locate the real card in the player's hand.
+	p := tg.Game.GetPlayer(playerID)
+	var cardID uuid.UUID
+	if p != nil {
+		for _, c := range p.Hand() {
+			if c.Name() == ca.spell {
+				cardID = c.ID()
+				break
+			}
+		}
+	}
+	if cardID == uuid.Nil {
+		tg.t.Logf("CastSpell %s: card not in %v hand", ca.spell, ca.player)
+		return mage.PriorityAction{}, false
+	}
+
+	return mage.PriorityAction{
+		Type:    mage.PriorityCastSpell,
+		CardID:  cardID,
+		Targets: targets,
+		XValue:  ca.xValue,
+	}, true
+}
+
+func (tg *TestGame) buildPriorityActionForActivate(idx int) (mage.PriorityAction, bool) {
+	aa := &tg.activateActions[idx]
+	aa.fired = true
+	playerID := tg.getPlayerID(aa.player)
+	targets := tg.resolveTargets(aa.targets, playerID)
+	tg.ensureManaForActivate(*aa)
+	tg.SetXValue(aa.xValue)
+	perm, abilityIdx, err := tg.findActivatableAbilityByName(playerID, aa.permName, targets)
 	if err != nil {
-		tg.t.Logf("CastSpell %s failed: %v", ca.spell, err)
+		tg.t.Logf("ActivateAbility %s failed: %v", aa.permName, err)
+		return mage.PriorityAction{}, false
+	}
+	return mage.PriorityAction{
+		Type:        mage.PriorityActivateAbility,
+		PermanentID: perm.ID(),
+		AbilityIdx:  abilityIdx,
+		Targets:     targets,
+		XValue:      aa.xValue,
+	}, true
+}
+
+// popResponseFor looks up a queued response whose parent cast is currently
+// the top object on the stack (by card ID) and whose responder matches the
+// player currently being asked for priority. Responses fire in the scripted
+// order within their parent (nextResponseIdx guard).
+func (tg *TestGame) popResponseFor(topSourceID uuid.UUID, ref PlayerRef) *responseAction {
+	for ci := range tg.castActions {
+		ca := &tg.castActions[ci]
+		if !ca.fired || len(ca.responses) == 0 {
+			continue
+		}
+		// Parent cast's spell must still be the top of the stack.
+		// CastSpellByID sets SourceID to the spell's card ID.
+		playerID := tg.getPlayerID(ca.player)
+		p := tg.Game.GetPlayer(playerID)
+		_ = p
+		// Find the card ID of this cast's spell by scanning the stack:
+		// we compare by name because the underlying card ID isn't
+		// preserved across the cast.
+		obj := tg.StackPeek()
+		if obj == nil {
+			continue
+		}
+		// Match stack top to this cast by spell name.
+		if !stackTopMatchesSpell(tg.Game, obj, ca.spell) {
+			continue
+		}
+		// Find first unfired response whose player matches.
+		for ri := range ca.responses {
+			r := &ca.responses[ri]
+			if r.fired {
+				continue
+			}
+			// Maintain scripted order within this cast's responses.
+			if r.player != ref {
+				return nil
+			}
+			r.fired = true
+			return r
+		}
+	}
+	return nil
+}
+
+// stackTopMatchesSpell returns true if the top stack object represents a
+// spell with the given name. The Stack stores StackObjects with Card pointers
+// for spells; abilities have IsAbility=true and a nil Card.
+func stackTopMatchesSpell(g *mage.Game, obj *mage.StackObject, name string) bool {
+	if obj == nil {
+		return false
+	}
+	if obj.IsAbility {
+		return false
+	}
+	if obj.Card != nil && obj.Card.Name() == name {
+		return true
+	}
+	return false
+}
+
+func (tg *TestGame) buildPriorityActionForResponse(r responseAction, playerIdx int) mage.PriorityAction {
+	respPlayerID := tg.PlayerAt(playerIdx).PlayerID()
+
+	var targets []uuid.UUID
+	if len(r.targets) > 0 {
+		targets = tg.resolveTargets(r.targets, respPlayerID)
+	} else if tg.StackPeek() != nil {
+		targets = []uuid.UUID{tg.StackPeek().SourceID}
 	}
 
-	if len(ca.responses) > 0 {
-		tg.executeResponses(ca.responses)
+	if r.perm != "" {
+		// Ensure responder has enough mana to activate; CR 500.5's
+		// per-step pool empty means pre-turn top-up doesn't survive.
+		respPlayer := tg.GetPlayer(r.player)
+		pool := respPlayer.ManaPool()
+		pool.Add(core.White, 5)
+		pool.Add(core.Blue, 5)
+		pool.Add(core.Black, 5)
+		pool.Add(core.Red, 5)
+		pool.Add(core.Green, 5)
+		pool.Add(core.Colorless, 10)
+		perm, abilityIdx, err := tg.findActivatableAbilityByName(respPlayerID, r.perm, targets)
+		if err != nil {
+			tg.t.Logf("ActivateInResponseTo %s failed: %v", r.perm, err)
+			return mage.PriorityAction{Type: mage.PriorityPass}
+		}
+		return mage.PriorityAction{
+			Type:        mage.PriorityActivateAbility,
+			PermanentID: perm.ID(),
+			AbilityIdx:  abilityIdx,
+			Targets:     targets,
+			XValue:      r.xValue,
+		}
 	}
 
-	tg.ResolveStack()
+	tg.ensureManaForResponse(r)
+
+	// Locate real card in responder's hand.
+	p := tg.Game.GetPlayer(respPlayerID)
+	var cardID uuid.UUID
+	if p != nil {
+		for _, c := range p.Hand() {
+			if c.Name() == r.spell {
+				cardID = c.ID()
+				break
+			}
+		}
+	}
+	if cardID == uuid.Nil {
+		tg.t.Logf("CastInResponseTo %s: card not in hand", r.spell)
+		return mage.PriorityAction{Type: mage.PriorityPass}
+	}
+	return mage.PriorityAction{
+		Type:    mage.PriorityCastSpell,
+		CardID:  cardID,
+		Targets: targets,
+		XValue:  r.xValue,
+	}
 }
 
 func (tg *TestGame) ensureManaForActivate(aa activateAction) {
@@ -650,54 +1014,6 @@ func (tg *TestGame) findActivatableAbilityByName(playerID uuid.UUID, permName st
 	return nil, -1, fmt.Errorf("no activatable ability found on %s", permName)
 }
 
-func (tg *TestGame) executeSingleActivate(aa activateAction) {
-	playerID := tg.getPlayerID(aa.player)
-	targets := tg.resolveTargets(aa.targets, playerID)
-	tg.ensureManaForActivate(aa)
-	tg.SetXValue(aa.xValue)
-	perm, idx, err := tg.findActivatableAbilityByName(playerID, aa.permName, targets)
-	if err != nil {
-		tg.t.Logf("ActivateAbility %s failed: %v", aa.permName, err)
-		return
-	}
-	err = tg.ActivateAbilityByIndex(playerID, perm.ID(), idx, targets)
-	if err != nil {
-		tg.t.Logf("ActivateAbility %s failed: %v", aa.permName, err)
-	}
-	tg.ResolveStack()
-}
-
-func (tg *TestGame) executeResponses(responses []responseAction) {
-	for _, r := range responses {
-		respPlayerID := tg.getPlayerID(r.player)
-
-		var targets []uuid.UUID
-		if len(r.targets) > 0 {
-			targets = tg.resolveTargets(r.targets, respPlayerID)
-		} else if tg.StackPeek() != nil {
-			targets = []uuid.UUID{tg.StackPeek().SourceID}
-		}
-
-		if r.perm != "" {
-			perm, idx, err := tg.findActivatableAbilityByName(respPlayerID, r.perm, targets)
-			if err != nil {
-				tg.t.Logf("ActivateInResponseTo %s failed: %v", r.perm, err)
-			} else {
-				err = tg.ActivateAbilityByIndex(respPlayerID, perm.ID(), idx, targets)
-				if err != nil {
-					tg.t.Logf("ActivateInResponseTo %s failed: %v", r.perm, err)
-				}
-			}
-		} else {
-			tg.ensureManaForResponse(r)
-			err := tg.CastSpellByName(respPlayerID, r.spell, targets, r.xValue)
-			if err != nil {
-				tg.t.Logf("CastInResponseTo %s failed: %v", r.spell, err)
-			}
-		}
-	}
-}
-
 func (tg *TestGame) executeCounterActions(turn int, step core.PhaseStep) {
 	for _, ca := range tg.counterActions {
 		if ca.turn != turn || ca.step != step {
@@ -755,6 +1071,19 @@ func (tg *TestGame) resolveTargets(names []string, controllerID uuid.UUID) []uui
 		if found {
 			continue
 		}
+		for _, obj := range tg.StackObjects() {
+			if obj.IsAbility || obj.Card == nil {
+				continue
+			}
+			if obj.Card.Name() == name {
+				targets = append(targets, obj.SourceID)
+				found = true
+				break
+			}
+		}
+		if found {
+			continue
+		}
 		for _, pl := range tg.AllPlayers() {
 			for _, c := range pl.Hand() {
 				if c.Name() == name {
@@ -798,17 +1127,13 @@ func (tg *TestGame) PlayToEnd(maxTurns ...int) {
 
 	tg.padLibraries()
 	tg.autoAddMana()
-	tg.SetOnPriority(autoPassHandler())
+	tg.OnPriority = tg.scriptedPriorityHandler()
+	tg.syncToGame()
 
-	for tg.CurrentTurn() <= limit {
+	for tg.Turn <= limit {
 		for _, step := range core.AllSteps() {
-			tg.SetStep(step)
-			tg.executeCounterActions(tg.CurrentTurn(), step)
-			tg.executeOrderedActions(tg.CurrentTurn(), step)
-
-			if step == core.PrecombatMain {
-				tg.autoPlayLands()
-			}
+			tg.Step = step
+			tg.executeCounterActions(tg.Turn, step)
 
 			tg.RunStepWithPriority(step)
 
@@ -816,17 +1141,7 @@ func (tg *TestGame) PlayToEnd(maxTurns ...int) {
 				return
 			}
 		}
-		if extraPlayerID, ok := tg.PopExtraTurn(); ok {
-			for i, p := range tg.AllPlayers() {
-				if p.PlayerID() == extraPlayerID {
-					tg.SetActivePlayerIndex(i)
-					break
-				}
-			}
-		} else {
-			tg.SetActivePlayerIndex((tg.ActivePlayerIndex() + 1) % tg.PlayerCount())
-		}
-		tg.SetTurn(tg.CurrentTurn() + 1)
+		tg.advanceToNextTurn()
 	}
 	tg.t.Fatalf("PlayToEnd: game did not end within %d turns", limit)
 }
@@ -1089,6 +1404,26 @@ func (tg *TestGame) AssertHandSize(p PlayerRef, want int) {
 	got := len(tg.GetPlayer(p).Hand())
 	if got != want {
 		tg.t.Errorf("AssertHandSize(%v): got %d, want %d", p, got, want)
+	}
+}
+
+// AssertManaProduced checks how much mana of the given color has been
+// added to the player's pool during the current turn. Unlike Count on the
+// live pool, this survives per-step pool emptying (CR 500.5).
+func (tg *TestGame) AssertManaProduced(p PlayerRef, color core.Color, want int) {
+	tg.t.Helper()
+	got := tg.GetPlayer(p).ManaPool().CountProducedThisTurn(color)
+	if got != want {
+		tg.t.Errorf("AssertManaProduced(%v, %v): got %d, want %d", p, color, got, want)
+	}
+}
+
+// AssertManaProducedAtLeast is the >= variant of AssertManaProduced.
+func (tg *TestGame) AssertManaProducedAtLeast(p PlayerRef, color core.Color, min int) {
+	tg.t.Helper()
+	got := tg.GetPlayer(p).ManaPool().CountProducedThisTurn(color)
+	if got < min {
+		tg.t.Errorf("AssertManaProducedAtLeast(%v, %v): got %d, want >= %d", p, color, got, min)
 	}
 }
 

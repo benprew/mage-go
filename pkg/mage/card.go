@@ -32,6 +32,7 @@ type Card interface {
 	CloneFrom(Card)
 	SetBasePT(power, toughness int)
 	SetModes([]string)
+	IsToken() bool
 }
 
 // BaseCard provides the common card implementation.

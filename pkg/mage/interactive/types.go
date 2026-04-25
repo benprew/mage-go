@@ -92,6 +92,7 @@ type ActionOption struct {
 
 	ValidTargets      []uuid.UUID
 	ValidTargetLabels []string
+	MaxX              int // max X value the player can pay (0 if not an X spell)
 }
 
 // GameMsg is sent from the game goroutine to the TUI.

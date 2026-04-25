@@ -33,6 +33,10 @@ const (
 	EvtEndOfCombat        // fired at the end of combat step, before combat groups reset
 	EvtBecameUntapped     // fired when a permanent becomes untapped
 	EvtMainPhase          // fired at the beginning of a main phase
+	EvtCleanup            // fired at the beginning of the cleanup step (CR 514)
+	EvtCreatureBlocks     // fired once per blocking creature per combat (CR 509.3a)
+	EvtEntersAttacking    // fired when a creature is put onto the battlefield attacking (CR 508.4)
+	EvtEntersBlocking     // fired when a creature is put onto the battlefield blocking (CR 509.4)
 )
 
 // GameEvent carries data about a game event.

@@ -221,6 +221,27 @@ func TestFork(t *testing.T) {
 	})
 }
 
+func TestShock(t *testing.T) {
+	t.Run("deals_2_to_creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Shock")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Shock", "Grizzly Bears")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+	})
+
+	t.Run("deals_2_to_player", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Shock")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Shock", "PlayerB")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 18)
+	})
+}
+
 func TestChannel(t *testing.T) {
 	t.Run("pay_life_for_colorless_mana", func(t *testing.T) {
 		// Channel: Until end of turn, any time you could activate a mana ability,

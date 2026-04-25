@@ -19,7 +19,7 @@ func TestPiety(t *testing.T) {
 		g.Attack(1, gametest.PlayerA, "Grizzly Bears")
 		g.Block(1, gametest.PlayerB, "Merfolk of the Pearl Trident", "Grizzly Bears")
 		// Cast after blockers are declared (FirstStrikeDamage runs after DeclareBlockers)
-		g.CastSpell(1, core.FirstStrikeDamage, gametest.PlayerB, "Piety")
+		g.CastSpell(1, core.DeclareBlockers, gametest.PlayerB, "Piety")
 		g.StopAt(1, core.EndCombat)
 		g.Execute()
 		// 1/1 becomes 1/4 with Piety — survives blocking a 2/2
@@ -36,7 +36,7 @@ func TestPiety(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Plains")
 		g.Attack(1, gametest.PlayerA, "Grizzly Bears")
 		// Hill Giant does NOT block
-		g.CastSpell(1, core.FirstStrikeDamage, gametest.PlayerB, "Piety")
+		g.CastSpell(1, core.DeclareBlockers, gametest.PlayerB, "Piety")
 		g.StopAt(1, core.EndCombat)
 		g.Execute()
 		// Bears hits through unblocked — 2 damage to PlayerB
@@ -141,8 +141,8 @@ func TestMetamorphosis(t *testing.T) {
 		// Grizzly Bears (CMC 2) sacrificed → 1+2 = 3 green mana added
 		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.Green) < 3 {
-			t.Errorf("expected at least 3 green mana from Metamorphosis, got %d", pool.Count(core.Green))
+		if pool.CountProducedThisTurn(core.Green) < 3 {
+			t.Errorf("expected at least 3 green mana from Metamorphosis, got %d", pool.CountProducedThisTurn(core.Green))
 		}
 	})
 
@@ -156,8 +156,8 @@ func TestMetamorphosis(t *testing.T) {
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.Red) < 3 {
-			t.Errorf("expected at least 3 red mana from Metamorphosis, got %d", pool.Count(core.Red))
+		if pool.CountProducedThisTurn(core.Red) < 3 {
+			t.Errorf("expected at least 3 red mana from Metamorphosis, got %d", pool.CountProducedThisTurn(core.Red))
 		}
 	})
 }

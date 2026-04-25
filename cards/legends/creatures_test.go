@@ -238,8 +238,8 @@ func TestWalkingDead(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Walking Dead")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
-		g.ActivateAbility(2, core.PrecombatMain, gametest.PlayerA, "Walking Dead", "Regenerate")
 		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Walking Dead")
+		g.ActivateInResponseTo(gametest.PlayerA, "Walking Dead", "Regenerate")
 		g.StopAt(2, core.BeginCombat)
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerA, "Walking Dead", 1) // regenerated
@@ -2878,7 +2878,7 @@ func TestLesserWerewolf(t *testing.T) {
 		g.Attack(1, gametest.PlayerA, "Lesser Werewolf")
 		g.Block(1, gametest.PlayerB, "Hill Giant", "Lesser Werewolf")
 		// Activate ability targeting Hill Giant during blockers step
-		g.ActivateAbility(1, core.FirstStrikeDamage, gametest.PlayerA, "Lesser Werewolf", "gets -1/-0", "Hill Giant")
+		g.ActivateAbility(1, core.DeclareBlockers, gametest.PlayerA, "Lesser Werewolf", "gets -1/-0", "Hill Giant")
 		g.StopAt(2, core.PrecombatMain) // next turn so EOT cleanup runs
 		g.Execute()
 		// Lesser Werewolf gets -1/-0 (becomes 1/4), Hill Giant gets -0/-1 counter

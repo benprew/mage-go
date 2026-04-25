@@ -959,9 +959,9 @@ func TestGuardianBeast(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Guardian Beast")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Jayemdae Tome") // noncreature artifact
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Desert Twister")       // destroy target permanent
-		// Try to destroy Jayemdae Tome
-		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Desert Twister", "Jayemdae Tome")
-		g.StopAt(1, core.BeginCombat)
+		// PlayerB casts the sorcery on their own main phase.
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Desert Twister", "Jayemdae Tome")
+		g.StopAt(2, core.BeginCombat)
 		g.Execute()
 		// Jayemdae Tome should survive — indestructible while Guardian Beast is untapped
 		g.AssertPermanentCount(gametest.PlayerA, "Jayemdae Tome", 1)
@@ -972,11 +972,11 @@ func TestGuardianBeast(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Guardian Beast")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Jayemdae Tome")
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Desert Twister")
-		// Attack with Guardian Beast to tap it
+		// Tap Guardian Beast by attacking with it on PlayerA's turn.
 		g.Attack(1, gametest.PlayerA, "Guardian Beast")
-		// Then destroy Jayemdae Tome in postcombat main
-		g.CastSpell(1, core.PostcombatMain, gametest.PlayerB, "Desert Twister", "Jayemdae Tome")
-		g.StopAt(1, core.EndStep)
+		// PlayerB casts the sorcery on their own turn.
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Desert Twister", "Jayemdae Tome")
+		g.StopAt(2, core.EndStep)
 		g.Execute()
 		// Guardian Beast is tapped — no indestructible
 		g.AssertPermanentCount(gametest.PlayerA, "Jayemdae Tome", 0)
@@ -1148,10 +1148,13 @@ func TestHurrJackal(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hurr Jackal")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Drudge Skeletons") // 1/1 with {B}: Regenerate
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
-		// Hurr Jackal prevents regen, Skeletons tries to set up regen, bolt kills
+		// PlayerA activates Hurr Jackal targeting Drudge Skeletons (this
+		// turn, that creature can't regenerate), then casts Bolt at it.
+		// PlayerB attempts to regenerate in response, but the regen shield
+		// is nullified by Hurr Jackal's CantRegenerate grant.
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Hurr Jackal", "Drudge Skeletons")
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerB, "Drudge Skeletons")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Drudge Skeletons")
+		g.ActivateInResponseTo(gametest.PlayerB, "Drudge Skeletons")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		// Drudge Skeletons should die — can't regenerate this turn
@@ -1163,9 +1166,10 @@ func TestHurrJackal(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Drudge Skeletons") // 1/1 with {B}: Regenerate
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
-		// Skeletons sets up regen, bolt hits but regen saves it
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerB, "Drudge Skeletons")
+		// PlayerA casts Bolt; PlayerB activates Regenerate in response
+		// before the Bolt resolves.
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Drudge Skeletons")
+		g.ActivateInResponseTo(gametest.PlayerB, "Drudge Skeletons")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		// Drudge Skeletons should survive via regeneration

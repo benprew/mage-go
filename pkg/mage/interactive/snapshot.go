@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/eval"
 )
 
 func buildRulesText(c mage.Card) string {
@@ -249,7 +250,20 @@ func GetAvailableActions(g *mage.Game, playerID uuid.UUID) []ActionOption {
 			needsTarget = true
 			targetType = ct[0]
 			validTargets = targetType.Possible(playerID, card, g)
+			if len(validTargets) == 0 {
+				// MTG 601.2c: can't begin to cast a spell with no legal targets.
+				continue
+			}
 			validLabels = buildTargetLabels(g, validTargets)
+		}
+		mc := card.ManaCost()
+		maxX := 0
+		if mc.HasX {
+			availMana := eval.CountAvailableMana(g, playerID)
+			maxX = availMana - mc.CMC()
+			if maxX < 0 {
+				maxX = 0
+			}
 		}
 		options = append(options, ActionOption{
 			Type:              ActionCastSpell,
@@ -258,9 +272,10 @@ func GetAvailableActions(g *mage.Game, playerID uuid.UUID) []ActionOption {
 			CardName:          card.Name(),
 			NeedsTarget:       needsTarget,
 			TargetType:        targetType,
-			ManaCost:          card.ManaCost().String(),
+			ManaCost:          mc.String(),
 			ValidTargets:      validTargets,
 			ValidTargetLabels: validLabels,
+			MaxX:              maxX,
 		})
 	}
 
@@ -279,6 +294,10 @@ func GetAvailableActions(g *mage.Game, playerID uuid.UUID) []ActionOption {
 					opt.NeedsTarget = true
 					opt.TargetType = targets[0]
 					opt.ValidTargets = targets[0].Possible(perm.Controller, perm.Card, g)
+					if len(opt.ValidTargets) == 0 {
+						// MTG 602.5b: can't begin to activate an ability with no legal targets.
+						continue
+					}
 					opt.ValidTargetLabels = buildTargetLabels(g, opt.ValidTargets)
 				}
 			}

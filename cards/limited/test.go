@@ -230,8 +230,8 @@ func TestAlphaLords(t *testing.T) {
 	t.Run("Crusade boosts white creatures", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Crusade")
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Savannah Lions")   // white
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")    // green
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Savannah Lions") // white
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")  // green
 		g.StopAt(1, core.PrecombatMain)
 		g.Execute()
 		// Savannah Lions (2/1 white) gets +1/+1 = 3/2
@@ -277,8 +277,8 @@ func TestAlphaXSpells(t *testing.T) {
 
 	t.Run("Earthquake damages creatures without flying and players", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")  // 2/2, no flying
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Air Elemental")  // 4/4, flying
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2, no flying
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Air Elemental") // 4/4, flying
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Earthquake")
 		g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerA, "Earthquake", 3)
 		g.StopAt(1, core.BeginCombat)
@@ -479,8 +479,8 @@ func TestAlphaPestilence(t *testing.T) {
 	t.Run("Pestilence deals 1 to all creatures and players", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Pestilence")
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")     // 3/3
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")  // 2/2
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")    // 3/3
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // 2/2
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Pestilence")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
@@ -701,8 +701,8 @@ func TestAlphaAncestralRecall(t *testing.T) {
 func TestAlphaCombatKeywords(t *testing.T) {
 	t.Run("Trample deals excess damage to player", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Craw Wurm") // 6/4 Trample is on War Mammoth
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "War Mammoth") // 3/3 Trample
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Craw Wurm")     // 6/4 Trample is on War Mammoth
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "War Mammoth")   // 3/3 Trample
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // 2/2
 		g.Attack(1, gametest.PlayerA, "War Mammoth")
 		g.Block(1, gametest.PlayerB, "Grizzly Bears", "War Mammoth")

@@ -289,6 +289,12 @@ func registerSpells() {
 		)
 	})
 
+	Register("Shock", func() Card {
+		return NewInstant("Shock", "{R}",
+			NewTargetedSpell(TargetAnyTarget(), DealDamage(Fixed(2))),
+		)
+	})
+
 	Register("Fireball", func() Card {
 		return NewSorcery("Fireball", "{X}{R}",
 			NewTargetedSpell(TargetAnyTarget(), DealDamage(XValue())),
