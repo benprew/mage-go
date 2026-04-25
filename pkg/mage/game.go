@@ -2261,6 +2261,8 @@ func (g *Game) doDraw() {
 	g.ResolveStack()
 }
 
+// 1. Rule 508.1: First, the active player declares attackers.
+// 2. Rule 508.2: Second, the active player gets priority.
 func (g *Game) doDeclareAttackers() {
 	active := g.ActivePlayerObj()
 	attackerIDs := active.DeclareAttackers(g)
@@ -2320,6 +2322,7 @@ func (g *Game) doDeclareAttackers() {
 	// CR 506.5 — snapshot "attacks alone" once all attackers have been
 	// declared this step.
 	g.combat.SnapshotAttackedAlone()
+	g.ResolveStack()
 }
 
 // isValidBand checks that a slice of attacker IDs meets banding requirements:
