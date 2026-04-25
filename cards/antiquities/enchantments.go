@@ -334,7 +334,8 @@ type artifactDamageToCreaturePreventionReplacement struct {
 	creatureID uuid.UUID
 }
 
-func (r *artifactDamageToCreaturePreventionReplacement) SourceID() uuid.UUID { return uuid.Nil }
+func (r *artifactDamageToCreaturePreventionReplacement) SourceID() uuid.UUID  { return uuid.Nil }
+func (r *artifactDamageToCreaturePreventionReplacement) GetDuration() Duration { return WhileOnBattlefield }
 
 func (r *artifactDamageToCreaturePreventionReplacement) Matches(a Action, g GameReader) bool {
 	act, ok := a.(*DamageToCreatureAction)

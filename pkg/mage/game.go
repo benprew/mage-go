@@ -1940,7 +1940,6 @@ func (g *Game) CheckStateBasedActions() {
 
 func (g *Game) doUntap() {
 	active := g.ActivePlayerObj()
-	g.effects.ClearRegenerationReplacements(active.PlayerID(), g)
 	// Island Sanctuary: clear protection at the start of the player's turn
 	g.effects.Rules.ClearSanctuary(active.PlayerID())
 

@@ -1,6 +1,9 @@
 package mage
 
-import "github.com/google/uuid"
+import (
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"github.com/google/uuid"
+)
 
 // Action represents a game mutation flowing through the replacement pipeline.
 // The pipeline transforms or replaces actions before they execute.
@@ -21,13 +24,17 @@ type ReplacementEffect interface {
 	SourceID() uuid.UUID
 	// IsActive returns true if this replacement is still valid.
 	IsActive(GameReader) bool
+	// GetDuration returns when this replacement expires.
+	GetDuration() Duration
 	// Clone returns a deep copy of this replacement effect (for game cloning).
 	Clone() ReplacementEffect
 }
 
-// replacementBase provides a SourceID implementation for replacement effects.
+// replacementBase provides SourceID and GetDuration implementations for replacement effects.
 type replacementBase struct {
 	sourceID uuid.UUID
+	duration Duration
 }
 
-func (r *replacementBase) SourceID() uuid.UUID { return r.sourceID }
+func (r *replacementBase) SourceID() uuid.UUID  { return r.sourceID }
+func (r *replacementBase) GetDuration() Duration { return r.duration }

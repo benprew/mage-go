@@ -50,7 +50,8 @@ type pyramidsDestructionReplacement struct {
 	consumed    bool
 }
 
-func (r *pyramidsDestructionReplacement) SourceID() uuid.UUID { return r.sourceID }
+func (r *pyramidsDestructionReplacement) SourceID() uuid.UUID  { return r.sourceID }
+func (r *pyramidsDestructionReplacement) GetDuration() Duration { return EndOfTurn }
 
 func (r *pyramidsDestructionReplacement) Matches(a Action, g GameReader) bool {
 	da, ok := a.(*DestroyPermanentAction)

@@ -1,6 +1,7 @@
 package mage
 
 import (
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"github.com/google/uuid"
 )
 
@@ -144,7 +145,7 @@ func (ds *DamageSystem) AddRegenerationShield(targetID uuid.UUID) {
 			return
 		}
 	}
-	ds.em.AddReplacement(&regenerationReplacement{permanentID: targetID, shields: 1})
+	ds.em.AddReplacement(&regenerationReplacement{replacementBase: replacementBase{duration: EndOfTurn}, permanentID: targetID, shields: 1})
 }
 
 // SetArtifactDamageRedirect is a legacy API that delegates to the replacement system.

@@ -897,11 +897,22 @@ and a WithAmount(int) copy method for partial prevention.
 	    Replace(Action, *Game) Action      // transform or prevent the action
 	    SourceID() uuid.UUID               // permanent/spell that created this
 	    IsActive(GameReader) bool          // still valid?
+	    GetDuration() Duration             // when does this expire?
+	    Clone() ReplacementEffect          // deep copy for game cloning
 	}
 
 Replace returns a modified action, a different action type (e.g., redirect
 damage from player to creature), or nil to fully prevent the mutation. The
-[replacementBase] struct provides a default SourceID implementation.
+[replacementBase] struct provides default SourceID and GetDuration implementations.
+
+## Replacement Durations
+
+Each replacement declares its duration via GetDuration():
+
+	EndOfTurn          — cleared at cleanup step (fog, forcefield, prevention
+	                     shields, regeneration, one-shot redirects)
+	WhileOnBattlefield — active while source permanent exists (Lich, cycle
+	                     replacements re-registered by continuous effects)
 
 ## The ApplyReplacements Pipeline
 
@@ -926,6 +937,10 @@ Use [EffectManager.AddCycleReplacement] for cycle-scoped ones.
 Continuous effects that need replacement behavior call AddCycleReplacement in
 their Apply function. The EffectManager clears cycleReplacements at the start
 of each Apply() cycle, so continuous effects re-register them every cycle.
+
+At the cleanup step, [EffectManager.ClearReplacementsEndOfTurn] removes all
+persistent replacements with EndOfTurn duration — this handles fog, forcefield,
+prevention shields, regeneration shields, and one-shot redirects uniformly.
 
 ## Registration from Card Effects
 
