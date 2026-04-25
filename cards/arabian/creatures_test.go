@@ -592,6 +592,40 @@ func TestMerchantShip(t *testing.T) {
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerA, "Merchant Ship", 0)
 	})
+
+	t.Run("zero_power_creatures_are_eligible_attackers", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Merchant Ship")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Wall of Stone")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Animate Wall")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island")
+
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Animate Wall", "Wall of Stone")
+
+		g.StopAt(1, core.DeclareAttackers)
+		g.Execute()
+
+		playerA := g.GetPlayer(gametest.PlayerA).PlayerID()
+		var eligible []string
+		for _, perm := range g.AllBattlefield() {
+			if perm.Controller != playerA {
+				continue
+			}
+			if perm.CanDeclareAsAttacker(g.Game) {
+				eligible = append(eligible, perm.Name())
+			}
+		}
+		if len(eligible) != 2 {
+			t.Fatalf("expected 2 eligible attackers, got %d: %v", len(eligible), eligible)
+		}
+		for _, name := range eligible {
+			if name != "Merchant Ship" && name != "Wall of Stone" {
+				t.Errorf("unexpected eligible attacker: %s", name)
+			}
+		}
+	})
 }
 
 func TestDanDan(t *testing.T) {
