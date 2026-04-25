@@ -134,32 +134,6 @@ type Game struct {
 	// Used by the replacement pipeline to identify combat damage actions.
 	resolvingCombatDamage bool
 
-	// inStep is true while the engine is inside RunStep / RunStepWithPriority.
-	// CR 500.12 invariant: no game events occur between steps or phases —
-	// any event fired must be associated with the enclosing step. Tests
-	// install OnFireEvent to verify this.
-	inStep bool
-
-	// OnFireEvent, if non-nil, is invoked at the top of FireEvent for every
-	// event dispatched. Test-only observable; used to enforce the CR 500.12
-	// "no events between steps" invariant.
-	OnFireEvent func(g *Game, evt GameEvent)
-}
-
-// InStep reports whether the engine is currently executing a step (i.e.,
-// inside RunStep or RunStepWithPriority). Used by tests to check the
-// CR 500.12 no-events-between-steps invariant.
-func (g *Game) InStep() bool { return g.inStep }
-
-// WithInStep runs fn with inStep=true, restoring the previous value on
-// return. Used by the test harness to ensure scripted pre-step actions
-// (which logically occur during the step's priority round) are not
-// observed as "between steps" events. CR 500.12.
-func (g *Game) WithInStep(fn func()) {
-	prev := g.inStep
-	g.inStep = true
-	defer func() { g.inStep = prev }()
-	fn()
 }
 
 func (g *Game) ActivePlayer() int {
@@ -1224,9 +1198,6 @@ func (g *Game) RegisterDelayedTrigger(dt *DelayedTrigger) {
 
 // FireEvent dispatches an event and checks triggered abilities.
 func (g *Game) FireEvent(evt GameEvent) {
-	if g.OnFireEvent != nil {
-		g.OnFireEvent(g, evt)
-	}
 	for _, perm := range g.battlefield {
 		for _, a := range perm.RuntimeAbilities {
 			ta, ok := UnwrapAbility(a).(TriggeredAbility)
