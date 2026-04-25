@@ -281,6 +281,8 @@ func ExecuteEffect(ctx *EffectContext, data EffectData) error {
 		return execBlockerCountVar(ctx, e)
 	case *RampageEffectData:
 		return execRampageEffect(ctx, e)
+	case *AddContinuousEffectsData:
+		return execAddContinuousEffects(ctx, e)
 
 	default:
 		_ = e

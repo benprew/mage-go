@@ -16,10 +16,13 @@ func registerEnchantments() {
 	// Animate Artifact {3}{U}
 	// Enchantment — Aura
 	// Enchant artifact
-	// As long as enchanted artifact isn't a creature, it's an artifact creature with power and toughness each equal to its mana value.
-	// TODO: implement — needs type-changing continuous effect with mana value P/T
+	// As long as enchanted artifact isn't a creature, it's an artifact creature with power and
+	// toughness each equal to its mana value.
 	Register("Animate Artifact", func() Card {
-		return NewAura("Animate Artifact", "{3}{U}")
+		return NewAura("Animate Artifact", "{3}{U}",
+			WithCastTarget(TargetArtifact()),
+			WithStaticAbility(AnimateArtifact(Attached)...),
+		)
 	})
 
 	// Brainwash {W}

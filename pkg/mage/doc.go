@@ -677,6 +677,9 @@ Global/source-based effects (while source on battlefield):
 	[GrantTriggeredAbilityToAll](evt, opt, cond, filter, effects...) // grant trigger to matching
 	[PreventUntapForMatching](filter)                      // Meekstone
 	[PreventAllUntaps]()                                   // Stasis
+	[AnimateArtifact](Attached)                            // Animate Artifact aura
+	[AnimateArtifact](ForAll(duration))                    // Titania's Song (global)
+	[AnimateArtifact](ForTarget(id, duration))             // Xenic Poltergeist (targeted)
 	[AnimateLands](filter, power, toughness)               // Living Lands
 	[LimitLandUntaps](limit)                               // Winter Orb (while untapped)
 	[AllowUnlimitedLandPlays]()                            // Fastbond

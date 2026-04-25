@@ -201,7 +201,6 @@ func registerCreatures() {
 		return NewCreature("Xenic Poltergeist", "{1}{B}{B}", 1, 1,
 			WithSubTypes("Spirit"),
 			WithActivatedAbility(
-				// TODO: convert to pipeline — needs "animate until next upkeep" step
 				FuncEffect("animate target noncreature artifact until your next upkeep",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -212,10 +211,10 @@ func registerCreatures() {
 						if perm == nil {
 							return nil
 						}
-						cmc := perm.Card.ManaCost().CMC()
-						eff := TemporaryAnimateUntilNextUpkeep(perm.ID(), cmc, cmc)
-						eff.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff)
+						for _, eff := range AnimateArtifact(ForTarget(perm.ID(), UntilYourNextTurn)) {
+							eff.SetSourceID(sourceID)
+							g.AddContinuousEffect(eff)
+						}
 						g.ApplyContinuousEffects()
 						return nil
 					}),
@@ -784,6 +783,7 @@ func registerCreatures() {
 							)
 							token.SetOwner(controller)
 							perm := g.PutOnBattlefield(token, controller)
+							perm.IsToken = true
 							perm.CreatedBy = sourceID
 						}
 						return nil

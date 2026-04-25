@@ -251,77 +251,35 @@ func registerEnchantments() {
 	// and toughness each equal to its mana value. If Titania's Song leaves the battlefield, this
 	// effect continues until end of turn.
 
-	// isNoncreatureArtifactByPrint checks if a permanent is an artifact that is NOT inherently
-	// a creature by its card's printed types. This is stable across all layers because it checks
-	// the card's base types, not granted attrs.
-	isNoncreatureArtifactByPrint := func(perm *Permanent) bool {
-		if !perm.HasType(TypeArtifact) {
-			return false
-		}
-		// Check the card's base type — HasType on the Card checks the card's registered
-		// types, not granted attrs from LayerType
-		return !perm.Card.HasType(TypeCreature)
-	}
-
-	// Three functions for the three layers:
-	titaniasSongType := func(g *Game, _ uuid.UUID) error {
-		for _, perm := range g.AllBattlefield() {
-			if isNoncreatureArtifactByPrint(perm) {
-				g.GrantAttr(perm.ID(), AttrIsCreature)
-				g.GrantAttr(perm.ID(), AttrCanAttack)
-				g.GrantAttr(perm.ID(), AttrCanBlock)
-				g.GrantAttr(perm.ID(), AttrHasPowerToughness)
-			}
-		}
-		return nil
-	}
 	titaniasSongAbility := func(g *Game, _ uuid.UUID) error {
 		for _, perm := range g.AllBattlefield() {
-			if isNoncreatureArtifactByPrint(perm) {
+			if perm.HasType(TypeArtifact) && !perm.Card.HasType(TypeCreature) {
 				perm.RuntimeAbilities = nil
-			}
-		}
-		return nil
-	}
-	titaniasSongPT := func(g *Game, _ uuid.UUID) error {
-		for _, perm := range g.AllBattlefield() {
-			if isNoncreatureArtifactByPrint(perm) {
-				cmc := perm.Card.ManaCost().CMC()
-				perm.BasePTOverride = &[2]int{cmc, cmc}
 			}
 		}
 		return nil
 	}
 
 	Register("Titania's Song", func() Card {
+		animateEffects := AnimateArtifact(ForAll(WhileOnBattlefield))
 		return NewEnchantment("Titania's Song", "{3}{G}",
-			WithStaticAbility(
-				FuncContinuousEffect(LayerType, WhileOnBattlefield, titaniasSongType),
-			),
+			WithStaticAbility(animateEffects[0]),
 			WithStaticAbility(
 				FuncContinuousEffect(LayerAbility, WhileOnBattlefield, titaniasSongAbility),
 			),
-			WithStaticAbility(
-				FuncContinuousEffect(LayerPT, WhileOnBattlefield, titaniasSongPT),
-			),
+			WithStaticAbility(animateEffects[1]),
 			// When Song leaves the battlefield, continue the effect until end of turn
 			WithAbility(
 				NewTriggered(EvtLeavesBattlefield, false,
-					// TODO: convert to pipeline — needs "add multiple continuous effects" step
-					FuncEffect("continue Titania's Song effect until end of turn",
+					Pipeline("continue Titania's Song effect until end of turn",
 						EffectProperties{},
-						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							effType := FuncContinuousEffect(LayerType, EndOfTurn, titaniasSongType)
-							effType.SetSourceID(sourceID)
-							g.AddContinuousEffect(effType)
-							effAbil := FuncContinuousEffect(LayerAbility, EndOfTurn, titaniasSongAbility)
-							effAbil.SetSourceID(sourceID)
-							g.AddContinuousEffect(effAbil)
-							effPT := FuncContinuousEffect(LayerPT, EndOfTurn, titaniasSongPT)
-							effPT.SetSourceID(sourceID)
-							g.AddContinuousEffect(effPT)
-							return nil
+						AddContinuousEffectsStep(func() []ContinuousEffect {
+							effects := AnimateArtifact(ForAll(EndOfTurn))
+							return append(effects,
+								FuncContinuousEffect(LayerAbility, EndOfTurn, titaniasSongAbility),
+							)
 						}),
+					),
 				).SetConditionData(EventSourceIsSelf{}),
 			),
 		)
