@@ -1,6 +1,8 @@
 package mage
 
 import (
+	"slices"
+
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"github.com/google/uuid"
 )
@@ -186,10 +188,9 @@ func (r *colorPreventionReplacement) Matches(a Action, g GameReader) bool {
 	if sourceCard == nil {
 		return false
 	}
-	for _, c := range sourceCard.ManaCost().Colors() {
-		if c == r.color {
-			return true
-		}
+
+	if slices.Contains(sourceCard.ManaCost().Colors(), r.color) {
+		return true
 	}
 	return false
 }
@@ -327,7 +328,7 @@ func (r *reverseDamageReplacement) Clone() ReplacementEffect {
 
 type bodyguardReplacement struct {
 	replacementBase
-	controllerID   uuid.UUID
+	controllerID    uuid.UUID
 	bodyguardPermID uuid.UUID
 }
 
@@ -363,7 +364,7 @@ func (r *bodyguardReplacement) Clone() ReplacementEffect {
 
 type playerDamageRedirectReplacement struct {
 	replacementBase
-	controllerID  uuid.UUID
+	controllerID   uuid.UUID
 	redirectPermID uuid.UUID
 }
 
@@ -398,7 +399,7 @@ func (r *playerDamageRedirectReplacement) Clone() ReplacementEffect {
 
 type artifactDamageRedirectReplacement struct {
 	replacementBase
-	controllerID  uuid.UUID
+	controllerID   uuid.UUID
 	redirectPermID uuid.UUID
 }
 
@@ -471,7 +472,7 @@ func (r *creatureDamageRedirectReplacement) Clone() ReplacementEffect {
 
 type attackerDamageRedirectReplacement struct {
 	replacementBase
-	attackerID    uuid.UUID
+	attackerID     uuid.UUID
 	absorberPermID uuid.UUID
 }
 
@@ -558,10 +559,7 @@ func (r *minimumLifeReplacement) Replace(a Action, g *Game) Action {
 	if p == nil {
 		return a
 	}
-	maxDamage := p.Life() - 1
-	if maxDamage < 0 {
-		maxDamage = 0
-	}
+	maxDamage := max(p.Life()-1, 0)
 	if act.Amount() <= maxDamage {
 		return a
 	}
@@ -749,4 +747,3 @@ func (*colorPreventionReplacement) IsPreventionEffect() bool      { return true 
 func (*sourcePreventionReplacement) IsPreventionEffect() bool     { return true }
 func (*typePreventionReplacement) IsPreventionEffect() bool       { return true }
 func (*damagePreventionRuleReplacement) IsPreventionEffect() bool { return true }
-

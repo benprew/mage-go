@@ -4,10 +4,10 @@ import (
 	"os"
 	"testing"
 
+	_ "git.sr.ht/~cdcarter/mage-go/cards/limited" // register base cards for test creatures
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
-	_ "git.sr.ht/~cdcarter/mage-go/cards/limited" // register base cards for test creatures
 )
 
 func TestMain(m *testing.M) {
@@ -639,7 +639,7 @@ func TestMijaeDjinn(t *testing.T) {
 	t.Run("win_flip_stays_in_combat", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mijae Djinn") // 6/3
-		g.SetCoinFlipResults([]bool{true})                                 // win
+		g.SetCoinFlipResults([]bool{true})                               // win
 		g.Attack(1, gametest.PlayerA, "Mijae Djinn")
 		g.StopAt(1, core.EndCombat)
 		g.Execute()
@@ -650,7 +650,7 @@ func TestMijaeDjinn(t *testing.T) {
 	t.Run("lose_flip_removed_and_tapped", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mijae Djinn") // 6/3
-		g.SetCoinFlipResults([]bool{false})                                // lose
+		g.SetCoinFlipResults([]bool{false})                              // lose
 		g.Attack(1, gametest.PlayerA, "Mijae Djinn")
 		g.StopAt(1, core.EndCombat)
 		g.Execute()
@@ -665,7 +665,7 @@ func TestYdwenEfreet(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Ydwen Efreet")  // 3/6
-		g.SetCoinFlipResults([]bool{true})                                   // win
+		g.SetCoinFlipResults([]bool{true})                                 // win
 		g.Attack(1, gametest.PlayerA, "Grizzly Bears")
 		g.Block(1, gametest.PlayerB, "Ydwen Efreet", "Grizzly Bears")
 		g.StopAt(1, core.EndCombat)
@@ -679,7 +679,7 @@ func TestYdwenEfreet(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Ydwen Efreet")  // 3/6
-		g.SetCoinFlipResults([]bool{false})                                  // lose
+		g.SetCoinFlipResults([]bool{false})                                // lose
 		g.Attack(1, gametest.PlayerA, "Grizzly Bears")
 		g.Block(1, gametest.PlayerB, "Ydwen Efreet", "Grizzly Bears")
 		g.StopAt(1, core.EndCombat)
@@ -753,7 +753,7 @@ func TestSerendibDjinn(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Serendib Djinn")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest") // 2nd forest so Djinn survives upkeep
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")        // 2nd forest so Djinn survives upkeep
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // no flying
 		g.Attack(1, gametest.PlayerA, "Serendib Djinn")
 		g.Block(1, gametest.PlayerB, "Grizzly Bears", "Serendib Djinn")
@@ -1042,7 +1042,7 @@ func TestOldManOfTheSea(t *testing.T) {
 	t.Run("cannot_steal_too_powerful", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Old Man of the Sea") // 2/3
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")          // 3/3 — power > 2
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")         // 3/3 — power > 2
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Old Man of the Sea", "Hill Giant")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
@@ -1337,5 +1337,3 @@ func TestIfhBiffEfreetOpponentActivation(t *testing.T) {
 		g.AssertLife(gametest.PlayerB, 19)
 	})
 }
-
-
