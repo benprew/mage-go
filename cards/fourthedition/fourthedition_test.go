@@ -64,8 +64,8 @@ func TestSistersOfTheFlame(t *testing.T) {
 	g.Execute()
 	g.AssertTapped(gametest.PlayerA, "Sisters of the Flame", true)
 	pool := g.AllPlayers()[0].ManaPool()
-	if pool.Count(core.Red) < 1 {
-		t.Errorf("expected at least 1 red mana, got %d", pool.Count(core.Red))
+	if pool.CountProducedThisTurn(core.Red) < 1 {
+		t.Errorf("expected at least 1 red mana produced, got %d", pool.CountProducedThisTurn(core.Red))
 	}
 }
 
@@ -77,8 +77,8 @@ func TestApprenticeWizard(t *testing.T) {
 	g.Execute()
 	g.AssertTapped(gametest.PlayerA, "Apprentice Wizard", true)
 	pool := g.AllPlayers()[0].ManaPool()
-	if pool.Count(core.Colorless) < 3 {
-		t.Errorf("expected at least 3 colorless mana, got %d", pool.Count(core.Colorless))
+	if pool.CountProducedThisTurn(core.Colorless) < 3 {
+		t.Errorf("expected at least 3 colorless mana produced, got %d", pool.CountProducedThisTurn(core.Colorless))
 	}
 }
 

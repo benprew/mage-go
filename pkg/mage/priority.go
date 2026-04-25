@@ -3,10 +3,10 @@ package mage
 import (
 	"fmt"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-
 	"github.com/google/uuid"
 )
+
+// Functions related to running a priority round (aka the stack)
 
 // DebugPriority enables verbose logging of priority actions and errors.
 var DebugPriority bool
@@ -72,12 +72,12 @@ func (g *Game) executePriorityAction(playerIdx int, action PriorityAction) bool 
 	return true
 }
 
-// RunPriorityRound runs the full priority loop for the current step:
+// runPriorityRound runs the full priority loop for the current step:
 //
 //	SBA check → trigger placement → cycle players → resolve one at a time.
 //
 // If OnPriority is nil, falls back to draining the stack atomically (ResolveStack).
-func (g *Game) RunPriorityRound(mainPhase bool) {
+func (g *Game) runPriorityRound(mainPhase bool) {
 	if g.onPriority == nil {
 		g.CheckStateBasedActions()
 		g.ResolveStack()
@@ -166,107 +166,4 @@ func (g *Game) RunPriorityRound(mainPhase bool) {
 		}
 		g.ResolveTopOfStack()
 	}
-}
-
-func countBattlefield(g *Game, playerID uuid.UUID) int {
-	count := 0
-	for _, p := range g.battlefield {
-		if p.Controller == playerID {
-			count++
-		}
-	}
-	return count
-}
-
-// RunStepWithPriority runs a single step of the turn using the priority system.
-// It sets the step, applies continuous effects, performs step-specific actions,
-// then runs a priority round (unless the step has no priority, e.g. Untap).
-func (g *Game) RunStepWithPriority(step PhaseStep) {
-	g.step = step
-	g.effects.Apply(g)
-
-	switch step {
-	case Untap:
-		g.doUntap()
-		return // no priority in untap
-
-	case Upkeep:
-		g.doUpkeepActions()
-		g.RunPriorityRound(false)
-
-	case Draw:
-		g.doDrawNormalDraw()
-		g.doDrawActions()
-		g.RunPriorityRound(false)
-
-	case PrecombatMain:
-		g.RunPriorityRound(true)
-
-	case BeginCombat:
-		g.doBeginCombatActions()
-		g.RunPriorityRound(false)
-
-	case DeclareAttackers:
-		g.doDeclareAttackers()
-		if len(g.combat.Groups) > 0 {
-			g.PutTriggersOnStack()
-			g.RunPriorityRound(false)
-		}
-
-	case DeclareBlockers:
-		// 508.8: Skip if no creatures are attacking.
-		if len(g.combat.Groups) > 0 {
-			g.doDeclareBlockers()
-			g.PutTriggersOnStack()
-			g.RunPriorityRound(false)
-		}
-
-	case FirstStrikeDamage:
-		if g.combat.HasFirstStrikers(g) {
-			g.resolvingCombatDamage = true
-			g.combat.ResolveDamage(g, true)
-			g.resolvingCombatDamage = false
-			g.RunPriorityRound(false)
-		}
-
-	case CombatDamage:
-		if len(g.combat.Groups) > 0 {
-			g.resolvingCombatDamage = true
-			g.combat.ResolveDamage(g, false)
-			g.resolvingCombatDamage = false
-			g.RunPriorityRound(false)
-		}
-
-	case EndCombat:
-		g.FireEvent(GameEvent{
-			Type:     EvtEndOfCombat,
-			PlayerID: g.ActivePlayerObj().PlayerID(),
-		})
-		g.PutTriggersOnStack()
-		g.RunPriorityRound(false)
-		g.effects.RemoveEndOfCombat()
-		g.effects.Apply(g)
-		g.combat.Reset()
-
-	case PostcombatMain:
-		g.RunPriorityRound(true)
-
-	case EndStep:
-		g.doEndStepActions()
-		g.RunPriorityRound(false)
-
-	case Cleanup:
-		if g.doCleanupActions() {
-			// CR 514.3a: triggers fired during cleanup — players get priority,
-			// then another cleanup step begins.
-			g.cleanupPriorityRounds++
-			g.RunPriorityRound(false)
-			g.CheckStateBasedActions()
-			g.RunStepWithPriority(Cleanup)
-			return
-		}
-	}
-
-	// Check SBAs after each step (matches RunStep behavior)
-	g.CheckStateBasedActions()
 }

@@ -1,8 +1,9 @@
 package mage
 
 import (
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"testing"
+
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 // autoPass is a PriorityHandler that always passes.
@@ -20,7 +21,7 @@ func newPriorityTestGame() *Game {
 
 	// Give each player a library so they don't deck out
 	for _, p := range g.players {
-		for i := 0; i < 60; i++ {
+		for range 60 {
 			p.AddToLibrary(NewLand("Plains"))
 		}
 	}
@@ -74,51 +75,29 @@ func TestRunStepWithPriority_FullTurn(t *testing.T) {
 	}
 }
 
-func TestRunStepWithPriority_MatchesRunStep(t *testing.T) {
-	// Run the same setup through RunStep and RunStepWithPriority
-	// and verify life totals match (basic smoke test)
-
-	makeGame := func() *Game {
-		pA := NewBasePlayer("A")
-		pB := NewBasePlayer("B")
-		g := NewGame(pA, pB)
-		for _, p := range g.players {
-			for i := 0; i < 60; i++ {
-				p.AddToLibrary(NewLand("Plains"))
-			}
+func TestRunStepWithPriority_NilHandler_FullTurn(t *testing.T) {
+	// Verify RunStepWithPriority works when onPriority is nil (falls back
+	// to ResolveStack). Run 3 turns and confirm the game stays consistent.
+	pA := NewBasePlayer("A")
+	pB := NewBasePlayer("B")
+	g := NewGame(pA, pB)
+	for _, p := range g.players {
+		for range 60 {
+			p.AddToLibrary(NewLand("Plains"))
 		}
-		return g
 	}
 
-	g1 := makeGame()
-	g2 := makeGame()
-	g2.onPriority = autoPass()
-
-	// Run 3 turns through each
-	for turn := 0; turn < 3; turn++ {
+	for range 3 {
 		for _, step := range AllSteps() {
-			g1.RunStep(step)
+			g.RunStepWithPriority(step)
 		}
-		g1.activePlayer = (g1.activePlayer + 1) % 2
-		g1.turn++
-
-		for _, step := range AllSteps() {
-			g2.RunStepWithPriority(step)
-		}
-		g2.activePlayer = (g2.activePlayer + 1) % 2
-		g2.turn++
+		g.activePlayer = (g.activePlayer + 1) % 2
+		g.turn++
 	}
 
-	for i := range g1.players {
-		life1 := g1.players[i].Life()
-		life2 := g2.players[i].Life()
-		if life1 != life2 {
-			t.Errorf("player %d life mismatch: RunStep=%d, RunStepWithPriority=%d", i, life1, life2)
-		}
-		hand1 := len(g1.players[i].Hand())
-		hand2 := len(g2.players[i].Hand())
-		if hand1 != hand2 {
-			t.Errorf("player %d hand size mismatch: RunStep=%d, RunStepWithPriority=%d", i, hand1, hand2)
+	for i, p := range g.players {
+		if p.Life() != 20 {
+			t.Errorf("player %d life = %d, want 20", i, p.Life())
 		}
 	}
 }
@@ -128,7 +107,7 @@ func TestRunPriorityRound_NilHandler(t *testing.T) {
 	pB := NewBasePlayer("B")
 	g := NewGame(pA, pB)
 	// OnPriority is nil — should fall back to ResolveStack behavior
-	g.RunPriorityRound(false) // should not panic
+	g.runPriorityRound(false) // should not panic
 }
 
 func TestRunPriorityRound_ActionExecution(t *testing.T) {
@@ -152,7 +131,7 @@ func TestRunPriorityRound_ActionExecution(t *testing.T) {
 		return PriorityAction{Type: PriorityPass}
 	}
 
-	g.RunPriorityRound(true)
+	g.runPriorityRound(true)
 
 	if g.landsPlayedThisTurn != 1 {
 		t.Errorf("expected 1 land played, got %d", g.landsPlayedThisTurn)

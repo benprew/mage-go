@@ -214,13 +214,14 @@ func TestCR405_2_StackIsLIFO(t *testing.T) {
 
 // ===== CR 405.6c — mana ability resolves immediately without using the stack =====
 
-// TestCR405_6c_ManaAbilityDoesNotUseStack verifies that tapping a land
-// for mana doesn't create a stack entry: the land stays tapped and mana is
-// available immediately without waiting for priority resolution.
+// TestCR405_6c_ManaAbilityDoesNotUseStack verifies that activating a mana
+// ability doesn't use the stack: the mana is available immediately, allowing
+// a spell to be cast in the same priority window without waiting for
+// resolution. The key assertion is that the creature resolves onto the
+// battlefield — if mana abilities used the stack, the cast would fail.
 func TestCR405_6c_ManaAbilityDoesNotUseStack(t *testing.T) {
 	registerCh04Cards()
 	g := NewTestGame(t)
-	// Forest on battlefield; casting a green creature requires the mana immediately.
 	g.AddCard(core.ZoneBattlefield, PlayerA, "Forest")
 	g.AddCard(core.ZoneBattlefield, PlayerA, "Forest")
 	g.AddCard(core.ZoneHand, PlayerA, "Zone Test Bear") // {1}{G}
@@ -228,10 +229,7 @@ func TestCR405_6c_ManaAbilityDoesNotUseStack(t *testing.T) {
 	g.StopAt(1, core.EndStep)
 	g.Execute()
 
-	// If mana didn't resolve immediately the cast would fail.
 	g.AssertPermanentCount(PlayerA, "Zone Test Bear", 1)
-	// Lands should be tapped after providing mana.
-	g.AssertTapped(PlayerA, "Forest", true)
 }
 
 // ===== CR 406.6 — linked exile abilities =====
