@@ -452,3 +452,52 @@ func TestMorale(t *testing.T) {
 	// Hill Giant is not attacking, no boost
 	g.AssertLife(gametest.PlayerB, 17)
 }
+
+// ===== ANIMATE ARTIFACT =====
+
+func TestAnimateArtifact(t *testing.T) {
+	t.Run("turns noncreature artifact into creature with CMC P/T", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Fellwar Stone") // CMC 2
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Animate Artifact")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Animate Artifact", "Fellwar Stone")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Fellwar Stone", 2, 2)
+	})
+
+	t.Run("animated artifact can attack", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Dingus Egg") // CMC 4
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Animate Artifact")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Animate Artifact", "Dingus Egg")
+		g.Attack(1, gametest.PlayerA, "Dingus Egg")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 16)
+	})
+
+	t.Run("does not affect artifact that is already a creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Diabolic Machine") // 4/4 artifact creature
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Animate Artifact")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Animate Artifact", "Diabolic Machine")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Diabolic Machine is already a creature, so Animate Artifact doesn't change its P/T
+		g.AssertPowerToughness(gametest.PlayerA, "Diabolic Machine", 4, 4)
+	})
+
+	t.Run("effect ends when aura is removed", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Fellwar Stone") // CMC 2
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Animate Artifact")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Disenchant")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Animate Artifact", "Fellwar Stone")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Disenchant", "Animate Artifact")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Aura destroyed — Fellwar Stone is no longer a creature
+		g.AssertPermanentCount(gametest.PlayerA, "Fellwar Stone", 1)
+	})
+}

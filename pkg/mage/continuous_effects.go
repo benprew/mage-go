@@ -222,11 +222,6 @@ func TemporaryAnimateUntilEndOfCombat(targetID uuid.UUID, power, toughness int) 
 	return temporaryAnimate(targetID, power, toughness, EndOfCombat)
 }
 
-// TemporaryAnimateUntilNextUpkeep creates an effect that animates a permanent until the
-// controller's next upkeep (UntilYourNextTurn duration).
-func TemporaryAnimateUntilNextUpkeep(targetID uuid.UUID, power, toughness int) ContinuousEffect {
-	return temporaryAnimate(targetID, power, toughness, UntilYourNextTurn)
-}
 
 // PreventAttackingUntilEndOfTurn creates an EndOfTurn-scoped continuous effect
 // that revokes AttrCanAttack from a specific creature. Used for instant-speed
@@ -691,6 +686,115 @@ func AnimateLands(filter PermanentFilter, power, toughness int) ContinuousEffect
 		}
 		return nil
 	})
+}
+
+// ---------------------------------------------------------------------------
+// Animate artifact effects (P/T = mana value)
+// ---------------------------------------------------------------------------
+
+// AnimateArtifactScope controls which artifacts are animated and how.
+type AnimateArtifactScope struct {
+	mode     int // 0=attached, 1=all, 2=target
+	targetID uuid.UUID
+	duration Duration
+}
+
+// Attached is the scope for aura-based artifact animation (Animate Artifact).
+var Attached = AnimateArtifactScope{mode: 0}
+
+// ForAll returns a scope that animates all noncreature artifacts globally.
+// Used by Titania's Song.
+func ForAll(d Duration) AnimateArtifactScope {
+	return AnimateArtifactScope{mode: 1, duration: d}
+}
+
+// ForTarget returns a scope that animates a specific artifact by ID.
+// Used by Xenic Poltergeist.
+func ForTarget(id uuid.UUID, d Duration) AnimateArtifactScope {
+	return AnimateArtifactScope{mode: 2, targetID: id, duration: d}
+}
+
+// AnimateArtifact returns continuous effects that turn noncreature artifacts into
+// artifact creatures with P/T equal to their mana value. Returns separate effects
+// for LayerType and LayerPT so other effects (e.g. ability stripping) can layer
+// between them correctly.
+//
+// Scope controls the targeting:
+//
+//	AnimateArtifact(Attached)                          // aura (Animate Artifact)
+//	AnimateArtifact(ForAll(WhileOnBattlefield))        // global (Titania's Song)
+//	AnimateArtifact(ForTarget(permID, UntilYourNextTurn)) // targeted (Xenic Poltergeist)
+func AnimateArtifact(scope AnimateArtifactScope) []ContinuousEffect {
+	switch scope.mode {
+	case 0: // attached
+		return []ContinuousEffect{
+			AttachedEffect(LayerType, func(g *Game, source, target *Permanent) error {
+				if target.Card.HasType(TypeCreature) {
+					return nil
+				}
+				g.effects.GrantAttr(target.ID(), AttrIsCreature)
+				g.effects.GrantAttr(target.ID(), AttrCanAttack)
+				g.effects.GrantAttr(target.ID(), AttrCanBlock)
+				g.effects.GrantAttr(target.ID(), AttrHasPowerToughness)
+				return nil
+			}),
+			AttachedEffect(LayerPT, func(g *Game, source, target *Permanent) error {
+				if target.Card.HasType(TypeCreature) {
+					return nil
+				}
+				cmc := target.Card.ManaCost().CMC()
+				target.BasePTOverride = &[2]int{cmc, cmc}
+				return nil
+			}),
+		}
+	case 1: // all
+		isNoncreatureArtifactByPrint := func(perm *Permanent) bool {
+			return perm.HasType(TypeArtifact) && !perm.Card.HasType(TypeCreature)
+		}
+		return []ContinuousEffect{
+			FuncContinuousEffect(LayerType, scope.duration, func(g *Game, _ uuid.UUID) error {
+				for _, perm := range g.AllBattlefield() {
+					if isNoncreatureArtifactByPrint(perm) {
+						g.GrantAttr(perm.ID(), AttrIsCreature)
+						g.GrantAttr(perm.ID(), AttrCanAttack)
+						g.GrantAttr(perm.ID(), AttrCanBlock)
+						g.GrantAttr(perm.ID(), AttrHasPowerToughness)
+					}
+				}
+				return nil
+			}),
+			FuncContinuousEffect(LayerPT, scope.duration, func(g *Game, _ uuid.UUID) error {
+				for _, perm := range g.AllBattlefield() {
+					if isNoncreatureArtifactByPrint(perm) {
+						cmc := perm.Card.ManaCost().CMC()
+						perm.BasePTOverride = &[2]int{cmc, cmc}
+					}
+				}
+				return nil
+			}),
+		}
+	default: // target
+		return []ContinuousEffect{
+			TargetEffect(LayerType, scope.duration, scope.targetID, func(g *Game, target *Permanent) error {
+				if target.Card.HasType(TypeCreature) {
+					return nil
+				}
+				g.effects.GrantAttr(target.ID(), AttrIsCreature)
+				g.effects.GrantAttr(target.ID(), AttrCanAttack)
+				g.effects.GrantAttr(target.ID(), AttrCanBlock)
+				g.effects.GrantAttr(target.ID(), AttrHasPowerToughness)
+				return nil
+			}),
+			TargetEffect(LayerPT, scope.duration, scope.targetID, func(g *Game, target *Permanent) error {
+				if target.Card.HasType(TypeCreature) {
+					return nil
+				}
+				cmc := target.Card.ManaCost().CMC()
+				target.BasePTOverride = &[2]int{cmc, cmc}
+				return nil
+			}),
+		}
+	}
 }
 
 // GrantColorToAll sets the color of all permanents matching the filter.

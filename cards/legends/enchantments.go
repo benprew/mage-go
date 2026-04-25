@@ -1222,7 +1222,8 @@ type blackOrRedPreventionReplacement struct {
 	sourceID       uuid.UUID
 }
 
-func (r *blackOrRedPreventionReplacement) SourceID() uuid.UUID { return r.sourceID }
+func (r *blackOrRedPreventionReplacement) SourceID() uuid.UUID  { return r.sourceID }
+func (r *blackOrRedPreventionReplacement) GetDuration() Duration { return EndOfTurn }
 
 func (r *blackOrRedPreventionReplacement) Matches(a Action, g GameReader) bool {
 	act, ok := a.(*DamageToPlayerAction)

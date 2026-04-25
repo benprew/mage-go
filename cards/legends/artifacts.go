@@ -445,7 +445,8 @@ func registerArtifacts() {
 						token.AddAbility(NewTriggered(EvtDamageDealt, false,
 							PoisonTargetPlayer(1),
 						).SetConditionData(EventSourceIsSelfDamageToPlayer{}))
-						g.PutOnBattlefield(token, controller)
+						perm := g.PutOnBattlefield(token, controller)
+						perm.IsToken = true
 						return nil
 					},
 				),

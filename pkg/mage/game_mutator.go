@@ -166,7 +166,7 @@ func (g *Game) ApplyContinuousEffects() {
 
 // SetPreventCombatDamage flags that all combat damage is prevented this turn.
 func (g *Game) SetPreventCombatDamage() {
-	g.effects.AddReplacement(&fogReplacement{replacementBase: replacementBase{sourceID: uuid.Nil}})
+	g.effects.AddReplacement(&fogReplacement{replacementBase: replacementBase{sourceID: uuid.Nil, duration: EndOfTurn}})
 }
 
 // AddRegenerationShield adds a regeneration shield to the specified permanent.
@@ -178,7 +178,7 @@ func (g *Game) AddRegenerationShield(id uuid.UUID) {
 			return
 		}
 	}
-	g.effects.AddReplacement(&regenerationReplacement{permanentID: id, shields: 1})
+	g.effects.AddReplacement(&regenerationReplacement{replacementBase: replacementBase{duration: EndOfTurn}, permanentID: id, shields: 1})
 }
 
 // AddPreventionShield adds a damage prevention shield to the specified permanent or player.
@@ -190,12 +190,12 @@ func (g *Game) AddPreventionShield(id uuid.UUID, amount int) {
 			return
 		}
 	}
-	g.effects.AddReplacement(&preventionShieldReplacement{targetID: id, remaining: amount})
+	g.effects.AddReplacement(&preventionShieldReplacement{replacementBase: replacementBase{duration: EndOfTurn}, targetID: id, remaining: amount})
 }
 
 // AddForcefieldShield adds a Forcefield shield for the specified player.
 func (g *Game) AddForcefieldShield(id uuid.UUID) {
-	g.effects.AddReplacement(&forcefieldReplacement{playerID: id})
+	g.effects.AddReplacement(&forcefieldReplacement{replacementBase: replacementBase{duration: EndOfTurn}, playerID: id})
 }
 
 // IsLichActive reports whether the Lich enchantment is active for the player.
@@ -208,7 +208,7 @@ func (g *Game) SetLichActive(playerID, sourceID uuid.UUID) {
 	g.effects.Rules.SetLichActive(playerID, sourceID)
 	// Register the life-gain replacement (Lich: draw cards instead of gaining life)
 	g.effects.AddReplacement(&lichLifeGainReplacement{
-		replacementBase: replacementBase{sourceID: sourceID},
+		replacementBase: replacementBase{sourceID: sourceID, duration: WhileOnBattlefield},
 		playerID:        playerID,
 	})
 }
@@ -224,14 +224,14 @@ func (g *Game) ClearLich(playerID uuid.UUID) {
 
 // AddColorPrevention adds a color-based damage prevention rule for the player.
 func (g *Game) AddColorPrevention(playerID uuid.UUID, color Color) {
-	g.effects.AddReplacement(&colorPreventionReplacement{playerID: playerID, color: color})
+	g.effects.AddReplacement(&colorPreventionReplacement{replacementBase: replacementBase{duration: EndOfTurn}, playerID: playerID, color: color})
 }
 
 // AddReverseDamageShield adds a reverse-damage shield for the player.
 // Prepended so it is checked before any prevention shields (which would
 // otherwise absorb the damage before the reverse replacement sees it).
 func (g *Game) AddReverseDamageShield(playerID uuid.UUID) {
-	g.effects.PrependReplacement(&reverseDamageReplacement{playerID: playerID})
+	g.effects.PrependReplacement(&reverseDamageReplacement{replacementBase: replacementBase{duration: EndOfTurn}, playerID: playerID})
 }
 
 // SetChannelActive marks the Channel ability as active for the player.
@@ -242,8 +242,9 @@ func (g *Game) SetChannelActive(playerID uuid.UUID) {
 // SetCreatureDamageRedirect redirects damage dealt to a creature to a player.
 func (g *Game) SetCreatureDamageRedirect(creatureID, playerID uuid.UUID) {
 	g.effects.AddReplacement(&creatureDamageRedirectReplacement{
-		creatureID:     creatureID,
-		targetPlayerID: playerID,
+		replacementBase: replacementBase{duration: EndOfTurn},
+		creatureID:      creatureID,
+		targetPlayerID:  playerID,
 	})
 }
 
@@ -251,14 +252,15 @@ func (g *Game) SetCreatureDamageRedirect(creatureID, playerID uuid.UUID) {
 // to a player is dealt to the absorber permanent instead (Shimian Night Stalker).
 func (g *Game) SetAttackerDamageRedirect(attackerID, absorberID uuid.UUID) {
 	g.effects.AddReplacement(&attackerDamageRedirectReplacement{
-		attackerID:     attackerID,
-		absorberPermID: absorberID,
+		replacementBase: replacementBase{duration: EndOfTurn},
+		attackerID:      attackerID,
+		absorberPermID:  absorberID,
 	})
 }
 
 // SetSkipNextDraw sets a flag to skip the next draw step for the player.
 func (g *Game) SetSkipNextDraw(playerID uuid.UUID) {
-	g.effects.AddReplacement(&skipDrawReplacement{playerID: playerID})
+	g.effects.AddReplacement(&skipDrawReplacement{replacementBase: replacementBase{duration: EndOfTurn}, playerID: playerID})
 }
 
 // SetSanctuaryActive marks the Ivory Tower sanctuary effect as active.
@@ -274,17 +276,18 @@ func (g *Game) SetMinimumLife(playerID uuid.UUID) {
 // AddSourcePrevention adds a one-shot damage prevention for the next damage
 // from a specific source to the specified player (Circle of Protection: Artifacts).
 func (g *Game) AddSourcePrevention(playerID, sourceID uuid.UUID) {
-	g.effects.AddReplacement(&sourcePreventionReplacement{playerID: playerID, dmgSource: sourceID})
+	g.effects.AddReplacement(&sourcePreventionReplacement{replacementBase: replacementBase{duration: EndOfTurn}, playerID: playerID, dmgSource: sourceID})
 }
 
 // AddTypePrevention adds a card-type damage prevention rule for the player.
 func (g *Game) AddTypePrevention(playerID uuid.UUID, ct CardType) {
-	g.effects.AddReplacement(&typePreventionReplacement{playerID: playerID, cardType: ct})
+	g.effects.AddReplacement(&typePreventionReplacement{replacementBase: replacementBase{duration: EndOfTurn}, playerID: playerID, cardType: ct})
 }
 
 // PreventAllDamageFrom prevents all damage from the specified source until end of turn.
 func (g *Game) PreventAllDamageFrom(sourceID uuid.UUID) {
 	g.effects.AddReplacement(&damagePreventionRuleReplacement{
+		replacementBase: replacementBase{duration: EndOfTurn},
 		from: NewPermanentFilter("specific source", func(p *Permanent, _ *Game) bool {
 			return p.ID() == sourceID
 		}),
@@ -307,7 +310,7 @@ func (g *Game) SetDamageReflection(playerID, eyeSourceID, chosenSourceID uuid.UU
 
 // SetDrawReplacement stores a pending draw replacement for a player (Aladdin's Lamp).
 func (g *Game) SetDrawReplacement(playerID uuid.UUID, count int) {
-	g.effects.AddReplacement(&drawReplacementEffect{playerID: playerID, count: count})
+	g.effects.AddReplacement(&drawReplacementEffect{replacementBase: replacementBase{duration: EndOfTurn}, playerID: playerID, count: count})
 }
 
 // AddReplacementEffect adds a replacement effect to the effect manager.

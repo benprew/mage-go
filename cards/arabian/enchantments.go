@@ -168,7 +168,7 @@ func registerEnchantments() {
 					for _, p := range g.AllBattlefield() {
 						if p.Controller == chosenPlayer &&
 							HasColorFilter(chosenColor).Match(p, g) &&
-							!p.Card.(*BaseCard).IsToken() {
+							!p.IsToken {
 							hasNontoken = true
 							break
 						}
@@ -202,7 +202,7 @@ func registerEnchantments() {
 					for _, p := range g.FilterBattlefield(AnyPermanent) {
 						if p.Controller == chosenPlayer &&
 							cardHasColor(p.Card, chosenColor) &&
-							!p.Card.(*BaseCard).IsToken() {
+							!p.IsToken {
 							return false
 						}
 					}

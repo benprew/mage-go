@@ -685,11 +685,15 @@ func (g *Game) DestroyPermanent(perm *Permanent) {
 	selfAbilities := make([]Ability, len(perm.RuntimeAbilities))
 	copy(selfAbilities, perm.RuntimeAbilities)
 
+	isToken := perm.IsToken
+
 	g.RemoveFromBattlefield(perm)
 
-	p := g.GetPlayer(owner)
-	if p != nil {
-		p.AddToGraveyard(card)
+	if !isToken {
+		p := g.GetPlayer(owner)
+		if p != nil {
+			p.AddToGraveyard(card)
+		}
 	}
 
 	// Check the destroyed permanent's own abilities for self-referencing triggers
@@ -756,6 +760,7 @@ func (g *Game) PutPermanentIntoGraveyard(perm *Permanent) {
 	}
 
 	isCreature := perm.HasType(TypeCreature)
+	isToken := perm.IsToken
 	permID := perm.ID()
 	card := perm.Card
 
@@ -765,9 +770,11 @@ func (g *Game) PutPermanentIntoGraveyard(perm *Permanent) {
 
 	g.RemoveFromBattlefield(perm)
 
-	p := g.GetPlayer(owner)
-	if p != nil {
-		p.AddToGraveyard(card)
+	if !isToken {
+		p := g.GetPlayer(owner)
+		if p != nil {
+			p.AddToGraveyard(card)
+		}
 	}
 
 	graveyardEvt := GameEvent{
@@ -799,14 +806,17 @@ func (g *Game) Sacrifice(perm *Permanent) {
 	}
 
 	isCreature := perm.HasType(TypeCreature)
+	isToken := perm.IsToken
 	permID := perm.ID()
 	card := perm.Card
 
 	g.RemoveFromBattlefield(perm)
 
-	p := g.GetPlayer(owner)
-	if p != nil {
-		p.AddToGraveyard(card)
+	if !isToken {
+		p := g.GetPlayer(owner)
+		if p != nil {
+			p.AddToGraveyard(card)
+		}
 	}
 
 	g.FireEvent(GameEvent{
@@ -1876,58 +1886,9 @@ func (g *Game) CheckStateBasedActions() {
 		}
 
 		// MTG rule 704.5d / CR 111.7: a token in any zone other than the battlefield
-		// ceases to exist. This runs after death/graveyard movement so "dies" triggers
-		// fire normally — the trigger is tied to the event, not the card's continued
-		// existence in the graveyard.
-		for _, p := range g.players {
-			var gyTokens []uuid.UUID
-			for _, c := range p.Graveyard() {
-				if c.IsToken() {
-					gyTokens = append(gyTokens, c.ID())
-				}
-			}
-			for _, id := range gyTokens {
-				p.RemoveFromGraveyard(id)
-				actions = true
-			}
-			var handTokens []uuid.UUID
-			for _, c := range p.Hand() {
-				if c.IsToken() {
-					handTokens = append(handTokens, c.ID())
-				}
-			}
-			for _, id := range handTokens {
-				p.RemoveFromHand(id)
-				actions = true
-			}
-			lib := p.Library()
-			kept := lib[:0]
-			removed := false
-			for _, c := range lib {
-				if c.IsToken() {
-					removed = true
-					continue
-				}
-				kept = append(kept, c)
-			}
-			if removed {
-				p.SetLibrary(kept)
-				actions = true
-			}
-		}
-		exileKept := g.exile[:0]
-		exileRemoved := false
-		for _, ec := range g.exile {
-			if ec.Card != nil && ec.Card.IsToken() {
-				exileRemoved = true
-				continue
-			}
-			exileKept = append(exileKept, ec)
-		}
-		if exileRemoved {
-			g.exile = exileKept
-			actions = true
-		}
+		// ceases to exist. Token status lives on Permanent, so when a token permanent
+		// leaves the battlefield its underlying Card is just a regular card — it is
+		// skipped by DestroyPermanent/bounce rather than cleaned up here.
 
 		if !actions {
 			break
@@ -1940,7 +1901,6 @@ func (g *Game) CheckStateBasedActions() {
 
 func (g *Game) doUntap() {
 	active := g.ActivePlayerObj()
-	g.effects.ClearRegenerationReplacements(active.PlayerID(), g)
 	// Island Sanctuary: clear protection at the start of the player's turn
 	g.effects.Rules.ClearSanctuary(active.PlayerID())
 

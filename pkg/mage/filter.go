@@ -307,8 +307,7 @@ var IsAuraOnLand = NewPermanentFilter("Aura attached to a land", func(p *Permane
 
 // IsToken matches token permanents.
 var IsToken = NewPermanentFilter("token", func(p *Permanent, g *Game) bool {
-	bc, ok := p.Card.(*BaseCard)
-	return ok && bc.IsToken()
+	return p.IsToken
 })
 
 // CreatedByFilter matches tokens created by a specific permanent.

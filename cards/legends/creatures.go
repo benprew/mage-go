@@ -165,7 +165,7 @@ func registerCreatures() {
 						if p.Controller == src.Controller {
 							continue
 						}
-						if p.Card.(*BaseCard).IsToken() {
+						if p.IsToken {
 							continue
 						}
 						if HasColorFilter(Red).Match(p, g) {
@@ -1261,7 +1261,7 @@ func registerCreatures() {
 						if p.Controller == src.Controller {
 							continue
 						}
-						if p.Card.(*BaseCard).IsToken() {
+						if p.IsToken {
 							continue
 						}
 						if HasColorFilter(White).Match(p, g) {
@@ -2461,6 +2461,7 @@ func registerCreatures() {
 									token := NewToken("Sand Warrior", 1, 1, []CardType{TypeCreature}, []string{"Sand", "Warrior"})
 									token.SetOwner(controller)
 									perm := g.PutOnBattlefield(token, controller)
+									perm.IsToken = true
 									perm.ColorOverride = &colors
 								}
 								return nil
@@ -3072,6 +3073,7 @@ func registerCreatures() {
 					token.SetOwner(controller)
 					WithSuperTypes(SuperLegendary)(token)
 					perm := g.PutOnBattlefield(token, controller)
+					perm.IsToken = true
 					colors := []Color{Red, Green}
 					perm.ColorOverride = &colors
 					twinID = perm.ID()

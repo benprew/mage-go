@@ -364,7 +364,7 @@ func execBalance(ctx *EffectContext, _ *balanceEffect) error {
 func execChaosOrb(ctx *EffectContext, _ *chaosOrbEffect) error {
 	var candidates []*Permanent
 	for _, p := range ctx.Game.FilterBattlefield(Not(ControlledBy(ctx.Controller))) {
-		if !p.Card.(*BaseCard).IsToken() {
+		if !p.IsToken {
 			candidates = append(candidates, p)
 		}
 	}

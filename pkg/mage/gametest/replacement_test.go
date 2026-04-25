@@ -395,6 +395,7 @@ func (r *doubleDamageReplacement) Replace(a mage.Action, _ *mage.Game) mage.Acti
 
 func (r *doubleDamageReplacement) SourceID() uuid.UUID             { return uuid.Nil }
 func (r *doubleDamageReplacement) IsActive(_ mage.GameReader) bool { return true }
+func (r *doubleDamageReplacement) GetDuration() core.Duration      { return core.EndOfTurn }
 func (r *doubleDamageReplacement) Clone() mage.ReplacementEffect {
 	c := *r
 	return &c
@@ -418,6 +419,115 @@ func TestPreventionShieldOnCreature(t *testing.T) {
 	g.Execute()
 	// 3 damage - 2 prevented = 1 damage. Hill Giant survives (3/3 with 1 damage).
 	g.AssertPermanentCount(PlayerB, "Hill Giant", 1)
+}
+
+// ===== Replacement Duration / End-of-Turn Cleanup =====
+
+// TestForcefieldExpiresAtEndOfTurn verifies that a forcefield replacement
+// added during turn 1 does not persist into turn 2.
+func TestForcefieldExpiresAtEndOfTurn(t *testing.T) {
+	registerReplacementTestCards()
+
+	t.Run("forcefield_active_on_turn_1", func(t *testing.T) {
+		g := NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, PlayerA, "Test Giant") // 5/5
+
+		g.AddForcefieldShield(g.AllPlayers()[1].PlayerID())
+
+		g.Attack(1, PlayerA, "Test Giant")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		g.AssertLife(PlayerB, 19) // 5 reduced to 1
+	})
+
+	t.Run("forcefield_gone_on_turn_3", func(t *testing.T) {
+		g := NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, PlayerA, "Test Giant") // 5/5
+
+		g.AddForcefieldShield(g.AllPlayers()[1].PlayerID())
+
+		g.Attack(1, PlayerA, "Test Giant")
+		// Turn 3 (PlayerA's next turn): no new forcefield. Full damage.
+		g.Attack(3, PlayerA, "Test Giant")
+		g.StopAt(3, core.EndCombat)
+		g.Execute()
+		// Turn 1: 5 reduced to 1. Turn 3: full 5 damage. Total: 6.
+		g.AssertLife(PlayerB, 14)
+	})
+}
+
+// TestFogExpiresAtEndOfTurn verifies that fog only prevents combat damage
+// for the turn it was activated and does not carry over.
+func TestFogExpiresAtEndOfTurn(t *testing.T) {
+	registerReplacementTestCards()
+
+	t.Run("fog_active_on_turn_1", func(t *testing.T) {
+		g := NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, PlayerA, "Hill Giant") // 3/3
+
+		g.SetPreventCombatDamage()
+
+		g.Attack(1, PlayerA, "Hill Giant")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		g.AssertLife(PlayerB, 20) // prevented
+	})
+
+	t.Run("fog_gone_on_turn_3", func(t *testing.T) {
+		g := NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, PlayerA, "Hill Giant") // 3/3
+
+		g.SetPreventCombatDamage()
+
+		g.Attack(1, PlayerA, "Hill Giant")
+		// Turn 3: fog expired. Full damage.
+		g.Attack(3, PlayerA, "Hill Giant")
+		g.StopAt(3, core.EndCombat)
+		g.Execute()
+		// Turn 1: prevented. Turn 3: 3 damage.
+		g.AssertLife(PlayerB, 17)
+	})
+}
+
+// TestRegenerationShieldExpiresAtEndOfTurn verifies that an unused
+// regeneration shield does not persist into the next turn.
+func TestRegenerationShieldExpiresAtEndOfTurn(t *testing.T) {
+	registerReplacementTestCards()
+
+	g := NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, PlayerA, "Regenerating Troll")
+	g.AddCard(core.ZoneHand, PlayerB, "Test Destroy")
+	g.AddCard(core.ZoneHand, PlayerB, "Test Destroy")
+
+	// Activate regeneration on turn 1 but don't use it
+	g.ActivateAbility(1, core.PrecombatMain, PlayerA, "Regenerating Troll")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(PlayerA, "Regenerating Troll", 1)
+
+	// Turn 2: destroy the troll without a fresh shield — it should die
+	g.CastSpell(2, core.PrecombatMain, PlayerB, "Test Destroy", "Regenerating Troll")
+	g.StopAt(2, core.BeginCombat)
+	g.Execute()
+	g.AssertPermanentCount(PlayerA, "Regenerating Troll", 0)
+	g.AssertGraveyardCount(PlayerA, "Regenerating Troll", 1)
+}
+
+// TestPreventionShieldExpiresAtEndOfTurn verifies that an unused prevention
+// shield is cleared at end of turn.
+func TestPreventionShieldExpiresAtEndOfTurn(t *testing.T) {
+	registerReplacementTestCards()
+
+	g := NewTestGame(t)
+	g.AddCard(core.ZoneHand, PlayerA, "Lightning Bolt")
+
+	// Add a prevention shield on turn 1 but don't trigger any damage.
+	// Cast bolt on turn 2 — shield should be gone.
+	g.AddPreventionShield(g.AllPlayers()[1].PlayerID(), 5)
+	g.CastSpell(2, core.PrecombatMain, PlayerA, "Lightning Bolt", "PlayerB")
+	g.StopAt(2, core.BeginCombat)
+	g.Execute()
+	g.AssertLife(PlayerB, 17)
 }
 
 // findPermanentByName is a test helper to find a permanent on the battlefield.

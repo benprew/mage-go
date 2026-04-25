@@ -183,15 +183,18 @@ func execBounceGathered(ctx *EffectContext, e *BounceGatheredData) error {
 	if perm == nil {
 		return nil
 	}
+	isToken := perm.IsToken
 	card := perm.Card
 	owner := card.Owner()
 	if owner == uuid.Nil {
 		owner = perm.Controller
 	}
 	ctx.Game.RemoveFromBattlefield(perm)
-	p := ctx.Game.GetPlayer(owner)
-	if p != nil {
-		p.AddToHand(card)
+	if !isToken {
+		p := ctx.Game.GetPlayer(owner)
+		if p != nil {
+			p.AddToHand(card)
+		}
 	}
 	return nil
 }

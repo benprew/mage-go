@@ -452,15 +452,18 @@ func execReturnToHandTarget(ctx *EffectContext, _ *returnToHandTargetEffect) err
 	if perm == nil {
 		return nil // target gone, fizzle
 	}
+	isToken := perm.IsToken
 	card := perm.Card
 	owner := card.Owner()
 	if owner == uuid.Nil {
 		owner = perm.Controller
 	}
 	ctx.Game.RemoveFromBattlefield(perm)
-	p := ctx.Game.GetPlayer(owner)
-	if p != nil {
-		p.AddToHand(card)
+	if !isToken {
+		p := ctx.Game.GetPlayer(owner)
+		if p != nil {
+			p.AddToHand(card)
+		}
 	}
 	return nil
 }

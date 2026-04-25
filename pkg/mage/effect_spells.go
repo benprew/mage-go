@@ -195,7 +195,8 @@ func (e *createTokenAttackingEffect) Apply(g *Game, sourceID, controller uuid.UU
 			break
 		}
 	}
-	g.PutOnBattlefieldAttacking(token, controller, defenderID)
+	perm := g.PutOnBattlefieldAttacking(token, controller, defenderID)
+	perm.IsToken = true
 	return nil
 }
 
@@ -239,7 +240,8 @@ func (e *createTokenBlockingEffect) Apply(g *Game, sourceID, controller uuid.UUI
 	if len(targets) > 0 {
 		attackerID = targets[0]
 	}
-	g.PutOnBattlefieldBlocking(token, controller, attackerID)
+	perm := g.PutOnBattlefieldBlocking(token, controller, attackerID)
+	perm.IsToken = true
 	return nil
 }
 
@@ -470,7 +472,8 @@ func execCreateToken(ctx *EffectContext, e *createTokenEffect) error {
 			token.colorOverride = make([]Color, len(e.colors))
 			copy(token.colorOverride, e.colors)
 		}
-		ctx.Game.PutOnBattlefield(token, ctx.Controller)
+		perm := ctx.Game.PutOnBattlefield(token, ctx.Controller)
+		perm.IsToken = true
 	}
 	return nil
 }

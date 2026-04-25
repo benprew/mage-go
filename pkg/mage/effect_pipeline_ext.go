@@ -806,3 +806,30 @@ func execRampageEffect(ctx *EffectContext, e *RampageEffectData) error {
 	ctx.Game.AddContinuousEffect(ce)
 	return nil
 }
+
+// ---------------------------------------------------------------------------
+// AddContinuousEffects: add continuous effects to the game
+// ---------------------------------------------------------------------------
+
+// AddContinuousEffectsData adds continuous effects created by a factory function.
+// The factory is called each time the step executes, producing fresh effect
+// instances (effects contain mutable state like sourceID).
+type AddContinuousEffectsData struct {
+	Factory func() []ContinuousEffect
+}
+
+// AddContinuousEffectsStep creates a pipeline step that adds continuous effects.
+func AddContinuousEffectsStep(factory func() []ContinuousEffect) EffectData {
+	return &AddContinuousEffectsData{Factory: factory}
+}
+
+func (e *AddContinuousEffectsData) EffectText() string            { return "add continuous effects" }
+func (e *AddContinuousEffectsData) EffectProps() EffectProperties { return EffectProperties{} }
+
+func execAddContinuousEffects(ctx *EffectContext, e *AddContinuousEffectsData) error {
+	for _, eff := range e.Factory() {
+		eff.SetSourceID(ctx.SourceID)
+		ctx.Game.AddContinuousEffect(eff)
+	}
+	return nil
+}

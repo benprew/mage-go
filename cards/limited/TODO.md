@@ -24,9 +24,6 @@ You have no maximum hand size. If an effect causes you to discard a card, you ma
 Enchant artifact. Whenever you're dealt damage, put vitality counters on this. At upkeep, remove one for 1 life.
 *Needs: "whenever you're dealt damage" trigger.*
 
-**Animate Artifact** `{3}{U}` Enchantment — Aura
-Enchant artifact. As long as enchanted artifact isn't a creature, it's an artifact creature with P/T each equal to its mana value.
-*Needs: conditional type-granting continuous effect, CMC-based P/T setting.*
 
 **Gaea's Liege** `{3}{G}{G}{G}` Creature — Avatar \*/\*
 P/T = Forests you control (or defending player's Forests if attacking). {T}: Target land becomes a Forest.

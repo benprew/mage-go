@@ -466,33 +466,17 @@ func (em *EffectManager) ApplyReplacements(action Action, g *Game) Action {
 	return action
 }
 
-// ClearReplacementsEndOfTurn clears turn-scoped replacement effects.
+// ClearReplacementsEndOfTurn removes all replacement effects with EndOfTurn duration.
 func (em *EffectManager) ClearReplacementsEndOfTurn() {
-	// Remove consumed one-shot replacements and turn-scoped ones
 	filtered := em.replacements[:0]
 	for _, r := range em.replacements {
-		if r.IsActive(nil) {
+		if r.GetDuration() != EndOfTurn {
 			filtered = append(filtered, r)
 		}
 	}
 	em.replacements = filtered
 }
 
-// ClearRegenerationReplacements clears all regeneration replacements for permanents
-// controlled by the given player (called during untap step per MTG rules).
-func (em *EffectManager) ClearRegenerationReplacements(playerID uuid.UUID, g GameReader) {
-	filtered := em.replacements[:0]
-	for _, r := range em.replacements {
-		if regen, ok := r.(*regenerationReplacement); ok {
-			perm := g.FindPermanent(regen.permanentID)
-			if perm != nil && perm.Controller == playerID {
-				continue // remove this one
-			}
-		}
-		filtered = append(filtered, r)
-	}
-	em.replacements = filtered
-}
 
 // grantedByEffect is a marker wrapper to identify abilities granted by continuous effects.
 type grantedByEffect struct {

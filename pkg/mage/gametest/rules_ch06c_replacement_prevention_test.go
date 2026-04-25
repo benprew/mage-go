@@ -323,6 +323,7 @@ func (r *ch06DoubleDamageReplacement) Replace(a mage.Action, _ *mage.Game) mage.
 
 func (r *ch06DoubleDamageReplacement) SourceID() uuid.UUID             { return uuid.Nil }
 func (r *ch06DoubleDamageReplacement) IsActive(_ mage.GameReader) bool { return true }
+func (r *ch06DoubleDamageReplacement) GetDuration() core.Duration      { return core.EndOfTurn }
 func (r *ch06DoubleDamageReplacement) Clone() mage.ReplacementEffect {
 	c := *r
 	return &c

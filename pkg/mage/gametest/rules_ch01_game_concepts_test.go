@@ -489,3 +489,30 @@ func TestCR111_7_TokenCeasesAfterDeath(t *testing.T) {
 	tg.AssertGraveyardCount(PlayerA, "Wasp", 0)
 	tg.AssertPermanentCount(PlayerA, "Wasp", 0)
 }
+
+// CR 111.7: Tokens never enter the graveyard or hand — they cease to exist
+// when they would leave the battlefield.
+func TestCR111_7_TokenNeverEntersGraveyardOrHand(t *testing.T) {
+	t.Run("token does not enter graveyard when destroyed", func(t *testing.T) {
+		tg := NewTestGame(t)
+		tg.AddCard(core.ZoneBattlefield, PlayerA, "The Hive")
+		tg.AddCard(core.ZoneHand, PlayerB, "Wrath of God")
+		tg.ActivateAbility(1, core.PrecombatMain, PlayerA, "The Hive")
+		tg.CastSpell(2, core.PrecombatMain, PlayerB, "Wrath of God")
+		tg.StopAt(2, core.EndStep)
+		tg.Execute()
+		tg.AssertGraveyardCount(PlayerA, "Wasp", 0)
+	})
+
+	t.Run("token does not enter hand when bounced", func(t *testing.T) {
+		tg := NewTestGame(t)
+		tg.AddCard(core.ZoneBattlefield, PlayerA, "The Hive")
+		tg.AddCard(core.ZoneHand, PlayerB, "Unsummon")
+		tg.ActivateAbility(1, core.PrecombatMain, PlayerA, "The Hive")
+		tg.CastSpell(2, core.PrecombatMain, PlayerB, "Unsummon", "Wasp")
+		tg.StopAt(2, core.EndStep)
+		tg.Execute()
+		tg.AssertPermanentCount(PlayerA, "Wasp", 0)
+		tg.AssertHandCount(PlayerA, "Wasp", 0)
+	})
+}
