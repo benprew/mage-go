@@ -51,6 +51,11 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 		g.runPriorityRound(false)
 
 	case Draw:
+		// CR 103.8a: In a two-player game, the player who plays first
+		// skips the draw step of their first turn.
+		if g.turn == 1 && g.activePlayer == 0 && len(g.players) == 2 {
+			return
+		}
 		g.doDrawNormalDraw()
 		g.doDrawActions()
 		g.runPriorityRound(false)

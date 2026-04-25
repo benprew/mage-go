@@ -2022,11 +2022,6 @@ func (g *Game) doDrawActions() {
 func (g *Game) doDrawNormalDraw() {
 	active := g.ActivePlayerObj()
 
-	// First player doesn't draw on turn 1
-	if g.turn == 1 && g.activePlayer == 0 {
-		return
-	}
-
 	// Run through replacement pipeline (skip draw, Aladdin's Lamp, etc.)
 	action := NewDrawCardAction(uuid.Nil, active.PlayerID(), true)
 	result := g.effects.ApplyReplacements(action, g)
