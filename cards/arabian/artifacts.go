@@ -154,7 +154,7 @@ func registerArtifacts() {
 								if p.ID() == sourceID {
 									continue
 								}
-								if p.Card.(*BaseCard).IsToken() {
+								if p.IsToken {
 									continue
 								}
 								g.Sacrifice(p)
@@ -175,7 +175,7 @@ func registerArtifacts() {
 								if p.ID() == sourceID {
 									continue
 								}
-								if p.Card.(*BaseCard).IsToken() {
+								if p.IsToken {
 									continue
 								}
 								g.Sacrifice(p)
@@ -191,7 +191,7 @@ func registerArtifacts() {
 						if perm == nil {
 							return false
 						}
-						return catalog.Global().CardInSet("ARN", perm.Name()) && !perm.Card.(*BaseCard).IsToken()
+						return catalog.Global().CardInSet("ARN", perm.Name()) && !perm.IsToken
 					}),
 			),
 			// Continuous: block casting/playing Arabian Nights cards

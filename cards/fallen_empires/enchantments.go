@@ -144,7 +144,8 @@ func registerEnchantments() {
 								// Create a 1/1 green Saproling creature token
 								token := NewToken("Saproling", 1, 1, []CardType{TypeCreature}, []string{"Saproling"})
 								token.SetOwner(controller)
-								g.PutOnBattlefield(token, controller)
+								perm := g.PutOnBattlefield(token, controller)
+								perm.IsToken = true
 								return nil
 							}
 						}

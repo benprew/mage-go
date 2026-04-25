@@ -221,6 +221,7 @@ func clonePermanentInto(dst, src *Permanent) {
 		PhasedOut:           src.PhasedOut,
 		Damage:              src.Damage,
 		AttachedTo:          src.AttachedTo,
+		IsToken:             src.IsToken,
 		FaceDown:            src.FaceDown,
 		ChosenColor:         src.ChosenColor,
 		ChosenPlayer:        src.ChosenPlayer,

@@ -417,10 +417,13 @@ func (c *returnToHandCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	if chosen == nil {
 		return fmt.Errorf("no permanent chosen")
 	}
+	isToken := chosen.IsToken
 	g.RemoveFromBattlefield(chosen)
-	owner := g.GetPlayer(chosen.Card.Owner())
-	if owner != nil {
-		owner.AddToHand(chosen.Card)
+	if !isToken {
+		owner := g.GetPlayer(chosen.Card.Owner())
+		if owner != nil {
+			owner.AddToHand(chosen.Card)
+		}
 	}
 	return nil
 }

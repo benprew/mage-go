@@ -32,7 +32,6 @@ type Card interface {
 	CloneFrom(Card)
 	SetBasePT(power, toughness int)
 	SetModes([]string)
-	IsToken() bool
 }
 
 // BaseCard provides the common card implementation.
@@ -48,7 +47,6 @@ type BaseCard struct {
 	power           int
 	toughness       int
 	colorOverride   []Color
-	isToken         bool
 	modes           []string
 	attrSeeds       map[Attr]int // keyword/attr seeds; NewPermanent copies these to baseAttrs
 	additionalCosts []Cost       // additional costs paid when casting (sacrifice, discard, etc.)
@@ -329,7 +327,6 @@ func NewToken(name string, power, toughness int, types []CardType, subTypes []st
 		subTypes:  subTypes,
 		power:     power,
 		toughness: toughness,
-		isToken:   true,
 	}
 	for _, kw := range keywords {
 		if c.attrSeeds == nil {
@@ -339,8 +336,6 @@ func NewToken(name string, power, toughness int, types []CardType, subTypes []st
 	}
 	return c
 }
-
-func (c *BaseCard) IsToken() bool { return c.isToken }
 
 // NewInstant creates a new instant card. The spell parameter defines what
 // happens when the spell resolves (use [NewTargetedSpell] or [NewSpellAbility]).
@@ -459,6 +454,7 @@ type Permanent struct {
 	BasePTOverride   *[2]int   // if set, overrides base P/T (for animate effects)
 	ColorOverride    *[]Color  // if set, replaces card's colors (from lace effects)
 	FaceDown         bool      // true when face-down (e.g. Illusionary Mask)
+	IsToken          bool      // true for token permanents (cease to exist outside battlefield)
 
 	// Attr system: additive/subtractive attribute counts.
 	// baseAttrs holds intrinsic attrs (set at creation/ETB; persists until explicitly revoked).
