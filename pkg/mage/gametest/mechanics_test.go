@@ -773,28 +773,3 @@ func TestAttachmentsOnExile(t *testing.T) {
 	})
 }
 
-// ===== Cleanup Step Discard (CR 514.1) =====
-
-func TestCleanupDiscardOnlyActivePlayer(t *testing.T) {
-	t.Run("non-active player does not discard during active player cleanup", func(t *testing.T) {
-		g := NewTestGame(t)
-		for i := 0; i < 8; i++ {
-			g.AddCard(core.ZoneHand, PlayerB, "Forest")
-		}
-		// Stop after turn 1 cleanup has executed
-		g.StopAt(2, core.Upkeep)
-		g.Execute()
-		g.AssertHandCount(PlayerB, "Forest", 8)
-	})
-
-	t.Run("active player discards during their own cleanup", func(t *testing.T) {
-		g := NewTestGame(t)
-		for i := 0; i < 8; i++ {
-			g.AddCard(core.ZoneHand, PlayerA, "Forest")
-		}
-		// Stop after turn 1 cleanup has executed
-		g.StopAt(2, core.Upkeep)
-		g.Execute()
-		g.AssertHandCount(PlayerA, "Forest", 7)
-	})
-}

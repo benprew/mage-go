@@ -225,8 +225,8 @@ func TestPriestOfYawgmoth(t *testing.T) {
 		g.AssertPermanentCount(gametest.PlayerA, "Su-Chi", 0) // sacrificed
 		g.AssertTapped(gametest.PlayerA, "Priest of Yawgmoth", true)
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.Black) < 4 {
-			t.Errorf("expected at least 4 black mana (from CMC 4), got %d", pool.Count(core.Black))
+		if pool.CountProducedThisTurn(core.Black) < 4 {
+			t.Errorf("expected at least 4 black mana (from CMC 4), got %d", pool.CountProducedThisTurn(core.Black))
 		}
 	})
 }
@@ -933,14 +933,14 @@ func TestSuChi(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Su-Chi") // 4/4
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Fireball")
-		g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerB, "Fireball", 4, "Su-Chi")
-		g.StopAt(1, core.BeginCombat)
+		g.CastSpellWithX(2, core.PrecombatMain, gametest.PlayerB, "Fireball", 4, "Su-Chi")
+		g.StopAt(2, core.BeginCombat)
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerA, "Su-Chi", 0)
 		pool := g.AllPlayers()[0].ManaPool()
 		// Su-Chi death adds 4C to controller's pool
-		if pool.Count(core.Colorless) < 4 {
-			t.Errorf("Su-Chi should add 4 colorless on death; expected >=4 colorless, got %d", pool.Count(core.Colorless))
+		if pool.CountProducedThisTurn(core.Colorless) < 4 {
+			t.Errorf("Su-Chi should add 4 colorless on death; expected >=4 colorless, got %d", pool.CountProducedThisTurn(core.Colorless))
 		}
 	})
 

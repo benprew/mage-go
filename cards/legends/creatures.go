@@ -1546,7 +1546,7 @@ func registerCreatures() {
 			WithSubTypes("Wall"),
 			WithKeyword(Defender),
 			WithAbility(
-				BlocksTrigger(
+				NewTriggered(EvtDeclaredBlocker, false,
 					FuncEffect("blocked creature can't attack next turn",
 						EffectProperties{Outcome: OutcomeDetriment},
 						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -1568,8 +1568,10 @@ func registerCreatures() {
 							ce.SetSourceID(sourceID)
 							g.AddContinuousEffect(ce)
 							return nil
-						}), false,
-				),
+						})).
+					SetCondition(func(evt *GameEvent, _ GameReader, sourceID, _ uuid.UUID) bool {
+						return evt.SourceID == sourceID
+					}),
 			),
 		)
 	})

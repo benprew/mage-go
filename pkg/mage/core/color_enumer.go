@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _ColorName = "ColorlessWhiteBlueBlackRedGreen"
+const _ColorName = "ColorlessWhiteBlueBlackRedGreenAnyColor"
 
-var _ColorIndex = [...]uint8{0, 9, 14, 18, 23, 26, 31}
+var _ColorIndex = [...]uint8{0, 9, 14, 18, 23, 26, 31, 39}
 
-const _ColorLowerName = "colorlesswhiteblueblackredgreen"
+const _ColorLowerName = "colorlesswhiteblueblackredgreenanycolor"
 
 func (i Color) String() string {
 	if i < 0 || i >= Color(len(_ColorIndex)-1) {
@@ -30,9 +30,10 @@ func _ColorNoOp() {
 	_ = x[Black-(3)]
 	_ = x[Red-(4)]
 	_ = x[Green-(5)]
+	_ = x[AnyColor-(6)]
 }
 
-var _ColorValues = []Color{Colorless, White, Blue, Black, Red, Green}
+var _ColorValues = []Color{Colorless, White, Blue, Black, Red, Green, AnyColor}
 
 var _ColorNameToValueMap = map[string]Color{
 	_ColorName[0:9]:        Colorless,
@@ -47,6 +48,8 @@ var _ColorNameToValueMap = map[string]Color{
 	_ColorLowerName[23:26]: Red,
 	_ColorName[26:31]:      Green,
 	_ColorLowerName[26:31]: Green,
+	_ColorName[31:39]:      AnyColor,
+	_ColorLowerName[31:39]: AnyColor,
 }
 
 var _ColorNames = []string{
@@ -56,6 +59,7 @@ var _ColorNames = []string{
 	_ColorName[18:23],
 	_ColorName[23:26],
 	_ColorName[26:31],
+	_ColorName[31:39],
 }
 
 // ColorString retrieves an enum value from the enum constants string name.

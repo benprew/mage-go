@@ -294,7 +294,7 @@ func (g *Game) PreventAllDamageFrom(sourceID uuid.UUID) {
 // SetArtifactDamageRedirect sets a creature that absorbs artifact damage dealt to a player.
 func (g *Game) SetArtifactDamageRedirect(controllerID, permID uuid.UUID) {
 	g.effects.AddCycleReplacement(&artifactDamageRedirectReplacement{
-		controllerID:  controllerID,
+		controllerID:   controllerID,
 		redirectPermID: permID,
 	})
 }
@@ -460,6 +460,9 @@ func (g *Game) HasExtraTurns() bool { return len(g.extraTurns) > 0 }
 // GetLandsPlayedThisTurn returns the number of lands played this turn.
 func (g *Game) GetLandsPlayedThisTurn() int { return g.landsPlayedThisTurn }
 
+// GetCleanupPriorityRounds returns the total cleanup priority rounds granted.
+func (g *Game) GetCleanupPriorityRounds() int { return g.cleanupPriorityRounds }
+
 // ApplyEffects applies all continuous effects to current permanents.
 func (g *Game) ApplyEffects() { g.effects.Apply(g) }
 
@@ -497,6 +500,14 @@ func (g *Game) GetEffects() *EffectManager { return g.effects }
 
 // GetStack returns the stack.
 func (g *Game) GetStack() *Stack { return g.stack }
+
+// GetSchedule returns the current turn schedule, initializing it if needed.
+func (g *Game) GetSchedule() *TurnSchedule {
+	if g.schedule == nil {
+		g.schedule = newTurnSchedule()
+	}
+	return g.schedule
+}
 
 // AddToBattlefield appends permanents directly to the battlefield without ETB processing.
 // Used by tests that construct permanents manually.
@@ -543,6 +554,7 @@ func (g *Game) ExecuteAttackers(playerID uuid.UUID, attackerIDs []uuid.UUID) {
 			PlayerID: playerID,
 		})
 	}
+	g.combat.SnapshotAttackedAlone()
 }
 
 // ExecuteBlockers declares blockers from explicit assignments for AI search clones.
@@ -552,6 +564,7 @@ func (g *Game) ExecuteBlockers(assignments []BlockAssignment) {
 		return
 	}
 	blockerCount := make(map[uuid.UUID]int)
+	var blockerOrder []uuid.UUID
 	for _, ba := range assignments {
 		blocker := g.FindPermanent(ba.BlockerID)
 		attacker := g.FindPermanent(ba.AttackerID)
@@ -570,6 +583,9 @@ func (g *Game) ExecuteBlockers(assignments []BlockAssignment) {
 		if blockerCount[ba.BlockerID] >= maxBlocks {
 			continue
 		}
+		if blockerCount[ba.BlockerID] == 0 {
+			blockerOrder = append(blockerOrder, ba.BlockerID)
+		}
 		blockerCount[ba.BlockerID]++
 		g.combat.AddBlocker(ba.BlockerID, ba.AttackerID)
 		g.blockedThisTurn[ba.BlockerID] = append(g.blockedThisTurn[ba.BlockerID], ba.AttackerID)
@@ -579,6 +595,13 @@ func (g *Game) ExecuteBlockers(assignments []BlockAssignment) {
 			TargetID: ba.AttackerID,
 		})
 	}
+	for _, blockerID := range blockerOrder {
+		g.FireEvent(GameEvent{
+			Type:     EvtCreatureBlocks,
+			SourceID: blockerID,
+		})
+	}
+	g.combat.SnapshotBlockedAlone()
 }
 
 // ExecuteCombatDamage resolves first-strike and normal combat damage for AI search clones.

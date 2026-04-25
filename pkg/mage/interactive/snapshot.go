@@ -250,6 +250,10 @@ func GetAvailableActions(g *mage.Game, playerID uuid.UUID) []ActionOption {
 			needsTarget = true
 			targetType = ct[0]
 			validTargets = targetType.Possible(playerID, card, g)
+			if len(validTargets) == 0 {
+				// MTG 601.2c: can't begin to cast a spell with no legal targets.
+				continue
+			}
 			validLabels = buildTargetLabels(g, validTargets)
 		}
 		mc := card.ManaCost()
@@ -290,6 +294,10 @@ func GetAvailableActions(g *mage.Game, playerID uuid.UUID) []ActionOption {
 					opt.NeedsTarget = true
 					opt.TargetType = targets[0]
 					opt.ValidTargets = targets[0].Possible(perm.Controller, perm.Card, g)
+					if len(opt.ValidTargets) == 0 {
+						// MTG 602.5b: can't begin to activate an ability with no legal targets.
+						continue
+					}
 					opt.ValidTargetLabels = buildTargetLabels(g, opt.ValidTargets)
 				}
 			}

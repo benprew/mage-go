@@ -427,34 +427,42 @@ func (em *EffectManager) RemoveReplacements(sourceID uuid.UUID) {
 // Each replacement fires at most once per event to prevent infinite loops.
 func (em *EffectManager) ApplyReplacements(action Action, g *Game) Action {
 	applied := make(map[ReplacementEffect]bool)
-	for {
-		if action == nil {
-			return nil
-		}
-		found := false
-		// Check both lists: persistent first, then cycle
+	tryMatch := func(action Action, preventionOnly bool) (Action, ReplacementEffect, bool) {
 		for _, list := range [2][]ReplacementEffect{em.replacements, em.cycleReplacements} {
 			for _, r := range list {
 				if applied[r] {
+					continue
+				}
+				if isPreventionReplacement(r) != preventionOnly {
 					continue
 				}
 				if !r.IsActive(g) {
 					continue
 				}
 				if r.Matches(action, g) {
-					applied[r] = true
-					action = r.Replace(action, g)
-					found = true
-					break // restart inner loop with new action
+					return r.Replace(action, g), r, true
 				}
 			}
-			if found {
-				break
-			}
 		}
-		if !found {
-			break
+		return action, nil, false
+	}
+	for {
+		if action == nil {
+			return nil
 		}
+		newAction, r, ok := tryMatch(action, false)
+		if ok {
+			applied[r] = true
+			action = newAction
+			continue
+		}
+		newAction, r, ok = tryMatch(action, true)
+		if ok {
+			applied[r] = true
+			action = newAction
+			continue
+		}
+		break
 	}
 	return action
 }

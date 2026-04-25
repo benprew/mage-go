@@ -12,17 +12,18 @@ import (
 // Players are wrapped in SearchPlayer for non-interactive choice defaults.
 func (g *Game) Clone() *Game {
 	c := &Game{
-		turn:                  g.turn,
-		step:                  g.step,
-		activePlayer:          g.activePlayer,
-		currentX:              g.currentX,
-		currentMode:           g.currentMode,
-		currentEventAmount:    g.currentEventAmount,
-		resolvingCard:         g.resolvingCard, // Card ref shared
-		landsPlayedThisTurn:   g.landsPlayedThisTurn,
+		turn:                   g.turn,
+		step:                   g.step,
+		activePlayer:           g.activePlayer,
+		currentX:               g.currentX,
+		currentMode:            g.currentMode,
+		currentEventAmount:     g.currentEventAmount,
+		resolvingCard:          g.resolvingCard, // Card ref shared
+		landsPlayedThisTurn:    g.landsPlayedThisTurn,
 		creatureDeathsThisTurn: g.creatureDeathsThisTurn,
-		stopped:               g.stopped,
-		resolvingCombatDamage: g.resolvingCombatDamage,
+		cleanupPriorityRounds:  g.cleanupPriorityRounds,
+		stopped:                g.stopped,
+		resolvingCombatDamage:  g.resolvingCombatDamage,
 	}
 
 	// Deep copy players, wrapping in SearchPlayer for non-interactive choices.
@@ -67,6 +68,22 @@ func (g *Game) Clone() *Game {
 	if len(g.extraTurns) > 0 {
 		c.extraTurns = make([]uuid.UUID, len(g.extraTurns))
 		copy(c.extraTurns, g.extraTurns)
+	}
+
+	// Deep copy turn schedule.
+	if g.schedule != nil {
+		cs := newTurnSchedule()
+		if len(g.schedule.Remaining) > 0 {
+			cs.Remaining = make([]PhaseStep, len(g.schedule.Remaining))
+			copy(cs.Remaining, g.schedule.Remaining)
+		}
+		for k, v := range g.schedule.SkipNextStep {
+			cs.SkipNextStep[k] = v
+		}
+		for k, v := range g.schedule.SkipNextTurnFor {
+			cs.SkipNextTurnFor[k] = v
+		}
+		c.schedule = cs
 	}
 
 	// Deep copy resolving targets.
@@ -137,12 +154,12 @@ func clonePlayer(p Player) *SearchPlayer {
 // extractBasePlayer creates a BasePlayer from any Player interface.
 func extractBasePlayer(p Player) *BasePlayer {
 	bp := &BasePlayer{
-		id:             p.PlayerID(),
-		name:           p.Name(),
-		life:           p.Life(),
-		drewFromEmpty:  p.DrewFromEmpty(),
-		manaPool:       NewManaPool(),
-		poisonCounters: p.PoisonCounters(),
+		id:              p.PlayerID(),
+		name:            p.Name(),
+		life:            p.Life(),
+		drewFromEmpty:   p.DrewFromEmpty(),
+		manaPool:        NewManaPool(),
+		poisonCounters:  p.PoisonCounters(),
 		lastDrawnCardID: p.LastDrawnCardID(),
 	}
 	if !p.IsAlive() && p.Life() > 0 {

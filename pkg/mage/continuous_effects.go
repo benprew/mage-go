@@ -85,9 +85,16 @@ func ColorToBasicLandType(c Color) string {
 }
 
 // GrantActivatedAbilityToAttached grants an activated ability to the attached creature.
+// The ability instance is persisted across continuous-effect reapplications so that
+// per-turn activation tracking (OncePerTurn, MaxActivationsPerTurn) survives.
 func GrantActivatedAbilityToAttached(effect Effect, cost Cost, at AttachType, opts ...AbilityOption) ContinuousEffect {
+	abByTarget := map[uuid.UUID]*SimpleActivatedAbility{}
 	return AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
-		ab := NewActivatedAbility(effect, cost, opts...)
+		ab, ok := abByTarget[target.ID()]
+		if !ok {
+			ab = NewActivatedAbility(effect, cost, opts...)
+			abByTarget[target.ID()] = ab
+		}
 		ab.source = target.ID()
 		ab.controller = target.Controller
 		target.RuntimeAbilities = append(target.RuntimeAbilities, &grantedByEffect{ab})
@@ -219,6 +226,21 @@ func TemporaryAnimateUntilEndOfCombat(targetID uuid.UUID, power, toughness int) 
 // controller's next upkeep (UntilYourNextTurn duration).
 func TemporaryAnimateUntilNextUpkeep(targetID uuid.UUID, power, toughness int) ContinuousEffect {
 	return temporaryAnimate(targetID, power, toughness, UntilYourNextTurn)
+}
+
+// PreventAttackingUntilEndOfTurn creates an EndOfTurn-scoped continuous effect
+// that revokes AttrCanAttack from a specific creature. Used for instant-speed
+// "target creature can't attack this turn" effects (CR 506.4a). Per CR 506.4a,
+// applying this effect to a creature that has already been declared as an
+// attacker does not remove it from combat — the engine layer handles that
+// because the AttrCanAttack check only runs at declaration time. The effect
+// keeps the attribute revoked for the rest of the turn, so the creature can't
+// be re-declared in any later combat phase this turn.
+func PreventAttackingUntilEndOfTurn(permID uuid.UUID) ContinuousEffect {
+	return TargetEffect(LayerAbility, EndOfTurn, permID, func(g *Game, target *Permanent) error {
+		g.effects.RevokeAttr(target.ID(), AttrCanAttack)
+		return nil
+	})
 }
 
 // PreventBlockingUntilEndOfCombat creates an EndOfCombat-scoped continuous effect

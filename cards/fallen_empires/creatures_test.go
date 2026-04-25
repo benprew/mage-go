@@ -501,15 +501,21 @@ func TestIcatianMoneychanger_UpkeepCounter(t *testing.T) {
 func TestIcatianMoneychanger_SacrificeGainsLife(t *testing.T) {
 	// Sacrifice: gain 1 life per credit counter, only during upkeep.
 	// AddCard triggers ETB: 3 counters, 3 damage (life → 17).
-	// Turn 1 upkeep: +1 counter (4). Ability activated at turn 3 upkeep before trigger: 4 counters.
-	// Gain 4 life: 17 + 4 = 21.
+	// Turn 1 (PlayerA) upkeep: +1 counter (4).
+	// Turn 2 (PlayerB) upkeep: trigger reads "at beginning of your upkeep",
+	//   only fires on the controller's turn → no counter added.
+	// Turn 3 (PlayerA) upkeep: upkeep trigger goes on the stack and, per CR
+	//   117.1b / 603.6, active player gets priority only after TBAs and
+	//   triggers have been placed. The trigger resolves first (+1 → 5),
+	//   then PlayerA activates the sacrifice ability (sorcery speed, empty
+	//   stack). Gain 5 life: 17 + 5 = 22.
 	g := gametest.NewTestGame(t)
 	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Icatian Moneychanger")
 	g.ActivateAbility(3, Upkeep, gametest.PlayerA, "Icatian Moneychanger")
 	g.StopAt(3, PrecombatMain)
 	g.Execute()
 	g.AssertPermanentCount(gametest.PlayerA, "Icatian Moneychanger", 0)
-	g.AssertLife(gametest.PlayerA, 21)
+	g.AssertLife(gametest.PlayerA, 22)
 }
 
 // ===== SPORE CREATURE TESTS =====

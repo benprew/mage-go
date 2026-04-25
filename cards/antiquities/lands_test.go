@@ -16,8 +16,8 @@ func TestMishrasFactory(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.Colorless) < 6 { // 5 auto + 1
-			t.Errorf("expected at least 6 colorless, got %d", pool.Count(core.Colorless))
+		if pool.CountProducedThisTurn(core.Colorless) < 6 { // 5 auto + 1
+			t.Errorf("expected at least 6 colorless, got %d", pool.CountProducedThisTurn(core.Colorless))
 		}
 	})
 
@@ -88,8 +88,8 @@ func TestMishrasWorkshop(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.Colorless) < 8 { // 5 auto + 3
-			t.Errorf("expected at least 8 colorless, got %d", pool.Count(core.Colorless))
+		if pool.CountProducedThisTurn(core.Colorless) < 8 { // 5 auto + 3
+			t.Errorf("expected at least 8 colorless, got %d", pool.CountProducedThisTurn(core.Colorless))
 		}
 	})
 
@@ -116,8 +116,8 @@ func TestStripMine(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.Colorless) < 6 { // 5 auto + 1
-			t.Errorf("expected at least 6 colorless, got %d", pool.Count(core.Colorless))
+		if pool.CountProducedThisTurn(core.Colorless) < 6 { // 5 auto + 1
+			t.Errorf("expected at least 6 colorless, got %d", pool.CountProducedThisTurn(core.Colorless))
 		}
 	})
 
@@ -142,8 +142,8 @@ func TestUrzasMine(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.Colorless) < 6 { // 5 auto + 1
-			t.Errorf("expected at least 6 colorless, got %d", pool.Count(core.Colorless))
+		if pool.CountProducedThisTurn(core.Colorless) < 6 { // 5 auto + 1
+			t.Errorf("expected at least 6 colorless, got %d", pool.CountProducedThisTurn(core.Colorless))
 		}
 	})
 
@@ -156,8 +156,8 @@ func TestUrzasMine(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.Colorless) < 7 { // 5 auto + 2 (Tron bonus)
-			t.Errorf("Urza's Mine with Tron should produce 2 colorless; expected >=7, got %d", pool.Count(core.Colorless))
+		if pool.CountProducedThisTurn(core.Colorless) < 7 { // 5 auto + 2 (Tron bonus)
+			t.Errorf("Urza's Mine with Tron should produce 2 colorless; expected >=7, got %d", pool.CountProducedThisTurn(core.Colorless))
 		}
 	})
 }
@@ -170,8 +170,8 @@ func TestUrzasPowerPlant(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.Colorless) < 6 {
-			t.Errorf("expected at least 6 colorless, got %d", pool.Count(core.Colorless))
+		if pool.CountProducedThisTurn(core.Colorless) < 6 {
+			t.Errorf("expected at least 6 colorless, got %d", pool.CountProducedThisTurn(core.Colorless))
 		}
 	})
 
@@ -184,8 +184,8 @@ func TestUrzasPowerPlant(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.Colorless) < 7 { // 5 auto + 2
-			t.Errorf("Urza's Power Plant with Tron should produce 2 colorless; expected >=7, got %d", pool.Count(core.Colorless))
+		if pool.CountProducedThisTurn(core.Colorless) < 7 { // 5 auto + 2
+			t.Errorf("Urza's Power Plant with Tron should produce 2 colorless; expected >=7, got %d", pool.CountProducedThisTurn(core.Colorless))
 		}
 	})
 }
@@ -198,8 +198,8 @@ func TestUrzasTower(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.Colorless) < 6 {
-			t.Errorf("expected at least 6 colorless, got %d", pool.Count(core.Colorless))
+		if pool.CountProducedThisTurn(core.Colorless) < 6 {
+			t.Errorf("expected at least 6 colorless, got %d", pool.CountProducedThisTurn(core.Colorless))
 		}
 	})
 
@@ -212,8 +212,8 @@ func TestUrzasTower(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.Count(core.Colorless) < 8 { // 5 auto + 3 (Tron Tower)
-			t.Errorf("Urza's Tower with Tron should produce 3 colorless; expected >=8, got %d", pool.Count(core.Colorless))
+		if pool.CountProducedThisTurn(core.Colorless) < 8 { // 5 auto + 3 (Tron Tower)
+			t.Errorf("Urza's Tower with Tron should produce 3 colorless; expected >=8, got %d", pool.CountProducedThisTurn(core.Colorless))
 		}
 	})
 }

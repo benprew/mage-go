@@ -104,9 +104,9 @@ func TestBirdsOfParadise(t *testing.T) {
 				// For non-green colors, count should be 6 if Birds works correctly.
 				pool := g.AllPlayers()[0].ManaPool()
 				if tc.color != core.Green {
-					if pool.Count(tc.color) < 6 {
+					if pool.CountProducedThisTurn(tc.color) < 6 {
 						t.Errorf("Birds of Paradise should produce %s mana; pool has %d, want >= 6",
-							tc.name, pool.Count(tc.color))
+							tc.name, pool.CountProducedThisTurn(tc.color))
 					}
 				}
 			})

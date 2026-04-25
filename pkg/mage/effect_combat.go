@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"github.com/google/uuid"
 )
 
 // tapTargetEffect taps a target permanent.
@@ -46,7 +47,7 @@ func UntapSource() Effect {
 	return DataEffect(&untapSourceEffect{})
 }
 
-func (e *untapSourceEffect) EffectText() string          { return "Untap this permanent" }
+func (e *untapSourceEffect) EffectText() string            { return "Untap this permanent" }
 func (e *untapSourceEffect) EffectProps() EffectProperties { return EffectProperties{} }
 
 // tapAttachedCreatureEffect taps the creature attached to the source aura.
@@ -92,7 +93,7 @@ type removeFromCombatEffect struct{}
 // RemoveFromCombat creates an effect that removes a target creature from combat.
 func RemoveFromCombat() Effect { return DataEffect(&removeFromCombatEffect{}) }
 
-func (e *removeFromCombatEffect) EffectText() string { return "Remove target creature from combat" }
+func (e *removeFromCombatEffect) EffectText() string            { return "Remove target creature from combat" }
 func (e *removeFromCombatEffect) EffectProps() EffectProperties { return EffectProperties{} }
 
 // makeUnblockableUntilEndOfTurnEffect makes a target creature unblockable until end of turn.
@@ -110,6 +111,41 @@ func (e *makeUnblockableUntilEndOfTurnEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
+// preventAttackingUntilEndOfTurnEffect makes a target creature unable to attack
+// for the rest of this turn. Used for instant-speed "target creature can't
+// attack this turn" cards. Per CR 506.4a, if applied after the target has
+// already been declared as an attacker, the creature stays in combat — the
+// effect only prevents future declarations this turn.
+type preventAttackingUntilEndOfTurnEffect struct{}
+
+// PreventAttackingTargetUntilEndOfTurn creates an effect that prevents a target
+// creature from attacking this turn (CR 506.4a).
+func PreventAttackingTargetUntilEndOfTurn() Effect {
+	return &preventAttackingUntilEndOfTurnEffect{}
+}
+
+func (e *preventAttackingUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	if len(targets) == 0 {
+		return nil
+	}
+	perm := g.FindPermanent(targets[0])
+	if perm == nil {
+		return nil
+	}
+	eff := PreventAttackingUntilEndOfTurn(perm.ID())
+	eff.SetSourceID(sourceID)
+	g.AddContinuousEffect(eff)
+	g.ApplyContinuousEffects()
+	return nil
+}
+
+func (e *preventAttackingUntilEndOfTurnEffect) Text() string {
+	return "Target creature can't attack this turn"
+}
+func (e *preventAttackingUntilEndOfTurnEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
+
 // doubleSourcePowerEffect doubles the source creature's power until end of turn.
 type doubleSourcePowerEffect struct{}
 
@@ -124,7 +160,6 @@ func (e *doubleSourcePowerEffect) EffectText() string {
 func (e *doubleSourcePowerEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
-
 
 // replaceKeywordEffect replaces one keyword with another on a target permanent.
 type replaceKeywordEffect struct {

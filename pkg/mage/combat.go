@@ -11,6 +11,14 @@ type Combat struct {
 	Attackers   map[uuid.UUID]bool
 	FirstStruck map[uuid.UUID]bool
 	Bands       map[uuid.UUID][]uuid.UUID // band leader -> members (all creatures in the band)
+
+	// AttackedAlone records the single creature declared as an attacker during
+	// the most recent declare-attackers step, if exactly one was declared. Used
+	// by the CR 506.5 "attacks alone" selector (e.g. Exalted, CR 702.83). Set
+	// by SnapshotAttackedAlone, cleared by Reset.
+	AttackedAlone uuid.UUID
+	// BlockedAlone is the symmetric snapshot for CR 506.5 "blocks alone".
+	BlockedAlone uuid.UUID
 }
 
 // CombatGroup represents an attacker and its blockers.
@@ -33,6 +41,8 @@ func (c *Combat) Reset() {
 	c.Attackers = make(map[uuid.UUID]bool)
 	c.FirstStruck = make(map[uuid.UUID]bool)
 	c.Bands = make(map[uuid.UUID][]uuid.UUID)
+	c.AttackedAlone = uuid.Nil
+	c.BlockedAlone = uuid.Nil
 }
 
 func (c *Combat) AddAttacker(attackerID, defenderID uuid.UUID) {
@@ -66,6 +76,83 @@ func (c *Combat) IsBlocking(id uuid.UUID) bool {
 		}
 	}
 	return false
+}
+
+// SnapshotAttackedAlone records, at the end of the declare-attackers step,
+// whether exactly one creature was declared as an attacker. CR 506.5: "A
+// creature attacks alone if it's the only creature declared as an attacker
+// during the declare attackers step."
+func (c *Combat) SnapshotAttackedAlone() {
+	if len(c.Attackers) == 1 {
+		for id := range c.Attackers {
+			c.AttackedAlone = id
+		}
+	} else {
+		c.AttackedAlone = uuid.Nil
+	}
+}
+
+// SnapshotBlockedAlone records, at the end of the declare-blockers step,
+// whether exactly one creature was declared as a blocker. CR 506.5: "A
+// creature blocks alone if it's the only creature declared as a blocker
+// during the declare blockers step."
+func (c *Combat) SnapshotBlockedAlone() {
+	var only uuid.UUID
+	count := 0
+	for _, g := range c.Groups {
+		for _, bid := range g.BlockerIDs {
+			only = bid
+			count++
+			if count > 1 {
+				c.BlockedAlone = uuid.Nil
+				return
+			}
+		}
+	}
+	if count == 1 {
+		c.BlockedAlone = only
+	} else {
+		c.BlockedAlone = uuid.Nil
+	}
+}
+
+// AttacksAlone returns true if id was the sole creature declared as an
+// attacker during the most recent declare-attackers step (CR 506.5,
+// snapshot semantics — used by Exalted, etc.).
+func (c *Combat) AttacksAlone(id uuid.UUID) bool {
+	return id != uuid.Nil && c.AttackedAlone == id
+}
+
+// IsAttackingAlone returns true if id is currently the only attacker
+// (CR 506.5, live semantics — re-evaluated whenever queried).
+func (c *Combat) IsAttackingAlone(id uuid.UUID) bool {
+	return c.Attackers[id] && len(c.Attackers) == 1
+}
+
+// BlocksAlone returns true if id was the sole creature declared as a
+// blocker during the most recent declare-blockers step (CR 506.5,
+// snapshot semantics).
+func (c *Combat) BlocksAlone(id uuid.UUID) bool {
+	return id != uuid.Nil && c.BlockedAlone == id
+}
+
+// IsBlockingAlone returns true if id is currently the only blocker
+// across all combat groups (CR 506.5, live semantics).
+func (c *Combat) IsBlockingAlone(id uuid.UUID) bool {
+	found := false
+	count := 0
+	for _, g := range c.Groups {
+		for _, bid := range g.BlockerIDs {
+			count++
+			if bid == id {
+				found = true
+			}
+			if count > 1 {
+				return false
+			}
+		}
+	}
+	return found && count == 1
 }
 
 // AddBand records a group of creatures attacking as a band.
@@ -295,21 +382,73 @@ func (c *Combat) isBlockingBand(g *Game, blockerIDs []uuid.UUID) bool {
 // doNormalBlockedDamage handles blocked combat for a single non-banded attacker.
 func (c *Combat) doNormalBlockedDamage(g *Game, atk *Permanent, group *CombatGroup, isFirstStrikeStep bool) {
 	if c.DealsDamageInStep(atk, isFirstStrikeStep) {
-		remainingDmg := atk.CurrentPower(g)
+		atkPower := atk.CurrentPower(g)
+		// Order: ask attacker controller (CR 510.1c) for the damage-assignment
+		// order. Default is the BlockerIDs order recorded at block declaration.
+		orderedIDs := group.BlockerIDs
+		attackingPlayer := g.GetPlayer(atk.Controller)
+		blockerPerms := make([]*Permanent, 0, len(group.BlockerIDs))
 		for _, bid := range group.BlockerIDs {
-			blk := g.FindPermanent(bid)
-			if blk == nil {
-				continue
+			if blk := g.FindPermanent(bid); blk != nil {
+				blockerPerms = append(blockerPerms, blk)
 			}
-			needed := blk.CurrentToughness(g) - blk.Damage
-			if needed <= 0 {
-				continue
+		}
+		if assigner, ok := attackingPlayer.(CombatDamageAssigner); ok && len(blockerPerms) > 0 {
+			if reordered := assigner.GetBlockerOrder(atk, blockerPerms); reordered != nil {
+				orderedIDs = mergeBlockerOrder(reordered, group.BlockerIDs)
 			}
-			dealt := min(remainingDmg, needed)
-			g.DealDamageToPermanent(blk, dealt, atk.ID())
-			remainingDmg -= dealt
-			if remainingDmg <= 0 {
-				break
+		}
+
+		// Try a controller-supplied damage assignment first; fall back to the
+		// engine's lethal-first greedy split if none is provided or it is
+		// invalid per CR 510.1c (each blocker before the next must be assigned
+		// at least lethal damage; with trample, all blockers must be at lethal
+		// before any goes to the defender).
+		var assignment map[uuid.UUID]int
+		if assigner, ok := attackingPlayer.(CombatDamageAssigner); ok && len(orderedIDs) > 1 {
+			orderedPerms := make([]*Permanent, 0, len(orderedIDs))
+			for _, bid := range orderedIDs {
+				if blk := g.FindPermanent(bid); blk != nil {
+					orderedPerms = append(orderedPerms, blk)
+				}
+			}
+			assignment = assigner.GetCombatDamageAssignment(atk, orderedPerms, atkPower)
+			if assignment != nil && !validateBlockerAssignment(g, atk, orderedIDs, assignment, atkPower) {
+				assignment = nil
+			}
+		}
+
+		remainingDmg := atkPower
+		if assignment != nil {
+			usedDmg := 0
+			for _, bid := range orderedIDs {
+				blk := g.FindPermanent(bid)
+				if blk == nil {
+					continue
+				}
+				dmg := assignment[bid]
+				if dmg > 0 {
+					g.DealDamageToPermanent(blk, dmg, atk.ID())
+					usedDmg += dmg
+				}
+			}
+			remainingDmg = atkPower - usedDmg
+		} else {
+			for _, bid := range orderedIDs {
+				blk := g.FindPermanent(bid)
+				if blk == nil {
+					continue
+				}
+				needed := blk.CurrentToughness(g) - blk.Damage
+				if needed <= 0 {
+					continue
+				}
+				dealt := min(remainingDmg, needed)
+				g.DealDamageToPermanent(blk, dealt, atk.ID())
+				remainingDmg -= dealt
+				if remainingDmg <= 0 {
+					break
+				}
 			}
 		}
 		if remainingDmg > 0 && atk.HasKeyword(Trample) {
@@ -328,6 +467,74 @@ func (c *Combat) doNormalBlockedDamage(g *Game, atk *Permanent, group *CombatGro
 			g.DealDamageToPermanent(atk, blk.CurrentPower(g), blk.ID())
 		}
 	}
+}
+
+// mergeBlockerOrder returns a permutation of original such that IDs in
+// preferred come first (in their preferred order), then any IDs from original
+// not present in preferred (in their original order).
+func mergeBlockerOrder(preferred, original []uuid.UUID) []uuid.UUID {
+	origSet := make(map[uuid.UUID]bool, len(original))
+	for _, id := range original {
+		origSet[id] = true
+	}
+	seen := make(map[uuid.UUID]bool, len(original))
+	out := make([]uuid.UUID, 0, len(original))
+	for _, id := range preferred {
+		if origSet[id] && !seen[id] {
+			out = append(out, id)
+			seen[id] = true
+		}
+	}
+	for _, id := range original {
+		if !seen[id] {
+			out = append(out, id)
+			seen[id] = true
+		}
+	}
+	return out
+}
+
+// validateBlockerAssignment checks the CR 510.1c constraint: damage is
+// assigned to blockers in order, and a blocker can only be assigned non-lethal
+// damage if every blocker before it in the order has been assigned at least
+// lethal damage. With trample (CR 702.19b) all blockers must be at lethal
+// before any goes to the defender. The total assigned must not exceed
+// atkPower.
+func validateBlockerAssignment(g *Game, atk *Permanent, orderedIDs []uuid.UUID, assignment map[uuid.UUID]int, atkPower int) bool {
+	total := 0
+	prevLethal := true
+	allLethal := true
+	for _, bid := range orderedIDs {
+		blk := g.FindPermanent(bid)
+		if blk == nil {
+			continue
+		}
+		needed := blk.CurrentToughness(g) - blk.Damage
+		if needed < 0 {
+			needed = 0
+		}
+		dmg := assignment[bid]
+		if dmg < 0 {
+			return false
+		}
+		total += dmg
+		if !prevLethal && dmg > 0 {
+			return false
+		}
+		if dmg < needed {
+			prevLethal = false
+			allLethal = false
+		}
+	}
+	if total > atkPower {
+		return false
+	}
+	if total < atkPower {
+		if !atk.HasKeyword(Trample) || !allLethal {
+			return false
+		}
+	}
+	return true
 }
 
 // doBlockingBandDamage handles combat where multiple blockers with banding block
