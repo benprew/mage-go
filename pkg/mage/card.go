@@ -740,11 +740,13 @@ func (p *Permanent) IsAttached() bool {
 // must not be summoning sick (unless it has Haste), must not have Defender.
 // Attack prevention by effects writes a negative attrDelta for AttrCanAttack, so
 // HasAttr(AttrCanAttack) returning false captures both "not a creature" and "prevented".
+// A granted AttrCanAttack (e.g. Animate Wall) overrides Defender, matching
+// "can attack as though it didn't have defender."
 func (p *Permanent) CanDeclareAsAttacker(g *Game) bool {
 	return p.HasAttr(AttrCanAttack) &&
 		!p.Tapped &&
 		(!p.HasAttr(AttrSummonSick) || p.HasAttr(Haste)) &&
-		!p.HasAttr(Defender)
+		(!p.HasAttr(Defender) || p.grantedAttrs[AttrCanAttack] > 0)
 }
 
 // CanDeclareAsBlocker returns true if this permanent may be declared as a blocker.

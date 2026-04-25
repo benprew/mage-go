@@ -1,8 +1,9 @@
 package mage
 
 import (
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"fmt"
+
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 // ManaPool tracks available mana for a player.
@@ -33,9 +34,17 @@ func (mp *ManaPool) RestorePool(snap []Mana) {
 }
 
 func (mp *ManaPool) Add(c Color, amount int) {
-	for i := 0; i < amount; i++ {
+	for range amount {
 		mp.pool = append(mp.pool, Mana{Color: c})
 		mp.ProducedThisTurn = append(mp.ProducedThisTurn, Mana{Color: c})
+	}
+}
+
+// Empties every player's mana pool. Called at the end of every step and phase per
+// CR 500.5.
+func (g *Game) emptyManaPools() {
+	for _, p := range g.players {
+		p.ManaPool().Clear()
 	}
 }
 
@@ -84,7 +93,6 @@ func (mp *ManaPool) DrainGeneric(n int) {
 		mp.pool = mp.pool[:len(mp.pool)-1]
 	}
 }
-
 
 // CanPay returns true if the pool can pay the given mana cost.
 func (mp *ManaPool) CanPay(mc ManaCost) bool {
@@ -188,7 +196,6 @@ func (mp *ManaPool) Pay(mc ManaCost) error {
 	}
 	return nil
 }
-
 
 func (mp *ManaPool) removeUpTo(c Color, n int) int {
 	for n > 0 {

@@ -581,17 +581,36 @@ receives (g *Game, source, target *Permanent). Active while source is attached.
 permanent by ID. applyFunc receives (g *Game, target *Permanent). Active while
 target exists. Used for temporary effects (Giant Growth, Sorceress Queen).
 
-# Layers
+# Layers (CR 613)
 
-The MTG layer system determines the order effects are applied. Applied in order
-by [EffectManager.Apply]:
+Continuous effects are applied in a fixed layer order (CR 613.1). The layer
+system ensures interactions resolve deterministically — e.g., a type change in
+layer 4 is visible to an ability-granting effect in layer 6, which in turn is
+visible to a P/T modification in layer 7.
+
+[EffectManager.Apply] resets all computed state (grantedAttrs, P/T bonuses,
+SubTypeOverride, ColorOverride, RuntimeAbilities) then reapplies every active
+effect in layer order:
 
 	[LayerCopy]    (1) — copy effects (Doppelganger, Clone)
 	[LayerControl] (2) — control changes (Control Magic, Aladdin)
+	[LayerText]    (3) — text-changing effects (not currently used)
 	[LayerType]    (4) — type changes, subtype overrides, animate effects
 	[LayerColor]   (5) — color changes (lace effects)
 	[LayerAbility] (6) — add/remove abilities, keywords, attrs
 	[LayerPT]      (7) — power/toughness modifications
+
+Layer 7 has four sublayers per CR 613.4 (not yet split in the engine):
+
+	7a — Characteristic-defining abilities that set P/T (e.g. Tarmogoyf)
+	7b — Effects that set P/T to a specific value (e.g. "becomes a 0/1")
+	7c — Effects that modify P/T (e.g. +1/+1 counters, Giant Growth)
+	7d — P/T switching effects (e.g. "switch power and toughness")
+
+Within each layer/sublayer, effects are applied in timestamp order (CR 613.7).
+An effect with an earlier timestamp is applied first. Dependency (CR 613.8) can
+override timestamp order: if applying effect B would change what effect A does,
+A depends on B and waits for B to apply first.
 
 # Durations
 
@@ -721,18 +740,18 @@ The permanent's GrantBaseAttr/RevokeBaseAttr modify intrinsic attrs directly.
 [EffectManager] manages all continuous effects and per-cycle state. Its Apply(g)
 method is called frequently and:
 
-1. Resets all grantedAttrs, powerBonus, toughBonus, SubTypeOverride,
-   BasePTOverride, ColorOverride, and controller to owner on every permanent.
-2. Strips effect-granted runtime abilities.
-3. Removes effects whose source is gone (except EOT/EOC/Indefinite effects).
-4. Applies effects in layer order (1→2→4→5→6→7).
-5. Calls Rules.ResetPerCycle() and Damage.ResetPerCycle() before each cycle.
-6. Syncs mana conversions and writes attrDeltas to permanents.
+ 1. Resets all grantedAttrs, powerBonus, toughBonus, SubTypeOverride,
+    BasePTOverride, ColorOverride, and controller to owner on every permanent.
+ 2. Strips effect-granted runtime abilities.
+ 3. Removes effects whose source is gone (except EOT/EOC/Indefinite effects).
+ 4. Applies effects in layer order (1→2→4→5→6→7).
+ 5. Calls Rules.ResetPerCycle() and Damage.ResetPerCycle() before each cycle.
+ 6. Syncs mana conversions and writes attrDeltas to permanents.
 
 The EffectManager owns two subsystems accessed as public fields:
 
-  g.Effects.Damage  — [DamageSystem] (damage_system.go)
-  g.Effects.Rules   — [GameRules]    (game_rules.go)
+	g.Effects.Damage  — [DamageSystem] (damage_system.go)
+	g.Effects.Rules   — [GameRules]    (game_rules.go)
 
 Block pair restrictions (PreventBlockPair, IsBlockPrevented) and attr deltas
 (GrantAttr, RevokeAttr) remain directly on EffectManager.
@@ -743,10 +762,10 @@ Block pair restrictions (PreventBlockPair, IsBlockPrevented) and attr deltas
 [ReplacementEffect] implementations in the replacement pipeline (see
 "Replacement Effect System" above). What remains on DamageSystem:
 
-  Reflection:  SetDamageReflection, GetDamageReflection  — Eye for an Eye (post-damage, not a replacement)
-  Legacy API:  AddDamagePreventionRule (with [WithFrom], [WithTo], [WithOneShot]) — delegates to EffectManager.AddCycleReplacement
-               AddRegenerationShield — delegates to EffectManager.AddReplacement
-               SetArtifactDamageRedirect — delegates to EffectManager.AddCycleReplacement
+	Reflection:  SetDamageReflection, GetDamageReflection  — Eye for an Eye (post-damage, not a replacement)
+	Legacy API:  AddDamagePreventionRule (with [WithFrom], [WithTo], [WithOneShot]) — delegates to EffectManager.AddCycleReplacement
+	             AddRegenerationShield — delegates to EffectManager.AddReplacement
+	             SetArtifactDamageRedirect — delegates to EffectManager.AddCycleReplacement
 
 Lifecycle: ResetPerCycle() is now empty. ClearEndOfTurn() clears reflection only.
 
@@ -755,22 +774,22 @@ Lifecycle: ResetPerCycle() is now empty. ClearEndOfTurn() clears reflection only
 [GameRules] owns all game-rule modifier state. Public fields set directly by
 continuous effects:
 
-  LandUntapMax       int             // max lands to untap per step (-1 = unlimited)
-  ArtifactUntapMax   int             // max artifacts to untap per step (-1 = unlimited)
-  UnlimitedLandPlays bool            // bypass one-land-per-turn
-  SpellCostIncreases map[Color]int   // per-color cost increases (Gloom, etc.)
-  SpellCostReductions map[Color]int  // per-color cost reductions
-  ManaConversion     map[Color]Color // forced mana conversion (Celestial Dawn)
+	LandUntapMax       int             // max lands to untap per step (-1 = unlimited)
+	ArtifactUntapMax   int             // max artifacts to untap per step (-1 = unlimited)
+	UnlimitedLandPlays bool            // bypass one-land-per-turn
+	SpellCostIncreases map[Color]int   // per-color cost increases (Gloom, etc.)
+	SpellCostReductions map[Color]int  // per-color cost reductions
+	ManaConversion     map[Color]Color // forced mana conversion (Celestial Dawn)
 
 Methods for special rules:
 
-  Lich:      SetLichActive, IsLichActive, GetLichPermanent
-  Channel:   SetChannelActive, IsChannelActive
-  Sanctuary: SetSanctuaryActive, IsSanctuaryActive
-  Skip draw: SetSkipNextDraw, ShouldSkipDraw
-  Min life:  SetMinimumLife, HasMinimumLife
-  Max hand:  SetMaxHandSize, GetMaxHandSize
-  Cast block: AddExpansionCastBlock, IsCardExpansionBlocked
+	Lich:      SetLichActive, IsLichActive, GetLichPermanent
+	Channel:   SetChannelActive, IsChannelActive
+	Sanctuary: SetSanctuaryActive, IsSanctuaryActive
+	Skip draw: SetSkipNextDraw, ShouldSkipDraw
+	Min life:  SetMinimumLife, HasMinimumLife
+	Max hand:  SetMaxHandSize, GetMaxHandSize
+	Cast block: AddExpansionCastBlock, IsCardExpansionBlocked
 
 Lifecycle: ResetPerCycle() clears per-Apply state. ClearEndOfTurn() clears
 end-of-turn flags. SyncManaConversions(players) writes mana conversions to

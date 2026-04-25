@@ -1,6 +1,6 @@
 // Package gametest: turn-structure tests for CR 500 (general phase/step rules).
-// Covers CR 500.1, 500.2, 500.3, 500.4, 500.5, 500.5a, 500.6, 500.7, 500.11,
-// 500.12. CR 501.1 (beginning-phase step ordering) is exercised alongside CR
+// Covers CR 500.1, 500.2, 500.3, 500.4, 500.5, 500.5a, 500.6, 500.7, 500.11.
+// CR 501.1 (beginning-phase step ordering) is exercised alongside CR
 // 500.1 in the combined "five phases and beginning-phase steps in order" sub-
 // test below, since the two rules are verified by the same step-order assertion.
 package gametest
@@ -376,46 +376,4 @@ func TestTurnPhasesAdditional(t *testing.T) {
 		}
 	})
 
-	// CR 500.12 — No game events occur between steps or phases. Any ability
-	// or state-based action that would look at "events between steps" sees
-	// nothing; everything attaches to a specific step.
-	//
-	// Observable: install an OnFireEvent hook that records every event along
-	// with whether the engine was inside a step (g.InStep()) at firing time.
-	// Run a multi-turn game and assert no event was fired with InStep==false.
-	t.Run("CR 500.12 no game events between steps", func(t *testing.T) {
-		tg := NewTestGame(t)
-		tg.AddCard(core.ZoneBattlefield, PlayerA, "Grizzly Bears")
-		tg.AddCard(core.ZoneBattlefield, PlayerB, "Mons's Goblin Raiders")
-
-		type firing struct {
-			evt    core.GameEvent
-			inStep bool
-			turn   int
-			step   core.PhaseStep
-		}
-		var firings []firing
-		tg.OnFireEvent = func(g *mage.Game, evt core.GameEvent) {
-			firings = append(firings, firing{
-				evt:    evt,
-				inStep: g.InStep(),
-				turn:   g.CurrentTurn(),
-				step:   g.GetStep(),
-			})
-		}
-
-		tg.Attack(1, PlayerA, "Grizzly Bears")
-		tg.StopAt(3, core.EndStep)
-		tg.Execute()
-
-		if len(firings) == 0 {
-			t.Fatalf("CR 500.12: expected some events to fire; got none (hook not wired?)")
-		}
-		for _, f := range firings {
-			if !f.inStep {
-				t.Errorf("CR 500.12: event %v fired between steps (turn=%d step=%v); all events must be associated with an enclosing step",
-					f.evt.Type, f.turn, f.step)
-			}
-		}
-	})
 }

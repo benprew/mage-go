@@ -186,10 +186,10 @@ func (e *targetEffect) Apply(g *Game) error {
 // EffectManager manages and applies continuous effects.
 type EffectManager struct {
 	effects               []ContinuousEffect
-	attrDeltas            map[uuid.UUID]map[Attr]int        // deltas accumulated during Apply(); written to perm.grantedAttrs
-	blockPairRestrictions map[uuid.UUID]map[uuid.UUID]bool  // attacker -> set of blockers that can't block it; reset each Apply
-	replacements          []ReplacementEffect               // persistent: one-shot, turn-scoped, while-on-battlefield
-	cycleReplacements     []ReplacementEffect               // cleared each Apply() cycle, re-registered by continuous effects
+	attrDeltas            map[uuid.UUID]map[Attr]int       // deltas accumulated during Apply(); written to perm.grantedAttrs
+	blockPairRestrictions map[uuid.UUID]map[uuid.UUID]bool // attacker -> set of blockers that can't block it; reset each Apply
+	replacements          []ReplacementEffect              // persistent: one-shot, turn-scoped, while-on-battlefield
+	cycleReplacements     []ReplacementEffect              // cleared each Apply() cycle, re-registered by continuous effects
 	Damage                *DamageSystem
 	Rules                 *GameRules
 }
@@ -380,7 +380,6 @@ func (em *EffectManager) Apply(g *Game) {
 		}
 	}
 }
-
 
 // ---------------------------------------------------------------------------
 // Replacement effect management

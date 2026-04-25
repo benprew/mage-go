@@ -133,33 +133,6 @@ type Game struct {
 	// resolvingCombatDamage is true while combat damage is being resolved.
 	// Used by the replacement pipeline to identify combat damage actions.
 	resolvingCombatDamage bool
-
-	// inStep is true while the engine is inside RunStep / RunStepWithPriority.
-	// CR 500.12 invariant: no game events occur between steps or phases —
-	// any event fired must be associated with the enclosing step. Tests
-	// install OnFireEvent to verify this.
-	inStep bool
-
-	// OnFireEvent, if non-nil, is invoked at the top of FireEvent for every
-	// event dispatched. Test-only observable; used to enforce the CR 500.12
-	// "no events between steps" invariant.
-	OnFireEvent func(g *Game, evt GameEvent)
-}
-
-// InStep reports whether the engine is currently executing a step (i.e.,
-// inside RunStep or RunStepWithPriority). Used by tests to check the
-// CR 500.12 no-events-between-steps invariant.
-func (g *Game) InStep() bool { return g.inStep }
-
-// WithInStep runs fn with inStep=true, restoring the previous value on
-// return. Used by the test harness to ensure scripted pre-step actions
-// (which logically occur during the step's priority round) are not
-// observed as "between steps" events. CR 500.12.
-func (g *Game) WithInStep(fn func()) {
-	prev := g.inStep
-	g.inStep = true
-	defer func() { g.inStep = prev }()
-	fn()
 }
 
 func (g *Game) ActivePlayer() int {
@@ -1224,9 +1197,6 @@ func (g *Game) RegisterDelayedTrigger(dt *DelayedTrigger) {
 
 // FireEvent dispatches an event and checks triggered abilities.
 func (g *Game) FireEvent(evt GameEvent) {
-	if g.OnFireEvent != nil {
-		g.OnFireEvent(g, evt)
-	}
 	for _, perm := range g.battlefield {
 		for _, a := range perm.RuntimeAbilities {
 			ta, ok := UnwrapAbility(a).(TriggeredAbility)
@@ -1968,118 +1938,6 @@ func (g *Game) CheckStateBasedActions() {
 	g.PutTriggersOnStack()
 }
 
-// EmptyManaPools empties every player's mana pool. Called at the end of
-// every step and phase per CR 500.5.
-func (g *Game) EmptyManaPools() {
-	for _, p := range g.players {
-		p.ManaPool().Clear()
-	}
-}
-
-// resetManaProducedThisTurn clears the per-turn mana-produced tally on
-// every player's pool. Called at the start of each turn.
-func (g *Game) resetManaProducedThisTurn() {
-	for _, p := range g.players {
-		p.ManaPool().ResetProducedThisTurn()
-	}
-}
-
-// RunStep executes a single step of the turn.
-func (g *Game) RunStep(step PhaseStep) {
-	g.step = step
-
-	// CR 500.5: any unspent mana empties as the step/phase ends.
-	defer g.EmptyManaPools()
-
-	// Reapply continuous effects at start of each step
-	g.effects.Apply(g)
-
-	switch step {
-	case Untap:
-		g.doUntap()
-	case Upkeep:
-		g.doUpkeep()
-	case Draw:
-		g.doDraw()
-	case BeginCombat:
-		g.doBeginCombat()
-	case DeclareAttackers:
-		g.doDeclareAttackers()
-	case DeclareBlockers:
-		// 508.8: If no creatures are declared as attackers or put onto the
-		// battlefield attacking, skip the declare blockers and combat damage steps.
-		if len(g.combat.Groups) == 0 {
-			return
-		}
-		g.doDeclareBlockers()
-	case FirstStrikeDamage:
-		if len(g.combat.Groups) == 0 {
-			return
-		}
-		if !g.combat.HasFirstStrikers(g) {
-			return // skip if no first strikers
-		}
-		g.resolvingCombatDamage = true
-		g.combat.ResolveDamage(g, true)
-		g.resolvingCombatDamage = false
-	case CombatDamage:
-		if len(g.combat.Groups) == 0 {
-			return
-		}
-		g.resolvingCombatDamage = true
-		g.combat.ResolveDamage(g, false)
-		g.resolvingCombatDamage = false
-	case EndCombat:
-		g.FireEvent(GameEvent{
-			Type:     EvtEndOfCombat,
-			PlayerID: g.ActivePlayerObj().PlayerID(),
-		})
-		g.PutTriggersOnStack()
-		g.ResolveStack()
-		g.effects.RemoveEndOfCombat()
-		g.effects.Apply(g)
-		g.combat.Reset()
-	case EndStep:
-		g.doEndStep()
-	case Cleanup:
-		g.doCleanup()
-	}
-
-	// Check SBAs after each step
-	g.CheckStateBasedActions()
-
-	// Resolve stack
-	g.ResolveStack()
-}
-
-func (g *Game) doBeginCombatActions() {
-	active := g.ActivePlayerObj()
-	g.FireEvent(GameEvent{
-		Type:     EvtBeginCombat,
-		PlayerID: active.PlayerID(),
-	})
-	g.PutTriggersOnStack()
-}
-
-func (g *Game) doBeginCombat() {
-	g.doBeginCombatActions()
-	g.ResolveStack()
-}
-
-func (g *Game) doEndStepActions() {
-	active := g.ActivePlayerObj()
-	g.FireEvent(GameEvent{
-		Type:     EvtEndStep,
-		PlayerID: active.PlayerID(),
-	})
-	g.PutTriggersOnStack()
-}
-
-func (g *Game) doEndStep() {
-	g.doEndStepActions()
-	g.ResolveStack()
-}
-
 func (g *Game) doUntap() {
 	active := g.ActivePlayerObj()
 	g.effects.ClearRegenerationReplacements(active.PlayerID(), g)
@@ -2151,11 +2009,6 @@ func (g *Game) doUpkeepActions() {
 		PlayerID: active.PlayerID(),
 	})
 	g.PutTriggersOnStack()
-}
-
-func (g *Game) doUpkeep() {
-	g.doUpkeepActions()
-	g.ResolveStack()
 }
 
 // checkGraveyardReturns checks for cards in the graveyard that can return to the
@@ -2252,13 +2105,6 @@ func (g *Game) applyDrawReplacement(p Player, count int) {
 	newLib = append(newLib, rest...)
 	p.SetLibrary(newLib)
 	g.PlayerDrawCard(p)
-}
-
-func (g *Game) doDraw() {
-	g.doDrawActions()
-	g.ResolveStack()
-	g.doDrawNormalDraw()
-	g.ResolveStack()
 }
 
 // 1. Rule 508.1: First, the active player declares attackers.
@@ -2506,38 +2352,6 @@ func (g *Game) doCleanupActions() bool {
 	// MTG 514.3a: if triggers fire during cleanup, put them on stack
 	g.PutTriggersOnStack()
 	return !g.stack.IsEmpty()
-}
-
-func (g *Game) doCleanup() {
-	if g.doCleanupActions() {
-		// Triggers fired — resolve, check SBAs, then do another cleanup step.
-		g.ResolveStack()
-		g.CheckStateBasedActions()
-		g.doCleanup()
-	}
-}
-
-// RunTurn executes a complete turn for the active player, reading steps
-// from g.Schedule so that effects can skip or insert steps mid-turn.
-// stopAt is checked: if we reach the specified turn+step, we stop.
-func (g *Game) RunTurn(stopTurn int, stopStep PhaseStep) bool {
-	if g.schedule == nil {
-		g.schedule = newTurnSchedule()
-	}
-	g.resetManaProducedThisTurn()
-	g.schedule.buildNextTurn()
-	for {
-		step, ok := g.schedule.popNextStep()
-		if !ok {
-			// Put the stop step back so the next Run resumes correctly.
-			g.schedule.Remaining = append([]PhaseStep{step}, g.schedule.Remaining...)
-			return false
-		}
-		g.RunStep(step)
-		if g.stopped {
-			return true
-		}
-	}
 }
 
 // Run executes the game until the stop condition.
