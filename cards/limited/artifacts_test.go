@@ -658,19 +658,21 @@ func TestIslandSanctuary(t *testing.T) {
 		// Island Sanctuary: If you would draw a card during your draw step, you may
 		// skip that draw instead. If you do, until your next turn, you can't be
 		// attacked except by creatures with flying or islandwalk.
+		// Sanctuary on PlayerB so its draw-step trigger fires on turn 2; per CR
+		// 103.8a PlayerA's turn-1 draw step is skipped.
 		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island Sanctuary")
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // no flying
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island Sanctuary")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // no flying
 		for i := 0; i < 5; i++ {
 			g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Forest")
 			g.AddCard(core.ZoneLibrary, gametest.PlayerB, "Forest")
 		}
-		// PlayerA skips draw. On turn 2, PlayerB attacks with Bears.
-		g.Attack(2, gametest.PlayerB, "Grizzly Bears")
-		g.StopAt(2, core.EndCombat)
+		// Turn 2 PlayerB skips draw. Turn 3 PlayerA attacks.
+		g.Attack(3, gametest.PlayerA, "Grizzly Bears")
+		g.StopAt(3, core.EndCombat)
 		g.Execute()
-		// Grizzly Bears (no flying/islandwalk) can't attack PlayerA.
-		g.AssertLife(gametest.PlayerA, 20)
+		// Grizzly Bears (no flying/islandwalk) can't attack PlayerB.
+		g.AssertLife(gametest.PlayerB, 20)
 	})
 }
 
