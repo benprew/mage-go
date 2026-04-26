@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"github.com/google/uuid"
 )
 
 // ExecuteEffect dispatches an EffectData value to the appropriate execution
@@ -284,6 +285,24 @@ func ExecuteEffect(ctx *EffectContext, data EffectData) error {
 	case *AddContinuousEffectsData:
 		return execAddContinuousEffects(ctx, e)
 
+	// --- Holdouts: previously dispatched via Effect.Apply, now via executor case ---
+
+	case *funcEffect:
+		return e.fn(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	case *compositeEffect:
+		for _, sub := range e.effects {
+			if err := ExecuteEffect(ctx, sub); err != nil {
+				return err
+			}
+		}
+		return nil
+	case *preventAttackingUntilEndOfTurnEffect:
+		return execPreventAttackingTargetUntilEndOfTurn(ctx, e)
+	case *createTokenAttackingEffect:
+		return execCreateTokenAttacking(ctx, e)
+	case *createTokenBlockingEffect:
+		return execCreateTokenBlocking(ctx, e)
+
 	default:
 		_ = e
 		return fmt.Errorf("executor: unhandled EffectData type %T", data)
@@ -305,14 +324,21 @@ func execGainLife(ctx *EffectContext, e *gainLifeEffect) error {
 }
 
 func execPoisonTargetPlayer(ctx *EffectContext, e *poisonTargetPlayerEffect) error {
-	if len(ctx.Targets) == 0 {
-		return nil
+	var playerIDs []uuid.UUID
+	switch {
+	case e.sel != nil:
+		playerIDs = e.sel.Select(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	case len(ctx.Targets) > 0:
+		playerIDs = []uuid.UUID{ctx.Targets[0]}
 	}
-	p := ctx.Game.GetPlayer(ctx.Targets[0])
-	if p == nil {
-		return nil
+
+	for _, pid := range playerIDs {
+		p := ctx.Game.GetPlayer(pid)
+		if p == nil {
+			continue
+		}
+		p.AddPoisonCounters(e.amount)
 	}
-	p.AddPoisonCounters(e.amount)
 	return nil
 }
 

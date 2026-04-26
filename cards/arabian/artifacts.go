@@ -1,10 +1,10 @@
 package arabian
 
 import (
-	"github.com/google/uuid"
+	"git.sr.ht/~cdcarter/mage-go/pkg/catalog"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"git.sr.ht/~cdcarter/mage-go/pkg/catalog"
+	"github.com/google/uuid"
 )
 
 // discardLastDrawnCost is an additional cost: discard the last card drawn this turn.
@@ -50,7 +50,7 @@ type pyramidsDestructionReplacement struct {
 	consumed    bool
 }
 
-func (r *pyramidsDestructionReplacement) SourceID() uuid.UUID  { return r.sourceID }
+func (r *pyramidsDestructionReplacement) SourceID() uuid.UUID   { return r.sourceID }
 func (r *pyramidsDestructionReplacement) GetDuration() Duration { return EndOfTurn }
 
 func (r *pyramidsDestructionReplacement) Matches(a Action, g GameReader) bool {
@@ -126,11 +126,11 @@ func registerArtifacts() {
 	Register("Bottle of Suleiman", func() Card {
 		return NewArtifact("Bottle of Suleiman", "{4}",
 			WithActivatedAbility(
-				DataEffect(IfElse("flip coin: 5/5 Djinn or 5 damage",
+				IfElse("flip coin: 5/5 Djinn or 5 damage",
 					&FlipCoinCond{},
 					UnwrapEffect(CreateToken("Djinn", 5, 5, []CardType{TypeArtifact, TypeCreature}, []string{"Djinn"}, Flying)),
 					UnwrapEffect(DealDamageToPlayers(Fixed(5), SelectController())),
-				)),
+				),
 				ManaCostOf("{1}"),
 				WithCost(SacrificeSourceCost()),
 			),

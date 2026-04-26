@@ -249,7 +249,7 @@ func registerEnchantments() {
 		return NewAura("Phantasmal Terrain", "{U}{U}",
 			WithCastTarget(TargetLand()),
 			WithAbility(EntersBattlefieldTrigger(
-				DataEffect(ChooseColorStep("Choose basic land type for Phantasmal Terrain")),
+				ChooseColorStep("Choose basic land type for Phantasmal Terrain"),
 				false)),
 			WithStaticAbility(
 				ChangeAttachedSubTypesByChosenColor(),
@@ -285,7 +285,7 @@ func registerEnchantments() {
 			return NewEnchantment(name, "{1}{W}",
 				// {1}: Prevent all damage from one source of this color this turn.
 				WithActivatedAbility(
-					DataEffect(AddColorPreventionStep(color)),
+					AddColorPreventionStep(color),
 					GenericCost(1),
 				),
 			)
@@ -373,11 +373,11 @@ func registerEnchantments() {
 		return NewAura("Farmstead", "{W}{W}{W}",
 			WithCastTarget(TargetLand()),
 			WithAbility(BeginningOfUpkeepTrigger(
-				DataEffect(IfElse("you may pay {W}{W} to gain 1 life",
+				IfElse("you may pay {W}{W} to gain 1 life",
 					&TryPayManaCond{Cost: "{W}{W}"},
 					UnwrapEffect(GainLife(1)),
 					nil,
-				)), false)),
+				), false)),
 		)
 	})
 

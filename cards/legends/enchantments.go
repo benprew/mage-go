@@ -90,7 +90,7 @@ func registerEnchantments() {
 			WithCastTarget(TargetLand()),
 			WithAbility(
 				WhenAttachedBecomesTappedTrigger(
-					DataEffect(DestroyAttachedStep()), false,
+					DestroyAttachedStep(), false,
 				),
 			),
 		)
@@ -150,7 +150,7 @@ func registerEnchantments() {
 				}),
 			),
 			WithAbility(BeginningOfUpkeepTrigger(
-				DataEffect(IfElse("remove pupa counter or sacrifice and boost",
+				IfElse("remove pupa counter or sacrifice and boost",
 					&SourceHasCounterCond{CounterType: Pupa, MinCount: 1},
 					RemoveCounters(Pupa, 1),
 					&PipelineData{
@@ -162,7 +162,7 @@ func registerEnchantments() {
 						},
 						Txt: "sacrifice Cocoon, boost creature",
 					},
-				)), false,
+				), false,
 			)),
 		)
 	})

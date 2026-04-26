@@ -41,7 +41,7 @@ func (e *addCountersEffect) Max(n int) *addCountersEffect {
 }
 
 // EffectData interface
-func (e *addCountersEffect) EffectText() string {
+func (e *addCountersEffect) Text() string {
 	if _, ok := e.amount.(xValue); ok {
 		if e.maxTotal > 0 {
 			return fmt.Sprintf("put up to X %s counters on it (max %d total)", e.ct, e.maxTotal)
@@ -59,27 +59,12 @@ func (e *addCountersEffect) EffectText() string {
 	}
 }
 
-func (e *addCountersEffect) EffectProps() EffectProperties {
+func (e *addCountersEffect) Properties() EffectProperties {
 	if e.maxTotal > 0 {
 		return EffectProperties{Outcome: OutcomeBenefit}
 	}
 	return EffectProperties{}
 }
-
-// Effect interface — allows direct use without DataEffect() wrapper.
-func (e *addCountersEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	ctx := &EffectContext{
-		Game:       g,
-		SourceID:   sourceID,
-		Controller: controller,
-		Targets:    targets,
-		Vars:       make(map[string]any),
-	}
-	return execAddCounters(ctx, e)
-}
-
-func (e *addCountersEffect) Text() string                 { return e.EffectText() }
-func (e *addCountersEffect) Properties() EffectProperties { return e.EffectProps() }
 
 func execAddCounters(ctx *EffectContext, e *addCountersEffect) error {
 	perms := resolvePermanents(ctx, e.selector)
@@ -124,7 +109,7 @@ func (e *removeCountersEffect) Targeting(sel TargetSelector) *removeCountersEffe
 }
 
 // EffectData interface
-func (e *removeCountersEffect) EffectText() string {
+func (e *removeCountersEffect) Text() string {
 	switch e.selector.Kind {
 	case KindSource:
 		return fmt.Sprintf("remove %d %s counter(s) from it", e.amount, e.ct)
@@ -132,22 +117,7 @@ func (e *removeCountersEffect) EffectText() string {
 		return fmt.Sprintf("remove %d %s counter(s) from target", e.amount, e.ct)
 	}
 }
-func (e *removeCountersEffect) EffectProps() EffectProperties { return EffectProperties{} }
-
-// Effect interface — allows direct use without DataEffect() wrapper.
-func (e *removeCountersEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	ctx := &EffectContext{
-		Game:       g,
-		SourceID:   sourceID,
-		Controller: controller,
-		Targets:    targets,
-		Vars:       make(map[string]any),
-	}
-	return execRemoveCounters(ctx, e)
-}
-
-func (e *removeCountersEffect) Text() string                 { return e.EffectText() }
-func (e *removeCountersEffect) Properties() EffectProperties { return e.EffectProps() }
+func (e *removeCountersEffect) Properties() EffectProperties { return EffectProperties{} }
 
 func execRemoveCounters(ctx *EffectContext, e *removeCountersEffect) error {
 	perms := resolvePermanents(ctx, e.selector)
@@ -170,8 +140,8 @@ func SnapshotSourceCounter(ct CounterType, storeAs string) EffectData {
 	return &SnapshotSourceCounterData{CounterType: ct, StoreAs: storeAs}
 }
 
-func (e *SnapshotSourceCounterData) EffectText() string            { return "" }
-func (e *SnapshotSourceCounterData) EffectProps() EffectProperties { return EffectProperties{} }
+func (e *SnapshotSourceCounterData) Text() string            { return "" }
+func (e *SnapshotSourceCounterData) Properties() EffectProperties { return EffectProperties{} }
 
 func execSnapshotSourceCounter(ctx *EffectContext, e *SnapshotSourceCounterData) error {
 	perm := ctx.Game.FindPermanent(ctx.SourceID)

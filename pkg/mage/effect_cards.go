@@ -7,31 +7,41 @@ import (
 	"github.com/google/uuid"
 )
 
-// drawCardsTargetEffect draws cards for a target player (or controller as fallback).
+// drawCardsTargetEffect draws cards for a player. By default the player is read
+// from ctx.Targets[0] (with controller as fallback). Use Targeting to override
+// with a PlayerSelector.
 type drawCardsTargetEffect struct {
 	props  EffectProperties
 	amount ValueSource
+	sel    PlayerSelector
 }
 
-// DrawCards creates an effect that draws cards for a target player (or controller as fallback).
-func DrawCards(amount ValueSource) Effect {
+// DrawCards creates an effect that draws cards for a target player (or controller
+// as fallback). Chain .Targeting(sel) to pick the player(s) via a PlayerSelector.
+func DrawCards(amount ValueSource) TargetedEffect {
 	drawCount := 0
 	if fv, ok := amount.(fixedValue); ok {
 		drawCount = fv.n
 	}
-	return DataEffect(&drawCardsTargetEffect{
+	return &drawCardsTargetEffect{
 		props:  EffectProperties{Outcome: OutcomeBenefit, DrawCount: drawCount},
 		amount: amount,
-	})
+	}
 }
 
-func (e *drawCardsTargetEffect) EffectText() string {
+// Targeting overrides the default target (ctx.Targets[0]) with a PlayerSelector.
+func (e *drawCardsTargetEffect) Targeting(sel PlayerSelector) TargetedEffect {
+	e.sel = sel
+	return e
+}
+
+func (e *drawCardsTargetEffect) Text() string {
 	if _, ok := e.amount.(xValue); ok {
 		return "target player draws X cards"
 	}
 	return fmt.Sprintf("target player draws %d card(s)", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil))
 }
-func (e *drawCardsTargetEffect) EffectProps() EffectProperties { return e.props }
+func (e *drawCardsTargetEffect) Properties() EffectProperties { return e.props }
 
 // drawCardsActivePlayerEffect draws cards for the active player (e.g. Howling Mine).
 type drawCardsActivePlayerEffect struct {
@@ -45,52 +55,70 @@ func DrawCardsActivePlayer(amount ValueSource) Effect {
 	if fv, ok := amount.(fixedValue); ok {
 		drawCount = fv.n
 	}
-	return DataEffect(&drawCardsActivePlayerEffect{
+	return &drawCardsActivePlayerEffect{
 		props:  EffectProperties{Outcome: OutcomeBenefit, DrawCount: drawCount},
 		amount: amount,
-	})
+	}
 }
 
-func (e *drawCardsActivePlayerEffect) EffectText() string {
+func (e *drawCardsActivePlayerEffect) Text() string {
 	return "that player draws an additional card"
 }
-func (e *drawCardsActivePlayerEffect) EffectProps() EffectProperties { return e.props }
+func (e *drawCardsActivePlayerEffect) Properties() EffectProperties { return e.props }
 
-// discardCardsEffect forces a target player to discard cards.
+// discardCardsEffect forces a player to discard cards. By default the player
+// is read from ctx.Targets[0] (the spell's chosen target). Use Targeting to
+// override with a PlayerSelector — for example, SelectEachOpponent() for
+// "defending player discards" triggers.
 type discardCardsEffect struct {
 	amount ValueSource
+	sel    PlayerSelector
 }
 
-// DiscardCards creates an effect that forces a target player to discard cards.
-func DiscardCards(amount ValueSource) Effect {
-	return DataEffect(&discardCardsEffect{amount: amount})
+// DiscardCards creates an effect that forces a player to discard cards.
+// Without Targeting, it acts on ctx.Targets[0]; chain .Targeting(sel) to pick
+// the player(s) via a PlayerSelector instead.
+func DiscardCards(amount ValueSource) TargetedEffect {
+	return &discardCardsEffect{amount: amount}
 }
 
-func (e *discardCardsEffect) EffectText() string {
+// Targeting overrides the default target (ctx.Targets[0]) with a PlayerSelector.
+func (e *discardCardsEffect) Targeting(sel PlayerSelector) TargetedEffect {
+	e.sel = sel
+	return e
+}
+
+func (e *discardCardsEffect) Text() string {
 	if _, ok := e.amount.(xValue); ok {
 		return "target player discards X cards"
 	}
 	return fmt.Sprintf("target player discards %d card(s)", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil))
 }
-func (e *discardCardsEffect) EffectProps() EffectProperties {
+func (e *discardCardsEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
 // discardRandomEffect forces an opponent to discard a card at random.
 type discardRandomEffect struct {
 	amount int
+	sel    PlayerSelector
 }
 
 // DiscardRandom creates an effect that forces a target player (or opponent) to discard cards at random.
-func DiscardRandom(amount int) Effect {
-	return DataEffect(&discardRandomEffect{amount: amount})
+func DiscardRandom(amount int) TargetedEffect {
+	return &discardRandomEffect{amount: amount}
 }
 
-func (e *discardRandomEffect) EffectText() string {
+func (e *discardRandomEffect) Text() string {
 	return fmt.Sprintf("discard %d card(s) at random", e.amount)
 }
-func (e *discardRandomEffect) EffectProps() EffectProperties {
+func (e *discardRandomEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
+}
+
+func (e *discardRandomEffect) Targeting(sel PlayerSelector) TargetedEffect {
+	e.sel = sel
+	return e
 }
 
 // returnFromGraveyardEffect returns a target creature from graveyard to battlefield.
@@ -99,13 +127,13 @@ type returnFromGraveyardEffect struct{}
 // ReturnFromGraveyardToBattlefield creates an effect that returns a target creature card
 // from the controller's graveyard directly to the battlefield (e.g. Animate Dead, Resurrection).
 func ReturnFromGraveyardToBattlefield() Effect {
-	return DataEffect(&returnFromGraveyardEffect{})
+	return &returnFromGraveyardEffect{}
 }
 
-func (e *returnFromGraveyardEffect) EffectText() string {
+func (e *returnFromGraveyardEffect) Text() string {
 	return "return target creature card from your graveyard to the battlefield"
 }
-func (e *returnFromGraveyardEffect) EffectProps() EffectProperties {
+func (e *returnFromGraveyardEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
@@ -115,13 +143,13 @@ type returnSourceToHandEffect struct{}
 // ReturnSourceToHand creates an effect that returns the source card from the graveyard
 // to its owner's hand (e.g. Rancor's triggered ability).
 func ReturnSourceToHand() Effect {
-	return DataEffect(&returnSourceToHandEffect{})
+	return &returnSourceToHandEffect{}
 }
 
-func (e *returnSourceToHandEffect) EffectText() string {
+func (e *returnSourceToHandEffect) Text() string {
 	return "return this card to its owner's hand"
 }
-func (e *returnSourceToHandEffect) EffectProps() EffectProperties { return EffectProperties{} }
+func (e *returnSourceToHandEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // exileSourceFromGraveyardEffect exiles the source card from the graveyard.
 type exileSourceFromGraveyardEffect struct{}
@@ -129,26 +157,36 @@ type exileSourceFromGraveyardEffect struct{}
 // ExileSourceFromGraveyard creates an effect that exiles the source from the graveyard
 // (e.g. Cyclopean Mummy's death trigger).
 func ExileSourceFromGraveyard() Effect {
-	return DataEffect(&exileSourceFromGraveyardEffect{})
+	return &exileSourceFromGraveyardEffect{}
 }
 
-func (e *exileSourceFromGraveyardEffect) EffectText() string            { return "exile this card from graveyard" }
-func (e *exileSourceFromGraveyardEffect) EffectProps() EffectProperties { return EffectProperties{} }
+func (e *exileSourceFromGraveyardEffect) Text() string                 { return "exile this card from graveyard" }
+func (e *exileSourceFromGraveyardEffect) Properties() EffectProperties { return EffectProperties{} }
 
-// millTargetPlayerEffect mills N cards from the target player's library.
+// millTargetPlayerEffect mills N cards from a player's library. By default the
+// player is read from ctx.Targets[0]. Use Targeting to override with a
+// PlayerSelector.
 type millTargetPlayerEffect struct {
 	amount ValueSource
+	sel    PlayerSelector
 }
 
 // MillTargetPlayer creates an effect that mills N cards from target player's library.
-func MillTargetPlayer(amount ValueSource) Effect {
-	return DataEffect(&millTargetPlayerEffect{amount: amount})
+// Chain .Targeting(sel) to pick the player(s) via a PlayerSelector.
+func MillTargetPlayer(amount ValueSource) *millTargetPlayerEffect {
+	return &millTargetPlayerEffect{amount: amount}
 }
 
-func (e *millTargetPlayerEffect) EffectText() string {
+// Targeting overrides the default target (ctx.Targets[0]) with a PlayerSelector.
+func (e *millTargetPlayerEffect) Targeting(sel PlayerSelector) *millTargetPlayerEffect {
+	e.sel = sel
+	return e
+}
+
+func (e *millTargetPlayerEffect) Text() string {
 	return "target player mills cards"
 }
-func (e *millTargetPlayerEffect) EffectProps() EffectProperties {
+func (e *millTargetPlayerEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
@@ -157,13 +195,13 @@ type returnToHandTargetEffect struct{}
 
 // ReturnToHandTarget creates an effect that bounces a target permanent to its owner's hand.
 func ReturnToHandTarget() Effect {
-	return DataEffect(&returnToHandTargetEffect{})
+	return &returnToHandTargetEffect{}
 }
 
-func (e *returnToHandTargetEffect) EffectText() string {
+func (e *returnToHandTargetEffect) Text() string {
 	return "return target permanent to its owner's hand"
 }
-func (e *returnToHandTargetEffect) EffectProps() EffectProperties {
+func (e *returnToHandTargetEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment, IsBounce: true}
 }
 
@@ -173,13 +211,13 @@ type returnFromGraveyardToHandTargetEffect struct{}
 // ReturnFromGraveyardToHandTarget creates an effect that returns a target card
 // from the controller's graveyard to their hand (e.g. Raise Dead, Regrowth).
 func ReturnFromGraveyardToHandTarget() Effect {
-	return DataEffect(&returnFromGraveyardToHandTargetEffect{})
+	return &returnFromGraveyardToHandTargetEffect{}
 }
 
-func (e *returnFromGraveyardToHandTargetEffect) EffectText() string {
+func (e *returnFromGraveyardToHandTargetEffect) Text() string {
 	return "return target card from your graveyard to your hand"
 }
-func (e *returnFromGraveyardToHandTargetEffect) EffectProps() EffectProperties {
+func (e *returnFromGraveyardToHandTargetEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
@@ -189,13 +227,13 @@ type searchLibraryEffect struct{}
 // SearchLibraryToHand creates an effect that lets the controller search their library for a card
 // and put it into their hand (e.g. Demonic Tutor).
 func SearchLibraryToHand() Effect {
-	return DataEffect(&searchLibraryEffect{})
+	return &searchLibraryEffect{}
 }
 
-func (e *searchLibraryEffect) EffectText() string {
+func (e *searchLibraryEffect) Text() string {
 	return "search your library for a card and put it into your hand"
 }
-func (e *searchLibraryEffect) EffectProps() EffectProperties {
+func (e *searchLibraryEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
@@ -205,13 +243,13 @@ type searchLibraryToTopEffect struct{}
 // SearchLibraryToTop creates an effect that lets the controller search their library for a card
 // and put it on top of their library (e.g. Worldly Tutor, Vampiric Tutor).
 func SearchLibraryToTop() Effect {
-	return DataEffect(&searchLibraryToTopEffect{})
+	return &searchLibraryToTopEffect{}
 }
 
-func (e *searchLibraryToTopEffect) EffectText() string {
+func (e *searchLibraryToTopEffect) Text() string {
 	return "search your library for a card and put it on top"
 }
-func (e *searchLibraryToTopEffect) EffectProps() EffectProperties {
+func (e *searchLibraryToTopEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
@@ -222,13 +260,13 @@ type discardHandAndDrawEffect struct {
 
 // DiscardHandAndDraw creates an effect where each player discards their hand then draws n cards (e.g. Timetwister, Wheel of Fortune).
 func DiscardHandAndDraw(n int) Effect {
-	return DataEffect(&discardHandAndDrawEffect{drawCount: n})
+	return &discardHandAndDrawEffect{drawCount: n}
 }
 
-func (e *discardHandAndDrawEffect) EffectText() string {
+func (e *discardHandAndDrawEffect) Text() string {
 	return fmt.Sprintf("Each player discards their hand, then draws %d cards", e.drawCount)
 }
-func (e *discardHandAndDrawEffect) EffectProps() EffectProperties { return EffectProperties{} }
+func (e *discardHandAndDrawEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // shuffleHandAndGraveyardIntoLibraryAndDrawEffect shuffles each player's hand
 // and graveyard into their library, then each player draws N cards.
@@ -239,13 +277,13 @@ type shuffleHandAndGraveyardIntoLibraryAndDrawEffect struct {
 // ShuffleHandAndGraveyardIntoLibraryAndDraw creates an effect where each player shuffles their
 // hand and graveyard into their library, then draws n cards (e.g. Timetwister).
 func ShuffleHandAndGraveyardIntoLibraryAndDraw(n int) Effect {
-	return DataEffect(&shuffleHandAndGraveyardIntoLibraryAndDrawEffect{drawCount: n})
+	return &shuffleHandAndGraveyardIntoLibraryAndDrawEffect{drawCount: n}
 }
 
-func (e *shuffleHandAndGraveyardIntoLibraryAndDrawEffect) EffectText() string {
+func (e *shuffleHandAndGraveyardIntoLibraryAndDrawEffect) Text() string {
 	return fmt.Sprintf("Each player shuffles their hand and graveyard into their library, then draws %d cards", e.drawCount)
 }
-func (e *shuffleHandAndGraveyardIntoLibraryAndDrawEffect) EffectProps() EffectProperties {
+func (e *shuffleHandAndGraveyardIntoLibraryAndDrawEffect) Properties() EffectProperties {
 	return EffectProperties{}
 }
 
@@ -254,11 +292,11 @@ type shuffleLibraryEffect struct{}
 
 // ShuffleLibrary creates an effect that shuffles the controller's library.
 func ShuffleLibrary() Effect {
-	return DataEffect(&shuffleLibraryEffect{})
+	return &shuffleLibraryEffect{}
 }
 
-func (e *shuffleLibraryEffect) EffectText() string              { return "shuffle your library" }
-func (e *shuffleLibraryEffect) EffectProps() EffectProperties { return EffectProperties{} }
+func (e *shuffleLibraryEffect) Text() string                 { return "shuffle your library" }
+func (e *shuffleLibraryEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // putFromHandOntoBattlefieldEffect lets the controller put a card from hand onto the battlefield.
 type putFromHandOntoBattlefieldEffect struct {
@@ -268,13 +306,13 @@ type putFromHandOntoBattlefieldEffect struct {
 // PutFromHandOntoBattlefield creates an effect that lets the controller put a card from hand
 // onto the battlefield (e.g. Elvish Piper, Show and Tell). Pass a zero CardFilter to allow any card.
 func PutFromHandOntoBattlefield(filter CardFilter) Effect {
-	return DataEffect(&putFromHandOntoBattlefieldEffect{filter: filter})
+	return &putFromHandOntoBattlefieldEffect{filter: filter}
 }
 
-func (e *putFromHandOntoBattlefieldEffect) EffectText() string {
+func (e *putFromHandOntoBattlefieldEffect) Text() string {
 	return "put a card from your hand onto the battlefield"
 }
-func (e *putFromHandOntoBattlefieldEffect) EffectProps() EffectProperties {
+func (e *putFromHandOntoBattlefieldEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
@@ -287,13 +325,13 @@ type searchLibraryToBattlefieldEffect struct {
 // library for a card matching the filter, puts it onto the battlefield, then
 // shuffles (e.g. Untamed Wilds, Rampant Growth).
 func SearchLibraryToBattlefield(filter CardFilter) Effect {
-	return DataEffect(&searchLibraryToBattlefieldEffect{filter: filter})
+	return &searchLibraryToBattlefieldEffect{filter: filter}
 }
 
-func (e *searchLibraryToBattlefieldEffect) EffectText() string {
+func (e *searchLibraryToBattlefieldEffect) Text() string {
 	return "search your library for a card, put it onto the battlefield, then shuffle"
 }
-func (e *searchLibraryToBattlefieldEffect) EffectProps() EffectProperties {
+func (e *searchLibraryToBattlefieldEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
@@ -305,28 +343,44 @@ type chooseColorEffect struct {
 // ChooseColor creates an effect that asks the controller to choose a color,
 // storing the result on the source permanent's ChosenColor field.
 func ChooseColor(reason string) Effect {
-	return DataEffect(&chooseColorEffect{reason: reason})
+	return &chooseColorEffect{reason: reason}
 }
 
-func (e *chooseColorEffect) EffectText() string              { return "choose a color" }
-func (e *chooseColorEffect) EffectProps() EffectProperties { return EffectProperties{} }
+func (e *chooseColorEffect) Text() string                 { return "choose a color" }
+func (e *chooseColorEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // --- Executor functions ---
 
 func execDrawCardsTarget(ctx *EffectContext, e *drawCardsTargetEffect) error {
-	var targetPlayer Player
-	if len(ctx.Targets) > 0 {
-		targetPlayer = ctx.Game.GetPlayer(ctx.Targets[0])
-	}
-	if targetPlayer == nil {
-		targetPlayer = ctx.Game.GetPlayer(ctx.Controller)
-	}
-	if targetPlayer == nil {
-		return ErrPlayerNotFound
-	}
 	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
-	for i := 0; i < amount; i++ {
-		ctx.Game.PlayerDrawCard(targetPlayer)
+
+	var players []Player
+	if e.sel != nil {
+		for _, pid := range e.sel.Select(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets) {
+			if p := ctx.Game.GetPlayer(pid); p != nil {
+				players = append(players, p)
+			}
+		}
+	} else {
+		// Default: targets[0] if it resolves to a player; otherwise controller.
+		// Triggers often pass a permanent/spell ID in Targets, so we fall back.
+		var p Player
+		if len(ctx.Targets) > 0 {
+			p = ctx.Game.GetPlayer(ctx.Targets[0])
+		}
+		if p == nil {
+			p = ctx.Game.GetPlayer(ctx.Controller)
+		}
+		if p == nil {
+			return ErrPlayerNotFound
+		}
+		players = []Player{p}
+	}
+
+	for _, p := range players {
+		for i := 0; i < amount; i++ {
+			ctx.Game.PlayerDrawCard(p)
+		}
 	}
 	return nil
 }
@@ -344,20 +398,29 @@ func execDrawCardsActivePlayer(ctx *EffectContext, e *drawCardsActivePlayerEffec
 }
 
 func execDiscardCards(ctx *EffectContext, e *discardCardsEffect) error {
-	var targetPlayer Player
-	if len(ctx.Targets) > 0 {
-		targetPlayer = ctx.Game.GetPlayer(ctx.Targets[0])
-	}
-	if targetPlayer == nil {
-		targetPlayer = ctx.Game.GetOpponent(ctx.Controller)
-	}
-	if targetPlayer == nil {
-		return nil
-	}
 	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
-	chosen := targetPlayer.ChooseCardsFromHand(amount, "discard", ctx.Game)
-	for _, card := range chosen {
-		targetPlayer.DiscardCard(card.ID())
+
+	var playerIDs []uuid.UUID
+	switch {
+	case e.sel != nil:
+		playerIDs = e.sel.Select(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	case len(ctx.Targets) > 0:
+		playerIDs = []uuid.UUID{ctx.Targets[0]}
+	default:
+		if opp := ctx.Game.GetOpponent(ctx.Controller); opp != nil {
+			playerIDs = []uuid.UUID{opp.PlayerID()}
+		}
+	}
+
+	for _, pid := range playerIDs {
+		p := ctx.Game.GetPlayer(pid)
+		if p == nil {
+			continue
+		}
+		chosen := p.ChooseCardsFromHand(amount, "discard", ctx.Game)
+		for _, card := range chosen {
+			p.DiscardCard(card.ID())
+		}
 	}
 	return nil
 }
@@ -401,21 +464,29 @@ func execReturnFromGraveyardToBattlefield(ctx *EffectContext, _ *returnFromGrave
 }
 
 func execMillTargetPlayer(ctx *EffectContext, e *millTargetPlayerEffect) error {
-	if len(ctx.Targets) == 0 {
-		return nil
-	}
-	p := ctx.Game.GetPlayer(ctx.Targets[0])
-	if p == nil {
-		return nil
-	}
 	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
-	lib := p.Library()
-	for i := 0; i < amount && len(lib) > 0; i++ {
-		card := lib[len(lib)-1]
-		lib = lib[:len(lib)-1]
-		p.AddToGraveyard(card)
+
+	var playerIDs []uuid.UUID
+	switch {
+	case e.sel != nil:
+		playerIDs = e.sel.Select(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	case len(ctx.Targets) > 0:
+		playerIDs = []uuid.UUID{ctx.Targets[0]}
 	}
-	p.SetLibrary(lib)
+
+	for _, pid := range playerIDs {
+		p := ctx.Game.GetPlayer(pid)
+		if p == nil {
+			continue
+		}
+		lib := p.Library()
+		for i := 0; i < amount && len(lib) > 0; i++ {
+			card := lib[len(lib)-1]
+			lib = lib[:len(lib)-1]
+			p.AddToGraveyard(card)
+		}
+		p.SetLibrary(lib)
+	}
 	return nil
 }
 

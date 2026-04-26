@@ -12,11 +12,11 @@ type counterSpellEffect struct{}
 
 // CounterSpell creates an effect that counters a target spell on the stack.
 func CounterSpell() Effect {
-	return DataEffect(&counterSpellEffect{})
+	return &counterSpellEffect{}
 }
 
-func (e *counterSpellEffect) EffectText() string { return "counter target spell" }
-func (e *counterSpellEffect) EffectProps() EffectProperties {
+func (e *counterSpellEffect) Text() string { return "counter target spell" }
+func (e *counterSpellEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
@@ -28,13 +28,13 @@ type counterSpellIfColorEffect struct {
 // CounterSpellIfColor creates an effect that counters a target spell only if it matches the given color
 // (e.g. Blue Elemental Blast, Red Elemental Blast).
 func CounterSpellIfColor(c Color) Effect {
-	return DataEffect(&counterSpellIfColorEffect{color: c})
+	return &counterSpellIfColorEffect{color: c}
 }
 
-func (e *counterSpellIfColorEffect) EffectText() string {
+func (e *counterSpellIfColorEffect) Text() string {
 	return fmt.Sprintf("Counter target %s spell", e.color)
 }
-func (e *counterSpellIfColorEffect) EffectProps() EffectProperties {
+func (e *counterSpellIfColorEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
@@ -44,13 +44,13 @@ type counterSpellIfXMeetsOrExceedsCMCEffect struct{}
 // CounterSpellIfXMeetsCMC creates an effect that counters a target spell only if X >= its mana value
 // (e.g. Spell Blast).
 func CounterSpellIfXMeetsCMC() Effect {
-	return DataEffect(&counterSpellIfXMeetsOrExceedsCMCEffect{})
+	return &counterSpellIfXMeetsOrExceedsCMCEffect{}
 }
 
-func (e *counterSpellIfXMeetsOrExceedsCMCEffect) EffectText() string {
+func (e *counterSpellIfXMeetsOrExceedsCMCEffect) Text() string {
 	return "Counter target spell if X >= its mana value"
 }
-func (e *counterSpellIfXMeetsOrExceedsCMCEffect) EffectProps() EffectProperties {
+func (e *counterSpellIfXMeetsOrExceedsCMCEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
@@ -60,13 +60,13 @@ type powerSinkEffect struct{}
 // PowerSinkEffect creates an effect that counters a spell unless its controller pays X mana,
 // draining their pool either way (Power Sink).
 func PowerSinkEffect() Effect {
-	return DataEffect(&powerSinkEffect{})
+	return &powerSinkEffect{}
 }
 
-func (e *powerSinkEffect) EffectText() string {
+func (e *powerSinkEffect) Text() string {
 	return "Counter target spell unless its controller pays {X}"
 }
-func (e *powerSinkEffect) EffectProps() EffectProperties {
+func (e *powerSinkEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
@@ -78,13 +78,13 @@ type addManaEffect struct {
 
 // AddMana creates an effect that adds mana of the given color to the controller's pool.
 func AddMana(color Color, amount int) Effect {
-	return DataEffect(&addManaEffect{color: color, amount: amount})
+	return &addManaEffect{color: color, amount: amount}
 }
 
-func (e *addManaEffect) EffectText() string {
+func (e *addManaEffect) Text() string {
 	return fmt.Sprintf("add %d %s mana", e.amount, e.color)
 }
-func (e *addManaEffect) EffectProps() EffectProperties { return EffectProperties{} }
+func (e *addManaEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // addAnyManaEffect adds mana of any one color to the controller's pool.
 type addAnyManaEffect struct {
@@ -93,13 +93,13 @@ type addAnyManaEffect struct {
 
 // AddAnyMana creates an effect that adds mana of any one color (player chooses) to the controller's pool.
 func AddAnyMana(amount int, _ Color) Effect {
-	return DataEffect(&addAnyManaEffect{amount: amount})
+	return &addAnyManaEffect{amount: amount}
 }
 
-func (e *addAnyManaEffect) EffectText() string {
+func (e *addAnyManaEffect) Text() string {
 	return fmt.Sprintf("add %d mana of any one color", e.amount)
 }
-func (e *addAnyManaEffect) EffectProps() EffectProperties { return EffectProperties{} }
+func (e *addAnyManaEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // createTokenEffect creates a token creature on the battlefield.
 type createTokenEffect struct {
@@ -115,19 +115,19 @@ type createTokenEffect struct {
 
 // CreateToken creates an effect that puts a token creature onto the battlefield.
 func CreateToken(name string, power, toughness int, types []CardType, subTypes []string, keywords ...Keyword) Effect {
-	return DataEffect(&createTokenEffect{
+	return &createTokenEffect{
 		name:      name,
 		power:     power,
 		toughness: toughness,
 		types:     types,
 		subTypes:  subTypes,
 		keywords:  keywords,
-	})
+	}
 }
 
 // CreateTokens creates an effect that puts N token creatures onto the battlefield.
 func CreateTokens(count int, name string, power, toughness int, types []CardType, subTypes []string, keywords ...Keyword) Effect {
-	return DataEffect(&createTokenEffect{
+	return &createTokenEffect{
 		name:      name,
 		power:     power,
 		toughness: toughness,
@@ -135,12 +135,12 @@ func CreateTokens(count int, name string, power, toughness int, types []CardType
 		subTypes:  subTypes,
 		keywords:  keywords,
 		count:     count,
-	})
+	}
 }
 
 // CreateColoredToken creates an effect that puts a colored token creature onto the battlefield.
 func CreateColoredToken(name string, power, toughness int, colors []Color, types []CardType, subTypes []string, keywords ...Keyword) Effect {
-	return DataEffect(&createTokenEffect{
+	return &createTokenEffect{
 		name:      name,
 		power:     power,
 		toughness: toughness,
@@ -148,13 +148,13 @@ func CreateColoredToken(name string, power, toughness int, colors []Color, types
 		subTypes:  subTypes,
 		keywords:  keywords,
 		colors:    colors,
-	})
+	}
 }
 
-func (e *createTokenEffect) EffectText() string {
+func (e *createTokenEffect) Text() string {
 	return fmt.Sprintf("create a %d/%d %s token", e.power, e.toughness, e.name)
 }
-func (e *createTokenEffect) EffectProps() EffectProperties {
+func (e *createTokenEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit, TokenPower: e.power, TokenToughness: e.toughness}
 }
 
@@ -185,17 +185,17 @@ func CreateTokenAttacking(name string, power, toughness int, types []CardType, s
 	}
 }
 
-func (e *createTokenAttackingEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func execCreateTokenAttacking(ctx *EffectContext, e *createTokenAttackingEffect) error {
 	token := NewToken(e.name, e.power, e.toughness, e.types, e.subTypes, e.keywords...)
-	token.SetOwner(controller)
+	token.SetOwner(ctx.Controller)
 	var defenderID uuid.UUID
-	for _, p := range g.AllPlayers() {
-		if p.PlayerID() != controller {
+	for _, p := range ctx.Game.AllPlayers() {
+		if p.PlayerID() != ctx.Controller {
 			defenderID = p.PlayerID()
 			break
 		}
 	}
-	perm := g.PutOnBattlefieldAttacking(token, controller, defenderID)
+	perm := ctx.Game.PutOnBattlefieldAttacking(token, ctx.Controller, defenderID)
 	perm.IsToken = true
 	return nil
 }
@@ -233,14 +233,14 @@ func CreateTokenBlocking(name string, power, toughness int, types []CardType, su
 	}
 }
 
-func (e *createTokenBlockingEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+func execCreateTokenBlocking(ctx *EffectContext, e *createTokenBlockingEffect) error {
 	token := NewToken(e.name, e.power, e.toughness, e.types, e.subTypes, e.keywords...)
-	token.SetOwner(controller)
+	token.SetOwner(ctx.Controller)
 	var attackerID uuid.UUID
-	if len(targets) > 0 {
-		attackerID = targets[0]
+	if len(ctx.Targets) > 0 {
+		attackerID = ctx.Targets[0]
 	}
-	perm := g.PutOnBattlefieldBlocking(token, controller, attackerID)
+	perm := ctx.Game.PutOnBattlefieldBlocking(token, ctx.Controller, attackerID)
 	perm.IsToken = true
 	return nil
 }
@@ -263,48 +263,48 @@ type cloneTargetEffect struct {
 // CloneTarget creates an effect that copies a target permanent's characteristics onto the source.
 // Additional types (e.g. TypeEnchantment for Copy Artifact) are added after cloning.
 func CloneTarget(additionalTypes ...CardType) Effect {
-	return DataEffect(&cloneTargetEffect{additionalTypes: additionalTypes})
+	return &cloneTargetEffect{additionalTypes: additionalTypes}
 }
 
-func (e *cloneTargetEffect) EffectText() string {
+func (e *cloneTargetEffect) Text() string {
 	return "enters the battlefield as a copy of target permanent"
 }
-func (e *cloneTargetEffect) EffectProps() EffectProperties { return EffectProperties{} }
+func (e *cloneTargetEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // copySpellOnStackEffect copies the top spell on the stack. Used by Fork.
 type copySpellOnStackEffect struct{}
 
 // CopySpellOnStack creates an effect that copies the target spell on the stack.
 func CopySpellOnStack() Effect {
-	return DataEffect(&copySpellOnStackEffect{})
+	return &copySpellOnStackEffect{}
 }
 
-func (e *copySpellOnStackEffect) EffectText() string {
+func (e *copySpellOnStackEffect) Text() string {
 	return "copy target instant or sorcery spell"
 }
-func (e *copySpellOnStackEffect) EffectProps() EffectProperties { return EffectProperties{} }
+func (e *copySpellOnStackEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // attachToTargetEffect attaches the source (aura/equipment) to the target.
 type attachToTargetEffect struct{}
 
 // AttachToTarget creates an effect that attaches the source (aura or equipment) to the target permanent.
 func AttachToTarget() Effect {
-	return DataEffect(&attachToTargetEffect{})
+	return &attachToTargetEffect{}
 }
 
-func (e *attachToTargetEffect) EffectText() string            { return "attach to target" }
-func (e *attachToTargetEffect) EffectProps() EffectProperties { return EffectProperties{} }
+func (e *attachToTargetEffect) Text() string            { return "attach to target" }
+func (e *attachToTargetEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // controlChangeTargetEffect gains control of a target permanent.
 type controlChangeTargetEffect struct{}
 
 // ControlChangeTarget creates an effect that gives the controller permanent control of a target (e.g. Control Magic).
 func ControlChangeTarget() Effect {
-	return DataEffect(&controlChangeTargetEffect{})
+	return &controlChangeTargetEffect{}
 }
 
-func (e *controlChangeTargetEffect) EffectText() string { return "gain control of target permanent" }
-func (e *controlChangeTargetEffect) EffectProps() EffectProperties {
+func (e *controlChangeTargetEffect) Text() string { return "gain control of target permanent" }
+func (e *controlChangeTargetEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
@@ -313,11 +313,11 @@ type extraTurnEffect struct{}
 
 // ExtraTurn creates an effect that gives the controller an extra turn (e.g. Time Walk).
 func ExtraTurn() Effect {
-	return DataEffect(&extraTurnEffect{})
+	return &extraTurnEffect{}
 }
 
-func (e *extraTurnEffect) EffectText() string { return "take an extra turn after this one" }
-func (e *extraTurnEffect) EffectProps() EffectProperties {
+func (e *extraTurnEffect) Text() string { return "take an extra turn after this one" }
+func (e *extraTurnEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
@@ -328,13 +328,13 @@ type changeColorEffect struct {
 
 // ChangeColorEffect creates an effect that changes a target permanent's color.
 func ChangeColorEffect(color Color) Effect {
-	return DataEffect(&changeColorEffect{color: color})
+	return &changeColorEffect{color: color}
 }
 
-func (e *changeColorEffect) EffectText() string {
+func (e *changeColorEffect) Text() string {
 	return fmt.Sprintf("Target permanent becomes %s", e.color)
 }
-func (e *changeColorEffect) EffectProps() EffectProperties { return EffectProperties{} }
+func (e *changeColorEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // counterUnlessPayEffect counters a target spell unless its controller pays a cost.
 type counterUnlessPayEffect struct {
@@ -344,13 +344,13 @@ type counterUnlessPayEffect struct {
 // CounterUnlessPay creates an effect that counters a target spell unless its
 // controller pays the specified mana cost (e.g. Force Spike, Mana Leak).
 func CounterUnlessPay(cost string) Effect {
-	return DataEffect(&counterUnlessPayEffect{cost: cost})
+	return &counterUnlessPayEffect{cost: cost}
 }
 
-func (e *counterUnlessPayEffect) EffectText() string {
+func (e *counterUnlessPayEffect) Text() string {
 	return fmt.Sprintf("Counter target spell unless its controller pays %s", e.cost)
 }
-func (e *counterUnlessPayEffect) EffectProps() EffectProperties {
+func (e *counterUnlessPayEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
@@ -360,13 +360,13 @@ type forcefieldEffect struct{}
 // ForcefieldEffect creates an effect that reduces all unblocked combat damage to the controller
 // to 1 for this turn (Forcefield).
 func ForcefieldEffect() Effect {
-	return DataEffect(&forcefieldEffect{})
+	return &forcefieldEffect{}
 }
 
-func (e *forcefieldEffect) EffectText() string {
+func (e *forcefieldEffect) Text() string {
 	return "prevent all but 1 combat damage from each unblocked creature this turn"
 }
-func (e *forcefieldEffect) EffectProps() EffectProperties {
+func (e *forcefieldEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 

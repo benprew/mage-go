@@ -6,20 +6,15 @@ import (
 	"github.com/google/uuid"
 )
 
-// EffectData describes an effect without execution logic. Effects that implement
-// this interface are inert data — the executor dispatches on their concrete type
-// to perform mutations. Use DataEffect() to wrap an EffectData into the Effect
-// interface so it can be used anywhere the old interface is expected.
-type EffectData interface {
-	EffectText() string
-	EffectProps() EffectProperties
-}
+// EffectData is an alias for Effect kept for backward compatibility. There is
+// no semantic difference: every Effect is data, and execution happens through
+// the executor's type switch (ExecuteEffect / ApplyEffect).
+type EffectData = Effect
 
 // EffectContext carries runtime state through a pipeline of effects. It is
-// created by the dataEffectAdapter when an EffectData is executed through the
-// legacy Effect interface, and threaded through Pipeline steps so intermediate
-// values (snapshotted permanent properties, chosen IDs, etc.) can flow between
-// steps without closures.
+// constructed by ApplyEffect (or pipeline steps) and threaded through executor
+// dispatch so intermediate values (snapshotted permanent properties, chosen
+// IDs, etc.) can flow between steps without closures.
 type EffectContext struct {
 	Game       *Game
 	SourceID   uuid.UUID
@@ -97,42 +92,10 @@ func (ctx *EffectContext) GetBool(name string) bool {
 	return b
 }
 
-// dataEffectAdapter wraps an EffectData into the Effect interface, creating an
-// EffectContext and dispatching through ExecuteEffect.
-type dataEffectAdapter struct {
-	data EffectData
-}
+// DataEffect is an identity function kept for backward compatibility. Effects
+// are data; no wrapping is needed. Prefer returning the raw effect value.
+func DataEffect(data Effect) Effect { return data }
 
-// DataEffect wraps an EffectData value into the Effect interface.
-func DataEffect(data EffectData) Effect {
-	return &dataEffectAdapter{data: data}
-}
-
-func (a *dataEffectAdapter) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	ctx := &EffectContext{
-		Game:       g,
-		SourceID:   sourceID,
-		Controller: controller,
-		Targets:    targets,
-		Vars:       make(map[string]any),
-	}
-	return ExecuteEffect(ctx, a.data)
-}
-
-func (a *dataEffectAdapter) Text() string              { return a.data.EffectText() }
-func (a *dataEffectAdapter) Properties() EffectProperties { return a.data.EffectProps() }
-
-// Unwrap returns the underlying EffectData, allowing the executor or AI to
-// inspect the data structure without going through the Effect interface.
-func (a *dataEffectAdapter) Unwrap() EffectData { return a.data }
-
-// UnwrapEffect extracts the EffectData from an Effect that was created via
-// DataEffect(). This allows pre-built effects (DealDamage, GainLifeTarget, etc.)
-// to be used as pipeline steps inside ModalEffect or Pipeline. Panics if the
-// effect is not a dataEffectAdapter.
-func UnwrapEffect(e Effect) EffectData {
-	if a, ok := e.(*dataEffectAdapter); ok {
-		return a.data
-	}
-	panic(fmt.Sprintf("UnwrapEffect: %T is not a DataEffect", e))
-}
+// UnwrapEffect is an identity function kept for backward compatibility. Effects
+// are data; no unwrapping is needed.
+func UnwrapEffect(e Effect) Effect { return e }

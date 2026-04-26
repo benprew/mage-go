@@ -263,12 +263,12 @@ func CreatureDealtDamageBySourceDiesTrigger(effect Effect, optional bool) *Gener
 // the beginning of the controller's upkeep unless the mana cost can be paid.
 func SacrificeAtUpkeepUnlessPay(cost string) *GenericTriggered {
 	return NewTriggered(EvtUpkeep, false,
-		DataEffect(IfElse(
+		IfElse(
 			"Sacrifice unless pay "+cost,
 			&TryPayManaCond{Cost: cost},
 			nil,
 			SacrificeSourceStep(),
-		)),
+		),
 	).SetConditionData(EventPlayerIsController{})
 }
 
@@ -282,7 +282,7 @@ func WhenAttachedBecomesTappedTrigger(effect Effect, optional bool) *GenericTrig
 // RampageTrigger creates a triggered ability for Rampage N.
 func RampageTrigger(n int) *GenericTriggered {
 	return NewTriggered(EvtBlockersDecl, false,
-		DataEffect(RampageEffect(n)),
+		RampageEffect(n),
 	).SetConditionData(SourceIsBlockedAttacker{})
 }
 

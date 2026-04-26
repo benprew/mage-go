@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"github.com/google/uuid"
 )
 
 // tapTargetEffect taps a target permanent.
@@ -12,14 +11,14 @@ type tapTargetEffect struct{}
 
 // TapTarget creates an effect that taps a target permanent.
 func TapTarget() Effect {
-	return DataEffect(&tapTargetEffect{})
+	return &tapTargetEffect{}
 }
 
 // TapTargetStep returns the EffectData for use as a pipeline/ForEach inner step.
 func TapTargetStep() EffectData { return &tapTargetEffect{} }
 
-func (e *tapTargetEffect) EffectText() string { return "tap target permanent" }
-func (e *tapTargetEffect) EffectProps() EffectProperties {
+func (e *tapTargetEffect) Text() string { return "tap target permanent" }
+func (e *tapTargetEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
@@ -28,14 +27,14 @@ type untapTargetEffect struct{}
 
 // UntapTarget creates an effect that untaps a target permanent.
 func UntapTarget() Effect {
-	return DataEffect(&untapTargetEffect{})
+	return &untapTargetEffect{}
 }
 
 // UntapTargetStep returns the EffectData for use as a pipeline/ForEach inner step.
 func UntapTargetStep() EffectData { return &untapTargetEffect{} }
 
-func (e *untapTargetEffect) EffectText() string { return "untap target permanent" }
-func (e *untapTargetEffect) EffectProps() EffectProperties {
+func (e *untapTargetEffect) Text() string { return "untap target permanent" }
+func (e *untapTargetEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
@@ -44,22 +43,22 @@ type untapSourceEffect struct{}
 
 // UntapSource creates an effect that untaps the source permanent.
 func UntapSource() Effect {
-	return DataEffect(&untapSourceEffect{})
+	return &untapSourceEffect{}
 }
 
-func (e *untapSourceEffect) EffectText() string            { return "Untap this permanent" }
-func (e *untapSourceEffect) EffectProps() EffectProperties { return EffectProperties{} }
+func (e *untapSourceEffect) Text() string            { return "Untap this permanent" }
+func (e *untapSourceEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // tapAttachedCreatureEffect taps the creature attached to the source aura.
 type tapAttachedCreatureEffect struct{}
 
 // TapAttachedCreature creates an effect that taps the creature the source aura is attached to.
 func TapAttachedCreature() Effect {
-	return DataEffect(&tapAttachedCreatureEffect{})
+	return &tapAttachedCreatureEffect{}
 }
 
-func (e *tapAttachedCreatureEffect) EffectText() string { return "Tap enchanted creature" }
-func (e *tapAttachedCreatureEffect) EffectProps() EffectProperties {
+func (e *tapAttachedCreatureEffect) Text() string { return "Tap enchanted creature" }
+func (e *tapAttachedCreatureEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
@@ -68,22 +67,22 @@ type tapOrUntapTargetEffect struct{}
 
 // TapOrUntapTarget creates an effect that toggles a target permanent's tapped state (e.g. Twiddle).
 func TapOrUntapTarget() Effect {
-	return DataEffect(&tapOrUntapTargetEffect{})
+	return &tapOrUntapTargetEffect{}
 }
 
-func (e *tapOrUntapTargetEffect) EffectText() string {
+func (e *tapOrUntapTargetEffect) Text() string {
 	return "Tap or untap target permanent"
 }
-func (e *tapOrUntapTargetEffect) EffectProps() EffectProperties { return EffectProperties{} }
+func (e *tapOrUntapTargetEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // tapAllLandsEffect taps all lands target player controls.
 type tapAllLandsEffect struct{}
 
 // TapAllLands creates an effect that taps all lands a target player controls (e.g. Mana Short).
-func TapAllLands() Effect { return DataEffect(&tapAllLandsEffect{}) }
+func TapAllLands() Effect { return &tapAllLandsEffect{} }
 
-func (e *tapAllLandsEffect) EffectText() string { return "Tap all lands target player controls" }
-func (e *tapAllLandsEffect) EffectProps() EffectProperties {
+func (e *tapAllLandsEffect) Text() string { return "Tap all lands target player controls" }
+func (e *tapAllLandsEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
@@ -91,23 +90,23 @@ func (e *tapAllLandsEffect) EffectProps() EffectProperties {
 type removeFromCombatEffect struct{}
 
 // RemoveFromCombat creates an effect that removes a target creature from combat.
-func RemoveFromCombat() Effect { return DataEffect(&removeFromCombatEffect{}) }
+func RemoveFromCombat() Effect { return &removeFromCombatEffect{} }
 
-func (e *removeFromCombatEffect) EffectText() string            { return "Remove target creature from combat" }
-func (e *removeFromCombatEffect) EffectProps() EffectProperties { return EffectProperties{} }
+func (e *removeFromCombatEffect) Text() string            { return "Remove target creature from combat" }
+func (e *removeFromCombatEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // makeUnblockableUntilEndOfTurnEffect makes a target creature unblockable until end of turn.
 type makeUnblockableUntilEndOfTurnEffect struct{}
 
 // MakeUnblockableUntilEndOfTurn creates an effect that makes a target creature unblockable until end of turn.
 func MakeUnblockableUntilEndOfTurn() Effect {
-	return DataEffect(&makeUnblockableUntilEndOfTurnEffect{})
+	return &makeUnblockableUntilEndOfTurnEffect{}
 }
 
-func (e *makeUnblockableUntilEndOfTurnEffect) EffectText() string {
+func (e *makeUnblockableUntilEndOfTurnEffect) Text() string {
 	return "Target creature can't be blocked this turn"
 }
-func (e *makeUnblockableUntilEndOfTurnEffect) EffectProps() EffectProperties {
+func (e *makeUnblockableUntilEndOfTurnEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
@@ -124,18 +123,18 @@ func PreventAttackingTargetUntilEndOfTurn() Effect {
 	return &preventAttackingUntilEndOfTurnEffect{}
 }
 
-func (e *preventAttackingUntilEndOfTurnEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	if len(targets) == 0 {
+func execPreventAttackingTargetUntilEndOfTurn(ctx *EffectContext, _ *preventAttackingUntilEndOfTurnEffect) error {
+	if len(ctx.Targets) == 0 {
 		return nil
 	}
-	perm := g.FindPermanent(targets[0])
+	perm := ctx.Game.FindPermanent(ctx.Targets[0])
 	if perm == nil {
 		return nil
 	}
 	eff := PreventAttackingUntilEndOfTurn(perm.ID())
-	eff.SetSourceID(sourceID)
-	g.AddContinuousEffect(eff)
-	g.ApplyContinuousEffects()
+	eff.SetSourceID(ctx.SourceID)
+	ctx.Game.AddContinuousEffect(eff)
+	ctx.Game.ApplyContinuousEffects()
 	return nil
 }
 
@@ -151,13 +150,13 @@ type doubleSourcePowerEffect struct{}
 
 // DoubleTargetPower creates an effect that doubles a target creature's power until end of turn (e.g. Berserk).
 func DoubleTargetPower() Effect {
-	return DataEffect(&doubleSourcePowerEffect{})
+	return &doubleSourcePowerEffect{}
 }
 
-func (e *doubleSourcePowerEffect) EffectText() string {
+func (e *doubleSourcePowerEffect) Text() string {
 	return "Target creature's power is doubled until end of turn"
 }
-func (e *doubleSourcePowerEffect) EffectProps() EffectProperties {
+func (e *doubleSourcePowerEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
@@ -170,24 +169,24 @@ type replaceKeywordEffect struct {
 // ReplaceKeywordEffect creates an effect that replaces one keyword with another on a target permanent
 // as a continuous effect (e.g. replacing Flying with a different evasion).
 func ReplaceKeywordEffect(from, to Keyword) Effect {
-	return DataEffect(&replaceKeywordEffect{from: from, to: to})
+	return &replaceKeywordEffect{from: from, to: to}
 }
 
-func (e *replaceKeywordEffect) EffectText() string {
+func (e *replaceKeywordEffect) Text() string {
 	return fmt.Sprintf("Replace %s with %s", e.from, e.to)
 }
-func (e *replaceKeywordEffect) EffectProps() EffectProperties { return EffectProperties{} }
+func (e *replaceKeywordEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // regenerateSourceEffect sets a regeneration shield on the source.
 type regenerateSourceEffect struct{}
 
 // RegenerateSource creates an effect that sets a regeneration shield on the source permanent.
 func RegenerateSource() Effect {
-	return DataEffect(&regenerateSourceEffect{})
+	return &regenerateSourceEffect{}
 }
 
-func (e *regenerateSourceEffect) EffectText() string { return "Regenerate ~" }
-func (e *regenerateSourceEffect) EffectProps() EffectProperties {
+func (e *regenerateSourceEffect) Text() string { return "Regenerate ~" }
+func (e *regenerateSourceEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
@@ -196,11 +195,11 @@ type regenerateTargetEffect struct{}
 
 // RegenerateTarget creates an effect that sets a regeneration shield on a target creature.
 func RegenerateTarget() Effect {
-	return DataEffect(&regenerateTargetEffect{})
+	return &regenerateTargetEffect{}
 }
 
-func (e *regenerateTargetEffect) EffectText() string { return "Regenerate target creature" }
-func (e *regenerateTargetEffect) EffectProps() EffectProperties {
+func (e *regenerateTargetEffect) Text() string { return "Regenerate target creature" }
+func (e *regenerateTargetEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
@@ -213,13 +212,13 @@ type markDestroyAtEOTAfterNActivationsEffect struct {
 // MarkDestroyAtEOTAfterNActivations creates an effect that tracks activations via Charge counters.
 // When the count reaches the threshold, the source is destroyed at end of turn (e.g. Basalt Monolith variant).
 func MarkDestroyAtEOTAfterNActivations(threshold int) Effect {
-	return DataEffect(&markDestroyAtEOTAfterNActivationsEffect{threshold: threshold})
+	return &markDestroyAtEOTAfterNActivationsEffect{threshold: threshold}
 }
 
-func (e *markDestroyAtEOTAfterNActivationsEffect) EffectText() string {
+func (e *markDestroyAtEOTAfterNActivationsEffect) Text() string {
 	return fmt.Sprintf("if activated %d+ times, destroy at end of turn", e.threshold)
 }
-func (e *markDestroyAtEOTAfterNActivationsEffect) EffectProps() EffectProperties {
+func (e *markDestroyAtEOTAfterNActivationsEffect) Properties() EffectProperties {
 	return EffectProperties{}
 }
 
@@ -229,13 +228,13 @@ type destroyTargetAtEndOfTurnEffect struct{}
 // DestroyTargetAtEndOfTurn creates an effect that registers a delayed trigger to destroy
 // the target creature at the next end step.
 func DestroyTargetAtEndOfTurn() Effect {
-	return DataEffect(&destroyTargetAtEndOfTurnEffect{})
+	return &destroyTargetAtEndOfTurnEffect{}
 }
 
-func (e *destroyTargetAtEndOfTurnEffect) EffectText() string {
+func (e *destroyTargetAtEndOfTurnEffect) Text() string {
 	return "Destroy target creature at end of turn"
 }
-func (e *destroyTargetAtEndOfTurnEffect) EffectProps() EffectProperties {
+func (e *destroyTargetAtEndOfTurnEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
@@ -248,13 +247,13 @@ type setBasePTUntilEndOfTurnEffect struct {
 // SetPTUntilEndOfTurn creates an effect that sets the target creature's base P/T
 // until end of turn (e.g. Sorceress Queen: 0/2).
 func SetPTUntilEndOfTurn(power, toughness int, target PermanentSelector) Effect {
-	return DataEffect(&setBasePTUntilEndOfTurnEffect{power: power, toughness: toughness})
+	return &setBasePTUntilEndOfTurnEffect{power: power, toughness: toughness}
 }
 
-func (e *setBasePTUntilEndOfTurnEffect) EffectText() string {
+func (e *setBasePTUntilEndOfTurnEffect) Text() string {
 	return fmt.Sprintf("target creature has base power and toughness %d/%d until end of turn", e.power, e.toughness)
 }
-func (e *setBasePTUntilEndOfTurnEffect) EffectProps() EffectProperties {
+func (e *setBasePTUntilEndOfTurnEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
@@ -266,13 +265,13 @@ type setBasePowerUntilEndOfTurnEffect struct {
 // SetPowerUntilEndOfTurn creates an effect that sets the target creature's base power
 // until end of turn (e.g. Singing Tree, Island of Wak-Wak: power becomes 0).
 func SetPowerUntilEndOfTurn(power int, target PermanentSelector) Effect {
-	return DataEffect(&setBasePowerUntilEndOfTurnEffect{power: power})
+	return &setBasePowerUntilEndOfTurnEffect{power: power}
 }
 
-func (e *setBasePowerUntilEndOfTurnEffect) EffectText() string {
+func (e *setBasePowerUntilEndOfTurnEffect) Text() string {
 	return fmt.Sprintf("target creature has base power %d until end of turn", e.power)
 }
-func (e *setBasePowerUntilEndOfTurnEffect) EffectProps() EffectProperties {
+func (e *setBasePowerUntilEndOfTurnEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 

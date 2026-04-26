@@ -21,11 +21,11 @@ type PipelineData struct {
 
 // Pipeline creates a pipeline effect from a sequence of steps.
 func Pipeline(text string, props EffectProperties, steps ...EffectData) Effect {
-	return DataEffect(&PipelineData{Steps: steps, Txt: text, Props: props})
+	return &PipelineData{Steps: steps, Txt: text, Props: props}
 }
 
-func (e *PipelineData) EffectText() string          { return e.Txt }
-func (e *PipelineData) EffectProps() EffectProperties { return e.Props }
+func (e *PipelineData) Text() string          { return e.Txt }
+func (e *PipelineData) Properties() EffectProperties { return e.Props }
 
 func execPipeline(ctx *EffectContext, e *PipelineData) error {
 	for _, step := range e.Steps {
@@ -59,8 +59,8 @@ func SnapshotPermanent(sel PermanentSelector, storeAs string) EffectData {
 	return &SnapshotPermanentData{Selector: sel, StoreAs: storeAs}
 }
 
-func (e *SnapshotPermanentData) EffectText() string          { return "" }
-func (e *SnapshotPermanentData) EffectProps() EffectProperties { return EffectProperties{} }
+func (e *SnapshotPermanentData) Text() string          { return "" }
+func (e *SnapshotPermanentData) Properties() EffectProperties { return EffectProperties{} }
 
 func execSnapshotPermanent(ctx *EffectContext, e *SnapshotPermanentData) error {
 	var perm *Permanent
@@ -94,8 +94,8 @@ type ExileGatheredData struct{ VarName string }
 
 func ExileGathered(varName string) EffectData { return &ExileGatheredData{VarName: varName} }
 
-func (e *ExileGatheredData) EffectText() string            { return "exile" }
-func (e *ExileGatheredData) EffectProps() EffectProperties { return EffectProperties{Outcome: OutcomeDetriment} }
+func (e *ExileGatheredData) Text() string            { return "exile" }
+func (e *ExileGatheredData) Properties() EffectProperties { return EffectProperties{Outcome: OutcomeDetriment} }
 
 func execExileGathered(ctx *EffectContext, e *ExileGatheredData) error {
 	id := ctx.TryGetUUID(e.VarName)
@@ -123,8 +123,8 @@ func DestroyGatheredNoRegen(varName string) EffectData {
 	return &DestroyGatheredData{VarName: varName, NoRegen: true}
 }
 
-func (e *DestroyGatheredData) EffectText() string            { return "destroy" }
-func (e *DestroyGatheredData) EffectProps() EffectProperties { return EffectProperties{Outcome: OutcomeDetriment} }
+func (e *DestroyGatheredData) Text() string            { return "destroy" }
+func (e *DestroyGatheredData) Properties() EffectProperties { return EffectProperties{Outcome: OutcomeDetriment} }
 
 func execDestroyGathered(ctx *EffectContext, e *DestroyGatheredData) error {
 	id := ctx.TryGetUUID(e.VarName)
@@ -150,8 +150,8 @@ type SacrificeGatheredData struct{ VarName string }
 
 func SacrificeGathered(varName string) EffectData { return &SacrificeGatheredData{VarName: varName} }
 
-func (e *SacrificeGatheredData) EffectText() string            { return "sacrifice" }
-func (e *SacrificeGatheredData) EffectProps() EffectProperties { return EffectProperties{} }
+func (e *SacrificeGatheredData) Text() string            { return "sacrifice" }
+func (e *SacrificeGatheredData) Properties() EffectProperties { return EffectProperties{} }
 
 func execSacrificeGathered(ctx *EffectContext, e *SacrificeGatheredData) error {
 	id := ctx.TryGetUUID(e.VarName)
@@ -171,8 +171,8 @@ type BounceGatheredData struct{ VarName string }
 
 func BounceGathered(varName string) EffectData { return &BounceGatheredData{VarName: varName} }
 
-func (e *BounceGatheredData) EffectText() string            { return "return to hand" }
-func (e *BounceGatheredData) EffectProps() EffectProperties { return EffectProperties{Outcome: OutcomeDetriment, IsBounce: true} }
+func (e *BounceGatheredData) Text() string            { return "return to hand" }
+func (e *BounceGatheredData) Properties() EffectProperties { return EffectProperties{Outcome: OutcomeDetriment, IsBounce: true} }
 
 func execBounceGathered(ctx *EffectContext, e *BounceGatheredData) error {
 	id := ctx.TryGetUUID(e.VarName)
@@ -258,8 +258,8 @@ func GainLifeControllerFromVar(amountVar string) EffectData {
 	return &GainLifeVarData{AmountVar: amountVar}
 }
 
-func (e *GainLifeVarData) EffectText() string            { return "gain life" }
-func (e *GainLifeVarData) EffectProps() EffectProperties { return EffectProperties{Outcome: OutcomeBenefit} }
+func (e *GainLifeVarData) Text() string            { return "gain life" }
+func (e *GainLifeVarData) Properties() EffectProperties { return EffectProperties{Outcome: OutcomeBenefit} }
 
 func execGainLifeVar(ctx *EffectContext, e *GainLifeVarData) error {
 	var playerID uuid.UUID
@@ -295,8 +295,8 @@ func DealDamageFromVar(amountVar string) EffectData {
 	return &DealDamageVarData{AmountVar: amountVar}
 }
 
-func (e *DealDamageVarData) EffectText() string            { return "deal damage" }
-func (e *DealDamageVarData) EffectProps() EffectProperties { return EffectProperties{Outcome: OutcomeDetriment} }
+func (e *DealDamageVarData) Text() string            { return "deal damage" }
+func (e *DealDamageVarData) Properties() EffectProperties { return EffectProperties{Outcome: OutcomeDetriment} }
 
 func execDealDamageVar(ctx *EffectContext, e *DealDamageVarData) error {
 	amount := ctx.GetInt(e.AmountVar)
@@ -330,8 +330,8 @@ func DealDamageToPlayersFromVar(amountVar string, sel PlayerSelector) EffectData
 	return &DealDamageToPlayersVarData{AmountVar: amountVar, Selector: sel}
 }
 
-func (e *DealDamageToPlayersVarData) EffectText() string            { return "deal damage to players" }
-func (e *DealDamageToPlayersVarData) EffectProps() EffectProperties { return EffectProperties{Outcome: OutcomeDetriment} }
+func (e *DealDamageToPlayersVarData) Text() string            { return "deal damage to players" }
+func (e *DealDamageToPlayersVarData) Properties() EffectProperties { return EffectProperties{Outcome: OutcomeDetriment} }
 
 func execDealDamageToPlayersVar(ctx *EffectContext, e *DealDamageToPlayersVarData) error {
 	amount := ctx.GetInt(e.AmountVar)
@@ -379,8 +379,8 @@ func ForEachControlledPermanent(who PlayerSelector, filter PermanentFilter, inne
 	return &ForEachPermanentData{Filter: filter, Who: who, Inner: inner, Txt: text}
 }
 
-func (e *ForEachPermanentData) EffectText() string            { return e.Txt }
-func (e *ForEachPermanentData) EffectProps() EffectProperties { return EffectProperties{Mass: true} }
+func (e *ForEachPermanentData) Text() string            { return e.Txt }
+func (e *ForEachPermanentData) Properties() EffectProperties { return EffectProperties{Mass: true} }
 
 func execForEachPermanent(ctx *EffectContext, e *ForEachPermanentData) error {
 	perms := ctx.Game.FilterBattlefield(e.Filter)
@@ -431,8 +431,8 @@ func IfElse(text string, cond ConditionData, then, els EffectData) EffectData {
 	return &IfElseData{Cond: cond, Then: then, Else: els, Txt: text}
 }
 
-func (e *IfElseData) EffectText() string            { return e.Txt }
-func (e *IfElseData) EffectProps() EffectProperties { return EffectProperties{} }
+func (e *IfElseData) Text() string            { return e.Txt }
+func (e *IfElseData) Properties() EffectProperties { return EffectProperties{} }
 
 func execIfElse(ctx *EffectContext, e *IfElseData) error {
 	if e.Cond.Check(ctx) {
@@ -505,8 +505,8 @@ func ModalEffect(text string, modes ...EffectData) EffectData {
 	return &ModalEffectData{Modes: modes, Txt: text}
 }
 
-func (e *ModalEffectData) EffectText() string            { return e.Txt }
-func (e *ModalEffectData) EffectProps() EffectProperties { return EffectProperties{} }
+func (e *ModalEffectData) Text() string            { return e.Txt }
+func (e *ModalEffectData) Properties() EffectProperties { return EffectProperties{} }
 
 func execModalEffect(ctx *EffectContext, e *ModalEffectData) error {
 	mode := ctx.Game.ModeValue()
@@ -534,8 +534,8 @@ func ChoosePermanentStep(player PlayerSelector, filter PermanentFilter, reason, 
 	return &ChoosePermanentData{Player: player, Filter: filter, Reason: reason, StoreAs: storeAs}
 }
 
-func (e *ChoosePermanentData) EffectText() string            { return "" }
-func (e *ChoosePermanentData) EffectProps() EffectProperties { return EffectProperties{} }
+func (e *ChoosePermanentData) Text() string            { return "" }
+func (e *ChoosePermanentData) Properties() EffectProperties { return EffectProperties{} }
 
 func execChoosePermanent(ctx *EffectContext, e *ChoosePermanentData) error {
 	playerIDs := e.Player.Select(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
@@ -572,8 +572,8 @@ type SacrificeSourceData struct{}
 
 func SacrificeSourceStep() EffectData { return &SacrificeSourceData{} }
 
-func (e *SacrificeSourceData) EffectText() string            { return "sacrifice" }
-func (e *SacrificeSourceData) EffectProps() EffectProperties { return EffectProperties{} }
+func (e *SacrificeSourceData) Text() string            { return "sacrifice" }
+func (e *SacrificeSourceData) Properties() EffectProperties { return EffectProperties{} }
 
 func execSacrificeSourceStep(ctx *EffectContext, _ *SacrificeSourceData) error {
 	perm := ctx.Game.FindPermanent(ctx.SourceID)
@@ -592,8 +592,8 @@ type ShuffleGraveyardIntoLibraryData struct{}
 
 func ShuffleGraveyardIntoLibrary() EffectData { return &ShuffleGraveyardIntoLibraryData{} }
 
-func (e *ShuffleGraveyardIntoLibraryData) EffectText() string { return "shuffle graveyard into library" }
-func (e *ShuffleGraveyardIntoLibraryData) EffectProps() EffectProperties {
+func (e *ShuffleGraveyardIntoLibraryData) Text() string { return "shuffle graveyard into library" }
+func (e *ShuffleGraveyardIntoLibraryData) Properties() EffectProperties {
 	return EffectProperties{}
 }
 

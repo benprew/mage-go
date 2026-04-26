@@ -1,17 +1,26 @@
 package mage
 
 import (
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"fmt"
+
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 
 	"github.com/google/uuid"
 )
 
-// Effect represents a one-shot effect that resolves.
+// Effect represents a one-shot effect that resolves. Effects are inert data
+// describing what should happen; the executor (ExecuteEffect) dispatches on
+// the concrete type to perform mutations. Use ApplyEffect to run an Effect
+// against a *Game.
 type Effect interface {
-	Apply(g *Game, sourceID uuid.UUID, controller uuid.UUID, targets []uuid.UUID) error
 	Text() string
 	Properties() EffectProperties
+}
+
+type TargetedEffect interface {
+	Text() string
+	Properties() EffectProperties
+	Targeting(PlayerSelector) TargetedEffect
 }
 
 // funcEffect wraps an anonymous function as an Effect. Use FuncEffect to create
@@ -30,12 +39,8 @@ func FuncEffect(text string, props EffectProperties, fn func(g *Game, sourceID, 
 	return &funcEffect{text: text, props: props, fn: fn}
 }
 
-func (e *funcEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	return e.fn(g, sourceID, controller, targets)
-}
-
-func (e *funcEffect) Text() string                   { return e.text }
-func (e *funcEffect) Properties() EffectProperties   { return e.props }
+func (e *funcEffect) Text() string                 { return e.text }
+func (e *funcEffect) Properties() EffectProperties { return e.props }
 
 // compositeEffect applies multiple effects in sequence.
 type compositeEffect struct {
@@ -48,17 +53,22 @@ func CompositeEffects(text string, effects ...Effect) Effect {
 	return &compositeEffect{effects: effects, text: text}
 }
 
-func (e *compositeEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	for _, eff := range e.effects {
-		if err := eff.Apply(g, sourceID, controller, targets); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (e *compositeEffect) Text() string { return e.text }
+func (e *compositeEffect) Text() string                 { return e.text }
 func (e *compositeEffect) Properties() EffectProperties { return EffectProperties{} }
+
+// ApplyEffect runs an Effect by constructing an EffectContext and dispatching
+// through the executor. This is the canonical entry point for Effect resolution
+// from engine code that holds a *Game directly.
+func ApplyEffect(g *Game, e Effect, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	ctx := &EffectContext{
+		Game:       g,
+		SourceID:   sourceID,
+		Controller: controller,
+		Targets:    targets,
+		Vars:       make(map[string]any),
+	}
+	return ExecuteEffect(ctx, e)
+}
 
 // Outcome describes whether an effect is beneficial or detrimental to its primary target.
 // The AI uses this to choose appropriate targets.
@@ -80,9 +90,9 @@ type EffectProperties struct {
 	Mass        bool        // true if effect is board-wide (wrath, earthquake, etc.)
 
 	// AI-search properties (used by search.go for simplified spell resolution):
-	LifeGain       int // life gained by controller; 0 if not a life-gain effect
-	PowerBoost     int // power boost for target; 0 if not a boost effect
-	ToughnessBoost int // toughness boost for target; 0 if not a boost effect
+	LifeGain       int  // life gained by controller; 0 if not a life-gain effect
+	PowerBoost     int  // power boost for target; 0 if not a boost effect
+	ToughnessBoost int  // toughness boost for target; 0 if not a boost effect
 	IsBounce       bool // true if this effect bounces a permanent to hand
 	TokenPower     int  // token creature power; 0 if not a token-creation effect
 	TokenToughness int  // token creature toughness; 0 if not a token-creation effect
@@ -138,17 +148,17 @@ const (
 type fixedValue struct{ n int }
 
 // Fixed creates a ValueSource that always returns the constant n.
-func Fixed(n int) ValueSource                                            { return fixedValue{n: n} }
+func Fixed(n int) ValueSource                                                { return fixedValue{n: n} }
 func (v fixedValue) Resolve(_ GameReader, _, _ uuid.UUID, _ []uuid.UUID) int { return v.n }
-func (v fixedValue) Text() string                        { return fmt.Sprintf("%d", v.n) }
+func (v fixedValue) Text() string                                            { return fmt.Sprintf("%d", v.n) }
 
 // xValue is a ValueSource that reads g.CurrentX.
 type xValue struct{}
 
 // XValue creates a ValueSource that reads the X value from the current spell/ability (g.CurrentX).
-func XValue() ValueSource                                            { return xValue{} }
+func XValue() ValueSource                                                { return xValue{} }
 func (v xValue) Resolve(g GameReader, _, _ uuid.UUID, _ []uuid.UUID) int { return g.XValue() }
-func (v xValue) Text() string                        { return "X" }
+func (v xValue) Text() string                                            { return "X" }
 
 // mulValue multiplies two ValueSources.
 type mulValue struct {
@@ -179,9 +189,11 @@ func (v addValue) Text() string { return v.a.Text() + " + " + v.b.Text() }
 type eventAmountValue struct{}
 
 // EventAmountValue creates a ValueSource that reads g.EventAmount().
-func EventAmountValue() ValueSource                                            { return eventAmountValue{} }
-func (v eventAmountValue) Resolve(g GameReader, _, _ uuid.UUID, _ []uuid.UUID) int { return g.EventAmount() }
-func (v eventAmountValue) Text() string                                        { return "that much" }
+func EventAmountValue() ValueSource { return eventAmountValue{} }
+func (v eventAmountValue) Resolve(g GameReader, _, _ uuid.UUID, _ []uuid.UUID) int {
+	return g.EventAmount()
+}
+func (v eventAmountValue) Text() string { return "that much" }
 
 // playerLifeValue reads the controller's current life total.
 type playerLifeValue struct{}
@@ -366,6 +378,34 @@ func (s selectAttachedController) Select(g GameReader, sourceID, _ uuid.UUID, _ 
 	return []uuid.UUID{target.Controller}
 }
 func (s selectAttachedController) Text() string { return "enchanted creature's controller" }
+
+// selectDefendingPlayer returns the defending player of the source's combat
+// group — i.e. the player being attacked (or the controller of the attacked
+// planeswalker). Falls back to the non-active player if the source isn't in
+// a combat group, which keeps it safe to use on triggers that fire just
+// outside combat resolution.
+type selectDefendingPlayer struct{}
+
+// SelectDefendingPlayer creates a PlayerSelector that returns the defending
+// player of the source's combat group. Use this for "defending player ..."
+// triggers on attacking creatures (Mindstab Thrull, Necrite, etc.).
+func SelectDefendingPlayer() PlayerSelector { return selectDefendingPlayer{} }
+func (s selectDefendingPlayer) Select(g GameReader, sourceID, _ uuid.UUID, _ []uuid.UUID) []uuid.UUID {
+	if group := g.CombatGroupFor(sourceID); group != nil && group.DefenderID != uuid.Nil {
+		if p := g.GetPlayer(group.DefenderID); p != nil {
+			return []uuid.UUID{p.PlayerID()}
+		}
+		// Planeswalker defender: return its controller.
+		if perm := g.FindPermanent(group.DefenderID); perm != nil {
+			return []uuid.UUID{perm.Controller}
+		}
+	}
+	if nap := g.NonActivePlayerObj(); nap != nil {
+		return []uuid.UUID{nap.PlayerID()}
+	}
+	return nil
+}
+func (s selectDefendingPlayer) Text() string { return "defending player" }
 
 // selectEventController reads targets[0] as a player ID (for event-based triggers).
 type selectEventController struct{}
