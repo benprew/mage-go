@@ -1537,11 +1537,11 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	}
 	// Check artifact mana restriction (Mishra's Workshop)
 	if g.artifactManaOnly[playerID] && !card.HasType(TypeArtifact) {
-		return fmt.Errorf("mana restriction: can only cast artifact spells")
+		return fmt.Errorf("can't cast %s: restricted mana pool may only pay for artifact spells", name)
 	}
 	// Check creature mana restriction (Metamorphosis)
 	if g.creatureManaOnly[playerID] && !card.HasType(TypeCreature) {
-		return fmt.Errorf("mana restriction: can only cast creature spells")
+		return fmt.Errorf("can't cast %s: restricted mana pool may only pay for creature spells", name)
 	}
 
 	// Determine X value
@@ -1682,7 +1682,14 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 // addManaFromAbility resolves a mana ability's productions, adding mana to the player's pool.
 // AnyColor productions prompt the player to choose a color.
 func (g *Game) addManaFromAbility(ma *ManaAbility, p Player, perm *Permanent) {
-	for _, prod := range ma.Productions {
+	g.addManaProductions(ma.Productions, p, perm)
+}
+
+// addManaProductions adds mana to the player's pool from a list of productions.
+// AnyColor productions prompt the player to choose a color. Used by both the
+// proper *ManaAbility path and the *SimpleActivatedAbility tap-for-mana path.
+func (g *Game) addManaProductions(productions []ManaProduction, p Player, perm *Permanent) {
+	for _, prod := range productions {
 		color := prod.Color
 		if color == AnyColor {
 			color = p.ChooseManaColor("add mana")
@@ -2407,7 +2414,11 @@ func (g *Game) PlayLand(playerID, cardID uuid.UUID) error {
 	return nil
 }
 
-// TapForMana taps a permanent for mana using its mana ability.
+// TapForMana taps a permanent for mana using its mana ability. Recognizes both
+// *ManaAbility (built via WithManaAbility/WithMultiManaAbility) and
+// *SimpleActivatedAbility whose only cost is tapping and whose effects are
+// mana-producing (built via WithActivatedAbility(AddMana(...), TapSourceCost())
+// — e.g. Mana Vault).
 func (g *Game) TapForMana(playerID, permanentID uuid.UUID) error {
 	perm := g.FindPermanent(permanentID)
 	if perm == nil {
@@ -2420,21 +2431,66 @@ func (g *Game) TapForMana(playerID, permanentID uuid.UUID) error {
 		return fmt.Errorf("permanent is already tapped")
 	}
 
-	// Find a mana ability
 	for _, a := range perm.RuntimeAbilities {
-		if ma, ok := a.(*ManaAbility); ok {
-			if !perm.CanTapForEffect(g) {
-				return fmt.Errorf("creature has summoning sickness")
-			}
-			g.TapPermanent(perm)
-			p := g.GetPlayer(playerID)
-			if p != nil {
-				g.addManaFromAbility(ma, p, perm)
-			}
+		productions := abilityManaProductions(a)
+		if productions == nil {
+			continue
+		}
+		if !perm.CanTapForEffect(g) {
+			return fmt.Errorf("creature has summoning sickness")
+		}
+		g.TapPermanent(perm)
+		if p := g.GetPlayer(playerID); p != nil {
+			g.addManaProductions(productions, p, perm)
+		}
+		return nil
+	}
+	return fmt.Errorf("permanent has no mana ability")
+}
+
+// abilityManaProductions returns the mana productions for an ability that acts
+// as a tap-for-mana mana source, or nil if the ability is not such a source.
+// Recognizes both *ManaAbility and *SimpleActivatedAbility whose only cost is
+// tapping and whose effects all produce mana (AddMana / AddAnyMana).
+func abilityManaProductions(a Ability) []ManaProduction {
+	switch ab := a.(type) {
+	case *ManaAbility:
+		return ab.Productions
+	case *SimpleActivatedAbility:
+		return activatedManaProductions(ab)
+	}
+	return nil
+}
+
+// activatedManaProductions extracts mana productions from a SimpleActivatedAbility
+// that behaves as a tap-for-mana ability — exactly one cost (tapping the source)
+// and all effects are AddMana / AddAnyMana. Returns nil if the shape doesn't match.
+func activatedManaProductions(a *SimpleActivatedAbility) []ManaProduction {
+	if len(a.costs) != 1 {
+		return nil
+	}
+	if _, ok := a.costs[0].(*tapSourceCost); !ok {
+		return nil
+	}
+	if len(a.effects) == 0 {
+		return nil
+	}
+	var productions []ManaProduction
+	for _, e := range a.effects {
+		adapter, ok := e.(*dataEffectAdapter)
+		if !ok {
+			return nil
+		}
+		switch d := adapter.data.(type) {
+		case *addManaEffect:
+			productions = append(productions, ManaProduction{Color: d.color, Amount: d.amount})
+		case *addAnyManaEffect:
+			productions = append(productions, ManaProduction{Color: AnyColor, Amount: d.amount})
+		default:
 			return nil
 		}
 	}
-	return fmt.Errorf("permanent has no mana ability")
+	return productions
 }
 
 // manaSourceInfo describes a mana source available for tapping.
@@ -2481,18 +2537,39 @@ func (g *Game) getUntappedManaSources(playerID uuid.UUID) []manaSourceInfo {
 			continue
 		}
 		for _, a := range perm.RuntimeAbilities {
-			if ma, ok := a.(*ManaAbility); ok {
-				sources = append(sources, manaSourceInfo{
-					PermanentID: perm.ID(),
-					Name:        perm.Name(),
-					Color:       ma.PrimaryColor(),
-					Amount:      ma.ProducedAmount(),
-				})
-				break // one entry per permanent even if it has multiple mana abilities
+			productions := abilityManaProductions(a)
+			if productions == nil {
+				continue
 			}
+			sources = append(sources, manaSourceInfo{
+				PermanentID: perm.ID(),
+				Name:        perm.Name(),
+				Color:       productionsPrimaryColor(productions),
+				Amount:      productionsTotalAmount(productions),
+			})
+			break // one entry per permanent even if it has multiple mana abilities
 		}
 	}
 	return sources
+}
+
+func productionsPrimaryColor(productions []ManaProduction) Color {
+	if len(productions) > 0 {
+		return productions[0].Color
+	}
+	return Colorless
+}
+
+func productionsTotalAmount(productions []ManaProduction) int {
+	total := 0
+	for _, p := range productions {
+		if p.Amount <= 0 {
+			total++
+		} else {
+			total += p.Amount
+		}
+	}
+	return total
 }
 
 // AutoTapForCost taps untapped lands/mana sources to pay a mana cost,
@@ -2500,7 +2577,7 @@ func (g *Game) getUntappedManaSources(playerID uuid.UUID) []manaSourceInfo {
 func (g *Game) AutoTapForCost(playerID uuid.UUID, mc ManaCost) error {
 	p := g.GetPlayer(playerID)
 	if p == nil {
-		return fmt.Errorf("player not found")
+		return ErrPlayerNotFound
 	}
 	pool := p.ManaPool()
 	sources := g.getUntappedManaSources(playerID)
@@ -2544,7 +2621,7 @@ func (g *Game) AutoTapForCost(playerID uuid.UUID, mc ManaCost) error {
 				}
 			}
 			if !found {
-				return fmt.Errorf("insufficient %s mana", color)
+				return fmt.Errorf("cannot pay %s for cost %s: no untapped %s source available", color, mc, color)
 			}
 		}
 	}
@@ -2566,7 +2643,7 @@ func (g *Game) AutoTapForCost(playerID uuid.UUID, mc ManaCost) error {
 			}
 		}
 		if !found {
-			return fmt.Errorf("insufficient mana for generic cost")
+			return fmt.Errorf("cannot pay cost %s: %d generic mana still needed, no untapped sources remain", mc, genericNeeded)
 		}
 	}
 
