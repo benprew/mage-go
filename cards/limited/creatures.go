@@ -192,7 +192,12 @@ func registerCreatures() {
 			WithKeyword(Haste),
 			// At beginning of your upkeep, if Nether Shadow is in your graveyard
 			// with three or more creature cards above it, put it onto the battlefield.
-			WithAbility(GraveyardReturnIfCreaturesAbove(3)),
+			WithAbility(NewTriggered(EvtUpkeep, false,
+				ReturnSourceFromGraveyardToBattlefield(),
+			).FromGraveyard().SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+				EventPlayerIsController{},
+				SourceInOwnGraveyardWithCreaturesAbove{N: 3},
+			}})),
 		)
 	})
 

@@ -1056,7 +1056,6 @@ Attach with WithAbility:
 	[CopyCreatureOnETB]()                 // clone ETB (Doppelganger)
 	[ETBWithTargets](effect)              // run effect on ETB using spell targets
 	[ETBEffect](effect)                   // run effect on ETB without targets
-	[GraveyardReturnIfCreaturesAbove](n)  // return from graveyard (Nether Shadow)
 	[ManaBonusAbility] / [NewManaBonusAbility](filter, color) // bonus mana on tap
 	[NewAttachedManaBonusAbility](color)  // Wild Growth bonus mana
 

@@ -13,6 +13,11 @@ type TriggeredAbility interface {
 	IsOptional() bool
 	Effects() []Effect
 	Targets() []Target
+	// TriggerSourceZone reports the zone the source must be in for this
+	// ability to listen for events. Defaults to ZoneBattlefield. Override
+	// (e.g. via FromGraveyard) for cards whose triggers function in another
+	// zone, like Nether Shadow.
+	TriggerSourceZone() Zone
 }
 
 // TriggerCondition is a predicate that determines whether a triggered ability
@@ -28,11 +33,12 @@ type TriggerCondition func(evt *GameEvent, g GameReader, sourceID, controllerID 
 // create a GenericTriggered with the appropriate condition.
 type GenericTriggered struct {
 	BaseAbility
-	eventType EventType
-	Optional  bool
-	Condition TriggerCondition
-	effects   []Effect
-	targets   []Target
+	eventType  EventType
+	sourceZone Zone
+	Optional   bool
+	Condition  TriggerCondition
+	effects    []Effect
+	targets    []Target
 }
 
 // NewTriggered creates a GenericTriggered ability that fires on the given event type.
@@ -43,11 +49,21 @@ func NewTriggered(eventType EventType, optional bool, effects ...Effect) *Generi
 			id:          uuid.New(),
 			abilityType: AbilityTriggered,
 		},
-		eventType: eventType,
-		Optional:  optional,
-		effects:   effects,
+		eventType:  eventType,
+		sourceZone: ZoneBattlefield,
+		Optional:   optional,
+		effects:    effects,
 	}
 }
+
+// FromGraveyard marks this trigger as functioning while the source card is in
+// its owner's graveyard (e.g. Nether Shadow). Returns the trigger for chaining.
+func (t *GenericTriggered) FromGraveyard() *GenericTriggered {
+	t.sourceZone = ZoneGraveyard
+	return t
+}
+
+func (t *GenericTriggered) TriggerSourceZone() Zone { return t.sourceZone }
 
 // SetCondition sets the trigger condition and returns the trigger for chaining.
 func (t *GenericTriggered) SetCondition(cond TriggerCondition) *GenericTriggered {

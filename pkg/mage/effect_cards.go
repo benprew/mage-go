@@ -137,6 +137,25 @@ func (e *returnFromGraveyardEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
+// returnSourceFromGraveyardToBattlefieldEffect returns the source card from its
+// owner's graveyard directly to the battlefield. Used by graveyard-functional
+// triggered abilities like Nether Shadow's "put it onto the battlefield".
+type returnSourceFromGraveyardToBattlefieldEffect struct{}
+
+// ReturnSourceFromGraveyardToBattlefield creates an effect that moves the
+// source card from its controller's graveyard to the battlefield. If the
+// source is no longer in the graveyard at resolution, the effect fizzles.
+func ReturnSourceFromGraveyardToBattlefield() Effect {
+	return &returnSourceFromGraveyardToBattlefieldEffect{}
+}
+
+func (e *returnSourceFromGraveyardToBattlefieldEffect) Text() string {
+	return "return ~ from your graveyard to the battlefield"
+}
+func (e *returnSourceFromGraveyardToBattlefieldEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
+
 // returnSourceToHandEffect returns the source card from graveyard to hand.
 type returnSourceToHandEffect struct{}
 
@@ -499,6 +518,19 @@ func execExileSourceFromGraveyard(ctx *EffectContext, _ *exileSourceFromGraveyar
 	if ok && card != nil {
 		ctx.Game.ExileCard(card, ctx.SourceID)
 	}
+	return nil
+}
+
+func execReturnSourceFromGraveyardToBattlefield(ctx *EffectContext, _ *returnSourceFromGraveyardToBattlefieldEffect) error {
+	p := ctx.Game.GetPlayer(ctx.Controller)
+	if p == nil {
+		return ErrPlayerNotFound
+	}
+	card, ok := p.RemoveFromGraveyard(ctx.SourceID)
+	if !ok {
+		return nil // source no longer in graveyard — fizzle
+	}
+	ctx.Game.PutOnBattlefield(card, ctx.Controller)
 	return nil
 }
 
