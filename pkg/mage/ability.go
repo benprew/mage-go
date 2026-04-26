@@ -277,21 +277,3 @@ func ETBEffect(effect Effect) *ETBEffectAbility {
 	}
 }
 
-// GraveyardReturnAbility allows a creature card in the graveyard to return to
-// the battlefield if enough creature cards are above it in the graveyard.
-type GraveyardReturnAbility struct {
-	BaseAbility
-	MinCreaturesAbove int
-}
-
-// GraveyardReturnIfCreaturesAbove creates a static ability that returns this creature card
-// from the graveyard to the battlefield if at least n creature cards are above it (e.g. Nether Shadow).
-func GraveyardReturnIfCreaturesAbove(n int) *GraveyardReturnAbility {
-	return &GraveyardReturnAbility{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityStatic,
-		},
-		MinCreaturesAbove: n,
-	}
-}

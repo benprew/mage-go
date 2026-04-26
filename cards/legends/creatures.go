@@ -496,19 +496,17 @@ func registerCreatures() {
 		return NewCreature("Time Elemental", "{2}{U}", 0, 2,
 			WithSubTypes("Elemental"),
 			// When attacks: register delayed end-of-combat sacrifice + 5 damage
-			WithAbility(AttacksTrigger(DataEffect(
+			WithAbility(AttacksTrigger(
 				RegisterDelayedTriggerStep(EvtEndOfCombat, "",
 					SacrificeSource(),
 					DealDamageToPlayers(Fixed(5), SelectController()),
-				),
-			), false)),
+				), false)),
 			// When blocks: register delayed end-of-combat sacrifice + 5 damage
-			WithAbility(BlocksTrigger(DataEffect(
+			WithAbility(BlocksTrigger(
 				RegisterDelayedTriggerStep(EvtEndOfCombat, "",
 					SacrificeSource(),
 					DealDamageToPlayers(Fixed(5), SelectController()),
-				),
-			), false)),
+				), false)),
 			// {2}{U}{U}, {T}: Return target permanent that isn't enchanted to its owner's hand.
 			WithActivatedAbility(
 				ReturnToHandTarget(),
@@ -870,20 +868,20 @@ func registerCreatures() {
 			// When Medusa blocks: destroy the attacker at end of combat
 			WithAbility(
 				NewTriggered(EvtBlockersDecl, false,
-					DataEffect(ForEachAttackerBlockedBySource(
+					ForEachAttackerBlockedBySource(
 						RegisterDelayedTriggerStep(EvtEndOfCombat, "_target", DestroyTarget()),
 						"destroy creature blocked by Infernal Medusa at end of combat",
-					)),
+					),
 				).SetConditionData(SourceIsBlockingInCombat{}),
 			),
 			// When Medusa is blocked by a non-Wall: destroy that blocker at end of combat
 			WithAbility(
 				NewTriggered(EvtBlockersDecl, false,
-					DataEffect(ForEachBlockerOfSourceMatching(
+					ForEachBlockerOfSourceMatching(
 						Not(HasSubType("Wall")),
 						RegisterDelayedTriggerStep(EvtEndOfCombat, "_target", DestroyTarget()),
 						"destroy non-Wall creatures blocking Infernal Medusa at end of combat",
-					)),
+					),
 				).SetConditionData(SourceBlockedByCreatureMatching{Filter: Not(HasSubType("Wall"))}),
 			),
 		)
@@ -2473,11 +2471,11 @@ func registerCreatures() {
 			), false)),
 			// When Hazezon leaves, exile all Sand Warriors
 			WithAbility(NewTriggered(EvtLeavesBattlefield, false,
-				DataEffect(ForEachPermanent(
+				ForEachPermanent(
 					And(HasSubType("Sand"), HasSubType("Warrior")),
 					ExileTargetStep(),
 					"exile all Sand Warriors",
-				)),
+				),
 			).SetConditionData(EventSourceIsSelf{})),
 		)
 	})

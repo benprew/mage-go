@@ -88,8 +88,8 @@ func resolvePermanents(ctx *EffectContext, sel TargetSelector) []*Permanent {
 
 // --- Boost DSL ---
 
-// boostEffect is a composable effect that temporarily modifies P/T. It
-// implements both EffectData (for pipelines) and Effect (for direct use).
+// boostEffect is a composable EffectData that temporarily modifies P/T.
+// Wrap with DataEffect() to use as an Effect.
 type boostEffect struct {
 	power     ValueSource
 	toughness ValueSource
@@ -119,7 +119,7 @@ func (e *boostEffect) Until(d Duration) *boostEffect {
 }
 
 // EffectData interface
-func (e *boostEffect) EffectText() string {
+func (e *boostEffect) Text() string {
 	_, pIsX := e.power.(xValue)
 	_, tIsX := e.toughness.(xValue)
 	if pIsX || tIsX {
@@ -137,7 +137,7 @@ func (e *boostEffect) EffectText() string {
 	}
 }
 
-func (e *boostEffect) EffectProps() EffectProperties {
+func (e *boostEffect) Properties() EffectProperties {
 	var pb, tb int
 	if _, ok := e.power.(xValue); !ok {
 		pb = e.power.Resolve(nil, uuid.Nil, uuid.Nil, nil)
@@ -148,21 +148,6 @@ func (e *boostEffect) EffectProps() EffectProperties {
 	mass := e.selector.Kind == KindMatching || e.selector.Kind == KindAllMatching
 	return EffectProperties{Outcome: OutcomeBenefit, PowerBoost: pb, ToughnessBoost: tb, Mass: mass}
 }
-
-// Effect interface — allows direct use without DataEffect() wrapper.
-func (e *boostEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	ctx := &EffectContext{
-		Game:       g,
-		SourceID:   sourceID,
-		Controller: controller,
-		Targets:    targets,
-		Vars:       make(map[string]any),
-	}
-	return execBoost(ctx, e)
-}
-
-func (e *boostEffect) Text() string            { return e.EffectText() }
-func (e *boostEffect) Properties() EffectProperties { return e.EffectProps() }
 
 func execBoost(ctx *EffectContext, e *boostEffect) error {
 	perms := resolvePermanents(ctx, e.selector)
@@ -185,8 +170,8 @@ func execBoost(ctx *EffectContext, e *boostEffect) error {
 
 // --- GrantKeyword DSL ---
 
-// grantKeywordEffect is a composable effect that temporarily grants a keyword.
-// It implements both EffectData (for pipelines) and Effect (for direct use).
+// grantKeywordEffect is a composable EffectData that temporarily grants a keyword.
+// Wrap with DataEffect() to use as an Effect.
 type grantKeywordEffect struct {
 	keyword  Keyword
 	selector TargetSelector
@@ -214,7 +199,7 @@ func (e *grantKeywordEffect) Until(d Duration) *grantKeywordEffect {
 }
 
 // EffectData interface
-func (e *grantKeywordEffect) EffectText() string {
+func (e *grantKeywordEffect) Text() string {
 	switch e.selector.Kind {
 	case KindSource:
 		return fmt.Sprintf("~ gains %s until end of turn", e.keyword)
@@ -223,24 +208,9 @@ func (e *grantKeywordEffect) EffectText() string {
 	}
 }
 
-func (e *grantKeywordEffect) EffectProps() EffectProperties {
+func (e *grantKeywordEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
-
-// Effect interface — allows direct use without DataEffect() wrapper.
-func (e *grantKeywordEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	ctx := &EffectContext{
-		Game:       g,
-		SourceID:   sourceID,
-		Controller: controller,
-		Targets:    targets,
-		Vars:       make(map[string]any),
-	}
-	return execGrantKeyword(ctx, e)
-}
-
-func (e *grantKeywordEffect) Text() string            { return e.EffectText() }
-func (e *grantKeywordEffect) Properties() EffectProperties { return e.EffectProps() }
 
 func execGrantKeyword(ctx *EffectContext, e *grantKeywordEffect) error {
 	perms := resolvePermanents(ctx, e.selector)
@@ -276,9 +246,9 @@ func CardTypeAttr(ct CardType) Attr {
 	}
 }
 
-// grantTypeEffect is a composable effect that grants an additional card type
+// grantTypeEffect is a composable EffectData that grants an additional card type
 // to a permanent via an indefinite continuous effect at LayerType.
-// It implements both EffectData (for pipelines) and Effect (for direct use).
+// Wrap with DataEffect() to use as an Effect.
 type grantTypeEffect struct {
 	ct       CardType
 	selector TargetSelector
@@ -307,28 +277,13 @@ func (e *grantTypeEffect) Until(d Duration) *grantTypeEffect {
 }
 
 // EffectData interface
-func (e *grantTypeEffect) EffectText() string {
+func (e *grantTypeEffect) Text() string {
 	return fmt.Sprintf("becomes a %s in addition to its other types", e.ct)
 }
 
-func (e *grantTypeEffect) EffectProps() EffectProperties {
+func (e *grantTypeEffect) Properties() EffectProperties {
 	return EffectProperties{}
 }
-
-// Effect interface — allows direct use without DataEffect() wrapper.
-func (e *grantTypeEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	ctx := &EffectContext{
-		Game:       g,
-		SourceID:   sourceID,
-		Controller: controller,
-		Targets:    targets,
-		Vars:       make(map[string]any),
-	}
-	return execGrantType(ctx, e)
-}
-
-func (e *grantTypeEffect) Text() string                 { return e.EffectText() }
-func (e *grantTypeEffect) Properties() EffectProperties { return e.EffectProps() }
 
 func execGrantType(ctx *EffectContext, e *grantTypeEffect) error {
 	attr := CardTypeAttr(e.ct)

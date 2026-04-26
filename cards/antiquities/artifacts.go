@@ -214,7 +214,7 @@ func registerArtifacts() {
 	Register("Feldon's Cane", func() Card {
 		return NewArtifact("Feldon's Cane", "{1}",
 			WithActivatedAbility(
-				DataEffect(ShuffleGraveyardIntoLibrary()),
+				ShuffleGraveyardIntoLibrary(),
 				TapSourceCost(),
 				WithCost(ExileSourceCost()),
 			),

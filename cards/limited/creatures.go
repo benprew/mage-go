@@ -192,7 +192,12 @@ func registerCreatures() {
 			WithKeyword(Haste),
 			// At beginning of your upkeep, if Nether Shadow is in your graveyard
 			// with three or more creature cards above it, put it onto the battlefield.
-			WithAbility(GraveyardReturnIfCreaturesAbove(3)),
+			WithAbility(NewTriggered(EvtUpkeep, false,
+				ReturnSourceFromGraveyardToBattlefield(),
+			).FromGraveyard().SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+				EventPlayerIsController{},
+				SourceInOwnGraveyardWithCreaturesAbove{N: 3},
+			}})),
 		)
 	})
 
@@ -472,12 +477,12 @@ func registerCreatures() {
 			WithKeyword(Trample),
 			// At the beginning of your upkeep, Force of Nature deals 8 damage to you
 			// unless you pay {G}{G}{G}{G}.
-			WithAbility(NewTriggered(EvtUpkeep, false, DataEffect(IfElse(
+			WithAbility(NewTriggered(EvtUpkeep, false, IfElse(
 				"deal 8 damage unless you pay {G}{G}{G}{G}",
 				&TryPayManaCond{Cost: "{G}{G}{G}{G}"},
 				nil,
 				UnwrapEffect(DealDamageToPlayers(Fixed(8), SelectController())),
-			))).SetConditionData(EventPlayerIsController{})),
+			)).SetConditionData(EventPlayerIsController{})),
 		)
 	})
 
@@ -800,7 +805,7 @@ func registerCreatures() {
 							return nil
 						}
 						targetID := targets[0]
-						GrantKeyword(MustAttack).Apply(g, sourceID, controller, targets)
+						ApplyEffect(g, GrantKeyword(MustAttack), sourceID, controller, targets)
 						g.RegisterDelayedTrigger(&DelayedTrigger{
 							EventType:  EvtEndStep,
 							SourceID:   sourceID,

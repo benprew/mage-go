@@ -122,11 +122,11 @@ func registerArtifacts() {
 		return NewArtifact("Arena of the Ancients", "{3}",
 			WithStaticAbility(PreventUntapForMatching(And(IsCreature, IsLegendary))),
 			WithAbility(EntersBattlefieldTrigger(
-				DataEffect(ForEachPermanent(
+				ForEachPermanent(
 					And(IsCreature, IsLegendary),
 					TapTargetStep(),
 					"tap all legendary creatures",
-				)), false)),
+				), false)),
 		)
 	})
 

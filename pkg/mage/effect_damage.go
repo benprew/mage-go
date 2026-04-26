@@ -13,16 +13,16 @@ type gainLifeEffect struct {
 
 // GainLife creates an effect that gains life for the controller.
 func GainLife(amount int) Effect {
-	return DataEffect(&gainLifeEffect{amount: amount})
+	return &gainLifeEffect{amount: amount}
 }
 
 // GainLifeStep returns the EffectData for use in pipelines/ForEach/Modal.
 func GainLifeStep(amount int) EffectData { return &gainLifeEffect{amount: amount} }
 
-func (e *gainLifeEffect) EffectText() string {
+func (e *gainLifeEffect) Text() string {
 	return fmt.Sprintf("gain %d life", e.amount)
 }
-func (e *gainLifeEffect) EffectProps() EffectProperties {
+func (e *gainLifeEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit, LifeGain: e.amount}
 }
 
@@ -33,13 +33,13 @@ type gainLifeDynamicEffect struct {
 
 // GainLifeAmount creates an effect that gains life for the controller equal to a dynamic value.
 func GainLifeAmount(amount ValueSource) Effect {
-	return DataEffect(&gainLifeDynamicEffect{amount: amount})
+	return &gainLifeDynamicEffect{amount: amount}
 }
 
-func (e *gainLifeDynamicEffect) EffectText() string {
+func (e *gainLifeDynamicEffect) Text() string {
 	return "gain " + e.amount.Text() + " life"
 }
-func (e *gainLifeDynamicEffect) EffectProps() EffectProperties {
+func (e *gainLifeDynamicEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
@@ -50,16 +50,16 @@ type gainLifeTargetEffect struct {
 
 // GainLifeTarget creates an effect that gains life for a target player (or controller as fallback).
 func GainLifeTarget(amount ValueSource) Effect {
-	return DataEffect(&gainLifeTargetEffect{amount: amount})
+	return &gainLifeTargetEffect{amount: amount}
 }
 
-func (e *gainLifeTargetEffect) EffectText() string {
+func (e *gainLifeTargetEffect) Text() string {
 	if _, ok := e.amount.(xValue); ok {
 		return "target player gains X life"
 	}
 	return fmt.Sprintf("target player gains %d life", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil))
 }
-func (e *gainLifeTargetEffect) EffectProps() EffectProperties {
+func (e *gainLifeTargetEffect) Properties() EffectProperties {
 	lg := 0
 	if _, ok := e.amount.(xValue); !ok {
 		lg = e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil)
@@ -67,20 +67,30 @@ func (e *gainLifeTargetEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit, LifeGain: lg}
 }
 
-// poisonTargetPlayerEffect gives the target player a poison counter.
+// poisonTargetPlayerEffect gives a player poison counters. By default the
+// player is read from ctx.Targets[0]. Use Targeting to override with a
+// PlayerSelector.
 type poisonTargetPlayerEffect struct {
 	amount int
+	sel    PlayerSelector
 }
 
-// PoisonTargetPlayer creates an effect that gives the target player N poison counters.
-func PoisonTargetPlayer(amount int) Effect {
-	return DataEffect(&poisonTargetPlayerEffect{amount: amount})
+// PoisonTargetPlayer creates an effect that gives the target player N poison
+// counters. Chain .Targeting(sel) to pick the player(s) via a PlayerSelector.
+func PoisonTargetPlayer(amount int) *poisonTargetPlayerEffect {
+	return &poisonTargetPlayerEffect{amount: amount}
 }
 
-func (e *poisonTargetPlayerEffect) EffectText() string {
+// Targeting overrides the default target (ctx.Targets[0]) with a PlayerSelector.
+func (e *poisonTargetPlayerEffect) Targeting(sel PlayerSelector) *poisonTargetPlayerEffect {
+	e.sel = sel
+	return e
+}
+
+func (e *poisonTargetPlayerEffect) Text() string {
 	return fmt.Sprintf("target player gets %d poison counter(s)", e.amount)
 }
-func (e *poisonTargetPlayerEffect) EffectProps() EffectProperties {
+func (e *poisonTargetPlayerEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
@@ -91,13 +101,13 @@ type loseLifeDynamicEffect struct {
 
 // LoseLifeAmount creates an effect that causes the controller to lose life equal to a dynamic value.
 func LoseLifeAmount(amount ValueSource) Effect {
-	return DataEffect(&loseLifeDynamicEffect{amount: amount})
+	return &loseLifeDynamicEffect{amount: amount}
 }
 
-func (e *loseLifeDynamicEffect) EffectText() string {
+func (e *loseLifeDynamicEffect) Text() string {
 	return "lose " + e.amount.Text() + " life"
 }
-func (e *loseLifeDynamicEffect) EffectProps() EffectProperties {
+func (e *loseLifeDynamicEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
@@ -108,13 +118,13 @@ type loseLifeEffect struct {
 
 // LoseLife creates an effect that causes the controller to lose life.
 func LoseLife(amount int) Effect {
-	return DataEffect(&loseLifeEffect{amount: amount})
+	return &loseLifeEffect{amount: amount}
 }
 
-func (e *loseLifeEffect) EffectText() string {
+func (e *loseLifeEffect) Text() string {
 	return fmt.Sprintf("you lose %d life", e.amount)
 }
-func (e *loseLifeEffect) EffectProps() EffectProperties {
+func (e *loseLifeEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
@@ -125,19 +135,19 @@ type dealDamageEffect struct {
 
 // DealDamage creates an effect that deals damage to a target.
 func DealDamage(amount ValueSource) Effect {
-	return DataEffect(&dealDamageEffect{amount: amount})
+	return &dealDamageEffect{amount: amount}
 }
 
 // DealDamageStep returns the EffectData for use in pipelines/ForEach.
 func DealDamageStep(amount ValueSource) EffectData { return &dealDamageEffect{amount: amount} }
 
-func (e *dealDamageEffect) EffectText() string {
+func (e *dealDamageEffect) Text() string {
 	if _, ok := e.amount.(xValue); ok {
 		return "deal X damage to target"
 	}
 	return fmt.Sprintf("deal %d damage to target", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil))
 }
-func (e *dealDamageEffect) EffectProps() EffectProperties {
+func (e *dealDamageEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment, DamageValue: e.amount}
 }
 
@@ -149,16 +159,16 @@ type dealDamageToAllCreaturesEffect struct {
 
 // DealDamageToAllCreatures creates an effect that deals damage to all matching creatures.
 func DealDamageToAllCreatures(amount ValueSource, filter PermanentFilter) Effect {
-	return DataEffect(&dealDamageToAllCreaturesEffect{amount: amount, filter: filter})
+	return &dealDamageToAllCreaturesEffect{amount: amount, filter: filter}
 }
 
-func (e *dealDamageToAllCreaturesEffect) EffectText() string {
+func (e *dealDamageToAllCreaturesEffect) Text() string {
 	if _, ok := e.amount.(xValue); ok {
 		return "deal X damage to each creature"
 	}
 	return fmt.Sprintf("deal %d damage to each creature", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil))
 }
-func (e *dealDamageToAllCreaturesEffect) EffectProps() EffectProperties {
+func (e *dealDamageToAllCreaturesEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment, DamageValue: e.amount, Mass: true}
 }
 
@@ -170,7 +180,7 @@ type dealDamageToPlayersEffect struct {
 
 // DealDamageToPlayers creates an effect that deals damage to players selected by the selector.
 func DealDamageToPlayers(amount ValueSource, selector PlayerSelector) Effect {
-	return DataEffect(&dealDamageToPlayersEffect{amount: amount, selector: selector})
+	return &dealDamageToPlayersEffect{amount: amount, selector: selector}
 }
 
 // DealDamageToPlayersStep returns the EffectData for use in pipelines/ForEach/Modal.
@@ -178,10 +188,10 @@ func DealDamageToPlayersStep(amount ValueSource, selector PlayerSelector) Effect
 	return &dealDamageToPlayersEffect{amount: amount, selector: selector}
 }
 
-func (e *dealDamageToPlayersEffect) EffectText() string {
+func (e *dealDamageToPlayersEffect) Text() string {
 	return fmt.Sprintf("deal %s damage to %s", e.amount.Text(), e.selector.Text())
 }
-func (e *dealDamageToPlayersEffect) EffectProps() EffectProperties {
+func (e *dealDamageToPlayersEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment, DamageValue: e.amount}
 }
 
@@ -195,7 +205,7 @@ type handSizeDamageEffect struct {
 // their hand size relative to a threshold. If above is true, damage = hand - threshold
 // (Black Vise: threshold 4). If above is false, damage = threshold - hand (The Rack: threshold 3).
 func HandSizeDamageEffect(threshold int, above bool) Effect {
-	return DataEffect(&handSizeDamageEffect{threshold: threshold, above: above})
+	return &handSizeDamageEffect{threshold: threshold, above: above}
 }
 
 // BlackViseEffect creates the Black Vise damage effect (hand size minus 4).
@@ -208,26 +218,26 @@ func TheRackEffect() Effect {
 	return HandSizeDamageEffect(3, false)
 }
 
-func (e *handSizeDamageEffect) EffectText() string {
+func (e *handSizeDamageEffect) Text() string {
 	if e.above {
 		return fmt.Sprintf("deal damage to active player equal to cards in hand minus %d", e.threshold)
 	}
 	return fmt.Sprintf("deal damage to active player equal to %d minus cards in hand", e.threshold)
 }
-func (e *handSizeDamageEffect) EffectProps() EffectProperties { return EffectProperties{} }
+func (e *handSizeDamageEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // preventAllCombatDamageEffect prevents all combat damage this turn (Fog).
 type preventAllCombatDamageEffect struct{}
 
 // PreventAllCombatDamage creates an effect that prevents all combat damage this turn (e.g. Fog).
 func PreventAllCombatDamage() Effect {
-	return DataEffect(&preventAllCombatDamageEffect{})
+	return &preventAllCombatDamageEffect{}
 }
 
-func (e *preventAllCombatDamageEffect) EffectText() string {
+func (e *preventAllCombatDamageEffect) Text() string {
 	return "prevent all combat damage that would be dealt this turn"
 }
-func (e *preventAllCombatDamageEffect) EffectProps() EffectProperties {
+func (e *preventAllCombatDamageEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
@@ -238,16 +248,16 @@ type preventDamageToTargetEffect struct {
 
 // PreventDamageToTarget creates an effect that prevents damage to a target.
 func PreventDamageToTarget(amount ValueSource) Effect {
-	return DataEffect(&preventDamageToTargetEffect{amount: amount})
+	return &preventDamageToTargetEffect{amount: amount}
 }
 
-func (e *preventDamageToTargetEffect) EffectText() string {
+func (e *preventDamageToTargetEffect) Text() string {
 	if _, ok := e.amount.(xValue); ok {
 		return "Prevent the next X damage to target"
 	}
 	return fmt.Sprintf("Prevent the next %d damage to target", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil))
 }
-func (e *preventDamageToTargetEffect) EffectProps() EffectProperties {
+func (e *preventDamageToTargetEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
@@ -260,10 +270,10 @@ type sacrificeOrDamageEffect struct {
 // SacrificeCreatureOrDamage creates an effect where the controller sacrifices a creature,
 // or takes damage if no creature is available (e.g. Lord of the Pit upkeep).
 func SacrificeCreatureOrDamage(damage int) Effect {
-	return DataEffect(&sacrificeOrDamageEffect{damage: damage})
+	return &sacrificeOrDamageEffect{damage: damage}
 }
 
-func (e *sacrificeOrDamageEffect) EffectText() string {
+func (e *sacrificeOrDamageEffect) Text() string {
 	return fmt.Sprintf("Sacrifice a creature or take %d damage", e.damage)
 }
-func (e *sacrificeOrDamageEffect) EffectProps() EffectProperties { return EffectProperties{} }
+func (e *sacrificeOrDamageEffect) Properties() EffectProperties { return EffectProperties{} }

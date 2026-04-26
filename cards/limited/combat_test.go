@@ -21,10 +21,11 @@ func TestBlockedCreatureRemainsBlocked(t *testing.T) {
 
 		g.Attack(1, gametest.PlayerA, "Hill Giant")
 		g.Block(1, gametest.PlayerB, "Grizzly Bears", "Hill Giant")
-		// Kill the blocker with Lightning Bolt after blockers declared, before damage.
-		// Use FirstStrikeDamage step: executeOrderedActions fires before damage resolves,
-		// and blocks were already declared in DeclareBlockers step.
-		g.CastSpell(1, core.FirstStrikeDamage, gametest.PlayerA, "Lightning Bolt", "Grizzly Bears")
+		// Kill the blocker after blocks are declared but before combat damage.
+		// FirstStrikeDamage is skipped entirely when no creature has first/double
+		// strike (no priority round runs there), so cast in DeclareBlockers, where
+		// priority is given after blockers are declared.
+		g.CastSpell(1, core.DeclareBlockers, gametest.PlayerA, "Lightning Bolt", "Grizzly Bears")
 
 		g.StopAt(1, core.EndStep)
 		g.Execute()
@@ -48,7 +49,7 @@ func TestBlockedCreatureRemainsBlocked(t *testing.T) {
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Berserk", "Craw Wurm")
 		g.Attack(1, gametest.PlayerA, "Craw Wurm")
 		g.Block(1, gametest.PlayerB, "Grizzly Bears", "Craw Wurm")
-		g.CastSpell(1, core.FirstStrikeDamage, gametest.PlayerA, "Lightning Bolt", "Grizzly Bears")
+		g.CastSpell(1, core.DeclareBlockers, gametest.PlayerA, "Lightning Bolt", "Grizzly Bears")
 
 		g.StopAt(1, core.EndStep)
 		g.Execute()

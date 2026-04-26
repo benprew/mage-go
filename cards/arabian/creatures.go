@@ -20,10 +20,10 @@ func registerCreatures() {
 			WithSubTypes("Human"),
 			WithAbility(
 				NewTriggered(EvtCreatureDied, false,
-					DataEffect(ForEachCombatOpponent(
+					ForEachCombatOpponent(
 						DestroyTargetNoRegenStep(),
 						"destroy all creatures blocking or blocked by Abu Ja'far",
-					)),
+					),
 				).SetConditionData(EventSourceIsSelf{}),
 			),
 		)
@@ -123,11 +123,11 @@ func registerCreatures() {
 			WithKeyword(DoesNotUntapKW),
 			// "At the beginning of your upkeep, you may pay {U}{U}{U}. If you do, untap it."
 			WithAbility(BeginningOfUpkeepTrigger(
-				DataEffect(IfElse("pay {U}{U}{U} to untap",
+				IfElse("pay {U}{U}{U} to untap",
 					&TryPayManaCond{Cost: "{U}{U}{U}"},
 					UnwrapEffect(UntapSource()),
 					nil,
-				)), false,
+				), false,
 			)),
 			WithStaticAbility(PreventFromAttackingIfDefendingPlayerControls(HasSubType("Island"))),
 			WithAbility(NewTriggered(EvtLeavesBattlefield, false, SacrificeSource()).
@@ -408,11 +408,11 @@ func registerCreatures() {
 		return NewCreature("Hasran Ogress", "{B}{B}", 3, 2,
 			WithSubTypes("Ogre"),
 			WithAbility(AttacksTrigger(
-				DataEffect(IfElse("pay {2} or take 3 damage",
+				IfElse("pay {2} or take 3 damage",
 					&TryPayManaCond{Cost: "{2}"},
 					nil,
 					UnwrapEffect(DealDamageToPlayers(Fixed(3), SelectController())),
-				)), false,
+				), false,
 			)),
 		)
 	})
@@ -624,9 +624,9 @@ func registerCreatures() {
 			WithSubTypes("Bird", "Egg"),
 			WithAbility(
 				NewTriggered(EvtCreatureDied, false,
-					DataEffect(RegisterDelayedTriggerStep(EvtEndStep, "",
+					RegisterDelayedTriggerStep(EvtEndStep, "",
 						CreateColoredToken("Bird", 4, 4, []Color{Red}, []CardType{TypeCreature}, []string{"Bird"}, Flying),
-					)),
+					),
 				).SetConditionData(EventSourceIsSelf{}),
 			),
 		)
@@ -852,11 +852,11 @@ func registerCreatures() {
 			WithCardType(TypeArtifact),
 			WithKeyword(DoesNotUntapKW),
 			WithAbility(BeginningOfUpkeepTrigger(
-				DataEffect(IfElse("pay {1} to untap",
+				IfElse("pay {1} to untap",
 					&TryPayManaCond{Cost: "{1}"},
 					UnwrapEffect(UntapSource()),
 					nil,
-				)), false,
+				), false,
 			)),
 		)
 	})

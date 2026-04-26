@@ -547,6 +547,38 @@ func (AttachedToIsEventSourceNoTapCost) CheckTriggerCond(evt *GameEvent, g GameR
 	return evt.SourceID == src.AttachedTo
 }
 
+// SourceInOwnGraveyardWithCreaturesAbove checks that the source card is in its
+// owner's graveyard with at least N creature cards above it. Used as the
+// intervening-if for graveyard-functional triggers like Nether Shadow.
+type SourceInOwnGraveyardWithCreaturesAbove struct {
+	N int
+}
+
+func (c SourceInOwnGraveyardWithCreaturesAbove) CheckTriggerCond(_ *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
+	p := g.GetPlayer(controllerID)
+	if p == nil {
+		return false
+	}
+	graveyard := p.Graveyard()
+	idx := -1
+	for i, card := range graveyard {
+		if card.ID() == sourceID {
+			idx = i
+			break
+		}
+	}
+	if idx < 0 {
+		return false
+	}
+	above := 0
+	for j := idx + 1; j < len(graveyard); j++ {
+		if graveyard[j].HasType(TypeCreature) {
+			above++
+		}
+	}
+	return above >= c.N
+}
+
 // OpponentActivatedArtifactNoTapCost checks that an opponent activated an
 // artifact ability without a tap cost.
 type OpponentActivatedArtifactNoTapCost struct{}

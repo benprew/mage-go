@@ -1078,12 +1078,12 @@ func registerSpells() {
 // XXX: timing restriction not enforced
 	Register("Reset", func() Card {
 		return NewInstant("Reset", "{U}{U}",
-			NewSpellAbility(DataEffect(ForEachControlledPermanent(
+			NewSpellAbility(ForEachControlledPermanent(
 				SelectController(),
 				IsLand,
 				UntapTargetStep(),
 				"untap all lands you control",
-			))),
+			)),
 		)
 	})
 

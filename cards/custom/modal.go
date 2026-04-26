@@ -15,10 +15,10 @@ func registerModal() {
 	Register("Modal Test Artifact", func() Card {
 		c := NewArtifact("Modal Test Artifact", "{1}",
 			WithActivatedAbility(
-				DataEffect(ModalEffect("deal 1 damage or gain 1 life",
+				ModalEffect("deal 1 damage or gain 1 life",
 					DealDamageToPlayersStep(Fixed(1), SelectEachOpponent()),
 					GainLifeStep(1),
-				)),
+				),
 				ManaCostOf("{1}"),
 			),
 		)

@@ -482,14 +482,14 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 	// Run unconditional ETB effects (e.g. Primal Clay mode choice)
 	for _, a := range perm.RuntimeAbilities {
 		if etb, ok := a.(*ETBEffectAbility); ok {
-			_ = etb.Effect.Apply(g, perm.ID(), controller, nil)
+			_ = ApplyEffect(g, etb.Effect, perm.ID(), controller, nil)
 		}
 	}
 
 	// Run ETB-with-targets effects (e.g. Oubliette exile on entry)
 	for _, a := range perm.RuntimeAbilities {
 		if etb, ok := a.(*ETBWithTargetsAbility); ok && len(g.resolvingTargets) > 0 {
-			_ = etb.Effect.Apply(g, perm.ID(), controller, g.resolvingTargets)
+			_ = ApplyEffect(g, etb.Effect, perm.ID(), controller, g.resolvingTargets)
 			break
 		}
 	}
@@ -1213,6 +1213,9 @@ func (g *Game) FireEvent(evt GameEvent) {
 			if !ok {
 				continue
 			}
+			if ta.TriggerSourceZone() != ZoneBattlefield {
+				continue
+			}
 			if !ta.CheckEventType(evt.Type) {
 				continue
 			}
@@ -1222,6 +1225,39 @@ func (g *Game) FireEvent(evt GameEvent) {
 					event:      &evt,
 					sourceID:   perm.ID(),
 					controller: perm.Controller,
+				})
+			}
+		}
+	}
+
+	// Graveyard-functional triggers (e.g. Nether Shadow): a card in a graveyard
+	// listens for events while it has an ability declared as TriggerSourceZone()
+	// == ZoneGraveyard. Controller is the card's owner, since graveyard cards
+	// have no controller.
+	p := g.ActivePlayerObj()
+	for _, card := range p.Graveyard() {
+		for _, a := range card.Abilities() {
+			ta, ok := UnwrapAbility(a).(TriggeredAbility)
+			if !ok {
+				continue
+			}
+			if ta.TriggerSourceZone() != ZoneGraveyard {
+				continue
+			}
+			if !ta.CheckEventType(evt.Type) {
+				continue
+			}
+			// Bind source/controller on the shared ability so the
+			// condition predicate sees the right values, mirroring how
+			// PutOnBattlefield primes battlefield abilities.
+			a.SetSource(card.ID())
+			a.SetController(p.PlayerID())
+			if ta.CheckTrigger(&evt, g) {
+				g.pendingTriggers = append(g.pendingTriggers, &pendingTrigger{
+					ability:    ta,
+					event:      &evt,
+					sourceID:   card.ID(),
+					controller: p.PlayerID(),
 				})
 			}
 		}
@@ -1450,7 +1486,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 	g.resolvingCard = obj.Card
 	g.resolvingTargets = obj.Targets
 	for _, eff := range obj.Effects {
-		_ = eff.Apply(g, obj.SourceID, obj.Controller, obj.Targets)
+		_ = ApplyEffect(g, eff, obj.SourceID, obj.Controller, obj.Targets)
 	}
 
 	// If this was a spell (not an ability), put the card in the graveyard
@@ -1962,57 +1998,20 @@ func (g *Game) doUntap() {
 	g.landsPlayedThisTurn = 0
 }
 
+// TODO this should "tell" turn to do upkeep actions and give turn a list of actions to do
+// this should iterate over permanents & cards in the game and ask if they have upkeep actions to do
+// What the fuck is this method doing here? Why isn't it part of Turn or similar?
 func (g *Game) doUpkeepActions() {
 	active := g.ActivePlayerObj()
 
 	// Expire "until your next upkeep" effects for the active player.
 	g.effects.RemoveUntilYourNextTurn(g, active.PlayerID())
 
-	// Check for graveyard returns (e.g. Nether Shadow)
-	g.checkGraveyardReturns(active)
-
 	g.FireEvent(GameEvent{
 		Type:     EvtUpkeep,
 		PlayerID: active.PlayerID(),
 	})
 	g.PutTriggersOnStack()
-}
-
-// checkGraveyardReturns checks for cards in the graveyard that can return to the
-// battlefield at the beginning of their controller's upkeep (e.g. Nether Shadow).
-func (g *Game) checkGraveyardReturns(p Player) {
-	graveyard := p.Graveyard()
-	var toReturn []uuid.UUID
-
-	for i, card := range graveyard {
-		var minCreatures int
-		for _, a := range card.Abilities() {
-			if gra, ok := a.(*GraveyardReturnAbility); ok {
-				minCreatures = gra.MinCreaturesAbove
-				break
-			}
-		}
-		if minCreatures <= 0 {
-			continue
-		}
-		// Count creature cards above this one (higher indices = more recently added)
-		creaturesAbove := 0
-		for j := i + 1; j < len(graveyard); j++ {
-			if graveyard[j].HasType(TypeCreature) {
-				creaturesAbove++
-			}
-		}
-		if creaturesAbove >= minCreatures {
-			toReturn = append(toReturn, card.ID())
-		}
-	}
-
-	for _, id := range toReturn {
-		card, ok := p.RemoveFromGraveyard(id)
-		if ok {
-			g.PutOnBattlefield(card, p.PlayerID())
-		}
-	}
 }
 
 func (g *Game) doDrawActions() {

@@ -38,37 +38,36 @@ func TestAmuletOfKroog(t *testing.T) {
 }
 
 func TestArmageddonClock(t *testing.T) {
+	// Clock controlled by PlayerB so the draw-step trigger fires on turn 2:
+	// per CR 103.8a, PlayerA's turn-1 draw step is skipped.
 	t.Run("deals damage equal to doom counters at draw step", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Armageddon Clock")
-		// After upkeep (1 doom counter), at draw step deals 1 to each player
-		g.StopAt(1, core.PrecombatMain)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Armageddon Clock")
+		g.StopAt(2, core.PrecombatMain)
 		g.Execute()
-		g.AssertLife(gametest.PlayerA, 19) // 1 doom counter → 1 damage
+		g.AssertLife(gametest.PlayerA, 19)
 		g.AssertLife(gametest.PlayerB, 19)
 	})
 
 	t.Run("doom counters accumulate over multiple turns", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Armageddon Clock")
-		// Turn 1: 1 doom counter → 1 damage each, Turn 3: 2 doom counters → 2 damage each
-		g.StopAt(3, core.PrecombatMain)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Armageddon Clock")
+		// Turn 2: 1 counter → 1 dmg each. Turn 4: 2 counters → 2 dmg each. Total: 3 each.
+		g.StopAt(4, core.PrecombatMain)
 		g.Execute()
-		// Turn 1: 1 dmg each, Turn 3: 2 dmg each = 3 total each
 		g.AssertLife(gametest.PlayerA, 17)
 		g.AssertLife(gametest.PlayerB, 17)
 	})
 
 	t.Run("remove doom counter ability for {4}", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Armageddon Clock")
-		// After turn 1 upkeep adds doom counter, remove it during upkeep
-		g.ActivateAbility(3, core.Upkeep, gametest.PlayerA, "Armageddon Clock")
-		g.StopAt(3, core.PrecombatMain)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Armageddon Clock")
+		g.ActivateAbility(4, core.Upkeep, gametest.PlayerB, "Armageddon Clock")
+		g.StopAt(4, core.PrecombatMain)
 		g.Execute()
-		// Turn 1: 1 doom counter dealt 1 damage each
-		// Turn 3: added 2nd doom counter, removed 1 → 1 doom counter, dealt 1 each
-		// Total: 2 damage each
+		// Turn 2: 1 counter dealt 1 each.
+		// Turn 4: 2nd counter added (2 total) → activated to remove (1 total) → 1 each.
+		// Total: 2 damage each.
 		g.AssertLife(gametest.PlayerA, 18)
 		g.AssertLife(gametest.PlayerB, 18)
 	})

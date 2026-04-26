@@ -534,24 +534,10 @@ func registerCreatures() {
 	Register("Mindstab Thrull", withExpansion(func() Card {
 		return NewCreature("Mindstab Thrull", "{1}{B}{B}", 2, 2,
 			WithSubTypes("Thrull"),
-			// TODO: convert to pipeline — needs SacrificeSourceStep + DiscardCards targeting defending player
 			WithAbility(NewTriggered(EvtBlockersDecl, true,
-				FuncEffect("sacrifice, defending player discards 3",
-					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						src := g.FindPermanent(sourceID)
-						if src == nil {
-							return nil
-						}
-						g.Sacrifice(src)
-						defending := g.NonActivePlayerObj()
-						if defending != nil {
-							DiscardCards(Fixed(3)).Apply(g, sourceID, controller, []uuid.UUID{defending.PlayerID()})
-						}
-						return nil
-					}),
-			).
-				SetConditionData(SourceIsUnblockedAttacker{})),
+				SacrificeSource(),
+				DiscardCards(Fixed(3)).Targeting(SelectDefendingPlayer()),
+			).SetConditionData(SourceIsUnblockedAttacker{})),
 		)
 	}))
 

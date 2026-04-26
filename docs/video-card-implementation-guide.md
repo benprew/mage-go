@@ -482,7 +482,7 @@ mage.NewCreature("Black Knight", "{B}{B}", 2, 1,
 
 ## SLIDE 27 — Special Ability Types
 
-**ETB & Lifecycle:** `ETBWithTargets`, `ETBEffect`, `EntersWithXCounters`, `CopyCreatureOnETB`, `SacrificeUnlessLand`, `GraveyardReturnIfCreaturesAbove`
+**ETB & Lifecycle:** `ETBWithTargets`, `ETBEffect`, `EntersWithXCounters`, `CopyCreatureOnETB`, `SacrificeUnlessLand`
 
 **Mana:** `NewManaAbility`, `ManaBonusAbility`, `NewManaBonusAbility`, `NewAttachedManaBonusAbility`, `NewEquipAbility`
 

@@ -35,11 +35,11 @@ func registerSpells() {
 
 	Register("Healing Salve", func() Card {
 		c := NewInstant("Healing Salve", "{W}",
-			NewTargetedSpell(TargetAnyTarget(), DataEffect(ModalEffect(
+			NewTargetedSpell(TargetAnyTarget(), ModalEffect(
 				"target player gains 3 life or prevent the next 3 damage that would be dealt to any target this turn",
 				UnwrapEffect(GainLifeTarget(Fixed(3))),
 				UnwrapEffect(PreventDamageToTarget(Fixed(3))),
-			))),
+			)),
 		)
 		c.SetModes([]string{
 			"Target player gains 3 life",
@@ -256,11 +256,11 @@ func registerSpells() {
 		return NewEnchantment("Pestilence", "{2}{B}{B}",
 			// At the beginning of the end step, if no creatures are on the battlefield, sacrifice Pestilence.
 			WithAbility(BeginningOfEachEndStepTrigger(
-				DataEffect(IfElse("sacrifice if no creatures",
+				IfElse("sacrifice if no creatures",
 					&NotCond{Inner: &HasMatchingPermanentCond{Filter: IsCreature}},
 					SacrificeSourceStep(),
 					nil,
-				)), false,
+				), false,
 			)),
 			// {B}: Deal 1 damage to each creature and each player
 			WithActivatedAbility(

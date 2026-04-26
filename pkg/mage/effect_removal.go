@@ -13,14 +13,14 @@ type destroyTargetEffect struct{}
 
 // DestroyTarget creates an effect that destroys the first target permanent.
 func DestroyTarget() Effect {
-	return DataEffect(&destroyTargetEffect{})
+	return &destroyTargetEffect{}
 }
 
 // DestroyTargetStep returns the EffectData for use as a pipeline/ForEach inner step.
 func DestroyTargetStep() EffectData { return &destroyTargetEffect{} }
 
-func (e *destroyTargetEffect) EffectText() string { return "destroy target" }
-func (e *destroyTargetEffect) EffectProps() EffectProperties {
+func (e *destroyTargetEffect) Text() string { return "destroy target" }
+func (e *destroyTargetEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
@@ -31,21 +31,21 @@ type destroyTargetPermanentEffect struct {
 
 // DestroyTargetPermanent creates an effect that destroys a target permanent.
 func DestroyTargetPermanent() Effect {
-	return DataEffect(&destroyTargetPermanentEffect{text: "destroy target permanent"})
+	return &destroyTargetPermanentEffect{text: "destroy target permanent"}
 }
 
 // DestroyTargetLand creates an effect that destroys a target land (e.g. Stone Rain, Sinkhole).
 func DestroyTargetLand() Effect {
-	return DataEffect(&destroyTargetPermanentEffect{text: "destroy target land"})
+	return &destroyTargetPermanentEffect{text: "destroy target land"}
 }
 
 // DestroyTargetArtifact creates an effect that destroys a target artifact (e.g. Shatter).
 func DestroyTargetArtifact() Effect {
-	return DataEffect(&destroyTargetPermanentEffect{text: "destroy target artifact"})
+	return &destroyTargetPermanentEffect{text: "destroy target artifact"}
 }
 
-func (e *destroyTargetPermanentEffect) EffectText() string { return e.text }
-func (e *destroyTargetPermanentEffect) EffectProps() EffectProperties {
+func (e *destroyTargetPermanentEffect) Text() string { return e.text }
+func (e *destroyTargetPermanentEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
@@ -67,11 +67,11 @@ type destroyAllMatchingEffect struct {
 
 // DestroyAllMatching creates an effect that destroys all permanents matching the filter.
 func DestroyAllMatching(filter PermanentFilter, text string) Effect {
-	return DataEffect(&destroyAllMatchingEffect{filter: filter, text: text})
+	return &destroyAllMatchingEffect{filter: filter, text: text}
 }
 
-func (e *destroyAllMatchingEffect) EffectText() string { return e.text }
-func (e *destroyAllMatchingEffect) EffectProps() EffectProperties {
+func (e *destroyAllMatchingEffect) Text() string { return e.text }
+func (e *destroyAllMatchingEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment, Mass: true}
 }
 
@@ -89,11 +89,11 @@ type destroyAllMatchingNoRegenEffect struct {
 // DestroyAllMatchingNoRegen creates an effect that destroys all permanents matching the filter.
 // The destroyed permanents can't be regenerated (e.g. Shatterstorm).
 func DestroyAllMatchingNoRegen(filter PermanentFilter, text string) Effect {
-	return DataEffect(&destroyAllMatchingNoRegenEffect{filter: filter, text: text})
+	return &destroyAllMatchingNoRegenEffect{filter: filter, text: text}
 }
 
-func (e *destroyAllMatchingNoRegenEffect) EffectText() string { return e.text }
-func (e *destroyAllMatchingNoRegenEffect) EffectProps() EffectProperties {
+func (e *destroyAllMatchingNoRegenEffect) Text() string { return e.text }
+func (e *destroyAllMatchingNoRegenEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment, Mass: true}
 }
 
@@ -103,7 +103,7 @@ type destroyTargetNoRegenEffect struct{}
 // DestroyTargetNoRegen creates an effect that destroys the first target permanent.
 // The destroyed permanent can't be regenerated (e.g. Terror, Tunnel).
 func DestroyTargetNoRegen() Effect {
-	return DataEffect(&destroyTargetNoRegenEffect{})
+	return &destroyTargetNoRegenEffect{}
 }
 
 // DestroyTargetNoRegenStep returns the EffectData for use in pipelines/ForEach.
@@ -114,10 +114,10 @@ func DestroyAllCreaturesNoRegen() Effect {
 	return DestroyAllMatchingNoRegen(IsCreature, "destroy all creatures (can't be regenerated)")
 }
 
-func (e *destroyTargetNoRegenEffect) EffectText() string {
+func (e *destroyTargetNoRegenEffect) Text() string {
 	return "destroy target (can't be regenerated)"
 }
-func (e *destroyTargetNoRegenEffect) EffectProps() EffectProperties {
+func (e *destroyTargetNoRegenEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
@@ -126,14 +126,14 @@ type exileTargetEffect struct{}
 
 // ExileTarget creates an effect that exiles a target permanent.
 func ExileTarget() Effect {
-	return DataEffect(&exileTargetEffect{})
+	return &exileTargetEffect{}
 }
 
 // ExileTargetStep returns the EffectData for use as a pipeline/ForEach inner step.
 func ExileTargetStep() EffectData { return &exileTargetEffect{} }
 
-func (e *exileTargetEffect) EffectText() string { return "exile target permanent" }
-func (e *exileTargetEffect) EffectProps() EffectProperties {
+func (e *exileTargetEffect) Text() string { return "exile target permanent" }
+func (e *exileTargetEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
@@ -142,37 +142,37 @@ type sacrificeSourceEffect struct{}
 
 // SacrificeSource creates an effect that sacrifices the source permanent.
 func SacrificeSource() Effect {
-	return DataEffect(&sacrificeSourceEffect{})
+	return &sacrificeSourceEffect{}
 }
 
-func (e *sacrificeSourceEffect) EffectText() string        { return "sacrifice this permanent" }
-func (e *sacrificeSourceEffect) EffectProps() EffectProperties { return EffectProperties{} }
+func (e *sacrificeSourceEffect) Text() string        { return "sacrifice this permanent" }
+func (e *sacrificeSourceEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // sacrificeTargetEffect sacrifices the target permanent (targets[0]).
 type sacrificeTargetEffect struct{}
 
 // SacrificeTarget creates an effect that sacrifices the first target permanent.
 func SacrificeTarget() Effect {
-	return DataEffect(&sacrificeTargetEffect{})
+	return &sacrificeTargetEffect{}
 }
 
 // SacrificeTargetStep returns the EffectData for use in pipelines/ForEach.
 func SacrificeTargetStep() EffectData { return &sacrificeTargetEffect{} }
 
-func (e *sacrificeTargetEffect) EffectText() string        { return "sacrifice target permanent" }
-func (e *sacrificeTargetEffect) EffectProps() EffectProperties { return EffectProperties{} }
+func (e *sacrificeTargetEffect) Text() string        { return "sacrifice target permanent" }
+func (e *sacrificeTargetEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // balanceEffect equalizes lands, creatures, and hand sizes.
 type balanceEffect struct{}
 
 // BalanceEffect creates an effect that equalizes lands, creatures, and hand sizes across all
 // players by having each player sacrifice/discard down to the minimum (Balance).
-func BalanceEffect() Effect { return DataEffect(&balanceEffect{}) }
+func BalanceEffect() Effect { return &balanceEffect{} }
 
-func (e *balanceEffect) EffectText() string {
+func (e *balanceEffect) Text() string {
 	return "Each player sacrifices to match fewest lands, creatures; discards to match smallest hand"
 }
-func (e *balanceEffect) EffectProps() EffectProperties {
+func (e *balanceEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment, Mass: true}
 }
 
@@ -180,12 +180,12 @@ func (e *balanceEffect) EffectProps() EffectProperties {
 type chaosOrbEffect struct{}
 
 // ChaosOrbEffect creates the Chaos Orb effect.
-func ChaosOrbEffect() Effect { return DataEffect(&chaosOrbEffect{}) }
+func ChaosOrbEffect() Effect { return &chaosOrbEffect{} }
 
-func (e *chaosOrbEffect) EffectText() string {
+func (e *chaosOrbEffect) Text() string {
 	return "Destroy a random nontoken permanent, then destroy ~"
 }
-func (e *chaosOrbEffect) EffectProps() EffectProperties {
+func (e *chaosOrbEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
