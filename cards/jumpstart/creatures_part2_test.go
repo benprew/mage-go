@@ -388,6 +388,140 @@ func TestHarvesterOfSouls_DrawsOnNontokenDeath(t *testing.T) {
 	g.AssertHandCount(gametest.PlayerA, "Mox Ruby", 1)
 }
 
+func TestBloodHost_SacForCounterAndLife(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Blood Host")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 2)
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Blood Host")
+	g.ChoosePermanent(gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerA, 22)
+	g.AssertPowerToughness(gametest.PlayerA, "Blood Host", 4, 4)
+}
+
+func TestKelsFightFixer_SacForIndestructible(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Kels, Fight Fixer")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Kels, Fight Fixer")
+	g.ChoosePermanent(gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Kels, Fight Fixer", core.Indestructible, true)
+}
+
+func TestLilianasReaver_DiscardAndZombieToken(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Liliana's Reaver")
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Mountain")
+	g.Attack(3, gametest.PlayerA, "Liliana's Reaver")
+	g.StopAt(3, core.EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerB, 16)
+	g.AssertHandCount(gametest.PlayerB, "Mountain", 0)
+	g.AssertPermanentCount(gametest.PlayerA, "Zombie", 1)
+}
+
+func TestMireTriton_MillsAndGains(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Mire Triton")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 2)
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Mox Ruby", 4)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Mire Triton")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerA, "Mox Ruby", 2)
+	g.AssertLife(gametest.PlayerA, 22)
+}
+
+func TestNightshadeStinger_CantBlock(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Nightshade Stinger")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+	g.Attack(2, gametest.PlayerB, "Hill Giant")
+	g.Block(2, gametest.PlayerA, "Nightshade Stinger", "Hill Giant")
+	g.StopAt(2, core.EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerA, 17)
+	g.AssertPermanentCount(gametest.PlayerA, "Nightshade Stinger", 1)
+}
+
+func TestNocturnalFeeder_DrainsOnDeath(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Nocturnal Feeder")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Nocturnal Feeder")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerA, 22)
+	g.AssertLife(gametest.PlayerB, 18)
+}
+
+func TestOgreSlumlord_RatTokenAndDeathtouch(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ogre Slumlord")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Rat", 1)
+	g.AssertHasAbility(gametest.PlayerA, "Rat", core.Deathtouch, true)
+}
+
+func TestSangromancer_GainsOnOpponentCreatureDeath(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sangromancer")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerA, 23)
+}
+
+func TestSlateStreetRuffian_DiscardWhenBlocked(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Slate Street Ruffian")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Mountain")
+	g.Attack(3, gametest.PlayerA, "Slate Street Ruffian")
+	g.Block(3, gametest.PlayerB, "Grizzly Bears", "Slate Street Ruffian")
+	g.StopAt(3, core.EndStep)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerB, "Mountain", 0)
+}
+
+func TestSwarmOfBloodflies_CountersOnETBAndDeath(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Swarm of Bloodflies")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 5)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Swarm of Bloodflies")
+	g.CastSpell(1, core.PostcombatMain, gametest.PlayerA, "Lightning Bolt", "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Swarm of Bloodflies", 3, 3)
+}
+
+func TestTinybonesTrinketThief_DamageHandless(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tinybones, Trinket Thief")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 6)
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Tinybones, Trinket Thief")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerB, 10)
+}
+
 func TestLawlessBroker_CounterOnDeath(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Lawless Broker")
