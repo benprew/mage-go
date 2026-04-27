@@ -205,6 +205,8 @@ Misc effects:
 	[AddMana](color, amount)              // add mana to pool
 	[AddAnyMana](amount, Color)           // add mana of any one color
 	[CreateToken](name, p, t, types, subtypes, keywords...)
+	[CreateTreasureToken]() / [CreateTreasureTokens](n)  // CR 111.10c predefined token
+	[CreateFoodToken]() / [CreateFoodTokens](n)          // CR 111.10d predefined token
 	[CloneTarget](additionalTypes...)     // Copy Artifact, Clone
 	[CopySpellOnStack]()                  // Fork
 	[AttachToTarget]()                    // attach aura/equipment
