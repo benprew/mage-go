@@ -3309,10 +3309,34 @@ func registerCreatures() {
 // Creature — Beast
 // 4/4
 // When this creature enters, you may have it fight target creature you don't control. (Each deals damage equal to its power to the other.)
-// TODO: implement
 	Register("Affectionate Indrik", func() Card {
 		return NewCreature("Affectionate Indrik", "{5}{G}", 4, 4,
 			WithSubTypes("Beast"),
+			WithETBEffect(FuncEffect("fight target creature you don't control",
+				EffectProperties{Outcome: OutcomeBenefit},
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					if len(targets) == 0 {
+						return nil
+					}
+					src := g.FindPermanent(sourceID)
+					tgt := g.FindPermanent(targets[0])
+					if src == nil || tgt == nil {
+						return nil
+					}
+					p := g.GetPlayer(controller)
+					if p != nil && !p.ChooseMayAbility("fight target creature") {
+						return nil
+					}
+					srcPower := src.CurrentPower(g)
+					tgtPower := tgt.CurrentPower(g)
+					if tgtPower > 0 {
+						g.DealDamageToPermanent(src, tgtPower, tgt.ID())
+					}
+					if srcPower > 0 {
+						g.DealDamageToPermanent(tgt, srcPower, sourceID)
+					}
+					return nil
+				})),
 		)
 	})
 
@@ -3322,7 +3346,7 @@ func registerCreatures() {
 // This spell can't be countered.
 // Green spells you control can't be countered.
 // {4}{G}{G}: Until end of turn, each Elf creature you control has base power and toughness 5/5 and becomes a Dinosaur in addition to its other creature types.
-// TODO: implement
+// XXX: requires type-granting + uncounterable static
 	Register("Allosaurus Shepherd", func() Card {
 		return NewCreature("Allosaurus Shepherd", "{G}", 1, 1,
 			WithSubTypes("Elf", "Shaman"),
@@ -3333,10 +3357,13 @@ func registerCreatures() {
 // Creature — Treefolk Warrior
 // 3/3
 // When this creature enters, create a 1/1 green Elf Warrior creature token.
-// TODO: implement
 	Register("Ambassador Oak", func() Card {
 		return NewCreature("Ambassador Oak", "{3}{G}", 3, 3,
 			WithSubTypes("Treefolk", "Warrior"),
+			WithAbility(EntersBattlefieldTrigger(
+				CreateToken("Elf Warrior", 1, 1, []CardType{TypeCreature}, []string{"Elf", "Warrior"}),
+				false,
+			)),
 		)
 	})
 
@@ -3344,10 +3371,32 @@ func registerCreatures() {
 // Creature — Elf Artificer
 // 3/3
 // When this creature enters, draw a card for each creature you control with a +1/+1 counter on it.
-// TODO: implement
 	Register("Armorcraft Judge", func() Card {
 		return NewCreature("Armorcraft Judge", "{3}{G}", 3, 3,
 			WithSubTypes("Elf", "Artificer"),
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect("draw a card for each creature you control with a +1/+1 counter on it",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, _, controller uuid.UUID, _ []uuid.UUID) error {
+						count := 0
+						for _, perm := range g.FilterBattlefield(And(IsCreature, ControlledBy(controller))) {
+							if int(perm.Counters[P1P1]) > 0 {
+								count++
+							}
+						}
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						for i := 0; i < count; i++ {
+							if card, ok := p.DrawCard(); ok {
+								p.AddToHand(card)
+							}
+						}
+						return nil
+					}),
+				false,
+			)),
 		)
 	})
 
@@ -3355,7 +3404,7 @@ func registerCreatures() {
 // Creature — Human Druid
 // 1/1
 // When this creature enters, target Forest becomes a 4/5 green Treefolk creature for as long as this creature remains on the battlefield. It's still a land.
-// TODO: implement
+// XXX: requires aura-animates-land mechanic
 	Register("Awakener Druid", func() Card {
 		return NewCreature("Awakener Druid", "{2}{G}", 1, 1,
 			WithSubTypes("Human", "Druid"),
@@ -3366,10 +3415,12 @@ func registerCreatures() {
 // Creature — Boar
 // 1/1
 // When this creature dies, create a 3/3 green Boar creature token.
-// TODO: implement
 	Register("Brindle Shoat", func() Card {
 		return NewCreature("Brindle Shoat", "{1}{G}", 1, 1,
 			WithSubTypes("Boar"),
+			WithAbility(NewTriggered(EvtCreatureDied, false,
+				CreateToken("Boar", 3, 3, []CardType{TypeCreature}, []string{"Boar"}),
+			).SetConditionData(EventSourceIsSelf{})),
 		)
 	})
 
@@ -3377,10 +3428,10 @@ func registerCreatures() {
 // Creature — Beast
 // 3/1
 // Vigilance (Attacking doesn't cause this creature to tap.)
-// TODO: implement
 	Register("Brushstrider", func() Card {
 		return NewCreature("Brushstrider", "{1}{G}", 3, 1,
 			WithSubTypes("Beast"),
+			WithKeyword(Vigilance),
 		)
 	})
 
@@ -3389,10 +3440,23 @@ func registerCreatures() {
 // 2/5
 // Defender (This creature can't attack.)
 // When this creature enters, draw a card.
-// TODO: implement
 	Register("Carven Caryatid", func() Card {
 		return NewCreature("Carven Caryatid", "{1}{G}{G}", 2, 5,
 			WithSubTypes("Spirit"),
+			WithKeyword(Defender),
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect("draw a card",
+					EffectProperties{Outcome: OutcomeBenefit, DrawCount: 1},
+					func(g *Game, _, controller uuid.UUID, _ []uuid.UUID) error {
+						if p := g.GetPlayer(controller); p != nil {
+							if card, ok := p.DrawCard(); ok {
+								p.AddToHand(card)
+							}
+						}
+						return nil
+					}),
+				false,
+			)),
 		)
 	})
 
@@ -3401,10 +3465,18 @@ func registerCreatures() {
 // 1/1
 // Creatures with power less than this creature's power can't block creatures you control.
 // Whenever another creature you control enters, put a +1/+1 counter on this creature.
-// TODO: implement
+// XXX: requires power-comparison block restriction
 	Register("Champion of Lambholt", func() Card {
 		return NewCreature("Champion of Lambholt", "{1}{G}{G}", 1, 1,
 			WithSubTypes("Human", "Warrior"),
+			WithAbility(WheneverPermanentEntersBattlefieldTrigger(
+				AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
+				false,
+				IsCreature,
+			).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+				EventSourceNotSelf{},
+				EventSourceControlledByController{},
+			}})),
 		)
 	})
 
