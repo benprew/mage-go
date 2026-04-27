@@ -769,6 +769,7 @@ Global/source-based effects (while source on battlefield):
 	[AllowUnlimitedLandPlays]()                            // Fastbond
 	[IncreaseSpellCostForColor](color, amount)             // Gloom
 	[ReduceSpellCostForColor](color, amount)               // cost reduction
+	[ReduceSpellCostStatic](filter, amount, condition)     // conditional cost reduction (CR 601.2f)
 	[ChangeSubTypesForAll](fromSubTypes, toSubTypes)       // Conversion
 	[ManaConversion](from, to Color)                       // Sunglasses of Urza
 	[BodyguardContinuous]()                                // Veteran Bodyguard
@@ -779,6 +780,62 @@ Damage prevention rules (continuous):
 
 	[PreventDamageFromTo](from, toFactory, ...SourceCondition)
 	    // Camel: prevent Desert damage to self and banded creatures
+
+# Conditional Spell Cost Reduction (CR 601.2f)
+
+Two flavors are supported. Both reduce only the *generic* portion of a mana
+cost; colored requirements are unchanged. A spell's generic cost cannot drop
+below zero (per cast).
+
+  1. Static reductions sourced from a permanent on the battlefield, applying
+     to spells the source's controller casts that match a spell-filter:
+
+	[ReduceSpellCostStatic](filter, amount, condition) ContinuousEffect
+	[ReduceSpellCostStaticLabeled](label, filter, amount, condition)
+
+     Use as the argument to [WithStaticAbility]. The continuous effect
+     registers a [SpellCostReducer] entry on [GameRules.SpellCostReducers]
+     each Apply() cycle while the source is on the battlefield. Examples:
+     Warden of Evos Isle, Dragonlord's Servant, Dragonspeaker Shaman,
+     Herald's Horn.
+
+  2. Self cost reductions intrinsic to the casting card itself, reducing
+     only its own cost at cast time (works while the card is in hand —
+     the cast pipeline walks the casting card's abilities directly):
+
+	[WithSelfCostReduction](amount, condition) CardOption
+	[SelfCostReduction](amount, condition) *SelfCostReductionAbility
+
+     Examples: Bone Picker, Cryptic Serpent, Ghalta Primal Hunger.
+
+Filters ([SpellPredicate]):
+
+	[SpellAny]()                              // every spell
+	[SpellHasType](CardType)                  // creature/instant/etc.
+	[SpellHasSubType](string)                 // "Dragon", "Wizard"
+	[SpellHasKeyword](Attr)                   // Flying, Trample
+	[SpellIsSelf]()                           // the registered card itself
+	[SpellSubTypeMatchesChosen]()             // Herald's Horn (ChosenSubtype)
+	[SpellsAnd](preds...) / [SpellsOr](preds...)
+
+Amounts ([SpellAmount]):
+
+	[FixedAmount](n)                          // constant
+	[AmountByGraveyardCount](CardFilter)      // Cryptic Serpent
+	[AmountByTotalPower](PermanentFilter)     // Ghalta
+	[AmountByPermanentCount](PermanentFilter)
+
+Conditions ([SpellCondition]):
+
+	[CondCreatureDiedThisTurn]()              // Bone Picker
+	[CondControlsMatching](PermanentFilter)   // Wizard's Retort, Winged Words
+	[CondAnd](conds...)
+	(nil) — unconditional
+
+Inspection (engine tests, AI):
+
+	g.[ConditionalSpellCostReduction](controller, card) int
+	    // total generic reduction that would apply to a hypothetical cast
 
 # The Attr System
 
@@ -873,6 +930,7 @@ continuous effects:
 	UnlimitedLandPlays bool            // bypass one-land-per-turn
 	SpellCostIncreases map[Color]int   // per-color cost increases (Gloom, etc.)
 	SpellCostReductions map[Color]int  // per-color cost reductions
+	SpellCostReducers  []SpellCostReducer // conditional generic-mana reducers (CR 601.2f)
 	ManaConversion     map[Color]Color // forced mana conversion (Celestial Dawn)
 
 Methods for special rules:

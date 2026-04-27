@@ -29,6 +29,7 @@ type GameRules struct {
 	NullifiedLandwalks       map[Attr]bool           // landwalk attrs that are nullified (Great Wall, etc.)
 	ActivationCostReductions map[uuid.UUID]int        // permanent ID → generic mana reduction for activated abilities
 	entersTappedRules []func(*Permanent) bool        // filters registered by continuous effects (Kismet, etc.)
+	SpellCostReducers []SpellCostReducer             // conditional generic-cost reducers registered each Apply() cycle
 }
 
 // NewGameRules creates a GameRules with all maps initialized.
@@ -68,6 +69,13 @@ func (r *GameRules) ResetPerCycle() {
 	r.NullifiedLandwalks = make(map[Attr]bool)
 	r.ActivationCostReductions = make(map[uuid.UUID]int)
 	r.entersTappedRules = nil
+	r.SpellCostReducers = nil
+}
+
+// AddSpellCostReducer registers a conditional spell-cost reducer for this
+// Apply() cycle. Cleared by ResetPerCycle.
+func (r *GameRules) AddSpellCostReducer(red SpellCostReducer) {
+	r.SpellCostReducers = append(r.SpellCostReducers, red)
 }
 
 // AddEntersTappedRule registers a filter that causes matching permanents to enter tapped.

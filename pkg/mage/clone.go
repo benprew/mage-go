@@ -404,6 +404,10 @@ func cloneGameRules(gr *GameRules) *GameRules {
 	clone.maxHandSize = cloneUUIDIntMap(gr.maxHandSize)
 	clone.NullifiedLandwalks = cloneAttrBoolMap(gr.NullifiedLandwalks)
 	clone.ActivationCostReductions = cloneUUIDIntMap(gr.ActivationCostReductions)
+	if len(gr.SpellCostReducers) > 0 {
+		clone.SpellCostReducers = make([]SpellCostReducer, len(gr.SpellCostReducers))
+		copy(clone.SpellCostReducers, gr.SpellCostReducers)
+	}
 	// Copy expansion cast blocks.
 	if len(gr.expansionCastBlock) > 0 {
 		clone.expansionCastBlock = make([]string, len(gr.expansionCastBlock))

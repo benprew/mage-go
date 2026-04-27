@@ -1770,6 +1770,14 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		}
 	}
 
+	// Conditional cost reductions (CR 601.2f). Reduce generic only; never
+	// below zero. Covers static-source reducers (Warden of Evos Isle,
+	// Dragonlord's Servant, Herald's Horn) and intrinsic self-reducers
+	// (Bone Picker, Cryptic Serpent, Ghalta).
+	if r := computeConditionalCostReduction(g, playerID, card, mc.Generic); r > 0 {
+		mc.Generic -= r
+	}
+
 	// Channel: pay life for generic/X costs instead of mana
 	if g.effects.Rules.IsChannelActive(playerID) && (mc.Generic > 0 || (mc.HasX && xValue > 0)) {
 		// Pay colored portion from pool
