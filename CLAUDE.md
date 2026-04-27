@@ -9,13 +9,12 @@ XMage reference: `~/mage/Mage.Sets/src/mage/cards/` and `~/mage/Mage/src/main/ja
 ## Commands
 
 ```bash
-go test ./...                              # all tests
+make test                                  # all tests
 go test ./cards/...                        # card tests only
 go test ./cards/arabian/ -run TestFooBar   # single test
-go build ./...                             # build check
-go vet ./...                               # vet
+make build                                 # build check
 make wasm                                  # WASM build
-golangci-lint run --fix                    # lint (run after changes)
+make lint                                  # lint (run after making changes and before commit)
 ```
 
 ## Code Style
