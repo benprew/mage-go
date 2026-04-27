@@ -11,19 +11,45 @@ func init() {
 	registerLands()
 }
 
-// thrivingLand creates a Thriving cycle land. Each enters tapped, and taps
-// for its on-color mana. The Oracle text "As ~ enters, choose a color other
-// than X. {T}: Add {X} or one mana of the chosen color." requires an
-// "as it enters, choose a color" replacement that the engine does not yet
-// support, so the chosen-color half is deferred.
+// thrivingLand creates a Thriving cycle land. Each enters tapped, has an
+// "as it enters, choose a color other than {onColor}" replacement, and a
+// {T} ability that adds either {onColor} or one mana of the chosen color
+// (controller's choice on activation).
 //
-// XXX: requires "as enters, choose color" engine support — choose-a-color
-// alternative mana production is not yet implemented; only the on-color half
-// is available.
+// The on-color half is registered as a real mana ability so casting cost
+// auto-tap can find it. The chosen-color half is a separate activated
+// ability whose FuncEffect reads Permanent.ChosenColor at resolution time.
+// Splitting the Oracle text's "X or chosen" into two abilities preserves
+// the player's choice (each tap picks one of the two productions) while
+// matching the engine's mana-ability detection conventions.
 func thrivingLand(name string, onColor Color) Card {
+	reason := "color other than " + onColor.String()
 	return NewLand(name,
 		WithKeyword(EntersTapped),
+		WithAbility(ETBChooseColorOtherThan(reason, onColor)),
 		WithManaAbility(onColor),
+		WithActivatedAbility(
+			FuncEffect(
+				"add one mana of the chosen color",
+				EffectProperties{},
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					perm := g.FindPermanent(sourceID)
+					if perm == nil {
+						return nil
+					}
+					p := g.GetPlayer(controller)
+					if p == nil {
+						return nil
+					}
+					c := perm.ChosenColor
+					if c == Colorless || c == AnyColor {
+						return nil
+					}
+					p.ManaPool().Add(c, 1)
+					return nil
+				}),
+			TapSourceCost(),
+		),
 	)
 }
 
@@ -175,40 +201,30 @@ func registerLands() {
 	// Land
 	// This land enters tapped. As it enters, choose a color other than red.
 	// {T}: Add {R} or one mana of the chosen color.
-	// XXX: requires "as enters, choose color" engine support — alt-color mana production deferred.
-	// TODO: implement
 	Register("Thriving Bluff", func() Card { return thrivingLand("Thriving Bluff", Red) })
 
 	// Thriving Grove
 	// Land
 	// This land enters tapped. As it enters, choose a color other than green.
 	// {T}: Add {G} or one mana of the chosen color.
-	// XXX: requires "as enters, choose color" engine support — alt-color mana production deferred.
-	// TODO: implement
 	Register("Thriving Grove", func() Card { return thrivingLand("Thriving Grove", Green) })
 
 	// Thriving Heath
 	// Land
 	// This land enters tapped. As it enters, choose a color other than white.
 	// {T}: Add {W} or one mana of the chosen color.
-	// XXX: requires "as enters, choose color" engine support — alt-color mana production deferred.
-	// TODO: implement
 	Register("Thriving Heath", func() Card { return thrivingLand("Thriving Heath", White) })
 
 	// Thriving Isle
 	// Land
 	// This land enters tapped. As it enters, choose a color other than blue.
 	// {T}: Add {U} or one mana of the chosen color.
-	// XXX: requires "as enters, choose color" engine support — alt-color mana production deferred.
-	// TODO: implement
 	Register("Thriving Isle", func() Card { return thrivingLand("Thriving Isle", Blue) })
 
 	// Thriving Moor
 	// Land
 	// This land enters tapped. As it enters, choose a color other than black.
 	// {T}: Add {B} or one mana of the chosen color.
-	// XXX: requires "as enters, choose color" engine support — alt-color mana production deferred.
-	// TODO: implement
 	Register("Thriving Moor", func() Card { return thrivingLand("Thriving Moor", Black) })
 }
 

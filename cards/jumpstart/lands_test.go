@@ -181,6 +181,7 @@ func TestTerramorphicExpanse(t *testing.T) {
 func TestThrivingBluff(t *testing.T) {
 	t.Run("enters tapped from hand", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
+		g.ChooseManaColor(gametest.PlayerA, core.Blue)
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Thriving Bluff")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
@@ -188,15 +189,83 @@ func TestThrivingBluff(t *testing.T) {
 		g.AssertTapped(gametest.PlayerA, "Thriving Bluff", true)
 	})
 
-	t.Run("taps for red mana", func(t *testing.T) {
+	t.Run("records chosen color (other than red) on entry", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
+		g.ChooseManaColor(gametest.PlayerA, core.Blue)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Thriving Bluff")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		perm := g.FindPermanentByName("Thriving Bluff", g.GetPlayer(gametest.PlayerA).PlayerID())
+		if perm == nil {
+			t.Fatal("Thriving Bluff not on battlefield")
+		}
+		if perm.ChosenColor != core.Blue {
+			t.Errorf("ChosenColor: got %v, want Blue", perm.ChosenColor)
+		}
+	})
+
+	t.Run("rejects red as chosen color", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.ChooseManaColor(gametest.PlayerA, core.Red)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Thriving Bluff")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		perm := g.FindPermanentByName("Thriving Bluff", g.GetPlayer(gametest.PlayerA).PlayerID())
+		if perm.ChosenColor == core.Red {
+			t.Errorf("ChosenColor: got Red (excluded), want non-Red")
+		}
+	})
+
+	t.Run("taps for one mana of the chosen color", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.ChooseManaColor(gametest.PlayerA, core.Blue)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Thriving Bluff")
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Thriving Bluff")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		pool := g.GetPlayer(gametest.PlayerA).ManaPool()
-		if pool.CountProducedThisTurn(core.Red) < 6 {
-			t.Errorf("expected at least 6 red, got %d", pool.CountProducedThisTurn(core.Red))
+		if pool.CountProducedThisTurn(core.Blue) < 1 {
+			t.Errorf("expected at least 1 blue produced, got %d", pool.CountProducedThisTurn(core.Blue))
 		}
 	})
+}
+
+// thrivingCycleCase covers the chosen-color half of one Thriving land:
+// the player picks an off-color, the land records it on entry, and a
+// {T} activation produces one mana of that color.
+func thrivingCycleCase(t *testing.T, name string, off core.Color) {
+	t.Helper()
+	g := gametest.NewTestGame(t)
+	g.ChooseManaColor(gametest.PlayerA, off)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, name)
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, name)
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	perm := g.FindPermanentByName(name, g.GetPlayer(gametest.PlayerA).PlayerID())
+	if perm == nil {
+		t.Fatalf("%s not on battlefield", name)
+	}
+	if perm.ChosenColor != off {
+		t.Errorf("ChosenColor: got %v, want %v", perm.ChosenColor, off)
+	}
+	pool := g.GetPlayer(gametest.PlayerA).ManaPool()
+	if pool.CountProducedThisTurn(off) < 1 {
+		t.Errorf("expected at least 1 %v produced, got %d", off, pool.CountProducedThisTurn(off))
+	}
+}
+
+func TestThrivingGrove(t *testing.T) {
+	thrivingCycleCase(t, "Thriving Grove", core.White)
+}
+
+func TestThrivingHeath(t *testing.T) {
+	thrivingCycleCase(t, "Thriving Heath", core.Blue)
+}
+
+func TestThrivingIsle(t *testing.T) {
+	thrivingCycleCase(t, "Thriving Isle", core.Black)
+}
+
+func TestThrivingMoor(t *testing.T) {
+	thrivingCycleCase(t, "Thriving Moor", core.Red)
 }
