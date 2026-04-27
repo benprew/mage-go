@@ -304,7 +304,7 @@ func convertCard(sc scryfallCard) CardEntry {
 }
 
 func get(client *http.Client, url string, dst any) error {
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, http.NoBody)
 	if err != nil {
 		return fmt.Errorf("building request: %w", err)
 	}

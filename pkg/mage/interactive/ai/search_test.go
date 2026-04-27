@@ -795,11 +795,11 @@ func TestSearch_HistoryHeuristicPersists(t *testing.T) {
 	addLands(g, pa, "Forest", 2)
 	g.SetStep(core.PrecombatMain)
 
-	start := makeSearchAI(SearchConfig{MaxDepth: 4, MaxNodes: 5000, TimeLimit: 1 * time.Second})
-	_ = start.PriorityAction(pa, g, 0, true)
+	strategy := makeSearchAI(SearchConfig{MaxDepth: 4, MaxNodes: 5000, TimeLimit: 1 * time.Second})
+	_ = strategy.PriorityAction(pa, g, 0, true)
 
 	// History should be initialized (even if no cutoffs occurred, the map exists).
-	if strat.history == nil {
+	if strategy.history == nil {
 		t.Error("history heuristic should be initialized after search")
 	}
 }
