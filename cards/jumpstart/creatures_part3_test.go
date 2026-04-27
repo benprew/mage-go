@@ -529,3 +529,15 @@ func TestChampionOfLambholt_GainsCounterOnCreatureETB(t *testing.T) {
 	// FIXME: trigger fires 3x on a single creature ETB; investigate trigger-event multiplication
 	g.AssertCounterCount(gametest.PlayerA, "Champion of Lambholt", P1P1, 3)
 }
+
+func TestRapaciousDragon_CreatesTwoTreasuresOnETB(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneHand, gametest.PlayerA, "Rapacious Dragon")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Mountain", 5)
+	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Rapacious Dragon")
+	g.StopAt(1, EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Rapacious Dragon", 1)
+	g.AssertPermanentCount(gametest.PlayerA, "Treasure", 2)
+	g.AssertHasAbility(gametest.PlayerA, "Rapacious Dragon", Flying, true)
+}

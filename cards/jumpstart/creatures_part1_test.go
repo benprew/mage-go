@@ -655,3 +655,51 @@ func TestNebelgastHeraldFlash(t *testing.T) {
 	g.AssertPermanentCount(gametest.PlayerB, "Nebelgast Herald", 1)
 	g.AssertTapped(gametest.PlayerA, "Hill Giant", true)
 }
+
+func TestSailorOfMeans_CreatesTreasureOnETB(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Sailor of Means")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 3)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Sailor of Means")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Sailor of Means", 1)
+	g.AssertPermanentCount(gametest.PlayerA, "Treasure", 1)
+}
+
+func TestProsperousPirates_CreatesTwoTreasuresOnETB(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Prosperous Pirates")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 5)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Prosperous Pirates")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Prosperous Pirates", 1)
+	g.AssertPermanentCount(gametest.PlayerA, "Treasure", 2)
+}
+
+func TestCorsairCaptain_CreatesTreasureAndPumpsPirates(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Corsair Captain")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Kitesail Corsair")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 3)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Corsair Captain")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Treasure", 1)
+	g.AssertPowerToughness(gametest.PlayerA, "Kitesail Corsair", 3, 2)
+	g.AssertPowerToughness(gametest.PlayerA, "Corsair Captain", 2, 2)
+}
+
+func TestSailorOfMeans_TreasureSacAddsAnyMana(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Sailor of Means")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 3)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Sailor of Means")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Treasure")
+	g.ChooseManaColor(gametest.PlayerA, core.Blue)
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Treasure", 0)
+	g.AssertManaProducedAtLeast(gametest.PlayerA, core.Blue, 1)
+}

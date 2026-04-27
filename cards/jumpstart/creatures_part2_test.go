@@ -538,3 +538,38 @@ func TestLawlessBroker_CounterOnDeath(t *testing.T) {
 	g.Execute()
 	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 3, 3)
 }
+
+func TestCauldronFamiliar_DrainsOnETB(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Cauldron Familiar")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Cauldron Familiar")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerA, 21)
+	g.AssertLife(gametest.PlayerB, 19)
+	g.AssertPermanentCount(gametest.PlayerA, "Cauldron Familiar", 1)
+}
+
+func TestTemptingWitch_CreatesFoodOnETB(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Tempting Witch")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 3)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Tempting Witch")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Tempting Witch", 1)
+	g.AssertPermanentCount(gametest.PlayerA, "Food", 1)
+}
+
+func TestTemptingWitch_SacFoodDrainsTargetPlayer(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Tempting Witch")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 5)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Tempting Witch")
+	g.ActivateAbility(3, core.PrecombatMain, gametest.PlayerA, "Tempting Witch", "PlayerB")
+	g.StopAt(3, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Food", 0)
+	g.AssertLife(gametest.PlayerB, 17)
+}

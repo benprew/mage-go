@@ -846,10 +846,23 @@ func registerCreatures() {
 	// 2/2
 	// When this creature enters, create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
 	// Other Pirates you control get +1/+1.
-	// XXX: requires Treasure token primitive
 	Register("Corsair Captain", func() Card {
 		return NewCreature("Corsair Captain", "{2}{U}", 2, 2,
 			WithSubTypes("Human", "Pirate"),
+			WithAbility(EntersBattlefieldTrigger(CreateTreasureToken(), false)),
+			WithStaticAbility(FuncContinuousEffect(LayerPT, WhileOnBattlefield,
+				func(g *Game, sourceID uuid.UUID) error {
+					src := g.FindPermanent(sourceID)
+					if src == nil {
+						return nil
+					}
+					for _, p := range g.FilterBattlefield(And(
+						ControlledBy(src.Controller), HasSubType("Pirate"), NotID(sourceID),
+					)) {
+						p.BoostPT(1, 1)
+					}
+					return nil
+				})),
 		)
 	})
 
@@ -1125,10 +1138,10 @@ func registerCreatures() {
 	// Creature — Human Pirate
 	// 3/4
 	// When this creature enters, create two Treasure tokens. (They're artifacts with "{T}, Sacrifice this token: Add one mana of any color.")
-	// XXX: requires Treasure token primitive
 	Register("Prosperous Pirates", func() Card {
 		return NewCreature("Prosperous Pirates", "{4}{U}", 3, 4,
 			WithSubTypes("Human", "Pirate"),
+			WithAbility(EntersBattlefieldTrigger(CreateTreasureTokens(2), false)),
 		)
 	})
 
@@ -1211,10 +1224,10 @@ func registerCreatures() {
 	// Creature — Human Pirate
 	// 1/4
 	// When this creature enters, create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
-	// XXX: requires Treasure token primitive
 	Register("Sailor of Means", func() Card {
 		return NewCreature("Sailor of Means", "{2}{U}", 1, 4,
 			WithSubTypes("Human", "Pirate"),
+			WithAbility(EntersBattlefieldTrigger(CreateTreasureToken(), false)),
 		)
 	})
 
@@ -1687,10 +1700,26 @@ func registerCreatures() {
 	// 1/1
 	// When this creature enters, each opponent loses 1 life and you gain 1 life.
 	// Sacrifice a Food: Return this card from your graveyard to the battlefield.
-	// XXX: requires Food token primitive
+	// XXX: graveyard-activated ability ("Sacrifice a Food: Return this card from your graveyard to the battlefield.") requires graveyard-zone activation primitive
 	Register("Cauldron Familiar", func() Card {
 		return NewCreature("Cauldron Familiar", "{B}", 1, 1,
 			WithSubTypes("Cat"),
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect("each opponent loses 1 life and you gain 1 life",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						for _, pl := range g.AllPlayers() {
+							if pl.PlayerID() != controller {
+								pl.LoseLife(1)
+							}
+						}
+						if you := g.GetPlayer(controller); you != nil {
+							g.PlayerGainLife(you, 1)
+						}
+						return nil
+					}),
+				false,
+			)),
 		)
 	})
 
@@ -2630,10 +2659,26 @@ func registerCreatures() {
 	// 1/3
 	// When this creature enters, create a Food token. (It's an artifact with "{2}, {T}, Sacrifice this token: You gain 3 life.")
 	// {2}, {T}, Sacrifice a Food: Target player loses 3 life.
-	// XXX: requires Food token primitive
 	Register("Tempting Witch", func() Card {
 		return NewCreature("Tempting Witch", "{2}{B}", 1, 3,
 			WithSubTypes("Human", "Warlock"),
+			WithAbility(EntersBattlefieldTrigger(CreateFoodToken(), false)),
+			WithActivatedAbility(
+				FuncEffect("target player loses 3 life",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) > 0 {
+							if tp := g.GetPlayer(targets[0]); tp != nil {
+								tp.LoseLife(3)
+							}
+						}
+						return nil
+					}),
+				ManaCostOf("{2}"),
+				WithCost(TapSourceCost()),
+				WithCost(SacrificeMatchingCost(HasSubType("Food"), "Sacrifice a Food")),
+				WithTarget(TargetPlayer()),
+			),
 		)
 	})
 
@@ -3581,11 +3626,11 @@ func registerCreatures() {
 	// 3/3
 	// Flying
 	// When this creature enters, create two Treasure tokens. (They're artifacts with "{T}, Sacrifice this token: Add one mana of any color.")
-	// XXX: requires Treasure token primitive
 	Register("Rapacious Dragon", func() Card {
 		return NewCreature("Rapacious Dragon", "{4}{R}", 3, 3,
 			WithSubTypes("Dragon"),
 			WithKeyword(Flying),
+			WithAbility(EntersBattlefieldTrigger(CreateTreasureTokens(2), false)),
 		)
 	})
 
