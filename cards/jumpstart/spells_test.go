@@ -625,6 +625,106 @@ func TestMugging(t *testing.T) {
 	g.AssertLife(gametest.PlayerB, 17)
 }
 
+func TestReleaseTheDogsTokens(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 4)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Release the Dogs")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Release the Dogs")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Dog", 4)
+}
+
+func TestRiseOfTheDarkRealms(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 9)
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Hill Giant")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Rise of the Dark Realms")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Rise of the Dark Realms")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
+	g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 1)
+	g.AssertGraveyardCount(gametest.PlayerA, "Hill Giant", 0)
+}
+
+func TestSarkhansRageNoDragons(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 5)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Sarkhan's Rage")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Sarkhan's Rage", "PlayerB")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertLife(gametest.PlayerB, 15)
+	g.AssertLife(gametest.PlayerA, 18)
+}
+
+func TestTakeHeart(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Take Heart")
+	g.Attack(1, gametest.PlayerA, "Hill Giant")
+	g.CastSpell(1, core.DeclareAttackers, gametest.PlayerA, "Take Heart", "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerA, 21)
+}
+
+func TestTalrandsInvocationTokens(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 4)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Talrand's Invocation")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Talrand's Invocation")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Drake", 2)
+}
+
+func TestThoughtCollapse(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 3)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forest", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Thought Collapse")
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerB, "Hill Giant", 5)
+	g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Grizzly Bears")
+	g.CastInResponseTo(gametest.PlayerA, "Thought Collapse", "Grizzly Bears")
+	g.StopAt(2, core.EndStep)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+	g.AssertGraveyardCount(gametest.PlayerB, "Hill Giant", 3)
+}
+
+func TestWildsize(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 3)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Wildsize")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Hill Giant")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Wildsize", "Grizzly Bears")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 4, 4)
+	g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", core.Trample, true)
+	g.AssertHandCount(gametest.PlayerA, "Hill Giant", 1)
+}
+
+func TestWhelmingWave(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 4)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Whelming Wave")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Whelming Wave")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 1)
+	g.AssertHandCount(gametest.PlayerB, "Hill Giant", 1)
+}
+
 func TestVolcanicFalloutDamagesAll(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 3)
