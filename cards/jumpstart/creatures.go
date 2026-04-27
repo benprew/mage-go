@@ -885,12 +885,13 @@ func registerCreatures() {
 // Creature — Merfolk Wizard
 // 2/1
 // Whenever this creature deals damage, target player mills that many cards.
+// XXX: target-player auto-bound to the damaged player (engine doesn't yet support trigger-target selection)
 	Register("Towering-Wave Mystic", func() Card {
 		return NewCreature("Towering-Wave Mystic", "{1}{U}", 2, 1,
 			WithSubTypes("Merfolk", "Wizard"),
 			WithAbility(NewTriggered(EvtDamageDealt, false,
 				MillTargetPlayer(EventAmountValue()),
-			).SetConditionData(EventSourceIsSelf{}).AddTarget(TargetPlayer())),
+			).SetConditionData(EventSourceIsSelf{})),
 		)
 	})
 
@@ -929,11 +930,30 @@ func registerCreatures() {
 // 0/4
 // Defender (This creature can't attack.)
 // When this creature enters, target player mills four cards. (They put the top four cards of their library into their graveyard.)
+// XXX: target-player defaults to opponent (engine doesn't yet support trigger-target selection)
 	Register("Wall of Lost Thoughts", func() Card {
 		return NewCreature("Wall of Lost Thoughts", "{1}{U}", 0, 4,
 			WithSubTypes("Wall"),
 			WithKeyword(Defender),
-			WithAbility(EntersBattlefieldTrigger(MillTargetPlayer(Fixed(4)), false).AddTarget(TargetPlayer())),
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect("target player mills four cards",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetOpponent(controller)
+						if p == nil {
+							return nil
+						}
+						lib := p.Library()
+						for i := 0; i < 4 && len(lib) > 0; i++ {
+							card := lib[len(lib)-1]
+							lib = lib[:len(lib)-1]
+							p.AddToGraveyard(card)
+						}
+						p.SetLibrary(lib)
+						return nil
+					}),
+				false,
+			)),
 		)
 	})
 
@@ -1010,17 +1030,16 @@ func registerCreatures() {
 // Creature — Vampire
 // 0/1
 // Whenever Blood Artist or another creature dies, target opponent loses 1 life and you gain 1 life.
+// XXX: target-opponent defaults to the lone opponent (engine doesn't yet support trigger-target selection)
 	Register("A-Blood Artist", func() Card {
 		return NewCreature("A-Blood Artist", "{1}{B}", 0, 1,
 			WithSubTypes("Vampire"),
 			WithAbility(AnyCreatureDiesTrigger(
 				FuncEffect("target opponent loses 1 life and you gain 1 life",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) > 0 {
-							if tp := g.GetPlayer(targets[0]); tp != nil {
-								tp.LoseLife(1)
-							}
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						if tp := g.GetOpponent(controller); tp != nil {
+							tp.LoseLife(1)
 						}
 						if cp := g.GetPlayer(controller); cp != nil {
 							g.PlayerGainLife(cp, 1)
@@ -1028,7 +1047,7 @@ func registerCreatures() {
 						return nil
 					}),
 				false,
-			).AddTarget(TargetOpponent())),
+			)),
 		)
 	})
 
@@ -1036,12 +1055,23 @@ func registerCreatures() {
 // Creature — Zombie Cat
 // 1/1
 // When this creature dies, target opponent discards a card at random.
+// XXX: target-opponent defaults to the lone opponent (engine doesn't yet support trigger-target selection)
 	Register("Black Cat", func() Card {
 		return NewCreature("Black Cat", "{1}{B}", 1, 1,
 			WithSubTypes("Zombie", "Cat"),
-			WithAbility(NewTriggered(EvtCreatureDied, false, DiscardRandom(1)).
-				SetConditionData(EventSourceIsSelf{}).
-				AddTarget(TargetOpponent())),
+			WithAbility(NewTriggered(EvtCreatureDied, false,
+				FuncEffect("target opponent discards a card at random",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetOpponent(controller)
+						if p == nil || len(p.Hand()) == 0 {
+							return nil
+						}
+						idx := rand.Intn(len(p.Hand()))
+						p.DiscardCard(p.Hand()[idx].ID())
+						return nil
+					}),
+			).SetConditionData(EventSourceIsSelf{})),
 		)
 	})
 
@@ -1065,17 +1095,16 @@ func registerCreatures() {
 // Creature — Vampire
 // 0/1
 // Whenever this creature or another creature dies, target player loses 1 life and you gain 1 life.
+// XXX: target-player defaults to opponent (engine doesn't yet support trigger-target selection)
 	Register("Blood Artist", func() Card {
 		return NewCreature("Blood Artist", "{1}{B}", 0, 1,
 			WithSubTypes("Vampire"),
 			WithAbility(AnyCreatureDiesTrigger(
 				FuncEffect("target player loses 1 life and you gain 1 life",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) > 0 {
-							if tp := g.GetPlayer(targets[0]); tp != nil {
-								tp.LoseLife(1)
-							}
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						if tp := g.GetOpponent(controller); tp != nil {
+							tp.LoseLife(1)
 						}
 						if cp := g.GetPlayer(controller); cp != nil {
 							g.PlayerGainLife(cp, 1)
@@ -1083,7 +1112,7 @@ func registerCreatures() {
 						return nil
 					}),
 				false,
-			).AddTarget(TargetPlayer())),
+			)),
 		)
 	})
 
@@ -1121,6 +1150,7 @@ func registerCreatures() {
 // 2/2
 // Flying
 // When this creature enters, target player loses 2 life and you gain 2 life.
+// XXX: target-player defaults to opponent (engine doesn't yet support trigger-target selection)
 	Register("Bloodhunter Bat", func() Card {
 		return NewCreature("Bloodhunter Bat", "{3}{B}", 2, 2,
 			WithSubTypes("Bat"),
@@ -1128,11 +1158,9 @@ func registerCreatures() {
 			WithAbility(EntersBattlefieldTrigger(
 				FuncEffect("target player loses 2 life and you gain 2 life",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) > 0 {
-							if tp := g.GetPlayer(targets[0]); tp != nil {
-								tp.LoseLife(2)
-							}
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						if tp := g.GetOpponent(controller); tp != nil {
+							tp.LoseLife(2)
 						}
 						if cp := g.GetPlayer(controller); cp != nil {
 							g.PlayerGainLife(cp, 2)
@@ -1140,7 +1168,7 @@ func registerCreatures() {
 						return nil
 					}),
 				false,
-			).AddTarget(TargetPlayer())),
+			)),
 		)
 	})
 
@@ -1203,14 +1231,39 @@ func registerCreatures() {
 // 1/1
 // Flying
 // When this creature enters, you may return target creature card from your graveyard to your hand.
+// XXX: target-creature-from-graveyard auto-chosen by player (engine doesn't yet support trigger-target selection)
 	Register("Cadaver Imp", func() Card {
 		return NewCreature("Cadaver Imp", "{1}{B}{B}", 1, 1,
 			WithSubTypes("Imp"),
 			WithKeyword(Flying),
 			WithAbility(EntersBattlefieldTrigger(
-				ReturnFromGraveyardToHandTarget(),
+				FuncEffect("you may return target creature card from your graveyard to your hand",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						var creatures []Card
+						for _, c := range p.Graveyard() {
+							if c.HasType(TypeCreature) {
+								creatures = append(creatures, c)
+							}
+						}
+						if len(creatures) == 0 {
+							return nil
+						}
+						chosen := p.ChooseCardFromLibrary(creatures, "return creature card from graveyard to hand", g)
+						if chosen == nil {
+							return nil
+						}
+						if card, ok := p.RemoveFromGraveyard(chosen.ID()); ok {
+							p.AddToHand(card)
+						}
+						return nil
+					}),
 				true,
-			).AddTarget(TargetCardInYourGraveyard(IsCreatureCard))),
+			)),
 		)
 	})
 
@@ -1337,13 +1390,37 @@ func registerCreatures() {
 // Creature — Human Warrior
 // 1/2
 // When this creature dies, return another target creature card from your graveyard to your hand.
+// XXX: target-creature-from-graveyard auto-chosen (engine doesn't yet support trigger-target selection)
 	Register("Dutiful Attendant", func() Card {
 		return NewCreature("Dutiful Attendant", "{2}{B}", 1, 2,
 			WithSubTypes("Human", "Warrior"),
 			WithAbility(NewTriggered(EvtCreatureDied, false,
-				ReturnFromGraveyardToHandTarget(),
-			).SetConditionData(EventSourceIsSelf{}).
-				AddTarget(TargetCardInYourGraveyard(IsCreatureCard))),
+				FuncEffect("return another target creature card from your graveyard to your hand",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						var creatures []Card
+						for _, c := range p.Graveyard() {
+							if c.HasType(TypeCreature) && c.ID() != sourceID {
+								creatures = append(creatures, c)
+							}
+						}
+						if len(creatures) == 0 {
+							return nil
+						}
+						chosen := p.ChooseCardFromLibrary(creatures, "return another creature card from graveyard to hand", g)
+						if chosen == nil {
+							return nil
+						}
+						if card, ok := p.RemoveFromGraveyard(chosen.ID()); ok {
+							p.AddToHand(card)
+						}
+						return nil
+					}),
+			).SetConditionData(EventSourceIsSelf{})),
 		)
 	})
 
@@ -1378,6 +1455,7 @@ func registerCreatures() {
 // 2/2
 // Flying
 // Whenever this creature or another creature dies, target player loses 1 life and you gain 1 life.
+// XXX: target-player defaults to opponent (engine doesn't yet support trigger-target selection)
 	Register("Falkenrath Noble", func() Card {
 		return NewCreature("Falkenrath Noble", "{3}{B}", 2, 2,
 			WithSubTypes("Vampire", "Noble"),
@@ -1385,11 +1463,9 @@ func registerCreatures() {
 			WithAbility(AnyCreatureDiesTrigger(
 				FuncEffect("target player loses 1 life and you gain 1 life",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) > 0 {
-							if tp := g.GetPlayer(targets[0]); tp != nil {
-								tp.LoseLife(1)
-							}
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						if tp := g.GetOpponent(controller); tp != nil {
+							tp.LoseLife(1)
 						}
 						if cp := g.GetPlayer(controller); cp != nil {
 							g.PlayerGainLife(cp, 1)
@@ -1397,7 +1473,7 @@ func registerCreatures() {
 						return nil
 					}),
 				false,
-			).AddTarget(TargetPlayer())),
+			)),
 		)
 	})
 
@@ -1419,27 +1495,36 @@ func registerCreatures() {
 // Creature — Salamander
 // 1/1
 // When this creature dies, target creature an opponent controls gets -1/-1 until end of turn. That creature gets -4/-4 instead if you control a creature named Bogbrew Witch.
+// XXX: target-creature auto-chosen (engine doesn't yet support trigger-target selection)
 	Register("Festering Newt", func() Card {
 		return NewCreature("Festering Newt", "{B}", 1, 1,
 			WithSubTypes("Salamander"),
 			WithAbility(NewTriggered(EvtCreatureDied, false,
 				FuncEffect("target creature gets -1/-1 (-4/-4 with Bogbrew Witch) until end of turn",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						candidates := g.FilterBattlefield(And(IsCreature, NotControlledBy(controller)))
+						if len(candidates) == 0 {
+							return nil
+						}
+						player := g.GetPlayer(controller)
+						if player == nil {
+							return nil
+						}
+						chosen := player.ChoosePermanent(candidates, "-1/-1 to opponent's creature", g)
+						if chosen == nil {
 							return nil
 						}
 						amount := 1
 						if g.AnyBattlefield(And(IsCreature, ControlledBy(controller), Named("Bogbrew Witch"))) {
 							amount = 4
 						}
-						ce := TemporaryBoost(targets[0], -amount, -amount)
+						ce := TemporaryBoost(chosen.ID(), -amount, -amount)
 						ce.SetSourceID(sourceID)
 						g.AddContinuousEffect(ce)
 						return nil
 					}),
-			).SetConditionData(EventSourceIsSelf{}).
-				AddTarget(TargetPermanentOpponentControls(IsCreature))),
+			).SetConditionData(EventSourceIsSelf{})),
 		)
 	})
 
@@ -1634,13 +1719,29 @@ func registerCreatures() {
 // Creature — Aetherborn Rogue
 // 3/2
 // When this creature dies, put a +1/+1 counter on target creature you control.
+// XXX: target-creature auto-chosen (engine doesn't yet support trigger-target selection)
 	Register("Lawless Broker", func() Card {
 		return NewCreature("Lawless Broker", "{2}{B}", 3, 2,
 			WithSubTypes("Aetherborn", "Rogue"),
 			WithAbility(NewTriggered(EvtCreatureDied, false,
-				AddCounters(P1P1, Fixed(1)),
-			).SetConditionData(EventSourceIsSelf{}).
-				AddTarget(TargetControlledCreature())),
+				FuncEffect("put a +1/+1 counter on target creature you control",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						candidates := g.FilterBattlefield(And(IsCreature, ControlledBy(controller)))
+						if len(candidates) == 0 {
+							return nil
+						}
+						player := g.GetPlayer(controller)
+						if player == nil {
+							return nil
+						}
+						chosen := player.ChoosePermanent(candidates, "+1/+1 counter on target creature you control", g)
+						if chosen != nil {
+							chosen.AddCounter(P1P1, 1)
+						}
+						return nil
+					}),
+			).SetConditionData(EventSourceIsSelf{})),
 		)
 	})
 
@@ -1971,13 +2072,30 @@ func registerCreatures() {
 // Creature — Beast Horror
 // 2/2
 // When this creature enters, destroy target creature an opponent controls.
+// XXX: target-creature defaults to first available opponent creature (engine doesn't yet support trigger-target selection)
 	Register("Ravenous Chupacabra", func() Card {
 		return NewCreature("Ravenous Chupacabra", "{2}{B}{B}", 2, 2,
 			WithSubTypes("Beast", "Horror"),
 			WithAbility(EntersBattlefieldTrigger(
-				DestroyTargetPermanent(),
+				FuncEffect("destroy target creature an opponent controls",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						candidates := g.FilterBattlefield(And(IsCreature, NotControlledBy(controller)))
+						if len(candidates) == 0 {
+							return nil
+						}
+						player := g.GetPlayer(controller)
+						if player == nil {
+							return nil
+						}
+						chosen := player.ChoosePermanent(candidates, "destroy target creature an opponent controls", g)
+						if chosen != nil {
+							g.DestroyPermanent(chosen)
+						}
+						return nil
+					}),
 				false,
-			).AddTarget(TargetPermanentOpponentControls(IsCreature))),
+			)),
 		)
 	})
 
@@ -2026,13 +2144,31 @@ func registerCreatures() {
 // Creature — Zombie Goblin
 // 1/1
 // When this creature dies, target creature an opponent controls gets -1/-1 until end of turn.
+// XXX: target-creature auto-chosen (engine doesn't yet support trigger-target selection)
 	Register("Shambling Goblin", func() Card {
 		return NewCreature("Shambling Goblin", "{B}", 1, 1,
 			WithSubTypes("Zombie", "Goblin"),
 			WithAbility(NewTriggered(EvtCreatureDied, false,
-				Boost(Fixed(-1), Fixed(-1)).Until(EndOfTurn),
-			).SetConditionData(EventSourceIsSelf{}).
-				AddTarget(TargetPermanentOpponentControls(IsCreature))),
+				FuncEffect("target creature an opponent controls gets -1/-1 until end of turn",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						candidates := g.FilterBattlefield(And(IsCreature, NotControlledBy(controller)))
+						if len(candidates) == 0 {
+							return nil
+						}
+						player := g.GetPlayer(controller)
+						if player == nil {
+							return nil
+						}
+						chosen := player.ChoosePermanent(candidates, "-1/-1 to opponent's creature", g)
+						if chosen != nil {
+							ce := TemporaryBoost(chosen.ID(), -1, -1)
+							ce.SetSourceID(sourceID)
+							g.AddContinuousEffect(ce)
+						}
+						return nil
+					}),
+			).SetConditionData(EventSourceIsSelf{})),
 		)
 	})
 
@@ -2048,9 +2184,33 @@ func registerCreatures() {
 			WithSuperTypes(SuperLegendary),
 			WithKeyword(Swampwalk),
 			WithAbility(BeginningOfUpkeepTrigger(
-				ReturnFromGraveyardToBattlefield(),
+				FuncEffect("return target creature card from your graveyard to the battlefield",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						var creatures []Card
+						for _, c := range p.Graveyard() {
+							if c.HasType(TypeCreature) {
+								creatures = append(creatures, c)
+							}
+						}
+						if len(creatures) == 0 {
+							return nil
+						}
+						chosen := p.ChooseCardFromLibrary(creatures, "reanimate creature card from graveyard", g)
+						if chosen == nil {
+							return nil
+						}
+						if card, ok := p.RemoveFromGraveyard(chosen.ID()); ok {
+							g.PutOnBattlefield(card, controller)
+						}
+						return nil
+					}),
 				false,
-			).AddTarget(TargetCardInYourGraveyard(IsCreatureCard))),
+			)),
 			WithAbility(NewTriggered(EvtUpkeep, false,
 				FuncEffect("that player sacrifices a creature of their choice",
 					EffectProperties{Outcome: OutcomeBenefit},

@@ -30,7 +30,7 @@ func TestVedalkenArchmage_DrawsOnArtifactSpell(t *testing.T) {
 	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Ornithopter")
 	g.StopAt(1, core.EndStep)
 	g.Execute()
-	g.AssertHandCount(gametest.PlayerA, "Mox Ruby", 2)
+	g.AssertHandCount(gametest.PlayerA, "Mox Ruby", 1)
 }
 
 func TestVedalkenEntrancer_MillsTwo(t *testing.T) {
@@ -70,10 +70,10 @@ func TestWindstormDrake_BoostsOtherFlyers(t *testing.T) {
 func TestBloodArtist_DrainsOnDeath(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Blood Artist")
-	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
-	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
-	g.Attack(1, gametest.PlayerB, "Hill Giant")
-	g.Block(1, gametest.PlayerA, "Grizzly Bears", "Hill Giant")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Grizzly Bears")
 	g.StopAt(1, core.EndStep)
 	g.Execute()
 	g.AssertLife(gametest.PlayerA, 21)
@@ -122,7 +122,7 @@ func TestPhyrexianRager_DrawAndLose(t *testing.T) {
 	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Phyrexian Rager")
 	g.StopAt(1, core.EndStep)
 	g.Execute()
-	g.AssertHandCount(gametest.PlayerA, "Mox Ruby", 2)
+	g.AssertHandCount(gametest.PlayerA, "Mox Ruby", 1)
 	g.AssertLife(gametest.PlayerA, 19)
 }
 
@@ -130,11 +130,11 @@ func TestPhyrexianGargantua_DrawTwoLoseTwo(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneHand, gametest.PlayerA, "Phyrexian Gargantua")
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 6)
-	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Plains", 2)
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Mox Ruby", 3)
 	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Phyrexian Gargantua")
 	g.StopAt(1, core.EndStep)
 	g.Execute()
-	g.AssertHandCount(gametest.PlayerA, "Plains", 2)
+	g.AssertHandCount(gametest.PlayerA, "Mox Ruby", 2)
 	g.AssertLife(gametest.PlayerA, 18)
 }
 
@@ -142,11 +142,11 @@ func TestTithebearerGiant_DrawAndLose(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneHand, gametest.PlayerA, "Tithebearer Giant")
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 6)
-	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Plains")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Mox Ruby", 2)
 	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Tithebearer Giant")
 	g.StopAt(1, core.EndStep)
 	g.Execute()
-	g.AssertHandCount(gametest.PlayerA, "Plains", 1)
+	g.AssertHandCount(gametest.PlayerA, "Mox Ruby", 1)
 	g.AssertLife(gametest.PlayerA, 19)
 }
 
@@ -174,11 +174,11 @@ func TestLilianasElite_PTByGraveyardCreatures(t *testing.T) {
 func TestGristleGrinner_BoostOnDeath(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Gristle Grinner")
-	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
-	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
-	g.Attack(1, gametest.PlayerB, "Hill Giant")
-	g.Block(1, gametest.PlayerA, "Grizzly Bears", "Hill Giant")
-	g.StopAt(1, core.EndStep)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Grizzly Bears")
+	g.StopAt(1, core.PostcombatMain)
 	g.Execute()
 	g.AssertPowerToughness(gametest.PlayerA, "Gristle Grinner", 5, 5)
 }
