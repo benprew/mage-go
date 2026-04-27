@@ -103,6 +103,10 @@ type Game struct {
 	// Targets of the spell currently being resolved (for ETB copy effects)
 	resolvingTargets []uuid.UUID
 
+	// DamageDistribution chosen at cast/activation time for the spell currently
+	// being resolved (CR 601.2d, divided damage). Cleared after resolution.
+	resolvingDamageDistribution map[uuid.UUID]int
+
 	// Delayed triggers
 	delayedTriggers []*DelayedTrigger
 
@@ -1579,9 +1583,11 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 	g.currentEventAmount = obj.EventAmount
 	g.resolvingCard = obj.Card
 	g.resolvingTargets = obj.Targets
+	g.resolvingDamageDistribution = obj.DamageDistribution
 	for _, eff := range obj.Effects {
 		_ = eff.Apply(g, obj.SourceID, obj.Controller, obj.Targets)
 	}
+	g.resolvingDamageDistribution = nil
 
 	// If this was a spell (not an ability), put the card in the graveyard
 	if obj.Card != nil && !obj.IsAbility {
@@ -1624,6 +1630,54 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 	g.resolvingTargets = nil
 
 	g.CheckStateBasedActions()
+}
+
+// sanitizeDamageDistribution validates a player-chosen damage division for a
+// divided-damage spell or ability (CR 601.2d). The returned map is restricted
+// to keys present in `targets`, has only non-negative values, and sums to
+// exactly `total`. If the player's input is malformed (sum mismatch, unknown
+// target, negative entry, missing assignment when total > 0) we fall back to
+// "all damage to the first target," which is always a legal distribution
+// because total damage must be assigned across the chosen targets.
+func sanitizeDamageDistribution(in map[uuid.UUID]int, targets []uuid.UUID, total int) map[uuid.UUID]int {
+	if total <= 0 || len(targets) == 0 {
+		return nil
+	}
+	allowed := make(map[uuid.UUID]struct{}, len(targets))
+	for _, t := range targets {
+		if t == uuid.Nil {
+			continue
+		}
+		allowed[t] = struct{}{}
+	}
+	out := make(map[uuid.UUID]int, len(in))
+	sum := 0
+	valid := true
+	for k, v := range in {
+		if _, ok := allowed[k]; !ok {
+			valid = false
+			break
+		}
+		if v < 0 {
+			valid = false
+			break
+		}
+		if v > 0 {
+			out[k] = v
+			sum += v
+		}
+	}
+	if !valid || sum != total || len(out) == 0 {
+		out = map[uuid.UUID]int{}
+		for _, t := range targets {
+			if t != uuid.Nil {
+				out[t] = total
+				return out
+			}
+		}
+		return nil
+	}
+	return out
 }
 
 // CastSpellByName finds a card in player's hand, puts it on the stack.
@@ -1793,6 +1847,18 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 
 	if modes := card.Modes(); len(modes) > 0 {
 		obj.ModeChoice = p.ChooseMode(modes, card.Name())
+	}
+
+	for _, eff := range effects {
+		if !IsDividedDamageEffect(eff) {
+			continue
+		}
+		total := DividedDamageTotal(eff).Resolve(g, card.ID(), playerID, targets)
+		if total > 0 && len(targets) > 0 {
+			dist := p.ChooseDamageDistribution(targets, total, card.Name(), g)
+			obj.DamageDistribution = sanitizeDamageDistribution(dist, targets, total)
+		}
+		break
 	}
 
 	g.stack.Push(obj)
@@ -3105,6 +3171,21 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		if p != nil {
 			obj.ModeChoice = p.ChooseMode(modes, perm.Card.Name())
 		}
+	}
+
+	for _, eff := range aa.Effects() {
+		if !IsDividedDamageEffect(eff) {
+			continue
+		}
+		total := DividedDamageTotal(eff).Resolve(g, perm.ID(), playerID, targets)
+		if total > 0 && len(targets) > 0 {
+			pl := g.GetPlayer(playerID)
+			if pl != nil {
+				dist := pl.ChooseDamageDistribution(targets, total, perm.Card.Name(), g)
+				obj.DamageDistribution = sanitizeDamageDistribution(dist, targets, total)
+			}
+		}
+		break
 	}
 
 	g.stack.Push(obj)

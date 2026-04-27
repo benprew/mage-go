@@ -297,6 +297,20 @@ func (tg *TestGame) ChooseTarget(p PlayerRef, name string) {
 	tp.chooseTarget = append(tp.chooseTarget, name)
 }
 
+// ChooseDamageDistribution scripts the damage division a player will return
+// when casting a divided-damage spell (CR 601.2d). Keys are target names
+// (player names or permanent names); values are the per-target damage amount.
+// Values must sum to the spell's total or the engine will discard the
+// distribution and fall back to dumping all damage on the first target.
+func (tg *TestGame) ChooseDamageDistribution(p PlayerRef, distribution map[string]int) {
+	tp := tg.GetPlayer(p)
+	cp := make(map[string]int, len(distribution))
+	for k, v := range distribution {
+		cp[k] = v
+	}
+	tp.chooseDamageDistribution = append(tp.chooseDamageDistribution, cp)
+}
+
 // ChoosePermanent scripts which permanent a player will choose when asked.
 func (tg *TestGame) ChoosePermanent(p PlayerRef, name string) {
 	tp := tg.GetPlayer(p)

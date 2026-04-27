@@ -302,6 +302,12 @@ func cloneStackObject(obj *StackObject) *StackObject {
 		clone.Targets = make([]uuid.UUID, len(obj.Targets))
 		copy(clone.Targets, obj.Targets)
 	}
+	if len(obj.DamageDistribution) > 0 {
+		clone.DamageDistribution = make(map[uuid.UUID]int, len(obj.DamageDistribution))
+		for k, v := range obj.DamageDistribution {
+			clone.DamageDistribution[k] = v
+		}
+	}
 	return clone
 }
 

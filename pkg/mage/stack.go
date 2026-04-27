@@ -14,6 +14,13 @@ type StackObject struct {
 	XValue      int        // value of X for X-cost spells
 	ModeChoice  int        // chosen mode for modal spells (0-indexed)
 	EventAmount int        // amount from triggering event (e.g. damage dealt)
+
+	// DamageDistribution carries per-target damage assignments for
+	// divided-damage spells/abilities (CR 601.2d). The controller picks the
+	// distribution at cast or activation time; the executor reads it back at
+	// resolution. Map keys are the target IDs in StackObject.Targets; values
+	// sum to the spell's total damage.
+	DamageDistribution map[uuid.UUID]int
 }
 
 // Stack represents the game stack.

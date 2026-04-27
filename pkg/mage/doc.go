@@ -78,7 +78,8 @@ Instants and sorceries take a [*SpellAbility] that defines resolution behavior.
 Build one with:
 
 	[NewSpellAbility](effects...)              // untargeted spell
-	[NewTargetedSpell](target, effects...)     // targeted spell
+	[NewTargetedSpell](target, effects...)     // single-target spell
+	[NewMultiTargetSpell](targets, effects...) // multi-target spell (see "Multi-target spells" below)
 
 Effects are the atomic actions. Each implements the [Effect] interface:
 
@@ -291,6 +292,14 @@ Zone targets:
 	[TargetAnyNumberOfCardsInYourGraveyard](filters)         // any number (0+) of cards in your graveyard
 	[TargetCardInHand](filters ...CardFilter)                // any card in your hand (pass IsCreatureCard for creatures)
 
+Multi-target shapes (used with [NewMultiTargetSpell]):
+
+	[TargetUpToNCreatures](n, filters...)             // 0..n creatures (Dauntless Onslaught)
+	[TargetUpToNCreaturesOrPlayers](n)                // 0..n creatures-or-players (divided damage)
+	[TargetUpToNCardsInYourGraveyard](n, filters...)  // 0..n cards in your graveyard
+	[TargetCreatureYouControl](filters...)            // a creature you control
+	[TargetCreatureOpponentControls](filters...)      // a creature an opponent controls
+
 Restrict with filters:
 
 	// Destroy target nonblack creature
@@ -378,6 +387,61 @@ Examples:
 	    mage.SelectController(),
 	    mage.And(mage.IsLand, mage.HasSubType("Swamp")),
 	))
+
+# Multi-Target Spells
+
+Three target shapes don't fit the single-target pattern:
+
+  - "Up to N target X" — controller picks 0..N legal targets.
+  - "Target Y you control AND target Z an opponent controls" — two distinct
+    Targets with disjoint predicates (Peel from Reality, Nature's Way).
+  - "N damage divided as you choose among any number of targets" — controller
+    chooses both the targets and the per-target damage at announcement
+    (CR 601.2d). Flames of the Firebrand, Hail of Arrows.
+
+Use [NewMultiTargetSpell] with a slice of [Target]s; the flat list of chosen
+target IDs (in declaration order) is passed to each effect via ctx.Targets.
+
+To act on every chosen target uniformly, select with [ToAllTargets]() — the
+selector iterates ctx.Targets and skips uuid.Nil placeholders or targets that
+have left the battlefield (CR 608.2b: a multi-target spell whose first target
+becomes illegal still affects the surviving targets).
+
+	// Dauntless Onslaught: Up to two target creatures get +2/+2 until EOT
+	mage.NewSorcery("Dauntless Onslaught", "{1}{W}",
+	    mage.NewMultiTargetSpell(
+	        []mage.Target{mage.TargetUpToNCreatures(2)},
+	        mage.Boost(mage.Fixed(2), mage.Fixed(2)).Targeting(mage.ToAllTargets()),
+	    ),
+	)
+
+	// Peel from Reality: Return target creature you control AND target
+	// creature an opponent controls to their owners' hands.
+	mage.NewInstant("Peel from Reality", "{1}{U}",
+	    mage.NewMultiTargetSpell(
+	        []mage.Target{
+	            mage.TargetCreatureYouControl(),
+	            mage.TargetCreatureOpponentControls(),
+	        },
+	        // FuncEffect that iterates targets and bounces each.
+	    ),
+	)
+
+	// Flames of the Firebrand: 3 damage divided as you choose among any number of targets.
+	mage.NewSorcery("Flames of the Firebrand", "{2}{R}",
+	    mage.NewMultiTargetSpell(
+	        []mage.Target{mage.TargetUpToNCreaturesOrPlayers(3)},
+	        mage.DealDividedDamage(mage.Fixed(3)),
+	    ),
+	)
+
+For divided-damage spells the engine calls [Player.ChooseDamageDistribution]
+at cast/activation time, validates the result (CR 601.2d: sum equals total,
+keys are a subset of chosen targets, no negatives), and stores the map on the
+[StackObject] as DamageDistribution. At resolution, [DealDividedDamage] reads
+the map back, skipping targets that became illegal — only their share is
+wasted, the remaining targets still take their assigned damage. Test code
+scripts the distribution with TestGame.ChooseDamageDistribution(player, map).
 
 # PermanentSelector — Source vs Target
 

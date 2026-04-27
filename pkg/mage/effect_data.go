@@ -26,6 +26,10 @@ type EffectContext struct {
 	Controller uuid.UUID
 	Targets    []uuid.UUID
 	Vars       map[string]any
+
+	// DamageDistribution is set when the resolving stack object carries a
+	// pre-chosen damage distribution (divided-damage spells/abilities).
+	DamageDistribution map[uuid.UUID]int
 }
 
 // SetInt stores an integer variable in the context.

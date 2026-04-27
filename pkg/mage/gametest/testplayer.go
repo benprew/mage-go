@@ -47,6 +47,7 @@ type TestPlayer struct {
 	combatBlockerOrder        map[string][]string
 	combatDamageAssignment    map[string]map[string]int
 	chooseScryDecisions       []scryDecision
+	chooseDamageDistribution  []map[string]int
 }
 
 // scryDecision is one queued scry placement: cards to send to the bottom
@@ -245,6 +246,36 @@ func (tp *TestPlayer) ChooseTargets(possible []uuid.UUID, min, max int, g *mage.
 // ChooseMayAbility always accepts optional abilities.
 func (tp *TestPlayer) ChooseMayAbility(description string) bool {
 	return true
+}
+
+// ChooseDamageDistribution returns a scripted distribution if one was queued
+// via TestGame.ChooseDamageDistribution, mapping target names to amounts.
+// Falls back to dumping `total` on the first possible target.
+func (tp *TestPlayer) ChooseDamageDistribution(possible []uuid.UUID, total int, reason string, g *mage.Game) map[uuid.UUID]int {
+	if total <= 0 || len(possible) == 0 {
+		return nil
+	}
+	if len(tp.chooseDamageDistribution) == 0 {
+		return tp.BasePlayer.ChooseDamageDistribution(possible, total, reason, g)
+	}
+	script := tp.chooseDamageDistribution[0]
+	tp.chooseDamageDistribution = tp.chooseDamageDistribution[1:]
+	out := make(map[uuid.UUID]int, len(script))
+	for _, id := range possible {
+		var name string
+		if pl := g.GetPlayer(id); pl != nil {
+			name = pl.Name()
+		} else if perm := g.FindPermanent(id); perm != nil {
+			name = perm.Name()
+		}
+		if name == "" {
+			continue
+		}
+		if amt, ok := script[name]; ok && amt > 0 {
+			out[id] = amt
+		}
+	}
+	return out
 }
 
 // ChooseMode picks a mode from a list of options.

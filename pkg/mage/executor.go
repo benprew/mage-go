@@ -31,6 +31,8 @@ func ExecuteEffect(ctx *EffectContext, data EffectData) error {
 		return execLoseLife(ctx, e)
 	case *dealDamageEffect:
 		return execDealDamage(ctx, e)
+	case *dealDividedDamageEffect:
+		return execDealDividedDamage(ctx, e)
 	case *dealDamageToAllCreaturesEffect:
 		return execDealDamageToAllCreatures(ctx, e)
 	case *dealDamageToPlayersEffect:
@@ -403,6 +405,50 @@ func execDealDamage(ctx *EffectContext, e *dealDamageEffect) error {
 	}
 
 	ctx.Game.DealDamageToPermanent(perm, amount, ctx.SourceID)
+	return nil
+}
+
+// execDealDividedDamage reads the per-target damage distribution chosen at
+// cast/activation time (stored on the StackObject and forwarded into ctx via
+// resolvingDamageDistribution) and applies it. CR 601.2d/609.3.5: a divided-
+// damage spell's distribution is chosen on announcement and is frozen; if a
+// target later becomes illegal, only that target's share is wasted — the
+// remaining targets still take their shares. We honor that by skipping
+// ctx.Targets entries that no longer point at a valid creature/player.
+func execDealDividedDamage(ctx *EffectContext, _ *dealDividedDamageEffect) error {
+	dist := ctx.DamageDistribution
+	if dist == nil {
+		dist = ctx.Game.resolvingDamageDistribution
+	}
+	if len(dist) == 0 {
+		return nil
+	}
+	for _, tid := range ctx.Targets {
+		amt, ok := dist[tid]
+		if !ok || amt <= 0 {
+			continue
+		}
+		applied := false
+		for _, pl := range ctx.Game.AllPlayers() {
+			if pl.PlayerID() == tid {
+				ctx.Game.DealDamageToPlayer(pl, amt, ctx.SourceID)
+				applied = true
+				break
+			}
+		}
+		if applied {
+			continue
+		}
+		perm := ctx.Game.FindPermanent(tid)
+		if perm == nil {
+			continue
+		}
+		sourceCard := ctx.Game.FindCardAnywhere(ctx.SourceID)
+		if sourceCard != nil && perm.HasProtectionFrom(sourceCard) {
+			continue
+		}
+		ctx.Game.DealDamageToPermanent(perm, amt, ctx.SourceID)
+	}
 	return nil
 }
 

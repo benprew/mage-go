@@ -35,6 +35,7 @@ type CreatureTarget struct {
 	Filters        []PermanentFilter
 	excludeSource  bool
 	controllerOnly bool
+	opponentOnly   bool
 }
 
 // TargetCreature creates a target that selects a creature on the battlefield,
@@ -66,6 +67,48 @@ func TargetCreatureYouControl(filters ...PermanentFilter) Target {
 	}
 }
 
+// TargetCreatureOpponentControls creates a target that selects a creature an
+// opponent controls, optionally narrowed by PermanentFilter predicates. This
+// pairs with TargetCreatureYouControl in a multi-target spell whose targets
+// must have distinct controllers (e.g. Peel from Reality, Nature's Way).
+func TargetCreatureOpponentControls(filters ...PermanentFilter) Target {
+	return &CreatureTarget{
+		BaseTarget:   BaseTarget{min: 1, max: 1},
+		Filters:      filters,
+		opponentOnly: true,
+	}
+}
+
+// TargetUpToNCreatures creates a target that selects from 0 up to n creatures
+// on the battlefield, optionally narrowed by PermanentFilter predicates. Use
+// this for "up to N target creatures" spells (Dauntless Onslaught, Tandem
+// Tactics, Rishkar's ETB).
+func TargetUpToNCreatures(n int, filters ...PermanentFilter) Target {
+	return &CreatureTarget{
+		BaseTarget: BaseTarget{min: 0, max: n},
+		Filters:    filters,
+	}
+}
+
+// TargetUpToNCreaturesOrPlayers creates a target that selects from 0 up to n
+// creatures or players. Used for divided-damage spells like Flames of the
+// Firebrand ("3 damage divided as you choose among any number of targets").
+func TargetUpToNCreaturesOrPlayers(n int) Target {
+	return &AnyTarget{
+		BaseTarget: BaseTarget{min: 0, max: n},
+	}
+}
+
+// TargetUpToNCardsInYourGraveyard creates a target that selects from 0 up to n
+// cards in the controller's graveyard, optionally narrowed by CardFilter
+// predicates. Used for Macabre Waltz, Soul Salvage, etc.
+func TargetUpToNCardsInYourGraveyard(n int, filters ...CardFilter) Target {
+	return &GraveyardCardTarget{
+		BaseTarget: BaseTarget{min: 0, max: n},
+		Filters:    filters,
+	}
+}
+
 func (t *CreatureTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
 	sourceID := sourceCard.ID()
@@ -77,6 +120,9 @@ func (t *CreatureTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game
 			continue
 		}
 		if t.controllerOnly && p.Controller != controller {
+			continue
+		}
+		if t.opponentOnly && p.Controller == controller {
 			continue
 		}
 		if !p.CanBeTargetedBy(sourceCard, controller, g) {

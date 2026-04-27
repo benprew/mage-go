@@ -141,6 +141,51 @@ func (e *dealDamageEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment, DamageValue: e.amount}
 }
 
+// dealDividedDamageEffect deals N damage divided as the controller chose at
+// cast/activation time among any number of targets (CR 601.2d). The per-target
+// distribution is recorded on the StackObject (DamageDistribution) when the
+// spell is cast and is read back at resolution. Used by Flames of the
+// Firebrand and similar spells.
+type dealDividedDamageEffect struct {
+	total ValueSource
+}
+
+// DealDividedDamage creates an effect that deals `total` damage divided among
+// the spell's targets according to the StackObject.DamageDistribution chosen
+// at cast time. Pair with TargetUpToNCreaturesOrPlayers and pass the resulting
+// Target to NewMultiTargetSpell.
+func DealDividedDamage(total ValueSource) Effect {
+	return DataEffect(&dealDividedDamageEffect{total: total})
+}
+
+func (e *dealDividedDamageEffect) EffectText() string {
+	return fmt.Sprintf("deal %s damage divided as you choose among any number of targets", e.total.Text())
+}
+func (e *dealDividedDamageEffect) EffectProps() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment, DamageValue: e.total}
+}
+
+// IsDividedDamageEffect returns true if e is a divided-damage effect (used by
+// the spell-cast flow to prompt the controller for a distribution).
+func IsDividedDamageEffect(e Effect) bool {
+	if a, ok := e.(*dataEffectAdapter); ok {
+		_, isDiv := a.data.(*dealDividedDamageEffect)
+		return isDiv
+	}
+	return false
+}
+
+// DividedDamageTotal returns the ValueSource carrying the total damage of a
+// divided-damage effect, or nil if e is not one.
+func DividedDamageTotal(e Effect) ValueSource {
+	if a, ok := e.(*dataEffectAdapter); ok {
+		if d, isDiv := a.data.(*dealDividedDamageEffect); isDiv {
+			return d.total
+		}
+	}
+	return nil
+}
+
 // dealDamageToAllCreaturesEffect deals damage to all creatures matching an optional filter.
 type dealDamageToAllCreaturesEffect struct {
 	amount ValueSource

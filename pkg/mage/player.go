@@ -95,6 +95,15 @@ type Player interface {
 	ChooseCardFromLibrary(candidates []Card, reason string, g GameReader) Card
 	ChooseNumber(min, max int, reason string) int
 
+	// ChooseDamageDistribution asks the player how to divide a fixed total of
+	// damage among the given target IDs. The implementation must return a map
+	// whose values are non-negative, whose keys are a subset of `possible`,
+	// and whose values sum to exactly `total` (CR 601.2d). At least one
+	// target must receive at least 1 damage if total > 0 and possible is
+	// non-empty. The engine validates the response and falls back to a 1-per-
+	// target dump if the returned distribution is malformed.
+	ChooseDamageDistribution(possible []uuid.UUID, total int, reason string, g *Game) map[uuid.UUID]int
+
 	// ChooseScryPlacement implements the controller's choice for a scry (CR 701.18).
 	// `top` is the top N cards of the library in their current order (top first).
 	// The implementation returns:
@@ -283,6 +292,15 @@ func (p *BasePlayer) DeclareBlockers(g *Game) []BlockAssignment {
 
 func (p *BasePlayer) ChooseMayAbility(description string) bool {
 	return false
+}
+
+// ChooseDamageDistribution defaults to dumping all damage onto the first
+// possible target. Test/AI players override this for richer behavior.
+func (p *BasePlayer) ChooseDamageDistribution(possible []uuid.UUID, total int, reason string, g *Game) map[uuid.UUID]int {
+	if total <= 0 || len(possible) == 0 {
+		return nil
+	}
+	return map[uuid.UUID]int{possible[0]: total}
 }
 
 // Default choice implementations (pick first available option).
