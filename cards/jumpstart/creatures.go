@@ -940,10 +940,11 @@ func registerCreatures() {
 // 2/2
 // Flying
 // Creature spells with flying you cast cost {1} less to cast.
-// TODO: implement
+// XXX: requires keyword-based spell cost reduction
 	Register("Warden of Evos Isle", func() Card {
 		return NewCreature("Warden of Evos Isle", "{2}{U}", 2, 2,
 			WithSubTypes("Bird", "Wizard"),
+			WithKeyword(Flying),
 		)
 	})
 
@@ -952,10 +953,13 @@ func registerCreatures() {
 // 3/7
 // Flying
 // Whenever a creature with flying attacks, you may draw a card.
-// TODO: implement
 	Register("Windreader Sphinx", func() Card {
 		return NewCreature("Windreader Sphinx", "{5}{U}{U}", 3, 7,
 			WithSubTypes("Sphinx"),
+			WithKeyword(Flying),
+			WithAbility(NewTriggered(EvtDeclaredAttacker, true,
+				DrawCards(Fixed(1)),
+			).SetConditionData(EventSourceMatchesPermanentFilter{Filter: HasKeywordFilter(Flying)})),
 		)
 	})
 
@@ -964,10 +968,23 @@ func registerCreatures() {
 // 3/3
 // Flying
 // Other creatures you control with flying get +1/+0.
-// TODO: implement
 	Register("Windstorm Drake", func() Card {
 		return NewCreature("Windstorm Drake", "{4}{U}", 3, 3,
 			WithSubTypes("Drake"),
+			WithKeyword(Flying),
+			WithStaticAbility(FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+				src := g.FindPermanent(sourceID)
+				if src == nil {
+					return nil
+				}
+				for _, p := range g.FilterBattlefield(And(IsCreature, ControlledBy(src.Controller), HasKeywordFilter(Flying))) {
+					if p.ID() == sourceID {
+						continue
+					}
+					p.BoostPT(1, 0)
+				}
+				return nil
+			})),
 		)
 	})
 
@@ -976,10 +993,11 @@ func registerCreatures() {
 // 3/2
 // Defender
 // {1}{U}: This creature loses defender and becomes a Human until end of turn.
-// TODO: implement
+// XXX: requires temporary subtype change with keyword removal until EOT
 	Register("Wishful Merfolk", func() Card {
 		return NewCreature("Wishful Merfolk", "{1}{U}", 3, 2,
 			WithSubTypes("Merfolk"),
+			WithKeyword(Defender),
 		)
 	})
 
@@ -990,10 +1008,25 @@ func registerCreatures() {
 // Creature — Vampire
 // 0/1
 // Whenever Blood Artist or another creature dies, target opponent loses 1 life and you gain 1 life.
-// TODO: implement
 	Register("A-Blood Artist", func() Card {
 		return NewCreature("A-Blood Artist", "{1}{B}", 0, 1,
 			WithSubTypes("Vampire"),
+			WithAbility(AnyCreatureDiesTrigger(
+				FuncEffect("target opponent loses 1 life and you gain 1 life",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) > 0 {
+							if tp := g.GetPlayer(targets[0]); tp != nil {
+								tp.LoseLife(1)
+							}
+						}
+						if cp := g.GetPlayer(controller); cp != nil {
+							g.PlayerGainLife(cp, 1)
+						}
+						return nil
+					}),
+				false,
+			).AddTarget(TargetOpponent())),
 		)
 	})
 
@@ -1001,10 +1034,12 @@ func registerCreatures() {
 // Creature — Zombie Cat
 // 1/1
 // When this creature dies, target opponent discards a card at random.
-// TODO: implement
 	Register("Black Cat", func() Card {
 		return NewCreature("Black Cat", "{1}{B}", 1, 1,
 			WithSubTypes("Zombie", "Cat"),
+			WithAbility(NewTriggered(EvtCreatureDied, false, DiscardRandom(1)).
+				SetConditionData(EventSourceIsSelf{}).
+				AddTarget(TargetOpponent())),
 		)
 	})
 
@@ -1013,10 +1048,14 @@ func registerCreatures() {
 // 2/1
 // Flying
 // {1}: This creature gains haste until end of turn.
-// TODO: implement
 	Register("Blighted Bat", func() Card {
 		return NewCreature("Blighted Bat", "{2}{B}", 2, 1,
 			WithSubTypes("Zombie", "Bat"),
+			WithKeyword(Flying),
+			WithActivatedAbility(
+				GrantKeyword(Haste).Targeting(ToSource()),
+				GenericCost(1),
+			),
 		)
 	})
 
@@ -1024,10 +1063,25 @@ func registerCreatures() {
 // Creature — Vampire
 // 0/1
 // Whenever this creature or another creature dies, target player loses 1 life and you gain 1 life.
-// TODO: implement
 	Register("Blood Artist", func() Card {
 		return NewCreature("Blood Artist", "{1}{B}", 0, 1,
 			WithSubTypes("Vampire"),
+			WithAbility(AnyCreatureDiesTrigger(
+				FuncEffect("target player loses 1 life and you gain 1 life",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) > 0 {
+							if tp := g.GetPlayer(targets[0]); tp != nil {
+								tp.LoseLife(1)
+							}
+						}
+						if cp := g.GetPlayer(controller); cp != nil {
+							g.PlayerGainLife(cp, 1)
+						}
+						return nil
+					}),
+				false,
+			).AddTarget(TargetPlayer())),
 		)
 	})
 
@@ -1035,10 +1089,17 @@ func registerCreatures() {
 // Creature — Vampire
 // 3/3
 // {1}{B}, Sacrifice another creature: Put a +1/+1 counter on this creature and you gain 2 life.
-// TODO: implement
 	Register("Blood Host", func() Card {
 		return NewCreature("Blood Host", "{3}{B}{B}", 3, 3,
 			WithSubTypes("Vampire"),
+			WithActivatedAbility(
+				CompositeEffects("put +1/+1 counter on this creature and gain 2 life",
+					AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
+					GainLife(2),
+				),
+				ManaCostOf("{1}{B}"),
+				WithCost(SacrificeCreatureCost()),
+			),
 		)
 	})
 
@@ -1046,7 +1107,7 @@ func registerCreatures() {
 // Creature — Vampire Shaman Ally
 // 3/3
 // Whenever you gain life, put a +1/+1 counter on this creature.
-// TODO: implement
+// XXX: requires gain-life event trigger
 	Register("Bloodbond Vampire", func() Card {
 		return NewCreature("Bloodbond Vampire", "{2}{B}{B}", 3, 3,
 			WithSubTypes("Vampire", "Shaman", "Ally"),
@@ -1058,10 +1119,26 @@ func registerCreatures() {
 // 2/2
 // Flying
 // When this creature enters, target player loses 2 life and you gain 2 life.
-// TODO: implement
 	Register("Bloodhunter Bat", func() Card {
 		return NewCreature("Bloodhunter Bat", "{3}{B}", 2, 2,
 			WithSubTypes("Bat"),
+			WithKeyword(Flying),
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect("target player loses 2 life and you gain 2 life",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) > 0 {
+							if tp := g.GetPlayer(targets[0]); tp != nil {
+								tp.LoseLife(2)
+							}
+						}
+						if cp := g.GetPlayer(controller); cp != nil {
+							g.PlayerGainLife(cp, 2)
+						}
+						return nil
+					}),
+				false,
+			).AddTarget(TargetPlayer())),
 		)
 	})
 
@@ -1069,7 +1146,7 @@ func registerCreatures() {
 // Creature — Human Wizard
 // 1/3
 // {2}, {T}: Search your library for a card named Festering Newt or Bubbling Cauldron, put it onto the battlefield tapped, then shuffle.
-// TODO: implement
+// XXX: requires search-by-name-list-to-battlefield-tapped primitive
 	Register("Bogbrew Witch", func() Card {
 		return NewCreature("Bogbrew Witch", "{3}{B}", 1, 3,
 			WithSubTypes("Human", "Wizard"),
@@ -1081,10 +1158,12 @@ func registerCreatures() {
 // 3/2
 // This spell costs {3} less to cast if a creature died this turn.
 // Flying, deathtouch
-// TODO: implement
+// XXX: requires conditional cast-cost reduction
 	Register("Bone Picker", func() Card {
 		return NewCreature("Bone Picker", "{3}{B}", 3, 2,
 			WithSubTypes("Bird"),
+			WithKeyword(Flying),
+			WithKeyword(Deathtouch),
 		)
 	})
 
@@ -1092,10 +1171,28 @@ func registerCreatures() {
 // Creature — Rat
 // 1/1
 // When this creature enters, each opponent discards a card.
-// TODO: implement
 	Register("Burglar Rat", func() Card {
 		return NewCreature("Burglar Rat", "{1}{B}", 1, 1,
 			WithSubTypes("Rat"),
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect("each opponent discards a card",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						for _, p := range g.AllPlayers() {
+							if p.PlayerID() == controller {
+								continue
+							}
+							if len(p.Hand()) == 0 {
+								continue
+							}
+							for _, c := range p.ChooseCardsFromHand(1, "discard", g) {
+								p.DiscardCard(c.ID())
+							}
+						}
+						return nil
+					}),
+				false,
+			)),
 		)
 	})
 
@@ -1104,10 +1201,14 @@ func registerCreatures() {
 // 1/1
 // Flying
 // When this creature enters, you may return target creature card from your graveyard to your hand.
-// TODO: implement
 	Register("Cadaver Imp", func() Card {
 		return NewCreature("Cadaver Imp", "{1}{B}{B}", 1, 1,
 			WithSubTypes("Imp"),
+			WithKeyword(Flying),
+			WithAbility(EntersBattlefieldTrigger(
+				ReturnFromGraveyardToHandTarget(),
+				true,
+			).AddTarget(TargetCardInYourGraveyard(IsCreatureCard))),
 		)
 	})
 
@@ -1116,7 +1217,7 @@ func registerCreatures() {
 // 1/1
 // When this creature enters, each opponent loses 1 life and you gain 1 life.
 // Sacrifice a Food: Return this card from your graveyard to the battlefield.
-// TODO: implement
+// XXX: requires Food token primitive
 	Register("Cauldron Familiar", func() Card {
 		return NewCreature("Cauldron Familiar", "{B}", 1, 1,
 			WithSubTypes("Cat"),
@@ -1127,10 +1228,10 @@ func registerCreatures() {
 // Creature — Vampire
 // 2/1
 // Lifelink
-// TODO: implement
 	Register("Child of Night", func() Card {
 		return NewCreature("Child of Night", "{1}{B}", 2, 1,
 			WithSubTypes("Vampire"),
+			WithKeyword(Lifelink),
 		)
 	})
 
@@ -1138,10 +1239,15 @@ func registerCreatures() {
 // Creature — Human Rogue
 // 2/1
 // {2}{B}, Sacrifice this creature: Return another target creature card from your graveyard to your hand.
-// TODO: implement
 	Register("Corpse Hauler", func() Card {
 		return NewCreature("Corpse Hauler", "{1}{B}", 2, 1,
 			WithSubTypes("Human", "Rogue"),
+			WithActivatedAbility(
+				ReturnFromGraveyardToHandTarget(),
+				ManaCostOf("{2}{B}"),
+				WithCost(SacrificeSourceCost()),
+				WithTarget(TargetCardInYourGraveyard(IsCreatureCard)),
+			),
 		)
 	})
 
@@ -1815,10 +1921,29 @@ func registerCreatures() {
 // Creature — Elemental Dog
 // 2/1
 // Whenever this creature blocks or becomes blocked by a creature, this creature deals 1 damage to that creature.
-// TODO: implement
 	Register("Ashmouth Hound", func() Card {
 		return NewCreature("Ashmouth Hound", "{1}{R}", 2, 1,
 			WithSubTypes("Elemental", "Dog"),
+			WithAbility(NewTriggered(EvtDeclaredBlocker, false, FuncEffect(
+				"deal 1 damage to that creature",
+				EffectProperties{Outcome: OutcomeDetriment},
+				func(g *Game, sourceID, _ uuid.UUID, targets []uuid.UUID) error {
+					var otherID uuid.UUID
+					for _, tid := range targets {
+						if tid != sourceID {
+							otherID = tid
+						}
+					}
+					other := g.FindPermanent(otherID)
+					if other != nil {
+						g.DealDamageToPermanent(other, 1, sourceID)
+					}
+					return nil
+				},
+			)).SetConditionData(OrTriggerCond{Conditions: []TriggerConditionData{
+				EventSourceIsSelf{},
+				EventTargetIsSelf{},
+			}})),
 		)
 	})
 
@@ -1828,10 +1953,21 @@ func registerCreatures() {
 // Trample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)
 // Haste (This creature can attack and {T} as soon as it comes under your control.)
 // At the beginning of the end step, sacrifice this creature.
-// TODO: implement
 	Register("Ball Lightning", func() Card {
 		return NewCreature("Ball Lightning", "{R}{R}{R}", 6, 1,
 			WithSubTypes("Elemental"),
+			WithKeyword(Trample),
+			WithKeyword(Haste),
+			WithAbility(NewTriggered(EvtEndStep, false, FuncEffect(
+				"sacrifice this creature",
+				EffectProperties{Outcome: OutcomeDetriment},
+				func(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
+					if perm := g.FindPermanent(sourceID); perm != nil {
+						g.Sacrifice(perm)
+					}
+					return nil
+				},
+			))),
 		)
 	})
 
@@ -1839,10 +1975,13 @@ func registerCreatures() {
 // Creature — Goblin Warrior
 // 2/2
 // When this creature enters, create two 1/1 red Goblin creature tokens.
-// TODO: implement
 	Register("Beetleback Chief", func() Card {
 		return NewCreature("Beetleback Chief", "{2}{R}{R}", 2, 2,
 			WithSubTypes("Goblin", "Warrior"),
+			WithAbility(EntersBattlefieldTrigger(
+				CreateTokens(2, "Goblin", 1, 1, []CardType{TypeCreature}, []string{"Goblin"}),
+				false,
+			)),
 		)
 	})
 
