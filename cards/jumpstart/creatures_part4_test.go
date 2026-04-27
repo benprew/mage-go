@@ -493,3 +493,27 @@ func TestPrescientChimera(t *testing.T) {
 	g.AssertLife(gametest.PlayerB, 17)
 	g.AssertLibraryTop(gametest.PlayerA, "Island", "Forest")
 }
+
+func TestRishkarPeemaRenegade_ETBCountersAndManaGrant(t *testing.T) {
+	t.Run("ETB places counter on chosen target", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest", 3)
+		g.AddCard(ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(ZoneHand, gametest.PlayerA, "Rishkar, Peema Renegade")
+		g.ChooseTarget(gametest.PlayerA, "Grizzly Bears")
+		g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Rishkar, Peema Renegade")
+		g.StopAt(1, EndCombat)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 3, 3)
+	})
+
+	t.Run("ETB with zero targets resolves cleanly", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest", 3)
+		g.AddCard(ZoneHand, gametest.PlayerA, "Rishkar, Peema Renegade")
+		g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Rishkar, Peema Renegade")
+		g.StopAt(1, EndCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Rishkar, Peema Renegade", 1)
+	})
+}

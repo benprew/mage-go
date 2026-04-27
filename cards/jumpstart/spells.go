@@ -917,7 +917,7 @@ func registerSpells() {
 	// Macabre Waltz {1}{B}
 	// Sorcery
 	// Return up to two target creature cards from your graveyard to your hand, then discard a card.
-	// XXX: requires "up to two target cards in graveyard" multi-target; defer
+	// XXX: needs multi-target return-from-graveyard effect (current ReturnFromGraveyardToHandTarget only handles targets[0])
 	Register("Macabre Waltz", func() Card {
 		return NewSorcery("Macabre Waltz", "{1}{B}",
 			NewSpellAbility(),
@@ -1223,7 +1223,7 @@ func registerSpells() {
 	// Soul Salvage {2}{B}
 	// Sorcery
 	// Return up to two target creature cards from your graveyard to your hand.
-	// XXX: requires "up to two target cards" multi-target; defer
+	// XXX: needs multi-target return-from-graveyard effect (current ReturnFromGraveyardToHandTarget only handles targets[0])
 	Register("Soul Salvage", func() Card {
 		return NewSorcery("Soul Salvage", "{2}{B}",
 			NewSpellAbility(),

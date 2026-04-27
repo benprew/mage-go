@@ -4493,11 +4493,43 @@ func registerCreatures() {
 	// 2/2
 	// When Rishkar enters, put a +1/+1 counter on each of up to two target creatures.
 	// Each creature you control with a counter on it has "{T}: Add {G}."
-	// XXX: requires "up to two target creatures" multi-target and dynamic granting of activated mana abilities
 	Register("Rishkar, Peema Renegade", func() Card {
+		hasAnyCounter := func(p *Permanent) bool {
+			for ct := CounterType(0); ct < NumCounters; ct++ {
+				if p.Counters[ct] > 0 {
+					return true
+				}
+			}
+			return false
+		}
 		return NewCreature("Rishkar, Peema Renegade", "{2}{G}", 2, 2,
 			WithSubTypes("Elf", "Druid"),
 			WithSuperTypes(SuperLegendary),
+			WithAbility(EntersBattlefieldTrigger(
+				AddCounters(P1P1, Fixed(1)).Targeting(ToAllTargets()),
+				false,
+			).AddTarget(TargetUpToNCreatures(2))),
+			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield,
+				func(g *Game, sourceID uuid.UUID) error {
+					src := g.FindPermanent(sourceID)
+					if src == nil {
+						return nil
+					}
+					for _, p := range g.FilterBattlefield(IsCreature) {
+						if p.Controller != src.Controller {
+							continue
+						}
+						if !hasAnyCounter(p) {
+							continue
+						}
+						ab := NewActivatedAbility(AddMana(Green, 1), TapSourceCost())
+						ab.SetSource(p.ID())
+						ab.SetController(p.Controller)
+						p.RuntimeAbilities = append(p.RuntimeAbilities, WrapGrantedAbility(ab))
+					}
+					return nil
+				},
+			)),
 		)
 	})
 
