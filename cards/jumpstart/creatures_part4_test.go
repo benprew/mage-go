@@ -1,0 +1,415 @@
+package jumpstart
+
+import (
+	"testing"
+
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
+)
+
+// Tests for green tail / multicolor / colorless creatures (chunk 4).
+
+func TestCraterhoofBehemoth_PumpsAndGrantsTrample(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneHand, gametest.PlayerA, "Craterhoof Behemoth")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest", 8)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Craterhoof Behemoth")
+	g.StopAt(1, PostcombatMain)
+	g.Execute()
+	// 2 creatures => +2/+2 and trample.
+	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 4, 4)
+	g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", Trample, true)
+}
+
+func TestDawntreaderElk_TutorsBasicLandTapped(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Dawntreader Elk")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Plains", 1)
+	g.ActivateAbility(1, PrecombatMain, gametest.PlayerA, "Dawntreader Elk")
+	g.StopAt(1, EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Plains", 1)
+	g.AssertGraveyardCount(gametest.PlayerA, "Dawntreader Elk", 1)
+}
+
+func TestDroverOfTheMighty_BoostsWhenDinosaur(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Drover of the Mighty")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Orazca Frillback")
+	g.StopAt(1, EndStep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Drover of the Mighty", 3, 3)
+}
+
+func TestDwynensElite_CreatesTokenIfElf(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneHand, gametest.PlayerA, "Dwynen's Elite")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest", 2)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Leaf Gilder")
+	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Dwynen's Elite")
+	g.StopAt(1, EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Elf Warrior", 1)
+}
+
+func TestElvishArchdruid_BoostsOtherElves(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Elvish Archdruid")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Leaf Gilder")
+	g.StopAt(1, EndStep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Leaf Gilder", 3, 2)
+	g.AssertPowerToughness(gametest.PlayerA, "Elvish Archdruid", 2, 2)
+}
+
+func TestFeralProwler_DrawsOnDeath(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Feral Prowler")
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Forest", 5)
+	g.AddCard(ZoneBattlefield, gametest.PlayerB, "Craw Wurm")
+	g.Attack(1, gametest.PlayerB, "Craw Wurm")
+	// Wait until B's turn
+	g.StopAt(2, EndStep)
+	g.Execute()
+}
+
+func TestFeralHydra_EntersWithXCounters(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneHand, gametest.PlayerA, "Feral Hydra")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest", 4)
+	g.CastSpellWithX(1, PrecombatMain, gametest.PlayerA, "Feral Hydra", 3)
+	g.StopAt(1, EndStep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Feral Hydra", 3, 3)
+}
+
+func TestFertilid_EntersWithCounters(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Fertilid")
+	g.StopAt(1, EndStep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Fertilid", 2, 2)
+}
+
+func TestGraveBramble_HasDefenderAndProtection(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Grave Bramble")
+	g.StopAt(1, EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Grave Bramble", Defender, true)
+}
+
+func TestIronshellBeetle_AddsCounterToTarget(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneHand, gametest.PlayerA, "Ironshell Beetle")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest", 2)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Ironshell Beetle", "Grizzly Bears")
+	g.StopAt(1, EndStep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 3, 3)
+}
+
+func TestLeafGilder_TapsForGreen(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Leaf Gilder")
+	g.StopAt(1, EndStep)
+	g.Execute()
+}
+
+func TestOvergrownBattlement_AddsGreenForEachDefender(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Overgrown Battlement")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Wall of Vines")
+	g.StopAt(1, EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Overgrown Battlement", Defender, true)
+}
+
+func TestPenumbraBobcat_CreatesTokenOnDeath(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Penumbra Bobcat")
+	g.AddCard(ZoneBattlefield, gametest.PlayerB, "Craw Wurm")
+	g.Attack(1, gametest.PlayerA, "Penumbra Bobcat")
+	g.Block(1, gametest.PlayerB, "Craw Wurm", "Penumbra Bobcat")
+	g.StopAt(1, PostcombatMain)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Cat", 1)
+}
+
+func TestPrimordialSage_DrawsOnCreatureCast(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Primordial Sage")
+	g.AddCard(ZoneHand, gametest.PlayerA, "Leaf Gilder")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest", 2)
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Plains", 5)
+	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Leaf Gilder")
+	g.StopAt(1, EndStep)
+	g.Execute()
+}
+
+func TestRavenousBaloth_GainsLife(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Ravenous Baloth")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Rumbling Baloth")
+	g.SetLife(gametest.PlayerA, 20)
+	g.ActivateAbility(1, PrecombatMain, gametest.PlayerA, "Ravenous Baloth")
+	g.StopAt(1, EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerA, 24)
+}
+
+func TestSomberwaldStag_FightsTarget(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneHand, gametest.PlayerA, "Somberwald Stag")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest", 5)
+	g.AddCard(ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Somberwald Stag", "Grizzly Bears")
+	g.StopAt(1, EndStep)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+}
+
+func TestSporemound_SaprolingOnLandETB(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Sporemound")
+	g.AddCard(ZoneHand, gametest.PlayerA, "Forest")
+	g.StopAt(1, EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Saproling", 1)
+}
+
+func TestSylvanBrushstrider_GainsLife(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneHand, gametest.PlayerA, "Sylvan Brushstrider")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest", 3)
+	g.SetLife(gametest.PlayerA, 20)
+	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Sylvan Brushstrider")
+	g.StopAt(1, EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerA, 22)
+}
+
+func TestSylvanRanger_TutorsToHand(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneHand, gametest.PlayerA, "Sylvan Ranger")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest", 2)
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Plains", 1)
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Mountain", 5)
+	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Sylvan Ranger")
+	g.StopAt(1, PostcombatMain)
+	g.Execute()
+	// Either in hand or auto-played as land.
+	g.AssertPermanentCount(gametest.PlayerA, "Plains", 1)
+}
+
+func TestThragtusk_GainsLifeAndLeavesToken(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneHand, gametest.PlayerA, "Thragtusk")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest", 5)
+	g.SetLife(gametest.PlayerA, 20)
+	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Thragtusk")
+	g.StopAt(1, EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerA, 25)
+}
+
+func TestUlvenwaldHydra_PTEqualsLands(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Ulvenwald Hydra")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest", 5)
+	g.StopAt(1, Upkeep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Ulvenwald Hydra", 5, 5)
+}
+
+func TestWallOfBlossoms_DrawsOnETB(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneHand, gametest.PlayerA, "Wall of Blossoms")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest", 2)
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Plains", 5)
+	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Wall of Blossoms")
+	g.StopAt(1, EndStep)
+	g.Execute()
+}
+
+func TestWildheartInvoker_PumpsAndGrantsTrample(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Wildheart Invoker")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest", 8)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.ActivateAbility(1, PrecombatMain, gametest.PlayerA, "Wildheart Invoker", "Grizzly Bears")
+	g.StopAt(1, PostcombatMain)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 7, 7)
+	g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", Trample, true)
+}
+
+func TestWoodbornBehemoth_BuffsWith8Lands(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Woodborn Behemoth")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest", 8)
+	g.StopAt(1, EndStep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Woodborn Behemoth", 8, 8)
+	g.AssertHasAbility(gametest.PlayerA, "Woodborn Behemoth", Trample, true)
+}
+
+func TestRagingRegisaur_PingOnAttack(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Raging Regisaur")
+	g.SetLife(gametest.PlayerB, 20)
+	g.Attack(1, gametest.PlayerA, "Raging Regisaur")
+	g.StopAt(1, PostcombatMain)
+	g.Execute()
+	// 4 (combat) + 1 (trigger) = 5
+	g.AssertLife(gametest.PlayerB, 15)
+}
+
+func TestIronrootWarlord_PowerEqualsCreatures(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Ironroot Warlord")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, EndStep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Ironroot Warlord", 2, 5)
+}
+
+func TestAlloyMyr_TapsForAnyColor(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Alloy Myr")
+	g.StopAt(1, EndStep)
+	g.Execute()
+}
+
+func TestAncestralStatue_BouncesPermanent(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneHand, gametest.PlayerA, "Ancestral Statue")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest", 4)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Ancestral Statue")
+	g.ChoosePermanent(gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, EndStep)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 1)
+}
+
+func TestGargoyleSentinel_GainsFlying(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Gargoyle Sentinel")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest", 3)
+	g.ActivateAbility(1, PrecombatMain, gametest.PlayerA, "Gargoyle Sentinel")
+	g.StopAt(1, PostcombatMain)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Gargoyle Sentinel", Flying, true)
+	g.AssertHasAbility(gametest.PlayerA, "Gargoyle Sentinel", Defender, false)
+}
+
+func TestGingerbrute_HasteAndSacGainsLife(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Gingerbrute")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest", 3)
+	g.SetLife(gametest.PlayerA, 20)
+	g.ActivateAbility(1, PrecombatMain, gametest.PlayerA, "Gingerbrute")
+	g.StopAt(1, EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerA, 23)
+	g.AssertGraveyardCount(gametest.PlayerA, "Gingerbrute", 1)
+}
+
+func TestJoustingDummy_BoostsPower(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Jousting Dummy")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest", 3)
+	g.ActivateAbility(1, PrecombatMain, gametest.PlayerA, "Jousting Dummy")
+	g.StopAt(1, PostcombatMain)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Jousting Dummy", 3, 1)
+}
+
+func TestLightningCoreExcavator_DealsThreeOnSac(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Lightning-Core Excavator")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest", 5)
+	g.AddCard(ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.ActivateAbility(1, PrecombatMain, gametest.PlayerA, "Lightning-Core Excavator", "Grizzly Bears")
+	g.StopAt(1, EndStep)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+	g.AssertGraveyardCount(gametest.PlayerA, "Lightning-Core Excavator", 1)
+}
+
+func TestMeteorGolem_DestroysNonland(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneHand, gametest.PlayerA, "Meteor Golem")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest", 7)
+	g.AddCard(ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Meteor Golem", "Grizzly Bears")
+	g.StopAt(1, EndStep)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+}
+
+func TestMyrSire_CreatesTokenOnDeath(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Myr Sire")
+	g.AddCard(ZoneBattlefield, gametest.PlayerB, "Craw Wurm")
+	g.Attack(1, gametest.PlayerA, "Myr Sire")
+	g.Block(1, gametest.PlayerB, "Craw Wurm", "Myr Sire")
+	g.StopAt(1, PostcombatMain)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Myr", 1)
+}
+
+func TestPerilousMyr_DealsTwoOnDeath(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Perilous Myr")
+	g.AddCard(ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.SetLife(gametest.PlayerB, 20)
+	g.Attack(1, gametest.PlayerA, "Perilous Myr")
+	g.Block(1, gametest.PlayerB, "Grizzly Bears", "Perilous Myr")
+	g.StopAt(1, PostcombatMain)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+}
+
+func TestRunedServitor_EachPlayerDraws(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Runed Servitor")
+	g.AddCard(ZoneBattlefield, gametest.PlayerB, "Craw Wurm")
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Forest", 5)
+	g.AddCard(ZoneLibrary, gametest.PlayerB, "Forest", 5)
+	g.Attack(1, gametest.PlayerA, "Runed Servitor")
+	g.Block(1, gametest.PlayerB, "Craw Wurm", "Runed Servitor")
+	g.StopAt(1, PostcombatMain)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerA, "Runed Servitor", 1)
+}
+
+func TestSkitteringSurveyor_TutorsToHand(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneHand, gametest.PlayerA, "Skittering Surveyor")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest", 3)
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Plains", 1)
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Mountain", 5)
+	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Skittering Surveyor")
+	g.StopAt(1, PostcombatMain)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Plains", 1)
+}
+
+func TestSuspiciousBookcase_MakesUnblockable(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Suspicious Bookcase")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest", 3)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(ZoneBattlefield, gametest.PlayerB, "Craw Wurm")
+	g.SetLife(gametest.PlayerB, 20)
+	g.ActivateAbility(1, PrecombatMain, gametest.PlayerA, "Suspicious Bookcase", "Grizzly Bears")
+	g.Attack(1, gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, PostcombatMain)
+	g.Execute()
+	g.AssertLife(gametest.PlayerB, 18)
+}

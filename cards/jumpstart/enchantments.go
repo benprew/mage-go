@@ -1,6 +1,10 @@
 package jumpstart
 
-import . "git.sr.ht/~cdcarter/mage-go/pkg/mage"
+import (
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage"
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"github.com/google/uuid"
+)
 
 func init() {
 	registerEnchantments()
@@ -8,425 +12,546 @@ func init() {
 
 func registerEnchantments() {
 
-// Assault Formation {1}{G}
-// Enchantment
-// Each creature you control assigns combat damage equal to its toughness rather than its power.
-// {G}: Target creature with defender can attack this turn as though it didn't have defender.
-// {2}{G}: Creatures you control get +0/+1 until end of turn.
-// TODO: implement
+	// Assault Formation {1}{G}
+	// Enchantment
+	// Each creature you control assigns combat damage equal to its toughness rather than its power.
+	// {G}: Target creature with defender can attack this turn as though it didn't have defender.
+	// {2}{G}: Creatures you control get +0/+1 until end of turn.
+	// XXX: requires "assigns combat damage equal to toughness" engine support
 	Register("Assault Formation", func() Card {
 		return NewEnchantment("Assault Formation", "{1}{G}")
 	})
 
-
-// Barrage of Expendables {R}
-// Enchantment
-// {R}, Sacrifice a creature: This enchantment deals 1 damage to any target.
-// TODO: implement
+	// Barrage of Expendables {R}
+	// Enchantment
+	// {R}, Sacrifice a creature: This enchantment deals 1 damage to any target.
 	Register("Barrage of Expendables", func() Card {
-		return NewEnchantment("Barrage of Expendables", "{R}")
+		return NewEnchantment("Barrage of Expendables", "{R}",
+			WithActivatedAbility(
+				DealDamage(Fixed(1)),
+				ManaCostOf("{R}"),
+				WithCost(SacrificeCreatureCost()),
+				WithTarget(TargetAnyTarget()),
+			),
+		)
 	})
 
-
-// Black Market {3}{B}{B}
-// Enchantment
-// Whenever a creature dies, put a charge counter on this enchantment.
-// At the beginning of your first main phase, add {B} for each charge counter on this enchantment.
-// TODO: implement
+	// Black Market {3}{B}{B}
+	// Enchantment
+	// Whenever a creature dies, put a charge counter on this enchantment.
+	// At the beginning of your first main phase, add {B} for each charge counter on this enchantment.
+	// XXX: requires "beginning of first main phase" mana-add trigger
 	Register("Black Market", func() Card {
 		return NewEnchantment("Black Market", "{3}{B}{B}")
 	})
 
-
-// Blessed Sanctuary {3}{W}{W}
-// Enchantment
-// Prevent all noncombat damage that would be dealt to you and creatures you control.
-// Whenever a nontoken creature you control enters, create a 2/2 white Unicorn creature token.
-// TODO: implement
+	// Blessed Sanctuary {3}{W}{W}
+	// Enchantment
+	// Prevent all noncombat damage that would be dealt to you and creatures you control.
+	// Whenever a nontoken creature you control enters, create a 2/2 white Unicorn creature token.
+	// XXX: requires noncombat-damage prevention scope and nontoken ETB filter
 	Register("Blessed Sanctuary", func() Card {
 		return NewEnchantment("Blessed Sanctuary", "{3}{W}{W}")
 	})
 
-
-// Branching Evolution {2}{G}
-// Enchantment
-// If one or more +1/+1 counters would be put on a creature you control, twice that many +1/+1 counters are put on that creature instead.
-// TODO: implement
+	// Branching Evolution {2}{G}
+	// Enchantment
+	// If one or more +1/+1 counters would be put on a creature you control, twice that many +1/+1 counters are put on that creature instead.
+	// XXX: requires counter-doubling replacement effect
 	Register("Branching Evolution", func() Card {
 		return NewEnchantment("Branching Evolution", "{2}{G}")
 	})
 
-
-// Cathars' Crusade {3}{W}{W}
-// Enchantment
-// Whenever a creature you control enters, put a +1/+1 counter on each creature you control.
-// TODO: implement
+	// Cathars' Crusade {3}{W}{W}
+	// Enchantment
+	// Whenever a creature you control enters, put a +1/+1 counter on each creature you control.
 	Register("Cathars' Crusade", func() Card {
-		return NewEnchantment("Cathars' Crusade", "{3}{W}{W}")
+		return NewEnchantment("Cathars' Crusade", "{3}{W}{W}",
+			WithAbility(
+				NewTriggered(EvtEntersBattlefield, false,
+					FuncEffect("put a +1/+1 counter on each creature you control",
+						EffectProperties{Outcome: OutcomeBenefit, Mass: true},
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+							for _, p := range g.FilterBattlefield(And(IsCreature, ControlledBy(controller))) {
+								p.AddCounter(P1P1, 1)
+							}
+							return nil
+						}),
+				).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+					EventSourceControlledByController{},
+					EventSourceMatchesPermanentFilter{Filter: IsCreature},
+				}}),
+			),
+		)
 	})
 
-
-// Celestial Mantle {3}{W}{W}{W}
-// Enchantment — Aura
-// Enchant creature
-// Enchanted creature gets +3/+3.
-// Whenever enchanted creature deals combat damage to a player, double its controller's life total.
-// TODO: implement
+	// Celestial Mantle {3}{W}{W}{W}
+	// Enchantment — Aura
+	// Enchant creature
+	// Enchanted creature gets +3/+3.
+	// Whenever enchanted creature deals combat damage to a player, double its controller's life total.
+	// XXX: requires "double life total" effect and combat-damage-to-player trigger from enchanted source
 	Register("Celestial Mantle", func() Card {
-		return NewAura("Celestial Mantle", "{3}{W}{W}{W}")
+		return NewBoostAura("Celestial Mantle", "{3}{W}{W}{W}", 3, 3)
 	})
 
-
-// Coastal Piracy {2}{U}{U}
-// Enchantment
-// Whenever a creature you control deals combat damage to an opponent, you may draw a card.
-// TODO: implement
+	// Coastal Piracy {2}{U}{U}
+	// Enchantment
+	// Whenever a creature you control deals combat damage to an opponent, you may draw a card.
+	// XXX: requires "deals combat damage to opponent" trigger filtered to controlled creatures
 	Register("Coastal Piracy", func() Card {
 		return NewEnchantment("Coastal Piracy", "{2}{U}{U}")
 	})
 
-
-// Cradle of Vitality {3}{W}
-// Enchantment
-// Whenever you gain life, you may pay {1}{W}. If you do, put a +1/+1 counter on target creature for each 1 life you gained.
-// TODO: implement
+	// Cradle of Vitality {3}{W}
+	// Enchantment
+	// Whenever you gain life, you may pay {1}{W}. If you do, put a +1/+1 counter on target creature for each 1 life you gained.
+	// XXX: requires gain-life event
 	Register("Cradle of Vitality", func() Card {
 		return NewEnchantment("Cradle of Vitality", "{3}{W}")
 	})
 
-
-// Curiosity {U}
-// Enchantment — Aura
-// Enchant creature
-// Whenever enchanted creature deals damage to an opponent, you may draw a card.
-// TODO: implement
+	// Curiosity {U}
+	// Enchantment — Aura
+	// Enchant creature
+	// Whenever enchanted creature deals damage to an opponent, you may draw a card.
+	// XXX: requires "enchanted creature deals damage to opponent" trigger condition
 	Register("Curiosity", func() Card {
 		return NewAura("Curiosity", "{U}")
 	})
 
-
-// Curious Obsession {U}
-// Enchantment — Aura
-// Enchant creature
-// Enchanted creature gets +1/+1 and has "Whenever this creature deals combat damage to a player, you may draw a card."
-// At the beginning of your end step, if you didn't attack with a creature this turn, sacrifice this Aura.
-// TODO: implement
+	// Curious Obsession {U}
+	// Enchantment — Aura
+	// Enchant creature
+	// Enchanted creature gets +1/+1 and has "Whenever this creature deals combat damage to a player, you may draw a card."
+	// At the beginning of your end step, if you didn't attack with a creature this turn, sacrifice this Aura.
+	// XXX: requires granting triggered abilities to attached and "didn't attack this turn" tracking
 	Register("Curious Obsession", func() Card {
 		return NewAura("Curious Obsession", "{U}")
 	})
 
-
-// Death's Approach {B}
-// Enchantment — Aura
-// Enchant creature
-// Enchanted creature gets -X/-X, where X is the number of creature cards in its controller's graveyard.
-// TODO: implement
+	// Death's Approach {B}
+	// Enchantment — Aura
+	// Enchant creature
+	// Enchanted creature gets -X/-X, where X is the number of creature cards in its controller's graveyard.
 	Register("Death's Approach", func() Card {
-		return NewAura("Death's Approach", "{B}")
+		return NewAura("Death's Approach", "{B}",
+			WithStaticAbility(
+				AttachedEffect(LayerPT, func(g *Game, source, target *Permanent) error {
+					owner := g.GetPlayer(target.Controller)
+					if owner == nil {
+						return nil
+					}
+					n := 0
+					for _, c := range owner.Graveyard() {
+						if c.HasType(TypeCreature) {
+							n++
+						}
+					}
+					target.BoostPT(-n, -n)
+					return nil
+				}),
+			),
+		)
 	})
 
-
-// Duelist's Heritage {2}{W}
-// Enchantment
-// Whenever one or more creatures attack, you may have target attacking creature gain double strike until end of turn.
-// TODO: implement
+	// Duelist's Heritage {2}{W}
+	// Enchantment
+	// Whenever one or more creatures attack, you may have target attacking creature gain double strike until end of turn.
+	// XXX: requires "one or more creatures attack" trigger and target attacking creature
 	Register("Duelist's Heritage", func() Card {
 		return NewEnchantment("Duelist's Heritage", "{2}{W}")
 	})
 
-
-// Eternal Thirst {1}{B}
-// Enchantment — Aura
-// Enchant creature
-// Enchanted creature has lifelink and "Whenever a creature an opponent controls dies, put a +1/+1 counter on this creature." (Damage dealt by a creature with lifelink also causes its controller to gain that much life.)
-// TODO: implement
+	// Eternal Thirst {1}{B}
+	// Enchantment — Aura
+	// Enchant creature
+	// Enchanted creature has lifelink and "Whenever a creature an opponent controls dies, put a +1/+1 counter on this creature." (Damage dealt by a creature with lifelink also causes its controller to gain that much life.)
+	// XXX: requires granting a triggered ability to attached creature
 	Register("Eternal Thirst", func() Card {
-		return NewAura("Eternal Thirst", "{1}{B}")
+		return NewAura("Eternal Thirst", "{1}{B}",
+			WithStaticAbility(
+				GrantAbilityToAttached(Lifelink, AttachAura),
+			),
+		)
 	})
 
-
-// Exquisite Blood {4}{B}
-// Enchantment
-// Whenever an opponent loses life, you gain that much life.
-// TODO: implement
+	// Exquisite Blood {4}{B}
+	// Enchantment
+	// Whenever an opponent loses life, you gain that much life.
+	// XXX: requires lose-life event
 	Register("Exquisite Blood", func() Card {
 		return NewEnchantment("Exquisite Blood", "{4}{B}")
 	})
 
-
-// Face of Divinity {2}{W}
-// Enchantment — Aura
-// Enchant creature
-// Enchanted creature gets +2/+2.
-// As long as another Aura is attached to enchanted creature, it has first strike and lifelink.
-// TODO: implement
+	// Face of Divinity {2}{W}
+	// Enchantment — Aura
+	// Enchant creature
+	// Enchanted creature gets +2/+2.
+	// As long as another Aura is attached to enchanted creature, it has first strike and lifelink.
+	// XXX: requires conditional "another Aura attached" check for granted abilities
 	Register("Face of Divinity", func() Card {
-		return NewAura("Face of Divinity", "{2}{W}")
+		return NewBoostAura("Face of Divinity", "{2}{W}", 2, 2)
 	})
 
-
-// Feral Invocation {2}{G}
-// Enchantment — Aura
-// Flash (You may cast this spell any time you could cast an instant.)
-// Enchant creature
-// Enchanted creature gets +2/+2.
-// TODO: implement
+	// Feral Invocation {2}{G}
+	// Enchantment — Aura
+	// Flash (You may cast this spell any time you could cast an instant.)
+	// Enchant creature
+	// Enchanted creature gets +2/+2.
+	// XXX: requires Flash keyword
 	Register("Feral Invocation", func() Card {
-		return NewAura("Feral Invocation", "{2}{G}")
+		return NewBoostAura("Feral Invocation", "{2}{G}", 2, 2)
 	})
 
-
-// Forced Worship {1}{W}
-// Enchantment — Aura
-// Enchant creature
-// Enchanted creature can't attack.
-// {2}{W}: Return this Aura to its owner's hand.
-// TODO: implement
+	// Forced Worship {1}{W}
+	// Enchantment — Aura
+	// Enchant creature
+	// Enchanted creature can't attack.
+	// {2}{W}: Return this Aura to its owner's hand.
 	Register("Forced Worship", func() Card {
-		return NewAura("Forced Worship", "{1}{W}")
+		return NewAura("Forced Worship", "{1}{W}",
+			WithStaticAbility(
+				PreventAttachedFromAttacking(AttachAura),
+			),
+			WithActivatedAbility(
+				FuncEffect("return this Aura to its owner's hand",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						src := g.FindPermanent(sourceID)
+						if src == nil {
+							return nil
+						}
+						owner := g.GetPlayer(src.Card.Owner())
+						if owner == nil {
+							return nil
+						}
+						g.RemoveFromBattlefield(src)
+						owner.AddToHand(src.Card)
+						return nil
+					}),
+				ManaCostOf("{2}{W}"),
+			),
+		)
 	})
 
-
-// Indomitable Will {1}{W}
-// Enchantment — Aura
-// Flash (You may cast this spell any time you could cast an instant.)
-// Enchant creature
-// Enchanted creature gets +1/+2.
-// TODO: implement
+	// Indomitable Will {1}{W}
+	// Enchantment — Aura
+	// Flash (You may cast this spell any time you could cast an instant.)
+	// Enchant creature
+	// Enchanted creature gets +1/+2.
+	// XXX: requires Flash keyword
 	Register("Indomitable Will", func() Card {
-		return NewAura("Indomitable Will", "{1}{W}")
+		return NewBoostAura("Indomitable Will", "{1}{W}", 1, 2)
 	})
 
-
-// Knightly Valor {4}{W}
-// Enchantment — Aura
-// Enchant creature
-// When this Aura enters, create a 2/2 white Knight creature token with vigilance. (Attacking doesn't cause it to tap.)
-// Enchanted creature gets +2/+2 and has vigilance.
-// TODO: implement
+	// Knightly Valor {4}{W}
+	// Enchantment — Aura
+	// Enchant creature
+	// When this Aura enters, create a 2/2 white Knight creature token with vigilance. (Attacking doesn't cause it to tap.)
+	// Enchanted creature gets +2/+2 and has vigilance.
 	Register("Knightly Valor", func() Card {
-		return NewAura("Knightly Valor", "{4}{W}")
+		return NewAura("Knightly Valor", "{4}{W}",
+			WithAbility(EntersBattlefieldTrigger(
+				CreateToken("Knight", 2, 2, []CardType{TypeCreature}, []string{"Knight"}, Vigilance),
+				false,
+			)),
+			WithStaticAbility(
+				BoostAttached(2, 2, AttachAura),
+				GrantAbilityToAttached(Vigilance, AttachAura),
+			),
+		)
 	})
 
-
-// Lawmage's Binding {1}{W}{U}
-// Enchantment — Aura
-// Flash
-// Enchant creature
-// Enchanted creature can't attack or block, and its activated abilities can't be activated.
-// TODO: implement
+	// Lawmage's Binding {1}{W}{U}
+	// Enchantment — Aura
+	// Flash
+	// Enchant creature
+	// Enchanted creature can't attack or block, and its activated abilities can't be activated.
+	// XXX: requires Flash and "activated abilities can't be activated" attr
 	Register("Lawmage's Binding", func() Card {
-		return NewAura("Lawmage's Binding", "{1}{W}{U}")
+		return NewAura("Lawmage's Binding", "{1}{W}{U}",
+			WithStaticAbility(
+				PreventAttachedFromAttacking(AttachAura),
+				AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
+					g.RevokeAttr(target.ID(), AttrCanBlock)
+					return nil
+				}),
+			),
+		)
 	})
 
-
-// Lightning Diadem {5}{R}
-// Enchantment — Aura
-// Enchant creature
-// When this Aura enters, it deals 2 damage to any target.
-// Enchanted creature gets +2/+2.
-// TODO: implement
+	// Lightning Diadem {5}{R}
+	// Enchantment — Aura
+	// Enchant creature
+	// When this Aura enters, it deals 2 damage to any target.
+	// Enchanted creature gets +2/+2.
+	// XXX: requires ETB target separate from the aura's enchant target
 	Register("Lightning Diadem", func() Card {
-		return NewAura("Lightning Diadem", "{5}{R}")
+		return NewBoostAura("Lightning Diadem", "{5}{R}", 2, 2)
 	})
 
-
-// Lurking Predators {4}{G}{G}
-// Enchantment
-// Whenever an opponent casts a spell, reveal the top card of your library. If it's a creature card, put it onto the battlefield. Otherwise, you may put that card on the bottom of your library.
-// TODO: implement
+	// Lurking Predators {4}{G}{G}
+	// Enchantment
+	// Whenever an opponent casts a spell, reveal the top card of your library. If it's a creature card, put it onto the battlefield. Otherwise, you may put that card on the bottom of your library.
+	// XXX: requires reveal-top-of-library and put-onto-battlefield-from-library mechanics
 	Register("Lurking Predators", func() Card {
 		return NewEnchantment("Lurking Predators", "{4}{G}{G}")
 	})
 
-
-// Makeshift Munitions {1}{R}
-// Enchantment
-// {1}, Sacrifice an artifact or creature: This enchantment deals 1 damage to any target.
-// TODO: implement
+	// Makeshift Munitions {1}{R}
+	// Enchantment
+	// {1}, Sacrifice an artifact or creature: This enchantment deals 1 damage to any target.
 	Register("Makeshift Munitions", func() Card {
-		return NewEnchantment("Makeshift Munitions", "{1}{R}")
+		return NewEnchantment("Makeshift Munitions", "{1}{R}",
+			WithActivatedAbility(
+				DealDamage(Fixed(1)),
+				GenericCost(1),
+				WithCost(SacrificeMatchingCost(Or(IsArtifact, IsCreature), "Sacrifice an artifact or creature")),
+				WithTarget(TargetAnyTarget()),
+			),
+		)
 	})
 
-
-// Mark of the Vampire {3}{B}
-// Enchantment — Aura
-// Enchant creature
-// Enchanted creature gets +2/+2 and has lifelink.
-// TODO: implement
+	// Mark of the Vampire {3}{B}
+	// Enchantment — Aura
+	// Enchant creature
+	// Enchanted creature gets +2/+2 and has lifelink.
 	Register("Mark of the Vampire", func() Card {
-		return NewAura("Mark of the Vampire", "{3}{B}")
+		return NewAura("Mark of the Vampire", "{3}{B}",
+			WithStaticAbility(
+				BoostAttached(2, 2, AttachAura),
+				GrantAbilityToAttached(Lifelink, AttachAura),
+			),
+		)
 	})
 
-
-// Narcolepsy {1}{U}
-// Enchantment — Aura
-// Enchant creature
-// At the beginning of each upkeep, if enchanted creature is untapped, tap it.
-// TODO: implement
+	// Narcolepsy {1}{U}
+	// Enchantment — Aura
+	// Enchant creature
+	// At the beginning of each upkeep, if enchanted creature is untapped, tap it.
 	Register("Narcolepsy", func() Card {
-		return NewAura("Narcolepsy", "{1}{U}")
+		return NewAura("Narcolepsy", "{1}{U}",
+			WithAbility(
+				NewTriggered(EvtUpkeep, false,
+					FuncEffect("tap enchanted creature if untapped",
+						EffectProperties{Outcome: OutcomeDetriment},
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+							src := g.FindPermanent(sourceID)
+							if src == nil || src.AttachedTo == uuid.Nil {
+								return nil
+							}
+							target := g.FindPermanent(src.AttachedTo)
+							if target != nil && !target.Tapped {
+								g.TapPermanent(target)
+							}
+							return nil
+						}),
+				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+					src := g.FindPermanent(sourceID)
+					if src == nil || src.AttachedTo == uuid.Nil {
+						return false
+					}
+					target := g.FindPermanent(src.AttachedTo)
+					return target != nil && !target.Tapped
+				}),
+			),
+		)
 	})
 
-
-// New Horizons {2}{G}
-// Enchantment — Aura
-// Enchant land
-// When this Aura enters, put a +1/+1 counter on target creature you control.
-// Enchanted land has "{T}: Add two mana of any one color."
-// TODO: implement
+	// New Horizons {2}{G}
+	// Enchantment — Aura
+	// Enchant land
+	// When this Aura enters, put a +1/+1 counter on target creature you control.
+	// Enchanted land has "{T}: Add two mana of any one color."
+	// XXX: requires aura-grants-mana-ability-to-land mechanic
 	Register("New Horizons", func() Card {
-		return NewAura("New Horizons", "{2}{G}")
+		return NewAura("New Horizons", "{2}{G}",
+			WithCastTarget(TargetLand()),
+		)
 	})
 
-
-// Pacifism {1}{W}
-// Enchantment — Aura
-// Enchant creature
-// Enchanted creature can't attack or block.
-// TODO: implement
+	// Pacifism {1}{W}
+	// Enchantment — Aura
+	// Enchant creature
+	// Enchanted creature can't attack or block.
 	Register("Pacifism", func() Card {
-		return NewAura("Pacifism", "{1}{W}")
+		return NewAura("Pacifism", "{1}{W}",
+			WithStaticAbility(
+				PreventAttachedFromAttacking(AttachAura),
+				AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
+					g.RevokeAttr(target.ID(), AttrCanBlock)
+					return nil
+				}),
+			),
+		)
 	})
 
-
-// Parasitic Implant {3}{B}
-// Enchantment — Aura
-// Enchant creature
-// At the beginning of your upkeep, enchanted creature's controller sacrifices it and you create a 1/1 colorless Phyrexian Myr artifact creature token.
-// TODO: implement
+	// Parasitic Implant {3}{B}
+	// Enchantment — Aura
+	// Enchant creature
+	// At the beginning of your upkeep, enchanted creature's controller sacrifices it and you create a 1/1 colorless Phyrexian Myr artifact creature token.
+	// XXX: requires sacrifice-attached + token creation pipeline integration
 	Register("Parasitic Implant", func() Card {
 		return NewAura("Parasitic Implant", "{3}{B}")
 	})
 
-
-// Path of Bravery {2}{W}
-// Enchantment
-// As long as your life total is greater than or equal to your starting life total, creatures you control get +1/+1.
-// Whenever one or more creatures you control attack, you gain life equal to the number of attacking creatures.
-// TODO: implement
+	// Path of Bravery {2}{W}
+	// Enchantment
+	// As long as your life total is greater than or equal to your starting life total, creatures you control get +1/+1.
+	// Whenever one or more creatures you control attack, you gain life equal to the number of attacking creatures.
+	// XXX: requires "starting life total" comparison and attack-count gain-life trigger
 	Register("Path of Bravery", func() Card {
 		return NewEnchantment("Path of Bravery", "{2}{W}")
 	})
 
-
-// Phyrexian Reclamation {B}
-// Enchantment
-// {1}{B}, Pay 2 life: Return target creature card from your graveyard to your hand.
-// TODO: implement
+	// Phyrexian Reclamation {B}
+	// Enchantment
+	// {1}{B}, Pay 2 life: Return target creature card from your graveyard to your hand.
 	Register("Phyrexian Reclamation", func() Card {
-		return NewEnchantment("Phyrexian Reclamation", "{B}")
+		return NewEnchantment("Phyrexian Reclamation", "{B}",
+			WithActivatedAbility(
+				ReturnFromGraveyardToHandTarget(),
+				ManaCostOf("{1}{B}"),
+				WithCost(LifePayCost(2)),
+				WithTarget(TargetCardInYourGraveyard(IsCreatureCard)),
+			),
+		)
 	})
 
-
-// Presence of Gond {2}{G}
-// Enchantment — Aura
-// Enchant creature
-// Enchanted creature has "{T}: Create a 1/1 green Elf Warrior creature token."
-// TODO: implement
+	// Presence of Gond {2}{G}
+	// Enchantment — Aura
+	// Enchant creature
+	// Enchanted creature has "{T}: Create a 1/1 green Elf Warrior creature token."
 	Register("Presence of Gond", func() Card {
-		return NewAura("Presence of Gond", "{2}{G}")
+		return NewAura("Presence of Gond", "{2}{G}",
+			WithStaticAbility(
+				GrantActivatedAbilityToAttached(
+					CreateToken("Elf Warrior", 1, 1, []CardType{TypeCreature}, []string{"Elf", "Warrior"}),
+					TapSourceCost(),
+					AttachAura,
+				),
+			),
+		)
 	})
 
-
-// Primeval Bounty {5}{G}
-// Enchantment
-// Whenever you cast a creature spell, create a 3/3 green Beast creature token.
-// Whenever you cast a noncreature spell, put three +1/+1 counters on target creature you control.
-// Landfall — Whenever a land you control enters, you gain 3 life.
-// TODO: implement
+	// Primeval Bounty {5}{G}
+	// Enchantment
+	// Whenever you cast a creature spell, create a 3/3 green Beast creature token.
+	// Whenever you cast a noncreature spell, put three +1/+1 counters on target creature you control.
+	// Landfall — Whenever a land you control enters, you gain 3 life.
+	// XXX: requires landfall + cast-creature-spell + cast-noncreature-spell modal triggers with target
 	Register("Primeval Bounty", func() Card {
 		return NewEnchantment("Primeval Bounty", "{5}{G}")
 	})
 
-
-// Rhystic Study {2}{U}
-// Enchantment
-// Whenever an opponent casts a spell, you may draw a card unless that player pays {1}.
-// TODO: implement
+	// Rhystic Study {2}{U}
+	// Enchantment
+	// Whenever an opponent casts a spell, you may draw a card unless that player pays {1}.
+	// XXX: requires "may draw unless opponent pays" optional trigger
 	Register("Rhystic Study", func() Card {
 		return NewEnchantment("Rhystic Study", "{2}{U}")
 	})
 
-
-// Sarkhan's Unsealing {3}{R}
-// Enchantment
-// Whenever you cast a creature spell with power 4, 5, or 6, this enchantment deals 4 damage to any target.
-// Whenever you cast a creature spell with power 7 or greater, this enchantment deals 4 damage to each opponent and each creature and planeswalker they control.
-// TODO: implement
+	// Sarkhan's Unsealing {3}{R}
+	// Enchantment
+	// Whenever you cast a creature spell with power 4, 5, or 6, this enchantment deals 4 damage to any target.
+	// Whenever you cast a creature spell with power 7 or greater, this enchantment deals 4 damage to each opponent and each creature and planeswalker they control.
+	// XXX: requires inspecting cast spell's printed power
 	Register("Sarkhan's Unsealing", func() Card {
 		return NewEnchantment("Sarkhan's Unsealing", "{3}{R}")
 	})
 
-
-// Sky Tether {W}
-// Enchantment — Aura
-// Enchant creature
-// Enchanted creature has defender and loses flying.
-// TODO: implement
+	// Sky Tether {W}
+	// Enchantment — Aura
+	// Enchant creature
+	// Enchanted creature has defender and loses flying.
 	Register("Sky Tether", func() Card {
-		return NewAura("Sky Tether", "{W}")
+		return NewAura("Sky Tether", "{W}",
+			WithStaticAbility(
+				GrantAbilityToAttached(Defender, AttachAura),
+				RemoveKeywordFromAttached(Flying, AttachAura),
+			),
+		)
 	})
 
-
-// Stab Wound {2}{B}
-// Enchantment — Aura
-// Enchant creature
-// Enchanted creature gets -2/-2.
-// At the beginning of the upkeep of enchanted creature's controller, that player loses 2 life.
-// TODO: implement
+	// Stab Wound {2}{B}
+	// Enchantment — Aura
+	// Enchant creature
+	// Enchanted creature gets -2/-2.
+	// At the beginning of the upkeep of enchanted creature's controller, that player loses 2 life.
 	Register("Stab Wound", func() Card {
-		return NewAura("Stab Wound", "{2}{B}")
+		return NewAura("Stab Wound", "{2}{B}",
+			WithStaticAbility(
+				BoostAttached(-2, -2, AttachAura),
+			),
+			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
+				DealDamageToPlayers(Fixed(2), SelectAttachedController()), false,
+			)),
+		)
 	})
 
-
-// Vastwood Zendikon {4}{G}
-// Enchantment — Aura
-// Enchant land
-// Enchanted land is a 6/4 green Elemental creature. It's still a land.
-// When enchanted land dies, return that card to its owner's hand.
-// TODO: implement
+	// Vastwood Zendikon {4}{G}
+	// Enchantment — Aura
+	// Enchant land
+	// Enchanted land is a 6/4 green Elemental creature. It's still a land.
+	// When enchanted land dies, return that card to its owner's hand.
+	// XXX: requires aura-animates-land mechanic
 	Register("Vastwood Zendikon", func() Card {
-		return NewAura("Vastwood Zendikon", "{4}{G}")
+		return NewAura("Vastwood Zendikon", "{4}{G}",
+			WithCastTarget(TargetLand()),
+		)
 	})
 
-
-// Verdant Embrace {3}{G}{G}
-// Enchantment — Aura
-// Enchant creature
-// Enchanted creature gets +3/+3 and has "At the beginning of each upkeep, create a 1/1 green Saproling creature token."
-// TODO: implement
+	// Verdant Embrace {3}{G}{G}
+	// Enchantment — Aura
+	// Enchant creature
+	// Enchanted creature gets +3/+3 and has "At the beginning of each upkeep, create a 1/1 green Saproling creature token."
+	// XXX: requires granting upkeep triggered ability to attached creature
 	Register("Verdant Embrace", func() Card {
-		return NewAura("Verdant Embrace", "{3}{G}{G}")
+		return NewBoostAura("Verdant Embrace", "{3}{G}{G}", 3, 3)
 	})
 
-
-// Waterknot {1}{U}{U}
-// Enchantment — Aura
-// Enchant creature
-// When this Aura enters, tap enchanted creature.
-// Enchanted creature doesn't untap during its controller's untap step.
-// TODO: implement
+	// Waterknot {1}{U}{U}
+	// Enchantment — Aura
+	// Enchant creature
+	// When this Aura enters, tap enchanted creature.
+	// Enchanted creature doesn't untap during its controller's untap step.
 	Register("Waterknot", func() Card {
-		return NewAura("Waterknot", "{1}{U}{U}")
+		return NewAura("Waterknot", "{1}{U}{U}",
+			WithAbility(EntersBattlefieldTrigger(TapAttachedCreature(), false)),
+			WithStaticAbility(
+				PreventAttachedFromUntapping(AttachAura),
+			),
+		)
 	})
 
-
-// Zendikar's Roil {3}{G}{G}
-// Enchantment
-// Landfall — Whenever a land you control enters, create a 2/2 green Elemental creature token.
-// TODO: implement
+	// Zendikar's Roil {3}{G}{G}
+	// Enchantment
+	// Landfall — Whenever a land you control enters, create a 2/2 green Elemental creature token.
 	Register("Zendikar's Roil", func() Card {
-		return NewEnchantment("Zendikar's Roil", "{3}{G}{G}")
+		return NewEnchantment("Zendikar's Roil", "{3}{G}{G}",
+			WithAbility(
+				NewTriggered(EvtEntersBattlefield, false,
+					CreateToken("Elemental", 2, 2, []CardType{TypeCreature}, []string{"Elemental"}),
+				).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+					EventSourceControlledByController{},
+					EventSourceMatchesPermanentFilter{Filter: IsLand},
+				}}),
+			),
+		)
 	})
 
-
-// Zombie Infestation {1}{B}
-// Enchantment
-// Discard two cards: Create a 2/2 black Zombie creature token.
-// TODO: implement
+	// Zombie Infestation {1}{B}
+	// Enchantment
+	// Discard two cards: Create a 2/2 black Zombie creature token.
 	Register("Zombie Infestation", func() Card {
-		return NewEnchantment("Zombie Infestation", "{1}{B}")
+		return NewEnchantment("Zombie Infestation", "{1}{B}",
+			WithActivatedAbility(
+				CreateToken("Zombie", 2, 2, []CardType{TypeCreature}, []string{"Zombie"}),
+				DiscardCost(2),
+			),
+		)
 	})
 
 }

@@ -1,6 +1,8 @@
 package jumpstart
 
 import (
+	"github.com/google/uuid"
+
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
@@ -9,118 +11,212 @@ func init() {
 	registerLands()
 }
 
+// thrivingLand creates a Thriving cycle land. Each enters tapped, and taps
+// for its on-color mana. The Oracle text "As ~ enters, choose a color other
+// than X. {T}: Add {X} or one mana of the chosen color." requires an
+// "as it enters, choose a color" replacement that the engine does not yet
+// support, so the chosen-color half is deferred.
+//
+// XXX: requires "as enters, choose color" engine support — choose-a-color
+// alternative mana production is not yet implemented; only the on-color half
+// is available.
+func thrivingLand(name string, onColor Color) Card {
+	return NewLand(name,
+		WithKeyword(EntersTapped),
+		WithManaAbility(onColor),
+	)
+}
+
 func registerLands() {
 
-// Buried Ruin 
-// Land
-// {T}: Add {C}.
-// {2}, {T}, Sacrifice this land: Return target artifact card from your graveyard to your hand.
-// TODO: implement
+	// Buried Ruin
+	// Land
+	// {T}: Add {C}.
+	// {2}, {T}, Sacrifice this land: Return target artifact card from your graveyard to your hand.
 	Register("Buried Ruin", func() Card {
-		return NewLand("Buried Ruin")
-	})
-
-
-// Mirrodin's Core 
-// Land
-// {T}: Add {C}.
-// {T}: Put a charge counter on this land.
-// {T}, Remove a charge counter from this land: Add one mana of any color.
-// TODO: implement
-	Register("Mirrodin's Core", func() Card {
-		return NewLand("Mirrodin's Core")
-	})
-
-
-// Phyrexian Tower 
-// Legendary Land
-// {T}: Add {C}.
-// {T}, Sacrifice a creature: Add {B}{B}.
-// TODO: implement
-	Register("Phyrexian Tower", func() Card {
-		return NewLand("Phyrexian Tower",
-			WithSuperTypes(SuperLegendary),
+		return NewLand("Buried Ruin",
+			WithManaAbility(Colorless),
+			WithActivatedAbility(
+				ReturnFromGraveyardToHandTarget(),
+				GenericCost(2),
+				WithCost(TapSourceCost()),
+				WithCost(SacrificeSourceCost()),
+				WithTarget(TargetCardInYourGraveyard(IsArtifactCard)),
+			),
 		)
 	})
 
+	// Mirrodin's Core
+	// Land
+	// {T}: Add {C}.
+	// {T}: Put a charge counter on this land.
+	// {T}, Remove a charge counter from this land: Add one mana of any color.
+	Register("Mirrodin's Core", func() Card {
+		return NewLand("Mirrodin's Core",
+			WithManaAbility(Colorless),
+			WithActivatedAbility(
+				AddCounters(Charge, Fixed(1)).Targeting(ToSource()),
+				TapSourceCost(),
+			),
+			WithActivatedAbility(
+				AddAnyMana(1, Colorless),
+				TapSourceCost(),
+				WithCost(RemoveCountersCost(Charge, 1)),
+			),
+		)
+	})
 
-// Riptide Laboratory 
-// Land
-// {T}: Add {C}.
-// {1}{U}, {T}: Return target Wizard you control to its owner's hand.
-// TODO: implement
+	// Phyrexian Tower
+	// Legendary Land
+	// {T}: Add {C}.
+	// {T}, Sacrifice a creature: Add {B}{B}.
+	Register("Phyrexian Tower", func() Card {
+		return NewLand("Phyrexian Tower",
+			WithSuperTypes(SuperLegendary),
+			WithManaAbility(Colorless),
+			WithActivatedAbility(
+				AddMana(Black, 2),
+				TapSourceCost(),
+				WithCost(SacrificeCreatureCost()),
+			),
+		)
+	})
+
+	// Riptide Laboratory
+	// Land
+	// {T}: Add {C}.
+	// {1}{U}, {T}: Return target Wizard you control to its owner's hand.
 	Register("Riptide Laboratory", func() Card {
-		return NewLand("Riptide Laboratory")
+		return NewLand("Riptide Laboratory",
+			WithManaAbility(Colorless),
+			WithActivatedAbility(
+				ReturnToHandTarget(),
+				ManaCostOf("{1}{U}"),
+				WithCost(TapSourceCost()),
+				WithTarget(TargetCreatureYouControl(HasSubType("Wizard"))),
+			),
+		)
 	})
 
-
-// Rupture Spire 
-// Land
-// This land enters tapped.
-// When this land enters, sacrifice it unless you pay {1}.
-// {T}: Add one mana of any color.
-// TODO: implement
+	// Rupture Spire
+	// Land
+	// This land enters tapped.
+	// When this land enters, sacrifice it unless you pay {1}.
+	// {T}: Add one mana of any color.
 	Register("Rupture Spire", func() Card {
-		return NewLand("Rupture Spire")
+		return NewLand("Rupture Spire",
+			WithKeyword(EntersTapped),
+			WithAbility(
+				EntersBattlefieldTrigger(
+					DataEffect(IfElse(
+						"sacrifice unless pay {1}",
+						&TryPayManaCond{Cost: "{1}"},
+						nil,
+						SacrificeSourceStep(),
+					)),
+					false,
+				),
+			),
+			WithAnyColorMana(),
+		)
 	})
 
-
-// Terramorphic Expanse 
-// Land
-// {T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.
-// TODO: implement
+	// Terramorphic Expanse
+	// Land
+	// {T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.
 	Register("Terramorphic Expanse", func() Card {
-		return NewLand("Terramorphic Expanse")
+		return NewLand("Terramorphic Expanse",
+			WithActivatedAbility(
+				FuncEffect(
+					"search your library for a basic land card, put it onto the battlefield tapped, then shuffle",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						lib := p.Library()
+						var candidates []Card
+						for _, c := range lib {
+							if isBasicLandCard(c) {
+								candidates = append(candidates, c)
+							}
+						}
+						if len(candidates) == 0 {
+							p.ShuffleLibrary()
+							return nil
+						}
+						chosen := p.ChooseCardFromLibrary(candidates, "search for basic land", g)
+						if chosen == nil {
+							p.ShuffleLibrary()
+							return nil
+						}
+						newLib := make([]Card, 0, len(lib)-1)
+						for _, c := range lib {
+							if c.ID() != chosen.ID() {
+								newLib = append(newLib, c)
+							}
+						}
+						p.SetLibrary(newLib)
+						p.ShuffleLibrary()
+						perm := g.PutOnBattlefield(chosen, controller)
+						if perm != nil {
+							perm.Tapped = true
+						}
+						return nil
+					}),
+				TapSourceCost(),
+				WithCost(SacrificeSourceCost()),
+			),
+		)
 	})
 
+	// Thriving Bluff
+	// Land
+	// This land enters tapped. As it enters, choose a color other than red.
+	// {T}: Add {R} or one mana of the chosen color.
+	// XXX: requires "as enters, choose color" engine support — alt-color mana production deferred.
+	// TODO: implement
+	Register("Thriving Bluff", func() Card { return thrivingLand("Thriving Bluff", Red) })
 
-// Thriving Bluff 
-// Land
-// This land enters tapped. As it enters, choose a color other than red.
-// {T}: Add {R} or one mana of the chosen color.
-// TODO: implement
-	Register("Thriving Bluff", func() Card {
-		return NewLand("Thriving Bluff")
-	})
+	// Thriving Grove
+	// Land
+	// This land enters tapped. As it enters, choose a color other than green.
+	// {T}: Add {G} or one mana of the chosen color.
+	// XXX: requires "as enters, choose color" engine support — alt-color mana production deferred.
+	// TODO: implement
+	Register("Thriving Grove", func() Card { return thrivingLand("Thriving Grove", Green) })
 
+	// Thriving Heath
+	// Land
+	// This land enters tapped. As it enters, choose a color other than white.
+	// {T}: Add {W} or one mana of the chosen color.
+	// XXX: requires "as enters, choose color" engine support — alt-color mana production deferred.
+	// TODO: implement
+	Register("Thriving Heath", func() Card { return thrivingLand("Thriving Heath", White) })
 
-// Thriving Grove 
-// Land
-// This land enters tapped. As it enters, choose a color other than green.
-// {T}: Add {G} or one mana of the chosen color.
-// TODO: implement
-	Register("Thriving Grove", func() Card {
-		return NewLand("Thriving Grove")
-	})
+	// Thriving Isle
+	// Land
+	// This land enters tapped. As it enters, choose a color other than blue.
+	// {T}: Add {U} or one mana of the chosen color.
+	// XXX: requires "as enters, choose color" engine support — alt-color mana production deferred.
+	// TODO: implement
+	Register("Thriving Isle", func() Card { return thrivingLand("Thriving Isle", Blue) })
 
+	// Thriving Moor
+	// Land
+	// This land enters tapped. As it enters, choose a color other than black.
+	// {T}: Add {B} or one mana of the chosen color.
+	// XXX: requires "as enters, choose color" engine support — alt-color mana production deferred.
+	// TODO: implement
+	Register("Thriving Moor", func() Card { return thrivingLand("Thriving Moor", Black) })
+}
 
-// Thriving Heath 
-// Land
-// This land enters tapped. As it enters, choose a color other than white.
-// {T}: Add {W} or one mana of the chosen color.
-// TODO: implement
-	Register("Thriving Heath", func() Card {
-		return NewLand("Thriving Heath")
-	})
-
-
-// Thriving Isle 
-// Land
-// This land enters tapped. As it enters, choose a color other than blue.
-// {T}: Add {U} or one mana of the chosen color.
-// TODO: implement
-	Register("Thriving Isle", func() Card {
-		return NewLand("Thriving Isle")
-	})
-
-
-// Thriving Moor 
-// Land
-// This land enters tapped. As it enters, choose a color other than black.
-// {T}: Add {B} or one mana of the chosen color.
-// TODO: implement
-	Register("Thriving Moor", func() Card {
-		return NewLand("Thriving Moor")
-	})
-
+// isBasicLandCard returns true if a card is a basic land (by name).
+func isBasicLandCard(c Card) bool {
+	switch c.Name() {
+	case "Plains", "Island", "Swamp", "Mountain", "Forest":
+		return true
+	}
+	return false
 }
