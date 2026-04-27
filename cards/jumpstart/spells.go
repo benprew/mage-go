@@ -354,10 +354,12 @@ func registerSpells() {
 	// Dauntless Onslaught {2}{W}
 	// Instant
 	// Up to two target creatures each get +2/+2 until end of turn.
-	// XXX: requires multi-target ("up to two target creatures") support
 	Register("Dauntless Onslaught", func() Card {
 		return NewInstant("Dauntless Onslaught", "{2}{W}",
-			NewTargetedSpell(TargetCreature(), Boost(Fixed(2), Fixed(2))),
+			NewMultiTargetSpell(
+				[]Target{TargetUpToNCreatures(2)},
+				Boost(Fixed(2), Fixed(2)).Targeting(ToAllTargets()),
+			),
 		)
 	})
 
@@ -493,10 +495,12 @@ func registerSpells() {
 	// Flames of the Firebrand {2}{R}
 	// Sorcery
 	// Flames of the Firebrand deals 3 damage divided as you choose among one, two, or three targets.
-	// XXX: requires divided-damage multi-target spell support
 	Register("Flames of the Firebrand", func() Card {
 		return NewSorcery("Flames of the Firebrand", "{2}{R}",
-			NewTargetedSpell(TargetAnyTarget(), DealDamage(Fixed(3))),
+			NewMultiTargetSpell(
+				[]Target{TargetUpToNCreaturesOrPlayers(3)},
+				DealDividedDamage(Fixed(3)),
+			),
 		)
 	})
 
@@ -595,10 +599,12 @@ func registerSpells() {
 	// Gird for Battle {W}
 	// Sorcery
 	// Put a +1/+1 counter on each of up to two target creatures.
-	// XXX: requires "up to two target creatures" multi-target support
 	Register("Gird for Battle", func() Card {
 		return NewSorcery("Gird for Battle", "{W}",
-			NewTargetedSpell(TargetCreature(), AddCounters(P1P1, Fixed(1))),
+			NewMultiTargetSpell(
+				[]Target{TargetUpToNCreatures(2)},
+				AddCounters(P1P1, Fixed(1)).Targeting(ToAllTargets()),
+			),
 		)
 	})
 
@@ -1199,14 +1205,13 @@ func registerSpells() {
 	// Tandem Tactics {1}{W}
 	// Instant
 	// Up to two target creatures each get +1/+2 until end of turn. You gain 2 life.
-	// XXX: requires "up to two" multi-target; implement single-target +1/+2 + 2 life
 	Register("Tandem Tactics", func() Card {
 		return NewInstant("Tandem Tactics", "{1}{W}",
-			NewTargetedSpell(TargetCreature(), CompositeEffects(
-				"+1/+2 and gain 2 life",
-				Boost(Fixed(1), Fixed(2)),
+			NewMultiTargetSpell(
+				[]Target{TargetUpToNCreatures(2)},
+				Boost(Fixed(1), Fixed(2)).Targeting(ToAllTargets()),
 				GainLife(2),
-			)),
+			),
 		)
 	})
 

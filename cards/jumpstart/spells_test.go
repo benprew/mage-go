@@ -794,3 +794,137 @@ func TestBakeIntoAPie_DestroysAndCreatesFood(t *testing.T) {
 	g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 0)
 	g.AssertPermanentCount(gametest.PlayerA, "Food", 1)
 }
+
+func TestDauntlessOnslaught(t *testing.T) {
+	t.Run("two targets each get +2/+2", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 3)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Dauntless Onslaught")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Dauntless Onslaught", "Grizzly Bears", "Hill Giant")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 4, 4)
+		g.AssertPowerToughness(gametest.PlayerA, "Hill Giant", 5, 5)
+	})
+	t.Run("single target gets +2/+2", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 3)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Dauntless Onslaught")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Dauntless Onslaught", "Grizzly Bears")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 4, 4)
+		g.AssertPowerToughness(gametest.PlayerA, "Hill Giant", 3, 3)
+	})
+	t.Run("zero targets resolves with no effect", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 3)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Dauntless Onslaught")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Dauntless Onslaught")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 2)
+		g.AssertGraveyardCount(gametest.PlayerA, "Dauntless Onslaught", 1)
+	})
+}
+
+func TestGirdForBattle(t *testing.T) {
+	t.Run("two targets each get a +1/+1 counter", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 1)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Gird for Battle")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Gird for Battle", "Grizzly Bears", "Hill Giant")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 3, 3)
+		g.AssertPowerToughness(gametest.PlayerA, "Hill Giant", 4, 4)
+	})
+	t.Run("zero targets is legal", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 1)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Gird for Battle")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Gird for Battle")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		g.AssertGraveyardCount(gametest.PlayerA, "Gird for Battle", 1)
+	})
+}
+
+func TestTandemTactics(t *testing.T) {
+	t.Run("two targets each get +1/+2 and you gain 2 life", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.SetLife(gametest.PlayerA, 18)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 2)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Tandem Tactics")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Tandem Tactics", "Grizzly Bears", "Hill Giant")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 3, 4)
+		g.AssertPowerToughness(gametest.PlayerA, "Hill Giant", 4, 5)
+		g.AssertLife(gametest.PlayerA, 20)
+	})
+	t.Run("zero targets still gains 2 life", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.SetLife(gametest.PlayerA, 18)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 2)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Tandem Tactics")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Tandem Tactics")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 20)
+	})
+}
+
+func TestFlamesOfTheFirebrand(t *testing.T) {
+	t.Run("split 1/2 between two creatures", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 3)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Flames of the Firebrand")
+		g.ChooseDamageDistribution(gametest.PlayerA, map[string]int{
+			"Grizzly Bears": 1,
+			"Hill Giant":    2,
+		})
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Flames of the Firebrand", "Grizzly Bears", "Hill Giant")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
+		g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 1)
+	})
+	t.Run("3 to one creature kills it", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 3)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Flames of the Firebrand")
+		g.ChooseDamageDistribution(gametest.PlayerA, map[string]int{"Grizzly Bears": 3})
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Flames of the Firebrand", "Grizzly Bears")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+	})
+	t.Run("split between player and creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 3)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Flames of the Firebrand")
+		g.ChooseDamageDistribution(gametest.PlayerA, map[string]int{
+			"PlayerB":       2,
+			"Grizzly Bears": 1,
+		})
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Flames of the Firebrand", "PlayerB", "Grizzly Bears")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 18)
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
+	})
+}
