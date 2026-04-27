@@ -902,10 +902,15 @@ func registerCreatures() {
 	// Creature — Serpent
 	// 6/5
 	// This spell costs {1} less to cast for each instant and sorcery card in your graveyard.
-	// XXX: requires self-cost-reduction-by-graveyard-count primitive
 	Register("Cryptic Serpent", func() Card {
 		return NewCreature("Cryptic Serpent", "{5}{U}{U}", 6, 5,
 			WithSubTypes("Serpent"),
+			WithSelfCostReduction(
+				AmountByGraveyardCount(NewCardFilter("instant or sorcery", func(c Card) bool {
+					return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
+				})),
+				nil,
+			),
 		)
 	})
 
@@ -1411,11 +1416,14 @@ func registerCreatures() {
 	// 2/2
 	// Flying
 	// Creature spells with flying you cast cost {1} less to cast.
-	// XXX: requires keyword-based spell cost reduction
 	Register("Warden of Evos Isle", func() Card {
 		return NewCreature("Warden of Evos Isle", "{2}{U}", 2, 2,
 			WithSubTypes("Bird", "Wizard"),
 			WithKeyword(Flying),
+			WithStaticAbility(ReduceSpellCostStatic(
+				SpellsAnd(SpellHasType(TypeCreature), SpellHasKeyword(Flying)),
+				FixedAmount(1), nil,
+			)),
 		)
 	})
 
@@ -1641,12 +1649,12 @@ func registerCreatures() {
 	// 3/2
 	// This spell costs {3} less to cast if a creature died this turn.
 	// Flying, deathtouch
-	// XXX: requires conditional cast-cost reduction
 	Register("Bone Picker", func() Card {
 		return NewCreature("Bone Picker", "{3}{B}", 3, 2,
 			WithSubTypes("Bird"),
 			WithKeyword(Flying),
 			WithKeyword(Deathtouch),
+			WithSelfCostReduction(FixedAmount(3), CondCreatureDiedThisTurn()),
 		)
 	})
 
@@ -3061,10 +3069,13 @@ func registerCreatures() {
 	// Creature — Goblin Shaman
 	// 1/3
 	// Dragon spells you cast cost {1} less to cast.
-	// XXX: requires subtype-based spell cost reduction
 	Register("Dragonlord's Servant", func() Card {
 		return NewCreature("Dragonlord's Servant", "{1}{R}", 1, 3,
 			WithSubTypes("Goblin", "Shaman"),
+			WithStaticAbility(ReduceSpellCostStatic(
+				SpellHasSubType("Dragon"),
+				FixedAmount(1), nil,
+			)),
 		)
 	})
 
@@ -3072,10 +3083,13 @@ func registerCreatures() {
 	// Creature — Human Barbarian Shaman
 	// 2/2
 	// Dragon spells you cast cost {2} less to cast.
-	// XXX: requires subtype-based spell cost reduction
 	Register("Dragonspeaker Shaman", func() Card {
 		return NewCreature("Dragonspeaker Shaman", "{1}{R}{R}", 2, 2,
 			WithSubTypes("Human", "Barbarian", "Shaman"),
+			WithStaticAbility(ReduceSpellCostStatic(
+				SpellHasSubType("Dragon"),
+				FixedAmount(2), nil,
+			)),
 		)
 	})
 
@@ -4259,12 +4273,12 @@ func registerCreatures() {
 	// 12/12
 	// This spell costs {X} less to cast, where X is the total power of creatures you control.
 	// Trample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)
-	// XXX: requires "this spell costs {X} less to cast" cost-reduction infrastructure
 	Register("Ghalta, Primal Hunger", func() Card {
 		return NewCreature("Ghalta, Primal Hunger", "{10}{G}{G}", 12, 12,
 			WithSubTypes("Elder", "Dinosaur"),
 			WithSuperTypes(SuperLegendary),
 			WithKeyword(Trample),
+			WithSelfCostReduction(AmountByTotalPower(IsCreature), nil),
 		)
 	})
 
