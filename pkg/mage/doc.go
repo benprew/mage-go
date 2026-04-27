@@ -476,6 +476,15 @@ constructor is [NewTriggered](eventType, optional bool, effects...). Use
 .SetCondition() to filter which events actually trigger it, and .AddTarget()
 to add targeting requirements.
 
+When a triggered ability with one or more .AddTarget(...) declarations is put
+on the stack (CR 603.3d), its controller is prompted via Player.ChooseTargets
+for each declared Target — the same mechanism used for spell-cast targeting.
+Chosen IDs become the StackObject's Targets and are passed to the ability's
+effects at resolution time. Triggers with no declared targets keep the legacy
+event-derived auto-binding (e.g. ETB triggers receive the entering permanent's
+ID, EvtCreatureDied triggers receive the dead creature's ID, etc.) so cards
+that read targets[0] from the firing event continue to work unchanged.
+
 Convenience constructors (set condition automatically):
 
 	[AttacksTrigger](effect, optional)                          // EvtDeclaredAttacker, source is self

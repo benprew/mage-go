@@ -1288,6 +1288,26 @@ func (g *Game) PutTriggersOnStack() {
 			IsAbility:  true,
 		}
 		obj.Effects = append(obj.Effects, pt.ability.Effects()...)
+		// CR 603.3d: when a triggered ability with targets is put on the stack,
+		// its controller chooses the targets. Declared AddTarget(...) entries
+		// take precedence over the legacy event-derived auto-binding below;
+		// triggers without declared targets fall through to the auto-bind so
+		// existing card behavior is preserved.
+		if declared := pt.ability.Targets(); len(declared) > 0 {
+			obj.Targets = g.chooseTriggerTargets(pt, declared)
+			if pt.event != nil && pt.event.Amount != 0 {
+				if gt, ok := pt.ability.(*GenericTriggered); ok {
+					switch gt.eventType {
+					case EvtEntersBattlefield:
+						obj.XValue = pt.event.Amount
+					case EvtDamageDealt:
+						obj.EventAmount = pt.event.Amount
+					}
+				}
+			}
+			g.stack.Push(obj)
+			continue
+		}
 		// For triggers that need to pass the event's player as a target
 		// (e.g., "deal damage to that land's controller", "that player draws"),
 		// store the event PlayerID as a target on the stack object.
@@ -1352,6 +1372,40 @@ func (g *Game) PutTriggersOnStack() {
 		g.stack.Push(obj)
 	}
 	g.pendingTriggers = nil
+}
+
+// chooseTriggerTargets prompts the trigger's controller to choose targets for
+// each declared Target on the triggered ability. Returns the flat list of
+// chosen UUIDs that becomes the StackObject's Targets.
+//
+// If a Target has no legal candidates, it is skipped (a placeholder uuid.Nil
+// is appended for required targets so positional indexing in effects survives,
+// matching the convention used elsewhere). The trigger may still resolve and
+// later fizzle via the normal isTargetStillLegal check at resolution time.
+func (g *Game) chooseTriggerTargets(pt *pendingTrigger, declared []Target) []uuid.UUID {
+	controller := g.GetPlayer(pt.controller)
+	sourceCard := g.FindCardAnywhere(pt.sourceID)
+	var out []uuid.UUID
+	for _, t := range declared {
+		t.Reset()
+		possible := t.Possible(pt.controller, sourceCard, g)
+		if len(possible) == 0 {
+			if t.Min() > 0 {
+				out = append(out, uuid.Nil)
+			}
+			continue
+		}
+		var chosen []uuid.UUID
+		if controller != nil {
+			chosen = controller.ChooseTargets(possible, t.Min(), t.Max(), g)
+		}
+		if len(chosen) == 0 && t.Min() > 0 {
+			chosen = possible[:1]
+		}
+		_ = t.Choose(pt.controller, sourceCard, g, chosen)
+		out = append(out, chosen...)
+	}
+	return out
 }
 
 // ResolveStack resolves all objects on the stack (simplified: no priority passing).
