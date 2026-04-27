@@ -145,6 +145,20 @@ func TestDropOfHoney(t *testing.T) {
 		// Both creatures dead, Drop of Honey should sacrifice itself
 		g.AssertPermanentCount(gametest.PlayerA, "Drop of Honey", 0)
 	})
+
+	t.Run("sacrifices_self_when_cast_with_no_creatures", func(t *testing.T) {
+		// Regression: state trigger must fire on entry, not just on a
+		// later leaves-battlefield event. Cross-validation observed XMage
+		// firing this immediately after Drop of Honey resolved.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Drop of Honey")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Drop of Honey")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Drop of Honey", 0)
+		g.AssertGraveyardCount(gametest.PlayerA, "Drop of Honey", 1)
+	})
 }
 
 func TestCyclone(t *testing.T) {

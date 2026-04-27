@@ -116,8 +116,7 @@ func registerEnchantments() {
 				),
 			),
 			// "When there are no creatures on the battlefield, sacrifice Drop of Honey."
-			// State trigger: fires when a creature leaves and no creatures remain
-			WithAbility(NewTriggered(EvtLeavesBattlefield, false, SacrificeSource()).
+			WithAbility(NewStateTriggered(false, SacrificeSource()).
 				SetConditionData(NoBattlefieldPermanentMatching{Filter: IsCreature})),
 		)
 	})

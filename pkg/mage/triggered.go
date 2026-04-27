@@ -18,6 +18,11 @@ type TriggeredAbility interface {
 	// (e.g. via FromGraveyard) for cards whose triggers function in another
 	// zone, like Nether Shadow.
 	TriggerSourceZone() Zone
+	// IsStateTrigger reports whether this is a state-triggered ability
+	// (CR 603.8): one whose condition is checked alongside state-based
+	// actions, not in response to events. State triggers fire once per
+	// false→true transition of the condition.
+	IsStateTrigger() bool
 }
 
 // TriggerCondition is a predicate that determines whether a triggered ability
@@ -33,12 +38,13 @@ type TriggerCondition func(evt *GameEvent, g GameReader, sourceID, controllerID 
 // create a GenericTriggered with the appropriate condition.
 type GenericTriggered struct {
 	BaseAbility
-	eventType  EventType
-	sourceZone Zone
-	Optional   bool
-	Condition  TriggerCondition
-	effects    []Effect
-	targets    []Target
+	eventType      EventType
+	sourceZone     Zone
+	Optional       bool
+	Condition      TriggerCondition
+	effects        []Effect
+	targets        []Target
+	isStateTrigger bool
 }
 
 // NewTriggered creates a GenericTriggered ability that fires on the given event type.
@@ -101,9 +107,28 @@ func (t *GenericTriggered) CheckTrigger(evt *GameEvent, g GameReader) bool {
 	return t.Condition(evt, g, t.source, t.controller)
 }
 
-func (t *GenericTriggered) IsOptional() bool  { return t.Optional }
-func (t *GenericTriggered) Effects() []Effect { return t.effects }
-func (t *GenericTriggered) Targets() []Target { return t.targets }
+func (t *GenericTriggered) IsOptional() bool   { return t.Optional }
+func (t *GenericTriggered) Effects() []Effect  { return t.effects }
+func (t *GenericTriggered) Targets() []Target  { return t.targets }
+func (t *GenericTriggered) IsStateTrigger() bool { return t.isStateTrigger }
+
+// AsStateTrigger marks this as a state-triggered ability (CR 603.8). State
+// triggers don't listen for events — instead, the condition is checked
+// alongside state-based actions, and the trigger fires once per false→true
+// transition. Returns the trigger for chaining. Pair with a condition that
+// checks game state directly (e.g. NoBattlefieldPermanentMatching), and the
+// EventType passed to NewTriggered is ignored.
+func (t *GenericTriggered) AsStateTrigger() *GenericTriggered {
+	t.isStateTrigger = true
+	return t
+}
+
+// NewStateTriggered is a convenience constructor for state-triggered abilities.
+// The condition is evaluated against game state alone (no event), so callers
+// typically supply a TriggerConditionData that ignores its event argument.
+func NewStateTriggered(optional bool, effects ...Effect) *GenericTriggered {
+	return NewTriggered(0, optional, effects...).AsStateTrigger()
+}
 
 // ---------------------------------------------------------------------------
 // Convenience constructors: thin wrappers around NewTriggered that use

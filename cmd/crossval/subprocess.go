@@ -14,10 +14,42 @@ import (
 
 // xmageOracle manages the Java CrossValOracle subprocess.
 type xmageOracle struct {
-	cmd    *exec.Cmd
-	stdin  io.WriteCloser
-	reader *bufio.Scanner
-	stderr io.ReadCloser
+	cmd     *exec.Cmd
+	stdin   io.WriteCloser
+	lines   chan string
+	readErr chan error
+	stderr  io.ReadCloser
+	lastErr *ringBuffer
+}
+
+// ringBuffer keeps the last N strings.
+type ringBuffer struct {
+	buf  []string
+	pos  int
+	full bool
+}
+
+func newRingBuffer(n int) *ringBuffer {
+	return &ringBuffer{buf: make([]string, n)}
+}
+
+func (r *ringBuffer) add(s string) {
+	r.buf[r.pos] = s
+	r.pos++
+	if r.pos >= len(r.buf) {
+		r.pos = 0
+		r.full = true
+	}
+}
+
+func (r *ringBuffer) lines() []string {
+	if !r.full {
+		return r.buf[:r.pos]
+	}
+	out := make([]string, len(r.buf))
+	copy(out, r.buf[r.pos:])
+	copy(out[len(r.buf)-r.pos:], r.buf[:r.pos])
+	return out
 }
 
 func findJava() string {
@@ -56,7 +88,7 @@ func launchOracle(xmageDir string, verbose bool) (*xmageOracle, error) {
 	if verbose {
 		fmt.Fprintf(os.Stderr, "Using java: %s\n", javaPath)
 	}
-	cmd := exec.Command(javaPath, "-cp", classpath, "org.mage.test.crossval.CrossValOracle")
+	cmd := exec.Command(javaPath, "-Xmx2g", "-cp", classpath, "org.mage.test.crossval.CrossValOracle")
 	cmd.Dir = filepath.Join(xmageDir, "Mage.Tests")
 
 	stdinPipe, err := cmd.StdinPipe()
@@ -78,25 +110,47 @@ func launchOracle(xmageDir string, verbose bool) (*xmageOracle, error) {
 		return nil, fmt.Errorf("start java: %w", err)
 	}
 
-	// Forward stderr in background
+	stderrBuf := newRingBuffer(50)
+
+	// Forward stderr in background, always capturing last 50 lines
 	go func() {
 		scanner := bufio.NewScanner(stderrPipe)
 		scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
 		for scanner.Scan() {
+			line := scanner.Text()
+			stderrBuf.add(line)
 			if verbose {
-				fmt.Fprintf(os.Stderr, "[xmage] %s\n", scanner.Text())
+				fmt.Fprintf(os.Stderr, "[xmage] %s\n", line)
 			}
 		}
 	}()
 
-	reader := bufio.NewScanner(stdoutPipe)
-	reader.Buffer(make([]byte, 0, 64*1024), 10*1024*1024)
+	lines := make(chan string, 64)
+	readErr := make(chan error, 1)
+
+	// Continuously drain stdout in the background so the pipe never fills up
+	// and deadlocks against stdin writes.
+	go func() {
+		scanner := bufio.NewScanner(stdoutPipe)
+		scanner.Buffer(make([]byte, 0, 64*1024), 10*1024*1024)
+		for scanner.Scan() {
+			lines <- scanner.Text()
+		}
+		if err := scanner.Err(); err != nil {
+			readErr <- err
+		} else {
+			readErr <- fmt.Errorf("oracle process closed stdout")
+		}
+		close(lines)
+	}()
 
 	return &xmageOracle{
-		cmd:    cmd,
-		stdin:  stdinPipe,
-		reader: reader,
-		stderr: stderrPipe,
+		cmd:     cmd,
+		stdin:   stdinPipe,
+		lines:   lines,
+		readErr: readErr,
+		stderr:  stderrPipe,
+		lastErr: stderrBuf,
 	}, nil
 }
 
@@ -110,27 +164,17 @@ func (o *xmageOracle) send(msg any) error {
 }
 
 func (o *xmageOracle) recv(timeout time.Duration) (*oracleMsg, error) {
-	done := make(chan struct{})
-	var scanOK bool
-
-	go func() {
-		scanOK = o.reader.Scan()
-		close(done)
-	}()
-
+	var line string
 	select {
-	case <-done:
-		if !scanOK {
-			if err := o.reader.Err(); err != nil {
-				return nil, fmt.Errorf("read: %w", err)
-			}
-			return nil, fmt.Errorf("oracle process closed stdout")
+	case l, ok := <-o.lines:
+		if !ok {
+			return nil, <-o.readErr
 		}
+		line = l
 	case <-time.After(timeout):
 		return nil, fmt.Errorf("timeout waiting for oracle response (%v)", timeout)
 	}
 
-	line := o.reader.Text()
 	var msg oracleMsg
 	if err := json.Unmarshal([]byte(line), &msg); err != nil {
 		return nil, fmt.Errorf("unmarshal oracle response: %w (line: %s)", err, truncate(line, 200))

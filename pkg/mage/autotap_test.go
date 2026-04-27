@@ -278,6 +278,73 @@ func TestTapForMana_MultiColor(t *testing.T) {
 	}
 }
 
+// Mana Vault style: tap-for-mana built via WithActivatedAbility(AddMana(...), TapSourceCost())
+// rather than WithMultiManaAbility. Auto-tap must discover these too.
+func TestAutoTapForCost_ActivatedManaAbility(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+
+	vault := NewArtifact("Mana Vault", "{1}",
+		WithActivatedAbility(AddMana(Colorless, 3), TapSourceCost()),
+	)
+	vault.SetOwner(pid)
+	perm := g.PutOnBattlefield(vault, pid)
+	perm.RevokeBaseAttr(AttrSummonSick)
+
+	if err := g.AutoTapForCost(pid, ManaCost{Generic: 2}); err != nil {
+		t.Fatalf("AutoTapForCost failed: %v", err)
+	}
+	if !perm.Tapped {
+		t.Error("expected Mana Vault to be tapped")
+	}
+	pool := g.players[0].ManaPool()
+	if pool.Count(Colorless) != 3 {
+		t.Errorf("expected 3 colorless mana, got %d", pool.Count(Colorless))
+	}
+}
+
+func TestTapForMana_ActivatedManaAbility(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+
+	vault := NewArtifact("Mana Vault", "{1}",
+		WithActivatedAbility(AddMana(Colorless, 3), TapSourceCost()),
+	)
+	vault.SetOwner(pid)
+	perm := g.PutOnBattlefield(vault, pid)
+	perm.RevokeBaseAttr(AttrSummonSick)
+
+	if err := g.TapForMana(pid, perm.ID()); err != nil {
+		t.Fatalf("TapForMana failed: %v", err)
+	}
+	if !perm.Tapped {
+		t.Error("expected Mana Vault to be tapped")
+	}
+	pool := g.players[0].ManaPool()
+	if pool.Count(Colorless) != 3 {
+		t.Errorf("expected 3 colorless mana, got %d", pool.Count(Colorless))
+	}
+}
+
+func TestCanAfford_ActivatedManaAbility(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+
+	vault := NewArtifact("Mana Vault", "{1}",
+		WithActivatedAbility(AddMana(Colorless, 3), TapSourceCost()),
+	)
+	vault.SetOwner(pid)
+	perm := g.PutOnBattlefield(vault, pid)
+	perm.RevokeBaseAttr(AttrSummonSick)
+
+	if !g.CanAfford(pid, ManaCost{Generic: 3}) {
+		t.Error("should afford {3} with untapped Mana Vault")
+	}
+	if g.CanAfford(pid, ManaCost{Generic: 4}) {
+		t.Error("should not afford {4} with only Mana Vault")
+	}
+}
+
 func TestAutoTapForCost_MultiMana(t *testing.T) {
 	g := newPriorityTestGame()
 	pid := g.players[0].PlayerID()
