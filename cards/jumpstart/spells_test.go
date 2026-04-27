@@ -782,3 +782,15 @@ func TestRiddleOfLightningScry(t *testing.T) {
 	g.Execute()
 	g.AssertLibraryTop(gametest.PlayerA, "Swamp", "Forest", "Island", "Plains")
 }
+
+func TestBakeIntoAPie_DestroysAndCreatesFood(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Bake into a Pie")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 4)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Bake into a Pie", "Hill Giant")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 0)
+	g.AssertPermanentCount(gametest.PlayerA, "Food", 1)
+}

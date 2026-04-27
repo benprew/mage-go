@@ -142,10 +142,9 @@ func registerSpells() {
 	// Bake into a Pie {2}{B}{B}
 	// Instant
 	// Destroy target creature. Create a Food token.
-	// XXX: requires Treasure/Food token primitive
 	Register("Bake into a Pie", func() Card {
 		return NewInstant("Bake into a Pie", "{2}{B}{B}",
-			NewTargetedSpell(TargetCreature(), DestroyTarget()),
+			NewTargetedSpell(TargetCreature(), DestroyTarget(), CreateFoodToken()),
 		)
 	})
 
