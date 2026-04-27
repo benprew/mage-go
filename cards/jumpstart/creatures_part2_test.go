@@ -303,3 +303,100 @@ func TestPlaguedRusalka_SacToDebuff(t *testing.T) {
 	g.AssertPowerToughness(gametest.PlayerB, "Hill Giant", 2, 2)
 	g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 1)
 }
+
+func TestCorpseHauler_SacToReturn(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Corpse Hauler")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 3)
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Corpse Hauler", "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 1)
+	g.AssertGraveyardCount(gametest.PlayerA, "Corpse Hauler", 1)
+}
+
+func TestDranaLiberatorOfMalakir_BoostsAttackersOnHit(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Drana, Liberator of Malakir")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.Attack(3, gametest.PlayerA, "Drana, Liberator of Malakir", "Grizzly Bears")
+	g.StopAt(3, core.EndStep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Drana, Liberator of Malakir", 3, 4)
+	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 3, 3)
+}
+
+func TestDutifulAttendant_ReturnsOnDeath(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Dutiful Attendant")
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Dutiful Attendant")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 1)
+}
+
+func TestFesteringNewt_DebuffOnDeath(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Festering Newt")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Festering Newt")
+	g.ChoosePermanent(gametest.PlayerA, "Hill Giant")
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerB, "Hill Giant", 2, 2)
+}
+
+func TestGhoulraiser_ReturnsZombieFromGraveyard(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Ghoulraiser")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 3)
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Black Cat")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Ghoulraiser")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "Black Cat", 1)
+}
+
+func TestGravewaker_ReanimatesTapped(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Gravewaker")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 7)
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Gravewaker", "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
+	g.AssertTapped(gametest.PlayerA, "Grizzly Bears", true)
+}
+
+func TestHarvesterOfSouls_DrawsOnNontokenDeath(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Harvester of Souls")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Mox Ruby", 2)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "Mox Ruby", 1)
+}
+
+func TestLawlessBroker_CounterOnDeath(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Lawless Broker")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Lawless Broker")
+	g.ChoosePermanent(gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 3, 3)
+}
