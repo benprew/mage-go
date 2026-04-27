@@ -198,6 +198,33 @@ func registerCh07bTestCards() {
 			)
 		})
 	}
+	// Flash 2/2 — creature castable at instant speed (CR 702.8).
+	if !mage.CardRegistered("Test Flash Creature") {
+		mage.Register("Test Flash Creature", func() mage.Card {
+			return mage.NewCreature("Test Flash Creature", "{1}{U}", 2, 2,
+				mage.WithSubTypes("Spirit"),
+				mage.WithKeyword(core.Flash),
+			)
+		})
+	}
+	// Flash aura — castable at instant speed; enchant creature, +1/+1.
+	if !mage.CardRegistered("Test Flash Aura") {
+		mage.Register("Test Flash Aura", func() mage.Card {
+			return mage.NewAura("Test Flash Aura", "{U}",
+				mage.WithKeyword(core.Flash),
+				mage.WithStaticAbility(mage.BoostAttached(1, 1, core.AttachAura)),
+			)
+		})
+	}
+	// Island land for blue Flash test mana.
+	if !mage.CardRegistered("Island") {
+		mage.Register("Island", func() mage.Card {
+			return mage.NewLand("Island",
+				mage.WithSubTypes("Island"),
+				mage.WithManaAbility(core.Blue),
+			)
+		})
+	}
 }
 
 // ── 702.9 Flying ──────────────────────────────────────────────────────────────
@@ -544,4 +571,67 @@ func TestCR702_110b_MenaceRequiresTwoBlockers(t *testing.T) {
 	// Current engine: single block accepted → both 2/2s trade → PlayerB at 20.
 	// Asserting 20 (engine behavior); this test FAILS when engine enforces Menace correctly.
 	tg.AssertLife(PlayerB, 20)
+}
+
+// ── 702.8 Flash ───────────────────────────────────────────────────────────────
+
+// TestCR702_8_FlashCreatureCastableOnOpponentTurn verifies CR 702.8: a creature
+// with Flash may be cast any time its controller could cast an instant —
+// including during the opponent's turn.
+func TestCR702_8_FlashCreatureCastableOnOpponentTurn(t *testing.T) {
+	tg := NewTestGame(t)
+	tg.AddCard(core.ZoneHand, PlayerB, "Test Flash Creature")
+	tg.AddCard(core.ZoneBattlefield, PlayerB, "Island", 2)
+	tg.AddCard(core.ZoneBattlefield, PlayerA, "Hill Giant")
+	tg.CastSpell(1, core.BeginCombat, PlayerB, "Test Flash Creature")
+	tg.StopAt(1, core.PostcombatMain)
+	tg.Execute()
+
+	tg.AssertPermanentCount(PlayerB, "Test Flash Creature", 1)
+	tg.AssertHandCount(PlayerB, "Test Flash Creature", 0)
+}
+
+// TestCR702_8_FlashCreatureCastableInResponse verifies CR 702.8: a Flash
+// creature may be cast in response to a spell on the stack.
+func TestCR702_8_FlashCreatureCastableInResponse(t *testing.T) {
+	tg := NewTestGame(t)
+	tg.AddCard(core.ZoneHand, PlayerA, "Test Flash Creature")
+	tg.AddCard(core.ZoneBattlefield, PlayerA, "Island", 2)
+	tg.AddCard(core.ZoneHand, PlayerB, "Lightning Bolt")
+	tg.AddCard(core.ZoneBattlefield, PlayerB, "Mountain")
+	tg.CastSpell(1, core.PrecombatMain, PlayerB, "Lightning Bolt", "PlayerA")
+	tg.CastInResponseTo(PlayerA, "Test Flash Creature")
+	tg.StopAt(1, core.BeginCombat)
+	tg.Execute()
+
+	tg.AssertPermanentCount(PlayerA, "Test Flash Creature", 1)
+}
+
+// TestCR702_8_NonFlashCreatureCannotBeCastAtInstantSpeed verifies the negative
+// case: a creature without Flash still cannot be cast on the opponent's turn.
+func TestCR702_8_NonFlashCreatureCannotBeCastAtInstantSpeed(t *testing.T) {
+	tg := NewTestGame(t)
+	tg.AddCard(core.ZoneHand, PlayerB, "Grizzly Bears")
+	tg.AddCard(core.ZoneBattlefield, PlayerB, "Forest", 2)
+	tg.CastSpell(1, core.BeginCombat, PlayerB, "Grizzly Bears")
+	tg.StopAt(1, core.PostcombatMain)
+	tg.Execute()
+
+	tg.AssertHandCount(PlayerB, "Grizzly Bears", 1)
+	tg.AssertPermanentCount(PlayerB, "Grizzly Bears", 0)
+}
+
+// TestCR702_8_FlashAuraCastableAtInstantSpeed verifies CR 702.8 for auras:
+// an aura with Flash can be cast on the opponent's turn.
+func TestCR702_8_FlashAuraCastableAtInstantSpeed(t *testing.T) {
+	tg := NewTestGame(t)
+	tg.AddCard(core.ZoneHand, PlayerB, "Test Flash Aura")
+	tg.AddCard(core.ZoneBattlefield, PlayerB, "Island")
+	tg.AddCard(core.ZoneBattlefield, PlayerA, "Grizzly Bears")
+	tg.CastSpell(1, core.BeginCombat, PlayerB, "Test Flash Aura", "Grizzly Bears")
+	tg.StopAt(1, core.PostcombatMain)
+	tg.Execute()
+
+	tg.AssertPermanentCount(PlayerB, "Test Flash Aura", 1)
+	tg.AssertAttachedTo(PlayerA, "Test Flash Aura", "Grizzly Bears")
 }

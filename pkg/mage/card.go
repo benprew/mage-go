@@ -213,6 +213,16 @@ func WithSubTypes(subTypes ...string) CardOption {
 	return func(c *BaseCard) { c.subTypes = append(c.subTypes, subTypes...) }
 }
 
+// cardHasKeyword reports whether the card was registered with the given keyword
+// attr seed. Used by the casting-permission gate (see Flash, CR 702.8) to inspect
+// keywords on a card that is not yet on the battlefield as a Permanent.
+func cardHasKeyword(c Card, kw Attr) bool {
+	if c == nil {
+		return false
+	}
+	return c.AttrSeeds()[kw] > 0
+}
+
 // WithKeyword adds a keyword ability to a card.
 // Seeds the card's attrSeeds so that NewPermanent can populate baseAttrs.
 func WithKeyword(kw Keyword) CardOption {

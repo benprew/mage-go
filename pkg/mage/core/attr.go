@@ -60,6 +60,7 @@ const (
 	Desertwalk
 	CantRegenerate
 	LegendaryLandwalk
+	Flash
 
 	// attrCount is a sentinel marking one past the last Attr value.
 	// NumAttrs exposes this as a sized array bound for Permanent attr storage.
@@ -179,6 +180,8 @@ func (a Attr) String() string {
 		return "Can't Be Regenerated"
 	case LegendaryLandwalk:
 		return "Legendary Landwalk"
+	case Flash:
+		return "Flash"
 	default:
 		return "Unknown"
 	}
