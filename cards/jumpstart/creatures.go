@@ -2343,10 +2343,24 @@ func registerCreatures() {
 	// 7/7
 	// As this creature enters, choose an opponent.
 	// This creature gets -1/-1 for each card in the chosen player's hand.
-	// XXX: requires as-enters-choose-player
 	Register("Nyxathid", func() Card {
 		return NewCreature("Nyxathid", "{1}{B}{B}", 7, 7,
 			WithSubTypes("Elemental"),
+			WithAbility(ETBChooseOpponent()),
+			WithStaticAbility(FuncContinuousEffect(LayerPT, WhileOnBattlefield,
+				func(g *Game, sourceID uuid.UUID) error {
+					src := g.FindPermanent(sourceID)
+					if src == nil {
+						return nil
+					}
+					target := g.GetPlayer(src.ChosenPlayer)
+					if target == nil {
+						return nil
+					}
+					n := len(target.Hand())
+					src.BoostPT(-n, -n)
+					return nil
+				})),
 		)
 	})
 

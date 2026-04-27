@@ -541,3 +541,47 @@ func TestRapaciousDragon_CreatesTwoTreasuresOnETB(t *testing.T) {
 	g.AssertPermanentCount(gametest.PlayerA, "Treasure", 2)
 	g.AssertHasAbility(gametest.PlayerA, "Rapacious Dragon", Flying, true)
 }
+
+func TestNyxathid_PinsOpponentAndShrinksByHandSize(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Nyxathid")
+	g.AddCard(ZoneHand, gametest.PlayerB, "Mountain", 3)
+	g.StopAt(1, PrecombatMain)
+	g.Execute()
+	pidB := g.GetPlayer(gametest.PlayerB).PlayerID()
+	perm := g.FindPermanentByName("Nyxathid", g.GetPlayer(gametest.PlayerA).PlayerID())
+	if perm == nil {
+		t.Fatal("Nyxathid not on battlefield")
+	}
+	if perm.ChosenPlayer != pidB {
+		t.Errorf("ChosenPlayer: got %v, want PlayerB %v", perm.ChosenPlayer, pidB)
+	}
+	g.AssertPowerToughness(gametest.PlayerA, "Nyxathid", 4, 4)
+}
+
+func TestNyxathid_LargerHandShrinksMore(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Nyxathid")
+	g.AddCard(ZoneHand, gametest.PlayerB, "Mountain", 6)
+	g.StopAt(1, PrecombatMain)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Nyxathid", 1, 1)
+}
+
+func TestNyxathid_DiesIfOpponentHasSevenCards(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Nyxathid")
+	g.AddCard(ZoneHand, gametest.PlayerB, "Mountain", 7)
+	g.StopAt(1, PrecombatMain)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Nyxathid", 0)
+	g.AssertGraveyardCount(gametest.PlayerA, "Nyxathid", 1)
+}
+
+func TestNyxathid_EmptyOpponentHandLeavesBaseStats(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Nyxathid")
+	g.StopAt(1, PrecombatMain)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Nyxathid", 7, 7)
+}
