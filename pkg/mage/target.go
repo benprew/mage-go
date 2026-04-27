@@ -386,7 +386,8 @@ func (t *SpellOnStackTarget) Choose(controller uuid.UUID, _ Card, g *Game, chose
 // optionally filtered by CardFilter predicates.
 type GraveyardCardTarget struct {
 	BaseTarget
-	Filters []CardFilter
+	Filters       []CardFilter
+	excludeSource bool
 }
 
 // TargetCardInYourGraveyard creates a target that selects any card in the controller's graveyard,
@@ -398,13 +399,31 @@ func TargetCardInYourGraveyard(filters ...CardFilter) Target {
 	}
 }
 
-func (t *GraveyardCardTarget) Possible(controller uuid.UUID, _ Card, g *Game) []uuid.UUID {
+// TargetOtherCreatureInYourGraveyard targets a creature card in the controller's
+// graveyard other than the source card. Used for "return another target creature
+// card from your graveyard" triggers (CR 109.5 — "another" excludes the source).
+func TargetOtherCreatureInYourGraveyard() Target {
+	return &GraveyardCardTarget{
+		BaseTarget:    BaseTarget{min: 1, max: 1},
+		Filters:       []CardFilter{IsCreatureCard},
+		excludeSource: true,
+	}
+}
+
+func (t *GraveyardCardTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return nil
 	}
+	var sourceID uuid.UUID
+	if sourceCard != nil {
+		sourceID = sourceCard.ID()
+	}
 	var result []uuid.UUID
 	for _, c := range p.Graveyard() {
+		if t.excludeSource && c.ID() == sourceID {
+			continue
+		}
 		match := true
 		for _, f := range t.Filters {
 			if !f.Match(c) {

@@ -19,11 +19,11 @@ func registerCreatures() {
 
 	// ===== WHITE CREATURES =====
 
-// Affa Guard Hound {2}{W}
-// Creature — Dog
-// 2/2
-// Flash (You may cast this spell any time you could cast an instant.)
-// When this creature enters, target creature gets +0/+3 until end of turn.
+	// Affa Guard Hound {2}{W}
+	// Creature — Dog
+	// 2/2
+	// Flash (You may cast this spell any time you could cast an instant.)
+	// When this creature enters, target creature gets +0/+3 until end of turn.
 	// XXX: engine has no Flash keyword yet
 	Register("Affa Guard Hound", func() Card {
 		return NewCreature("Affa Guard Hound", "{2}{W}", 2, 2,
@@ -33,10 +33,10 @@ func registerCreatures() {
 		)
 	})
 
-// Ajani's Chosen {2}{W}{W}
-// Creature — Cat Soldier
-// 3/3
-// Whenever an enchantment you control enters, create a 2/2 white Cat creature token. If that enchantment is an Aura, you may attach it to the token.
+	// Ajani's Chosen {2}{W}{W}
+	// Creature — Cat Soldier
+	// 3/3
+	// Whenever an enchantment you control enters, create a 2/2 white Cat creature token. If that enchantment is an Aura, you may attach it to the token.
 	// XXX: aura-attach-on-token portion deferred; token creation is implemented.
 	Register("Ajani's Chosen", func() Card {
 		return NewCreature("Ajani's Chosen", "{2}{W}{W}", 3, 3,
@@ -54,10 +54,10 @@ func registerCreatures() {
 		)
 	})
 
-// Alabaster Mage {1}{W}
-// Creature — Human Wizard
-// 2/1
-// {1}{W}: Target creature you control gains lifelink until end of turn. (Damage dealt by the creature also causes its controller to gain that much life.)
+	// Alabaster Mage {1}{W}
+	// Creature — Human Wizard
+	// 2/1
+	// {1}{W}: Target creature you control gains lifelink until end of turn. (Damage dealt by the creature also causes its controller to gain that much life.)
 	Register("Alabaster Mage", func() Card {
 		return NewCreature("Alabaster Mage", "{1}{W}", 2, 1,
 			WithSubTypes("Human", "Wizard"),
@@ -69,11 +69,11 @@ func registerCreatures() {
 		)
 	})
 
-// Angel of Mercy {4}{W}
-// Creature — Angel
-// 3/3
-// Flying
-// When this creature enters, you gain 3 life.
+	// Angel of Mercy {4}{W}
+	// Creature — Angel
+	// 3/3
+	// Flying
+	// When this creature enters, you gain 3 life.
 	Register("Angel of Mercy", func() Card {
 		return NewCreature("Angel of Mercy", "{4}{W}", 3, 3,
 			WithSubTypes("Angel"),
@@ -82,12 +82,12 @@ func registerCreatures() {
 		)
 	})
 
-// Angel of the Dire Hour {5}{W}{W}
-// Creature — Angel
-// 5/4
-// Flash
-// Flying
-// When this creature enters, if you cast it from your hand, exile all attacking creatures.
+	// Angel of the Dire Hour {5}{W}{W}
+	// Creature — Angel
+	// 5/4
+	// Flash
+	// Flying
+	// When this creature enters, if you cast it from your hand, exile all attacking creatures.
 	// XXX: engine has no Flash keyword and no "if you cast from hand" condition;
 	// implementing as Flying with ETB exile-all-attackers (always triggers).
 	Register("Angel of the Dire Hour", func() Card {
@@ -107,12 +107,12 @@ func registerCreatures() {
 		)
 	})
 
-// Angelic Arbiter {5}{W}{W}
-// Creature — Angel
-// 5/6
-// Flying
-// Each opponent who cast a spell this turn can't attack with creatures.
-// Each opponent who attacked with a creature this turn can't cast spells.
+	// Angelic Arbiter {5}{W}{W}
+	// Creature — Angel
+	// 5/6
+	// Flying
+	// Each opponent who cast a spell this turn can't attack with creatures.
+	// Each opponent who attacked with a creature this turn can't cast spells.
 	// XXX: requires "opponent cast spell / attacked this turn" restrictions
 	Register("Angelic Arbiter", func() Card {
 		return NewCreature("Angelic Arbiter", "{5}{W}{W}", 5, 6,
@@ -121,11 +121,11 @@ func registerCreatures() {
 		)
 	})
 
-// Angelic Page {1}{W}
-// Creature — Angel Spirit
-// 1/1
-// Flying
-// {T}: Target attacking or blocking creature gets +1/+1 until end of turn.
+	// Angelic Page {1}{W}
+	// Creature — Angel Spirit
+	// 1/1
+	// Flying
+	// {T}: Target attacking or blocking creature gets +1/+1 until end of turn.
 	Register("Angelic Page", func() Card {
 		return NewCreature("Angelic Page", "{1}{W}", 1, 1,
 			WithSubTypes("Angel", "Spirit"),
@@ -138,24 +138,26 @@ func registerCreatures() {
 		)
 	})
 
-// Archon of Justice {3}{W}{W}
-// Creature — Archon
-// 4/4
-// Flying
-// When this creature dies, exile target permanent.
-	// XXX: triggered abilities can't prompt user for targets at trigger time
+	// Archon of Justice {3}{W}{W}
+	// Creature — Archon
+	// 4/4
+	// Flying
+	// When this creature dies, exile target permanent.
 	Register("Archon of Justice", func() Card {
 		return NewCreature("Archon of Justice", "{3}{W}{W}", 4, 4,
 			WithSubTypes("Archon"),
 			WithKeyword(Flying),
+			WithAbility(NewTriggered(EvtCreatureDied, false, ExileTarget()).
+				SetConditionData(EventSourceIsSelf{}).
+				AddTarget(TargetPermanent())),
 		)
 	})
 
-// Archon of Redemption {3}{W}{W}
-// Creature — Archon
-// 3/4
-// Flying
-// Whenever this creature or another creature you control with flying enters, you may gain life equal to that creature's power.
+	// Archon of Redemption {3}{W}{W}
+	// Creature — Archon
+	// 3/4
+	// Flying
+	// Whenever this creature or another creature you control with flying enters, you may gain life equal to that creature's power.
 	Register("Archon of Redemption", func() Card {
 		return NewCreature("Archon of Redemption", "{3}{W}{W}", 3, 4,
 			WithSubTypes("Archon"),
@@ -194,11 +196,11 @@ func registerCreatures() {
 		)
 	})
 
-// Blessed Spirits {2}{W}
-// Creature — Spirit
-// 2/2
-// Flying
-// Whenever you cast an enchantment spell, put a +1/+1 counter on this creature.
+	// Blessed Spirits {2}{W}
+	// Creature — Spirit
+	// 2/2
+	// Flying
+	// Whenever you cast an enchantment spell, put a +1/+1 counter on this creature.
 	Register("Blessed Spirits", func() Card {
 		return NewCreature("Blessed Spirits", "{2}{W}", 2, 2,
 			WithSubTypes("Spirit"),
@@ -208,10 +210,10 @@ func registerCreatures() {
 		)
 	})
 
-// Brightmare {2}{W}
-// Creature — Unicorn
-// 2/3
-// When this creature enters, tap up to one target creature. You gain life equal to that creature's power.
+	// Brightmare {2}{W}
+	// Creature — Unicorn
+	// 2/3
+	// When this creature enters, tap up to one target creature. You gain life equal to that creature's power.
 	Register("Brightmare", func() Card {
 		return NewCreature("Brightmare", "{2}{W}", 2, 3,
 			WithSubTypes("Unicorn"),
@@ -243,10 +245,10 @@ func registerCreatures() {
 		)
 	})
 
-// Bulwark Giant {5}{W}
-// Creature — Giant Soldier
-// 3/6
-// When this creature enters, you gain 5 life.
+	// Bulwark Giant {5}{W}
+	// Creature — Giant Soldier
+	// 3/6
+	// When this creature enters, you gain 5 life.
 	Register("Bulwark Giant", func() Card {
 		return NewCreature("Bulwark Giant", "{5}{W}", 3, 6,
 			WithSubTypes("Giant", "Soldier"),
@@ -254,10 +256,10 @@ func registerCreatures() {
 		)
 	})
 
-// Cathar's Companion {2}{W}
-// Creature — Dog
-// 3/1
-// Whenever you cast a noncreature spell, this creature gains indestructible until end of turn. (Damage and effects that say "destroy" don't destroy it.)
+	// Cathar's Companion {2}{W}
+	// Creature — Dog
+	// 3/1
+	// Whenever you cast a noncreature spell, this creature gains indestructible until end of turn. (Damage and effects that say "destroy" don't destroy it.)
 	Register("Cathar's Companion", func() Card {
 		return NewCreature("Cathar's Companion", "{2}{W}", 3, 1,
 			WithSubTypes("Dog"),
@@ -271,11 +273,11 @@ func registerCreatures() {
 		)
 	})
 
-// Emancipation Angel {1}{W}{W}
-// Creature — Angel
-// 3/3
-// Flying
-// When this creature enters, return a permanent you control to its owner's hand.
+	// Emancipation Angel {1}{W}{W}
+	// Creature — Angel
+	// 3/3
+	// Flying
+	// When this creature enters, return a permanent you control to its owner's hand.
 	Register("Emancipation Angel", func() Card {
 		return NewCreature("Emancipation Angel", "{1}{W}{W}", 3, 3,
 			WithSubTypes("Angel"),
@@ -285,11 +287,11 @@ func registerCreatures() {
 		)
 	})
 
-// Emiel the Blessed {2}{W}{W}
-// Legendary Creature — Unicorn
-// 4/4
-// {3}: Exile another target creature you control, then return it to the battlefield under its owner's control.
-// Whenever another creature you control enters, you may pay {G/W}. If you do, put a +1/+1 counter on it. If it's a Unicorn, put two +1/+1 counters on it instead. ({G/W} can be paid with either {G} or {W}.)
+	// Emiel the Blessed {2}{W}{W}
+	// Legendary Creature — Unicorn
+	// 4/4
+	// {3}: Exile another target creature you control, then return it to the battlefield under its owner's control.
+	// Whenever another creature you control enters, you may pay {G/W}. If you do, put a +1/+1 counter on it. If it's a Unicorn, put two +1/+1 counters on it instead. ({G/W} can be paid with either {G} or {W}.)
 	// XXX: hybrid mana cost {G/W} not supported; ETB-counter trigger deferred.
 	Register("Emiel the Blessed", func() Card {
 		return NewCreature("Emiel the Blessed", "{2}{W}{W}", 4, 4,
@@ -320,11 +322,11 @@ func registerCreatures() {
 		)
 	})
 
-// Healer's Hawk {W}
-// Creature — Bird
-// 1/1
-// Flying
-// Lifelink (Damage dealt by this creature also causes you to gain that much life.)
+	// Healer's Hawk {W}
+	// Creature — Bird
+	// 1/1
+	// Flying
+	// Lifelink (Damage dealt by this creature also causes you to gain that much life.)
 	Register("Healer's Hawk", func() Card {
 		return NewCreature("Healer's Hawk", "{W}", 1, 1,
 			WithSubTypes("Bird"),
@@ -333,12 +335,12 @@ func registerCreatures() {
 		)
 	})
 
-// High Sentinels of Arashin {3}{W}
-// Creature — Bird Soldier
-// 3/4
-// Flying
-// This creature gets +1/+1 for each other creature you control with a +1/+1 counter on it.
-// {3}{W}: Put a +1/+1 counter on target creature.
+	// High Sentinels of Arashin {3}{W}
+	// Creature — Bird Soldier
+	// 3/4
+	// Flying
+	// This creature gets +1/+1 for each other creature you control with a +1/+1 counter on it.
+	// {3}{W}: Put a +1/+1 counter on target creature.
 	Register("High Sentinels of Arashin", func() Card {
 		return NewCreature("High Sentinels of Arashin", "{3}{W}", 3, 4,
 			WithSubTypes("Bird", "Soldier"),
@@ -368,10 +370,10 @@ func registerCreatures() {
 		)
 	})
 
-// Inspiring Captain {3}{W}
-// Creature — Human Knight
-// 3/3
-// When this creature enters, creatures you control get +1/+1 until end of turn.
+	// Inspiring Captain {3}{W}
+	// Creature — Human Knight
+	// 3/3
+	// When this creature enters, creatures you control get +1/+1 until end of turn.
 	Register("Inspiring Captain", func() Card {
 		return NewCreature("Inspiring Captain", "{3}{W}", 3, 3,
 			WithSubTypes("Human", "Knight"),
@@ -381,10 +383,10 @@ func registerCreatures() {
 		)
 	})
 
-// Inspiring Unicorn {2}{W}{W}
-// Creature — Unicorn
-// 2/2
-// Whenever this creature attacks, creatures you control get +1/+1 until end of turn.
+	// Inspiring Unicorn {2}{W}{W}
+	// Creature — Unicorn
+	// 2/2
+	// Whenever this creature attacks, creatures you control get +1/+1 until end of turn.
 	Register("Inspiring Unicorn", func() Card {
 		return NewCreature("Inspiring Unicorn", "{2}{W}{W}", 2, 2,
 			WithSubTypes("Unicorn"),
@@ -394,9 +396,9 @@ func registerCreatures() {
 		)
 	})
 
-// Isamaru, Hound of Konda {W}
-// Legendary Creature — Dog
-// 2/2
+	// Isamaru, Hound of Konda {W}
+	// Legendary Creature — Dog
+	// 2/2
 	Register("Isamaru, Hound of Konda", func() Card {
 		return NewCreature("Isamaru, Hound of Konda", "{W}", 2, 2,
 			WithSubTypes("Dog"),
@@ -404,10 +406,10 @@ func registerCreatures() {
 		)
 	})
 
-// Knight of the Tusk {4}{W}{W}
-// Creature — Human Knight
-// 3/7
-// Vigilance (Attacking doesn't cause this creature to tap.)
+	// Knight of the Tusk {4}{W}{W}
+	// Creature — Human Knight
+	// 3/7
+	// Vigilance (Attacking doesn't cause this creature to tap.)
 	Register("Knight of the Tusk", func() Card {
 		return NewCreature("Knight of the Tusk", "{4}{W}{W}", 3, 7,
 			WithSubTypes("Human", "Knight"),
@@ -415,11 +417,11 @@ func registerCreatures() {
 		)
 	})
 
-// Kor Spiritdancer {1}{W}
-// Creature — Kor Wizard
-// 0/2
-// This creature gets +2/+2 for each Aura attached to it.
-// Whenever you cast an Aura spell, you may draw a card.
+	// Kor Spiritdancer {1}{W}
+	// Creature — Kor Wizard
+	// 0/2
+	// This creature gets +2/+2 for each Aura attached to it.
+	// Whenever you cast an Aura spell, you may draw a card.
 	Register("Kor Spiritdancer", func() Card {
 		return NewCreature("Kor Spiritdancer", "{1}{W}", 0, 2,
 			WithSubTypes("Kor", "Wizard"),
@@ -456,11 +458,11 @@ func registerCreatures() {
 		)
 	})
 
-// Lena, Selfless Champion {4}{W}{W}
-// Legendary Creature — Human Knight
-// 3/3
-// When Lena enters, create a 1/1 white Soldier creature token for each nontoken creature you control.
-// Sacrifice Lena: Creatures you control with power less than Lena's power gain indestructible until end of turn.
+	// Lena, Selfless Champion {4}{W}{W}
+	// Legendary Creature — Human Knight
+	// 3/3
+	// When Lena enters, create a 1/1 white Soldier creature token for each nontoken creature you control.
+	// Sacrifice Lena: Creatures you control with power less than Lena's power gain indestructible until end of turn.
 	// XXX: sac → power-comparison indestructible portion not implemented (no power-LT-source filter primitive)
 	Register("Lena, Selfless Champion", func() Card {
 		return NewCreature("Lena, Selfless Champion", "{4}{W}{W}", 3, 3,
@@ -490,10 +492,10 @@ func registerCreatures() {
 		)
 	})
 
-// Lightwalker {1}{W}
-// Creature — Human Warrior
-// 2/1
-// This creature has flying as long as it has a +1/+1 counter on it.
+	// Lightwalker {1}{W}
+	// Creature — Human Warrior
+	// 2/1
+	// This creature has flying as long as it has a +1/+1 counter on it.
 	Register("Lightwalker", func() Card {
 		return NewCreature("Lightwalker", "{1}{W}", 2, 1,
 			WithSubTypes("Human", "Warrior"),
@@ -511,11 +513,11 @@ func registerCreatures() {
 		)
 	})
 
-// Linvala, Keeper of Silence {2}{W}{W}
-// Legendary Creature — Angel
-// 3/4
-// Flying
-// Activated abilities of creatures your opponents control can't be activated.
+	// Linvala, Keeper of Silence {2}{W}{W}
+	// Legendary Creature — Angel
+	// 3/4
+	// Flying
+	// Activated abilities of creatures your opponents control can't be activated.
 	// XXX: requires opponent-activated-ability suppression
 	Register("Linvala, Keeper of Silence", func() Card {
 		return NewCreature("Linvala, Keeper of Silence", "{2}{W}{W}", 3, 4,
@@ -525,10 +527,10 @@ func registerCreatures() {
 		)
 	})
 
-// Mentor of the Meek {2}{W}
-// Creature — Human Soldier
-// 2/2
-// Whenever another creature you control with power 2 or less enters, you may pay {1}. If you do, draw a card.
+	// Mentor of the Meek {2}{W}
+	// Creature — Human Soldier
+	// 2/2
+	// Whenever another creature you control with power 2 or less enters, you may pay {1}. If you do, draw a card.
 	Register("Mentor of the Meek", func() Card {
 		return NewCreature("Mentor of the Meek", "{2}{W}", 2, 2,
 			WithSubTypes("Human", "Soldier"),
@@ -562,10 +564,10 @@ func registerCreatures() {
 		)
 	})
 
-// Mesa Unicorn {1}{W}
-// Creature — Unicorn
-// 2/2
-// Lifelink (Damage dealt by this creature also causes you to gain that much life.)
+	// Mesa Unicorn {1}{W}
+	// Creature — Unicorn
+	// 2/2
+	// Lifelink (Damage dealt by this creature also causes you to gain that much life.)
 	Register("Mesa Unicorn", func() Card {
 		return NewCreature("Mesa Unicorn", "{1}{W}", 2, 2,
 			WithSubTypes("Unicorn"),
@@ -573,12 +575,12 @@ func registerCreatures() {
 		)
 	})
 
-// Mikaeus, the Lunarch {X}{W}
-// Legendary Creature — Human Cleric
-// 0/0
-// Mikaeus enters with X +1/+1 counters on it.
-// {T}: Put a +1/+1 counter on Mikaeus.
-// {T}, Remove a +1/+1 counter from Mikaeus: Put a +1/+1 counter on each other creature you control.
+	// Mikaeus, the Lunarch {X}{W}
+	// Legendary Creature — Human Cleric
+	// 0/0
+	// Mikaeus enters with X +1/+1 counters on it.
+	// {T}: Put a +1/+1 counter on Mikaeus.
+	// {T}, Remove a +1/+1 counter from Mikaeus: Put a +1/+1 counter on each other creature you control.
 	Register("Mikaeus, the Lunarch", func() Card {
 		return NewCreature("Mikaeus, the Lunarch", "{X}{W}", 0, 0,
 			WithSubTypes("Human", "Cleric"),
@@ -605,11 +607,11 @@ func registerCreatures() {
 		)
 	})
 
-// Patron of the Valiant {3}{W}{W}
-// Creature — Angel
-// 4/4
-// Flying
-// When this creature enters, put a +1/+1 counter on each creature you control with a +1/+1 counter on it.
+	// Patron of the Valiant {3}{W}{W}
+	// Creature — Angel
+	// 4/4
+	// Flying
+	// When this creature enters, put a +1/+1 counter on each creature you control with a +1/+1 counter on it.
 	Register("Patron of the Valiant", func() Card {
 		return NewCreature("Patron of the Valiant", "{3}{W}{W}", 4, 4,
 			WithSubTypes("Angel"),
@@ -628,11 +630,11 @@ func registerCreatures() {
 		)
 	})
 
-// Rhox Faithmender {3}{W}
-// Creature — Rhino Monk
-// 1/5
-// Lifelink (Damage dealt by this creature also causes you to gain that much life.)
-// If you would gain life, you gain twice that much life instead.
+	// Rhox Faithmender {3}{W}
+	// Creature — Rhino Monk
+	// 1/5
+	// Lifelink (Damage dealt by this creature also causes you to gain that much life.)
+	// If you would gain life, you gain twice that much life instead.
 	// XXX: requires life-gain replacement primitive (LifeGainAction has no WithAmount)
 	Register("Rhox Faithmender", func() Card {
 		return NewCreature("Rhox Faithmender", "{3}{W}", 1, 5,
@@ -641,10 +643,10 @@ func registerCreatures() {
 		)
 	})
 
-// Ronom Unicorn {1}{W}
-// Creature — Unicorn
-// 2/2
-// Sacrifice this creature: Destroy target enchantment.
+	// Ronom Unicorn {1}{W}
+	// Creature — Unicorn
+	// 2/2
+	// Sacrifice this creature: Destroy target enchantment.
 	Register("Ronom Unicorn", func() Card {
 		return NewCreature("Ronom Unicorn", "{1}{W}", 2, 2,
 			WithSubTypes("Unicorn"),
@@ -656,11 +658,11 @@ func registerCreatures() {
 		)
 	})
 
-// Steel-Plume Marshal {3}{W}{W}
-// Creature — Bird Soldier
-// 3/3
-// Flying
-// Whenever this creature attacks, other attacking creatures you control with flying get +2/+2 until end of turn.
+	// Steel-Plume Marshal {3}{W}{W}
+	// Creature — Bird Soldier
+	// 3/3
+	// Flying
+	// Whenever this creature attacks, other attacking creatures you control with flying get +2/+2 until end of turn.
 	Register("Steel-Plume Marshal", func() Card {
 		return NewCreature("Steel-Plume Marshal", "{3}{W}{W}", 3, 3,
 			WithSubTypes("Bird", "Soldier"),
@@ -680,10 +682,10 @@ func registerCreatures() {
 		)
 	})
 
-// Stone Haven Pilgrim {1}{W}
-// Creature — Kor Cleric
-// 2/2
-// Whenever this creature attacks, if you control an artifact or enchantment, this creature gets +1/+1 and gains lifelink until end of turn.
+	// Stone Haven Pilgrim {1}{W}
+	// Creature — Kor Cleric
+	// 2/2
+	// Whenever this creature attacks, if you control an artifact or enchantment, this creature gets +1/+1 and gains lifelink until end of turn.
 	Register("Stone Haven Pilgrim", func() Card {
 		return NewCreature("Stone Haven Pilgrim", "{1}{W}", 2, 2,
 			WithSubTypes("Kor", "Cleric"),
@@ -702,10 +704,10 @@ func registerCreatures() {
 		)
 	})
 
-// Supply Runners {4}{W}
-// Creature — Dog
-// 2/2
-// When this creature enters, put a +1/+1 counter on each other creature you control.
+	// Supply Runners {4}{W}
+	// Creature — Dog
+	// 2/2
+	// When this creature enters, put a +1/+1 counter on each other creature you control.
 	Register("Supply Runners", func() Card {
 		return NewCreature("Supply Runners", "{4}{W}", 2, 2,
 			WithSubTypes("Dog"),
@@ -722,12 +724,12 @@ func registerCreatures() {
 		)
 	})
 
-// Trusty Retriever {3}{W}
-// Creature — Dog
-// 2/3
-// When this creature enters, choose one —
-// • Put a +1/+1 counter on this creature.
-// • Return target artifact or enchantment card from your graveyard to your hand.
+	// Trusty Retriever {3}{W}
+	// Creature — Dog
+	// 2/3
+	// When this creature enters, choose one —
+	// • Put a +1/+1 counter on this creature.
+	// • Return target artifact or enchantment card from your graveyard to your hand.
 	// XXX: requires modal ETB trigger
 	Register("Trusty Retriever", func() Card {
 		return NewCreature("Trusty Retriever", "{3}{W}", 2, 3,
@@ -735,11 +737,11 @@ func registerCreatures() {
 		)
 	})
 
-// Voice of the Provinces {4}{W}{W}
-// Creature — Angel
-// 3/3
-// Flying
-// When this creature enters, create a 1/1 white Human creature token.
+	// Voice of the Provinces {4}{W}{W}
+	// Creature — Angel
+	// 3/3
+	// Flying
+	// When this creature enters, create a 1/1 white Human creature token.
 	Register("Voice of the Provinces", func() Card {
 		return NewCreature("Voice of the Provinces", "{4}{W}{W}", 3, 3,
 			WithSubTypes("Angel"),
@@ -751,22 +753,21 @@ func registerCreatures() {
 		)
 	})
 
-
 	// ===== BLUE CREATURES =====
 
-// Aegis Turtle {U}
-// Creature — Turtle
-// 0/5
+	// Aegis Turtle {U}
+	// Creature — Turtle
+	// 0/5
 	Register("Aegis Turtle", func() Card {
 		return NewCreature("Aegis Turtle", "{U}", 0, 5,
 			WithSubTypes("Turtle"),
 		)
 	})
 
-// Archaeomender {2}{U}
-// Creature — Human Wizard
-// 2/3
-// When this creature enters, return target artifact card from your graveyard to your hand.
+	// Archaeomender {2}{U}
+	// Creature — Human Wizard
+	// 2/3
+	// When this creature enters, return target artifact card from your graveyard to your hand.
 	Register("Archaeomender", func() Card {
 		return NewCreature("Archaeomender", "{2}{U}", 2, 3,
 			WithSubTypes("Human", "Wizard"),
@@ -775,11 +776,11 @@ func registerCreatures() {
 		)
 	})
 
-// Battleground Geist {4}{U}
-// Creature — Spirit
-// 3/3
-// Flying
-// Other Spirit creatures you control get +1/+0.
+	// Battleground Geist {4}{U}
+	// Creature — Spirit
+	// 3/3
+	// Flying
+	// Other Spirit creatures you control get +1/+0.
 	Register("Battleground Geist", func() Card {
 		return NewCreature("Battleground Geist", "{4}{U}", 3, 3,
 			WithSubTypes("Spirit"),
@@ -800,11 +801,11 @@ func registerCreatures() {
 		)
 	})
 
-// Belltower Sphinx {4}{U}
-// Creature — Sphinx
-// 2/5
-// Flying
-// Whenever a source deals damage to this creature, that source's controller mills that many cards.
+	// Belltower Sphinx {4}{U}
+	// Creature — Sphinx
+	// 2/5
+	// Flying
+	// Whenever a source deals damage to this creature, that source's controller mills that many cards.
 	// XXX: trigger pipeline doesn't expose damage-source ID to the effect, so we
 	// can't identify the damage source's controller. Implementing as Flying only.
 	Register("Belltower Sphinx", func() Card {
@@ -814,10 +815,10 @@ func registerCreatures() {
 		)
 	})
 
-// Bruvac the Grandiloquent {2}{U}
-// Legendary Creature — Human Advisor
-// 1/4
-// If an opponent would mill one or more cards, they mill twice that many cards instead. (To mill a card, a player puts the top card of their library into their graveyard.)
+	// Bruvac the Grandiloquent {2}{U}
+	// Legendary Creature — Human Advisor
+	// 1/4
+	// If an opponent would mill one or more cards, they mill twice that many cards instead. (To mill a card, a player puts the top card of their library into their graveyard.)
 	// XXX: requires mill replacement effect
 	Register("Bruvac the Grandiloquent", func() Card {
 		return NewCreature("Bruvac the Grandiloquent", "{2}{U}", 1, 4,
@@ -826,11 +827,11 @@ func registerCreatures() {
 		)
 	})
 
-// Cloudreader Sphinx {4}{U}
-// Creature — Sphinx
-// 3/4
-// Flying
-// When this creature enters, scry 2. (Look at the top two cards of your library, then put any number of them on the bottom and the rest on top in any order.)
+	// Cloudreader Sphinx {4}{U}
+	// Creature — Sphinx
+	// 3/4
+	// Flying
+	// When this creature enters, scry 2. (Look at the top two cards of your library, then put any number of them on the bottom and the rest on top in any order.)
 	// XXX: requires scry primitive
 	Register("Cloudreader Sphinx", func() Card {
 		return NewCreature("Cloudreader Sphinx", "{4}{U}", 3, 4,
@@ -839,11 +840,11 @@ func registerCreatures() {
 		)
 	})
 
-// Corsair Captain {2}{U}
-// Creature — Human Pirate
-// 2/2
-// When this creature enters, create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
-// Other Pirates you control get +1/+1.
+	// Corsair Captain {2}{U}
+	// Creature — Human Pirate
+	// 2/2
+	// When this creature enters, create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+	// Other Pirates you control get +1/+1.
 	// XXX: requires Treasure token primitive
 	Register("Corsair Captain", func() Card {
 		return NewCreature("Corsair Captain", "{2}{U}", 2, 2,
@@ -851,12 +852,12 @@ func registerCreatures() {
 		)
 	})
 
-// Crookclaw Transmuter {3}{U}
-// Creature — Bird Wizard
-// 3/1
-// Flash
-// Flying
-// When this creature enters, switch target creature's power and toughness until end of turn.
+	// Crookclaw Transmuter {3}{U}
+	// Creature — Bird Wizard
+	// 3/1
+	// Flash
+	// Flying
+	// When this creature enters, switch target creature's power and toughness until end of turn.
 	// XXX: engine has no Flash keyword yet
 	Register("Crookclaw Transmuter", func() Card {
 		return NewCreature("Crookclaw Transmuter", "{3}{U}", 3, 1,
@@ -883,10 +884,10 @@ func registerCreatures() {
 		)
 	})
 
-// Cryptic Serpent {5}{U}{U}
-// Creature — Serpent
-// 6/5
-// This spell costs {1} less to cast for each instant and sorcery card in your graveyard.
+	// Cryptic Serpent {5}{U}{U}
+	// Creature — Serpent
+	// 6/5
+	// This spell costs {1} less to cast for each instant and sorcery card in your graveyard.
 	// XXX: requires self-cost-reduction-by-graveyard-count primitive
 	Register("Cryptic Serpent", func() Card {
 		return NewCreature("Cryptic Serpent", "{5}{U}{U}", 6, 5,
@@ -894,12 +895,12 @@ func registerCreatures() {
 		)
 	})
 
-// Departed Deckhand {1}{U}
-// Creature — Spirit Pirate
-// 2/2
-// When this creature becomes the target of a spell, sacrifice it.
-// This creature can't be blocked except by Spirits.
-// {3}{U}: Another target creature you control can't be blocked this turn except by Spirits.
+	// Departed Deckhand {1}{U}
+	// Creature — Spirit Pirate
+	// 2/2
+	// When this creature becomes the target of a spell, sacrifice it.
+	// This creature can't be blocked except by Spirits.
+	// {3}{U}: Another target creature you control can't be blocked this turn except by Spirits.
 	// XXX: requires becomes-target trigger and "can't be blocked except by X" restriction
 	Register("Departed Deckhand", func() Card {
 		return NewCreature("Departed Deckhand", "{1}{U}", 2, 2,
@@ -907,10 +908,10 @@ func registerCreatures() {
 		)
 	})
 
-// Erratic Visionary {1}{U}
-// Creature — Human Wizard
-// 1/3
-// {1}{U}, {T}: Draw a card, then discard a card.
+	// Erratic Visionary {1}{U}
+	// Creature — Human Wizard
+	// 1/3
+	// {1}{U}, {T}: Draw a card, then discard a card.
 	Register("Erratic Visionary", func() Card {
 		return NewCreature("Erratic Visionary", "{1}{U}", 1, 3,
 			WithSubTypes("Human", "Wizard"),
@@ -937,10 +938,10 @@ func registerCreatures() {
 		)
 	})
 
-// Exclusion Mage {2}{U}
-// Creature — Human Wizard
-// 2/2
-// When this creature enters, return target creature an opponent controls to its owner's hand.
+	// Exclusion Mage {2}{U}
+	// Creature — Human Wizard
+	// 2/2
+	// When this creature enters, return target creature an opponent controls to its owner's hand.
 	Register("Exclusion Mage", func() Card {
 		return NewCreature("Exclusion Mage", "{2}{U}", 2, 2,
 			WithSubTypes("Human", "Wizard"),
@@ -949,12 +950,12 @@ func registerCreatures() {
 		)
 	})
 
-// Inniaz, the Gale Force {3}{U}{U}
-// Legendary Creature — Djinn
-// 4/4
-// Flying
-// {2}{W/U}: Attacking creatures with flying get +1/+1 until end of turn. ({W/U} can be paid with either {W} or {U}.)
-// Whenever three or more creatures you control with flying attack, each player gains control of a nonland permanent of your choice controlled by the player to their right.
+	// Inniaz, the Gale Force {3}{U}{U}
+	// Legendary Creature — Djinn
+	// 4/4
+	// Flying
+	// {2}{W/U}: Attacking creatures with flying get +1/+1 until end of turn. ({W/U} can be paid with either {W} or {U}.)
+	// Whenever three or more creatures you control with flying attack, each player gains control of a nonland permanent of your choice controlled by the player to their right.
 	// XXX: requires hybrid mana cost {W/U} and player-to-right (multiplayer) mechanics
 	Register("Inniaz, the Gale Force", func() Card {
 		return NewCreature("Inniaz, the Gale Force", "{3}{U}{U}", 4, 4,
@@ -964,11 +965,11 @@ func registerCreatures() {
 		)
 	})
 
-// Kira, Great Glass-Spinner {1}{U}{U}
-// Legendary Creature — Spirit
-// 2/2
-// Flying
-// Creatures you control have "Whenever this creature becomes the target of a spell or ability for the first time each turn, counter that spell or ability."
+	// Kira, Great Glass-Spinner {1}{U}{U}
+	// Legendary Creature — Spirit
+	// 2/2
+	// Flying
+	// Creatures you control have "Whenever this creature becomes the target of a spell or ability for the first time each turn, counter that spell or ability."
 	// XXX: requires becomes-target trigger
 	Register("Kira, Great Glass-Spinner", func() Card {
 		return NewCreature("Kira, Great Glass-Spinner", "{1}{U}{U}", 2, 2,
@@ -978,10 +979,10 @@ func registerCreatures() {
 		)
 	})
 
-// Kitesail Corsair {1}{U}
-// Creature — Human Pirate
-// 2/1
-// This creature has flying as long as it's attacking.
+	// Kitesail Corsair {1}{U}
+	// Creature — Human Pirate
+	// 2/1
+	// This creature has flying as long as it's attacking.
 	Register("Kitesail Corsair", func() Card {
 		return NewCreature("Kitesail Corsair", "{1}{U}", 2, 1,
 			WithSubTypes("Human", "Pirate"),
@@ -999,10 +1000,10 @@ func registerCreatures() {
 		)
 	})
 
-// Murmuring Phantasm {1}{U}
-// Creature — Spirit
-// 0/5
-// Defender
+	// Murmuring Phantasm {1}{U}
+	// Creature — Spirit
+	// 0/5
+	// Defender
 	Register("Murmuring Phantasm", func() Card {
 		return NewCreature("Murmuring Phantasm", "{1}{U}", 0, 5,
 			WithSubTypes("Spirit"),
@@ -1010,10 +1011,10 @@ func registerCreatures() {
 		)
 	})
 
-// Mystic Archaeologist {1}{U}
-// Creature — Human Wizard
-// 2/1
-// {3}{U}{U}: Draw two cards.
+	// Mystic Archaeologist {1}{U}
+	// Creature — Human Wizard
+	// 2/1
+	// {3}{U}{U}: Draw two cards.
 	Register("Mystic Archaeologist", func() Card {
 		return NewCreature("Mystic Archaeologist", "{1}{U}", 2, 1,
 			WithSubTypes("Human", "Wizard"),
@@ -1036,24 +1037,36 @@ func registerCreatures() {
 		)
 	})
 
-// Nebelgast Herald {2}{U}
-// Creature — Spirit
-// 2/1
-// Flash
-// Flying
-// Whenever this creature or another Spirit you control enters, tap target creature an opponent controls.
-	// XXX: engine has no Flash keyword and triggered abilities can't prompt user for targets at trigger time
+	// Nebelgast Herald {2}{U}
+	// Creature — Spirit
+	// 2/1
+	// Flash
+	// Flying
+	// Whenever this creature or another Spirit you control enters, tap target creature an opponent controls.
+	// XXX: engine has no Flash keyword
 	Register("Nebelgast Herald", func() Card {
 		return NewCreature("Nebelgast Herald", "{2}{U}", 2, 1,
 			WithSubTypes("Spirit"),
 			WithKeyword(Flying),
+			WithAbility(NewTriggered(EvtEntersBattlefield, false, TapTarget()).
+				SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
+					perm := g.FindPermanent(evt.SourceID)
+					if perm == nil {
+						return false
+					}
+					if perm.ID() == sourceID {
+						return true
+					}
+					return perm.Controller == controllerID && perm.HasSubType("Spirit")
+				}).
+				AddTarget(TargetPermanentOpponentControls(IsCreature))),
 		)
 	})
 
-// Octoprophet {3}{U}
-// Creature — Octopus
-// 3/3
-// When this creature enters, scry 2. (Look at the top two cards of your library, then put any number of them on the bottom and the rest on top in any order.)
+	// Octoprophet {3}{U}
+	// Creature — Octopus
+	// 3/3
+	// When this creature enters, scry 2. (Look at the top two cards of your library, then put any number of them on the bottom and the rest on top in any order.)
 	// XXX: requires scry primitive
 	Register("Octoprophet", func() Card {
 		return NewCreature("Octoprophet", "{3}{U}", 3, 3,
@@ -1061,11 +1074,11 @@ func registerCreatures() {
 		)
 	})
 
-// Oneirophage {3}{U}
-// Creature — Squid Illusion
-// 1/2
-// Flying
-// Whenever you draw a card, put a +1/+1 counter on this creature.
+	// Oneirophage {3}{U}
+	// Creature — Squid Illusion
+	// 1/2
+	// Flying
+	// Whenever you draw a card, put a +1/+1 counter on this creature.
 	Register("Oneirophage", func() Card {
 		return NewCreature("Oneirophage", "{3}{U}", 1, 2,
 			WithSubTypes("Squid", "Illusion"),
@@ -1076,12 +1089,12 @@ func registerCreatures() {
 		)
 	})
 
-// Ormos, Archive Keeper {4}{U}{U}
-// Legendary Creature — Sphinx
-// 5/5
-// Flying
-// If you would draw a card while your library has no cards in it, instead put five +1/+1 counters on Ormos.
-// {1}{U}{U}, Discard three cards with different names: Draw five cards.
+	// Ormos, Archive Keeper {4}{U}{U}
+	// Legendary Creature — Sphinx
+	// 5/5
+	// Flying
+	// If you would draw a card while your library has no cards in it, instead put five +1/+1 counters on Ormos.
+	// {1}{U}{U}, Discard three cards with different names: Draw five cards.
 	// XXX: requires different-names tracking and draw-replacement-from-empty-library
 	Register("Ormos, Archive Keeper", func() Card {
 		return NewCreature("Ormos, Archive Keeper", "{4}{U}{U}", 5, 5,
@@ -1091,11 +1104,11 @@ func registerCreatures() {
 		)
 	})
 
-// Prescient Chimera {3}{U}{U}
-// Creature — Chimera
-// 3/4
-// Flying
-// Whenever you cast an instant or sorcery spell, scry 1. (Look at the top card of your library. You may put that card on the bottom.)
+	// Prescient Chimera {3}{U}{U}
+	// Creature — Chimera
+	// 3/4
+	// Flying
+	// Whenever you cast an instant or sorcery spell, scry 1. (Look at the top card of your library. You may put that card on the bottom.)
 	// XXX: requires scry primitive
 	Register("Prescient Chimera", func() Card {
 		return NewCreature("Prescient Chimera", "{3}{U}{U}", 3, 4,
@@ -1104,10 +1117,10 @@ func registerCreatures() {
 		)
 	})
 
-// Prosperous Pirates {4}{U}
-// Creature — Human Pirate
-// 3/4
-// When this creature enters, create two Treasure tokens. (They're artifacts with "{T}, Sacrifice this token: Add one mana of any color.")
+	// Prosperous Pirates {4}{U}
+	// Creature — Human Pirate
+	// 3/4
+	// When this creature enters, create two Treasure tokens. (They're artifacts with "{T}, Sacrifice this token: Add one mana of any color.")
 	// XXX: requires Treasure token primitive
 	Register("Prosperous Pirates", func() Card {
 		return NewCreature("Prosperous Pirates", "{4}{U}", 3, 4,
@@ -1115,13 +1128,13 @@ func registerCreatures() {
 		)
 	})
 
-// Rattlechains {1}{U}
-// Creature — Spirit
-// 2/1
-// Flash
-// Flying
-// When this creature enters, target Spirit gains hexproof until end of turn.
-// You may cast Spirit spells as though they had flash.
+	// Rattlechains {1}{U}
+	// Creature — Spirit
+	// 2/1
+	// Flash
+	// Flying
+	// When this creature enters, target Spirit gains hexproof until end of turn.
+	// You may cast Spirit spells as though they had flash.
 	// XXX: engine has no Flash keyword, no "as though flash" cast permission
 	Register("Rattlechains", func() Card {
 		return NewCreature("Rattlechains", "{1}{U}", 2, 1,
@@ -1132,10 +1145,10 @@ func registerCreatures() {
 		)
 	})
 
-// Reckless Scholar {2}{U}
-// Creature — Human Wizard
-// 2/1
-// {T}: Target player draws a card, then discards a card.
+	// Reckless Scholar {2}{U}
+	// Creature — Human Wizard
+	// 2/1
+	// {T}: Target player draws a card, then discards a card.
 	Register("Reckless Scholar", func() Card {
 		return NewCreature("Reckless Scholar", "{2}{U}", 2, 1,
 			WithSubTypes("Human", "Wizard"),
@@ -1165,11 +1178,11 @@ func registerCreatures() {
 		)
 	})
 
-// Rishadan Airship {2}{U}
-// Creature — Human Pirate
-// 3/1
-// Flying
-// This creature can block only creatures with flying.
+	// Rishadan Airship {2}{U}
+	// Creature — Human Pirate
+	// 3/1
+	// Flying
+	// This creature can block only creatures with flying.
 	// XXX: requires "can block only X" restriction primitive
 	Register("Rishadan Airship", func() Card {
 		return NewCreature("Rishadan Airship", "{2}{U}", 3, 1,
@@ -1178,10 +1191,10 @@ func registerCreatures() {
 		)
 	})
 
-// Sage's Row Savant {1}{U}
-// Creature — Vedalken Wizard
-// 2/1
-// When this creature enters, scry 2.
+	// Sage's Row Savant {1}{U}
+	// Creature — Vedalken Wizard
+	// 2/1
+	// When this creature enters, scry 2.
 	// XXX: requires scry primitive
 	Register("Sage's Row Savant", func() Card {
 		return NewCreature("Sage's Row Savant", "{1}{U}", 2, 1,
@@ -1189,10 +1202,10 @@ func registerCreatures() {
 		)
 	})
 
-// Sailor of Means {2}{U}
-// Creature — Human Pirate
-// 1/4
-// When this creature enters, create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
+	// Sailor of Means {2}{U}
+	// Creature — Human Pirate
+	// 1/4
+	// When this creature enters, create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
 	// XXX: requires Treasure token primitive
 	Register("Sailor of Means", func() Card {
 		return NewCreature("Sailor of Means", "{2}{U}", 1, 4,
@@ -1200,11 +1213,11 @@ func registerCreatures() {
 		)
 	})
 
-// Scholar of the Lost Trove {5}{U}{U}
-// Creature — Sphinx
-// 5/5
-// Flying
-// When this creature enters, you may cast target instant, sorcery, or artifact card from your graveyard without paying its mana cost. If an instant or sorcery spell cast this way would be put into your graveyard, exile it instead.
+	// Scholar of the Lost Trove {5}{U}{U}
+	// Creature — Sphinx
+	// 5/5
+	// Flying
+	// When this creature enters, you may cast target instant, sorcery, or artifact card from your graveyard without paying its mana cost. If an instant or sorcery spell cast this way would be put into your graveyard, exile it instead.
 	// XXX: requires cast-from-graveyard alternate-cost
 	Register("Scholar of the Lost Trove", func() Card {
 		return NewCreature("Scholar of the Lost Trove", "{5}{U}{U}", 5, 5,
@@ -1213,10 +1226,10 @@ func registerCreatures() {
 		)
 	})
 
-// Sea Gate Oracle {2}{U}
-// Creature — Human Wizard
-// 1/3
-// When this creature enters, look at the top two cards of your library. Put one of them into your hand and the other on the bottom of your library.
+	// Sea Gate Oracle {2}{U}
+	// Creature — Human Wizard
+	// 1/3
+	// When this creature enters, look at the top two cards of your library. Put one of them into your hand and the other on the bottom of your library.
 	// XXX: ETB-look-at-top-N FuncEffect mutations don't appear in player.Hand()
 	// from tests; substituted GainLife placeholder until the underlying issue is investigated.
 	Register("Sea Gate Oracle", func() Card {
@@ -1226,22 +1239,25 @@ func registerCreatures() {
 		)
 	})
 
-// Selhoff Occultist {2}{U}
-// Creature — Human Rogue
-// 2/3
-// Whenever this creature or another creature dies, target player mills a card.
-	// XXX: triggered ability targets are not prompted; falls back to source-creature ID which doesn't match a player
+	// Selhoff Occultist {2}{U}
+	// Creature — Human Rogue
+	// 2/3
+	// Whenever this creature or another creature dies, target player mills a card.
 	Register("Selhoff Occultist", func() Card {
 		return NewCreature("Selhoff Occultist", "{2}{U}", 2, 3,
 			WithSubTypes("Human", "Rogue"),
+			WithAbility(AnyCreatureDiesTrigger(
+				MillTargetPlayer(Fixed(1)),
+				false,
+			).AddTarget(TargetPlayer())),
 		)
 	})
 
-// Sharding Sphinx {4}{U}{U}
-// Artifact Creature — Sphinx
-// 4/4
-// Flying
-// Whenever an artifact creature you control deals combat damage to a player, you may create a 1/1 blue Thopter artifact creature token with flying.
+	// Sharding Sphinx {4}{U}{U}
+	// Artifact Creature — Sphinx
+	// 4/4
+	// Flying
+	// Whenever an artifact creature you control deals combat damage to a player, you may create a 1/1 blue Thopter artifact creature token with flying.
 	// XXX: requires "another artifact creature you control deals combat damage to a player" trigger predicate
 	Register("Sharding Sphinx", func() Card {
 		return NewCreature("Sharding Sphinx", "{4}{U}{U}", 4, 4,
@@ -1251,10 +1267,10 @@ func registerCreatures() {
 		)
 	})
 
-// Sigiled Starfish {1}{U}
-// Creature — Starfish
-// 0/3
-// {T}: Scry 1. (Look at the top card of your library. You may put that card on the bottom.)
+	// Sigiled Starfish {1}{U}
+	// Creature — Starfish
+	// 0/3
+	// {T}: Scry 1. (Look at the top card of your library. You may put that card on the bottom.)
 	// XXX: requires scry primitive
 	Register("Sigiled Starfish", func() Card {
 		return NewCreature("Sigiled Starfish", "{1}{U}", 0, 3,
@@ -1262,12 +1278,12 @@ func registerCreatures() {
 		)
 	})
 
-// Spectral Sailor {U}
-// Creature — Spirit Pirate
-// 1/1
-// Flash (You may cast this spell any time you could cast an instant.)
-// Flying
-// {3}{U}: Draw a card.
+	// Spectral Sailor {U}
+	// Creature — Spirit Pirate
+	// 1/1
+	// Flash (You may cast this spell any time you could cast an instant.)
+	// Flying
+	// {3}{U}: Draw a card.
 	// XXX: engine has no Flash keyword yet
 	Register("Spectral Sailor", func() Card {
 		return NewCreature("Spectral Sailor", "{U}", 1, 1,
@@ -1280,11 +1296,11 @@ func registerCreatures() {
 		)
 	})
 
-// Storm Sculptor {3}{U}
-// Creature — Merfolk Wizard
-// 3/2
-// This creature can't be blocked.
-// When this creature enters, return a creature you control to its owner's hand.
+	// Storm Sculptor {3}{U}
+	// Creature — Merfolk Wizard
+	// 3/2
+	// This creature can't be blocked.
+	// When this creature enters, return a creature you control to its owner's hand.
 	Register("Storm Sculptor", func() Card {
 		return NewCreature("Storm Sculptor", "{3}{U}", 3, 2,
 			WithSubTypes("Merfolk", "Wizard"),
@@ -1294,10 +1310,10 @@ func registerCreatures() {
 		)
 	})
 
-// Talrand, Sky Summoner {2}{U}{U}
-// Legendary Creature — Merfolk Wizard
-// 2/2
-// Whenever you cast an instant or sorcery spell, create a 2/2 blue Drake creature token with flying.
+	// Talrand, Sky Summoner {2}{U}{U}
+	// Legendary Creature — Merfolk Wizard
+	// 2/2
+	// Whenever you cast an instant or sorcery spell, create a 2/2 blue Drake creature token with flying.
 	Register("Talrand, Sky Summoner", func() Card {
 		instOrSorc := NewCardFilter("instant or sorcery", func(c Card) bool {
 			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
@@ -1312,24 +1328,24 @@ func registerCreatures() {
 		)
 	})
 
-// Towering-Wave Mystic {1}{U}
-// Creature — Merfolk Wizard
-// 2/1
-// Whenever this creature deals damage, target player mills that many cards.
-// XXX: target-player auto-bound to the damaged player (engine doesn't yet support trigger-target selection)
+	// Towering-Wave Mystic {1}{U}
+	// Creature — Merfolk Wizard
+	// 2/1
+	// Whenever this creature deals damage, target player mills that many cards.
 	Register("Towering-Wave Mystic", func() Card {
 		return NewCreature("Towering-Wave Mystic", "{1}{U}", 2, 1,
 			WithSubTypes("Merfolk", "Wizard"),
 			WithAbility(NewTriggered(EvtDamageDealt, false,
 				MillTargetPlayer(EventAmountValue()),
-			).SetConditionData(EventSourceIsSelf{})),
+			).SetConditionData(EventSourceIsSelf{}).
+				AddTarget(TargetPlayer())),
 		)
 	})
 
-// Vedalken Archmage {2}{U}{U}
-// Creature — Vedalken Wizard
-// 0/2
-// Whenever you cast an artifact spell, draw a card.
+	// Vedalken Archmage {2}{U}{U}
+	// Creature — Vedalken Wizard
+	// 0/2
+	// Whenever you cast an artifact spell, draw a card.
 	Register("Vedalken Archmage", func() Card {
 		return NewCreature("Vedalken Archmage", "{2}{U}{U}", 0, 2,
 			WithSubTypes("Vedalken", "Wizard"),
@@ -1340,10 +1356,10 @@ func registerCreatures() {
 		)
 	})
 
-// Vedalken Entrancer {3}{U}
-// Creature — Vedalken Wizard
-// 1/4
-// {U}, {T}: Target player mills two cards.
+	// Vedalken Entrancer {3}{U}
+	// Creature — Vedalken Wizard
+	// 1/4
+	// {U}, {T}: Target player mills two cards.
 	Register("Vedalken Entrancer", func() Card {
 		return NewCreature("Vedalken Entrancer", "{3}{U}", 1, 4,
 			WithSubTypes("Vedalken", "Wizard"),
@@ -1356,44 +1372,28 @@ func registerCreatures() {
 		)
 	})
 
-// Wall of Lost Thoughts {1}{U}
-// Creature — Wall
-// 0/4
-// Defender (This creature can't attack.)
-// When this creature enters, target player mills four cards. (They put the top four cards of their library into their graveyard.)
-// XXX: target-player defaults to opponent (engine doesn't yet support trigger-target selection)
+	// Wall of Lost Thoughts {1}{U}
+	// Creature — Wall
+	// 0/4
+	// Defender (This creature can't attack.)
+	// When this creature enters, target player mills four cards. (They put the top four cards of their library into their graveyard.)
 	Register("Wall of Lost Thoughts", func() Card {
 		return NewCreature("Wall of Lost Thoughts", "{1}{U}", 0, 4,
 			WithSubTypes("Wall"),
 			WithKeyword(Defender),
 			WithAbility(EntersBattlefieldTrigger(
-				FuncEffect("target player mills four cards",
-					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						p := g.GetOpponent(controller)
-						if p == nil {
-							return nil
-						}
-						lib := p.Library()
-						for i := 0; i < 4 && len(lib) > 0; i++ {
-							card := lib[len(lib)-1]
-							lib = lib[:len(lib)-1]
-							p.AddToGraveyard(card)
-						}
-						p.SetLibrary(lib)
-						return nil
-					}),
+				MillTargetPlayer(Fixed(4)),
 				false,
-			)),
+			).AddTarget(TargetPlayer())),
 		)
 	})
 
-// Warden of Evos Isle {2}{U}
-// Creature — Bird Wizard
-// 2/2
-// Flying
-// Creature spells with flying you cast cost {1} less to cast.
-// XXX: requires keyword-based spell cost reduction
+	// Warden of Evos Isle {2}{U}
+	// Creature — Bird Wizard
+	// 2/2
+	// Flying
+	// Creature spells with flying you cast cost {1} less to cast.
+	// XXX: requires keyword-based spell cost reduction
 	Register("Warden of Evos Isle", func() Card {
 		return NewCreature("Warden of Evos Isle", "{2}{U}", 2, 2,
 			WithSubTypes("Bird", "Wizard"),
@@ -1401,11 +1401,11 @@ func registerCreatures() {
 		)
 	})
 
-// Windreader Sphinx {5}{U}{U}
-// Creature — Sphinx
-// 3/7
-// Flying
-// Whenever a creature with flying attacks, you may draw a card.
+	// Windreader Sphinx {5}{U}{U}
+	// Creature — Sphinx
+	// 3/7
+	// Flying
+	// Whenever a creature with flying attacks, you may draw a card.
 	Register("Windreader Sphinx", func() Card {
 		return NewCreature("Windreader Sphinx", "{5}{U}{U}", 3, 7,
 			WithSubTypes("Sphinx"),
@@ -1416,11 +1416,11 @@ func registerCreatures() {
 		)
 	})
 
-// Windstorm Drake {4}{U}
-// Creature — Drake
-// 3/3
-// Flying
-// Other creatures you control with flying get +1/+0.
+	// Windstorm Drake {4}{U}
+	// Creature — Drake
+	// 3/3
+	// Flying
+	// Other creatures you control with flying get +1/+0.
 	Register("Windstorm Drake", func() Card {
 		return NewCreature("Windstorm Drake", "{4}{U}", 3, 3,
 			WithSubTypes("Drake"),
@@ -1441,12 +1441,12 @@ func registerCreatures() {
 		)
 	})
 
-// Wishful Merfolk {1}{U}
-// Creature — Merfolk
-// 3/2
-// Defender
-// {1}{U}: This creature loses defender and becomes a Human until end of turn.
-// XXX: requires temporary subtype change with keyword removal until EOT
+	// Wishful Merfolk {1}{U}
+	// Creature — Merfolk
+	// 3/2
+	// Defender
+	// {1}{U}: This creature loses defender and becomes a Human until end of turn.
+	// XXX: requires temporary subtype change with keyword removal until EOT
 	Register("Wishful Merfolk", func() Card {
 		return NewCreature("Wishful Merfolk", "{1}{U}", 3, 2,
 			WithSubTypes("Merfolk"),
@@ -1454,23 +1454,23 @@ func registerCreatures() {
 		)
 	})
 
-
 	// ===== BLACK CREATURES =====
 
-// A-Blood Artist {1}{B}
-// Creature — Vampire
-// 0/1
-// Whenever Blood Artist or another creature dies, target opponent loses 1 life and you gain 1 life.
-// XXX: target-opponent defaults to the lone opponent (engine doesn't yet support trigger-target selection)
+	// A-Blood Artist {1}{B}
+	// Creature — Vampire
+	// 0/1
+	// Whenever Blood Artist or another creature dies, target opponent loses 1 life and you gain 1 life.
 	Register("A-Blood Artist", func() Card {
 		return NewCreature("A-Blood Artist", "{1}{B}", 0, 1,
 			WithSubTypes("Vampire"),
 			WithAbility(AnyCreatureDiesTrigger(
 				FuncEffect("target opponent loses 1 life and you gain 1 life",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						if tp := g.GetOpponent(controller); tp != nil {
-							tp.LoseLife(1)
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) > 0 {
+							if tp := g.GetPlayer(targets[0]); tp != nil {
+								tp.LoseLife(1)
+							}
 						}
 						if cp := g.GetPlayer(controller); cp != nil {
 							g.PlayerGainLife(cp, 1)
@@ -1478,23 +1478,25 @@ func registerCreatures() {
 						return nil
 					}),
 				false,
-			)),
+			).AddTarget(TargetOpponent())),
 		)
 	})
 
-// Black Cat {1}{B}
-// Creature — Zombie Cat
-// 1/1
-// When this creature dies, target opponent discards a card at random.
-// XXX: target-opponent defaults to the lone opponent (engine doesn't yet support trigger-target selection)
+	// Black Cat {1}{B}
+	// Creature — Zombie Cat
+	// 1/1
+	// When this creature dies, target opponent discards a card at random.
 	Register("Black Cat", func() Card {
 		return NewCreature("Black Cat", "{1}{B}", 1, 1,
 			WithSubTypes("Zombie", "Cat"),
 			WithAbility(NewTriggered(EvtCreatureDied, false,
 				FuncEffect("target opponent discards a card at random",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						p := g.GetOpponent(controller)
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						p := g.GetPlayer(targets[0])
 						if p == nil || len(p.Hand()) == 0 {
 							return nil
 						}
@@ -1502,15 +1504,15 @@ func registerCreatures() {
 						p.DiscardCard(p.Hand()[idx].ID())
 						return nil
 					}),
-			).SetConditionData(EventSourceIsSelf{})),
+			).SetConditionData(EventSourceIsSelf{}).AddTarget(TargetOpponent())),
 		)
 	})
 
-// Blighted Bat {2}{B}
-// Creature — Zombie Bat
-// 2/1
-// Flying
-// {1}: This creature gains haste until end of turn.
+	// Blighted Bat {2}{B}
+	// Creature — Zombie Bat
+	// 2/1
+	// Flying
+	// {1}: This creature gains haste until end of turn.
 	Register("Blighted Bat", func() Card {
 		return NewCreature("Blighted Bat", "{2}{B}", 2, 1,
 			WithSubTypes("Zombie", "Bat"),
@@ -1522,20 +1524,21 @@ func registerCreatures() {
 		)
 	})
 
-// Blood Artist {1}{B}
-// Creature — Vampire
-// 0/1
-// Whenever this creature or another creature dies, target player loses 1 life and you gain 1 life.
-// XXX: target-player defaults to opponent (engine doesn't yet support trigger-target selection)
+	// Blood Artist {1}{B}
+	// Creature — Vampire
+	// 0/1
+	// Whenever this creature or another creature dies, target player loses 1 life and you gain 1 life.
 	Register("Blood Artist", func() Card {
 		return NewCreature("Blood Artist", "{1}{B}", 0, 1,
 			WithSubTypes("Vampire"),
 			WithAbility(AnyCreatureDiesTrigger(
 				FuncEffect("target player loses 1 life and you gain 1 life",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						if tp := g.GetOpponent(controller); tp != nil {
-							tp.LoseLife(1)
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) > 0 {
+							if tp := g.GetPlayer(targets[0]); tp != nil {
+								tp.LoseLife(1)
+							}
 						}
 						if cp := g.GetPlayer(controller); cp != nil {
 							g.PlayerGainLife(cp, 1)
@@ -1543,14 +1546,14 @@ func registerCreatures() {
 						return nil
 					}),
 				false,
-			)),
+			).AddTarget(TargetPlayer())),
 		)
 	})
 
-// Blood Host {3}{B}{B}
-// Creature — Vampire
-// 3/3
-// {1}{B}, Sacrifice another creature: Put a +1/+1 counter on this creature and you gain 2 life.
+	// Blood Host {3}{B}{B}
+	// Creature — Vampire
+	// 3/3
+	// {1}{B}, Sacrifice another creature: Put a +1/+1 counter on this creature and you gain 2 life.
 	Register("Blood Host", func() Card {
 		return NewCreature("Blood Host", "{3}{B}{B}", 3, 3,
 			WithSubTypes("Vampire"),
@@ -1565,23 +1568,22 @@ func registerCreatures() {
 		)
 	})
 
-// Bloodbond Vampire {2}{B}{B}
-// Creature — Vampire Shaman Ally
-// 3/3
-// Whenever you gain life, put a +1/+1 counter on this creature.
-// XXX: requires gain-life event trigger
+	// Bloodbond Vampire {2}{B}{B}
+	// Creature — Vampire Shaman Ally
+	// 3/3
+	// Whenever you gain life, put a +1/+1 counter on this creature.
+	// XXX: requires gain-life event trigger
 	Register("Bloodbond Vampire", func() Card {
 		return NewCreature("Bloodbond Vampire", "{2}{B}{B}", 3, 3,
 			WithSubTypes("Vampire", "Shaman", "Ally"),
 		)
 	})
 
-// Bloodhunter Bat {3}{B}
-// Creature — Bat
-// 2/2
-// Flying
-// When this creature enters, target player loses 2 life and you gain 2 life.
-// XXX: target-player defaults to opponent (engine doesn't yet support trigger-target selection)
+	// Bloodhunter Bat {3}{B}
+	// Creature — Bat
+	// 2/2
+	// Flying
+	// When this creature enters, target player loses 2 life and you gain 2 life.
 	Register("Bloodhunter Bat", func() Card {
 		return NewCreature("Bloodhunter Bat", "{3}{B}", 2, 2,
 			WithSubTypes("Bat"),
@@ -1589,9 +1591,11 @@ func registerCreatures() {
 			WithAbility(EntersBattlefieldTrigger(
 				FuncEffect("target player loses 2 life and you gain 2 life",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						if tp := g.GetOpponent(controller); tp != nil {
-							tp.LoseLife(2)
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) > 0 {
+							if tp := g.GetPlayer(targets[0]); tp != nil {
+								tp.LoseLife(2)
+							}
 						}
 						if cp := g.GetPlayer(controller); cp != nil {
 							g.PlayerGainLife(cp, 2)
@@ -1599,27 +1603,27 @@ func registerCreatures() {
 						return nil
 					}),
 				false,
-			)),
+			).AddTarget(TargetPlayer())),
 		)
 	})
 
-// Bogbrew Witch {3}{B}
-// Creature — Human Wizard
-// 1/3
-// {2}, {T}: Search your library for a card named Festering Newt or Bubbling Cauldron, put it onto the battlefield tapped, then shuffle.
-// XXX: requires search-by-name-list-to-battlefield-tapped primitive
+	// Bogbrew Witch {3}{B}
+	// Creature — Human Wizard
+	// 1/3
+	// {2}, {T}: Search your library for a card named Festering Newt or Bubbling Cauldron, put it onto the battlefield tapped, then shuffle.
+	// XXX: requires search-by-name-list-to-battlefield-tapped primitive
 	Register("Bogbrew Witch", func() Card {
 		return NewCreature("Bogbrew Witch", "{3}{B}", 1, 3,
 			WithSubTypes("Human", "Wizard"),
 		)
 	})
 
-// Bone Picker {3}{B}
-// Creature — Bird
-// 3/2
-// This spell costs {3} less to cast if a creature died this turn.
-// Flying, deathtouch
-// XXX: requires conditional cast-cost reduction
+	// Bone Picker {3}{B}
+	// Creature — Bird
+	// 3/2
+	// This spell costs {3} less to cast if a creature died this turn.
+	// Flying, deathtouch
+	// XXX: requires conditional cast-cost reduction
 	Register("Bone Picker", func() Card {
 		return NewCreature("Bone Picker", "{3}{B}", 3, 2,
 			WithSubTypes("Bird"),
@@ -1628,10 +1632,10 @@ func registerCreatures() {
 		)
 	})
 
-// Burglar Rat {1}{B}
-// Creature — Rat
-// 1/1
-// When this creature enters, each opponent discards a card.
+	// Burglar Rat {1}{B}
+	// Creature — Rat
+	// 1/1
+	// When this creature enters, each opponent discards a card.
 	Register("Burglar Rat", func() Card {
 		return NewCreature("Burglar Rat", "{1}{B}", 1, 1,
 			WithSubTypes("Rat"),
@@ -1657,63 +1661,38 @@ func registerCreatures() {
 		)
 	})
 
-// Cadaver Imp {1}{B}{B}
-// Creature — Imp
-// 1/1
-// Flying
-// When this creature enters, you may return target creature card from your graveyard to your hand.
-// XXX: target-creature-from-graveyard auto-chosen by player (engine doesn't yet support trigger-target selection)
+	// Cadaver Imp {1}{B}{B}
+	// Creature — Imp
+	// 1/1
+	// Flying
+	// When this creature enters, you may return target creature card from your graveyard to your hand.
 	Register("Cadaver Imp", func() Card {
 		return NewCreature("Cadaver Imp", "{1}{B}{B}", 1, 1,
 			WithSubTypes("Imp"),
 			WithKeyword(Flying),
 			WithAbility(EntersBattlefieldTrigger(
-				FuncEffect("you may return target creature card from your graveyard to your hand",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						p := g.GetPlayer(controller)
-						if p == nil {
-							return nil
-						}
-						var creatures []Card
-						for _, c := range p.Graveyard() {
-							if c.HasType(TypeCreature) {
-								creatures = append(creatures, c)
-							}
-						}
-						if len(creatures) == 0 {
-							return nil
-						}
-						chosen := p.ChooseCardFromLibrary(creatures, "return creature card from graveyard to hand", g)
-						if chosen == nil {
-							return nil
-						}
-						if card, ok := p.RemoveFromGraveyard(chosen.ID()); ok {
-							p.AddToHand(card)
-						}
-						return nil
-					}),
+				ReturnFromGraveyardToHandTarget(),
 				true,
-			)),
+			).AddTarget(TargetCreatureInYourGraveyard())),
 		)
 	})
 
-// Cauldron Familiar {B}
-// Creature — Cat
-// 1/1
-// When this creature enters, each opponent loses 1 life and you gain 1 life.
-// Sacrifice a Food: Return this card from your graveyard to the battlefield.
-// XXX: requires Food token primitive
+	// Cauldron Familiar {B}
+	// Creature — Cat
+	// 1/1
+	// When this creature enters, each opponent loses 1 life and you gain 1 life.
+	// Sacrifice a Food: Return this card from your graveyard to the battlefield.
+	// XXX: requires Food token primitive
 	Register("Cauldron Familiar", func() Card {
 		return NewCreature("Cauldron Familiar", "{B}", 1, 1,
 			WithSubTypes("Cat"),
 		)
 	})
 
-// Child of Night {1}{B}
-// Creature — Vampire
-// 2/1
-// Lifelink
+	// Child of Night {1}{B}
+	// Creature — Vampire
+	// 2/1
+	// Lifelink
 	Register("Child of Night", func() Card {
 		return NewCreature("Child of Night", "{1}{B}", 2, 1,
 			WithSubTypes("Vampire"),
@@ -1721,10 +1700,10 @@ func registerCreatures() {
 		)
 	})
 
-// Corpse Hauler {1}{B}
-// Creature — Human Rogue
-// 2/1
-// {2}{B}, Sacrifice this creature: Return another target creature card from your graveyard to your hand.
+	// Corpse Hauler {1}{B}
+	// Creature — Human Rogue
+	// 2/1
+	// {2}{B}, Sacrifice this creature: Return another target creature card from your graveyard to your hand.
 	Register("Corpse Hauler", func() Card {
 		return NewCreature("Corpse Hauler", "{1}{B}", 2, 1,
 			WithSubTypes("Human", "Rogue"),
@@ -1737,22 +1716,22 @@ func registerCreatures() {
 		)
 	})
 
-// Corpse Traders {3}{B}
-// Creature — Human Rogue
-// 3/3
-// {2}{B}, Sacrifice a creature: Target opponent reveals their hand. You choose a card from it. That player discards that card. Activate only as a sorcery.
-// XXX: requires reveal-hand-and-controller-chooses-discard primitive
+	// Corpse Traders {3}{B}
+	// Creature — Human Rogue
+	// 3/3
+	// {2}{B}, Sacrifice a creature: Target opponent reveals their hand. You choose a card from it. That player discards that card. Activate only as a sorcery.
+	// XXX: requires reveal-hand-and-controller-chooses-discard primitive
 	Register("Corpse Traders", func() Card {
 		return NewCreature("Corpse Traders", "{3}{B}", 3, 3,
 			WithSubTypes("Human", "Rogue"),
 		)
 	})
 
-// Crow of Dark Tidings {2}{B}
-// Creature — Zombie Bird
-// 2/1
-// Flying
-// When this creature enters or dies, mill two cards. (Put the top two cards of your library into your graveyard.)
+	// Crow of Dark Tidings {2}{B}
+	// Creature — Zombie Bird
+	// 2/1
+	// Flying
+	// When this creature enters or dies, mill two cards. (Put the top two cards of your library into your graveyard.)
 	Register("Crow of Dark Tidings", func() Card {
 		millSelf2 := FuncEffect("mill two cards",
 			EffectProperties{},
@@ -1779,22 +1758,22 @@ func registerCreatures() {
 		)
 	})
 
-// Drainpipe Vermin {B}
-// Creature — Rat
-// 1/1
-// When this creature dies, you may pay {B}. If you do, target player discards a card.
-// XXX: requires player-controlled may-pay-mana primitive in trigger resolution
+	// Drainpipe Vermin {B}
+	// Creature — Rat
+	// 1/1
+	// When this creature dies, you may pay {B}. If you do, target player discards a card.
+	// XXX: requires player-controlled may-pay-mana primitive in trigger resolution
 	Register("Drainpipe Vermin", func() Card {
 		return NewCreature("Drainpipe Vermin", "{B}", 1, 1,
 			WithSubTypes("Rat"),
 		)
 	})
 
-// Drana, Liberator of Malakir {1}{B}{B}
-// Legendary Creature — Vampire Ally
-// 2/3
-// Flying, first strike
-// Whenever Drana deals combat damage to a player, put a +1/+1 counter on each attacking creature you control.
+	// Drana, Liberator of Malakir {1}{B}{B}
+	// Legendary Creature — Vampire Ally
+	// 2/3
+	// Flying, first strike
+	// Whenever Drana deals combat damage to a player, put a +1/+1 counter on each attacking creature you control.
 	Register("Drana, Liberator of Malakir", func() Card {
 		return NewCreature("Drana, Liberator of Malakir", "{1}{B}{B}", 2, 3,
 			WithSubTypes("Vampire", "Ally"),
@@ -1817,63 +1796,39 @@ func registerCreatures() {
 		)
 	})
 
-// Dutiful Attendant {2}{B}
-// Creature — Human Warrior
-// 1/2
-// When this creature dies, return another target creature card from your graveyard to your hand.
-// XXX: target-creature-from-graveyard auto-chosen (engine doesn't yet support trigger-target selection)
+	// Dutiful Attendant {2}{B}
+	// Creature — Human Warrior
+	// 1/2
+	// When this creature dies, return another target creature card from your graveyard to your hand.
 	Register("Dutiful Attendant", func() Card {
 		return NewCreature("Dutiful Attendant", "{2}{B}", 1, 2,
 			WithSubTypes("Human", "Warrior"),
 			WithAbility(NewTriggered(EvtCreatureDied, false,
-				FuncEffect("return another target creature card from your graveyard to your hand",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						p := g.GetPlayer(controller)
-						if p == nil {
-							return nil
-						}
-						var creatures []Card
-						for _, c := range p.Graveyard() {
-							if c.HasType(TypeCreature) && c.ID() != sourceID {
-								creatures = append(creatures, c)
-							}
-						}
-						if len(creatures) == 0 {
-							return nil
-						}
-						chosen := p.ChooseCardFromLibrary(creatures, "return another creature card from graveyard to hand", g)
-						if chosen == nil {
-							return nil
-						}
-						if card, ok := p.RemoveFromGraveyard(chosen.ID()); ok {
-							p.AddToHand(card)
-						}
-						return nil
-					}),
-			).SetConditionData(EventSourceIsSelf{})),
+				ReturnFromGraveyardToHandTarget(),
+			).SetConditionData(EventSourceIsSelf{}).
+				AddTarget(TargetOtherCreatureInYourGraveyard())),
 		)
 	})
 
-// Entomber Exarch {2}{B}{B}
-// Creature — Phyrexian Cleric
-// 2/2
-// When this creature enters, choose one —
-// • Return target creature card from your graveyard to your hand.
-// • Target opponent reveals their hand. You choose a noncreature card from it. That player discards that card.
-// XXX: requires modal-ETB and reveal-hand-and-controller-chooses-discard primitives
+	// Entomber Exarch {2}{B}{B}
+	// Creature — Phyrexian Cleric
+	// 2/2
+	// When this creature enters, choose one —
+	// • Return target creature card from your graveyard to your hand.
+	// • Target opponent reveals their hand. You choose a noncreature card from it. That player discards that card.
+	// XXX: requires modal-ETB and reveal-hand-and-controller-chooses-discard primitives
 	Register("Entomber Exarch", func() Card {
 		return NewCreature("Entomber Exarch", "{2}{B}{B}", 2, 2,
 			WithSubTypes("Phyrexian", "Cleric"),
 		)
 	})
 
-// Eternal Taskmaster {1}{B}
-// Creature — Zombie
-// 2/3
-// This creature enters tapped.
-// Whenever this creature attacks, you may pay {2}{B}. If you do, return target creature card from your graveyard to your hand.
-// XXX: requires player-controlled may-pay-mana primitive in trigger resolution
+	// Eternal Taskmaster {1}{B}
+	// Creature — Zombie
+	// 2/3
+	// This creature enters tapped.
+	// Whenever this creature attacks, you may pay {2}{B}. If you do, return target creature card from your graveyard to your hand.
+	// XXX: requires player-controlled may-pay-mana primitive in trigger resolution
 	Register("Eternal Taskmaster", func() Card {
 		return NewCreature("Eternal Taskmaster", "{1}{B}", 2, 3,
 			WithSubTypes("Zombie"),
@@ -1881,12 +1836,11 @@ func registerCreatures() {
 		)
 	})
 
-// Falkenrath Noble {3}{B}
-// Creature — Vampire Noble
-// 2/2
-// Flying
-// Whenever this creature or another creature dies, target player loses 1 life and you gain 1 life.
-// XXX: target-player defaults to opponent (engine doesn't yet support trigger-target selection)
+	// Falkenrath Noble {3}{B}
+	// Creature — Vampire Noble
+	// 2/2
+	// Flying
+	// Whenever this creature or another creature dies, target player loses 1 life and you gain 1 life.
 	Register("Falkenrath Noble", func() Card {
 		return NewCreature("Falkenrath Noble", "{3}{B}", 2, 2,
 			WithSubTypes("Vampire", "Noble"),
@@ -1894,9 +1848,11 @@ func registerCreatures() {
 			WithAbility(AnyCreatureDiesTrigger(
 				FuncEffect("target player loses 1 life and you gain 1 life",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						if tp := g.GetOpponent(controller); tp != nil {
-							tp.LoseLife(1)
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) > 0 {
+							if tp := g.GetPlayer(targets[0]); tp != nil {
+								tp.LoseLife(1)
+							}
 						}
 						if cp := g.GetPlayer(controller); cp != nil {
 							g.PlayerGainLife(cp, 1)
@@ -1904,17 +1860,17 @@ func registerCreatures() {
 						return nil
 					}),
 				false,
-			)),
+			).AddTarget(TargetPlayer())),
 		)
 	})
 
-// Fell Specter {3}{B}
-// Creature — Specter
-// 1/3
-// Flying
-// When this creature enters, target opponent discards a card.
-// Whenever an opponent discards a card, that player loses 2 life.
-// XXX: requires discard event for the "whenever an opponent discards" trigger
+	// Fell Specter {3}{B}
+	// Creature — Specter
+	// 1/3
+	// Flying
+	// When this creature enters, target opponent discards a card.
+	// Whenever an opponent discards a card, that player loses 2 life.
+	// XXX: requires discard event for the "whenever an opponent discards" trigger
 	Register("Fell Specter", func() Card {
 		return NewCreature("Fell Specter", "{3}{B}", 1, 3,
 			WithSubTypes("Specter"),
@@ -1922,48 +1878,43 @@ func registerCreatures() {
 		)
 	})
 
-// Festering Newt {B}
-// Creature — Salamander
-// 1/1
-// When this creature dies, target creature an opponent controls gets -1/-1 until end of turn. That creature gets -4/-4 instead if you control a creature named Bogbrew Witch.
-// XXX: target-creature auto-chosen (engine doesn't yet support trigger-target selection)
+	// Festering Newt {B}
+	// Creature — Salamander
+	// 1/1
+	// When this creature dies, target creature an opponent controls gets -1/-1 until end of turn. That creature gets -4/-4 instead if you control a creature named Bogbrew Witch.
 	Register("Festering Newt", func() Card {
 		return NewCreature("Festering Newt", "{B}", 1, 1,
 			WithSubTypes("Salamander"),
 			WithAbility(NewTriggered(EvtCreatureDied, false,
-				FuncEffect("target creature gets -1/-1 (-4/-4 with Bogbrew Witch) until end of turn",
+				FuncEffect("target creature an opponent controls gets -1/-1 (-4/-4 with Bogbrew Witch) until end of turn",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						candidates := g.FilterBattlefield(And(IsCreature, NotControlledBy(controller)))
-						if len(candidates) == 0 {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
 							return nil
 						}
-						player := g.GetPlayer(controller)
-						if player == nil {
-							return nil
-						}
-						chosen := player.ChoosePermanent(candidates, "-1/-1 to opponent's creature", g)
-						if chosen == nil {
+						target := g.FindPermanent(targets[0])
+						if target == nil {
 							return nil
 						}
 						amount := 1
 						if g.AnyBattlefield(And(IsCreature, ControlledBy(controller), Named("Bogbrew Witch"))) {
 							amount = 4
 						}
-						ce := TemporaryBoost(chosen.ID(), -amount, -amount)
+						ce := TemporaryBoost(target.ID(), -amount, -amount)
 						ce.SetSourceID(sourceID)
 						g.AddContinuousEffect(ce)
 						return nil
 					}),
-			).SetConditionData(EventSourceIsSelf{})),
+			).SetConditionData(EventSourceIsSelf{}).
+				AddTarget(TargetPermanentOpponentControls(IsCreature))),
 		)
 	})
 
-// Ghoulcaller Gisa {3}{B}{B}
-// Legendary Creature — Human Wizard
-// 3/4
-// {B}, {T}, Sacrifice another creature: Create X 2/2 black Zombie creature tokens, where X is the sacrificed creature's power.
-// XXX: requires sacrificed-creature-power capture in cost->effect chain
+	// Ghoulcaller Gisa {3}{B}{B}
+	// Legendary Creature — Human Wizard
+	// 3/4
+	// {B}, {T}, Sacrifice another creature: Create X 2/2 black Zombie creature tokens, where X is the sacrificed creature's power.
+	// XXX: requires sacrificed-creature-power capture in cost->effect chain
 	Register("Ghoulcaller Gisa", func() Card {
 		return NewCreature("Ghoulcaller Gisa", "{3}{B}{B}", 3, 4,
 			WithSubTypes("Human", "Wizard"),
@@ -1971,21 +1922,21 @@ func registerCreatures() {
 		)
 	})
 
-// Ghoulcaller's Accomplice {1}{B}
-// Creature — Human Rogue
-// 2/2
-// {3}{B}, Exile this card from your graveyard: Create a 2/2 black Zombie creature token. Activate only as a sorcery.
-// XXX: requires activated-from-graveyard abilities
+	// Ghoulcaller's Accomplice {1}{B}
+	// Creature — Human Rogue
+	// 2/2
+	// {3}{B}, Exile this card from your graveyard: Create a 2/2 black Zombie creature token. Activate only as a sorcery.
+	// XXX: requires activated-from-graveyard abilities
 	Register("Ghoulcaller's Accomplice", func() Card {
 		return NewCreature("Ghoulcaller's Accomplice", "{1}{B}", 2, 2,
 			WithSubTypes("Human", "Rogue"),
 		)
 	})
 
-// Ghoulraiser {1}{B}{B}
-// Creature — Zombie
-// 2/2
-// When this creature enters, return a Zombie card at random from your graveyard to your hand.
+	// Ghoulraiser {1}{B}{B}
+	// Creature — Zombie
+	// 2/2
+	// When this creature enters, return a Zombie card at random from your graveyard to your hand.
 	Register("Ghoulraiser", func() Card {
 		return NewCreature("Ghoulraiser", "{1}{B}{B}", 2, 2,
 			WithSubTypes("Zombie"),
@@ -2018,10 +1969,10 @@ func registerCreatures() {
 		)
 	})
 
-// Gifted Aetherborn {B}{B}
-// Creature — Aetherborn Vampire
-// 2/3
-// Deathtouch, lifelink
+	// Gifted Aetherborn {B}{B}
+	// Creature — Aetherborn Vampire
+	// 2/3
+	// Deathtouch, lifelink
 	Register("Gifted Aetherborn", func() Card {
 		return NewCreature("Gifted Aetherborn", "{B}{B}", 2, 3,
 			WithSubTypes("Aetherborn", "Vampire"),
@@ -2030,12 +1981,12 @@ func registerCreatures() {
 		)
 	})
 
-// Gonti, Lord of Luxury {2}{B}{B}
-// Legendary Creature — Aetherborn Rogue
-// 2/3
-// Deathtouch
-// When Gonti enters, look at the top four cards of target opponent's library, exile one of them face down, then put the rest on the bottom of that library in a random order. You may cast that card for as long as it remains exiled, and mana of any type can be spent to cast that spell.
-// XXX: requires cast-from-exile-with-any-color
+	// Gonti, Lord of Luxury {2}{B}{B}
+	// Legendary Creature — Aetherborn Rogue
+	// 2/3
+	// Deathtouch
+	// When Gonti enters, look at the top four cards of target opponent's library, exile one of them face down, then put the rest on the bottom of that library in a random order. You may cast that card for as long as it remains exiled, and mana of any type can be spent to cast that spell.
+	// XXX: requires cast-from-exile-with-any-color
 	Register("Gonti, Lord of Luxury", func() Card {
 		return NewCreature("Gonti, Lord of Luxury", "{2}{B}{B}", 2, 3,
 			WithSubTypes("Aetherborn", "Rogue"),
@@ -2044,11 +1995,11 @@ func registerCreatures() {
 		)
 	})
 
-// Gravewaker {4}{B}{B}
-// Creature — Bird Spirit
-// 5/5
-// Flying (This creature can't be blocked except by creatures with flying or reach.)
-// {5}{B}{B}: Return target creature card from your graveyard to the battlefield tapped.
+	// Gravewaker {4}{B}{B}
+	// Creature — Bird Spirit
+	// 5/5
+	// Flying (This creature can't be blocked except by creatures with flying or reach.)
+	// {5}{B}{B}: Return target creature card from your graveyard to the battlefield tapped.
 	Register("Gravewaker", func() Card {
 		return NewCreature("Gravewaker", "{4}{B}{B}", 5, 5,
 			WithSubTypes("Bird", "Spirit"),
@@ -2080,10 +2031,10 @@ func registerCreatures() {
 		)
 	})
 
-// Gristle Grinner {4}{B}
-// Creature — Zombie
-// 3/3
-// Whenever a creature dies, this creature gets +2/+2 until end of turn.
+	// Gristle Grinner {4}{B}
+	// Creature — Zombie
+	// 3/3
+	// Whenever a creature dies, this creature gets +2/+2 until end of turn.
 	Register("Gristle Grinner", func() Card {
 		return NewCreature("Gristle Grinner", "{4}{B}", 3, 3,
 			WithSubTypes("Zombie"),
@@ -2094,11 +2045,11 @@ func registerCreatures() {
 		)
 	})
 
-// Harvester of Souls {4}{B}{B}
-// Creature — Demon
-// 5/5
-// Deathtouch (Any amount of damage this deals to a creature is enough to destroy it.)
-// Whenever another nontoken creature dies, you may draw a card.
+	// Harvester of Souls {4}{B}{B}
+	// Creature — Demon
+	// 5/5
+	// Deathtouch (Any amount of damage this deals to a creature is enough to destroy it.)
+	// Whenever another nontoken creature dies, you may draw a card.
 	Register("Harvester of Souls", func() Card {
 		return NewCreature("Harvester of Souls", "{4}{B}{B}", 5, 5,
 			WithSubTypes("Demon"),
@@ -2115,24 +2066,24 @@ func registerCreatures() {
 		)
 	})
 
-// Kalastria Nightwatch {4}{B}
-// Creature — Vampire Warrior Ally
-// 4/5
-// Whenever you gain life, this creature gains flying until end of turn.
-// XXX: requires gain-life event trigger
+	// Kalastria Nightwatch {4}{B}
+	// Creature — Vampire Warrior Ally
+	// 4/5
+	// Whenever you gain life, this creature gains flying until end of turn.
+	// XXX: requires gain-life event trigger
 	Register("Kalastria Nightwatch", func() Card {
 		return NewCreature("Kalastria Nightwatch", "{4}{B}", 4, 5,
 			WithSubTypes("Vampire", "Warrior", "Ally"),
 		)
 	})
 
-// Kels, Fight Fixer {2}{B}{B}
-// Legendary Creature — Azra Warlock
-// 4/3
-// Menace
-// Whenever you sacrifice a creature, you may pay {U/B}. If you do, draw a card. ({U/B} can be paid with either {U} or {B}.)
-// {1}, Sacrifice a creature: Kels gains indestructible until end of turn.
-// XXX: requires sacrifice event and hybrid-mana costs
+	// Kels, Fight Fixer {2}{B}{B}
+	// Legendary Creature — Azra Warlock
+	// 4/3
+	// Menace
+	// Whenever you sacrifice a creature, you may pay {U/B}. If you do, draw a card. ({U/B} can be paid with either {U} or {B}.)
+	// {1}, Sacrifice a creature: Kels gains indestructible until end of turn.
+	// XXX: requires sacrifice event and hybrid-mana costs
 	Register("Kels, Fight Fixer", func() Card {
 		return NewCreature("Kels, Fight Fixer", "{2}{B}{B}", 4, 3,
 			WithSubTypes("Azra", "Warlock"),
@@ -2146,40 +2097,24 @@ func registerCreatures() {
 		)
 	})
 
-// Lawless Broker {2}{B}
-// Creature — Aetherborn Rogue
-// 3/2
-// When this creature dies, put a +1/+1 counter on target creature you control.
-// XXX: target-creature auto-chosen (engine doesn't yet support trigger-target selection)
+	// Lawless Broker {2}{B}
+	// Creature — Aetherborn Rogue
+	// 3/2
+	// When this creature dies, put a +1/+1 counter on target creature you control.
 	Register("Lawless Broker", func() Card {
 		return NewCreature("Lawless Broker", "{2}{B}", 3, 2,
 			WithSubTypes("Aetherborn", "Rogue"),
 			WithAbility(NewTriggered(EvtCreatureDied, false,
-				FuncEffect("put a +1/+1 counter on target creature you control",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						candidates := g.FilterBattlefield(And(IsCreature, ControlledBy(controller)))
-						if len(candidates) == 0 {
-							return nil
-						}
-						player := g.GetPlayer(controller)
-						if player == nil {
-							return nil
-						}
-						chosen := player.ChoosePermanent(candidates, "+1/+1 counter on target creature you control", g)
-						if chosen != nil {
-							chosen.AddCounter(P1P1, 1)
-						}
-						return nil
-					}),
-			).SetConditionData(EventSourceIsSelf{})),
+				AddCounters(P1P1, Fixed(1)),
+			).SetConditionData(EventSourceIsSelf{}).
+				AddTarget(TargetCreatureYouControl())),
 		)
 	})
 
-// Liliana's Elite {2}{B}
-// Creature — Zombie
-// 1/1
-// This creature gets +1/+1 for each creature card in your graveyard.
+	// Liliana's Elite {2}{B}
+	// Creature — Zombie
+	// 1/1
+	// This creature gets +1/+1 for each creature card in your graveyard.
 	Register("Liliana's Elite", func() Card {
 		return NewCreature("Liliana's Elite", "{2}{B}", 1, 1,
 			WithSubTypes("Zombie"),
@@ -2204,11 +2139,11 @@ func registerCreatures() {
 		)
 	})
 
-// Liliana's Reaver {2}{B}{B}
-// Creature — Zombie
-// 4/3
-// Deathtouch
-// Whenever this creature deals combat damage to a player, that player discards a card and you create a tapped 2/2 black Zombie creature token.
+	// Liliana's Reaver {2}{B}{B}
+	// Creature — Zombie
+	// 4/3
+	// Deathtouch
+	// Whenever this creature deals combat damage to a player, that player discards a card and you create a tapped 2/2 black Zombie creature token.
 	Register("Liliana's Reaver", func() Card {
 		return NewCreature("Liliana's Reaver", "{2}{B}{B}", 4, 3,
 			WithSubTypes("Zombie"),
@@ -2243,12 +2178,12 @@ func registerCreatures() {
 		)
 	})
 
-// Malakir Familiar {2}{B}
-// Creature — Bat
-// 2/1
-// Flying, deathtouch
-// Whenever you gain life, this creature gets +1/+1 until end of turn.
-// XXX: requires gain-life event trigger
+	// Malakir Familiar {2}{B}
+	// Creature — Bat
+	// 2/1
+	// Flying, deathtouch
+	// Whenever you gain life, this creature gets +1/+1 until end of turn.
+	// XXX: requires gain-life event trigger
 	Register("Malakir Familiar", func() Card {
 		return NewCreature("Malakir Familiar", "{2}{B}", 2, 1,
 			WithSubTypes("Bat"),
@@ -2257,21 +2192,21 @@ func registerCreatures() {
 		)
 	})
 
-// Mausoleum Turnkey {3}{B}
-// Creature — Ogre Rogue
-// 3/2
-// When this creature enters, return target creature card of an opponent's choice from your graveyard to your hand.
-// XXX: requires opponent-chooses-target primitive
+	// Mausoleum Turnkey {3}{B}
+	// Creature — Ogre Rogue
+	// 3/2
+	// When this creature enters, return target creature card of an opponent's choice from your graveyard to your hand.
+	// XXX: requires opponent-chooses-target primitive
 	Register("Mausoleum Turnkey", func() Card {
 		return NewCreature("Mausoleum Turnkey", "{3}{B}", 3, 2,
 			WithSubTypes("Ogre", "Rogue"),
 		)
 	})
 
-// Miasmic Mummy {1}{B}
-// Creature — Zombie Jackal
-// 2/2
-// When this creature enters, each player discards a card.
+	// Miasmic Mummy {1}{B}
+	// Creature — Zombie Jackal
+	// 2/2
+	// When this creature enters, each player discards a card.
 	Register("Miasmic Mummy", func() Card {
 		return NewCreature("Miasmic Mummy", "{1}{B}", 2, 2,
 			WithSubTypes("Zombie", "Jackal"),
@@ -2294,11 +2229,11 @@ func registerCreatures() {
 		)
 	})
 
-// Mire Triton {1}{B}
-// Creature — Zombie Merfolk
-// 2/1
-// Deathtouch
-// When this creature enters, mill two cards and you gain 2 life. (To mill a card, put the top card of your library into your graveyard.)
+	// Mire Triton {1}{B}
+	// Creature — Zombie Merfolk
+	// 2/1
+	// Deathtouch
+	// When this creature enters, mill two cards and you gain 2 life. (To mill a card, put the top card of your library into your graveyard.)
 	Register("Mire Triton", func() Card {
 		return NewCreature("Mire Triton", "{1}{B}", 2, 1,
 			WithSubTypes("Zombie", "Merfolk"),
@@ -2326,11 +2261,11 @@ func registerCreatures() {
 		)
 	})
 
-// Nightshade Stinger {B}
-// Creature — Faerie Rogue
-// 1/1
-// Flying
-// This creature can't block.
+	// Nightshade Stinger {B}
+	// Creature — Faerie Rogue
+	// 1/1
+	// Flying
+	// This creature can't block.
 	Register("Nightshade Stinger", func() Card {
 		return NewCreature("Nightshade Stinger", "{B}", 1, 1,
 			WithSubTypes("Faerie", "Rogue"),
@@ -2342,11 +2277,11 @@ func registerCreatures() {
 		)
 	})
 
-// Nocturnal Feeder {2}{B}
-// Creature — Vampire Rogue
-// 2/1
-// Flying
-// When this creature dies, each opponent loses 2 life and you gain 2 life.
+	// Nocturnal Feeder {2}{B}
+	// Creature — Vampire Rogue
+	// 2/1
+	// Flying
+	// When this creature dies, each opponent loses 2 life and you gain 2 life.
 	Register("Nocturnal Feeder", func() Card {
 		return NewCreature("Nocturnal Feeder", "{2}{B}", 2, 1,
 			WithSubTypes("Vampire", "Rogue"),
@@ -2369,23 +2304,23 @@ func registerCreatures() {
 		)
 	})
 
-// Nyxathid {1}{B}{B}
-// Creature — Elemental
-// 7/7
-// As this creature enters, choose an opponent.
-// This creature gets -1/-1 for each card in the chosen player's hand.
-// XXX: requires as-enters-choose-player
+	// Nyxathid {1}{B}{B}
+	// Creature — Elemental
+	// 7/7
+	// As this creature enters, choose an opponent.
+	// This creature gets -1/-1 for each card in the chosen player's hand.
+	// XXX: requires as-enters-choose-player
 	Register("Nyxathid", func() Card {
 		return NewCreature("Nyxathid", "{1}{B}{B}", 7, 7,
 			WithSubTypes("Elemental"),
 		)
 	})
 
-// Ogre Slumlord {3}{B}{B}
-// Creature — Ogre Rogue
-// 3/3
-// Whenever another nontoken creature dies, you may create a 1/1 black Rat creature token.
-// Rats you control have deathtouch.
+	// Ogre Slumlord {3}{B}{B}
+	// Creature — Ogre Rogue
+	// 3/3
+	// Whenever another nontoken creature dies, you may create a 1/1 black Rat creature token.
+	// Rats you control have deathtouch.
 	Register("Ogre Slumlord", func() Card {
 		return NewCreature("Ogre Slumlord", "{3}{B}{B}", 3, 3,
 			WithSubTypes("Ogre", "Rogue"),
@@ -2402,13 +2337,13 @@ func registerCreatures() {
 		)
 	})
 
-// Oona's Blackguard {1}{B}
-// Creature — Faerie Rogue
-// 1/1
-// Flying
-// Each other Rogue creature you control enters with an additional +1/+1 counter on it.
-// Whenever a creature you control with a +1/+1 counter on it deals combat damage to a player, that player discards a card.
-// XXX: requires "enters with additional counter" replacement effect
+	// Oona's Blackguard {1}{B}
+	// Creature — Faerie Rogue
+	// 1/1
+	// Flying
+	// Each other Rogue creature you control enters with an additional +1/+1 counter on it.
+	// Whenever a creature you control with a +1/+1 counter on it deals combat damage to a player, that player discards a card.
+	// XXX: requires "enters with additional counter" replacement effect
 	Register("Oona's Blackguard", func() Card {
 		return NewCreature("Oona's Blackguard", "{1}{B}", 1, 1,
 			WithSubTypes("Faerie", "Rogue"),
@@ -2416,10 +2351,10 @@ func registerCreatures() {
 		)
 	})
 
-// Phyrexian Broodlings {1}{B}{B}
-// Creature — Phyrexian Minion
-// 2/2
-// {1}, Sacrifice a creature: Put a +1/+1 counter on this creature.
+	// Phyrexian Broodlings {1}{B}{B}
+	// Creature — Phyrexian Minion
+	// 2/2
+	// {1}, Sacrifice a creature: Put a +1/+1 counter on this creature.
 	Register("Phyrexian Broodlings", func() Card {
 		return NewCreature("Phyrexian Broodlings", "{1}{B}{B}", 2, 2,
 			WithSubTypes("Phyrexian", "Minion"),
@@ -2431,11 +2366,11 @@ func registerCreatures() {
 		)
 	})
 
-// Phyrexian Debaser {3}{B}
-// Creature — Phyrexian Carrier
-// 2/2
-// Flying
-// {T}, Sacrifice this creature: Target creature gets -2/-2 until end of turn.
+	// Phyrexian Debaser {3}{B}
+	// Creature — Phyrexian Carrier
+	// 2/2
+	// Flying
+	// {T}, Sacrifice this creature: Target creature gets -2/-2 until end of turn.
 	Register("Phyrexian Debaser", func() Card {
 		return NewCreature("Phyrexian Debaser", "{3}{B}", 2, 2,
 			WithSubTypes("Phyrexian", "Carrier"),
@@ -2449,10 +2384,10 @@ func registerCreatures() {
 		)
 	})
 
-// Phyrexian Gargantua {4}{B}{B}
-// Creature — Phyrexian Horror
-// 4/4
-// When this creature enters, you draw two cards and you lose 2 life.
+	// Phyrexian Gargantua {4}{B}{B}
+	// Creature — Phyrexian Horror
+	// 4/4
+	// When this creature enters, you draw two cards and you lose 2 life.
 	Register("Phyrexian Gargantua", func() Card {
 		return NewCreature("Phyrexian Gargantua", "{4}{B}{B}", 4, 4,
 			WithSubTypes("Phyrexian", "Horror"),
@@ -2466,10 +2401,10 @@ func registerCreatures() {
 		)
 	})
 
-// Phyrexian Rager {2}{B}
-// Creature — Phyrexian Horror
-// 2/2
-// When this creature enters, you draw a card and you lose 1 life.
+	// Phyrexian Rager {2}{B}
+	// Creature — Phyrexian Horror
+	// 2/2
+	// When this creature enters, you draw a card and you lose 1 life.
 	Register("Phyrexian Rager", func() Card {
 		return NewCreature("Phyrexian Rager", "{2}{B}", 2, 2,
 			WithSubTypes("Phyrexian", "Horror"),
@@ -2483,10 +2418,10 @@ func registerCreatures() {
 		)
 	})
 
-// Plagued Rusalka {B}
-// Creature — Spirit
-// 1/1
-// {B}, Sacrifice a creature: Target creature gets -1/-1 until end of turn.
+	// Plagued Rusalka {B}
+	// Creature — Spirit
+	// 1/1
+	// {B}, Sacrifice a creature: Target creature gets -1/-1 until end of turn.
 	Register("Plagued Rusalka", func() Card {
 		return NewCreature("Plagued Rusalka", "{B}", 1, 1,
 			WithSubTypes("Spirit"),
@@ -2499,44 +2434,27 @@ func registerCreatures() {
 		)
 	})
 
-// Ravenous Chupacabra {2}{B}{B}
-// Creature — Beast Horror
-// 2/2
-// When this creature enters, destroy target creature an opponent controls.
-// XXX: target-creature defaults to first available opponent creature (engine doesn't yet support trigger-target selection)
+	// Ravenous Chupacabra {2}{B}{B}
+	// Creature — Beast Horror
+	// 2/2
+	// When this creature enters, destroy target creature an opponent controls.
 	Register("Ravenous Chupacabra", func() Card {
 		return NewCreature("Ravenous Chupacabra", "{2}{B}{B}", 2, 2,
 			WithSubTypes("Beast", "Horror"),
 			WithAbility(EntersBattlefieldTrigger(
-				FuncEffect("destroy target creature an opponent controls",
-					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						candidates := g.FilterBattlefield(And(IsCreature, NotControlledBy(controller)))
-						if len(candidates) == 0 {
-							return nil
-						}
-						player := g.GetPlayer(controller)
-						if player == nil {
-							return nil
-						}
-						chosen := player.ChoosePermanent(candidates, "destroy target creature an opponent controls", g)
-						if chosen != nil {
-							g.DestroyPermanent(chosen)
-						}
-						return nil
-					}),
+				DestroyTargetPermanent(),
 				false,
-			)),
+			).AddTarget(TargetPermanentOpponentControls(IsCreature))),
 		)
 	})
 
-// Sangromancer {2}{B}{B}
-// Creature — Vampire Shaman
-// 3/3
-// Flying
-// Whenever a creature an opponent controls dies, you may gain 3 life.
-// Whenever an opponent discards a card, you may gain 3 life.
-// XXX: discard-trigger half requires discard event
+	// Sangromancer {2}{B}{B}
+	// Creature — Vampire Shaman
+	// 3/3
+	// Flying
+	// Whenever a creature an opponent controls dies, you may gain 3 life.
+	// Whenever an opponent discards a card, you may gain 3 life.
+	// XXX: discard-trigger half requires discard event
 	Register("Sangromancer", func() Card {
 		return NewCreature("Sangromancer", "{2}{B}{B}", 3, 3,
 			WithSubTypes("Vampire", "Shaman"),
@@ -2547,23 +2465,23 @@ func registerCreatures() {
 		)
 	})
 
-// Sanitarium Skeleton {B}
-// Creature — Skeleton
-// 1/2
-// {2}{B}: Return this card from your graveyard to your hand.
-// XXX: requires activated-from-graveyard abilities
+	// Sanitarium Skeleton {B}
+	// Creature — Skeleton
+	// 1/2
+	// {2}{B}: Return this card from your graveyard to your hand.
+	// XXX: requires activated-from-graveyard abilities
 	Register("Sanitarium Skeleton", func() Card {
 		return NewCreature("Sanitarium Skeleton", "{B}", 1, 2,
 			WithSubTypes("Skeleton"),
 		)
 	})
 
-// Scourge of Nel Toth {5}{B}{B}
-// Creature — Zombie Dragon
-// 6/6
-// Flying
-// You may cast this creature from your graveyard by paying {B}{B} and sacrificing two creatures rather than paying its mana cost.
-// XXX: requires cast-from-graveyard alternate-cost
+	// Scourge of Nel Toth {5}{B}{B}
+	// Creature — Zombie Dragon
+	// 6/6
+	// Flying
+	// You may cast this creature from your graveyard by paying {B}{B} and sacrificing two creatures rather than paying its mana cost.
+	// XXX: requires cast-from-graveyard alternate-cost
 	Register("Scourge of Nel Toth", func() Card {
 		return NewCreature("Scourge of Nel Toth", "{5}{B}{B}", 6, 6,
 			WithSubTypes("Zombie", "Dragon"),
@@ -2571,44 +2489,40 @@ func registerCreatures() {
 		)
 	})
 
-// Shambling Goblin {B}
-// Creature — Zombie Goblin
-// 1/1
-// When this creature dies, target creature an opponent controls gets -1/-1 until end of turn.
-// XXX: target-creature auto-chosen (engine doesn't yet support trigger-target selection)
+	// Shambling Goblin {B}
+	// Creature — Zombie Goblin
+	// 1/1
+	// When this creature dies, target creature an opponent controls gets -1/-1 until end of turn.
 	Register("Shambling Goblin", func() Card {
 		return NewCreature("Shambling Goblin", "{B}", 1, 1,
 			WithSubTypes("Zombie", "Goblin"),
 			WithAbility(NewTriggered(EvtCreatureDied, false,
 				FuncEffect("target creature an opponent controls gets -1/-1 until end of turn",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						candidates := g.FilterBattlefield(And(IsCreature, NotControlledBy(controller)))
-						if len(candidates) == 0 {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
 							return nil
 						}
-						player := g.GetPlayer(controller)
-						if player == nil {
+						target := g.FindPermanent(targets[0])
+						if target == nil {
 							return nil
 						}
-						chosen := player.ChoosePermanent(candidates, "-1/-1 to opponent's creature", g)
-						if chosen != nil {
-							ce := TemporaryBoost(chosen.ID(), -1, -1)
-							ce.SetSourceID(sourceID)
-							g.AddContinuousEffect(ce)
-						}
+						ce := TemporaryBoost(target.ID(), -1, -1)
+						ce.SetSourceID(sourceID)
+						g.AddContinuousEffect(ce)
 						return nil
 					}),
-			).SetConditionData(EventSourceIsSelf{})),
+			).SetConditionData(EventSourceIsSelf{}).
+				AddTarget(TargetPermanentOpponentControls(IsCreature))),
 		)
 	})
 
-// Sheoldred, Whispering One {5}{B}{B}
-// Legendary Creature — Phyrexian Praetor
-// 6/6
-// Swampwalk (This creature can't be blocked as long as defending player controls a Swamp.)
-// At the beginning of your upkeep, return target creature card from your graveyard to the battlefield.
-// At the beginning of each opponent's upkeep, that player sacrifices a creature of their choice.
+	// Sheoldred, Whispering One {5}{B}{B}
+	// Legendary Creature — Phyrexian Praetor
+	// 6/6
+	// Swampwalk (This creature can't be blocked as long as defending player controls a Swamp.)
+	// At the beginning of your upkeep, return target creature card from your graveyard to the battlefield.
+	// At the beginning of each opponent's upkeep, that player sacrifices a creature of their choice.
 	Register("Sheoldred, Whispering One", func() Card {
 		return NewCreature("Sheoldred, Whispering One", "{5}{B}{B}", 6, 6,
 			WithSubTypes("Phyrexian", "Praetor"),
@@ -2651,9 +2565,7 @@ func registerCreatures() {
 							return nil
 						}
 						var creatures []*Permanent
-						for _, p := range g.FilterBattlefield(And(IsCreature, ControlledBy(active.PlayerID()))) {
-							creatures = append(creatures, p)
-						}
+						creatures = append(creatures, g.FilterBattlefield(And(IsCreature, ControlledBy(active.PlayerID())))...)
 						if len(creatures) == 0 {
 							return nil
 						}
@@ -2667,10 +2579,10 @@ func registerCreatures() {
 		)
 	})
 
-// Slate Street Ruffian {2}{B}
-// Creature — Human Warrior
-// 2/2
-// Whenever this creature becomes blocked, defending player discards a card.
+	// Slate Street Ruffian {2}{B}
+	// Creature — Human Warrior
+	// 2/2
+	// Whenever this creature becomes blocked, defending player discards a card.
 	Register("Slate Street Ruffian", func() Card {
 		return NewCreature("Slate Street Ruffian", "{2}{B}", 2, 2,
 			WithSubTypes("Human", "Warrior"),
@@ -2691,12 +2603,12 @@ func registerCreatures() {
 		)
 	})
 
-// Swarm of Bloodflies {4}{B}
-// Creature — Insect
-// 0/0
-// Flying
-// This creature enters with two +1/+1 counters on it.
-// Whenever another creature dies, put a +1/+1 counter on this creature.
+	// Swarm of Bloodflies {4}{B}
+	// Creature — Insect
+	// 0/0
+	// Flying
+	// This creature enters with two +1/+1 counters on it.
+	// Whenever another creature dies, put a +1/+1 counter on this creature.
 	Register("Swarm of Bloodflies", func() Card {
 		return NewCreature("Swarm of Bloodflies", "{4}{B}", 0, 0,
 			WithSubTypes("Insect"),
@@ -2708,24 +2620,24 @@ func registerCreatures() {
 		)
 	})
 
-// Tempting Witch {2}{B}
-// Creature — Human Warlock
-// 1/3
-// When this creature enters, create a Food token. (It's an artifact with "{2}, {T}, Sacrifice this token: You gain 3 life.")
-// {2}, {T}, Sacrifice a Food: Target player loses 3 life.
-// XXX: requires Food token primitive
+	// Tempting Witch {2}{B}
+	// Creature — Human Warlock
+	// 1/3
+	// When this creature enters, create a Food token. (It's an artifact with "{2}, {T}, Sacrifice this token: You gain 3 life.")
+	// {2}, {T}, Sacrifice a Food: Target player loses 3 life.
+	// XXX: requires Food token primitive
 	Register("Tempting Witch", func() Card {
 		return NewCreature("Tempting Witch", "{2}{B}", 1, 3,
 			WithSubTypes("Human", "Warlock"),
 		)
 	})
 
-// Tinybones, Trinket Thief {1}{B}
-// Legendary Creature — Skeleton Rogue
-// 1/2
-// At the beginning of each end step, if an opponent discarded a card this turn, you draw a card and you lose 1 life.
-// {4}{B}{B}: Each opponent with no cards in hand loses 10 life.
-// XXX: end-step half requires per-turn discard tracking
+	// Tinybones, Trinket Thief {1}{B}
+	// Legendary Creature — Skeleton Rogue
+	// 1/2
+	// At the beginning of each end step, if an opponent discarded a card this turn, you draw a card and you lose 1 life.
+	// {4}{B}{B}: Each opponent with no cards in hand loses 10 life.
+	// XXX: end-step half requires per-turn discard tracking
 	Register("Tinybones, Trinket Thief", func() Card {
 		return NewCreature("Tinybones, Trinket Thief", "{1}{B}", 1, 2,
 			WithSubTypes("Skeleton", "Rogue"),
@@ -2746,10 +2658,10 @@ func registerCreatures() {
 		)
 	})
 
-// Tithebearer Giant {5}{B}
-// Creature — Giant Warrior
-// 4/5
-// When this creature enters, you draw a card and you lose 1 life.
+	// Tithebearer Giant {5}{B}
+	// Creature — Giant Warrior
+	// 4/5
+	// When this creature enters, you draw a card and you lose 1 life.
 	Register("Tithebearer Giant", func() Card {
 		return NewCreature("Tithebearer Giant", "{5}{B}", 4, 5,
 			WithSubTypes("Giant", "Warrior"),
@@ -2763,10 +2675,10 @@ func registerCreatures() {
 		)
 	})
 
-// Vampire Neonate {B}
-// Creature — Vampire
-// 0/3
-// {2}, {T}: Each opponent loses 1 life and you gain 1 life.
+	// Vampire Neonate {B}
+	// Creature — Vampire
+	// 0/3
+	// {2}, {T}: Each opponent loses 1 life and you gain 1 life.
 	Register("Vampire Neonate", func() Card {
 		return NewCreature("Vampire Neonate", "{B}", 0, 3,
 			WithSubTypes("Vampire"),
@@ -2790,10 +2702,10 @@ func registerCreatures() {
 		)
 	})
 
-// Wailing Ghoul {1}{B}
-// Creature — Zombie
-// 1/3
-// When this creature enters, mill two cards. (Put the top two cards of your library into your graveyard.)
+	// Wailing Ghoul {1}{B}
+	// Creature — Zombie
+	// 1/3
+	// When this creature enters, mill two cards. (Put the top two cards of your library into your graveyard.)
 	Register("Wailing Ghoul", func() Card {
 		return NewCreature("Wailing Ghoul", "{1}{B}", 1, 3,
 			WithSubTypes("Zombie"),
@@ -2818,10 +2730,10 @@ func registerCreatures() {
 		)
 	})
 
-// Wight of Precinct Six {1}{B}
-// Creature — Zombie
-// 1/1
-// This creature gets +1/+1 for each creature card in your opponents' graveyards.
+	// Wight of Precinct Six {1}{B}
+	// Creature — Zombie
+	// 1/1
+	// This creature gets +1/+1 for each creature card in your opponents' graveyards.
 	Register("Wight of Precinct Six", func() Card {
 		return NewCreature("Wight of Precinct Six", "{1}{B}", 1, 1,
 			WithSubTypes("Zombie"),
@@ -2847,12 +2759,12 @@ func registerCreatures() {
 		)
 	})
 
-// Witch of the Moors {3}{B}{B}
-// Creature — Human Warlock
-// 4/4
-// Deathtouch
-// At the beginning of your end step, if you gained life this turn, each opponent sacrifices a creature of their choice and you return up to one target creature card from your graveyard to your hand.
-// XXX: requires gained-life-this-turn tracking
+	// Witch of the Moors {3}{B}{B}
+	// Creature — Human Warlock
+	// 4/4
+	// Deathtouch
+	// At the beginning of your end step, if you gained life this turn, each opponent sacrifices a creature of their choice and you return up to one target creature card from your graveyard to your hand.
+	// XXX: requires gained-life-this-turn tracking
 	Register("Witch of the Moors", func() Card {
 		return NewCreature("Witch of the Moors", "{3}{B}{B}", 4, 4,
 			WithSubTypes("Human", "Warlock"),
@@ -2860,13 +2772,12 @@ func registerCreatures() {
 		)
 	})
 
-
 	// ===== RED CREATURES =====
 
-// Ashmouth Hound {1}{R}
-// Creature — Elemental Dog
-// 2/1
-// Whenever this creature blocks or becomes blocked by a creature, this creature deals 1 damage to that creature.
+	// Ashmouth Hound {1}{R}
+	// Creature — Elemental Dog
+	// 2/1
+	// Whenever this creature blocks or becomes blocked by a creature, this creature deals 1 damage to that creature.
 	Register("Ashmouth Hound", func() Card {
 		return NewCreature("Ashmouth Hound", "{1}{R}", 2, 1,
 			WithSubTypes("Elemental", "Dog"),
@@ -2893,12 +2804,12 @@ func registerCreatures() {
 		)
 	})
 
-// Ball Lightning {R}{R}{R}
-// Creature — Elemental
-// 6/1
-// Trample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)
-// Haste (This creature can attack and {T} as soon as it comes under your control.)
-// At the beginning of the end step, sacrifice this creature.
+	// Ball Lightning {R}{R}{R}
+	// Creature — Elemental
+	// 6/1
+	// Trample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)
+	// Haste (This creature can attack and {T} as soon as it comes under your control.)
+	// At the beginning of the end step, sacrifice this creature.
 	Register("Ball Lightning", func() Card {
 		return NewCreature("Ball Lightning", "{R}{R}{R}", 6, 1,
 			WithSubTypes("Elemental"),
@@ -2917,10 +2828,10 @@ func registerCreatures() {
 		)
 	})
 
-// Beetleback Chief {2}{R}{R}
-// Creature — Goblin Warrior
-// 2/2
-// When this creature enters, create two 1/1 red Goblin creature tokens.
+	// Beetleback Chief {2}{R}{R}
+	// Creature — Goblin Warrior
+	// 2/2
+	// When this creature enters, create two 1/1 red Goblin creature tokens.
 	Register("Beetleback Chief", func() Card {
 		return NewCreature("Beetleback Chief", "{2}{R}{R}", 2, 2,
 			WithSubTypes("Goblin", "Warrior"),
@@ -2931,10 +2842,10 @@ func registerCreatures() {
 		)
 	})
 
-// Bloodrage Brawler {1}{R}
-// Creature — Minotaur Warrior
-// 4/3
-// When this creature enters, discard a card.
+	// Bloodrage Brawler {1}{R}
+	// Creature — Minotaur Warrior
+	// 4/3
+	// When this creature enters, discard a card.
 	Register("Bloodrage Brawler", func() Card {
 		return NewCreature("Bloodrage Brawler", "{1}{R}", 4, 3,
 			WithSubTypes("Minotaur", "Warrior"),
@@ -2957,10 +2868,10 @@ func registerCreatures() {
 		)
 	})
 
-// Bloodrock Cyclops {2}{R}
-// Creature — Cyclops
-// 3/3
-// This creature attacks each combat if able.
+	// Bloodrock Cyclops {2}{R}
+	// Creature — Cyclops
+	// 3/3
+	// This creature attacks each combat if able.
 	Register("Bloodrock Cyclops", func() Card {
 		return NewCreature("Bloodrock Cyclops", "{2}{R}", 3, 3,
 			WithSubTypes("Cyclops"),
@@ -2968,21 +2879,21 @@ func registerCreatures() {
 		)
 	})
 
-// Bloodshot Trainee {3}{R}
-// Creature — Goblin Warrior
-// 2/3
-// {T}: This creature deals 4 damage to target creature. Activate only if this creature's power is 4 or greater.
-// XXX: requires power-conditional activation gate
+	// Bloodshot Trainee {3}{R}
+	// Creature — Goblin Warrior
+	// 2/3
+	// {T}: This creature deals 4 damage to target creature. Activate only if this creature's power is 4 or greater.
+	// XXX: requires power-conditional activation gate
 	Register("Bloodshot Trainee", func() Card {
 		return NewCreature("Bloodshot Trainee", "{3}{R}", 2, 3,
 			WithSubTypes("Goblin", "Warrior"),
 		)
 	})
 
-// Boggart Brute {2}{R}
-// Creature — Goblin Warrior
-// 3/2
-// Menace (This creature can't be blocked except by two or more creatures.)
+	// Boggart Brute {2}{R}
+	// Creature — Goblin Warrior
+	// 3/2
+	// Menace (This creature can't be blocked except by two or more creatures.)
 	Register("Boggart Brute", func() Card {
 		return NewCreature("Boggart Brute", "{2}{R}", 3, 2,
 			WithSubTypes("Goblin", "Warrior"),
@@ -2990,10 +2901,10 @@ func registerCreatures() {
 		)
 	})
 
-// Borderland Marauder {1}{R}
-// Creature — Human Warrior
-// 1/2
-// Whenever this creature attacks, it gets +2/+0 until end of turn.
+	// Borderland Marauder {1}{R}
+	// Creature — Human Warrior
+	// 1/2
+	// Whenever this creature attacks, it gets +2/+0 until end of turn.
 	Register("Borderland Marauder", func() Card {
 		return NewCreature("Borderland Marauder", "{1}{R}", 1, 2,
 			WithSubTypes("Human", "Warrior"),
@@ -3001,21 +2912,21 @@ func registerCreatures() {
 		)
 	})
 
-// Borderland Minotaur {2}{R}{R}
-// Creature — Minotaur Warrior
-// 4/3
+	// Borderland Minotaur {2}{R}{R}
+	// Creature — Minotaur Warrior
+	// 4/3
 	Register("Borderland Minotaur", func() Card {
 		return NewCreature("Borderland Minotaur", "{2}{R}{R}", 4, 3,
 			WithSubTypes("Minotaur", "Warrior"),
 		)
 	})
 
-// Chained Brute {1}{R}
-// Creature — Devil
-// 4/3
-// This creature doesn't untap during your untap step.
-// {1}, Sacrifice another creature: Untap this creature. Activate only during your turn.
-// XXX: requires sorcery-speed activation restriction; see CR 605
+	// Chained Brute {1}{R}
+	// Creature — Devil
+	// 4/3
+	// This creature doesn't untap during your untap step.
+	// {1}, Sacrifice another creature: Untap this creature. Activate only during your turn.
+	// XXX: requires sorcery-speed activation restriction; see CR 605
 	Register("Chained Brute", func() Card {
 		return NewCreature("Chained Brute", "{1}{R}", 4, 3,
 			WithSubTypes("Devil"),
@@ -3030,12 +2941,12 @@ func registerCreatures() {
 		)
 	})
 
-// Charmbreaker Devils {5}{R}
-// Creature — Devil
-// 4/4
-// At the beginning of your upkeep, return an instant or sorcery card at random from your graveyard to your hand.
-// Whenever you cast an instant or sorcery spell, this creature gets +4/+0 until end of turn.
-// XXX: requires random-card-from-graveyard primitive
+	// Charmbreaker Devils {5}{R}
+	// Creature — Devil
+	// 4/4
+	// At the beginning of your upkeep, return an instant or sorcery card at random from your graveyard to your hand.
+	// Whenever you cast an instant or sorcery spell, this creature gets +4/+0 until end of turn.
+	// XXX: requires random-card-from-graveyard primitive
 	Register("Charmbreaker Devils", func() Card {
 		return NewCreature("Charmbreaker Devils", "{5}{R}", 4, 4,
 			WithSubTypes("Devil"),
@@ -3049,10 +2960,10 @@ func registerCreatures() {
 		)
 	})
 
-// Cinder Elemental {3}{R}
-// Creature — Elemental
-// 2/2
-// {X}{R}, {T}, Sacrifice this creature: It deals X damage to any target.
+	// Cinder Elemental {3}{R}
+	// Creature — Elemental
+	// 2/2
+	// {X}{R}, {T}, Sacrifice this creature: It deals X damage to any target.
 	Register("Cinder Elemental", func() Card {
 		return NewCreature("Cinder Elemental", "{3}{R}", 2, 2,
 			WithSubTypes("Elemental"),
@@ -3066,11 +2977,11 @@ func registerCreatures() {
 		)
 	})
 
-// Dragon Hatchling {1}{R}
-// Creature — Dragon
-// 0/1
-// Flying
-// {R}: This creature gets +1/+0 until end of turn.
+	// Dragon Hatchling {1}{R}
+	// Creature — Dragon
+	// 0/1
+	// Flying
+	// {R}: This creature gets +1/+0 until end of turn.
 	Register("Dragon Hatchling", func() Card {
 		return NewCreature("Dragon Hatchling", "{1}{R}", 0, 1,
 			WithSubTypes("Dragon"),
@@ -3082,45 +2993,45 @@ func registerCreatures() {
 		)
 	})
 
-// Dragonlord's Servant {1}{R}
-// Creature — Goblin Shaman
-// 1/3
-// Dragon spells you cast cost {1} less to cast.
-// XXX: requires subtype-based spell cost reduction
+	// Dragonlord's Servant {1}{R}
+	// Creature — Goblin Shaman
+	// 1/3
+	// Dragon spells you cast cost {1} less to cast.
+	// XXX: requires subtype-based spell cost reduction
 	Register("Dragonlord's Servant", func() Card {
 		return NewCreature("Dragonlord's Servant", "{1}{R}", 1, 3,
 			WithSubTypes("Goblin", "Shaman"),
 		)
 	})
 
-// Dragonspeaker Shaman {1}{R}{R}
-// Creature — Human Barbarian Shaman
-// 2/2
-// Dragon spells you cast cost {2} less to cast.
-// XXX: requires subtype-based spell cost reduction
+	// Dragonspeaker Shaman {1}{R}{R}
+	// Creature — Human Barbarian Shaman
+	// 2/2
+	// Dragon spells you cast cost {2} less to cast.
+	// XXX: requires subtype-based spell cost reduction
 	Register("Dragonspeaker Shaman", func() Card {
 		return NewCreature("Dragonspeaker Shaman", "{1}{R}{R}", 2, 2,
 			WithSubTypes("Human", "Barbarian", "Shaman"),
 		)
 	})
 
-// Dualcaster Mage {1}{R}{R}
-// Creature — Human Wizard
-// 2/2
-// Flash
-// When this creature enters, copy target instant or sorcery spell. You may choose new targets for the copy.
-// XXX: requires spell-copy primitive
+	// Dualcaster Mage {1}{R}{R}
+	// Creature — Human Wizard
+	// 2/2
+	// Flash
+	// When this creature enters, copy target instant or sorcery spell. You may choose new targets for the copy.
+	// XXX: requires spell-copy primitive
 	Register("Dualcaster Mage", func() Card {
 		return NewCreature("Dualcaster Mage", "{1}{R}{R}", 2, 2,
 			WithSubTypes("Human", "Wizard"),
 		)
 	})
 
-// Etali, Primal Storm {4}{R}{R}
-// Legendary Creature — Elder Dinosaur
-// 6/6
-// Whenever Etali attacks, exile the top card of each player's library, then you may cast any number of spells from among those cards without paying their mana costs.
-// XXX: requires cast-from-exile alternate-cost
+	// Etali, Primal Storm {4}{R}{R}
+	// Legendary Creature — Elder Dinosaur
+	// 6/6
+	// Whenever Etali attacks, exile the top card of each player's library, then you may cast any number of spells from among those cards without paying their mana costs.
+	// XXX: requires cast-from-exile alternate-cost
 	Register("Etali, Primal Storm", func() Card {
 		return NewCreature("Etali, Primal Storm", "{4}{R}{R}", 6, 6,
 			WithSubTypes("Elder", "Dinosaur"),
@@ -3128,11 +3039,11 @@ func registerCreatures() {
 		)
 	})
 
-// Fanatical Firebrand {R}
-// Creature — Goblin Pirate
-// 1/1
-// Haste (This creature can attack and {T} as soon as it comes under your control.)
-// {T}, Sacrifice this creature: It deals 1 damage to any target.
+	// Fanatical Firebrand {R}
+	// Creature — Goblin Pirate
+	// 1/1
+	// Haste (This creature can attack and {T} as soon as it comes under your control.)
+	// {T}, Sacrifice this creature: It deals 1 damage to any target.
 	Register("Fanatical Firebrand", func() Card {
 		return NewCreature("Fanatical Firebrand", "{R}", 1, 1,
 			WithSubTypes("Goblin", "Pirate"),
@@ -3146,10 +3057,10 @@ func registerCreatures() {
 		)
 	})
 
-// Flametongue Kavu {3}{R}
-// Creature — Kavu
-// 4/2
-// When this creature enters, it deals 4 damage to target creature.
+	// Flametongue Kavu {3}{R}
+	// Creature — Kavu
+	// 4/2
+	// When this creature enters, it deals 4 damage to target creature.
 	Register("Flametongue Kavu", func() Card {
 		return NewCreature("Flametongue Kavu", "{3}{R}", 4, 2,
 			WithSubTypes("Kavu"),
@@ -3157,10 +3068,10 @@ func registerCreatures() {
 		)
 	})
 
-// Forge Devil {R}
-// Creature — Devil
-// 1/1
-// When this creature enters, it deals 1 damage to target creature and 1 damage to you.
+	// Forge Devil {R}
+	// Creature — Devil
+	// 1/1
+	// When this creature enters, it deals 1 damage to target creature and 1 damage to you.
 	Register("Forge Devil", func() Card {
 		return NewCreature("Forge Devil", "{R}", 1, 1,
 			WithSubTypes("Devil"),
@@ -3171,11 +3082,11 @@ func registerCreatures() {
 		)
 	})
 
-// Furnace Whelp {2}{R}{R}
-// Creature — Dragon
-// 2/2
-// Flying
-// {R}: This creature gets +1/+0 until end of turn.
+	// Furnace Whelp {2}{R}{R}
+	// Creature — Dragon
+	// 2/2
+	// Flying
+	// {R}: This creature gets +1/+0 until end of turn.
 	Register("Furnace Whelp", func() Card {
 		return NewCreature("Furnace Whelp", "{2}{R}{R}", 2, 2,
 			WithSubTypes("Dragon"),
@@ -3187,11 +3098,11 @@ func registerCreatures() {
 		)
 	})
 
-// Goblin Chieftain {1}{R}{R}
-// Creature — Goblin
-// 2/2
-// Haste (This creature can attack and {T} as soon as it comes under your control.)
-// Other Goblin creatures you control get +1/+1 and have haste.
+	// Goblin Chieftain {1}{R}{R}
+	// Creature — Goblin
+	// 2/2
+	// Haste (This creature can attack and {T} as soon as it comes under your control.)
+	// Other Goblin creatures you control get +1/+1 and have haste.
 	Register("Goblin Chieftain", func() Card {
 		return NewCreature("Goblin Chieftain", "{1}{R}{R}", 2, 2,
 			WithSubTypes("Goblin"),
@@ -3203,10 +3114,10 @@ func registerCreatures() {
 		)
 	})
 
-// Goblin Commando {4}{R}
-// Creature — Goblin
-// 2/2
-// When this creature enters, it deals 2 damage to target creature.
+	// Goblin Commando {4}{R}
+	// Creature — Goblin
+	// 2/2
+	// When this creature enters, it deals 2 damage to target creature.
 	Register("Goblin Commando", func() Card {
 		return NewCreature("Goblin Commando", "{4}{R}", 2, 2,
 			WithSubTypes("Goblin"),
@@ -3214,22 +3125,22 @@ func registerCreatures() {
 		)
 	})
 
-// Goblin Goon {3}{R}
-// Creature — Goblin Mutant
-// 6/6
-// This creature can't attack unless you control more creatures than defending player.
-// This creature can't block unless you control more creatures than attacking player.
-// XXX: requires power-comparison restrictions (creature-count attack/block constraints)
+	// Goblin Goon {3}{R}
+	// Creature — Goblin Mutant
+	// 6/6
+	// This creature can't attack unless you control more creatures than defending player.
+	// This creature can't block unless you control more creatures than attacking player.
+	// XXX: requires power-comparison restrictions (creature-count attack/block constraints)
 	Register("Goblin Goon", func() Card {
 		return NewCreature("Goblin Goon", "{3}{R}", 6, 6,
 			WithSubTypes("Goblin", "Mutant"),
 		)
 	})
 
-// Goblin Instigator {1}{R}
-// Creature — Goblin Rogue
-// 1/1
-// When this creature enters, create a 1/1 red Goblin creature token.
+	// Goblin Instigator {1}{R}
+	// Creature — Goblin Rogue
+	// 1/1
+	// When this creature enters, create a 1/1 red Goblin creature token.
 	Register("Goblin Instigator", func() Card {
 		return NewCreature("Goblin Instigator", "{1}{R}", 1, 1,
 			WithSubTypes("Goblin", "Rogue"),
@@ -3240,10 +3151,10 @@ func registerCreatures() {
 		)
 	})
 
-// Goblin Shortcutter {1}{R}
-// Creature — Goblin Scout
-// 2/1
-// When this creature enters, target creature can't block this turn.
+	// Goblin Shortcutter {1}{R}
+	// Creature — Goblin Scout
+	// 2/1
+	// When this creature enters, target creature can't block this turn.
 	Register("Goblin Shortcutter", func() Card {
 		return NewCreature("Goblin Shortcutter", "{1}{R}", 2, 1,
 			WithSubTypes("Goblin", "Scout"),
@@ -3261,10 +3172,10 @@ func registerCreatures() {
 		)
 	})
 
-// Grim Lavamancer {R}
-// Creature — Human Wizard
-// 1/1
-// {R}, {T}, Exile two cards from your graveyard: This creature deals 2 damage to any target.
+	// Grim Lavamancer {R}
+	// Creature — Human Wizard
+	// 1/1
+	// {R}, {T}, Exile two cards from your graveyard: This creature deals 2 damage to any target.
 	Register("Grim Lavamancer", func() Card {
 		return NewCreature("Grim Lavamancer", "{R}", 1, 1,
 			WithSubTypes("Human", "Wizard"),
@@ -3278,10 +3189,10 @@ func registerCreatures() {
 		)
 	})
 
-// Hamletback Goliath {6}{R}
-// Creature — Giant Warrior
-// 6/6
-// Whenever another creature enters, you may put X +1/+1 counters on this creature, where X is that creature's power.
+	// Hamletback Goliath {6}{R}
+	// Creature — Giant Warrior
+	// 6/6
+	// Whenever another creature enters, you may put X +1/+1 counters on this creature, where X is that creature's power.
 	Register("Hamletback Goliath", func() Card {
 		return NewCreature("Hamletback Goliath", "{6}{R}", 6, 6,
 			WithSubTypes("Giant", "Warrior"),
@@ -3310,11 +3221,11 @@ func registerCreatures() {
 		)
 	})
 
-// Hellrider {2}{R}{R}
-// Creature — Devil
-// 3/3
-// Haste
-// Whenever a creature you control attacks, this creature deals 1 damage to the player or planeswalker it's attacking.
+	// Hellrider {2}{R}{R}
+	// Creature — Devil
+	// 3/3
+	// Haste
+	// Whenever a creature you control attacks, this creature deals 1 damage to the player or planeswalker it's attacking.
 	Register("Hellrider", func() Card {
 		return NewCreature("Hellrider", "{2}{R}{R}", 3, 3,
 			WithSubTypes("Devil"),
@@ -3341,12 +3252,12 @@ func registerCreatures() {
 		)
 	})
 
-// Inferno Hellion {3}{R}
-// Creature — Hellion
-// 7/3
-// Trample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)
-// At the beginning of each end step, if this creature attacked or blocked this turn, its owner shuffles it into their library.
-// XXX: requires "attacked or blocked this turn" tracking
+	// Inferno Hellion {3}{R}
+	// Creature — Hellion
+	// 7/3
+	// Trample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)
+	// At the beginning of each end step, if this creature attacked or blocked this turn, its owner shuffles it into their library.
+	// XXX: requires "attacked or blocked this turn" tracking
 	Register("Inferno Hellion", func() Card {
 		return NewCreature("Inferno Hellion", "{3}{R}", 7, 3,
 			WithSubTypes("Hellion"),
@@ -3354,10 +3265,10 @@ func registerCreatures() {
 		)
 	})
 
-// Kiln Fiend {1}{R}
-// Creature — Elemental Beast
-// 1/2
-// Whenever you cast an instant or sorcery spell, this creature gets +3/+0 until end of turn.
+	// Kiln Fiend {1}{R}
+	// Creature — Elemental Beast
+	// 1/2
+	// Whenever you cast an instant or sorcery spell, this creature gets +3/+0 until end of turn.
 	Register("Kiln Fiend", func() Card {
 		return NewCreature("Kiln Fiend", "{1}{R}", 1, 2,
 			WithSubTypes("Elemental", "Beast"),
@@ -3371,10 +3282,10 @@ func registerCreatures() {
 		)
 	})
 
-// Krenko, Mob Boss {2}{R}{R}
-// Legendary Creature — Goblin Warrior
-// 3/3
-// {T}: Create X 1/1 red Goblin creature tokens, where X is the number of Goblins you control.
+	// Krenko, Mob Boss {2}{R}{R}
+	// Legendary Creature — Goblin Warrior
+	// 3/3
+	// {T}: Create X 1/1 red Goblin creature tokens, where X is the number of Goblins you control.
 	Register("Krenko, Mob Boss", func() Card {
 		return NewCreature("Krenko, Mob Boss", "{2}{R}{R}", 3, 3,
 			WithSubTypes("Goblin", "Warrior"),
@@ -3396,12 +3307,12 @@ func registerCreatures() {
 		)
 	})
 
-// Lathliss, Dragon Queen {4}{R}{R}
-// Legendary Creature — Dragon
-// 6/6
-// Flying
-// Whenever another nontoken Dragon you control enters, create a 5/5 red Dragon creature token with flying.
-// {1}{R}: Dragons you control get +1/+0 until end of turn.
+	// Lathliss, Dragon Queen {4}{R}{R}
+	// Legendary Creature — Dragon
+	// 6/6
+	// Flying
+	// Whenever another nontoken Dragon you control enters, create a 5/5 red Dragon creature token with flying.
+	// {1}{R}: Dragons you control get +1/+0 until end of turn.
 	Register("Lathliss, Dragon Queen", func() Card {
 		return NewCreature("Lathliss, Dragon Queen", "{4}{R}{R}", 6, 6,
 			WithSubTypes("Dragon"),
@@ -3431,10 +3342,10 @@ func registerCreatures() {
 		)
 	})
 
-// Lightning Elemental {3}{R}
-// Creature — Elemental
-// 4/1
-// Haste (This creature can attack and {T} as soon as it comes under your control.)
+	// Lightning Elemental {3}{R}
+	// Creature — Elemental
+	// 4/1
+	// Haste (This creature can attack and {T} as soon as it comes under your control.)
 	Register("Lightning Elemental", func() Card {
 		return NewCreature("Lightning Elemental", "{3}{R}", 4, 1,
 			WithSubTypes("Elemental"),
@@ -3442,13 +3353,13 @@ func registerCreatures() {
 		)
 	})
 
-// Lightning Phoenix {2}{R}
-// Creature — Phoenix
-// 2/2
-// Flying, haste
-// This creature can't block.
-// At the beginning of your end step, if an opponent was dealt 3 or more damage this turn, you may pay {R}. If you do, return this card from your graveyard to the battlefield.
-// XXX: requires damage-this-turn tracking and graveyard self-return on conditional pay
+	// Lightning Phoenix {2}{R}
+	// Creature — Phoenix
+	// 2/2
+	// Flying, haste
+	// This creature can't block.
+	// At the beginning of your end step, if an opponent was dealt 3 or more damage this turn, you may pay {R}. If you do, return this card from your graveyard to the battlefield.
+	// XXX: requires damage-this-turn tracking and graveyard self-return on conditional pay
 	Register("Lightning Phoenix", func() Card {
 		return NewCreature("Lightning Phoenix", "{2}{R}", 2, 2,
 			WithSubTypes("Phoenix"),
@@ -3457,11 +3368,11 @@ func registerCreatures() {
 		)
 	})
 
-// Lightning Shrieker {4}{R}
-// Creature — Dragon
-// 5/5
-// Flying, trample, haste
-// At the beginning of the end step, this creature's owner shuffles it into their library.
+	// Lightning Shrieker {4}{R}
+	// Creature — Dragon
+	// 5/5
+	// Flying, trample, haste
+	// At the beginning of the end step, this creature's owner shuffles it into their library.
 	Register("Lightning Shrieker", func() Card {
 		return NewCreature("Lightning Shrieker", "{4}{R}", 5, 5,
 			WithSubTypes("Dragon"),
@@ -3489,10 +3400,10 @@ func registerCreatures() {
 		)
 	})
 
-// Lightning Visionary {1}{R}
-// Creature — Minotaur Shaman
-// 2/1
-// Prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)
+	// Lightning Visionary {1}{R}
+	// Creature — Minotaur Shaman
+	// 2/1
+	// Prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)
 	Register("Lightning Visionary", func() Card {
 		return NewCreature("Lightning Visionary", "{1}{R}", 2, 1,
 			WithSubTypes("Minotaur", "Shaman"),
@@ -3506,10 +3417,10 @@ func registerCreatures() {
 		)
 	})
 
-// Living Lightning {3}{R}
-// Creature — Elemental Shaman
-// 3/2
-// When this creature dies, return target instant or sorcery card from your graveyard to your hand.
+	// Living Lightning {3}{R}
+	// Creature — Elemental Shaman
+	// 3/2
+	// When this creature dies, return target instant or sorcery card from your graveyard to your hand.
 	Register("Living Lightning", func() Card {
 		return NewCreature("Living Lightning", "{3}{R}", 3, 2,
 			WithSubTypes("Elemental", "Shaman"),
@@ -3523,11 +3434,11 @@ func registerCreatures() {
 		)
 	})
 
-// Minotaur Skullcleaver {2}{R}
-// Creature — Minotaur Berserker
-// 2/2
-// Haste
-// When this creature enters, it gets +2/+0 until end of turn.
+	// Minotaur Skullcleaver {2}{R}
+	// Creature — Minotaur Berserker
+	// 2/2
+	// Haste
+	// When this creature enters, it gets +2/+0 until end of turn.
 	Register("Minotaur Skullcleaver", func() Card {
 		return NewCreature("Minotaur Skullcleaver", "{2}{R}", 2, 2,
 			WithSubTypes("Minotaur", "Berserker"),
@@ -3539,11 +3450,11 @@ func registerCreatures() {
 		)
 	})
 
-// Minotaur Sureshot {2}{R}
-// Creature — Minotaur Archer
-// 2/3
-// Reach (This creature can block creatures with flying.)
-// {1}{R}: This creature gets +1/+0 until end of turn.
+	// Minotaur Sureshot {2}{R}
+	// Creature — Minotaur Archer
+	// 2/3
+	// Reach (This creature can block creatures with flying.)
+	// {1}{R}: This creature gets +1/+0 until end of turn.
 	Register("Minotaur Sureshot", func() Card {
 		return NewCreature("Minotaur Sureshot", "{2}{R}", 2, 3,
 			WithSubTypes("Minotaur", "Archer"),
@@ -3555,10 +3466,10 @@ func registerCreatures() {
 		)
 	})
 
-// Molten Ravager {2}{R}
-// Creature — Elemental
-// 0/4
-// {R}: This creature gets +1/+0 until end of turn.
+	// Molten Ravager {2}{R}
+	// Creature — Elemental
+	// 0/4
+	// {R}: This creature gets +1/+0 until end of turn.
 	Register("Molten Ravager", func() Card {
 		return NewCreature("Molten Ravager", "{2}{R}", 0, 4,
 			WithSubTypes("Elemental"),
@@ -3569,12 +3480,12 @@ func registerCreatures() {
 		)
 	})
 
-// Muxus, Goblin Grandee {4}{R}{R}
-// Legendary Creature — Goblin Noble
-// 4/4
-// When Muxus enters, reveal the top six cards of your library. Put all Goblin creature cards with mana value 5 or less from among them onto the battlefield and the rest on the bottom of your library in a random order.
-// Whenever Muxus attacks, it gets +1/+1 until end of turn for each other Goblin you control.
-// XXX: requires reveal-and-selectively-put-onto-battlefield primitive
+	// Muxus, Goblin Grandee {4}{R}{R}
+	// Legendary Creature — Goblin Noble
+	// 4/4
+	// When Muxus enters, reveal the top six cards of your library. Put all Goblin creature cards with mana value 5 or less from among them onto the battlefield and the rest on the bottom of your library in a random order.
+	// Whenever Muxus attacks, it gets +1/+1 until end of turn for each other Goblin you control.
+	// XXX: requires reveal-and-selectively-put-onto-battlefield primitive
 	Register("Muxus, Goblin Grandee", func() Card {
 		return NewCreature("Muxus, Goblin Grandee", "{4}{R}{R}", 4, 4,
 			WithSubTypes("Goblin", "Noble"),
@@ -3599,10 +3510,10 @@ func registerCreatures() {
 		)
 	})
 
-// Ornery Goblin {1}{R}
-// Creature — Goblin Warrior
-// 2/1
-// Whenever this creature blocks or becomes blocked by a creature, this creature deals 1 damage to that creature.
+	// Ornery Goblin {1}{R}
+	// Creature — Goblin Warrior
+	// 2/1
+	// Whenever this creature blocks or becomes blocked by a creature, this creature deals 1 damage to that creature.
 	Register("Ornery Goblin", func() Card {
 		return NewCreature("Ornery Goblin", "{1}{R}", 2, 1,
 			WithSubTypes("Goblin", "Warrior"),
@@ -3629,10 +3540,10 @@ func registerCreatures() {
 		)
 	})
 
-// Pyroclastic Elemental {3}{R}{R}
-// Creature — Elemental
-// 5/4
-// {1}{R}{R}: This creature deals 1 damage to target player.
+	// Pyroclastic Elemental {3}{R}{R}
+	// Creature — Elemental
+	// 5/4
+	// {1}{R}{R}: This creature deals 1 damage to target player.
 	Register("Pyroclastic Elemental", func() Card {
 		return NewCreature("Pyroclastic Elemental", "{3}{R}{R}", 5, 4,
 			WithSubTypes("Elemental"),
@@ -3644,11 +3555,11 @@ func registerCreatures() {
 		)
 	})
 
-// Rageblood Shaman {1}{R}{R}
-// Creature — Minotaur Shaman
-// 2/3
-// Trample
-// Other Minotaur creatures you control get +1/+1 and have trample.
+	// Rageblood Shaman {1}{R}{R}
+	// Creature — Minotaur Shaman
+	// 2/3
+	// Trample
+	// Other Minotaur creatures you control get +1/+1 and have trample.
 	Register("Rageblood Shaman", func() Card {
 		return NewCreature("Rageblood Shaman", "{1}{R}{R}", 2, 3,
 			WithSubTypes("Minotaur", "Shaman"),
@@ -3660,12 +3571,12 @@ func registerCreatures() {
 		)
 	})
 
-// Rapacious Dragon {4}{R}
-// Creature — Dragon
-// 3/3
-// Flying
-// When this creature enters, create two Treasure tokens. (They're artifacts with "{T}, Sacrifice this token: Add one mana of any color.")
-// XXX: requires Treasure token primitive
+	// Rapacious Dragon {4}{R}
+	// Creature — Dragon
+	// 3/3
+	// Flying
+	// When this creature enters, create two Treasure tokens. (They're artifacts with "{T}, Sacrifice this token: Add one mana of any color.")
+	// XXX: requires Treasure token primitive
 	Register("Rapacious Dragon", func() Card {
 		return NewCreature("Rapacious Dragon", "{4}{R}", 3, 3,
 			WithSubTypes("Dragon"),
@@ -3673,10 +3584,10 @@ func registerCreatures() {
 		)
 	})
 
-// Seismic Elemental {3}{R}{R}
-// Creature — Elemental
-// 4/4
-// When this creature enters, creatures without flying can't block this turn.
+	// Seismic Elemental {3}{R}{R}
+	// Creature — Elemental
+	// 4/4
+	// When this creature enters, creatures without flying can't block this turn.
 	Register("Seismic Elemental", func() Card {
 		return NewCreature("Seismic Elemental", "{3}{R}{R}", 4, 4,
 			WithSubTypes("Elemental"),
@@ -3693,12 +3604,12 @@ func registerCreatures() {
 		)
 	})
 
-// Sethron, Hurloon General {3}{R}{R}
-// Legendary Creature — Minotaur Warrior
-// 4/4
-// Whenever Sethron or another nontoken Minotaur you control enters, create a 2/3 red Minotaur creature token.
-// {2}{B/R}: Minotaurs you control get +1/+0 and gain menace and haste until end of turn. ({B/R} can be paid with either {B} or {R}.)
-// XXX: pump activation requires hybrid {B/R} mana cost
+	// Sethron, Hurloon General {3}{R}{R}
+	// Legendary Creature — Minotaur Warrior
+	// 4/4
+	// Whenever Sethron or another nontoken Minotaur you control enters, create a 2/3 red Minotaur creature token.
+	// {2}{B/R}: Minotaurs you control get +1/+0 and gain menace and haste until end of turn. ({B/R} can be paid with either {B} or {R}.)
+	// XXX: pump activation requires hybrid {B/R} mana cost
 	Register("Sethron, Hurloon General", func() Card {
 		return NewCreature("Sethron, Hurloon General", "{3}{R}{R}", 4, 4,
 			WithSubTypes("Minotaur", "Warrior"),
@@ -3713,12 +3624,12 @@ func registerCreatures() {
 		)
 	})
 
-// Sin Prodder {2}{R}
-// Creature — Devil
-// 3/2
-// Menace
-// At the beginning of your upkeep, reveal the top card of your library. Any opponent may have you put that card into your graveyard. If a player does, this creature deals damage to that player equal to that card's mana value. Otherwise, put that card into your hand.
-// XXX: requires reveal-then-opponent-choice primitive
+	// Sin Prodder {2}{R}
+	// Creature — Devil
+	// 3/2
+	// Menace
+	// At the beginning of your upkeep, reveal the top card of your library. Any opponent may have you put that card into your graveyard. If a player does, this creature deals damage to that player equal to that card's mana value. Otherwise, put that card into your hand.
+	// XXX: requires reveal-then-opponent-choice primitive
 	Register("Sin Prodder", func() Card {
 		return NewCreature("Sin Prodder", "{2}{R}", 3, 2,
 			WithSubTypes("Devil"),
@@ -3726,11 +3637,11 @@ func registerCreatures() {
 		)
 	})
 
-// Spiteful Prankster {2}{R}
-// Creature — Devil
-// 3/2
-// During your turn, this creature has first strike.
-// Whenever another creature dies, this creature deals 1 damage to target player or planeswalker.
+	// Spiteful Prankster {2}{R}
+	// Creature — Devil
+	// 3/2
+	// During your turn, this creature has first strike.
+	// Whenever another creature dies, this creature deals 1 damage to target player or planeswalker.
 	Register("Spiteful Prankster", func() Card {
 		return NewCreature("Spiteful Prankster", "{2}{R}", 3, 2,
 			WithSubTypes("Devil"),
@@ -3752,12 +3663,12 @@ func registerCreatures() {
 		)
 	})
 
-// Thermo-Alchemist {1}{R}
-// Creature — Human Shaman
-// 0/3
-// Defender
-// {T}: This creature deals 1 damage to each opponent.
-// Whenever you cast an instant or sorcery spell, untap this creature.
+	// Thermo-Alchemist {1}{R}
+	// Creature — Human Shaman
+	// 0/3
+	// Defender
+	// {T}: This creature deals 1 damage to each opponent.
+	// Whenever you cast an instant or sorcery spell, untap this creature.
 	Register("Thermo-Alchemist", func() Card {
 		return NewCreature("Thermo-Alchemist", "{1}{R}", 0, 3,
 			WithSubTypes("Human", "Shaman"),
@@ -3784,11 +3695,11 @@ func registerCreatures() {
 		)
 	})
 
-// Tibalt's Rager {1}{R}
-// Creature — Devil
-// 1/2
-// When this creature dies, it deals 1 damage to any target.
-// {1}{R}: This creature gets +2/+0 until end of turn.
+	// Tibalt's Rager {1}{R}
+	// Creature — Devil
+	// 1/2
+	// When this creature dies, it deals 1 damage to any target.
+	// {1}{R}: This creature gets +2/+0 until end of turn.
 	Register("Tibalt's Rager", func() Card {
 		return NewCreature("Tibalt's Rager", "{1}{R}", 1, 2,
 			WithSubTypes("Devil"),
@@ -3802,10 +3713,10 @@ func registerCreatures() {
 		)
 	})
 
-// Torch Fiend {1}{R}
-// Creature — Devil
-// 2/1
-// {R}, Sacrifice this creature: Destroy target artifact.
+	// Torch Fiend {1}{R}
+	// Creature — Devil
+	// 2/1
+	// {R}, Sacrifice this creature: Destroy target artifact.
 	Register("Torch Fiend", func() Card {
 		return NewCreature("Torch Fiend", "{1}{R}", 2, 1,
 			WithSubTypes("Devil"),
@@ -3818,10 +3729,10 @@ func registerCreatures() {
 		)
 	})
 
-// Volley Veteran {3}{R}
-// Creature — Goblin Warrior
-// 4/2
-// When this creature enters, it deals damage to target creature an opponent controls equal to the number of Goblins you control.
+	// Volley Veteran {3}{R}
+	// Creature — Goblin Warrior
+	// 4/2
+	// When this creature enters, it deals damage to target creature an opponent controls equal to the number of Goblins you control.
 	Register("Volley Veteran", func() Card {
 		return NewCreature("Volley Veteran", "{3}{R}", 4, 2,
 			WithSubTypes("Goblin", "Warrior"),
@@ -3830,10 +3741,10 @@ func registerCreatures() {
 		)
 	})
 
-// Warfire Javelineer {3}{R}
-// Creature — Minotaur Warrior
-// 2/3
-// When this creature enters, it deals X damage to target creature an opponent controls, where X is the number of instant and sorcery cards in your graveyard.
+	// Warfire Javelineer {3}{R}
+	// Creature — Minotaur Warrior
+	// 2/3
+	// When this creature enters, it deals X damage to target creature an opponent controls, where X is the number of instant and sorcery cards in your graveyard.
 	Register("Warfire Javelineer", func() Card {
 		return NewCreature("Warfire Javelineer", "{3}{R}", 2, 3,
 			WithSubTypes("Minotaur", "Warrior"),
@@ -3844,11 +3755,11 @@ func registerCreatures() {
 		)
 	})
 
-// Weaver of Lightning {2}{R}
-// Creature — Human Shaman
-// 1/4
-// Reach (This creature can block creatures with flying.)
-// Whenever you cast an instant or sorcery spell, this creature deals 1 damage to target creature an opponent controls.
+	// Weaver of Lightning {2}{R}
+	// Creature — Human Shaman
+	// 1/4
+	// Reach (This creature can block creatures with flying.)
+	// Whenever you cast an instant or sorcery spell, this creature deals 1 damage to target creature an opponent controls.
 	Register("Weaver of Lightning", func() Card {
 		return NewCreature("Weaver of Lightning", "{2}{R}", 1, 4,
 			WithSubTypes("Human", "Shaman"),
@@ -3863,10 +3774,10 @@ func registerCreatures() {
 		)
 	})
 
-// Young Pyromancer {1}{R}
-// Creature — Human Shaman
-// 2/1
-// Whenever you cast an instant or sorcery spell, create a 1/1 red Elemental creature token.
+	// Young Pyromancer {1}{R}
+	// Creature — Human Shaman
+	// 2/1
+	// Whenever you cast an instant or sorcery spell, create a 1/1 red Elemental creature token.
 	Register("Young Pyromancer", func() Card {
 		return NewCreature("Young Pyromancer", "{1}{R}", 2, 1,
 			WithSubTypes("Human", "Shaman"),
@@ -3880,12 +3791,12 @@ func registerCreatures() {
 		)
 	})
 
-// Zurzoth, Chaos Rider {2}{R}
-// Legendary Creature — Devil
-// 2/3
-// Whenever an opponent draws their first card each turn, if it's not their turn, you create a 1/1 red Devil creature token with "When this token dies, it deals 1 damage to any target."
-// Whenever one or more Devils you control attack one or more players, you and those players each draw a card, then discard a card at random.
-// XXX: requires opponent-draw-state tracking and random-discard primitive
+	// Zurzoth, Chaos Rider {2}{R}
+	// Legendary Creature — Devil
+	// 2/3
+	// Whenever an opponent draws their first card each turn, if it's not their turn, you create a 1/1 red Devil creature token with "When this token dies, it deals 1 damage to any target."
+	// Whenever one or more Devils you control attack one or more players, you and those players each draw a card, then discard a card at random.
+	// XXX: requires opponent-draw-state tracking and random-discard primitive
 	Register("Zurzoth, Chaos Rider", func() Card {
 		return NewCreature("Zurzoth, Chaos Rider", "{2}{R}", 2, 3,
 			WithSubTypes("Devil"),
@@ -3893,13 +3804,12 @@ func registerCreatures() {
 		)
 	})
 
-
 	// ===== GREEN CREATURES =====
 
-// Affectionate Indrik {5}{G}
-// Creature — Beast
-// 4/4
-// When this creature enters, you may have it fight target creature you don't control. (Each deals damage equal to its power to the other.)
+	// Affectionate Indrik {5}{G}
+	// Creature — Beast
+	// 4/4
+	// When this creature enters, you may have it fight target creature you don't control. (Each deals damage equal to its power to the other.)
 	Register("Affectionate Indrik", func() Card {
 		return NewCreature("Affectionate Indrik", "{5}{G}", 4, 4,
 			WithSubTypes("Beast"),
@@ -3931,23 +3841,23 @@ func registerCreatures() {
 		)
 	})
 
-// Allosaurus Shepherd {G}
-// Creature — Elf Shaman
-// 1/1
-// This spell can't be countered.
-// Green spells you control can't be countered.
-// {4}{G}{G}: Until end of turn, each Elf creature you control has base power and toughness 5/5 and becomes a Dinosaur in addition to its other creature types.
-// XXX: requires type-granting + uncounterable static
+	// Allosaurus Shepherd {G}
+	// Creature — Elf Shaman
+	// 1/1
+	// This spell can't be countered.
+	// Green spells you control can't be countered.
+	// {4}{G}{G}: Until end of turn, each Elf creature you control has base power and toughness 5/5 and becomes a Dinosaur in addition to its other creature types.
+	// XXX: requires type-granting + uncounterable static
 	Register("Allosaurus Shepherd", func() Card {
 		return NewCreature("Allosaurus Shepherd", "{G}", 1, 1,
 			WithSubTypes("Elf", "Shaman"),
 		)
 	})
 
-// Ambassador Oak {3}{G}
-// Creature — Treefolk Warrior
-// 3/3
-// When this creature enters, create a 1/1 green Elf Warrior creature token.
+	// Ambassador Oak {3}{G}
+	// Creature — Treefolk Warrior
+	// 3/3
+	// When this creature enters, create a 1/1 green Elf Warrior creature token.
 	Register("Ambassador Oak", func() Card {
 		return NewCreature("Ambassador Oak", "{3}{G}", 3, 3,
 			WithSubTypes("Treefolk", "Warrior"),
@@ -3958,10 +3868,10 @@ func registerCreatures() {
 		)
 	})
 
-// Armorcraft Judge {3}{G}
-// Creature — Elf Artificer
-// 3/3
-// When this creature enters, draw a card for each creature you control with a +1/+1 counter on it.
+	// Armorcraft Judge {3}{G}
+	// Creature — Elf Artificer
+	// 3/3
+	// When this creature enters, draw a card for each creature you control with a +1/+1 counter on it.
 	Register("Armorcraft Judge", func() Card {
 		return NewCreature("Armorcraft Judge", "{3}{G}", 3, 3,
 			WithSubTypes("Elf", "Artificer"),
@@ -3991,21 +3901,21 @@ func registerCreatures() {
 		)
 	})
 
-// Awakener Druid {2}{G}
-// Creature — Human Druid
-// 1/1
-// When this creature enters, target Forest becomes a 4/5 green Treefolk creature for as long as this creature remains on the battlefield. It's still a land.
-// XXX: requires aura-animates-land mechanic
+	// Awakener Druid {2}{G}
+	// Creature — Human Druid
+	// 1/1
+	// When this creature enters, target Forest becomes a 4/5 green Treefolk creature for as long as this creature remains on the battlefield. It's still a land.
+	// XXX: requires aura-animates-land mechanic
 	Register("Awakener Druid", func() Card {
 		return NewCreature("Awakener Druid", "{2}{G}", 1, 1,
 			WithSubTypes("Human", "Druid"),
 		)
 	})
 
-// Brindle Shoat {1}{G}
-// Creature — Boar
-// 1/1
-// When this creature dies, create a 3/3 green Boar creature token.
+	// Brindle Shoat {1}{G}
+	// Creature — Boar
+	// 1/1
+	// When this creature dies, create a 3/3 green Boar creature token.
 	Register("Brindle Shoat", func() Card {
 		return NewCreature("Brindle Shoat", "{1}{G}", 1, 1,
 			WithSubTypes("Boar"),
@@ -4015,10 +3925,10 @@ func registerCreatures() {
 		)
 	})
 
-// Brushstrider {1}{G}
-// Creature — Beast
-// 3/1
-// Vigilance (Attacking doesn't cause this creature to tap.)
+	// Brushstrider {1}{G}
+	// Creature — Beast
+	// 3/1
+	// Vigilance (Attacking doesn't cause this creature to tap.)
 	Register("Brushstrider", func() Card {
 		return NewCreature("Brushstrider", "{1}{G}", 3, 1,
 			WithSubTypes("Beast"),
@@ -4026,11 +3936,11 @@ func registerCreatures() {
 		)
 	})
 
-// Carven Caryatid {1}{G}{G}
-// Creature — Spirit
-// 2/5
-// Defender (This creature can't attack.)
-// When this creature enters, draw a card.
+	// Carven Caryatid {1}{G}{G}
+	// Creature — Spirit
+	// 2/5
+	// Defender (This creature can't attack.)
+	// When this creature enters, draw a card.
 	Register("Carven Caryatid", func() Card {
 		return NewCreature("Carven Caryatid", "{1}{G}{G}", 2, 5,
 			WithSubTypes("Spirit"),
@@ -4051,12 +3961,12 @@ func registerCreatures() {
 		)
 	})
 
-// Champion of Lambholt {1}{G}{G}
-// Creature — Human Warrior
-// 1/1
-// Creatures with power less than this creature's power can't block creatures you control.
-// Whenever another creature you control enters, put a +1/+1 counter on this creature.
-// XXX: requires power-comparison block restriction
+	// Champion of Lambholt {1}{G}{G}
+	// Creature — Human Warrior
+	// 1/1
+	// Creatures with power less than this creature's power can't block creatures you control.
+	// Whenever another creature you control enters, put a +1/+1 counter on this creature.
+	// XXX: requires power-comparison block restriction
 	Register("Champion of Lambholt", func() Card {
 		return NewCreature("Champion of Lambholt", "{1}{G}{G}", 1, 1,
 			WithSubTypes("Human", "Warrior"),
@@ -4071,11 +3981,11 @@ func registerCreatures() {
 		)
 	})
 
-// Craterhoof Behemoth {5}{G}{G}{G}
-// Creature — Beast
-// 5/5
-// Haste
-// When this creature enters, creatures you control gain trample and get +X/+X until end of turn, where X is the number of creatures you control.
+	// Craterhoof Behemoth {5}{G}{G}{G}
+	// Creature — Beast
+	// 5/5
+	// Haste
+	// When this creature enters, creatures you control gain trample and get +X/+X until end of turn, where X is the number of creatures you control.
 	Register("Craterhoof Behemoth", func() Card {
 		return NewCreature("Craterhoof Behemoth", "{5}{G}{G}{G}", 5, 5,
 			WithSubTypes("Beast"),
@@ -4100,10 +4010,10 @@ func registerCreatures() {
 		)
 	})
 
-// Dawntreader Elk {1}{G}
-// Creature — Elk
-// 2/2
-// {G}, Sacrifice this creature: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.
+	// Dawntreader Elk {1}{G}
+	// Creature — Elk
+	// 2/2
+	// {G}, Sacrifice this creature: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.
 	Register("Dawntreader Elk", func() Card {
 		return NewCreature("Dawntreader Elk", "{1}{G}", 2, 2,
 			WithSubTypes("Elk"),
@@ -4122,11 +4032,11 @@ func registerCreatures() {
 		)
 	})
 
-// Drover of the Mighty {1}{G}
-// Creature — Human Druid
-// 1/1
-// This creature gets +2/+2 as long as you control a Dinosaur.
-// {T}: Add one mana of any color.
+	// Drover of the Mighty {1}{G}
+	// Creature — Human Druid
+	// 1/1
+	// This creature gets +2/+2 as long as you control a Dinosaur.
+	// {T}: Add one mana of any color.
 	Register("Drover of the Mighty", func() Card {
 		return NewCreature("Drover of the Mighty", "{1}{G}", 1, 1,
 			WithSubTypes("Human", "Druid"),
@@ -4137,10 +4047,10 @@ func registerCreatures() {
 		)
 	})
 
-// Dwynen's Elite {1}{G}
-// Creature — Elf Warrior
-// 2/2
-// When this creature enters, if you control another Elf, create a 1/1 green Elf Warrior creature token.
+	// Dwynen's Elite {1}{G}
+	// Creature — Elf Warrior
+	// 2/2
+	// When this creature enters, if you control another Elf, create a 1/1 green Elf Warrior creature token.
 	Register("Dwynen's Elite", func() Card {
 		return NewCreature("Dwynen's Elite", "{1}{G}", 2, 2,
 			WithSubTypes("Elf", "Warrior"),
@@ -4158,11 +4068,11 @@ func registerCreatures() {
 		)
 	})
 
-// Elvish Archdruid {1}{G}{G}
-// Creature — Elf Druid
-// 2/2
-// Other Elf creatures you control get +1/+1.
-// {T}: Add {G} for each Elf you control.
+	// Elvish Archdruid {1}{G}{G}
+	// Creature — Elf Druid
+	// 2/2
+	// Other Elf creatures you control get +1/+1.
+	// {T}: Add {G} for each Elf you control.
 	Register("Elvish Archdruid", func() Card {
 		return NewCreature("Elvish Archdruid", "{1}{G}{G}", 2, 2,
 			WithSubTypes("Elf", "Druid"),
@@ -4190,10 +4100,10 @@ func registerCreatures() {
 		)
 	})
 
-// Fa'adiyah Seer {1}{G}
-// Creature — Human Shaman
-// 1/1
-// {T}: Draw a card and reveal it. If it isn't a land card, discard it.
+	// Fa'adiyah Seer {1}{G}
+	// Creature — Human Shaman
+	// 1/1
+	// {T}: Draw a card and reveal it. If it isn't a land card, discard it.
 	Register("Fa'adiyah Seer", func() Card {
 		return NewCreature("Fa'adiyah Seer", "{1}{G}", 1, 1,
 			WithSubTypes("Human", "Shaman"),
@@ -4221,11 +4131,11 @@ func registerCreatures() {
 		)
 	})
 
-// Feral Hydra {X}{G}
-// Creature — Hydra Beast
-// 0/0
-// This creature enters with X +1/+1 counters on it.
-// {3}: Put a +1/+1 counter on this creature. Any player may activate this ability.
+	// Feral Hydra {X}{G}
+	// Creature — Hydra Beast
+	// 0/0
+	// This creature enters with X +1/+1 counters on it.
+	// {3}: Put a +1/+1 counter on this creature. Any player may activate this ability.
 	Register("Feral Hydra", func() Card {
 		return NewCreature("Feral Hydra", "{X}{G}", 0, 0,
 			WithSubTypes("Hydra", "Beast"),
@@ -4238,10 +4148,10 @@ func registerCreatures() {
 		)
 	})
 
-// Feral Prowler {1}{G}
-// Creature — Cat
-// 1/3
-// When this creature dies, draw a card.
+	// Feral Prowler {1}{G}
+	// Creature — Cat
+	// 1/3
+	// When this creature dies, draw a card.
 	Register("Feral Prowler", func() Card {
 		return NewCreature("Feral Prowler", "{1}{G}", 1, 3,
 			WithSubTypes("Cat"),
@@ -4252,11 +4162,11 @@ func registerCreatures() {
 		)
 	})
 
-// Fertilid {2}{G}
-// Creature — Elemental
-// 0/0
-// This creature enters with two +1/+1 counters on it.
-// {1}{G}, Remove a +1/+1 counter from this creature: Target player searches their library for a basic land card, puts it onto the battlefield tapped, then shuffles.
+	// Fertilid {2}{G}
+	// Creature — Elemental
+	// 0/0
+	// This creature enters with two +1/+1 counters on it.
+	// {1}{G}, Remove a +1/+1 counter from this creature: Target player searches their library for a basic land card, puts it onto the battlefield tapped, then shuffles.
 	Register("Fertilid", func() Card {
 		return NewCreature("Fertilid", "{2}{G}", 0, 0,
 			WithSubTypes("Elemental"),
@@ -4280,12 +4190,12 @@ func registerCreatures() {
 		)
 	})
 
-// Ghalta, Primal Hunger {10}{G}{G}
-// Legendary Creature — Elder Dinosaur
-// 12/12
-// This spell costs {X} less to cast, where X is the total power of creatures you control.
-// Trample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)
-// XXX: requires "this spell costs {X} less to cast" cost-reduction infrastructure
+	// Ghalta, Primal Hunger {10}{G}{G}
+	// Legendary Creature — Elder Dinosaur
+	// 12/12
+	// This spell costs {X} less to cast, where X is the total power of creatures you control.
+	// Trample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)
+	// XXX: requires "this spell costs {X} less to cast" cost-reduction infrastructure
 	Register("Ghalta, Primal Hunger", func() Card {
 		return NewCreature("Ghalta, Primal Hunger", "{10}{G}{G}", 12, 12,
 			WithSubTypes("Elder", "Dinosaur"),
@@ -4294,21 +4204,21 @@ func registerCreatures() {
 		)
 	})
 
-// Ghirapur Guide {2}{G}
-// Creature — Elf Scout
-// 3/2
-// {2}{G}: Target creature you control can't be blocked by creatures with power 2 or less this turn.
-// XXX: requires "can't be blocked by creatures with power N or less" combat restriction
+	// Ghirapur Guide {2}{G}
+	// Creature — Elf Scout
+	// 3/2
+	// {2}{G}: Target creature you control can't be blocked by creatures with power 2 or less this turn.
+	// XXX: requires "can't be blocked by creatures with power N or less" combat restriction
 	Register("Ghirapur Guide", func() Card {
 		return NewCreature("Ghirapur Guide", "{2}{G}", 3, 2,
 			WithSubTypes("Elf", "Scout"),
 		)
 	})
 
-// Grave Bramble {1}{G}{G}
-// Creature — Plant
-// 3/4
-// Defender, protection from Zombies
+	// Grave Bramble {1}{G}{G}
+	// Creature — Plant
+	// 3/4
+	// Defender, protection from Zombies
 	Register("Grave Bramble", func() Card {
 		return NewCreature("Grave Bramble", "{1}{G}{G}", 3, 4,
 			WithSubTypes("Plant"),
@@ -4317,10 +4227,10 @@ func registerCreatures() {
 		)
 	})
 
-// Initiate's Companion {1}{G}
-// Creature — Cat
-// 3/1
-// Whenever this creature deals combat damage to a player, untap target creature or land.
+	// Initiate's Companion {1}{G}
+	// Creature — Cat
+	// 3/1
+	// Whenever this creature deals combat damage to a player, untap target creature or land.
 	Register("Initiate's Companion", func() Card {
 		return NewCreature("Initiate's Companion", "{1}{G}", 3, 1,
 			WithSubTypes("Cat"),
@@ -4332,52 +4242,35 @@ func registerCreatures() {
 		)
 	})
 
-// Ironshell Beetle {1}{G}
-// Creature — Insect
-// 1/1
-// When this creature enters, put a +1/+1 counter on target creature.
-// XXX: triggered abilities with AddTarget don't ask for player target choice; targets are derived from event source. Falls back to source counter for now
+	// Ironshell Beetle {1}{G}
+	// Creature — Insect
+	// 1/1
+	// When this creature enters, put a +1/+1 counter on target creature.
 	Register("Ironshell Beetle", func() Card {
 		return NewCreature("Ironshell Beetle", "{1}{G}", 1, 1,
 			WithSubTypes("Insect"),
-			WithAbility(EntersBattlefieldTrigger(FuncEffect(
-				"put a +1/+1 counter on target creature",
-				EffectProperties{Outcome: OutcomeBenefit},
-				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					p := g.GetPlayer(controller)
-					if p == nil {
-						return nil
-					}
-					candidates := g.FilterBattlefield(IsCreature)
-					if len(candidates) == 0 {
-						return nil
-					}
-					chosen := p.ChoosePermanent(candidates, "+1/+1 counter target", g)
-					if chosen == nil {
-						return nil
-					}
-					chosen.AddCounter(P1P1, 1)
-					return nil
-				},
-			), false)),
+			WithAbility(EntersBattlefieldTrigger(
+				AddCounters(P1P1, Fixed(1)),
+				false,
+			).AddTarget(TargetCreature())),
 		)
 	})
 
-// Keeper of Fables {3}{G}{G}
-// Creature — Cat
-// 4/5
-// Whenever one or more non-Human creatures you control deal combat damage to a player, draw a card.
-// XXX: requires "one or more" once-per-combat trigger aggregation across multiple sources
+	// Keeper of Fables {3}{G}{G}
+	// Creature — Cat
+	// 4/5
+	// Whenever one or more non-Human creatures you control deal combat damage to a player, draw a card.
+	// XXX: requires "one or more" once-per-combat trigger aggregation across multiple sources
 	Register("Keeper of Fables", func() Card {
 		return NewCreature("Keeper of Fables", "{3}{G}{G}", 4, 5,
 			WithSubTypes("Cat"),
 		)
 	})
 
-// Leaf Gilder {1}{G}
-// Creature — Elf Druid
-// 2/1
-// {T}: Add {G}.
+	// Leaf Gilder {1}{G}
+	// Creature — Elf Druid
+	// 2/1
+	// {T}: Add {G}.
 	Register("Leaf Gilder", func() Card {
 		return NewCreature("Leaf Gilder", "{1}{G}", 2, 1,
 			WithSubTypes("Elf", "Druid"),
@@ -4385,10 +4278,10 @@ func registerCreatures() {
 		)
 	})
 
-// Nessian Hornbeetle {1}{G}
-// Creature — Insect
-// 2/2
-// At the beginning of combat on your turn, if you control another creature with power 4 or greater, put a +1/+1 counter on this creature.
+	// Nessian Hornbeetle {1}{G}
+	// Creature — Insect
+	// 2/2
+	// At the beginning of combat on your turn, if you control another creature with power 4 or greater, put a +1/+1 counter on this creature.
 	Register("Nessian Hornbeetle", func() Card {
 		return NewCreature("Nessian Hornbeetle", "{1}{G}", 2, 2,
 			WithSubTypes("Insect"),
@@ -4407,12 +4300,12 @@ func registerCreatures() {
 		)
 	})
 
-// Neyith of the Dire Hunt {2}{G}{G}
-// Legendary Creature — Human Warrior
-// 3/3
-// Whenever one or more creatures you control fight or become blocked, draw a card.
-// At the beginning of combat on your turn, you may pay {2}{R/G}. If you do, double target creature's power until end of turn. That creature must be blocked this combat if able. ({R/G} can be paid with either {R} or {G}.)
-// XXX: requires hybrid mana, "one or more ... fight" aggregation, "must be blocked this combat" restriction
+	// Neyith of the Dire Hunt {2}{G}{G}
+	// Legendary Creature — Human Warrior
+	// 3/3
+	// Whenever one or more creatures you control fight or become blocked, draw a card.
+	// At the beginning of combat on your turn, you may pay {2}{R/G}. If you do, double target creature's power until end of turn. That creature must be blocked this combat if able. ({R/G} can be paid with either {R} or {G}.)
+	// XXX: requires hybrid mana, "one or more ... fight" aggregation, "must be blocked this combat" restriction
 	Register("Neyith of the Dire Hunt", func() Card {
 		return NewCreature("Neyith of the Dire Hunt", "{2}{G}{G}", 3, 3,
 			WithSubTypes("Human", "Warrior"),
@@ -4420,33 +4313,33 @@ func registerCreatures() {
 		)
 	})
 
-// Oracle of Mul Daya {3}{G}
-// Creature — Elf Shaman
-// 2/2
-// You may play an additional land on each of your turns.
-// Play with the top card of your library revealed.
-// You may play lands from the top of your library.
-// XXX: requires play-lands-from-top-of-library and library top reveal infrastructure
+	// Oracle of Mul Daya {3}{G}
+	// Creature — Elf Shaman
+	// 2/2
+	// You may play an additional land on each of your turns.
+	// Play with the top card of your library revealed.
+	// You may play lands from the top of your library.
+	// XXX: requires play-lands-from-top-of-library and library top reveal infrastructure
 	Register("Oracle of Mul Daya", func() Card {
 		return NewCreature("Oracle of Mul Daya", "{3}{G}", 2, 2,
 			WithSubTypes("Elf", "Shaman"),
 		)
 	})
 
-// Orazca Frillback {2}{G}
-// Creature — Dinosaur
-// 4/2
+	// Orazca Frillback {2}{G}
+	// Creature — Dinosaur
+	// 4/2
 	Register("Orazca Frillback", func() Card {
 		return NewCreature("Orazca Frillback", "{2}{G}", 4, 2,
 			WithSubTypes("Dinosaur"),
 		)
 	})
 
-// Overgrown Battlement {1}{G}
-// Creature — Wall
-// 0/4
-// Defender
-// {T}: Add {G} for each creature you control with defender.
+	// Overgrown Battlement {1}{G}
+	// Creature — Wall
+	// 0/4
+	// Defender
+	// {T}: Add {G} for each creature you control with defender.
 	Register("Overgrown Battlement", func() Card {
 		return NewCreature("Overgrown Battlement", "{1}{G}", 0, 4,
 			WithSubTypes("Wall"),
@@ -4472,10 +4365,10 @@ func registerCreatures() {
 		)
 	})
 
-// Penumbra Bobcat {2}{G}
-// Creature — Cat
-// 2/1
-// When this creature dies, create a 2/1 black Cat creature token.
+	// Penumbra Bobcat {2}{G}
+	// Creature — Cat
+	// 2/1
+	// When this creature dies, create a 2/1 black Cat creature token.
 	Register("Penumbra Bobcat", func() Card {
 		return NewCreature("Penumbra Bobcat", "{2}{G}", 2, 1,
 			WithSubTypes("Cat"),
@@ -4486,21 +4379,21 @@ func registerCreatures() {
 		)
 	})
 
-// Pouncing Cheetah {2}{G}
-// Creature — Cat
-// 3/2
-// Flash
-// XXX: requires Flash keyword (instant-speed casting of permanents)
+	// Pouncing Cheetah {2}{G}
+	// Creature — Cat
+	// 3/2
+	// Flash
+	// XXX: requires Flash keyword (instant-speed casting of permanents)
 	Register("Pouncing Cheetah", func() Card {
 		return NewCreature("Pouncing Cheetah", "{2}{G}", 3, 2,
 			WithSubTypes("Cat"),
 		)
 	})
 
-// Primordial Sage {4}{G}{G}
-// Creature — Spirit
-// 4/5
-// Whenever you cast a creature spell, you may draw a card.
+	// Primordial Sage {4}{G}{G}
+	// Creature — Spirit
+	// 4/5
+	// Whenever you cast a creature spell, you may draw a card.
 	Register("Primordial Sage", func() Card {
 		return NewCreature("Primordial Sage", "{4}{G}{G}", 4, 5,
 			WithSubTypes("Spirit"),
@@ -4512,11 +4405,11 @@ func registerCreatures() {
 		)
 	})
 
-// Rampaging Brontodon {5}{G}{G}
-// Creature — Dinosaur
-// 7/7
-// Trample
-// Whenever this creature attacks, it gets +1/+1 until end of turn for each land you control.
+	// Rampaging Brontodon {5}{G}{G}
+	// Creature — Dinosaur
+	// 7/7
+	// Trample
+	// Whenever this creature attacks, it gets +1/+1 until end of turn for each land you control.
 	Register("Rampaging Brontodon", func() Card {
 		return NewCreature("Rampaging Brontodon", "{5}{G}{G}", 7, 7,
 			WithSubTypes("Dinosaur"),
@@ -4531,10 +4424,10 @@ func registerCreatures() {
 		)
 	})
 
-// Ravenous Baloth {2}{G}{G}
-// Creature — Beast
-// 4/4
-// Sacrifice a Beast: You gain 4 life.
+	// Ravenous Baloth {2}{G}{G}
+	// Creature — Beast
+	// 4/4
+	// Sacrifice a Beast: You gain 4 life.
 	Register("Ravenous Baloth", func() Card {
 		return NewCreature("Ravenous Baloth", "{2}{G}{G}", 4, 4,
 			WithSubTypes("Beast"),
@@ -4545,12 +4438,12 @@ func registerCreatures() {
 		)
 	})
 
-// Rishkar, Peema Renegade {2}{G}
-// Legendary Creature — Elf Druid
-// 2/2
-// When Rishkar enters, put a +1/+1 counter on each of up to two target creatures.
-// Each creature you control with a counter on it has "{T}: Add {G}."
-// XXX: requires "up to two target creatures" multi-target and dynamic granting of activated mana abilities
+	// Rishkar, Peema Renegade {2}{G}
+	// Legendary Creature — Elf Druid
+	// 2/2
+	// When Rishkar enters, put a +1/+1 counter on each of up to two target creatures.
+	// Each creature you control with a counter on it has "{T}: Add {G}."
+	// XXX: requires "up to two target creatures" multi-target and dynamic granting of activated mana abilities
 	Register("Rishkar, Peema Renegade", func() Card {
 		return NewCreature("Rishkar, Peema Renegade", "{2}{G}", 2, 2,
 			WithSubTypes("Elf", "Druid"),
@@ -4558,21 +4451,21 @@ func registerCreatures() {
 		)
 	})
 
-// Rumbling Baloth {2}{G}{G}
-// Creature — Beast
-// 4/4
+	// Rumbling Baloth {2}{G}{G}
+	// Creature — Beast
+	// 4/4
 	Register("Rumbling Baloth", func() Card {
 		return NewCreature("Rumbling Baloth", "{2}{G}{G}", 4, 4,
 			WithSubTypes("Beast"),
 		)
 	})
 
-// Scrounging Bandar {1}{G}
-// Creature — Cat Monkey
-// 0/0
-// This creature enters with two +1/+1 counters on it.
-// At the beginning of your upkeep, you may move any number of +1/+1 counters from this creature onto another target creature.
-// XXX: requires "move any number of counters" choice mechanic
+	// Scrounging Bandar {1}{G}
+	// Creature — Cat Monkey
+	// 0/0
+	// This creature enters with two +1/+1 counters on it.
+	// At the beginning of your upkeep, you may move any number of +1/+1 counters from this creature onto another target creature.
+	// XXX: requires "move any number of counters" choice mechanic
 	Register("Scrounging Bandar", func() Card {
 		return NewCreature("Scrounging Bandar", "{1}{G}", 0, 0,
 			WithSubTypes("Cat", "Monkey"),
@@ -4580,12 +4473,12 @@ func registerCreatures() {
 		)
 	})
 
-// Selvala, Heart of the Wilds {1}{G}{G}
-// Legendary Creature — Elf Scout
-// 2/3
-// Whenever another creature enters, its controller may draw a card if its power is greater than each other creature's power.
-// {G}, {T}: Add X mana in any combination of colors, where X is the greatest power among creatures you control.
-// XXX: requires power-comparison ETB trigger and "X mana in any combination of colors" mana production
+	// Selvala, Heart of the Wilds {1}{G}{G}
+	// Legendary Creature — Elf Scout
+	// 2/3
+	// Whenever another creature enters, its controller may draw a card if its power is greater than each other creature's power.
+	// {G}, {T}: Add X mana in any combination of colors, where X is the greatest power among creatures you control.
+	// XXX: requires power-comparison ETB trigger and "X mana in any combination of colors" mana production
 	Register("Selvala, Heart of the Wilds", func() Card {
 		return NewCreature("Selvala, Heart of the Wilds", "{1}{G}{G}", 2, 3,
 			WithSubTypes("Elf", "Scout"),
@@ -4593,58 +4486,49 @@ func registerCreatures() {
 		)
 	})
 
-// Silhana Wayfinder {1}{G}
-// Creature — Elf Scout
-// 2/1
-// When this creature enters, look at the top four cards of your library. You may reveal a creature or land card from among them and put it on top of your library. Put the rest on the bottom of your library in a random order.
-// XXX: requires "look at top N, choose, rest on bottom in random order" library manipulation
+	// Silhana Wayfinder {1}{G}
+	// Creature — Elf Scout
+	// 2/1
+	// When this creature enters, look at the top four cards of your library. You may reveal a creature or land card from among them and put it on top of your library. Put the rest on the bottom of your library in a random order.
+	// XXX: requires "look at top N, choose, rest on bottom in random order" library manipulation
 	Register("Silhana Wayfinder", func() Card {
 		return NewCreature("Silhana Wayfinder", "{1}{G}", 2, 1,
 			WithSubTypes("Elf", "Scout"),
 		)
 	})
 
-// Somberwald Stag {3}{G}{G}
-// Creature — Elk
-// 4/3
-// When this creature enters, you may have it fight target creature you don't control.
-// XXX: triggered abilities don't currently re-prompt for player target choice; falls back to player picking via ChoosePermanent
+	// Somberwald Stag {3}{G}{G}
+	// Creature — Elk
+	// 4/3
+	// When this creature enters, you may have it fight target creature you don't control.
 	Register("Somberwald Stag", func() Card {
 		return NewCreature("Somberwald Stag", "{3}{G}{G}", 4, 3,
 			WithSubTypes("Elk"),
 			WithAbility(EntersBattlefieldTrigger(FuncEffect(
 				"have ~ fight target creature you don't control",
 				EffectProperties{Outcome: OutcomeDetriment},
-				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					p := g.GetPlayer(controller)
-					if p == nil {
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					if len(targets) == 0 {
 						return nil
 					}
 					src := g.FindPermanent(sourceID)
-					if src == nil {
+					target := g.FindPermanent(targets[0])
+					if src == nil || target == nil {
 						return nil
 					}
-					candidates := g.FilterBattlefield(And(IsCreature, NotControlledBy(controller)))
-					if len(candidates) == 0 {
-						return nil
-					}
-					chosen := p.ChoosePermanent(candidates, "fight target", g)
-					if chosen == nil {
-						return nil
-					}
-					fightTargets(g, src, chosen)
+					fightTargets(g, src, target)
 					return nil
 				},
-			), true)),
+			), true).AddTarget(TargetPermanentOpponentControls(IsCreature))),
 		)
 	})
 
-// Soul of the Harvest {4}{G}{G}
-// Creature — Elemental
-// 6/6
-// Trample
-// Whenever another nontoken creature you control enters, you may draw a card.
-// XXX: requires "another nontoken creature" ETB filter (token detection on event source)
+	// Soul of the Harvest {4}{G}{G}
+	// Creature — Elemental
+	// 6/6
+	// Trample
+	// Whenever another nontoken creature you control enters, you may draw a card.
+	// XXX: requires "another nontoken creature" ETB filter (token detection on event source)
 	Register("Soul of the Harvest", func() Card {
 		return NewCreature("Soul of the Harvest", "{4}{G}{G}", 6, 6,
 			WithSubTypes("Elemental"),
@@ -4652,10 +4536,10 @@ func registerCreatures() {
 		)
 	})
 
-// Sporemound {3}{G}{G}
-// Creature — Fungus
-// 3/3
-// Landfall — Whenever a land you control enters, create a 1/1 green Saproling creature token.
+	// Sporemound {3}{G}{G}
+	// Creature — Fungus
+	// 3/3
+	// Landfall — Whenever a land you control enters, create a 1/1 green Saproling creature token.
 	Register("Sporemound", func() Card {
 		return NewCreature("Sporemound", "{3}{G}{G}", 3, 3,
 			WithSubTypes("Fungus"),
@@ -4668,10 +4552,10 @@ func registerCreatures() {
 		)
 	})
 
-// Sylvan Brushstrider {2}{G}
-// Creature — Beast
-// 3/2
-// When this creature enters, you gain 2 life.
+	// Sylvan Brushstrider {2}{G}
+	// Creature — Beast
+	// 3/2
+	// When this creature enters, you gain 2 life.
 	Register("Sylvan Brushstrider", func() Card {
 		return NewCreature("Sylvan Brushstrider", "{2}{G}", 3, 2,
 			WithSubTypes("Beast"),
@@ -4679,10 +4563,10 @@ func registerCreatures() {
 		)
 	})
 
-// Sylvan Ranger {1}{G}
-// Creature — Elf Scout Ranger
-// 1/1
-// When this creature enters, you may search your library for a basic land card, reveal it, put it into your hand, then shuffle.
+	// Sylvan Ranger {1}{G}
+	// Creature — Elf Scout Ranger
+	// 1/1
+	// When this creature enters, you may search your library for a basic land card, reveal it, put it into your hand, then shuffle.
 	Register("Sylvan Ranger", func() Card {
 		return NewCreature("Sylvan Ranger", "{1}{G}", 1, 1,
 			WithSubTypes("Elf", "Scout", "Ranger"),
@@ -4697,11 +4581,11 @@ func registerCreatures() {
 		)
 	})
 
-// Thragtusk {4}{G}
-// Creature — Beast
-// 5/3
-// When this creature enters, you gain 5 life.
-// When this creature leaves the battlefield, create a 3/3 green Beast creature token.
+	// Thragtusk {4}{G}
+	// Creature — Beast
+	// 5/3
+	// When this creature enters, you gain 5 life.
+	// When this creature leaves the battlefield, create a 3/3 green Beast creature token.
 	Register("Thragtusk", func() Card {
 		return NewCreature("Thragtusk", "{4}{G}", 5, 3,
 			WithSubTypes("Beast"),
@@ -4712,11 +4596,11 @@ func registerCreatures() {
 		)
 	})
 
-// Thundering Spineback {5}{G}{G}
-// Creature — Dinosaur
-// 5/5
-// Other Dinosaurs you control get +1/+1.
-// {5}{G}: Create a 3/3 green Dinosaur creature token with trample. (It can deal excess combat damage to the player or planeswalker it's attacking.)
+	// Thundering Spineback {5}{G}{G}
+	// Creature — Dinosaur
+	// 5/5
+	// Other Dinosaurs you control get +1/+1.
+	// {5}{G}: Create a 3/3 green Dinosaur creature token with trample. (It can deal excess combat damage to the player or planeswalker it's attacking.)
 	Register("Thundering Spineback", func() Card {
 		return NewCreature("Thundering Spineback", "{5}{G}{G}", 5, 5,
 			WithSubTypes("Dinosaur"),
@@ -4728,12 +4612,12 @@ func registerCreatures() {
 		)
 	})
 
-// Towering Titan {4}{G}{G}
-// Creature — Giant
-// 0/0
-// This creature enters with X +1/+1 counters on it, where X is the total toughness of other creatures you control.
-// Sacrifice a creature with defender: All creatures gain trample until end of turn.
-// XXX: requires "enters with X counters where X is total toughness of other creatures" replacement
+	// Towering Titan {4}{G}{G}
+	// Creature — Giant
+	// 0/0
+	// This creature enters with X +1/+1 counters on it, where X is the total toughness of other creatures you control.
+	// Sacrifice a creature with defender: All creatures gain trample until end of turn.
+	// XXX: requires "enters with X counters where X is total toughness of other creatures" replacement
 	Register("Towering Titan", func() Card {
 		return NewCreature("Towering Titan", "{4}{G}{G}", 0, 0,
 			WithSubTypes("Giant"),
@@ -4756,12 +4640,12 @@ func registerCreatures() {
 		)
 	})
 
-// Ulvenwald Hydra {4}{G}{G}
-// Creature — Hydra
-// */*
-// Reach
-// Ulvenwald Hydra's power and toughness are each equal to the number of lands you control.
-// When this creature enters, you may search your library for a land card, put it onto the battlefield tapped, then shuffle.
+	// Ulvenwald Hydra {4}{G}{G}
+	// Creature — Hydra
+	// */*
+	// Reach
+	// Ulvenwald Hydra's power and toughness are each equal to the number of lands you control.
+	// When this creature enters, you may search your library for a land card, put it onto the battlefield tapped, then shuffle.
 	Register("Ulvenwald Hydra", func() Card {
 		return NewCreature("Ulvenwald Hydra", "{4}{G}{G}", 0, 0,
 			WithSubTypes("Hydra"),
@@ -4778,11 +4662,11 @@ func registerCreatures() {
 		)
 	})
 
-// Wall of Blossoms {1}{G}
-// Creature — Plant Wall
-// 0/4
-// Defender
-// When this creature enters, draw a card.
+	// Wall of Blossoms {1}{G}
+	// Creature — Plant Wall
+	// 0/4
+	// Defender
+	// When this creature enters, draw a card.
 	Register("Wall of Blossoms", func() Card {
 		return NewCreature("Wall of Blossoms", "{1}{G}", 0, 4,
 			WithSubTypes("Plant", "Wall"),
@@ -4791,11 +4675,11 @@ func registerCreatures() {
 		)
 	})
 
-// Wall of Vines {G}
-// Creature — Plant Wall
-// 0/3
-// Defender (This creature can't attack.)
-// Reach (This creature can block creatures with flying.)
+	// Wall of Vines {G}
+	// Creature — Plant Wall
+	// 0/3
+	// Defender (This creature can't attack.)
+	// Reach (This creature can block creatures with flying.)
 	Register("Wall of Vines", func() Card {
 		return NewCreature("Wall of Vines", "{G}", 0, 3,
 			WithSubTypes("Plant", "Wall"),
@@ -4804,10 +4688,10 @@ func registerCreatures() {
 		)
 	})
 
-// Wildheart Invoker {2}{G}{G}
-// Creature — Elf Shaman
-// 4/3
-// {8}: Target creature gets +5/+5 and gains trample until end of turn. (It can deal excess combat damage to the player or planeswalker it's attacking.)
+	// Wildheart Invoker {2}{G}{G}
+	// Creature — Elf Shaman
+	// 4/3
+	// {8}: Target creature gets +5/+5 and gains trample until end of turn. (It can deal excess combat damage to the player or planeswalker it's attacking.)
 	Register("Wildheart Invoker", func() Card {
 		return NewCreature("Wildheart Invoker", "{2}{G}{G}", 4, 3,
 			WithSubTypes("Elf", "Shaman"),
@@ -4820,10 +4704,10 @@ func registerCreatures() {
 		)
 	})
 
-// Woodborn Behemoth {3}{G}{G}
-// Creature — Elemental
-// 4/4
-// As long as you control eight or more lands, this creature gets +4/+4 and has trample. (It can deal excess combat damage to the player or planeswalker it's attacking.)
+	// Woodborn Behemoth {3}{G}{G}
+	// Creature — Elemental
+	// 4/4
+	// As long as you control eight or more lands, this creature gets +4/+4 and has trample. (It can deal excess combat damage to the player or planeswalker it's attacking.)
 	Register("Woodborn Behemoth", func() Card {
 		return NewCreature("Woodborn Behemoth", "{3}{G}{G}", 4, 4,
 			WithSubTypes("Elemental"),
@@ -4854,12 +4738,12 @@ func registerCreatures() {
 		)
 	})
 
-// Wren's Run Vanquisher {1}{G}
-// Creature — Elf Warrior
-// 3/3
-// As an additional cost to cast this spell, reveal an Elf card from your hand or pay {3}.
-// Deathtouch (Any amount of damage this deals to a creature is enough to destroy it.)
-// XXX: requires "reveal a card from hand or pay X" branching additional cost
+	// Wren's Run Vanquisher {1}{G}
+	// Creature — Elf Warrior
+	// 3/3
+	// As an additional cost to cast this spell, reveal an Elf card from your hand or pay {3}.
+	// Deathtouch (Any amount of damage this deals to a creature is enough to destroy it.)
+	// XXX: requires "reveal a card from hand or pay X" branching additional cost
 	Register("Wren's Run Vanquisher", func() Card {
 		return NewCreature("Wren's Run Vanquisher", "{1}{G}", 3, 3,
 			WithSubTypes("Elf", "Warrior"),
@@ -4867,13 +4751,12 @@ func registerCreatures() {
 		)
 	})
 
-
 	// ===== MULTICOLOR CREATURES =====
 
-// Dinrova Horror {4}{U}{B}
-// Creature — Horror
-// 4/4
-// When this creature enters, return target permanent to its owner's hand, then that player discards a card.
+	// Dinrova Horror {4}{U}{B}
+	// Creature — Horror
+	// 4/4
+	// When this creature enters, return target permanent to its owner's hand, then that player discards a card.
 	Register("Dinrova Horror", func() Card {
 		return NewCreature("Dinrova Horror", "{4}{U}{B}", 4, 4,
 			WithSubTypes("Horror"),
@@ -4909,20 +4792,20 @@ func registerCreatures() {
 		)
 	})
 
-// Fusion Elemental {W}{U}{B}{R}{G}
-// Creature — Elemental
-// 8/8
+	// Fusion Elemental {W}{U}{B}{R}{G}
+	// Creature — Elemental
+	// 8/8
 	Register("Fusion Elemental", func() Card {
 		return NewCreature("Fusion Elemental", "{W}{U}{B}{R}{G}", 8, 8,
 			WithSubTypes("Elemental"),
 		)
 	})
 
-// Ironroot Warlord {1}{G}{W}
-// Creature — Treefolk Soldier
-// */5
-// Ironroot Warlord's power is equal to the number of creatures you control.
-// {3}{G}{W}: Create a 1/1 white Soldier creature token.
+	// Ironroot Warlord {1}{G}{W}
+	// Creature — Treefolk Soldier
+	// */5
+	// Ironroot Warlord's power is equal to the number of creatures you control.
+	// {3}{G}{W}: Create a 1/1 white Soldier creature token.
 	Register("Ironroot Warlord", func() Card {
 		return NewCreature("Ironroot Warlord", "{1}{G}{W}", 0, 5,
 			WithSubTypes("Treefolk", "Soldier"),
@@ -4944,12 +4827,12 @@ func registerCreatures() {
 		)
 	})
 
-// Maelstrom Archangel {W}{U}{B}{R}{G}
-// Creature — Angel
-// 5/5
-// Flying
-// Whenever this creature deals combat damage to a player, you may cast a spell from your hand without paying its mana cost.
-// XXX: requires cast-from-hand-without-paying alternate-cost mechanic
+	// Maelstrom Archangel {W}{U}{B}{R}{G}
+	// Creature — Angel
+	// 5/5
+	// Flying
+	// Whenever this creature deals combat damage to a player, you may cast a spell from your hand without paying its mana cost.
+	// XXX: requires cast-from-hand-without-paying alternate-cost mechanic
 	Register("Maelstrom Archangel", func() Card {
 		return NewCreature("Maelstrom Archangel", "{W}{U}{B}{R}{G}", 5, 5,
 			WithSubTypes("Angel"),
@@ -4957,10 +4840,10 @@ func registerCreatures() {
 		)
 	})
 
-// Raging Regisaur {2}{R}{G}
-// Creature — Dinosaur
-// 4/4
-// Whenever this creature attacks, it deals 1 damage to any target.
+	// Raging Regisaur {2}{R}{G}
+	// Creature — Dinosaur
+	// 4/4
+	// Whenever this creature attacks, it deals 1 damage to any target.
 	Register("Raging Regisaur", func() Card {
 		return NewCreature("Raging Regisaur", "{2}{R}{G}", 4, 4,
 			WithSubTypes("Dinosaur"),
@@ -4973,9 +4856,7 @@ func registerCreatures() {
 						return nil
 					}
 					var creatureCands []*Permanent
-					for _, perm := range g.FilterBattlefield(And(IsCreature, NotControlledBy(controller))) {
-						creatureCands = append(creatureCands, perm)
-					}
+					creatureCands = append(creatureCands, g.FilterBattlefield(And(IsCreature, NotControlledBy(controller)))...)
 					if opp := g.GetOpponent(controller); opp != nil {
 						g.DealDamageToPlayer(opp, 1, sourceID)
 						return nil
@@ -4992,13 +4873,12 @@ func registerCreatures() {
 		)
 	})
 
-
 	// ===== COLORLESS CREATURES =====
 
-// Alloy Myr {3}
-// Artifact Creature — Myr
-// 2/2
-// {T}: Add one mana of any color.
+	// Alloy Myr {3}
+	// Artifact Creature — Myr
+	// 2/2
+	// {T}: Add one mana of any color.
 	Register("Alloy Myr", func() Card {
 		return NewCreature("Alloy Myr", "{3}", 2, 2,
 			WithSubTypes("Myr"),
@@ -5007,10 +4887,10 @@ func registerCreatures() {
 		)
 	})
 
-// Ancestral Statue {4}
-// Artifact Creature — Golem
-// 3/4
-// When this creature enters, return a nonland permanent you control to its owner's hand.
+	// Ancestral Statue {4}
+	// Artifact Creature — Golem
+	// 3/4
+	// When this creature enters, return a nonland permanent you control to its owner's hand.
 	Register("Ancestral Statue", func() Card {
 		return NewCreature("Ancestral Statue", "{4}", 3, 4,
 			WithSubTypes("Golem"),
@@ -5046,13 +4926,13 @@ func registerCreatures() {
 		)
 	})
 
-// Chamber Sentry {X}
-// Artifact Creature — Construct
-// 0/0
-// This creature enters with a +1/+1 counter on it for each color of mana spent to cast it.
-// {X}, {T}, Remove X +1/+1 counters from this creature: It deals X damage to any target.
-// {W}{U}{B}{R}{G}: Return this card from your graveyard to your hand.
-// XXX: requires colors-of-mana-spent tracking and graveyard activated abilities
+	// Chamber Sentry {X}
+	// Artifact Creature — Construct
+	// 0/0
+	// This creature enters with a +1/+1 counter on it for each color of mana spent to cast it.
+	// {X}, {T}, Remove X +1/+1 counters from this creature: It deals X damage to any target.
+	// {W}{U}{B}{R}{G}: Return this card from your graveyard to your hand.
+	// XXX: requires colors-of-mana-spent tracking and graveyard activated abilities
 	Register("Chamber Sentry", func() Card {
 		return NewCreature("Chamber Sentry", "{X}", 0, 0,
 			WithSubTypes("Construct"),
@@ -5060,10 +4940,10 @@ func registerCreatures() {
 		)
 	})
 
-// Dragonloft Idol {4}
-// Artifact Creature — Gargoyle
-// 3/3
-// As long as you control a Dragon, this creature gets +1/+1 and has flying and trample.
+	// Dragonloft Idol {4}
+	// Artifact Creature — Gargoyle
+	// 3/3
+	// As long as you control a Dragon, this creature gets +1/+1 and has flying and trample.
 	Register("Dragonloft Idol", func() Card {
 		return NewCreature("Dragonloft Idol", "{4}", 3, 3,
 			WithSubTypes("Gargoyle"),
@@ -5085,11 +4965,11 @@ func registerCreatures() {
 		)
 	})
 
-// Gargoyle Sentinel {3}
-// Artifact Creature — Gargoyle
-// 3/3
-// Defender (This creature can't attack.)
-// {3}: Until end of turn, this creature loses defender and gains flying.
+	// Gargoyle Sentinel {3}
+	// Artifact Creature — Gargoyle
+	// 3/3
+	// Defender (This creature can't attack.)
+	// {3}: Until end of turn, this creature loses defender and gains flying.
 	Register("Gargoyle Sentinel", func() Card {
 		return NewCreature("Gargoyle Sentinel", "{3}", 3, 3,
 			WithSubTypes("Gargoyle"),
@@ -5116,13 +4996,13 @@ func registerCreatures() {
 		)
 	})
 
-// Gingerbrute {1}
-// Artifact Creature — Food Golem
-// 1/1
-// Haste (This creature can attack and {T} as soon as it comes under your control.)
-// {1}: This creature can't be blocked this turn except by creatures with haste.
-// {2}, {T}, Sacrifice this creature: You gain 3 life.
-// XXX: {1} ability requires "can't be blocked except by creatures with [keyword]" combat restriction
+	// Gingerbrute {1}
+	// Artifact Creature — Food Golem
+	// 1/1
+	// Haste (This creature can attack and {T} as soon as it comes under your control.)
+	// {1}: This creature can't be blocked this turn except by creatures with haste.
+	// {2}, {T}, Sacrifice this creature: You gain 3 life.
+	// XXX: {1} ability requires "can't be blocked except by creatures with [keyword]" combat restriction
 	Register("Gingerbrute", func() Card {
 		return NewCreature("Gingerbrute", "{1}", 1, 1,
 			WithSubTypes("Food", "Golem"),
@@ -5137,10 +5017,10 @@ func registerCreatures() {
 		)
 	})
 
-// Jousting Dummy {2}
-// Artifact Creature — Scarecrow Knight
-// 2/1
-// {3}: This creature gets +1/+0 until end of turn.
+	// Jousting Dummy {2}
+	// Artifact Creature — Scarecrow Knight
+	// 2/1
+	// {3}: This creature gets +1/+0 until end of turn.
 	Register("Jousting Dummy", func() Card {
 		return NewCreature("Jousting Dummy", "{2}", 2, 1,
 			WithSubTypes("Scarecrow", "Knight"),
@@ -5152,10 +5032,10 @@ func registerCreatures() {
 		)
 	})
 
-// Lightning-Core Excavator {1}
-// Artifact Creature — Golem
-// 0/3
-// {5}, {T}, Sacrifice this creature: It deals 3 damage to any target.
+	// Lightning-Core Excavator {1}
+	// Artifact Creature — Golem
+	// 0/3
+	// {5}, {T}, Sacrifice this creature: It deals 3 damage to any target.
 	Register("Lightning-Core Excavator", func() Card {
 		return NewCreature("Lightning-Core Excavator", "{1}", 0, 3,
 			WithSubTypes("Golem"),
@@ -5170,10 +5050,10 @@ func registerCreatures() {
 		)
 	})
 
-// Meteor Golem {7}
-// Artifact Creature — Golem
-// 3/3
-// When this creature enters, destroy target nonland permanent an opponent controls.
+	// Meteor Golem {7}
+	// Artifact Creature — Golem
+	// 3/3
+	// When this creature enters, destroy target nonland permanent an opponent controls.
 	Register("Meteor Golem", func() Card {
 		return NewCreature("Meteor Golem", "{7}", 3, 3,
 			WithSubTypes("Golem"),
@@ -5201,10 +5081,10 @@ func registerCreatures() {
 		)
 	})
 
-// Myr Sire {2}
-// Artifact Creature — Phyrexian Myr
-// 1/1
-// When this creature dies, create a 1/1 colorless Phyrexian Myr artifact creature token.
+	// Myr Sire {2}
+	// Artifact Creature — Phyrexian Myr
+	// 1/1
+	// When this creature dies, create a 1/1 colorless Phyrexian Myr artifact creature token.
 	Register("Myr Sire", func() Card {
 		return NewCreature("Myr Sire", "{2}", 1, 1,
 			WithSubTypes("Phyrexian", "Myr"),
@@ -5216,10 +5096,10 @@ func registerCreatures() {
 		)
 	})
 
-// Perilous Myr {2}
-// Artifact Creature — Phyrexian Myr
-// 1/1
-// When this creature dies, it deals 2 damage to any target.
+	// Perilous Myr {2}
+	// Artifact Creature — Phyrexian Myr
+	// 1/1
+	// When this creature dies, it deals 2 damage to any target.
 	Register("Perilous Myr", func() Card {
 		return NewCreature("Perilous Myr", "{2}", 1, 1,
 			WithSubTypes("Phyrexian", "Myr"),
@@ -5233,9 +5113,7 @@ func registerCreatures() {
 						return nil
 					}
 					var creatureCands []*Permanent
-					for _, perm := range g.FilterBattlefield(IsCreature) {
-						creatureCands = append(creatureCands, perm)
-					}
+					creatureCands = append(creatureCands, g.FilterBattlefield(IsCreature)...)
 					if len(creatureCands) > 0 {
 						chosen := p.ChoosePermanent(creatureCands, "2 damage to creature", g)
 						if chosen != nil {
@@ -5252,11 +5130,11 @@ func registerCreatures() {
 		)
 	})
 
-// Roving Keep {7}
-// Artifact Creature — Wall
-// 5/7
-// Defender
-// {7}: This creature gets +2/+0 and gains trample until end of turn. It can attack this turn as though it didn't have defender.
+	// Roving Keep {7}
+	// Artifact Creature — Wall
+	// 5/7
+	// Defender
+	// {7}: This creature gets +2/+0 and gains trample until end of turn. It can attack this turn as though it didn't have defender.
 	Register("Roving Keep", func() Card {
 		return NewCreature("Roving Keep", "{7}", 5, 7,
 			WithSubTypes("Wall"),
@@ -5288,10 +5166,10 @@ func registerCreatures() {
 		)
 	})
 
-// Runed Servitor {2}
-// Artifact Creature — Construct
-// 2/2
-// When this creature dies, each player draws a card.
+	// Runed Servitor {2}
+	// Artifact Creature — Construct
+	// 2/2
+	// When this creature dies, each player draws a card.
 	Register("Runed Servitor", func() Card {
 		return NewCreature("Runed Servitor", "{2}", 2, 2,
 			WithSubTypes("Construct"),
@@ -5309,11 +5187,11 @@ func registerCreatures() {
 		)
 	})
 
-// Scarecrone {3}
-// Artifact Creature — Scarecrow
-// 1/2
-// {1}, Sacrifice a Scarecrow: Draw a card.
-// {4}, {T}: Return target artifact creature card from your graveyard to the battlefield.
+	// Scarecrone {3}
+	// Artifact Creature — Scarecrow
+	// 1/2
+	// {1}, Sacrifice a Scarecrow: Draw a card.
+	// {4}, {T}: Return target artifact creature card from your graveyard to the battlefield.
 	Register("Scarecrone", func() Card {
 		return NewCreature("Scarecrone", "{3}", 1, 2,
 			WithSubTypes("Scarecrow"),
@@ -5334,12 +5212,12 @@ func registerCreatures() {
 		)
 	})
 
-// Scuttlemutt {3}
-// Artifact Creature — Scarecrow
-// 2/2
-// {T}: Add one mana of any color.
-// {T}: Target creature becomes the color or colors of your choice until end of turn.
-// XXX: requires "color or colors of your choice" (multi-color override) until end of turn
+	// Scuttlemutt {3}
+	// Artifact Creature — Scarecrow
+	// 2/2
+	// {T}: Add one mana of any color.
+	// {T}: Target creature becomes the color or colors of your choice until end of turn.
+	// XXX: requires "color or colors of your choice" (multi-color override) until end of turn
 	Register("Scuttlemutt", func() Card {
 		return NewCreature("Scuttlemutt", "{3}", 2, 2,
 			WithSubTypes("Scarecrow"),
@@ -5348,11 +5226,11 @@ func registerCreatures() {
 		)
 	})
 
-// Signpost Scarecrow {4}
-// Artifact Creature — Scarecrow
-// 2/4
-// Vigilance
-// {2}: Add one mana of any color.
+	// Signpost Scarecrow {4}
+	// Artifact Creature — Scarecrow
+	// 2/4
+	// Vigilance
+	// {2}: Add one mana of any color.
 	Register("Signpost Scarecrow", func() Card {
 		return NewCreature("Signpost Scarecrow", "{4}", 2, 4,
 			WithSubTypes("Scarecrow"),
@@ -5365,10 +5243,10 @@ func registerCreatures() {
 		)
 	})
 
-// Skittering Surveyor {3}
-// Artifact Creature — Construct
-// 1/2
-// When this creature enters, you may search your library for a basic land card, reveal it, put it into your hand, then shuffle.
+	// Skittering Surveyor {3}
+	// Artifact Creature — Construct
+	// 1/2
+	// When this creature enters, you may search your library for a basic land card, reveal it, put it into your hand, then shuffle.
 	Register("Skittering Surveyor", func() Card {
 		return NewCreature("Skittering Surveyor", "{3}", 1, 2,
 			WithSubTypes("Construct"),
@@ -5384,11 +5262,11 @@ func registerCreatures() {
 		)
 	})
 
-// Suspicious Bookcase {2}
-// Artifact Creature — Wall
-// 0/4
-// Defender
-// {3}, {T}: Target creature can't be blocked this turn.
+	// Suspicious Bookcase {2}
+	// Artifact Creature — Wall
+	// 0/4
+	// Defender
+	// {3}, {T}: Target creature can't be blocked this turn.
 	Register("Suspicious Bookcase", func() Card {
 		return NewCreature("Suspicious Bookcase", "{2}", 0, 4,
 			WithSubTypes("Wall"),
