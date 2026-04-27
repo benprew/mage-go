@@ -243,8 +243,8 @@ func registerCreatures() {
 						return nil
 					}), false,
 			)),
-			// State trigger: when you control no lands (outside upkeep), sacrifice
-			WithAbility(NewTriggered(EvtLeavesBattlefield, false, SacrificeSource()).
+			// "When you control no lands, sacrifice Serendib Djinn."
+			WithAbility(NewStateTriggered(false, SacrificeSource()).
 				SetConditionData(ControllerHasNoPermanentMatching{Filter: IsLand})),
 		)
 	})

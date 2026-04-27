@@ -104,7 +104,10 @@ func (g *Game) runPriorityRound(mainPhase bool) {
 		// 1. Check state-based actions (includes lethal damage, 0-toughness, etc.)
 		g.CheckStateBasedActions()
 
-		// 2. Put pending triggers on stack
+		// 2. Evaluate state triggers (CR 603.8) — they're checked alongside SBA.
+		g.CheckStateTriggers()
+
+		// 3. Put pending triggers on stack
 		g.PutTriggersOnStack()
 
 		// 3. Cycle through players starting from active player

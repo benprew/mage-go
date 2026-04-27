@@ -43,6 +43,13 @@ type Game struct {
 	// Event handling
 	pendingTriggers []*pendingTrigger
 
+	// armedStateTriggers tracks state-triggered abilities (CR 603.8) that have
+	// fired but not yet rearmed. Key is the (sourceID, abilityID) pair. A
+	// state trigger only re-fires once its condition has gone false and then
+	// true again — armedStateTriggers[key] == true means "fired since last
+	// observed false; do not fire again until it's seen false."
+	armedStateTriggers map[stateTriggerKey]bool
+
 	// Extra turns
 	extraTurns []uuid.UUID // player IDs who get extra turns
 
@@ -160,6 +167,11 @@ type pendingTrigger struct {
 	controller uuid.UUID
 }
 
+type stateTriggerKey struct {
+	sourceID  uuid.UUID
+	abilityID uuid.UUID
+}
+
 // NewGame creates a new 2-player game.
 func NewGame(playerA, playerB Player) *Game {
 	return &Game{
@@ -176,6 +188,7 @@ func NewGame(playerA, playerB Player) *Game {
 		instantsCastThisTurn:        make(map[uuid.UUID]int),
 		artifactManaOnly:            make(map[uuid.UUID]bool),
 		creatureManaOnly:            make(map[uuid.UUID]bool),
+		armedStateTriggers:          make(map[stateTriggerKey]bool),
 		schedule:                    newTurnSchedule(),
 	}
 }
@@ -734,6 +747,9 @@ func (g *Game) checkAbilitiesForEvent(abilities []Ability, evt *GameEvent, sourc
 		if !ok {
 			continue
 		}
+		if ta.IsStateTrigger() {
+			continue
+		}
 		if !ta.CheckEventType(evt.Type) {
 			continue
 		}
@@ -1213,6 +1229,9 @@ func (g *Game) FireEvent(evt GameEvent) {
 			if !ok {
 				continue
 			}
+			if ta.IsStateTrigger() {
+				continue
+			}
 			if ta.TriggerSourceZone() != ZoneBattlefield {
 				continue
 			}
@@ -1297,6 +1316,50 @@ func (g *Game) FireEvent(evt GameEvent) {
 		}
 	}
 	g.delayedTriggers = remaining
+}
+
+// CheckStateTriggers evaluates state-triggered abilities (CR 603.8) on every
+// battlefield permanent. A state trigger fires once each time its condition
+// transitions from false to true; while the condition stays true, it must not
+// re-trigger until it has been observed false. Newly-triggered abilities are
+// appended to pendingTriggers so the next PutTriggersOnStack call queues them
+// alongside any event-driven triggers.
+//
+// Call this whenever state-based actions are checked, before priority is
+// granted (the runPriorityRound loop does so after CheckStateBasedActions).
+func (g *Game) CheckStateTriggers() {
+	seen := make(map[stateTriggerKey]bool)
+	for _, perm := range g.battlefield {
+		for _, a := range perm.RuntimeAbilities {
+			ta, ok := UnwrapAbility(a).(TriggeredAbility)
+			if !ok || !ta.IsStateTrigger() {
+				continue
+			}
+			key := stateTriggerKey{sourceID: perm.ID(), abilityID: ta.AbilityID()}
+			seen[key] = true
+			cond := ta.CheckTrigger(nil, g)
+			if !cond {
+				delete(g.armedStateTriggers, key)
+				continue
+			}
+			if g.armedStateTriggers[key] {
+				continue
+			}
+			g.armedStateTriggers[key] = true
+			g.pendingTriggers = append(g.pendingTriggers, &pendingTrigger{
+				ability:    ta,
+				sourceID:   perm.ID(),
+				controller: perm.Controller,
+			})
+		}
+	}
+	// Drop entries for sources no longer on the battlefield so a re-entered
+	// instance starts fresh.
+	for key := range g.armedStateTriggers {
+		if !seen[key] {
+			delete(g.armedStateTriggers, key)
+		}
+	}
 }
 
 // PutTriggersOnStack puts all pending triggers onto the stack.

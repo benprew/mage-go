@@ -129,6 +129,7 @@ func (g *Game) Clone() *Game {
 	c.attackedThisTurn = cloneUUIDBoolMap(g.attackedThisTurn)
 	c.instantsCastThisTurn = cloneUUIDIntMap(g.instantsCastThisTurn)
 	c.blockedThisTurn = cloneBlockedThisTurn(g.blockedThisTurn)
+	c.armedStateTriggers = cloneStateTriggerMap(g.armedStateTriggers)
 
 	// Interactive callbacks are nil'd — search clones don't call back to UI.
 	// OnPriority, AfterPriorityAction, BeforeStackResolve all remain nil.
@@ -433,6 +434,17 @@ func cloneUUIDBoolMap(src map[uuid.UUID]bool) map[uuid.UUID]bool {
 		return make(map[uuid.UUID]bool)
 	}
 	dst := make(map[uuid.UUID]bool, len(src))
+	for k, v := range src {
+		dst[k] = v
+	}
+	return dst
+}
+
+func cloneStateTriggerMap(src map[stateTriggerKey]bool) map[stateTriggerKey]bool {
+	if src == nil {
+		return make(map[stateTriggerKey]bool)
+	}
+	dst := make(map[stateTriggerKey]bool, len(src))
 	for k, v := range src {
 		dst[k] = v
 	}
