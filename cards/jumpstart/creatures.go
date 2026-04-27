@@ -1255,7 +1255,7 @@ func registerCreatures() {
 // Creature — Human Rogue
 // 3/3
 // {2}{B}, Sacrifice a creature: Target opponent reveals their hand. You choose a card from it. That player discards that card. Activate only as a sorcery.
-// TODO: implement
+// XXX: requires reveal-hand-and-controller-chooses-discard primitive
 	Register("Corpse Traders", func() Card {
 		return NewCreature("Corpse Traders", "{3}{B}", 3, 3,
 			WithSubTypes("Human", "Rogue"),
@@ -1267,10 +1267,29 @@ func registerCreatures() {
 // 2/1
 // Flying
 // When this creature enters or dies, mill two cards. (Put the top two cards of your library into your graveyard.)
-// TODO: implement
 	Register("Crow of Dark Tidings", func() Card {
+		millSelf2 := FuncEffect("mill two cards",
+			EffectProperties{},
+			func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				p := g.GetPlayer(controller)
+				if p == nil {
+					return nil
+				}
+				lib := p.Library()
+				for i := 0; i < 2 && len(lib) > 0; i++ {
+					card := lib[len(lib)-1]
+					lib = lib[:len(lib)-1]
+					p.AddToGraveyard(card)
+				}
+				p.SetLibrary(lib)
+				return nil
+			})
 		return NewCreature("Crow of Dark Tidings", "{2}{B}", 2, 1,
 			WithSubTypes("Zombie", "Bird"),
+			WithKeyword(Flying),
+			WithAbility(EntersBattlefieldTrigger(millSelf2, false)),
+			WithAbility(NewTriggered(EvtCreatureDied, false, millSelf2).
+				SetConditionData(EventSourceIsSelf{})),
 		)
 	})
 
@@ -1278,7 +1297,7 @@ func registerCreatures() {
 // Creature — Rat
 // 1/1
 // When this creature dies, you may pay {B}. If you do, target player discards a card.
-// TODO: implement
+// XXX: requires player-controlled may-pay-mana primitive in trigger resolution
 	Register("Drainpipe Vermin", func() Card {
 		return NewCreature("Drainpipe Vermin", "{B}", 1, 1,
 			WithSubTypes("Rat"),
@@ -1290,11 +1309,25 @@ func registerCreatures() {
 // 2/3
 // Flying, first strike
 // Whenever Drana deals combat damage to a player, put a +1/+1 counter on each attacking creature you control.
-// TODO: implement
 	Register("Drana, Liberator of Malakir", func() Card {
 		return NewCreature("Drana, Liberator of Malakir", "{1}{B}{B}", 2, 3,
 			WithSubTypes("Vampire", "Ally"),
 			WithSuperTypes(SuperLegendary),
+			WithKeyword(Flying),
+			WithKeyword(FirstStrike),
+			WithAbility(NewTriggered(EvtDamageDealt, false,
+				FuncEffect("put a +1/+1 counter on each attacking creature you control",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						for _, p := range g.FilterBattlefield(And(IsCreature, IsAttacking, ControlledBy(controller))) {
+							p.AddCounter(P1P1, 1)
+						}
+						return nil
+					}),
+			).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+				EventSourceIsSelfDamageToPlayer{},
+				EventFlagIsTrue{},
+			}})),
 		)
 	})
 
@@ -1302,10 +1335,13 @@ func registerCreatures() {
 // Creature — Human Warrior
 // 1/2
 // When this creature dies, return another target creature card from your graveyard to your hand.
-// TODO: implement
 	Register("Dutiful Attendant", func() Card {
 		return NewCreature("Dutiful Attendant", "{2}{B}", 1, 2,
 			WithSubTypes("Human", "Warrior"),
+			WithAbility(NewTriggered(EvtCreatureDied, false,
+				ReturnFromGraveyardToHandTarget(),
+			).SetConditionData(EventSourceIsSelf{}).
+				AddTarget(TargetCardInYourGraveyard(IsCreatureCard))),
 		)
 	})
 
@@ -1315,7 +1351,7 @@ func registerCreatures() {
 // When this creature enters, choose one —
 // • Return target creature card from your graveyard to your hand.
 // • Target opponent reveals their hand. You choose a noncreature card from it. That player discards that card.
-// TODO: implement
+// XXX: requires modal-ETB and reveal-hand-and-controller-chooses-discard primitives
 	Register("Entomber Exarch", func() Card {
 		return NewCreature("Entomber Exarch", "{2}{B}{B}", 2, 2,
 			WithSubTypes("Phyrexian", "Cleric"),
@@ -1327,10 +1363,11 @@ func registerCreatures() {
 // 2/3
 // This creature enters tapped.
 // Whenever this creature attacks, you may pay {2}{B}. If you do, return target creature card from your graveyard to your hand.
-// TODO: implement
+// XXX: requires player-controlled may-pay-mana primitive in trigger resolution
 	Register("Eternal Taskmaster", func() Card {
 		return NewCreature("Eternal Taskmaster", "{1}{B}", 2, 3,
 			WithSubTypes("Zombie"),
+			WithKeyword(EntersTapped),
 		)
 	})
 
@@ -1339,10 +1376,26 @@ func registerCreatures() {
 // 2/2
 // Flying
 // Whenever this creature or another creature dies, target player loses 1 life and you gain 1 life.
-// TODO: implement
 	Register("Falkenrath Noble", func() Card {
 		return NewCreature("Falkenrath Noble", "{3}{B}", 2, 2,
 			WithSubTypes("Vampire", "Noble"),
+			WithKeyword(Flying),
+			WithAbility(AnyCreatureDiesTrigger(
+				FuncEffect("target player loses 1 life and you gain 1 life",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) > 0 {
+							if tp := g.GetPlayer(targets[0]); tp != nil {
+								tp.LoseLife(1)
+							}
+						}
+						if cp := g.GetPlayer(controller); cp != nil {
+							g.PlayerGainLife(cp, 1)
+						}
+						return nil
+					}),
+				false,
+			).AddTarget(TargetPlayer())),
 		)
 	})
 
@@ -1989,10 +2042,25 @@ func registerCreatures() {
 // Creature — Minotaur Warrior
 // 4/3
 // When this creature enters, discard a card.
-// TODO: implement
 	Register("Bloodrage Brawler", func() Card {
 		return NewCreature("Bloodrage Brawler", "{1}{R}", 4, 3,
 			WithSubTypes("Minotaur", "Warrior"),
+			WithAbility(EntersBattlefieldTrigger(FuncEffect(
+				"discard a card",
+				EffectProperties{Outcome: OutcomeDetriment},
+				func(g *Game, _, controller uuid.UUID, _ []uuid.UUID) error {
+					p := g.GetPlayer(controller)
+					if p == nil || len(p.Hand()) == 0 {
+						return nil
+					}
+					chosen := p.ChooseCardsFromHand(1, "discard", g)
+					for _, c := range chosen {
+						p.RemoveFromHand(c.ID())
+						p.AddToGraveyard(c)
+					}
+					return nil
+				},
+			), false)),
 		)
 	})
 
@@ -2000,10 +2068,10 @@ func registerCreatures() {
 // Creature — Cyclops
 // 3/3
 // This creature attacks each combat if able.
-// TODO: implement
 	Register("Bloodrock Cyclops", func() Card {
 		return NewCreature("Bloodrock Cyclops", "{2}{R}", 3, 3,
 			WithSubTypes("Cyclops"),
+			WithKeyword(MustAttack),
 		)
 	})
 
@@ -2022,10 +2090,10 @@ func registerCreatures() {
 // Creature — Goblin Warrior
 // 3/2
 // Menace (This creature can't be blocked except by two or more creatures.)
-// TODO: implement
 	Register("Boggart Brute", func() Card {
 		return NewCreature("Boggart Brute", "{2}{R}", 3, 2,
 			WithSubTypes("Goblin", "Warrior"),
+			WithKeyword(Menace),
 		)
 	})
 
@@ -2033,17 +2101,19 @@ func registerCreatures() {
 // Creature — Human Warrior
 // 1/2
 // Whenever this creature attacks, it gets +2/+0 until end of turn.
-// TODO: implement
 	Register("Borderland Marauder", func() Card {
 		return NewCreature("Borderland Marauder", "{1}{R}", 1, 2,
 			WithSubTypes("Human", "Warrior"),
+			WithAbility(AttacksTrigger(
+				Boost(Fixed(2), Fixed(0)).Targeting(ToSource()),
+				false,
+			)),
 		)
 	})
 
 // Borderland Minotaur {2}{R}{R}
 // Creature — Minotaur Warrior
 // 4/3
-// TODO: implement
 	Register("Borderland Minotaur", func() Card {
 		return NewCreature("Borderland Minotaur", "{2}{R}{R}", 4, 3,
 			WithSubTypes("Minotaur", "Warrior"),
