@@ -199,9 +199,11 @@ func registerEnchantments() {
 	// Flash (You may cast this spell any time you could cast an instant.)
 	// Enchant creature
 	// Enchanted creature gets +2/+2.
-	// XXX: requires Flash keyword
 	Register("Feral Invocation", func() Card {
-		return NewBoostAura("Feral Invocation", "{2}{G}", 2, 2)
+		return NewAura("Feral Invocation", "{2}{G}",
+			WithKeyword(Flash),
+			WithStaticAbility(BoostAttached(2, 2, AttachAura)),
+		)
 	})
 
 	// Forced Worship {1}{W}
@@ -240,9 +242,11 @@ func registerEnchantments() {
 	// Flash (You may cast this spell any time you could cast an instant.)
 	// Enchant creature
 	// Enchanted creature gets +1/+2.
-	// XXX: requires Flash keyword
 	Register("Indomitable Will", func() Card {
-		return NewBoostAura("Indomitable Will", "{1}{W}", 1, 2)
+		return NewAura("Indomitable Will", "{1}{W}",
+			WithKeyword(Flash),
+			WithStaticAbility(BoostAttached(1, 2, AttachAura)),
+		)
 	})
 
 	// Knightly Valor {4}{W}
@@ -268,9 +272,10 @@ func registerEnchantments() {
 	// Flash
 	// Enchant creature
 	// Enchanted creature can't attack or block, and its activated abilities can't be activated.
-	// XXX: requires Flash and "activated abilities can't be activated" attr
+	// XXX: "activated abilities can't be activated" attr not yet supported
 	Register("Lawmage's Binding", func() Card {
 		return NewAura("Lawmage's Binding", "{1}{W}{U}",
+			WithKeyword(Flash),
 			WithStaticAbility(
 				PreventAttachedFromAttacking(AttachAura),
 				AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {

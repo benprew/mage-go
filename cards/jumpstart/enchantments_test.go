@@ -226,3 +226,78 @@ func TestPresenceOfGond(t *testing.T) {
 		g.AssertPermanentCount(gametest.PlayerA, "Elf Warrior", 1)
 	})
 }
+
+func TestFeralInvocation(t *testing.T) {
+	t.Run("boosts +2/+2", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Feral Invocation")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 3)
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Feral Invocation", "Grizzly Bears")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 4, 4)
+	})
+
+	t.Run("flash: castable on opponent's turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Feral Invocation")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forest", 3)
+		g.CastSpell(1, core.BeginCombat, gametest.PlayerB, "Feral Invocation", "Grizzly Bears")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+		g.AssertAttachedTo(gametest.PlayerA, "Feral Invocation", "Grizzly Bears")
+	})
+}
+
+func TestIndomitableWill(t *testing.T) {
+	t.Run("boosts +1/+2", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Indomitable Will")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 2)
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Indomitable Will", "Grizzly Bears")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 3, 4)
+	})
+
+	t.Run("flash: castable on opponent's turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Indomitable Will")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Plains", 2)
+		g.CastSpell(1, core.BeginCombat, gametest.PlayerB, "Indomitable Will", "Grizzly Bears")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+		g.AssertAttachedTo(gametest.PlayerA, "Indomitable Will", "Grizzly Bears")
+	})
+}
+
+func TestLawmagesBinding(t *testing.T) {
+	t.Run("enchanted creature can't attack", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lawmage's Binding")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 2)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 1)
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lawmage's Binding", "Hill Giant")
+		g.Attack(2, gametest.PlayerB, "Hill Giant")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 20)
+	})
+
+	t.Run("flash: castable on opponent's turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lawmage's Binding")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Plains", 2)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island", 1)
+		g.CastSpell(1, core.BeginCombat, gametest.PlayerB, "Lawmage's Binding", "Hill Giant")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+		g.AssertAttachedTo(gametest.PlayerA, "Lawmage's Binding", "Hill Giant")
+	})
+}

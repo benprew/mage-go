@@ -128,6 +128,17 @@ func TestAffaGuardHound(t *testing.T) {
 	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 5)
 }
 
+func TestAffaGuardHoundFlash(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Affa Guard Hound")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Plains", 3)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.CastSpell(1, core.BeginCombat, gametest.PlayerB, "Affa Guard Hound", "Grizzly Bears")
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerB, "Affa Guard Hound", 1)
+}
+
 func TestCrookclawTransmuter(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneHand, gametest.PlayerA, "Crookclaw Transmuter")
@@ -137,6 +148,18 @@ func TestCrookclawTransmuter(t *testing.T) {
 	g.StopAt(1, core.PostcombatMain)
 	g.Execute()
 	g.AssertPowerToughness(gametest.PlayerB, "Hill Giant", 3, 3)
+}
+
+func TestCrookclawTransmuterFlash(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Crookclaw Transmuter")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island", 4)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")
+	g.CastSpell(1, core.BeginCombat, gametest.PlayerB, "Crookclaw Transmuter", "Hill Giant")
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerB, "Crookclaw Transmuter", 1)
+	g.AssertPowerToughness(gametest.PlayerA, "Hill Giant", 3, 3)
 }
 
 func TestEmancipationAngel(t *testing.T) {
@@ -212,6 +235,17 @@ func TestAngelOfTheDireHour(t *testing.T) {
 	g2.StopAt(1, core.PostcombatMain)
 	g2.Execute()
 	g2.AssertHasAbility(gametest.PlayerA, "Angel of the Dire Hour", core.Flying, true)
+}
+
+func TestAngelOfTheDireHourFlash(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Angel of the Dire Hour")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Plains", 7)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")
+	g.CastSpell(1, core.BeginCombat, gametest.PlayerB, "Angel of the Dire Hour")
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerB, "Angel of the Dire Hour", 1)
 }
 
 func TestAngelicPage(t *testing.T) {
@@ -353,6 +387,16 @@ func TestSpectralSailor(t *testing.T) {
 	g.StopAt(3, core.PostcombatMain)
 	g.Execute()
 	g.AssertHasAbility(gametest.PlayerA, "Spectral Sailor", core.Flying, true)
+}
+
+func TestSpectralSailorFlash(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Spectral Sailor")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island", 1)
+	g.CastSpell(1, core.BeginCombat, gametest.PlayerB, "Spectral Sailor")
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerB, "Spectral Sailor", 1)
 }
 
 func TestPatronOfTheValiant(t *testing.T) {
@@ -498,6 +542,17 @@ func TestRattlechains(t *testing.T) {
 	g.AssertHasAbility(gametest.PlayerA, "Will-o'-the-Wisp", core.Hexproof, true)
 }
 
+func TestRattlechainsFlash(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Rattlechains")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island", 2)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Will-o'-the-Wisp")
+	g.CastSpell(1, core.BeginCombat, gametest.PlayerB, "Rattlechains", "Will-o'-the-Wisp")
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerB, "Rattlechains", 1)
+}
+
 func TestEmielTheBlessed(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Emiel the Blessed")
@@ -575,4 +630,28 @@ func TestSupplyRunners(t *testing.T) {
 	g.Execute()
 	g.AssertCounterCount(gametest.PlayerA, "Grizzly Bears", core.P1P1, 1)
 	g.AssertCounterCount(gametest.PlayerA, "Supply Runners", core.P1P1, 0)
+}
+
+func TestNebelgastHerald(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Nebelgast Herald")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 2)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Nebelgast Herald", "Hill Giant")
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	g.AssertTapped(gametest.PlayerB, "Hill Giant", true)
+	g.AssertHasAbility(gametest.PlayerA, "Nebelgast Herald", core.Flying, true)
+}
+
+func TestNebelgastHeraldFlash(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Nebelgast Herald")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island", 2)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")
+	g.CastSpell(1, core.BeginCombat, gametest.PlayerB, "Nebelgast Herald", "Hill Giant")
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerB, "Nebelgast Herald", 1)
+	g.AssertTapped(gametest.PlayerA, "Hill Giant", true)
 }
