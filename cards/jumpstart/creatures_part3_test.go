@@ -104,8 +104,8 @@ func TestBorderlandMarauder_BoostsOnAttack(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Borderland Marauder")
 	g.SetLife(gametest.PlayerB, 20)
-	g.Attack(2, gametest.PlayerA, "Borderland Marauder")
-	g.StopAt(2, EndStep)
+	g.Attack(3, gametest.PlayerA, "Borderland Marauder")
+	g.StopAt(3, EndStep)
 	g.Execute()
 	g.AssertLife(gametest.PlayerB, 17)
 }
