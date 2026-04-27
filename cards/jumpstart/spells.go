@@ -667,10 +667,31 @@ func registerSpells() {
 	// Hungry Flames {2}{R}
 	// Instant
 	// Hungry Flames deals 3 damage to target creature and 2 damage to target player or planeswalker.
-	// XXX: requires two-target multi-target spell with distinct target types; implement single-target 3 damage
 	Register("Hungry Flames", func() Card {
 		return NewInstant("Hungry Flames", "{2}{R}",
-			NewTargetedSpell(TargetCreature(), DealDamage(Fixed(3))),
+			NewMultiTargetSpell(
+				[]Target{TargetCreature(), TargetPlayer()},
+				FuncEffect(
+					"3 damage to target creature, 2 damage to target player",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) >= 1 && targets[0] != uuid.Nil {
+							if perm := g.FindPermanent(targets[0]); perm != nil {
+								g.DealDamageToPermanent(perm, 3, sourceID)
+							}
+						}
+						if len(targets) >= 2 && targets[1] != uuid.Nil {
+							for _, pl := range g.AllPlayers() {
+								if pl.PlayerID() == targets[1] {
+									g.DealDamageToPlayer(pl, 2, sourceID)
+									break
+								}
+							}
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -961,10 +982,32 @@ func registerSpells() {
 	// Nature's Way {1}{G}
 	// Sorcery
 	// Target creature you control gains vigilance and trample until end of turn. It deals damage equal to its power to target creature you don't control.
-	// XXX: requires multi-target (your-creature + their-creature) + power-based damage; defer
 	Register("Nature's Way", func() Card {
 		return NewSorcery("Nature's Way", "{1}{G}",
-			NewSpellAbility(),
+			NewMultiTargetSpell(
+				[]Target{TargetCreatureYouControl(), TargetCreatureOpponentControls()},
+				GrantKeyword(Vigilance),
+				GrantKeyword(Trample),
+				FuncEffect(
+					"target you-control deals damage equal to its power to target opponent's creature",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) < 2 || targets[0] == uuid.Nil || targets[1] == uuid.Nil {
+							return nil
+						}
+						mine := g.FindPermanent(targets[0])
+						foe := g.FindPermanent(targets[1])
+						if mine == nil || foe == nil {
+							return nil
+						}
+						power := mine.CurrentPower(g)
+						if power > 0 {
+							g.DealDamageToPermanent(foe, power, mine.ID())
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -990,10 +1033,36 @@ func registerSpells() {
 	// Peel from Reality {1}{U}
 	// Instant
 	// Return target creature you control and target creature you don't control to their owners' hands.
-	// XXX: requires two-target spell with distinct controllers; defer
 	Register("Peel from Reality", func() Card {
 		return NewInstant("Peel from Reality", "{1}{U}",
-			NewSpellAbility(),
+			NewMultiTargetSpell(
+				[]Target{TargetCreatureYouControl(), TargetCreatureOpponentControls()},
+				FuncEffect(
+					"return both creatures to their owners' hands",
+					EffectProperties{Outcome: OutcomeUnknown, IsBounce: true},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						for _, tid := range targets {
+							if tid == uuid.Nil {
+								continue
+							}
+							perm := g.FindPermanent(tid)
+							if perm == nil {
+								continue
+							}
+							card := perm.Card
+							owner := card.Owner()
+							if owner == uuid.Nil {
+								owner = perm.Controller
+							}
+							g.RemoveFromBattlefield(perm)
+							if pl := g.GetPlayer(owner); pl != nil {
+								pl.AddToHand(card)
+							}
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 

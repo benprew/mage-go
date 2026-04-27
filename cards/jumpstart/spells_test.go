@@ -928,3 +928,44 @@ func TestFlamesOfTheFirebrand(t *testing.T) {
 		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
 	})
 }
+
+func TestHungryFlames(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 3)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Hungry Flames")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Hungry Flames", "Hill Giant", "PlayerB")
+	g.StopAt(1, core.EndCombat)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 0)
+	g.AssertLife(gametest.PlayerB, 18)
+}
+
+func TestPeelFromReality(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Peel from Reality")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Peel from Reality", "Grizzly Bears", "Hill Giant")
+	g.StopAt(1, core.EndCombat)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
+	g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 0)
+	g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 1)
+	g.AssertHandCount(gametest.PlayerB, "Hill Giant", 1)
+}
+
+func TestNaturesWay(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Nature's Way")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Nature's Way", "Hill Giant", "Grizzly Bears")
+	g.StopAt(1, core.EndCombat)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+	g.AssertHasAbility(gametest.PlayerA, "Hill Giant", core.Vigilance, true)
+	g.AssertHasAbility(gametest.PlayerA, "Hill Giant", core.Trample, true)
+}
