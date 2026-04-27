@@ -1309,9 +1309,14 @@ func (g *Game) FireEvent(evt GameEvent) {
 // first.
 //
 // We partition pendingTriggers by controller into active and non-active
-// groups, preserving source order within each group (stable), then push the
-// active group first, then the non-active group. This means the non-active
-// player's triggers end up on top of the stack and resolve first.
+// groups, then push the active group first and the non-active group second,
+// so the non-active player's triggers end up on top and resolve first.
+//
+// Within each group we reverse FireEvent's source-order so older permanents'
+// triggers end up on top of their group and resolve first. CR 603.3b lets the
+// controller pick any order; we pick the one XMage does, which keeps
+// cross-validation deterministic. (In particular, both "newer-first" and
+// "older-first" are CR-valid; matching the cross-val oracle is what matters.)
 func (g *Game) PutTriggersOnStack() {
 	if len(g.pendingTriggers) > 1 {
 		activeID := g.ActivePlayerObj().PlayerID()
@@ -1324,6 +1329,8 @@ func (g *Game) PutTriggersOnStack() {
 				nonActive = append(nonActive, pt)
 			}
 		}
+		reverseTriggers(active)
+		reverseTriggers(nonActive)
 		g.pendingTriggers = append(active, nonActive...)
 	}
 	for _, pt := range g.pendingTriggers {
@@ -1398,6 +1405,12 @@ func (g *Game) PutTriggersOnStack() {
 		g.stack.Push(obj)
 	}
 	g.pendingTriggers = nil
+}
+
+func reverseTriggers(s []*pendingTrigger) {
+	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
+		s[i], s[j] = s[j], s[i]
+	}
 }
 
 // ResolveStack resolves all objects on the stack (simplified: no priority passing).
@@ -2476,11 +2489,7 @@ func activatedManaProductions(a *SimpleActivatedAbility) []ManaProduction {
 	}
 	var productions []ManaProduction
 	for _, e := range a.effects {
-		adapter, ok := e.(*dataEffectAdapter)
-		if !ok {
-			return nil
-		}
-		switch d := adapter.data.(type) {
+		switch d := e.(type) {
 		case *addManaEffect:
 			productions = append(productions, ManaProduction{Color: d.color, Amount: d.amount})
 		case *addAnyManaEffect:

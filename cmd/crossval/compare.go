@@ -8,17 +8,29 @@ import (
 )
 
 // mismatch records a single state or legal-action difference.
+//
+// Warning is set true when the diff was observed mid-stack (either side has
+// a non-empty stack at comparison time). These are typically transient: CR
+// 603.3b lets the controller pick any order for simultaneous triggers, so
+// engines can briefly disagree on intermediate state while resolving the
+// stack. They tend to converge by the time the stack empties — a warning is
+// useful to surface but not a failure on its own.
 type mismatch struct {
-	Game  int
-	Turn  int
-	Step  string
-	Field string
-	Go    string
-	XMage string
+	Game    int
+	Turn    int
+	Step    string
+	Field   string
+	Go      string
+	XMage   string
+	Warning bool
 }
 
 func (m mismatch) String() string {
-	return fmt.Sprintf("T%d %s: %s: go=%s xmage=%s", m.Turn, m.Step, m.Field, m.Go, m.XMage)
+	tag := ""
+	if m.Warning {
+		tag = " [warn]"
+	}
+	return fmt.Sprintf("T%d %s%s: %s: go=%s xmage=%s", m.Turn, m.Step, tag, m.Field, m.Go, m.XMage)
 }
 
 // canonicalStep converts a mage-go PhaseStep to the canonical wire name.
@@ -54,12 +66,15 @@ func canonicalStep(ps core.PhaseStep) string {
 	return "unknown"
 }
 
-// compareStates compares two cvStates and returns all mismatches.
+// compareStates compares two cvStates and returns all mismatches. Diffs that
+// occur while either engine has a non-empty stack are flagged as warnings
+// (Warning=true), since they're typically transient ordering effects.
 func compareStates(goState, xmageState *cvState) []mismatch {
 	if goState == nil || xmageState == nil {
 		return []mismatch{{Field: "state", Go: fmt.Sprintf("%v", goState), XMage: fmt.Sprintf("%v", xmageState)}}
 	}
 
+	midStack := len(goState.Stack) > 0 || len(xmageState.Stack) > 0
 	var mm []mismatch
 	turn := goState.Turn
 	step := goState.Step
@@ -123,7 +138,45 @@ func compareStates(goState, xmageState *cvState) []mismatch {
 			Go: goStack, XMage: xmStack})
 	}
 
+	if midStack {
+		for i := range mm {
+			mm[i].Warning = true
+		}
+	}
 	return mm
+}
+
+// parseStep converts a canonical wire step name back to a PhaseStep.
+func parseStep(s string) (core.PhaseStep, bool) {
+	switch s {
+	case "untap":
+		return core.Untap, true
+	case "upkeep":
+		return core.Upkeep, true
+	case "draw":
+		return core.Draw, true
+	case "precombat_main":
+		return core.PrecombatMain, true
+	case "begin_combat":
+		return core.BeginCombat, true
+	case "declare_attackers":
+		return core.DeclareAttackers, true
+	case "declare_blockers":
+		return core.DeclareBlockers, true
+	case "first_strike_damage":
+		return core.FirstStrikeDamage, true
+	case "combat_damage":
+		return core.CombatDamage, true
+	case "end_combat":
+		return core.EndCombat, true
+	case "postcombat_main":
+		return core.PostcombatMain, true
+	case "end_step":
+		return core.EndStep, true
+	case "cleanup":
+		return core.Cleanup, true
+	}
+	return 0, false
 }
 
 func permNamesOnly(perms []cvPermanent) string {

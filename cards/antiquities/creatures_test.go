@@ -976,9 +976,10 @@ func TestTetravus(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Tetravus")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Tetravus")
-		// Turn 3 upkeep: both triggers go on stack. LIFO: exile trigger resolves
-		// first (no tokens yet, skips), then remove-counters trigger resolves.
-		g.ChooseNumber(gametest.PlayerA, 2) // remove 2 of 3 counters → create 2 Tetravites
+		// Turn 3 upkeep: both triggers stack. Controller orders them so remove
+		// resolves first (CR 603.3b).
+		g.ChooseNumber(gametest.PlayerA, 2) // remove: 2 of 3 counters → 2 Tetravites
+		g.ChooseNumber(gametest.PlayerA, 0) // exile: 0 tokens → keep them
 		g.StopAt(3, core.PrecombatMain)
 		g.Execute()
 		g.AssertCounterCount(gametest.PlayerA, "Tetravus", core.P1P1, 1)
@@ -989,13 +990,12 @@ func TestTetravus(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Tetravus")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Tetravus")
-		// Turn 3 upkeep: exile resolves first (no tokens, skips), then remove resolves
+		// Turn 3 upkeep: remove resolves first → 3 tokens; exile resolves → keep all.
 		g.ChooseNumber(gametest.PlayerA, 3) // remove all 3 counters → 3 Tetravites
-		// Turn 5 upkeep (LIFO): exile resolves first, then remove resolves.
-		// Exile: 3 tokens → exile 2 → adds 2 counters to Tetravus
-		g.ChooseNumber(gametest.PlayerA, 2)
-		// Remove: Tetravus now has 2 counters (from exile) → choose 0 to keep them
-		g.ChooseNumber(gametest.PlayerA, 0)
+		g.ChooseNumber(gametest.PlayerA, 0) // exile: keep all 3
+		// Turn 5 upkeep: remove fires but Tetravus has 0 counters so it returns
+		// without prompting. Exile fires and we exile 2 of 3 tokens → +2 counters.
+		g.ChooseNumber(gametest.PlayerA, 2) // exile 2 of 3 tokens → +2 counters
 		g.StopAt(5, core.PrecombatMain)
 		g.Execute()
 		g.AssertCounterCount(gametest.PlayerA, "Tetravus", core.P1P1, 2)
@@ -1019,6 +1019,7 @@ func TestTetravus(t *testing.T) {
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Tetravus")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Tetravus")
 		g.ChooseNumber(gametest.PlayerA, 1) // remove 1 counter → 1 Tetravite
+		g.ChooseNumber(gametest.PlayerA, 0) // exile: keep the token
 		g.StopAt(3, core.PrecombatMain)
 		g.Execute()
 		g.AssertHasAbility(gametest.PlayerA, "Tetravite", core.Flying, true)
@@ -1029,6 +1030,7 @@ func TestTetravus(t *testing.T) {
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Tetravus")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Tetravus")
 		g.ChooseNumber(gametest.PlayerA, 1) // remove 1 counter → 1 Tetravite
+		g.ChooseNumber(gametest.PlayerA, 0) // exile: keep the token
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Artifact Ward") // Aura targeting creature
 		g.CastSpell(4, core.PrecombatMain, gametest.PlayerB, "Artifact Ward", "Tetravite")
 		g.StopAt(4, core.BeginCombat)

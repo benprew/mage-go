@@ -68,11 +68,12 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 		g.runPriorityRound(false)
 
 	case DeclareAttackers:
+		// CR 508.7: After attackers are declared, the active player gets
+		// priority. Priority is granted regardless of whether any attackers
+		// were declared — pass-pass simply ends the step.
 		g.doDeclareAttackers()
-		if len(g.combat.Groups) > 0 {
-			g.PutTriggersOnStack()
-			g.runPriorityRound(false)
-		}
+		g.PutTriggersOnStack()
+		g.runPriorityRound(false)
 
 	case DeclareBlockers:
 		// 508.8: Skip if no creatures are attacking.

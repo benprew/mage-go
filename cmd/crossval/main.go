@@ -1,18 +1,15 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"math/rand"
 	"os"
 	"sort"
-	"strings"
 	"time"
 
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
-
 	_ "git.sr.ht/~cdcarter/mage-go/cards" // register all sets
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 )
 
 func main() {
@@ -21,6 +18,7 @@ func main() {
 		maxTurns       int
 		seed           int64
 		verbose        bool
+		debug          bool
 		games          int
 		outFile        string
 		roguesDir      string
@@ -30,10 +28,15 @@ func main() {
 	flag.IntVar(&maxTurns, "turns", 10, "max turns per game")
 	flag.Int64Var(&seed, "seed", 0, "random seed (0 = time-based)")
 	flag.BoolVar(&verbose, "verbose", false, "verbose output")
+	flag.BoolVar(&debug, "debug", false, "trace IPC and synchronization (helps diagnose deadlocks)")
 	flag.IntVar(&games, "games", 1, "number of games to run")
 	flag.StringVar(&outFile, "out", "", "write divergence logs to this directory")
 	flag.StringVar(&roguesDir, "rogues", "", "directory of rogue deck .toml files")
 	flag.Parse()
+
+	if debug {
+		_ = os.Setenv("CROSSVAL_DEBUG", "1")
+	}
 
 	if seed == 0 {
 		seed = time.Now().UnixNano()
@@ -86,8 +89,10 @@ func main() {
 
 	// Step 2: Run games
 	totalDecisions := 0
+	totalWarnings := 0
 	gamesOK := 0
 	gamesDiverged := 0
+	gamesWithWarnings := 0
 	gameErrors := 0
 
 	for gameNum := 0; gameNum < games; gameNum++ {
@@ -98,39 +103,69 @@ func main() {
 		deckA := pickDeck(rogueDecks, available, rng)
 		deckB := pickDeck(rogueDecks, available, rng)
 
-		decisions, divergences, err := runXMageDrivenGame(oracle, deckA, deckB, maxTurns, rng, verbose)
+		decisions, divergences, warnings, err := runXMageDrivenGame(oracle, deckA, deckB, maxTurns, verbose, debug)
 		if err != nil {
 			gameErrors++
-			if verbose {
-				fmt.Fprintf(os.Stderr, "  Game %d error: %v\n", gameNum+1, err)
+			fmt.Fprintf(os.Stderr, "  Game %d error: %v\n", gameNum+1, err)
+			for _, line := range oracle.lastErr.lines() {
+				fmt.Fprintf(os.Stderr, "  [xmage] %s\n", line)
 			}
 			if outFile != "" {
 				writeErrorLog(outFile, gameNum+1, seed, deckA, deckB, err)
+			}
+			// Oracle process may have crashed — restart it.
+			oracle.close()
+			oracle, err = launchOracle(xmageDir, verbose)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to relaunch oracle: %v\n", err)
+				os.Exit(1)
+			}
+			if err := oracle.send(map[string]any{"type": "card_check", "cards": goCards}); err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to resend card check: %v\n", err)
+				os.Exit(1)
+			}
+			if _, err := oracle.recv(300 * time.Second); err != nil {
+				fmt.Fprintf(os.Stderr, "Card check failed after relaunch: %v\n", err)
+				os.Exit(1)
 			}
 			continue
 		}
 
 		totalDecisions += decisions
+		totalWarnings += len(warnings)
+		if len(warnings) > 0 {
+			gamesWithWarnings++
+		}
 		if len(divergences) > 0 {
 			gamesDiverged++
-			fmt.Printf("  Game %d: %d divergences (out of %d decisions)\n",
-				gameNum+1, len(divergences), decisions)
+			fmt.Printf("  Game %d: %d divergences, %d warnings (out of %d decisions)\n",
+				gameNum+1, len(divergences), len(warnings), decisions)
 			if verbose {
 				for _, d := range divergences {
 					fmt.Printf("    %s\n", d)
 				}
+				for _, w := range warnings {
+					fmt.Printf("    %s\n", w)
+				}
 			}
 			if outFile != "" {
-				writeGameLog(outFile, gameNum+1, seed, deckA, deckB, divergences, decisions)
+				writeGameLog(outFile, gameNum+1, seed, deckA, deckB, divergences, warnings, decisions)
 			}
 		} else {
 			gamesOK++
+			if len(warnings) > 0 && verbose {
+				fmt.Printf("  Game %d: OK with %d warnings\n", gameNum+1, len(warnings))
+				for _, w := range warnings {
+					fmt.Printf("    %s\n", w)
+				}
+			}
 		}
 	}
 
 	fmt.Printf("\n=== Summary ===\n")
 	fmt.Printf("Games: %d, OK: %d, Diverged: %d, Errors: %d\n",
 		games, gamesOK, gamesDiverged, gameErrors)
+	fmt.Printf("Warnings: %d total across %d games\n", totalWarnings, gamesWithWarnings)
 	fmt.Printf("Total decisions: %d\n", totalDecisions)
 
 	if outFile != "" && (gamesDiverged > 0 || gameErrors > 0) {
@@ -149,10 +184,13 @@ func main() {
 	}
 }
 
-// runXMageDrivenGame runs one game with the Go driver choosing actions at each
-// XMage decision point. Both engines execute the same action sequence so their
-// states can be compared.
-func runXMageDrivenGame(oracle *xmageOracle, deckA, deckB []string, maxTurns int, rng *rand.Rand, verbose bool) (int, []string, error) {
+// runXMageDrivenGame runs one game where XMage drives all decisions.
+// The Go engine mirrors each action and compares state after non-pass actions.
+// Returns (decisions, divergences, warnings, err) where divergences are real
+// state mismatches (engines disagree on a stable state) and warnings are
+// transient mid-stack diffs that typically reflect CR-valid trigger-ordering
+// choices rather than engine bugs.
+func runXMageDrivenGame(oracle *xmageOracle, deckA, deckB []string, maxTurns int, verbose, debug bool) (int, []string, []string, error) {
 	setup := setupMsg{
 		Type:     "setup",
 		PlayerA:  playerDef{Name: "Alice", Library: deckA},
@@ -161,91 +199,175 @@ func runXMageDrivenGame(oracle *xmageOracle, deckA, deckB []string, maxTurns int
 		MaxTurns: maxTurns,
 	}
 	if err := oracle.send(setup); err != nil {
-		return 0, nil, fmt.Errorf("send setup: %w", err)
+		return 0, nil, nil, fmt.Errorf("send setup: %w", err)
 	}
+
+	mg, err := newMirrorGame(deckA, deckB)
+	if err != nil {
+		return 0, nil, nil, fmt.Errorf("create mirror game: %w", err)
+	}
+	mg.debug = debug
+	mg.start()
+	defer mg.stop()
+	_ = maxTurns // XMage now drives step transitions; max_turns is enforced server-side via stopOnTurn.
 
 	decisions := 0
 	var divergences []string
-	var lastState *cvState
+	var warnings []string
+
+	ack := ackMsg{Type: "ack"}
 
 	for {
-		msg, err := oracle.recv(30 * time.Second)
+		dbg(debug, "main: waiting for oracle message...")
+		msg, err := oracle.recv(120 * time.Second)
 		if err != nil {
-			return decisions, divergences, fmt.Errorf("recv: %w", err)
+			dbg(debug, "main: recv error: %v (go-state=%s)", err, mg.snapshotState())
+			return decisions, divergences, warnings, fmt.Errorf("recv: %w", err)
 		}
+		dbg(debug, "main: recv type=%s turn=%d step=%s player=%d",
+			msg.Type, msg.Turn, msg.Step, msg.PlayerIdx)
 
-		if msg.Type == "game_over" {
-			break
-		}
+		switch msg.Type {
+		case "game_over":
+			return decisions, divergences, warnings, nil
 
-		if msg.Type == "error" {
-			return decisions, divergences, fmt.Errorf("oracle: %s", msg.Message)
-		}
+		case "error":
+			return decisions, divergences, warnings, fmt.Errorf("oracle: %s", msg.Message)
 
-		if msg.Type != "decision_point" {
-			continue
-		}
+		case "step_begin":
+			step, ok := parseStep(msg.Step)
+			if !ok {
+				return decisions, divergences, warnings, fmt.Errorf("step_begin: unknown step %q", msg.Step)
+			}
+			dbg(debug, "main: -> stepCh (T%d %s active=%d)", msg.Turn, msg.Step, msg.ActivePlayerIdx)
+			select {
+			case mg.stepCh <- stepInfo{
+				turn:            msg.Turn,
+				step:            step,
+				activePlayerIdx: msg.ActivePlayerIdx,
+			}:
+			case <-mg.doneCh:
+				return decisions, divergences, warnings, fmt.Errorf(
+					"go game exited before step_begin (xmage T%d %s, gameErr=%v)",
+					msg.Turn, msg.Step, mg.gameErr)
+			}
+			if err := oracle.send(ack); err != nil {
+				return decisions, divergences, warnings, fmt.Errorf("send step_begin ack: %w", err)
+			}
 
-		decisions++
+		case "action_taken":
+			decisions++
+			if msg.Action == nil {
+				if err := oracle.send(ack); err != nil {
+					return decisions, divergences, warnings, fmt.Errorf("send ack: %w", err)
+				}
+				continue
+			}
 
-		if msg.State != nil {
-			lastState = msg.State
+			if verbose {
+				fmt.Printf("    T%d %s p%d: %s",
+					msg.Turn, msg.Step, msg.PlayerIdx, msg.Action.Kind)
+				if msg.Action.CardName != "" {
+					fmt.Printf(" %s", msg.Action.CardName)
+				}
+				if len(msg.Action.Targets) > 0 {
+					fmt.Printf(" targets=%v", msg.Action.Targets)
+				}
+				fmt.Println()
+			}
 
-			for i := 0; i < 2; i++ {
-				p := msg.State.Players[i]
-				if p.Life < -100 {
-					divergences = append(divergences,
-						fmt.Sprintf("T%d %s: %s life=%d (runaway negative life)",
-							msg.State.Turn, msg.State.Step, p.Name, p.Life))
+			dbg(debug, "main: -> msgCh (T%d %s p%d %s)", msg.Turn, msg.Step, msg.PlayerIdx, msg.Action.Kind)
+			select {
+			case mg.msgCh <- mirrorMsg{
+				playerIdx: msg.PlayerIdx,
+				action:    *msg.Action,
+				step:      msg.Step,
+			}:
+			case <-mg.doneCh:
+				return decisions, divergences, warnings, fmt.Errorf(
+					"go game goroutine exited before xmage finished (xmage at T%d %s p%d, go-state=%s, gameErr=%v)",
+					msg.Turn, msg.Step, msg.PlayerIdx, mg.snapshotState(), mg.gameErr)
+			}
+			dbg(debug, "main: msgCh sent, waiting on resultCh")
+
+			var result mirrorResult
+			select {
+			case result = <-mg.resultCh:
+			case <-mg.doneCh:
+				return decisions, divergences, warnings, fmt.Errorf(
+					"go game goroutine exited while waiting for resultCh (xmage at T%d %s, go-state=%s, gameErr=%v)",
+					msg.Turn, msg.Step, mg.snapshotState(), mg.gameErr)
+			}
+			dbg(debug, "main: <- resultCh (err=%v go-step=%s)", result.err, mg.snapshotState())
+			if result.err != nil {
+				return decisions, divergences, warnings, fmt.Errorf("mirror error: %w", result.err)
+			}
+
+			if result.state != nil && msg.State != nil {
+				mm := compareStates(result.state, msg.State)
+				for _, m := range mm {
+					if m.Warning {
+						warnings = append(warnings, m.String())
+					} else {
+						divergences = append(divergences, m.String())
+					}
 				}
 			}
-		}
 
-		var action actionMsg
-		switch msg.Kind {
-		case "priority":
-			action = choosePriorityAction(msg.Legal, msg.State, rng)
-		case "attackers", "declare_attackers":
-			action = chooseAttackers(msg.Legal, msg.State)
-		case "blockers", "declare_blockers":
-			action = chooseBlockers(msg.Legal, msg.State)
-		case "choice":
-			action = chooseChoice(msg)
+			if err := oracle.send(ack); err != nil {
+				return decisions, divergences, warnings, fmt.Errorf("send ack: %w", err)
+			}
+
+		case "attackers_declared":
+			decisions++
+			if verbose {
+				fmt.Printf("    T%d attackers: %v\n", msg.Turn, msg.Attackers)
+			}
+			dbg(debug, "main: -> attackCh[p%d] (n=%d) go-state=%s",
+				msg.PlayerIdx, len(msg.Attackers), mg.snapshotState())
+			select {
+			case mg.players[msg.PlayerIdx].attackCh <- msg.Attackers:
+			case <-mg.doneCh:
+				return decisions, divergences, warnings, fmt.Errorf(
+					"go game exited before attackers fed (xmage at T%d, go-state=%s, gameErr=%v)",
+					msg.Turn, mg.snapshotState(), mg.gameErr)
+			}
+			dbg(debug, "main: attackCh sent")
+
+			if err := oracle.send(ack); err != nil {
+				return decisions, divergences, warnings, fmt.Errorf("send ack: %w", err)
+			}
+
+		case "blockers_declared":
+			decisions++
+			if verbose {
+				fmt.Printf("    T%d blockers: %v\n", msg.Turn, msg.Blockers)
+			}
+			dbg(debug, "main: -> blockCh[p%d] (n=%d) go-state=%s",
+				msg.PlayerIdx, len(msg.Blockers), mg.snapshotState())
+			select {
+			case mg.players[msg.PlayerIdx].blockCh <- msg.Blockers:
+			case <-mg.doneCh:
+				return decisions, divergences, warnings, fmt.Errorf(
+					"go game exited before blockers fed (xmage at T%d, go-state=%s, gameErr=%v)",
+					msg.Turn, mg.snapshotState(), mg.gameErr)
+			}
+			dbg(debug, "main: blockCh sent")
+
+			if err := oracle.send(ack); err != nil {
+				return decisions, divergences, warnings, fmt.Errorf("send ack: %w", err)
+			}
+
 		default:
-			action = actionMsg{Type: "action", Kind: "pass"}
-		}
-
-		if verbose {
-			step := ""
-			if msg.State != nil {
-				step = fmt.Sprintf("T%d %s", msg.State.Turn, msg.State.Step)
-			}
-			fmt.Printf("    %s [%s] -> %s", step, msg.Kind, action.Kind)
-			if action.CardName != "" {
-				fmt.Printf(" %s", action.CardName)
-			}
-			if len(action.Targets) > 0 {
-				fmt.Printf(" targets=%v", action.Targets)
-			}
-			if action.XValue > 0 {
-				fmt.Printf(" X=%d", action.XValue)
-			}
-			if len(action.Attackers) > 0 {
-				fmt.Printf(" attackers=%v", action.Attackers)
-			}
-			if len(action.Blockers) > 0 {
-				fmt.Printf(" blockers=%v", action.Blockers)
-			}
-			fmt.Println()
-		}
-
-		if err := oracle.send(action); err != nil {
-			return decisions, divergences, fmt.Errorf("send action: %w", err)
+			// Ignore unknown message types
 		}
 	}
+}
 
-	_ = lastState
-	return decisions, divergences, nil
+func dbg(enabled bool, format string, args ...any) {
+	if enabled {
+		fmt.Fprintf(os.Stderr, "[crossval] "+format+"\n", args...)
+	}
 }
 
 func writeErrorLog(dir string, gameNum int, seed int64, deckA, deckB []string, gameErr error) {
@@ -268,7 +390,7 @@ func writeErrorLog(dir string, gameNum int, seed int64, deckA, deckB []string, g
 	}
 }
 
-func writeGameLog(dir string, gameNum int, seed int64, deckA, deckB []string, divergences []string, decisions int) {
+func writeGameLog(dir string, gameNum int, seed int64, deckA, deckB []string, divergences, warnings []string, decisions int) {
 	fname := fmt.Sprintf("%s/game_%04d.log", dir, gameNum)
 	f, err := os.Create(fname)
 	if err != nil {
@@ -277,7 +399,7 @@ func writeGameLog(dir string, gameNum int, seed int64, deckA, deckB []string, di
 	defer f.Close()
 
 	fmt.Fprintf(f, "# Game %d (seed=%d)\n", gameNum, seed)
-	fmt.Fprintf(f, "# %d divergences, %d decisions\n\n", len(divergences), decisions)
+	fmt.Fprintf(f, "# %d divergences, %d warnings, %d decisions\n\n", len(divergences), len(warnings), decisions)
 	fmt.Fprintf(f, "## Deck A\n")
 	for _, c := range deckA {
 		fmt.Fprintf(f, "  %s\n", c)
@@ -290,33 +412,11 @@ func writeGameLog(dir string, gameNum int, seed int64, deckA, deckB []string, di
 	for _, d := range divergences {
 		fmt.Fprintf(f, "%s\n", d)
 	}
-}
-
-// parsePreState extracts the pre_state from the raw oracle message JSON.
-func parsePreState(raw json.RawMessage) *cvState {
-	var wrapper struct {
-		PreState *cvState `json:"pre_state"`
-	}
-	if err := json.Unmarshal(raw, &wrapper); err != nil {
-		return nil
-	}
-	return wrapper.PreState
-}
-
-// Placeholder for future: deduplicate divergence messages
-func dedup(msgs []string) []string {
-	seen := make(map[string]bool)
-	var result []string
-	for _, m := range msgs {
-		key := m
-		// Normalize turn/step prefix for dedup
-		if idx := strings.Index(m, ":"); idx > 0 {
-			key = m[idx+1:]
-		}
-		if !seen[key] {
-			seen[key] = true
-			result = append(result, m)
+	if len(warnings) > 0 {
+		fmt.Fprintf(f, "\n## Warnings (transient mid-stack diffs)\n")
+		for _, w := range warnings {
+			fmt.Fprintf(f, "%s\n", w)
 		}
 	}
-	return result
 }
+
