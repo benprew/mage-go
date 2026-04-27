@@ -204,3 +204,102 @@ func TestGiftedAetherborn(t *testing.T) {
 	g.AssertHasAbility(gametest.PlayerA, "Gifted Aetherborn", core.Deathtouch, true)
 	g.AssertHasAbility(gametest.PlayerA, "Gifted Aetherborn", core.Lifelink, true)
 }
+
+func TestWindreaderSphinx_DrawsOnFlyingAttack(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Windreader Sphinx")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Serra Angel")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Mox Ruby", 2)
+	g.Attack(1, gametest.PlayerA, "Serra Angel")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "Mox Ruby", 1)
+}
+
+func TestBurglarRat_OpponentDiscards(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Burglar Rat")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Mountain")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Burglar Rat")
+	g.ChooseDiscard(gametest.PlayerB, "Mountain")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerB, "Mountain", 1)
+}
+
+func TestCadaverImp_ReturnsCreatureFromGraveyard(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Cadaver Imp")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 3)
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Cadaver Imp")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 1)
+}
+
+func TestCrowOfDarkTidings_MillsOnETBAndDeath(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Crow of Dark Tidings")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 3)
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Mox Ruby", 6)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Crow of Dark Tidings")
+	g.CastSpell(1, core.PostcombatMain, gametest.PlayerA, "Lightning Bolt", "Crow of Dark Tidings")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerA, "Mox Ruby", 4)
+}
+
+func TestFalkenrathNoble_DrainsOnAnyDeath(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Falkenrath Noble")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerA, 21)
+	g.AssertLife(gametest.PlayerB, 19)
+}
+
+func TestPhyrexianBroodlings_SacForCounter(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Phyrexian Broodlings")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Phyrexian Broodlings")
+	g.ChoosePermanent(gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 1)
+	g.AssertPowerToughness(gametest.PlayerA, "Phyrexian Broodlings", 3, 3)
+}
+
+func TestPhyrexianDebaser_SacToDebuff(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Phyrexian Debaser")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Phyrexian Debaser", "Hill Giant")
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerB, "Hill Giant", 1, 1)
+	g.AssertGraveyardCount(gametest.PlayerA, "Phyrexian Debaser", 1)
+}
+
+func TestPlaguedRusalka_SacToDebuff(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plagued Rusalka")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Plagued Rusalka", "Hill Giant")
+	g.ChoosePermanent(gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerB, "Hill Giant", 2, 2)
+	g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 1)
+}
