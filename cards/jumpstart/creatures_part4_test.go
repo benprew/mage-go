@@ -413,3 +413,83 @@ func TestSuspiciousBookcase_MakesUnblockable(t *testing.T) {
 	g.Execute()
 	g.AssertLife(gametest.PlayerB, 18)
 }
+
+func TestPouncingCheetah_Flash(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneHand, gametest.PlayerB, "Pouncing Cheetah")
+	g.AddCard(ZoneBattlefield, gametest.PlayerB, "Forest", 3)
+	g.CastSpell(1, BeginCombat, gametest.PlayerB, "Pouncing Cheetah")
+	g.StopAt(1, PostcombatMain)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerB, "Pouncing Cheetah", 1)
+}
+
+func TestCloudreaderSphinx(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneHand, gametest.PlayerA, "Cloudreader Sphinx")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Island", 5)
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Mountain")
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Forest")
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Plains")
+	g.ChooseScry(gametest.PlayerA, []string{"Mountain"}, []string{"Forest"})
+	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Cloudreader Sphinx")
+	g.StopAt(1, EndStep)
+	g.Execute()
+	g.AssertLibraryTop(gametest.PlayerA, "Forest", "Plains", "Mountain")
+}
+
+func TestOctoprophet(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneHand, gametest.PlayerA, "Octoprophet")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Island", 4)
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Mountain")
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Forest")
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Plains")
+	g.ChooseScry(gametest.PlayerA, []string{"Mountain", "Forest"}, nil)
+	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Octoprophet")
+	g.StopAt(1, EndStep)
+	g.Execute()
+	g.AssertLibraryTop(gametest.PlayerA, "Plains", "Mountain", "Forest")
+}
+
+func TestSagesRowSavant(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneHand, gametest.PlayerA, "Sage's Row Savant")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Island", 2)
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Mountain")
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Forest")
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Plains")
+	g.ChooseScry(gametest.PlayerA, nil, []string{"Forest", "Mountain"})
+	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Sage's Row Savant")
+	g.StopAt(1, EndStep)
+	g.Execute()
+	g.AssertLibraryTop(gametest.PlayerA, "Forest", "Mountain", "Plains")
+}
+
+func TestSigiledStarfish(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Sigiled Starfish")
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Mountain")
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Forest")
+	g.ChooseScry(gametest.PlayerA, []string{"Mountain"}, nil)
+	g.ActivateAbility(1, PrecombatMain, gametest.PlayerA, "Sigiled Starfish")
+	g.StopAt(1, EndStep)
+	g.Execute()
+	g.AssertTapped(gametest.PlayerA, "Sigiled Starfish", true)
+	g.AssertLibraryTop(gametest.PlayerA, "Forest", "Mountain")
+}
+
+func TestPrescientChimera(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Prescient Chimera")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Mountain", 2)
+	g.AddCard(ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Forest")
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Island")
+	g.ChooseScry(gametest.PlayerA, []string{"Forest"}, nil)
+	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
+	g.StopAt(1, EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerB, 17)
+	g.AssertLibraryTop(gametest.PlayerA, "Island", "Forest")
+}

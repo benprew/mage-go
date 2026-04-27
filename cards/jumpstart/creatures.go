@@ -24,10 +24,10 @@ func registerCreatures() {
 	// 2/2
 	// Flash (You may cast this spell any time you could cast an instant.)
 	// When this creature enters, target creature gets +0/+3 until end of turn.
-	// XXX: engine has no Flash keyword yet
 	Register("Affa Guard Hound", func() Card {
 		return NewCreature("Affa Guard Hound", "{2}{W}", 2, 2,
 			WithSubTypes("Dog"),
+			WithKeyword(Flash),
 			WithCastTarget(TargetCreature()),
 			WithETBEffect(Boost(Fixed(0), Fixed(3)).Targeting(ToTarget()).Until(EndOfTurn)),
 		)
@@ -88,11 +88,12 @@ func registerCreatures() {
 	// Flash
 	// Flying
 	// When this creature enters, if you cast it from your hand, exile all attacking creatures.
-	// XXX: engine has no Flash keyword and no "if you cast from hand" condition;
-	// implementing as Flying with ETB exile-all-attackers (always triggers).
+	// XXX: no "if you cast from hand" condition;
+	// implementing ETB exile-all-attackers always triggers.
 	Register("Angel of the Dire Hour", func() Card {
 		return NewCreature("Angel of the Dire Hour", "{5}{W}{W}", 5, 4,
 			WithSubTypes("Angel"),
+			WithKeyword(Flash),
 			WithKeyword(Flying),
 			WithAbility(EntersBattlefieldTrigger(FuncEffect(
 				"exile all attacking creatures",
@@ -832,11 +833,11 @@ func registerCreatures() {
 	// 3/4
 	// Flying
 	// When this creature enters, scry 2. (Look at the top two cards of your library, then put any number of them on the bottom and the rest on top in any order.)
-	// XXX: requires scry primitive
 	Register("Cloudreader Sphinx", func() Card {
 		return NewCreature("Cloudreader Sphinx", "{4}{U}", 3, 4,
 			WithSubTypes("Sphinx"),
 			WithKeyword(Flying),
+			WithAbility(EntersBattlefieldTrigger(Scry(Fixed(2)), false)),
 		)
 	})
 
@@ -858,10 +859,10 @@ func registerCreatures() {
 	// Flash
 	// Flying
 	// When this creature enters, switch target creature's power and toughness until end of turn.
-	// XXX: engine has no Flash keyword yet
 	Register("Crookclaw Transmuter", func() Card {
 		return NewCreature("Crookclaw Transmuter", "{3}{U}", 3, 1,
 			WithSubTypes("Bird", "Wizard"),
+			WithKeyword(Flash),
 			WithKeyword(Flying),
 			WithCastTarget(TargetCreature()),
 			WithETBEffect(FuncEffect(
@@ -1043,10 +1044,10 @@ func registerCreatures() {
 	// Flash
 	// Flying
 	// Whenever this creature or another Spirit you control enters, tap target creature an opponent controls.
-	// XXX: engine has no Flash keyword
 	Register("Nebelgast Herald", func() Card {
 		return NewCreature("Nebelgast Herald", "{2}{U}", 2, 1,
 			WithSubTypes("Spirit"),
+			WithKeyword(Flash),
 			WithKeyword(Flying),
 			WithAbility(NewTriggered(EvtEntersBattlefield, false, TapTarget()).
 				SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
@@ -1067,10 +1068,10 @@ func registerCreatures() {
 	// Creature — Octopus
 	// 3/3
 	// When this creature enters, scry 2. (Look at the top two cards of your library, then put any number of them on the bottom and the rest on top in any order.)
-	// XXX: requires scry primitive
 	Register("Octoprophet", func() Card {
 		return NewCreature("Octoprophet", "{3}{U}", 3, 3,
 			WithSubTypes("Octopus"),
+			WithAbility(EntersBattlefieldTrigger(Scry(Fixed(2)), false)),
 		)
 	})
 
@@ -1109,11 +1110,14 @@ func registerCreatures() {
 	// 3/4
 	// Flying
 	// Whenever you cast an instant or sorcery spell, scry 1. (Look at the top card of your library. You may put that card on the bottom.)
-	// XXX: requires scry primitive
 	Register("Prescient Chimera", func() Card {
+		instOrSorc := NewCardFilter("instant or sorcery", func(c Card) bool {
+			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
+		})
 		return NewCreature("Prescient Chimera", "{3}{U}{U}", 3, 4,
 			WithSubTypes("Chimera"),
 			WithKeyword(Flying),
+			WithAbility(WheneverYouCastSpellTrigger(Scry(Fixed(1)), false, instOrSorc)),
 		)
 	})
 
@@ -1135,10 +1139,11 @@ func registerCreatures() {
 	// Flying
 	// When this creature enters, target Spirit gains hexproof until end of turn.
 	// You may cast Spirit spells as though they had flash.
-	// XXX: engine has no Flash keyword, no "as though flash" cast permission
+	// XXX: no "as though flash" cast permission for Spirit spells
 	Register("Rattlechains", func() Card {
 		return NewCreature("Rattlechains", "{1}{U}", 2, 1,
 			WithSubTypes("Spirit"),
+			WithKeyword(Flash),
 			WithKeyword(Flying),
 			WithCastTarget(TargetCreature(HasSubType("Spirit"))),
 			WithETBEffect(GrantKeyword(Hexproof).Targeting(ToTarget()).Until(EndOfTurn)),
@@ -1195,10 +1200,10 @@ func registerCreatures() {
 	// Creature — Vedalken Wizard
 	// 2/1
 	// When this creature enters, scry 2.
-	// XXX: requires scry primitive
 	Register("Sage's Row Savant", func() Card {
 		return NewCreature("Sage's Row Savant", "{1}{U}", 2, 1,
 			WithSubTypes("Vedalken", "Wizard"),
+			WithAbility(EntersBattlefieldTrigger(Scry(Fixed(2)), false)),
 		)
 	})
 
@@ -1271,10 +1276,10 @@ func registerCreatures() {
 	// Creature — Starfish
 	// 0/3
 	// {T}: Scry 1. (Look at the top card of your library. You may put that card on the bottom.)
-	// XXX: requires scry primitive
 	Register("Sigiled Starfish", func() Card {
 		return NewCreature("Sigiled Starfish", "{1}{U}", 0, 3,
 			WithSubTypes("Starfish"),
+			WithActivatedAbility(Scry(Fixed(1)), TapSourceCost()),
 		)
 	})
 
@@ -1284,10 +1289,10 @@ func registerCreatures() {
 	// Flash (You may cast this spell any time you could cast an instant.)
 	// Flying
 	// {3}{U}: Draw a card.
-	// XXX: engine has no Flash keyword yet
 	Register("Spectral Sailor", func() Card {
 		return NewCreature("Spectral Sailor", "{U}", 1, 1,
 			WithSubTypes("Spirit", "Pirate"),
+			WithKeyword(Flash),
 			WithKeyword(Flying),
 			WithActivatedAbility(
 				DrawCards(Fixed(1)),
@@ -4383,10 +4388,10 @@ func registerCreatures() {
 	// Creature — Cat
 	// 3/2
 	// Flash
-	// XXX: requires Flash keyword (instant-speed casting of permanents)
 	Register("Pouncing Cheetah", func() Card {
 		return NewCreature("Pouncing Cheetah", "{2}{G}", 3, 2,
 			WithSubTypes("Cat"),
+			WithKeyword(Flash),
 		)
 	})
 

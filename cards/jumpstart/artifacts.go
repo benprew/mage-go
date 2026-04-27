@@ -176,10 +176,10 @@ func registerArtifacts() {
 	// Artifact
 	// When this artifact enters, scry 1.
 	// {T}: Add one mana of any color.
-	// XXX: scry is not implemented in the engine; the ETB scry is a no-op.
 	Register("Mana Geode", func() Card {
 		return NewArtifact("Mana Geode", "{3}",
 			WithAnyColorMana(),
+			WithAbility(EntersBattlefieldTrigger(Scry(Fixed(1)), false)),
 		)
 	})
 

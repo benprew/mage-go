@@ -252,3 +252,16 @@ func TestWarmongersChariot(t *testing.T) {
 	g.Execute()
 	g.AssertLife(gametest.PlayerB, 18)
 }
+
+func TestManaGeode(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Mana Geode")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 3)
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Mountain")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Forest")
+	g.ChooseScry(gametest.PlayerA, []string{"Mountain"}, nil)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Mana Geode")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertLibraryTop(gametest.PlayerA, "Forest", "Mountain")
+}
