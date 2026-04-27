@@ -934,6 +934,92 @@ func (g *Game) PlayerDrawCard(p Player) (Card, bool) {
 	return c, ok
 }
 
+// PerformScry implements scry N (CR 701.18): the player looks at the top N
+// cards of their library, then puts any number of them on the bottom of their
+// library and the rest on top in any order. If the library has fewer than N
+// cards, the player scries however many are present. Returns the number of
+// cards actually scried.
+//
+// The placement decision is delegated to Player.ChooseScryPlacement; the engine
+// validates the returned IDs and falls back to "all on top, original order" on
+// any mismatch so a buggy player implementation cannot lose cards.
+func (g *Game) PerformScry(p Player, n int) int {
+	if p == nil || n <= 0 {
+		return 0
+	}
+	lib := p.Library()
+	if len(lib) == 0 {
+		return 0
+	}
+	count := n
+	if count > len(lib) {
+		count = len(lib)
+	}
+	top := make([]Card, count)
+	copy(top, lib[:count])
+
+	bottom, topOrder := p.ChooseScryPlacement(top, "scry", g)
+	bottom, topOrder = validateScryPlacement(top, bottom, topOrder)
+
+	idToCard := make(map[uuid.UUID]Card, count)
+	for _, c := range top {
+		idToCard[c.ID()] = c
+	}
+
+	rest := lib[count:]
+	newLib := make([]Card, 0, len(lib))
+	for _, id := range topOrder {
+		newLib = append(newLib, idToCard[id])
+	}
+	newLib = append(newLib, rest...)
+	for _, id := range bottom {
+		newLib = append(newLib, idToCard[id])
+	}
+	p.SetLibrary(newLib)
+
+	g.FireEvent(GameEvent{
+		Type:     EvtScry,
+		PlayerID: p.PlayerID(),
+		Amount:   count,
+	})
+	return count
+}
+
+// validateScryPlacement ensures the player's choice is a valid partition of
+// `top`. On any inconsistency it returns the safe default (all on top in the
+// original order) so cards are never dropped.
+func validateScryPlacement(top []Card, bottom, topOrder []uuid.UUID) ([]uuid.UUID, []uuid.UUID) {
+	want := make(map[uuid.UUID]bool, len(top))
+	for _, c := range top {
+		want[c.ID()] = true
+	}
+	if len(bottom)+len(topOrder) != len(top) {
+		return nil, defaultScryTopOrder(top)
+	}
+	seen := make(map[uuid.UUID]bool, len(top))
+	for _, id := range topOrder {
+		if !want[id] || seen[id] {
+			return nil, defaultScryTopOrder(top)
+		}
+		seen[id] = true
+	}
+	for _, id := range bottom {
+		if !want[id] || seen[id] {
+			return nil, defaultScryTopOrder(top)
+		}
+		seen[id] = true
+	}
+	return bottom, topOrder
+}
+
+func defaultScryTopOrder(top []Card) []uuid.UUID {
+	out := make([]uuid.UUID, len(top))
+	for i, c := range top {
+		out[i] = c.ID()
+	}
+	return out
+}
+
 // DealDamageToPlayer deals damage to a player, running it through the replacement pipeline.
 func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
 	if amount <= 0 {
@@ -1563,7 +1649,9 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	// is not an instant may be cast only during its controller's main phase,
 	// when the stack is empty, and when that player is the active player
 	// (i.e. could cast a sorcery).
-	if !card.HasType(TypeInstant) {
+	// CR 702.8 — Flash: "You may cast this spell any time you could cast an
+	// instant." A card with Flash bypasses the sorcery-speed gate entirely.
+	if !card.HasType(TypeInstant) && !cardHasKeyword(card, Flash) {
 		if !g.step.IsMainPhase() {
 			return ErrSorcerySpeed
 		}
@@ -2722,14 +2810,17 @@ func (g *Game) GetCastableSpells(playerID uuid.UUID) []Card {
 		if card.HasType(TypeLand) {
 			continue
 		}
+		// CR 702.8 — Flash lets a spell be cast any time you could cast an instant,
+		// bypassing the sorcery-speed gate below.
+		hasFlash := cardHasKeyword(card, Flash)
 		// Sorceries can only be cast at sorcery speed (main phase, active player, empty stack)
-		if card.HasType(TypeSorcery) {
+		if card.HasType(TypeSorcery) && !hasFlash {
 			if !isMainPhase || !isActive || !g.stack.IsEmpty() {
 				continue
 			}
 		}
 		// Creatures/artifacts/enchantments are sorcery speed
-		if card.HasType(TypeCreature) || card.HasType(TypeArtifact) || card.HasType(TypeEnchantment) {
+		if (card.HasType(TypeCreature) || card.HasType(TypeArtifact) || card.HasType(TypeEnchantment)) && !hasFlash {
 			if !isMainPhase || !isActive || !g.stack.IsEmpty() {
 				continue
 			}

@@ -149,6 +149,18 @@ Card manipulation effects:
 	[SearchLibraryToHand]()                      // Demonic Tutor
 	[SearchLibraryToTop]()                       // Vampiric Tutor
 	[ShuffleLibrary]()                           // shuffle controller's library
+	[Scry](amount ValueSource)                   // CR 701.18 — controller scries N
+
+Scry primitives:
+
+	Game.PerformScry(player, n) — engine entry point: looks at the top N
+	cards of player's library and rearranges them per
+	Player.ChooseScryPlacement. Fires EvtScry with Amount = cards seen.
+
+	Player.ChooseScryPlacement(top, reason, g) decides the split: returns
+	(bottom, topOrder) ID slices that partition `top`. BasePlayer's default
+	keeps every card on top in original order. TestPlayer queues decisions
+	via TestGame.ChooseScry(p, bottom, topOrder).
 
 Graveyard effects:
 
@@ -735,7 +747,14 @@ Keyword attrs (all >= Flying):
 	[Indestructible], [Hexproof], [Shroud], [Forestwalk], [Islandwalk],
 	[Swampwalk], [Mountainwalk], [Plainswalk], [Desertwalk], [UnblockableKW],
 	[CantBeBlockedByWalls], [CantBeBlockedExceptByWalls], [CanBlockAny],
-	[CanBlockAdditional], [BasiliskTouch], [CantRegenerate]
+	[CanBlockAdditional], [BasiliskTouch], [CantRegenerate], [Flash]
+
+Flash (CR 702.8 — "You may cast this spell any time you could cast an instant.")
+is a casting-time keyword rather than a permanent ability: it is read off the
+card while it is still in hand, by [Game.CastSpellByName] and
+[Game.GetCastableSpells], to bypass the sorcery-speed gate. The keyword is
+seeded onto the card via [WithKeyword] like any other keyword and is not
+re-checked once the spell is on the battlefield.
 
 Continuous effects use EffectManager.GrantAttr/RevokeAttr to modify grantedAttrs:
 

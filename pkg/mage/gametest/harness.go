@@ -288,6 +288,15 @@ func (tg *TestGame) Block(turn int, p PlayerRef, blocker, attacker string) {
 	tp.blockActions[turn] = append(tp.blockActions[turn], blockPair{blocker, attacker})
 }
 
+// ChooseTarget scripts which target a player will choose when prompted by
+// ChooseTargets (e.g. for triggered abilities that declare .AddTarget(...)).
+// The name is matched against possible player names (e.g. "PlayerA",
+// "PlayerB") or permanent names.
+func (tg *TestGame) ChooseTarget(p PlayerRef, name string) {
+	tp := tg.GetPlayer(p)
+	tp.chooseTarget = append(tp.chooseTarget, name)
+}
+
 // ChoosePermanent scripts which permanent a player will choose when asked.
 func (tg *TestGame) ChoosePermanent(p PlayerRef, name string) {
 	tp := tg.GetPlayer(p)
@@ -310,6 +319,14 @@ func (tg *TestGame) ChooseManaColor(p PlayerRef, color core.Color) {
 func (tg *TestGame) ChooseFromLibrary(p PlayerRef, name string) {
 	tp := tg.GetPlayer(p)
 	tp.chooseFromLibrary = append(tp.chooseFromLibrary, name)
+}
+
+// ChooseScry queues a scry placement for the next scry the player performs
+// (CR 701.18). `bottom` lists card names (in placement order) that go to the
+// bottom of the library; `topOrder` lists the remaining card names in their
+// new top-of-library order. Both must reference cards revealed by the scry.
+func (tg *TestGame) ChooseScry(p PlayerRef, bottom []string, topOrder []string) {
+	tg.GetPlayer(p).AddScryDecision(bottom, topOrder)
 }
 
 // FormBand scripts which creatures form an attacking band on the given turn.

@@ -138,6 +138,8 @@ func ExecuteEffect(ctx *EffectContext, data EffectData) error {
 		return execSearchLibraryToBattlefield(ctx, e)
 	case *chooseColorEffect:
 		return execChooseColor(ctx, e)
+	case *scryEffect:
+		return execScry(ctx, e)
 
 	// --- Combat effects (effect_combat.go) ---
 

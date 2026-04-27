@@ -94,6 +94,17 @@ type Player interface {
 	ChooseManaColor(reason string) Color
 	ChooseCardFromLibrary(candidates []Card, reason string, g GameReader) Card
 	ChooseNumber(min, max int, reason string) int
+
+	// ChooseScryPlacement implements the controller's choice for a scry (CR 701.18).
+	// `top` is the top N cards of the library in their current order (top first).
+	// The implementation returns:
+	//   - bottom: the subset of `top` (by ID) that go to the bottom of the library,
+	//     in the order they will be placed (last ID becomes the new bottom card).
+	//   - topOrder: the remaining cards (by ID) in the order they will be placed
+	//     back on top of the library (first ID becomes the new top card).
+	// The union of bottom and topOrder must equal the IDs in `top` exactly once each;
+	// the engine validates this and falls back to the original order on any mismatch.
+	ChooseScryPlacement(top []Card, reason string, g GameReader) (bottom []uuid.UUID, topOrder []uuid.UUID)
 }
 
 // BasePlayer implements Player with basic functionality.
@@ -310,6 +321,16 @@ func (p *BasePlayer) ChooseCardFromLibrary(candidates []Card, reason string, g G
 
 func (p *BasePlayer) ChooseNumber(min, max int, reason string) int {
 	return max // default: choose maximum
+}
+
+// ChooseScryPlacement: deterministic default keeps every revealed card on top
+// in its original order. Card implementations and AI players may override this.
+func (p *BasePlayer) ChooseScryPlacement(top []Card, reason string, g GameReader) (bottom []uuid.UUID, topOrder []uuid.UUID) {
+	topOrder = make([]uuid.UUID, len(top))
+	for i, c := range top {
+		topOrder[i] = c.ID()
+	}
+	return nil, topOrder
 }
 
 func (p *BasePlayer) assertOwner(c Card) {

@@ -37,6 +37,7 @@ const (
 	EvtCreatureBlocks     // fired once per blocking creature per combat (CR 509.3a)
 	EvtEntersAttacking    // fired when a creature is put onto the battlefield attacking (CR 508.4)
 	EvtEntersBlocking     // fired when a creature is put onto the battlefield blocking (CR 509.4)
+	EvtScry               // fired when a player scries; Amount is the number of cards scried (CR 701.18)
 )
 
 // GameEvent carries data about a game event.

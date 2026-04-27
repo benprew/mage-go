@@ -43,8 +43,17 @@ type TestPlayer struct {
 	chooseBandingDistribution []map[string]int
 	chooseMode                []int
 	chooseNumber              []int
+	chooseTarget              []string
 	combatBlockerOrder        map[string][]string
 	combatDamageAssignment    map[string]map[string]int
+	chooseScryDecisions       []scryDecision
+}
+
+// scryDecision is one queued scry placement: cards to send to the bottom
+// (in placement order) and the desired top order for the rest.
+type scryDecision struct {
+	bottom   []string
+	topOrder []string
 }
 
 func NewTestPlayer(name string) *TestPlayer {
@@ -207,7 +216,22 @@ func (tp *TestPlayer) DeclareBlockers(g *mage.Game) []mage.BlockAssignment {
 }
 
 // ChooseTargets selects from possible targets (for auto-targeting).
+// If a scripted target name is queued (via TestGame.ChooseTarget), it is
+// resolved against the possible IDs by matching player name or permanent name.
 func (tp *TestPlayer) ChooseTargets(possible []uuid.UUID, min, max int, g *mage.Game) []uuid.UUID {
+	if len(tp.chooseTarget) > 0 {
+		name := tp.chooseTarget[0]
+		for _, id := range possible {
+			if pl := g.GetPlayer(id); pl != nil && pl.Name() == name {
+				tp.chooseTarget = tp.chooseTarget[1:]
+				return []uuid.UUID{id}
+			}
+			if perm := g.FindPermanent(id); perm != nil && perm.Name() == name {
+				tp.chooseTarget = tp.chooseTarget[1:]
+				return []uuid.UUID{id}
+			}
+		}
+	}
 	if len(possible) >= min {
 		n := min
 		if n > len(possible) {
@@ -303,6 +327,59 @@ func (tp *TestPlayer) ChooseCardFromLibrary(candidates []mage.Card, reason strin
 		}
 	}
 	return candidates[0]
+}
+
+// AddScryDecision queues a scry placement. `bottom` lists card names to put on
+// the bottom of the library in placement order (last name becomes the new
+// bottom card). `topOrder` lists the remaining card names in the order they
+// will be returned to the top (first name becomes the new top card). Cards
+// listed must be drawn from the top N revealed by the scry.
+func (tp *TestPlayer) AddScryDecision(bottom, topOrder []string) {
+	tp.chooseScryDecisions = append(tp.chooseScryDecisions, scryDecision{
+		bottom:   append([]string(nil), bottom...),
+		topOrder: append([]string(nil), topOrder...),
+	})
+}
+
+// ChooseScryPlacement consumes one queued decision; with no queued decision
+// the BasePlayer default applies (keep all on top in current order).
+func (tp *TestPlayer) ChooseScryPlacement(top []mage.Card, reason string, g mage.GameReader) (bottom []uuid.UUID, topOrder []uuid.UUID) {
+	if len(tp.chooseScryDecisions) == 0 {
+		return tp.BasePlayer.ChooseScryPlacement(top, reason, g)
+	}
+	dec := tp.chooseScryDecisions[0]
+	tp.chooseScryDecisions = tp.chooseScryDecisions[1:]
+
+	used := make(map[uuid.UUID]bool, len(top))
+	resolve := func(name string) (uuid.UUID, bool) {
+		for _, c := range top {
+			if used[c.ID()] {
+				continue
+			}
+			if c.Name() == name {
+				used[c.ID()] = true
+				return c.ID(), true
+			}
+		}
+		return uuid.Nil, false
+	}
+
+	for _, name := range dec.bottom {
+		if id, ok := resolve(name); ok {
+			bottom = append(bottom, id)
+		}
+	}
+	for _, name := range dec.topOrder {
+		if id, ok := resolve(name); ok {
+			topOrder = append(topOrder, id)
+		}
+	}
+	for _, c := range top {
+		if !used[c.ID()] {
+			topOrder = append(topOrder, c.ID())
+		}
+	}
+	return bottom, topOrder
 }
 
 // ChooseNumber picks a number from the given range.
