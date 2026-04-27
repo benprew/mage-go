@@ -1440,10 +1440,13 @@ func registerSpells() {
 	// Sorcery
 	// This spell costs {1} less to cast if you control a creature with flying.
 	// Draw two cards.
-	// XXX: requires conditional-cost-reduction-on-cast; implement plain draw two
 	Register("Winged Words", func() Card {
 		return NewSorcery("Winged Words", "{2}{U}",
 			NewSpellAbility(drawSelfCard(2)),
+			WithSelfCostReduction(
+				FixedAmount(1),
+				CondControlsMatching(HasKeywordFilter(Flying)),
+			),
 		)
 	})
 
@@ -1451,10 +1454,13 @@ func registerSpells() {
 	// Instant
 	// This spell costs {1} less to cast if you control a Wizard.
 	// Counter target spell.
-	// XXX: requires conditional-cost-reduction-on-cast; implement plain counter
 	Register("Wizard's Retort", func() Card {
 		return NewInstant("Wizard's Retort", "{1}{U}{U}",
 			NewTargetedSpell(TargetSpellOnStack(), CounterSpell()),
+			WithSelfCostReduction(
+				FixedAmount(1),
+				CondControlsMatching(HasSubType("Wizard")),
+			),
 		)
 	})
 

@@ -173,3 +173,75 @@ func TestCrypticSerpent_ReducedByInstantsAndSorceriesInGraveyard(t *testing.T) {
 		}
 	})
 }
+
+func TestHeraldsHorn_ReducesChosenCreatureType(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Herald's Horn")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Shivan Dragon")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Hill Giant")
+	g.StopAt(1, core.PrecombatMain)
+	g.Execute()
+	pid := g.GetPlayer(gametest.PlayerA).PlayerID()
+	hornPerm := g.FindPermanentByName("Herald's Horn", pid)
+	if hornPerm == nil {
+		t.Fatal("Herald's Horn not found on battlefield")
+	}
+	hornPerm.ChosenSubtype = "Dragon"
+
+	if got := g.Game.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Shivan Dragon")); got != 1 {
+		t.Errorf("Dragon spell with chosen Dragon: got %d, want 1", got)
+	}
+	if got := g.Game.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Hill Giant")); got != 0 {
+		t.Errorf("Giant spell with chosen Dragon: got %d, want 0", got)
+	}
+}
+
+func TestWingedWords_ReducedIfYouControlFlyer(t *testing.T) {
+	t.Run("with flyer: reduces by 1", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rishadan Airship")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Winged Words")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		pid := g.GetPlayer(gametest.PlayerA).PlayerID()
+		if got := g.Game.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Winged Words")); got != 1 {
+			t.Errorf("Winged Words with flyer: got %d, want 1", got)
+		}
+	})
+
+	t.Run("without flyer: no reduction", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Winged Words")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		pid := g.GetPlayer(gametest.PlayerA).PlayerID()
+		if got := g.Game.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Winged Words")); got != 0 {
+			t.Errorf("Winged Words without flyer: got %d, want 0", got)
+		}
+	})
+}
+
+func TestWizardsRetort_ReducedIfYouControlWizard(t *testing.T) {
+	t.Run("with Wizard: reduces by 1", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Erratic Visionary")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Wizard's Retort")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		pid := g.GetPlayer(gametest.PlayerA).PlayerID()
+		if got := g.Game.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Wizard's Retort")); got != 1 {
+			t.Errorf("Wizard's Retort with Wizard: got %d, want 1", got)
+		}
+	})
+
+	t.Run("without Wizard: no reduction", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Wizard's Retort")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		pid := g.GetPlayer(gametest.PlayerA).PlayerID()
+		if got := g.Game.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Wizard's Retort")); got != 0 {
+			t.Errorf("Wizard's Retort without Wizard: got %d, want 0", got)
+		}
+	})
+}

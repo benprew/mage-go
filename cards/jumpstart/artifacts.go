@@ -167,9 +167,14 @@ func registerArtifacts() {
 	// As this artifact enters, choose a creature type.
 	// Creature spells you cast of the chosen type cost {1} less to cast.
 	// At the beginning of your upkeep, look at the top card of your library. If it's a creature card of the chosen type, you may reveal it and put it into your hand.
-	// XXX: requires "as enters choose a creature subtype" + per-subtype spell cost reduction (engine has color/type cost reductions but not subtype). Also requires top-of-library reveal/draw mechanic.
+	// XXX: requires "as enters choose a creature subtype" replacement and the upkeep top-of-library reveal/draw mechanic.
 	Register("Herald's Horn", func() Card {
-		return NewArtifact("Herald's Horn", "{3}")
+		return NewArtifact("Herald's Horn", "{3}",
+			WithStaticAbility(ReduceSpellCostStatic(
+				SpellsAnd(SpellHasType(TypeCreature), SpellSubTypeMatchesChosen()),
+				FixedAmount(1), nil,
+			)),
+		)
 	})
 
 	// Mana Geode {3}
