@@ -901,10 +901,9 @@ func registerSpells() {
 	// Magma Jet {1}{R}
 	// Instant
 	// Magma Jet deals 2 damage to any target. Scry 2.
-	// XXX: missing Scry primitive — implement damage portion only
 	Register("Magma Jet", func() Card {
 		return NewInstant("Magma Jet", "{1}{R}",
-			NewTargetedSpell(TargetAnyTarget(), DealDamage(Fixed(2))),
+			NewTargetedSpell(TargetAnyTarget(), DealDamage(Fixed(2)), Scry(Fixed(2))),
 		)
 	})
 
@@ -1062,10 +1061,10 @@ func registerSpells() {
 	// Riddle of Lightning {3}{R}{R}
 	// Instant
 	// Choose any target. Scry 3, then reveal the top card of your library. Riddle of Lightning deals damage equal to that card's mana value to that permanent or player.
-	// XXX: requires Scry primitive + reveal-top + mana-value-from-card; defer
+	// XXX: reveal-top + mana-value-from-card damage portion deferred; Scry 3 implemented
 	Register("Riddle of Lightning", func() Card {
 		return NewInstant("Riddle of Lightning", "{3}{R}{R}",
-			NewSpellAbility(),
+			NewSpellAbility(Scry(Fixed(3))),
 		)
 	})
 
@@ -1303,10 +1302,9 @@ func registerSpells() {
 	// Voyage's End {1}{U}
 	// Instant
 	// Return target creature to its owner's hand. Scry 1.
-	// XXX: missing Scry primitive — implement bounce only
 	Register("Voyage's End", func() Card {
 		return NewInstant("Voyage's End", "{1}{U}",
-			NewTargetedSpell(TargetCreature(), ReturnToHandTarget()),
+			NewTargetedSpell(TargetCreature(), ReturnToHandTarget(), Scry(Fixed(1))),
 		)
 	})
 

@@ -737,3 +737,48 @@ func TestVolcanicFalloutDamagesAll(t *testing.T) {
 	g.AssertLife(gametest.PlayerA, 18)
 	g.AssertLife(gametest.PlayerB, 18)
 }
+
+func TestMagmaJet(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Magma Jet")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 2)
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Forest")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Island")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Plains")
+	g.ChooseScry(gametest.PlayerA, []string{"Forest", "Island"}, nil)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Magma Jet", "PlayerB")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerB, 18)
+	g.AssertLibraryTop(gametest.PlayerA, "Plains", "Forest", "Island")
+}
+
+func TestVoyagesEnd(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Voyage's End")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 2)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Mountain")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Forest")
+	g.ChooseScry(gametest.PlayerA, []string{"Mountain"}, nil)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Voyage's End", "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerB, "Grizzly Bears", 1)
+	g.AssertLibraryTop(gametest.PlayerA, "Forest", "Mountain")
+}
+
+func TestRiddleOfLightningScry(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Riddle of Lightning")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 5)
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Forest")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Island")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Plains")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Swamp")
+	g.ChooseScry(gametest.PlayerA, []string{"Forest", "Island", "Plains"}, nil)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Riddle of Lightning")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertLibraryTop(gametest.PlayerA, "Swamp", "Forest", "Island", "Plains")
+}
