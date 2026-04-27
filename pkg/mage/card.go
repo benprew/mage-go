@@ -177,7 +177,7 @@ func (c *BaseCard) CastTargets() []Target {
 	}
 	// Fall back to SpellAbility targets for existing spells.
 	for _, a := range c.abilities {
-		if sa, ok := a.(*SpellAbility); ok {
+		if sa, ok := a.(*SpellAbility); ok && sa.Kind() == ActionSpell {
 			if targets := sa.Targets(); len(targets) > 0 {
 				return targets
 			}
@@ -224,6 +224,11 @@ func WithKeyword(kw Keyword) CardOption {
 
 // WithAbility adds an ability to a card.
 func WithAbility(a Ability) CardOption {
+	return func(c *BaseCard) { c.AddAbility(a) }
+}
+
+// WithAction adds a spell or activated ability action to a card.
+func WithAction(a *ActionDefinition) CardOption {
 	return func(c *BaseCard) { c.AddAbility(a) }
 }
 
@@ -304,6 +309,41 @@ func applyCardOpts(c *BaseCard, opts []CardOption) {
 	}
 }
 
+func splitSpellConstructorParts(parts ...any) (*SpellAbility, []CardOption) {
+	var spell *SpellAbility
+	var actionParts []any
+	var opts []CardOption
+	for _, part := range parts {
+		switch v := part.(type) {
+		case nil:
+		case *ActionDefinition:
+			if v.Kind() == ActionSpell {
+				spell = v
+			} else {
+				opts = append(opts, WithAction(v))
+			}
+		case Effect:
+			actionParts = append(actionParts, v)
+		case ActionOption:
+			actionParts = append(actionParts, v)
+		case CardOption:
+			opts = append(opts, v)
+		default:
+			panic("mage: unsupported spell constructor argument")
+		}
+	}
+	if len(actionParts) > 0 {
+		if spell == nil {
+			spell = NewSpell(actionParts...)
+		} else {
+			for _, opt := range actionPartsToOptions(actionParts...) {
+				opt(spell)
+			}
+		}
+	}
+	return spell, opts
+}
+
 // NewCreature creates a new creature card.
 func NewCreature(name, cost string, power, toughness int, opts ...CardOption) *BaseCard {
 	c := &BaseCard{
@@ -337,10 +377,10 @@ func NewToken(name string, power, toughness int, types []CardType, subTypes []st
 	return c
 }
 
-// NewInstant creates a new instant card. The spell parameter defines what
-// happens when the spell resolves (use [NewTargetedSpell] or [NewSpellAbility]).
-// Pass nil for placeholder cards with no effect.
-func NewInstant(name, cost string, spell *SpellAbility, opts ...CardOption) *BaseCard {
+// NewInstant creates a new instant card. Pass effects and action options
+// directly, or pass an explicit [*SpellAbility] for compatibility.
+func NewInstant(name, cost string, parts ...any) *BaseCard {
+	spell, opts := splitSpellConstructorParts(parts...)
 	c := &BaseCard{
 		id:       uuid.New(),
 		name:     name,
@@ -354,10 +394,10 @@ func NewInstant(name, cost string, spell *SpellAbility, opts ...CardOption) *Bas
 	return c
 }
 
-// NewSorcery creates a new sorcery card. The spell parameter defines what
-// happens when the spell resolves (use [NewTargetedSpell] or [NewSpellAbility]).
-// Pass nil for placeholder cards with no effect.
-func NewSorcery(name, cost string, spell *SpellAbility, opts ...CardOption) *BaseCard {
+// NewSorcery creates a new sorcery card. Pass effects and action options
+// directly, or pass an explicit [*SpellAbility] for compatibility.
+func NewSorcery(name, cost string, parts ...any) *BaseCard {
+	spell, opts := splitSpellConstructorParts(parts...)
 	c := &BaseCard{
 		id:       uuid.New(),
 		name:     name,

@@ -1,11 +1,11 @@
 package ai
 
 import (
-	"github.com/google/uuid"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/eval"
+	"github.com/google/uuid"
 )
 
 // HeuristicStrategy implements AIStrategy using personality-driven heuristics.
@@ -106,7 +106,7 @@ func (s *HeuristicStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPla
 			}
 			hasUsableEffect := false
 			for _, a := range card.Abilities() {
-				if sa, ok := a.(*mage.SpellAbility); ok {
+				if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
 					if mage.SpellOutcome(sa.Effects()) != mage.OutcomeUnknown {
 						hasUsableEffect = true
 						break
@@ -144,7 +144,7 @@ func (s *HeuristicStrategy) findBestRemoval(p mage.Player, g *mage.Game) *intera
 		}
 		for _, a := range card.Abilities() {
 			sa, ok := a.(*mage.SpellAbility)
-			if !ok {
+			if !ok || sa.Kind() != mage.ActionSpell {
 				continue
 			}
 			outcome := mage.SpellOutcome(sa.Effects())
@@ -410,7 +410,7 @@ func (s *HeuristicStrategy) autoSelectTargets(p mage.Player, g *mage.Game, card 
 
 	for _, a := range card.Abilities() {
 		sa, ok := a.(*mage.SpellAbility)
-		if !ok {
+		if !ok || sa.Kind() != mage.ActionSpell {
 			continue
 		}
 		for _, t := range sa.Targets() {
@@ -454,7 +454,7 @@ func (s *HeuristicStrategy) autoSelectTargets(p mage.Player, g *mage.Game, card 
 				}
 				spellDamage := 0
 				for _, ab := range card.Abilities() {
-					if sa, ok := ab.(*mage.SpellAbility); ok {
+					if sa, ok := ab.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
 						for _, e := range sa.Effects() {
 							if dv := e.Properties().DamageValue; dv != nil {
 								spellDamage = dv.Resolve(g, card.ID(), playerID, nil)
@@ -616,7 +616,7 @@ func bestXValue(g *mage.Game, playerID uuid.UUID, card mage.Card, targets []uuid
 	// For damage spells, try to pick a lethal X value.
 	isDamageSpell := false
 	for _, a := range card.Abilities() {
-		if sa, ok := a.(*mage.SpellAbility); ok {
+		if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
 			for _, e := range sa.Effects() {
 				if e.Properties().DamageValue != nil {
 					isDamageSpell = true

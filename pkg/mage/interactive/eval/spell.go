@@ -32,7 +32,7 @@ func SpellIsWorthless(card mage.Card, p mage.Player, g *mage.Game) bool {
 	playerID := p.PlayerID()
 	for _, a := range card.Abilities() {
 		sa, ok := a.(*mage.SpellAbility)
-		if !ok {
+		if !ok || sa.Kind() != mage.ActionSpell {
 			continue
 		}
 		for _, t := range sa.Targets() {
@@ -96,7 +96,7 @@ func SpellValue(card mage.Card, p mage.Player, g *mage.Game) int {
 
 	for _, a := range card.Abilities() {
 		sa, ok := a.(*mage.SpellAbility)
-		if !ok {
+		if !ok || sa.Kind() != mage.ActionSpell {
 			continue
 		}
 		for _, e := range sa.Effects() {

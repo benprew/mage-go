@@ -3,11 +3,11 @@ package ai
 import (
 	"sort"
 
-	"github.com/google/uuid"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/eval"
+	"github.com/google/uuid"
 )
 
 // Move represents a single action the AI can take during a priority window.
@@ -19,8 +19,8 @@ type Move struct {
 	PermanentID  uuid.UUID
 	AbilityIndex int
 	Attackers    []uuid.UUID
-	XValue    int // X value for X-cost spells (0 means not an X spell)
-	ModeIndex int // mode index for modal spells (0 = first mode or non-modal)
+	XValue       int // X value for X-cost spells (0 means not an X spell)
+	ModeIndex    int // mode index for modal spells (0 = first mode or non-modal)
 
 	IsCreature bool
 	IsTactical bool // true for damage spells, removal, combat tricks
@@ -237,7 +237,7 @@ func expandXSpellMoves(p mage.Player, g *mage.Game, card mage.Card) []Move {
 	isDamageSpell := false
 	for _, a := range card.Abilities() {
 		sa, ok := a.(*mage.SpellAbility)
-		if !ok {
+		if !ok || sa.Kind() != mage.ActionSpell {
 			continue
 		}
 		for _, e := range sa.Effects() {
@@ -299,7 +299,7 @@ func expandNonXSpellMoves(p mage.Player, g *mage.Game, card mage.Card, xValue, m
 	var outcome mage.Outcome
 	for _, a := range card.Abilities() {
 		sa, ok := a.(*mage.SpellAbility)
-		if !ok {
+		if !ok || sa.Kind() != mage.ActionSpell {
 			continue
 		}
 		outcome = mage.SpellOutcome(sa.Effects())
@@ -353,7 +353,7 @@ func expandNonXSpellMoves(p mage.Player, g *mage.Game, card mage.Card, xValue, m
 		if tp := g.GetPlayer(tid); tp != nil && tp.PlayerID() != playerID {
 			for _, a := range card.Abilities() {
 				sa, ok := a.(*mage.SpellAbility)
-				if !ok {
+				if !ok || sa.Kind() != mage.ActionSpell {
 					continue
 				}
 				for _, e := range sa.Effects() {

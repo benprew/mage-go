@@ -32,11 +32,12 @@ ensure its init() runs — typically a blank identifier reference in a test.go f
 # Card Constructors
 
 Type-specific constructors create the [*BaseCard] with the right types pre-set.
-All accept variadic [CardOption] functions for customization:
+Most accept variadic [CardOption] functions for customization. Instants and
+sorceries accept spell effects/options directly, plus [CardOption] values:
 
 	[NewCreature](name, manaCost, power, toughness, ...CardOption)
-	[NewInstant](name, manaCost, *SpellAbility, ...CardOption)
-	[NewSorcery](name, manaCost, *SpellAbility, ...CardOption)
+	[NewInstant](name, manaCost, effectsOrOptions...)
+	[NewSorcery](name, manaCost, effectsOrOptions...)
 	[NewEnchantment](name, manaCost, ...CardOption)
 	[NewAura](name, manaCost, ...CardOption)           // TypeEnchantment + "Aura" subtype
 	[NewArtifact](name, manaCost, ...CardOption)
@@ -53,6 +54,7 @@ arguments to any card constructor:
 	[WithSuperTypes](core.Legendary)       // Legendary, Basic, Snow, World
 	[WithKeyword](core.Flying)             // keyword attrs (seeds baseAttrs)
 	[WithAbility](ability)                 // any Ability (triggered, protection, etc.)
+	[WithAction](action)                   // spell or activated ability action
 	[WithCardType](core.TypeArtifact)      // additional card type (artifact creature)
 	[WithManaAbility](core.Green)          // tap for one mana of color
 	[WithAnyColorMana]()                   // tap for any color (Birds of Paradise)
@@ -74,8 +76,33 @@ Common card patterns have dedicated constructors that reduce boilerplate:
 
 # Spells and Effects
 
-Instants and sorceries take a [*SpellAbility] that defines resolution behavior.
-Build one with:
+Spells and non-mana activated abilities are both backed by [ActionDefinition],
+which stores costs, effects, and real targeting requirements. Instants and
+sorceries automatically wrap direct effects/options in a spell action.
+
+Preferred spell constructor style:
+
+	[NewInstant](name, cost, effectsOrOptions...)
+	[NewSorcery](name, cost, effectsOrOptions...)
+
+Explicit spell actions are also available:
+
+	[NewSpell](effectsOrOptions...)            // effects plus options such as WithTarget
+
+Examples:
+
+	// Lightning Bolt: deal 3 damage to any target
+	mage.NewInstant("Lightning Bolt", "{R}",
+	    mage.DealDamage(mage.Fixed(3)),
+	    mage.WithTarget(mage.TargetAnyTarget()),
+	)
+
+	// Wrath of God: destroy all creatures (no target)
+	mage.NewSorcery("Wrath of God", "{2}{W}{W}",
+	    mage.DestroyAllCreatures(),
+	)
+
+Older helpers remain available during migration:
 
 	[NewSpellAbility](effects...)              // untargeted spell
 	[NewTargetedSpell](target, effects...)     // targeted spell
@@ -88,19 +115,10 @@ Effects are the atomic actions. Each implements the [Effect] interface:
 
 Examples:
 
-	// Lightning Bolt: deal 3 damage to any target
-	mage.NewInstant("Lightning Bolt", "{R}",
-	    mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
-	)
-
-	// Wrath of God: destroy all creatures (no target)
-	mage.NewSorcery("Wrath of God", "{2}{W}{W}",
-	    mage.NewSpellAbility(mage.DestroyAllCreatures()),
-	)
-
 	// Ancestral Recall: target player draws 3
 	mage.NewInstant("Ancestral Recall", "{U}",
-	    mage.NewTargetedSpell(mage.TargetPlayer(), mage.DrawCards(mage.Fixed(3))),
+	    mage.DrawCards(mage.Fixed(3)),
+	    mage.WithTarget(mage.TargetPlayer()),
 	)
 
 	// Modal spell (Healing Salve): set modes on the card
@@ -427,16 +445,29 @@ Additional costs on the card itself (paid when casting, not on an ability):
 
 # Activated Abilities
 
-[NewActivatedAbility] takes a primary effect, primary cost, and optional
-[AbilityOption] modifiers:
+Non-mana activated abilities use the same [ActionDefinition] model as spells.
+Prefer [NewActivated] with [WithAction]:
+
+	mage.WithAction(mage.NewActivated(
+	    mage.TapSourceCost(),
+	    mage.DealDamage(mage.Fixed(1)),
+	    mage.WithTarget(mage.TargetAnyTarget()),
+	))
+
+[NewActivatedAbility] and [WithActivatedAbility] remain as compatibility
+wrappers. They take a primary effect, primary cost, and optional [AbilityOption]
+modifiers:
 
 	mage.NewActivatedAbility(effect, cost, ...AbilityOption)
 
-AbilityOption modifiers:
+ActionOption / AbilityOption modifiers:
 
 	[WithCost](cost)                      // additional cost
 	[WithTarget](target)                  // targeting requirement
 	[WithEffect](effect)                  // additional effect
+	[WithEffects](effects...)             // additional effects
+	[WithTiming](TimingSorcery)           // timing rule
+	[WithStepTiming](step)                // step-specific timing
 	[WithUpkeepOnly]()                    // only during upkeep
 	[WithOncePerTurn]()                   // once per turn limit
 	[WithAnyPlayerMay]()                  // any player can activate
@@ -1134,7 +1165,8 @@ Targeted instant:
 
 	mage.Register("Lightning Bolt", func() mage.Card {
 	    return mage.NewInstant("Lightning Bolt", "{R}",
-	        mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+	        mage.DealDamage(mage.Fixed(3)),
+	        mage.WithTarget(mage.TargetAnyTarget()),
 	    )
 	})
 
@@ -1142,7 +1174,7 @@ Untargeted sorcery:
 
 	mage.Register("Wrath of God", func() mage.Card {
 	    return mage.NewSorcery("Wrath of God", "{2}{W}{W}",
-	        mage.NewSpellAbility(mage.DestroyAllCreatures()),
+	        mage.DestroyAllCreatures(),
 	    )
 	})
 
@@ -1150,7 +1182,8 @@ X spell:
 
 	mage.Register("Fireball", func() mage.Card {
 	    return mage.NewSorcery("Fireball", "{X}{R}",
-	        mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.XValue())),
+	        mage.DealDamage(mage.XValue()),
+	        mage.WithTarget(mage.TargetAnyTarget()),
 	    )
 	})
 
@@ -1158,7 +1191,8 @@ Counterspell:
 
 	mage.Register("Counterspell", func() mage.Card {
 	    return mage.NewInstant("Counterspell", "{U}{U}",
-	        mage.NewTargetedSpell(mage.TargetSpellOnStack(), mage.CounterSpell()),
+	        mage.CounterSpell(),
+	        mage.WithTarget(mage.TargetSpellOnStack()),
 	    )
 	})
 

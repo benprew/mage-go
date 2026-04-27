@@ -1532,6 +1532,85 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 	g.CheckStateBasedActions()
 }
 
+func (g *Game) validateActionTargets(controller uuid.UUID, sourceCard Card, specs []Target, chosen []uuid.UUID, label string) error {
+	if len(specs) == 0 || len(chosen) == 0 {
+		return nil
+	}
+	for i, spec := range specs {
+		if i >= len(chosen) {
+			break
+		}
+		if tf, ok := spec.(interface{ Filter() PermanentFilter }); ok {
+			targetPerm := g.FindPermanent(chosen[i])
+			if targetPerm != nil {
+				if !tf.Filter().Match(targetPerm, g) {
+					return fmt.Errorf("invalid target for %s", label)
+				}
+				if !targetPerm.CanBeTargetedBy(sourceCard, controller, g) {
+					return fmt.Errorf("target cannot be targeted")
+				}
+				continue
+			}
+		}
+		possible := spec.Possible(controller, sourceCard, g)
+		found := false
+		for _, id := range possible {
+			if id == chosen[i] {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("invalid target for %s", label)
+		}
+	}
+	return nil
+}
+
+func (g *Game) autoTapForManaCosts(controller, sourceID uuid.UUID, costs []Cost) error {
+	for _, cost := range costs {
+		if mc, ok := cost.(*ManaCostPayment); ok {
+			reduced := mc.reducedCost(sourceID, g)
+			if !reduced.IsZero() {
+				if err := g.AutoTapForCost(controller, reduced); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (g *Game) payActionCosts(controller, sourceID uuid.UUID, costs []Cost) error {
+	for _, cost := range costs {
+		if err := cost.Pay(sourceID, controller, g); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func newStackObject(controller, sourceID uuid.UUID, card Card, effects []Effect, targets []uuid.UUID, xValue int, isAbility bool) *StackObject {
+	obj := &StackObject{
+		ID:         uuid.New(),
+		Card:       card,
+		Controller: controller,
+		SourceID:   sourceID,
+		IsAbility:  isAbility,
+		Targets:    targets,
+		XValue:     xValue,
+	}
+	obj.Effects = append(obj.Effects, effects...)
+	return obj
+}
+
+func chooseModeForStackObject(obj *StackObject, modes []string, chooser Player, sourceName string) {
+	if len(modes) == 0 || chooser == nil {
+		return
+	}
+	obj.ModeChoice = chooser.ChooseMode(modes, sourceName)
+}
+
 // CastSpellByName finds a card in player's hand, puts it on the stack.
 func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.UUID, xValues ...int) error {
 	p := g.GetPlayer(playerID)
@@ -1668,6 +1747,28 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		}
 	}
 
+	// Build spell action data before moving the card so action-level costs
+	// are paid as part of casting.
+	var effects []Effect
+	var actionCosts []Cost
+	for _, a := range card.Abilities() {
+		if sa, ok := a.(*SpellAbility); ok && sa.Kind() == ActionSpell {
+			effects = append(effects, sa.Effects()...)
+			actionCosts = append(actionCosts, sa.Costs()...)
+		}
+	}
+	if err := g.autoTapForManaCosts(playerID, card.ID(), actionCosts); err != nil {
+		return err
+	}
+	for _, cost := range actionCosts {
+		if !cost.CanPay(card.ID(), playerID, g) {
+			return fmt.Errorf("cannot pay action cost for %s: %s", name, cost.Text())
+		}
+	}
+	if err := g.payActionCosts(playerID, card.ID(), actionCosts); err != nil {
+		return err
+	}
+
 	// If an additional cost set g.currentX (e.g. sacrifice-capture-CMC), use it
 	if g.currentX != 0 && xValue == 0 {
 		xValue = g.currentX
@@ -1677,27 +1778,8 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	// Remove from hand
 	p.RemoveFromHand(card.ID())
 
-	// Build effects from spell abilities
-	var effects []Effect
-	for _, a := range card.Abilities() {
-		if sa, ok := a.(*SpellAbility); ok {
-			effects = append(effects, sa.Effects()...)
-		}
-	}
-
-	obj := &StackObject{
-		ID:         uuid.New(),
-		Card:       card,
-		Controller: playerID,
-		SourceID:   card.ID(),
-		Effects:    effects,
-		Targets:    targets,
-		XValue:     xValue,
-	}
-
-	if modes := card.Modes(); len(modes) > 0 {
-		obj.ModeChoice = p.ChooseMode(modes, card.Name())
-	}
+	obj := newStackObject(playerID, card.ID(), card, effects, targets, xValue, false)
+	chooseModeForStackObject(obj, card.Modes(), p, card.Name())
 
 	g.stack.Push(obj)
 
@@ -2830,68 +2912,17 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 			return fmt.Errorf("only opponents may activate this ability")
 		}
 	}
-	// CR 307.5 / 602.5d — "activate only as a sorcery" means the ability can
-	// only be activated when its controller could cast a sorcery: main phase,
-	// active player, empty stack.
-	if aa.SorcerySpeed() {
-		if !g.step.IsMainPhase() {
-			return ErrSorcerySpeed
-		}
-		if g.ActivePlayerObj().PlayerID() != playerID {
-			return ErrSorcerySpeed
-		}
-		if !g.stack.IsEmpty() {
-			return ErrSorcerySpeed
-		}
-	}
 
-	// Validate targets
-	if len(aa.Targets()) > 0 && len(targets) > 0 {
-		for i, t := range aa.Targets() {
-			if i >= len(targets) {
-				break
-			}
-			if tf, ok := t.(interface{ Filter() PermanentFilter }); ok {
-				targetPerm := g.FindPermanent(targets[i])
-				if targetPerm != nil {
-					if !tf.Filter().Match(targetPerm, g) {
-						return fmt.Errorf("invalid target for ability")
-					}
-					if !targetPerm.CanBeTargetedBy(perm.Card, playerID, g) {
-						return fmt.Errorf("target cannot be targeted")
-					}
-				}
-			} else {
-				possible := t.Possible(playerID, perm.Card, g)
-				found := false
-				for _, pid := range possible {
-					if pid == targets[i] {
-						found = true
-						break
-					}
-				}
-				if !found {
-					return fmt.Errorf("invalid target for ability")
-				}
-			}
-		}
+	if err := g.validateActionTargets(playerID, perm.Card, aa.Targets(), targets, "ability"); err != nil {
+		return err
 	}
 
 	// Auto-tap lands to pay mana costs, then pay all costs
-	for _, c := range aa.Costs() {
-		if mc, ok := c.(*ManaCostPayment); ok {
-			reduced := mc.reducedCost(perm.ID(), g)
-			if !reduced.IsZero() {
-				if err := g.AutoTapForCost(playerID, reduced); err != nil {
-					return err
-				}
-			}
-		}
+	if err := g.autoTapForManaCosts(playerID, perm.ID(), aa.Costs()); err != nil {
+		return err
 	}
-	for _, c := range aa.Costs() {
-		if err := c.Pay(perm.ID(), playerID, g); err != nil {
-			return err
-		}
+	if err := g.payActionCosts(playerID, perm.ID(), aa.Costs()); err != nil {
+		return err
 	}
 
 	// Mark once-per-turn abilities as used
@@ -2899,23 +2930,10 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		saa.MarkActivated()
 	}
 
-	obj := &StackObject{
-		ID:         uuid.New(),
-		Controller: playerID,
-		SourceID:   perm.ID(),
-		IsAbility:  true,
-		Targets:    targets,
-		XValue:     g.currentX,
-	}
-	obj.Effects = append(obj.Effects, aa.Effects()...)
+	obj := newStackObject(playerID, perm.ID(), nil, aa.Effects(), targets, g.currentX, true)
 
 	// Modal abilities: choose mode at activation time
-	if modes := perm.Card.Modes(); len(modes) > 0 {
-		p := g.GetPlayer(playerID)
-		if p != nil {
-			obj.ModeChoice = p.ChooseMode(modes, perm.Card.Name())
-		}
-	}
+	chooseModeForStackObject(obj, perm.Card.Modes(), g.GetPlayer(playerID), perm.Card.Name())
 
 	g.stack.Push(obj)
 

@@ -3,14 +3,25 @@ package interactive
 import (
 	"fmt"
 
-	"github.com/google/uuid"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/eval"
+	"github.com/google/uuid"
 )
 
 func buildRulesText(c mage.Card) string {
 	var parts []string
+	formatActivated := func(ab mage.ActivatedAbility) string {
+		var costParts []string
+		for _, cost := range ab.Costs() {
+			costParts = append(costParts, cost.Text())
+		}
+		var effParts []string
+		for _, eff := range ab.Effects() {
+			effParts = append(effParts, eff.Text())
+		}
+		return fmt.Sprintf("%s: %s", joinStrings(costParts), joinStrings(effParts))
+	}
 	// Keywords come from the card's attr seeds (canonical storage).
 	for a, count := range c.AttrSeeds() {
 		if count > 0 && core.IsKeywordAttr(a) {
@@ -26,19 +37,15 @@ func buildRulesText(c mage.Card) string {
 			}
 			parts = append(parts, fmt.Sprintf("Protection from %s", joinStrings(colors)))
 		case *mage.SpellAbility:
+			if ab.Kind() != mage.ActionSpell {
+				parts = append(parts, formatActivated(ab))
+				break
+			}
 			for _, eff := range ab.Effects() {
 				parts = append(parts, eff.Text())
 			}
 		case mage.ActivatedAbility:
-			var costParts []string
-			for _, cost := range ab.Costs() {
-				costParts = append(costParts, cost.Text())
-			}
-			var effParts []string
-			for _, eff := range ab.Effects() {
-				effParts = append(effParts, eff.Text())
-			}
-			parts = append(parts, fmt.Sprintf("%s: %s", joinStrings(costParts), joinStrings(effParts)))
+			parts = append(parts, formatActivated(ab))
 		}
 	}
 	return joinStrings(parts)

@@ -1,11 +1,11 @@
 package ai
 
 import (
-	"github.com/google/uuid"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/eval"
+	"github.com/google/uuid"
 )
 
 // CombatScore summarizes the outcome of a combat step.
@@ -561,7 +561,7 @@ func holdBackValue(p mage.Player, g *mage.Game, w WeightedPersonality) float64 {
 		}
 		hasUsableEffect := false
 		for _, a := range card.Abilities() {
-			if sa, ok := a.(*mage.SpellAbility); ok {
+			if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
 				if mage.SpellOutcome(sa.Effects()) != mage.OutcomeUnknown {
 					hasUsableEffect = true
 					break
@@ -573,7 +573,7 @@ func holdBackValue(p mage.Player, g *mage.Game, w WeightedPersonality) float64 {
 		}
 		sv := float64(eval.SpellValue(card, p, g))
 		for _, a := range card.Abilities() {
-			if sa, ok := a.(*mage.SpellAbility); ok {
+			if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
 				outcome := mage.SpellOutcome(sa.Effects())
 				if outcome == mage.OutcomeDetriment {
 					sv *= 1.5
@@ -644,7 +644,7 @@ func (s *HeuristicStrategy) evaluateResponse(p mage.Player, g *mage.Game) *inter
 
 		hasUsableEffect := false
 		for _, a := range card.Abilities() {
-			if sa, ok := a.(*mage.SpellAbility); ok {
+			if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
 				if mage.SpellOutcome(sa.Effects()) != mage.OutcomeUnknown {
 					hasUsableEffect = true
 					break
@@ -663,7 +663,7 @@ func (s *HeuristicStrategy) evaluateResponse(p mage.Player, g *mage.Game) *inter
 
 		for _, a := range card.Abilities() {
 			sa, ok := a.(*mage.SpellAbility)
-			if !ok {
+			if !ok || sa.Kind() != mage.ActionSpell {
 				continue
 			}
 			outcome := mage.SpellOutcome(sa.Effects())
