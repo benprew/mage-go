@@ -358,7 +358,7 @@ func TestCR205_2_CardTypeAllBasicTypesRecognized(t *testing.T) {
 		{"Demonic Tutor", core.TypeSorcery},
 	}
 	for _, tc := range tests {
-		tc := tc
+
 		t.Run(tc.name, func(t *testing.T) {
 			card, err := mage.CreateCard(tc.name)
 			if err != nil {
@@ -476,7 +476,7 @@ func TestCR205_3i_LandSubtypeBasicLandTypes(t *testing.T) {
 		{"Mountain", "Mountain"},
 		{"Forest", "Forest"},
 	} {
-		tc := tc
+
 		t.Run(tc.name, func(t *testing.T) {
 			card, err := mage.CreateCard(tc.name)
 			if err != nil {
@@ -606,7 +606,7 @@ func TestCR205_4_LegendaryRuleDifferentNamesNoProblem(t *testing.T) {
 	const nameA = "Ch02 Legend Alpha"
 	const nameB = "Ch02 Legend Beta"
 	for _, n := range []string{nameA, nameB} {
-		n := n
+
 		if !mage.CardRegistered(n) {
 			mage.Register(n, func() mage.Card {
 				return mage.NewCreature(n, "{2}{G}", 2, 2,

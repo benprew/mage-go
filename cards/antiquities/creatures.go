@@ -3,9 +3,10 @@ package antiquities
 import (
 	"fmt"
 
+	"github.com/google/uuid"
+
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"github.com/google/uuid"
 )
 
 func init() {
@@ -437,7 +438,7 @@ func registerCreatures() {
 			// When blocked by a Wall, destroy that Wall at end of combat
 			WithAbility(
 				NewTriggered(EvtDeclaredBlocker, false,
-				Pipeline("destroy blocking Wall at end of combat",
+					Pipeline("destroy blocking Wall at end of combat",
 						EffectProperties{Outcome: OutcomeDetriment},
 						SnapshotPermanent(SelectTarget, "wall"),
 						RegisterDelayedTriggerStep(EvtEndOfCombat, "wall", DestroyTarget()),

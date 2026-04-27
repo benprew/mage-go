@@ -68,7 +68,7 @@ func TestSearchLibraryToHand(t *testing.T) {
 		})
 	}
 	for _, n := range []string{target1, target2, target3} {
-		n := n
+
 		if !mage.CardRegistered(n) {
 			mage.Register(n, func() mage.Card {
 				return mage.NewCreature(n, "{1}", 1, 1, mage.WithSubTypes("Test"))
@@ -772,4 +772,3 @@ func TestAttachmentsOnExile(t *testing.T) {
 		tg.AssertExileCount(crName, 1)
 	})
 }
-

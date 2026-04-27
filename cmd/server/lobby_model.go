@@ -5,8 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"git.sr.ht/~cdcarter/mage-go/internal/tui"
 	tea "github.com/charmbracelet/bubbletea"
+
+	"git.sr.ht/~cdcarter/mage-go/internal/tui"
 )
 
 type lobbyState int

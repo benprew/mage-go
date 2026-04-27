@@ -4,16 +4,16 @@ import "github.com/google/uuid"
 
 // StackObject represents something on the stack (spell or ability).
 type StackObject struct {
-	ID         uuid.UUID
-	Card       Card       // non-nil for spells
-	Controller uuid.UUID
-	SourceID   uuid.UUID  // source permanent (for abilities)
-	Effects    []Effect
-	Targets    []uuid.UUID
-	IsAbility  bool
-	XValue      int        // value of X for X-cost spells
-	ModeChoice  int        // chosen mode for modal spells (0-indexed)
-	EventAmount int        // amount from triggering event (e.g. damage dealt)
+	ID          uuid.UUID
+	Card        Card // non-nil for spells
+	Controller  uuid.UUID
+	SourceID    uuid.UUID // source permanent (for abilities)
+	Effects     []Effect
+	Targets     []uuid.UUID
+	IsAbility   bool
+	XValue      int // value of X for X-cost spells
+	ModeChoice  int // chosen mode for modal spells (0-indexed)
+	EventAmount int // amount from triggering event (e.g. damage dealt)
 }
 
 // Stack represents the game stack.

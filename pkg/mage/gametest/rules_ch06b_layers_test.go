@@ -7,6 +7,7 @@ import (
 
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
+
 // 613 — Layer 2: Control changes (CR 613)
 // ─────────────────────────────────────────────────────────────────────────────
 

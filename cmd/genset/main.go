@@ -525,4 +525,3 @@ func writeSpells(dir, pkg string, cards []Card) {
 func writeLands(dir, pkg string, cards []Card) {
 	writeFileWithCards(dir, pkg, "lands.go", "registerLands", cards, landStub)
 }
-

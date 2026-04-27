@@ -3013,7 +3013,7 @@ func (g *Game) CastSpellByID(playerID, cardID uuid.UUID, targets []uuid.UUID, xV
 	}
 	if !payMC.IsZero() && !p.ManaPool().CanPay(payMC) {
 		if err := g.AutoTapForCost(playerID, payMC); err != nil {
-			return fmt.Errorf("cannot pay for %s: %v", card.Name(), err)
+			return fmt.Errorf("cannot pay for %s: %w", card.Name(), err)
 		}
 	}
 	return g.CastSpellByName(playerID, card.Name(), targets, xValue)

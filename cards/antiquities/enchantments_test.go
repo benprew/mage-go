@@ -95,7 +95,7 @@ func TestArtifactWard(t *testing.T) {
 
 	t.Run("artifact ability cannot target warded creature", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")  // 2/2
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Staff of Zegon") // artifact with {3},{T}: -2/-0
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Artifact Ward")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Artifact Ward", "Grizzly Bears")
@@ -127,7 +127,7 @@ func TestCircleOfProtectionArtifacts(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Circle of Protection: Artifacts")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Su-Chi") // 4/4 artifact creature
-		g.ChoosePermanent(gametest.PlayerA, "Su-Chi") // choose Su-Chi as source to prevent
+		g.ChoosePermanent(gametest.PlayerA, "Su-Chi")               // choose Su-Chi as source to prevent
 		g.ActivateAbility(2, core.DeclareAttackers, gametest.PlayerA, "Circle of Protection: Artifacts")
 		g.Attack(2, gametest.PlayerB, "Su-Chi")
 		g.StopAt(2, core.EndCombat)
@@ -140,9 +140,9 @@ func TestCircleOfProtectionArtifactsSourceSpecific(t *testing.T) {
 	t.Run("second artifact source damage still goes through", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Circle of Protection: Artifacts")
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Su-Chi")       // 4/4 artifact creature
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Su-Chi")         // 4/4 artifact creature
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Yotian Soldier") // 1/4 artifact creature
-		g.ChoosePermanent(gametest.PlayerA, "Su-Chi") // prevent Su-Chi only
+		g.ChoosePermanent(gametest.PlayerA, "Su-Chi")                       // prevent Su-Chi only
 		g.ActivateAbility(2, core.DeclareAttackers, gametest.PlayerA, "Circle of Protection: Artifacts")
 		g.Attack(2, gametest.PlayerB, "Su-Chi", "Yotian Soldier")
 		g.StopAt(2, core.EndCombat)
@@ -154,7 +154,7 @@ func TestCircleOfProtectionArtifactsSourceSpecific(t *testing.T) {
 	t.Run("multiple activations choosing different sources", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Circle of Protection: Artifacts")
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Su-Chi")       // 4/4
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Su-Chi")         // 4/4
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Yotian Soldier") // 1/4
 		g.ChoosePermanent(gametest.PlayerA, "Su-Chi")
 		g.ActivateAbility(2, core.DeclareAttackers, gametest.PlayerA, "Circle of Protection: Artifacts")

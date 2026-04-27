@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
@@ -140,7 +141,7 @@ func SnapshotSourceCounter(ct CounterType, storeAs string) EffectData {
 	return &SnapshotSourceCounterData{CounterType: ct, StoreAs: storeAs}
 }
 
-func (e *SnapshotSourceCounterData) Text() string            { return "" }
+func (e *SnapshotSourceCounterData) Text() string                 { return "" }
 func (e *SnapshotSourceCounterData) Properties() EffectProperties { return EffectProperties{} }
 
 func execSnapshotSourceCounter(ctx *EffectContext, e *SnapshotSourceCounterData) error {

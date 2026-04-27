@@ -1,8 +1,9 @@
 package mage
 
 import (
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"testing"
+
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 func TestAutoTapForCost_UsesManaPool(t *testing.T) {

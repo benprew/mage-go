@@ -2,6 +2,7 @@ package mage
 
 import (
 	"github.com/google/uuid"
+
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
@@ -107,9 +108,9 @@ func (t *GenericTriggered) CheckTrigger(evt *GameEvent, g GameReader) bool {
 	return t.Condition(evt, g, t.source, t.controller)
 }
 
-func (t *GenericTriggered) IsOptional() bool   { return t.Optional }
-func (t *GenericTriggered) Effects() []Effect  { return t.effects }
-func (t *GenericTriggered) Targets() []Target  { return t.targets }
+func (t *GenericTriggered) IsOptional() bool     { return t.Optional }
+func (t *GenericTriggered) Effects() []Effect    { return t.effects }
+func (t *GenericTriggered) Targets() []Target    { return t.targets }
 func (t *GenericTriggered) IsStateTrigger() bool { return t.isStateTrigger }
 
 // AsStateTrigger marks this as a state-triggered ability (CR 603.8). State

@@ -58,7 +58,7 @@ func TestBottleOfSuleiman(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Bottle of Suleiman")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains") // {1} to activate
-		g.SetCoinFlipResults([]bool{true})                           // win
+		g.SetCoinFlipResults([]bool{true})                          // win
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Bottle of Suleiman")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()

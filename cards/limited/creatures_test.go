@@ -137,7 +137,7 @@ func TestVesuvanDoppelganger(t *testing.T) {
 		// copy of a different creature.
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Serra Angel")   // 4/4 flying
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Shivan Dragon")  // 5/5 flying
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Shivan Dragon") // 5/5 flying
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Vesuvan Doppelganger")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Vesuvan Doppelganger", "Serra Angel")
 		// Turn 3 is PlayerA's next turn. At upkeep, Doppelganger can change to Shivan Dragon.
@@ -154,8 +154,8 @@ func TestScavengingGhoul(t *testing.T) {
 		// Two creatures die in combat, Scavenging Ghoul should get 2 corpse counters at end step.
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Scavenging Ghoul")
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")  // 3/3
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")  // 3/3
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant") // 3/3
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant") // 3/3
 		// Both Hill Giants trade in combat
 		g.Attack(1, gametest.PlayerA, "Hill Giant")
 		g.Block(1, gametest.PlayerB, "Hill Giant", "Hill Giant")

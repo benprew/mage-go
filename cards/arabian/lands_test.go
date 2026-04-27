@@ -3,9 +3,9 @@ package arabian
 import (
 	"testing"
 
+	_ "git.sr.ht/~cdcarter/mage-go/cards/limited" // register base cards for test creatures
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
-	_ "git.sr.ht/~cdcarter/mage-go/cards/limited" // register base cards for test creatures
 )
 
 func TestBazaarOfBaghdad(t *testing.T) {

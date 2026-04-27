@@ -3,10 +3,11 @@ package interactive
 import (
 	"fmt"
 
+	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/eval"
-	"github.com/google/uuid"
 )
 
 func buildRulesText(c mage.Card) string {

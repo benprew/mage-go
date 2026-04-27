@@ -1,8 +1,9 @@
 package mage
 
 import (
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"github.com/google/uuid"
+
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 // ContinuousEffect represents an ongoing effect on the game.
@@ -476,7 +477,6 @@ func (em *EffectManager) ClearReplacementsEndOfTurn() {
 	}
 	em.replacements = filtered
 }
-
 
 // grantedByEffect is a marker wrapper to identify abilities granted by continuous effects.
 type grantedByEffect struct {

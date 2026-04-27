@@ -17,7 +17,7 @@ import (
 type PlayerSession struct {
 	Name        string
 	DeckEntries []tui.DeckEntry
-	FromGame    chan interactive.GameMsg       // game → TUI
+	FromGame    chan interactive.GameMsg        // game → TUI
 	ToGame      chan interactive.PriorityAction // TUI → game
 	ChoiceReqs  chan interactive.ChoiceRequest  // game → TUI choices
 	ChoiceResps chan interactive.ChoiceResponse // TUI → game choices
@@ -39,9 +39,9 @@ type GameSlot struct {
 	ID    string
 	isAI  bool
 	p1    *PlayerSession
-	p2    *PlayerSession  // nil while waiting for second human player
-	ready chan struct{}    // closed when p2 joins
-	done  chan struct{}    // closed when game ends
+	p2    *PlayerSession // nil while waiting for second human player
+	ready chan struct{}  // closed when p2 joins
+	done  chan struct{}  // closed when game ends
 }
 
 // SlotInfo is a safe copy of open-slot metadata for lobby display.

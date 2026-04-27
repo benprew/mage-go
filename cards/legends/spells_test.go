@@ -240,9 +240,9 @@ func TestManaDrainDelayedMana(t *testing.T) {
 func TestRapidFire(t *testing.T) {
 	t.Run("grants first strike and rampage 2", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")      // 2/2
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Barbary Apes")       // 2/2 blocker 1
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Headless Horseman")  // 2/2 blocker 2
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")     // 2/2
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Barbary Apes")      // 2/2 blocker 1
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Headless Horseman") // 2/2 blocker 2
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Rapid Fire")
 		g.CastSpell(3, core.BeginCombat, gametest.PlayerA, "Rapid Fire", "Grizzly Bears")
 		g.Attack(3, gametest.PlayerA, "Grizzly Bears")

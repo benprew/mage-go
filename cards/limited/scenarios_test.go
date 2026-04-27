@@ -3,9 +3,9 @@ package limited
 import (
 	"testing"
 
+	_ "git.sr.ht/~cdcarter/mage-go/cards/arabian"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
-	_ "git.sr.ht/~cdcarter/mage-go/cards/arabian"
 )
 
 // TestWorldsNinetyFour recreates a game inspired by the 1994 Magic World
@@ -162,10 +162,10 @@ func TestSengirsFeast(t *testing.T) {
 	g := gametest.NewTestGame(t)
 
 	// --- Battlefield ---
-	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sengir Vampire")   // 4/4 flying
-	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mesa Pegasus")     // 1/1 flying banding
-	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Phantom Monster")  // 3/3 flying
-	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")    // 2/2 (can't block flyers)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sengir Vampire")  // 4/4 flying
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mesa Pegasus")    // 1/1 flying banding
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Phantom Monster") // 3/3 flying
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")   // 2/2 (can't block flyers)
 
 	// Turn 1 (A): Sengir attacks. B chump-blocks with Mesa Pegasus.
 	// Sengir (4/4) kills Pegasus (1/1) → gains +1/+1 counter → 5/5.
@@ -219,8 +219,8 @@ func TestWrathAndRecovery(t *testing.T) {
 	// --- Battlefield: A has White Weenie start, B has fatties ---
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Savannah Lions") // 2/1
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "White Knight")   // 2/2 first strike, pro-black
-	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Craw Wurm")     // 6/4
-	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // 2/2
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Craw Wurm")      // 6/4
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")  // 2/2
 
 	// --- Hands ---
 	g.AddCard(core.ZoneHand, gametest.PlayerA, "Serra Angel")
@@ -351,7 +351,7 @@ func TestSerraAngelLethal(t *testing.T) {
 func TestBurnRace(t *testing.T) {
 	g := gametest.NewTestGame(t)
 
-	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Gray Ogre")    // 2/2
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Gray Ogre")     // 2/2
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // 2/2
 
 	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")

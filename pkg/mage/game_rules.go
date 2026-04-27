@@ -1,9 +1,10 @@
 package mage
 
 import (
+	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/catalog"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"github.com/google/uuid"
 )
 
 // GameRules manages all game-rule modifier state: spell costs, mana conversion,
@@ -11,42 +12,42 @@ import (
 // Channel, Sanctuary, and minimum life. It is owned by EffectManager and
 // exposed as a public field.
 type GameRules struct {
-	ManaConversion     map[Color]Color         // from color -> to color (Sunglasses of Urza)
-	SpellCostIncreases map[Color]int           // color -> additional generic cost for spells of that color
-	SpellCostReductions map[Color]int          // color -> generic cost reduction for spells of that color
-	SpellTypeCostReductions map[CardType]int   // type -> generic cost reduction for spells of that type
-	LandUntapMax       int                     // -1 = no limit; >= 0 = max lands that may untap per turn
-	ArtifactUntapMax   int                     // -1 = no limit; >= 0 = max artifacts that may untap per turn
-	CreatureUntapMax   int                     // -1 = no limit; >= 0 = max creatures that may untap per turn
-	UnlimitedLandPlays bool                    // true if a player can play unlimited lands (Fastbond)
-	sanctuaryActive    map[uuid.UUID]bool      // player -> if true, only flying/islandwalk can attack them
-	lichActive         map[uuid.UUID]uuid.UUID // player -> source permanent ID of active Lich
-	skipNextDraw       map[uuid.UUID]bool      // player -> if true, skip normal draw in draw step
-	channelActive      map[uuid.UUID]bool      // players with Channel active this turn
-	minimumLife        map[uuid.UUID]bool      // players whose life can't go below 1 (Ali from Cairo)
-	maxHandSize        map[uuid.UUID]int       // player -> max hand size override (Cursed Rack)
-	expansionCastBlock   []string                // set codes blocked from casting/playing
+	ManaConversion           map[Color]Color         // from color -> to color (Sunglasses of Urza)
+	SpellCostIncreases       map[Color]int           // color -> additional generic cost for spells of that color
+	SpellCostReductions      map[Color]int           // color -> generic cost reduction for spells of that color
+	SpellTypeCostReductions  map[CardType]int        // type -> generic cost reduction for spells of that type
+	LandUntapMax             int                     // -1 = no limit; >= 0 = max lands that may untap per turn
+	ArtifactUntapMax         int                     // -1 = no limit; >= 0 = max artifacts that may untap per turn
+	CreatureUntapMax         int                     // -1 = no limit; >= 0 = max creatures that may untap per turn
+	UnlimitedLandPlays       bool                    // true if a player can play unlimited lands (Fastbond)
+	sanctuaryActive          map[uuid.UUID]bool      // player -> if true, only flying/islandwalk can attack them
+	lichActive               map[uuid.UUID]uuid.UUID // player -> source permanent ID of active Lich
+	skipNextDraw             map[uuid.UUID]bool      // player -> if true, skip normal draw in draw step
+	channelActive            map[uuid.UUID]bool      // players with Channel active this turn
+	minimumLife              map[uuid.UUID]bool      // players whose life can't go below 1 (Ali from Cairo)
+	maxHandSize              map[uuid.UUID]int       // player -> max hand size override (Cursed Rack)
+	expansionCastBlock       []string                // set codes blocked from casting/playing
 	NullifiedLandwalks       map[Attr]bool           // landwalk attrs that are nullified (Great Wall, etc.)
-	ActivationCostReductions map[uuid.UUID]int        // permanent ID → generic mana reduction for activated abilities
-	entersTappedRules []func(*Permanent) bool        // filters registered by continuous effects (Kismet, etc.)
+	ActivationCostReductions map[uuid.UUID]int       // permanent ID → generic mana reduction for activated abilities
+	entersTappedRules        []func(*Permanent) bool // filters registered by continuous effects (Kismet, etc.)
 }
 
 // NewGameRules creates a GameRules with all maps initialized.
 func NewGameRules() *GameRules {
 	return &GameRules{
-		LandUntapMax:            -1,
-		ArtifactUntapMax:        -1,
-		CreatureUntapMax:        -1,
-		ManaConversion:          make(map[Color]Color),
-		SpellCostIncreases:      make(map[Color]int),
-		SpellCostReductions:     make(map[Color]int),
-		SpellTypeCostReductions: make(map[CardType]int),
-		sanctuaryActive:         make(map[uuid.UUID]bool),
-		lichActive:              make(map[uuid.UUID]uuid.UUID),
-		skipNextDraw:            make(map[uuid.UUID]bool),
-		channelActive:           make(map[uuid.UUID]bool),
-		minimumLife:             make(map[uuid.UUID]bool),
-		maxHandSize:             make(map[uuid.UUID]int),
+		LandUntapMax:             -1,
+		ArtifactUntapMax:         -1,
+		CreatureUntapMax:         -1,
+		ManaConversion:           make(map[Color]Color),
+		SpellCostIncreases:       make(map[Color]int),
+		SpellCostReductions:      make(map[Color]int),
+		SpellTypeCostReductions:  make(map[CardType]int),
+		sanctuaryActive:          make(map[uuid.UUID]bool),
+		lichActive:               make(map[uuid.UUID]uuid.UUID),
+		skipNextDraw:             make(map[uuid.UUID]bool),
+		channelActive:            make(map[uuid.UUID]bool),
+		minimumLife:              make(map[uuid.UUID]bool),
+		maxHandSize:              make(map[uuid.UUID]int),
 		NullifiedLandwalks:       make(map[Attr]bool),
 		ActivationCostReductions: make(map[uuid.UUID]int),
 	}

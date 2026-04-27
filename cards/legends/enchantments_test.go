@@ -64,7 +64,7 @@ func TestMarblePriest(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		// Use a Marble Priest (3/3) attacking into a Wall of Opposition (0/6)
 		// Pump the wall's power to 4 via its {1}: +1/+0 ability so it would be lethal
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Marble Priest") // 3/3
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Marble Priest")      // 3/3
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Wall of Opposition") // 0/6 Wall, {1}: +1/+0
 		// Pump 4 times during begin combat on PlayerA's turn (PlayerB activates)
 		g.ActivateAbility(1, core.BeginCombat, gametest.PlayerB, "Wall of Opposition")
@@ -383,9 +383,9 @@ func TestDreamCoat(t *testing.T) {
 func TestInfiniteAuthority(t *testing.T) {
 	t.Run("destroys creature with toughness 3 or less at end of combat", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")        // 3/3
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant") // 3/3
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Infinite Authority")
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")     // 2/2 (toughness <= 3)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // 2/2 (toughness <= 3)
 		// Cast Infinite Authority on Hill Giant
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Infinite Authority", "Hill Giant")
 		// Attack with Hill Giant, blocked by Bears

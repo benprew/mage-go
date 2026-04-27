@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/catalog"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"github.com/google/uuid"
 )
 
 // PermanentFilter is a labeled predicate on permanents.

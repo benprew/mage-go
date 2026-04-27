@@ -3,8 +3,9 @@ package mage
 import (
 	"fmt"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"github.com/google/uuid"
+
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 // ---------------------------------------------------------------------------
@@ -21,7 +22,7 @@ func SnapshotAttached(storeAs string) EffectData {
 	return &SnapshotAttachedData{StoreAs: storeAs}
 }
 
-func (e *SnapshotAttachedData) Text() string            { return "" }
+func (e *SnapshotAttachedData) Text() string                 { return "" }
 func (e *SnapshotAttachedData) Properties() EffectProperties { return EffectProperties{} }
 
 func execSnapshotAttached(ctx *EffectContext, e *SnapshotAttachedData) error {
@@ -53,8 +54,10 @@ type TapGatheredData struct{ VarName string }
 
 func TapGathered(v string) EffectData { return &TapGatheredData{VarName: v} }
 
-func (e *TapGatheredData) Text() string            { return "tap" }
-func (e *TapGatheredData) Properties() EffectProperties { return EffectProperties{Outcome: OutcomeDetriment} }
+func (e *TapGatheredData) Text() string { return "tap" }
+func (e *TapGatheredData) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
 
 func execTapGathered(ctx *EffectContext, e *TapGatheredData) error {
 	id := ctx.TryGetUUID(e.VarName)
@@ -73,8 +76,10 @@ type UntapGatheredData struct{ VarName string }
 
 func UntapGathered(v string) EffectData { return &UntapGatheredData{VarName: v} }
 
-func (e *UntapGatheredData) Text() string            { return "untap" }
-func (e *UntapGatheredData) Properties() EffectProperties { return EffectProperties{Outcome: OutcomeBenefit} }
+func (e *UntapGatheredData) Text() string { return "untap" }
+func (e *UntapGatheredData) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
 
 func execUntapGathered(ctx *EffectContext, e *UntapGatheredData) error {
 	id := ctx.TryGetUUID(e.VarName)
@@ -99,8 +104,10 @@ func DealDamageToGathered(v string, amount ValueSource) EffectData {
 	return &DealDamageToGatheredData{VarName: v, Amount: amount}
 }
 
-func (e *DealDamageToGatheredData) Text() string            { return "deal damage" }
-func (e *DealDamageToGatheredData) Properties() EffectProperties { return EffectProperties{Outcome: OutcomeDetriment} }
+func (e *DealDamageToGatheredData) Text() string { return "deal damage" }
+func (e *DealDamageToGatheredData) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
 
 func execDealDamageToGathered(ctx *EffectContext, e *DealDamageToGatheredData) error {
 	id := ctx.TryGetUUID(e.VarName)
@@ -123,8 +130,10 @@ type RegenerateGatheredData struct{ VarName string }
 
 func RegenerateGathered(v string) EffectData { return &RegenerateGatheredData{VarName: v} }
 
-func (e *RegenerateGatheredData) Text() string            { return "regenerate" }
-func (e *RegenerateGatheredData) Properties() EffectProperties { return EffectProperties{Outcome: OutcomeBenefit} }
+func (e *RegenerateGatheredData) Text() string { return "regenerate" }
+func (e *RegenerateGatheredData) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
 
 func execRegenerateGathered(ctx *EffectContext, e *RegenerateGatheredData) error {
 	id := ctx.TryGetUUID(e.VarName)
@@ -145,8 +154,10 @@ func PreventDamageToGathered(v string, amount ValueSource) EffectData {
 	return &PreventDamageToGatheredData{VarName: v, Amount: amount}
 }
 
-func (e *PreventDamageToGatheredData) Text() string            { return "prevent damage" }
-func (e *PreventDamageToGatheredData) Properties() EffectProperties { return EffectProperties{Outcome: OutcomeBenefit} }
+func (e *PreventDamageToGatheredData) Text() string { return "prevent damage" }
+func (e *PreventDamageToGatheredData) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
 
 func execPreventDamageToGathered(ctx *EffectContext, e *PreventDamageToGatheredData) error {
 	id := ctx.TryGetUUID(e.VarName)
@@ -168,7 +179,7 @@ func GrantAttrToGathered(v string, a Attr) EffectData {
 	return &GrantAttrToGatheredData{VarName: v, Attr: a}
 }
 
-func (e *GrantAttrToGatheredData) Text() string            { return "" }
+func (e *GrantAttrToGatheredData) Text() string                 { return "" }
 func (e *GrantAttrToGatheredData) Properties() EffectProperties { return EffectProperties{} }
 
 func execGrantAttrToGathered(ctx *EffectContext, e *GrantAttrToGatheredData) error {
@@ -205,7 +216,7 @@ func RegisterPersistentDelayedTriggerStep(evtType EventType, targetVar string, e
 	return &RegisterDelayedTriggerData{EventType: evtType, TargetVar: targetVar, Effects: effects, Persistent: true}
 }
 
-func (e *RegisterDelayedTriggerData) Text() string            { return "" }
+func (e *RegisterDelayedTriggerData) Text() string                 { return "" }
 func (e *RegisterDelayedTriggerData) Properties() EffectProperties { return EffectProperties{} }
 
 func execRegisterDelayedTrigger(ctx *EffectContext, e *RegisterDelayedTriggerData) error {
@@ -299,7 +310,7 @@ func AddManaFromVar(color Color, amountVar string) EffectData {
 	return &AddManaFromVarData{Color: color, AmountVar: amountVar}
 }
 
-func (e *AddManaFromVarData) Text() string            { return "add mana" }
+func (e *AddManaFromVarData) Text() string                 { return "add mana" }
 func (e *AddManaFromVarData) Properties() EffectProperties { return EffectProperties{} }
 
 func execAddManaFromVar(ctx *EffectContext, e *AddManaFromVarData) error {
@@ -347,8 +358,10 @@ func AddColorPreventionStep(color Color) EffectData {
 	return &AddColorPreventionData{Color: color}
 }
 
-func (e *AddColorPreventionData) Text() string            { return "prevent damage from color" }
-func (e *AddColorPreventionData) Properties() EffectProperties { return EffectProperties{Outcome: OutcomeBenefit} }
+func (e *AddColorPreventionData) Text() string { return "prevent damage from color" }
+func (e *AddColorPreventionData) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
 
 func execAddColorPrevention(ctx *EffectContext, e *AddColorPreventionData) error {
 	ctx.Game.AddColorPrevention(ctx.Controller, e.Color)
@@ -384,8 +397,10 @@ type AddReverseDamageShieldData struct{}
 
 func AddReverseDamageShieldStep() EffectData { return &AddReverseDamageShieldData{} }
 
-func (e *AddReverseDamageShieldData) Text() string            { return "reverse damage" }
-func (e *AddReverseDamageShieldData) Properties() EffectProperties { return EffectProperties{Outcome: OutcomeBenefit} }
+func (e *AddReverseDamageShieldData) Text() string { return "reverse damage" }
+func (e *AddReverseDamageShieldData) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
 
 func execAddReverseDamageShield(ctx *EffectContext, _ *AddReverseDamageShieldData) error {
 	ctx.Game.AddReverseDamageShield(ctx.Controller)
@@ -407,7 +422,7 @@ func SetVarFromHandSize(player PlayerSelector, storeAs string, offset int) Effec
 	return &SetVarFromHandSizeData{Player: player, StoreAs: storeAs, Offset: offset}
 }
 
-func (e *SetVarFromHandSizeData) Text() string            { return "" }
+func (e *SetVarFromHandSizeData) Text() string                 { return "" }
 func (e *SetVarFromHandSizeData) Properties() EffectProperties { return EffectProperties{} }
 
 func execSetVarFromHandSize(ctx *EffectContext, e *SetVarFromHandSizeData) error {
@@ -443,7 +458,7 @@ func ChooseColorStep(reason string) EffectData {
 	return &ChooseColorStepData{Reason: reason}
 }
 
-func (e *ChooseColorStepData) Text() string            { return "choose a color" }
+func (e *ChooseColorStepData) Text() string                 { return "choose a color" }
 func (e *ChooseColorStepData) Properties() EffectProperties { return EffectProperties{} }
 
 func execChooseColorStep(ctx *EffectContext, e *ChooseColorStepData) error {
@@ -469,7 +484,7 @@ func RemoveFromCombatGathered(v string) EffectData {
 	return &RemoveFromCombatGatheredData{VarName: v}
 }
 
-func (e *RemoveFromCombatGatheredData) Text() string            { return "remove from combat" }
+func (e *RemoveFromCombatGatheredData) Text() string                 { return "remove from combat" }
 func (e *RemoveFromCombatGatheredData) Properties() EffectProperties { return EffectProperties{} }
 
 func execRemoveFromCombatGathered(ctx *EffectContext, e *RemoveFromCombatGatheredData) error {
@@ -490,8 +505,10 @@ type DestroyAttachedData struct{}
 
 func DestroyAttachedStep() EffectData { return &DestroyAttachedData{} }
 
-func (e *DestroyAttachedData) Text() string            { return "destroy enchanted permanent" }
-func (e *DestroyAttachedData) Properties() EffectProperties { return EffectProperties{Outcome: OutcomeDetriment} }
+func (e *DestroyAttachedData) Text() string { return "destroy enchanted permanent" }
+func (e *DestroyAttachedData) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
 
 func execDestroyAttached(ctx *EffectContext, _ *DestroyAttachedData) error {
 	src := ctx.Game.FindPermanent(ctx.SourceID)
@@ -514,8 +531,10 @@ func GrantAttrToAttachedStep(attr Keyword) EffectData {
 	return &GrantAttrToAttachedData{Attr: attr}
 }
 
-func (e *GrantAttrToAttachedData) Text() string            { return "grant keyword to enchanted permanent" }
-func (e *GrantAttrToAttachedData) Properties() EffectProperties { return EffectProperties{Outcome: OutcomeBenefit} }
+func (e *GrantAttrToAttachedData) Text() string { return "grant keyword to enchanted permanent" }
+func (e *GrantAttrToAttachedData) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
 
 func execGrantAttrToAttached(ctx *EffectContext, e *GrantAttrToAttachedData) error {
 	src := ctx.Game.FindPermanent(ctx.SourceID)
@@ -542,8 +561,10 @@ func DealDamageToSourceStep(amount ValueSource) EffectData {
 	return &DealDamageToSourceData{Amount: amount}
 }
 
-func (e *DealDamageToSourceData) Text() string            { return "deal damage to self" }
-func (e *DealDamageToSourceData) Properties() EffectProperties { return EffectProperties{Outcome: OutcomeDetriment} }
+func (e *DealDamageToSourceData) Text() string { return "deal damage to self" }
+func (e *DealDamageToSourceData) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
 
 func execDealDamageToSource(ctx *EffectContext, e *DealDamageToSourceData) error {
 	self := ctx.Game.FindPermanent(ctx.SourceID)
@@ -578,7 +599,7 @@ func ForEachBlockerOfSourceMatching(filter PermanentFilter, inner EffectData, te
 	return &ForEachBlockerOfSourceData{Filter: filter, Inner: inner, Txt: text}
 }
 
-func (e *ForEachBlockerOfSourceData) Text() string            { return e.Txt }
+func (e *ForEachBlockerOfSourceData) Text() string                 { return e.Txt }
 func (e *ForEachBlockerOfSourceData) Properties() EffectProperties { return EffectProperties{} }
 
 func execForEachBlockerOfSource(ctx *EffectContext, e *ForEachBlockerOfSourceData) error {
@@ -619,7 +640,7 @@ func ForEachAttackerBlockedBySource(inner EffectData, text string) EffectData {
 	return &ForEachAttackerBlockedBySourceData{Inner: inner, Txt: text}
 }
 
-func (e *ForEachAttackerBlockedBySourceData) Text() string            { return e.Txt }
+func (e *ForEachAttackerBlockedBySourceData) Text() string                 { return e.Txt }
 func (e *ForEachAttackerBlockedBySourceData) Properties() EffectProperties { return EffectProperties{} }
 
 func execForEachAttackerBlockedBySource(ctx *EffectContext, e *ForEachAttackerBlockedBySourceData) error {
@@ -655,7 +676,7 @@ func ForEachCombatOpponent(inner EffectData, text string) EffectData {
 	return &ForEachCombatOpponentData{Inner: inner, Txt: text}
 }
 
-func (e *ForEachCombatOpponentData) Text() string            { return e.Txt }
+func (e *ForEachCombatOpponentData) Text() string                 { return e.Txt }
 func (e *ForEachCombatOpponentData) Properties() EffectProperties { return EffectProperties{} }
 
 func execForEachCombatOpponent(ctx *EffectContext, e *ForEachCombatOpponentData) error {
@@ -693,7 +714,7 @@ func ForEachBlockerOfTarget(inner EffectData, text string) EffectData {
 	return &ForEachBlockerOfTargetData{Inner: inner, Txt: text}
 }
 
-func (e *ForEachBlockerOfTargetData) Text() string            { return e.Txt }
+func (e *ForEachBlockerOfTargetData) Text() string                 { return e.Txt }
 func (e *ForEachBlockerOfTargetData) Properties() EffectProperties { return EffectProperties{} }
 
 func execForEachBlockerOfTarget(ctx *EffectContext, e *ForEachBlockerOfTargetData) error {
@@ -730,7 +751,7 @@ func ForEachAttackerBlockedByTarget(inner EffectData, text string) EffectData {
 	return &ForEachAttackerBlockedByTargetData{Inner: inner, Txt: text}
 }
 
-func (e *ForEachAttackerBlockedByTargetData) Text() string            { return e.Txt }
+func (e *ForEachAttackerBlockedByTargetData) Text() string                 { return e.Txt }
 func (e *ForEachAttackerBlockedByTargetData) Properties() EffectProperties { return EffectProperties{} }
 
 func execForEachAttackerBlockedByTarget(ctx *EffectContext, e *ForEachAttackerBlockedByTargetData) error {
@@ -768,7 +789,7 @@ func BlockerCountVar(storeAs string) EffectData {
 	return &BlockerCountVarData{StoreAs: storeAs}
 }
 
-func (e *BlockerCountVarData) Text() string            { return "count blockers" }
+func (e *BlockerCountVarData) Text() string                 { return "count blockers" }
 func (e *BlockerCountVarData) Properties() EffectProperties { return EffectProperties{} }
 
 func execBlockerCountVar(ctx *EffectContext, e *BlockerCountVarData) error {
@@ -823,7 +844,7 @@ func AddContinuousEffectsStep(factory func() []ContinuousEffect) EffectData {
 	return &AddContinuousEffectsData{Factory: factory}
 }
 
-func (e *AddContinuousEffectsData) Text() string            { return "add continuous effects" }
+func (e *AddContinuousEffectsData) Text() string                 { return "add continuous effects" }
 func (e *AddContinuousEffectsData) Properties() EffectProperties { return EffectProperties{} }
 
 func execAddContinuousEffects(ctx *EffectContext, e *AddContinuousEffectsData) error {

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
@@ -128,7 +129,7 @@ func TestHumanPlayer_ChooseMode_FirstMode(t *testing.T) {
 func TestHumanPlayer_ChooseMode_AllIndices(t *testing.T) {
 	modes := []string{"X", "Y", "Z"}
 	for wantIdx := 0; wantIdx < len(modes); wantIdx++ {
-		wantIdx := wantIdx
+
 		t.Run(modes[wantIdx], func(t *testing.T) {
 			hp := interactive.NewHumanPlayer("Human")
 			result := make(chan int, 1)
@@ -171,7 +172,7 @@ func TestHumanPlayer_ChooseManaColor(t *testing.T) {
 func TestHumanPlayer_ChooseManaColor_AllColors(t *testing.T) {
 	colors := []core.Color{core.White, core.Blue, core.Black, core.Red, core.Green}
 	for _, want := range colors {
-		want := want
+
 		t.Run(want.String(), func(t *testing.T) {
 			hp := interactive.NewHumanPlayer("Human")
 			result := make(chan core.Color, 1)
@@ -393,4 +394,3 @@ func TestHumanPlayer_ChoiceRequests_ClosedOnGameOver(t *testing.T) {
 		t.Error("ChoiceRequests() should return the same channel on every call")
 	}
 }
-

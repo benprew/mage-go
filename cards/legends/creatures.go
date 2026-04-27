@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/google/uuid"
+
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"github.com/google/uuid"
 )
 
 func init() {
@@ -286,50 +287,50 @@ func registerCreatures() {
 					SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 						// Check if this Wall is blocking something
 						for _, group := range g.CombatGroups() {
-						isBlocking := false
-						for _, bid := range group.BlockerIDs {
-							if bid == sourceID {
-								isBlocking = true
-								break
+							isBlocking := false
+							for _, bid := range group.BlockerIDs {
+								if bid == sourceID {
+									isBlocking = true
+									break
+								}
 							}
-						}
-						if !isBlocking {
-							continue
-						}
-						// This Wall is blocking this attacker.
-						// Check that at least one OTHER Wall is blocking it,
-						// and no non-Wall creatures are blocking it.
-						hasOtherWall := false
-						hasNonWall := false
-						for _, bid := range group.BlockerIDs {
-							if bid == sourceID {
+							if !isBlocking {
 								continue
 							}
-							blocker := g.FindPermanent(bid)
-							if blocker == nil {
-								continue
+							// This Wall is blocking this attacker.
+							// Check that at least one OTHER Wall is blocking it,
+							// and no non-Wall creatures are blocking it.
+							hasOtherWall := false
+							hasNonWall := false
+							for _, bid := range group.BlockerIDs {
+								if bid == sourceID {
+									continue
+								}
+								blocker := g.FindPermanent(bid)
+								if blocker == nil {
+									continue
+								}
+								if blocker.HasSubType("Wall") {
+									hasOtherWall = true
+								} else {
+									hasNonWall = true
+								}
 							}
-							if blocker.HasSubType("Wall") {
-								hasOtherWall = true
-							} else {
-								hasNonWall = true
+							if hasOtherWall && !hasNonWall {
+								return true
 							}
 						}
-						if hasOtherWall && !hasNonWall {
-							return true
-						}
-					}
-					return false
-				}),
+						return false
+					}),
 			),
 		)
 	})
 
-// Wall of Light {2}{W}
-// Creature — Wall
-// 1/5
-// Defender (This creature can't attack.)
-// Protection from black
+	// Wall of Light {2}{W}
+	// Creature — Wall
+	// 1/5
+	// Defender (This creature can't attack.)
+	// Protection from black
 	Register("Wall of Light", func() Card {
 		return NewCreature("Wall of Light", "{2}{W}", 1, 5,
 			WithSubTypes("Wall"),

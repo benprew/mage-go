@@ -134,7 +134,7 @@ func ch03RegisterCards() {
 		}},
 	}
 	for _, c := range cards {
-		c := c
+
 		if !mage.CardRegistered(c.name) {
 			mage.Register(c.name, c.factory)
 		}

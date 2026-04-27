@@ -19,4 +19,4 @@ func NewDrawCardAction(source, playerID uuid.UUID, isNormalDraw bool) *DrawCardA
 
 func (a *DrawCardAction) ActionSource() uuid.UUID { return a.source }
 func (a *DrawCardAction) PlayerID() uuid.UUID     { return a.playerID }
-func (a *DrawCardAction) IsNormalDraw() bool       { return a.isNormalDraw }
+func (a *DrawCardAction) IsNormalDraw() bool      { return a.isNormalDraw }

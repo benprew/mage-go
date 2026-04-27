@@ -5,10 +5,12 @@ package gametest
 import (
 	"testing"
 
+	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"github.com/google/uuid"
 )
+
 // 614.1a — Replacement with "instead" (CR 614.1a)
 // ─────────────────────────────────────────────────────────────────────────────
 

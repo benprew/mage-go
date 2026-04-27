@@ -3,9 +3,10 @@ package legends
 import (
 	"fmt"
 
+	"github.com/google/uuid"
+
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"github.com/google/uuid"
 )
 
 // avoid unused import error
@@ -594,25 +595,25 @@ func registerEnchantments() {
 						}
 						enchantedID := src.AttachedTo
 						for _, group := range g.CombatGroups() {
-						if group.AttackerID == enchantedID {
+							if group.AttackerID == enchantedID {
+								for _, bid := range group.BlockerIDs {
+									blocker := g.FindPermanent(bid)
+									if blocker != nil && blocker.CurrentToughness(g) <= 3 {
+										return true
+									}
+								}
+							}
 							for _, bid := range group.BlockerIDs {
-								blocker := g.FindPermanent(bid)
-								if blocker != nil && blocker.CurrentToughness(g) <= 3 {
-									return true
+								if bid == enchantedID {
+									attacker := g.FindPermanent(group.AttackerID)
+									if attacker != nil && attacker.CurrentToughness(g) <= 3 {
+										return true
+									}
 								}
 							}
 						}
-						for _, bid := range group.BlockerIDs {
-							if bid == enchantedID {
-								attacker := g.FindPermanent(group.AttackerID)
-								if attacker != nil && attacker.CurrentToughness(g) <= 3 {
-									return true
-								}
-							}
-						}
-					}
-					return false
-				}),
+						return false
+					}),
 			),
 		)
 	})
@@ -648,26 +649,26 @@ func registerEnchantments() {
 					SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 						// Only opponent's creature spells
 						if evt.PlayerID == controllerID {
-						return false
-					}
-					card := g.FindCardAnywhere(evt.SourceID)
-					if card == nil || !card.HasType(TypeCreature) {
-						return false
-					}
-					// Check if spell doesn't share a color with a creature you control
-					myCreatures := g.FilterBattlefield(And(IsCreature, ControlledBy(controllerID)))
-					cardColors := card.ManaCost().Colors()
-					for _, color := range cardColors {
-						for _, c := range myCreatures {
-							for _, col := range c.Card.ManaCost().Colors() {
-								if col == color {
-									return false // shares a color
+							return false
+						}
+						card := g.FindCardAnywhere(evt.SourceID)
+						if card == nil || !card.HasType(TypeCreature) {
+							return false
+						}
+						// Check if spell doesn't share a color with a creature you control
+						myCreatures := g.FilterBattlefield(And(IsCreature, ControlledBy(controllerID)))
+						cardColors := card.ManaCost().Colors()
+						for _, color := range cardColors {
+							for _, c := range myCreatures {
+								for _, col := range c.Card.ManaCost().Colors() {
+									if col == color {
+										return false // shares a color
+									}
 								}
 							}
 						}
-					}
-					return true
-				}),
+						return true
+					}),
 			),
 		)
 	})
@@ -1222,7 +1223,7 @@ type blackOrRedPreventionReplacement struct {
 	sourceID       uuid.UUID
 }
 
-func (r *blackOrRedPreventionReplacement) SourceID() uuid.UUID  { return r.sourceID }
+func (r *blackOrRedPreventionReplacement) SourceID() uuid.UUID   { return r.sourceID }
 func (r *blackOrRedPreventionReplacement) GetDuration() Duration { return EndOfTurn }
 
 func (r *blackOrRedPreventionReplacement) Matches(a Action, g GameReader) bool {

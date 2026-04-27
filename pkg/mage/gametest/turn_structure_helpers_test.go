@@ -7,9 +7,10 @@ package gametest
 import (
 	"sync"
 
+	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"github.com/google/uuid"
 )
 
 // combatEventRecorder captures combat-phase events in the order they fire.

@@ -4,9 +4,9 @@ import (
 	"os"
 	"testing"
 
+	_ "git.sr.ht/~cdcarter/mage-go/cards/limited" // register base cards
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
-	_ "git.sr.ht/~cdcarter/mage-go/cards/limited" // register base cards
 )
 
 func TestMain(m *testing.M) {
@@ -300,8 +300,8 @@ func TestCrawGiant(t *testing.T) {
 	t.Run("gets +2/+2 per blocker beyond first", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Craw Giant")
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")       // 2/2
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Headless Horseman")   // 2/2
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")     // 2/2
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Headless Horseman") // 2/2
 		g.Attack(3, gametest.PlayerA, "Craw Giant")
 		g.Block(3, gametest.PlayerB, "Grizzly Bears", "Craw Giant")
 		g.Block(3, gametest.PlayerB, "Headless Horseman", "Craw Giant")
@@ -417,7 +417,7 @@ func TestAcidRain(t *testing.T) {
 func TestCleanse(t *testing.T) {
 	t.Run("destroys all black creatures", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Walking Dead")  // black 1/1
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Walking Dead")      // black 1/1
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Headless Horseman") // black 2/2
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")     // green 2/2
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Cleanse")
@@ -517,7 +517,7 @@ func TestConcordantCrossroads(t *testing.T) {
 func TestBloodLust(t *testing.T) {
 	t.Run("creature with toughness >= 5 gets +4/-4", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Craw Giant") // 6/4... wait, 4 < 5
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Craw Giant")    // 6/4... wait, 4 < 5
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Wall of Earth") // 0/6
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Blood Lust")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Blood Lust", "Wall of Earth")
@@ -543,7 +543,7 @@ func TestHellSwarm(t *testing.T) {
 	t.Run("all creatures get -1/-0", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Azure Drake") // 2/4
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Azure Drake")   // 2/4
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Hell Swarm")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Hell Swarm")
 		g.StopAt(1, core.BeginCombat)
@@ -556,9 +556,9 @@ func TestHellSwarm(t *testing.T) {
 func TestHellfire(t *testing.T) {
 	t.Run("destroys nonblack creatures and deals damage to caster", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")   // green
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Azure Drake")     // blue
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Walking Dead")    // black, should survive
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // green
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Azure Drake")   // blue
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Walking Dead")  // black, should survive
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Hellfire")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Hellfire")
 		g.StopAt(1, core.BeginCombat)
@@ -647,7 +647,7 @@ func TestCyclopeanMummy(t *testing.T) {
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerA, "Cyclopean Mummy", 0)
 		g.AssertGraveyardCount(gametest.PlayerA, "Cyclopean Mummy", 0) // not in graveyard
-		g.AssertExileCount("Cyclopean Mummy", 1)     // exiled
+		g.AssertExileCount("Cyclopean Mummy", 1)                       // exiled
 	})
 }
 
@@ -726,7 +726,7 @@ func TestGreed(t *testing.T) {
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Greed", "Draw")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		g.AssertLife(gametest.PlayerA, 18) // paid 2 life
+		g.AssertLife(gametest.PlayerA, 18)                      // paid 2 life
 		g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 1) // drew 1 card
 	})
 }
@@ -877,7 +877,7 @@ func TestRabidWombat(t *testing.T) {
 	t.Run("+2/+2 per aura attached", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rabid Wombat") // 0/1 vigilance
-		g.AddCard(core.ZoneHand, gametest.PlayerA, "Giant Strength")       // +2/+2 aura
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Giant Strength")      // +2/+2 aura
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Giant Strength", "Rabid Wombat")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
@@ -996,7 +996,7 @@ func TestDivineOffering(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerB, "Black Mana Battery", 0) // destroyed
-		g.AssertLife(gametest.PlayerA, 24) // gain 4 life (CMC 4)
+		g.AssertLife(gametest.PlayerA, 24)                                // gain 4 life (CMC 4)
 	})
 }
 
@@ -1711,7 +1711,7 @@ func TestWallOfShadows(t *testing.T) {
 	t.Run("takes no damage from creature it blocks", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Wall of Shadows") // 0/1 Defender
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Craw Wurm")      // 6/4
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Craw Wurm")       // 6/4
 		g.Attack(2, gametest.PlayerB, "Craw Wurm")
 		g.Block(2, gametest.PlayerA, "Wall of Shadows", "Craw Wurm")
 		g.StopAt(2, core.EndStep)
@@ -1757,8 +1757,8 @@ func TestEnchantedBeing(t *testing.T) {
 func TestElvenRiders(t *testing.T) {
 	t.Run("cannot be blocked by non-Wall non-flying creature", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Elven Riders")   // 3/3
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")  // 2/2 no flying, not Wall
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Elven Riders")  // 3/3
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // 2/2 no flying, not Wall
 		g.Attack(1, gametest.PlayerA, "Elven Riders")
 		g.Block(1, gametest.PlayerB, "Grizzly Bears", "Elven Riders")
 		g.StopAt(1, core.EndStep)
@@ -1769,7 +1769,7 @@ func TestElvenRiders(t *testing.T) {
 
 	t.Run("can be blocked by Wall", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Elven Riders") // 3/3
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Elven Riders")  // 3/3
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Wall of Earth") // 0/6 Wall
 		g.Attack(1, gametest.PlayerA, "Elven Riders")
 		g.Block(1, gametest.PlayerB, "Wall of Earth", "Elven Riders")
@@ -1781,8 +1781,8 @@ func TestElvenRiders(t *testing.T) {
 
 	t.Run("can be blocked by flying creature", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Elven Riders")  // 3/3
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Azure Drake")   // 2/4 flying
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Elven Riders") // 3/3
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Azure Drake")  // 2/4 flying
 		g.Attack(1, gametest.PlayerA, "Elven Riders")
 		g.Block(1, gametest.PlayerB, "Azure Drake", "Elven Riders")
 		g.StopAt(1, core.EndStep)
@@ -1817,7 +1817,7 @@ func TestElderSpawn(t *testing.T) {
 	t.Run("cannot be blocked by red creatures", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Elder Spawn")
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island") // survive upkeep
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island")      // survive upkeep
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Raging Bull") // 2/2 red creature
 		g.Attack(1, gametest.PlayerA, "Elder Spawn")
 		g.Block(1, gametest.PlayerB, "Raging Bull", "Elder Spawn")
@@ -2202,7 +2202,7 @@ func TestBartelRuneaxe(t *testing.T) {
 		g.Attack(3, gametest.PlayerA, "Bartel Runeaxe")
 		g.StopAt(3, core.EndStep)
 		g.Execute()
-		g.AssertLife(gametest.PlayerB, 14) // 6/5 attacks
+		g.AssertLife(gametest.PlayerB, 14)                        // 6/5 attacks
 		g.AssertTapped(gametest.PlayerA, "Bartel Runeaxe", false) // vigilance
 	})
 }
@@ -2371,8 +2371,8 @@ func TestHellsCaretaker(t *testing.T) {
 		g.ChoosePermanent(gametest.PlayerA, "Raging Bull") // sacrifice this
 		g.StopAt(3, core.PrecombatMain)
 		g.Execute()
-		g.AssertPermanentCount(gametest.PlayerA, "Moss Monster", 1)   // reanimated
-		g.AssertPermanentCount(gametest.PlayerA, "Raging Bull", 0)    // sacrificed
+		g.AssertPermanentCount(gametest.PlayerA, "Moss Monster", 1) // reanimated
+		g.AssertPermanentCount(gametest.PlayerA, "Raging Bull", 0)  // sacrificed
 		g.AssertGraveyardCount(gametest.PlayerA, "Raging Bull", 1)
 	})
 }
@@ -2390,7 +2390,7 @@ func TestWhirlingDervish(t *testing.T) {
 
 	t.Run("is not damaged by black creatures", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Whirling Dervish") // 1/1
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Whirling Dervish")  // 1/1
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Headless Horseman") // 2/2 black
 		g.Attack(2, gametest.PlayerB, "Headless Horseman")
 		g.Block(2, gametest.PlayerA, "Whirling Dervish", "Headless Horseman")
@@ -2416,7 +2416,7 @@ func TestPrimordialOoze(t *testing.T) {
 func TestAbomination(t *testing.T) {
 	t.Run("destroys green creature that blocks it", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Abomination") // 2/6
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Abomination")    // 2/6
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Durkwood Boars") // 4/4 green
 		g.Attack(1, gametest.PlayerA, "Abomination")
 		g.Block(1, gametest.PlayerB, "Durkwood Boars", "Abomination")
@@ -2605,7 +2605,7 @@ func TestGabrielAngelfire(t *testing.T) {
 	t.Run("choose first strike at upkeep", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Gabriel Angelfire") // 4/4
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Craw Wurm")        // 6/4
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Craw Wurm")         // 6/4
 		// Turn 1 upkeep: choose first strike (mode 1)
 		g.ChooseMode(gametest.PlayerA, 1)
 		g.Attack(1, gametest.PlayerA, "Gabriel Angelfire")
@@ -2637,7 +2637,7 @@ func TestGabrielAngelfire(t *testing.T) {
 func TestHalfdane(t *testing.T) {
 	t.Run("copies target creature P/T at upkeep", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Halfdane")   // 3/3
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Halfdane")  // 3/3
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Craw Wurm") // 6/4
 		// Turn 1 upkeep: choose Craw Wurm to copy P/T
 		g.ChoosePermanent(gametest.PlayerA, "Craw Wurm")
@@ -2740,8 +2740,8 @@ func TestAbominationEndOfCombat(t *testing.T) {
 func TestInfernalMedusa(t *testing.T) {
 	t.Run("destroys creature it blocks at end of combat", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")        // 3/3
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Infernal Medusa")   // 2/4
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")      // 3/3
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Infernal Medusa") // 2/4
 		g.Attack(1, gametest.PlayerB)
 		g.Attack(2, gametest.PlayerA)
 		// PlayerB attacks with Hill Giant on turn 2 (their turn)
@@ -2960,11 +2960,11 @@ func TestSwordOfTheAges(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2
 		// Sword enters tapped; wait until turn 3 when it untaps
 		// Choose to sacrifice Hill Giant and Grizzly Bears
-		g.ChooseMode(gametest.PlayerA, 0)                       // 0 = "Sacrifice a creature"
-		g.ChoosePermanent(gametest.PlayerA, "Hill Giant")       // pick Hill Giant
-		g.ChooseMode(gametest.PlayerA, 0)                       // sacrifice another
-		g.ChoosePermanent(gametest.PlayerA, "Grizzly Bears")   // pick Grizzly Bears
-		g.ChooseMode(gametest.PlayerA, 1)                       // 1 = "Done"
+		g.ChooseMode(gametest.PlayerA, 0)                    // 0 = "Sacrifice a creature"
+		g.ChoosePermanent(gametest.PlayerA, "Hill Giant")    // pick Hill Giant
+		g.ChooseMode(gametest.PlayerA, 0)                    // sacrifice another
+		g.ChoosePermanent(gametest.PlayerA, "Grizzly Bears") // pick Grizzly Bears
+		g.ChooseMode(gametest.PlayerA, 1)                    // 1 = "Done"
 		g.ActivateAbility(3, core.PrecombatMain, gametest.PlayerA, "Sword of the Ages", "{T}, Sacrifice", "PlayerB")
 		g.StopAt(3, core.PostcombatMain)
 		g.Execute()
@@ -2980,9 +2980,9 @@ func TestSwordOfTheAges(t *testing.T) {
 func TestWallOfCaltrops(t *testing.T) {
 	t.Run("gains banding when blocking with another Wall", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Wall of Caltrops")  // 2/1 Defender
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Wall of Earth")     // 0/6 Defender
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")        // 3/3
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Wall of Caltrops") // 2/1 Defender
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Wall of Earth")    // 0/6 Defender
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")       // 3/3
 		g.Attack(1, gametest.PlayerA, "Hill Giant")
 		g.Block(1, gametest.PlayerB, "Wall of Caltrops", "Hill Giant")
 		g.Block(1, gametest.PlayerB, "Wall of Earth", "Hill Giant")
@@ -2999,9 +2999,9 @@ func TestWallOfCaltrops(t *testing.T) {
 	})
 	t.Run("does not gain banding when blocking with non-Wall", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Wall of Caltrops")  // 2/1 Defender
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")     // 2/2
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")        // 3/3
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Wall of Caltrops") // 2/1 Defender
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")    // 2/2
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")       // 3/3
 		g.Attack(1, gametest.PlayerA, "Hill Giant")
 		g.Block(1, gametest.PlayerB, "Wall of Caltrops", "Hill Giant")
 		g.Block(1, gametest.PlayerB, "Grizzly Bears", "Hill Giant")
@@ -3058,4 +3058,3 @@ func TestShelkinBrownie(t *testing.T) {
 		g.AssertHasAbility(gametest.PlayerA, "Jasmine Boreal", core.Banding, false)
 	})
 }
-

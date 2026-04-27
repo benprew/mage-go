@@ -49,9 +49,9 @@ type CardFace struct {
 }
 
 type scryfallResponse struct {
-	Data     []Card `json:"data"`
-	HasMore  bool   `json:"has_more"`
-	NextPage string `json:"next_page"`
+	Data     []Card   `json:"data"`
+	HasMore  bool     `json:"has_more"`
+	NextPage string   `json:"next_page"`
 	Warnings []string `json:"warnings"`
 	// error fields
 	Status  int    `json:"status"`
@@ -134,7 +134,7 @@ func fetchSet(setCode string) ([]Card, error) {
 }
 
 func get(client *http.Client, url string, dst any) error {
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return fmt.Errorf("building request: %w", err)
 	}

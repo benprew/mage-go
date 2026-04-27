@@ -8,9 +8,10 @@ package gametest
 import (
 	"testing"
 
+	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"github.com/google/uuid"
 )
 
 // TestCombatDamage covers CR 510 sub-rules that govern combat damage
@@ -24,7 +25,7 @@ func TestCombatDamage(t *testing.T) {
 		bearA := "Combat Sim Bear A"
 		bearB := "Combat Sim Bear B"
 		for _, n := range []string{bearA, bearB} {
-			n := n
+
 			if !mage.CardRegistered(n) {
 				mage.Register(n, func() mage.Card {
 					return mage.NewCreature(n, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))
@@ -161,7 +162,7 @@ func TestCombatDamage(t *testing.T) {
 			})
 		}
 		for _, n := range []string{blkA, blkB} {
-			n := n
+
 			if !mage.CardRegistered(n) {
 				mage.Register(n, func() mage.Card {
 					return mage.NewCreature(n, "{1}{W}{W}", 2, 3, mage.WithSubTypes("Soldier"))

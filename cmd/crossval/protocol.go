@@ -34,11 +34,11 @@ type oracleMsg struct {
 	Type string `json:"type"` // "step_begin", "action_taken", "attackers_declared", "blockers_declared", "game_over", "error", "ready"
 
 	// action_taken / step_begin fields
-	Turn      int          `json:"turn,omitempty"`
-	Step      string       `json:"step,omitempty"`
-	PlayerIdx int          `json:"player_idx,omitempty"`
-	Action    *actionInfo  `json:"action,omitempty"`
-	State     *cvState     `json:"state,omitempty"`
+	Turn      int         `json:"turn,omitempty"`
+	Step      string      `json:"step,omitempty"`
+	PlayerIdx int         `json:"player_idx,omitempty"`
+	Action    *actionInfo `json:"action,omitempty"`
+	State     *cvState    `json:"state,omitempty"`
 
 	// step_begin fields
 	ActivePlayerIdx int `json:"active_player_idx,omitempty"`
@@ -86,8 +86,8 @@ type cvPlayer struct {
 	Name        string        `json:"name"`
 	Life        int           `json:"life"`
 	Hand        []string      `json:"hand"`        // sorted card names
-	Battlefield []cvPermanent `json:"battlefield"`  // sorted by name
-	Graveyard   []string      `json:"graveyard"`    // sorted card names
+	Battlefield []cvPermanent `json:"battlefield"` // sorted by name
+	Graveyard   []string      `json:"graveyard"`   // sorted card names
 	LibrarySize int           `json:"library_size"`
 }
 

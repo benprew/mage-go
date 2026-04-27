@@ -2,6 +2,7 @@ package antiquities
 
 import (
 	"github.com/google/uuid"
+
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
@@ -25,8 +26,7 @@ func registerEnchantments() {
 				WhenAttachedBecomesTappedTrigger(artPossDmgEffect, false),
 			),
 			WithAbility(
-				NewTriggered(EvtAbilityActivated, false, artPossDmgEffect,
-				).SetConditionData(AttachedToIsEventSourceNoTapCost{}),
+				NewTriggered(EvtAbilityActivated, false, artPossDmgEffect).SetConditionData(AttachedToIsEventSourceNoTapCost{}),
 			),
 		)
 	})
@@ -189,8 +189,7 @@ func registerEnchantments() {
 			),
 			// Trigger when any artifact's ability is activated without {T}
 			WithAbility(
-				NewTriggered(EvtAbilityActivated, false, hauntingWindEffect,
-				).
+				NewTriggered(EvtAbilityActivated, false, hauntingWindEffect).
 					SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
 						EventFlagIsFalse{},
 						EventSourceHasType{Type: TypeArtifact},
@@ -238,8 +237,7 @@ func registerEnchantments() {
 			),
 			// Trigger when opponent activates artifact ability without {T}
 			WithAbility(
-				NewTriggered(EvtAbilityActivated, false, powerleechEffect,
-				).
+				NewTriggered(EvtAbilityActivated, false, powerleechEffect).
 					SetConditionData(OpponentActivatedArtifactNoTapCost{}),
 			),
 		)
@@ -292,8 +290,10 @@ type artifactDamageToCreaturePreventionReplacement struct {
 	creatureID uuid.UUID
 }
 
-func (r *artifactDamageToCreaturePreventionReplacement) SourceID() uuid.UUID  { return uuid.Nil }
-func (r *artifactDamageToCreaturePreventionReplacement) GetDuration() Duration { return WhileOnBattlefield }
+func (r *artifactDamageToCreaturePreventionReplacement) SourceID() uuid.UUID { return uuid.Nil }
+func (r *artifactDamageToCreaturePreventionReplacement) GetDuration() Duration {
+	return WhileOnBattlefield
+}
 
 func (r *artifactDamageToCreaturePreventionReplacement) Matches(a Action, g GameReader) bool {
 	act, ok := a.(*DamageToCreatureAction)

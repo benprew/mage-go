@@ -3,8 +3,9 @@ package mage
 import (
 	"testing"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"github.com/google/uuid"
+
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 // TestNewCreature_HasAttrs_CanAttack_CanBlock_HasPT_IsCreature verifies that a

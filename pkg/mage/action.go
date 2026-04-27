@@ -1,8 +1,9 @@
 package mage
 
 import (
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"github.com/google/uuid"
+
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 // Action represents a game mutation flowing through the replacement pipeline.
@@ -36,5 +37,5 @@ type replacementBase struct {
 	duration Duration
 }
 
-func (r *replacementBase) SourceID() uuid.UUID  { return r.sourceID }
+func (r *replacementBase) SourceID() uuid.UUID   { return r.sourceID }
 func (r *replacementBase) GetDuration() Duration { return r.duration }

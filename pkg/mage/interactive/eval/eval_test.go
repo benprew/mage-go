@@ -4,9 +4,10 @@ import (
 	"math"
 	"testing"
 
+	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"github.com/google/uuid"
 )
 
 // ── permPower / permToughness ───────────────────────────────────────────────

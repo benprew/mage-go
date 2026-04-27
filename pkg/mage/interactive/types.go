@@ -2,6 +2,7 @@ package interactive
 
 import (
 	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
@@ -198,18 +199,18 @@ type StackItemState struct {
 type ChoiceType int
 
 const (
-	ChoicePermanent      ChoiceType = iota // pick one permanent from candidates
-	ChoiceCardsFromHand                    // pick N cards from hand (multi-select)
-	ChoiceManaColor                        // pick a mana color
-	ChoiceCardFromLibrary                  // pick one card from library candidates
-	ChoiceMay                              // yes/no for an optional ability
-	ChoiceMode                             // pick one mode from a modal spell/ability
-	ChoiceNumber                           // pick a number from a range
+	ChoicePermanent       ChoiceType = iota // pick one permanent from candidates
+	ChoiceCardsFromHand                     // pick N cards from hand (multi-select)
+	ChoiceManaColor                         // pick a mana color
+	ChoiceCardFromLibrary                   // pick one card from library candidates
+	ChoiceMay                               // yes/no for an optional ability
+	ChoiceMode                              // pick one mode from a modal spell/ability
+	ChoiceNumber                            // pick a number from a range
 )
 
 // ChoiceOption is one selectable item in a ChoiceRequest.
 type ChoiceOption struct {
-	ID    uuid.UUID  // permanent or card ID (zero for color/boolean options)
+	ID    uuid.UUID // permanent or card ID (zero for color/boolean options)
 	Label string
 	Color core.Color // populated for ChoiceManaColor options
 }
@@ -219,7 +220,7 @@ type ChoiceOption struct {
 type ChoiceRequest struct {
 	Type    ChoiceType
 	Reason  string
-	Amount  int          // for ChoiceCardsFromHand: how many to select
+	Amount  int // for ChoiceCardsFromHand: how many to select
 	Options []ChoiceOption
 }
 

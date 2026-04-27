@@ -103,8 +103,8 @@ func TestCircleOfProtection(t *testing.T) {
 	t.Run("doesnt_prevent_other_colors", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Circle of Protection: Red")
-		g.AddCard(core.ZoneHand, gametest.PlayerA, "Terror")           // black spell
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant") // non-black creature for Terror
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Terror")                  // black spell
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")       // non-black creature for Terror
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hypnotic Specter") // black 2/2 flyer
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerB, "Circle of Protection: Red")
 		g.Attack(1, gametest.PlayerA, "Hypnotic Specter")

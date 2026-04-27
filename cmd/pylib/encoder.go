@@ -300,7 +300,7 @@ func zoneCards(player *interactive.PlayerState, zone string) []*stateCard {
 			if idx >= maxCardsPerZone {
 				break
 			}
-			card := card
+
 			out = append(out, &stateCard{id: card.ID.String(), name: card.Name})
 		}
 		return out
@@ -310,7 +310,7 @@ func zoneCards(player *interactive.PlayerState, zone string) []*stateCard {
 			if idx >= maxCardsPerZone {
 				break
 			}
-			card := card
+
 			out = append(out, &stateCard{id: card.ID.String(), name: card.Name})
 		}
 		return out
@@ -320,7 +320,7 @@ func zoneCards(player *interactive.PlayerState, zone string) []*stateCard {
 			if idx >= maxCardsPerZone {
 				break
 			}
-			perm := perm
+
 			out = append(out, &stateCard{id: perm.ID.String(), name: perm.Name, tapped: perm.Tapped})
 		}
 		return out

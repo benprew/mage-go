@@ -14,14 +14,14 @@ import (
 
 func main() {
 	var (
-		xmageDir       string
-		maxTurns       int
-		seed           int64
-		verbose        bool
-		debug          bool
-		games          int
-		outFile        string
-		roguesDir      string
+		xmageDir  string
+		maxTurns  int
+		seed      int64
+		verbose   bool
+		debug     bool
+		games     int
+		outFile   string
+		roguesDir string
 	)
 
 	flag.StringVar(&xmageDir, "xmage", "../xmage", "path to XMage repo")
@@ -248,7 +248,7 @@ func runXMageDrivenGame(oracle *xmageOracle, deckA, deckB []string, maxTurns int
 			}:
 			case <-mg.doneCh:
 				return decisions, divergences, warnings, fmt.Errorf(
-					"go game exited before step_begin (xmage T%d %s, gameErr=%v)",
+					"go game exited before step_begin (xmage T%d %s, gameErr=%w)",
 					msg.Turn, msg.Step, mg.gameErr)
 			}
 			if err := oracle.send(ack); err != nil {
@@ -285,7 +285,7 @@ func runXMageDrivenGame(oracle *xmageOracle, deckA, deckB []string, maxTurns int
 			}:
 			case <-mg.doneCh:
 				return decisions, divergences, warnings, fmt.Errorf(
-					"go game goroutine exited before xmage finished (xmage at T%d %s p%d, go-state=%s, gameErr=%v)",
+					"go game goroutine exited before xmage finished (xmage at T%d %s p%d, go-state=%s, gameErr=%w)",
 					msg.Turn, msg.Step, msg.PlayerIdx, mg.snapshotState(), mg.gameErr)
 			}
 			dbg(debug, "main: msgCh sent, waiting on resultCh")
@@ -295,7 +295,7 @@ func runXMageDrivenGame(oracle *xmageOracle, deckA, deckB []string, maxTurns int
 			case result = <-mg.resultCh:
 			case <-mg.doneCh:
 				return decisions, divergences, warnings, fmt.Errorf(
-					"go game goroutine exited while waiting for resultCh (xmage at T%d %s, go-state=%s, gameErr=%v)",
+					"go game goroutine exited while waiting for resultCh (xmage at T%d %s, go-state=%s, gameErr=%w)",
 					msg.Turn, msg.Step, mg.snapshotState(), mg.gameErr)
 			}
 			dbg(debug, "main: <- resultCh (err=%v go-step=%s)", result.err, mg.snapshotState())
@@ -329,7 +329,7 @@ func runXMageDrivenGame(oracle *xmageOracle, deckA, deckB []string, maxTurns int
 			case mg.players[msg.PlayerIdx].attackCh <- msg.Attackers:
 			case <-mg.doneCh:
 				return decisions, divergences, warnings, fmt.Errorf(
-					"go game exited before attackers fed (xmage at T%d, go-state=%s, gameErr=%v)",
+					"go game exited before attackers fed (xmage at T%d, go-state=%s, gameErr=%w)",
 					msg.Turn, mg.snapshotState(), mg.gameErr)
 			}
 			dbg(debug, "main: attackCh sent")
@@ -349,7 +349,7 @@ func runXMageDrivenGame(oracle *xmageOracle, deckA, deckB []string, maxTurns int
 			case mg.players[msg.PlayerIdx].blockCh <- msg.Blockers:
 			case <-mg.doneCh:
 				return decisions, divergences, warnings, fmt.Errorf(
-					"go game exited before blockers fed (xmage at T%d, go-state=%s, gameErr=%v)",
+					"go game exited before blockers fed (xmage at T%d, go-state=%s, gameErr=%w)",
 					msg.Turn, mg.snapshotState(), mg.gameErr)
 			}
 			dbg(debug, "main: blockCh sent")
@@ -419,4 +419,3 @@ func writeGameLog(dir string, gameNum int, seed int64, deckA, deckB []string, di
 		}
 	}
 }
-

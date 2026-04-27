@@ -46,7 +46,7 @@ func UntapSource() Effect {
 	return &untapSourceEffect{}
 }
 
-func (e *untapSourceEffect) Text() string            { return "Untap this permanent" }
+func (e *untapSourceEffect) Text() string                 { return "Untap this permanent" }
 func (e *untapSourceEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // tapAttachedCreatureEffect taps the creature attached to the source aura.
@@ -92,7 +92,7 @@ type removeFromCombatEffect struct{}
 // RemoveFromCombat creates an effect that removes a target creature from combat.
 func RemoveFromCombat() Effect { return &removeFromCombatEffect{} }
 
-func (e *removeFromCombatEffect) Text() string            { return "Remove target creature from combat" }
+func (e *removeFromCombatEffect) Text() string                 { return "Remove target creature from combat" }
 func (e *removeFromCombatEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // makeUnblockableUntilEndOfTurnEffect makes a target creature unblockable until end of turn.

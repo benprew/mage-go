@@ -3,8 +3,9 @@ package mage
 import (
 	"testing"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"github.com/google/uuid"
+
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 // makeTestGame returns a minimal game for query method tests.

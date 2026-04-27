@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
@@ -65,8 +66,8 @@ func TestSearch_FindLethal(t *testing.T) {
 	// Set up the game state for main phase
 	g.SetStep(core.PrecombatMain)
 
-	strat := makeSearchAI(DefaultSearchConfig())
-	action := strat.PriorityAction(pa, g, 0, true)
+	start := makeSearchAI(DefaultSearchConfig())
+	action := start.PriorityAction(pa, g, 0, true)
 
 	if action.Type != interactive.ActionCastSpell {
 		t.Fatalf("expected ActionCastSpell, got %v", action.Type)
@@ -102,8 +103,8 @@ func TestSearch_PreferHigherValueCreature(t *testing.T) {
 
 	g.SetStep(core.PrecombatMain)
 
-	strat := makeSearchAI(DefaultSearchConfig())
-	action := strat.PriorityAction(pa, g, 0, true)
+	start := makeSearchAI(DefaultSearchConfig())
+	action := start.PriorityAction(pa, g, 0, true)
 
 	if action.Type != interactive.ActionCastSpell {
 		t.Fatalf("expected ActionCastSpell, got %v", action.Type)
@@ -134,8 +135,8 @@ func TestSearch_FallbackOnNodeBudget(t *testing.T) {
 		MaxNodes:  1,
 		TimeLimit: 500 * time.Millisecond,
 	}
-	strat := makeSearchAI(config)
-	action := strat.PriorityAction(pa, g, 0, true)
+	start := makeSearchAI(config)
+	action := start.PriorityAction(pa, g, 0, true)
 
 	// Should still produce a valid action (fallback to heuristic)
 	if action.Type != interactive.ActionCastSpell && action.Type != interactive.ActionPass {
@@ -162,10 +163,10 @@ func TestSearch_NodeBudgetRespected(t *testing.T) {
 		MaxNodes:  50,
 		TimeLimit: 5 * time.Second,
 	}
-	strat := makeSearchAI(config)
+	start := makeSearchAI(config)
 
 	// This should complete without hanging — the node budget caps the search
-	action := strat.PriorityAction(pa, g, 0, true)
+	action := start.PriorityAction(pa, g, 0, true)
 	_ = action // just verify it completes
 }
 
@@ -471,8 +472,8 @@ func TestSearch_Attackers_PrefersUnblockedDamage(t *testing.T) {
 	c := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
 	g.AddToBattlefield(c)
 
-	strat := makeSearchAI(DefaultSearchConfig())
-	attackers := strat.Attackers(pa, g)
+	start := makeSearchAI(DefaultSearchConfig())
+	attackers := start.Attackers(pa, g)
 
 	// With opponent at 5 life and no blockers, search should attack
 	if len(attackers) == 0 {
@@ -489,8 +490,8 @@ func TestSearch_Blockers_FallsBackToHeuristic(t *testing.T) {
 	g.AddToBattlefield(atk, blk)
 	g.GetCombat().AddAttacker(atk.ID(), pb.PlayerID())
 
-	strat := makeSearchAI(DefaultSearchConfig())
-	blocks := strat.Blockers(pb, g)
+	start := makeSearchAI(DefaultSearchConfig())
+	blocks := start.Blockers(pb, g)
 
 	// Search evaluates blocking assignments; the wall (0/4) can block the 3/3
 	// and survive, so search should find that blocking is better than not blocking.
@@ -509,8 +510,8 @@ func TestSearch_Blockers_PreventsLethal(t *testing.T) {
 	g.AddToBattlefield(atk, blk)
 	g.GetCombat().AddAttacker(atk.ID(), pb.PlayerID())
 
-	strat := makeSearchAI(DefaultSearchConfig())
-	blocks := strat.Blockers(pb, g)
+	start := makeSearchAI(DefaultSearchConfig())
+	blocks := start.Blockers(pb, g)
 
 	if len(blocks) == 0 {
 		t.Error("search should block to prevent lethal damage")
@@ -526,8 +527,8 @@ func TestSearch_Blockers_GangBlocksBigThreat(t *testing.T) {
 	g.AddToBattlefield(atk, b1, b2)
 	g.GetCombat().AddAttacker(atk.ID(), pb.PlayerID())
 
-	strat := makeSearchAI(DefaultSearchConfig())
-	blocks := strat.Blockers(pb, g)
+	start := makeSearchAI(DefaultSearchConfig())
+	blocks := start.Blockers(pb, g)
 
 	// Search should find the gang block (2 blockers on 1 attacker) is the best option.
 	gangBlockCount := 0
@@ -604,10 +605,10 @@ func TestSearch_MultiSpell_BoltAndCreature(t *testing.T) {
 
 	// Increase search budget for multi-spell exploration
 	config := SearchConfig{MaxDepth: 4, MaxNodes: 10000, TimeLimit: 2 * time.Second}
-	strat := makeSearchAI(config)
+	start := makeSearchAI(config)
 
 	// The search should produce a valid action (not crash/hang with chaining).
-	action := strat.PriorityAction(pa, g, 0, true)
+	action := start.PriorityAction(pa, g, 0, true)
 	if action.Type == interactive.ActionPass {
 		t.Error("search should find a useful action with bolt + creature in hand")
 	}
@@ -626,10 +627,10 @@ func TestSearch_MultiSpell_NodeBudgetRespected(t *testing.T) {
 	g.SetStep(core.PrecombatMain)
 
 	config := SearchConfig{MaxDepth: 4, MaxNodes: 100, TimeLimit: 5 * time.Second}
-	strat := makeSearchAI(config)
+	start := makeSearchAI(config)
 
 	// Should complete without hanging — chain limit + node budget cap the search.
-	action := strat.PriorityAction(pa, g, 0, true)
+	action := start.PriorityAction(pa, g, 0, true)
 	_ = action
 }
 
@@ -639,10 +640,10 @@ func TestSearch_MultiSpell_PassEndsChain(t *testing.T) {
 	g.SetStep(core.PrecombatMain)
 
 	config := SearchConfig{MaxDepth: 3, MaxNodes: 500, TimeLimit: 1 * time.Second}
-	strat := makeSearchAI(config)
+	start := makeSearchAI(config)
 
 	// Empty hand: only pass available. Should complete quickly.
-	action := strat.PriorityAction(pa, g, 0, true)
+	action := start.PriorityAction(pa, g, 0, true)
 	if action.Type != interactive.ActionPass {
 		t.Errorf("expected pass with empty hand, got %v", action.Type)
 	}
@@ -700,8 +701,8 @@ func TestXSpell_SearchPicksExactLethal(t *testing.T) {
 	addLands(g, pa, "Mountain", 5)
 	g.SetStep(core.PrecombatMain)
 
-	strat := makeSearchAI(DefaultSearchConfig())
-	action := strat.PriorityAction(pa, g, 0, true)
+	start := makeSearchAI(DefaultSearchConfig())
+	action := start.PriorityAction(pa, g, 0, true)
 
 	if action.Type != interactive.ActionCastSpell {
 		t.Fatalf("expected ActionCastSpell, got %v", action.Type)
@@ -794,8 +795,8 @@ func TestSearch_HistoryHeuristicPersists(t *testing.T) {
 	addLands(g, pa, "Forest", 2)
 	g.SetStep(core.PrecombatMain)
 
-	strat := makeSearchAI(SearchConfig{MaxDepth: 4, MaxNodes: 5000, TimeLimit: 1 * time.Second})
-	_ = strat.PriorityAction(pa, g, 0, true)
+	start := makeSearchAI(SearchConfig{MaxDepth: 4, MaxNodes: 5000, TimeLimit: 1 * time.Second})
+	_ = start.PriorityAction(pa, g, 0, true)
 
 	// History should be initialized (even if no cutoffs occurred, the map exists).
 	if strat.history == nil {
@@ -851,8 +852,8 @@ func BenchmarkSearch_TypicalBoard_Depth2(b *testing.B) {
 		g.SetStep(core.PrecombatMain)
 
 		config := SearchConfig{MaxDepth: 2, MaxNodes: 5000, TimeLimit: 500 * time.Millisecond}
-		strat := makeSearchAI(config)
-		strat.PriorityAction(pa, g, 0, true)
+		start := makeSearchAI(config)
+		start.PriorityAction(pa, g, 0, true)
 	}
 }
 
@@ -878,8 +879,8 @@ func BenchmarkSearch_TypicalBoard_Depth5(b *testing.B) {
 		g.SetStep(core.PrecombatMain)
 
 		config := SearchConfig{MaxDepth: 5, MaxNodes: 10000, TimeLimit: 500 * time.Millisecond}
-		strat := makeSearchAI(config)
-		strat.PriorityAction(pa, g, 0, true)
+		start := makeSearchAI(config)
+		start.PriorityAction(pa, g, 0, true)
 	}
 }
 
@@ -899,8 +900,8 @@ func BenchmarkSearch_Attackers(b *testing.B) {
 		g.SetStep(core.DeclareAttackers)
 
 		config := SearchConfig{MaxDepth: 6, MaxNodes: 10000, TimeLimit: 1 * time.Second}
-		strat := makeSearchAI(config)
-		strat.Attackers(pa, g)
+		start := makeSearchAI(config)
+		start.Attackers(pa, g)
 	}
 }
 
@@ -919,8 +920,8 @@ func BenchmarkSearch_Blockers(b *testing.B) {
 		g.GetCombat().AddAttacker(atk2.ID(), pb.PlayerID())
 
 		config := SearchConfig{MaxDepth: 6, MaxNodes: 10000, TimeLimit: 1 * time.Second}
-		strat := makeSearchAI(config)
-		strat.Blockers(pb, g)
+		start := makeSearchAI(config)
+		start.Blockers(pb, g)
 	}
 }
 
@@ -958,8 +959,8 @@ func BenchmarkSearch_LargeBoard_Depth6(b *testing.B) {
 		g.SetStep(core.PrecombatMain)
 
 		config := SearchConfig{MaxDepth: 6, MaxNodes: 15000, TimeLimit: 1 * time.Second}
-		strat := makeSearchAI(config)
-		strat.PriorityAction(pa, g, 0, true)
+		start := makeSearchAI(config)
+		start.PriorityAction(pa, g, 0, true)
 	}
 }
 
@@ -983,8 +984,8 @@ func BenchmarkSearch_Attackers_LargeBoard(b *testing.B) {
 		g.SetStep(core.DeclareAttackers)
 
 		config := SearchConfig{MaxDepth: 6, MaxNodes: 15000, TimeLimit: 1 * time.Second}
-		strat := makeSearchAI(config)
-		strat.Attackers(pa, g)
+		start := makeSearchAI(config)
+		start.Attackers(pa, g)
 	}
 }
 
@@ -1010,7 +1011,7 @@ func BenchmarkSearch_TypicalBoard_Depth3(b *testing.B) {
 		g.SetStep(core.PrecombatMain)
 
 		config := SearchConfig{MaxDepth: 3, MaxNodes: 5000, TimeLimit: 500 * time.Millisecond}
-		strat := makeSearchAI(config)
-		strat.PriorityAction(pa, g, 0, true)
+		start := makeSearchAI(config)
+		start.PriorityAction(pa, g, 0, true)
 	}
 }

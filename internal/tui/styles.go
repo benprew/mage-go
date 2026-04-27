@@ -50,7 +50,7 @@ var (
 			Foreground(colorWhite)
 
 	dimHandCardStyle = lipgloss.NewStyle().
-			Foreground(colorTapped)
+				Foreground(colorTapped)
 
 	landCardStyle = lipgloss.NewStyle().
 			Foreground(colorGreen)

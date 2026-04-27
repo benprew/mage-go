@@ -3,8 +3,9 @@ package mage
 import (
 	"strings"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"github.com/google/uuid"
+
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 // Ability is the base interface for all abilities.
@@ -276,4 +277,3 @@ func ETBEffect(effect Effect) *ETBEffectAbility {
 		Effect: effect,
 	}
 }
-

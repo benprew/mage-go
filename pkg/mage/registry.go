@@ -10,7 +10,7 @@ type CardFactory func() Card
 
 // Registry holds card factories keyed by name, with thread-safe access.
 type Registry struct {
-	mu       sync.RWMutex
+	mu        sync.RWMutex
 	factories map[string]CardFactory
 }
 

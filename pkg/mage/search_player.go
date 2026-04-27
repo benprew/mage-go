@@ -3,8 +3,9 @@ package mage
 import (
 	"strings"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"github.com/google/uuid"
+
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 // SearchPlayer wraps a BasePlayer for use in cloned game states during AI search.

@@ -4,13 +4,13 @@ package main
 // All weights are 0.0 (never) to 1.0 (signature/primary).
 // Calibrated to 4th Edition era design.
 type ColorPie struct {
-	Color            Color
+	Color             Color
 	KeywordAffinities map[Keyword]float64
-	StatShape        StatShapeWeights
-	EffectAccess     map[EffectType]float64
-	CreatureSubtypes []SubtypePool
-	ManaPipTendency  ManaPipTendency
-	Philosophy       ColorPhilosophy
+	StatShape         StatShapeWeights
+	EffectAccess      map[EffectType]float64
+	CreatureSubtypes  []SubtypePool
+	ManaPipTendency   ManaPipTendency
+	Philosophy        ColorPhilosophy
 }
 
 // StatShapeWeights controls how a color distributes power vs toughness.

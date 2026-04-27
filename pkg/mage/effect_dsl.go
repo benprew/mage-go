@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
@@ -28,12 +29,18 @@ type TargetSelector struct {
 	VarName string
 }
 
-func ToTarget() TargetSelector                       { return TargetSelector{Kind: KindTarget} }
-func ToSource() TargetSelector                       { return TargetSelector{Kind: KindSource} }
-func ToAttached() TargetSelector                     { return TargetSelector{Kind: KindAttached} }
-func ToMatching(f PermanentFilter) TargetSelector    { return TargetSelector{Kind: KindMatching, Filter: f} }
-func ToAllMatching(f PermanentFilter) TargetSelector { return TargetSelector{Kind: KindAllMatching, Filter: f} }
-func ToGathered(varName string) TargetSelector       { return TargetSelector{Kind: KindGathered, VarName: varName} }
+func ToTarget() TargetSelector   { return TargetSelector{Kind: KindTarget} }
+func ToSource() TargetSelector   { return TargetSelector{Kind: KindSource} }
+func ToAttached() TargetSelector { return TargetSelector{Kind: KindAttached} }
+func ToMatching(f PermanentFilter) TargetSelector {
+	return TargetSelector{Kind: KindMatching, Filter: f}
+}
+func ToAllMatching(f PermanentFilter) TargetSelector {
+	return TargetSelector{Kind: KindAllMatching, Filter: f}
+}
+func ToGathered(varName string) TargetSelector {
+	return TargetSelector{Kind: KindGathered, VarName: varName}
+}
 
 // BoostUntilEndOfTurn is a compatibility helper for the older boost API.
 func BoostUntilEndOfTurn(power, toughness ValueSource, target PermanentSelector) Effect {

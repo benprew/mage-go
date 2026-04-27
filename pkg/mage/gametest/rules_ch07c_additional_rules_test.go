@@ -542,7 +542,7 @@ func TestCR704_3_SBARepeated(t *testing.T) {
 	const crA = "SBA Repeat Zero Tough A"
 	const crB = "SBA Repeat Zero Tough B"
 	for _, n := range []string{crA, crB} {
-		n := n
+
 		if !mage.CardRegistered(n) {
 			mage.Register(n, func() mage.Card {
 				return mage.NewCreature(n, "{G}", 1, 1, mage.WithSubTypes("Insect"))

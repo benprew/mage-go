@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
@@ -97,8 +98,8 @@ func TestAttackers_AggroAttacksAll(t *testing.T) {
 	blk := makePerm("Giant", "{3}{G}", 5, 5, pb.PlayerID())
 	g.AddToBattlefield(c1, c2, blk)
 
-	strat := &HeuristicStrategy{Personality: AggroPersonality}
-	attackers := strat.Attackers(pa, g)
+	start := &HeuristicStrategy{Personality: AggroPersonality}
+	attackers := start.Attackers(pa, g)
 	if len(attackers) != 2 {
 		t.Errorf("aggro should attack with all %d eligible, got %d", 2, len(attackers))
 	}
@@ -111,8 +112,8 @@ func TestAttackers_ControlOnlyProfitable(t *testing.T) {
 	blk := makePerm("Bear", "{1}{G}", 3, 3, pb.PlayerID())
 	g.AddToBattlefield(smallAtk, blk)
 
-	strat := &HeuristicStrategy{Personality: ControlPersonality}
-	attackers := strat.Attackers(pa, g)
+	start := &HeuristicStrategy{Personality: ControlPersonality}
+	attackers := start.Attackers(pa, g)
 	// Elf vs 3/3 is not profitable
 	if len(attackers) != 0 {
 		t.Errorf("control should not attack with unprofitable creatures, got %d attackers", len(attackers))
@@ -127,8 +128,8 @@ func TestAttackers_SkipsCantAttack(t *testing.T) {
 	c2.Tapped = true
 	g.AddToBattlefield(c1, c2)
 
-	strat := &HeuristicStrategy{Personality: AggroPersonality}
-	attackers := strat.Attackers(pa, g)
+	start := &HeuristicStrategy{Personality: AggroPersonality}
+	attackers := start.Attackers(pa, g)
 	if len(attackers) != 1 {
 		t.Errorf("should only attack with untapped creature, got %d", len(attackers))
 	}
@@ -145,8 +146,8 @@ func TestBlockers_ControlBlocksHighPower(t *testing.T) {
 
 	g.GetCombat().AddAttacker(atk.ID(), pb.PlayerID())
 
-	strat := &HeuristicStrategy{Personality: ControlPersonality}
-	blocks := strat.Blockers(pb, g)
+	start := &HeuristicStrategy{Personality: ControlPersonality}
+	blocks := start.Blockers(pb, g)
 	if len(blocks) != 1 {
 		t.Errorf("control should block high-power attacker, got %d blocks", len(blocks))
 	}
@@ -160,8 +161,8 @@ func TestBlockers_AggroSkipsWeakAttacker(t *testing.T) {
 
 	g.GetCombat().AddAttacker(atk.ID(), pb.PlayerID())
 
-	strat := &HeuristicStrategy{Personality: AggroPersonality}
-	blocks := strat.Blockers(pb, g)
+	start := &HeuristicStrategy{Personality: AggroPersonality}
+	blocks := start.Blockers(pb, g)
 	// Aggro has BlockPowerThreshold=3, so power 1 attacker is skipped
 	if len(blocks) != 0 {
 		t.Errorf("aggro should skip blocking weak attacker, got %d blocks", len(blocks))
@@ -176,8 +177,8 @@ func TestBlockers_KillsAttacker(t *testing.T) {
 
 	g.GetCombat().AddAttacker(atk.ID(), pb.PlayerID())
 
-	strat := &HeuristicStrategy{Personality: ControlPersonality}
-	blocks := strat.Blockers(pb, g)
+	start := &HeuristicStrategy{Personality: ControlPersonality}
+	blocks := start.Blockers(pb, g)
 	if len(blocks) != 1 {
 		t.Errorf("should block to kill attacker, got %d blocks", len(blocks))
 	}
@@ -191,8 +192,8 @@ func TestBlockers_CantBlockFlying(t *testing.T) {
 
 	g.GetCombat().AddAttacker(atk.ID(), pb.PlayerID())
 
-	strat := &HeuristicStrategy{Personality: ControlPersonality}
-	blocks := strat.Blockers(pb, g)
+	start := &HeuristicStrategy{Personality: ControlPersonality}
+	blocks := start.Blockers(pb, g)
 	if len(blocks) != 0 {
 		t.Errorf("ground creature should not block flyer, got %d blocks", len(blocks))
 	}
@@ -206,8 +207,8 @@ func TestBlockers_ReachCanBlockFlying(t *testing.T) {
 
 	g.GetCombat().AddAttacker(atk.ID(), pb.PlayerID())
 
-	strat := &HeuristicStrategy{Personality: ControlPersonality}
-	blocks := strat.Blockers(pb, g)
+	start := &HeuristicStrategy{Personality: ControlPersonality}
+	blocks := start.Blockers(pb, g)
 	// Spider can block flyer (has reach), atkPow=3 >= threshold=0, and atkPow=3 >= 3
 	if len(blocks) != 1 {
 		t.Errorf("reach creature should block flyer, got %d blocks", len(blocks))
@@ -223,8 +224,8 @@ func TestPriorityAction_PlaysLandFirst(t *testing.T) {
 	land.SetOwner(pa.PlayerID())
 	pa.AddToHand(land)
 
-	strat := &HeuristicStrategy{Personality: MidrangePersonality}
-	action := strat.PriorityAction(pa, g, 0, true)
+	start := &HeuristicStrategy{Personality: MidrangePersonality}
+	action := start.PriorityAction(pa, g, 0, true)
 	if action.Type != interactive.ActionPlayLand {
 		t.Errorf("expected ActionPlayLand, got %v", action.Type)
 	}
@@ -232,8 +233,8 @@ func TestPriorityAction_PlaysLandFirst(t *testing.T) {
 
 func TestPriorityAction_PassWhenEmpty(t *testing.T) {
 	g, pa, _ := makeGame()
-	strat := &HeuristicStrategy{Personality: MidrangePersonality}
-	action := strat.PriorityAction(pa, g, 0, true)
+	start := &HeuristicStrategy{Personality: MidrangePersonality}
+	action := start.PriorityAction(pa, g, 0, true)
 	if action.Type != interactive.ActionPass {
 		t.Errorf("expected ActionPass with empty hand, got %v", action.Type)
 	}
@@ -241,8 +242,8 @@ func TestPriorityAction_PassWhenEmpty(t *testing.T) {
 
 func TestPriorityAction_PassOnNonMainEmptyHand(t *testing.T) {
 	g, pa, _ := makeGame()
-	strat := &HeuristicStrategy{Personality: MidrangePersonality}
-	action := strat.PriorityAction(pa, g, 0, false)
+	start := &HeuristicStrategy{Personality: MidrangePersonality}
+	action := start.PriorityAction(pa, g, 0, false)
 	if action.Type != interactive.ActionPass {
 		t.Errorf("expected ActionPass on non-main with empty hand, got %v", action.Type)
 	}
@@ -318,8 +319,8 @@ type passStrategy struct{}
 func (s *passStrategy) PriorityAction(_ mage.Player, _ *mage.Game, _ int, _ bool) interactive.PriorityAction {
 	return interactive.PriorityAction{Type: interactive.ActionPass}
 }
-func (s *passStrategy) Attackers(_ mage.Player, _ *mage.Game) []uuid.UUID            { return nil }
-func (s *passStrategy) Blockers(_ mage.Player, _ *mage.Game) []mage.BlockAssignment  { return nil }
+func (s *passStrategy) Attackers(_ mage.Player, _ *mage.Game) []uuid.UUID           { return nil }
+func (s *passStrategy) Blockers(_ mage.Player, _ *mage.Game) []mage.BlockAssignment { return nil }
 
 type fixedActionStrategy struct {
 	action interactive.PriorityAction
@@ -328,8 +329,10 @@ type fixedActionStrategy struct {
 func (s *fixedActionStrategy) PriorityAction(_ mage.Player, _ *mage.Game, _ int, _ bool) interactive.PriorityAction {
 	return s.action
 }
-func (s *fixedActionStrategy) Attackers(_ mage.Player, _ *mage.Game) []uuid.UUID            { return nil }
-func (s *fixedActionStrategy) Blockers(_ mage.Player, _ *mage.Game) []mage.BlockAssignment  { return nil }
+func (s *fixedActionStrategy) Attackers(_ mage.Player, _ *mage.Game) []uuid.UUID { return nil }
+func (s *fixedActionStrategy) Blockers(_ mage.Player, _ *mage.Game) []mage.BlockAssignment {
+	return nil
+}
 
 func TestSequentialStrategy_FirstNonPassWins(t *testing.T) {
 	g, pa, _ := makeGame()
@@ -401,8 +404,8 @@ func TestAutoSelectTargets_AnyTargetBenefit_OwnCreature(t *testing.T) {
 	card.SetOwner(pa.PlayerID())
 	pa.AddToHand(card)
 
-	strat := &HeuristicStrategy{Personality: MidrangePersonality}
-	targets := strat.autoSelectTargets(pa, g, card)
+	start := &HeuristicStrategy{Personality: MidrangePersonality}
+	targets := start.autoSelectTargets(pa, g, card)
 	if len(targets) != 1 || targets[0] != ownCreature.ID() {
 		t.Errorf("benefit spell should target own creature, got %v", targets)
 	}
@@ -419,8 +422,8 @@ func TestAutoSelectTargets_AnyTargetDetriment_OpponentCreature(t *testing.T) {
 	card.SetOwner(pa.PlayerID())
 	pa.AddToHand(card)
 
-	strat := &HeuristicStrategy{Personality: MidrangePersonality}
-	targets := strat.autoSelectTargets(pa, g, card)
+	start := &HeuristicStrategy{Personality: MidrangePersonality}
+	targets := start.autoSelectTargets(pa, g, card)
 	if len(targets) != 1 || targets[0] != oppCreature.ID() {
 		t.Errorf("detriment spell should target opponent creature, got %v", targets)
 	}
@@ -437,8 +440,8 @@ func TestAutoSelectTargets_BurnTargetsFace(t *testing.T) {
 	card.SetOwner(pa.PlayerID())
 	pa.AddToHand(card)
 
-	strat := &HeuristicStrategy{Personality: BurnPersonality}
-	targets := strat.autoSelectTargets(pa, g, card)
+	start := &HeuristicStrategy{Personality: BurnPersonality}
+	targets := start.autoSelectTargets(pa, g, card)
 	if len(targets) != 1 || targets[0] != pb.PlayerID() {
 		t.Errorf("burn should target opponent face, got %v", targets)
 	}
@@ -456,8 +459,8 @@ func TestAutoSelectTargets_CreatureTargetBenefit_OwnCreature(t *testing.T) {
 	card.SetOwner(pa.PlayerID())
 	pa.AddToHand(card)
 
-	strat := &HeuristicStrategy{Personality: MidrangePersonality}
-	targets := strat.autoSelectTargets(pa, g, card)
+	start := &HeuristicStrategy{Personality: MidrangePersonality}
+	targets := start.autoSelectTargets(pa, g, card)
 	if len(targets) != 1 || targets[0] != ownCreature.ID() {
 		t.Errorf("benefit creature target should pick own creature, got %v", targets)
 	}
@@ -475,8 +478,8 @@ func TestAutoSelectTargets_CreatureTargetDetriment_OpponentCreature(t *testing.T
 	card.SetOwner(pa.PlayerID())
 	pa.AddToHand(card)
 
-	strat := &HeuristicStrategy{Personality: MidrangePersonality}
-	targets := strat.autoSelectTargets(pa, g, card)
+	start := &HeuristicStrategy{Personality: MidrangePersonality}
+	targets := start.autoSelectTargets(pa, g, card)
 	if len(targets) != 1 || targets[0] != oppCreature.ID() {
 		t.Errorf("detriment creature target should pick opponent creature, got %v", targets)
 	}
@@ -490,8 +493,8 @@ func TestAutoSelectTargets_PlayerTarget_Opponent(t *testing.T) {
 	card.SetOwner(pa.PlayerID())
 	pa.AddToHand(card)
 
-	strat := &HeuristicStrategy{Personality: MidrangePersonality}
-	targets := strat.autoSelectTargets(pa, g, card)
+	start := &HeuristicStrategy{Personality: MidrangePersonality}
+	targets := start.autoSelectTargets(pa, g, card)
 	if len(targets) != 1 || targets[0] != pb.PlayerID() {
 		t.Errorf("player target should select opponent, got %v", targets)
 	}
@@ -505,8 +508,8 @@ func TestAutoSelectTargets_NoTargets_ReturnsNil(t *testing.T) {
 	card.SetOwner(pa.PlayerID())
 	pa.AddToHand(card)
 
-	strat := &HeuristicStrategy{Personality: MidrangePersonality}
-	targets := strat.autoSelectTargets(pa, g, card)
+	start := &HeuristicStrategy{Personality: MidrangePersonality}
+	targets := start.autoSelectTargets(pa, g, card)
 	if targets != nil {
 		t.Errorf("expected nil targets when no valid targets, got %v", targets)
 	}
@@ -525,8 +528,8 @@ func TestAutoSelectTargets_LethalPreference(t *testing.T) {
 	card.SetOwner(pa.PlayerID())
 	pa.AddToHand(card)
 
-	strat := &HeuristicStrategy{Personality: MidrangePersonality}
-	targets := strat.autoSelectTargets(pa, g, card)
+	start := &HeuristicStrategy{Personality: MidrangePersonality}
+	targets := start.autoSelectTargets(pa, g, card)
 	// Should prefer the lethal target (bear) over non-lethal (giant)
 	if len(targets) != 1 || targets[0] != small.ID() {
 		t.Errorf("should prefer lethal target, got %v", targets)
@@ -542,8 +545,8 @@ func TestAutoSelectTargets_FallbackToOpponentFace(t *testing.T) {
 	card.SetOwner(pa.PlayerID())
 	pa.AddToHand(card)
 
-	strat := &HeuristicStrategy{Personality: MidrangePersonality}
-	targets := strat.autoSelectTargets(pa, g, card)
+	start := &HeuristicStrategy{Personality: MidrangePersonality}
+	targets := start.autoSelectTargets(pa, g, card)
 	if len(targets) != 1 || targets[0] != pb.PlayerID() {
 		t.Errorf("with no creatures, should target opponent player, got %v", targets)
 	}
@@ -618,8 +621,8 @@ func TestAttackers_LethalUsesMinimalSet(t *testing.T) {
 	small := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
 	g.AddToBattlefield(big, small)
 
-	strat := &HeuristicStrategy{Personality: ControlPersonality}
-	attackers := strat.Attackers(pa, g)
+	start := &HeuristicStrategy{Personality: ControlPersonality}
+	attackers := start.Attackers(pa, g)
 	// Should attack with only the 3/3 unblockable (minimal lethal set)
 	if len(attackers) != 1 {
 		t.Errorf("expected 1 lethal attacker, got %d", len(attackers))
@@ -638,8 +641,8 @@ func TestAttackers_LethalOverridesControlPersonality(t *testing.T) {
 	blk := makePerm("Giant", "{3}{G}", 5, 5, pb.PlayerID())
 	g.AddToBattlefield(atk, blk)
 
-	strat := &HeuristicStrategy{Personality: ControlPersonality}
-	attackers := strat.Attackers(pa, g)
+	start := &HeuristicStrategy{Personality: ControlPersonality}
+	attackers := start.Attackers(pa, g)
 	if len(attackers) != 1 {
 		t.Errorf("control should attack for lethal, got %d attackers", len(attackers))
 	}
@@ -658,8 +661,8 @@ func TestBlockers_BlocksToPreventLethal(t *testing.T) {
 	g.GetCombat().AddAttacker(atk.ID(), pb.PlayerID())
 
 	// Aggro personality normally skips blocking power < 3, but lethal override should block
-	strat := &HeuristicStrategy{Personality: AggroPersonality}
-	blocks := strat.Blockers(pb, g)
+	start := &HeuristicStrategy{Personality: AggroPersonality}
+	blocks := start.Blockers(pb, g)
 	if len(blocks) != 1 {
 		t.Errorf("should block to prevent lethal, got %d blocks", len(blocks))
 	}
@@ -680,8 +683,8 @@ func TestAttackers_RaceFavorably(t *testing.T) {
 
 	// Control personality normally wouldn't attack with the 1/1 into a 5/5
 	// But we're racing favorably so it should attack aggressively
-	strat := &HeuristicStrategy{Personality: ControlPersonality}
-	attackers := strat.Attackers(pa, g)
+	start := &HeuristicStrategy{Personality: ControlPersonality}
+	attackers := start.Attackers(pa, g)
 	// With favorable race, might use lethal detection or race logic to attack
 	if len(attackers) < 1 {
 		t.Errorf("should attack when racing favorably, got %d attackers", len(attackers))
@@ -710,8 +713,8 @@ func TestPriorityAction_PrefersCurvePlay(t *testing.T) {
 	pa.AddToHand(cheap)
 	pa.AddToHand(expensive)
 
-	strat := &HeuristicStrategy{Personality: MidrangePersonality}
-	action := strat.PriorityAction(pa, g, 1, true) // already played land
+	start := &HeuristicStrategy{Personality: MidrangePersonality}
+	action := start.PriorityAction(pa, g, 1, true) // already played land
 	if action.Type == interactive.ActionCastSpell && action.CardName == "Wurm" {
 		// Good - preferred the 5-drop
 	} else if action.Type == interactive.ActionCastSpell && action.CardName == "Bear" {
@@ -739,9 +742,9 @@ func TestPriorityAction_ActivatesAbility(t *testing.T) {
 	)
 	g.AddToBattlefield(pinger)
 
-	strat := &HeuristicStrategy{Personality: MidrangePersonality}
+	start := &HeuristicStrategy{Personality: MidrangePersonality}
 	// No spells in hand, not main phase → should consider ability activation
-	action := strat.PriorityAction(pa, g, 1, false)
+	action := start.PriorityAction(pa, g, 1, false)
 	// The AI should activate the pinger ability
 	if action.Type == interactive.ActionActivateAbility {
 		if action.PermanentID != pinger.ID() {

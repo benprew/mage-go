@@ -8,9 +8,10 @@ package gametest
 import (
 	"testing"
 
+	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"github.com/google/uuid"
 )
 
 // TestDeclareAttackers covers CR 508 sub-rules that govern the declare-

@@ -4,11 +4,11 @@ import (
 	"os"
 	"testing"
 
+	_ "git.sr.ht/~cdcarter/mage-go/cards/limited" // register base cards
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
-	_ "git.sr.ht/~cdcarter/mage-go/cards/limited" // register base cards
 )
 
 func TestMain(m *testing.M) {
@@ -406,8 +406,8 @@ func TestGoblinArtisans(t *testing.T) {
 		g.ActivateInResponseTo(gametest.PlayerA, "Goblin Artisans")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		g.AssertPermanentCount(gametest.PlayerA, "Ornithopter", 0)  // countered
-		g.AssertGraveyardCount(gametest.PlayerA, "Ornithopter", 1)  // in graveyard
+		g.AssertPermanentCount(gametest.PlayerA, "Ornithopter", 0) // countered
+		g.AssertGraveyardCount(gametest.PlayerA, "Ornithopter", 1) // in graveyard
 	})
 }
 
@@ -539,7 +539,7 @@ func TestGaeasAvenger(t *testing.T) {
 	t.Run("own artifacts do not count", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Gaea's Avenger")
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ornithopter")   // own artifact — should not count
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ornithopter")    // own artifact — should not count
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Yotian Soldier") // opponent artifact
 		g.StopAt(1, core.PrecombatMain)
 		g.Execute()
@@ -1029,8 +1029,8 @@ func TestTetravus(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Tetravus")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Tetravus")
-		g.ChooseNumber(gametest.PlayerA, 1) // remove 1 counter → 1 Tetravite
-		g.ChooseNumber(gametest.PlayerA, 0) // exile: keep the token
+		g.ChooseNumber(gametest.PlayerA, 1)                         // remove 1 counter → 1 Tetravite
+		g.ChooseNumber(gametest.PlayerA, 0)                         // exile: keep the token
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Artifact Ward") // Aura targeting creature
 		g.CastSpell(4, core.PrecombatMain, gametest.PlayerB, "Artifact Ward", "Tetravite")
 		g.StopAt(4, core.BeginCombat)

@@ -1,8 +1,9 @@
 package mage
 
 import (
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"github.com/google/uuid"
+
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 // ---------------------------------------------------------------------------
@@ -221,7 +222,6 @@ func TemporaryAnimate(targetID uuid.UUID, power, toughness int) ContinuousEffect
 func TemporaryAnimateUntilEndOfCombat(targetID uuid.UUID, power, toughness int) ContinuousEffect {
 	return temporaryAnimate(targetID, power, toughness, EndOfCombat)
 }
-
 
 // PreventAttackingUntilEndOfTurn creates an EndOfTurn-scoped continuous effect
 // that revokes AttrCanAttack from a specific creature. Used for instant-speed

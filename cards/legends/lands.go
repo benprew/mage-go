@@ -2,6 +2,7 @@ package legends
 
 import (
 	"github.com/google/uuid"
+
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
@@ -12,10 +13,10 @@ func init() {
 
 func registerLands() {
 
-// Adventurers' Guildhouse 
-// Land
-// Green legendary creatures you control have "bands with other legendary creatures." (Any legendary creatures can attack in a band as long as at least one has "bands with other legendary creatures." Bands are blocked as a group. If at least two legendary creatures you control, one of which has "bands with other legendary creatures," are blocking or being blocked by the same creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)
-// XXX: "bands with other legendary creatures" approximated as Banding
+	// Adventurers' Guildhouse
+	// Land
+	// Green legendary creatures you control have "bands with other legendary creatures." (Any legendary creatures can attack in a band as long as at least one has "bands with other legendary creatures." Bands are blocked as a group. If at least two legendary creatures you control, one of which has "bands with other legendary creatures," are blocking or being blocked by the same creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)
+	// XXX: "bands with other legendary creatures" approximated as Banding
 	Register("Adventurers' Guildhouse", func() Card {
 		return NewLand("Adventurers' Guildhouse",
 			WithStaticAbility(
@@ -24,11 +25,10 @@ func registerLands() {
 		)
 	})
 
-
-// Cathedral of Serra 
-// Land
-// White legendary creatures you control have "bands with other legendary creatures." (Any legendary creatures can attack in a band as long as at least one has "bands with other legendary creatures." Bands are blocked as a group. If at least two legendary creatures you control, one of which has "bands with other legendary creatures," are blocking or being blocked by the same creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)
-// XXX: "bands with other legendary creatures" approximated as Banding
+	// Cathedral of Serra
+	// Land
+	// White legendary creatures you control have "bands with other legendary creatures." (Any legendary creatures can attack in a band as long as at least one has "bands with other legendary creatures." Bands are blocked as a group. If at least two legendary creatures you control, one of which has "bands with other legendary creatures," are blocking or being blocked by the same creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)
+	// XXX: "bands with other legendary creatures" approximated as Banding
 	Register("Cathedral of Serra", func() Card {
 		return NewLand("Cathedral of Serra",
 			WithStaticAbility(
@@ -37,11 +37,10 @@ func registerLands() {
 		)
 	})
 
-
-// Hammerheim
-// Legendary Land
-// {T}: Add {R}.
-// {T}: Target creature loses all landwalk abilities until end of turn.
+	// Hammerheim
+	// Legendary Land
+	// {T}: Add {R}.
+	// {T}: Target creature loses all landwalk abilities until end of turn.
 	Register("Hammerheim", func() Card {
 		return NewLand("Hammerheim",
 			WithSuperTypes(SuperLegendary),
@@ -72,11 +71,10 @@ func registerLands() {
 		)
 	})
 
-
-// Karakas
-// Legendary Land
-// {T}: Add {W}.
-// {T}: Return target legendary creature to its owner's hand.
+	// Karakas
+	// Legendary Land
+	// {T}: Add {W}.
+	// {T}: Return target legendary creature to its owner's hand.
 	Register("Karakas", func() Card {
 		return NewLand("Karakas",
 			WithSuperTypes(SuperLegendary),
@@ -91,11 +89,10 @@ func registerLands() {
 		)
 	})
 
-
-// Mountain Stronghold 
-// Land
-// Red legendary creatures you control have "bands with other legendary creatures." (Any legendary creatures can attack in a band as long as at least one has "bands with other legendary creatures." Bands are blocked as a group. If at least two legendary creatures you control, one of which has "bands with other legendary creatures," are blocking or being blocked by the same creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)
-// XXX: "bands with other legendary creatures" approximated as Banding
+	// Mountain Stronghold
+	// Land
+	// Red legendary creatures you control have "bands with other legendary creatures." (Any legendary creatures can attack in a band as long as at least one has "bands with other legendary creatures." Bands are blocked as a group. If at least two legendary creatures you control, one of which has "bands with other legendary creatures," are blocking or being blocked by the same creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)
+	// XXX: "bands with other legendary creatures" approximated as Banding
 	Register("Mountain Stronghold", func() Card {
 		return NewLand("Mountain Stronghold",
 			WithStaticAbility(
@@ -104,11 +101,10 @@ func registerLands() {
 		)
 	})
 
-
-// Pendelhaven
-// Legendary Land
-// {T}: Add {G}.
-// {T}: Target 1/1 creature gets +1/+2 until end of turn.
+	// Pendelhaven
+	// Legendary Land
+	// {T}: Add {G}.
+	// {T}: Target 1/1 creature gets +1/+2 until end of turn.
 	Register("Pendelhaven", func() Card {
 		return NewLand("Pendelhaven",
 			WithSuperTypes(SuperLegendary),
@@ -123,11 +119,10 @@ func registerLands() {
 		)
 	})
 
-
-// Seafarer's Quay 
-// Land
-// Blue legendary creatures you control have "bands with other legendary creatures." (Any legendary creatures can attack in a band as long as at least one has "bands with other legendary creatures." Bands are blocked as a group. If at least two legendary creatures you control, one of which has "bands with other legendary creatures," are blocking or being blocked by the same creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)
-// XXX: "bands with other legendary creatures" approximated as Banding
+	// Seafarer's Quay
+	// Land
+	// Blue legendary creatures you control have "bands with other legendary creatures." (Any legendary creatures can attack in a band as long as at least one has "bands with other legendary creatures." Bands are blocked as a group. If at least two legendary creatures you control, one of which has "bands with other legendary creatures," are blocking or being blocked by the same creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)
+	// XXX: "bands with other legendary creatures" approximated as Banding
 	Register("Seafarer's Quay", func() Card {
 		return NewLand("Seafarer's Quay",
 			WithStaticAbility(
@@ -136,10 +131,9 @@ func registerLands() {
 		)
 	})
 
-
-// The Tabernacle at Pendrell Vale
-// Legendary Land
-// All creatures have "At the beginning of your upkeep, destroy this creature unless you pay {1}."
+	// The Tabernacle at Pendrell Vale
+	// Legendary Land
+	// All creatures have "At the beginning of your upkeep, destroy this creature unless you pay {1}."
 	Register("The Tabernacle at Pendrell Vale", func() Card {
 		return NewLand("The Tabernacle at Pendrell Vale",
 			WithSuperTypes(SuperLegendary),
@@ -161,11 +155,10 @@ func registerLands() {
 		)
 	})
 
-
-// Tolaria
-// Legendary Land
-// {T}: Add {U}.
-// {T}: Target creature loses banding and all "bands with other" abilities until end of turn. Activate only during any upkeep step.
+	// Tolaria
+	// Legendary Land
+	// {T}: Add {U}.
+	// {T}: Target creature loses banding and all "bands with other" abilities until end of turn. Activate only during any upkeep step.
 	Register("Tolaria", func() Card {
 		return NewLand("Tolaria",
 			WithSuperTypes(SuperLegendary),
@@ -182,11 +175,10 @@ func registerLands() {
 		)
 	})
 
-
-// Unholy Citadel 
-// Land
-// Black legendary creatures you control have "bands with other legendary creatures." (Any legendary creatures can attack in a band as long as at least one has "bands with other legendary creatures." Bands are blocked as a group. If at least two legendary creatures you control, one of which has "bands with other legendary creatures," are blocking or being blocked by the same creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)
-// XXX: "bands with other legendary creatures" approximated as Banding
+	// Unholy Citadel
+	// Land
+	// Black legendary creatures you control have "bands with other legendary creatures." (Any legendary creatures can attack in a band as long as at least one has "bands with other legendary creatures." Bands are blocked as a group. If at least two legendary creatures you control, one of which has "bands with other legendary creatures," are blocking or being blocked by the same creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)
+	// XXX: "bands with other legendary creatures" approximated as Banding
 	Register("Unholy Citadel", func() Card {
 		return NewLand("Unholy Citadel",
 			WithStaticAbility(
@@ -195,11 +187,10 @@ func registerLands() {
 		)
 	})
 
-
-// Urborg
-// Legendary Land
-// {T}: Add {B}.
-// {T}: Target creature loses first strike or swampwalk until end of turn.
+	// Urborg
+	// Legendary Land
+	// {T}: Add {B}.
+	// {T}: Target creature loses first strike or swampwalk until end of turn.
 	Register("Urborg", func() Card {
 		return NewLand("Urborg",
 			WithSuperTypes(SuperLegendary),

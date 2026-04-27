@@ -4,30 +4,31 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"github.com/google/uuid"
 )
 
 // TestGame provides a DSL for scripting and asserting game states.
 type TestGame struct {
 	*mage.Game
-	t       *testing.T
-	playerA *TestPlayer
-	playerB *TestPlayer
-	Combat  *mage.Combat
-	Effects *mage.EffectManager
-	Stack   *mage.Stack
-	Battlefield []*mage.Permanent
-	Schedule *mage.TurnSchedule
-	Players []mage.Player
-	OnPriority mage.PriorityHandler
-	Step core.PhaseStep
-	Turn int
-	ActivePlayer int
-	LandsPlayedThisTurn int
+	t                     *testing.T
+	playerA               *TestPlayer
+	playerB               *TestPlayer
+	Combat                *mage.Combat
+	Effects               *mage.EffectManager
+	Stack                 *mage.Stack
+	Battlefield           []*mage.Permanent
+	Schedule              *mage.TurnSchedule
+	Players               []mage.Player
+	OnPriority            mage.PriorityHandler
+	Step                  core.PhaseStep
+	Turn                  int
+	ActivePlayer          int
+	LandsPlayedThisTurn   int
 	CleanupPriorityRounds int
-	stopAt  struct {
+	stopAt                struct {
 		turn int
 		step core.PhaseStep
 	}

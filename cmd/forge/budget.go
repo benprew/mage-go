@@ -34,20 +34,20 @@ func VanillaStats(cmc int) float64 {
 
 // KeywordCosts maps each keyword to its stat-budget cost.
 var KeywordCosts = map[Keyword]float64{
-	Flying:        0.75,
-	FirstStrike:   0.50,
-	DoubleStrike:  1.50,
-	Trample:       0.50,
-	Vigilance:     0.25,
-	Haste:         0.50,
-	Lifelink:      0.50,
-	Deathtouch:    1.00,
-	Reach:         0.25,
-	Defender:      -1.00,
-	Menace:        0.50,
-	Hexproof:      0.75,
+	Flying:         0.75,
+	FirstStrike:    0.50,
+	DoubleStrike:   1.50,
+	Trample:        0.50,
+	Vigilance:      0.25,
+	Haste:          0.50,
+	Lifelink:       0.50,
+	Deathtouch:     1.00,
+	Reach:          0.25,
+	Defender:       -1.00,
+	Menace:         0.50,
+	Hexproof:       0.75,
 	Indestructible: 2.00,
-	Flash:         0.25,
+	Flash:          0.25,
 }
 
 // KeywordCost returns how much stat budget a keyword consumes.

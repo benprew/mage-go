@@ -8,9 +8,10 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"github.com/google/uuid"
 )
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -680,8 +681,8 @@ func TestCR608_2h_ResolveGameInfoLockedOnApplication(t *testing.T) {
 	registerCh06Cards()
 
 	g := NewTestGame(t)
-	g.AddCard(core.ZoneBattlefield, PlayerA, "Ch06 Bear")    // 2/2
-	g.AddCard(core.ZoneBattlefield, PlayerB, "Ch06 Giant")   // 3/3
+	g.AddCard(core.ZoneBattlefield, PlayerA, "Ch06 Bear")  // 2/2
+	g.AddCard(core.ZoneBattlefield, PlayerB, "Ch06 Giant") // 3/3
 	g.AddCard(core.ZoneHand, PlayerA, "Ch06 Earthquake")
 
 	// Earthquake for 2: kills Bear (2/2), not Giant (3/3); both players -2 life.

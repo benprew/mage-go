@@ -5,6 +5,7 @@ import (
 	"math/rand"
 
 	"github.com/google/uuid"
+
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
@@ -145,7 +146,7 @@ func SacrificeSource() Effect {
 	return &sacrificeSourceEffect{}
 }
 
-func (e *sacrificeSourceEffect) Text() string        { return "sacrifice this permanent" }
+func (e *sacrificeSourceEffect) Text() string                 { return "sacrifice this permanent" }
 func (e *sacrificeSourceEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // sacrificeTargetEffect sacrifices the target permanent (targets[0]).
@@ -159,7 +160,7 @@ func SacrificeTarget() Effect {
 // SacrificeTargetStep returns the EffectData for use in pipelines/ForEach.
 func SacrificeTargetStep() EffectData { return &sacrificeTargetEffect{} }
 
-func (e *sacrificeTargetEffect) Text() string        { return "sacrifice target permanent" }
+func (e *sacrificeTargetEffect) Text() string                 { return "sacrifice target permanent" }
 func (e *sacrificeTargetEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // balanceEffect equalizes lands, creatures, and hand sizes.

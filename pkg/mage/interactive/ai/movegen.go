@@ -3,11 +3,12 @@ package ai
 import (
 	"sort"
 
+	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/eval"
-	"github.com/google/uuid"
 )
 
 // Move represents a single action the AI can take during a priority window.
@@ -439,6 +440,6 @@ func pickAdditionalTargets(g *mage.Game, playerID uuid.UUID, card mage.Card, req
 
 // AutoSelectTargetsForSearch uses the same targeting logic as HeuristicStrategy.
 func AutoSelectTargetsForSearch(p mage.Player, g *mage.Game, card mage.Card) []uuid.UUID {
-	strat := &HeuristicStrategy{Personality: MidrangePersonality}
-	return strat.autoSelectTargets(p, g, card)
+	start := &HeuristicStrategy{Personality: MidrangePersonality}
+	return start.autoSelectTargets(p, g, card)
 }

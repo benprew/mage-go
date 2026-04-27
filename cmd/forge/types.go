@@ -481,7 +481,7 @@ type KeywordSet map[Keyword]bool
 
 func NewKeywordSet() KeywordSet { return make(KeywordSet) }
 
-func (ks KeywordSet) Add(k Keyword) { ks[k] = true }
+func (ks KeywordSet) Add(k Keyword)      { ks[k] = true }
 func (ks KeywordSet) Has(k Keyword) bool { return ks[k] }
 
 func (ks KeywordSet) Slice() []Keyword {

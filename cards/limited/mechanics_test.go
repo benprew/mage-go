@@ -4,11 +4,11 @@ import (
 	"sync"
 	"testing"
 
+	_ "git.sr.ht/~cdcarter/mage-go/cards/custom"  // register Wraithbloom Cultivator
+	_ "git.sr.ht/~cdcarter/mage-go/cards/limited" // register Alpha cards
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
-	_ "git.sr.ht/~cdcarter/mage-go/cards/custom"  // register Wraithbloom Cultivator
-	_ "git.sr.ht/~cdcarter/mage-go/cards/limited" // register Alpha cards
 )
 
 var registerOnce sync.Once
@@ -685,7 +685,7 @@ func TestEquipment(t *testing.T) {
 			},
 			check: func(g *gametest.TestGame) {
 				g.AssertAttachedTo(gametest.PlayerA, "Bonesplitter", "Serra Angel")
-				g.AssertPowerToughness(gametest.PlayerA, "Serra Angel", 6, 4) // 4+2/4+0
+				g.AssertPowerToughness(gametest.PlayerA, "Serra Angel", 6, 4)   // 4+2/4+0
 				g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 2) // back to normal
 			},
 		},

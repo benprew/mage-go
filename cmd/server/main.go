@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -12,6 +13,7 @@ import (
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 	bm "github.com/charmbracelet/wish/bubbletea"
+
 	"git.sr.ht/~cdcarter/mage-go/internal/tui"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
 )
@@ -45,7 +47,7 @@ func main() {
 	fmt.Printf("SSH server listening on :%s\n", port)
 
 	go func() {
-		if err := s.ListenAndServe(); err != nil && err != ssh.ErrServerClosed {
+		if err := s.ListenAndServe(); err != nil && !errors.Is(err, ssh.ErrServerClosed) {
 			fmt.Fprintf(os.Stderr, "Server error: %v\n", err)
 		}
 	}()

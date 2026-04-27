@@ -134,8 +134,8 @@ func TestDropOfHoney(t *testing.T) {
 	t.Run("sacrifices_self_when_last_creature_dies_mid_turn", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Drop of Honey")
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")    // 2/2
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Flying Men")       // 1/1
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // 2/2
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Flying Men")    // 1/1
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
 		// Turn 1 upkeep: destroys Flying Men (least power = 1)
 		// Then cast Lightning Bolt on Grizzly Bears — last creature dies

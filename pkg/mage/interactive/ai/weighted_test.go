@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
@@ -75,20 +76,20 @@ func TestToWeighted_PreservesName(t *testing.T) {
 
 func TestHeuristicStrategy_OldPersonalityBackwardCompat(t *testing.T) {
 	// Using the old struct-literal pattern (no Weights set) should still work.
-	strat := &HeuristicStrategy{Personality: AggroPersonality}
+	start := &HeuristicStrategy{Personality: AggroPersonality}
 	g, pa, _ := makeGame()
 	c := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
 	g.AddToBattlefield(c)
 
 	// Aggro should attack with everything.
-	attackers := strat.Attackers(pa, g)
+	attackers := start.Attackers(pa, g)
 	if len(attackers) != 1 {
 		t.Errorf("old-style aggro should attack, got %d attackers", len(attackers))
 	}
 }
 
 func TestHeuristicStrategy_OldControlHoldsInstants(t *testing.T) {
-	strat := &HeuristicStrategy{Personality: ControlPersonality}
+	start := &HeuristicStrategy{Personality: ControlPersonality}
 	g, pa, _ := makeGame()
 	card := mage.NewInstant("Bolt", "{R}",
 		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
@@ -102,7 +103,7 @@ func TestHeuristicStrategy_OldControlHoldsInstants(t *testing.T) {
 	lp.RevokeBaseAttr(core.AttrSummonSick)
 	g.AddToBattlefield(lp)
 
-	action := strat.PriorityAction(pa, g, 1, true)
+	action := start.PriorityAction(pa, g, 1, true)
 	// Control holds instants during main phase.
 	if action.Type != interactive.ActionPass {
 		t.Errorf("old-style control should pass (hold instant), got %v", action.Type)
@@ -118,8 +119,8 @@ func TestWeightedPresets_AggroAttacksAll(t *testing.T) {
 	blk := makePerm("Giant", "{3}{G}", 5, 5, pb.PlayerID())
 	g.AddToBattlefield(c1, c2, blk)
 
-	strat := NewHeuristicStrategy(AggroWeighted)
-	attackers := strat.Attackers(pa, g)
+	start := NewHeuristicStrategy(AggroWeighted)
+	attackers := start.Attackers(pa, g)
 	if len(attackers) != 2 {
 		t.Errorf("AggroWeighted should attack with all, got %d", len(attackers))
 	}
@@ -131,8 +132,8 @@ func TestWeightedPresets_ControlOnlyProfitable(t *testing.T) {
 	blk := makePerm("Bear", "{1}{G}", 3, 3, pb.PlayerID())
 	g.AddToBattlefield(smallAtk, blk)
 
-	strat := NewHeuristicStrategy(ControlWeighted)
-	attackers := strat.Attackers(pa, g)
+	start := NewHeuristicStrategy(ControlWeighted)
+	attackers := start.Attackers(pa, g)
 	if len(attackers) != 0 {
 		t.Errorf("ControlWeighted should not attack unprofitably, got %d", len(attackers))
 	}
@@ -149,8 +150,8 @@ func TestWeightedPresets_BurnTargetsFace(t *testing.T) {
 	card.SetOwner(pa.PlayerID())
 	pa.AddToHand(card)
 
-	strat := NewHeuristicStrategy(BurnWeighted)
-	targets := strat.autoSelectTargets(pa, g, card)
+	start := NewHeuristicStrategy(BurnWeighted)
+	targets := start.autoSelectTargets(pa, g, card)
 	if len(targets) != 1 || targets[0] != pb.PlayerID() {
 		t.Errorf("BurnWeighted should target face, got %v", targets)
 	}
@@ -171,8 +172,8 @@ func TestWeightedPresets_ControlHoldsInstants(t *testing.T) {
 	lp.RevokeBaseAttr(core.AttrSummonSick)
 	g.AddToBattlefield(lp)
 
-	strat := NewHeuristicStrategy(ControlWeighted)
-	action := strat.PriorityAction(pa, g, 1, true)
+	start := NewHeuristicStrategy(ControlWeighted)
+	action := start.PriorityAction(pa, g, 1, true)
 	if action.Type != interactive.ActionPass {
 		t.Errorf("ControlWeighted should hold instants in main phase, got %v", action.Type)
 	}
@@ -185,8 +186,8 @@ func TestWeightedPresets_BurnNeverBlocks(t *testing.T) {
 	g.AddToBattlefield(atk, blk)
 	g.GetCombat().AddAttacker(atk.ID(), pb.PlayerID())
 
-	strat := NewHeuristicStrategy(BurnWeighted)
-	blocks := strat.Blockers(pb, g)
+	start := NewHeuristicStrategy(BurnWeighted)
+	blocks := start.Blockers(pb, g)
 	if len(blocks) != 0 {
 		t.Errorf("BurnWeighted should never block, got %d blocks", len(blocks))
 	}
@@ -199,8 +200,8 @@ func TestWeightedPresets_ControlBlocksEverything(t *testing.T) {
 	g.AddToBattlefield(atk, blk)
 	g.GetCombat().AddAttacker(atk.ID(), pb.PlayerID())
 
-	strat := NewHeuristicStrategy(ControlWeighted)
-	blocks := strat.Blockers(pb, g)
+	start := NewHeuristicStrategy(ControlWeighted)
+	blocks := start.Blockers(pb, g)
 	// Control blocks everything (BlockThreshold=0.0), atkPow=1 >= minPow=0.
 	// But the blocker logic also checks blkPow >= atkTough OR atkPow >= 3.
 	// Here blkPow=0, atkTough=1, atkPow=1 < 3. Neither condition met, so no block.

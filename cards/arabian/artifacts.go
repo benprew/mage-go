@@ -1,10 +1,11 @@
 package arabian
 
 import (
+	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/catalog"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"github.com/google/uuid"
 )
 
 // discardLastDrawnCost is an additional cost: discard the last card drawn this turn.

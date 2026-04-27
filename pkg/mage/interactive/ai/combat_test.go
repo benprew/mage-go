@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
@@ -293,7 +294,7 @@ func TestBlockers_GangBlockIntegration(t *testing.T) {
 
 	// Use a custom personality with block threshold high enough to skip single blocks
 	// but the gang block pass should still trigger for big attackers
-	strat := NewHeuristicStrategy(WeightedPersonality{
+	start := NewHeuristicStrategy(WeightedPersonality{
 		Name:           "Test",
 		Aggression:     0.0,
 		BlockThreshold: 0.8, // minPow = 8, so won't block 6-power in single pass
@@ -306,7 +307,7 @@ func TestBlockers_GangBlockIntegration(t *testing.T) {
 			Tempo: 1.0,
 		},
 	})
-	blocks := strat.Blockers(pb, g)
+	blocks := start.Blockers(pb, g)
 
 	// Gang block should find two 3/3s to kill the 6/6
 	if len(blocks) != 2 {
@@ -384,8 +385,8 @@ func TestEvaluateResponse_CastsRemovalOnOpponentTurn(t *testing.T) {
 	// Give mana
 	addLands(g, pa, "Mountain", 1)
 
-	strat := NewHeuristicStrategy(MidrangeWeighted)
-	response := strat.evaluateResponse(pa, g)
+	start := NewHeuristicStrategy(MidrangeWeighted)
+	response := start.evaluateResponse(pa, g)
 
 	if response == nil {
 		t.Fatal("expected evaluateResponse to find bolt, got nil")
@@ -398,8 +399,8 @@ func TestEvaluateResponse_CastsRemovalOnOpponentTurn(t *testing.T) {
 func TestEvaluateResponse_PassWithNoInstants(t *testing.T) {
 	g, pa, _ := makeGame()
 
-	strat := NewHeuristicStrategy(MidrangeWeighted)
-	response := strat.evaluateResponse(pa, g)
+	start := NewHeuristicStrategy(MidrangeWeighted)
+	response := start.evaluateResponse(pa, g)
 
 	if response != nil {
 		t.Errorf("expected nil response with empty hand, got %v", response)
@@ -495,9 +496,9 @@ func TestPriorityAction_ResponseOnOpponentTurn(t *testing.T) {
 
 	addLands(g, pa, "Mountain", 1)
 
-	strat := NewHeuristicStrategy(MidrangeWeighted)
+	start := NewHeuristicStrategy(MidrangeWeighted)
 	// Non-main phase: should evaluate response and cast bolt
-	action := strat.PriorityAction(pa, g, 0, false)
+	action := start.PriorityAction(pa, g, 0, false)
 
 	if action.Type != interactive.ActionCastSpell {
 		t.Errorf("expected ActionCastSpell response, got %v", action.Type)

@@ -48,10 +48,10 @@ func NewDamageToCreatureAction(source, permanentID uuid.UUID, amount int, combat
 	}
 }
 
-func (a *DamageToCreatureAction) ActionSource() uuid.UUID  { return a.source }
-func (a *DamageToCreatureAction) PermanentID() uuid.UUID   { return a.permanentID }
-func (a *DamageToCreatureAction) Amount() int              { return a.amount }
-func (a *DamageToCreatureAction) IsCombatDamage() bool     { return a.combatDamage }
+func (a *DamageToCreatureAction) ActionSource() uuid.UUID { return a.source }
+func (a *DamageToCreatureAction) PermanentID() uuid.UUID  { return a.permanentID }
+func (a *DamageToCreatureAction) Amount() int             { return a.amount }
+func (a *DamageToCreatureAction) IsCombatDamage() bool    { return a.combatDamage }
 
 // WithAmount returns a copy with the amount changed.
 func (a *DamageToCreatureAction) WithAmount(amount int) *DamageToCreatureAction {

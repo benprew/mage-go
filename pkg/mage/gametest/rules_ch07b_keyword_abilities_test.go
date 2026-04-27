@@ -500,7 +500,7 @@ func TestCR702_23b_RampageBonusPerExtraBlocker(t *testing.T) {
 	bearA := "Rampage Blocker A"
 	bearB := "Rampage Blocker B"
 	for _, n := range []string{bearA, bearB} {
-		n := n
+
 		if !mage.CardRegistered(n) {
 			mage.Register(n, func() mage.Card {
 				return mage.NewCreature(n, "{1}{G}", 2, 2, mage.WithSubTypes("Bear"))

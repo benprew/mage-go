@@ -10,11 +10,11 @@ import (
 
 // Ensure all Alpha card packages are imported.
 var (
-	_ = registerCreatures     //nolint:unused
-	_ = registerSpells        //nolint:unused
-	_ = registerEnchantments  //nolint:unused
-	_ = registerArtifacts     //nolint:unused
-	_ = registerLands         //nolint:unused
+	_ = registerCreatures    //nolint:unused
+	_ = registerSpells       //nolint:unused
+	_ = registerEnchantments //nolint:unused
+	_ = registerArtifacts    //nolint:unused
+	_ = registerLands        //nolint:unused
 )
 
 // =============================================================================
@@ -598,8 +598,8 @@ func TestDwarvenWarriors(t *testing.T) {
 	t.Run("makes power-2-or-less creature unblockable", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Dwarven Warriors")
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")  // 2/2
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")     // blocker
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")    // blocker
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Dwarven Warriors", "Grizzly Bears")
 		g.Attack(1, gametest.PlayerA, "Grizzly Bears")
 		g.Block(1, gametest.PlayerB, "Hill Giant", "Grizzly Bears")
@@ -900,6 +900,3 @@ func TestNettlingImpDestroysNonAttacker(t *testing.T) {
 		g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 0)
 	})
 }
-
-
-

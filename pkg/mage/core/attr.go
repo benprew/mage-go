@@ -8,18 +8,18 @@ type Attr int
 
 const (
 	// Capability attrs — what a permanent can do / must do.
-	AttrCanAttack          Attr = iota + 1
+	AttrCanAttack Attr = iota + 1
 	AttrCanBlock
-	AttrHasPowerToughness  // has P/T; takes combat damage; subject to SBAs
-	AttrSummonSick         // set on ETB for creatures; cleared at untap; Haste bypasses check
-	AttrDoesNotUntap       // replaces DoesNotUntapKW
-	AttrEntersTapped       // set on entry; cleared by PutOnBattlefield after tapping
-	AttrMustAttack         // replaces MustAttack keyword
-	AttrMustBeBlocked      // replaces MustBeBlocked keyword
-	AttrMayNotUntap        // player may choose not to untap during untap step
-	AttrCantBeEnchanted              // permanent can't have enchantments attached to it
-	AttrCantBeTargetedByArtifacts    // permanent can't be targeted by abilities from artifact sources
-	AttrCantChangeControl            // other players can't gain control (Guardian Beast)
+	AttrHasPowerToughness         // has P/T; takes combat damage; subject to SBAs
+	AttrSummonSick                // set on ETB for creatures; cleared at untap; Haste bypasses check
+	AttrDoesNotUntap              // replaces DoesNotUntapKW
+	AttrEntersTapped              // set on entry; cleared by PutOnBattlefield after tapping
+	AttrMustAttack                // replaces MustAttack keyword
+	AttrMustBeBlocked             // replaces MustBeBlocked keyword
+	AttrMayNotUntap               // player may choose not to untap during untap step
+	AttrCantBeEnchanted           // permanent can't have enchantments attached to it
+	AttrCantBeTargetedByArtifacts // permanent can't be targeted by abilities from artifact sources
+	AttrCantChangeControl         // other players can't gain control (Guardian Beast)
 
 	// Type-identity attrs (battlefield) — replaces TypesAdded []CardType on Permanent.
 	AttrIsCreature

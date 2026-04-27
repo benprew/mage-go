@@ -2,6 +2,7 @@ package ai
 
 import (
 	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/eval"
@@ -39,8 +40,8 @@ type SequentialStrategy struct {
 }
 
 func (s *SequentialStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, mainPhase bool) interactive.PriorityAction {
-	for _, strat := range s.Strategies {
-		if action := strat.PriorityAction(p, g, landsPlayed, mainPhase); action.Type != interactive.ActionPass {
+	for _, start := range s.Strategies {
+		if action := start.PriorityAction(p, g, landsPlayed, mainPhase); action.Type != interactive.ActionPass {
 			return action
 		}
 	}
@@ -48,8 +49,8 @@ func (s *SequentialStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPl
 }
 
 func (s *SequentialStrategy) Attackers(p mage.Player, g *mage.Game) []uuid.UUID {
-	for _, strat := range s.Strategies {
-		if atks := strat.Attackers(p, g); len(atks) > 0 {
+	for _, start := range s.Strategies {
+		if atks := start.Attackers(p, g); len(atks) > 0 {
 			return atks
 		}
 	}
@@ -57,8 +58,8 @@ func (s *SequentialStrategy) Attackers(p mage.Player, g *mage.Game) []uuid.UUID 
 }
 
 func (s *SequentialStrategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAssignment {
-	for _, strat := range s.Strategies {
-		if blks := strat.Blockers(p, g); len(blks) > 0 {
+	for _, start := range s.Strategies {
+		if blks := start.Blockers(p, g); len(blks) > 0 {
 			return blks
 		}
 	}

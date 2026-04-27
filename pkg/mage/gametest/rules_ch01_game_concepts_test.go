@@ -142,8 +142,8 @@ func TestCR101_1_CardTextOverridesRule(t *testing.T) {
 // from blocking even though it otherwise could.
 func TestCR101_2_CantOverridesCanBlocking(t *testing.T) {
 	tg := NewTestGame(t)
-	tg.AddCard(core.ZoneBattlefield, PlayerA, "White Knight")   // 2/2
-	tg.AddCard(core.ZoneBattlefield, PlayerB, "Hill Giant")     // 3/3
+	tg.AddCard(core.ZoneBattlefield, PlayerA, "White Knight") // 2/2
+	tg.AddCard(core.ZoneBattlefield, PlayerB, "Hill Giant")   // 3/3
 	tg.AddCard(core.ZoneBattlefield, PlayerA, "Icy Manipulator")
 	// Tap Hill Giant (preventing it from blocking).
 	tg.ActivateAbility(1, core.BeginCombat, PlayerA, "Icy Manipulator", "Hill Giant")

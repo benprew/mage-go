@@ -3,8 +3,9 @@ package mage
 import (
 	"testing"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"github.com/google/uuid"
+
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 // makeTestGameWithPerm creates a minimal game state with one permanent for EM tests.

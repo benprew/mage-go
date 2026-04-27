@@ -3,9 +3,10 @@ package eval
 import (
 	"math"
 
+	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"github.com/google/uuid"
 )
 
 // LethalInfo describes whether either player can push through lethal damage.

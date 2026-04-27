@@ -3,8 +3,9 @@ package mage
 import (
 	"fmt"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"github.com/google/uuid"
+
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 // counterSpellEffect counters a target spell on the stack.
@@ -292,7 +293,7 @@ func AttachToTarget() Effect {
 	return &attachToTargetEffect{}
 }
 
-func (e *attachToTargetEffect) Text() string            { return "attach to target" }
+func (e *attachToTargetEffect) Text() string                 { return "attach to target" }
 func (e *attachToTargetEffect) Properties() EffectProperties { return EffectProperties{} }
 
 // controlChangeTargetEffect gains control of a target permanent.

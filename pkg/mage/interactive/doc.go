@@ -82,12 +82,12 @@ Higher scores are better for playerID. [DefaultEvaluator] uses hardcoded weight
 constants; [WeightedEvaluator] returns a [StateEvaluator] parameterised by a
 [WeightedPersonality]'s evaluation weights. DefaultEvaluator sums five components:
 
-  1. Life advantage: (myLife − oppLife) × [LifeWeight]
-  2. Creature board: for each creature, [evalCreature] score — positive for own,
-     negative for opponent's.
-  3. Non-creature permanents: CMC / [NonCreatureCMCDiv] per permanent.
-  4. Card advantage: (myHand − oppHand) × [CardWeight].
-  5. Mana development: own land count × [LandWeight], plus +1 per untapped land.
+ 1. Life advantage: (myLife − oppLife) × [LifeWeight]
+ 2. Creature board: for each creature, [evalCreature] score — positive for own,
+    negative for opponent's.
+ 3. Non-creature permanents: CMC / [NonCreatureCMCDiv] per permanent.
+ 4. Card advantage: (myHand − oppHand) × [CardWeight].
+ 5. Mana development: own land count × [LandWeight], plus +1 per untapped land.
 
 [evalCreature] scores a creature from its base P/T (via counters and
 [BasePTOverride], without querying continuous effects), applies a ×2/3 discount

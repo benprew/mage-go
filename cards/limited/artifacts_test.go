@@ -196,7 +196,7 @@ func TestForcefieldBlockedCreature(t *testing.T) {
 		// Forcefield only prevents unblocked combat damage.
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forcefield")
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Craw Wurm")    // 6/4
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Craw Wurm")     // 6/4
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // 2/2
 		g.ActivateAbility(1, core.DeclareBlockers, gametest.PlayerB, "Forcefield")
 		g.Attack(1, gametest.PlayerA, "Craw Wurm")
@@ -717,8 +717,8 @@ func TestSimulacrum(t *testing.T) {
 		// Simulacrum deals damage to target creature you control equal to the
 		// damage dealt to you this turn.
 		g := gametest.NewTestGame(t)
-		g.SetLife(gametest.PlayerA, 17) // took 3 damage earlier this "turn"
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")   // 3/3
+		g.SetLife(gametest.PlayerA, 17)                                    // took 3 damage earlier this "turn"
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")    // 3/3
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // 2/2
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Simulacrum")
@@ -760,7 +760,7 @@ func TestFalseOrders(t *testing.T) {
 		// Remove target creature defending player controls from combat.
 		// Attacker(s) it blocked that other creatures blocked become unblocked.
 		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Craw Wurm") // 6/4
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Craw Wurm")  // 6/4
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant") // 3/3 blocker
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "False Orders")
 		g.Attack(1, gametest.PlayerA, "Craw Wurm")
@@ -1337,7 +1337,7 @@ func TestVeteranBodyguard(t *testing.T) {
 	t.Run("redirects_combat_damage", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Veteran Bodyguard") // 2/5
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")       // 3/3
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")        // 3/3
 		g.Attack(1, gametest.PlayerA, "Hill Giant")
 		g.StopAt(1, core.EndCombat)
 		g.Execute()

@@ -6,9 +6,10 @@ package gametest
 import (
 	"testing"
 
+	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"github.com/google/uuid"
 )
 
 // TestTurnStructureBeginning covers CR 502 (untap), 503 (upkeep), 504 (draw),

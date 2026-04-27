@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
@@ -347,12 +348,12 @@ func buildDeck(names []string, ownerID uuid.UUID) []mage.Card {
 
 type gameMsgJSON struct {
 	State    *interactive.GameState `json:"state"`
-	Prompt   int                   `json:"prompt"`
-	Options  []actionOptionJSON    `json:"options"`
-	Log      []string              `json:"log"`
-	GameOver bool                  `json:"gameOver"`
-	Winner   string                `json:"winner"`
-	CanUndo  bool                  `json:"canUndo"`
+	Prompt   int                    `json:"prompt"`
+	Options  []actionOptionJSON     `json:"options"`
+	Log      []string               `json:"log"`
+	GameOver bool                   `json:"gameOver"`
+	Winner   string                 `json:"winner"`
+	CanUndo  bool                   `json:"canUndo"`
 }
 
 type actionOptionJSON struct {

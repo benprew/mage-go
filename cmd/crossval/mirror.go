@@ -137,7 +137,6 @@ func (p *crossValPlayer) ChooseMayAbility(description string) bool {
 	return true
 }
 
-
 func newMirrorGame(deckA, deckB []string) (*mirrorGame, error) {
 	playerA := newCrossValPlayer("Alice")
 	playerB := newCrossValPlayer("Bob")
