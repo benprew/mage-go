@@ -224,6 +224,7 @@ func clonePermanentInto(dst, src *Permanent) {
 		FaceDown:            src.FaceDown,
 		ChosenColor:         src.ChosenColor,
 		ChosenPlayer:        src.ChosenPlayer,
+		ChosenSubtype:       src.ChosenSubtype,
 		ControlledPermanent: src.ControlledPermanent,
 		TurnControlGained:   src.TurnControlGained,
 		StoredValue:         src.StoredValue,

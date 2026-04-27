@@ -39,6 +39,7 @@ type TestPlayer struct {
 	choosePermanent           []string
 	chooseDiscard             [][]string
 	chooseManaColor           []core.Color
+	chooseString              []string
 	chooseFromLibrary         []string
 	chooseBandingDistribution []map[string]int
 	chooseMode                []int
@@ -341,6 +342,25 @@ func (tp *TestPlayer) ChooseManaColor(reason string) core.Color {
 		return c
 	}
 	return core.White
+}
+
+// ChooseString picks one option from a string list. Falls back to the
+// BasePlayer default (first option) when no scripted choice is queued.
+func (tp *TestPlayer) ChooseString(options []string, reason string) string {
+	if len(options) == 0 {
+		return ""
+	}
+	if len(tp.chooseString) > 0 {
+		s := tp.chooseString[0]
+		tp.chooseString = tp.chooseString[1:]
+		for _, o := range options {
+			if o == s {
+				return s
+			}
+		}
+		// Scripted value not in options — fall through to default.
+	}
+	return options[0]
 }
 
 // ChooseCardFromLibrary picks a card from candidates.

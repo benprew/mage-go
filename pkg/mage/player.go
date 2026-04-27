@@ -95,6 +95,13 @@ type Player interface {
 	ChooseCardFromLibrary(candidates []Card, reason string, g GameReader) Card
 	ChooseNumber(min, max int, reason string) int
 
+	// ChooseString asks the player to pick one option from a string list,
+	// e.g. a creature type for "as ~ enters, choose a creature type"
+	// (Herald's Horn). Implementations must return a value from `options`;
+	// callers pre-filter the list (e.g. exclude the source's own colors).
+	// If `options` is empty, implementations should return "".
+	ChooseString(options []string, reason string) string
+
 	// ChooseDamageDistribution asks the player how to divide a fixed total of
 	// damage among the given target IDs. The implementation must return a map
 	// whose values are non-negative, whose keys are a subset of `possible`,
@@ -339,6 +346,13 @@ func (p *BasePlayer) ChooseCardFromLibrary(candidates []Card, reason string, g G
 
 func (p *BasePlayer) ChooseNumber(min, max int, reason string) int {
 	return max // default: choose maximum
+}
+
+func (p *BasePlayer) ChooseString(options []string, reason string) string {
+	if len(options) == 0 {
+		return ""
+	}
+	return options[0]
 }
 
 // ChooseScryPlacement: deterministic default keeps every revealed card on top

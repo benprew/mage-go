@@ -329,6 +329,13 @@ func (tg *TestGame) ChooseManaColor(p PlayerRef, color core.Color) {
 	tp.chooseManaColor = append(tp.chooseManaColor, color)
 }
 
+// ChooseString scripts the next string choice a player will make
+// (e.g. for "as ~ enters, choose a creature type").
+func (tg *TestGame) ChooseString(p PlayerRef, value string) {
+	tp := tg.GetPlayer(p)
+	tp.chooseString = append(tp.chooseString, value)
+}
+
 // ChooseFromLibrary scripts which card a player will find when searching library.
 func (tg *TestGame) ChooseFromLibrary(p PlayerRef, name string) {
 	tp := tg.GetPlayer(p)

@@ -1147,9 +1147,62 @@ Attach with WithAbility:
 	[CopyCreatureOnETB]()                 // clone ETB (Doppelganger)
 	[ETBWithTargets](effect)              // run effect on ETB using spell targets
 	[ETBEffect](effect)                   // run effect on ETB without targets
+	[ETBChooseColor](reason)              // "as ~ enters, choose a color"
+	[ETBChooseColorOtherThan](reason, c)  // "as ~ enters, choose a color other than X" (Thriving cycle)
+	[ETBChooseOpponent]()                 // "as ~ enters, choose an opponent" (Nyxathid, Black Vise)
+	[ETBChooseCreatureType](options)      // "as ~ enters, choose a creature type" (Herald's Horn)
 	[GraveyardReturnIfCreaturesAbove](n)  // return from graveyard (Nether Shadow)
 	[ManaBonusAbility] / [NewManaBonusAbility](filter, color) // bonus mana on tap
 	[NewAttachedManaBonusAbility](color)  // Wild Growth bonus mana
+
+# "As ~ Enters the Battlefield, Choose ___" (CR 614.12)
+
+An "as it enters" replacement effect makes the controller pick a value at
+the moment a permanent enters the battlefield. The choice is recorded on
+the permanent itself, so other abilities of the same permanent can read it
+later. The four ETBChoose* constructors above each produce an
+*ETBEffectAbility that PutOnBattlefield runs unconditionally during ETB
+resolution BEFORE firing the EvtEntersBattlefield event — so the stored
+choice is already in place when "when this enters" triggers fire.
+
+Storage fields on Permanent:
+
+	ChosenColor    Color   // ETBChooseColor / ETBChooseColorOtherThan
+	ChosenPlayer   uuid.UUID // ETBChooseOpponent
+	ChosenSubtype  string  // ETBChooseCreatureType
+
+Example: a Thriving-cycle land that enters tapped and taps for either its
+own color or the chosen color.
+
+	mage.Register("Thriving Bluff", func() mage.Card {
+	    return mage.NewLand("Thriving Bluff",
+	        mage.WithKeyword(core.EntersTapped),
+	        mage.WithAbility(mage.ETBChooseColorOtherThan(
+	            "choose a color other than red", core.Red,
+	        )),
+	        mage.WithActivatedAbility(
+	            // Custom mana ability reads perm.ChosenColor at activation time.
+	            mage.FuncEffect("add {R} or chosen color", mage.EffectProperties{},
+	                func(g *mage.Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+	                    perm := g.FindPermanent(sourceID)
+	                    p := g.GetPlayer(controller)
+	                    // ... add core.Red or perm.ChosenColor based on player choice
+	                    return nil
+	                }),
+	            mage.TapSourceCost(),
+	        ),
+	    )
+	})
+
+Test harness scripting:
+
+	tg.ChooseManaColor(PlayerA, core.Blue)   // for ETBChooseColor / ETBChooseColorOtherThan
+	tg.ChooseString(PlayerA, "Goblin")       // for ETBChooseCreatureType
+
+ETBChooseOpponent does not consult the player in 2-player; it pins
+ChosenPlayer to the lone opponent at ETB-replacement time so downstream
+references (Nyxathid's P/T-by-hand-size, ChosenPlayerUpkeepTrigger, etc.)
+remain stable.
 
 # Mana
 
