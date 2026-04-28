@@ -767,8 +767,42 @@ Target effects (apply to specific permanent by ID):
 	[ColorOverride](targetID, color)                       // change color (Indefinite)
 	[TemporaryAnimate](targetID, power, toughness)         // animate until EOT
 	[TemporaryAnimateUntilEndOfCombat](id, power, tough)   // animate until end combat
+	[AnimateTargetLand](targetID, opts, duration)          // Elemental Uprising (full options)
+	[AnimateLandWhileSourceOnBattlefield](targetID, opts)  // Awakener Druid pattern
+	[AnimateAttachedLand](opts)                            // Vastwood Zendikon (aura animates host)
+	[GrantManaAbilityToAttached](productions...)           // New Horizons (extra mana ability)
 	[PreventBlockingUntilEndOfCombat](permID)              // can't block until end combat
 	[PreventAttackingUntilEndOfTurn](permID)               // can't attack until EOT (CR 506.4a)
+
+# Animate Land
+
+CR 305.7 / 612 (layer system) require a land that "becomes a creature" to
+remain a land while gaining creature type, P/T, and (optionally) extra
+subtypes/colors/keywords. The engine exposes [AnimateLandOptions] and four
+helpers built on the layer-aware effect primitives:
+
+  - [AnimateTargetLand](id, opts, dur) — for spells like Elemental Uprising
+    ("target land becomes a 4/4 Elemental creature with trample until end
+    of turn. It's still a land."). Use core.EndOfTurn for instants.
+  - [AnimateLandWhileSourceOnBattlefield](id, opts) — for Awakener Druid's
+    ETB clause ("target Forest becomes a 4/5 green Treefolk creature for
+    as long as Awakener Druid remains on the battlefield"). The effect's
+    sourceID must be set to the source permanent before registration; the
+    effect manager removes it automatically when the source leaves.
+  - [AnimateAttachedLand](opts) — for auras like Vastwood Zendikon
+    ("Enchanted land is a 6/4 green Elemental creature with trample. It's
+    still a land."). Built on [AttachedEffect] and gated by SourceAttached.
+  - [GrantManaAbilityToAttached](productions...) — companion helper for
+    cards that grant additional mana abilities to the enchanted land
+    (e.g. New Horizons' "{T}: Add {G}" clause).
+
+All four helpers route through applyAnimateLand: they grant AttrIsCreature
+/ AttrCanAttack / AttrCanBlock / AttrHasPowerToughness, set
+BasePTOverride, append (not replace) subtypes via SubTypeOverride, append
+colors via ColorOverride, and grant keyword attrs. AttrIsLand is left in
+baseAttrs so the land remains a land per CR 305.7. Each Apply() cycle
+recomputes from the card baseline so reverting (aura leaves, source
+dies, EOT cleanup) restores the land to its non-creature state.
 
 Global/source-based effects (while source on battlefield):
 
