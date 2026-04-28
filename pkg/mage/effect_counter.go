@@ -157,6 +157,50 @@ func execRemoveCounters(ctx *EffectContext, e *removeCountersEffect) error {
 	return nil
 }
 
+// MoveCountersFromSourceToTarget creates an effect that prompts the
+// controller to move up to N counters of the given type from the source
+// permanent to the resolving target permanent. N is capped at the
+// number of counters currently on the source. Used by Scrounging
+// Bandar / Power Conduit / Crystalline Crawler-shape upkeep triggers
+// ("you may move any number of +1/+1 counters from this creature onto
+// another target creature"). The choice is delegated to
+// Player.ChooseNumber(0, available, reason) so AI/TUI can override.
+func MoveCountersFromSourceToTarget(ct CounterType) Effect {
+	return FuncEffect(
+		"move any number of counters from source to target",
+		EffectProperties{Outcome: OutcomeBenefit},
+		func(g *Game, sourceID, controllerID uuid.UUID, targets []uuid.UUID) error {
+			if len(targets) == 0 {
+				return nil
+			}
+			source := g.FindPermanent(sourceID)
+			target := g.FindPermanent(targets[0])
+			if source == nil || target == nil {
+				return nil
+			}
+			available := int(source.Counters[ct])
+			if available <= 0 {
+				return nil
+			}
+			player := g.GetPlayer(controllerID)
+			if player == nil {
+				return nil
+			}
+			n := player.ChooseNumber(0, available, fmt.Sprintf("Move how many %s counters?", ct))
+			if n <= 0 {
+				return nil
+			}
+			if n > available {
+				n = available
+			}
+			source.RemoveCounter(ct, n)
+			target.AddCounter(ct, n)
+			g.ApplyContinuousEffects()
+			return nil
+		},
+	)
+}
+
 // --- Snapshot source counter (pipeline) ---
 
 // SnapshotSourceCounterData reads a counter value from the source permanent.
