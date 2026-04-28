@@ -48,6 +48,38 @@ func PreventAttachedFromActivatingNonManaAbilities(at AttachType) ContinuousEffe
 	})
 }
 
+// AssignsDamageEqualToToughnessForCreaturesYouControl grants
+// AttrAssignsDamageEqualToToughness to each creature controlled by the
+// source's controller. Damage assignment in combat then uses the creature's
+// toughness instead of power. Used by Assault Formation
+// ("Each creature you control assigns combat damage equal to its toughness
+// rather than its power"). Does not change the creature's power.
+func AssignsDamageEqualToToughnessForCreaturesYouControl() ContinuousEffect {
+	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+		src := g.FindPermanent(sourceID)
+		if src == nil {
+			return nil
+		}
+		for _, p := range g.battlefield {
+			if !p.HasType(TypeCreature) || p.Controller != src.Controller {
+				continue
+			}
+			g.effects.GrantAttr(p.ID(), AttrAssignsDamageEqualToToughness)
+		}
+		return nil
+	})
+}
+
+// AssignsDamageEqualToToughnessSelf grants AttrAssignsDamageEqualToToughness
+// to the source permanent itself. Used by Doran the Siege Tower-style cards
+// where only the source assigns toughness instead of power.
+func AssignsDamageEqualToToughnessSelf() ContinuousEffect {
+	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+		g.effects.GrantAttr(sourceID, AttrAssignsDamageEqualToToughness)
+		return nil
+	})
+}
+
 // PreventActivationsOfMatching creates a continuous effect that stops non-mana
 // activated abilities from being activated for permanents matching filter.
 // Used by static effects like "Activated abilities of artifacts your opponents

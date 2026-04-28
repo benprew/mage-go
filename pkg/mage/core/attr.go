@@ -22,6 +22,7 @@ const (
 	AttrCantBeTargetedByArtifacts    // permanent can't be targeted by abilities from artifact sources
 	AttrCantChangeControl            // other players can't gain control (Guardian Beast)
 	AttrCantActivateNonManaAbilities // permanent's non-mana activated abilities can't be activated (CR 605 mana abilities are unaffected)
+	AttrAssignsDamageEqualToToughness // permanent assigns combat damage equal to its toughness rather than its power (Doran the Siege Tower / Assault Formation)
 
 	// Type-identity attrs (battlefield) — replaces TypesAdded []CardType on Permanent.
 	AttrIsCreature
@@ -118,6 +119,8 @@ func (a Attr) String() string {
 		return "Can't Change Control"
 	case AttrCantActivateNonManaAbilities:
 		return "Can't Activate Non-Mana Abilities"
+	case AttrAssignsDamageEqualToToughness:
+		return "Assigns Combat Damage Equal to Toughness"
 	case AttrIsCreature:
 		return "IsCreature"
 	case AttrIsLand:
