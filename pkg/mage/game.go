@@ -171,6 +171,11 @@ type Game struct {
 	// is the source ID that granted the rider. Cleared at end of turn.
 	exileInsteadCards map[uuid.UUID]uuid.UUID
 
+	// lastCostReveal is the most recent card revealed by a
+	// [RevealFromHandCost]. Cleared on each cost-pay cycle by the cost
+	// pipeline; clients can read it during effect resolution.
+	lastCostReveal Card
+
 	// Per-turn trackers (see per_turn_trackers.go). Reset by
 	// resetPerTurnTrackers in the turn-end cleanup pipeline.
 	discardCountThisTurn       map[uuid.UUID]int  // playerID -> discards this turn
