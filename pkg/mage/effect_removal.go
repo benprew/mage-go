@@ -266,6 +266,56 @@ func execDestroyTargetNoRegen(ctx *EffectContext, _ *destroyTargetNoRegenEffect)
 	return nil
 }
 
+// ExileTargetReturnAtEndStepWithCounter exiles the resolving target
+// permanent and registers a one-shot delayed trigger that, at the
+// beginning of the next end step, returns the exiled card to the
+// battlefield under its owner's control with the given counter (Long
+// Road Home: "+1/+1 counter on it"). If counter is empty / amount <= 0,
+// the card is returned without a counter (Cloudshift / Banishing Light
+// "exile until X" patterns can reuse this primitive). The delayed
+// trigger is keyed on the exiled card's ID and consumed on first fire.
+func ExileTargetReturnAtEndStepWithCounter(counter CounterType, amount int) Effect {
+	return FuncEffect(
+		"exile target permanent; return it at the beginning of the next end step with a counter",
+		EffectProperties{Outcome: OutcomeDetriment},
+		func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+			if len(targets) == 0 {
+				return nil
+			}
+			perm := g.FindPermanent(targets[0])
+			if perm == nil {
+				return nil
+			}
+			cardID := perm.Card.ID()
+			owner := perm.Card.Owner()
+			g.ExilePermanent(perm)
+			returnEffect := FuncEffect(
+				"return exiled card with counter",
+				EffectProperties{Outcome: OutcomeBenefit},
+				func(g *Game, _, _ uuid.UUID, _ []uuid.UUID) error {
+					card, ok := g.RemoveFromExile(cardID)
+					if !ok {
+						return nil
+					}
+					newPerm := g.PutOnBattlefield(card, owner)
+					if newPerm != nil && amount > 0 {
+						newPerm.AddCounter(counter, amount)
+						g.ApplyContinuousEffects()
+					}
+					return nil
+				},
+			)
+			g.RegisterDelayedTrigger(&DelayedTrigger{
+				EventType:  EvtEndStep,
+				Effects:    []Effect{returnEffect},
+				SourceID:   sourceID,
+				Controller: controller,
+			})
+			return nil
+		},
+	)
+}
+
 func execExileTarget(ctx *EffectContext, _ *exileTargetEffect) error {
 	if len(ctx.Targets) == 0 {
 		return fmt.Errorf("no target for exile")
