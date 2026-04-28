@@ -98,9 +98,40 @@ func registerEnchantments() {
 	// Enchant creature
 	// Enchanted creature gets +3/+3.
 	// Whenever enchanted creature deals combat damage to a player, double its controller's life total.
-	// XXX: requires "double life total" effect and combat-damage-to-player trigger from enchanted source
 	Register("Celestial Mantle", func() Card {
-		return NewBoostAura("Celestial Mantle", "{3}{W}{W}{W}", 3, 3)
+		return NewAura("Celestial Mantle", "{3}{W}{W}{W}",
+			WithStaticAbility(BoostAttached(3, 3, AttachAura)),
+			WithAbility(
+				NewTriggered(EvtDamageDealt, false,
+					FuncEffect("double enchanted creature's controller's life total",
+						EffectProperties{Outcome: OutcomeBenefit},
+						func(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
+							src := g.FindPermanent(sourceID)
+							if src == nil || src.AttachedTo == uuid.Nil {
+								return nil
+							}
+							host := g.FindPermanent(src.AttachedTo)
+							if host == nil {
+								return nil
+							}
+							p := g.GetPlayer(host.Controller)
+							if p == nil {
+								return nil
+							}
+							gain := p.Life()
+							if gain <= 0 {
+								return nil
+							}
+							g.PlayerGainLife(p, gain)
+							return nil
+						}),
+				).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+					EventSourceIsAttachedTo{},
+					EventTargetIsPlayer{},
+					EventIsCombatDamage{},
+				}}),
+			),
+		)
 	})
 
 	// Coastal Piracy {2}{U}{U}
@@ -165,9 +196,29 @@ func registerEnchantments() {
 	// Enchant creature
 	// Enchanted creature gets +1/+1 and has "Whenever this creature deals combat damage to a player, you may draw a card."
 	// At the beginning of your end step, if you didn't attack with a creature this turn, sacrifice this Aura.
-	// XXX: requires granting triggered abilities to attached and "didn't attack this turn" tracking
 	Register("Curious Obsession", func() Card {
-		return NewAura("Curious Obsession", "{U}")
+		return NewAura("Curious Obsession", "{U}",
+			WithStaticAbility(
+				BoostAttached(1, 1, AttachAura),
+				GrantTriggeredAbilityToAttached(
+					EvtDamageDealt, true,
+					AndTriggerCond{Conditions: []TriggerConditionData{
+						EventSourceIsSelf{},
+						EventTargetIsPlayer{},
+						EventIsCombatDamage{},
+					}},
+					DrawCards(Fixed(1)),
+				),
+			),
+			WithAbility(
+				NewTriggered(EvtEndStep, false,
+					DataEffect(SacrificeSourceStep()),
+				).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+					EventPlayerIsController{},
+					controllerDidNotAttackThisTurn{},
+				}}),
+			),
+		)
 	})
 
 	// Death's Approach {B}
@@ -198,7 +249,9 @@ func registerEnchantments() {
 	// Duelist's Heritage {2}{W}
 	// Enchantment
 	// Whenever one or more creatures attack, you may have target attacking creature gain double strike until end of turn.
-	// XXX: requires "one or more creatures attack" trigger and target attacking creature
+	// XXX: needs an "EvtAttackersDeclared" event that fires once per combat regardless of attacker
+	// count (CR 603.6e). Engine currently only fires per-attacker EvtDeclaredAttacker, which would
+	// trigger the ability multiple times per combat. Leaving unimplemented.
 	Register("Duelist's Heritage", func() Card {
 		return NewEnchantment("Duelist's Heritage", "{2}{W}")
 	})
@@ -207,7 +260,10 @@ func registerEnchantments() {
 	// Enchantment — Aura
 	// Enchant creature
 	// Enchanted creature has lifelink and "Whenever a creature an opponent controls dies, put a +1/+1 counter on this creature." (Damage dealt by a creature with lifelink also causes its controller to gain that much life.)
-	// XXX: requires granting a triggered ability to attached creature
+	// XXX: granted "opponent's creature dies" half not wired. EvtCreatureDied fires after the
+	// permanent leaves the battlefield, so EventSourceControlledByOpponent can't resolve the
+	// dying permanent's controller. Needs a "last-known-info" lookup or an opponent-controller
+	// flag carried on the EvtCreatureDied event.
 	Register("Eternal Thirst", func() Card {
 		return NewAura("Eternal Thirst", "{1}{B}",
 			WithStaticAbility(
@@ -231,9 +287,19 @@ func registerEnchantments() {
 	// Enchant creature
 	// Enchanted creature gets +2/+2.
 	// As long as another Aura is attached to enchanted creature, it has first strike and lifelink.
-	// XXX: requires conditional "another Aura attached" check for granted abilities
 	Register("Face of Divinity", func() Card {
-		return NewBoostAura("Face of Divinity", "{2}{W}", 2, 2)
+		return NewAura("Face of Divinity", "{2}{W}",
+			WithStaticAbility(
+				BoostAttached(2, 2, AttachAura),
+				AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
+					if anotherAuraAttachedTo(g, source, target) {
+						g.GrantAttr(target.ID(), FirstStrike)
+						g.GrantAttr(target.ID(), Lifelink)
+					}
+					return nil
+				}),
+			),
+		)
 	})
 
 	// Feral Invocation {2}{G}
@@ -333,9 +399,14 @@ func registerEnchantments() {
 	// Enchant creature
 	// When this Aura enters, it deals 2 damage to any target.
 	// Enchanted creature gets +2/+2.
-	// XXX: requires ETB target separate from the aura's enchant target
 	Register("Lightning Diadem", func() Card {
-		return NewBoostAura("Lightning Diadem", "{5}{R}", 2, 2)
+		return NewAura("Lightning Diadem", "{5}{R}",
+			WithStaticAbility(BoostAttached(2, 2, AttachAura)),
+			WithAbility(
+				EntersBattlefieldTrigger(DealDamage(Fixed(2)), false).
+					AddTarget(TargetAnyTarget()),
+			),
+		)
 	})
 
 	// Lurking Predators {4}{G}{G}
@@ -583,9 +654,16 @@ func registerEnchantments() {
 	// Enchantment — Aura
 	// Enchant creature
 	// Enchanted creature gets +3/+3 and has "At the beginning of each upkeep, create a 1/1 green Saproling creature token."
-	// XXX: requires granting upkeep triggered ability to attached creature
 	Register("Verdant Embrace", func() Card {
-		return NewBoostAura("Verdant Embrace", "{3}{G}{G}", 3, 3)
+		return NewAura("Verdant Embrace", "{3}{G}{G}",
+			WithStaticAbility(
+				BoostAttached(3, 3, AttachAura),
+				GrantTriggeredAbilityToAttached(
+					EvtUpkeep, false, nil,
+					CreateToken("Saproling", 1, 1, []CardType{TypeCreature}, []string{"Saproling"}),
+				),
+			),
+		)
 	})
 
 	// Waterknot {1}{U}{U}

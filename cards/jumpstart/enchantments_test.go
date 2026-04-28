@@ -381,3 +381,97 @@ func TestCradleOfVitality_DeclinePayment(t *testing.T) {
 	g.AssertLife(gametest.PlayerA, 23)
 	g.AssertCounterCount(gametest.PlayerA, "Grizzly Bears", core.P1P1, 0)
 }
+
+func TestCuriousObsession_BoostsAndDrawsOnHit(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	bearID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	auraID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Curious Obsession")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Mountain", 5)
+	g.Attach(auraID, bearID)
+	g.Attack(1, gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 3, 3)
+	g.AssertLife(gametest.PlayerB, 17)
+}
+
+func TestCuriousObsession_SacrificedIfDidNotAttack(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	bearID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	auraID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Curious Obsession")
+	g.Attach(auraID, bearID)
+	g.StopAt(1, core.Cleanup)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerA, "Curious Obsession", 1)
+}
+
+func TestEternalThirst_GrantsLifelink(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	bearID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	auraID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Eternal Thirst")
+	g.Attach(auraID, bearID)
+	g.StopAt(1, core.PrecombatMain)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", core.Lifelink, true)
+}
+
+
+func TestVerdantEmbrace_BoostAndUpkeepSaproling(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	bearID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	auraID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Verdant Embrace")
+	g.Attach(auraID, bearID)
+	g.StopAt(2, core.PostcombatMain)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 5, 5)
+	// Trigger fires on each upkeep (turn 1 PlayerA upkeep + turn 2 PlayerB upkeep) = 2.
+	g.AssertPermanentCount(gametest.PlayerA, "Saproling", 2)
+}
+
+func TestCelestialMantle_DoublesLifeOnCombatHit(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	bearID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	auraID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Celestial Mantle")
+	g.Attach(auraID, bearID)
+	g.SetLife(gametest.PlayerA, 20)
+	g.Attack(1, gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerA, 40)
+	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 5, 5)
+}
+
+func TestFaceOfDivinity_NoExtraKeywordsAlone(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	bearID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	auraID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Face of Divinity")
+	g.Attach(auraID, bearID)
+	g.StopAt(1, core.PrecombatMain)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 4, 4)
+	g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", core.FirstStrike, false)
+	g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", core.Lifelink, false)
+}
+
+func TestFaceOfDivinity_WithSecondAuraGrantsKeywords(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	bearID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	auraID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Face of Divinity")
+	pacID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Pacifism")
+	g.Attach(auraID, bearID)
+	g.Attach(pacID, bearID)
+	g.StopAt(1, core.PrecombatMain)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", core.FirstStrike, true)
+	g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", core.Lifelink, true)
+}
+
+func TestLightningDiadem_BoostAttached(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	bearID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	auraID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Lightning Diadem")
+	g.Attach(auraID, bearID)
+	g.StopAt(1, core.PrecombatMain)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 4, 4)
+}
