@@ -131,6 +131,9 @@ func (g *Game) Clone() *Game {
 	c.instantsCastThisTurn = cloneUUIDIntMap(g.instantsCastThisTurn)
 	c.timesTargetedThisTurn = cloneUUIDIntMap(g.timesTargetedThisTurn)
 	c.blockedThisTurn = cloneBlockedThisTurn(g.blockedThisTurn)
+	if g.extraLandPlaysThisTurn != nil {
+		c.extraLandPlaysThisTurn = cloneUUIDIntMap(g.extraLandPlaysThisTurn)
+	}
 
 	// Deep copy cast-from-exile permissions and exile-instead-of-graveyard tags.
 	if len(g.castFromExilePermissions) > 0 {

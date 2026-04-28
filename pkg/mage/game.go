@@ -67,6 +67,11 @@ type Game struct {
 	// Interactive play tracking
 	landsPlayedThisTurn int
 
+	// Per-player additional-land-play allowance granted this turn ("you may
+	// play an additional land this turn"). Reset alongside landsPlayedThisTurn
+	// during cleanup. CR 305.2 / Explore-style effects.
+	extraLandPlaysThisTurn map[uuid.UUID]int
+
 	// Damage tracking: maps target permanent ID -> set of source permanent IDs that dealt damage this turn
 	damageDealtBy map[uuid.UUID]map[uuid.UUID]bool
 
@@ -2463,6 +2468,7 @@ func (g *Game) doUntap() {
 		}
 	}
 	g.landsPlayedThisTurn = 0
+	g.extraLandPlaysThisTurn = nil
 }
 
 func (g *Game) doUpkeepActions() {
@@ -2964,7 +2970,33 @@ func (g *Game) MaxLandPlays() int {
 	if g.effects.Rules.UnlimitedLandPlays {
 		limit = 999
 	}
+	if g.extraLandPlaysThisTurn != nil {
+		limit += g.extraLandPlaysThisTurn[g.ActivePlayerObj().PlayerID()]
+	}
 	return limit
+}
+
+// GrantExtraLandPlay increases the active player's land-play allowance by n
+// for the current turn. Cumulative across multiple grants. Reset alongside
+// landsPlayedThisTurn during the cleanup step. Implements the rules-modifier
+// half of Explore / Walking Atlas / Azusa-style effects.
+func (g *Game) GrantExtraLandPlay(playerID uuid.UUID, n int) {
+	if n <= 0 {
+		return
+	}
+	if g.extraLandPlaysThisTurn == nil {
+		g.extraLandPlaysThisTurn = make(map[uuid.UUID]int)
+	}
+	g.extraLandPlaysThisTurn[playerID] += n
+}
+
+// ExtraLandPlaysGrantedThisTurn returns the cumulative additional land-play
+// allowance granted to the player this turn (not including the base 1).
+func (g *Game) ExtraLandPlaysGrantedThisTurn(playerID uuid.UUID) int {
+	if g.extraLandPlaysThisTurn == nil {
+		return 0
+	}
+	return g.extraLandPlaysThisTurn[playerID]
 }
 
 // playLandCore moves a land from a player's hand to the battlefield and fires
