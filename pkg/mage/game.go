@@ -57,6 +57,9 @@ type Game struct {
 
 	// Amount from the triggering event (e.g. damage dealt) for triggered abilities
 	currentEventAmount int
+	// SourceID of the triggering event (e.g. the damager on EvtDamageDealt).
+	// Read by Game.EventSourceID() during resolution of a triggered ability.
+	currentEventSourceID uuid.UUID
 
 	// Card currently being resolved (set during ResolveStackObject)
 	resolvingCard Card
@@ -1482,13 +1485,14 @@ func (g *Game) FireEvent(evt GameEvent) {
 				continue
 			}
 			obj := &StackObject{
-				ID:          uuid.New(),
-				Controller:  dt.Controller,
-				SourceID:    dt.SourceID,
-				IsAbility:   true,
-				Effects:     dt.Effects,
-				Targets:     []uuid.UUID{dt.TargetID},
-				EventAmount: evt.Amount,
+				ID:            uuid.New(),
+				Controller:    dt.Controller,
+				SourceID:      dt.SourceID,
+				IsAbility:     true,
+				Effects:       dt.Effects,
+				Targets:       []uuid.UUID{dt.TargetID},
+				EventAmount:   evt.Amount,
+				EventSourceID: evt.SourceID,
 			}
 			g.stack.Push(obj)
 			if dt.Persistent {
@@ -1550,6 +1554,7 @@ func (g *Game) PutTriggersOnStack() {
 						obj.XValue = pt.event.Amount
 					case EvtDamageDealt:
 						obj.EventAmount = pt.event.Amount
+						obj.EventSourceID = pt.event.SourceID
 					}
 				}
 			}
@@ -1586,6 +1591,7 @@ func (g *Game) PutTriggersOnStack() {
 						obj.Targets = []uuid.UUID{pt.event.TargetID}
 					}
 					obj.EventAmount = pt.event.Amount
+					obj.EventSourceID = pt.event.SourceID
 				case EvtTapped, EvtAbilityActivated:
 					// Pass the permanent's ID so effects can identify it
 					if pt.event.SourceID != uuid.Nil {
@@ -1781,6 +1787,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 	g.currentX = obj.XValue
 	g.currentMode = obj.ModeChoice
 	g.currentEventAmount = obj.EventAmount
+	g.currentEventSourceID = obj.EventSourceID
 	g.resolvingCard = obj.Card
 	g.resolvingTargets = obj.Targets
 	g.resolvingDamageDistribution = obj.DamageDistribution

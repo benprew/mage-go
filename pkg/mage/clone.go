@@ -18,6 +18,7 @@ func (g *Game) Clone() *Game {
 		currentX:               g.currentX,
 		currentMode:            g.currentMode,
 		currentEventAmount:     g.currentEventAmount,
+		currentEventSourceID:   g.currentEventSourceID,
 		resolvingCard:          g.resolvingCard, // Card ref shared
 		landsPlayedThisTurn:    g.landsPlayedThisTurn,
 		creatureDeathsThisTurn: g.creatureDeathsThisTurn,
@@ -306,8 +307,9 @@ func cloneStackObject(obj *StackObject) *StackObject {
 		IsAbility:   obj.IsAbility,
 		XValue:      obj.XValue,
 		ModeChoice:  obj.ModeChoice,
-		EventAmount: obj.EventAmount,
-		IsCopy:      obj.IsCopy,
+		EventAmount:   obj.EventAmount,
+		EventSourceID: obj.EventSourceID,
+		IsCopy:        obj.IsCopy,
 	}
 	if len(obj.ModalTargets) > 0 {
 		clone.ModalTargets = make([][]uuid.UUID, len(obj.ModalTargets))

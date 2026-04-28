@@ -23,6 +23,7 @@ type GameReader interface {
 	XValue() int
 	ModeValue() int
 	EventAmount() int
+	EventSourceID() uuid.UUID
 	GetResolvingCard() Card
 	FindStackObject(uuid.UUID) *StackObject
 	CombatGroups() []*CombatGroup
@@ -60,6 +61,12 @@ func (g *Game) ModeValue() int { return g.currentMode }
 
 // EventAmount returns the amount from the triggering event (e.g. damage dealt).
 func (g *Game) EventAmount() int { return g.currentEventAmount }
+
+// EventSourceID returns the SourceID of the event that triggered the
+// currently-resolving triggered ability. For an EvtDamageDealt trigger,
+// this is the damager's permanent ID. Returns uuid.Nil when there is no
+// trigger context (e.g. spell resolution).
+func (g *Game) EventSourceID() uuid.UUID { return g.currentEventSourceID }
 
 // GetResolvingCard returns the card currently being resolved from the stack.
 func (g *Game) GetResolvingCard() Card { return g.resolvingCard }

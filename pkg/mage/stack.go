@@ -14,6 +14,10 @@ type StackObject struct {
 	XValue      int // value of X for X-cost spells
 	ModeChoice  int // chosen mode for modal spells (0-indexed)
 	EventAmount int // amount from triggering event (e.g. damage dealt)
+	// EventSourceID is the SourceID of the event that produced this
+	// triggered ability (e.g. on EvtDamageDealt, the damager's ID).
+	// Read by FuncEffect via Game.EventSourceID() during resolution.
+	EventSourceID uuid.UUID
 
 	// DamageDistribution carries per-target damage assignments for
 	// divided-damage spells/abilities (CR 601.2d). The controller picks the
