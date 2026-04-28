@@ -908,7 +908,7 @@ func registerCreatures() {
 		return NewCreature("Bruvac the Grandiloquent", "{2}{U}", 1, 4,
 			WithSubTypes("Human", "Advisor"),
 			WithSuperTypes(SuperLegendary),
-			WithETBEffect(FuncEffect(
+			WithAbility(EntersBattlefieldTrigger(FuncEffect(
 				"register Bruvac mill doubler",
 				EffectProperties{},
 				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -922,7 +922,7 @@ func registerCreatures() {
 						return amt * 2
 					})
 					return nil
-				})),
+				}), false)),
 		)
 	})
 
@@ -4514,10 +4514,29 @@ func registerCreatures() {
 	// This spell can't be countered.
 	// Green spells you control can't be countered.
 	// {4}{G}{G}: Until end of turn, each Elf creature you control has base power and toughness 5/5 and becomes a Dinosaur in addition to its other creature types.
-	// XXX: requires type-granting + uncounterable static
+	// XXX: "This spell can't be countered" and "Green spells you control can't be countered" still require an uncounterable engine flag.
 	Register("Allosaurus Shepherd", func() Card {
 		return NewCreature("Allosaurus Shepherd", "{G}", 1, 1,
 			WithSubTypes("Elf", "Shaman"),
+			WithActivatedAbility(
+				FuncEffect(
+					"until end of turn, each Elf creature you control has base power and toughness 5/5 and becomes a Dinosaur in addition to its other creature types",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						for _, perm := range g.FilterBattlefield(And(IsCreature, ControlledBy(controller), HasSubType("Elf"))) {
+							pt := SetBasePT(perm.ID(), 5, 5)
+							pt.SetSourceID(sourceID)
+							g.AddContinuousEffect(pt)
+							sub := GrantSubTypeToTarget(perm.ID(), "Dinosaur", EndOfTurn)
+							sub.SetSourceID(sourceID)
+							g.AddContinuousEffect(sub)
+						}
+						g.ApplyContinuousEffects()
+						return nil
+					},
+				),
+				ManaCostOf("{4}{G}{G}"),
+			),
 		)
 	})
 
