@@ -3,10 +3,10 @@ package interactive
 import (
 	"fmt"
 
-	"github.com/google/uuid"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/eval"
+	"github.com/google/uuid"
 )
 
 func buildRulesText(c mage.Card) string {
@@ -145,6 +145,8 @@ func snapshotPlayer(g *mage.Game, p mage.Player, showHand bool) PlayerState {
 			Toughness:  perm.CurrentToughness(g),
 			Tapped:     perm.Tapped,
 			SummonSick: perm.HasAttr(core.AttrSummonSick),
+			FaceDown:   perm.FaceDown,
+			PhasedOut:  perm.PhasedOut,
 			IsCreature: perm.HasType(core.TypeCreature),
 			IsLand:     perm.HasType(core.TypeLand),
 			IsArtifact: perm.HasType(core.TypeArtifact),
@@ -169,6 +171,7 @@ func snapshotPlayer(g *mage.Game, p mage.Player, showHand bool) PlayerState {
 			if n == 0 {
 				continue
 			}
+			permState.RawCounters[ct] = n
 			if permState.Counters == nil {
 				permState.Counters = make(map[string]int)
 			}

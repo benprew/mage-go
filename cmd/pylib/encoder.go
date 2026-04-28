@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"sort"
 	"strings"
 	"sync"
@@ -73,35 +74,40 @@ type encodeConfig struct {
 	optionScalarDim     int64
 	targetScalarDim     int64
 	decisionCapacity    int64
+	emitRenderPlan      bool
+	renderPlanCapacity  int64
 }
 
 type outputViews struct {
-	traceKindID       []int64
-	slotCardRows      []int64
-	slotOccupied      []float32
-	slotTapped        []float32
-	gameInfo          []float32
-	pendingKindID     []int64
-	numPresentOptions []int64
-	optionKindIDs     []int64
-	optionScalars     []float32
-	optionMask        []float32
-	optionRefSlotIdx  []int64
-	optionRefCardRow  []int64
-	targetMask        []float32
-	targetTypeIDs     []int64
-	targetScalars     []float32
-	targetOverflow    []float32
-	targetRefSlotIdx  []int64
-	targetRefIsPlayer []byte
-	targetRefIsSelf   []byte
-	mayMask           []byte
-	decisionStart     []int64
-	decisionCount     []int64
-	decisionOptionIdx []int64
-	decisionTargetIdx []int64
-	decisionMask      []byte
-	usesNoneHead      []byte
+	traceKindID        []int64
+	slotCardRows       []int64
+	slotOccupied       []float32
+	slotTapped         []float32
+	gameInfo           []float32
+	pendingKindID      []int64
+	numPresentOptions  []int64
+	optionKindIDs      []int64
+	optionScalars      []float32
+	optionMask         []float32
+	optionRefSlotIdx   []int64
+	optionRefCardRow   []int64
+	targetMask         []float32
+	targetTypeIDs      []int64
+	targetScalars      []float32
+	targetOverflow     []float32
+	targetRefSlotIdx   []int64
+	targetRefIsPlayer  []byte
+	targetRefIsSelf    []byte
+	mayMask            []byte
+	decisionStart      []int64
+	decisionCount      []int64
+	decisionOptionIdx  []int64
+	decisionTargetIdx  []int64
+	decisionMask       []byte
+	usesNoneHead       []byte
+	renderPlan         []int32
+	renderPlanLengths  []int64
+	renderPlanOverflow []int64
 }
 
 type batchRequest struct {
@@ -131,6 +137,10 @@ func validateEncodeConfig(cfg encodeConfig) *encodeError {
 		return &encodeError{code: mageEncodeErrArg, message: "max_cached_choices must be >= max_options"}
 	case cfg.maxCachedChoices < cfg.maxTargetsPerOption+1:
 		return &encodeError{code: mageEncodeErrArg, message: "max_cached_choices must be >= max_targets_per_option + 1"}
+	case cfg.emitRenderPlan && cfg.renderPlanCapacity <= 0:
+		return &encodeError{code: mageEncodeErrArg, message: "render_plan_capacity must be positive when emit_render_plan is set"}
+	case cfg.renderPlanCapacity > math.MaxInt32:
+		return &encodeError{code: mageEncodeErrArg, message: "render_plan_capacity must fit in int32"}
 	}
 	return nil
 }
@@ -175,6 +185,12 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 			h.mu.Unlock()
 			return decisionCursor, err
 		}
+		if cfg.emitRenderPlan {
+			if err := fillRenderPlan(int64(batchIdx), state, pending, playerIdx, cfg, views); err != nil {
+				h.mu.Unlock()
+				return decisionCursor, err
+			}
+		}
 		written, err := fillDecisionEncoding(int64(batchIdx), pending, cfg, views, decisionCursor)
 		h.mu.Unlock()
 		if err != nil {
@@ -212,6 +228,9 @@ func clearOutputViews(view outputViews) {
 	fillInt64(view.decisionTargetIdx, -1)
 	fillBytes(view.decisionMask, 0)
 	fillBytes(view.usesNoneHead, 0)
+	fillInt32(view.renderPlan, 0)
+	fillInt64(view.renderPlanLengths, 0)
+	fillInt64(view.renderPlanOverflow, 0)
 }
 
 func resolvePerspectivePlayerIndex(state *apiGameState, pending *apiPending, requested int64) (int, *encodeError) {
@@ -789,6 +808,12 @@ func fillFloat32(dst []float32, value float32) {
 }
 
 func fillBytes(dst []byte, value byte) {
+	for i := range dst {
+		dst[i] = value
+	}
+}
+
+func fillInt32(dst []int32, value int32) {
 	for i := range dst {
 		dst[i] = value
 	}

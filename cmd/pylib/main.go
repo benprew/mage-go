@@ -219,6 +219,8 @@ func parseEncodeConfigC(cfg *C.MageEncodeConfig) encodeConfig {
 		optionScalarDim:     int64(cfg.option_scalar_dim),
 		targetScalarDim:     int64(cfg.target_scalar_dim),
 		decisionCapacity:    int64(cfg.decision_capacity),
+		emitRenderPlan:      int64(cfg.emit_render_plan) != 0,
+		renderPlanCapacity:  int64(cfg.render_plan_capacity),
 	}
 }
 
@@ -240,6 +242,12 @@ func makeOutputViewsC(n int64, cfg encodeConfig, out *C.MageEncodeOutputs) (outp
 			return nil, &encodeError{code: mageEncodeErrInvalidArgument, message: fmt.Sprintf("out.%s must be non-nil", name)}
 		}
 		return unsafe.Slice((*byte)(unsafe.Pointer(ptr)), count), nil
+	}
+	requiredI32 := func(ptr *C.int32_t, count int64, name string) ([]int32, *encodeError) {
+		if ptr == nil {
+			return nil, &encodeError{code: mageEncodeErrInvalidArgument, message: fmt.Sprintf("out.%s must be non-nil", name)}
+		}
+		return unsafe.Slice((*int32)(unsafe.Pointer(ptr)), count), nil
 	}
 
 	view := outputViews{}
@@ -321,6 +329,17 @@ func makeOutputViewsC(n int64, cfg encodeConfig, out *C.MageEncodeOutputs) (outp
 	}
 	if view.usesNoneHead, err = requiredU8(out.uses_none_head, cfg.decisionCapacity, "uses_none_head"); err != nil {
 		return view, err
+	}
+	if cfg.emitRenderPlan {
+		if view.renderPlan, err = requiredI32(out.render_plan, n*cfg.renderPlanCapacity, "render_plan"); err != nil {
+			return view, err
+		}
+		if view.renderPlanLengths, err = requiredI64(out.render_plan_lengths, n, "render_plan_lengths"); err != nil {
+			return view, err
+		}
+		if view.renderPlanOverflow, err = requiredI64(out.render_plan_overflow, n, "render_plan_overflow"); err != nil {
+			return view, err
+		}
 	}
 	return view, nil
 }
