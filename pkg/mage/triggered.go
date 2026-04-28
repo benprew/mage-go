@@ -205,35 +205,37 @@ func OnLeaveZone(from, to Zone, effect Effect, optional bool) *GenericTriggered 
 	return t
 }
 
-// EntersBattlefieldTrigger fires when the source permanent enters the battlefield.
+// EntersBattlefieldTrigger fires when the source permanent enters the
+// battlefield. Implemented as an OnEnterZone(ZoneBattlefield) — fires on
+// EvtZoneChange with ToZone=Battlefield (CR 603.6d).
 func EntersBattlefieldTrigger(effect Effect, optional bool) *GenericTriggered {
-	return NewTriggered(EvtEntersBattlefield, optional, effect).
-		SetConditionData(EventSourceIsSelf{})
+	return OnEnterZone(ZoneBattlefield, effect, optional)
 }
 
 // PutIntoGraveyardFromBattlefieldTrigger fires when the source goes to graveyard
-// from the battlefield (e.g. Rancor).
+// from the battlefield (e.g. Rancor). Battlefield-only — does not fire on
+// the Sacrifice path. Use LeavesBattlefieldToGraveyardTrigger if you want
+// "when ~ is put into a graveyard from the battlefield" Oracle wording that
+// catches sacrifices too.
 func PutIntoGraveyardFromBattlefieldTrigger(effect Effect, optional bool) *GenericTriggered {
-	return NewTriggered(EvtPutIntoGraveyardFromBattlefield, optional, effect).
-		SetConditionData(EventSourceIsSelf{})
+	return NewTriggered(EvtZoneChange, optional, effect).
+		SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+			EventSourceIsSelf{},
+			EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard},
+		}})
 }
 
 // LeavesBattlefieldToGraveyardTrigger fires whenever the source is put into a
 // graveyard from the battlefield, via any path (lethal damage, destroy,
-// sacrifice, state-based effect, etc.). Implements Oracle text of the form
-// "When CARDNAME is put into a graveyard from the battlefield..." (Terrarion,
-// Sword of the Animist–style artifacts) per CR 603.6c (leaves-the-battlefield
-// triggers look back at the permanent's LKI).
+// sacrifice, state-based effect, etc.). Oracle wording "When CARDNAME is put
+// into a graveyard from the battlefield..." (Terrarion-style artifacts) per
+// CR 603.6c (leaves-the-battlefield triggers look back at the permanent's
+// LKI).
 //
-// Differs from PutIntoGraveyardFromBattlefieldTrigger: that variant does not
-// fire on the Game.Sacrifice path (the permanent is gone before the event
-// dispatches). This variant sets SelfGraveyard=true so the engine consults
-// the captured-ability list inside Sacrifice and still fires.
+// Sets SelfGraveyard=true so the engine consults the captured-ability list
+// inside Sacrifice and still fires after the permanent has left.
 func LeavesBattlefieldToGraveyardTrigger(effect Effect, optional bool) *GenericTriggered {
-	t := NewTriggered(EvtPutIntoGraveyardFromBattlefield, optional, effect).
-		SetConditionData(EventSourceIsSelf{})
-	t.SelfGraveyard = true
-	return t
+	return OnLeaveZone(ZoneBattlefield, ZoneGraveyard, effect, optional)
 }
 
 // ChooseOpponentOnETB sets the permanent's ChosenPlayer to the opponent on ETB.
@@ -362,10 +364,14 @@ func BeginningOfAttachedControllerUpkeepTrigger(effect Effect, optional bool) *G
 }
 
 // WheneverPermanentEntersBattlefieldTrigger fires whenever a permanent matching
-// the filter enters the battlefield.
+// the filter enters the battlefield. Fires on EvtZoneChange (To=Battlefield)
+// — see CR 603.10 / 603.6d.
 func WheneverPermanentEntersBattlefieldTrigger(effect Effect, optional bool, filter PermanentFilter) *GenericTriggered {
-	return NewTriggered(EvtEntersBattlefield, optional, effect).
-		SetConditionData(EventSourceMatchesPermanentFilter{Filter: filter})
+	return NewTriggered(EvtZoneChange, optional, effect).
+		SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+			EventZoneChangeMatches{From: ZoneAny, To: ZoneBattlefield},
+			EventSourceMatchesPermanentFilter{Filter: filter},
+		}})
 }
 
 // WheneverLandEntersBattlefieldTrigger fires whenever any land enters the battlefield.

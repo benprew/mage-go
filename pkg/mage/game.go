@@ -1742,6 +1742,10 @@ func (g *Game) PutTriggersOnStack() {
 					switch gt.eventType {
 					case EvtEntersBattlefield:
 						obj.XValue = pt.event.Amount
+					case EvtZoneChange:
+						if pt.event.ToZone == ZoneBattlefield {
+							obj.XValue = pt.event.Amount
+						}
 					case EvtDamageDealt:
 						obj.EventAmount = pt.event.Amount
 						obj.EventSourceID = pt.event.SourceID
@@ -1764,6 +1768,25 @@ func (g *Game) PutTriggersOnStack() {
 					}
 					// Preserve X value from the resolving spell (for X-cost ETB triggers)
 					obj.XValue = pt.event.Amount
+				case EvtZoneChange:
+					// EvtZoneChange replaces the legacy specialized events.
+					// Route based on (FromZone, ToZone) so migrated triggers
+					// receive the same StackObject context as before.
+					switch {
+					case pt.event.ToZone == ZoneBattlefield:
+						// Mirror EvtEntersBattlefield semantics.
+						if pt.event.SourceID != uuid.Nil {
+							obj.Targets = []uuid.UUID{pt.event.SourceID}
+						}
+						obj.XValue = pt.event.Amount
+					case pt.event.FromZone == ZoneBattlefield && pt.event.ToZone == ZoneGraveyard:
+						// Mirror EvtPutIntoGraveyardFromBattlefield: pass the
+						// controller's player ID so effects like "deal damage
+						// to its controller" / "draw a card" target correctly.
+						if pt.event.PlayerID != uuid.Nil {
+							obj.Targets = []uuid.UUID{pt.event.PlayerID}
+						}
+					}
 				case EvtDrawStep, EvtCardDrawn:
 					if pt.event.PlayerID != uuid.Nil {
 						obj.Targets = []uuid.UUID{pt.event.PlayerID}
