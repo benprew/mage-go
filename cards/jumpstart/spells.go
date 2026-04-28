@@ -428,13 +428,25 @@ func registerSpells() {
 	// Enlarge {3}{G}{G}
 	// Sorcery
 	// Target creature gets +7/+7 and gains trample until end of turn. It must be blocked this turn if able.
-	// XXX: missing MustBeBlocked grant primitive; implement +7/+7 + trample
 	Register("Enlarge", func() Card {
 		return NewSorcery("Enlarge", "{3}{G}{G}",
 			NewTargetedSpell(TargetCreature(), CompositeEffects(
-				"+7/+7 and trample",
+				"+7/+7, trample, must be blocked if able",
 				Boost(Fixed(7), Fixed(7)),
 				GrantKeyword(Trample),
+				FuncEffect(
+					"target creature must be blocked this turn if able",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						eff := TargetMustBeBlockedIfAble(targets[0], EndOfTurn)
+						eff.SetSourceID(sourceID)
+						g.AddContinuousEffect(eff)
+						return nil
+					},
+				),
 			)),
 		)
 	})
@@ -797,10 +809,25 @@ func registerSpells() {
 	// Sorcery
 	// Target creature must be blocked this turn if able.
 	// Draw a card.
-	// XXX: requires MustBeBlocked grant primitive; implement only draw
 	Register("Irresistible Prey", func() Card {
 		return NewSorcery("Irresistible Prey", "{G}",
-			NewTargetedSpell(TargetCreature(), drawSelfCard(1)),
+			NewTargetedSpell(TargetCreature(), CompositeEffects(
+				"must be blocked if able, draw a card",
+				FuncEffect(
+					"target creature must be blocked this turn if able",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						eff := TargetMustBeBlockedIfAble(targets[0], EndOfTurn)
+						eff.SetSourceID(sourceID)
+						g.AddContinuousEffect(eff)
+						return nil
+					},
+				),
+				drawSelfCard(1),
+			)),
 		)
 	})
 

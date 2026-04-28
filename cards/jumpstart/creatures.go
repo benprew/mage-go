@@ -485,7 +485,9 @@ func registerCreatures() {
 	// 3/3
 	// When Lena enters, create a 1/1 white Soldier creature token for each nontoken creature you control.
 	// Sacrifice Lena: Creatures you control with power less than Lena's power gain indestructible until end of turn.
-	// XXX: sac → power-comparison indestructible portion not implemented (no power-LT-source filter primitive)
+	// XXX: sac → power-comparison indestructible portion not implemented; SacrificeSourceCost
+	// runs before effect resolution, so by then Lena is in graveyard and her power can't be
+	// read. No LKI snapshot primitive exists between cost-pay and effect resolution.
 	Register("Lena, Selfless Champion", func() Card {
 		return NewCreature("Lena, Selfless Champion", "{4}{W}{W}", 3, 3,
 			WithSubTypes("Human", "Knight"),
@@ -3372,10 +3374,16 @@ func registerCreatures() {
 	// 6/6
 	// This creature can't attack unless you control more creatures than defending player.
 	// This creature can't block unless you control more creatures than attacking player.
-	// XXX: requires power-comparison restrictions (creature-count attack/block constraints)
+	// XXX: PreventAttackingIfDefenderControlsMore prevents only when defender controls
+	// strictly more (theirs > mine); Oracle requires "more creatures than defending
+	// player" to attack, which means attacking should also be illegal when counts are
+	// equal. Equal-count case is therefore permissive vs. Oracle.
+	// XXX: block-side "can't block unless you control more creatures than attacking player"
+	// has no engine primitive yet (no PreventBlockingIfAttackerControlsMore).
 	Register("Goblin Goon", func() Card {
 		return NewCreature("Goblin Goon", "{3}{R}", 6, 6,
 			WithSubTypes("Goblin", "Mutant"),
+			WithStaticAbility(PreventAttackingIfDefenderControlsMore(IsCreature)),
 		)
 	})
 
@@ -4229,10 +4237,10 @@ func registerCreatures() {
 	// 1/1
 	// Creatures with power less than this creature's power can't block creatures you control.
 	// Whenever another creature you control enters, put a +1/+1 counter on this creature.
-	// XXX: requires power-comparison block restriction
 	Register("Champion of Lambholt", func() Card {
 		return NewCreature("Champion of Lambholt", "{1}{G}{G}", 1, 1,
 			WithSubTypes("Human", "Warrior"),
+			WithStaticAbility(PreventBlockByPowerLessThanSource(IsCreature)),
 			WithAbility(WheneverPermanentEntersBattlefieldTrigger(
 				AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
 				false,
@@ -4471,10 +4479,26 @@ func registerCreatures() {
 	// Creature — Elf Scout
 	// 3/2
 	// {2}{G}: Target creature you control can't be blocked by creatures with power 2 or less this turn.
-	// XXX: requires "can't be blocked by creatures with power N or less" combat restriction
 	Register("Ghirapur Guide", func() Card {
 		return NewCreature("Ghirapur Guide", "{2}{G}", 3, 2,
 			WithSubTypes("Elf", "Scout"),
+			WithActivatedAbility(
+				FuncEffect(
+					"target creature you control can't be blocked by creatures with power 2 or less this turn",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						eff := TargetCantBeBlockedExceptBy(targets[0], PowerGreaterThan(2), EndOfTurn)
+						eff.SetSourceID(sourceID)
+						g.AddContinuousEffect(eff)
+						return nil
+					},
+				),
+				ManaCostOf("{2}{G}"),
+				WithTarget(TargetControlledCreature()),
+			),
 		)
 	})
 
@@ -5324,7 +5348,6 @@ func registerCreatures() {
 	// Haste (This creature can attack and {T} as soon as it comes under your control.)
 	// {1}: This creature can't be blocked this turn except by creatures with haste.
 	// {2}, {T}, Sacrifice this creature: You gain 3 life.
-	// XXX: {1} ability requires "can't be blocked except by creatures with [keyword]" combat restriction
 	Register("Gingerbrute", func() Card {
 		return NewCreature("Gingerbrute", "{1}", 1, 1,
 			WithSubTypes("Food", "Golem"),
@@ -5335,6 +5358,19 @@ func registerCreatures() {
 				ManaCostOf("{2}"),
 				WithCost(TapSourceCost()),
 				WithCost(SacrificeSourceCost()),
+			),
+			WithActivatedAbility(
+				FuncEffect(
+					"this creature can't be blocked this turn except by creatures with haste",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						eff := TargetCantBeBlockedExceptBy(sourceID, HasKeywordFilter(Haste), EndOfTurn)
+						eff.SetSourceID(sourceID)
+						g.AddContinuousEffect(eff)
+						return nil
+					},
+				),
+				ManaCostOf("{1}"),
 			),
 		)
 	})
