@@ -54,15 +54,33 @@ func registerEnchantments() {
 	// Enchantment
 	// Whenever a creature dies, put a charge counter on this enchantment.
 	// At the beginning of your first main phase, add {B} for each charge counter on this enchantment.
-	// XXX: EvtMainPhase exists in core/event.go but is never fired by the turn
-	// engine, so no "beginning of [first] main phase" trigger can fire. Also
-	// needs a charge-counter ability (EvtCreatureDied -> AddCounter on self)
-	// and a mana-pool primitive that emits {B} per charge-counter at that step.
-	// Engine work required: fire EvtMainPhase from turn.go on entry to
-	// PrecombatMain (and a way to scope to "first main phase" — i.e. only
-	// PrecombatMain).
 	Register("Black Market", func() Card {
-		return NewEnchantment("Black Market", "{3}{B}{B}")
+		return NewEnchantment("Black Market", "{3}{B}{B}",
+			WithAbility(AnyCreatureDiesTrigger(
+				AddCounters(Charge, Fixed(1)).Targeting(ToSource()),
+				false,
+			)),
+			WithAbility(BeginningOfFirstMainPhaseTrigger(
+				FuncEffect("add {B} for each charge counter on this enchantment",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						src := g.FindPermanent(sourceID)
+						if src == nil {
+							return nil
+						}
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						n := int(src.Counters[Charge])
+						for i := 0; i < n; i++ {
+							p.ManaPool().Add(Black, 1)
+						}
+						return nil
+					}),
+				false,
+			)),
+		)
 	})
 
 	// Blessed Sanctuary {3}{W}{W}

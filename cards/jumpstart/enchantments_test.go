@@ -405,6 +405,33 @@ func TestCuriousObsession_SacrificedIfDidNotAttack(t *testing.T) {
 	g.AssertGraveyardCount(gametest.PlayerA, "Curious Obsession", 1)
 }
 
+// Black Market accumulates charge counters when creatures die, then on the
+// controller's first main phase pours {B} into the pool for each counter.
+func TestBlackMarket_ChargeCountersOnCreatureDeath(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Black Market")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Grizzly Bears")
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	g.AssertCounterCount(gametest.PlayerA, "Black Market", core.Charge, 1)
+}
+
+// On the controller's first (precombat) main phase, Black Market emits {B} for
+// each charge counter — verified by casting a black spell using only that mana.
+func TestBlackMarket_AddsBlackOnFirstMainPhase(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Black Market")
+	g.AddCounters(1, core.Upkeep, gametest.PlayerA, "Black Market", core.Charge, 1)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Dark Ritual")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Dark Ritual")
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerA, "Dark Ritual", 1)
+}
+
 func TestEternalThirst_GrantsLifelink(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	bearID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
