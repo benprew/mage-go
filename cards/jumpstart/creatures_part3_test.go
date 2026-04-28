@@ -331,10 +331,20 @@ func TestKrenkoMobBoss_CreatesGoblinsEqualToCount(t *testing.T) {
 	g.AssertPermanentCount(gametest.PlayerA, "Goblin", 2)
 }
 
-// FIXME: Lathliss trigger appears to loop infinitely when a nontoken Dragon enters under
-// her controller (priority loop hits the 501-iteration emergency break).
+// Lathliss: another nontoken Dragon you control entering creates a 5/5 Dragon token.
+// Lathliss herself entering does not trigger (own ETB is filtered by EventSourceNotSelf),
+// and the 5/5 Dragon token she creates does not re-trigger her ability (nontoken filter).
 func TestLathlissDragonQueen_CreatesDragonOnETB(t *testing.T) {
-	t.Skip("FIXME: Lathliss ETB trigger loops priority resolution")
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Lathliss, Dragon Queen")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Mountain", 6)
+	g.AddCard(ZoneHand, gametest.PlayerA, "Lightning Shrieker")
+	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Lightning Shrieker")
+	g.StopAt(1, BeginCombat)
+	g.Execute()
+	// Exactly one 5/5 Dragon token from Lightning Shrieker's nontoken ETB.
+	// Lathliss is named "Lathliss, Dragon Queen"; the token is named "Dragon".
+	g.AssertPermanentCount(gametest.PlayerA, "Dragon", 1)
 }
 
 func TestLightningShrieker_ShufflesIntoLibrary(t *testing.T) {

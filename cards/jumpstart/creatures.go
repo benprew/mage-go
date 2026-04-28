@@ -4118,7 +4118,7 @@ func registerCreatures() {
 				NewPermanentFilter("another nontoken Dragon you control", func(p *Permanent, _ *Game) bool {
 					return p.HasSubType("Dragon") && !p.Card.IsToken()
 				}),
-			).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+			).AndConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
 				EventSourceNotSelf{},
 				EventSourceControlledByController{},
 			}})),
@@ -4449,7 +4449,7 @@ func registerCreatures() {
 				NewPermanentFilter("Sethron or another nontoken Minotaur you control", func(p *Permanent, _ *Game) bool {
 					return p.HasSubType("Minotaur") && !p.Card.IsToken()
 				}),
-			).SetConditionData(EventSourceControlledByController{})),
+			).AndConditionData(EventSourceControlledByController{})),
 			WithActivatedAbility(
 				FuncEffect(
 					"Minotaurs you control get +1/+0 and gain menace and haste until end of turn",
@@ -5558,12 +5558,11 @@ func registerCreatures() {
 		return NewCreature("Soul of the Harvest", "{4}{G}{G}", 6, 6,
 			WithSubTypes("Elemental"),
 			WithKeyword(Trample),
-			WithAbility(NewTriggered(EvtEntersBattlefield, true,
-				DrawCards(Fixed(1)),
-			).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+			WithAbility(WheneverPermanentEntersBattlefieldTrigger(
+				DrawCards(Fixed(1)), true, nontokenCreature,
+			).AndConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
 				EventSourceNotSelf{},
 				EventSourceControlledByController{},
-				EventSourceMatchesPermanentFilter{Filter: nontokenCreature},
 			}})),
 		)
 	})

@@ -512,8 +512,19 @@ func TestBlessedSanctuary_NontokenETBCreatesUnicorn(t *testing.T) {
 }
 
 // Token ETB does NOT trigger Blessed Sanctuary's nontoken-ETB clause.
-// SKIPPED: same engine bug as Lathliss — token detection on EvtEntersBattlefield
-// event source is unreliable inside trigger condition closures.
+// Cast Sporemound after Sanctuary is on the battlefield — Sporemound enters
+// (nontoken: 1 Unicorn), then plays a Forest so Sporemound's landfall makes a
+// Saproling token. Sanctuary must NOT mint a second Unicorn for the token.
 func TestBlessedSanctuary_TokenETBDoesNotTrigger(t *testing.T) {
-	t.Skip("FIXME: token-detection on EvtEntersBattlefield event source unreliable; same as Lathliss")
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Blessed Sanctuary")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 5)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Sporemound")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Forest")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Sporemound")
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Saproling", 1)
+	// Exactly one Unicorn (from nontoken Sporemound ETB), zero from the Saproling token.
+	g.AssertPermanentCount(gametest.PlayerA, "Unicorn", 1)
 }

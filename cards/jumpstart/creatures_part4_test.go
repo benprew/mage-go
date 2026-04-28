@@ -554,7 +554,6 @@ func TestInniazTheGaleForce_DoesNotPumpNonAttackers(t *testing.T) {
 }
 
 func TestSethronHurloonGeneral_PumpMinotaursWithB(t *testing.T) {
-	t.Skip("XXX: pre-existing ETB token-creation loop in Sethron's existing trigger blocks this test")
 	g := gametest.NewTestGame(t)
 	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Sethron, Hurloon General")
 	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Swamp", 3)
@@ -567,7 +566,6 @@ func TestSethronHurloonGeneral_PumpMinotaursWithB(t *testing.T) {
 }
 
 func TestSethronHurloonGeneral_PumpMinotaursWithR(t *testing.T) {
-	t.Skip("XXX: pre-existing ETB token-creation loop in Sethron's existing trigger blocks this test")
 	g := gametest.NewTestGame(t)
 	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Sethron, Hurloon General")
 	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Mountain", 3)
@@ -629,9 +627,23 @@ func TestSoulOfTheHarvest_DrawsOnNontokenETB(t *testing.T) {
 	g.AssertHandCount(gametest.PlayerA, "Hill Giant", 1)
 }
 
-// Token ETB does NOT draw a card. SKIPPED: same engine bug as Lathliss
-// (token detection on event source not reliable inside trigger condition
-// closures); see creatures_part3_test.go FIXME for context.
+// Token ETB does NOT draw a card. Cast Sporemound (nontoken: triggers a draw),
+// then play Forest so its landfall creates a Saproling token; Soul of the
+// Harvest's draw must fire only once (for Sporemound itself, not the token).
 func TestSoulOfTheHarvest_TokenETBDoesNotDraw(t *testing.T) {
-	t.Skip("FIXME: token-detection on EvtEntersBattlefield event source unreliable; same as Lathliss")
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Soul of the Harvest")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest", 5)
+	g.AddCard(ZoneHand, gametest.PlayerA, "Sporemound")
+	g.AddCard(ZoneHand, gametest.PlayerA, "Forest")
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Hill Giant")
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
+	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Sporemound")
+	g.StopAt(1, PostcombatMain)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Saproling", 1)
+	// Exactly one library top card drawn (Sporemound's nontoken ETB triggers Soul).
+	// The Saproling token must NOT trigger a second draw.
+	g.AssertHandCount(gametest.PlayerA, "Hill Giant", 1)
+	g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 0)
 }

@@ -73,21 +73,16 @@ func registerEnchantments() {
 	// damagePreventionRule supports combatOnly but has no NoncombatOnly flag,
 	// and PreventDamageFromTo has no way to scope to noncombat damage. Engine
 	// work needed: a NoncombatOnly option on the prevention rule.
-	// XXX: nontoken filter on the ETB trigger suffers from the same engine bug
-	// as Lathliss — token detection on EvtEntersBattlefield event source is
-	// unreliable, so token creatures entering may also (incorrectly) spawn a
-	// Unicorn.
 	Register("Blessed Sanctuary", func() Card {
 		nontokenCreatureYouControl := NewPermanentFilter("nontoken creature you control", func(p *Permanent, _ *Game) bool {
 			return p.HasType(TypeCreature) && !p.Card.IsToken()
 		})
 		return NewEnchantment("Blessed Sanctuary", "{3}{W}{W}",
-			WithAbility(NewTriggered(EvtEntersBattlefield, false,
+			WithAbility(WheneverPermanentEntersBattlefieldTrigger(
 				CreateColoredToken("Unicorn", 2, 2, []Color{White}, []CardType{TypeCreature}, []string{"Unicorn"}),
-			).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
-				EventSourceControlledByController{},
-				EventSourceMatchesPermanentFilter{Filter: nontokenCreatureYouControl},
-			}})),
+				false,
+				nontokenCreatureYouControl,
+			).AndConditionData(EventSourceControlledByController{})),
 		)
 	})
 
