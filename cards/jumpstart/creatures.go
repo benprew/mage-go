@@ -3229,11 +3229,37 @@ func registerCreatures() {
 	// 1/2
 	// At the beginning of each end step, if an opponent discarded a card this turn, you draw a card and you lose 1 life.
 	// {4}{B}{B}: Each opponent with no cards in hand loses 10 life.
-	// XXX: end-step half requires per-turn discard tracking
 	Register("Tinybones, Trinket Thief", func() Card {
 		return NewCreature("Tinybones, Trinket Thief", "{1}{B}", 1, 2,
 			WithSubTypes("Skeleton", "Rogue"),
 			WithSuperTypes(SuperLegendary),
+			WithAbility(BeginningOfEachEndStepTrigger(
+				FuncEffect("if an opponent discarded a card this turn, draw a card and lose 1 life",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						any := false
+						for _, pl := range g.AllPlayers() {
+							if pl.PlayerID() == controller {
+								continue
+							}
+							if g.PlayerDiscardCountThisTurn(pl.PlayerID()) > 0 {
+								any = true
+								break
+							}
+						}
+						if !any {
+							return nil
+						}
+						you := g.GetPlayer(controller)
+						if you == nil {
+							return nil
+						}
+						you.DrawCard()
+						you.LoseLife(1)
+						return nil
+					}),
+				false,
+			)),
 			WithActivatedAbility(
 				FuncEffect("each opponent with no cards in hand loses 10 life",
 					EffectProperties{Outcome: OutcomeBenefit},
@@ -3356,11 +3382,65 @@ func registerCreatures() {
 	// 4/4
 	// Deathtouch
 	// At the beginning of your end step, if you gained life this turn, each opponent sacrifices a creature of their choice and you return up to one target creature card from your graveyard to your hand.
-	// XXX: requires gained-life-this-turn tracking
+	// XXX: Oracle says "up to one target creature card" — implementation picks
+	// the creature card at resolution time (controller's choice) rather than
+	// pre-selecting a target on stack. Equivalent in 2-player without
+	// hexproof/ward graveyard interactions, but technically a target-vs-choice
+	// gap. Same simplification as Sheoldred, Whispering One.
 	Register("Witch of the Moors", func() Card {
 		return NewCreature("Witch of the Moors", "{3}{B}{B}", 4, 4,
 			WithSubTypes("Human", "Warlock"),
 			WithKeyword(Deathtouch),
+			WithAbility(NewTriggered(EvtEndStep, false,
+				FuncEffect(
+					"if you gained life this turn, each opponent sacrifices a creature of their choice and you return up to one target creature card from your graveyard to your hand",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if g.PlayerLifeGainedThisTurn(controller) <= 0 {
+							return nil
+						}
+						for _, pl := range g.AllPlayers() {
+							if pl.PlayerID() == controller {
+								continue
+							}
+							creatures := g.FilterBattlefield(And(IsCreature, ControlledBy(pl.PlayerID())))
+							if len(creatures) == 0 {
+								continue
+							}
+							chosen := pl.ChoosePermanent(creatures, "sacrifice a creature", g)
+							if chosen != nil {
+								g.Sacrifice(chosen)
+							}
+						}
+						you := g.GetPlayer(controller)
+						if you == nil {
+							return nil
+						}
+						if len(targets) > 0 {
+							if card, ok := you.RemoveFromGraveyard(targets[0]); ok {
+								you.AddToHand(card)
+							}
+							return nil
+						}
+						var creatureCards []Card
+						for _, c := range you.Graveyard() {
+							if IsCreatureCard.Match(c) {
+								creatureCards = append(creatureCards, c)
+							}
+						}
+						if len(creatureCards) == 0 {
+							return nil
+						}
+						chosen := you.ChooseCardFromLibrary(creatureCards, "return up to one creature card from your graveyard to your hand", g)
+						if chosen == nil {
+							return nil
+						}
+						if card, ok := you.RemoveFromGraveyard(chosen.ID()); ok {
+							you.AddToHand(card)
+						}
+						return nil
+					}),
+			).SetConditionData(EventPlayerIsController{})),
 		)
 	})
 
@@ -3939,11 +4019,32 @@ func registerCreatures() {
 	// 7/3
 	// Trample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)
 	// At the beginning of each end step, if this creature attacked or blocked this turn, its owner shuffles it into their library.
-	// XXX: requires "attacked or blocked this turn" tracking
 	Register("Inferno Hellion", func() Card {
 		return NewCreature("Inferno Hellion", "{3}{R}", 7, 3,
 			WithSubTypes("Hellion"),
 			WithKeyword(Trample),
+			WithAbility(BeginningOfEachEndStepTrigger(
+				FuncEffect("if this creature attacked or blocked this turn, owner shuffles it into their library",
+					EffectProperties{},
+					func(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
+						if !g.PermanentAttackedOrBlockedThisTurn(sourceID) {
+							return nil
+						}
+						perm := g.FindPermanent(sourceID)
+						if perm == nil {
+							return nil
+						}
+						owner := g.GetPlayer(perm.Card.Owner())
+						card := perm.Card
+						g.RemoveFromBattlefield(perm)
+						if owner != nil {
+							owner.AddToLibrary(card)
+							owner.ShuffleLibrary()
+						}
+						return nil
+					},
+				), false,
+			)),
 		)
 	})
 
@@ -4041,7 +4142,7 @@ func registerCreatures() {
 	// Flying, haste
 	// This creature can't block.
 	// At the beginning of your end step, if an opponent was dealt 3 or more damage this turn, you may pay {R}. If you do, return this card from your graveyard to the battlefield.
-	// XXX: requires damage-this-turn tracking and graveyard self-return on conditional pay
+	// XXX: per-turn damage tracker exists (PermanentDamageReceivedThisTurn applies to players too), but the engine has no graveyard-zone triggered-ability primitive — triggered abilities only fire while the source is on the battlefield. Need a "while in graveyard" trigger registration before this can be wired.
 	Register("Lightning Phoenix", func() Card {
 		return NewCreature("Lightning Phoenix", "{2}{R}", 2, 2,
 			WithSubTypes("Phoenix"),
@@ -4618,10 +4719,30 @@ func registerCreatures() {
 	// This spell can't be countered.
 	// Green spells you control can't be countered.
 	// {4}{G}{G}: Until end of turn, each Elf creature you control has base power and toughness 5/5 and becomes a Dinosaur in addition to its other creature types.
-	// XXX: "This spell can't be countered" and "Green spells you control can't be countered" still require an uncounterable engine flag.
 	Register("Allosaurus Shepherd", func() Card {
 		return NewCreature("Allosaurus Shepherd", "{G}", 1, 1,
 			WithSubTypes("Elf", "Shaman"),
+			WithUncounterable(),
+			WithStaticAbility(RegisterUncounterableStatic(func(g *Game, obj *StackObject) bool {
+				if obj.Card == nil {
+					return false
+				}
+				isGreen := false
+				for _, c := range obj.Card.ManaCost().Colors() {
+					if c == Green {
+						isGreen = true
+						break
+					}
+				}
+				if !isGreen {
+					return false
+				}
+				shepherds := g.FilterBattlefield(And(ControlledBy(obj.Controller),
+					NewPermanentFilter("Allosaurus Shepherd", func(p *Permanent, _ *Game) bool {
+						return p.Card.Name() == "Allosaurus Shepherd"
+					})))
+				return len(shepherds) > 0
+			})),
 			WithActivatedAbility(
 				FuncEffect(
 					"until end of turn, each Elf creature you control has base power and toughness 5/5 and becomes a Dinosaur in addition to its other creature types",
