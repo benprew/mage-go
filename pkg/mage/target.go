@@ -29,6 +29,41 @@ func (t *BaseTarget) Min() int            { return t.min }
 func (t *BaseTarget) Max() int            { return t.max }
 func (t *BaseTarget) Reset()              { t.chosen = nil }
 
+// opponentChosenTarget wraps another Target so the *opponent* of the
+// trigger's controller is prompted to choose, not the controller. Used
+// for "of an opponent's choice" effects (Mausoleum Turnkey).
+//
+// The wrapper forwards Possible/Choose/Min/Max/Reset and exposes
+// OpponentChoosesTarget() bool so chooseTriggerTargets routes the
+// ChooseTargets prompt to the opponent.
+type opponentChosenTarget struct {
+	inner Target
+}
+
+// TargetOpponentChoice wraps inner so the opponent of the ability's
+// controller picks the target from inner's legal candidates. Combine
+// with any existing Target constructor:
+//
+//	mage.TargetOpponentChoice(mage.TargetUpToNCardsInYourGraveyard(1, mage.IsCreatureCard))
+func TargetOpponentChoice(inner Target) Target {
+	return &opponentChosenTarget{inner: inner}
+}
+
+func (t *opponentChosenTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+	return t.inner.Possible(controller, sourceCard, g)
+}
+
+func (t *opponentChosenTarget) Choose(controller uuid.UUID, sourceCard Card, g *Game, chosen []uuid.UUID) error {
+	return t.inner.Choose(controller, sourceCard, g, chosen)
+}
+
+func (t *opponentChosenTarget) Chosen() []uuid.UUID         { return t.inner.Chosen() }
+func (t *opponentChosenTarget) IsChosen() bool              { return t.inner.IsChosen() }
+func (t *opponentChosenTarget) Min() int                    { return t.inner.Min() }
+func (t *opponentChosenTarget) Max() int                    { return t.inner.Max() }
+func (t *opponentChosenTarget) Reset()                      { t.inner.Reset() }
+func (t *opponentChosenTarget) OpponentChoosesTarget() bool { return true }
+
 // CreatureTarget targets a creature on the battlefield.
 type CreatureTarget struct {
 	BaseTarget

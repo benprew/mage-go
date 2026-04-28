@@ -1682,8 +1682,19 @@ func (g *Game) chooseTriggerTargets(pt *pendingTrigger, declared []Target) []uui
 			continue
 		}
 		var chosen []uuid.UUID
-		if controller != nil {
-			chosen = controller.ChooseTargets(possible, t.Min(), t.Max(), g)
+		// Some targets specify that the *opponent* (not the trigger's
+		// controller) chooses from the legal target set, e.g. Mausoleum
+		// Turnkey ("of an opponent's choice"). Such targets implement the
+		// OpponentChoosesTarget marker interface; we route the prompt to
+		// the opposing player.
+		chooser := controller
+		if oct, ok := t.(interface{ OpponentChoosesTarget() bool }); ok && oct.OpponentChoosesTarget() {
+			if opp := g.GetOpponent(pt.controller); opp != nil {
+				chooser = opp
+			}
+		}
+		if chooser != nil {
+			chosen = chooser.ChooseTargets(possible, t.Min(), t.Max(), g)
 		}
 		if len(chosen) == 0 && t.Min() > 0 {
 			chosen = possible[:1]
