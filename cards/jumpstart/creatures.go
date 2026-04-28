@@ -904,11 +904,25 @@ func registerCreatures() {
 	// Legendary Creature — Human Advisor
 	// 1/4
 	// If an opponent would mill one or more cards, they mill twice that many cards instead. (To mill a card, a player puts the top card of their library into their graveyard.)
-	// XXX: requires mill replacement effect
 	Register("Bruvac the Grandiloquent", func() Card {
 		return NewCreature("Bruvac the Grandiloquent", "{2}{U}", 1, 4,
 			WithSubTypes("Human", "Advisor"),
 			WithSuperTypes(SuperLegendary),
+			WithETBEffect(FuncEffect(
+				"register Bruvac mill doubler",
+				EffectProperties{},
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					g.AddMillReplacement(sourceID, func(g *Game, milledID uuid.UUID, amt int) int {
+						if milledID == controller {
+							return amt
+						}
+						if amt < 1 {
+							return amt
+						}
+						return amt * 2
+					})
+					return nil
+				})),
 		)
 	})
 
@@ -1661,11 +1675,30 @@ func registerCreatures() {
 	// 3/2
 	// Defender
 	// {1}{U}: This creature loses defender and becomes a Human until end of turn.
-	// XXX: requires temporary subtype change with keyword removal until EOT
 	Register("Wishful Merfolk", func() Card {
 		return NewCreature("Wishful Merfolk", "{1}{U}", 3, 2,
 			WithSubTypes("Merfolk"),
 			WithKeyword(Defender),
+			WithActivatedAbility(
+				FuncEffect(
+					"this creature loses defender and becomes a Human until end of turn",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						revoke := TargetEffect(LayerAbility, EndOfTurn, sourceID, func(g *Game, target *Permanent) error {
+							g.RevokeAttr(target.ID(), Defender)
+							return nil
+						})
+						revoke.SetSourceID(sourceID)
+						g.AddContinuousEffect(revoke)
+						sub := BecomesSubType(sourceID, "Human", EndOfTurn)
+						sub.SetSourceID(sourceID)
+						g.AddContinuousEffect(sub)
+						g.ApplyContinuousEffects()
+						return nil
+					},
+				),
+				ManaCostOf("{1}{U}"),
+			),
 		)
 	})
 
@@ -5454,7 +5487,11 @@ func registerCreatures() {
 	// 3/3
 	// As an additional cost to cast this spell, reveal an Elf card from your hand or pay {3}.
 	// Deathtouch (Any amount of damage this deals to a creature is enough to destroy it.)
-	// XXX: requires "reveal a card from hand or pay X" branching additional cost
+	// XXX: EitherCost can model the OR branching, but the first branch needs a
+	// "reveal a card matching <filter> from your hand" Cost primitive — no such
+	// RevealFromHandCost(filter) exists in pkg/mage/cost.go today. Once added,
+	// wire as: WithAdditionalCost(EitherCost(RevealFromHandCost(IsElfCard),
+	// ManaCostOf("{3}"))).
 	Register("Wren's Run Vanquisher", func() Card {
 		return NewCreature("Wren's Run Vanquisher", "{1}{G}", 3, 3,
 			WithSubTypes("Elf", "Warrior"),
@@ -5967,12 +6004,49 @@ func registerCreatures() {
 	// 2/2
 	// {T}: Add one mana of any color.
 	// {T}: Target creature becomes the color or colors of your choice until end of turn.
-	// XXX: requires "color or colors of your choice" (multi-color override) until end of turn
 	Register("Scuttlemutt", func() Card {
 		return NewCreature("Scuttlemutt", "{3}", 2, 2,
 			WithSubTypes("Scarecrow"),
 			WithCardType(TypeArtifact),
 			WithAnyColorMana(),
+			WithActivatedAbility(
+				FuncEffect(
+					"target creature becomes the color or colors of your choice until end of turn",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						chosen := []Color{p.ChooseManaColor("Choose a color")}
+						seen := map[Color]bool{chosen[0]: true}
+						for {
+							if !p.ChooseMayAbility("Choose another color?") {
+								break
+							}
+							c := p.ChooseManaColor("Choose another color")
+							if seen[c] {
+								continue
+							}
+							seen[c] = true
+							chosen = append(chosen, c)
+							if len(chosen) >= 5 {
+								break
+							}
+						}
+						eff := BecomesColors(targets[0], chosen, EndOfTurn)
+						eff.SetSourceID(sourceID)
+						g.AddContinuousEffect(eff)
+						g.ApplyContinuousEffects()
+						return nil
+					},
+				),
+				TapSourceCost(),
+				WithTarget(TargetCreature()),
+			),
 		)
 	})
 

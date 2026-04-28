@@ -1057,3 +1057,34 @@ func TestDoublecast_CopiesNextInstantOrSorcery(t *testing.T) {
 	g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
 }
 
+// Lightning Axe: "As an additional cost to cast this spell, discard a card or
+// pay {5}." With both options payable, default ChooseMode = 0 → discard branch.
+func TestLightningAxe_DiscardBranch(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Axe")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Plains")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+	g.ChooseDiscard(gametest.PlayerA, "Plains")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Axe", "Hill Giant")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerB, "Hill Giant", 1)
+	// Discard branch consumed the Plains from hand.
+	g.AssertGraveyardCount(gametest.PlayerA, "Plains", 1)
+	g.AssertHandCount(gametest.PlayerA, "Plains", 0)
+}
+
+// Lightning Axe: with no other cards in hand at cast time, discard branch is
+// unpayable and EitherCost auto-routes to the {5} mana branch.
+func TestLightningAxe_PayFiveBranch(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 6)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Axe")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Axe", "Hill Giant")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerB, "Hill Giant", 1)
+}
+

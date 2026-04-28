@@ -999,11 +999,10 @@ func registerSpells() {
 	// Instant
 	// As an additional cost to cast this spell, discard a card or pay {5}.
 	// Lightning Axe deals 5 damage to target creature.
-	// XXX: requires "discard a card or pay {5}" alternative additional-cost framework
 	Register("Lightning Axe", func() Card {
 		return NewInstant("Lightning Axe", "{R}",
 			NewTargetedSpell(TargetCreature(), DealDamage(Fixed(5))),
-			WithAdditionalCost(DiscardCost(1)),
+			WithAdditionalCost(EitherCost(DiscardCost(1), ManaCostOf("{5}"))),
 		)
 	})
 
@@ -1191,7 +1190,10 @@ func registerSpells() {
 	// Read the Runes {X}{U}
 	// Instant
 	// Draw X cards. For each card drawn this way, discard a card unless you sacrifice a permanent.
-	// XXX: requires per-card discard-or-sacrifice choice
+	// XXX: not an additional cost; this is a per-card "unless" branching effect during
+	// resolution. EitherCost only models additional casting costs. Needs a resolution-time
+	// "for each X, choose: pay cost A unless you pay cost B" effect combinator with a
+	// generic SacrificePermanentCost (no permanent-type filter currently exists).
 	Register("Read the Runes", func() Card {
 		return NewInstant("Read the Runes", "{X}{U}",
 			NewSpellAbility(DrawCards(XValue())),
@@ -1390,7 +1392,11 @@ func registerSpells() {
 	// Thirst for Knowledge {2}{U}
 	// Instant
 	// Draw three cards. Then discard two cards unless you discard an artifact card.
-	// XXX: requires choose-discard-artifact-or-two-cards branching primitive
+	// XXX: not an additional cost; this is a resolution-time "unless" branch.
+	// EitherCost only applies to casting costs. Needs a resolution-time effect
+	// that asks the controller to choose between discarding 2 cards or discarding
+	// 1 artifact card, plus a hand-card-by-type-filter discard primitive (no
+	// DiscardMatching/DiscardOfType primitive exists today).
 	Register("Thirst for Knowledge", func() Card {
 		return NewInstant("Thirst for Knowledge", "{2}{U}",
 			NewSpellAbility(drawSelfCard(3)),
