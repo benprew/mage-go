@@ -363,3 +363,69 @@ func TestPreventAttackingIfDefenderControlsMore(t *testing.T) {
 		tg.AssertLife(PlayerB, 14)
 	})
 }
+
+// TestPreventAttackingIfDefenderControlsAsManyOrMore exercises the
+// strict "more creatures than defending player" variant: equality also
+// revokes the attack.
+func TestPreventAttackingIfDefenderControlsAsManyOrMore(t *testing.T) {
+	goon := "ComboRestr Goon-AtkStrict"
+	registerOnce(goon, func() mage.Card {
+		return mage.NewCreature(goon, "{2}{R}{R}", 6, 6,
+			mage.WithStaticAbility(
+				mage.PreventAttackingIfDefenderControlsAsManyOrMore(mage.IsCreature),
+			),
+		)
+	})
+	chump := "ComboRestr Goon-ChumpStrict"
+	registerOnce(chump, func() mage.Card { return mage.NewCreature(chump, "{1}", 1, 1) })
+
+	t.Run("can't attack when equal", func(t *testing.T) {
+		tg := NewTestGame(t)
+		tg.AddCard(core.ZoneBattlefield, PlayerA, goon)
+		tg.AddCard(core.ZoneBattlefield, PlayerB, chump)
+		tg.Attack(1, PlayerA, goon)
+		tg.StopAt(1, core.EndCombat)
+		tg.Execute()
+		tg.AssertLife(PlayerB, 20)
+	})
+
+	t.Run("can attack when strictly more", func(t *testing.T) {
+		tg := NewTestGame(t)
+		tg.AddCard(core.ZoneBattlefield, PlayerA, goon)
+		tg.AddCard(core.ZoneBattlefield, PlayerA, chump)
+		tg.AddCard(core.ZoneBattlefield, PlayerB, chump)
+		tg.Attack(1, PlayerA, goon)
+		tg.StopAt(1, core.EndCombat)
+		tg.Execute()
+		tg.AssertLife(PlayerB, 14)
+	})
+}
+
+// TestPreventBlockingIfAttackerControlsAsManyOrMore exercises the
+// block-side restriction: source can't be declared a blocker unless
+// the source's controller controls strictly more permanents matching
+// the filter than the attacking player does.
+func TestPreventBlockingIfAttackerControlsAsManyOrMore(t *testing.T) {
+	goon := "ComboRestr Goon-Blk"
+	registerOnce(goon, func() mage.Card {
+		return mage.NewCreature(goon, "{2}{R}{R}", 6, 6,
+			mage.WithStaticAbility(
+				mage.PreventBlockingIfAttackerControlsAsManyOrMore(mage.IsCreature),
+			),
+		)
+	})
+	bear := "ComboRestr Goon-Blk-Bear"
+	registerOnce(bear, func() mage.Card { return mage.NewCreature(bear, "{1}{G}", 2, 2) })
+
+	t.Run("can't block when equal", func(t *testing.T) {
+		tg := NewTestGame(t)
+		tg.AddCard(core.ZoneBattlefield, PlayerB, goon)
+		tg.AddCard(core.ZoneBattlefield, PlayerA, bear)
+		tg.Attack(1, PlayerA, bear)
+		tg.Block(1, PlayerB, goon, bear)
+		tg.StopAt(1, core.EndCombat)
+		tg.Execute()
+		// Block was suppressed; bear got through.
+		tg.AssertLife(PlayerB, 18)
+	})
+}

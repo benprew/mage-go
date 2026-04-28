@@ -212,6 +212,64 @@ func PreventAttackingIfDefenderControlsMore(filter PermanentFilter) ContinuousEf
 	})
 }
 
+// PreventAttackingIfDefenderControlsAsManyOrMore is the strict variant of
+// PreventAttackingIfDefenderControlsMore. It revokes AttrCanAttack from
+// the source unless the source's controller controls strictly more
+// permanents matching filter than the defending player does. Used by
+// Goblin Goon: "Goblin Goon can't attack unless you control more
+// creatures than defending player." (Equality also revokes; Oracle
+// requires "more" from your side.)
+func PreventAttackingIfDefenderControlsAsManyOrMore(filter PermanentFilter) ContinuousEffect {
+	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+		src := g.FindPermanent(sourceID)
+		if src == nil {
+			return nil
+		}
+		mine := g.CountBattlefield(And(ControlledBy(src.Controller), filter))
+		var defID uuid.UUID
+		for _, pl := range g.players {
+			if pl.PlayerID() != src.Controller {
+				defID = pl.PlayerID()
+				break
+			}
+		}
+		theirs := g.CountBattlefield(And(ControlledBy(defID), filter))
+		if mine <= theirs {
+			g.effects.RevokeAttr(sourceID, AttrCanAttack)
+		}
+		return nil
+	})
+}
+
+// PreventBlockingIfAttackerControlsAsManyOrMore is the block-side analogue
+// of PreventAttackingIfDefenderControlsAsManyOrMore. It revokes
+// AttrCanBlock from the source unless the source's controller controls
+// strictly more permanents matching filter than the attacking player
+// does. Used by Goblin Goon: "Goblin Goon can't block unless you
+// control more creatures than attacking player." Treats the opposing
+// 2-player seat as the attacking-player.
+func PreventBlockingIfAttackerControlsAsManyOrMore(filter PermanentFilter) ContinuousEffect {
+	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+		src := g.FindPermanent(sourceID)
+		if src == nil {
+			return nil
+		}
+		mine := g.CountBattlefield(And(ControlledBy(src.Controller), filter))
+		var attID uuid.UUID
+		for _, pl := range g.players {
+			if pl.PlayerID() != src.Controller {
+				attID = pl.PlayerID()
+				break
+			}
+		}
+		theirs := g.CountBattlefield(And(ControlledBy(attID), filter))
+		if mine <= theirs {
+			g.effects.RevokeAttr(sourceID, AttrCanBlock)
+		}
+		return nil
+	})
+}
+
 // PowerLessOrEqual returns a PermanentFilter matching creatures whose current
 // power is <= n. Useful for "can't be blocked by creatures with power N or
 // less" (Ghirapur Guide).
