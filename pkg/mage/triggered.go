@@ -166,9 +166,13 @@ func BlocksTrigger(effect Effect, optional bool) *GenericTriggered {
 
 // DiesCreatureTrigger fires when another creature you control dies.
 // The filter parameter is reserved for future use.
+// Fires on EvtZoneChange (BF -> GY) with a was-creature LKI predicate
+// (CR 700.4 / 603.6c).
 func DiesCreatureTrigger(effect Effect, optional bool, filter PermanentFilter) *GenericTriggered {
-	return NewTriggered(EvtCreatureDied, optional, effect).
-		SetConditionData(AndTriggerCond{[]TriggerConditionData{
+	return NewTriggered(EvtZoneChange, optional, effect).
+		SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+			EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard},
+			EventSourceWasOfType{Type: TypeCreature},
 			EventSourceNotSelf{},
 			EventPlayerIsController{},
 		}})
@@ -380,15 +384,25 @@ func WheneverLandEntersBattlefieldTrigger(effect Effect, optional bool) *Generic
 }
 
 // AnyCreatureDiesTrigger fires when any creature dies (regardless of controller).
+// Fires on EvtZoneChange (BF -> GY) with a was-creature LKI predicate
+// (CR 700.4 / 603.6c).
 func AnyCreatureDiesTrigger(effect Effect, optional bool) *GenericTriggered {
-	return NewTriggered(EvtCreatureDied, optional, effect)
+	return NewTriggered(EvtZoneChange, optional, effect).
+		SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+			EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard},
+			EventSourceWasOfType{Type: TypeCreature},
+		}})
 }
 
 // CreatureDealtDamageBySourceDiesTrigger fires when a creature that was dealt
 // damage by the source permanent this turn dies (e.g. Sengir Vampire).
 func CreatureDealtDamageBySourceDiesTrigger(effect Effect, optional bool) *GenericTriggered {
-	return NewTriggered(EvtCreatureDied, optional, effect).
-		SetConditionData(EventSourceDamagedBySource{})
+	return NewTriggered(EvtZoneChange, optional, effect).
+		SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+			EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard},
+			EventSourceWasOfType{Type: TypeCreature},
+			EventSourceDamagedBySource{},
+		}})
 }
 
 // SacrificeAtUpkeepUnlessPay creates a trigger that sacrifices the source at
