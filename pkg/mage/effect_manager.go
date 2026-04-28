@@ -328,6 +328,7 @@ func (em *EffectManager) Apply(g *Game) {
 		p.RuntimeAbilities = base
 		p.Controller = p.Card.Owner()
 		p.SubTypeOverride = nil
+		p.SubTypeAdditions = nil
 		p.BasePTOverride = nil
 		p.ColorOverride = nil
 		// Reset grantedAttrs and P/T bonuses so each Apply() cycle starts fresh.

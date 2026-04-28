@@ -466,6 +466,7 @@ type Permanent struct {
 
 	RuntimeAbilities []Ability // base + granted by effects
 	SubTypeOverride  []string  // if set, replaces card's subtypes (from continuous effects)
+	SubTypeAdditions []string  // additive subtypes granted by continuous effects (CR 614 layer 4); kept alongside SubTypeOverride or card's intrinsic subtypes
 	BasePTOverride   *[2]int   // if set, overrides base P/T (for animate effects)
 	ColorOverride    *[]Color  // if set, replaces card's colors (from lace effects)
 	FaceDown         bool      // true when face-down (e.g. Illusionary Mask)
@@ -617,6 +618,11 @@ func (p *Permanent) HasSubType(s string) bool {
 		subs = p.SubTypeOverride
 	}
 	for _, st := range subs {
+		if st == s {
+			return true
+		}
+	}
+	for _, st := range p.SubTypeAdditions {
 		if st == s {
 			return true
 		}

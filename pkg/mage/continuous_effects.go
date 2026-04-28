@@ -1068,3 +1068,100 @@ func extractKeywords(p *Permanent) []Keyword {
 	}
 	return keywords
 }
+
+// ---------------------------------------------------------------------------
+// Type-granting continuous effects (CR 614 layer 4) and color-changing
+// continuous effects (CR 614 layer 5).
+// ---------------------------------------------------------------------------
+
+// addSubTypeAddition appends a subtype to a permanent's additive subtype slice
+// without duplicating one already present (in either base subtypes, an
+// override, or another addition).
+func addSubTypeAddition(p *Permanent, subtype string) {
+	if subtype == "" {
+		return
+	}
+	if p.HasSubType(subtype) {
+		return
+	}
+	p.SubTypeAdditions = append(p.SubTypeAdditions, subtype)
+}
+
+// GrantSubTypeToControlled grants a subtype to all permanents controlled by
+// the source's controller that match the given filter (e.g. Allosaurus
+// Shepherd's static "All creatures you control that are Elves are also
+// Dinosaurs in addition to their other types"). Operates at LayerType.
+func GrantSubTypeToControlled(subtype string, filter PermanentFilter) ContinuousEffect {
+	return FuncContinuousEffect(LayerType, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+		src := g.FindPermanent(sourceID)
+		if src == nil {
+			return nil
+		}
+		for _, p := range g.battlefield {
+			if p.Controller != src.Controller {
+				continue
+			}
+			if !filter.Match(p, g) {
+				continue
+			}
+			addSubTypeAddition(p, subtype)
+		}
+		return nil
+	})
+}
+
+// GrantSubTypeToAll grants a subtype to all permanents matching the filter
+// (no controller restriction). Operates at LayerType.
+func GrantSubTypeToAll(subtype string, filter PermanentFilter) ContinuousEffect {
+	return FuncContinuousEffect(LayerType, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
+		for _, p := range g.FilterBattlefield(filter) {
+			addSubTypeAddition(p, subtype)
+		}
+		return nil
+	})
+}
+
+// GrantSubTypeToTarget grants a subtype to a specific permanent for the given
+// duration ("in addition to its other types"). Operates at LayerType.
+func GrantSubTypeToTarget(targetID uuid.UUID, subtype string, duration Duration) ContinuousEffect {
+	return TargetEffect(LayerType, duration, targetID, func(g *Game, target *Permanent) error {
+		addSubTypeAddition(target, subtype)
+		return nil
+	})
+}
+
+// BecomesSubType replaces the (creature) subtypes of a specific permanent with
+// the given subtype until the given duration expires (e.g. Wishful Merfolk
+// "becomes a Human until end of turn"). The card retains all its types
+// (creature/etc.) but its printed subtypes are overridden. Operates at
+// LayerType.
+func BecomesSubType(targetID uuid.UUID, subtype string, duration Duration) ContinuousEffect {
+	return TargetEffect(LayerType, duration, targetID, func(g *Game, target *Permanent) error {
+		target.SubTypeOverride = []string{subtype}
+		target.SubTypeAdditions = nil
+		return nil
+	})
+}
+
+// BecomesColor replaces the colors of a specific permanent with the given
+// color until the given duration expires (e.g. Scuttlemutt "Target creature
+// becomes the chosen color until end of turn"). Operates at LayerColor.
+func BecomesColor(targetID uuid.UUID, color Color, duration Duration) ContinuousEffect {
+	return TargetEffect(LayerColor, duration, targetID, func(g *Game, target *Permanent) error {
+		colors := []Color{color}
+		target.ColorOverride = &colors
+		return nil
+	})
+}
+
+// BecomesColors is the multi-color variant of BecomesColor.
+func BecomesColors(targetID uuid.UUID, colors []Color, duration Duration) ContinuousEffect {
+	cs := make([]Color, len(colors))
+	copy(cs, colors)
+	return TargetEffect(LayerColor, duration, targetID, func(g *Game, target *Permanent) error {
+		out := make([]Color, len(cs))
+		copy(out, cs)
+		target.ColorOverride = &out
+		return nil
+	})
+}

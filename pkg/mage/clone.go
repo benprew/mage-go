@@ -264,6 +264,10 @@ func clonePermanentInto(dst, src *Permanent) {
 		dst.SubTypeOverride = make([]string, len(src.SubTypeOverride))
 		copy(dst.SubTypeOverride, src.SubTypeOverride)
 	}
+	if len(src.SubTypeAdditions) > 0 {
+		dst.SubTypeAdditions = make([]string, len(src.SubTypeAdditions))
+		copy(dst.SubTypeAdditions, src.SubTypeAdditions)
+	}
 	// Deep copy BasePTOverride if non-nil (it's a *[2]int).
 	if src.BasePTOverride != nil {
 		v := *src.BasePTOverride
