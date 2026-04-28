@@ -208,29 +208,8 @@ func SpellValue(card mage.Card, p mage.Player, g *mage.Game) int {
 }
 
 // CountAvailableMana counts the total mana available from untapped sources a player controls.
-func CountAvailableMana(g *mage.Game, playerID uuid.UUID) int {
-	count := 0
-	for _, perm := range g.AllBattlefield() {
-		if perm.Controller != playerID {
-			continue
-		}
-		if perm.Tapped {
-			continue
-		}
-		bestProduction := 0
-		for _, a := range perm.RuntimeAbilities {
-			if ma, ok := mage.UnwrapAbility(a).(*mage.ManaAbility); ok {
-				if amt := ma.ProducedAmount(); amt > bestProduction {
-					bestProduction = amt
-				}
-			}
-		}
-		if bestProduction == 0 && perm.HasType(core.TypeLand) {
-			bestProduction = 1
-		}
-		count += bestProduction
-	}
-	return count
+func CountAvailableMana(g mage.GameReader, playerID uuid.UUID) int {
+	return g.HypotheticalMana(playerID)
 }
 
 // HandCMCs returns the CMC of each non-land, non-instant card in a player's hand.

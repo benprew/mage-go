@@ -737,15 +737,16 @@ func TestAbilityQuality_PingerHigherThanPump(t *testing.T) {
 
 func TestCountAvailableMana_UntappedLands(t *testing.T) {
 	g, pa, _ := makeGame()
-	for i := 0; i < 3; i++ {
-		land := mage.NewLand("Forest")
+	for range 3 {
+		land := mage.NewLand("Forest", mage.WithManaAbility(core.Green))
 		land.SetOwner(pa.PlayerID())
 		lp := mage.NewPermanent(land, pa.PlayerID())
 		lp.RevokeBaseAttr(core.AttrSummonSick)
 		g.AddToBattlefield(lp)
 	}
+
 	// Add one tapped land
-	tappedLand := mage.NewLand("Mountain")
+	tappedLand := mage.NewLand("Mountain", mage.WithManaAbility(core.Red))
 	tappedLand.SetOwner(pa.PlayerID())
 	tp := mage.NewPermanent(tappedLand, pa.PlayerID())
 	tp.RevokeBaseAttr(core.AttrSummonSick)
@@ -760,7 +761,7 @@ func TestCountAvailableMana_UntappedLands(t *testing.T) {
 
 func TestCountAvailableMana_IncludesManaCreatures(t *testing.T) {
 	g, pa, _ := makeGame()
-	land := mage.NewLand("Forest")
+	land := mage.NewLand("Forest", mage.WithManaAbility(core.Green))
 	land.SetOwner(pa.PlayerID())
 	lp := mage.NewPermanent(land, pa.PlayerID())
 	lp.RevokeBaseAttr(core.AttrSummonSick)

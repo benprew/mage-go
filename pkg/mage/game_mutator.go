@@ -41,6 +41,7 @@ type GameReader interface {
 	FindPermanentIncludingPhased(uuid.UUID) *Permanent
 	GetArtifactUntapMax() int
 	ActivePlayerIndex() int
+	HypotheticalMana(uuid.UUID) int // returns the amount of hypthetical mana a player has available
 }
 
 // Compile-time check that *Game satisfies GameReader.

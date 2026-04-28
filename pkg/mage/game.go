@@ -2796,6 +2796,11 @@ func (g *Game) AutoTapForCost(playerID uuid.UUID, mc ManaCost) error {
 	return nil
 }
 
+func (g *Game) HypotheticalMana(playerID uuid.UUID) int {
+	p := g.buildHypotheticalPool(playerID)
+	return p.Surplus(ManaCost{})
+}
+
 // CanAfford returns true if a player has enough mana (pool + untapped sources) to pay a cost.
 func (g *Game) CanAfford(playerID uuid.UUID, mc ManaCost) bool {
 	hypothetical := g.buildHypotheticalPool(playerID)
