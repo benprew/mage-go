@@ -91,7 +91,7 @@ func execAddCounters(ctx *EffectContext, e *addCountersEffect) error {
 			amount = min(amount, room)
 		}
 		if amount > 0 {
-			perm.AddCounter(e.ct, amount)
+			ctx.Game.AddCountersWithReplacement(perm, e.ct, amount, ctx.SourceID, false)
 		}
 	}
 	return nil

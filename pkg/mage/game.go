@@ -103,6 +103,12 @@ type Game struct {
 	// Targets of the spell currently being resolved (for ETB copy effects)
 	resolvingTargets []uuid.UUID
 
+	// Permanent currently being put onto the battlefield during PutOnBattlefield,
+	// before it is appended to g.battlefield. Looked up by FindPermanent so
+	// that counter-placement replacements (ETB additional, doubling) can match
+	// the entering permanent during ETB resolution.
+	enteringPermanent *Permanent
+
 	// DamageDistribution chosen at cast/activation time for the spell currently
 	// being resolved (CR 601.2d, divided damage). Cleared after resolution.
 	resolvingDamageDistribution map[uuid.UUID]int
@@ -235,6 +241,9 @@ func (g *Game) FindPermanent(id uuid.UUID) *Permanent {
 		if p.ID() == id {
 			return p
 		}
+	}
+	if g.enteringPermanent != nil && g.enteringPermanent.ID() == id {
+		return g.enteringPermanent
 	}
 	return nil
 }
@@ -455,18 +464,27 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 		perm.RevokeBaseAttr(EntersTapped)
 	}
 
-	// Add X counters if configured (replacement effect, not a trigger)
+	// Expose the entering permanent to FindPermanent for the duration of ETB
+	// resolution so counter-placement replacements (ETB additional counters,
+	// doublers) can match it before it joins g.battlefield.
+	g.enteringPermanent = perm
+	defer func() { g.enteringPermanent = nil }()
+
+	// Add X counters if configured (replacement effect, not a trigger).
+	// Routed through AddCountersWithReplacement so ETB-additional counter
+	// effects (Oona's Blackguard) and counter doublers (Branching Evolution)
+	// can intercept the placement.
 	for _, a := range perm.RuntimeAbilities {
 		if xc, ok := a.(*EntersWithXCountersAbility); ok && g.currentX > 0 {
-			perm.AddCounter(xc.CounterType, g.currentX)
+			g.AddCountersWithReplacement(perm, xc.CounterType, g.currentX, perm.ID(), true)
 			break
 		}
 	}
 
-	// Add fixed N counters if configured (replacement effect, not a trigger)
+	// Add fixed N counters if configured (replacement effect, not a trigger).
 	for _, a := range perm.RuntimeAbilities {
 		if nc, ok := a.(*EntersWithNCountersAbility); ok {
-			perm.AddCounter(nc.CounterType, nc.Count)
+			g.AddCountersWithReplacement(perm, nc.CounterType, nc.Count, perm.ID(), true)
 		}
 	}
 

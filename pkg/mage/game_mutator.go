@@ -318,6 +318,77 @@ func (g *Game) AddReplacementEffect(r ReplacementEffect) {
 	g.effects.AddReplacement(r)
 }
 
+// AddCountersWithReplacement places counters on a permanent after running the
+// counter-placement replacement pipeline (CR 614). This is the API engine
+// effects should use for counter placement so doubling effects (Branching
+// Evolution) and "enters with an additional counter" effects (Oona's
+// Blackguard) can intercept the placement. Direct calls to
+// Permanent.AddCounter bypass the pipeline and are reserved for replacement
+// implementations themselves and very low-level mechanics (Vanishing's Time
+// counters, etc.).
+//
+// sourceID identifies the spell/ability/permanent causing the placement.
+// onEntry must be true exactly when the placement happens during the
+// permanent's enter-the-battlefield resolution, before EvtEntersBattlefield
+// fires (used by EntersWithXCounters and EntersWithNCounters).
+func (g *Game) AddCountersWithReplacement(perm *Permanent, ct CounterType, n int, sourceID uuid.UUID, onEntry bool) {
+	if perm == nil || n <= 0 {
+		return
+	}
+	action := NewAddCountersAction(sourceID, perm.ID(), ct, n, onEntry)
+	result := g.effects.ApplyReplacements(action, g)
+	if result == nil {
+		return
+	}
+	aca, ok := result.(*AddCountersAction)
+	if !ok {
+		return
+	}
+	target := g.FindPermanent(aca.PermanentID())
+	if target == nil {
+		// During PutOnBattlefield the permanent isn't yet on the
+		// battlefield slice; fall back to the caller-supplied pointer when
+		// the IDs match (ETB additional/doubling for the same permanent).
+		if perm.ID() == aca.PermanentID() {
+			target = perm
+		}
+	}
+	if target == nil {
+		return
+	}
+	if aca.Amount() > 0 {
+		target.AddCounter(aca.CounterType(), aca.Amount())
+	}
+}
+
+// AddCounterDoubler registers a counter-doubling replacement effect (CR
+// 614.1c) for the given counter type. The filter restricts which permanents
+// the doubler applies to (e.g. ControlledBy(playerID) for Branching
+// Evolution). Pass an empty PermanentFilter to apply globally (Doubling
+// Season-style for a specific counter type).
+func (g *Game) AddCounterDoubler(sourceID uuid.UUID, ct CounterType, filter PermanentFilter) {
+	g.effects.AddReplacement(&counterDoublerReplacement{
+		replacementBase: replacementBase{sourceID: sourceID, duration: WhileOnBattlefield},
+		counterType:     ct,
+		filter:          filter,
+	})
+}
+
+// AddETBAdditionalCounters registers a replacement that puts N additional
+// counters of the given type on each permanent matching filter as it enters
+// the battlefield. excludeSelf=true keeps the source out of its own filter
+// (e.g. "Each other Rogue creature you control enters with an additional
+// +1/+1 counter on it").
+func (g *Game) AddETBAdditionalCounters(sourceID uuid.UUID, ct CounterType, extra int, filter PermanentFilter, excludeSelf bool) {
+	g.effects.AddReplacement(&etbAdditionalCountersReplacement{
+		replacementBase: replacementBase{sourceID: sourceID, duration: WhileOnBattlefield},
+		counterType:     ct,
+		extra:           extra,
+		filter:          filter,
+		excludeSelf:     excludeSelf,
+	})
+}
+
 // SetArtifactManaOnly marks a player as having artifact-only mana restriction active.
 func (g *Game) SetArtifactManaOnly(playerID uuid.UUID) {
 	if g.artifactManaOnly == nil {

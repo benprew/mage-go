@@ -1235,17 +1235,22 @@ card draw — it is wrapped in an [Action] struct and run through
 
 ## Action Types
 
-Five concrete action types represent pending mutations:
+Six concrete action types represent pending mutations:
 
 	[*DamageToPlayerAction]    — damage about to be dealt to a player
 	[*DamageToCreatureAction]  — damage about to be dealt to a creature
 	[*DestroyPermanentAction]  — a permanent about to be destroyed
 	[*LifeGainAction]          — a player about to gain life
 	[*DrawCardAction]          — a player about to draw a card
+	[*AddCountersAction]       — counters about to be put on a permanent (CR 614.1c)
 
 All implement the [Action] interface (single method: ActionSource() uuid.UUID).
 Damage actions expose Amount(), IsCombatDamage(), PlayerID()/PermanentID(),
 and a WithAmount(int) copy method for partial prevention.
+[*AddCountersAction] exposes PermanentID(), CounterType(), Amount(), and
+OnEntry() (true when the placement happens during enter-the-battlefield
+resolution before EvtEntersBattlefield); WithAmount(int) returns a copy with
+a different count.
 
 ## ReplacementEffect Interface
 
@@ -1319,10 +1324,16 @@ the appropriate replacement:
 	g.PreventAllDamageFrom(sourceID)           → damagePreventionRuleReplacement
 	g.SetMinimumLife(playerID)                 → minimumLifeReplacement (cycle)
 	g.SetArtifactDamageRedirect(ctrlID, pID)   → artifactDamageRedirectReplacement (cycle)
+	g.AddCounterDoubler(srcID, ct, filter)     → counterDoublerReplacement (Doubling Season,
+	                                              Branching Evolution; CR 614.1c)
+	g.AddETBAdditionalCounters(srcID, ct, n,
+	                           filter, excludeSelf) → etbAdditionalCountersReplacement
+	                                              (Oona's Blackguard, Winding Constrictor;
+	                                              CR 614.1c)
 
 For custom replacements, call [*Game.AddReplacementEffect](r) directly.
 
-## Built-In Replacement Implementations (17)
+## Built-In Replacement Implementations (19)
 
 All live in replacement.go:
 
@@ -1343,6 +1354,10 @@ All live in replacement.go:
 	skipDrawReplacement                — skips next normal draw
 	drawReplacementEffect              — Aladdin's Lamp draw replacement
 	damagePreventionRuleReplacement    — from/to PermanentFilter-based prevention (cycle)
+	counterDoublerReplacement          — doubles +1/+1 (or other) counter placements on
+	                                      matching permanents (CR 614.1c)
+	etbAdditionalCountersReplacement   — adds N more counters when matching permanents
+	                                      enter the battlefield (CR 614.1c)
 
 ## Example: Custom Replacement on a Card
 
@@ -1377,13 +1392,23 @@ All live in replacement.go:
 
 ## Mutation Method Integration
 
-The five Game methods that produce actions:
+The six Game methods that produce actions:
 
 	DealDamageToPlayer  — creates DamageToPlayerAction, runs pipeline, executes via executeDamageToPlayer
 	DealDamageToPermanent — creates DamageToCreatureAction, runs pipeline, executes via executeDamageToCreature
 	DestroyPermanent    — creates DestroyPermanentAction, runs pipeline, removes from battlefield if not replaced
 	PlayerGainLife      — creates LifeGainAction, runs pipeline, applies life gain if not replaced
 	doDrawNormalDraw    — creates DrawCardAction, runs pipeline, draws card if not replaced
+	AddCountersWithReplacement — creates AddCountersAction, runs pipeline, calls Permanent.AddCounter
+	                              with the (possibly transformed) amount. Engine code that needs
+	                              counter doubling / ETB-additional support uses this; raw
+	                              Permanent.AddCounter bypasses the pipeline.
+
+During PutOnBattlefield the entering permanent is transiently exposed via
+g.enteringPermanent so FindPermanent (and therefore replacement Matches
+predicates) can see it before it joins g.battlefield. EntersWithXCounters
+and EntersWithNCounters route through AddCountersWithReplacement with
+onEntry=true.
 
 The executeAction dispatcher type-switches on the returned action and calls the
 appropriate executor. If a replacement changes action type (e.g., redirect

@@ -747,3 +747,103 @@ func (*colorPreventionReplacement) IsPreventionEffect() bool      { return true 
 func (*sourcePreventionReplacement) IsPreventionEffect() bool     { return true }
 func (*typePreventionReplacement) IsPreventionEffect() bool       { return true }
 func (*damagePreventionRuleReplacement) IsPreventionEffect() bool { return true }
+
+// ---------------------------------------------------------------------------
+// 18. Counter doubler: doubles +1/+1 counter placements on matching permanents
+// (Doubling Season, Branching Evolution-style — CR 614.1c)
+// ---------------------------------------------------------------------------
+
+type counterDoublerReplacement struct {
+	replacementBase
+	counterType CounterType
+	filter      PermanentFilter
+}
+
+func (r *counterDoublerReplacement) Matches(a Action, g GameReader) bool {
+	act, ok := a.(*AddCountersAction)
+	if !ok {
+		return false
+	}
+	if act.CounterType() != r.counterType {
+		return false
+	}
+	if act.Amount() <= 0 {
+		return false
+	}
+	game, _ := g.(*Game)
+	perm := g.FindPermanent(act.PermanentID())
+	if perm == nil {
+		return false
+	}
+	if r.filter.IsZero() {
+		return true
+	}
+	return r.filter.Match(perm, game)
+}
+
+func (r *counterDoublerReplacement) Replace(a Action, _ *Game) Action {
+	act := a.(*AddCountersAction)
+	return act.WithAmount(act.Amount() * 2)
+}
+
+func (r *counterDoublerReplacement) IsActive(g GameReader) bool {
+	return g.FindPermanent(r.sourceID) != nil
+}
+
+func (r *counterDoublerReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
+}
+
+// ---------------------------------------------------------------------------
+// 19. ETB-additional counters: adds N more counters when matching permanents
+// enter the battlefield (Oona's Blackguard, Winding Constrictor — CR 614.1c).
+// ---------------------------------------------------------------------------
+
+type etbAdditionalCountersReplacement struct {
+	replacementBase
+	counterType CounterType
+	extra       int
+	filter      PermanentFilter
+	// excludeSelf, if true, prevents the source permanent from buffing itself.
+	excludeSelf bool
+}
+
+func (r *etbAdditionalCountersReplacement) Matches(a Action, g GameReader) bool {
+	act, ok := a.(*AddCountersAction)
+	if !ok || !act.OnEntry() {
+		return false
+	}
+	if act.CounterType() != r.counterType {
+		return false
+	}
+	if act.Amount() <= 0 {
+		return false
+	}
+	if r.excludeSelf && act.PermanentID() == r.sourceID {
+		return false
+	}
+	game, _ := g.(*Game)
+	perm := g.FindPermanent(act.PermanentID())
+	if perm == nil {
+		return false
+	}
+	if r.filter.IsZero() {
+		return true
+	}
+	return r.filter.Match(perm, game)
+}
+
+func (r *etbAdditionalCountersReplacement) Replace(a Action, _ *Game) Action {
+	act := a.(*AddCountersAction)
+	return act.WithAmount(act.Amount() + r.extra)
+}
+
+func (r *etbAdditionalCountersReplacement) IsActive(g GameReader) bool {
+	return g.FindPermanent(r.sourceID) != nil
+}
+
+func (r *etbAdditionalCountersReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
+}
