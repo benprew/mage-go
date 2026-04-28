@@ -239,9 +239,7 @@ func registerCreatures() {
 	Register("Brightmare", func() Card {
 		return NewCreature("Brightmare", "{2}{W}", 2, 3,
 			WithSubTypes("Unicorn"),
-			// XXX: Oracle is "tap up to one target creature" but engine has no
-			// up-to-one target primitive; using mandatory single target instead.
-			WithCastTarget(TargetCreature()),
+			WithCastTarget(TargetUpToOneCreature()),
 			WithETBEffect(FuncEffect(
 				"tap target creature; gain life equal to its power",
 				EffectProperties{Outcome: OutcomeBenefit},
@@ -1073,11 +1071,6 @@ func registerCreatures() {
 	// When this creature becomes the target of a spell, sacrifice it.
 	// This creature can't be blocked except by Spirits.
 	// {3}{U}: Another target creature you control can't be blocked this turn except by Spirits.
-	// Note: "another target creature you control" enforced via runtime
-	// exclude-source check inside the effect. Engine has CreatureTarget with
-	// both controllerOnly and excludeSource flags, but no public constructor
-	// combining them; PermanentFilter does not receive sourceID, so a filter
-	// closure isn't enough either. Behavior matches Oracle.
 	Register("Departed Deckhand", func() Card {
 		// "becomes the target of a spell" only — filter EvtBecomesTarget by Flag=false
 		// (Flag is true for activated abilities, false for spells per EvtBecomesTarget docs).
@@ -1098,9 +1091,6 @@ func registerCreatures() {
 						if len(targets) == 0 {
 							return nil
 						}
-						if targets[0] == sourceID {
-							return nil
-						}
 						eff := TargetCantBeBlockedExceptBy(targets[0], HasSubType("Spirit"), EndOfTurn)
 						eff.SetSourceID(sourceID)
 						g.AddContinuousEffect(eff)
@@ -1108,7 +1098,7 @@ func registerCreatures() {
 					},
 				),
 				ManaCostOf("{3}{U}"),
-				WithTarget(TargetControlledCreature()),
+				WithTarget(TargetAnotherCreatureYouControl()),
 			),
 		)
 	})
@@ -1181,11 +1171,13 @@ func registerCreatures() {
 	// 2/2
 	// Flying
 	// Creatures you control have "Whenever this creature becomes the target of a spell or ability for the first time each turn, counter that spell or ability."
-	// XXX: GrantTriggeredAbilityToAll skips the source permanent, so Kira herself does
-	// not receive a copy of the granted trigger via the static. We add the same trigger
-	// directly on Kira so she also benefits — functionally correct, but mechanically
-	// the trigger should derive from the static on a "creatures you control" filter
-	// that includes the source.
+	// XXX: GrantTriggeredAbilityToAll unconditionally skips the source permanent in
+	// pkg/mage/continuous_effects.go (`if p.ID() == sourceID { continue }`), so Kira
+	// would never grant the trigger to herself even though Oracle's "creatures you
+	// control" filter clearly includes her. Workaround: register an own-copy trigger
+	// directly on Kira. A proper fix needs an opt-in flag on GrantTriggeredAbilityToAll
+	// (e.g. IncludeSource) so lord-style "creatures you control" grants can match the
+	// source when the filter does — out of scope for cards/.
 	Register("Kira, Great Glass-Spinner", func() Card {
 		// "Counter that spell or ability." Auto-bind on EvtBecomesTarget passes
 		// the targeted object as targets[0] and the offending spell/ability source
