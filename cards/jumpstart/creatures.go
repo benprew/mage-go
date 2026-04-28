@@ -62,7 +62,7 @@ func registerCreatures() {
 	Register("Ajani's Chosen", func() Card {
 		return NewCreature("Ajani's Chosen", "{2}{W}{W}", 3, 3,
 			WithSubTypes("Cat", "Soldier"),
-			WithAbility(NewTriggered(EvtEntersBattlefield, false,
+			WithAbility(NewTriggered(EvtZoneChange, false,
 				CreateColoredToken("Cat", 2, 2, []Color{White},
 					[]CardType{TypeCreature}, []string{"Cat"})).
 				SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
@@ -71,7 +71,7 @@ func registerCreatures() {
 						return false
 					}
 					return perm.Controller == controllerID && perm.HasType(TypeEnchantment)
-				})),
+				}).AndConditionData(EventZoneChangeMatches{From: ZoneAny, To: ZoneBattlefield})),
 		)
 	})
 
@@ -169,8 +169,7 @@ func registerCreatures() {
 		return NewCreature("Archon of Justice", "{3}{W}{W}", 4, 4,
 			WithSubTypes("Archon"),
 			WithKeyword(Flying),
-			WithAbility(NewTriggered(EvtCreatureDied, false, ExileTarget()).
-				SetConditionData(EventSourceIsSelf{}).
+			WithAbility(DiesTrigger(ExileTarget(), false).
 				AddTarget(TargetPermanent())),
 		)
 	})
@@ -184,7 +183,7 @@ func registerCreatures() {
 		return NewCreature("Archon of Redemption", "{3}{W}{W}", 3, 4,
 			WithSubTypes("Archon"),
 			WithKeyword(Flying),
-			WithAbility(NewTriggered(EvtEntersBattlefield, true, FuncEffect(
+			WithAbility(NewTriggered(EvtZoneChange, true, FuncEffect(
 				"may gain life equal to that creature's power",
 				EffectProperties{Outcome: OutcomeBenefit},
 				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -214,7 +213,7 @@ func registerCreatures() {
 						return true
 					}
 					return perm.Controller == controllerID && perm.HasType(TypeCreature) && perm.HasKeyword(Flying)
-				})),
+				}).AndConditionData(EventZoneChangeMatches{From: ZoneAny, To: ZoneBattlefield})),
 		)
 	})
 
@@ -338,7 +337,7 @@ func registerCreatures() {
 				GenericCost(3),
 				WithTarget(TargetControlledCreature()),
 			),
-			WithAbility(NewTriggered(EvtEntersBattlefield, false,
+			WithAbility(NewTriggered(EvtZoneChange, false,
 				MayPayMana("{G/W}",
 					"put a +1/+1 counter on it (two if it's a Unicorn)",
 					FuncEffect("put a +1/+1 counter on it; two if it's a Unicorn",
@@ -361,6 +360,7 @@ func registerCreatures() {
 					),
 				),
 			).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+				EventZoneChangeMatches{From: ZoneAny, To: ZoneBattlefield},
 				EventSourceNotSelf{},
 				EventSourceMatchesPermanentFilter{Filter: IsCreature},
 				EventSourceControlledByController{},
@@ -605,7 +605,7 @@ func registerCreatures() {
 	Register("Mentor of the Meek", func() Card {
 		return NewCreature("Mentor of the Meek", "{2}{W}", 2, 2,
 			WithSubTypes("Human", "Soldier"),
-			WithAbility(NewTriggered(EvtEntersBattlefield, true, FuncEffect(
+			WithAbility(NewTriggered(EvtZoneChange, true, FuncEffect(
 				"may pay {1}; if you do, draw a card",
 				EffectProperties{Outcome: OutcomeBenefit, DrawCount: 1},
 				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -631,7 +631,7 @@ func registerCreatures() {
 						return false
 					}
 					return perm.Controller == controllerID && perm.HasType(TypeCreature) && perm.CurrentPower(g) <= 2
-				})),
+				}).AndConditionData(EventZoneChangeMatches{From: ZoneAny, To: ZoneBattlefield})),
 		)
 	})
 
@@ -1256,7 +1256,7 @@ func registerCreatures() {
 			WithSubTypes("Spirit"),
 			WithKeyword(Flash),
 			WithKeyword(Flying),
-			WithAbility(NewTriggered(EvtEntersBattlefield, false, TapTarget()).
+			WithAbility(NewTriggered(EvtZoneChange, false, TapTarget()).
 				SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 					perm := g.FindPermanent(evt.SourceID)
 					if perm == nil {
@@ -1266,7 +1266,7 @@ func registerCreatures() {
 						return true
 					}
 					return perm.Controller == controllerID && perm.HasSubType("Spirit")
-				}).
+				}).AndConditionData(EventZoneChangeMatches{From: ZoneAny, To: ZoneBattlefield}).
 				AddTarget(TargetPermanentOpponentControls(IsCreature))),
 		)
 	})
@@ -1789,7 +1789,7 @@ func registerCreatures() {
 	Register("Black Cat", func() Card {
 		return NewCreature("Black Cat", "{1}{B}", 1, 1,
 			WithSubTypes("Zombie", "Cat"),
-			WithAbility(NewTriggered(EvtCreatureDied, false,
+			WithAbility(DiesTrigger(
 				FuncEffect("target opponent discards a card at random",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -1804,7 +1804,8 @@ func registerCreatures() {
 						p.DiscardCard(p.Hand()[idx].ID())
 						return nil
 					}),
-			).SetConditionData(EventSourceIsSelf{}).AddTarget(TargetOpponent())),
+				false,
+			).AddTarget(TargetOpponent())),
 		)
 	})
 
@@ -2151,8 +2152,7 @@ func registerCreatures() {
 			WithSubTypes("Zombie", "Bird"),
 			WithKeyword(Flying),
 			WithAbility(EntersBattlefieldTrigger(millSelf2, false)),
-			WithAbility(NewTriggered(EvtCreatureDied, false, millSelf2).
-				SetConditionData(EventSourceIsSelf{})),
+			WithAbility(DiesTrigger(millSelf2, false)),
 		)
 	})
 
@@ -2163,10 +2163,10 @@ func registerCreatures() {
 	Register("Drainpipe Vermin", func() Card {
 		return NewCreature("Drainpipe Vermin", "{B}", 1, 1,
 			WithSubTypes("Rat"),
-			WithAbility(NewTriggered(EvtCreatureDied, false,
+			WithAbility(DiesTrigger(
 				MayPayMana("{B}", "target player discards a card", DiscardCards(Fixed(1))),
-			).SetConditionData(EventSourceIsSelf{}).
-				AddTarget(TargetPlayer())),
+				false,
+			).AddTarget(TargetPlayer())),
 		)
 	})
 
@@ -2204,10 +2204,10 @@ func registerCreatures() {
 	Register("Dutiful Attendant", func() Card {
 		return NewCreature("Dutiful Attendant", "{2}{B}", 1, 2,
 			WithSubTypes("Human", "Warrior"),
-			WithAbility(NewTriggered(EvtCreatureDied, false,
+			WithAbility(DiesTrigger(
 				ReturnFromGraveyardToHandTarget(),
-			).SetConditionData(EventSourceIsSelf{}).
-				AddTarget(TargetOtherCreatureInYourGraveyard())),
+				false,
+			).AddTarget(TargetOtherCreatureInYourGraveyard())),
 		)
 	})
 
@@ -2353,7 +2353,7 @@ func registerCreatures() {
 	Register("Festering Newt", func() Card {
 		return NewCreature("Festering Newt", "{B}", 1, 1,
 			WithSubTypes("Salamander"),
-			WithAbility(NewTriggered(EvtCreatureDied, false,
+			WithAbility(DiesTrigger(
 				FuncEffect("target creature an opponent controls gets -1/-1 (-4/-4 with Bogbrew Witch) until end of turn",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -2373,8 +2373,8 @@ func registerCreatures() {
 						g.AddContinuousEffect(ce)
 						return nil
 					}),
-			).SetConditionData(EventSourceIsSelf{}).
-				AddTarget(TargetPermanentOpponentControls(IsCreature))),
+				false,
+			).AddTarget(TargetPermanentOpponentControls(IsCreature))),
 		)
 	})
 
@@ -2595,7 +2595,7 @@ func registerCreatures() {
 		return NewCreature("Harvester of Souls", "{4}{B}{B}", 5, 5,
 			WithSubTypes("Demon"),
 			WithKeyword(Deathtouch),
-			WithAbility(NewTriggered(EvtCreatureDied, true,
+			WithAbility(NewTriggered(EvtZoneChange, true,
 				DrawCards(Fixed(1)),
 			).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 				if evt.SourceID == sourceID {
@@ -2603,7 +2603,10 @@ func registerCreatures() {
 				}
 				c := g.FindCardAnywhere(evt.SourceID)
 				return c != nil && !c.IsToken()
-			})),
+			}).AndConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+				EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard},
+				EventSourceWasOfType{Type: TypeCreature},
+			}})),
 		)
 	})
 
@@ -2649,10 +2652,10 @@ func registerCreatures() {
 	Register("Lawless Broker", func() Card {
 		return NewCreature("Lawless Broker", "{2}{B}", 3, 2,
 			WithSubTypes("Aetherborn", "Rogue"),
-			WithAbility(NewTriggered(EvtCreatureDied, false,
+			WithAbility(DiesTrigger(
 				AddCounters(P1P1, Fixed(1)),
-			).SetConditionData(EventSourceIsSelf{}).
-				AddTarget(TargetCreatureYouControl())),
+				false,
+			).AddTarget(TargetCreatureYouControl())),
 		)
 	})
 
@@ -2839,7 +2842,7 @@ func registerCreatures() {
 		return NewCreature("Nocturnal Feeder", "{2}{B}", 2, 1,
 			WithSubTypes("Vampire", "Rogue"),
 			WithKeyword(Flying),
-			WithAbility(NewTriggered(EvtCreatureDied, false,
+			WithAbility(DiesTrigger(
 				FuncEffect("each opponent loses 2 life and you gain 2 life",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -2853,7 +2856,8 @@ func registerCreatures() {
 						}
 						return nil
 					}),
-			).SetConditionData(EventSourceIsSelf{})),
+				false,
+			)),
 		)
 	})
 
@@ -2891,7 +2895,7 @@ func registerCreatures() {
 	Register("Ogre Slumlord", func() Card {
 		return NewCreature("Ogre Slumlord", "{3}{B}{B}", 3, 3,
 			WithSubTypes("Ogre", "Rogue"),
-			WithAbility(NewTriggered(EvtCreatureDied, true,
+			WithAbility(NewTriggered(EvtZoneChange, true,
 				CreateColoredToken("Rat", 1, 1, []Color{Black}, []CardType{TypeCreature}, []string{"Rat"}),
 			).SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 				if evt.SourceID == sourceID {
@@ -2899,7 +2903,10 @@ func registerCreatures() {
 				}
 				c := g.FindCardAnywhere(evt.SourceID)
 				return c != nil && !c.IsToken()
-			})),
+			}).AndConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+				EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard},
+				EventSourceWasOfType{Type: TypeCreature},
+			}})),
 			WithStaticAbility(GrantKeywordToControlled(Deathtouch, HasSubType("Rat"))),
 		)
 	})
@@ -3025,9 +3032,13 @@ func registerCreatures() {
 		return NewCreature("Sangromancer", "{2}{B}{B}", 3, 3,
 			WithSubTypes("Vampire", "Shaman"),
 			WithKeyword(Flying),
-			WithAbility(NewTriggered(EvtCreatureDied, true,
+			WithAbility(NewTriggered(EvtZoneChange, true,
 				GainLife(3),
-			).SetConditionData(EventPlayerIsNotController{})),
+			).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+				EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard},
+				EventSourceWasOfType{Type: TypeCreature},
+				EventPlayerIsNotController{},
+			}})),
 			WithAbility(WheneverOpponentDiscardsTrigger(GainLife(3), true)),
 		)
 	})
@@ -3071,7 +3082,7 @@ func registerCreatures() {
 	Register("Shambling Goblin", func() Card {
 		return NewCreature("Shambling Goblin", "{B}", 1, 1,
 			WithSubTypes("Zombie", "Goblin"),
-			WithAbility(NewTriggered(EvtCreatureDied, false,
+			WithAbility(DiesTrigger(
 				FuncEffect("target creature an opponent controls gets -1/-1 until end of turn",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -3087,8 +3098,8 @@ func registerCreatures() {
 						g.AddContinuousEffect(ce)
 						return nil
 					}),
-			).SetConditionData(EventSourceIsSelf{}).
-				AddTarget(TargetPermanentOpponentControls(IsCreature))),
+				false,
+			).AddTarget(TargetPermanentOpponentControls(IsCreature))),
 		)
 	})
 
@@ -3189,9 +3200,13 @@ func registerCreatures() {
 			WithSubTypes("Insect"),
 			WithKeyword(Flying),
 			WithAbility(ETBEffect(AddCounters(P1P1, Fixed(2)).Targeting(ToSource()))),
-			WithAbility(NewTriggered(EvtCreatureDied, false,
+			WithAbility(NewTriggered(EvtZoneChange, false,
 				AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
-			).SetConditionData(EventSourceNotSelf{})),
+			).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+				EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard},
+				EventSourceWasOfType{Type: TypeCreature},
+				EventSourceNotSelf{},
+			}})),
 		)
 	})
 
@@ -3943,7 +3958,7 @@ func registerCreatures() {
 	Register("Hamletback Goliath", func() Card {
 		return NewCreature("Hamletback Goliath", "{6}{R}", 6, 6,
 			WithSubTypes("Giant", "Warrior"),
-			WithAbility(NewTriggered(EvtEntersBattlefield, true,
+			WithAbility(NewTriggered(EvtZoneChange, true,
 				FuncEffect("put X +1/+1 counters on this creature where X is that creature's power",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, _ uuid.UUID, targets []uuid.UUID) error {
@@ -3962,6 +3977,7 @@ func registerCreatures() {
 						return nil
 					}),
 			).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+				EventZoneChangeMatches{From: ZoneAny, To: ZoneBattlefield},
 				EventSourceNotSelf{},
 				EventSourceHasType{Type: TypeCreature},
 			}})),
@@ -4192,9 +4208,10 @@ func registerCreatures() {
 	Register("Living Lightning", func() Card {
 		return NewCreature("Living Lightning", "{3}{R}", 3, 2,
 			WithSubTypes("Elemental", "Shaman"),
-			WithAbility(NewTriggered(EvtCreatureDied, false,
+			WithAbility(DiesTrigger(
 				ReturnFromGraveyardToHandTarget(),
-			).SetConditionData(EventSourceIsSelf{}).AddTarget(
+				false,
+			).AddTarget(
 				TargetCardInYourGraveyard(NewCardFilter("instant or sorcery", func(c Card) bool {
 					return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
 				})),
@@ -4560,9 +4577,10 @@ func registerCreatures() {
 	Register("Tibalt's Rager", func() Card {
 		return NewCreature("Tibalt's Rager", "{1}{R}", 1, 2,
 			WithSubTypes("Devil"),
-			WithAbility(NewTriggered(EvtCreatureDied, false,
+			WithAbility(DiesTrigger(
 				DealDamage(Fixed(1)),
-			).SetConditionData(EventSourceIsSelf{}).AddTarget(TargetAnyTarget())),
+				false,
+			).AddTarget(TargetAnyTarget())),
 			WithActivatedAbility(
 				Boost(Fixed(2), Fixed(0)).Targeting(ToSource()),
 				ManaCostOf("{1}{R}"),
@@ -4835,9 +4853,10 @@ func registerCreatures() {
 	Register("Brindle Shoat", func() Card {
 		return NewCreature("Brindle Shoat", "{1}{G}", 1, 1,
 			WithSubTypes("Boar"),
-			WithAbility(NewTriggered(EvtCreatureDied, false,
+			WithAbility(DiesTrigger(
 				CreateToken("Boar", 3, 3, []CardType{TypeCreature}, []string{"Boar"}),
-			).SetConditionData(EventSourceIsSelf{})),
+				false,
+			)),
 		)
 	})
 
@@ -5615,9 +5634,10 @@ func registerCreatures() {
 	Register("Sporemound", func() Card {
 		return NewCreature("Sporemound", "{3}{G}{G}", 3, 3,
 			WithSubTypes("Fungus"),
-			WithAbility(NewTriggered(EvtEntersBattlefield, false,
+			WithAbility(NewTriggered(EvtZoneChange, false,
 				CreateColoredToken("Saproling", 1, 1, []Color{Green}, []CardType{TypeCreature}, []string{"Saproling"}),
 			).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+				EventZoneChangeMatches{From: ZoneAny, To: ZoneBattlefield},
 				EventSourceMatchesPermanentFilter{Filter: IsLand},
 				EventSourceControlledByController{},
 			}})),
@@ -5662,9 +5682,10 @@ func registerCreatures() {
 		return NewCreature("Thragtusk", "{4}{G}", 5, 3,
 			WithSubTypes("Beast"),
 			WithAbility(EntersBattlefieldTrigger(GainLife(5), false)),
-			WithAbility(NewTriggered(EvtLeavesBattlefield, false,
+			WithAbility(OnLeaveZone(ZoneBattlefield, ZoneAny,
 				CreateColoredToken("Beast", 3, 3, []Color{Green}, []CardType{TypeCreature}, []string{"Beast"}),
-			).SetConditionData(EventSourceIsSelf{})),
+				false,
+			)),
 		)
 	})
 

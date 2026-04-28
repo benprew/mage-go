@@ -359,7 +359,7 @@ func registerCreatures() {
 		return NewCreature("Brine Hag", "{2}{U}{U}", 2, 2,
 			WithSubTypes("Hag"),
 			WithAbility(
-				NewTriggered(EvtCreatureDied, false, FuncEffect(
+				DiesTrigger(FuncEffect(
 					"change base P/T of all creatures that dealt damage to this to 0/2",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -385,7 +385,7 @@ func registerCreatures() {
 							}
 						}
 						return nil
-					})).SetConditionData(EventSourceIsSelf{}),
+					}), false),
 			),
 		)
 	})
@@ -722,9 +722,7 @@ func registerCreatures() {
 	Register("Cyclopean Mummy", func() Card {
 		return NewCreature("Cyclopean Mummy", "{1}{B}", 2, 1,
 			WithSubTypes("Zombie"),
-			WithAbility(NewTriggered(EvtCreatureDied, false,
-				ExileSourceFromGraveyard(),
-			).SetConditionData(EventSourceIsSelf{})),
+			WithAbility(DiesTrigger(ExileSourceFromGraveyard(), false)),
 		)
 	})
 
@@ -1283,7 +1281,7 @@ func registerCreatures() {
 		return NewCreature("Blazing Effigy", "{1}{R}", 0, 3,
 			WithSubTypes("Elemental"),
 			WithAbility(
-				NewTriggered(EvtCreatureDied, false, FuncEffect(
+				DiesTrigger(FuncEffect(
 					"deal 3+ damage to target creature",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -1303,8 +1301,7 @@ func registerCreatures() {
 						// needs per-source damage tracking by card name
 						g.DealDamageToPermanent(target, 3, sourceID)
 						return nil
-					}),
-				).SetConditionData(EventSourceIsSelf{}),
+					}), false),
 			),
 		)
 	})
@@ -1356,9 +1353,7 @@ func registerCreatures() {
 		return NewCreature("Firestorm Phoenix", "{4}{R}{R}", 3, 2,
 			WithSubTypes("Phoenix"),
 			WithKeyword(Flying),
-			WithAbility(NewTriggered(EvtCreatureDied, false,
-				ReturnSourceToHand(),
-			).SetConditionData(EventSourceIsSelf{})),
+			WithAbility(DiesTrigger(ReturnSourceToHand(), false)),
 		)
 	})
 
@@ -2471,13 +2466,14 @@ func registerCreatures() {
 				},
 			), false)),
 			// When Hazezon leaves, exile all Sand Warriors
-			WithAbility(NewTriggered(EvtLeavesBattlefield, false,
+			WithAbility(OnLeaveZone(ZoneBattlefield, ZoneAny,
 				DataEffect(ForEachPermanent(
 					And(HasSubType("Sand"), HasSubType("Warrior")),
 					ExileTargetStep(),
 					"exile all Sand Warriors",
 				)),
-			).SetConditionData(EventSourceIsSelf{})),
+				false,
+			)),
 		)
 	})
 
@@ -3079,7 +3075,7 @@ func registerCreatures() {
 				},
 			), false)),
 			// When Stangg leaves, exile the token
-			WithAbility(NewTriggered(EvtLeavesBattlefield, false, FuncEffect(
+			WithAbility(OnLeaveZone(ZoneBattlefield, ZoneAny, FuncEffect(
 				"exile Stangg Twin",
 				EffectProperties{},
 				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -3089,9 +3085,9 @@ func registerCreatures() {
 					}
 					return nil
 				},
-			)).SetConditionData(EventSourceIsSelf{})),
+			), false)),
 			// When the token leaves, sacrifice Stangg
-			WithAbility(NewTriggered(EvtLeavesBattlefield, false, FuncEffect(
+			WithAbility(NewTriggered(EvtZoneChange, false, FuncEffect(
 				"sacrifice Stangg",
 				EffectProperties{},
 				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -3105,7 +3101,7 @@ func registerCreatures() {
 				// TODO: convert to data condition
 				SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 					return evt.SourceID == twinID && evt.SourceID != sourceID
-				})),
+				}).AndConditionData(EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneAny})),
 		)
 	})
 

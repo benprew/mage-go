@@ -152,7 +152,7 @@ func registerEnchantments() {
 	Register("Cathars' Crusade", func() Card {
 		return NewEnchantment("Cathars' Crusade", "{3}{W}{W}",
 			WithAbility(
-				NewTriggered(EvtEntersBattlefield, false,
+				NewTriggered(EvtZoneChange, false,
 					FuncEffect("put a +1/+1 counter on each creature you control",
 						EffectProperties{Outcome: OutcomeBenefit, Mass: true},
 						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -162,6 +162,7 @@ func registerEnchantments() {
 							return nil
 						}),
 				).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+					EventZoneChangeMatches{From: ZoneAny, To: ZoneBattlefield},
 					EventSourceControlledByController{},
 					EventSourceMatchesPermanentFilter{Filter: IsCreature},
 				}}),
@@ -765,7 +766,7 @@ func registerEnchantments() {
 				}),
 			),
 			WithAbility(
-				NewTriggered(EvtCreatureDied, false,
+				NewTriggered(EvtZoneChange, false,
 					FuncEffect("return enchanted land to its owner's hand",
 						EffectProperties{Outcome: OutcomeBenefit},
 						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -792,7 +793,11 @@ func registerEnchantments() {
 							}
 							return nil
 						}),
-				).SetConditionData(SourceIsAttachedToEventSource{}),
+				).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+					EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard},
+					EventSourceWasOfType{Type: TypeCreature},
+					SourceIsAttachedToEventSource{},
+				}}),
 			),
 		)
 	})
@@ -833,9 +838,10 @@ func registerEnchantments() {
 	Register("Zendikar's Roil", func() Card {
 		return NewEnchantment("Zendikar's Roil", "{3}{G}{G}",
 			WithAbility(
-				NewTriggered(EvtEntersBattlefield, false,
+				NewTriggered(EvtZoneChange, false,
 					CreateToken("Elemental", 2, 2, []CardType{TypeCreature}, []string{"Elemental"}),
 				).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+					EventZoneChangeMatches{From: ZoneAny, To: ZoneBattlefield},
 					EventSourceControlledByController{},
 					EventSourceMatchesPermanentFilter{Filter: IsLand},
 				}}),
