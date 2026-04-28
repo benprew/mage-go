@@ -5,6 +5,33 @@ import (
 	"github.com/google/uuid"
 )
 
+// Deferred follow-up steps for the LKI framework (steps A-C are done):
+//
+// Step D — Extend LKI to non-battlefield zone changes. Today only
+// RemoveFromBattlefield captures a snapshot. CR 113.7a / 603.10 cover
+// any zone change, so spells fizzling off the stack (stack -> graveyard
+// / exile), discards (hand -> graveyard), milled cards (library ->
+// graveyard), and exile-from-anywhere paths should snapshot too. Cards
+// that need this: Goblin Welder reading swap targets when one is
+// sacrificed mid-resolution; fizzled-spell triggers (Word of Command-
+// like effects); discard-then-react patterns. Implementation: extend
+// captureLKI to accept a non-battlefield Permanent-or-Card source, key
+// snapshots by (id, fromZone) since the same UUID may move multiple
+// times, and add corresponding fire sites in Stack.Resolve / Counter,
+// PlayerDiscard, mill helpers.
+//
+// Step E — Refcounted / event-scoped retention. clearLKI fires at
+// end-of-turn cleanup, which is wrong on both ends: too long for
+// transient triggers (a finished trigger doesn't need its source
+// snapshot anymore) and too short for durable references (Banishing
+// Light / Astral Slide / Hazezon Tamar capture an LKI reference and
+// need it across many turns). Implementation: add a scope/refcount
+// model where the dispatcher opens a scope when a snapshot is taken,
+// closes it after the spawned StackObjects resolve; continuous effects
+// or delayed triggers that want durable LKI hold a strong reference
+// to *PermanentLKI directly so it stays alive while the closure does.
+// Drop the per-turn clearLKI in favor of refcount-driven cleanup.
+
 // LKIView is the read-only query interface satisfied by both a live
 // *Permanent (via livePermanentView) and an LKI snapshot (*PermanentLKI).
 // Predicates and effects that need to inspect an object whose liveness is
