@@ -183,6 +183,28 @@ func BeginningOfUpkeepTrigger(effect Effect, optional bool) *GenericTriggered {
 		SetConditionData(EventPlayerIsController{})
 }
 
+// BeginningOfFirstMainPhaseTrigger fires at the beginning of the controller's
+// precombat (first) main phase (CR 505). Used by cards like Black Market that
+// say "at the beginning of your first main phase". Per CR 505, EvtMainPhase
+// has Flag=true for precombat and Flag=false for postcombat.
+func BeginningOfFirstMainPhaseTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtMainPhase, optional, effect).
+		SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+			EventPlayerIsController{},
+			EventFlagIsTrue{},
+		}})
+}
+
+// BeginningOfPostcombatMainPhaseTrigger fires at the beginning of the
+// controller's postcombat main phase.
+func BeginningOfPostcombatMainPhaseTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtMainPhase, optional, effect).
+		SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+			EventPlayerIsController{},
+			EventFlagIsFalse{},
+		}})
+}
+
 // BeginningOfEachUpkeepTrigger fires at the beginning of every player's upkeep.
 func BeginningOfEachUpkeepTrigger(effect Effect, optional bool) *GenericTriggered {
 	return NewTriggered(EvtUpkeep, optional, effect)
