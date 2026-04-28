@@ -84,15 +84,12 @@ func (EventSourceNotSelf) CheckTriggerCond(evt *GameEvent, _ GameReader, sourceI
 type EventSourceControlledByController struct{}
 
 func (EventSourceControlledByController) CheckTriggerCond(evt *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
-	if perm := g.FindPermanent(evt.SourceID); perm != nil {
-		return perm.Controller == controllerID
+	game, ok := g.(*Game)
+	if !ok {
+		return false
 	}
-	if game, ok := g.(*Game); ok {
-		if lki := game.LKI(evt.SourceID); lki != nil {
-			return lki.Controller == controllerID
-		}
-	}
-	return false
+	view := game.LookupObject(evt.SourceID)
+	return view != nil && view.ViewController() == controllerID
 }
 
 // EventSourceControlledByOpponent checks that the permanent referenced by
@@ -102,15 +99,12 @@ func (EventSourceControlledByController) CheckTriggerCond(evt *GameEvent, g Game
 type EventSourceControlledByOpponent struct{}
 
 func (EventSourceControlledByOpponent) CheckTriggerCond(evt *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
-	if perm := g.FindPermanent(evt.SourceID); perm != nil {
-		return perm.Controller != controllerID
+	game, ok := g.(*Game)
+	if !ok {
+		return false
 	}
-	if game, ok := g.(*Game); ok {
-		if lki := game.LKI(evt.SourceID); lki != nil {
-			return lki.Controller != controllerID
-		}
-	}
-	return false
+	view := game.LookupObject(evt.SourceID)
+	return view != nil && view.ViewController() != controllerID
 }
 
 // EventSourceHasType checks that the permanent at evt.SourceID has a card type.

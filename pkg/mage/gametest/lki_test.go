@@ -59,9 +59,9 @@ func TestLKI_DirectAccessor(t *testing.T) {
 						}),
 				).SetCondition(func(evt *core.GameEvent, gr mage.GameReader, _, _ uuid.UUID) bool {
 					if game, ok := gr.(*mage.Game); ok {
-						if lki := game.LKI(evt.SourceID); lki != nil {
+						if view := game.LookupObject(evt.SourceID); view != nil {
 							captured = true
-							capturedController = lki.Controller
+							capturedController = view.ViewController()
 						}
 					}
 					return false

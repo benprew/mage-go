@@ -84,61 +84,60 @@ func (v livePermanentView) ViewAbilities() []Ability        { return v.p.Runtime
 
 // PermanentLKI captures Last-Known-Information about a permanent at the
 // moment it left the battlefield. Triggered abilities that reference the
-// dying/leaving permanent (e.g. "whenever a creature an opponent controls
-// dies") need its controller, types, and P/T after it has been moved to
-// the graveyard. Per CR 603.10 and CR 113.7a, such triggers see the
-// permanent's last existence on the battlefield.
+// dying/leaving permanent need its controller, types, P/T, counters,
+// runtime abilities, and attachments after the move (CR 603.6c, 603.10,
+// 113.7a).
 //
-// LKI is recorded by RemoveFromBattlefield just before the permanent leaves
-// g.battlefield, and is read via Game.LKI(permID). Entries persist for the
-// remainder of the current step so death-trigger conditions and effects can
-// use them; they are cleared at end-of-turn cleanup.
+// Snapshot is a deep clone of the live *Permanent at capture time. Power
+// and Toughness are also recorded as plain ints because CurrentPower /
+// CurrentToughness on the cloned permanent would consult continuous
+// effects sourced from the now-removed permanent and return zero.
 //
-// Step A note: the snapshot's field set is still the pre-framework subset
-// (controller, owner, power, toughness, types, subtypes, isToken). Step B
-// will replace this with a deep clone of the live *Permanent so abilities,
-// counters, and attachments are preserved. Until then ViewCounters and
-// ViewAbilities return zero / nil for snapshot views.
+// LKI is recorded by RemoveFromBattlefield just before the permanent
+// leaves g.battlefield, read via Game.LKI(id) or Game.LookupObject(id),
+// and cleared at end-of-turn cleanup.
 type PermanentLKI struct {
-	ID         uuid.UUID
-	Name       string
-	Controller uuid.UUID
-	Owner      uuid.UUID
-	Power      int
-	Toughness  int
-	Types      []CardType
-	SubTypes   []string
-	IsToken    bool
-	Keywords   []Keyword // captured for ViewHasKeyword
+	ID        uuid.UUID
+	Name      string
+	Owner     uuid.UUID
+	Power     int
+	Toughness int
+	IsToken   bool
+
+	// Snapshot is a frozen *Permanent capturing controller, types,
+	// subtypes, keywords, counters, runtime abilities, attachments, and
+	// the various override fields. Read-only — never mutate.
+	Snapshot *Permanent
 }
 
 // HasType reports whether the LKI snapshot had the given card type.
 func (l *PermanentLKI) HasType(t CardType) bool {
-	for _, x := range l.Types {
-		if x == t {
-			return true
-		}
+	if l.Snapshot == nil {
+		return false
 	}
-	return false
+	return l.Snapshot.HasType(t)
 }
 
 // HasSubType reports whether the LKI snapshot had the given subtype.
 func (l *PermanentLKI) HasSubType(s string) bool {
-	for _, x := range l.SubTypes {
-		if x == s {
-			return true
-		}
+	if l.Snapshot == nil {
+		return false
 	}
-	return false
+	return l.Snapshot.HasSubType(s)
 }
 
-// LKIView interface implementation for *PermanentLKI. View* methods read
-// from the snapshot fields directly.
+// LKIView interface implementation for *PermanentLKI. Read-only,
+// snapshot-backed.
 
-func (l *PermanentLKI) ViewID() uuid.UUID         { return l.ID }
-func (l *PermanentLKI) ViewName() string          { return l.Name }
-func (l *PermanentLKI) ViewController() uuid.UUID { return l.Controller }
-func (l *PermanentLKI) ViewOwner() uuid.UUID      { return l.Owner }
+func (l *PermanentLKI) ViewID() uuid.UUID   { return l.ID }
+func (l *PermanentLKI) ViewName() string    { return l.Name }
+func (l *PermanentLKI) ViewController() uuid.UUID {
+	if l.Snapshot == nil {
+		return uuid.Nil
+	}
+	return l.Snapshot.Controller
+}
+func (l *PermanentLKI) ViewOwner() uuid.UUID { return l.Owner }
 func (l *PermanentLKI) ViewHasType(t CardType) bool {
 	return l.HasType(t)
 }
@@ -146,21 +145,39 @@ func (l *PermanentLKI) ViewHasSubType(s string) bool {
 	return l.HasSubType(s)
 }
 func (l *PermanentLKI) ViewHasKeyword(k Keyword) bool {
-	for _, kw := range l.Keywords {
-		if kw == k {
-			return true
-		}
+	if l.Snapshot == nil {
+		return false
 	}
-	return false
+	return l.Snapshot.HasKeyword(k)
 }
-func (l *PermanentLKI) ViewPower() int                  { return l.Power }
-func (l *PermanentLKI) ViewToughness() int              { return l.Toughness }
-func (l *PermanentLKI) ViewIsToken() bool               { return l.IsToken }
-func (l *PermanentLKI) ViewCounters(_ CounterType) int  { return 0 }      // step B: real
-func (l *PermanentLKI) ViewAbilities() []Ability        { return nil }    // step B: real
+func (l *PermanentLKI) ViewPower() int     { return l.Power }
+func (l *PermanentLKI) ViewToughness() int { return l.Toughness }
+func (l *PermanentLKI) ViewIsToken() bool  { return l.IsToken }
+func (l *PermanentLKI) ViewCounters(ct CounterType) int {
+	if l.Snapshot == nil {
+		return 0
+	}
+	return int(l.Snapshot.Counters[ct])
+}
+func (l *PermanentLKI) ViewAbilities() []Ability {
+	if l.Snapshot == nil {
+		return nil
+	}
+	return l.Snapshot.RuntimeAbilities
+}
 
 // captureLKI records an LKI snapshot for a permanent that is about to leave
-// the battlefield. Idempotent — re-snapshotting overwrites.
+// the battlefield. Deep-clones the live *Permanent so the snapshot is a
+// faithful frozen copy of all its state — counters, runtime abilities,
+// attachments, P/T overrides — not a hand-picked subset. Idempotent;
+// re-snapshotting overwrites.
+//
+// CR alignment: 113.7a / 603.10 say a triggered ability looks at the most
+// recent existence of the object before the event fired. The snapshot is
+// that "most recent existence." Power and Toughness are recorded outside
+// the snapshot because CurrentPower(g) on the clone would consult
+// continuous effects sourced from the (now-removed) permanent and return
+// the wrong value.
 func (g *Game) captureLKI(p *Permanent) {
 	if p == nil {
 		return
@@ -168,53 +185,25 @@ func (g *Game) captureLKI(p *Permanent) {
 	if g.lki == nil {
 		g.lki = make(map[uuid.UUID]*PermanentLKI)
 	}
-	types := make([]CardType, 0, 4)
-	for _, t := range []CardType{TypeCreature, TypeArtifact, TypeEnchantment, TypeLand, TypeInstant, TypeSorcery} {
-		if p.HasType(t) {
-			types = append(types, t)
-		}
-	}
-	subTypes := make([]string, len(p.Card.SubTypes()))
-	copy(subTypes, p.Card.SubTypes())
 	isToken := false
 	if bc, ok := p.Card.(*BaseCard); ok {
 		isToken = bc.IsToken()
 	}
 	owner := p.Card.Owner()
-	keywords := captureLKIKeywords(p)
+	if owner == uuid.Nil {
+		owner = p.Controller
+	}
+	snap := &Permanent{}
+	clonePermanentInto(snap, p)
 	g.lki[p.ID()] = &PermanentLKI{
-		ID:         p.ID(),
-		Name:       p.Name(),
-		Controller: p.Controller,
-		Owner:      owner,
-		Power:      p.CurrentPower(g),
-		Toughness:  p.CurrentToughness(g),
-		Types:      types,
-		SubTypes:   subTypes,
-		IsToken:    isToken,
-		Keywords:   keywords,
+		ID:        p.ID(),
+		Name:      p.Name(),
+		Owner:     owner,
+		Power:     p.CurrentPower(g),
+		Toughness: p.CurrentToughness(g),
+		IsToken:   isToken,
+		Snapshot:  snap,
 	}
-}
-
-// captureLKIKeywords extracts the keywords currently on a permanent so the
-// LKI snapshot can answer ViewHasKeyword. Walks the keyword-range Attrs
-// (Flying and above per IsKeywordAttr / attr.go), which is the universe
-// of keywords a permanent can carry — abilities-block keywords like
-// Indestructible, Hexproof, Trample, etc.
-func captureLKIKeywords(p *Permanent) []Keyword {
-	if p == nil {
-		return nil
-	}
-	out := make([]Keyword, 0, 4)
-	for a := Flying; a < Attr(NumAttrs); a++ {
-		if !IsKeywordAttr(a) {
-			continue
-		}
-		if p.HasKeyword(a) {
-			out = append(out, a)
-		}
-	}
-	return out
 }
 
 // LKI returns the last-known-information snapshot for a permanent that has
