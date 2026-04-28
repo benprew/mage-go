@@ -188,7 +188,7 @@ func TestBecomesSubType_WishfulMerfolk(t *testing.T) {
 	g.AddCard(core.ZoneBattlefield, PlayerA, "Island")
 
 	g.ActivateAbility(1, core.PrecombatMain, PlayerA, "Test Becomes Human")
-	g.StopAt(1, core.PrecombatMain)
+	g.StopAt(1, core.EndStep)
 	g.Execute()
 
 	perm := g.FindPermanentByName("Test Becomes Human", g.getPlayerID(PlayerA))
@@ -241,7 +241,7 @@ func TestBecomesColor(t *testing.T) {
 
 	g.ActivateAbility(1, core.PrecombatMain, PlayerA, "Test Color Changer",
 		"Test Green Bear")
-	g.StopAt(1, core.PrecombatMain)
+	g.StopAt(1, core.EndStep)
 	g.Execute()
 
 	target := g.FindPermanent(targetID)
