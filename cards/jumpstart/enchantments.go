@@ -106,9 +106,11 @@ func registerEnchantments() {
 	// Coastal Piracy {2}{U}{U}
 	// Enchantment
 	// Whenever a creature you control deals combat damage to an opponent, you may draw a card.
-	// XXX: requires "deals combat damage to opponent" trigger filtered to controlled creatures
 	Register("Coastal Piracy", func() Card {
-		return NewEnchantment("Coastal Piracy", "{2}{U}{U}")
+		return NewEnchantment("Coastal Piracy", "{2}{U}{U}",
+			WithAbility(WheneverPermanentDealsCombatDamageToPlayerTrigger(
+				DrawCards(Fixed(1)), true, IsCreature)),
+		)
 	})
 
 	// Cradle of Vitality {3}{W}
@@ -151,9 +153,11 @@ func registerEnchantments() {
 	// Enchantment — Aura
 	// Enchant creature
 	// Whenever enchanted creature deals damage to an opponent, you may draw a card.
-	// XXX: requires "enchanted creature deals damage to opponent" trigger condition
 	Register("Curiosity", func() Card {
-		return NewAura("Curiosity", "{U}")
+		return NewAura("Curiosity", "{U}",
+			WithAbility(WheneverEnchantedPermanentDealsDamageToPlayerTrigger(
+				DrawCards(Fixed(1)), true)),
+		)
 	})
 
 	// Curious Obsession {U}
@@ -337,9 +341,38 @@ func registerEnchantments() {
 	// Lurking Predators {4}{G}{G}
 	// Enchantment
 	// Whenever an opponent casts a spell, reveal the top card of your library. If it's a creature card, put it onto the battlefield. Otherwise, you may put that card on the bottom of your library.
-	// XXX: requires reveal-top-of-library and put-onto-battlefield-from-library mechanics
 	Register("Lurking Predators", func() Card {
-		return NewEnchantment("Lurking Predators", "{4}{G}{G}")
+		return NewEnchantment("Lurking Predators", "{4}{G}{G}",
+			WithAbility(NewTriggered(EvtSpellCast, false,
+				FuncEffect("reveal top; if creature, put onto battlefield; otherwise may put on bottom",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						revealed := g.RevealTopN(p, 1)
+						if len(revealed) == 0 {
+							return nil
+						}
+						top := revealed[0]
+						taken := g.RemoveTopN(p, 1)
+						if len(taken) == 0 {
+							return nil
+						}
+						if top.HasType(TypeCreature) {
+							g.PutOnBattlefield(top, controller)
+							return nil
+						}
+						if p.ChooseMayAbility("put revealed card on the bottom of your library") {
+							g.PutOnBottomInRandomOrder(p, taken)
+						} else {
+							g.PutOnTopInChosenOrder(p, taken)
+						}
+						return nil
+					}),
+			).SetConditionData(EventPlayerIsOpponent{})),
+		)
 	})
 
 	// Makeshift Munitions {1}{R}

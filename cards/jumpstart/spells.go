@@ -322,10 +322,51 @@ func registerSpells() {
 	// Commune with Dinosaurs {G}
 	// Sorcery
 	// Look at the top five cards of your library. You may reveal a Dinosaur or land card from among them and put it into your hand. Put the rest on the bottom of your library in any order.
-	// XXX: requires look-at-top-N + reveal-and-pick primitive
+	// XXX: Oracle says "in any order" (controller-chosen); engine only exposes
+	// PutOnBottomInRandomOrder, so the rest currently go to bottom in random
+	// order. This is hidden-information so the difference is minor in practice.
 	Register("Commune with Dinosaurs", func() Card {
+		dinoOrLandCard := NewCardFilter("Dinosaur or land card", func(c Card) bool {
+			if c.HasType(TypeLand) {
+				return true
+			}
+			if !c.HasType(TypeCreature) {
+				return false
+			}
+			for _, st := range c.SubTypes() {
+				if st == "Dinosaur" {
+					return true
+				}
+			}
+			return false
+		})
 		return NewSorcery("Commune with Dinosaurs", "{G}",
-			NewSpellAbility(),
+			NewSpellAbility(FuncEffect(
+				"look at top 5; may reveal a Dinosaur or land and put in hand; rest to bottom",
+				EffectProperties{Outcome: OutcomeBenefit},
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					p := g.GetPlayer(controller)
+					if p == nil {
+						return nil
+					}
+					chosen, _ := g.RevealAndPickFromTop(p, p, 5, dinoOrLandCard, true,
+						"reveal a Dinosaur or land card and put it into your hand")
+					taken := g.RemoveTopN(p, 5)
+					rest := taken
+					if chosen != nil {
+						rest = make([]Card, 0, len(taken))
+						for _, c := range taken {
+							if c.ID() == chosen.ID() {
+								p.AddToHand(c)
+								continue
+							}
+							rest = append(rest, c)
+						}
+					}
+					g.PutOnBottomInRandomOrder(p, rest)
+					return nil
+				}),
+			),
 		)
 	})
 
@@ -647,10 +688,21 @@ func registerSpells() {
 	// Goblin Lore {1}{R}
 	// Sorcery
 	// Draw four cards, then discard three cards at random.
-	// XXX: requires random-discard-from-hand primitive
 	Register("Goblin Lore", func() Card {
 		return NewSorcery("Goblin Lore", "{1}{R}",
-			NewSpellAbility(drawSelfCard(4)),
+			NewSpellAbility(
+				drawSelfCard(4),
+				FuncEffect("discard three cards at random",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						g.DiscardAtRandom(p, 3)
+						return nil
+					}),
+			),
 		)
 	})
 

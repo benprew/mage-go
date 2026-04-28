@@ -1004,10 +1004,40 @@ func registerCreatures() {
 	// When this creature becomes the target of a spell, sacrifice it.
 	// This creature can't be blocked except by Spirits.
 	// {3}{U}: Another target creature you control can't be blocked this turn except by Spirits.
-	// XXX: requires becomes-target trigger and "can't be blocked except by X" restriction
+	// XXX: "another target creature you control" approximated via TargetControlledCreature
+	// with a runtime exclude-source check; engine lacks a TargetOtherCreatureYouControl primitive.
 	Register("Departed Deckhand", func() Card {
+		// "becomes the target of a spell" only — filter EvtBecomesTarget by Flag=false
+		// (Flag is true for activated abilities, false for spells per EvtBecomesTarget docs).
+		spellTargetTrig := NewTriggered(EvtBecomesTarget, false, SacrificeSource()).
+			SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+				EventTargetIsSelf{},
+				EventFlagIsFalse{},
+			}})
 		return NewCreature("Departed Deckhand", "{1}{U}", 2, 2,
 			WithSubTypes("Spirit", "Pirate"),
+			WithAbility(spellTargetTrig),
+			WithStaticAbility(SourceCantBeBlockedExceptBy(HasSubType("Spirit"))),
+			WithActivatedAbility(
+				FuncEffect(
+					"another target creature you control can't be blocked this turn except by Spirits",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						if targets[0] == sourceID {
+							return nil
+						}
+						eff := TargetCantBeBlockedExceptBy(targets[0], HasSubType("Spirit"), EndOfTurn)
+						eff.SetSourceID(sourceID)
+						g.AddContinuousEffect(eff)
+						return nil
+					},
+				),
+				ManaCostOf("{3}{U}"),
+				WithTarget(TargetControlledCreature()),
+			),
 		)
 	})
 
@@ -1079,12 +1109,42 @@ func registerCreatures() {
 	// 2/2
 	// Flying
 	// Creatures you control have "Whenever this creature becomes the target of a spell or ability for the first time each turn, counter that spell or ability."
-	// XXX: requires becomes-target trigger
+	// XXX: GrantTriggeredAbilityToAll skips the source permanent, so Kira herself does
+	// not receive a copy of the granted trigger via the static. We add the same trigger
+	// directly on Kira so she also benefits — functionally correct, but mechanically
+	// the trigger should derive from the static on a "creatures you control" filter
+	// that includes the source.
 	Register("Kira, Great Glass-Spinner", func() Card {
+		// "Counter that spell or ability." Auto-bind on EvtBecomesTarget passes
+		// the targeted object as targets[0] and the offending spell/ability source
+		// as targets[1].
+		counterThatSpellOrAbility := FuncEffect(
+			"counter that spell or ability",
+			EffectProperties{Outcome: OutcomeBenefit},
+			func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				if len(targets) < 2 || targets[1] == uuid.Nil {
+					return nil
+				}
+				g.CounterSpellOnStack(targets[1])
+				return nil
+			},
+		)
+		// Kira's own copy of the granted trigger (see XXX above).
+		ownCopy := NewTriggered(EvtBecomesTarget, false, counterThatSpellOrAbility).
+			SetConditionData(EventTargetIsSelfFirstTimeThisTurn{})
 		return NewCreature("Kira, Great Glass-Spinner", "{1}{U}{U}", 2, 2,
 			WithSubTypes("Spirit"),
 			WithSuperTypes(SuperLegendary),
 			WithKeyword(Flying),
+			WithAbility(ownCopy),
+			WithStaticAbility(
+				GrantTriggeredAbilityToAll(
+					EvtBecomesTarget, false,
+					EventTargetIsSelfFirstTimeThisTurn{},
+					IsCreature,
+					counterThatSpellOrAbility,
+				),
+			),
 		)
 	})
 
@@ -1403,12 +1463,19 @@ func registerCreatures() {
 	// 4/4
 	// Flying
 	// Whenever an artifact creature you control deals combat damage to a player, you may create a 1/1 blue Thopter artifact creature token with flying.
-	// XXX: requires "another artifact creature you control deals combat damage to a player" trigger predicate
 	Register("Sharding Sphinx", func() Card {
 		return NewCreature("Sharding Sphinx", "{4}{U}{U}", 4, 4,
 			WithSubTypes("Sphinx"),
 			WithCardType(TypeArtifact),
 			WithKeyword(Flying),
+			WithAbility(WheneverPermanentDealsCombatDamageToPlayerTrigger(
+				CreateColoredToken("Thopter", 1, 1,
+					[]Color{Blue},
+					[]CardType{TypeArtifact, TypeCreature},
+					[]string{"Thopter"},
+					Flying),
+				true,
+				And(IsArtifact, IsCreature))),
 		)
 	})
 
@@ -1760,10 +1827,50 @@ func registerCreatures() {
 	// Creature — Human Wizard
 	// 1/3
 	// {2}, {T}: Search your library for a card named Festering Newt or Bubbling Cauldron, put it onto the battlefield tapped, then shuffle.
-	// XXX: requires search-by-name-list-to-battlefield-tapped primitive
 	Register("Bogbrew Witch", func() Card {
 		return NewCreature("Bogbrew Witch", "{3}{B}", 1, 3,
 			WithSubTypes("Human", "Wizard"),
+			WithActivatedAbility(
+				FuncEffect("search library for Festering Newt or Bubbling Cauldron, put onto battlefield tapped, then shuffle",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						lib := p.Library()
+						var candidates []Card
+						for _, c := range lib {
+							n := c.Name()
+							if n == "Festering Newt" || n == "Bubbling Cauldron" {
+								candidates = append(candidates, c)
+							}
+						}
+						if len(candidates) == 0 {
+							p.ShuffleLibrary()
+							return nil
+						}
+						chosen := p.ChooseCardFromLibrary(candidates,
+							"choose Festering Newt or Bubbling Cauldron", g)
+						if chosen != nil {
+							newLib := make([]Card, 0, len(lib)-1)
+							for _, c := range lib {
+								if c.ID() != chosen.ID() {
+									newLib = append(newLib, c)
+								}
+							}
+							p.SetLibrary(newLib)
+							perm := g.PutOnBattlefield(chosen, controller)
+							if perm != nil {
+								g.TapPermanent(perm)
+							}
+						}
+						p.ShuffleLibrary()
+						return nil
+					}),
+				ManaCostOf("{2}"),
+				WithCost(TapSourceCost()),
+			),
 		)
 	})
 
@@ -1885,10 +1992,35 @@ func registerCreatures() {
 	// Creature — Human Rogue
 	// 3/3
 	// {2}{B}, Sacrifice a creature: Target opponent reveals their hand. You choose a card from it. That player discards that card. Activate only as a sorcery.
-	// XXX: requires reveal-hand-and-controller-chooses-discard primitive
 	Register("Corpse Traders", func() Card {
 		return NewCreature("Corpse Traders", "{3}{B}", 3, 3,
 			WithSubTypes("Human", "Rogue"),
+			WithActivatedAbility(
+				FuncEffect("target opponent reveals their hand; you choose a card; they discard it",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						target := g.GetPlayer(targets[0])
+						you := g.GetPlayer(controller)
+						if target == nil || you == nil {
+							return nil
+						}
+						_ = g.RevealHand(you, target)
+						chosen := g.PickFromHand(you, target, CardFilter{}, false,
+							"choose a card to discard")
+						if chosen == nil {
+							return nil
+						}
+						g.PlayerDiscard(target, chosen.ID())
+						return nil
+					}),
+				ManaCostOf("{2}{B}"),
+				WithCost(SacrificeMatchingCost(IsCreature, "Sacrifice a creature")),
+				WithTarget(TargetOpponent()),
+				WithSorcerySpeed(),
+			),
 		)
 	})
 
@@ -1984,10 +2116,68 @@ func registerCreatures() {
 	// When this creature enters, choose one —
 	// • Return target creature card from your graveyard to your hand.
 	// • Target opponent reveals their hand. You choose a noncreature card from it. That player discards that card.
-	// XXX: requires modal-ETB and reveal-hand-and-controller-chooses-discard primitives
+	// XXX: target gathering for modal triggers occurs before mode selection (CR
+	// 603.3d). Until the engine supports per-mode target gathering for triggers,
+	// this implementation prompts ChooseMode and then prompts the mode's
+	// chooser inline (so neither mode declares an AddTarget on the trigger).
 	Register("Entomber Exarch", func() Card {
+		noncreatureCard := NewCardFilter("noncreature card", func(c Card) bool {
+			return !c.HasType(TypeCreature)
+		})
 		return NewCreature("Entomber Exarch", "{2}{B}{B}", 2, 2,
 			WithSubTypes("Phyrexian", "Cleric"),
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect("Entomber Exarch ETB modal",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						you := g.GetPlayer(controller)
+						if you == nil {
+							return nil
+						}
+						labels := []string{
+							"Return target creature card from your graveyard to your hand",
+							"Target opponent reveals their hand; you choose a noncreature card; they discard it",
+						}
+						idx := you.ChooseMode(labels, "Entomber Exarch ETB")
+						if idx < 0 || idx > 1 {
+							idx = 0
+						}
+						switch idx {
+						case 0:
+							var creatures []Card
+							for _, c := range you.Graveyard() {
+								if c.HasType(TypeCreature) {
+									creatures = append(creatures, c)
+								}
+							}
+							if len(creatures) == 0 {
+								return nil
+							}
+							chosen := you.ChooseCardFromLibrary(creatures,
+								"return creature card from graveyard to hand", g)
+							if chosen == nil {
+								return nil
+							}
+							if c, ok := you.RemoveFromGraveyard(chosen.ID()); ok {
+								you.AddToHand(c)
+							}
+						case 1:
+							opp := g.GetOpponent(controller)
+							if opp == nil {
+								return nil
+							}
+							_ = g.RevealHand(you, opp)
+							chosen := g.PickFromHand(you, opp, noncreatureCard, false,
+								"choose a noncreature card to discard")
+							if chosen == nil {
+								return nil
+							}
+							g.PlayerDiscard(opp, chosen.ID())
+						}
+						return nil
+					}),
+				false,
+			)),
 		)
 	})
 
@@ -3211,16 +3401,35 @@ func registerCreatures() {
 	// 4/4
 	// At the beginning of your upkeep, return an instant or sorcery card at random from your graveyard to your hand.
 	// Whenever you cast an instant or sorcery spell, this creature gets +4/+0 until end of turn.
-	// XXX: requires random-card-from-graveyard primitive
 	Register("Charmbreaker Devils", func() Card {
+		instantOrSorceryCard := NewCardFilter("instant or sorcery card", func(c Card) bool {
+			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
+		})
 		return NewCreature("Charmbreaker Devils", "{5}{R}", 4, 4,
 			WithSubTypes("Devil"),
+			WithAbility(BeginningOfUpkeepTrigger(
+				FuncEffect("return an instant or sorcery card at random from your graveyard to your hand",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						chosen := g.RandomCardFromGraveyard(p, instantOrSorceryCard)
+						if chosen == nil {
+							return nil
+						}
+						if c, ok := p.RemoveFromGraveyard(chosen.ID()); ok {
+							p.AddToHand(c)
+						}
+						return nil
+					}),
+				false,
+			)),
 			WithAbility(WheneverYouCastSpellTrigger(
 				Boost(Fixed(4), Fixed(0)).Targeting(ToSource()),
 				false,
-				NewCardFilter("instant or sorcery", func(c Card) bool {
-					return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-				}),
+				instantOrSorceryCard,
 			)),
 		)
 	})
@@ -3821,11 +4030,47 @@ func registerCreatures() {
 	// 4/4
 	// When Muxus enters, reveal the top six cards of your library. Put all Goblin creature cards with mana value 5 or less from among them onto the battlefield and the rest on the bottom of your library in a random order.
 	// Whenever Muxus attacks, it gets +1/+1 until end of turn for each other Goblin you control.
-	// XXX: requires reveal-and-selectively-put-onto-battlefield primitive
 	Register("Muxus, Goblin Grandee", func() Card {
+		isGoblinCreatureMV5OrLess := func(c Card) bool {
+			if !c.HasType(TypeCreature) {
+				return false
+			}
+			if c.ManaCost().CMC() > 5 {
+				return false
+			}
+			for _, st := range c.SubTypes() {
+				if st == "Goblin" {
+					return true
+				}
+			}
+			return false
+		}
 		return NewCreature("Muxus, Goblin Grandee", "{4}{R}{R}", 4, 4,
 			WithSubTypes("Goblin", "Noble"),
 			WithSuperTypes(SuperLegendary),
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect("reveal top 6; put Goblin creatures with MV<=5 onto battlefield; rest to bottom random",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						_ = g.RevealTopN(p, 6)
+						taken := g.RemoveTopN(p, 6)
+						rest := make([]Card, 0, len(taken))
+						for _, c := range taken {
+							if isGoblinCreatureMV5OrLess(c) {
+								g.PutOnBattlefield(c, controller)
+							} else {
+								rest = append(rest, c)
+							}
+						}
+						g.PutOnBottomInRandomOrder(p, rest)
+						return nil
+					}),
+				false,
+			)),
 			WithAbility(AttacksTrigger(
 				FuncEffect("get +1/+1 EOT for each other Goblin you control",
 					EffectProperties{Outcome: OutcomeBenefit},
@@ -3986,11 +4231,43 @@ func registerCreatures() {
 	// 3/2
 	// Menace
 	// At the beginning of your upkeep, reveal the top card of your library. Any opponent may have you put that card into your graveyard. If a player does, this creature deals damage to that player equal to that card's mana value. Otherwise, put that card into your hand.
-	// XXX: requires reveal-then-opponent-choice primitive
 	Register("Sin Prodder", func() Card {
 		return NewCreature("Sin Prodder", "{2}{R}", 3, 2,
 			WithSubTypes("Devil"),
 			WithKeyword(Menace),
+			WithAbility(BeginningOfUpkeepTrigger(
+				FuncEffect("reveal top; any opponent may have you put it in graveyard for MV damage; else into hand",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						you := g.GetPlayer(controller)
+						if you == nil {
+							return nil
+						}
+						revealed := g.RevealTopN(you, 1)
+						if len(revealed) == 0 {
+							return nil
+						}
+						top := revealed[0]
+						mv := top.ManaCost().CMC()
+						chooser := g.GetOpponent(controller)
+						if chooser != nil && chooser.ChooseMayAbility(
+							"have controller put revealed "+top.Name()+" into their graveyard (Sin Prodder deals "+
+								"MV damage to you)") {
+							taken := g.RemoveTopN(you, 1)
+							if len(taken) > 0 {
+								you.AddToGraveyard(taken[0])
+							}
+							g.DealDamageToPlayer(chooser, mv, sourceID)
+							return nil
+						}
+						taken := g.RemoveTopN(you, 1)
+						if len(taken) > 0 {
+							you.AddToHand(taken[0])
+						}
+						return nil
+					}),
+				false,
+			)),
 		)
 	})
 
@@ -4895,10 +5172,39 @@ func registerCreatures() {
 	// Creature — Elf Scout
 	// 2/1
 	// When this creature enters, look at the top four cards of your library. You may reveal a creature or land card from among them and put it on top of your library. Put the rest on the bottom of your library in a random order.
-	// XXX: requires "look at top N, choose, rest on bottom in random order" library manipulation
 	Register("Silhana Wayfinder", func() Card {
+		creatureOrLandCard := NewCardFilter("creature or land card", func(c Card) bool {
+			return c.HasType(TypeCreature) || c.HasType(TypeLand)
+		})
 		return NewCreature("Silhana Wayfinder", "{1}{G}", 2, 1,
 			WithSubTypes("Elf", "Scout"),
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect("look at top 4; may reveal a creature or land and put on top; rest on bottom random",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						chosen, _ := g.RevealAndPickFromTop(p, p, 4, creatureOrLandCard, true,
+							"reveal a creature or land card to put on top of your library")
+						taken := g.RemoveTopN(p, 4)
+						rest := taken
+						if chosen != nil {
+							rest = make([]Card, 0, len(taken))
+							for _, c := range taken {
+								if c.ID() == chosen.ID() {
+									continue
+								}
+								rest = append(rest, c)
+							}
+							g.PutOnTopInChosenOrder(p, []Card{chosen})
+						}
+						g.PutOnBottomInRandomOrder(p, rest)
+						return nil
+					}),
+				false,
+			)),
 		)
 	})
 
