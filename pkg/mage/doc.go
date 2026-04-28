@@ -1039,6 +1039,51 @@ For spell/land/ability execution on clones, use the standard methods:
 	g.ActivateAbilityByIndex(playerID, permID, idx, tgts) // put on stack (or handle mana ability)
 	g.ResolveStack()                                      // drain stack atomically
 
+# Casting From Non-Hand Zones (Alternate Costs)
+
+CR 117.9 / 601.2b: a player may sometimes be allowed to cast a card from a
+non-hand zone (graveyard, exile) using either no mana cost ("without paying
+its mana cost", an alternate cost of 0) or a different alternate cost. Cards
+like Scholar of the Lost Trove, Scourge of Nel Toth, Etali Primal Storm,
+Gonti Lord of Luxury and Maelstrom Archangel rely on this.
+
+The engine exposes four helpers for this:
+
+	g.CastCardFromZoneWithoutPaying(playerID, cardID, zone, targets, xValue)
+	    — Move a card from any zone (Hand, Graveyard, Library, Exile) onto the
+	      stack paying NO mana cost. Additional costs printed on the card
+	      (sacrifice, discard, etc.) are still paid (CR 601.2b). Used by
+	      "without paying its mana cost" effects.
+
+	g.CastCardFromZoneWithAlternateCost(playerID, cardID, zone, mc, targets, xValue)
+	    — Like the above but pays the supplied alternate ManaCost from the
+	      controller's pool instead of the card's printed cost. Used for
+	      Scourge-of-Nel-Toth-style "by paying {3}{B}{B} ... rather than
+	      paying its mana cost".
+
+	g.GrantCastFromExile(playerID, cardID, anyColorMana)
+	g.CastFromExilePermissionFor(playerID, cardID) *CastableFromExilePermission
+	g.ClearCastFromExilePermission(cardID)
+	g.CastExiledCardWithPermission(playerID, cardID, targets, xValue)
+	    — Per-card permission to cast a specific exiled card (Gonti, Lord of
+	      Luxury). When AnyColorMana is true, the card's colored pips collapse
+	      into generic for the cost calculation, modelling CR 609.4b "spend
+	      mana as though it were mana of any color". The permission is
+	      cleared automatically when the card leaves exile.
+
+	g.AddExileIfWouldGoToGraveyardThisTurn(cardID, sourceID)
+	g.IsCardMarkedExileInsteadOfGraveyard(cardID) bool
+	g.ClearExileInsteadOfGraveyardForTurn()
+	    — Turn-scoped rider for the Scholar-of-the-Lost-Trove pattern: "If
+	      that spell would be put into a graveyard this turn, exile it
+	      instead." Tagged cards are exiled when ResolveStackObject would put
+	      them in the graveyard, and a registered ReplacementEffect intercepts
+	      the destroy/death path for permanents. The tag is cleared at the
+	      cleanup step.
+
+These helpers fire EvtSpellCast like the standard CastSpellByName, so cast
+triggers (Storm, prowess, "whenever you cast a spell") see the cast.
+
 # Replacement Effect System
 
 The engine implements a generic replacement effect pipeline (MTG rule 614).

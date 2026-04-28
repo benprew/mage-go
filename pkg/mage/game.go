@@ -137,6 +137,16 @@ type Game struct {
 	// resolvingCombatDamage is true while combat damage is being resolved.
 	// Used by the replacement pipeline to identify combat damage actions.
 	resolvingCombatDamage bool
+
+	// castFromExilePermissions records which exiled cards specific players
+	// may cast (Gonti, Lord of Luxury and similar effects). The permission
+	// persists until the card leaves exile.
+	castFromExilePermissions []CastableFromExilePermission
+
+	// exileInsteadCards maps card IDs that should be exiled instead of put
+	// into a graveyard this turn (Scholar of the Lost Trove rider). Value
+	// is the source ID that granted the rider. Cleared at end of turn.
+	exileInsteadCards map[uuid.UUID]uuid.UUID
 }
 
 func (g *Game) ActivePlayer() int {
@@ -181,6 +191,7 @@ func NewGame(playerA, playerB Player) *Game {
 		artifactManaOnly:            make(map[uuid.UUID]bool),
 		creatureManaOnly:            make(map[uuid.UUID]bool),
 		schedule:                    newTurnSchedule(),
+		exileInsteadCards:           make(map[uuid.UUID]uuid.UUID),
 	}
 }
 
@@ -1633,9 +1644,13 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 				if owner == uuid.Nil {
 					owner = obj.Controller
 				}
-				p := g.GetPlayer(owner)
-				if p != nil {
-					p.AddToGraveyard(obj.Card)
+				if g.IsCardMarkedExileInsteadOfGraveyard(obj.Card.ID()) {
+					g.ExileCard(obj.Card, obj.Card.ID())
+				} else {
+					p := g.GetPlayer(owner)
+					if p != nil {
+						p.AddToGraveyard(obj.Card)
+					}
 				}
 			}
 			g.CheckStateBasedActions()
@@ -1682,10 +1697,16 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 			return
 		}
 
-		// Instants and sorceries go to graveyard
-		p := g.GetPlayer(owner)
-		if p != nil {
-			p.AddToGraveyard(obj.Card)
+		// Instants and sorceries go to graveyard, unless an active
+		// "if would be put into a graveyard, exile it instead" rider
+		// applies to this card (e.g. Scholar of the Lost Trove).
+		if g.IsCardMarkedExileInsteadOfGraveyard(obj.Card.ID()) {
+			g.ExileCard(obj.Card, obj.Card.ID())
+		} else {
+			p := g.GetPlayer(owner)
+			if p != nil {
+				p.AddToGraveyard(obj.Card)
+			}
 		}
 	}
 
@@ -2594,6 +2615,7 @@ func (g *Game) doCleanupActions() bool {
 	// Remove end-of-turn effects and clear turn-scoped state
 	g.effects.RemoveEndOfTurn()
 	g.effects.ClearReplacementsEndOfTurn()
+	g.exileInsteadCards = map[uuid.UUID]uuid.UUID{}
 	g.effects.Damage.ClearEndOfTurn()
 	g.effects.Rules.ClearEndOfTurn()
 	// Clear persistent delayed triggers (they only last "this turn")

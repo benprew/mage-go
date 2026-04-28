@@ -130,6 +130,16 @@ func (g *Game) Clone() *Game {
 	c.instantsCastThisTurn = cloneUUIDIntMap(g.instantsCastThisTurn)
 	c.blockedThisTurn = cloneBlockedThisTurn(g.blockedThisTurn)
 
+	// Deep copy cast-from-exile permissions and exile-instead-of-graveyard tags.
+	if len(g.castFromExilePermissions) > 0 {
+		c.castFromExilePermissions = make([]CastableFromExilePermission, len(g.castFromExilePermissions))
+		copy(c.castFromExilePermissions, g.castFromExilePermissions)
+	}
+	c.exileInsteadCards = make(map[uuid.UUID]uuid.UUID, len(g.exileInsteadCards))
+	for k, v := range g.exileInsteadCards {
+		c.exileInsteadCards[k] = v
+	}
+
 	// Interactive callbacks are nil'd — search clones don't call back to UI.
 	// OnPriority, AfterPriorityAction, BeforeStackResolve all remain nil.
 
