@@ -456,7 +456,11 @@ func registerSpells() {
 	// Instant
 	// As an additional cost to cast this spell, you may reveal a Dragon card from your hand.
 	// Draconic Roar deals 3 damage to target creature. If you revealed a Dragon card or controlled a Dragon as you cast this spell, Draconic Roar deals 3 damage to that creature's controller.
-	// XXX: requires reveal-card-from-hand additional cost; implement only the base 3 damage
+	// XXX: needs an OptionalCost primitive (the reveal is "may reveal", not a
+	// mandatory branch of an EitherCost), plus a stack-time snapshot of "did
+	// you control a Dragon as you cast this spell" — RevealFromHandCost +
+	// EitherCost alone don't model the optional path. Base 3-damage-to-creature
+	// is implemented; the conditional 3-damage-to-controller is not.
 	Register("Draconic Roar", func() Card {
 		return NewInstant("Draconic Roar", "{1}{R}",
 			NewTargetedSpell(TargetCreature(), DealDamage(Fixed(3))),
@@ -1538,7 +1542,6 @@ func registerSpells() {
 	// Instant
 	// This spell can't be countered.
 	// Volcanic Fallout deals 2 damage to each creature and each player.
-	// XXX: requires uncounterable flag — implement remaining damage portion
 	Register("Volcanic Fallout", func() Card {
 		return NewInstant("Volcanic Fallout", "{1}{R}{R}",
 			NewSpellAbility(CompositeEffects(
@@ -1546,6 +1549,7 @@ func registerSpells() {
 				DealDamageToAllCreatures(Fixed(2), AnyPermanent),
 				DealDamageToPlayers(Fixed(2), SelectEachPlayer()),
 			)),
+			WithUncounterable(),
 		)
 	})
 

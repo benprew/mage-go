@@ -5630,15 +5630,17 @@ func registerCreatures() {
 	// 3/3
 	// As an additional cost to cast this spell, reveal an Elf card from your hand or pay {3}.
 	// Deathtouch (Any amount of damage this deals to a creature is enough to destroy it.)
-	// XXX: EitherCost can model the OR branching, but the first branch needs a
-	// "reveal a card matching <filter> from your hand" Cost primitive — no such
-	// RevealFromHandCost(filter) exists in pkg/mage/cost.go today. Once added,
-	// wire as: WithAdditionalCost(EitherCost(RevealFromHandCost(IsElfCard),
-	// ManaCostOf("{3}"))).
 	Register("Wren's Run Vanquisher", func() Card {
+		elfCardFilter := NewCardFilter("Elf card", func(c Card) bool {
+			return c.HasSubType("Elf")
+		})
 		return NewCreature("Wren's Run Vanquisher", "{1}{G}", 3, 3,
 			WithSubTypes("Elf", "Warrior"),
 			WithKeyword(Deathtouch),
+			WithAdditionalCost(EitherCost(
+				RevealFromHandCost(elfCardFilter, "Reveal an Elf card"),
+				ManaCostOf("{3}"),
+			)),
 		)
 	})
 
