@@ -335,6 +335,71 @@ func (c *discardCost) Text() string {
 	return fmt.Sprintf("Discard %d cards", c.amount)
 }
 
+// eitherCost is a branching additional cost: the controller chooses one of
+// several alternatives at pay time. Used for "as an additional cost,
+// discard a card or pay {N}" and similar OR-style additional costs.
+type eitherCost struct {
+	options []Cost
+}
+
+// EitherCost creates a branching cost that lets the controller pick which
+// underlying cost to pay (CR 118.1 — "or" in cost text). All options are
+// tried during CanPay; payment routes to the option chosen by the player
+// via ChooseMode. If only one option is payable, that one is selected
+// automatically.
+//
+// Example: "As an additional cost, discard a card or pay {5}." →
+// EitherCost(DiscardCost(1), ManaCostOf("{5}")).
+func EitherCost(options ...Cost) Cost {
+	return &eitherCost{options: options}
+}
+
+func (c *eitherCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+	for _, opt := range c.options {
+		if opt.CanPay(sourceID, controller, g) {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *eitherCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
+	var payable []int
+	var labels []string
+	for i, opt := range c.options {
+		if opt.CanPay(sourceID, controller, g) {
+			payable = append(payable, i)
+			labels = append(labels, opt.Text())
+		}
+	}
+	if len(payable) == 0 {
+		return fmt.Errorf("no payable option")
+	}
+	if len(payable) == 1 {
+		return c.options[payable[0]].Pay(sourceID, controller, g)
+	}
+	p := g.GetPlayer(controller)
+	if p == nil {
+		return ErrPlayerNotFound
+	}
+	choice := p.ChooseMode(labels, c.Text())
+	if choice < 0 || choice >= len(payable) {
+		choice = 0
+	}
+	return c.options[payable[choice]].Pay(sourceID, controller, g)
+}
+
+func (c *eitherCost) Text() string {
+	parts := ""
+	for i, opt := range c.options {
+		if i > 0 {
+			parts += " or "
+		}
+		parts += opt.Text()
+	}
+	return parts
+}
+
 // exileFromGraveyardCost requires exiling cards from your graveyard.
 type exileFromGraveyardCost struct {
 	amount int
