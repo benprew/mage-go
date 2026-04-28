@@ -456,14 +456,44 @@ func registerSpells() {
 	// Instant
 	// As an additional cost to cast this spell, you may reveal a Dragon card from your hand.
 	// Draconic Roar deals 3 damage to target creature. If you revealed a Dragon card or controlled a Dragon as you cast this spell, Draconic Roar deals 3 damage to that creature's controller.
-	// XXX: needs an OptionalCost primitive (the reveal is "may reveal", not a
-	// mandatory branch of an EitherCost), plus a stack-time snapshot of "did
-	// you control a Dragon as you cast this spell" — RevealFromHandCost +
-	// EitherCost alone don't model the optional path. Base 3-damage-to-creature
-	// is implemented; the conditional 3-damage-to-controller is not.
+	// XXX: the "controlled a Dragon as you cast this spell" half is checked at
+	// resolution rather than snapshotted at cast — engine has no cast-time
+	// snapshot hook, so a Dragon that leaves between cast and resolution is
+	// not counted. The optional reveal half is implemented exactly.
 	Register("Draconic Roar", func() Card {
+		dragonCard := NewCardFilter("Dragon card", func(c Card) bool {
+			return c.HasSubType("Dragon")
+		})
 		return NewInstant("Draconic Roar", "{1}{R}",
-			NewTargetedSpell(TargetCreature(), DealDamage(Fixed(3))),
+			NewTargetedSpell(TargetCreature(), FuncEffect(
+				"3 damage to target creature; +3 to its controller if revealed/controlled a Dragon",
+				EffectProperties{Outcome: OutcomeDetriment, DamageValue: Fixed(3)},
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					if len(targets) == 0 {
+						g.ClearOptionalCostPaid(sourceID)
+						return nil
+					}
+					revealed := g.LastCostOptionalPaid(sourceID)
+					controlsDragon := g.AnyBattlefield(And(ControlledBy(controller), IsCreature, HasSubType("Dragon")))
+					perm := g.FindPermanent(targets[0])
+					if perm == nil {
+						g.ClearOptionalCostPaid(sourceID)
+						return nil
+					}
+					g.DealDamageToPermanent(perm, 3, sourceID)
+					if revealed || controlsDragon {
+						if owner := g.GetPlayer(perm.Controller); owner != nil {
+							g.DealDamageToPlayer(owner, 3, sourceID)
+						}
+					}
+					g.ClearOptionalCostPaid(sourceID)
+					return nil
+				},
+			)),
+			WithAdditionalCost(OptionalCost(
+				RevealFromHandCost(dragonCard, "Reveal a Dragon card"),
+				"Reveal a Dragon card from your hand?",
+			)),
 		)
 	})
 
