@@ -549,10 +549,19 @@ func registerSpells() {
 	// Sorcery
 	// You may play an additional land this turn.
 	// Draw a card.
-	// XXX: requires "additional land this turn" rules modifier (single increment)
 	Register("Explore", func() Card {
 		return NewSorcery("Explore", "{1}{G}",
-			NewSpellAbility(drawSelfCard(1)),
+			NewSpellAbility(
+				FuncEffect(
+					"you may play an additional land this turn",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						g.GrantExtraLandPlay(controller, 1)
+						return nil
+					},
+				),
+				drawSelfCard(1),
+			),
 		)
 	})
 
