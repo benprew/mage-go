@@ -184,6 +184,48 @@ Scry primitives:
 	keeps every card on top in original order. TestPlayer queues decisions
 	via TestGame.ChooseScry(p, bottom, topOrder).
 
+Reveal-and-pick primitives (reveal.go):
+
+	Game.RevealTopN(player, n) []Card
+	    Returns a copy of the top N cards without modifying the library.
+	    Powers "look at" / "reveal the top N" effects (Commune with
+	    Dinosaurs, Silhana Wayfinder, Muxus, Lurking Predators, Sin Prodder).
+
+	Game.RemoveTopN(player, n) []Card
+	    Removes and returns the top N cards. Pair with the relocation
+	    primitives below to put cards back in the desired places.
+
+	Game.RevealAndPickFromTop(chooser, owner, n, filter, mayDecline, reason)
+	    Reveals top N of `owner`'s library, asks `chooser` to pick one
+	    card matching `filter`. Returns (chosen, revealed). chosen is nil
+	    if no card matches; if mayDecline=false the chooser is forced to
+	    pick from the candidates. The library is NOT mutated — caller
+	    typically follows with RemoveTopN + relocation.
+
+	Game.PutOnBottomInRandomOrder(player, cards)
+	    Appends `cards` to the bottom of the library in uniformly random
+	    order. The cards must already have been removed from the library.
+
+	Game.PutOnTopInChosenOrder(player, cards)
+	    Places `cards` on top in the supplied order (first = new top).
+
+	Game.RevealHand(viewer, owner) []Card
+	    Returns a copy of `owner`'s hand. The viewer parameter is
+	    informational; the engine does not currently model private vs
+	    public knowledge.
+
+	Game.PickFromHand(chooser, owner, filter, mayDecline, reason) Card
+	    Asks `chooser` to pick one card from `owner`'s hand matching the
+	    filter. Returns nil if no card matches or the chooser declines
+	    (only when mayDecline=true). The hand is NOT mutated — callers
+	    move the returned card themselves (e.g. via Game.PlayerDiscard).
+	    Powers Corpse Traders / Entomber Exarch ("you choose a card from
+	    target opponent's hand; they discard it").
+
+	Both reveal-and-pick choosers reuse Player.ChooseCardFromLibrary
+	for the actual selection — TestPlayer scripts decisions via
+	TestGame.ChooseFromLibrary(p, name).
+
 Graveyard effects:
 
 	[ReturnFromGraveyardToBattlefield]()          // reanimate (Animate Dead)
