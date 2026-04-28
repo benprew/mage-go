@@ -170,6 +170,13 @@ type Game struct {
 	// into a graveyard this turn (Scholar of the Lost Trove rider). Value
 	// is the source ID that granted the rider. Cleared at end of turn.
 	exileInsteadCards map[uuid.UUID]uuid.UUID
+
+	// Per-turn trackers (see per_turn_trackers.go). Reset by
+	// resetPerTurnTrackers in the turn-end cleanup pipeline.
+	discardCountThisTurn       map[uuid.UUID]int  // playerID -> discards this turn
+	lifeGainedThisTurn         map[uuid.UUID]int  // playerID -> life gained this turn
+	permDamageReceivedThisTurn map[uuid.UUID]int  // permID/playerID -> damage taken this turn
+	attackedOrBlockedThisTurn  map[uuid.UUID]bool // permID -> attacked or blocked this turn
 }
 
 func (g *Game) ActivePlayer() int {
@@ -1432,6 +1439,7 @@ func (g *Game) RegisterDelayedTrigger(dt *DelayedTrigger) {
 
 // FireEvent dispatches an event and checks triggered abilities.
 func (g *Game) FireEvent(evt GameEvent) {
+	g.recordPerTurnEvent(&evt)
 	for _, perm := range g.battlefield {
 		for _, a := range perm.RuntimeAbilities {
 			ta, ok := UnwrapAbility(a).(TriggeredAbility)
@@ -2871,6 +2879,7 @@ func (g *Game) doCleanupActions() bool {
 	g.instantsCastThisTurn = make(map[uuid.UUID]int)
 	g.timesTargetedThisTurn = make(map[uuid.UUID]int)
 	g.creatureDeathsThisTurn = 0
+	g.resetPerTurnTrackers()
 	// Clear mana restrictions
 	g.artifactManaOnly = make(map[uuid.UUID]bool)
 	g.creatureManaOnly = make(map[uuid.UUID]bool)
