@@ -2207,13 +2207,23 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 // AnyColor productions prompt the player to choose a color.
 func (g *Game) addManaFromAbility(ma *ManaAbility, p Player, perm *Permanent) {
 	for _, prod := range ma.Productions {
-		color := prod.Color
-		if color == AnyColor {
-			color = p.ChooseManaColor("add mana")
-		}
 		amt := prod.Amount
 		if amt <= 0 {
 			amt = 1
+		}
+		// "X mana in any combination of colors": ask once per mana point so
+		// the controller can split colors arbitrarily.
+		if prod.Color == AnyColor && prod.AnyCombination && amt > 1 {
+			for i := 0; i < amt; i++ {
+				color := p.ChooseManaColor("add mana")
+				p.ManaPool().Add(color, 1)
+				g.applyManaBonuses(perm, color, p)
+			}
+			continue
+		}
+		color := prod.Color
+		if color == AnyColor {
+			color = p.ChooseManaColor("add mana")
 		}
 		p.ManaPool().Add(color, amt)
 		g.applyManaBonuses(perm, color, p)

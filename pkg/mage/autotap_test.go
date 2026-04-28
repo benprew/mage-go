@@ -238,7 +238,7 @@ func TestTapForMana_MultiMana(t *testing.T) {
 	pid := g.players[0].PlayerID()
 
 	// Sol Ring style: tap for 2 colorless
-	ring := NewArtifact("Sol Ring", "{1}", WithMultiManaAbility(ManaProduction{Colorless, 2}))
+	ring := NewArtifact("Sol Ring", "{1}", WithMultiManaAbility(ManaProduction{Color: Colorless, Amount: 2}))
 	ring.SetOwner(pid)
 	perm := g.PutOnBattlefield(ring, pid)
 	perm.RevokeBaseAttr(AttrSummonSick)
@@ -259,7 +259,7 @@ func TestTapForMana_MultiColor(t *testing.T) {
 
 	// Produces {G}{W} at once
 	land := NewLand("Dual Land",
-		WithMultiManaAbility(ManaProduction{Green, 1}, ManaProduction{White, 1}),
+		WithMultiManaAbility(ManaProduction{Color: Green, Amount: 1}, ManaProduction{Color: White, Amount: 1}),
 	)
 	land.SetOwner(pid)
 	perm := g.PutOnBattlefield(land, pid)
@@ -283,7 +283,7 @@ func TestAutoTapForCost_MultiMana(t *testing.T) {
 	pid := g.players[0].PlayerID()
 
 	// Sol Ring style: produces 2 colorless
-	ring := NewArtifact("Sol Ring", "{1}", WithMultiManaAbility(ManaProduction{Colorless, 2}))
+	ring := NewArtifact("Sol Ring", "{1}", WithMultiManaAbility(ManaProduction{Color: Colorless, Amount: 2}))
 	ring.SetOwner(pid)
 	perm := g.PutOnBattlefield(ring, pid)
 	perm.RevokeBaseAttr(AttrSummonSick)
@@ -304,7 +304,7 @@ func TestCanAfford_MultiMana(t *testing.T) {
 	pid := g.players[0].PlayerID()
 
 	// Sol Ring style: produces 2 colorless
-	ring := NewArtifact("Sol Ring", "{1}", WithMultiManaAbility(ManaProduction{Colorless, 2}))
+	ring := NewArtifact("Sol Ring", "{1}", WithMultiManaAbility(ManaProduction{Color: Colorless, Amount: 2}))
 	ring.SetOwner(pid)
 	perm := g.PutOnBattlefield(ring, pid)
 	perm.RevokeBaseAttr(AttrSummonSick)
@@ -328,14 +328,14 @@ func TestProducedAmount(t *testing.T) {
 		want int
 	}{
 		{"single color", NewManaAbility(Green), 1},
-		{"multi amount", NewMultiManaAbility(ManaProduction{Colorless, 2}), 2},
-		{"multi amount 3", NewMultiManaAbility(ManaProduction{Colorless, 3}), 3},
+		{"multi amount", NewMultiManaAbility(ManaProduction{Color: Colorless, Amount: 2}), 2},
+		{"multi amount 3", NewMultiManaAbility(ManaProduction{Color: Colorless, Amount: 3}), 3},
 		{"any color", NewManaAbility(AnyColor), 1},
 		{"multi color", NewMultiManaAbility(
-			ManaProduction{Green, 1}, ManaProduction{White, 1},
+			ManaProduction{Color: Green, Amount: 1}, ManaProduction{Color: White, Amount: 1},
 		), 2},
 		{"multi color varied", NewMultiManaAbility(
-			ManaProduction{Colorless, 2}, ManaProduction{Red, 1},
+			ManaProduction{Color: Colorless, Amount: 2}, ManaProduction{Color: Red, Amount: 1},
 		), 3},
 	}
 	for _, tt := range tests {
