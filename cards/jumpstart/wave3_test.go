@@ -8,6 +8,37 @@ import (
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
 )
 
+// TestSavageStomp_CounterAndFight verifies +1/+1 counter then fight between
+// two targets. A 2/2 (post-counter 3/3) fights a 3/3 — both die.
+func TestSavageStomp_CounterAndFight(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 3)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Savage Stomp")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Savage Stomp", "Grizzly Bears", "Hill Giant")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 1)
+	g.AssertGraveyardCount(gametest.PlayerB, "Hill Giant", 1)
+}
+
+// TestTimeToFeed_FightAndGain3 verifies the fight resolves and the on-death
+// trigger fires for +3 life when the opponent's creature dies.
+func TestTimeToFeed_FightAndGain3(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.SetLife(gametest.PlayerA, 20)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 3)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Time to Feed")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Time to Feed", "Grizzly Bears", "Hill Giant")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+	g.AssertLife(gametest.PlayerA, 23)
+}
+
 // TestThirstForKnowledge_DiscardArtifact verifies the controller defaults to
 // "yes pay" and discards an artifact card to avoid the 2-card discard.
 func TestThirstForKnowledge_DiscardArtifact(t *testing.T) {

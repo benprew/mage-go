@@ -49,6 +49,32 @@ func (c *discardCardOfTypeCost) Pay(_, controller uuid.UUID, g *Game) error {
 
 func (c *discardCardOfTypeCost) Text() string { return c.label }
 
+// fightBetween implements CR 701.13 between two arbitrary permanents (neither
+// of which is the spell source). Both must be creatures on the battlefield;
+// damage is dealt simultaneously, with protection respected per direction.
+// Used by spells like Savage Stomp and Time to Feed where the spell source is
+// the spell card itself rather than a fighting creature.
+func fightBetween(g *Game, aID, bID uuid.UUID) {
+	a := g.FindPermanent(aID)
+	b := g.FindPermanent(bID)
+	if a == nil || b == nil {
+		return
+	}
+	if !a.HasType(TypeCreature) || !b.HasType(TypeCreature) {
+		return
+	}
+	aPower := a.CurrentPower(g)
+	bPower := b.CurrentPower(g)
+	aCard := g.FindCardAnywhere(aID)
+	bCard := g.FindCardAnywhere(bID)
+	if aPower > 0 && (bCard == nil || !b.HasProtectionFrom(aCard)) {
+		g.DealDamageToPermanent(b, aPower, aID)
+	}
+	if bPower > 0 && (aCard == nil || !a.HasProtectionFrom(bCard)) {
+		g.DealDamageToPermanent(a, bPower, bID)
+	}
+}
+
 func registerSpells() {
 
 	// Act of Treason {2}{R}
@@ -1479,10 +1505,26 @@ func registerSpells() {
 	// Sorcery
 	// This spell costs {2} less to cast if it targets a Dinosaur you control.
 	// Put a +1/+1 counter on target creature you control. Then that creature fights target creature you don't control.
-	// XXX: requires fight + cost-reduction-on-target + multi-target; defer
+	// XXX: cost-reduction-on-target piece is not wired — SpellCondition runs
+	// before targets are chosen, so "if it targets a Dinosaur you control" has
+	// no hook. Counter + fight + multi-target are implemented exactly.
 	Register("Savage Stomp", func() Card {
 		return NewSorcery("Savage Stomp", "{2}{G}",
-			NewSpellAbility(),
+			NewMultiTargetSpell(
+				[]Target{TargetCreatureYouControl(), TargetCreatureOpponentControls()},
+				AddCounters(P1P1, Fixed(1)).Targeting(ToTarget()),
+				FuncEffect(
+					"target creature you control fights target creature you don't control",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) < 2 {
+							return nil
+						}
+						fightBetween(g, targets[0], targets[1])
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -1648,10 +1690,27 @@ func registerSpells() {
 	// Time to Feed {2}{G}
 	// Sorcery
 	// Choose target creature an opponent controls. When that creature dies this turn, you gain 3 life. Target creature you control fights that creature.
-	// XXX: requires fight + delayed-trigger-on-death; defer
 	Register("Time to Feed", func() Card {
 		return NewSorcery("Time to Feed", "{2}{G}",
-			NewSpellAbility(),
+			NewMultiTargetSpell(
+				[]Target{TargetCreatureOpponentControls(), TargetCreatureYouControl()},
+				FuncEffect(
+					"register on-death gain-3 trigger; your creature fights opponent's",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) < 2 {
+							return nil
+						}
+						oppCreature := targets[0]
+						yourCreature := targets[1]
+						if err := OnPermanentDiesThisTurn(oppCreature, GainLife(3)).Apply(g, sourceID, controller, nil); err != nil {
+							return err
+						}
+						fightBetween(g, yourCreature, oppCreature)
+						return nil
+					},
+				),
+			),
 		)
 	})
 
