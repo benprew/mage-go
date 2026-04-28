@@ -4695,10 +4695,30 @@ func registerCreatures() {
 	// Creature — Human Druid
 	// 1/1
 	// When this creature enters, target Forest becomes a 4/5 green Treefolk creature for as long as this creature remains on the battlefield. It's still a land.
-	// XXX: requires aura-animates-land mechanic
 	Register("Awakener Druid", func() Card {
 		return NewCreature("Awakener Druid", "{2}{G}", 1, 1,
 			WithSubTypes("Human", "Druid"),
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect(
+					"target Forest becomes a 4/5 green Treefolk creature for as long as Awakener Druid remains on the battlefield",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						eff := AnimateLandWhileSourceOnBattlefield(targets[0],
+							AnimateLandOptions{
+								Power:     4,
+								Toughness: 5,
+								SubTypes:  []string{"Treefolk"},
+								Colors:    []Color{Green},
+							})
+						eff.SetSourceID(sourceID)
+						g.AddContinuousEffect(eff)
+						return nil
+					}),
+				false,
+			).AddTarget(TargetPermanent(IsLand, HasSubType("Forest")))),
 		)
 	})
 
