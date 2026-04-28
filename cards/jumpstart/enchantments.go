@@ -40,7 +40,13 @@ func registerEnchantments() {
 	// Enchantment
 	// Whenever a creature dies, put a charge counter on this enchantment.
 	// At the beginning of your first main phase, add {B} for each charge counter on this enchantment.
-	// XXX: requires "beginning of first main phase" mana-add trigger
+	// XXX: EvtMainPhase exists in core/event.go but is never fired by the turn
+	// engine, so no "beginning of [first] main phase" trigger can fire. Also
+	// needs a charge-counter ability (EvtCreatureDied -> AddCounter on self)
+	// and a mana-pool primitive that emits {B} per charge-counter at that step.
+	// Engine work required: fire EvtMainPhase from turn.go on entry to
+	// PrecombatMain (and a way to scope to "first main phase" — i.e. only
+	// PrecombatMain).
 	Register("Black Market", func() Card {
 		return NewEnchantment("Black Market", "{3}{B}{B}")
 	})
@@ -49,9 +55,26 @@ func registerEnchantments() {
 	// Enchantment
 	// Prevent all noncombat damage that would be dealt to you and creatures you control.
 	// Whenever a nontoken creature you control enters, create a 2/2 white Unicorn creature token.
-	// XXX: requires noncombat-damage prevention scope and nontoken ETB filter
+	// XXX: first clause ("Prevent all noncombat damage...") is not implemented.
+	// damagePreventionRule supports combatOnly but has no NoncombatOnly flag,
+	// and PreventDamageFromTo has no way to scope to noncombat damage. Engine
+	// work needed: a NoncombatOnly option on the prevention rule.
+	// XXX: nontoken filter on the ETB trigger suffers from the same engine bug
+	// as Lathliss — token detection on EvtEntersBattlefield event source is
+	// unreliable, so token creatures entering may also (incorrectly) spawn a
+	// Unicorn.
 	Register("Blessed Sanctuary", func() Card {
-		return NewEnchantment("Blessed Sanctuary", "{3}{W}{W}")
+		nontokenCreatureYouControl := NewPermanentFilter("nontoken creature you control", func(p *Permanent, _ *Game) bool {
+			return p.HasType(TypeCreature) && !p.Card.IsToken()
+		})
+		return NewEnchantment("Blessed Sanctuary", "{3}{W}{W}",
+			WithAbility(NewTriggered(EvtEntersBattlefield, false,
+				CreateColoredToken("Unicorn", 2, 2, []Color{White}, []CardType{TypeCreature}, []string{"Unicorn"}),
+			).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+				EventSourceControlledByController{},
+				EventSourceMatchesPermanentFilter{Filter: nontokenCreatureYouControl},
+			}})),
+		)
 	})
 
 	// Branching Evolution {2}{G}

@@ -497,3 +497,23 @@ func TestNewHorizons_GrantsCounterAndManaAbility(t *testing.T) {
 	g.Execute()
 	g.AssertCounterCount(gametest.PlayerA, "Grizzly Bears", core.P1P1, 1)
 }
+
+// Blessed Sanctuary: nontoken creature ETB creates a 2/2 white Unicorn token.
+// Damage prevention clause is not implemented — see XXX in source.
+func TestBlessedSanctuary_NontokenETBCreatesUnicorn(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Blessed Sanctuary")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 4)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Grizzly Bears")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Unicorn", 1)
+}
+
+// Token ETB does NOT trigger Blessed Sanctuary's nontoken-ETB clause.
+// SKIPPED: same engine bug as Lathliss — token detection on EvtEntersBattlefield
+// event source is unreliable inside trigger condition closures.
+func TestBlessedSanctuary_TokenETBDoesNotTrigger(t *testing.T) {
+	t.Skip("FIXME: token-detection on EvtEntersBattlefield event source unreliable; same as Lathliss")
+}

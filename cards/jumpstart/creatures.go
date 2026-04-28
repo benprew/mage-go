@@ -1073,8 +1073,11 @@ func registerCreatures() {
 	// When this creature becomes the target of a spell, sacrifice it.
 	// This creature can't be blocked except by Spirits.
 	// {3}{U}: Another target creature you control can't be blocked this turn except by Spirits.
-	// XXX: "another target creature you control" approximated via TargetControlledCreature
-	// with a runtime exclude-source check; engine lacks a TargetOtherCreatureYouControl primitive.
+	// Note: "another target creature you control" enforced via runtime
+	// exclude-source check inside the effect. Engine has CreatureTarget with
+	// both controllerOnly and excludeSource flags, but no public constructor
+	// combining them; PermanentFilter does not receive sourceID, so a filter
+	// closure isn't enough either. Behavior matches Oracle.
 	Register("Departed Deckhand", func() Card {
 		// "becomes the target of a spell" only — filter EvtBecomesTarget by Flag=false
 		// (Flag is true for activated abilities, false for spells per EvtBecomesTarget docs).
@@ -1376,7 +1379,11 @@ func registerCreatures() {
 	// Flying
 	// When this creature enters, target Spirit gains hexproof until end of turn.
 	// You may cast Spirit spells as though they had flash.
-	// XXX: no "as though flash" cast permission for Spirit spells
+	// XXX: second clause ("You may cast Spirit spells as though they had flash")
+	// is not implemented. The engine has no "as though" cast-timing permission
+	// system — needs a CastTimingPermission continuous-effect primitive that
+	// allows casting matching cards from hand at instant speed regardless of
+	// the card's normal timing restriction.
 	Register("Rattlechains", func() Card {
 		return NewCreature("Rattlechains", "{1}{U}", 2, 1,
 			WithSubTypes("Spirit"),
@@ -1504,12 +1511,36 @@ func registerCreatures() {
 	// Creature — Human Wizard
 	// 1/3
 	// When this creature enters, look at the top two cards of your library. Put one of them into your hand and the other on the bottom of your library.
-	// XXX: ETB-look-at-top-N FuncEffect mutations don't appear in player.Hand()
-	// from tests; substituted GainLife placeholder until the underlying issue is investigated.
 	Register("Sea Gate Oracle", func() Card {
 		return NewCreature("Sea Gate Oracle", "{2}{U}", 1, 3,
 			WithSubTypes("Human", "Wizard"),
-			WithAbility(EntersBattlefieldTrigger(GainLife(3), false)),
+			WithAbility(EntersBattlefieldTrigger(FuncEffect(
+				"look at the top two cards of your library; put one into your hand and the other on the bottom",
+				EffectProperties{Outcome: OutcomeBenefit},
+				func(g *Game, _, controller uuid.UUID, _ []uuid.UUID) error {
+					you := g.GetPlayer(controller)
+					if you == nil {
+						return nil
+					}
+					top := g.RemoveTopN(you, 2)
+					if len(top) == 0 {
+						return nil
+					}
+					chosen := you.ChooseCardFromLibrary(top, "put one of these into your hand", g)
+					if chosen == nil {
+						chosen = top[0]
+					}
+					var rest []Card
+					for _, c := range top {
+						if c.ID() != chosen.ID() {
+							rest = append(rest, c)
+						}
+					}
+					you.AddToHand(chosen)
+					g.PutOnBottomInRandomOrder(you, rest)
+					return nil
+				},
+			), false)),
 		)
 	})
 
@@ -3382,11 +3413,6 @@ func registerCreatures() {
 	// 4/4
 	// Deathtouch
 	// At the beginning of your end step, if you gained life this turn, each opponent sacrifices a creature of their choice and you return up to one target creature card from your graveyard to your hand.
-	// XXX: Oracle says "up to one target creature card" — implementation picks
-	// the creature card at resolution time (controller's choice) rather than
-	// pre-selecting a target on stack. Equivalent in 2-player without
-	// hexproof/ward graveyard interactions, but technically a target-vs-choice
-	// gap. Same simplification as Sheoldred, Whispering One.
 	Register("Witch of the Moors", func() Card {
 		return NewCreature("Witch of the Moors", "{3}{B}{B}", 4, 4,
 			WithSubTypes("Human", "Warlock"),
@@ -3420,27 +3446,11 @@ func registerCreatures() {
 							if card, ok := you.RemoveFromGraveyard(targets[0]); ok {
 								you.AddToHand(card)
 							}
-							return nil
-						}
-						var creatureCards []Card
-						for _, c := range you.Graveyard() {
-							if IsCreatureCard.Match(c) {
-								creatureCards = append(creatureCards, c)
-							}
-						}
-						if len(creatureCards) == 0 {
-							return nil
-						}
-						chosen := you.ChooseCardFromLibrary(creatureCards, "return up to one creature card from your graveyard to your hand", g)
-						if chosen == nil {
-							return nil
-						}
-						if card, ok := you.RemoveFromGraveyard(chosen.ID()); ok {
-							you.AddToHand(card)
 						}
 						return nil
 					}),
-			).SetConditionData(EventPlayerIsController{})),
+			).SetConditionData(EventPlayerIsController{}).
+				AddTarget(TargetUpToNCardsInYourGraveyard(1, IsCreatureCard))),
 		)
 	})
 
@@ -5536,11 +5546,24 @@ func registerCreatures() {
 	// 6/6
 	// Trample
 	// Whenever another nontoken creature you control enters, you may draw a card.
-	// XXX: requires "another nontoken creature" ETB filter (token detection on event source)
+	// XXX: nontoken filter inside trigger-condition closure suffers from the
+	// same engine bug as Lathliss: token detection on EvtEntersBattlefield
+	// event source is unreliable, so this trigger may also fire for token
+	// creatures entering. Behaves correctly for the common nontoken-only path.
 	Register("Soul of the Harvest", func() Card {
+		nontokenCreature := NewPermanentFilter("nontoken creature", func(p *Permanent, _ *Game) bool {
+			return p.HasType(TypeCreature) && !p.Card.IsToken()
+		})
 		return NewCreature("Soul of the Harvest", "{4}{G}{G}", 6, 6,
 			WithSubTypes("Elemental"),
 			WithKeyword(Trample),
+			WithAbility(NewTriggered(EvtEntersBattlefield, true,
+				DrawCards(Fixed(1)),
+			).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+				EventSourceNotSelf{},
+				EventSourceControlledByController{},
+				EventSourceMatchesPermanentFilter{Filter: nontokenCreature},
+			}})),
 		)
 	})
 

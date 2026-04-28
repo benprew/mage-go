@@ -615,3 +615,23 @@ func TestTrustyRetriever_ReturnArtifactMode(t *testing.T) {
 	g.Execute()
 	g.AssertHandCount(gametest.PlayerA, "Sol Ring", 1)
 }
+
+// Soul of the Harvest: another nontoken creature you control entering draws.
+func TestSoulOfTheHarvest_DrawsOnNontokenETB(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Soul of the Harvest")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest", 4)
+	g.AddCard(ZoneHand, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Hill Giant")
+	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, PostcombatMain)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "Hill Giant", 1)
+}
+
+// Token ETB does NOT draw a card. SKIPPED: same engine bug as Lathliss
+// (token detection on event source not reliable inside trigger condition
+// closures); see creatures_part3_test.go FIXME for context.
+func TestSoulOfTheHarvest_TokenETBDoesNotDraw(t *testing.T) {
+	t.Skip("FIXME: token-detection on EvtEntersBattlefield event source unreliable; same as Lathliss")
+}

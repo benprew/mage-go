@@ -636,10 +636,12 @@ func TestSeaGateOracle(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneHand, gametest.PlayerA, "Sea Gate Oracle")
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 3)
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears", 2)
 	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Sea Gate Oracle")
 	g.StopAt(1, core.PostcombatMain)
 	g.Execute()
-	g.AssertLife(gametest.PlayerA, 23)
+	g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 1)
+	g.AssertLibraryCount(gametest.PlayerA, "Grizzly Bears", 1)
 }
 
 func TestOneirophage(t *testing.T) {

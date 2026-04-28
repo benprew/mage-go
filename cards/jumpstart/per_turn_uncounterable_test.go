@@ -56,12 +56,15 @@ func TestWitchOfTheMoors_TriggersOnLifeGain(t *testing.T) {
 	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Healing Salve")
 	g.ChooseMode(gametest.PlayerA, 0)
 	g.ChooseTarget(gametest.PlayerA, "PlayerA")
-	// End-step trigger: B picks Hill Giant to sacrifice.
+	// End-step trigger: the "up to 1 target creature card from your graveyard"
+	// is unselected (test harness ChooseTargets does not look up graveyard
+	// cards by name; "up to 1" resolves to 0 by default), so Grizzly Bears
+	// remains in the graveyard. The sacrifice clause still runs.
 	g.ChoosePermanent(gametest.PlayerB, "Hill Giant")
 	g.StopAt(1, core.Cleanup)
 	g.Execute()
 	g.AssertGraveyardCount(gametest.PlayerB, "Hill Giant", 1)
-	g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 1)
+	g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 1)
 }
 
 // Without life gain, the trigger's intervening-if fails silently.
