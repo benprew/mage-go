@@ -110,6 +110,7 @@ type createTokenEffect struct {
 	subTypes  []string
 	keywords  []Keyword
 	colors    []Color
+	abilities []Ability
 	count     int // 0 means 1
 }
 
@@ -134,6 +135,25 @@ func CreateTokens(count int, name string, power, toughness int, types []CardType
 		types:     types,
 		subTypes:  subTypes,
 		keywords:  keywords,
+		count:     count,
+	})
+}
+
+// CreateTokensWithAbilities creates an effect that puts N token
+// creatures onto the battlefield with the given baked-in abilities
+// (typically triggered abilities like "When this token dies, it deals
+// 1 damage to any target."). Used by Dance with Devils-style spells
+// where the printed text grants the tokens themselves a triggered
+// ability that fires later.
+func CreateTokensWithAbilities(count int, name string, power, toughness int, types []CardType, subTypes []string, keywords []Keyword, abilities ...Ability) Effect {
+	return DataEffect(&createTokenEffect{
+		name:      name,
+		power:     power,
+		toughness: toughness,
+		types:     types,
+		subTypes:  subTypes,
+		keywords:  keywords,
+		abilities: abilities,
 		count:     count,
 	})
 }
@@ -469,6 +489,9 @@ func execCreateToken(ctx *EffectContext, e *createTokenEffect) error {
 		if len(e.colors) > 0 {
 			token.colorOverride = make([]Color, len(e.colors))
 			copy(token.colorOverride, e.colors)
+		}
+		for _, a := range e.abilities {
+			token.AddAbility(a)
 		}
 		ctx.Game.PutOnBattlefield(token, ctx.Controller)
 	}
