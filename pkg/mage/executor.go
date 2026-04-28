@@ -33,6 +33,10 @@ func ExecuteEffect(ctx *EffectContext, data EffectData) error {
 		return execLoseLifeTarget(ctx, e)
 	case *dealDamageEffect:
 		return execDealDamage(ctx, e)
+	case *fightTargetEffect:
+		return execFightTarget(ctx, e)
+	case *onPermanentDiesEffect:
+		return execOnPermanentDies(ctx, e)
 	case *dealDividedDamageEffect:
 		return execDealDividedDamage(ctx, e)
 	case *dealDamageToAllCreaturesEffect:
