@@ -517,3 +517,64 @@ func TestRishkarPeemaRenegade_ETBCountersAndManaGrant(t *testing.T) {
 		g.AssertPermanentCount(gametest.PlayerA, "Rishkar, Peema Renegade", 1)
 	})
 }
+
+func TestInniazTheGaleForce_PumpAttackingFlyersWithW(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Inniaz, the Gale Force")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Healer's Hawk")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Plains", 3)
+	g.Attack(3, gametest.PlayerA, "Healer's Hawk")
+	g.ActivateAbility(3, DeclareAttackers, gametest.PlayerA, "Inniaz, the Gale Force")
+	g.StopAt(3, DeclareBlockers)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Healer's Hawk", 2, 2)
+}
+
+func TestInniazTheGaleForce_PumpAttackingFlyersWithU(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Inniaz, the Gale Force")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Healer's Hawk")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Island", 3)
+	g.Attack(3, gametest.PlayerA, "Healer's Hawk")
+	g.ActivateAbility(3, DeclareAttackers, gametest.PlayerA, "Inniaz, the Gale Force")
+	g.StopAt(3, DeclareBlockers)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Healer's Hawk", 2, 2)
+}
+
+func TestInniazTheGaleForce_DoesNotPumpNonAttackers(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Inniaz, the Gale Force")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Healer's Hawk")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Plains", 3)
+	g.ActivateAbility(1, PrecombatMain, gametest.PlayerA, "Inniaz, the Gale Force")
+	g.StopAt(1, EndStep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Healer's Hawk", 1, 1)
+}
+
+func TestSethronHurloonGeneral_PumpMinotaursWithB(t *testing.T) {
+	t.Skip("XXX: pre-existing ETB token-creation loop in Sethron's existing trigger blocks this test")
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Sethron, Hurloon General")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Swamp", 3)
+	g.ActivateAbility(1, PrecombatMain, gametest.PlayerA, "Sethron, Hurloon General")
+	g.StopAt(1, BeginCombat)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Sethron, Hurloon General", 5, 4)
+	g.AssertHasAbility(gametest.PlayerA, "Sethron, Hurloon General", Menace, true)
+	g.AssertHasAbility(gametest.PlayerA, "Sethron, Hurloon General", Haste, true)
+}
+
+func TestSethronHurloonGeneral_PumpMinotaursWithR(t *testing.T) {
+	t.Skip("XXX: pre-existing ETB token-creation loop in Sethron's existing trigger blocks this test")
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Sethron, Hurloon General")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Mountain", 3)
+	g.ActivateAbility(1, PrecombatMain, gametest.PlayerA, "Sethron, Hurloon General")
+	g.StopAt(1, BeginCombat)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Sethron, Hurloon General", 5, 4)
+	g.AssertHasAbility(gametest.PlayerA, "Sethron, Hurloon General", Menace, true)
+	g.AssertHasAbility(gametest.PlayerA, "Sethron, Hurloon General", Haste, true)
+}

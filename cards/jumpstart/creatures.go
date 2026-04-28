@@ -975,12 +975,18 @@ func registerCreatures() {
 	// Flying
 	// {2}{W/U}: Attacking creatures with flying get +1/+1 until end of turn. ({W/U} can be paid with either {W} or {U}.)
 	// Whenever three or more creatures you control with flying attack, each player gains control of a nonland permanent of your choice controlled by the player to their right.
-	// XXX: requires hybrid mana cost {W/U} and player-to-right (multiplayer) mechanics
+	// XXX: player-to-right (multiplayer) mechanics not in scope
 	Register("Inniaz, the Gale Force", func() Card {
 		return NewCreature("Inniaz, the Gale Force", "{3}{U}{U}", 4, 4,
 			WithSubTypes("Djinn"),
 			WithSuperTypes(SuperLegendary),
 			WithKeyword(Flying),
+			WithActivatedAbility(
+				Boost(Fixed(1), Fixed(1)).
+					Targeting(ToAllMatching(And(IsAttacking, HasKeywordFilter(Flying)))).
+					Until(EndOfTurn),
+				ManaCostOf("{2}{W/U}"),
+			),
 		)
 	})
 
@@ -3697,7 +3703,6 @@ func registerCreatures() {
 	// 4/4
 	// Whenever Sethron or another nontoken Minotaur you control enters, create a 2/3 red Minotaur creature token.
 	// {2}{B/R}: Minotaurs you control get +1/+0 and gain menace and haste until end of turn. ({B/R} can be paid with either {B} or {R}.)
-	// XXX: pump activation requires hybrid {B/R} mana cost
 	Register("Sethron, Hurloon General", func() Card {
 		return NewCreature("Sethron, Hurloon General", "{3}{R}{R}", 4, 4,
 			WithSubTypes("Minotaur", "Warrior"),
@@ -3709,6 +3714,28 @@ func registerCreatures() {
 					return p.HasSubType("Minotaur") && !p.Card.IsToken()
 				}),
 			).SetConditionData(EventSourceControlledByController{})),
+			WithActivatedAbility(
+				FuncEffect(
+					"Minotaurs you control get +1/+0 and gain menace and haste until end of turn",
+					EffectProperties{Outcome: OutcomeBenefit, Mass: true},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						for _, p := range g.FilterBattlefield(And(IsCreature, ControlledBy(controller), HasSubType("Minotaur"))) {
+							b := TemporaryBoost(p.ID(), 1, 0)
+							b.SetSourceID(sourceID)
+							g.AddContinuousEffect(b)
+							km := TemporaryKeyword(p.ID(), Menace)
+							km.SetSourceID(sourceID)
+							g.AddContinuousEffect(km)
+							kh := TemporaryKeyword(p.ID(), Haste)
+							kh.SetSourceID(sourceID)
+							g.AddContinuousEffect(kh)
+						}
+						g.ApplyContinuousEffects()
+						return nil
+					},
+				),
+				ManaCostOf("{2}{B/R}"),
+			),
 		)
 	})
 
