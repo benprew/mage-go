@@ -36,6 +36,7 @@ type GameReader interface {
 	GetDamageSources(uuid.UUID) map[uuid.UUID]bool
 	GetBlockedThisTurn(uuid.UUID) []uuid.UUID
 	GetInstantsCastThisTurn(uuid.UUID) int
+	TimesTargetedThisTurn(uuid.UUID) int
 	AllBattlefield() []*Permanent
 	GetResolvingTargets() []uuid.UUID
 	FindPermanentIncludingPhased(uuid.UUID) *Permanent

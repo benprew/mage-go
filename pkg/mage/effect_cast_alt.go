@@ -236,6 +236,8 @@ func (g *Game) castCardFromZone(playerID, cardID uuid.UUID, zone Zone, targets [
 		PlayerID: playerID,
 	})
 
+	g.fireBecomesTargetEvents(obj, false)
+
 	return nil
 }
 
@@ -388,6 +390,7 @@ func (g *Game) CastExiledCardWithPermission(playerID, cardID uuid.UUID, targets 
 		SourceID: card.ID(),
 		PlayerID: playerID,
 	})
+	g.fireBecomesTargetEvents(obj, false)
 	return nil
 }
 

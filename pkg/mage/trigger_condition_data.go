@@ -400,6 +400,61 @@ func (EventSourceIsSelfDamageToOpponent) CheckTriggerCond(evt *GameEvent, g Game
 	return p != nil && p.PlayerID() != controllerID
 }
 
+// EventTargetIsPlayer checks the event's TargetID identifies a player.
+type EventTargetIsPlayer struct{}
+
+func (EventTargetIsPlayer) CheckTriggerCond(evt *GameEvent, g GameReader, _, _ uuid.UUID) bool {
+	return g.GetPlayer(evt.TargetID) != nil
+}
+
+// EventIsCombatDamage checks evt.Flag, which is set by combat damage events.
+type EventIsCombatDamage struct{}
+
+func (EventIsCombatDamage) CheckTriggerCond(evt *GameEvent, _ GameReader, _, _ uuid.UUID) bool {
+	return evt.Flag
+}
+
+// EventSourceIsAttachedTo checks that the source is attached to the event's
+// SourceID (used for "enchanted creature deals damage" patterns where the
+// source of the damage event must be the permanent the aura is attached to).
+type EventSourceIsAttachedTo struct{}
+
+func (EventSourceIsAttachedTo) CheckTriggerCond(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+	src := g.FindPermanent(sourceID)
+	if src == nil || !src.IsAttached() {
+		return false
+	}
+	return evt.SourceID == src.AttachedTo
+}
+
+// ---------------------------------------------------------------------------
+// Becomes-target predicates (CR 603.6c, 119.5)
+// ---------------------------------------------------------------------------
+
+// EventTargetIsSelfFirstTimeThisTurn checks that the event's TargetID is the
+// source permanent AND the source has been targeted exactly once this turn
+// (i.e. this is the first time it has become the target this turn). Used for
+// Kira, Great Glass-Spinner ("the first time each turn").
+type EventTargetIsSelfFirstTimeThisTurn struct{}
+
+func (EventTargetIsSelfFirstTimeThisTurn) CheckTriggerCond(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+	if evt.TargetID != sourceID {
+		return false
+	}
+	// fireBecomesTargetEvents increments the counter BEFORE firing the event,
+	// so "first time" means the counter is exactly 1 when this condition runs.
+	return g.TimesTargetedThisTurn(sourceID) == 1
+}
+
+// EventBecomesTargetSourceIsNotSelf checks that the event was caused by a
+// spell or ability whose source is not the trigger's own source (so a creature
+// doesn't trigger when it targets itself with its own ability).
+type EventBecomesTargetSourceIsNotSelf struct{}
+
+func (EventBecomesTargetSourceIsNotSelf) CheckTriggerCond(evt *GameEvent, _ GameReader, sourceID, _ uuid.UUID) bool {
+	return evt.SourceID != sourceID
+}
+
 // ---------------------------------------------------------------------------
 // Battlefield state predicates
 // ---------------------------------------------------------------------------

@@ -128,6 +128,7 @@ func (g *Game) Clone() *Game {
 	c.creatureManaOnly = cloneUUIDBoolMap(g.creatureManaOnly)
 	c.attackedThisTurn = cloneUUIDBoolMap(g.attackedThisTurn)
 	c.instantsCastThisTurn = cloneUUIDIntMap(g.instantsCastThisTurn)
+	c.timesTargetedThisTurn = cloneUUIDIntMap(g.timesTargetedThisTurn)
 	c.blockedThisTurn = cloneBlockedThisTurn(g.blockedThisTurn)
 
 	// Deep copy cast-from-exile permissions and exile-instead-of-graveyard tags.

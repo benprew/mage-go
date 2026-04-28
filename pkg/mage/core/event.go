@@ -40,6 +40,7 @@ const (
 	EvtScry               // fired when a player scries; Amount is the number of cards scried (CR 701.18)
 	EvtDiscard            // fired when a player discards a card; PlayerID = discarding player, SourceID = card ID
 	EvtSacrifice          // fired when a permanent is sacrificed; PlayerID = controller, SourceID = sacrificed permanent ID
+	EvtBecomesTarget      // fired when a permanent or player becomes the target of a spell or ability (CR 603.6c, 119.5). SourceID = the spell/ability source (card or permanent), TargetID = the targeted object (permanent or player), PlayerID = the controller of the spell/ability, Flag = true if the source is an activated ability, false if a spell.
 )
 
 // GameEvent carries data about a game event.

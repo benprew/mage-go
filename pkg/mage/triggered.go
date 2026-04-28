@@ -361,6 +361,65 @@ func WheneverYouSacrificeTrigger(effect Effect, optional bool) *GenericTriggered
 		}})
 }
 
+// WheneverBecomesTargetTrigger fires when the source permanent becomes the
+// target of a spell or activated ability (CR 603.6c, 119.5). Used by cards
+// like Departed Deckhand ("When this creature becomes the target of a spell
+// or ability, sacrifice it").
+func WheneverBecomesTargetTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtBecomesTarget, optional, effect).
+		SetConditionData(EventTargetIsSelf{})
+}
+
+// WheneverBecomesTargetFirstTimeEachTurnTrigger fires the first time each turn
+// the source permanent becomes the target of a spell or activated ability
+// (CR 603.6c, 119.5). Used by Kira, Great Glass-Spinner.
+func WheneverBecomesTargetFirstTimeEachTurnTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtBecomesTarget, optional, effect).
+		SetConditionData(EventTargetIsSelfFirstTimeThisTurn{})
+}
+
+// WheneverDealsCombatDamageToPlayerTrigger fires when the source permanent
+// deals combat damage to any player (CR 119.5). Used by Coastal Piracy-style
+// "whenever a creature you control deals combat damage to a player" cards
+// when targeted at the source itself; for filter-based triggers see
+// WheneverPermanentDealsCombatDamageToPlayerTrigger.
+func WheneverDealsCombatDamageToPlayerTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtDamageDealt, optional, effect).
+		SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+			EventSourceIsSelf{},
+			EventTargetIsPlayer{},
+			EventIsCombatDamage{},
+		}})
+}
+
+// WheneverPermanentDealsCombatDamageToPlayerTrigger fires whenever any
+// permanent matching the given filter (and controlled by the trigger's
+// controller) deals combat damage to a player. Used by Coastal Piracy
+// ("whenever a creature you control deals combat damage to a player") and
+// Sharding Sphinx ("whenever an artifact creature you control deals combat
+// damage to a player").
+func WheneverPermanentDealsCombatDamageToPlayerTrigger(effect Effect, optional bool, filter PermanentFilter) *GenericTriggered {
+	return NewTriggered(EvtDamageDealt, optional, effect).
+		SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+			EventTargetIsPlayer{},
+			EventIsCombatDamage{},
+			EventSourceControlledByController{},
+			EventSourceMatchesPermanentFilter{Filter: filter},
+		}})
+}
+
+// WheneverEnchantedPermanentDealsDamageToPlayerTrigger fires whenever the
+// permanent this aura is attached to deals damage (combat or otherwise) to a
+// player. Used by Curiosity ("when enchanted creature deals damage to a
+// player, draw a card").
+func WheneverEnchantedPermanentDealsDamageToPlayerTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtDamageDealt, optional, effect).
+		SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+			EventTargetIsPlayer{},
+			EventSourceIsAttachedTo{},
+		}})
+}
+
 // WhenOpponentPermanentBecomesTappedTrigger fires when a permanent matching the
 // filter that an opponent controls becomes tapped.
 func WhenOpponentPermanentBecomesTappedTrigger(effect Effect, optional bool, filter PermanentFilter) *GenericTriggered {

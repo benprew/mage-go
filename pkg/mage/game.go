@@ -92,6 +92,11 @@ type Game struct {
 	// Creature deaths this turn (total count across all players)
 	creatureDeathsThisTurn int
 
+	// Times an object (permanent or player) became the target of a spell or
+	// activated ability this turn (CR 603.6c). Keyed by object ID. Used by
+	// "first time each turn" target triggers like Kira, Great Glass-Spinner.
+	timesTargetedThisTurn map[uuid.UUID]int
+
 	// CleanupPriorityRounds counts how many times players have received priority
 	// during a cleanup step in this game. Normally no priority is given during
 	// cleanup (CR 514.3); it is only granted when a state-based action fires or
@@ -194,6 +199,7 @@ func NewGame(playerA, playerB Player) *Game {
 		attackedThisTurn:            make(map[uuid.UUID]bool),
 		blockedThisTurn:             make(map[uuid.UUID][]uuid.UUID),
 		instantsCastThisTurn:        make(map[uuid.UUID]int),
+		timesTargetedThisTurn:       make(map[uuid.UUID]int),
 		artifactManaOnly:            make(map[uuid.UUID]bool),
 		creatureManaOnly:            make(map[uuid.UUID]bool),
 		schedule:                    newTurnSchedule(),
@@ -1354,6 +1360,50 @@ func (g *Game) Attach(sourceID, targetID uuid.UUID) {
 	})
 }
 
+// fireBecomesTargetEvents fires EvtBecomesTarget for each declared target of a
+// stack object that has just been put on the stack with its targets chosen
+// (CR 603.6c, 119.5). The event is fired once per distinct target — players
+// and permanents alike. evt.SourceID is the spell/ability source (the casting
+// card's ID for spells, the source permanent's ID for activated abilities);
+// evt.TargetID is the targeted object's ID; evt.PlayerID is the controller of
+// the spell/ability; evt.Flag is true for activated abilities, false for spells.
+//
+// CR 603.6c: "becomes the target" triggered abilities trigger only once per
+// event, even if multiple targets are chosen, BUT only the targets that the
+// trigger applies to count — i.e. each affected permanent/player sees the
+// event independently. This implementation fires one event per distinct target
+// so triggers attached to different permanents each see "their" event.
+func (g *Game) fireBecomesTargetEvents(obj *StackObject, isAbility bool) {
+	if obj == nil {
+		return
+	}
+	if g.timesTargetedThisTurn == nil {
+		g.timesTargetedThisTurn = make(map[uuid.UUID]int)
+	}
+	seen := make(map[uuid.UUID]bool)
+	for _, tid := range obj.Targets {
+		if tid == uuid.Nil || seen[tid] {
+			continue
+		}
+		seen[tid] = true
+		g.timesTargetedThisTurn[tid]++
+		g.FireEvent(GameEvent{
+			Type:     EvtBecomesTarget,
+			SourceID: obj.SourceID,
+			TargetID: tid,
+			PlayerID: obj.Controller,
+			Flag:     isAbility,
+		})
+	}
+}
+
+// TimesTargetedThisTurn returns how many times the given object (permanent or
+// player) has become the target of a spell or activated ability this turn.
+// Counter resets at the cleanup step.
+func (g *Game) TimesTargetedThisTurn(id uuid.UUID) int {
+	return g.timesTargetedThisTurn[id]
+}
+
 // RegisterDelayedTrigger registers a one-shot delayed trigger that will fire
 // when the specified event type occurs.
 func (g *Game) RegisterDelayedTrigger(dt *DelayedTrigger) {
@@ -1507,6 +1557,19 @@ func (g *Game) PutTriggersOnStack() {
 					// Pass the permanent's ID so effects can identify it
 					if pt.event.SourceID != uuid.Nil {
 						obj.Targets = []uuid.UUID{pt.event.SourceID}
+					}
+				case EvtBecomesTarget:
+					// Pass the targeted object's ID and the spell/ability
+					// source so effects can either identify "this" (the target,
+					// e.g. Departed Deckhand sacrificing itself) or the
+					// spell/ability that did the targeting (e.g. Kira
+					// countering it). Targets[0] is the targeted object;
+					// Targets[1] is the offending spell/ability source.
+					if pt.event.TargetID != uuid.Nil {
+						obj.Targets = []uuid.UUID{pt.event.TargetID}
+						if pt.event.SourceID != uuid.Nil {
+							obj.Targets = append(obj.Targets, pt.event.SourceID)
+						}
 					}
 				case EvtCreatureDied:
 					// Pass the dead creature's ID so effects can find it in graveyard
@@ -2017,6 +2080,8 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		SourceID: card.ID(),
 		PlayerID: playerID,
 	})
+
+	g.fireBecomesTargetEvents(obj, false)
 
 	return nil
 }
@@ -2781,6 +2846,7 @@ func (g *Game) doCleanupActions() bool {
 	g.attackedThisTurn = make(map[uuid.UUID]bool)
 	g.blockedThisTurn = make(map[uuid.UUID][]uuid.UUID)
 	g.instantsCastThisTurn = make(map[uuid.UUID]int)
+	g.timesTargetedThisTurn = make(map[uuid.UUID]int)
 	g.creatureDeathsThisTurn = 0
 	// Clear mana restrictions
 	g.artifactManaOnly = make(map[uuid.UUID]bool)
@@ -3479,6 +3545,8 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		PlayerID: playerID,
 		Flag:     hasTapCost,
 	})
+
+	g.fireBecomesTargetEvents(obj, true)
 
 	return nil
 }

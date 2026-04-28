@@ -91,6 +91,7 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 	}
 
 	g.stack.Push(cp)
+	g.fireBecomesTargetEvents(cp, cp.IsAbility)
 	return cp
 }
 

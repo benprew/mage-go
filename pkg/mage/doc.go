@@ -681,6 +681,11 @@ Convenience constructors (set condition automatically):
 	[WheneverPlayerDiscardsTrigger](effect, optional)           // EvtDiscard, any player
 	[WheneverYouSacrificeAnotherCreatureTrigger](effect, opt)   // EvtSacrifice, another creature you control (Kels)
 	[WheneverYouSacrificeTrigger](effect, optional)             // EvtSacrifice, any non-self permanent you control
+	[WheneverBecomesTargetTrigger](effect, optional)            // EvtBecomesTarget, source self (Departed Deckhand)
+	[WheneverBecomesTargetFirstTimeEachTurnTrigger](e, opt)     // EvtBecomesTarget, first time each turn (Kira)
+	[WheneverDealsCombatDamageToPlayerTrigger](effect, opt)     // EvtDamageDealt to a player, combat, source self
+	[WheneverPermanentDealsCombatDamageToPlayerTrigger](e, opt, filter) // combat damage to player, controller's matching permanent (Coastal Piracy, Sharding Sphinx)
+	[WheneverEnchantedPermanentDealsDamageToPlayerTrigger](e, opt)      // damage to player, source is enchanted permanent (Curiosity)
 
 EvtLifeGained / EvtLifeLost auto-binds preserve evt.Amount as the trigger's
 EventAmount (readable via mage.EventAmountValue() in effects), but do NOT
@@ -691,6 +696,23 @@ the discarder/sacrificer.
 
 EvtBecameUntapped fires whenever a permanent becomes untapped (during the untap step or
 by an effect like Twiddle). Use with NewTriggered for "when this becomes untapped" triggers.
+
+EvtBecomesTarget fires whenever a permanent or player becomes the target of a
+spell or activated ability (CR 603.6c, 119.5). It is fired immediately after
+the spell is cast or the ability is activated (and copies pushed to the stack
+via spell-copy effects), once per distinct target. Event fields:
+
+  - SourceID — the source of the targeting (card ID for spells, permanent ID
+    for activated abilities)
+  - TargetID — the targeted object (permanent or player)
+  - PlayerID — the controller of the spell/ability that is targeting
+  - Flag    — true if the source is an activated ability, false if a spell
+
+The auto-bind passes the targeted object as targets[0] and the offending
+spell/ability source as targets[1] so a "counter that spell or ability"
+effect (Kira) can find the spell on the stack via targets[1]. Game tracks
+TimesTargetedThisTurn(id) for "first time each turn" predicates; the counter
+resets at cleanup.
 
 Custom triggers with SetConditionData (composable data predicates):
 
