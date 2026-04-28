@@ -41,6 +41,7 @@ const (
 	EvtDiscard            // fired when a player discards a card; PlayerID = discarding player, SourceID = card ID
 	EvtSacrifice          // fired when a permanent is sacrificed; PlayerID = controller, SourceID = sacrificed permanent ID
 	EvtBecomesTarget      // fired when a permanent or player becomes the target of a spell or ability (CR 603.6c, 119.5). SourceID = the spell/ability source (card or permanent), TargetID = the targeted object (permanent or player), PlayerID = the controller of the spell/ability, Flag = true if the source is an activated ability, false if a spell.
+	EvtAttackersDeclared  // fired once after all attackers are declared (CR 506.4 / 603.6e). PlayerID = active player, Amount = number of attackers declared. Used by once-per-combat triggers like Duelist's Heritage and "whenever one or more creatures attack" aggregations.
 )
 
 // GameEvent carries data about a game event.

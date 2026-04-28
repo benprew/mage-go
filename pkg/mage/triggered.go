@@ -113,6 +113,23 @@ func (t *GenericTriggered) Targets() []Target { return t.targets }
 // composable TriggerConditionData predicates instead of closures.
 // ---------------------------------------------------------------------------
 
+// WheneverOneOrMoreCreaturesAttackTrigger fires once per combat after all
+// attackers have been declared (CR 506.4 / 603.6e), if any creature attacked.
+// evt.PlayerID is the attacking (active) player; evt.Amount is the attacker
+// count. Used by Duelist's Heritage and similar "whenever one or more
+// creatures attack" effects that should resolve once per combat regardless
+// of attacker count.
+func WheneverOneOrMoreCreaturesAttackTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtAttackersDeclared, optional, effect)
+}
+
+// WheneverOneOrMoreCreaturesYouControlAttackTrigger restricts the once-per-
+// combat trigger to combats in which the controller is the attacking player.
+func WheneverOneOrMoreCreaturesYouControlAttackTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtAttackersDeclared, optional, effect).
+		SetConditionData(EventPlayerIsController{})
+}
+
 // AttacksTrigger fires when the source creature is declared as an attacker.
 func AttacksTrigger(effect Effect, optional bool) *GenericTriggered {
 	return NewTriggered(EvtDeclaredAttacker, optional, effect).

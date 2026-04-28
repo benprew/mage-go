@@ -2660,6 +2660,18 @@ func (g *Game) doDeclareAttackers() {
 	// CR 506.5 — snapshot "attacks alone" once all attackers have been
 	// declared this step.
 	g.combat.SnapshotAttackedAlone()
+
+	// CR 506.4 / 603.6e: once-per-combat "whenever one or more creatures
+	// attack" trigger. Fired only if at least one creature was declared as
+	// an attacker. evt.Amount carries the attacker count.
+	if len(g.combat.Groups) > 0 {
+		g.FireEvent(GameEvent{
+			Type:     EvtAttackersDeclared,
+			PlayerID: active.PlayerID(),
+			Amount:   len(g.combat.Groups),
+		})
+	}
+
 	g.ResolveStack()
 }
 
