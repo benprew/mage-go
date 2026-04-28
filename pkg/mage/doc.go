@@ -226,6 +226,30 @@ Reveal-and-pick primitives (reveal.go):
 	for the actual selection — TestPlayer scripts decisions via
 	TestGame.ChooseFromLibrary(p, name).
 
+Random-card primitives (random.go):
+
+	Game.DiscardAtRandom(player, n) []Card
+	    Discards up to n cards from the player's hand chosen uniformly
+	    at random, firing EvtDiscard for each. Returns the discarded
+	    cards. Powers Goblin Lore ("then discard three cards at random")
+	    and similar self-discard-at-random effects. Distinct from the
+	    DiscardRandom Effect, which targets an opponent.
+
+	Game.RandomCardFromGraveyard(player, filter) Card
+	    Returns one card chosen uniformly at random from the player's
+	    graveyard that matches the filter, or nil if none match. Does
+	    NOT remove the card. Powers Charmbreaker Devils ("instant or
+	    sorcery card chosen at random") and Ghoulraiser ("Zombie card
+	    at random").
+
+	Game.RandomCardFromHand(player, filter) Card
+	    Same pattern for hands — useful for "reveal a card at random
+	    from your hand" effects.
+
+	All three use math/rand directly, the same RNG used by
+	ShuffleLibrary, DiscardRandomCost, and Aladdin's Lamp draw
+	replacement.
+
 Graveyard effects:
 
 	[ReturnFromGraveyardToBattlefield]()          // reanimate (Animate Dead)
