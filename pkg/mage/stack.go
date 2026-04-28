@@ -5,15 +5,15 @@ import "github.com/google/uuid"
 // StackObject represents something on the stack (spell or ability).
 type StackObject struct {
 	ID         uuid.UUID
-	Card       Card       // non-nil for spells
+	Card       Card // non-nil for spells
 	Controller uuid.UUID
-	SourceID   uuid.UUID  // source permanent (for abilities)
+	SourceID   uuid.UUID // source permanent (for abilities)
 	Effects    []Effect
 	Targets    []uuid.UUID
 	IsAbility  bool
-	XValue      int        // value of X for X-cost spells
-	ModeChoice  int        // chosen mode for modal spells (0-indexed)
-	EventAmount int        // amount from triggering event (e.g. damage dealt)
+	XValue      int // value of X for X-cost spells
+	ModeChoice  int // chosen mode for modal spells (0-indexed)
+	EventAmount int // amount from triggering event (e.g. damage dealt)
 
 	// DamageDistribution carries per-target damage assignments for
 	// divided-damage spells/abilities (CR 601.2d). The controller picks the
@@ -21,6 +21,12 @@ type StackObject struct {
 	// resolution. Map keys are the target IDs in StackObject.Targets; values
 	// sum to the spell's total damage.
 	DamageDistribution map[uuid.UUID]int
+
+	// IsCopy marks this stack object as a copy of a spell (CR 707.10).
+	// Copies of spells cease to exist when they resolve or are countered —
+	// they do not enter any zone, are never put into a graveyard, and do
+	// not become permanents. Set by Game.CopySpellOnStack.
+	IsCopy bool
 }
 
 // Stack represents the game stack.

@@ -1100,6 +1100,34 @@ For spell/land/ability execution on clones, use the standard methods:
 	g.ActivateAbilityByIndex(playerID, permID, idx, tgts) // put on stack (or handle mana ability)
 	g.ResolveStack()                                      // drain stack atomically
 
+# Spell-Copy Primitive (CR 706, 707.10)
+
+Game.CopySpellOnStack creates a duplicate StackObject of a spell already on
+the stack. Used by Doublecast, Dualcaster Mage, Twincast, Reverberate, Fork,
+Twinning Staff, Riku of Two Reflections, and similar effects.
+
+	cp := g.CopySpellOnStack(originalSourceID, controller, mayChooseNewTargets)
+	    // originalSourceID — SourceID (card ID) of the spell to copy;
+	    //                    typically read from EvtSpellCast.SourceID.
+	    // controller       — player who controls the copy (CR 706.10c).
+	    // mayChooseNewTargets — true reprompts the controller for every
+	    //                       declared Target on the spell's SpellAbility.
+	    //                       For modal spells, only the chosen mode's
+	    //                       targets are reprompted.
+
+The returned StackObject:
+
+  - Has a fresh ID and a freshly Copy()'d underlying Card (so spell-copy
+    triggers don't double-fire on the same card ID).
+  - Inherits the original's effects, X value, chosen mode, and divided-
+    damage distribution.
+  - Has IsCopy=true. ResolveStackObject honors the flag: a copy of a spell
+    ceases to exist when it resolves OR fizzles (CR 707.10) — it does
+    not enter the graveyard, the battlefield, or any other zone.
+
+Returns nil if the original spell isn't on the stack (caller can no-op).
+Use CopyStackObjectDirect when you already have the *StackObject in hand.
+
 # Casting From Non-Hand Zones (Alternate Costs)
 
 CR 117.9 / 601.2b: a player may sometimes be allowed to cast a card from a

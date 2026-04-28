@@ -1638,7 +1638,13 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 			}
 		}
 		if hasRealTargets && !anyLegal {
-			// Spell fizzles — put card in graveyard without resolving effects
+			// Spell fizzles — put card in graveyard without resolving effects.
+			// Copies of spells (CR 707.10) cease to exist instead of going to
+			// any zone.
+			if obj.IsCopy {
+				g.CheckStateBasedActions()
+				return
+			}
 			if obj.Card != nil && !obj.IsAbility {
 				owner := obj.Card.Owner()
 				if owner == uuid.Nil {
@@ -1668,6 +1674,17 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 		_ = eff.Apply(g, obj.SourceID, obj.Controller, obj.Targets)
 	}
 	g.resolvingDamageDistribution = nil
+
+	// Copies of spells cease to exist as they resolve (CR 707.10) — no
+	// graveyard, no battlefield, no exile. The effects already ran above.
+	if obj.IsCopy {
+		g.currentX = 0
+		g.currentMode = 0
+		g.resolvingCard = nil
+		g.resolvingTargets = nil
+		g.CheckStateBasedActions()
+		return
+	}
 
 	// If this was a spell (not an ability), put the card in the graveyard
 	if obj.Card != nil && !obj.IsAbility {

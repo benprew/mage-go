@@ -302,6 +302,7 @@ func cloneStackObject(obj *StackObject) *StackObject {
 		XValue:      obj.XValue,
 		ModeChoice:  obj.ModeChoice,
 		EventAmount: obj.EventAmount,
+		IsCopy:      obj.IsCopy,
 	}
 	// Share Effect interface refs.
 	if len(obj.Effects) > 0 {
