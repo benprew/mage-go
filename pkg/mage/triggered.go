@@ -33,12 +33,6 @@ type GenericTriggered struct {
 	Condition TriggerCondition
 	effects   []Effect
 	targets   []Target
-	// SelfGraveyard, when true, opts this trigger into firing from the
-	// captured-ability path inside Game.Sacrifice (and existing Destroy /
-	// PutPermanentIntoGraveyard paths) so it sees the LtB / sacrifice / dies
-	// event for the source itself even after the source has left the
-	// battlefield. Used by LeavesBattlefieldToGraveyardTrigger.
-	SelfGraveyard bool
 }
 
 // NewTriggered creates a GenericTriggered ability that fires on the given event type.
@@ -196,17 +190,16 @@ func OnEnterZone(to Zone, effect Effect, optional bool) *GenericTriggered {
 // destination (CR 603.6c — leaves-the-battlefield triggers consult LKI;
 // the destination is irrelevant to whether the event fired).
 //
-// Sets SelfGraveyard=true so the engine captures the source's abilities
-// before the permanent leaves the battlefield, regardless of which leave
-// path (destroy / sacrifice / SBA / bounce) caused the move.
+// The engine captures the source's runtime abilities into the LKI snapshot
+// at RemoveFromBattlefield time, so this trigger fires uniformly regardless
+// of which leave path (destroy / sacrifice / SBA / bounce / exile) moved
+// the permanent.
 func OnLeaveZone(from, to Zone, effect Effect, optional bool) *GenericTriggered {
-	t := NewTriggered(EvtZoneChange, optional, effect).
-		SetConditionData(AndTriggerCond{[]TriggerConditionData{
+	return NewTriggered(EvtZoneChange, optional, effect).
+		SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
 			EventSourceIsSelf{},
 			EventZoneChangeMatches{From: from, To: to},
 		}})
-	t.SelfGraveyard = true
-	return t
 }
 
 // EntersBattlefieldTrigger fires when the source permanent enters the
@@ -234,10 +227,9 @@ func PutIntoGraveyardFromBattlefieldTrigger(effect Effect, optional bool) *Gener
 // sacrifice, state-based effect, etc.). Oracle wording "When CARDNAME is put
 // into a graveyard from the battlefield..." (Terrarion-style artifacts) per
 // CR 603.6c (leaves-the-battlefield triggers look back at the permanent's
-// LKI).
-//
-// Sets SelfGraveyard=true so the engine consults the captured-ability list
-// inside Sacrifice and still fires after the permanent has left.
+// LKI). With CR 700.4 collapsing sacrifice into "put into a graveyard from
+// the battlefield," this constructor and PutIntoGraveyardFromBattlefieldTrigger
+// now fire on identical sets of paths and could be unified.
 func LeavesBattlefieldToGraveyardTrigger(effect Effect, optional bool) *GenericTriggered {
 	return OnLeaveZone(ZoneBattlefield, ZoneGraveyard, effect, optional)
 }

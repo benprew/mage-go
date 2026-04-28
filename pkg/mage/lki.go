@@ -32,6 +32,18 @@ type LKIView interface {
 	ViewAbilities() []Ability
 }
 
+// LKIAbilities returns the captured runtime-abilities of an object that has
+// just left the battlefield. Used by zone-change paths to dispatch
+// leave-triggers via checkAbilitiesForEvent without each path needing its
+// own pre-removal selfAbilities capture. Returns nil if no LKI snapshot
+// exists for id.
+func (g *Game) LKIAbilities(id uuid.UUID) []Ability {
+	if lki := g.LKI(id); lki != nil {
+		return lki.ViewAbilities()
+	}
+	return nil
+}
+
 // LookupObject returns an LKIView for the given object ID, preferring the
 // live permanent on the battlefield and falling back to the LKI snapshot
 // recorded at leave time. Returns nil if no live or snapshot view exists

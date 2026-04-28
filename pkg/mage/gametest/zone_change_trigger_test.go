@@ -108,7 +108,8 @@ func TestOnLeaveZone_AnyDestination_Exile(t *testing.T) {
 
 // OnLeaveZone(ZoneBattlefield, ZoneGraveyard) fires when the source is put
 // into a graveyard from the battlefield via any path — sacrifice, destroy,
-// or SBA. Verifies the SelfGraveyard capture works through EvtZoneChange.
+// or SBA. Verifies the LKI captured-ability dispatch works for self-leave
+// triggers fired on EvtZoneChange (CR 603.6c).
 func TestOnLeaveZone_FiresOnSacrifice(t *testing.T) {
 	const cardName = "OLZ Terrarion-like"
 	if !mage.CardRegistered(cardName) {

@@ -797,18 +797,14 @@ func (g *Game) DestroyPermanent(perm *Permanent) {
 	permID := perm.ID()
 	card := perm.Card
 
-	// Capture abilities before removal (for "leaves battlefield" / "dies" triggers on self)
-	selfAbilities := make([]Ability, len(perm.RuntimeAbilities))
-	copy(selfAbilities, perm.RuntimeAbilities)
-
 	g.RemoveFromBattlefield(perm)
+	selfAbilities := g.LKIAbilities(permID)
 
 	p := g.GetPlayer(owner)
 	if p != nil {
 		p.AddToGraveyard(card)
 	}
 
-	// Check the destroyed permanent's own abilities for self-referencing triggers
 	graveyardEvt := GameEvent{
 		Type:     EvtPutIntoGraveyardFromBattlefield,
 		SourceID: permID,
@@ -889,11 +885,8 @@ func (g *Game) PutPermanentIntoGraveyard(perm *Permanent) {
 	permID := perm.ID()
 	card := perm.Card
 
-	// Capture abilities before removal (for "leaves battlefield" / "dies" triggers on self)
-	selfAbilities := make([]Ability, len(perm.RuntimeAbilities))
-	copy(selfAbilities, perm.RuntimeAbilities)
-
 	g.RemoveFromBattlefield(perm)
+	selfAbilities := g.LKIAbilities(permID)
 
 	p := g.GetPlayer(owner)
 	if p != nil {
@@ -934,15 +927,10 @@ func (g *Game) PutPermanentIntoGraveyard(perm *Permanent) {
 	}
 }
 
-// Sacrifice sacrifices a permanent (like destroy but doesn't check indestructible).
-// Self-referential triggers on the sacrificed permanent — those declared via
-// LeavesBattlefieldToGraveyardTrigger / DiesSelfTrigger — fire from the
-// captured ability list, mirroring Game.DestroyPermanent. Existing
-// battlefield-only triggers (PutIntoGraveyardFromBattlefieldTrigger)
-// intentionally do not fire here; cards whose Oracle text reads "When ~ is
-// put into a graveyard from the battlefield" should use the
-// LeavesBattlefieldToGraveyardTrigger constructor so sacrifice paths fire too
-// (CR 603.6c).
+// Sacrifice sacrifices a permanent (like destroy but doesn't check
+// indestructible). Self-referential triggers fire from the LKI snapshot's
+// captured abilities (CR 700.4 / 603.6c: any battlefield → graveyard
+// transition is "put into a graveyard," including sacrifice).
 func (g *Game) Sacrifice(perm *Permanent) {
 	controller := perm.Controller
 	owner := perm.Card.Owner()
@@ -954,20 +942,8 @@ func (g *Game) Sacrifice(perm *Permanent) {
 	permID := perm.ID()
 	card := perm.Card
 
-	// Capture abilities before removal so opt-in self triggers can fire
-	// after the permanent has left the battlefield. Filter to abilities
-	// flagged as self-graveyard triggers so existing
-	// PutIntoGraveyardFromBattlefieldTrigger semantics on cards like Lich
-	// stay battlefield-only.
-	selfTriggers := make([]Ability, 0, len(perm.RuntimeAbilities))
-	for _, a := range perm.RuntimeAbilities {
-		inner := UnwrapAbility(a)
-		if gt, ok := inner.(*GenericTriggered); ok && gt.SelfGraveyard {
-			selfTriggers = append(selfTriggers, a)
-		}
-	}
-
 	g.RemoveFromBattlefield(perm)
+	selfTriggers := g.LKIAbilities(permID)
 
 	p := g.GetPlayer(owner)
 	if p != nil {
@@ -1095,9 +1071,8 @@ func (g *Game) sacrificePermanents(playerID uuid.UUID, count int) {
 
 // BouncePermanentToHand removes a permanent from the battlefield and adds the
 // underlying card to its owner's hand, firing an EvtZoneChange{From: BF,
-// To: Hand}. Self-referencing leave triggers fire via captured abilities per
-// CR 603.6c. Use this rather than open-coding RemoveFromBattlefield + AddToHand
-// so the zone-change event is consistent across bounce sites.
+// To: Hand}. Self-referencing leave triggers fire via the LKI snapshot's
+// captured abilities per CR 603.6c.
 func (g *Game) BouncePermanentToHand(perm *Permanent) {
 	if perm == nil {
 		return
@@ -1109,9 +1084,8 @@ func (g *Game) BouncePermanentToHand(perm *Permanent) {
 	if owner == uuid.Nil {
 		owner = controller
 	}
-	selfAbilities := make([]Ability, len(perm.RuntimeAbilities))
-	copy(selfAbilities, perm.RuntimeAbilities)
 	g.RemoveFromBattlefield(perm)
+	selfAbilities := g.LKIAbilities(permID)
 	if p := g.GetPlayer(owner); p != nil {
 		p.AddToHand(card)
 	}
@@ -1127,17 +1101,14 @@ func (g *Game) BouncePermanentToHand(perm *Permanent) {
 }
 
 // ExilePermanent removes a permanent from the battlefield to exile and fires
-// an EvtZoneChange{From: Battlefield, To: Exile}. Self-referencing
-// leave-the-battlefield triggers (registered via OnLeaveZone or
-// LeavesBattlefieldToGraveyardTrigger) fire from the captured ability list
-// per CR 603.6c, even though the permanent is no longer on the battlefield.
+// an EvtZoneChange{From: Battlefield, To: Exile}. Self-referencing leave
+// triggers fire via the LKI snapshot's captured abilities per CR 603.6c.
 func (g *Game) ExilePermanent(perm *Permanent) {
 	controller := perm.Controller
 	permID := perm.ID()
 	card := perm.Card
-	selfAbilities := make([]Ability, len(perm.RuntimeAbilities))
-	copy(selfAbilities, perm.RuntimeAbilities)
 	g.RemoveFromBattlefield(perm)
+	selfAbilities := g.LKIAbilities(permID)
 	g.exile = append(g.exile, ExiledCard{Card: card})
 	zoneEvt := GameEvent{
 		Type:     EvtZoneChange,
