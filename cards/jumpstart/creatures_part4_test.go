@@ -578,3 +578,40 @@ func TestSethronHurloonGeneral_PumpMinotaursWithR(t *testing.T) {
 	g.AssertHasAbility(gametest.PlayerA, "Sethron, Hurloon General", Menace, true)
 	g.AssertHasAbility(gametest.PlayerA, "Sethron, Hurloon General", Haste, true)
 }
+
+func TestDualcasterMage_CopiesSpellOnStack(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Mountain", 5)
+	g.AddCard(ZoneHand, gametest.PlayerA, "Dualcaster Mage")
+	g.AddCard(ZoneHand, gametest.PlayerA, "Bathe in Dragonfire")
+	g.AddCard(ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Bathe in Dragonfire", "Hill Giant")
+	g.CastInResponseTo(gametest.PlayerA, "Dualcaster Mage", "Bathe in Dragonfire")
+	g.StopAt(1, BeginCombat)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerB, "Hill Giant", 1)
+	g.AssertPermanentCount(gametest.PlayerA, "Dualcaster Mage", 1)
+}
+
+func TestTrustyRetriever_CounterMode(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Plains", 4)
+	g.AddCard(ZoneHand, gametest.PlayerA, "Trusty Retriever")
+	g.ChooseMode(gametest.PlayerA, 0)
+	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Trusty Retriever")
+	g.StopAt(1, BeginCombat)
+	g.Execute()
+	g.AssertCounterCount(gametest.PlayerA, "Trusty Retriever", P1P1, 1)
+}
+
+func TestTrustyRetriever_ReturnArtifactMode(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Plains", 4)
+	g.AddCard(ZoneHand, gametest.PlayerA, "Trusty Retriever")
+	g.AddCard(ZoneGraveyard, gametest.PlayerA, "Sol Ring")
+	g.ChooseMode(gametest.PlayerA, 1)
+	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Trusty Retriever", "Sol Ring")
+	g.StopAt(1, BeginCombat)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "Sol Ring", 1)
+}

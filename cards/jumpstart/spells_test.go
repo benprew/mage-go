@@ -969,3 +969,91 @@ func TestNaturesWay(t *testing.T) {
 	g.AssertHasAbility(gametest.PlayerA, "Hill Giant", core.Vigilance, true)
 	g.AssertHasAbility(gametest.PlayerA, "Hill Giant", core.Trample, true)
 }
+
+func TestCrushingCanopy_DestroyFlying(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mesa Pegasus")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 3)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Crushing Canopy")
+	g.ChooseMode(gametest.PlayerA, 0)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Crushing Canopy", "Mesa Pegasus")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerB, "Mesa Pegasus", 1)
+}
+
+func TestCrushingCanopy_DestroyEnchantment(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Pacifism")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 3)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Crushing Canopy")
+	g.ChooseMode(gametest.PlayerA, 1)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Crushing Canopy", "Pacifism")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerB, "Pacifism", 1)
+}
+
+func TestFortify_PowerMode(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 3)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Fortify")
+	g.ChooseMode(gametest.PlayerA, 0)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Fortify")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 4, 2)
+}
+
+func TestFortify_ToughnessMode(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 3)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Fortify")
+	g.ChooseMode(gametest.PlayerA, 1)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Fortify")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 4)
+}
+
+func TestValorousStance_Indestructible(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Valorous Stance")
+	g.ChooseMode(gametest.PlayerA, 0)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Valorous Stance", "Grizzly Bears")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", core.Indestructible, true)
+}
+
+func TestValorousStance_DestroyTough(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Serra Angel")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Valorous Stance")
+	g.ChooseMode(gametest.PlayerA, 1)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Valorous Stance", "Serra Angel")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerB, "Serra Angel", 1)
+}
+
+func TestDoublecast_CopiesNextInstantOrSorcery(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.SetLife(gametest.PlayerB, 20)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 5)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Doublecast")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Bathe in Dragonfire")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Doublecast")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Bathe in Dragonfire", "Grizzly Bears")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	// Bathe deals 4; copy also resolves (same target by default → second resolution sees creature gone, copy fizzles).
+	g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+}
+

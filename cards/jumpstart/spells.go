@@ -334,11 +334,21 @@ func registerSpells() {
 	// Choose one —
 	// • Destroy target creature with flying.
 	// • Destroy target enchantment.
-	// XXX: requires modal-spell support with per-mode targets across types
 	Register("Crushing Canopy", func() Card {
-		return NewInstant("Crushing Canopy", "{2}{G}",
-			NewSpellAbility(),
-		)
+		c := NewInstant("Crushing Canopy", "{2}{G}", nil)
+		c.AddAbility(NewModalSpell([]Mode{
+			{
+				Label:   "Destroy target creature with flying",
+				Targets: []Target{TargetCreature(HasKeywordFilter(Flying))},
+				Effects: []Effect{DestroyTarget()},
+			},
+			{
+				Label:   "Destroy target enchantment",
+				Targets: []Target{TargetPermanent(IsEnchantment)},
+				Effects: []Effect{DestroyTargetPermanent()},
+			},
+		}))
+		return c
 	})
 
 	// Dance with Devils {3}{R}
@@ -375,10 +385,16 @@ func registerSpells() {
 	// Doublecast {R}{R}
 	// Sorcery
 	// When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy.
-	// XXX: requires spell-copy primitive
 	Register("Doublecast", func() Card {
 		return NewSorcery("Doublecast", "{R}{R}",
-			NewSpellAbility(),
+			NewSpellAbility(FuncEffect(
+				"register delayed trigger: copy next instant/sorcery spell you cast this turn",
+				EffectProperties{Outcome: OutcomeBenefit},
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					registerDoublecastDelayedTrigger(g, sourceID, controller)
+					return nil
+				},
+			)),
 		)
 	})
 
@@ -578,11 +594,19 @@ func registerSpells() {
 	// Choose one —
 	// • Creatures you control get +2/+0 until end of turn.
 	// • Creatures you control get +0/+2 until end of turn.
-	// XXX: requires modal-spell support
 	Register("Fortify", func() Card {
-		return NewInstant("Fortify", "{2}{W}",
-			NewSpellAbility(),
-		)
+		c := NewInstant("Fortify", "{2}{W}", nil)
+		c.AddAbility(NewModalSpell([]Mode{
+			{
+				Label:   "Creatures you control get +2/+0 until end of turn",
+				Effects: []Effect{BoostMatchingUntilEndOfTurn(Fixed(2), Fixed(0), AnyPermanent)},
+			},
+			{
+				Label:   "Creatures you control get +0/+2 until end of turn",
+				Effects: []Effect{BoostMatchingUntilEndOfTurn(Fixed(0), Fixed(2), AnyPermanent)},
+			},
+		}))
+		return c
 	})
 
 	// Funeral Rites {2}{B}
@@ -1377,11 +1401,21 @@ func registerSpells() {
 	// Choose one —
 	// • Target creature gains indestructible until end of turn.
 	// • Destroy target creature with toughness 4 or greater.
-	// XXX: requires modal-spell support
 	Register("Valorous Stance", func() Card {
-		return NewInstant("Valorous Stance", "{1}{W}",
-			NewSpellAbility(),
-		)
+		c := NewInstant("Valorous Stance", "{1}{W}", nil)
+		c.AddAbility(NewModalSpell([]Mode{
+			{
+				Label:   "Target creature gains indestructible until end of turn",
+				Targets: []Target{TargetCreature()},
+				Effects: []Effect{GrantKeyword(Indestructible)},
+			},
+			{
+				Label:   "Destroy target creature with toughness 4 or greater",
+				Targets: []Target{TargetCreature(toughness4OrGreater)},
+				Effects: []Effect{DestroyTarget()},
+			},
+		}))
+		return c
 	})
 
 	// Volcanic Fallout {1}{R}{R}
@@ -1658,4 +1692,43 @@ func millSelf(g *Game, p Player, n int) {
 // creatureSpellFilter matches creature spells on the stack.
 var creatureSpellFilter = NewCardFilter("creature spell", func(c Card) bool {
 	return c.HasType(TypeCreature)
+})
+
+// registerDoublecastDelayedTrigger sets up a one-shot delayed trigger that
+// fires on the controller's next spell cast. If the cast spell is an instant
+// or sorcery, it is copied with new targets allowed (CR 706.10c). Otherwise
+// the trigger re-arms so the next-cast hook still applies to the next
+// instant/sorcery cast this turn (per Oracle "next ... instant or sorcery").
+func registerDoublecastDelayedTrigger(g *Game, sourceID, controller uuid.UUID) {
+	dt := &DelayedTrigger{
+		EventType:     EvtSpellCast,
+		MatchPlayerID: controller,
+		SourceID:      sourceID,
+		Controller:    controller,
+		Effects: []Effect{FuncEffect(
+			"copy next instant/sorcery spell you cast this turn (or re-arm)",
+			EffectProperties{Outcome: OutcomeBenefit},
+			func(g2 *Game, src, ctrl uuid.UUID, _ []uuid.UUID) error {
+				top := g2.Stack().Peek()
+				if top != nil && !top.IsAbility && top.Card != nil && top.Controller == ctrl &&
+					(top.Card.HasType(TypeInstant) || top.Card.HasType(TypeSorcery)) {
+					g2.CopySpellOnStack(top.SourceID, ctrl, true)
+					return nil
+				}
+				registerDoublecastDelayedTrigger(g2, src, ctrl)
+				return nil
+			},
+		)},
+	}
+	g.RegisterDelayedTrigger(dt)
+}
+
+// instantOrSorcerySpellFilter matches instant or sorcery spells on the stack.
+var instantOrSorcerySpellFilter = NewCardFilter("instant or sorcery spell", func(c Card) bool {
+	return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
+})
+
+// toughness4OrGreater matches creatures with current toughness >= 4.
+var toughness4OrGreater = NewPermanentFilter("toughness 4 or greater", func(p *Permanent, g *Game) bool {
+	return p.CurrentToughness(g) >= 4
 })

@@ -754,10 +754,45 @@ func registerCreatures() {
 	// When this creature enters, choose one —
 	// • Put a +1/+1 counter on this creature.
 	// • Return target artifact or enchantment card from your graveyard to your hand.
-	// XXX: requires modal ETB trigger
 	Register("Trusty Retriever", func() Card {
+		artifactOrEnchantmentCard := NewCardFilter("artifact or enchantment card", func(c Card) bool {
+			return c.HasType(TypeArtifact) || c.HasType(TypeEnchantment)
+		})
 		return NewCreature("Trusty Retriever", "{3}{W}", 2, 3,
 			WithSubTypes("Dog"),
+			WithAbility(EntersBattlefieldTrigger(
+				ModalTriggerEffect("Trusty Retriever ETB", []ModalTriggerMode{
+					{
+						Label: "Put a +1/+1 counter on this creature",
+						Resolve: func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+							if perm := g.FindPermanent(sourceID); perm != nil {
+								perm.AddCounter(P1P1, 1)
+								g.ApplyContinuousEffects()
+							}
+							return nil
+						},
+					},
+					{
+						Label: "Return target artifact or enchantment card from your graveyard to your hand",
+						Resolve: func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+							if len(targets) == 0 || targets[0] == uuid.Nil {
+								return nil
+							}
+							p := g.GetPlayer(controller)
+							if p == nil {
+								return nil
+							}
+							picked, ok := p.RemoveFromGraveyard(targets[0])
+							if !ok {
+								return nil
+							}
+							p.AddToHand(picked)
+							return nil
+						},
+					},
+				}),
+				false,
+			).AddTarget(TargetCardInYourGraveyard(artifactOrEnchantmentCard))),
 		)
 	})
 
@@ -3219,10 +3254,24 @@ func registerCreatures() {
 	// 2/2
 	// Flash
 	// When this creature enters, copy target instant or sorcery spell. You may choose new targets for the copy.
-	// XXX: requires spell-copy primitive
 	Register("Dualcaster Mage", func() Card {
 		return NewCreature("Dualcaster Mage", "{1}{R}{R}", 2, 2,
 			WithSubTypes("Human", "Wizard"),
+			WithKeyword(Flash),
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect(
+					"copy target instant or sorcery spell; you may choose new targets",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 || targets[0] == uuid.Nil {
+							return nil
+						}
+						g.CopySpellOnStack(targets[0], controller, true)
+						return nil
+					},
+				),
+				false,
+			).AddTarget(TargetSpellOnStack(instantOrSorcerySpellFilter))),
 		)
 	})
 
