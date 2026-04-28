@@ -604,14 +604,11 @@ func (t *BlockingOrBlockedBySourceTarget) Possible(controller uuid.UUID, sourceC
 					result = append(result, bid)
 				}
 			}
-		} else {
-			// Check if source is a blocker in this group
-			if slices.Contains(group.BlockerIDs, sourceID) {
-				// Source is blocking — the attacker is a valid target
-				a := g.FindPermanent(group.AttackerID)
-				if a != nil && a.CanBeTargetedBy(sourceCard, controller, g) {
-					result = append(result, group.AttackerID)
-				}
+		} else if slices.Contains(group.BlockerIDs, sourceID) {
+			// Source is blocking — the attacker is a valid target
+			a := g.FindPermanent(group.AttackerID)
+			if a != nil && a.CanBeTargetedBy(sourceCard, controller, g) {
+				result = append(result, group.AttackerID)
 			}
 		}
 	}

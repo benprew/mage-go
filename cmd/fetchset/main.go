@@ -87,7 +87,7 @@ func main() {
 	}
 
 	if *outFile != "" {
-		if err := os.WriteFile(*outFile, out, 0644); err != nil {
+		if err := os.WriteFile(*outFile, out, 0o644); err != nil {
 			fmt.Fprintf(os.Stderr, "error writing file: %v\n", err)
 			os.Exit(1)
 		}

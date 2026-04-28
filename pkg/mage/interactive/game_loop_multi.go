@@ -41,7 +41,7 @@ func RunMultiplayerGameLoop(g *mage.Game, channels [2]PlayerChannels) {
 			GameOver: g.IsGameOver(),
 			Winner:   g.Winner(),
 		}
-		defer func() { recover() }() // guard against send on closed channel
+		defer func() { _ = recover() }() // guard against send on closed channel
 		channels[idx].ToPlayer <- msg
 	}
 
@@ -66,7 +66,7 @@ func RunMultiplayerGameLoop(g *mage.Game, channels [2]PlayerChannels) {
 		survivorIdx := (disconnectedIdx + 1) % 2
 		survivor := g.PlayerAt(survivorIdx)
 		func() {
-			defer func() { recover() }()
+			defer func() { _ = recover() }()
 			channels[survivorIdx].ToPlayer <- GameMsg{
 				GameOver: true,
 				Winner:   survivor.Name(),

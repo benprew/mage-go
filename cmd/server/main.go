@@ -26,7 +26,7 @@ func main() {
 		port = "2222"
 	}
 
-	if err := os.MkdirAll(".ssh", 0700); err != nil {
+	if err := os.MkdirAll(".ssh", 0o700); err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to create .ssh dir: %v\n", err)
 		os.Exit(1)
 	}

@@ -772,11 +772,9 @@ func (c *Combat) doBandedAttackDamage(g *Game, bandMemberIDs []uuid.UUID, defend
 					g.DealDamageToPermanent(member, dmg, sourceID)
 				}
 			}
-		} else {
+		} else if len(memberPerms) > 0 {
 			// Default: all incoming damage falls on the first band member.
-			if len(memberPerms) > 0 {
-				g.DealDamageToPermanent(memberPerms[0], totalIncoming, sourceID)
-			}
+			g.DealDamageToPermanent(memberPerms[0], totalIncoming, sourceID)
 		}
 	}
 }

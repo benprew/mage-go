@@ -13,6 +13,10 @@ import (
 )
 
 func main() {
+	os.Exit(run())
+}
+
+func run() int {
 	var (
 		xmageDir  string
 		maxTurns  int
@@ -55,25 +59,28 @@ func main() {
 	oracle, err := launchOracle(xmageDir, verbose)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to launch oracle: %v\n", err)
-		os.Exit(1)
+		return 1
 	}
 	defer oracle.close()
 
 	if err := oracle.send(map[string]any{"type": "card_check", "cards": goCards}); err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to send card check: %v\n", err)
-		os.Exit(1)
+		return 1
 	}
 
 	resp, err := oracle.recv(300 * time.Second)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Card check failed: %v\n", err)
-		os.Exit(1)
+		return 1
 	}
 	available := resp.Cards
 	fmt.Printf("  Card intersection: %d\n", len(available))
 
 	if outFile != "" {
-		os.MkdirAll(outFile, 0755)
+		if err := os.MkdirAll(outFile, 0o755); err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to create output dir: %v\n", err)
+			return 1
+		}
 	}
 
 	var rogueDecks []rogueDeck
@@ -82,7 +89,7 @@ func main() {
 		rogueDecks, err = loadRogueDecks(roguesDir, available)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to load rogue decks: %v\n", err)
-			os.Exit(1)
+			return 1
 		}
 		fmt.Printf("  Rogue decks loaded: %d\n", len(rogueDecks))
 	}
@@ -118,15 +125,15 @@ func main() {
 			oracle, err = launchOracle(xmageDir, verbose)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Failed to relaunch oracle: %v\n", err)
-				os.Exit(1)
+				return 1
 			}
 			if err := oracle.send(map[string]any{"type": "card_check", "cards": goCards}); err != nil {
 				fmt.Fprintf(os.Stderr, "Failed to resend card check: %v\n", err)
-				os.Exit(1)
+				return 1
 			}
 			if _, err := oracle.recv(300 * time.Second); err != nil {
 				fmt.Fprintf(os.Stderr, "Card check failed after relaunch: %v\n", err)
-				os.Exit(1)
+				return 1
 			}
 			continue
 		}
@@ -180,8 +187,9 @@ func main() {
 	}
 
 	if gamesDiverged > 0 {
-		os.Exit(1)
+		return 1
 	}
+	return 0
 }
 
 // runXMageDrivenGame runs one game where XMage drives all decisions.

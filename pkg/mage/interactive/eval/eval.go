@@ -268,16 +268,16 @@ func handQuality(p mage.Player, g *mage.Game) int {
 		if card.HasType(core.TypeLand) {
 			landCount++
 			if landCount <= 5 {
-				score += 1
+				score++
 			} else {
-				score -= 1 // flood penalty
+				score-- // flood penalty
 			}
 		} else {
 			cmc := card.ManaCost().CMC()
 			if cmc <= availMana {
 				score += 2 // castable now
 			} else if cmc <= availMana+2 {
-				score += 1 // castable soon
+				score++ // castable soon
 			}
 			// else: dead card, no value
 		}
@@ -374,7 +374,7 @@ func EvalCreature(perm *mage.Permanent) int {
 		score = score * 2 / 3
 	}
 	if perm.HasAttr(core.AttrSummonSick) && !perm.HasAttr(core.Haste) {
-		score = score / 2
+		score /= 2
 	}
 	score += keywordBonus(perm)
 	score += abilityBonus(perm)
@@ -390,7 +390,7 @@ func EvalCreatureInGame(perm *mage.Permanent, g *mage.Game) int {
 		score = score * 2 / 3
 	}
 	if perm.HasAttr(core.AttrSummonSick) && !perm.HasAttr(core.Haste) {
-		score = score / 2
+		score /= 2
 	}
 	score += keywordBonus(perm)
 	score += abilityBonus(perm)
@@ -460,7 +460,7 @@ func keywordBonus(perm *mage.Permanent) int {
 		}
 	}
 	if perm.HasKeyword(core.CantBeBlockedByWalls) {
-		score += 1
+		score++
 	}
 	if perm.HasKeyword(core.CantBeBlockedExceptByWalls) {
 		score -= 2
@@ -496,19 +496,19 @@ func keywordBonus(perm *mage.Permanent) int {
 		score += 2
 	}
 	if perm.HasKeyword(core.Reach) {
-		score += 1
+		score++
 	}
 	if perm.HasKeyword(core.CanBlockAdditional) {
-		score += 1
+		score++
 	}
 	if perm.HasKeyword(core.CanBlockAny) {
-		score += 1
+		score++
 	}
 	if perm.HasKeyword(core.MustBeBlocked) {
-		score += 1
+		score++
 	}
 	if perm.HasKeyword(core.Banding) {
-		score += 1
+		score++
 	}
 	if perm.HasKeyword(core.Defender) {
 		score -= 2
@@ -517,7 +517,7 @@ func keywordBonus(perm *mage.Permanent) int {
 		score -= 2
 	}
 	if perm.HasKeyword(core.MustAttack) {
-		score -= 1
+		score--
 	}
 
 	return score

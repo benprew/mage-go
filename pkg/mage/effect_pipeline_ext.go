@@ -287,7 +287,7 @@ func execRevokeKeywordFromTargetUntilEOT(ctx *EffectContext, e *RevokeKeywordFro
 	eff := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, _ uuid.UUID) error {
 		p := g.FindPermanent(perm.ID())
 		if p != nil {
-			g.RevokeAttr(p.ID(), Attr(e.Keyword))
+			g.RevokeAttr(p.ID(), e.Keyword)
 		}
 		return nil
 	})
