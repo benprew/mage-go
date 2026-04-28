@@ -84,6 +84,28 @@ func ColorToBasicLandType(c Color) string {
 	}
 }
 
+// GrantTriggeredAbilityToAttached grants a triggered ability to the permanent
+// the source aura/equipment is attached to. The trigger fires from the
+// attached permanent (its source/controller), not from the aura — so e.g.
+// Curse of Bloodletting's "If a source would deal damage to enchanted player,
+// it deals double that damage instead" is registered with the enchanted
+// player's controller as the trigger source.
+//
+// Use this for auras like the Curse cycle and Stalwart Aven, where Oracle
+// text grants an ability "to enchanted creature" or "to enchanted player".
+func GrantTriggeredAbilityToAttached(eventType EventType, optional bool, cond TriggerConditionData, effects ...Effect) ContinuousEffect {
+	return AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
+		trig := NewTriggered(eventType, optional, effects...)
+		trig.source = target.ID()
+		trig.controller = target.Controller
+		if cond != nil {
+			trig.SetConditionData(cond)
+		}
+		target.RuntimeAbilities = append(target.RuntimeAbilities, &grantedByEffect{trig})
+		return nil
+	})
+}
+
 // GrantActivatedAbilityToAttached grants an activated ability to the attached creature.
 // The ability instance is persisted across continuous-effect reapplications so that
 // per-turn activation tracking (OncePerTurn, MaxActivationsPerTurn) survives.
