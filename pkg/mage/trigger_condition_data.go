@@ -412,6 +412,32 @@ func (SourceAttackedOrBlockedThisTurn) CheckTriggerCond(_ *GameEvent, g GameRead
 // Damage predicates
 // ---------------------------------------------------------------------------
 
+// EventSourcePowerGreaterThanAllOthers checks that the permanent at
+// evt.SourceID is a creature whose current power is strictly greater than
+// the current power of every other creature on the battlefield (any
+// controller). Used by Selvala, Heart of the Wilds-style triggers
+// ("whenever another creature enters, ... if its power is greater than
+// each other creature's power"). Excludes the entering creature itself
+// from the comparison set.
+type EventSourcePowerGreaterThanAllOthers struct{}
+
+func (EventSourcePowerGreaterThanAllOthers) CheckTriggerCond(evt *GameEvent, g GameReader, _, _ uuid.UUID) bool {
+	enterer := g.FindPermanent(evt.SourceID)
+	if enterer == nil || !enterer.HasType(TypeCreature) {
+		return false
+	}
+	enterPow := enterer.CurrentPower(g)
+	for _, p := range g.FilterBattlefield(IsCreature) {
+		if p.ID() == enterer.ID() {
+			continue
+		}
+		if p.CurrentPower(g) >= enterPow {
+			return false
+		}
+	}
+	return true
+}
+
 // EventSourceIsSelfDamageToPlayer checks evt.SourceID == sourceID and the
 // target is a player (any player).
 type EventSourceIsSelfDamageToPlayer struct{}
