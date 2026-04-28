@@ -795,6 +795,32 @@ Global/source-based effects (while source on battlefield):
 	[PersonalIncarnationRedirect]()                        // Personal Incarnation
 	[PreventFromAttackingIfDefendingPlayerControls](f)     // Dandân
 
+Combat restrictions (CR 509.1b/c, declared on attackers and blockers):
+
+	[SourceCantBeBlockedExceptBy](filter)              // Gingerbrute, Invisibility-style
+	[SourceCanBlockOnly](filter)                       // Rishadan Airship
+	[SourceCantBeBlockedByFewerThan](n)                // Goblin Goon: needs 3+ blockers
+	[TargetCantBeBlockedExceptBy](id, filter, dur)     // Ghirapur Guide
+	[TargetMustBeBlockedIfAble](id, dur)               // Enlarge, Irresistible Prey
+	[PreventBlockByPowerLessThanSource](filter)        // Champion of Lambholt
+	[PreventAttackingIfDefenderControlsMore](filter)   // Goblin Goon attack clause
+
+Filter helpers built for combat restrictions:
+
+	[PowerLessOrEqual](n)        // creatures with power N or less
+	[PowerGreaterThan](n)        // creatures with power > N
+
+The [EffectManager] holds the per-cycle restriction maps:
+
+	em.AddCantBeBlockedExceptBy(attackerID, filter)    // CR 509.1b
+	em.AddCanBlockOnly(blockerID, filter)              // CR 509.1b
+	em.AddMinBlockers(attackerID, n)                   // CR 509.1b ("N or more")
+
+Filter-based restrictions are checked inside [CanBlock]. The minimum-blockers
+constraint and "must be blocked if able" (AttrMustBeBlockedIfAble) are
+enforced post-declaration in doDeclareBlockers via enforceMinimumBlockers
+and enforceMustBeBlockedIfAble.
+
 Damage prevention rules (continuous):
 
 	[PreventDamageFromTo](from, toFactory, ...SourceCondition)
@@ -875,7 +901,8 @@ Capability attrs:
 	[AttrDoesNotUntap]        // doesn't untap during untap step
 	[AttrEntersTapped]        // enters tapped
 	[AttrMustAttack]          // must attack each turn
-	[AttrMustBeBlocked]       // must be blocked if possible
+	[AttrMustBeBlocked]       // Lure: every able blocker must block this
+	[AttrMustBeBlockedIfAble] // CR 509.1c: must be blocked by at least one able blocker
 	[AttrMayNotUntap]         // player may choose not to untap
 
 Type-identity attrs:

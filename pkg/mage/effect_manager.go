@@ -188,6 +188,9 @@ type EffectManager struct {
 	effects               []ContinuousEffect
 	attrDeltas            map[uuid.UUID]map[Attr]int       // deltas accumulated during Apply(); written to perm.grantedAttrs
 	blockPairRestrictions map[uuid.UUID]map[uuid.UUID]bool // attacker -> set of blockers that can't block it; reset each Apply
+	cantBeBlockedExceptByRules map[uuid.UUID][]PermanentFilter // attacker -> conjunction of filters blockers must match
+	canBlockOnlyRules     map[uuid.UUID][]PermanentFilter // blocker -> conjunction of filters attackers must match
+	minBlockers           map[uuid.UUID]int               // attacker -> minimum number of blockers required
 	replacements          []ReplacementEffect              // persistent: one-shot, turn-scoped, while-on-battlefield
 	cycleReplacements     []ReplacementEffect              // cleared each Apply() cycle, re-registered by continuous effects
 	Damage                *DamageSystem
@@ -305,6 +308,7 @@ func (em *EffectManager) RemoveUntilYourNextTurn(g *Game, controllerID uuid.UUID
 func (em *EffectManager) Apply(g *Game) {
 	em.attrDeltas = make(map[uuid.UUID]map[Attr]int)
 	em.blockPairRestrictions = nil
+	em.resetCombatRestrictions()
 	em.cycleReplacements = nil
 	em.Rules.ResetPerCycle()
 	em.Damage.ResetPerCycle()

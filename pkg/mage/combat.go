@@ -258,6 +258,11 @@ func CanBlock(blocker, attacker *Permanent, g *Game) bool {
 	if g.effects.IsBlockPrevented(blocker.ID(), attacker.ID()) {
 		return false
 	}
+	// Filter-based "can't be blocked except by X" / "can block only X" rules
+	// (CR 509.1b). Source: combat_restrictions.go.
+	if !g.effects.passesCombatRestrictions(blocker, attacker, g) {
+		return false
+	}
 	// Defender creatures can't attack (checked elsewhere), but they CAN block.
 	// Protection: creature with protection from X can't be blocked by X
 	if attacker.HasProtectionFrom(blocker.Card) {

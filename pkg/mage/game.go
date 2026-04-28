@@ -2499,7 +2499,9 @@ func (g *Game) doDeclareBlockers() {
 	nonActive := g.NonActivePlayerObj()
 	assignments := nonActive.DeclareBlockers(g)
 	if assignments == nil {
-		// No blockers, but still fire the event so "attacks and isn't blocked" triggers work
+		// Even with no scripted blockers, we may need to enforce
+		// CR 509.1c "must be blocked if able" before firing the event.
+		g.enforceMustBeBlockedIfAble(nonActive.PlayerID())
 		g.combat.SnapshotBlockedAlone()
 		g.FireEvent(GameEvent{
 			Type:     EvtBlockersDecl,
@@ -2575,6 +2577,17 @@ func (g *Game) doDeclareBlockers() {
 		})
 	}
 
+	// Enforce minimum-blocker restrictions (CR 509.1b — Goblin Goon style):
+	// if an attacker requires N+ blockers and fewer than N are declared,
+	// none of them are legal blockers. Remove them all.
+	g.enforceMinimumBlockers()
+
+	// Enforce CR 509.1c "must be blocked if able": for every attacker with
+	// AttrMustBeBlockedIfAble, if no blocker has been declared and at least
+	// one creature controlled by the defender could legally block it, force
+	// one such creature into the block.
+	g.enforceMustBeBlockedIfAble(nonActive.PlayerID())
+
 	// CR 506.5 — snapshot "blocks alone" once all blockers have been
 	// declared this step.
 	g.combat.SnapshotBlockedAlone()
@@ -2584,6 +2597,91 @@ func (g *Game) doDeclareBlockers() {
 		Type:     EvtBlockersDecl,
 		PlayerID: nonActive.PlayerID(),
 	})
+}
+
+// enforceMinimumBlockers removes blockers from groups whose attacker has a
+// minimum-blocker requirement (e.g. Goblin Goon "can't be blocked except by
+// three or more creatures") that isn't met.
+func (g *Game) enforceMinimumBlockers() {
+	for _, group := range g.combat.Groups {
+		minN := g.effects.MinBlockers(group.AttackerID)
+		if minN <= 0 {
+			continue
+		}
+		if len(group.BlockerIDs) >= minN {
+			continue
+		}
+		// Insufficient blockers — none of them are legal. Drop them all.
+		dropped := group.BlockerIDs
+		group.BlockerIDs = nil
+		for _, bid := range dropped {
+			// Also clean up the per-turn blocked tracking for this attacker.
+			rest := g.blockedThisTurn[bid][:0]
+			for _, aid := range g.blockedThisTurn[bid] {
+				if aid != group.AttackerID {
+					rest = append(rest, aid)
+				}
+			}
+			g.blockedThisTurn[bid] = rest
+		}
+	}
+}
+
+// enforceMustBeBlockedIfAble implements CR 509.1c: for each attacker with
+// AttrMustBeBlockedIfAble, if no blocker is currently declared, force one
+// legal blocker controlled by defenderID into the block. Picks the first
+// untapped creature that passes CanBlock; ignores creatures already maxed-out
+// on blocks.
+func (g *Game) enforceMustBeBlockedIfAble(defenderID uuid.UUID) {
+	for _, group := range g.combat.Groups {
+		atk := g.FindPermanent(group.AttackerID)
+		if atk == nil || !atk.HasAttr(AttrMustBeBlockedIfAble) {
+			continue
+		}
+		if len(group.BlockerIDs) > 0 {
+			continue
+		}
+		minN := g.effects.MinBlockers(group.AttackerID)
+		if minN < 1 {
+			minN = 1
+		}
+		// Find legal blockers controlled by the defender.
+		var candidates []*Permanent
+		for _, p := range g.battlefield {
+			if p.Controller != defenderID {
+				continue
+			}
+			if !p.CanDeclareAsBlocker(g) {
+				continue
+			}
+			if !CanBlock(p, atk, g) {
+				continue
+			}
+			if HasLandwalkEvasion(atk, defenderID, g) {
+				continue
+			}
+			candidates = append(candidates, p)
+		}
+		if len(candidates) < minN {
+			continue
+		}
+		for i := 0; i < minN && i < len(candidates); i++ {
+			b := candidates[i]
+			g.combat.AddBlocker(b.ID(), atk.ID())
+			g.blockedThisTurn[b.ID()] = append(g.blockedThisTurn[b.ID()], atk.ID())
+			g.FireEvent(GameEvent{
+				Type:     EvtDeclaredBlocker,
+				SourceID: b.ID(),
+				TargetID: atk.ID(),
+				PlayerID: defenderID,
+			})
+			g.FireEvent(GameEvent{
+				Type:     EvtCreatureBlocks,
+				SourceID: b.ID(),
+				PlayerID: defenderID,
+			})
+		}
+	}
 }
 
 // doCleanupActions performs cleanup housekeeping and places any triggers on the stack.
