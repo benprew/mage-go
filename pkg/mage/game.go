@@ -86,6 +86,11 @@ type Game struct {
 	// Artifact damage tracking: maps player ID -> artifact damage taken this turn
 	artifactDamageTakenThisTurn map[uuid.UUID]int
 
+	// Per-step combat damage aggregation. Maps controllerID -> recipientPlayerID
+	// -> total combat damage dealt this damage step. Reset before each
+	// ResolveDamage call; consumed to fire EvtCombatDamageDealt afterward.
+	combatDamageThisStep map[uuid.UUID]map[uuid.UUID]int
+
 	// Artifact mana restriction: players who have activated artifact-only mana sources
 	artifactManaOnly map[uuid.UUID]bool
 
@@ -240,6 +245,7 @@ func NewGame(playerA, playerB Player) *Game {
 		damageDealtBy:               make(map[uuid.UUID]map[uuid.UUID]bool),
 		damageTakenThisTurn:         make(map[uuid.UUID]int),
 		artifactDamageTakenThisTurn: make(map[uuid.UUID]int),
+		combatDamageThisStep:        make(map[uuid.UUID]map[uuid.UUID]int),
 		attackedThisTurn:            make(map[uuid.UUID]bool),
 		blockedThisTurn:             make(map[uuid.UUID][]uuid.UUID),
 		instantsCastThisTurn:        make(map[uuid.UUID]int),
@@ -1035,6 +1041,28 @@ func (g *Game) RemoveExiledCardBySource(exiledBy uuid.UUID) []ExiledCard {
 	return found
 }
 
+// flushCombatDamageAggregator fires EvtCombatDamageDealt once per (controller,
+// recipient-player) pair that took combat damage this step (CR 510.2 wrap-up).
+// Used by "whenever one or more creatures you control deal combat damage to a
+// player" aggregator triggers. Per-creature/per-target damage is also fired by
+// EvtDamageDealt; this aggregator provides once-per-step semantics.
+func (g *Game) flushCombatDamageAggregator() {
+	if len(g.combatDamageThisStep) == 0 {
+		return
+	}
+	for ctrlID, byRecipient := range g.combatDamageThisStep {
+		for recipID, amount := range byRecipient {
+			g.FireEvent(GameEvent{
+				Type:     EvtCombatDamageDealt,
+				PlayerID: ctrlID,
+				TargetID: recipID,
+				Amount:   amount,
+			})
+		}
+	}
+	g.combatDamageThisStep = make(map[uuid.UUID]map[uuid.UUID]int)
+}
+
 // CounterSpellOnStack removes a spell from the stack by its source ID.
 // The countered spell's card goes to its owner's graveyard.
 //
@@ -1220,6 +1248,20 @@ func (g *Game) executeDamageToPlayer(a *DamageToPlayerAction) {
 	sourceCard := g.findCardForDamageSource(sourceID)
 	if sourceCard != nil && sourceCard.HasType(TypeArtifact) {
 		g.artifactDamageTakenThisTurn[p.PlayerID()] += amount
+	}
+	// Combat damage aggregation: track total damage this step per (controller,
+	// recipient-player) pair so EvtCombatDamageDealt can fire once per pair
+	// after the damage step completes (CR 510.2). Source must be a permanent
+	// on the battlefield with a controller.
+	if a.IsCombatDamage() {
+		if srcPerm := g.FindPermanent(sourceID); srcPerm != nil {
+			byCtrl, ok := g.combatDamageThisStep[srcPerm.Controller]
+			if !ok {
+				byCtrl = make(map[uuid.UUID]int)
+				g.combatDamageThisStep[srcPerm.Controller] = byCtrl
+			}
+			byCtrl[p.PlayerID()] += amount
+		}
 	}
 	g.FireEvent(GameEvent{
 		Type:     EvtDamageDealt,

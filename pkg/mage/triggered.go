@@ -130,6 +130,19 @@ func WheneverOneOrMoreCreaturesYouControlAttackTrigger(effect Effect, optional b
 		SetConditionData(EventPlayerIsController{})
 }
 
+// WheneverOneOrMoreCreaturesYouControlDealCombatDamageToPlayerTrigger fires
+// once per combat damage step (CR 510.2) for each opposing player that took
+// any combat damage from creatures controlled by the source's controller.
+// Used by Keeper of Fables and other "whenever one or more creatures you
+// control deal combat damage to a player" triggers. evt.PlayerID is the
+// damaging-creatures' controller, evt.TargetID is the player taking damage,
+// evt.Amount is the total combat damage dealt to that player by that
+// controller's creatures this step.
+func WheneverOneOrMoreCreaturesYouControlDealCombatDamageToPlayerTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtCombatDamageDealt, optional, effect).
+		SetConditionData(EventPlayerIsController{})
+}
+
 // AttacksTrigger fires when the source creature is declared as an attacker.
 func AttacksTrigger(effect Effect, optional bool) *GenericTriggered {
 	return NewTriggered(EvtDeclaredAttacker, optional, effect).

@@ -83,6 +83,7 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 			g.resolvingCombatDamage = true
 			g.combat.ResolveDamage(g, true)
 			g.resolvingCombatDamage = false
+			g.flushCombatDamageAggregator()
 			g.runPriorityRound(false)
 		}
 
@@ -91,6 +92,7 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 			g.resolvingCombatDamage = true
 			g.combat.ResolveDamage(g, false)
 			g.resolvingCombatDamage = false
+			g.flushCombatDamageAggregator()
 			g.runPriorityRound(false)
 		}
 

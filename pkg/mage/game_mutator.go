@@ -692,7 +692,9 @@ func (g *Game) ExecuteCombatDamage() {
 	if g.combat.HasFirstStrikers(g) {
 		g.combat.ResolveDamage(g, true)
 		g.CheckStateBasedActions()
+		g.flushCombatDamageAggregator()
 	}
 	g.combat.ResolveDamage(g, false)
 	g.resolvingCombatDamage = false
+	g.flushCombatDamageAggregator()
 }
