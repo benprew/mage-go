@@ -405,6 +405,21 @@ func TestCuriousObsession_SacrificedIfDidNotAttack(t *testing.T) {
 	g.AssertGraveyardCount(gametest.PlayerA, "Curious Obsession", 1)
 }
 
+// Duelist's Heritage: once per combat (regardless of attacker count), may have
+// target attacking creature gain double strike until end of turn. Verified by
+// confirming an attacker with double strike deals double damage.
+func TestDuelistsHeritage_GrantsDoubleStrike(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Duelist's Heritage")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.Attack(1, gametest.PlayerA, "Grizzly Bears")
+	g.ChooseTarget(gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Grizzly Bears 2/2 with double strike unblocked: 2 + 2 = 4 damage.
+	g.AssertLife(gametest.PlayerB, 16)
+}
+
 // Black Market accumulates charge counters when creatures die, then on the
 // controller's first main phase pours {B} into the pool for each counter.
 func TestBlackMarket_ChargeCountersOnCreatureDeath(t *testing.T) {
@@ -440,6 +455,28 @@ func TestEternalThirst_GrantsLifelink(t *testing.T) {
 	g.StopAt(1, core.PrecombatMain)
 	g.Execute()
 	g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", core.Lifelink, true)
+}
+
+// Eternal Thirst's granted "Whenever a creature an opponent controls dies"
+// trigger: enchanted creature gains a +1/+1 counter when an opponent's
+// creature dies. Relies on LKI fallback for the dying permanent's controller.
+func TestEternalThirst_CounterOnOpponentCreatureDeath(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	bearID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	auraID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Eternal Thirst")
+	g.Attach(auraID, bearID)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt", 2)
+	// Two bolts (3+3=6) destroy the 3/3 Hill Giant via stacking damage.
+	// Use a 3-damage source instead — easier: just kill with a single bigger spell.
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Bathe in Dragonfire")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 4)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Bathe in Dragonfire", "Hill Giant")
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerB, "Hill Giant", 1)
+	g.AssertCounterCount(gametest.PlayerA, "Grizzly Bears", core.P1P1, 1)
 }
 
 

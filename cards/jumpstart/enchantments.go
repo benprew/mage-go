@@ -299,25 +299,42 @@ func registerEnchantments() {
 	// Duelist's Heritage {2}{W}
 	// Enchantment
 	// Whenever one or more creatures attack, you may have target attacking creature gain double strike until end of turn.
-	// XXX: needs an "EvtAttackersDeclared" event that fires once per combat regardless of attacker
-	// count (CR 603.6e). Engine currently only fires per-attacker EvtDeclaredAttacker, which would
-	// trigger the ability multiple times per combat. Leaving unimplemented.
 	Register("Duelist's Heritage", func() Card {
-		return NewEnchantment("Duelist's Heritage", "{2}{W}")
+		return NewEnchantment("Duelist's Heritage", "{2}{W}",
+			WithAbility(WheneverOneOrMoreCreaturesAttackTrigger(
+				FuncEffect("target attacking creature gains double strike until end of turn",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, _ uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						eff := TemporaryKeyword(targets[0], DoubleStrike)
+						eff.SetSourceID(sourceID)
+						g.AddContinuousEffect(eff)
+						g.ApplyContinuousEffects()
+						return nil
+					}),
+				true,
+			).AddTarget(TargetCreature(IsAttacking))),
+		)
 	})
 
 	// Eternal Thirst {1}{B}
 	// Enchantment — Aura
 	// Enchant creature
 	// Enchanted creature has lifelink and "Whenever a creature an opponent controls dies, put a +1/+1 counter on this creature." (Damage dealt by a creature with lifelink also causes its controller to gain that much life.)
-	// XXX: granted "opponent's creature dies" half not wired. EvtCreatureDied fires after the
-	// permanent leaves the battlefield, so EventSourceControlledByOpponent can't resolve the
-	// dying permanent's controller. Needs a "last-known-info" lookup or an opponent-controller
-	// flag carried on the EvtCreatureDied event.
 	Register("Eternal Thirst", func() Card {
 		return NewAura("Eternal Thirst", "{1}{B}",
 			WithStaticAbility(
 				GrantAbilityToAttached(Lifelink, AttachAura),
+				GrantTriggeredAbilityToAttached(
+					EvtCreatureDied, false,
+					AndTriggerCond{Conditions: []TriggerConditionData{
+						EventSourceControlledByOpponent{},
+						EventSourceHasType{Type: TypeCreature},
+					}},
+					AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
+				),
 			),
 		)
 	})
