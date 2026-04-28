@@ -159,6 +159,9 @@ func NewActivatedAbility(effect Effect, cost Cost, opts ...AbilityOption) *Simpl
 }
 
 func (a *SimpleActivatedAbility) CanActivate(controller uuid.UUID, g *Game) bool {
+	if perm := g.FindPermanent(a.source); perm != nil && perm.HasAttr(AttrCantActivateNonManaAbilities) {
+		return false
+	}
 	if a.UpkeepOnly && g.step != Upkeep {
 		return false
 	}

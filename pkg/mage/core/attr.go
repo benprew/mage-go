@@ -21,6 +21,7 @@ const (
 	AttrCantBeEnchanted              // permanent can't have enchantments attached to it
 	AttrCantBeTargetedByArtifacts    // permanent can't be targeted by abilities from artifact sources
 	AttrCantChangeControl            // other players can't gain control (Guardian Beast)
+	AttrCantActivateNonManaAbilities // permanent's non-mana activated abilities can't be activated (CR 605 mana abilities are unaffected)
 
 	// Type-identity attrs (battlefield) — replaces TypesAdded []CardType on Permanent.
 	AttrIsCreature
@@ -115,6 +116,8 @@ func (a Attr) String() string {
 		return "Can't Be Targeted by Artifacts"
 	case AttrCantChangeControl:
 		return "Can't Change Control"
+	case AttrCantActivateNonManaAbilities:
+		return "Can't Activate Non-Mana Abilities"
 	case AttrIsCreature:
 		return "IsCreature"
 	case AttrIsLand:

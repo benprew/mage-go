@@ -35,6 +35,35 @@ func GrantProtectionToAttached(color Color, at AttachType) ContinuousEffect {
 	})
 }
 
+// PreventAttachedFromActivatingNonManaAbilities creates a continuous effect that
+// stops the attached permanent's non-mana activated abilities from being
+// activated. CR 605 mana abilities are unaffected (they bypass priority and the
+// stack, and aren't checked through SimpleActivatedAbility.CanActivate).
+// Used by Lawmage's Binding and similar "and its activated abilities can't be
+// activated" auras.
+func PreventAttachedFromActivatingNonManaAbilities(at AttachType) ContinuousEffect {
+	return AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
+		g.effects.GrantAttr(target.ID(), AttrCantActivateNonManaAbilities)
+		return nil
+	})
+}
+
+// PreventActivationsOfMatching creates a continuous effect that stops non-mana
+// activated abilities from being activated for permanents matching filter.
+// Used by static effects like "Activated abilities of artifacts your opponents
+// control can't be activated" — pass an opponent-scoped filter.
+func PreventActivationsOfMatching(filter PermanentFilter) ContinuousEffect {
+	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+		for _, p := range g.battlefield {
+			if !filter.Match(p, g) {
+				continue
+			}
+			g.effects.GrantAttr(p.ID(), AttrCantActivateNonManaAbilities)
+		}
+		return nil
+	})
+}
+
 // RemoveKeywordFromAttached creates a continuous effect removing a keyword from the attached creature.
 func RemoveKeywordFromAttached(kw Keyword, at AttachType) ContinuousEffect {
 	return AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
