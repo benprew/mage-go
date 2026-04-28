@@ -171,6 +171,8 @@ func ExecuteEffect(ctx *EffectContext, data EffectData) error {
 		return execDoubleTargetPower(ctx, e)
 	case *grantKeywordEffect:
 		return execGrantKeyword(ctx, e)
+	case *grantAbilityEffect:
+		return execGrantAbility(ctx, e)
 	case *grantTypeEffect:
 		return execGrantType(ctx, e)
 	case *replaceKeywordEffect:

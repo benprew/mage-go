@@ -1,7 +1,7 @@
 package custom
 
 import (
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage"
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/dsl"
 )
 
 func init() {

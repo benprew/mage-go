@@ -1,8 +1,7 @@
 package fallen_empires
 
 import (
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage"
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/dsl"
 )
 
 func init() {

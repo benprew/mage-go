@@ -183,6 +183,7 @@ type grantKeywordEffect struct {
 	keyword  Keyword
 	selector TargetSelector
 	dur      Duration
+	unless   ConditionData
 }
 
 // GrantKeyword creates a temporary keyword grant effect. Defaults to targeting
@@ -205,6 +206,12 @@ func (e *grantKeywordEffect) Until(d Duration) *grantKeywordEffect {
 	return e
 }
 
+// Unless suppresses the grant if the given condition is true at execution time.
+func (e *grantKeywordEffect) Unless(cond ConditionData) *grantKeywordEffect {
+	e.unless = cond
+	return e
+}
+
 // EffectData interface
 func (e *grantKeywordEffect) Text() string {
 	switch e.selector.Kind {
@@ -220,10 +227,83 @@ func (e *grantKeywordEffect) Properties() EffectProperties {
 }
 
 func execGrantKeyword(ctx *EffectContext, e *grantKeywordEffect) error {
+	if e.unless != nil && e.unless.Check(ctx) {
+		return nil
+	}
 	perms := resolvePermanents(ctx, e.selector)
 	for _, perm := range perms {
 		eff := TargetEffect(LayerAbility, e.dur, perm.ID(), func(g *Game, target *Permanent) error {
 			g.GrantAttr(target.ID(), e.keyword)
+			return nil
+		})
+		eff.SetSourceID(ctx.SourceID)
+		ctx.Game.AddContinuousEffect(eff)
+	}
+	if len(perms) > 0 {
+		ctx.Game.ApplyContinuousEffects()
+	}
+	return nil
+}
+
+// --- GrantAbility DSL ---
+
+// grantAbilityEffect is a composable EffectData that temporarily grants a
+// non-keyword ability (typically a triggered ability like Rampage N) to the
+// selected permanent. Mirrors grantKeywordEffect for parameterized abilities
+// that don't fit into the Keyword/Attr enum.
+type grantAbilityEffect struct {
+	ability  Ability
+	selector TargetSelector
+	dur      Duration
+	unless   ConditionData
+}
+
+// GrantAbility creates a temporary ability grant effect. Defaults to targeting
+// targets[0] until end of turn. Use .Targeting() / .Until() / .Unless().
+func GrantAbility(a Ability) *grantAbilityEffect {
+	return &grantAbilityEffect{
+		ability:  a,
+		selector: TargetSelector{Kind: KindTarget},
+		dur:      EndOfTurn,
+	}
+}
+
+func (e *grantAbilityEffect) Targeting(sel TargetSelector) *grantAbilityEffect {
+	e.selector = sel
+	return e
+}
+
+func (e *grantAbilityEffect) Until(d Duration) *grantAbilityEffect {
+	e.dur = d
+	return e
+}
+
+func (e *grantAbilityEffect) Unless(cond ConditionData) *grantAbilityEffect {
+	e.unless = cond
+	return e
+}
+
+func (e *grantAbilityEffect) Text() string { return "grant ability until end of turn" }
+func (e *grantAbilityEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
+
+func execGrantAbility(ctx *EffectContext, e *grantAbilityEffect) error {
+	if e.unless != nil && e.unless.Check(ctx) {
+		return nil
+	}
+	perms := resolvePermanents(ctx, e.selector)
+	for _, perm := range perms {
+		targetID := perm.ID()
+		ability := e.ability
+		eff := FuncContinuousEffect(LayerAbility, e.dur, func(g *Game, _ uuid.UUID) error {
+			p := g.FindPermanent(targetID)
+			if p == nil {
+				return nil
+			}
+			ability.SetSource(targetID)
+			ability.SetController(p.Controller)
+			p.RuntimeAbilities = append(p.RuntimeAbilities, WrapGrantedAbility(ability))
 			return nil
 		})
 		eff.SetSourceID(ctx.SourceID)

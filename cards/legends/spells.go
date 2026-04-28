@@ -2,12 +2,10 @@ package legends
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/google/uuid"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage"
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/dsl"
 )
 
 func init() {
@@ -837,57 +835,13 @@ func registerSpells() {
 	// XXX: timing restriction not enforced
 	Register("Rapid Fire", func() Card {
 		return NewInstant("Rapid Fire", "{3}{W}",
-			NewTargetedSpell(TargetCreature(), FuncEffect(
-				"target creature gains first strike and rampage 2 until end of turn",
-				EffectProperties{Outcome: OutcomeBenefit},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					if len(targets) == 0 {
-						return nil
-					}
-					perm := g.FindPermanent(targets[0])
-					if perm == nil {
-						return nil
-					}
-					// Grant first strike until end of turn
-					ce := TemporaryKeyword(perm.ID(), FirstStrike)
-					ce.SetSourceID(sourceID)
-					g.AddContinuousEffect(ce)
-					// Grant rampage 2 only if the creature doesn't already have rampage
-					hasRampage := false
-					for _, a := range perm.RuntimeAbilities {
-						inner := UnwrapAbility(a)
-						if gt, ok := inner.(*GenericTriggered); ok {
-							for _, e := range gt.Effects() {
-								if strings.HasPrefix(e.Text(), "rampage ") {
-									hasRampage = true
-									break
-								}
-							}
-						}
-						if hasRampage {
-							break
-						}
-					}
-					if hasRampage {
-						return nil
-					}
-					targetID := targets[0]
-					rampageEff := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, _ uuid.UUID) error {
-						p := g.FindPermanent(targetID)
-						if p == nil {
-							return nil
-						}
-						rt := RampageTrigger(2)
-						rt.SetSource(targetID)
-						rt.SetController(p.Controller)
-						p.RuntimeAbilities = append(p.RuntimeAbilities, WrapGrantedAbility(rt))
-						return nil
-					})
-					rampageEff.SetSourceID(sourceID)
-					g.AddContinuousEffect(rampageEff)
-					return nil
-				},
-			)),
+			NewTargetedSpell(TargetCreature(),
+				Pipeline("first strike + rampage 2 unless target already has rampage",
+					EffectProperties{Outcome: OutcomeBenefit},
+					GrantKeyword(FirstStrike),
+					GrantAbility(RampageTrigger(2)).Unless(&TargetHasRampageCond{}),
+				),
+			),
 		)
 	})
 

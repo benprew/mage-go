@@ -828,6 +828,32 @@ func execRampageEffect(ctx *EffectContext, e *RampageEffectData) error {
 	return nil
 }
 
+// TargetHasRampageCond is true when targets[0] already has a Rampage triggered
+// ability (used by Rapid Fire's "If it doesn't have rampage" clause).
+type TargetHasRampageCond struct{}
+
+func (c *TargetHasRampageCond) Check(ctx *EffectContext) bool {
+	if len(ctx.Targets) == 0 {
+		return false
+	}
+	p := ctx.Game.FindPermanent(ctx.Targets[0])
+	if p == nil {
+		return false
+	}
+	for _, a := range p.RuntimeAbilities {
+		gt, ok := UnwrapAbility(a).(*GenericTriggered)
+		if !ok {
+			continue
+		}
+		for _, e := range gt.Effects() {
+			if _, ok := e.(*RampageEffectData); ok {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // ---------------------------------------------------------------------------
 // AddContinuousEffects: add continuous effects to the game
 // ---------------------------------------------------------------------------

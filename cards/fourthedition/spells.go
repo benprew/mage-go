@@ -1,6 +1,6 @@
 package fourthedition
 
-import . "git.sr.ht/~cdcarter/mage-go/pkg/mage"
+import . "git.sr.ht/~cdcarter/mage-go/pkg/mage/dsl"
 
 func init() {
 	registerSpells()

@@ -5,8 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage"
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/dsl"
 )
 
 // exactHandSizeCost is a zero-cost activation condition: the ability can only
