@@ -167,6 +167,28 @@ func (c EventSourceMatchesPermanentFilter) CheckTriggerCond(evt *GameEvent, g Ga
 	return perm != nil && c.Filter.Match(perm, g.(*Game))
 }
 
+// EventZoneChangeMatches checks that an EvtZoneChange event's FromZone and
+// ToZone match. Pass ZoneAny in either field to skip that side of the check
+// — useful for "when ~ leaves the battlefield" (To=ZoneAny) and "when ~
+// enters the battlefield" (From=ZoneAny) triggers (CR 603.6c, 603.6d).
+//
+// Per CR 603.10 a single zone change is one event, so any leaves-/enters-
+// trigger can be expressed as a ZoneChangeMatches over EvtZoneChange.
+type EventZoneChangeMatches struct {
+	From Zone // ZoneAny to skip the source check
+	To   Zone // ZoneAny to skip the destination check
+}
+
+func (c EventZoneChangeMatches) CheckTriggerCond(evt *GameEvent, _ GameReader, _, _ uuid.UUID) bool {
+	if c.From != ZoneAny && evt.FromZone != c.From {
+		return false
+	}
+	if c.To != ZoneAny && evt.ToZone != c.To {
+		return false
+	}
+	return true
+}
+
 // SourceIsAttachedToEventSource checks that the source permanent is attached
 // to the permanent in evt.SourceID (for aura triggers like "when enchanted
 // creature becomes tapped").

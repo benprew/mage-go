@@ -46,6 +46,13 @@ const (
 )
 
 // GameEvent carries data about a game event.
+//
+// FromZone and ToZone are populated for EvtZoneChange (and dual-fired
+// alongside the specialized zone events EvtEntersBattlefield /
+// EvtLeavesBattlefield / EvtPutIntoGraveyardFromBattlefield) so triggers
+// matching on a generic zone change can read the move's endpoints. For
+// non-zone events both default to ZoneLibrary's zero value but should be
+// ignored.
 type GameEvent struct {
 	Type     EventType
 	SourceID uuid.UUID
@@ -53,4 +60,6 @@ type GameEvent struct {
 	PlayerID uuid.UUID
 	Amount   int
 	Flag     bool // context-dependent
+	FromZone Zone
+	ToZone   Zone
 }

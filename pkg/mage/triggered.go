@@ -174,6 +174,37 @@ func DiesCreatureTrigger(effect Effect, optional bool, filter PermanentFilter) *
 		}})
 }
 
+// OnEnterZone fires when the source permanent enters `to`. Generic
+// zone-change trigger over EvtZoneChange (CR 603.10): a single zone change
+// is one event, so any "when ~ enters X" can be expressed this way. For the
+// common ZoneBattlefield case prefer EntersBattlefieldTrigger which is a
+// thin alias.
+func OnEnterZone(to Zone, effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtZoneChange, optional, effect).
+		SetConditionData(AndTriggerCond{[]TriggerConditionData{
+			EventSourceIsSelf{},
+			EventZoneChangeMatches{From: ZoneAny, To: to},
+		}})
+}
+
+// OnLeaveZone fires when the source permanent leaves `from`, optionally
+// constrained to also entering `to`. Pass ZoneAny for `to` to fire on any
+// destination (CR 603.6c — leaves-the-battlefield triggers consult LKI;
+// the destination is irrelevant to whether the event fired).
+//
+// Sets SelfGraveyard=true so the engine captures the source's abilities
+// before the permanent leaves the battlefield, regardless of which leave
+// path (destroy / sacrifice / SBA / bounce) caused the move.
+func OnLeaveZone(from, to Zone, effect Effect, optional bool) *GenericTriggered {
+	t := NewTriggered(EvtZoneChange, optional, effect).
+		SetConditionData(AndTriggerCond{[]TriggerConditionData{
+			EventSourceIsSelf{},
+			EventZoneChangeMatches{From: from, To: to},
+		}})
+	t.SelfGraveyard = true
+	return t
+}
+
 // EntersBattlefieldTrigger fires when the source permanent enters the battlefield.
 func EntersBattlefieldTrigger(effect Effect, optional bool) *GenericTriggered {
 	return NewTriggered(EvtEntersBattlefield, optional, effect).

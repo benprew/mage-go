@@ -603,6 +603,16 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 		SourceID: perm.ID(),
 		PlayerID: controller,
 		Amount:   g.currentX, // preserve X from resolving spell for ETB triggers
+		FromZone: ZoneAny,    // engine doesn't model the precise origin of an ETB
+		ToZone:   ZoneBattlefield,
+	})
+	g.FireEvent(GameEvent{
+		Type:     EvtZoneChange,
+		SourceID: perm.ID(),
+		PlayerID: controller,
+		Amount:   g.currentX,
+		FromZone: ZoneAny,
+		ToZone:   ZoneBattlefield,
 	})
 
 	return perm
@@ -803,9 +813,21 @@ func (g *Game) DestroyPermanent(perm *Permanent) {
 		Type:     EvtPutIntoGraveyardFromBattlefield,
 		SourceID: permID,
 		PlayerID: controller,
+		FromZone: ZoneBattlefield,
+		ToZone:   ZoneGraveyard,
 	}
 	g.FireEvent(graveyardEvt)
 	g.checkAbilitiesForEvent(selfAbilities, &graveyardEvt, permID, controller)
+
+	zoneEvt := GameEvent{
+		Type:     EvtZoneChange,
+		SourceID: permID,
+		PlayerID: controller,
+		FromZone: ZoneBattlefield,
+		ToZone:   ZoneGraveyard,
+	}
+	g.FireEvent(zoneEvt)
+	g.checkAbilitiesForEvent(selfAbilities, &zoneEvt, permID, controller)
 
 	if isCreature {
 		g.creatureDeathsThisTurn++
@@ -813,6 +835,8 @@ func (g *Game) DestroyPermanent(perm *Permanent) {
 			Type:     EvtCreatureDied,
 			SourceID: permID,
 			PlayerID: controller,
+			FromZone: ZoneBattlefield,
+			ToZone:   ZoneGraveyard,
 		}
 		g.FireEvent(diedEvt)
 		g.checkAbilitiesForEvent(selfAbilities, &diedEvt, permID, controller)
@@ -880,9 +904,21 @@ func (g *Game) PutPermanentIntoGraveyard(perm *Permanent) {
 		Type:     EvtPutIntoGraveyardFromBattlefield,
 		SourceID: permID,
 		PlayerID: controller,
+		FromZone: ZoneBattlefield,
+		ToZone:   ZoneGraveyard,
 	}
 	g.FireEvent(graveyardEvt)
 	g.checkAbilitiesForEvent(selfAbilities, &graveyardEvt, permID, controller)
+
+	zoneEvt := GameEvent{
+		Type:     EvtZoneChange,
+		SourceID: permID,
+		PlayerID: controller,
+		FromZone: ZoneBattlefield,
+		ToZone:   ZoneGraveyard,
+	}
+	g.FireEvent(zoneEvt)
+	g.checkAbilitiesForEvent(selfAbilities, &zoneEvt, permID, controller)
 
 	if isCreature {
 		g.creatureDeathsThisTurn++
@@ -890,6 +926,8 @@ func (g *Game) PutPermanentIntoGraveyard(perm *Permanent) {
 			Type:     EvtCreatureDied,
 			SourceID: permID,
 			PlayerID: controller,
+			FromZone: ZoneBattlefield,
+			ToZone:   ZoneGraveyard,
 		}
 		g.FireEvent(diedEvt)
 		g.checkAbilitiesForEvent(selfAbilities, &diedEvt, permID, controller)
@@ -941,15 +979,30 @@ func (g *Game) Sacrifice(perm *Permanent) {
 		SourceID: permID,
 		PlayerID: controller,
 		Flag:     true, // Flag=true means this was a sacrifice (not destroy)
+		FromZone: ZoneBattlefield,
+		ToZone:   ZoneGraveyard,
 	}
 	g.FireEvent(graveyardEvt)
 	g.checkAbilitiesForEvent(selfTriggers, &graveyardEvt, permID, controller)
+
+	zoneEvt := GameEvent{
+		Type:     EvtZoneChange,
+		SourceID: permID,
+		PlayerID: controller,
+		Flag:     true, // sacrifice path
+		FromZone: ZoneBattlefield,
+		ToZone:   ZoneGraveyard,
+	}
+	g.FireEvent(zoneEvt)
+	g.checkAbilitiesForEvent(selfTriggers, &zoneEvt, permID, controller)
 
 	sacEvt := GameEvent{
 		Type:     EvtSacrifice,
 		SourceID: permID,
 		PlayerID: controller,
 		Flag:     isCreature, // Flag=true means the sacrificed permanent was a creature
+		FromZone: ZoneBattlefield,
+		ToZone:   ZoneGraveyard,
 	}
 	g.FireEvent(sacEvt)
 	g.checkAbilitiesForEvent(selfTriggers, &sacEvt, permID, controller)
@@ -960,6 +1013,8 @@ func (g *Game) Sacrifice(perm *Permanent) {
 			Type:     EvtCreatureDied,
 			SourceID: permID,
 			PlayerID: controller,
+			FromZone: ZoneBattlefield,
+			ToZone:   ZoneGraveyard,
 		}
 		g.FireEvent(diedEvt)
 		g.checkAbilitiesForEvent(selfTriggers, &diedEvt, permID, controller)
