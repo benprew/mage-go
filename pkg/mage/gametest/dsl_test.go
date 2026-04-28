@@ -15,11 +15,7 @@ func TestGenericTriggered(t *testing.T) {
 			mage.Register(name, func() mage.Card {
 				return mage.NewCreature(name, "{2}{G}", 3, 3,
 					mage.WithSubTypes("Beast"),
-					mage.WithAbility(mage.NewTriggered(
-						core.EvtEntersBattlefield,
-						false,
-						mage.GainLife(3),
-					).SetConditionData(mage.EventSourceIsSelf{})),
+					mage.WithAbility(mage.EntersBattlefieldTrigger(mage.GainLife(3), false)),
 				)
 			})
 		}
@@ -67,14 +63,10 @@ func TestGenericTriggered(t *testing.T) {
 			{name, func() mage.Card {
 				return mage.NewCreature(name, "{1}{B}", 1, 1,
 					mage.WithSubTypes("Zombie"),
-					mage.WithAbility(mage.NewTriggered(
-						core.EvtCreatureDied,
-						false,
+					mage.WithAbility(mage.DiesCreatureTrigger(
 						mage.AddCounters(core.P1P1, mage.Fixed(1)).Targeting(mage.ToSource()),
-					).SetConditionData(mage.AndTriggerCond{Conditions: []mage.TriggerConditionData{
-						mage.EventSourceNotSelf{},
-						mage.EventPlayerIsController{},
-					}})),
+						false, mage.AnyPermanent,
+					)),
 				)
 			}},
 			{victimName, func() mage.Card {

@@ -647,16 +647,16 @@ for each declared Target — the same mechanism used for spell-cast targeting.
 Chosen IDs become the StackObject's Targets and are passed to the ability's
 effects at resolution time. Triggers with no declared targets keep the legacy
 event-derived auto-binding (e.g. ETB triggers receive the entering permanent's
-ID, EvtCreatureDied triggers receive the dead creature's ID, etc.) so cards
+ID, EvtZoneChange (BF→GY, was creature) triggers receive the dead creature's ID, etc.) so cards
 that read targets[0] from the firing event continue to work unchanged.
 
 Convenience constructors (set condition automatically):
 
 	[AttacksTrigger](effect, optional)                          // EvtDeclaredAttacker, source is self
 	[BlocksTrigger](effect, optional)                           // EvtCreatureBlocks, source is self (CR 509.3a; fires once per combat per blocker)
-	[EntersBattlefieldTrigger](effect, optional)                // EvtEntersBattlefield, source is self
-	[DiesCreatureTrigger](effect, optional, filter)             // EvtCreatureDied, another creature you control
-	[AnyCreatureDiesTrigger](effect, optional)                  // EvtCreatureDied, any creature
+	[EntersBattlefieldTrigger](effect, optional)                // EvtZoneChange (To=Battlefield), source is self
+	[DiesCreatureTrigger](effect, optional, filter)             // EvtZoneChange (BF→GY, was creature), another creature you control
+	[AnyCreatureDiesTrigger](effect, optional)                  // EvtZoneChange (BF→GY, was creature), any creature
 	[CreatureDealtDamageBySourceDiesTrigger](effect, optional)  // creature damaged by source dies
 	[DealsDamageToOpponentTrigger](effect, optional)            // EvtDamageDealt to opponent
 	[WhenDamageDealtToThisTrigger](effect, optional)            // EvtDamageDealt to self
@@ -667,9 +667,9 @@ Convenience constructors (set condition automatically):
 	[WheneverSpellCastTrigger](effect, optional, ...CardFilter)  // EvtSpellCast, any player, filtered
 	[WheneverYouCastSpellTrigger](effect, optional, ...CardFilter) // EvtSpellCast, controller only
 	[WhenAttachedBecomesTappedTrigger](effect, optional)        // EvtTapped, enchanted permanent
-	[WheneverPermanentEntersBattlefieldTrigger](e, opt, filter) // EvtEntersBattlefield, filtered
+	[WheneverPermanentEntersBattlefieldTrigger](e, opt, filter) // EvtZoneChange (To=Battlefield), filtered
 	[WhenOpponentPermanentBecomesTappedTrigger](e, opt, filter) // EvtTapped, opponent's matching permanent
-	[PutIntoGraveyardFromBattlefieldTrigger](effect, optional)  // EvtPutIntoGraveyardFromBattlefield, self
+	[PutIntoGraveyardFromBattlefieldTrigger](effect, optional)  // EvtZoneChange (BF→GY), self
 	[SacrificeAtUpkeepUnlessPay](manaCost)                      // sacrifice unless pay at upkeep
 	[WheneverYouGainLifeTrigger](effect, optional)              // EvtLifeGained, controller (CR 119.9)
 	[WheneverPlayerGainsLifeTrigger](effect, optional)          // EvtLifeGained, any player
@@ -717,7 +717,7 @@ resets at cleanup.
 Custom triggers with SetConditionData (composable data predicates):
 
 	// When this creature dies (not "another" — self)
-	mage.NewTriggered(core.EvtCreatureDied, false, effect).
+	mage.NewTriggered(core.EvtZoneChange (BF→GY, was creature), false, effect).
 	    SetConditionData(mage.EventSourceIsSelf{})
 
 	// Whenever an opponent's Swamp becomes tapped
@@ -1359,7 +1359,7 @@ Damage actions expose Amount(), IsCombatDamage(), PlayerID()/PermanentID(),
 and a WithAmount(int) copy method for partial prevention.
 [*AddCountersAction] exposes PermanentID(), CounterType(), Amount(), and
 OnEntry() (true when the placement happens during enter-the-battlefield
-resolution before EvtEntersBattlefield); WithAmount(int) returns a copy with
+resolution before EvtZoneChange (To=Battlefield)); WithAmount(int) returns a copy with
 a different count.
 
 ## ReplacementEffect Interface
@@ -1560,7 +1560,7 @@ the moment a permanent enters the battlefield. The choice is recorded on
 the permanent itself, so other abilities of the same permanent can read it
 later. The four ETBChoose* constructors above each produce an
 *ETBEffectAbility that PutOnBattlefield runs unconditionally during ETB
-resolution BEFORE firing the EvtEntersBattlefield event — so the stored
+resolution BEFORE firing the EvtZoneChange (To=Battlefield) event — so the stored
 choice is already in place when "when this enters" triggers fire.
 
 Storage fields on Permanent:

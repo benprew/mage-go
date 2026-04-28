@@ -19,9 +19,13 @@ func TestLKI_DeathTriggerReadsOpponentController(t *testing.T) {
 	if !mage.CardRegistered(cardName) {
 		mage.Register(cardName, func() mage.Card {
 			return mage.NewEnchantment(cardName, "{0}",
-				mage.WithAbility(mage.NewTriggered(core.EvtCreatureDied, false,
+				mage.WithAbility(mage.NewTriggered(core.EvtZoneChange, false,
 					mage.GainLife(1),
-				).SetConditionData(mage.EventSourceControlledByOpponent{})),
+				).SetConditionData(mage.AndTriggerCond{Conditions: []mage.TriggerConditionData{
+					mage.EventZoneChangeMatches{From: core.ZoneBattlefield, To: core.ZoneGraveyard},
+					mage.EventSourceWasOfType{Type: core.TypeCreature},
+					mage.EventSourceControlledByOpponent{},
+				}})),
 			)
 		})
 	}
@@ -52,7 +56,7 @@ func TestLKI_DirectAccessor(t *testing.T) {
 	if !mage.CardRegistered(cardName) {
 		mage.Register(cardName, func() mage.Card {
 			return mage.NewEnchantment(cardName, "{0}",
-				mage.WithAbility(mage.NewTriggered(core.EvtCreatureDied, false,
+				mage.WithAbility(mage.NewTriggered(core.EvtZoneChange, false,
 					mage.FuncEffect("probe", mage.EffectProperties{},
 						func(g *mage.Game, _, _ uuid.UUID, _ []uuid.UUID) error {
 							return nil
@@ -65,7 +69,7 @@ func TestLKI_DirectAccessor(t *testing.T) {
 						}
 					}
 					return false
-				})),
+				}).AndConditionData(mage.EventZoneChangeMatches{From: core.ZoneBattlefield, To: core.ZoneGraveyard})),
 			)
 		})
 	}

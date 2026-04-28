@@ -363,8 +363,10 @@ func registerArtifacts() {
 					SnapshotPermanent(SelectTarget, "t"),
 					GrantKeyword(Islandwalk),
 					&RegisterDelayedTriggerData{
-						EventType:     EvtCreatureDied,
+						EventType:     EvtZoneChange,
 						MatchEventVar: "t",
+						MatchFromZone: ZoneBattlefield,
+						MatchToZone:   ZoneGraveyard,
 						Effects:       []Effect{DestroyTarget()},
 					},
 				),

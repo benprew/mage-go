@@ -101,11 +101,13 @@ func execOnPermanentDies(ctx *EffectContext, e *onPermanentDiesEffect) error {
 		id = ctx.Targets[0]
 	}
 	dt := &DelayedTrigger{
-		EventType:    EvtCreatureDied,
-		MatchEventID: id,
-		Effects:      e.effects,
-		SourceID:     ctx.SourceID,
-		Controller:   ctx.Controller,
+		EventType:     EvtZoneChange,
+		MatchEventID:  id,
+		MatchFromZone: ZoneBattlefield,
+		MatchToZone:   ZoneGraveyard,
+		Effects:       e.effects,
+		SourceID:      ctx.SourceID,
+		Controller:    ctx.Controller,
 	}
 	ctx.Game.RegisterDelayedTrigger(dt)
 	return nil

@@ -236,6 +236,8 @@ type DelayedTrigger struct {
 	MatchEventID  uuid.UUID // if set, only fire when evt.SourceID matches
 	MatchPlayerID uuid.UUID // if set, only fire when evt.PlayerID matches
 	MatchTargetID uuid.UUID // if set, only fire when evt.TargetID matches
+	MatchFromZone Zone      // for EvtZoneChange: ZoneAny to skip the from check
+	MatchToZone   Zone      // for EvtZoneChange: ZoneAny to skip the to check
 	Persistent    bool      // if true, trigger is not consumed after firing
 }
 
@@ -599,19 +601,11 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 	g.effects.Apply(g)
 
 	g.FireEvent(GameEvent{
-		Type:     EvtEntersBattlefield,
+		Type:     EvtZoneChange,
 		SourceID: perm.ID(),
 		PlayerID: controller,
 		Amount:   g.currentX, // preserve X from resolving spell for ETB triggers
 		FromZone: ZoneAny,    // engine doesn't model the precise origin of an ETB
-		ToZone:   ZoneBattlefield,
-	})
-	g.FireEvent(GameEvent{
-		Type:     EvtZoneChange,
-		SourceID: perm.ID(),
-		PlayerID: controller,
-		Amount:   g.currentX,
-		FromZone: ZoneAny,
 		ToZone:   ZoneBattlefield,
 	})
 
@@ -716,12 +710,6 @@ func (g *Game) RemoveFromBattlefield(perm *Permanent) {
 	// read the dying permanent's controller, types, and P/T after the move.
 	g.captureLKI(perm)
 
-	// Capture abilities before removal (for "leaves battlefield" triggers on self)
-	selfAbilities := make([]Ability, len(perm.RuntimeAbilities))
-	copy(selfAbilities, perm.RuntimeAbilities)
-	permID := perm.ID()
-	controller := perm.Controller
-
 	// Remove continuous effects sourced from this permanent
 	g.effects.Remove(perm.ID())
 
@@ -752,15 +740,11 @@ func (g *Game) RemoveFromBattlefield(perm *Permanent) {
 	}
 
 	g.effects.Apply(g)
-
-	evt := GameEvent{
-		Type:     EvtLeavesBattlefield,
-		SourceID: permID,
-		PlayerID: controller,
-	}
-	g.FireEvent(evt)
-	// Also check the removed permanent's own triggers (since it's no longer on battlefield)
-	g.checkAbilitiesForEvent(selfAbilities, &evt, permID, controller)
+	// Leave-zone trigger dispatch (CR 603.6c) happens in the destination-
+	// specific path (Destroy / Sacrifice / Exile / Bounce /
+	// PutPermanentIntoGraveyard) via EvtZoneChange + LKIAbilities. The
+	// permanent's runtime abilities are captured into LKI by captureLKI
+	// above.
 
 	// Detach equipment immediately. Auras are left for SBAs to put into the
 	// graveyard so that "when enchanted creature dies" triggers can still see
@@ -806,7 +790,7 @@ func (g *Game) DestroyPermanent(perm *Permanent) {
 	}
 
 	graveyardEvt := GameEvent{
-		Type:     EvtPutIntoGraveyardFromBattlefield,
+		Type:     EvtZoneChange,
 		SourceID: permID,
 		PlayerID: controller,
 		FromZone: ZoneBattlefield,
@@ -815,27 +799,8 @@ func (g *Game) DestroyPermanent(perm *Permanent) {
 	g.FireEvent(graveyardEvt)
 	g.checkAbilitiesForEvent(selfAbilities, &graveyardEvt, permID, controller)
 
-	zoneEvt := GameEvent{
-		Type:     EvtZoneChange,
-		SourceID: permID,
-		PlayerID: controller,
-		FromZone: ZoneBattlefield,
-		ToZone:   ZoneGraveyard,
-	}
-	g.FireEvent(zoneEvt)
-	g.checkAbilitiesForEvent(selfAbilities, &zoneEvt, permID, controller)
-
 	if isCreature {
 		g.creatureDeathsThisTurn++
-		diedEvt := GameEvent{
-			Type:     EvtCreatureDied,
-			SourceID: permID,
-			PlayerID: controller,
-			FromZone: ZoneBattlefield,
-			ToZone:   ZoneGraveyard,
-		}
-		g.FireEvent(diedEvt)
-		g.checkAbilitiesForEvent(selfAbilities, &diedEvt, permID, controller)
 	}
 }
 
@@ -894,7 +859,7 @@ func (g *Game) PutPermanentIntoGraveyard(perm *Permanent) {
 	}
 
 	graveyardEvt := GameEvent{
-		Type:     EvtPutIntoGraveyardFromBattlefield,
+		Type:     EvtZoneChange,
 		SourceID: permID,
 		PlayerID: controller,
 		FromZone: ZoneBattlefield,
@@ -903,27 +868,8 @@ func (g *Game) PutPermanentIntoGraveyard(perm *Permanent) {
 	g.FireEvent(graveyardEvt)
 	g.checkAbilitiesForEvent(selfAbilities, &graveyardEvt, permID, controller)
 
-	zoneEvt := GameEvent{
-		Type:     EvtZoneChange,
-		SourceID: permID,
-		PlayerID: controller,
-		FromZone: ZoneBattlefield,
-		ToZone:   ZoneGraveyard,
-	}
-	g.FireEvent(zoneEvt)
-	g.checkAbilitiesForEvent(selfAbilities, &zoneEvt, permID, controller)
-
 	if isCreature {
 		g.creatureDeathsThisTurn++
-		diedEvt := GameEvent{
-			Type:     EvtCreatureDied,
-			SourceID: permID,
-			PlayerID: controller,
-			FromZone: ZoneBattlefield,
-			ToZone:   ZoneGraveyard,
-		}
-		g.FireEvent(diedEvt)
-		g.checkAbilitiesForEvent(selfAbilities, &diedEvt, permID, controller)
 	}
 }
 
@@ -950,22 +896,11 @@ func (g *Game) Sacrifice(perm *Permanent) {
 		p.AddToGraveyard(card)
 	}
 
-	graveyardEvt := GameEvent{
-		Type:     EvtPutIntoGraveyardFromBattlefield,
-		SourceID: permID,
-		PlayerID: controller,
-		Flag:     true, // Flag=true means this was a sacrifice (not destroy)
-		FromZone: ZoneBattlefield,
-		ToZone:   ZoneGraveyard,
-	}
-	g.FireEvent(graveyardEvt)
-	g.checkAbilitiesForEvent(selfTriggers, &graveyardEvt, permID, controller)
-
 	zoneEvt := GameEvent{
 		Type:     EvtZoneChange,
 		SourceID: permID,
 		PlayerID: controller,
-		Flag:     true, // sacrifice path
+		Flag:     true, // sacrifice path (vs. destroy/SBA)
 		FromZone: ZoneBattlefield,
 		ToZone:   ZoneGraveyard,
 	}
@@ -985,15 +920,6 @@ func (g *Game) Sacrifice(perm *Permanent) {
 
 	if isCreature {
 		g.creatureDeathsThisTurn++
-		diedEvt := GameEvent{
-			Type:     EvtCreatureDied,
-			SourceID: permID,
-			PlayerID: controller,
-			FromZone: ZoneBattlefield,
-			ToZone:   ZoneGraveyard,
-		}
-		g.FireEvent(diedEvt)
-		g.checkAbilitiesForEvent(selfTriggers, &diedEvt, permID, controller)
 	}
 }
 
@@ -1695,6 +1621,26 @@ func (g *Game) FireEvent(evt GameEvent) {
 				remaining = append(remaining, dt)
 				continue
 			}
+			if evt.Type == EvtZoneChange {
+				// Default unset zone matchers to ZoneAny so callers that
+				// don't care about the from/to don't have to set them.
+				wantFrom := dt.MatchFromZone
+				if wantFrom == 0 {
+					wantFrom = ZoneAny
+				}
+				wantTo := dt.MatchToZone
+				if wantTo == 0 {
+					wantTo = ZoneAny
+				}
+				if wantFrom != ZoneAny && evt.FromZone != wantFrom {
+					remaining = append(remaining, dt)
+					continue
+				}
+				if wantTo != ZoneAny && evt.ToZone != wantTo {
+					remaining = append(remaining, dt)
+					continue
+				}
+			}
 			obj := &StackObject{
 				ID:            uuid.New(),
 				Controller:    dt.Controller,
@@ -1761,8 +1707,6 @@ func (g *Game) PutTriggersOnStack() {
 			if pt.event != nil && pt.event.Amount != 0 {
 				if gt, ok := pt.ability.(*GenericTriggered); ok {
 					switch gt.eventType {
-					case EvtEntersBattlefield:
-						obj.XValue = pt.event.Amount
 					case EvtZoneChange:
 						if pt.event.ToZone == ZoneBattlefield {
 							obj.XValue = pt.event.Amount
@@ -1782,20 +1726,12 @@ func (g *Game) PutTriggersOnStack() {
 		if pt.event != nil {
 			if gt, ok := pt.ability.(*GenericTriggered); ok {
 				switch gt.eventType {
-				case EvtEntersBattlefield:
-					// Pass the entering permanent's ID so effects can tap/modify it
-					if pt.event.SourceID != uuid.Nil {
-						obj.Targets = []uuid.UUID{pt.event.SourceID}
-					}
-					// Preserve X value from the resolving spell (for X-cost ETB triggers)
-					obj.XValue = pt.event.Amount
 				case EvtZoneChange:
-					// EvtZoneChange replaces the legacy specialized events.
-					// Route based on (FromZone, ToZone) so migrated triggers
-					// receive the same StackObject context as before.
+					// Route by (FromZone, ToZone) for stack-object context.
 					switch {
 					case pt.event.ToZone == ZoneBattlefield:
-						// Mirror EvtEntersBattlefield semantics.
+						// ETB: pass the entering permanent's ID so effects can
+						// tap/modify it; preserve X for X-cost ETB triggers.
 						if pt.event.SourceID != uuid.Nil {
 							obj.Targets = []uuid.UUID{pt.event.SourceID}
 						}
@@ -1803,11 +1739,11 @@ func (g *Game) PutTriggersOnStack() {
 					case pt.event.FromZone == ZoneBattlefield:
 						// Battlefield -> elsewhere (graveyard / exile / hand /
 						// library). Pass the leaving permanent's ID first
-						// (matches EvtCreatureDied's "dead creature ID"
-						// convention used by Creature Bond / Sengir Vampire-
-						// style triggers) and the controller's ID second
-						// (matches EvtPutIntoGraveyardFromBattlefield's "deal
-						// damage to its controller" convention).
+						// (the dies/leaves convention - Creature Bond reading
+						// the dead creature's toughness, Sengir Vampire
+						// finding it in the graveyard) and the controller's
+						// ID second (Dingus Egg "deal damage to its
+						// controller", post-LKI lookups).
 						if pt.event.SourceID != uuid.Nil {
 							obj.Targets = []uuid.UUID{pt.event.SourceID}
 							if pt.event.PlayerID != uuid.Nil {
@@ -1850,16 +1786,6 @@ func (g *Game) PutTriggersOnStack() {
 						if pt.event.SourceID != uuid.Nil {
 							obj.Targets = append(obj.Targets, pt.event.SourceID)
 						}
-					}
-				case EvtCreatureDied:
-					// Pass the dead creature's ID so effects can find it in graveyard
-					if pt.event.SourceID != uuid.Nil {
-						obj.Targets = []uuid.UUID{pt.event.SourceID}
-					}
-				case EvtPutIntoGraveyardFromBattlefield:
-					// Pass the controller's player ID so effects can deal damage/etc.
-					if pt.event.PlayerID != uuid.Nil {
-						obj.Targets = []uuid.UUID{pt.event.PlayerID}
 					}
 				case EvtDeclaredBlocker:
 					// Pass the blocker's ID and attacker's ID

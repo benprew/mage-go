@@ -65,7 +65,7 @@ func TestSetConditionData_StillReplaces(t *testing.T) {
 		called = true
 		return false
 	}
-	trig := mage.NewTriggered(core.EvtEntersBattlefield, false).SetCondition(cond)
+	trig := mage.NewTriggered(core.EvtZoneChange, false).SetCondition(cond)
 	// Replace.
 	trig.SetConditionData(mage.EventSourceIsSelf{})
 	// Original closure no longer invoked.

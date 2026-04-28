@@ -355,10 +355,11 @@ func registerEnchantments() {
 			WithStaticAbility(
 				GrantAbilityToAttached(Lifelink, AttachAura),
 				GrantTriggeredAbilityToAttached(
-					EvtCreatureDied, false,
+					EvtZoneChange, false,
 					AndTriggerCond{Conditions: []TriggerConditionData{
+						EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard},
+						EventSourceWasOfType{Type: TypeCreature},
 						EventSourceControlledByOpponent{},
-						EventSourceHasType{Type: TypeCreature},
 					}},
 					AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
 				),
