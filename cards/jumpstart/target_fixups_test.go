@@ -39,3 +39,16 @@ func TestDepartedDeckhandActivatedTargetsAnotherYouControl(t *testing.T) {
 	// Wall of Wood (not a Spirit) couldn't legally block Grizzly Bears.
 	g.AssertLife(gametest.PlayerB, 18)
 }
+
+// Rattlechains' static lets the controller cast OTHER Spirit spells at
+// instant speed (during the opponent's combat).
+func TestRattlechainsGrantsFlashToOtherSpirits(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rattlechains")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 3)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Will-o'-the-Wisp") // Spirit
+	g.CastSpell(2, core.BeginCombat, gametest.PlayerA, "Will-o'-the-Wisp")
+	g.StopAt(2, core.PostcombatMain)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Will-o'-the-Wisp", 1)
+}

@@ -1371,18 +1371,17 @@ func registerCreatures() {
 	// Flying
 	// When this creature enters, target Spirit gains hexproof until end of turn.
 	// You may cast Spirit spells as though they had flash.
-	// XXX: second clause ("You may cast Spirit spells as though they had flash")
-	// is not implemented. The engine has no "as though" cast-timing permission
-	// system — needs a CastTimingPermission continuous-effect primitive that
-	// allows casting matching cards from hand at instant speed regardless of
-	// the card's normal timing restriction.
 	Register("Rattlechains", func() Card {
+		spiritCard := NewCardFilter("Spirit card", func(c Card) bool {
+			return c.HasSubType("Spirit")
+		})
 		return NewCreature("Rattlechains", "{1}{U}", 2, 1,
 			WithSubTypes("Spirit"),
 			WithKeyword(Flash),
 			WithKeyword(Flying),
 			WithCastTarget(TargetCreature(HasSubType("Spirit"))),
 			WithETBEffect(GrantKeyword(Hexproof).Targeting(ToTarget()).Until(EndOfTurn)),
+			WithStaticAbility(CastAsThoughHadFlash(spiritCard)),
 		)
 	})
 
