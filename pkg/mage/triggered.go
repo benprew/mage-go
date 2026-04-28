@@ -33,6 +33,12 @@ type GenericTriggered struct {
 	Condition TriggerCondition
 	effects   []Effect
 	targets   []Target
+	// SelfGraveyard, when true, opts this trigger into firing from the
+	// captured-ability path inside Game.Sacrifice (and existing Destroy /
+	// PutPermanentIntoGraveyard paths) so it sees the LtB / sacrifice / dies
+	// event for the source itself even after the source has left the
+	// battlefield. Used by SacrificeSelfTrigger.
+	SelfGraveyard bool
 }
 
 // NewTriggered creates a GenericTriggered ability that fires on the given event type.
@@ -179,6 +185,20 @@ func EntersBattlefieldTrigger(effect Effect, optional bool) *GenericTriggered {
 func PutIntoGraveyardFromBattlefieldTrigger(effect Effect, optional bool) *GenericTriggered {
 	return NewTriggered(EvtPutIntoGraveyardFromBattlefield, optional, effect).
 		SetConditionData(EventSourceIsSelf{})
+}
+
+// SacrificeSelfTrigger fires when the source permanent is sacrificed (CR 701.16).
+// Unlike PutIntoGraveyardFromBattlefieldTrigger, this also fires on
+// Game.Sacrifice paths (where the source has already been removed from the
+// battlefield by the time the event is dispatched), via the captured-ability
+// list inside Sacrifice. Used by Terrarion-style "When this artifact is put
+// into a graveyard from the battlefield, draw a card" effects that need to
+// see sacrifices in addition to destruction.
+func SacrificeSelfTrigger(effect Effect, optional bool) *GenericTriggered {
+	t := NewTriggered(EvtPutIntoGraveyardFromBattlefield, optional, effect).
+		SetConditionData(EventSourceIsSelf{})
+	t.SelfGraveyard = true
+	return t
 }
 
 // ChooseOpponentOnETB sets the permanent's ChosenPlayer to the opponent on ETB.

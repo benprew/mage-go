@@ -884,6 +884,12 @@ func (g *Game) PutPermanentIntoGraveyard(perm *Permanent) {
 }
 
 // Sacrifice sacrifices a permanent (like destroy but doesn't check indestructible).
+// Self-referential triggers on the sacrificed permanent — those declared via
+// SacrificeSelfTrigger / DiesSelfTrigger — fire from the captured ability
+// list, mirroring Game.DestroyPermanent. Existing battlefield-only triggers
+// (PutIntoGraveyardFromBattlefieldTrigger) intentionally do not fire here for
+// backwards compatibility; cards that need "when sacrificed" semantics should
+// use the explicit SacrificeSelfTrigger constructor.
 func (g *Game) Sacrifice(perm *Permanent) {
 	controller := perm.Controller
 	owner := perm.Card.Owner()
@@ -895,6 +901,19 @@ func (g *Game) Sacrifice(perm *Permanent) {
 	permID := perm.ID()
 	card := perm.Card
 
+	// Capture abilities before removal so opt-in self triggers can fire
+	// after the permanent has left the battlefield. Filter to abilities
+	// flagged as self-graveyard triggers so existing
+	// PutIntoGraveyardFromBattlefieldTrigger semantics on cards like Lich
+	// stay battlefield-only.
+	selfTriggers := make([]Ability, 0, len(perm.RuntimeAbilities))
+	for _, a := range perm.RuntimeAbilities {
+		inner := UnwrapAbility(a)
+		if gt, ok := inner.(*GenericTriggered); ok && gt.SelfGraveyard {
+			selfTriggers = append(selfTriggers, a)
+		}
+	}
+
 	g.RemoveFromBattlefield(perm)
 
 	p := g.GetPlayer(owner)
@@ -902,27 +921,33 @@ func (g *Game) Sacrifice(perm *Permanent) {
 		p.AddToGraveyard(card)
 	}
 
-	g.FireEvent(GameEvent{
+	graveyardEvt := GameEvent{
 		Type:     EvtPutIntoGraveyardFromBattlefield,
 		SourceID: permID,
 		PlayerID: controller,
 		Flag:     true, // Flag=true means this was a sacrifice (not destroy)
-	})
+	}
+	g.FireEvent(graveyardEvt)
+	g.checkAbilitiesForEvent(selfTriggers, &graveyardEvt, permID, controller)
 
-	g.FireEvent(GameEvent{
+	sacEvt := GameEvent{
 		Type:     EvtSacrifice,
 		SourceID: permID,
 		PlayerID: controller,
 		Flag:     isCreature, // Flag=true means the sacrificed permanent was a creature
-	})
+	}
+	g.FireEvent(sacEvt)
+	g.checkAbilitiesForEvent(selfTriggers, &sacEvt, permID, controller)
 
 	if isCreature {
 		g.creatureDeathsThisTurn++
-		g.FireEvent(GameEvent{
+		diedEvt := GameEvent{
 			Type:     EvtCreatureDied,
 			SourceID: permID,
 			PlayerID: controller,
-		})
+		}
+		g.FireEvent(diedEvt)
+		g.checkAbilitiesForEvent(selfTriggers, &diedEvt, permID, controller)
 	}
 }
 
