@@ -646,6 +646,22 @@ Custom triggers with SetConditionData (composable data predicates):
 The optional flag (second arg) controls whether the controller may decline:
 false = mandatory, true = "you may" (AI/player can decline).
 
+## "You may pay {N}. If you do, ___" (CR 603.4)
+
+Triggers of the form "Whenever X, you may pay {cost}. If you do, ___" prompt
+the controller for an optional payment mid-resolution. Wrap the inner effect
+with [MayPayMana]:
+
+	mage.MayPayMana("{1}{W}", "put X +1/+1 counters on target creature",
+	    inner)
+
+On Apply, the wrapper calls Player.ChooseMayAbility with the description; if
+the player accepts AND Game.TryPayCostFromLands succeeds for the cost, the
+inner Effect runs with the same sourceID/controller/targets the outer
+trigger received. If the player declines or the cost cannot be paid,
+nothing happens (no partial payment is taken). Used by Cradle of Vitality,
+Kels Fight Fixer, Emiel the Blessed, and similar abilities.
+
 Predicates implement [TriggerConditionData]:
 
 	type TriggerConditionData interface {

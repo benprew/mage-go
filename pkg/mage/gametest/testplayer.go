@@ -49,6 +49,13 @@ type TestPlayer struct {
 	combatDamageAssignment    map[string]map[string]int
 	chooseScryDecisions       []scryDecision
 	chooseDamageDistribution  []map[string]int
+	chooseMayAbility          []bool
+}
+
+// QueueMayAbilityChoices records the next N may-ability decisions in order.
+// ChooseMayAbility consumes them FIFO; once exhausted, it accepts by default.
+func (tp *TestPlayer) QueueMayAbilityChoices(choices ...bool) {
+	tp.chooseMayAbility = append(tp.chooseMayAbility, choices...)
 }
 
 // scryDecision is one queued scry placement: cards to send to the bottom
@@ -244,8 +251,14 @@ func (tp *TestPlayer) ChooseTargets(possible []uuid.UUID, min, max int, g *mage.
 	return nil
 }
 
-// ChooseMayAbility always accepts optional abilities.
+// ChooseMayAbility consumes a queued decision (FIFO) if any; otherwise
+// accepts by default.
 func (tp *TestPlayer) ChooseMayAbility(description string) bool {
+	if len(tp.chooseMayAbility) > 0 {
+		c := tp.chooseMayAbility[0]
+		tp.chooseMayAbility = tp.chooseMayAbility[1:]
+		return c
+	}
 	return true
 }
 
