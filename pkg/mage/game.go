@@ -72,6 +72,11 @@ type Game struct {
 	// during cleanup. CR 305.2 / Explore-style effects.
 	extraLandPlaysThisTurn map[uuid.UUID]int
 
+	// Per-source flag set by OptionalCost: true if the controller chose to
+	// pay the optional cost most recently. Resolution-time effects branch on
+	// LastCostOptionalPaid(sourceID).
+	optionalCostPaid map[uuid.UUID]bool
+
 	// Damage tracking: maps target permanent ID -> set of source permanent IDs that dealt damage this turn
 	damageDealtBy map[uuid.UUID]map[uuid.UUID]bool
 

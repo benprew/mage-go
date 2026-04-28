@@ -134,6 +134,9 @@ func (g *Game) Clone() *Game {
 	if g.extraLandPlaysThisTurn != nil {
 		c.extraLandPlaysThisTurn = cloneUUIDIntMap(g.extraLandPlaysThisTurn)
 	}
+	if g.optionalCostPaid != nil {
+		c.optionalCostPaid = cloneUUIDBoolMap(g.optionalCostPaid)
+	}
 
 	// Deep copy cast-from-exile permissions and exile-instead-of-graveyard tags.
 	if len(g.castFromExilePermissions) > 0 {
