@@ -323,7 +323,7 @@ func registerArtifacts() {
 				WithCost(TapSourceCost()),
 				WithCost(SacrificeSourceCost()),
 			),
-			WithAbility(LeavesBattlefieldToGraveyardTrigger(
+			WithAbility(DiesTrigger(
 				DrawCards(Fixed(1)), false,
 			)),
 		)

@@ -1800,12 +1800,19 @@ func (g *Game) PutTriggersOnStack() {
 							obj.Targets = []uuid.UUID{pt.event.SourceID}
 						}
 						obj.XValue = pt.event.Amount
-					case pt.event.FromZone == ZoneBattlefield && pt.event.ToZone == ZoneGraveyard:
-						// Mirror EvtPutIntoGraveyardFromBattlefield: pass the
-						// controller's player ID so effects like "deal damage
-						// to its controller" / "draw a card" target correctly.
-						if pt.event.PlayerID != uuid.Nil {
-							obj.Targets = []uuid.UUID{pt.event.PlayerID}
+					case pt.event.FromZone == ZoneBattlefield:
+						// Battlefield -> elsewhere (graveyard / exile / hand /
+						// library). Pass the leaving permanent's ID first
+						// (matches EvtCreatureDied's "dead creature ID"
+						// convention used by Creature Bond / Sengir Vampire-
+						// style triggers) and the controller's ID second
+						// (matches EvtPutIntoGraveyardFromBattlefield's "deal
+						// damage to its controller" convention).
+						if pt.event.SourceID != uuid.Nil {
+							obj.Targets = []uuid.UUID{pt.event.SourceID}
+							if pt.event.PlayerID != uuid.Nil {
+								obj.Targets = append(obj.Targets, pt.event.PlayerID)
+							}
 						}
 					}
 				case EvtDrawStep, EvtCardDrawn:

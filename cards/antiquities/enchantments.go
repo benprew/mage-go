@@ -306,7 +306,7 @@ func registerEnchantments() {
 			),
 			// When Song leaves the battlefield, continue the effect until end of turn
 			WithAbility(
-				NewTriggered(EvtLeavesBattlefield, false,
+				OnLeaveZone(ZoneBattlefield, ZoneAny,
 					// TODO: convert to pipeline — needs "add multiple continuous effects" step
 					FuncEffect("continue Titania's Song effect until end of turn",
 						EffectProperties{},
@@ -322,7 +322,8 @@ func registerEnchantments() {
 							g.AddContinuousEffect(effPT)
 							return nil
 						}),
-				).SetConditionData(EventSourceIsSelf{}),
+					false,
+				),
 			),
 		)
 	})

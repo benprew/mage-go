@@ -429,10 +429,14 @@ func (s selectTargetPermanentController) Select(g GameReader, _, _ uuid.UUID, ta
 	if len(targets) == 0 {
 		return nil
 	}
-	perm := g.FindPermanent(targets[0])
-	if perm == nil {
-		return nil
+	if game, ok := g.(*Game); ok {
+		if view := game.LookupObject(targets[0]); view != nil {
+			return []uuid.UUID{view.ViewController()}
+		}
 	}
-	return []uuid.UUID{perm.Controller}
+	if perm := g.FindPermanent(targets[0]); perm != nil {
+		return []uuid.UUID{perm.Controller}
+	}
+	return nil
 }
 func (s selectTargetPermanentController) Text() string { return "that permanent's controller" }

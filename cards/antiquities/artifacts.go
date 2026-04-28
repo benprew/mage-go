@@ -393,7 +393,7 @@ func registerArtifacts() {
 	Register("Tablet of Epityr", func() Card {
 		return NewArtifact("Tablet of Epityr", "{1}",
 			WithAbility(
-				NewTriggered(EvtPutIntoGraveyardFromBattlefield, true,
+				NewTriggered(EvtZoneChange, true,
 					Pipeline("you may pay {1}; if you do, gain 1 life",
 						EffectProperties{Outcome: OutcomeBenefit},
 						IfElse("pay {1} to gain 1 life",
@@ -403,6 +403,7 @@ func registerArtifacts() {
 					),
 				).
 					SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+						EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard},
 						EventPlayerIsController{},
 						SpellCastIsType{Type: TypeArtifact},
 					}}),
@@ -517,7 +518,7 @@ func registerArtifacts() {
 			),
 			// When Tawnos's Coffin leaves the battlefield, return exiled creature
 			WithAbility(
-				NewTriggered(EvtLeavesBattlefield, false,
+				OnLeaveZone(ZoneBattlefield, ZoneAny,
 					// TODO: convert to pipeline — needs exile-with-noted-state tracking
 					FuncEffect("return exiled creature to battlefield",
 						EffectProperties{},
@@ -525,7 +526,8 @@ func registerArtifacts() {
 							coffinReturnExiled(g, sourceID)
 							return nil
 						}),
-				).SetConditionData(EventSourceIsSelf{}),
+					false,
+				),
 			),
 			// When Tawnos's Coffin becomes untapped, return exiled creature
 			WithAbility(
@@ -636,7 +638,7 @@ func registerArtifacts() {
 	Register("Urza's Miter", func() Card {
 		return NewArtifact("Urza's Miter", "{3}",
 			WithAbility(
-				NewTriggered(EvtPutIntoGraveyardFromBattlefield, true,
+				NewTriggered(EvtZoneChange, true,
 					Pipeline("pay {3} to draw a card",
 						EffectProperties{Outcome: OutcomeBenefit},
 						IfElse("pay {3} to draw",
@@ -646,6 +648,7 @@ func registerArtifacts() {
 					),
 				).
 					SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+						EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard},
 						EventFlagIsFalse{},
 						SpellCastIsType{Type: TypeArtifact},
 						EventPlayerIsController{},

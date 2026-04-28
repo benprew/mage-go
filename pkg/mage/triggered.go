@@ -222,15 +222,14 @@ func PutIntoGraveyardFromBattlefieldTrigger(effect Effect, optional bool) *Gener
 		}})
 }
 
-// LeavesBattlefieldToGraveyardTrigger fires whenever the source is put into a
-// graveyard from the battlefield, via any path (lethal damage, destroy,
-// sacrifice, state-based effect, etc.). Oracle wording "When CARDNAME is put
-// into a graveyard from the battlefield..." (Terrarion-style artifacts) per
-// CR 603.6c (leaves-the-battlefield triggers look back at the permanent's
-// LKI). With CR 700.4 collapsing sacrifice into "put into a graveyard from
-// the battlefield," this constructor and PutIntoGraveyardFromBattlefieldTrigger
-// now fire on identical sets of paths and could be unified.
-func LeavesBattlefieldToGraveyardTrigger(effect Effect, optional bool) *GenericTriggered {
+// DiesTrigger fires when the source goes to the graveyard from the
+// battlefield via any path (lethal damage, destroy, sacrifice, SBA).
+// Implements Oracle wording "When CARDNAME dies..." for creatures
+// (CR 700.4) and "When CARDNAME is put into a graveyard from the
+// battlefield..." for non-creatures (Terrarion-style artifacts). The
+// engine consults LKI per CR 603.6c so the trigger fires after the
+// permanent has left the battlefield.
+func DiesTrigger(effect Effect, optional bool) *GenericTriggered {
 	return OnLeaveZone(ZoneBattlefield, ZoneGraveyard, effect, optional)
 }
 

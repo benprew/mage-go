@@ -166,7 +166,7 @@ func registerArtifacts() {
 			),
 			// Whenever any nontoken Arabian Nights permanent enters (not self), sacrifice it
 			WithAbility(
-				NewTriggered(EvtEntersBattlefield, false,
+				NewTriggered(EvtZoneChange, false,
 					// TODO: convert to pipeline — needs ForEach with nontoken + set filter + sacrifice-excluding-self
 					FuncEffect("sacrifice entering Arabian Nights permanent",
 						EffectProperties{Outcome: OutcomeDetriment},
@@ -192,7 +192,7 @@ func registerArtifacts() {
 							return false
 						}
 						return catalog.Global().CardInSet("ARN", perm.Name()) && !perm.Card.(*BaseCard).IsToken()
-					}),
+					}).AndConditionData(EventZoneChangeMatches{From: ZoneAny, To: ZoneBattlefield}),
 			),
 			// Continuous: block casting/playing Arabian Nights cards
 			WithStaticAbility(

@@ -117,8 +117,8 @@ func registerEnchantments() {
 			),
 			// "When there are no creatures on the battlefield, sacrifice Drop of Honey."
 			// State trigger: fires when a creature leaves and no creatures remain
-			WithAbility(NewTriggered(EvtLeavesBattlefield, false, SacrificeSource()).
-				SetConditionData(NoBattlefieldPermanentMatching{Filter: IsCreature})),
+			WithAbility(NewTriggered(EvtZoneChange, false, SacrificeSource()).AndConditionData(EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneAny}).
+				AndConditionData(NoBattlefieldPermanentMatching{Filter: IsCreature})),
 		)
 	})
 
@@ -187,7 +187,7 @@ func registerEnchantments() {
 			),
 			// When the chosen player controls no nontoken permanents of the chosen color, sacrifice Jihad
 			WithAbility(
-				NewTriggered(EvtLeavesBattlefield, false,
+				NewTriggered(EvtZoneChange, false,
 					SacrificeSource(),
 				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 					perm := g.FindPermanent(sourceID)
@@ -207,7 +207,7 @@ func registerEnchantments() {
 						}
 					}
 					return true
-				}),
+				}).AndConditionData(EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneAny}),
 			),
 		)
 	})
