@@ -1171,13 +1171,6 @@ func registerCreatures() {
 	// 2/2
 	// Flying
 	// Creatures you control have "Whenever this creature becomes the target of a spell or ability for the first time each turn, counter that spell or ability."
-	// XXX: GrantTriggeredAbilityToAll unconditionally skips the source permanent in
-	// pkg/mage/continuous_effects.go (`if p.ID() == sourceID { continue }`), so Kira
-	// would never grant the trigger to herself even though Oracle's "creatures you
-	// control" filter clearly includes her. Workaround: register an own-copy trigger
-	// directly on Kira. A proper fix needs an opt-in flag on GrantTriggeredAbilityToAll
-	// (e.g. IncludeSource) so lord-style "creatures you control" grants can match the
-	// source when the filter does — out of scope for cards/.
 	Register("Kira, Great Glass-Spinner", func() Card {
 		// "Counter that spell or ability." Auto-bind on EvtBecomesTarget passes
 		// the targeted object as targets[0] and the offending spell/ability source
@@ -1193,16 +1186,12 @@ func registerCreatures() {
 				return nil
 			},
 		)
-		// Kira's own copy of the granted trigger (see XXX above).
-		ownCopy := NewTriggered(EvtBecomesTarget, false, counterThatSpellOrAbility).
-			SetConditionData(EventTargetIsSelfFirstTimeThisTurn{})
 		return NewCreature("Kira, Great Glass-Spinner", "{1}{U}{U}", 2, 2,
 			WithSubTypes("Spirit"),
 			WithSuperTypes(SuperLegendary),
 			WithKeyword(Flying),
-			WithAbility(ownCopy),
 			WithStaticAbility(
-				GrantTriggeredAbilityToAll(
+				GrantTriggeredAbilityToAllIncludingSource(
 					EvtBecomesTarget, false,
 					EventTargetIsSelfFirstTimeThisTurn{},
 					IsCreature,
@@ -5218,12 +5207,11 @@ func registerCreatures() {
 	// Creature — Cat
 	// 4/5
 	// Whenever one or more non-Human creatures you control deal combat damage to a player, draw a card.
-	// XXX: needs a once-per-combat aggregator for "Whenever one or more
-	// creatures deal combat damage to a player" (analogous to
-	// WheneverOneOrMoreCreaturesAttackTrigger / EvtAttackersDeclared but for
-	// the combat-damage step). EvtDamageDealt is per-source/per-target; firing
-	// once across all sources requires a new EvtCombatDamageDealt aggregate
-	// fired at the end of CR 510.2 first-/regular-strike damage assignment.
+	// XXX: EvtCombatDamageDealt aggregator only tracks (controller, recipient,
+	// total amount) — it does NOT remember which creatures contributed damage.
+	// So we can't filter on "non-Human" without simplifying. Engine gap:
+	// combatDamageThisStep needs to record source IDs (or aggregate per source)
+	// before this card can be wired faithfully.
 	Register("Keeper of Fables", func() Card {
 		return NewCreature("Keeper of Fables", "{3}{G}{G}", 4, 5,
 			WithSubTypes("Cat"),
@@ -5473,11 +5461,49 @@ func registerCreatures() {
 	// 2/3
 	// Whenever another creature enters, its controller may draw a card if its power is greater than each other creature's power.
 	// {G}, {T}: Add X mana in any combination of colors, where X is the greatest power among creatures you control.
-	// XXX: requires power-comparison ETB trigger and "X mana in any combination of colors" mana production
+	// XXX: ETB trigger half ("if its power is greater than each other creature's power")
+	// requires a power-comparison ETB-trigger primitive that inspects the entering
+	// creature's power against all other creatures (any controller) at the time of
+	// the event. EvtEntersBattlefield + a custom condition can almost express it,
+	// but the may-draw-controlled-by-creature's-controller piece needs a "selected
+	// player = entering creature's controller" trigger-target hookup that the
+	// existing helpers don't expose. Engine gap.
 	Register("Selvala, Heart of the Wilds", func() Card {
+		// {G}, {T}: Add X mana in any combination of colors, where X is the
+		// greatest power among creatures you control. Implemented as a regular
+		// activated ability (FuncEffect into mana pool) because ManaProduction
+		// has no dynamic-Amount form; AnyCombination=true with a fixed Amount
+		// can't compute X. This still respects "any combination of colors"
+		// (ChooseManaColor per mana point), but goes through the stack rather
+		// than CR 605's mana-ability fast path.
 		return NewCreature("Selvala, Heart of the Wilds", "{1}{G}{G}", 2, 3,
 			WithSubTypes("Elf", "Scout"),
 			WithSuperTypes(SuperLegendary),
+			WithActivatedAbility(
+				FuncEffect(
+					"add X mana in any combination of colors, where X is the greatest power among creatures you control",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						x := 0
+						for _, c := range g.FilterBattlefield(And(IsCreature, ControlledBy(controller))) {
+							if pw := c.CurrentPower(g); pw > x {
+								x = pw
+							}
+						}
+						for i := 0; i < x; i++ {
+							color := p.ChooseManaColor("Selvala: add mana of any color")
+							p.ManaPool().Add(color, 1)
+						}
+						return nil
+					},
+				),
+				ManaCostOf("{G}"),
+				WithCost(TapSourceCost()),
+			),
 		)
 	})
 

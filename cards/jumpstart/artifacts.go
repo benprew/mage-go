@@ -314,9 +314,6 @@ func registerArtifacts() {
 	// This artifact enters tapped.
 	// {2}, {T}, Sacrifice this artifact: Add two mana in any combination of colors.
 	// When this artifact is put into a graveyard from the battlefield, draw a card.
-	// XXX: self-graveyard trigger doesn't fire when sacrificed because Game.Sacrifice
-	// removes the permanent before firing the event and doesn't capture self-abilities
-	// (unlike Game.Destroy which uses checkAbilitiesForEvent). Engine gap.
 	Register("Terrarion", func() Card {
 		return NewArtifact("Terrarion", "{1}",
 			WithKeyword(EntersTapped),
@@ -326,7 +323,7 @@ func registerArtifacts() {
 				WithCost(TapSourceCost()),
 				WithCost(SacrificeSourceCost()),
 			),
-			WithAbility(PutIntoGraveyardFromBattlefieldTrigger(
+			WithAbility(SacrificeSelfTrigger(
 				DrawCards(Fixed(1)), false,
 			)),
 		)

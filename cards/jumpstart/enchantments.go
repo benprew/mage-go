@@ -31,9 +31,35 @@ func registerEnchantments() {
 	// Each creature you control assigns combat damage equal to its toughness rather than its power.
 	// {G}: Target creature with defender can attack this turn as though it didn't have defender.
 	// {2}{G}: Creatures you control get +0/+1 until end of turn.
-	// XXX: requires "assigns combat damage equal to toughness" engine support
 	Register("Assault Formation", func() Card {
-		return NewEnchantment("Assault Formation", "{1}{G}")
+		return NewEnchantment("Assault Formation", "{1}{G}",
+			WithStaticAbility(AssignsDamageEqualToToughnessForCreaturesYouControl()),
+			WithActivatedAbility(
+				FuncEffect(
+					"target creature with defender can attack this turn as though it didn't have defender",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 || targets[0] == uuid.Nil {
+							return nil
+						}
+						eff := TargetEffect(LayerAbility, EndOfTurn, targets[0], func(g *Game, target *Permanent) error {
+							g.RevokeAttr(target.ID(), Defender)
+							return nil
+						})
+						eff.SetSourceID(sourceID)
+						g.AddContinuousEffect(eff)
+						g.ApplyContinuousEffects()
+						return nil
+					},
+				),
+				ManaCostOf("{G}"),
+				WithTarget(TargetCreature(HasKeywordFilter(Defender))),
+			),
+			WithActivatedAbility(
+				BoostMatchingUntilEndOfTurn(Fixed(0), Fixed(1), IsCreature),
+				ManaCostOf("{2}{G}"),
+			),
+		)
 	})
 
 	// Barrage of Expendables {R}
@@ -447,7 +473,6 @@ func registerEnchantments() {
 	// Flash
 	// Enchant creature
 	// Enchanted creature can't attack or block, and its activated abilities can't be activated.
-	// XXX: "activated abilities can't be activated" attr not yet supported
 	Register("Lawmage's Binding", func() Card {
 		return NewAura("Lawmage's Binding", "{1}{W}{U}",
 			WithKeyword(Flash),
@@ -457,6 +482,7 @@ func registerEnchantments() {
 					g.RevokeAttr(target.ID(), AttrCanBlock)
 					return nil
 				}),
+				PreventAttachedFromActivatingNonManaAbilities(AttachAura),
 			),
 		)
 	})
