@@ -167,25 +167,26 @@ func (c EventSourceMatchesPermanentFilter) CheckTriggerCond(evt *GameEvent, g Ga
 	return perm != nil && c.Filter.Match(perm, g.(*Game))
 }
 
-// EventSourceWasOfType checks the LKI for a permanent that has just left the
-// battlefield. Used by leave-/dies-triggers fired on EvtZoneChange where the
-// permanent is no longer findable in g.battlefield (CR 603.6c). Falls back to
-// FindPermanent for triggers that fire while the permanent still exists
-// (e.g. EvtZoneChange where ToZone=Battlefield, an enter event).
+// EventSourceWasOfType checks the type of an event's source object via the
+// unified LKIView, transparently consulting either the live permanent or
+// the LKI snapshot (CR 603.6c / 603.10). Used by leave-/dies-triggers
+// fired on EvtZoneChange where the permanent may already be gone from the
+// battlefield, and equally usable for ETB triggers where the source is
+// still live.
 type EventSourceWasOfType struct {
 	Type CardType
 }
 
 func (c EventSourceWasOfType) CheckTriggerCond(evt *GameEvent, g GameReader, _, _ uuid.UUID) bool {
-	if perm := g.FindPermanent(evt.SourceID); perm != nil {
-		return perm.HasType(c.Type)
+	game, ok := g.(*Game)
+	if !ok {
+		return false
 	}
-	if game, ok := g.(*Game); ok {
-		if lki := game.LKI(evt.SourceID); lki != nil {
-			return lki.HasType(c.Type)
-		}
+	view := game.LookupObject(evt.SourceID)
+	if view == nil {
+		return false
 	}
-	return false
+	return view.ViewHasType(c.Type)
 }
 
 // EventZoneChangeMatches checks that an EvtZoneChange event's FromZone and
