@@ -304,6 +304,16 @@ func cloneStackObject(obj *StackObject) *StackObject {
 		EventAmount: obj.EventAmount,
 		IsCopy:      obj.IsCopy,
 	}
+	if len(obj.ModalTargets) > 0 {
+		clone.ModalTargets = make([][]uuid.UUID, len(obj.ModalTargets))
+		for i, t := range obj.ModalTargets {
+			if len(t) > 0 {
+				cp := make([]uuid.UUID, len(t))
+				copy(cp, t)
+				clone.ModalTargets[i] = cp
+			}
+		}
+	}
 	// Share Effect interface refs.
 	if len(obj.Effects) > 0 {
 		clone.Effects = make([]Effect, len(obj.Effects))

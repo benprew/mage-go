@@ -72,6 +72,13 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 
 	cp.Targets = append([]uuid.UUID(nil), original.Targets...)
 
+	if len(original.ModalTargets) > 0 {
+		cp.ModalTargets = make([][]uuid.UUID, len(original.ModalTargets))
+		for i, t := range original.ModalTargets {
+			cp.ModalTargets[i] = append([]uuid.UUID(nil), t...)
+		}
+	}
+
 	if len(original.DamageDistribution) > 0 {
 		cp.DamageDistribution = make(map[uuid.UUID]int, len(original.DamageDistribution))
 		for k, v := range original.DamageDistribution {
@@ -93,6 +100,21 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 func (g *Game) repromptTargetsForCopy(copyObj *StackObject, card Card) {
 	controller := g.GetPlayer(copyObj.Controller)
 	if controller == nil {
+		return
+	}
+
+	if ms, ok := getModalSpellAbility(card); ok {
+		modeIdx := copyObj.ModeChoice
+		if modeIdx < 0 || modeIdx >= len(ms.Modes()) {
+			return
+		}
+		mode := ms.Modes()[modeIdx]
+		newTargets := g.promptTargetsForList(controller.PlayerID(), card, mode.Targets)
+		if copyObj.ModalTargets == nil {
+			copyObj.ModalTargets = make([][]uuid.UUID, len(ms.Modes()))
+		}
+		copyObj.ModalTargets[modeIdx] = newTargets
+		copyObj.Targets = newTargets
 		return
 	}
 

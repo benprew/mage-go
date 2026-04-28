@@ -104,10 +104,29 @@ Examples:
 	    mage.NewTargetedSpell(mage.TargetPlayer(), mage.DrawCards(mage.Fixed(3))),
 	)
 
-	// Modal spell (Healing Salve): set modes on the card
+	// Modal spell, legacy "branch on ModeValue" form (Healing Salve):
 	c := mage.NewInstant("Healing Salve", "{W}", spell)
 	c.SetModes([]string{"Gain 3 life", "Prevent 3 damage"})
 	// Inside the FuncEffect, call g.ModeValue() to read the chosen mode (0 or 1).
+
+	// Modal spell, full per-mode targets and effects (Crushing Canopy):
+	canopy := mage.NewInstant("Crushing Canopy", "{3}{G}", nil)
+	canopy.AddAbility(mage.NewModalSpell([]mage.Mode{
+	    {
+	        Label:   "Destroy target creature with flying",
+	        Targets: []mage.Target{mage.TargetCreature(mage.HasKeywordFilter(core.Flying))},
+	        Effects: []mage.Effect{mage.DestroyTarget()},
+	    },
+	    {
+	        Label:   "Destroy target enchantment",
+	        Targets: []mage.Target{mage.TargetPermanent(mage.IsEnchantment)},
+	        Effects: []mage.Effect{mage.DestroyTarget()},
+	    },
+	}))
+	// At cast time, the engine prompts Player.ChooseMode and gathers
+	// targets only for the chosen mode (CR 700.2). At resolution, only
+	// that mode's effects run. The chosen mode index is stored on
+	// StackObject.ModeChoice; per-mode targets on StackObject.ModalTargets.
 
 # Pre-Built Effects Catalog
 
@@ -1099,6 +1118,39 @@ For spell/land/ability execution on clones, use the standard methods:
 	g.CastSpellByID(playerID, cardID, targets, xValue)    // put on stack (call ResolveStack after)
 	g.ActivateAbilityByIndex(playerID, permID, idx, tgts) // put on stack (or handle mana ability)
 	g.ResolveStack()                                      // drain stack atomically
+
+# Modal Spells (CR 700.2)
+
+A modal spell offers the controller a choice of two or more options at
+cast time. Use NewModalSpell to declare per-mode targets and effects:
+
+	mage.NewModalSpell([]mage.Mode{
+	    {Label: "...", Targets: []mage.Target{...}, Effects: []mage.Effect{...}},
+	    {Label: "...", Targets: []mage.Target{...}, Effects: []mage.Effect{...}},
+	})
+
+The engine prompts Player.ChooseMode at cast time, then gathers targets
+only for the chosen mode (CR 700.2d). The chosen mode index is recorded on
+StackObject.ModeChoice; per-mode target lists on StackObject.ModalTargets.
+At resolution, only the chosen mode's Effects run.
+
+NewModalSpell panics with fewer than two modes (modal spells have at least
+two options by definition).
+
+For modal triggered abilities (Trusty Retriever, Entomber Exarch ETB), use
+ModalTriggerEffect — it prompts ChooseMode at trigger resolution and
+dispatches to the chosen ModalTriggerMode.Resolve callback. Per-mode
+targets are picked at put-on-stack time via the trigger's AddTarget
+declarations (CR 603.3d).
+
+	mage.ModalTriggerEffect("Trusty Retriever", []mage.ModalTriggerMode{
+	    {Label: "Return target ...", Resolve: func(g, src, ctrl, targets) error {...}},
+	    {Label: "Draw a card",        Resolve: func(g, src, ctrl, targets) error {...}},
+	})
+
+The legacy SetModes / g.ModeValue branch-inside-FuncEffect API still works
+for cards whose modes don't differ in target shape; both APIs share the
+same currentMode plumbing.
 
 # Spell-Copy Primitive (CR 706, 707.10)
 

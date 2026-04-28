@@ -1938,22 +1938,37 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	// Remove from hand
 	p.RemoveFromHand(card.ID())
 
-	// Build effects from spell abilities
+	// Build effects from spell abilities. Modal spells built with
+	// NewModalSpell route through gatherModalSpellTargets; the chosen mode
+	// supplies its own effects and targets.
 	var effects []Effect
-	for _, a := range card.Abilities() {
-		if sa, ok := a.(*SpellAbility); ok {
-			effects = append(effects, sa.Effects()...)
+	var modalTargets [][]uuid.UUID
+	modeChoice := 0
+	if ms, ok := getModalSpellAbility(card); ok {
+		mIdx, mTargets := g.gatherModalSpellTargets(p, card, ms)
+		modeChoice = mIdx
+		effects = append(effects, ms.modes[mIdx].Effects...)
+		targets = mTargets
+		modalTargets = make([][]uuid.UUID, len(ms.modes))
+		modalTargets[mIdx] = mTargets
+	} else {
+		for _, a := range card.Abilities() {
+			if sa, ok := a.(*SpellAbility); ok {
+				effects = append(effects, sa.Effects()...)
+			}
 		}
 	}
 
 	obj := &StackObject{
-		ID:         uuid.New(),
-		Card:       card,
-		Controller: playerID,
-		SourceID:   card.ID(),
-		Effects:    effects,
-		Targets:    targets,
-		XValue:     xValue,
+		ID:           uuid.New(),
+		Card:         card,
+		Controller:   playerID,
+		SourceID:     card.ID(),
+		Effects:      effects,
+		Targets:      targets,
+		XValue:       xValue,
+		ModeChoice:   modeChoice,
+		ModalTargets: modalTargets,
 	}
 
 	if modes := card.Modes(); len(modes) > 0 {

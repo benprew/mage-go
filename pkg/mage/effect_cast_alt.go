@@ -175,22 +175,37 @@ func (g *Game) castCardFromZone(playerID, cardID uuid.UUID, zone Zone, targets [
 		return fmt.Errorf("could not remove %s from %s", card.Name(), zone)
 	}
 
-	// Build the spell ability effect list.
+	// Build the spell ability effect list. Modal spells route through
+	// gatherModalSpellTargets so the chosen mode supplies its own
+	// targets and effects (CR 700.2).
 	var effects []Effect
-	for _, a := range card.Abilities() {
-		if sa, ok := a.(*SpellAbility); ok {
-			effects = append(effects, sa.Effects()...)
+	var modalTargets [][]uuid.UUID
+	modeChoice := 0
+	if ms, ok := getModalSpellAbility(card); ok {
+		mIdx, mTargets := g.gatherModalSpellTargets(p, card, ms)
+		modeChoice = mIdx
+		effects = append(effects, ms.modes[mIdx].Effects...)
+		targets = mTargets
+		modalTargets = make([][]uuid.UUID, len(ms.modes))
+		modalTargets[mIdx] = mTargets
+	} else {
+		for _, a := range card.Abilities() {
+			if sa, ok := a.(*SpellAbility); ok {
+				effects = append(effects, sa.Effects()...)
+			}
 		}
 	}
 
 	obj := &StackObject{
-		ID:         uuid.New(),
-		Card:       card,
-		Controller: playerID,
-		SourceID:   card.ID(),
-		Effects:    effects,
-		Targets:    targets,
-		XValue:     xValue,
+		ID:           uuid.New(),
+		Card:         card,
+		Controller:   playerID,
+		SourceID:     card.ID(),
+		Effects:      effects,
+		Targets:      targets,
+		XValue:       xValue,
+		ModeChoice:   modeChoice,
+		ModalTargets: modalTargets,
 	}
 
 	if modes := card.Modes(); len(modes) > 0 {
@@ -334,19 +349,32 @@ func (g *Game) CastExiledCardWithPermission(playerID, cardID uuid.UUID, targets 
 
 	pl := g.GetPlayer(playerID)
 	var effects []Effect
-	for _, a := range card.Abilities() {
-		if sa, ok := a.(*SpellAbility); ok {
-			effects = append(effects, sa.Effects()...)
+	var modalTargets [][]uuid.UUID
+	modeChoice := 0
+	if ms, ok := getModalSpellAbility(card); ok {
+		mIdx, mTargets := g.gatherModalSpellTargets(pl, card, ms)
+		modeChoice = mIdx
+		effects = append(effects, ms.modes[mIdx].Effects...)
+		targets = mTargets
+		modalTargets = make([][]uuid.UUID, len(ms.modes))
+		modalTargets[mIdx] = mTargets
+	} else {
+		for _, a := range card.Abilities() {
+			if sa, ok := a.(*SpellAbility); ok {
+				effects = append(effects, sa.Effects()...)
+			}
 		}
 	}
 	obj := &StackObject{
-		ID:         uuid.New(),
-		Card:       card,
-		Controller: playerID,
-		SourceID:   card.ID(),
-		Effects:    effects,
-		Targets:    targets,
-		XValue:     xValue,
+		ID:           uuid.New(),
+		Card:         card,
+		Controller:   playerID,
+		SourceID:     card.ID(),
+		Effects:      effects,
+		Targets:      targets,
+		XValue:       xValue,
+		ModeChoice:   modeChoice,
+		ModalTargets: modalTargets,
 	}
 	if modes := card.Modes(); len(modes) > 0 {
 		obj.ModeChoice = pl.ChooseMode(modes, card.Name())

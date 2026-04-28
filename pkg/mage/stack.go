@@ -27,6 +27,13 @@ type StackObject struct {
 	// they do not enter any zone, are never put into a graveyard, and do
 	// not become permanents. Set by Game.CopySpellOnStack.
 	IsCopy bool
+
+	// ModalTargets, when non-empty, holds the per-mode chosen targets for a
+	// modal spell built with NewModalSpell. The slice at index ModeChoice
+	// is the list of UUIDs the chosen mode's effects act on. Targets is
+	// kept in sync (it points at ModalTargets[ModeChoice]) so existing
+	// fizzle and target-still-legal logic works unchanged.
+	ModalTargets [][]uuid.UUID
 }
 
 // Stack represents the game stack.
