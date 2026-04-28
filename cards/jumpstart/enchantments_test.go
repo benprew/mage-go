@@ -301,3 +301,26 @@ func TestLawmagesBinding(t *testing.T) {
 		g.AssertAttachedTo(gametest.PlayerA, "Lawmage's Binding", "Hill Giant")
 	})
 }
+
+func TestExquisiteBlood_GainsOnOpponentLifeLoss(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Exquisite Blood")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerB, 17)
+	g.AssertLife(gametest.PlayerA, 23)
+}
+
+func TestExquisiteBlood_NoGainOnOwnLifeLoss(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Exquisite Blood")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerA")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerA, 17)
+}

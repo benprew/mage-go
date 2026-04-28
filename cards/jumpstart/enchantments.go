@@ -106,7 +106,7 @@ func registerEnchantments() {
 	// Cradle of Vitality {3}{W}
 	// Enchantment
 	// Whenever you gain life, you may pay {1}{W}. If you do, put a +1/+1 counter on target creature for each 1 life you gained.
-	// XXX: requires gain-life event
+	// XXX: requires may-pay-mana cost ({1}{W}) inside trigger resolution; gain-life trigger is available but the conditional payment is not. Implementing the always-pump branch would be a wrong simplification.
 	Register("Cradle of Vitality", func() Card {
 		return NewEnchantment("Cradle of Vitality", "{3}{W}")
 	})
@@ -179,9 +179,11 @@ func registerEnchantments() {
 	// Exquisite Blood {4}{B}
 	// Enchantment
 	// Whenever an opponent loses life, you gain that much life.
-	// XXX: requires lose-life event
 	Register("Exquisite Blood", func() Card {
-		return NewEnchantment("Exquisite Blood", "{4}{B}")
+		return NewEnchantment("Exquisite Blood", "{4}{B}",
+			WithAbility(WheneverOpponentLosesLifeTrigger(
+				GainLifeTarget(EventAmountValue()), false)),
+		)
 	})
 
 	// Face of Divinity {2}{W}
