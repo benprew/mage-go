@@ -3565,10 +3565,20 @@ func registerCreatures() {
 	// Creature — Goblin Warrior
 	// 2/3
 	// {T}: This creature deals 4 damage to target creature. Activate only if this creature's power is 4 or greater.
-	// XXX: requires power-conditional activation gate
 	Register("Bloodshot Trainee", func() Card {
 		return NewCreature("Bloodshot Trainee", "{3}{R}", 2, 3,
 			WithSubTypes("Goblin", "Warrior"),
+			WithActivatedAbility(
+				DealDamage(Fixed(4)),
+				TapSourceCost(),
+				WithTarget(TargetCreature()),
+				WithActivationCondition(func(g *Game, src *Permanent, _ uuid.UUID) bool {
+					if src == nil {
+						return false
+					}
+					return src.CurrentPower(g) >= 4
+				}),
+			),
 		)
 	})
 
@@ -3608,7 +3618,6 @@ func registerCreatures() {
 	// 4/3
 	// This creature doesn't untap during your untap step.
 	// {1}, Sacrifice another creature: Untap this creature. Activate only during your turn.
-	// XXX: requires sorcery-speed activation restriction; see CR 605
 	Register("Chained Brute", func() Card {
 		return NewCreature("Chained Brute", "{1}{R}", 4, 3,
 			WithSubTypes("Devil"),
@@ -3619,6 +3628,7 @@ func registerCreatures() {
 				WithCost(SacrificeMatchingCost(NewPermanentFilter("another creature", func(p *Permanent, _ *Game) bool {
 					return p.HasType(TypeCreature)
 				}), "Sacrifice another creature")),
+				WithYourTurnOnly(),
 			),
 		)
 	})
