@@ -614,10 +614,31 @@ func registerSpells() {
 	// Instant
 	// As an additional cost to cast this spell, sacrifice a creature.
 	// Fling deals damage equal to the sacrificed creature's power to any target.
-	// XXX: requires capturing sacrificed-creature power as additional-cost output
 	Register("Fling", func() Card {
 		return NewInstant("Fling", "{1}{R}",
-			NewSpellAbility(),
+			NewTargetedSpell(TargetAnyTarget(),
+				FuncEffect("Fling deals damage equal to the sacrificed creature's power to any target",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						snap := g.LastSacrificed()
+						if snap == nil || len(targets) == 0 {
+							return nil
+						}
+						amt := snap.Power
+						if amt < 0 {
+							amt = 0
+						}
+						if pl := g.GetPlayer(targets[0]); pl != nil {
+							g.DealDamageToPlayer(pl, amt, sourceID)
+							return nil
+						}
+						if perm := g.FindPermanent(targets[0]); perm != nil {
+							g.DealDamageToPermanent(perm, amt, sourceID)
+						}
+						return nil
+					}),
+			),
+			WithAdditionalCost(SacrificeCreatureCost()),
 		)
 	})
 
@@ -1019,10 +1040,25 @@ func registerSpells() {
 	// Macabre Waltz {1}{B}
 	// Sorcery
 	// Return up to two target creature cards from your graveyard to your hand, then discard a card.
-	// XXX: needs multi-target return-from-graveyard effect (current ReturnFromGraveyardToHandTarget only handles targets[0])
 	Register("Macabre Waltz", func() Card {
 		return NewSorcery("Macabre Waltz", "{1}{B}",
-			NewSpellAbility(),
+			NewMultiTargetSpell(
+				[]Target{TargetUpToNCardsInYourGraveyard(2, IsCreatureCard)},
+				ReturnFromGraveyardToHandTarget(),
+				FuncEffect("then discard a card",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, _, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil || len(p.Hand()) == 0 {
+							return nil
+						}
+						pick := p.ChooseCardsFromHand(1, "discard a card", g)
+						for _, c := range pick {
+							p.DiscardCard(c.ID())
+						}
+						return nil
+					}),
+			),
 		)
 	})
 
@@ -1061,10 +1097,30 @@ func registerSpells() {
 	// Instant
 	// As an additional cost to cast this spell, sacrifice a creature.
 	// You draw cards equal to the sacrificed creature's power, then you gain life equal to its toughness.
-	// XXX: requires capturing sacrificed-creature P/T from additional-cost
 	Register("Momentous Fall", func() Card {
 		return NewInstant("Momentous Fall", "{2}{G}{G}",
-			NewSpellAbility(),
+			NewSpellAbility(
+				FuncEffect("draw cards equal to the sacrificed creature's power, then you gain life equal to its toughness",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						snap := g.LastSacrificed()
+						if snap == nil {
+							return nil
+						}
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						for i := 0; i < snap.Power; i++ {
+							p.DrawCard()
+						}
+						if snap.Toughness > 0 {
+							g.PlayerGainLife(p, snap.Toughness)
+						}
+						return nil
+					}),
+			),
+			WithAdditionalCost(SacrificeCreatureCost()),
 		)
 	})
 
@@ -1328,10 +1384,12 @@ func registerSpells() {
 	// Soul Salvage {2}{B}
 	// Sorcery
 	// Return up to two target creature cards from your graveyard to your hand.
-	// XXX: needs multi-target return-from-graveyard effect (current ReturnFromGraveyardToHandTarget only handles targets[0])
 	Register("Soul Salvage", func() Card {
 		return NewSorcery("Soul Salvage", "{2}{B}",
-			NewSpellAbility(),
+			NewMultiTargetSpell(
+				[]Target{TargetUpToNCardsInYourGraveyard(2, IsCreatureCard)},
+				ReturnFromGraveyardToHandTarget(),
+			),
 		)
 	})
 
