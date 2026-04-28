@@ -102,6 +102,19 @@ func TargetCreatureYouControl(filters ...PermanentFilter) Target {
 	}
 }
 
+// TargetAnotherCreatureYouControl creates a target that selects a creature
+// you control other than the source permanent, optionally narrowed by
+// PermanentFilter predicates. Used by Kira-style abilities that target
+// "another creature you control".
+func TargetAnotherCreatureYouControl(filters ...PermanentFilter) Target {
+	return &CreatureTarget{
+		BaseTarget:     BaseTarget{min: 1, max: 1},
+		Filters:        filters,
+		controllerOnly: true,
+		excludeSource:  true,
+	}
+}
+
 // TargetCreatureOpponentControls creates a target that selects a creature an
 // opponent controls, optionally narrowed by PermanentFilter predicates. This
 // pairs with TargetCreatureYouControl in a multi-target spell whose targets
@@ -123,6 +136,15 @@ func TargetUpToNCreatures(n int, filters ...PermanentFilter) Target {
 		BaseTarget: BaseTarget{min: 0, max: n},
 		Filters:    filters,
 	}
+}
+
+// TargetUpToOneCreature creates a target that selects from 0 up to one
+// creature on the battlefield, optionally narrowed by PermanentFilter
+// predicates. Per CR 115.1b, "up to one target creature" abilities can
+// resolve with no chosen target. Used by Brightmare ("tap up to one
+// target creature") and similar effects.
+func TargetUpToOneCreature(filters ...PermanentFilter) Target {
+	return TargetUpToNCreatures(1, filters...)
 }
 
 // TargetUpToNCreaturesOrPlayers creates a target that selects from 0 up to n
