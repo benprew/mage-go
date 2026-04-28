@@ -43,6 +43,7 @@ type GameReader interface {
 	FindPermanentIncludingPhased(uuid.UUID) *Permanent
 	GetArtifactUntapMax() int
 	ActivePlayerIndex() int
+	CombatDamageSourcesThisStep(controllerID, recipientID uuid.UUID) map[uuid.UUID]int
 }
 
 // Compile-time check that *Game satisfies GameReader.

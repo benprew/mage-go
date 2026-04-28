@@ -90,6 +90,13 @@ type Game struct {
 	// -> total combat damage dealt this damage step. Reset before each
 	// ResolveDamage call; consumed to fire EvtCombatDamageDealt afterward.
 	combatDamageThisStep map[uuid.UUID]map[uuid.UUID]int
+	// Per-step combat damage breakdown by source permanent. Maps
+	// (controllerID, recipientPlayerID) -> sourcePermanentID -> amount.
+	// Populated alongside combatDamageThisStep; preserved across the
+	// EvtCombatDamageDealt fire so trigger predicates can filter on source
+	// attributes (e.g., "non-Human creatures you control"). Cleared at the
+	// end of flushCombatDamageAggregator.
+	combatDamageSourcesThisStep map[uuid.UUID]map[uuid.UUID]map[uuid.UUID]int
 
 	// Artifact mana restriction: players who have activated artifact-only mana sources
 	artifactManaOnly map[uuid.UUID]bool
@@ -246,6 +253,7 @@ func NewGame(playerA, playerB Player) *Game {
 		damageTakenThisTurn:         make(map[uuid.UUID]int),
 		artifactDamageTakenThisTurn: make(map[uuid.UUID]int),
 		combatDamageThisStep:        make(map[uuid.UUID]map[uuid.UUID]int),
+		combatDamageSourcesThisStep: make(map[uuid.UUID]map[uuid.UUID]map[uuid.UUID]int),
 		attackedThisTurn:            make(map[uuid.UUID]bool),
 		blockedThisTurn:             make(map[uuid.UUID][]uuid.UUID),
 		instantsCastThisTurn:        make(map[uuid.UUID]int),
@@ -1086,6 +1094,21 @@ func (g *Game) flushCombatDamageAggregator() {
 		}
 	}
 	g.combatDamageThisStep = make(map[uuid.UUID]map[uuid.UUID]int)
+	g.combatDamageSourcesThisStep = make(map[uuid.UUID]map[uuid.UUID]map[uuid.UUID]int)
+}
+
+// CombatDamageSourcesThisStep returns the per-source combat damage breakdown
+// for the given (controllerID, recipientPlayerID) pair during the current
+// EvtCombatDamageDealt fire. Returns nil if no combat damage was dealt for
+// this pair this step. The map is sourcePermanentID -> amount. Trigger
+// condition closures listening to EvtCombatDamageDealt may use this to
+// filter on source attributes (e.g., "non-Human creatures you control").
+func (g *Game) CombatDamageSourcesThisStep(controllerID, recipientID uuid.UUID) map[uuid.UUID]int {
+	byCtrl, ok := g.combatDamageSourcesThisStep[controllerID]
+	if !ok {
+		return nil
+	}
+	return byCtrl[recipientID]
 }
 
 // CounterSpellOnStack removes a spell from the stack by its source ID.
@@ -1286,6 +1309,17 @@ func (g *Game) executeDamageToPlayer(a *DamageToPlayerAction) {
 				g.combatDamageThisStep[srcPerm.Controller] = byCtrl
 			}
 			byCtrl[p.PlayerID()] += amount
+			byCtrlSrcs, ok := g.combatDamageSourcesThisStep[srcPerm.Controller]
+			if !ok {
+				byCtrlSrcs = make(map[uuid.UUID]map[uuid.UUID]int)
+				g.combatDamageSourcesThisStep[srcPerm.Controller] = byCtrlSrcs
+			}
+			bySrc, ok := byCtrlSrcs[p.PlayerID()]
+			if !ok {
+				bySrc = make(map[uuid.UUID]int)
+				byCtrlSrcs[p.PlayerID()] = bySrc
+			}
+			bySrc[sourceID] += amount
 		}
 	}
 	g.FireEvent(GameEvent{

@@ -129,6 +129,14 @@ func (g *Game) Clone() *Game {
 	for k, inner := range g.combatDamageThisStep {
 		c.combatDamageThisStep[k] = cloneUUIDIntMap(inner)
 	}
+	c.combatDamageSourcesThisStep = make(map[uuid.UUID]map[uuid.UUID]map[uuid.UUID]int, len(g.combatDamageSourcesThisStep))
+	for k, byRecip := range g.combatDamageSourcesThisStep {
+		dst := make(map[uuid.UUID]map[uuid.UUID]int, len(byRecip))
+		for r, bySrc := range byRecip {
+			dst[r] = cloneUUIDIntMap(bySrc)
+		}
+		c.combatDamageSourcesThisStep[k] = dst
+	}
 	c.artifactManaOnly = cloneUUIDBoolMap(g.artifactManaOnly)
 	c.creatureManaOnly = cloneUUIDBoolMap(g.creatureManaOnly)
 	c.attackedThisTurn = cloneUUIDBoolMap(g.attackedThisTurn)
