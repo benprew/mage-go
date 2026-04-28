@@ -165,6 +165,7 @@ func (c *sacrificeSourceCost) Pay(sourceID, controller uuid.UUID, g *Game) error
 	if p == nil {
 		return ErrSourceNotFound
 	}
+	g.CaptureSacrificed(p)
 	g.Sacrifice(p)
 	return nil
 }
@@ -245,6 +246,7 @@ func (c *sacrificeMatchingCost) Pay(sourceID, controller uuid.UUID, g *Game) err
 	if chosen == nil {
 		return fmt.Errorf("no permanent chosen")
 	}
+	g.CaptureSacrificed(chosen)
 	g.Sacrifice(chosen)
 	return nil
 }

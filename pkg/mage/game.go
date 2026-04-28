@@ -118,6 +118,13 @@ type Game struct {
 	// being resolved (CR 601.2d, divided damage). Cleared after resolution.
 	resolvingDamageDistribution map[uuid.UUID]int
 
+	// LKI snapshot of the most recently sacrificed permanent paid as a cost
+	// for the spell or ability currently on the stack. Set by SacrificeSourceCost,
+	// SacrificeMatchingCost, and SacrificeCreatureCost; read by effects via
+	// LastSacrificed(). Cleared at the start of each cost-pay cycle and after
+	// resolution.
+	lastSacrificed *SacrificedSnapshot
+
 	// Mill amount modifiers (CR 614 replacement-style) keyed by source permanent ID.
 	// Each entry maps milled-player ID -> proposed amount -> new amount; modifiers
 	// stack and are dropped when the source leaves the battlefield (cleared in Apply).
@@ -1768,6 +1775,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 		g.currentMode = 0
 		g.resolvingCard = nil
 		g.resolvingTargets = nil
+		g.ClearSacrificed()
 		g.CheckStateBasedActions()
 		return
 	}
@@ -1796,6 +1804,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 			g.currentX = 0
 			g.currentMode = 0
 			g.resolvingTargets = nil
+			g.ClearSacrificed()
 			g.CheckStateBasedActions()
 			return
 		}
@@ -1817,6 +1826,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 	g.currentMode = 0
 	g.resolvingCard = nil
 	g.resolvingTargets = nil
+	g.ClearSacrificed()
 
 	g.CheckStateBasedActions()
 }
