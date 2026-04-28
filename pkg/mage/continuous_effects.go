@@ -306,11 +306,26 @@ func GrantActivatedAbilityToAll(effect Effect, cost Cost, filter PermanentFilter
 // GrantTriggeredAbilityToAll grants a triggered ability to all permanents matching filter.
 // Each permanent gets its own copy of the triggered ability, allowing individual trigger
 // ordering (unlike a single batch trigger). The trigger is constructed from the provided
-// event type, optional flag, condition, and effects.
+// event type, optional flag, condition, and effects. The source permanent itself is
+// excluded (typical "other creatures you control" lord behavior); use
+// GrantTriggeredAbilityToAllIncludingSource for "creatures you control" effects that
+// include the source itself (e.g. Kira, Great Glass-Spinner).
 func GrantTriggeredAbilityToAll(eventType EventType, optional bool, cond TriggerConditionData, filter PermanentFilter, effects ...Effect) ContinuousEffect {
+	return grantTriggeredAbilityToAll(eventType, optional, cond, filter, false, effects...)
+}
+
+// GrantTriggeredAbilityToAllIncludingSource is like GrantTriggeredAbilityToAll but
+// matches the source permanent as well, when filter accepts it. Used by
+// "creatures you control" lord-style triggers where Oracle text clearly includes
+// the source itself.
+func GrantTriggeredAbilityToAllIncludingSource(eventType EventType, optional bool, cond TriggerConditionData, filter PermanentFilter, effects ...Effect) ContinuousEffect {
+	return grantTriggeredAbilityToAll(eventType, optional, cond, filter, true, effects...)
+}
+
+func grantTriggeredAbilityToAll(eventType EventType, optional bool, cond TriggerConditionData, filter PermanentFilter, includeSource bool, effects ...Effect) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
 		for _, p := range g.battlefield {
-			if p.ID() == sourceID {
+			if !includeSource && p.ID() == sourceID {
 				continue
 			}
 			if !filter.Match(p, g) {
