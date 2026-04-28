@@ -8,6 +8,54 @@ import (
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
 )
 
+// TestThirstForKnowledge_DiscardArtifact verifies the controller defaults to
+// "yes pay" and discards an artifact card to avoid the 2-card discard.
+func TestThirstForKnowledge_DiscardArtifact(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 3)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Thirst for Knowledge")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Plains", 5)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Sol Ring")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Thirst for Knowledge")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerA, "Sol Ring", 1)
+}
+
+// TestReadTheRunes_X1Discard verifies that for X=1 with the controller
+// declining the sacrifice option, the discard branch fires once.
+func TestReadTheRunes_X1Discard(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Read the Runes")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Plains")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Forest")
+	tp := g.GetPlayer(gametest.PlayerA)
+	tp.QueueMayAbilityChoices(false)
+	g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerA, "Read the Runes", 1)
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerA, "Read the Runes", 1)
+}
+
+// TestRhysticStudy_OpponentDeclinesPay verifies that when an opponent casts
+// a spell and declines/cannot pay {1}, the controller draws a card.
+func TestRhysticStudy_OpponentDeclinesPay(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rhystic Study")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Plains")
+	g.SetLife(gametest.PlayerA, 20)
+	tpB := g.GetPlayer(gametest.PlayerB)
+	tpB.QueueMayAbilityChoices(false)
+	g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "PlayerA")
+	g.StopAt(2, core.EndStep)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "Plains", 1)
+	g.AssertLife(gametest.PlayerA, 17)
+}
+
 // TestDraconicRoar_RevealedDragonDealsExtra verifies the optional reveal pays
 // off as +3 damage to the targeted creature's controller.
 func TestDraconicRoar_RevealedDragonDealsExtra(t *testing.T) {

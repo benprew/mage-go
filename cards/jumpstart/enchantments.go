@@ -10,6 +10,20 @@ func init() {
 	registerEnchantments()
 }
 
+// spellCastCasterSelector picks the player who cast the spell that triggered
+// an EvtSpellCast trigger. The trigger machinery passes targets[0] as the
+// spell's stack ID and targets[1] as the caster's player ID.
+type spellCastCasterSelector struct{}
+
+func (spellCastCasterSelector) Select(_ GameReader, _, _ uuid.UUID, targets []uuid.UUID) []uuid.UUID {
+	if len(targets) < 2 {
+		return nil
+	}
+	return []uuid.UUID{targets[1]}
+}
+
+func (spellCastCasterSelector) Text() string { return "that player" }
+
 func registerEnchantments() {
 
 	// Assault Formation {1}{G}
@@ -626,9 +640,18 @@ func registerEnchantments() {
 	// Rhystic Study {2}{U}
 	// Enchantment
 	// Whenever an opponent casts a spell, you may draw a card unless that player pays {1}.
-	// XXX: requires "may draw unless opponent pays" optional trigger
 	Register("Rhystic Study", func() Card {
-		return NewEnchantment("Rhystic Study", "{2}{U}")
+		return NewEnchantment("Rhystic Study", "{2}{U}",
+			WithAbility(WheneverSpellCastTrigger(
+				UnlessTargetPays(
+					spellCastCasterSelector{},
+					ManaCostOf("{1}"),
+					"Pay {1} to prevent the opponent's Rhystic Study draw?",
+					drawSelfCard(1),
+				),
+				true,
+			).SetConditionData(EventPlayerIsOpponent{})),
+		)
 	})
 
 	// Sarkhan's Unsealing {3}{R}

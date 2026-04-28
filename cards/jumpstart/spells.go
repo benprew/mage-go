@@ -11,6 +11,44 @@ func init() {
 	registerSpells()
 }
 
+// discardCardOfTypeCost is a Cost that discards one card from the controller's
+// hand matching the given filter. Used by Thirst for Knowledge ("discard an
+// artifact card"). Picks the first matching card; behaviorally identical to
+// player-choice when the hand has only one matching card.
+type discardCardOfTypeCost struct {
+	filter CardFilter
+	label  string
+}
+
+func (c *discardCardOfTypeCost) CanPay(_, controller uuid.UUID, g *Game) bool {
+	p := g.GetPlayer(controller)
+	if p == nil {
+		return false
+	}
+	for _, card := range p.Hand() {
+		if c.filter.IsZero() || c.filter.Match(card) {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *discardCardOfTypeCost) Pay(_, controller uuid.UUID, g *Game) error {
+	p := g.GetPlayer(controller)
+	if p == nil {
+		return ErrPlayerNotFound
+	}
+	for _, card := range p.Hand() {
+		if c.filter.IsZero() || c.filter.Match(card) {
+			g.PlayerDiscard(p, card.ID())
+			return nil
+		}
+	}
+	return ErrPlayerNotFound
+}
+
+func (c *discardCardOfTypeCost) Text() string { return c.label }
+
 func registerSpells() {
 
 	// Act of Treason {2}{R}
@@ -1289,13 +1327,47 @@ func registerSpells() {
 	// Read the Runes {X}{U}
 	// Instant
 	// Draw X cards. For each card drawn this way, discard a card unless you sacrifice a permanent.
-	// XXX: not an additional cost; this is a per-card "unless" branching effect during
-	// resolution. EitherCost only models additional casting costs. Needs a resolution-time
-	// "for each X, choose: pay cost A unless you pay cost B" effect combinator with a
-	// generic SacrificePermanentCost (no permanent-type filter currently exists).
 	Register("Read the Runes", func() Card {
+		anyPermanent := NewPermanentFilter("a permanent", func(p *Permanent, _ *Game) bool { return true })
 		return NewInstant("Read the Runes", "{X}{U}",
-			NewSpellAbility(DrawCards(XValue())),
+			NewSpellAbility(
+				DrawCards(XValue()),
+				FuncEffect(
+					"for each card drawn this way, discard a card unless you sacrifice a permanent",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						x := g.XValue()
+						discardOne := FuncEffect(
+							"discard a card",
+							EffectProperties{Outcome: OutcomeDetriment},
+							func(g *Game, _, c uuid.UUID, _ []uuid.UUID) error {
+								p := g.GetPlayer(c)
+								if p == nil {
+									return nil
+								}
+								chosen := p.ChooseCardsFromHand(1, "discard", g)
+								for _, cd := range chosen {
+									p.RemoveFromHand(cd.ID())
+									p.AddToGraveyard(cd)
+								}
+								return nil
+							},
+						)
+						unless := UnlessTargetPays(
+							SelectController(),
+							SacrificeMatchingCost(anyPermanent, "Sacrifice a permanent"),
+							"Sacrifice a permanent to avoid discarding a card?",
+							discardOne,
+						)
+						for i := 0; i < x; i++ {
+							if err := unless.Apply(g, sourceID, controller, nil); err != nil {
+								return err
+							}
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -1493,14 +1565,42 @@ func registerSpells() {
 	// Thirst for Knowledge {2}{U}
 	// Instant
 	// Draw three cards. Then discard two cards unless you discard an artifact card.
-	// XXX: not an additional cost; this is a resolution-time "unless" branch.
-	// EitherCost only applies to casting costs. Needs a resolution-time effect
-	// that asks the controller to choose between discarding 2 cards or discarding
-	// 1 artifact card, plus a hand-card-by-type-filter discard primitive (no
-	// DiscardMatching/DiscardOfType primitive exists today).
+	// XXX: when paying the "discard an artifact card" branch, the engine
+	// has no choose-card-from-hand-by-filter primitive, so the cost picks the
+	// first artifact card in the controller's hand rather than letting them
+	// choose. Behaviorally identical when the hand has only one artifact.
 	Register("Thirst for Knowledge", func() Card {
+		artifactCard := NewCardFilter("artifact card", func(c Card) bool {
+			return c.HasType(TypeArtifact)
+		})
 		return NewInstant("Thirst for Knowledge", "{2}{U}",
-			NewSpellAbility(drawSelfCard(3)),
+			NewSpellAbility(
+				drawSelfCard(3),
+				UnlessTargetPays(
+					SelectController(),
+					&discardCardOfTypeCost{filter: artifactCard, label: "Discard an artifact card"},
+					"Discard an artifact card to avoid discarding two cards?",
+					FuncEffect(
+						"discard two cards",
+						EffectProperties{Outcome: OutcomeDetriment},
+						func(g *Game, _, c uuid.UUID, _ []uuid.UUID) error {
+							p := g.GetPlayer(c)
+							if p == nil {
+								return nil
+							}
+							n := 2
+							if len(p.Hand()) < n {
+								n = len(p.Hand())
+							}
+							chosen := p.ChooseCardsFromHand(n, "discard", g)
+							for _, cd := range chosen {
+								g.PlayerDiscard(p, cd.ID())
+							}
+							return nil
+						},
+					),
+				),
+			),
 		)
 	})
 
