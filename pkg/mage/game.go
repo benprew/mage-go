@@ -118,6 +118,11 @@ type Game struct {
 	// being resolved (CR 601.2d, divided damage). Cleared after resolution.
 	resolvingDamageDistribution map[uuid.UUID]int
 
+	// Mill amount modifiers (CR 614 replacement-style) keyed by source permanent ID.
+	// Each entry maps milled-player ID -> proposed amount -> new amount; modifiers
+	// stack and are dropped when the source leaves the battlefield (cleared in Apply).
+	millModifiers []millModifierEntry
+
 	// Delayed triggers
 	delayedTriggers []*DelayedTrigger
 

@@ -431,6 +431,7 @@ func execMillTargetPlayer(ctx *EffectContext, e *millTargetPlayerEffect) error {
 		return nil
 	}
 	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	amount = ctx.Game.ApplyMillModifiers(p.PlayerID(), amount)
 	lib := p.Library()
 	for i := 0; i < amount && len(lib) > 0; i++ {
 		card := lib[len(lib)-1]
