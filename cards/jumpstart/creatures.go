@@ -511,9 +511,6 @@ func registerCreatures() {
 	// 3/3
 	// When Lena enters, create a 1/1 white Soldier creature token for each nontoken creature you control.
 	// Sacrifice Lena: Creatures you control with power less than Lena's power gain indestructible until end of turn.
-	// XXX: sac → power-comparison indestructible portion not implemented; SacrificeSourceCost
-	// runs before effect resolution, so by then Lena is in graveyard and her power can't be
-	// read. No LKI snapshot primitive exists between cost-pay and effect resolution.
 	Register("Lena, Selfless Champion", func() Card {
 		return NewCreature("Lena, Selfless Champion", "{4}{W}{W}", 3, 3,
 			WithSubTypes("Human", "Knight"),
@@ -539,6 +536,32 @@ func registerCreatures() {
 					}
 					return nil
 				}), false)),
+			WithActivatedAbility(
+				FuncEffect("creatures you control with power less than Lena's power gain indestructible until end of turn",
+					EffectProperties{Outcome: OutcomeBenefit, Mass: true},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						snap := g.LastSacrificed()
+						if snap == nil {
+							return nil
+						}
+						lenaPower := snap.Power
+						for _, p := range g.FilterBattlefield(And(ControlledBy(controller), IsCreature)) {
+							if p.CurrentPower(g) >= lenaPower {
+								continue
+							}
+							pid := p.ID()
+							eff := TargetEffect(LayerAbility, EndOfTurn, pid, func(g *Game, target *Permanent) error {
+								g.GrantAttr(target.ID(), Indestructible)
+								return nil
+							})
+							eff.SetSourceID(sourceID)
+							g.AddContinuousEffect(eff)
+						}
+						g.ApplyContinuousEffects()
+						return nil
+					}),
+				SacrificeSourceCost(),
+			),
 		)
 	})
 
@@ -2328,11 +2351,34 @@ func registerCreatures() {
 	// Legendary Creature — Human Wizard
 	// 3/4
 	// {B}, {T}, Sacrifice another creature: Create X 2/2 black Zombie creature tokens, where X is the sacrificed creature's power.
-	// XXX: requires sacrificed-creature-power capture in cost->effect chain
 	Register("Ghoulcaller Gisa", func() Card {
 		return NewCreature("Ghoulcaller Gisa", "{3}{B}{B}", 3, 4,
 			WithSubTypes("Human", "Wizard"),
 			WithSuperTypes(SuperLegendary),
+			WithActivatedAbility(
+				FuncEffect("create X 2/2 black Zombie creature tokens, where X is the sacrificed creature's power",
+					EffectProperties{Outcome: OutcomeBenefit, Mass: true},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						snap := g.LastSacrificed()
+						if snap == nil {
+							return nil
+						}
+						x := snap.Power
+						for i := 0; i < x; i++ {
+							token := NewToken("Zombie", 2, 2, []CardType{TypeCreature}, []string{"Zombie"})
+							token.SetOwner(controller)
+							colors := []Color{Black}
+							perm := g.PutOnBattlefield(token, controller)
+							if perm != nil {
+								perm.ColorOverride = &colors
+							}
+						}
+						return nil
+					}),
+				ManaCostOf("{B}"),
+				WithCost(TapSourceCost()),
+				WithCost(SacrificeCreatureCost()),
+			),
 		)
 	})
 
