@@ -475,3 +475,25 @@ func TestLightningDiadem_BoostAttached(t *testing.T) {
 	g.Execute()
 	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 4, 4)
 }
+
+func TestVastwoodZendikon_AnimatesEnchantedLand(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	forestID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	auraID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Vastwood Zendikon")
+	g.Attach(auraID, forestID)
+	g.StopAt(1, core.PrecombatMain)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Forest", 6, 4)
+}
+
+func TestNewHorizons_GrantsCounterAndManaAbility(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 3)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "New Horizons")
+	g.ChooseTarget(gametest.PlayerA, "Grizzly Bears")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "New Horizons", "Forest")
+	g.StopAt(1, core.EndCombat)
+	g.Execute()
+	g.AssertCounterCount(gametest.PlayerA, "Grizzly Bears", core.P1P1, 1)
+}

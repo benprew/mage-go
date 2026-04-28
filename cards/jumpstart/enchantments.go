@@ -511,10 +511,18 @@ func registerEnchantments() {
 	// Enchant land
 	// When this Aura enters, put a +1/+1 counter on target creature you control.
 	// Enchanted land has "{T}: Add two mana of any one color."
-	// XXX: requires aura-grants-mana-ability-to-land mechanic
 	Register("New Horizons", func() Card {
 		return NewAura("New Horizons", "{2}{G}",
 			WithCastTarget(TargetLand()),
+			WithAbility(
+				EntersBattlefieldTrigger(
+					AddCounters(P1P1, Fixed(1)),
+					false,
+				).AddTarget(TargetCreatureYouControl()),
+			),
+			WithStaticAbility(
+				GrantManaAbilityToAttached(ManaProduction{Color: AnyColor, Amount: 2}),
+			),
 		)
 	})
 
@@ -643,10 +651,47 @@ func registerEnchantments() {
 	// Enchant land
 	// Enchanted land is a 6/4 green Elemental creature. It's still a land.
 	// When enchanted land dies, return that card to its owner's hand.
-	// XXX: requires aura-animates-land mechanic
 	Register("Vastwood Zendikon", func() Card {
 		return NewAura("Vastwood Zendikon", "{4}{G}",
 			WithCastTarget(TargetLand()),
+			WithStaticAbility(
+				AnimateAttachedLand(AnimateLandOptions{
+					Power:     6,
+					Toughness: 4,
+					SubTypes:  []string{"Elemental"},
+					Colors:    []Color{Green},
+				}),
+			),
+			WithAbility(
+				NewTriggered(EvtCreatureDied, false,
+					FuncEffect("return enchanted land to its owner's hand",
+						EffectProperties{Outcome: OutcomeBenefit},
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+							evtSource := uuid.Nil
+							if len(targets) > 0 {
+								evtSource = targets[0]
+							}
+							if evtSource == uuid.Nil {
+								return nil
+							}
+							for _, pl := range g.AllPlayers() {
+								for _, c := range pl.Graveyard() {
+									if c.ID() == evtSource {
+										if removed, ok := pl.RemoveFromGraveyard(c.ID()); ok {
+											ownerP := g.GetPlayer(c.Owner())
+											if ownerP == nil {
+												ownerP = pl
+											}
+											ownerP.AddToHand(removed)
+										}
+										return nil
+									}
+								}
+							}
+							return nil
+						}),
+				).SetConditionData(SourceIsAttachedToEventSource{}),
+			),
 		)
 	})
 
