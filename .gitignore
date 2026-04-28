@@ -50,3 +50,4 @@ __pycache__/
 /build/
 
 .claude/
+.codex

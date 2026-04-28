@@ -62,6 +62,50 @@ func TestOnEnterZone_FiresOnETB(t *testing.T) {
 	tg.AssertPermanentCount(PlayerA, "Plains", 1)
 }
 
+// OnLeaveZone with To=ZoneAny fires for any leave-battlefield path. Verifies
+// the unified bounce/exile zone-change dispatch added in Phase 2b — a
+// trigger with no destination filter sees all of: destroy/SBA/sacrifice
+// (to graveyard), bounce (to hand), and exile.
+func TestOnLeaveZone_AnyDestination_Exile(t *testing.T) {
+	const cardName = "OLZ Any-Exile"
+	if !mage.CardRegistered(cardName) {
+		mage.Register(cardName, func() mage.Card {
+			return mage.NewArtifact(cardName, "{1}",
+				mage.WithAbility(mage.OnLeaveZone(
+					core.ZoneBattlefield,
+					core.ZoneAny,
+					mage.DrawCards(mage.Fixed(1)),
+					false,
+				)),
+			)
+		})
+	}
+	mage.Register("OLZ Exile-self", func() mage.Card {
+		return mage.NewSorcery("OLZ Exile-self", "{0}",
+			mage.NewSpellAbility(mage.FuncEffect("self-exile",
+				mage.EffectProperties{},
+				func(g *mage.Game, _, controller uuid.UUID, _ []uuid.UUID) error {
+					for _, p := range g.AllBattlefield() {
+						if p.Controller == controller && p.Card.Name() == cardName {
+							g.ExilePermanent(p)
+							return nil
+						}
+					}
+					return nil
+				})),
+		)
+	})
+	tg := NewTestGame(t)
+	tg.AddCard(core.ZoneBattlefield, PlayerA, cardName)
+	tg.AddCard(core.ZoneHand, PlayerA, "OLZ Exile-self")
+	tg.AddCard(core.ZoneLibrary, PlayerA, "Forest", 5)
+	tg.CastSpell(1, core.PrecombatMain, PlayerA, "OLZ Exile-self")
+	tg.StopAt(1, core.EndStep)
+	tg.Execute()
+	tg.AssertExileCount(cardName, 1)
+	tg.AssertPermanentCount(PlayerA, "Forest", 1)
+}
+
 // OnLeaveZone(ZoneBattlefield, ZoneGraveyard) fires when the source is put
 // into a graveyard from the battlefield via any path — sacrifice, destroy,
 // or SBA. Verifies the SelfGraveyard capture works through EvtZoneChange.

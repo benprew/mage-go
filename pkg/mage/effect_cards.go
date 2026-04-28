@@ -480,11 +480,7 @@ func execReturnToHandTarget(ctx *EffectContext, _ *returnToHandTargetEffect) err
 	if owner == uuid.Nil {
 		owner = perm.Controller
 	}
-	ctx.Game.RemoveFromBattlefield(perm)
-	p := ctx.Game.GetPlayer(owner)
-	if p != nil {
-		p.AddToHand(card)
-	}
+	ctx.Game.BouncePermanentToHand(perm)
 	return nil
 }
 

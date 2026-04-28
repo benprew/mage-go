@@ -1093,11 +1093,61 @@ func (g *Game) sacrificePermanents(playerID uuid.UUID, count int) {
 	}
 }
 
-// ExilePermanent removes a permanent from the battlefield to exile.
-func (g *Game) ExilePermanent(perm *Permanent) {
+// BouncePermanentToHand removes a permanent from the battlefield and adds the
+// underlying card to its owner's hand, firing an EvtZoneChange{From: BF,
+// To: Hand}. Self-referencing leave triggers fire via captured abilities per
+// CR 603.6c. Use this rather than open-coding RemoveFromBattlefield + AddToHand
+// so the zone-change event is consistent across bounce sites.
+func (g *Game) BouncePermanentToHand(perm *Permanent) {
+	if perm == nil {
+		return
+	}
+	controller := perm.Controller
+	permID := perm.ID()
 	card := perm.Card
+	owner := card.Owner()
+	if owner == uuid.Nil {
+		owner = controller
+	}
+	selfAbilities := make([]Ability, len(perm.RuntimeAbilities))
+	copy(selfAbilities, perm.RuntimeAbilities)
+	g.RemoveFromBattlefield(perm)
+	if p := g.GetPlayer(owner); p != nil {
+		p.AddToHand(card)
+	}
+	zoneEvt := GameEvent{
+		Type:     EvtZoneChange,
+		SourceID: permID,
+		PlayerID: controller,
+		FromZone: ZoneBattlefield,
+		ToZone:   ZoneHand,
+	}
+	g.FireEvent(zoneEvt)
+	g.checkAbilitiesForEvent(selfAbilities, &zoneEvt, permID, controller)
+}
+
+// ExilePermanent removes a permanent from the battlefield to exile and fires
+// an EvtZoneChange{From: Battlefield, To: Exile}. Self-referencing
+// leave-the-battlefield triggers (registered via OnLeaveZone or
+// LeavesBattlefieldToGraveyardTrigger) fire from the captured ability list
+// per CR 603.6c, even though the permanent is no longer on the battlefield.
+func (g *Game) ExilePermanent(perm *Permanent) {
+	controller := perm.Controller
+	permID := perm.ID()
+	card := perm.Card
+	selfAbilities := make([]Ability, len(perm.RuntimeAbilities))
+	copy(selfAbilities, perm.RuntimeAbilities)
 	g.RemoveFromBattlefield(perm)
 	g.exile = append(g.exile, ExiledCard{Card: card})
+	zoneEvt := GameEvent{
+		Type:     EvtZoneChange,
+		SourceID: permID,
+		PlayerID: controller,
+		FromZone: ZoneBattlefield,
+		ToZone:   ZoneExile,
+	}
+	g.FireEvent(zoneEvt)
+	g.checkAbilitiesForEvent(selfAbilities, &zoneEvt, permID, controller)
 }
 
 // ExileCard moves a card (from any zone) to the exile zone.
