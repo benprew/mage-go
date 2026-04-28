@@ -701,3 +701,31 @@ func TestEternalTaskmaster_ReturnOnAttack(t *testing.T) {
 	g.AssertHandCount(gametest.PlayerA, "Hill Giant", 1)
 }
 
+
+func TestBelltowerSphinx_DamagerControllerMills(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Belltower Sphinx")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain", 1)
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerB, "Hill Giant", 5)
+	g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Belltower Sphinx")
+	g.StopAt(2, core.EndStep)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerB, "Hill Giant", 3)
+}
+
+func TestMausoleumTurnkey_OpponentChoosesReturn(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Mausoleum Turnkey")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 4)
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Hill Giant")
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
+	g.ChooseTarget(gametest.PlayerB, "Hill Giant")
+	g.ChooseTarget(gametest.PlayerA, "Grizzly Bears")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Mausoleum Turnkey")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "Hill Giant", 1)
+	g.AssertGraveyardCount(gametest.PlayerA, "Hill Giant", 0)
+	g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 1)
+}

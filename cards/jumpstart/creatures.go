@@ -914,12 +914,44 @@ func registerCreatures() {
 	// 2/5
 	// Flying
 	// Whenever a source deals damage to this creature, that source's controller mills that many cards.
-	// XXX: trigger pipeline doesn't expose damage-source ID to the effect, so we
-	// can't identify the damage source's controller. Implementing as Flying only.
 	Register("Belltower Sphinx", func() Card {
 		return NewCreature("Belltower Sphinx", "{4}{U}", 2, 5,
 			WithSubTypes("Sphinx"),
 			WithKeyword(Flying),
+			WithAbility(WhenDamageDealtToThisTrigger(
+				FuncEffect("damage source's controller mills that many cards",
+					EffectProperties{},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						damagerID := g.EventSourceID()
+						amount := g.EventAmount()
+						if damagerID == uuid.Nil || amount <= 0 {
+							return nil
+						}
+						var damagerController uuid.UUID
+						if perm := g.FindPermanent(damagerID); perm != nil {
+							damagerController = perm.Controller
+						} else if obj := g.FindStackObject(damagerID); obj != nil {
+							damagerController = obj.Controller
+						} else if c := g.FindCardAnywhere(damagerID); c != nil {
+							damagerController = c.Owner()
+						}
+						if damagerController == uuid.Nil {
+							return nil
+						}
+						p := g.GetPlayer(damagerController)
+						if p == nil {
+							return nil
+						}
+						amt := g.ApplyMillModifiers(p.PlayerID(), amount)
+						lib := p.Library()
+						for i := 0; i < amt && len(lib) > 0; i++ {
+							card := lib[len(lib)-1]
+							lib = lib[:len(lib)-1]
+							p.AddToGraveyard(card)
+						}
+						p.SetLibrary(lib)
+						return nil
+					}), false)),
 		)
 	})
 
@@ -2716,10 +2748,12 @@ func registerCreatures() {
 	// Creature — Ogre Rogue
 	// 3/2
 	// When this creature enters, return target creature card of an opponent's choice from your graveyard to your hand.
-	// XXX: requires opponent-chooses-target primitive
 	Register("Mausoleum Turnkey", func() Card {
 		return NewCreature("Mausoleum Turnkey", "{3}{B}", 3, 2,
 			WithSubTypes("Ogre", "Rogue"),
+			WithAbility(EntersBattlefieldTrigger(
+				ReturnFromGraveyardToHandTarget(), false,
+			).AddTarget(TargetOpponentChoice(TargetCreatureInYourGraveyard()))),
 		)
 	})
 
