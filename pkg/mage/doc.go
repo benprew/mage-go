@@ -1292,6 +1292,14 @@ Mana abilities are a special ability type:
 Mana costs are parsed from strings like "{2}{W}{B}" via [ParseManaCost].
 Colors: [White], [Blue], [Black], [Red], [Green], [Colorless].
 
+Hybrid mana symbols (CR 107.4d, 117.7) are written {X/Y} where X and Y are
+two of W/U/B/R/G — for example "{1}{W/U}{G/W}". A hybrid symbol can be paid
+with mana of either listed color; the engine picks deterministically (the
+more-abundant color in the pool, breaking ties toward the first listed
+color). Each hybrid symbol contributes 1 to the cost's mana value (CR 202.3f)
+and counts as both of its colors for color identity (CR 202.2c). Stored on
+[ManaCost] as the [ManaCost.Hybrid] slice of [HybridSymbol]{A, B}.
+
 # Complete Card Examples
 
 Vanilla creature:

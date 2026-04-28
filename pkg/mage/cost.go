@@ -53,7 +53,7 @@ func (c *ManaCostPayment) reducedCost(sourceID uuid.UUID, g *Game) ManaCost {
 	}
 	mc := c.MC
 	// Total colored mana in the cost
-	coloredTotal := mc.White + mc.Blue + mc.Black + mc.Red + mc.Green
+	coloredTotal := mc.White + mc.Blue + mc.Black + mc.Red + mc.Green + len(mc.Hybrid)
 	total := coloredTotal + mc.Generic
 	// Can't reduce below 1 total mana
 	minGeneric := 0

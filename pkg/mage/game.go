@@ -2843,11 +2843,43 @@ func (g *Game) AutoTapForCost(playerID uuid.UUID, mc ManaCost) error {
 	}
 	needed := map[Color]int{}
 	poolUsedForColor := 0
+	poolByColor := map[Color]int{}
 	for _, cn := range colorNeeds {
-		have := pool.Count(cn.color)
+		poolByColor[cn.color] = pool.Count(cn.color)
+	}
+	for _, cn := range colorNeeds {
+		have := poolByColor[cn.color]
 		used := min(have, cn.need)
+		poolByColor[cn.color] -= used
 		poolUsedForColor += used
 		needed[cn.color] = cn.need - used
+	}
+	availableForHybridFromSources := map[Color]int{}
+	for _, src := range sources {
+		availableForHybridFromSources[src.Color] += src.Amount
+	}
+	for _, h := range mc.Hybrid {
+		pa, pb := poolByColor[h.A], poolByColor[h.B]
+		if pa >= pb && pa > 0 {
+			poolByColor[h.A] = pa - 1
+			poolUsedForColor++
+			continue
+		}
+		if pb > 0 {
+			poolByColor[h.B] = pb - 1
+			poolUsedForColor++
+			continue
+		}
+		sa, sb := availableForHybridFromSources[h.A], availableForHybridFromSources[h.B]
+		if sa >= sb && sa > 0 {
+			availableForHybridFromSources[h.A] = sa - 1
+			needed[h.A]++
+		} else if sb > 0 {
+			availableForHybridFromSources[h.B] = sb - 1
+			needed[h.B]++
+		} else {
+			return fmt.Errorf("insufficient mana for hybrid %s", h)
+		}
 	}
 	poolRemaining := pool.TotalMana() - poolUsedForColor
 	genericNeeded := mc.Generic - min(mc.Generic, poolRemaining)
