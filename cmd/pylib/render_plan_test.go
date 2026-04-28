@@ -8,7 +8,7 @@ import (
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
 )
 
-func TestRenderPlanEmitsPlaceholderManaCostID(t *testing.T) {
+func TestRenderPlanEmitsManaCostID(t *testing.T) {
 	cardID := uuid.New()
 	state := testRenderState(cardID)
 	pending := &apiPending{
@@ -39,8 +39,12 @@ func TestRenderPlanEmitsPlaceholderManaCostID(t *testing.T) {
 	if !ok {
 		t.Fatalf("OP_OPTION not found in plan: %v", view.renderPlan[:view.renderPlanLengths[0]])
 	}
-	if got := optionPayload[3]; got != -1 {
-		t.Fatalf("mana_cost_id = %d, want -1 placeholder", got)
+	want := manaCostIDForCost("{1}{G}")
+	if want < 0 {
+		t.Fatalf("registered mana costs did not include {1}{G}: %v", registeredManaCostStrings())
+	}
+	if got := optionPayload[3]; got != want {
+		t.Fatalf("mana_cost_id = %d, want %d", got, want)
 	}
 }
 

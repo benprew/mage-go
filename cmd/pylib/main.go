@@ -1209,6 +1209,13 @@ func MageRegisteredCards() *C.char {
 	return C.CString(string(b))
 }
 
+//export MageRegisteredManaCosts
+func MageRegisteredManaCosts() *C.char {
+	defer func() { _ = recover() }()
+	b, _ := json.Marshal(registeredManaCostStrings())
+	return C.CString(string(b))
+}
+
 //export MageSetCardNameRows
 func MageSetCardNameRows(cardNameRowsJSON *C.char) *C.char {
 	defer func() { _ = recover() }()

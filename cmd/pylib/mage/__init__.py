@@ -125,6 +125,7 @@ char *MageWinner(int64_t id);
 void MageFree(int64_t id);
 void MageFreeString(char *s);
 char *MageRegisteredCards(void);
+char *MageRegisteredManaCosts(void);
 """
 
 
@@ -194,6 +195,11 @@ def _take(cstr) -> dict[str, Any]:
 def registered_cards() -> list[str]:
     _ensure_loaded()
     return _take_raw(_lib.MageRegisteredCards())
+
+
+def registered_mana_costs() -> list[str]:
+    _ensure_loaded()
+    return _take_raw(_lib.MageRegisteredManaCosts())
 
 
 def resolved_library_path() -> str:

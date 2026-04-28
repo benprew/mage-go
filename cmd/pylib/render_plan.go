@@ -2,7 +2,10 @@ package main
 
 import (
 	"math"
+	"sort"
+	"sync"
 
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
 )
@@ -74,6 +77,12 @@ var renderZoneOrder = [...]int32{
 	renderZoneStack,
 	renderZoneCommand,
 }
+
+var (
+	manaCostRowsOnce sync.Once
+	manaCostRows     []string
+	manaCostRowByKey map[string]int32
+)
 
 type renderPlanWriter struct {
 	buf      []int32
@@ -310,7 +319,7 @@ func emitRenderActions(w *renderPlanWriter, pending *apiPending, state *apiGameS
 				int32(indexOrUnknown(actionKinds[:], option.Kind)),
 				sourceRow,
 				sourceUUIDIdx,
-				-1,
+				manaCostIDForCost(option.ManaCost),
 				clampInt32(int64(option.AbilityIndex)),
 			)
 			for tgtIdx := int64(0); tgtIdx < minInt64(int64(len(option.ValidTargets)), cfg.maxTargetsPerOption); tgtIdx++ {
@@ -427,6 +436,49 @@ func renderSlotIndex(owner int32, zone int32, cardIdx int) int32 {
 		return -1
 	}
 	return int32(slotZone*maxCardsPerZone + cardIdx)
+}
+
+func registeredManaCostStrings() []string {
+	initManaCostRows()
+	out := make([]string, len(manaCostRows))
+	copy(out, manaCostRows)
+	return out
+}
+
+func manaCostIDForCost(manaCost string) int32 {
+	if manaCost == "" {
+		return -1
+	}
+	initManaCostRows()
+	if id, ok := manaCostRowByKey[manaCost]; ok {
+		return id
+	}
+	return -1
+}
+
+func initManaCostRows() {
+	manaCostRowsOnce.Do(func() {
+		seen := map[string]struct{}{}
+		for _, name := range mage.RegisteredCardNames() {
+			card, err := mage.CreateCard(name)
+			if err != nil {
+				continue
+			}
+			cost := card.ManaCost().String()
+			if cost != "" {
+				seen[cost] = struct{}{}
+			}
+		}
+		manaCostRows = make([]string, 0, len(seen))
+		for cost := range seen {
+			manaCostRows = append(manaCostRows, cost)
+		}
+		sort.Strings(manaCostRows)
+		manaCostRowByKey = make(map[string]int32, len(manaCostRows))
+		for idx, cost := range manaCostRows {
+			manaCostRowByKey[cost] = int32(idx)
+		}
+	})
 }
 
 func clampInt32(value int64) int32 {
