@@ -37,7 +37,7 @@ type GenericTriggered struct {
 	// captured-ability path inside Game.Sacrifice (and existing Destroy /
 	// PutPermanentIntoGraveyard paths) so it sees the LtB / sacrifice / dies
 	// event for the source itself even after the source has left the
-	// battlefield. Used by SacrificeSelfTrigger.
+	// battlefield. Used by LeavesBattlefieldToGraveyardTrigger.
 	SelfGraveyard bool
 }
 
@@ -187,14 +187,18 @@ func PutIntoGraveyardFromBattlefieldTrigger(effect Effect, optional bool) *Gener
 		SetConditionData(EventSourceIsSelf{})
 }
 
-// SacrificeSelfTrigger fires when the source permanent is sacrificed (CR 701.16).
-// Unlike PutIntoGraveyardFromBattlefieldTrigger, this also fires on
-// Game.Sacrifice paths (where the source has already been removed from the
-// battlefield by the time the event is dispatched), via the captured-ability
-// list inside Sacrifice. Used by Terrarion-style "When this artifact is put
-// into a graveyard from the battlefield, draw a card" effects that need to
-// see sacrifices in addition to destruction.
-func SacrificeSelfTrigger(effect Effect, optional bool) *GenericTriggered {
+// LeavesBattlefieldToGraveyardTrigger fires whenever the source is put into a
+// graveyard from the battlefield, via any path (lethal damage, destroy,
+// sacrifice, state-based effect, etc.). Implements Oracle text of the form
+// "When CARDNAME is put into a graveyard from the battlefield..." (Terrarion,
+// Sword of the Animist–style artifacts) per CR 603.6c (leaves-the-battlefield
+// triggers look back at the permanent's LKI).
+//
+// Differs from PutIntoGraveyardFromBattlefieldTrigger: that variant does not
+// fire on the Game.Sacrifice path (the permanent is gone before the event
+// dispatches). This variant sets SelfGraveyard=true so the engine consults
+// the captured-ability list inside Sacrifice and still fires.
+func LeavesBattlefieldToGraveyardTrigger(effect Effect, optional bool) *GenericTriggered {
 	t := NewTriggered(EvtPutIntoGraveyardFromBattlefield, optional, effect).
 		SetConditionData(EventSourceIsSelf{})
 	t.SelfGraveyard = true

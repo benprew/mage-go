@@ -18,7 +18,7 @@ func TestExileTargetReturnAtEndStepWithCounter(t *testing.T) {
 			return mage.NewInstant(cardName, "{1}{W}",
 				mage.NewTargetedSpell(
 					mage.TargetCreature(),
-					mage.ExileTargetReturnAtEndStepWithCounter(core.P1P1, 1),
+					mage.ExileTargetReturnAtEndStep(mage.ReturnWithCounter(core.P1P1, 1)),
 				),
 			)
 		})

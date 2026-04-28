@@ -7,7 +7,7 @@ import (
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
-// RevealTopAndDealDamage (Riddle of Lightning shape): the controller
+// TopOfLibraryManaValue (Riddle of Lightning shape): the controller
 // reveals the top card of their library and the spell deals damage
 // equal to that card's mana value to the chosen target. The library is
 // not mutated by the reveal.
@@ -16,7 +16,8 @@ func TestRevealTopAndDealDamage(t *testing.T) {
 	if !mage.CardRegistered(cardName) {
 		mage.Register(cardName, func() mage.Card {
 			return mage.NewInstant(cardName, "{3}{R}{R}",
-				mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.RevealTopAndDealDamage()),
+				mage.NewTargetedSpell(mage.TargetAnyTarget(),
+					mage.DealDamage(mage.TopOfLibraryManaValue(mage.SelectController()))),
 			)
 		})
 	}

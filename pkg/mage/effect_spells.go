@@ -139,23 +139,30 @@ func CreateTokens(count int, name string, power, toughness int, types []CardType
 	})
 }
 
-// CreateTokensWithAbilities creates an effect that puts N token
-// creatures onto the battlefield with the given baked-in abilities
-// (typically triggered abilities like "When this token dies, it deals
-// 1 damage to any target."). Used by Dance with Devils-style spells
-// where the printed text grants the tokens themselves a triggered
-// ability that fires later.
-func CreateTokensWithAbilities(count int, name string, power, toughness int, types []CardType, subTypes []string, keywords []Keyword, abilities ...Ability) Effect {
-	return DataEffect(&createTokenEffect{
-		name:      name,
-		power:     power,
-		toughness: toughness,
-		types:     types,
-		subTypes:  subTypes,
-		keywords:  keywords,
-		abilities: abilities,
-		count:     count,
-	})
+// TokenWithAbilities decorates a token-creation effect (CreateToken /
+// CreateTokens / CreateColoredToken) with extra abilities that each created
+// token instance carries. Used by spells whose Oracle text grants the token
+// itself a triggered or static ability — e.g. Dance with Devils' "When this
+// token dies, it deals 1 damage to any target." Per CR 111.10 / 113.3, those
+// abilities exist on the token object (not on the creating spell), and they
+// continue to work after the spell that made the token has resolved.
+//
+// Decomposition rationale: keeps the four base CreateToken* constructors
+// minimal (no abilities slot in their signatures) and treats "abilities on
+// the token" as an orthogonal concern attached after construction.
+func TokenWithAbilities(base Effect, abilities ...Ability) Effect {
+	a, ok := base.(*dataEffectAdapter)
+	if !ok {
+		return base
+	}
+	t, ok := a.data.(*createTokenEffect)
+	if !ok {
+		return base
+	}
+	clone := *t
+	clone.abilities = append([]Ability(nil), t.abilities...)
+	clone.abilities = append(clone.abilities, abilities...)
+	return DataEffect(&clone)
 }
 
 // CreateColoredToken creates an effect that puts a colored token creature onto the battlefield.

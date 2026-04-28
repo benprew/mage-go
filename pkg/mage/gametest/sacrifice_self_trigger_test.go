@@ -23,7 +23,7 @@ func TestSacrificeSelfTrigger_FiresOnSacrifice(t *testing.T) {
 					mage.ManaCostOf("{0}"),
 					mage.WithCost(mage.SacrificeSourceCost()),
 				),
-				mage.WithAbility(mage.SacrificeSelfTrigger(
+				mage.WithAbility(mage.LeavesBattlefieldToGraveyardTrigger(
 					mage.DrawCards(mage.Fixed(1)), false,
 				)),
 			)

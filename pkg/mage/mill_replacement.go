@@ -27,6 +27,43 @@ func (g *Game) AddMillReplacement(sourceID uuid.UUID, fn MillModifierFn) {
 	g.millModifiers = append(g.millModifiers, millModifierEntry{sourceID: sourceID, fn: fn})
 }
 
+// MillModifierFactory builds a per-instance MillModifierFn given the source
+// permanent's ID and controller (captured at ETB time). Used by
+// WithMillReplacement to express "an opponent would mill" / "you would mill"
+// scoping without per-card FuncEffect boilerplate.
+type MillModifierFactory func(sourceID, controllerID uuid.UUID) MillModifierFn
+
+// WithMillReplacement registers a mill replacement on this permanent at ETB,
+// auto-cleared when it leaves the battlefield. Per CR 701.13b mill is a
+// game action whose card count is replaceable; per CR 614.6 these stack
+// additively in registration order.
+func WithMillReplacement(factory MillModifierFactory) CardOption {
+	return func(c *BaseCard) {
+		c.AddAbility(EntersBattlefieldTrigger(
+			FuncEffect("install mill modifier",
+				EffectProperties{},
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					g.AddMillReplacement(sourceID, factory(sourceID, controller))
+					return nil
+				},
+			),
+			false,
+		))
+	}
+}
+
+// DoubleMillForOpponents is a MillModifierFactory for
+// "If an opponent would mill one or more cards, they mill twice that many
+// cards instead" (Bruvac the Grandiloquent).
+func DoubleMillForOpponents(_, controllerID uuid.UUID) MillModifierFn {
+	return func(_ *Game, milledID uuid.UUID, amount int) int {
+		if milledID == controllerID || amount < 1 {
+			return amount
+		}
+		return amount * 2
+	}
+}
+
 // ApplyMillModifiers runs all registered mill modifiers (whose source is
 // still on the battlefield) on the given proposed amount and returns the
 // resulting amount. Called by the mill execution path before any cards are

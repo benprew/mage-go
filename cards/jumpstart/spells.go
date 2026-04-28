@@ -461,11 +461,10 @@ func registerSpells() {
 	// Create two 1/1 red Devil creature tokens. They have "When this token dies, it deals 1 damage to any target."
 	Register("Dance with Devils", func() Card {
 		return NewInstant("Dance with Devils", "{3}{R}",
-			NewSpellAbility(CreateTokensWithAbilities(
-				2, "Devil", 1, 1,
-				[]CardType{TypeCreature},
-				[]string{"Devil"},
-				nil,
+			NewSpellAbility(TokenWithAbilities(
+				CreateTokens(2, "Devil", 1, 1,
+					[]CardType{TypeCreature},
+					[]string{"Devil"}),
 				PutIntoGraveyardFromBattlefieldTrigger(
 					DealDamage(Fixed(1)), false,
 				).AddTarget(TargetAnyTarget()),
@@ -1174,7 +1173,7 @@ func registerSpells() {
 	Register("Long Road Home", func() Card {
 		return NewInstant("Long Road Home", "{1}{W}",
 			NewTargetedSpell(TargetCreature(),
-				ExileTargetReturnAtEndStepWithCounter(P1P1, 1),
+				ExileTargetReturnAtEndStep(ReturnWithCounter(P1P1, 1)),
 			),
 		)
 	})
@@ -1477,7 +1476,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetAnyTarget(), CompositeEffects(
 				"scry 3, reveal top, deal damage equal to its mana value",
 				Scry(Fixed(3)),
-				RevealTopAndDealDamage(),
+				DealDamage(TopOfLibraryManaValue(SelectController())),
 			)),
 		)
 	})

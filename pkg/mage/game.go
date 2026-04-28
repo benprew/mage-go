@@ -898,11 +898,13 @@ func (g *Game) PutPermanentIntoGraveyard(perm *Permanent) {
 
 // Sacrifice sacrifices a permanent (like destroy but doesn't check indestructible).
 // Self-referential triggers on the sacrificed permanent — those declared via
-// SacrificeSelfTrigger / DiesSelfTrigger — fire from the captured ability
-// list, mirroring Game.DestroyPermanent. Existing battlefield-only triggers
-// (PutIntoGraveyardFromBattlefieldTrigger) intentionally do not fire here for
-// backwards compatibility; cards that need "when sacrificed" semantics should
-// use the explicit SacrificeSelfTrigger constructor.
+// LeavesBattlefieldToGraveyardTrigger / DiesSelfTrigger — fire from the
+// captured ability list, mirroring Game.DestroyPermanent. Existing
+// battlefield-only triggers (PutIntoGraveyardFromBattlefieldTrigger)
+// intentionally do not fire here; cards whose Oracle text reads "When ~ is
+// put into a graveyard from the battlefield" should use the
+// LeavesBattlefieldToGraveyardTrigger constructor so sacrifice paths fire too
+// (CR 603.6c).
 func (g *Game) Sacrifice(perm *Permanent) {
 	controller := perm.Controller
 	owner := perm.Card.Owner()

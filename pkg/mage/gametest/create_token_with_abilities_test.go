@@ -19,11 +19,10 @@ func TestCreateTokensWithAbilities_DanceWithDevils(t *testing.T) {
 				mage.DealDamage(mage.Fixed(1)), false,
 			).AddTarget(mage.TargetPlayer())
 			return mage.NewInstant(cardName, "{3}{R}",
-				mage.NewSpellAbility(mage.CreateTokensWithAbilities(
-					2, "Devil", 1, 1,
-					[]core.CardType{core.TypeCreature},
-					[]string{"Devil"},
-					nil,
+				mage.NewSpellAbility(mage.TokenWithAbilities(
+					mage.CreateTokens(2, "Devil", 1, 1,
+						[]core.CardType{core.TypeCreature},
+						[]string{"Devil"}),
 					tokenAbility,
 				)),
 			)

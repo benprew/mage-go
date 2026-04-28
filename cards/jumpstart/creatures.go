@@ -710,21 +710,7 @@ func registerCreatures() {
 		return NewCreature("Rhox Faithmender", "{3}{W}", 1, 5,
 			WithSubTypes("Rhino", "Monk"),
 			WithKeyword(Lifelink),
-			WithAbility(EntersBattlefieldTrigger(
-				FuncEffect("install life-gain doubler",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						g.AddLifeGainModifier(sourceID, func(g *Game, gainingID uuid.UUID, amount int) int {
-							if gainingID == controller {
-								return amount * 2
-							}
-							return amount
-						})
-						return nil
-					},
-				),
-				false,
-			)),
+			WithLifeGainReplacement(DoubleLifeGainForController),
 		)
 	})
 
@@ -975,21 +961,7 @@ func registerCreatures() {
 		return NewCreature("Bruvac the Grandiloquent", "{2}{U}", 1, 4,
 			WithSubTypes("Human", "Advisor"),
 			WithSuperTypes(SuperLegendary),
-			WithAbility(EntersBattlefieldTrigger(FuncEffect(
-				"register Bruvac mill doubler",
-				EffectProperties{},
-				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					g.AddMillReplacement(sourceID, func(g *Game, milledID uuid.UUID, amt int) int {
-						if milledID == controller {
-							return amt
-						}
-						if amt < 1 {
-							return amt
-						}
-						return amt * 2
-					})
-					return nil
-				}), false)),
+			WithMillReplacement(DoubleMillForOpponents),
 		)
 	})
 
@@ -5512,7 +5484,7 @@ func registerCreatures() {
 		etbDraw := WheneverPermanentEntersBattlefieldTrigger(
 			DrawCards(Fixed(1)), false, IsCreature,
 		).AndConditionData(EventSourceNotSelf{}).
-			AndConditionData(EventSourcePowerGreaterThanAllOthers{})
+			AndConditionData(eventSourcePowerGreaterThanAllOthers{})
 		return NewCreature("Selvala, Heart of the Wilds", "{1}{G}{G}", 2, 3,
 			WithSubTypes("Elf", "Scout"),
 			WithSuperTypes(SuperLegendary),

@@ -20,6 +20,31 @@ func (controllerDidNotAttackThisTurn) CheckTriggerCond(_ *GameEvent, g GameReade
 	return true
 }
 
+// eventSourcePowerGreaterThanAllOthers is satisfied when the event's source
+// permanent is a creature whose current power is strictly greater than every
+// other creature on the battlefield. Used by Selvala, Heart of the Wilds:
+// "Whenever another creature enters, if its power is greater than each other
+// creature's power, you may draw a card." Excludes the entering creature
+// itself from the comparison.
+type eventSourcePowerGreaterThanAllOthers struct{}
+
+func (eventSourcePowerGreaterThanAllOthers) CheckTriggerCond(evt *GameEvent, g GameReader, _, _ uuid.UUID) bool {
+	enterer := g.FindPermanent(evt.SourceID)
+	if enterer == nil || !enterer.HasType(TypeCreature) {
+		return false
+	}
+	enterPow := enterer.CurrentPower(g)
+	for _, p := range g.FilterBattlefield(IsCreature) {
+		if p.ID() == enterer.ID() {
+			continue
+		}
+		if p.CurrentPower(g) >= enterPow {
+			return false
+		}
+	}
+	return true
+}
+
 // anotherAuraAttachedTo returns true if any aura other than self is attached
 // to host. Used by Face of Divinity for "as long as another Aura is attached".
 func anotherAuraAttachedTo(g *Game, self, host *Permanent) bool {

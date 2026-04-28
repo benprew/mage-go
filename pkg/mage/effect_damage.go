@@ -6,45 +6,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// RevealTopAndDealDamage reveals the top card of the controller's
-// library and deals damage equal to that card's mana value to the
-// resolving target (player or permanent). Used by Riddle of Lightning:
-// "Choose any target. Scry 3, then reveal the top card of your library.
-// Riddle of Lightning deals damage equal to that card's mana value to
-// that permanent or player." The reveal does not mutate the library.
-func RevealTopAndDealDamage() Effect {
-	return FuncEffect(
-		"reveal top card; deal damage equal to its mana value to target",
-		EffectProperties{Outcome: OutcomeDetriment},
-		func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-			if len(targets) == 0 {
-				return nil
-			}
-			ctrl := g.GetPlayer(controller)
-			if ctrl == nil {
-				return nil
-			}
-			top := g.RevealTopN(ctrl, 1)
-			if len(top) == 0 {
-				return nil
-			}
-			amount := top[0].ManaCost().CMC()
-			if amount <= 0 {
-				return nil
-			}
-			tid := targets[0]
-			if perm := g.FindPermanent(tid); perm != nil {
-				g.DealDamageToPermanent(perm, amount, sourceID)
-				return nil
-			}
-			if p := g.GetPlayer(tid); p != nil {
-				g.DealDamageToPlayer(p, amount, sourceID)
-			}
-			return nil
-		},
-	)
-}
-
 // gainLifeEffect gains life for the controller.
 type gainLifeEffect struct {
 	amount int
