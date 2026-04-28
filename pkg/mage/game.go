@@ -162,6 +162,11 @@ type Game struct {
 	// stack and are dropped when the source leaves the battlefield (cleared in Apply).
 	millModifiers []millModifierEntry
 
+	// Life-gain amount modifiers (CR 614 replacement-style) keyed by source
+	// permanent ID. Used by Rhox Faithmender ("If you would gain life, you
+	// gain twice that much life instead.") and similar effects.
+	lifeGainModifiers []lifeGainModifierEntry
+
 	// Delayed triggers
 	delayedTriggers []*DelayedTrigger
 
@@ -990,8 +995,14 @@ func (g *Game) PlayerLoseLife(p Player, amount int) {
 	})
 }
 
-// PlayerGainLife handles life gain with replacement effects (Lich).
+// PlayerGainLife handles life gain with replacement effects (Lich) and
+// life-gain amount modifiers (Rhox Faithmender — "If you would gain
+// life, you gain twice that much life instead.").
 func (g *Game) PlayerGainLife(p Player, amount int) {
+	if amount <= 0 {
+		return
+	}
+	amount = g.ApplyLifeGainModifiers(p.PlayerID(), amount)
 	if amount <= 0 {
 		return
 	}
@@ -1427,7 +1438,7 @@ func (g *Game) executeDamageToCreature(a *DamageToCreatureAction) {
 	if src != nil && src.HasKeyword(Lifelink) {
 		srcPlayer := g.GetPlayer(src.Controller)
 		if srcPlayer != nil {
-			srcPlayer.GainLife(amount)
+			g.PlayerGainLife(srcPlayer, amount)
 		}
 	}
 	// Face-down: flip the target if it was dealt damage
