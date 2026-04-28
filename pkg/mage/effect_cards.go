@@ -495,11 +495,13 @@ func execReturnFromGraveyardToHandTarget(ctx *EffectContext, _ *returnFromGravey
 	if p == nil {
 		return ErrPlayerNotFound
 	}
-	card, ok := p.RemoveFromGraveyard(ctx.Targets[0])
-	if !ok {
-		return nil // target gone
+	for _, tid := range ctx.Targets {
+		card, ok := p.RemoveFromGraveyard(tid)
+		if !ok {
+			continue
+		}
+		p.AddToHand(card)
 	}
-	p.AddToHand(card)
 	return nil
 }
 
