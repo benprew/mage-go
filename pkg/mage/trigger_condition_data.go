@@ -78,21 +78,39 @@ func (EventSourceNotSelf) CheckTriggerCond(evt *GameEvent, _ GameReader, sourceI
 }
 
 // EventSourceControlledByController checks that the permanent referenced by
-// evt.SourceID is controlled by the trigger's controller.
+// evt.SourceID is controlled by the trigger's controller. For events fired
+// after the permanent has left the battlefield (e.g. EvtCreatureDied), it
+// falls back to the LKI snapshot recorded by RemoveFromBattlefield.
 type EventSourceControlledByController struct{}
 
 func (EventSourceControlledByController) CheckTriggerCond(evt *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
-	perm := g.FindPermanent(evt.SourceID)
-	return perm != nil && perm.Controller == controllerID
+	if perm := g.FindPermanent(evt.SourceID); perm != nil {
+		return perm.Controller == controllerID
+	}
+	if game, ok := g.(*Game); ok {
+		if lki := game.LKI(evt.SourceID); lki != nil {
+			return lki.Controller == controllerID
+		}
+	}
+	return false
 }
 
 // EventSourceControlledByOpponent checks that the permanent referenced by
-// evt.SourceID is NOT controlled by the trigger's controller.
+// evt.SourceID is NOT controlled by the trigger's controller. For events
+// fired after the permanent has left the battlefield (e.g. EvtCreatureDied),
+// it falls back to the LKI snapshot.
 type EventSourceControlledByOpponent struct{}
 
 func (EventSourceControlledByOpponent) CheckTriggerCond(evt *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
-	perm := g.FindPermanent(evt.SourceID)
-	return perm != nil && perm.Controller != controllerID
+	if perm := g.FindPermanent(evt.SourceID); perm != nil {
+		return perm.Controller != controllerID
+	}
+	if game, ok := g.(*Game); ok {
+		if lki := game.LKI(evt.SourceID); lki != nil {
+			return lki.Controller != controllerID
+		}
+	}
+	return false
 }
 
 // EventSourceHasType checks that the permanent at evt.SourceID has a card type.
@@ -101,8 +119,15 @@ type EventSourceHasType struct {
 }
 
 func (c EventSourceHasType) CheckTriggerCond(evt *GameEvent, g GameReader, _, _ uuid.UUID) bool {
-	perm := g.FindPermanent(evt.SourceID)
-	return perm != nil && perm.HasType(c.Type)
+	if perm := g.FindPermanent(evt.SourceID); perm != nil {
+		return perm.HasType(c.Type)
+	}
+	if game, ok := g.(*Game); ok {
+		if lki := game.LKI(evt.SourceID); lki != nil {
+			return lki.HasType(c.Type)
+		}
+	}
+	return false
 }
 
 // EventSourceHasSubType checks that the permanent at evt.SourceID has a subtype.
@@ -111,8 +136,15 @@ type EventSourceHasSubType struct {
 }
 
 func (c EventSourceHasSubType) CheckTriggerCond(evt *GameEvent, g GameReader, _, _ uuid.UUID) bool {
-	perm := g.FindPermanent(evt.SourceID)
-	return perm != nil && perm.HasSubType(c.SubType)
+	if perm := g.FindPermanent(evt.SourceID); perm != nil {
+		return perm.HasSubType(c.SubType)
+	}
+	if game, ok := g.(*Game); ok {
+		if lki := game.LKI(evt.SourceID); lki != nil {
+			return lki.HasSubType(c.SubType)
+		}
+	}
+	return false
 }
 
 // EventTargetHasSubType checks that the permanent at evt.TargetID has a subtype.

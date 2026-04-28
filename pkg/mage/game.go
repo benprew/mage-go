@@ -138,6 +138,13 @@ type Game struct {
 	// resolution.
 	lastSacrificed *SacrificedSnapshot
 
+	// LKI snapshots for permanents that have left the battlefield, keyed by
+	// permanent ID. Populated by RemoveFromBattlefield so that death/leave
+	// triggers (and their conditions) can read the dying permanent's
+	// controller, types, P/T, and token-ness after it has moved zones.
+	// Cleared at end-of-turn cleanup.
+	lki map[uuid.UUID]*PermanentLKI
+
 	// Mill amount modifiers (CR 614 replacement-style) keyed by source permanent ID.
 	// Each entry maps milled-player ID -> proposed amount -> new amount; modifiers
 	// stack and are dropped when the source leaves the battlefield (cleared in Apply).
@@ -676,6 +683,10 @@ func (g *Game) turnFaceUp(perm *Permanent) {
 
 // RemoveFromBattlefield removes a permanent and handles cleanup.
 func (g *Game) RemoveFromBattlefield(perm *Permanent) {
+	// Snapshot LKI before any state mutation so death/leave-triggers can
+	// read the dying permanent's controller, types, and P/T after the move.
+	g.captureLKI(perm)
+
 	// Capture abilities before removal (for "leaves battlefield" triggers on self)
 	selfAbilities := make([]Ability, len(perm.RuntimeAbilities))
 	copy(selfAbilities, perm.RuntimeAbilities)
@@ -2913,6 +2924,7 @@ func (g *Game) doCleanupActions() bool {
 	g.instantsCastThisTurn = make(map[uuid.UUID]int)
 	g.timesTargetedThisTurn = make(map[uuid.UUID]int)
 	g.creatureDeathsThisTurn = 0
+	g.clearLKI()
 	g.resetPerTurnTrackers()
 	// Clear mana restrictions
 	g.artifactManaOnly = make(map[uuid.UUID]bool)
