@@ -645,3 +645,59 @@ func TestSangromancer_GainsOnOpponentDiscard(t *testing.T) {
 	g.Execute()
 	g.AssertLife(gametest.PlayerA, 23)
 }
+
+func TestKelsFightFixer_DrawOnSacrifice(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Kels, Fight Fixer")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	// One Swamp pays the {1} sacrifice cost, another pays {U/B} for the may-pay draw.
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 2)
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Hill Giant")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Kels, Fight Fixer")
+	g.ChoosePermanent(gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "Hill Giant", 1)
+}
+
+func TestKelsFightFixer_DeclineDraw(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Kels, Fight Fixer")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 2)
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Hill Giant")
+	tpA := g.GetPlayer(gametest.PlayerA)
+	tpA.QueueMayAbilityChoices(false)
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Kels, Fight Fixer")
+	g.ChoosePermanent(gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "Hill Giant", 0)
+}
+
+func TestDrainpipeVermin_DiscardOnDeath(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Drainpipe Vermin")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Hill Giant")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Drainpipe Vermin")
+	g.ChooseTarget(gametest.PlayerA, "PlayerB")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerB, "Hill Giant", 0)
+	g.AssertGraveyardCount(gametest.PlayerB, "Hill Giant", 1)
+}
+
+func TestEternalTaskmaster_ReturnOnAttack(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Eternal Taskmaster")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 3)
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Hill Giant")
+	g.Attack(3, gametest.PlayerA, "Eternal Taskmaster")
+	g.StopAt(3, core.EndStep)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "Hill Giant", 1)
+}
+

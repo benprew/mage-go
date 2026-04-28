@@ -57,9 +57,17 @@ func registerEnchantments() {
 	// Branching Evolution {2}{G}
 	// Enchantment
 	// If one or more +1/+1 counters would be put on a creature you control, twice that many +1/+1 counters are put on that creature instead.
-	// XXX: requires counter-doubling replacement effect
 	Register("Branching Evolution", func() Card {
-		return NewEnchantment("Branching Evolution", "{2}{G}")
+		return NewEnchantment("Branching Evolution", "{2}{G}",
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect("register +1/+1 counter doubler for creatures you control",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						g.AddCounterDoubler(sourceID, P1P1, And(IsCreature, ControlledBy(controller)))
+						return nil
+					}), false),
+			),
+		)
 	})
 
 	// Cathars' Crusade {3}{W}{W}
@@ -106,9 +114,37 @@ func registerEnchantments() {
 	// Cradle of Vitality {3}{W}
 	// Enchantment
 	// Whenever you gain life, you may pay {1}{W}. If you do, put a +1/+1 counter on target creature for each 1 life you gained.
-	// XXX: requires may-pay-mana cost ({1}{W}) inside trigger resolution; gain-life trigger is available but the conditional payment is not. Implementing the always-pump branch would be a wrong simplification.
 	Register("Cradle of Vitality", func() Card {
-		return NewEnchantment("Cradle of Vitality", "{3}{W}")
+		return NewEnchantment("Cradle of Vitality", "{3}{W}",
+			WithAbility(WheneverYouGainLifeTrigger(
+				MayPayMana("{1}{W}",
+					"put a +1/+1 counter on target creature for each 1 life you gained",
+					FuncEffect("put a +1/+1 counter on target creature for each 1 life you gained",
+						EffectProperties{Outcome: OutcomeBenefit},
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+							n := g.EventAmount()
+							if n <= 0 {
+								return nil
+							}
+							p := g.GetPlayer(controller)
+							if p == nil {
+								return nil
+							}
+							candidates := g.FilterBattlefield(IsCreature)
+							if len(candidates) == 0 {
+								return nil
+							}
+							chosen := p.ChoosePermanent(candidates, "target creature for Cradle of Vitality counters", g)
+							if chosen == nil {
+								return nil
+							}
+							g.AddCountersWithReplacement(chosen, P1P1, n, sourceID, false)
+							return nil
+						}),
+				),
+				false,
+			)),
+		)
 	})
 
 	// Curiosity {U}

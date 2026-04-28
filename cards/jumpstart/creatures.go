@@ -314,7 +314,6 @@ func registerCreatures() {
 	// 4/4
 	// {3}: Exile another target creature you control, then return it to the battlefield under its owner's control.
 	// Whenever another creature you control enters, you may pay {G/W}. If you do, put a +1/+1 counter on it. If it's a Unicorn, put two +1/+1 counters on it instead. ({G/W} can be paid with either {G} or {W}.)
-	// XXX: may-pay-mana cost in trigger resolution not supported; ETB-counter trigger deferred.
 	Register("Emiel the Blessed", func() Card {
 		return NewCreature("Emiel the Blessed", "{2}{W}{W}", 4, 4,
 			WithSubTypes("Unicorn"),
@@ -341,6 +340,33 @@ func registerCreatures() {
 				GenericCost(3),
 				WithTarget(TargetControlledCreature()),
 			),
+			WithAbility(NewTriggered(EvtEntersBattlefield, false,
+				MayPayMana("{G/W}",
+					"put a +1/+1 counter on it (two if it's a Unicorn)",
+					FuncEffect("put a +1/+1 counter on it; two if it's a Unicorn",
+						EffectProperties{Outcome: OutcomeBenefit},
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+							if len(targets) == 0 {
+								return nil
+							}
+							perm := g.FindPermanent(targets[0])
+							if perm == nil {
+								return nil
+							}
+							n := 1
+							if perm.HasSubType("Unicorn") {
+								n = 2
+							}
+							g.AddCountersWithReplacement(perm, P1P1, n, sourceID, false)
+							return nil
+						},
+					),
+				),
+			).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+				EventSourceNotSelf{},
+				EventSourceMatchesPermanentFilter{Filter: IsCreature},
+				EventSourceControlledByController{},
+			}})),
 		)
 	})
 
@@ -1901,10 +1927,13 @@ func registerCreatures() {
 	// Creature — Rat
 	// 1/1
 	// When this creature dies, you may pay {B}. If you do, target player discards a card.
-	// XXX: requires player-controlled may-pay-mana primitive in trigger resolution
 	Register("Drainpipe Vermin", func() Card {
 		return NewCreature("Drainpipe Vermin", "{B}", 1, 1,
 			WithSubTypes("Rat"),
+			WithAbility(NewTriggered(EvtCreatureDied, false,
+				MayPayMana("{B}", "target player discards a card", DiscardCards(Fixed(1))),
+			).SetConditionData(EventSourceIsSelf{}).
+				AddTarget(TargetPlayer())),
 		)
 	})
 
@@ -1967,11 +1996,16 @@ func registerCreatures() {
 	// 2/3
 	// This creature enters tapped.
 	// Whenever this creature attacks, you may pay {2}{B}. If you do, return target creature card from your graveyard to your hand.
-	// XXX: requires player-controlled may-pay-mana primitive in trigger resolution
 	Register("Eternal Taskmaster", func() Card {
 		return NewCreature("Eternal Taskmaster", "{1}{B}", 2, 3,
 			WithSubTypes("Zombie"),
 			WithKeyword(EntersTapped),
+			WithAbility(AttacksTrigger(
+				MayPayMana("{2}{B}",
+					"return target creature card from your graveyard to your hand",
+					ReturnFromGraveyardToHandTarget()),
+				false,
+			).AddTarget(TargetCreatureInYourGraveyard())),
 		)
 	})
 
@@ -2270,12 +2304,15 @@ func registerCreatures() {
 	// Menace
 	// Whenever you sacrifice a creature, you may pay {U/B}. If you do, draw a card. ({U/B} can be paid with either {U} or {B}.)
 	// {1}, Sacrifice a creature: Kels gains indestructible until end of turn.
-	// XXX: requires may-pay-mana cost in trigger resolution; sacrifice trigger detection is available but unconditional draw would be a wrong simplification.
 	Register("Kels, Fight Fixer", func() Card {
 		return NewCreature("Kels, Fight Fixer", "{2}{B}{B}", 4, 3,
 			WithSubTypes("Azra", "Warlock"),
 			WithSuperTypes(SuperLegendary),
 			WithKeyword(Menace),
+			WithAbility(WheneverYouSacrificeAnotherCreatureTrigger(
+				MayPayMana("{U/B}", "draw a card", DrawCards(Fixed(1))),
+				false,
+			)),
 			WithActivatedAbility(
 				GrantKeyword(Indestructible).Targeting(ToSource()).Until(EndOfTurn),
 				GenericCost(1),
@@ -2550,7 +2587,7 @@ func registerCreatures() {
 	// Flying
 	// Each other Rogue creature you control enters with an additional +1/+1 counter on it.
 	// Whenever a creature you control with a +1/+1 counter on it deals combat damage to a player, that player discards a card.
-	// XXX: requires "enters with additional counter" replacement effect
+	// XXX: AddETBAdditionalCounters only augments an existing AddCountersAction; a creature entering with no base counters never triggers the replacement, so the primitive cannot wire this card. Also need a "creature-you-control-with-+1/+1 counter deals combat damage to a player" trigger for the second ability.
 	Register("Oona's Blackguard", func() Card {
 		return NewCreature("Oona's Blackguard", "{1}{B}", 1, 1,
 			WithSubTypes("Faerie", "Rogue"),

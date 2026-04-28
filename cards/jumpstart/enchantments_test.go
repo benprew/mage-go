@@ -324,3 +324,60 @@ func TestExquisiteBlood_NoGainOnOwnLifeLoss(t *testing.T) {
 	g.Execute()
 	g.AssertLife(gametest.PlayerA, 17)
 }
+
+func TestBranchingEvolution_DoublesP1P1Counters(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Branching Evolution")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Bloodbond Vampire")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Healing Salve")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Healing Salve", "PlayerA")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Bloodbond Vampire would normally get 1 +1/+1 counter on life gain.
+	// Branching Evolution doubles to 2.
+	g.AssertCounterCount(gametest.PlayerA, "Bloodbond Vampire", core.P1P1, 2)
+}
+
+func TestBranchingEvolution_DoesNotDoubleOpponentCounters(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Branching Evolution")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Bloodbond Vampire")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Plains")
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Healing Salve")
+	g.CastSpell(1, core.PostcombatMain, gametest.PlayerB, "Healing Salve", "PlayerB")
+	g.StopAt(2, core.EndStep)
+	g.Execute()
+	g.AssertCounterCount(gametest.PlayerB, "Bloodbond Vampire", core.P1P1, 1)
+}
+
+func TestCradleOfVitality_PutCountersWhenPaying(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Cradle of Vitality")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	// Plains for Healing Salve {W}; two more for the may-pay {1}{W}.
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 3)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Healing Salve")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Healing Salve", "PlayerA")
+	g.ChoosePermanent(gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerA, 23)
+	// Healing Salve gains 3 life, so 3 +1/+1 counters on the bears.
+	g.AssertCounterCount(gametest.PlayerA, "Grizzly Bears", core.P1P1, 3)
+}
+
+func TestCradleOfVitality_DeclinePayment(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Cradle of Vitality")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 3)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Healing Salve")
+	tpA := g.GetPlayer(gametest.PlayerA)
+	tpA.QueueMayAbilityChoices(false)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Healing Salve", "PlayerA")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerA, 23)
+	g.AssertCounterCount(gametest.PlayerA, "Grizzly Bears", core.P1P1, 0)
+}

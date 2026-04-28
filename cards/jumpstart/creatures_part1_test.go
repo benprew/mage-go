@@ -564,6 +564,42 @@ func TestEmielTheBlessed(t *testing.T) {
 	g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
 }
 
+func TestEmielTheBlessed_PayCounterOnNonUnicorn(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Emiel the Blessed")
+	// One Forest pays the may-pay {G/W} when Grizzly Bears enters.
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Grizzly Bears")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertCounterCount(gametest.PlayerA, "Grizzly Bears", core.P1P1, 1)
+}
+
+func TestEmielTheBlessed_PayTwoCountersOnUnicorn(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Emiel the Blessed")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 3)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Mesa Unicorn")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Mesa Unicorn")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertCounterCount(gametest.PlayerA, "Mesa Unicorn", core.P1P1, 2)
+}
+
+func TestEmielTheBlessed_NoTriggerOnSelfETB(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Emiel the Blessed")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 4)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Emiel the Blessed")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Trigger says "another creature you control" — Emiel itself shouldn't trigger.
+	g.AssertCounterCount(gametest.PlayerA, "Emiel the Blessed", core.P1P1, 0)
+}
+
 func TestLenaSelflessChampion(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lena, Selfless Champion")
