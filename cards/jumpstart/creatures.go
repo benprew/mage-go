@@ -1598,10 +1598,11 @@ func registerCreatures() {
 	// Creature — Vampire Shaman Ally
 	// 3/3
 	// Whenever you gain life, put a +1/+1 counter on this creature.
-	// XXX: requires gain-life event trigger
 	Register("Bloodbond Vampire", func() Card {
 		return NewCreature("Bloodbond Vampire", "{2}{B}{B}", 3, 3,
 			WithSubTypes("Vampire", "Shaman", "Ally"),
+			WithAbility(WheneverYouGainLifeTrigger(
+				AddCounters(P1P1, Fixed(1)).Targeting(ToSource()), false)),
 		)
 	})
 
@@ -1912,11 +1913,13 @@ func registerCreatures() {
 	// Flying
 	// When this creature enters, target opponent discards a card.
 	// Whenever an opponent discards a card, that player loses 2 life.
-	// XXX: requires discard event for the "whenever an opponent discards" trigger
+	// XXX: requires "target opponent discards a card" ETB primitive
 	Register("Fell Specter", func() Card {
 		return NewCreature("Fell Specter", "{3}{B}", 1, 3,
 			WithSubTypes("Specter"),
 			WithKeyword(Flying),
+			WithAbility(WheneverOpponentDiscardsTrigger(
+				TargetPlayerLoseLife(Fixed(2)), false)),
 		)
 	})
 
@@ -2112,10 +2115,11 @@ func registerCreatures() {
 	// Creature — Vampire Warrior Ally
 	// 4/5
 	// Whenever you gain life, this creature gains flying until end of turn.
-	// XXX: requires gain-life event trigger
 	Register("Kalastria Nightwatch", func() Card {
 		return NewCreature("Kalastria Nightwatch", "{4}{B}", 4, 5,
 			WithSubTypes("Vampire", "Warrior", "Ally"),
+			WithAbility(WheneverYouGainLifeTrigger(
+				GrantKeyword(Flying).Targeting(ToSource()).Until(EndOfTurn), false)),
 		)
 	})
 
@@ -2125,7 +2129,7 @@ func registerCreatures() {
 	// Menace
 	// Whenever you sacrifice a creature, you may pay {U/B}. If you do, draw a card. ({U/B} can be paid with either {U} or {B}.)
 	// {1}, Sacrifice a creature: Kels gains indestructible until end of turn.
-	// XXX: requires sacrifice event and hybrid-mana costs
+	// XXX: requires may-pay-mana cost in trigger resolution and hybrid-mana cost; sacrifice trigger detection is available but unconditional draw would be a wrong simplification.
 	Register("Kels, Fight Fixer", func() Card {
 		return NewCreature("Kels, Fight Fixer", "{2}{B}{B}", 4, 3,
 			WithSubTypes("Azra", "Warlock"),
@@ -2225,12 +2229,18 @@ func registerCreatures() {
 	// 2/1
 	// Flying, deathtouch
 	// Whenever you gain life, this creature gets +1/+1 until end of turn.
-	// XXX: requires gain-life event trigger
 	Register("Malakir Familiar", func() Card {
 		return NewCreature("Malakir Familiar", "{2}{B}", 2, 1,
 			WithSubTypes("Bat"),
 			WithKeyword(Flying),
 			WithKeyword(Deathtouch),
+			WithAbility(WheneverYouGainLifeTrigger(
+				FuncEffect("this creature gets +1/+1 until end of turn",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						g.AddContinuousEffect(TemporaryBoost(sourceID, 1, 1))
+						return nil
+					}), false)),
 		)
 	})
 
@@ -2510,7 +2520,6 @@ func registerCreatures() {
 	// Flying
 	// Whenever a creature an opponent controls dies, you may gain 3 life.
 	// Whenever an opponent discards a card, you may gain 3 life.
-	// XXX: discard-trigger half requires discard event
 	Register("Sangromancer", func() Card {
 		return NewCreature("Sangromancer", "{2}{B}{B}", 3, 3,
 			WithSubTypes("Vampire", "Shaman"),
@@ -2518,6 +2527,7 @@ func registerCreatures() {
 			WithAbility(NewTriggered(EvtCreatureDied, true,
 				GainLife(3),
 			).SetConditionData(EventPlayerIsNotController{})),
+			WithAbility(WheneverOpponentDiscardsTrigger(GainLife(3), true)),
 		)
 	})
 

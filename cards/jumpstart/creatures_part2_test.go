@@ -573,3 +573,75 @@ func TestTemptingWitch_SacFoodDrainsTargetPlayer(t *testing.T) {
 	g.AssertPermanentCount(gametest.PlayerA, "Food", 0)
 	g.AssertLife(gametest.PlayerB, 17)
 }
+
+func TestBloodbondVampire_GainsCounterOnLifeGain(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Bloodbond Vampire")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Healing Salve")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Healing Salve", "PlayerA")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerA, 23)
+	g.AssertCounterCount(gametest.PlayerA, "Bloodbond Vampire", core.P1P1, 1)
+}
+
+func TestBloodbondVampire_NoCounterOnOpponentLifeGain(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Bloodbond Vampire")
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Healing Salve")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Plains")
+	g.CastSpell(1, core.PostcombatMain, gametest.PlayerB, "Healing Salve", "PlayerB")
+	g.StopAt(2, core.EndStep)
+	g.Execute()
+	g.AssertCounterCount(gametest.PlayerA, "Bloodbond Vampire", core.P1P1, 0)
+}
+
+func TestKalastriaNightwatch_GainsFlyingOnLifeGain(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Kalastria Nightwatch")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Healing Salve")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+	g.AssertHasAbility(gametest.PlayerA, "Kalastria Nightwatch", core.Flying, false)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Healing Salve", "PlayerA")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Kalastria Nightwatch", core.Flying, true)
+}
+
+func TestMalakirFamiliar_PumpsOnLifeGain(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Malakir Familiar")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Healing Salve")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Healing Salve", "PlayerA")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Malakir Familiar", 3, 2)
+}
+
+func TestFellSpecter_DiscardCausesLifeLoss(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Fell Specter")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Mind Twist")
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Mountain", 2)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 2)
+	g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerA, "Mind Twist", 1, "PlayerB")
+	g.ChooseDiscard(gametest.PlayerB, "Mountain")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerB, 18)
+}
+
+func TestSangromancer_GainsOnOpponentDiscard(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sangromancer")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Mind Twist")
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Mountain", 2)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 2)
+	g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerA, "Mind Twist", 1, "PlayerB")
+	g.ChooseDiscard(gametest.PlayerB, "Mountain")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerA, 23)
+}
