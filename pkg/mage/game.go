@@ -2812,12 +2812,44 @@ func (g *Game) AutoTapForCost(playerID uuid.UUID, mc ManaCost) error {
 
 // CanAfford returns true if a player has enough mana (pool + untapped sources) to pay a cost.
 func (g *Game) CanAfford(playerID uuid.UUID, mc ManaCost) bool {
-	p := g.GetPlayer(playerID)
-	if p == nil {
+	hypothetical := g.buildHypotheticalPool(playerID)
+	if hypothetical == nil {
 		return false
 	}
+	return hypothetical.CanPay(mc)
+}
 
-	// Build a hypothetical pool: current pool + what untapped sources would produce
+// MaxXValue returns the maximum X value a player can pay for a spell with cost mc,
+// considering mana in pool plus untapped sources.
+func (g *Game) MaxXValue(playerID uuid.UUID, mc ManaCost) int {
+	if !mc.HasX || mc.XCount == 0 {
+		return 0
+	}
+	hypothetical := g.buildHypotheticalPool(playerID)
+	if hypothetical == nil {
+		return 0
+	}
+	surplus := hypothetical.Surplus(ManaCost{
+		Generic: mc.Generic,
+		White:   mc.White,
+		Blue:    mc.Blue,
+		Black:   mc.Black,
+		Red:     mc.Red,
+		Green:   mc.Green,
+	})
+	if surplus < 0 {
+		return 0
+	}
+	return surplus / mc.XCount
+}
+
+// buildHypotheticalPool creates a mana pool representing all mana a player
+// could produce (current pool + untapped sources).
+func (g *Game) buildHypotheticalPool(playerID uuid.UUID) *ManaPool {
+	p := g.GetPlayer(playerID)
+	if p == nil {
+		return nil
+	}
 	hypothetical := NewManaPool()
 	pool := p.ManaPool()
 	for _, color := range []Color{White, Blue, Black, Red, Green, Colorless} {
@@ -2828,8 +2860,7 @@ func (g *Game) CanAfford(playerID uuid.UUID, mc ManaCost) bool {
 		hypothetical.Add(src.Color, g.countManaBonuses(src.PermanentID))
 	}
 	hypothetical.ManaConversions = pool.ManaConversions
-
-	return hypothetical.CanPay(mc)
+	return hypothetical
 }
 
 // ActivatableInfo describes an activated ability on a permanent that can currently be used.

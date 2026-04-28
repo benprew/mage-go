@@ -155,6 +155,15 @@ func (mp *ManaPool) CanPay(mc ManaCost) bool {
 	return remaining >= mc.Generic
 }
 
+// Surplus returns how much mana would remain after paying the given cost,
+// or -1 if the cost cannot be paid.
+func (mp *ManaPool) Surplus(mc ManaCost) int {
+	if !mp.CanPay(mc) {
+		return -1
+	}
+	return len(mp.pool) - mc.CMC()
+}
+
 // Pay removes mana from the pool to pay a cost. Returns error if insufficient.
 func (mp *ManaPool) Pay(mc ManaCost) error {
 	if !mp.CanPay(mc) {

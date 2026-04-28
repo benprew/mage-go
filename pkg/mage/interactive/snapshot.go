@@ -7,7 +7,6 @@ import (
 
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/eval"
 )
 
 func buildRulesText(c mage.Card) string {
@@ -265,17 +264,9 @@ func GetAvailableActions(g *mage.Game, playerID uuid.UUID) []ActionOption {
 			validLabels = buildTargetLabels(g, validTargets)
 		}
 		mc := card.ManaCost()
-		maxX := 0
-		if mc.HasX {
-			availMana := eval.CountAvailableMana(g, playerID)
-			maxX = availMana - mc.CMC()
-			if maxX < 0 {
-				maxX = 0
-			}
-		}
-		options = append(options, ActionOption{
+		opt := ActionOption{
 			Type:              ActionCastSpell,
-			Label:             fmt.Sprintf("Cast %s %s", card.Name(), card.ManaCost()),
+			Label:             fmt.Sprintf("Cast %s %s", card.Name(), mc),
 			CardID:            card.ID(),
 			CardName:          card.Name(),
 			NeedsTarget:       needsTarget,
@@ -283,8 +274,12 @@ func GetAvailableActions(g *mage.Game, playerID uuid.UUID) []ActionOption {
 			ManaCost:          mc.String(),
 			ValidTargets:      validTargets,
 			ValidTargetLabels: validLabels,
-			MaxX:              maxX,
-		})
+		}
+		if mc.HasX {
+			opt.NeedsX = true
+			opt.MaxXValue = g.MaxXValue(playerID, mc)
+		}
+		options = append(options, opt)
 	}
 
 	for _, info := range g.GetActivatableAbilities(playerID) {

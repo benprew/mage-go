@@ -365,6 +365,8 @@ type actionOptionJSON struct {
 	AbilityIndex int    `json:"abilityIndex"`
 	NeedsTarget  bool   `json:"needsTarget"`
 	ManaCost     string `json:"manaCost"`
+	NeedsX       bool   `json:"needsX,omitempty"`
+	MaxXValue    int    `json:"maxXValue,omitempty"`
 }
 
 func gameMsgToJSON(msg interactive.GameMsg) gameMsgJSON {
@@ -379,6 +381,8 @@ func gameMsgToJSON(msg interactive.GameMsg) gameMsgJSON {
 			AbilityIndex: o.AbilityIndex,
 			NeedsTarget:  o.NeedsTarget,
 			ManaCost:     o.ManaCost,
+			NeedsX:       o.NeedsX,
+			MaxXValue:    o.MaxXValue,
 		}
 	}
 	return gameMsgJSON{
