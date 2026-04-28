@@ -30,6 +30,7 @@ type GameRules struct {
 	ActivationCostReductions map[uuid.UUID]int        // permanent ID → generic mana reduction for activated abilities
 	entersTappedRules []func(*Permanent) bool        // filters registered by continuous effects (Kismet, etc.)
 	SpellCostReducers []SpellCostReducer             // conditional generic-cost reducers registered each Apply() cycle
+	UncounterableFilters []uncounterableEntry        // static "can't be countered" filters (Allosaurus Shepherd, Vexing Shusher)
 }
 
 // NewGameRules creates a GameRules with all maps initialized.
@@ -70,6 +71,13 @@ func (r *GameRules) ResetPerCycle() {
 	r.ActivationCostReductions = make(map[uuid.UUID]int)
 	r.entersTappedRules = nil
 	r.SpellCostReducers = nil
+	r.UncounterableFilters = nil
+}
+
+// AddUncounterableFilter registers a "can't be countered" filter for this
+// Apply() cycle. Cleared by ResetPerCycle.
+func (r *GameRules) AddUncounterableFilter(sourceID uuid.UUID, filter UncounterableFilter) {
+	r.UncounterableFilters = append(r.UncounterableFilters, uncounterableEntry{SourceID: sourceID, Filter: filter})
 }
 
 // AddSpellCostReducer registers a conditional spell-cost reducer for this

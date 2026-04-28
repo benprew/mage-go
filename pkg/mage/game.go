@@ -1001,7 +1001,15 @@ func (g *Game) RemoveExiledCardBySource(exiledBy uuid.UUID) []ExiledCard {
 
 // CounterSpellOnStack removes a spell from the stack by its source ID.
 // The countered spell's card goes to its owner's graveyard.
+//
+// If the targeted spell is currently uncounterable — either because the
+// card was registered with [WithUncounterable] or a static filter
+// installed via [RegisterUncounterableStatic] matches — the counter has
+// no effect: the spell stays on the stack.
 func (g *Game) CounterSpellOnStack(spellID uuid.UUID) {
+	if obj := g.stack.FindBySourceID(spellID); obj != nil && g.IsSpellUncounterable(obj) {
+		return
+	}
 	obj := g.stack.RemoveBySourceID(spellID)
 	if obj != nil && obj.Card != nil {
 		owner := g.GetPlayer(obj.Card.Owner())

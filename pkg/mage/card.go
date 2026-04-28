@@ -53,6 +53,7 @@ type BaseCard struct {
 	attrSeeds       map[Attr]int // keyword/attr seeds; NewPermanent copies these to baseAttrs
 	additionalCosts []Cost       // additional costs paid when casting (sacrifice, discard, etc.)
 	castTargets     []Target     // targeting requirements when casting (auras, targeted ETBs)
+	uncounterable   bool         // intrinsic "can't be countered" flag (set via WithUncounterable)
 }
 
 // AttrSeeds returns the keyword/attr seeds for this card.
@@ -135,11 +136,14 @@ func (c *BaseCard) CloneFrom(other Card) {
 		c.castTargets = make([]Target, len(ct))
 		copy(c.castTargets, ct)
 	}
-	if bc, ok := other.(*BaseCard); ok && len(bc.attrSeeds) > 0 {
-		c.attrSeeds = make(map[Attr]int, len(bc.attrSeeds))
-		for k, v := range bc.attrSeeds {
-			c.attrSeeds[k] = v
+	if bc, ok := other.(*BaseCard); ok {
+		if len(bc.attrSeeds) > 0 {
+			c.attrSeeds = make(map[Attr]int, len(bc.attrSeeds))
+			for k, v := range bc.attrSeeds {
+				c.attrSeeds[k] = v
+			}
 		}
+		c.uncounterable = bc.uncounterable
 	}
 }
 
