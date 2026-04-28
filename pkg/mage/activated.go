@@ -106,6 +106,21 @@ func WithControlledSinceTurnStart() AbilityOption {
 	}
 }
 
+// ActivationCondition is a predicate that returns true if the activation
+// should be permitted. It runs in addition to the standard timing/cost
+// gates and is consulted by CanActivate.
+type ActivationCondition func(g *Game, src *Permanent, controller uuid.UUID) bool
+
+// WithActivationCondition adds a card-defined predicate gating activation
+// (e.g. "activate only if this creature's power is 4 or greater"). The
+// predicate is invoked with the (live) source permanent — pass nil-safe
+// logic, since the source may be missing if it left the battlefield.
+func WithActivationCondition(cond ActivationCondition) AbilityOption {
+	return func(a *SimpleActivatedAbility) {
+		a.activationConds = append(a.activationConds, cond)
+	}
+}
+
 // SimpleActivatedAbility is a basic activated ability.
 type SimpleActivatedAbility struct {
 	BaseAbility
@@ -123,6 +138,7 @@ type SimpleActivatedAbility struct {
 	ControlledSinceTurnStart bool      // Only if controlled since beginning of most recent turn
 	activatedThisTurn        bool      // Tracks whether this ability has been activated this turn
 	activationsThisTurn      int       // Counts activations for MaxActivationsPerTurn
+	activationConds          []ActivationCondition
 }
 
 // NewActivatedAbility creates an activated ability with a primary effect, a primary cost,
@@ -162,6 +178,14 @@ func (a *SimpleActivatedAbility) CanActivate(controller uuid.UUID, g *Game) bool
 		perm := g.FindPermanent(a.source)
 		if perm == nil || perm.TurnControlGained >= g.turn {
 			return false
+		}
+	}
+	if len(a.activationConds) > 0 {
+		src := g.FindPermanent(a.source)
+		for _, cond := range a.activationConds {
+			if !cond(g, src, controller) {
+				return false
+			}
 		}
 	}
 	for _, c := range a.costs {
