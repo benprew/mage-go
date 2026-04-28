@@ -38,6 +38,8 @@ const (
 	EvtEntersAttacking    // fired when a creature is put onto the battlefield attacking (CR 508.4)
 	EvtEntersBlocking     // fired when a creature is put onto the battlefield blocking (CR 509.4)
 	EvtScry               // fired when a player scries; Amount is the number of cards scried (CR 701.18)
+	EvtDiscard            // fired when a player discards a card; PlayerID = discarding player, SourceID = card ID
+	EvtSacrifice          // fired when a permanent is sacrificed; PlayerID = controller, SourceID = sacrificed permanent ID
 )
 
 // GameEvent carries data about a game event.

@@ -53,6 +53,23 @@ func (EventPlayerIsNotController) CheckTriggerCond(evt *GameEvent, _ GameReader,
 	return evt.PlayerID != controllerID
 }
 
+// EventPlayerIsOpponent is an alias for EventPlayerIsNotController, kept for
+// readability when expressing "an opponent did X" triggers in 2-player games.
+type EventPlayerIsOpponent struct{}
+
+func (EventPlayerIsOpponent) CheckTriggerCond(evt *GameEvent, _ GameReader, _, controllerID uuid.UUID) bool {
+	return evt.PlayerID != controllerID
+}
+
+// EventSacrificedPermanentIsCreature checks the Flag bit set by Game.Sacrifice
+// to indicate the sacrificed permanent was a creature. Used for "whenever you
+// sacrifice another creature" triggers.
+type EventSacrificedPermanentIsCreature struct{}
+
+func (EventSacrificedPermanentIsCreature) CheckTriggerCond(evt *GameEvent, _ GameReader, _, _ uuid.UUID) bool {
+	return evt.Flag
+}
+
 // EventSourceNotSelf checks evt.SourceID != sourceID ("another" creature).
 type EventSourceNotSelf struct{}
 

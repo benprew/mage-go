@@ -54,14 +54,20 @@ func GainLifeTarget(amount ValueSource) Effect {
 }
 
 func (e *gainLifeTargetEffect) EffectText() string {
-	if _, ok := e.amount.(xValue); ok {
+	switch e.amount.(type) {
+	case xValue:
 		return "target player gains X life"
+	case eventAmountValue:
+		return "target player gains that much life"
 	}
 	return fmt.Sprintf("target player gains %d life", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil))
 }
 func (e *gainLifeTargetEffect) EffectProps() EffectProperties {
 	lg := 0
-	if _, ok := e.amount.(xValue); !ok {
+	switch e.amount.(type) {
+	case xValue, eventAmountValue:
+		// dynamic; report 0 for static heuristics
+	default:
 		lg = e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil)
 	}
 	return EffectProperties{Outcome: OutcomeBenefit, LifeGain: lg}
@@ -98,6 +104,26 @@ func (e *loseLifeDynamicEffect) EffectText() string {
 	return "lose " + e.amount.Text() + " life"
 }
 func (e *loseLifeDynamicEffect) EffectProps() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
+
+// loseLifeTargetEffect causes a target player (or the controller if no target)
+// to lose life equal to a dynamic value. Used for "target opponent loses N life".
+type loseLifeTargetEffect struct {
+	amount ValueSource
+}
+
+// TargetPlayerLoseLife creates an effect that causes the target player (first
+// player target) to lose the given amount of life. Falls back to the controller
+// if no target is supplied.
+func TargetPlayerLoseLife(amount ValueSource) Effect {
+	return DataEffect(&loseLifeTargetEffect{amount: amount})
+}
+
+func (e *loseLifeTargetEffect) EffectText() string {
+	return "target player loses " + e.amount.Text() + " life"
+}
+func (e *loseLifeTargetEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 

@@ -286,6 +286,81 @@ func RampageTrigger(n int) *GenericTriggered {
 	).SetConditionData(SourceIsBlockedAttacker{})
 }
 
+// WheneverYouGainLifeTrigger fires whenever the controller gains life
+// (CR 119.9). evt.Amount is the amount gained.
+func WheneverYouGainLifeTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtLifeGained, optional, effect).
+		SetConditionData(EventPlayerIsController{})
+}
+
+// WheneverPlayerGainsLifeTrigger fires whenever any player gains life.
+// evt.PlayerID identifies the gaining player; evt.Amount is the amount gained.
+func WheneverPlayerGainsLifeTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtLifeGained, optional, effect)
+}
+
+// WheneverYouLoseLifeTrigger fires whenever the controller loses life
+// (CR 119.9). evt.Amount is the amount lost.
+func WheneverYouLoseLifeTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtLifeLost, optional, effect).
+		SetConditionData(EventPlayerIsController{})
+}
+
+// WheneverOpponentLosesLifeTrigger fires whenever an opponent loses life
+// (CR 119.9; used by Exquisite Blood). evt.Amount is the amount lost.
+func WheneverOpponentLosesLifeTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtLifeLost, optional, effect).
+		SetConditionData(EventPlayerIsOpponent{})
+}
+
+// WheneverPlayerLosesLifeTrigger fires whenever any player loses life.
+// evt.PlayerID identifies the losing player; evt.Amount is the amount lost.
+func WheneverPlayerLosesLifeTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtLifeLost, optional, effect)
+}
+
+// WheneverPlayerDiscardsTrigger fires whenever any player discards a card.
+// evt.PlayerID is the discarding player; evt.SourceID is the discarded card ID.
+func WheneverPlayerDiscardsTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtDiscard, optional, effect)
+}
+
+// WheneverOpponentDiscardsTrigger fires whenever an opponent discards a card
+// (used by Fell Specter, Sangromancer).
+func WheneverOpponentDiscardsTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtDiscard, optional, effect).
+		SetConditionData(EventPlayerIsOpponent{})
+}
+
+// WheneverYouDiscardTrigger fires whenever the controller discards a card.
+func WheneverYouDiscardTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtDiscard, optional, effect).
+		SetConditionData(EventPlayerIsController{})
+}
+
+// WheneverYouSacrificeAnotherCreatureTrigger fires whenever the controller
+// sacrifices a creature other than the source permanent. The sacrificed
+// permanent's identity is reported via evt.SourceID, the controller via
+// evt.PlayerID, and creature-ness via evt.Flag.
+func WheneverYouSacrificeAnotherCreatureTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtSacrifice, optional, effect).
+		SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+			EventPlayerIsController{},
+			EventSacrificedPermanentIsCreature{},
+			EventSourceNotSelf{},
+		}})
+}
+
+// WheneverYouSacrificeTrigger fires whenever the controller sacrifices any
+// permanent (creature or otherwise), excluding the source itself.
+func WheneverYouSacrificeTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtSacrifice, optional, effect).
+		SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+			EventPlayerIsController{},
+			EventSourceNotSelf{},
+		}})
+}
+
 // WhenOpponentPermanentBecomesTappedTrigger fires when a permanent matching the
 // filter that an opponent controls becomes tapped.
 func WhenOpponentPermanentBecomesTappedTrigger(effect Effect, optional bool, filter PermanentFilter) *GenericTriggered {

@@ -138,6 +138,8 @@ Life effects:
 	[GainLife](amount int)                   // controller gains life
 	[GainLifeTarget](amount ValueSource)     // target player gains life
 	[LoseLife](amount int)                   // controller loses life
+	[LoseLifeAmount](amount ValueSource)     // controller loses dynamic life
+	[TargetPlayerLoseLife](amount ValueSource) // target player loses life
 	[SacrificeCreatureOrDamage](dmg int)     // sacrifice or take damage (Lord of the Pit)
 
 Card manipulation effects:
@@ -584,6 +586,23 @@ Convenience constructors (set condition automatically):
 	[WhenOpponentPermanentBecomesTappedTrigger](e, opt, filter) // EvtTapped, opponent's matching permanent
 	[PutIntoGraveyardFromBattlefieldTrigger](effect, optional)  // EvtPutIntoGraveyardFromBattlefield, self
 	[SacrificeAtUpkeepUnlessPay](manaCost)                      // sacrifice unless pay at upkeep
+	[WheneverYouGainLifeTrigger](effect, optional)              // EvtLifeGained, controller (CR 119.9)
+	[WheneverPlayerGainsLifeTrigger](effect, optional)          // EvtLifeGained, any player
+	[WheneverYouLoseLifeTrigger](effect, optional)              // EvtLifeLost, controller (CR 119.9)
+	[WheneverOpponentLosesLifeTrigger](effect, optional)        // EvtLifeLost, opponent (Exquisite Blood)
+	[WheneverPlayerLosesLifeTrigger](effect, optional)          // EvtLifeLost, any player
+	[WheneverYouDiscardTrigger](effect, optional)               // EvtDiscard, controller
+	[WheneverOpponentDiscardsTrigger](effect, optional)         // EvtDiscard, opponent (Fell Specter)
+	[WheneverPlayerDiscardsTrigger](effect, optional)           // EvtDiscard, any player
+	[WheneverYouSacrificeAnotherCreatureTrigger](effect, opt)   // EvtSacrifice, another creature you control (Kels)
+	[WheneverYouSacrificeTrigger](effect, optional)             // EvtSacrifice, any non-self permanent you control
+
+EvtLifeGained / EvtLifeLost auto-binds preserve evt.Amount as the trigger's
+EventAmount (readable via mage.EventAmountValue() in effects), but do NOT
+bind a default target — "you gain that much life" triggers fall back to the
+controller naturally. EvtDiscard and EvtSacrifice auto-bind the event's
+PlayerID as targets[0] so effects like "that player loses 2 life" target
+the discarder/sacrificer.
 
 EvtBecameUntapped fires whenever a permanent becomes untapped (during the untap step or
 by an effect like Twiddle). Use with NewTriggered for "when this becomes untapped" triggers.

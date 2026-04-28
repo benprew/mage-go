@@ -29,6 +29,8 @@ func ExecuteEffect(ctx *EffectContext, data EffectData) error {
 		return execLoseLifeDynamic(ctx, e)
 	case *loseLifeEffect:
 		return execLoseLife(ctx, e)
+	case *loseLifeTargetEffect:
+		return execLoseLifeTarget(ctx, e)
 	case *dealDamageEffect:
 		return execDealDamage(ctx, e)
 	case *dealDividedDamageEffect:
@@ -362,8 +364,7 @@ func execLoseLifeDynamic(ctx *EffectContext, e *loseLifeDynamicEffect) error {
 	if p == nil {
 		return ErrPlayerNotFound
 	}
-	p.LoseLife(amount)
-	ctx.Game.FireEvent(GameEvent{Type: EvtLifeLost, PlayerID: ctx.Controller, Amount: amount})
+	ctx.Game.PlayerLoseLife(p, amount)
 	return nil
 }
 
@@ -372,8 +373,26 @@ func execLoseLife(ctx *EffectContext, e *loseLifeEffect) error {
 	if p == nil {
 		return ErrPlayerNotFound
 	}
-	p.LoseLife(e.amount)
-	ctx.Game.FireEvent(GameEvent{Type: EvtLifeLost, PlayerID: ctx.Controller, Amount: e.amount})
+	ctx.Game.PlayerLoseLife(p, e.amount)
+	return nil
+}
+
+func execLoseLifeTarget(ctx *EffectContext, e *loseLifeTargetEffect) error {
+	var targetPlayer Player
+	if len(ctx.Targets) > 0 {
+		targetPlayer = ctx.Game.GetPlayer(ctx.Targets[0])
+	}
+	if targetPlayer == nil {
+		targetPlayer = ctx.Game.GetPlayer(ctx.Controller)
+	}
+	if targetPlayer == nil {
+		return ErrPlayerNotFound
+	}
+	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	if amount <= 0 {
+		return nil
+	}
+	ctx.Game.PlayerLoseLife(targetPlayer, amount)
 	return nil
 }
 

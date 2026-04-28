@@ -379,7 +379,7 @@ func execDiscardCards(ctx *EffectContext, e *discardCardsEffect) error {
 	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
 	chosen := targetPlayer.ChooseCardsFromHand(amount, "discard", ctx.Game)
 	for _, card := range chosen {
-		targetPlayer.DiscardCard(card.ID())
+		ctx.Game.PlayerDiscard(targetPlayer, card.ID())
 	}
 	return nil
 }
@@ -401,7 +401,7 @@ func execDiscardRandom(ctx *EffectContext, e *discardRandomEffect) error {
 			break
 		}
 		idx := rand.Intn(len(hand))
-		targetPlayer.DiscardCard(hand[idx].ID())
+		ctx.Game.PlayerDiscard(targetPlayer, hand[idx].ID())
 	}
 	return nil
 }
@@ -559,7 +559,7 @@ func execDiscardHandAndDraw(ctx *EffectContext, e *discardHandAndDrawEffect) err
 		// Discard entire hand
 		hand := p.Hand()
 		for _, c := range hand {
-			p.DiscardCard(c.ID())
+			ctx.Game.PlayerDiscard(p, c.ID())
 		}
 		// Draw N cards
 		for i := 0; i < e.drawCount; i++ {

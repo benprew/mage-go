@@ -820,6 +820,13 @@ func (g *Game) Sacrifice(perm *Permanent) {
 		Flag:     true, // Flag=true means this was a sacrifice (not destroy)
 	})
 
+	g.FireEvent(GameEvent{
+		Type:     EvtSacrifice,
+		SourceID: permID,
+		PlayerID: controller,
+		Flag:     isCreature, // Flag=true means the sacrificed permanent was a creature
+	})
+
 	if isCreature {
 		g.creatureDeathsThisTurn++
 		g.FireEvent(GameEvent{
@@ -828,6 +835,37 @@ func (g *Game) Sacrifice(perm *Permanent) {
 			PlayerID: controller,
 		})
 	}
+}
+
+// PlayerDiscard removes a card from the player's hand into their graveyard and
+// fires EvtDiscard. SourceID = card ID, PlayerID = discarding player.
+// Returns the card and true on success.
+func (g *Game) PlayerDiscard(p Player, cardID uuid.UUID) (Card, bool) {
+	c, ok := p.DiscardCard(cardID)
+	if !ok {
+		return nil, false
+	}
+	g.FireEvent(GameEvent{
+		Type:     EvtDiscard,
+		SourceID: cardID,
+		PlayerID: p.PlayerID(),
+	})
+	return c, true
+}
+
+// PlayerLoseLife reduces a player's life total and fires EvtLifeLost. Used by
+// effects that cause direct life loss (CR 119.3). Damage that causes life loss
+// fires EvtLifeLost separately from executeDamageToPlayer.
+func (g *Game) PlayerLoseLife(p Player, amount int) {
+	if amount <= 0 {
+		return
+	}
+	p.LoseLife(amount)
+	g.FireEvent(GameEvent{
+		Type:     EvtLifeLost,
+		PlayerID: p.PlayerID(),
+		Amount:   amount,
+	})
 }
 
 // PlayerGainLife handles life gain with replacement effects (Lich).
@@ -1076,7 +1114,15 @@ func (g *Game) executeDamageToPlayer(a *DamageToPlayerAction) {
 	if g.effects.Rules.IsLichActive(g, p.PlayerID()) {
 		g.sacrificePermanents(p.PlayerID(), amount)
 	} else {
+		// CR 119.9: damage dealt to a player causes that player to lose that
+		// much life. Fire EvtLifeLost so "whenever a player loses life" triggers
+		// see damage-induced life loss.
 		p.LoseLife(amount)
+		g.FireEvent(GameEvent{
+			Type:     EvtLifeLost,
+			PlayerID: p.PlayerID(),
+			Amount:   amount,
+		})
 	}
 	g.damageTakenThisTurn[p.PlayerID()] += amount
 	// Track artifact damage separately (for Reverse Polarity)
@@ -1456,6 +1502,25 @@ func (g *Game) PutTriggersOnStack() {
 					if pt.event.SourceID != uuid.Nil {
 						obj.Targets = []uuid.UUID{pt.event.SourceID}
 					}
+				case EvtLifeGained, EvtLifeLost:
+					// Preserve the life delta for "gain/lose that much" triggers.
+					// We deliberately do NOT auto-bind PlayerID as a target; the
+					// affected player is rarely the same as the trigger's
+					// "you" (e.g. Exquisite Blood's "you gain that much life"
+					// targets the controller, not the opponent who lost life).
+					obj.EventAmount = pt.event.Amount
+				case EvtDiscard:
+					// Pass the discarding player's ID so effects like
+					// "that player loses 2 life" target the discarder.
+					if pt.event.PlayerID != uuid.Nil {
+						obj.Targets = []uuid.UUID{pt.event.PlayerID}
+					}
+				case EvtSacrifice:
+					// Pass the sacrificing player's ID for "you sacrifice"
+					// effects that need to identify the controller.
+					if pt.event.PlayerID != uuid.Nil {
+						obj.Targets = []uuid.UUID{pt.event.PlayerID}
+					}
 				}
 			}
 		}
@@ -1797,7 +1862,7 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		if mc.HasX {
 			lifeCost += xValue * mc.XCount
 		}
-		p.LoseLife(lifeCost)
+		g.PlayerLoseLife(p, lifeCost)
 	} else {
 		// Pay mana cost (auto-pay from pool)
 		payMC := mc
@@ -2516,7 +2581,7 @@ func (g *Game) doCleanupActions() bool {
 		if len(chosen) == 0 {
 			break
 		}
-		p.DiscardCard(chosen[0].ID())
+		g.PlayerDiscard(p, chosen[0].ID())
 	}
 	// Clear damage from all creatures
 	for _, p := range g.battlefield {

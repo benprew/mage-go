@@ -191,7 +191,7 @@ func (c *lifePayCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	if p == nil {
 		return ErrPlayerNotFound
 	}
-	p.LoseLife(c.amount)
+	g.PlayerLoseLife(p, c.amount)
 	return nil
 }
 
@@ -321,8 +321,7 @@ func (c *discardCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	}
 	chosen := p.ChooseCardsFromHand(c.amount, "discard cost", g)
 	for _, card := range chosen {
-		p.RemoveFromHand(card.ID())
-		p.AddToGraveyard(card)
+		g.PlayerDiscard(p, card.ID())
 	}
 	return nil
 }
@@ -503,10 +502,12 @@ func (c *discardRandomCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	}
 	for i := 0; i < c.amount; i++ {
 		hand = p.Hand()
+		if len(hand) == 0 {
+			break
+		}
 		idx := rand.Intn(len(hand))
 		card := hand[idx]
-		p.RemoveFromHand(card.ID())
-		p.AddToGraveyard(card)
+		g.PlayerDiscard(p, card.ID())
 	}
 	return nil
 }
