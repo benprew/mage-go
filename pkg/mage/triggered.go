@@ -62,6 +62,25 @@ func (t *GenericTriggered) SetConditionData(cond TriggerConditionData) *GenericT
 	return t
 }
 
+// AndConditionData composes the given predicate with any existing trigger
+// condition (logical AND). If no condition is set, this becomes the
+// condition. Use AndConditionData (rather than SetConditionData) when adding
+// a refinement on top of a constructor-provided filter — for example when
+// WheneverPermanentEntersBattlefieldTrigger has already installed the filter
+// check, and you want to additionally require the source not to be self.
+func (t *GenericTriggered) AndConditionData(cond TriggerConditionData) *GenericTriggered {
+	if t.Condition == nil {
+		t.Condition = AsTriggerCondition(cond)
+		return t
+	}
+	prev := t.Condition
+	added := AsTriggerCondition(cond)
+	t.Condition = func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
+		return prev(evt, g, sourceID, controllerID) && added(evt, g, sourceID, controllerID)
+	}
+	return t
+}
+
 // AddEffect appends an effect to the trigger. Returns the trigger for chaining.
 func (t *GenericTriggered) AddEffect(e Effect) *GenericTriggered {
 	t.effects = append(t.effects, e)

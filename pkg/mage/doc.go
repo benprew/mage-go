@@ -777,6 +777,12 @@ Common atomic predicates:
 
 For rare cases needing full closure access, SetCondition is still available.
 
+When refining a constructor that already installed a filter (e.g.
+WheneverPermanentEntersBattlefieldTrigger), use [GenericTriggered.AndConditionData]
+to compose the new predicate with the constructor's filter (logical AND).
+Calling SetConditionData would REPLACE the existing condition and silently
+drop the constructor's filter.
+
 # Static Abilities and Continuous Effects
 
 Static abilities apply continuous effects while the source is on the battlefield.
