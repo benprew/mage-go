@@ -189,7 +189,7 @@ func TestXVariantCollapse(t *testing.T) {
 		}
 
 		tg := NewTestGame(t)
-		for i := 0; i < 5; i++ {
+		for range 5 {
 			tg.GetPlayer(PlayerA).AddToLibrary(mage.NewSorcery("Library Card", "{0}", nil))
 		}
 		tg.AddCard(core.ZoneHand, PlayerA, name)

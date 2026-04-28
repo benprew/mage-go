@@ -12,7 +12,7 @@ func TestAladdinsRing(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Aladdin's Ring")
 		// Need 8 mana to activate
-		for i := 0; i < 8; i++ {
+		for range 8 {
 			g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
 		}
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // 2/2
@@ -25,7 +25,7 @@ func TestAladdinsRing(t *testing.T) {
 	t.Run("deals_4_to_player", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Aladdin's Ring")
-		for i := 0; i < 8; i++ {
+		for range 8 {
 			g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
 		}
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Aladdin's Ring", "PlayerB")
@@ -40,7 +40,7 @@ func TestJandorsSaddlebags(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Jandor's Saddlebags")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
-		for i := 0; i < 3; i++ {
+		for range 3 {
 			g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
 		}
 		// Attack with bears to tap them
@@ -285,7 +285,7 @@ func TestAladdinsLamp(t *testing.T) {
 	t.Run("replaces_draw_with_filtered_draw", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Aladdin's Lamp")
-		for i := 0; i < 3; i++ {
+		for range 3 {
 			g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
 		}
 		// Library: top to bottom — put a different card on top so replacement
@@ -307,7 +307,7 @@ func TestAladdinsLamp(t *testing.T) {
 	t.Run("replacement_expires_at_end_of_turn", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Aladdin's Lamp")
-		for i := 0; i < 3; i++ {
+		for range 3 {
 			g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
 		}
 		// Library: several cards

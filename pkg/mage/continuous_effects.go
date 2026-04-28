@@ -1,6 +1,8 @@
 package mage
 
 import (
+	"slices"
+
 	"github.com/google/uuid"
 
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
@@ -581,21 +583,18 @@ func ChangeSubTypesForAll(fromSubTypes, toSubTypes []string) ContinuousEffect {
 			}
 		}
 		for _, p := range g.battlefield {
-			for _, from := range fromSubTypes {
-				if p.HasSubType(from) {
-					p.SubTypeOverride = toSubTypes
-					if hasNewColor && p.HasType(TypeLand) {
-						var filtered []Ability
-						for _, a := range p.RuntimeAbilities {
-							inner := UnwrapAbility(a)
-							if _, ok := inner.(*ManaAbility); !ok {
-								filtered = append(filtered, a)
-							}
+			if slices.ContainsFunc(fromSubTypes, p.HasSubType) {
+				p.SubTypeOverride = toSubTypes
+				if hasNewColor && p.HasType(TypeLand) {
+					var filtered []Ability
+					for _, a := range p.RuntimeAbilities {
+						inner := UnwrapAbility(a)
+						if _, ok := inner.(*ManaAbility); !ok {
+							filtered = append(filtered, a)
 						}
-						p.RuntimeAbilities = filtered
-						p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{NewManaAbility(newColor)})
 					}
-					break
+					p.RuntimeAbilities = filtered
+					p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{NewManaAbility(newColor)})
 				}
 			}
 		}

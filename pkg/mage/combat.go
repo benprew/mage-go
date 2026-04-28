@@ -1,6 +1,8 @@
 package mage
 
 import (
+	"slices"
+
 	"github.com/google/uuid"
 
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
@@ -72,10 +74,8 @@ func (c *Combat) IsAttacking(id uuid.UUID) bool {
 // IsBlocking returns true if the creature with the given ID is a declared blocker.
 func (c *Combat) IsBlocking(id uuid.UUID) bool {
 	for _, g := range c.Groups {
-		for _, bid := range g.BlockerIDs {
-			if bid == id {
-				return true
-			}
+		if slices.Contains(g.BlockerIDs, id) {
+			return true
 		}
 	}
 	return false
@@ -177,12 +177,7 @@ func (c *Combat) IsBandedWith(id1, id2 uuid.UUID) bool {
 	if !ok {
 		return false
 	}
-	for _, m := range members {
-		if m == id2 {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(members, id2)
 }
 
 // RemoveFromCombat removes a permanent from combat (attacker or blocker).
@@ -283,13 +278,7 @@ func CanBlock(blocker, attacker *Permanent, g *Game) bool {
 	// Fear: can only be blocked by artifact creatures or black creatures
 	if attacker.HasKeyword(Fear) {
 		isArtifact := blocker.HasType(TypeArtifact)
-		isBlack := false
-		for _, col := range blocker.Card.ManaCost().Colors() {
-			if col == Black {
-				isBlack = true
-				break
-			}
-		}
+		isBlack := slices.Contains(blocker.Card.ManaCost().Colors(), Black)
 		if !isArtifact && !isBlack {
 			return false
 		}
@@ -530,10 +519,7 @@ func validateBlockerAssignment(g *Game, atk *Permanent, orderedIDs []uuid.UUID, 
 		if blk == nil {
 			continue
 		}
-		needed := blk.CurrentToughness(g) - blk.Damage
-		if needed < 0 {
-			needed = 0
-		}
+		needed := max(blk.CurrentToughness(g)-blk.Damage, 0)
 		dmg := assignment[bid]
 		if dmg < 0 {
 			return false

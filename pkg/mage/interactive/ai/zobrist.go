@@ -76,14 +76,14 @@ func NewZobristTables() *ZobristTables {
 	}
 	z.CanPlayLand = z.rng.Uint64()
 
-	for p := 0; p < 2; p++ {
-		for i := 0; i < maxLifeTable; i++ {
+	for p := range 2 {
+		for i := range maxLifeTable {
 			z.Life[p][i] = z.rng.Uint64()
 		}
-		for i := 0; i < maxHandSize; i++ {
+		for i := range maxHandSize {
 			z.HandSize[p][i] = z.rng.Uint64()
 		}
-		for i := 0; i < maxLibSize; i++ {
+		for i := range maxLibSize {
 			z.LibSize[p][i] = z.rng.Uint64()
 		}
 	}
@@ -143,9 +143,9 @@ func (z *ZobristTables) nameIdx(name string) int {
 	z.graveCard[1] = append(z.graveCard[1], z.rng.Uint64())
 
 	var pc [2][2][2]uint64
-	for c := 0; c < 2; c++ {
-		for t := 0; t < 2; t++ {
-			for s := 0; s < 2; s++ {
+	for c := range 2 {
+		for t := range 2 {
+			for s := range 2 {
 				pc[c][t][s] = z.rng.Uint64()
 			}
 		}
@@ -153,8 +153,8 @@ func (z *ZobristTables) nameIdx(name string) int {
 	z.permCard = append(z.permCard, pc)
 
 	var cc [core.NumCounters][maxCount]uint64
-	for ct := core.CounterType(0); ct < core.NumCounters; ct++ {
-		for n := 0; n < maxCount; n++ {
+	for ct := range core.NumCounters {
+		for n := range maxCount {
 			cc[ct][n] = z.rng.Uint64()
 		}
 	}
@@ -253,7 +253,7 @@ func (z *ZobristTables) Hash(g *mage.Game) uint64 {
 		}
 		h ^= z.permCard[idx][ctrl][tapped][sick]
 
-		for ct := core.CounterType(0); ct < core.NumCounters; ct++ {
+		for ct := range core.NumCounters {
 			n := perm.Counters[ct]
 			if n == 0 {
 				continue

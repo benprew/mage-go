@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // Color represents the five Magic colors plus colorless.
 type Color int
@@ -227,26 +230,26 @@ func (m ManaCost) CMC() int {
 }
 
 func (m ManaCost) String() string {
-	s := ""
+	var s strings.Builder
 	if m.Generic > 0 || m.CMC() == 0 {
-		s += fmt.Sprintf("{%d}", m.Generic)
+		fmt.Fprintf(&s, "{%d}", m.Generic)
 	}
 	for i := 0; i < m.White; i++ {
-		s += "{W}"
+		s.WriteString("{W}")
 	}
 	for i := 0; i < m.Blue; i++ {
-		s += "{U}"
+		s.WriteString("{U}")
 	}
 	for i := 0; i < m.Black; i++ {
-		s += "{B}"
+		s.WriteString("{B}")
 	}
 	for i := 0; i < m.Red; i++ {
-		s += "{R}"
+		s.WriteString("{R}")
 	}
 	for i := 0; i < m.Green; i++ {
-		s += "{G}"
+		s.WriteString("{G}")
 	}
-	return s
+	return s.String()
 }
 
 // Card is a generated card — data only, no engine integration.

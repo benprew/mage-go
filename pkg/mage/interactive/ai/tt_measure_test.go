@@ -28,12 +28,12 @@ func buildMeasureState() (*mage.Game, *mage.BasePlayer, *mage.BasePlayer) {
 	g.AddToBattlefield(makePerm("Savannah Lions", "{W}", 2, 1, pb.PlayerID()))
 	g.AddToBattlefield(makePerm("Wall of Swords", "{3}{W}", 3, 5, pb.PlayerID()))
 
-	for i := 0; i < 4; i++ {
+	for range 4 {
 		c := mage.NewCreature("Bear", "{1}{G}", 2, 2)
 		c.SetOwner(pa.PlayerID())
 		pa.AddToHand(c)
 	}
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		bolt := mage.NewInstant("Lightning Bolt", "{R}",
 			mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))))
 		bolt.SetOwner(pa.PlayerID())

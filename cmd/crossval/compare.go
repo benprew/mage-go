@@ -92,7 +92,7 @@ func compareStates(goState, xmageState *cvState) []mismatch {
 			Go: fmt.Sprintf("%d", goState.ActivePlayerIdx), XMage: fmt.Sprintf("%d", xmageState.ActivePlayerIdx)})
 	}
 
-	for i := 0; i < 2; i++ {
+	for i := range 2 {
 		prefix := fmt.Sprintf("player[%d]", i)
 		gp := goState.Players[i]
 		xp := xmageState.Players[i]

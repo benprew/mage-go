@@ -33,7 +33,7 @@ func TestLibraryOfAlexandria(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Library of Alexandria")
 		// Put exactly 7 non-land cards in hand
-		for i := 0; i < 7; i++ {
+		for range 7 {
 			g.AddCard(core.ZoneHand, gametest.PlayerA, "Grizzly Bears")
 		}
 		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Hill Giant")

@@ -1,6 +1,8 @@
 package eval
 
 import (
+	"slices"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
@@ -103,12 +105,7 @@ func hasEvasion(p *mage.Permanent) bool {
 		core.Islandwalk, core.Swampwalk, core.Forestwalk,
 		core.Mountainwalk, core.Plainswalk, core.Trample,
 	}
-	for _, kw := range evasionKWs {
-		if p.HasKeyword(kw) {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(evasionKWs, p.HasKeyword)
 }
 
 func hasManaAbility(p *mage.Permanent) bool {

@@ -33,7 +33,7 @@ var landColor = map[string]core.Color{
 
 func addLands(g *mage.Game, p *mage.BasePlayer, name string, count int) {
 	color := landColor[name]
-	for i := 0; i < count; i++ {
+	for range count {
 		land := mage.NewLand(name, mage.WithManaAbility(color))
 		land.SetOwner(p.PlayerID())
 		perm := mage.NewPermanent(land, p.PlayerID())
@@ -150,7 +150,7 @@ func TestSearch_NodeBudgetRespected(t *testing.T) {
 	g, pa, _ := makeGame()
 
 	// Add several spells to create many search branches
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		c := mage.NewCreature("Bear", "{1}{G}", 2, 2)
 		c.SetOwner(pa.PlayerID())
 		pa.AddToHand(c)
@@ -618,7 +618,7 @@ func TestSearch_MultiSpell_NodeBudgetRespected(t *testing.T) {
 	// With multiple spells, multi-spell chaining should still respect node budget.
 	g, pa, _ := makeGame()
 
-	for i := 0; i < 4; i++ {
+	for range 4 {
 		c := mage.NewCreature("Bear", "{1}{G}", 2, 2)
 		c.SetOwner(pa.PlayerID())
 		pa.AddToHand(c)
@@ -830,7 +830,7 @@ func TestGenerateAttackerSets_IncludesAllButOne(t *testing.T) {
 // ── Benchmark ───────────────────────────────────────────────────────────────
 
 func BenchmarkSearch_TypicalBoard_Depth2(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		g, pa, pb := makeGame()
 		pa.SetLife(20)
 		pb.SetLife(15)
@@ -858,7 +858,7 @@ func BenchmarkSearch_TypicalBoard_Depth2(b *testing.B) {
 }
 
 func BenchmarkSearch_TypicalBoard_Depth5(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		g, pa, pb := makeGame()
 		pa.SetLife(20)
 		pb.SetLife(15)
@@ -885,7 +885,7 @@ func BenchmarkSearch_TypicalBoard_Depth5(b *testing.B) {
 }
 
 func BenchmarkSearch_Attackers(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		g, pa, pb := makeGame()
 		pa.SetLife(20)
 		pb.SetLife(10)
@@ -906,7 +906,7 @@ func BenchmarkSearch_Attackers(b *testing.B) {
 }
 
 func BenchmarkSearch_Blockers(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		g, pa, pb := makeGame()
 		pa.SetLife(20)
 		pb.SetLife(15)
@@ -926,7 +926,7 @@ func BenchmarkSearch_Blockers(b *testing.B) {
 }
 
 func BenchmarkSearch_LargeBoard_Depth6(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		g, pa, pb := makeGame()
 		pa.SetLife(20)
 		pb.SetLife(15)
@@ -965,7 +965,7 @@ func BenchmarkSearch_LargeBoard_Depth6(b *testing.B) {
 }
 
 func BenchmarkSearch_Attackers_LargeBoard(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		g, pa, pb := makeGame()
 		pa.SetLife(20)
 		pb.SetLife(10)
@@ -990,7 +990,7 @@ func BenchmarkSearch_Attackers_LargeBoard(b *testing.B) {
 }
 
 func BenchmarkSearch_TypicalBoard_Depth3(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		g, pa, pb := makeGame()
 		pa.SetLife(20)
 		pb.SetLife(15)

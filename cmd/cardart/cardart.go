@@ -51,8 +51,8 @@ func Generate(input CardInput) *image.RGBA {
 
 	// Layer 1: background
 	bg := backgroundGradient(input.Colors, hash)
-	for y := 0; y < Size; y++ {
-		for x := 0; x < Size; x++ {
+	for y := range Size {
+		for x := range Size {
 			img.Set(x, y, bg(x, y))
 		}
 	}
@@ -70,8 +70,8 @@ func Generate(input CardInput) *image.RGBA {
 	// Compose silhouette + pattern in the inner 24x24 region (offset 4,4)
 	// Pattern has 4 intensity levels (0-3) for richer visual detail
 	patColors := patternPalette(input.Colors)
-	for y := 0; y < 24; y++ {
-		for x := 0; x < 24; x++ {
+	for y := range 24 {
+		for x := range 24 {
 			if silhouette[y][x] {
 				px, py := x+4, y+4
 				img.Set(px, py, patColors[pattern[y][x]])
@@ -225,7 +225,7 @@ func patternPalette(colors []Color) [4]color.RGBA {
 }
 
 func drawFrame(img *image.RGBA, c color.RGBA) {
-	for i := 0; i < Size; i++ {
+	for i := range Size {
 		// Top and bottom, 2px thick
 		img.Set(i, 0, c)
 		img.Set(i, 1, c)
@@ -251,8 +251,8 @@ func generatePattern(hash [32]byte) [24][24]uint8 {
 	bits = append(bits, hash3[:]...)
 
 	bitIdx := 0
-	for y := 0; y < 24; y++ {
-		for x := 0; x < 12; x++ {
+	for y := range 24 {
+		for x := range 12 {
 			// Read 2 bits for 4 intensity levels
 			byteIdx := bitIdx / 8
 			bitOff := uint(bitIdx % 8)
@@ -270,8 +270,8 @@ func generatePattern(hash [32]byte) [24][24]uint8 {
 
 // drawOutline draws a 1px dark outline around silhouette edges for definition.
 func drawOutline(img *image.RGBA, sil [24][24]bool, c color.RGBA) {
-	for y := 0; y < 24; y++ {
-		for x := 0; x < 24; x++ {
+	for y := range 24 {
+		for x := range 24 {
 			if !sil[y][x] {
 				continue
 			}

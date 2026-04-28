@@ -6,6 +6,7 @@
 package gametest
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/google/uuid"
@@ -174,12 +175,7 @@ func TestDeclareAttackers(t *testing.T) {
 						if atk == nil {
 							return false
 						}
-						for _, c := range atk.Colors() {
-							if c == core.Green {
-								return true
-							}
-						}
-						return false
+						return slices.Contains(atk.Colors(), core.Green)
 					})
 				return mage.NewCreature(watcher, "{2}", 1, 1,
 					mage.WithSubTypes("Spirit"),

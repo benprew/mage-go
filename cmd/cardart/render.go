@@ -27,8 +27,8 @@ func WriteSVG(w io.Writer, img *image.RGBA, scale int) error {
 	fmt.Fprintf(&sb, `<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d" shape-rendering="crispEdges">`, svgW, svgH)
 	sb.WriteByte('\n')
 
-	for y := 0; y < height; y++ {
-		for x := 0; x < width; x++ {
+	for y := range height {
+		for x := range width {
 			r, g, b, _ := img.At(x, y).RGBA()
 			fmt.Fprintf(&sb, `<rect x="%d" y="%d" width="%d" height="%d" fill="rgb(%d,%d,%d)"/>`,
 				x*scale, y*scale, scale, scale, r>>8, g>>8, b>>8)
@@ -50,7 +50,7 @@ func RenderANSI(img *image.RGBA) string {
 
 	var sb strings.Builder
 	for y := 0; y < h; y += 2 {
-		for x := 0; x < w; x++ {
+		for x := range w {
 			r1, g1, b1, _ := img.At(x, y).RGBA()
 			if y+1 < h {
 				r2, g2, b2, _ := img.At(x, y+1).RGBA()

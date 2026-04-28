@@ -278,7 +278,7 @@ func collectSlotCards(state *apiGameState, perspectivePlayerIdx int) []*stateCar
 		default:
 			cards = zoneCards(opponent, spec.zone)
 		}
-		for slotIdx := 0; slotIdx < maxCardsPerZone; slotIdx++ {
+		for slotIdx := range maxCardsPerZone {
 			if slotIdx < len(cards) {
 				out = append(out, cards[slotIdx])
 			} else {
@@ -427,7 +427,7 @@ func fillActionEncoding(batchIdx int64, state *apiGameState, pending *apiPending
 	targetRefIsPlayer := view.targetRefIsPlayer[batchIdx*cfg.maxOptions*cfg.maxTargetsPerOption : (batchIdx+1)*cfg.maxOptions*cfg.maxTargetsPerOption]
 	targetRefIsSelf := view.targetRefIsSelf[batchIdx*cfg.maxOptions*cfg.maxTargetsPerOption : (batchIdx+1)*cfg.maxOptions*cfg.maxTargetsPerOption]
 
-	for optIdx := int64(0); optIdx < numPresent; optIdx++ {
+	for optIdx := range numPresent {
 		option := options[optIdx]
 		optionKindIDs[optIdx] = indexOrUnknown(actionKinds[:], option.Kind)
 		optionMask[optIdx] = 1
@@ -504,7 +504,7 @@ func fillManaCostFeatures(out []float32, manaCost string) {
 			continue
 		}
 		if strings.Contains(symbol, "/") {
-			for _, part := range strings.Split(symbol, "/") {
+			for part := range strings.SplitSeq(symbol, "/") {
 				if _, ok := counts[part]; ok {
 					counts[part] += 0.5
 				}
@@ -572,7 +572,7 @@ func fillDecisionEncoding(batchIdx int64, pending *apiPending, cfg encodeConfig,
 		}
 		rowBase := cursor * cfg.maxCachedChoices
 		candidateIdx := int64(0)
-		for optIdx := int64(0); optIdx < optionCount; optIdx++ {
+		for optIdx := range optionCount {
 			option := pending.Options[optIdx]
 			switch option.Kind {
 			case "pass", "play_land":
@@ -616,7 +616,7 @@ func fillDecisionEncoding(batchIdx int64, pending *apiPending, cfg encodeConfig,
 		if cursor+optionCount > cfg.decisionCapacity {
 			return 0, &encodeError{code: mageEncodeErrBuffer, message: "decision_capacity too small for attacker rows"}
 		}
-		for optIdx := int64(0); optIdx < optionCount; optIdx++ {
+		for optIdx := range optionCount {
 			rowBase := (cursor + optIdx) * cfg.maxCachedChoices
 			view.decisionMask[rowBase] = 1
 			view.decisionMask[rowBase+1] = 1
@@ -633,12 +633,12 @@ func fillDecisionEncoding(batchIdx int64, pending *apiPending, cfg encodeConfig,
 		if cursor+optionCount > cfg.decisionCapacity {
 			return 0, &encodeError{code: mageEncodeErrBuffer, message: "decision_capacity too small for blocker rows"}
 		}
-		for optIdx := int64(0); optIdx < optionCount; optIdx++ {
+		for optIdx := range optionCount {
 			rowBase := (cursor + optIdx) * cfg.maxCachedChoices
 			view.decisionMask[rowBase] = 1
 			view.usesNoneHead[cursor+optIdx] = 1
 			targetCount := minInt64(int64(len(pending.Options[optIdx].ValidTargets)), cfg.maxTargetsPerOption)
-			for tgtIdx := int64(0); tgtIdx < targetCount; tgtIdx++ {
+			for tgtIdx := range targetCount {
 				col := tgtIdx + 1
 				view.decisionOptionIdx[rowBase+col] = optIdx
 				view.decisionTargetIdx[rowBase+col] = tgtIdx
@@ -656,7 +656,7 @@ func fillDecisionEncoding(batchIdx int64, pending *apiPending, cfg encodeConfig,
 			return 0, &encodeError{code: mageEncodeErrBuffer, message: "decision_capacity too small for choice rows"}
 		}
 		rowBase := cursor * cfg.maxCachedChoices
-		for optIdx := int64(0); optIdx < optionCount; optIdx++ {
+		for optIdx := range optionCount {
 			view.decisionOptionIdx[rowBase+optIdx] = optIdx
 			view.decisionMask[rowBase+optIdx] = 1
 		}
@@ -693,7 +693,7 @@ func priorityCandidateCount(pending *apiPending, maxOptions int64, maxTargetsPer
 	}
 	count := int64(0)
 	optionCount := minInt64(int64(len(pending.Options)), maxOptions)
-	for optIdx := int64(0); optIdx < optionCount; optIdx++ {
+	for optIdx := range optionCount {
 		option := pending.Options[optIdx]
 		switch option.Kind {
 		case "pass", "play_land":

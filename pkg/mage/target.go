@@ -1,6 +1,8 @@
 package mage
 
 import (
+	"slices"
+
 	"github.com/google/uuid"
 
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
@@ -604,14 +606,11 @@ func (t *BlockingOrBlockedBySourceTarget) Possible(controller uuid.UUID, sourceC
 			}
 		} else {
 			// Check if source is a blocker in this group
-			for _, bid := range group.BlockerIDs {
-				if bid == sourceID {
-					// Source is blocking — the attacker is a valid target
-					a := g.FindPermanent(group.AttackerID)
-					if a != nil && a.CanBeTargetedBy(sourceCard, controller, g) {
-						result = append(result, group.AttackerID)
-					}
-					break
+			if slices.Contains(group.BlockerIDs, sourceID) {
+				// Source is blocking — the attacker is a valid target
+				a := g.FindPermanent(group.AttackerID)
+				if a != nil && a.CanBeTargetedBy(sourceCard, controller, g) {
+					result = append(result, group.AttackerID)
 				}
 			}
 		}

@@ -125,10 +125,7 @@ func SpellValue(card mage.Card, p mage.Player, g *mage.Game) int {
 					for _, perm := range g.AllBattlefield() {
 						if perm.Controller == oppID && perm.HasType(core.TypeCreature) {
 							if dmg >= perm.CurrentToughness(g) {
-								bonus := EvalCreatureInGame(perm, g) / 2
-								if bonus < 2 {
-									bonus = 2
-								}
+								bonus := max(EvalCreatureInGame(perm, g)/2, 2)
 								if bonus > bestLethalBonus {
 									bestLethalBonus = bonus
 								}

@@ -136,7 +136,7 @@ func registerEnchantments() {
 							}
 							if len(creatures) >= 2 {
 								// Exile the first two creature cards
-								for i := 0; i < 2; i++ {
+								for i := range 2 {
 									if _, ok := player.RemoveFromGraveyard(creatures[i].ID()); ok {
 										g.ExileCard(creatures[i], sourceID)
 									}

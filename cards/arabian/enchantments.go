@@ -1,9 +1,11 @@
 package arabian
 
 import (
-	"github.com/google/uuid"
+	"slices"
+	"strings"
 
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/dsl"
+	"github.com/google/uuid"
 )
 
 func init() {
@@ -11,12 +13,7 @@ func init() {
 }
 
 func cardHasColor(c Card, color Color) bool {
-	for _, col := range c.ManaCost().Colors() {
-		if col == color {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(c.ManaCost().Colors(), color)
 }
 
 func registerEnchantments() {
@@ -41,11 +38,11 @@ func registerEnchantments() {
 							perm.AddCounter(Wind, 1)
 							count := int(perm.Counters[Wind])
 							// Build the mana cost: {G} per wind counter
-							cost := ""
+							var cost strings.Builder
 							for range count {
-								cost += "{G}"
+								cost.WriteString("{G}")
 							}
-							if g.TryPayCostFromLands(controller, cost) {
+							if g.TryPayCostFromLands(controller, cost.String()) {
 								// Deal damage equal to wind counters to each creature and player
 								for _, c := range g.FilterBattlefield(IsCreature) {
 									g.DealDamageToPermanent(c, count, sourceID)

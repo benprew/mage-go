@@ -228,7 +228,7 @@ func (mg *mirrorGame) runGameLoop() {
 	// Draw opening hands (7 cards each). XMage does the same in its game
 	// startup before any step_begin fires.
 	for _, p := range g.AllPlayers() {
-		for i := 0; i < 7; i++ {
+		for range 7 {
 			p.DrawCard()
 		}
 	}

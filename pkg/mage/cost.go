@@ -356,11 +356,8 @@ func (c *exileFromGraveyardCost) Pay(sourceID, controller uuid.UUID, g *Game) er
 		return ErrPlayerNotFound
 	}
 	gy := p.Graveyard()
-	n := c.amount
-	if n > len(gy) {
-		n = len(gy)
-	}
-	for i := 0; i < n; i++ {
+	n := min(c.amount, len(gy))
+	for i := range n {
 		card := gy[i]
 		if _, ok := p.RemoveFromGraveyard(card.ID()); ok {
 			g.exile = append(g.exile, ExiledCard{Card: card, ExiledBy: sourceID})

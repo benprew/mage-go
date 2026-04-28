@@ -2,6 +2,7 @@ package mage
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/google/uuid"
@@ -94,12 +95,7 @@ var IsLegendary = NewPermanentFilter("legendary", func(p *Permanent, _ *Game) bo
 
 // IsCreatureCard matches creature cards.
 var IsCreatureCard = NewCardFilter("creature card", func(c Card) bool {
-	for _, t := range c.Types() {
-		if t == TypeCreature {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(c.Types(), TypeCreature)
 })
 
 // ControlledBy returns a filter matching permanents controlled by the given player.
@@ -124,12 +120,7 @@ func NotControlledBy(playerID uuid.UUID) PermanentFilter {
 // a color-changing effect.
 func HasColorFilter(c Color) PermanentFilter {
 	return NewPermanentFilter(c.String(), func(p *Permanent, _ *Game) bool {
-		for _, col := range p.Colors() {
-			if col == c {
-				return true
-			}
-		}
-		return false
+		return slices.Contains(p.Colors(), c)
 	})
 }
 
@@ -266,12 +257,7 @@ var IsEnchantmentCard = NewCardFilter("enchantment card", func(c Card) bool {
 // HasColorCardFilter returns a CardFilter matching cards with the given color.
 func HasColorCardFilter(color Color) CardFilter {
 	return NewCardFilter(color.String()+" card", func(c Card) bool {
-		for _, col := range c.ManaCost().Colors() {
-			if col == color {
-				return true
-			}
-		}
-		return false
+		return slices.Contains(c.ManaCost().Colors(), color)
 	})
 }
 

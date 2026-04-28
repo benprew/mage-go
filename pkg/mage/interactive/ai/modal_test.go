@@ -40,7 +40,7 @@ func TestGeneratePriorityMoves_ModalSpellGeneratesPerModeMove(t *testing.T) {
 	if charmMoves != 3 {
 		t.Errorf("expected 3 moves for 3-mode Charm, got %d", charmMoves)
 	}
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		if !modesSeen[i] {
 			t.Errorf("missing move for mode %d", i)
 		}
@@ -285,7 +285,7 @@ func TestApplySpellCast_MultiEffect_DrawAndDamage(t *testing.T) {
 	multiSpell.SetOwner(pa.PlayerID())
 	pa.AddToHand(multiSpell)
 
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		c := mage.NewCreature("Filler", "{G}", 1, 1)
 		c.SetOwner(pa.PlayerID())
 		pa.AddToLibrary(c)

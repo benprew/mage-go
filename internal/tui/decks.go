@@ -145,7 +145,7 @@ func BuildDeck(entries []DeckEntry, ownerID uuid.UUID) []mage.Card {
 
 // DrawOpeningHand draws 7 cards from the library into the player's hand.
 func DrawOpeningHand(p mage.Player) {
-	for i := 0; i < 7; i++ {
+	for range 7 {
 		p.DrawCard()
 	}
 }

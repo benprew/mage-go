@@ -105,7 +105,7 @@ func oracleComment(c Card) string {
 		lines = append(lines, fmt.Sprintf("// %s/%s", c.Power, c.Toughness))
 	}
 	if c.OracleText != "" {
-		for _, line := range strings.Split(c.OracleText, "\n") {
+		for line := range strings.SplitSeq(c.OracleText, "\n") {
 			lines = append(lines, fmt.Sprintf("// %s", line))
 		}
 	}

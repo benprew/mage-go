@@ -2,6 +2,7 @@ package gametest
 
 import (
 	"fmt"
+	"slices"
 	"testing"
 
 	"github.com/google/uuid"
@@ -386,7 +387,7 @@ func (tg *TestGame) StopAt(turn int, step core.PhaseStep) {
 func (tg *TestGame) padLibraries() {
 	for _, p := range tg.AllPlayers() {
 		if len(p.Library()) == 0 {
-			for i := 0; i < 60; i++ {
+			for range 60 {
 				p.AddToLibrary(mage.NewLand("Plains"))
 			}
 		}
@@ -981,13 +982,7 @@ func (tg *TestGame) findActivatableAbilityByName(playerID uuid.UUID, permName st
 					}
 				} else {
 					possible := t.Possible(playerID, perm.Card, tg.Game)
-					found := false
-					for _, pid := range possible {
-						if pid == targets[j] {
-							found = true
-							break
-						}
-					}
+					found := slices.Contains(possible, targets[j])
 					if !found {
 						validTargets = false
 						break
@@ -1437,13 +1432,7 @@ func (tg *TestGame) AssertHasColor(p PlayerRef, name string, color core.Color, h
 		tg.t.Errorf("AssertHasColor(%v, %s): permanent not found", p, name)
 		return
 	}
-	got := false
-	for _, c := range perm.Colors() {
-		if c == color {
-			got = true
-			break
-		}
-	}
+	got := slices.Contains(perm.Colors(), color)
 	if got != has {
 		tg.t.Errorf("AssertHasColor(%v, %s, %v): got %v, want %v", p, name, color, got, has)
 	}

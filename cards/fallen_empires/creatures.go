@@ -1,6 +1,8 @@
 package fallen_empires
 
 import (
+	"slices"
+
 	"github.com/google/uuid"
 
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/dsl"
@@ -753,13 +755,7 @@ func registerCreatures() {
 			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
 				for _, p := range g.AllBattlefield() {
 					if p.HasType(TypeCreature) && p.CurrentPower(g) >= 2 {
-						isWhite := false
-						for _, c := range p.Colors() {
-							if c == White {
-								isWhite = true
-								break
-							}
-						}
+						isWhite := slices.Contains(p.Colors(), White)
 						if isWhite {
 							g.PreventBlockPair(sourceID, p.ID())
 						}

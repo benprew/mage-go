@@ -671,13 +671,11 @@ func registerCreatures() {
 					if perm == nil {
 						return nil
 					}
-					choice := g.ModeValue() // 0-7
-					if choice < 0 {
-						choice = 0
-					}
-					if choice > 7 {
-						choice = 7
-					}
+					choice := min(
+						// 0-7
+						max(
+
+							g.ModeValue(), 0), 7)
 					perm.StoredValue = choice
 					return nil
 				}))),
@@ -696,13 +694,7 @@ func registerCreatures() {
 							return nil
 						}
 						if p.ChooseMayAbility("choose a new number for Shapeshifter") {
-							choice := p.ChooseMode(shapeshifterModes, "choose number 0-7")
-							if choice < 0 {
-								choice = 0
-							}
-							if choice > 7 {
-								choice = 7
-							}
+							choice := min(max(p.ChooseMode(shapeshifterModes, "choose number 0-7"), 0), 7)
 							perm.StoredValue = choice
 						}
 						return nil

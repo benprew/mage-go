@@ -126,8 +126,8 @@ func (c *Catalog) indexCards(cards []CardEntry) {
 
 		// Index split card face names (e.g. "Fire // Ice" → "fire", "ice").
 		if strings.Contains(card.Name, " // ") {
-			parts := strings.Split(card.Name, " // ")
-			for _, part := range parts {
+			parts := strings.SplitSeq(card.Name, " // ")
+			for part := range parts {
 				lowPart := strings.ToLower(part)
 				if lowPart != lowName {
 					c.byName[lowPart] = append(c.byName[lowPart], idx)

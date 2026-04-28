@@ -147,16 +147,10 @@ func CreatureBudget(cmc, coloredPips int, rarity Rarity, tendency ManaPipTendenc
 
 // AllocateStats converts a stat budget + shape into power/toughness.
 func AllocateStats(budget float64, shape StatShape, rng *RNG) (power, toughness int) {
-	totalStats := int(math.Round(budget))
-	if totalStats < 0 {
-		totalStats = 0
-	}
+	totalStats := max(int(math.Round(budget)), 0)
 
 	if totalStats <= 1 {
-		p := totalStats
-		if p < 0 {
-			p = 0
-		}
+		p := max(totalStats, 0)
 		return p, 1
 	}
 
@@ -182,10 +176,7 @@ func AllocateStats(budget float64, shape StatShape, rng *RNG) (power, toughness 
 
 	if toughness < 1 {
 		toughness = 1
-		power = totalStats - 1
-		if power < 0 {
-			power = 0
-		}
+		power = max(totalStats-1, 0)
 	}
 	if power < 0 {
 		power = 0

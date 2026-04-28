@@ -553,7 +553,7 @@ func registerSpells() {
 						p.SetLibrary(lib[1:])
 						p.AddToAnte(top)
 					}
-					for i := 0; i < 7; i++ {
+					for range 7 {
 						g.PlayerDrawCard(p)
 					}
 					return nil

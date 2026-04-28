@@ -1,6 +1,10 @@
 package mage
 
 import (
+	"maps"
+	"slices"
+	"strings"
+
 	"github.com/google/uuid"
 
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
@@ -75,30 +79,15 @@ func (c *BaseCard) SetOwner(id uuid.UUID)   { c.owner = id }
 func (c *BaseCard) SetID(id uuid.UUID)      { c.id = id }
 
 func (c *BaseCard) HasType(t CardType) bool {
-	for _, ct := range c.types {
-		if ct == t {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(c.types, t)
 }
 
 func (c *BaseCard) HasSuperType(st SuperType) bool {
-	for _, s := range c.superTypes {
-		if s == st {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(c.superTypes, st)
 }
 
 func (c *BaseCard) HasSubType(st string) bool {
-	for _, s := range c.subTypes {
-		if s == st {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(c.subTypes, st)
 }
 
 func (c *BaseCard) AddType(t CardType) {
@@ -136,9 +125,7 @@ func (c *BaseCard) CloneFrom(other Card) {
 	}
 	if bc, ok := other.(*BaseCard); ok && len(bc.attrSeeds) > 0 {
 		c.attrSeeds = make(map[Attr]int, len(bc.attrSeeds))
-		for k, v := range bc.attrSeeds {
-			c.attrSeeds[k] = v
-		}
+		maps.Copy(c.attrSeeds, bc.attrSeeds)
 	}
 }
 
@@ -159,9 +146,7 @@ func (c *BaseCard) Copy() Card {
 	}
 	if len(c.attrSeeds) > 0 {
 		cp.attrSeeds = make(map[Attr]int, len(c.attrSeeds))
-		for k, v := range c.attrSeeds {
-			cp.attrSeeds[k] = v
-		}
+		maps.Copy(cp.attrSeeds, c.attrSeeds)
 	}
 	return &cp
 }
@@ -258,11 +243,11 @@ func WithCumulativeUpkeep(costPerAge string) CardOption {
 						perm.AddCounter(Age, 1)
 						count := perm.Counters[Age]
 						// Build total cost: costPerAge repeated count times
-						totalCost := ""
+						var totalCost strings.Builder
 						for range count {
-							totalCost += costPerAge
+							totalCost.WriteString(costPerAge)
 						}
-						if g.TryPayCostFromLands(controller, totalCost) {
+						if g.TryPayCostFromLands(controller, totalCost.String()) {
 							return nil
 						}
 						g.Sacrifice(perm)
@@ -640,12 +625,7 @@ func (p *Permanent) HasSubType(s string) bool {
 	if len(p.SubTypeOverride) > 0 {
 		subs = p.SubTypeOverride
 	}
-	for _, st := range subs {
-		if st == s {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(subs, s)
 }
 
 // HasKeyword checks if this permanent currently has the given keyword ability.
@@ -712,7 +692,7 @@ func (p *Permanent) CurrentPower(g GameReader) int {
 	if p.BasePTOverride != nil {
 		pw = p.BasePTOverride[0]
 	}
-	for ct := CounterType(0); ct < NumCounters; ct++ {
+	for ct := range NumCounters {
 		if n := p.Counters[ct]; n != 0 {
 			pw += ct.PowerBoost() * int(n)
 		}
@@ -730,7 +710,7 @@ func (p *Permanent) CurrentToughness(g GameReader) int {
 	if p.BasePTOverride != nil {
 		tg = p.BasePTOverride[1]
 	}
-	for ct := CounterType(0); ct < NumCounters; ct++ {
+	for ct := range NumCounters {
 		if n := p.Counters[ct]; n != 0 {
 			tg += ct.ToughnessBoost() * int(n)
 		}

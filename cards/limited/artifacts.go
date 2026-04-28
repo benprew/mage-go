@@ -554,10 +554,7 @@ func registerArtifacts() {
 					if len(lib) < 2 {
 						return nil
 					}
-					n := 3
-					if len(lib) < n {
-						n = len(lib)
-					}
+					n := min(len(lib), 3)
 					// TODO it's not a random shuffle, it's the controller choosing the order
 					// TODO the controller may also choose to shuffle the library
 					rand.Shuffle(n, func(i, j int) {

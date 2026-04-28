@@ -136,7 +136,7 @@ func TestHowlingMine(t *testing.T) {
 		// draws an additional card.
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Howling Mine")
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
 			g.AddCard(core.ZoneLibrary, gametest.PlayerB, "Grizzly Bears")
 		}
@@ -159,7 +159,7 @@ func TestHowlingMine(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Howling Mine")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Icy Manipulator")
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Forest")
 			g.AddCard(core.ZoneLibrary, gametest.PlayerB, "Forest")
 		}
@@ -608,7 +608,7 @@ func TestLich(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.SetLife(gametest.PlayerA, 0)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Lich")
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
 		}
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Healing Salve")
@@ -663,7 +663,7 @@ func TestIslandSanctuary(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island Sanctuary")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // no flying
-		for i := 0; i < 5; i++ {
+		for range 5 {
 			g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Forest")
 			g.AddCard(core.ZoneLibrary, gametest.PlayerB, "Forest")
 		}
@@ -841,7 +841,7 @@ func TestPowerSurge(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Power Surge")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Plains", 3)
-		for i := 0; i < 5; i++ {
+		for range 5 {
 			g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Forest")
 			g.AddCard(core.ZoneLibrary, gametest.PlayerB, "Forest")
 		}

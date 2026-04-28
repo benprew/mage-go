@@ -133,13 +133,7 @@ func distributeLands(colors map[core.Color]int, count int) []string {
 		if !ok {
 			continue
 		}
-		share := (n * count) / total
-		if share < 1 {
-			share = 1
-		}
-		if share > remaining {
-			share = remaining
-		}
+		share := min(max((n*count)/total, 1), remaining)
 		landName := colorToLand(c)
 		for i := 0; i < share; i++ {
 			lands = append(lands, landName)
@@ -251,7 +245,7 @@ func parseRogueTOML(path string) (string, []string, error) {
 	var cards []string
 	inMainCards := false
 
-	for _, line := range strings.Split(string(data), "\n") {
+	for line := range strings.SplitSeq(string(data), "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || line[0] == '#' {
 			continue
@@ -278,7 +272,7 @@ func parseRogueTOML(path string) (string, []string, error) {
 			if err != nil {
 				continue
 			}
-			for i := 0; i < count; i++ {
+			for range count {
 				cards = append(cards, cardName)
 			}
 			continue
@@ -289,9 +283,9 @@ func parseRogueTOML(path string) (string, []string, error) {
 			continue
 		}
 
-		if idx := strings.IndexByte(line, '='); idx >= 0 {
-			key := strings.TrimSpace(line[:idx])
-			val := strings.TrimSpace(line[idx+1:])
+		if before, after, ok := strings.Cut(line, "="); ok {
+			key := strings.TrimSpace(before)
+			val := strings.TrimSpace(after)
 			if key == "name" {
 				name = strings.Trim(val, "\"")
 			}

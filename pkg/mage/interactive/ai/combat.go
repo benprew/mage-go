@@ -152,10 +152,7 @@ func evaluateCombatOutcome(g *mage.Game, playerID uuid.UUID, attackers []uuid.UU
 						continue
 					}
 
-					assigned := neededToKill
-					if assigned > remainingAtkDmg {
-						assigned = remainingAtkDmg
-					}
+					assigned := min(neededToKill, remainingAtkDmg)
 					stepDmg[blkID] += assigned
 					if atkHasDT && assigned > 0 {
 						stepDT[blkID] = true
@@ -294,7 +291,7 @@ func findGangBlocks(atk *mage.Permanent, available []*mage.Permanent, g *mage.Ga
 	atkScore := eval.EvalCreatureInGame(atk, g)
 
 	// Try all 2-blocker combinations first.
-	for i := 0; i < len(available); i++ {
+	for i := range available {
 		if available[i] == nil {
 			continue
 		}
@@ -330,7 +327,7 @@ func findGangBlocks(atk *mage.Permanent, available []*mage.Permanent, g *mage.Ga
 	}
 
 	// Try all 3-blocker combinations.
-	for i := 0; i < len(available); i++ {
+	for i := range available {
 		if available[i] == nil {
 			continue
 		}

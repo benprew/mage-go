@@ -880,7 +880,7 @@ func registerSpells() {
 						p.AddToGraveyard(card)
 					}
 					// Return that many cards from graveyard to hand (player chooses)
-					for returned := 0; returned < len(discarded); returned++ {
+					for range discarded {
 						gy := p.Graveyard()
 						if len(gy) == 0 {
 							break
@@ -1283,7 +1283,7 @@ func registerSpells() {
 						}
 						pl.ShuffleLibrary()
 						// Draw that many cards
-						for i := 0; i < handSize; i++ {
+						for range handSize {
 							pl.DrawCard()
 						}
 					}

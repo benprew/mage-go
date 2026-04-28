@@ -524,7 +524,7 @@ func TestNewWeightedEvaluator_AggroValuesCreatures(t *testing.T) {
 
 func TestNewWeightedEvaluator_ControlValuesHand(t *testing.T) {
 	g, pa, _ := makeGame()
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		c := mage.NewInstant("Spell", "{1}{U}", mage.NewSpellAbility(mage.DrawCards(mage.Fixed(1))))
 		pa.AddToHand(c)
 	}
@@ -542,7 +542,7 @@ func TestNewWeightedEvaluator_ControlValuesHand(t *testing.T) {
 
 func TestNewWeightedEvaluator_TempoValuesUntappedMana(t *testing.T) {
 	g, pa, _ := makeGame()
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		land := mage.NewLand("Island")
 		land.SetOwner(pa.PlayerID())
 		lp := mage.NewPermanent(land, pa.PlayerID())

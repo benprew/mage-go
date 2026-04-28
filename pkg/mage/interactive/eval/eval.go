@@ -412,7 +412,7 @@ func permPower(p *mage.Permanent) int {
 	if p.BasePTOverride != nil {
 		pw = p.BasePTOverride[0]
 	}
-	for ct := core.CounterType(0); ct < core.NumCounters; ct++ {
+	for ct := range core.NumCounters {
 		if n := p.Counters[ct]; n != 0 {
 			pw += ct.PowerBoost() * int(n)
 		}
@@ -425,7 +425,7 @@ func permToughness(p *mage.Permanent) int {
 	if p.BasePTOverride != nil {
 		tg = p.BasePTOverride[1]
 	}
-	for ct := core.CounterType(0); ct < core.NumCounters; ct++ {
+	for ct := range core.NumCounters {
 		if n := p.Counters[ct]; n != 0 {
 			tg += ct.ToughnessBoost() * int(n)
 		}
@@ -652,10 +652,7 @@ func evalNonCreaturePermanent(perm *mage.Permanent) int {
 		bonus = 1
 	}
 
-	value := baseValue + bonus
-	if value < baseValue {
-		value = baseValue
-	}
+	value := max(baseValue+bonus, baseValue)
 	return value
 }
 

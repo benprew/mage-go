@@ -151,7 +151,7 @@ func registerArtifacts() {
 						if player == nil {
 							return nil
 						}
-						for i := 0; i < x; i++ {
+						for range x {
 							candidates := g.FilterBattlefield(And(IsLand, IsTapped))
 							if len(candidates) == 0 {
 								break
@@ -447,7 +447,7 @@ func registerArtifacts() {
 				if creaturePerm != nil {
 					// comes into play tapped, not comes into play then taps
 					creaturePerm.Tapped = true
-					for ct := CounterType(0); ct < NumCounters; ct++ {
+					for ct := range NumCounters {
 						if count := ns.counters[ct]; count != 0 {
 							creaturePerm.AddCounter(ct, int(count))
 						}

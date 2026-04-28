@@ -180,7 +180,7 @@ func TestAutoTapForCost_ManaBonusReducesTapping(t *testing.T) {
 	pid := g.players[0].PlayerID()
 
 	// Two Mountains on the battlefield
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		m := NewLand("Mountain", WithManaAbility(Red))
 		m.SetOwner(pid)
 		p := g.PutOnBattlefield(m, pid)
@@ -216,7 +216,7 @@ func TestMaxXValue_BasicLands(t *testing.T) {
 	pid := g.players[0].PlayerID()
 
 	// 3 Mountains on battlefield
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		m := NewLand("Mountain", WithManaAbility(Red))
 		m.SetOwner(pid)
 		p := g.PutOnBattlefield(m, pid)
@@ -253,7 +253,7 @@ func TestMaxXValue_DoubleX(t *testing.T) {
 	pid := g.players[0].PlayerID()
 
 	// 5 Mountains
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		m := NewLand("Mountain", WithManaAbility(Red))
 		m.SetOwner(pid)
 		p := g.PutOnBattlefield(m, pid)
@@ -293,7 +293,7 @@ func TestMaxXValue_WithManaBonus(t *testing.T) {
 	pid := g.players[0].PlayerID()
 
 	// 2 Mountains + Mana Flare (doubles land mana)
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		m := NewLand("Mountain", WithManaAbility(Red))
 		m.SetOwner(pid)
 		p := g.PutOnBattlefield(m, pid)

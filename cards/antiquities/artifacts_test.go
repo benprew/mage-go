@@ -215,7 +215,7 @@ func TestCursedRack(t *testing.T) {
 	t.Run("reduces chosen opponent max hand size to 4", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Cursed Rack")
-		for i := 0; i < 7; i++ {
+		for range 7 {
 			g.AddCard(core.ZoneHand, gametest.PlayerB, "Forest")
 		}
 		// At end of PlayerB's turn, they should discard to 4
@@ -282,7 +282,7 @@ func TestIvoryTower(t *testing.T) {
 	t.Run("gains life equal to hand size minus 4 on upkeep", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ivory Tower")
-		for i := 0; i < 7; i++ {
+		for range 7 {
 			g.AddCard(core.ZoneHand, gametest.PlayerA, "Forest")
 		}
 		g.StopAt(1, core.PrecombatMain)
@@ -294,7 +294,7 @@ func TestIvoryTower(t *testing.T) {
 	t.Run("no life gain with 4 or fewer cards", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ivory Tower")
-		for i := 0; i < 3; i++ {
+		for range 3 {
 			g.AddCard(core.ZoneHand, gametest.PlayerA, "Forest")
 		}
 		g.StopAt(1, core.PrecombatMain)
@@ -723,7 +723,7 @@ func TestTheRack(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "The Rack")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "The Rack")
-		for i := 0; i < 4; i++ {
+		for range 4 {
 			g.AddCard(core.ZoneHand, gametest.PlayerB, "Forest")
 		}
 		g.StopAt(2, core.PrecombatMain)

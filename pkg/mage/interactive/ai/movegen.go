@@ -146,7 +146,7 @@ func GenerateAttackerSets(g *mage.Game, playerID uuid.UUID) [][]uuid.UUID {
 		halfN := len(sorted) / 2
 		if halfN >= 2 {
 			topHalf := make([]uuid.UUID, halfN)
-			for i := 0; i < halfN; i++ {
+			for i := range halfN {
 				topHalf[i] = sorted[i].ID()
 			}
 			sets = append(sets, topHalf)
@@ -200,11 +200,8 @@ func expandSpellMoves(p mage.Player, g *mage.Game, card mage.Card) []Move {
 // expandModalSpellMoves generates one set of moves per mode for modal spells.
 func expandModalSpellMoves(p mage.Player, g *mage.Game, card mage.Card, modes []string) []Move {
 	var allMoves []Move
-	maxModes := len(modes)
-	if maxModes > 3 {
-		maxModes = 3
-	}
-	for modeIdx := 0; modeIdx < maxModes; modeIdx++ {
+	maxModes := min(len(modes), 3)
+	for modeIdx := range maxModes {
 		baseMoves := expandNonXSpellMoves(p, g, card, 0, modeIdx)
 		allMoves = append(allMoves, baseMoves...)
 	}

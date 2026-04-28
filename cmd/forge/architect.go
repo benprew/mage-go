@@ -117,13 +117,13 @@ func buildSkeleton(config SetConfig, rng *RNG) []skeletonSlot {
 		uncommons := int(float64(perColor) * 0.30)
 		rares := perColor - commons - uncommons
 
-		for i := 0; i < commons; i++ {
+		for range commons {
 			slots = append(slots, skeletonSlot{color: color, rarity: Common, template: -1})
 		}
-		for i := 0; i < uncommons; i++ {
+		for range uncommons {
 			slots = append(slots, skeletonSlot{color: color, rarity: Uncommon, template: -1})
 		}
-		for i := 0; i < rares; i++ {
+		for range rares {
 			slots = append(slots, skeletonSlot{color: color, rarity: Rare, template: -1})
 		}
 	}
@@ -218,7 +218,7 @@ func ensureCreatureCurve(cards []GeneratedCard, rng *RNG) []GeneratedCard {
 		if !hasTwoDrop && replaceIdx >= 0 {
 			old := result[replaceIdx]
 			var candidate Card
-			for attempts := 0; attempts < 10; attempts++ {
+			for range 10 {
 				candidate = Generate(color, Common, Vanilla, rng)
 				if candidate.CMC() == 2 {
 					break

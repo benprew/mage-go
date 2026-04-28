@@ -2,6 +2,7 @@ package mage
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/google/uuid"
 
@@ -391,11 +392,9 @@ func execCounterSpellIfColor(ctx *EffectContext, e *counterSpellIfColorEffect) e
 		return nil
 	}
 	// Check if the spell has the required color
-	for _, c := range obj.Card.ManaCost().Colors() {
-		if c == e.color {
-			ctx.Game.CounterSpellOnStack(ctx.Targets[0])
-			return nil
-		}
+	if slices.Contains(obj.Card.ManaCost().Colors(), e.color) {
+		ctx.Game.CounterSpellOnStack(ctx.Targets[0])
+		return nil
 	}
 	// Color doesn't match, spell is NOT countered
 	return nil

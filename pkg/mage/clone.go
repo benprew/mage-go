@@ -1,6 +1,8 @@
 package mage
 
 import (
+	"maps"
+
 	"github.com/google/uuid"
 
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
@@ -78,12 +80,8 @@ func (g *Game) Clone() *Game {
 			cs.Remaining = make([]PhaseStep, len(g.schedule.Remaining))
 			copy(cs.Remaining, g.schedule.Remaining)
 		}
-		for k, v := range g.schedule.SkipNextStep {
-			cs.SkipNextStep[k] = v
-		}
-		for k, v := range g.schedule.SkipNextTurnFor {
-			cs.SkipNextTurnFor[k] = v
-		}
+		maps.Copy(cs.SkipNextStep, g.schedule.SkipNextStep)
+		maps.Copy(cs.SkipNextTurnFor, g.schedule.SkipNextTurnFor)
 		c.schedule = cs
 	}
 
@@ -176,9 +174,7 @@ func extractBasePlayer(p Player) *BasePlayer {
 	bp.manaPool.RestorePool(p.ManaPool().SnapshotPool())
 	if len(p.ManaPool().ManaConversions) > 0 {
 		bp.manaPool.ManaConversions = make(map[Color]Color)
-		for k, v := range p.ManaPool().ManaConversions {
-			bp.manaPool.ManaConversions[k] = v
-		}
+		maps.Copy(bp.manaPool.ManaConversions, p.ManaPool().ManaConversions)
 	}
 	return bp
 }
@@ -204,9 +200,7 @@ func cloneBasePlayer(bp *BasePlayer) *BasePlayer {
 	clone.manaPool.RestorePool(bp.manaPool.SnapshotPool())
 	if len(bp.manaPool.ManaConversions) > 0 {
 		clone.manaPool.ManaConversions = make(map[Color]Color)
-		for k, v := range bp.manaPool.ManaConversions {
-			clone.manaPool.ManaConversions[k] = v
-		}
+		maps.Copy(clone.manaPool.ManaConversions, bp.manaPool.ManaConversions)
 	}
 	return clone
 }
@@ -413,9 +407,7 @@ func cloneDamageSystem(ds *DamageSystem) *DamageSystem {
 	clone := &DamageSystem{
 		damageReflection: make(map[uuid.UUID]damageReflectionEntry, len(ds.damageReflection)),
 	}
-	for k, v := range ds.damageReflection {
-		clone.damageReflection[k] = v
-	}
+	maps.Copy(clone.damageReflection, ds.damageReflection)
 	return clone
 }
 
@@ -435,9 +427,7 @@ func cloneUUIDBoolMap(src map[uuid.UUID]bool) map[uuid.UUID]bool {
 		return make(map[uuid.UUID]bool)
 	}
 	dst := make(map[uuid.UUID]bool, len(src))
-	for k, v := range src {
-		dst[k] = v
-	}
+	maps.Copy(dst, src)
 	return dst
 }
 
@@ -446,9 +436,7 @@ func cloneStateTriggerMap(src map[stateTriggerKey]bool) map[stateTriggerKey]bool
 		return make(map[stateTriggerKey]bool)
 	}
 	dst := make(map[stateTriggerKey]bool, len(src))
-	for k, v := range src {
-		dst[k] = v
-	}
+	maps.Copy(dst, src)
 	return dst
 }
 
@@ -457,9 +445,7 @@ func cloneUUIDIntMap(src map[uuid.UUID]int) map[uuid.UUID]int {
 		return make(map[uuid.UUID]int)
 	}
 	dst := make(map[uuid.UUID]int, len(src))
-	for k, v := range src {
-		dst[k] = v
-	}
+	maps.Copy(dst, src)
 	return dst
 }
 
@@ -468,9 +454,7 @@ func cloneUUIDUUIDMap(src map[uuid.UUID]uuid.UUID) map[uuid.UUID]uuid.UUID {
 		return make(map[uuid.UUID]uuid.UUID)
 	}
 	dst := make(map[uuid.UUID]uuid.UUID, len(src))
-	for k, v := range src {
-		dst[k] = v
-	}
+	maps.Copy(dst, src)
 	return dst
 }
 
@@ -481,9 +465,7 @@ func cloneNestedUUIDMap(src map[uuid.UUID]map[uuid.UUID]bool) map[uuid.UUID]map[
 	dst := make(map[uuid.UUID]map[uuid.UUID]bool, len(src))
 	for k, v := range src {
 		inner := make(map[uuid.UUID]bool, len(v))
-		for ik, iv := range v {
-			inner[ik] = iv
-		}
+		maps.Copy(inner, v)
 		dst[k] = inner
 	}
 	return dst
@@ -507,9 +489,7 @@ func cloneColorColorMap(src map[Color]Color) map[Color]Color {
 		return make(map[Color]Color)
 	}
 	dst := make(map[Color]Color, len(src))
-	for k, v := range src {
-		dst[k] = v
-	}
+	maps.Copy(dst, src)
 	return dst
 }
 
@@ -518,9 +498,7 @@ func cloneColorIntMap(src map[Color]int) map[Color]int {
 		return make(map[Color]int)
 	}
 	dst := make(map[Color]int, len(src))
-	for k, v := range src {
-		dst[k] = v
-	}
+	maps.Copy(dst, src)
 	return dst
 }
 
@@ -529,9 +507,7 @@ func cloneCardTypeIntMap(src map[CardType]int) map[CardType]int {
 		return make(map[CardType]int)
 	}
 	dst := make(map[CardType]int, len(src))
-	for k, v := range src {
-		dst[k] = v
-	}
+	maps.Copy(dst, src)
 	return dst
 }
 
@@ -540,8 +516,6 @@ func cloneAttrBoolMap(src map[Attr]bool) map[Attr]bool {
 		return make(map[Attr]bool)
 	}
 	dst := make(map[Attr]bool, len(src))
-	for k, v := range src {
-		dst[k] = v
-	}
+	maps.Copy(dst, src)
 	return dst
 }

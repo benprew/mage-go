@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"slices"
 
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 
@@ -996,10 +997,7 @@ func (g *Game) executeDamageToPlayer(a *DamageToPlayerAction) {
 	// This is checked here as a fallback for continuous effects that set the
 	// GameRules flag directly rather than registering a cycle replacement.
 	if g.effects.Rules.IsMinimumLifeActive(p.PlayerID()) {
-		maxDamage := p.Life() - 1
-		if maxDamage < 0 {
-			maxDamage = 0
-		}
+		maxDamage := max(p.Life()-1, 0)
 		if amount > maxDamage {
 			amount = maxDamage
 		}
@@ -1578,11 +1576,8 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 
 			// Handle aura attachment (only for Aura subtype, not all enchantments)
 			if obj.Card.HasType(TypeEnchantment) && len(obj.Targets) > 0 {
-				for _, st := range obj.Card.SubTypes() {
-					if st == "Aura" {
-						g.Attach(perm.ID(), obj.Targets[0])
-						break
-					}
+				if slices.Contains(obj.Card.SubTypes(), "Aura") {
+					g.Attach(perm.ID(), obj.Targets[0])
 				}
 			}
 
@@ -1629,13 +1624,7 @@ func (g *Game) validateActionTargets(controller uuid.UUID, sourceCard Card, spec
 			}
 		}
 		possible := spec.Possible(controller, sourceCard, g)
-		found := false
-		for _, id := range possible {
-			if id == chosen[i] {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(possible, chosen[i])
 		if !found {
 			return fmt.Errorf("invalid target for %s", label)
 		}
@@ -1955,10 +1944,7 @@ func (g *Game) CheckStateBasedActions() {
 			plus := p.Counters[P1P1]
 			minus := p.Counters[M1M1]
 			if plus > 0 && minus > 0 {
-				remove := plus
-				if minus < remove {
-					remove = minus
-				}
+				remove := min(minus, plus)
 				p.Counters[P1P1] -= remove
 				p.Counters[M1M1] -= remove
 				actions = true
@@ -2762,7 +2748,7 @@ func (g *Game) AutoTapForCost(playerID uuid.UUID, mc ManaCost) error {
 
 	// First pass: tap sources for exact color requirements
 	for color, count := range needed {
-		for i := 0; i < count; i++ {
+		for range count {
 			found := false
 			for j, src := range sources {
 				if src.Color == color && src.PermanentID != uuid.Nil {

@@ -165,10 +165,7 @@ func generateSpell(color Color, rarity Rarity, template CardTemplate, rng *RNG) 
 		finalCMC += instantPremium
 	}
 
-	cmc := int(math.Round(finalCMC))
-	if cmc < 1 {
-		cmc = 1
-	}
+	cmc := max(int(math.Round(finalCMC)), 1)
 
 	pips := pickColoredPips(cmc, rarity, pie.ManaPipTendency, rng)
 	manaCost := buildManaCost(cmc, pips, color)
@@ -239,14 +236,8 @@ func generateEnchantment(color Color, rarity Rarity, template CardTemplate, rng 
 				pRatio = 0.1
 			}
 		}
-		pBonus := int(math.Round(float64(budget) * pRatio))
-		if pBonus < 0 {
-			pBonus = 0
-		}
-		tBonus := budget - pBonus
-		if tBonus < 0 {
-			tBonus = 0
-		}
+		pBonus := max(int(math.Round(float64(budget)*pRatio)), 0)
+		tBonus := max(budget-pBonus, 0)
 		desc := fmt.Sprintf("Enchanted creature gets +%d/+%d", pBonus, tBonus)
 		if kwStr != "" {
 			desc += " and has " + kwStr
@@ -309,14 +300,8 @@ func pickColoredPips(cmc int, rarity Rarity, tendency ManaPipTendency, rng *RNG)
 }
 
 func buildManaCost(cmc, pips int, color Color) ManaCost {
-	generic := cmc - pips
-	if generic < 0 {
-		generic = 0
-	}
-	actualPips := pips
-	if actualPips > cmc {
-		actualPips = cmc
-	}
+	generic := max(cmc-pips, 0)
+	actualPips := min(pips, cmc)
 
 	mc := ManaCost{Generic: generic}
 	switch color {
@@ -428,10 +413,7 @@ func generateETBAbility(pie ColorPie, budget float64, rng *RNG) string {
 		return "ETB: Gain 1 life"
 	}
 
-	magnitude := int(math.Round(budget))
-	if magnitude < 1 {
-		magnitude = 1
-	}
+	magnitude := max(int(math.Round(budget)), 1)
 
 	picked := WeightedPick(options, rng)
 	switch picked {
@@ -442,16 +424,10 @@ func generateETBAbility(pie ColorPie, budget float64, rng *RNG) string {
 	case "bounce":
 		return "ETB: Return target creature to its owner's hand"
 	case "draw":
-		count := magnitude / 2
-		if count < 1 {
-			count = 1
-		}
+		count := max(magnitude/2, 1)
 		return fmt.Sprintf("ETB: Draw %d card(s)", count)
 	case "discard":
-		count := magnitude / 2
-		if count < 1 {
-			count = 1
-		}
+		count := max(magnitude/2, 1)
 		return fmt.Sprintf("ETB: Target player discards %d card(s)", count)
 	case "drain":
 		return fmt.Sprintf("ETB: Each opponent loses %d life and you gain %d life", magnitude, magnitude)

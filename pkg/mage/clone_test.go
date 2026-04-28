@@ -32,12 +32,12 @@ func setupTestGame() *Game {
 	pB.AddToHand(cardB1)
 
 	// Add cards to libraries.
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		lc := NewLand("Forest")
 		lc.SetOwner(pA.PlayerID())
 		pA.AddToLibrary(lc)
 	}
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		lc := NewLand("Mountain")
 		lc.SetOwner(pB.PlayerID())
 		pB.AddToLibrary(lc)
@@ -663,7 +663,7 @@ func BenchmarkClone(b *testing.B) {
 	g := setupTestGame()
 
 	// Add more permanents for a realistic mid-game board.
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		card := NewCreature("Soldier Token", "0", 1, 1)
 		card.SetOwner(g.players[i%2].PlayerID())
 		perm := NewPermanent(card, g.players[i%2].PlayerID())
@@ -694,9 +694,8 @@ func BenchmarkClone(b *testing.B) {
 	}
 	g.stack.Push(obj)
 
-	b.ResetTimer()
 	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_ = g.Clone()
 	}
 }

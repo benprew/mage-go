@@ -2,6 +2,7 @@ package legends
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/google/uuid"
 
@@ -659,10 +660,8 @@ func registerEnchantments() {
 						cardColors := card.ManaCost().Colors()
 						for _, color := range cardColors {
 							for _, c := range myCreatures {
-								for _, col := range c.Card.ManaCost().Colors() {
-									if col == color {
-										return false // shares a color
-									}
+								if slices.Contains(c.Card.ManaCost().Colors(), color) {
+									return false // shares a color
 								}
 							}
 						}
@@ -727,7 +726,7 @@ func registerEnchantments() {
 							if p == nil {
 								return nil
 							}
-							for i := 0; i < 3; i++ {
+							for range 3 {
 								lib := p.Library()
 								var candidates []Card
 								for _, c := range lib {
@@ -961,13 +960,7 @@ func registerEnchantments() {
 						if p.HasType(TypeArtifact) {
 							continue
 						}
-						isWhite := false
-						for _, c := range p.Colors() {
-							if c == White {
-								isWhite = true
-								break
-							}
-						}
+						isWhite := slices.Contains(p.Colors(), White)
 						if isWhite {
 							continue
 						}

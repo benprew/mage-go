@@ -23,7 +23,7 @@ func TestCleanup(t *testing.T) {
 	// cleanup step.
 	t.Run("CR 514.1 active player discards down to seven during cleanup", func(t *testing.T) {
 		g := NewTestGame(t)
-		for i := 0; i < 8; i++ {
+		for range 8 {
 			g.AddCard(core.ZoneHand, PlayerA, "Forest")
 		}
 		g.StopAt(2, core.Upkeep)
@@ -37,7 +37,7 @@ func TestCleanup(t *testing.T) {
 	// here for completeness of the CR 514 suite.)
 	t.Run("CR 514.1 non-active player does not discard during active player cleanup", func(t *testing.T) {
 		g := NewTestGame(t)
-		for i := 0; i < 9; i++ {
+		for range 9 {
 			g.AddCard(core.ZoneHand, PlayerB, "Forest")
 		}
 		g.StopAt(2, core.Upkeep)
@@ -220,7 +220,7 @@ func TestCleanup(t *testing.T) {
 func TestCleanupDiscardOnlyActivePlayer(t *testing.T) {
 	t.Run("non-active player does not discard during active player cleanup", func(t *testing.T) {
 		g := NewTestGame(t)
-		for i := 0; i < 8; i++ {
+		for range 8 {
 			g.AddCard(core.ZoneHand, PlayerB, "Forest")
 		}
 		// Stop after turn 1 cleanup has executed
@@ -231,7 +231,7 @@ func TestCleanupDiscardOnlyActivePlayer(t *testing.T) {
 
 	t.Run("active player discards during their own cleanup", func(t *testing.T) {
 		g := NewTestGame(t)
-		for i := 0; i < 8; i++ {
+		for range 8 {
 			g.AddCard(core.ZoneHand, PlayerA, "Forest")
 		}
 		// Stop after turn 1 cleanup has executed

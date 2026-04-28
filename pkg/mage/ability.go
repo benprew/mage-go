@@ -1,6 +1,7 @@
 package mage
 
 import (
+	"slices"
 	"strings"
 
 	"github.com/google/uuid"
@@ -49,12 +50,7 @@ func ProtectionFromColor(c Color) *ProtectionAbility {
 		},
 		FromColors: []Color{c},
 		Filter: NewCardFilter(c.String(), func(card Card) bool {
-			for _, col := range card.ManaCost().Colors() {
-				if col == c {
-					return true
-				}
-			}
-			return false
+			return slices.Contains(card.ManaCost().Colors(), c)
 		}),
 	}
 }
@@ -109,12 +105,7 @@ func ProtectionFromSubType(subtype string) *ProtectionAbility {
 			abilityType: AbilityStatic,
 		},
 		Filter: NewCardFilter(subtype, func(card Card) bool {
-			for _, st := range card.SubTypes() {
-				if st == subtype {
-					return true
-				}
-			}
-			return false
+			return slices.Contains(card.SubTypes(), subtype)
 		}),
 	}
 }

@@ -203,18 +203,9 @@ func (m Model) View() string {
 		b.WriteString("\n")
 		b.WriteString(divider(w))
 		b.WriteString("\n")
-		visibleLines := m.height - 6
-		if visibleLines < 5 {
-			visibleLines = 5
-		}
-		start := m.logScroll - visibleLines + 1
-		if start < 0 {
-			start = 0
-		}
-		end := start + visibleLines
-		if end > len(m.log) {
-			end = len(m.log)
-		}
+		visibleLines := max(m.height-6, 5)
+		start := max(m.logScroll-visibleLines+1, 0)
+		end := min(start+visibleLines, len(m.log))
 		for i := start; i < end; i++ {
 			line := m.log[i]
 			if i == m.logScroll {
@@ -470,7 +461,7 @@ func renderBattlefieldTo(b *strings.Builder, perms []interactive.PermanentState,
 			cards[i] = buildPermCard(p, eligible[p.ID], selected[p.ID])
 		}
 		row := lipgloss.JoinHorizontal(lipgloss.Top, cards...)
-		for _, line := range strings.Split(row, "\n") {
+		for line := range strings.SplitSeq(row, "\n") {
 			b.WriteString("   ")
 			b.WriteString(line)
 			b.WriteString("\n")

@@ -2,6 +2,7 @@ package mage
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/google/uuid"
 
@@ -436,10 +437,7 @@ func execSetVarFromHandSize(ctx *EffectContext, e *SetVarFromHandSizeData) error
 		ctx.SetInt(e.StoreAs, 0)
 		return nil
 	}
-	val := len(p.Hand()) - e.Offset
-	if val < 0 {
-		val = 0
-	}
+	val := max(len(p.Hand())-e.Offset, 0)
 	ctx.SetInt(e.StoreAs, val)
 	return nil
 }
@@ -646,11 +644,8 @@ func (e *ForEachAttackerBlockedBySourceData) Properties() EffectProperties { ret
 func execForEachAttackerBlockedBySource(ctx *EffectContext, e *ForEachAttackerBlockedBySourceData) error {
 	var attackerIDs []uuid.UUID
 	for _, group := range ctx.Game.CombatGroups() {
-		for _, bid := range group.BlockerIDs {
-			if bid == ctx.SourceID {
-				attackerIDs = append(attackerIDs, group.AttackerID)
-				break
-			}
+		if slices.Contains(group.BlockerIDs, ctx.SourceID) {
+			attackerIDs = append(attackerIDs, group.AttackerID)
 		}
 	}
 	savedTargets := ctx.Targets
@@ -761,11 +756,8 @@ func execForEachAttackerBlockedByTarget(ctx *EffectContext, e *ForEachAttackerBl
 	blockerID := ctx.Targets[0]
 	var attackerIDs []uuid.UUID
 	for _, group := range ctx.Game.CombatGroups() {
-		for _, bid := range group.BlockerIDs {
-			if bid == blockerID {
-				attackerIDs = append(attackerIDs, group.AttackerID)
-				break
-			}
+		if slices.Contains(group.BlockerIDs, blockerID) {
+			attackerIDs = append(attackerIDs, group.AttackerID)
 		}
 	}
 	savedTargets := ctx.Targets

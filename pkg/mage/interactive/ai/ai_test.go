@@ -696,7 +696,7 @@ func TestAttackers_RaceFavorably(t *testing.T) {
 func TestPriorityAction_PrefersCurvePlay(t *testing.T) {
 	g, pa, _ := makeGame()
 	// Give player 5 untapped lands
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		land := mage.NewLand("Forest")
 		land.SetOwner(pa.PlayerID())
 		lp := mage.NewPermanent(land, pa.PlayerID())
@@ -760,7 +760,7 @@ func TestPriorityAction_ActivatesAbility(t *testing.T) {
 func TestShouldMulligan_ZeroLands(t *testing.T) {
 	ai := NewAIPlayer("Bot")
 	// 7-card hand with 0 lands — should mulligan
-	for i := 0; i < 7; i++ {
+	for range 7 {
 		c := mage.NewCreature("Bear", "{1}{G}", 2, 2)
 		c.SetOwner(ai.PlayerID())
 		ai.AddToHand(c)
@@ -773,7 +773,7 @@ func TestShouldMulligan_ZeroLands(t *testing.T) {
 func TestShouldMulligan_SevenLands(t *testing.T) {
 	ai := NewAIPlayer("Bot")
 	// 7-card hand with 7 lands — should mulligan
-	for i := 0; i < 7; i++ {
+	for range 7 {
 		c := mage.NewLand("Forest")
 		c.SetOwner(ai.PlayerID())
 		ai.AddToHand(c)
@@ -786,12 +786,12 @@ func TestShouldMulligan_SevenLands(t *testing.T) {
 func TestShouldMulligan_ThreeLandsFourSpells(t *testing.T) {
 	ai := NewAIPlayer("Bot")
 	// 3 lands + 4 two-drop spells — should keep
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		c := mage.NewLand("Forest")
 		c.SetOwner(ai.PlayerID())
 		ai.AddToHand(c)
 	}
-	for i := 0; i < 4; i++ {
+	for range 4 {
 		c := mage.NewCreature("Bear", "{1}{G}", 2, 2)
 		c.SetOwner(ai.PlayerID())
 		ai.AddToHand(c)
@@ -807,7 +807,7 @@ func TestShouldMulligan_OneLandSixSevenDrops(t *testing.T) {
 	c := mage.NewLand("Forest")
 	c.SetOwner(ai.PlayerID())
 	ai.AddToHand(c)
-	for i := 0; i < 6; i++ {
+	for range 6 {
 		s := mage.NewCreature("Wurm", "{5}{G}{G}", 7, 7)
 		s.SetOwner(ai.PlayerID())
 		ai.AddToHand(s)
@@ -820,12 +820,12 @@ func TestShouldMulligan_OneLandSixSevenDrops(t *testing.T) {
 func TestShouldMulligan_TwoLandsFourTwoDrops(t *testing.T) {
 	ai := NewAIPlayer("Bot")
 	// 2 lands + 4 two-drops + 1 three-drop — should keep
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		c := mage.NewLand("Forest")
 		c.SetOwner(ai.PlayerID())
 		ai.AddToHand(c)
 	}
-	for i := 0; i < 4; i++ {
+	for range 4 {
 		c := mage.NewCreature("Bear", "{1}{G}", 2, 2)
 		c.SetOwner(ai.PlayerID())
 		ai.AddToHand(c)
@@ -844,7 +844,7 @@ func TestShouldMulligan_SixCardHandOneLand(t *testing.T) {
 	c := mage.NewLand("Forest")
 	c.SetOwner(ai.PlayerID())
 	ai.AddToHand(c)
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		s := mage.NewCreature("Bear", "{1}{G}", 2, 2)
 		s.SetOwner(ai.PlayerID())
 		ai.AddToHand(s)
@@ -857,7 +857,7 @@ func TestShouldMulligan_SixCardHandOneLand(t *testing.T) {
 func TestShouldMulligan_FiveCardHand(t *testing.T) {
 	ai := NewAIPlayer("Bot")
 	// 5-card hand — always keep regardless of contents
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		c := mage.NewCreature("Bear", "{1}{G}", 2, 2)
 		c.SetOwner(ai.PlayerID())
 		ai.AddToHand(c)
@@ -870,13 +870,13 @@ func TestShouldMulligan_FiveCardHand(t *testing.T) {
 func TestMulligan_ShufflesAndDrawsFewerCards(t *testing.T) {
 	ai := NewAIPlayer("Bot")
 	// Put 30 cards in library
-	for i := 0; i < 30; i++ {
+	for range 30 {
 		c := mage.NewCreature("Bear", "{1}{G}", 2, 2)
 		c.SetOwner(ai.PlayerID())
 		ai.AddToLibrary(c)
 	}
 	// Draw 7 cards
-	for i := 0; i < 7; i++ {
+	for range 7 {
 		ai.DrawCard()
 	}
 	if len(ai.Hand()) != 7 {
@@ -899,19 +899,19 @@ func TestMulligan_ShufflesAndDrawsFewerCards(t *testing.T) {
 func TestMulliganAI_KeepsGoodHand(t *testing.T) {
 	ai := NewAIPlayer("Bot")
 	// Build a library of 30 cards (mix of lands and spells)
-	for i := 0; i < 15; i++ {
+	for range 15 {
 		c := mage.NewLand("Forest")
 		c.SetOwner(ai.PlayerID())
 		ai.AddToLibrary(c)
 	}
-	for i := 0; i < 15; i++ {
+	for range 15 {
 		c := mage.NewCreature("Bear", "{1}{G}", 2, 2)
 		c.SetOwner(ai.PlayerID())
 		ai.AddToLibrary(c)
 	}
 	ai.ShuffleLibrary()
 	// Draw opening hand
-	for i := 0; i < 7; i++ {
+	for range 7 {
 		ai.DrawCard()
 	}
 

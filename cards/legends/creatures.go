@@ -286,13 +286,7 @@ func registerCreatures() {
 					SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 						// Check if this Wall is blocking something
 						for _, group := range g.CombatGroups() {
-							isBlocking := false
-							for _, bid := range group.BlockerIDs {
-								if bid == sourceID {
-									isBlocking = true
-									break
-								}
-							}
+							isBlocking := slices.Contains(group.BlockerIDs, sourceID)
 							if !isBlocking {
 								continue
 							}
@@ -537,10 +531,8 @@ func registerCreatures() {
 					WithFrom(NewPermanentFilter("blocked by this wall", func(p *Permanent, g *Game) bool {
 						for _, grp := range g.CombatGroups() {
 							if grp.AttackerID == p.ID() {
-								for _, bid := range grp.BlockerIDs {
-									if bid == sourceID {
-										return true
-									}
+								if slices.Contains(grp.BlockerIDs, sourceID) {
+									return true
 								}
 							}
 						}
@@ -908,19 +900,14 @@ func registerCreatures() {
 						targetID := targets[0]
 						inCombat := false
 						for _, group := range g.CombatGroups() {
-							if group.AttackerID == sourceID {
-								for _, bid := range group.BlockerIDs {
-									if bid == targetID {
-										inCombat = true
-										break
-									}
+							switch group.AttackerID {
+							case sourceID:
+								if slices.Contains(group.BlockerIDs, targetID) {
+									inCombat = true
 								}
-							} else if group.AttackerID == targetID {
-								for _, bid := range group.BlockerIDs {
-									if bid == sourceID {
-										inCombat = true
-										break
-									}
+							case targetID:
+								if slices.Contains(group.BlockerIDs, sourceID) {
+									inCombat = true
 								}
 							}
 							if inCombat {
@@ -1168,10 +1155,8 @@ func registerCreatures() {
 					WithFrom(NewPermanentFilter("blocked by this wall", func(p *Permanent, g *Game) bool {
 						for _, grp := range g.CombatGroups() {
 							if grp.AttackerID == p.ID() {
-								for _, bid := range grp.BlockerIDs {
-									if bid == sourceID {
-										return true
-									}
+								if slices.Contains(grp.BlockerIDs, sourceID) {
+									return true
 								}
 							}
 						}
@@ -2448,7 +2433,7 @@ func registerCreatures() {
 							func(g *Game, _ uuid.UUID, controller uuid.UUID, _ []uuid.UUID) error {
 								x := g.CountBattlefield(And(ControlledBy(controller), IsLand))
 								colors := []Color{Red, Green, White}
-								for i := 0; i < x; i++ {
+								for range x {
 									token := NewToken("Sand Warrior", 1, 1, []CardType{TypeCreature}, []string{"Sand", "Warrior"})
 									token.SetOwner(controller)
 									perm := g.PutOnBattlefield(token, controller)
@@ -3300,12 +3285,7 @@ func registerCreatures() {
 						if g.GetResolvingCard() == nil {
 							return false
 						}
-						for _, t := range g.GetResolvingTargets() {
-							if t == sourceID {
-								return true
-							}
-						}
-						return false
+						return slices.Contains(g.GetResolvingTargets(), sourceID)
 					})),
 				)
 				return nil
@@ -3360,19 +3340,14 @@ func registerCreatures() {
 						// Verify target is blocking or blocked by this creature
 						inCombat := false
 						for _, group := range g.CombatGroups() {
-							if group.AttackerID == sourceID {
-								for _, bid := range group.BlockerIDs {
-									if bid == targets[0] {
-										inCombat = true
-										break
-									}
+							switch group.AttackerID {
+							case sourceID:
+								if slices.Contains(group.BlockerIDs, targets[0]) {
+									inCombat = true
 								}
-							} else if group.AttackerID == targets[0] {
-								for _, bid := range group.BlockerIDs {
-									if bid == sourceID {
-										inCombat = true
-										break
-									}
+							case targets[0]:
+								if slices.Contains(group.BlockerIDs, sourceID) {
+									inCombat = true
 								}
 							}
 							if inCombat {

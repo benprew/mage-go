@@ -833,7 +833,7 @@ func TestClock_ZeroDamage(t *testing.T) {
 func TestHandQuality_CastableSpells(t *testing.T) {
 	g, pa, _ := makeGame()
 	// 3 untapped lands
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		land := mage.NewLand("Forest")
 		land.SetOwner(pa.PlayerID())
 		lp := mage.NewPermanent(land, pa.PlayerID())
@@ -856,7 +856,7 @@ func TestHandQuality_CastableSpells(t *testing.T) {
 func TestHandQuality_UncastableExpensiveSpell(t *testing.T) {
 	g, pa, _ := makeGame()
 	// 2 untapped lands
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		land := mage.NewLand("Forest")
 		land.SetOwner(pa.PlayerID())
 		lp := mage.NewPermanent(land, pa.PlayerID())
@@ -877,7 +877,7 @@ func TestHandQuality_UncastableExpensiveSpell(t *testing.T) {
 func TestHandQuality_NearCastableSpell(t *testing.T) {
 	g, pa, _ := makeGame()
 	// 2 untapped lands
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		land := mage.NewLand("Forest")
 		land.SetOwner(pa.PlayerID())
 		lp := mage.NewPermanent(land, pa.PlayerID())
@@ -898,7 +898,7 @@ func TestHandQuality_NearCastableSpell(t *testing.T) {
 func TestHandQuality_ExcessLands(t *testing.T) {
 	g, pa, _ := makeGame()
 	// 6 lands in hand
-	for i := 0; i < 6; i++ {
+	for range 6 {
 		land := mage.NewLand("Forest")
 		pa.AddToHand(land)
 	}
@@ -1058,7 +1058,7 @@ func addLands(g *mage.Game, p *mage.BasePlayer, name string, count int) {
 		"Island": core.Blue, "Swamp": core.Black,
 	}
 	color := colorMap[name]
-	for i := 0; i < count; i++ {
+	for range count {
 		land := mage.NewLand(name, mage.WithManaAbility(color))
 		land.SetOwner(p.PlayerID())
 		perm := mage.NewPermanent(land, p.PlayerID())

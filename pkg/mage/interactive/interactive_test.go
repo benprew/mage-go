@@ -128,7 +128,7 @@ func TestHumanPlayer_ChooseMode_FirstMode(t *testing.T) {
 
 func TestHumanPlayer_ChooseMode_AllIndices(t *testing.T) {
 	modes := []string{"X", "Y", "Z"}
-	for wantIdx := 0; wantIdx < len(modes); wantIdx++ {
+	for wantIdx := range modes {
 
 		t.Run(modes[wantIdx], func(t *testing.T) {
 			hp := interactive.NewHumanPlayer("Human")

@@ -309,10 +309,7 @@ func (s *SearchStrategy) searchRoot(g *mage.Game, p mage.Player, moves []Move,
 		// that have low heuristic value.
 		searchDepth := depth - 1
 		if i >= lmrMoveThreshold && depth >= lmrMinDepth && m.heuristic <= 5 {
-			searchDepth = depth - 2
-			if searchDepth < 0 {
-				searchDepth = 0
-			}
+			searchDepth = max(depth-2, 0)
 		}
 
 		score := s.minimax(clone, searchDepth, alpha, beta,
@@ -383,10 +380,7 @@ func (s *SearchStrategy) Attackers(p mage.Player, g *mage.Game) []uuid.UUID {
 
 		// Search from opponent's perspective — they'll choose blocks optimally.
 		// Use reduced depth for combat search since the branching factor is lower.
-		combatDepth := s.Config.MaxDepth / 2
-		if combatDepth < 2 {
-			combatDepth = 2
-		}
+		combatDepth := max(s.Config.MaxDepth/2, 2)
 		score := s.minimaxCombat(clone, combatDepth, minScore, maxScore,
 			false, p.PlayerID(), &nodes, deadline)
 
@@ -437,10 +431,7 @@ func (s *SearchStrategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAssig
 
 		// Evaluate post-combat position with a short forward search
 		// (opponent may cast spells in second main phase).
-		postCombatDepth := s.Config.MaxDepth / 3
-		if postCombatDepth < 1 {
-			postCombatDepth = 1
-		}
+		postCombatDepth := max(s.Config.MaxDepth/3, 1)
 		score := s.minimax(clone, postCombatDepth, minScore, maxScore,
 			false, p.PlayerID(), &nodes, deadline, 0)
 
@@ -523,10 +514,7 @@ func (s *SearchStrategy) minimax(g *mage.Game, depth, alpha, beta int,
 	// beat beta? If so, this position is so good we can prune.
 	// Only apply when not in a chain and depth is sufficient.
 	if depth >= nullMoveReduction+1 && chainCount == 0 && !g.IsGameOver() {
-		nullDepth := depth - 1 - nullMoveReduction
-		if nullDepth < 0 {
-			nullDepth = 0
-		}
+		nullDepth := max(depth-1-nullMoveReduction, 0)
 		nullScore := s.minimax(g, nullDepth, alpha, beta, !maximizing, playerID, nodes, deadline, 0)
 		// Null-move cutoffs establish a bound on the real score at this node
 		// without doing any real work, so they are high-value TT entries.
@@ -587,10 +575,7 @@ func (s *SearchStrategy) minimax(g *mage.Game, depth, alpha, beta int,
 			// Late move reduction within minimax.
 			searchDepth := depth - 1
 			if i >= lmrMoveThreshold && depth >= lmrMinDepth && m.heuristic <= 3 {
-				searchDepth = depth - 2
-				if searchDepth < 0 {
-					searchDepth = 0
-				}
+				searchDepth = max(depth-2, 0)
 			}
 
 			var score int
@@ -655,10 +640,7 @@ func (s *SearchStrategy) minimax(g *mage.Game, depth, alpha, beta int,
 		// Late move reduction.
 		searchDepth := depth - 1
 		if i >= lmrMoveThreshold && depth >= lmrMinDepth && m.heuristic <= 3 {
-			searchDepth = depth - 2
-			if searchDepth < 0 {
-				searchDepth = 0
-			}
+			searchDepth = max(depth-2, 0)
 		}
 
 		var score int

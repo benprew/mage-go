@@ -4,6 +4,7 @@
 package gametest
 
 import (
+	"slices"
 	"sync/atomic"
 	"testing"
 
@@ -828,12 +829,7 @@ func TestCR509_3f_CharacteristicChangeNoRetroTrigger(t *testing.T) {
 					if blk == nil {
 						return false
 					}
-					for _, c := range blk.Colors() {
-						if c == core.Green {
-							return true
-						}
-					}
-					return false
+					return slices.Contains(blk.Colors(), core.Green)
 				})
 			return mage.NewCreature(colorWatcherName, "{2}", 1, 1,
 				mage.WithSubTypes("Spirit"),

@@ -397,7 +397,7 @@ func execDrawCardsTarget(ctx *EffectContext, e *drawCardsTargetEffect) error {
 	}
 
 	for _, p := range players {
-		for i := 0; i < amount; i++ {
+		for range amount {
 			ctx.Game.PlayerDrawCard(p)
 		}
 	}
@@ -410,7 +410,7 @@ func execDrawCardsActivePlayer(ctx *EffectContext, e *drawCardsActivePlayerEffec
 		return ErrPlayerNotFound
 	}
 	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, active.PlayerID(), ctx.Targets)
-	for i := 0; i < amount; i++ {
+	for range amount {
 		ctx.Game.PlayerDrawCard(active)
 	}
 	return nil

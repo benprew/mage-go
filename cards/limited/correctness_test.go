@@ -86,10 +86,10 @@ func TestWheelOfFortune(t *testing.T) {
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Wheel of Fortune")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Grizzly Bears")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Hill Giant")
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
 		}
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			g.AddCard(core.ZoneLibrary, gametest.PlayerB, "Grizzly Bears")
 		}
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Wheel of Fortune")
@@ -111,10 +111,10 @@ func TestTimetwister(t *testing.T) {
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Timetwister")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
 		g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Forest")
 		}
-		for i := 0; i < 7; i++ {
+		for range 7 {
 			g.AddCard(core.ZoneLibrary, gametest.PlayerB, "Forest")
 		}
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Timetwister")
@@ -337,7 +337,7 @@ func TestBlackVise(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Black Vise")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Black Vise")
-		for i := 0; i < 7; i++ {
+		for range 7 {
 			g.AddCard(core.ZoneHand, gametest.PlayerB, "Forest")
 		}
 		g.StopAt(2, core.PrecombatMain)
@@ -350,7 +350,7 @@ func TestBlackVise(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Black Vise")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Black Vise")
-		for i := 0; i < 7; i++ {
+		for range 7 {
 			g.AddCard(core.ZoneHand, gametest.PlayerA, "Forest")
 		}
 		g.StopAt(3, core.PrecombatMain)

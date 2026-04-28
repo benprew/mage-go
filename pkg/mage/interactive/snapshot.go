@@ -2,6 +2,7 @@ package interactive
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 
@@ -52,14 +53,14 @@ func buildRulesText(c mage.Card) string {
 }
 
 func joinStrings(ss []string) string {
-	result := ""
+	var result strings.Builder
 	for i, s := range ss {
 		if i > 0 {
-			result += ", "
+			result.WriteString(", ")
 		}
-		result += s
+		result.WriteString(s)
 	}
-	return result
+	return result.String()
 }
 
 // SnapshotGameState creates a read-only snapshot of the game for the TUI.
@@ -171,7 +172,7 @@ func snapshotPlayer(g *mage.Game, p mage.Player, showHand bool) PlayerState {
 			}
 			permState.SubTypes += st
 		}
-		for ct := core.CounterType(0); ct < core.NumCounters; ct++ {
+		for ct := range core.NumCounters {
 			n := perm.Counters[ct]
 			if n == 0 {
 				continue

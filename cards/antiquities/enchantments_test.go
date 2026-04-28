@@ -253,7 +253,7 @@ func TestEnergyFlux(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Energy Flux")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Ornithopter")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Jalum Tome")
-		for i := 0; i < 5; i++ {
+		for range 5 {
 			g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forest")
 		}
 		// 5 lands can pay {2}+{2}=4 mana (5 lands produce 5, enough)
