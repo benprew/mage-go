@@ -1971,7 +1971,6 @@ func registerCreatures() {
 	// 1/1
 	// When this creature enters, each opponent loses 1 life and you gain 1 life.
 	// Sacrifice a Food: Return this card from your graveyard to the battlefield.
-	// XXX: graveyard-activated ability ("Sacrifice a Food: Return this card from your graveyard to the battlefield.") requires graveyard-zone activation primitive
 	Register("Cauldron Familiar", func() Card {
 		return NewCreature("Cauldron Familiar", "{B}", 1, 1,
 			WithSubTypes("Cat"),
@@ -1991,6 +1990,23 @@ func registerCreatures() {
 					}),
 				false,
 			)),
+			WithGraveyardActivatedAbility(
+				FuncEffect("return this card from your graveyard to the battlefield",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						card, ok := p.RemoveFromGraveyard(sourceID)
+						if !ok {
+							return nil
+						}
+						g.PutOnBattlefield(card, controller)
+						return nil
+					}),
+				SacrificeMatchingCost(And(IsArtifact, HasSubType("Food")), "Sacrifice a Food"),
+			),
 		)
 	})
 
@@ -2324,10 +2340,15 @@ func registerCreatures() {
 	// Creature — Human Rogue
 	// 2/2
 	// {3}{B}, Exile this card from your graveyard: Create a 2/2 black Zombie creature token. Activate only as a sorcery.
-	// XXX: requires activated-from-graveyard abilities
 	Register("Ghoulcaller's Accomplice", func() Card {
 		return NewCreature("Ghoulcaller's Accomplice", "{1}{B}", 2, 2,
 			WithSubTypes("Human", "Rogue"),
+			WithGraveyardActivatedAbility(
+				CreateColoredToken("Zombie", 2, 2, []Color{Black},
+					[]CardType{TypeCreature}, []string{"Zombie"}),
+				ManaCostOf("{3}{B}"),
+				WithCost(ExileSelfFromGraveyardCost()),
+			),
 		)
 	})
 
@@ -2935,11 +2956,14 @@ func registerCreatures() {
 	// Sanitarium Skeleton {B}
 	// Creature — Skeleton
 	// 1/2
-	// {2}{B}: Return this card from your graveyard to your hand.
-	// XXX: requires activated-from-graveyard abilities
+	// {2}{B}: Return this card from your graveyard to your hand. Activate only as a sorcery.
 	Register("Sanitarium Skeleton", func() Card {
 		return NewCreature("Sanitarium Skeleton", "{B}", 1, 2,
 			WithSubTypes("Skeleton"),
+			WithGraveyardActivatedAbility(
+				ReturnSourceToHand(),
+				ManaCostOf("{2}{B}"),
+			),
 		)
 	})
 
