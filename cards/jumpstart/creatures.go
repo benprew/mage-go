@@ -5218,7 +5218,12 @@ func registerCreatures() {
 	// Creature — Cat
 	// 4/5
 	// Whenever one or more non-Human creatures you control deal combat damage to a player, draw a card.
-	// XXX: requires "one or more" once-per-combat trigger aggregation across multiple sources
+	// XXX: needs a once-per-combat aggregator for "Whenever one or more
+	// creatures deal combat damage to a player" (analogous to
+	// WheneverOneOrMoreCreaturesAttackTrigger / EvtAttackersDeclared but for
+	// the combat-damage step). EvtDamageDealt is per-source/per-target; firing
+	// once across all sources requires a new EvtCombatDamageDealt aggregate
+	// fired at the end of CR 510.2 first-/regular-strike damage assignment.
 	Register("Keeper of Fables", func() Card {
 		return NewCreature("Keeper of Fables", "{3}{G}{G}", 4, 5,
 			WithSubTypes("Cat"),
