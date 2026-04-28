@@ -293,7 +293,7 @@ func registerCreatures() {
 	// 4/4
 	// {3}: Exile another target creature you control, then return it to the battlefield under its owner's control.
 	// Whenever another creature you control enters, you may pay {G/W}. If you do, put a +1/+1 counter on it. If it's a Unicorn, put two +1/+1 counters on it instead. ({G/W} can be paid with either {G} or {W}.)
-	// XXX: hybrid mana cost {G/W} not supported; ETB-counter trigger deferred.
+	// XXX: may-pay-mana cost in trigger resolution not supported; ETB-counter trigger deferred.
 	Register("Emiel the Blessed", func() Card {
 		return NewCreature("Emiel the Blessed", "{2}{W}{W}", 4, 4,
 			WithSubTypes("Unicorn"),
@@ -2135,7 +2135,7 @@ func registerCreatures() {
 	// Menace
 	// Whenever you sacrifice a creature, you may pay {U/B}. If you do, draw a card. ({U/B} can be paid with either {U} or {B}.)
 	// {1}, Sacrifice a creature: Kels gains indestructible until end of turn.
-	// XXX: requires may-pay-mana cost in trigger resolution and hybrid-mana cost; sacrifice trigger detection is available but unconditional draw would be a wrong simplification.
+	// XXX: requires may-pay-mana cost in trigger resolution; sacrifice trigger detection is available but unconditional draw would be a wrong simplification.
 	Register("Kels, Fight Fixer", func() Card {
 		return NewCreature("Kels, Fight Fixer", "{2}{B}{B}", 4, 3,
 			WithSubTypes("Azra", "Warlock"),
@@ -4420,7 +4420,7 @@ func registerCreatures() {
 	// 3/3
 	// Whenever one or more creatures you control fight or become blocked, draw a card.
 	// At the beginning of combat on your turn, you may pay {2}{R/G}. If you do, double target creature's power until end of turn. That creature must be blocked this combat if able. ({R/G} can be paid with either {R} or {G}.)
-	// XXX: requires hybrid mana, "one or more ... fight" aggregation, "must be blocked this combat" restriction
+	// XXX: requires may-pay-mana cost in trigger resolution, "one or more ... fight" aggregation, "must be blocked this combat" restriction
 	Register("Neyith of the Dire Hunt", func() Card {
 		return NewCreature("Neyith of the Dire Hunt", "{2}{G}{G}", 3, 3,
 			WithSubTypes("Human", "Warrior"),
