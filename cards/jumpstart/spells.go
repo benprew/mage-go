@@ -459,10 +459,17 @@ func registerSpells() {
 	// Dance with Devils {3}{R}
 	// Instant
 	// Create two 1/1 red Devil creature tokens. They have "When this token dies, it deals 1 damage to any target."
-	// XXX: requires creating tokens with per-token triggered abilities
 	Register("Dance with Devils", func() Card {
 		return NewInstant("Dance with Devils", "{3}{R}",
-			NewSpellAbility(CreateTokens(2, "Devil", 1, 1, []CardType{TypeCreature}, []string{"Devil"})),
+			NewSpellAbility(CreateTokensWithAbilities(
+				2, "Devil", 1, 1,
+				[]CardType{TypeCreature},
+				[]string{"Devil"},
+				nil,
+				PutIntoGraveyardFromBattlefieldTrigger(
+					DealDamage(Fixed(1)), false,
+				).AddTarget(TargetAnyTarget()),
+			)),
 		)
 	})
 
@@ -573,10 +580,37 @@ func registerSpells() {
 	// Elemental Uprising {1}{G}
 	// Instant
 	// Target land you control becomes a 4/4 Elemental creature with haste until end of turn. It's still a land. It must be blocked this turn if able.
-	// XXX: requires animate-land effect with MustBeBlocked attr
 	Register("Elemental Uprising", func() Card {
 		return NewInstant("Elemental Uprising", "{1}{G}",
-			NewSpellAbility(),
+			NewTargetedSpell(
+				TargetPermanent(IsLand),
+				FuncEffect(
+					"target land you control becomes a 4/4 Elemental with haste; must be blocked",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						land := g.FindPermanent(targets[0])
+						if land == nil {
+							return nil
+						}
+						anim := AnimateTargetLand(land.ID(), AnimateLandOptions{
+							Power:     4,
+							Toughness: 4,
+							SubTypes:  []string{"Elemental"},
+							Colors:    []Color{Green},
+							Keywords:  []Attr{Haste},
+						}, EndOfTurn)
+						anim.SetSourceID(sourceID)
+						g.AddContinuousEffect(anim)
+						mb := TargetMustBeBlockedIfAble(land.ID(), EndOfTurn)
+						mb.SetSourceID(sourceID)
+						g.AddContinuousEffect(mb)
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -1137,10 +1171,11 @@ func registerSpells() {
 	// Long Road Home {1}{W}
 	// Instant
 	// Exile target creature. At the beginning of the next end step, return that card to the battlefield under its owner's control with a +1/+1 counter on it.
-	// XXX: requires exile-then-return-with-counter delayed trigger primitive
 	Register("Long Road Home", func() Card {
 		return NewInstant("Long Road Home", "{1}{W}",
-			NewSpellAbility(),
+			NewTargetedSpell(TargetCreature(),
+				ExileTargetReturnAtEndStepWithCounter(P1P1, 1),
+			),
 		)
 	})
 
@@ -1437,10 +1472,13 @@ func registerSpells() {
 	// Riddle of Lightning {3}{R}{R}
 	// Instant
 	// Choose any target. Scry 3, then reveal the top card of your library. Riddle of Lightning deals damage equal to that card's mana value to that permanent or player.
-	// XXX: reveal-top + mana-value-from-card damage portion deferred; Scry 3 implemented
 	Register("Riddle of Lightning", func() Card {
 		return NewInstant("Riddle of Lightning", "{3}{R}{R}",
-			NewSpellAbility(Scry(Fixed(3))),
+			NewTargetedSpell(TargetAnyTarget(), CompositeEffects(
+				"scry 3, reveal top, deal damage equal to its mana value",
+				Scry(Fixed(3)),
+				RevealTopAndDealDamage(),
+			)),
 		)
 	})
 

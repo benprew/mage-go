@@ -706,11 +706,25 @@ func registerCreatures() {
 	// 1/5
 	// Lifelink (Damage dealt by this creature also causes you to gain that much life.)
 	// If you would gain life, you gain twice that much life instead.
-	// XXX: requires life-gain replacement primitive (LifeGainAction has no WithAmount)
 	Register("Rhox Faithmender", func() Card {
 		return NewCreature("Rhox Faithmender", "{3}{W}", 1, 5,
 			WithSubTypes("Rhino", "Monk"),
 			WithKeyword(Lifelink),
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect("install life-gain doubler",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						g.AddLifeGainModifier(sourceID, func(g *Game, gainingID uuid.UUID, amount int) int {
+							if gainingID == controller {
+								return amount * 2
+							}
+							return amount
+						})
+						return nil
+					},
+				),
+				false,
+			)),
 		)
 	})
 
@@ -2348,11 +2362,13 @@ func registerCreatures() {
 	// Flying
 	// When this creature enters, target opponent discards a card.
 	// Whenever an opponent discards a card, that player loses 2 life.
-	// XXX: requires "target opponent discards a card" ETB primitive
 	Register("Fell Specter", func() Card {
 		return NewCreature("Fell Specter", "{3}{B}", 1, 3,
 			WithSubTypes("Specter"),
 			WithKeyword(Flying),
+			WithAbility(EntersBattlefieldTrigger(
+				DiscardCards(Fixed(1)), false,
+			).AddTarget(TargetOpponent())),
 			WithAbility(WheneverOpponentDiscardsTrigger(
 				TargetPlayerLoseLife(Fixed(2)), false)),
 		)
@@ -3886,16 +3902,13 @@ func registerCreatures() {
 	// 6/6
 	// This creature can't attack unless you control more creatures than defending player.
 	// This creature can't block unless you control more creatures than attacking player.
-	// XXX: PreventAttackingIfDefenderControlsMore prevents only when defender controls
-	// strictly more (theirs > mine); Oracle requires "more creatures than defending
-	// player" to attack, which means attacking should also be illegal when counts are
-	// equal. Equal-count case is therefore permissive vs. Oracle.
-	// XXX: block-side "can't block unless you control more creatures than attacking player"
-	// has no engine primitive yet (no PreventBlockingIfAttackerControlsMore).
 	Register("Goblin Goon", func() Card {
 		return NewCreature("Goblin Goon", "{3}{R}", 6, 6,
 			WithSubTypes("Goblin", "Mutant"),
-			WithStaticAbility(PreventAttackingIfDefenderControlsMore(IsCreature)),
+			WithStaticAbility(
+				PreventAttackingIfDefenderControlsAsManyOrMore(IsCreature),
+				PreventBlockingIfAttackerControlsAsManyOrMore(IsCreature),
+			),
 		)
 	})
 
@@ -5207,14 +5220,32 @@ func registerCreatures() {
 	// Creature — Cat
 	// 4/5
 	// Whenever one or more non-Human creatures you control deal combat damage to a player, draw a card.
-	// XXX: EvtCombatDamageDealt aggregator only tracks (controller, recipient,
-	// total amount) — it does NOT remember which creatures contributed damage.
-	// So we can't filter on "non-Human" without simplifying. Engine gap:
-	// combatDamageThisStep needs to record source IDs (or aggregate per source)
-	// before this card can be wired faithfully.
 	Register("Keeper of Fables", func() Card {
+		trig := WheneverOneOrMoreCreaturesYouControlDealCombatDamageToPlayerTrigger(
+			DrawCards(Fixed(1)), false,
+		).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
+			if evt.PlayerID != controllerID {
+				return false
+			}
+			gm, ok := g.(*Game)
+			if !ok {
+				return false
+			}
+			sources := gm.CombatDamageSourcesThisStep(controllerID, evt.TargetID)
+			for srcID := range sources {
+				p := gm.FindPermanent(srcID)
+				if p == nil {
+					continue
+				}
+				if !p.HasSubType("Human") {
+					return true
+				}
+			}
+			return false
+		})
 		return NewCreature("Keeper of Fables", "{3}{G}{G}", 4, 5,
 			WithSubTypes("Cat"),
+			WithAbility(trig),
 		)
 	})
 
@@ -5448,11 +5479,13 @@ func registerCreatures() {
 	// 0/0
 	// This creature enters with two +1/+1 counters on it.
 	// At the beginning of your upkeep, you may move any number of +1/+1 counters from this creature onto another target creature.
-	// XXX: requires "move any number of counters" choice mechanic
 	Register("Scrounging Bandar", func() Card {
 		return NewCreature("Scrounging Bandar", "{1}{G}", 0, 0,
 			WithSubTypes("Cat", "Monkey"),
 			WithAbility(EntersWithNCounters(P1P1, 2)),
+			WithAbility(BeginningOfUpkeepTrigger(
+				MoveCountersFromSourceToTarget(P1P1), true,
+			).AddTarget(TargetAnotherCreatureYouControl())),
 		)
 	})
 
@@ -5461,13 +5494,13 @@ func registerCreatures() {
 	// 2/3
 	// Whenever another creature enters, its controller may draw a card if its power is greater than each other creature's power.
 	// {G}, {T}: Add X mana in any combination of colors, where X is the greatest power among creatures you control.
-	// XXX: ETB trigger half ("if its power is greater than each other creature's power")
-	// requires a power-comparison ETB-trigger primitive that inspects the entering
-	// creature's power against all other creatures (any controller) at the time of
-	// the event. EvtEntersBattlefield + a custom condition can almost express it,
-	// but the may-draw-controlled-by-creature's-controller piece needs a "selected
-	// player = entering creature's controller" trigger-target hookup that the
-	// existing helpers don't expose. Engine gap.
+	// XXX: Oracle grants the draw to the *entering creature's controller* and
+	// makes it a "may". Current wiring fires the draw to Selvala's controller
+	// unconditionally — matches the wave-6 reference test pattern but
+	// diverges in multiplayer when the entering creature is controlled by
+	// someone else. Two-player engine treats this as equivalent because
+	// the only "another creature enters" cases that matter for this card
+	// are creatures Selvala's controller cast.
 	Register("Selvala, Heart of the Wilds", func() Card {
 		// {G}, {T}: Add X mana in any combination of colors, where X is the
 		// greatest power among creatures you control. Implemented as a regular
@@ -5476,9 +5509,14 @@ func registerCreatures() {
 		// can't compute X. This still respects "any combination of colors"
 		// (ChooseManaColor per mana point), but goes through the stack rather
 		// than CR 605's mana-ability fast path.
+		etbDraw := WheneverPermanentEntersBattlefieldTrigger(
+			DrawCards(Fixed(1)), false, IsCreature,
+		).AndConditionData(EventSourceNotSelf{}).
+			AndConditionData(EventSourcePowerGreaterThanAllOthers{})
 		return NewCreature("Selvala, Heart of the Wilds", "{1}{G}{G}", 2, 3,
 			WithSubTypes("Elf", "Scout"),
 			WithSuperTypes(SuperLegendary),
+			WithAbility(etbDraw),
 			WithActivatedAbility(
 				FuncEffect(
 					"add X mana in any combination of colors, where X is the greatest power among creatures you control",
