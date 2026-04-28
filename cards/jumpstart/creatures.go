@@ -15,6 +15,27 @@ func init() {
 	registerCreatures()
 }
 
+// gatherCastTargetsFromZone walks a card's CastTargets and asks the player to
+// choose them (used when casting a card via the alternate-cost helpers, which
+// take pre-chosen targets rather than prompting). Returns a flat list of
+// chosen IDs across all required targets in declaration order.
+func gatherCastTargetsFromZone(g *Game, p Player, card Card) []uuid.UUID {
+	var out []uuid.UUID
+	for _, t := range card.CastTargets() {
+		t.Reset()
+		possible := t.Possible(p.PlayerID(), card, g)
+		if len(possible) == 0 {
+			continue
+		}
+		chosen := p.ChooseTargets(possible, t.Min(), t.Max(), g)
+		if err := t.Choose(p.PlayerID(), card, g, chosen); err != nil {
+			continue
+		}
+		out = append(out, chosen...)
+	}
+	return out
+}
+
 func registerCreatures() {
 
 	// ===== WHITE CREATURES =====
@@ -1212,11 +1233,11 @@ func registerCreatures() {
 	// 3/1
 	// Flying
 	// This creature can block only creatures with flying.
-	// XXX: requires "can block only X" restriction primitive
 	Register("Rishadan Airship", func() Card {
 		return NewCreature("Rishadan Airship", "{2}{U}", 3, 1,
 			WithSubTypes("Human", "Pirate"),
 			WithKeyword(Flying),
+			WithStaticAbility(SourceCanBlockOnly(HasKeywordFilter(Flying))),
 		)
 	})
 
@@ -1247,11 +1268,43 @@ func registerCreatures() {
 	// 5/5
 	// Flying
 	// When this creature enters, you may cast target instant, sorcery, or artifact card from your graveyard without paying its mana cost. If an instant or sorcery spell cast this way would be put into your graveyard, exile it instead.
-	// XXX: requires cast-from-graveyard alternate-cost
 	Register("Scholar of the Lost Trove", func() Card {
+		isInstantSorceryOrArtifactCard := NewCardFilter("instant, sorcery, or artifact", func(c Card) bool {
+			return c.HasType(TypeInstant) || c.HasType(TypeSorcery) || c.HasType(TypeArtifact)
+		})
 		return NewCreature("Scholar of the Lost Trove", "{5}{U}{U}", 5, 5,
 			WithSubTypes("Sphinx"),
 			WithKeyword(Flying),
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect("cast target instant/sorcery/artifact from graveyard without paying; if instant/sorcery, exile-instead-of-graveyard this turn",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						cardID := targets[0]
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						var chosen Card
+						for _, c := range p.Graveyard() {
+							if c.ID() == cardID {
+								chosen = c
+								break
+							}
+						}
+						if chosen == nil {
+							return nil
+						}
+						if chosen.HasType(TypeInstant) || chosen.HasType(TypeSorcery) {
+							g.AddExileIfWouldGoToGraveyardThisTurn(cardID, sourceID)
+						}
+						castTargets := gatherCastTargetsFromZone(g, p, chosen)
+						return g.CastCardFromZoneWithoutPaying(controller, cardID, ZoneGraveyard, castTargets, 0)
+					}),
+				true,
+			).AddTarget(TargetCardInYourGraveyard(isInstantSorceryOrArtifactCard))),
 		)
 	})
 
@@ -2037,12 +2090,57 @@ func registerCreatures() {
 	// 2/3
 	// Deathtouch
 	// When Gonti enters, look at the top four cards of target opponent's library, exile one of them face down, then put the rest on the bottom of that library in a random order. You may cast that card for as long as it remains exiled, and mana of any type can be spent to cast that spell.
-	// XXX: requires cast-from-exile-with-any-color
+	// XXX: face-down exile and "look at" privacy aren't modeled — the exiled
+	// card is placed in exile face up and visible to both players.
 	Register("Gonti, Lord of Luxury", func() Card {
 		return NewCreature("Gonti, Lord of Luxury", "{2}{B}{B}", 2, 3,
 			WithSubTypes("Aetherborn", "Rogue"),
 			WithSuperTypes(SuperLegendary),
 			WithKeyword(Deathtouch),
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect("look at top 4 of target opponent's library, exile one, rest on bottom in random order; you may cast that card with any-color mana while exiled",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						opp := g.GetPlayer(targets[0])
+						if opp == nil {
+							return nil
+						}
+						lib := opp.Library()
+						n := 4
+						if n > len(lib) {
+							n = len(lib)
+						}
+						if n == 0 {
+							return nil
+						}
+						top := make([]Card, n)
+						copy(top, lib[:n])
+						rest := lib[n:]
+						ctrl := g.GetPlayer(controller)
+						chosenCard := ctrl.ChooseCardFromLibrary(top, "exile one of these cards face down", g)
+						if chosenCard == nil {
+							chosenCard = top[0]
+						}
+						var bottom []Card
+						for _, c := range top {
+							if c.ID() != chosenCard.ID() {
+								bottom = append(bottom, c)
+							}
+						}
+						rand.Shuffle(len(bottom), func(i, j int) { bottom[i], bottom[j] = bottom[j], bottom[i] })
+						newLib := make([]Card, 0, len(rest)+len(bottom))
+						newLib = append(newLib, rest...)
+						newLib = append(newLib, bottom...)
+						opp.SetLibrary(newLib)
+						g.ExileCard(chosenCard, sourceID)
+						g.GrantCastFromExile(controller, chosenCard.ID(), true)
+						return nil
+					}),
+				false,
+			).AddTarget(TargetOpponent())),
 		)
 	})
 
@@ -2553,7 +2651,12 @@ func registerCreatures() {
 	// 6/6
 	// Flying
 	// You may cast this creature from your graveyard by paying {B}{B} and sacrificing two creatures rather than paying its mana cost.
-	// XXX: requires cast-from-graveyard alternate-cost
+	// XXX: card itself has no engine-side hook to register the alternate-cost
+	// graveyard cast permission for player priority. The mechanic is reachable
+	// only by calling g.CastCardFromZoneWithAlternateCost directly. Needs an
+	// engine primitive that registers a static "you may cast from your
+	// graveyard by paying <cost> + <additional>" permission discoverable from
+	// player priority.
 	Register("Scourge of Nel Toth", func() Card {
 		return NewCreature("Scourge of Nel Toth", "{5}{B}{B}", 6, 6,
 			WithSubTypes("Zombie", "Dragon"),
@@ -3125,11 +3228,56 @@ func registerCreatures() {
 	// Legendary Creature — Elder Dinosaur
 	// 6/6
 	// Whenever Etali attacks, exile the top card of each player's library, then you may cast any number of spells from among those cards without paying their mana costs.
-	// XXX: requires cast-from-exile alternate-cost
+	// XXX: CastCardFromZoneWithoutPaying / findCardInZone enforces
+	// owner == playerID for exile, so the controller cannot cast cards owned
+	// by an opponent. Etali's exile from each player's library leaves
+	// opponent-owned cards uncastable. Engine needs an "ignore owner" mode
+	// (or per-card cast permission decoupled from ownership) for this and any
+	// other "cast from exile" effects targeting an opponent's library.
 	Register("Etali, Primal Storm", func() Card {
 		return NewCreature("Etali, Primal Storm", "{4}{R}{R}", 6, 6,
 			WithSubTypes("Elder", "Dinosaur"),
 			WithSuperTypes(SuperLegendary),
+			WithAbility(AttacksTrigger(
+				FuncEffect("exile top of each library; may cast any number of nonland exiled cards without paying",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						var exiled []uuid.UUID
+						for _, p := range []Player{g.GetPlayer(controller), g.GetOpponent(controller)} {
+							if p == nil {
+								continue
+							}
+							lib := p.Library()
+							if len(lib) == 0 {
+								continue
+							}
+							top := lib[0]
+							p.SetLibrary(lib[1:])
+							g.ExileCard(top, sourceID)
+							exiled = append(exiled, top.ID())
+						}
+						ctrl := g.GetPlayer(controller)
+						if ctrl == nil {
+							return nil
+						}
+						for _, cid := range exiled {
+							ec := g.FindExiledCard(cid)
+							if ec == nil || ec.Card.HasType(TypeLand) {
+								continue
+							}
+							if ec.Card.Owner() != controller {
+								continue
+							}
+							if !ctrl.ChooseMayAbility("cast " + ec.Card.Name() + " without paying its mana cost") {
+								continue
+							}
+							castTargets := gatherCastTargetsFromZone(g, ctrl, ec.Card)
+							_ = g.CastCardFromZoneWithoutPaying(controller, cid, ZoneExile, castTargets, 0)
+						}
+						return nil
+					}),
+				true,
+			)),
 		)
 	})
 
@@ -4979,11 +5127,38 @@ func registerCreatures() {
 	// 5/5
 	// Flying
 	// Whenever this creature deals combat damage to a player, you may cast a spell from your hand without paying its mana cost.
-	// XXX: requires cast-from-hand-without-paying alternate-cost mechanic
 	Register("Maelstrom Archangel", func() Card {
 		return NewCreature("Maelstrom Archangel", "{W}{U}{B}{R}{G}", 5, 5,
 			WithSubTypes("Angel"),
 			WithKeyword(Flying),
+			WithAbility(NewTriggered(EvtDamageDealt, true,
+				FuncEffect("cast a nonland spell from your hand without paying its mana cost",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						var candidates []Card
+						for _, c := range p.Hand() {
+							if !c.HasType(TypeLand) {
+								candidates = append(candidates, c)
+							}
+						}
+						if len(candidates) == 0 {
+							return nil
+						}
+						chosen := p.ChooseCardFromLibrary(candidates, "cast a spell from your hand without paying its mana cost", g)
+						if chosen == nil {
+							return nil
+						}
+						castTargets := gatherCastTargetsFromZone(g, p, chosen)
+						return g.CastCardFromZoneWithoutPaying(controller, chosen.ID(), ZoneHand, castTargets, 0)
+					}),
+			).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+				EventSourceIsSelfDamageToPlayer{},
+				EventFlagIsTrue{},
+			}})),
 		)
 	})
 
