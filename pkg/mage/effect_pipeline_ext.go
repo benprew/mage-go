@@ -259,45 +259,6 @@ func (c *FlipCoinCond) Check(ctx *EffectContext) bool {
 }
 
 // ---------------------------------------------------------------------------
-// GrantKeyword / RevokeKeyword until end of turn (as pipeline steps)
-// ---------------------------------------------------------------------------
-
-// RevokeKeywordFromTargetUntilEOTData removes a keyword from targets[0] until EOT.
-type RevokeKeywordFromTargetUntilEOTData struct {
-	Keyword Keyword
-}
-
-func RevokeKeywordFromTargetUntilEOT(kw Keyword) EffectData {
-	return &RevokeKeywordFromTargetUntilEOTData{Keyword: kw}
-}
-
-func (e *RevokeKeywordFromTargetUntilEOTData) Text() string { return "" }
-func (e *RevokeKeywordFromTargetUntilEOTData) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment}
-}
-
-func execRevokeKeywordFromTargetUntilEOT(ctx *EffectContext, e *RevokeKeywordFromTargetUntilEOTData) error {
-	if len(ctx.Targets) == 0 {
-		return nil
-	}
-	perm := ctx.Game.FindPermanent(ctx.Targets[0])
-	if perm == nil {
-		return nil
-	}
-	eff := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, _ uuid.UUID) error {
-		p := g.FindPermanent(perm.ID())
-		if p != nil {
-			g.RevokeAttr(p.ID(), Attr(e.Keyword))
-		}
-		return nil
-	})
-	eff.SetSourceID(ctx.SourceID)
-	ctx.Game.AddContinuousEffect(eff)
-	ctx.Game.ApplyContinuousEffects()
-	return nil
-}
-
-// ---------------------------------------------------------------------------
 // AddMana from a context variable
 // ---------------------------------------------------------------------------
 

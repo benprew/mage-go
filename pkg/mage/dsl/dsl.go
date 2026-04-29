@@ -389,7 +389,7 @@ var (
 	GrantKeyword                           = mage.GrantKeyword
 	GrantAbility                           = mage.GrantAbility
 	GrantType                              = mage.GrantType
-	RevokeKeywordFromTargetUntilEOT        = mage.RevokeKeywordFromTargetUntilEOT
+	RevokeKeyword                          = mage.RevokeKeyword
 	AddCounters                            = mage.AddCounters
 	RemoveCounters                         = mage.RemoveCounters
 	ToAttached                             = mage.ToAttached

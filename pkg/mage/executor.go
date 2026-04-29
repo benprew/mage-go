@@ -243,8 +243,8 @@ func ExecuteEffect(ctx *EffectContext, data EffectData) error {
 		return execGrantAttrToGathered(ctx, e)
 	case *RegisterDelayedTriggerData:
 		return execRegisterDelayedTrigger(ctx, e)
-	case *RevokeKeywordFromTargetUntilEOTData:
-		return execRevokeKeywordFromTargetUntilEOT(ctx, e)
+	case *revokeKeywordEffect:
+		return execRevokeKeyword(ctx, e)
 	case *AddManaFromVarData:
 		return execAddManaFromVar(ctx, e)
 	case *PreventAllDamageFromSourceData:

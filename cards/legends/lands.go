@@ -165,7 +165,7 @@ func registerLands() {
 			WithActivatedAbility(
 				Pipeline("target creature loses banding until end of turn",
 					EffectProperties{Outcome: OutcomeDetriment},
-					RevokeKeywordFromTargetUntilEOT(Banding),
+					RevokeKeyword(Banding),
 				),
 				TapSourceCost(),
 				WithTarget(TargetCreature()),

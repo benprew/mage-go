@@ -245,6 +245,69 @@ func execGrantKeyword(ctx *EffectContext, e *grantKeywordEffect) error {
 	return nil
 }
 
+// --- RevokeKeyword DSL ---
+
+// revokeKeywordEffect is a composable EffectData that temporarily removes a
+// keyword from a permanent. Mirrors grantKeywordEffect.
+type revokeKeywordEffect struct {
+	keyword  Keyword
+	selector TargetSelector
+	dur      Duration
+}
+
+// RevokeKeyword creates an effect that removes a keyword from a permanent.
+// Defaults to targeting targets[0] until end of turn. Use .Targeting() and
+// .Until() to override.
+func RevokeKeyword(kw Keyword) *revokeKeywordEffect {
+	return &revokeKeywordEffect{
+		keyword:  kw,
+		selector: TargetSelector{Kind: KindTarget},
+		dur:      EndOfTurn,
+	}
+}
+
+func (e *revokeKeywordEffect) Targeting(sel TargetSelector) *revokeKeywordEffect {
+	e.selector = sel
+	return e
+}
+
+func (e *revokeKeywordEffect) Until(d Duration) *revokeKeywordEffect {
+	e.dur = d
+	return e
+}
+
+func (e *revokeKeywordEffect) Text() string {
+	switch e.selector.Kind {
+	case KindSource:
+		return fmt.Sprintf("~ loses %s until end of turn", e.keyword)
+	default:
+		return fmt.Sprintf("target creature loses %s until end of turn", e.keyword)
+	}
+}
+
+func (e *revokeKeywordEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
+
+func execRevokeKeyword(ctx *EffectContext, e *revokeKeywordEffect) error {
+	perms := resolvePermanents(ctx, e.selector)
+	for _, perm := range perms {
+		targetID := perm.ID()
+		eff := FuncContinuousEffect(LayerAbility, e.dur, func(g *Game, _ uuid.UUID) error {
+			if p := g.FindPermanent(targetID); p != nil {
+				g.RevokeAttr(p.ID(), Attr(e.keyword))
+			}
+			return nil
+		})
+		eff.SetSourceID(ctx.SourceID)
+		ctx.Game.AddContinuousEffect(eff)
+	}
+	if len(perms) > 0 {
+		ctx.Game.ApplyContinuousEffects()
+	}
+	return nil
+}
+
 // --- GrantAbility DSL ---
 
 // grantAbilityEffect is a composable EffectData that temporarily grants a

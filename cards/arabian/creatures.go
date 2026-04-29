@@ -638,22 +638,19 @@ func registerCreatures() {
 		return NewCreature("Ydwen Efreet", "{R}{R}{R}", 3, 6,
 			WithSubTypes("Efreet"),
 			WithAbility(BlocksTrigger(
-				// TODO: convert to pipeline — needs FlipCoin condition + cant-block-this-turn primitives
-				FuncEffect("flip coin or remove from combat",
+				Pipeline("flip a coin; if you lose, remove from combat and it can't block this turn",
 					EffectProperties{},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						if !g.FlipCoin(controller) {
-							g.RemoveFromCombat(sourceID)
-							// "it can't block this turn"
-							eff := TargetEffect(LayerAbility, EndOfTurn, sourceID, func(g *Game, target *Permanent) error {
-								g.RevokeAttr(target.ID(), AttrCanBlock)
-								return nil
-							})
-							g.AddContinuousEffect(eff)
-							g.ApplyContinuousEffects()
-						}
-						return nil
-					}), false,
+					SnapshotPermanent(SelectSource, "self"),
+					IfElse("on lost flip, remove from combat and revoke can-block",
+						&FlipCoinCond{},
+						nil,
+						Pipeline("remove from combat and revoke can-block",
+							EffectProperties{},
+							RemoveFromCombatGathered("self"),
+							RevokeKeyword(AttrCanBlock).Targeting(ToSource()),
+						),
+					),
+				), false,
 			)),
 		)
 	})
@@ -760,18 +757,11 @@ func registerCreatures() {
 			WithSubTypes("Efreet"),
 			WithKeyword(Flying),
 			WithActivatedAbility(
-				// TODO: convert to pipeline — needs deal-damage-to-all-matching + deal-damage-to-all-players primitives
-				FuncEffect("deal 1 to each flyer and each player",
-					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						for _, c := range g.FilterBattlefield(HasKeywordFilter(Flying)) {
-							g.DealDamageToPermanent(c, 1, sourceID)
-						}
-						for _, p := range g.AllPlayers() {
-							g.DealDamageToPlayer(p, 1, sourceID)
-						}
-						return nil
-					}),
+				CompositeEffects(
+					"Ifh-Bíff Efreet deals 1 damage to each creature with flying and each player",
+					DealDamageToAllCreatures(Fixed(1), HasKeywordFilter(Flying)),
+					DealDamageToPlayers(Fixed(1), SelectEachPlayer()),
+				),
 				ManaCostOf("{G}"),
 				WithAnyPlayerMay(),
 			),

@@ -102,14 +102,11 @@ func registerCreatures() {
 			WithSubTypes("Dragon", "Wurm"),
 			WithKeyword(Defender),
 			WithKeyword(Trample),
-			// TODO: convert to pipeline — needs RevokeBaseAttr(kw, SelectSource) primitive
-			WithAbility(BlocksTrigger(FuncEffect("lose defender", EffectProperties{Outcome: OutcomeBenefit}, func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-				perm := g.FindPermanent(sourceID)
-				if perm != nil {
-					perm.RevokeBaseAttr(Defender)
-				}
-				return nil
-			}), false)),
+			WithAbility(BlocksTrigger(
+				Pipeline("loses defender",
+					EffectProperties{Outcome: OutcomeBenefit},
+					RevokeKeyword(Defender).Targeting(ToSource()).Until(WhileOnBattlefield),
+				), false)),
 		)
 	})
 
@@ -557,23 +554,11 @@ func registerCreatures() {
 			WithSubTypes("Wall"),
 			WithKeyword(Defender),
 			WithActivatedAbility(
-				FuncEffect(
+				Pipeline(
 					"this creature gets +4/-4 until end of turn and can attack this turn as though it didn't have defender",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						// +4/-4 boost
-						boost := TemporaryBoost(sourceID, 4, -4)
-						boost.SetSourceID(sourceID)
-						g.AddContinuousEffect(boost)
-						// Revoke Defender so it can attack this turn
-						canAttack := TargetEffect(LayerAbility, EndOfTurn, sourceID, func(g *Game, target *Permanent) error {
-							g.RevokeAttr(target.ID(), Defender)
-							return nil
-						})
-						canAttack.SetSourceID(sourceID)
-						g.AddContinuousEffect(canAttack)
-						return nil
-					},
+					Boost(Fixed(4), Fixed(-4)).Targeting(ToSource()),
+					RevokeKeyword(Defender).Targeting(ToSource()),
 				),
 				ManaCostOf("{2}{U}{U}"),
 			),
@@ -1964,7 +1949,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				Pipeline("target creature loses flying until end of turn",
 					EffectProperties{Outcome: OutcomeDetriment},
-					RevokeKeywordFromTargetUntilEOT(Flying),
+					RevokeKeyword(Flying),
 				),
 				TapSourceCost(),
 				WithTarget(TargetCreature()),
@@ -1983,7 +1968,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				Pipeline("target creature loses all bands with other abilities until end of turn",
 					EffectProperties{Outcome: OutcomeDetriment},
-					RevokeKeywordFromTargetUntilEOT(Banding),
+					RevokeKeyword(Banding),
 				),
 				TapSourceCost(),
 				WithTarget(TargetCreature()),

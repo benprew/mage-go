@@ -135,7 +135,7 @@ func distributeLands(colors map[core.Color]int, count int) []string {
 		}
 		share := min(max((n*count)/total, 1), remaining)
 		landName := colorToLand(c)
-		for i := 0; i < share; i++ {
+		for range share {
 			lands = append(lands, landName)
 		}
 		remaining -= share
