@@ -78,4 +78,97 @@ typedef struct {
     char* error_message;
 } MageEncodeResult;
 
+/*
+ * Token-table registration: Python ships the closed-vocabulary token tables
+ * needed by the future native text-encoder assembler. The wire format is a
+ * collection of int32 buffers + int32/int64 offset tables. All pointers are
+ * borrowed: Python owns the underlying tensors and must keep them alive for
+ * the lifetime of the registration. Calling MageRegisterTokenTables again
+ * replaces the prior registration.
+ *
+ * Most fields are length-prefixed via an offsets table: tokens for entry K
+ * live at ``tokens[offsets[K]:offsets[K+1]]``. ``offsets`` always has length
+ * ``count + 1`` so ``offsets[count]`` equals the total token buffer length.
+ */
+typedef struct {
+    /* Static structural fragments (Frag enum values 0..fragment_count-1). */
+    int32_t fragment_count;
+    const int32_t* structural_tokens;
+    const int32_t* structural_offsets; /* length fragment_count + 1 */
+
+    /* turn × step. ``turn_step_offsets`` has length
+       (turn_max - turn_min + 1) * step_count + 1. */
+    int32_t turn_min;
+    int32_t turn_max;
+    int32_t step_count;
+    const int32_t* turn_step_tokens;
+    const int32_t* turn_step_offsets;
+
+    /* life × owner. ``life_owner_offsets`` has length
+       (life_max - life_min + 1) * owner_count + 1. */
+    int32_t life_min;
+    int32_t life_max;
+    int32_t owner_count;
+    const int32_t* life_owner_tokens;
+    const int32_t* life_owner_offsets;
+
+    /* ability index. */
+    int32_t ability_min;
+    int32_t ability_max;
+    const int32_t* ability_tokens;
+    const int32_t* ability_offsets; /* length ability_max - ability_min + 2 */
+
+    /* counter count. */
+    int32_t count_min;
+    int32_t count_max;
+    const int32_t* count_tokens;
+    const int32_t* count_offsets;
+
+    /* zone × owner open/close pairs. ``*_offsets`` length zone_count*owner_count + 1. */
+    int32_t zone_count;
+    const int32_t* zone_open_tokens;
+    const int32_t* zone_open_offsets;
+    const int32_t* zone_close_tokens;
+    const int32_t* zone_close_offsets;
+
+    /* action verb prefix (with leading space). */
+    int32_t action_verb_count;
+    const int32_t* action_verb_tokens;
+    const int32_t* action_verb_offsets;
+
+    /* mana glyph per color id. */
+    int32_t mana_color_count;
+    const int32_t* mana_glyph_tokens;
+    const int32_t* mana_glyph_offsets;
+
+    /* card-ref single ids. */
+    int32_t card_ref_count;
+    const int32_t* card_ref_ids;
+
+    /* Singletons. */
+    int32_t pad_id;
+    int32_t option_id;
+    int32_t target_open_id;
+    int32_t target_close_id;
+    int32_t tapped_id;
+    int32_t untapped_id;
+
+    /* Small fixed-length lists. */
+    int32_t card_closer_len;
+    const int32_t* card_closer;
+    int32_t status_tapped_len;
+    const int32_t* status_tapped;
+    int32_t status_untapped_len;
+    const int32_t* status_untapped;
+
+    /* Per-card body / display-name tables.
+       ``card_body_offsets`` and ``card_name_offsets`` have length
+       ``card_row_count + 1``. */
+    int32_t card_row_count;
+    const int32_t* card_body_tokens;
+    const int64_t* card_body_offsets;
+    const int32_t* card_name_tokens;
+    const int64_t* card_name_offsets;
+} MageTokenTables;
+
 #endif

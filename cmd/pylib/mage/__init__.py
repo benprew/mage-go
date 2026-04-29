@@ -126,6 +126,64 @@ void MageFree(int64_t id);
 void MageFreeString(char *s);
 char *MageRegisteredCards(void);
 char *MageRegisteredManaCosts(void);
+
+typedef struct {
+    int32_t fragment_count;
+    const int32_t *structural_tokens;
+    const int32_t *structural_offsets;
+    int32_t turn_min;
+    int32_t turn_max;
+    int32_t step_count;
+    const int32_t *turn_step_tokens;
+    const int32_t *turn_step_offsets;
+    int32_t life_min;
+    int32_t life_max;
+    int32_t owner_count;
+    const int32_t *life_owner_tokens;
+    const int32_t *life_owner_offsets;
+    int32_t ability_min;
+    int32_t ability_max;
+    const int32_t *ability_tokens;
+    const int32_t *ability_offsets;
+    int32_t count_min;
+    int32_t count_max;
+    const int32_t *count_tokens;
+    const int32_t *count_offsets;
+    int32_t zone_count;
+    const int32_t *zone_open_tokens;
+    const int32_t *zone_open_offsets;
+    const int32_t *zone_close_tokens;
+    const int32_t *zone_close_offsets;
+    int32_t action_verb_count;
+    const int32_t *action_verb_tokens;
+    const int32_t *action_verb_offsets;
+    int32_t mana_color_count;
+    const int32_t *mana_glyph_tokens;
+    const int32_t *mana_glyph_offsets;
+    int32_t card_ref_count;
+    const int32_t *card_ref_ids;
+    int32_t pad_id;
+    int32_t option_id;
+    int32_t target_open_id;
+    int32_t target_close_id;
+    int32_t tapped_id;
+    int32_t untapped_id;
+    int32_t card_closer_len;
+    const int32_t *card_closer;
+    int32_t status_tapped_len;
+    const int32_t *status_tapped;
+    int32_t status_untapped_len;
+    const int32_t *status_untapped;
+    int32_t card_row_count;
+    const int32_t *card_body_tokens;
+    const int64_t *card_body_offsets;
+    const int32_t *card_name_tokens;
+    const int64_t *card_name_offsets;
+} MageTokenTables;
+
+int32_t MageRegisterTokenTables(MageTokenTables *tables);
+char *MageTokenTableSummary(void);
+char *MageTokenTableLookup(int32_t kind, int32_t k0, int32_t k1);
 """
 
 

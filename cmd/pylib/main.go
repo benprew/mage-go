@@ -1413,6 +1413,135 @@ func MageEncodeBatch(req *C.MageBatchRequest, cfg *C.MageEncodeConfig, out *C.Ma
 	return newEncodeResult(rowsWritten, mageEncodeErrOK, "")
 }
 
+//export MageRegisterTokenTables
+//
+// Stores the borrowed pointers in ``tokenTables`` for use by the future
+// native text-encoder assembler. Returns 0 on success or a positive error
+// code on a wire-format inconsistency. Calling with a nil pointer clears
+// the registration.
+func MageRegisterTokenTables(tables *C.MageTokenTables) C.int32_t {
+	defer func() { _ = recover() }()
+	if err := registerTokenTables(tables); err != nil {
+		// Error path: keep prior registration intact, surface the code as
+		// nonzero. We use 1 generically; the message is logged only in tests.
+		return C.int32_t(1)
+	}
+	return C.int32_t(0)
+}
+
+//export MageTokenTableSummary
+//
+// Returns a JSON summary of the currently registered token tables (sizes
+// per category). Used by the Phase-3 round-trip parity test to verify the
+// wire format unpacks correctly. Returns "null" if no tables registered.
+func MageTokenTableSummary() *C.char {
+	defer func() { _ = recover() }()
+	t := getTokenTables()
+	if t == nil {
+		return C.CString("null")
+	}
+	summary := map[string]any{
+		"fragment_count":     len(t.structuralOffsets) - 1,
+		"structural_tokens":  len(t.structuralTokens),
+		"turn_min":           t.turnMin,
+		"turn_max":           t.turnMax,
+		"step_count":         t.stepCount,
+		"turn_step_tokens":   len(t.turnStepTokens),
+		"life_min":           t.lifeMin,
+		"life_max":           t.lifeMax,
+		"owner_count":        t.ownerCount,
+		"life_owner_tokens":  len(t.lifeOwnerTokens),
+		"ability_min":        t.abilityMin,
+		"ability_max":        t.abilityMax,
+		"ability_tokens":     len(t.abilityTokens),
+		"count_min":          t.countMin,
+		"count_max":          t.countMax,
+		"count_tokens":       len(t.countTokens),
+		"zone_count":         t.zoneCount,
+		"zone_open_tokens":   len(t.zoneOpenTokens),
+		"zone_close_tokens":  len(t.zoneCloseTok),
+		"action_verb_count":  t.actionVerbCount,
+		"action_verb_tokens": len(t.actionVerbTokens),
+		"mana_color_count":   t.manaColorCount,
+		"mana_tokens":        len(t.manaTokens),
+		"card_ref_count":     t.cardRefCount,
+		"card_row_count":     t.cardRowCount,
+		"card_body_tokens":   len(t.cardBodyToks),
+		"card_name_tokens":   len(t.cardNameToks),
+		"card_closer":        t.cardCloser,
+		"status_tapped":      t.statusTapped,
+		"status_untapped":    t.statusUntapped,
+		"pad_id":             t.padID,
+		"option_id":          t.optionID,
+		"target_open_id":     t.targetOpenID,
+		"target_close_id":    t.targetCloseID,
+		"tapped_id":          t.tappedID,
+		"untapped_id":        t.untappedID,
+	}
+	b, err := json.Marshal(summary)
+	if err != nil {
+		return errResponse(fmt.Sprintf("marshal summary: %v", err))
+	}
+	return C.CString(string(b))
+}
+
+//export MageTokenTableLookup
+//
+// Test/debug accessor: returns the JSON-encoded token-id list for a single
+// (kind, key) pair. ``kind`` is one of:
+//   0=fragment, 1=turn_step, 2=life_owner, 3=ability, 4=count,
+//   5=zone_open, 6=zone_close, 7=action_verb, 8=mana_glyph,
+//   9=card_body, 10=card_name, 11=card_ref (single id list).
+// Two key fields cover all (zero or one used).
+func MageTokenTableLookup(kind C.int32_t, k0 C.int32_t, k1 C.int32_t) *C.char {
+	defer func() { _ = recover() }()
+	t := getTokenTables()
+	if t == nil {
+		return C.CString("null")
+	}
+	var span []int32
+	switch int32(kind) {
+	case 0:
+		span = t.fragmentSpan(int32(k0))
+	case 1:
+		span = t.turnStepSpan(int32(k0), int32(k1))
+	case 2:
+		span = t.lifeOwnerSpan(int32(k0), int32(k1))
+	case 3:
+		span = t.abilitySpan(int32(k0))
+	case 4:
+		span = t.countSpan(int32(k0))
+	case 5:
+		span = t.zoneOpenSpan(int32(k0), int32(k1))
+	case 6:
+		span = t.zoneCloseSpan(int32(k0), int32(k1))
+	case 7:
+		span = t.actionVerbSpan(int32(k0))
+	case 8:
+		span = t.manaGlyphSpan(int32(k0))
+	case 9:
+		span = t.cardBodySpan(int32(k0))
+	case 10:
+		span = t.cardNameSpan(int32(k0))
+	case 11:
+		idx := int32(k0)
+		if idx < 0 || idx >= t.cardRefCount {
+			span = nil
+		} else {
+			span = []int32{t.cardRefIDs[idx]}
+		}
+	default:
+		return C.CString("null")
+	}
+	out := make([]int32, len(span))
+	copy(out, span)
+	b, err := json.Marshal(out)
+	if err != nil {
+		return errResponse(fmt.Sprintf("marshal: %v", err))
+	}
+	return C.CString(string(b))
+}
+
 //export MagePendingPlayer
 func MagePendingPlayer(id C.int64_t) C.int64_t {
 	defer func() { _ = recover() }()
