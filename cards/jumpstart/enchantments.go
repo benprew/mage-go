@@ -716,9 +716,44 @@ func registerEnchantments() {
 	// Enchantment
 	// Whenever you cast a creature spell with power 4, 5, or 6, this enchantment deals 4 damage to any target.
 	// Whenever you cast a creature spell with power 7 or greater, this enchantment deals 4 damage to each opponent and each creature and planeswalker they control.
-	// XXX: requires inspecting cast spell's printed power
 	Register("Sarkhan's Unsealing", func() Card {
-		return NewEnchantment("Sarkhan's Unsealing", "{3}{R}")
+		creaturePower4to6 := NewCardFilter("creature with power 4, 5, or 6", func(c Card) bool {
+			if !c.HasType(TypeCreature) {
+				return false
+			}
+			p := c.Power()
+			return p >= 4 && p <= 6
+		})
+		creaturePower7plus := NewCardFilter("creature with power 7 or greater", func(c Card) bool {
+			return c.HasType(TypeCreature) && c.Power() >= 7
+		})
+		return NewEnchantment("Sarkhan's Unsealing", "{3}{R}",
+			WithAbility(
+				WheneverYouCastSpellTrigger(DealDamage(Fixed(4)), false, creaturePower4to6).
+					AddTarget(TargetAnyTarget()),
+			),
+			WithAbility(
+				WheneverYouCastSpellTrigger(FuncEffect(
+					"deal 4 damage to each opponent and each creature they control",
+					EffectProperties{Outcome: OutcomeBenefit, Mass: true},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						opponent := g.GetOpponent(controller)
+						if opponent != nil {
+							g.DealDamageToPlayer(opponent, 4, sourceID)
+						}
+						for _, perm := range g.FilterBattlefield(NewPermanentFilter(
+							"creature opponent controls",
+							func(p *Permanent, _ *Game) bool {
+								return p.Controller != controller && p.HasType(TypeCreature)
+							},
+						)) {
+							g.DealDamageToPermanent(perm, 4, sourceID)
+						}
+						return nil
+					},
+				), false, creaturePower7plus),
+			),
+		)
 	})
 
 	// Sky Tether {W}

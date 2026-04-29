@@ -109,8 +109,6 @@ func registerCreatures() {
 	// Flash
 	// Flying
 	// When this creature enters, if you cast it from your hand, exile all attacking creatures.
-	// XXX: no "if you cast from hand" condition;
-	// implementing ETB exile-all-attackers always triggers.
 	Register("Angel of the Dire Hour", func() Card {
 		return NewCreature("Angel of the Dire Hour", "{5}{W}{W}", 5, 4,
 			WithSubTypes("Angel"),
@@ -125,7 +123,7 @@ func registerCreatures() {
 					}
 					return nil
 				},
-			), false)),
+			), false).AndConditionData(ResolvingSpellCastFromZone{Zone: ZoneHand})),
 		)
 	})
 

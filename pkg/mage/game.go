@@ -64,6 +64,13 @@ type Game struct {
 	// Card currently being resolved (set during ResolveStackObject)
 	resolvingCard Card
 
+	// Zone the resolving spell was cast from (set during ResolveStackObject
+	// from StackObject.CastZone). Read by triggers expressing "if you cast it
+	// from your hand"/"from your graveyard" — including ETB triggers on the
+	// resolving permanent, since PutOnBattlefield is invoked before the field
+	// is cleared.
+	resolvingCastZone Zone
+
 	// Interactive play tracking
 	landsPlayedThisTurn int
 
@@ -1952,6 +1959,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 	g.resolvingCard = obj.Card
 	g.resolvingTargets = obj.Targets
 	g.resolvingDamageDistribution = obj.DamageDistribution
+	g.resolvingCastZone = obj.CastZone
 	for _, eff := range obj.Effects {
 		_ = eff.Apply(g, obj.SourceID, obj.Controller, obj.Targets)
 	}
@@ -1964,6 +1972,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 		g.currentMode = 0
 		g.resolvingCard = nil
 		g.resolvingTargets = nil
+		g.resolvingCastZone = ZoneAny
 		g.ClearSacrificed()
 		g.CheckStateBasedActions()
 		return
@@ -1993,6 +2002,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 			g.currentX = 0
 			g.currentMode = 0
 			g.resolvingTargets = nil
+			g.resolvingCastZone = ZoneAny
 			g.ClearSacrificed()
 			g.CheckStateBasedActions()
 			return
@@ -2015,6 +2025,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 	g.currentMode = 0
 	g.resolvingCard = nil
 	g.resolvingTargets = nil
+	g.resolvingCastZone = ZoneAny
 	g.ClearSacrificed()
 
 	g.CheckStateBasedActions()
@@ -2254,6 +2265,7 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		XValue:       xValue,
 		ModeChoice:   modeChoice,
 		ModalTargets: modalTargets,
+		CastZone:     ZoneHand,
 	}
 
 	if modes := card.Modes(); len(modes) > 0 {

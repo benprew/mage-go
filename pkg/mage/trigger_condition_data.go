@@ -274,6 +274,20 @@ func (EventFlagIsFalse) CheckTriggerCond(evt *GameEvent, _ GameReader, _, _ uuid
 	return !evt.Flag
 }
 
+// ResolvingSpellCastFromZone is true when the spell currently resolving was
+// cast from the named zone (CR 601.2a). For ETB triggers on a permanent
+// entering the battlefield as a result of casting it, this checks the zone
+// the spell was cast from — e.g. ResolvingSpellCastFromZone{Zone: ZoneHand}
+// implements "if you cast it from your hand". Returns false outside of spell
+// resolution (abilities and other paths).
+type ResolvingSpellCastFromZone struct {
+	Zone Zone
+}
+
+func (c ResolvingSpellCastFromZone) CheckTriggerCond(_ *GameEvent, g GameReader, _, _ uuid.UUID) bool {
+	return g.ResolvingCastZone() == c.Zone
+}
+
 // ---------------------------------------------------------------------------
 // Combinators
 // ---------------------------------------------------------------------------

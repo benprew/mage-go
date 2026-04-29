@@ -206,6 +206,7 @@ func (g *Game) castCardFromZone(playerID, cardID uuid.UUID, zone Zone, targets [
 		XValue:       xValue,
 		ModeChoice:   modeChoice,
 		ModalTargets: modalTargets,
+		CastZone:     zone,
 	}
 
 	if modes := card.Modes(); len(modes) > 0 {
@@ -377,6 +378,7 @@ func (g *Game) CastExiledCardWithPermission(playerID, cardID uuid.UUID, targets 
 		XValue:       xValue,
 		ModeChoice:   modeChoice,
 		ModalTargets: modalTargets,
+		CastZone:     ZoneExile,
 	}
 	if modes := card.Modes(); len(modes) > 0 {
 		obj.ModeChoice = pl.ChooseMode(modes, card.Name())

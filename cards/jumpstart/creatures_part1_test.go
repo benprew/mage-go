@@ -6,6 +6,7 @@ import (
 	_ "git.sr.ht/~cdcarter/mage-go/cards/limited"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
+	"github.com/google/uuid"
 )
 
 // Tests for the white + blue creature chunk implemented in creatures.go.
@@ -656,6 +657,34 @@ func TestOneirophage(t *testing.T) {
 
 func TestAngelOfTheDireHourETB(t *testing.T) {
 	// Already covered in earlier test
+}
+
+// Angel of the Dire Hour: when cast from a non-hand zone (graveyard via
+// CastCardFromZoneWithoutPaying), the "if you cast it from your hand" gate
+// fails and the ETB exile-attackers ability does NOT trigger.
+func TestAngelOfTheDireHour_NotCastFromHand_NoExile(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Angel of the Dire Hour")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+	g.Attack(2, gametest.PlayerB, "Hill Giant")
+	g.StopAt(2, core.DeclareAttackers)
+	g.Execute()
+	pA := g.GetPlayer(gametest.PlayerA).PlayerID()
+	var cardID uuid.UUID
+	for _, c := range g.GetPlayer(gametest.PlayerA).Graveyard() {
+		if c.Name() == "Angel of the Dire Hour" {
+			cardID = c.ID()
+		}
+	}
+	if cardID == uuid.Nil {
+		t.Fatal("Angel not in graveyard")
+	}
+	if err := g.Game.CastCardFromZoneWithoutPaying(pA, cardID, core.ZoneGraveyard, nil, 0); err != nil {
+		t.Fatalf("CastCardFromZoneWithoutPaying: %v", err)
+	}
+	g.Game.ResolveStack()
+	g.AssertExileCount("Hill Giant", 0)
+	g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 1)
 }
 
 func TestSupplyRunners(t *testing.T) {

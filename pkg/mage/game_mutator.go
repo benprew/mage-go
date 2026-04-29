@@ -25,6 +25,7 @@ type GameReader interface {
 	EventAmount() int
 	EventSourceID() uuid.UUID
 	GetResolvingCard() Card
+	ResolvingCastZone() Zone
 	FindStackObject(uuid.UUID) *StackObject
 	CombatGroups() []*CombatGroup
 	CombatGroupFor(uuid.UUID) *CombatGroup
@@ -71,6 +72,13 @@ func (g *Game) EventSourceID() uuid.UUID { return g.currentEventSourceID }
 
 // GetResolvingCard returns the card currently being resolved from the stack.
 func (g *Game) GetResolvingCard() Card { return g.resolvingCard }
+
+// ResolvingCastZone returns the zone the resolving spell was cast from
+// (CR 601.2a). Returns ZoneAny when no spell is resolving or the resolving
+// stack object is an ability rather than a spell. Read by triggers expressing
+// "if you cast it from your hand"/"from your graveyard" conditions, including
+// ETB triggers that fire while PutOnBattlefield is in flight.
+func (g *Game) ResolvingCastZone() Zone { return g.resolvingCastZone }
 
 // FindStackObject finds a stack object by its source card ID.
 func (g *Game) FindStackObject(id uuid.UUID) *StackObject {

@@ -1088,3 +1088,114 @@ func TestLightningAxe_PayFiveBranch(t *testing.T) {
 	g.AssertGraveyardCount(gametest.PlayerB, "Hill Giant", 1)
 }
 
+// Pillar of Flame: 2 damage to a 2/2 creature kills it; the corpse goes to
+// exile (not the graveyard) per "if it would die this turn, exile it instead".
+func TestPillarOfFlame_ExilesKilledCreature(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Pillar of Flame")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Pillar of Flame", "Grizzly Bears")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertExileCount("Grizzly Bears", 1)
+	g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 0)
+}
+
+// Pillar of Flame: dealing 2 to a 3/3 doesn't kill it, so the exile-replacement
+// is irrelevant — the creature stays on the battlefield.
+func TestPillarOfFlame_NonLethalDamage(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Pillar of Flame")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Pillar of Flame", "Hill Giant")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 1)
+}
+
+// Exhume: each player picks a creature card from their own graveyard and
+// puts it onto the battlefield. With one creature in each graveyard, both
+// come back.
+func TestExhume_BothPlayersReanimate(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Exhume")
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Hill Giant")
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerB, "Grizzly Bears")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Exhume")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 1)
+	g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
+}
+
+// Exhume: a player with no creature card in their graveyard simply skips.
+func TestExhume_OneEmptyGraveyard(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Exhume")
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Hill Giant")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Exhume")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 1)
+}
+
+// Sweep Away: non-attacking creature is bounced to its owner's hand.
+func TestSweepAway_NonAttacking_BouncesToHand(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 3)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Sweep Away")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Sweep Away", "Grizzly Bears")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+	g.AssertHandCount(gametest.PlayerB, "Grizzly Bears", 1)
+}
+
+// Sweep Away: attacking creature with controller saying "yes" goes on top of
+// owner's library instead of returning to hand.
+func TestSweepAway_Attacking_PutOnTopOfLibrary(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island", 3)
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Sweep Away")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.GetPlayer(gametest.PlayerB).QueueMayAbilityChoices(true)
+	g.Attack(1, gametest.PlayerA, "Grizzly Bears")
+	g.CastSpell(1, core.DeclareAttackers, gametest.PlayerB, "Sweep Away", "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
+	g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 0)
+	g.AssertLibraryTop(gametest.PlayerA, "Grizzly Bears")
+}
+
+// Sweep Away: attacking creature, but controller declines top-of-library —
+// falls back to plain bounce.
+func TestSweepAway_Attacking_DeclinesTop(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island", 3)
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Sweep Away")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.GetPlayer(gametest.PlayerB).QueueMayAbilityChoices(false)
+	g.Attack(1, gametest.PlayerA, "Grizzly Bears")
+	g.CastSpell(1, core.DeclareAttackers, gametest.PlayerB, "Sweep Away", "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 1)
+}
+
+// Pillar of Flame: targeting a player just deals 2 damage; no exile replacement.
+func TestPillarOfFlame_PlayerTarget(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Pillar of Flame")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Pillar of Flame", "PlayerB")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertLife(gametest.PlayerB, 18)
+}
+

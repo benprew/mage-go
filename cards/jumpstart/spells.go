@@ -665,10 +665,37 @@ func registerSpells() {
 	// Exhume {1}{B}
 	// Sorcery
 	// Each player puts a creature card from their graveyard onto the battlefield.
-	// XXX: requires each-player-chooses-from-own-graveyard primitive
 	Register("Exhume", func() Card {
 		return NewSorcery("Exhume", "{1}{B}",
-			NewSpellAbility(),
+			NewSpellAbility(FuncEffect(
+				"each player puts a creature card from their graveyard onto the battlefield",
+				EffectProperties{Outcome: OutcomeBenefit},
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					order := []Player{g.ActivePlayerObj(), g.NonActivePlayerObj()}
+					for _, p := range order {
+						if p == nil {
+							continue
+						}
+						var candidates []Card
+						for _, c := range p.Graveyard() {
+							if c.HasType(TypeCreature) {
+								candidates = append(candidates, c)
+							}
+						}
+						if len(candidates) == 0 {
+							continue
+						}
+						chosen := p.ChooseCardFromLibrary(candidates, "Exhume: put a creature card from your graveyard onto the battlefield", g)
+						if chosen == nil {
+							continue
+						}
+						if c, ok := p.RemoveFromGraveyard(chosen.ID()); ok {
+							g.PutOnBattlefield(c, p.PlayerID())
+						}
+					}
+					return nil
+				},
+			)),
 		)
 	})
 
@@ -1368,10 +1395,30 @@ func registerSpells() {
 	// Pillar of Flame {R}
 	// Sorcery
 	// Pillar of Flame deals 2 damage to any target. If a creature dealt damage this way would die this turn, exile it instead.
-	// XXX: missing exile-instead-of-die replacement; implement plain 2 damage
 	Register("Pillar of Flame", func() Card {
 		return NewSorcery("Pillar of Flame", "{R}",
-			NewTargetedSpell(TargetAnyTarget(), DealDamage(Fixed(2))),
+			NewTargetedSpell(TargetAnyTarget(), CompositeEffects(
+				"deal 2 damage; if a creature, exile it if it would die this turn",
+				FuncEffect(
+					"exile-if-would-die marker",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						perm := g.FindPermanent(targets[0])
+						if perm == nil || perm.Card == nil {
+							return nil
+						}
+						if !perm.Card.HasType(TypeCreature) {
+							return nil
+						}
+						g.AddExileIfWouldGoToGraveyardThisTurn(perm.Card.ID(), sourceID)
+						return nil
+					},
+				),
+				DealDamage(Fixed(2)),
+			)),
 		)
 	})
 
@@ -1599,10 +1646,46 @@ func registerSpells() {
 	// Sweep Away {2}{U}
 	// Instant
 	// Return target creature to its owner's hand. If that creature is attacking, you may put it on top of its owner's library instead.
-	// XXX: missing put-on-top-of-library option; implement plain bounce
 	Register("Sweep Away", func() Card {
 		return NewInstant("Sweep Away", "{2}{U}",
-			NewTargetedSpell(TargetCreature(), ReturnToHandTarget()),
+			NewTargetedSpell(TargetCreature(), FuncEffect(
+				"return to owner's hand; if attacking, may put on top of library instead",
+				EffectProperties{Outcome: OutcomeBenefit},
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					if len(targets) == 0 {
+						return nil
+					}
+					perm := g.FindPermanent(targets[0])
+					if perm == nil {
+						return nil
+					}
+					card := perm.Card
+					owner := card.Owner()
+					if owner == uuid.Nil {
+						owner = perm.Controller
+					}
+					ownerPlayer := g.GetPlayer(owner)
+					attacking := g.IsAttackingInCombat(perm.ID())
+					controllerPlayer := g.GetPlayer(controller)
+					if attacking && controllerPlayer != nil && ownerPlayer != nil &&
+						controllerPlayer.ChooseMayAbility("put "+card.Name()+" on top of "+ownerPlayer.Name()+"'s library instead of returning to hand") {
+						permID := perm.ID()
+						permController := perm.Controller
+						g.RemoveFromBattlefield(perm)
+						ownerPlayer.SetLibrary(append([]Card{card}, ownerPlayer.Library()...))
+						g.FireEvent(GameEvent{
+							Type:     EvtZoneChange,
+							SourceID: permID,
+							PlayerID: permController,
+							FromZone: ZoneBattlefield,
+							ToZone:   ZoneLibrary,
+						})
+						return nil
+					}
+					g.BouncePermanentToHand(perm)
+					return nil
+				},
+			)),
 		)
 	})
 

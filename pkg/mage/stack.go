@@ -1,6 +1,10 @@
 package mage
 
-import "github.com/google/uuid"
+import (
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+
+	"github.com/google/uuid"
+)
 
 // StackObject represents something on the stack (spell or ability).
 type StackObject struct {
@@ -38,6 +42,14 @@ type StackObject struct {
 	// kept in sync (it points at ModalTargets[ModeChoice]) so existing
 	// fizzle and target-still-legal logic works unchanged.
 	ModalTargets [][]uuid.UUID
+
+	// CastZone records the zone the spell was cast from (CR 601.2a).
+	// Populated by the cast machinery: ZoneHand for the standard cast path,
+	// or the explicit zone passed to CastCardFromZoneWithoutPaying /
+	// CastCardFromZoneWithAlternateCost. Read at resolution time via
+	// Game.ResolvingCastZone() so triggers can express "if you cast it from
+	// your hand" / "from the graveyard" / etc.
+	CastZone Zone
 }
 
 // Stack represents the game stack.

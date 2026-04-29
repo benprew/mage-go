@@ -328,6 +328,7 @@ func cloneStackObject(obj *StackObject) *StackObject {
 		EventAmount:   obj.EventAmount,
 		EventSourceID: obj.EventSourceID,
 		IsCopy:        obj.IsCopy,
+		CastZone:      obj.CastZone,
 	}
 	if len(obj.ModalTargets) > 0 {
 		clone.ModalTargets = make([][]uuid.UUID, len(obj.ModalTargets))

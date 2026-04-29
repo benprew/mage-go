@@ -562,6 +562,38 @@ func TestNewHorizons_GrantsCounterAndManaAbility(t *testing.T) {
 	g.AssertCounterCount(gametest.PlayerA, "Grizzly Bears", core.P1P1, 1)
 }
 
+// Sarkhan's Unsealing: casting a 4-power creature triggers 4-damage-to-any-target.
+func TestSarkhansUnsealing_Power4Trigger(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sarkhan's Unsealing")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 5)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 5)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Hill Giant")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Serra Angel")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Hill Giant")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Serra Angel")
+	g.ChooseTarget(gametest.PlayerA, "PlayerB")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertLife(gametest.PlayerB, 16)
+}
+
+// Sarkhan's Unsealing: casting a 7+ power creature deals 4 to opponent and
+// each creature they control.
+func TestSarkhansUnsealing_Power7Trigger(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sarkhan's Unsealing")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 4)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 4)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Force of Nature")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Force of Nature")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertLife(gametest.PlayerB, 16)
+	g.AssertGraveyardCount(gametest.PlayerB, "Hill Giant", 1)
+}
+
 // Blessed Sanctuary: nontoken creature ETB creates a 2/2 white Unicorn token.
 // Damage prevention clause is not implemented — see XXX in source.
 func TestBlessedSanctuary_NontokenETBCreatesUnicorn(t *testing.T) {
