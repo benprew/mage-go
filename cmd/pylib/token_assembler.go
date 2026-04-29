@@ -10,7 +10,7 @@ const (
 )
 
 // Action-kind ids that skip the source-row / ability suffix on OP_OPTION.
-// Matches the Python guard ``verb in ("pass", "choice", "unknown")``.
+// Matches the Python guard “verb in ("pass", "choice", "unknown")“.
 //
 //	0=pass, 6=choice
 func kindHasNoSource(kindID int32) bool {
@@ -22,18 +22,18 @@ const tokenAssemblerMaxCardRefs = 256
 
 // Frag enum values mirrored from token_tables.py:Frag. Append-only.
 const (
-	fragBosState        int32 = 0
-	fragCloseStateEos   int32 = 1
-	fragCloseSelf       int32 = 2
-	fragCloseOpp        int32 = 3
-	fragCloseOption     int32 = 4
-	fragOpenActions     int32 = 5
-	fragCloseActions    int32 = 6
-	fragOpenTarget      int32 = 7
-	fragSpace           int32 = 8
-	fragTargetFallback  int32 = 9
-	fragSelfMana        int32 = 10
-	fragOppMana         int32 = 11
+	fragBosState       int32 = 0
+	fragCloseStateEos  int32 = 1
+	fragCloseSelf      int32 = 2
+	fragCloseOpp       int32 = 3
+	fragCloseOption    int32 = 4
+	fragOpenActions    int32 = 5
+	fragCloseActions   int32 = 6
+	fragOpenTarget     int32 = 7
+	fragSpace          int32 = 8
+	fragTargetFallback int32 = 9
+	fragSelfMana       int32 = 10
+	fragOppMana        int32 = 11
 )
 
 // Opcode arities mirrored from render_plan.py. Variable-length opcodes
@@ -58,6 +58,10 @@ var opcodeArity = map[int32]int{
 	opEndCard:      0,
 	opOpenRawCard:  1,
 	opCloseRawCard: 0,
+	opOpenDict:     0,
+	opCloseDict:    0,
+	opDictEntry:    1,
+	opPlaceCardRef: 4,
 }
 
 type zoneEntry struct {
@@ -69,25 +73,25 @@ type zoneEntry struct {
 // walker. Slices are views into the Python-allocated output tensors. -1
 // sentinels mark absent positions; mask slices carry 0/1 indicators.
 type tokenAssemblerOut struct {
-	tokenIDs       []int64
-	attentionMask  []int64
-	optionPos      []int64
-	optionMask     []uint8
-	targetPos      []int64 // length max_options*max_targets
-	targetMask     []uint8 // length max_options*max_targets
-	cardRefPos     []int64
-	maxOptions     int32
-	maxTargets     int32
-	maxCardRefs    int32
+	tokenIDs      []int64
+	attentionMask []int64
+	optionPos     []int64
+	optionMask    []uint8
+	targetPos     []int64 // length max_options*max_targets
+	targetMask    []uint8 // length max_options*max_targets
+	cardRefPos    []int64
+	maxOptions    int32
+	maxTargets    int32
+	maxCardRefs   int32
 }
 
-// assembleTokensFromPlan walks ``plan`` (an int32 render-plan stream) and
-// writes tokens + anchor positions into ``out``. Mirrors the Python
+// assembleTokensFromPlan walks “plan“ (an int32 render-plan stream) and
+// writes tokens + anchor positions into “out“. Mirrors the Python
 // _assemble_one walker 1:1; out-of-bounds scalars (turn/life/ability)
 // raise an error rather than falling back to a live encode.
 //
 // Returns the sequence length written and a truncation flag (true if the
-// stream overran ``maxTokens`` and was cut off).
+// stream overran “maxTokens“ and was cut off).
 func assembleTokensFromPlan(
 	plan []int32,
 	tables *tokenTables,
@@ -121,7 +125,7 @@ func assembleTokensFromPlan(
 	var (
 		cursor          int32 // next write index in tokenIDs
 		overflow        bool
-		nextOption      int32 // index in option_positions for the next OP_OPTION
+		nextOption      int32      // index in option_positions for the next OP_OPTION
 		curOptionIdx    int32 = -1 // index of the option whose target bucket is open
 		curTargetCount  int32 = 0
 		optionOpen      bool
@@ -486,6 +490,47 @@ func assembleTokensFromPlan(
 			emitCardRef(uuidIdx)
 			i += 1 + arity
 			continue
+		case opOpenDict:
+			writeSingle(tables.dictOpenID)
+			i++
+			continue
+		case opCloseDict:
+			writeSingle(tables.dictCloseID)
+			i++
+			continue
+		case opDictEntry:
+			row := plan[i+1]
+			if row >= 0 && row < int32(len(tables.dictEntryIDs)) {
+				writeSingle(tables.dictEntryIDs[row])
+			}
+			if row >= 0 && row < tables.cardRowCount {
+				writeSpan(tables.cardBodySpan(row))
+			}
+			writeSpan(tables.cardCloser)
+			i += 1 + arity
+			continue
+		case opPlaceCardRef:
+			_ = plan[i+1] // slot_idx (unused)
+			row := plan[i+2]
+			status := plan[i+3]
+			uuidIdx := plan[i+4]
+			emitCardRef(uuidIdx)
+			writeSingle(tables.cardOpenID)
+			if row >= 0 && row < int32(len(tables.dictEntryIDs)) {
+				writeSingle(tables.dictEntryIDs[row])
+			}
+			if status&statusTappedKnown != 0 {
+				if status&0x0001 != 0 {
+					writeSpan(tables.statusTapped)
+				} else {
+					writeSpan(tables.statusUntapped)
+				}
+			} else if structured && status&0x0001 != 0 {
+				writeSpan(tables.statusTapped)
+			}
+			writeSpan(tables.cardCloser)
+			i += 1 + arity
+			continue
 		}
 
 		// Bookkeeping-only opcodes — skip over header + payload.
@@ -493,7 +538,8 @@ func assembleTokensFromPlan(
 		case opOpenState, opCloseState, opOpenZone, opCloseZone,
 			opOpenActions, opCloseActions, opOpenPlayer, opClosePlayer,
 			opCounter, opAttachedTo, opOption, opTarget, opTurn, opLife,
-			opMana, opCloseRawCard:
+			opMana, opCloseRawCard, opOpenDict, opCloseDict, opDictEntry,
+			opPlaceCardRef:
 			i += 1 + arity
 			continue
 		}

@@ -38,6 +38,7 @@ typedef struct {
     int64_t decision_capacity;
     int64_t emit_render_plan;
     int64_t render_plan_capacity;
+    int64_t dedup_card_bodies;
 } MageEncodeConfig;
 
 typedef struct {

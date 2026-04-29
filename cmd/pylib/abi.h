@@ -38,6 +38,12 @@ typedef struct {
     int64_t decision_capacity;
     int64_t emit_render_plan;
     int64_t render_plan_capacity;
+    /* When set, the render-plan emitter switches to v2 (``<dict>`` opcodes
+       21-24): each unique card body is spliced once at the top, and per-zone
+       occurrences become short ``<card-ref>``-anchored references. The
+       native token assembler must understand these opcodes for the encoded
+       tokens to round-trip correctly. */
+    int64_t dedup_card_bodies;
 } MageEncodeConfig;
 
 typedef struct {
@@ -169,6 +175,17 @@ typedef struct {
     const int64_t* card_body_offsets;
     const int32_t* card_name_tokens;
     const int64_t* card_name_offsets;
+
+    /* v2 card-body deduplication. The dict-entry table is one int32 per
+       cache row (the ``<dict-entry:R>`` token id for row R), aligned to
+       ``card_row_count``. ``dict_open_id`` / ``dict_close_id`` /
+       ``card_open_id`` are the singleton ids for ``<dict>`` / ``</dict>`` /
+       ``<card>``. All zero (and dict_entry_ids = NULL) is acceptable when
+       ``cfg.dedup_card_bodies`` is never set. */
+    int32_t dict_open_id;
+    int32_t dict_close_id;
+    int32_t card_open_id;
+    const int32_t* dict_entry_ids;
 } MageTokenTables;
 
 /*

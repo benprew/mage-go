@@ -10,7 +10,11 @@ import (
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
 )
 
-const renderPlanVersion = 1
+// renderPlanVersion bumps when an opcode change is not byte-equal to v1.
+// v2 adds the “<dict>“ card-body deduplication opcodes (21-24); the v2
+// opcodes are additive and only appear when “cfg.dedupCardBodies“ is set,
+// so v2 emitters remain byte-equal to v1 until that flag is enabled.
+const renderPlanVersion = 2
 
 const (
 	opOpenState int32 = iota + 1
@@ -33,6 +37,10 @@ const (
 	opEndCard
 	opOpenRawCard
 	opCloseRawCard
+	opOpenDict     // 21: opens the per-snapshot card-body dictionary
+	opCloseDict    // 22: closes the dictionary
+	opDictEntry    // 23: payload [row]; emit one dict entry (full body)
+	opPlaceCardRef // 24: payload [slot, row, status, uuid]; ref to dict entry
 )
 
 const (
@@ -123,6 +131,11 @@ type renderPlanIndex struct {
 	rowByID    map[string]int32
 	slotByID   map[string]int32
 	cardsByKey map[renderZoneKey][]renderCardRef
+	// rowOrder lists each unique card cache row that appears in any zone of
+	// this snapshot, in deterministic ascending order. Populated for v2 dict
+	// emission. Mirrors the Python emitter's ``unique_rows`` (collected in
+	// _RENDER_ZONES order, then sorted ascending).
+	rowOrder []int32
 }
 
 type renderZoneKey struct {
@@ -140,9 +153,16 @@ func fillRenderPlan(batchIdx int64, state *apiGameState, pending *apiPending, pl
 
 	w := renderPlanWriter{buf: plan}
 	w.write(opOpenState)
+	if cfg.dedupCardBodies && len(index.rowOrder) > 0 {
+		w.write(opOpenDict)
+		for _, row := range index.rowOrder {
+			w.write(opDictEntry, row)
+		}
+		w.write(opCloseDict)
+	}
 	w.write(opTurn, clampInt32(int64(state.Turn)), int32(indexOrUnknown(stepNames[:], state.Step)))
 	emitRenderPlayerScalars(&w, state, playerIdx)
-	emitRenderZones(&w, index)
+	emitRenderZones(&w, index, cfg)
 	emitRenderActions(&w, pending, state, playerIdx, cfg, index)
 	w.write(opCloseState)
 
@@ -160,6 +180,7 @@ func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int) (render
 		slotByID:   map[string]int32{},
 		cardsByKey: map[renderZoneKey][]renderCardRef{},
 	}
+	rowSeen := map[int32]struct{}{}
 	for _, owner := range []int32{renderOwnerSelf, renderOwnerOpponent} {
 		player := renderPlayerState(state, perspectivePlayerIdx, owner)
 		if player == nil {
@@ -181,11 +202,16 @@ func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int) (render
 					index.rowByID[cards[idx].id] = cards[idx].row
 					index.slotByID[cards[idx].id] = cards[idx].slotIdx
 				}
+				if _, dup := rowSeen[cards[idx].row]; !dup {
+					rowSeen[cards[idx].row] = struct{}{}
+					index.rowOrder = append(index.rowOrder, cards[idx].row)
+				}
 				index.cards = append(index.cards, cards[idx])
 			}
 			index.cardsByKey[renderZoneKey{owner: owner, zone: zone}] = cards
 		}
 	}
+	sort.Slice(index.rowOrder, func(i, j int) bool { return index.rowOrder[i] < index.rowOrder[j] })
 	return index, nil
 }
 
@@ -282,12 +308,19 @@ func emitRenderPlayerScalars(w *renderPlanWriter, state *apiGameState, playerIdx
 	}
 }
 
-func emitRenderZones(w *renderPlanWriter, index renderPlanIndex) {
+func emitRenderZones(w *renderPlanWriter, index renderPlanIndex, cfg encodeConfig) {
 	for _, owner := range []int32{renderOwnerSelf, renderOwnerOpponent} {
 		w.write(opOpenPlayer, owner)
 		for _, zone := range renderZoneOrder {
 			w.write(opOpenZone, zone, owner)
 			for _, card := range index.cardsByKey[renderZoneKey{owner: owner, zone: zone}] {
+				if cfg.dedupCardBodies {
+					// v2: ref the dict entry, no body splice. Per-card
+					// counter / attached_to are skipped to match the Python
+					// emitter, which does not emit them in dedup mode.
+					w.write(opPlaceCardRef, card.slotIdx, card.row, renderStatusBits(card.perm), card.uuidIdx)
+					continue
+				}
 				w.write(opPlaceCard, card.slotIdx, card.row, renderStatusBits(card.perm), card.uuidIdx)
 				if card.perm != nil {
 					for ct := core.CounterType(0); ct < core.NumCounters; ct++ {

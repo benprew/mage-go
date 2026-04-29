@@ -65,6 +65,7 @@ typedef struct {
     int64_t decision_capacity;
     int64_t emit_render_plan;
     int64_t render_plan_capacity;
+    int64_t dedup_card_bodies;
 } MageEncodeConfig;
 typedef struct {
     int64_t *trace_kind_id;
@@ -179,6 +180,10 @@ typedef struct {
     const int64_t *card_body_offsets;
     const int32_t *card_name_tokens;
     const int64_t *card_name_offsets;
+    int32_t dict_open_id;
+    int32_t dict_close_id;
+    int32_t card_open_id;
+    const int32_t *dict_entry_ids;
 } MageTokenTables;
 
 int32_t MageRegisterTokenTables(MageTokenTables *tables);

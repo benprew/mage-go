@@ -76,15 +76,22 @@ type tokenTables struct {
 	statusTapped   []int32
 	statusUntapped []int32
 
-	cardRowCount  int32
-	cardBodyToks  []int32
-	cardBodyOff   []int64
-	cardNameToks  []int32
-	cardNameOff   []int64
+	cardRowCount int32
+	cardBodyToks []int32
+	cardBodyOff  []int64
+	cardNameToks []int32
+	cardNameOff  []int64
+
+	// v2 dedup. dictEntryIDs is one int32 per card row (the
+	// ``<dict-entry:R>`` token id). NULL/empty when v2 is disabled.
+	dictOpenID   int32
+	dictCloseID  int32
+	cardOpenID   int32
+	dictEntryIDs []int32
 }
 
 var (
-	tokenTablesMu sync.RWMutex
+	tokenTablesMu      sync.RWMutex
 	currentTokenTables *tokenTables
 )
 
@@ -256,27 +263,30 @@ func registerTokenTables(c *C.MageTokenTables) error {
 	}
 
 	t := &tokenTables{
-		turnMin:          int32(c.turn_min),
-		turnMax:          int32(c.turn_max),
-		stepCount:        int32(c.step_count),
-		lifeMin:          int32(c.life_min),
-		lifeMax:          int32(c.life_max),
-		ownerCount:       int32(c.owner_count),
-		abilityMin:       int32(c.ability_min),
-		abilityMax:       int32(c.ability_max),
-		countMin:         int32(c.count_min),
-		countMax:         int32(c.count_max),
-		zoneCount:        int32(c.zone_count),
-		actionVerbCount:  int32(c.action_verb_count),
-		manaColorCount:   int32(c.mana_color_count),
-		cardRefCount:     int32(c.card_ref_count),
-		padID:            int32(c.pad_id),
-		optionID:         int32(c.option_id),
-		targetOpenID:     int32(c.target_open_id),
-		targetCloseID:    int32(c.target_close_id),
-		tappedID:         int32(c.tapped_id),
-		untappedID:       int32(c.untapped_id),
-		cardRowCount:     int32(c.card_row_count),
+		turnMin:         int32(c.turn_min),
+		turnMax:         int32(c.turn_max),
+		stepCount:       int32(c.step_count),
+		lifeMin:         int32(c.life_min),
+		lifeMax:         int32(c.life_max),
+		ownerCount:      int32(c.owner_count),
+		abilityMin:      int32(c.ability_min),
+		abilityMax:      int32(c.ability_max),
+		countMin:        int32(c.count_min),
+		countMax:        int32(c.count_max),
+		zoneCount:       int32(c.zone_count),
+		actionVerbCount: int32(c.action_verb_count),
+		manaColorCount:  int32(c.mana_color_count),
+		cardRefCount:    int32(c.card_ref_count),
+		padID:           int32(c.pad_id),
+		optionID:        int32(c.option_id),
+		targetOpenID:    int32(c.target_open_id),
+		targetCloseID:   int32(c.target_close_id),
+		tappedID:        int32(c.tapped_id),
+		untappedID:      int32(c.untapped_id),
+		cardRowCount:    int32(c.card_row_count),
+		dictOpenID:      int32(c.dict_open_id),
+		dictCloseID:     int32(c.dict_close_id),
+		cardOpenID:      int32(c.card_open_id),
 	}
 
 	fragmentCount := int(c.fragment_count)
@@ -288,7 +298,7 @@ func registerTokenTables(c *C.MageTokenTables) error {
 		return err
 	}
 
-	turnEntries := int((t.turnMax-t.turnMin+1)*t.stepCount)
+	turnEntries := int((t.turnMax - t.turnMin + 1) * t.stepCount)
 	t.turnStepOff = sliceI32(c.turn_step_offsets, turnEntries+1)
 	if len(t.turnStepOff) > 0 {
 		t.turnStepTokens = sliceI32(c.turn_step_tokens, int(t.turnStepOff[turnEntries]))
@@ -297,7 +307,7 @@ func registerTokenTables(c *C.MageTokenTables) error {
 		return err
 	}
 
-	lifeEntries := int((t.lifeMax-t.lifeMin+1)*t.ownerCount)
+	lifeEntries := int((t.lifeMax - t.lifeMin + 1) * t.ownerCount)
 	t.lifeOwnerOff = sliceI32(c.life_owner_offsets, lifeEntries+1)
 	if len(t.lifeOwnerOff) > 0 {
 		t.lifeOwnerTokens = sliceI32(c.life_owner_tokens, int(t.lifeOwnerOff[lifeEntries]))
@@ -379,6 +389,11 @@ func registerTokenTables(c *C.MageTokenTables) error {
 	if err := validateTablePack64("card_name", t.cardNameToks, t.cardNameOff, rowCount); err != nil {
 		return err
 	}
+
+	// dict_entry_ids is sized rowCount (one entry per card row), or NULL
+	// when v2 dedup is disabled. The native side never indexes past
+	// rowCount, so the same length bound is safe.
+	t.dictEntryIDs = sliceI32(c.dict_entry_ids, rowCount)
 
 	tokenTablesMu.Lock()
 	currentTokenTables = t

@@ -221,6 +221,7 @@ func parseEncodeConfigC(cfg *C.MageEncodeConfig) encodeConfig {
 		decisionCapacity:    int64(cfg.decision_capacity),
 		emitRenderPlan:      int64(cfg.emit_render_plan) != 0,
 		renderPlanCapacity:  int64(cfg.render_plan_capacity),
+		dedupCardBodies:     int64(cfg.dedup_card_bodies) != 0,
 	}
 }
 
@@ -1413,12 +1414,12 @@ func MageEncodeBatch(req *C.MageBatchRequest, cfg *C.MageEncodeConfig, out *C.Ma
 	return newEncodeResult(rowsWritten, mageEncodeErrOK, "")
 }
 
-//export MageRegisterTokenTables
-//
-// Stores the borrowed pointers in ``tokenTables`` for use by the future
+// Stores the borrowed pointers in “tokenTables“ for use by the future
 // native text-encoder assembler. Returns 0 on success or a positive error
 // code on a wire-format inconsistency. Calling with a nil pointer clears
 // the registration.
+//
+//export MageRegisterTokenTables
 func MageRegisterTokenTables(tables *C.MageTokenTables) C.int32_t {
 	defer func() { _ = recover() }()
 	if err := registerTokenTables(tables); err != nil {
@@ -1429,11 +1430,11 @@ func MageRegisterTokenTables(tables *C.MageTokenTables) C.int32_t {
 	return C.int32_t(0)
 }
 
-//export MageTokenTableSummary
-//
 // Returns a JSON summary of the currently registered token tables (sizes
 // per category). Used by the Phase-3 round-trip parity test to verify the
 // wire format unpacks correctly. Returns "null" if no tables registered.
+//
+//export MageTokenTableSummary
 func MageTokenTableSummary() *C.char {
 	defer func() { _ = recover() }()
 	t := getTokenTables()
@@ -1485,14 +1486,16 @@ func MageTokenTableSummary() *C.char {
 	return C.CString(string(b))
 }
 
-//export MageTokenTableLookup
-//
 // Test/debug accessor: returns the JSON-encoded token-id list for a single
-// (kind, key) pair. ``kind`` is one of:
-//   0=fragment, 1=turn_step, 2=life_owner, 3=ability, 4=count,
-//   5=zone_open, 6=zone_close, 7=action_verb, 8=mana_glyph,
-//   9=card_body, 10=card_name, 11=card_ref (single id list).
+// (kind, key) pair. “kind“ is one of:
+//
+//	0=fragment, 1=turn_step, 2=life_owner, 3=ability, 4=count,
+//	5=zone_open, 6=zone_close, 7=action_verb, 8=mana_glyph,
+//	9=card_body, 10=card_name, 11=card_ref (single id list).
+//
 // Two key fields cover all (zero or one used).
+//
+//export MageTokenTableLookup
 func MageTokenTableLookup(kind C.int32_t, k0 C.int32_t, k1 C.int32_t) *C.char {
 	defer func() { _ = recover() }()
 	t := getTokenTables()
@@ -1542,13 +1545,13 @@ func MageTokenTableLookup(kind C.int32_t, k0 C.int32_t, k1 C.int32_t) *C.char {
 	return C.CString(string(b))
 }
 
-//export MageEncodeTokens
-//
 // Same as MageEncodeBatch but additionally runs the native token-assembler
-// after the render-plan emission. ``cfg.emit_render_plan`` is forced on
+// after the render-plan emission. “cfg.emit_render_plan“ is forced on
 // inside the call (the assembler walks the freshly-emitted plan). Token
-// outputs go into ``tok_out`` (caller-owned buffers, shapes determined by
-// ``tok_cfg``). Requires MageRegisterTokenTables to have been called.
+// outputs go into “tok_out“ (caller-owned buffers, shapes determined by
+// “tok_cfg“). Requires MageRegisterTokenTables to have been called.
+//
+//export MageEncodeTokens
 func MageEncodeTokens(
 	req *C.MageBatchRequest,
 	cfg *C.MageEncodeConfig,

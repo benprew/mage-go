@@ -76,13 +76,19 @@ type encodeConfig struct {
 	decisionCapacity    int64
 	emitRenderPlan      bool
 	renderPlanCapacity  int64
+	// dedupCardBodies turns on the v2 ``<dict>`` opcode set: each unique
+	// card cache row in the snapshot is spliced once at the top, and per-zone
+	// occurrences become short ``<card-ref>``-anchored references back to
+	// the dict entry instead of full body splices. Off by default — the
+	// native token assembler does not yet understand the v2 opcodes.
+	dedupCardBodies bool
 	// emitTokens turns on the native token-assembler pass after the
 	// render-plan emission. Output buffers live in tokenAssemblerViews.
-	emitTokens             bool
-	tokenMaxTokens         int32
-	tokenMaxOptions        int32
-	tokenMaxTargets        int32
-	tokenMaxCardRefs       int32
+	emitTokens       bool
+	tokenMaxTokens   int32
+	tokenMaxOptions  int32
+	tokenMaxTargets  int32
+	tokenMaxCardRefs int32
 }
 
 type outputViews struct {
@@ -117,15 +123,15 @@ type outputViews struct {
 	renderPlanOverflow []int64
 
 	// Token-assembler outputs. nil when emit_tokens=false.
-	tokenIDs          []int64
-	tokenAttention    []int64
-	tokenSeqLengths   []int64
-	tokenOptionPos    []int64
-	tokenOptionMask   []byte
-	tokenTargetPos    []int64
-	tokenTargetMask   []byte
-	tokenCardRefPos   []int64
-	tokenOverflow     []int32
+	tokenIDs        []int64
+	tokenAttention  []int64
+	tokenSeqLengths []int64
+	tokenOptionPos  []int64
+	tokenOptionMask []byte
+	tokenTargetPos  []int64
+	tokenTargetMask []byte
+	tokenCardRefPos []int64
+	tokenOverflow   []int32
 }
 
 type batchRequest struct {
@@ -266,7 +272,7 @@ func clearOutputViews(view outputViews) {
 	fillInt32(view.tokenOverflow, 0)
 }
 
-// fillTokenAssembly walks the render-plan stream emitted for ``batchIdx``
+// fillTokenAssembly walks the render-plan stream emitted for “batchIdx“
 // and fills the token-assembler outputs for that row. Requires that the
 // render plan was already emitted (cfg.emitRenderPlan must be true).
 func fillTokenAssembly(batchIdx int64, cfg encodeConfig, view outputViews) *encodeError {

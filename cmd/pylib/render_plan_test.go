@@ -144,4 +144,74 @@ var testRenderPlanArity = map[int32]int{
 	opCloseActions: 0,
 	opOption:       5,
 	opTarget:       3,
+	opOpenDict:     0,
+	opCloseDict:    0,
+	opDictEntry:    1,
+	opPlaceCardRef: 4,
+}
+
+func TestRenderPlanV1NoDictOpcodes(t *testing.T) {
+	state := testRenderState(uuid.New())
+	cfg := testRenderConfig(128)
+	view := outputViews{
+		renderPlan:         make([]int32, cfg.renderPlanCapacity),
+		renderPlanLengths:  make([]int64, 1),
+		renderPlanOverflow: make([]int64, 1),
+	}
+	if err := fillRenderPlan(0, state, &apiPending{Kind: "priority"}, 0, cfg, view); err != nil {
+		t.Fatalf("fillRenderPlan: %v", err)
+	}
+	plan := view.renderPlan[:view.renderPlanLengths[0]]
+	for _, op := range plan {
+		switch op {
+		case opOpenDict, opCloseDict, opDictEntry, opPlaceCardRef:
+			t.Fatalf("v1 plan contained v2 opcode %d: %v", op, plan)
+		}
+	}
+}
+
+func TestRenderPlanV2EmitsDictAndRefs(t *testing.T) {
+	state := testRenderState(uuid.New())
+	cfg := testRenderConfig(128)
+	cfg.dedupCardBodies = true
+	view := outputViews{
+		renderPlan:         make([]int32, cfg.renderPlanCapacity),
+		renderPlanLengths:  make([]int64, 1),
+		renderPlanOverflow: make([]int64, 1),
+	}
+	if err := fillRenderPlan(0, state, &apiPending{Kind: "priority"}, 0, cfg, view); err != nil {
+		t.Fatalf("fillRenderPlan: %v", err)
+	}
+	plan := view.renderPlan[:view.renderPlanLengths[0]]
+	if len(plan) < 2 || plan[0] != opOpenState || plan[1] != opOpenDict {
+		t.Fatalf("v2 plan does not start with opOpenState, opOpenDict: %v", plan)
+	}
+	var sawDictEntry, sawCloseDict, sawCardRef, sawPlaceCard bool
+	for cursor := 0; cursor < len(plan); {
+		op := plan[cursor]
+		arity, ok := testRenderPlanArity[op]
+		if !ok {
+			t.Fatalf("unknown opcode %d at %d", op, cursor)
+		}
+		switch op {
+		case opDictEntry:
+			sawDictEntry = true
+		case opCloseDict:
+			sawCloseDict = true
+		case opPlaceCardRef:
+			sawCardRef = true
+		case opPlaceCard:
+			sawPlaceCard = true
+		}
+		cursor += 1 + arity
+	}
+	if !sawDictEntry || !sawCloseDict {
+		t.Fatalf("expected dict entry + close, got plan=%v", plan)
+	}
+	if !sawCardRef {
+		t.Fatalf("expected opPlaceCardRef in v2 plan, got %v", plan)
+	}
+	if sawPlaceCard {
+		t.Fatalf("v2 plan should not contain opPlaceCard, got %v", plan)
+	}
 }

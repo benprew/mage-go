@@ -98,6 +98,36 @@ extern char* MageSetCardNameRows(char* cardNameRowsJSON);
 extern MageEncodeResult MageBatchPoll(MageBatchRequest* req, MageBatchPollOutputs* out);
 extern MageEncodeResult MageBatchStepByChoice(MageStepChoiceRequest* req);
 extern MageEncodeResult MageEncodeBatch(MageBatchRequest* req, MageEncodeConfig* cfg, MageEncodeOutputs* out);
+
+//
+// Stores the borrowed pointers in ``tokenTables`` for use by the future
+// native text-encoder assembler. Returns 0 on success or a positive error
+// code on a wire-format inconsistency. Calling with a nil pointer clears
+// the registration.
+extern int32_t MageRegisterTokenTables(MageTokenTables* tables);
+
+//
+// Returns a JSON summary of the currently registered token tables (sizes
+// per category). Used by the Phase-3 round-trip parity test to verify the
+// wire format unpacks correctly. Returns "null" if no tables registered.
+extern char* MageTokenTableSummary();
+
+//
+// Test/debug accessor: returns the JSON-encoded token-id list for a single
+// (kind, key) pair. ``kind`` is one of:
+//   0=fragment, 1=turn_step, 2=life_owner, 3=ability, 4=count,
+//   5=zone_open, 6=zone_close, 7=action_verb, 8=mana_glyph,
+//   9=card_body, 10=card_name, 11=card_ref (single id list).
+// Two key fields cover all (zero or one used).
+extern char* MageTokenTableLookup(int32_t kind, int32_t k0, int32_t k1);
+
+//
+// Same as MageEncodeBatch but additionally runs the native token-assembler
+// after the render-plan emission. ``cfg.emit_render_plan`` is forced on
+// inside the call (the assembler walks the freshly-emitted plan). Token
+// outputs go into ``tok_out`` (caller-owned buffers, shapes determined by
+// ``tok_cfg``). Requires MageRegisterTokenTables to have been called.
+extern MageEncodeResult MageEncodeTokens(MageBatchRequest* req, MageEncodeConfig* cfg, MageEncodeOutputs* out, MageTokenAssemblerConfig* tokCfg, MageTokenAssemblerOutputs* tokOut);
 extern int64_t MagePendingPlayer(int64_t id);
 extern int64_t MageIsOver(int64_t id);
 extern char* MageWinner(int64_t id);
