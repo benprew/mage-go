@@ -312,6 +312,12 @@ func emitRenderZones(w *renderPlanWriter, index renderPlanIndex, cfg encodeConfi
 	for _, owner := range []int32{renderOwnerSelf, renderOwnerOpponent} {
 		w.write(opOpenPlayer, owner)
 		for _, zone := range renderZoneOrder {
+			// Fog of war: opponent's hand contents are hidden information
+			// and are skipped by the Python emit_render_plan path. Mirror
+			// that here so the native render plan stays in lockstep.
+			if owner == renderOwnerOpponent && zone == renderZoneHand {
+				continue
+			}
 			w.write(opOpenZone, zone, owner)
 			for _, card := range index.cardsByKey[renderZoneKey{owner: owner, zone: zone}] {
 				if cfg.dedupCardBodies {
