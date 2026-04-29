@@ -275,10 +275,11 @@ func registerCreatures() {
 	// Creature — Snake
 	// 1/2
 	// Whenever Marsh Viper deals damage to a player, that player gets two poison counters.
-	// TODO: implement — needs poison counter support
 	Register("Marsh Viper", func() Card {
 		return NewCreature("Marsh Viper", "{3}{G}", 1, 2,
 			WithSubTypes("Snake"),
+			WithAbility(NewTriggered(EvtDamageDealt, false, PoisonTargetPlayer(2)).
+				SetConditionData(EventSourceIsSelfDamageToPlayer{})),
 		)
 	})
 

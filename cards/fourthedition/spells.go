@@ -1,6 +1,10 @@
 package fourthedition
 
-import . "git.sr.ht/~cdcarter/mage-go/pkg/mage/dsl"
+import (
+	"github.com/google/uuid"
+
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/dsl"
+)
 
 func init() {
 	registerSpells()
@@ -46,10 +50,38 @@ func registerSpells() {
 	// Mana Clash {R}
 	// Sorcery
 	// You and target opponent each flip a coin. Mana Clash deals 1 damage to each player whose coin comes up tails. Repeat this process until both players' coins come up heads on the same flip.
-	// TODO: implement �� needs coin flip loop
 	Register("Mana Clash", func() Card {
 		return NewSorcery("Mana Clash", "{R}",
-			NewSpellAbility(),
+			NewTargetedSpell(
+				TargetOpponent(),
+				FuncEffect(
+					"you and target opponent flip coins; tails takes 1 damage; repeat until both heads",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						you := g.GetPlayer(controller)
+						opp := g.GetPlayer(targets[0])
+						if you == nil || opp == nil {
+							return nil
+						}
+						for {
+							youHeads := g.FlipCoin(controller)
+							oppHeads := g.FlipCoin(targets[0])
+							if !youHeads {
+								g.DealDamageToPlayer(you, 1, sourceID)
+							}
+							if !oppHeads {
+								g.DealDamageToPlayer(opp, 1, sourceID)
+							}
+							if youHeads && oppHeads {
+								return nil
+							}
+						}
+					},
+				),
+			),
 		)
 	})
 

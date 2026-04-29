@@ -501,3 +501,72 @@ func TestAnimateArtifact(t *testing.T) {
 		g.AssertPermanentCount(gametest.PlayerA, "Fellwar Stone", 1)
 	})
 }
+
+// ===== MARSH VIPER =====
+
+func TestMarshViper(t *testing.T) {
+	t.Run("combat damage to player gives two poison counters", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Marsh Viper")
+		g.Attack(1, gametest.PlayerA, "Marsh Viper")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 19)
+		g.AssertPoisonCounters(gametest.PlayerB, 2)
+	})
+
+	t.Run("damage to creature does not give poison", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Marsh Viper")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // 2/2
+		g.Attack(2, gametest.PlayerA, "Marsh Viper")
+		g.Block(2, gametest.PlayerB, "Grizzly Bears", "Marsh Viper")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		g.AssertPoisonCounters(gametest.PlayerB, 0)
+	})
+}
+
+// ===== MANA CLASH =====
+
+func TestManaClash(t *testing.T) {
+	t.Run("both heads first flip ends with no damage", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Mana Clash")
+		g.SetCoinFlipResults([]bool{true, true}) // you heads, opp heads
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Mana Clash", "PlayerB")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 20)
+		g.AssertLife(gametest.PlayerB, 20)
+	})
+
+	t.Run("opponent tails takes damage then both heads stops", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Mana Clash")
+		// round 1: you heads, opp tails (opp -1) → continue
+		// round 2: you heads, opp heads → stop
+		g.SetCoinFlipResults([]bool{true, false, true, true})
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Mana Clash", "PlayerB")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 20)
+		g.AssertLife(gametest.PlayerB, 19)
+	})
+
+	t.Run("both tails then both heads", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Mana Clash")
+		// round 1: both tails (each -1) → continue
+		// round 2: both heads → stop
+		g.SetCoinFlipResults([]bool{false, false, true, true})
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Mana Clash", "PlayerB")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 19)
+		g.AssertLife(gametest.PlayerB, 19)
+	})
+}
