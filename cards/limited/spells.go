@@ -494,7 +494,7 @@ func registerSpells() {
 			WithActivatedAbility(
 				ChaosOrbEffect(),
 				GenericCost(1),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 			),
 		)
 	})

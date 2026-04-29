@@ -102,7 +102,7 @@ func registerArtifacts() {
 						g.SetDrawReplacement(controller, x)
 						return nil
 					}),
-				TapSourceCost(),
+				Tap(),
 				WithCost(ManaCostOf("{X}")),
 			),
 		)
@@ -113,7 +113,7 @@ func registerArtifacts() {
 		return NewArtifact("Aladdin's Ring", "{8}",
 			WithActivatedAbility(
 				DealDamage(Fixed(4)),
-				TapSourceCost(),
+				Tap(),
 				WithCost(ManaCostOf("{8}")),
 				WithTarget(TargetAnyTarget()),
 			),
@@ -219,7 +219,7 @@ func registerArtifacts() {
 					UntapGathered("t"),
 					RemoveFromCombatGathered("t"),
 				),
-				TapSourceCost(),
+				Tap(),
 				WithCost(ManaCostOf("{2}")),
 				WithTarget(TargetCreatureYouControl(IsAttacking)),
 			),
@@ -231,7 +231,7 @@ func registerArtifacts() {
 		return NewArtifact("Flying Carpet", "{4}",
 			WithActivatedAbility(
 				GrantKeyword(Flying),
-				TapSourceCost(),
+				Tap(),
 				WithCost(ManaCostOf("{2}")),
 				WithTarget(TargetCreature()),
 			),
@@ -243,7 +243,7 @@ func registerArtifacts() {
 		return NewArtifact("Jandor's Ring", "{6}",
 			WithActivatedAbility(
 				DrawCards(Fixed(1)),
-				TapSourceCost(),
+				Tap(),
 				WithCost(ManaCostOf("{2}")),
 				WithCost(&discardLastDrawnCost{}),
 			),
@@ -255,7 +255,7 @@ func registerArtifacts() {
 		return NewArtifact("Jandor's Saddlebags", "{2}",
 			WithActivatedAbility(
 				UntapTarget(),
-				TapSourceCost(),
+				Tap(),
 				WithCost(ManaCostOf("{3}")),
 				WithTarget(TargetCreature()),
 			),
@@ -300,7 +300,7 @@ func registerArtifacts() {
 						p.DrawCard()
 						return nil
 					}),
-				TapSourceCost(),
+				Tap(),
 			),
 		)
 	})
@@ -368,7 +368,7 @@ func registerArtifacts() {
 						Effects:       []Effect{DestroyTarget()},
 					},
 				),
-				TapSourceCost(),
+				Tap(),
 				WithCost(ManaCostOf("{2}")),
 				WithTarget(TargetCreature()),
 			),

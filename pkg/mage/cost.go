@@ -69,18 +69,23 @@ func (c *ManaCostPayment) Text() string {
 	return c.MC.String()
 }
 
-// tapSourceCost requires tapping the source permanent.
-type tapSourceCost struct{}
+// tap implements both Cost and EffectData. As a cost it taps the source
+// permanent ({T}). As an effect it taps ctx.Targets[0]. Single DSL constructor
+// (Tap) — the call site (cost slot vs effect slot) selects the path.
+type tap struct{}
 
-// TapSourceCost creates a cost that requires tapping the source permanent ({T}).
-func TapSourceCost() Cost { return &tapSourceCost{} }
+// Tap creates a tap operation usable as a Cost (taps source) or Effect (taps
+// target).
+func Tap() *tap { return &tap{} }
 
-func (c *tapSourceCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+// --- Cost interface ---
+
+func (c *tap) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	p := g.FindPermanent(sourceID)
 	return p != nil && !p.Tapped && p.CanTapForEffect(g)
 }
 
-func (c *tapSourceCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
+func (c *tap) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	p := g.FindPermanent(sourceID)
 	if p == nil {
 		return ErrSourceNotFound
@@ -92,7 +97,19 @@ func (c *tapSourceCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	return nil
 }
 
-func (c *tapSourceCost) Text() string { return "{T}" }
+// --- Effect / Cost shared ---
+
+// Text returns the cost-style symbol "{T}". This is what the eval heuristic
+// (AbilityQuality) and rules-text rendering expect for tap costs. When used
+// as an effect, the rendered string is the same — slightly less descriptive
+// than "tap target permanent" but consistent.
+func (c *tap) Text() string { return "{T}" }
+
+// --- Effect interface ---
+
+func (c *tap) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
 
 // removeCountersCost requires removing counters from the source.
 type removeCountersCost struct {

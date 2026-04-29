@@ -287,7 +287,7 @@ var (
 	RegenerateGathered                        = mage.RegenerateGathered
 	PreventDamageToTarget                     = mage.PreventDamageToTarget
 	SacrificeSource                           = mage.SacrificeSource
-	TapTarget                                 = mage.TapTarget
+	Tap                                       = mage.Tap
 	UntapSource                               = mage.UntapSource
 	RemoveFromCombatGathered                  = mage.RemoveFromCombatGathered
 	TapGathered                               = mage.TapGathered
@@ -377,7 +377,6 @@ var (
 	DealDamageStep            = mage.DealDamageStep
 	DealDamageToSourceStep    = mage.DealDamageToSourceStep
 	GainLifeStep              = mage.GainLifeStep
-	TapTargetStep             = mage.TapTargetStep
 	DealDamageToAllCreatures  = mage.DealDamageToAllCreatures
 	SacrificeCreatureOrDamage = mage.SacrificeCreatureOrDamage
 
@@ -513,7 +512,6 @@ var (
 // =============================================================================
 
 var (
-	TapSourceCost         = mage.TapSourceCost
 	SacrificeSourceCost   = mage.SacrificeSourceCost
 	ManaCostOf            = mage.ManaCostOf
 	WithFrom              = mage.WithFrom

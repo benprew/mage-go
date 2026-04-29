@@ -28,7 +28,7 @@ func registerWraithbloom() {
 			WithActivatedAbility(
 				ReturnFromGraveyardToBattlefield(),
 				GenericCost(2),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithCost(RemoveCountersCost(P1P1, 3)),
 				WithTarget(TargetCreatureInYourGraveyard()),
 			),

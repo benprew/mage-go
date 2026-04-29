@@ -6,22 +6,6 @@ import (
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
-// tapTargetEffect taps a target permanent.
-type tapTargetEffect struct{}
-
-// TapTarget creates an effect that taps a target permanent.
-func TapTarget() Effect {
-	return &tapTargetEffect{}
-}
-
-// TapTargetStep returns the EffectData for use as a pipeline/ForEach inner step.
-func TapTargetStep() EffectData { return &tapTargetEffect{} }
-
-func (e *tapTargetEffect) Text() string { return "tap target permanent" }
-func (e *tapTargetEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment}
-}
-
 // untapTargetEffect untaps a target permanent.
 type untapTargetEffect struct{}
 
@@ -277,7 +261,7 @@ func (e *setBasePowerUntilEndOfTurnEffect) Properties() EffectProperties {
 
 // --- Combat effect executors ---
 
-func execTapTarget(ctx *EffectContext, _ *tapTargetEffect) error {
+func execTap(ctx *EffectContext, _ *tap) error {
 	if len(ctx.Targets) == 0 {
 		return fmt.Errorf("no target for tap")
 	}

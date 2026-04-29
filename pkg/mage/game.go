@@ -2558,7 +2558,7 @@ func (g *Game) PlayLand(playerID, cardID uuid.UUID) error {
 // TapForMana taps a permanent for mana using its mana ability. Recognizes both
 // *ManaAbility (built via WithManaAbility/WithMultiManaAbility) and
 // *SimpleActivatedAbility whose only cost is tapping and whose effects are
-// mana-producing (built via WithActivatedAbility(AddMana(...), TapSourceCost())
+// mana-producing (built via WithActivatedAbility(AddMana(...), Tap())
 // — e.g. Mana Vault).
 func (g *Game) TapForMana(playerID, permanentID uuid.UUID) error {
 	perm := g.FindPermanent(permanentID)
@@ -2610,7 +2610,7 @@ func activatedManaProductions(a *SimpleActivatedAbility) []ManaProduction {
 	if len(a.costs) != 1 {
 		return nil
 	}
-	if _, ok := a.costs[0].(*tapSourceCost); !ok {
+	if _, ok := a.costs[0].(*tap); !ok {
 		return nil
 	}
 	if len(a.effects) == 0 {
@@ -3109,7 +3109,7 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	// Fire EvtAbilityActivated
 	hasTapCost := false
 	for _, c := range aa.Costs() {
-		if _, ok := c.(*tapSourceCost); ok {
+		if _, ok := c.(*tap); ok {
 			hasTapCost = true
 			break
 		}

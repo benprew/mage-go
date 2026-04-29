@@ -64,7 +64,7 @@ func registerLands() {
 						return nil
 					},
 				),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -80,7 +80,7 @@ func registerLands() {
 			WithManaAbility(White),
 			WithActivatedAbility(
 				ReturnToHandTarget(),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature(NewPermanentFilter("legendary", func(p *Permanent, _ *Game) bool {
 					return p.Card.HasSuperType(SuperLegendary)
 				}))),
@@ -110,7 +110,7 @@ func registerLands() {
 			WithManaAbility(Green),
 			WithActivatedAbility(
 				Boost(Fixed(1), Fixed(2)),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature(NewPermanentFilter("1/1", func(p *Permanent, g *Game) bool {
 					return p.CurrentPower(g) == 1 && p.CurrentToughness(g) == 1
 				}))),
@@ -167,7 +167,7 @@ func registerLands() {
 					EffectProperties{Outcome: OutcomeDetriment},
 					RevokeKeyword(Banding),
 				),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature()),
 				WithUpkeepOnly(),
 			),
@@ -226,7 +226,7 @@ func registerLands() {
 						return nil
 					},
 				),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature()),
 			),
 		)

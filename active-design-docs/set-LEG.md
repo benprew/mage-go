@@ -102,7 +102,7 @@ HIGH — Incorrect Game Behavior
 
 9. Voodoo Doll — Missing {X}{X} mana cost on damage ability
 - Oracle: "{X}{X}, {T}: This artifact deals damage equal to pin counters... X is the number of pin counters."
-- Code: Only uses TapSourceCost(). The mana cost is missing — ability is free to activate.
+- Code: Only uses Tap(). The mana cost is missing — ability is free to activate.
 
 10. Greater Realm of Preservation — Double prevention instead of single choice
 - Oracle: "The next time a black or red source of your choice would deal damage to you..."

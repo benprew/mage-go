@@ -41,7 +41,7 @@ func registerArtifacts() {
 			// {T}, Sacrifice: Add 3 mana of any one color
 			WithActivatedAbility(
 				AddAnyMana(3, Green),
-				TapSourceCost(),
+				Tap(),
 				WithCost(SacrificeSourceCost()),
 			),
 		)
@@ -60,7 +60,7 @@ func registerArtifacts() {
 			// {T}: Add {C}{C}{C}
 			WithActivatedAbility(
 				AddMana(Colorless, 3),
-				TapSourceCost(),
+				Tap(),
 			),
 			// {3}: Untap Basalt Monolith
 			WithActivatedAbility(
@@ -76,7 +76,7 @@ func registerArtifacts() {
 			// {T}: Add {C}{C}{C}
 			WithActivatedAbility(
 				AddMana(Colorless, 3),
-				TapSourceCost(),
+				Tap(),
 			),
 			// At the beginning of your upkeep, you may pay {4}. If you do, untap Mana Vault.
 			WithAbility(NewTriggered(EvtUpkeep, false, Pipeline(
@@ -103,7 +103,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				DrawCards(Fixed(1)),
 				GenericCost(4),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 			),
 		)
 	})
@@ -115,7 +115,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				DiscardCards(Fixed(1)),
 				GenericCost(3),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetPlayer()),
 			),
 		)
@@ -125,9 +125,9 @@ func registerArtifacts() {
 		return NewArtifact("Icy Manipulator", "{4}",
 			// {1}, {T}: Tap target permanent
 			WithActivatedAbility(
-				TapTarget(),
+				Tap(),
 				GenericCost(1),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetPermanent(Or(IsArtifact, IsCreature, IsLand))),
 			),
 		)
@@ -139,7 +139,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				DealDamage(Fixed(1)),
 				GenericCost(3),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetAnyTarget()),
 			),
 		)
@@ -155,7 +155,7 @@ func registerArtifacts() {
 					Flying,
 				),
 				GenericCost(5),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 			),
 		)
 	})
@@ -292,7 +292,7 @@ func registerArtifacts() {
 				FuncEffect("look at target player's hand", EffectProperties{}, func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					return nil
 				}),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetPlayer()),
 			),
 		)
@@ -304,7 +304,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				GrantKeyword(Banding),
 				GenericCost(1),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -332,7 +332,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				AddCounters(Mire, Fixed(1)),
 				GenericCost(2),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetPermanent(IsLand, Not(HasSubType("Swamp")))),
 			),
 		)
@@ -380,7 +380,7 @@ func registerArtifacts() {
 					DestroyAllMatching(IsArtifact, "destroy all artifacts"),
 				),
 				GenericCost(1),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 			),
 		)
 	})
@@ -876,7 +876,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				AddAnyMana(1, Colorless),
 				GenericCost(2),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 			),
 		)
 	})
@@ -889,7 +889,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				PreventDamageToTarget(Fixed(2)),
 				GenericCost(3),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetController()),
 			),
 		)

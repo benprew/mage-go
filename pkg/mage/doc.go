@@ -176,7 +176,7 @@ Graveyard effects:
 
 Permanent manipulation effects:
 
-	[TapTarget]()                              // tap target permanent
+	[Tap]()                                    // tap (target as effect, source as cost)
 	[UntapTarget]()                            // untap target permanent
 	[UntapSource]()                            // untap self
 	[TapOrUntapTarget]()                       // Twiddle: choose tap or untap
@@ -424,7 +424,7 @@ The [Cost] interface has CanPay, Pay, and Text methods. Cost constructors:
 	[ManaCostOf]("{1}{R}")             // mana payment from pool
 	[GenericCost](n)                   // n generic mana
 	[XManaCost]()                      // pay X generic mana (g.CurrentX)
-	[TapSourceCost]()                  // {T}: tap the source
+	[Tap]()                            // {T}: tap the source (also usable as effect)
 	[SacrificeSourceCost]()            // sacrifice self
 	[SacrificeMatchingCost](filter, text)  // sacrifice a permanent matching filter
 	[SacrificeCreatureCost]()          // = SacrificeMatchingCost(IsCreature, ...)
@@ -449,7 +449,7 @@ Non-mana activated abilities use the same [ActionDefinition] model as spells.
 Prefer [NewActivated] with [WithAction]:
 
 	mage.WithAction(mage.NewActivated(
-	    mage.TapSourceCost(),
+	    mage.Tap(),
 	    mage.DealDamage(mage.Fixed(1)),
 	    mage.WithTarget(mage.TargetAnyTarget()),
 	))
@@ -479,14 +479,14 @@ Attach to a card with [WithActivatedAbility] or [WithAbility]:
 	mage.WithActivatedAbility(
 	    mage.DestroyTargetPermanent(),
 	    mage.ManaCostOf("{W}{W}"),
-	    mage.WithCost(mage.TapSourceCost()),
+	    mage.WithCost(mage.Tap()),
 	    mage.WithTarget(mage.TargetPermanent(mage.HasColorFilter(core.Black))),
 	)
 
 	// Prodigal Sorcerer: {T}: Deal 1 damage to any target
 	mage.WithActivatedAbility(
 	    mage.DealDamage(mage.Fixed(1)),
-	    mage.TapSourceCost(),
+	    mage.Tap(),
 	    mage.WithTarget(mage.TargetAnyTarget()),
 	)
 
@@ -1128,7 +1128,7 @@ Creature with activated ability:
 	        mage.WithSubTypes("Human", "Wizard"),
 	        mage.WithActivatedAbility(
 	            mage.DealDamage(mage.Fixed(1)),
-	            mage.TapSourceCost(),
+	            mage.Tap(),
 	            mage.WithTarget(mage.TargetAnyTarget()),
 	        ),
 	    )

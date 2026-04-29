@@ -737,7 +737,7 @@ func TestPriorityAction_ActivatesAbility(t *testing.T) {
 
 	// Player has a pinger (tap-to-deal-1-damage, quality=4, above threshold of 3)
 	pinger := makePerm("Pinger", "{1}{R}", 1, 1, pa.PlayerID(),
-		mage.WithActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.TapSourceCost(),
+		mage.WithActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.Tap(),
 			mage.WithTarget(mage.TargetAnyTarget())),
 	)
 	g.AddToBattlefield(pinger)

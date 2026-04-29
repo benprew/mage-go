@@ -380,14 +380,14 @@ func TestTapForMana_MultiColor(t *testing.T) {
 	}
 }
 
-// Mana Vault style: tap-for-mana built via WithActivatedAbility(AddMana(...), TapSourceCost())
+// Mana Vault style: tap-for-mana built via WithActivatedAbility(AddMana(...), Tap())
 // rather than WithMultiManaAbility. Auto-tap must discover these too.
 func TestAutoTapForCost_ActivatedManaAbility(t *testing.T) {
 	g := newPriorityTestGame()
 	pid := g.players[0].PlayerID()
 
 	vault := NewArtifact("Mana Vault", "{1}",
-		WithActivatedAbility(AddMana(Colorless, 3), TapSourceCost()),
+		WithActivatedAbility(AddMana(Colorless, 3), Tap()),
 	)
 	vault.SetOwner(pid)
 	perm := g.PutOnBattlefield(vault, pid)
@@ -410,7 +410,7 @@ func TestTapForMana_ActivatedManaAbility(t *testing.T) {
 	pid := g.players[0].PlayerID()
 
 	vault := NewArtifact("Mana Vault", "{1}",
-		WithActivatedAbility(AddMana(Colorless, 3), TapSourceCost()),
+		WithActivatedAbility(AddMana(Colorless, 3), Tap()),
 	)
 	vault.SetOwner(pid)
 	perm := g.PutOnBattlefield(vault, pid)
@@ -433,7 +433,7 @@ func TestCanAfford_ActivatedManaAbility(t *testing.T) {
 	pid := g.players[0].PlayerID()
 
 	vault := NewArtifact("Mana Vault", "{1}",
-		WithActivatedAbility(AddMana(Colorless, 3), TapSourceCost()),
+		WithActivatedAbility(AddMana(Colorless, 3), Tap()),
 	)
 	vault.SetOwner(pid)
 	perm := g.PutOnBattlefield(vault, pid)

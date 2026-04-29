@@ -40,14 +40,14 @@ func ch03RegisterCards() {
 		}},
 		{"Sol Ring", func() mage.Card {
 			return mage.NewArtifact("Sol Ring", "{1}",
-				mage.WithActivatedAbility(mage.AddMana(core.Colorless, 2), mage.TapSourceCost()),
+				mage.WithActivatedAbility(mage.AddMana(core.Colorless, 2), mage.Tap()),
 			)
 		}},
 		{"Black Lotus", func() mage.Card {
 			return mage.NewArtifact("Black Lotus", "{0}",
 				mage.WithActivatedAbility(
 					mage.AddAnyMana(3, core.Green),
-					mage.TapSourceCost(),
+					mage.Tap(),
 					mage.WithCost(mage.SacrificeSourceCost()),
 				),
 			)
@@ -101,9 +101,9 @@ func ch03RegisterCards() {
 		{"Icy Manipulator", func() mage.Card {
 			return mage.NewArtifact("Icy Manipulator", "{4}",
 				mage.WithActivatedAbility(
-					mage.TapTarget(),
+					mage.Tap(),
 					mage.GenericCost(1),
-					mage.WithCost(mage.TapSourceCost()),
+					mage.WithCost(mage.Tap()),
 					mage.WithTarget(mage.TargetPermanent(mage.Or(mage.IsArtifact, mage.IsCreature, mage.IsLand))),
 				),
 			)

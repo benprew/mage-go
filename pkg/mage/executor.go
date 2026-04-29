@@ -149,8 +149,8 @@ func ExecuteEffect(ctx *EffectContext, data EffectData) error {
 		return execAddCounters(ctx, e)
 	case *removeCountersEffect:
 		return execRemoveCounters(ctx, e)
-	case *tapTargetEffect:
-		return execTapTarget(ctx, e)
+	case *tap:
+		return execTap(ctx, e)
 	case *untapTargetEffect:
 		return execUntapTarget(ctx, e)
 	case *untapSourceEffect:

@@ -48,7 +48,7 @@ func registerLands() {
 			),
 			WithActivatedAbility(
 				Boost(Fixed(1), Fixed(1)),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature(HasSubType("Assembly-Worker"))),
 			),
 		)
@@ -71,7 +71,7 @@ func registerLands() {
 						}
 						return nil
 					}),
-				TapSourceCost(),
+				Tap(),
 			),
 		)
 	})
@@ -85,7 +85,7 @@ func registerLands() {
 			WithManaAbility(Colorless),
 			WithActivatedAbility(
 				DestroyTarget(),
-				TapSourceCost(),
+				Tap(),
 				WithCost(SacrificeSourceCost()),
 				WithTarget(TargetPermanent(IsLand)),
 			),
@@ -116,7 +116,7 @@ func registerLands() {
 						}
 						return nil
 					}),
-				TapSourceCost(),
+				Tap(),
 			),
 		)
 	})
@@ -145,7 +145,7 @@ func registerLands() {
 						}
 						return nil
 					}),
-				TapSourceCost(),
+				Tap(),
 			),
 		)
 	})
@@ -174,7 +174,7 @@ func registerLands() {
 						}
 						return nil
 					}),
-				TapSourceCost(),
+				Tap(),
 			),
 		)
 	})

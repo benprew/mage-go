@@ -171,7 +171,7 @@ func registerCh06Cards() {
 				mage.WithKeyword(core.Haste),
 				mage.WithActivatedAbility(
 					mage.DealDamage(mage.Fixed(1)),
-					mage.TapSourceCost(),
+					mage.Tap(),
 					mage.WithTarget(mage.TargetAnyTarget())))
 		})
 		reg("Ch06 Pinger", func() mage.Card {
@@ -179,7 +179,7 @@ func registerCh06Cards() {
 				mage.WithSubTypes("Human", "Wizard"),
 				mage.WithActivatedAbility(
 					mage.DealDamage(mage.Fixed(1)),
-					mage.TapSourceCost(),
+					mage.Tap(),
 					mage.WithTarget(mage.TargetAnyTarget())))
 		})
 		reg("Ch06 Damage Watcher", func() mage.Card {
@@ -235,7 +235,7 @@ func registerCh06Cards() {
 				mage.WithActivatedAbility(
 					mage.SetPTUntilEndOfTurn(0, 2,
 						mage.SelectTarget),
-					mage.TapSourceCost(),
+					mage.Tap(),
 					mage.WithTarget(mage.TargetCreature(
 						mage.NotHasKeywordFilter(core.Flying)))))
 		})

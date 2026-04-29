@@ -20,7 +20,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				PreventDamageToTarget(Fixed(1)),
 				GenericCost(2),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetAnyTarget()),
 			),
 		)
@@ -106,7 +106,7 @@ func registerArtifacts() {
 						return nil
 					}),
 				GenericCost(2),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetControlledCreature()),
 			),
 		)
@@ -124,7 +124,7 @@ func registerArtifacts() {
 					AddCounters(P1P1, Fixed(1)),
 					GrantType(TypeArtifact),
 				),
-				TapSourceCost(),
+				Tap(),
 				WithCost(SacrificeSourceCost()),
 				WithTarget(TargetCreature(Not(IsArtifact))),
 			),
@@ -165,7 +165,7 @@ func registerArtifacts() {
 						return nil
 					}),
 				XManaCost(),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 			),
 		)
 	})
@@ -215,7 +215,7 @@ func registerArtifacts() {
 		return NewArtifact("Feldon's Cane", "{1}",
 			WithActivatedAbility(
 				ShuffleGraveyardIntoLibrary(),
-				TapSourceCost(),
+				Tap(),
 				WithCost(ExileSourceCost()),
 			),
 		)
@@ -244,7 +244,7 @@ func registerArtifacts() {
 						return nil
 					}),
 				GenericCost(1),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 			),
 		)
 	})
@@ -289,7 +289,7 @@ func registerArtifacts() {
 						return nil
 					}),
 				GenericCost(2),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 			),
 		)
 	})
@@ -313,7 +313,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				MillTargetPlayer(Fixed(2)),
 				GenericCost(2),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetPlayer()),
 			),
 		)
@@ -328,7 +328,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				ReturnToHandTarget(),
 				GenericCost(6),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetControlledPermanent()),
 			),
 		)
@@ -380,7 +380,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				Boost(Fixed(-2), Fixed(0)),
 				GenericCost(3),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -512,7 +512,7 @@ func registerArtifacts() {
 						return nil
 					}),
 				GenericCost(3),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetCreature()),
 			),
 			// When Tawnos's Coffin leaves the battlefield, return exiled creature
@@ -550,7 +550,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				GrantKeyword(UnblockableKW),
 				GenericCost(2),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetCreature(HasPowerLTE(2))),
 			),
 		)
@@ -591,7 +591,7 @@ func registerArtifacts() {
 						return nil
 					}),
 				GenericCost(2),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetCreature()),
 			),
 		)

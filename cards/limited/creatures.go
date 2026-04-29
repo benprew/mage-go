@@ -58,7 +58,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				DestroyTargetPermanent(),
 				ManaCostOf("{W}{W}"),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetPermanent(HasColorFilter(Black))),
 			),
 		)
@@ -100,7 +100,7 @@ func registerCreatures() {
 			WithSubTypes("Human", "Wizard"),
 			WithActivatedAbility(
 				DealDamage(Fixed(1)),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetAnyTarget()),
 			),
 		)
@@ -115,7 +115,7 @@ func registerCreatures() {
 			),
 			WithActivatedAbility(
 				DealDamage(Fixed(1)),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetAnyTarget()),
 			),
 			// When you control no Islands, sacrifice Pirate Ship.
@@ -228,7 +228,7 @@ func registerCreatures() {
 			// {T}: Destroy target tapped creature
 			WithActivatedAbility(
 				DestroyTarget(),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature(IsTapped)),
 			),
 		)
@@ -322,7 +322,7 @@ func registerCreatures() {
 			// {T}: Target creature with power 2 or less can't be blocked this turn.
 			WithActivatedAbility(
 				MakeUnblockableUntilEndOfTurn(),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature(HasPowerLTE(2))),
 			),
 		)
@@ -697,7 +697,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				AddCounters(P1P0, XValue()).Targeting(ToSource()).Max(7),
 				XManaCost(),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithUpkeepOnly(),
 			),
 		)
@@ -762,7 +762,7 @@ func registerCreatures() {
 			// {T}: Prevent the next 1 damage that would be dealt to any target this turn.
 			WithActivatedAbility(
 				PreventDamageToTarget(Fixed(1)),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetAnyTarget()),
 			),
 		)
@@ -774,7 +774,7 @@ func registerCreatures() {
 			// {T}: Untap target land
 			WithActivatedAbility(
 				UntapTarget(),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetLand()),
 			),
 		)
@@ -826,7 +826,7 @@ func registerCreatures() {
 						})
 						return nil
 					}),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature(Not(HasSubType("Wall")))),
 			),
 		)
@@ -962,7 +962,7 @@ func registerCreatures() {
 			WithSubTypes("Dwarf"),
 			WithActivatedAbility(
 				DestroyTarget(),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature(HasSubType("Wall"))),
 			),
 		)
@@ -979,7 +979,7 @@ func registerCreatures() {
 					DealDamage(Fixed(2)),
 					DealDamageToPlayers(Fixed(3), SelectController()),
 				),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetAnyTarget()),
 			),
 		)

@@ -231,7 +231,7 @@ func TestAbilityBonus_AnyColorMana(t *testing.T) {
 
 func TestAbilityBonus_ActivatedAbility(t *testing.T) {
 	p := makePerm("Pinger", "{1}{R}", 1, 1, uuid.New(),
-		mage.WithActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.TapSourceCost(),
+		mage.WithActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.Tap(),
 			mage.WithTarget(mage.TargetAnyTarget())),
 	)
 	// Phase 0D: tap-to-damage scores 4 (up from flat 1)
@@ -683,7 +683,7 @@ func TestManaCurveBonus_NoMana(t *testing.T) {
 
 func TestAbilityQuality_DrawAbility(t *testing.T) {
 	p := makePerm("Sage", "{1}{U}", 1, 1, uuid.New(),
-		mage.WithActivatedAbility(mage.DrawCards(mage.Fixed(1)), mage.TapSourceCost()),
+		mage.WithActivatedAbility(mage.DrawCards(mage.Fixed(1)), mage.Tap()),
 	)
 	// The draw ability should score 5
 	for _, a := range p.RuntimeAbilities {
@@ -701,7 +701,7 @@ func TestAbilityQuality_DrawAbility(t *testing.T) {
 
 func TestAbilityQuality_DamageAbility(t *testing.T) {
 	p := makePerm("Pinger", "{1}{R}", 1, 1, uuid.New(),
-		mage.WithActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.TapSourceCost(),
+		mage.WithActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.Tap(),
 			mage.WithTarget(mage.TargetAnyTarget())),
 	)
 	for _, a := range p.RuntimeAbilities {
@@ -719,11 +719,11 @@ func TestAbilityQuality_DamageAbility(t *testing.T) {
 
 func TestAbilityQuality_PingerHigherThanPump(t *testing.T) {
 	pinger := makePerm("Pinger", "{1}{R}", 1, 1, uuid.New(),
-		mage.WithActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.TapSourceCost(),
+		mage.WithActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.Tap(),
 			mage.WithTarget(mage.TargetAnyTarget())),
 	)
 	pumper := makePerm("Pump", "{2}{G}", 1, 1, uuid.New(),
-		mage.WithActivatedAbility(mage.Boost(mage.Fixed(1), mage.Fixed(1)).Targeting(mage.ToSource()), mage.TapSourceCost()),
+		mage.WithActivatedAbility(mage.Boost(mage.Fixed(1), mage.Fixed(1)).Targeting(mage.ToSource()), mage.Tap()),
 	)
 
 	pingerScore := abilityBonus(pinger)

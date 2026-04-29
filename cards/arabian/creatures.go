@@ -51,7 +51,7 @@ func registerCreatures() {
 			WithSubTypes("Human", "Noble"),
 			WithActivatedAbility(
 				DestroyTarget(),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature(
 					Or(HasSubType("Djinn"), HasSubType("Efreet")),
 				)),
@@ -179,7 +179,7 @@ func registerCreatures() {
 						src.ControlledPermanent = targets[0]
 						return nil
 					}),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreatureWithPowerLESource()),
 			),
 			WithStaticAbility(FuncContinuousEffect(LayerControl, WhileOnBattlefield,
@@ -283,7 +283,7 @@ func registerCreatures() {
 						}
 						return nil
 					}),
-				TapSourceCost(),
+				Tap(),
 			),
 		)
 	})
@@ -339,7 +339,7 @@ func registerCreatures() {
 						}
 						return nil
 					}),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetAnyTarget()),
 			),
 		)
@@ -468,7 +468,7 @@ func registerCreatures() {
 			WithSubTypes("Human", "Wizard", "Sorcerer"),
 			WithActivatedAbility(
 				SetPTUntilEndOfTurn(0, 2, SelectTarget),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetOtherCreature()),
 			),
 		)
@@ -504,7 +504,7 @@ func registerCreatures() {
 						src.ControlledPermanent = targets[0]
 						return nil
 					}),
-				TapSourceCost(),
+				Tap(),
 				WithCost(ManaCostOf("{1}{R}{R}")),
 				WithTarget(TargetArtifact()),
 			),
@@ -530,7 +530,7 @@ func registerCreatures() {
 		return NewCreature("Ali Baba", "{R}", 1, 1,
 			WithSubTypes("Human", "Rogue"),
 			WithActivatedAbility(
-				TapTarget(),
+				Tap(),
 				ManaCostOf("{R}"),
 				WithTarget(TargetCreature(HasSubType("Wall"))),
 			),
@@ -581,7 +581,7 @@ func registerCreatures() {
 			WithSubTypes("Jackal"),
 			WithActivatedAbility(
 				GrantKeyword(CantRegenerate),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -814,7 +814,7 @@ func registerCreatures() {
 			WithSubTypes("Plant"),
 			WithActivatedAbility(
 				SetPowerUntilEndOfTurn(0, SelectTarget),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature(IsAttacking)),
 			),
 		)
@@ -826,7 +826,7 @@ func registerCreatures() {
 			WithSubTypes("Wolf"),
 			WithActivatedAbility(
 				Boost(Fixed(1), Fixed(1)),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature()),
 			),
 		)

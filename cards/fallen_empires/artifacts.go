@@ -22,7 +22,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				DealDamage(Fixed(2)),
 				GenericCost(1),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithCost(SacrificeSourceCost()),
 				WithTarget(TargetAnyTarget()),
 			),
@@ -45,7 +45,7 @@ func registerArtifacts() {
 					),
 				),
 				GenericCost(1),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithCost(SacrificeSourceCost()),
 				WithTarget(TargetAnyTarget()),
 			),
@@ -91,7 +91,7 @@ func registerArtifacts() {
 						return nil
 					}),
 				GenericCost(1),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithCost(SacrificeSourceCost()),
 			),
 		)
@@ -122,7 +122,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				RegenerateTarget(),
 				GenericCost(2),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithCost(DiscardRandomCost(1)),
 				WithTarget(TargetCreature()),
 			),
@@ -137,7 +137,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				Boost(Fixed(2), Fixed(2)),
 				GenericCost(1),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithCost(SacrificeSourceCost()),
 				WithTarget(TargetCreature()),
 			),
@@ -152,7 +152,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				AddAnyMana(2, core.Colorless),
 				GenericCost(1),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithCost(SacrificeSourceCost()),
 			),
 		)
@@ -187,7 +187,7 @@ func registerArtifacts() {
 					},
 				),
 				GenericCost(5),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 			),
 		)
 	}))

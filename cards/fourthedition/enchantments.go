@@ -80,7 +80,7 @@ func registerEnchantments() {
 	Register("Flood", func() Card {
 		return NewEnchantment("Flood", "{U}",
 			WithActivatedAbility(
-				TapTarget(),
+				Tap(),
 				ManaCostOf("{U}{U}"),
 				WithTarget(TargetCreature(NotHasKeywordFilter(Flying))),
 			),

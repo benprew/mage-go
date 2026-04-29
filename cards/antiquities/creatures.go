@@ -59,7 +59,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				ReturnFromGraveyardToHandTarget(),
 				ManaCostOf("{W}{W}"),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetCardInYourGraveyard(IsArtifactCard)),
 			),
 		)
@@ -73,7 +73,7 @@ func registerCreatures() {
 			WithSubTypes("Human", "Artificer"),
 			WithActivatedAbility(
 				PreventDamageToTarget(Fixed(2)),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature(IsArtifact)),
 			),
 		)
@@ -109,7 +109,7 @@ func registerCreatures() {
 			WithSubTypes("Human", "Artificer"),
 			WithActivatedAbility(
 				DrawCards(Fixed(1)),
-				TapSourceCost(),
+				Tap(),
 				WithCost(SacrificeArtifactCost()),
 			),
 		)
@@ -159,7 +159,7 @@ func registerCreatures() {
 						g.ApplyContinuousEffects()
 						return nil
 					}),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetPermanent(IsArtifact)),
 			),
 		)
@@ -187,7 +187,7 @@ func registerCreatures() {
 						}
 						return nil
 					}),
-				TapSourceCost(),
+				Tap(),
 				WithCost(&sacrificeArtifactCaptureCMCCost{}),
 			),
 		)
@@ -218,7 +218,7 @@ func registerCreatures() {
 						g.ApplyContinuousEffects()
 						return nil
 					}),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetPermanent(And(IsArtifact, Not(IsCreature)))),
 			),
 		)
@@ -286,7 +286,7 @@ func registerCreatures() {
 			WithSubTypes("Dwarf", "Artificer"),
 			WithActivatedAbility(
 				AddCounters(P1P1, Fixed(1)),
-				TapSourceCost(),
+				Tap(),
 				WithCost(SacrificeArtifactCost()),
 				WithTarget(TargetCreature()),
 				WithUpkeepOnly(),
@@ -313,7 +313,7 @@ func registerCreatures() {
 						UnwrapEffect(CounterSpell()),
 					),
 				),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetOwnSpellOnStack(IsArtifactCard)),
 			),
 		)
@@ -327,7 +327,7 @@ func registerCreatures() {
 			WithSubTypes("Orc"),
 			WithActivatedAbility(
 				DealDamage(Fixed(2)),
-				TapSourceCost(),
+				Tap(),
 				WithCost(SacrificeArtifactCost()),
 				WithTarget(TargetAnyTarget()),
 			),
@@ -495,7 +495,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				AddCounters(P1P0, XValue()).Targeting(ToSource()).Max(4),
 				XManaCost(),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithUpkeepOnly(),
 			),
 		)
@@ -543,7 +543,7 @@ func registerCreatures() {
 			WithCardType(TypeArtifact),
 			WithActivatedAbility(
 				DealDamage(Fixed(1)),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature(HasKeywordFilter(Flying))),
 			),
 		)

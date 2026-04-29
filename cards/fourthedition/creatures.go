@@ -50,7 +50,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				AddMana(Colorless, 3),
 				ManaCostOf("{U}"),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 			),
 		)
 	})
@@ -194,7 +194,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				GrantKeyword(Mountainwalk).Targeting(ToTarget()),
 				ManaCostOf("{1}{R}{R}"),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetCreature()),
 			),
 		)

@@ -565,7 +565,7 @@ func TestNewWeightedEvaluator_TempoValuesUntappedMana(t *testing.T) {
 
 func TestEvalCreature_PingerVsVanilla(t *testing.T) {
 	pinger := makePerm("Prodigal Sorcerer", "{2}{U}", 1, 1, uuid.New(),
-		mage.WithActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.TapSourceCost(),
+		mage.WithActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.Tap(),
 			mage.WithTarget(mage.TargetAnyTarget())),
 	)
 	vanilla := makePerm("Bear", "{1}{G}", 1, 1, uuid.New())
@@ -583,7 +583,7 @@ func TestEvalCreature_PingerVsVanilla(t *testing.T) {
 
 func TestEvalCreature_DrawCreatureVsVanilla(t *testing.T) {
 	drawer := makePerm("Draw Engine", "{2}{U}", 1, 1, uuid.New(),
-		mage.WithActivatedAbility(mage.DrawCards(mage.Fixed(1)), mage.TapSourceCost()),
+		mage.WithActivatedAbility(mage.DrawCards(mage.Fixed(1)), mage.Tap()),
 	)
 	vanilla := makePerm("Bear", "{1}{G}", 1, 1, uuid.New())
 
@@ -601,7 +601,7 @@ func TestEvalCreature_DrawCreatureVsVanilla(t *testing.T) {
 // ── AbilityQuality (exported) ───────────────────────────────────────────────
 
 func TestAbilityQuality_TapToDealDamage(t *testing.T) {
-	ab := mage.NewActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.TapSourceCost(),
+	ab := mage.NewActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.Tap(),
 		mage.WithTarget(mage.TargetAnyTarget()))
 	got := eval.AbilityQuality(ab)
 	if got != 4 {
@@ -610,7 +610,7 @@ func TestAbilityQuality_TapToDealDamage(t *testing.T) {
 }
 
 func TestAbilityQuality_TapToDraw(t *testing.T) {
-	ab := mage.NewActivatedAbility(mage.DrawCards(mage.Fixed(1)), mage.TapSourceCost())
+	ab := mage.NewActivatedAbility(mage.DrawCards(mage.Fixed(1)), mage.Tap())
 	got := eval.AbilityQuality(ab)
 	if got != 5 {
 		t.Errorf("AbilityQuality(tap to draw) = %d, want 5", got)
@@ -619,7 +619,7 @@ func TestAbilityQuality_TapToDraw(t *testing.T) {
 
 func TestAbilityQuality_ExpensiveDraw(t *testing.T) {
 	ab := mage.NewActivatedAbility(mage.DrawCards(mage.Fixed(1)), mage.ManaCostOf("{3}{U}"),
-		mage.WithCost(mage.TapSourceCost()))
+		mage.WithCost(mage.Tap()))
 	got := eval.AbilityQuality(ab)
 	if got != 3 {
 		t.Errorf("AbilityQuality(expensive draw) = %d, want 3", got)
@@ -654,7 +654,7 @@ func TestAbilityQuality_FreeTapAbility(t *testing.T) {
 	ab := mage.NewActivatedAbility(
 		mage.FuncEffect("tap effect", mage.EffectProperties{},
 			func(g *mage.Game, s, c uuid.UUID, t []uuid.UUID) error { return nil }),
-		mage.TapSourceCost(),
+		mage.Tap(),
 	)
 	got := eval.AbilityQuality(ab)
 	if got != 2 {
@@ -663,7 +663,7 @@ func TestAbilityQuality_FreeTapAbility(t *testing.T) {
 }
 
 func TestAbilityQuality_PingerBeatsPump(t *testing.T) {
-	pinger := mage.NewActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.TapSourceCost(),
+	pinger := mage.NewActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.Tap(),
 		mage.WithTarget(mage.TargetAnyTarget()))
 	pump := mage.NewActivatedAbility(
 		mage.FuncEffect("pump", mage.EffectProperties{Outcome: mage.OutcomeBenefit},
