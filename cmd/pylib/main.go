@@ -1617,6 +1617,116 @@ func MageEncodeTokens(
 	return newEncodeResult(rowsWritten, mageEncodeErrOK, "")
 }
 
+//export MageEncodeTokensPacked
+func MageEncodeTokensPacked(
+	req *C.MageBatchRequest,
+	cfg *C.MageEncodeConfig,
+	out *C.MageEncodeOutputs,
+	tokCfg *C.MageTokenAssemblerConfig,
+	packedOut *C.MagePackedTokenAssemblerOutputs,
+) (res C.MageEncodeResult) {
+	defer func() {
+		if r := recover(); r != nil {
+			res = newEncodeResult(0, mageEncodeErrEncodeFailure, fmt.Sprintf("panic: %v", r))
+		}
+	}()
+	if req == nil || cfg == nil || out == nil || tokCfg == nil || packedOut == nil {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "req, cfg, out, tok_cfg, packed_out must be non-nil")
+	}
+	if getTokenTables() == nil {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "MageRegisterTokenTables must be called before MageEncodeTokensPacked")
+	}
+	n := int64(req.n)
+	if n < 0 {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "req.n must be non-negative")
+	}
+	cfgGo := parseEncodeConfigC(cfg)
+	if !cfgGo.emitRenderPlan {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "MageEncodeTokensPacked requires cfg.emit_render_plan=1")
+	}
+	cfgGo.emitTokensPacked = true
+	cfgGo.tokenMaxTokens = int32(tokCfg.max_tokens)
+	cfgGo.tokenMaxOptions = int32(tokCfg.max_options)
+	cfgGo.tokenMaxTargets = int32(tokCfg.max_targets)
+	cfgGo.tokenMaxCardRefs = int32(tokCfg.max_card_refs)
+	if cfgGo.tokenMaxTokens <= 0 || cfgGo.tokenMaxOptions <= 0 ||
+		cfgGo.tokenMaxTargets < 0 || cfgGo.tokenMaxCardRefs <= 0 {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "token assembler config has non-positive dimension")
+	}
+	if err := validateEncodeConfig(cfgGo); err != nil {
+		return newEncodeResult(0, err.code, err.message)
+	}
+	if n == 0 {
+		return newEncodeResult(0, mageEncodeErrOK, "")
+	}
+	if req.handles == nil {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "req.handles must be non-nil when n > 0")
+	}
+	reqGo := batchRequest{
+		handles: unsafe.Slice((*int64)(unsafe.Pointer(req.handles)), n),
+	}
+	if req.perspective_player_idx != nil {
+		reqGo.perspectives = unsafe.Slice((*int64)(unsafe.Pointer(req.perspective_player_idx)), n)
+	}
+	views, viewErr := makeOutputViewsC(n, cfgGo, out)
+	if viewErr != nil {
+		return newEncodeResult(0, viewErr.code, viewErr.message)
+	}
+	if err := attachPackedTokenViews(n, cfgGo, packedOut, &views); err != nil {
+		return newEncodeResult(0, err.code, err.message)
+	}
+	rowsWritten, err := encodeBatchGo(reqGo, cfgGo, views)
+	if err != nil {
+		return newEncodeResult(rowsWritten, err.code, err.message)
+	}
+	return newEncodeResult(rowsWritten, mageEncodeErrOK, "")
+}
+
+// attachPackedTokenViews wires the C-side packed token-assembler
+// buffers into the outputViews slices. Token-shaped arrays are sized
+// at the worst case ``B * max_tokens`` so a single pre-allocated
+// buffer can be reused across calls of varying live-token totals.
+func attachPackedTokenViews(
+	n int64,
+	cfg encodeConfig,
+	packedOut *C.MagePackedTokenAssemblerOutputs,
+	views *outputViews,
+) *encodeError {
+	totalCap := n * int64(cfg.tokenMaxTokens)
+	totalOptions := n * int64(cfg.tokenMaxOptions)
+	totalTargets := n * int64(cfg.tokenMaxOptions) * int64(cfg.tokenMaxTargets)
+	totalCardRefs := n * int64(cfg.tokenMaxCardRefs)
+
+	if packedOut.token_ids == nil ||
+		packedOut.seq_id == nil ||
+		packedOut.pos_in_seq == nil ||
+		packedOut.cu_seqlens == nil ||
+		packedOut.seq_lengths == nil ||
+		packedOut.state_positions == nil ||
+		packedOut.option_positions == nil ||
+		packedOut.option_mask == nil ||
+		packedOut.target_positions == nil ||
+		packedOut.target_mask == nil ||
+		packedOut.card_ref_positions == nil ||
+		packedOut.token_overflow == nil {
+		return &encodeError{code: mageEncodeErrInvalidArgument, message: "packed token outputs must be non-nil"}
+	}
+
+	views.packedTokenIDs = unsafe.Slice((*int64)(unsafe.Pointer(packedOut.token_ids)), totalCap)
+	views.packedSeqID = unsafe.Slice((*int64)(unsafe.Pointer(packedOut.seq_id)), totalCap)
+	views.packedPosInSeq = unsafe.Slice((*int64)(unsafe.Pointer(packedOut.pos_in_seq)), totalCap)
+	views.packedCuSeqlens = unsafe.Slice((*int64)(unsafe.Pointer(packedOut.cu_seqlens)), n+1)
+	views.packedSeqLengths = unsafe.Slice((*int64)(unsafe.Pointer(packedOut.seq_lengths)), n)
+	views.packedStatePositions = unsafe.Slice((*int64)(unsafe.Pointer(packedOut.state_positions)), n)
+	views.packedOptionPos = unsafe.Slice((*int64)(unsafe.Pointer(packedOut.option_positions)), totalOptions)
+	views.packedOptionMask = unsafe.Slice((*byte)(unsafe.Pointer(packedOut.option_mask)), totalOptions)
+	views.packedTargetPos = unsafe.Slice((*int64)(unsafe.Pointer(packedOut.target_positions)), totalTargets)
+	views.packedTargetMask = unsafe.Slice((*byte)(unsafe.Pointer(packedOut.target_mask)), totalTargets)
+	views.packedCardRefPos = unsafe.Slice((*int64)(unsafe.Pointer(packedOut.card_ref_positions)), totalCardRefs)
+	views.packedTokenOverflow = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.token_overflow)), n)
+	return nil
+}
+
 // attachTokenViews wires the C-side token-assembler buffers into the
 // outputViews slices. Each pointer field becomes a borrowed Go slice.
 func attachTokenViews(

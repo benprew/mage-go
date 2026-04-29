@@ -79,7 +79,7 @@ type zoneEntry struct {
 // sentinels mark absent positions; mask slices carry 0/1 indicators.
 type tokenAssemblerOut struct {
 	tokenIDs      []int64
-	attentionMask []int64
+	attentionMask []int64 // optional: may be nil in packed mode
 	optionPos     []int64
 	optionMask    []uint8
 	targetPos     []int64 // length max_options*max_targets
@@ -88,6 +88,17 @@ type tokenAssemblerOut struct {
 	maxOptions    int32
 	maxTargets    int32
 	maxCardRefs   int32
+	// cursorBase shifts every recorded anchor position by a constant
+	// offset before it is written. Dense (per-row) mode passes 0 so the
+	// existing byte-for-byte behavior is preserved; packed mode passes
+	// the row's start offset into the shared packed buffer so anchors
+	// land as absolute offsets.
+	cursorBase int32
+	// padTail, when true, fills the unused tail of ``tokenIDs`` with
+	// ``tables.padID`` and zeroes the unused tail of ``attentionMask``.
+	// Packed mode disables this because the next row will write into
+	// the same backing buffer and the trailing region is unused.
+	padTail bool
 }
 
 // assembleTokensFromPlan walks “plan“ (an int32 render-plan stream) and
@@ -212,7 +223,7 @@ func assembleTokensFromPlan(
 		}
 		if !cardRefSeen[uuidIdx] {
 			cardRefSeen[uuidIdx] = true
-			out.cardRefPos[uuidIdx] = int64(pos)
+			out.cardRefPos[uuidIdx] = int64(pos + out.cursorBase)
 		}
 		return true
 	}
@@ -260,7 +271,7 @@ func assembleTokensFromPlan(
 				switch {
 				case tid == tables.optionID:
 					if nextOption < out.maxOptions {
-						out.optionPos[nextOption] = int64(pos)
+						out.optionPos[nextOption] = int64(pos + out.cursorBase)
 						out.optionMask[nextOption] = 1
 						curOptionIdx = nextOption
 						curTargetCount = 0
@@ -269,7 +280,7 @@ func assembleTokensFromPlan(
 				case tid == tables.targetOpenID && curOptionIdx >= 0:
 					if curTargetCount < out.maxTargets {
 						idx := curOptionIdx*out.maxTargets + curTargetCount
-						out.targetPos[idx] = int64(pos)
+						out.targetPos[idx] = int64(pos + out.cursorBase)
 						out.targetMask[idx] = 1
 						curTargetCount++
 					}
@@ -278,7 +289,7 @@ func assembleTokensFromPlan(
 					for k := int32(0); k < tables.cardRefCount; k++ {
 						if tables.cardRefIDs[k] == tid && !cardRefSeen[k] {
 							cardRefSeen[k] = true
-							out.cardRefPos[k] = int64(pos)
+							out.cardRefPos[k] = int64(pos + out.cursorBase)
 							break
 						}
 					}
@@ -394,7 +405,7 @@ func assembleTokensFromPlan(
 
 				pos := writeSingle(tables.optionID)
 				if pos >= 0 && nextOption < out.maxOptions {
-					out.optionPos[nextOption] = int64(pos)
+					out.optionPos[nextOption] = int64(pos + out.cursorBase)
 					out.optionMask[nextOption] = 1
 					curOptionIdx = nextOption
 					curTargetCount = 0
@@ -440,7 +451,7 @@ func assembleTokensFromPlan(
 				pos := writeSingle(tables.targetOpenID)
 				if pos >= 0 && curOptionIdx >= 0 && curTargetCount < out.maxTargets {
 					idx := curOptionIdx*out.maxTargets + curTargetCount
-					out.targetPos[idx] = int64(pos)
+					out.targetPos[idx] = int64(pos + out.cursorBase)
 					out.targetMask[idx] = 1
 					curTargetCount++
 				}
@@ -596,8 +607,12 @@ func assembleTokensFromPlan(
 	// (the option exists) but option_position is unreachable. Same for
 	// targets and card-refs.
 	if overflow {
+		// Compare against the absolute end-of-row offset so the same
+		// truncation pass works for dense (cursorBase=0) and packed
+		// (cursorBase=row_start) callers.
+		endAbs := int64(cursor + out.cursorBase)
 		for o := int32(0); o < out.maxOptions; o++ {
-			if out.optionPos[o] >= int64(cursor) {
+			if out.optionPos[o] >= endAbs {
 				out.optionPos[o] = -1
 				// Note: Python keeps option_mask=False for truncated slots
 				// because the assembler clears it when option_pos == -1.
@@ -606,31 +621,35 @@ func assembleTokensFromPlan(
 			}
 			for t := int32(0); t < out.maxTargets; t++ {
 				idx := o*out.maxTargets + t
-				if out.targetPos[idx] >= int64(cursor) {
+				if out.targetPos[idx] >= endAbs {
 					out.targetPos[idx] = -1
 					out.targetMask[idx] = 0
 				}
 			}
 		}
 		for k := int32(0); k < out.maxCardRefs; k++ {
-			if out.cardRefPos[k] >= int64(cursor) {
+			if out.cardRefPos[k] >= endAbs {
 				out.cardRefPos[k] = -1
 			}
 		}
 	}
 
-	// Fill attention mask up to cursor.
-	for k := int32(0); k < cursor; k++ {
-		out.attentionMask[k] = 1
-	}
-	for k := cursor; k < maxTokens; k++ {
-		out.attentionMask[k] = 0
+	if out.attentionMask != nil {
+		for k := int32(0); k < cursor; k++ {
+			out.attentionMask[k] = 1
+		}
+		if out.padTail {
+			for k := cursor; k < maxTokens; k++ {
+				out.attentionMask[k] = 0
+			}
+		}
 	}
 
-	// Pad the rest of token_ids with the pad id.
-	pad := int64(tables.padID)
-	for k := cursor; k < maxTokens; k++ {
-		out.tokenIDs[k] = pad
+	if out.padTail {
+		pad := int64(tables.padID)
+		for k := cursor; k < maxTokens; k++ {
+			out.tokenIDs[k] = pad
+		}
 	}
 
 	return cursor, overflow, nil

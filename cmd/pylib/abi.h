@@ -229,4 +229,30 @@ typedef struct {
     int32_t* token_overflow;     /* (B,) int32 (1 = truncated) */
 } MageTokenAssemblerOutputs;
 
+/*
+ * Packed (varlen) token-assembler outputs. Caller allocates the token-
+ * shaped arrays at capacity ``B * max_tokens`` (the worst case where
+ * every row fills its budget). Anchor arrays carry absolute offsets
+ * into ``token_ids`` (i.e. they are already shifted by cu_seqlens[b]).
+ *
+ * After a successful call, ``cu_seqlens[B]`` is the total live token
+ * count; ``token_ids[0 : cu_seqlens[B]]``, ``seq_id[0 : cu_seqlens[B]]``
+ * and ``pos_in_seq[0 : cu_seqlens[B]]`` are the live region. The trailing
+ * portion of the buffer is unspecified.
+ */
+typedef struct {
+    int64_t* token_ids;          /* [B*max_tokens] int64, live region */
+    int64_t* seq_id;             /* [B*max_tokens] int64, doc index per token */
+    int64_t* pos_in_seq;         /* [B*max_tokens] int64, in-doc RoPE position */
+    int64_t* cu_seqlens;         /* [B+1] int64, exclusive prefix sum */
+    int64_t* seq_lengths;        /* [B] int64 */
+    int64_t* state_positions;    /* [B] int64, packed-offset of row's first token */
+    int64_t* option_positions;   /* [B, max_options] int64, absolute, -1 absent */
+    uint8_t* option_mask;        /* [B, max_options] uint8 */
+    int64_t* target_positions;   /* [B, max_options, max_targets] int64, absolute */
+    uint8_t* target_mask;        /* [B, max_options, max_targets] uint8 */
+    int64_t* card_ref_positions; /* [B, max_card_refs] int64, absolute, -1 absent */
+    int32_t* token_overflow;     /* [B] int32 (1 = row truncated) */
+} MagePackedTokenAssemblerOutputs;
+
 #endif

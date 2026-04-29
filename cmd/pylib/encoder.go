@@ -89,6 +89,10 @@ type encodeConfig struct {
 	tokenMaxOptions  int32
 	tokenMaxTargets  int32
 	tokenMaxCardRefs int32
+	// emitTokensPacked is the varlen sibling of ``emitTokens``. Only one
+	// of the two flags may be set per encode call. When set, the packed
+	// output buffers in ``outputViews`` are filled instead.
+	emitTokensPacked bool
 }
 
 type outputViews struct {
@@ -132,6 +136,23 @@ type outputViews struct {
 	tokenTargetMask []byte
 	tokenCardRefPos []int64
 	tokenOverflow   []int32
+
+	// Packed (varlen) token-assembler outputs. Mutually exclusive with
+	// the dense ``token*`` views above: only one of the two paths is
+	// active per encode call. ``packedTokenIDs`` etc. are sized
+	// [B*max_tokens]; ``packedSeqId`` and ``packedPosInSeq`` likewise.
+	packedTokenIDs        []int64
+	packedSeqID           []int64
+	packedPosInSeq        []int64
+	packedCuSeqlens       []int64 // [B+1]
+	packedSeqLengths      []int64 // [B]
+	packedStatePositions  []int64 // [B]
+	packedOptionPos       []int64
+	packedOptionMask      []byte
+	packedTargetPos       []int64
+	packedTargetMask      []byte
+	packedCardRefPos      []int64
+	packedTokenOverflow   []int32
 }
 
 type batchRequest struct {
@@ -172,6 +193,12 @@ func validateEncodeConfig(cfg encodeConfig) *encodeError {
 func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64, *encodeError) {
 	clearOutputViews(views)
 	decisionCursor := int64(0)
+	// Running write cursor into the packed token buffer. Only advanced
+	// when emitTokensPacked is set; ignored otherwise.
+	packedCursor := int32(0)
+	if cfg.emitTokensPacked && len(views.packedCuSeqlens) > 0 {
+		views.packedCuSeqlens[0] = 0
+	}
 	for batchIdx, handleID := range req.handles {
 		h := getHandle(handleID)
 		if h == nil {
@@ -220,6 +247,14 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 				h.mu.Unlock()
 				return decisionCursor, err
 			}
+		}
+		if cfg.emitTokensPacked {
+			advanced, err := fillTokenAssemblyPacked(int64(batchIdx), packedCursor, cfg, views)
+			if err != nil {
+				h.mu.Unlock()
+				return decisionCursor, err
+			}
+			packedCursor = advanced
 		}
 		written, err := fillDecisionEncoding(int64(batchIdx), pending, cfg, views, decisionCursor)
 		h.mu.Unlock()
@@ -270,6 +305,18 @@ func clearOutputViews(view outputViews) {
 	fillBytes(view.tokenTargetMask, 0)
 	fillInt64(view.tokenCardRefPos, -1)
 	fillInt32(view.tokenOverflow, 0)
+	// Packed buffers: clear sentinel/anchor regions. The token / seq_id
+	// / pos_in_seq buffers are written contiguously up to cu_seqlens[B];
+	// their tail is unspecified, so no need to zero them.
+	fillInt64(view.packedCuSeqlens, 0)
+	fillInt64(view.packedSeqLengths, 0)
+	fillInt64(view.packedStatePositions, 0)
+	fillInt64(view.packedOptionPos, -1)
+	fillBytes(view.packedOptionMask, 0)
+	fillInt64(view.packedTargetPos, -1)
+	fillBytes(view.packedTargetMask, 0)
+	fillInt64(view.packedCardRefPos, -1)
+	fillInt32(view.packedTokenOverflow, 0)
 }
 
 // fillTokenAssembly walks the render-plan stream emitted for “batchIdx“
@@ -303,6 +350,8 @@ func fillTokenAssembly(batchIdx int64, cfg encodeConfig, view outputViews) *enco
 		maxOptions:    cfg.tokenMaxOptions,
 		maxTargets:    cfg.tokenMaxTargets,
 		maxCardRefs:   cfg.tokenMaxCardRefs,
+		cursorBase:    0,
+		padTail:       true,
 	}
 
 	cursor, overflow, err := assembleTokensFromPlan(plan, tables, out, cfg.tokenMaxTokens)
@@ -314,6 +363,83 @@ func fillTokenAssembly(batchIdx int64, cfg encodeConfig, view outputViews) *enco
 		view.tokenOverflow[batchIdx] = 1
 	}
 	return nil
+}
+
+// fillTokenAssemblyPacked writes one row's worth of tokens into the
+// shared packed output buffer starting at ``packedCursor``. Returns the
+// new cursor (one past the last live token) so the caller can chain
+// rows without an outer-loop allocation. Anchors are written as
+// absolute offsets into the packed buffer.
+func fillTokenAssemblyPacked(
+	batchIdx int64,
+	packedCursor int32,
+	cfg encodeConfig,
+	view outputViews,
+) (int32, *encodeError) {
+	tables := getTokenTables()
+	if tables == nil {
+		return packedCursor, &encodeError{
+			code:    mageEncodeErrEncodeFailure,
+			message: "MageRegisterTokenTables must be called before MageEncodeTokensPacked",
+		}
+	}
+	planStart := batchIdx * cfg.renderPlanCapacity
+	planLen := view.renderPlanLengths[batchIdx]
+	plan := view.renderPlan[planStart : planStart+planLen]
+
+	mt := int64(cfg.tokenMaxTokens)
+	mo := int64(cfg.tokenMaxOptions)
+	mtg := int64(cfg.tokenMaxTargets)
+	mcr := int64(cfg.tokenMaxCardRefs)
+
+	// Carve a row-sized scratch slice straight out of the packed buffer
+	// at the running cursor. The assembler writes tokens into this view
+	// using its own 0-based local cursor; with cursorBase=packedCursor
+	// the anchor positions land as absolute offsets.
+	rowStart := int64(packedCursor)
+	rowEnd := rowStart + mt
+	if rowEnd > int64(len(view.packedTokenIDs)) {
+		return packedCursor, &encodeError{
+			code:    mageEncodeErrInvalidArgument,
+			message: "packed token buffer too small (need >= B*max_tokens)",
+		}
+	}
+
+	out := &tokenAssemblerOut{
+		tokenIDs:      view.packedTokenIDs[rowStart:rowEnd],
+		attentionMask: nil, // packed mode does not use attention_mask
+		optionPos:     view.packedOptionPos[batchIdx*mo : (batchIdx+1)*mo],
+		optionMask:    view.packedOptionMask[batchIdx*mo : (batchIdx+1)*mo],
+		targetPos:     view.packedTargetPos[batchIdx*mo*mtg : (batchIdx+1)*mo*mtg],
+		targetMask:    view.packedTargetMask[batchIdx*mo*mtg : (batchIdx+1)*mo*mtg],
+		cardRefPos:    view.packedCardRefPos[batchIdx*mcr : (batchIdx+1)*mcr],
+		maxOptions:    cfg.tokenMaxOptions,
+		maxTargets:    cfg.tokenMaxTargets,
+		maxCardRefs:   cfg.tokenMaxCardRefs,
+		cursorBase:    packedCursor,
+		padTail:       false,
+	}
+
+	cursor, overflow, err := assembleTokensFromPlan(plan, tables, out, cfg.tokenMaxTokens)
+	if err != nil {
+		return packedCursor, &encodeError{
+			code:    mageEncodeErrEncodeFailure,
+			message: err.Error(),
+		}
+	}
+
+	// Per-token metadata for the live region of this row.
+	for k := int32(0); k < cursor; k++ {
+		view.packedSeqID[packedCursor+k] = batchIdx
+		view.packedPosInSeq[packedCursor+k] = int64(k)
+	}
+	view.packedSeqLengths[batchIdx] = int64(cursor)
+	view.packedStatePositions[batchIdx] = int64(packedCursor)
+	view.packedCuSeqlens[batchIdx+1] = int64(packedCursor + cursor)
+	if overflow {
+		view.packedTokenOverflow[batchIdx] = 1
+	}
+	return packedCursor + cursor, nil
 }
 
 func resolvePerspectivePlayerIndex(state *apiGameState, pending *apiPending, requested int64) (int, *encodeError) {
