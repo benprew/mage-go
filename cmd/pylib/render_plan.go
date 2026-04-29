@@ -29,6 +29,10 @@ const (
 	opCloseActions
 	opOption
 	opTarget
+	opLiteralTokens
+	opEndCard
+	opOpenRawCard
+	opCloseRawCard
 )
 
 const (

@@ -76,6 +76,13 @@ type encodeConfig struct {
 	decisionCapacity    int64
 	emitRenderPlan      bool
 	renderPlanCapacity  int64
+	// emitTokens turns on the native token-assembler pass after the
+	// render-plan emission. Output buffers live in tokenAssemblerViews.
+	emitTokens             bool
+	tokenMaxTokens         int32
+	tokenMaxOptions        int32
+	tokenMaxTargets        int32
+	tokenMaxCardRefs       int32
 }
 
 type outputViews struct {
@@ -108,6 +115,17 @@ type outputViews struct {
 	renderPlan         []int32
 	renderPlanLengths  []int64
 	renderPlanOverflow []int64
+
+	// Token-assembler outputs. nil when emit_tokens=false.
+	tokenIDs          []int64
+	tokenAttention    []int64
+	tokenSeqLengths   []int64
+	tokenOptionPos    []int64
+	tokenOptionMask   []byte
+	tokenTargetPos    []int64
+	tokenTargetMask   []byte
+	tokenCardRefPos   []int64
+	tokenOverflow     []int32
 }
 
 type batchRequest struct {
@@ -191,6 +209,12 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 				return decisionCursor, err
 			}
 		}
+		if cfg.emitTokens {
+			if err := fillTokenAssembly(int64(batchIdx), cfg, views); err != nil {
+				h.mu.Unlock()
+				return decisionCursor, err
+			}
+		}
 		written, err := fillDecisionEncoding(int64(batchIdx), pending, cfg, views, decisionCursor)
 		h.mu.Unlock()
 		if err != nil {
@@ -231,6 +255,59 @@ func clearOutputViews(view outputViews) {
 	fillInt32(view.renderPlan, 0)
 	fillInt64(view.renderPlanLengths, 0)
 	fillInt64(view.renderPlanOverflow, 0)
+	fillInt64(view.tokenIDs, 0)
+	fillInt64(view.tokenAttention, 0)
+	fillInt64(view.tokenSeqLengths, 0)
+	fillInt64(view.tokenOptionPos, -1)
+	fillBytes(view.tokenOptionMask, 0)
+	fillInt64(view.tokenTargetPos, -1)
+	fillBytes(view.tokenTargetMask, 0)
+	fillInt64(view.tokenCardRefPos, -1)
+	fillInt32(view.tokenOverflow, 0)
+}
+
+// fillTokenAssembly walks the render-plan stream emitted for ``batchIdx``
+// and fills the token-assembler outputs for that row. Requires that the
+// render plan was already emitted (cfg.emitRenderPlan must be true).
+func fillTokenAssembly(batchIdx int64, cfg encodeConfig, view outputViews) *encodeError {
+	tables := getTokenTables()
+	if tables == nil {
+		return &encodeError{
+			code:    mageEncodeErrEncodeFailure,
+			message: "MageRegisterTokenTables must be called before MageEncodeTokens",
+		}
+	}
+	planStart := batchIdx * cfg.renderPlanCapacity
+	planLen := view.renderPlanLengths[batchIdx]
+	plan := view.renderPlan[planStart : planStart+planLen]
+
+	mt := int64(cfg.tokenMaxTokens)
+	mo := int64(cfg.tokenMaxOptions)
+	mtg := int64(cfg.tokenMaxTargets)
+	mcr := int64(cfg.tokenMaxCardRefs)
+
+	out := &tokenAssemblerOut{
+		tokenIDs:      view.tokenIDs[batchIdx*mt : (batchIdx+1)*mt],
+		attentionMask: view.tokenAttention[batchIdx*mt : (batchIdx+1)*mt],
+		optionPos:     view.tokenOptionPos[batchIdx*mo : (batchIdx+1)*mo],
+		optionMask:    view.tokenOptionMask[batchIdx*mo : (batchIdx+1)*mo],
+		targetPos:     view.tokenTargetPos[batchIdx*mo*mtg : (batchIdx+1)*mo*mtg],
+		targetMask:    view.tokenTargetMask[batchIdx*mo*mtg : (batchIdx+1)*mo*mtg],
+		cardRefPos:    view.tokenCardRefPos[batchIdx*mcr : (batchIdx+1)*mcr],
+		maxOptions:    cfg.tokenMaxOptions,
+		maxTargets:    cfg.tokenMaxTargets,
+		maxCardRefs:   cfg.tokenMaxCardRefs,
+	}
+
+	cursor, overflow, err := assembleTokensFromPlan(plan, tables, out, cfg.tokenMaxTokens)
+	if err != nil {
+		return &encodeError{code: mageEncodeErrEncodeFailure, message: err.Error()}
+	}
+	view.tokenSeqLengths[batchIdx] = int64(cursor)
+	if overflow {
+		view.tokenOverflow[batchIdx] = 1
+	}
+	return nil
 }
 
 func resolvePerspectivePlayerIndex(state *apiGameState, pending *apiPending, requested int64) (int, *encodeError) {

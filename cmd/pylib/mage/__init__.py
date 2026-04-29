@@ -184,6 +184,33 @@ typedef struct {
 int32_t MageRegisterTokenTables(MageTokenTables *tables);
 char *MageTokenTableSummary(void);
 char *MageTokenTableLookup(int32_t kind, int32_t k0, int32_t k1);
+
+typedef struct {
+    int32_t max_tokens;
+    int32_t max_options;
+    int32_t max_targets;
+    int32_t max_card_refs;
+} MageTokenAssemblerConfig;
+
+typedef struct {
+    int64_t *token_ids;
+    int64_t *attention_mask;
+    int64_t *seq_lengths;
+    int64_t *option_positions;
+    uint8_t *option_mask;
+    int64_t *target_positions;
+    uint8_t *target_mask;
+    int64_t *card_ref_positions;
+    int32_t *token_overflow;
+} MageTokenAssemblerOutputs;
+
+MageEncodeResult MageEncodeTokens(
+    MageBatchRequest *req,
+    MageEncodeConfig *cfg,
+    MageEncodeOutputs *out,
+    MageTokenAssemblerConfig *tok_cfg,
+    MageTokenAssemblerOutputs *tok_out
+);
 """
 
 

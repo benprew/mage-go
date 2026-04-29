@@ -171,4 +171,32 @@ typedef struct {
     const int64_t* card_name_offsets;
 } MageTokenTables;
 
+/*
+ * Token-assembler outputs. Filled per-batch-row by the native walker
+ * after the render-plan has been emitted. Buffers are (B, max_tokens)
+ * for sequence-shaped fields and (B, max_options[, max_targets]) for
+ * anchor fields. -1 sentinels mark absent positions; mask buffers carry
+ * 1/0 indicators (matching the Python assembler's bool tensors after a
+ * widening cast). Allocations are owned by the caller; pass nil if a
+ * particular output is unwanted.
+ */
+typedef struct {
+    int32_t max_tokens;
+    int32_t max_options;
+    int32_t max_targets;
+    int32_t max_card_refs;
+} MageTokenAssemblerConfig;
+
+typedef struct {
+    int64_t* token_ids;          /* (B, max_tokens) int64, pad-filled */
+    int64_t* attention_mask;     /* (B, max_tokens) int64 */
+    int64_t* seq_lengths;        /* (B,) int64 */
+    int64_t* option_positions;   /* (B, max_options) int64 (-1 = absent) */
+    uint8_t* option_mask;        /* (B, max_options) uint8 (0/1) */
+    int64_t* target_positions;   /* (B, max_options, max_targets) int64 */
+    uint8_t* target_mask;        /* (B, max_options, max_targets) uint8 */
+    int64_t* card_ref_positions; /* (B, max_card_refs) int64 (-1 = absent) */
+    int32_t* token_overflow;     /* (B,) int32 (1 = truncated) */
+} MageTokenAssemblerOutputs;
+
 #endif
