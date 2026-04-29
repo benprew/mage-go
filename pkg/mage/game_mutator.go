@@ -647,7 +647,6 @@ func (g *Game) ExecuteBlockers(assignments []BlockAssignment) {
 		return
 	}
 	blockerCount := make(map[uuid.UUID]int)
-	var blockerOrder []uuid.UUID
 	for _, ba := range assignments {
 		blocker := g.FindPermanent(ba.BlockerID)
 		attacker := g.FindPermanent(ba.AttackerID)
@@ -666,9 +665,7 @@ func (g *Game) ExecuteBlockers(assignments []BlockAssignment) {
 		if blockerCount[ba.BlockerID] >= maxBlocks {
 			continue
 		}
-		if blockerCount[ba.BlockerID] == 0 {
-			blockerOrder = append(blockerOrder, ba.BlockerID)
-		}
+		firstForBlocker := blockerCount[ba.BlockerID] == 0
 		blockerCount[ba.BlockerID]++
 		g.combat.AddBlocker(ba.BlockerID, ba.AttackerID)
 		g.blockedThisTurn[ba.BlockerID] = append(g.blockedThisTurn[ba.BlockerID], ba.AttackerID)
@@ -676,12 +673,7 @@ func (g *Game) ExecuteBlockers(assignments []BlockAssignment) {
 			Type:     EvtDeclaredBlocker,
 			SourceID: ba.BlockerID,
 			TargetID: ba.AttackerID,
-		})
-	}
-	for _, blockerID := range blockerOrder {
-		g.FireEvent(GameEvent{
-			Type:     EvtCreatureBlocks,
-			SourceID: blockerID,
+			Flag:     firstForBlocker,
 		})
 	}
 	g.combat.SnapshotBlockedAlone()

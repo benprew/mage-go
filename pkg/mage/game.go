@@ -627,12 +627,6 @@ func (g *Game) PutOnBattlefieldAttacking(card Card, controller, defenderID uuid.
 		return perm
 	}
 	g.combat.AddAttacker(perm.ID(), defenderID)
-	g.FireEvent(GameEvent{
-		Type:     EvtEntersAttacking,
-		SourceID: perm.ID(),
-		TargetID: defenderID,
-		PlayerID: controller,
-	})
 	return perm
 }
 
@@ -651,12 +645,6 @@ func (g *Game) PutOnBattlefieldBlocking(card Card, controller, attackerID uuid.U
 	}
 	g.combat.AddBlocker(perm.ID(), attackerID)
 	g.blockedThisTurn[perm.ID()] = append(g.blockedThisTurn[perm.ID()], attackerID)
-	g.FireEvent(GameEvent{
-		Type:     EvtEntersBlocking,
-		SourceID: perm.ID(),
-		TargetID: attackerID,
-		PlayerID: controller,
-	})
 	return perm
 }
 
@@ -1795,11 +1783,6 @@ func (g *Game) PutTriggersOnStack() {
 							obj.Targets = append(obj.Targets, pt.event.TargetID)
 						}
 					}
-				case EvtCreatureBlocks:
-					// Pass the blocker's ID (fired once per combat per blocker)
-					if pt.event.SourceID != uuid.Nil {
-						obj.Targets = []uuid.UUID{pt.event.SourceID}
-					}
 				case EvtLifeGained, EvtLifeLost:
 					// Preserve the life delta for "gain/lose that much" triggers.
 					// We deliberately do NOT auto-bind PlayerID as a target; the
@@ -2880,7 +2863,6 @@ func (g *Game) doDeclareBlockers() {
 	}
 
 	blockerCount := make(map[uuid.UUID]int) // how many attackers each blocker is assigned to
-	var blockerOrder []uuid.UUID            // insertion order for EvtCreatureBlocks (CR 509.3a)
 	for _, ba := range assignments {
 		blocker := g.FindPermanent(ba.BlockerID)
 		attackerID := ba.AttackerID
@@ -2912,27 +2894,19 @@ func (g *Game) doDeclareBlockers() {
 		if blockerCount[ba.BlockerID] >= maxBlocks {
 			continue
 		}
-		if blockerCount[ba.BlockerID] == 0 {
-			blockerOrder = append(blockerOrder, ba.BlockerID)
-		}
+		firstForBlocker := blockerCount[ba.BlockerID] == 0
 		blockerCount[ba.BlockerID]++
 		g.combat.AddBlocker(ba.BlockerID, attackerID)
 		g.blockedThisTurn[ba.BlockerID] = append(g.blockedThisTurn[ba.BlockerID], attackerID)
+		// CR 509.3a — Flag=true marks the once-per-combat "Whenever ~ blocks"
+		// firing for this blocker; subsequent attackers fire with Flag=false
+		// for "blocks a creature" per-pair triggers only.
 		g.FireEvent(GameEvent{
 			Type:     EvtDeclaredBlocker,
 			SourceID: ba.BlockerID,
 			TargetID: attackerID,
 			PlayerID: nonActive.PlayerID(),
-		})
-	}
-
-	// CR 509.3a — "Whenever [creature] blocks" fires exactly once per combat
-	// per blocking creature, regardless of how many attackers it blocks.
-	for _, blockerID := range blockerOrder {
-		g.FireEvent(GameEvent{
-			Type:     EvtCreatureBlocks,
-			SourceID: blockerID,
-			PlayerID: nonActive.PlayerID(),
+			Flag:     firstForBlocker,
 		})
 	}
 
@@ -3033,11 +3007,7 @@ func (g *Game) enforceMustBeBlockedIfAble(defenderID uuid.UUID) {
 				SourceID: b.ID(),
 				TargetID: atk.ID(),
 				PlayerID: defenderID,
-			})
-			g.FireEvent(GameEvent{
-				Type:     EvtCreatureBlocks,
-				SourceID: b.ID(),
-				PlayerID: defenderID,
+				Flag:     true,
 			})
 		}
 	}

@@ -653,7 +653,7 @@ that read targets[0] from the firing event continue to work unchanged.
 Convenience constructors (set condition automatically):
 
 	[AttacksTrigger](effect, optional)                          // EvtDeclaredAttacker, source is self
-	[BlocksTrigger](effect, optional)                           // EvtCreatureBlocks, source is self (CR 509.3a; fires once per combat per blocker)
+	[BlocksTrigger](effect, optional)                           // EvtDeclaredBlocker + Flag=true (source is self; CR 509.3a; fires once per combat per blocker)
 	[EntersBattlefieldTrigger](effect, optional)                // EvtZoneChange (To=Battlefield), source is self
 	[DiesCreatureTrigger](effect, optional, filter)             // EvtZoneChange (BF→GY, was creature), another creature you control
 	[AnyCreatureDiesTrigger](effect, optional)                  // EvtZoneChange (BF→GY, was creature), any creature

@@ -152,10 +152,13 @@ func AttacksTrigger(effect Effect, optional bool) *GenericTriggered {
 // BlocksTrigger fires once per combat when the source creature blocks one or
 // more attackers (CR 509.3a). For "Whenever [creature] blocks a creature"
 // (per-attacker) triggers, construct a NewTriggered on EvtDeclaredBlocker
-// directly.
+// directly without the Flag predicate.
 func BlocksTrigger(effect Effect, optional bool) *GenericTriggered {
-	return NewTriggered(EvtCreatureBlocks, optional, effect).
-		SetConditionData(EventSourceIsSelf{})
+	return NewTriggered(EvtDeclaredBlocker, optional, effect).
+		SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+			EventSourceIsSelf{},
+			EventFlagIsTrue{},
+		}})
 }
 
 // DiesCreatureTrigger fires when another creature you control dies.

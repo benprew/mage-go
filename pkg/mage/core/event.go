@@ -10,7 +10,7 @@ type EventType int
 const (
 	EvtZoneChange EventType = iota
 	EvtDeclaredAttacker
-	EvtDeclaredBlocker
+	EvtDeclaredBlocker // fired once per (blocker, attacker) pair when a blocker is declared. Flag=true on the first firing for each blocker in a combat to mark the once-per-combat "Whenever ~ blocks" trigger (CR 509.3a); Flag=false on subsequent fires for the same blocker.
 	EvtDamageDealt
 	EvtLifeGained
 	EvtLifeLost
@@ -30,9 +30,6 @@ const (
 	EvtBecameUntapped     // fired when a permanent becomes untapped
 	EvtMainPhase          // fired at the beginning of a main phase
 	EvtCleanup            // fired at the beginning of the cleanup step (CR 514)
-	EvtCreatureBlocks     // fired once per blocking creature per combat (CR 509.3a)
-	EvtEntersAttacking    // fired when a creature is put onto the battlefield attacking (CR 508.4)
-	EvtEntersBlocking     // fired when a creature is put onto the battlefield blocking (CR 509.4)
 	EvtScry               // fired when a player scries; Amount is the number of cards scried (CR 701.18)
 	EvtDiscard            // fired when a player discards a card; PlayerID = discarding player, SourceID = card ID
 	EvtSacrifice          // fired when a permanent is sacrificed (named action per CR 701.16); PlayerID = controller, SourceID = sacrificed permanent ID

@@ -46,7 +46,10 @@ func (g *Game) recordPerTurnEvent(evt *GameEvent) {
 			amt = 0
 		}
 		g.permDamageReceivedThisTurn[evt.TargetID] += amt
-	case EvtCreatureBlocks:
+	case EvtDeclaredBlocker:
+		if !evt.Flag {
+			return
+		}
 		if g.attackedOrBlockedThisTurn == nil {
 			g.attackedOrBlockedThisTurn = make(map[uuid.UUID]bool)
 		}
