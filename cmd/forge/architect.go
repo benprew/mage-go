@@ -319,7 +319,7 @@ func computeStatistics(cards []GeneratedCard) SetStatistics {
 }
 
 func capitalize(s string) string {
-	if len(s) == 0 {
+	if s == "" {
 		return s
 	}
 	return strings.ToUpper(s[:1]) + s[1:]

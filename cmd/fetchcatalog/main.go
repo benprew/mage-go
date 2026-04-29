@@ -171,7 +171,7 @@ func main() {
 
 	// Ensure output directories exist.
 	setsDir := filepath.Join(*dir, "_sets")
-	if err := os.MkdirAll(setsDir, 0755); err != nil {
+	if err := os.MkdirAll(setsDir, 0o755); err != nil {
 		fmt.Fprintf(os.Stderr, "error creating directory: %v\n", err)
 		os.Exit(1)
 	}
@@ -194,7 +194,7 @@ func main() {
 		}
 		setData, _ := json.MarshalIndent(si, "", "  ")
 		setFile := filepath.Join(setsDir, strings.ToUpper(code)+".json")
-		if err := os.WriteFile(setFile, setData, 0644); err != nil {
+		if err := os.WriteFile(setFile, setData, 0o644); err != nil {
 			fmt.Fprintf(os.Stderr, "  error writing %s: %v\n", setFile, err)
 			os.Exit(1)
 		}
@@ -209,7 +209,7 @@ func main() {
 
 		cardData, _ := json.MarshalIndent(cards, "", "  ")
 		cardFile := filepath.Join(*dir, strings.ToUpper(code)+".json")
-		if err := os.WriteFile(cardFile, cardData, 0644); err != nil {
+		if err := os.WriteFile(cardFile, cardData, 0o644); err != nil {
 			fmt.Fprintf(os.Stderr, "  error writing %s: %v\n", cardFile, err)
 			os.Exit(1)
 		}

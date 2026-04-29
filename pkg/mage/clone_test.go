@@ -252,8 +252,8 @@ func TestCloneWithContinuousEffects(t *testing.T) {
 	eff := FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(game *Game, srcID uuid.UUID) error {
 		for _, p := range game.battlefield {
 			if p.ID() == srcID {
-				p.powerBonus += 1
-				p.toughBonus += 1
+				p.powerBonus++
+				p.toughBonus++
 			}
 		}
 		return nil

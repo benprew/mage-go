@@ -2468,10 +2468,8 @@ func (g *Game) Run(stopTurn int, stopStep PhaseStep, maxTurns int) {
 		activeID := g.ActivePlayerObj().PlayerID()
 		if g.schedule != nil && g.schedule.consumeTurnSkip(activeID) {
 			// Fall through to the extra-turn / next-player logic below.
-		} else {
-			if g.RunTurn(stopTurn, stopStep) {
-				return
-			}
+		} else if g.RunTurn(stopTurn, stopStep) {
+			return
 		}
 		// Check for extra turns
 		if len(g.extraTurns) > 0 {

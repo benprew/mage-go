@@ -47,6 +47,7 @@ func main() {
 		defer f.Close()
 		if err := pprof.StartCPUProfile(f); err != nil {
 			fmt.Fprintf(os.Stderr, "could not start cpu profile: %v\n", err)
+			f.Close()
 			os.Exit(1)
 		}
 		defer pprof.StopCPUProfile()

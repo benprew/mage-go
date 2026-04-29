@@ -187,13 +187,13 @@ func (o *xmageOracle) close() {
 	// Give the process a moment to exit gracefully, then force-kill
 	done := make(chan struct{})
 	go func() {
-		o.cmd.Wait()
+		_ = o.cmd.Wait()
 		close(done)
 	}()
 	select {
 	case <-done:
 	case <-time.After(5 * time.Second):
-		o.cmd.Process.Kill()
+		_ = o.cmd.Process.Kill()
 		<-done
 	}
 }
