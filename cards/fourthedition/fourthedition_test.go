@@ -570,3 +570,75 @@ func TestManaClash(t *testing.T) {
 		g.AssertLife(gametest.PlayerB, 19)
 	})
 }
+
+// ===== ANGRY MOB =====
+
+func TestAngryMob(t *testing.T) {
+	t.Run("during your turn pt is 2 plus opponents swamps", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Angry Mob")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Swamp", 3)
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Angry Mob", 5, 5)
+		g.AssertHasAbility(gametest.PlayerA, "Angry Mob", core.Trample, true)
+	})
+
+	t.Run("during opponents turn pt is 2", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Angry Mob")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Swamp", 3)
+		g.StopAt(2, core.PrecombatMain) // PlayerB's turn
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Angry Mob", 2, 2)
+	})
+
+	t.Run("your own swamps do not count", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Angry Mob")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 3)
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Angry Mob", 2, 2)
+	})
+}
+
+// ===== GAEA'S LIEGE =====
+
+func TestGaeasLiege(t *testing.T) {
+	t.Run("not attacking pt equals your forests", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Gaea's Liege")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 4)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forest", 2)
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Gaea's Liege", 4, 4)
+	})
+
+	t.Run("attacking pt equals defending players forests", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Gaea's Liege")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 1)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forest", 5)
+		g.Attack(1, gametest.PlayerA, "Gaea's Liege")
+		g.StopAt(1, core.DeclareBlockers)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Gaea's Liege", 5, 5)
+	})
+
+	t.Run("activated ability turns target land into Forest", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Gaea's Liege")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 1)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain", 1)
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Gaea's Liege", "Mountain")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// Mountain becomes a Forest, so it now counts as one of opponent's Forests.
+		// Gaea's Liege isn't attacking, so P/T = 1 (your only Forest).
+		g.AssertPowerToughness(gametest.PlayerA, "Gaea's Liege", 1, 1)
+		// Sanity: still on the battlefield
+		g.AssertPermanentCount(gametest.PlayerB, "Mountain", 1)
+	})
+}

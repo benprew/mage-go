@@ -19,10 +19,25 @@ func registerCreatures() {
 	// 2+*/2+*
 	// Trample
 	// During your turn, Angry Mob's power and toughness are each equal to 2 plus the number of Swamps your opponents control. During turns other than yours, Angry Mob's power and toughness are each 2.
-	// TODO: implement — needs variable P/T based on turn ownership
 	Register("Angry Mob", func() Card {
 		return NewCreature("Angry Mob", "{2}{W}{W}", 0, 0,
 			WithSubTypes("Human"),
+			WithKeyword(Trample),
+			WithStaticAbility(
+				FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+					src := g.FindPermanent(sourceID)
+					if src == nil {
+						return nil
+					}
+					bonus := 2
+					ap := g.ActivePlayerObj()
+					if ap != nil && ap.PlayerID() == src.Controller {
+						bonus += g.CountBattlefield(And(NotControlledBy(src.Controller), HasSubType("Swamp")))
+					}
+					src.BoostPT(bonus, bonus)
+					return nil
+				}),
+			),
 		)
 	})
 
@@ -253,10 +268,52 @@ func registerCreatures() {
 	// */*
 	// As long as Gaea's Liege isn't attacking, its power and toughness are each equal to the number of Forests you control. As long as Gaea's Liege is attacking, its power and toughness are each equal to the number of Forests defending player controls.
 	// {T}: Target land becomes a Forest until Gaea's Liege leaves the battlefield.
-	// TODO: implement — needs variable P/T based on attacking state + land type change
 	Register("Gaea's Liege", func() Card {
 		return NewCreature("Gaea's Liege", "{3}{G}{G}{G}", 0, 0,
 			WithSubTypes("Avatar"),
+			WithStaticAbility(
+				FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+					src := g.FindPermanent(sourceID)
+					if src == nil {
+						return nil
+					}
+					var who PermanentFilter
+					if g.IsAttackingInCombat(sourceID) {
+						who = NotControlledBy(src.Controller)
+					} else {
+						who = ControlledBy(src.Controller)
+					}
+					count := g.CountBattlefield(And(who, HasSubType("Forest")))
+					src.BoostPT(count, count)
+					return nil
+				}),
+			),
+			WithActivatedAbility(
+				FuncEffect(
+					"target land becomes a Forest until this creature leaves the battlefield",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						targetID := targets[0]
+						ce := FuncContinuousEffect(LayerType, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
+							perm := g.FindPermanent(targetID)
+							if perm == nil {
+								return nil
+							}
+							perm.SubTypeOverride = []string{"Forest"}
+							return nil
+						})
+						ce.SetSourceID(sourceID)
+						g.AddContinuousEffect(ce)
+						g.ApplyContinuousEffects()
+						return nil
+					},
+				),
+				Tap(),
+				WithTarget(TargetPermanent(IsLand)),
+			),
 		)
 	})
 
