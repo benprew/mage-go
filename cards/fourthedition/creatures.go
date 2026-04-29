@@ -1,10 +1,55 @@
 package fourthedition
 
 import (
+	"math/rand"
+
 	"github.com/google/uuid"
 
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/dsl"
 )
+
+// stoneGiantTarget targets a creature its controller controls whose toughness
+// is strictly less than the source's current power. It captures source state
+// at Possible() time, which is the closest the engine's filter API allows for
+// "less than this creature's power" (filters can't see the source).
+type stoneGiantTarget struct {
+	chosen []uuid.UUID
+}
+
+func (t *stoneGiantTarget) Min() int            { return 1 }
+func (t *stoneGiantTarget) Max() int            { return 1 }
+func (t *stoneGiantTarget) Chosen() []uuid.UUID { return t.chosen }
+func (t *stoneGiantTarget) IsChosen() bool      { return len(t.chosen) > 0 }
+func (t *stoneGiantTarget) Reset()              { t.chosen = nil }
+
+func (t *stoneGiantTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+	src := g.FindPermanent(sourceCard.ID())
+	if src == nil {
+		return nil
+	}
+	srcPower := src.CurrentPower(g)
+	var result []uuid.UUID
+	for _, p := range g.AllBattlefield() {
+		if !p.HasType(TypeCreature) {
+			continue
+		}
+		if p.Controller != controller {
+			continue
+		}
+		if !p.CanBeTargetedBy(sourceCard, controller, g) {
+			continue
+		}
+		if p.CurrentToughness(g) < srcPower {
+			result = append(result, p.ID())
+		}
+	}
+	return result
+}
+
+func (t *stoneGiantTarget) Choose(_ uuid.UUID, _ Card, _ *Game, chosen []uuid.UUID) error {
+	t.chosen = chosen
+	return nil
+}
 
 func init() {
 	registerCreatures()
@@ -132,10 +177,40 @@ func registerCreatures() {
 	// Creature — Human Minion
 	// 2/1
 	// {B}{B}{B}, {T}: Target opponent reveals their hand and discards a creature card at random. Activate only during your turn.
-	// TODO: implement — needs hand reveal + creature-specific random discard
 	Register("Rag Man", func() Card {
 		return NewCreature("Rag Man", "{2}{B}{B}", 2, 1,
 			WithSubTypes("Human", "Minion"),
+			WithActivatedAbility(
+				FuncEffect(
+					"target opponent reveals their hand and discards a creature card at random",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						p := g.GetPlayer(targets[0])
+						if p == nil {
+							return nil
+						}
+						var creatures []Card
+						for _, c := range p.Hand() {
+							if c.HasType(TypeCreature) {
+								creatures = append(creatures, c)
+							}
+						}
+						if len(creatures) == 0 {
+							return nil
+						}
+						chosen := creatures[rand.Intn(len(creatures))]
+						p.DiscardCard(chosen.ID())
+						return nil
+					},
+				),
+				ManaCostOf("{B}{B}{B}"),
+				WithCost(Tap()),
+				WithTarget(TargetOpponent()),
+				WithYourTurnOnly(),
+			),
 		)
 	})
 
@@ -265,10 +340,34 @@ func registerCreatures() {
 	// Creature — Giant
 	// 3/4
 	// {T}: Target creature you control with toughness less than Stone Giant's power gains flying until end of turn. Destroy that creature at the beginning of the next end step.
-	// TODO: implement — needs dynamic toughness-vs-power target filter
 	Register("Stone Giant", func() Card {
 		return NewCreature("Stone Giant", "{2}{R}{R}", 3, 4,
 			WithSubTypes("Giant"),
+			WithActivatedAbility(
+				FuncEffect(
+					"target creature gains flying until end of turn; destroy it at the next end step",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						kw := TemporaryKeyword(targets[0], Flying)
+						kw.SetSourceID(sourceID)
+						g.AddContinuousEffect(kw)
+						g.ApplyContinuousEffects()
+						g.RegisterDelayedTrigger(&DelayedTrigger{
+							EventType:  EvtEndStep,
+							TargetID:   targets[0],
+							Effects:    []Effect{DestroyTarget()},
+							SourceID:   sourceID,
+							Controller: controller,
+						})
+						return nil
+					},
+				),
+				Tap(),
+				WithTarget(&stoneGiantTarget{}),
+			),
 		)
 	})
 

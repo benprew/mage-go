@@ -740,3 +740,85 @@ func TestLivingArtifact(t *testing.T) {
 		g.AssertLife(gametest.PlayerA, 20)
 	})
 }
+
+// ===== RAG MAN =====
+
+func TestRagMan(t *testing.T) {
+	t.Run("activated ability discards a creature card from opponent at random", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rag Man")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 3)
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Grizzly Bears") // creature
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Disenchant")    // not creature
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Rag Man", "PlayerB")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+		g.AssertHandCount(gametest.PlayerB, "Disenchant", 1)
+	})
+
+	t.Run("does nothing if opponent has no creature cards", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rag Man")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 3)
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Disenchant")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Rag Man", "PlayerB")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertHandCount(gametest.PlayerB, "Disenchant", 1)
+		g.AssertHandCount(gametest.PlayerB, "Lightning Bolt", 1)
+		g.AssertGraveyardCount(gametest.PlayerB, "Disenchant", 0)
+		g.AssertGraveyardCount(gametest.PlayerB, "Lightning Bolt", 0)
+	})
+
+	t.Run("cannot activate during opponents turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rag Man")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 3)
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Grizzly Bears")
+		// Turn 2 = PlayerB's turn. Activation should fail (your turn only).
+		g.ActivateAbility(2, core.PrecombatMain, gametest.PlayerA, "Rag Man", "PlayerB")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		g.AssertHandCount(gametest.PlayerB, "Grizzly Bears", 1)
+		g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 0)
+	})
+}
+
+// ===== STONE GIANT =====
+
+func TestStoneGiant(t *testing.T) {
+	t.Run("target your creature with toughness less than power gains flying", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Stone Giant")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2, toughness 2 < 3
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Stone Giant", "Grizzly Bears")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", core.Flying, true)
+	})
+
+	t.Run("targeted creature is destroyed at next end step", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Stone Giant")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Stone Giant", "Grizzly Bears")
+		g.StopAt(2, core.Upkeep) // past PlayerA turn 1's end step
+		g.Execute()
+		g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 1)
+		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
+	})
+
+	t.Run("cannot target creature with toughness equal to power", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Stone Giant")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant") // 3/3, toughness 3 NOT less than 3
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Stone Giant", "Hill Giant")
+		g.StopAt(2, core.Upkeep)
+		g.Execute()
+		// Activation should not have succeeded, so no flying and no destruction
+		g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 1)
+		g.AssertHasAbility(gametest.PlayerA, "Hill Giant", core.Flying, false)
+	})
+}
