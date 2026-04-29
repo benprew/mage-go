@@ -186,6 +186,19 @@ typedef struct {
     int32_t dict_close_id;
     int32_t card_open_id;
     const int32_t* dict_entry_ids;
+
+    /* Singletons used by the structured Go emitter to reach byte-for-byte
+       parity with the Python emit_render_plan path:
+         - ``self_id`` / ``opp_id`` are emitted inside ``<target>...</target>``
+           blocks when an option targets a player.
+         - ``stack_*`` / ``command_*`` open/close the shared (non-per-player)
+           stack and command zones, emitted once per snapshot. */
+    int32_t self_id;
+    int32_t opp_id;
+    int32_t stack_open_id;
+    int32_t stack_close_id;
+    int32_t command_open_id;
+    int32_t command_close_id;
 } MageTokenTables;
 
 /*

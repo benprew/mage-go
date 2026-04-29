@@ -148,6 +148,11 @@ var testRenderPlanArity = map[int32]int{
 	opCloseDict:    0,
 	opDictEntry:    1,
 	opPlaceCardRef: 4,
+	opCount:        1,
+	opStackOpen:    0,
+	opStackClose:   0,
+	opCommandOpen:  0,
+	opCommandClose: 0,
 }
 
 func TestRenderPlanV1NoDictOpcodes(t *testing.T) {

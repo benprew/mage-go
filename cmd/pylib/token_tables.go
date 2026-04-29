@@ -88,6 +88,18 @@ type tokenTables struct {
 	dictCloseID  int32
 	cardOpenID   int32
 	dictEntryIDs []int32
+
+	// Singletons used by the Go emitter for byte-equal parity with the
+	// Python emit_render_plan path. ``selfID`` / ``oppID`` are written
+	// inside ``<target>...</target>`` blocks for player-target options;
+	// ``stack_*`` / ``command_*`` open and close the shared (non-per-
+	// player) stack / command zones once per snapshot.
+	selfID         int32
+	oppID          int32
+	stackOpenID    int32
+	stackCloseID   int32
+	commandOpenID  int32
+	commandCloseID int32
 }
 
 var (
@@ -287,6 +299,12 @@ func registerTokenTables(c *C.MageTokenTables) error {
 		dictOpenID:      int32(c.dict_open_id),
 		dictCloseID:     int32(c.dict_close_id),
 		cardOpenID:      int32(c.card_open_id),
+		selfID:          int32(c.self_id),
+		oppID:           int32(c.opp_id),
+		stackOpenID:     int32(c.stack_open_id),
+		stackCloseID:    int32(c.stack_close_id),
+		commandOpenID:   int32(c.command_open_id),
+		commandCloseID:  int32(c.command_close_id),
 	}
 
 	fragmentCount := int(c.fragment_count)

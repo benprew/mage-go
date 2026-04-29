@@ -41,6 +41,11 @@ const (
 	opCloseDict    // 22: closes the dictionary
 	opDictEntry    // 23: payload [row]; emit one dict entry (full body)
 	opPlaceCardRef // 24: payload [slot, row, status, uuid]; ref to dict entry
+	opCount        // 25: payload [N]; emit count[N] span (e.g. <library>{N})
+	opStackOpen    // 26: emit shared <stack>
+	opStackClose   // 27: emit shared </stack>
+	opCommandOpen  // 28: emit shared <command>
+	opCommandClose // 29: emit shared </command>
 )
 
 const (
@@ -162,7 +167,7 @@ func fillRenderPlan(batchIdx int64, state *apiGameState, pending *apiPending, pl
 	}
 	w.write(opTurn, clampInt32(int64(state.Turn)), int32(indexOrUnknown(stepNames[:], state.Step)))
 	emitRenderPlayerScalars(&w, state, playerIdx)
-	emitRenderZones(&w, index, cfg)
+	emitRenderZones(&w, state, playerIdx, index, cfg)
 	emitRenderActions(&w, pending, state, playerIdx, cfg, index)
 	w.write(opCloseState)
 
@@ -181,6 +186,12 @@ func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int) (render
 		cardsByKey: map[renderZoneKey][]renderCardRef{},
 	}
 	rowSeen := map[int32]struct{}{}
+	// First pass: build the full card lists per (owner, zone) but do NOT
+	// assign UUID indices yet. UUID-ordering must match Python's
+	// _assign_card_refs which walks zones owner-interleaved (self.bf,
+	// opp.bf, self.hand, opp.hand, ...). Doing the UUID pass after the
+	// data is collected lets us iterate in that order without changing the
+	// per-zone iteration semantics elsewhere.
 	for _, owner := range []int32{renderOwnerSelf, renderOwnerOpponent} {
 		player := renderPlayerState(state, perspectivePlayerIdx, owner)
 		if player == nil {
@@ -191,25 +202,47 @@ func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int) (render
 			if err != nil {
 				return index, err
 			}
-			for idx := range cards {
-				if cards[idx].id != "" {
-					if uuidIdx, ok := index.uuidByID[cards[idx].id]; ok {
-						cards[idx].uuidIdx = uuidIdx
-					} else {
-						cards[idx].uuidIdx = int32(len(index.uuidByID))
-						index.uuidByID[cards[idx].id] = cards[idx].uuidIdx
-					}
-					index.rowByID[cards[idx].id] = cards[idx].row
-					index.slotByID[cards[idx].id] = cards[idx].slotIdx
-				}
-				if _, dup := rowSeen[cards[idx].row]; !dup {
-					rowSeen[cards[idx].row] = struct{}{}
-					index.rowOrder = append(index.rowOrder, cards[idx].row)
-				}
-				index.cards = append(index.cards, cards[idx])
-			}
 			index.cardsByKey[renderZoneKey{owner: owner, zone: zone}] = cards
 		}
+	}
+	// UUID assignment: walk in Python's _ZONE_ORDER (owner-interleaved by
+	// zone) so card-ref ids line up byte-for-byte.
+	type zoneAssignKey struct {
+		owner int32
+		zone  int32
+	}
+	uuidOrder := []zoneAssignKey{
+		{renderOwnerSelf, renderZoneBattlefield},
+		{renderOwnerOpponent, renderZoneBattlefield},
+		{renderOwnerSelf, renderZoneHand},
+		{renderOwnerOpponent, renderZoneHand},
+		{renderOwnerSelf, renderZoneGraveyard},
+		{renderOwnerOpponent, renderZoneGraveyard},
+		{renderOwnerSelf, renderZoneExile},
+		{renderOwnerOpponent, renderZoneExile},
+	}
+	for _, key := range uuidOrder {
+		cards := index.cardsByKey[renderZoneKey{owner: key.owner, zone: key.zone}]
+		for idx := range cards {
+			if cards[idx].id != "" {
+				if uuidIdx, ok := index.uuidByID[cards[idx].id]; ok {
+					cards[idx].uuidIdx = uuidIdx
+				} else {
+					cards[idx].uuidIdx = int32(len(index.uuidByID))
+					index.uuidByID[cards[idx].id] = cards[idx].uuidIdx
+				}
+				index.rowByID[cards[idx].id] = cards[idx].row
+				index.slotByID[cards[idx].id] = cards[idx].slotIdx
+			}
+			if _, dup := rowSeen[cards[idx].row]; !dup {
+				rowSeen[cards[idx].row] = struct{}{}
+				index.rowOrder = append(index.rowOrder, cards[idx].row)
+			}
+			index.cards = append(index.cards, cards[idx])
+		}
+		// Persist mutations back (cards is a copy of the slice header but
+		// shares the backing array, so the uuidIdx writes already landed).
+		index.cardsByKey[renderZoneKey{owner: key.owner, zone: key.zone}] = cards
 	}
 	sort.Slice(index.rowOrder, func(i, j int) bool { return index.rowOrder[i] < index.rowOrder[j] })
 	return index, nil
@@ -308,46 +341,85 @@ func emitRenderPlayerScalars(w *renderPlanWriter, state *apiGameState, playerIdx
 	}
 }
 
-func emitRenderZones(w *renderPlanWriter, index renderPlanIndex, cfg encodeConfig) {
-	for _, owner := range []int32{renderOwnerSelf, renderOwnerOpponent} {
-		w.write(opOpenPlayer, owner)
-		for _, zone := range renderZoneOrder {
-			// Fog of war: opponent's hand contents are hidden information
-			// and are skipped by the Python emit_render_plan path. Mirror
-			// that here so the native render plan stays in lockstep.
-			if owner == renderOwnerOpponent && zone == renderZoneHand {
+// emitRenderZones writes zone blocks in the same order as the Python
+// emit_render_plan path:
+//
+//   - Battlefield  (self, opp)
+//   - Hand         (self)            ← opp.hand is fog-of-war redacted
+//   - Graveyard    (self, opp)
+//   - Exile        (self if non-empty, opp if non-empty)
+//   - Library      (self, opp)       ← <{owner}><library>{N}</library></{owner}>
+//   - Stack        (shared, single block)
+//   - Command      (shared, single block)
+//
+// Owner-interleave (zone-outer, owner-inner) mirrors Python; the previous
+// owner-outer iteration produced a different token order.
+func emitRenderZones(w *renderPlanWriter, state *apiGameState, playerIdx int, index renderPlanIndex, cfg encodeConfig) {
+	emitCardsForZone := func(owner, zone int32) {
+		w.write(opOpenZone, zone, owner)
+		for _, card := range index.cardsByKey[renderZoneKey{owner: owner, zone: zone}] {
+			if cfg.dedupCardBodies {
+				// v2: ref the dict entry, no body splice. Per-card counter /
+				// attached_to are skipped to match the Python emitter, which
+				// does not emit them in dedup mode.
+				w.write(opPlaceCardRef, card.slotIdx, card.row, renderStatusBits(card.perm), card.uuidIdx)
 				continue
 			}
-			w.write(opOpenZone, zone, owner)
-			for _, card := range index.cardsByKey[renderZoneKey{owner: owner, zone: zone}] {
-				if cfg.dedupCardBodies {
-					// v2: ref the dict entry, no body splice. Per-card
-					// counter / attached_to are skipped to match the Python
-					// emitter, which does not emit them in dedup mode.
-					w.write(opPlaceCardRef, card.slotIdx, card.row, renderStatusBits(card.perm), card.uuidIdx)
-					continue
+			w.write(opPlaceCard, card.slotIdx, card.row, renderStatusBits(card.perm), card.uuidIdx)
+			if card.perm != nil {
+				for ct := core.CounterType(0); ct < core.NumCounters; ct++ {
+					count := card.perm.RawCounters[ct]
+					if count != 0 {
+						w.write(opCounter, int32(ct), int32(count))
+					}
 				}
-				w.write(opPlaceCard, card.slotIdx, card.row, renderStatusBits(card.perm), card.uuidIdx)
-				if card.perm != nil {
-					for ct := core.CounterType(0); ct < core.NumCounters; ct++ {
-						count := card.perm.RawCounters[ct]
-						if count != 0 {
-							w.write(opCounter, int32(ct), int32(count))
-						}
+				if card.perm.AttachedTo.String() != "" && card.perm.AttachedTo.String() != "00000000-0000-0000-0000-000000000000" {
+					targetUUIDIdx := int32(-1)
+					if idx, ok := index.uuidByID[card.perm.AttachedTo.String()]; ok {
+						targetUUIDIdx = idx
 					}
-					if card.perm.AttachedTo.String() != "" && card.perm.AttachedTo.String() != "00000000-0000-0000-0000-000000000000" {
-						targetUUIDIdx := int32(-1)
-						if idx, ok := index.uuidByID[card.perm.AttachedTo.String()]; ok {
-							targetUUIDIdx = idx
-						}
-						w.write(opAttachedTo, targetUUIDIdx)
-					}
+					w.write(opAttachedTo, targetUUIDIdx)
 				}
 			}
-			w.write(opCloseZone)
 		}
-		w.write(opClosePlayer)
+		w.write(opCloseZone)
 	}
+
+	// Battlefield, Hand (self only), Graveyard.
+	for _, zone := range []int32{renderZoneBattlefield, renderZoneHand, renderZoneGraveyard} {
+		for _, owner := range []int32{renderOwnerSelf, renderOwnerOpponent} {
+			if owner == renderOwnerOpponent && zone == renderZoneHand {
+				continue // fog of war
+			}
+			emitCardsForZone(owner, zone)
+		}
+	}
+	// Exile: skip when empty for that owner.
+	for _, owner := range []int32{renderOwnerSelf, renderOwnerOpponent} {
+		if len(index.cardsByKey[renderZoneKey{owner: owner, zone: renderZoneExile}]) == 0 {
+			continue
+		}
+		emitCardsForZone(owner, renderZoneExile)
+	}
+	// Library: <{owner}><library>{N}</library></{owner}>. The zone open/close
+	// tables already encode <{owner}><library> and </library></{owner}>; the
+	// count slots in via opCount.
+	for _, owner := range []int32{renderOwnerSelf, renderOwnerOpponent} {
+		player := renderPlayerState(state, playerIdx, owner)
+		if player == nil {
+			continue
+		}
+		w.write(opOpenZone, renderZoneLibrary, owner)
+		w.write(opCount, clampInt32(int64(player.LibraryCount)))
+		w.write(opCloseZone)
+	}
+	// Stack (shared) — always emitted so the model sees the structural slot.
+	w.write(opStackOpen)
+	w.write(opStackClose)
+	// Command zone is omitted in 60-card formats (the engine snapshot does
+	// not surface command-zone contents). Re-introduce when commander /
+	// conspiracy / emblem support is plumbed through the snapshot API.
+	_ = playerIdx
 }
 
 func emitRenderActions(w *renderPlanWriter, pending *apiPending, state *apiGameState, playerIdx int, cfg encodeConfig, index renderPlanIndex) {
@@ -378,7 +450,11 @@ func renderStatusBits(perm *interactive.PermanentState) int32 {
 	if perm == nil {
 		return 0
 	}
-	var bits int32
+	// Permanents always carry the known-tap bit so the assembler knows to
+	// emit ``<tapped>`` or ``<untapped>``. Mirrors Python's
+	// ``_status_bits_from_card`` which sets STATUS_TAPPED_KNOWN whenever the
+	// snapshot reports either Tapped=True or Tapped=False.
+	bits := statusTappedKnown
 	if perm.Tapped {
 		bits |= statusTapped
 	}
@@ -442,8 +518,15 @@ func renderTarget(target apiTarget, selfID string, oppID string, index renderPla
 	if target.ID == "" {
 		return -1, -1, renderTargetUnknown
 	}
-	if target.ID == selfID || target.ID == oppID {
-		return -1, -1, renderTargetPlayer
+	// For player targets the assembler doesn't need a row / uuid index — it
+	// emits ``<self>`` or ``<opp>`` directly. Encode the owner index in the
+	// row slot (0=self, 1=opp) so the assembler can dispatch on a single
+	// payload word without needing to know the player's UUID.
+	if target.ID == selfID {
+		return renderOwnerSelf, -1, renderTargetPlayer
+	}
+	if target.ID == oppID {
+		return renderOwnerOpponent, -1, renderTargetPlayer
 	}
 	uuidIdx, hasUUID := index.uuidByID[target.ID]
 	row, hasRow := index.rowByID[target.ID]

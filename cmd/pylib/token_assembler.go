@@ -62,6 +62,11 @@ var opcodeArity = map[int32]int{
 	opCloseDict:    0,
 	opDictEntry:    1,
 	opPlaceCardRef: 4,
+	opCount:        1,
+	opStackOpen:    0,
+	opStackClose:   0,
+	opCommandOpen:  0,
+	opCommandClose: 0,
 }
 
 type zoneEntry struct {
@@ -409,7 +414,6 @@ func assembleTokensFromPlan(
 					writeSpan(verbSpan)
 				}
 				if kindKnown && !kindHasNoSource(kindID) {
-					emitFragment(fragSpace)
 					if !emitCardRef(sourceUUIDIdx) {
 						if sourceRow >= 0 && sourceRow < tables.cardRowCount {
 							writeSpan(tables.cardNameSpan(sourceRow))
@@ -431,7 +435,7 @@ func assembleTokensFromPlan(
 			case opTarget:
 				targetRow := plan[i+1]
 				targetUUIDIdx := plan[i+2]
-				_ = plan[i+3] // target_kind (unused)
+				targetKind := plan[i+3]
 
 				pos := writeSingle(tables.targetOpenID)
 				if pos >= 0 && curOptionIdx >= 0 && curTargetCount < out.maxTargets {
@@ -440,17 +444,56 @@ func assembleTokensFromPlan(
 					out.targetMask[idx] = 1
 					curTargetCount++
 				}
-				emitFragment(fragSpace)
-				if !emitCardRef(targetUUIDIdx) {
-					if targetRow >= 0 && targetRow < tables.cardRowCount {
-						writeSpan(tables.cardNameSpan(targetRow))
+				// Player targets: targetRow encodes the owner index (0=self,
+				// 1=opp); emit the corresponding singleton id. Permanent /
+				// card-in-zone targets resolve to a card-ref or fall back to
+				// the row's display-name span.
+				switch targetKind {
+				case 0: // renderTargetPlayer
+					if targetRow == 0 {
+						writeSingle(tables.selfID)
 					} else {
-						emitFragment(fragTargetFallback)
+						writeSingle(tables.oppID)
+					}
+				default:
+					if !emitCardRef(targetUUIDIdx) {
+						if targetRow >= 0 && targetRow < tables.cardRowCount {
+							writeSpan(tables.cardNameSpan(targetRow))
+						} else {
+							emitFragment(fragTargetFallback)
+						}
 					}
 				}
-				emitFragment(fragSpace)
 				writeSingle(tables.targetCloseID)
 				i += 1 + arity
+				continue
+			case opCount:
+				amount := plan[i+1]
+				span := tables.countSpan(amount)
+				if span == nil {
+					return 0, false, fmt.Errorf(
+						"OP_COUNT out of bounds: amount=%d (range %d..%d)",
+						amount, tables.countMin, tables.countMax,
+					)
+				}
+				writeSpan(span)
+				i += 1 + arity
+				continue
+			case opStackOpen:
+				writeSingle(tables.stackOpenID)
+				i++
+				continue
+			case opStackClose:
+				writeSingle(tables.stackCloseID)
+				i++
+				continue
+			case opCommandOpen:
+				writeSingle(tables.commandOpenID)
+				i++
+				continue
+			case opCommandClose:
+				writeSingle(tables.commandCloseID)
+				i++
 				continue
 			}
 		}
@@ -539,7 +582,8 @@ func assembleTokensFromPlan(
 			opOpenActions, opCloseActions, opOpenPlayer, opClosePlayer,
 			opCounter, opAttachedTo, opOption, opTarget, opTurn, opLife,
 			opMana, opCloseRawCard, opOpenDict, opCloseDict, opDictEntry,
-			opPlaceCardRef:
+			opPlaceCardRef, opCount, opStackOpen, opStackClose,
+			opCommandOpen, opCommandClose:
 			i += 1 + arity
 			continue
 		}

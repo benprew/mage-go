@@ -184,6 +184,12 @@ typedef struct {
     int32_t dict_close_id;
     int32_t card_open_id;
     const int32_t *dict_entry_ids;
+    int32_t self_id;
+    int32_t opp_id;
+    int32_t stack_open_id;
+    int32_t stack_close_id;
+    int32_t command_open_id;
+    int32_t command_close_id;
 } MageTokenTables;
 
 int32_t MageRegisterTokenTables(MageTokenTables *tables);
