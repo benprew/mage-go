@@ -642,3 +642,101 @@ func TestGaeasLiege(t *testing.T) {
 		g.AssertPermanentCount(gametest.PlayerB, "Mountain", 1)
 	})
 }
+
+// ===== GOBLIN ROCK SLED =====
+
+func TestGoblinRockSled(t *testing.T) {
+	t.Run("cannot attack if defender controls no Mountain", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Goblin Rock Sled")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forest")
+		g.Attack(1, gametest.PlayerA, "Goblin Rock Sled")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 20)
+	})
+
+	t.Run("can attack if defender controls a Mountain", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Goblin Rock Sled")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+		g.Attack(1, gametest.PlayerA, "Goblin Rock Sled")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 17) // 3 damage
+		g.AssertHasAbility(gametest.PlayerA, "Goblin Rock Sled", core.Trample, true)
+	})
+
+	t.Run("does not untap on next own turn after attacking", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Goblin Rock Sled")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+		g.Attack(1, gametest.PlayerA, "Goblin Rock Sled")
+		// Turn 3 = PlayerA's second turn. After untap, sled should still be tapped.
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertTapped(gametest.PlayerA, "Goblin Rock Sled", true)
+	})
+
+	t.Run("untaps normally if it did not attack last own turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Goblin Rock Sled")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+		// Don't attack on turn 1; verify untap step on turn 3 works normally if
+		// it happens to be tapped (we tap manually for the test).
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertTapped(gametest.PlayerA, "Goblin Rock Sled", false)
+	})
+}
+
+// ===== LIVING ARTIFACT =====
+
+func TestLivingArtifact(t *testing.T) {
+	t.Run("damage to controller adds vitality counters", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Fellwar Stone")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Living Artifact")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Living Artifact", "Fellwar Stone")
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "PlayerA")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 17)
+		g.AssertCounterCount(gametest.PlayerA, "Living Artifact", core.Vitality, 3)
+	})
+
+	t.Run("upkeep optional removes counter and gains life", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Fellwar Stone")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Living Artifact")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Living Artifact", "Fellwar Stone")
+		// Turn 2 PlayerB Bolts PlayerA → 3 vitality counters added.
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "PlayerA")
+		// Turn 3 PlayerA upkeep: optional trigger (always accepted in tests) removes
+		// one vitality counter and gains 1 life.
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertCounterCount(gametest.PlayerA, "Living Artifact", core.Vitality, 2)
+		g.AssertLife(gametest.PlayerA, 18) // 17 after Bolt, +1 from removed counter
+	})
+
+	t.Run("no counters means no life gain", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Fellwar Stone")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Living Artifact")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Living Artifact", "Fellwar Stone")
+		// No damage taken, so no counters. PlayerA's turn 3 upkeep tries to remove
+		// a counter but there are none — no life gained.
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertCounterCount(gametest.PlayerA, "Living Artifact", core.Vitality, 0)
+		g.AssertLife(gametest.PlayerA, 20)
+	})
+}

@@ -727,6 +727,7 @@ const (
 	Matrix       = core.Matrix
 	Pin          = core.Pin
 	Carrion      = core.Carrion
+	Vitality     = core.Vitality
 	NumCounters  = core.NumCounters
 )
 

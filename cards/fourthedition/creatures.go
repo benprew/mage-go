@@ -221,10 +221,32 @@ func registerCreatures() {
 	// Trample
 	// Goblin Rock Sled doesn't untap during your untap step if it attacked during your last turn.
 	// Goblin Rock Sled can't attack unless defending player controls a Mountain.
-	// TODO: implement — needs conditional untap + defending player land check
 	Register("Goblin Rock Sled", func() Card {
 		return NewCreature("Goblin Rock Sled", "{1}{R}", 3, 1,
 			WithSubTypes("Goblin"),
+			WithKeyword(Trample),
+			WithStaticAbility(
+				PreventFromAttackingIfDefendingPlayerControls(HasSubType("Mountain")),
+			),
+			WithAbility(AttacksTrigger(FuncEffect(
+				"doesn't untap during your next untap step",
+				EffectProperties{},
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					expiryTurn := g.CurrentTurn() + 2
+					ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, _ uuid.UUID) error {
+						perm := g.FindPermanent(sourceID)
+						if perm != nil {
+							g.GrantAttr(perm.ID(), AttrDoesNotUntap)
+						}
+						return nil
+					}, func(g *Game, _ uuid.UUID) bool {
+						return g.CurrentTurn() <= expiryTurn && g.FindPermanent(sourceID) != nil
+					})
+					ce.SetSourceID(sourceID)
+					g.AddContinuousEffect(ce)
+					return nil
+				},
+			), false)),
 		)
 	})
 

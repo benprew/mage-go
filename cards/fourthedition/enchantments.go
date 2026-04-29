@@ -92,9 +92,31 @@ func registerEnchantments() {
 	// Enchant artifact
 	// Whenever you're dealt damage, put that many vitality counters on Living Artifact.
 	// At the beginning of your upkeep, you may remove a vitality counter from Living Artifact. If you do, you gain 1 life.
-	// TODO: implement — needs vitality counters + damage-to-you trigger
 	Register("Living Artifact", func() Card {
-		return NewAura("Living Artifact", "{G}")
+		return NewAura("Living Artifact", "{G}",
+			WithCastTarget(TargetArtifact()),
+			WithAbility(NewTriggered(EvtDamageDealt, false,
+				AddCounters(Vitality, EventAmountValue()).Targeting(ToSource()),
+			).SetCondition(func(evt *GameEvent, _ GameReader, _, controllerID uuid.UUID) bool {
+				return evt.TargetID == controllerID && evt.Amount > 0
+			})),
+			WithAbility(BeginningOfUpkeepTrigger(FuncEffect(
+				"remove a vitality counter from Living Artifact; if you do, gain 1 life",
+				EffectProperties{Outcome: OutcomeBenefit},
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					perm := g.FindPermanent(sourceID)
+					if perm == nil {
+						return nil
+					}
+					if perm.RemoveCounter(Vitality, 1) {
+						if p := g.GetPlayer(controller); p != nil {
+							g.PlayerGainLife(p, 1)
+						}
+					}
+					return nil
+				},
+			), true)),
+		)
 	})
 
 	// Power Leak {1}{U}
