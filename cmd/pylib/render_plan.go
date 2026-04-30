@@ -5,10 +5,31 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
 )
+
+// renderLifeMin / renderLifeMax bound the OP_LIFE payload range. They must
+// match LIFE_MIN / LIFE_MAX in magic_ai/text_encoder/token_tables.py — the
+// assembler precomputes a (life, owner)-keyed token table sized to this
+// range and rejects out-of-range values.
+const (
+	renderLifeMin int64 = -30
+	renderLifeMax int64 = 300
+)
+
+func clampLife(value int64) int32 {
+	if value > renderLifeMax {
+		return int32(renderLifeMax)
+	}
+	if value < renderLifeMin {
+		return int32(renderLifeMin)
+	}
+	return int32(value)
+}
 
 // renderPlanVersion bumps when an opcode change is not byte-equal to v1.
 // v2 adds the “<dict>“ card-body deduplication opcodes (21-24); the v2
@@ -143,16 +164,51 @@ type renderPlanIndex struct {
 	rowOrder []int32
 }
 
+// encodeScratch holds per-call scratch buffers for an encode batch so
+// hot-path map/slice allocations are reused across batch rows.
+type encodeScratch struct {
+	cardIDToSlot map[string]int64
+	renderIndex  renderPlanIndex
+	rowSeen      map[int32]struct{}
+}
+
+func newEncodeScratch() *encodeScratch {
+	return &encodeScratch{
+		cardIDToSlot: make(map[string]int64),
+		renderIndex: renderPlanIndex{
+			uuidByID:   make(map[string]int32),
+			rowByID:    make(map[string]int32),
+			slotByID:   make(map[string]int32),
+			cardsByKey: make(map[renderZoneKey][]renderCardRef),
+		},
+		rowSeen: make(map[int32]struct{}),
+	}
+}
+
+func (s *encodeScratch) reset() {
+	clear(s.cardIDToSlot)
+	idx := &s.renderIndex
+	clear(idx.uuidByID)
+	clear(idx.rowByID)
+	clear(idx.slotByID)
+	for k, v := range idx.cardsByKey {
+		idx.cardsByKey[k] = v[:0]
+	}
+	idx.cards = idx.cards[:0]
+	idx.rowOrder = idx.rowOrder[:0]
+	clear(s.rowSeen)
+}
+
 type renderZoneKey struct {
 	owner int32
 	zone  int32
 }
 
-func fillRenderPlan(batchIdx int64, state *apiGameState, pending *apiPending, playerIdx int, cfg encodeConfig, view outputViews) *encodeError {
+func fillRenderPlan(batchIdx int64, state *apiGameState, pending *apiPending, playerIdx int, cfg encodeConfig, view outputViews, scratch *encodeScratch) *encodeError {
 	start := batchIdx * cfg.renderPlanCapacity
 	plan := view.renderPlan[start : start+cfg.renderPlanCapacity]
-	index, err := buildRenderPlanIndex(state, playerIdx)
-	if err != nil {
+	index := &scratch.renderIndex
+	if err := buildRenderPlanIndex(state, playerIdx, index, &scratch.rowSeen); err != nil {
 		return err
 	}
 
@@ -167,8 +223,8 @@ func fillRenderPlan(batchIdx int64, state *apiGameState, pending *apiPending, pl
 	}
 	w.write(opTurn, clampInt32(int64(state.Turn)), int32(indexOrUnknown(stepNames[:], state.Step)))
 	emitRenderPlayerScalars(&w, state, playerIdx)
-	emitRenderZones(&w, state, playerIdx, index, cfg)
-	emitRenderActions(&w, pending, state, playerIdx, cfg, index)
+	emitRenderZones(&w, state, playerIdx, *index, cfg)
+	emitRenderActions(&w, pending, state, playerIdx, cfg, *index)
 	w.write(opCloseState)
 
 	view.renderPlanLengths[batchIdx] = w.cursor
@@ -178,14 +234,8 @@ func fillRenderPlan(batchIdx int64, state *apiGameState, pending *apiPending, pl
 	return nil
 }
 
-func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int) (renderPlanIndex, *encodeError) {
-	index := renderPlanIndex{
-		uuidByID:   map[string]int32{},
-		rowByID:    map[string]int32{},
-		slotByID:   map[string]int32{},
-		cardsByKey: map[renderZoneKey][]renderCardRef{},
-	}
-	rowSeen := map[int32]struct{}{}
+func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int, index *renderPlanIndex, rowSeenPtr *map[int32]struct{}) *encodeError {
+	rowSeen := *rowSeenPtr
 	// First pass: build the full card lists per (owner, zone) but do NOT
 	// assign UUID indices yet. UUID-ordering must match Python's
 	// _assign_card_refs which walks zones owner-interleaved (self.bf,
@@ -198,11 +248,12 @@ func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int) (render
 			continue
 		}
 		for _, zone := range renderZoneOrder {
-			cards, err := renderCardsForZone(player, owner, zone)
+			key := renderZoneKey{owner: owner, zone: zone}
+			cards, err := appendRenderCardsForZone(index.cardsByKey[key][:0], player, owner, zone)
 			if err != nil {
-				return index, err
+				return err
 			}
-			index.cardsByKey[renderZoneKey{owner: owner, zone: zone}] = cards
+			index.cardsByKey[key] = cards
 		}
 	}
 	// UUID assignment: walk in Python's _ZONE_ORDER (owner-interleaved by
@@ -245,7 +296,7 @@ func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int) (render
 		index.cardsByKey[renderZoneKey{owner: key.owner, zone: key.zone}] = cards
 	}
 	sort.Slice(index.rowOrder, func(i, j int) bool { return index.rowOrder[i] < index.rowOrder[j] })
-	return index, nil
+	return nil
 }
 
 func renderPlayerState(state *apiGameState, perspectivePlayerIdx int, owner int32) *interactive.PlayerState {
@@ -262,10 +313,9 @@ func renderPlayerState(state *apiGameState, perspectivePlayerIdx int, owner int3
 	return &state.Players[idx]
 }
 
-func renderCardsForZone(player *interactive.PlayerState, owner int32, zone int32) ([]renderCardRef, *encodeError) {
+func appendRenderCardsForZone(out []renderCardRef, player *interactive.PlayerState, owner int32, zone int32) ([]renderCardRef, *encodeError) {
 	switch zone {
 	case renderZoneBattlefield:
-		out := make([]renderCardRef, 0, len(player.Battlefield))
 		for idx, perm := range player.Battlefield {
 			row, ok := cardRowForName(perm.Name)
 			if !ok {
@@ -285,7 +335,6 @@ func renderCardsForZone(player *interactive.PlayerState, owner int32, zone int32
 		}
 		return out, nil
 	case renderZoneHand:
-		out := make([]renderCardRef, 0, len(player.Hand))
 		for idx, card := range player.Hand {
 			row, ok := cardRowForName(card.Name)
 			if !ok {
@@ -303,7 +352,6 @@ func renderCardsForZone(player *interactive.PlayerState, owner int32, zone int32
 		}
 		return out, nil
 	case renderZoneGraveyard:
-		out := make([]renderCardRef, 0, len(player.Graveyard))
 		for idx, card := range player.Graveyard {
 			row, ok := cardRowForName(card.Name)
 			if !ok {
@@ -321,7 +369,7 @@ func renderCardsForZone(player *interactive.PlayerState, owner int32, zone int32
 		}
 		return out, nil
 	default:
-		return nil, nil
+		return out, nil
 	}
 }
 
@@ -331,7 +379,7 @@ func emitRenderPlayerScalars(w *renderPlanWriter, state *apiGameState, playerIdx
 		if player == nil {
 			continue
 		}
-		w.write(opLife, owner, clampInt32(int64(player.Life)))
+		w.write(opLife, owner, clampLife(int64(player.Life)))
 		pool := []int{player.ManaPool.White, player.ManaPool.Blue, player.ManaPool.Black, player.ManaPool.Red, player.ManaPool.Green, player.ManaPool.Colorless}
 		for colorID, amount := range pool {
 			if amount != 0 {
@@ -373,7 +421,7 @@ func emitRenderZones(w *renderPlanWriter, state *apiGameState, playerIdx int, in
 						w.write(opCounter, int32(ct), int32(count))
 					}
 				}
-				if card.perm.AttachedTo.String() != "" && card.perm.AttachedTo.String() != "00000000-0000-0000-0000-000000000000" {
+				if card.perm.AttachedTo != uuid.Nil {
 					targetUUIDIdx := int32(-1)
 					if idx, ok := index.uuidByID[card.perm.AttachedTo.String()]; ok {
 						targetUUIDIdx = idx
@@ -464,7 +512,7 @@ func renderStatusBits(perm *interactive.PermanentState) int32 {
 	if perm.Attacking {
 		bits |= statusAttacking
 	}
-	if perm.Blocking.String() != "" && perm.Blocking.String() != "00000000-0000-0000-0000-000000000000" {
+	if perm.Blocking != uuid.Nil {
 		bits |= statusBlocking
 	}
 	if perm.FaceDown {
@@ -482,7 +530,7 @@ func renderStatusBits(perm *interactive.PermanentState) int32 {
 	if perm.IsArtifact {
 		bits |= statusIsArtifact
 	}
-	if perm.AttachedTo.String() != "" && perm.AttachedTo.String() != "00000000-0000-0000-0000-000000000000" {
+	if perm.AttachedTo != uuid.Nil {
 		bits |= statusIsAttached
 	}
 	return bits

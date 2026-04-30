@@ -48,11 +48,17 @@ var (
 	actionKinds        = [...]string{"pass", "play_land", "cast_spell", "activate_ability", "attacker", "blocker", "choice", "unknown"}
 	traceKinds         = [...]string{"priority", "attackers", "blockers", "choice_index", "choice_ids", "choice_color", "may"}
 	zoneSpecs          = [...]zoneSpec{{zone: "hand", owner: "self"}, {zone: "graveyard", owner: "self"}, {zone: "graveyard", owner: "opponent"}, {zone: "battlefield", owner: "self"}, {zone: "battlefield", owner: "opponent"}}
-	cardRowsOnce       sync.Once
-	cardRowByName      map[string]int64
-	cardRowOverrideMu  sync.RWMutex
-	cardRowOverrides   = map[string]int64{}
-	cardRowsOverridden bool
+	stepNamesNorm      = normalizedKeys(stepNames[:])
+	pendingKindsNorm   = normalizedKeys(pendingKinds[:])
+	actionKindsNorm    = normalizedKeys(actionKinds[:])
+	traceKindsNorm     = normalizedKeys(traceKinds[:])
+	cardRowsOnce          sync.Once
+	cardRowByName         map[string]int64
+	cardRowByRawName      map[string]int64
+	cardRowOverrideMu     sync.RWMutex
+	cardRowOverrides      = map[string]int64{}
+	cardRowOverridesByRaw = map[string]int64{}
+	cardRowsOverridden    bool
 )
 
 type zoneSpec struct {
@@ -191,7 +197,7 @@ func validateEncodeConfig(cfg encodeConfig) *encodeError {
 }
 
 func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64, *encodeError) {
-	clearOutputViews(views)
+	clearOutputViews(views, cfg)
 	decisionCursor := int64(0)
 	// Running write cursor into the packed token buffer. Only advanced
 	// when emitTokensPacked is set; ignored otherwise.
@@ -199,6 +205,7 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 	if cfg.emitTokensPacked && len(views.packedCuSeqlens) > 0 {
 		views.packedCuSeqlens[0] = 0
 	}
+	scratch := newEncodeScratch()
 	for batchIdx, handleID := range req.handles {
 		h := getHandle(handleID)
 		if h == nil {
@@ -210,7 +217,7 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 			h.mu.Unlock()
 			return decisionCursor, &encodeError{code: mageEncodeErrOver, message: fmt.Sprintf("handle %d is over", handleID)}
 		}
-		state := snapshotState(h.game)
+		state := cachedSnapshotState(h)
 		pending := buildPending(h.current)
 		if pending == nil {
 			h.mu.Unlock()
@@ -227,7 +234,8 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 			return decisionCursor, err
 		}
 
-		cardIDToSlot := map[string]int64{}
+		scratch.reset()
+		cardIDToSlot := scratch.cardIDToSlot
 		if err := fillStateEncoding(int64(batchIdx), state, pending, playerIdx, cfg, views, cardIDToSlot); err != nil {
 			h.mu.Unlock()
 			return decisionCursor, err
@@ -237,7 +245,7 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 			return decisionCursor, err
 		}
 		if cfg.emitRenderPlan {
-			if err := fillRenderPlan(int64(batchIdx), state, pending, playerIdx, cfg, views); err != nil {
+			if err := fillRenderPlan(int64(batchIdx), state, pending, playerIdx, cfg, views, scratch); err != nil {
 				h.mu.Unlock()
 				return decisionCursor, err
 			}
@@ -266,7 +274,7 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 	return decisionCursor, nil
 }
 
-func clearOutputViews(view outputViews) {
+func clearOutputViews(view outputViews, cfg encodeConfig) {
 	fillInt64(view.traceKindID, 0)
 	fillInt64(view.slotCardRows, 0)
 	fillFloat32(view.slotOccupied, 0)
@@ -296,27 +304,37 @@ func clearOutputViews(view outputViews) {
 	fillInt32(view.renderPlan, 0)
 	fillInt64(view.renderPlanLengths, 0)
 	fillInt64(view.renderPlanOverflow, 0)
-	fillInt64(view.tokenIDs, 0)
-	fillInt64(view.tokenAttention, 0)
-	fillInt64(view.tokenSeqLengths, 0)
-	fillInt64(view.tokenOptionPos, -1)
-	fillBytes(view.tokenOptionMask, 0)
-	fillInt64(view.tokenTargetPos, -1)
-	fillBytes(view.tokenTargetMask, 0)
-	fillInt64(view.tokenCardRefPos, -1)
-	fillInt32(view.tokenOverflow, 0)
-	// Packed buffers: clear sentinel/anchor regions. The token / seq_id
-	// / pos_in_seq buffers are written contiguously up to cu_seqlens[B];
-	// their tail is unspecified, so no need to zero them.
-	fillInt64(view.packedCuSeqlens, 0)
-	fillInt64(view.packedSeqLengths, 0)
-	fillInt64(view.packedStatePositions, 0)
-	fillInt64(view.packedOptionPos, -1)
-	fillBytes(view.packedOptionMask, 0)
-	fillInt64(view.packedTargetPos, -1)
-	fillBytes(view.packedTargetMask, 0)
-	fillInt64(view.packedCardRefPos, -1)
-	fillInt32(view.packedTokenOverflow, 0)
+	// Dense token-assembler buffers are only live when emitTokens is set;
+	// zeroing them in packed mode is wasted work. The dense and packed
+	// paths are mutually exclusive (validated at the C entry points), so
+	// in packed mode the dense slices are typically nil anyway — skip the
+	// loops outright.
+	if cfg.emitTokens {
+		fillInt64(view.tokenIDs, 0)
+		fillInt64(view.tokenAttention, 0)
+		fillInt64(view.tokenSeqLengths, 0)
+		fillInt64(view.tokenOptionPos, -1)
+		fillBytes(view.tokenOptionMask, 0)
+		fillInt64(view.tokenTargetPos, -1)
+		fillBytes(view.tokenTargetMask, 0)
+		fillInt64(view.tokenCardRefPos, -1)
+		fillInt32(view.tokenOverflow, 0)
+	}
+	if cfg.emitTokensPacked {
+		// Packed buffers: clear sentinel/anchor regions. The token /
+		// seq_id / pos_in_seq buffers are written contiguously up to
+		// cu_seqlens[B]; their tail is unspecified, so no need to zero
+		// them.
+		fillInt64(view.packedCuSeqlens, 0)
+		fillInt64(view.packedSeqLengths, 0)
+		fillInt64(view.packedStatePositions, 0)
+		fillInt64(view.packedOptionPos, -1)
+		fillBytes(view.packedOptionMask, 0)
+		fillInt64(view.packedTargetPos, -1)
+		fillBytes(view.packedTargetMask, 0)
+		fillInt64(view.packedCardRefPos, -1)
+		fillInt32(view.packedTokenOverflow, 0)
+	}
 }
 
 // fillTokenAssembly walks the render-plan stream emitted for “batchIdx“
@@ -616,8 +634,8 @@ func fillGameInfo(out []float32, state *apiGameState, pending *apiPending, persp
 
 	stepIdx := len(stepNames) - 1
 	normalizedStep := normalizeKey(state.Step)
-	for idx, stepName := range stepNames[:len(stepNames)-1] {
-		if normalizeKey(stepName) == normalizedStep {
+	for idx, stepKey := range stepNamesNorm[:len(stepNamesNorm)-1] {
+		if stepKey == normalizedStep {
 			stepIdx = idx
 			break
 		}
@@ -951,12 +969,39 @@ func playerIDs(state *apiGameState, perspectivePlayerIdx int) (string, string) {
 
 func indexOrUnknown(values []string, value string) int64 {
 	key := normalizeKey(value)
-	for idx, candidate := range values {
-		if normalizeKey(candidate) == key {
+	norm := normalizedKeysFor(values)
+	for idx, candidate := range norm {
+		if candidate == key {
 			return int64(idx)
 		}
 	}
 	return int64(len(values) - 1)
+}
+
+// normalizedKeys returns a slice of normalized keys, one per input value.
+func normalizedKeys(values []string) []string {
+	out := make([]string, len(values))
+	for i, v := range values {
+		out[i] = normalizeKey(v)
+	}
+	return out
+}
+
+// normalizedKeysFor maps the well-known shared lookup tables to their
+// precomputed normalized-key slice. Falls back to fresh normalization
+// for unknown inputs (rare on the hot path).
+func normalizedKeysFor(values []string) []string {
+	switch {
+	case len(values) == len(stepNames) && &values[0] == &stepNames[0]:
+		return stepNamesNorm
+	case len(values) == len(pendingKinds) && &values[0] == &pendingKinds[0]:
+		return pendingKindsNorm
+	case len(values) == len(actionKinds) && &values[0] == &actionKinds[0]:
+		return actionKindsNorm
+	case len(values) == len(traceKinds) && &values[0] == &traceKinds[0]:
+		return traceKindsNorm
+	}
+	return normalizedKeys(values)
 }
 
 func normalizeKey(s string) string {
@@ -964,15 +1009,19 @@ func normalizeKey(s string) string {
 }
 
 func cardRowForName(name string) (int64, bool) {
-	key := normalizeKey(name)
-	if key == "" {
+	if name == "" {
 		return 0, true
 	}
 
 	cardRowOverrideMu.RLock()
 	overridden := cardRowsOverridden
-	row, ok := cardRowOverrides[key]
 	if overridden {
+		if row, ok := cardRowOverridesByRaw[name]; ok {
+			cardRowOverrideMu.RUnlock()
+			return row, true
+		}
+		key := normalizeKey(name)
+		row, ok := cardRowOverrides[key]
 		cardRowOverrideMu.RUnlock()
 		return row, ok
 	}
@@ -982,11 +1031,16 @@ func cardRowForName(name string) (int64, bool) {
 		names := mage.RegisteredCardNames()
 		sort.Strings(names)
 		cardRowByName = make(map[string]int64, len(names))
+		cardRowByRawName = make(map[string]int64, len(names))
 		for idx, cardName := range names {
 			cardRowByName[normalizeKey(cardName)] = int64(idx + 1)
+			cardRowByRawName[cardName] = int64(idx + 1)
 		}
 	})
-	row, ok = cardRowByName[key]
+	if row, ok := cardRowByRawName[name]; ok {
+		return row, true
+	}
+	row, ok := cardRowByName[normalizeKey(name)]
 	if !ok {
 		return 0, true
 	}
@@ -995,11 +1049,14 @@ func cardRowForName(name string) (int64, bool) {
 
 func setCardRowOverrides(rows map[string]int64) {
 	next := make(map[string]int64, len(rows))
+	nextRaw := make(map[string]int64, len(rows))
 	for name, row := range rows {
 		next[normalizeKey(name)] = row
+		nextRaw[name] = row
 	}
 	cardRowOverrideMu.Lock()
 	cardRowOverrides = next
+	cardRowOverridesByRaw = nextRaw
 	cardRowsOverridden = true
 	cardRowOverrideMu.Unlock()
 }

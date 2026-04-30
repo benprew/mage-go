@@ -28,7 +28,7 @@ func TestRenderPlanEmitsManaCostID(t *testing.T) {
 		renderPlanOverflow: make([]int64, 1),
 	}
 
-	if err := fillRenderPlan(0, state, pending, 0, cfg, view); err != nil {
+	if err := fillRenderPlan(0, state, pending, 0, cfg, view, newEncodeScratch()); err != nil {
 		t.Fatalf("fillRenderPlan: %v", err)
 	}
 	if view.renderPlanOverflow[0] != 0 {
@@ -57,7 +57,7 @@ func TestRenderPlanSoftOverflow(t *testing.T) {
 		renderPlanOverflow: make([]int64, 1),
 	}
 
-	if err := fillRenderPlan(0, state, &apiPending{Kind: "priority"}, 0, cfg, view); err != nil {
+	if err := fillRenderPlan(0, state, &apiPending{Kind: "priority"}, 0, cfg, view, newEncodeScratch()); err != nil {
 		t.Fatalf("fillRenderPlan: %v", err)
 	}
 	if view.renderPlanOverflow[0] != 1 {
@@ -163,7 +163,7 @@ func TestRenderPlanV1NoDictOpcodes(t *testing.T) {
 		renderPlanLengths:  make([]int64, 1),
 		renderPlanOverflow: make([]int64, 1),
 	}
-	if err := fillRenderPlan(0, state, &apiPending{Kind: "priority"}, 0, cfg, view); err != nil {
+	if err := fillRenderPlan(0, state, &apiPending{Kind: "priority"}, 0, cfg, view, newEncodeScratch()); err != nil {
 		t.Fatalf("fillRenderPlan: %v", err)
 	}
 	plan := view.renderPlan[:view.renderPlanLengths[0]]
@@ -184,7 +184,7 @@ func TestRenderPlanV2EmitsDictAndRefs(t *testing.T) {
 		renderPlanLengths:  make([]int64, 1),
 		renderPlanOverflow: make([]int64, 1),
 	}
-	if err := fillRenderPlan(0, state, &apiPending{Kind: "priority"}, 0, cfg, view); err != nil {
+	if err := fillRenderPlan(0, state, &apiPending{Kind: "priority"}, 0, cfg, view, newEncodeScratch()); err != nil {
 		t.Fatalf("fillRenderPlan: %v", err)
 	}
 	plan := view.renderPlan[:view.renderPlanLengths[0]]

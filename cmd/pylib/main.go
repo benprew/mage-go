@@ -56,12 +56,23 @@ type playerChans struct {
 }
 
 type handle struct {
-	mu      sync.Mutex
-	game    *mage.Game
-	players [2]*interactive.HumanPlayer
-	chans   [2]playerChans
-	current pending
-	done    bool
+	mu       sync.Mutex
+	game     *mage.Game
+	players  [2]*interactive.HumanPlayer
+	chans    [2]playerChans
+	current  pending
+	done     bool
+	stateBuf *apiGameState // cached snapshotState; cleared on each Step
+}
+
+// cachedSnapshotState returns the cached game-state snapshot for the
+// handle, lazily populating it. The handle's mu must be held by the
+// caller. The cache is invalidated after each MageStep advance.
+func cachedSnapshotState(h *handle) *apiGameState {
+	if h.stateBuf == nil {
+		h.stateBuf = snapshotState(h.game)
+	}
+	return h.stateBuf
 }
 
 var (
@@ -1092,11 +1103,13 @@ func MageNewGame(cfgJSON *C.char) (id C.int64_t, resp *C.char) {
 	h.mu.Lock()
 	h.current = ev
 	h.done = ev.Over
+	h.stateBuf = nil
+	state := cachedSnapshotState(h)
 	h.mu.Unlock()
 
 	out := apiResponse{
 		OK:       true,
-		State:    snapshotState(g),
+		State:    state,
 		Pending:  buildPending(ev),
 		GameOver: ev.Over,
 		Winner:   ev.Winner,
@@ -1115,7 +1128,7 @@ func MageState(id C.int64_t) *C.char {
 	defer h.mu.Unlock()
 	out := apiResponse{
 		OK:       true,
-		State:    snapshotState(h.game),
+		State:    cachedSnapshotState(h),
 		Pending:  buildPending(h.current),
 		GameOver: h.done,
 		Winner:   h.current.Winner,
@@ -1166,10 +1179,11 @@ func MageStep(id C.int64_t, actionJSON *C.char) (resp *C.char) {
 	ev := waitForNext(h)
 	h.current = ev
 	h.done = ev.Over
+	h.stateBuf = nil
 
 	out := apiResponse{
 		OK:       true,
-		State:    snapshotState(h.game),
+		State:    cachedSnapshotState(h),
 		Pending:  buildPending(ev),
 		GameOver: ev.Over,
 		Winner:   ev.Winner,
