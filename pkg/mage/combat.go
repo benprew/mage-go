@@ -504,6 +504,38 @@ func mergeBlockerOrder(preferred, original []uuid.UUID) []uuid.UUID {
 	return out
 }
 
+// validateBandedBlockerAssignment is the banding-relaxed counterpart of
+// validateBlockerAssignment. Per CR 702.22, the attacking player may
+// distribute the band's combined damage among the blockers freely, so the
+// lethal-first ordering of CR 510.1c does not apply. Total must equal the
+// attacker's power; with trample, total may be less only if every blocker
+// has been assigned at least lethal damage.
+func validateBandedBlockerAssignment(g *Game, blockers []*Permanent, assignment map[uuid.UUID]int, totalPower int, hasTrample bool) bool {
+	total := 0
+	allLethal := true
+	for _, blk := range blockers {
+		if blk == nil {
+			continue
+		}
+		dmg := assignment[blk.ID()]
+		if dmg < 0 {
+			return false
+		}
+		total += dmg
+		needed := max(blk.CurrentToughness(g)-blk.Damage, 0)
+		if dmg < needed {
+			allLethal = false
+		}
+	}
+	if total > totalPower {
+		return false
+	}
+	if total < totalPower && (!hasTrample || !allLethal) {
+		return false
+	}
+	return true
+}
+
 // validateBlockerAssignment checks the CR 510.1c constraint: damage is
 // assigned to blockers in order, and a blocker can only be assigned non-lethal
 // damage if every blocker before it in the order has been assigned at least
@@ -703,21 +735,47 @@ func (c *Combat) doBandedAttackDamage(g *Game, bandMemberIDs []uuid.UUID, defend
 		}
 	}
 	if primaryAttacker != nil && totalBandPower > 0 {
-		remainingDmg := totalBandPower
+		// CR 702.22: the attacking player chooses how the band's combined
+		// damage is distributed among blockers, ignoring the lethal-first
+		// ordering of CR 510.1c. Consult CombatDamageAssigner; if absent or
+		// invalid, fall back to greedy lethal-first.
+		blockerPerms := make([]*Permanent, 0, len(allBlockerIDs))
 		for _, bid := range allBlockerIDs {
-			blk := g.FindPermanent(bid)
-			if blk == nil {
-				continue
+			if blk := g.FindPermanent(bid); blk != nil {
+				blockerPerms = append(blockerPerms, blk)
 			}
-			needed := blk.CurrentToughness(g) - blk.Damage
-			if needed <= 0 {
-				continue
+		}
+		attackingPlayer := g.GetPlayer(primaryAttacker.Controller)
+		var assignment map[uuid.UUID]int
+		if assigner, ok := attackingPlayer.(CombatDamageAssigner); ok && len(blockerPerms) > 0 {
+			assignment = assigner.GetCombatDamageAssignment(primaryAttacker, blockerPerms, totalBandPower)
+			if assignment != nil && !validateBandedBlockerAssignment(g, blockerPerms, assignment, totalBandPower, hasTrample) {
+				assignment = nil
 			}
-			dealt := min(remainingDmg, needed)
-			g.DealDamageToPermanent(blk, dealt, primaryAttacker.ID())
-			remainingDmg -= dealt
-			if remainingDmg <= 0 {
-				break
+		}
+
+		remainingDmg := totalBandPower
+		if assignment != nil {
+			usedDmg := 0
+			for _, blk := range blockerPerms {
+				if dmg := assignment[blk.ID()]; dmg > 0 {
+					g.DealDamageToPermanent(blk, dmg, primaryAttacker.ID())
+					usedDmg += dmg
+				}
+			}
+			remainingDmg = totalBandPower - usedDmg
+		} else {
+			for _, blk := range blockerPerms {
+				needed := blk.CurrentToughness(g) - blk.Damage
+				if needed <= 0 {
+					continue
+				}
+				dealt := min(remainingDmg, needed)
+				g.DealDamageToPermanent(blk, dealt, primaryAttacker.ID())
+				remainingDmg -= dealt
+				if remainingDmg <= 0 {
+					break
+				}
 			}
 		}
 		if remainingDmg > 0 && hasTrample {

@@ -206,16 +206,32 @@ func truncate(s string, maxLen int) string {
 }
 
 func buildClasspath(xmageDir string) (string, error) {
-	// Get maven dependency classpath
-	mvnCmd := exec.Command("mvn", "-q", "dependency:build-classpath",
-		"-pl", "Mage.Tests",
-		"-DincludeScope=test",
-		"-Dmdep.outputFile=/dev/stdout")
-	mvnCmd.Dir = xmageDir
+	// Allow overriding the dependency classpath with a pre-built file. This is
+	// useful when `mvn dependency:build-classpath` fails (e.g., macOS TCC
+	// blocking writes under ~/.m2). Generate it once with:
+	//   mvn -o -q dependency:build-classpath -pl Mage.Tests \
+	//     -DincludeScope=test -Dmdep.outputFile=/tmp/xmage-classpath.txt
+	// then export CROSSVAL_CLASSPATH_FILE=/tmp/xmage-classpath.txt.
+	var out []byte
+	if cpFile := os.Getenv("CROSSVAL_CLASSPATH_FILE"); cpFile != "" {
+		var err error
+		out, err = os.ReadFile(cpFile)
+		if err != nil {
+			return "", fmt.Errorf("read CROSSVAL_CLASSPATH_FILE %s: %w", cpFile, err)
+		}
+	} else {
+		// Get maven dependency classpath
+		mvnCmd := exec.Command("mvn", "-q", "dependency:build-classpath",
+			"-pl", "Mage.Tests",
+			"-DincludeScope=test",
+			"-Dmdep.outputFile=/dev/stdout")
+		mvnCmd.Dir = xmageDir
 
-	out, err := mvnCmd.Output()
-	if err != nil {
-		return "", fmt.Errorf("mvn dependency:build-classpath: %w", err)
+		var err error
+		out, err = mvnCmd.Output()
+		if err != nil {
+			return "", fmt.Errorf("mvn dependency:build-classpath: %w", err)
+		}
 	}
 
 	// Parse the output - maven may print extra lines, the classpath is the last non-empty line

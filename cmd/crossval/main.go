@@ -14,14 +14,15 @@ import (
 
 func main() {
 	var (
-		xmageDir  string
-		maxTurns  int
-		seed      int64
-		verbose   bool
-		debug     bool
-		games     int
-		outFile   string
-		roguesDir string
+		xmageDir    string
+		maxTurns    int
+		seed        int64
+		verbose     bool
+		debug       bool
+		games       int
+		outFile     string
+		roguesDir   string
+		gameTimeout int
 	)
 
 	flag.StringVar(&xmageDir, "xmage", "../xmage", "path to XMage repo")
@@ -32,6 +33,7 @@ func main() {
 	flag.IntVar(&games, "games", 1, "number of games to run")
 	flag.StringVar(&outFile, "out", "", "write divergence logs to this directory")
 	flag.StringVar(&roguesDir, "rogues", "", "directory of rogue deck .toml files")
+	flag.IntVar(&gameTimeout, "game-timeout", 60, "per-game wall-clock timeout in seconds (0 disables)")
 	flag.Parse()
 
 	if debug {
@@ -94,6 +96,7 @@ func main() {
 	gamesDiverged := 0
 	gamesWithWarnings := 0
 	gameErrors := 0
+	gamesHung := 0
 
 	for gameNum := 0; gameNum < games; gameNum++ {
 		if gameNum%10 == 0 {
@@ -103,9 +106,30 @@ func main() {
 		deckA := pickDeck(rogueDecks, available, rng)
 		deckB := pickDeck(rogueDecks, available, rng)
 
-		decisions, divergences, warnings, err := runXMageDrivenGame(oracle, deckA, deckB, maxTurns, verbose, debug)
+		// Per-game wall-clock guard. XMage's AI can get stuck in an infinite
+		// decision loop on certain board states; without a hard deadline a
+		// single hung game stalls the whole sweep. On timeout we force-kill
+		// the JVM AND close abortCh — the latter is needed because the main
+		// loop frequently blocks sending on the mirror's stepCh/msgCh, which
+		// killing the JVM alone won't unblock (it only closes the recv pipe).
+		abortCh := make(chan struct{})
+		var timer *time.Timer
+		if gameTimeout > 0 {
+			timer = time.AfterFunc(time.Duration(gameTimeout)*time.Second, func() {
+				fmt.Fprintf(os.Stderr, "  Game %d hung (>%ds), killing JVM\n", gameNum+1, gameTimeout)
+				close(abortCh)
+				if oracle.cmd != nil && oracle.cmd.Process != nil {
+					oracle.cmd.Process.Kill()
+				}
+			})
+		}
+		decisions, divergences, warnings, err := runXMageDrivenGame(oracle, deckA, deckB, maxTurns, verbose, debug, abortCh)
+		hung := timer != nil && !timer.Stop()
 		if err != nil {
 			gameErrors++
+			if hung {
+				gamesHung++
+			}
 			fmt.Fprintf(os.Stderr, "  Game %d error: %v\n", gameNum+1, err)
 			for _, line := range oracle.lastErr.lines() {
 				fmt.Fprintf(os.Stderr, "  [xmage] %s\n", line)
@@ -163,8 +187,8 @@ func main() {
 	}
 
 	fmt.Printf("\n=== Summary ===\n")
-	fmt.Printf("Games: %d, OK: %d, Diverged: %d, Errors: %d\n",
-		games, gamesOK, gamesDiverged, gameErrors)
+	fmt.Printf("Games: %d, OK: %d, Diverged: %d, Errors: %d (Hung: %d)\n",
+		games, gamesOK, gamesDiverged, gameErrors, gamesHung)
 	fmt.Printf("Warnings: %d total across %d games\n", totalWarnings, gamesWithWarnings)
 	fmt.Printf("Total decisions: %d\n", totalDecisions)
 
@@ -190,7 +214,7 @@ func main() {
 // state mismatches (engines disagree on a stable state) and warnings are
 // transient mid-stack diffs that typically reflect CR-valid trigger-ordering
 // choices rather than engine bugs.
-func runXMageDrivenGame(oracle *xmageOracle, deckA, deckB []string, maxTurns int, verbose, debug bool) (int, []string, []string, error) {
+func runXMageDrivenGame(oracle *xmageOracle, deckA, deckB []string, maxTurns int, verbose, debug bool, abortCh <-chan struct{}) (int, []string, []string, error) {
 	setup := setupMsg{
 		Type:     "setup",
 		PlayerA:  playerDef{Name: "Alice", Library: deckA},
@@ -250,6 +274,9 @@ func runXMageDrivenGame(oracle *xmageOracle, deckA, deckB []string, maxTurns int
 				return decisions, divergences, warnings, fmt.Errorf(
 					"go game exited before step_begin (xmage T%d %s, gameErr=%w)",
 					msg.Turn, msg.Step, mg.gameErr)
+			case <-abortCh:
+				return decisions, divergences, warnings, fmt.Errorf(
+					"aborted (xmage T%d %s) — likely game timeout", msg.Turn, msg.Step)
 			}
 			if err := oracle.send(ack); err != nil {
 				return decisions, divergences, warnings, fmt.Errorf("send step_begin ack: %w", err)
@@ -273,6 +300,9 @@ func runXMageDrivenGame(oracle *xmageOracle, deckA, deckB []string, maxTurns int
 				if len(msg.Action.Targets) > 0 {
 					fmt.Printf(" targets=%v", msg.Action.Targets)
 				}
+				if msg.Action.X > 0 {
+					fmt.Printf(" x=%d", msg.Action.X)
+				}
 				fmt.Println()
 			}
 
@@ -287,6 +317,9 @@ func runXMageDrivenGame(oracle *xmageOracle, deckA, deckB []string, maxTurns int
 				return decisions, divergences, warnings, fmt.Errorf(
 					"go game goroutine exited before xmage finished (xmage at T%d %s p%d, go-state=%s, gameErr=%w)",
 					msg.Turn, msg.Step, msg.PlayerIdx, mg.snapshotState(), mg.gameErr)
+			case <-abortCh:
+				return decisions, divergences, warnings, fmt.Errorf(
+					"aborted (xmage at T%d %s p%d) — likely game timeout", msg.Turn, msg.Step, msg.PlayerIdx)
 			}
 			dbg(debug, "main: msgCh sent, waiting on resultCh")
 
@@ -297,6 +330,9 @@ func runXMageDrivenGame(oracle *xmageOracle, deckA, deckB []string, maxTurns int
 				return decisions, divergences, warnings, fmt.Errorf(
 					"go game goroutine exited while waiting for resultCh (xmage at T%d %s, go-state=%s, gameErr=%w)",
 					msg.Turn, msg.Step, mg.snapshotState(), mg.gameErr)
+			case <-abortCh:
+				return decisions, divergences, warnings, fmt.Errorf(
+					"aborted (xmage at T%d %s, awaiting resultCh) — likely game timeout", msg.Turn, msg.Step)
 			}
 			dbg(debug, "main: <- resultCh (err=%v go-step=%s)", result.err, mg.snapshotState())
 			if result.err != nil {
@@ -331,6 +367,9 @@ func runXMageDrivenGame(oracle *xmageOracle, deckA, deckB []string, maxTurns int
 				return decisions, divergences, warnings, fmt.Errorf(
 					"go game exited before attackers fed (xmage at T%d, go-state=%s, gameErr=%w)",
 					msg.Turn, mg.snapshotState(), mg.gameErr)
+			case <-abortCh:
+				return decisions, divergences, warnings, fmt.Errorf(
+					"aborted (xmage at T%d, attackers) — likely game timeout", msg.Turn)
 			}
 			dbg(debug, "main: attackCh sent")
 
@@ -351,6 +390,9 @@ func runXMageDrivenGame(oracle *xmageOracle, deckA, deckB []string, maxTurns int
 				return decisions, divergences, warnings, fmt.Errorf(
 					"go game exited before blockers fed (xmage at T%d, go-state=%s, gameErr=%w)",
 					msg.Turn, mg.snapshotState(), mg.gameErr)
+			case <-abortCh:
+				return decisions, divergences, warnings, fmt.Errorf(
+					"aborted (xmage at T%d, blockers) — likely game timeout", msg.Turn)
 			}
 			dbg(debug, "main: blockCh sent")
 

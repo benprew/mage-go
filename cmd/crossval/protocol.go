@@ -66,6 +66,7 @@ type actionInfo struct {
 	Targets       []string `json:"targets,omitempty"`
 	PermanentName string   `json:"permanent_name,omitempty"`
 	AbilityIndex  int      `json:"ability_index,omitempty"`
+	X             int      `json:"x,omitempty"` // X value announced for {X} costs
 }
 
 type blockerPair struct {

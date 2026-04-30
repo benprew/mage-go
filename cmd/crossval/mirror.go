@@ -301,6 +301,7 @@ func (mg *mirrorGame) translateAction(msg mirrorMsg, g *mage.Game) mage.Priority
 					Type:    mage.PriorityCastSpell,
 					CardID:  c.ID(),
 					Targets: targets,
+					XValue:  a.X,
 				}
 			}
 		}
