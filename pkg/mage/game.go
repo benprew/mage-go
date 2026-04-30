@@ -2102,6 +2102,8 @@ func (g *Game) doUntap() {
 		if p.Controller == active.PlayerID() {
 			if p.HasAttr(AttrDoesNotUntap) {
 				// Does not untap — skip
+			} else if p.Counters[Stun] > 0 {
+				// Stun counter prevents untap. Counter is removed at upkeep.
 			} else if p.Tapped && p.HasAttr(AttrMayNotUntap) {
 				// Player may choose not to untap
 				if !active.ChooseMayAbility("untap " + p.Name()) {
@@ -2150,6 +2152,13 @@ func (g *Game) doUpkeepActions() {
 
 	// Expire "until your next upkeep" effects for the active player.
 	g.effects.RemoveUntilYourNextTurn(g, active.PlayerID())
+
+	// Remove one stun counter from each permanent the active player controls.
+	for _, p := range g.battlefield {
+		if p.Controller == active.PlayerID() && p.Counters[Stun] > 0 {
+			p.RemoveCounter(Stun, 1)
+		}
+	}
 
 	g.FireEvent(GameEvent{
 		Type:     EvtUpkeep,

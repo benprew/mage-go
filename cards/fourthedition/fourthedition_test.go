@@ -688,6 +688,62 @@ func TestGoblinRockSled(t *testing.T) {
 		g.Execute()
 		g.AssertTapped(gametest.PlayerA, "Goblin Rock Sled", false)
 	})
+
+	t.Run("attacking puts a stun counter on it", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Goblin Rock Sled")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+		g.Attack(1, gametest.PlayerA, "Goblin Rock Sled")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertCounterCount(gametest.PlayerA, "Goblin Rock Sled", core.Stun, 1)
+	})
+
+	t.Run("stun counter removed at next own upkeep", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Goblin Rock Sled")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+		g.Attack(1, gametest.PlayerA, "Goblin Rock Sled")
+		// Turn 3 is PlayerA's next turn; upkeep removes the stun counter.
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertCounterCount(gametest.PlayerA, "Goblin Rock Sled", core.Stun, 0)
+	})
+}
+
+// ===== STUN COUNTER MECHANIC =====
+
+func TestStunCounterMechanic(t *testing.T) {
+	t.Run("multiple stun counters skip multiple untaps and removed one per upkeep", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		// Use Goblin Rock Sled as a stand-in stunnable creature; it will attack on turn 1
+		// to get one stun counter. We add a second stun counter manually before turn 3.
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Goblin Rock Sled")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+		g.Attack(1, gametest.PlayerA, "Goblin Rock Sled") // adds stun counter #1
+		// Add a second stun counter at turn 1 EndStep so the creature has 2 going into turn 3.
+		g.AddCounters(1, core.EndStep, gametest.PlayerA, "Goblin Rock Sled", core.Stun, 1)
+		// Turn 3 PrecombatMain: untap step skipped (had 2 stun); upkeep removed 1 → 1 left, still tapped.
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertTapped(gametest.PlayerA, "Goblin Rock Sled", true)
+		g.AssertCounterCount(gametest.PlayerA, "Goblin Rock Sled", core.Stun, 1)
+	})
+
+	t.Run("two stun counters leave creature tapped through next own turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Goblin Rock Sled")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+		g.Attack(1, gametest.PlayerA, "Goblin Rock Sled")
+		g.AddCounters(1, core.EndStep, gametest.PlayerA, "Goblin Rock Sled", core.Stun, 1)
+		// Turn 5: PlayerA's third own turn. Untap on turn 3 skipped (2→1 at upkeep);
+		// untap on turn 5 skipped (1→0 at upkeep); next active untap (turn 7) would
+		// finally untap. So at turn 5 PrecombatMain, sled is still tapped, 0 stun.
+		g.StopAt(5, core.PrecombatMain)
+		g.Execute()
+		g.AssertTapped(gametest.PlayerA, "Goblin Rock Sled", true)
+		g.AssertCounterCount(gametest.PlayerA, "Goblin Rock Sled", core.Stun, 0)
+	})
 }
 
 // ===== LIVING ARTIFACT =====

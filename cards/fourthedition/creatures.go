@@ -303,25 +303,10 @@ func registerCreatures() {
 			WithStaticAbility(
 				PreventFromAttackingIfDefendingPlayerControls(HasSubType("Mountain")),
 			),
-			WithAbility(AttacksTrigger(FuncEffect(
-				"doesn't untap during your next untap step",
-				EffectProperties{},
-				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					expiryTurn := g.CurrentTurn() + 2
-					ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, _ uuid.UUID) error {
-						perm := g.FindPermanent(sourceID)
-						if perm != nil {
-							g.GrantAttr(perm.ID(), AttrDoesNotUntap)
-						}
-						return nil
-					}, func(g *Game, _ uuid.UUID) bool {
-						return g.CurrentTurn() <= expiryTurn && g.FindPermanent(sourceID) != nil
-					})
-					ce.SetSourceID(sourceID)
-					g.AddContinuousEffect(ce)
-					return nil
-				},
-			), false)),
+			WithAbility(AttacksTrigger(
+				AddCounters(Stun, Fixed(1)).Targeting(ToSource()),
+				false,
+			)),
 		)
 	})
 

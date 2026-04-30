@@ -728,6 +728,7 @@ const (
 	Pin          = core.Pin
 	Carrion      = core.Carrion
 	Vitality     = core.Vitality
+	Stun         = core.Stun
 	NumCounters  = core.NumCounters
 )
 

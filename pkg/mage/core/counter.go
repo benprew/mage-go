@@ -38,6 +38,7 @@ const (
 
 	Corpse   // Scavenging Ghoul corpse counters
 	Vitality // Living Artifact vitality counters
+	Stun     // Stun counter: skip next untap; one is removed at controller's upkeep
 
 	// Generic P/T counters
 	P1P2 // +1/+2 (Armor Thrull)
@@ -110,6 +111,8 @@ func (ct CounterType) String() string {
 		return "Corpse"
 	case Vitality:
 		return "Vitality"
+	case Stun:
+		return "Stun"
 	case P1P2:
 		return "+1/+2"
 	case M2M2:
