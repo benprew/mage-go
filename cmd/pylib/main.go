@@ -1382,6 +1382,7 @@ func MageBatchStepByChoice(req *C.MageStepChoiceRequest) (res C.MageEncodeResult
 		ev := waitForNext(h)
 		h.current = ev
 		h.done = ev.Over
+		h.stateBuf = nil
 		h.mu.Unlock()
 	}
 	return newEncodeResult(0, mageEncodeErrOK, "")
