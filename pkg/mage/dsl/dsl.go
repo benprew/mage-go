@@ -326,6 +326,7 @@ var (
 	TapAllLands                               = mage.TapAllLands
 	RemoveFromCombat                          = mage.RemoveFromCombat
 	RegenerateSource                          = mage.RegenerateSource
+	Stun                                      = mage.Stun
 	ReplaceKeywordEffect                      = mage.ReplaceKeywordEffect
 	ForEachCombatOpponent                     = mage.ForEachCombatOpponent
 	ForEachPermanent                          = mage.ForEachPermanent
@@ -728,7 +729,6 @@ const (
 	Pin          = core.Pin
 	Carrion      = core.Carrion
 	Vitality     = core.Vitality
-	Stun         = core.Stun
 	NumCounters  = core.NumCounters
 )
 

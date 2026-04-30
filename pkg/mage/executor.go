@@ -185,6 +185,8 @@ func ExecuteEffect(ctx *EffectContext, data EffectData) error {
 		return execMarkDestroyAtEOTAfterNActivations(ctx, e)
 	case *destroyTargetAtEndOfTurnEffect:
 		return execDestroyTargetAtEndOfTurn(ctx, e)
+	case *stunEffect:
+		return execStun(ctx, e)
 	case *setBasePTUntilEndOfTurnEffect:
 		return execSetPTUntilEndOfTurn(ctx, e)
 	case *setBasePowerUntilEndOfTurnEffect:

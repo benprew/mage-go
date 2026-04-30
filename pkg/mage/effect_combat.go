@@ -3,6 +3,8 @@ package mage
 import (
 	"fmt"
 
+	"github.com/google/uuid"
+
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
@@ -204,6 +206,32 @@ func (e *markDestroyAtEOTAfterNActivationsEffect) Text() string {
 }
 func (e *markDestroyAtEOTAfterNActivationsEffect) Properties() EffectProperties {
 	return EffectProperties{}
+}
+
+// stunEffect causes the selected permanent to skip its next own untap step
+// (i.e. its controller's next untap step), then expires. Implemented as a
+// turn-bounded continuous effect that grants AttrDoesNotUntap; no counter is
+// placed on the permanent.
+type stunEffect struct {
+	selector TargetSelector
+}
+
+// Stun creates an effect that causes the targeted permanent to skip its next
+// untap step. Defaults to targeting the resolved target; chain .Targeting(...)
+// to apply to the source.
+func Stun() *stunEffect {
+	return &stunEffect{selector: TargetSelector{Kind: KindTarget}}
+}
+
+// Targeting sets which permanent the stun applies to.
+func (e *stunEffect) Targeting(sel TargetSelector) *stunEffect {
+	e.selector = sel
+	return e
+}
+
+func (e *stunEffect) Text() string { return "stun" }
+func (e *stunEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
 // destroyTargetAtEndOfTurnEffect marks a creature for destruction at end of turn.
@@ -434,6 +462,35 @@ func execMarkDestroyAtEOTAfterNActivations(ctx *EffectContext, e *markDestroyAtE
 			SourceID:   ctx.SourceID,
 			Controller: ctx.Controller,
 		})
+	}
+	return nil
+}
+
+func execStun(ctx *EffectContext, e *stunEffect) error {
+	perms := resolvePermanents(ctx, e.selector)
+	if len(perms) == 0 {
+		return nil
+	}
+	for _, perm := range perms {
+		permID := perm.ID()
+		// Compute the turn number on which the permanent's controller will
+		// next have an untap step. In a 2-player game that's currentTurn+2 if
+		// the permanent's controller is currently active, else currentTurn+1.
+		expiryTurn := ctx.Game.CurrentTurn() + 1
+		if ctx.Game.ActivePlayerObj().PlayerID() == perm.Controller {
+			expiryTurn = ctx.Game.CurrentTurn() + 2
+		}
+		ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, _ uuid.UUID) error {
+			p := g.FindPermanent(permID)
+			if p != nil {
+				g.GrantAttr(p.ID(), AttrDoesNotUntap)
+			}
+			return nil
+		}, func(g *Game, _ uuid.UUID) bool {
+			return g.CurrentTurn() <= expiryTurn && g.FindPermanent(permID) != nil
+		})
+		ce.SetSourceID(ctx.SourceID)
+		ctx.Game.AddContinuousEffect(ce)
 	}
 	return nil
 }

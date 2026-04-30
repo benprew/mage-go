@@ -303,10 +303,7 @@ func registerCreatures() {
 			WithStaticAbility(
 				PreventFromAttackingIfDefendingPlayerControls(HasSubType("Mountain")),
 			),
-			WithAbility(AttacksTrigger(
-				AddCounters(Stun, Fixed(1)).Targeting(ToSource()),
-				false,
-			)),
+			WithAbility(AttacksTrigger(Stun().Targeting(ToSource()), false)),
 		)
 	})
 
