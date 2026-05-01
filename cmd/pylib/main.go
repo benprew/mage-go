@@ -1560,6 +1560,16 @@ func MageTokenTableLookup(kind C.int32_t, k0 C.int32_t, k1 C.int32_t) *C.char {
 	return C.CString(string(b))
 }
 
+//export MageEncodeTimingSummary
+func MageEncodeTimingSummary(reset C.int32_t) *C.char {
+	summary := packedEncodeTimingSnapshot(reset != 0)
+	b, err := json.Marshal(summary)
+	if err != nil {
+		return errResponse("marshal timing summary: %v", err)
+	}
+	return C.CString(string(b))
+}
+
 //export MageEncodeTokensPacked
 func MageEncodeTokensPacked(
 	req *C.MageBatchRequest,

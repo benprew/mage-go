@@ -195,6 +195,7 @@ typedef struct {
 int32_t MageRegisterTokenTables(MageTokenTables *tables);
 char *MageTokenTableSummary(void);
 char *MageTokenTableLookup(int32_t kind, int32_t k0, int32_t k1);
+char *MageEncodeTimingSummary(int32_t reset);
 
 typedef struct {
     int32_t max_tokens;

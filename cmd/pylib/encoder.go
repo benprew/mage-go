@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
@@ -178,6 +179,11 @@ func validateEncodeConfig(cfg encodeConfig) *encodeError {
 }
 
 func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64, *encodeError) {
+	callStart := time.Time{}
+	var gameTiming, renderTiming, assemblyTiming, metadataTiming time.Duration
+	if cfg.emitTokensPacked {
+		callStart = time.Now()
+	}
 	clearOutputViews(views, cfg)
 	decisionCursor := int64(0)
 	// Running write cursor into the packed token buffer. Only advanced
@@ -217,6 +223,7 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 
 		scratch.reset()
 		cardIDToSlot := scratch.cardIDToSlot
+		phaseStart := time.Now()
 		if err := fillStateEncoding(int64(batchIdx), state, pending, playerIdx, cfg, views, cardIDToSlot); err != nil {
 			h.mu.Unlock()
 			return decisionCursor, err
@@ -225,6 +232,9 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 			h.mu.Unlock()
 			return decisionCursor, err
 		}
+		if cfg.emitTokensPacked {
+			gameTiming += time.Since(phaseStart)
+		}
 		if cfg.emitRenderPlan || cfg.emitTokensPacked {
 			renderBatchIdx := int64(batchIdx)
 			renderViews := views
@@ -232,9 +242,13 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 				renderBatchIdx = 0
 				renderViews = scratch.internalRenderPlanView(cfg.renderPlanCapacity)
 			}
+			phaseStart = time.Now()
 			if err := fillRenderPlan(renderBatchIdx, state, pending, playerIdx, cfg, renderViews, scratch); err != nil {
 				h.mu.Unlock()
 				return decisionCursor, err
+			}
+			if cfg.emitTokensPacked {
+				renderTiming += time.Since(phaseStart)
 			}
 		}
 		if cfg.emitTokensPacked {
@@ -244,7 +258,8 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 				renderBatchIdx = 0
 				renderViews = scratch.internalRenderPlanView(cfg.renderPlanCapacity)
 			}
-			advanced, err := fillTokenAssemblyPacked(
+			phaseStart = time.Now()
+			advanced, metadata, err := fillTokenAssemblyPacked(
 				renderBatchIdx,
 				int64(batchIdx),
 				packedCursor,
@@ -257,14 +272,30 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 				h.mu.Unlock()
 				return decisionCursor, err
 			}
+			elapsed := time.Since(phaseStart)
+			assemblyTiming += elapsed - metadata
+			metadataTiming += metadata
 			packedCursor = advanced
 		}
+		phaseStart = time.Now()
 		written, err := fillDecisionEncoding(int64(batchIdx), pending, cfg, views, decisionCursor)
+		if cfg.emitTokensPacked {
+			gameTiming += time.Since(phaseStart)
+		}
 		h.mu.Unlock()
 		if err != nil {
 			return decisionCursor, err
 		}
 		decisionCursor += written
+	}
+	if cfg.emitTokensPacked {
+		addPackedEncodeTiming(
+			time.Since(callStart),
+			gameTiming,
+			renderTiming,
+			assemblyTiming,
+			metadataTiming,
+		)
 	}
 	return decisionCursor, nil
 }
@@ -319,10 +350,10 @@ func fillTokenAssemblyPacked(
 	planView outputViews,
 	outputView outputViews,
 	scratch *encodeScratch,
-) (int32, *encodeError) {
+) (int32, time.Duration, *encodeError) {
 	tables := getTokenTables()
 	if tables == nil {
-		return packedCursor, &encodeError{
+		return packedCursor, 0, &encodeError{
 			code:    mageEncodeErrEncodeFailure,
 			message: "MageRegisterTokenTables must be called before MageEncodeTokensPacked",
 		}
@@ -343,7 +374,7 @@ func fillTokenAssemblyPacked(
 	rowStart := int64(packedCursor)
 	rowEnd := rowStart + mt
 	if rowEnd > int64(len(outputView.packedTokenIDs)) {
-		return packedCursor, &encodeError{
+		return packedCursor, 0, &encodeError{
 			code:    mageEncodeErrInvalidArgument,
 			message: "packed token buffer too small (need >= B*max_tokens)",
 		}
@@ -369,19 +400,20 @@ func fillTokenAssemblyPacked(
 
 	cursor, overflow, err := assembleTokensFromPlan(plan, tables, out, cfg.tokenMaxTokens)
 	if err != nil {
-		return packedCursor, &encodeError{
+		return packedCursor, 0, &encodeError{
 			code:    mageEncodeErrEncodeFailure,
 			message: err.Error(),
 		}
 	}
 
+	metadataStart := time.Now()
 	outputView.packedSeqLengths[outputBatchIdx] = cursor
 	outputView.packedStatePositions[outputBatchIdx] = packedCursor
 	outputView.packedCuSeqlens[outputBatchIdx+1] = packedCursor + cursor
 	if overflow {
 		outputView.packedTokenOverflow[outputBatchIdx] = 1
 	}
-	return packedCursor + cursor, nil
+	return packedCursor + cursor, time.Since(metadataStart), nil
 }
 
 func resolvePerspectivePlayerIndex(state *apiGameState, pending *apiPending, requested int64) (int, *encodeError) {
