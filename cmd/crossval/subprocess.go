@@ -164,22 +164,30 @@ func (o *xmageOracle) send(msg any) error {
 }
 
 func (o *xmageOracle) recv(timeout time.Duration) (*oracleMsg, error) {
+	_, msg, err := o.recvLine(timeout)
+	return msg, err
+}
+
+// recvLine is like recv but also returns the raw JSON line, so callers (e.g.
+// the dump mode) can persist xmage's exact wire output without round-tripping
+// through oracleMsg.
+func (o *xmageOracle) recvLine(timeout time.Duration) (string, *oracleMsg, error) {
 	var line string
 	select {
 	case l, ok := <-o.lines:
 		if !ok {
-			return nil, <-o.readErr
+			return "", nil, <-o.readErr
 		}
 		line = l
 	case <-time.After(timeout):
-		return nil, fmt.Errorf("timeout waiting for oracle response (%v)", timeout)
+		return "", nil, fmt.Errorf("timeout waiting for oracle response (%v)", timeout)
 	}
 
 	var msg oracleMsg
 	if err := json.Unmarshal([]byte(line), &msg); err != nil {
-		return nil, fmt.Errorf("unmarshal oracle response: %w (line: %s)", err, truncate(line, 200))
+		return line, nil, fmt.Errorf("unmarshal oracle response: %w (line: %s)", err, truncate(line, 200))
 	}
-	return &msg, nil
+	return line, &msg, nil
 }
 
 func (o *xmageOracle) close() {
