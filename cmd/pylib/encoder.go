@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"math"
+	"os"
 	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -328,11 +330,7 @@ func encodeBatchGoPackedParallel(req batchRequest, cfg encodeConfig, views outpu
 	metadataTimings := make([]time.Duration, n)
 	pendings := make([]*apiPending, n)
 
-	workers := minInt(n, runtime.GOMAXPROCS(0))
-	workers = minInt(workers, packedParallelMaxWorkers)
-	if workers < 1 {
-		workers = 1
-	}
+	workers := packedEncodeWorkerCount(n)
 	var wg sync.WaitGroup
 	var errMu sync.Mutex
 	var firstErr *encodeError
@@ -465,27 +463,9 @@ func encodeBatchGoPackedParallel(req batchRequest, cfg encodeConfig, views outpu
 		decisionCursor += count
 	}
 
-	packedCursor := int32(0)
 	metadataStart := time.Now()
-	for batchIdx := 0; batchIdx < n; batchIdx++ {
-		rowStart := int32(int64(batchIdx) * int64(cfg.tokenMaxTokens))
-		length := views.packedSeqLengths[batchIdx]
-		if length < 0 || length > cfg.tokenMaxTokens {
-			return decisionCursor, &encodeError{code: mageEncodeErrEncode, message: fmt.Sprintf("invalid packed sequence length %d at batch row %d", length, batchIdx)}
-		}
-		if length > 0 && packedCursor != rowStart {
-			copy(
-				views.packedTokenIDs[packedCursor:packedCursor+length],
-				views.packedTokenIDs[rowStart:rowStart+length],
-			)
-		}
-		delta := packedCursor - rowStart
-		if delta != 0 {
-			rebasePackedPositions(views, cfg, int64(batchIdx), delta)
-		}
-		views.packedStatePositions[batchIdx] = packedCursor
-		views.packedCuSeqlens[batchIdx+1] = packedCursor + length
-		packedCursor += length
+	if encErr := compactPackedRows(views, cfg); encErr != nil {
+		return decisionCursor, encErr
 	}
 	metadataTimings[0] += time.Since(metadataStart)
 
@@ -504,6 +484,46 @@ func encodeBatchGoPackedParallel(req batchRequest, cfg encodeConfig, views outpu
 		metadataTiming,
 	)
 	return decisionCursor, nil
+}
+
+func packedEncodeWorkerCount(n int) int {
+	workers := minInt(n, runtime.GOMAXPROCS(0))
+	workers = minInt(workers, packedParallelMaxWorkers)
+	if raw := os.Getenv("MAGE_PACKED_ENCODE_WORKERS"); raw != "" {
+		if parsed, err := strconv.Atoi(raw); err == nil && parsed > 0 {
+			workers = minInt(n, parsed)
+		}
+	}
+	if workers < 1 {
+		workers = 1
+	}
+	return workers
+}
+
+func compactPackedRows(views outputViews, cfg encodeConfig) *encodeError {
+	n := len(views.packedSeqLengths)
+	packedCursor := int32(0)
+	for batchIdx := 0; batchIdx < n; batchIdx++ {
+		length := views.packedSeqLengths[batchIdx]
+		if length < 0 || length > cfg.tokenMaxTokens {
+			return &encodeError{code: mageEncodeErrEncode, message: fmt.Sprintf("invalid packed sequence length %d at batch row %d", length, batchIdx)}
+		}
+		views.packedCuSeqlens[batchIdx+1] = packedCursor + length
+		rowStart := int32(int64(batchIdx) * int64(cfg.tokenMaxTokens))
+		if length > 0 && packedCursor != rowStart {
+			copy(
+				views.packedTokenIDs[packedCursor:packedCursor+length],
+				views.packedTokenIDs[rowStart:rowStart+length],
+			)
+		}
+		delta := packedCursor - rowStart
+		if delta != 0 {
+			rebasePackedPositions(views, cfg, int64(batchIdx), delta)
+		}
+		views.packedStatePositions[batchIdx] = packedCursor
+		packedCursor += length
+	}
+	return nil
 }
 
 func clearOutputViews(view outputViews, cfg encodeConfig) {
