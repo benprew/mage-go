@@ -364,6 +364,11 @@ func fillTokenAssemblyPacked(
 		cursorBase:  packedCursor,
 	}
 
+	outputView.packedSeqLengths[outputBatchIdx] = 0
+	outputView.packedStatePositions[outputBatchIdx] = 0
+	outputView.packedCuSeqlens[outputBatchIdx+1] = packedCursor
+	outputView.packedTokenOverflow[outputBatchIdx] = 0
+
 	cursor, overflow, err := assembleTokensFromPlan(plan, tables, out, cfg.tokenMaxTokens)
 	if err != nil {
 		return packedCursor, &encodeError{
