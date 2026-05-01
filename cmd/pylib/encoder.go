@@ -242,13 +242,9 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 		if cfg.emitTokensPacked {
 			gameTiming += time.Since(phaseStart)
 		}
-		if cfg.emitRenderPlan || cfg.emitTokensPacked {
+		if cfg.emitRenderPlan {
 			renderBatchIdx := int64(batchIdx)
 			renderViews := views
-			if cfg.emitTokensPacked && !cfg.emitRenderPlan {
-				renderBatchIdx = 0
-				renderViews = scratch.internalRenderPlanView(cfg.renderPlanCapacity)
-			}
 			phaseStart = time.Now()
 			if err := fillRenderPlan(renderBatchIdx, state, pending, playerIdx, cfg, renderViews, scratch); err != nil {
 				h.mu.Unlock()
@@ -259,22 +255,32 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 			}
 		}
 		if cfg.emitTokensPacked {
-			renderBatchIdx := int64(batchIdx)
-			renderViews := views
-			if !cfg.emitRenderPlan {
-				renderBatchIdx = 0
-				renderViews = scratch.internalRenderPlanView(cfg.renderPlanCapacity)
-			}
 			phaseStart = time.Now()
-			advanced, metadata, err := fillTokenAssemblyPacked(
-				renderBatchIdx,
-				int64(batchIdx),
-				packedCursor,
-				cfg,
-				renderViews,
-				views,
-				scratch,
-			)
+			var advanced int32
+			var metadata time.Duration
+			var err *encodeError
+			if cfg.emitRenderPlan {
+				advanced, metadata, err = fillTokenAssemblyPacked(
+					int64(batchIdx),
+					int64(batchIdx),
+					packedCursor,
+					cfg,
+					views,
+					views,
+					scratch,
+				)
+			} else {
+				advanced, metadata, err = fillTokenAssemblyDirectPacked(
+					int64(batchIdx),
+					packedCursor,
+					state,
+					pending,
+					playerIdx,
+					cfg,
+					views,
+					scratch,
+				)
+			}
 			if err != nil {
 				h.mu.Unlock()
 				return decisionCursor, err
@@ -406,23 +412,15 @@ func encodeBatchGoPackedParallel(req batchRequest, cfg encodeConfig, views outpu
 				}
 				gameTimings[batchIdx] += time.Since(phaseStart)
 
-				renderViews := scratch.internalRenderPlanView(cfg.renderPlanCapacity)
-				phaseStart = time.Now()
-				if encErr := fillRenderPlan(0, state, pending, playerIdx, cfg, renderViews, scratch); encErr != nil {
-					h.mu.Unlock()
-					setErr(encErr)
-					return
-				}
-				renderTimings[batchIdx] += time.Since(phaseStart)
-
 				rowStart := int32(int64(batchIdx) * int64(cfg.tokenMaxTokens))
 				phaseStart = time.Now()
-				_, metadata, encErr := fillTokenAssemblyPacked(
-					0,
+				_, metadata, encErr := fillTokenAssemblyDirectPacked(
 					int64(batchIdx),
 					rowStart,
+					state,
+					pending,
+					playerIdx,
 					cfg,
-					renderViews,
 					views,
 					scratch,
 				)
