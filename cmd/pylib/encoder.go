@@ -87,17 +87,13 @@ type encodeConfig struct {
 	// occurrences become short ``<card-ref>``-anchored references back to
 	// the dict entry instead of full body splices. Off by default — the
 	// native token assembler does not yet understand the v2 opcodes.
-	dedupCardBodies bool
-	// emitTokens turns on the native token-assembler pass after the
-	// render-plan emission. Output buffers live in tokenAssemblerViews.
-	emitTokens       bool
+	dedupCardBodies  bool
 	tokenMaxTokens   int32
 	tokenMaxOptions  int32
 	tokenMaxTargets  int32
 	tokenMaxCardRefs int32
-	// emitTokensPacked is the varlen sibling of ``emitTokens``. Only one
-	// of the two flags may be set per encode call. When set, the packed
-	// output buffers in ``outputViews`` are filled instead.
+	// emitTokensPacked turns on the native packed token-assembler pass after
+	// render-plan emission. Output buffers live in outputViews.
 	emitTokensPacked bool
 }
 
@@ -132,21 +128,8 @@ type outputViews struct {
 	renderPlanLengths  []int64
 	renderPlanOverflow []int64
 
-	// Token-assembler outputs. nil when emit_tokens=false.
-	tokenIDs        []int64
-	tokenAttention  []int64
-	tokenSeqLengths []int64
-	tokenOptionPos  []int64
-	tokenOptionMask []byte
-	tokenTargetPos  []int64
-	tokenTargetMask []byte
-	tokenCardRefPos []int64
-	tokenOverflow   []int32
-
-	// Packed (varlen) token-assembler outputs. Mutually exclusive with
-	// the dense ``token*`` views above: only one of the two paths is
-	// active per encode call. ``packedTokenIDs`` etc. are sized
-	// [B*max_tokens]; ``packedSeqId`` and ``packedPosInSeq`` likewise.
+	// Packed (varlen) token-assembler outputs. ``packedTokenIDs`` etc. are
+	// sized [B*max_tokens]; ``packedSeqId`` and ``packedPosInSeq`` likewise.
 	packedTokenIDs       []int64
 	packedSeqID          []int64
 	packedPosInSeq       []int64
@@ -188,7 +171,7 @@ func validateEncodeConfig(cfg encodeConfig) *encodeError {
 		return &encodeError{code: mageEncodeErrArg, message: "max_cached_choices must be >= max_options"}
 	case cfg.maxCachedChoices < cfg.maxTargetsPerOption+1:
 		return &encodeError{code: mageEncodeErrArg, message: "max_cached_choices must be >= max_targets_per_option + 1"}
-	case (cfg.emitRenderPlan || cfg.emitTokens || cfg.emitTokensPacked) && cfg.renderPlanCapacity <= 0:
+	case (cfg.emitRenderPlan || cfg.emitTokensPacked) && cfg.renderPlanCapacity <= 0:
 		return &encodeError{code: mageEncodeErrArg, message: "render_plan_capacity must be positive when render-plan-backed token assembly is set"}
 	case cfg.renderPlanCapacity > math.MaxInt32:
 		return &encodeError{code: mageEncodeErrArg, message: "render_plan_capacity must fit in int32"}
@@ -256,12 +239,6 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 				return decisionCursor, err
 			}
 		}
-		if cfg.emitTokens {
-			if err := fillTokenAssembly(int64(batchIdx), cfg, views); err != nil {
-				h.mu.Unlock()
-				return decisionCursor, err
-			}
-		}
 		if cfg.emitTokensPacked {
 			renderBatchIdx := int64(batchIdx)
 			renderViews := views
@@ -324,73 +301,11 @@ func clearOutputViews(view outputViews, cfg encodeConfig) {
 	fillInt32(view.renderPlan, 0)
 	fillInt64(view.renderPlanLengths, 0)
 	fillInt64(view.renderPlanOverflow, 0)
-	// Dense token-assembler buffers are only live when emitTokens is set;
-	// zeroing them in packed mode is wasted work. The dense and packed
-	// paths are mutually exclusive (validated at the C entry points), so
-	// in packed mode the dense slices are typically nil anyway — skip the
-	// loops outright.
-	if cfg.emitTokens {
-		fillInt64(view.tokenIDs, 0)
-		fillInt64(view.tokenAttention, 0)
-		fillInt64(view.tokenSeqLengths, 0)
-		fillInt64(view.tokenOptionPos, -1)
-		fillBytes(view.tokenOptionMask, 0)
-		fillInt64(view.tokenTargetPos, -1)
-		fillBytes(view.tokenTargetMask, 0)
-		fillInt64(view.tokenCardRefPos, -1)
-		fillInt32(view.tokenOverflow, 0)
-	}
 	if cfg.emitTokensPacked {
 		// Packed token outputs are reset by the Python wrapper before
 		// every reuse. Avoid clearing these large slabs a second time here;
 		// the assembler only writes the live token region and active anchors.
 	}
-}
-
-// fillTokenAssembly walks the render-plan stream emitted for “batchIdx“
-// and fills the token-assembler outputs for that row. Requires that the
-// render plan was already emitted (cfg.emitRenderPlan must be true).
-func fillTokenAssembly(batchIdx int64, cfg encodeConfig, view outputViews) *encodeError {
-	tables := getTokenTables()
-	if tables == nil {
-		return &encodeError{
-			code:    mageEncodeErrEncodeFailure,
-			message: "MageRegisterTokenTables must be called before MageEncodeTokens",
-		}
-	}
-	planStart := batchIdx * cfg.renderPlanCapacity
-	planLen := view.renderPlanLengths[batchIdx]
-	plan := view.renderPlan[planStart : planStart+planLen]
-
-	mt := int64(cfg.tokenMaxTokens)
-	mo := int64(cfg.tokenMaxOptions)
-	mtg := int64(cfg.tokenMaxTargets)
-	mcr := int64(cfg.tokenMaxCardRefs)
-
-	out := &tokenAssemblerOut{
-		tokenIDs:      view.tokenIDs[batchIdx*mt : (batchIdx+1)*mt],
-		attentionMask: view.tokenAttention[batchIdx*mt : (batchIdx+1)*mt],
-		optionPos:     view.tokenOptionPos[batchIdx*mo : (batchIdx+1)*mo],
-		optionMask:    view.tokenOptionMask[batchIdx*mo : (batchIdx+1)*mo],
-		targetPos:     view.tokenTargetPos[batchIdx*mo*mtg : (batchIdx+1)*mo*mtg],
-		targetMask:    view.tokenTargetMask[batchIdx*mo*mtg : (batchIdx+1)*mo*mtg],
-		cardRefPos:    view.tokenCardRefPos[batchIdx*mcr : (batchIdx+1)*mcr],
-		maxOptions:    cfg.tokenMaxOptions,
-		maxTargets:    cfg.tokenMaxTargets,
-		maxCardRefs:   cfg.tokenMaxCardRefs,
-		cursorBase:    0,
-		padTail:       true,
-	}
-
-	cursor, overflow, err := assembleTokensFromPlan(plan, tables, out, cfg.tokenMaxTokens)
-	if err != nil {
-		return &encodeError{code: mageEncodeErrEncodeFailure, message: err.Error()}
-	}
-	view.tokenSeqLengths[batchIdx] = int64(cursor)
-	if overflow {
-		view.tokenOverflow[batchIdx] = 1
-	}
-	return nil
 }
 
 // fillTokenAssemblyPacked writes one row's worth of tokens into the

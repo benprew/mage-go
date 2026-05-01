@@ -123,13 +123,6 @@ extern char* MageTokenTableSummary();
 //
 extern char* MageTokenTableLookup(int32_t kind, int32_t k0, int32_t k1);
 
-// Same as MageEncodeBatch but additionally runs the native token-assembler
-// after the render-plan emission. “cfg.emit_render_plan“ is forced on
-// inside the call (the assembler walks the freshly-emitted plan). Token
-// outputs go into “tok_out“ (caller-owned buffers, shapes determined by
-// “tok_cfg“). Requires MageRegisterTokenTables to have been called.
-//
-extern MageEncodeResult MageEncodeTokens(MageBatchRequest* req, MageEncodeConfig* cfg, MageEncodeOutputs* out, MageTokenAssemblerConfig* tokCfg, MageTokenAssemblerOutputs* tokOut);
 extern MageEncodeResult MageEncodeTokensPacked(MageBatchRequest* req, MageEncodeConfig* cfg, MageEncodeOutputs* out, MageTokenAssemblerConfig* tokCfg, MagePackedTokenAssemblerOutputs* packedOut);
 extern int64_t MagePendingPlayer(int64_t id);
 extern int64_t MageIsOver(int64_t id);

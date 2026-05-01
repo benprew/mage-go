@@ -205,26 +205,6 @@ typedef struct {
 
 typedef struct {
     int64_t *token_ids;
-    int64_t *attention_mask;
-    int64_t *seq_lengths;
-    int64_t *option_positions;
-    uint8_t *option_mask;
-    int64_t *target_positions;
-    uint8_t *target_mask;
-    int64_t *card_ref_positions;
-    int32_t *token_overflow;
-} MageTokenAssemblerOutputs;
-
-MageEncodeResult MageEncodeTokens(
-    MageBatchRequest *req,
-    MageEncodeConfig *cfg,
-    MageEncodeOutputs *out,
-    MageTokenAssemblerConfig *tok_cfg,
-    MageTokenAssemblerOutputs *tok_out
-);
-
-typedef struct {
-    int64_t *token_ids;
     int64_t *seq_id;
     int64_t *pos_in_seq;
     int64_t *cu_seqlens;
