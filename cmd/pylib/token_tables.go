@@ -72,15 +72,20 @@ type tokenTables struct {
 	tappedID      int32
 	untappedID    int32
 
-	cardCloser     []int32
-	statusTapped   []int32
-	statusUntapped []int32
+	cardCloser       []int32
+	statusTapped     []int32
+	statusUntapped   []int32
+	cardCloser64     []int64
+	statusTapped64   []int64
+	statusUntapped64 []int64
 
-	cardRowCount int32
-	cardBodyToks []int32
-	cardBodyOff  []int64
-	cardNameToks []int32
-	cardNameOff  []int64
+	cardRowCount   int32
+	cardBodyToks   []int32
+	cardBodyOff    []int64
+	cardNameToks   []int32
+	cardNameOff    []int64
+	cardBodyToks64 []int64
+	cardNameToks64 []int64
 
 	// v2 dedup. dictEntryIDs is one int32 per card row (the
 	// ``<dict-entry:R>`` token id). NULL/empty when v2 is disabled.
@@ -122,6 +127,17 @@ func sliceI64(ptr *C.int64_t, length int) []int64 {
 		return nil
 	}
 	return unsafe.Slice((*int64)(unsafe.Pointer(ptr)), length)
+}
+
+func widenI32ToI64(src []int32) []int64 {
+	if len(src) == 0 {
+		return nil
+	}
+	out := make([]int64, len(src))
+	for i, v := range src {
+		out[i] = int64(v)
+	}
+	return out
 }
 
 // validateTablePack ensures an offsets table is consistent with its token
@@ -247,11 +263,25 @@ func (t *tokenTables) cardBodySpan(row int32) []int32 {
 	return t.cardBodyToks[t.cardBodyOff[row]:t.cardBodyOff[row+1]]
 }
 
+func (t *tokenTables) cardBodySpan64(row int32) []int64 {
+	if t == nil || row < 0 || row >= t.cardRowCount {
+		return nil
+	}
+	return t.cardBodyToks64[t.cardBodyOff[row]:t.cardBodyOff[row+1]]
+}
+
 func (t *tokenTables) cardNameSpan(row int32) []int32 {
 	if t == nil || row < 0 || row >= t.cardRowCount {
 		return nil
 	}
 	return t.cardNameToks[t.cardNameOff[row]:t.cardNameOff[row+1]]
+}
+
+func (t *tokenTables) cardNameSpan64(row int32) []int64 {
+	if t == nil || row < 0 || row >= t.cardRowCount {
+		return nil
+	}
+	return t.cardNameToks64[t.cardNameOff[row]:t.cardNameOff[row+1]]
 }
 
 // getTokenTables returns the currently-registered tables, or nil if Python
@@ -391,6 +421,9 @@ func registerTokenTables(c *C.MageTokenTables) error {
 	t.cardCloser = sliceI32(c.card_closer, int(c.card_closer_len))
 	t.statusTapped = sliceI32(c.status_tapped, int(c.status_tapped_len))
 	t.statusUntapped = sliceI32(c.status_untapped, int(c.status_untapped_len))
+	t.cardCloser64 = widenI32ToI64(t.cardCloser)
+	t.statusTapped64 = widenI32ToI64(t.statusTapped)
+	t.statusUntapped64 = widenI32ToI64(t.statusUntapped)
 
 	rowCount := int(t.cardRowCount)
 	t.cardBodyOff = sliceI64(c.card_body_offsets, rowCount+1)
@@ -400,6 +433,7 @@ func registerTokenTables(c *C.MageTokenTables) error {
 	if err := validateTablePack64("card_body", t.cardBodyToks, t.cardBodyOff, rowCount); err != nil {
 		return err
 	}
+	t.cardBodyToks64 = widenI32ToI64(t.cardBodyToks)
 	t.cardNameOff = sliceI64(c.card_name_offsets, rowCount+1)
 	if len(t.cardNameOff) > 0 {
 		t.cardNameToks = sliceI32(c.card_name_tokens, int(t.cardNameOff[rowCount]))
@@ -407,6 +441,7 @@ func registerTokenTables(c *C.MageTokenTables) error {
 	if err := validateTablePack64("card_name", t.cardNameToks, t.cardNameOff, rowCount); err != nil {
 		return err
 	}
+	t.cardNameToks64 = widenI32ToI64(t.cardNameToks)
 
 	// dict_entry_ids is sized rowCount (one entry per card row), or NULL
 	// when v2 dedup is disabled. The native side never indexes past

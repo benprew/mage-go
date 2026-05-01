@@ -193,6 +193,24 @@ func assembleTokensFromPlan(
 		cursor += n
 	}
 
+	writeSpan64 := func(span []int64) {
+		if overflow || span == nil {
+			return
+		}
+		n := int32(len(span))
+		if cursor+n > maxTokens {
+			room := maxTokens - cursor
+			if room > 0 {
+				copy(out.tokenIDs[cursor:cursor+room], span[:room])
+				cursor += room
+			}
+			overflow = true
+			return
+		}
+		copy(out.tokenIDs[cursor:cursor+n], span)
+		cursor += n
+	}
+
 	writeSingle := func(id int32) int32 {
 		if overflow {
 			return -1
@@ -427,7 +445,7 @@ func assembleTokensFromPlan(
 				if kindKnown && !kindHasNoSource(kindID) {
 					if !emitCardRef(sourceUUIDIdx) {
 						if sourceRow >= 0 && sourceRow < tables.cardRowCount {
-							writeSpan(tables.cardNameSpan(sourceRow))
+							writeSpan64(tables.cardNameSpan64(sourceRow))
 						}
 					}
 				}
@@ -469,7 +487,7 @@ func assembleTokensFromPlan(
 				default:
 					if !emitCardRef(targetUUIDIdx) {
 						if targetRow >= 0 && targetRow < tables.cardRowCount {
-							writeSpan(tables.cardNameSpan(targetRow))
+							writeSpan64(tables.cardNameSpan64(targetRow))
 						} else {
 							emitFragment(fragTargetFallback)
 						}
@@ -519,24 +537,24 @@ func assembleTokensFromPlan(
 			uuidIdx := plan[i+4]
 			emitCardRef(uuidIdx)
 			if row >= 0 && row < tables.cardRowCount {
-				writeSpan(tables.cardBodySpan(row))
+				writeSpan64(tables.cardBodySpan64(row))
 			}
 			if status&statusTappedKnown != 0 {
 				if status&0x0001 != 0 {
-					writeSpan(tables.statusTapped)
+					writeSpan64(tables.statusTapped64)
 				} else {
-					writeSpan(tables.statusUntapped)
+					writeSpan64(tables.statusUntapped64)
 				}
 			} else if structured && status&0x0001 != 0 {
-				writeSpan(tables.statusTapped)
+				writeSpan64(tables.statusTapped64)
 			}
 			if structured {
-				writeSpan(tables.cardCloser)
+				writeSpan64(tables.cardCloser64)
 			}
 			i += 1 + arity
 			continue
 		case opEndCard:
-			writeSpan(tables.cardCloser)
+			writeSpan64(tables.cardCloser64)
 			i++
 			continue
 		case opOpenRawCard:
@@ -558,9 +576,9 @@ func assembleTokensFromPlan(
 				writeSingle(tables.dictEntryIDs[row])
 			}
 			if row >= 0 && row < tables.cardRowCount {
-				writeSpan(tables.cardBodySpan(row))
+				writeSpan64(tables.cardBodySpan64(row))
 			}
-			writeSpan(tables.cardCloser)
+			writeSpan64(tables.cardCloser64)
 			i += 1 + arity
 			continue
 		case opPlaceCardRef:
@@ -575,14 +593,14 @@ func assembleTokensFromPlan(
 			}
 			if status&statusTappedKnown != 0 {
 				if status&0x0001 != 0 {
-					writeSpan(tables.statusTapped)
+					writeSpan64(tables.statusTapped64)
 				} else {
-					writeSpan(tables.statusUntapped)
+					writeSpan64(tables.statusUntapped64)
 				}
 			} else if structured && status&0x0001 != 0 {
-				writeSpan(tables.statusTapped)
+				writeSpan64(tables.statusTapped64)
 			}
-			writeSpan(tables.cardCloser)
+			writeSpan64(tables.cardCloser64)
 			i += 1 + arity
 			continue
 		}
