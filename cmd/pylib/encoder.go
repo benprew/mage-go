@@ -276,6 +276,7 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 				cfg,
 				renderViews,
 				views,
+				scratch,
 			)
 			if err != nil {
 				h.mu.Unlock()
@@ -404,6 +405,7 @@ func fillTokenAssemblyPacked(
 	cfg encodeConfig,
 	planView outputViews,
 	outputView outputViews,
+	scratch *encodeScratch,
 ) (int32, *encodeError) {
 	tables := getTokenTables()
 	if tables == nil {
@@ -457,11 +459,11 @@ func fillTokenAssemblyPacked(
 		}
 	}
 
-	// Per-token metadata for the live region of this row.
-	for k := int32(0); k < cursor; k++ {
-		outputView.packedSeqID[packedCursor+k] = outputBatchIdx
-		outputView.packedPosInSeq[packedCursor+k] = int64(k)
-	}
+	// Per-token metadata for the live region of this row. Both arrays are
+	// derivable from ``cu_seqlens``; keep the ABI stable but write them with
+	// bulk operations instead of a two-store loop.
+	fillInt64(outputView.packedSeqID[packedCursor:packedCursor+cursor], outputBatchIdx)
+	copy(outputView.packedPosInSeq[packedCursor:packedCursor+cursor], scratch.tokenPositions(cursor))
 	outputView.packedSeqLengths[outputBatchIdx] = int64(cursor)
 	outputView.packedStatePositions[outputBatchIdx] = int64(packedCursor)
 	outputView.packedCuSeqlens[outputBatchIdx+1] = int64(packedCursor + cursor)
