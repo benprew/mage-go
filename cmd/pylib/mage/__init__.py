@@ -204,17 +204,17 @@ typedef struct {
 } MageTokenAssemblerConfig;
 
 typedef struct {
-    int64_t *token_ids;
-    int64_t *seq_id;
-    int64_t *pos_in_seq;
-    int64_t *cu_seqlens;
-    int64_t *seq_lengths;
-    int64_t *state_positions;
-    int64_t *option_positions;
+    int32_t *token_ids;
+    int32_t *seq_id;
+    int32_t *pos_in_seq;
+    int32_t *cu_seqlens;
+    int32_t *seq_lengths;
+    int32_t *state_positions;
+    int32_t *option_positions;
     uint8_t *option_mask;
-    int64_t *target_positions;
+    int32_t *target_positions;
     uint8_t *target_mask;
-    int64_t *card_ref_positions;
+    int32_t *card_ref_positions;
     int32_t *token_overflow;
 } MagePackedTokenAssemblerOutputs;
 

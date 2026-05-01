@@ -1652,17 +1652,17 @@ func attachPackedTokenViews(
 		return &encodeError{code: mageEncodeErrInvalidArgument, message: "packed token outputs must be non-nil"}
 	}
 
-	views.packedTokenIDs = unsafe.Slice((*int64)(unsafe.Pointer(packedOut.token_ids)), totalCap)
-	views.packedSeqID = unsafe.Slice((*int64)(unsafe.Pointer(packedOut.seq_id)), totalCap)
-	views.packedPosInSeq = unsafe.Slice((*int64)(unsafe.Pointer(packedOut.pos_in_seq)), totalCap)
-	views.packedCuSeqlens = unsafe.Slice((*int64)(unsafe.Pointer(packedOut.cu_seqlens)), n+1)
-	views.packedSeqLengths = unsafe.Slice((*int64)(unsafe.Pointer(packedOut.seq_lengths)), n)
-	views.packedStatePositions = unsafe.Slice((*int64)(unsafe.Pointer(packedOut.state_positions)), n)
-	views.packedOptionPos = unsafe.Slice((*int64)(unsafe.Pointer(packedOut.option_positions)), totalOptions)
+	views.packedTokenIDs = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.token_ids)), totalCap)
+	views.packedSeqID = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.seq_id)), totalCap)
+	views.packedPosInSeq = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.pos_in_seq)), totalCap)
+	views.packedCuSeqlens = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.cu_seqlens)), n+1)
+	views.packedSeqLengths = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.seq_lengths)), n)
+	views.packedStatePositions = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.state_positions)), n)
+	views.packedOptionPos = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.option_positions)), totalOptions)
 	views.packedOptionMask = unsafe.Slice((*byte)(unsafe.Pointer(packedOut.option_mask)), totalOptions)
-	views.packedTargetPos = unsafe.Slice((*int64)(unsafe.Pointer(packedOut.target_positions)), totalTargets)
+	views.packedTargetPos = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.target_positions)), totalTargets)
 	views.packedTargetMask = unsafe.Slice((*byte)(unsafe.Pointer(packedOut.target_mask)), totalTargets)
-	views.packedCardRefPos = unsafe.Slice((*int64)(unsafe.Pointer(packedOut.card_ref_positions)), totalCardRefs)
+	views.packedCardRefPos = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.card_ref_positions)), totalCardRefs)
 	views.packedTokenOverflow = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.token_overflow)), n)
 	return nil
 }

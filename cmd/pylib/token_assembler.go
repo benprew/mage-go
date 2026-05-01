@@ -78,27 +78,19 @@ type zoneEntry struct {
 // walker. Slices are views into the Python-allocated output tensors. -1
 // sentinels mark absent positions; mask slices carry 0/1 indicators.
 type tokenAssemblerOut struct {
-	tokenIDs      []int64
-	attentionMask []int64 // optional: may be nil in packed mode
-	optionPos     []int64
-	optionMask    []uint8
-	targetPos     []int64 // length max_options*max_targets
-	targetMask    []uint8 // length max_options*max_targets
-	cardRefPos    []int64
-	maxOptions    int32
-	maxTargets    int32
-	maxCardRefs   int32
+	tokenIDs    []int32
+	optionPos   []int32
+	optionMask  []uint8
+	targetPos   []int32 // length max_options*max_targets
+	targetMask  []uint8 // length max_options*max_targets
+	cardRefPos  []int32
+	maxOptions  int32
+	maxTargets  int32
+	maxCardRefs int32
 	// cursorBase shifts every recorded anchor position by a constant
-	// offset before it is written. Dense (per-row) mode passes 0 so the
-	// existing byte-for-byte behavior is preserved; packed mode passes
-	// the row's start offset into the shared packed buffer so anchors
-	// land as absolute offsets.
+	// offset before it is written. Packed mode passes the row's start offset
+	// into the shared packed buffer so anchors land as absolute offsets.
 	cursorBase int32
-	// padTail, when true, fills the unused tail of ``tokenIDs`` with
-	// ``tables.padID`` and zeroes the unused tail of ``attentionMask``.
-	// Packed mode disables this because the next row will write into
-	// the same backing buffer and the trailing region is unused.
-	padTail bool
 }
 
 // assembleTokensFromPlan walks “plan“ (an int32 render-plan stream) and
@@ -179,28 +171,6 @@ func assembleTokensFromPlan(
 			// Write what fits, mark overflow, stop.
 			room := maxTokens - cursor
 			if room > 0 {
-				for k := int32(0); k < room; k++ {
-					out.tokenIDs[cursor+k] = int64(span[k])
-				}
-				cursor += room
-			}
-			overflow = true
-			return
-		}
-		for k := int32(0); k < n; k++ {
-			out.tokenIDs[cursor+k] = int64(span[k])
-		}
-		cursor += n
-	}
-
-	writeSpan64 := func(span []int64) {
-		if overflow || span == nil {
-			return
-		}
-		n := int32(len(span))
-		if cursor+n > maxTokens {
-			room := maxTokens - cursor
-			if room > 0 {
 				copy(out.tokenIDs[cursor:cursor+room], span[:room])
 				cursor += room
 			}
@@ -220,7 +190,7 @@ func assembleTokensFromPlan(
 			return -1
 		}
 		pos := cursor
-		out.tokenIDs[cursor] = int64(id)
+		out.tokenIDs[cursor] = id
 		cursor++
 		return pos
 	}
@@ -241,7 +211,7 @@ func assembleTokensFromPlan(
 		}
 		if !cardRefSeen[uuidIdx] {
 			cardRefSeen[uuidIdx] = true
-			out.cardRefPos[uuidIdx] = int64(pos + out.cursorBase)
+			out.cardRefPos[uuidIdx] = pos + out.cursorBase
 		}
 		return true
 	}
@@ -289,7 +259,7 @@ func assembleTokensFromPlan(
 				switch {
 				case tid == tables.optionID:
 					if nextOption < out.maxOptions {
-						out.optionPos[nextOption] = int64(pos + out.cursorBase)
+						out.optionPos[nextOption] = pos + out.cursorBase
 						out.optionMask[nextOption] = 1
 						curOptionIdx = nextOption
 						curTargetCount = 0
@@ -298,7 +268,7 @@ func assembleTokensFromPlan(
 				case tid == tables.targetOpenID && curOptionIdx >= 0:
 					if curTargetCount < out.maxTargets {
 						idx := curOptionIdx*out.maxTargets + curTargetCount
-						out.targetPos[idx] = int64(pos + out.cursorBase)
+						out.targetPos[idx] = pos + out.cursorBase
 						out.targetMask[idx] = 1
 						curTargetCount++
 					}
@@ -307,7 +277,7 @@ func assembleTokensFromPlan(
 					for k := int32(0); k < tables.cardRefCount; k++ {
 						if tables.cardRefIDs[k] == tid && !cardRefSeen[k] {
 							cardRefSeen[k] = true
-							out.cardRefPos[k] = int64(pos + out.cursorBase)
+							out.cardRefPos[k] = pos + out.cursorBase
 							break
 						}
 					}
@@ -423,7 +393,7 @@ func assembleTokensFromPlan(
 
 				pos := writeSingle(tables.optionID)
 				if pos >= 0 && nextOption < out.maxOptions {
-					out.optionPos[nextOption] = int64(pos + out.cursorBase)
+					out.optionPos[nextOption] = pos + out.cursorBase
 					out.optionMask[nextOption] = 1
 					curOptionIdx = nextOption
 					curTargetCount = 0
@@ -445,7 +415,7 @@ func assembleTokensFromPlan(
 				if kindKnown && !kindHasNoSource(kindID) {
 					if !emitCardRef(sourceUUIDIdx) {
 						if sourceRow >= 0 && sourceRow < tables.cardRowCount {
-							writeSpan64(tables.cardNameSpan64(sourceRow))
+							writeSpan(tables.cardNameSpan(sourceRow))
 						}
 					}
 				}
@@ -469,7 +439,7 @@ func assembleTokensFromPlan(
 				pos := writeSingle(tables.targetOpenID)
 				if pos >= 0 && curOptionIdx >= 0 && curTargetCount < out.maxTargets {
 					idx := curOptionIdx*out.maxTargets + curTargetCount
-					out.targetPos[idx] = int64(pos + out.cursorBase)
+					out.targetPos[idx] = pos + out.cursorBase
 					out.targetMask[idx] = 1
 					curTargetCount++
 				}
@@ -487,7 +457,7 @@ func assembleTokensFromPlan(
 				default:
 					if !emitCardRef(targetUUIDIdx) {
 						if targetRow >= 0 && targetRow < tables.cardRowCount {
-							writeSpan64(tables.cardNameSpan64(targetRow))
+							writeSpan(tables.cardNameSpan(targetRow))
 						} else {
 							emitFragment(fragTargetFallback)
 						}
@@ -537,24 +507,24 @@ func assembleTokensFromPlan(
 			uuidIdx := plan[i+4]
 			emitCardRef(uuidIdx)
 			if row >= 0 && row < tables.cardRowCount {
-				writeSpan64(tables.cardBodySpan64(row))
+				writeSpan(tables.cardBodySpan(row))
 			}
 			if status&statusTappedKnown != 0 {
 				if status&0x0001 != 0 {
-					writeSpan64(tables.statusTapped64)
+					writeSpan(tables.statusTapped)
 				} else {
-					writeSpan64(tables.statusUntapped64)
+					writeSpan(tables.statusUntapped)
 				}
 			} else if structured && status&0x0001 != 0 {
-				writeSpan64(tables.statusTapped64)
+				writeSpan(tables.statusTapped)
 			}
 			if structured {
-				writeSpan64(tables.cardCloser64)
+				writeSpan(tables.cardCloser)
 			}
 			i += 1 + arity
 			continue
 		case opEndCard:
-			writeSpan64(tables.cardCloser64)
+			writeSpan(tables.cardCloser)
 			i++
 			continue
 		case opOpenRawCard:
@@ -576,9 +546,9 @@ func assembleTokensFromPlan(
 				writeSingle(tables.dictEntryIDs[row])
 			}
 			if row >= 0 && row < tables.cardRowCount {
-				writeSpan64(tables.cardBodySpan64(row))
+				writeSpan(tables.cardBodySpan(row))
 			}
-			writeSpan64(tables.cardCloser64)
+			writeSpan(tables.cardCloser)
 			i += 1 + arity
 			continue
 		case opPlaceCardRef:
@@ -593,14 +563,14 @@ func assembleTokensFromPlan(
 			}
 			if status&statusTappedKnown != 0 {
 				if status&0x0001 != 0 {
-					writeSpan64(tables.statusTapped64)
+					writeSpan(tables.statusTapped)
 				} else {
-					writeSpan64(tables.statusUntapped64)
+					writeSpan(tables.statusUntapped)
 				}
 			} else if structured && status&0x0001 != 0 {
-				writeSpan64(tables.statusTapped64)
+				writeSpan(tables.statusTapped)
 			}
-			writeSpan64(tables.cardCloser64)
+			writeSpan(tables.cardCloser)
 			i += 1 + arity
 			continue
 		}
@@ -625,10 +595,9 @@ func assembleTokensFromPlan(
 	// (the option exists) but option_position is unreachable. Same for
 	// targets and card-refs.
 	if overflow {
-		// Compare against the absolute end-of-row offset so the same
-		// truncation pass works for dense (cursorBase=0) and packed
-		// (cursorBase=row_start) callers.
-		endAbs := int64(cursor + out.cursorBase)
+		// Compare against the absolute end-of-row offset so truncation tests
+		// packed absolute anchors against the row-local token budget.
+		endAbs := cursor + out.cursorBase
 		for o := int32(0); o < out.maxOptions; o++ {
 			if out.optionPos[o] >= endAbs {
 				out.optionPos[o] = -1
@@ -649,24 +618,6 @@ func assembleTokensFromPlan(
 			if out.cardRefPos[k] >= endAbs {
 				out.cardRefPos[k] = -1
 			}
-		}
-	}
-
-	if out.attentionMask != nil {
-		for k := int32(0); k < cursor; k++ {
-			out.attentionMask[k] = 1
-		}
-		if out.padTail {
-			for k := cursor; k < maxTokens; k++ {
-				out.attentionMask[k] = 0
-			}
-		}
-	}
-
-	if out.padTail {
-		pad := int64(tables.padID)
-		for k := cursor; k < maxTokens; k++ {
-			out.tokenIDs[k] = pad
 		}
 	}
 

@@ -130,17 +130,17 @@ type outputViews struct {
 
 	// Packed (varlen) token-assembler outputs. ``packedTokenIDs`` etc. are
 	// sized [B*max_tokens]; ``packedSeqId`` and ``packedPosInSeq`` likewise.
-	packedTokenIDs       []int64
-	packedSeqID          []int64
-	packedPosInSeq       []int64
-	packedCuSeqlens      []int64 // [B+1]
-	packedSeqLengths     []int64 // [B]
-	packedStatePositions []int64 // [B]
-	packedOptionPos      []int64
+	packedTokenIDs       []int32
+	packedSeqID          []int32
+	packedPosInSeq       []int32
+	packedCuSeqlens      []int32 // [B+1]
+	packedSeqLengths     []int32 // [B]
+	packedStatePositions []int32 // [B]
+	packedOptionPos      []int32
 	packedOptionMask     []byte
-	packedTargetPos      []int64
+	packedTargetPos      []int32
 	packedTargetMask     []byte
-	packedCardRefPos     []int64
+	packedCardRefPos     []int32
 	packedTokenOverflow  []int32
 }
 
@@ -352,18 +352,16 @@ func fillTokenAssemblyPacked(
 	}
 
 	out := &tokenAssemblerOut{
-		tokenIDs:      outputView.packedTokenIDs[rowStart:rowEnd],
-		attentionMask: nil, // packed mode does not use attention_mask
-		optionPos:     outputView.packedOptionPos[outputBatchIdx*mo : (outputBatchIdx+1)*mo],
-		optionMask:    outputView.packedOptionMask[outputBatchIdx*mo : (outputBatchIdx+1)*mo],
-		targetPos:     outputView.packedTargetPos[outputBatchIdx*mo*mtg : (outputBatchIdx+1)*mo*mtg],
-		targetMask:    outputView.packedTargetMask[outputBatchIdx*mo*mtg : (outputBatchIdx+1)*mo*mtg],
-		cardRefPos:    outputView.packedCardRefPos[outputBatchIdx*mcr : (outputBatchIdx+1)*mcr],
-		maxOptions:    cfg.tokenMaxOptions,
-		maxTargets:    cfg.tokenMaxTargets,
-		maxCardRefs:   cfg.tokenMaxCardRefs,
-		cursorBase:    packedCursor,
-		padTail:       false,
+		tokenIDs:    outputView.packedTokenIDs[rowStart:rowEnd],
+		optionPos:   outputView.packedOptionPos[outputBatchIdx*mo : (outputBatchIdx+1)*mo],
+		optionMask:  outputView.packedOptionMask[outputBatchIdx*mo : (outputBatchIdx+1)*mo],
+		targetPos:   outputView.packedTargetPos[outputBatchIdx*mo*mtg : (outputBatchIdx+1)*mo*mtg],
+		targetMask:  outputView.packedTargetMask[outputBatchIdx*mo*mtg : (outputBatchIdx+1)*mo*mtg],
+		cardRefPos:  outputView.packedCardRefPos[outputBatchIdx*mcr : (outputBatchIdx+1)*mcr],
+		maxOptions:  cfg.tokenMaxOptions,
+		maxTargets:  cfg.tokenMaxTargets,
+		maxCardRefs: cfg.tokenMaxCardRefs,
+		cursorBase:  packedCursor,
 	}
 
 	cursor, overflow, err := assembleTokensFromPlan(plan, tables, out, cfg.tokenMaxTokens)
@@ -377,11 +375,11 @@ func fillTokenAssemblyPacked(
 	// Per-token metadata for the live region of this row. Both arrays are
 	// derivable from ``cu_seqlens``; keep the ABI stable but write them with
 	// bulk operations instead of a two-store loop.
-	fillInt64(outputView.packedSeqID[packedCursor:packedCursor+cursor], outputBatchIdx)
+	fillInt32(outputView.packedSeqID[packedCursor:packedCursor+cursor], int32(outputBatchIdx))
 	copy(outputView.packedPosInSeq[packedCursor:packedCursor+cursor], scratch.tokenPositions(cursor))
-	outputView.packedSeqLengths[outputBatchIdx] = int64(cursor)
-	outputView.packedStatePositions[outputBatchIdx] = int64(packedCursor)
-	outputView.packedCuSeqlens[outputBatchIdx+1] = int64(packedCursor + cursor)
+	outputView.packedSeqLengths[outputBatchIdx] = cursor
+	outputView.packedStatePositions[outputBatchIdx] = packedCursor
+	outputView.packedCuSeqlens[outputBatchIdx+1] = packedCursor + cursor
 	if overflow {
 		outputView.packedTokenOverflow[outputBatchIdx] = 1
 	}

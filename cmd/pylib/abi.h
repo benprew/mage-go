@@ -221,17 +221,17 @@ typedef struct {
  * portion of the buffer is unspecified.
  */
 typedef struct {
-    int64_t* token_ids;          /* [B*max_tokens] int64, live region */
-    int64_t* seq_id;             /* [B*max_tokens] int64, doc index per token */
-    int64_t* pos_in_seq;         /* [B*max_tokens] int64, in-doc RoPE position */
-    int64_t* cu_seqlens;         /* [B+1] int64, exclusive prefix sum */
-    int64_t* seq_lengths;        /* [B] int64 */
-    int64_t* state_positions;    /* [B] int64, packed-offset of row's first token */
-    int64_t* option_positions;   /* [B, max_options] int64, absolute, -1 absent */
+    int32_t* token_ids;          /* [B*max_tokens] int32, live region */
+    int32_t* seq_id;             /* [B*max_tokens] int32, doc index per token */
+    int32_t* pos_in_seq;         /* [B*max_tokens] int32, in-doc RoPE position */
+    int32_t* cu_seqlens;         /* [B+1] int32, exclusive prefix sum */
+    int32_t* seq_lengths;        /* [B] int32 */
+    int32_t* state_positions;    /* [B] int32, packed-offset of row's first token */
+    int32_t* option_positions;   /* [B, max_options] int32, absolute, -1 absent */
     uint8_t* option_mask;        /* [B, max_options] uint8 */
-    int64_t* target_positions;   /* [B, max_options, max_targets] int64, absolute */
+    int32_t* target_positions;   /* [B, max_options, max_targets] int32, absolute */
     uint8_t* target_mask;        /* [B, max_options, max_targets] uint8 */
-    int64_t* card_ref_positions; /* [B, max_card_refs] int64, absolute, -1 absent */
+    int32_t* card_ref_positions; /* [B, max_card_refs] int32, absolute, -1 absent */
     int32_t* token_overflow;     /* [B] int32 (1 = row truncated) */
 } MagePackedTokenAssemblerOutputs;
 
