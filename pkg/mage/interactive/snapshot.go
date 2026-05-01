@@ -223,14 +223,19 @@ func snapshotStack(g *mage.Game) []StackItemState {
 			controller = p.Name()
 		}
 		var targetNames []string
+		var targetIDs []uuid.UUID
 		for _, tid := range obj.Targets {
 			targetNames = append(targetNames, resolveTargetName(g, tid))
+			targetIDs = append(targetIDs, tid)
 		}
 		items = append(items, StackItemState{
-			Name:       name,
-			Controller: controller,
-			IsAbility:  obj.IsAbility,
-			Targets:    targetNames,
+			Name:        name,
+			Controller:  controller,
+			IsAbility:   obj.IsAbility,
+			Targets:     targetNames,
+			TargetIDs:   targetIDs,
+			XValue:      obj.XValue,
+			EventAmount: obj.EventAmount,
 		})
 	}
 	return items

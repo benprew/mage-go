@@ -191,10 +191,13 @@ type ManaPoolState struct {
 
 // StackItemState is a snapshot of a stack object.
 type StackItemState struct {
-	Name       string
-	Controller string
-	IsAbility  bool
-	Targets    []string // human-readable target names
+	Name        string
+	Controller  string
+	IsAbility   bool
+	Targets     []string    // human-readable target names
+	TargetIDs   []uuid.UUID // permanent/player IDs of targets, parallel to Targets
+	XValue      int         // chosen X for X-cost spells, 0 otherwise
+	EventAmount int         // amount from triggering event (e.g. damage dealt for triggered abilities)
 }
 
 // ChoiceType identifies what kind of interactive choice the human player must make.
