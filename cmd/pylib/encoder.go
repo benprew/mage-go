@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math"
+	"runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -40,6 +41,8 @@ const (
 	mageEncodeErrGameOver        = mageEncodeErrOver
 	mageEncodeErrBufferTooSmall  = mageEncodeErrBuffer
 	mageEncodeErrEncodeFailure   = mageEncodeErrEncode
+	packedParallelMinRows        = 128
+	packedParallelMaxWorkers     = 8
 )
 
 var (
@@ -179,6 +182,10 @@ func validateEncodeConfig(cfg encodeConfig) *encodeError {
 }
 
 func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64, *encodeError) {
+	if cfg.emitTokensPacked && !cfg.emitRenderPlan && len(req.handles) >= packedParallelMinRows {
+		return encodeBatchGoPackedParallel(req, cfg, views)
+	}
+
 	callStart := time.Time{}
 	var gameTiming, renderTiming, assemblyTiming, metadataTiming time.Duration
 	if cfg.emitTokensPacked {
@@ -300,6 +307,207 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 	return decisionCursor, nil
 }
 
+func encodeBatchGoPackedParallel(req batchRequest, cfg encodeConfig, views outputViews) (int64, *encodeError) {
+	callStart := time.Now()
+	clearOutputViews(views, cfg)
+	if len(views.packedCuSeqlens) > 0 {
+		views.packedCuSeqlens[0] = 0
+	}
+
+	n := len(req.handles)
+	decisionRows := make([]int64, n)
+	gameTimings := make([]time.Duration, n)
+	renderTimings := make([]time.Duration, n)
+	assemblyTimings := make([]time.Duration, n)
+	metadataTimings := make([]time.Duration, n)
+	pendings := make([]*apiPending, n)
+
+	workers := minInt(n, runtime.GOMAXPROCS(0))
+	workers = minInt(workers, packedParallelMaxWorkers)
+	if workers < 1 {
+		workers = 1
+	}
+	var wg sync.WaitGroup
+	var errMu sync.Mutex
+	var firstErr *encodeError
+	setErr := func(err *encodeError) {
+		if err == nil {
+			return
+		}
+		errMu.Lock()
+		if firstErr == nil {
+			firstErr = err
+		}
+		errMu.Unlock()
+	}
+
+	for workerIdx := 0; workerIdx < workers; workerIdx++ {
+		start := workerIdx * n / workers
+		end := (workerIdx + 1) * n / workers
+		if start == end {
+			continue
+		}
+		wg.Add(1)
+		go func(start, end int) {
+			defer wg.Done()
+			scratch := newEncodeScratch()
+			for batchIdx := start; batchIdx < end; batchIdx++ {
+				errMu.Lock()
+				stopped := firstErr != nil
+				errMu.Unlock()
+				if stopped {
+					return
+				}
+				handleID := req.handles[batchIdx]
+				h := getHandle(handleID)
+				if h == nil {
+					setErr(&encodeError{code: mageEncodeErrHandle, message: fmt.Sprintf("unknown handle %d", handleID)})
+					return
+				}
+
+				h.mu.Lock()
+				if h.done {
+					h.mu.Unlock()
+					setErr(&encodeError{code: mageEncodeErrOver, message: fmt.Sprintf("handle %d is over", handleID)})
+					return
+				}
+				state := cachedSnapshotState(h)
+				pending := buildPending(h.current)
+				if pending == nil {
+					h.mu.Unlock()
+					setErr(&encodeError{code: mageEncodeErrEncode, message: fmt.Sprintf("handle %d has no pending request", handleID)})
+					return
+				}
+				pendings[batchIdx] = pending
+
+				requestedPerspective := int64(-1)
+				if req.perspectives != nil {
+					requestedPerspective = req.perspectives[batchIdx]
+				}
+				playerIdx, encErr := resolvePerspectivePlayerIndex(state, pending, requestedPerspective)
+				if encErr != nil {
+					h.mu.Unlock()
+					setErr(encErr)
+					return
+				}
+
+				scratch.reset()
+				cardIDToSlot := scratch.cardIDToSlot
+				phaseStart := time.Now()
+				if encErr := fillStateEncoding(int64(batchIdx), state, pending, playerIdx, cfg, views, cardIDToSlot); encErr != nil {
+					h.mu.Unlock()
+					setErr(encErr)
+					return
+				}
+				if encErr := fillActionEncoding(int64(batchIdx), state, pending, playerIdx, cfg, views, cardIDToSlot); encErr != nil {
+					h.mu.Unlock()
+					setErr(encErr)
+					return
+				}
+				gameTimings[batchIdx] += time.Since(phaseStart)
+
+				renderViews := scratch.internalRenderPlanView(cfg.renderPlanCapacity)
+				phaseStart = time.Now()
+				if encErr := fillRenderPlan(0, state, pending, playerIdx, cfg, renderViews, scratch); encErr != nil {
+					h.mu.Unlock()
+					setErr(encErr)
+					return
+				}
+				renderTimings[batchIdx] += time.Since(phaseStart)
+
+				rowStart := int32(int64(batchIdx) * int64(cfg.tokenMaxTokens))
+				phaseStart = time.Now()
+				_, metadata, encErr := fillTokenAssemblyPacked(
+					0,
+					int64(batchIdx),
+					rowStart,
+					cfg,
+					renderViews,
+					views,
+					scratch,
+				)
+				if encErr != nil {
+					h.mu.Unlock()
+					setErr(encErr)
+					return
+				}
+				elapsed := time.Since(phaseStart)
+				assemblyTimings[batchIdx] += elapsed - metadata
+				metadataTimings[batchIdx] += metadata
+
+				phaseStart = time.Now()
+				decisionRows[batchIdx] = decisionRowsForPending(pending, cfg)
+				gameTimings[batchIdx] += time.Since(phaseStart)
+				h.mu.Unlock()
+			}
+		}(start, end)
+	}
+	wg.Wait()
+	if firstErr != nil {
+		return 0, firstErr
+	}
+
+	decisionCursor := int64(0)
+	for batchIdx, count := range decisionRows {
+		if decisionCursor+count > cfg.decisionCapacity {
+			return decisionCursor, &encodeError{code: mageEncodeErrBuffer, message: "decision_capacity too small for decision rows"}
+		}
+		if pending := pendings[batchIdx]; pending != nil {
+			written, encErr := fillDecisionEncoding(int64(batchIdx), pending, cfg, views, decisionCursor)
+			if encErr != nil {
+				return decisionCursor, encErr
+			}
+			if written != count {
+				return decisionCursor, &encodeError{
+					code:    mageEncodeErrEncode,
+					message: fmt.Sprintf("decision row count mismatch for batch row %d: precomputed=%d written=%d", batchIdx, count, written),
+				}
+			}
+		}
+		decisionCursor += count
+	}
+
+	packedCursor := int32(0)
+	metadataStart := time.Now()
+	for batchIdx := 0; batchIdx < n; batchIdx++ {
+		rowStart := int32(int64(batchIdx) * int64(cfg.tokenMaxTokens))
+		length := views.packedSeqLengths[batchIdx]
+		if length < 0 || length > cfg.tokenMaxTokens {
+			return decisionCursor, &encodeError{code: mageEncodeErrEncode, message: fmt.Sprintf("invalid packed sequence length %d at batch row %d", length, batchIdx)}
+		}
+		if length > 0 && packedCursor != rowStart {
+			copy(
+				views.packedTokenIDs[packedCursor:packedCursor+length],
+				views.packedTokenIDs[rowStart:rowStart+length],
+			)
+		}
+		delta := packedCursor - rowStart
+		if delta != 0 {
+			rebasePackedPositions(views, cfg, int64(batchIdx), delta)
+		}
+		views.packedStatePositions[batchIdx] = packedCursor
+		views.packedCuSeqlens[batchIdx+1] = packedCursor + length
+		packedCursor += length
+	}
+	metadataTimings[0] += time.Since(metadataStart)
+
+	var gameTiming, renderTiming, assemblyTiming, metadataTiming time.Duration
+	for i := 0; i < n; i++ {
+		gameTiming += gameTimings[i]
+		renderTiming += renderTimings[i]
+		assemblyTiming += assemblyTimings[i]
+		metadataTiming += metadataTimings[i]
+	}
+	addPackedEncodeTiming(
+		time.Since(callStart),
+		gameTiming,
+		renderTiming,
+		assemblyTiming,
+		metadataTiming,
+	)
+	return decisionCursor, nil
+}
+
 func clearOutputViews(view outputViews, cfg encodeConfig) {
 	fillInt64(view.traceKindID, 0)
 	fillInt64(view.slotCardRows, 0)
@@ -414,6 +622,63 @@ func fillTokenAssemblyPacked(
 		outputView.packedTokenOverflow[outputBatchIdx] = 1
 	}
 	return packedCursor + cursor, time.Since(metadataStart), nil
+}
+
+func rebasePackedPositions(view outputViews, cfg encodeConfig, batchIdx int64, delta int32) {
+	mo := cfg.tokenMaxOptions
+	mtg := cfg.tokenMaxTargets
+	mcr := cfg.tokenMaxCardRefs
+
+	if batchIdx >= 0 && batchIdx < int64(len(view.packedStatePositions)) {
+		view.packedStatePositions[batchIdx] += delta
+	}
+
+	optionStart := batchIdx * int64(mo)
+	optionEnd := optionStart + int64(mo)
+	for i := optionStart; i < optionEnd; i++ {
+		if view.packedOptionPos[i] >= 0 {
+			view.packedOptionPos[i] += delta
+		}
+	}
+
+	targetStart := batchIdx * int64(mo) * int64(mtg)
+	targetEnd := targetStart + int64(mo)*int64(mtg)
+	for i := targetStart; i < targetEnd; i++ {
+		if view.packedTargetPos[i] >= 0 {
+			view.packedTargetPos[i] += delta
+		}
+	}
+
+	cardStart := batchIdx * int64(mcr)
+	cardEnd := cardStart + int64(mcr)
+	for i := cardStart; i < cardEnd; i++ {
+		if view.packedCardRefPos[i] >= 0 {
+			view.packedCardRefPos[i] += delta
+		}
+	}
+}
+
+func decisionRowsForPending(pending *apiPending, cfg encodeConfig) int64 {
+	traceKind := traceKindForPending(pending)
+	switch traceKind {
+	case "may":
+		return 0
+	case "priority":
+		optionCount := minInt64(int64(len(pending.Options)), cfg.maxOptions)
+		count := minInt64(priorityCandidateCount(pending, optionCount, cfg.maxTargetsPerOption), cfg.maxCachedChoices)
+		if count == 0 {
+			return 0
+		}
+		return 1
+	case "attackers", "blockers":
+		return minInt64(int64(len(pending.Options)), cfg.maxOptions)
+	default:
+		optionCount := minInt64(int64(len(pending.Options)), cfg.maxOptions)
+		if optionCount == 0 {
+			return 0
+		}
+		return 1
+	}
 }
 
 func resolvePerspectivePlayerIndex(state *apiGameState, pending *apiPending, requested int64) (int, *encodeError) {
