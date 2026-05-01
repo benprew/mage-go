@@ -1496,7 +1496,7 @@ func MageTokenTableSummary() *C.char {
 	}
 	b, err := json.Marshal(summary)
 	if err != nil {
-		return errResponse(fmt.Sprintf("marshal summary: %v", err))
+		return errResponse("marshal summary: %v", err)
 	}
 	return C.CString(string(b))
 }
@@ -1555,7 +1555,7 @@ func MageTokenTableLookup(kind C.int32_t, k0 C.int32_t, k1 C.int32_t) *C.char {
 	copy(out, span)
 	b, err := json.Marshal(out)
 	if err != nil {
-		return errResponse(fmt.Sprintf("marshal: %v", err))
+		return errResponse("marshal: %v", err)
 	}
 	return C.CString(string(b))
 }
