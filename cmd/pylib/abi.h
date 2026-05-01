@@ -216,14 +216,12 @@ typedef struct {
  * into ``token_ids`` (i.e. they are already shifted by cu_seqlens[b]).
  *
  * After a successful call, ``cu_seqlens[B]`` is the total live token
- * count; ``token_ids[0 : cu_seqlens[B]]``, ``seq_id[0 : cu_seqlens[B]]``
- * and ``pos_in_seq[0 : cu_seqlens[B]]`` are the live region. The trailing
- * portion of the buffer is unspecified.
+ * count; ``token_ids[0 : cu_seqlens[B]]`` is the live region. The trailing
+ * portion of the buffer is unspecified. ``seq_id`` and ``pos_in_seq`` are
+ * derivable from ``cu_seqlens`` and are intentionally not written by Go.
  */
 typedef struct {
     int32_t* token_ids;          /* [B*max_tokens] int32, live region */
-    int32_t* seq_id;             /* [B*max_tokens] int32, doc index per token */
-    int32_t* pos_in_seq;         /* [B*max_tokens] int32, in-doc RoPE position */
     int32_t* cu_seqlens;         /* [B+1] int32, exclusive prefix sum */
     int32_t* seq_lengths;        /* [B] int32 */
     int32_t* state_positions;    /* [B] int32, packed-offset of row's first token */

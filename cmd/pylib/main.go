@@ -1638,8 +1638,6 @@ func attachPackedTokenViews(
 	totalCardRefs := n * int64(cfg.tokenMaxCardRefs)
 
 	if packedOut.token_ids == nil ||
-		packedOut.seq_id == nil ||
-		packedOut.pos_in_seq == nil ||
 		packedOut.cu_seqlens == nil ||
 		packedOut.seq_lengths == nil ||
 		packedOut.state_positions == nil ||
@@ -1653,8 +1651,6 @@ func attachPackedTokenViews(
 	}
 
 	views.packedTokenIDs = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.token_ids)), totalCap)
-	views.packedSeqID = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.seq_id)), totalCap)
-	views.packedPosInSeq = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.pos_in_seq)), totalCap)
 	views.packedCuSeqlens = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.cu_seqlens)), n+1)
 	views.packedSeqLengths = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.seq_lengths)), n)
 	views.packedStatePositions = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.state_positions)), n)

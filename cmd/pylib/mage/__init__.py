@@ -205,8 +205,6 @@ typedef struct {
 
 typedef struct {
     int32_t *token_ids;
-    int32_t *seq_id;
-    int32_t *pos_in_seq;
     int32_t *cu_seqlens;
     int32_t *seq_lengths;
     int32_t *state_positions;

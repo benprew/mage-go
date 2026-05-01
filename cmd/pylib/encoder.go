@@ -128,11 +128,9 @@ type outputViews struct {
 	renderPlanLengths  []int64
 	renderPlanOverflow []int64
 
-	// Packed (varlen) token-assembler outputs. ``packedTokenIDs`` etc. are
-	// sized [B*max_tokens]; ``packedSeqId`` and ``packedPosInSeq`` likewise.
+	// Packed (varlen) token-assembler outputs. ``packedTokenIDs`` is sized
+	// [B*max_tokens]; per-token seq/position metadata is derived by Python.
 	packedTokenIDs       []int32
-	packedSeqID          []int32
-	packedPosInSeq       []int32
 	packedCuSeqlens      []int32 // [B+1]
 	packedSeqLengths     []int32 // [B]
 	packedStatePositions []int32 // [B]
@@ -377,11 +375,6 @@ func fillTokenAssemblyPacked(
 		}
 	}
 
-	// Per-token metadata for the live region of this row. Both arrays are
-	// derivable from ``cu_seqlens``; keep the ABI stable but write them with
-	// bulk operations instead of a two-store loop.
-	fillInt32(outputView.packedSeqID[packedCursor:packedCursor+cursor], int32(outputBatchIdx))
-	copy(outputView.packedPosInSeq[packedCursor:packedCursor+cursor], scratch.tokenPositions(cursor))
 	outputView.packedSeqLengths[outputBatchIdx] = cursor
 	outputView.packedStatePositions[outputBatchIdx] = packedCursor
 	outputView.packedCuSeqlens[outputBatchIdx+1] = packedCursor + cursor

@@ -173,7 +173,6 @@ type encodeScratch struct {
 	tokenPlan    []int32
 	tokenPlanLen [1]int64
 	tokenPlanOvf [1]int64
-	tokenPos     []int32
 }
 
 func newEncodeScratch() *encodeScratch {
@@ -215,16 +214,6 @@ func (s *encodeScratch) internalRenderPlanView(capacity int64) outputViews {
 		renderPlanLengths:  s.tokenPlanLen[:],
 		renderPlanOverflow: s.tokenPlanOvf[:],
 	}
-}
-
-func (s *encodeScratch) tokenPositions(n int32) []int32 {
-	if int32(cap(s.tokenPos)) < n {
-		s.tokenPos = make([]int32, n)
-		for i := int32(0); i < n; i++ {
-			s.tokenPos[i] = i
-		}
-	}
-	return s.tokenPos[:n]
 }
 
 type renderZoneKey struct {
