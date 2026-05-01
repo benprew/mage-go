@@ -1656,9 +1656,6 @@ func MageEncodeTokensPacked(
 		return newEncodeResult(0, mageEncodeErrInvalidArgument, "req.n must be non-negative")
 	}
 	cfgGo := parseEncodeConfigC(cfg)
-	if !cfgGo.emitRenderPlan {
-		return newEncodeResult(0, mageEncodeErrInvalidArgument, "MageEncodeTokensPacked requires cfg.emit_render_plan=1")
-	}
 	cfgGo.emitTokensPacked = true
 	cfgGo.tokenMaxTokens = int32(tokCfg.max_tokens)
 	cfgGo.tokenMaxOptions = int32(tokCfg.max_options)
@@ -1699,7 +1696,7 @@ func MageEncodeTokensPacked(
 
 // attachPackedTokenViews wires the C-side packed token-assembler
 // buffers into the outputViews slices. Token-shaped arrays are sized
-// at the worst case ``B * max_tokens`` so a single pre-allocated
+// at the worst case “B * max_tokens“ so a single pre-allocated
 // buffer can be reused across calls of varying live-token totals.
 func attachPackedTokenViews(
 	n int64,

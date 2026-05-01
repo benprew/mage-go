@@ -188,8 +188,8 @@ func validateEncodeConfig(cfg encodeConfig) *encodeError {
 		return &encodeError{code: mageEncodeErrArg, message: "max_cached_choices must be >= max_options"}
 	case cfg.maxCachedChoices < cfg.maxTargetsPerOption+1:
 		return &encodeError{code: mageEncodeErrArg, message: "max_cached_choices must be >= max_targets_per_option + 1"}
-	case cfg.emitRenderPlan && cfg.renderPlanCapacity <= 0:
-		return &encodeError{code: mageEncodeErrArg, message: "render_plan_capacity must be positive when emit_render_plan is set"}
+	case (cfg.emitRenderPlan || cfg.emitTokens || cfg.emitTokensPacked) && cfg.renderPlanCapacity <= 0:
+		return &encodeError{code: mageEncodeErrArg, message: "render_plan_capacity must be positive when render-plan-backed token assembly is set"}
 	case cfg.renderPlanCapacity > math.MaxInt32:
 		return &encodeError{code: mageEncodeErrArg, message: "render_plan_capacity must fit in int32"}
 	}
@@ -244,8 +244,14 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 			h.mu.Unlock()
 			return decisionCursor, err
 		}
-		if cfg.emitRenderPlan {
-			if err := fillRenderPlan(int64(batchIdx), state, pending, playerIdx, cfg, views, scratch); err != nil {
+		if cfg.emitRenderPlan || cfg.emitTokensPacked {
+			renderBatchIdx := int64(batchIdx)
+			renderViews := views
+			if cfg.emitTokensPacked && !cfg.emitRenderPlan {
+				renderBatchIdx = 0
+				renderViews = scratch.internalRenderPlanView(cfg.renderPlanCapacity)
+			}
+			if err := fillRenderPlan(renderBatchIdx, state, pending, playerIdx, cfg, renderViews, scratch); err != nil {
 				h.mu.Unlock()
 				return decisionCursor, err
 			}
@@ -257,7 +263,20 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 			}
 		}
 		if cfg.emitTokensPacked {
-			advanced, err := fillTokenAssemblyPacked(int64(batchIdx), packedCursor, cfg, views)
+			renderBatchIdx := int64(batchIdx)
+			renderViews := views
+			if !cfg.emitRenderPlan {
+				renderBatchIdx = 0
+				renderViews = scratch.internalRenderPlanView(cfg.renderPlanCapacity)
+			}
+			advanced, err := fillTokenAssemblyPacked(
+				renderBatchIdx,
+				int64(batchIdx),
+				packedCursor,
+				cfg,
+				renderViews,
+				views,
+			)
 			if err != nil {
 				h.mu.Unlock()
 				return decisionCursor, err
@@ -379,10 +398,12 @@ func fillTokenAssembly(batchIdx int64, cfg encodeConfig, view outputViews) *enco
 // rows without an outer-loop allocation. Anchors are written as
 // absolute offsets into the packed buffer.
 func fillTokenAssemblyPacked(
-	batchIdx int64,
+	planBatchIdx int64,
+	outputBatchIdx int64,
 	packedCursor int32,
 	cfg encodeConfig,
-	view outputViews,
+	planView outputViews,
+	outputView outputViews,
 ) (int32, *encodeError) {
 	tables := getTokenTables()
 	if tables == nil {
@@ -391,9 +412,9 @@ func fillTokenAssemblyPacked(
 			message: "MageRegisterTokenTables must be called before MageEncodeTokensPacked",
 		}
 	}
-	planStart := batchIdx * cfg.renderPlanCapacity
-	planLen := view.renderPlanLengths[batchIdx]
-	plan := view.renderPlan[planStart : planStart+planLen]
+	planStart := planBatchIdx * cfg.renderPlanCapacity
+	planLen := planView.renderPlanLengths[planBatchIdx]
+	plan := planView.renderPlan[planStart : planStart+planLen]
 
 	mt := int64(cfg.tokenMaxTokens)
 	mo := int64(cfg.tokenMaxOptions)
@@ -406,7 +427,7 @@ func fillTokenAssemblyPacked(
 	// the anchor positions land as absolute offsets.
 	rowStart := int64(packedCursor)
 	rowEnd := rowStart + mt
-	if rowEnd > int64(len(view.packedTokenIDs)) {
+	if rowEnd > int64(len(outputView.packedTokenIDs)) {
 		return packedCursor, &encodeError{
 			code:    mageEncodeErrInvalidArgument,
 			message: "packed token buffer too small (need >= B*max_tokens)",
@@ -414,13 +435,13 @@ func fillTokenAssemblyPacked(
 	}
 
 	out := &tokenAssemblerOut{
-		tokenIDs:      view.packedTokenIDs[rowStart:rowEnd],
+		tokenIDs:      outputView.packedTokenIDs[rowStart:rowEnd],
 		attentionMask: nil, // packed mode does not use attention_mask
-		optionPos:     view.packedOptionPos[batchIdx*mo : (batchIdx+1)*mo],
-		optionMask:    view.packedOptionMask[batchIdx*mo : (batchIdx+1)*mo],
-		targetPos:     view.packedTargetPos[batchIdx*mo*mtg : (batchIdx+1)*mo*mtg],
-		targetMask:    view.packedTargetMask[batchIdx*mo*mtg : (batchIdx+1)*mo*mtg],
-		cardRefPos:    view.packedCardRefPos[batchIdx*mcr : (batchIdx+1)*mcr],
+		optionPos:     outputView.packedOptionPos[outputBatchIdx*mo : (outputBatchIdx+1)*mo],
+		optionMask:    outputView.packedOptionMask[outputBatchIdx*mo : (outputBatchIdx+1)*mo],
+		targetPos:     outputView.packedTargetPos[outputBatchIdx*mo*mtg : (outputBatchIdx+1)*mo*mtg],
+		targetMask:    outputView.packedTargetMask[outputBatchIdx*mo*mtg : (outputBatchIdx+1)*mo*mtg],
+		cardRefPos:    outputView.packedCardRefPos[outputBatchIdx*mcr : (outputBatchIdx+1)*mcr],
 		maxOptions:    cfg.tokenMaxOptions,
 		maxTargets:    cfg.tokenMaxTargets,
 		maxCardRefs:   cfg.tokenMaxCardRefs,
@@ -438,14 +459,14 @@ func fillTokenAssemblyPacked(
 
 	// Per-token metadata for the live region of this row.
 	for k := int32(0); k < cursor; k++ {
-		view.packedSeqID[packedCursor+k] = batchIdx
-		view.packedPosInSeq[packedCursor+k] = int64(k)
+		outputView.packedSeqID[packedCursor+k] = outputBatchIdx
+		outputView.packedPosInSeq[packedCursor+k] = int64(k)
 	}
-	view.packedSeqLengths[batchIdx] = int64(cursor)
-	view.packedStatePositions[batchIdx] = int64(packedCursor)
-	view.packedCuSeqlens[batchIdx+1] = int64(packedCursor + cursor)
+	outputView.packedSeqLengths[outputBatchIdx] = int64(cursor)
+	outputView.packedStatePositions[outputBatchIdx] = int64(packedCursor)
+	outputView.packedCuSeqlens[outputBatchIdx+1] = int64(packedCursor + cursor)
 	if overflow {
-		view.packedTokenOverflow[batchIdx] = 1
+		outputView.packedTokenOverflow[outputBatchIdx] = 1
 	}
 	return packedCursor + cursor, nil
 }

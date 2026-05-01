@@ -170,6 +170,9 @@ type encodeScratch struct {
 	cardIDToSlot map[string]int64
 	renderIndex  renderPlanIndex
 	rowSeen      map[int32]struct{}
+	tokenPlan    []int32
+	tokenPlanLen [1]int64
+	tokenPlanOvf [1]int64
 }
 
 func newEncodeScratch() *encodeScratch {
@@ -197,6 +200,20 @@ func (s *encodeScratch) reset() {
 	idx.cards = idx.cards[:0]
 	idx.rowOrder = idx.rowOrder[:0]
 	clear(s.rowSeen)
+	s.tokenPlanLen[0] = 0
+	s.tokenPlanOvf[0] = 0
+}
+
+func (s *encodeScratch) internalRenderPlanView(capacity int64) outputViews {
+	if int64(cap(s.tokenPlan)) < capacity {
+		s.tokenPlan = make([]int32, capacity)
+	}
+	s.tokenPlan = s.tokenPlan[:capacity]
+	return outputViews{
+		renderPlan:         s.tokenPlan,
+		renderPlanLengths:  s.tokenPlanLen[:],
+		renderPlanOverflow: s.tokenPlanOvf[:],
+	}
 }
 
 type renderZoneKey struct {
