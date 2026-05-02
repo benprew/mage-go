@@ -200,12 +200,16 @@ type encodeScratch struct {
 }
 
 func newEncodeScratch() *encodeScratch {
+	// Pre-size the hot-path maps so the typical batch row's ~28 cards
+	// don't trigger a rehash during index construction. Sizes are upper
+	// bounds for realistic snapshots: 64 distinct UUIDs (battlefield +
+	// hand + graveyard for both players) and 64 distinct card rows.
 	return &encodeScratch{
-		cardIDToSlot: make(map[string]int64),
+		cardIDToSlot: make(map[string]int64, 64),
 		renderIndex: renderPlanIndex{
-			byCardID: make(map[uuid.UUID]cardIDEntry),
+			byCardID: make(map[uuid.UUID]cardIDEntry, 64),
 		},
-		rowSeen: make(map[int32]struct{}),
+		rowSeen: make(map[int32]struct{}, 64),
 	}
 }
 
