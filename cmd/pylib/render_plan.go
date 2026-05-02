@@ -575,11 +575,34 @@ func renderStatusBits(perm *interactive.PermanentState) int32 {
 }
 
 func renderOptionSource(option apiOption, index renderPlanIndex) (int32, int32) {
-	for _, id := range [3]uuid.UUID{option.CardUUID, option.PermanentUUID, option.IDUUID} {
-		if id == uuid.Nil {
-			continue
+	// In practice an option carries exactly one source identifier:
+	// cast_spell / play_land / choice → CardUUID, the rest → PermanentUUID
+	// (with ChoiceMay using IDUUID). Try the most likely field first per
+	// kind, then fall back through the remaining ones for safety.
+	var first uuid.UUID
+	switch option.Kind {
+	case "cast_spell", "play_land", "choice":
+		first = option.CardUUID
+	default:
+		first = option.PermanentUUID
+	}
+	if first != uuid.Nil {
+		if entry, ok := index.byCardID[first]; ok {
+			return entry.row, entry.uuidIdx
 		}
-		if entry, ok := index.byCardID[id]; ok {
+	}
+	if option.CardUUID != uuid.Nil && option.CardUUID != first {
+		if entry, ok := index.byCardID[option.CardUUID]; ok {
+			return entry.row, entry.uuidIdx
+		}
+	}
+	if option.PermanentUUID != uuid.Nil && option.PermanentUUID != first {
+		if entry, ok := index.byCardID[option.PermanentUUID]; ok {
+			return entry.row, entry.uuidIdx
+		}
+	}
+	if option.IDUUID != uuid.Nil {
+		if entry, ok := index.byCardID[option.IDUUID]; ok {
 			return entry.row, entry.uuidIdx
 		}
 	}
