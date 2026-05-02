@@ -10,12 +10,75 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unsafe"
 
 	"github.com/google/uuid"
 
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
 )
+
+// scratchPool keys a free list of encodeScratch instances by output-buffer
+// pointer. Production callers (Python's NativePackedAssemblerOutputs) reuse
+// the same output tensors across encode calls, so caching scratch per
+// output preserves the per-row dirty state on encodeScratch.directDirty
+// across calls — the high-water-mark partial-clears in
+// directTokenEmitter.reset only kick in when a row has been processed at
+// least once before with the same buffer.
+type scratchPool struct {
+	mu        sync.Mutex
+	available []*encodeScratch
+}
+
+var scratchPools sync.Map // uintptr -> *scratchPool
+
+// scratchPoolKey returns a stable pool key for the given output views, or
+// 0 if no packed buffer is bound (in which case caching is skipped). Uses
+// the address of packedTokenIDs[0] since that buffer is allocated once
+// per outputs object and reused on every call.
+func scratchPoolKey(views outputViews) uintptr {
+	if len(views.packedTokenIDs) == 0 {
+		return 0
+	}
+	return uintptr(unsafe.Pointer(&views.packedTokenIDs[0]))
+}
+
+func acquireScratch(key uintptr) *encodeScratch {
+	if key == 0 {
+		return newEncodeScratch()
+	}
+	val, ok := scratchPools.Load(key)
+	if !ok {
+		val, _ = scratchPools.LoadOrStore(key, &scratchPool{})
+	}
+	p := val.(*scratchPool)
+	p.mu.Lock()
+	var s *encodeScratch
+	if n := len(p.available); n > 0 {
+		s = p.available[n-1]
+		p.available[n-1] = nil
+		p.available = p.available[:n-1]
+	}
+	p.mu.Unlock()
+	if s == nil {
+		s = newEncodeScratch()
+	}
+	return s
+}
+
+func releaseScratch(key uintptr, s *encodeScratch) {
+	if key == 0 {
+		return
+	}
+	val, ok := scratchPools.Load(key)
+	if !ok {
+		return
+	}
+	p := val.(*scratchPool)
+	p.mu.Lock()
+	p.available = append(p.available, s)
+	p.mu.Unlock()
+}
 
 const (
 	zoneSlotCount                = 50
@@ -203,7 +266,9 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 	if cfg.emitTokensPacked && len(views.packedCuSeqlens) > 0 {
 		views.packedCuSeqlens[0] = 0
 	}
-	scratch := newEncodeScratch()
+	poolKey := scratchPoolKey(views)
+	scratch := acquireScratch(poolKey)
+	defer releaseScratch(poolKey, scratch)
 	for batchIdx, handleID := range req.handles {
 		h := getHandle(handleID)
 		if h == nil {
@@ -347,6 +412,7 @@ func encodeBatchGoPackedParallel(req batchRequest, cfg encodeConfig, views outpu
 		errMu.Unlock()
 	}
 
+	poolKey := scratchPoolKey(views)
 	for workerIdx := 0; workerIdx < workers; workerIdx++ {
 		start := workerIdx * n / workers
 		end := (workerIdx + 1) * n / workers
@@ -356,7 +422,8 @@ func encodeBatchGoPackedParallel(req batchRequest, cfg encodeConfig, views outpu
 		wg.Add(1)
 		go func(start, end int) {
 			defer wg.Done()
-			scratch := newEncodeScratch()
+			scratch := acquireScratch(poolKey)
+			defer releaseScratch(poolKey, scratch)
 			for batchIdx := start; batchIdx < end; batchIdx++ {
 				errMu.Lock()
 				stopped := firstErr != nil

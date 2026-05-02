@@ -188,16 +188,23 @@ func BenchmarkDirectTokenEncodePackedBatch(b *testing.B) {
 		dedupCardBodies:     true,
 	}
 
-	scratch := newEncodeScratch()
+	// Mirror the production path: acquire a scratch from the per-output
+	// pool at the start of each call and release it at the end. With a
+	// stable output buffer, we always get the same scratch back, so its
+	// directDirty state survives across calls and the high-water-mark
+	// partial clears in directTokenEmitter.reset stay warm.
+	poolKey := scratchPoolKey(view)
 
 	// Warm up + sanity-check one row so the bench fails fast on plumbing
 	// errors before timing.
 	{
-		scratch.reset()
-		_, _, err := fillTokenAssemblyDirectPacked(0, 0, states[0], pendings[0], 0, cfg, view, scratch)
+		warm := acquireScratch(poolKey)
+		warm.reset()
+		_, _, err := fillTokenAssemblyDirectPacked(0, 0, states[0], pendings[0], 0, cfg, view, warm)
 		if err != nil {
 			b.Fatalf("warmup direct encode: %s", err.message)
 		}
+		releaseScratch(poolKey, warm)
 	}
 
 	b.ReportAllocs()
@@ -205,6 +212,7 @@ func BenchmarkDirectTokenEncodePackedBatch(b *testing.B) {
 	for iter := 0; iter < b.N; iter++ {
 		var packedCursor int32
 		view.packedCuSeqlens[0] = 0
+		scratch := acquireScratch(poolKey)
 		for i := 0; i < benchBatchSize; i++ {
 			scratch.reset()
 			next, _, err := fillTokenAssemblyDirectPacked(int64(i), packedCursor, states[i], pendings[i], 0, cfg, view, scratch)
@@ -213,8 +221,64 @@ func BenchmarkDirectTokenEncodePackedBatch(b *testing.B) {
 			}
 			packedCursor = next
 		}
+		releaseScratch(poolKey, scratch)
 		if iter == 0 {
 			b.Logf("packed cursor after batch = %d / %d", packedCursor, benchBatchSize*benchMaxTokens)
+		}
+	}
+}
+
+// BenchmarkDirectTokenEncodePackedBatchNoPool reproduces the old
+// scratch-per-call behavior so the pool's effect is measurable: every
+// iteration allocates a fresh encodeScratch, which forces every row's
+// directDirty entry to start "uninitialized" -> full per-row clear in
+// directTokenEmitter.reset.
+func BenchmarkDirectTokenEncodePackedBatchNoPool(b *testing.B) {
+	tables := benchTokenTables()
+	tokenTablesMu.Lock()
+	prev := currentTokenTables
+	currentTokenTables = tables
+	tokenTablesMu.Unlock()
+	defer func() {
+		tokenTablesMu.Lock()
+		currentTokenTables = prev
+		tokenTablesMu.Unlock()
+	}()
+
+	benchRegisterCardRows()
+
+	states := make([]*apiGameState, benchBatchSize)
+	pendings := make([]*apiPending, benchBatchSize)
+	for i := 0; i < benchBatchSize; i++ {
+		states[i] = benchDirectGameState(i)
+		pendings[i] = benchDirectPending(states[i])
+	}
+
+	view := benchDirectAllocOutputs()
+
+	cfg := encodeConfig{
+		maxOptions:          benchMaxOptions,
+		maxTargetsPerOption: benchMaxTargets,
+		tokenMaxTokens:      benchMaxTokens,
+		tokenMaxOptions:     benchMaxOptions,
+		tokenMaxTargets:     benchMaxTargets,
+		tokenMaxCardRefs:    benchMaxCardRefs,
+		dedupCardBodies:     true,
+	}
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for iter := 0; iter < b.N; iter++ {
+		var packedCursor int32
+		view.packedCuSeqlens[0] = 0
+		scratch := newEncodeScratch()
+		for i := 0; i < benchBatchSize; i++ {
+			scratch.reset()
+			next, _, err := fillTokenAssemblyDirectPacked(int64(i), packedCursor, states[i], pendings[i], 0, cfg, view, scratch)
+			if err != nil {
+				b.Fatalf("row=%d direct encode: %s", i, err.message)
+			}
+			packedCursor = next
 		}
 	}
 }
