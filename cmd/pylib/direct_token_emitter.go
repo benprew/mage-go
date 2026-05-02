@@ -17,6 +17,17 @@ type directTokenEmitter struct {
 }
 
 func newDirectTokenEmitter(tables *tokenTables, out *tokenAssemblerOut, maxTokens int32) *directTokenEmitter {
+	e := &directTokenEmitter{}
+	e.reset(tables, out, maxTokens)
+	return e
+}
+
+// reset re-binds an emitter to a new output row and clears the per-row
+// state. Lets callers keep a single emitter on the heap (e.g. on
+// encodeScratch) and reuse it across batch rows; the [256]bool
+// cardRefSeen field stays in place rather than getting re-zeroed every
+// row, which is the dominant per-row alloc/cost in the direct path.
+func (e *directTokenEmitter) reset(tables *tokenTables, out *tokenAssemblerOut, maxTokens int32) {
 	for i := range out.optionPos {
 		out.optionPos[i] = -1
 	}
@@ -32,13 +43,19 @@ func newDirectTokenEmitter(tables *tokenTables, out *tokenAssemblerOut, maxToken
 	for i := range out.cardRefPos {
 		out.cardRefPos[i] = -1
 	}
-	return &directTokenEmitter{
-		tables:          tables,
-		out:             out,
-		maxTokens:       maxTokens,
-		curOptionIdx:    -1,
-		scalarOwnerOpen: -1,
+	e.tables = tables
+	e.out = out
+	e.maxTokens = maxTokens
+	e.cursor = 0
+	e.overflow = false
+	for i := range e.cardRefSeen {
+		e.cardRefSeen[i] = false
 	}
+	e.nextOption = 0
+	e.curOptionIdx = -1
+	e.curTargetCount = 0
+	e.optionOpen = false
+	e.scalarOwnerOpen = -1
 }
 
 func (e *directTokenEmitter) writeSpan(span []int32) {

@@ -167,12 +167,13 @@ type renderPlanIndex struct {
 // encodeScratch holds per-call scratch buffers for an encode batch so
 // hot-path map/slice allocations are reused across batch rows.
 type encodeScratch struct {
-	cardIDToSlot map[string]int64
-	renderIndex  renderPlanIndex
-	rowSeen      map[int32]struct{}
-	tokenPlan    []int32
-	tokenPlanLen [1]int64
-	tokenPlanOvf [1]int64
+	cardIDToSlot  map[string]int64
+	renderIndex   renderPlanIndex
+	rowSeen       map[int32]struct{}
+	tokenPlan     []int32
+	tokenPlanLen  [1]int64
+	tokenPlanOvf  [1]int64
+	directEmitter directTokenEmitter
 }
 
 func newEncodeScratch() *encodeScratch {

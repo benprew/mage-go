@@ -56,7 +56,8 @@ func fillTokenAssemblyDirectPacked(
 	outputView.packedCuSeqlens[outputBatchIdx+1] = packedCursor
 	outputView.packedTokenOverflow[outputBatchIdx] = 0
 
-	emitter := newDirectTokenEmitter(tables, out, cfg.tokenMaxTokens)
+	emitter := &scratch.directEmitter
+	emitter.reset(tables, out, cfg.tokenMaxTokens)
 	if err := emitDirectTokens(emitter, state, pending, playerIdx, cfg, *index); err != nil {
 		return packedCursor, 0, &encodeError{
 			code:    mageEncodeErrEncodeFailure,
