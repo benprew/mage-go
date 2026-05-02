@@ -187,7 +187,6 @@ func zoneOwnerSlot(zone, owner int32) int {
 type encodeScratch struct {
 	cardIDToSlot  map[string]int64
 	renderIndex   renderPlanIndex
-	rowSeen       map[int32]struct{}
 	tokenPlan     []int32
 	tokenPlanLen  [1]int64
 	tokenPlanOvf  [1]int64
@@ -215,7 +214,6 @@ func newEncodeScratch() *encodeScratch {
 		renderIndex: renderPlanIndex{
 			byCardID: make(map[uuid.UUID]cardIDEntry, 64),
 		},
-		rowSeen: make(map[int32]struct{}, 64),
 	}
 }
 
@@ -228,7 +226,6 @@ func (s *encodeScratch) reset() {
 	}
 	idx.cards = idx.cards[:0]
 	idx.rowOrder = idx.rowOrder[:0]
-	clear(s.rowSeen)
 	s.tokenPlanLen[0] = 0
 	s.tokenPlanOvf[0] = 0
 }
@@ -278,7 +275,6 @@ func fillRenderPlan(batchIdx int64, state *apiGameState, pending *apiPending, pl
 
 func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int, scratch *encodeScratch) *encodeError {
 	index := &scratch.renderIndex
-	rowSeen := scratch.rowSeen
 	// First pass: build the full card lists per (owner, zone) but do NOT
 	// assign UUID indices yet. UUID-ordering must match Python's
 	// _assign_card_refs which walks zones owner-interleaved (self.bf,
@@ -330,9 +326,19 @@ func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int, scratch
 					}
 				}
 			}
-			if _, dup := rowSeen[cards[idx].row]; !dup {
-				rowSeen[cards[idx].row] = struct{}{}
-				index.rowOrder = append(index.rowOrder, cards[idx].row)
+			// Insertion-sorted dedup into rowOrder. ~30 unique rows per
+			// snapshot, so a small linear scan beats a map (no hashing,
+			// cache-friendly contiguous slice). Also avoids the trailing
+			// slices.Sort pass since rowOrder is built sorted.
+			row := cards[idx].row
+			pos := 0
+			for pos < len(index.rowOrder) && index.rowOrder[pos] < row {
+				pos++
+			}
+			if pos == len(index.rowOrder) || index.rowOrder[pos] != row {
+				index.rowOrder = append(index.rowOrder, 0)
+				copy(index.rowOrder[pos+1:], index.rowOrder[pos:len(index.rowOrder)-1])
+				index.rowOrder[pos] = row
 			}
 			index.cards = append(index.cards, cards[idx])
 		}
@@ -340,7 +346,6 @@ func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int, scratch
 		// shares the backing array, so the uuidIdx writes already landed).
 		index.cardsByZone[slot] = cards
 	}
-	slices.Sort(index.rowOrder)
 	return nil
 }
 
