@@ -38,7 +38,12 @@ const (
 
 // Opcode arities mirrored from render_plan.py. Variable-length opcodes
 // (OP_LITERAL_TOKENS) carry their length as the first payload word.
-var opcodeArity = map[int32]int{
+//
+// Stored as a fixed-size array keyed by opcode rather than a map because
+// the assembler hot loop indexes this on every opcode and a map lookup
+// dominates the profile (mapaccess2_fast32 + memhash32 ~ half of CPU).
+// Unknown opcodes return -1 from opcodeArityLookup.
+var opcodeArityArr = [...]int8{
 	opOpenState:    0,
 	opCloseState:   0,
 	opTurn:         2,
@@ -55,6 +60,7 @@ var opcodeArity = map[int32]int{
 	opCloseActions: 0,
 	opOption:       5,
 	opTarget:       3,
+	opLiteralTokens: -1, // variable-length; handled separately in the walker
 	opEndCard:      0,
 	opOpenRawCard:  1,
 	opCloseRawCard: 0,
@@ -67,6 +73,19 @@ var opcodeArity = map[int32]int{
 	opStackClose:   0,
 	opCommandOpen:  0,
 	opCommandClose: 0,
+}
+
+// opcodeArityLookup returns (arity, true) for known opcodes and (0, false)
+// otherwise. Mirrors a map lookup but avoids the hash-table cost.
+func opcodeArityLookup(op int32) (int, bool) {
+	if op <= 0 || int(op) >= len(opcodeArityArr) {
+		return 0, false
+	}
+	a := opcodeArityArr[op]
+	if a < 0 {
+		return 0, false
+	}
+	return int(a), true
 }
 
 type zoneEntry struct {
@@ -128,7 +147,8 @@ func assembleTokensFromPlan(
 	}
 
 	// First-occurrence card-ref bitmap (matches Python's "k not in card_ref_positions").
-	cardRefSeen := make([]bool, tokenAssemblerMaxCardRefs)
+	// 256-bit stack-resident bitset avoids a per-row [256]bool heap alloc.
+	var cardRefSeen [tokenAssemblerMaxCardRefs / 64]uint64
 
 	var (
 		cursor          int32 // next write index in tokenIDs
@@ -138,8 +158,12 @@ func assembleTokensFromPlan(
 		curTargetCount  int32 = 0
 		optionOpen      bool
 		scalarOwnerOpen int32 = -1 // -1 / 0 / 1
-		zoneStack       []zoneEntry
 	)
+	// Stack-resident backing array for zoneStack avoids the heap alloc of
+	// the first append. Plans nest at most a few zones deep; spillover
+	// would just trigger a normal growslice.
+	var zoneStackArr [8]zoneEntry
+	zoneStack := zoneStackArr[:0]
 
 	// Detect literal-tokens mode by scanning the opcode stream. Naive
 	// "any token equals OP_LITERAL_TOKENS" misfires on payload ints.
@@ -152,7 +176,7 @@ func assembleTokensFromPlan(
 				structured = false
 				break
 			}
-			arity, ok := opcodeArity[op]
+			arity, ok := opcodeArityLookup(op)
 			if !ok {
 				break
 			}
@@ -209,8 +233,10 @@ func assembleTokensFromPlan(
 		if pos < 0 {
 			return false
 		}
-		if !cardRefSeen[uuidIdx] {
-			cardRefSeen[uuidIdx] = true
+		mask := uint64(1) << (uint32(uuidIdx) & 63)
+		word := uint32(uuidIdx) >> 6
+		if cardRefSeen[word]&mask == 0 {
+			cardRefSeen[word] |= mask
 			out.cardRefPos[uuidIdx] = pos + out.cursorBase
 		}
 		return true
@@ -240,7 +266,7 @@ func assembleTokensFromPlan(
 	i := 0
 	for i < len(plan) && !overflow {
 		op := plan[i]
-		arity, ok := opcodeArity[op]
+		arity, ok := opcodeArityLookup(op)
 		if !ok {
 			return 0, false, fmt.Errorf("unknown opcode %d at position %d", op, i)
 		}
@@ -275,9 +301,13 @@ func assembleTokensFromPlan(
 				default:
 					// card-ref ids: record first-occurrence position per K.
 					for k := int32(0); k < tables.cardRefCount; k++ {
-						if tables.cardRefIDs[k] == tid && !cardRefSeen[k] {
-							cardRefSeen[k] = true
-							out.cardRefPos[k] = pos + out.cursorBase
+						if tables.cardRefIDs[k] == tid {
+							mask := uint64(1) << (uint32(k) & 63)
+							word := uint32(k) >> 6
+							if cardRefSeen[word]&mask == 0 {
+								cardRefSeen[word] |= mask
+								out.cardRefPos[k] = pos + out.cursorBase
+							}
 							break
 						}
 					}
