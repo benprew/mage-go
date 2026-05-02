@@ -334,12 +334,16 @@ func renderPlayerState(state *apiGameState, perspectivePlayerIdx int, owner int3
 func appendRenderCardsForZone(out []renderCardRef, player *interactive.PlayerState, owner int32, zone int32) ([]renderCardRef, *encodeError) {
 	switch zone {
 	case renderZoneBattlefield:
-		for idx, perm := range player.Battlefield {
+		// Take pointers directly into player.Battlefield so each renderCardRef
+		// shares the snapshot's PermanentState rather than getting its own
+		// heap-allocated copy. The snapshot outlives the index, and the encode
+		// path is read-only.
+		for idx := range player.Battlefield {
+			perm := &player.Battlefield[idx]
 			row, ok := cardRowForName(perm.Name)
 			if !ok {
 				return nil, &encodeError{code: mageEncodeErrEncode, message: "missing card embedding for " + perm.Name}
 			}
-			perm := perm
 			out = append(out, renderCardRef{
 				zone:    zone,
 				owner:   owner,
@@ -348,7 +352,7 @@ func appendRenderCardsForZone(out []renderCardRef, player *interactive.PlayerSta
 				cardID:  perm.ID,
 				name:    perm.Name,
 				row:     clampInt32(row),
-				perm:    &perm,
+				perm:    perm,
 			})
 		}
 		return out, nil
