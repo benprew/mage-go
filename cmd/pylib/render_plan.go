@@ -151,17 +151,35 @@ type renderCardRef struct {
 	perm    *interactive.PermanentState
 }
 
+// cardIDEntry pairs the values previously held in two separate maps
+// (uuidByID, rowByID) so the index only does one map write per card and
+// renderTarget / renderOptionSource only do one lookup. row=-1 / uuidIdx=-1
+// indicate "no value" in the same way the old separate maps did via
+// presence.
+type cardIDEntry struct {
+	uuidIdx int32
+	row     int32
+}
+
+const renderZoneArrayLen = int(renderZoneCommand) + 1
+
 type renderPlanIndex struct {
-	cards      []renderCardRef
-	uuidByID   map[uuid.UUID]int32
-	rowByID    map[uuid.UUID]int32
-	slotByID   map[uuid.UUID]int32
-	cardsByKey map[renderZoneKey][]renderCardRef
+	cards    []renderCardRef
+	byCardID map[uuid.UUID]cardIDEntry
+	// cardsByZone is indexed by zone*2 + owner, where owner is renderOwnerSelf
+	// (0) or renderOwnerOpponent (1). Replaces a map[renderZoneKey][]renderCardRef
+	// with a fixed array since the keyspace is small (zoneCount*2 == 14) and
+	// hit on every card insert + every emitter zone iteration.
+	cardsByZone [renderZoneArrayLen * 2][]renderCardRef
 	// rowOrder lists each unique card cache row that appears in any zone of
 	// this snapshot, in deterministic ascending order. Populated for v2 dict
 	// emission. Mirrors the Python emitter's ``unique_rows`` (collected in
 	// _RENDER_ZONES order, then sorted ascending).
 	rowOrder []int32
+}
+
+func zoneOwnerSlot(zone, owner int32) int {
+	return int(zone)*2 + int(owner)
 }
 
 // encodeScratch holds per-call scratch buffers for an encode batch so
@@ -181,10 +199,7 @@ func newEncodeScratch() *encodeScratch {
 	return &encodeScratch{
 		cardIDToSlot: make(map[string]int64),
 		renderIndex: renderPlanIndex{
-			uuidByID:   make(map[uuid.UUID]int32),
-			rowByID:    make(map[uuid.UUID]int32),
-			slotByID:   make(map[uuid.UUID]int32),
-			cardsByKey: make(map[renderZoneKey][]renderCardRef),
+			byCardID: make(map[uuid.UUID]cardIDEntry),
 		},
 		rowSeen: make(map[int32]struct{}),
 	}
@@ -193,11 +208,9 @@ func newEncodeScratch() *encodeScratch {
 func (s *encodeScratch) reset() {
 	clear(s.cardIDToSlot)
 	idx := &s.renderIndex
-	clear(idx.uuidByID)
-	clear(idx.rowByID)
-	clear(idx.slotByID)
-	for k, v := range idx.cardsByKey {
-		idx.cardsByKey[k] = v[:0]
+	clear(idx.byCardID)
+	for slot := range idx.cardsByZone {
+		idx.cardsByZone[slot] = idx.cardsByZone[slot][:0]
 	}
 	idx.cards = idx.cards[:0]
 	idx.rowOrder = idx.rowOrder[:0]
@@ -218,10 +231,6 @@ func (s *encodeScratch) internalRenderPlanView(capacity int64) outputViews {
 	}
 }
 
-type renderZoneKey struct {
-	owner int32
-	zone  int32
-}
 
 func fillRenderPlan(batchIdx int64, state *apiGameState, pending *apiPending, playerIdx int, cfg encodeConfig, view outputViews, scratch *encodeScratch) *encodeError {
 	start := batchIdx * cfg.renderPlanCapacity
@@ -267,12 +276,12 @@ func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int, index *
 			continue
 		}
 		for _, zone := range renderZoneOrder {
-			key := renderZoneKey{owner: owner, zone: zone}
-			cards, err := appendRenderCardsForZone(index.cardsByKey[key][:0], player, owner, zone)
+			slot := zoneOwnerSlot(zone, owner)
+			cards, err := appendRenderCardsForZone(index.cardsByZone[slot][:0], player, owner, zone)
 			if err != nil {
 				return err
 			}
-			index.cardsByKey[key] = cards
+			index.cardsByZone[slot] = cards
 		}
 	}
 	// UUID assignment: walk in Python's _ZONE_ORDER (owner-interleaved by
@@ -292,17 +301,19 @@ func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int, index *
 		{renderOwnerOpponent, renderZoneExile},
 	}
 	for _, key := range uuidOrder {
-		cards := index.cardsByKey[renderZoneKey{owner: key.owner, zone: key.zone}]
+		slot := zoneOwnerSlot(key.zone, key.owner)
+		cards := index.cardsByZone[slot]
 		for idx := range cards {
 			if cards[idx].cardID != uuid.Nil {
-				if uuidIdx, ok := index.uuidByID[cards[idx].cardID]; ok {
-					cards[idx].uuidIdx = uuidIdx
+				if existing, ok := index.byCardID[cards[idx].cardID]; ok {
+					cards[idx].uuidIdx = existing.uuidIdx
 				} else {
-					cards[idx].uuidIdx = int32(len(index.uuidByID))
-					index.uuidByID[cards[idx].cardID] = cards[idx].uuidIdx
+					cards[idx].uuidIdx = int32(len(index.byCardID))
+					index.byCardID[cards[idx].cardID] = cardIDEntry{
+						uuidIdx: cards[idx].uuidIdx,
+						row:     cards[idx].row,
+					}
 				}
-				index.rowByID[cards[idx].cardID] = cards[idx].row
-				index.slotByID[cards[idx].cardID] = cards[idx].slotIdx
 			}
 			if _, dup := rowSeen[cards[idx].row]; !dup {
 				rowSeen[cards[idx].row] = struct{}{}
@@ -312,7 +323,7 @@ func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int, index *
 		}
 		// Persist mutations back (cards is a copy of the slice header but
 		// shares the backing array, so the uuidIdx writes already landed).
-		index.cardsByKey[renderZoneKey{owner: key.owner, zone: key.zone}] = cards
+		index.cardsByZone[slot] = cards
 	}
 	slices.Sort(index.rowOrder)
 	return nil
@@ -428,7 +439,7 @@ func emitRenderPlayerScalars(w *renderPlanWriter, state *apiGameState, playerIdx
 func emitRenderZones(w *renderPlanWriter, state *apiGameState, playerIdx int, index renderPlanIndex, cfg encodeConfig) {
 	emitCardsForZone := func(owner, zone int32) {
 		w.write(opOpenZone, zone, owner)
-		for _, card := range index.cardsByKey[renderZoneKey{owner: owner, zone: zone}] {
+		for _, card := range index.cardsByZone[zoneOwnerSlot(zone, owner)] {
 			if cfg.dedupCardBodies {
 				// v2: ref the dict entry, no body splice. Per-card counter /
 				// attached_to are skipped to match the Python emitter, which
@@ -446,8 +457,8 @@ func emitRenderZones(w *renderPlanWriter, state *apiGameState, playerIdx int, in
 				}
 				if card.perm.AttachedTo != uuid.Nil {
 					targetUUIDIdx := int32(-1)
-					if idx, ok := index.uuidByID[card.perm.AttachedTo]; ok {
-						targetUUIDIdx = idx
+					if entry, ok := index.byCardID[card.perm.AttachedTo]; ok {
+						targetUUIDIdx = entry.uuidIdx
 					}
 					w.write(opAttachedTo, targetUUIDIdx)
 				}
@@ -467,7 +478,7 @@ func emitRenderZones(w *renderPlanWriter, state *apiGameState, playerIdx int, in
 	}
 	// Exile: skip when empty for that owner.
 	for _, owner := range []int32{renderOwnerSelf, renderOwnerOpponent} {
-		if len(index.cardsByKey[renderZoneKey{owner: owner, zone: renderZoneExile}]) == 0 {
+		if len(index.cardsByZone[zoneOwnerSlot(renderZoneExile, owner)]) == 0 {
 			continue
 		}
 		emitCardsForZone(owner, renderZoneExile)
@@ -568,16 +579,8 @@ func renderOptionSource(option apiOption, index renderPlanIndex) (int32, int32) 
 		if err != nil {
 			continue
 		}
-		uuidIdx, hasUUID := index.uuidByID[parsed]
-		row, hasRow := index.rowByID[parsed]
-		if hasUUID || hasRow {
-			if !hasUUID {
-				uuidIdx = -1
-			}
-			if !hasRow {
-				row = -1
-			}
-			return row, uuidIdx
+		if entry, ok := index.byCardID[parsed]; ok {
+			return entry.row, entry.uuidIdx
 		}
 	}
 	if option.CardName != "" {
@@ -607,16 +610,8 @@ func renderTarget(target apiTarget, selfID uuid.UUID, oppID uuid.UUID, index ren
 	if parsed == oppID {
 		return renderOwnerOpponent, -1, renderTargetPlayer
 	}
-	uuidIdx, hasUUID := index.uuidByID[parsed]
-	row, hasRow := index.rowByID[parsed]
-	if hasUUID || hasRow {
-		if !hasUUID {
-			uuidIdx = -1
-		}
-		if !hasRow {
-			row = -1
-		}
-		return row, uuidIdx, renderTargetPermanent
+	if entry, ok := index.byCardID[parsed]; ok {
+		return entry.row, entry.uuidIdx, renderTargetPermanent
 	}
 	return -1, -1, renderTargetUnknown
 }

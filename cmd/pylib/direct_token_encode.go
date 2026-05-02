@@ -131,7 +131,7 @@ func emitDirectPlayerScalars(e *directTokenEmitter, state *apiGameState, playerI
 func emitDirectZones(e *directTokenEmitter, state *apiGameState, playerIdx int, index renderPlanIndex, cfg encodeConfig) error {
 	emitCardsForZone := func(owner, zone int32) {
 		e.emitOpenZone(zone, owner)
-		for _, card := range index.cardsByKey[renderZoneKey{owner: owner, zone: zone}] {
+		for _, card := range index.cardsByZone[zoneOwnerSlot(zone, owner)] {
 			if cfg.dedupCardBodies {
 				e.emitPlaceCardRef(card.row, renderStatusBits(card.perm), card.uuidIdx)
 				continue
@@ -150,7 +150,7 @@ func emitDirectZones(e *directTokenEmitter, state *apiGameState, playerIdx int, 
 		}
 	}
 	for _, owner := range []int32{renderOwnerSelf, renderOwnerOpponent} {
-		if len(index.cardsByKey[renderZoneKey{owner: owner, zone: renderZoneExile}]) == 0 {
+		if len(index.cardsByZone[zoneOwnerSlot(renderZoneExile, owner)]) == 0 {
 			continue
 		}
 		emitCardsForZone(owner, renderZoneExile)
