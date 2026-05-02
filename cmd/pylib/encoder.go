@@ -11,6 +11,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
 )
@@ -937,13 +939,15 @@ func fillActionEncoding(batchIdx int64, state *apiGameState, pending *apiPending
 			targetScalars[targetScalarBase+tgtIdx*cfg.targetScalarDim] = clipNorm(float64(tgtIdx), maxTargetScalar)
 			targetScalars[targetScalarBase+tgtIdx*cfg.targetScalarDim+1] = 1
 
-			if target.ID != "" && (target.ID == selfID || target.ID == oppID) {
-				targetTypeIDs[targetBase+tgtIdx] = 0
-				targetRefIsPlayer[targetBase+tgtIdx] = 1
-				if target.ID == selfID {
-					targetRefIsSelf[targetBase+tgtIdx] = 1
+			if target.ID != "" {
+				if parsed, err := uuid.Parse(target.ID); err == nil && (parsed == selfID || parsed == oppID) {
+					targetTypeIDs[targetBase+tgtIdx] = 0
+					targetRefIsPlayer[targetBase+tgtIdx] = 1
+					if parsed == selfID {
+						targetRefIsSelf[targetBase+tgtIdx] = 1
+					}
+					continue
 				}
-				continue
 			}
 			if slot, ok := cardIDToSlot[target.ID]; ok {
 				targetTypeIDs[targetBase+tgtIdx] = 1
@@ -1194,14 +1198,13 @@ func priorityCandidateCount(pending *apiPending, maxOptions int64, maxTargetsPer
 	return count
 }
 
-func playerIDs(state *apiGameState, perspectivePlayerIdx int) (string, string) {
-	selfID := ""
+func playerIDs(state *apiGameState, perspectivePlayerIdx int) (uuid.UUID, uuid.UUID) {
+	var selfID, oppID uuid.UUID
 	if len(state.Players) > 0 {
-		selfID = state.Players[perspectivePlayerIdx].ID.String()
+		selfID = state.Players[perspectivePlayerIdx].ID
 	}
-	oppID := ""
 	if len(state.Players) == 2 {
-		oppID = state.Players[1-perspectivePlayerIdx].ID.String()
+		oppID = state.Players[1-perspectivePlayerIdx].ID
 	}
 	return selfID, oppID
 }

@@ -145,7 +145,7 @@ type renderCardRef struct {
 	owner   int32
 	slotIdx int32
 	uuidIdx int32
-	id      string
+	cardID  uuid.UUID
 	name    string
 	row     int32
 	perm    *interactive.PermanentState
@@ -153,9 +153,9 @@ type renderCardRef struct {
 
 type renderPlanIndex struct {
 	cards      []renderCardRef
-	uuidByID   map[string]int32
-	rowByID    map[string]int32
-	slotByID   map[string]int32
+	uuidByID   map[uuid.UUID]int32
+	rowByID    map[uuid.UUID]int32
+	slotByID   map[uuid.UUID]int32
 	cardsByKey map[renderZoneKey][]renderCardRef
 	// rowOrder lists each unique card cache row that appears in any zone of
 	// this snapshot, in deterministic ascending order. Populated for v2 dict
@@ -180,9 +180,9 @@ func newEncodeScratch() *encodeScratch {
 	return &encodeScratch{
 		cardIDToSlot: make(map[string]int64),
 		renderIndex: renderPlanIndex{
-			uuidByID:   make(map[string]int32),
-			rowByID:    make(map[string]int32),
-			slotByID:   make(map[string]int32),
+			uuidByID:   make(map[uuid.UUID]int32),
+			rowByID:    make(map[uuid.UUID]int32),
+			slotByID:   make(map[uuid.UUID]int32),
 			cardsByKey: make(map[renderZoneKey][]renderCardRef),
 		},
 		rowSeen: make(map[int32]struct{}),
@@ -293,15 +293,15 @@ func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int, index *
 	for _, key := range uuidOrder {
 		cards := index.cardsByKey[renderZoneKey{owner: key.owner, zone: key.zone}]
 		for idx := range cards {
-			if cards[idx].id != "" {
-				if uuidIdx, ok := index.uuidByID[cards[idx].id]; ok {
+			if cards[idx].cardID != uuid.Nil {
+				if uuidIdx, ok := index.uuidByID[cards[idx].cardID]; ok {
 					cards[idx].uuidIdx = uuidIdx
 				} else {
 					cards[idx].uuidIdx = int32(len(index.uuidByID))
-					index.uuidByID[cards[idx].id] = cards[idx].uuidIdx
+					index.uuidByID[cards[idx].cardID] = cards[idx].uuidIdx
 				}
-				index.rowByID[cards[idx].id] = cards[idx].row
-				index.slotByID[cards[idx].id] = cards[idx].slotIdx
+				index.rowByID[cards[idx].cardID] = cards[idx].row
+				index.slotByID[cards[idx].cardID] = cards[idx].slotIdx
 			}
 			if _, dup := rowSeen[cards[idx].row]; !dup {
 				rowSeen[cards[idx].row] = struct{}{}
@@ -345,7 +345,7 @@ func appendRenderCardsForZone(out []renderCardRef, player *interactive.PlayerSta
 				owner:   owner,
 				slotIdx: renderSlotIndex(owner, zone, idx),
 				uuidIdx: -1,
-				id:      perm.ID.String(),
+				cardID:  perm.ID,
 				name:    perm.Name,
 				row:     clampInt32(row),
 				perm:    &perm,
@@ -363,7 +363,7 @@ func appendRenderCardsForZone(out []renderCardRef, player *interactive.PlayerSta
 				owner:   owner,
 				slotIdx: renderSlotIndex(owner, zone, idx),
 				uuidIdx: -1,
-				id:      card.ID.String(),
+				cardID:  card.ID,
 				name:    card.Name,
 				row:     clampInt32(row),
 			})
@@ -380,7 +380,7 @@ func appendRenderCardsForZone(out []renderCardRef, player *interactive.PlayerSta
 				owner:   owner,
 				slotIdx: renderSlotIndex(owner, zone, idx),
 				uuidIdx: -1,
-				id:      card.ID.String(),
+				cardID:  card.ID,
 				name:    card.Name,
 				row:     clampInt32(row),
 			})
@@ -441,7 +441,7 @@ func emitRenderZones(w *renderPlanWriter, state *apiGameState, playerIdx int, in
 				}
 				if card.perm.AttachedTo != uuid.Nil {
 					targetUUIDIdx := int32(-1)
-					if idx, ok := index.uuidByID[card.perm.AttachedTo.String()]; ok {
+					if idx, ok := index.uuidByID[card.perm.AttachedTo]; ok {
 						targetUUIDIdx = idx
 					}
 					w.write(opAttachedTo, targetUUIDIdx)
@@ -559,8 +559,12 @@ func renderOptionSource(option apiOption, index renderPlanIndex) (int32, int32) 
 		if id == "" {
 			continue
 		}
-		uuidIdx, hasUUID := index.uuidByID[id]
-		row, hasRow := index.rowByID[id]
+		parsed, err := uuid.Parse(id)
+		if err != nil {
+			continue
+		}
+		uuidIdx, hasUUID := index.uuidByID[parsed]
+		row, hasRow := index.rowByID[parsed]
 		if hasUUID || hasRow {
 			if !hasUUID {
 				uuidIdx = -1
@@ -580,22 +584,26 @@ func renderOptionSource(option apiOption, index renderPlanIndex) (int32, int32) 
 	return -1, -1
 }
 
-func renderTarget(target apiTarget, selfID string, oppID string, index renderPlanIndex) (int32, int32, int32) {
+func renderTarget(target apiTarget, selfID uuid.UUID, oppID uuid.UUID, index renderPlanIndex) (int32, int32, int32) {
 	if target.ID == "" {
+		return -1, -1, renderTargetUnknown
+	}
+	parsed, err := uuid.Parse(target.ID)
+	if err != nil {
 		return -1, -1, renderTargetUnknown
 	}
 	// For player targets the assembler doesn't need a row / uuid index — it
 	// emits ``<self>`` or ``<opp>`` directly. Encode the owner index in the
 	// row slot (0=self, 1=opp) so the assembler can dispatch on a single
 	// payload word without needing to know the player's UUID.
-	if target.ID == selfID {
+	if parsed == selfID {
 		return renderOwnerSelf, -1, renderTargetPlayer
 	}
-	if target.ID == oppID {
+	if parsed == oppID {
 		return renderOwnerOpponent, -1, renderTargetPlayer
 	}
-	uuidIdx, hasUUID := index.uuidByID[target.ID]
-	row, hasRow := index.rowByID[target.ID]
+	uuidIdx, hasUUID := index.uuidByID[parsed]
+	row, hasRow := index.rowByID[parsed]
 	if hasUUID || hasRow {
 		if !hasUUID {
 			uuidIdx = -1
