@@ -285,17 +285,21 @@ func (e *directTokenEmitter) emitOption(kindID, sourceRow, sourceUUIDIdx, abilit
 
 	verbSpan := e.tables.actionVerbSpan(kindID)
 	kindKnown := verbSpan != nil
+	var flags uint8
+	if kindID >= 0 && int(kindID) < len(kindFlags) {
+		flags = kindFlags[kindID]
+	}
 	if kindKnown {
 		e.writeSpan(verbSpan)
 	}
-	if kindKnown && !kindHasNoSource(kindID) {
+	if kindKnown && flags&kindFlagHasSource != 0 {
 		if !e.emitCardRef(sourceUUIDIdx) {
 			if sourceRow >= 0 && sourceRow < e.tables.cardRowCount {
 				e.writeSpan(e.tables.cardNameSpan(sourceRow))
 			}
 		}
 	}
-	if abilityIdx >= 0 && kindID == 3 {
+	if abilityIdx >= 0 && flags&kindFlagAbility != 0 {
 		span := e.tables.abilitySpan(abilityIdx)
 		if span == nil {
 			return fmt.Errorf(

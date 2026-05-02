@@ -9,12 +9,37 @@ const (
 	statusTappedKnown int32 = 0x2000
 )
 
-// Action-kind ids that skip the source-row / ability suffix on OP_OPTION.
-// Matches the Python guard “verb in ("pass", "choice", "unknown")“.
-//
-//	0=pass, 6=choice
+// Action-kind metadata flags. Bits set per kind id; consumers branch on
+// flags rather than open-coded equality checks. kindFlagHasSource is set
+// for every kind that participates in the source-row / ability suffix
+// emission on OP_OPTION (everything except pass=0 and choice=6, matching
+// the Python guard 'verb in ("pass", "choice", "unknown")'). kindFlagAbility
+// is set only for activate_ability=3, which is the kind that consumes
+// abilityIdx into a real span emit.
+const (
+	kindFlagHasSource uint8 = 1 << 0
+	kindFlagAbility   uint8 = 1 << 1
+)
+
+// kindFlags is indexed by action-kind id. Sized at 16 to give room for
+// future kinds without rebuilding; entries past actionKinds remain zero,
+// which means "no source, no ability" — equivalent to treating unknown
+// kinds as Python's "unknown".
+var kindFlags = [16]uint8{
+	0: 0,                                 // pass: no source, no ability
+	1: kindFlagHasSource,                 // play_land
+	2: kindFlagHasSource,                 // cast_spell
+	3: kindFlagHasSource | kindFlagAbility, // activate_ability
+	4: kindFlagHasSource,                 // attacker
+	5: kindFlagHasSource,                 // blocker
+	6: 0,                                 // choice: no source, no ability
+}
+
 func kindHasNoSource(kindID int32) bool {
-	return kindID == 0 || kindID == 6
+	if kindID < 0 || int(kindID) >= len(kindFlags) {
+		return true
+	}
+	return kindFlags[kindID]&kindFlagHasSource == 0
 }
 
 // MAX_CARD_REFS is mirrored from magic_ai/text_encoder/tokenizer.py.
