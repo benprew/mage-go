@@ -571,15 +571,11 @@ func renderStatusBits(perm *interactive.PermanentState) int32 {
 }
 
 func renderOptionSource(option apiOption, index renderPlanIndex) (int32, int32) {
-	for _, id := range []string{option.CardID, option.PermanentID, option.ID} {
-		if id == "" {
+	for _, id := range [3]uuid.UUID{option.CardUUID, option.PermanentUUID, option.IDUUID} {
+		if id == uuid.Nil {
 			continue
 		}
-		parsed, err := uuid.Parse(id)
-		if err != nil {
-			continue
-		}
-		if entry, ok := index.byCardID[parsed]; ok {
+		if entry, ok := index.byCardID[id]; ok {
 			return entry.row, entry.uuidIdx
 		}
 	}
@@ -593,24 +589,20 @@ func renderOptionSource(option apiOption, index renderPlanIndex) (int32, int32) 
 }
 
 func renderTarget(target apiTarget, selfID uuid.UUID, oppID uuid.UUID, index renderPlanIndex) (int32, int32, int32) {
-	if target.ID == "" {
-		return -1, -1, renderTargetUnknown
-	}
-	parsed, err := uuid.Parse(target.ID)
-	if err != nil {
+	if target.IDUUID == uuid.Nil {
 		return -1, -1, renderTargetUnknown
 	}
 	// For player targets the assembler doesn't need a row / uuid index — it
 	// emits ``<self>`` or ``<opp>`` directly. Encode the owner index in the
 	// row slot (0=self, 1=opp) so the assembler can dispatch on a single
 	// payload word without needing to know the player's UUID.
-	if parsed == selfID {
+	if target.IDUUID == selfID {
 		return renderOwnerSelf, -1, renderTargetPlayer
 	}
-	if parsed == oppID {
+	if target.IDUUID == oppID {
 		return renderOwnerOpponent, -1, renderTargetPlayer
 	}
-	if entry, ok := index.byCardID[parsed]; ok {
+	if entry, ok := index.byCardID[target.IDUUID]; ok {
 		return entry.row, entry.uuidIdx, renderTargetPermanent
 	}
 	return -1, -1, renderTargetUnknown

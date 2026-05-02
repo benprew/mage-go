@@ -939,15 +939,13 @@ func fillActionEncoding(batchIdx int64, state *apiGameState, pending *apiPending
 			targetScalars[targetScalarBase+tgtIdx*cfg.targetScalarDim] = clipNorm(float64(tgtIdx), maxTargetScalar)
 			targetScalars[targetScalarBase+tgtIdx*cfg.targetScalarDim+1] = 1
 
-			if target.ID != "" {
-				if parsed, err := uuid.Parse(target.ID); err == nil && (parsed == selfID || parsed == oppID) {
-					targetTypeIDs[targetBase+tgtIdx] = 0
-					targetRefIsPlayer[targetBase+tgtIdx] = 1
-					if parsed == selfID {
-						targetRefIsSelf[targetBase+tgtIdx] = 1
-					}
-					continue
+			if target.IDUUID != uuid.Nil && (target.IDUUID == selfID || target.IDUUID == oppID) {
+				targetTypeIDs[targetBase+tgtIdx] = 0
+				targetRefIsPlayer[targetBase+tgtIdx] = 1
+				if target.IDUUID == selfID {
+					targetRefIsSelf[targetBase+tgtIdx] = 1
 				}
+				continue
 			}
 			if slot, ok := cardIDToSlot[target.ID]; ok {
 				targetTypeIDs[targetBase+tgtIdx] = 1

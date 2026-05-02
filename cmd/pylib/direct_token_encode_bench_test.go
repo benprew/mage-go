@@ -90,25 +90,29 @@ func benchDirectPending(state *apiGameState) *apiPending {
 	for o := 0; o < benchOptionCount; o++ {
 		k := kinds[o%len(kinds)]
 		var cardID, cardName, permID string
+		var cardUUID, permUUID uuid.UUID
 		// alternate sourcing options between hand cards and battlefield perms
 		if o%2 == 0 && len(selfPlayer.Hand) > 0 {
 			c := selfPlayer.Hand[o%len(selfPlayer.Hand)]
-			cardID, cardName = c.ID.String(), c.Name
+			cardID, cardName, cardUUID = c.ID.String(), c.Name, c.ID
 		} else if len(selfPlayer.Battlefield) > 0 {
 			p := selfPlayer.Battlefield[o%len(selfPlayer.Battlefield)]
-			permID, cardName = p.ID.String(), p.Name
+			permID, cardName, permUUID = p.ID.String(), p.Name, p.ID
 		}
 		opt := apiOption{
-			Kind:         k,
-			CardID:       cardID,
-			CardName:     cardName,
-			PermanentID:  permID,
-			AbilityIndex: o % 8,
+			Kind:          k,
+			CardID:        cardID,
+			CardName:      cardName,
+			PermanentID:   permID,
+			AbilityIndex:  o % 8,
+			CardUUID:      cardUUID,
+			PermanentUUID: permUUID,
 		}
 		// 2 targets each — first a player target, second a permanent
+		permTgt := oppPlayer.Battlefield[o%len(oppPlayer.Battlefield)]
 		opt.ValidTargets = []apiTarget{
-			{ID: oppPlayer.ID.String(), Label: "opp"},
-			{ID: oppPlayer.Battlefield[o%len(oppPlayer.Battlefield)].ID.String(), Label: "perm"},
+			{ID: oppPlayer.ID.String(), Label: "opp", IDUUID: oppPlayer.ID},
+			{ID: permTgt.ID.String(), Label: "perm", IDUUID: permTgt.ID},
 		}
 		options = append(options, opt)
 	}

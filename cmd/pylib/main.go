@@ -163,11 +163,21 @@ type apiOption struct {
 	ValidTargets []apiTarget `json:"valid_targets,omitempty"`
 	ID           string      `json:"id,omitempty"`
 	Color        string      `json:"color,omitempty"`
+	// CardUUID / PermanentUUID / IDUUID mirror the string IDs above as
+	// raw uuid.UUID values. Populated alongside the strings during
+	// snapshot conversion so the encode hot path can avoid a round-trip
+	// through uuid.Parse on every option lookup. Excluded from JSON to
+	// keep the wire format unchanged.
+	CardUUID      uuid.UUID `json:"-"`
+	PermanentUUID uuid.UUID `json:"-"`
+	IDUUID        uuid.UUID `json:"-"`
 }
 
 type apiTarget struct {
 	ID    string `json:"id"`
 	Label string `json:"label"`
+	// IDUUID mirrors ID for the encode hot path. See apiOption above.
+	IDUUID uuid.UUID `json:"-"`
 }
 
 // actionRequest is what Python sends back to MageStep.
@@ -415,7 +425,7 @@ func targetsFromActionOption(opt interactive.ActionOption) []apiTarget {
 		if i < len(opt.ValidTargetLabels) {
 			label = opt.ValidTargetLabels[i]
 		}
-		out = append(out, apiTarget{ID: id.String(), Label: label})
+		out = append(out, apiTarget{ID: id.String(), Label: label, IDUUID: id})
 	}
 	return out
 }
@@ -438,9 +448,11 @@ func convertPriorityOptions(opts []interactive.ActionOption) []apiOption {
 		}
 		if o.CardID != uuid.Nil {
 			ao.CardID = o.CardID.String()
+			ao.CardUUID = o.CardID
 		}
 		if o.PermanentID != uuid.Nil {
 			ao.PermanentID = o.PermanentID.String()
+			ao.PermanentUUID = o.PermanentID
 		}
 		switch o.Type {
 		case interactive.ActionPass:
@@ -485,6 +497,7 @@ func convertChoiceOptions(choiceType interactive.ChoiceType, opts []interactive.
 		ao := apiOption{Kind: "choice", Label: o.Label}
 		if o.ID != uuid.Nil {
 			ao.ID = o.ID.String()
+			ao.IDUUID = o.ID
 		}
 		if choiceType == interactive.ChoiceManaColor {
 			ao.Color = o.Color.String()
@@ -500,6 +513,7 @@ func buildAttackerPending(msg *interactive.GameMsg, playerIdx int) *apiPending {
 		ao := apiOption{Kind: "attacker", Label: o.Label}
 		if o.PermanentID != uuid.Nil {
 			ao.PermanentID = o.PermanentID.String()
+			ao.PermanentUUID = o.PermanentID
 		}
 		out = append(out, ao)
 	}
@@ -512,13 +526,14 @@ func buildBlockerPending(msg *interactive.GameMsg, playerIdx int) *apiPending {
 		ao := apiOption{Kind: "blocker", Label: o.Label}
 		if o.PermanentID != uuid.Nil {
 			ao.PermanentID = o.PermanentID.String()
+			ao.PermanentUUID = o.PermanentID
 		}
 		for i, id := range o.ValidTargets {
 			label := ""
 			if i < len(o.ValidTargetLabels) {
 				label = o.ValidTargetLabels[i]
 			}
-			ao.ValidTargets = append(ao.ValidTargets, apiTarget{ID: id.String(), Label: label})
+			ao.ValidTargets = append(ao.ValidTargets, apiTarget{ID: id.String(), Label: label, IDUUID: id})
 		}
 		out = append(out, ao)
 	}
