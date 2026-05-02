@@ -17,6 +17,7 @@ import (
 	"os"
 
 	_ "git.sr.ht/~cdcarter/mage-go/cards" // register all sets
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 )
 
 func main() {
@@ -30,6 +31,8 @@ func run() int {
 	)
 	flag.BoolVar(&loose, "loose", true, "loose action-set match (kind+sourceName), ignoring text")
 	flag.BoolVar(&verbose, "verbose", false, "print one line per PRIORITY validation")
+	var trace bool
+	flag.BoolVar(&trace, "trace", false, "enable mage-go priority-action debug trace (DebugPriority)")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "usage: %s [flags] <recording.jsonl[.gz]>\n", os.Args[0])
 		flag.PrintDefaults()
@@ -39,6 +42,9 @@ func run() int {
 	if flag.NArg() != 1 {
 		flag.Usage()
 		return 2
+	}
+	if trace {
+		mage.DebugPriority = true
 	}
 	path := flag.Arg(0)
 

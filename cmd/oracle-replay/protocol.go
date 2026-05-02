@@ -17,10 +17,14 @@ type metaLine struct {
 }
 
 type playerInfo struct {
-	ID           string   `json:"id"`
-	Name         string   `json:"name"`
-	StartingLife int      `json:"startingLife"`
-	Deck         []string `json:"deck"`
+	ID           string `json:"id"`
+	Name         string `json:"name"`
+	StartingLife int    `json:"startingLife"`
+	// Deck = hand cards (first HandSizeAtStart entries) + library top-to-bottom,
+	// captured at the first PRIORITY event so replayers reconstruct the
+	// post-shuffle library without needing a draw-7 step.
+	Deck             []string `json:"deck"`
+	HandSizeAtStart  int      `json:"handSizeAtStart"`
 }
 
 type eventLine struct {

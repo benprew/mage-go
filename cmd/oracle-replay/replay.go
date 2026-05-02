@@ -37,6 +37,11 @@ type replay struct {
 	// same turn the recording stops. Read from META.extras.maxTurns.
 	maxTurns int
 
+	// handSizes[i] = the number of leading entries in META.players[i].deck
+	// that should go directly into player i's hand at game start (rather
+	// than draw-from-top). 0 = legacy encoding, fall back to draw-7.
+	handSizes []int
+
 	// First fatal divergence causes replay to bail; record it.
 	divergence string
 	gameErr    error
@@ -87,6 +92,12 @@ func newReplay(meta metaLine, events []eventLine, loose bool) (*replay, error) {
 	r.playerByID[meta.Players[0].ID] = pa
 	r.playerByID[meta.Players[1].ID] = pb
 
+	// Build full library (hand cards + library cards) so card UUIDs exist in
+	// the engine. We slice into hand-cards / library-cards in run() based on
+	// HandSizeAtStart from META — that's how new recordings encode the
+	// post-shuffle state. Older recordings (pre-Hand+Library encoding) have
+	// HandSizeAtStart=0 and Deck = full library order; for those, run()
+	// falls back to draw-7-from-top.
 	libA, err := buildLibrary(meta.Players[0].Deck)
 	if err != nil {
 		return nil, fmt.Errorf("build library A: %w", err)
@@ -98,9 +109,33 @@ func newReplay(meta metaLine, events []eventLine, loose bool) (*replay, error) {
 	pa.SetLibrary(libA)
 	pb.SetLibrary(libB)
 
+	r.handSizes = []int{meta.Players[0].HandSizeAtStart, meta.Players[1].HandSizeAtStart}
+
 	r.game = mage.NewGame(pa, pb)
 	r.game.SetOnPriority(r.onPriority)
 	return r, nil
+}
+
+// usesHandLibraryEncoding reports whether META encodes the deck as
+// "hand cards then library cards" (any HandSizeAtStart > 0). New
+// recordings always use this; older ones have HandSizeAtStart=0 and
+// the deck list is just the library order.
+// playerNameByID looks up a recorder UUID and returns the player's name
+// (PlayerA / PlayerB / etc.). Returns "" if the ID isn't known.
+func (r *replay) playerNameByID(id string) string {
+	if rp, ok := r.playerByID[id]; ok && rp != nil {
+		return rp.Name()
+	}
+	return ""
+}
+
+func (r *replay) usesHandLibraryEncoding() bool {
+	for _, n := range r.handSizes {
+		if n > 0 {
+			return true
+		}
+	}
+	return false
 }
 
 // shouldDrawOpeningHands inspects the first PRIORITY snapshot in the
@@ -137,12 +172,32 @@ func buildLibrary(cardNames []string) ([]mage.Card, error) {
 }
 
 // run drives the game forward until it ends or a divergence is hit.
-// New recordings (post-SelfPlayExecutor) draw opening hands (testMode=false);
-// older recordings made under the test framework's default testMode=true
-// did NOT — players started with empty hands and full libraries. We detect
-// which case applies by peeking at the first PRIORITY snapshot.
+// Three startup modes, in priority order:
+//
+//   1. New recording with HandSizeAtStart > 0: META.deck encodes
+//      hand[0..HandSizeAtStart) + library[HandSizeAtStart..]. We move the
+//      first N cards from the library directly into hand without drawing.
+//      Replay matches XMage's exact post-shuffle, post-opening-hand state.
+//
+//   2. Older recording, post-SelfPlayExecutor: hand drawn at game start
+//      via testMode=false but no HandSizeAtStart in META. shouldDrawOpeningHands
+//      sees ≥1 card in the first PRIORITY's hand and draws 7 here; the
+//      shuffle order may diverge so this only works for replayable .dck
+//      orders (skipInitShuffling=true setups).
+//
+//   3. Legacy recording, testMode=true: empty hands at first PRIORITY,
+//      no opening hand draw needed.
 func (r *replay) run() error {
-	if r.shouldDrawOpeningHands() {
+	if r.usesHandLibraryEncoding() {
+		for i, p := range r.game.AllPlayers() {
+			n := r.handSizes[i]
+			for range n {
+				c, ok := p.DrawCard()
+				_ = c
+				_ = ok
+			}
+		}
+	} else if r.shouldDrawOpeningHands() {
 		for _, p := range r.game.AllPlayers() {
 			for range 7 {
 				p.DrawCard()
@@ -206,18 +261,41 @@ func (r *replay) fail(format string, args ...any) {
 // player gets priority. Pulls the next PRIORITY event off the recording,
 // validates state + playable actions, then peeks ahead to figure out what
 // XMage did and returns the corresponding PriorityAction.
+//
+// Tricky bit: the two engines don't agree on the count of priority points.
+// In particular, after a player acts, mage-go cycles back through priority
+// (CR 117.3c: active player retains priority after their action), but
+// XMage's recording often skips that "implicit" priority and only logs
+// the next player's. So we peek the next PRIORITY in the recording and
+// only consume it if its priorityPlayerId matches the mage-go player who's
+// currently asking. If not, mage-go has an "extra" priority point — return
+// pass without consuming the event so the next, real priority point lines
+// up correctly.
 // =============================================================================
 func (r *replay) onPriority(g *mage.Game, playerIdx int, mainPhase bool) mage.PriorityAction {
 	if r.divergence != "" {
 		return mage.PriorityAction{Type: mage.PriorityPass}
 	}
 
-	ev, err := r.advanceTo("PRIORITY")
+	ev, idx, err := r.peek("PRIORITY")
 	if err != nil {
 		r.fail("ran out of recording at mage-go priority pass (T%d %s p%d)",
 			g.CurrentTurn(), stepName(g.GetStep()), playerIdx)
 		return mage.PriorityAction{Type: mage.PriorityPass}
 	}
+
+	mageGoPlayerName := g.PlayerAt(playerIdx).Name()
+	recordedName := r.playerNameByID(ev.Snapshot.PriorityPlayerID)
+	if recordedName != "" && recordedName != mageGoPlayerName {
+		// mage-go is asking for priority but the next PRIORITY in the
+		// recording is for a different player — i.e. mage-go has an
+		// extra priority cycle XMage skipped. Auto-pass without
+		// consuming the event.
+		return mage.PriorityAction{Type: mage.PriorityPass}
+	}
+
+	// Consume the matched event.
+	r.cursor = idx + 1
 
 	if mismatches := r.diffSnapshot(g, playerIdx, ev.Snapshot); len(mismatches) > 0 {
 		r.fail("state mismatch at PRIORITY seq=%d T%d %s:\n  %s",
