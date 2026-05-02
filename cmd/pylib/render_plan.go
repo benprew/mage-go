@@ -197,6 +197,12 @@ type encodeScratch struct {
 	// so the next reset can clear only those slots. Indexed by
 	// outputBatchIdx; grown lazily.
 	directDirty []directDirtyState
+	// nameRowCache memoizes cardRowForName lookups for the lifetime of
+	// the scratch. Names repeat heavily within a snapshot (multiple
+	// copies of the same card across battlefield / hand / graveyard /
+	// options), so the first lookup pays the lock + map-probe cost and
+	// subsequent ones hit a small unlocked map.
+	nameRowCache map[string]int32
 }
 
 func newEncodeScratch() *encodeScratch {
@@ -243,10 +249,10 @@ func (s *encodeScratch) internalRenderPlanView(capacity int64) outputViews {
 func fillRenderPlan(batchIdx int64, state *apiGameState, pending *apiPending, playerIdx int, cfg encodeConfig, view outputViews, scratch *encodeScratch) *encodeError {
 	start := batchIdx * cfg.renderPlanCapacity
 	plan := view.renderPlan[start : start+cfg.renderPlanCapacity]
-	index := &scratch.renderIndex
-	if err := buildRenderPlanIndex(state, playerIdx, index, &scratch.rowSeen); err != nil {
+	if err := buildRenderPlanIndex(state, playerIdx, scratch); err != nil {
 		return err
 	}
+	index := &scratch.renderIndex
 
 	w := renderPlanWriter{buf: plan}
 	w.write(opOpenState)
@@ -270,8 +276,9 @@ func fillRenderPlan(batchIdx int64, state *apiGameState, pending *apiPending, pl
 	return nil
 }
 
-func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int, index *renderPlanIndex, rowSeenPtr *map[int32]struct{}) *encodeError {
-	rowSeen := *rowSeenPtr
+func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int, scratch *encodeScratch) *encodeError {
+	index := &scratch.renderIndex
+	rowSeen := scratch.rowSeen
 	// First pass: build the full card lists per (owner, zone) but do NOT
 	// assign UUID indices yet. UUID-ordering must match Python's
 	// _assign_card_refs which walks zones owner-interleaved (self.bf,
@@ -285,7 +292,7 @@ func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int, index *
 		}
 		for _, zone := range renderZoneOrder {
 			slot := zoneOwnerSlot(zone, owner)
-			cards, err := appendRenderCardsForZone(index.cardsByZone[slot][:0], player, owner, zone)
+			cards, err := appendRenderCardsForZone(index.cardsByZone[slot][:0], player, owner, zone, scratch)
 			if err != nil {
 				return err
 			}
@@ -351,7 +358,7 @@ func renderPlayerState(state *apiGameState, perspectivePlayerIdx int, owner int3
 	return &state.Players[idx]
 }
 
-func appendRenderCardsForZone(out []renderCardRef, player *interactive.PlayerState, owner int32, zone int32) ([]renderCardRef, *encodeError) {
+func appendRenderCardsForZone(out []renderCardRef, player *interactive.PlayerState, owner int32, zone int32, scratch *encodeScratch) ([]renderCardRef, *encodeError) {
 	switch zone {
 	case renderZoneBattlefield:
 		// Take pointers directly into player.Battlefield so each renderCardRef
@@ -360,7 +367,7 @@ func appendRenderCardsForZone(out []renderCardRef, player *interactive.PlayerSta
 		// path is read-only.
 		for idx := range player.Battlefield {
 			perm := &player.Battlefield[idx]
-			row, ok := cardRowForName(perm.Name)
+			row, ok := scratch.cachedRowForName(perm.Name)
 			if !ok {
 				return nil, &encodeError{code: mageEncodeErrEncode, message: "missing card embedding for " + perm.Name}
 			}
@@ -371,14 +378,14 @@ func appendRenderCardsForZone(out []renderCardRef, player *interactive.PlayerSta
 				uuidIdx: -1,
 				cardID:  perm.ID,
 				name:    perm.Name,
-				row:     clampInt32(row),
+				row:     row,
 				perm:    perm,
 			})
 		}
 		return out, nil
 	case renderZoneHand:
 		for idx, card := range player.Hand {
-			row, ok := cardRowForName(card.Name)
+			row, ok := scratch.cachedRowForName(card.Name)
 			if !ok {
 				return nil, &encodeError{code: mageEncodeErrEncode, message: "missing card embedding for " + card.Name}
 			}
@@ -389,13 +396,13 @@ func appendRenderCardsForZone(out []renderCardRef, player *interactive.PlayerSta
 				uuidIdx: -1,
 				cardID:  card.ID,
 				name:    card.Name,
-				row:     clampInt32(row),
+				row:     row,
 			})
 		}
 		return out, nil
 	case renderZoneGraveyard:
 		for idx, card := range player.Graveyard {
-			row, ok := cardRowForName(card.Name)
+			row, ok := scratch.cachedRowForName(card.Name)
 			if !ok {
 				return nil, &encodeError{code: mageEncodeErrEncode, message: "missing card embedding for " + card.Name}
 			}
@@ -406,13 +413,39 @@ func appendRenderCardsForZone(out []renderCardRef, player *interactive.PlayerSta
 				uuidIdx: -1,
 				cardID:  card.ID,
 				name:    card.Name,
-				row:     clampInt32(row),
+				row:     row,
 			})
 		}
 		return out, nil
 	default:
 		return out, nil
 	}
+}
+
+// cachedRowForName memoizes cardRowForName for the lifetime of the
+// scratch. Negative cached values mean "lookup failed (missing
+// embedding)" so retries don't re-acquire the global RWMutex.
+func (s *encodeScratch) cachedRowForName(name string) (int32, bool) {
+	if name == "" {
+		return 0, true
+	}
+	if v, ok := s.nameRowCache[name]; ok {
+		if v < 0 {
+			return 0, false
+		}
+		return v, true
+	}
+	row, ok := cardRowForName(name)
+	if s.nameRowCache == nil {
+		s.nameRowCache = make(map[string]int32, 64)
+	}
+	if !ok {
+		s.nameRowCache[name] = -1
+		return 0, false
+	}
+	clamped := clampInt32(row)
+	s.nameRowCache[name] = clamped
+	return clamped, true
 }
 
 func emitRenderPlayerScalars(w *renderPlanWriter, state *apiGameState, playerIdx int) {

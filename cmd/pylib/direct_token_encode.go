@@ -19,10 +19,10 @@ func fillTokenAssemblyDirectPacked(
 			message: "MageRegisterTokenTables must be called before MageEncodeTokensPacked",
 		}
 	}
-	index := &scratch.renderIndex
-	if err := buildRenderPlanIndex(state, playerIdx, index, &scratch.rowSeen); err != nil {
+	if err := buildRenderPlanIndex(state, playerIdx, scratch); err != nil {
 		return packedCursor, 0, err
 	}
+	index := &scratch.renderIndex
 
 	mt := int64(cfg.tokenMaxTokens)
 	mo := int64(cfg.tokenMaxOptions)
