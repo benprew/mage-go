@@ -38,7 +38,8 @@ func fillTokenAssemblyDirectPacked(
 		}
 	}
 
-	out := &tokenAssemblerOut{
+	out := &scratch.directOut
+	*out = tokenAssemblerOut{
 		tokenIDs:    outputView.packedTokenIDs[rowStart:rowEnd],
 		optionPos:   outputView.packedOptionPos[outputBatchIdx*mo : (outputBatchIdx+1)*mo],
 		optionMask:  outputView.packedOptionMask[outputBatchIdx*mo : (outputBatchIdx+1)*mo],

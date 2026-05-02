@@ -2,7 +2,7 @@ package main
 
 import (
 	"math"
-	"sort"
+	"slices"
 	"sync"
 
 	"github.com/google/uuid"
@@ -174,6 +174,7 @@ type encodeScratch struct {
 	tokenPlanLen  [1]int64
 	tokenPlanOvf  [1]int64
 	directEmitter directTokenEmitter
+	directOut     tokenAssemblerOut
 }
 
 func newEncodeScratch() *encodeScratch {
@@ -313,7 +314,7 @@ func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int, index *
 		// shares the backing array, so the uuidIdx writes already landed).
 		index.cardsByKey[renderZoneKey{owner: key.owner, zone: key.zone}] = cards
 	}
-	sort.Slice(index.rowOrder, func(i, j int) bool { return index.rowOrder[i] < index.rowOrder[j] })
+	slices.Sort(index.rowOrder)
 	return nil
 }
 
@@ -677,7 +678,7 @@ func initManaCostRows() {
 		for cost := range seen {
 			manaCostRows = append(manaCostRows, cost)
 		}
-		sort.Strings(manaCostRows)
+		slices.Sort(manaCostRows)
 		manaCostRowByKey = make(map[string]int32, len(manaCostRows))
 		for idx, cost := range manaCostRows {
 			manaCostRowByKey[cost] = int32(idx)
