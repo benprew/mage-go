@@ -1207,6 +1207,18 @@ func playerIDs(state *apiGameState, perspectivePlayerIdx int) (string, string) {
 }
 
 func indexOrUnknown(values []string, value string) int64 {
+	if cache := indexCacheFor(values); cache != nil {
+		if cached, ok := cache.Load(value); ok {
+			return cached.(int64)
+		}
+		idx := indexOrUnknownSlow(values, value)
+		cache.Store(value, idx)
+		return idx
+	}
+	return indexOrUnknownSlow(values, value)
+}
+
+func indexOrUnknownSlow(values []string, value string) int64 {
 	key := normalizeKey(value)
 	norm := normalizedKeysFor(values)
 	for idx, candidate := range norm {
@@ -1215,6 +1227,31 @@ func indexOrUnknown(values []string, value string) int64 {
 		}
 	}
 	return int64(len(values) - 1)
+}
+
+// indexCacheFor returns a per-table sync.Map memoizing prior raw-input
+// lookups. Hot-path callers (the encoder dispatches an option-kind lookup
+// per option, per row, per batch) avoid the strings.Fields cost that way.
+// Returns nil for unknown tables so the slow path stays correct.
+var (
+	stepNamesIndexCache    sync.Map
+	pendingKindsIndexCache sync.Map
+	actionKindsIndexCache  sync.Map
+	traceKindsIndexCache   sync.Map
+)
+
+func indexCacheFor(values []string) *sync.Map {
+	switch {
+	case len(values) == len(stepNames) && &values[0] == &stepNames[0]:
+		return &stepNamesIndexCache
+	case len(values) == len(pendingKinds) && &values[0] == &pendingKinds[0]:
+		return &pendingKindsIndexCache
+	case len(values) == len(actionKinds) && &values[0] == &actionKinds[0]:
+		return &actionKindsIndexCache
+	case len(values) == len(traceKinds) && &values[0] == &traceKinds[0]:
+		return &traceKindsIndexCache
+	}
+	return nil
 }
 
 // normalizedKeys returns a slice of normalized keys, one per input value.
