@@ -547,13 +547,30 @@ func (r *replay) diffSnapshot(g *mage.Game, playerIdx int, want *snapshot) []str
 		}
 	}
 
-	// Battlefield: name+tapped multiset, partitioned by controller name.
+	// Battlefield diff is split into two strictness levels:
+	//
+	//   - Names (multiset): fatal divergence if differ — engines disagree
+	//     on which permanents exist under each controller.
+	//
+	//   - Tap state: warning if names match but tap multisets differ —
+	//     this happens when both engines pay an equivalent cost using
+	//     different mana sources (e.g., mage-go's AutoTapForCost picks
+	//     a different combination of lands+moxen than XMage). Same
+	//     resources spent, just different choice.
 	goBF := buildGoBattlefield(g)
 	wantBF := groupRecordedBattlefieldByController(want)
 	for ctrlName, goPerms := range goBF {
-		if !equalPermSet(goPerms, wantBF[ctrlName]) {
+		wantPerms := wantBF[ctrlName]
+		if !equalNameMultiset(permNameList(goPerms), permNameList(wantPerms)) {
 			diffs = append(diffs, fmt.Sprintf("battlefield[%s]: go=%s xmage=%s", ctrlName,
-				formatPerms(goPerms), formatPerms(wantBF[ctrlName])))
+				formatPerms(goPerms), formatPerms(wantPerms)))
+			continue
+		}
+		// Same names. Tap-state difference becomes a warning instead.
+		if !equalPermSet(goPerms, wantPerms) {
+			r.warnings = append(r.warnings, fmt.Sprintf(
+				"tap-state diff battlefield[%s]: go=%s xmage=%s (same names, different tap multiset)",
+				ctrlName, formatPerms(goPerms), formatPerms(wantPerms)))
 		}
 	}
 	for ctrlName, wantPerms := range wantBF {
@@ -564,6 +581,17 @@ func (r *replay) diffSnapshot(g *mage.Game, playerIdx int, want *snapshot) []str
 		diffs = append(diffs, fmt.Sprintf("battlefield[%s]: go=[] xmage=%s", ctrlName, formatPerms(wantPerms)))
 	}
 	return diffs
+}
+
+// permNameList returns just the names from a permEntry slice, preserving
+// order so the multiset comparison via equalNameMultiset (which expects
+// pre-sorted inputs) still works on already-sorted permEntry lists.
+func permNameList(ps []permEntry) []string {
+	out := make([]string, len(ps))
+	for i, p := range ps {
+		out[i] = p.name
+	}
+	return out
 }
 
 func buildGoPlayers(g *mage.Game) []goPlayerSnap {
