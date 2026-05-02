@@ -1,62 +1,119 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"math/bits"
+)
+
+// directDirtyState records exactly what slots a previous run of the direct
+// emitter wrote into a shared output row, so the next reset only zeroes
+// those slots instead of the full per-row capacity. Lives on encodeScratch
+// (one entry per batch row) so dirty info persists across calls that reuse
+// the same scratch.
+type directDirtyState struct {
+	// optionWatermark is the count of option_pos / option_mask slots that
+	// were written by the last reset of this row. Slots [0, watermark) need
+	// re-zeroing; slots beyond are still pristine sentinels from the
+	// caller's allocation.
+	optionWatermark int32
+	// targetWatermark is the highest target slot index + 1 written by the
+	// last reset (i.e. the smallest prefix of target_pos / target_mask that
+	// covers all the dirty slots).
+	targetWatermark int32
+	// cardRefSeen doubles as the live "have we seen this card-ref idx yet"
+	// bitmap during emission AND, after the row finishes, as the dirty
+	// record for which cardRefPos slots need re-zeroing next time. Bit i
+	// set => card ref i was emitted this row.
+	cardRefSeen [tokenAssemblerMaxCardRefs / 64]uint64
+	// initialized is false until the first reset. While false, reset does a
+	// full clear (caller's pre-init may not have laid down sentinels).
+	initialized bool
+}
 
 type directTokenEmitter struct {
 	tables          *tokenTables
 	out             *tokenAssemblerOut
+	dirty           *directDirtyState
 	maxTokens       int32
 	cursor          int32
 	overflow        bool
-	cardRefSeen     [tokenAssemblerMaxCardRefs]bool
 	nextOption      int32
+	maxTargetSlot   int32 // highest written target_pos index + 1, in row-local coords
 	curOptionIdx    int32
 	curTargetCount  int32
 	optionOpen      bool
 	scalarOwnerOpen int32
 }
 
-func newDirectTokenEmitter(tables *tokenTables, out *tokenAssemblerOut, maxTokens int32) *directTokenEmitter {
+func newDirectTokenEmitter(tables *tokenTables, out *tokenAssemblerOut, maxTokens int32, dirty *directDirtyState) *directTokenEmitter {
 	e := &directTokenEmitter{}
-	e.reset(tables, out, maxTokens)
+	e.reset(tables, out, maxTokens, dirty)
 	return e
 }
 
 // reset re-binds an emitter to a new output row and clears the per-row
-// state. Lets callers keep a single emitter on the heap (e.g. on
-// encodeScratch) and reuse it across batch rows; the [256]bool
-// cardRefSeen field stays in place rather than getting re-zeroed every
-// row, which is the dominant per-row alloc/cost in the direct path.
-func (e *directTokenEmitter) reset(tables *tokenTables, out *tokenAssemblerOut, maxTokens int32) {
-	for i := range out.optionPos {
-		out.optionPos[i] = -1
+// state. Uses the row's directDirtyState to clear ONLY slots dirtied by
+// the previous run on this row: clear() (memclr) for the mask arrays,
+// fill loops bounded by the watermark for the -1 sentinels, and a
+// trailing-zeros walk over the bitset for the per-card-ref positions.
+//
+// First-time use of a row (initialized=false) does a full clear because
+// the caller's allocator may not have laid down sentinels. After that the
+// per-row dirty state caps the work.
+func (e *directTokenEmitter) reset(tables *tokenTables, out *tokenAssemblerOut, maxTokens int32, dirty *directDirtyState) {
+	if !dirty.initialized {
+		fillInt32(out.optionPos, -1)
+		clear(out.optionMask)
+		fillInt32(out.targetPos, -1)
+		clear(out.targetMask)
+		fillInt32(out.cardRefPos, -1)
+		dirty.initialized = true
+	} else {
+		if w := dirty.optionWatermark; w > 0 {
+			if int(w) > len(out.optionPos) {
+				w = int32(len(out.optionPos))
+			}
+			fillInt32(out.optionPos[:w], -1)
+			clear(out.optionMask[:w])
+		}
+		if w := dirty.targetWatermark; w > 0 {
+			if int(w) > len(out.targetPos) {
+				w = int32(len(out.targetPos))
+			}
+			fillInt32(out.targetPos[:w], -1)
+			clear(out.targetMask[:w])
+		}
+		// Walk the cardRefSeen bitset and reset only those positions.
+		for word, m := range dirty.cardRefSeen {
+			for m != 0 {
+				bit := bits.TrailingZeros64(m)
+				idx := word*64 + bit
+				if idx < len(out.cardRefPos) {
+					out.cardRefPos[idx] = -1
+				}
+				m &= m - 1
+			}
+		}
 	}
-	for i := range out.optionMask {
-		out.optionMask[i] = 0
-	}
-	for i := range out.targetPos {
-		out.targetPos[i] = -1
-	}
-	for i := range out.targetMask {
-		out.targetMask[i] = 0
-	}
-	for i := range out.cardRefPos {
-		out.cardRefPos[i] = -1
-	}
+
+	clear(dirty.cardRefSeen[:])
+	dirty.optionWatermark = 0
+	dirty.targetWatermark = 0
+
 	e.tables = tables
 	e.out = out
+	e.dirty = dirty
 	e.maxTokens = maxTokens
 	e.cursor = 0
 	e.overflow = false
-	for i := range e.cardRefSeen {
-		e.cardRefSeen[i] = false
-	}
 	e.nextOption = 0
+	e.maxTargetSlot = 0
 	e.curOptionIdx = -1
 	e.curTargetCount = 0
 	e.optionOpen = false
 	e.scalarOwnerOpen = -1
 }
+
 
 func (e *directTokenEmitter) writeSpan(span []int32) {
 	if e.overflow || span == nil {
@@ -102,8 +159,10 @@ func (e *directTokenEmitter) emitCardRef(uuidIdx int32) bool {
 	if pos < 0 {
 		return false
 	}
-	if !e.cardRefSeen[uuidIdx] {
-		e.cardRefSeen[uuidIdx] = true
+	mask := uint64(1) << (uint32(uuidIdx) & 63)
+	word := uint32(uuidIdx) >> 6
+	if e.dirty.cardRefSeen[word]&mask == 0 {
+		e.dirty.cardRefSeen[word] |= mask
 		e.out.cardRefPos[uuidIdx] = pos + e.out.cursorBase
 	}
 	return true
@@ -257,6 +316,9 @@ func (e *directTokenEmitter) emitTarget(targetRow, targetUUIDIdx, targetKind int
 		e.out.targetPos[idx] = pos + e.out.cursorBase
 		e.out.targetMask[idx] = 1
 		e.curTargetCount++
+		if idx+1 > e.maxTargetSlot {
+			e.maxTargetSlot = idx + 1
+		}
 	}
 	switch targetKind {
 	case renderTargetPlayer:
@@ -376,5 +438,9 @@ func (e *directTokenEmitter) finish() (int32, bool) {
 			}
 		}
 	}
+	// Record what we dirtied so the next reset on this row can do a
+	// partial clear. cardRefSeen is already populated in-place.
+	e.dirty.optionWatermark = e.nextOption
+	e.dirty.targetWatermark = e.maxTargetSlot
 	return e.cursor, e.overflow
 }

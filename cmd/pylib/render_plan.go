@@ -193,6 +193,10 @@ type encodeScratch struct {
 	tokenPlanOvf  [1]int64
 	directEmitter directTokenEmitter
 	directOut     tokenAssemblerOut
+	// directDirty tracks per-row "what slots did the last emit write"
+	// so the next reset can clear only those slots. Indexed by
+	// outputBatchIdx; grown lazily.
+	directDirty []directDirtyState
 }
 
 func newEncodeScratch() *encodeScratch {
