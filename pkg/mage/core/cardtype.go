@@ -12,6 +12,7 @@ const (
 	TypeLand
 	TypeArtifact
 	TypeEnchantment
+	TypePlaneswalker
 )
 
 // SuperType represents a card's supertype.

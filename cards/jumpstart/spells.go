@@ -1699,10 +1699,31 @@ func registerSpells() {
 	// Settle the Score {2}{B}{B}
 	// Sorcery
 	// Exile target creature. Put two loyalty counters on a planeswalker you control.
-	// XXX: requires planeswalker / loyalty-counter primitive; implement only exile portion
 	Register("Settle the Score", func() Card {
 		return NewSorcery("Settle the Score", "{2}{B}{B}",
-			NewTargetedSpell(TargetCreature(), ExileTarget()),
+			NewTargetedSpell(TargetCreature(),
+				ExileTarget(),
+				FuncEffect(
+					"put two loyalty counters on a planeswalker you control",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						candidates := g.FilterBattlefield(And(ControlledBy(controller), IsPlaneswalker))
+						if len(candidates) == 0 {
+							return nil
+						}
+						player := g.GetPlayer(controller)
+						if player == nil {
+							return nil
+						}
+						chosen := player.ChoosePermanent(candidates, "planeswalker to gain two loyalty counters", g)
+						if chosen == nil {
+							return nil
+						}
+						g.AddCountersWithReplacement(chosen, Loyalty, 2, sourceID, false)
+						return nil
+					},
+				),
+			),
 		)
 	})
 

@@ -42,7 +42,21 @@ All accept variadic [CardOption] functions for customization:
 	[NewArtifact](name, manaCost, ...CardOption)
 	[NewEquipment](name, manaCost, ...CardOption)       // TypeArtifact + "Equipment" subtype
 	[NewLand](name, ...CardOption)                      // no mana cost
+	[NewPlaneswalker](name, manaCost, startingLoyalty, ...CardOption)
 	[NewToken](name, power, toughness, types, subTypes, ...keywords)
+
+# Planeswalkers (minimal)
+
+The planeswalker primitive is intentionally minimal. [NewPlaneswalker] gives a
+card TypePlaneswalker and an EntersWithNCounters(Loyalty, N) replacement so the
+permanent enters with its starting loyalty (CR 614.1c / 306.5b). The 0-loyalty
+state-based action (CR 704.5i) is implemented in CheckStateBasedActions.
+
+XXX: NOT yet implemented:
+  - Loyalty-activated abilities (+N / -N abilities, CR 606)
+  - Attacking planeswalkers (CR 506.4 / 508.1) and the planeswalker as a valid
+    attack/spell/ability target as an alternative to a player
+  - Damage redirection rules (legacy CR 117.6, removed in 2018)
 
 # CardOption Functions
 
@@ -1299,15 +1313,42 @@ At resolution, only the chosen mode's Effects run.
 NewModalSpell panics with fewer than two modes (modal spells have at least
 two options by definition).
 
-For modal triggered abilities (Trusty Retriever, Entomber Exarch ETB), use
-ModalTriggerEffect — it prompts ChooseMode at trigger resolution and
-dispatches to the chosen ModalTriggerMode.Resolve callback. Per-mode
-targets are picked at put-on-stack time via the trigger's AddTarget
-declarations (CR 603.3d).
+For modal triggered abilities with per-mode targets (Entomber Exarch ETB,
+"Choose one — …" trigger wording), use GenericTriggered.WithModes. Per CR
+603.1f the mode is chosen as the trigger goes on the stack, and per CR
+603.3d the chosen mode's targets are gathered at the same time. The engine
+prompts Player.ChooseMode for the mode index, runs target selection for
+that mode only, and pushes only that mode's Effects onto the stack object
+— so resolution runs only the selected mode.
+
+	mage.EntersBattlefieldTrigger(nil, false).WithModes(
+	    mage.Mode{
+	        Label:   "Return target creature card from your graveyard to your hand",
+	        Targets: []mage.Target{mage.TargetCardInYourGraveyard(mage.IsCreatureCard)},
+	        Effects: []mage.Effect{mage.ReturnFromGraveyardToHandTarget()},
+	    },
+	    mage.Mode{
+	        Label:   "Target opponent reveals their hand …",
+	        Targets: []mage.Target{mage.TargetOpponent()},
+	        Effects: []mage.Effect{revealAndDiscard},
+	    },
+	)
+
+WithModes panics with fewer than two modes (CR 700.2). When modes are
+declared, AddTarget/AddEffect on the same trigger are ignored — the chosen
+mode's lists fully replace them.
+
+For modal triggers whose modes have no targets (Trusty Retriever's "put a
+counter on this" / "draw a card"), ModalTriggerEffect remains an option.
+It prompts ChooseMode at trigger resolution time rather than at
+put-on-stack time, which is observably indistinguishable when no targets
+are involved. Prefer WithModes for any modal trigger that has per-mode
+targets — only WithModes implements the strict CR 603.1f / 603.3d ordering
+(mode and targets chosen at stack placement, before priority passes).
 
 	mage.ModalTriggerEffect("Trusty Retriever", []mage.ModalTriggerMode{
-	    {Label: "Return target ...", Resolve: func(g, src, ctrl, targets) error {...}},
-	    {Label: "Draw a card",        Resolve: func(g, src, ctrl, targets) error {...}},
+	    {Label: "Put a counter on this", Resolve: func(g, src, ctrl, targets) error {...}},
+	    {Label: "Draw a card",            Resolve: func(g, src, ctrl, targets) error {...}},
 	})
 
 The legacy SetModes / g.ModeValue branch-inside-FuncEffect API still works
@@ -1393,7 +1434,22 @@ The engine exposes four helpers for this:
 	      Luxury). When AnyColorMana is true, the card's colored pips collapse
 	      into generic for the cost calculation, modelling CR 609.4b "spend
 	      mana as though it were mana of any color". The permission is
-	      cleared automatically when the card leaves exile.
+	      cleared automatically when the card leaves exile. The caster need
+	      not own the exiled card (CR 706.10): Gonti's controller can cast a
+	      card originally owned by an opponent.
+
+	g.ExileCardFaceDown(card, exiledBy, revealedTo...)
+	g.RevealExiledCardTo(cardID, playerID)
+	ExiledCard.FaceDown / ExiledCard.RevealedTo / ExiledCard.VisibleTo(playerID)
+	    — Face-down exile (CR 707, 408). A face-down exiled card hides its
+	      identity from every player except those listed in RevealedTo. Used
+	      by Gonti, Lord of Luxury: the chosen card is exiled face down and
+	      only Gonti's controller is permitted to see it. RevealExiledCardTo
+	      grants additional players permission to look at the identity later
+	      (no-op once the entry has gone face-up or left exile). When the
+	      card leaves exile (cast / removed) the face-down state is dropped
+	      with the entry; UI/observers should query VisibleTo to decide
+	      whether to display the card's name and characteristics.
 
 	g.AddExileIfWouldGoToGraveyardThisTurn(cardID, sourceID)
 	g.IsCardMarkedExileInsteadOfGraveyard(cardID) bool

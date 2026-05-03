@@ -436,6 +436,27 @@ func NewEnchantment(name, cost string, opts ...CardOption) *BaseCard {
 	return c
 }
 
+// NewPlaneswalker creates a new planeswalker card. The permanent enters with
+// startingLoyalty loyalty counters via an EntersWithNCounters(Loyalty, …)
+// replacement (CR 614.1c / 306.5b). This is the minimal planeswalker primitive:
+// loyalty-activated abilities, attacking planeswalkers (CR 506.4 / 508.1), and
+// the planeswalker damage-redirection rules (CR 117.6, removed in 2018) are NOT
+// implemented. The 0-loyalty state-based action (CR 704.5i) IS implemented in
+// CheckStateBasedActions.
+func NewPlaneswalker(name, cost string, startingLoyalty int, opts ...CardOption) *BaseCard {
+	c := &BaseCard{
+		id:       uuid.New(),
+		name:     name,
+		manaCost: ParseManaCost(cost),
+		types:    []CardType{TypePlaneswalker},
+	}
+	if startingLoyalty > 0 {
+		c.AddAbility(EntersWithNCounters(Loyalty, startingLoyalty))
+	}
+	applyCardOpts(c, opts)
+	return c
+}
+
 // NewAura creates a new aura enchantment card. Defaults to "enchant creature"
 // targeting. Use WithCastTarget() to override (e.g. enchant land, enchant artifact).
 func NewAura(name, cost string, opts ...CardOption) *BaseCard {

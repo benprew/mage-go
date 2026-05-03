@@ -327,7 +327,10 @@ func (g *Game) CastExiledCardWithPermission(playerID, cardID uuid.UUID, targets 
 	if perm == nil {
 		return fmt.Errorf("no permission to cast %s from exile", cardID)
 	}
-	card := g.findCardInZone(playerID, cardID, ZoneExile)
+	// Per CR 706.10 the caster becomes controller regardless of original
+	// ownership; Gonti exiles cards owned by an opponent, so we permit
+	// foreign ownership when looking up the exiled card.
+	card := g.findCardInZoneOpt(playerID, cardID, ZoneExile, true)
 	if card == nil {
 		return fmt.Errorf("card not in exile")
 	}

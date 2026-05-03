@@ -22,9 +22,37 @@ var (
 )
 
 // ExiledCard tracks a card in exile along with metadata about why it was exiled.
+//
+// FaceDown: when true, the card is in exile face down (CR 707, 406.3). Its
+// characteristics (name, types, mana cost, abilities, etc.) are hidden from
+// players who haven't been granted permission to look at it. Used by Gonti,
+// Lord of Luxury and similar effects that exile a card face down so opponents
+// can't see what was taken.
+//
+// RevealedTo: the set of player IDs that have been granted permission to look
+// at a face-down exiled card's identity (CR 408). The exiling player and the
+// card's owner are typically included. Other players see only "an exiled
+// face-down card" — they cannot inspect its name or characteristics.
 type ExiledCard struct {
-	Card     Card
-	ExiledBy uuid.UUID // ID of the permanent/spell that caused the exile
+	Card       Card
+	ExiledBy   uuid.UUID // ID of the permanent/spell that caused the exile
+	FaceDown   bool
+	RevealedTo []uuid.UUID
+}
+
+// VisibleTo reports whether the given player may inspect this exiled card's
+// identity. Face-up exiled cards are visible to everyone; face-down exiled
+// cards are visible only to players in RevealedTo.
+func (ec *ExiledCard) VisibleTo(playerID uuid.UUID) bool {
+	if !ec.FaceDown {
+		return true
+	}
+	for _, id := range ec.RevealedTo {
+		if id == playerID {
+			return true
+		}
+	}
+	return false
 }
 
 // Game is the central game state and engine.
@@ -1131,6 +1159,44 @@ func (g *Game) ExileCard(card Card, exiledBy uuid.UUID) {
 	g.exile = append(g.exile, ExiledCard{Card: card, ExiledBy: exiledBy})
 }
 
+// ExileCardFaceDown moves a card to the exile zone face down. Only players in
+// revealedTo may inspect the card's identity (via FindExiledCard / GetExile +
+// ExiledCard.VisibleTo). For Gonti-style "exile face down" effects, only the
+// exiling player (not the card's owner) sees the identity — pass that player's
+// ID in revealedTo. Owners of face-down exiled cards do not automatically see
+// the identity, matching Gonti's printed ruling.
+func (g *Game) ExileCardFaceDown(card Card, exiledBy uuid.UUID, revealedTo ...uuid.UUID) {
+	rev := append([]uuid.UUID(nil), revealedTo...)
+	g.exile = append(g.exile, ExiledCard{
+		Card:       card,
+		ExiledBy:   exiledBy,
+		FaceDown:   true,
+		RevealedTo: rev,
+	})
+}
+
+// RevealExiledCardTo grants the given player permission to see the identity of
+// the face-down exiled card with the given ID. No-op if the card is face up
+// (already public) or not in exile.
+func (g *Game) RevealExiledCardTo(cardID, playerID uuid.UUID) {
+	for i := range g.exile {
+		if g.exile[i].Card.ID() != cardID {
+			continue
+		}
+		ec := &g.exile[i]
+		if !ec.FaceDown {
+			return
+		}
+		for _, id := range ec.RevealedTo {
+			if id == playerID {
+				return
+			}
+		}
+		ec.RevealedTo = append(ec.RevealedTo, playerID)
+		return
+	}
+}
+
 // FindExiledCard finds an exiled card by its ID.
 func (g *Game) FindExiledCard(cardID uuid.UUID) *ExiledCard {
 	for i := range g.exile {
@@ -1842,6 +1908,37 @@ func (g *Game) PutTriggersOnStack() {
 			Controller: pt.controller,
 			SourceID:   pt.sourceID,
 			IsAbility:  true,
+		}
+		// CR 603.1f / 603.3d: a modal triggered ability picks its mode as it
+		// goes on the stack, then gathers targets only for that mode. Push the
+		// chosen mode's effects/targets onto the stack object and skip the
+		// legacy declared-targets and event-derived auto-binding paths below.
+		if gt, ok := pt.ability.(*GenericTriggered); ok && gt.IsModal() {
+			ctrl := g.GetPlayer(pt.controller)
+			modes := gt.Modes()
+			labels := make([]string, len(modes))
+			for i, m := range modes {
+				labels[i] = m.Label
+			}
+			idx := 0
+			if ctrl != nil {
+				reason := "modal trigger"
+				if c := g.FindCardAnywhere(pt.sourceID); c != nil {
+					reason = c.Name()
+				}
+				idx = ctrl.ChooseMode(labels, reason)
+				if idx < 0 || idx >= len(modes) {
+					idx = 0
+				}
+			}
+			chosen := modes[idx]
+			obj.Effects = append(obj.Effects, chosen.Effects...)
+			obj.ModeChoice = idx
+			if len(chosen.Targets) > 0 {
+				obj.Targets = g.chooseTriggerTargets(pt, chosen.Targets)
+			}
+			g.stack.Push(obj)
+			continue
 		}
 		obj.Effects = append(obj.Effects, pt.ability.Effects()...)
 		// CR 603.3d: when a triggered ability with targets is put on the stack,
@@ -2577,6 +2674,20 @@ func (g *Game) CheckStateBasedActions() {
 			}
 		}
 		for _, p := range zeroToughness {
+			g.PutPermanentIntoGraveyard(p)
+		}
+
+		// CR 704.5i: a planeswalker with loyalty 0 is put into its owner's
+		// graveyard. Loyalty-activated abilities, attacking planeswalkers, and
+		// the legacy damage-redirection rules are not implemented.
+		var zeroLoyalty []*Permanent
+		for _, p := range g.battlefield {
+			if p.HasType(TypePlaneswalker) && int(p.Counters[Loyalty]) <= 0 {
+				zeroLoyalty = append(zeroLoyalty, p)
+				actions = true
+			}
+		}
+		for _, p := range zeroLoyalty {
 			g.PutPermanentIntoGraveyard(p)
 		}
 

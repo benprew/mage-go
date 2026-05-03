@@ -41,6 +41,7 @@ type GenericTriggered struct {
 	effects   []Effect
 	targets   []Target
 	zones     []Zone
+	modes     []Mode
 }
 
 // NewTriggered creates a GenericTriggered ability that fires on the given event type.
@@ -130,6 +131,32 @@ func (t *GenericTriggered) AddTarget(tgt Target) *GenericTriggered {
 	t.targets = append(t.targets, tgt)
 	return t
 }
+
+// WithModes declares the trigger as modal (CR 603.1f). When the trigger is put
+// on the stack, the engine prompts Player.ChooseMode for the mode index
+// (CR 603.1f) and then gathers targets only for that mode's Targets list
+// (CR 603.3d). Only the chosen mode's Effects are pushed onto the stack
+// object, so resolution runs only the selected mode.
+//
+// At least two modes are required ("Choose one — …" implies >= 2 options
+// per CR 700.2). Calling WithModes with fewer than two panics.
+//
+// Modes and the legacy AddTarget/AddEffect path are mutually exclusive:
+// when modes are present, targets/effects declared via AddEffect/AddTarget
+// are ignored in favor of the chosen mode's lists.
+func (t *GenericTriggered) WithModes(modes ...Mode) *GenericTriggered {
+	if len(modes) < 2 {
+		panic("WithModes: a modal trigger needs at least two modes (CR 700.2)")
+	}
+	t.modes = modes
+	return t
+}
+
+// Modes returns the configured modes for a modal trigger (empty for non-modal).
+func (t *GenericTriggered) Modes() []Mode { return t.modes }
+
+// IsModal reports whether the trigger has been declared modal via WithModes.
+func (t *GenericTriggered) IsModal() bool { return len(t.modes) > 0 }
 
 func (t *GenericTriggered) CheckEventType(et EventType) bool {
 	return et == t.eventType

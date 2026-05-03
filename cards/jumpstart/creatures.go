@@ -2378,67 +2378,44 @@ func registerCreatures() {
 	// When this creature enters, choose one —
 	// • Return target creature card from your graveyard to your hand.
 	// • Target opponent reveals their hand. You choose a noncreature card from it. That player discards that card.
-	// XXX: target gathering for modal triggers occurs before mode selection (CR
-	// 603.3d). Until the engine supports per-mode target gathering for triggers,
-	// this implementation prompts ChooseMode and then prompts the mode's
-	// chooser inline (so neither mode declares an AddTarget on the trigger).
 	Register("Entomber Exarch", func() Card {
 		noncreatureCard := NewCardFilter("noncreature card", func(c Card) bool {
 			return !c.HasType(TypeCreature)
 		})
+		revealAndDiscard := FuncEffect(
+			"target opponent reveals their hand; you choose a noncreature card; they discard it",
+			EffectProperties{Outcome: OutcomeDetriment},
+			func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				you := g.GetPlayer(controller)
+				if you == nil || len(targets) == 0 {
+					return nil
+				}
+				opp := g.GetPlayer(targets[0])
+				if opp == nil {
+					return nil
+				}
+				_ = g.RevealHand(you, opp)
+				chosen := g.PickFromHand(you, opp, noncreatureCard, false,
+					"choose a noncreature card to discard")
+				if chosen == nil {
+					return nil
+				}
+				g.PlayerDiscard(opp, chosen.ID())
+				return nil
+			})
 		return NewCreature("Entomber Exarch", "{2}{B}{B}", 2, 2,
 			WithSubTypes("Phyrexian", "Cleric"),
-			WithAbility(EntersBattlefieldTrigger(
-				FuncEffect("Entomber Exarch ETB modal",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						you := g.GetPlayer(controller)
-						if you == nil {
-							return nil
-						}
-						labels := []string{
-							"Return target creature card from your graveyard to your hand",
-							"Target opponent reveals their hand; you choose a noncreature card; they discard it",
-						}
-						idx := you.ChooseMode(labels, "Entomber Exarch ETB")
-						if idx < 0 || idx > 1 {
-							idx = 0
-						}
-						switch idx {
-						case 0:
-							var creatures []Card
-							for _, c := range you.Graveyard() {
-								if c.HasType(TypeCreature) {
-									creatures = append(creatures, c)
-								}
-							}
-							if len(creatures) == 0 {
-								return nil
-							}
-							chosen := you.ChooseCardFromLibrary(creatures,
-								"return creature card from graveyard to hand", g)
-							if chosen == nil {
-								return nil
-							}
-							if c, ok := you.RemoveFromGraveyard(chosen.ID()); ok {
-								you.AddToHand(c)
-							}
-						case 1:
-							opp := g.GetOpponent(controller)
-							if opp == nil {
-								return nil
-							}
-							_ = g.RevealHand(you, opp)
-							chosen := g.PickFromHand(you, opp, noncreatureCard, false,
-								"choose a noncreature card to discard")
-							if chosen == nil {
-								return nil
-							}
-							g.PlayerDiscard(opp, chosen.ID())
-						}
-						return nil
-					}),
-				false,
+			WithAbility(EntersBattlefieldTrigger(nil, false).WithModes(
+				Mode{
+					Label:   "Return target creature card from your graveyard to your hand",
+					Targets: []Target{TargetCardInYourGraveyard(IsCreatureCard)},
+					Effects: []Effect{ReturnFromGraveyardToHandTarget()},
+				},
+				Mode{
+					Label:   "Target opponent reveals their hand. You choose a noncreature card from it. That player discards that card.",
+					Targets: []Target{TargetOpponent()},
+					Effects: []Effect{revealAndDiscard},
+				},
 			)),
 		)
 	})
@@ -2643,8 +2620,6 @@ func registerCreatures() {
 	// 2/3
 	// Deathtouch
 	// When Gonti enters, look at the top four cards of target opponent's library, exile one of them face down, then put the rest on the bottom of that library in a random order. You may cast that card for as long as it remains exiled, and mana of any type can be spent to cast that spell.
-	// XXX: face-down exile and "look at" privacy aren't modeled — the exiled
-	// card is placed in exile face up and visible to both players.
 	Register("Gonti, Lord of Luxury", func() Card {
 		return NewCreature("Gonti, Lord of Luxury", "{2}{B}{B}", 2, 3,
 			WithSubTypes("Aetherborn", "Rogue"),
@@ -2688,7 +2663,7 @@ func registerCreatures() {
 						newLib = append(newLib, rest...)
 						newLib = append(newLib, bottom...)
 						opp.SetLibrary(newLib)
-						g.ExileCard(chosenCard, sourceID)
+						g.ExileCardFaceDown(chosenCard, sourceID, controller)
 						g.GrantCastFromExile(controller, chosenCard.ID(), true)
 						return nil
 					}),
