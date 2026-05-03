@@ -1367,10 +1367,56 @@ func registerSpells() {
 	// Path to Exile {W}
 	// Instant
 	// Exile target creature. Its controller may search their library for a basic land card, put that card onto the battlefield tapped, then shuffle.
-	// XXX: requires opponent-may-search-library + put tapped onto battlefield primitive
 	Register("Path to Exile", func() Card {
 		return NewInstant("Path to Exile", "{W}",
-			NewTargetedSpell(TargetCreature(), ExileTarget()),
+			NewTargetedSpell(TargetCreature(),
+				FuncEffect("exile target creature; its controller may search their library for a basic land",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 || targets[0] == uuid.Nil {
+							return nil
+						}
+						perm := g.FindPermanent(targets[0])
+						if perm == nil {
+							return nil
+						}
+						creatureCtrl := perm.Controller
+						g.ExilePermanent(perm)
+						p := g.GetPlayer(creatureCtrl)
+						if p == nil {
+							return nil
+						}
+						mode := p.ChooseMode([]string{"yes", "no"}, "search your library for a basic land?")
+						if mode != 0 {
+							return nil
+						}
+						var basics []Card
+						for _, c := range p.Library() {
+							if c.HasType(TypeLand) && c.HasSuperType(SuperBasic) {
+								basics = append(basics, c)
+							}
+						}
+						if len(basics) > 0 {
+							chosen := p.ChooseCardFromLibrary(basics, "basic land", g)
+							if chosen != nil {
+								newLib := make([]Card, 0, len(p.Library())-1)
+								for _, c := range p.Library() {
+									if c.ID() != chosen.ID() {
+										newLib = append(newLib, c)
+									}
+								}
+								p.SetLibrary(newLib)
+								newPerm := g.PutOnBattlefield(chosen, creatureCtrl)
+								if newPerm != nil {
+									newPerm.Tapped = true
+								}
+							}
+						}
+						p.ShuffleLibrary()
+						return nil
+					},
+				),
+			),
 		)
 	})
 

@@ -1231,3 +1231,21 @@ func TestHuntersInsight_ExpiresEndOfTurn(t *testing.T) {
 	// library went from 5 → 4.
 	g.AssertLibraryCount(gametest.PlayerA, "Lightning Bolt", 4)
 }
+
+func TestPathToExile_ExilesAndOpponentMaySearch(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerB, "Forest", 3)
+	g.AddCard(core.ZoneLibrary, gametest.PlayerB, "Mountain", 3)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Path to Exile")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+	g.ChooseMode(gametest.PlayerB, 0)
+	g.ChooseFromLibrary(gametest.PlayerB, "Forest")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Path to Exile", "Grizzly Bears")
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+	g.AssertExileCount("Grizzly Bears", 1)
+	g.AssertPermanentCount(gametest.PlayerB, "Forest", 1)
+	g.AssertTapped(gametest.PlayerB, "Forest", true)
+}
