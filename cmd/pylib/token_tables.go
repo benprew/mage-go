@@ -83,11 +83,16 @@ type tokenTables struct {
 	cardNameOff  []int64
 
 	// v2 dedup. dictEntryIDs is one int32 per card row (the
-	// ``<dict-entry:R>`` token id). NULL/empty when v2 is disabled.
+	// ``<dict-entry:R>`` token id) — used by the legacy row-keyed render-plan
+	// path. dictSlotIDs is one int32 per per-snapshot slot (the
+	// ``<dict-slot:S>`` token id) — used by the direct emitter so the model
+	// sees a slot index that's reassigned per snapshot in insertion order
+	// rather than a stable per-card identity. NULL/empty when v2 is disabled.
 	dictOpenID   int32
 	dictCloseID  int32
 	cardOpenID   int32
 	dictEntryIDs []int32
+	dictSlotIDs  []int32
 
 	// Singletons used by the Go emitter for byte-equal parity with the
 	// Python emit_render_plan path. ``selfID`` / ``oppID`` are written

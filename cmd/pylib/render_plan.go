@@ -141,14 +141,15 @@ func (w *renderPlanWriter) write(op int32, args ...int32) {
 }
 
 type renderCardRef struct {
-	zone    int32
-	owner   int32
-	slotIdx int32
-	uuidIdx int32
-	cardID  uuid.UUID
-	name    string
-	row     int32
-	perm    *interactive.PermanentState
+	zone     int32
+	owner    int32
+	slotIdx  int32
+	uuidIdx  int32
+	dictSlot int32
+	cardID   uuid.UUID
+	name     string
+	row      int32
+	perm     *interactive.PermanentState
 }
 
 // cardIDEntry pairs the values previously held in two separate maps
@@ -172,10 +173,22 @@ type renderPlanIndex struct {
 	// hit on every card insert + every emitter zone iteration.
 	cardsByZone [renderZoneArrayLen * 2][]renderCardRef
 	// rowOrder lists each unique card cache row that appears in any zone of
-	// this snapshot, in deterministic ascending order. Populated for v2 dict
-	// emission. Mirrors the Python emitter's ``unique_rows`` (collected in
-	// _RENDER_ZONES order, then sorted ascending).
+	// this snapshot, in deterministic ascending order. Populated for the
+	// legacy row-keyed render-plan dict emission.
 	rowOrder []int32
+	// dictRowOrder lists each unique row in *insertion order* (the order the
+	// card was first seen during index construction). Position in this slice
+	// IS the card's per-snapshot dict slot, which the direct emitter uses as
+	// the dict-entry token id — so the model can't memorize a stable card
+	// identity across snapshots.
+	dictRowOrder []int32
+	// dictSlotByRow is the sparse half of a sparse-dense int set
+	// (Briggs/Torczon). dictSlotByRow[row] is the candidate slot for row;
+	// row is actually present iff dictSlotByRow[row] < len(dictRowOrder)
+	// and dictRowOrder[dictSlotByRow[row]] == row. This makes reset O(1)
+	// (just truncate dictRowOrder) without ever touching dictSlotByRow,
+	// and per-row insert / membership is two loads + a compare.
+	dictSlotByRow []int32
 }
 
 func zoneOwnerSlot(zone, owner int32) int {
@@ -228,8 +241,39 @@ func (s *encodeScratch) reset() {
 	}
 	idx.cards = idx.cards[:0]
 	idx.rowOrder = idx.rowOrder[:0]
+	// Sparse-dense reset: only truncate the dense side. Stale dictSlotByRow
+	// entries are auto-rejected by the membership check, so this stays O(1).
+	idx.dictRowOrder = idx.dictRowOrder[:0]
 	s.tokenPlanLen[0] = 0
 	s.tokenPlanOvf[0] = 0
+}
+
+// ensureDictSparse grows dictSlotByRow so it can hold up to rowCount entries.
+// Reused across calls — staleness is detected by the dictRowOrder[slot] == row
+// check, so no clear is needed when growing.
+func (idx *renderPlanIndex) ensureDictSparse(rowCount int32) {
+	if int(rowCount) <= len(idx.dictSlotByRow) {
+		return
+	}
+	next := make([]int32, rowCount)
+	copy(next, idx.dictSlotByRow)
+	idx.dictSlotByRow = next
+}
+
+// dictSlotFor returns the per-snapshot slot for row, allocating a fresh one
+// (in insertion order) if row hasn't been seen yet. O(1) amortized.
+func (idx *renderPlanIndex) dictSlotFor(row int32) int32 {
+	if row < 0 || int(row) >= len(idx.dictSlotByRow) {
+		return -1
+	}
+	s := idx.dictSlotByRow[row]
+	if s >= 0 && int(s) < len(idx.dictRowOrder) && idx.dictRowOrder[s] == row {
+		return s
+	}
+	s = int32(len(idx.dictRowOrder))
+	idx.dictRowOrder = append(idx.dictRowOrder, row)
+	idx.dictSlotByRow[row] = s
+	return s
 }
 
 func (s *encodeScratch) internalRenderPlanView(capacity int64) outputViews {
@@ -277,6 +321,9 @@ func fillRenderPlan(batchIdx int64, state *apiGameState, pending *apiPending, pl
 
 func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int, scratch *encodeScratch) *encodeError {
 	index := &scratch.renderIndex
+	if tables := getTokenTables(); tables != nil && tables.cardRowCount > 0 {
+		index.ensureDictSparse(tables.cardRowCount)
+	}
 	// First pass: build the full card lists per (owner, zone) but do NOT
 	// assign UUID indices yet. UUID-ordering must match Python's
 	// _assign_card_refs which walks zones owner-interleaved (self.bf,
@@ -328,11 +375,14 @@ func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int, scratch
 					}
 				}
 			}
-			// Insertion-sorted dedup into rowOrder. ~30 unique rows per
-			// snapshot, so a small linear scan beats a map (no hashing,
-			// cache-friendly contiguous slice). Also avoids the trailing
-			// slices.Sort pass since rowOrder is built sorted.
 			row := cards[idx].row
+			// Sparse-dense dict slot assignment: O(1) amortized membership +
+			// insertion. dictRowOrder is the dense insertion-ordered list
+			// the direct emitter walks; the per-card dictSlot is the
+			// position the card claims in that list.
+			cards[idx].dictSlot = index.dictSlotFor(row)
+			// Legacy ascending-sorted rowOrder still maintained for the
+			// render-plan path, which keys dict ids by row, not slot.
 			pos := 0
 			for pos < len(index.rowOrder) && index.rowOrder[pos] < row {
 				pos++

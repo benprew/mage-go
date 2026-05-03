@@ -87,10 +87,10 @@ func emitDirectTokens(
 	index renderPlanIndex,
 ) error {
 	e.emitOpenState()
-	if cfg.dedupCardBodies && len(index.rowOrder) > 0 {
+	if cfg.dedupCardBodies && len(index.dictRowOrder) > 0 {
 		e.emitOpenDict()
-		for _, row := range index.rowOrder {
-			e.emitDictEntry(row)
+		for slot, row := range index.dictRowOrder {
+			e.emitDictEntry(int32(slot), row)
 		}
 		e.emitCloseDict()
 	}
@@ -134,7 +134,7 @@ func emitDirectZones(e *directTokenEmitter, state *apiGameState, playerIdx int, 
 		e.emitOpenZone(zone, owner)
 		for _, card := range index.cardsByZone[zoneOwnerSlot(zone, owner)] {
 			if cfg.dedupCardBodies {
-				e.emitPlaceCardRef(card.row, renderStatusBits(card.perm), card.uuidIdx)
+				e.emitPlaceCardRef(card.dictSlot, renderStatusBits(card.perm), card.uuidIdx)
 				continue
 			}
 			e.emitPlaceCard(card.row, renderStatusBits(card.perm), card.uuidIdx)

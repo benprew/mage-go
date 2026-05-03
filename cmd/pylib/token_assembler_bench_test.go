@@ -125,6 +125,10 @@ func benchTokenTables() *tokenTables {
 	for i := range t.dictEntryIDs {
 		t.dictEntryIDs[i] = 110000 + int32(i)
 	}
+	t.dictSlotIDs = make([]int32, t.cardRowCount)
+	for i := range t.dictSlotIDs {
+		t.dictSlotIDs[i] = 120000 + int32(i)
+	}
 	return t
 }
 
