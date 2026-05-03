@@ -1629,12 +1629,52 @@ func (g *Game) FireEvent(evt GameEvent) {
 			if !ta.CheckEventType(evt.Type) {
 				continue
 			}
+			// Default-zone triggers are battlefield-only; explicit
+			// non-battlefield zones are scanned in the cross-zone loop below.
+			if gt, ok := ta.(*GenericTriggered); ok && !gt.FunctionsInZone(ZoneBattlefield) {
+				continue
+			}
 			if ta.CheckTrigger(&evt, g) {
 				g.pendingTriggers = append(g.pendingTriggers, &pendingTrigger{
 					ability:    ta,
 					event:      &evt,
 					sourceID:   perm.ID(),
 					controller: perm.Controller,
+				})
+			}
+		}
+	}
+
+	// Scan card-level abilities that function while the source is in a
+	// non-battlefield zone (CR 113.6) — currently graveyard, for cards like
+	// Pia Nalaar, Consul of Revival. Card.Abilities() returns the immutable
+	// card-level ability list (not Permanent.RuntimeAbilities); we set
+	// source/controller transiently so condition predicates see the right
+	// IDs while the trigger is queued.
+	for _, pl := range g.players {
+		ownerID := pl.PlayerID()
+		for _, c := range pl.Graveyard() {
+			for _, a := range c.Abilities() {
+				gt, ok := UnwrapAbility(a).(*GenericTriggered)
+				if !ok {
+					continue
+				}
+				if !gt.FunctionsInZone(ZoneGraveyard) {
+					continue
+				}
+				if !gt.CheckEventType(evt.Type) {
+					continue
+				}
+				gt.SetSource(c.ID())
+				gt.SetController(ownerID)
+				if !gt.CheckTrigger(&evt, g) {
+					continue
+				}
+				g.pendingTriggers = append(g.pendingTriggers, &pendingTrigger{
+					ability:    gt,
+					event:      &evt,
+					sourceID:   c.ID(),
+					controller: ownerID,
 				})
 			}
 		}

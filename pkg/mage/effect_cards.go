@@ -109,6 +109,26 @@ func (e *returnFromGraveyardEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
+// returnSourceFromGraveyardToBattlefieldEffect returns the source card from
+// its owner's graveyard directly to the battlefield under the source's owner.
+// Used by graveyard-zone triggers like Pia Nalaar's "return ~ from your
+// graveyard to the battlefield".
+type returnSourceFromGraveyardToBattlefieldEffect struct{}
+
+// ReturnSourceFromGraveyardToBattlefield creates an effect that returns the
+// source card from its owner's graveyard to the battlefield. If the source
+// is not in any graveyard at resolution time the effect does nothing.
+func ReturnSourceFromGraveyardToBattlefield() Effect {
+	return DataEffect(&returnSourceFromGraveyardToBattlefieldEffect{})
+}
+
+func (e *returnSourceFromGraveyardToBattlefieldEffect) EffectText() string {
+	return "return this card from your graveyard to the battlefield"
+}
+func (e *returnSourceFromGraveyardToBattlefieldEffect) EffectProps() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
+
 // returnSourceToHandEffect returns the source card from graveyard to hand.
 type returnSourceToHandEffect struct{}
 
@@ -450,6 +470,19 @@ func execExileSourceFromGraveyard(ctx *EffectContext, _ *exileSourceFromGraveyar
 	card, ok := p.RemoveFromGraveyard(ctx.SourceID)
 	if ok && card != nil {
 		ctx.Game.ExileCard(card, ctx.SourceID)
+	}
+	return nil
+}
+
+func execReturnSourceFromGraveyardToBattlefield(ctx *EffectContext, _ *returnSourceFromGraveyardToBattlefieldEffect) error {
+	// Search every graveyard for the source card; the trigger controller is
+	// usually the owner, but the card may have moved zones since the trigger
+	// was queued.
+	for _, p := range ctx.Game.AllPlayers() {
+		if card, ok := p.RemoveFromGraveyard(ctx.SourceID); ok {
+			ctx.Game.PutOnBattlefield(card, p.PlayerID())
+			return nil
+		}
 	}
 	return nil
 }

@@ -696,6 +696,15 @@ Convenience constructors (set condition automatically):
 	[WheneverDealsCombatDamageToPlayerTrigger](effect, opt)     // EvtDamageDealt to a player, combat, source self
 	[WheneverPermanentDealsCombatDamageToPlayerTrigger](e, opt, filter) // combat damage to player, controller's matching permanent (Coastal Piracy, Sharding Sphinx)
 	[WheneverEnchantedPermanentDealsDamageToPlayerTrigger](e, opt)      // damage to player, source is enchanted permanent (Curiosity)
+	[WhileInZoneTrigger](zone, evtType, effect, optional)               // CR 113.6 — trigger functions while source is in zone (Pia Nalaar from graveyard)
+	[BeginningOfYourEndStepFromGraveyard](effect, optional)             // EvtEndStep, controller's, source in graveyard (Pia Nalaar)
+
+By default, GenericTriggered functions only on the battlefield (CR 113.6). Use
+[GenericTriggered.InZone] to declare an additional active zone (graveyard,
+hand, exile). FireEvent scans each player's graveyard for card-level
+GenericTriggered abilities whose ActiveZones include ZoneGraveyard, sets the
+ability's source/controller transiently to the card and its owner, and queues
+the trigger like any battlefield trigger.
 
 EvtLifeGained / EvtLifeLost auto-binds preserve evt.Amount as the trigger's
 EventAmount (readable via mage.EventAmountValue() in effects), but do NOT

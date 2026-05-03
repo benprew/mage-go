@@ -553,6 +553,79 @@ func TestInniazTheGaleForce_DoesNotPumpNonAttackers(t *testing.T) {
 	g.AssertPowerToughness(gametest.PlayerA, "Healer's Hawk", 1, 1)
 }
 
+// Three flying attackers controlled by Inniaz's controller fires the
+// trigger; in 2-player, "the player to their right" collapses to the
+// unique opponent, so the controller picks for both assignments.
+func TestInniazTheGaleForce_ThreeFlyersSwapsPermanents(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Inniaz, the Gale Force")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Healer's Hawk")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Mesa Pegasus")
+	g.AddCard(ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(ZoneBattlefield, gametest.PlayerB, "Mountain")
+	// Inniaz's controller (A) makes both selections in order:
+	//   1) of B's nonland permanents -> A gains Grizzly Bears
+	//   2) of A's nonland permanents -> B gains Healer's Hawk
+	g.ChoosePermanent(gametest.PlayerA, "Grizzly Bears")
+	g.ChoosePermanent(gametest.PlayerA, "Healer's Hawk")
+	g.Attack(3, gametest.PlayerA, "Inniaz, the Gale Force", "Healer's Hawk", "Mesa Pegasus")
+	g.StopAt(3, DeclareBlockers)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
+	g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+	g.AssertPermanentCount(gametest.PlayerB, "Healer's Hawk", 1)
+	g.AssertPermanentCount(gametest.PlayerA, "Healer's Hawk", 0)
+}
+
+// Only two flying attackers — does not meet the "three or more" threshold.
+func TestInniazTheGaleForce_TwoFlyersDoesNotTrigger(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Inniaz, the Gale Force")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Healer's Hawk")
+	g.AddCard(ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.Attack(3, gametest.PlayerA, "Inniaz, the Gale Force", "Healer's Hawk")
+	g.StopAt(3, DeclareBlockers)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
+	g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
+	g.AssertPermanentCount(gametest.PlayerA, "Healer's Hawk", 1)
+}
+
+// Non-flying attackers don't count toward the threshold.
+func TestInniazTheGaleForce_NonFlyersDoNotCountTowardThreshold(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Inniaz, the Gale Force")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Healer's Hawk")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(ZoneBattlefield, gametest.PlayerB, "Mesa Pegasus")
+	// 2 flyers + 1 non-flyer attacking — flying count is 2, no trigger.
+	g.Attack(3, gametest.PlayerA, "Inniaz, the Gale Force", "Healer's Hawk", "Grizzly Bears")
+	g.StopAt(3, DeclareBlockers)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerB, "Mesa Pegasus", 1)
+	g.AssertPermanentCount(gametest.PlayerA, "Mesa Pegasus", 0)
+	g.AssertPermanentCount(gametest.PlayerA, "Healer's Hawk", 1)
+}
+
+// If the opponent controls only lands, no permanent transfers from B to A;
+// the other assignment (A -> B) still happens.
+func TestInniazTheGaleForce_NoNonlandOnOpposingSideSkipsAssignment(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Inniaz, the Gale Force")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Healer's Hawk")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Mesa Pegasus")
+	g.AddCard(ZoneBattlefield, gametest.PlayerB, "Mountain")
+	// Only the second assignment has a candidate: A's nonland -> B.
+	g.ChoosePermanent(gametest.PlayerA, "Mesa Pegasus")
+	g.Attack(3, gametest.PlayerA, "Inniaz, the Gale Force", "Healer's Hawk", "Mesa Pegasus")
+	g.StopAt(3, DeclareBlockers)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerB, "Mesa Pegasus", 1)
+	g.AssertPermanentCount(gametest.PlayerA, "Mesa Pegasus", 0)
+	g.AssertPermanentCount(gametest.PlayerA, "Healer's Hawk", 1)
+	g.AssertPermanentCount(gametest.PlayerB, "Mountain", 1)
+}
+
 func TestSethronHurloonGeneral_PumpMinotaursWithB(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Sethron, Hurloon General")
@@ -646,4 +719,67 @@ func TestSoulOfTheHarvest_TokenETBDoesNotDraw(t *testing.T) {
 	// The Saproling token must NOT trigger a second draw.
 	g.AssertHandCount(gametest.PlayerA, "Hill Giant", 1)
 	g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 0)
+}
+
+// Selvala — entering creature you control has greatest power: you draw.
+func TestSelvalaHeartOfTheWilds_YouDrawOnYourBigger(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Selvala, Heart of the Wilds")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(ZoneHand, gametest.PlayerA, "Hill Giant")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Mountain", 4)
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Plains", 3)
+	g.CastSpell(3, PrecombatMain, gametest.PlayerA, "Hill Giant")
+	g.StopAt(3, EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 1)
+	// The Selvala trigger fires when Hill Giant enters (Hill Giant power 3 > Selvala 2 and Bears 2),
+	// drawing one extra card for PlayerA.
+	g.AssertHandCount(gametest.PlayerA, "Plains", 1)
+}
+
+// Selvala — entering creature opponent controls has greatest power: opponent draws.
+func TestSelvalaHeartOfTheWilds_OpponentDrawsOnTheirBigger(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Selvala, Heart of the Wilds")
+	g.AddCard(ZoneHand, gametest.PlayerB, "Hill Giant")
+	g.AddCard(ZoneBattlefield, gametest.PlayerB, "Mountain", 4)
+	g.AddCard(ZoneLibrary, gametest.PlayerB, "Plains", 3)
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Forest", 3)
+	g.CastSpell(2, PrecombatMain, gametest.PlayerB, "Hill Giant")
+	g.StopAt(2, EndStep)
+	g.Execute()
+	// PlayerB is the controller of the entering Hill Giant, so PlayerB draws
+	// from the Selvala trigger — one Plains in hand.
+	g.AssertHandCount(gametest.PlayerB, "Plains", 1)
+	// PlayerA (Selvala's controller) must NOT have been the one to draw.
+	g.AssertHandCount(gametest.PlayerA, "Forest", 0)
+}
+
+// Selvala — tied power (Bears 2 vs Selvala 2) is not strictly greater: no draw.
+func TestSelvalaHeartOfTheWilds_TiedPowerNoDraw(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Selvala, Heart of the Wilds")
+	g.AddCard(ZoneHand, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest", 2)
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Plains", 3)
+	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, EndStep)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "Plains", 0)
+}
+
+// Selvala — entering creature ties an existing larger creature: no draw.
+func TestSelvalaHeartOfTheWilds_TiesExistingLargest(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Selvala, Heart of the Wilds")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Hill Giant")
+	g.AddCard(ZoneHand, gametest.PlayerA, "War Mammoth")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest", 4)
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Plains", 3)
+	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "War Mammoth")
+	g.StopAt(1, EndStep)
+	g.Execute()
+	// War Mammoth is 3/3, Hill Giant is 3/3 — not strictly greater.
+	g.AssertHandCount(gametest.PlayerA, "Plains", 0)
 }

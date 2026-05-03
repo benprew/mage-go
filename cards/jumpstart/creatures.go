@@ -1199,8 +1199,62 @@ func registerCreatures() {
 	// Flying
 	// {2}{W/U}: Attacking creatures with flying get +1/+1 until end of turn. ({W/U} can be paid with either {W} or {U}.)
 	// Whenever three or more creatures you control with flying attack, each player gains control of a nonland permanent of your choice controlled by the player to their right.
-	// XXX: player-to-right (multiplayer) mechanics not in scope
 	Register("Inniaz, the Gale Force", func() Card {
+		// In a 2-player game, "the player to their right" collapses to each
+		// player's unique opponent. The "of your choice" qualifier means
+		// Inniaz's controller picks the permanent for both assignments.
+		inniazSwap := FuncEffect(
+			"each player gains control of a nonland permanent of your choice controlled by the player to their right",
+			EffectProperties{Outcome: OutcomeBenefit},
+			func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				inniazController := g.GetPlayer(controller)
+				if inniazController == nil {
+					return nil
+				}
+				opp := g.GetOpponent(controller)
+				if opp == nil {
+					return nil
+				}
+				// Each player P gains a nonland permanent of Inniaz's
+				// controller's choice controlled by P's opponent.
+				// 2-player rotation:
+				//   recipient = controller,        donor = opp        (controller picks from opp)
+				//   recipient = opp,               donor = controller (controller picks from controller)
+				type assignment struct {
+					recipientID uuid.UUID
+					donorID     uuid.UUID
+				}
+				assignments := []assignment{
+					{recipientID: controller, donorID: opp.PlayerID()},
+					{recipientID: opp.PlayerID(), donorID: controller},
+				}
+				for _, a := range assignments {
+					candidates := g.FilterBattlefield(
+						And(ControlledBy(a.donorID), Not(IsLand)),
+					)
+					if len(candidates) == 0 {
+						continue
+					}
+					chosen := inniazController.ChoosePermanent(
+						candidates,
+						"gain control of a nonland permanent",
+						g,
+					)
+					if chosen == nil {
+						continue
+					}
+					newController := a.recipientID
+					ce := TargetEffect(LayerControl, Indefinite, chosen.ID(),
+						func(g *Game, target *Permanent) error {
+							target.Controller = newController
+							return nil
+						})
+					ce.SetSourceID(sourceID)
+					g.AddContinuousEffect(ce)
+				}
+				return nil
+			},
+		)
 		return NewCreature("Inniaz, the Gale Force", "{3}{U}{U}", 4, 4,
 			WithSubTypes("Djinn"),
 			WithSuperTypes(SuperLegendary),
@@ -1210,6 +1264,31 @@ func registerCreatures() {
 					Targeting(ToAllMatching(And(IsAttacking, HasKeywordFilter(Flying)))).
 					Until(EndOfTurn),
 				ManaCostOf("{2}{W/U}"),
+			),
+			WithAbility(
+				// Use the bare "one or more attack" trigger and refine it to
+				// require ≥ 3 flying attackers controlled by the trigger's
+				// controller. Going through the bare trigger (rather than the
+				// "you control" wrapper) lets us own the full condition
+				// closure; the controller-is-active-player check is folded
+				// into the count below since flying attackers controlled by
+				// `controllerID` only exist when controllerID is attacking.
+				WheneverOneOrMoreCreaturesAttackTrigger(inniazSwap, false).
+					SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
+						// CR 603.2c: aggregate the batch — fire once if ≥ 3
+						// flying attackers controlled by the trigger's
+						// controller were declared this combat.
+						if evt.PlayerID != controllerID {
+							return false
+						}
+						count := 0
+						for _, p := range g.FilterBattlefield(IsAttacking) {
+							if p.Controller == controllerID && p.HasKeyword(Flying) {
+								count++
+							}
+						}
+						return count >= 3
+					}),
 			),
 		)
 	})
@@ -4784,6 +4863,34 @@ func registerCreatures() {
 		)
 	})
 
+	// Pia Nalaar, Consul of Revival {2}{R}
+	// Legendary Creature — Human Artificer
+	// 3/2
+	// When this creature enters, create a 1/1 colorless Thopter artifact creature token with flying.
+	// Sacrifice an artifact: Creatures you control get +1/+0 until end of turn.
+	// At the beginning of your end step, if an opponent was dealt 3 or more damage this turn, you may pay {R}. If you do, return this card from your graveyard to the battlefield.
+	Register("Pia Nalaar, Consul of Revival", func() Card {
+		return NewCreature("Pia Nalaar, Consul of Revival", "{2}{R}", 3, 2,
+			WithSubTypes("Human", "Artificer"),
+			WithSuperTypes(SuperLegendary),
+			WithAbility(EntersBattlefieldTrigger(
+				CreateToken("Thopter", 1, 1,
+					[]CardType{TypeArtifact, TypeCreature},
+					[]string{"Thopter"},
+					Flying),
+				false)),
+			WithActivatedAbility(
+				Boost(Fixed(1), Fixed(0)).Targeting(ToMatching(IsCreature)).Until(EndOfTurn),
+				SacrificeArtifactCost(),
+			),
+			WithAbility(BeginningOfYourEndStepFromGraveyard(
+				MayPayMana("{R}", "return Pia Nalaar from your graveyard to the battlefield",
+					ReturnSourceFromGraveyardToBattlefield()),
+				false,
+			).AndConditionData(piaNalaarOpponentDealt3PlusCond{})),
+		)
+	})
+
 	// ===== GREEN CREATURES =====
 
 	// Affectionate Indrik {5}{G}
@@ -5588,16 +5695,14 @@ func registerCreatures() {
 	// Selvala, Heart of the Wilds {1}{G}{G}
 	// Legendary Creature — Elf Scout
 	// 2/3
-	// Whenever another creature enters, its controller may draw a card if its power is greater than each other creature's power.
+	// Whenever another creature enters, if it has greater power than each other creature on the battlefield, that creature's controller draws a card.
 	// {G}, {T}: Add X mana in any combination of colors, where X is the greatest power among creatures you control.
-	// XXX: Oracle grants the draw to the *entering creature's controller* and
-	// makes it a "may". Current wiring fires the draw to Selvala's controller
-	// unconditionally — matches the wave-6 reference test pattern but
-	// diverges in multiplayer when the entering creature is controlled by
-	// someone else. Two-player engine treats this as equivalent because
-	// the only "another creature enters" cases that matter for this card
-	// are creatures Selvala's controller cast.
 	Register("Selvala, Heart of the Wilds", func() Card {
+		// The trigger's effect is "that creature's controller draws a card" —
+		// the entering creature's controller, not Selvala's. The ETB-trigger
+		// auto-binding sets Targets[0] to the entering permanent's ID, so we
+		// look it up at resolution time and draw for its current controller
+		// (CR 603.6 — values used at resolution).
 		// {G}, {T}: Add X mana in any combination of colors, where X is the
 		// greatest power among creatures you control. Implemented as a regular
 		// activated ability (FuncEffect into mana pool) because ManaProduction
@@ -5605,8 +5710,27 @@ func registerCreatures() {
 		// can't compute X. This still respects "any combination of colors"
 		// (ChooseManaColor per mana point), but goes through the stack rather
 		// than CR 605's mana-ability fast path.
+		drawForEnteringController := FuncEffect(
+			"that creature's controller draws a card",
+			EffectProperties{Outcome: OutcomeBenefit, DrawCount: 1},
+			func(g *Game, _, _ uuid.UUID, targets []uuid.UUID) error {
+				if len(targets) == 0 {
+					return nil
+				}
+				perm := g.FindPermanent(targets[0])
+				if perm == nil {
+					return nil
+				}
+				p := g.GetPlayer(perm.Controller)
+				if p == nil {
+					return nil
+				}
+				g.PlayerDrawCard(p)
+				return nil
+			},
+		)
 		etbDraw := WheneverPermanentEntersBattlefieldTrigger(
-			DrawCards(Fixed(1)), false, IsCreature,
+			drawForEnteringController, false, IsCreature,
 		).AndConditionData(EventSourceNotSelf{}).
 			AndConditionData(eventSourcePowerGreaterThanAllOthers{})
 		return NewCreature("Selvala, Heart of the Wilds", "{1}{G}{G}", 2, 3,

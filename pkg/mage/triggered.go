@@ -26,6 +26,13 @@ type TriggerCondition func(evt *GameEvent, g GameReader, sourceID, controllerID 
 // function to decide whether to fire. All existing trigger constructors
 // (AttacksTrigger, BeginningOfUpkeepTrigger, etc.) are thin wrappers that
 // create a GenericTriggered with the appropriate condition.
+//
+// Most triggered abilities function only while the source is on the battlefield
+// (CR 113.6). For abilities that function while the source is in another zone
+// — e.g. Pia Nalaar's "at the beginning of your end step ... return ~ from your
+// graveyard to the battlefield" — set the active zone via [GenericTriggered.InZone]
+// or use [WhileInZoneTrigger]. The zone list defaults to [ZoneBattlefield] so
+// existing behavior is preserved.
 type GenericTriggered struct {
 	BaseAbility
 	eventType EventType
@@ -33,6 +40,7 @@ type GenericTriggered struct {
 	Condition TriggerCondition
 	effects   []Effect
 	targets   []Target
+	zones     []Zone
 }
 
 // NewTriggered creates a GenericTriggered ability that fires on the given event type.
@@ -53,6 +61,36 @@ func NewTriggered(eventType EventType, optional bool, effects ...Effect) *Generi
 func (t *GenericTriggered) SetCondition(cond TriggerCondition) *GenericTriggered {
 	t.Condition = cond
 	return t
+}
+
+// InZone declares an additional zone in which this trigger functions. By
+// default a GenericTriggered is active only on the battlefield; calling InZone
+// adds another zone (e.g. ZoneGraveyard for Pia Nalaar). Multiple calls are
+// additive. CR 113.6 governs which abilities of an object function in each
+// zone; this hook is for "while in graveyard / hand / exile" Oracle wording.
+func (t *GenericTriggered) InZone(z Zone) *GenericTriggered {
+	t.zones = append(t.zones, z)
+	return t
+}
+
+// ActiveZones returns the zones in which this trigger functions. If no zones
+// were declared via InZone, the default is [ZoneBattlefield].
+func (t *GenericTriggered) ActiveZones() []Zone {
+	if len(t.zones) == 0 {
+		return []Zone{ZoneBattlefield}
+	}
+	return t.zones
+}
+
+// FunctionsInZone reports whether this trigger functions while its source is
+// in the given zone.
+func (t *GenericTriggered) FunctionsInZone(z Zone) bool {
+	for _, az := range t.ActiveZones() {
+		if az == z {
+			return true
+		}
+	}
+	return false
 }
 
 // SetConditionData sets the trigger condition from a composable TriggerConditionData
@@ -568,4 +606,33 @@ func WhenOpponentPermanentBecomesTappedTrigger(effect Effect, optional bool, fil
 			EventSourceControlledByOpponent{},
 			EventSourceMatchesPermanentFilter{Filter: filter},
 		}})
+}
+
+// WhileInZoneTrigger creates a triggered ability that functions while its
+// source card is in the given zone (rather than the default battlefield).
+// Used by Pia Nalaar (graveyard), Squee-style hand triggers, and flashback-
+// adjacent registrations. The zone defaults to ZoneBattlefield if zone is the
+// zero value.
+//
+// Per CR 113.6, an ability of an object only functions in the zones the rules
+// of that ability or the object's text specify. Wrap the inner condition with
+// AndTriggerCond if you need to add e.g. EventPlayerIsController.
+func WhileInZoneTrigger(zone Zone, evtType EventType, effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(evtType, optional, effect).InZone(zone)
+}
+
+// BeginningOfYourEndStepFromGraveyard fires at the beginning of the
+// controller's (i.e. owner's) end step while the source card is in its
+// owner's graveyard. Used by Pia Nalaar, Consul of Revival ("At the beginning
+// of your end step, if an opponent was dealt 3 or more damage this turn, you
+// may pay {R}. If you do, return this card from your graveyard to the
+// battlefield.").
+//
+// The trigger sets EventPlayerIsController so it only fires on the source
+// owner's end step. Composing additional conditions (e.g. "if an opponent was
+// dealt 3 or more damage this turn") should be added with AndConditionData.
+func BeginningOfYourEndStepFromGraveyard(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtEndStep, optional, effect).
+		SetConditionData(EventPlayerIsController{}).
+		InZone(ZoneGraveyard)
 }
