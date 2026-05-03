@@ -245,6 +245,7 @@ type DelayedTrigger struct {
 	MatchTargetID uuid.UUID // if set, only fire when evt.TargetID matches
 	MatchFromZone Zone      // for EvtZoneChange: ZoneAny to skip the from check
 	MatchToZone   Zone      // for EvtZoneChange: ZoneAny to skip the to check
+	MatchFlag     bool      // if true, only fire when evt.Flag is true (e.g. combat damage)
 	Persistent    bool      // if true, trigger is not consumed after firing
 }
 
@@ -1637,6 +1638,10 @@ func (g *Game) FireEvent(evt GameEvent) {
 				continue
 			}
 			if dt.MatchTargetID != uuid.Nil && evt.TargetID != dt.MatchTargetID {
+				remaining = append(remaining, dt)
+				continue
+			}
+			if dt.MatchFlag && !evt.Flag {
 				remaining = append(remaining, dt)
 				continue
 			}

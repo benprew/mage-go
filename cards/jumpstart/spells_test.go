@@ -1199,3 +1199,35 @@ func TestPillarOfFlame_PlayerTarget(t *testing.T) {
 	g.AssertLife(gametest.PlayerB, 18)
 }
 
+
+func TestHuntersInsight_DrawsOnEachCombatHit(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Hunter's Insight")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 3)
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Lightning Bolt", 5)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Hunter's Insight", "Grizzly Bears")
+	g.Attack(1, gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Grizzly Bears (2 power) connects on turn 1: trigger fires, draw 2 cards.
+	g.AssertHandCount(gametest.PlayerA, "Lightning Bolt", 2)
+}
+
+func TestHuntersInsight_ExpiresEndOfTurn(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Hunter's Insight")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 3)
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Lightning Bolt", 5)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Hunter's Insight", "Grizzly Bears")
+	// Don't attack on turn 1; trigger expires at end of turn 1.
+	g.Attack(3, gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(3, core.EndStep)
+	g.Execute()
+	// Without expiration, Bears would draw 2 extra cards from the trigger; but
+	// it expired at end of turn 1. PlayerA only drew 1 normal draw-step card on
+	// turn 3 (PlayerB's turn 2 draw doesn't touch PlayerA's library), so
+	// library went from 5 → 4.
+	g.AssertLibraryCount(gametest.PlayerA, "Lightning Bolt", 4)
+}

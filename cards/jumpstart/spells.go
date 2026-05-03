@@ -974,10 +974,28 @@ func registerSpells() {
 	// Hunter's Insight {2}{G}
 	// Instant
 	// Choose target creature you control. Whenever that creature deals combat damage to a player or planeswalker this turn, draw that many cards.
-	// XXX: requires per-creature this-turn delayed triggered ability
 	Register("Hunter's Insight", func() Card {
 		return NewInstant("Hunter's Insight", "{2}{G}",
-			NewSpellAbility(),
+			NewTargetedSpell(TargetCreatureYouControl(),
+				FuncEffect("register a delayed trigger this turn",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						g.RegisterDelayedTrigger(&DelayedTrigger{
+							EventType:    EvtDamageDealt,
+							Effects:      []Effect{DrawCards(EventAmountValue())},
+							SourceID:     sourceID,
+							Controller:   controller,
+							MatchEventID: targets[0],
+							MatchFlag:    true,
+							Persistent:   true,
+						})
+						return nil
+					},
+				),
+			),
 		)
 	})
 
