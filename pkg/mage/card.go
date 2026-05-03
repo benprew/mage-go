@@ -52,6 +52,7 @@ type BaseCard struct {
 	modes           []string
 	attrSeeds       map[Attr]int // keyword/attr seeds; NewPermanent copies these to baseAttrs
 	additionalCosts []Cost       // additional costs paid when casting (sacrifice, discard, etc.)
+	alternateCosts  []AlternateCost // card-level alternate casting costs (CR 117.9); see alternate_cost.go
 	castTargets     []Target     // targeting requirements when casting (auras, targeted ETBs)
 	uncounterable   bool         // intrinsic "can't be countered" flag (set via WithUncounterable)
 }
@@ -151,6 +152,9 @@ func (c *BaseCard) CloneFrom(other Card) {
 			}
 		}
 		c.uncounterable = bc.uncounterable
+		if len(bc.alternateCosts) > 0 {
+			c.alternateCosts = append([]AlternateCost(nil), bc.alternateCosts...)
+		}
 	}
 }
 

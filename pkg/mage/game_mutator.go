@@ -118,6 +118,14 @@ func (g *Game) snapshotCastContext(playerID uuid.UUID) *CastContext {
 	if g.lastCostReveal != nil {
 		ctx.RevealedAtCast = append(ctx.RevealedAtCast, g.lastCostReveal)
 	}
+	if pl := g.GetPlayer(playerID); pl != nil {
+		if drained := pl.ManaPool().LastDrainedColors; len(drained) > 0 {
+			ctx.ColorsSpent = make(map[Color]int, len(drained))
+			for c, n := range drained {
+				ctx.ColorsSpent[c] = n
+			}
+		}
+	}
 	return ctx
 }
 
@@ -384,6 +392,22 @@ func (g *Game) SetDamageReflection(playerID, eyeSourceID, chosenSourceID uuid.UU
 // SetDrawReplacement stores a pending draw replacement for a player (Aladdin's Lamp).
 func (g *Game) SetDrawReplacement(playerID uuid.UUID, count int) {
 	g.effects.AddReplacement(&drawReplacementEffect{replacementBase: replacementBase{duration: EndOfTurn}, playerID: playerID, count: count})
+}
+
+// AddEmptyLibraryDrawReplacement registers a replacement effect that fires
+// when playerID would draw a card while their library is empty. The
+// replacement stays active while sourceID is on the battlefield (CR 614 +
+// 614.6: replacement effects on a permanent function only while it's on
+// the battlefield). The callback runs in place of the draw, receiving
+// the game and source permanent ID. Used by Ormos, Archive Keeper —
+// "If you would draw a card while your library has no cards in it,
+// instead put five +1/+1 counters on Ormos."
+func (g *Game) AddEmptyLibraryDrawReplacement(sourceID, playerID uuid.UUID, callback func(g *Game, sourceID uuid.UUID)) {
+	g.effects.AddReplacement(&emptyLibraryDrawReplacement{
+		replacementBase: replacementBase{sourceID: sourceID, duration: WhileOnBattlefield},
+		playerID:        playerID,
+		callback:        callback,
+	})
 }
 
 // AddReplacementEffect adds a replacement effect to the effect manager.

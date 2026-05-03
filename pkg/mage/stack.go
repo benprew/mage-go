@@ -81,6 +81,29 @@ type CastContext struct {
 	// spell"). Card references are LKI: even if the card later changes
 	// zones, this slice continues to point at the snapshotted Card.
 	RevealedAtCast []Card
+
+	// ColorsSpent records how many mana of each color were spent paying
+	// the spell's mana cost (the colored portion plus any colored mana
+	// used to satisfy generic / X requirements). Populated by the cast
+	// pipeline immediately after the mana cost is paid. Used by Chamber
+	// Sentry's "enters with a +1/+1 counter on it for each color of mana
+	// spent to cast it" effect — count distinct colors with value > 0.
+	ColorsSpent map[Color]int
+}
+
+// DistinctColorsSpent returns the number of distinct colors of mana that
+// were spent to cast this spell. Returns 0 if ctx is nil.
+func (ctx *CastContext) DistinctColorsSpent() int {
+	if ctx == nil {
+		return 0
+	}
+	n := 0
+	for _, v := range ctx.ColorsSpent {
+		if v > 0 {
+			n++
+		}
+	}
+	return n
 }
 
 // HasControlledSubtypeAtCast is a small helper for the common

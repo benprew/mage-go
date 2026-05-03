@@ -1442,14 +1442,34 @@ func registerCreatures() {
 	// Legendary Creature — Sphinx
 	// 5/5
 	// Flying
-	// If you would draw a card while your library has no cards in it, instead put five +1/+1 counters on Ormos.
+	// If you would draw a card while your library has no cards in it, instead put five +1/+1 counters on Ormos, Archive Keeper.
 	// {1}{U}{U}, Discard three cards with different names: Draw five cards.
-	// XXX: requires different-names tracking and draw-replacement-from-empty-library
 	Register("Ormos, Archive Keeper", func() Card {
 		return NewCreature("Ormos, Archive Keeper", "{4}{U}{U}", 5, 5,
 			WithSubTypes("Sphinx"),
 			WithSuperTypes(SuperLegendary),
 			WithKeyword(Flying),
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect(
+					"register empty-library draw replacement",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						g.AddEmptyLibraryDrawReplacement(sourceID, controller, func(g *Game, srcID uuid.UUID) {
+							perm := g.FindPermanent(srcID)
+							if perm == nil {
+								return
+							}
+							g.AddCountersWithReplacement(perm, P1P1, 5, srcID, false)
+						})
+						return nil
+					},
+				), false,
+			)),
+			WithActivatedAbility(
+				DrawCards(Fixed(5)),
+				ManaCostOf("{1}{U}{U}"),
+				WithCost(DiscardCardsWithDifferentNamesCost(3)),
+			),
 		)
 	})
 
@@ -3246,16 +3266,14 @@ func registerCreatures() {
 	// 6/6
 	// Flying
 	// You may cast this creature from your graveyard by paying {B}{B} and sacrificing two creatures rather than paying its mana cost.
-	// XXX: card itself has no engine-side hook to register the alternate-cost
-	// graveyard cast permission for player priority. The mechanic is reachable
-	// only by calling g.CastCardFromZoneWithAlternateCost directly. Needs an
-	// engine primitive that registers a static "you may cast from your
-	// graveyard by paying <cost> + <additional>" permission discoverable from
-	// player priority.
 	Register("Scourge of Nel Toth", func() Card {
 		return NewCreature("Scourge of Nel Toth", "{5}{B}{B}", 6, 6,
 			WithSubTypes("Zombie", "Dragon"),
 			WithKeyword(Flying),
+			WithAlternateCost(ZoneGraveyard, ParseManaCost("{B}{B}"),
+				SacrificeCreatureCost(),
+				SacrificeCreatureCost(),
+			),
 		)
 	})
 
@@ -6451,14 +6469,27 @@ func registerCreatures() {
 	// Chamber Sentry {X}
 	// Artifact Creature — Construct
 	// 0/0
-	// This creature enters with a +1/+1 counter on it for each color of mana spent to cast it.
-	// {X}, {T}, Remove X +1/+1 counters from this creature: It deals X damage to any target.
+	// Chamber Sentry enters with a +1/+1 counter on it for each color of mana spent to cast it.
+	// {X}, {T}, Remove X +1/+1 counters from this creature: Chamber Sentry deals X damage to any target.
 	// {W}{U}{B}{R}{G}: Return this card from your graveyard to your hand.
-	// XXX: requires colors-of-mana-spent tracking and graveyard activated abilities
 	Register("Chamber Sentry", func() Card {
 		return NewCreature("Chamber Sentry", "{X}", 0, 0,
 			WithSubTypes("Construct"),
 			WithCardType(TypeArtifact),
+			WithAbility(EntersWithComputedCounters(P1P1, func(g *Game, perm *Permanent) int {
+				return g.ResolvingCastContext().DistinctColorsSpent()
+			})),
+			WithActivatedAbility(
+				DealDamage(XValue()),
+				XManaCost(),
+				WithCost(TapSourceCost()),
+				WithCost(RemoveXCountersFromSourceCost(P1P1)),
+				WithTarget(TargetAnyTarget()),
+			),
+			WithGraveyardActivatedAbility(
+				ReturnSourceToHand(),
+				ManaCostOf("{W}{U}{B}{R}{G}"),
+			),
 		)
 	})
 

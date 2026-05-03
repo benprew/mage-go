@@ -648,6 +648,49 @@ func (r *drawReplacementEffect) Clone() ReplacementEffect {
 }
 
 // ---------------------------------------------------------------------------
+// 16b. Empty-library draw replacement: "if you would draw a card while your
+//      library has no cards in it, instead <callback>" (Ormos, Archive Keeper).
+//      Stays active while the source permanent is on the battlefield.
+// ---------------------------------------------------------------------------
+
+type emptyLibraryDrawReplacement struct {
+	replacementBase
+	playerID uuid.UUID
+	callback func(g *Game, sourceID uuid.UUID)
+}
+
+func (r *emptyLibraryDrawReplacement) Matches(a Action, g GameReader) bool {
+	act, ok := a.(*DrawCardAction)
+	if !ok {
+		return false
+	}
+	if act.PlayerID() != r.playerID {
+		return false
+	}
+	p := g.GetPlayer(r.playerID)
+	if p == nil {
+		return false
+	}
+	return len(p.Library()) == 0
+}
+
+func (r *emptyLibraryDrawReplacement) Replace(_ Action, g *Game) Action {
+	if r.callback != nil {
+		r.callback(g, r.sourceID)
+	}
+	return nil
+}
+
+func (r *emptyLibraryDrawReplacement) IsActive(g GameReader) bool {
+	return g.FindPermanent(r.sourceID) != nil
+}
+
+func (r *emptyLibraryDrawReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
+}
+
+// ---------------------------------------------------------------------------
 // 17. Damage prevention rule: from/to filter-based prevention
 // ---------------------------------------------------------------------------
 

@@ -124,6 +124,50 @@ func (c *removeCountersCost) Text() string {
 	return fmt.Sprintf("Remove %d %s counter(s)", c.amount, c.ct)
 }
 
+// removeXCountersCost requires removing X counters of the given type from
+// the source, where X is the current activation X (g.currentX). Used by
+// abilities like Chamber Sentry: "{X}, {T}, Remove X +1/+1 counters from
+// this creature: …".
+type removeXCountersCost struct {
+	ct CounterType
+}
+
+// RemoveXCountersFromSourceCost creates a cost that removes X counters of
+// the given type from the source permanent, where X is the activation's
+// X value (set via ActivateAbilityWithX). When X = 0, no counters are
+// removed and the cost is trivially payable.
+func RemoveXCountersFromSourceCost(ct CounterType) Cost {
+	return &removeXCountersCost{ct: ct}
+}
+
+func (c *removeXCountersCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+	x := g.currentX
+	if x <= 0 {
+		return true
+	}
+	p := g.FindPermanent(sourceID)
+	return p != nil && int(p.Counters[c.ct]) >= x
+}
+
+func (c *removeXCountersCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
+	x := g.currentX
+	if x <= 0 {
+		return nil
+	}
+	p := g.FindPermanent(sourceID)
+	if p == nil {
+		return ErrSourceNotFound
+	}
+	if !p.RemoveCounter(c.ct, x) {
+		return fmt.Errorf("not enough %s counters to remove %d", c.ct, x)
+	}
+	return nil
+}
+
+func (c *removeXCountersCost) Text() string {
+	return fmt.Sprintf("Remove X %s counter(s)", c.ct)
+}
+
 // requireCountersCost is a gate cost that checks for N+ counters but does not remove them.
 type requireCountersCost struct {
 	ct     CounterType
@@ -333,6 +377,88 @@ func (c *discardCost) Text() string {
 		return "Discard a card"
 	}
 	return fmt.Sprintf("Discard %d cards", c.amount)
+}
+
+// discardCardsWithDifferentNamesCost is a Cost that requires the
+// controller to discard `amount` cards from their hand whose names are
+// all distinct (CR 117 cost-payment validity is checked by CanPay).
+// Used by Ormos, Archive Keeper — "Discard three cards with different
+// names". The chosen set is solicited via Player.ChooseCardsFromHand;
+// if the player's selection isn't a valid distinct-name set the cost
+// falls back to a deterministic distinct-name selection from hand.
+type discardCardsWithDifferentNamesCost struct {
+	amount int
+}
+
+// DiscardCardsWithDifferentNamesCost creates a cost that requires the
+// controller to discard n cards with mutually distinct names. The cost
+// is unpayable unless the controller has at least n distinctly-named
+// cards in hand.
+func DiscardCardsWithDifferentNamesCost(n int) Cost {
+	return &discardCardsWithDifferentNamesCost{amount: n}
+}
+
+// distinctNameCards returns up to amount cards from hand with mutually
+// distinct names, in hand order. Used by both CanPay (length check) and
+// Pay (deterministic fallback).
+func (c *discardCardsWithDifferentNamesCost) distinctNameCards(hand []Card) []Card {
+	seen := make(map[string]bool, c.amount)
+	out := make([]Card, 0, c.amount)
+	for _, card := range hand {
+		if seen[card.Name()] {
+			continue
+		}
+		seen[card.Name()] = true
+		out = append(out, card)
+		if len(out) == c.amount {
+			break
+		}
+	}
+	return out
+}
+
+func (c *discardCardsWithDifferentNamesCost) CanPay(_, controller uuid.UUID, g *Game) bool {
+	p := g.GetPlayer(controller)
+	if p == nil {
+		return false
+	}
+	return len(c.distinctNameCards(p.Hand())) >= c.amount
+}
+
+func (c *discardCardsWithDifferentNamesCost) Pay(_, controller uuid.UUID, g *Game) error {
+	p := g.GetPlayer(controller)
+	if p == nil {
+		return ErrPlayerNotFound
+	}
+	chosen := p.ChooseCardsFromHand(c.amount, c.Text(), g)
+	valid := len(chosen) == c.amount
+	if valid {
+		seen := make(map[string]bool, c.amount)
+		for _, card := range chosen {
+			if card == nil || seen[card.Name()] {
+				valid = false
+				break
+			}
+			seen[card.Name()] = true
+		}
+	}
+	if !valid {
+		chosen = c.distinctNameCards(p.Hand())
+		if len(chosen) < c.amount {
+			return fmt.Errorf("not enough distinctly-named cards to discard")
+		}
+	}
+	for _, card := range chosen {
+		g.PlayerDiscard(p, card.ID())
+	}
+	return nil
+}
+
+func (c *discardCardsWithDifferentNamesCost) Text() string {
+	if c.amount == 1 {
+		return "Discard a card"
+	}
+	return fmt.Sprintf("Discard %d cards with different names", c.amount)
 }
 
 // revealFromHandCost is an additional cost that requires the controller

@@ -165,6 +165,10 @@ func (g *Game) castCardFromZone(playerID, cardID uuid.UUID, zone Zone, targets [
 		return fmt.Errorf("can't cast a land")
 	}
 
+	// Reset per-spell drained-colors tally so the cast snapshot can capture
+	// exactly which colors were spent (or none, for free casts).
+	p.ManaPool().ResetLastDrained()
+
 	// Pay the alternate mana cost if specified.
 	if alternateMC != nil && !alternateMC.IsZero() {
 		if !p.ManaPool().CanPay(*alternateMC) {

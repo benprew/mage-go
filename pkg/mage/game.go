@@ -1225,8 +1225,32 @@ func (g *Game) CounterSpellOnStack(spellID uuid.UUID) {
 	}
 }
 
-// PlayerDrawCard draws a card for the player and fires EvtCardDrawn.
+// PlayerDrawCard draws a card for the player, running the replacement
+// pipeline first so that "if you would draw a card" replacement effects
+// (Aladdin's Lamp, Ormos's empty-library counters, etc.) intercept the
+// draw. When the action is fully replaced, no card is drawn and (false,
+// nil) is returned; otherwise the next library card moves to hand and
+// EvtCardDrawn fires. The draw is marked isNormalDraw=false because this
+// entry point is used by effect-driven draws; the turn-based draw step
+// builds its own action with isNormalDraw=true.
 func (g *Game) PlayerDrawCard(p Player) (Card, bool) {
+	if p == nil {
+		return nil, false
+	}
+	action := NewDrawCardAction(uuid.Nil, p.PlayerID(), false)
+	result := g.effects.ApplyReplacements(action, g)
+	if result == nil {
+		return nil, false
+	}
+	return g.drawCardRaw(p)
+}
+
+// drawCardRaw performs the underlying library-to-hand transfer and fires
+// EvtCardDrawn without running the replacement pipeline. Used by the
+// normal draw step (which applies replacements itself) and by
+// replacement implementations that need to draw after rearranging the
+// library (Aladdin's Lamp).
+func (g *Game) drawCardRaw(p Player) (Card, bool) {
 	c, ok := p.DrawCard()
 	if ok {
 		g.FireEvent(GameEvent{
@@ -2117,7 +2141,10 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 		_ = eff.Apply(g, obj.SourceID, obj.Controller, obj.Targets)
 	}
 	g.resolvingDamageDistribution = nil
-	g.resolvingCastContext = nil
+	// Note: g.resolvingCastContext is intentionally NOT cleared here so
+	// PutOnBattlefield (and ETB replacement effects like
+	// EntersWithComputedCounters) can still consult cast-time state such as
+	// ColorsSpent (Chamber Sentry). It is cleared at every exit path below.
 
 	// Copies of spells cease to exist as they resolve (CR 707.10) — no
 	// graveyard, no battlefield, no exile. The effects already ran above.
@@ -2127,6 +2154,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 		g.resolvingCard = nil
 		g.resolvingTargets = nil
 		g.resolvingCastZone = ZoneAny
+		g.resolvingCastContext = nil
 		g.ClearSacrificed()
 		g.CheckStateBasedActions()
 		return
@@ -2157,6 +2185,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 			g.currentMode = 0
 			g.resolvingTargets = nil
 			g.resolvingCastZone = ZoneAny
+			g.resolvingCastContext = nil
 			g.ClearSacrificed()
 			g.CheckStateBasedActions()
 			return
@@ -2180,6 +2209,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 	g.resolvingCard = nil
 	g.resolvingTargets = nil
 	g.resolvingCastZone = ZoneAny
+	g.resolvingCastContext = nil
 	g.ClearSacrificed()
 
 	g.CheckStateBasedActions()
@@ -2334,6 +2364,12 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	if r := computeConditionalCostReduction(g, playerID, card, mc.Generic, targets); r > 0 {
 		mc.Generic -= r
 	}
+
+	// Reset per-spell drained-colors tally so the cast snapshot captures
+	// exactly which colors were spent paying for THIS spell (Chamber Sentry:
+	// "enters with a +1/+1 counter on it for each color of mana spent to
+	// cast it").
+	p.ManaPool().ResetLastDrained()
 
 	// Channel: pay life for generic/X costs instead of mana
 	if g.effects.Rules.IsChannelActive(playerID) && (mc.Generic > 0 || (mc.HasX && xValue > 0)) {
@@ -2879,7 +2915,7 @@ func (g *Game) doDrawNormalDraw() {
 		return // draw was replaced (skip draw, Aladdin's Lamp, etc.)
 	}
 
-	g.PlayerDrawCard(active)
+	g.drawCardRaw(active)
 }
 
 // applyDrawReplacement handles Aladdin's Lamp draw replacement.
@@ -2909,7 +2945,7 @@ func (g *Game) applyDrawReplacement(p Player, count int) {
 	newLib = append(newLib, lib[count:]...)
 	newLib = append(newLib, rest...)
 	p.SetLibrary(newLib)
-	g.PlayerDrawCard(p)
+	g.drawCardRaw(p)
 }
 
 // 1. Rule 508.1: First, the active player declares attackers.

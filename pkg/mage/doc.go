@@ -620,6 +620,7 @@ The [Cost] interface has CanPay, Pay, and Text methods. Cost constructors:
 	[RemoveCountersCost](ct, n)        // remove n counters of type ct
 	[DiscardCost](n)                   // discard n cards
 	[DiscardRandomCost](n)             // discard n cards at random
+	[DiscardCardsWithDifferentNamesCost](n)  // discard n cards w/ distinct names
 	[ExileFromGraveyardCost](n)        // exile n cards from your graveyard
 	[ExileSourceCost]()                // exile self
 	[ReturnToHandCost](filter)         // bounce a permanent to hand (nil = any)
@@ -1359,9 +1360,30 @@ The engine exposes four helpers for this:
 
 	g.CastCardFromZoneWithAlternateCost(playerID, cardID, zone, mc, targets, xValue)
 	    — Like the above but pays the supplied alternate ManaCost from the
-	      controller's pool instead of the card's printed cost. Used for
-	      Scourge-of-Nel-Toth-style "by paying {3}{B}{B} ... rather than
-	      paying its mana cost".
+	      controller's pool instead of the card's printed cost. The caller
+	      provides both the zone and the mana cost; the card need not declare
+	      the alt-cost itself. Used by effect-driven alt-casts where the
+	      grant lives on a different card.
+
+	WithAlternateCost(zone, mana, additional...) CardOption
+	g.CastCardWithAlternateCost(playerID, cardID, altIdx, targets, xValue)
+	    — Card-level alternate cost (CR 117.9). The card's constructor
+	      registers one or more AlternateCost entries (zone + mana cost +
+	      optional additional costs such as sacrifice/discard/pay-life), and
+	      callers route through CastCardWithAlternateCost which:
+	        1. Verifies the card is in the alt's source zone.
+	        2. Auto-taps for the alt mana cost if the pool is short.
+	        3. Validates that all additional costs can be paid together
+	           (e.g. two SacrificeCreatureCost entries require two
+	           sacrificable creatures, not just one).
+	        4. Pays the additional costs, then enters the standard
+	           cast-from-zone pipeline (paying the alt mana, removing the
+	           card from its zone, pushing onto the stack, firing
+	           EvtSpellCast). Used by Scourge of Nel Toth ("cast from your
+	           graveyard by paying {B}{B} and sacrificing two creatures").
+	      An optional Condition func gates the alt-cost (e.g. "only on your
+	      turn"); when nil the alt is always available while the card sits
+	      in the named zone.
 
 	g.GrantCastFromExile(playerID, cardID, anyColorMana)
 	g.CastFromExilePermissionFor(playerID, cardID) *CastableFromExilePermission
@@ -1481,6 +1503,10 @@ the appropriate replacement:
 	g.SetAttackerDamageRedirect(aID, absID)    → attackerDamageRedirectReplacement
 	g.SetSkipNextDraw(playerID)                → skipDrawReplacement
 	g.SetDrawReplacement(playerID, count)      → drawReplacementEffect
+	g.AddEmptyLibraryDrawReplacement(srcID,
+	    playerID, callback)                    → emptyLibraryDrawReplacement
+	                                              (Ormos, Archive Keeper; "if you would
+	                                              draw while your library is empty")
 	g.SetLichActive(playerID, sourceID)        → lichLifeGainReplacement
 	g.PreventAllDamageFrom(sourceID)           → damagePreventionRuleReplacement
 	g.SetMinimumLife(playerID)                 → minimumLifeReplacement (cycle)
@@ -1494,7 +1520,7 @@ the appropriate replacement:
 
 For custom replacements, call [*Game.AddReplacementEffect](r) directly.
 
-## Built-In Replacement Implementations (19)
+## Built-In Replacement Implementations (20)
 
 All live in replacement.go:
 
@@ -1514,6 +1540,8 @@ All live in replacement.go:
 	minimumLifeReplacement             — caps damage so life stays >= 1 (cycle)
 	skipDrawReplacement                — skips next normal draw
 	drawReplacementEffect              — Aladdin's Lamp draw replacement
+	emptyLibraryDrawReplacement        — replaces draws from an empty library with a
+	                                      card-supplied callback (Ormos, Archive Keeper)
 	damagePreventionRuleReplacement    — from/to PermanentFilter-based prevention (cycle).
 	                                      Supports combatOnly / noncombatOnly flags and a
 	                                      toPlayerID gate for "damage dealt to <player>"

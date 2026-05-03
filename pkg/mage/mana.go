@@ -15,6 +15,15 @@ type ManaPool struct {
 	// during the current turn, for observability when the live pool empties
 	// between steps (CR 500.5). Reset at turn start.
 	ProducedThisTurn []Mana
+
+	// LastDrainedColors records, per color, how many mana of that color were
+	// removed from the pool by the most recent payment operation (Pay or
+	// DrainGeneric). Callers that need to know which colors were spent paying
+	// for a particular spell or ability should call ResetLastDrained()
+	// immediately before the payment and then inspect this map after.
+	// Used by the cast pipeline to populate CastContext.ColorsSpent for
+	// "for each color of mana spent to cast it" effects (Chamber Sentry).
+	LastDrainedColors map[Color]int
 }
 
 func NewManaPool() *ManaPool {
@@ -90,8 +99,25 @@ func (mp *ManaPool) TotalMana() int {
 // DrainGeneric removes n mana from the pool (any color).
 func (mp *ManaPool) DrainGeneric(n int) {
 	for i := 0; i < n && len(mp.pool) > 0; i++ {
+		drained := mp.pool[len(mp.pool)-1]
 		mp.pool = mp.pool[:len(mp.pool)-1]
+		mp.recordDrain(drained.Color)
 	}
+}
+
+// ResetLastDrained clears the last-drained-color tally so that a subsequent
+// payment operation produces a clean snapshot. The cast pipeline calls this
+// immediately before paying a spell's mana cost.
+func (mp *ManaPool) ResetLastDrained() {
+	mp.LastDrainedColors = nil
+}
+
+// recordDrain bumps the per-color tally for the most recent payment.
+func (mp *ManaPool) recordDrain(c Color) {
+	if mp.LastDrainedColors == nil {
+		mp.LastDrainedColors = map[Color]int{}
+	}
+	mp.LastDrainedColors[c]++
 }
 
 // CanPay returns true if the pool can pay the given mana cost.
@@ -249,6 +275,7 @@ func (mp *ManaPool) removeUpTo(c Color, n int) int {
 				mp.pool = append(mp.pool[:j], mp.pool[j+1:]...)
 				n--
 				found = true
+				mp.recordDrain(c)
 				break
 			}
 		}
