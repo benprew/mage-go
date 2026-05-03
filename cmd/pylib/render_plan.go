@@ -192,10 +192,12 @@ type encodeScratch struct {
 	tokenPlanOvf  [1]int64
 	directEmitter directTokenEmitter
 	directOut     tokenAssemblerOut
-	// directDirty tracks per-row "what slots did the last emit write"
-	// so the next reset can clear only those slots. Indexed by
-	// outputBatchIdx; grown lazily.
-	directDirty []directDirtyState
+	// directDirty USED TO live here. The per-row "what slots did the last
+	// emit write" state must be associated with the OUTPUT BUFFER, not the
+	// scratch — under parallel encode the pool can hand a different scratch
+	// to the same row across calls, and the dirty record on a stale scratch
+	// no longer reflects what's actually sitting in the buffer. See
+	// ``scratchPool.directDirty`` for the per-buffer state.
 	// nameRowCache memoizes cardRowForName lookups for the lifetime of
 	// the scratch. Names repeat heavily within a snapshot (multiple
 	// copies of the same card across battlefield / hand / graveyard /

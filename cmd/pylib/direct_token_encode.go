@@ -11,6 +11,7 @@ func fillTokenAssemblyDirectPacked(
 	cfg encodeConfig,
 	outputView outputViews,
 	scratch *encodeScratch,
+	dirty *directDirtyState,
 ) (int32, time.Duration, *encodeError) {
 	tables := getTokenTables()
 	if tables == nil {
@@ -57,13 +58,8 @@ func fillTokenAssemblyDirectPacked(
 	outputView.packedCuSeqlens[outputBatchIdx+1] = packedCursor
 	outputView.packedTokenOverflow[outputBatchIdx] = 0
 
-	if int64(len(scratch.directDirty)) <= outputBatchIdx {
-		grown := make([]directDirtyState, outputBatchIdx+1)
-		copy(grown, scratch.directDirty)
-		scratch.directDirty = grown
-	}
 	emitter := &scratch.directEmitter
-	emitter.reset(tables, out, cfg.tokenMaxTokens, &scratch.directDirty[outputBatchIdx])
+	emitter.reset(tables, out, cfg.tokenMaxTokens, dirty)
 	if err := emitDirectTokens(emitter, state, pending, playerIdx, cfg, *index); err != nil {
 		return packedCursor, 0, &encodeError{
 			code:    mageEncodeErrEncodeFailure,

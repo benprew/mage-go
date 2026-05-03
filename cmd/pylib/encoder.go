@@ -19,15 +19,38 @@ import (
 )
 
 // scratchPool keys a free list of encodeScratch instances by output-buffer
-// pointer. Production callers (Python's NativePackedAssemblerOutputs) reuse
-// the same output tensors across encode calls, so caching scratch per
-// output preserves the per-row dirty state on encodeScratch.directDirty
-// across calls — the high-water-mark partial-clears in
-// directTokenEmitter.reset only kick in when a row has been processed at
-// least once before with the same buffer.
+// pointer, alongside the per-row directDirty state for that buffer. Each
+// parallel worker takes its own scratch (see ``acquireScratch``) so its
+// emitter / out / cardIDToSlot don't race; the directDirty state, however,
+// must be 1:1 with the OUTPUT BUFFER, not the scratch — otherwise a row
+// handled by scratch A in one call and scratch B in the next has a stale
+// dirty record on whichever scratch is reused later, and reset's partial
+// clear leaves residue from the OTHER scratch's writes in the buffer. See
+// the per-row directDirty comment on ``directDirtyState``.
 type scratchPool struct {
-	mu        sync.Mutex
-	available []*encodeScratch
+	mu          sync.Mutex
+	available   []*encodeScratch
+	directDirty []directDirtyState
+}
+
+// ensureDirty grows ``p.directDirty`` to at least ``n`` entries. Caller
+// must hold p.mu OR be the only writer (e.g. before launching workers).
+func (p *scratchPool) ensureDirty(n int) {
+	if cap(p.directDirty) < n {
+		grown := make([]directDirtyState, n)
+		copy(grown, p.directDirty)
+		p.directDirty = grown
+	} else if len(p.directDirty) < n {
+		p.directDirty = p.directDirty[:n]
+	}
+}
+
+// rowDirty returns the per-row dirty entry for ``batchIdx``. Concurrent
+// callers from different workers are safe as long as each batchIdx is
+// owned by at most one worker — the pointer aliases the slice element,
+// and slice growth is done up-front via ensureDirty.
+func (p *scratchPool) rowDirty(batchIdx int64) *directDirtyState {
+	return &p.directDirty[batchIdx]
 }
 
 var scratchPools sync.Map // uintptr -> *scratchPool
@@ -43,15 +66,25 @@ func scratchPoolKey(views outputViews) uintptr {
 	return uintptr(unsafe.Pointer(&views.packedTokenIDs[0]))
 }
 
-func acquireScratch(key uintptr) *encodeScratch {
+// scratchPoolFor returns the per-buffer scratch pool, lazily creating it.
+// Returns nil when ``key == 0`` (no buffer bound — caller must supply a
+// fresh ``directDirtyState`` for each fillTokenAssemblyDirectPacked call).
+func scratchPoolFor(key uintptr) *scratchPool {
 	if key == 0 {
-		return newEncodeScratch()
+		return nil
 	}
 	val, ok := scratchPools.Load(key)
 	if !ok {
 		val, _ = scratchPools.LoadOrStore(key, &scratchPool{})
 	}
-	p := val.(*scratchPool)
+	return val.(*scratchPool)
+}
+
+func acquireScratch(key uintptr) *encodeScratch {
+	p := scratchPoolFor(key)
+	if p == nil {
+		return newEncodeScratch()
+	}
 	p.mu.Lock()
 	var s *encodeScratch
 	if n := len(p.available); n > 0 {
@@ -269,6 +302,25 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 	poolKey := scratchPoolKey(views)
 	scratch := acquireScratch(poolKey)
 	defer releaseScratch(poolKey, scratch)
+	pool := scratchPoolFor(poolKey)
+	// Per-row directDirty lives on the buffer-keyed pool (not on scratch),
+	// so all scratches that touch this buffer share the same dirty record
+	// and partial-clears reflect what's actually in the buffer.
+	var fallbackDirty directDirtyState
+	if pool != nil {
+		pool.mu.Lock()
+		pool.ensureDirty(len(req.handles))
+		pool.mu.Unlock()
+	}
+	rowDirty := func(batchIdx int64) *directDirtyState {
+		if pool != nil {
+			return pool.rowDirty(batchIdx)
+		}
+		// No buffer bound — fall back to a fresh state per call. Forces
+		// full clears, which is correct (no buffer to track).
+		fallbackDirty = directDirtyState{}
+		return &fallbackDirty
+	}
 	for batchIdx, handleID := range req.handles {
 		h := getHandle(handleID)
 		if h == nil {
@@ -348,6 +400,7 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 					cfg,
 					views,
 					scratch,
+					rowDirty(int64(batchIdx)),
 				)
 			}
 			if err != nil {
@@ -413,6 +466,15 @@ func encodeBatchGoPackedParallel(req batchRequest, cfg encodeConfig, views outpu
 	}
 
 	poolKey := scratchPoolKey(views)
+	pool := scratchPoolFor(poolKey)
+	if pool != nil {
+		// Size the per-buffer dirty slice once up-front so workers can
+		// take aliasing pointers into it without locking — each worker
+		// owns a disjoint row range.
+		pool.mu.Lock()
+		pool.ensureDirty(n)
+		pool.mu.Unlock()
+	}
 	for workerIdx := 0; workerIdx < workers; workerIdx++ {
 		start := workerIdx * n / workers
 		end := (workerIdx + 1) * n / workers
@@ -481,6 +543,12 @@ func encodeBatchGoPackedParallel(req batchRequest, cfg encodeConfig, views outpu
 
 				rowStart := int32(int64(batchIdx) * int64(cfg.tokenMaxTokens))
 				phaseStart = time.Now()
+				var dirty *directDirtyState
+				if pool != nil {
+					dirty = pool.rowDirty(int64(batchIdx))
+				} else {
+					dirty = &directDirtyState{}
+				}
 				_, metadata, encErr := fillTokenAssemblyDirectPacked(
 					int64(batchIdx),
 					rowStart,
@@ -490,6 +558,7 @@ func encodeBatchGoPackedParallel(req batchRequest, cfg encodeConfig, views outpu
 					cfg,
 					views,
 					scratch,
+					dirty,
 				)
 				if encErr != nil {
 					h.mu.Unlock()

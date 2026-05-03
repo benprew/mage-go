@@ -200,7 +200,11 @@ func BenchmarkDirectTokenEncodePackedBatch(b *testing.B) {
 	{
 		warm := acquireScratch(poolKey)
 		warm.reset()
-		_, _, err := fillTokenAssemblyDirectPacked(0, 0, states[0], pendings[0], 0, cfg, view, warm)
+		pool := scratchPoolFor(poolKey)
+		pool.mu.Lock()
+		pool.ensureDirty(benchBatchSize)
+		pool.mu.Unlock()
+		_, _, err := fillTokenAssemblyDirectPacked(0, 0, states[0], pendings[0], 0, cfg, view, warm, pool.rowDirty(0))
 		if err != nil {
 			b.Fatalf("warmup direct encode: %s", err.message)
 		}
@@ -213,9 +217,13 @@ func BenchmarkDirectTokenEncodePackedBatch(b *testing.B) {
 		var packedCursor int32
 		view.packedCuSeqlens[0] = 0
 		scratch := acquireScratch(poolKey)
+		pool := scratchPoolFor(poolKey)
+		pool.mu.Lock()
+		pool.ensureDirty(benchBatchSize)
+		pool.mu.Unlock()
 		for i := 0; i < benchBatchSize; i++ {
 			scratch.reset()
-			next, _, err := fillTokenAssemblyDirectPacked(int64(i), packedCursor, states[i], pendings[i], 0, cfg, view, scratch)
+			next, _, err := fillTokenAssemblyDirectPacked(int64(i), packedCursor, states[i], pendings[i], 0, cfg, view, scratch, pool.rowDirty(int64(i)))
 			if err != nil {
 				b.Fatalf("row=%d direct encode: %s", i, err.message)
 			}
@@ -272,9 +280,10 @@ func BenchmarkDirectTokenEncodePackedBatchNoPool(b *testing.B) {
 		var packedCursor int32
 		view.packedCuSeqlens[0] = 0
 		scratch := newEncodeScratch()
+		dirty := make([]directDirtyState, benchBatchSize)
 		for i := 0; i < benchBatchSize; i++ {
 			scratch.reset()
-			next, _, err := fillTokenAssemblyDirectPacked(int64(i), packedCursor, states[i], pendings[i], 0, cfg, view, scratch)
+			next, _, err := fillTokenAssemblyDirectPacked(int64(i), packedCursor, states[i], pendings[i], 0, cfg, view, scratch, &dirty[i])
 			if err != nil {
 				b.Fatalf("row=%d direct encode: %s", i, err.message)
 			}
