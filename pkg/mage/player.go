@@ -93,6 +93,12 @@ type Player interface {
 	ChooseMode(modes []string, reason string) int
 	ChoosePermanent(candidates []*Permanent, reason string, g GameReader) *Permanent
 	ChooseCardsFromHand(amount int, reason string, g GameReader) []Card
+	// ChooseCardFromHand picks one card from a pre-filtered candidate list
+	// drawn from the player's hand. Used when an effect or cost limits the
+	// choice to a subset of hand (e.g. "discard an artifact card"). Callers
+	// must pre-filter candidates; implementations should return a card from
+	// `candidates` (or nil if empty).
+	ChooseCardFromHand(candidates []Card, reason string, g GameReader) Card
 	ChooseManaColor(reason string) Color
 	ChooseCardFromLibrary(candidates []Card, reason string, g GameReader) Card
 	ChooseNumber(min, max int, reason string) int
@@ -341,6 +347,13 @@ func (p *BasePlayer) ChooseCardsFromHand(amount int, reason string, g GameReader
 	result := make([]Card, amount)
 	copy(result, hand[:amount])
 	return result
+}
+
+func (p *BasePlayer) ChooseCardFromHand(candidates []Card, reason string, g GameReader) Card {
+	if len(candidates) == 0 {
+		return nil
+	}
+	return candidates[0]
 }
 
 func (p *BasePlayer) ChooseManaColor(reason string) Color {

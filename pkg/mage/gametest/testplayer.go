@@ -347,6 +347,28 @@ func (tp *TestPlayer) ChooseCardsFromHand(amount int, reason string, g mage.Game
 	return result
 }
 
+// ChooseCardFromHand picks one card from a pre-filtered candidate list.
+// Consumes the next entry from the chooseDiscard queue (matching by name);
+// the queued name must refer to a candidate. Falls back to the first
+// candidate when no scripted choice is queued.
+func (tp *TestPlayer) ChooseCardFromHand(candidates []mage.Card, reason string, g mage.GameReader) mage.Card {
+	if len(candidates) == 0 {
+		return nil
+	}
+	if len(tp.chooseDiscard) > 0 {
+		names := tp.chooseDiscard[0]
+		tp.chooseDiscard = tp.chooseDiscard[1:]
+		if len(names) > 0 {
+			for _, c := range candidates {
+				if c.Name() == names[0] {
+					return c
+				}
+			}
+		}
+	}
+	return candidates[0]
+}
+
 // ChooseManaColor picks a mana color.
 func (tp *TestPlayer) ChooseManaColor(reason string) core.Color {
 	if len(tp.chooseManaColor) > 0 {

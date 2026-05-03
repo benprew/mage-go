@@ -221,6 +221,36 @@ func EntersWithNCounters(ct CounterType, n int) *EntersWithNCountersAbility {
 	}
 }
 
+// EntersWithComputedCountersAbility is a replacement effect that adds a
+// dynamically-computed number of counters when the permanent enters the
+// battlefield. The Compute closure is evaluated at ETB resolution time, after
+// the entering permanent has been transiently exposed to FindPermanent so the
+// closure can inspect the entering permanent itself (its ID and controller)
+// and the rest of the battlefield. Routed through AddCountersWithReplacement
+// so doublers (Branching Evolution) and ETB-additional counter effects
+// (Oona's Blackguard) compose correctly. Used for cards like Towering Titan
+// whose ETB count depends on board state.
+type EntersWithComputedCountersAbility struct {
+	BaseAbility
+	CounterType CounterType
+	Compute     func(g *Game, perm *Permanent) int
+}
+
+// EntersWithComputedCounters creates a replacement effect that puts a
+// computed number of counters of the given type on the permanent as it
+// enters the battlefield. The compute closure receives the game and the
+// entering permanent and returns the count.
+func EntersWithComputedCounters(ct CounterType, compute func(g *Game, perm *Permanent) int) *EntersWithComputedCountersAbility {
+	return &EntersWithComputedCountersAbility{
+		BaseAbility: BaseAbility{
+			id:          uuid.New(),
+			abilityType: AbilityStatic,
+		},
+		CounterType: ct,
+		Compute:     compute,
+	}
+}
+
 // CopyCreatureOnETBAbility is a replacement effect that copies a target creature
 // when this permanent enters the battlefield (e.g., Vesuvan Doppelganger).
 type CopyCreatureOnETBAbility struct {

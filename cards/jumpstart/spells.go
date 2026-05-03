@@ -13,11 +13,20 @@ func init() {
 
 // discardCardOfTypeCost is a Cost that discards one card from the controller's
 // hand matching the given filter. Used by Thirst for Knowledge ("discard an
-// artifact card"). Picks the first matching card; behaviorally identical to
-// player-choice when the hand has only one matching card.
+// artifact card"). The controller chooses which matching card to discard.
 type discardCardOfTypeCost struct {
 	filter CardFilter
 	label  string
+}
+
+func (c *discardCardOfTypeCost) candidates(p Player) []Card {
+	var out []Card
+	for _, card := range p.Hand() {
+		if c.filter.IsZero() || c.filter.Match(card) {
+			out = append(out, card)
+		}
+	}
+	return out
 }
 
 func (c *discardCardOfTypeCost) CanPay(_, controller uuid.UUID, g *Game) bool {
@@ -25,12 +34,7 @@ func (c *discardCardOfTypeCost) CanPay(_, controller uuid.UUID, g *Game) bool {
 	if p == nil {
 		return false
 	}
-	for _, card := range p.Hand() {
-		if c.filter.IsZero() || c.filter.Match(card) {
-			return true
-		}
-	}
-	return false
+	return len(c.candidates(p)) > 0
 }
 
 func (c *discardCardOfTypeCost) Pay(_, controller uuid.UUID, g *Game) error {
@@ -38,13 +42,16 @@ func (c *discardCardOfTypeCost) Pay(_, controller uuid.UUID, g *Game) error {
 	if p == nil {
 		return ErrPlayerNotFound
 	}
-	for _, card := range p.Hand() {
-		if c.filter.IsZero() || c.filter.Match(card) {
-			g.PlayerDiscard(p, card.ID())
-			return nil
-		}
+	cands := c.candidates(p)
+	if len(cands) == 0 {
+		return ErrPlayerNotFound
 	}
-	return ErrPlayerNotFound
+	chosen := p.ChooseCardFromHand(cands, c.label, g)
+	if chosen == nil {
+		chosen = cands[0]
+	}
+	g.PlayerDiscard(p, chosen.ID())
+	return nil
 }
 
 func (c *discardCardOfTypeCost) Text() string { return c.label }
@@ -1788,10 +1795,6 @@ func registerSpells() {
 	// Thirst for Knowledge {2}{U}
 	// Instant
 	// Draw three cards. Then discard two cards unless you discard an artifact card.
-	// XXX: when paying the "discard an artifact card" branch, the engine
-	// has no choose-card-from-hand-by-filter primitive, so the cost picks the
-	// first artifact card in the controller's hand rather than letting them
-	// choose. Behaviorally identical when the hand has only one artifact.
 	Register("Thirst for Knowledge", func() Card {
 		artifactCard := NewCardFilter("artifact card", func(c Card) bool {
 			return c.HasType(TypeArtifact)

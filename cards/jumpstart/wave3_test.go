@@ -53,6 +53,67 @@ func TestThirstForKnowledge_DiscardArtifact(t *testing.T) {
 	g.AssertGraveyardCount(gametest.PlayerA, "Sol Ring", 1)
 }
 
+// TestThirstForKnowledge_PlayerChoosesArtifact verifies that with multiple
+// artifact cards in hand, the controller picks which one to discard rather
+// than the engine auto-picking the first.
+func TestThirstForKnowledge_PlayerChoosesArtifact(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 3)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Thirst for Knowledge")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Sol Ring")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Mox Ruby")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Plains", 5)
+	g.ChooseDiscard(gametest.PlayerA, "Mox Ruby")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Thirst for Knowledge")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerA, "Mox Ruby", 1)
+	g.AssertGraveyardCount(gametest.PlayerA, "Sol Ring", 0)
+	g.AssertHandCount(gametest.PlayerA, "Sol Ring", 1)
+}
+
+// TestThirstForKnowledge_NoArtifactDiscardTwo verifies that when there is no
+// artifact card in hand, the controller cannot pay the artifact branch and
+// must discard two cards instead.
+func TestThirstForKnowledge_NoArtifactDiscardTwo(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 3)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Thirst for Knowledge")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Counterspell")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Plains", 5)
+	g.ChooseDiscard(gametest.PlayerA, "Lightning Bolt", "Counterspell")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Thirst for Knowledge")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerA, "Lightning Bolt", 1)
+	g.AssertGraveyardCount(gametest.PlayerA, "Counterspell", 1)
+	g.AssertGraveyardCount(gametest.PlayerA, "Thirst for Knowledge", 1)
+}
+
+// TestThirstForKnowledge_DeclineArtifactBranch verifies that the controller
+// can choose NOT to pay the discard-an-artifact branch even when an artifact
+// is in hand, and instead discard two non-artifact cards of their choice.
+func TestThirstForKnowledge_DeclineArtifactBranch(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 3)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Thirst for Knowledge")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Mox Ruby")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Counterspell")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Plains", 5)
+	tpA := g.GetPlayer(gametest.PlayerA)
+	tpA.QueueMayAbilityChoices(false)
+	g.ChooseDiscard(gametest.PlayerA, "Lightning Bolt", "Counterspell")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Thirst for Knowledge")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "Mox Ruby", 1)
+	g.AssertGraveyardCount(gametest.PlayerA, "Mox Ruby", 0)
+	g.AssertGraveyardCount(gametest.PlayerA, "Lightning Bolt", 1)
+	g.AssertGraveyardCount(gametest.PlayerA, "Counterspell", 1)
+}
+
 // TestReadTheRunes_X1Discard verifies that for X=1 with the controller
 // declining the sacrifice option, the discard branch fires once.
 func TestReadTheRunes_X1Discard(t *testing.T) {

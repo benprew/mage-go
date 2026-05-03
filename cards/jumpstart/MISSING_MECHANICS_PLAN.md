@@ -184,9 +184,9 @@ These each add one orthogonal capability. They're ordered by dependency depth.
 - Bucket key supports the "fight or become blocked" pattern: one bucket per
   ability instance per dispatch window.
 - Unblocks: Neyith of the Dire Hunt (`creatures.go:5279`), Path of Bravery
-  (`enchantments.go:653`), and future "one or more" cards. Inniaz remains deferred
-  (multiplayer). Soul of the Harvest's closure-capture bug is largely independent
-  and tracked under 3.7.
+  (`enchantments.go:653`), and future "one or more" cards. Inniaz fits naturally
+  here in a 2-player game (see 2.11). Soul of the Harvest's closure-capture bug
+  is largely independent and tracked under 3.7.
 
 ### 1.8 Random selection primitive
 - Engine already has deterministic test choices; add `Game.RandomChoice([]T) T`
@@ -281,6 +281,22 @@ These each add one orthogonal capability. They're ordered by dependency depth.
   matching permanents. Filter for "creatures opponents control".
 - Unblocks: Linvala (`creatures.go:590`).
 
+### 2.11 "Player to your right" in 2-player (Inniaz)
+
+- `creatures.go:1138`. Oracle: "Whenever three or more creatures you control with
+  flying attack, each player gains control of a nonland permanent of your choice
+  controlled by the player to their right."
+- In a strict 2-player engine, "the player to their right" collapses to the
+  unique opponent. So for each player P (each of the two), pick a nonland
+  permanent controlled by P's opponent and hand it to P. Practically: you choose
+  a nonland permanent your opponent controls (you gain it); your opponent
+  chooses a nonland permanent you control (they gain it).
+- Composes with 1.7 (one-or-more-creatures-you-control-with-flying-attack
+  aggregation) and the existing `g.ChangeController(perm, newController)`
+  primitive (search `ChangeController` in `pkg/mage/`). No new infrastructure
+  beyond what 1.7 provides.
+- Unblocks: Inniaz, the Gale Force.
+
 ---
 
 ## Tier 3 — Higher-friction mechanics (defer or scope down)
@@ -325,9 +341,11 @@ These each add one orthogonal capability. They're ordered by dependency depth.
 - Both small, but Ormos also wants its activated ability with split sub-modes,
   so wait until 1.5 (modal) lands before wiring.
 
-### 3.6 Multiplayer "player to your right"
-- Inniaz (`creatures.go:1138`). 2-player engine; explicitly **out of scope**.
-  Leave the `// XXX:` note and skip.
+### 3.6 Multiplayer "player to your right" (general)
+- Generalizing "player to your right" / "player to your left" / "next opponent
+  in turn order" to >2 players is out of scope for this 2-player engine. In
+  2-player, these phrases collapse to "the opponent" and the cards are
+  implementable today — see 2.11 for Inniaz.
 
 ### 3.7 Selvala / Soul of the Harvest closure capture
 - `creatures.go:5486`, `5608`. Both stem from trigger-condition closures that
@@ -388,5 +406,5 @@ These each add one orthogonal capability. They're ordered by dependency depth.
 | Etali, Primal Storm | creatures.go:3746 | 3.3 (after 1.3) |
 | Gargoyle-class alt-cost | creatures.go:3063 | 3.4 |
 | Ormos | creatures.go:1304 | 3.5 (after 1.5) |
-| Inniaz | creatures.go:1138 | 3.6 (out of scope) |
+| Inniaz | creatures.go:1138 | 2.11 (in-scope: 2-player collapse) |
 

@@ -576,6 +576,19 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 		}
 	}
 
+	// Add computed counters if configured (CR 614.1c self-replacement whose
+	// count depends on board state, e.g. Towering Titan: X = total toughness
+	// of other creatures you control).
+	for _, a := range perm.RuntimeAbilities {
+		if cc, ok := a.(*EntersWithComputedCountersAbility); ok && cc.Compute != nil {
+			n := cc.Compute(g, perm)
+			if n > 0 {
+				g.AddCountersWithReplacement(perm, cc.CounterType, n, perm.ID(), true)
+			}
+			baseCtrTypes[cc.CounterType] = true
+		}
+	}
+
 	// CR 614.1c: "enters with N counters" effects from other sources (Oona's
 	// Blackguard, Winding Constrictor) are self-replacements applied during the
 	// ETB process even when the entering permanent has no native "enters with"

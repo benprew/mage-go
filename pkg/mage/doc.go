@@ -1556,6 +1556,7 @@ Attach with WithAbility:
 
 	[SacrificeUnlessLand](subtype)        // sacrifice if you don't control land type
 	[EntersWithXCounters](counterType)    // ETB with X counters
+	[EntersWithComputedCounters](counterType, compute) // ETB with counters computed from board state (Towering Titan)
 	[CopyCreatureOnETB]()                 // clone ETB (Doppelganger)
 	[ETBWithTargets](effect)              // run effect on ETB using spell targets
 	[ETBEffect](effect)                   // run effect on ETB without targets

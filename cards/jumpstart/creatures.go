@@ -5815,10 +5815,23 @@ func registerCreatures() {
 	// 0/0
 	// This creature enters with X +1/+1 counters on it, where X is the total toughness of other creatures you control.
 	// Sacrifice a creature with defender: All creatures gain trample until end of turn.
-	// XXX: requires "enters with X counters where X is total toughness of other creatures" replacement
 	Register("Towering Titan", func() Card {
 		return NewCreature("Towering Titan", "{4}{G}{G}", 0, 0,
 			WithSubTypes("Giant"),
+			WithAbility(EntersWithComputedCounters(P1P1, func(g *Game, perm *Permanent) int {
+				total := 0
+				controller := perm.Controller
+				for _, p := range g.FilterBattlefield(IsCreature) {
+					if p.ID() == perm.ID() {
+						continue
+					}
+					if p.Controller != controller {
+						continue
+					}
+					total += p.CurrentToughness(g)
+				}
+				return total
+			})),
 			WithActivatedAbility(
 				FuncEffect(
 					"all creatures gain trample until end of turn",

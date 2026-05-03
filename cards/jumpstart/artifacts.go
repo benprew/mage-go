@@ -167,13 +167,44 @@ func registerArtifacts() {
 	// As this artifact enters, choose a creature type.
 	// Creature spells you cast of the chosen type cost {1} less to cast.
 	// At the beginning of your upkeep, look at the top card of your library. If it's a creature card of the chosen type, you may reveal it and put it into your hand.
-	// XXX: requires "as enters choose a creature subtype" replacement and the upkeep top-of-library reveal/draw mechanic.
 	Register("Herald's Horn", func() Card {
 		return NewArtifact("Herald's Horn", "{3}",
+			WithAbility(ETBChooseCreatureType(heraldsHornCreatureTypes)),
 			WithStaticAbility(ReduceSpellCostStatic(
 				SpellsAnd(SpellHasType(TypeCreature), SpellSubTypeMatchesChosen()),
 				FixedAmount(1), nil,
 			)),
+			WithAbility(BeginningOfUpkeepTrigger(FuncEffect(
+				"look at the top card of your library; if it is a creature card of the chosen type, you may reveal it and put it into your hand",
+				EffectProperties{Outcome: OutcomeBenefit},
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					src := g.FindPermanent(sourceID)
+					if src == nil || src.ChosenSubtype == "" {
+						return nil
+					}
+					you := g.GetPlayer(controller)
+					if you == nil {
+						return nil
+					}
+					top := g.RevealTopN(you, 1)
+					if len(top) == 0 {
+						return nil
+					}
+					card := top[0]
+					if !card.HasType(TypeCreature) || !card.HasSubType(src.ChosenSubtype) {
+						return nil
+					}
+					if !you.ChooseMayAbility("reveal top card and put it into your hand?") {
+						return nil
+					}
+					taken := g.RemoveTopN(you, 1)
+					if len(taken) == 0 {
+						return nil
+					}
+					you.AddToHand(taken[0])
+					return nil
+				},
+			), false)),
 		)
 	})
 
@@ -361,4 +392,44 @@ func registerArtifacts() {
 		)
 	})
 
+}
+
+// heraldsHornCreatureTypes is the menu of creature types offered to the
+// controller of Herald's Horn for its "as it enters, choose a creature type"
+// replacement. Magic does not actually constrain this choice — any creature
+// type is legal — but ETBChooseCreatureType requires a finite option list.
+// This list covers the common tribal types found across MTG; cards in the
+// Jumpstart pool whose tribes appear here exercise the cost reducer and the
+// upkeep reveal naturally.
+var heraldsHornCreatureTypes = []string{
+	"Advisor", "Aetherborn", "Ally", "Angel", "Antelope", "Ape", "Archer", "Archon",
+	"Artificer", "Assassin", "Assembly-Worker", "Atog", "Aurochs", "Avatar", "Azra",
+	"Badger", "Barbarian", "Basilisk", "Bat", "Bear", "Beast", "Beeble", "Berserker",
+	"Bird", "Blinkmoth", "Boar", "Bringer", "Brushwagg", "Camarid", "Camel", "Caribou",
+	"Carrier", "Cat", "Centaur", "Cephalid", "Chimera", "Citizen", "Cleric", "Cockatrice",
+	"Construct", "Coward", "Crab", "Crocodile", "Cyclops", "Dauthi", "Demon", "Deserter",
+	"Devil", "Dinosaur", "Djinn", "Dragon", "Drake", "Dreadnought", "Drone", "Druid",
+	"Dryad", "Dwarf", "Efreet", "Egg", "Elder", "Eldrazi", "Elemental", "Elephant",
+	"Elf", "Elk", "Eye", "Faerie", "Ferret", "Fish", "Flagbearer", "Fox", "Frog",
+	"Fungus", "Gargoyle", "Germ", "Giant", "Gnome", "Goat", "Goblin", "God", "Golem",
+	"Gorgon", "Graveborn", "Gremlin", "Griffin", "Hag", "Harpy", "Hellion", "Hippo",
+	"Hippogriff", "Homarid", "Homunculus", "Horror", "Horse", "Hound", "Human", "Hydra",
+	"Hyena", "Illusion", "Imp", "Incarnation", "Insect", "Jackal", "Jellyfish", "Juggernaut",
+	"Kavu", "Kirin", "Kithkin", "Knight", "Kobold", "Kor", "Kraken", "Lamia", "Lammasu",
+	"Leech", "Leviathan", "Lhurgoyf", "Licid", "Lizard", "Manticore", "Masticore", "Mercenary",
+	"Merfolk", "Metathran", "Minion", "Minotaur", "Mole", "Monger", "Mongoose", "Monk",
+	"Monkey", "Moonfolk", "Mouse", "Mutant", "Myr", "Mystic", "Naga", "Nautilus",
+	"Nephilim", "Nightmare", "Nightstalker", "Ninja", "Noggle", "Nomad", "Nymph", "Octopus",
+	"Ogre", "Ooze", "Orb", "Orc", "Orgg", "Ouphe", "Ox", "Oyster", "Pegasus", "Pentavite",
+	"Pest", "Phelddagrif", "Phoenix", "Pilot", "Pincher", "Pirate", "Plant", "Praetor",
+	"Prism", "Processor", "Rabbit", "Rat", "Rebel", "Reflection", "Rhino", "Rigger",
+	"Rogue", "Sable", "Salamander", "Samurai", "Sand", "Saproling", "Satyr", "Scarecrow",
+	"Scion", "Scorpion", "Scout", "Serf", "Serpent", "Servo", "Shade", "Shaman",
+	"Shapeshifter", "Sheep", "Siren", "Skeleton", "Slith", "Sliver", "Slug", "Snake",
+	"Soldier", "Soltari", "Spawn", "Specter", "Spellshaper", "Sphinx", "Spider", "Spike",
+	"Spirit", "Splinter", "Sponge", "Squid", "Squirrel", "Starfish", "Surrakar", "Survivor",
+	"Tetravite", "Thalakos", "Thopter", "Thrull", "Treefolk", "Trilobite", "Triskelavite",
+	"Troll", "Turtle", "Unicorn", "Vampire", "Vedalken", "Viashino", "Volver", "Wall",
+	"Warlock", "Warrior", "Weird", "Werewolf", "Whale", "Wizard", "Wolf", "Wolverine",
+	"Wombat", "Worm", "Wraith", "Wurm", "Yeti", "Zombie", "Zubera",
 }
