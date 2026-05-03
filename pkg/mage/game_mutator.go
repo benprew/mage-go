@@ -36,6 +36,7 @@ type GameReader interface {
 	GetDamageSources(uuid.UUID) map[uuid.UUID]bool
 	GetBlockedThisTurn(uuid.UUID) []uuid.UUID
 	GetInstantsCastThisTurn(uuid.UUID) int
+	UntappedLandsAtTurnStart(uuid.UUID) int
 	AllBattlefield() []*Permanent
 	GetResolvingTargets() []uuid.UUID
 	FindPermanentIncludingPhased(uuid.UUID) *Permanent
@@ -136,6 +137,13 @@ func (g *Game) GetBlockedThisTurn(blockerID uuid.UUID) []uuid.UUID {
 // GetInstantsCastThisTurn returns the number of instants the given player has cast this turn.
 func (g *Game) GetInstantsCastThisTurn(playerID uuid.UUID) int {
 	return g.instantsCastThisTurn[playerID]
+}
+
+// UntappedLandsAtTurnStart returns the number of untapped lands the given
+// player controlled at the start of the current turn (snapshot taken before
+// the untap step). Used by Power Surge.
+func (g *Game) UntappedLandsAtTurnStart(playerID uuid.UUID) int {
+	return g.untappedLandsAtTurnStart[playerID]
 }
 
 // --- Mutation methods on *Game ---

@@ -256,6 +256,31 @@ func (v countBattlefieldValue) Text() string {
 	return fmt.Sprintf("the number of %ss on the battlefield", noun)
 }
 
+// untappedLandsAtTurnStartValue resolves to the number of untapped lands the
+// selected player controlled at the start of the current turn (snapshot taken
+// before the untap step).
+type untappedLandsAtTurnStartValue struct {
+	who PlayerSelector
+}
+
+// UntappedLandsAtTurnStart creates a ValueSource that reads the snapshot of
+// untapped lands the selected player controlled at the very start of the
+// current turn — before the untap step ran. Used by Power Surge.
+func UntappedLandsAtTurnStart(who PlayerSelector) ValueSource {
+	return untappedLandsAtTurnStartValue{who: who}
+}
+
+func (v untappedLandsAtTurnStartValue) Resolve(g GameReader, sourceID, controller uuid.UUID, targets []uuid.UUID) int {
+	total := 0
+	for _, pid := range v.who.Select(g, sourceID, controller, targets) {
+		total += g.UntappedLandsAtTurnStart(pid)
+	}
+	return total
+}
+func (v untappedLandsAtTurnStartValue) Text() string {
+	return "the number of untapped lands " + v.who.Text() + " controlled at the beginning of this turn"
+}
+
 // countZoneValue is a ValueSource that counts cards in a player zone (hand, graveyard, library).
 type countZoneValue struct {
 	zone   Zone

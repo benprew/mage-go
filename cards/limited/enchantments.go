@@ -547,10 +547,9 @@ func registerEnchantments() {
 
 	Register("Power Surge", func() Card {
 		return NewEnchantment("Power Surge", "{R}{R}",
-			// TODO need to count number of land untapped at start of turn (before untap)
 			WithAbility(BeginningOfEachUpkeepTrigger(
 				DealDamageToPlayers(
-					CountBattlefield(SelectActivePlayer(), And(IsLand, Not(IsTapped))),
+					UntappedLandsAtTurnStart(SelectActivePlayer()),
 					SelectActivePlayer(),
 				), false)),
 		)

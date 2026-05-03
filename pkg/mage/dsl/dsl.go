@@ -541,6 +541,7 @@ var (
 	XValue                          = mage.XValue
 	EventAmountValue                = mage.EventAmountValue
 	CountBattlefield                = mage.CountBattlefield
+	UntappedLandsAtTurnStart        = mage.UntappedLandsAtTurnStart
 	HalfRoundUp                     = mage.HalfRoundUp
 	PlayerLifeValue                 = mage.PlayerLifeValue
 	Mul                             = mage.Mul

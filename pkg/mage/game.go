@@ -100,6 +100,10 @@ type Game struct {
 	// Creature deaths this turn (total count across all players)
 	creatureDeathsThisTurn int
 
+	// Number of untapped lands the active player controlled at the start of
+	// this turn (snapshot taken before the untap step). Read by Power Surge.
+	untappedLandsAtTurnStart map[uuid.UUID]int
+
 	// CleanupPriorityRounds counts how many times players have received priority
 	// during a cleanup step in this game. Normally no priority is given during
 	// cleanup (CR 514.3); it is only granted when a state-based action fires or
@@ -2090,6 +2094,20 @@ func (g *Game) doUntap() {
 	active := g.ActivePlayerObj()
 	// Island Sanctuary: clear protection at the start of the player's turn
 	g.effects.Rules.ClearSanctuary(active.PlayerID())
+
+	// Snapshot the active player's untapped land count before the untap loop
+	// runs (CR 502.1 happens at the very start of the turn). Power Surge and
+	// similar effects read this at upkeep.
+	if g.untappedLandsAtTurnStart == nil {
+		g.untappedLandsAtTurnStart = make(map[uuid.UUID]int)
+	}
+	count := 0
+	for _, p := range g.battlefield {
+		if p.Controller == active.PlayerID() && p.HasType(TypeLand) && !p.Tapped {
+			count++
+		}
+	}
+	g.untappedLandsAtTurnStart[active.PlayerID()] = count
 
 	landUntapLimit := g.effects.Rules.LandUntapMax
 	landsUntapped := 0

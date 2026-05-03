@@ -3,6 +3,8 @@ package limited
 import (
 	"testing"
 
+	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
 )
@@ -533,8 +535,34 @@ func TestPowerSurge(t *testing.T) {
 		}
 		g.StopAt(2, core.PrecombatMain)
 		g.Execute()
-		// PlayerB had 3 untapped lands -> takes 3 damage at upkeep.
+		// PlayerB had 3 untapped lands at the start of turn 2 -> 3 damage at upkeep.
 		g.AssertLife(gametest.PlayerB, 17)
+	})
+
+	t.Run("snapshot_taken_before_untap_step", func(t *testing.T) {
+		// Snapshot is taken at the start of the turn (before the untap step).
+		// If lands are tapped at end of the previous turn, they should not be
+		// counted even though they untap during the untap step.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Power Surge")
+		p1 := g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Plains")
+		p2 := g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Plains")
+		p3 := g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Plains")
+		for range 5 {
+			g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Forest")
+			g.AddCard(core.ZoneLibrary, gametest.PlayerB, "Forest")
+		}
+		// Stop just before turn 2's Untap step, then tap PlayerB's lands so the
+		// snapshot taken at the start of turn 2 sees zero untapped lands.
+		g.StopAt(2, core.Untap)
+		g.Execute()
+		for _, id := range []uuid.UUID{p1, p2, p3} {
+			g.FindPermanent(id).Tapped = true
+		}
+		g.RunStepWithPriority(core.Untap)
+		g.RunStepWithPriority(core.Upkeep)
+		// All Plains were tapped at the start of turn 2 -> snapshot is 0 -> 0 damage.
+		g.AssertLife(gametest.PlayerB, 20)
 	})
 }
 
