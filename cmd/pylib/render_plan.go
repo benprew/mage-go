@@ -150,6 +150,10 @@ type renderCardRef struct {
 	name     string
 	row      int32
 	perm     *interactive.PermanentState
+	// staticStatus holds status bits for non-permanent cards (e.g.
+	// exile face-down). For battlefield cards the bits are computed
+	// from PermanentState; for graveyard / hand the value is 0.
+	staticStatus int32
 }
 
 // cardIDEntry pairs the values previously held in two separate maps
@@ -474,6 +478,37 @@ func appendRenderCardsForZone(out []renderCardRef, player *interactive.PlayerSta
 			})
 		}
 		return out, nil
+	case renderZoneExile:
+		// Face-down exile that the snapshot viewer cannot inspect arrives
+		// with Name="" — emit a row=0 sentinel and the face-down status
+		// bit so the model sees "card present, identity unknown" instead
+		// of being silently dropped (which would break the count signal).
+		for idx, card := range player.Exile {
+			var row int32
+			if card.FaceDown && card.Name == "" {
+				row = 0
+			} else {
+				r, ok := scratch.cachedRowForName(card.Name)
+				if !ok {
+					return nil, &encodeError{code: mageEncodeErrEncode, message: "missing card embedding for " + card.Name}
+				}
+				row = r
+			}
+			ref := renderCardRef{
+				zone:    zone,
+				owner:   owner,
+				slotIdx: renderSlotIndex(owner, zone, idx),
+				uuidIdx: -1,
+				cardID:  card.ID,
+				name:    card.Name,
+				row:     row,
+			}
+			if card.FaceDown {
+				ref.staticStatus |= statusFaceDown
+			}
+			out = append(out, ref)
+		}
+		return out, nil
 	default:
 		return out, nil
 	}
@@ -538,14 +573,15 @@ func emitRenderZones(w *renderPlanWriter, state *apiGameState, playerIdx int, in
 	emitCardsForZone := func(owner, zone int32) {
 		w.write(opOpenZone, zone, owner)
 		for _, card := range index.cardsByZone[zoneOwnerSlot(zone, owner)] {
+			status := renderStatusBits(card.perm) | card.staticStatus
 			if cfg.dedupCardBodies {
 				// v2: ref the dict entry, no body splice. Per-card counter /
 				// attached_to are skipped to match the Python emitter, which
 				// does not emit them in dedup mode.
-				w.write(opPlaceCardRef, card.slotIdx, card.row, renderStatusBits(card.perm), card.uuidIdx)
+				w.write(opPlaceCardRef, card.slotIdx, card.row, status, card.uuidIdx)
 				continue
 			}
-			w.write(opPlaceCard, card.slotIdx, card.row, renderStatusBits(card.perm), card.uuidIdx)
+			w.write(opPlaceCard, card.slotIdx, card.row, status, card.uuidIdx)
 			if card.perm != nil {
 				for ct := core.CounterType(0); ct < core.NumCounters; ct++ {
 					count := card.perm.RawCounters[ct]
