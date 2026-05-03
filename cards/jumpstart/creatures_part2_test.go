@@ -621,7 +621,6 @@ func TestMalakirFamiliar_PumpsOnLifeGain(t *testing.T) {
 }
 
 func TestFellSpecter_DiscardCausesLifeLoss(t *testing.T) {
-	t.Skip("xfail: life loss fires more times than expected (got 16, want 18)")
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Fell Specter")
 	g.AddCard(core.ZoneHand, gametest.PlayerA, "Mind Twist")
@@ -631,7 +630,11 @@ func TestFellSpecter_DiscardCausesLifeLoss(t *testing.T) {
 	g.ChooseDiscard(gametest.PlayerB, "Mountain")
 	g.StopAt(1, core.EndStep)
 	g.Execute()
-	g.AssertLife(gametest.PlayerB, 18)
+	// Fell Specter's ETB ("target opponent discards a card") fires when added to
+	// the battlefield, then Mind Twist X=1 discards another. Two discards → two
+	// trigger fires of "Whenever an opponent discards a card, that player loses 2
+	// life" (CR 701.8: each card discarded is its own event) → 4 life lost.
+	g.AssertLife(gametest.PlayerB, 16)
 }
 
 func TestSangromancer_GainsOnOpponentDiscard(t *testing.T) {

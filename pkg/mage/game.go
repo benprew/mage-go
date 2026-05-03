@@ -1769,6 +1769,14 @@ func (g *Game) PutTriggersOnStack() {
 					if pt.event.SourceID != uuid.Nil {
 						obj.Targets = []uuid.UUID{pt.event.SourceID}
 					}
+				case EvtDeclaredAttacker:
+					// Pass the declared attacker's ID so effects can identify which
+					// creature attacked (Hellrider's "deal 1 damage to the player
+					// or planeswalker it's attacking").
+					obj.EventSourceID = pt.event.SourceID
+					if pt.event.SourceID != uuid.Nil {
+						obj.Targets = []uuid.UUID{pt.event.SourceID}
+					}
 				case EvtBecomesTarget:
 					// Pass the targeted object's ID and the spell/ability
 					// source so effects can either identify "this" (the target,

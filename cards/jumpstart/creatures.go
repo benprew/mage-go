@@ -3994,11 +3994,11 @@ func registerCreatures() {
 			WithAbility(NewTriggered(EvtDeclaredAttacker, false,
 				FuncEffect("deal 1 damage to the player or planeswalker it's attacking",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, _ uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 {
+					func(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
+						atkID := g.EventSourceID()
+						if atkID == uuid.Nil {
 							return nil
 						}
-						atkID := targets[0]
 						for _, group := range g.CombatGroups() {
 							if group.AttackerID == atkID {
 								if def := g.GetPlayer(group.DefenderID); def != nil {
@@ -4907,7 +4907,7 @@ func registerCreatures() {
 				AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
 				false,
 				IsCreature,
-			).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+			).AndConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
 				EventSourceNotSelf{},
 				EventSourceControlledByController{},
 			}})),

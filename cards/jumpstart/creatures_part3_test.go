@@ -316,9 +316,9 @@ func TestHellrider_DealsOneOnAttack(t *testing.T) {
 	g.Attack(3, gametest.PlayerA, "Hellrider", "Grizzly Bears")
 	g.StopAt(3, EndStep)
 	g.Execute()
-	// FIXME: Hellrider's "whenever a creature you control attacks" trigger does not appear
-	// to fire on declared attackers; only combat damage (3+2=5) is dealt.
-	g.AssertLife(gametest.PlayerB, 15)
+	// 3+2 combat damage + 1+1 from Hellrider's trigger (fires per declared attacker
+	// you control, including Hellrider itself).
+	g.AssertLife(gametest.PlayerB, 13)
 }
 
 func TestKrenkoMobBoss_CreatesGoblinsEqualToCount(t *testing.T) {
@@ -367,10 +367,17 @@ func TestLightningVisionary_ProwessOnNoncreature(t *testing.T) {
 	g.AssertPowerToughness(gametest.PlayerA, "Lightning Visionary", 3, 2)
 }
 
-// FIXME: Living Lightning's dies-trigger does not appear to return the instant from
-// graveyard to hand under this harness setup; investigate target-card-in-graveyard auto-pick.
 func TestLivingLightning_ReturnsInstantOnDeath(t *testing.T) {
-	t.Skip("FIXME: dies-trigger fails to return target instant/sorcery from graveyard")
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Living Lightning")
+	g.AddCard(ZoneGraveyard, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(ZoneHand, gametest.PlayerB, "Lightning Bolt")
+	g.AddCard(ZoneBattlefield, gametest.PlayerB, "Mountain")
+	g.CastSpell(2, PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Living Lightning")
+	g.StopAt(2, EndStep)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "Lightning Bolt", 1)
+	g.AssertGraveyardCount(gametest.PlayerA, "Living Lightning", 1)
 }
 
 func TestMinotaurSkullcleaver_BoostsOnETB(t *testing.T) {
@@ -536,8 +543,7 @@ func TestChampionOfLambholt_GainsCounterOnCreatureETB(t *testing.T) {
 	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Grizzly Bears")
 	g.StopAt(1, EndStep)
 	g.Execute()
-	// FIXME: trigger fires 3x on a single creature ETB; investigate trigger-event multiplication
-	g.AssertCounterCount(gametest.PlayerA, "Champion of Lambholt", P1P1, 3)
+	g.AssertCounterCount(gametest.PlayerA, "Champion of Lambholt", P1P1, 1)
 }
 
 func TestRapaciousDragon_CreatesTwoTreasuresOnETB(t *testing.T) {
