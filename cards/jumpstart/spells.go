@@ -1661,9 +1661,6 @@ func registerSpells() {
 	// Sorcery
 	// This spell costs {2} less to cast if it targets a Dinosaur you control.
 	// Put a +1/+1 counter on target creature you control. Then that creature fights target creature you don't control.
-	// XXX: cost-reduction-on-target piece is not wired — SpellCondition runs
-	// before targets are chosen, so "if it targets a Dinosaur you control" has
-	// no hook. Counter + fight + multi-target are implemented exactly.
 	Register("Savage Stomp", func() Card {
 		return NewSorcery("Savage Stomp", "{2}{G}",
 			NewMultiTargetSpell(
@@ -1681,6 +1678,21 @@ func registerSpells() {
 					},
 				),
 			),
+			WithTargetConditionalCostReduction(2, func(g *Game, controller uuid.UUID, c Card, targets []uuid.UUID) bool {
+				for _, id := range targets {
+					perm := g.FindPermanent(id)
+					if perm == nil {
+						continue
+					}
+					if perm.Controller != controller {
+						continue
+					}
+					if perm.Card.HasSubType("Dinosaur") {
+						return true
+					}
+				}
+				return false
+			}),
 		)
 	})
 

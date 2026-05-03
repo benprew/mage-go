@@ -3929,12 +3929,6 @@ func registerCreatures() {
 	// Legendary Creature — Elder Dinosaur
 	// 6/6
 	// Whenever Etali attacks, exile the top card of each player's library, then you may cast any number of spells from among those cards without paying their mana costs.
-	// XXX: CastCardFromZoneWithoutPaying / findCardInZone enforces
-	// owner == playerID for exile, so the controller cannot cast cards owned
-	// by an opponent. Etali's exile from each player's library leaves
-	// opponent-owned cards uncastable. Engine needs an "ignore owner" mode
-	// (or per-card cast permission decoupled from ownership) for this and any
-	// other "cast from exile" effects targeting an opponent's library.
 	Register("Etali, Primal Storm", func() Card {
 		return NewCreature("Etali, Primal Storm", "{4}{R}{R}", 6, 6,
 			WithSubTypes("Elder", "Dinosaur"),
@@ -3966,14 +3960,11 @@ func registerCreatures() {
 							if ec == nil || ec.Card.HasType(TypeLand) {
 								continue
 							}
-							if ec.Card.Owner() != controller {
-								continue
-							}
 							if !ctrl.ChooseMayAbility("cast " + ec.Card.Name() + " without paying its mana cost") {
 								continue
 							}
 							castTargets := gatherCastTargetsFromZone(g, ctrl, ec.Card)
-							_ = g.CastCardFromZoneWithoutPaying(controller, cid, ZoneExile, castTargets, 0)
+							_ = g.CastCardFromExileWithoutPaying(controller, cid, castTargets, 0)
 						}
 						return nil
 					}),

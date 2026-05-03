@@ -733,9 +733,23 @@ func registerEnchantments() {
 	// Whenever you cast a creature spell, create a 3/3 green Beast creature token.
 	// Whenever you cast a noncreature spell, put three +1/+1 counters on target creature you control.
 	// Landfall — Whenever a land you control enters, you gain 3 life.
-	// XXX: requires landfall + cast-creature-spell + cast-noncreature-spell modal triggers with target
 	Register("Primeval Bounty", func() Card {
-		return NewEnchantment("Primeval Bounty", "{5}{G}")
+		noncreatureCard := NewCardFilter("noncreature card", func(c Card) bool {
+			return !c.HasType(TypeCreature)
+		})
+		return NewEnchantment("Primeval Bounty", "{5}{G}",
+			WithAbility(WheneverYouCastSpellTrigger(
+				CreateColoredToken("Beast", 3, 3, []Color{Green}, []CardType{TypeCreature}, []string{"Beast"}),
+				false, IsCreatureCard,
+			)),
+			WithAbility(WheneverYouCastSpellTrigger(
+				AddCounters(P1P1, Fixed(3)).Targeting(ToTarget()),
+				false, noncreatureCard,
+			).AddTarget(TargetCreatureYouControl())),
+			WithAbility(WheneverLandEntersBattlefieldTrigger(
+				GainLife(3), false,
+			).AndConditionData(EventSourceControlledByController{})),
+		)
 	})
 
 	// Rhystic Study {2}{U}

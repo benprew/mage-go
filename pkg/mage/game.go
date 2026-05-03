@@ -2331,7 +2331,7 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	// below zero. Covers static-source reducers (Warden of Evos Isle,
 	// Dragonlord's Servant, Herald's Horn) and intrinsic self-reducers
 	// (Bone Picker, Cryptic Serpent, Ghalta).
-	if r := computeConditionalCostReduction(g, playerID, card, mc.Generic); r > 0 {
+	if r := computeConditionalCostReduction(g, playerID, card, mc.Generic, targets); r > 0 {
 		mc.Generic -= r
 	}
 
