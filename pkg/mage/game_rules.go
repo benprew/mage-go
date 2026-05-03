@@ -33,6 +33,9 @@ type GameRules struct {
 	UncounterableFilters []uncounterableEntry        // static "can't be countered" filters (Allosaurus Shepherd, Vexing Shusher)
 	FlashGrants          []flashGrantEntry            // continuous "you may cast X spells as though they had flash" grants (Rattlechains, Vedalken Orrery, Leyline of Anticipation)
 	cantCastSpells       map[uuid.UUID]bool           // players forbidden from casting spells this Apply() cycle (Angelic Arbiter, etc.)
+	revealedTopCard      map[uuid.UUID]bool           // players playing with top card of library revealed (Future Sight, Oracle of Mul Daya). Per Apply() cycle.
+	playLandsFromZones   map[uuid.UUID]map[Zone]bool  // player -> zones (other than hand) from which lands may be played. Per Apply() cycle.
+	additionalLandPlays  map[uuid.UUID]int            // per-cycle additional land-play allowance from static abilities (Azusa, Oracle of Mul Daya).
 }
 
 // flashGrantEntry holds a continuous flash-permission grant. Player is the
@@ -86,6 +89,73 @@ func (r *GameRules) ResetPerCycle() {
 	r.UncounterableFilters = nil
 	r.FlashGrants = nil
 	r.cantCastSpells = nil
+	r.revealedTopCard = nil
+	r.playLandsFromZones = nil
+	r.additionalLandPlays = nil
+}
+
+// AddRevealedTopCard marks playerID as playing with the top card of their
+// library revealed for this Apply() cycle. Cleared by ResetPerCycle.
+func (r *GameRules) AddRevealedTopCard(playerID uuid.UUID) {
+	if r.revealedTopCard == nil {
+		r.revealedTopCard = make(map[uuid.UUID]bool)
+	}
+	r.revealedTopCard[playerID] = true
+}
+
+// IsTopCardRevealed reports whether the given player is currently playing
+// with the top card of their library revealed.
+func (r *GameRules) IsTopCardRevealed(playerID uuid.UUID) bool {
+	return r.revealedTopCard[playerID]
+}
+
+// AddPlayLandsFromZone permits playerID to play lands from the given zone
+// (in addition to their hand) for this Apply() cycle. Cleared by
+// ResetPerCycle.
+func (r *GameRules) AddPlayLandsFromZone(playerID uuid.UUID, zone Zone) {
+	if r.playLandsFromZones == nil {
+		r.playLandsFromZones = make(map[uuid.UUID]map[Zone]bool)
+	}
+	zones := r.playLandsFromZones[playerID]
+	if zones == nil {
+		zones = make(map[Zone]bool)
+		r.playLandsFromZones[playerID] = zones
+	}
+	zones[zone] = true
+}
+
+// CanPlayLandsFromZone reports whether playerID may currently play lands
+// from the given zone. Hand is always permitted; other zones require an
+// active continuous-effect grant.
+func (r *GameRules) CanPlayLandsFromZone(playerID uuid.UUID, zone Zone) bool {
+	if zone == ZoneHand {
+		return true
+	}
+	zones := r.playLandsFromZones[playerID]
+	if zones == nil {
+		return false
+	}
+	return zones[zone]
+}
+
+// AddAdditionalLandPlay registers an additional land play allowance for the
+// player from a static ability for this Apply() cycle. This stacks with
+// per-turn grants from spells (GrantExtraLandPlay) and is recomputed each
+// Apply() so it auto-clears with the source.
+func (r *GameRules) AddAdditionalLandPlay(playerID uuid.UUID, n int) {
+	if n <= 0 {
+		return
+	}
+	if r.additionalLandPlays == nil {
+		r.additionalLandPlays = make(map[uuid.UUID]int)
+	}
+	r.additionalLandPlays[playerID] += n
+}
+
+// AdditionalLandPlays returns the per-cycle static additional land-play
+// allowance for the given player.
+func (r *GameRules) AdditionalLandPlays(playerID uuid.UUID) int {
+	return r.additionalLandPlays[playerID]
 }
 
 // AddCantCastSpells registers a continuous "this player can't cast spells"

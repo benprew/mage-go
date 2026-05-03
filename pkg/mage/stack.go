@@ -50,6 +50,61 @@ type StackObject struct {
 	// Game.ResolvingCastZone() so triggers can express "if you cast it from
 	// your hand" / "from the graveyard" / etc.
 	CastZone Zone
+
+	// CastContext snapshots cast-time state used by effects whose Oracle
+	// text references "as you cast this spell" (CR 608.2g). Populated when
+	// a spell is pushed onto the stack and read during resolution via
+	// Game.ResolvingCastContext(). Nil for activated/triggered abilities
+	// and for spell stack objects whose cast path predates the snapshot
+	// machinery; callers should treat nil as empty.
+	CastContext *CastContext
+}
+
+// CastContext captures the cast-time snapshot mandated by CR 608.2g for
+// effects that reference values "as you cast this spell". Fields are
+// intentionally minimal — extend as new cards require.
+//
+// Populated by the cast pipeline immediately after additional costs have
+// been paid (so reveal-style additional costs make it into the snapshot)
+// and immediately before the StackObject is pushed.
+type CastContext struct {
+	// ControllerSubtypesAtCast records every subtype present on a permanent
+	// the spell's controller controlled at the moment the spell went on the
+	// stack. Used by cards like Draconic Roar ("controlled a Dragon as you
+	// cast this spell"): a Dragon leaving between cast and resolution must
+	// not flip the condition false.
+	ControllerSubtypesAtCast map[string]bool
+
+	// RevealedAtCast lists cards revealed as part of paying additional
+	// costs for this spell (e.g. RevealFromHandCost). Used by cards like
+	// Draconic Roar ("If you revealed a Dragon card... as you cast this
+	// spell"). Card references are LKI: even if the card later changes
+	// zones, this slice continues to point at the snapshotted Card.
+	RevealedAtCast []Card
+}
+
+// HasControlledSubtypeAtCast is a small helper for the common
+// "controlled an X as you cast this spell" predicate. Returns false if
+// ctx is nil.
+func (ctx *CastContext) HasControlledSubtypeAtCast(subtype string) bool {
+	if ctx == nil || ctx.ControllerSubtypesAtCast == nil {
+		return false
+	}
+	return ctx.ControllerSubtypesAtCast[subtype]
+}
+
+// RevealedSubtypeAtCast reports whether any card revealed as an additional
+// cost for this spell had the given subtype. Returns false if ctx is nil.
+func (ctx *CastContext) RevealedSubtypeAtCast(subtype string) bool {
+	if ctx == nil {
+		return false
+	}
+	for _, c := range ctx.RevealedAtCast {
+		if c != nil && c.HasSubType(subtype) {
+			return true
+		}
+	}
+	return false
 }
 
 // Stack represents the game stack.

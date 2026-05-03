@@ -721,6 +721,33 @@ func TestSoulOfTheHarvest_TokenETBDoesNotDraw(t *testing.T) {
 	g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 0)
 }
 
+// Soul of the Harvest's own ETB does not satisfy "another creature".
+func TestSoulOfTheHarvest_OwnETBDoesNotDraw(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest", 6)
+	g.AddCard(ZoneHand, gametest.PlayerA, "Soul of the Harvest")
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Hill Giant")
+	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Soul of the Harvest")
+	g.StopAt(1, PostcombatMain)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Soul of the Harvest", 1)
+	g.AssertHandCount(gametest.PlayerA, "Hill Giant", 0)
+}
+
+// Opponent's nontoken creature entering does not trigger PlayerA's Soul.
+func TestSoulOfTheHarvest_OpponentsCreatureDoesNotDraw(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Soul of the Harvest")
+	g.AddCard(ZoneBattlefield, gametest.PlayerB, "Forest", 4)
+	g.AddCard(ZoneHand, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Hill Giant")
+	g.CastSpell(2, PrecombatMain, gametest.PlayerB, "Grizzly Bears")
+	g.StopAt(2, PostcombatMain)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
+	g.AssertHandCount(gametest.PlayerA, "Hill Giant", 0)
+}
+
 // Selvala — entering creature you control has greatest power: you draw.
 func TestSelvalaHeartOfTheWilds_YouDrawOnYourBigger(t *testing.T) {
 	g := gametest.NewTestGame(t)

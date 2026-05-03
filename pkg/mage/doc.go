@@ -540,6 +540,36 @@ the map back, skipping targets that became illegal — only their share is
 wasted, the remaining targets still take their assigned damage. Test code
 scripts the distribution with TestGame.ChooseDamageDistribution(player, map).
 
+# Cast-Time Snapshot (CR 608.2g)
+
+Some spells reference values that are fixed when the spell is put on the
+stack rather than re-queried at resolution. Oracle text cues are phrases
+like "as you cast this spell" or "as ~ enters" — for example, Draconic
+Roar's "If you revealed a Dragon card or controlled a Dragon as you cast
+this spell". Per CR 608.2g, those values are locked in at cast time;
+state changes between cast and resolution must not flip the condition.
+
+The cast pipeline writes a [CastContext] onto the [StackObject] when the
+spell goes on the stack, populated immediately after additional costs
+have been paid. Effects read it back during resolution via
+[Game.ResolvingCastContext]:
+
+	ctx := g.ResolvingCastContext()
+	if ctx.HasControlledSubtypeAtCast("Dragon") || ctx.RevealedSubtypeAtCast("Dragon") {
+	    // bonus damage half — fixed at cast time, immune to in-response removal
+	}
+
+[CastContext] is intentionally minimal — extend with new fields as cards
+require. Currently captured:
+
+  - ControllerSubtypesAtCast: every subtype the controller had on a
+    permanent at cast time (used by "controlled an X as you cast..." riders).
+  - RevealedAtCast: cards revealed by [RevealFromHandCost] payments paid
+    for this spell (used by "revealed an X as you cast..." riders).
+
+[CastContext] is nil for activated and triggered abilities; helper methods
+(HasControlledSubtypeAtCast, RevealedSubtypeAtCast) are nil-safe.
+
 # PermanentSelector — Source vs Target
 
 Effects that can apply to either the source permanent or a resolved target use
@@ -1196,6 +1226,8 @@ Read methods (GameReader):
 	XValue() int
 	ModeValue() int
 	GetResolvingCard() Card
+	ResolvingCastZone() Zone
+	ResolvingCastContext() *CastContext
 	FindStackObject(uuid.UUID) *StackObject
 	CombatGroups() []*CombatGroup
 

@@ -180,6 +180,75 @@ func TestDraconicRoar_NoDragonNoBonus(t *testing.T) {
 	g.AssertLife(gametest.PlayerB, 20)
 }
 
+// TestDraconicRoar_ControlledDragonAtCastDealsExtra verifies that a Dragon
+// the caster controls at cast time triggers the bonus damage on resolution.
+// PlayerA declines the optional reveal — the controlled-Dragon half alone
+// must satisfy the condition.
+func TestDraconicRoar_ControlledDragonAtCastDealsExtra(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.SetLife(gametest.PlayerB, 20)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 2)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Dragon Hatchling")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Draconic Roar")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	tpA := g.GetPlayer(gametest.PlayerA)
+	tpA.QueueMayAbilityChoices(false) // decline optional reveal
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Draconic Roar", "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+	g.AssertLife(gametest.PlayerB, 17)
+}
+
+// TestDraconicRoar_ControlledDragonLeavesBeforeResolution verifies CR 608.2g:
+// the "controlled a Dragon as you cast this spell" condition is fixed at
+// cast time, so a Dragon that is killed in response between cast and
+// resolution still satisfies the condition. PlayerA's Dragon Hatchling
+// (0/1) is killed by PlayerB's Lightning Bolt cast in response to
+// Draconic Roar; when Draconic Roar resolves it must still deal the
+// bonus damage to PlayerB.
+func TestDraconicRoar_ControlledDragonLeavesBeforeResolution(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.SetLife(gametest.PlayerB, 20)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 2)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Dragon Hatchling")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Draconic Roar")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	tpA := g.GetPlayer(gametest.PlayerA)
+	tpA.QueueMayAbilityChoices(false) // decline optional reveal — only the controlled half should matter
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Draconic Roar", "Grizzly Bears")
+	g.CastInResponseTo(gametest.PlayerB, "Lightning Bolt", "Dragon Hatchling")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Dragon Hatchling died to the Bolt before Draconic Roar resolved.
+	g.AssertGraveyardCount(gametest.PlayerA, "Dragon Hatchling", 1)
+	// Grizzly Bears died to Draconic Roar's 3 damage.
+	g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+	// Bonus damage from cast-time-snapshotted "controlled a Dragon" still applied.
+	g.AssertLife(gametest.PlayerB, 17)
+}
+
+// TestDraconicRoar_RevealedDragonOnlyNoBattlefieldDragon verifies the
+// reveal-half of the condition independently: PlayerA controls no Dragon
+// but reveals a Dragon card from hand as the optional additional cost,
+// triggering the bonus damage.
+func TestDraconicRoar_RevealedDragonOnlyNoBattlefieldDragon(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.SetLife(gametest.PlayerB, 20)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Draconic Roar")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Shivan Dragon")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Draconic Roar", "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+	g.AssertHandCount(gametest.PlayerA, "Shivan Dragon", 1)
+	g.AssertLife(gametest.PlayerB, 17)
+}
+
 // TestExplore_AllowsSecondLand verifies that after Explore resolves, the
 // active player's land-play allowance is bumped to 2. The harness's auto-
 // land-play loop then plays both Forests in the same main phase.

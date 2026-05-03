@@ -26,6 +26,7 @@ type GameReader interface {
 	EventSourceID() uuid.UUID
 	GetResolvingCard() Card
 	ResolvingCastZone() Zone
+	ResolvingCastContext() *CastContext
 	FindStackObject(uuid.UUID) *StackObject
 	CombatGroups() []*CombatGroup
 	CombatGroupFor(uuid.UUID) *CombatGroup
@@ -79,6 +80,45 @@ func (g *Game) GetResolvingCard() Card { return g.resolvingCard }
 // "if you cast it from your hand"/"from your graveyard" conditions, including
 // ETB triggers that fire while PutOnBattlefield is in flight.
 func (g *Game) ResolvingCastZone() Zone { return g.resolvingCastZone }
+
+// ResolvingCastContext returns the cast-time snapshot of the spell currently
+// being resolved (CR 608.2g). Returns nil when there is no resolving spell
+// or the resolving stack object is an ability. Effects that reference
+// cast-time state ("as you cast this spell") should consult this rather
+// than re-querying live state.
+func (g *Game) ResolvingCastContext() *CastContext { return g.resolvingCastContext }
+
+// snapshotCastContext builds a CastContext for a spell about to be pushed
+// onto the stack by the controller with playerID. Captures the controller's
+// permanent subtypes (CR 608.2g) and consumes any pending lastCostReveal
+// recorded by additional costs paid earlier in the cast pipeline.
+//
+// Must be called AFTER additional costs have been paid so that reveal-style
+// costs are visible in the snapshot.
+func (g *Game) snapshotCastContext(playerID uuid.UUID) *CastContext {
+	ctx := &CastContext{
+		ControllerSubtypesAtCast: make(map[string]bool),
+	}
+	for _, perm := range g.AllBattlefield() {
+		if perm == nil || perm.Controller != playerID || perm.FaceDown {
+			continue
+		}
+		subs := perm.Card.SubTypes()
+		if len(perm.SubTypeOverride) > 0 {
+			subs = perm.SubTypeOverride
+		}
+		for _, st := range subs {
+			ctx.ControllerSubtypesAtCast[st] = true
+		}
+		for _, st := range perm.SubTypeAdditions {
+			ctx.ControllerSubtypesAtCast[st] = true
+		}
+	}
+	if g.lastCostReveal != nil {
+		ctx.RevealedAtCast = append(ctx.RevealedAtCast, g.lastCostReveal)
+	}
+	return ctx
+}
 
 // FindStackObject finds a stack object by its source card ID.
 func (g *Game) FindStackObject(id uuid.UUID) *StackObject {

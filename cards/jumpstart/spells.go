@@ -530,10 +530,8 @@ func registerSpells() {
 	// Instant
 	// As an additional cost to cast this spell, you may reveal a Dragon card from your hand.
 	// Draconic Roar deals 3 damage to target creature. If you revealed a Dragon card or controlled a Dragon as you cast this spell, Draconic Roar deals 3 damage to that creature's controller.
-	// XXX: the "controlled a Dragon as you cast this spell" half is checked at
-	// resolution rather than snapshotted at cast — engine has no cast-time
-	// snapshot hook, so a Dragon that leaves between cast and resolution is
-	// not counted. The optional reveal half is implemented exactly.
+	// CR 608.2g: both halves of the bonus condition are evaluated against
+	// the cast-time snapshot (CastContext), not live state at resolution.
 	Register("Draconic Roar", func() Card {
 		dragonCard := NewCardFilter("Dragon card", func(c Card) bool {
 			return c.HasSubType("Dragon")
@@ -547,15 +545,16 @@ func registerSpells() {
 						g.ClearOptionalCostPaid(sourceID)
 						return nil
 					}
-					revealed := g.LastCostOptionalPaid(sourceID)
-					controlsDragon := g.AnyBattlefield(And(ControlledBy(controller), IsCreature, HasSubType("Dragon")))
+					ctx := g.ResolvingCastContext()
+					revealedDragon := ctx.RevealedSubtypeAtCast("Dragon")
+					controlledDragon := ctx.HasControlledSubtypeAtCast("Dragon")
 					perm := g.FindPermanent(targets[0])
 					if perm == nil {
 						g.ClearOptionalCostPaid(sourceID)
 						return nil
 					}
 					g.DealDamageToPermanent(perm, 3, sourceID)
-					if revealed || controlsDragon {
+					if revealedDragon || controlledDragon {
 						if owner := g.GetPlayer(perm.Controller); owner != nil {
 							g.DealDamageToPlayer(owner, 3, sourceID)
 						}

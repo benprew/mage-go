@@ -5504,10 +5504,14 @@ func registerCreatures() {
 	// You may play an additional land on each of your turns.
 	// Play with the top card of your library revealed.
 	// You may play lands from the top of your library.
-	// XXX: requires play-lands-from-top-of-library and library top reveal infrastructure
 	Register("Oracle of Mul Daya", func() Card {
 		return NewCreature("Oracle of Mul Daya", "{3}{G}", 2, 2,
 			WithSubTypes("Elf", "Shaman"),
+			WithStaticAbility(
+				AdditionalLandPlayStatic(),
+				RevealTopCardOfLibrary(),
+				PlayLandsFromTopOfLibrary(),
+			),
 		)
 	})
 
@@ -5836,10 +5840,6 @@ func registerCreatures() {
 	// 6/6
 	// Trample
 	// Whenever another nontoken creature you control enters, you may draw a card.
-	// XXX: nontoken filter inside trigger-condition closure suffers from the
-	// same engine bug as Lathliss: token detection on EvtEntersBattlefield
-	// event source is unreliable, so this trigger may also fire for token
-	// creatures entering. Behaves correctly for the common nontoken-only path.
 	Register("Soul of the Harvest", func() Card {
 		nontokenCreature := NewPermanentFilter("nontoken creature", func(p *Permanent, _ *Game) bool {
 			return p.HasType(TypeCreature) && !p.Card.IsToken()
