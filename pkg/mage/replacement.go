@@ -817,9 +817,6 @@ func (r *etbAdditionalCountersReplacement) Matches(a Action, g GameReader) bool 
 	if act.CounterType() != r.counterType {
 		return false
 	}
-	if act.Amount() <= 0 {
-		return false
-	}
 	if r.excludeSelf && act.PermanentID() == r.sourceID {
 		return false
 	}
@@ -846,4 +843,35 @@ func (r *etbAdditionalCountersReplacement) IsActive(g GameReader) bool {
 func (r *etbAdditionalCountersReplacement) Clone() ReplacementEffect {
 	c := *r
 	return &c
+}
+
+// etbAdditionalCounterTypesFor returns the unique set of counter types from
+// active etbAdditionalCountersReplacement effects whose filter matches the
+// entering permanent. Used by PutOnBattlefield (CR 614.1c) to synthesize
+// AddCountersActions for permanents with no native "enters with" clause so
+// effects like Oona's Blackguard can still place counters.
+func (g *Game) etbAdditionalCounterTypesFor(perm *Permanent) []CounterType {
+	seen := map[CounterType]bool{}
+	var out []CounterType
+	for _, r := range g.effects.replacements {
+		etb, ok := r.(*etbAdditionalCountersReplacement)
+		if !ok {
+			continue
+		}
+		if !etb.IsActive(g) {
+			continue
+		}
+		if etb.excludeSelf && perm.ID() == etb.sourceID {
+			continue
+		}
+		if !etb.filter.IsZero() && !etb.filter.Match(perm, g) {
+			continue
+		}
+		if seen[etb.counterType] {
+			continue
+		}
+		seen[etb.counterType] = true
+		out = append(out, etb.counterType)
+	}
+	return out
 }

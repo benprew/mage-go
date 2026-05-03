@@ -637,6 +637,24 @@ func TestFellSpecter_DiscardCausesLifeLoss(t *testing.T) {
 	g.AssertLife(gametest.PlayerB, 16)
 }
 
+func TestOonasBlackguard_AdditionalCounterAndCombatDiscard(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Oona's Blackguard")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Corpse Hauler") // Human Rogue 2/1
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Mountain", 2)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Corpse Hauler")
+	// Corpse Hauler enters with an additional +1/+1 counter (3/2), attacks PlayerB
+	// for 3 combat damage. The combat-damage trigger fires once for each
+	// +1/+1-countered creature dealing damage to that player → PlayerB discards 1.
+	g.Attack(3, gametest.PlayerA, "Corpse Hauler")
+	g.ChooseDiscard(gametest.PlayerB, "Mountain")
+	g.StopAt(3, core.EndStep)
+	g.Execute()
+	g.AssertCounterCount(gametest.PlayerA, "Corpse Hauler", core.P1P1, 1)
+	g.AssertHandCount(gametest.PlayerB, "Mountain", 1)
+}
+
 func TestSangromancer_GainsOnOpponentDiscard(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sangromancer")

@@ -2915,11 +2915,54 @@ func registerCreatures() {
 	// Flying
 	// Each other Rogue creature you control enters with an additional +1/+1 counter on it.
 	// Whenever a creature you control with a +1/+1 counter on it deals combat damage to a player, that player discards a card.
-	// XXX: AddETBAdditionalCounters only augments an existing AddCountersAction; a creature entering with no base counters never triggers the replacement, so the primitive cannot wire this card. Also need a "creature-you-control-with-+1/+1 counter deals combat damage to a player" trigger for the second ability.
 	Register("Oona's Blackguard", func() Card {
+		rogueYouControl := NewPermanentFilter("Rogue creature", func(p *Permanent, _ *Game) bool {
+			return p.HasType(TypeCreature) && p.HasSubType("Rogue")
+		})
 		return NewCreature("Oona's Blackguard", "{1}{B}", 1, 1,
 			WithSubTypes("Faerie", "Rogue"),
 			WithKeyword(Flying),
+			WithAbility(ETBEffect(FuncEffect(
+				"each other Rogue creature you control enters with an additional +1/+1 counter on it",
+				EffectProperties{},
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					g.AddETBAdditionalCounters(sourceID, P1P1, 1, rogueYouControl, true)
+					return nil
+				},
+			))),
+			WithAbility(NewTriggered(EvtCombatDamageDealt, false,
+				FuncEffect("each creature you control with a +1/+1 counter that dealt combat damage to that player makes them discard a card",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						recipID := g.EventSourceID()
+						if recipID == uuid.Nil {
+							return nil
+						}
+						recip := g.GetPlayer(recipID)
+						if recip == nil {
+							return nil
+						}
+						sources := g.CombatDamageSourcesThisStep(controller, recipID)
+						discards := 0
+						for srcID := range sources {
+							src := g.FindPermanent(srcID)
+							if src == nil || src.Controller != controller {
+								continue
+							}
+							if src.Counters[P1P1] == 0 {
+								continue
+							}
+							discards++
+						}
+						for i := 0; i < discards; i++ {
+							chosen := recip.ChooseCardsFromHand(1, "discard", g)
+							for _, c := range chosen {
+								g.PlayerDiscard(recip, c.ID())
+							}
+						}
+						return nil
+					}),
+			).SetConditionData(EventPlayerIsController{})),
 		)
 	})
 

@@ -560,9 +560,33 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 	}
 
 	// Add fixed N counters if configured (replacement effect, not a trigger).
+	baseCtrTypes := map[CounterType]bool{}
 	for _, a := range perm.RuntimeAbilities {
 		if nc, ok := a.(*EntersWithNCountersAbility); ok {
 			g.AddCountersWithReplacement(perm, nc.CounterType, nc.Count, perm.ID(), true)
+			baseCtrTypes[nc.CounterType] = true
+		}
+	}
+	for _, a := range perm.RuntimeAbilities {
+		if xc, ok := a.(*EntersWithXCountersAbility); ok {
+			baseCtrTypes[xc.CounterType] = true
+		}
+	}
+
+	// CR 614.1c: "enters with N counters" effects from other sources (Oona's
+	// Blackguard, Winding Constrictor) are self-replacements applied during the
+	// ETB process even when the entering permanent has no native "enters with"
+	// clause for that counter type. Synthesize a 0-amount AddCountersAction so
+	// the registered etbAdditionalCountersReplacement effects can intercept it
+	// (CR 614.5: multiple such effects combine into a single application).
+	for _, ct := range g.etbAdditionalCounterTypesFor(perm) {
+		if baseCtrTypes[ct] {
+			continue
+		}
+		action := NewAddCountersAction(perm.ID(), perm.ID(), ct, 0, true)
+		result := g.effects.ApplyReplacements(action, g)
+		if aca, ok := result.(*AddCountersAction); ok && aca.Amount() > 0 {
+			perm.AddCounter(aca.CounterType(), aca.Amount())
 		}
 	}
 
@@ -1777,6 +1801,17 @@ func (g *Game) PutTriggersOnStack() {
 					if pt.event.SourceID != uuid.Nil {
 						obj.Targets = []uuid.UUID{pt.event.SourceID}
 					}
+				case EvtCombatDamageDealt:
+					// Pass the damaging controller and recipient via the dedicated
+					// event-context fields (EventSourceID = recipient, EventAmount
+					// = total damage). We deliberately do NOT auto-bind Targets[0]
+					// here — DrawCards-style effects fall back to controller when
+					// Targets is empty, which is the correct behavior for "draw a
+					// card" triggers (Keeper of Fables). Per-step triggers that
+					// need the recipient (Oona's Blackguard) read it via
+					// g.EventSourceID().
+					obj.EventSourceID = pt.event.TargetID
+					obj.EventAmount = pt.event.Amount
 				case EvtBecomesTarget:
 					// Pass the targeted object's ID and the spell/ability
 					// source so effects can either identify "this" (the target,
