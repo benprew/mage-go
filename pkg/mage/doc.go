@@ -1463,7 +1463,11 @@ All live in replacement.go:
 	minimumLifeReplacement             — caps damage so life stays >= 1 (cycle)
 	skipDrawReplacement                — skips next normal draw
 	drawReplacementEffect              — Aladdin's Lamp draw replacement
-	damagePreventionRuleReplacement    — from/to PermanentFilter-based prevention (cycle)
+	damagePreventionRuleReplacement    — from/to PermanentFilter-based prevention (cycle).
+	                                      Supports combatOnly / noncombatOnly flags and a
+	                                      toPlayerID gate for "damage dealt to <player>"
+	                                      (e.g. Blessed Sanctuary). See
+	                                      PreventNoncombatDamageToControllerAndCreatures.
 	counterDoublerReplacement          — doubles +1/+1 (or other) counter placements on
 	                                      matching permanents (CR 614.1c)
 	etbAdditionalCountersReplacement   — adds N more counters when matching permanents

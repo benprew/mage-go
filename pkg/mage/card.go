@@ -60,6 +60,13 @@ type BaseCard struct {
 // NewPermanent uses these to populate the permanent's baseAttrs.
 func (c *BaseCard) AttrSeeds() map[Attr]int { return c.attrSeeds }
 
+// SetColorOverride sets the colors of a card directly, bypassing mana cost
+// derivation. Used by token-creation paths that produce colored tokens
+// (CreateColoredToken).
+func (c *BaseCard) SetColorOverride(colors []Color) {
+	c.colorOverride = append([]Color(nil), colors...)
+}
+
 func (c *BaseCard) ID() uuid.UUID           { return c.id }
 func (c *BaseCard) Name() string            { return c.name }
 func (c *BaseCard) ManaCost() ManaCost      { return c.manaCost }

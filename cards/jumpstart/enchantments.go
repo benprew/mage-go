@@ -113,15 +113,12 @@ func registerEnchantments() {
 	// Enchantment
 	// Prevent all noncombat damage that would be dealt to you and creatures you control.
 	// Whenever a nontoken creature you control enters, create a 2/2 white Unicorn creature token.
-	// XXX: first clause ("Prevent all noncombat damage...") is not implemented.
-	// damagePreventionRule supports combatOnly but has no NoncombatOnly flag,
-	// and PreventDamageFromTo has no way to scope to noncombat damage. Engine
-	// work needed: a NoncombatOnly option on the prevention rule.
 	Register("Blessed Sanctuary", func() Card {
 		nontokenCreatureYouControl := NewPermanentFilter("nontoken creature you control", func(p *Permanent, _ *Game) bool {
 			return p.HasType(TypeCreature) && !p.Card.IsToken()
 		})
 		return NewEnchantment("Blessed Sanctuary", "{3}{W}{W}",
+			WithStaticAbility(PreventNoncombatDamageToControllerAndCreatures()),
 			WithAbility(WheneverPermanentEntersBattlefieldTrigger(
 				CreateColoredToken("Unicorn", 2, 2, []Color{White}, []CardType{TypeCreature}, []string{"Unicorn"}),
 				false,

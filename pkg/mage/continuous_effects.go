@@ -1079,6 +1079,51 @@ func (e *preventDamageRuleContinuous) Apply(g *Game) error {
 	return nil
 }
 
+// preventNoncombatDamageToControllerContinuous prevents all noncombat damage
+// dealt to the source's controller and to creatures the controller controls.
+// Used by Blessed Sanctuary.
+type preventNoncombatDamageToControllerContinuous struct {
+	effectSource
+}
+
+// PreventNoncombatDamageToControllerAndCreatures creates a continuous effect
+// that prevents all noncombat damage that would be dealt to the source's
+// controller and to creatures that controller controls.
+func PreventNoncombatDamageToControllerAndCreatures() ContinuousEffect {
+	return &preventNoncombatDamageToControllerContinuous{}
+}
+
+func (e *preventNoncombatDamageToControllerContinuous) GetLayer() Layer {
+	return LayerAbility
+}
+
+func (e *preventNoncombatDamageToControllerContinuous) GetDuration() Duration {
+	return WhileOnBattlefield
+}
+
+func (e *preventNoncombatDamageToControllerContinuous) IsActive(g *Game) bool {
+	return g.FindPermanent(e.sourceID) != nil
+}
+
+func (e *preventNoncombatDamageToControllerContinuous) Apply(g *Game) error {
+	src := g.FindPermanent(e.sourceID)
+	if src == nil {
+		return nil
+	}
+	controller := src.Controller
+	g.effects.AddCycleReplacement(&damagePreventionRuleReplacement{
+		replacementBase: replacementBase{sourceID: e.sourceID},
+		to:              And(IsCreature, ControlledBy(controller)),
+		noncombatOnly:   true,
+	})
+	g.effects.AddCycleReplacement(&damagePreventionRuleReplacement{
+		replacementBase: replacementBase{sourceID: e.sourceID},
+		toPlayerID:      controller,
+		noncombatOnly:   true,
+	})
+	return nil
+}
+
 // ---------------------------------------------------------------------------
 // Doppelganger copy effect (mutable state, not convertible to primitives)
 // ---------------------------------------------------------------------------

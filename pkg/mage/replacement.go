@@ -653,20 +653,44 @@ func (r *drawReplacementEffect) Clone() ReplacementEffect {
 
 type damagePreventionRuleReplacement struct {
 	replacementBase
-	from       PermanentFilter
-	to         PermanentFilter
-	oneShot    bool
-	consumed   bool
-	combatOnly bool
-	playerOnly bool
+	from          PermanentFilter
+	to            PermanentFilter
+	oneShot       bool
+	consumed      bool
+	combatOnly    bool
+	noncombatOnly bool
+	playerOnly    bool
+	// toPlayerID, when non-zero, makes this rule also match damage dealt to
+	// that player (DamageToPlayerAction). Used for prevention rules that
+	// protect a specific player (e.g. Blessed Sanctuary's "dealt to you").
+	toPlayerID uuid.UUID
 }
 
 func (r *damagePreventionRuleReplacement) Matches(a Action, g GameReader) bool {
 	game := g.(*Game)
 	switch act := a.(type) {
 	case *DamageToPlayerAction:
-		// For player damage, only match rules with a "from" filter and no "to" filter
-		// (source-only prevention like Lady Evangela, Horn of Deafening)
+		// Player-targeted rules: a rule with toPlayerID set protects that
+		// player; otherwise (legacy) the rule must have a "from" filter and
+		// no "to" filter (source-only prevention like Lady Evangela).
+		if r.toPlayerID != uuid.Nil {
+			if act.PlayerID() != r.toPlayerID {
+				return false
+			}
+			if !r.from.IsZero() {
+				source := g.FindPermanent(act.ActionSource())
+				if source == nil || !r.from.Match(source, game) {
+					return false
+				}
+			}
+			if r.combatOnly && !act.IsCombatDamage() {
+				return false
+			}
+			if r.noncombatOnly && act.IsCombatDamage() {
+				return false
+			}
+			return true
+		}
 		if !r.to.IsZero() {
 			return false
 		}
@@ -680,9 +704,17 @@ func (r *damagePreventionRuleReplacement) Matches(a Action, g GameReader) bool {
 		if r.combatOnly && !act.IsCombatDamage() {
 			return false
 		}
+		if r.noncombatOnly && act.IsCombatDamage() {
+			return false
+		}
 		return true
 	case *DamageToCreatureAction:
 		if r.playerOnly {
+			return false
+		}
+		// A rule scoped exclusively to a target player (toPlayerID set, no
+		// from/to filters) protects only that player, not creatures.
+		if r.from.IsZero() && r.to.IsZero() {
 			return false
 		}
 		source := g.FindPermanent(act.ActionSource())
@@ -692,11 +724,10 @@ func (r *damagePreventionRuleReplacement) Matches(a Action, g GameReader) bool {
 		}
 		fromMatch := r.from.IsZero() || (source != nil && r.from.Match(source, game))
 		toMatch := r.to.IsZero() || r.to.Match(target, game)
-		// If both are zero, this doesn't match anything useful
-		if r.from.IsZero() && r.to.IsZero() {
+		if r.combatOnly && !act.IsCombatDamage() {
 			return false
 		}
-		if r.combatOnly && !act.IsCombatDamage() {
+		if r.noncombatOnly && act.IsCombatDamage() {
 			return false
 		}
 		return fromMatch && toMatch

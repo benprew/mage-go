@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	_ "git.sr.ht/~cdcarter/mage-go/cards/limited"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
 )
@@ -595,7 +596,6 @@ func TestSarkhansUnsealing_Power7Trigger(t *testing.T) {
 }
 
 // Blessed Sanctuary: nontoken creature ETB creates a 2/2 white Unicorn token.
-// Damage prevention clause is not implemented — see XXX in source.
 func TestBlessedSanctuary_NontokenETBCreatesUnicorn(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Blessed Sanctuary")
@@ -625,6 +625,55 @@ func TestBlessedSanctuary_TokenETBDoesNotTrigger(t *testing.T) {
 	g.AssertPermanentCount(gametest.PlayerA, "Unicorn", 1)
 }
 
+// Noncombat damage to controller is prevented.
+func TestBlessedSanctuary_PreventsBoltToController(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Blessed Sanctuary")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+	g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "PlayerA")
+	g.StopAt(2, core.EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerA, 20)
+}
+
+// Noncombat damage to a creature you control is prevented.
+func TestBlessedSanctuary_PreventsBoltToYourCreature(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Blessed Sanctuary")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+	g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Grizzly Bears")
+	g.StopAt(2, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
+}
+
+// Combat damage is NOT prevented.
+func TestBlessedSanctuary_DoesNotPreventCombatDamage(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Blessed Sanctuary")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+	g.Attack(2, gametest.PlayerB, "Hill Giant")
+	g.StopAt(2, core.EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerA, 17)
+}
+
+// Damage to opponent's creatures is NOT prevented.
+func TestBlessedSanctuary_DoesNotPreventDamageToOpponentCreatures(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Blessed Sanctuary")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+}
+
 func TestPathOfBravery_BoostsAtFullLifeAndGainsOnAttack(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Path of Bravery")
@@ -649,4 +698,51 @@ func TestPathOfBravery_BoostInactiveBelowStartingLife(t *testing.T) {
 	g.StopAt(1, core.PrecombatMain)
 	g.Execute()
 	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 2)
+}
+
+func TestAjanisChosen_NonAuraEnchantmentCreatesCatToken(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ajani's Chosen")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 5)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Black Market")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Black Market")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Black Market", 1)
+	g.AssertPermanentCount(gametest.PlayerA, "Cat", 1)
+	g.AssertPowerToughness(gametest.PlayerA, "Cat", 2, 2)
+}
+
+func TestAjanisChosen_AuraOnExistingCreatureKeepsAttachment(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ajani's Chosen")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 2)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Pacifism")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Pacifism", "Hill Giant")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Cat", 1)
+	g.AssertAttachedTo(gametest.PlayerB, "Pacifism", "Hill Giant")
+}
+
+func TestAjanisChosen_UnattachedAuraAttachesToCatToken(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ajani's Chosen")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 2)
+	g.StopAt(1, core.PrecombatMain)
+	g.Execute()
+
+	pacifismCard, err := mage.CreateCard("Pacifism")
+	if err != nil {
+		t.Fatalf("CreateCard: %v", err)
+	}
+	playerAID := g.GetPlayer(gametest.PlayerA).PlayerID()
+	pacifismCard.SetOwner(playerAID)
+	g.Game.PutOnBattlefield(pacifismCard, playerAID)
+	g.Game.PutTriggersOnStack()
+	g.Game.ResolveStack()
+
+	g.AssertPermanentCount(gametest.PlayerA, "Cat", 1)
+	g.AssertAttachedTo(gametest.PlayerA, "Pacifism", "Cat")
 }

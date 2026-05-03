@@ -751,3 +751,49 @@ func TestMausoleumTurnkey_OpponentChoosesReturn(t *testing.T) {
 	g.AssertGraveyardCount(gametest.PlayerA, "Hill Giant", 0)
 	g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 1)
 }
+
+// Linvala, Keeper of Silence: Activated abilities of creatures your opponents
+// control can't be activated unless they're mana abilities.
+
+func TestLinvalaKeeperOfSilence_BlocksOpponentNonManaActivation(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Linvala, Keeper of Silence")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Prodigal Sorcerer")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerB, "Prodigal Sorcerer", "PlayerA")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerA, 20)
+	g.AssertTapped(gametest.PlayerB, "Prodigal Sorcerer", false)
+}
+
+func TestLinvalaKeeperOfSilence_AllowsOpponentManaAbility(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Linvala, Keeper of Silence")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Llanowar Elves")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerB, "Llanowar Elves")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertTapped(gametest.PlayerB, "Llanowar Elves", true)
+}
+
+func TestLinvalaKeeperOfSilence_OwnCreaturesUnaffected(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Linvala, Keeper of Silence")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Prodigal Sorcerer")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Prodigal Sorcerer", "PlayerB")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerB, 19)
+	g.AssertTapped(gametest.PlayerA, "Prodigal Sorcerer", true)
+}
+
+func TestLinvalaKeeperOfSilence_OpponentNonCreatureUnaffected(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Linvala, Keeper of Silence")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Jayemdae Tome")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island", 5)
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerB, "Jayemdae Tome")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertTapped(gametest.PlayerB, "Jayemdae Tome", true)
+}

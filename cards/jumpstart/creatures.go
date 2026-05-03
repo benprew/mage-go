@@ -57,21 +57,47 @@ func registerCreatures() {
 	// Ajani's Chosen {2}{W}{W}
 	// Creature — Cat Soldier
 	// 3/3
-	// Whenever an enchantment you control enters, create a 2/2 white Cat creature token. If that enchantment is an Aura, you may attach it to the token.
-	// XXX: aura-attach-on-token portion deferred; token creation is implemented.
+	// Whenever an enchantment you control enters, create a 2/2 white Cat creature token. If that enchantment is an Aura without a creature attached to it, you may attach it to the token created this way.
 	Register("Ajani's Chosen", func() Card {
+		ajanisChosenEffect := FuncEffect(
+			"create a 2/2 white Cat token; if the entering enchantment is an Aura without a creature attached, may attach it to the token",
+			EffectProperties{Outcome: OutcomeBenefit, TokenPower: 2, TokenToughness: 2},
+			func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				token := NewToken("Cat", 2, 2, []CardType{TypeCreature}, []string{"Cat"})
+				token.SetOwner(controller)
+				tokenPerm := g.PutOnBattlefield(token, controller)
+				if tokenPerm == nil {
+					return nil
+				}
+				g.AddContinuousEffect(ColorOverride(tokenPerm.ID(), White))
+
+				if len(targets) == 0 {
+					return nil
+				}
+				enteringID := targets[0]
+				entering := g.FindPermanent(enteringID)
+				if entering == nil || !entering.HasSubType("Aura") {
+					return nil
+				}
+				attachedTo := g.FindPermanent(entering.AttachedTo)
+				if attachedTo != nil && attachedTo.HasType(TypeCreature) {
+					return nil
+				}
+				p := g.GetPlayer(controller)
+				if p == nil {
+					return nil
+				}
+				if !p.ChooseMayAbility("attach Aura to the Cat token created by Ajani's Chosen") {
+					return nil
+				}
+				g.Attach(enteringID, tokenPerm.ID())
+				return nil
+			},
+		)
 		return NewCreature("Ajani's Chosen", "{2}{W}{W}", 3, 3,
 			WithSubTypes("Cat", "Soldier"),
-			WithAbility(NewTriggered(EvtZoneChange, false,
-				CreateColoredToken("Cat", 2, 2, []Color{White},
-					[]CardType{TypeCreature}, []string{"Cat"})).
-				SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-					perm := g.FindPermanent(evt.SourceID)
-					if perm == nil {
-						return false
-					}
-					return perm.Controller == controllerID && perm.HasType(TypeEnchantment)
-				}).AndConditionData(EventZoneChangeMatches{From: ZoneAny, To: ZoneBattlefield})),
+			WithAbility(WheneverPermanentEntersBattlefieldTrigger(ajanisChosenEffect, false, IsEnchantment).
+				AndConditionData(EventSourceControlledByController{})),
 		)
 	})
 
@@ -586,13 +612,26 @@ func registerCreatures() {
 	// Legendary Creature — Angel
 	// 3/4
 	// Flying
-	// Activated abilities of creatures your opponents control can't be activated.
-	// XXX: requires opponent-activated-ability suppression
+	// Activated abilities of creatures your opponents control can't be activated unless they're mana abilities.
 	Register("Linvala, Keeper of Silence", func() Card {
 		return NewCreature("Linvala, Keeper of Silence", "{2}{W}{W}", 3, 4,
 			WithSubTypes("Angel"),
 			WithSuperTypes(SuperLegendary),
 			WithKeyword(Flying),
+			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield,
+				func(g *Game, sourceID uuid.UUID) error {
+					src := g.FindPermanent(sourceID)
+					if src == nil {
+						return nil
+					}
+					for _, p := range g.AllBattlefield() {
+						if !p.HasType(TypeCreature) || p.Controller == src.Controller {
+							continue
+						}
+						g.GrantAttr(p.ID(), AttrCantActivateNonManaAbilities)
+					}
+					return nil
+				})),
 		)
 	})
 
