@@ -624,3 +624,29 @@ func TestBlessedSanctuary_TokenETBDoesNotTrigger(t *testing.T) {
 	// Exactly one Unicorn (from nontoken Sporemound ETB), zero from the Saproling token.
 	g.AssertPermanentCount(gametest.PlayerA, "Unicorn", 1)
 }
+
+func TestPathOfBravery_BoostsAtFullLifeAndGainsOnAttack(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Path of Bravery")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")
+	// Life is 20 = starting life → +1/+1 active.
+	g.Attack(1, gametest.PlayerA, "Grizzly Bears", "Hill Giant")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Two attackers → gain 2 life → 22.
+	g.AssertLife(gametest.PlayerA, 22)
+	// Boost still active during postcombat.
+	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 3, 3)
+	g.AssertPowerToughness(gametest.PlayerA, "Hill Giant", 4, 4)
+}
+
+func TestPathOfBravery_BoostInactiveBelowStartingLife(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Path of Bravery")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.SetLife(gametest.PlayerA, 19)
+	g.StopAt(1, core.PrecombatMain)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 2)
+}

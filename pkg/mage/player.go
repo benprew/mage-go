@@ -45,6 +45,8 @@ type Player interface {
 	Name() string
 	Life() int
 	SetLife(int)
+	StartingLife() int
+	SetStartingLife(int)
 	GainLife(int)
 	LoseLife(int)
 	IsAlive() bool
@@ -128,6 +130,7 @@ type BasePlayer struct {
 	id              uuid.UUID
 	name            string
 	life            int
+	startingLife    int
 	lost            bool // true if the player has lost the game (e.g. deck-out)
 	drewFromEmpty   bool // set when a draw is attempted from an empty library
 	hand            []Card
@@ -162,6 +165,13 @@ func (p *BasePlayer) PlayerID() uuid.UUID { return p.id }
 func (p *BasePlayer) Name() string        { return p.name }
 func (p *BasePlayer) Life() int           { return p.life }
 func (p *BasePlayer) SetLife(n int)       { p.life = n }
+func (p *BasePlayer) StartingLife() int {
+	if p.startingLife == 0 {
+		return 20
+	}
+	return p.startingLife
+}
+func (p *BasePlayer) SetStartingLife(n int) { p.startingLife = n }
 func (p *BasePlayer) IsAlive() bool       { return p.life > 0 && !p.lost }
 func (p *BasePlayer) DrewFromEmpty() bool { return p.drewFromEmpty }
 func (p *BasePlayer) ClearDrewFromEmpty() { p.drewFromEmpty = false }

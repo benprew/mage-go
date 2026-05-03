@@ -1845,6 +1845,11 @@ func (g *Game) PutTriggersOnStack() {
 					// "you" (e.g. Exquisite Blood's "you gain that much life"
 					// targets the controller, not the opponent who lost life).
 					obj.EventAmount = pt.event.Amount
+				case EvtAttackersDeclared:
+					// Preserve the attacker count for "gain that much life" /
+					// "draw that many cards" attack-aggregate triggers (Path of
+					// Bravery's gain-life clause).
+					obj.EventAmount = pt.event.Amount
 				case EvtDiscard:
 					// Pass the discarding player's ID so effects like
 					// "that player loses 2 life" target the discarder.

@@ -650,9 +650,28 @@ func registerEnchantments() {
 	// Enchantment
 	// As long as your life total is greater than or equal to your starting life total, creatures you control get +1/+1.
 	// Whenever one or more creatures you control attack, you gain life equal to the number of attacking creatures.
-	// XXX: requires "starting life total" comparison and attack-count gain-life trigger
 	Register("Path of Bravery", func() Card {
-		return NewEnchantment("Path of Bravery", "{2}{W}")
+		return NewEnchantment("Path of Bravery", "{2}{W}",
+			WithStaticAbility(
+				FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+					src := g.FindPermanent(sourceID)
+					if src == nil {
+						return nil
+					}
+					ctrl := g.GetPlayer(src.Controller)
+					if ctrl == nil || ctrl.Life() < ctrl.StartingLife() {
+						return nil
+					}
+					for _, p := range g.FilterBattlefield(And(IsCreature, ControlledBy(src.Controller))) {
+						p.BoostPT(1, 1)
+					}
+					return nil
+				}),
+			),
+			WithAbility(WheneverOneOrMoreCreaturesYouControlAttackTrigger(
+				GainLifeAmount(EventAmountValue()), false,
+			)),
+		)
 	})
 
 	// Phyrexian Reclamation {B}
