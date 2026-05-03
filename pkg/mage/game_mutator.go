@@ -46,6 +46,7 @@ type GameReader interface {
 	GetArtifactUntapMax() int
 	ActivePlayerIndex() int
 	CombatDamageSourcesThisStep(controllerID, recipientID uuid.UUID) map[uuid.UUID]int
+	PlayerCardsDrawnThisTurn(uuid.UUID) int
 }
 
 // Compile-time check that *Game satisfies GameReader.

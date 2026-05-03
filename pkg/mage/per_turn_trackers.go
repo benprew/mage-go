@@ -67,6 +67,11 @@ func (g *Game) recordPerTurnEvent(evt *GameEvent) {
 			g.playerAttackedThisTurn = make(map[uuid.UUID]bool)
 		}
 		g.playerAttackedThisTurn[evt.PlayerID] = true
+	case EvtCardDrawn:
+		if g.cardsDrawnThisTurn == nil {
+			g.cardsDrawnThisTurn = make(map[uuid.UUID]int)
+		}
+		g.cardsDrawnThisTurn[evt.PlayerID]++
 	case EvtSpellCast:
 		// Track which player cast a spell this turn (Angelic Arbiter, etc.).
 		// PlayerID on EvtSpellCast is the casting player.
@@ -87,6 +92,16 @@ func (g *Game) resetPerTurnTrackers() {
 	g.attackedOrBlockedThisTurn = nil
 	g.playerCastSpellThisTurn = nil
 	g.playerAttackedThisTurn = nil
+	g.cardsDrawnThisTurn = nil
+}
+
+// PlayerCardsDrawnThisTurn returns the number of cards the given player has
+// drawn this turn (counts every EvtCardDrawn — turn-based draws, replacement-
+// granted extra draws like Howling Mine, and resolved spells/abilities).
+// Used by cards that key on "their first card each turn" (Zurzoth, Chaos
+// Rider).
+func (g *Game) PlayerCardsDrawnThisTurn(playerID uuid.UUID) int {
+	return g.cardsDrawnThisTurn[playerID]
 }
 
 // PlayerDiscardCountThisTurn returns the number of times the given player

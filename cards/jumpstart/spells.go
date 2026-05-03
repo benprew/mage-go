@@ -80,6 +80,11 @@ func fightBetween(g *Game, aID, bID uuid.UUID) {
 	if bPower > 0 && (aCard == nil || !a.HasProtectionFrom(bCard)) {
 		g.DealDamageToPermanent(a, bPower, bID)
 	}
+	g.FireEvent(GameEvent{
+		Type:     EvtFight,
+		SourceID: aID,
+		TargetID: bID,
+	})
 }
 
 func registerSpells() {

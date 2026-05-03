@@ -4327,12 +4327,20 @@ func registerCreatures() {
 	// Flying, haste
 	// This creature can't block.
 	// At the beginning of your end step, if an opponent was dealt 3 or more damage this turn, you may pay {R}. If you do, return this card from your graveyard to the battlefield.
-	// XXX: per-turn damage tracker exists (PermanentDamageReceivedThisTurn applies to players too), but the engine has no graveyard-zone triggered-ability primitive — triggered abilities only fire while the source is on the battlefield. Need a "while in graveyard" trigger registration before this can be wired.
 	Register("Lightning Phoenix", func() Card {
 		return NewCreature("Lightning Phoenix", "{2}{R}", 2, 2,
 			WithSubTypes("Phoenix"),
 			WithKeyword(Flying),
 			WithKeyword(Haste),
+			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+				g.RevokeAttr(sourceID, AttrCanBlock)
+				return nil
+			})),
+			WithAbility(BeginningOfYourEndStepFromGraveyard(
+				MayPayMana("{R}", "return Lightning Phoenix from your graveyard to the battlefield",
+					ReturnSourceFromGraveyardToBattlefield()),
+				false,
+			).AndConditionData(opponentDealt3PlusDamageThisTurnCond{})),
 		)
 	})
 
@@ -4855,11 +4863,92 @@ func registerCreatures() {
 	// 2/3
 	// Whenever an opponent draws their first card each turn, if it's not their turn, you create a 1/1 red Devil creature token with "When this token dies, it deals 1 damage to any target."
 	// Whenever one or more Devils you control attack one or more players, you and those players each draw a card, then discard a card at random.
-	// XXX: requires opponent-draw-state tracking and random-discard primitive
 	Register("Zurzoth, Chaos Rider", func() Card {
+		// Clause 2 effect: each of {controller, defending players} draws a
+		// card, then each discards a card at random. Per CR 603.2c the trigger
+		// itself is once-per-combat (one batch); the player set is the
+		// controller plus every player being attacked by a Devil-attacker that
+		// the controller controls.
+		zurzothDevilsAttack := FuncEffect(
+			"you and those players each draw a card, then discard a card at random",
+			EffectProperties{Outcome: OutcomeBenefit},
+			func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				playerIDs := []uuid.UUID{controller}
+				seen := map[uuid.UUID]bool{controller: true}
+				for _, group := range g.CombatGroups() {
+					attacker := g.FindPermanent(group.AttackerID)
+					if attacker == nil {
+						continue
+					}
+					if attacker.Controller != controller {
+						continue
+					}
+					if !attacker.HasSubType("Devil") {
+						continue
+					}
+					if group.DefenderID == uuid.Nil || seen[group.DefenderID] {
+						continue
+					}
+					if pl := g.GetPlayer(group.DefenderID); pl != nil {
+						playerIDs = append(playerIDs, group.DefenderID)
+						seen[group.DefenderID] = true
+					}
+				}
+				for _, pid := range playerIDs {
+					if pl := g.GetPlayer(pid); pl != nil {
+						g.PlayerDrawCard(pl)
+					}
+				}
+				for _, pid := range playerIDs {
+					if pl := g.GetPlayer(pid); pl != nil {
+						g.DiscardAtRandom(pl, 1)
+					}
+				}
+				return nil
+			},
+		)
+
 		return NewCreature("Zurzoth, Chaos Rider", "{2}{R}", 2, 3,
 			WithSubTypes("Devil"),
 			WithSuperTypes(SuperLegendary),
+			// Clause 1: opponent's first card draw each turn, if it's not
+			// their turn → create a 1/1 red Devil token with the dies trigger.
+			WithAbility(NewTriggered(EvtCardDrawn, false,
+				TokenWithAbilities(
+					CreateColoredToken("Devil", 1, 1, []Color{Red},
+						[]CardType{TypeCreature}, []string{"Devil"}),
+					PutIntoGraveyardFromBattlefieldTrigger(
+						DealDamage(Fixed(1)), false,
+					).AddTarget(TargetAnyTarget()),
+				),
+			).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
+				if evt.PlayerID == controllerID {
+					return false
+				}
+				active := g.ActivePlayerObj()
+				if active != nil && active.PlayerID() == evt.PlayerID {
+					return false
+				}
+				// recordPerTurnEvent has already incremented the counter for
+				// this draw, so "first card this turn" == count of exactly 1.
+				return g.PlayerCardsDrawnThisTurn(evt.PlayerID) == 1
+			})),
+			// Clause 2: one or more Devils you control attack one or more
+			// players → you and those players each draw a card, then each
+			// discards a card at random.
+			WithAbility(WheneverOneOrMoreCreaturesYouControlAttackTrigger(
+				zurzothDevilsAttack, false,
+			).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
+				if evt.PlayerID != controllerID {
+					return false
+				}
+				for _, p := range g.FilterBattlefield(IsAttacking) {
+					if p.Controller == controllerID && p.HasSubType("Devil") {
+						return true
+					}
+				}
+				return false
+			})),
 		)
 	})
 
@@ -4887,7 +4976,7 @@ func registerCreatures() {
 				MayPayMana("{R}", "return Pia Nalaar from your graveyard to the battlefield",
 					ReturnSourceFromGraveyardToBattlefield()),
 				false,
-			).AndConditionData(piaNalaarOpponentDealt3PlusCond{})),
+			).AndConditionData(opponentDealt3PlusDamageThisTurnCond{})),
 		)
 	})
 
@@ -5490,11 +5579,85 @@ func registerCreatures() {
 	// 3/3
 	// Whenever one or more creatures you control fight or become blocked, draw a card.
 	// At the beginning of combat on your turn, you may pay {2}{R/G}. If you do, double target creature's power until end of turn. That creature must be blocked this combat if able. ({R/G} can be paid with either {R} or {G}.)
-	// XXX: requires may-pay-mana cost in trigger resolution, "one or more ... fight" aggregation, "must be blocked this combat" restriction
 	Register("Neyith of the Dire Hunt", func() Card {
+		// Aggregating "draw a card" trigger — CR 603.2c. Fires once per
+		// "blockers declared" dispatch if any creature controlled by Neyith's
+		// controller was blocked, and once per fight resolution involving a
+		// creature Neyith's controller controls. Each dispatch is a single
+		// event window so the once-per-dispatch firing satisfies "one or
+		// more" without further deduplication.
+		blockedAggregate := NewTriggered(EvtBlockersDecl, false,
+			DrawCards(Fixed(1)),
+		).SetCondition(func(_ *GameEvent, gr GameReader, _, controllerID uuid.UUID) bool {
+			game, ok := gr.(*Game)
+			if !ok || game.GetCombat() == nil {
+				return false
+			}
+			for _, grp := range game.GetCombat().Groups {
+				if len(grp.BlockerIDs) == 0 {
+					continue
+				}
+				atk := game.FindPermanent(grp.AttackerID)
+				if atk != nil && atk.Controller == controllerID {
+					return true
+				}
+			}
+			return false
+		})
+
+		fightAggregate := NewTriggered(EvtFight, false,
+			DrawCards(Fixed(1)),
+		).SetCondition(func(evt *GameEvent, gr GameReader, _, controllerID uuid.UUID) bool {
+			game, ok := gr.(*Game)
+			if !ok {
+				return false
+			}
+			for _, id := range []uuid.UUID{evt.SourceID, evt.TargetID} {
+				if perm := game.FindPermanent(id); perm != nil && perm.Controller == controllerID {
+					return true
+				}
+			}
+			return false
+		})
+
+		// At the beginning of combat on your turn, you may pay {2}{R/G}.
+		// If you do, double target creature's power until end of turn and
+		// that creature must be blocked this combat if able (CR 509.1c
+		// applied for the duration of the current combat phase).
+		mustBeBlockedThisCombat := FuncEffect(
+			"that creature must be blocked this combat if able",
+			EffectProperties{Outcome: OutcomeBenefit},
+			func(g *Game, sourceID, _ uuid.UUID, targets []uuid.UUID) error {
+				if len(targets) == 0 {
+					return nil
+				}
+				eff := TargetMustBeBlockedIfAble(targets[0], EndOfCombat)
+				eff.SetSourceID(sourceID)
+				g.AddContinuousEffect(eff)
+				g.ApplyContinuousEffects()
+				return nil
+			},
+		)
+
+		combatAbility := NewTriggered(EvtBeginCombat, true,
+			MayPayMana("{2}{R/G}",
+				"double target creature's power and force it to be blocked this combat",
+				CompositeEffects(
+					"double target creature's power; must be blocked this combat",
+					DoubleTargetPower(),
+					mustBeBlockedThisCombat,
+				),
+			),
+		).SetCondition(func(evt *GameEvent, _ GameReader, _, controllerID uuid.UUID) bool {
+			return evt.PlayerID == controllerID
+		}).AddTarget(TargetCreature())
+
 		return NewCreature("Neyith of the Dire Hunt", "{2}{G}{G}", 3, 3,
 			WithSubTypes("Human", "Warrior"),
 			WithSuperTypes(SuperLegendary),
+			WithAbility(blockedAggregate),
+			WithAbility(fightAggregate),
+			WithAbility(combatAbility),
 		)
 	})
 

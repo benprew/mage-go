@@ -45,13 +45,13 @@ func (eventSourcePowerGreaterThanAllOthers) CheckTriggerCond(evt *GameEvent, g G
 	return true
 }
 
-// piaNalaarOpponentDealt3PlusCond is satisfied when an opponent of the
+// opponentDealt3PlusDamageThisTurnCond is satisfied when an opponent of the
 // trigger's controller has been dealt 3 or more damage this turn (any source,
-// combat or noncombat). Used by Pia Nalaar, Consul of Revival's graveyard
-// end-step trigger.
-type piaNalaarOpponentDealt3PlusCond struct{}
+// combat or noncombat). Shared by Pia Nalaar, Consul of Revival and Lightning
+// Phoenix's graveyard end-step triggers.
+type opponentDealt3PlusDamageThisTurnCond struct{}
 
-func (piaNalaarOpponentDealt3PlusCond) CheckTriggerCond(_ *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
+func (opponentDealt3PlusDamageThisTurnCond) CheckTriggerCond(_ *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
 	for _, p := range g.AllPlayers() {
 		if p.PlayerID() == controllerID {
 			continue

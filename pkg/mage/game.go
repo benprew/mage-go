@@ -233,6 +233,7 @@ type Game struct {
 	attackedOrBlockedThisTurn  map[uuid.UUID]bool // permID -> attacked or blocked this turn
 	playerCastSpellThisTurn    map[uuid.UUID]bool // playerID -> cast any spell this turn
 	playerAttackedThisTurn     map[uuid.UUID]bool // playerID -> declared at least one attacker this turn
+	cardsDrawnThisTurn         map[uuid.UUID]int  // playerID -> count of cards drawn this turn (per Zurzoth, Chaos Rider et al.)
 }
 
 func (g *Game) ActivePlayer() int {
@@ -505,6 +506,44 @@ func (g *Game) TryPayCostFromLands(playerID uuid.UUID, manaCostStr string) bool 
 			if !found {
 				return false
 			}
+		}
+	}
+
+	// Pay hybrid symbols (CR 107.4d): each {X/Y} can be paid with either
+	// color. Greedy allocation — try the first listed color, fall back to
+	// the second. Sufficient for the simple hybrid costs in print.
+	for _, h := range cost.Hybrid {
+		paid := false
+		for _, c := range []Color{h.A, h.B} {
+			subtype := ""
+			switch c {
+			case White:
+				subtype = "Plains"
+			case Blue:
+				subtype = "Island"
+			case Black:
+				subtype = "Swamp"
+			case Red:
+				subtype = "Mountain"
+			case Green:
+				subtype = "Forest"
+			}
+			if subtype == "" {
+				continue
+			}
+			for _, land := range lands {
+				if !used[land.ID()] && land.HasSubType(subtype) {
+					used[land.ID()] = true
+					paid = true
+					break
+				}
+			}
+			if paid {
+				break
+			}
+		}
+		if !paid {
+			return false
 		}
 	}
 
