@@ -940,20 +940,6 @@ func registerCreatures() {
 		)
 	})
 
-	Register("Aspect of Wolf", func() Card {
-		return NewAura("Aspect of Wolf", "{1}{G}",
-			// Enchanted creature gets +X/+Y where X is half Forests you control
-			// (rounded down) and Y is half (rounded up).
-			WithStaticAbility(
-				BoostAttachedByCount(
-					And(IsLand, HasSubType("Forest")),
-					func(n int) int { return n / 2 },
-					func(n int) int { return (n + 1) / 2 },
-				),
-			),
-		)
-	})
-
 	// Dwarven Demolition Team {2}{R}
 	// Creature — Dwarf 1/1
 	// {T}: Destroy target Wall.
