@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"slices"
 	"sort"
 	"strings"
 
@@ -174,19 +175,19 @@ func buildLibrary(cardNames []string) ([]mage.Card, error) {
 // run drives the game forward until it ends or a divergence is hit.
 // Three startup modes, in priority order:
 //
-//   1. New recording with HandSizeAtStart > 0: META.deck encodes
-//      hand[0..HandSizeAtStart) + library[HandSizeAtStart..]. We move the
-//      first N cards from the library directly into hand without drawing.
-//      Replay matches XMage's exact post-shuffle, post-opening-hand state.
+//  1. New recording with HandSizeAtStart > 0: META.deck encodes
+//     hand[0..HandSizeAtStart) + library[HandSizeAtStart..]. We move the
+//     first N cards from the library directly into hand without drawing.
+//     Replay matches XMage's exact post-shuffle, post-opening-hand state.
 //
-//   2. Older recording, post-SelfPlayExecutor: hand drawn at game start
-//      via testMode=false but no HandSizeAtStart in META. shouldDrawOpeningHands
-//      sees ≥1 card in the first PRIORITY's hand and draws 7 here; the
-//      shuffle order may diverge so this only works for replayable .dck
-//      orders (skipInitShuffling=true setups).
+//  2. Older recording, post-SelfPlayExecutor: hand drawn at game start
+//     via testMode=false but no HandSizeAtStart in META. shouldDrawOpeningHands
+//     sees ≥1 card in the first PRIORITY's hand and draws 7 here; the
+//     shuffle order may diverge so this only works for replayable .dck
+//     orders (skipInitShuffling=true setups).
 //
-//   3. Legacy recording, testMode=true: empty hands at first PRIORITY,
-//      no opening hand draw needed.
+//  3. Legacy recording, testMode=true: empty hands at first PRIORITY,
+//     no opening hand draw needed.
 func (r *replay) run() error {
 	if r.usesHandLibraryEncoding() {
 		for i, p := range r.game.AllPlayers() {
@@ -224,10 +225,8 @@ func (r *replay) peek(types ...string) (*eventLine, int, error) {
 		if len(types) == 0 {
 			return ev, i, nil
 		}
-		for _, t := range types {
-			if ev.Type == t {
-				return ev, i, nil
-			}
+		if slices.Contains(types, ev.Type) {
+			return ev, i, nil
 		}
 	}
 	return nil, -1, io.EOF

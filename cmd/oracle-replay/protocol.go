@@ -23,8 +23,8 @@ type playerInfo struct {
 	// Deck = hand cards (first HandSizeAtStart entries) + library top-to-bottom,
 	// captured at the first PRIORITY event so replayers reconstruct the
 	// post-shuffle library without needing a draw-7 step.
-	Deck             []string `json:"deck"`
-	HandSizeAtStart  int      `json:"handSizeAtStart"`
+	Deck            []string `json:"deck"`
+	HandSizeAtStart int      `json:"handSizeAtStart"`
 }
 
 type eventLine struct {

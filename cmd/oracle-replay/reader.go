@@ -20,9 +20,9 @@ import (
 const scanLargeBuffer = 16 * 1024 * 1024
 
 type recordingReader struct {
-	src     io.Closer  // file or gzip wrapper to close
-	scanner *bufio.Scanner
-	meta    metaLine
+	src      io.Closer // file or gzip wrapper to close
+	scanner  *bufio.Scanner
+	meta     metaLine
 	headRead bool
 }
 

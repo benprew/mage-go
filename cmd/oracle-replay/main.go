@@ -2,15 +2,18 @@
 // the game in mage-go, validating state at every recorded priority point.
 //
 // Usage:
-//   oracle-replay path/to/game.jsonl[.gz]
+//
+//	oracle-replay path/to/game.jsonl[.gz]
 //
 // Exit codes:
-//   0 — game replayed cleanly, every PRIORITY snapshot matched
-//   1 — divergence detected (single first-failure mode); diff printed to stderr
-//   2 — usage / file / parse error
+//
+//	0 — game replayed cleanly, every PRIORITY snapshot matched
+//	1 — divergence detected (single first-failure mode); diff printed to stderr
+//	2 — usage / file / parse error
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -62,7 +65,7 @@ func run() int {
 	events := make([]eventLine, 0, meta.TotalEvents)
 	for {
 		ev, err := rdr.Next()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {
