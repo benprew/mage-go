@@ -637,10 +637,37 @@ func registerEnchantments() {
 	// Parasitic Implant {3}{B}
 	// Enchantment — Aura
 	// Enchant creature
-	// At the beginning of your upkeep, enchanted creature's controller sacrifices it and you create a 1/1 colorless Phyrexian Myr artifact creature token.
-	// XXX: requires sacrifice-attached + token creation pipeline integration
+	// At the beginning of the end step, the enchanted creature's controller sacrifices it. If they do, you create a 3/2 black Insect creature token with flying.
 	Register("Parasitic Implant", func() Card {
-		return NewAura("Parasitic Implant", "{3}{B}")
+		return NewAura("Parasitic Implant", "{3}{B}",
+			WithAbility(BeginningOfEachEndStepTrigger(
+				FuncEffect(
+					"enchanted creature's controller sacrifices it; if they do, create a 3/2 black flying Insect token",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						src := g.FindPermanent(sourceID)
+						if src == nil || src.AttachedTo == uuid.Nil {
+							return nil
+						}
+						host := g.FindPermanent(src.AttachedTo)
+						if host == nil {
+							return nil
+						}
+						g.Sacrifice(host)
+						if g.FindPermanent(host.ID()) != nil {
+							return nil
+						}
+						token := NewToken("Insect", 3, 2,
+							[]CardType{TypeCreature}, []string{"Insect"}, Flying)
+						token.SetOwner(controller)
+						token.SetColorOverride([]Color{Black})
+						g.PutOnBattlefield(token, controller)
+						return nil
+					},
+				),
+				false,
+			)),
+		)
 	})
 
 	// Path of Bravery {2}{W}

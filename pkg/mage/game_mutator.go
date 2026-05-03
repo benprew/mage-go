@@ -256,6 +256,21 @@ func (g *Game) SetChannelActive(playerID uuid.UUID) {
 	g.effects.Rules.SetChannelActive(playerID)
 }
 
+// AddCantCastSpells registers a continuous "this player can't cast spells"
+// rule for the current Apply() cycle. Used by Angelic Arbiter and similar
+// effects. The flag is cleared at the start of each Apply() cycle, so
+// continuous effects must re-register it every cycle while the source
+// permanent is on the battlefield.
+func (g *Game) AddCantCastSpells(playerID uuid.UUID) {
+	g.effects.Rules.AddCantCastSpells(playerID)
+}
+
+// PlayerCantCastSpells reports whether a continuous effect currently
+// forbids the given player from casting spells.
+func (g *Game) PlayerCantCastSpells(playerID uuid.UUID) bool {
+	return g.effects.Rules.PlayerCantCastSpells(playerID)
+}
+
 // SetCreatureDamageRedirect redirects damage dealt to a creature to a player.
 func (g *Game) SetCreatureDamageRedirect(creatureID, playerID uuid.UUID) {
 	g.effects.AddReplacement(&creatureDamageRedirectReplacement{

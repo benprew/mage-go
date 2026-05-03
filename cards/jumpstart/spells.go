@@ -386,9 +386,6 @@ func registerSpells() {
 	// Commune with Dinosaurs {G}
 	// Sorcery
 	// Look at the top five cards of your library. You may reveal a Dinosaur or land card from among them and put it into your hand. Put the rest on the bottom of your library in any order.
-	// XXX: Oracle says "in any order" (controller-chosen); engine only exposes
-	// PutOnBottomInRandomOrder, so the rest currently go to bottom in random
-	// order. This is hidden-information so the difference is minor in practice.
 	Register("Commune with Dinosaurs", func() Card {
 		dinoOrLandCard := NewCardFilter("Dinosaur or land card", func(c Card) bool {
 			if c.HasType(TypeLand) {
@@ -427,7 +424,7 @@ func registerSpells() {
 							rest = append(rest, c)
 						}
 					}
-					g.PutOnBottomInRandomOrder(p, rest)
+					g.PutOnBottomInChosenOrder(p, rest)
 					return nil
 				}),
 			),

@@ -226,6 +226,8 @@ type Game struct {
 	lifeGainedThisTurn         map[uuid.UUID]int  // playerID -> life gained this turn
 	permDamageReceivedThisTurn map[uuid.UUID]int  // permID/playerID -> damage taken this turn
 	attackedOrBlockedThisTurn  map[uuid.UUID]bool // permID -> attacked or blocked this turn
+	playerCastSpellThisTurn    map[uuid.UUID]bool // playerID -> cast any spell this turn
+	playerAttackedThisTurn     map[uuid.UUID]bool // playerID -> declared at least one attacker this turn
 }
 
 func (g *Game) ActivePlayer() int {
@@ -2172,6 +2174,10 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	// Check expansion block (City in a Bottle)
 	if g.effects.Rules.IsCardExpansionBlocked(card.Name()) {
 		return fmt.Errorf("can't cast %s: card is from a blocked expansion", card.Name())
+	}
+	// Check player-level cast prohibition (Angelic Arbiter, etc.)
+	if g.effects.Rules.PlayerCantCastSpells(playerID) {
+		return fmt.Errorf("can't cast %s: a continuous effect prevents this player from casting spells", card.Name())
 	}
 	// Check artifact mana restriction (Mishra's Workshop)
 	if g.artifactManaOnly[playerID] && !card.HasType(TypeArtifact) {

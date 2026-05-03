@@ -770,3 +770,79 @@ func TestSailorOfMeans_TreasureSacAddsAnyMana(t *testing.T) {
 	g.AssertPermanentCount(gametest.PlayerA, "Treasure", 0)
 	g.AssertManaProducedAtLeast(gametest.PlayerA, core.Blue, 1)
 }
+
+// ===== Angelic Arbiter =====
+//
+// Each opponent who cast a spell this turn can't attack with creatures.
+// Each opponent who attacked with a creature this turn can't cast spells.
+
+// TestAngelicArbiter_OpponentCastSpellCantAttack: PlayerB casts Lightning
+// Bolt at PlayerA on PlayerB's main phase, then tries to attack with
+// Grizzly Bears. The bolt resolves (PlayerA -> 17) but the attack must
+// be blocked by the static ability (no combat damage from the Bears).
+func TestAngelicArbiter_OpponentCastSpellCantAttack(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Angelic Arbiter")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain", 1)
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+	g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "PlayerA")
+	g.Attack(2, gametest.PlayerB, "Grizzly Bears")
+	g.StopAt(2, core.EndCombat)
+	g.Execute()
+	g.AssertLife(gametest.PlayerA, 17)
+}
+
+// TestAngelicArbiter_OpponentAttackedCantCastSpells: PlayerB attacks with
+// Grizzly Bears, then tries to cast Lightning Bolt at PlayerA in
+// PostcombatMain. The attack lands (PlayerA -> 18). The Bolt must be
+// rejected by the static ability — PlayerA stays at 18.
+func TestAngelicArbiter_OpponentAttackedCantCastSpells(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Angelic Arbiter")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain", 1)
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+	g.Attack(2, gametest.PlayerB, "Grizzly Bears")
+	g.CastSpell(2, core.PostcombatMain, gametest.PlayerB, "Lightning Bolt", "PlayerA")
+	g.StopAt(2, core.EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerA, 18)
+}
+
+// TestAngelicArbiter_ControllerUnaffected: PlayerA controls Angelic
+// Arbiter and is allowed to cast spells and attack freely.
+func TestAngelicArbiter_ControllerUnaffected(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Angelic Arbiter")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 1)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
+	g.Attack(1, gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, core.EndCombat)
+	g.Execute()
+	// Bolt 3 + Bears attack 2 = 5 damage to PlayerB.
+	g.AssertLife(gametest.PlayerB, 15)
+}
+
+// TestAngelicArbiter_PerTurnReset: turn 2 PlayerB casts a spell (so can't
+// attack on turn 2), but on turn 4 (PlayerB's next turn) PlayerB hasn't
+// done anything yet and can attack normally.
+func TestAngelicArbiter_PerTurnReset(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Angelic Arbiter")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain", 1)
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+	// Turn 2: PlayerB casts a spell, then can't attack this turn.
+	g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "PlayerA")
+	g.Attack(2, gametest.PlayerB, "Grizzly Bears")
+	// Turn 4: PlayerB's next turn, has done nothing — Bears can attack.
+	g.Attack(4, gametest.PlayerB, "Grizzly Bears")
+	g.StopAt(4, core.EndCombat)
+	g.Execute()
+	// Turn 2: only the bolt landed (PlayerA -> 17), no Bears damage.
+	// Turn 4: Bears attack lands (PlayerA -> 15).
+	g.AssertLife(gametest.PlayerA, 15)
+}

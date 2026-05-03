@@ -206,6 +206,16 @@ Reveal-and-pick primitives (reveal.go):
 	    Appends `cards` to the bottom of the library in uniformly random
 	    order. The cards must already have been removed from the library.
 
+	Game.PutOnBottomInChosenOrder(player, cards)
+	    Asks the player (via Player.ChooseScryPlacement, reason
+	    "put on bottom in any order") to order `cards` and appends them to
+	    the bottom of the library in that order. The first ID in the
+	    chosen ordering ends up just above the previous bottom card; the
+	    last ID becomes the new deepest card. Powers "Put the rest on the
+	    bottom of your library in any order" (Commune with Dinosaurs etc.).
+	    Test players script the order via TestGame.ChooseScry(player,
+	    ordering, nil).
+
 	Game.PutOnTopInChosenOrder(player, cards)
 	    Places `cards` on top in the supplied order (first = new top).
 

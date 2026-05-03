@@ -2,6 +2,8 @@ package mage
 
 import (
 	"math/rand"
+
+	"github.com/google/uuid"
 )
 
 // Reveal-and-pick primitives. These power cards that look at the top N cards
@@ -120,6 +122,51 @@ func (g *Game) PutOnBottomInRandomOrder(p Player, cards []Card) {
 	newLib := make([]Card, 0, len(lib)+len(shuffled))
 	newLib = append(newLib, lib...)
 	newLib = append(newLib, shuffled...)
+	p.SetLibrary(newLib)
+}
+
+// PutOnBottomInChosenOrder asks the player to order the given cards and
+// appends them to the bottom of their library in that order: the first ID in
+// the chosen ordering ends up just above the previous bottom card, and the
+// last ID becomes the new deepest (very bottom) card. The cards must NOT
+// currently be in the library — typically the caller has already removed
+// them via RemoveTopN.
+//
+// Internally this reuses Player.ChooseScryPlacement (passing the cards as the
+// "top" argument); both the bottom and topOrder slots in the return are
+// concatenated into a single bottom-placement order. This lets test players
+// script the order via TestGame.ChooseScry(player, ordering, nil).
+//
+// Powers Oracle phrases of the form "Put the rest on the bottom of your
+// library in any order" (Commune with Dinosaurs, Mausoleum Secrets, etc.).
+func (g *Game) PutOnBottomInChosenOrder(p Player, cards []Card) {
+	if p == nil || len(cards) == 0 {
+		return
+	}
+	snapshot := make([]Card, len(cards))
+	copy(snapshot, cards)
+	bottom, topOrder := p.ChooseScryPlacement(snapshot, "put on bottom in any order", g)
+	bottom, topOrder = validateScryPlacement(snapshot, bottom, topOrder)
+
+	idToCard := make(map[uuid.UUID]Card, len(snapshot))
+	for _, c := range snapshot {
+		idToCard[c.ID()] = c
+	}
+	ordered := make([]Card, 0, len(snapshot))
+	for _, id := range bottom {
+		if c, ok := idToCard[id]; ok {
+			ordered = append(ordered, c)
+		}
+	}
+	for _, id := range topOrder {
+		if c, ok := idToCard[id]; ok {
+			ordered = append(ordered, c)
+		}
+	}
+	lib := p.Library()
+	newLib := make([]Card, 0, len(lib)+len(ordered))
+	newLib = append(newLib, lib...)
+	newLib = append(newLib, ordered...)
 	p.SetLibrary(newLib)
 }
 

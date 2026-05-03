@@ -1249,3 +1249,86 @@ func TestPathToExile_ExilesAndOpponentMaySearch(t *testing.T) {
 	g.AssertPermanentCount(gametest.PlayerB, "Forest", 1)
 	g.AssertTapped(gametest.PlayerB, "Forest", true)
 }
+
+// Commune with Dinosaurs: scripted bottom order is honored, and the chosen
+// Dinosaur card is moved to hand. The library after resolution should be the
+// pre-existing tail (cards 6..N) followed by the four un-picked top cards in
+// the order the player scripted (last name = new bottom card).
+func TestCommuneWithDinosaurs_BottomOrderHonored(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Commune with Dinosaurs")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	// Top 5 of library, in order:
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Mountain")        // top
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Orazca Frillback") // chosen Dinosaur
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Plains")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Aegis of the Heavens")
+	// Tail (untouched):
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Swamp")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Island")
+
+	g.ChooseFromLibrary(gametest.PlayerA, "Orazca Frillback")
+	// Place the four un-picked cards on bottom, deepest last:
+	// shallow -> deep: Mountain, Plains, Lightning Bolt, Aegis of the Heavens.
+	g.ChooseScry(gametest.PlayerA, []string{
+		"Mountain", "Plains", "Lightning Bolt", "Aegis of the Heavens",
+	}, nil)
+
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Commune with Dinosaurs")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+
+	g.AssertHandCount(gametest.PlayerA, "Orazca Frillback", 1)
+	g.AssertLibraryCount(gametest.PlayerA, "Orazca Frillback", 0)
+	// Tail (Swamp, Island) is now on top, then the chosen bottom order.
+	g.AssertLibraryTop(gametest.PlayerA,
+		"Swamp",
+		"Island",
+		"Mountain",
+		"Plains",
+		"Lightning Bolt",
+		"Aegis of the Heavens",
+	)
+}
+
+// Commune with Dinosaurs: when no revealed card is a Dinosaur or land, the
+// player has no legal pick. All five cards are bottomed in chosen order and
+// hand size is unchanged (other than the spell leaving hand for graveyard).
+func TestCommuneWithDinosaurs_NoLegalPick(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Commune with Dinosaurs")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	// Top 5: all instants/sorceries (no creatures, no lands).
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Aegis of the Heavens")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Aggressive Urge")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Path to Exile")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Cloudshift")
+	// Tail.
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Swamp")
+
+	g.ChooseScry(gametest.PlayerA, []string{
+		"Cloudshift", "Path to Exile", "Aggressive Urge", "Aegis of the Heavens", "Lightning Bolt",
+	}, nil)
+
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Commune with Dinosaurs")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+
+	// Nothing put into hand from the top 5.
+	g.AssertHandCount(gametest.PlayerA, "Lightning Bolt", 0)
+	g.AssertHandCount(gametest.PlayerA, "Aegis of the Heavens", 0)
+	g.AssertHandCount(gametest.PlayerA, "Aggressive Urge", 0)
+	g.AssertHandCount(gametest.PlayerA, "Path to Exile", 0)
+	g.AssertHandCount(gametest.PlayerA, "Cloudshift", 0)
+	// All 5 are still in the library, on the bottom in the scripted order.
+	g.AssertLibraryTop(gametest.PlayerA,
+		"Swamp",
+		"Cloudshift",
+		"Path to Exile",
+		"Aggressive Urge",
+		"Aegis of the Heavens",
+		"Lightning Bolt",
+	)
+}

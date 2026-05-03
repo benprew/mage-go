@@ -746,3 +746,27 @@ func TestAjanisChosen_UnattachedAuraAttachesToCatToken(t *testing.T) {
 	g.AssertPermanentCount(gametest.PlayerA, "Cat", 1)
 	g.AssertAttachedTo(gametest.PlayerA, "Pacifism", "Cat")
 }
+
+func TestParasiticImplant(t *testing.T) {
+	t.Run("end step: enchanted creature's controller sacrifices it; aura controller gets a 3/2 black flying Insect token", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		bearID := g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		auraID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Parasitic Implant")
+		g.Attach(auraID, bearID)
+		g.StopAt(2, core.Upkeep)
+		g.Execute()
+		g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+		g.AssertPermanentCount(gametest.PlayerA, "Insect", 1)
+		g.AssertPowerToughness(gametest.PlayerA, "Insect", 3, 2)
+		g.AssertHasAbility(gametest.PlayerA, "Insect", core.Flying, true)
+		g.AssertGraveyardCount(gametest.PlayerA, "Parasitic Implant", 1)
+	})
+
+	t.Run("no host: no sacrifice, no token", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Parasitic Implant")
+		g.StopAt(2, core.Upkeep)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Insect", 0)
+	})
+}

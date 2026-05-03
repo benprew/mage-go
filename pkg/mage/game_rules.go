@@ -32,6 +32,7 @@ type GameRules struct {
 	SpellCostReducers []SpellCostReducer             // conditional generic-cost reducers registered each Apply() cycle
 	UncounterableFilters []uncounterableEntry        // static "can't be countered" filters (Allosaurus Shepherd, Vexing Shusher)
 	FlashGrants          []flashGrantEntry            // continuous "you may cast X spells as though they had flash" grants (Rattlechains, Vedalken Orrery, Leyline of Anticipation)
+	cantCastSpells       map[uuid.UUID]bool           // players forbidden from casting spells this Apply() cycle (Angelic Arbiter, etc.)
 }
 
 // flashGrantEntry holds a continuous flash-permission grant. Player is the
@@ -84,6 +85,23 @@ func (r *GameRules) ResetPerCycle() {
 	r.SpellCostReducers = nil
 	r.UncounterableFilters = nil
 	r.FlashGrants = nil
+	r.cantCastSpells = nil
+}
+
+// AddCantCastSpells registers a continuous "this player can't cast spells"
+// rule for this Apply() cycle. Used by Angelic Arbiter and similar global
+// restrictions. Cleared by ResetPerCycle.
+func (r *GameRules) AddCantCastSpells(playerID uuid.UUID) {
+	if r.cantCastSpells == nil {
+		r.cantCastSpells = make(map[uuid.UUID]bool)
+	}
+	r.cantCastSpells[playerID] = true
+}
+
+// PlayerCantCastSpells reports whether the given player is currently
+// forbidden from casting spells by an active continuous effect.
+func (r *GameRules) PlayerCantCastSpells(playerID uuid.UUID) bool {
+	return r.cantCastSpells[playerID]
 }
 
 // AddFlashGrant registers a continuous "may cast as though it had flash"

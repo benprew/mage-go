@@ -159,11 +159,36 @@ func registerCreatures() {
 	// Flying
 	// Each opponent who cast a spell this turn can't attack with creatures.
 	// Each opponent who attacked with a creature this turn can't cast spells.
-	// XXX: requires "opponent cast spell / attacked this turn" restrictions
 	Register("Angelic Arbiter", func() Card {
 		return NewCreature("Angelic Arbiter", "{5}{W}{W}", 5, 6,
 			WithSubTypes("Angel"),
 			WithKeyword(Flying),
+			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield,
+				func(g *Game, sourceID uuid.UUID) error {
+					src := g.FindPermanent(sourceID)
+					if src == nil {
+						return nil
+					}
+					opp := g.GetOpponent(src.Controller)
+					if opp == nil {
+						return nil
+					}
+					oppID := opp.PlayerID()
+					// Clause 1: each opponent who cast a spell this turn
+					// can't attack with creatures. Revoke AttrCanAttack from
+					// every creature that opponent controls.
+					if g.PlayerCastSpellThisTurn(oppID) {
+						for _, p := range g.FilterBattlefield(And(IsCreature, ControlledBy(oppID))) {
+							g.RevokeAttr(p.ID(), AttrCanAttack)
+						}
+					}
+					// Clause 2: each opponent who attacked with a creature
+					// this turn can't cast spells.
+					if g.PlayerAttackedThisTurn(oppID) {
+						g.AddCantCastSpells(oppID)
+					}
+					return nil
+				})),
 		)
 	})
 

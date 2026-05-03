@@ -60,6 +60,20 @@ func (g *Game) recordPerTurnEvent(evt *GameEvent) {
 			g.attackedOrBlockedThisTurn = make(map[uuid.UUID]bool)
 		}
 		g.attackedOrBlockedThisTurn[evt.SourceID] = true
+		// Track which player declared an attacker this turn (Angelic Arbiter,
+		// etc.). PlayerID on EvtDeclaredAttacker is the attacking (active)
+		// player.
+		if g.playerAttackedThisTurn == nil {
+			g.playerAttackedThisTurn = make(map[uuid.UUID]bool)
+		}
+		g.playerAttackedThisTurn[evt.PlayerID] = true
+	case EvtSpellCast:
+		// Track which player cast a spell this turn (Angelic Arbiter, etc.).
+		// PlayerID on EvtSpellCast is the casting player.
+		if g.playerCastSpellThisTurn == nil {
+			g.playerCastSpellThisTurn = make(map[uuid.UUID]bool)
+		}
+		g.playerCastSpellThisTurn[evt.PlayerID] = true
 	}
 }
 
@@ -71,6 +85,8 @@ func (g *Game) resetPerTurnTrackers() {
 	g.lifeGainedThisTurn = nil
 	g.permDamageReceivedThisTurn = nil
 	g.attackedOrBlockedThisTurn = nil
+	g.playerCastSpellThisTurn = nil
+	g.playerAttackedThisTurn = nil
 }
 
 // PlayerDiscardCountThisTurn returns the number of times the given player
@@ -97,4 +113,18 @@ func (g *Game) PermanentDamageReceivedThisTurn(permID uuid.UUID) int {
 // cards like Heart of Light or Foundry Champion.
 func (g *Game) PermanentAttackedOrBlockedThisTurn(permID uuid.UUID) bool {
 	return g.attackedOrBlockedThisTurn[permID]
+}
+
+// PlayerCastSpellThisTurn reports whether the given player has cast at
+// least one spell this turn. Used by cards like Angelic Arbiter that key
+// on whether an opponent cast a spell this turn.
+func (g *Game) PlayerCastSpellThisTurn(playerID uuid.UUID) bool {
+	return g.playerCastSpellThisTurn[playerID]
+}
+
+// PlayerAttackedThisTurn reports whether the given player declared at
+// least one attacker this turn. Used by cards like Angelic Arbiter that
+// key on whether an opponent attacked with a creature this turn.
+func (g *Game) PlayerAttackedThisTurn(playerID uuid.UUID) bool {
+	return g.playerAttackedThisTurn[playerID]
 }
