@@ -2552,10 +2552,40 @@ func registerCreatures() {
 	// Creature — Rhino Bard
 	// 4/5
 	// When this creature enters, look at the top X cards of your library, where X is the number of creatures you control. Put one of those cards into your hand and the rest into your graveyard.
-	// TODO: implement
 	Register("Stirring Honormancer", func() Card {
 		return NewCreature("Stirring Honormancer", "{2}{W}{W/B}{B}", 4, 5,
 			WithSubTypes("Rhino", "Bard"),
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect(
+					"look at top X cards, put one into hand, rest into graveyard",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						x := g.CountBattlefield(And(IsCreature, ControlledBy(controller)))
+						if x <= 0 {
+							return nil
+						}
+						revealed := g.RemoveTopN(p, x)
+						if len(revealed) == 0 {
+							return nil
+						}
+						chosen := p.ChooseCardFromLibrary(revealed, "put into hand", g)
+						for _, c := range revealed {
+							if chosen != nil && c.ID() == chosen.ID() {
+								p.AddToHand(c)
+								chosen = nil
+							} else {
+								p.AddToGraveyard(c)
+							}
+						}
+						return nil
+					},
+				),
+				false,
+			)),
 		)
 	})
 
