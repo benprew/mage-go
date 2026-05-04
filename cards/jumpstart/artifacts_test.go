@@ -244,14 +244,26 @@ func TestRoguesGloves(t *testing.T) {
 }
 
 func TestWarmongersChariot(t *testing.T) {
-	g := gametest.NewTestGame(t)
-	chariotID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Warmonger's Chariot")
-	wallID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Wall of Wood")
-	g.Attach(chariotID, wallID)
-	g.Attack(1, gametest.PlayerA, "Wall of Wood")
-	g.StopAt(1, core.EndStep)
-	g.Execute()
-	g.AssertLife(gametest.PlayerB, 18)
+	t.Run("equipped defender can attack", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		chariotID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Warmonger's Chariot")
+		wallID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Wall of Wood")
+		g.Attach(chariotID, wallID)
+		g.Attack(1, gametest.PlayerA, "Wall of Wood")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 18)
+	})
+
+	t.Run("equipped non-defender still gets +2/+2 boost", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		chariotID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Warmonger's Chariot")
+		bearID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.Attach(chariotID, bearID)
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 4, 4)
+	})
 }
 
 func TestHeraldsHorn(t *testing.T) {

@@ -184,16 +184,32 @@ func TestThoughtScour(t *testing.T) {
 }
 
 func TestReanimate(t *testing.T) {
-	g := gametest.NewTestGame(t)
-	g.SetLife(gametest.PlayerA, 20)
-	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
-	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Hill Giant")
-	g.AddCard(core.ZoneHand, gametest.PlayerA, "Reanimate")
-	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Reanimate", "Hill Giant")
-	g.StopAt(1, core.BeginCombat)
-	g.Execute()
-	g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 1)
-	g.AssertLife(gametest.PlayerA, 16)
+	t.Run("from your graveyard", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.SetLife(gametest.PlayerA, 20)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+		g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Hill Giant")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Reanimate")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Reanimate", "Hill Giant")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 1)
+		g.AssertLife(gametest.PlayerA, 16)
+	})
+
+	t.Run("from opponent's graveyard", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.SetLife(gametest.PlayerA, 20)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+		g.AddCard(core.ZoneGraveyard, gametest.PlayerB, "Hill Giant")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Reanimate")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Reanimate", "Hill Giant")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 1)
+		g.AssertLife(gametest.PlayerA, 16)
+		g.AssertGraveyardCount(gametest.PlayerB, "Hill Giant", 0)
+	})
 }
 
 func TestActOfTreason(t *testing.T) {
@@ -997,6 +1013,7 @@ func TestCrushingCanopy_DestroyEnchantment(t *testing.T) {
 func TestFortify_PowerMode(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 3)
 	g.AddCard(core.ZoneHand, gametest.PlayerA, "Fortify")
 	g.ChooseMode(gametest.PlayerA, 0)
@@ -1004,6 +1021,7 @@ func TestFortify_PowerMode(t *testing.T) {
 	g.StopAt(1, core.BeginCombat)
 	g.Execute()
 	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 4, 2)
+	g.AssertPowerToughness(gametest.PlayerB, "Hill Giant", 3, 3)
 }
 
 func TestFortify_ToughnessMode(t *testing.T) {

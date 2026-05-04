@@ -836,11 +836,11 @@ func registerSpells() {
 		c.AddAbility(NewModalSpell([]Mode{
 			{
 				Label:   "Creatures you control get +2/+0 until end of turn",
-				Effects: []Effect{BoostMatchingUntilEndOfTurn(Fixed(2), Fixed(0), AnyPermanent)},
+				Effects: []Effect{BoostMatchingUntilEndOfTurn(Fixed(2), Fixed(0), IsCreature)},
 			},
 			{
 				Label:   "Creatures you control get +0/+2 until end of turn",
-				Effects: []Effect{BoostMatchingUntilEndOfTurn(Fixed(0), Fixed(2), AnyPermanent)},
+				Effects: []Effect{BoostMatchingUntilEndOfTurn(Fixed(0), Fixed(2), IsCreature)},
 			},
 		}))
 		return c
@@ -1555,23 +1555,34 @@ func registerSpells() {
 	// Put target creature card from a graveyard onto the battlefield under your control. You lose life equal to that card's mana value.
 	Register("Reanimate", func() Card {
 		return NewSorcery("Reanimate", "{B}",
-			NewTargetedSpell(TargetCreatureInYourGraveyard(), FuncEffect(
+			NewTargetedSpell(TargetCreatureCardInAnyGraveyard(), FuncEffect(
 				"reanimate; lose life = mana value",
 				EffectProperties{Outcome: OutcomeBenefit},
 				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
-					p := g.GetPlayer(controller)
-					if p == nil {
+					ctrl := g.GetPlayer(controller)
+					if ctrl == nil {
 						return nil
 					}
-					picked, ok := p.RemoveFromGraveyard(targets[0])
+					picked, ok := ctrl.RemoveFromGraveyard(targets[0])
 					if !ok {
-						return nil
+						if opp := g.GetOpponent(controller); opp != nil {
+							picked, ok = opp.RemoveFromGraveyard(targets[0])
+						}
+						if !ok {
+							return nil
+						}
 					}
-					g.PutOnBattlefield(picked, controller)
-					p.LoseLife(picked.ManaCost().CMC())
+					perm := g.PutOnBattlefield(picked, controller)
+					if perm != nil && picked.Owner() != controller {
+						g.AddContinuousEffect(TargetEffect(LayerControl, Indefinite, perm.ID(), func(g *Game, target *Permanent) error {
+							target.Controller = controller
+							return nil
+						}))
+					}
+					ctrl.LoseLife(picked.ManaCost().CMC())
 					return nil
 				},
 			)),

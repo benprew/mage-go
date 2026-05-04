@@ -1109,6 +1109,24 @@ func (tg *TestGame) resolveTargets(names []string, controllerID uuid.UUID) []uui
 		if found {
 			continue
 		}
+		for _, pl := range tg.AllPlayers() {
+			if pl.PlayerID() == controllerID {
+				continue
+			}
+			for _, c := range pl.Graveyard() {
+				if c.Name() == name {
+					targets = append(targets, c.ID())
+					found = true
+					break
+				}
+			}
+			if found {
+				break
+			}
+		}
+		if found {
+			continue
+		}
 		for _, obj := range tg.StackObjects() {
 			if obj.IsAbility || obj.Card == nil {
 				continue

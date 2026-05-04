@@ -556,6 +556,16 @@ func WheneverYouSacrificeAnotherCreatureTrigger(effect Effect, optional bool) *G
 		}})
 }
 
+// WheneverYouSacrificeCreatureTrigger fires whenever the controller sacrifices
+// a creature, including the source itself (e.g. Kels, Fight Fixer).
+func WheneverYouSacrificeCreatureTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtSacrifice, optional, effect).
+		SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+			EventPlayerIsController{},
+			EventSacrificedPermanentIsCreature{},
+		}})
+}
+
 // WheneverYouSacrificeTrigger fires whenever the controller sacrifices any
 // permanent (creature or otherwise), excluding the source itself.
 func WheneverYouSacrificeTrigger(effect Effect, optional bool) *GenericTriggered {

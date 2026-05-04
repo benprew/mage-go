@@ -262,10 +262,23 @@ func TestRagingRegisaur_PingOnAttack(t *testing.T) {
 	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Raging Regisaur")
 	g.SetLife(gametest.PlayerB, 20)
 	g.Attack(1, gametest.PlayerA, "Raging Regisaur")
+	g.ChooseTarget(gametest.PlayerA, "PlayerB")
 	g.StopAt(1, PostcombatMain)
 	g.Execute()
 	// 4 (combat) + 1 (trigger) = 5
 	g.AssertLife(gametest.PlayerB, 15)
+}
+
+func TestRagingRegisaur_PingTargetsCreature(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Raging Regisaur")
+	g.AddCard(ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.Attack(1, gametest.PlayerA, "Raging Regisaur")
+	g.ChooseTarget(gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, PostcombatMain)
+	g.Execute()
+	g.AssertLife(gametest.PlayerB, 16)
+	g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 0)
 }
 
 func TestIronrootWarlord_PowerEqualsCreatures(t *testing.T) {
@@ -346,7 +359,8 @@ func TestMeteorGolem_DestroysNonland(t *testing.T) {
 	g.AddCard(ZoneHand, gametest.PlayerA, "Meteor Golem")
 	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest", 7)
 	g.AddCard(ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
-	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Meteor Golem", "Grizzly Bears")
+	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Meteor Golem")
+	g.ChooseTarget(gametest.PlayerA, "Grizzly Bears")
 	g.StopAt(1, EndStep)
 	g.Execute()
 	g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
@@ -370,9 +384,23 @@ func TestPerilousMyr_DealsTwoOnDeath(t *testing.T) {
 	g.SetLife(gametest.PlayerB, 20)
 	g.Attack(1, gametest.PlayerA, "Perilous Myr")
 	g.Block(1, gametest.PlayerB, "Grizzly Bears", "Perilous Myr")
+	g.ChooseTarget(gametest.PlayerA, "Grizzly Bears")
 	g.StopAt(1, PostcombatMain)
 	g.Execute()
 	g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+}
+
+func TestPerilousMyr_DealsTwoOnDeath_PlayerTarget(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Perilous Myr")
+	g.AddCard(ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.SetLife(gametest.PlayerB, 20)
+	g.Attack(1, gametest.PlayerA, "Perilous Myr")
+	g.Block(1, gametest.PlayerB, "Grizzly Bears", "Perilous Myr")
+	g.ChooseTarget(gametest.PlayerA, "PlayerB")
+	g.StopAt(1, PostcombatMain)
+	g.Execute()
+	g.AssertLife(gametest.PlayerB, 18)
 }
 
 func TestRunedServitor_EachPlayerDraws(t *testing.T) {
@@ -781,6 +809,22 @@ func TestSelvalaHeartOfTheWilds_OpponentDrawsOnTheirBigger(t *testing.T) {
 	g.AssertHandCount(gametest.PlayerB, "Plains", 1)
 	// PlayerA (Selvala's controller) must NOT have been the one to draw.
 	g.AssertHandCount(gametest.PlayerA, "Forest", 0)
+}
+
+// Selvala — controller may decline the optional draw.
+func TestSelvalaHeartOfTheWilds_MayDecline(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Selvala, Heart of the Wilds")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(ZoneHand, gametest.PlayerA, "Hill Giant")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Mountain", 4)
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Plains", 3)
+	g.GetPlayer(gametest.PlayerA).QueueMayAbilityChoices(false)
+	g.CastSpell(3, PrecombatMain, gametest.PlayerA, "Hill Giant")
+	g.StopAt(3, EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 1)
+	g.AssertHandCount(gametest.PlayerA, "Plains", 0)
 }
 
 // Selvala — tied power (Bears 2 vs Selvala 2) is not strictly greater: no draw.

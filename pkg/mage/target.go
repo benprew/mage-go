@@ -556,6 +556,54 @@ func TargetAnyNumberOfCardsInYourGraveyard(filters ...CardFilter) Target {
 	}
 }
 
+// AnyGraveyardCardTarget targets a card in any player's graveyard, optionally
+// filtered by CardFilter predicates. Used by effects worded "from a graveyard"
+// (e.g. Reanimate, "Put target creature card from a graveyard onto the
+// battlefield under your control").
+type AnyGraveyardCardTarget struct {
+	BaseTarget
+	Filters []CardFilter
+}
+
+// TargetCardInAnyGraveyard creates a target that selects any card in any
+// player's graveyard, optionally narrowed by CardFilter predicates.
+func TargetCardInAnyGraveyard(filters ...CardFilter) Target {
+	return &AnyGraveyardCardTarget{
+		BaseTarget: BaseTarget{min: 1, max: 1},
+		Filters:    filters,
+	}
+}
+
+// TargetCreatureCardInAnyGraveyard targets a creature card in any player's
+// graveyard. Convenience wrapper for TargetCardInAnyGraveyard(IsCreatureCard).
+func TargetCreatureCardInAnyGraveyard() Target {
+	return TargetCardInAnyGraveyard(IsCreatureCard)
+}
+
+func (t *AnyGraveyardCardTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+	var result []uuid.UUID
+	for _, p := range g.players {
+		for _, c := range p.Graveyard() {
+			match := true
+			for _, f := range t.Filters {
+				if !f.Match(c) {
+					match = false
+					break
+				}
+			}
+			if match {
+				result = append(result, c.ID())
+			}
+		}
+	}
+	return result
+}
+
+func (t *AnyGraveyardCardTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
+	t.chosen = chosen
+	return nil
+}
+
 // HandCardTarget targets a card in the controller's hand, optionally filtered by CardFilter predicates.
 type HandCardTarget struct {
 	BaseTarget

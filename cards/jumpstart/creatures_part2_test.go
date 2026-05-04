@@ -3,6 +3,7 @@ package jumpstart
 import (
 	"testing"
 
+	mage "git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
 
@@ -682,6 +683,30 @@ func TestKelsFightFixer_DrawOnSacrifice(t *testing.T) {
 	g.AssertHandCount(gametest.PlayerA, "Hill Giant", 1)
 }
 
+func TestKelsFightFixer_DrawOnSelfSacrifice(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Kels, Fight Fixer")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Hill Giant")
+	g.StopAt(1, core.PrecombatMain)
+	g.Execute()
+
+	var kels *mage.Permanent
+	for _, p := range g.Game.AllBattlefield() {
+		if p.Name() == "Kels, Fight Fixer" {
+			kels = p
+			break
+		}
+	}
+	if kels == nil {
+		t.Fatal("Kels not on battlefield")
+	}
+	g.Game.Sacrifice(kels)
+	g.Game.PutTriggersOnStack()
+	g.Game.ResolveStack()
+	g.AssertHandCount(gametest.PlayerA, "Hill Giant", 1)
+}
+
 func TestKelsFightFixer_DeclineDraw(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Kels, Fight Fixer")
@@ -753,7 +778,7 @@ func TestMausoleumTurnkey_OpponentChoosesReturn(t *testing.T) {
 }
 
 // Linvala, Keeper of Silence: Activated abilities of creatures your opponents
-// control can't be activated unless they're mana abilities.
+// control can't be activated.
 
 func TestLinvalaKeeperOfSilence_BlocksOpponentNonManaActivation(t *testing.T) {
 	g := gametest.NewTestGame(t)
@@ -766,14 +791,14 @@ func TestLinvalaKeeperOfSilence_BlocksOpponentNonManaActivation(t *testing.T) {
 	g.AssertTapped(gametest.PlayerB, "Prodigal Sorcerer", false)
 }
 
-func TestLinvalaKeeperOfSilence_AllowsOpponentManaAbility(t *testing.T) {
+func TestLinvalaKeeperOfSilence_BlocksOpponentManaAbility(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Linvala, Keeper of Silence")
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Llanowar Elves")
 	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerB, "Llanowar Elves")
 	g.StopAt(1, core.EndStep)
 	g.Execute()
-	g.AssertTapped(gametest.PlayerB, "Llanowar Elves", true)
+	g.AssertTapped(gametest.PlayerB, "Llanowar Elves", false)
 }
 
 func TestLinvalaKeeperOfSilence_OwnCreaturesUnaffected(t *testing.T) {

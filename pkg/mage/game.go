@@ -3606,6 +3606,9 @@ func (g *Game) TapForMana(playerID, permanentID uuid.UUID) error {
 	if perm.Tapped {
 		return fmt.Errorf("permanent is already tapped")
 	}
+	if perm.HasAttr(AttrCantActivate) {
+		return fmt.Errorf("cannot activate mana ability of %s", perm.Name())
+	}
 
 	// Find a mana ability
 	for _, a := range perm.RuntimeAbilities {
@@ -3661,6 +3664,9 @@ func (g *Game) getUntappedManaSources(playerID uuid.UUID) []manaSourceInfo {
 	var sources []manaSourceInfo
 	for _, perm := range g.battlefield {
 		if perm.Controller != playerID || perm.Tapped {
+			continue
+		}
+		if perm.HasAttr(AttrCantActivate) {
 			continue
 		}
 		// Skip summoning-sick creatures without haste
@@ -4025,6 +4031,9 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 
 	// Handle mana abilities (don't use the stack)
 	if ma, ok := inner.(*ManaAbility); ok {
+		if perm.HasAttr(AttrCantActivate) {
+			return fmt.Errorf("cannot activate mana ability of %s", perm.Name())
+		}
 		if perm.Tapped || !perm.CanTapForEffect(g) {
 			return fmt.Errorf("cannot tap %s for mana", perm.Name())
 		}

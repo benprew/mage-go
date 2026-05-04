@@ -57,10 +57,10 @@ func registerCreatures() {
 	// Ajani's Chosen {2}{W}{W}
 	// Creature — Cat Soldier
 	// 3/3
-	// Whenever an enchantment you control enters, create a 2/2 white Cat creature token. If that enchantment is an Aura without a creature attached to it, you may attach it to the token created this way.
+	// Whenever an enchantment you control enters, create a 2/2 white Cat creature token. If that enchantment is an Aura, you may attach it to the token.
 	Register("Ajani's Chosen", func() Card {
 		ajanisChosenEffect := FuncEffect(
-			"create a 2/2 white Cat token; if the entering enchantment is an Aura without a creature attached, may attach it to the token",
+			"create a 2/2 white Cat token; if the entering enchantment is an Aura, may attach it to the token",
 			EffectProperties{Outcome: OutcomeBenefit, TokenPower: 2, TokenToughness: 2},
 			func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 				token := NewToken("Cat", 2, 2, []CardType{TypeCreature}, []string{"Cat"})
@@ -77,10 +77,6 @@ func registerCreatures() {
 				enteringID := targets[0]
 				entering := g.FindPermanent(enteringID)
 				if entering == nil || !entering.HasSubType("Aura") {
-					return nil
-				}
-				attachedTo := g.FindPermanent(entering.AttachedTo)
-				if attachedTo != nil && attachedTo.HasType(TypeCreature) {
 					return nil
 				}
 				p := g.GetPlayer(controller)
@@ -637,7 +633,7 @@ func registerCreatures() {
 	// Legendary Creature — Angel
 	// 3/4
 	// Flying
-	// Activated abilities of creatures your opponents control can't be activated unless they're mana abilities.
+	// Activated abilities of creatures your opponents control can't be activated.
 	Register("Linvala, Keeper of Silence", func() Card {
 		return NewCreature("Linvala, Keeper of Silence", "{2}{W}{W}", 3, 4,
 			WithSubTypes("Angel"),
@@ -653,7 +649,7 @@ func registerCreatures() {
 						if !p.HasType(TypeCreature) || p.Controller == src.Controller {
 							continue
 						}
-						g.GrantAttr(p.ID(), AttrCantActivateNonManaAbilities)
+						g.GrantAttr(p.ID(), AttrCantActivate)
 					}
 					return nil
 				})),
@@ -2769,7 +2765,7 @@ func registerCreatures() {
 			WithSubTypes("Azra", "Warlock"),
 			WithSuperTypes(SuperLegendary),
 			WithKeyword(Menace),
-			WithAbility(WheneverYouSacrificeAnotherCreatureTrigger(
+			WithAbility(WheneverYouSacrificeCreatureTrigger(
 				MayPayMana("{U/B}", "draw a card", DrawCards(Fixed(1))),
 				false,
 			)),
@@ -3991,7 +3987,8 @@ func registerCreatures() {
 	Register("Flametongue Kavu", func() Card {
 		return NewCreature("Flametongue Kavu", "{3}{R}", 4, 2,
 			WithSubTypes("Kavu"),
-			WithETBEffect(DealDamage(Fixed(4))),
+			WithAbility(EntersBattlefieldTrigger(DealDamage(Fixed(4)), false).
+				AddTarget(TargetCreature())),
 		)
 	})
 
@@ -4002,10 +3999,11 @@ func registerCreatures() {
 	Register("Forge Devil", func() Card {
 		return NewCreature("Forge Devil", "{R}", 1, 1,
 			WithSubTypes("Devil"),
-			WithETBEffect(CompositeEffects("deal 1 to target creature and 1 to you",
-				DealDamage(Fixed(1)),
-				DealDamageToPlayers(Fixed(1), SelectController()),
-			)),
+			WithAbility(EntersBattlefieldTrigger(
+				CompositeEffects("deal 1 to target creature and 1 to you",
+					DealDamage(Fixed(1)),
+					DealDamageToPlayers(Fixed(1), SelectController()),
+				), false).AddTarget(TargetCreature())),
 		)
 	})
 
@@ -4048,7 +4046,8 @@ func registerCreatures() {
 	Register("Goblin Commando", func() Card {
 		return NewCreature("Goblin Commando", "{4}{R}", 2, 2,
 			WithSubTypes("Goblin"),
-			WithETBEffect(DealDamage(Fixed(2))),
+			WithAbility(EntersBattlefieldTrigger(DealDamage(Fixed(2)), false).
+				AddTarget(TargetCreature())),
 		)
 	})
 
@@ -5846,7 +5845,7 @@ func registerCreatures() {
 	// Selvala, Heart of the Wilds {1}{G}{G}
 	// Legendary Creature — Elf Scout
 	// 2/3
-	// Whenever another creature enters, if it has greater power than each other creature on the battlefield, that creature's controller draws a card.
+	// Whenever another creature enters, its controller may draw a card if its power is greater than each other creature's power.
 	// {G}, {T}: Add X mana in any combination of colors, where X is the greatest power among creatures you control.
 	Register("Selvala, Heart of the Wilds", func() Card {
 		// The trigger's effect is "that creature's controller draws a card" —
@@ -5862,7 +5861,7 @@ func registerCreatures() {
 		// (ChooseManaColor per mana point), but goes through the stack rather
 		// than CR 605's mana-ability fast path.
 		drawForEnteringController := FuncEffect(
-			"that creature's controller draws a card",
+			"that creature's controller may draw a card",
 			EffectProperties{Outcome: OutcomeBenefit, DrawCount: 1},
 			func(g *Game, _, _ uuid.UUID, targets []uuid.UUID) error {
 				if len(targets) == 0 {
@@ -5874,6 +5873,9 @@ func registerCreatures() {
 				}
 				p := g.GetPlayer(perm.Controller)
 				if p == nil {
+					return nil
+				}
+				if !p.ChooseMayAbility("draw a card (Selvala, Heart of the Wilds)") {
 					return nil
 				}
 				g.PlayerDrawCard(p)
@@ -6362,29 +6364,8 @@ func registerCreatures() {
 	Register("Raging Regisaur", func() Card {
 		return NewCreature("Raging Regisaur", "{2}{R}{G}", 4, 4,
 			WithSubTypes("Dinosaur"),
-			WithAbility(AttacksTrigger(FuncEffect(
-				"deal 1 damage to any target",
-				EffectProperties{Outcome: OutcomeDetriment, DamageValue: Fixed(1)},
-				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					p := g.GetPlayer(controller)
-					if p == nil {
-						return nil
-					}
-					var creatureCands []*Permanent
-					creatureCands = append(creatureCands, g.FilterBattlefield(And(IsCreature, NotControlledBy(controller)))...)
-					if opp := g.GetOpponent(controller); opp != nil {
-						g.DealDamageToPlayer(opp, 1, sourceID)
-						return nil
-					}
-					if len(creatureCands) > 0 {
-						chosen := p.ChoosePermanent(creatureCands, "1 damage", g)
-						if chosen != nil {
-							g.DealDamageToPermanent(chosen, 1, sourceID)
-						}
-					}
-					return nil
-				},
-			), false)),
+			WithAbility(AttacksTrigger(DealDamage(Fixed(1)), false).
+				AddTarget(TargetAnyTarget())),
 		)
 	})
 
@@ -6598,26 +6579,8 @@ func registerCreatures() {
 		return NewCreature("Meteor Golem", "{7}", 3, 3,
 			WithSubTypes("Golem"),
 			WithCardType(TypeArtifact),
-			WithAbility(EntersBattlefieldTrigger(FuncEffect(
-				"destroy target nonland permanent an opponent controls",
-				EffectProperties{Outcome: OutcomeDetriment},
-				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					p := g.GetPlayer(controller)
-					if p == nil {
-						return nil
-					}
-					candidates := g.FilterBattlefield(And(NotControlledBy(controller), Not(IsLand)))
-					if len(candidates) == 0 {
-						return nil
-					}
-					chosen := p.ChoosePermanent(candidates, "destroy target", g)
-					if chosen == nil {
-						return nil
-					}
-					g.DestroyPermanent(chosen)
-					return nil
-				},
-			), false)),
+			WithAbility(EntersBattlefieldTrigger(DestroyTarget(), false).
+				AddTarget(TargetPermanentOpponentControls(Not(IsLand)))),
 		)
 	})
 
@@ -6644,29 +6607,8 @@ func registerCreatures() {
 		return NewCreature("Perilous Myr", "{2}", 1, 1,
 			WithSubTypes("Phyrexian", "Myr"),
 			WithCardType(TypeArtifact),
-			WithAbility(PutIntoGraveyardFromBattlefieldTrigger(FuncEffect(
-				"deal 2 damage to any target",
-				EffectProperties{Outcome: OutcomeDetriment, DamageValue: Fixed(2)},
-				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					p := g.GetPlayer(controller)
-					if p == nil {
-						return nil
-					}
-					var creatureCands []*Permanent
-					creatureCands = append(creatureCands, g.FilterBattlefield(IsCreature)...)
-					if len(creatureCands) > 0 {
-						chosen := p.ChoosePermanent(creatureCands, "2 damage to creature", g)
-						if chosen != nil {
-							g.DealDamageToPermanent(chosen, 2, sourceID)
-							return nil
-						}
-					}
-					if opp := g.GetOpponent(controller); opp != nil {
-						g.DealDamageToPlayer(opp, 2, sourceID)
-					}
-					return nil
-				},
-			), false)),
+			WithAbility(DiesTrigger(DealDamage(Fixed(2)), false).
+				AddTarget(TargetAnyTarget())),
 		)
 	})
 

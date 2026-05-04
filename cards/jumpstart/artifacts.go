@@ -386,7 +386,12 @@ func registerArtifacts() {
 		return NewEquipment("Warmonger's Chariot", "{2}",
 			WithStaticAbility(
 				BoostAttached(2, 2, AttachEquipment),
-				GrantAbilityToAttached(AttrCanAttack, AttachEquipment),
+				AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
+					if target.HasKeyword(Defender) {
+						g.GrantAttr(target.ID(), AttrCanAttack)
+					}
+					return nil
+				}),
 			),
 			WithAbility(NewEquipAbility(ManaCostOf("{3}"))),
 		)

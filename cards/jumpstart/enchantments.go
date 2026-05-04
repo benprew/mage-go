@@ -637,12 +637,12 @@ func registerEnchantments() {
 	// Parasitic Implant {3}{B}
 	// Enchantment — Aura
 	// Enchant creature
-	// At the beginning of the end step, the enchanted creature's controller sacrifices it. If they do, you create a 3/2 black Insect creature token with flying.
+	// At the beginning of your upkeep, enchanted creature's controller sacrifices it and you create a 1/1 colorless Phyrexian Myr artifact creature token.
 	Register("Parasitic Implant", func() Card {
 		return NewAura("Parasitic Implant", "{3}{B}",
-			WithAbility(BeginningOfEachEndStepTrigger(
+			WithAbility(BeginningOfUpkeepTrigger(
 				FuncEffect(
-					"enchanted creature's controller sacrifices it; if they do, create a 3/2 black flying Insect token",
+					"enchanted creature's controller sacrifices it; create a 1/1 colorless Phyrexian Myr artifact creature token",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						src := g.FindPermanent(sourceID)
@@ -650,17 +650,12 @@ func registerEnchantments() {
 							return nil
 						}
 						host := g.FindPermanent(src.AttachedTo)
-						if host == nil {
-							return nil
+						if host != nil {
+							g.Sacrifice(host)
 						}
-						g.Sacrifice(host)
-						if g.FindPermanent(host.ID()) != nil {
-							return nil
-						}
-						token := NewToken("Insect", 3, 2,
-							[]CardType{TypeCreature}, []string{"Insect"}, Flying)
+						token := NewToken("Myr", 1, 1,
+							[]CardType{TypeArtifact, TypeCreature}, []string{"Phyrexian", "Myr"})
 						token.SetOwner(controller)
-						token.SetColorOverride([]Color{Black})
 						g.PutOnBattlefield(token, controller)
 						return nil
 					},
@@ -932,7 +927,7 @@ func registerEnchantments() {
 		return NewEnchantment("Zendikar's Roil", "{3}{G}{G}",
 			WithAbility(
 				NewTriggered(EvtZoneChange, false,
-					CreateToken("Elemental", 2, 2, []CardType{TypeCreature}, []string{"Elemental"}),
+					CreateColoredToken("Elemental", 2, 2, []Color{Green}, []CardType{TypeCreature}, []string{"Elemental"}),
 				).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
 					EventZoneChangeMatches{From: ZoneAny, To: ZoneBattlefield},
 					EventSourceControlledByController{},

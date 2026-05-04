@@ -713,7 +713,7 @@ func TestAjanisChosen_NonAuraEnchantmentCreatesCatToken(t *testing.T) {
 	g.AssertPowerToughness(gametest.PlayerA, "Cat", 2, 2)
 }
 
-func TestAjanisChosen_AuraOnExistingCreatureKeepsAttachment(t *testing.T) {
+func TestAjanisChosen_AuraOnExistingCreatureMayReattachToToken(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ajani's Chosen")
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 2)
@@ -723,7 +723,7 @@ func TestAjanisChosen_AuraOnExistingCreatureKeepsAttachment(t *testing.T) {
 	g.StopAt(1, core.EndStep)
 	g.Execute()
 	g.AssertPermanentCount(gametest.PlayerA, "Cat", 1)
-	g.AssertAttachedTo(gametest.PlayerB, "Pacifism", "Hill Giant")
+	g.AssertAttachedTo(gametest.PlayerA, "Pacifism", "Cat")
 }
 
 func TestAjanisChosen_UnattachedAuraAttachesToCatToken(t *testing.T) {
@@ -748,25 +748,50 @@ func TestAjanisChosen_UnattachedAuraAttachesToCatToken(t *testing.T) {
 }
 
 func TestParasiticImplant(t *testing.T) {
-	t.Run("end step: enchanted creature's controller sacrifices it; aura controller gets a 3/2 black flying Insect token", func(t *testing.T) {
+	t.Run("upkeep: enchanted creature's controller sacrifices it; aura controller gets a 1/1 colorless Phyrexian Myr artifact creature token", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		bearID := g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
 		auraID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Parasitic Implant")
 		g.Attach(auraID, bearID)
-		g.StopAt(2, core.Upkeep)
+		g.StopAt(3, core.Upkeep)
 		g.Execute()
 		g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
-		g.AssertPermanentCount(gametest.PlayerA, "Insect", 1)
-		g.AssertPowerToughness(gametest.PlayerA, "Insect", 3, 2)
-		g.AssertHasAbility(gametest.PlayerA, "Insect", core.Flying, true)
+		g.AssertPermanentCount(gametest.PlayerA, "Myr", 1)
+		g.AssertPowerToughness(gametest.PlayerA, "Myr", 1, 1)
+		g.AssertHasAbility(gametest.PlayerA, "Myr", core.Flying, false)
 		g.AssertGraveyardCount(gametest.PlayerA, "Parasitic Implant", 1)
+
+		pid := g.GetPlayer(gametest.PlayerA).PlayerID()
+		myr := g.FindPermanentByName("Myr", pid)
+		if myr == nil {
+			t.Fatalf("Myr token not on battlefield")
+		}
+		if !myr.HasType(core.TypeArtifact) || !myr.HasType(core.TypeCreature) {
+			t.Fatalf("Myr token types: got %v, want Artifact Creature", myr.Card.Types())
+		}
+		hasPhyrexian := false
+		hasMyr := false
+		for _, st := range myr.Card.SubTypes() {
+			if st == "Phyrexian" {
+				hasPhyrexian = true
+			}
+			if st == "Myr" {
+				hasMyr = true
+			}
+		}
+		if !hasPhyrexian || !hasMyr {
+			t.Fatalf("Myr token subtypes: got %v, want [Phyrexian Myr]", myr.Card.SubTypes())
+		}
+		if cs := myr.Colors(); len(cs) != 0 {
+			t.Fatalf("Myr token should be colorless, got %v", cs)
+		}
 	})
 
-	t.Run("no host: no sacrifice, no token", func(t *testing.T) {
+	t.Run("no host: aura is detached and falls off; no token", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Parasitic Implant")
 		g.StopAt(2, core.Upkeep)
 		g.Execute()
-		g.AssertPermanentCount(gametest.PlayerA, "Insect", 0)
+		g.AssertPermanentCount(gametest.PlayerA, "Myr", 0)
 	})
 }
