@@ -851,10 +851,36 @@ func registerCreatures() {
 				false,
 			)),
 			// {1}{B}, Exile an instant or sorcery card from your graveyard: Return this card from your graveyard to the battlefield.
+			// XXX: "Exile an instant or sorcery card from your graveyard" should be an additional cost, but there is
+			// no filtered graveyard exile cost API; the exile is performed inside the effect instead.
 			WithGraveyardActivatedAbility(
-				ReturnSourceFromGraveyardToBattlefield(),
+				FuncEffect("exile an instant or sorcery card from your graveyard, then return this card to the battlefield",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						// Exile an instant or sorcery card from graveyard (not self).
+						for _, c := range p.Graveyard() {
+							if c.ID() == sourceID {
+								continue
+							}
+							if !(c.HasType(TypeInstant) || c.HasType(TypeSorcery)) {
+								continue
+							}
+							if removed, ok := p.RemoveFromGraveyard(c.ID()); ok {
+								g.ExileCard(removed, sourceID)
+							}
+							break
+						}
+						// Return self from graveyard to battlefield.
+						if removed, ok := p.RemoveFromGraveyard(sourceID); ok {
+							g.PutOnBattlefield(removed, controller)
+						}
+						return nil
+					}),
 				ManaCostOf("{1}{B}"),
-				WithCost(ExileFromGraveyardCost(1)),
 			),
 		)
 	})

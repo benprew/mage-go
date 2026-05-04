@@ -728,22 +728,24 @@ func TestOwlinHistorian_FlyingAndSurveil(t *testing.T) {
 // ===========================================================================
 
 // TestParadoxSurveyor_ETBLooksAtTopFive verifies that when Paradox Surveyor
-// enters, the controller looks at the top 5 cards and may take a land card.
+// enters, the controller looks at the top 5 cards and may take a qualifying card.
+// We use Stream of Life (an X-cost card) so the auto-land-play harness does not
+// immediately remove the card from hand before the assertion runs.
 func TestParadoxSurveyor_ETBLooksAtTopFive(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneHand, gametest.PlayerA, "Paradox Surveyor")
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 3)
-	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Forest")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Stream of Life")
 	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Gray Ogre")
 	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Gray Ogre")
 	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Gray Ogre")
 	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Gray Ogre")
-	g.ChooseFromLibrary(gametest.PlayerA, "Forest")
+	g.ChooseFromLibrary(gametest.PlayerA, "Stream of Life")
 	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Paradox Surveyor")
 	g.StopAt(1, core.EndStep)
 	g.Execute()
-	// Forest was put into hand
-	g.AssertHandCount(gametest.PlayerA, "Forest", 1)
+	// Stream of Life (a card with {X} in its mana cost) was put into hand
+	g.AssertHandCount(gametest.PlayerA, "Stream of Life", 1)
 }
 
 // TestParadoxSurveyor_ETBDeclineNoCard verifies declining puts all cards back on bottom.
@@ -814,26 +816,30 @@ func TestPestbroodSloth_PestTokenGainsLifeWhenAttacking(t *testing.T) {
 }
 
 // TestPostmortemProfessor_CantBlock verifies Postmortem Professor can't block.
+// Turn 2 is PlayerB's turn; Gray Ogre attacks and PlayerA tries to block with Prof.
+// Prof's block declaration is silently ignored (can't block), so Gray Ogre
+// deals 2 unblocked combat damage. PlayerA finishes at 18.
 func TestPostmortemProfessor_CantBlock(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Postmortem Professor")
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Gray Ogre")
-	g.Attack(1, gametest.PlayerB, "Gray Ogre")
-	g.Block(1, gametest.PlayerA, "Postmortem Professor", "Gray Ogre")
-	g.StopAt(1, core.EndStep)
+	g.Attack(2, gametest.PlayerB, "Gray Ogre")
+	g.Block(2, gametest.PlayerA, "Postmortem Professor", "Gray Ogre")
+	g.StopAt(2, core.EndStep)
 	g.Execute()
-	g.AssertLife(gametest.PlayerA, 17)
+	g.AssertLife(gametest.PlayerA, 18)
 }
 
 // TestPostmortemProfessor_AttackDrainsLife verifies each opponent loses 1 life
 // and controller gains 1 life when Professor attacks.
+// Prof (2/2) attacks unblocked: 2 combat damage + 1 drain = PlayerB at 17; PlayerA gains 1 = 21.
 func TestPostmortemProfessor_AttackDrainsLife(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Postmortem Professor")
 	g.Attack(1, gametest.PlayerA, "Postmortem Professor")
 	g.StopAt(1, core.EndStep)
 	g.Execute()
-	g.AssertLife(gametest.PlayerB, 19)
+	g.AssertLife(gametest.PlayerB, 17)
 	g.AssertLife(gametest.PlayerA, 21)
 }
 
