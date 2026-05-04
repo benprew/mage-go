@@ -1287,10 +1287,36 @@ func registerSpells() {
 // Instant
 // Destroy target creature.
 // Infusion — If you gained life this turn, that creature's controller loses 3 life.
-// TODO: implement
 	Register("Foolish Fate", func() Card {
 		return NewInstant("Foolish Fate", "{2}{B}",
-			NewSpellAbility(),
+			NewTargetedSpell(
+				TargetCreature(),
+				FuncEffect(
+					"destroy target creature; Infusion: that creature's controller loses 3 life",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						perm := g.FindPermanent(targets[0])
+						if perm == nil {
+							return nil
+						}
+						// Capture the creature's controller before destroying.
+						creatureControllerID := perm.Controller
+						g.DestroyPermanent(perm)
+						// Infusion: if controller gained life this turn, that
+						// creature's controller loses 3 life.
+						if IfControllerGainedLifeThisTurn(g, controller) {
+							creatureController := g.GetPlayer(creatureControllerID)
+							if creatureController != nil {
+								g.PlayerLoseLife(creatureController, 3)
+							}
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 

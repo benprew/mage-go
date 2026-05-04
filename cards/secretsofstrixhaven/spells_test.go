@@ -2049,3 +2049,51 @@ func TestFollowTheLumarets_InfusionRevealsTwoWithLifeGain(t *testing.T) {
 	// Giant Spider should be in hand if infusion condition triggered.
 	g.AssertHandCount(gametest.PlayerA, "Giant Spider", 1)
 }
+
+// TestFoolishFate_DestroysTargetCreature verifies that Foolish Fate destroys
+// the target creature.
+func TestFoolishFate_DestroysTargetCreature(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Foolish Fate")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Foolish Fate", "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+	g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+}
+
+// TestFoolishFate_InfusionLosesThreeLifeWithLifeGain verifies that if the
+// controller gained life this turn, that creature's controller loses 3 life.
+func TestFoolishFate_InfusionLosesThreeLifeWithLifeGain(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Foolish Fate")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Healing Salve")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+	// Gain life first, then cast Foolish Fate.
+	g.ChooseMode(gametest.PlayerA, 0) // Healing Salve mode 0: gain 3 life
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Healing Salve")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Foolish Fate", "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Grizzly Bears should be destroyed.
+	g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+	// PlayerB (controller of the creature) loses 3 life due to infusion.
+	g.AssertLife(gametest.PlayerB, 17)
+}
+
+// TestFoolishFate_NoLifeLossWithoutLifeGain verifies that without life gain,
+// the infusion bonus (3 life loss) does not apply.
+func TestFoolishFate_NoLifeLossWithoutLifeGain(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Foolish Fate")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Foolish Fate", "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Grizzly Bears is destroyed.
+	g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+	// PlayerB retains full 20 life (no infusion bonus).
+	g.AssertLife(gametest.PlayerB, 20)
+}
