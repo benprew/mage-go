@@ -819,10 +819,38 @@ func registerCreatures() {
 // This creature can't block.
 // Whenever this creature attacks, each opponent loses 1 life and you gain 1 life.
 // {1}{B}, Exile an instant or sorcery card from your graveyard: Return this card from your graveyard to the battlefield.
-// TODO: implement
 	Register("Postmortem Professor", func() Card {
 		return NewCreature("Postmortem Professor", "{1}{B}", 2, 2,
 			WithSubTypes("Zombie", "Warlock"),
+			// This creature can't block.
+			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+				g.RevokeAttr(sourceID, AttrCanBlock)
+				return nil
+			})),
+			// Whenever this creature attacks, each opponent loses 1 life and you gain 1 life.
+			WithAbility(AttacksTrigger(
+				FuncEffect("each opponent loses 1 life and you gain 1 life",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						for _, pl := range g.AllPlayers() {
+							if pl.PlayerID() != controller {
+								pl.LoseLife(1)
+							}
+						}
+						if you := g.GetPlayer(controller); you != nil {
+							g.PlayerGainLife(you, 1)
+						}
+						return nil
+					},
+				),
+				false,
+			)),
+			// {1}{B}, Exile an instant or sorcery card from your graveyard: Return this card from your graveyard to the battlefield.
+			WithGraveyardActivatedAbility(
+				ReturnSourceFromGraveyardToBattlefield(),
+				ManaCostOf("{1}{B}"),
+				WithCost(ExileFromGraveyardCost(1)),
+			),
 		)
 	})
 
@@ -1399,10 +1427,27 @@ func registerCreatures() {
 // 4/4
 // Reach
 // When this creature dies, create two 1/1 black and green Pest creature tokens with "Whenever this token attacks, you gain 1 life."
-// TODO: implement
 	Register("Pestbrood Sloth", func() Card {
+		pestTokenWithAttack := TokenWithAbilities(
+			CreateColoredToken("Pest Token", 1, 1,
+				[]Color{Black, Green},
+				[]CardType{TypeCreature},
+				[]string{"Pest"},
+			),
+			AttacksTrigger(GainLife(1), false),
+		)
 		return NewCreature("Pestbrood Sloth", "{3}{G}", 4, 4,
 			WithSubTypes("Plant", "Sloth"),
+			WithKeyword(Reach),
+			// When this creature dies, create two 1/1 black and green Pest creature tokens
+			// with "Whenever this token attacks, you gain 1 life."
+			WithAbility(PutIntoGraveyardFromBattlefieldTrigger(
+				CompositeEffects("create two Pest tokens",
+					pestTokenWithAttack,
+					pestTokenWithAttack,
+				),
+				false,
+			)),
 		)
 	})
 
@@ -1874,10 +1919,11 @@ func registerCreatures() {
 // 3/3
 // Vigilance
 // When this creature enters, surveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)
-// TODO: implement
 	Register("Imperious Inkmage", func() Card {
 		return NewCreature("Imperious Inkmage", "{1}{W}{B}", 3, 3,
 			WithSubTypes("Orc", "Warlock"),
+			WithKeyword(Vigilance),
+			WithAbility(EntersBattlefieldTrigger(surveilEffect(2), false)),
 		)
 	})
 
@@ -1933,11 +1979,63 @@ func registerCreatures() {
 // 2/3
 // Whenever you cast a spell you don't own, put a +1/+1 counter on each creature you control.
 // {2}, Sacrifice another creature: Exile target instant or sorcery card from an opponent's graveyard. You may cast it this turn, and mana of any type can be spent to cast that spell. If that spell would be put into a graveyard, exile it instead. Activate only as a sorcery.
-// TODO: implement
 	Register("Nita, Forum Conciliator", func() Card {
+		// XXX: "Whenever you cast a spell you don't own" trigger not implemented — engine
+		// does not track spell ownership separately from controller.
+		instantOrSorceryCard := NewCardFilter("instant or sorcery card", func(c Card) bool {
+			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
+		})
 		return NewCreature("Nita, Forum Conciliator", "{1}{W}{B}", 2, 3,
 			WithSubTypes("Human", "Advisor"),
 			WithSuperTypes(SuperLegendary),
+			// {2}, Sacrifice another creature: Exile target instant or sorcery card from an
+			// opponent's graveyard. You may cast it this turn, and mana of any type can be
+			// spent to cast that spell. If that spell would be put into a graveyard, exile it
+			// instead. Activate only as a sorcery.
+			WithActivatedAbility(
+				FuncEffect(
+					"exile target instant or sorcery from an opponent's graveyard; may cast it this turn with any mana",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						// Collect instant/sorcery cards from all opponents' graveyards.
+						var candidates []Card
+						for _, opp := range g.AllPlayers() {
+							if opp.PlayerID() == controller {
+								continue
+							}
+							for _, c := range opp.Graveyard() {
+								if instantOrSorceryCard.Match(c) {
+									candidates = append(candidates, c)
+								}
+							}
+						}
+						if len(candidates) == 0 {
+							return nil
+						}
+						chosen := p.ChooseCardFromLibrary(candidates, "exile target instant or sorcery card from an opponent's graveyard", g)
+						if chosen == nil {
+							return nil
+						}
+						// Remove from owner's graveyard and exile it.
+						for _, opp := range g.AllPlayers() {
+							if removed, ok := opp.RemoveFromGraveyard(chosen.ID()); ok {
+								g.ExileCard(removed, sourceID)
+								g.GrantCastFromExile(controller, removed.ID(), true)
+								g.AddExileIfWouldGoToGraveyardThisTurn(removed.ID(), sourceID)
+								break
+							}
+						}
+						return nil
+					},
+				),
+				ManaCostOf("{2}"),
+				WithCost(SacrificeCreatureCost()),
+				WithSorcerySpeed(),
+			),
 		)
 	})
 
@@ -1958,10 +2056,48 @@ func registerCreatures() {
 // 3/3
 // Reach
 // When this creature enters, look at the top five cards of your library. You may reveal a land card or a card with {X} in its mana cost from among them and put it into your hand. Put the rest on the bottom of your library in a random order.
-// TODO: implement
 	Register("Paradox Surveyor", func() Card {
+		landOrXCostCard := NewCardFilter("land card or card with {X} in its mana cost", func(c Card) bool {
+			if c.HasType(TypeLand) {
+				return true
+			}
+			return c.ManaCost().HasX
+		})
 		return NewCreature("Paradox Surveyor", "{G}{G/U}{U}", 3, 3,
 			WithSubTypes("Elf", "Druid"),
+			WithKeyword(Reach),
+			// When this creature enters, look at the top five cards of your library. You may
+			// reveal a land card or a card with {X} in its mana cost from among them and put
+			// it into your hand. Put the rest on the bottom of your library in a random order.
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect(
+					"look at top 5; may put a land or X-cost card into your hand; rest on bottom in random order",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						chosen, _ := g.RevealAndPickFromTop(p, p, 5, landOrXCostCard, true,
+							"reveal a land card or a card with {X} in its mana cost and put it into your hand")
+						taken := g.RemoveTopN(p, 5)
+						rest := taken
+						if chosen != nil {
+							rest = make([]Card, 0, len(taken))
+							for _, c := range taken {
+								if c.ID() == chosen.ID() {
+									p.AddToHand(c)
+									continue
+								}
+								rest = append(rest, c)
+							}
+						}
+						g.PutOnBottomInRandomOrder(p, rest)
+						return nil
+					},
+				),
+				false,
+			)),
 		)
 	})
 
@@ -1970,10 +2106,14 @@ func registerCreatures() {
 // 2/3
 // Trample
 // Whenever you gain life, put a +1/+1 counter on this creature.
-// TODO: implement
 	Register("Pest Mascot", func() Card {
 		return NewCreature("Pest Mascot", "{1}{B}{G}", 2, 3,
 			WithSubTypes("Pest", "Ape"),
+			WithKeyword(Trample),
+			WithAbility(WheneverYouGainLifeTrigger(
+				AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
+				false,
+			)),
 		)
 	})
 
