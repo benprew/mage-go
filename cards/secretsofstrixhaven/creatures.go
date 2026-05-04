@@ -1390,10 +1390,22 @@ func registerCreatures() {
 	// Cheerful Osteomancer // Raise Dead {3}{B} // {B}
 	// Creature — Orc Warlock // Sorcery
 	// 4/2
-	// TODO: implement
+	// This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)
+	// ---
+	// Raise Dead {B}
+	// Sorcery
+	// Return target creature card from your graveyard to your hand.
 	Register("Cheerful Osteomancer // Raise Dead", func() Card {
+		spellFactory := func() Card {
+			return NewSorcery("Raise Dead", "{B}",
+				NewTargetedSpell(
+					TargetCardInYourGraveyard(IsCreatureCard),
+					ReturnFromGraveyardToHandTarget(),
+				))
+		}
 		return NewCreature("Cheerful Osteomancer // Raise Dead", "{3}{B} // {B}", 4, 2,
-			WithSubTypes("Orc", "Warlock", "//", "Sorcery"),
+			WithSubTypes("Orc", "Warlock"),
+			WithPreparedSpell(spellFactory),
 		)
 	})
 

@@ -2617,6 +2617,34 @@ func TestSpectacularSkywhale_OpusFiveManaSpentPutsCounters(t *testing.T) {
 }
 
 // =============================================================================
+// Cheerful Osteomancer // Raise Dead
+// =============================================================================
+
+// TestCheerfulOsteomancer_ETBPrepared: Cheerful Osteomancer enters the battlefield prepared.
+func TestCheerfulOsteomancer_ETBPrepared(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Cheerful Osteomancer // Raise Dead")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Cheerful Osteomancer // Raise Dead", core.AttrPrepared, true)
+}
+
+// TestCheerfulOsteomancer_RaiseDeadReturnsCreatureToHand: casting a copy of Raise Dead
+// returns a target creature card from your graveyard to your hand.
+func TestCheerfulOsteomancer_RaiseDeadReturnsCreatureToHand(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Cheerful Osteomancer // Raise Dead")
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
+	g.ChooseTarget(gametest.PlayerA, "Grizzly Bears")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Cheerful Osteomancer // Raise Dead")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 1)
+	g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 0)
+	g.AssertHasAbility(gametest.PlayerA, "Cheerful Osteomancer // Raise Dead", core.AttrPrepared, false)
+}
+
+// =============================================================================
 // Adventurous Eater // Have a Bite
 // =============================================================================
 
@@ -2961,15 +2989,19 @@ func TestPigmentWrangler_ETBPrepared(t *testing.T) {
 
 // TestPigmentWrangler_StrikingPaletteCopiesNextInstantOrSorcery verifies that
 // activating the Prepared ability causes the next instant or sorcery spell cast
-// this turn to be copied.
+// this turn to be copied. The bolt is cast in PostcombatMain so that Striking
+// Palette has fully resolved and registered the delayed copy trigger before the
+// bolt is cast (harness batches same-step actions, so different steps are needed).
 func TestPigmentWrangler_StrikingPaletteCopiesNextInstantOrSorcery(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Pigment Wrangler // Striking Palette")
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 5)
 	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
-	// Activate Striking Palette (the Prepared ability), then cast Lightning Bolt.
+	// Activate Striking Palette in precombat main to register the copy trigger.
 	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Pigment Wrangler // Striking Palette")
-	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
+	// Cast Lightning Bolt in postcombat main so it fires AFTER the delayed copy
+	// trigger has been registered (the trigger persists until used or end of turn).
+	g.CastSpell(1, core.PostcombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
 	g.StopAt(1, core.EndStep)
 	g.Execute()
 	// The bolt and its copy each deal 3 damage — PlayerB ends at 14.
