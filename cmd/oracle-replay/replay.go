@@ -51,6 +51,17 @@ type replay struct {
 	// mismatches from mage-go's approximate Playable() stub). Reported
 	// at end of run.
 	warnings []string
+
+	// attackersByTurn[turn] = ordered list of creature names declared
+	// as attackers on that turn, derived from "Attacker: <name>" LOG
+	// entries. Only populated when the recording lacks ATTACKERS_DECLARED
+	// events (true for AI plays — XMage's recorder gap).
+	attackersByTurn map[int][]string
+
+	// blockersByTurn[turn] = ordered (blocker, attacker) name pairs
+	// from "Blocker: <name> blocks <name>" LOG entries. Same fallback
+	// motivation as attackersByTurn.
+	blockersByTurn map[int][]blockPair
 }
 
 func newReplay(meta metaLine, events []eventLine, loose bool) (*replay, error) {
@@ -112,9 +123,89 @@ func newReplay(meta metaLine, events []eventLine, loose bool) (*replay, error) {
 
 	r.handSizes = []int{meta.Players[0].HandSizeAtStart, meta.Players[1].HandSizeAtStart}
 
+	r.indexCombatLogs()
+
 	r.game = mage.NewGame(pa, pb)
 	r.game.SetOnPriority(r.onPriority)
 	return r, nil
+}
+
+// indexCombatLogs populates attackersByTurn and blockersByTurn by
+// scanning LOG events. XMage's recorder doesn't fire onTestsAttackersDeclared
+// or onTestsBlockersDeclared for AI plays, so without this fallback the
+// replay can't distinguish "no attackers" from "attackers declared but
+// not recorded as a structured event."
+func (r *replay) indexCombatLogs() {
+	r.attackersByTurn = map[int][]string{}
+	r.blockersByTurn = map[int][]blockPair{}
+	currentTurn := 0
+	for _, ev := range r.events {
+		if ev.Snapshot != nil && ev.Snapshot.Turn > 0 {
+			currentTurn = ev.Snapshot.Turn
+		}
+		if ev.Type != "LOG" {
+			continue
+		}
+		if name := parseAttackerLog(ev.Description); name != "" && currentTurn > 0 {
+			r.attackersByTurn[currentTurn] = append(r.attackersByTurn[currentTurn], name)
+			continue
+		}
+		if blocker, attacker := parseBlockerLog(ev.Description); blocker != "" && currentTurn > 0 {
+			r.blockersByTurn[currentTurn] = append(r.blockersByTurn[currentTurn], blockPair{
+				BlockerName:  blocker,
+				AttackerName: attacker,
+			})
+		}
+	}
+}
+
+// parseAttackerLog extracts an attacker's card name from XMage's per-attacker
+// LOG line:
+//
+//	"Attacker: <CardName> [<shortid>] (P/T) unblocked"
+//	"Attacker: <CardName> [<shortid>] (P/T) blocked by <Blocker> [...]"
+//
+// Returns "" if the line doesn't match.
+func parseAttackerLog(desc string) string {
+	const prefix = "Attacker: "
+	if !strings.HasPrefix(desc, prefix) {
+		return ""
+	}
+	rest := desc[len(prefix):]
+	// Card name ends at " [shortid]".
+	before, _, ok := strings.Cut(rest, " [")
+	if !ok {
+		return ""
+	}
+	return before
+}
+
+// parseBlockerLog extracts (blockerName, attackerName) from XMage's per-blocker
+// LOG line:
+//
+//	"Blocker: <BlockerName> [id] (P/T) blocks <AttackerName> [id] (P/T)"
+//
+// Returns ("", "") if the line doesn't match.
+func parseBlockerLog(desc string) (blockerName, attackerName string) {
+	const prefix = "Blocker: "
+	if !strings.HasPrefix(desc, prefix) {
+		return "", ""
+	}
+	rest := desc[len(prefix):]
+	blocker, _, ok := strings.Cut(rest, " [")
+	if !ok {
+		return "", ""
+	}
+	const sep = " blocks "
+	_, atkRest, ok := strings.Cut(rest, sep)
+	if !ok {
+		return "", ""
+	}
+	attacker, _, ok := strings.Cut(atkRest, " [")
+	if !ok {
+		return "", ""
+	}
+	return blocker, attacker
 }
 
 // usesHandLibraryEncoding reports whether META encodes the deck as
@@ -340,6 +431,27 @@ func (r *replay) decideAction(g *mage.Game, playerIdx int) mage.PriorityAction {
 			r.fail("LAND_PLAYED %q at seq=%d but mage-go p%d has no such land in hand",
 				cardName, ev.Seq, playerIdx)
 			return mage.PriorityAction{Type: mage.PriorityPass}
+		case "LOG":
+			// XMage's recorder doesn't fire LAND_PLAYED for AI plays (the hook
+			// isn't reached on the ComputerPlayer path), but the move-to-
+			// battlefield LOG always fires:
+			//   "<PlayerName> puts <CardName> [id] from hand onto the Battlefield"
+			// Parse it as a land-play signal — but only when the named card is
+			// actually a land in the active player's hand. Spells reach the
+			// battlefield via STACK_PUSH/STACK_RESOLVE and would also match this
+			// log line; the in-hand-land check filters those out.
+			cardName := parseLandPlayedFromLog(ev.Description)
+			if cardName == "" {
+				continue
+			}
+			player := g.PlayerAt(playerIdx)
+			for _, c := range player.Hand() {
+				if matchCardName(c.Name(), cardName) && c.HasType(core.TypeLand) {
+					r.cursor = i + 1
+					return mage.PriorityAction{Type: mage.PriorityPlayLand, CardID: c.ID()}
+				}
+			}
+			// Not a land in hand — likely a resolved spell, skip
 		case "STACK_PUSH":
 			if ev.Action == nil {
 				continue
@@ -351,10 +463,144 @@ func (r *replay) decideAction(g *mage.Game, playerIdx int) mage.PriorityAction {
 			r.cursor = i + 1
 			return pa
 		default:
-			// LOG, STACK_RESOLVE, DISCARD_TAKEN, TRIGGER_ORDER — keep scanning
+			// STACK_RESOLVE, DISCARD_TAKEN, TRIGGER_ORDER — keep scanning
 		}
 	}
 	return mage.PriorityAction{Type: mage.PriorityPass}
+}
+
+// pickAbilityIndex selects the activated-ability index on perm that best
+// matches the XMage rule text. XMage's recorder only gives us the ability's
+// rule text ("({1}: {this} becomes a 2/2 ...)") not its index, so we score
+// each candidate ability against that text and pick the highest. Mana
+// abilities are preferred only when wantMana is true (kind=ACTIVATE_MANA),
+// so a non-mana activate on a card like Mishra's Factory doesn't fall
+// through to its tap-for-mana ability and silently mis-fire.
+func pickAbilityIndex(perm *mage.Permanent, ruleText string, wantMana bool) int {
+	bestIdx, bestScore := -1, -1
+	for i, ab := range perm.RuntimeAbilities {
+		inner := mage.UnwrapAbility(ab)
+		_, isMana := inner.(*mage.ManaAbility)
+		if isMana != wantMana {
+			continue
+		}
+		score := scoreAbilityMatch(inner, ruleText)
+		if score > bestScore {
+			bestScore = score
+			bestIdx = i
+		}
+	}
+	if bestIdx >= 0 {
+		return bestIdx
+	}
+	// Fallback: index 0 (preserves prior behavior on cards with a single
+	// activated ability where mana/non-mana distinction is moot).
+	return 0
+}
+
+// scoreAbilityMatch returns a coarse word-overlap score between an
+// ability's effect text and the XMage rule text. Higher is better; -1
+// for unmatchable inputs.
+func scoreAbilityMatch(ab mage.Ability, ruleText string) int {
+	type texter interface {
+		Effects() []mage.Effect
+		Costs() []mage.Cost
+	}
+	t, ok := ab.(texter)
+	if !ok {
+		return 0
+	}
+	var sb strings.Builder
+	for _, c := range t.Costs() {
+		sb.WriteString(c.Text())
+		sb.WriteByte(' ')
+	}
+	for _, e := range t.Effects() {
+		sb.WriteString(e.Text())
+		sb.WriteByte(' ')
+	}
+	abText := strings.ToLower(sb.String())
+	rt := strings.ToLower(ruleText)
+	score := 0
+	for w := range strings.FieldsSeq(abText) {
+		if len(w) >= 4 && strings.Contains(rt, w) {
+			score++
+		}
+	}
+	return score
+}
+
+// lookupPermanentNameByID scans backwards from the cursor for the most
+// recent PRIORITY snapshot containing a battlefield permanent with the
+// given recorder UUID, returning its name. Used to resolve the source
+// permanent of an ACTIVATE event whose SourceName is the ability rule
+// text rather than the permanent's name.
+func (r *replay) lookupPermanentNameByID(sourceID string) string {
+	if sourceID == "" {
+		return ""
+	}
+	for i := r.cursor - 1; i >= 0; i-- {
+		ev := &r.events[i]
+		if ev.Type != "PRIORITY" || ev.Snapshot == nil {
+			continue
+		}
+		for _, p := range ev.Snapshot.Battlefield {
+			if p.ID == sourceID {
+				return p.Name
+			}
+		}
+	}
+	// Fall back: scan forward (in case the activate fires before any
+	// snapshot includes the permanent — rare but possible for a permanent
+	// that ETBs and immediately activates).
+	for i := r.cursor; i < len(r.events); i++ {
+		ev := &r.events[i]
+		if ev.Type != "PRIORITY" || ev.Snapshot == nil {
+			continue
+		}
+		for _, p := range ev.Snapshot.Battlefield {
+			if p.ID == sourceID {
+				return p.Name
+			}
+		}
+	}
+	return ""
+}
+
+// parseLandPlayedFromLog extracts the card name from the XMage move-to-
+// battlefield log line. Returns "" on no match. Format:
+//
+//	"<PlayerName> puts <CardName> [<shortid>] from hand onto the Battlefield"
+//
+// The trailing " (source: ...)" or " [N]" suffix is irrelevant to us.
+func parseLandPlayedFromLog(desc string) string {
+	const marker = " puts "
+	const tail = " from hand onto the Battlefield"
+	_, after, ok := strings.Cut(desc, marker)
+	if !ok {
+		return ""
+	}
+	rest := after
+	before, _, ok := strings.Cut(rest, tail)
+	if !ok {
+		return ""
+	}
+	name := before
+	// Strip trailing " [shortid]" if present.
+	if k := strings.LastIndex(name, " ["); k >= 0 && strings.HasSuffix(name, "]") {
+		name = name[:k]
+	}
+	return strings.TrimSpace(name)
+}
+
+// matchCardName compares two card names ignoring diacritics, so XMage's
+// ASCII spelling ("El-Hajjaj") matches mage-go's canonical Scryfall form
+// ("El-Hajjâj") when scanning hand contents from a recorded log line.
+func matchCardName(a, b string) bool {
+	if a == b {
+		return true
+	}
+	return mage.FoldDiacritics(a) == mage.FoldDiacritics(b)
 }
 
 // translateCast maps an XMage STACK_PUSH (CAST_SPELL or activated ability)
@@ -390,19 +636,24 @@ func (r *replay) translateCast(g *mage.Game, playerIdx int, ev *eventLine) (mage
 			r.fail("ACTIVATE seq=%d: unknown playerId %s", ev.Seq, a.PlayerID)
 			return mage.PriorityAction{}, false
 		}
-		perm := g.FindPermanentByName(a.SourceName, controllerID.PlayerID())
+		// XMage's ACTIVATE event SourceName is the rule text of the ability,
+		// not the permanent's name. Resolve the permanent by SourceId via
+		// the most recent PRIORITY snapshot's battlefield.
+		permName := a.SourceName
+		if pn := r.lookupPermanentNameByID(a.SourceID); pn != "" {
+			permName = pn
+		}
+		perm := g.FindPermanentByName(permName, controllerID.PlayerID())
 		if perm == nil {
 			r.fail("ACTIVATE %q seq=%d: permanent not found on p%d battlefield",
-				a.SourceName, ev.Seq, playerIdx)
+				permName, ev.Seq, playerIdx)
 			return mage.PriorityAction{}, false
 		}
-		// Without ability index in the recording, we'd need rule-text matching
-		// to disambiguate among multiple activated abilities. Punt with a clear
-		// failure for now — skill-3 self-play rarely triggers this.
+		idx := pickAbilityIndex(perm, a.SourceName, a.Kind == "ACTIVATE_MANA")
 		return mage.PriorityAction{
 			Type:        mage.PriorityActivateAbility,
 			PermanentID: perm.ID(),
-			AbilityIdx:  0,
+			AbilityIdx:  idx,
 			Targets:     r.resolveTargets(g, a.ChosenTargets),
 		}, true
 	case "TRIGGERED":
@@ -684,7 +935,10 @@ func equalPermSet(a, b []permEntry) bool {
 		return false
 	}
 	for i := range a {
-		if a[i] != b[i] {
+		if a[i].tapped != b[i].tapped {
+			return false
+		}
+		if a[i].name != b[i].name && mage.FoldDiacritics(a[i].name) != mage.FoldDiacritics(b[i].name) {
 			return false
 		}
 	}
@@ -715,7 +969,7 @@ func equalNameMultiset(a, b []string) bool {
 		return false
 	}
 	for i := range a {
-		if a[i] != b[i] {
+		if a[i] != b[i] && mage.FoldDiacritics(a[i]) != mage.FoldDiacritics(b[i]) {
 			return false
 		}
 	}
@@ -800,21 +1054,58 @@ func newReplayPlayer(name string, r *replay) *replayPlayer {
 	return &replayPlayer{BasePlayer: mage.NewBasePlayer(name), r: r}
 }
 
+// nextDecisionEventIsAt reports whether the next event of the given type
+// in the cursor is for the current turn and step. Used by the combat
+// callbacks: XMage only emits ATTACKERS_DECLARED / BLOCKERS_DECLARED when
+// an actual decision happens, but mage-go always invokes the callback on
+// each combat step. Without this check, the callback would consume a
+// future-turn event and silently desync the cursor.
+func (r *replay) nextDecisionEventIsAt(eventType string, turn int, step core.PhaseStep) bool {
+	ev, _, err := r.peek(eventType)
+	if err != nil || ev == nil || ev.Snapshot == nil {
+		return false
+	}
+	if ev.Snapshot.Turn != turn {
+		return false
+	}
+	return normalizeXMageStep(ev.Snapshot.Step) == stepName(step)
+}
+
 func (p *replayPlayer) DeclareAttackers(g *mage.Game) []uuid.UUID {
 	if p.r.divergence != "" {
 		return nil
 	}
-	ev, err := p.r.advanceTo("ATTACKERS_DECLARED")
-	if err != nil || ev.Action == nil {
-		p.r.fail("DeclareAttackers fired on mage-go but no ATTACKERS_DECLARED in recording (T%d %s)",
-			g.CurrentTurn(), stepName(g.GetStep()))
+	if p.r.nextDecisionEventIsAt("ATTACKERS_DECLARED", g.CurrentTurn(), g.GetStep()) {
+		ev, err := p.r.advanceTo("ATTACKERS_DECLARED")
+		if err == nil && ev.Action != nil {
+			var ids []uuid.UUID
+			for _, ref := range ev.Action.Attackers {
+				if perm := g.FindPermanentByName(ref.Name, p.PlayerID()); perm != nil {
+					ids = append(ids, perm.ID())
+				}
+			}
+			return ids
+		}
+	}
+	// Fallback: structured ATTACKERS_DECLARED is missing (XMage recorder
+	// gap on AI plays), but the game's LOG entries list each attacker.
+	// Only the active player gets to declare attackers, so guard on that.
+	if g.ActivePlayerObj() == nil || g.ActivePlayerObj().PlayerID() != p.PlayerID() {
 		return nil
 	}
+	names := p.r.attackersByTurn[g.CurrentTurn()]
 	var ids []uuid.UUID
-	for _, ref := range ev.Action.Attackers {
-		perm := g.FindPermanentByName(ref.Name, p.PlayerID())
-		if perm != nil {
-			ids = append(ids, perm.ID())
+	used := make(map[uuid.UUID]bool)
+	for _, name := range names {
+		for _, perm := range g.AllBattlefield() {
+			if perm.Controller != p.PlayerID() || used[perm.ID()] {
+				continue
+			}
+			if matchCardName(perm.Name(), name) {
+				ids = append(ids, perm.ID())
+				used[perm.ID()] = true
+				break
+			}
 		}
 	}
 	return ids
@@ -824,18 +1115,48 @@ func (p *replayPlayer) DeclareBlockers(g *mage.Game) []mage.BlockAssignment {
 	if p.r.divergence != "" {
 		return nil
 	}
-	ev, err := p.r.advanceTo("BLOCKERS_DECLARED")
-	if err != nil || ev.Action == nil {
-		p.r.fail("DeclareBlockers fired on mage-go but no BLOCKERS_DECLARED in recording (T%d %s)",
-			g.CurrentTurn(), stepName(g.GetStep()))
+	if p.r.nextDecisionEventIsAt("BLOCKERS_DECLARED", g.CurrentTurn(), g.GetStep()) {
+		ev, err := p.r.advanceTo("BLOCKERS_DECLARED")
+		if err == nil && ev.Action != nil {
+			var out []mage.BlockAssignment
+			for _, bp := range ev.Action.Blockers {
+				blocker := g.FindPermanentByName(bp.BlockerName, p.PlayerID())
+				var attacker *mage.Permanent
+				for _, perm := range g.AllBattlefield() {
+					if matchCardName(perm.Name(), bp.AttackerName) && g.IsAttackingInCombat(perm.ID()) {
+						attacker = perm
+						break
+					}
+				}
+				if blocker != nil && attacker != nil {
+					out = append(out, mage.BlockAssignment{
+						BlockerID:  blocker.ID(),
+						AttackerID: attacker.ID(),
+					})
+				}
+			}
+			return out
+		}
+	}
+	// Fallback: derive from LOG-indexed blockers. The defending (non-active)
+	// player declares blockers; skip for the active player.
+	if g.ActivePlayerObj() == nil || g.ActivePlayerObj().PlayerID() == p.PlayerID() {
 		return nil
 	}
+	pairs := p.r.blockersByTurn[g.CurrentTurn()]
 	var out []mage.BlockAssignment
-	for _, bp := range ev.Action.Blockers {
-		blocker := g.FindPermanentByName(bp.BlockerName, p.PlayerID())
+	usedBlocker := make(map[uuid.UUID]bool)
+	for _, bp := range pairs {
+		var blocker *mage.Permanent
+		for _, perm := range g.AllBattlefield() {
+			if perm.Controller == p.PlayerID() && !usedBlocker[perm.ID()] && matchCardName(perm.Name(), bp.BlockerName) {
+				blocker = perm
+				break
+			}
+		}
 		var attacker *mage.Permanent
 		for _, perm := range g.AllBattlefield() {
-			if perm.Name() == bp.AttackerName && g.IsAttackingInCombat(perm.ID()) {
+			if matchCardName(perm.Name(), bp.AttackerName) && g.IsAttackingInCombat(perm.ID()) {
 				attacker = perm
 				break
 			}
@@ -845,6 +1166,7 @@ func (p *replayPlayer) DeclareBlockers(g *mage.Game) []mage.BlockAssignment {
 				BlockerID:  blocker.ID(),
 				AttackerID: attacker.ID(),
 			})
+			usedBlocker[blocker.ID()] = true
 		}
 	}
 	return out
@@ -859,10 +1181,15 @@ func (p *replayPlayer) ChooseCardsFromHand(amount int, reason string, g mage.Gam
 		// BasePlayer's deterministic head-of-hand behavior.
 		return p.BasePlayer.ChooseCardsFromHand(amount, reason, g)
 	}
+	// XMage may not emit DISCARD_TAKEN at all (recorder gap for AI plays);
+	// when missing, fall back to BasePlayer's deterministic discard so the
+	// game can continue rather than failing the replay outright.
+	if _, _, err := p.r.peek("DISCARD_TAKEN"); err != nil {
+		return p.BasePlayer.ChooseCardsFromHand(amount, reason, g)
+	}
 	ev, err := p.r.advanceTo("DISCARD_TAKEN")
 	if err != nil || ev.Action == nil {
-		p.r.fail("ChooseCardsFromHand fired but no DISCARD_TAKEN in recording (reason=%q)", reason)
-		return nil
+		return p.BasePlayer.ChooseCardsFromHand(amount, reason, g)
 	}
 	hand := p.Hand()
 	used := make(map[int]bool)
