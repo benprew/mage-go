@@ -58,8 +58,11 @@ func registerEnchantments() {
 	// Graduation Day {W}
 	// Enchantment
 	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, put a +1/+1 counter on target creature you control.
-	// TODO: implement
 	Register("Graduation Day", func() Card {
+		// XXX: "Repartee — Whenever you cast an instant or sorcery spell that targets a creature" —
+		// the engine's WheneverYouCastSpellTrigger does not expose the targets of the triggering
+		// spell, so there is no way to filter "that targets a creature." The trigger itself is
+		// not implemented.
 		return NewEnchantment("Graduation Day", "{W}")
 	})
 
