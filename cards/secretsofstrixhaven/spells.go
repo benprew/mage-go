@@ -1568,11 +1568,58 @@ func registerSpells() {
 // • Each opponent sacrifices a nontoken artifact of their choice.
 // • Return target artifact or creature card with mana value 2 or less from your graveyard to the battlefield.
 // • Creatures you control get +1/+1 and gain trample until end of turn.
-// TODO: implement
 	Register("Lorehold Charm", func() Card {
-		return NewInstant("Lorehold Charm", "{R}{W}",
-			NewSpellAbility(),
-		)
+		isArtifactOrCreatureLe2 := NewCardFilter("artifact or creature card with mana value 2 or less", func(c Card) bool {
+			if c.ManaCost().CMC() > 2 {
+				return false
+			}
+			return c.HasType(TypeArtifact) || c.HasType(TypeCreature)
+		})
+		c := NewInstant("Lorehold Charm", "{R}{W}", nil)
+		c.AddAbility(NewModalSpell([]Mode{
+			{
+				Label: "Each opponent sacrifices a nontoken artifact of their choice",
+				Effects: []Effect{FuncEffect(
+					"each opponent sacrifices a nontoken artifact",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						opp := g.GetOpponent(controller)
+						if opp == nil {
+							return nil
+						}
+						nonTokenArtifacts := g.FilterBattlefield(And(ControlledBy(opp.PlayerID()), IsArtifact, Not(IsToken)))
+						if len(nonTokenArtifacts) == 0 {
+							return nil
+						}
+						chosen := opp.ChoosePermanent(nonTokenArtifacts, "sacrifice a nontoken artifact", g)
+						if chosen != nil {
+							g.Sacrifice(chosen)
+						}
+						return nil
+					},
+				)},
+			},
+			{
+				Label:   "Return target artifact or creature card with mana value 2 or less from your graveyard to the battlefield",
+				Targets: []Target{TargetCardInYourGraveyard(isArtifactOrCreatureLe2)},
+				Effects: []Effect{ReturnFromGraveyardToBattlefield()},
+			},
+			{
+				Label: "Creatures you control get +1/+1 and gain trample until end of turn",
+				Effects: []Effect{FuncEffect(
+					"creatures you control get +1/+1 and gain trample until end of turn",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						for _, perm := range g.FilterBattlefield(And(ControlledBy(controller), IsCreature)) {
+							g.AddContinuousEffect(TemporaryBoost(perm.ID(), 1, 1))
+							g.AddContinuousEffect(TemporaryKeyword(perm.ID(), Trample))
+						}
+						return nil
+					},
+				)},
+			},
+		}))
+		return c
 	})
 
 
