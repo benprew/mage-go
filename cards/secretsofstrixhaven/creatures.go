@@ -307,10 +307,12 @@ func registerCreatures() {
 	// 4/3
 	// As an additional cost to cast this spell, exile two cards from your graveyard or pay {1}{W}.
 	// Flying, vigilance
-	// TODO: implement
 	Register("Soaring Stoneglider", func() Card {
 		return NewCreature("Soaring Stoneglider", "{2}{W}", 4, 3,
 			WithSubTypes("Elephant", "Cleric"),
+			WithAdditionalCost(EitherCost(ExileFromGraveyardCost(2), ManaCostOf("{1}{W}"))),
+			WithKeyword(Flying),
+			WithKeyword(Vigilance),
 		)
 	})
 
