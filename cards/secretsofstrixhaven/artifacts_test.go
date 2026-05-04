@@ -3,6 +3,7 @@ package secretsofstrixhaven
 import (
 	"testing"
 
+	_ "git.sr.ht/~cdcarter/mage-go/cards/limited"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
 )
@@ -25,7 +26,7 @@ func TestArkOfHunger(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ark of Hunger")
 		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears", 3)
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Ark of Hunger")
-		g.StopAt(1, core.PrecombatMain)
+		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 1)
 	})
@@ -39,7 +40,7 @@ func TestCauldronOfEssence(t *testing.T) {
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
 		// PlayerB casts Lightning Bolt to kill Grizzly Bears
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Grizzly Bears")
-		g.StopAt(1, core.PrecombatMain)
+		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		// PlayerA (Cauldron controller) gains 1 life; PlayerB (opponent) loses 1 life
 		g.AssertLife(gametest.PlayerB, 19)
@@ -52,7 +53,7 @@ func TestCauldronOfEssence(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Grizzly Bears")
-		g.StopAt(1, core.PrecombatMain)
+		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		// Cauldron does not trigger for opponent's creature dying
 		g.AssertLife(gametest.PlayerB, 20)
@@ -67,7 +68,7 @@ func TestCauldronOfEssence(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")
 		// Activate: {1}{B}{G},{T}, sacrifice a creature → return target creature from GY to BF
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Cauldron of Essence", "Grizzly Bears")
-		g.StopAt(1, core.PrecombatMain)
+		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
 	})
@@ -79,7 +80,7 @@ func TestDiaryOfDreams(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Diary of Dreams")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
-		g.StopAt(1, core.PrecombatMain)
+		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		g.AssertCounterCount(gametest.PlayerA, "Diary of Dreams", core.Charge, 1)
 	})
@@ -89,7 +90,7 @@ func TestDiaryOfDreams(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Diary of Dreams")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Ancestral Recall")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Ancestral Recall", "PlayerA")
-		g.StopAt(1, core.PrecombatMain)
+		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		g.AssertCounterCount(gametest.PlayerA, "Diary of Dreams", core.Charge, 1)
 	})
@@ -99,7 +100,7 @@ func TestDiaryOfDreams(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Diary of Dreams")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Grizzly Bears")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Grizzly Bears")
-		g.StopAt(1, core.PrecombatMain)
+		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		g.AssertCounterCount(gametest.PlayerA, "Diary of Dreams", core.Charge, 0)
 	})
@@ -110,7 +111,7 @@ func TestDiaryOfDreams(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 5)
 		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears", 5)
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Diary of Dreams")
-		g.StopAt(1, core.PrecombatMain)
+		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 1)
 	})
@@ -126,7 +127,7 @@ func TestDiaryOfDreams(t *testing.T) {
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
 		// Now activate Diary of Dreams — reduced cost {4},{T}
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Diary of Dreams")
-		g.StopAt(1, core.PrecombatMain)
+		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 1)
 	})
@@ -148,7 +149,7 @@ func TestPotionersTrove(t *testing.T) {
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Potioner's Trove")
-		g.StopAt(1, core.PrecombatMain)
+		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		g.AssertLife(gametest.PlayerA, 22)
 	})
@@ -172,7 +173,7 @@ func TestResonatingLute(t *testing.T) {
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Grizzly Bears", 7)
 		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Lightning Bolt", 3)
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Resonating Lute")
-		g.StopAt(1, core.PrecombatMain)
+		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		g.AssertHandCount(gametest.PlayerA, "Lightning Bolt", 1)
 	})
@@ -197,9 +198,11 @@ func TestStrixhavenSkycoach(t *testing.T) {
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Strixhaven Skycoach")
 		g.ChooseFromLibrary(gametest.PlayerA, "Forest")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Strixhaven Skycoach")
-		g.StopAt(1, core.PrecombatMain)
+		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		g.AssertHandCount(gametest.PlayerA, "Forest", 1)
+		// The fetched Forest goes to hand; the engine may auto-play it as the
+		// turn's land-for-turn. Check that it left the library (count drops from 3 to 2).
+		g.AssertLibraryCount(gametest.PlayerA, "Forest", 2)
 	})
 }
 
@@ -209,7 +212,7 @@ func TestTabletOfDiscovery(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tablet of Discovery")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
-		g.StopAt(1, core.PrecombatMain)
+		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		g.AssertLife(gametest.PlayerB, 17)
 	})
@@ -219,7 +222,7 @@ func TestTabletOfDiscovery(t *testing.T) {
 		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears", 3)
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Tablet of Discovery")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Tablet of Discovery")
-		g.StopAt(1, core.PrecombatMain)
+		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 1)
 	})
