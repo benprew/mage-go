@@ -1457,10 +1457,28 @@ func registerSpells() {
 // Mathemagics {X}{X}{U}{U}
 // Sorcery
 // Target player draws 2ˣ cards. (2⁰ = 1, 2¹ = 2, 2² = 4, 2³ = 8, 2⁴ = 16, 2⁵ = 32, and so on.)
-// TODO: implement
 	Register("Mathemagics", func() Card {
 		return NewSorcery("Mathemagics", "{X}{X}{U}{U}",
-			NewSpellAbility(),
+			NewTargetedSpell(TargetPlayer(),
+				FuncEffect("target player draws 2^X cards",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						p := g.GetPlayer(targets[0])
+						if p == nil {
+							return nil
+						}
+						x := g.XValue()
+						count := 1 << x // 2^X
+						for i := 0; i < count; i++ {
+							g.PlayerDrawCard(p)
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -1479,10 +1497,64 @@ func registerSpells() {
 // Mind into Matter {X}{G}{U}
 // Sorcery
 // Draw X cards. Then you may put a permanent card with mana value X or less from your hand onto the battlefield tapped.
-// TODO: implement
 	Register("Mind into Matter", func() Card {
+		isPermanentCard := NewCardFilter("permanent card", func(c Card) bool {
+			for _, t := range c.Types() {
+				switch t {
+				case TypeCreature, TypeArtifact, TypeEnchantment, TypeLand, TypePlaneswalker:
+					return true
+				}
+			}
+			return false
+		})
 		return NewSorcery("Mind into Matter", "{X}{G}{U}",
-			NewSpellAbility(),
+			NewSpellAbility(
+				FuncEffect(
+					"draw X cards, then may put a permanent card with mana value X or less from hand onto battlefield tapped",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						x := g.XValue()
+						for i := 0; i < x; i++ {
+							g.PlayerDrawCard(p)
+						}
+						// Collect eligible permanent cards from hand with mana value <= X.
+						var cands []Card
+						for _, c := range p.Hand() {
+							if isPermanentCard.Match(c) && c.ManaCost().CMC() <= x {
+								cands = append(cands, c)
+							}
+						}
+						if len(cands) == 0 {
+							return nil
+						}
+						if !p.ChooseMayAbility("put a permanent card with mana value X or less onto the battlefield tapped") {
+							return nil
+						}
+						chosen := p.ChooseCardFromHand(cands, "put permanent card onto battlefield tapped", g)
+						if chosen == nil {
+							return nil
+						}
+						// Remove chosen card from hand.
+						hand := p.Hand()
+						newHand := make([]Card, 0, len(hand))
+						for _, c := range hand {
+							if c.ID() != chosen.ID() {
+								newHand = append(newHand, c)
+							}
+						}
+						p.SetHand(newHand)
+						perm := g.PutOnBattlefield(chosen, controller)
+						if perm != nil {
+							g.TapPermanent(perm)
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -1549,10 +1621,59 @@ func registerSpells() {
 // Pox Plague {B}{B}{B}{B}{B}
 // Sorcery
 // Each player loses half their life, then discards half the cards in their hand, then sacrifices half the permanents they control of their choice. Round down each time.
-// TODO: implement
 	Register("Pox Plague", func() Card {
 		return NewSorcery("Pox Plague", "{B}{B}{B}{B}{B}",
-			NewSpellAbility(),
+			NewSpellAbility(
+				FuncEffect("each player loses half their life, then discards half their hand, then sacrifices half their permanents of their choice (round down each time)",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						// Each player loses half their life (round down).
+						for _, pl := range g.AllPlayers() {
+							lose := pl.Life() / 2
+							if lose > 0 {
+								g.PlayerLoseLife(pl, lose)
+							}
+						}
+						// Each player discards half the cards in their hand (round down).
+						for _, pl := range g.AllPlayers() {
+							count := len(pl.Hand()) / 2
+							if count > 0 {
+								chosen := pl.ChooseCardsFromHand(count, "discard half your hand", g)
+								for _, c := range chosen {
+									g.PlayerDiscard(pl, c.ID())
+								}
+							}
+						}
+						// Each player sacrifices half the permanents they control of their choice (round down).
+						for _, pl := range g.AllPlayers() {
+							var controlled []*Permanent
+							for _, perm := range g.AllBattlefield() {
+								if perm.Controller == pl.PlayerID() {
+									controlled = append(controlled, perm)
+								}
+							}
+							count := len(controlled) / 2
+							for i := 0; i < count; i++ {
+								// Rebuild candidates each iteration as prior sacrifices may have removed permanents.
+								var candidates []*Permanent
+								for _, perm := range g.AllBattlefield() {
+									if perm.Controller == pl.PlayerID() {
+										candidates = append(candidates, perm)
+									}
+								}
+								if len(candidates) == 0 {
+									break
+								}
+								chosen := pl.ChoosePermanent(candidates, "sacrifice a permanent", g)
+								if chosen == nil {
+									chosen = candidates[0]
+								}
+								g.Sacrifice(chosen)
+							}
+						}
+						return nil
+					}),
+			),
 		)
 	})
 
