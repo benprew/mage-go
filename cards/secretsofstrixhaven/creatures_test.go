@@ -1888,3 +1888,82 @@ func TestElementalMascot_OpusExilesTopCardFiveOrMore(t *testing.T) {
 	g.AssertExileCount("Grizzly Bears", 1)
 	g.AssertLibraryCount(gametest.PlayerA, "Grizzly Bears", 0)
 }
+
+// ===========================================================================
+// Rehearsed Debater
+// ===========================================================================
+
+// TestRehearsedDebater_StatsVigilance verifies base stats and vigilance.
+func TestRehearsedDebater_StatsVigilance(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rehearsed Debater")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Rehearsed Debater", 3, 3)
+	g.AssertHasAbility(gametest.PlayerA, "Rehearsed Debater", core.Vigilance, true)
+}
+
+// TestRehearsedDebater_ReparteeBoost verifies that casting an instant or sorcery
+// that targets a creature gives Rehearsed Debater +1/+1 until end of turn.
+func TestRehearsedDebater_ReparteeBoost(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rehearsed Debater")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Giant Growth")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	// Giant Growth targets Grizzly Bears — repartee should trigger.
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Giant Growth", "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Rehearsed Debater should be 4/4 until end of turn; after end step it's 3/3 again.
+	g.AssertPowerToughness(gametest.PlayerA, "Rehearsed Debater", 3, 3)
+}
+
+// TestRehearsedDebater_ReparteeBoostDuringCombat verifies the +1/+1 boost is
+// active during the turn it triggers (checked in begin-combat step).
+func TestRehearsedDebater_ReparteeBoostDuringCombat(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rehearsed Debater")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Giant Growth")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Giant Growth", "Grizzly Bears")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	// +1/+1 boost should still be in effect during begin-combat.
+	g.AssertPowerToughness(gametest.PlayerA, "Rehearsed Debater", 4, 4)
+}
+
+// TestUlnaAlleyShopkeep_BaseStats verifies base P/T, menace keyword.
+func TestUlnaAlleyShopkeep_BaseStats(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ulna Alley Shopkeep")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Ulna Alley Shopkeep", 2, 3)
+	g.AssertHasAbility(gametest.PlayerA, "Ulna Alley Shopkeep", core.Menace, true)
+}
+
+// TestUlnaAlleyShopkeep_InfusionBoostWithLifeGain verifies +2/+0 while you
+// gained life this turn.
+func TestUlnaAlleyShopkeep_InfusionBoostWithLifeGain(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ulna Alley Shopkeep")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Healing Salve")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+	g.ChooseMode(gametest.PlayerA, 0) // gain 3 life
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Healing Salve", "PlayerA")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Infusion: +2/+0 while life was gained this turn.
+	g.AssertPowerToughness(gametest.PlayerA, "Ulna Alley Shopkeep", 4, 3)
+}
+
+// TestUlnaAlleyShopkeep_NoBoostWithoutLifeGain verifies no bonus without life gain.
+func TestUlnaAlleyShopkeep_NoBoostWithoutLifeGain(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ulna Alley Shopkeep")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Ulna Alley Shopkeep", 2, 3)
+}

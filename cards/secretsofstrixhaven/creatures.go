@@ -359,10 +359,13 @@ func registerCreatures() {
 	// 3/3
 	// Vigilance
 	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, this creature gets +1/+1 until end of turn.
-	// TODO: implement
 	Register("Rehearsed Debater", func() Card {
 		return NewCreature("Rehearsed Debater", "{2}{W}", 3, 3,
 			WithSubTypes("Djinn", "Bard"),
+			WithKeyword(Vigilance),
+			WithAbility(NewTriggered(EvtSpellCast, false,
+				Boost(Fixed(1), Fixed(1)).Targeting(ToSource()).Until(EndOfTurn),
+			).SetCondition(reparteeCondition)),
 		)
 	})
 
@@ -1257,10 +1260,21 @@ func registerCreatures() {
 	// 2/3
 	// Menace (This creature can't be blocked except by two or more creatures.)
 	// Infusion — This creature gets +2/+0 as long as you gained life this turn.
-	// TODO: implement
 	Register("Ulna Alley Shopkeep", func() Card {
 		return NewCreature("Ulna Alley Shopkeep", "{2}{B}", 2, 3,
 			WithSubTypes("Goblin", "Warlock"),
+			WithKeyword(Menace),
+			// Infusion — This creature gets +2/+0 as long as you gained life this turn.
+			WithStaticAbility(FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+				src := g.FindPermanent(sourceID)
+				if src == nil {
+					return nil
+				}
+				if IfControllerGainedLifeThisTurn(g, src.Controller) {
+					src.BoostPT(2, 0)
+				}
+				return nil
+			})),
 		)
 	})
 
