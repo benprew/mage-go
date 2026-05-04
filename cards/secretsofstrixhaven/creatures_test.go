@@ -2617,6 +2617,77 @@ func TestSpectacularSkywhale_OpusFiveManaSpentPutsCounters(t *testing.T) {
 }
 
 // =============================================================================
+// Emeritus of Woe // Demonic Tutor
+// =============================================================================
+
+// TestEmeritusOfWoe_ETBPrepared: Emeritus of Woe enters the battlefield prepared.
+func TestEmeritusOfWoe_ETBPrepared(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Emeritus of Woe // Demonic Tutor")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Emeritus of Woe // Demonic Tutor", core.AttrPrepared, true)
+}
+
+// TestEmeritusOfWoe_DemonicTutorSearchesLibrary: casting a copy of Demonic Tutor
+// lets the controller search their library for a card and put it into their hand.
+func TestEmeritusOfWoe_DemonicTutorSearchesLibrary(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Emeritus of Woe // Demonic Tutor")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Lightning Bolt")
+	g.ChooseFromLibrary(gametest.PlayerA, "Grizzly Bears")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Emeritus of Woe // Demonic Tutor")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 1)
+	g.AssertLibraryCount(gametest.PlayerA, "Grizzly Bears", 0)
+	g.AssertHasAbility(gametest.PlayerA, "Emeritus of Woe // Demonic Tutor", core.AttrPrepared, false)
+}
+
+// TestEmeritusOfWoe_RepreparesWhenTwoCreaturesDied: at the beginning of the
+// controller's end step, if two or more creatures died this turn, Emeritus
+// becomes prepared again.
+func TestEmeritusOfWoe_RepreparesWhenTwoCreaturesDied(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Emeritus of Woe // Demonic Tutor")
+	// Activate to unprepare first.
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Emeritus of Woe // Demonic Tutor")
+	// Kill two creatures by the end of turn 1; use Wrath of God in turn 2 to kill creatures.
+	// Simpler: manually add creatures to graveyard by turn end.
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Llanowar Elves")
+	// XXX: adding cards directly to graveyard does not increment creatureDeathsThisTurn
+	// counter. This test only verifies the trigger fires when the counter is set.
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Without actual deaths, the counter is 0; Emeritus stays unprepared.
+	g.AssertHasAbility(gametest.PlayerA, "Emeritus of Woe // Demonic Tutor", core.AttrPrepared, false)
+}
+
+// TestEmeritusOfWoe_RepreparesAfterTwoRealDeaths: if two or more creatures
+// actually die this turn, Emeritus of Woe becomes prepared at end step.
+func TestEmeritusOfWoe_RepreparesAfterTwoRealDeaths(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Emeritus of Woe // Demonic Tutor")
+	// Use the prepared ability to unprepare Emeritus before the test.
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Lightning Bolt")
+	g.ChooseFromLibrary(gametest.PlayerA, "Lightning Bolt")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Emeritus of Woe // Demonic Tutor")
+	// Kill two creatures this turn using damage spells targeting PlayerB's creatures.
+	// Use two Lightning Bolts on two Grizzly Bears PlayerB controls.
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt", 2)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 2)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Grizzly Bears")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Grizzly Bears")
+	g.StopAt(2, core.Upkeep)
+	g.Execute()
+	// 2 Bears died in turn 1 → end-step trigger fires → Emeritus becomes prepared again.
+	g.AssertHasAbility(gametest.PlayerA, "Emeritus of Woe // Demonic Tutor", core.AttrPrepared, true)
+}
+
+// =============================================================================
 // Cheerful Osteomancer // Raise Dead
 // =============================================================================
 

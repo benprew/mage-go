@@ -1412,10 +1412,35 @@ func registerCreatures() {
 	// Emeritus of Woe // Demonic Tutor {3}{B} // {1}{B}
 	// Creature — Vampire Warlock // Sorcery
 	// 5/4
-	// TODO: implement
+	// This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)
+	// At the beginning of your end step, if two or more creatures died this turn, this creature becomes prepared.
+	// ---
+	// Demonic Tutor {1}{B}
+	// Sorcery
+	// Search your library for a card, put that card into your hand, then shuffle.
 	Register("Emeritus of Woe // Demonic Tutor", func() Card {
+		spellFactory := func() Card {
+			return NewSorcery("Demonic Tutor", "{1}{B}",
+				NewSpellAbility(SearchLibraryToHand()))
+		}
 		return NewCreature("Emeritus of Woe // Demonic Tutor", "{3}{B} // {1}{B}", 5, 4,
-			WithSubTypes("Vampire", "Warlock", "//", "Sorcery"),
+			WithSubTypes("Vampire", "Warlock"),
+			WithPreparedSpell(spellFactory),
+			// At the beginning of your end step, if two or more creatures died this turn,
+			// this creature becomes prepared.
+			WithAbility(BeginningOfEachEndStepTrigger(
+				FuncEffect(
+					"if two or more creatures died this turn, this creature becomes prepared",
+					EffectProperties{},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						if g.CreatureDeaths() >= 2 {
+							g.SetPrepared(sourceID, true)
+						}
+						return nil
+					},
+				),
+				false,
+			).SetConditionData(EventPlayerIsController{})),
 		)
 	})
 
