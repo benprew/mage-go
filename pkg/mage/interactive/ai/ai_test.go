@@ -90,18 +90,27 @@ func TestProfitableToAttack_TappedBlockerIgnored(t *testing.T) {
 
 // ── HeuristicStrategy.Attackers ─────────────────────────────────────────────
 
-func TestAttackers_AggroAttacksAll(t *testing.T) {
+// TestAttackers_FlyerGetsThrough verifies the solver picks a strictly-
+// positive attacker subset: the flying 2/2 can't be blocked by the ground
+// 2/2, so it deals 2 damage for free. The ground 1/1 would die to the
+// blocker for nothing — solver should skip it but include the flier.
+func TestAttackers_FlyerGetsThrough(t *testing.T) {
 	g, pa, pb := makeGame()
-	c1 := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
-	c2 := makePerm("Elf", "{G}", 1, 1, pa.PlayerID())
-	// Opponent has a big blocker — aggro attacks anyway
-	blk := makePerm("Giant", "{3}{G}", 5, 5, pb.PlayerID())
-	g.AddToBattlefield(c1, c2, blk)
+	flier := makePerm("Bird", "{1}{U}", 2, 2, pa.PlayerID(), mage.WithKeyword(core.Flying))
+	ground := makePerm("Elf", "{G}", 1, 1, pa.PlayerID())
+	blk := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
+	g.AddToBattlefield(flier, ground, blk)
 
 	start := &HeuristicStrategy{Personality: AggroPersonality}
 	attackers := start.Attackers(pa, g)
-	if len(attackers) != 2 {
-		t.Errorf("aggro should attack with all %d eligible, got %d", 2, len(attackers))
+	hasFlier := false
+	for _, id := range attackers {
+		if id == flier.ID() {
+			hasFlier = true
+		}
+	}
+	if !hasFlier {
+		t.Errorf("solver should attack with the unblockable flier, got %v", attackers)
 	}
 }
 
@@ -153,7 +162,12 @@ func TestBlockers_ControlBlocksHighPower(t *testing.T) {
 	}
 }
 
-func TestBlockers_AggroSkipsWeakAttacker(t *testing.T) {
+// TestBlockers_FreeKillIsTaken verifies that the solver takes a strictly
+// favourable block (1/1 attacker into 2/2 blocker → kill the attacker, blocker
+// survives). The old per-creature heuristic skipped weak attackers based on
+// BlockThreshold; the solver evaluates the trade and blocks when blocking
+// strictly improves the position.
+func TestBlockers_FreeKillIsTaken(t *testing.T) {
 	g, pa, pb := makeGame()
 	atk := makePerm("Elf", "{G}", 1, 1, pa.PlayerID())
 	blk := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
@@ -163,9 +177,8 @@ func TestBlockers_AggroSkipsWeakAttacker(t *testing.T) {
 
 	start := &HeuristicStrategy{Personality: AggroPersonality}
 	blocks := start.Blockers(pb, g)
-	// Aggro has BlockPowerThreshold=3, so power 1 attacker is skipped
-	if len(blocks) != 0 {
-		t.Errorf("aggro should skip blocking weak attacker, got %d blocks", len(blocks))
+	if len(blocks) != 1 {
+		t.Errorf("solver should block 1/1 with 2/2 (free kill), got %d blocks", len(blocks))
 	}
 }
 
@@ -246,6 +259,71 @@ func TestPriorityAction_PassOnNonMainEmptyHand(t *testing.T) {
 	action := start.PriorityAction(pa, g, 0, false)
 	if action.Type != interactive.ActionPass {
 		t.Errorf("expected ActionPass on non-main with empty hand, got %v", action.Type)
+	}
+}
+
+// TestPriorityAction_HoldsCombatTrickPrecombat verifies that the AI doesn't
+// fire a Giant Growth-style pump spell during the pre-combat main phase when
+// it has an attacker available. The trick is held for the post-blockers
+// response window.
+func TestPriorityAction_HoldsCombatTrickPrecombat(t *testing.T) {
+	g, pa, _ := makeGame()
+	g.SetStep(core.PrecombatMain)
+
+	// Player A has an attacker and a Giant Growth in hand with mana to cast.
+	atk := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
+	g.AddToBattlefield(atk)
+	land := mage.NewLand("Forest")
+	land.SetOwner(pa.PlayerID())
+	lp := mage.NewPermanent(land, pa.PlayerID())
+	lp.RevokeBaseAttr(core.AttrSummonSick)
+	g.AddToBattlefield(lp)
+
+	growth := mage.NewInstant("Giant Growth", "{G}",
+		mage.NewTargetedSpell(mage.TargetCreature(), mage.Boost(mage.Fixed(3), mage.Fixed(3))),
+	)
+	growth.SetOwner(pa.PlayerID())
+	pa.AddToHand(growth)
+
+	start := &HeuristicStrategy{Personality: AggroPersonality}
+	action := start.PriorityAction(pa, g, 1, true)
+	if action.Type == interactive.ActionCastSpell && action.CardID == growth.ID() {
+		t.Error("AI should hold Giant Growth in pre-combat main, not cast it sorcery-speed")
+	}
+}
+
+// TestPriorityAction_CastsTrickWithNoAttackers verifies the inverse: with
+// no creatures available to attack, holding a combat trick is pointless —
+// it should be cast normally.
+func TestPriorityAction_CastsTrickWithNoAttackers(t *testing.T) {
+	g, pa, pb := makeGame()
+	g.SetStep(core.PrecombatMain)
+
+	// Player A has no creatures of their own, but opponent does — the trick
+	// can target the opponent's creature (still combat-eligible by spec, but
+	// nothing to hold for since A has no attackers).
+	target := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
+	g.AddToBattlefield(target)
+	land := mage.NewLand("Forest")
+	land.SetOwner(pa.PlayerID())
+	lp := mage.NewPermanent(land, pa.PlayerID())
+	lp.RevokeBaseAttr(core.AttrSummonSick)
+	g.AddToBattlefield(lp)
+
+	growth := mage.NewInstant("Giant Growth", "{G}",
+		mage.NewTargetedSpell(mage.TargetCreature(), mage.Boost(mage.Fixed(3), mage.Fixed(3))),
+	)
+	growth.SetOwner(pa.PlayerID())
+	pa.AddToHand(growth)
+
+	start := &HeuristicStrategy{Personality: AggroPersonality}
+	_ = start.PriorityAction(pa, g, 1, true)
+	// We don't assert the action type here — autoSelectTargets may choose to
+	// pump the opponent's bear (a buff, not a hold-worthy decision in this
+	// configuration). The key invariant is that shouldHoldForCombat returned
+	// false (no attackers), so the holding-skip path didn't engage.
+	if start.shouldHoldForCombat(g, pa.PlayerID()) {
+		t.Error("shouldHoldForCombat returned true when AI has no attackers")
 	}
 }
 

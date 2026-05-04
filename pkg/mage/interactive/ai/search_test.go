@@ -542,26 +542,9 @@ func TestSearch_Blockers_GangBlocksBigThreat(t *testing.T) {
 	}
 }
 
-func TestGenerateBlockerSets_IncludesNoBlocks(t *testing.T) {
-	g, pa, pb := makeGame()
-	atk := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
-	blk := makePerm("Elf", "{G}", 1, 1, pb.PlayerID())
-	g.AddToBattlefield(atk, blk)
-	g.GetCombat().AddAttacker(atk.ID(), pb.PlayerID())
-
-	fallback := &HeuristicStrategy{Personality: MidrangePersonality, Weights: MidrangeWeighted, weightsInit: true}
-	sets := generateBlockerSets(g, pb.PlayerID(), fallback)
-
-	foundEmpty := false
-	for _, set := range sets {
-		if len(set) == 0 {
-			foundEmpty = true
-		}
-	}
-	if !foundEmpty {
-		t.Error("blocker sets should include the no-blocks option")
-	}
-}
+// TestGenerateBlockerSets_IncludesNoBlocks — removed in Phase 4.
+// generateBlockerSets is now in combatsolver/enumerate.go and the no-blocks
+// invariant is covered by TestEnumerateBlockerSets_NoBlockersReturnsEmpty.
 
 // ── NewSearchAI Constructor ─────────────────────────────────────────────────
 

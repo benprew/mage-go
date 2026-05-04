@@ -1,6 +1,7 @@
 package ai
 
 import (
+	"fmt"
 	"sort"
 	"time"
 
@@ -9,8 +10,13 @@ import (
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/ai/combatsolver"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/eval"
 )
+
+// DebugSearchStats enables one-line per-decision logging of search telemetry
+// (nodes visited, depth reached, elapsed time vs. budget, chosen move).
+var DebugSearchStats bool
 
 // SearchConfig controls the search parameters.
 type SearchConfig struct {
@@ -174,7 +180,8 @@ func (s *SearchStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed
 		s.history = make(map[string]int)
 	}
 
-	deadline := time.Now().Add(s.Config.TimeLimit)
+	start := time.Now()
+	deadline := start.Add(s.Config.TimeLimit)
 
 	// Iterative deepening with PV move ordering: the best move from the
 	// previous depth is searched first at the next depth.
@@ -182,6 +189,7 @@ func (s *SearchStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed
 	bestScore := minScore
 	var pvIndex int // index of PV move for next iteration
 	var totalNodes uint64
+	var lastCompletedDepth int
 
 	for depth := 1; depth <= s.Config.MaxDepth; depth++ {
 		// Search PV move first (from previous iteration).
@@ -263,6 +271,7 @@ func (s *SearchStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed
 		}
 
 		totalNodes += uint64(nodes)
+		lastCompletedDepth = depth
 
 		if time.Now().After(deadline) {
 			break
@@ -271,16 +280,33 @@ func (s *SearchStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed
 
 	s.LastNodes = totalNodes
 
-	if bestMove == nil {
-		return s.Fallback.PriorityAction(p, g, landsPlayed, mainPhase)
+	action := interactive.PriorityAction{Type: interactive.ActionPass}
+	usedFallback := false
+	switch {
+	case bestMove == nil:
+		action = s.Fallback.PriorityAction(p, g, landsPlayed, mainPhase)
+		usedFallback = true
+	case bestScore < s.eval(g, p.PlayerID()) && bestMove.Type != interactive.ActionPlayLand && !bestMove.IsCreature:
+		// Pass beats the best found move.
+	default:
+		action = moveToAction(bestMove)
 	}
 
-	passScore := s.eval(g, p.PlayerID())
-	if bestScore < passScore && bestMove.Type != interactive.ActionPlayLand && !bestMove.IsCreature {
-		return interactive.PriorityAction{Type: interactive.ActionPass}
+	if DebugSearchStats {
+		elapsed := time.Since(start)
+		moveDesc := "pass"
+		if usedFallback {
+			moveDesc = fmt.Sprintf("fallback:%s", action.Type)
+		} else if bestMove != nil && action.Type != interactive.ActionPass {
+			moveDesc = fmt.Sprintf("%s:%s", action.Type, bestMove.CardName)
+		}
+		fmt.Printf("[SEARCH] player=%s nodes=%d depth=%d elapsed=%s budget=%s candidates=%d action=%s\n",
+			p.Name(), totalNodes, lastCompletedDepth,
+			elapsed.Round(time.Millisecond), s.Config.TimeLimit,
+			len(moves), moveDesc)
 	}
 
-	return moveToAction(bestMove)
+	return action
 }
 
 // searchRoot performs a root-level search across all moves at a given depth
@@ -347,109 +373,41 @@ func (s *SearchStrategy) sortByHistory(moves []Move) {
 	})
 }
 
-// ── Attacker Search ─────────────────────────────────────────────────────────
+// ── Attacker / Blocker Search ───────────────────────────────────────────────
+//
+// Combat decisions delegate to combatsolver. SearchStrategy keeps its own
+// outer minimax for priority-action / spell-casting decisions, but combat is
+// a constrained subgame that the solver searches exhaustively without sharing
+// the outer search's depth/time budget.
 
 func (s *SearchStrategy) Attackers(p mage.Player, g *mage.Game) []uuid.UUID {
-	sets := GenerateAttackerSets(g, p.PlayerID())
-	if len(sets) <= 1 {
-		if len(sets) == 1 {
-			return sets[0]
-		}
-		return nil
-	}
-
-	deadline := time.Now().Add(s.Config.TimeLimit)
-	nodes := 0
-
-	bestScore := minScore
-	var bestSet []uuid.UUID
-
-	// Search each attacker set with minimax — the opponent will choose blocks,
-	// then combat resolves, giving us an accurate evaluation.
-	for _, set := range sets {
-		clone := g.Clone()
-		if clone == nil {
-			continue
-		}
-
-		// Apply attackers to the clone
-		clone.ExecuteAttackers(p.PlayerID(), set)
-		clone.PutTriggersOnStack()
-		clone.CheckStateBasedActions()
-		clone.ResolveStack()
-
-		// Search from opponent's perspective — they'll choose blocks optimally.
-		// Use reduced depth for combat search since the branching factor is lower.
-		combatDepth := max(s.Config.MaxDepth/2, 2)
-		score := s.minimaxCombat(clone, combatDepth, minScore, maxScore,
-			false, p.PlayerID(), &nodes, deadline)
-
-		if score > bestScore {
-			bestScore = score
-			bestSet = set
-		}
-
-		if nodes >= s.Config.MaxNodes || time.Now().After(deadline) {
-			break
-		}
-	}
-
-	if bestSet == nil {
+	r := combatsolver.SolveAttack(g, p.PlayerID(), combatsolver.Options{
+		Profile:  s.solverProfile(),
+		Deadline: time.Now().Add(s.Config.TimeLimit),
+	})
+	if r.DeadlineHit && len(r.Attackers) == 0 {
 		return s.Fallback.Attackers(p, g)
 	}
-	return bestSet
+	return r.Attackers
 }
 
-// ── Blocker Search ──────────────────────────────────────────────────────────
-
 func (s *SearchStrategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAssignment {
-	sets := generateBlockerSets(g, p.PlayerID(), s.Fallback)
-	if len(sets) <= 1 {
-		if len(sets) == 1 {
-			return sets[0]
-		}
+	r := combatsolver.SolveDefense(g, p.PlayerID(), combatsolver.Options{
+		Profile:  s.solverProfile(),
+		Deadline: time.Now().Add(s.Config.TimeLimit),
+	})
+	if r.DeadlineHit && len(r.Blocks) == 0 {
 		return s.Fallback.Blockers(p, g)
 	}
+	return r.Blocks
+}
 
-	deadline := time.Now().Add(s.Config.TimeLimit)
-	nodes := 0
-
-	bestScore := minScore
-	var bestSet []mage.BlockAssignment
-
-	// Search each blocker set — resolve combat damage on clone, then evaluate.
-	for _, set := range sets {
-		clone := g.Clone()
-		if clone == nil {
-			continue
-		}
-
-		// Apply blockers and resolve combat damage
-		clone.ExecuteBlockers(set)
-		clone.ExecuteCombatDamage()
-		clone.CheckStateBasedActions()
-
-		// Evaluate post-combat position with a short forward search
-		// (opponent may cast spells in second main phase).
-		postCombatDepth := max(s.Config.MaxDepth/3, 1)
-		score := s.minimax(clone, postCombatDepth, minScore, maxScore,
-			false, p.PlayerID(), &nodes, deadline, 0)
-
-		if score > bestScore {
-			bestScore = score
-			bestSet = set
-		}
-
-		nodes++
-		if nodes >= s.Config.MaxNodes || time.Now().After(deadline) {
-			break
-		}
+func (s *SearchStrategy) solverProfile() combatsolver.Profile {
+	return combatsolver.Profile{
+		Weights:        s.Personality.Weights,
+		Aggression:     s.Personality.Aggression,
+		BlockThreshold: s.Personality.BlockThreshold,
 	}
-
-	if bestSet == nil {
-		return s.Fallback.Blockers(p, g)
-	}
-	return bestSet
 }
 
 // ── Minimax Core ────────────────────────────────────────────────────────────
@@ -694,109 +652,6 @@ func (s *SearchStrategy) storeTT(hash uint64, depth, best, alphaOrig, betaOrig i
 	s.TTStores++
 }
 
-// minimaxCombat is a minimax variant for combat-phase decisions.
-// It models the opponent choosing blockers optimally, then evaluates
-// the resulting position after combat damage.
-func (s *SearchStrategy) minimaxCombat(g *mage.Game, depth, alpha, beta int,
-	maximizing bool, playerID uuid.UUID, nodes *int, deadline time.Time) int {
-
-	*nodes++
-
-	if g.IsGameOver() {
-		winner := gameWinner(g, playerID)
-		if winner == 1 {
-			return maxScore - (s.Config.MaxDepth - depth)
-		}
-		if winner == -1 {
-			return minScore + (s.Config.MaxDepth - depth)
-		}
-		return 0
-	}
-
-	if depth <= 0 || *nodes >= s.Config.MaxNodes || time.Now().After(deadline) {
-		return s.eval(g, playerID)
-	}
-
-	// If there are attackers and no blockers assigned yet, generate blocker sets
-	// for the defending player.
-	if len(g.CombatGroups()) > 0 && !combatHasBlockers(g) {
-		oppID := uuid.Nil
-		if opp := g.GetOpponent(playerID); opp != nil {
-			oppID = opp.PlayerID()
-		}
-
-		blockerSets := generateBlockerSets(g, oppID, s.Fallback)
-		if len(blockerSets) == 0 {
-			// No blockers possible — resolve damage and evaluate.
-			clone := g.Clone()
-			clone.ExecuteCombatDamage()
-			clone.CheckStateBasedActions()
-			return s.eval(clone, playerID)
-		}
-
-		if maximizing {
-			// We're choosing blockers (we're defending). Pick the best.
-			best := minScore
-			for _, set := range blockerSets {
-				clone := g.Clone()
-				clone.ExecuteBlockers(set)
-				clone.ExecuteCombatDamage()
-				clone.CheckStateBasedActions()
-				score := s.minimaxCombat(clone, depth-1, alpha, beta, true, playerID, nodes, deadline)
-				if score > best {
-					best = score
-				}
-				if best > alpha {
-					alpha = best
-				}
-				if alpha >= beta {
-					break
-				}
-				if *nodes >= s.Config.MaxNodes || time.Now().After(deadline) {
-					break
-				}
-			}
-			return best
-		}
-
-		// Opponent is choosing blockers — they minimize our score.
-		best := maxScore
-		for _, set := range blockerSets {
-			clone := g.Clone()
-			clone.ExecuteBlockers(set)
-			clone.ExecuteCombatDamage()
-			clone.CheckStateBasedActions()
-			score := s.minimaxCombat(clone, depth-1, alpha, beta, false, playerID, nodes, deadline)
-			if score < best {
-				best = score
-			}
-			if best < beta {
-				beta = best
-			}
-			if alpha >= beta {
-				break
-			}
-			if *nodes >= s.Config.MaxNodes || time.Now().After(deadline) {
-				break
-			}
-		}
-		return best
-	}
-
-	// Post-combat or no combat: evaluate position.
-	return s.eval(g, playerID)
-}
-
-// combatHasBlockers returns true if any combat group has blockers assigned.
-func combatHasBlockers(g *mage.Game) bool {
-	for _, group := range g.CombatGroups() {
-		if len(group.BlockerIDs) > 0 {
-			return true
-		}
-	}
-	return false
-}
-
 func (s *SearchStrategy) eval(g *mage.Game, playerID uuid.UUID) int {
 	return s.Evaluator(g, playerID)
 }
@@ -959,217 +814,6 @@ func applyMoveToClone(g *mage.Game, playerID uuid.UUID, m *Move, _ int) {
 		g.ResolveStack()
 	}
 	g.CheckStateBasedActions()
-}
-
-// ── Blocker set generation ──────────────────────────────────────────────────
-
-// generateBlockerSets produces a set of candidate blocking assignments for search evaluation.
-func generateBlockerSets(g *mage.Game, playerID uuid.UUID, fallback *HeuristicStrategy) [][]mage.BlockAssignment {
-	var attackers []*mage.Permanent
-	for _, group := range g.CombatGroups() {
-		if group.DefenderID != playerID {
-			continue
-		}
-		atk := g.FindPermanent(group.AttackerID)
-		if atk != nil {
-			attackers = append(attackers, atk)
-		}
-	}
-	if len(attackers) == 0 {
-		return nil
-	}
-
-	var blockers []*mage.Permanent
-	for _, perm := range g.AllBattlefield() {
-		if perm.Controller == playerID && perm.CanDeclareAsBlocker(g) {
-			blockers = append(blockers, perm)
-		}
-	}
-	if len(blockers) == 0 {
-		return [][]mage.BlockAssignment{nil}
-	}
-
-	var sets [][]mage.BlockAssignment
-
-	// Option 1: No blocks.
-	sets = append(sets, nil)
-
-	// Option 2: Heuristic result.
-	bp := mage.NewBasePlayerWithID(playerID, "search")
-	heuristicBlocks := fallback.Blockers(bp, g)
-	if len(heuristicBlocks) > 0 {
-		sets = append(sets, heuristicBlocks)
-	}
-
-	// Option 3: Best single block per attacker.
-	for _, atk := range attackers {
-		for _, blk := range blockers {
-			if !mage.CanBlock(blk, atk, g) {
-				continue
-			}
-			if mage.HasLandwalkEvasion(atk, playerID, g) {
-				continue
-			}
-			sets = append(sets, []mage.BlockAssignment{{
-				BlockerID:  blk.ID(),
-				AttackerID: atk.ID(),
-			}})
-		}
-	}
-
-	// Option 4: Gang block the biggest attacker + single block rest.
-	if len(attackers) > 0 {
-		// Find biggest attacker by power.
-		biggest := attackers[0]
-		for _, atk := range attackers[1:] {
-			if atk.CurrentPower(g) > biggest.CurrentPower(g) {
-				biggest = atk
-			}
-		}
-
-		// Try assigning 2 blockers to the biggest.
-		var gangSet []mage.BlockAssignment
-		usedBlockers := make(map[uuid.UUID]bool)
-		gangCount := 0
-		for _, blk := range blockers {
-			if gangCount >= 2 {
-				break
-			}
-			if !mage.CanBlock(blk, biggest, g) {
-				continue
-			}
-			if mage.HasLandwalkEvasion(biggest, playerID, g) {
-				continue
-			}
-			gangSet = append(gangSet, mage.BlockAssignment{
-				BlockerID:  blk.ID(),
-				AttackerID: biggest.ID(),
-			})
-			usedBlockers[blk.ID()] = true
-			gangCount++
-		}
-		// Single block remaining attackers with leftover blockers.
-		if gangCount == 2 {
-			for _, atk := range attackers {
-				if atk.ID() == biggest.ID() {
-					continue
-				}
-				for _, blk := range blockers {
-					if usedBlockers[blk.ID()] {
-						continue
-					}
-					if !mage.CanBlock(blk, atk, g) {
-						continue
-					}
-					if mage.HasLandwalkEvasion(atk, playerID, g) {
-						continue
-					}
-					gangSet = append(gangSet, mage.BlockAssignment{
-						BlockerID:  blk.ID(),
-						AttackerID: atk.ID(),
-					})
-					usedBlockers[blk.ID()] = true
-					break
-				}
-			}
-			sets = append(sets, gangSet)
-		}
-	}
-
-	// Option 5: Block everything — assign one blocker per attacker greedily.
-	if len(blockers) >= len(attackers) {
-		var greedySet []mage.BlockAssignment
-		usedBlockers := make(map[uuid.UUID]bool)
-		for _, atk := range attackers {
-			if mage.HasLandwalkEvasion(atk, playerID, g) {
-				continue
-			}
-			for _, blk := range blockers {
-				if usedBlockers[blk.ID()] {
-					continue
-				}
-				if !mage.CanBlock(blk, atk, g) {
-					continue
-				}
-				greedySet = append(greedySet, mage.BlockAssignment{
-					BlockerID:  blk.ID(),
-					AttackerID: atk.ID(),
-				})
-				usedBlockers[blk.ID()] = true
-				break
-			}
-		}
-		if len(greedySet) > 0 {
-			sets = append(sets, greedySet)
-		}
-	}
-
-	// For small boards, enumerate all valid single-blocker-per-attacker permutations.
-	if len(attackers) <= 3 && len(blockers) <= 4 {
-		enumerateBlockerPermutations(attackers, blockers, playerID, g, &sets)
-	}
-
-	return sets
-}
-
-// enumerateBlockerPermutations adds all valid 1-blocker-per-attacker combos
-// for small board states.
-func enumerateBlockerPermutations(attackers, blockers []*mage.Permanent,
-	playerID uuid.UUID, g *mage.Game, sets *[][]mage.BlockAssignment) {
-
-	// Build adjacency: which blockers can block which attackers.
-	type pair struct{ blkIdx, atkIdx int }
-	var validPairs []pair
-	for bi, blk := range blockers {
-		for ai, atk := range attackers {
-			if mage.CanBlock(blk, atk, g) && !mage.HasLandwalkEvasion(atk, playerID, g) {
-				validPairs = append(validPairs, pair{bi, ai})
-			}
-		}
-	}
-
-	// Generate all subsets of valid pairs where each blocker and attacker
-	// appear at most once. Cap at 20 to avoid explosion.
-	maxSets := 20 - len(*sets)
-	if maxSets <= 0 {
-		return
-	}
-
-	seen := make(map[string]bool)
-	var generate func(idx int, current []pair, usedBlk, usedAtk map[int]bool)
-	generate = func(idx int, current []pair, usedBlk, usedAtk map[int]bool) {
-		if len(seen) >= maxSets {
-			return
-		}
-		if len(current) > 0 {
-			// Build assignment and check uniqueness.
-			var set []mage.BlockAssignment
-			key := ""
-			for _, p := range current {
-				set = append(set, mage.BlockAssignment{
-					BlockerID:  blockers[p.blkIdx].ID(),
-					AttackerID: attackers[p.atkIdx].ID(),
-				})
-				key += blockers[p.blkIdx].ID().String() + ">" + attackers[p.atkIdx].ID().String() + ","
-			}
-			if !seen[key] {
-				seen[key] = true
-				*sets = append(*sets, set)
-			}
-		}
-		for i := idx; i < len(validPairs); i++ {
-			p := validPairs[i]
-			if usedBlk[p.blkIdx] || usedAtk[p.atkIdx] {
-				continue
-			}
-			usedBlk[p.blkIdx] = true
-			usedAtk[p.atkIdx] = true
-			generate(i+1, append(current, p), usedBlk, usedAtk)
-			delete(usedBlk, p.blkIdx)
-			delete(usedAtk, p.atkIdx)
-		}
-	}
-	generate(0, nil, make(map[int]bool), make(map[int]bool))
 }
 
 // DefaultTTSizeMB is the default transposition-table size in megabytes used
