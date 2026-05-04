@@ -2350,7 +2350,7 @@ func TestThornfistStriker_InfusionBoostsCreatures(t *testing.T) {
 	g.AddCard(core.ZoneHand, gametest.PlayerA, "Healing Salve")
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
 	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Healing Salve")
-	g.StopAt(1, core.PrecombatMain)
+	g.StopAt(1, core.BeginCombat)
 	g.Execute()
 	// After gaining life, Grizzly Bears should be 3/2 (+1/+0) and have trample.
 	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 3, 2)

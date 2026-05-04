@@ -2159,10 +2159,82 @@ func registerCreatures() {
 	// 3/3
 	// Ward {1} (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {1}.)
 	// Infusion — Creatures you control get +1/+0 and have trample as long as you gained life this turn.
-	// TODO: implement
 	Register("Thornfist Striker", func() Card {
+		wardEffect := FuncEffect(
+			"counter that spell or ability unless its controller pays {1}",
+			EffectProperties{Outcome: OutcomeBenefit},
+			func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				if len(targets) < 2 || targets[1] == uuid.Nil {
+					return nil
+				}
+				obj := g.FindStackObject(targets[1])
+				var opponentID uuid.UUID
+				if obj != nil {
+					opponentID = obj.Controller
+				} else {
+					perm := g.FindPermanent(targets[1])
+					if perm != nil {
+						opponentID = perm.Controller
+					}
+				}
+				if opponentID == uuid.Nil {
+					return nil
+				}
+				opponent := g.GetPlayer(opponentID)
+				if opponent == nil {
+					return nil
+				}
+				paid := false
+				if ManaCostOf("{1}").CanPay(sourceID, opponentID, g) {
+					if opponent.ChooseMayAbility("pay {1} to prevent Ward from countering") {
+						if err := ManaCostOf("{1}").Pay(sourceID, opponentID, g); err == nil {
+							paid = true
+						}
+					}
+				}
+				if !paid {
+					g.CounterSpellOnStack(targets[1])
+				}
+				return nil
+			},
+		)
 		return NewCreature("Thornfist Striker", "{2}{G}", 3, 3,
 			WithSubTypes("Elf", "Druid"),
+			// Ward {1}
+			WithAbility(NewTriggered(EvtBecomesTarget, false, wardEffect).
+				SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+					EventTargetIsSelf{},
+					EventPlayerIsNotController{},
+				}})),
+			// Infusion — Creatures you control get +1/+0 and have trample as long as you gained life this turn.
+			WithStaticAbility(
+				FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+					src := g.FindPermanent(sourceID)
+					if src == nil {
+						return nil
+					}
+					if !IfControllerGainedLifeThisTurn(g, src.Controller) {
+						return nil
+					}
+					for _, p := range g.FilterBattlefield(And(IsCreature, ControlledBy(src.Controller))) {
+						p.BoostPT(1, 0)
+					}
+					return nil
+				}),
+				FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+					src := g.FindPermanent(sourceID)
+					if src == nil {
+						return nil
+					}
+					if !IfControllerGainedLifeThisTurn(g, src.Controller) {
+						return nil
+					}
+					for _, p := range g.FilterBattlefield(And(IsCreature, ControlledBy(src.Controller))) {
+						g.GrantAttr(p.ID(), Trample)
+					}
+					return nil
+				}),
+			),
 		)
 	})
 
