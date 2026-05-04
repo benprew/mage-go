@@ -474,32 +474,39 @@ func registerCreatures() {
 			WithSubTypes("Human", "Wizard"),
 			// When this creature enters, return up to one other target creature to its owner's hand.
 			// "Up to one" is optional (0 or 1). The trigger is mandatory but picking 0 is legal.
+			// Uses ChoosePermanent so the test harness can script the choice via g.ChoosePermanent.
 			WithAbility(EntersBattlefieldTrigger(
 				FuncEffect("return up to one other target creature to its owner's hand",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 {
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
 							return nil
 						}
-						target := targets[0]
-						if target == uuid.Nil {
+						// Other creatures on the battlefield (not this permanent).
+						srcID := sourceID
+						notSelf := NewPermanentFilter("not this creature", func(perm *Permanent, _ *Game) bool {
+							return perm.ID() != srcID
+						})
+						candidates := g.FilterBattlefield(And(IsCreature, notSelf))
+						if len(candidates) == 0 {
 							return nil
 						}
-						perm := g.FindPermanent(target)
-						if perm == nil {
+						chosen := p.ChoosePermanent(candidates, "return up to one other target creature to its owner's hand", g)
+						if chosen == nil {
 							return nil
 						}
-						owner := g.GetPlayer(perm.Card.Owner())
+						owner := g.GetPlayer(chosen.Card.Owner())
 						if owner == nil {
 							return nil
 						}
-						g.RemoveFromBattlefield(perm)
-						owner.AddToHand(perm.Card)
+						g.RemoveFromBattlefield(chosen)
+						owner.AddToHand(chosen.Card)
 						return nil
 					},
 				),
 				false,
-			).AddTarget(TargetUpToOneCreature())),
+			)),
 			// Whenever you cast a spell with {X} in its mana cost, this creature can't be blocked this turn.
 			WithAbility(WheneverYouCastSpellTrigger(
 				FuncEffect("this creature can't be blocked this turn",
@@ -2499,11 +2506,19 @@ func registerCreatures() {
 // Artifact Creature — Construct
 // 2/1
 // Whenever you cast a multicolored spell, put a +1/+1 counter on this creature.
-// TODO: implement
 	Register("Mage Tower Referee", func() Card {
+		isMulticoloredCard := NewCardFilter("multicolored", func(c Card) bool {
+			return len(c.ManaCost().Colors()) >= 2
+		})
 		return NewCreature("Mage Tower Referee", "{2}", 2, 1,
 			WithSubTypes("Construct"),
 			WithCardType(TypeArtifact),
+			// Whenever you cast a multicolored spell, put a +1/+1 counter on this creature.
+			WithAbility(WheneverYouCastSpellTrigger(
+				AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
+				false,
+				isMulticoloredCard,
+			)),
 		)
 	})
 

@@ -520,9 +520,9 @@ func TestMageTowerReferee_MulticoloredSpellPutsCounter(t *testing.T) {
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mage Tower Referee")
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 2)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 2)
-	// Arnyn, Deathbloom Botanist is {2}{B}{G} — multicolored
-	g.AddCard(core.ZoneHand, gametest.PlayerA, "Arnyn, Deathbloom Botanist")
-	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Arnyn, Deathbloom Botanist")
+	// Blech, Loafing Pest is {1}{B}{G} — multicolored
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Blech, Loafing Pest")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Blech, Loafing Pest")
 	g.StopAt(1, core.EndStep)
 	g.Execute()
 	g.AssertCounterCount(gametest.PlayerA, "Mage Tower Referee", core.P1P1, 1)
