@@ -155,7 +155,7 @@ func registerEnchantments() {
 					&SourceHasCounterCond{CounterType: Pupa, MinCount: 1},
 					RemoveCounters(Pupa, 1),
 					&PipelineData{
-						Steps: []EffectData{
+						Steps: []Effect{
 							SnapshotAttached("host"),
 							SacrificeSourceStep(),
 							AddCounters(P1P1, Fixed(1)).Targeting(ToGathered("host")),

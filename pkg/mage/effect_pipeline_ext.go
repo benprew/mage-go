@@ -19,7 +19,7 @@ type SnapshotAttachedData struct {
 	StoreAs string
 }
 
-func SnapshotAttached(storeAs string) EffectData {
+func SnapshotAttached(storeAs string) Effect {
 	return &SnapshotAttachedData{StoreAs: storeAs}
 }
 
@@ -53,7 +53,7 @@ func execSnapshotAttached(ctx *EffectContext, e *SnapshotAttachedData) error {
 // TapGatheredData taps a var-bound permanent.
 type TapGatheredData struct{ VarName string }
 
-func TapGathered(v string) EffectData { return &TapGatheredData{VarName: v} }
+func TapGathered(v string) Effect { return &TapGatheredData{VarName: v} }
 
 func (e *TapGatheredData) Text() string { return "tap" }
 func (e *TapGatheredData) Properties() EffectProperties {
@@ -75,7 +75,7 @@ func execTapGathered(ctx *EffectContext, e *TapGatheredData) error {
 // UntapGatheredData untaps a var-bound permanent.
 type UntapGatheredData struct{ VarName string }
 
-func UntapGathered(v string) EffectData { return &UntapGatheredData{VarName: v} }
+func UntapGathered(v string) Effect { return &UntapGatheredData{VarName: v} }
 
 func (e *UntapGatheredData) Text() string { return "untap" }
 func (e *UntapGatheredData) Properties() EffectProperties {
@@ -101,7 +101,7 @@ type DealDamageToGatheredData struct {
 	Amount  ValueSource
 }
 
-func DealDamageToGathered(v string, amount ValueSource) EffectData {
+func DealDamageToGathered(v string, amount ValueSource) Effect {
 	return &DealDamageToGatheredData{VarName: v, Amount: amount}
 }
 
@@ -129,7 +129,7 @@ func execDealDamageToGathered(ctx *EffectContext, e *DealDamageToGatheredData) e
 // RegenerateGatheredData adds a regeneration shield to a var-bound permanent.
 type RegenerateGatheredData struct{ VarName string }
 
-func RegenerateGathered(v string) EffectData { return &RegenerateGatheredData{VarName: v} }
+func RegenerateGathered(v string) Effect { return &RegenerateGatheredData{VarName: v} }
 
 func (e *RegenerateGatheredData) Text() string { return "regenerate" }
 func (e *RegenerateGatheredData) Properties() EffectProperties {
@@ -151,7 +151,7 @@ type PreventDamageToGatheredData struct {
 	Amount  ValueSource
 }
 
-func PreventDamageToGathered(v string, amount ValueSource) EffectData {
+func PreventDamageToGathered(v string, amount ValueSource) Effect {
 	return &PreventDamageToGatheredData{VarName: v, Amount: amount}
 }
 
@@ -176,7 +176,7 @@ type GrantAttrToGatheredData struct {
 	Attr    Attr
 }
 
-func GrantAttrToGathered(v string, a Attr) EffectData {
+func GrantAttrToGathered(v string, a Attr) Effect {
 	return &GrantAttrToGatheredData{VarName: v, Attr: a}
 }
 
@@ -211,11 +211,11 @@ type RegisterDelayedTriggerData struct {
 	Persistent    bool
 }
 
-func RegisterDelayedTriggerStep(evtType EventType, targetVar string, effects ...Effect) EffectData {
+func RegisterDelayedTriggerStep(evtType EventType, targetVar string, effects ...Effect) Effect {
 	return &RegisterDelayedTriggerData{EventType: evtType, TargetVar: targetVar, Effects: effects}
 }
 
-func RegisterPersistentDelayedTriggerStep(evtType EventType, targetVar string, effects ...Effect) EffectData {
+func RegisterPersistentDelayedTriggerStep(evtType EventType, targetVar string, effects ...Effect) Effect {
 	return &RegisterDelayedTriggerData{EventType: evtType, TargetVar: targetVar, Effects: effects, Persistent: true}
 }
 
@@ -272,7 +272,7 @@ type AddManaFromVarData struct {
 	AmountVar string
 }
 
-func AddManaFromVar(color Color, amountVar string) EffectData {
+func AddManaFromVar(color Color, amountVar string) Effect {
 	return &AddManaFromVarData{Color: color, AmountVar: amountVar}
 }
 
@@ -299,7 +299,7 @@ func execAddManaFromVar(ctx *EffectContext, e *AddManaFromVarData) error {
 // PreventAllDamageFromSourceData prevents all damage from the source for this turn.
 type PreventAllDamageFromSourceData struct{}
 
-func PreventAllDamageFromSource() EffectData { return &PreventAllDamageFromSourceData{} }
+func PreventAllDamageFromSource() Effect { return &PreventAllDamageFromSourceData{} }
 
 func (e *PreventAllDamageFromSourceData) Text() string { return "prevent all damage from source" }
 func (e *PreventAllDamageFromSourceData) Properties() EffectProperties {
@@ -320,7 +320,7 @@ type AddColorPreventionData struct {
 	Color Color
 }
 
-func AddColorPreventionStep(color Color) EffectData {
+func AddColorPreventionStep(color Color) Effect {
 	return &AddColorPreventionData{Color: color}
 }
 
@@ -340,7 +340,7 @@ type AddPreventionShieldToControllerData struct {
 	Amount int
 }
 
-func AddPreventionShieldToControllerStep(amount int) EffectData {
+func AddPreventionShieldToControllerStep(amount int) Effect {
 	return &AddPreventionShieldToControllerData{Amount: amount}
 }
 
@@ -361,7 +361,7 @@ func execAddPreventionShieldToController(ctx *EffectContext, e *AddPreventionShi
 
 type AddReverseDamageShieldData struct{}
 
-func AddReverseDamageShieldStep() EffectData { return &AddReverseDamageShieldData{} }
+func AddReverseDamageShieldStep() Effect { return &AddReverseDamageShieldData{} }
 
 func (e *AddReverseDamageShieldData) Text() string { return "reverse damage" }
 func (e *AddReverseDamageShieldData) Properties() EffectProperties {
@@ -384,7 +384,7 @@ type SetVarFromHandSizeData struct {
 	Offset  int // result = max(0, handSize - offset)
 }
 
-func SetVarFromHandSize(player PlayerSelector, storeAs string, offset int) EffectData {
+func SetVarFromHandSize(player PlayerSelector, storeAs string, offset int) Effect {
 	return &SetVarFromHandSizeData{Player: player, StoreAs: storeAs, Offset: offset}
 }
 
@@ -417,7 +417,7 @@ type ChooseColorStepData struct {
 	Reason string
 }
 
-func ChooseColorStep(reason string) EffectData {
+func ChooseColorStep(reason string) Effect {
 	return &ChooseColorStepData{Reason: reason}
 }
 
@@ -443,7 +443,7 @@ func execChooseColorStep(ctx *EffectContext, e *ChooseColorStepData) error {
 
 type RemoveFromCombatGatheredData struct{ VarName string }
 
-func RemoveFromCombatGathered(v string) EffectData {
+func RemoveFromCombatGathered(v string) Effect {
 	return &RemoveFromCombatGatheredData{VarName: v}
 }
 
@@ -466,7 +466,7 @@ func execRemoveFromCombatGathered(ctx *EffectContext, e *RemoveFromCombatGathere
 // DestroyAttachedData destroys the permanent the source is attached to.
 type DestroyAttachedData struct{}
 
-func DestroyAttachedStep() EffectData { return &DestroyAttachedData{} }
+func DestroyAttachedStep() Effect { return &DestroyAttachedData{} }
 
 func (e *DestroyAttachedData) Text() string { return "destroy enchanted permanent" }
 func (e *DestroyAttachedData) Properties() EffectProperties {
@@ -490,7 +490,7 @@ type GrantAttrToAttachedData struct {
 	Attr Keyword
 }
 
-func GrantAttrToAttachedStep(attr Keyword) EffectData {
+func GrantAttrToAttachedStep(attr Keyword) Effect {
 	return &GrantAttrToAttachedData{Attr: attr}
 }
 
@@ -520,7 +520,7 @@ type DealDamageToSourceData struct {
 	Amount ValueSource
 }
 
-func DealDamageToSourceStep(amount ValueSource) EffectData {
+func DealDamageToSourceStep(amount ValueSource) Effect {
 	return &DealDamageToSourceData{Amount: amount}
 }
 
@@ -550,15 +550,15 @@ func execDealDamageToSource(ctx *EffectContext, e *DealDamageToSourceData) error
 // If Filter is set, only blockers matching the filter are included.
 type ForEachBlockerOfSourceData struct {
 	Filter PermanentFilter // optional: filter blockers
-	Inner  EffectData
+	Inner  Effect
 	Txt    string
 }
 
-func ForEachBlockerOfSource(inner EffectData, text string) EffectData {
+func ForEachBlockerOfSource(inner Effect, text string) Effect {
 	return &ForEachBlockerOfSourceData{Inner: inner, Txt: text}
 }
 
-func ForEachBlockerOfSourceMatching(filter PermanentFilter, inner EffectData, text string) EffectData {
+func ForEachBlockerOfSourceMatching(filter PermanentFilter, inner Effect, text string) Effect {
 	return &ForEachBlockerOfSourceData{Filter: filter, Inner: inner, Txt: text}
 }
 
@@ -595,11 +595,11 @@ func execForEachBlockerOfSource(ctx *EffectContext, e *ForEachBlockerOfSourceDat
 // ForEachAttackerBlockedBySourceData iterates all attackers that the source
 // creature is blocking. Each attacker's ID is set as targets[0].
 type ForEachAttackerBlockedBySourceData struct {
-	Inner EffectData
+	Inner Effect
 	Txt   string
 }
 
-func ForEachAttackerBlockedBySource(inner EffectData, text string) EffectData {
+func ForEachAttackerBlockedBySource(inner Effect, text string) Effect {
 	return &ForEachAttackerBlockedBySourceData{Inner: inner, Txt: text}
 }
 
@@ -628,11 +628,11 @@ func execForEachAttackerBlockedBySource(ctx *EffectContext, e *ForEachAttackerBl
 // (blockers if source is attacking, attacker if source is blocking).
 // Each opponent's ID is set as targets[0].
 type ForEachCombatOpponentData struct {
-	Inner EffectData
+	Inner Effect
 	Txt   string
 }
 
-func ForEachCombatOpponent(inner EffectData, text string) EffectData {
+func ForEachCombatOpponent(inner Effect, text string) Effect {
 	return &ForEachCombatOpponentData{Inner: inner, Txt: text}
 }
 
@@ -666,11 +666,11 @@ func execForEachCombatOpponent(ctx *EffectContext, e *ForEachCombatOpponentData)
 // (targets[0]). Each blocker's ID replaces targets[0] for the inner effect.
 // Used by spells that target an attacker and affect its blockers (e.g. Feint).
 type ForEachBlockerOfTargetData struct {
-	Inner EffectData
+	Inner Effect
 	Txt   string
 }
 
-func ForEachBlockerOfTarget(inner EffectData, text string) EffectData {
+func ForEachBlockerOfTarget(inner Effect, text string) Effect {
 	return &ForEachBlockerOfTargetData{Inner: inner, Txt: text}
 }
 
@@ -703,11 +703,11 @@ func execForEachBlockerOfTarget(ctx *EffectContext, e *ForEachBlockerOfTargetDat
 // creature (targets[0]) is blocking. Each attacker's ID replaces targets[0].
 // Used by spells that target a Wall and affect creatures it blocked (Glyph of Doom).
 type ForEachAttackerBlockedByTargetData struct {
-	Inner EffectData
+	Inner Effect
 	Txt   string
 }
 
-func ForEachAttackerBlockedByTarget(inner EffectData, text string) EffectData {
+func ForEachAttackerBlockedByTarget(inner Effect, text string) Effect {
 	return &ForEachAttackerBlockedByTargetData{Inner: inner, Txt: text}
 }
 
@@ -742,7 +742,7 @@ type BlockerCountVarData struct {
 	StoreAs string
 }
 
-func BlockerCountVar(storeAs string) EffectData {
+func BlockerCountVar(storeAs string) Effect {
 	return &BlockerCountVarData{StoreAs: storeAs}
 }
 
@@ -764,7 +764,7 @@ type RampageEffectData struct {
 	N int
 }
 
-func RampageEffect(n int) EffectData {
+func RampageEffect(n int) Effect {
 	return &RampageEffectData{N: n}
 }
 
@@ -823,7 +823,7 @@ type AddContinuousEffectsData struct {
 }
 
 // AddContinuousEffectsStep creates a pipeline step that adds continuous effects.
-func AddContinuousEffectsStep(factory func() []ContinuousEffect) EffectData {
+func AddContinuousEffectsStep(factory func() []ContinuousEffect) Effect {
 	return &AddContinuousEffectsData{Factory: factory}
 }
 

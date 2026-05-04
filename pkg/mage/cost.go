@@ -70,7 +70,7 @@ func (c *ManaCostPayment) Text() string {
 	return c.MC.String()
 }
 
-// tap implements both Cost and EffectData. As a cost it taps the source
+// tap implements both Cost and Effect. As a cost it taps the source
 // permanent ({T}). As an effect it taps ctx.Targets[0]. Single DSL constructor
 // (Tap) — the call site (cost slot vs effect slot) selects the path.
 type tap struct{}

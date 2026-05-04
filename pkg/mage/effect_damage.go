@@ -16,8 +16,8 @@ func GainLife(amount int) Effect {
 	return &gainLifeEffect{amount: amount}
 }
 
-// GainLifeStep returns the EffectData for use in pipelines/ForEach/Modal.
-func GainLifeStep(amount int) EffectData { return &gainLifeEffect{amount: amount} }
+// GainLifeStep returns the Effect for use in pipelines/ForEach/Modal.
+func GainLifeStep(amount int) Effect { return &gainLifeEffect{amount: amount} }
 
 func (e *gainLifeEffect) Text() string {
 	return fmt.Sprintf("gain %d life", e.amount)
@@ -164,8 +164,8 @@ func DealDamage(amount ValueSource) Effect {
 	return &dealDamageEffect{amount: amount}
 }
 
-// DealDamageStep returns the EffectData for use in pipelines/ForEach.
-func DealDamageStep(amount ValueSource) EffectData { return &dealDamageEffect{amount: amount} }
+// DealDamageStep returns the Effect for use in pipelines/ForEach.
+func DealDamageStep(amount ValueSource) Effect { return &dealDamageEffect{amount: amount} }
 
 func (e *dealDamageEffect) Text() string {
 	if _, ok := e.amount.(xValue); ok {
@@ -249,8 +249,8 @@ func DealDamageToPlayers(amount ValueSource, selector PlayerSelector) Effect {
 	return &dealDamageToPlayersEffect{amount: amount, selector: selector}
 }
 
-// DealDamageToPlayersStep returns the EffectData for use in pipelines/ForEach/Modal.
-func DealDamageToPlayersStep(amount ValueSource, selector PlayerSelector) EffectData {
+// DealDamageToPlayersStep returns the Effect for use in pipelines/ForEach/Modal.
+func DealDamageToPlayersStep(amount ValueSource, selector PlayerSelector) Effect {
 	return &dealDamageToPlayersEffect{amount: amount, selector: selector}
 }
 

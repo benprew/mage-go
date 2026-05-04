@@ -607,7 +607,7 @@ func registerCreatures() {
 					SnapshotPermanent(SelectSource, "self"),
 					IfElse("remove from combat and tap if lost",
 						&NotCond{Inner: &FlipCoinCond{}},
-						&PipelineData{Steps: []EffectData{
+						&PipelineData{Steps: []Effect{
 							RemoveFromCombatGathered("self"),
 							TapGathered("self"),
 						}},

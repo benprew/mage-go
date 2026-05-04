@@ -6,11 +6,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// EffectData is an alias for Effect kept for backward compatibility. There is
-// no semantic difference: every Effect is data, and execution happens through
-// the executor's type switch (ExecuteEffect / ApplyEffect).
-type EffectData = Effect
-
 // EffectContext carries runtime state through a pipeline of effects. It is
 // constructed by ApplyEffect (or pipeline steps) and threaded through executor
 // dispatch so intermediate values (snapshotted permanent properties, chosen

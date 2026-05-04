@@ -8,13 +8,13 @@ import (
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
-// ExecuteEffect dispatches an EffectData value to the appropriate execution
+// ExecuteEffect dispatches an Effect value to the appropriate execution
 // logic. This is the central interpreter: effect data describes "what" should
 // happen, and this function decides "how."
 //
-// New EffectData types are added as cases here. During migration, this starts
+// New Effect types are added as cases here. During migration, this starts
 // small and grows as pre-built effects and pipeline primitives are converted.
-func ExecuteEffect(ctx *EffectContext, data EffectData) error {
+func ExecuteEffect(ctx *EffectContext, data Effect) error {
 	switch e := data.(type) {
 
 	// --- Damage effects (effect_damage.go) ---
@@ -328,7 +328,7 @@ func ExecuteEffect(ctx *EffectContext, data EffectData) error {
 
 	default:
 		_ = e
-		return fmt.Errorf("executor: unhandled EffectData type %T", data)
+		return fmt.Errorf("executor: unhandled Effect type %T", data)
 	}
 }
 

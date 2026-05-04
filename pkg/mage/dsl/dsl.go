@@ -59,7 +59,6 @@ type (
 	ExiledCard             = mage.ExiledCard
 	BaseCard               = mage.BaseCard
 	Effect                 = mage.Effect
-	EffectData             = mage.EffectData
 	EffectProperties       = mage.EffectProperties
 	PipelineData           = mage.PipelineData
 	PermanentFilter        = mage.PermanentFilter

@@ -17,8 +17,8 @@ func DestroyTarget() Effect {
 	return &destroyTargetEffect{}
 }
 
-// DestroyTargetStep returns the EffectData for use as a pipeline/ForEach inner step.
-func DestroyTargetStep() EffectData { return &destroyTargetEffect{} }
+// DestroyTargetStep returns the Effect for use as a pipeline/ForEach inner step.
+func DestroyTargetStep() Effect { return &destroyTargetEffect{} }
 
 func (e *destroyTargetEffect) Text() string { return "destroy target" }
 func (e *destroyTargetEffect) Properties() EffectProperties {
@@ -107,8 +107,8 @@ func DestroyTargetNoRegen() Effect {
 	return &destroyTargetNoRegenEffect{}
 }
 
-// DestroyTargetNoRegenStep returns the EffectData for use in pipelines/ForEach.
-func DestroyTargetNoRegenStep() EffectData { return &destroyTargetNoRegenEffect{} }
+// DestroyTargetNoRegenStep returns the Effect for use in pipelines/ForEach.
+func DestroyTargetNoRegenStep() Effect { return &destroyTargetNoRegenEffect{} }
 
 // DestroyAllCreaturesNoRegen destroys all creatures; they can't be regenerated (e.g. Wrath of God).
 func DestroyAllCreaturesNoRegen() Effect {
@@ -130,8 +130,8 @@ func ExileTarget() Effect {
 	return &exileTargetEffect{}
 }
 
-// ExileTargetStep returns the EffectData for use as a pipeline/ForEach inner step.
-func ExileTargetStep() EffectData { return &exileTargetEffect{} }
+// ExileTargetStep returns the Effect for use as a pipeline/ForEach inner step.
+func ExileTargetStep() Effect { return &exileTargetEffect{} }
 
 func (e *exileTargetEffect) Text() string { return "exile target permanent" }
 func (e *exileTargetEffect) Properties() EffectProperties {
@@ -157,8 +157,8 @@ func SacrificeTarget() Effect {
 	return &sacrificeTargetEffect{}
 }
 
-// SacrificeTargetStep returns the EffectData for use in pipelines/ForEach.
-func SacrificeTargetStep() EffectData { return &sacrificeTargetEffect{} }
+// SacrificeTargetStep returns the Effect for use in pipelines/ForEach.
+func SacrificeTargetStep() Effect { return &sacrificeTargetEffect{} }
 
 func (e *sacrificeTargetEffect) Text() string                 { return "sacrifice target permanent" }
 func (e *sacrificeTargetEffect) Properties() EffectProperties { return EffectProperties{} }

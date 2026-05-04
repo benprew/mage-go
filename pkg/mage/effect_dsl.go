@@ -114,7 +114,7 @@ func resolvePermanents(ctx *EffectContext, sel TargetSelector) []*Permanent {
 
 // --- Boost DSL ---
 
-// boostEffect is a composable EffectData that temporarily modifies P/T.
+// boostEffect is a composable Effect that temporarily modifies P/T.
 // Use directly as an Effect.
 type boostEffect struct {
 	power     ValueSource
@@ -144,7 +144,7 @@ func (e *boostEffect) Until(d Duration) *boostEffect {
 	return e
 }
 
-// EffectData interface
+// Effect interface
 func (e *boostEffect) Text() string {
 	_, pIsX := e.power.(xValue)
 	_, tIsX := e.toughness.(xValue)
@@ -196,7 +196,7 @@ func execBoost(ctx *EffectContext, e *boostEffect) error {
 
 // --- GrantKeyword DSL ---
 
-// grantKeywordEffect is a composable EffectData that temporarily grants a keyword.
+// grantKeywordEffect is a composable Effect that temporarily grants a keyword.
 // Use directly as an Effect.
 type grantKeywordEffect struct {
 	keyword  Keyword
@@ -231,7 +231,7 @@ func (e *grantKeywordEffect) Unless(cond ConditionData) *grantKeywordEffect {
 	return e
 }
 
-// EffectData interface
+// Effect interface
 func (e *grantKeywordEffect) Text() string {
 	switch e.selector.Kind {
 	case KindSource:
@@ -266,7 +266,7 @@ func execGrantKeyword(ctx *EffectContext, e *grantKeywordEffect) error {
 
 // --- RevokeKeyword DSL ---
 
-// revokeKeywordEffect is a composable EffectData that temporarily removes a
+// revokeKeywordEffect is a composable Effect that temporarily removes a
 // keyword from a permanent. Mirrors grantKeywordEffect.
 type revokeKeywordEffect struct {
 	keyword  Keyword
@@ -329,7 +329,7 @@ func execRevokeKeyword(ctx *EffectContext, e *revokeKeywordEffect) error {
 
 // --- GrantAbility DSL ---
 
-// grantAbilityEffect is a composable EffectData that temporarily grants a
+// grantAbilityEffect is a composable Effect that temporarily grants a
 // non-keyword ability (typically a triggered ability like Rampage N) to the
 // selected permanent. Mirrors grantKeywordEffect for parameterized abilities
 // that don't fit into the Keyword/Attr enum.
@@ -415,7 +415,7 @@ func CardTypeAttr(ct CardType) Attr {
 	}
 }
 
-// grantTypeEffect is a composable EffectData that grants an additional card type
+// grantTypeEffect is a composable Effect that grants an additional card type
 // to a permanent via an indefinite continuous effect at LayerType.
 // Use directly as an Effect.
 type grantTypeEffect struct {
@@ -445,7 +445,7 @@ func (e *grantTypeEffect) Until(d Duration) *grantTypeEffect {
 	return e
 }
 
-// EffectData interface
+// Effect interface
 func (e *grantTypeEffect) Text() string {
 	return fmt.Sprintf("becomes a %s in addition to its other types", e.ct)
 }

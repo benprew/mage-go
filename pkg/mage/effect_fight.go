@@ -20,9 +20,9 @@ func FightTarget() Effect {
 	return &fightTargetEffect{}
 }
 
-// FightTargetStep returns the EffectData for use in pipelines / ForEach /
+// FightTargetStep returns the Effect for use in pipelines / ForEach /
 // Modal builders.
-func FightTargetStep() EffectData { return &fightTargetEffect{} }
+func FightTargetStep() Effect { return &fightTargetEffect{} }
 
 func (e *fightTargetEffect) Text() string { return "this creature fights target creature" }
 func (e *fightTargetEffect) Properties() EffectProperties {
