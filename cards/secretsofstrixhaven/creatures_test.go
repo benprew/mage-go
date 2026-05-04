@@ -2617,6 +2617,76 @@ func TestSpectacularSkywhale_OpusFiveManaSpentPutsCounters(t *testing.T) {
 }
 
 // =============================================================================
+// Grave Researcher // Reanimate
+// =============================================================================
+
+// TestGraveResearcher_NotPreparedOnETB: Grave Researcher does NOT enter the
+// battlefield prepared; it only becomes prepared via the upkeep trigger.
+func TestGraveResearcher_NotPreparedOnETB(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grave Researcher // Reanimate")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Grave Researcher // Reanimate", core.AttrPrepared, false)
+}
+
+// TestGraveResearcher_BecomesPreparedWithThreeCreatureCardsInGraveyard: at the
+// beginning of the controller's upkeep, surveil 1, then if there are 3+ creature
+// cards in the graveyard, this creature becomes prepared.
+func TestGraveResearcher_BecomesPreparedWithThreeCreatureCardsInGraveyard(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grave Researcher // Reanimate")
+	// Put 3 creature cards in graveyard before turn 2 upkeep.
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Llanowar Elves")
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Serra Angel")
+	// Surveil 1: one card on library top — put it back on top.
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Mountain")
+	g.ChooseScry(gametest.PlayerA, []string{}, []string{"Mountain"})
+	g.StopAt(2, core.PrecombatMain)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Grave Researcher // Reanimate", core.AttrPrepared, true)
+}
+
+// TestGraveResearcher_NotPreparedWithFewerThanThreeCreatures: with fewer than
+// 3 creature cards in graveyard, the creature does NOT become prepared at upkeep.
+func TestGraveResearcher_NotPreparedWithFewerThanThreeCreatures(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grave Researcher // Reanimate")
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Llanowar Elves")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Mountain")
+	g.ChooseScry(gametest.PlayerA, []string{}, []string{"Mountain"})
+	g.StopAt(2, core.PrecombatMain)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Grave Researcher // Reanimate", core.AttrPrepared, false)
+}
+
+// TestGraveResearcher_ReanimateControlsCreatureAndLosesLife: casting a copy of
+// Reanimate puts a target creature card from any graveyard onto the battlefield
+// under the controller's control; controller loses life equal to its mana value.
+func TestGraveResearcher_ReanimateControlsCreatureAndLosesLife(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grave Researcher // Reanimate")
+	// 3 creature cards required to trigger prepared; Grizzly Bears (CMC 2) is the target.
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Llanowar Elves")
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Serra Angel")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Mountain")
+	g.ChooseScry(gametest.PlayerA, []string{}, []string{"Mountain"})
+	// Activate in turn 2 (after upkeep trigger fires). ChooseTargets fallback picks
+	// first available graveyard creature (Grizzly Bears, CMC 2).
+	g.ActivateAbility(2, core.PrecombatMain, gametest.PlayerA, "Grave Researcher // Reanimate")
+	g.StopAt(2, core.EndStep)
+	g.Execute()
+	// One creature came back to the battlefield.
+	g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
+	// Controller loses 2 life (Grizzly Bears CMC 2).
+	g.AssertLife(gametest.PlayerA, 18)
+	g.AssertHasAbility(gametest.PlayerA, "Grave Researcher // Reanimate", core.AttrPrepared, false)
+}
+
+// =============================================================================
 // Emeritus of Woe // Demonic Tutor
 // =============================================================================
 
@@ -3072,6 +3142,10 @@ func TestPigmentWrangler_StrikingPaletteCopiesNextInstantOrSorcery(t *testing.T)
 	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Pigment Wrangler // Striking Palette")
 	// Cast Lightning Bolt in postcombat main so it fires AFTER the delayed copy
 	// trigger has been registered (the trigger persists until used or end of turn).
+	// The copy will reprompt for a new target; pre-queue "PlayerB" so the copy
+	// also hits PlayerB (without a queued choice, the harness defaults to the
+	// first possible target which may be PlayerA).
+	g.ChooseTarget(gametest.PlayerA, "PlayerB")
 	g.CastSpell(1, core.PostcombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
 	g.StopAt(1, core.EndStep)
 	g.Execute()
@@ -3259,7 +3333,10 @@ func TestAbigale_HeroicStanzaPutsCounterOnCreature(t *testing.T) {
 	g.AddCard(core.ZoneHand, gametest.PlayerA, "Llanowar Elves")
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
 	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Llanowar Elves")
-	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Abigale, Poet Laureate // Heroic Stanza", "Grizzly Bears")
+	// CastPreparedSpellCopy calls promptTargetsForList which uses the chooseTarget queue.
+	// Queue the target before activating so the copy's target selection picks Grizzly Bears.
+	g.ChooseTarget(gametest.PlayerA, "Grizzly Bears")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Abigale, Poet Laureate // Heroic Stanza")
 	g.StopAt(1, core.EndStep)
 	g.Execute()
 	g.AssertCounterCount(gametest.PlayerA, "Grizzly Bears", core.P1P1, 1)
@@ -3352,16 +3429,27 @@ func TestSanar_WildIdeaSearchesLibraryForInstantOrSorcery(t *testing.T) {
 
 // TestSanar_TreasureAbilityAfterInstantOrSorcery verifies that after casting
 // an instant or sorcery, Sanar's tap ability can create a Treasure token.
+// Sanar enters prepared, so we first use the Prepared ability (Wild Idea) to
+// unprepare it, then cast Lightning Bolt to gain a Charge counter, then
+// activate the Treasure tap in postcombat main.
 func TestSanar_TreasureAbilityAfterInstantOrSorcery(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sanar, Unfinished Genius // Wild Idea")
 	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
-	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
+	// Library card for Wild Idea to find; choose it so the search resolves.
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Counterspell")
+	g.ChooseFromLibrary(gametest.PlayerA, "Counterspell")
+	// Use the Prepared ability (Wild Idea) first to unprepare Sanar.
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Sanar, Unfinished Genius // Wild Idea")
+	// Now cast Lightning Bolt — this triggers the Charge counter.
+	g.CastSpell(1, core.PostcombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
+	// With Sanar unprepared and Charge > 0, the only activatable ability is the Treasure tap.
 	g.ActivateAbility(1, core.PostcombatMain, gametest.PlayerA, "Sanar, Unfinished Genius // Wild Idea")
 	g.StopAt(1, core.EndStep)
 	g.Execute()
-	g.AssertPermanentCount(gametest.PlayerA, "Treasure Token", 1)
+	// The predefined Treasure token is named "Treasure" (CreateTreasureToken).
+	g.AssertPermanentCount(gametest.PlayerA, "Treasure", 1)
 }
 
 // =============================================================================

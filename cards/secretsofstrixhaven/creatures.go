@@ -1488,10 +1488,101 @@ func registerCreatures() {
 	// Grave Researcher // Reanimate {2}{B} // {B}
 	// Creature — Troll Warlock // Sorcery
 	// 3/3
-	// TODO: implement
+	// At the beginning of your upkeep, surveil 1. Then if there are three or more creature
+	// cards in your graveyard, this creature becomes prepared. (While it's prepared, you may
+	// cast a copy of its spell. Doing so unprepares it.)
+	// ---
+	// Reanimate {B}
+	// Sorcery
+	// Put target creature card from a graveyard onto the battlefield under your control.
+	// You lose life equal to that card's mana value.
 	Register("Grave Researcher // Reanimate", func() Card {
+		spellFactory := func() Card {
+			return NewSorcery("Reanimate", "{B}",
+				NewTargetedSpell(
+					TargetCreatureCardInAnyGraveyard(),
+					FuncEffect(
+						"put target creature card from a graveyard onto the battlefield under your control; you lose life equal to that card's mana value",
+						EffectProperties{Outcome: OutcomeBenefit},
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+							if len(targets) == 0 {
+								return nil
+							}
+							ctrl := g.GetPlayer(controller)
+							if ctrl == nil {
+								return nil
+							}
+							var picked Card
+							var ok bool
+							picked, ok = ctrl.RemoveFromGraveyard(targets[0])
+							if !ok {
+								if opp := g.GetOpponent(controller); opp != nil {
+									picked, ok = opp.RemoveFromGraveyard(targets[0])
+								}
+								if !ok {
+									return nil
+								}
+							}
+							perm := g.PutOnBattlefield(picked, controller)
+							if perm != nil && picked.Owner() != controller {
+								g.AddContinuousEffect(TargetEffect(LayerControl, Indefinite, perm.ID(), func(g *Game, target *Permanent) error {
+									target.Controller = controller
+									return nil
+								}))
+							}
+							ctrl.LoseLife(picked.ManaCost().CMC())
+							return nil
+						},
+					),
+				))
+		}
+		// Grave Researcher does NOT enter prepared — it becomes prepared only via
+		// the upkeep trigger. We install the Prepared activated ability manually
+		// (without the ETB auto-prepare from WithPreparedSpell).
+		castCopy := FuncEffect(
+			"cast a copy of this creature's spell (Reanimate)",
+			EffectProperties{},
+			func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				return g.CastPreparedSpellCopy(controller, sourceID, spellFactory)
+			})
+		preparedAbility := NewActivatedAbility(castCopy, ManaCostOf("{0}"),
+			WithSorcerySpeed(),
+			WithActivationCondition(func(g *Game, src *Permanent, controller uuid.UUID) bool {
+				return src != nil && src.HasAttr(AttrPrepared)
+			}),
+		)
 		return NewCreature("Grave Researcher // Reanimate", "{2}{B} // {B}", 3, 3,
-			WithSubTypes("Troll", "Warlock", "//", "Sorcery"),
+			WithSubTypes("Troll", "Warlock"),
+			// At the beginning of your upkeep, surveil 1. Then if there are three or more
+			// creature cards in your graveyard, this creature becomes prepared.
+			WithAbility(BeginningOfUpkeepTrigger(
+				FuncEffect(
+					"surveil 1; then if 3+ creature cards in graveyard, become prepared",
+					EffectProperties{},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						if err := surveilEffect(1).Apply(g, sourceID, controller, nil); err != nil {
+							return err
+						}
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						count := 0
+						for _, c := range p.Graveyard() {
+							if c.HasType(TypeCreature) {
+								count++
+							}
+						}
+						if count >= 3 {
+							g.SetPrepared(sourceID, true)
+						}
+						return nil
+					},
+				),
+				false,
+			)),
+			// Prepared activated ability (cast a copy of Reanimate when prepared).
+			WithAbility(preparedAbility),
 		)
 	})
 
