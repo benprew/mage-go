@@ -90,8 +90,9 @@ func registerArtifacts() {
 // Whenever you cast an instant or sorcery spell, put a page counter on this artifact.
 // {5}, {T}: Draw a card. This ability costs {1} less to activate for each page counter on this artifact.
 	Register("Diary of Dreams", func() Card {
-		// Using Charge counters to represent page counters, as the engine has
-		// no Page counter type.
+		// XXX: "page counter" — the engine's core/counter.go has no Page counter type.
+		// Charge counters are used as a substitute. All functional behavior is preserved,
+		// but AssertCounterCount will show Charge counters, not page counters.
 		counterTrigger := WheneverYouCastSpellTrigger(
 			AddCounters(Charge, Fixed(1)).Targeting(ToSource()),
 			false, IsInstantOrSorceryCard,
