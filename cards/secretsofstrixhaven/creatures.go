@@ -2301,10 +2301,31 @@ func registerCreatures() {
 	// Blazing Firesinger // Seething Song {2}{R} // {2}{R}
 	// Creature — Dwarf Bard // Instant
 	// 2/3
-	// TODO: implement
+	// This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)
+	// ---
+	// Seething Song {2}{R}
+	// Instant
+	// Add {R}{R}{R}{R}{R}.
 	Register("Blazing Firesinger // Seething Song", func() Card {
+		spellFactory := func() Card {
+			return NewInstant("Seething Song", "{2}{R}",
+				NewSpellAbility(FuncEffect(
+					"add {R}{R}{R}{R}{R}",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						p.ManaPool().Add(Red, 5)
+						return nil
+					},
+				)),
+			)
+		}
 		return NewCreature("Blazing Firesinger // Seething Song", "{2}{R} // {2}{R}", 2, 3,
-			WithSubTypes("Dwarf", "Bard", "//", "Instant"),
+			WithSubTypes("Dwarf", "Bard"),
+			WithPreparedSpell(spellFactory),
 		)
 	})
 

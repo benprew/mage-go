@@ -170,6 +170,34 @@ func TestBurrogBanemaker_ActivatedBoost(t *testing.T) {
 	g.AssertPowerToughness(gametest.PlayerA, "Burrog Banemaker", 2, 2)
 }
 
+// =============================================================================
+// Blazing Firesinger // Seething Song
+// =============================================================================
+
+// TestBlazingFiresinger_ETBPrepared verifies Blazing Firesinger enters the
+// battlefield prepared.
+func TestBlazingFiresinger_ETBPrepared(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Blazing Firesinger // Seething Song")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Blazing Firesinger // Seething Song", core.AttrPrepared, true)
+}
+
+// TestBlazingFiresinger_SeethingSongAddsFiveRed verifies that activating the
+// Prepared ability casts Seething Song, adding {R}{R}{R}{R}{R} to the mana pool
+// and unpreparing the creature.
+func TestBlazingFiresinger_SeethingSongAddsFiveRed(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Blazing Firesinger // Seething Song")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Blazing Firesinger // Seething Song")
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	// Auto-mana provides 5R; Seething Song adds 5 more = 10R total produced.
+	g.AssertManaProducedAtLeast(gametest.PlayerA, core.Red, 10)
+	g.AssertHasAbility(gametest.PlayerA, "Blazing Firesinger // Seething Song", core.AttrPrepared, false)
+}
+
 // TestChargingStrifeknight_HasHaste verifies Charging Strifeknight has haste.
 func TestChargingStrifeknight_HasHaste(t *testing.T) {
 	g := gametest.NewTestGame(t)
