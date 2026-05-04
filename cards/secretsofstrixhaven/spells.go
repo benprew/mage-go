@@ -1734,10 +1734,78 @@ func registerSpells() {
 // Mind Roots {1}{B}{G}
 // Sorcery
 // Target player discards two cards. Put up to one land card discarded this way onto the battlefield tapped under your control.
-// TODO: implement
 	Register("Mind Roots", func() Card {
 		return NewSorcery("Mind Roots", "{1}{B}{G}",
-			NewSpellAbility(),
+			NewTargetedSpell(
+				TargetPlayer(),
+				FuncEffect(
+					"target player discards two cards; put up to one land discarded this way onto battlefield tapped under your control",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						target := g.GetPlayer(targets[0])
+						if target == nil {
+							return nil
+						}
+						chosen := target.ChooseCardsFromHand(2, "discard", g)
+						var discarded []Card
+						for _, card := range chosen {
+							if c, ok := g.PlayerDiscard(target, card.ID()); ok {
+								discarded = append(discarded, c)
+							}
+						}
+						// Collect land cards from those discarded.
+						var lands []Card
+						for _, c := range discarded {
+							if c.HasType(TypeLand) {
+								lands = append(lands, c)
+							}
+						}
+						if len(lands) == 0 {
+							return nil
+						}
+						you := g.GetPlayer(controller)
+						if you == nil {
+							return nil
+						}
+						// Put all discarded lands onto the battlefield tapped. Use the
+						// owner as the initial controller (effects.Apply resets to owner),
+						// then add a LayerControl continuous effect so they stay under
+						// the caster's control.
+						var landPerms []*Permanent
+						for _, lc := range lands {
+							target.RemoveFromGraveyard(lc.ID())
+							perm := g.PutOnBattlefield(lc, lc.Owner())
+							if perm != nil {
+								g.TapPermanent(perm)
+								permID := perm.ID()
+								ctrl := controller
+								ce := TargetEffect(LayerControl, Indefinite, permID, func(g *Game, p *Permanent) error {
+									p.Controller = ctrl
+									return nil
+								})
+								g.AddContinuousEffect(ce)
+								landPerms = append(landPerms, perm)
+							}
+						}
+						if len(landPerms) <= 1 {
+							return nil
+						}
+						// More than one land entered; controller chooses up to one to keep.
+						kept := you.ChoosePermanent(landPerms, "put up to one land onto the battlefield tapped", g)
+						for _, perm := range landPerms {
+							if kept == nil || perm.ID() != kept.ID() {
+								// Return unchosen lands to target's graveyard.
+								g.RemoveFromBattlefield(perm)
+								target.AddToGraveyard(perm.Card)
+							}
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 

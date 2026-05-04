@@ -917,14 +917,14 @@ func TestMindRoots(t *testing.T) {
 	t.Run("target player discards two cards", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Grizzly Bears")
-		g.AddCard(core.ZoneHand, gametest.PlayerB, "Forest")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Gray Ogre")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Mind Roots")
-		g.ChooseDiscard(gametest.PlayerB, "Grizzly Bears", "Forest")
+		g.ChooseDiscard(gametest.PlayerB, "Grizzly Bears", "Gray Ogre")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Mind Roots", "PlayerB")
 		g.StopAt(1, core.EndStep)
 		g.Execute()
 		g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
-		g.AssertGraveyardCount(gametest.PlayerB, "Forest", 1)
+		g.AssertGraveyardCount(gametest.PlayerB, "Gray Ogre", 1)
 	})
 	t.Run("discarded land card is put onto battlefield tapped under controller's control", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
