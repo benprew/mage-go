@@ -2557,10 +2557,20 @@ func registerCreatures() {
 	// 2/2
 	// Trample, reach
 	// Converge — This creature enters with a +1/+1 counter on it for each color of mana spent to cast it.
-	// TODO: implement
 	Register("Rancorous Archaic", func() Card {
 		return NewCreature("Rancorous Archaic", "{5}", 2, 2,
 			WithSubTypes("Avatar"),
+			WithKeyword(Trample),
+			WithKeyword(Reach),
+			// Converge — enters with a +1/+1 counter for each distinct color of mana spent to cast it.
+			// EntersWithComputedCounters runs inside PutOnBattlefield while resolvingCastContext is still set.
+			WithAbility(EntersWithComputedCounters(P1P1, func(g *Game, _ *Permanent) int {
+				ctx := g.ResolvingCastContext()
+				if ctx == nil {
+					return 0
+				}
+				return ctx.DistinctColorsSpent()
+			})),
 		)
 	})
 
