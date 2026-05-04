@@ -561,7 +561,7 @@ func TestMagmabloodArchaic_CastInstantBoostsCreatures(t *testing.T) {
 	// Lightning Bolt costs {R} — 1 color
 	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
 	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
-	g.StopAt(1, core.PrecombatMain)
+	g.StopAt(1, core.EndStep)
 	g.Execute()
 	// Grizzly Bears should get +1/+0 until EOT (1 color spent)
 	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 3, 2)
