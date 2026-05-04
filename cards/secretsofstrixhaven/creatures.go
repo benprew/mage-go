@@ -1213,10 +1213,37 @@ func registerCreatures() {
 	// 1/4
 	// When this creature enters, you may discard a card. If you do, draw a card.
 	// {T}, Exile a card from your graveyard: Add {R}. When you do, this creature deals 1 damage to each opponent.
-	// TODO: implement
 	Register("Rubble Rouser", func() Card {
 		return NewCreature("Rubble Rouser", "{2}{R}", 1, 4,
 			WithSubTypes("Dwarf", "Sorcerer"),
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect(
+					"you may discard a card; if you do, draw a card",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil || len(p.Hand()) == 0 {
+							return nil
+						}
+						if !p.ChooseMayAbility("discard a card to draw a card") {
+							return nil
+						}
+						chosen := p.ChooseCardsFromHand(1, "discard a card", g)
+						for _, c := range chosen {
+							g.PlayerDiscard(p, c.ID())
+						}
+						g.PlayerDrawCard(p)
+						return nil
+					},
+				),
+				false,
+			)),
+			WithActivatedAbility(
+				AddMana(Red, 1),
+				TapSourceCost(),
+				WithCost(ExileFromGraveyardCost(1)),
+				WithEffect(DealDamageToPlayers(Fixed(1), SelectEachOpponent())),
+			),
 		)
 	})
 
