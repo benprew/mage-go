@@ -14,6 +14,43 @@ var basicLandNamesSOS = map[string]bool{
 
 func isBasicLandCardSOS(c Card) bool { return basicLandNamesSOS[c.Name()] }
 
+// searchBasicLandToBattlefieldTappedSOS searches the controller's library for
+// a basic land card, puts it onto the battlefield tapped, then shuffles.
+func searchBasicLandToBattlefieldTappedSOS(g *Game, controller uuid.UUID) {
+	p := g.GetPlayer(controller)
+	if p == nil {
+		return
+	}
+	lib := p.Library()
+	var candidates []Card
+	for _, c := range lib {
+		if isBasicLandCardSOS(c) {
+			candidates = append(candidates, c)
+		}
+	}
+	if len(candidates) == 0 {
+		p.ShuffleLibrary()
+		return
+	}
+	chosen := p.ChooseCardFromLibrary(candidates, "search for basic land", g)
+	if chosen == nil {
+		p.ShuffleLibrary()
+		return
+	}
+	newLib := make([]Card, 0, len(lib)-1)
+	for _, c := range lib {
+		if c.ID() != chosen.ID() {
+			newLib = append(newLib, c)
+		}
+	}
+	p.SetLibrary(newLib)
+	p.ShuffleLibrary()
+	perm := g.PutOnBattlefield(chosen, controller)
+	if perm != nil {
+		g.TapPermanent(perm)
+	}
+}
+
 // searchBasicLandToHandSOS searches the controller's library for a basic land
 // card and puts it into hand, then shuffles.
 func searchBasicLandToHandSOS(g *Game, controller uuid.UUID) {
@@ -214,10 +251,14 @@ func registerCreatures() {
 // Flying
 // When this creature enters, surveil 1. (Look at the top card of your library. You may put it into your graveyard.)
 // Whenever one or more cards leave your graveyard, this creature gets +1/+1 until end of turn.
-// TODO: implement
 	Register("Owlin Historian", func() Card {
 		return NewCreature("Owlin Historian", "{2}{W}", 2, 3,
 			WithSubTypes("Bird", "Cleric"),
+			WithKeyword(Flying),
+			// When this creature enters, surveil 1.
+			WithAbility(EntersBattlefieldTrigger(surveilEffect(1), false)),
+			// XXX: "Whenever one or more cards leave your graveyard, this creature gets +1/+1 until end of turn."
+			// The engine has no EvtLeaveGraveyard event; this trigger cannot be implemented.
 		)
 	})
 
@@ -383,10 +424,19 @@ func registerCreatures() {
 // 1/3
 // {T}: Add {U}. Spend this mana only to cast an instant or sorcery spell.
 // {1}, {T}: Add one mana of any color. Spend this mana only to cast an instant or sorcery spell.
-// TODO: implement
 	Register("Hydro-Channeler", func() Card {
 		return NewCreature("Hydro-Channeler", "{1}{U}", 1, 3,
 			WithSubTypes("Merfolk", "Wizard"),
+			// {T}: Add {U}.
+			// XXX: "Spend this mana only to cast an instant or sorcery spell" restriction not enforced (engine has no mana restriction tagging).
+			WithManaAbility(Blue),
+			// {1}, {T}: Add one mana of any color.
+			// XXX: "Spend this mana only to cast an instant or sorcery spell" restriction not enforced.
+			WithActivatedAbility(
+				AddAnyMana(1, Colorless),
+				ManaCostOf("{1}"),
+				WithCost(TapSourceCost()),
+			),
 		)
 	})
 
@@ -416,10 +466,58 @@ func registerCreatures() {
 // 2/2
 // When this creature enters, return up to one other target creature to its owner's hand.
 // Whenever you cast a spell with {X} in its mana cost, this creature can't be blocked this turn.
-// TODO: implement
 	Register("Matterbending Mage", func() Card {
+		hasXFilter := NewCardFilter("spell with {X} in mana cost", func(c Card) bool {
+			return c.ManaCost().HasX
+		})
 		return NewCreature("Matterbending Mage", "{2}{U}", 2, 2,
 			WithSubTypes("Human", "Wizard"),
+			// When this creature enters, return up to one other target creature to its owner's hand.
+			// "Up to one" is optional (0 or 1). The trigger is mandatory but picking 0 is legal.
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect("return up to one other target creature to its owner's hand",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						target := targets[0]
+						if target == uuid.Nil {
+							return nil
+						}
+						perm := g.FindPermanent(target)
+						if perm == nil {
+							return nil
+						}
+						owner := g.GetPlayer(perm.Card.Owner())
+						if owner == nil {
+							return nil
+						}
+						g.RemoveFromBattlefield(perm)
+						owner.AddToHand(perm.Card)
+						return nil
+					},
+				),
+				false,
+			).AddTarget(TargetUpToOneCreature())),
+			// Whenever you cast a spell with {X} in its mana cost, this creature can't be blocked this turn.
+			WithAbility(WheneverYouCastSpellTrigger(
+				FuncEffect("this creature can't be blocked this turn",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						src := g.FindPermanent(sourceID)
+						if src == nil {
+							return nil
+						}
+						ce := TemporaryKeyword(sourceID, UnblockableKW)
+						ce.SetSourceID(sourceID)
+						g.AddContinuousEffect(ce)
+						return nil
+					},
+				),
+				false,
+				hasXFilter,
+			)),
 		)
 	})
 
@@ -439,11 +537,23 @@ func registerCreatures() {
 // 2/2
 // This spell costs {3} less to cast if creatures you control have total toughness 10 or greater.
 // When Orysa enters, draw two cards.
-// TODO: implement
 	Register("Orysa, Tide Choreographer", func() Card {
+		totalToughnessGTE10 := func(g *Game, controller uuid.UUID, _ Card, _ uuid.UUID) bool {
+			total := 0
+			for _, perm := range g.AllBattlefield() {
+				if perm.Controller == controller && perm.HasAttr(AttrIsCreature) {
+					total += perm.CurrentToughness(g)
+				}
+			}
+			return total >= 10
+		}
 		return NewCreature("Orysa, Tide Choreographer", "{4}{U}", 2, 2,
 			WithSubTypes("Merfolk", "Bard"),
 			WithSuperTypes(SuperLegendary),
+			// This spell costs {3} less to cast if creatures you control have total toughness 10 or greater.
+			WithSelfCostReduction(FixedAmount(3), totalToughnessGTE10),
+			// When Orysa enters, draw two cards.
+			WithAbility(EntersBattlefieldTrigger(DrawCards(Fixed(2)), false)),
 		)
 	})
 
@@ -830,10 +940,12 @@ func registerCreatures() {
 // 3/4
 // Menace (This creature can't be blocked except by two or more creatures.)
 // Whenever one or more cards leave your graveyard, create a 2/2 red and white Spirit creature token.
-// TODO: implement
 	Register("Garrison Excavator", func() Card {
 		return NewCreature("Garrison Excavator", "{3}{R}", 3, 4,
 			WithSubTypes("Orc", "Sorcerer"),
+			WithKeyword(Menace),
+			// XXX: "Whenever one or more cards leave your graveyard, create a 2/2 red and white Spirit creature token."
+			// The engine has no EvtLeaveGraveyard event; this trigger cannot be implemented.
 		)
 	})
 
@@ -863,10 +975,74 @@ func registerCreatures() {
 // Trample, reach
 // Converge — This creature enters with a +1/+1 counter on it for each color of mana spent to cast it.
 // Whenever you cast an instant or sorcery spell, creatures you control get +1/+0 until end of turn for each color of mana spent to cast that spell.
-// TODO: implement
 	Register("Magmablood Archaic", func() Card {
+		isInstantOrSorceryCard := NewCardFilter("instant or sorcery", func(c Card) bool {
+			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
+		})
 		return NewCreature("Magmablood Archaic", "{2/R}{2/R}{2/R}", 2, 2,
 			WithSubTypes("Avatar"),
+			WithKeyword(Trample),
+			WithKeyword(Reach),
+			// Converge — This creature enters with a +1/+1 counter on it for each color of mana spent to cast it.
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect("enter with a +1/+1 counter for each color of mana spent to cast",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						ctx := g.ResolvingCastContext()
+						if ctx == nil {
+							return nil
+						}
+						colors := ctx.DistinctColorsSpent()
+						if colors <= 0 {
+							return nil
+						}
+						perm := g.FindPermanent(sourceID)
+						if perm == nil {
+							return nil
+						}
+						perm.AddCounter(P1P1, colors)
+						g.ApplyContinuousEffects()
+						return nil
+					},
+				),
+				false,
+			)),
+			// Whenever you cast an instant or sorcery spell, creatures you control get +1/+0 until end of turn
+			// for each color of mana spent to cast that spell.
+			WithAbility(WheneverYouCastSpellTrigger(
+				OpusEffect("creatures you control get +1/+0 for each color of mana spent",
+					func(g *Game, sourceID, controller uuid.UUID, manaSpent int) error {
+						// Determine colors spent for the triggering spell.
+						// Walk the stack to find the spell that triggered this.
+						var numColors int
+						objs := g.GetStack().Objects()
+						for i := len(objs) - 1; i >= 0; i-- {
+							obj := objs[i]
+							if !obj.IsAbility && obj.CastContext != nil {
+								numColors = obj.CastContext.DistinctColorsSpent()
+								break
+							}
+						}
+						if numColors <= 0 {
+							return nil
+						}
+						src := g.FindPermanent(sourceID)
+						if src == nil {
+							return nil
+						}
+						for _, perm := range g.AllBattlefield() {
+							if perm.Controller == controller && perm.HasAttr(AttrIsCreature) {
+								ce := TemporaryBoost(perm.ID(), numColors, 0)
+								ce.SetSourceID(sourceID)
+								g.AddContinuousEffect(ce)
+							}
+						}
+						return nil
+					},
+				),
+				false,
+				isInstantOrSorceryCard,
+			)),
 		)
 	})
 
@@ -875,11 +1051,64 @@ func registerCreatures() {
 // 4/4
 // Ward—Pay 3 life. (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays 3 life.)
 // Whenever you cast an instant or sorcery spell, you may sacrifice an artifact. If you do, copy that spell and you may choose new targets for the copy.
-// TODO: implement
 	Register("Mica, Reader of Ruins", func() Card {
+		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c Card) bool {
+			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
+		})
 		return NewCreature("Mica, Reader of Ruins", "{3}{R}", 4, 4,
 			WithSubTypes("Human", "Artificer"),
 			WithSuperTypes(SuperLegendary),
+			// XXX: Ward—Pay 3 life. The engine has no Ward mechanic implementation.
+			// Whenever you cast an instant or sorcery spell, you may sacrifice an artifact.
+			// If you do, copy that spell and you may choose new targets for the copy.
+			WithAbility(WheneverYouCastSpellTrigger(
+				FuncEffect("may sacrifice an artifact to copy that spell",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						// Check if controller has any artifacts.
+						var artifacts []*Permanent
+						for _, perm := range g.AllBattlefield() {
+							if perm.Controller == controller && perm.HasAttr(AttrIsArtifact) {
+								artifacts = append(artifacts, perm)
+							}
+						}
+						if len(artifacts) == 0 {
+							return nil
+						}
+						choice := p.ChooseMode([]string{"yes", "no"}, "sacrifice an artifact to copy the spell?")
+						if choice != 0 {
+							return nil
+						}
+						chosen := p.ChoosePermanent(artifacts, "choose artifact to sacrifice", g)
+						if chosen == nil {
+							return nil
+						}
+						g.Sacrifice(chosen)
+						// Find the triggering spell on the stack.
+						var spellSourceID uuid.UUID
+						objs := g.GetStack().Objects()
+						for i := len(objs) - 1; i >= 0; i-- {
+							if !objs[i].IsAbility {
+								spellSourceID = objs[i].SourceID
+								break
+							}
+						}
+						if spellSourceID == uuid.Nil {
+							return nil
+						}
+						// XXX: Oracle says "you may choose new targets for the copy" (optional retarget).
+						// CopySpellOnStack with false inherits targets, which is correct for the common case.
+						g.CopySpellOnStack(spellSourceID, controller, false)
+						return nil
+					},
+				),
+				false,
+				isInstantOrSorcery,
+			)),
 		)
 	})
 
@@ -1138,10 +1367,17 @@ func registerCreatures() {
 // 2/2
 // When this creature enters, you gain 1 life.
 // {2}{G}: This creature gets +2/+2 until end of turn. Activate only once each turn.
-// TODO: implement
 	Register("Mindful Biomancer", func() Card {
 		return NewCreature("Mindful Biomancer", "{1}{G}", 2, 2,
 			WithSubTypes("Dryad", "Druid"),
+			// When this creature enters, you gain 1 life.
+			WithAbility(EntersBattlefieldTrigger(GainLife(1), false)),
+			// {2}{G}: This creature gets +2/+2 until end of turn. Activate only once each turn.
+			WithActivatedAbility(
+				Boost(Fixed(2), Fixed(2)).Targeting(ToSource()),
+				ManaCostOf("{2}{G}"),
+				WithOncePerTurn(),
+			),
 		)
 	})
 
@@ -1150,10 +1386,11 @@ func registerCreatures() {
 // 1/2
 // Deathtouch
 // {T}: Add {G}.
-// TODO: implement
 	Register("Noxious Newt", func() Card {
 		return NewCreature("Noxious Newt", "{1}{G}", 1, 2,
 			WithSubTypes("Salamander"),
+			WithKeyword(Deathtouch),
+			WithManaAbility(Green),
 		)
 	})
 

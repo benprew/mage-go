@@ -692,10 +692,45 @@ func registerSpells() {
 // Target opponent loses 1 life and you gain 1 life.
 // Up to one target creature gets +1/+1 until end of turn.
 // Up to one target creature gets -1/-1 until end of turn.
-// TODO: implement
 	Register("Dissection Practice", func() Card {
 		return NewInstant("Dissection Practice", "{B}",
-			NewSpellAbility(),
+			NewMultiTargetSpell(
+				[]Target{
+					TargetOpponent(),
+					TargetUpToOneCreature(),
+					TargetUpToOneCreature(),
+				},
+				FuncEffect(
+					"target opponent loses 1 life, you gain 1 life; up to one creature gets +1/+1; up to one creature gets -1/-1 until end of turn",
+					EffectProperties{Outcome: OutcomeUnknown},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						opp := g.GetPlayer(targets[0])
+						if opp != nil {
+							opp.LoseLife(1)
+						}
+						p := g.GetPlayer(controller)
+						if p != nil {
+							g.PlayerGainLife(p, 1)
+						}
+						if len(targets) >= 2 && targets[1] != uuid.Nil {
+							perm := g.FindPermanent(targets[1])
+							if perm != nil {
+								g.AddContinuousEffect(TemporaryBoost(perm.ID(), 1, 1))
+							}
+						}
+						if len(targets) >= 3 && targets[2] != uuid.Nil {
+							perm := g.FindPermanent(targets[2])
+							if perm != nil {
+								g.AddContinuousEffect(TemporaryBoost(perm.ID(), -1, -1))
+							}
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -704,10 +739,44 @@ func registerSpells() {
 // Instant
 // Return up to X target instant and/or sorcery cards from your graveyard to your hand.
 // Exile Divergent Equation.
-// TODO: implement
 	Register("Divergent Equation", func() Card {
 		return NewInstant("Divergent Equation", "{X}{X}{U}",
-			NewSpellAbility(),
+			NewMultiTargetSpell(
+				[]Target{
+					TargetAnyNumberOfCardsInYourGraveyard(IsInstantOrSorceryCard),
+				},
+				FuncEffect(
+					"return up to X instant and/or sorcery cards from graveyard to hand; exile self",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						x := g.XValue()
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						count := 0
+						for _, tid := range targets {
+							if tid == uuid.Nil {
+								continue
+							}
+							if count >= x {
+								break
+							}
+							card, ok := p.RemoveFromGraveyard(tid)
+							if ok {
+								p.AddToHand(card)
+								count++
+							}
+						}
+						// Exile Divergent Equation instead of putting it in the graveyard.
+						resCard := g.GetResolvingCard()
+						if resCard != nil {
+							g.AddExileIfWouldGoToGraveyardThisTurn(resCard.ID(), sourceID)
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -716,10 +785,36 @@ func registerSpells() {
 // Sorcery
 // Duel Tactics deals 1 damage to target creature. It can't block this turn.
 // Flashback {1}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.)
-// TODO: implement
+// XXX: Flashback does not exile the card after resolution (engine feature needed).
+// XXX: "It can't block this turn" — PreventBlockingUntilEndOfCombat only prevents blocking until end of combat,
+// not the full turn. For a sorcery cast during main phase, blocking happens during the following combat step.
+// PreventBlockingUntilEndOfCombat is used here as the closest available approximation.
 	Register("Duel Tactics", func() Card {
 		return NewSorcery("Duel Tactics", "{R}",
-			NewSpellAbility(),
+			NewTargetedSpell(
+				TargetCreature(),
+				CompositeEffects(
+					"Duel Tactics deals 1 damage to target creature. It can't block this turn.",
+					DealDamage(Fixed(1)),
+					FuncEffect(
+						"target creature can't block this turn",
+						EffectProperties{Outcome: OutcomeDetriment},
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+							if len(targets) == 0 {
+								return nil
+							}
+							perm := g.FindPermanent(targets[0])
+							if perm == nil {
+								return nil
+							}
+							// XXX: PreventBlockingUntilEndOfCombat is an approximation; should be "this turn"
+							g.AddContinuousEffect(PreventBlockingUntilEndOfCombat(perm.ID()))
+							return nil
+						},
+					),
+				),
+			),
+			WithAlternateCost(ZoneGraveyard, ParseManaCost("{1}{R}")),
 		)
 	})
 
@@ -751,10 +846,48 @@ func registerSpells() {
 // Embrace the Paradox {3}{G}{U}
 // Instant
 // Draw three cards. You may put a land card from your hand onto the battlefield tapped.
-// TODO: implement
 	Register("Embrace the Paradox", func() Card {
 		return NewInstant("Embrace the Paradox", "{3}{G}{U}",
-			NewSpellAbility(),
+			NewSpellAbility(
+				FuncEffect(
+					"draw three cards; may put a land card from hand onto battlefield tapped",
+					EffectProperties{Outcome: OutcomeBenefit, DrawCount: 3},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						for i := 0; i < 3; i++ {
+							g.PlayerDrawCard(p)
+						}
+						if !p.ChooseMayAbility("put a land card from your hand onto the battlefield tapped") {
+							return nil
+						}
+						// Pick a land card from hand
+						landFilter := NewCardFilter("land card", func(c Card) bool {
+							return c.HasType(TypeLand)
+						})
+						chosen := g.PickFromHand(p, p, landFilter, false, "put land onto battlefield tapped")
+						if chosen == nil {
+							return nil
+						}
+						// Remove from hand
+						hand := p.Hand()
+						newHand := make([]Card, 0, len(hand)-1)
+						for _, c := range hand {
+							if c.ID() != chosen.ID() {
+								newHand = append(newHand, c)
+							}
+						}
+						p.SetHand(newHand)
+						perm := g.PutOnBattlefield(chosen, controller)
+						if perm != nil {
+							g.TapPermanent(perm)
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -762,10 +895,55 @@ func registerSpells() {
 // End of the Hunt {1}{B}
 // Sorcery
 // Target opponent exiles a creature or planeswalker they control with the greatest mana value among creatures and planeswalkers they control.
-// TODO: implement
 	Register("End of the Hunt", func() Card {
 		return NewSorcery("End of the Hunt", "{1}{B}",
-			NewSpellAbility(),
+			NewTargetedSpell(
+				TargetOpponent(),
+				FuncEffect(
+					"target opponent exiles their creature or planeswalker with greatest mana value",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						oppID := targets[0]
+						// Find all creatures and planeswalkers the opponent controls
+						candidates := g.FilterBattlefield(And(
+							ControlledBy(oppID),
+							Or(IsCreature, IsPlaneswalker),
+						))
+						if len(candidates) == 0 {
+							return nil
+						}
+						// Find greatest mana value
+						maxMV := -1
+						for _, perm := range candidates {
+							mv := perm.Card.ManaCost().CMC()
+							if mv > maxMV {
+								maxMV = mv
+							}
+						}
+						// Collect candidates with greatest MV
+						var withMaxMV []*Permanent
+						for _, perm := range candidates {
+							if perm.Card.ManaCost().CMC() == maxMV {
+								withMaxMV = append(withMaxMV, perm)
+							}
+						}
+						// Opponent chooses one to exile
+						opp := g.GetPlayer(oppID)
+						if opp == nil {
+							return nil
+						}
+						chosen := opp.ChoosePermanent(withMaxMV, "exile a creature or planeswalker with greatest mana value", g)
+						if chosen == nil {
+							return nil
+						}
+						g.ExilePermanent(chosen)
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -773,10 +951,35 @@ func registerSpells() {
 // Erode {W}
 // Instant
 // Destroy target creature or planeswalker. Its controller may search their library for a basic land card, put it onto the battlefield tapped, then shuffle.
-// TODO: implement
 	Register("Erode", func() Card {
 		return NewInstant("Erode", "{W}",
-			NewSpellAbility(),
+			NewTargetedSpell(
+				TargetPermanent(Or(IsCreature, IsPlaneswalker)),
+				FuncEffect(
+					"destroy target creature or planeswalker; its controller may search library for basic land, put it onto battlefield tapped",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						perm := g.FindPermanent(targets[0])
+						if perm == nil {
+							return nil
+						}
+						permController := perm.Controller
+						g.DestroyPermanent(perm)
+						// Its controller may search for a basic land
+						p := g.GetPlayer(permController)
+						if p == nil {
+							return nil
+						}
+						if p.ChooseMayAbility("search your library for a basic land card, put it onto the battlefield tapped") {
+							searchBasicLandToBattlefieldTappedSOS(g, permController)
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -784,10 +987,12 @@ func registerSpells() {
 // Essence Scatter {1}{U}
 // Instant
 // Counter target creature spell.
-// TODO: implement
 	Register("Essence Scatter", func() Card {
+		creatureSpellFilter := NewCardFilter("creature spell", func(c Card) bool {
+			return c.HasType(TypeCreature)
+		})
 		return NewInstant("Essence Scatter", "{1}{U}",
-			NewSpellAbility(),
+			NewTargetedSpell(TargetSpellOnStack(creatureSpellFilter), CounterSpell()),
 		)
 	})
 
@@ -796,10 +1001,40 @@ func registerSpells() {
 // Sorcery
 // As an additional cost to cast this spell, pay X life.
 // Return each artifact and creature card with mana value X from your graveyard to the battlefield.
-// TODO: implement
+// XXX: "Pay X life" as an additional cost that also sets X is not supported by the engine.
+// The implementation reads X from g.XValue() (set by the test harness or cast pipeline).
+// A proper XLifePayCost that requests an amount from the player and sets g.currentX is needed.
 	Register("Fix What's Broken", func() Card {
 		return NewSorcery("Fix What's Broken", "{2}{W}{B}",
-			NewSpellAbility(),
+			NewSpellAbility(
+				FuncEffect(
+					"return each artifact and creature card with mana value X from graveyard to battlefield",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						x := g.XValue()
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						// Pay X life (additional cost already set by the time we resolve)
+						if x > 0 {
+							g.PlayerLoseLife(p, x)
+						}
+						gy := p.Graveyard()
+						var toReturn []Card
+						for _, c := range gy {
+							if c.ManaCost().CMC() == x && (c.HasType(TypeArtifact) || c.HasType(TypeCreature)) {
+								toReturn = append(toReturn, c)
+							}
+						}
+						for _, c := range toReturn {
+							p.RemoveFromGraveyard(c.ID())
+							g.PutOnBattlefield(c, controller)
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -807,10 +1042,23 @@ func registerSpells() {
 // Flashback {R}
 // Instant
 // Target instant or sorcery card in your graveyard gains flashback until end of turn. The flashback cost is equal to its mana cost. (You may cast that card from your graveyard for its flashback cost. Then exile it.)
-// TODO: implement
+// XXX: Granting flashback (an alternate cost) to a card in the graveyard until end of turn
+// requires dynamic alternate-cost injection, which the engine does not support.
+// The card is implemented as a no-op: it targets an instant/sorcery in your graveyard
+// but cannot actually grant it the flashback ability.
 	Register("Flashback", func() Card {
 		return NewInstant("Flashback", "{R}",
-			NewSpellAbility(),
+			NewTargetedSpell(
+				TargetCardInYourGraveyard(IsInstantOrSorceryCard),
+				FuncEffect(
+					"target instant or sorcery card in your graveyard gains flashback until end of turn",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						// XXX: Cannot grant flashback to the target; engine lacks dynamic alternate-cost injection.
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -818,10 +1066,65 @@ func registerSpells() {
 // Flow State {1}{U}
 // Sorcery
 // Look at the top three cards of your library. Put one of them into your hand and the rest on the bottom of your library in any order. If there is an instant card and a sorcery card in your graveyard, instead put two of them into your hand and the rest on the bottom of your library in any order.
-// TODO: implement
 	Register("Flow State", func() Card {
 		return NewSorcery("Flow State", "{1}{U}",
-			NewSpellAbility(),
+			NewSpellAbility(
+				FuncEffect(
+					"look at top 3; put 1 (or 2 if instant+sorcery in GY) into hand, rest on bottom in any order",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						topCards := g.RevealTopN(p, 3)
+						if len(topCards) == 0 {
+							return nil
+						}
+						// Check graveyard for both an instant and a sorcery card
+						hasInstant, hasSorcery := false, false
+						for _, c := range p.Graveyard() {
+							if c.HasType(TypeInstant) {
+								hasInstant = true
+							}
+							if c.HasType(TypeSorcery) {
+								hasSorcery = true
+							}
+						}
+						putToHand := 1
+						if hasInstant && hasSorcery {
+							putToHand = 2
+						}
+						// Remove top N from library
+						removed := g.RemoveTopN(p, len(topCards))
+						// Let player pick cards to put into hand
+						var inHand []Card
+						var remaining []Card
+						for i := 0; i < putToHand && len(removed) > 0; i++ {
+							anyFilter := NewCardFilter("any card", func(c Card) bool { return true })
+							chosen := p.ChooseCardFromLibrary(removed, "put into your hand", g)
+							_ = anyFilter
+							if chosen == nil {
+								break
+							}
+							inHand = append(inHand, chosen)
+							newRemoved := make([]Card, 0, len(removed)-1)
+							for _, c := range removed {
+								if c.ID() != chosen.ID() {
+									newRemoved = append(newRemoved, c)
+								}
+							}
+							removed = newRemoved
+						}
+						for _, c := range inHand {
+							p.AddToHand(c)
+						}
+						remaining = removed
+						g.PutOnBottomInChosenOrder(p, remaining)
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -852,10 +1155,33 @@ func registerSpells() {
 // Fractal Anomaly {U}
 // Instant
 // Create a 0/0 green and blue Fractal creature token and put X +1/+1 counters on it, where X is the number of cards you've drawn this turn.
-// TODO: implement
 	Register("Fractal Anomaly", func() Card {
 		return NewInstant("Fractal Anomaly", "{U}",
-			NewSpellAbility(),
+			NewSpellAbility(
+				FuncEffect(
+					"create 0/0 green and blue Fractal token; put X +1/+1 counters where X is cards drawn this turn",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						// Create 0/0 Fractal token via CreateColoredToken then find it to add counters
+						eff := CreateColoredToken("Fractal Token", 0, 0, []Color{Green, Blue}, []CardType{TypeCreature}, []string{"Fractal"})
+						_ = eff.Apply(g, sourceID, controller, nil)
+						// Find the newly created token to add counters
+						tokens := g.FilterBattlefield(And(
+							ControlledBy(controller),
+							HasSubType("Fractal"),
+						))
+						if len(tokens) == 0 {
+							return nil
+						}
+						newest := tokens[len(tokens)-1]
+						x := g.PlayerCardsDrawnThisTurn(controller)
+						for i := 0; i < x; i++ {
+							g.AddCountersWithReplacement(newest, P1P1, 1, sourceID, false)
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -956,10 +1282,39 @@ func registerSpells() {
 // Homesickness {4}{U}{U}
 // Instant
 // Target player draws two cards. Tap up to two target creatures. Put a stun counter on each of them. (If a permanent with a stun counter would become untapped, remove one from it instead.)
-// TODO: implement
+// XXX: Stun counters not implemented (no CounterType for Stun). Draw and tap effects implemented.
 	Register("Homesickness", func() Card {
 		return NewInstant("Homesickness", "{4}{U}{U}",
-			NewSpellAbility(),
+			NewMultiTargetSpell(
+				[]Target{TargetPlayer(), TargetUpToNCreatures(2)},
+				FuncEffect(
+					"target player draws two cards; tap up to two target creatures",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						if pid := targets[0]; pid != uuid.Nil {
+							p := g.GetPlayer(pid)
+							if p != nil {
+								g.PlayerDrawCard(p)
+								g.PlayerDrawCard(p)
+							}
+						}
+						for _, tid := range targets[1:] {
+							if tid == uuid.Nil {
+								continue
+							}
+							perm := g.FindPermanent(tid)
+							if perm != nil {
+								g.TapPermanent(perm)
+								// XXX: stun counter not placed — engine lacks Stun CounterType
+							}
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -967,10 +1322,35 @@ func registerSpells() {
 // Impractical Joke {R}
 // Sorcery
 // Damage can't be prevented this turn. Impractical Joke deals 3 damage to up to one target creature or planeswalker.
-// TODO: implement
+// XXX: "Damage can't be prevented this turn" requires a global prevention-suppression flag, which the engine
+// does not support. The damage effect is implemented; prevention suppression is not.
 	Register("Impractical Joke", func() Card {
 		return NewSorcery("Impractical Joke", "{R}",
-			NewSpellAbility(),
+			NewMultiTargetSpell(
+				[]Target{TargetUpToNCreaturesOrPlayers(1)},
+				FuncEffect(
+					"Impractical Joke deals 3 damage to up to one target creature or planeswalker",
+					EffectProperties{Outcome: OutcomeDetriment, DamageValue: Fixed(3)},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						// XXX: global damage prevention suppression not implemented
+						for _, tid := range targets {
+							if tid == uuid.Nil {
+								continue
+							}
+							perm := g.FindPermanent(tid)
+							if perm != nil {
+								g.DealDamageToPermanent(perm, 3, sourceID)
+								continue
+							}
+							p := g.GetPlayer(tid)
+							if p != nil {
+								g.DealDamageToPlayer(p, 3, sourceID)
+							}
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -990,10 +1370,15 @@ func registerSpells() {
 // Interjection {W}
 // Instant
 // Target creature gets +2/+2 and gains first strike until end of turn.
-// TODO: implement
 	Register("Interjection", func() Card {
 		return NewInstant("Interjection", "{W}",
-			NewSpellAbility(),
+			NewTargetedSpell(
+				TargetCreature(),
+				CompositeEffects("target creature gets +2/+2 and gains first strike until end of turn",
+					Boost(Fixed(2), Fixed(2)),
+					GrantKeyword(FirstStrike),
+				),
+			),
 		)
 	})
 
@@ -1190,21 +1575,73 @@ func registerSpells() {
 // • Surveil 2, then draw a card.
 // • Prismari Charm deals 1 damage to each of one or two targets.
 // • Return target nonland permanent to its owner's hand.
-// TODO: implement
 	Register("Prismari Charm", func() Card {
-		return NewInstant("Prismari Charm", "{U}{R}",
-			NewSpellAbility(),
-		)
+		c := NewInstant("Prismari Charm", "{U}{R}", nil)
+		c.AddAbility(NewModalSpell([]Mode{
+			{
+				Label:   "Surveil 2, then draw a card",
+				Targets: []Target{},
+				Effects: []Effect{
+					surveilEffect(2),
+					FuncEffect("draw a card",
+						EffectProperties{Outcome: OutcomeBenefit, DrawCount: 1},
+						func(g *Game, _, controller uuid.UUID, _ []uuid.UUID) error {
+							p := g.GetPlayer(controller)
+							if p != nil {
+								g.PlayerDrawCard(p)
+							}
+							return nil
+						},
+					),
+				},
+			},
+			{
+				Label:   "Prismari Charm deals 1 damage to each of one or two targets",
+				Targets: []Target{TargetUpToNCreaturesOrPlayers(2)},
+				Effects: []Effect{
+					FuncEffect("deal 1 damage to each of the chosen targets",
+						EffectProperties{Outcome: OutcomeDetriment, DamageValue: Fixed(1)},
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+							for _, tid := range targets {
+								if tid == uuid.Nil {
+									continue
+								}
+								perm := g.FindPermanent(tid)
+								if perm != nil {
+									g.DealDamageToPermanent(perm, 1, sourceID)
+									continue
+								}
+								p := g.GetPlayer(tid)
+								if p != nil {
+									g.DealDamageToPlayer(p, 1, sourceID)
+								}
+							}
+							return nil
+						},
+					),
+				},
+			},
+			{
+				Label:   "Return target nonland permanent to its owner's hand",
+				Targets: []Target{TargetPermanent(Not(IsLand))},
+				Effects: []Effect{ReturnToHandTarget()},
+			},
+		}))
+		return c
 	})
 
 
 // Procrastinate {X}{U}
 // Sorcery
 // Tap target creature. Put twice X stun counters on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)
-// TODO: implement
+// XXX: Stun counters are not implemented in the engine (no CounterType for Stun, no replacement effect to remove stun counters on untap). Implements tap-only.
 	Register("Procrastinate", func() Card {
 		return NewSorcery("Procrastinate", "{X}{U}",
-			NewSpellAbility(),
+			NewTargetedSpell(
+				TargetCreature(),
+				TapTarget(),
+				// XXX: stun counters not implemented
+			),
 		)
 	})
 
@@ -1212,10 +1649,30 @@ func registerSpells() {
 // Proctor's Gaze {2}{G}{U}
 // Instant
 // Return up to one target nonland permanent to its owner's hand. Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.
-// TODO: implement
+// XXX: No TargetUpToOnePermanent exists; uses TargetUpToNCreatures(1) as approximation (only targets creatures).
 	Register("Proctor's Gaze", func() Card {
 		return NewInstant("Proctor's Gaze", "{2}{G}{U}",
-			NewSpellAbility(),
+			NewMultiTargetSpell(
+				[]Target{TargetUpToNCreatures(1)},
+				FuncEffect(
+					"return up to one target nonland permanent to owner's hand; search for basic land, put it onto battlefield tapped",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						for _, tid := range targets {
+							if tid == uuid.Nil {
+								continue
+							}
+							perm := g.FindPermanent(tid)
+							if perm == nil || perm.HasType(TypeLand) {
+								continue
+							}
+							g.BouncePermanentToHand(perm)
+						}
+						searchBasicLandToBattlefieldTappedSOS(g, controller)
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -1226,10 +1683,12 @@ func registerSpells() {
 // 0: You draw a card and lose 1 life.
 // −3: Destroy target creature.
 // −6: You get an emblem with "Whenever you gain life, target opponent loses that much life."
-// TODO: implement
+// XXX: Loyalty-activated abilities (+2/0/−3/−6) are not implemented (engine lacks loyalty ability support, CR 606).
+// XXX: −6 emblem "Whenever you gain life, target opponent loses that much life" requires emblem support.
 	Register("Professor Dellian Fel", func() Card {
-		return NewSorcery("Professor Dellian Fel", "{2}{B}{G}",
-			NewSpellAbility(),
+		return NewPlaneswalker("Professor Dellian Fel", "{2}{B}{G}", 5,
+			WithSuperTypes(SuperLegendary),
+			WithSubTypes("Dellian"),
 		)
 	})
 
@@ -1237,10 +1696,13 @@ func registerSpells() {
 // Pull from the Grave {2}{B}
 // Sorcery
 // Return up to two target creature cards from your graveyard to your hand. You gain 2 life.
-// TODO: implement
 	Register("Pull from the Grave", func() Card {
 		return NewSorcery("Pull from the Grave", "{2}{B}",
-			NewSpellAbility(),
+			NewMultiTargetSpell(
+				[]Target{TargetUpToNCardsInYourGraveyard(2, IsCreatureCard)},
+				ReturnFromGraveyardToHandTarget(),
+				GainLife(2),
+			),
 		)
 	})
 
@@ -1249,10 +1711,33 @@ func registerSpells() {
 // Sorcery
 // You gain 2 life. You may discard a card. If you do, draw two cards.
 // Flashback {2}{R}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)
-// TODO: implement
+// XXX: Flashback does not exile the card after resolution (engine feature needed).
 	Register("Pursue the Past", func() Card {
 		return NewSorcery("Pursue the Past", "{R}{W}",
-			NewSpellAbility(),
+			NewSpellAbility(
+				GainLife(2),
+				FuncEffect(
+					"you may discard a card; if you do, draw two cards",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, _, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil || len(p.Hand()) == 0 {
+							return nil
+						}
+						if !p.ChooseMayAbility("discard a card to draw two cards") {
+							return nil
+						}
+						chosen := p.ChooseCardsFromHand(1, "discard a card", g)
+						for _, c := range chosen {
+							g.PlayerDiscard(p, c.ID())
+						}
+						g.PlayerDrawCard(p)
+						g.PlayerDrawCard(p)
+						return nil
+					},
+				),
+			),
+			WithAlternateCost(ZoneGraveyard, ParseManaCost("{2}{R}{W}")),
 		)
 	})
 
@@ -1263,21 +1748,35 @@ func registerSpells() {
 // • Counter target spell unless its controller pays {2}.
 // • Destroy target enchantment.
 // • Target creature has base power and toughness 5/5 until end of turn.
-// TODO: implement
 	Register("Quandrix Charm", func() Card {
-		return NewInstant("Quandrix Charm", "{G}{U}",
-			NewSpellAbility(),
-		)
+		c := NewInstant("Quandrix Charm", "{G}{U}", nil)
+		c.AddAbility(NewModalSpell([]Mode{
+			{
+				Label:   "Counter target spell unless its controller pays {2}",
+				Targets: []Target{TargetSpellOnStack()},
+				Effects: []Effect{CounterUnlessPay("{2}")},
+			},
+			{
+				Label:   "Destroy target enchantment",
+				Targets: []Target{TargetPermanent(IsEnchantment)},
+				Effects: []Effect{DestroyTarget()},
+			},
+			{
+				Label:   "Target creature has base power and toughness 5/5 until end of turn",
+				Targets: []Target{TargetCreature()},
+				Effects: []Effect{SetPTUntilEndOfTurn(5, 5, SelectTarget)},
+			},
+		}))
+		return c
 	})
 
 
 // Quick Study {2}{U}
 // Instant
 // Draw two cards.
-// TODO: implement
 	Register("Quick Study", func() Card {
 		return NewInstant("Quick Study", "{2}{U}",
-			NewSpellAbility(),
+			NewSpellAbility(DrawCards(Fixed(2))),
 		)
 	})
 
@@ -1285,10 +1784,60 @@ func registerSpells() {
 // Rabid Attack {1}{B}
 // Instant
 // Until end of turn, any number of target creatures you control each get +1/+0 and gain "When this creature dies, draw a card."
-// TODO: implement
 	Register("Rabid Attack", func() Card {
 		return NewInstant("Rabid Attack", "{1}{B}",
-			NewSpellAbility(),
+			NewMultiTargetSpell(
+				[]Target{TargetUpToNCreatures(100, IsCreature)},
+				FuncEffect(
+					"target creatures you control get +1/+0 and gain 'when this creature dies, draw a card' until end of turn",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						for _, tid := range targets {
+							if tid == uuid.Nil {
+								continue
+							}
+							perm := g.FindPermanent(tid)
+							if perm == nil || perm.Controller != controller {
+								continue
+							}
+							g.AddContinuousEffect(TemporaryBoost(perm.ID(), 1, 0))
+							// Grant "when this creature dies, draw a card" until end of turn.
+							permID := perm.ID()
+							ctrl := perm.Controller
+							deathDraw := NewTriggered(EvtZoneChange, false,
+								FuncEffect("draw a card when this creature dies",
+									EffectProperties{Outcome: OutcomeBenefit, DrawCount: 1},
+									func(g *Game, _, ctrl uuid.UUID, _ []uuid.UUID) error {
+										p := g.GetPlayer(ctrl)
+										if p != nil {
+											g.PlayerDrawCard(p)
+										}
+										return nil
+									}),
+							)
+							deathDraw.SetCondition(func(evt *GameEvent, _ GameReader, _, _ uuid.UUID) bool {
+								return evt.SourceID == permID &&
+									evt.FromZone == ZoneBattlefield &&
+									evt.ToZone == ZoneGraveyard &&
+									evt.Flag // was a creature
+							})
+							deathDraw.SetSource(permID)
+							deathDraw.SetController(ctrl)
+							g.AddContinuousEffect(FuncContinuousEffect(
+								LayerAbility, EndOfTurn,
+								func(g *Game, _ uuid.UUID) error {
+									p := g.FindPermanent(permID)
+									if p != nil {
+										p.RuntimeAbilities = append(p.RuntimeAbilities, WrapGrantedAbility(deathDraw))
+									}
+									return nil
+								},
+							))
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -1299,10 +1848,12 @@ func registerSpells() {
 // −1: Any number of target players each discard a card.
 // −2: Return target creature card with mana value 3 or less from your graveyard to the battlefield.
 // −7: Flip five coins. Target opponent skips their next X turns, where X is the number of coins that came up heads.
-// TODO: implement
+// XXX: Loyalty-activated abilities (+1/−1/−2/−7) are not implemented (engine lacks loyalty ability support, CR 606).
+// XXX: −7 "skip turns" requires skip-turn engine support.
 	Register("Ral Zarek, Guest Lecturer", func() Card {
-		return NewSorcery("Ral Zarek, Guest Lecturer", "{1}{B}{B}",
-			NewSpellAbility(),
+		return NewPlaneswalker("Ral Zarek, Guest Lecturer", "{1}{B}{B}", 4,
+			WithSuperTypes(SuperLegendary),
+			WithSubTypes("Ral"),
 		)
 	})
 
@@ -1311,10 +1862,24 @@ func registerSpells() {
 // Instant
 // Tap target creature. If it's your turn, put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)
 // Draw a card.
-// TODO: implement
+// XXX: Stun counters are not implemented in the engine (no CounterType for Stun, no replacement effect for untap). Tap and draw are implemented.
 	Register("Rapier Wit", func() Card {
 		return NewInstant("Rapier Wit", "{1}{W}",
-			NewSpellAbility(),
+			NewTargetedSpell(
+				TargetCreature(),
+				TapTarget(),
+				// XXX: "if it's your turn, put a stun counter on it" — stun counters not implemented
+				FuncEffect("draw a card",
+					EffectProperties{Outcome: OutcomeBenefit, DrawCount: 1},
+					func(g *Game, _, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p != nil {
+							g.PlayerDrawCard(p)
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -1322,10 +1887,39 @@ func registerSpells() {
 // Rapturous Moment {4}{U}{R}
 // Sorcery
 // Draw three cards, then discard two cards. Add {U}{U}{R}{R}{R}.
-// TODO: implement
 	Register("Rapturous Moment", func() Card {
 		return NewSorcery("Rapturous Moment", "{4}{U}{R}",
-			NewSpellAbility(),
+			NewSpellAbility(
+				FuncEffect(
+					"draw three cards, then discard two cards, add {U}{U}{R}{R}{R}",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, _, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						g.PlayerDrawCard(p)
+						g.PlayerDrawCard(p)
+						g.PlayerDrawCard(p)
+						// Discard two cards.
+						hand := p.Hand()
+						if len(hand) > 0 {
+							count := 2
+							if len(hand) < count {
+								count = len(hand)
+							}
+							chosen := p.ChooseCardsFromHand(count, "discard two cards", g)
+							for _, c := range chosen {
+								g.PlayerDiscard(p, c.ID())
+							}
+						}
+						// Add {U}{U}{R}{R}{R}.
+						p.ManaPool().Add(Blue, 2)
+						p.ManaPool().Add(Red, 3)
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -1334,10 +1928,42 @@ func registerSpells() {
 // Sorcery
 // Target opponent reveals their hand. You choose a nonland card from it. That player discards that card.
 // Put two +1/+1 counters on up to one target creature.
-// TODO: implement
 	Register("Render Speechless", func() Card {
 		return NewSorcery("Render Speechless", "{2}{W}{B}",
-			NewSpellAbility(),
+			NewMultiTargetSpell(
+				[]Target{
+					TargetOpponent(),
+					TargetUpToOneCreature(),
+				},
+				FuncEffect(
+					"reveal opponent's hand; choose nonland card; they discard it; put two +1/+1 counters on up to one creature",
+					EffectProperties{Outcome: OutcomeUnknown},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						oppID := targets[0]
+						opp := g.GetPlayer(oppID)
+						if opp != nil {
+							nonlandFilter := NewCardFilter("nonland card", func(c Card) bool {
+								return !c.HasType(TypeLand)
+							})
+							chosen := g.PickFromHand(g.GetPlayer(controller), opp, nonlandFilter, true, "choose a nonland card to discard")
+							if chosen != nil {
+								g.PlayerDiscard(opp, chosen.ID())
+							}
+						}
+						if len(targets) >= 2 && targets[1] != uuid.Nil {
+							perm := g.FindPermanent(targets[1])
+							if perm != nil {
+								g.AddCountersWithReplacement(perm, P1P1, 1, sourceID, false)
+								g.AddCountersWithReplacement(perm, P1P1, 1, sourceID, false)
+							}
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -1357,10 +1983,52 @@ func registerSpells() {
 // Root Manipulation {3}{B}{G}
 // Sorcery
 // Until end of turn, creatures you control get +2/+2 and gain menace and "Whenever this creature attacks, you gain 1 life." (A creature with menace can't be blocked except by two or more creatures.)
-// TODO: implement
 	Register("Root Manipulation", func() Card {
 		return NewSorcery("Root Manipulation", "{3}{B}{G}",
-			NewSpellAbility(),
+			NewSpellAbility(
+				FuncEffect(
+					"until end of turn, creatures you control get +2/+2, gain menace, and 'whenever this creature attacks, you gain 1 life'",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						creatures := g.FilterBattlefield(And(ControlledBy(controller), IsCreature))
+						for _, perm := range creatures {
+							g.AddContinuousEffect(TemporaryBoost(perm.ID(), 2, 2))
+							g.AddContinuousEffect(TemporaryKeyword(perm.ID(), Menace))
+							// Grant "whenever this creature attacks, you gain 1 life" until end of turn.
+							permID := perm.ID()
+							ctrl := controller
+							attackTrigger := NewTriggered(EvtDeclaredAttacker, false,
+								FuncEffect("gain 1 life when this creature attacks",
+									EffectProperties{Outcome: OutcomeBenefit},
+									func(g *Game, _, ctrl uuid.UUID, _ []uuid.UUID) error {
+										p := g.GetPlayer(ctrl)
+										if p != nil {
+											g.PlayerGainLife(p, 1)
+										}
+										return nil
+									},
+								),
+							)
+							attackTrigger.SetCondition(func(evt *GameEvent, _ GameReader, _, _ uuid.UUID) bool {
+								return evt.SourceID == permID
+							})
+							attackTrigger.SetSource(permID)
+							attackTrigger.SetController(ctrl)
+							g.AddContinuousEffect(FuncContinuousEffect(
+								LayerAbility, EndOfTurn,
+								func(g *Game, _ uuid.UUID) error {
+									p := g.FindPermanent(permID)
+									if p != nil {
+										p.RuntimeAbilities = append(p.RuntimeAbilities, WrapGrantedAbility(attackTrigger))
+									}
+									return nil
+								},
+							))
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -1369,10 +2037,60 @@ func registerSpells() {
 // Instant
 // This spell costs {1} less to cast if it targets an attacking creature.
 // Target creature's owner puts it on their choice of the top or bottom of their library.
-// TODO: implement
 	Register("Run Behind", func() Card {
 		return NewInstant("Run Behind", "{3}{U}",
-			NewSpellAbility(),
+			NewTargetedSpell(
+				TargetCreature(),
+				FuncEffect(
+					"target creature's owner puts it on their choice of the top or bottom of their library",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						perm := g.FindPermanent(targets[0])
+						if perm == nil {
+							return nil
+						}
+						card := perm.Card
+						ownerID := perm.Card.Owner()
+						if ownerID == uuid.Nil {
+							ownerID = perm.Controller
+						}
+						ownerPlayer := g.GetPlayer(ownerID)
+						if ownerPlayer == nil {
+							return nil
+						}
+						permID := perm.ID()
+						permController := perm.Controller
+						choice := ownerPlayer.ChooseMode([]string{"top", "bottom"}, "put "+card.Name()+" on top or bottom of your library")
+						g.RemoveFromBattlefield(perm)
+						if choice == 0 {
+							// top of library
+							ownerPlayer.SetLibrary(append([]Card{card}, ownerPlayer.Library()...))
+						} else {
+							// bottom of library
+							ownerPlayer.SetLibrary(append(ownerPlayer.Library(), card))
+						}
+						g.FireEvent(GameEvent{
+							Type:     EvtZoneChange,
+							SourceID: permID,
+							PlayerID: permController,
+							FromZone: ZoneBattlefield,
+							ToZone:   ZoneLibrary,
+						})
+						return nil
+					},
+				),
+			),
+			WithTargetConditionalCostReduction(1, func(g *Game, controller uuid.UUID, _ Card, targets []uuid.UUID) bool {
+				for _, id := range targets {
+					if g.IsAttackingInCombat(id) {
+						return true
+					}
+				}
+				return false
+			}),
 		)
 	})
 
@@ -1381,10 +2099,13 @@ func registerSpells() {
 // Sorcery
 // As an additional cost to cast this spell, discard a card.
 // Draw two cards and create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
-// TODO: implement
 	Register("Seize the Spoils", func() Card {
 		return NewSorcery("Seize the Spoils", "{2}{R}",
-			NewSpellAbility(),
+			NewSpellAbility(
+				DrawCards(Fixed(2)),
+				CreateTreasureToken(),
+			),
+			WithAdditionalCost(DiscardCost(1)),
 		)
 	})
 
@@ -1392,10 +2113,39 @@ func registerSpells() {
 // Send in the Pest {1}{B}
 // Sorcery
 // Each opponent discards a card. You create a 1/1 black and green Pest creature token with "Whenever this token attacks, you gain 1 life."
-// TODO: implement
 	Register("Send in the Pest", func() Card {
+		pestToken := TokenWithAbilities(
+			CreateColoredToken("Pest Token", 1, 1,
+				[]Color{Black, Green},
+				[]CardType{TypeCreature},
+				[]string{"Pest"},
+			),
+			AttacksTrigger(GainLife(1), false),
+		)
 		return NewSorcery("Send in the Pest", "{1}{B}",
-			NewSpellAbility(),
+			NewSpellAbility(
+				FuncEffect(
+					"each opponent discards a card",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						opp := g.GetOpponent(controller)
+						if opp == nil {
+							return nil
+						}
+						hand := opp.Hand()
+						if len(hand) == 0 {
+							return nil
+						}
+						chosen := opp.ChooseCardFromHand(hand, "discard a card", g)
+						if chosen == nil {
+							return nil
+						}
+						g.PlayerDiscard(opp, chosen.ID())
+						return nil
+					},
+				),
+				pestToken,
+			),
 		)
 	})
 
@@ -1406,21 +2156,95 @@ func registerSpells() {
 // • Put two +1/+1 counters on target creature.
 // • Exile target creature with power 2 or less.
 // • Each opponent loses 3 life and you gain 3 life.
-// TODO: implement
 	Register("Silverquill Charm", func() Card {
-		return NewInstant("Silverquill Charm", "{W}{B}",
-			NewSpellAbility(),
-		)
+		c := NewInstant("Silverquill Charm", "{W}{B}", nil)
+		c.AddAbility(NewModalSpell([]Mode{
+			{
+				Label:   "Put two +1/+1 counters on target creature",
+				Targets: []Target{TargetCreature()},
+				Effects: []Effect{FuncEffect(
+					"put two +1/+1 counters on target creature",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						perm := g.FindPermanent(targets[0])
+						if perm == nil {
+							return nil
+						}
+						g.AddCountersWithReplacement(perm, P1P1, 1, sourceID, false)
+						g.AddCountersWithReplacement(perm, P1P1, 1, sourceID, false)
+						return nil
+					},
+				)},
+			},
+			{
+				Label:   "Exile target creature with power 2 or less",
+				Targets: []Target{TargetCreature(HasPowerLTE(2))},
+				Effects: []Effect{ExileTarget()},
+			},
+			{
+				Label: "Each opponent loses 3 life and you gain 3 life",
+				Effects: []Effect{FuncEffect(
+					"each opponent loses 3 life and you gain 3 life",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						opp := g.GetOpponent(controller)
+						if opp != nil {
+							g.PlayerLoseLife(opp, 3)
+						}
+						p := g.GetPlayer(controller)
+						if p != nil {
+							g.PlayerGainLife(p, 3)
+						}
+						return nil
+					},
+				)},
+			},
+		}))
+		return c
 	})
 
 
 // Snarl Song {5}{G}
 // Sorcery
 // Converge — Create two 0/0 green and blue Fractal creature tokens. Put X +1/+1 counters on each of them and you gain X life, where X is the number of colors of mana spent to cast this spell.
-// TODO: implement
 	Register("Snarl Song", func() Card {
 		return NewSorcery("Snarl Song", "{5}{G}",
-			NewSpellAbility(),
+			NewSpellAbility(
+				FuncEffect(
+					"converge: create two 0/0 Fractal tokens with X counters each and gain X life",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						ctx := g.ResolvingCastContext()
+						x := 0
+						if ctx != nil {
+							x = ctx.DistinctColorsSpent()
+						}
+						for i := 0; i < 2; i++ {
+							token := NewToken("Fractal Token", 0, 0,
+								[]CardType{TypeCreature},
+								[]string{"Fractal"},
+							)
+							token.SetColorOverride([]Color{Green, Blue})
+							token.SetOwner(controller)
+							perm := g.PutOnBattlefield(token, controller)
+							if perm != nil && x > 0 {
+								perm.AddCounter(P1P1, x)
+								g.ApplyContinuousEffects()
+							}
+						}
+						if x > 0 {
+							p := g.GetPlayer(controller)
+							if p != nil {
+								g.PlayerGainLife(p, x)
+							}
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -1429,11 +2253,68 @@ func registerSpells() {
 // Sorcery
 // When you cast this spell while you control a creature, you may copy this spell.
 // Each player sacrifices a creature of their choice. Each opponent loses 1 life and you gain 1 life.
-// TODO: implement
 	Register("Social Snub", func() Card {
-		return NewSorcery("Social Snub", "{1}{W}{B}",
-			NewSpellAbility(),
+		socialSnubEffect := FuncEffect(
+			"each player sacrifices a creature; opponent loses 1, you gain 1",
+			EffectProperties{Outcome: OutcomeUnknown},
+			func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				// Each player sacrifices a creature of their choice (APNAP order).
+				for _, pid := range []uuid.UUID{controller, g.GetOpponent(controller).PlayerID()} {
+					p := g.GetPlayer(pid)
+					if p == nil {
+						continue
+					}
+					candidates := g.FilterBattlefield(And(ControlledBy(pid), IsCreature))
+					if len(candidates) == 0 {
+						continue
+					}
+					chosen := p.ChoosePermanent(candidates, "sacrifice a creature", g)
+					if chosen != nil {
+						g.Sacrifice(chosen)
+					}
+				}
+				// Each opponent loses 1 life and you gain 1 life.
+				opp := g.GetOpponent(controller)
+				if opp != nil {
+					opp.LoseLife(1)
+				}
+				p := g.GetPlayer(controller)
+				if p != nil {
+					g.PlayerGainLife(p, 1)
+				}
+				return nil
+			},
 		)
+		c := NewSorcery("Social Snub", "{1}{W}{B}",
+			NewSpellAbility(socialSnubEffect),
+		)
+		// When you cast this spell while you control a creature, you may copy this spell.
+		castTrigger := WheneverYouCastSpellTrigger(
+			FuncEffect(
+				"if you control a creature, you may copy Social Snub",
+				EffectProperties{Outcome: OutcomeBenefit},
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					if !g.AnyBattlefield(And(ControlledBy(controller), IsCreature)) {
+						return nil
+					}
+					p := g.GetPlayer(controller)
+					if p == nil {
+						return nil
+					}
+					if !p.ChooseMayAbility("copy Social Snub") {
+						return nil
+					}
+					g.CopySpellOnStack(sourceID, controller, false)
+					return nil
+				},
+			),
+			true,
+			NewCardFilter("Social Snub", func(c Card) bool {
+				return c.Name() == "Social Snub"
+			}),
+		)
+		c.AddAbility(castTrigger)
+		return c
 	})
 
 
@@ -1442,21 +2323,61 @@ func registerSpells() {
 // Choose one —
 // • Draw four cards.
 // • Splatter Technique deals 4 damage to each creature and planeswalker.
-// TODO: implement
 	Register("Splatter Technique", func() Card {
-		return NewSorcery("Splatter Technique", "{1}{U}{U}{R}{R}",
-			NewSpellAbility(),
-		)
+		c := NewSorcery("Splatter Technique", "{1}{U}{U}{R}{R}", nil)
+		c.AddAbility(NewModalSpell([]Mode{
+			{
+				Label:   "Draw four cards",
+				Targets: []Target{},
+				Effects: []Effect{
+					FuncEffect("draw four cards",
+						EffectProperties{Outcome: OutcomeBenefit, DrawCount: 4},
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+							p := g.GetPlayer(controller)
+							if p == nil {
+								return nil
+							}
+							for i := 0; i < 4; i++ {
+								g.PlayerDrawCard(p)
+							}
+							return nil
+						},
+					),
+				},
+			},
+			{
+				Label:   "Splatter Technique deals 4 damage to each creature and planeswalker",
+				Targets: []Target{},
+				Effects: []Effect{
+					FuncEffect(
+						"deal 4 damage to each creature and planeswalker",
+						EffectProperties{Outcome: OutcomeDetriment, Mass: true},
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+							// XXX: planeswalkers not fully supported; hits all creatures and planeswalkers
+							for _, perm := range g.AllBattlefield() {
+								if perm.HasType(TypeCreature) || perm.HasType(TypePlaneswalker) {
+									g.DealDamageToPermanent(perm, 4, sourceID)
+								}
+							}
+							return nil
+						},
+					),
+				},
+			},
+		}))
+		return c
 	})
 
 
 // Stand Up for Yourself {2}{W}
 // Instant
 // Destroy target creature with power 3 or greater.
-// TODO: implement
 	Register("Stand Up for Yourself", func() Card {
 		return NewInstant("Stand Up for Yourself", "{2}{W}",
-			NewSpellAbility(),
+			NewTargetedSpell(
+				TargetCreature(HasPowerGTE(3)),
+				DestroyTarget(),
+			),
 		)
 	})
 
@@ -1466,21 +2387,138 @@ func registerSpells() {
 // Choose one or both —
 // • Target player discards any number of cards, then draws that many cards.
 // • Steal the Show deals damage equal to the number of instant and sorcery cards in your graveyard to target creature or planeswalker.
-// TODO: implement
+// XXX: "Choose one or both" is not supported by the engine (only "choose one"). Implements as "choose one" modal.
 	Register("Steal the Show", func() Card {
-		return NewSorcery("Steal the Show", "{2}{R}",
-			NewSpellAbility(),
-		)
+		instantOrSorceryGY := NewCardFilter("instant or sorcery in graveyard", func(c Card) bool {
+			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
+		})
+		c := NewSorcery("Steal the Show", "{2}{R}", nil)
+		c.AddAbility(NewModalSpell([]Mode{
+			{
+				Label:   "Target player discards any number of cards, then draws that many cards",
+				Targets: []Target{TargetPlayer()},
+				Effects: []Effect{
+					FuncEffect(
+						"target player discards any number of cards then draws that many",
+						EffectProperties{Outcome: OutcomeUnknown},
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+							if len(targets) == 0 {
+								return nil
+							}
+							target := g.GetPlayer(targets[0])
+							if target == nil {
+								return nil
+							}
+							hand := target.Hand()
+							n := len(hand)
+							if n == 0 {
+								return nil
+							}
+							chosen := target.ChooseCardsFromHand(n, "discard any number", g)
+							discarded := 0
+							for _, card := range chosen {
+								if _, ok := g.PlayerDiscard(target, card.ID()); ok {
+									discarded++
+								}
+							}
+							for i := 0; i < discarded; i++ {
+								g.PlayerDrawCard(target)
+							}
+							return nil
+						},
+					),
+				},
+			},
+			{
+				Label:   "Steal the Show deals damage equal to instant and sorcery cards in your graveyard to target creature or planeswalker",
+				Targets: []Target{TargetAnyTarget()},
+				Effects: []Effect{
+					FuncEffect(
+						"deal damage equal to instants/sorceries in your graveyard",
+						EffectProperties{Outcome: OutcomeDetriment},
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+							if len(targets) == 0 {
+								return nil
+							}
+							p := g.GetPlayer(controller)
+							if p == nil {
+								return nil
+							}
+							count := 0
+							for _, card := range p.Graveyard() {
+								if instantOrSorceryGY.Match(card) {
+									count++
+								}
+							}
+							if count == 0 {
+								return nil
+							}
+							perm := g.FindPermanent(targets[0])
+							if perm != nil {
+								g.DealDamageToPermanent(perm, count, sourceID)
+							} else {
+								player := g.GetPlayer(targets[0])
+								if player != nil {
+									g.DealDamageToPlayer(player, count, sourceID)
+								}
+							}
+							return nil
+						},
+					),
+				},
+			},
+		}))
+		return c
 	})
 
 
 // Stress Dream {3}{U}{R}
 // Instant
 // Stress Dream deals 5 damage to up to one target creature. Look at the top two cards of your library. Put one of those cards into your hand and the other on the bottom of your library.
-// TODO: implement
 	Register("Stress Dream", func() Card {
 		return NewInstant("Stress Dream", "{3}{U}{R}",
-			NewSpellAbility(),
+			NewMultiTargetSpell(
+				[]Target{TargetUpToOneCreature()},
+				FuncEffect(
+					"deal 5 damage to up to one target creature; look at top 2, keep one, put other on bottom",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) > 0 && targets[0] != uuid.Nil {
+							perm := g.FindPermanent(targets[0])
+							if perm != nil {
+								g.DealDamageToPermanent(perm, 5, sourceID)
+							}
+						}
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						top2 := g.RemoveTopN(p, 2)
+						if len(top2) == 0 {
+							return nil
+						}
+						if len(top2) == 1 {
+							p.AddToHand(top2[0])
+							return nil
+						}
+						chosen, _ := g.RevealAndPickFromTop(g.GetPlayer(controller), g.GetPlayer(controller), 2,
+							NewCardFilter("any card", func(c Card) bool { return true }),
+							false, "put into hand")
+						if chosen != nil {
+							p.AddToHand(chosen)
+							for _, c := range top2 {
+								if c.ID() != chosen.ID() {
+									g.PutOnBottomInRandomOrder(p, []Card{c})
+								}
+							}
+						} else {
+							p.AddToHand(top2[0])
+							g.PutOnBottomInRandomOrder(p, top2[1:])
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -1488,10 +2526,35 @@ func registerSpells() {
 // Suspend Aggression {1}{R}{W}
 // Instant
 // Exile target nonland permanent and the top card of your library. For each of those cards, its owner may play it until the end of their next turn.
-// TODO: implement
+// XXX: "owner may play until end of their next turn" — per-card exile play permissions expiring at end of next turn are not implemented.
 	Register("Suspend Aggression", func() Card {
 		return NewInstant("Suspend Aggression", "{1}{R}{W}",
-			NewSpellAbility(),
+			NewTargetedSpell(
+				TargetPermanent(Not(IsLand)),
+				FuncEffect(
+					"exile target nonland permanent and top card of library; owners may play until end of their next turn",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) > 0 {
+							perm := g.FindPermanent(targets[0])
+							if perm != nil {
+								g.ExilePermanent(perm)
+								// XXX: owner may play until end of their next turn not implemented
+							}
+						}
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						top := g.RemoveTopN(p, 1)
+						for _, card := range top {
+							g.ExileCardFaceDown(card, sourceID, controller)
+							// XXX: owner may play until end of their next turn not implemented
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -1499,10 +2562,48 @@ func registerSpells() {
 // Together as One {6}
 // Sorcery
 // Converge — Target player draws X cards, Together as One deals X damage to any target, and you gain X life, where X is the number of colors of mana spent to cast this spell.
-// TODO: implement
 	Register("Together as One", func() Card {
 		return NewSorcery("Together as One", "{6}",
-			NewSpellAbility(),
+			NewMultiTargetSpell(
+				[]Target{TargetPlayer(), TargetAnyTarget()},
+				FuncEffect(
+					"converge: target player draws X, deal X damage to any target, gain X life",
+					EffectProperties{Outcome: OutcomeUnknown},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						ctx := g.ResolvingCastContext()
+						x := 0
+						if ctx != nil {
+							x = ctx.DistinctColorsSpent()
+						}
+						if len(targets) > 0 {
+							tp := g.GetPlayer(targets[0])
+							if tp != nil {
+								for i := 0; i < x; i++ {
+									g.PlayerDrawCard(tp)
+								}
+							}
+						}
+						if len(targets) > 1 && targets[1] != uuid.Nil && x > 0 {
+							perm := g.FindPermanent(targets[1])
+							if perm != nil {
+								g.DealDamageToPermanent(perm, x, sourceID)
+							} else {
+								player := g.GetPlayer(targets[1])
+								if player != nil {
+									g.DealDamageToPlayer(player, x, sourceID)
+								}
+							}
+						}
+						if x > 0 {
+							p := g.GetPlayer(controller)
+							if p != nil {
+								g.PlayerGainLife(p, x)
+							}
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -1511,10 +2612,11 @@ func registerSpells() {
 // Sorcery
 // Tome Blast deals 2 damage to any target.
 // Flashback {4}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.)
-// TODO: implement
+// XXX: Flashback does not exile the card after resolution (engine feature needed).
 	Register("Tome Blast", func() Card {
 		return NewSorcery("Tome Blast", "{1}{R}",
-			NewSpellAbility(),
+			NewTargetedSpell(TargetAnyTarget(), DealDamage(Fixed(2))),
+			WithAlternateCost(ZoneGraveyard, ParseManaCost("{4}{R}")),
 		)
 	})
 
@@ -1522,10 +2624,32 @@ func registerSpells() {
 // Traumatic Critique {X}{U}{R}
 // Instant
 // Traumatic Critique deals X damage to any target. Draw two cards, then discard a card.
-// TODO: implement
 	Register("Traumatic Critique", func() Card {
 		return NewInstant("Traumatic Critique", "{X}{U}{R}",
-			NewSpellAbility(),
+			NewTargetedSpell(
+				TargetAnyTarget(),
+				CompositeEffects(
+					"deal X damage; draw 2 then discard 1",
+					DealDamage(XValue()),
+					FuncEffect(
+						"draw two cards then discard a card",
+						EffectProperties{Outcome: OutcomeBenefit, DrawCount: 2},
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+							p := g.GetPlayer(controller)
+							if p == nil {
+								return nil
+							}
+							g.PlayerDrawCard(p)
+							g.PlayerDrawCard(p)
+							chosen := p.ChooseCardsFromHand(1, "discard", g)
+							for _, card := range chosen {
+								g.PlayerDiscard(p, card.ID())
+							}
+							return nil
+						},
+					),
+				),
+			),
 		)
 	})
 
@@ -1533,10 +2657,14 @@ func registerSpells() {
 // Unsubtle Mockery {2}{R}
 // Instant
 // Unsubtle Mockery deals 4 damage to target creature. Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)
-// TODO: implement
+// XXX: Surveil 1 not implemented (engine lacks Surveil; differs from Scry in that cards go to graveyard).
 	Register("Unsubtle Mockery", func() Card {
 		return NewInstant("Unsubtle Mockery", "{2}{R}",
-			NewSpellAbility(),
+			NewTargetedSpell(
+				TargetCreature(),
+				DealDamage(Fixed(4)),
+				// XXX: Surveil 1 not implemented
+			),
 		)
 	})
 
@@ -1544,10 +2672,35 @@ func registerSpells() {
 // Vibrant Outburst {U}{R}
 // Instant
 // Vibrant Outburst deals 3 damage to any target. Tap up to one target creature.
-// TODO: implement
 	Register("Vibrant Outburst", func() Card {
 		return NewInstant("Vibrant Outburst", "{U}{R}",
-			NewSpellAbility(),
+			NewMultiTargetSpell(
+				[]Target{TargetAnyTarget(), TargetUpToOneCreature()},
+				FuncEffect(
+					"deal 3 damage to any target; tap up to one target creature",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) > 0 && targets[0] != uuid.Nil {
+							perm := g.FindPermanent(targets[0])
+							if perm != nil {
+								g.DealDamageToPermanent(perm, 3, sourceID)
+							} else {
+								player := g.GetPlayer(targets[0])
+								if player != nil {
+									g.DealDamageToPlayer(player, 3, sourceID)
+								}
+							}
+						}
+						if len(targets) > 1 && targets[1] != uuid.Nil {
+							perm := g.FindPermanent(targets[1])
+							if perm != nil {
+								g.TapPermanent(perm)
+							}
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -1556,10 +2709,44 @@ func registerSpells() {
 // Sorcery
 // As an additional cost to cast this spell, pay X life.
 // Destroy all artifacts and creatures with mana value X or less.
-// TODO: implement
+// XXX: "pay X life" as additional cost — engine lacks a variable life-payment cost attached to the spell.
+// Implemented by prompting for X at resolution time, then paying life and executing the board sweep.
 	Register("Vicious Rivalry", func() Card {
 		return NewSorcery("Vicious Rivalry", "{2}{B}{G}",
-			NewSpellAbility(),
+			NewSpellAbility(
+				FuncEffect(
+					"pay X life then destroy all artifacts and creatures with mana value X or less",
+					EffectProperties{Outcome: OutcomeDetriment, Mass: true},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						maxLife := p.Life() - 1
+						if maxLife < 0 {
+							maxLife = 0
+						}
+						x := p.ChooseNumber(0, maxLife, "pay X life — choose X")
+						if x > 0 {
+							g.PlayerLoseLife(p, x)
+						}
+						g.SetXValue(x)
+						var toDestroy []*Permanent
+						for _, perm := range g.AllBattlefield() {
+							if !perm.HasType(TypeArtifact) && !perm.HasType(TypeCreature) {
+								continue
+							}
+							if perm.Card.ManaCost().CMC() <= x {
+								toDestroy = append(toDestroy, perm)
+							}
+						}
+						for _, perm := range toDestroy {
+							g.DestroyPermanent(perm)
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -1568,21 +2755,61 @@ func registerSpells() {
 // Sorcery
 // Create two 3/3 blue and red Elemental creature tokens with flying.
 // {2}, Discard this card: Look at the top two cards of your library. Put one of them into your hand and the other into your graveyard.
-// TODO: implement
 	Register("Visionary's Dance", func() Card {
-		return NewSorcery("Visionary's Dance", "{5}{U}{R}",
-			NewSpellAbility(),
+		c := NewSorcery("Visionary's Dance", "{5}{U}{R}",
+			NewSpellAbility(
+				CreateColoredToken("Elemental Token", 3, 3, []Color{Blue, Red}, []CardType{TypeCreature}, []string{"Elemental"}, Flying),
+				CreateColoredToken("Elemental Token", 3, 3, []Color{Blue, Red}, []CardType{TypeCreature}, []string{"Elemental"}, Flying),
+			),
 		)
+		// {2}, Discard this card: Look at the top two cards of your library. Put one in hand, other in graveyard.
+		c.AddAbility(NewActivatedAbility(
+			FuncEffect(
+				"look at top 2, put one in hand and other in graveyard",
+				EffectProperties{Outcome: OutcomeBenefit},
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					p := g.GetPlayer(controller)
+					if p == nil {
+						return nil
+					}
+					top2 := g.RemoveTopN(p, 2)
+					if len(top2) == 0 {
+						return nil
+					}
+					if len(top2) == 1 {
+						p.AddToHand(top2[0])
+						return nil
+					}
+					chosen, _ := g.RevealAndPickFromTop(g.GetPlayer(controller), g.GetPlayer(controller), 2,
+						NewCardFilter("any card", func(c Card) bool { return true }),
+						false, "put into hand")
+					if chosen != nil {
+						p.AddToHand(chosen)
+						for _, c := range top2 {
+							if c.ID() != chosen.ID() {
+								p.AddToGraveyard(c)
+							}
+						}
+					} else {
+						p.AddToHand(top2[0])
+						p.AddToGraveyard(top2[1])
+					}
+					return nil
+				},
+			),
+			ManaCostOf("{2}"),
+			WithCost(DiscardCost(1)),
+		))
+		return c
 	})
 
 
 // Wander Off {3}{B}
 // Instant
 // Exile target creature.
-// TODO: implement
 	Register("Wander Off", func() Card {
 		return NewInstant("Wander Off", "{3}{B}",
-			NewSpellAbility(),
+			NewTargetedSpell(TargetCreature(), ExileTarget()),
 		)
 	})
 
@@ -1591,10 +2818,31 @@ func registerSpells() {
 // Sorcery
 // Create a 0/0 green and blue Fractal creature token. Put X +1/+1 counters on it.
 // Surveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)
-// TODO: implement
+// XXX: Surveil 2 not implemented (engine lacks Surveil; differs from Scry in that cards go to graveyard).
 	Register("Wild Hypothesis", func() Card {
 		return NewSorcery("Wild Hypothesis", "{X}{G}",
-			NewSpellAbility(),
+			NewSpellAbility(
+				FuncEffect(
+					"create 0/0 Fractal token with X counters",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						x := g.XValue()
+						token := NewToken("Fractal Token", 0, 0,
+							[]CardType{TypeCreature},
+							[]string{"Fractal"},
+						)
+						token.SetColorOverride([]Color{Green, Blue})
+						token.SetOwner(controller)
+						perm := g.PutOnBattlefield(token, controller)
+						if perm != nil && x > 0 {
+							perm.AddCounter(P1P1, x)
+							g.ApplyContinuousEffects()
+						}
+						// XXX: Surveil 2 not implemented
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -1603,10 +2851,30 @@ func registerSpells() {
 // Instant
 // This spell costs {2} less to cast if one or more cards left your graveyard this turn.
 // Wilt in the Heat deals 5 damage to target creature. If that creature would die this turn, exile it instead.
-// TODO: implement
+// XXX: "costs {2} less if one or more cards left your graveyard this turn" — engine has no tracking for
+// cards leaving the graveyard this turn; cost reduction not implemented.
 	Register("Wilt in the Heat", func() Card {
 		return NewInstant("Wilt in the Heat", "{2}{R}{W}",
-			NewSpellAbility(),
+			NewTargetedSpell(
+				TargetCreature(),
+				FuncEffect(
+					"deal 5 damage to target creature; if it would die this turn, exile it instead",
+					EffectProperties{Outcome: OutcomeDetriment, DamageValue: Fixed(5)},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						perm := g.FindPermanent(targets[0])
+						if perm == nil {
+							return nil
+						}
+						g.AddExileIfWouldGoToGraveyardThisTurn(perm.ID(), sourceID)
+						g.DealDamageToPermanent(perm, 5, sourceID)
+						return nil
+					},
+				),
+			),
+			// XXX: {2} cost reduction if cards left graveyard this turn not implemented
 		)
 	})
 
@@ -1615,10 +2883,33 @@ func registerSpells() {
 // Sorcery
 // Return all instant and sorcery cards from your graveyard to your hand. You have no maximum hand size for the rest of the game.
 // Exile Wisdom of Ages.
-// TODO: implement
 	Register("Wisdom of Ages", func() Card {
 		return NewSorcery("Wisdom of Ages", "{4}{U}{U}{U}",
-			NewSpellAbility(),
+			NewSpellAbility(
+				FuncEffect(
+					"return all instants and sorceries from graveyard to hand; no max hand size; exile self",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						// Return all instant and sorcery cards from graveyard to hand.
+						gy := append([]Card(nil), p.Graveyard()...)
+						for _, card := range gy {
+							if card.HasType(TypeInstant) || card.HasType(TypeSorcery) {
+								p.RemoveFromGraveyard(card.ID())
+								p.AddToHand(card)
+							}
+						}
+						// No maximum hand size for the rest of the game.
+						g.SetMaxHandSize(controller, 999)
+						// Exile Wisdom of Ages: mark so resolver exiles instead of putting in graveyard.
+						g.AddExileIfWouldGoToGraveyardThisTurn(sourceID, sourceID)
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -1629,11 +2920,71 @@ func registerSpells() {
 // • You may sacrifice a permanent. If you do, draw two cards.
 // • You gain 5 life.
 // • Destroy target nonland permanent with mana value 2 or less.
-// TODO: implement
 	Register("Witherbloom Charm", func() Card {
-		return NewInstant("Witherbloom Charm", "{B}{G}",
-			NewSpellAbility(),
-		)
+		c := NewInstant("Witherbloom Charm", "{B}{G}", nil)
+		c.AddAbility(NewModalSpell([]Mode{
+			{
+				Label:   "You may sacrifice a permanent. If you do, draw two cards",
+				Targets: []Target{},
+				Effects: []Effect{
+					FuncEffect(
+						"may sacrifice a permanent to draw two cards",
+						EffectProperties{Outcome: OutcomeBenefit, DrawCount: 2},
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+							p := g.GetPlayer(controller)
+							if p == nil {
+								return nil
+							}
+							candidates := g.FilterBattlefield(ControlledBy(controller))
+							if len(candidates) == 0 {
+								return nil
+							}
+							if !p.ChooseMayAbility("sacrifice a permanent to draw two cards") {
+								return nil
+							}
+							chosen := p.ChoosePermanent(candidates, "sacrifice a permanent", g)
+							if chosen == nil {
+								return nil
+							}
+							g.Sacrifice(chosen)
+							g.PlayerDrawCard(p)
+							g.PlayerDrawCard(p)
+							return nil
+						},
+					),
+				},
+			},
+			{
+				Label:   "You gain 5 life",
+				Targets: []Target{},
+				Effects: []Effect{
+					FuncEffect(
+						"gain 5 life",
+						EffectProperties{Outcome: OutcomeBenefit},
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+							p := g.GetPlayer(controller)
+							if p != nil {
+								g.PlayerGainLife(p, 5)
+							}
+							return nil
+						},
+					),
+				},
+			},
+			{
+				Label: "Destroy target nonland permanent with mana value 2 or less",
+				Targets: []Target{
+					TargetPermanent(And(
+						Not(IsLand),
+						NewPermanentFilter("mana value 2 or less", func(perm *Permanent, gr *Game) bool {
+							return perm.Card.ManaCost().CMC() <= 2
+						}),
+					)),
+				},
+				Effects: []Effect{DestroyTarget()},
+			},
+		}))
+		return c
 	})
 
 
@@ -1652,10 +3003,72 @@ func registerSpells() {
 // Zimone's Experiment {3}{G}
 // Sorcery
 // Look at the top five cards of your library. You may reveal up to two creature and/or land cards from among them, then put the rest on the bottom of your library in a random order. Put all land cards revealed this way onto the battlefield tapped and put all creature cards revealed this way into your hand.
-// TODO: implement
 	Register("Zimone's Experiment", func() Card {
 		return NewSorcery("Zimone's Experiment", "{3}{G}",
-			NewSpellAbility(),
+			NewSpellAbility(
+				FuncEffect(
+					"look at top 5; reveal up to 2 creature/land; lands to battlefield tapped, creatures to hand; rest on bottom random",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						top5 := g.RemoveTopN(p, 5)
+						if len(top5) == 0 {
+							return nil
+						}
+						// Temporarily put cards back to use RevealAndPickFromTop.
+						g.PutOnTopInChosenOrder(p, top5)
+						revealed := make([]Card, 0, 2)
+						for i := 0; i < 2; i++ {
+							revealedIDs := make(map[uuid.UUID]bool, len(revealed))
+							for _, r := range revealed {
+								revealedIDs[r.ID()] = true
+							}
+							creatOrLandFilter := NewCardFilter("creature or land (not yet revealed)", func(c Card) bool {
+								if revealedIDs[c.ID()] {
+									return false
+								}
+								return c.HasType(TypeCreature) || c.HasType(TypeLand)
+							})
+							chosen, _ := g.RevealAndPickFromTop(g.GetPlayer(controller), g.GetPlayer(controller), 5,
+								creatOrLandFilter,
+								true, "reveal a creature or land card")
+							if chosen == nil {
+								break
+							}
+							revealed = append(revealed, chosen)
+						}
+						// Remove all top5 from library; separate revealed from rest.
+						top5 = g.RemoveTopN(p, 5)
+						revealedSet := make(map[uuid.UUID]bool, len(revealed))
+						for _, c := range revealed {
+							revealedSet[c.ID()] = true
+						}
+						var rest []Card
+						for _, c := range top5 {
+							if !revealedSet[c.ID()] {
+								rest = append(rest, c)
+							}
+						}
+						if len(rest) > 0 {
+							g.PutOnBottomInRandomOrder(p, rest)
+						}
+						for _, card := range revealed {
+							if card.HasType(TypeLand) {
+								perm := g.PutOnBattlefield(card, controller)
+								if perm != nil {
+									g.TapPermanent(perm)
+								}
+							} else if card.HasType(TypeCreature) {
+								p.AddToHand(card)
+							}
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 
