@@ -2617,6 +2617,34 @@ func TestSpectacularSkywhale_OpusFiveManaSpentPutsCounters(t *testing.T) {
 }
 
 // =============================================================================
+// Skycoach Conductor // All Aboard
+// =============================================================================
+
+// TestSkycoachConductor_ETBPrepared: Skycoach Conductor enters the battlefield prepared.
+func TestSkycoachConductor_ETBPrepared(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Skycoach Conductor // All Aboard")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Skycoach Conductor // All Aboard", core.AttrPrepared, true)
+}
+
+// TestSkycoachConductor_AllAboardExilesAndReturns: activating All Aboard exiles
+// a non-Pilot creature you control and returns it to the battlefield.
+func TestSkycoachConductor_AllAboardExilesAndReturns(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Skycoach Conductor // All Aboard")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.ChoosePermanent(gametest.PlayerA, "Grizzly Bears")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Skycoach Conductor // All Aboard")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Grizzly Bears should have been exiled and returned to the battlefield.
+	g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
+	g.AssertHasAbility(gametest.PlayerA, "Skycoach Conductor // All Aboard", core.AttrPrepared, false)
+}
+
+// =============================================================================
 // Spellbook Seeker // Careful Study
 // =============================================================================
 

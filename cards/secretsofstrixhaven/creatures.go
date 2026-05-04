@@ -1087,10 +1087,48 @@ func registerCreatures() {
 	// Skycoach Conductor // All Aboard {2}{U} // {U}
 	// Creature — Bird Pilot // Instant
 	// 2/3
-	// TODO: implement
+	// Flash
+	// Flying, vigilance
+	// This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)
+	// ---
+	// All Aboard {U}
+	// Instant
+	// Exile target non-Pilot creature you control, then return that card to the battlefield under its owner's control.
 	Register("Skycoach Conductor // All Aboard", func() Card {
+		nonPilot := Not(HasSubType("Pilot"))
+		spellFactory := func() Card {
+			return NewInstant("All Aboard", "{U}",
+				NewTargetedSpell(
+					TargetCreatureYouControl(nonPilot),
+					FuncEffect(
+						"exile target non-Pilot creature you control, then return it to the battlefield under its owner's control",
+						EffectProperties{Outcome: OutcomeBenefit},
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+							if len(targets) == 0 {
+								return nil
+							}
+							perm := g.FindPermanent(targets[0])
+							if perm == nil {
+								return nil
+							}
+							card := perm.Card
+							owner := card.Owner()
+							if owner == uuid.Nil {
+								owner = perm.Controller
+							}
+							g.ExilePermanent(perm)
+							g.PutOnBattlefield(card, owner)
+							return nil
+						},
+					),
+				))
+		}
 		return NewCreature("Skycoach Conductor // All Aboard", "{2}{U} // {U}", 2, 3,
-			WithSubTypes("Bird", "Pilot", "//", "Instant"),
+			WithSubTypes("Bird", "Pilot"),
+			WithKeyword(Flash),
+			WithKeyword(Flying),
+			WithKeyword(Vigilance),
+			WithPreparedSpell(spellFactory),
 		)
 	})
 
@@ -4267,11 +4305,39 @@ func registerCreatures() {
 	// Tam, Observant Sequencer // Deep Sight {2}{G}{U} // {G}{U}
 	// Legendary Creature — Gorgon Wizard // Sorcery
 	// 4/3
-	// TODO: implement
+	// Landfall — Whenever a land you control enters, Tam becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)
+	// ---
+	// Deep Sight {G}{U}
+	// Sorcery
+	// You draw a card and gain 1 life.
 	Register("Tam, Observant Sequencer // Deep Sight", func() Card {
+		spellFactory := func() Card {
+			return NewSorcery("Deep Sight", "{G}{U}",
+				NewSpellAbility(CompositeEffects(
+					"draw a card and gain 1 life",
+					DrawCards(Fixed(1)),
+					GainLife(1),
+				)))
+		}
 		return NewCreature("Tam, Observant Sequencer // Deep Sight", "{2}{G}{U} // {G}{U}", 4, 3,
 			WithSubTypes("Gorgon", "Wizard", "//", "Sorcery"),
 			WithSuperTypes(SuperLegendary),
+			WithPreparedSpell(spellFactory),
+			// Landfall — Whenever a land you control enters, Tam becomes prepared.
+			WithAbility(NewTriggered(EvtZoneChange, false,
+				FuncEffect(
+					"Tam becomes prepared",
+					EffectProperties{},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						g.SetPrepared(sourceID, true)
+						return nil
+					},
+				),
+			).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+				EventZoneChangeMatches{From: ZoneAny, To: ZoneBattlefield},
+				EventSourceMatchesPermanentFilter{Filter: IsLand},
+				EventSourceControlledByController{},
+			}})),
 		)
 	})
 
