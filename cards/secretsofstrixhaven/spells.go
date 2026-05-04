@@ -850,10 +850,42 @@ func registerSpells() {
 // Sorcery — Lesson
 // Target player creates a token that's a copy of target creature you control.
 // Paradigm (Then exile this spell. After you first resolve a spell with this name, you may cast a copy of it from exile without paying its mana cost at the beginning of each of your first main phases.)
-// TODO: implement
+// XXX: Paradigm recurring-cast trigger cannot be implemented — the engine does not scan exile-zone
+// triggers (only graveyard triggers are supported via InZone). The primary effect and first-resolve
+// self-exile are fully implemented.
 	Register("Echocasting Symposium", func() Card {
-		return NewSorcery("Echocasting Symposium", "{4}{U}{U}",
-			NewSpellAbility(),
+		const cardName = "Echocasting Symposium"
+		return NewSorcery(cardName, "{4}{U}{U}",
+			NewMultiTargetSpell(
+				[]Target{TargetPlayer(), TargetCreatureYouControl()},
+				FuncEffect(
+					"target player creates a token that's a copy of target creature you control; exile this spell (Paradigm)",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) < 2 {
+							return nil
+						}
+						targetPlayerID := targets[0]
+						creatureID := targets[1]
+						perm := g.FindPermanent(creatureID)
+						if perm == nil {
+							return nil
+						}
+						// Create a token that's a copy of the target creature under the target
+						// player's control. CR 706.10: the token copies the original permanent's
+						// characteristics.
+						// CR 706.10: the token is a copy of the creature. Copy() produces a new
+						// Card with the same characteristics; the permanent inherits its values.
+						tokenCard := perm.Card.Copy()
+						g.PutOnBattlefield(tokenCard, targetPlayerID)
+						// Paradigm: exile self instead of going to graveyard.
+						g.AddExileIfWouldGoToGraveyardThisTurn(sourceID, sourceID)
+						g.RecordParadigmResolution(controller, cardName)
+						g.RegisterParadigmExiledCopy(controller, cardName, sourceID)
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -862,10 +894,33 @@ func registerSpells() {
 // Instant
 // Put two +1/+1 counters on target creature.
 // Infusion — If you gained life this turn, that creature also gains trample and indestructible until end of turn.
-// TODO: implement
 	Register("Efflorescence", func() Card {
 		return NewInstant("Efflorescence", "{2}{G}",
-			NewSpellAbility(),
+			NewTargetedSpell(
+				TargetCreature(),
+				FuncEffect(
+					"put two +1/+1 counters on target creature; Infusion: also gains trample and indestructible until end of turn if you gained life this turn",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						perm := g.FindPermanent(targets[0])
+						if perm == nil {
+							return nil
+						}
+						// Put two +1/+1 counters on the target creature.
+						perm.AddCounter(P1P1, 2)
+						// Infusion: if you gained life this turn, that creature also gains trample
+						// and indestructible until end of turn.
+						if IfControllerGainedLifeThisTurn(g, controller) {
+							g.AddContinuousEffect(TemporaryKeyword(perm.ID(), Trample))
+							g.AddContinuousEffect(TemporaryKeyword(perm.ID(), Indestructible))
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 
