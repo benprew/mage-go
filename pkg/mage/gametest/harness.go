@@ -997,7 +997,7 @@ func (tg *TestGame) findActivatableAbilityByName(playerID uuid.UUID, permName st
 		if !aa.CanActivate(playerID, tg.Game) {
 			continue
 		}
-		if saa, isSAA := inner.(*mage.SimpleActivatedAbility); isSAA && saa.OpponentOnlyMayUse {
+		if saa, isSAA := inner.(*mage.SimpleActivatedAbility); isSAA && saa.IsOpponentOnlyAbility() {
 			if perm.Controller == playerID {
 				continue
 			}

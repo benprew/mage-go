@@ -85,10 +85,7 @@ func WithEffects(effects ...Effect) ActionOption {
 
 // WithTiming sets the timing rule for an action.
 func WithTiming(rule TimingRule) ActionOption {
-	return func(a *ActionDefinition) {
-		a.timing = rule
-		a.UpkeepOnly = rule == TimingUpkeepOnly
-	}
+	return func(a *ActionDefinition) { a.timing = rule }
 }
 
 // WithStepTiming restricts an action to a specific step.
@@ -96,24 +93,18 @@ func WithStepTiming(step PhaseStep) ActionOption {
 	return func(a *ActionDefinition) {
 		a.timing = TimingStepOnly
 		a.stepOnly = step
-		a.StepOnly = step
 	}
 }
 
 // WithSorcerySpeed marks an activated ability as "activate only as a sorcery"
 // (CR 602.5d). ActivateAbilityByIndex enforces the timing restriction.
 func WithSorcerySpeed() ActionOption {
-	return func(a *ActionDefinition) {
-		a.timing = TimingSorcery
-	}
+	return func(a *ActionDefinition) { a.timing = TimingSorcery }
 }
 
 // WithUpkeepOnly restricts an activated ability to only be activatable during an upkeep step.
 func WithUpkeepOnly() ActionOption {
-	return func(a *ActionDefinition) {
-		a.timing = TimingUpkeepOnly
-		a.UpkeepOnly = true
-	}
+	return func(a *ActionDefinition) { a.timing = TimingUpkeepOnly }
 }
 
 // WithStepOnly restricts an activated ability to only be activatable during the given step.
@@ -121,39 +112,27 @@ func WithStepOnly(step PhaseStep) ActionOption {
 	return func(a *ActionDefinition) {
 		a.timing = TimingStepOnly
 		a.stepOnly = step
-		a.StepOnly = step
 	}
 }
 
 // WithYourTurnOnly restricts an activated ability to only be activatable during its controller's turn.
 func WithYourTurnOnly() ActionOption {
-	return func(a *ActionDefinition) {
-		a.timing = YourTurnOnly
-	}
+	return func(a *ActionDefinition) { a.timing = YourTurnOnly }
 }
 
 // WithOncePerTurn restricts an activated ability to once per turn.
 func WithOncePerTurn() ActionOption {
-	return func(a *ActionDefinition) {
-		a.limits.OncePerTurn = true
-		a.OncePerTurn = true
-	}
+	return func(a *ActionDefinition) { a.limits.OncePerTurn = true }
 }
 
 // WithMaxActivationsPerTurn restricts an activated ability to n activations per turn.
 func WithMaxActivationsPerTurn(n int) ActionOption {
-	return func(a *ActionDefinition) {
-		a.limits.MaxActivationsPerTurn = n
-		a.MaxActivationsPerTurn = n
-	}
+	return func(a *ActionDefinition) { a.limits.MaxActivationsPerTurn = n }
 }
 
 // WithAnyPlayerMay allows any player (not just the controller) to activate the ability.
 func WithAnyPlayerMay() ActionOption {
-	return func(a *ActionDefinition) {
-		a.permission.AnyPlayerMayUse = true
-		a.AnyPlayerMayUse = true
-	}
+	return func(a *ActionDefinition) { a.permission.AnyPlayerMayUse = true }
 }
 
 // WithOpponentOnlyMay allows only the opponents of the controller to activate the ability.
@@ -162,18 +141,13 @@ func WithOpponentOnlyMay() ActionOption {
 	return func(a *ActionDefinition) {
 		a.permission.AnyPlayerMayUse = true
 		a.permission.OpponentOnlyMayUse = true
-		a.AnyPlayerMayUse = true
-		a.OpponentOnlyMayUse = true
 	}
 }
 
 // WithControlledSinceTurnStart restricts activation to only when the source has been
 // continuously controlled since the beginning of the controller's most recent turn.
 func WithControlledSinceTurnStart() ActionOption {
-	return func(a *ActionDefinition) {
-		a.limits.ControlledSinceTurnStart = true
-		a.ControlledSinceTurnStart = true
-	}
+	return func(a *ActionDefinition) { a.limits.ControlledSinceTurnStart = true }
 }
 
 // ActivationCondition is a predicate evaluated when checking whether an
@@ -192,45 +166,29 @@ func WithActivationCondition(cond ActivationCondition) ActionOption {
 
 // WithActivationLimit applies activation limits to an action.
 func WithActivationLimit(limits ActivationLimits) ActionOption {
-	return func(a *ActionDefinition) {
-		a.limits = limits
-		a.OncePerTurn = limits.OncePerTurn
-		a.MaxActivationsPerTurn = limits.MaxActivationsPerTurn
-		a.ControlledSinceTurnStart = limits.ControlledSinceTurnStart
-	}
+	return func(a *ActionDefinition) { a.limits = limits }
 }
 
 // WithActivationPermission applies activation permissions to an action.
 func WithActivationPermission(permission ActivationPermission) ActionOption {
-	return func(a *ActionDefinition) {
-		a.permission = permission
-		a.AnyPlayerMayUse = permission.AnyPlayerMayUse
-		a.OpponentOnlyMayUse = permission.OpponentOnlyMayUse
-	}
+	return func(a *ActionDefinition) { a.permission = permission }
 }
 
 // ActionDefinition is the shared resolvable action model for spells and
 // non-mana activated abilities.
 type ActionDefinition struct {
 	BaseAbility
-	kind                     ActionKind
-	effects                  []Effect
-	costs                    []Cost
-	targets                  []Target
-	timing                   TimingRule
-	stepOnly                 PhaseStep
-	limits                   ActivationLimits
-	permission               ActivationPermission
-	UpkeepOnly               bool      // legacy mirror for compatibility
-	StepOnly                 PhaseStep // legacy mirror for compatibility
-	OncePerTurn              bool      // legacy mirror for compatibility
-	MaxActivationsPerTurn    int       // legacy mirror for compatibility
-	AnyPlayerMayUse          bool      // legacy mirror for compatibility
-	OpponentOnlyMayUse       bool      // legacy mirror for compatibility
-	ControlledSinceTurnStart bool      // legacy mirror for compatibility
-	activatedThisTurn        bool      // Tracks whether this ability has been activated this turn
-	activationsThisTurn      int       // Counts activations for MaxActivationsPerTurn
-	activationConds          []ActivationCondition
+	kind                ActionKind
+	effects             []Effect
+	costs               []Cost
+	targets             []Target
+	timing              TimingRule
+	stepOnly            PhaseStep
+	limits              ActivationLimits
+	permission          ActivationPermission
+	activatedThisTurn   bool // Tracks whether this ability has been activated this turn
+	activationsThisTurn int  // Counts activations for MaxActivationsPerTurn
+	activationConds     []ActivationCondition
 }
 
 // SimpleActivatedAbility is kept as a compatibility name for activated actions.
@@ -295,30 +253,22 @@ func actionPartsToOptions(parts ...any) []ActionOption {
 func (a *ActionDefinition) Kind() ActionKind { return a.kind }
 
 func (a *ActionDefinition) CanActivate(controller uuid.UUID, g *Game) bool {
-	if (a.timing == TimingUpkeepOnly || a.UpkeepOnly) && g.step != Upkeep {
+	if a.timing == TimingUpkeepOnly && g.step != Upkeep {
 		return false
 	}
 	if a.timing == YourTurnOnly && g.ActivePlayerObj().PlayerID() != controller {
 		return false
 	}
-	stepOnly := a.StepOnly
-	if a.timing == TimingStepOnly {
-		stepOnly = a.stepOnly
-	}
-	if stepOnly != 0 && g.step != stepOnly {
+	if a.timing == TimingStepOnly && a.stepOnly != 0 && g.step != a.stepOnly {
 		return false
 	}
-	maxActivations := a.MaxActivationsPerTurn
-	if a.limits.MaxActivationsPerTurn > 0 {
-		maxActivations = a.limits.MaxActivationsPerTurn
-	}
-	if maxActivations > 0 && a.activationsThisTurn >= maxActivations {
+	if a.limits.MaxActivationsPerTurn > 0 && a.activationsThisTurn >= a.limits.MaxActivationsPerTurn {
 		return false
 	}
-	if (a.OncePerTurn || a.limits.OncePerTurn) && a.activatedThisTurn {
+	if a.limits.OncePerTurn && a.activatedThisTurn {
 		return false
 	}
-	if a.ControlledSinceTurnStart || a.limits.ControlledSinceTurnStart {
+	if a.limits.ControlledSinceTurnStart {
 		perm := g.FindPermanent(a.source)
 		if perm == nil || perm.TurnControlGained >= g.turn {
 			return false
@@ -358,10 +308,10 @@ func (a *ActionDefinition) CanActivate(controller uuid.UUID, g *Game) bool {
 
 // MarkActivated sets the once-per-turn flag. Called after the ability is paid for.
 func (a *ActionDefinition) MarkActivated() {
-	if a.OncePerTurn || a.limits.OncePerTurn {
+	if a.limits.OncePerTurn {
 		a.activatedThisTurn = true
 	}
-	if a.MaxActivationsPerTurn > 0 || a.limits.MaxActivationsPerTurn > 0 {
+	if a.limits.MaxActivationsPerTurn > 0 {
 		a.activationsThisTurn++
 	}
 }
@@ -374,7 +324,13 @@ func (a *ActionDefinition) ResetActivation() {
 
 // IsAnyPlayerAbility returns true if any player may activate this ability.
 func (a *ActionDefinition) IsAnyPlayerAbility() bool {
-	return a.AnyPlayerMayUse || a.permission.AnyPlayerMayUse
+	return a.permission.AnyPlayerMayUse
+}
+
+// IsOpponentOnlyAbility returns true if only opponents (not the controller)
+// may activate this ability.
+func (a *ActionDefinition) IsOpponentOnlyAbility() bool {
+	return a.permission.OpponentOnlyMayUse
 }
 
 func (a *ActionDefinition) Effects() []Effect  { return a.effects }

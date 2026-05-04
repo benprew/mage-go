@@ -3787,14 +3787,14 @@ func (g *Game) GetActivatableAbilities(playerID uuid.UUID) []ActivatableInfo {
 			// Check if this ability can be used by non-controllers
 			if !isOwner {
 				saa, isSAA := UnwrapAbility(a).(*SimpleActivatedAbility)
-				if !isSAA || !saa.AnyPlayerMayUse {
+				if !isSAA || !saa.IsAnyPlayerAbility() {
 					continue
 				}
 			}
 			// If opponent-only, the controller cannot activate it
 			if isOwner {
 				saa, isSAA := UnwrapAbility(a).(*SimpleActivatedAbility)
-				if isSAA && saa.OpponentOnlyMayUse {
+				if isSAA && saa.IsOpponentOnlyAbility() {
 					continue
 				}
 			}
@@ -3906,7 +3906,7 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	if !aa.CanActivate(playerID, g) {
 		return fmt.Errorf("cannot activate ability")
 	}
-	if saa, isSAA := inner.(*SimpleActivatedAbility); isSAA && saa.OpponentOnlyMayUse {
+	if saa, isSAA := inner.(*SimpleActivatedAbility); isSAA && saa.IsOpponentOnlyAbility() {
 		if perm.Controller == playerID {
 			return fmt.Errorf("only opponents may activate this ability")
 		}
