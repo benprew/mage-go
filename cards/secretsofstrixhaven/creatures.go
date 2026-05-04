@@ -1945,11 +1945,42 @@ func registerCreatures() {
 	// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
 	// Whenever one or more +1/+1 counters are put on Berta, add one mana of any color.
 	// {X}, {T}: Create a 0/0 green and blue Fractal creature token and put X +1/+1 counters on it.
-	// TODO: implement
 	Register("Berta, Wise Extrapolator", func() Card {
 		return NewCreature("Berta, Wise Extrapolator", "{2}{G}{U}", 1, 4,
 			WithSubTypes("Frog", "Druid"),
 			WithSuperTypes(SuperLegendary),
+			// Increment
+			WithAbility(IncrementTrigger()),
+			// XXX: "Whenever one or more +1/+1 counters are put on Berta, add one mana
+			// of any color." — the engine has no EvtCounterAdded event, so this trigger
+			// cannot be implemented without an engine change.
+			// {X}, {T}: Create a 0/0 green and blue Fractal creature token and put X +1/+1 counters on it.
+			WithActivatedAbility(
+				FuncEffect(
+					"create Fractal token with X +1/+1 counters",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						x := g.XValue()
+						token := NewToken("Fractal Token", 0, 0,
+							[]CardType{TypeCreature},
+							[]string{"Fractal"},
+						)
+						token.SetColorOverride([]Color{Green, Blue})
+						token.SetOwner(controller)
+						perm := g.PutOnBattlefield(token, controller)
+						if perm == nil {
+							return nil
+						}
+						if x > 0 {
+							g.AddCountersWithReplacement(perm, P1P1, x, sourceID, false)
+							g.ApplyContinuousEffects()
+						}
+						return nil
+					},
+				),
+				TapSourceCost(),
+				WithCost(ManaCostOf("{X}")),
+			),
 		)
 	})
 
@@ -2105,10 +2136,47 @@ func registerCreatures() {
 	// 1/4
 	// Flying, vigilance
 	// Opus — Whenever you cast an instant or sorcery spell, this creature gets +1/+0 until end of turn. If five or more mana was spent to cast that spell, exile the top card of your library. You may play that card until the end of your next turn.
-	// TODO: implement
 	Register("Elemental Mascot", func() Card {
+		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c Card) bool {
+			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
+		})
 		return NewCreature("Elemental Mascot", "{1}{U}{R}", 1, 4,
 			WithSubTypes("Elemental", "Bird"),
+			WithKeyword(Flying),
+			WithKeyword(Vigilance),
+			// Opus — Whenever you cast an instant or sorcery spell, this creature gets
+			// +1/+0 until end of turn. If five or more mana was spent to cast that spell,
+			// exile the top card of your library. You may play that card until the end of
+			// your next turn.
+			WithAbility(WheneverYouCastSpellTrigger(
+				OpusEffect(
+					"this creature gets +1/+0 until end of turn; if 5+ mana spent, exile top card — may play until end of next turn",
+					func(g *Game, sourceID, controller uuid.UUID, manaSpent int) error {
+						boost := TemporaryBoost(sourceID, 1, 0)
+						boost.SetSourceID(sourceID)
+						g.AddContinuousEffect(boost)
+						if manaSpent >= 5 {
+							p := g.GetPlayer(controller)
+							if p == nil {
+								return nil
+							}
+							topCards := g.RemoveTopN(p, 1)
+							if len(topCards) == 0 {
+								return nil
+							}
+							card := topCards[0]
+							g.ExileCard(card, sourceID)
+							// XXX: "until the end of your next turn" duration is not
+							// supported for cast-from-exile permissions; the permission
+							// persists until the card leaves exile (indefinite).
+							g.GrantCastFromExile(controller, card.ID(), false)
+						}
+						return nil
+					},
+				),
+				false,
+				isInstantOrSorcery,
+			)),
 		)
 	})
 

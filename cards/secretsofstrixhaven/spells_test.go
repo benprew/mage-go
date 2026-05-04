@@ -1834,3 +1834,168 @@ func TestHeatedArgument(t *testing.T) {
 		g.AssertLife(gametest.PlayerB, 18)
 	})
 }
+
+// TestDecorationDissertation_DrawsAndLosesLife verifies that Decorum Dissertation
+// causes the target player to draw two cards and lose 2 life.
+func TestDecorationDissertation_DrawsAndLosesLife(t *testing.T) {
+	t.Run("target player draws two and loses 2 life", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Decorum Dissertation")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Decorum Dissertation", "PlayerB")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 18)
+		// PlayerB drew 2 cards
+		// PlayerB drew 2 cards (from Filler library).
+		g.AssertHandCount(gametest.PlayerB, "Filler", 2)
+	})
+	t.Run("targeting self draws two and loses 2 life", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Decorum Dissertation")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Decorum Dissertation", "PlayerA")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 18)
+	})
+}
+
+// TestEfflorescence_PutsTwoCounters verifies that Efflorescence puts two +1/+1
+// counters on the target creature.
+func TestEfflorescence_PutsTwoCounters(t *testing.T) {
+	t.Run("puts two +1/+1 counters on target creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Efflorescence")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Efflorescence", "Grizzly Bears")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertCounterCount(gametest.PlayerA, "Grizzly Bears", core.P1P1, 2)
+	})
+	t.Run("infusion: trample and indestructible if life gained this turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Efflorescence")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Healing Salve") // gain 3 life
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+		// Gain life first, then cast Efflorescence
+		g.ChooseMode(gametest.PlayerA, 0) // Healing Salve mode 0: gain 3 life
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Healing Salve")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Efflorescence", "Grizzly Bears")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertCounterCount(gametest.PlayerA, "Grizzly Bears", core.P1P1, 2)
+		g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", core.Trample, true)
+		g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", core.Indestructible, true)
+	})
+	t.Run("infusion: no bonus keywords without life gain", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Efflorescence")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Efflorescence", "Grizzly Bears")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", core.Trample, false)
+		g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", core.Indestructible, false)
+	})
+}
+
+// TestEchocastingSymposium_TokenCopy verifies that Echocasting Symposium creates
+// a token that's a copy of a target creature you control for a target player.
+func TestEchocastingSymposium_TokenCopy(t *testing.T) {
+	t.Run("target player receives token copy of target creature you control", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Echocasting Symposium")
+		// targets: PlayerB (target player), Grizzly Bears (creature you control)
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Echocasting Symposium", "PlayerB", "Grizzly Bears")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// PlayerB should now control a token copy of Grizzly Bears
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
+	})
+}
+
+// TestGerminationPracticum_PutsTwoCountersOnEachCreature verifies that
+// Germination Practicum puts two +1/+1 counters on each creature you control.
+func TestGerminationPracticum_PutsTwoCountersOnEachCreature(t *testing.T) {
+	t.Run("puts two +1/+1 counters on each creature you control", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Llanowar Elves")
+		// {3}{G}{G} = 5 mana
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 5)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Germination Practicum")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Germination Practicum")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Grizzly Bears: 2/2 + 2/2 = 4/4
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 4, 4)
+		// Llanowar Elves: 1/1 + 2/2 = 3/3
+		g.AssertPowerToughness(gametest.PlayerA, "Llanowar Elves", 3, 3)
+	})
+	t.Run("does not affect opponent's creatures", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 5)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Germination Practicum")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Germination Practicum")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Opponent's Grizzly Bears unchanged at 2/2
+		g.AssertPowerToughness(gametest.PlayerB, "Grizzly Bears", 2, 2)
+	})
+}
+
+// TestGerminationPracticum_ParadigmExilesAndRecurs verifies that after the
+// first resolution, the spell is exiled and at the beginning of subsequent
+// first main phases the controller may cast a free copy from exile.
+func TestGerminationPracticum_ParadigmExilesAfterResolve(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 5)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Germination Practicum")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Germination Practicum")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// After resolving, the spell should be exiled (not in graveyard)
+	g.AssertGraveyardCount(gametest.PlayerA, "Germination Practicum", 0)
+	g.AssertExileCount("Germination Practicum", 1)
+}
+
+// TestImprovisationCapstone_ExilesUntilMV4 verifies that Improvisation
+// Capstone exiles cards from the top of the library until total mana value
+// reaches 4 or greater, then lets you cast any number for free.
+func TestImprovisationCapstone_ExilesUntilMV4(t *testing.T) {
+	t.Run("exiles one card with MV>=4 and allows free cast as creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		// Air Elemental has MV=5, which meets the >=4 threshold on its own.
+		// TestPlayer.ChooseMayAbility defaults to true, so it will cast Air Elemental.
+		// Air Elemental needs no targets, so it enters the battlefield automatically.
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Air Elemental")
+		// {5}{R}{R} = 7 mana
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 7)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Improvisation Capstone")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Improvisation Capstone")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Air Elemental cast for free should now be on the battlefield.
+		g.AssertPermanentCount(gametest.PlayerA, "Air Elemental", 1)
+	})
+}
+
+// TestImprovisationCapstone_ParadigmExilesAfterResolve verifies that after
+// the first resolution, the spell is exiled (not graveyarded).
+func TestImprovisationCapstone_ParadigmExilesAfterResolve(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	// Library with enough MV to meet the threshold; TestPlayer declines all casts.
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Air Elemental") // MV 5
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 7)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Improvisation Capstone")
+	// Queue a false MayAbility choice so Air Elemental is not cast.
+	g.GetPlayer(gametest.PlayerA).QueueMayAbilityChoices(false)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Improvisation Capstone")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerA, "Improvisation Capstone", 0)
+	g.AssertExileCount("Improvisation Capstone", 1)
+}
