@@ -3492,3 +3492,341 @@ func TestTam_DeepSightDrawsAndGainsLife(t *testing.T) {
 	g.AssertLife(gametest.PlayerA, 21)
 	g.AssertHasAbility(gametest.PlayerA, "Tam, Observant Sequencer // Deep Sight", core.AttrPrepared, false)
 }
+
+func TestEliteInterceptor_ETBPrepared(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Elite Interceptor // Rejoinder")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Elite Interceptor // Rejoinder", core.AttrPrepared, true)
+}
+
+func TestEliteInterceptor_CastRejoinderTapsAndDraws(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Elite Interceptor // Rejoinder")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	// Script target selection: Rejoinder targets Grizzly Bears.
+	g.ChooseTarget(gametest.PlayerA, "Grizzly Bears")
+	// Activate the prepared ability (cast copy of Rejoinder).
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Elite Interceptor // Rejoinder")
+	// Stop before EOT to check tapping; hand size increases by 1 from Rejoinder draw.
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	// The creature was tapped by Rejoinder (ChooseMayAbility returns true by default).
+	g.AssertTapped(gametest.PlayerB, "Grizzly Bears", true)
+	// padLibraries adds 60 Plains. Turn 1 first player skips draw step.
+	// Rejoinder draws 1 card (a Plains); the Plains land is auto-played by the harness.
+	// Net result: 59 Plains remain in library and 1 Plains is on the battlefield.
+	g.AssertLibraryCount(gametest.PlayerA, "Plains", 59)
+	// No longer prepared after casting the copy.
+	g.AssertHasAbility(gametest.PlayerA, "Elite Interceptor // Rejoinder", core.AttrPrepared, false)
+}
+
+func TestEmeritusOfTruce_ETBCreatesInklingToken(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	// ETB trigger targets a player via ChooseTargets (chooseTarget queue).
+	g.ChooseTarget(gametest.PlayerA, "PlayerA")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Emeritus of Truce // Swords to Plowshares")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Inkling Token", 1)
+}
+
+func TestEmeritusOfTruce_BecomesPreparedIfOpponentHasMoreCreatures(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	// PlayerB has two creatures; PlayerA has just Emeritus (1 creature).
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+	// Target PlayerA for the Inkling token (PlayerA gets Emeritus + Inkling = 2 creatures).
+	// PlayerB has 2 creatures — tie, so Emeritus does NOT become prepared.
+	g.ChooseTarget(gametest.PlayerA, "PlayerA")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Emeritus of Truce // Swords to Plowshares")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// After ETB: PlayerA has Emeritus+Inkling(2), PlayerB has 2 — not strictly more.
+	g.AssertHasAbility(gametest.PlayerA, "Emeritus of Truce // Swords to Plowshares", core.AttrPrepared, false)
+}
+
+func TestEmeritusOfTruce_BecomesPreparedWhenOpponentHasStrictlyMore(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	// PlayerB has three creatures; PlayerA will have only Emeritus (1).
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hurloon Minotaur")
+	// Target PlayerB for the Inkling token (so PlayerA still has 1 creature, B has 3+1=4).
+	g.ChooseTarget(gametest.PlayerA, "PlayerB")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Emeritus of Truce // Swords to Plowshares")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// PlayerB has 4 creatures, PlayerA has 1 — opponent has more → becomes prepared.
+	g.AssertHasAbility(gametest.PlayerA, "Emeritus of Truce // Swords to Plowshares", core.AttrPrepared, true)
+}
+
+func TestEmeritusOfTruce_CastStPExilesAndGainsLife(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hurloon Minotaur")
+	// ETB trigger targets a player via ChooseTargets (chooseTarget queue).
+	// Target PlayerB so Emeritus becomes prepared (B has 4 creatures after token, A has 1).
+	g.ChooseTarget(gametest.PlayerA, "PlayerB")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Emeritus of Truce // Swords to Plowshares")
+	// Activate prepared ability; STP also uses ChooseTargets for the creature target.
+	g.ChooseTarget(gametest.PlayerA, "Grizzly Bears")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Emeritus of Truce // Swords to Plowshares")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertExileCount("Grizzly Bears", 1)
+	// Grizzly Bears is 2/2; its controller (B) gains 2 life.
+	g.AssertLife(gametest.PlayerB, 22)
+	// No longer prepared.
+	g.AssertHasAbility(gametest.PlayerA, "Emeritus of Truce // Swords to Plowshares", core.AttrPrepared, false)
+}
+
+func TestHonorboundPage_ETBPrepared(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Honorbound Page // Forum's Favor")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Honorbound Page // Forum's Favor", core.AttrPrepared, true)
+}
+
+func TestHonorboundPage_HasFirstStrike(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Honorbound Page // Forum's Favor")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Honorbound Page // Forum's Favor", core.FirstStrike, true)
+}
+
+func TestHonorboundPage_CastForumsFavorBoostsAndGrantsFlying(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Honorbound Page // Forum's Favor")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	// CastPreparedSpellCopy uses ChooseTargets (chooseTarget queue), not choosePermanent.
+	g.ChooseTarget(gametest.PlayerA, "Grizzly Bears")
+	// Activate prepared ability.
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Honorbound Page // Forum's Favor")
+	// Stop before EOT so until-EOT effects are still active.
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 3, 2)
+	g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", core.Flying, true)
+	g.AssertHasAbility(gametest.PlayerA, "Honorbound Page // Forum's Favor", core.AttrPrepared, false)
+}
+
+func TestJoinedResearchers_HasFirstStrike(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Joined Researchers // Secret Rendezvous")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Joined Researchers // Secret Rendezvous", core.FirstStrike, true)
+}
+
+func TestJoinedResearchers_BecomesPreparedAtEndStepWhenOpponentHasMoreCards(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	// PlayerA has 0 cards in hand; PlayerB will have 1 (added below).
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Plains")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Joined Researchers // Secret Rendezvous")
+	// Stop at Cleanup so the EndStep trigger has had a chance to resolve.
+	g.StopAt(1, core.Cleanup)
+	g.Execute()
+	// B has 1 card, A has 0 → opponent has more → becomes prepared.
+	g.AssertHasAbility(gametest.PlayerA, "Joined Researchers // Secret Rendezvous", core.AttrPrepared, true)
+}
+
+func TestJoinedResearchers_DoesNotBecomePreparedWhenHandCountEqual(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	// Both players have no cards in hand.
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Joined Researchers // Secret Rendezvous")
+	// Stop at Cleanup so the EndStep trigger has a chance to fire (condition should be false).
+	g.StopAt(1, core.Cleanup)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Joined Researchers // Secret Rendezvous", core.AttrPrepared, false)
+}
+
+func TestJoinedResearchers_CastSecretRendezvousDrawsThreeEach(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	// PlayerB has 1 card in hand so Joined Researchers becomes prepared at end of turn 1.
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Joined Researchers // Secret Rendezvous")
+	// padLibraries adds 60 Plains to both players (libraries are empty at setup).
+	// After end step of turn 1 (Cleanup), B has 1 card in hand, A has 0 → becomes prepared.
+	// Turn 2 is PlayerB's turn. Turn 3 is PlayerA's next turn.
+	// Activate in precombat main of turn 3; Secret Rendezvous targets PlayerB as opponent.
+	// CastPreparedSpellCopy uses ChooseTargets (chooseTarget queue) for the opponent target.
+	g.ChooseTarget(gametest.PlayerA, "PlayerB")
+	g.ActivateAbility(3, core.PrecombatMain, gametest.PlayerA, "Joined Researchers // Secret Rendezvous")
+	g.StopAt(3, core.PostcombatMain)
+	g.Execute()
+	// Turn 3 draw step: A draws 1 Plains (auto-played as land).
+	// Secret Rendezvous draws 3 more Plains for A; at most 1 land/turn (already played),
+	// so 2 Plains are in hand, 1 was played. Starting from 60 Plains:
+	// 60 - 1 (turn 2 draw for B) - 1 (turn 3 draw for A) - 3 (rendezvous) = 55 remains...
+	// Actually padLibraries adds 60 to each player independently. A's library:
+	// 60 - 1 (turn 3 draw, auto-played) - 3 (rendezvous) = 56 Plains remaining.
+	g.AssertLibraryCount(gametest.PlayerA, "Plains", 56)
+	// No longer prepared after casting the copy.
+	g.AssertHasAbility(gametest.PlayerA, "Joined Researchers // Secret Rendezvous", core.AttrPrepared, false)
+}
+
+func TestQuillBladeLaureate_ETBPrepared(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Quill-Blade Laureate // Twofold Intent")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Quill-Blade Laureate // Twofold Intent", core.AttrPrepared, true)
+}
+
+func TestQuillBladeLaureate_HasDoubleStrike(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Quill-Blade Laureate // Twofold Intent")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Quill-Blade Laureate // Twofold Intent", core.DoubleStrike, true)
+}
+
+func TestQuillBladeLaureate_CastTwofoldIntentBoostsAndGrantsDoubleStrike(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Quill-Blade Laureate // Twofold Intent")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	// CastPreparedSpellCopy uses ChooseTargets (chooseTarget queue), not choosePermanent.
+	g.ChooseTarget(gametest.PlayerA, "Grizzly Bears")
+	// Activate prepared ability.
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Quill-Blade Laureate // Twofold Intent")
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 3, 2)
+	g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", core.DoubleStrike, true)
+	g.AssertHasAbility(gametest.PlayerA, "Quill-Blade Laureate // Twofold Intent", core.AttrPrepared, false)
+}
+
+func TestSpiritcallEnthusiast_BecomesPreparedWhenTokenEnters(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Spiritcall Enthusiast // Scrollboost")
+	// Create an Inkling token by casting Eager Glyphmage (which has ETB create Inkling).
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Eager Glyphmage")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Eager Glyphmage created an Inkling token for PlayerA → becomes prepared.
+	g.AssertHasAbility(gametest.PlayerA, "Spiritcall Enthusiast // Scrollboost", core.AttrPrepared, true)
+}
+
+func TestSpiritcallEnthusiast_CastScrollboostBoostsCreature(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Spiritcall Enthusiast // Scrollboost")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Eager Glyphmage")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	// Eager Glyphmage ETB creates Inkling token → Spiritcall becomes prepared.
+	// CastPreparedSpellCopy uses ChooseTargets (chooseTarget queue), not choosePermanent.
+	// The harness's ChooseTargets picks one target per call; target Grizzly Bears.
+	g.ChooseTarget(gametest.PlayerA, "Grizzly Bears")
+	// Activate prepared ability.
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Spiritcall Enthusiast // Scrollboost")
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 4, 4)
+	g.AssertHasAbility(gametest.PlayerA, "Spiritcall Enthusiast // Scrollboost", core.AttrPrepared, false)
+}
+
+func TestLeechCollector_BecomesPrearedOnFirstLifeGain(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Leech Collector // Bloodletting")
+	// Use Healing Salve to gain 3 life (mode 0: target player gains 3 life).
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Healing Salve")
+	g.ChooseMode(gametest.PlayerA, 0)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Healing Salve", "PlayerA")
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Leech Collector // Bloodletting", core.AttrPrepared, true)
+}
+
+func TestLeechCollector_ActivateBloodlettingOpponentsLoseLife(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Leech Collector // Bloodletting")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Healing Salve")
+	g.ChooseMode(gametest.PlayerA, 0)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Healing Salve", "PlayerA")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Leech Collector // Bloodletting")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerB, 18)
+	g.AssertHasAbility(gametest.PlayerA, "Leech Collector // Bloodletting", core.AttrPrepared, false)
+}
+
+func TestScathingShadelock_BecomesPrearedAtFirstMain(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Scathing Shadelock // Venomous Words")
+	g.StopAt(1, core.PrecombatMain)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Scathing Shadelock // Venomous Words", core.AttrPrepared, true)
+}
+
+func TestScathingShadelock_ActivateVenomousWords(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Scathing Shadelock // Venomous Words")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	// Shadelock becomes prepared at turn 1 upkeep (ETB trigger from setup) and at
+	// the beginning of precombat main (BeginningOfFirstMainPhaseTrigger). Activate
+	// during PlayerA's first main phase (turn 1).
+	g.ChooseTarget(gametest.PlayerA, "Grizzly Bears")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Scathing Shadelock // Venomous Words")
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 4, 2)
+	g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", core.Deathtouch, true)
+	g.AssertHasAbility(gametest.PlayerA, "Scathing Shadelock // Venomous Words", core.AttrPrepared, false)
+}
+
+func TestSchemingSilvertongue_HasFlyingAndLifelink(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Scheming Silvertongue // Sign in Blood")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Scheming Silvertongue // Sign in Blood", core.Flying, true)
+	g.AssertHasAbility(gametest.PlayerA, "Scheming Silvertongue // Sign in Blood", core.Lifelink, true)
+}
+
+func TestSchemingSilvertongue_BecomesPrearedAtSecondMainIfLifeGained(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Scheming Silvertongue // Sign in Blood")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Healing Salve")
+	// Gain 3 life during precombat main via Healing Salve (mode 0).
+	g.ChooseMode(gametest.PlayerA, 0)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Healing Salve", "PlayerA")
+	// StopAt EndStep so that PostcombatMain trigger fires and resolves first.
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// 3 >= 2, so Silvertongue becomes prepared at beginning of second main phase.
+	g.AssertHasAbility(gametest.PlayerA, "Scheming Silvertongue // Sign in Blood", core.AttrPrepared, true)
+}
+
+func TestSchemingSilvertongue_NotPrearedWithoutEnoughLifeGain(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Scheming Silvertongue // Sign in Blood")
+	// No life gained this turn; StopAt EndStep so postcombat main trigger has a chance to fire.
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Scheming Silvertongue // Sign in Blood", core.AttrPrepared, false)
+}
+
+func TestSchemingSilvertongue_ActivateSignInBlood(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Scheming Silvertongue // Sign in Blood")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Healing Salve")
+	g.ChooseMode(gametest.PlayerA, 0)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Healing Salve", "PlayerA")
+	// Silvertongue becomes prepared at start of second main phase (3 life >= 2).
+	// Queue target for the Sign in Blood spell copy, then activate.
+	g.ChooseTarget(gametest.PlayerA, "PlayerB")
+	g.ActivateAbility(1, core.PostcombatMain, gametest.PlayerA, "Scheming Silvertongue // Sign in Blood")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// PlayerB draws 2 cards and loses 2 life from Sign in Blood (from 20 to 18).
+	g.AssertLife(gametest.PlayerB, 18)
+	g.AssertHasAbility(gametest.PlayerA, "Scheming Silvertongue // Sign in Blood", core.AttrPrepared, false)
+}

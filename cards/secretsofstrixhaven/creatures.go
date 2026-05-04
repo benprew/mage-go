@@ -262,23 +262,123 @@ func registerCreatures() {
 	// Elite Interceptor // Rejoinder {W} // {1}{W}
 	// Creature — Human Wizard // Sorcery
 	// 1/2
-	// TODO: implement
+	// This creature enters prepared. (While it's prepared, you may cast a copy of its spell.
+	// Doing so unprepares it.)
+	// ---
+	// Rejoinder {1}{W}
+	// Sorcery
+	// You may tap or untap target creature. Draw a card.
 	Register("Elite Interceptor // Rejoinder", func() Card {
+		spellFactory := func() Card {
+			return NewSorcery("Rejoinder", "{1}{W}",
+				NewTargetedSpell(TargetCreature(),
+					FuncEffect("you may tap or untap target creature; draw a card",
+						EffectProperties{},
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+							if len(targets) > 0 {
+								perm := g.FindPermanent(targets[0])
+								if perm != nil {
+									p := g.GetPlayer(controller)
+									if p != nil && p.ChooseMayAbility("tap or untap target creature") {
+										if perm.Tapped {
+											perm.Tapped = false
+										} else {
+											g.TapPermanent(perm)
+										}
+									}
+								}
+							}
+							// Draw a card for the controller regardless of tap/untap choice.
+							p := g.GetPlayer(controller)
+							if p != nil {
+								g.PlayerDrawCard(p)
+							}
+							return nil
+						},
+					),
+				),
+			)
+		}
 		return NewCreature("Elite Interceptor // Rejoinder", "{W} // {1}{W}", 1, 2,
-			WithSubTypes("Human", "Wizard", "//", "Sorcery"),
+			WithSubTypes("Human", "Wizard"),
+			WithPreparedSpell(spellFactory),
 		)
 	})
-
 	// Emeritus of Truce // Swords to Plowshares {1}{W}{W} // {W}
 	// Creature — Cat Cleric // Instant
 	// 3/3
-	// TODO: implement
+	// When this creature enters, target player creates a 1/1 white and black Inkling creature
+	// token with flying. Then if an opponent controls more creatures than you, this creature
+	// becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so
+	// unprepares it.)
+	// ---
+	// Swords to Plowshares {W}
+	// Instant
+	// Exile target creature. Its controller gains life equal to its power.
 	Register("Emeritus of Truce // Swords to Plowshares", func() Card {
+		stpFactory := func() Card {
+			return NewInstant("Swords to Plowshares", "{W}",
+				NewTargetedSpell(TargetCreature(), Pipeline(
+					"exile target creature. Its controller gains life equal to its power",
+					EffectProperties{Outcome: OutcomeDetriment},
+					SnapshotPermanent(SelectTarget, "victim"),
+					ExileGathered("victim"),
+					GainLifeFromVar("victim.controller", "victim.power"),
+				)),
+			)
+		}
+		castCopy := FuncEffect(
+			"cast a copy of Swords to Plowshares",
+			EffectProperties{},
+			func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				return g.CastPreparedSpellCopy(controller, sourceID, stpFactory)
+			})
 		return NewCreature("Emeritus of Truce // Swords to Plowshares", "{1}{W}{W} // {W}", 3, 3,
 			WithSubTypes("Cat", "Cleric", "//", "Instant"),
+			// When this creature enters, target player creates a 1/1 white and black Inkling
+			// creature token with flying. Then if an opponent controls more creatures, becomes prepared.
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect(
+					"target player creates Inkling token; if opponent has more creatures, become prepared",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						// Step 1: target player creates a 1/1 white and black Inkling token with flying.
+						targetPlayerID := controller
+						if len(targets) > 0 {
+							targetPlayerID = targets[0]
+						}
+						inklingToken := NewToken("Inkling Token", 1, 1,
+							[]CardType{TypeCreature},
+							[]string{"Inkling"},
+							Flying,
+						)
+						inklingToken.SetOwner(targetPlayerID)
+						inklingToken.SetColorOverride([]Color{White, Black})
+						g.PutOnBattlefield(inklingToken, targetPlayerID)
+
+						// Step 2: if an opponent controls more creatures than you, become prepared.
+						myCount := len(g.FilterBattlefield(And(IsCreature, ControlledBy(controller))))
+						opp := g.GetOpponent(controller)
+						if opp != nil {
+							oppCount := len(g.FilterBattlefield(And(IsCreature, ControlledBy(opp.PlayerID()))))
+							if oppCount > myCount {
+								g.SetPrepared(sourceID, true)
+							}
+						}
+						return nil
+					},
+				),
+				false,
+			).AddTarget(TargetPlayer())),
+			// Sorcery-speed activated ability: cast a copy of Swords to Plowshares (gated on IsPrepared).
+			WithAbility(NewActivatedAbility(castCopy, ManaCostOf("{0}"),
+				WithSorcerySpeed(),
+				WithActivationCondition(func(g *Game, src *Permanent, ctrl uuid.UUID) bool {
+					return src != nil && src.HasAttr(AttrPrepared)
+				}),
+			)),
 		)
 	})
-
 	// Ennis, Debate Moderator {1}{W}
 	// Legendary Creature — Human Cleric
 	// 1/1
@@ -302,13 +402,30 @@ func registerCreatures() {
 	// Honorbound Page // Forum's Favor {3}{W} // {W}
 	// Creature — Cat Cleric // Sorcery
 	// 3/3
-	// TODO: implement
+	// First strike
+	// This creature enters prepared. (While it's prepared, you may cast a copy of its spell.
+	// Doing so unprepares it.)
+	// ---
+	// Forum's Favor {W}
+	// Sorcery
+	// Target creature gets +1/+0 and gains flying until end of turn.
 	Register("Honorbound Page // Forum's Favor", func() Card {
+		spellFactory := func() Card {
+			return NewSorcery("Forum's Favor", "{W}",
+				NewTargetedSpell(TargetCreature(),
+					CompositeEffects("target creature gets +1/+0 and gains flying until end of turn",
+						Boost(Fixed(1), Fixed(0)).Targeting(ToTarget()).Until(EndOfTurn),
+						GrantKeyword(Flying).Targeting(ToTarget()).Until(EndOfTurn),
+					),
+				),
+			)
+		}
 		return NewCreature("Honorbound Page // Forum's Favor", "{3}{W} // {W}", 3, 3,
 			WithSubTypes("Cat", "Cleric", "//", "Sorcery"),
+			WithKeyword(FirstStrike),
+			WithPreparedSpell(spellFactory),
 		)
 	})
-
 	// Informed Inkwright {1}{W}
 	// Creature — Human Wizard
 	// 2/2
@@ -393,13 +510,83 @@ func registerCreatures() {
 	// Joined Researchers // Secret Rendezvous {1}{W} // {1}{W}{W}
 	// Creature — Human Cleric Wizard // Sorcery
 	// 2/2
-	// TODO: implement
+	// First strike
+	// At the beginning of each end step, if an opponent has more cards in hand than you,
+	// this creature becomes prepared. (While it's prepared, you may cast a copy of its spell.
+	// Doing so unprepares it.)
+	// ---
+	// Secret Rendezvous {1}{W}{W}
+	// Sorcery
+	// You and target opponent each draw three cards.
 	Register("Joined Researchers // Secret Rendezvous", func() Card {
+		srFactory := func() Card {
+			return NewSorcery("Secret Rendezvous", "{1}{W}{W}",
+				NewTargetedSpell(TargetOpponent(),
+					FuncEffect(
+						"you and target opponent each draw three cards",
+						EffectProperties{Outcome: OutcomeBenefit},
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+							// Controller draws three cards.
+							p := g.GetPlayer(controller)
+							if p != nil {
+								for i := 0; i < 3; i++ {
+									g.PlayerDrawCard(p)
+								}
+							}
+							// Target opponent draws three cards.
+							if len(targets) > 0 {
+								opp := g.GetPlayer(targets[0])
+								if opp != nil {
+									for i := 0; i < 3; i++ {
+										g.PlayerDrawCard(opp)
+									}
+								}
+							}
+							return nil
+						},
+					),
+				),
+			)
+		}
+		castCopy := FuncEffect(
+			"cast a copy of Secret Rendezvous",
+			EffectProperties{},
+			func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				return g.CastPreparedSpellCopy(controller, sourceID, srFactory)
+			})
 		return NewCreature("Joined Researchers // Secret Rendezvous", "{1}{W} // {1}{W}{W}", 2, 2,
 			WithSubTypes("Human", "Cleric", "Wizard", "//", "Sorcery"),
+			WithKeyword(FirstStrike),
+			// At the beginning of each end step, if an opponent has more cards in hand than you,
+			// this creature becomes prepared.
+			WithAbility(BeginningOfEachEndStepTrigger(
+				FuncEffect(
+					"if an opponent has more cards in hand, become prepared",
+					EffectProperties{},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						myHandSize := len(p.Hand())
+						opp := g.GetOpponent(controller)
+						if opp != nil && len(opp.Hand()) > myHandSize {
+							g.SetPrepared(sourceID, true)
+						}
+						return nil
+					},
+				),
+				false,
+			)),
+			// Sorcery-speed activated ability: cast a copy of Secret Rendezvous (gated on IsPrepared).
+			WithAbility(NewActivatedAbility(castCopy, ManaCostOf("{0}"),
+				WithSorcerySpeed(),
+				WithActivationCondition(func(g *Game, src *Permanent, ctrl uuid.UUID) bool {
+					return src != nil && src.HasAttr(AttrPrepared)
+				}),
+			)),
 		)
 	})
-
 	// Owlin Historian {2}{W}
 	// Creature — Bird Cleric
 	// 2/3
@@ -420,13 +607,30 @@ func registerCreatures() {
 	// Quill-Blade Laureate // Twofold Intent {1}{W} // {1}{W}
 	// Creature — Human Cleric // Sorcery
 	// 1/1
-	// TODO: implement
+	// Double strike
+	// This creature enters prepared. (While it's prepared, you may cast a copy of its spell.
+	// Doing so unprepares it.)
+	// ---
+	// Twofold Intent {1}{W}
+	// Sorcery
+	// Target creature gets +1/+0 and gains double strike until end of turn.
 	Register("Quill-Blade Laureate // Twofold Intent", func() Card {
+		spellFactory := func() Card {
+			return NewSorcery("Twofold Intent", "{1}{W}",
+				NewTargetedSpell(TargetCreature(),
+					CompositeEffects("target creature gets +1/+0 and gains double strike until end of turn",
+						Boost(Fixed(1), Fixed(0)).Targeting(ToTarget()).Until(EndOfTurn),
+						GrantKeyword(DoubleStrike).Targeting(ToTarget()).Until(EndOfTurn),
+					),
+				),
+			)
+		}
 		return NewCreature("Quill-Blade Laureate // Twofold Intent", "{1}{W} // {1}{W}", 1, 1,
 			WithSubTypes("Human", "Cleric", "//", "Sorcery"),
+			WithKeyword(DoubleStrike),
+			WithPreparedSpell(spellFactory),
 		)
 	})
-
 	// Rehearsed Debater {2}{W}
 	// Creature — Djinn Bard
 	// 3/3
@@ -477,13 +681,53 @@ func registerCreatures() {
 	// Spiritcall Enthusiast // Scrollboost {2}{W} // {1}{W}
 	// Creature — Cat Cleric // Sorcery
 	// 3/3
-	// TODO: implement
+	// Whenever one or more tokens you control enter, this creature becomes prepared.
+	// (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)
+	// ---
+	// Scrollboost {1}{W}
+	// Sorcery
+	// One or two target creatures each get +2/+2 until end of turn.
 	Register("Spiritcall Enthusiast // Scrollboost", func() Card {
+		sbFactory := func() Card {
+			return NewSorcery("Scrollboost", "{1}{W}",
+				NewMultiTargetSpell(
+					[]Target{TargetUpToNCreatures(2)},
+					Boost(Fixed(2), Fixed(2)).Targeting(ToAllTargets()).Until(EndOfTurn),
+				),
+			)
+		}
+		castCopy := FuncEffect(
+			"cast a copy of Scrollboost",
+			EffectProperties{},
+			func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				return g.CastPreparedSpellCopy(controller, sourceID, sbFactory)
+			})
 		return NewCreature("Spiritcall Enthusiast // Scrollboost", "{2}{W} // {1}{W}", 3, 3,
 			WithSubTypes("Cat", "Cleric", "//", "Sorcery"),
+			// Whenever one or more tokens you control enter, this creature becomes prepared.
+			WithAbility(NewTriggered(EvtZoneChange, false,
+				FuncEffect(
+					"this creature becomes prepared",
+					EffectProperties{},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						g.SetPrepared(sourceID, true)
+						return nil
+					},
+				),
+			).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+				EventZoneChangeMatches{From: ZoneAny, To: ZoneBattlefield},
+				EventSourceMatchesPermanentFilter{Filter: IsToken},
+				EventSourceControlledByController{},
+			}})),
+			// Sorcery-speed activated ability: cast a copy of Scrollboost (gated on IsPrepared).
+			WithAbility(NewActivatedAbility(castCopy, ManaCostOf("{0}"),
+				WithSorcerySpeed(),
+				WithActivationCondition(func(g *Game, src *Permanent, ctrl uuid.UUID) bool {
+					return src != nil && src.HasAttr(AttrPrepared)
+				}),
+			)),
 		)
 	})
-
 	// Stirring Hopesinger {2}{W}
 	// Creature — Bird Bard
 	// 1/3
@@ -1602,13 +1846,67 @@ func registerCreatures() {
 	// Leech Collector // Bloodletting {1}{B} // {B}
 	// Creature — Human Warlock // Sorcery
 	// 2/2
-	// TODO: implement
+	// Whenever you gain life for the first time each turn, this creature becomes prepared.
+	// (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)
+	// ---
+	// Bloodletting {B}
+	// Sorcery
+	// Each opponent loses 2 life.
 	Register("Leech Collector // Bloodletting", func() Card {
+		spellFactory := func() Card {
+			return NewSorcery("Bloodletting", "{B}",
+				NewSpellAbility(FuncEffect(
+					"each opponent loses 2 life",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						for _, pl := range g.AllPlayers() {
+							if pl.PlayerID() != controller {
+								g.PlayerLoseLife(pl, 2)
+							}
+						}
+						return nil
+					},
+				)),
+			)
+		}
+		// Becomes prepared the first time the controller gains life each turn.
+		// "First time" = PlayerLifeGainedThisTurn equals the event amount (prior total was 0).
+		becomePrepared := FuncEffect(
+			"this creature becomes prepared",
+			EffectProperties{},
+			func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				g.SetPrepared(sourceID, true)
+				return nil
+			},
+		)
+		firstTimeLifeGainTrigger := NewTriggered(EvtLifeGained, false, becomePrepared).
+			SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
+				if evt.PlayerID != controllerID {
+					return false
+				}
+				// First time this turn = total gained so far equals this event's amount.
+				return LifeGainedThisTurnFor(g, controllerID) == evt.Amount
+			})
+		// Activated ability: cast a copy of Bloodletting (sorcery speed, while prepared).
+		castCopy := FuncEffect(
+			"cast a copy of this creature's spell",
+			EffectProperties{},
+			func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				return g.CastPreparedSpellCopy(controller, sourceID, spellFactory)
+			},
+		)
+		activatedAb := NewActivatedAbility(castCopy, ManaCostOf("{0}"),
+			WithSorcerySpeed(),
+			WithActivationCondition(func(g *Game, src *Permanent, controller uuid.UUID) bool {
+				return src != nil && src.HasAttr(AttrPrepared)
+			}),
+		)
 		return NewCreature("Leech Collector // Bloodletting", "{1}{B} // {B}", 2, 2,
-			WithSubTypes("Human", "Warlock", "//", "Sorcery"),
+			WithSubTypes("Human", "Warlock"),
+			WithAbility(firstTimeLifeGainTrigger),
+			WithAbility(activatedAb),
 		)
 	})
-
 	// Melancholic Poet {1}{B}
 	// Creature — Elf Bard
 	// 2/2
@@ -1792,23 +2090,112 @@ func registerCreatures() {
 	// Scathing Shadelock // Venomous Words {4}{B} // {B}
 	// Creature — Snake Warlock // Sorcery
 	// 4/6
-	// TODO: implement
+	// At the beginning of your first main phase, this creature becomes prepared.
+	// (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)
+	// ---
+	// Venomous Words {B}
+	// Sorcery
+	// Target creature you control gets +2/+0 and gains deathtouch until end of turn.
 	Register("Scathing Shadelock // Venomous Words", func() Card {
+		spellFactory := func() Card {
+			return NewSorcery("Venomous Words", "{B}",
+				NewTargetedSpell(TargetControlledCreature(),
+					CompositeEffects("target creature you control gets +2/+0 and gains deathtouch until end of turn",
+						Boost(Fixed(2), Fixed(0)).Targeting(ToTarget()).Until(EndOfTurn),
+						GrantKeyword(Deathtouch).Targeting(ToTarget()).Until(EndOfTurn),
+					),
+				))
+		}
+		becomePreparedEffect := FuncEffect(
+			"this creature becomes prepared",
+			EffectProperties{},
+			func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				g.SetPrepared(sourceID, true)
+				return nil
+			},
+		)
 		return NewCreature("Scathing Shadelock // Venomous Words", "{4}{B} // {B}", 4, 6,
-			WithSubTypes("Snake", "Warlock", "//", "Sorcery"),
+			WithSubTypes("Snake", "Warlock"),
+			WithAbility(BeginningOfFirstMainPhaseTrigger(becomePreparedEffect, false)),
+			WithPreparedSpell(spellFactory),
 		)
 	})
-
 	// Scheming Silvertongue // Sign in Blood {1}{B} // {B}{B}
 	// Creature — Vampire Warlock // Sorcery
 	// 1/3
-	// TODO: implement
+	// Flying, lifelink
+	// At the beginning of your second main phase, if you gained 2 or more life
+	// this turn, this creature becomes prepared.
+	// (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)
+	// ---
+	// Sign in Blood {B}{B}
+	// Sorcery
+	// Target player draws two cards and loses 2 life.
 	Register("Scheming Silvertongue // Sign in Blood", func() Card {
+		spellFactory := func() Card {
+			return NewSorcery("Sign in Blood", "{B}{B}",
+				NewTargetedSpell(TargetPlayer(),
+					FuncEffect(
+						"target player draws two cards and loses 2 life",
+						EffectProperties{Outcome: OutcomeDetriment},
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+							if len(targets) == 0 {
+								return nil
+							}
+							pl := g.GetPlayer(targets[0])
+							if pl == nil {
+								return nil
+							}
+							for i := 0; i < 2; i++ {
+								g.PlayerDrawCard(pl)
+							}
+							g.PlayerLoseLife(pl, 2)
+							return nil
+						},
+					),
+				))
+		}
+		// At the beginning of your second main phase, if you gained 2 or more life
+		// this turn, this creature becomes prepared.
+		becomePrepared := FuncEffect(
+			"this creature becomes prepared",
+			EffectProperties{},
+			func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				g.SetPrepared(sourceID, true)
+				return nil
+			},
+		)
+		// Fire at beginning of postcombat main phase if controller gained 2+ life this turn.
+		// SetCondition replaces the built-in conditions, so we re-apply EventPlayerIsController
+		// and EventFlagIsFalse (postcombat) alongside the life-gain check.
+		secondMainTrigger := NewTriggered(EvtMainPhase, false, becomePrepared).
+			SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
+				return evt.PlayerID == controllerID &&
+					!evt.Flag &&
+					LifeGainedThisTurnFor(g, controllerID) >= 2
+			})
+		// Activated ability: cast a copy of Sign in Blood (sorcery speed, while prepared).
+		castCopy := FuncEffect(
+			"cast a copy of this creature's spell",
+			EffectProperties{},
+			func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				return g.CastPreparedSpellCopy(controller, sourceID, spellFactory)
+			},
+		)
+		activatedAb := NewActivatedAbility(castCopy, ManaCostOf("{0}"),
+			WithSorcerySpeed(),
+			WithActivationCondition(func(g *Game, src *Permanent, controller uuid.UUID) bool {
+				return src != nil && src.HasAttr(AttrPrepared)
+			}),
+		)
 		return NewCreature("Scheming Silvertongue // Sign in Blood", "{1}{B} // {B}{B}", 1, 3,
-			WithSubTypes("Vampire", "Warlock", "//", "Sorcery"),
+			WithSubTypes("Vampire", "Warlock"),
+			WithKeyword(Flying),
+			WithKeyword(Lifelink),
+			WithAbility(secondMainTrigger),
+			WithAbility(activatedAb),
 		)
 	})
-
 	// Sneering Shadewriter {4}{B}
 	// Creature — Vampire Warlock
 	// 3/3
