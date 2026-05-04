@@ -1452,9 +1452,9 @@ func TestDissectionPractice(t *testing.T) {
 	t.Run("up to one creature gets +1/+1 until end of turn", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Dissection Practice")
-		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Dissection Practice", "PlayerB", "Grizzly Bears", "Grizzly Bears")
+		// Target PlayerB for life loss; target Grizzly Bears for +1/+1; skip -1/-1 (up to one).
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Dissection Practice", "PlayerB", "Grizzly Bears")
 		g.StopAt(1, core.DeclareAttackers)
 		g.Execute()
 		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 3, 3)
@@ -1462,10 +1462,11 @@ func TestDissectionPractice(t *testing.T) {
 
 	t.Run("up to one creature gets -1/-1 until end of turn", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Air Elemental")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Dissection Practice")
-		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Dissection Practice", "PlayerB", "Grizzly Bears", "Grizzly Bears")
+		// Target PlayerB for life loss; target Air Elemental for +1/+1; target Grizzly Bears for -1/-1.
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Dissection Practice", "PlayerB", "Air Elemental", "Grizzly Bears")
 		g.StopAt(1, core.DeclareAttackers)
 		g.Execute()
 		g.AssertPowerToughness(gametest.PlayerB, "Grizzly Bears", 1, 1)
