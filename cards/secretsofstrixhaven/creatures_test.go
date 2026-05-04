@@ -2617,6 +2617,42 @@ func TestSpectacularSkywhale_OpusFiveManaSpentPutsCounters(t *testing.T) {
 }
 
 // =============================================================================
+// Spellbook Seeker // Careful Study
+// =============================================================================
+
+// TestSpellbookSeeker_ETBPrepared: Spellbook Seeker enters the battlefield prepared.
+func TestSpellbookSeeker_ETBPrepared(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Spellbook Seeker // Careful Study")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Spellbook Seeker // Careful Study", core.AttrPrepared, true)
+}
+
+// TestSpellbookSeeker_CastCarefulStudyDrawsThenDiscards: activating the Prepared
+// ability casts a copy of Careful Study, drawing two cards then discarding two.
+func TestSpellbookSeeker_CastCarefulStudyDrawsThenDiscards(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Spellbook Seeker // Careful Study")
+	// Put two distinct cards in hand to discard; 3 Mountains in library
+	// (1 drawn at start of turn, 2 drawn by Careful Study).
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Llanowar Elves")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Mountain", 3)
+	// After drawing 2 Mountains via Careful Study, discard the Bears and Elves.
+	g.ChooseDiscard(gametest.PlayerA, "Grizzly Bears", "Llanowar Elves")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Spellbook Seeker // Careful Study")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Start-of-turn draw: 1 Mountain. Careful Study: draw 2 more Mountains, discard Bears+Elves.
+	// Final hand: 3 Mountains.
+	g.AssertHandCount(gametest.PlayerA, "Mountain", 3)
+	g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 1)
+	g.AssertGraveyardCount(gametest.PlayerA, "Llanowar Elves", 1)
+	g.AssertHasAbility(gametest.PlayerA, "Spellbook Seeker // Careful Study", core.AttrPrepared, false)
+}
+
+// =============================================================================
 // Landscape Painter // Vibrant Idea
 // =============================================================================
 
@@ -2641,4 +2677,137 @@ func TestLandscapePainter_CastVibrantIdeaDrawsTwoCards(t *testing.T) {
 	g.Execute()
 	g.AssertHandCount(gametest.PlayerA, "", 2)
 	g.AssertHasAbility(gametest.PlayerA, "Landscape Painter // Vibrant Idea", core.AttrPrepared, false)
+}
+
+// =============================================================================
+// Encouraging Aviator // Jump
+// =============================================================================
+
+// TestEncouragingAviator_HasFlying: Encouraging Aviator is a 2/3 with flying.
+func TestEncouragingAviator_HasFlying(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Encouraging Aviator // Jump")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Encouraging Aviator // Jump", core.Flying, true)
+	g.AssertPowerToughness(gametest.PlayerA, "Encouraging Aviator // Jump", 2, 3)
+}
+
+// TestEncouragingAviator_AttackMakesPrepared: when Encouraging Aviator attacks,
+// it becomes prepared.
+func TestEncouragingAviator_AttackMakesPrepared(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Encouraging Aviator // Jump")
+	g.Attack(1, gametest.PlayerA, "Encouraging Aviator // Jump")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Encouraging Aviator // Jump", core.AttrPrepared, true)
+}
+
+// TestEncouragingAviator_CastJumpGivesFlyingToTarget: casting the Jump copy
+// gives a target creature flying until end of turn.
+func TestEncouragingAviator_CastJumpGivesFlyingToTarget(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Encouraging Aviator // Jump")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.Attack(1, gametest.PlayerA, "Encouraging Aviator // Jump")
+	// Activate prepared ability during postcombat main; target Grizzly Bears.
+	g.ActivateAbility(1, core.PostcombatMain, gametest.PlayerA, "Encouraging Aviator // Jump", "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// After end step, the temporary flying from Jump has expired.
+	g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", core.Flying, false)
+	// The aviator is no longer prepared.
+	g.AssertHasAbility(gametest.PlayerA, "Encouraging Aviator // Jump", core.AttrPrepared, false)
+}
+
+// =============================================================================
+// Campus Composer // Aqueous Aria
+// =============================================================================
+
+// TestCampusComposer_ETBPrepared: Campus Composer enters the battlefield prepared.
+func TestCampusComposer_ETBPrepared(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Campus Composer // Aqueous Aria")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Campus Composer // Aqueous Aria", core.AttrPrepared, true)
+}
+
+// TestCampusComposer_CastAqueousAriaCreatesToken: casting the Aqueous Aria copy
+// creates a 3/3 blue and red Elemental creature token with flying.
+func TestCampusComposer_CastAqueousAriaCreatesToken(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Campus Composer // Aqueous Aria")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Campus Composer // Aqueous Aria")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Elemental Token", 1)
+	g.AssertPowerToughness(gametest.PlayerA, "Elemental Token", 3, 3)
+	g.AssertHasAbility(gametest.PlayerA, "Elemental Token", core.Flying, true)
+	g.AssertHasAbility(gametest.PlayerA, "Campus Composer // Aqueous Aria", core.AttrPrepared, false)
+}
+
+// =============================================================================
+// Harmonized Trio // Brainstorm
+// =============================================================================
+
+// TestHarmonizedTrio_TapTwoCreaturesBecomePrepared: tapping Harmonized Trio
+// plus two other untapped creatures makes it prepared.
+func TestHarmonizedTrio_TapTwoCreaturesBecomePrepared(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Harmonized Trio // Brainstorm")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears", 2)
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Harmonized Trio // Brainstorm", "Grizzly Bears", "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Harmonized Trio // Brainstorm", core.AttrPrepared, true)
+}
+
+// =============================================================================
+// Jadzi, Steward of Fate // Oracle's Gift
+// =============================================================================
+
+// TestJadzi_ETBPreparedAndDrawDiscard: Jadzi enters prepared; its ETB trigger
+// draws two cards then discards two cards.
+func TestJadzi_ETBPreparedAndDrawDiscard(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears", 2)
+	g.ChooseDiscard(gametest.PlayerA, "Grizzly Bears", "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Jadzi, Steward of Fate // Oracle's Gift")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Jadzi, Steward of Fate // Oracle's Gift", core.AttrPrepared, true)
+	// Drew 2, discarded 2: hand empty.
+	g.AssertHandCount(gametest.PlayerA, "", 0)
+	g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 2)
+}
+
+// =============================================================================
+// Emeritus of Ideation // Ancestral Recall
+// =============================================================================
+
+// TestEmeritusOfIdeation_ETBPrepared: Emeritus of Ideation is a 5/5 with flying
+// that enters prepared.
+func TestEmeritusOfIdeation_ETBPrepared(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Emeritus of Ideation // Ancestral Recall")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Emeritus of Ideation // Ancestral Recall", core.Flying, true)
+	g.AssertPowerToughness(gametest.PlayerA, "Emeritus of Ideation // Ancestral Recall", 5, 5)
+	g.AssertHasAbility(gametest.PlayerA, "Emeritus of Ideation // Ancestral Recall", core.AttrPrepared, true)
+}
+
+// TestEmeritusOfIdeation_CastAncestralRecallDrawsThreeForTarget: casting the
+// Ancestral Recall copy draws three cards for the target player.
+func TestEmeritusOfIdeation_CastAncestralRecallDrawsThreeForTarget(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Emeritus of Ideation // Ancestral Recall")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears", 3)
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Emeritus of Ideation // Ancestral Recall", "PlayerA")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "", 3)
+	g.AssertHasAbility(gametest.PlayerA, "Emeritus of Ideation // Ancestral Recall", core.AttrPrepared, false)
 }

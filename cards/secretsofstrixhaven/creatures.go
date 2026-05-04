@@ -567,10 +567,36 @@ func registerCreatures() {
 	// Encouraging Aviator // Jump {2}{U} // {U}
 	// Creature — Bird Wizard // Instant
 	// 2/3
-	// TODO: implement
+	// Flying
+	// Whenever this creature attacks, it becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)
+	// ---
+	// Jump {U}
+	// Instant
+	// Target creature gains flying until end of turn.
 	Register("Encouraging Aviator // Jump", func() Card {
+		spellFactory := func() Card {
+			return NewInstant("Jump", "{U}",
+				NewTargetedSpell(
+					TargetCreature(),
+					GrantKeyword(Flying).Targeting(ToTarget()).Until(EndOfTurn),
+				))
+		}
 		return NewCreature("Encouraging Aviator // Jump", "{2}{U} // {U}", 2, 3,
-			WithSubTypes("Bird", "Wizard", "//", "Instant"),
+			WithSubTypes("Bird", "Wizard"),
+			WithKeyword(Flying),
+			WithPreparedSpell(spellFactory),
+			// Whenever this creature attacks, it becomes prepared.
+			WithAbility(AttacksTrigger(
+				FuncEffect(
+					"this creature becomes prepared",
+					EffectProperties{},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						g.SetPrepared(sourceID, true)
+						return nil
+					},
+				),
+				false,
+			)),
 		)
 	})
 
@@ -849,10 +875,38 @@ func registerCreatures() {
 	// Spellbook Seeker // Careful Study {3}{U} // {U}
 	// Creature — Bird Wizard // Sorcery
 	// 3/3
-	// TODO: implement
+	// Flying
+	// This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)
+	// ---
+	// Careful Study {U}
+	// Sorcery
+	// Draw two cards, then discard two cards.
 	Register("Spellbook Seeker // Careful Study", func() Card {
+		spellFactory := func() Card {
+			return NewSorcery("Careful Study", "{U}",
+				NewSpellAbility(FuncEffect(
+					"draw two cards, then discard two cards",
+					EffectProperties{Outcome: OutcomeBenefit, DrawCount: 2},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						g.PlayerDrawCard(p)
+						g.PlayerDrawCard(p)
+						chosen := p.ChooseCardsFromHand(2, "discard two cards", g)
+						for _, card := range chosen {
+							g.PlayerDiscard(p, card.ID())
+						}
+						return nil
+					},
+				)),
+			)
+		}
 		return NewCreature("Spellbook Seeker // Careful Study", "{3}{U} // {U}", 3, 3,
-			WithSubTypes("Bird", "Wizard", "//", "Sorcery"),
+			WithSubTypes("Bird", "Wizard"),
+			WithKeyword(Flying),
+			WithPreparedSpell(spellFactory),
 		)
 	})
 
