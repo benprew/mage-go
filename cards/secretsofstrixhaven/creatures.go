@@ -480,10 +480,29 @@ func registerCreatures() {
 	// Campus Composer // Aqueous Aria {3}{U} // {4}{U}
 	// Creature — Merfolk Bard // Sorcery
 	// 3/4
-	// TODO: implement
+	// Ward {2}
+	// This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)
+	// ---
+	// Aqueous Aria {4}{U}
+	// Sorcery
+	// Create a 3/3 blue and red Elemental creature token with flying.
+	// XXX: Ward {2} — the engine has no Ward mechanic implementation.
 	Register("Campus Composer // Aqueous Aria", func() Card {
+		spellFactory := func() Card {
+			return NewSorcery("Aqueous Aria", "{4}{U}",
+				NewSpellAbility(
+					CreateColoredToken(
+						"Elemental Token", 3, 3,
+						[]Color{Blue, Red},
+						[]CardType{TypeCreature},
+						[]string{"Elemental"},
+						Flying,
+					),
+				))
+		}
 		return NewCreature("Campus Composer // Aqueous Aria", "{3}{U} // {4}{U}", 3, 4,
-			WithSubTypes("Merfolk", "Bard", "//", "Sorcery"),
+			WithSubTypes("Merfolk", "Bard"),
+			WithPreparedSpell(spellFactory),
 		)
 	})
 
