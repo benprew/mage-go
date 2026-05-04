@@ -2635,7 +2635,7 @@ func TestAdventurousEater_HaveABiteCounterAndLifeGain(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Adventurous Eater // Have a Bite")
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
-	g.ChoosePermanent(gametest.PlayerA, "Grizzly Bears")
+	g.ChooseTarget(gametest.PlayerA, "Grizzly Bears")
 	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Adventurous Eater // Have a Bite")
 	g.StopAt(1, core.EndStep)
 	g.Execute()
