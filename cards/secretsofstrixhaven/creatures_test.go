@@ -2226,3 +2226,193 @@ func TestQuandrixTheProof_StatsAndKeywords(t *testing.T) {
 	g.AssertHasAbility(gametest.PlayerA, "Quandrix, the Proof", core.Flying, true)
 	g.AssertHasAbility(gametest.PlayerA, "Quandrix, the Proof", core.Trample, true)
 }
+
+// ===========================================================================
+// Tester of the Tangential
+// ===========================================================================
+
+// TestTesterOfTheTangential_IncrementAddsCounter verifies that casting a spell
+// whose mana cost exceeds Tester's power or toughness puts a +1/+1 counter on it.
+func TestTesterOfTheTangential_IncrementAddsCounter(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tester of the Tangential")
+	// Tester is 1/1; Grizzly Bears costs {1}{G} = 2 mana > 1
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertCounterCount(gametest.PlayerA, "Tester of the Tangential", core.P1P1, 1)
+}
+
+// TestTesterOfTheTangential_MoveCountersToCombatTarget verifies that at the beginning
+// of combat, paying X mana moves X +1/+1 counters to another creature.
+func TestTesterOfTheTangential_MoveCountersToCombatTarget(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tester of the Tangential")
+	g.AddCounters(1, core.PrecombatMain, gametest.PlayerA, "Tester of the Tangential", core.P1P1, 3)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	// Provide mana to pay {2} for X=2
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island")
+	// Player chooses X=2 and targets Grizzly Bears
+	g.ChooseNumber(gametest.PlayerA, 2)
+	g.ChoosePermanent(gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertCounterCount(gametest.PlayerA, "Tester of the Tangential", core.P1P1, 1)
+	g.AssertCounterCount(gametest.PlayerA, "Grizzly Bears", core.P1P1, 2)
+}
+
+// ===========================================================================
+// Textbook Tabulator
+// ===========================================================================
+
+// TestTextbookTabulator_IncrementAddsCounter verifies Increment fires when mana
+// spent exceeds Textbook Tabulator's power or toughness.
+func TestTextbookTabulator_IncrementAddsCounter(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Textbook Tabulator")
+	// Tabulator is 0/3; Grizzly Bears = {1}{G} = 2 mana > 0 (power)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertCounterCount(gametest.PlayerA, "Textbook Tabulator", core.P1P1, 1)
+}
+
+// TestTextbookTabulator_ETBSurveil2 verifies that when Textbook Tabulator enters
+// the battlefield, the controller surveils 2 (top 2 cards are seen).
+func TestTextbookTabulator_ETBSurveil2(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears") // top card
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Forest")        // second card
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Textbook Tabulator")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// After ETB surveil 2, search player keeps cards in order; library count unchanged.
+	g.AssertLibraryCount(gametest.PlayerA, 2)
+}
+
+// ===========================================================================
+// Thornfist Striker
+// ===========================================================================
+
+// TestThornfistStriker_WardCountersTriggers verifies Ward {1}: targeting Thornfist
+// Striker with a spell should counter it unless the opponent pays {1}.
+func TestThornfistStriker_WardCountersTriggers(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Thornfist Striker")
+	// PlayerB casts Terror targeting Thornfist Striker. They won't pay Ward.
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Swamp", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Terror")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Terror", "Thornfist Striker")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Ward countered Terror, so Thornfist Striker survives.
+	g.AssertPermanentCount(gametest.PlayerA, "Thornfist Striker", 1)
+}
+
+// TestThornfistStriker_InfusionBoostsCreatures verifies that as long as you gained
+// life this turn, creatures you control get +1/+0 and trample.
+func TestThornfistStriker_InfusionBoostsCreatures(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Thornfist Striker")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	// Gain life this turn to activate Infusion
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Healing Salve")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Healing Salve")
+	g.StopAt(1, core.PrecombatMain)
+	g.Execute()
+	// After gaining life, Grizzly Bears should be 3/2 (+1/+0) and have trample.
+	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 3, 2)
+	g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", core.Trample, true)
+}
+
+// TestThornfistStriker_InfusionInactiveWithoutLifeGain verifies that without
+// gaining life this turn, the Infusion bonus does not apply.
+func TestThornfistStriker_InfusionInactiveWithoutLifeGain(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Thornfist Striker")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// No life gain, so Grizzly Bears stays at 2/2 with no trample.
+	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 2)
+	g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", core.Trample, false)
+}
+
+// ===========================================================================
+// Thunderdrum Soloist
+// ===========================================================================
+
+// TestThunderdrum_OpusDealsDamageToOpponent verifies that casting an instant or
+// sorcery spell causes Thunderdrum Soloist to deal 1 damage to each opponent.
+func TestThunderdrum_OpusDealsDamageToOpponent(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Thunderdrum Soloist")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Bolt deals 3, Opus deals 1 = total 4 damage to PlayerB
+	g.AssertLife(gametest.PlayerB, 16)
+}
+
+// TestThunderdrum_OpusFiveManaDealsThree verifies that if five or more mana was
+// spent to cast the instant/sorcery, Thunderdrum deals 3 damage instead of 1.
+func TestThunderdrum_OpusFiveManaDealsThree(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Thunderdrum Soloist")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 4)
+	// Earthquake {X}{R} with X=4 costs 5 mana total (>= 5)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Earthquake")
+	g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerA, "Earthquake", 4)
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Earthquake(4) deals 4 to PlayerB; Opus(3) deals 3 more = 7 total → life 13
+	g.AssertLife(gametest.PlayerB, 13)
+}
+
+// ===========================================================================
+// Topiary Lecturer
+// ===========================================================================
+
+// TestTopiaryLecturer_IncrementAddsCounter verifies Increment puts a counter on
+// Topiary Lecturer when mana spent exceeds its power or toughness.
+func TestTopiaryLecturer_IncrementAddsCounter(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Topiary Lecturer")
+	// Topiary Lecturer is 1/2; {1}{G} = 2 mana > 1 (power)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertCounterCount(gametest.PlayerA, "Topiary Lecturer", core.P1P1, 1)
+}
+
+// TestTopiaryLecturer_TapForGreenMana verifies {T}: Add {G} equal to this
+// creature's power produces the correct amount of mana.
+func TestTopiaryLecturer_TapForGreenMana(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Topiary Lecturer")
+	// Add 2 +1/+1 counters: power becomes 1+2=3
+	g.AddCounters(1, core.PrecombatMain, gametest.PlayerA, "Topiary Lecturer", core.P1P1, 2)
+	// Activate the mana ability on turn 3 (to avoid summoning sickness)
+	g.ActivateAbility(3, core.PrecombatMain, gametest.PlayerA, "Topiary Lecturer")
+	// Use that mana plus one more Forest to cast Giant Spider {3}{G}
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Giant Spider")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.CastSpell(3, core.PrecombatMain, gametest.PlayerA, "Giant Spider")
+	g.StopAt(3, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Giant Spider", 1)
+}

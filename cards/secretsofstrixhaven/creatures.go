@@ -3151,11 +3151,13 @@ func registerCreatures() {
 	// 4/4
 	// Flying, vigilance
 	// Each instant and sorcery spell you cast has casualty 1. (As you cast that spell, you may sacrifice a creature with power 1 or greater. When you do, copy the spell and you may choose new targets for the copy.)
-	// TODO: implement
+	// XXX: Casualty is not implemented in the engine (no mechanism to add an optional sacrifice cost to all spells of a given type, nor to copy the spell on sacrifice).
 	Register("Silverquill, the Disputant", func() Card {
 		return NewCreature("Silverquill, the Disputant", "{2}{W}{B}", 4, 4,
 			WithSubTypes("Elder", "Dragon"),
 			WithSuperTypes(SuperLegendary),
+			WithKeyword(Flying),
+			WithKeyword(Vigilance),
 		)
 	})
 
