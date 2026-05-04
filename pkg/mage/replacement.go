@@ -141,24 +141,30 @@ func (r *fogReplacement) Clone() ReplacementEffect {
 
 type forcefieldReplacement struct {
 	replacementBase
-	playerID uuid.UUID
+	playerID   uuid.UUID
+	attackerID uuid.UUID
+	consumed   bool
 }
 
 func (r *forcefieldReplacement) Matches(a Action, _ GameReader) bool {
+	if r.consumed {
+		return false
+	}
 	act, ok := a.(*DamageToPlayerAction)
 	if !ok {
 		return false
 	}
-	return act.IsCombatDamage() && act.PlayerID() == r.playerID && act.Amount() > 1
+	return act.IsCombatDamage() && act.PlayerID() == r.playerID && act.ActionSource() == r.attackerID && act.Amount() > 1
 }
 
 func (r *forcefieldReplacement) Replace(a Action, g *Game) Action {
 	act := a.(*DamageToPlayerAction)
+	r.consumed = true
 	return act.WithAmount(1)
 }
 
 func (r *forcefieldReplacement) IsActive(_ GameReader) bool {
-	return true
+	return !r.consumed
 }
 
 func (r *forcefieldReplacement) Clone() ReplacementEffect {
@@ -612,7 +618,47 @@ func (r *skipDrawReplacement) Clone() ReplacementEffect {
 }
 
 // ---------------------------------------------------------------------------
-// 16. Draw replacement: Aladdin's Lamp draw replacement
+// 16. Island Sanctuary: optional skip-draw with sanctuary protection
+// ---------------------------------------------------------------------------
+
+type islandSanctuaryReplacement struct {
+	replacementBase
+	playerID uuid.UUID
+}
+
+func (r *islandSanctuaryReplacement) Matches(a Action, _ GameReader) bool {
+	act, ok := a.(*DrawCardAction)
+	if !ok {
+		return false
+	}
+	// IsNormalDraw is set only for the active player's draw-step draw, so
+	// matching on it + playerID covers Oracle's "during your draw step" gate.
+	return act.IsNormalDraw() && act.PlayerID() == r.playerID
+}
+
+func (r *islandSanctuaryReplacement) Replace(a Action, g *Game) Action {
+	p := g.GetPlayer(r.playerID)
+	if p == nil {
+		return a
+	}
+	if !p.ChooseMayAbility("skip your draw to activate Island Sanctuary") {
+		return a
+	}
+	g.SetSanctuaryActive(r.playerID)
+	return nil
+}
+
+func (r *islandSanctuaryReplacement) IsActive(g GameReader) bool {
+	return g.FindPermanent(r.sourceID) != nil
+}
+
+func (r *islandSanctuaryReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
+}
+
+// ---------------------------------------------------------------------------
+// 17. Draw replacement: Aladdin's Lamp draw replacement
 // ---------------------------------------------------------------------------
 
 type drawReplacementEffect struct {

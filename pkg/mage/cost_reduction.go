@@ -401,10 +401,7 @@ func applyExternalCostReductions(g *Game, controller uuid.UUID, card Card) int {
 // pipeline. It returns the total generic reduction owed (capped to the
 // caller's current generic cost).
 func computeConditionalCostReduction(g *Game, controller uuid.UUID, card Card, currentGeneric int) int {
-	red := max(applySelfCostReductions(g, controller, card)+applyExternalCostReductions(g, controller, card), 0)
-	if red > currentGeneric {
-		red = currentGeneric
-	}
+	red := min(max(applySelfCostReductions(g, controller, card)+applyExternalCostReductions(g, controller, card), 0), currentGeneric)
 	return red
 }
 

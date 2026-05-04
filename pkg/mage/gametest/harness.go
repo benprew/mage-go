@@ -1134,8 +1134,19 @@ func (tg *TestGame) resolveTargets(names []string, controllerID uuid.UUID) []uui
 }
 
 func (tg *TestGame) validateTargets(sourceCard mage.Card, targets []uuid.UUID, controllerID uuid.UUID) []uuid.UUID {
+	cts := sourceCard.CastTargets()
 	var valid []uuid.UUID
-	for _, tid := range targets {
+	for i, tid := range targets {
+		// Graveyard-card cast targets (e.g. Animate Dead) must point to a card
+		// in a graveyard — reject battlefield permanents and players.
+		if i < len(cts) {
+			if _, isGY := cts[i].(*mage.GraveyardCardTarget); isGY {
+				possible := cts[i].Possible(controllerID, sourceCard, tg.Game)
+				if !slices.Contains(possible, tid) {
+					continue
+				}
+			}
+		}
 		perm := tg.FindPermanent(tid)
 		if perm != nil {
 			if perm.CanBeTargetedBy(sourceCard, controllerID, tg.Game) {

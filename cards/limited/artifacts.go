@@ -179,10 +179,18 @@ func registerArtifacts() {
 	})
 
 	Register("Forcefield", func() Card {
+		// Oracle: "{1}: The next time an unblocked creature of your choice
+		// would deal combat damage to you this turn, prevent all but 1 of
+		// that damage."
+		// XXX: target should be restricted to "unblocked attacker" — using
+		// IsAttacking is a coarser approximation; if the chosen attacker is
+		// blocked, the shield is wasted (matches Oracle's "next time" wording
+		// in spirit, since blocked attackers don't deal damage to the player).
 		return NewArtifact("Forcefield", "{3}",
 			WithActivatedAbility(
 				ForcefieldEffect(),
 				GenericCost(1),
+				WithTarget(TargetCreature(IsAttacking)),
 			),
 		)
 	})

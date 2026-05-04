@@ -213,7 +213,9 @@ func registerEnchantments() {
 
 	Register("Animate Dead", func() Card {
 		// XXX: missing leave-battlefield sacrifice trigger — engine needs last-known-information for attachments
+		// XXX: Oracle says "creature card in a graveyard" (any graveyard); restricted to controller's graveyard for now.
 		return NewAura("Animate Dead", "{1}{B}",
+			WithCastTarget(TargetCreatureInYourGraveyard()),
 			WithAbility(NewSpellAbility(ReturnFromGraveyardToBattlefield())),
 			WithStaticAbility(
 				BoostAttached(-1, 0, AttachAura),
@@ -532,16 +534,21 @@ func registerEnchantments() {
 	})
 
 	Register("Island Sanctuary", func() Card {
+		// Oracle: "If you would draw a card during your draw step, instead you
+		// may skip that draw. If you do, until your next turn, you can't be
+		// attacked except by creatures with flying or islandwalk."
+		// Implemented as a draw replacement registered on ETB: when the
+		// controller's draw-step draw fires, the replacement asks them whether
+		// to skip; accepting both replaces the draw with nothing and arms the
+		// sanctuary attack-restriction until their next turn.
 		return NewEnchantment("Island Sanctuary", "{1}{W}",
-			// TODO: convert to pipeline — needs skip-draw and sanctuary game rule steps
-			WithAbility(NewTriggered(EvtDrawStep, false, FuncEffect(
-				"skip draw, only flying/islandwalk can attack you until your next turn",
+			WithAbility(EntersBattlefieldTrigger(FuncEffect(
+				"register Island Sanctuary draw replacement",
 				EffectProperties{},
-				func(g *Game, _, controller uuid.UUID, _ []uuid.UUID) error {
-					g.SetSkipNextDraw(controller)
-					g.SetSanctuaryActive(controller)
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					g.AddIslandSanctuaryReplacement(controller, sourceID)
 					return nil
-				})).SetConditionData(EventPlayerIsController{})),
+				}), false)),
 		)
 	})
 
@@ -634,7 +641,7 @@ func registerEnchantments() {
 			WithCastTarget(TargetLand()),
 			// TODO: convert to pipeline — complex attachment manipulation
 			WithAbility(WhenAttachedBecomesTappedTrigger(FuncEffect(
-				"destroy enchanted land; attach Kudzu to another land",
+				"destroy enchanted land; its controller picks another land to attach Kudzu to",
 				EffectProperties{},
 				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					kudzu := g.FindPermanent(sourceID)
@@ -646,6 +653,7 @@ func registerEnchantments() {
 						return nil
 					}
 					attachedID := attached.ID()
+					attachedController := attached.Controller
 					kudzu.AttachedTo = uuid.Nil
 					filtered := attached.Attachments[:0]
 					for _, id := range attached.Attachments {
@@ -655,12 +663,24 @@ func registerEnchantments() {
 					}
 					attached.Attachments = filtered
 					g.DestroyPermanent(attached)
+					var candidates []*Permanent
 					for _, p := range g.FilterBattlefield(AnyPermanent) {
 						if p.HasType(TypeLand) && p.ID() != attachedID {
-							g.Attach(sourceID, p.ID())
-							return nil
+							candidates = append(candidates, p)
 						}
 					}
+					if len(candidates) == 0 {
+						return nil
+					}
+					chooser := g.GetPlayer(attachedController)
+					if chooser == nil {
+						return nil
+					}
+					chosen := chooser.ChoosePermanent(candidates, "attach Kudzu to a land", g)
+					if chosen == nil {
+						return nil
+					}
+					g.Attach(sourceID, chosen.ID())
 					return nil
 				}), false)),
 		)

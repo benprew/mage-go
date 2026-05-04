@@ -315,6 +315,23 @@ func TestJalumTome(t *testing.T) {
 		g.AssertTapped(gametest.PlayerA, "Jalum Tome", true)
 		// Should have drawn 1 (Bears) and discarded 1 (Forest) — net hand size same
 	})
+
+	t.Run("does not trigger on cast", func(t *testing.T) {
+		// Jalum Tome's draw/discard is an activated ability ({2}, {T}), not
+		// a cast/ETB trigger — casting it must not draw or discard cards.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 3)
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Hill Giant")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Jalum Tome")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Forest")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Jalum Tome")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Jalum Tome ETB; library and graveyard are unchanged.
+		g.AssertPermanentCount(gametest.PlayerA, "Jalum Tome", 1)
+		g.AssertLibraryCount(gametest.PlayerA, "Hill Giant", 1)
+		g.AssertGraveyardCount(gametest.PlayerA, "Forest", 0)
+	})
 }
 
 func TestMightstone(t *testing.T) {

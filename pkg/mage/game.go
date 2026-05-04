@@ -2466,7 +2466,10 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		modalTargets[mIdx] = mTargets
 	} else {
 		for _, a := range card.Abilities() {
-			if sa, ok := a.(*SpellAbility); ok {
+			// SpellAbility and SimpleActivatedAbility share the *ActionDefinition
+			// type, so filter by Kind() to keep activated abilities (Jalum Tome,
+			// Jade Statue, Forcefield) from running their effects on cast.
+			if sa, ok := a.(*SpellAbility); ok && sa.Kind() == ActionSpell {
 				effects = append(effects, sa.Effects()...)
 			}
 		}

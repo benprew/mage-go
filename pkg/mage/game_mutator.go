@@ -219,9 +219,15 @@ func (g *Game) AddPreventionShield(id uuid.UUID, amount int) {
 	g.effects.AddReplacement(&preventionShieldReplacement{replacementBase: replacementBase{duration: EndOfTurn}, targetID: id, remaining: amount})
 }
 
-// AddForcefieldShield adds a Forcefield shield for the specified player.
-func (g *Game) AddForcefieldShield(id uuid.UUID) {
-	g.effects.AddReplacement(&forcefieldReplacement{replacementBase: replacementBase{duration: EndOfTurn}, playerID: id})
+// AddForcefieldShield adds a Forcefield shield for the specified player against
+// the chosen attacker. The shield reduces the next combat damage from attackerID
+// to playerID down to 1, then deactivates (CR 614 — "the next time").
+func (g *Game) AddForcefieldShield(playerID, attackerID uuid.UUID) {
+	g.effects.AddReplacement(&forcefieldReplacement{
+		replacementBase: replacementBase{duration: EndOfTurn},
+		playerID:        playerID,
+		attackerID:      attackerID,
+	})
 }
 
 // IsLichActive reports whether the Lich enchantment is active for the player.
@@ -292,6 +298,16 @@ func (g *Game) SetSkipNextDraw(playerID uuid.UUID) {
 // SetSanctuaryActive marks the Ivory Tower sanctuary effect as active.
 func (g *Game) SetSanctuaryActive(playerID uuid.UUID) {
 	g.effects.Rules.SetSanctuaryActive(playerID)
+}
+
+// AddIslandSanctuaryReplacement registers the Island Sanctuary draw
+// replacement: while sourceID is on the battlefield, the controller may skip
+// their normal draw during their draw step to activate sanctuary protection.
+func (g *Game) AddIslandSanctuaryReplacement(playerID, sourceID uuid.UUID) {
+	g.effects.AddReplacement(&islandSanctuaryReplacement{
+		replacementBase: replacementBase{sourceID: sourceID, duration: WhileOnBattlefield},
+		playerID:        playerID,
+	})
 }
 
 // SetMinimumLife marks a player as having minimum-life protection (Ali from Cairo).

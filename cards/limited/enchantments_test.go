@@ -503,6 +503,48 @@ func TestLich(t *testing.T) {
 }
 
 func TestIslandSanctuary(t *testing.T) {
+	t.Run("draw_step_actually_skipped", func(t *testing.T) {
+		// Oracle: "If you would draw a card during your draw step, instead you
+		// may skip that draw." The skip must apply to the active draw step —
+		// not the next one. Library count after PlayerB's draw step should be
+		// unchanged.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island Sanctuary")
+		// Library size is the marker — Sanctuary should leave it untouched
+		// during the controller's draw step.
+		for range 3 {
+			g.AddCard(core.ZoneLibrary, gametest.PlayerB, "Forest")
+		}
+		// Stop right after PlayerB's draw step on turn 2.
+		g.StopAt(2, core.PrecombatMain)
+		g.Execute()
+		// PlayerB skipped its draw; library is still 3.
+		g.AssertLibraryCount(gametest.PlayerB, "Forest", 3)
+	})
+
+	t.Run("controller_can_decline_skip_and_draw_normally", func(t *testing.T) {
+		// Player chooses NOT to skip on turn 2 — draw happens normally and
+		// sanctuary protection does not activate, so a non-flyer can still
+		// connect on turn 3.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island Sanctuary")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // no flying
+		for range 5 {
+			g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Forest")
+			g.AddCard(core.ZoneLibrary, gametest.PlayerB, "Forest")
+		}
+		g.GetPlayer(gametest.PlayerB).QueueMayAbilityChoices(false)
+		g.Attack(3, gametest.PlayerA, "Grizzly Bears")
+		g.StopAt(3, core.EndCombat)
+		g.Execute()
+		// Sanctuary not active because PlayerB declined. Bears (2/2) connects.
+		g.AssertLife(gametest.PlayerB, 18)
+		// PlayerB drew normally on turn 2 — library went from 5 to 4 (turn 2
+		// draw) to 3 (turn 4 draw would happen later, but we stop on turn 3).
+		// Just confirm the turn-2 draw happened.
+		g.AssertLibraryCount(gametest.PlayerB, "Forest", 4)
+	})
+
 	t.Run("skip_draw_prevents_attacks", func(t *testing.T) {
 		// Island Sanctuary: If you would draw a card during your draw step, you may
 		// skip that draw instead. If you do, until your next turn, you can't be
@@ -697,6 +739,24 @@ func TestKudzu(t *testing.T) {
 		// Forest tapped -> destroyed. Kudzu moves to Plains.
 		g.AssertPermanentCount(gametest.PlayerB, "Forest", 0)
 		g.AssertAttachedTo(gametest.PlayerB, "Kudzu", "Plains")
+	})
+
+	t.Run("controller_of_destroyed_land_chooses_target", func(t *testing.T) {
+		// The player who controlled the destroyed land picks a land to attach
+		// Kudzu to — not the first land found.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Plains")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Kudzu")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Kudzu", "Forest")
+		// PlayerB (controller of the destroyed Forest) chooses Mountain.
+		g.ChoosePermanent(gametest.PlayerB, "Mountain")
+		g.ActivateAbility(2, core.PrecombatMain, gametest.PlayerB, "Forest")
+		g.StopAt(2, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerB, "Forest", 0)
+		g.AssertAttachedTo(gametest.PlayerB, "Kudzu", "Mountain")
 	})
 }
 

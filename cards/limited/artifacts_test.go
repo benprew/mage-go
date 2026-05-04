@@ -177,18 +177,36 @@ func TestHowlingMine(t *testing.T) {
 
 func TestForcefield(t *testing.T) {
 	t.Run("reduces_unblocked_damage_to_one", func(t *testing.T) {
-		// Forcefield: {1}: If an unblocked creature would deal combat damage to you,
-		// prevent all but 1 of that damage.
+		// Forcefield: {1}: The next time an unblocked creature of your choice
+		// would deal combat damage to you this turn, prevent all but 1 of
+		// that damage.
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forcefield")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Craw Wurm") // 6/4
-		g.ActivateAbility(1, core.DeclareBlockers, gametest.PlayerB, "Forcefield")
+		g.ActivateAbility(1, core.DeclareBlockers, gametest.PlayerB, "Forcefield", "Craw Wurm")
 		g.Attack(1, gametest.PlayerA, "Craw Wurm")
 		g.StopAt(1, core.EndCombat)
 		g.Execute()
 		// Forcefield should reduce 6 unblocked damage to 1.
 		g.AssertLife(gametest.PlayerB, 19)
 	})
+}
+
+func TestForcefieldMultipleAttackers(t *testing.T) {
+	// Forcefield Oracle: "{1}: The next time an unblocked creature of your
+	// choice would deal combat damage to you this turn, prevent all but 1
+	// of that damage." Only ONE chosen creature has its damage reduced —
+	// other unblocked attackers still deal their full damage.
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forcefield")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Craw Wurm")     // 6/4
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2
+	g.ActivateAbility(1, core.DeclareBlockers, gametest.PlayerB, "Forcefield", "Craw Wurm")
+	g.Attack(1, gametest.PlayerA, "Craw Wurm", "Grizzly Bears")
+	g.StopAt(1, core.EndCombat)
+	g.Execute()
+	// Craw Wurm 6 -> 1 (chosen), Grizzly Bears 2 (unchanged) = 3 damage total.
+	g.AssertLife(gametest.PlayerB, 17)
 }
 
 func TestForcefieldBlockedCreature(t *testing.T) {
@@ -198,7 +216,7 @@ func TestForcefieldBlockedCreature(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forcefield")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Craw Wurm")     // 6/4
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // 2/2
-		g.ActivateAbility(1, core.DeclareBlockers, gametest.PlayerB, "Forcefield")
+		g.ActivateAbility(1, core.DeclareBlockers, gametest.PlayerB, "Forcefield", "Craw Wurm")
 		g.Attack(1, gametest.PlayerA, "Craw Wurm")
 		g.Block(1, gametest.PlayerB, "Grizzly Bears", "Craw Wurm")
 		g.StopAt(1, core.EndCombat)
@@ -212,7 +230,7 @@ func TestForcefieldBlockedCreature(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forcefield")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Llanowar Elves") // 1/1
-		g.ActivateAbility(1, core.DeclareBlockers, gametest.PlayerB, "Forcefield")
+		g.ActivateAbility(1, core.DeclareBlockers, gametest.PlayerB, "Forcefield", "Llanowar Elves")
 		g.Attack(1, gametest.PlayerA, "Llanowar Elves")
 		g.StopAt(1, core.EndCombat)
 		g.Execute()
@@ -573,6 +591,40 @@ func TestJadeStatue(t *testing.T) {
 		if perm.HasType(core.TypeCreature) {
 			t.Errorf("Jade Statue should revert to non-creature at end of turn")
 		}
+	})
+
+	t.Run("cannot attack the turn it was cast", func(t *testing.T) {
+		// Per CR 302.1, a creature can't attack unless its controller has
+		// continuously controlled it since their most recent turn began. A
+		// Jade Statue cast and animated on the same turn is summoning-sick.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Black Lotus")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sol Ring")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 2)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Jade Statue")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Jade Statue")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Jade Statue")
+		g.Attack(1, gametest.PlayerA, "Jade Statue")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		// Sickness prevents the attack — PlayerB takes no damage.
+		g.AssertLife(gametest.PlayerB, 20)
+	})
+
+	t.Run("can attack the turn after it was cast", func(t *testing.T) {
+		// On the controller's next turn, sickness has cleared at untap; the
+		// animated Jade Statue can attack normally.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Black Lotus")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sol Ring")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 2)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Jade Statue")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Jade Statue")
+		g.ActivateAbility(3, core.PrecombatMain, gametest.PlayerA, "Jade Statue")
+		g.Attack(3, gametest.PlayerA, "Jade Statue")
+		g.StopAt(3, core.EndCombat)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 17)
 	})
 }
 

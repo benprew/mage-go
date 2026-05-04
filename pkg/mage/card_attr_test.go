@@ -44,6 +44,10 @@ func TestNewLand_HasAttr_IsLand(t *testing.T) {
 }
 
 // TestNewLand_NoAttr_IsCreature verifies lands don't have creature attrs.
+// AttrSummonSick is granted to every permanent on ETB so mid-turn animate
+// effects (Jade Statue, Living Lands) honor CR 302.1; the attr is harmless
+// on non-creatures because the relevant CanDeclareAsAttacker / CanTapForEffect
+// checks gate on AttrCanAttack / AttrHasPowerToughness first.
 func TestNewLand_NoAttr_IsCreature(t *testing.T) {
 	card := NewLand("Forest")
 	perm := NewPermanent(card, uuid.New())
@@ -52,9 +56,6 @@ func TestNewLand_NoAttr_IsCreature(t *testing.T) {
 	}
 	if perm.HasAttr(AttrCanAttack) {
 		t.Error("land should not have AttrCanAttack")
-	}
-	if perm.HasAttr(AttrSummonSick) {
-		t.Error("land should not have AttrSummonSick")
 	}
 }
 

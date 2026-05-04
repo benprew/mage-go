@@ -605,6 +605,9 @@ func execCounterUnlessPay(ctx *EffectContext, e *counterUnlessPayEffect) error {
 }
 
 func execForcefield(ctx *EffectContext, _ *forcefieldEffect) error {
-	ctx.Game.AddForcefieldShield(ctx.Controller)
+	if len(ctx.Targets) == 0 {
+		return nil
+	}
+	ctx.Game.AddForcefieldShield(ctx.Controller, ctx.Targets[0])
 	return nil
 }

@@ -360,6 +360,26 @@ func TestBlackVise(t *testing.T) {
 	})
 }
 
+func TestCrystalRod(t *testing.T) {
+	t.Run("requires mana payment to gain life", func(t *testing.T) {
+		// Crystal Rod: "Whenever a player casts a blue spell, you may pay {1}.
+		// If you do, you gain 1 life." Must spend {1} — not free.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Crystal Rod")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Counterspell") // blue
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+		g.SetLife(gametest.PlayerA, 20)
+		// PlayerA casts Bolt; PlayerB counters with Counterspell (blue spell cast).
+		// PlayerA has no untapped lands -> cannot pay {1} -> no life gain.
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
+		g.CastInResponseTo(gametest.PlayerB, "Counterspell")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// PlayerA controls Crystal Rod but has no mana -> didn't pay, didn't gain life.
+		g.AssertLife(gametest.PlayerA, 20)
+	})
+}
+
 func TestAnimateDead(t *testing.T) {
 	t.Run("returns creature from graveyard to battlefield", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
@@ -370,6 +390,21 @@ func TestAnimateDead(t *testing.T) {
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerA, "Serra Angel", 1)
 		g.AssertPowerToughness(gametest.PlayerA, "Serra Angel", 3, 4) // -1/-0 from Animate Dead
+	})
+
+	t.Run("cannot target living battlefield creature", func(t *testing.T) {
+		// Animate Dead targets a creature card in a graveyard — it must not
+		// be castable on a creature already on the battlefield.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Animate Dead")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Animate Dead", "Grizzly Bears")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Animate Dead must not have entered the battlefield; Bears retained
+		// its base 2/2 (no -1/-0 from an attached Animate Dead).
+		g.AssertPermanentCount(gametest.PlayerA, "Animate Dead", 0)
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 2)
 	})
 }
 

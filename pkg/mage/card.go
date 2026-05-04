@@ -556,7 +556,6 @@ func NewPermanent(card Card, controller uuid.UUID) *Permanent {
 			p.baseAttrs[AttrCanAttack]++
 			p.baseAttrs[AttrCanBlock]++
 			p.baseAttrs[AttrHasPowerToughness]++
-			p.baseAttrs[AttrSummonSick]++
 		case TypeLand:
 			p.baseAttrs[AttrIsLand]++
 		case TypeArtifact:
@@ -565,6 +564,11 @@ func NewPermanent(card Card, controller uuid.UUID) *Permanent {
 			p.baseAttrs[AttrIsEnchantment]++
 		}
 	}
+	// Summoning sickness applies to every permanent on ETB (CR 302.1) so a
+	// later type change (e.g. Jade Statue animating an artifact mid-turn,
+	// Living Lands turning Forests into creatures) honors the "continuously
+	// controlled since most recent turn began" check. Cleared at untap.
+	p.baseAttrs[AttrSummonSick]++
 	// Populate baseAttrs from card's keyword seeds via the Card interface.
 	// count is always 1 per WithKeyword call; stacking well below int8 range.
 	for a, count := range card.AttrSeeds() {
@@ -818,9 +822,15 @@ func (p *Permanent) CanTapForEffect(g *Game) bool {
 
 // NewLuckyCharm creates a {1} artifact that optionally gains 1 life whenever a
 // spell of the given color is cast (e.g. Crystal Rod, Iron Star, Ivory Cup).
+// Oracle: "Whenever a player casts a [color] spell, you may pay {1}. If you do,
+// you gain 1 life." — the inner MayPayMana models the optional mana payment.
 func NewLuckyCharm(name, cost string, color Color) *BaseCard {
 	return NewArtifact(name, cost,
-		WithAbility(WheneverSpellCastTrigger(GainLife(1), true, HasColorCardFilter(color))),
+		WithAbility(WheneverSpellCastTrigger(
+			MayPayMana("{1}", "gain 1 life", GainLife(1)),
+			false,
+			HasColorCardFilter(color),
+		)),
 	)
 }
 
