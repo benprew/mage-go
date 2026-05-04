@@ -1194,10 +1194,11 @@ func registerCreatures() {
 	// Creature — Horse Beast
 	// 4/5
 	// Reach, haste
-	// TODO: implement
 	Register("Rearing Embermare", func() Card {
 		return NewCreature("Rearing Embermare", "{4}{R}", 4, 5,
 			WithSubTypes("Horse", "Beast"),
+			WithKeyword(Reach),
+			WithKeyword(Haste),
 		)
 	})
 
