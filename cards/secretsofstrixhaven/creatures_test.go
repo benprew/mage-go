@@ -2080,6 +2080,22 @@ func TestScoldingAdministrator_DeathNoTransferWithoutCounters(t *testing.T) {
 }
 
 // ===========================================================================
+// Silverquill, the Disputant
+// ===========================================================================
+
+// TestSilverquillTheDisputant_StatsKeywords verifies base stats, legendary,
+// flying, and vigilance. The casualty 1 ability is marked XXX.
+func TestSilverquillTheDisputant_StatsKeywords(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Silverquill, the Disputant")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Silverquill, the Disputant", 4, 4)
+	g.AssertHasAbility(gametest.PlayerA, "Silverquill, the Disputant", core.Flying, true)
+	g.AssertHasAbility(gametest.PlayerA, "Silverquill, the Disputant", core.Vigilance, true)
+}
+
+// ===========================================================================
 // Page, Loose Leaf
 // ===========================================================================
 
