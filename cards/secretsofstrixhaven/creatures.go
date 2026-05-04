@@ -929,10 +929,28 @@ func registerCreatures() {
 	// 3/3
 	// Flying
 	// When this creature enters, each opponent loses 2 life and you gain 2 life.
-	// TODO: implement
 	Register("Sneering Shadewriter", func() Card {
 		return NewCreature("Sneering Shadewriter", "{4}{B}", 3, 3,
 			WithSubTypes("Vampire", "Warlock"),
+			WithKeyword(Flying),
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect(
+					"each opponent loses 2 life and you gain 2 life",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						for _, pl := range g.AllPlayers() {
+							if pl.PlayerID() != controller {
+								g.PlayerLoseLife(pl, 2)
+							}
+						}
+						if you := g.GetPlayer(controller); you != nil {
+							g.PlayerGainLife(you, 2)
+						}
+						return nil
+					},
+				),
+				false,
+			)),
 		)
 	})
 
