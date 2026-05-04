@@ -604,10 +604,37 @@ func registerSpells() {
 // Sorcery — Lesson
 // Target player draws two cards and loses 2 life.
 // Paradigm (Then exile this spell. After you first resolve a spell with this name, you may cast a copy of it from exile without paying its mana cost at the beginning of each of your first main phases.)
-// TODO: implement
+// XXX: Paradigm recurring-cast trigger cannot be implemented — the engine does not scan exile-zone
+// triggers (only graveyard triggers are supported via InZone). The primary effect and first-resolve
+// self-exile are fully implemented.
 	Register("Decorum Dissertation", func() Card {
-		return NewSorcery("Decorum Dissertation", "{3}{B}{B}",
-			NewSpellAbility(),
+		const cardName = "Decorum Dissertation"
+		return NewSorcery(cardName, "{3}{B}{B}",
+			NewTargetedSpell(
+				TargetPlayer(),
+				FuncEffect(
+					"target player draws two cards and loses 2 life; exile this spell (Paradigm)",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						// Primary effect: target player draws two, loses 2.
+						if len(targets) > 0 {
+							p := g.GetPlayer(targets[0])
+							if p != nil {
+								for i := 0; i < 2; i++ {
+									g.PlayerDrawCard(p)
+								}
+								g.PlayerLoseLife(p, 2)
+							}
+						}
+						// Paradigm: exile self instead of going to graveyard.
+						g.AddExileIfWouldGoToGraveyardThisTurn(sourceID, sourceID)
+						// Record resolution and register exiled copy ID for future recurring cast.
+						g.RecordParadigmResolution(controller, cardName)
+						g.RegisterParadigmExiledCopy(controller, cardName, sourceID)
+						return nil
+					},
+				),
+			),
 		)
 	})
 

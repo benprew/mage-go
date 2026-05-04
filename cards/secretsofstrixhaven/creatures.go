@@ -391,10 +391,65 @@ func registerCreatures() {
 	// 2/2
 	// When this creature enters, tap target creature an opponent controls and put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)
 	// Opus — Whenever you cast an instant or sorcery spell, this creature gets +1/+1 until end of turn. If five or more mana was spent to cast that spell, this creature gets +2/+2 until end of turn instead.
-	// TODO: implement
 	Register("Deluge Virtuoso", func() Card {
+		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c Card) bool {
+			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
+		})
 		return NewCreature("Deluge Virtuoso", "{2}{U}", 2, 2,
 			WithSubTypes("Human", "Wizard"),
+			// ETB: tap target creature an opponent controls and put a stun counter on it.
+			// XXX: Stun counter (untap-prevention counter type) not in engine; tap is implemented but stun counter is not.
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect(
+					"tap target creature an opponent controls",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						opp := g.GetOpponent(controller)
+						if opp == nil {
+							return nil
+						}
+						candidates := g.FilterBattlefield(And(
+							ControlledBy(opp.PlayerID()),
+							IsCreature,
+						))
+						if len(candidates) == 0 {
+							return nil
+						}
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						chosen := p.ChoosePermanent(candidates, "tap target creature an opponent controls", g)
+						if chosen == nil {
+							return nil
+						}
+						g.TapPermanent(chosen)
+						// XXX: put a stun counter on it — engine lacks Stun CounterType
+						return nil
+					},
+				),
+				false,
+			)),
+			// Opus — Whenever you cast an instant or sorcery spell, this creature gets +1/+1 until end
+			// of turn. If five or more mana was spent to cast that spell, this creature gets +2/+2
+			// until end of turn instead.
+			WithAbility(WheneverYouCastSpellTrigger(
+				OpusEffect(
+					"this creature gets +1/+1 (or +2/+2 if 5+ mana spent) until end of turn",
+					func(g *Game, sourceID, controller uuid.UUID, manaSpent int) error {
+						p, t := 1, 1
+						if manaSpent >= 5 {
+							p, t = 2, 2
+						}
+						ce := TemporaryBoost(sourceID, p, t)
+						ce.SetSourceID(sourceID)
+						g.AddContinuousEffect(ce)
+						return nil
+					},
+				),
+				false,
+				isInstantOrSorcery,
+			)),
 		)
 	})
 
@@ -422,10 +477,54 @@ func registerCreatures() {
 	// Creature — Djinn Wizard
 	// 0/2
 	// Opus — Whenever you cast an instant or sorcery spell, target player mills three cards. If five or more mana was spent to cast that spell, that player mills ten cards instead.
-	// TODO: implement
 	Register("Exhibition Tidecaller", func() Card {
+		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c Card) bool {
+			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
+		})
 		return NewCreature("Exhibition Tidecaller", "{U}", 0, 2,
 			WithSubTypes("Djinn", "Wizard"),
+			// Opus — Whenever you cast an instant or sorcery spell, target player mills
+			// three cards. If five or more mana was spent to cast that spell, that player
+			// mills ten cards instead.
+			WithAbility(WheneverYouCastSpellTrigger(
+				FuncEffect(
+					"target player mills 3; if 5+ mana spent, mills 10 instead",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						targetPlayerID := targets[0]
+						tp := g.GetPlayer(targetPlayerID)
+						if tp == nil {
+							return nil
+						}
+						var manaSpent int
+						objs := g.GetStack().Objects()
+						for i := len(objs) - 1; i >= 0; i-- {
+							if !objs[i].IsAbility {
+								manaSpent = ManaSpentToCast(objs[i])
+								break
+							}
+						}
+						amount := 3
+						if manaSpent >= 5 {
+							amount = 10
+						}
+						amount = g.ApplyMillModifiers(targetPlayerID, amount)
+						lib := tp.Library()
+						for i := 0; i < amount && len(lib) > 0; i++ {
+							card := lib[len(lib)-1]
+							lib = lib[:len(lib)-1]
+							tp.AddToGraveyard(card)
+						}
+						tp.SetLibrary(lib)
+						return nil
+					},
+				),
+				false,
+				isInstantOrSorcery,
+			).AddTarget(TargetPlayer())),
 		)
 	})
 
@@ -1915,10 +2014,13 @@ func registerCreatures() {
 	// Flash
 	// Flying, trample
 	// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
-	// TODO: implement
 	Register("Cuboid Colony", func() Card {
 		return NewCreature("Cuboid Colony", "{G}{U}", 1, 1,
 			WithSubTypes("Insect"),
+			WithKeyword(Flash),
+			WithKeyword(Flying),
+			WithKeyword(Trample),
+			WithAbility(IncrementTrigger()),
 		)
 	})
 

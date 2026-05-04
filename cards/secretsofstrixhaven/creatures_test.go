@@ -1356,3 +1356,262 @@ func TestZealousLorecaster_ETBReturnFromGraveyard(t *testing.T) {
 		g.AssertGraveyardCount(gametest.PlayerA, "Lightning Bolt", 0)
 	})
 }
+
+// TestForumNecroscribe_Stats verifies Forum Necroscribe is a 5/4 Troll Warlock.
+func TestForumNecroscribe_Stats(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forum Necroscribe")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Forum Necroscribe", 5, 4)
+}
+
+// TestForumNecroscribe_ReparteeReturnCreatureFromGraveyard verifies the Repartee
+// trigger: whenever you cast an instant or sorcery that targets a creature,
+// return target creature card from your graveyard to the battlefield.
+func TestForumNecroscribe_ReparteeReturnCreatureFromGraveyard(t *testing.T) {
+	t.Run("casting instant targeting creature returns creature from graveyard", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forum Necroscribe")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Shock")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Serra Angel")
+		// Repartee trigger: choose creature card from graveyard
+		g.ChoosePermanent(gametest.PlayerA, "Serra Angel")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Shock", "Grizzly Bears")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Serra Angel", 1)
+		g.AssertGraveyardCount(gametest.PlayerA, "Serra Angel", 0)
+	})
+	t.Run("casting spell NOT targeting creature does not trigger", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forum Necroscribe")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+		g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Serra Angel")
+		// Target a player, not a creature — no trigger
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Serra Angel", 0)
+		g.AssertGraveyardCount(gametest.PlayerA, "Serra Angel", 1)
+	})
+}
+
+// TestHungryGraffalon_StatsAndReach verifies Hungry Graffalon is a 3/4 with reach.
+func TestHungryGraffalon_StatsAndReach(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hungry Graffalon")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Hungry Graffalon", 3, 4)
+	g.AssertHasAbility(gametest.PlayerA, "Hungry Graffalon", core.Reach, true)
+}
+
+// TestHungryGraffalon_IncrementAddsCounter verifies Increment:
+// when you cast a spell spending more mana than the Graffalon's power or
+// toughness, it gets a +1/+1 counter.
+func TestHungryGraffalon_IncrementAddsCounter(t *testing.T) {
+	t.Run("casting spell spending more than power or toughness adds counter", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hungry Graffalon")
+		// Graffalon is 3/4. Spend 5 mana (Air Elemental {3}{U}{U} = 5).
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 3)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 2)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Air Elemental")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Air Elemental")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// 5 > 4 (toughness), so +1/+1 counter placed: 4/5
+		g.AssertPowerToughness(gametest.PlayerA, "Hungry Graffalon", 4, 5)
+	})
+	t.Run("casting spell spending less than both power and toughness does not add counter", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hungry Graffalon")
+		// Graffalon is 3/4. Cast Shock {R} = 1 mana (1 < 3 and 1 < 4).
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Shock")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Shock", "Grizzly Bears")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// No counter
+		g.AssertPowerToughness(gametest.PlayerA, "Hungry Graffalon", 3, 4)
+	})
+}
+
+// TestFractalTender_Stats verifies Fractal Tender is a 3/3 Elf Wizard.
+func TestFractalTender_Stats(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Fractal Tender")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Fractal Tender", 3, 3)
+}
+
+// TestFractalTender_IncrementAddsCounter verifies Increment fires on Fractal Tender.
+func TestFractalTender_IncrementAddsCounter(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Fractal Tender")
+	// Tender is 3/3. Spend 4 mana (Giant Spider = {3}{G}, 4 > 3).
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 4)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Giant Spider")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Giant Spider")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertCounterCount(gametest.PlayerA, "Fractal Tender", core.P1P1, 1)
+}
+
+// TestFractalTender_EndStepCreatesFractalToken verifies the end step trigger:
+// if a +1/+1 counter was placed on Fractal Tender this turn, create a 0/0
+// green and blue Fractal creature token and put three +1/+1 counters on it.
+func TestFractalTender_EndStepCreatesFractalToken(t *testing.T) {
+	t.Run("creates Fractal token with 3 counters when counter placed this turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Fractal Tender")
+		// Spend 4 mana to trigger Increment (Tender is 3/3, 4 > 3; Giant Spider = {3}{G})
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 4)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Giant Spider")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Giant Spider")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Fractal token should have been created at end step
+		g.AssertPermanentCount(gametest.PlayerA, "Fractal Token", 1)
+		g.AssertCounterCount(gametest.PlayerA, "Fractal Token", core.P1P1, 3)
+	})
+	t.Run("does not create token when no counter placed this turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Fractal Tender")
+		// Cast Shock {R} = 1 mana; 1 < 3 so no Increment trigger, no token
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Shock")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Shock", "Grizzly Bears")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Fractal Token", 0)
+	})
+}
+
+// TestExhibitionTidecaller_OpusMillsThree verifies that casting an instant or
+// sorcery spell causes Exhibition Tidecaller's Opus trigger to mill the target
+// player three cards when fewer than five mana was spent.
+func TestExhibitionTidecaller_OpusMillsThree(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Exhibition Tidecaller")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	// Choose PlayerB as the target of the mill trigger.
+	g.ChooseTarget(gametest.PlayerA, "PlayerB")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Lightning Bolt costs {R} — 1 mana spent, triggers 3-card mill.
+	g.AssertGraveyardCount(gametest.PlayerB, "Filler", 3)
+}
+
+// TestExhibitionTidecaller_OpusMillsTenFiveOrMoreMana verifies that the Opus
+// trigger mills ten cards when five or more mana was spent to cast the spell.
+func TestExhibitionTidecaller_OpusMillsTenFiveOrMoreMana(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Exhibition Tidecaller")
+	// Add enough mana for Fireball with X=4 (total 5: {X}{R} with X=4 = 5 mana).
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Fireball")
+	// Choose PlayerB as the target of the mill trigger.
+	g.ChooseTarget(gametest.PlayerA, "PlayerB")
+	g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerA, "Fireball", 4, "PlayerB")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Fireball costs {X}{R} with X=4 — 5 mana spent, triggers 10-card mill.
+	g.AssertGraveyardCount(gametest.PlayerB, "Filler", 10)
+}
+
+// TestCuboidColony_Stats verifies Cuboid Colony is a 1/1 with Flash, Flying, and Trample.
+func TestCuboidColony_Stats(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Cuboid Colony")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Cuboid Colony", 1, 1)
+	g.AssertHasAbility(gametest.PlayerA, "Cuboid Colony", core.Flying, true)
+	g.AssertHasAbility(gametest.PlayerA, "Cuboid Colony", core.Trample, true)
+	g.AssertHasAbility(gametest.PlayerA, "Cuboid Colony", core.Flash, true)
+}
+
+// TestCuboidColony_IncrementGrowth verifies the Increment keyword puts a +1/+1
+// counter when mana spent casting a spell is greater than the creature's power or toughness.
+func TestCuboidColony_IncrementGrowth(t *testing.T) {
+	t.Run("no counter when mana spent equals P/T", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Cuboid Colony")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt") // costs {R} = 1 mana
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		// colony is 1/1 — spending 1 mana is NOT greater than 1, so no counter
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertCounterCount(gametest.PlayerA, "Cuboid Colony", core.P1P1, 0)
+	})
+	t.Run("counter placed when mana spent exceeds power", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Cuboid Colony")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Grizzly Bears") // costs {1}{G} = 2 mana
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		// spend 2 mana; colony is 1/1 — 2 > 1, so a counter is placed
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Grizzly Bears")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertCounterCount(gametest.PlayerA, "Cuboid Colony", core.P1P1, 1)
+	})
+}
+
+// TestDelugeVirtuoso_ETBTapsOpponentCreature verifies that when Deluge Virtuoso
+// enters the battlefield, it taps a target creature an opponent controls.
+func TestDelugeVirtuoso_ETBTapsOpponentCreature(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Deluge Virtuoso")
+	g.ChoosePermanent(gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertTapped(gametest.PlayerB, "Grizzly Bears", true)
+}
+
+// TestDelugeVirtuoso_OpusBonusPowerToughness verifies the Opus ability grants
+// +1/+1 for cheap instant/sorcery casts, +2/+2 when 5 or more mana was spent.
+func TestDelugeVirtuoso_OpusBonusPowerToughness(t *testing.T) {
+	t.Run("opus: +1/+1 when casting instant or sorcery with fewer than 5 mana", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Deluge Virtuoso")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt") // {R} = 1 mana
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.ChoosePermanent(gametest.PlayerA, "Deluge Virtuoso") // no opp creature to tap
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// Deluge Virtuoso is 2/2 base, gets +1/+1 = 3/3
+		g.AssertPowerToughness(gametest.PlayerA, "Deluge Virtuoso", 3, 3)
+	})
+	t.Run("opus: only fires for instant or sorcery, not creatures", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Deluge Virtuoso")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.ChoosePermanent(gametest.PlayerA, "Deluge Virtuoso") // no opp creature to tap
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Grizzly Bears")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// No Opus trigger — Deluge Virtuoso stays at 2/2
+		g.AssertPowerToughness(gametest.PlayerA, "Deluge Virtuoso", 2, 2)
+	})
+}
