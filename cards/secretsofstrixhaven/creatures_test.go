@@ -2798,15 +2798,19 @@ func TestHarmonizedTrio_TapTwoCreaturesBecomePrepared(t *testing.T) {
 // draws two cards then discards two cards.
 func TestJadzi_ETBPreparedAndDrawDiscard(t *testing.T) {
 	g := gametest.NewTestGame(t)
-	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears", 2)
-	g.ChooseDiscard(gametest.PlayerA, "Grizzly Bears", "Grizzly Bears")
+	// Add two distinctly-named cards to the library so the ETB draw gives
+	// two discardable cards with unique names (ChooseCardsFromHand matches by name).
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Llanowar Elves")
+	g.ChooseDiscard(gametest.PlayerA, "Grizzly Bears", "Llanowar Elves")
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Jadzi, Steward of Fate // Oracle's Gift")
 	g.StopAt(1, core.EndStep)
 	g.Execute()
 	g.AssertHasAbility(gametest.PlayerA, "Jadzi, Steward of Fate // Oracle's Gift", core.AttrPrepared, true)
 	// Drew 2, discarded 2: hand empty.
 	g.AssertHandCount(gametest.PlayerA, "", 0)
-	g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 2)
+	g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 1)
+	g.AssertGraveyardCount(gametest.PlayerA, "Llanowar Elves", 1)
 }
 
 // =============================================================================
