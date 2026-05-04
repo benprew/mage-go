@@ -66,6 +66,14 @@ const (
 	LegendaryLandwalk
 	Flash
 
+	// AttrPrepared marks a permanent as "prepared" (Secrets of Strixhaven custom
+	// keyword). A creature that "enters prepared" gains a sorcery-speed activated
+	// ability allowing its controller to cast a copy of its associated spell-side
+	// for free; doing so unprepares it (clears the attr). See
+	// pkg/mage/keyword_sos.go for the Prepared API (WithPreparedSpell,
+	// Game.SetPrepared, Game.IsPrepared, Game.CastPreparedSpellCopy).
+	AttrPrepared
+
 	// attrCount is a sentinel marking one past the last Attr value.
 	// NumAttrs exposes this as a sized array bound for Permanent attr storage.
 	attrCount
@@ -194,6 +202,8 @@ func (a Attr) String() string {
 		return "Legendary Landwalk"
 	case Flash:
 		return "Flash"
+	case AttrPrepared:
+		return "Prepared"
 	default:
 		return "Unknown"
 	}

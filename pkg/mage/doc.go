@@ -1930,5 +1930,89 @@ Complex card with FuncEffect:
 	        )),
 	    )
 	})
+
+
+# Custom-keyword support: Secrets of Strixhaven (keyword_sos.go)
+
+The Secrets of Strixhaven set introduces seven set-specific keywords that
+ship as small composable helpers in keyword_sos.go (no engine-wide
+constants beyond AttrPrepared):
+
+	Prepared:
+	    [WithPreparedSpell](spellFactory func() Card) CardOption
+	    Game.IsPrepared(permID) bool
+	    Game.SetPrepared(permID, prepared bool)
+	    Game.CastPreparedSpellCopy(playerID, permID, spellFactory) error
+	    AttrPrepared (core.Attr; in keyword range)
+	    HasPreparedSpell(card) bool
+
+	    The CardOption installs:
+	      1) An ETB trigger that calls SetPrepared(self, true).
+	      2) A free, sorcery-speed activated ability gated on
+	         IsPrepared(self) that calls CastPreparedSpellCopy. The cast
+	         pushes a freshly built copy of `spellFactory()` onto the
+	         stack with IsCopy=true, prompts for any declared targets,
+	         fires EvtSpellCast, then calls SetPrepared(self, false).
+
+	Repartee:
+	    [WheneverYouCastInstantOrSorceryTargetingCreatureTrigger](effect, optional)
+	          *GenericTriggered
+
+	    Fires only when the controller casts an instant/sorcery whose
+	    declared targets include at least one creature on the battlefield.
+
+	Opus / Increment ("amount of mana spent to cast"):
+	    [ManaSpentToCast](*StackObject) int           — sums ColorsSpent
+	    [ManaSpentForSpellEvent](evt, GameReader) int  — for trigger predicates
+	    [OpusEffect](text, fn(g, src, ctrl, manaSpent)) Effect
+	    [IncrementTrigger]() *GenericTriggered
+
+	    OpusEffect wraps a closure that receives the total mana the
+	    controller spent to cast the triggering spell. Inside an
+	    EvtSpellCast trigger the helper reads the topmost non-ability
+	    StackObject's CastContext.ColorsSpent.
+
+	    IncrementTrigger() returns the standard Increment cast-trigger:
+	    "Whenever you cast a spell, if the amount of mana you spent is
+	    greater than this creature's power or toughness, put a +1/+1
+	    counter on this creature."
+
+	Infusion ("if you gained life this turn"):
+	    [IfControllerGainedLifeThisTurn](GameReader, controller) bool
+	    [LifeGainedThisTurnFor](GameReader, controller) int
+	    [InfusionEffect](text, inner Effect) Effect
+
+	    InfusionEffect wraps `inner` so it only resolves when the
+	    controller has gained at least one life this turn. Backed by the
+	    existing PlayerLifeGainedThisTurn tracker — life-gain effects
+	    that fire EvtLifeGained populate the count automatically.
+
+	Grandeur ("Discard another card with the same name as this"):
+	    [DiscardAnotherCardNamedSelfCost]() Cost
+
+	    A Cost suitable for an activated ability: payable iff the
+	    controller's hand contains a card with the source's name that
+	    isn't the source itself.
+
+	Paradigm ("After you first resolve a spell with this name, …"):
+	    Game.RecordParadigmResolution(playerID, name)
+	    Game.HasResolvedParadigmSpell(playerID, name) bool
+	    Game.RegisterParadigmExiledCopy(playerID, name, cardID)
+	    Game.ParadigmExiledCopy(playerID, name) (uuid.UUID, bool)
+
+	    These are per-game state hooks: a Paradigm spell, after first
+	    resolving, calls RecordParadigmResolution + (after exile)
+	    RegisterParadigmExiledCopy. A main-phase trigger (defined on the
+	    card) consults HasResolvedParadigmSpell and ParadigmExiledCopy to
+	    decide whether to offer the recurring free-cast.
+
+# Custom Per-Game State
+
+For set-specific state that doesn't fit any existing Game field, the engine
+provides a per-game string-keyed bag (Game.customState) accessed through
+typed helpers in the relevant keyword file (e.g. paradigmStateOf in
+keyword_sos.go). The bag is allocated by NewGame and survives the lifetime
+of the game.
+
 */
 package mage

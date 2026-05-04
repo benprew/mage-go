@@ -203,13 +203,13 @@ func TestBurrogBarrage(t *testing.T) {
 	t.Run("deals damage equal to creature power to opponent creature", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Scathe Zombies")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Burrog Barrage")
-		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Burrog Barrage", "Grizzly Bears", "Grizzly Bears")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Burrog Barrage", "Grizzly Bears", "Scathe Zombies")
 		g.StopAt(1, core.EndStep)
 		g.Execute()
 		// Grizzly Bears (2 power) deals 2 to opponent's 2/2 → kills it
-		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+		g.AssertPermanentCount(gametest.PlayerB, "Scathe Zombies", 0)
 	})
 
 	t.Run("gets +1/+0 if another instant was cast this turn", func(t *testing.T) {
@@ -253,7 +253,7 @@ func TestChaseInspiration(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Chase Inspiration")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Chase Inspiration", "Grizzly Bears")
-		g.StopAt(1, core.EndStep)
+		g.StopAt(2, core.Upkeep)
 		g.Execute()
 		g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", core.Hexproof, false)
 	})
@@ -263,14 +263,14 @@ func TestChelonianTackle(t *testing.T) {
 	t.Run("gives creature +0/+10 and it fights opponent creature", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Scathe Zombies")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Chelonian Tackle")
-		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Chelonian Tackle", "Grizzly Bears", "Grizzly Bears")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Chelonian Tackle", "Grizzly Bears", "Scathe Zombies")
 		g.StopAt(1, core.EndStep)
 		g.Execute()
-		// PlayerA's bear (2 power) fights opponent's 2/2 → opponent's bear dies
+		// PlayerA's bear (2 power) fights opponent's 2/2 Scathe Zombies → Scathe Zombies dies
 		// PlayerA's bear (12 toughness) survives opponent's 2 power
-		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+		g.AssertPermanentCount(gametest.PlayerB, "Scathe Zombies", 0)
 		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
 	})
 
@@ -282,6 +282,21 @@ func TestChelonianTackle(t *testing.T) {
 		g.StopAt(1, core.DeclareAttackers)
 		g.Execute()
 		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 12)
+	})
+}
+
+func TestChoreographedSparks(t *testing.T) {
+	t.Run("copies target instant or sorcery spell you control", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Choreographed Sparks")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
+		g.CastInResponseTo(gametest.PlayerA, "Choreographed Sparks", "Lightning Bolt")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// The copy of Lightning Bolt resolves first (3 damage), then the original resolves (3 damage)
+		// Total: 6 damage to PlayerB
+		g.AssertLife(gametest.PlayerB, 14)
 	})
 }
 

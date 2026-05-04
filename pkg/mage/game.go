@@ -262,6 +262,13 @@ type Game struct {
 	playerCastSpellThisTurn    map[uuid.UUID]bool // playerID -> cast any spell this turn
 	playerAttackedThisTurn     map[uuid.UUID]bool // playerID -> declared at least one attacker this turn
 	cardsDrawnThisTurn         map[uuid.UUID]int  // playerID -> count of cards drawn this turn (per Zurzoth, Chaos Rider et al.)
+
+	// customState is a per-game string-keyed bag for set-specific keyword
+	// support to stash auxiliary state (e.g. Paradigm "have I resolved a
+	// spell with this name yet?" tracking). Populate via paradigmStateOf
+	// and similar accessors in keyword_sos.go. Survives the lifetime of
+	// the game; cleared per-game via NewGame.
+	customState map[string]any
 }
 
 func (g *Game) ActivePlayer() int {
@@ -313,6 +320,7 @@ func NewGame(playerA, playerB Player) *Game {
 		creatureManaOnly:            make(map[uuid.UUID]bool),
 		schedule:                    newTurnSchedule(),
 		exileInsteadCards:           make(map[uuid.UUID]uuid.UUID),
+		customState:                 make(map[string]any),
 	}
 }
 

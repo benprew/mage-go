@@ -1,0 +1,6389 @@
+[
+  {
+    "name": "The Dawning Archaic",
+    "mana_cost": "{10}",
+    "cmc": 10,
+    "type_line": "Legendary Creature — Avatar",
+    "oracle_text": "This spell costs {1} less to cast for each instant and sorcery card in your graveyard.\nReach\nWhenever The Dawning Archaic attacks, you may cast target instant or sorcery card from your graveyard without paying its mana cost. If that spell would be put into your graveyard, exile it instead.",
+    "power": "7",
+    "toughness": "7",
+    "colors": [],
+    "keywords": [
+      "Reach"
+    ],
+    "rarity": "mythic",
+    "set": "sos"
+  },
+  {
+    "name": "Rancorous Archaic",
+    "mana_cost": "{5}",
+    "cmc": 5,
+    "type_line": "Creature — Avatar",
+    "oracle_text": "Trample, reach\nConverge — This creature enters with a +1/+1 counter on it for each color of mana spent to cast it.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [],
+    "keywords": [
+      "Reach",
+      "Converge",
+      "Trample"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Sundering Archaic",
+    "mana_cost": "{6}",
+    "cmc": 6,
+    "type_line": "Creature — Avatar",
+    "oracle_text": "Converge — When this creature enters, exile target nonland permanent an opponent controls with mana value less than or equal to the number of colors of mana spent to cast this creature.\n{2}: Put target card from a graveyard on the bottom of its owner's library.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [],
+    "keywords": [
+      "Converge"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Together as One",
+    "mana_cost": "{6}",
+    "cmc": 6,
+    "type_line": "Sorcery",
+    "oracle_text": "Converge — Target player draws X cards, Together as One deals X damage to any target, and you gain X life, where X is the number of colors of mana spent to cast this spell.",
+    "colors": [],
+    "keywords": [
+      "Converge"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Transcendent Archaic",
+    "mana_cost": "{7}",
+    "cmc": 7,
+    "type_line": "Creature — Avatar",
+    "oracle_text": "Vigilance\nConverge — When this creature enters, you may draw X cards, where X is the number of colors of mana spent to cast this spell. If you draw one or more cards this way, discard two cards.",
+    "power": "6",
+    "toughness": "6",
+    "colors": [],
+    "keywords": [
+      "Vigilance",
+      "Converge"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Ajani's Response",
+    "mana_cost": "{4}{W}",
+    "cmc": 5,
+    "type_line": "Instant",
+    "oracle_text": "This spell costs {3} less to cast if it targets a tapped creature.\nDestroy target creature.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Antiquities on the Loose",
+    "mana_cost": "{1}{W}{W}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Create two 2/2 red and white Spirit creature tokens. Then if this spell was cast from anywhere other than your hand, put a +1/+1 counter on each Spirit you control.\nFlashback {4}{W}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flashback"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Ascendant Dustspeaker",
+    "mana_cost": "{4}{W}",
+    "cmc": 5,
+    "type_line": "Creature — Orc Cleric",
+    "oracle_text": "Flying\nWhen this creature enters, put a +1/+1 counter on another target creature you control.\nAt the beginning of combat on your turn, exile up to one target card from a graveyard.",
+    "power": "3",
+    "toughness": "4",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Daydream",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "Exile target creature you control, then return that card to the battlefield under its owner's control with a +1/+1 counter on it.\nFlashback {2}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flashback"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Dig Site Inventory",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "Put a +1/+1 counter on target creature you control. It gains vigilance until end of turn.\nFlashback {W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flashback"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Eager Glyphmage",
+    "mana_cost": "{3}{W}",
+    "cmc": 4,
+    "type_line": "Creature — Cat Cleric",
+    "oracle_text": "When this creature enters, create a 1/1 white and black Inkling creature token with flying.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Elite Interceptor // Rejoinder",
+    "mana_cost": "{W} // {1}{W}",
+    "cmc": 1,
+    "type_line": "Creature — Human Wizard // Sorcery",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Prepared"
+    ],
+    "rarity": "common",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Elite Interceptor",
+        "mana_cost": "{W}",
+        "type_line": "Creature — Human Wizard",
+        "oracle_text": "This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "1",
+        "toughness": "2"
+      },
+      {
+        "name": "Rejoinder",
+        "mana_cost": "{1}{W}",
+        "type_line": "Sorcery",
+        "oracle_text": "You may tap or untap target creature.\nDraw a card."
+      }
+    ]
+  },
+  {
+    "name": "Emeritus of Truce // Swords to Plowshares",
+    "mana_cost": "{1}{W}{W} // {W}",
+    "cmc": 3,
+    "type_line": "Creature — Cat Cleric // Instant",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Prepared"
+    ],
+    "rarity": "mythic",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Emeritus of Truce",
+        "mana_cost": "{1}{W}{W}",
+        "type_line": "Creature — Cat Cleric",
+        "oracle_text": "When this creature enters, target player creates a 1/1 white and black Inkling creature token with flying. Then if an opponent controls more creatures than you, this creature becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "3",
+        "toughness": "3"
+      },
+      {
+        "name": "Swords to Plowshares",
+        "mana_cost": "{W}",
+        "type_line": "Instant",
+        "oracle_text": "Exile target creature. Its controller gains life equal to its power."
+      }
+    ]
+  },
+  {
+    "name": "Ennis, Debate Moderator",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Legendary Creature — Human Cleric",
+    "oracle_text": "When Ennis enters, exile up to one other target creature you control. Return that card to the battlefield under its owner's control at the beginning of the next end step.\nAt the beginning of your end step, if one or more cards were put into exile this turn, put a +1/+1 counter on Ennis.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Erode",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Destroy target creature or planeswalker. Its controller may search their library for a basic land card, put it onto the battlefield tapped, then shuffle.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Graduation Day",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Enchantment",
+    "oracle_text": "Repartee — Whenever you cast an instant or sorcery spell that targets a creature, put a +1/+1 counter on target creature you control.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Repartee"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Group Project",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Create a 2/2 red and white Spirit creature token.\nFlashback—Tap three untapped creatures you control. (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flashback"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Harsh Annotation",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Destroy target creature. Its controller creates a 1/1 white and black Inkling creature token with flying.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Honorbound Page // Forum's Favor",
+    "mana_cost": "{3}{W} // {W}",
+    "cmc": 4,
+    "type_line": "Creature — Cat Cleric // Sorcery",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "First strike",
+      "Prepared"
+    ],
+    "rarity": "common",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Honorbound Page",
+        "mana_cost": "{3}{W}",
+        "type_line": "Creature — Cat Cleric",
+        "oracle_text": "First strike\nThis creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "3",
+        "toughness": "3"
+      },
+      {
+        "name": "Forum's Favor",
+        "mana_cost": "{W}",
+        "type_line": "Sorcery",
+        "oracle_text": "Target creature gets +1/+0 and gains flying until end of turn."
+      }
+    ]
+  },
+  {
+    "name": "Informed Inkwright",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "Vigilance\nRepartee — Whenever you cast an instant or sorcery spell that targets a creature, create a 1/1 white and black Inkling creature token with flying.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Vigilance",
+      "Repartee"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Inkshape Demonstrator",
+    "mana_cost": "{3}{W}",
+    "cmc": 4,
+    "type_line": "Creature — Elephant Cleric",
+    "oracle_text": "Ward {2} (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {2}.)\nRepartee — Whenever you cast an instant or sorcery spell that targets a creature, this creature gets +1/+0 and gains lifelink until end of turn.",
+    "power": "3",
+    "toughness": "4",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Ward",
+      "Repartee"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Interjection",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Target creature gets +2/+2 and gains first strike until end of turn.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Joined Researchers // Secret Rendezvous",
+    "mana_cost": "{1}{W} // {1}{W}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Human Cleric Wizard // Sorcery",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "First strike",
+      "Prepared"
+    ],
+    "rarity": "rare",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Joined Researchers",
+        "mana_cost": "{1}{W}",
+        "type_line": "Creature — Human Cleric Wizard",
+        "oracle_text": "First strike\nAt the beginning of each end step, if an opponent has more cards in hand than you, this creature becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "2",
+        "toughness": "2"
+      },
+      {
+        "name": "Secret Rendezvous",
+        "mana_cost": "{1}{W}{W}",
+        "type_line": "Sorcery",
+        "oracle_text": "You and target opponent each draw three cards."
+      }
+    ]
+  },
+  {
+    "name": "Owlin Historian",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Bird Cleric",
+    "oracle_text": "Flying\nWhen this creature enters, surveil 1. (Look at the top card of your library. You may put it into your graveyard.)\nWhenever one or more cards leave your graveyard, this creature gets +1/+1 until end of turn.",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying",
+      "Surveil"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Practiced Offense",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Put a +1/+1 counter on each creature target player controls. Target creature gains your choice of double strike or lifelink until end of turn.\nFlashback {1}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flashback"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Primary Research",
+    "mana_cost": "{4}{W}",
+    "cmc": 5,
+    "type_line": "Enchantment",
+    "oracle_text": "When this enchantment enters, return target nonland permanent card with mana value 3 or less from your graveyard to the battlefield.\nAt the beginning of your end step, if a card left your graveyard this turn, draw a card.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Quill-Blade Laureate // Twofold Intent",
+    "mana_cost": "{1}{W} // {1}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Human Cleric // Sorcery",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Prepared",
+      "Double strike"
+    ],
+    "rarity": "uncommon",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Quill-Blade Laureate",
+        "mana_cost": "{1}{W}",
+        "type_line": "Creature — Human Cleric",
+        "oracle_text": "Double strike\nThis creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "1",
+        "toughness": "1"
+      },
+      {
+        "name": "Twofold Intent",
+        "mana_cost": "{1}{W}",
+        "type_line": "Sorcery",
+        "oracle_text": "Target creature gets +1/+0 and gains double strike until end of turn."
+      }
+    ]
+  },
+  {
+    "name": "Rapier Wit",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Tap target creature. If it's your turn, put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)\nDraw a card.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Rehearsed Debater",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Djinn Bard",
+    "oracle_text": "Vigilance\nRepartee — Whenever you cast an instant or sorcery spell that targets a creature, this creature gets +1/+1 until end of turn.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Vigilance",
+      "Repartee"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Restoration Seminar",
+    "mana_cost": "{5}{W}{W}",
+    "cmc": 7,
+    "type_line": "Sorcery — Lesson",
+    "oracle_text": "Return target nonland permanent card from your graveyard to the battlefield.\nParadigm (Then exile this spell. After you first resolve a spell with this name, you may cast a copy of it from exile without paying its mana cost at the beginning of each of your first main phases.)",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Paradigm"
+    ],
+    "rarity": "mythic",
+    "set": "sos"
+  },
+  {
+    "name": "Shattered Acolyte",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Dwarf Warlock",
+    "oracle_text": "Lifelink\n{1}, Sacrifice this creature: Destroy target artifact or enchantment.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Lifelink"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Soaring Stoneglider",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Elephant Cleric",
+    "oracle_text": "As an additional cost to cast this spell, exile two cards from your graveyard or pay {1}{W}.\nFlying, vigilance",
+    "power": "4",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying",
+      "Vigilance"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Spiritcall Enthusiast // Scrollboost",
+    "mana_cost": "{2}{W} // {1}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Cat Cleric // Sorcery",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Prepared"
+    ],
+    "rarity": "uncommon",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Spiritcall Enthusiast",
+        "mana_cost": "{2}{W}",
+        "type_line": "Creature — Cat Cleric",
+        "oracle_text": "Whenever one or more tokens you control enter, this creature becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "3",
+        "toughness": "3"
+      },
+      {
+        "name": "Scrollboost",
+        "mana_cost": "{1}{W}",
+        "type_line": "Sorcery",
+        "oracle_text": "One or two target creatures each get +2/+2 until end of turn."
+      }
+    ]
+  },
+  {
+    "name": "Stand Up for Yourself",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Destroy target creature with power 3 or greater.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Stirring Hopesinger",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Bird Bard",
+    "oracle_text": "Flying, lifelink\nRepartee — Whenever you cast an instant or sorcery spell that targets a creature, put a +1/+1 counter on each creature you control.",
+    "power": "1",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying",
+      "Lifelink",
+      "Repartee"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Stone Docent",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Spirit Chimera",
+    "oracle_text": "{W}, Exile this card from your graveyard: You gain 2 life. Surveil 1. Activate only as a sorcery. (Look at the top card of your library. You may put it into your graveyard.)",
+    "power": "3",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Surveil"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Summoned Dromedary",
+    "mana_cost": "{3}{W}",
+    "cmc": 4,
+    "type_line": "Creature — Spirit Camel",
+    "oracle_text": "Vigilance\n{1}{W}: Return this card from your graveyard to your hand. Activate only as a sorcery.",
+    "power": "4",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Vigilance"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Banishing Betrayal",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Return target nonland permanent to its owner's hand. Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Surveil"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Brush Off",
+    "mana_cost": "{2}{U}{U}",
+    "cmc": 4,
+    "type_line": "Instant",
+    "oracle_text": "This spell costs {1}{U} less to cast if it targets an instant or sorcery spell.\nCounter target spell.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Campus Composer // Aqueous Aria",
+    "mana_cost": "{3}{U} // {4}{U}",
+    "cmc": 4,
+    "type_line": "Creature — Merfolk Bard // Sorcery",
+    "power": "3",
+    "toughness": "4",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Prepared",
+      "Ward"
+    ],
+    "rarity": "uncommon",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Campus Composer",
+        "mana_cost": "{3}{U}",
+        "type_line": "Creature — Merfolk Bard",
+        "oracle_text": "Ward {2}\nThis creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "3",
+        "toughness": "4"
+      },
+      {
+        "name": "Aqueous Aria",
+        "mana_cost": "{4}{U}",
+        "type_line": "Sorcery",
+        "oracle_text": "Create a 3/3 blue and red Elemental creature token with flying."
+      }
+    ]
+  },
+  {
+    "name": "Chase Inspiration",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Target creature you control gets +0/+3 and gains hexproof until end of turn. (It can't be the target of spells or abilities your opponents control.)",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Deluge Virtuoso",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "When this creature enters, tap target creature an opponent controls and put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)\nOpus — Whenever you cast an instant or sorcery spell, this creature gets +1/+1 until end of turn. If five or more mana was spent to cast that spell, this creature gets +2/+2 until end of turn instead.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Opus"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Divergent Equation",
+    "mana_cost": "{X}{X}{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Return up to X target instant and/or sorcery cards from your graveyard to your hand.\nExile Divergent Equation.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Echocasting Symposium",
+    "mana_cost": "{4}{U}{U}",
+    "cmc": 6,
+    "type_line": "Sorcery — Lesson",
+    "oracle_text": "Target player creates a token that's a copy of target creature you control.\nParadigm (Then exile this spell. After you first resolve a spell with this name, you may cast a copy of it from exile without paying its mana cost at the beginning of each of your first main phases.)",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Paradigm"
+    ],
+    "rarity": "mythic",
+    "set": "sos"
+  },
+  {
+    "name": "Emeritus of Ideation // Ancestral Recall",
+    "mana_cost": "{3}{U}{U} // {U}",
+    "cmc": 5,
+    "type_line": "Creature — Human Wizard // Instant",
+    "power": "5",
+    "toughness": "5",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying",
+      "Prepared",
+      "Ward"
+    ],
+    "rarity": "mythic",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Emeritus of Ideation",
+        "mana_cost": "{3}{U}{U}",
+        "type_line": "Creature — Human Wizard",
+        "oracle_text": "Flying, ward {2}\nThis creature enters prepared.\nWhenever this creature attacks, you may exile eight cards from your graveyard. If you do, this creature becomes prepared.",
+        "power": "5",
+        "toughness": "5"
+      },
+      {
+        "name": "Ancestral Recall",
+        "mana_cost": "{U}",
+        "type_line": "Instant",
+        "oracle_text": "Target player draws three cards."
+      }
+    ]
+  },
+  {
+    "name": "Encouraging Aviator // Jump",
+    "mana_cost": "{2}{U} // {U}",
+    "cmc": 3,
+    "type_line": "Creature — Bird Wizard // Instant",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying",
+      "Prepared"
+    ],
+    "rarity": "uncommon",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Encouraging Aviator",
+        "mana_cost": "{2}{U}",
+        "type_line": "Creature — Bird Wizard",
+        "oracle_text": "Flying\nWhenever this creature attacks, it becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "2",
+        "toughness": "3"
+      },
+      {
+        "name": "Jump",
+        "mana_cost": "{U}",
+        "type_line": "Instant",
+        "oracle_text": "Target creature gains flying until end of turn."
+      }
+    ]
+  },
+  {
+    "name": "Essence Scatter",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Counter target creature spell.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Exhibition Tidecaller",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Creature — Djinn Wizard",
+    "oracle_text": "Opus — Whenever you cast an instant or sorcery spell, target player mills three cards. If five or more mana was spent to cast that spell, that player mills ten cards instead.",
+    "power": "0",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Mill",
+      "Opus"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Flow State",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Look at the top three cards of your library. Put one of them into your hand and the rest on the bottom of your library in any order. If there is an instant card and a sorcery card in your graveyard, instead put two of them into your hand and the rest on the bottom of your library in any order.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Fractal Anomaly",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Create a 0/0 green and blue Fractal creature token and put X +1/+1 counters on it, where X is the number of cards you've drawn this turn.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Fractalize",
+    "mana_cost": "{X}{U}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Until end of turn, target creature becomes a green and blue Fractal with base power and toughness each equal to X plus 1. (It loses all other colors and creature types.)",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Harmonized Trio // Brainstorm",
+    "mana_cost": "{U} // {U}",
+    "cmc": 1,
+    "type_line": "Creature — Merfolk Bard Wizard // Instant",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Prepared"
+    ],
+    "rarity": "rare",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Harmonized Trio",
+        "mana_cost": "{U}",
+        "type_line": "Creature — Merfolk Bard Wizard",
+        "oracle_text": "{T}, Tap two untapped creatures you control: This creature becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "1",
+        "toughness": "1"
+      },
+      {
+        "name": "Brainstorm",
+        "mana_cost": "{U}",
+        "type_line": "Instant",
+        "oracle_text": "Draw three cards, then put two cards from your hand on top of your library in any order."
+      }
+    ]
+  },
+  {
+    "name": "Homesickness",
+    "mana_cost": "{4}{U}{U}",
+    "cmc": 6,
+    "type_line": "Instant",
+    "oracle_text": "Target player draws two cards. Tap up to two target creatures. Put a stun counter on each of them. (If a permanent with a stun counter would become untapped, remove one from it instead.)",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Hydro-Channeler",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Merfolk Wizard",
+    "oracle_text": "{T}: Add {U}. Spend this mana only to cast an instant or sorcery spell.\n{1}, {T}: Add one mana of any color. Spend this mana only to cast an instant or sorcery spell.",
+    "power": "1",
+    "toughness": "3",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Jadzi, Steward of Fate // Oracle's Gift",
+    "mana_cost": "{2}{U} // {X}{X}{U}",
+    "cmc": 3,
+    "type_line": "Legendary Creature — Human Wizard // Sorcery",
+    "power": "2",
+    "toughness": "4",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Prepared"
+    ],
+    "rarity": "rare",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Jadzi, Steward of Fate",
+        "mana_cost": "{2}{U}",
+        "type_line": "Legendary Creature — Human Wizard",
+        "oracle_text": "Jadzi enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\nWhen Jadzi enters, draw two cards, then discard two cards.",
+        "power": "2",
+        "toughness": "4"
+      },
+      {
+        "name": "Oracle's Gift",
+        "mana_cost": "{X}{X}{U}",
+        "type_line": "Sorcery",
+        "oracle_text": "Create X 0/0 green and blue Fractal creature tokens, then put X +1/+1 counters on each Fractal you control."
+      }
+    ]
+  },
+  {
+    "name": "Landscape Painter // Vibrant Idea",
+    "mana_cost": "{1}{U} // {4}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Merfolk Wizard // Sorcery",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Prepared"
+    ],
+    "rarity": "common",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Landscape Painter",
+        "mana_cost": "{1}{U}",
+        "type_line": "Creature — Merfolk Wizard",
+        "oracle_text": "This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "2",
+        "toughness": "1"
+      },
+      {
+        "name": "Vibrant Idea",
+        "mana_cost": "{4}{U}",
+        "type_line": "Sorcery",
+        "oracle_text": "Draw two cards."
+      }
+    ]
+  },
+  {
+    "name": "Mana Sculpt",
+    "mana_cost": "{1}{U}{U}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Counter target spell. If you control a Wizard, add an amount of {C} equal to the amount of mana spent to cast that spell at the beginning of your next main phase.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Mathemagics",
+    "mana_cost": "{X}{X}{U}{U}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Target player draws 2ˣ cards. (2⁰ = 1, 2¹ = 2, 2² = 4, 2³ = 8, 2⁴ = 16, 2⁵ = 32, and so on.)",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "mythic",
+    "set": "sos"
+  },
+  {
+    "name": "Matterbending Mage",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "When this creature enters, return up to one other target creature to its owner's hand.\nWhenever you cast a spell with {X} in its mana cost, this creature can't be blocked this turn.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Muse Seeker",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Elf Wizard",
+    "oracle_text": "Opus — Whenever you cast an instant or sorcery spell, draw a card. Then discard a card unless five or more mana was spent to cast that spell.",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Opus"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Muse's Encouragement",
+    "mana_cost": "{4}{U}",
+    "cmc": 5,
+    "type_line": "Instant",
+    "oracle_text": "Create a 3/3 blue and red Elemental creature token with flying.\nSurveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Surveil"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Orysa, Tide Choreographer",
+    "mana_cost": "{4}{U}",
+    "cmc": 5,
+    "type_line": "Legendary Creature — Merfolk Bard",
+    "oracle_text": "This spell costs {3} less to cast if creatures you control have total toughness 10 or greater.\nWhen Orysa enters, draw two cards.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Pensive Professor",
+    "mana_cost": "{1}{U}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)\nWhenever one or more +1/+1 counters are put on this creature, draw a card.",
+    "power": "0",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Increment"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Procrastinate",
+    "mana_cost": "{X}{U}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "Tap target creature. Put twice X stun counters on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Quick Study",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Draw two cards.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Run Behind",
+    "mana_cost": "{3}{U}",
+    "cmc": 4,
+    "type_line": "Instant",
+    "oracle_text": "This spell costs {1} less to cast if it targets an attacking creature.\nTarget creature's owner puts it on their choice of the top or bottom of their library.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Skycoach Conductor // All Aboard",
+    "mana_cost": "{2}{U} // {U}",
+    "cmc": 3,
+    "type_line": "Creature — Bird Pilot // Instant",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying",
+      "Vigilance",
+      "Prepared",
+      "Flash"
+    ],
+    "rarity": "rare",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Skycoach Conductor",
+        "mana_cost": "{2}{U}",
+        "type_line": "Creature — Bird Pilot",
+        "oracle_text": "Flash\nFlying, vigilance\nThis creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "2",
+        "toughness": "3"
+      },
+      {
+        "name": "All Aboard",
+        "mana_cost": "{U}",
+        "type_line": "Instant",
+        "oracle_text": "Exile target non-Pilot creature you control, then return that card to the battlefield under its owner's control."
+      }
+    ]
+  },
+  {
+    "name": "Spellbook Seeker // Careful Study",
+    "mana_cost": "{3}{U} // {U}",
+    "cmc": 4,
+    "type_line": "Creature — Bird Wizard // Sorcery",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying",
+      "Prepared"
+    ],
+    "rarity": "common",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Spellbook Seeker",
+        "mana_cost": "{3}{U}",
+        "type_line": "Creature — Bird Wizard",
+        "oracle_text": "Flying\nThis creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "3",
+        "toughness": "3"
+      },
+      {
+        "name": "Careful Study",
+        "mana_cost": "{U}",
+        "type_line": "Sorcery",
+        "oracle_text": "Draw two cards, then discard two cards."
+      }
+    ]
+  },
+  {
+    "name": "Tester of the Tangential",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Djinn Wizard",
+    "oracle_text": "Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)\nAt the beginning of combat on your turn, you may pay {X}. When you do, move X +1/+1 counters from this creature onto another target creature.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Increment"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Textbook Tabulator",
+    "mana_cost": "{2}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Frog Wizard",
+    "oracle_text": "Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)\nWhen this creature enters, surveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)",
+    "power": "0",
+    "toughness": "3",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Surveil",
+      "Increment"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Wisdom of Ages",
+    "mana_cost": "{4}{U}{U}{U}",
+    "cmc": 7,
+    "type_line": "Sorcery",
+    "oracle_text": "Return all instant and sorcery cards from your graveyard to your hand. You have no maximum hand size for the rest of the game.\nExile Wisdom of Ages.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Adventurous Eater // Have a Bite",
+    "mana_cost": "{2}{B} // {B}",
+    "cmc": 3,
+    "type_line": "Creature — Human Warlock // Sorcery",
+    "power": "3",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Prepared"
+    ],
+    "rarity": "common",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Adventurous Eater",
+        "mana_cost": "{2}{B}",
+        "type_line": "Creature — Human Warlock",
+        "oracle_text": "This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "3",
+        "toughness": "2"
+      },
+      {
+        "name": "Have a Bite",
+        "mana_cost": "{B}",
+        "type_line": "Sorcery",
+        "oracle_text": "Put a +1/+1 counter on target creature. You gain 1 life."
+      }
+    ]
+  },
+  {
+    "name": "Arcane Omens",
+    "mana_cost": "{4}{B}",
+    "cmc": 5,
+    "type_line": "Sorcery",
+    "oracle_text": "Converge — Target player discards X cards, where X is the number of colors of mana spent to cast this spell.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Converge"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Arnyn, Deathbloom Botanist",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Legendary Creature — Vampire Druid",
+    "oracle_text": "Deathtouch\nWhenever a creature you control with power or toughness 1 or less dies, target opponent loses 2 life and you gain 2 life.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Deathtouch"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Burrog Banemaker",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Creature — Frog Warlock",
+    "oracle_text": "Deathtouch\n{1}{B}: This creature gets +1/+1 until end of turn.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Deathtouch"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Cheerful Osteomancer // Raise Dead",
+    "mana_cost": "{3}{B} // {B}",
+    "cmc": 4,
+    "type_line": "Creature — Orc Warlock // Sorcery",
+    "power": "4",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Prepared"
+    ],
+    "rarity": "common",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Cheerful Osteomancer",
+        "mana_cost": "{3}{B}",
+        "type_line": "Creature — Orc Warlock",
+        "oracle_text": "This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "4",
+        "toughness": "2"
+      },
+      {
+        "name": "Raise Dead",
+        "mana_cost": "{B}",
+        "type_line": "Sorcery",
+        "oracle_text": "Return target creature card from your graveyard to your hand."
+      }
+    ]
+  },
+  {
+    "name": "Cost of Brilliance",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Target player draws two cards and loses 2 life. Put a +1/+1 counter on up to one target creature.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Decorum Dissertation",
+    "mana_cost": "{3}{B}{B}",
+    "cmc": 5,
+    "type_line": "Sorcery — Lesson",
+    "oracle_text": "Target player draws two cards and loses 2 life.\nParadigm (Then exile this spell. After you first resolve a spell with this name, you may cast a copy of it from exile without paying its mana cost at the beginning of each of your first main phases.)",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Paradigm"
+    ],
+    "rarity": "mythic",
+    "set": "sos"
+  },
+  {
+    "name": "Dissection Practice",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Target opponent loses 1 life and you gain 1 life.\nUp to one target creature gets +1/+1 until end of turn.\nUp to one target creature gets -1/-1 until end of turn.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Emeritus of Woe // Demonic Tutor",
+    "mana_cost": "{3}{B} // {1}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Vampire Warlock // Sorcery",
+    "power": "5",
+    "toughness": "4",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Prepared"
+    ],
+    "rarity": "mythic",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Emeritus of Woe",
+        "mana_cost": "{3}{B}",
+        "type_line": "Creature — Vampire Warlock",
+        "oracle_text": "This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\nAt the beginning of your end step, if two or more creatures died this turn, this creature becomes prepared.",
+        "power": "5",
+        "toughness": "4"
+      },
+      {
+        "name": "Demonic Tutor",
+        "mana_cost": "{1}{B}",
+        "type_line": "Sorcery",
+        "oracle_text": "Search your library for a card, put that card into your hand, then shuffle."
+      }
+    ]
+  },
+  {
+    "name": "End of the Hunt",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Target opponent exiles a creature or planeswalker they control with the greatest mana value among creatures and planeswalkers they control.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Eternal Student",
+    "mana_cost": "{3}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Zombie Warlock",
+    "oracle_text": "{1}{B}, Exile this card from your graveyard: Create two 1/1 white and black Inkling creature tokens with flying.",
+    "power": "4",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Foolish Fate",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Destroy target creature.\nInfusion — If you gained life this turn, that creature's controller loses 3 life.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Infusion"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Forum Necroscribe",
+    "mana_cost": "{5}{B}",
+    "cmc": 6,
+    "type_line": "Creature — Troll Warlock",
+    "oracle_text": "Ward—Discard a card.\nRepartee — Whenever you cast an instant or sorcery spell that targets a creature, return target creature card from your graveyard to the battlefield.",
+    "power": "5",
+    "toughness": "4",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Ward",
+      "Repartee"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Grave Researcher // Reanimate",
+    "mana_cost": "{2}{B} // {B}",
+    "cmc": 3,
+    "type_line": "Creature — Troll Warlock // Sorcery",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Surveil",
+      "Prepared"
+    ],
+    "rarity": "rare",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Grave Researcher",
+        "mana_cost": "{2}{B}",
+        "type_line": "Creature — Troll Warlock",
+        "oracle_text": "At the beginning of your upkeep, surveil 1. Then if there are three or more creature cards in your graveyard, this creature becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "3",
+        "toughness": "3"
+      },
+      {
+        "name": "Reanimate",
+        "mana_cost": "{B}",
+        "type_line": "Sorcery",
+        "oracle_text": "Put target creature card from a graveyard onto the battlefield under your control. You lose life equal to that card's mana value."
+      }
+    ]
+  },
+  {
+    "name": "Last Gasp",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Target creature gets -3/-3 until end of turn.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Lecturing Scornmage",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Creature — Human Warlock",
+    "oracle_text": "Repartee — Whenever you cast an instant or sorcery spell that targets a creature, put a +1/+1 counter on this creature.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Repartee"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Leech Collector // Bloodletting",
+    "mana_cost": "{1}{B} // {B}",
+    "cmc": 2,
+    "type_line": "Creature — Human Warlock // Sorcery",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Prepared"
+    ],
+    "rarity": "uncommon",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Leech Collector",
+        "mana_cost": "{1}{B}",
+        "type_line": "Creature — Human Warlock",
+        "oracle_text": "Whenever you gain life for the first time each turn, this creature becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "2",
+        "toughness": "2"
+      },
+      {
+        "name": "Bloodletting",
+        "mana_cost": "{B}",
+        "type_line": "Sorcery",
+        "oracle_text": "Each opponent loses 2 life."
+      }
+    ]
+  },
+  {
+    "name": "Masterful Flourish",
+    "mana_cost": "{B}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Target creature you control gets +1/+0 and gains indestructible until end of turn. (Damage and effects that say \"destroy\" don't destroy it.)",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Melancholic Poet",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Elf Bard",
+    "oracle_text": "Repartee — Whenever you cast an instant or sorcery spell that targets a creature, each opponent loses 1 life and you gain 1 life.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Repartee"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Moseo, Vein's New Dean",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Legendary Creature — Bird Skeleton Warlock",
+    "oracle_text": "Flying\nWhen Moseo enters, create a 1/1 black and green Pest creature token with \"Whenever this token attacks, you gain 1 life.\"\nInfusion — At the beginning of your end step, if you gained life this turn, return up to one target creature card with mana value X or less from your graveyard to the battlefield, where X is the amount of life you gained this turn.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Infusion",
+      "Flying"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Poisoner's Apprentice",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Orc Warlock",
+    "oracle_text": "Infusion — When this creature enters, target creature an opponent controls gets -4/-4 until end of turn if you gained life this turn.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Infusion"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Postmortem Professor",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Zombie Warlock",
+    "oracle_text": "This creature can't block.\nWhenever this creature attacks, each opponent loses 1 life and you gain 1 life.\n{1}{B}, Exile an instant or sorcery card from your graveyard: Return this card from your graveyard to the battlefield.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Pox Plague",
+    "mana_cost": "{B}{B}{B}{B}{B}",
+    "cmc": 5,
+    "type_line": "Sorcery",
+    "oracle_text": "Each player loses half their life, then discards half the cards in their hand, then sacrifices half the permanents they control of their choice. Round down each time.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Pull from the Grave",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Return up to two target creature cards from your graveyard to your hand. You gain 2 life.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Rabid Attack",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Until end of turn, any number of target creatures you control each get +1/+0 and gain \"When this creature dies, draw a card.\"",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Ral Zarek, Guest Lecturer",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Legendary Planeswalker — Ral",
+    "oracle_text": "+1: Surveil 2.\n−1: Any number of target players each discard a card.\n−2: Return target creature card with mana value 3 or less from your graveyard to the battlefield.\n−7: Flip five coins. Target opponent skips their next X turns, where X is the number of coins that came up heads.",
+    "loyalty": "3",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Surveil"
+    ],
+    "rarity": "mythic",
+    "set": "sos"
+  },
+  {
+    "name": "Scathing Shadelock // Venomous Words",
+    "mana_cost": "{4}{B} // {B}",
+    "cmc": 5,
+    "type_line": "Creature — Snake Warlock // Sorcery",
+    "power": "4",
+    "toughness": "6",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Prepared"
+    ],
+    "rarity": "uncommon",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Scathing Shadelock",
+        "mana_cost": "{4}{B}",
+        "type_line": "Creature — Snake Warlock",
+        "oracle_text": "At the beginning of your first main phase, this creature becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "4",
+        "toughness": "6"
+      },
+      {
+        "name": "Venomous Words",
+        "mana_cost": "{B}",
+        "type_line": "Sorcery",
+        "oracle_text": "Target creature you control gets +2/+0 and gains deathtouch until end of turn."
+      }
+    ]
+  },
+  {
+    "name": "Scheming Silvertongue // Sign in Blood",
+    "mana_cost": "{1}{B} // {B}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Vampire Warlock // Sorcery",
+    "power": "1",
+    "toughness": "3",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Flying",
+      "Lifelink",
+      "Prepared"
+    ],
+    "rarity": "rare",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Scheming Silvertongue",
+        "mana_cost": "{1}{B}",
+        "type_line": "Creature — Vampire Warlock",
+        "oracle_text": "Flying, lifelink\nAt the beginning of your second main phase, if you gained 2 or more life this turn, this creature becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "1",
+        "toughness": "3"
+      },
+      {
+        "name": "Sign in Blood",
+        "mana_cost": "{B}{B}",
+        "type_line": "Sorcery",
+        "oracle_text": "Target player draws two cards and loses 2 life."
+      }
+    ]
+  },
+  {
+    "name": "Send in the Pest",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Each opponent discards a card. You create a 1/1 black and green Pest creature token with \"Whenever this token attacks, you gain 1 life.\"",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Sneering Shadewriter",
+    "mana_cost": "{4}{B}",
+    "cmc": 5,
+    "type_line": "Creature — Vampire Warlock",
+    "oracle_text": "Flying\nWhen this creature enters, each opponent loses 2 life and you gain 2 life.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Tragedy Feaster",
+    "mana_cost": "{2}{B}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Demon",
+    "oracle_text": "Trample\nWard—Discard a card.\nInfusion — At the beginning of your end step, sacrifice a permanent unless you gained life this turn.",
+    "power": "7",
+    "toughness": "6",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Infusion",
+      "Trample",
+      "Ward"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Ulna Alley Shopkeep",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Goblin Warlock",
+    "oracle_text": "Menace (This creature can't be blocked except by two or more creatures.)\nInfusion — This creature gets +2/+0 as long as you gained life this turn.",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Infusion",
+      "Menace"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Wander Off",
+    "mana_cost": "{3}{B}",
+    "cmc": 4,
+    "type_line": "Instant",
+    "oracle_text": "Exile target creature.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Withering Curse",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "All creatures get -2/-2 until end of turn.\nInfusion — If you gained life this turn, destroy all creatures instead.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Infusion"
+    ],
+    "rarity": "mythic",
+    "set": "sos"
+  },
+  {
+    "name": "Ancestral Anger",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "Target creature gains trample and gets +X/+0 until end of turn, where X is 1 plus the number of cards named Ancestral Anger in your graveyard.\nDraw a card.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Archaic's Agony",
+    "mana_cost": "{4}{R}",
+    "cmc": 5,
+    "type_line": "Sorcery",
+    "oracle_text": "Converge — Archaic's Agony deals X damage to target creature, where X is the number of colors of mana spent to cast this spell. Exile cards from the top of your library equal to the excess damage dealt to that creature this way. You may play those cards until the end of your next turn.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Converge"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Artistic Process",
+    "mana_cost": "{3}{R}{R}",
+    "cmc": 5,
+    "type_line": "Sorcery",
+    "oracle_text": "Choose one —\n• Artistic Process deals 6 damage to target creature.\n• Artistic Process deals 2 damage to each creature you don't control.\n• Create a 3/3 blue and red Elemental creature token with flying. It gains haste until end of turn.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Blazing Firesinger // Seething Song",
+    "mana_cost": "{2}{R} // {2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Dwarf Bard // Instant",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Prepared"
+    ],
+    "rarity": "uncommon",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Blazing Firesinger",
+        "mana_cost": "{2}{R}",
+        "type_line": "Creature — Dwarf Bard",
+        "oracle_text": "This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "2",
+        "toughness": "3"
+      },
+      {
+        "name": "Seething Song",
+        "mana_cost": "{2}{R}",
+        "type_line": "Instant",
+        "oracle_text": "Add {R}{R}{R}{R}{R}."
+      }
+    ]
+  },
+  {
+    "name": "Charging Strifeknight",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Spirit Knight",
+    "oracle_text": "Haste\n{T}, Discard a card: Draw a card.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Haste"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Choreographed Sparks",
+    "mana_cost": "{R}{R}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "This spell can't be copied.\nChoose one or both —\n• Copy target instant or sorcery spell you control. You may choose new targets for the copy.\n• Copy target creature spell you control. The copy gains haste and \"At the beginning of the end step, sacrifice this token.\"",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Duel Tactics",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "Duel Tactics deals 1 damage to target creature. It can't block this turn.\nFlashback {1}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Flashback"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Emeritus of Conflict // Lightning Bolt",
+    "mana_cost": "{1}{R} // {R}",
+    "cmc": 2,
+    "type_line": "Creature — Human Wizard // Instant",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "First strike",
+      "Prepared"
+    ],
+    "rarity": "mythic",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Emeritus of Conflict",
+        "mana_cost": "{1}{R}",
+        "type_line": "Creature — Human Wizard",
+        "oracle_text": "First strike\nWhenever you cast your third spell each turn, this creature becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "2",
+        "toughness": "2"
+      },
+      {
+        "name": "Lightning Bolt",
+        "mana_cost": "{R}",
+        "type_line": "Instant",
+        "oracle_text": "Lightning Bolt deals 3 damage to any target."
+      }
+    ]
+  },
+  {
+    "name": "Expressive Firedancer",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Creature — Human Sorcerer",
+    "oracle_text": "Opus — Whenever you cast an instant or sorcery spell, this creature gets +1/+1 until end of turn. If five or more mana was spent to cast that spell, this creature also gains double strike until end of turn.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Opus"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Flashback",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Target instant or sorcery card in your graveyard gains flashback until end of turn. The flashback cost is equal to its mana cost. (You may cast that card from your graveyard for its flashback cost. Then exile it.)",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Garrison Excavator",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Orc Sorcerer",
+    "oracle_text": "Menace (This creature can't be blocked except by two or more creatures.)\nWhenever one or more cards leave your graveyard, create a 2/2 red and white Spirit creature token.",
+    "power": "3",
+    "toughness": "4",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Menace"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Goblin Glasswright // Craft with Pride",
+    "mana_cost": "{1}{R} // {R}",
+    "cmc": 2,
+    "type_line": "Creature — Goblin Sorcerer // Sorcery",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Treasure",
+      "Prepared"
+    ],
+    "rarity": "common",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Goblin Glasswright",
+        "mana_cost": "{1}{R}",
+        "type_line": "Creature — Goblin Sorcerer",
+        "oracle_text": "This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "2",
+        "toughness": "2"
+      },
+      {
+        "name": "Craft with Pride",
+        "mana_cost": "{R}",
+        "type_line": "Sorcery",
+        "oracle_text": "Create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")"
+      }
+    ]
+  },
+  {
+    "name": "Heated Argument",
+    "mana_cost": "{4}{R}",
+    "cmc": 5,
+    "type_line": "Instant",
+    "oracle_text": "Heated Argument deals 6 damage to target creature. You may exile a card from your graveyard. If you do, Heated Argument also deals 2 damage to that creature's controller.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Impractical Joke",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "Damage can't be prevented this turn. Impractical Joke deals 3 damage to up to one target creature or planeswalker.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Improvisation Capstone",
+    "mana_cost": "{5}{R}{R}",
+    "cmc": 7,
+    "type_line": "Sorcery — Lesson",
+    "oracle_text": "Exile cards from the top of your library until you exile cards with total mana value 4 or greater. You may cast any number of spells from among them without paying their mana costs.\nParadigm (Then exile this spell. After you first resolve a spell with this name, you may cast a copy of it from exile without paying its mana cost at the beginning of each of your first main phases.)",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Paradigm"
+    ],
+    "rarity": "mythic",
+    "set": "sos"
+  },
+  {
+    "name": "Living History",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "When this enchantment enters, create a 2/2 red and white Spirit creature token.\nWhenever you attack, if a card left your graveyard this turn, target attacking creature gets +2/+0 until end of turn.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Maelstrom Artisan // Rocket Volley",
+    "mana_cost": "{1}{R}{R} // {1}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Minotaur Sorcerer // Sorcery",
+    "power": "3",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Haste",
+      "Prepared"
+    ],
+    "rarity": "rare",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Maelstrom Artisan",
+        "mana_cost": "{1}{R}{R}",
+        "type_line": "Creature — Minotaur Sorcerer",
+        "oracle_text": "Haste\nThis creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "3",
+        "toughness": "2"
+      },
+      {
+        "name": "Rocket Volley",
+        "mana_cost": "{1}{R}",
+        "type_line": "Sorcery",
+        "oracle_text": "Destroy target nonbasic land."
+      }
+    ]
+  },
+  {
+    "name": "Magmablood Archaic",
+    "mana_cost": "{2/R}{2/R}{2/R}",
+    "cmc": 6,
+    "type_line": "Creature — Avatar",
+    "oracle_text": "Trample, reach\nConverge — This creature enters with a +1/+1 counter on it for each color of mana spent to cast it.\nWhenever you cast an instant or sorcery spell, creatures you control get +1/+0 until end of turn for each color of mana spent to cast that spell.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Reach",
+      "Converge",
+      "Trample"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Mica, Reader of Ruins",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Legendary Creature — Human Artificer",
+    "oracle_text": "Ward—Pay 3 life. (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays 3 life.)\nWhenever you cast an instant or sorcery spell, you may sacrifice an artifact. If you do, copy that spell and you may choose new targets for the copy.",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Ward"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Molten-Core Maestro",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Creature — Goblin Bard",
+    "oracle_text": "Menace\nOpus — Whenever you cast an instant or sorcery spell, put a +1/+1 counter on this creature. If five or more mana was spent to cast that spell, add an amount of {R} equal to this creature's power.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Menace",
+      "Opus"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Pigment Wrangler // Striking Palette",
+    "mana_cost": "{4}{R} // {R}",
+    "cmc": 5,
+    "type_line": "Creature — Orc Sorcerer // Sorcery",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Flying",
+      "Prepared"
+    ],
+    "rarity": "uncommon",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Pigment Wrangler",
+        "mana_cost": "{4}{R}",
+        "type_line": "Creature — Orc Sorcerer",
+        "oracle_text": "Flying\nThis creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "4",
+        "toughness": "4"
+      },
+      {
+        "name": "Striking Palette",
+        "mana_cost": "{R}",
+        "type_line": "Sorcery",
+        "oracle_text": "When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy."
+      }
+    ]
+  },
+  {
+    "name": "Rearing Embermare",
+    "mana_cost": "{4}{R}",
+    "cmc": 5,
+    "type_line": "Creature — Horse Beast",
+    "oracle_text": "Reach, haste",
+    "power": "4",
+    "toughness": "5",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Reach",
+      "Haste"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Rubble Rouser",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Dwarf Sorcerer",
+    "oracle_text": "When this creature enters, you may discard a card. If you do, draw a card.\n{T}, Exile a card from your graveyard: Add {R}. When you do, this creature deals 1 damage to each opponent.",
+    "power": "1",
+    "toughness": "4",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Seize the Spoils",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "As an additional cost to cast this spell, discard a card.\nDraw two cards and create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Treasure"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Steal the Show",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Choose one or both —\n• Target player discards any number of cards, then draws that many cards.\n• Steal the Show deals damage equal to the number of instant and sorcery cards in your graveyard to target creature or planeswalker.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Strife Scholar // Awaken the Ages",
+    "mana_cost": "{2}{R} // {5}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Orc Sorcerer // Sorcery",
+    "power": "3",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Prepared",
+      "Ward"
+    ],
+    "rarity": "common",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Strife Scholar",
+        "mana_cost": "{2}{R}",
+        "type_line": "Creature — Orc Sorcerer",
+        "oracle_text": "Ward—Pay 2 life.\nThis creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "3",
+        "toughness": "2"
+      },
+      {
+        "name": "Awaken the Ages",
+        "mana_cost": "{5}{R}",
+        "type_line": "Sorcery",
+        "oracle_text": "Create two 2/2 red and white Spirit creature tokens."
+      }
+    ]
+  },
+  {
+    "name": "Tablet of Discovery",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "When this artifact enters, mill a card. You may play that card this turn. (To mill a card, put the top card of your library into your graveyard.)\n{T}: Add {R}.\n{T}: Add {R}{R}. Spend this mana only to cast instant and sorcery spells.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Mill"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Tackle Artist",
+    "mana_cost": "{3}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Orc Sorcerer",
+    "oracle_text": "Trample\nOpus — Whenever you cast an instant or sorcery spell, put a +1/+1 counter on this creature. If five or more mana was spent to cast that spell, put two +1/+1 counters on this creature instead.",
+    "power": "4",
+    "toughness": "3",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Trample",
+      "Opus"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Thunderdrum Soloist",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Creature — Dwarf Bard",
+    "oracle_text": "Reach\nOpus — Whenever you cast an instant or sorcery spell, this creature deals 1 damage to each opponent. If five or more mana was spent to cast that spell, this creature deals 3 damage to each opponent instead.",
+    "power": "1",
+    "toughness": "3",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Reach",
+      "Opus"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Tome Blast",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Tome Blast deals 2 damage to any target.\nFlashback {4}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Flashback"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Unsubtle Mockery",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Unsubtle Mockery deals 4 damage to target creature. Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Surveil"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Zealous Lorecaster",
+    "mana_cost": "{5}{R}",
+    "cmc": 6,
+    "type_line": "Creature — Giant Sorcerer",
+    "oracle_text": "When this creature enters, return target instant or sorcery card from your graveyard to your hand.",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Aberrant Manawurm",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Creature — Wurm",
+    "oracle_text": "Trample\nWhenever you cast an instant or sorcery spell, this creature gets +X/+0 until end of turn, where X is the amount of mana spent to cast that spell.",
+    "power": "2",
+    "toughness": "5",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Trample"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Additive Evolution",
+    "mana_cost": "{3}{G}{G}",
+    "cmc": 5,
+    "type_line": "Enchantment",
+    "oracle_text": "When this enchantment enters, create a 0/0 green and blue Fractal creature token. Put three +1/+1 counters on it.\nAt the beginning of combat on your turn, put a +1/+1 counter on target creature you control. It gains vigilance until end of turn.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Ambitious Augmenter",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Turtle Wizard",
+    "oracle_text": "Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)\nWhen this creature dies, if it had one or more counters on it, create a 0/0 green and blue Fractal creature token, then put this creature's counters on that token.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Increment"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Burrog Barrage",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Target creature you control gets +1/+0 until end of turn if you've cast another instant or sorcery spell this turn. Then it deals damage equal to its power to up to one target creature an opponent controls.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Chelonian Tackle",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Target creature you control gets +0/+10 until end of turn. Then it fights up to one target creature an opponent controls. (Each deals damage equal to its power to the other.)",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Fight"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Comforting Counsel",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever you gain life, put a growth counter on this enchantment.\nAs long as there are five or more growth counters on this enchantment, creatures you control get +3/+3.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Efflorescence",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Put two +1/+1 counters on target creature.\nInfusion — If you gained life this turn, that creature also gains trample and indestructible until end of turn.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Infusion"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Emeritus of Abundance // Regrowth",
+    "mana_cost": "{2}{G} // {1}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Elf Druid // Sorcery",
+    "power": "3",
+    "toughness": "4",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Vigilance",
+      "Prepared"
+    ],
+    "rarity": "mythic",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Emeritus of Abundance",
+        "mana_cost": "{2}{G}",
+        "type_line": "Creature — Elf Druid",
+        "oracle_text": "Vigilance\nThis creature enters prepared.\nWhenever this creature attacks, if you control eight or more lands, this creature becomes prepared.",
+        "power": "3",
+        "toughness": "4"
+      },
+      {
+        "name": "Regrowth",
+        "mana_cost": "{1}{G}",
+        "type_line": "Sorcery",
+        "oracle_text": "Return target card from your graveyard to your hand."
+      }
+    ]
+  },
+  {
+    "name": "Emil, Vastlands Roamer",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Legendary Creature — Elf Druid",
+    "oracle_text": "Creatures you control with +1/+1 counters on them have trample.\n{4}{G}, {T}: Create a 0/0 green and blue Fractal creature token. Put X +1/+1 counters on it, where X is the number of differently named lands you control.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Environmental Scientist",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Human Druid",
+    "oracle_text": "When this creature enters, you may search your library for a basic land card, reveal it, put it into your hand, then shuffle.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Follow the Lumarets",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Infusion — Look at the top four cards of your library. You may reveal a creature or land card from among them and put it into your hand. If you gained life this turn, you may instead reveal two creature and/or land cards from among them and put them into your hand. Put the rest on the bottom of your library in a random order.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Infusion"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Germination Practicum",
+    "mana_cost": "{3}{G}{G}",
+    "cmc": 5,
+    "type_line": "Sorcery — Lesson",
+    "oracle_text": "Put two +1/+1 counters on each creature you control.\nParadigm (Then exile this spell. After you first resolve a spell with this name, you may cast a copy of it from exile without paying its mana cost at the beginning of each of your first main phases.)",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Paradigm"
+    ],
+    "rarity": "mythic",
+    "set": "sos"
+  },
+  {
+    "name": "Glorious Decay",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Choose one —\n• Destroy target artifact.\n• Glorious Decay deals 4 damage to target creature with flying.\n• Exile target card from a graveyard. Draw a card.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Hungry Graffalon",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Creature — Giraffe",
+    "oracle_text": "Reach\nIncrement (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)",
+    "power": "3",
+    "toughness": "4",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Reach",
+      "Increment"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Infirmary Healer // Stream of Life",
+    "mana_cost": "{1}{G} // {X}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Cat Cleric // Sorcery",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Prepared"
+    ],
+    "rarity": "uncommon",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Infirmary Healer",
+        "mana_cost": "{1}{G}",
+        "type_line": "Creature — Cat Cleric",
+        "oracle_text": "This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "2",
+        "toughness": "3"
+      },
+      {
+        "name": "Stream of Life",
+        "mana_cost": "{X}{G}",
+        "type_line": "Sorcery",
+        "oracle_text": "Target player gains X life."
+      }
+    ]
+  },
+  {
+    "name": "Lumaret's Favor",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Infusion — When you cast this spell, copy it if you gained life this turn. You may choose new targets for the copy.\nTarget creature gets +2/+4 until end of turn.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Infusion"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Mindful Biomancer",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Dryad Druid",
+    "oracle_text": "When this creature enters, you gain 1 life.\n{2}{G}: This creature gets +2/+2 until end of turn. Activate only once each turn.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Noxious Newt",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Salamander",
+    "oracle_text": "Deathtouch\n{T}: Add {G}.",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Deathtouch"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Oracle's Restoration",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "Target creature you control gets +1/+1 until end of turn. You draw a card and gain 1 life.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Pestbrood Sloth",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Creature — Plant Sloth",
+    "oracle_text": "Reach\nWhen this creature dies, create two 1/1 black and green Pest creature tokens with \"Whenever this token attacks, you gain 1 life.\"",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Reach"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Planar Engineering",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Sacrifice two lands. Search your library for four basic land cards, put them onto the battlefield tapped, then shuffle.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Shopkeeper's Bane",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Badger Pest",
+    "oracle_text": "Trample\nWhenever this creature attacks, you gain 2 life.",
+    "power": "4",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Trample"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Slumbering Trudge",
+    "mana_cost": "{X}{G}",
+    "cmc": 1,
+    "type_line": "Creature — Plant Beast",
+    "oracle_text": "This creature enters with a number of stun counters on it equal to three minus X. If X is 2 or less, it enters tapped. (If a permanent with a stun counter would become untapped, remove one from it instead.)",
+    "power": "6",
+    "toughness": "6",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Snarl Song",
+    "mana_cost": "{5}{G}",
+    "cmc": 6,
+    "type_line": "Sorcery",
+    "oracle_text": "Converge — Create two 0/0 green and blue Fractal creature tokens. Put X +1/+1 counters on each of them and you gain X life, where X is the number of colors of mana spent to cast this spell.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Converge"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Studious First-Year // Rampant Growth",
+    "mana_cost": "{G} // {1}{G}",
+    "cmc": 1,
+    "type_line": "Creature — Bear Wizard // Sorcery",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Prepared"
+    ],
+    "rarity": "common",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Studious First-Year",
+        "mana_cost": "{G}",
+        "type_line": "Creature — Bear Wizard",
+        "oracle_text": "This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "1",
+        "toughness": "1"
+      },
+      {
+        "name": "Rampant Growth",
+        "mana_cost": "{1}{G}",
+        "type_line": "Sorcery",
+        "oracle_text": "Search your library for a basic land card, put that card onto the battlefield tapped, then shuffle."
+      }
+    ]
+  },
+  {
+    "name": "Tenured Concocter",
+    "mana_cost": "{4}{G}",
+    "cmc": 5,
+    "type_line": "Creature — Troll Druid",
+    "oracle_text": "Vigilance\nWhenever this creature becomes the target of a spell or ability an opponent controls, you may draw a card.\nInfusion — This creature gets +2/+0 as long as you gained life this turn.",
+    "power": "4",
+    "toughness": "5",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Infusion",
+      "Vigilance"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Thornfist Striker",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Elf Druid",
+    "oracle_text": "Ward {1} (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {1}.)\nInfusion — Creatures you control get +1/+0 and have trample as long as you gained life this turn.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Infusion",
+      "Ward"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Topiary Lecturer",
+    "mana_cost": "{2}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Elf Druid",
+    "oracle_text": "Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)\n{T}: Add an amount of {G} equal to this creature's power.",
+    "power": "1",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Increment"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Vastlands Scavenger // Bind to Life",
+    "mana_cost": "{1}{G}{G} // {4}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Bear Druid // Instant",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Prepared",
+      "Mill",
+      "Deathtouch"
+    ],
+    "rarity": "rare",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Vastlands Scavenger",
+        "mana_cost": "{1}{G}{G}",
+        "type_line": "Creature — Bear Druid",
+        "oracle_text": "Deathtouch\nThis creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "4",
+        "toughness": "4"
+      },
+      {
+        "name": "Bind to Life",
+        "mana_cost": "{4}{G}",
+        "type_line": "Instant",
+        "oracle_text": "Mill seven cards. Then put a creature card from among them onto the battlefield."
+      }
+    ]
+  },
+  {
+    "name": "Wild Hypothesis",
+    "mana_cost": "{X}{G}",
+    "cmc": 1,
+    "type_line": "Sorcery",
+    "oracle_text": "Create a 0/0 green and blue Fractal creature token. Put X +1/+1 counters on it.\nSurveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Surveil"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Wildgrowth Archaic",
+    "mana_cost": "{2/G}{2/G}",
+    "cmc": 4,
+    "type_line": "Creature — Avatar",
+    "oracle_text": "Trample, reach\nConverge — This creature enters with a +1/+1 counter on it for each color of mana spent to cast it.\nWhenever you cast a creature spell, that creature enters with X additional +1/+1 counters on it, where X is the number of colors of mana spent to cast it.",
+    "power": "0",
+    "toughness": "0",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Reach",
+      "Converge",
+      "Trample"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Zimone's Experiment",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Look at the top five cards of your library. You may reveal up to two creature and/or land cards from among them, then put the rest on the bottom of your library in a random order. Put all land cards revealed this way onto the battlefield tapped and put all creature cards revealed this way into your hand.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Abigale, Poet Laureate // Heroic Stanza",
+    "mana_cost": "{1}{W}{B} // {1}{W/B}",
+    "cmc": 3,
+    "type_line": "Legendary Creature — Bird Bard // Sorcery",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "keywords": [
+      "Flying",
+      "Prepared"
+    ],
+    "rarity": "uncommon",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Abigale, Poet Laureate",
+        "mana_cost": "{1}{W}{B}",
+        "type_line": "Legendary Creature — Bird Bard",
+        "oracle_text": "Flying\nWhenever you cast a creature spell, Abigale becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "2",
+        "toughness": "3"
+      },
+      {
+        "name": "Heroic Stanza",
+        "mana_cost": "{1}{W/B}",
+        "type_line": "Sorcery",
+        "oracle_text": "Put a +1/+1 counter on target creature."
+      }
+    ]
+  },
+  {
+    "name": "Abstract Paintmage",
+    "mana_cost": "{U}{U/R}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Djinn Sorcerer",
+    "oracle_text": "At the beginning of your first main phase, add {U}{R}. Spend this mana only to cast instant and sorcery spells.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Applied Geometry",
+    "mana_cost": "{2}{G}{U}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Create a token that's a copy of target non-Aura permanent you control, except it's a 0/0 Fractal creature in addition to its other types. Put six +1/+1 counters on it.",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Ark of Hunger",
+    "mana_cost": "{2}{R}{W}",
+    "cmc": 4,
+    "type_line": "Artifact",
+    "oracle_text": "Whenever one or more cards leave your graveyard, this artifact deals 1 damage to each opponent and you gain 1 life.\n{T}: Mill a card. You may play that card this turn.",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "keywords": [
+      "Mill"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Aziza, Mage Tower Captain",
+    "mana_cost": "{R}{W}",
+    "cmc": 2,
+    "type_line": "Legendary Creature — Djinn Sorcerer",
+    "oracle_text": "Whenever you cast an instant or sorcery spell, you may tap three untapped creatures you control. If you do, copy that spell. You may choose new targets for the copy.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Berta, Wise Extrapolator",
+    "mana_cost": "{2}{G}{U}",
+    "cmc": 4,
+    "type_line": "Legendary Creature — Frog Druid",
+    "oracle_text": "Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)\nWhenever one or more +1/+1 counters are put on Berta, add one mana of any color.\n{X}, {T}: Create a 0/0 green and blue Fractal creature token and put X +1/+1 counters on it.",
+    "power": "1",
+    "toughness": "4",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "keywords": [
+      "Increment"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Blech, Loafing Pest",
+    "mana_cost": "{1}{B}{G}",
+    "cmc": 3,
+    "type_line": "Legendary Creature — Pest",
+    "oracle_text": "Whenever you gain life, put a +1/+1 counter on each Pest, Bat, Insect, Snake, and Spider you control.",
+    "power": "3",
+    "toughness": "4",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Bogwater Lumaret",
+    "mana_cost": "{B}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Spirit Frog",
+    "oracle_text": "Whenever this creature or another creature you control enters, you gain 1 life.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Borrowed Knowledge",
+    "mana_cost": "{2}{R}{W}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Choose one —\n• Discard your hand, then draw cards equal to the number of cards in target opponent's hand.\n• Discard your hand, then draw cards equal to the number of cards discarded this way.",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Cauldron of Essence",
+    "mana_cost": "{1}{B}{G}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "Whenever a creature you control dies, each opponent loses 1 life and you gain 1 life.\n{1}{B}{G}, {T}, Sacrifice a creature: Return target creature card from your graveyard to the battlefield. Activate only as a sorcery.",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Colorstorm Stallion",
+    "mana_cost": "{1}{U}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Elemental Horse",
+    "oracle_text": "Ward {1}, haste\nOpus — Whenever you cast an instant or sorcery spell, this creature gets +1/+1 until end of turn. If five or more mana was spent to cast that spell, create a token that's a copy of this creature.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "keywords": [
+      "Haste",
+      "Ward",
+      "Opus"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Colossus of the Blood Age",
+    "mana_cost": "{4}{R}{W}",
+    "cmc": 6,
+    "type_line": "Artifact Creature — Construct",
+    "oracle_text": "When this creature enters, it deals 3 damage to each opponent and you gain 3 life.\nWhen this creature dies, discard any number of cards, then draw that many cards plus one.",
+    "power": "6",
+    "toughness": "6",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Conciliator's Duelist",
+    "mana_cost": "{W}{W}{B}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Kor Warlock",
+    "oracle_text": "When this creature enters, draw a card. Each player loses 1 life.\nRepartee — Whenever you cast an instant or sorcery spell that targets a creature, exile up to one target creature. Return that card to the battlefield under its owner's control at the beginning of the next end step.",
+    "power": "4",
+    "toughness": "3",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "keywords": [
+      "Repartee"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Cuboid Colony",
+    "mana_cost": "{G}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Insect",
+    "oracle_text": "Flash\nFlying, trample\nIncrement (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "keywords": [
+      "Flying",
+      "Trample",
+      "Flash",
+      "Increment"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Dina's Guidance",
+    "mana_cost": "{1}{B}{G}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Search your library for a creature card, reveal it, put it into your hand or graveyard, then shuffle.",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Elemental Mascot",
+    "mana_cost": "{1}{U}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Elemental Bird",
+    "oracle_text": "Flying, vigilance\nOpus — Whenever you cast an instant or sorcery spell, this creature gets +1/+0 until end of turn. If five or more mana was spent to cast that spell, exile the top card of your library. You may play that card until the end of your next turn.",
+    "power": "1",
+    "toughness": "4",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "keywords": [
+      "Flying",
+      "Vigilance",
+      "Opus"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Embrace the Paradox",
+    "mana_cost": "{3}{G}{U}",
+    "cmc": 5,
+    "type_line": "Instant",
+    "oracle_text": "Draw three cards. You may put a land card from your hand onto the battlefield tapped.",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Essenceknit Scholar",
+    "mana_cost": "{B}{B/G}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Dryad Warlock",
+    "oracle_text": "When this creature enters, create a 1/1 black and green Pest creature token with \"Whenever this token attacks, you gain 1 life.\"\nAt the beginning of your end step, if a creature died under your control this turn, draw a card.",
+    "power": "3",
+    "toughness": "1",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Fix What's Broken",
+    "mana_cost": "{2}{W}{B}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "As an additional cost to cast this spell, pay X life.\nReturn each artifact and creature card with mana value X from your graveyard to the battlefield.",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Fractal Mascot",
+    "mana_cost": "{4}{G}{U}",
+    "cmc": 6,
+    "type_line": "Creature — Fractal Elk",
+    "oracle_text": "Trample\nWhen this creature enters, tap target creature an opponent controls. Put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)",
+    "power": "6",
+    "toughness": "6",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "keywords": [
+      "Trample"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Fractal Tender",
+    "mana_cost": "{3}{G}{U}",
+    "cmc": 5,
+    "type_line": "Creature — Elf Wizard",
+    "oracle_text": "Ward {2}\nIncrement (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)\nAt the beginning of each end step, if you put a counter on this creature this turn, create a 0/0 green and blue Fractal creature token and put three +1/+1 counters on it.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "keywords": [
+      "Ward",
+      "Increment"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Geometer's Arthropod",
+    "mana_cost": "{G}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Fractal Crab",
+    "oracle_text": "Whenever you cast a spell with {X} in its mana cost, look at the top X cards of your library. Put one of them into your hand and the rest on the bottom of your library in a random order.",
+    "power": "1",
+    "toughness": "4",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Grapple with Death",
+    "mana_cost": "{1}{B}{G}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Destroy target artifact or creature. You gain 1 life.",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Growth Curve",
+    "mana_cost": "{G}{U}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Put a +1/+1 counter on target creature you control, then double the number of +1/+1 counters on that creature.",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Hardened Academic",
+    "mana_cost": "{R}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Bird Cleric",
+    "oracle_text": "Flying, haste\nDiscard a card: This creature gains lifelink until end of turn.\nWhenever one or more cards leave your graveyard, put a +1/+1 counter on target creature you control.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "keywords": [
+      "Flying",
+      "Haste"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Imperious Inkmage",
+    "mana_cost": "{1}{W}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Orc Warlock",
+    "oracle_text": "Vigilance\nWhen this creature enters, surveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "keywords": [
+      "Surveil",
+      "Vigilance"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Inkling Mascot",
+    "mana_cost": "{W}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Inkling Cat",
+    "oracle_text": "Repartee — Whenever you cast an instant or sorcery spell that targets a creature, this creature gains flying until end of turn. Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "keywords": [
+      "Surveil",
+      "Repartee"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Killian's Confidence",
+    "mana_cost": "{W}{B}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Target creature gets +1/+1 until end of turn. Draw a card.\nWhenever one or more creatures you control deal combat damage to a player, you may pay {W/B}. If you do, return this card from your graveyard to your hand.",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Kirol, History Buff // Pack a Punch",
+    "mana_cost": "{R}{W} // {1}{R}{W}",
+    "cmc": 2,
+    "type_line": "Legendary Creature — Vampire Cleric // Sorcery",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "keywords": [
+      "Prepared",
+      "Mill"
+    ],
+    "rarity": "uncommon",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Kirol, History Buff",
+        "mana_cost": "{R}{W}",
+        "type_line": "Legendary Creature — Vampire Cleric",
+        "oracle_text": "Whenever one or more cards leave your graveyard, Kirol becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "2",
+        "toughness": "3"
+      },
+      {
+        "name": "Pack a Punch",
+        "mana_cost": "{1}{R}{W}",
+        "type_line": "Sorcery",
+        "oracle_text": "Mill a card. Put two +1/+1 counters on target creature. It gains trample until end of turn."
+      }
+    ]
+  },
+  {
+    "name": "Lluwen, Exchange Student // Pest Friend",
+    "mana_cost": "{2}{B}{G} // {B/G}",
+    "cmc": 4,
+    "type_line": "Legendary Creature — Elf Druid // Sorcery",
+    "power": "3",
+    "toughness": "4",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "keywords": [
+      "Prepared"
+    ],
+    "rarity": "uncommon",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Lluwen, Exchange Student",
+        "mana_cost": "{2}{B}{G}",
+        "type_line": "Legendary Creature — Elf Druid",
+        "oracle_text": "Lluwen enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\nExile a creature card from your graveyard: Lluwen becomes prepared. Activate only as a sorcery.",
+        "power": "3",
+        "toughness": "4"
+      },
+      {
+        "name": "Pest Friend",
+        "mana_cost": "{B/G}",
+        "type_line": "Sorcery",
+        "oracle_text": "Create a 1/1 black and green Pest creature token with \"Whenever this token attacks, you gain 1 life.\""
+      }
+    ]
+  },
+  {
+    "name": "Lorehold Charm",
+    "mana_cost": "{R}{W}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Choose one —\n• Each opponent sacrifices a nontoken artifact of their choice.\n• Return target artifact or creature card with mana value 2 or less from your graveyard to the battlefield.\n• Creatures you control get +1/+1 and gain trample until end of turn.",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Lorehold, the Historian",
+    "mana_cost": "{3}{R}{W}",
+    "cmc": 5,
+    "type_line": "Legendary Creature — Elder Dragon",
+    "oracle_text": "Flying, haste\nEach instant and sorcery card in your hand has miracle {2}. (You may cast a card for its miracle cost when you draw it if it's the first card you drew this turn.)\nAt the beginning of each opponent's upkeep, you may discard a card. If you do, draw a card.",
+    "power": "5",
+    "toughness": "5",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "keywords": [
+      "Flying",
+      "Haste"
+    ],
+    "rarity": "mythic",
+    "set": "sos"
+  },
+  {
+    "name": "Mind into Matter",
+    "mana_cost": "{X}{G}{U}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Draw X cards. Then you may put a permanent card with mana value X or less from your hand onto the battlefield tapped.",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Mind Roots",
+    "mana_cost": "{1}{B}{G}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Target player discards two cards. Put up to one land card discarded this way onto the battlefield tapped under your control.",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Molten Note",
+    "mana_cost": "{X}{R}{W}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Molten Note deals damage to target creature equal to the amount of mana spent to cast this spell. Untap all creatures you control.\nFlashback {6}{R}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "keywords": [
+      "Flashback"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Moment of Reckoning",
+    "mana_cost": "{3}{W}{W}{B}{B}",
+    "cmc": 7,
+    "type_line": "Sorcery",
+    "oracle_text": "Choose up to four. You may choose the same mode more than once.\n• Destroy target nonland permanent.\n• Return target nonland permanent card from your graveyard to the battlefield.",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Nita, Forum Conciliator",
+    "mana_cost": "{1}{W}{B}",
+    "cmc": 3,
+    "type_line": "Legendary Creature — Human Advisor",
+    "oracle_text": "Whenever you cast a spell you don't own, put a +1/+1 counter on each creature you control.\n{2}, Sacrifice another creature: Exile target instant or sorcery card from an opponent's graveyard. You may cast it this turn, and mana of any type can be spent to cast that spell. If that spell would be put into a graveyard, exile it instead. Activate only as a sorcery.",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Old-Growth Educator",
+    "mana_cost": "{2}{B}{G}",
+    "cmc": 4,
+    "type_line": "Creature — Treefolk Druid",
+    "oracle_text": "Vigilance, reach\nInfusion — When this creature enters, put two +1/+1 counters on it if you gained life this turn.",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "keywords": [
+      "Infusion",
+      "Reach",
+      "Vigilance"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Paradox Surveyor",
+    "mana_cost": "{G}{G/U}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Elf Druid",
+    "oracle_text": "Reach\nWhen this creature enters, look at the top five cards of your library. You may reveal a land card or a card with {X} in its mana cost from among them and put it into your hand. Put the rest on the bottom of your library in a random order.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "keywords": [
+      "Reach"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Pest Mascot",
+    "mana_cost": "{1}{B}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Pest Ape",
+    "oracle_text": "Trample\nWhenever you gain life, put a +1/+1 counter on this creature.",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "keywords": [
+      "Trample"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Practiced Scrollsmith",
+    "mana_cost": "{R}{R/W}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Dwarf Cleric",
+    "oracle_text": "First strike\nWhen this creature enters, exile target noncreature, nonland card from your graveyard. Until the end of your next turn, you may cast that card.",
+    "power": "3",
+    "toughness": "2",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "keywords": [
+      "First strike"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Prismari Charm",
+    "mana_cost": "{U}{R}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Choose one —\n• Surveil 2, then draw a card.\n• Prismari Charm deals 1 damage to each of one or two targets.\n• Return target nonland permanent to its owner's hand.",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "keywords": [
+      "Surveil"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Prismari, the Inspiration",
+    "mana_cost": "{5}{U}{R}",
+    "cmc": 7,
+    "type_line": "Legendary Creature — Elder Dragon",
+    "oracle_text": "Flying\nWard—Pay 5 life.\nInstant and sorcery spells you cast have storm. (Whenever you cast an instant or sorcery spell, copy it for each spell cast before it this turn. You may choose new targets for the copies.)",
+    "power": "7",
+    "toughness": "7",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "keywords": [
+      "Flying",
+      "Ward"
+    ],
+    "rarity": "mythic",
+    "set": "sos"
+  },
+  {
+    "name": "Proctor's Gaze",
+    "mana_cost": "{2}{G}{U}",
+    "cmc": 4,
+    "type_line": "Instant",
+    "oracle_text": "Return up to one target nonland permanent to its owner's hand. Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Professor Dellian Fel",
+    "mana_cost": "{2}{B}{G}",
+    "cmc": 4,
+    "type_line": "Legendary Planeswalker — Dellian",
+    "oracle_text": "+2: You gain 3 life.\n0: You draw a card and lose 1 life.\n−3: Destroy target creature.\n−6: You get an emblem with \"Whenever you gain life, target opponent loses that much life.\"",
+    "loyalty": "5",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "mythic",
+    "set": "sos"
+  },
+  {
+    "name": "Pterafractyl",
+    "mana_cost": "{X}{G}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Dinosaur Fractal",
+    "oracle_text": "Flying\nThis creature enters with X +1/+1 counters on it.\nWhen this creature enters, you gain 2 life.",
+    "power": "1",
+    "toughness": "0",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Pursue the Past",
+    "mana_cost": "{R}{W}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "You gain 2 life. You may discard a card. If you do, draw two cards.\nFlashback {2}{R}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "keywords": [
+      "Flashback"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Quandrix Charm",
+    "mana_cost": "{G}{U}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Choose one —\n• Counter target spell unless its controller pays {2}.\n• Destroy target enchantment.\n• Target creature has base power and toughness 5/5 until end of turn.",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Quandrix, the Proof",
+    "mana_cost": "{4}{G}{U}",
+    "cmc": 6,
+    "type_line": "Legendary Creature — Elder Dragon",
+    "oracle_text": "Flying, trample\nCascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its mana cost. Put the exiled cards on the bottom in a random order.)\nInstant and sorcery spells you cast from your hand have cascade.",
+    "power": "6",
+    "toughness": "6",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "keywords": [
+      "Cascade",
+      "Flying",
+      "Trample"
+    ],
+    "rarity": "mythic",
+    "set": "sos"
+  },
+  {
+    "name": "Rapturous Moment",
+    "mana_cost": "{4}{U}{R}",
+    "cmc": 6,
+    "type_line": "Sorcery",
+    "oracle_text": "Draw three cards, then discard two cards. Add {U}{U}{R}{R}{R}.",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Render Speechless",
+    "mana_cost": "{2}{W}{B}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Target opponent reveals their hand. You choose a nonland card from it. That player discards that card.\nPut two +1/+1 counters on up to one target creature.",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Resonating Lute",
+    "mana_cost": "{2}{U}{R}",
+    "cmc": 4,
+    "type_line": "Artifact",
+    "oracle_text": "Lands you control have \"{T}: Add two mana of any one color. Spend this mana only to cast instant and sorcery spells.\"\n{T}: Draw a card. Activate only if you have seven or more cards in your hand.",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Root Manipulation",
+    "mana_cost": "{3}{B}{G}",
+    "cmc": 5,
+    "type_line": "Sorcery",
+    "oracle_text": "Until end of turn, creatures you control get +2/+2 and gain menace and \"Whenever this creature attacks, you gain 1 life.\" (A creature with menace can't be blocked except by two or more creatures.)",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Sanar, Unfinished Genius // Wild Idea",
+    "mana_cost": "{U}{R} // {3}{U}{R}",
+    "cmc": 2,
+    "type_line": "Legendary Creature — Goblin Sorcerer // Sorcery",
+    "power": "0",
+    "toughness": "4",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "keywords": [
+      "Treasure",
+      "Prepared"
+    ],
+    "rarity": "uncommon",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Sanar, Unfinished Genius",
+        "mana_cost": "{U}{R}",
+        "type_line": "Legendary Creature — Goblin Sorcerer",
+        "oracle_text": "Sanar enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\n{T}: Create a Treasure token. Activate only if you've cast an instant or sorcery spell this turn.",
+        "power": "0",
+        "toughness": "4"
+      },
+      {
+        "name": "Wild Idea",
+        "mana_cost": "{3}{U}{R}",
+        "type_line": "Sorcery",
+        "oracle_text": "Search your library for an instant or sorcery card, reveal it, put it into your hand, then shuffle."
+      }
+    ]
+  },
+  {
+    "name": "Scolding Administrator",
+    "mana_cost": "{W}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Dwarf Cleric",
+    "oracle_text": "Menace (This creature can't be blocked except by two or more creatures.)\nRepartee — Whenever you cast an instant or sorcery spell that targets a creature, put a +1/+1 counter on this creature.\nWhen this creature dies, if it had counters on it, put those counters on up to one target creature.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "keywords": [
+      "Menace",
+      "Repartee"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Silverquill Charm",
+    "mana_cost": "{W}{B}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Choose one —\n• Put two +1/+1 counters on target creature.\n• Exile target creature with power 2 or less.\n• Each opponent loses 3 life and you gain 3 life.",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Silverquill, the Disputant",
+    "mana_cost": "{2}{W}{B}",
+    "cmc": 4,
+    "type_line": "Legendary Creature — Elder Dragon",
+    "oracle_text": "Flying, vigilance\nEach instant and sorcery spell you cast has casualty 1. (As you cast that spell, you may sacrifice a creature with power 1 or greater. When you do, copy the spell and you may choose new targets for the copy.)",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "keywords": [
+      "Flying",
+      "Vigilance"
+    ],
+    "rarity": "mythic",
+    "set": "sos"
+  },
+  {
+    "name": "Snooping Page",
+    "mana_cost": "{1}{W}{B}",
+    "cmc": 3,
+    "type_line": "Creature — Human Cleric",
+    "oracle_text": "Repartee — Whenever you cast an instant or sorcery spell that targets a creature, this creature can't be blocked this turn.\nWhenever this creature deals combat damage to a player, you draw a card and lose 1 life.",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "keywords": [
+      "Repartee"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Social Snub",
+    "mana_cost": "{1}{W}{B}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "When you cast this spell while you control a creature, you may copy this spell.\nEach player sacrifices a creature of their choice. Each opponent loses 1 life and you gain 1 life.",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Spectacular Skywhale",
+    "mana_cost": "{2}{U}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Elemental Whale",
+    "oracle_text": "Flying\nOpus — Whenever you cast an instant or sorcery spell, this creature gets +3/+0 until end of turn. If five or more mana was spent to cast that spell, put three +1/+1 counters on this creature instead.",
+    "power": "1",
+    "toughness": "4",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "keywords": [
+      "Flying",
+      "Opus"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Spirit Mascot",
+    "mana_cost": "{R}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Spirit Ox",
+    "oracle_text": "Whenever one or more cards leave your graveyard, put a +1/+1 counter on this creature.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Splatter Technique",
+    "mana_cost": "{1}{U}{U}{R}{R}",
+    "cmc": 5,
+    "type_line": "Sorcery",
+    "oracle_text": "Choose one —\n• Draw four cards.\n• Splatter Technique deals 4 damage to each creature and planeswalker.",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Stadium Tidalmage",
+    "mana_cost": "{2}{U}{R}",
+    "cmc": 4,
+    "type_line": "Creature — Djinn Sorcerer",
+    "oracle_text": "Whenever this creature enters or attacks, you may draw a card. If you do, discard a card.",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Startled Relic Sloth",
+    "mana_cost": "{2}{R}{W}",
+    "cmc": 4,
+    "type_line": "Creature — Sloth Beast",
+    "oracle_text": "Trample, lifelink\nAt the beginning of combat on your turn, exile up to one target card from a graveyard.",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "keywords": [
+      "Lifelink",
+      "Trample"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Stirring Honormancer",
+    "mana_cost": "{2}{W}{W/B}{B}",
+    "cmc": 5,
+    "type_line": "Creature — Rhino Bard",
+    "oracle_text": "When this creature enters, look at the top X cards of your library, where X is the number of creatures you control. Put one of those cards into your hand and the rest into your graveyard.",
+    "power": "4",
+    "toughness": "5",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Stress Dream",
+    "mana_cost": "{3}{U}{R}",
+    "cmc": 5,
+    "type_line": "Instant",
+    "oracle_text": "Stress Dream deals 5 damage to up to one target creature. Look at the top two cards of your library. Put one of those cards into your hand and the other on the bottom of your library.",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Suspend Aggression",
+    "mana_cost": "{1}{R}{W}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Exile target nonland permanent and the top card of your library. For each of those cards, its owner may play it until the end of their next turn.",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Tam, Observant Sequencer // Deep Sight",
+    "mana_cost": "{2}{G}{U} // {G}{U}",
+    "cmc": 4,
+    "type_line": "Legendary Creature — Gorgon Wizard // Sorcery",
+    "power": "4",
+    "toughness": "3",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "keywords": [
+      "Prepared",
+      "Landfall"
+    ],
+    "rarity": "uncommon",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Tam, Observant Sequencer",
+        "mana_cost": "{2}{G}{U}",
+        "type_line": "Legendary Creature — Gorgon Wizard",
+        "oracle_text": "Landfall — Whenever a land you control enters, Tam becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "4",
+        "toughness": "3"
+      },
+      {
+        "name": "Deep Sight",
+        "mana_cost": "{G}{U}",
+        "type_line": "Sorcery",
+        "oracle_text": "You draw a card and gain 1 life."
+      }
+    ]
+  },
+  {
+    "name": "Teacher's Pest",
+    "mana_cost": "{B}{G}",
+    "cmc": 2,
+    "type_line": "Creature — Skeleton Pest",
+    "oracle_text": "Menace (This creature can't be blocked except by two or more creatures.)\nWhenever this creature attacks, you gain 1 life.\n{B}{G}: Return this card from your graveyard to the battlefield tapped.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "keywords": [
+      "Menace"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Traumatic Critique",
+    "mana_cost": "{X}{U}{R}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Traumatic Critique deals X damage to any target. Draw two cards, then discard a card.",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Vibrant Outburst",
+    "mana_cost": "{U}{R}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Vibrant Outburst deals 3 damage to any target. Tap up to one target creature.",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Vicious Rivalry",
+    "mana_cost": "{2}{B}{G}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "As an additional cost to cast this spell, pay X life.\nDestroy all artifacts and creatures with mana value X or less.",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Visionary's Dance",
+    "mana_cost": "{5}{U}{R}",
+    "cmc": 7,
+    "type_line": "Sorcery",
+    "oracle_text": "Create two 3/3 blue and red Elemental creature tokens with flying.\n{2}, Discard this card: Look at the top two cards of your library. Put one of them into your hand and the other into your graveyard.",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Wilt in the Heat",
+    "mana_cost": "{2}{R}{W}",
+    "cmc": 4,
+    "type_line": "Instant",
+    "oracle_text": "This spell costs {2} less to cast if one or more cards left your graveyard this turn.\nWilt in the Heat deals 5 damage to target creature. If that creature would die this turn, exile it instead.",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Witherbloom Charm",
+    "mana_cost": "{B}{G}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Choose one —\n• You may sacrifice a permanent. If you do, draw two cards.\n• You gain 5 life.\n• Destroy target nonland permanent with mana value 2 or less.",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Witherbloom, the Balancer",
+    "mana_cost": "{6}{B}{G}",
+    "cmc": 8,
+    "type_line": "Legendary Creature — Elder Dragon",
+    "oracle_text": "Affinity for creatures (This spell costs {1} less to cast for each creature you control.)\nFlying, deathtouch\nInstant and sorcery spells you cast have affinity for creatures.",
+    "power": "5",
+    "toughness": "5",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "keywords": [
+      "Deathtouch",
+      "Flying",
+      "Affinity"
+    ],
+    "rarity": "mythic",
+    "set": "sos"
+  },
+  {
+    "name": "Zaffai and the Tempests",
+    "mana_cost": "{5}{U}{R}",
+    "cmc": 7,
+    "type_line": "Legendary Creature — Human Bard Sorcerer",
+    "oracle_text": "Once during each of your turns, you may cast an instant or sorcery spell from your hand without paying its mana cost.",
+    "power": "5",
+    "toughness": "7",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Biblioplex Tomekeeper",
+    "mana_cost": "{4}",
+    "cmc": 4,
+    "type_line": "Artifact Creature — Construct",
+    "oracle_text": "When this creature enters, choose up to one —\n• Target creature becomes prepared. (Only creatures with prepare spells can become prepared.)\n• Target creature becomes unprepared.",
+    "power": "3",
+    "toughness": "4",
+    "colors": [],
+    "keywords": [
+      "Prepared"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Diary of Dreams",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact — Book",
+    "oracle_text": "Whenever you cast an instant or sorcery spell, put a page counter on this artifact.\n{5}, {T}: Draw a card. This ability costs {1} less to activate for each page counter on this artifact.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Mage Tower Referee",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Artifact Creature — Construct",
+    "oracle_text": "Whenever you cast a multicolored spell, put a +1/+1 counter on this creature.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Page, Loose Leaf",
+    "mana_cost": "{2}",
+    "cmc": 2,
+    "type_line": "Legendary Artifact Creature — Construct",
+    "oracle_text": "{T}: Add {C}.\nGrandeur — Discard another card named Page, Loose Leaf: Reveal cards from the top of your library until you reveal an instant or sorcery card. Put that card into your hand and the rest on the bottom of your library in a random order.",
+    "power": "0",
+    "toughness": "2",
+    "colors": [],
+    "keywords": [
+      "Grandeur"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Potioner's Trove",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "{T}: Add one mana of any color.\n{T}: You gain 2 life. Activate only if you've cast an instant or sorcery spell this turn.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Strixhaven Skycoach",
+    "mana_cost": "{3}",
+    "cmc": 3,
+    "type_line": "Artifact — Vehicle",
+    "oracle_text": "Flying\nWhen this Vehicle enters, you may search your library for a basic land card, reveal it, put it into your hand, then shuffle.\nCrew 2 (Tap any number of creatures you control with total power 2 or more: This Vehicle becomes an artifact creature until end of turn.)",
+    "power": "3",
+    "toughness": "2",
+    "colors": [],
+    "keywords": [
+      "Flying",
+      "Crew"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Deathcap Glade",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped unless you control two or more other lands.\n{T}: Add {B} or {G}.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Dreamroot Cascade",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped unless you control two or more other lands.\n{T}: Add {G} or {U}.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Fields of Strife",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped.\n{T}: Add {R} or {W}.\n{2}{R}{W}, {T}: Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)",
+    "colors": [],
+    "keywords": [
+      "Surveil"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Forum of Amity",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped.\n{T}: Add {W} or {B}.\n{2}{W}{B}, {T}: Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)",
+    "colors": [],
+    "keywords": [
+      "Surveil"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Great Hall of the Biblioplex",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "{T}: Add {C}.\n{T}, Pay 1 life: Add one mana of any color. Spend this mana only to cast an instant or sorcery spell.\n{5}: If this land isn't a creature, it becomes a 2/4 Wizard creature with \"Whenever you cast an instant or sorcery spell, this creature gets +1/+0 until end of turn.\" It's still a land.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Paradox Gardens",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped.\n{T}: Add {G} or {U}.\n{2}{G}{U}, {T}: Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)",
+    "colors": [],
+    "keywords": [
+      "Surveil"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Petrified Hamlet",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "When this land enters, choose a land card name.\nActivated abilities of sources with the chosen name can't be activated unless they're mana abilities.\nLands with the chosen name have \"{T}: Add {C}.\"\n{T}: Add {C}.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Shattered Sanctum",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped unless you control two or more other lands.\n{T}: Add {W} or {B}.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Skycoach Waypoint",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "{T}: Add {C}.\n{3}, {T}: Target creature becomes prepared. (Only creatures with prepare spells can become prepared.)",
+    "colors": [],
+    "keywords": [
+      "Prepared"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Spectacle Summit",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped.\n{T}: Add {U} or {R}.\n{2}{U}{R}, {T}: Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)",
+    "colors": [],
+    "keywords": [
+      "Surveil"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Stormcarved Coast",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped unless you control two or more other lands.\n{T}: Add {U} or {R}.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Sundown Pass",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped unless you control two or more other lands.\n{T}: Add {R} or {W}.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Terramorphic Expanse",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "{T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Titan's Grave",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped.\n{T}: Add {B} or {G}.\n{2}{B}{G}, {T}: Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)",
+    "colors": [],
+    "keywords": [
+      "Surveil"
+    ],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Plains",
+    "cmc": 0,
+    "type_line": "Basic Land — Plains",
+    "oracle_text": "({T}: Add {W}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Island",
+    "cmc": 0,
+    "type_line": "Basic Land — Island",
+    "oracle_text": "({T}: Add {U}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Swamp",
+    "cmc": 0,
+    "type_line": "Basic Land — Swamp",
+    "oracle_text": "({T}: Add {B}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Mountain",
+    "cmc": 0,
+    "type_line": "Basic Land — Mountain",
+    "oracle_text": "({T}: Add {R}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Forest",
+    "cmc": 0,
+    "type_line": "Basic Land — Forest",
+    "oracle_text": "({T}: Add {G}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Plains",
+    "cmc": 0,
+    "type_line": "Basic Land — Plains",
+    "oracle_text": "({T}: Add {W}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Plains",
+    "cmc": 0,
+    "type_line": "Basic Land — Plains",
+    "oracle_text": "({T}: Add {W}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Island",
+    "cmc": 0,
+    "type_line": "Basic Land — Island",
+    "oracle_text": "({T}: Add {U}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Island",
+    "cmc": 0,
+    "type_line": "Basic Land — Island",
+    "oracle_text": "({T}: Add {U}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Swamp",
+    "cmc": 0,
+    "type_line": "Basic Land — Swamp",
+    "oracle_text": "({T}: Add {B}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Swamp",
+    "cmc": 0,
+    "type_line": "Basic Land — Swamp",
+    "oracle_text": "({T}: Add {B}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Mountain",
+    "cmc": 0,
+    "type_line": "Basic Land — Mountain",
+    "oracle_text": "({T}: Add {R}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Mountain",
+    "cmc": 0,
+    "type_line": "Basic Land — Mountain",
+    "oracle_text": "({T}: Add {R}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Forest",
+    "cmc": 0,
+    "type_line": "Basic Land — Forest",
+    "oracle_text": "({T}: Add {G}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Forest",
+    "cmc": 0,
+    "type_line": "Basic Land — Forest",
+    "oracle_text": "({T}: Add {G}.)",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "sos"
+  },
+  {
+    "name": "Ral Zarek, Guest Lecturer",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Legendary Planeswalker — Ral",
+    "oracle_text": "+1: Surveil 2.\n−1: Any number of target players each discard a card.\n−2: Return target creature card with mana value 3 or less from your graveyard to the battlefield.\n−7: Flip five coins. Target opponent skips their next X turns, where X is the number of coins that came up heads.",
+    "loyalty": "3",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Surveil"
+    ],
+    "rarity": "mythic",
+    "set": "sos"
+  },
+  {
+    "name": "Professor Dellian Fel",
+    "mana_cost": "{2}{B}{G}",
+    "cmc": 4,
+    "type_line": "Legendary Planeswalker — Dellian",
+    "oracle_text": "+2: You gain 3 life.\n0: You draw a card and lose 1 life.\n−3: Destroy target creature.\n−6: You get an emblem with \"Whenever you gain life, target opponent loses that much life.\"",
+    "loyalty": "5",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "mythic",
+    "set": "sos"
+  },
+  {
+    "name": "Lorehold, the Historian",
+    "mana_cost": "{3}{R}{W}",
+    "cmc": 5,
+    "type_line": "Legendary Creature — Elder Dragon",
+    "oracle_text": "Flying, haste\nEach instant and sorcery card in your hand has miracle {2}. (You may cast a card for its miracle cost when you draw it if it's the first card you drew this turn.)\nAt the beginning of each opponent's upkeep, you may discard a card. If you do, draw a card.",
+    "power": "5",
+    "toughness": "5",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "keywords": [
+      "Flying",
+      "Haste"
+    ],
+    "rarity": "mythic",
+    "set": "sos"
+  },
+  {
+    "name": "Prismari, the Inspiration",
+    "mana_cost": "{5}{U}{R}",
+    "cmc": 7,
+    "type_line": "Legendary Creature — Elder Dragon",
+    "oracle_text": "Flying\nWard—Pay 5 life.\nInstant and sorcery spells you cast have storm. (Whenever you cast an instant or sorcery spell, copy it for each spell cast before it this turn. You may choose new targets for the copies.)",
+    "power": "7",
+    "toughness": "7",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "keywords": [
+      "Flying",
+      "Ward"
+    ],
+    "rarity": "mythic",
+    "set": "sos"
+  },
+  {
+    "name": "Quandrix, the Proof",
+    "mana_cost": "{4}{G}{U}",
+    "cmc": 6,
+    "type_line": "Legendary Creature — Elder Dragon",
+    "oracle_text": "Flying, trample\nCascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its mana cost. Put the exiled cards on the bottom in a random order.)\nInstant and sorcery spells you cast from your hand have cascade.",
+    "power": "6",
+    "toughness": "6",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "keywords": [
+      "Cascade",
+      "Flying",
+      "Trample"
+    ],
+    "rarity": "mythic",
+    "set": "sos"
+  },
+  {
+    "name": "Silverquill, the Disputant",
+    "mana_cost": "{2}{W}{B}",
+    "cmc": 4,
+    "type_line": "Legendary Creature — Elder Dragon",
+    "oracle_text": "Flying, vigilance\nEach instant and sorcery spell you cast has casualty 1. (As you cast that spell, you may sacrifice a creature with power 1 or greater. When you do, copy the spell and you may choose new targets for the copy.)",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "keywords": [
+      "Flying",
+      "Vigilance"
+    ],
+    "rarity": "mythic",
+    "set": "sos"
+  },
+  {
+    "name": "Witherbloom, the Balancer",
+    "mana_cost": "{6}{B}{G}",
+    "cmc": 8,
+    "type_line": "Legendary Creature — Elder Dragon",
+    "oracle_text": "Affinity for creatures (This spell costs {1} less to cast for each creature you control.)\nFlying, deathtouch\nInstant and sorcery spells you cast have affinity for creatures.",
+    "power": "5",
+    "toughness": "5",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "keywords": [
+      "Deathtouch",
+      "Flying",
+      "Affinity"
+    ],
+    "rarity": "mythic",
+    "set": "sos"
+  },
+  {
+    "name": "The Dawning Archaic",
+    "mana_cost": "{10}",
+    "cmc": 10,
+    "type_line": "Legendary Creature — Avatar",
+    "oracle_text": "This spell costs {1} less to cast for each instant and sorcery card in your graveyard.\nReach\nWhenever The Dawning Archaic attacks, you may cast target instant or sorcery card from your graveyard without paying its mana cost. If that spell would be put into your graveyard, exile it instead.",
+    "power": "7",
+    "toughness": "7",
+    "colors": [],
+    "keywords": [
+      "Reach"
+    ],
+    "rarity": "mythic",
+    "set": "sos"
+  },
+  {
+    "name": "Restoration Seminar",
+    "mana_cost": "{5}{W}{W}",
+    "cmc": 7,
+    "type_line": "Sorcery — Lesson",
+    "oracle_text": "Return target nonland permanent card from your graveyard to the battlefield.\nParadigm (Then exile this spell. After you first resolve a spell with this name, you may cast a copy of it from exile without paying its mana cost at the beginning of each of your first main phases.)",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Paradigm"
+    ],
+    "rarity": "mythic",
+    "set": "sos"
+  },
+  {
+    "name": "Echocasting Symposium",
+    "mana_cost": "{4}{U}{U}",
+    "cmc": 6,
+    "type_line": "Sorcery — Lesson",
+    "oracle_text": "Target player creates a token that's a copy of target creature you control.\nParadigm (Then exile this spell. After you first resolve a spell with this name, you may cast a copy of it from exile without paying its mana cost at the beginning of each of your first main phases.)",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Paradigm"
+    ],
+    "rarity": "mythic",
+    "set": "sos"
+  },
+  {
+    "name": "Decorum Dissertation",
+    "mana_cost": "{3}{B}{B}",
+    "cmc": 5,
+    "type_line": "Sorcery — Lesson",
+    "oracle_text": "Target player draws two cards and loses 2 life.\nParadigm (Then exile this spell. After you first resolve a spell with this name, you may cast a copy of it from exile without paying its mana cost at the beginning of each of your first main phases.)",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Paradigm"
+    ],
+    "rarity": "mythic",
+    "set": "sos"
+  },
+  {
+    "name": "Tragedy Feaster",
+    "mana_cost": "{2}{B}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Demon",
+    "oracle_text": "Trample\nWard—Discard a card.\nInfusion — At the beginning of your end step, sacrifice a permanent unless you gained life this turn.",
+    "power": "7",
+    "toughness": "6",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Infusion",
+      "Trample",
+      "Ward"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Improvisation Capstone",
+    "mana_cost": "{5}{R}{R}",
+    "cmc": 7,
+    "type_line": "Sorcery — Lesson",
+    "oracle_text": "Exile cards from the top of your library until you exile cards with total mana value 4 or greater. You may cast any number of spells from among them without paying their mana costs.\nParadigm (Then exile this spell. After you first resolve a spell with this name, you may cast a copy of it from exile without paying its mana cost at the beginning of each of your first main phases.)",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Paradigm"
+    ],
+    "rarity": "mythic",
+    "set": "sos"
+  },
+  {
+    "name": "Magmablood Archaic",
+    "mana_cost": "{2/R}{2/R}{2/R}",
+    "cmc": 6,
+    "type_line": "Creature — Avatar",
+    "oracle_text": "Trample, reach\nConverge — This creature enters with a +1/+1 counter on it for each color of mana spent to cast it.\nWhenever you cast an instant or sorcery spell, creatures you control get +1/+0 until end of turn for each color of mana spent to cast that spell.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Reach",
+      "Converge",
+      "Trample"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Germination Practicum",
+    "mana_cost": "{3}{G}{G}",
+    "cmc": 5,
+    "type_line": "Sorcery — Lesson",
+    "oracle_text": "Put two +1/+1 counters on each creature you control.\nParadigm (Then exile this spell. After you first resolve a spell with this name, you may cast a copy of it from exile without paying its mana cost at the beginning of each of your first main phases.)",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Paradigm"
+    ],
+    "rarity": "mythic",
+    "set": "sos"
+  },
+  {
+    "name": "Wildgrowth Archaic",
+    "mana_cost": "{2/G}{2/G}",
+    "cmc": 4,
+    "type_line": "Creature — Avatar",
+    "oracle_text": "Trample, reach\nConverge — This creature enters with a +1/+1 counter on it for each color of mana spent to cast it.\nWhenever you cast a creature spell, that creature enters with X additional +1/+1 counters on it, where X is the number of colors of mana spent to cast it.",
+    "power": "0",
+    "toughness": "0",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Reach",
+      "Converge",
+      "Trample"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Blech, Loafing Pest",
+    "mana_cost": "{1}{B}{G}",
+    "cmc": 3,
+    "type_line": "Legendary Creature — Pest",
+    "oracle_text": "Whenever you gain life, put a +1/+1 counter on each Pest, Bat, Insect, Snake, and Spider you control.",
+    "power": "3",
+    "toughness": "4",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Colorstorm Stallion",
+    "mana_cost": "{1}{U}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Elemental Horse",
+    "oracle_text": "Ward {1}, haste\nOpus — Whenever you cast an instant or sorcery spell, this creature gets +1/+1 until end of turn. If five or more mana was spent to cast that spell, create a token that's a copy of this creature.",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "keywords": [
+      "Haste",
+      "Ward",
+      "Opus"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Geometer's Arthropod",
+    "mana_cost": "{G}{U}",
+    "cmc": 2,
+    "type_line": "Creature — Fractal Crab",
+    "oracle_text": "Whenever you cast a spell with {X} in its mana cost, look at the top X cards of your library. Put one of them into your hand and the rest on the bottom of your library in a random order.",
+    "power": "1",
+    "toughness": "4",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Deathcap Glade",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped unless you control two or more other lands.\n{T}: Add {B} or {G}.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Dreamroot Cascade",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped unless you control two or more other lands.\n{T}: Add {G} or {U}.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Shattered Sanctum",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped unless you control two or more other lands.\n{T}: Add {W} or {B}.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Stormcarved Coast",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped unless you control two or more other lands.\n{T}: Add {U} or {R}.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Sundown Pass",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "This land enters tapped unless you control two or more other lands.\n{T}: Add {R} or {W}.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Emeritus of Ideation // Ancestral Recall",
+    "mana_cost": "{3}{U}{U} // {U}",
+    "cmc": 5,
+    "type_line": "Creature — Human Wizard // Instant",
+    "power": "5",
+    "toughness": "5",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying",
+      "Prepared",
+      "Ward"
+    ],
+    "rarity": "mythic",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Emeritus of Ideation",
+        "mana_cost": "{3}{U}{U}",
+        "type_line": "Creature — Human Wizard",
+        "oracle_text": "Flying, ward {2}\nThis creature enters prepared.\nWhenever this creature attacks, you may exile eight cards from your graveyard. If you do, this creature becomes prepared.",
+        "power": "5",
+        "toughness": "5"
+      },
+      {
+        "name": "Ancestral Recall",
+        "mana_cost": "{U}",
+        "type_line": "Instant",
+        "oracle_text": "Target player draws three cards."
+      }
+    ]
+  },
+  {
+    "name": "Together as One",
+    "mana_cost": "{6}",
+    "cmc": 6,
+    "type_line": "Sorcery",
+    "oracle_text": "Converge — Target player draws X cards, Together as One deals X damage to any target, and you gain X life, where X is the number of colors of mana spent to cast this spell.",
+    "colors": [],
+    "keywords": [
+      "Converge"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Antiquities on the Loose",
+    "mana_cost": "{1}{W}{W}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Create two 2/2 red and white Spirit creature tokens. Then if this spell was cast from anywhere other than your hand, put a +1/+1 counter on each Spirit you control.\nFlashback {4}{W}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flashback"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Emeritus of Truce // Swords to Plowshares",
+    "mana_cost": "{1}{W}{W} // {W}",
+    "cmc": 3,
+    "type_line": "Creature — Cat Cleric // Instant",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Prepared"
+    ],
+    "rarity": "mythic",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Emeritus of Truce",
+        "mana_cost": "{1}{W}{W}",
+        "type_line": "Creature — Cat Cleric",
+        "oracle_text": "When this creature enters, target player creates a 1/1 white and black Inkling creature token with flying. Then if an opponent controls more creatures than you, this creature becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "3",
+        "toughness": "3"
+      },
+      {
+        "name": "Swords to Plowshares",
+        "mana_cost": "{W}",
+        "type_line": "Instant",
+        "oracle_text": "Exile target creature. Its controller gains life equal to its power."
+      }
+    ]
+  },
+  {
+    "name": "Erode",
+    "mana_cost": "{W}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Destroy target creature or planeswalker. Its controller may search their library for a basic land card, put it onto the battlefield tapped, then shuffle.",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Informed Inkwright",
+    "mana_cost": "{1}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "Vigilance\nRepartee — Whenever you cast an instant or sorcery spell that targets a creature, create a 1/1 white and black Inkling creature token with flying.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Vigilance",
+      "Repartee"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Joined Researchers // Secret Rendezvous",
+    "mana_cost": "{1}{W} // {1}{W}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Human Cleric Wizard // Sorcery",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "First strike",
+      "Prepared"
+    ],
+    "rarity": "rare",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Joined Researchers",
+        "mana_cost": "{1}{W}",
+        "type_line": "Creature — Human Cleric Wizard",
+        "oracle_text": "First strike\nAt the beginning of each end step, if an opponent has more cards in hand than you, this creature becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "2",
+        "toughness": "2"
+      },
+      {
+        "name": "Secret Rendezvous",
+        "mana_cost": "{1}{W}{W}",
+        "type_line": "Sorcery",
+        "oracle_text": "You and target opponent each draw three cards."
+      }
+    ]
+  },
+  {
+    "name": "Practiced Offense",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Put a +1/+1 counter on each creature target player controls. Target creature gains your choice of double strike or lifelink until end of turn.\nFlashback {1}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flashback"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Stirring Hopesinger",
+    "mana_cost": "{2}{W}",
+    "cmc": 3,
+    "type_line": "Creature — Bird Bard",
+    "oracle_text": "Flying, lifelink\nRepartee — Whenever you cast an instant or sorcery spell that targets a creature, put a +1/+1 counter on each creature you control.",
+    "power": "1",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying",
+      "Lifelink",
+      "Repartee"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Emeritus of Ideation // Ancestral Recall",
+    "mana_cost": "{3}{U}{U} // {U}",
+    "cmc": 5,
+    "type_line": "Creature — Human Wizard // Instant",
+    "power": "5",
+    "toughness": "5",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying",
+      "Prepared",
+      "Ward"
+    ],
+    "rarity": "mythic",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Emeritus of Ideation",
+        "mana_cost": "{3}{U}{U}",
+        "type_line": "Creature — Human Wizard",
+        "oracle_text": "Flying, ward {2}\nThis creature enters prepared.\nWhenever this creature attacks, you may exile eight cards from your graveyard. If you do, this creature becomes prepared.",
+        "power": "5",
+        "toughness": "5"
+      },
+      {
+        "name": "Ancestral Recall",
+        "mana_cost": "{U}",
+        "type_line": "Instant",
+        "oracle_text": "Target player draws three cards."
+      }
+    ]
+  },
+  {
+    "name": "Exhibition Tidecaller",
+    "mana_cost": "{U}",
+    "cmc": 1,
+    "type_line": "Creature — Djinn Wizard",
+    "oracle_text": "Opus — Whenever you cast an instant or sorcery spell, target player mills three cards. If five or more mana was spent to cast that spell, that player mills ten cards instead.",
+    "power": "0",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Mill",
+      "Opus"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Harmonized Trio // Brainstorm",
+    "mana_cost": "{U} // {U}",
+    "cmc": 1,
+    "type_line": "Creature — Merfolk Bard Wizard // Instant",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Prepared"
+    ],
+    "rarity": "rare",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Harmonized Trio",
+        "mana_cost": "{U}",
+        "type_line": "Creature — Merfolk Bard Wizard",
+        "oracle_text": "{T}, Tap two untapped creatures you control: This creature becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "1",
+        "toughness": "1"
+      },
+      {
+        "name": "Brainstorm",
+        "mana_cost": "{U}",
+        "type_line": "Instant",
+        "oracle_text": "Draw three cards, then put two cards from your hand on top of your library in any order."
+      }
+    ]
+  },
+  {
+    "name": "Jadzi, Steward of Fate // Oracle's Gift",
+    "mana_cost": "{2}{U} // {X}{X}{U}",
+    "cmc": 3,
+    "type_line": "Legendary Creature — Human Wizard // Sorcery",
+    "power": "2",
+    "toughness": "4",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Prepared"
+    ],
+    "rarity": "rare",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Jadzi, Steward of Fate",
+        "mana_cost": "{2}{U}",
+        "type_line": "Legendary Creature — Human Wizard",
+        "oracle_text": "Jadzi enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\nWhen Jadzi enters, draw two cards, then discard two cards.",
+        "power": "2",
+        "toughness": "4"
+      },
+      {
+        "name": "Oracle's Gift",
+        "mana_cost": "{X}{X}{U}",
+        "type_line": "Sorcery",
+        "oracle_text": "Create X 0/0 green and blue Fractal creature tokens, then put X +1/+1 counters on each Fractal you control."
+      }
+    ]
+  },
+  {
+    "name": "Mana Sculpt",
+    "mana_cost": "{1}{U}{U}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Counter target spell. If you control a Wizard, add an amount of {C} equal to the amount of mana spent to cast that spell at the beginning of your next main phase.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Mathemagics",
+    "mana_cost": "{X}{X}{U}{U}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Target player draws 2ˣ cards. (2⁰ = 1, 2¹ = 2, 2² = 4, 2³ = 8, 2⁴ = 16, 2⁵ = 32, and so on.)",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "mythic",
+    "set": "sos"
+  },
+  {
+    "name": "Pensive Professor",
+    "mana_cost": "{1}{U}{U}",
+    "cmc": 3,
+    "type_line": "Creature — Human Wizard",
+    "oracle_text": "Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)\nWhenever one or more +1/+1 counters are put on this creature, draw a card.",
+    "power": "0",
+    "toughness": "2",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Increment"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Skycoach Conductor // All Aboard",
+    "mana_cost": "{2}{U} // {U}",
+    "cmc": 3,
+    "type_line": "Creature — Bird Pilot // Instant",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "U"
+    ],
+    "keywords": [
+      "Flying",
+      "Vigilance",
+      "Prepared",
+      "Flash"
+    ],
+    "rarity": "rare",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Skycoach Conductor",
+        "mana_cost": "{2}{U}",
+        "type_line": "Creature — Bird Pilot",
+        "oracle_text": "Flash\nFlying, vigilance\nThis creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "2",
+        "toughness": "3"
+      },
+      {
+        "name": "All Aboard",
+        "mana_cost": "{U}",
+        "type_line": "Instant",
+        "oracle_text": "Exile target non-Pilot creature you control, then return that card to the battlefield under its owner's control."
+      }
+    ]
+  },
+  {
+    "name": "Wisdom of Ages",
+    "mana_cost": "{4}{U}{U}{U}",
+    "cmc": 7,
+    "type_line": "Sorcery",
+    "oracle_text": "Return all instant and sorcery cards from your graveyard to your hand. You have no maximum hand size for the rest of the game.\nExile Wisdom of Ages.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Emeritus of Woe // Demonic Tutor",
+    "mana_cost": "{3}{B} // {1}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Vampire Warlock // Sorcery",
+    "power": "5",
+    "toughness": "4",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Prepared"
+    ],
+    "rarity": "mythic",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Emeritus of Woe",
+        "mana_cost": "{3}{B}",
+        "type_line": "Creature — Vampire Warlock",
+        "oracle_text": "This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\nAt the beginning of your end step, if two or more creatures died this turn, this creature becomes prepared.",
+        "power": "5",
+        "toughness": "4"
+      },
+      {
+        "name": "Demonic Tutor",
+        "mana_cost": "{1}{B}",
+        "type_line": "Sorcery",
+        "oracle_text": "Search your library for a card, put that card into your hand, then shuffle."
+      }
+    ]
+  },
+  {
+    "name": "Grave Researcher // Reanimate",
+    "mana_cost": "{2}{B} // {B}",
+    "cmc": 3,
+    "type_line": "Creature — Troll Warlock // Sorcery",
+    "power": "3",
+    "toughness": "3",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Surveil",
+      "Prepared"
+    ],
+    "rarity": "rare",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Grave Researcher",
+        "mana_cost": "{2}{B}",
+        "type_line": "Creature — Troll Warlock",
+        "oracle_text": "At the beginning of your upkeep, surveil 1. Then if there are three or more creature cards in your graveyard, this creature becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "3",
+        "toughness": "3"
+      },
+      {
+        "name": "Reanimate",
+        "mana_cost": "{B}",
+        "type_line": "Sorcery",
+        "oracle_text": "Put target creature card from a graveyard onto the battlefield under your control. You lose life equal to that card's mana value."
+      }
+    ]
+  },
+  {
+    "name": "Moseo, Vein's New Dean",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Legendary Creature — Bird Skeleton Warlock",
+    "oracle_text": "Flying\nWhen Moseo enters, create a 1/1 black and green Pest creature token with \"Whenever this token attacks, you gain 1 life.\"\nInfusion — At the beginning of your end step, if you gained life this turn, return up to one target creature card with mana value X or less from your graveyard to the battlefield, where X is the amount of life you gained this turn.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Infusion",
+      "Flying"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Postmortem Professor",
+    "mana_cost": "{1}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Zombie Warlock",
+    "oracle_text": "This creature can't block.\nWhenever this creature attacks, each opponent loses 1 life and you gain 1 life.\n{1}{B}, Exile an instant or sorcery card from your graveyard: Return this card from your graveyard to the battlefield.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Pox Plague",
+    "mana_cost": "{B}{B}{B}{B}{B}",
+    "cmc": 5,
+    "type_line": "Sorcery",
+    "oracle_text": "Each player loses half their life, then discards half the cards in their hand, then sacrifices half the permanents they control of their choice. Round down each time.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Scheming Silvertongue // Sign in Blood",
+    "mana_cost": "{1}{B} // {B}{B}",
+    "cmc": 2,
+    "type_line": "Creature — Vampire Warlock // Sorcery",
+    "power": "1",
+    "toughness": "3",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Flying",
+      "Lifelink",
+      "Prepared"
+    ],
+    "rarity": "rare",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Scheming Silvertongue",
+        "mana_cost": "{1}{B}",
+        "type_line": "Creature — Vampire Warlock",
+        "oracle_text": "Flying, lifelink\nAt the beginning of your second main phase, if you gained 2 or more life this turn, this creature becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "1",
+        "toughness": "3"
+      },
+      {
+        "name": "Sign in Blood",
+        "mana_cost": "{B}{B}",
+        "type_line": "Sorcery",
+        "oracle_text": "Target player draws two cards and loses 2 life."
+      }
+    ]
+  },
+  {
+    "name": "Withering Curse",
+    "mana_cost": "{1}{B}{B}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "All creatures get -2/-2 until end of turn.\nInfusion — If you gained life this turn, destroy all creatures instead.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [
+      "Infusion"
+    ],
+    "rarity": "mythic",
+    "set": "sos"
+  },
+  {
+    "name": "Choreographed Sparks",
+    "mana_cost": "{R}{R}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "This spell can't be copied.\nChoose one or both —\n• Copy target instant or sorcery spell you control. You may choose new targets for the copy.\n• Copy target creature spell you control. The copy gains haste and \"At the beginning of the end step, sacrifice this token.\"",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Emeritus of Conflict // Lightning Bolt",
+    "mana_cost": "{1}{R} // {R}",
+    "cmc": 2,
+    "type_line": "Creature — Human Wizard // Instant",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "First strike",
+      "Prepared"
+    ],
+    "rarity": "mythic",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Emeritus of Conflict",
+        "mana_cost": "{1}{R}",
+        "type_line": "Creature — Human Wizard",
+        "oracle_text": "First strike\nWhenever you cast your third spell each turn, this creature becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "2",
+        "toughness": "2"
+      },
+      {
+        "name": "Lightning Bolt",
+        "mana_cost": "{R}",
+        "type_line": "Instant",
+        "oracle_text": "Lightning Bolt deals 3 damage to any target."
+      }
+    ]
+  },
+  {
+    "name": "Flashback",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Target instant or sorcery card in your graveyard gains flashback until end of turn. The flashback cost is equal to its mana cost. (You may cast that card from your graveyard for its flashback cost. Then exile it.)",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Maelstrom Artisan // Rocket Volley",
+    "mana_cost": "{1}{R}{R} // {1}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Minotaur Sorcerer // Sorcery",
+    "power": "3",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Haste",
+      "Prepared"
+    ],
+    "rarity": "rare",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Maelstrom Artisan",
+        "mana_cost": "{1}{R}{R}",
+        "type_line": "Creature — Minotaur Sorcerer",
+        "oracle_text": "Haste\nThis creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "3",
+        "toughness": "2"
+      },
+      {
+        "name": "Rocket Volley",
+        "mana_cost": "{1}{R}",
+        "type_line": "Sorcery",
+        "oracle_text": "Destroy target nonbasic land."
+      }
+    ]
+  },
+  {
+    "name": "Molten-Core Maestro",
+    "mana_cost": "{1}{R}",
+    "cmc": 2,
+    "type_line": "Creature — Goblin Bard",
+    "oracle_text": "Menace\nOpus — Whenever you cast an instant or sorcery spell, put a +1/+1 counter on this creature. If five or more mana was spent to cast that spell, add an amount of {R} equal to this creature's power.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Menace",
+      "Opus"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Steal the Show",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Choose one or both —\n• Target player discards any number of cards, then draws that many cards.\n• Steal the Show deals damage equal to the number of instant and sorcery cards in your graveyard to target creature or planeswalker.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Ambitious Augmenter",
+    "mana_cost": "{G}",
+    "cmc": 1,
+    "type_line": "Creature — Turtle Wizard",
+    "oracle_text": "Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)\nWhen this creature dies, if it had one or more counters on it, create a 0/0 green and blue Fractal creature token, then put this creature's counters on that token.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Increment"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Comforting Counsel",
+    "mana_cost": "{1}{G}",
+    "cmc": 2,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever you gain life, put a growth counter on this enchantment.\nAs long as there are five or more growth counters on this enchantment, creatures you control get +3/+3.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Emeritus of Abundance // Regrowth",
+    "mana_cost": "{2}{G} // {1}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Elf Druid // Sorcery",
+    "power": "3",
+    "toughness": "4",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Vigilance",
+      "Prepared"
+    ],
+    "rarity": "mythic",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Emeritus of Abundance",
+        "mana_cost": "{2}{G}",
+        "type_line": "Creature — Elf Druid",
+        "oracle_text": "Vigilance\nThis creature enters prepared.\nWhenever this creature attacks, if you control eight or more lands, this creature becomes prepared.",
+        "power": "3",
+        "toughness": "4"
+      },
+      {
+        "name": "Regrowth",
+        "mana_cost": "{1}{G}",
+        "type_line": "Sorcery",
+        "oracle_text": "Return target card from your graveyard to your hand."
+      }
+    ]
+  },
+  {
+    "name": "Planar Engineering",
+    "mana_cost": "{3}{G}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Sacrifice two lands. Search your library for four basic land cards, put them onto the battlefield tapped, then shuffle.",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Slumbering Trudge",
+    "mana_cost": "{X}{G}",
+    "cmc": 1,
+    "type_line": "Creature — Plant Beast",
+    "oracle_text": "This creature enters with a number of stun counters on it equal to three minus X. If X is 2 or less, it enters tapped. (If a permanent with a stun counter would become untapped, remove one from it instead.)",
+    "power": "6",
+    "toughness": "6",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Vastlands Scavenger // Bind to Life",
+    "mana_cost": "{1}{G}{G} // {4}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Bear Druid // Instant",
+    "power": "4",
+    "toughness": "4",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Prepared",
+      "Mill",
+      "Deathtouch"
+    ],
+    "rarity": "rare",
+    "set": "sos",
+    "card_faces": [
+      {
+        "name": "Vastlands Scavenger",
+        "mana_cost": "{1}{G}{G}",
+        "type_line": "Creature — Bear Druid",
+        "oracle_text": "Deathtouch\nThis creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+        "power": "4",
+        "toughness": "4"
+      },
+      {
+        "name": "Bind to Life",
+        "mana_cost": "{4}{G}",
+        "type_line": "Instant",
+        "oracle_text": "Mill seven cards. Then put a creature card from among them onto the battlefield."
+      }
+    ]
+  },
+  {
+    "name": "Applied Geometry",
+    "mana_cost": "{2}{G}{U}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "Create a token that's a copy of target non-Aura permanent you control, except it's a 0/0 Fractal creature in addition to its other types. Put six +1/+1 counters on it.",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Ark of Hunger",
+    "mana_cost": "{2}{R}{W}",
+    "cmc": 4,
+    "type_line": "Artifact",
+    "oracle_text": "Whenever one or more cards leave your graveyard, this artifact deals 1 damage to each opponent and you gain 1 life.\n{T}: Mill a card. You may play that card this turn.",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "keywords": [
+      "Mill"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Aziza, Mage Tower Captain",
+    "mana_cost": "{R}{W}",
+    "cmc": 2,
+    "type_line": "Legendary Creature — Djinn Sorcerer",
+    "oracle_text": "Whenever you cast an instant or sorcery spell, you may tap three untapped creatures you control. If you do, copy that spell. You may choose new targets for the copy.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Berta, Wise Extrapolator",
+    "mana_cost": "{2}{G}{U}",
+    "cmc": 4,
+    "type_line": "Legendary Creature — Frog Druid",
+    "oracle_text": "Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)\nWhenever one or more +1/+1 counters are put on Berta, add one mana of any color.\n{X}, {T}: Create a 0/0 green and blue Fractal creature token and put X +1/+1 counters on it.",
+    "power": "1",
+    "toughness": "4",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "keywords": [
+      "Increment"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Cauldron of Essence",
+    "mana_cost": "{1}{B}{G}",
+    "cmc": 3,
+    "type_line": "Artifact",
+    "oracle_text": "Whenever a creature you control dies, each opponent loses 1 life and you gain 1 life.\n{1}{B}{G}, {T}, Sacrifice a creature: Return target creature card from your graveyard to the battlefield. Activate only as a sorcery.",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Conciliator's Duelist",
+    "mana_cost": "{W}{W}{B}{B}",
+    "cmc": 4,
+    "type_line": "Creature — Kor Warlock",
+    "oracle_text": "When this creature enters, draw a card. Each player loses 1 life.\nRepartee — Whenever you cast an instant or sorcery spell that targets a creature, exile up to one target creature. Return that card to the battlefield under its owner's control at the beginning of the next end step.",
+    "power": "4",
+    "toughness": "3",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "keywords": [
+      "Repartee"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Dina's Guidance",
+    "mana_cost": "{1}{B}{G}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Search your library for a creature card, reveal it, put it into your hand or graveyard, then shuffle.",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Fix What's Broken",
+    "mana_cost": "{2}{W}{B}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "As an additional cost to cast this spell, pay X life.\nReturn each artifact and creature card with mana value X from your graveyard to the battlefield.",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Hardened Academic",
+    "mana_cost": "{R}{W}",
+    "cmc": 2,
+    "type_line": "Creature — Bird Cleric",
+    "oracle_text": "Flying, haste\nDiscard a card: This creature gains lifelink until end of turn.\nWhenever one or more cards leave your graveyard, put a +1/+1 counter on target creature you control.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "keywords": [
+      "Flying",
+      "Haste"
+    ],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Mind into Matter",
+    "mana_cost": "{X}{G}{U}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Draw X cards. Then you may put a permanent card with mana value X or less from your hand onto the battlefield tapped.",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Moment of Reckoning",
+    "mana_cost": "{3}{W}{W}{B}{B}",
+    "cmc": 7,
+    "type_line": "Sorcery",
+    "oracle_text": "Choose up to four. You may choose the same mode more than once.\n• Destroy target nonland permanent.\n• Return target nonland permanent card from your graveyard to the battlefield.",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Nita, Forum Conciliator",
+    "mana_cost": "{1}{W}{B}",
+    "cmc": 3,
+    "type_line": "Legendary Creature — Human Advisor",
+    "oracle_text": "Whenever you cast a spell you don't own, put a +1/+1 counter on each creature you control.\n{2}, Sacrifice another creature: Exile target instant or sorcery card from an opponent's graveyard. You may cast it this turn, and mana of any type can be spent to cast that spell. If that spell would be put into a graveyard, exile it instead. Activate only as a sorcery.",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Resonating Lute",
+    "mana_cost": "{2}{U}{R}",
+    "cmc": 4,
+    "type_line": "Artifact",
+    "oracle_text": "Lands you control have \"{T}: Add two mana of any one color. Spend this mana only to cast instant and sorcery spells.\"\n{T}: Draw a card. Activate only if you have seven or more cards in your hand.",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Splatter Technique",
+    "mana_cost": "{1}{U}{U}{R}{R}",
+    "cmc": 5,
+    "type_line": "Sorcery",
+    "oracle_text": "Choose one —\n• Draw four cards.\n• Splatter Technique deals 4 damage to each creature and planeswalker.",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Suspend Aggression",
+    "mana_cost": "{1}{R}{W}",
+    "cmc": 3,
+    "type_line": "Instant",
+    "oracle_text": "Exile target nonland permanent and the top card of your library. For each of those cards, its owner may play it until the end of their next turn.",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Traumatic Critique",
+    "mana_cost": "{X}{U}{R}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Traumatic Critique deals X damage to any target. Draw two cards, then discard a card.",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Vicious Rivalry",
+    "mana_cost": "{2}{B}{G}",
+    "cmc": 4,
+    "type_line": "Sorcery",
+    "oracle_text": "As an additional cost to cast this spell, pay X life.\nDestroy all artifacts and creatures with mana value X or less.",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Zaffai and the Tempests",
+    "mana_cost": "{5}{U}{R}",
+    "cmc": 7,
+    "type_line": "Legendary Creature — Human Bard Sorcerer",
+    "oracle_text": "Once during each of your turns, you may cast an instant or sorcery spell from your hand without paying its mana cost.",
+    "power": "5",
+    "toughness": "7",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Great Hall of the Biblioplex",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "{T}: Add {C}.\n{T}, Pay 1 life: Add one mana of any color. Spend this mana only to cast an instant or sorcery spell.\n{5}: If this land isn't a creature, it becomes a 2/4 Wizard creature with \"Whenever you cast an instant or sorcery spell, this creature gets +1/+0 until end of turn.\" It's still a land.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Petrified Hamlet",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "When this land enters, choose a land card name.\nActivated abilities of sources with the chosen name can't be activated unless they're mana abilities.\nLands with the chosen name have \"{T}: Add {C}.\"\n{T}: Add {C}.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  },
+  {
+    "name": "Lorehold Charm",
+    "mana_cost": "{R}{W}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Choose one —\n• Each opponent sacrifices a nontoken artifact of their choice.\n• Return target artifact or creature card with mana value 2 or less from your graveyard to the battlefield.\n• Creatures you control get +1/+1 and gain trample until end of turn.",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Prismari Charm",
+    "mana_cost": "{U}{R}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Choose one —\n• Surveil 2, then draw a card.\n• Prismari Charm deals 1 damage to each of one or two targets.\n• Return target nonland permanent to its owner's hand.",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "keywords": [
+      "Surveil"
+    ],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Quandrix Charm",
+    "mana_cost": "{G}{U}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Choose one —\n• Counter target spell unless its controller pays {2}.\n• Destroy target enchantment.\n• Target creature has base power and toughness 5/5 until end of turn.",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Silverquill Charm",
+    "mana_cost": "{W}{B}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Choose one —\n• Put two +1/+1 counters on target creature.\n• Exile target creature with power 2 or less.\n• Each opponent loses 3 life and you gain 3 life.",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Witherbloom Charm",
+    "mana_cost": "{B}{G}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Choose one —\n• You may sacrifice a permanent. If you do, draw two cards.\n• You gain 5 life.\n• Destroy target nonland permanent with mana value 2 or less.",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "uncommon",
+    "set": "sos"
+  },
+  {
+    "name": "Wisdom of Ages",
+    "mana_cost": "{4}{U}{U}{U}",
+    "cmc": 7,
+    "type_line": "Sorcery",
+    "oracle_text": "Return all instant and sorcery cards from your graveyard to your hand. You have no maximum hand size for the rest of the game.\nExile Wisdom of Ages.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "sos"
+  }
+]
