@@ -242,7 +242,11 @@ func (e *grantKeywordEffect) Text() string {
 }
 
 func (e *grantKeywordEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeBenefit}
+	outcome := OutcomeBenefit
+	if e.keyword == CantRegenerate {
+		outcome = OutcomeDetriment
+	}
+	return EffectProperties{Outcome: outcome, GrantedKeyword: e.keyword}
 }
 
 func execGrantKeyword(ctx *EffectContext, e *grantKeywordEffect) error {

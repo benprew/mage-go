@@ -6,8 +6,50 @@ import (
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/ai/combatsolver"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/eval"
 )
+
+// stackHasOpponentThreat returns true when a stack object controlled by
+// someone other than playerID is currently resolving — typically an
+// opponent's spell or ability that may threaten our creatures.
+func stackHasOpponentThreat(g *mage.Game, playerID uuid.UUID) bool {
+	for _, obj := range g.StackObjects() {
+		if obj.Controller != playerID {
+			return true
+		}
+	}
+	return false
+}
+
+// shouldHoldForCombat returns true when the AI should defer casting combat-
+// eligible instants (pump, damage, removal) to the post-blockers response
+// window: it's the AI's pre-combat main phase and they have at least one
+// creature that can attack.
+func (s *HeuristicStrategy) shouldHoldForCombat(g *mage.Game, playerID uuid.UUID) bool {
+	if g.GetStep() != core.PrecombatMain {
+		return false
+	}
+	if g.ActivePlayerObj() == nil || g.ActivePlayerObj().PlayerID() != playerID {
+		return false
+	}
+	for _, perm := range g.AllBattlefield() {
+		if perm.Controller == playerID && perm.CanDeclareAsAttacker(g) {
+			return true
+		}
+	}
+	return false
+}
+
+// solverProfile translates a WeightedPersonality into a combatsolver.Profile.
+func (s *HeuristicStrategy) solverProfile() combatsolver.Profile {
+	w := s.weights()
+	return combatsolver.Profile{
+		Weights:        w.Weights,
+		Aggression:     w.Aggression,
+		BlockThreshold: w.BlockThreshold,
+	}
+}
 
 // HeuristicStrategy implements AIStrategy using personality-driven heuristics.
 type HeuristicStrategy struct {
@@ -91,18 +133,29 @@ func (s *HeuristicStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPla
 		return *action
 	}
 
-	if !mainPhase {
+	// Stack-threat exception: if an opponent's spell or ability is on the
+	// stack (e.g., a kill spell targeting one of our creatures), evaluate a
+	// response immediately — even during our main phase — so a held protection
+	// or pump trick can save the targeted creature instead of being suppressed
+	// by the combat-trick hold logic below.
+	if !mainPhase || stackHasOpponentThreat(g, playerID) {
 		if response := s.evaluateResponse(p, g); response != nil {
 			return *response
 		}
 	}
 
 	if mainPhase {
+		holdCombatTricks := s.shouldHoldForCombat(g, playerID)
 		for _, card := range p.Hand() {
 			if !card.HasType(core.TypeInstant) {
 				continue
 			}
 			if !g.CanAfford(playerID, card.ManaCost()) {
+				continue
+			}
+			// Hold combat-eligible instants for the post-blockers response
+			// window when we're pre-combat and have attackable creatures.
+			if holdCombatTricks && combatsolver.ClassifyCombat(card) != combatsolver.RoleNone {
 				continue
 			}
 			hasUsableEffect := false
@@ -211,6 +264,11 @@ func (s *HeuristicStrategy) considerAbilityActivation(p mage.Player, g *mage.Gam
 			return nil
 		}
 
+		// Pick the friendliness of the desired target from the ability's
+		// dominant outcome: detrimental abilities should hit opponents,
+		// beneficial ones should hit our own permanents.
+		preferOwn := mage.SpellOutcome(ab.Effects()) == mage.OutcomeBenefit
+
 		var targets []uuid.UUID
 		for _, t := range ab.Targets() {
 			possible := t.Possible(playerID, perm.Card, g)
@@ -219,7 +277,15 @@ func (s *HeuristicStrategy) considerAbilityActivation(p mage.Player, g *mage.Gam
 			}
 			opponent := g.GetOpponent(playerID)
 			bestTarget := possible[0]
-			if opponent != nil {
+			if preferOwn {
+				for _, id := range possible {
+					p := g.FindPermanent(id)
+					if p != nil && p.Controller == playerID {
+						bestTarget = id
+						break
+					}
+				}
+			} else if opponent != nil {
 				for _, id := range possible {
 					p := g.FindPermanent(id)
 					if p != nil && p.Controller == opponent.PlayerID() {
@@ -244,166 +310,23 @@ func (s *HeuristicStrategy) considerAbilityActivation(p mage.Player, g *mage.Gam
 
 func (s *HeuristicStrategy) Attackers(p mage.Player, g *mage.Game) []uuid.UUID {
 	playerID := p.PlayerID()
-	opponent := g.GetOpponent(playerID)
-	var opponentID uuid.UUID
-	if opponent != nil {
-		opponentID = opponent.PlayerID()
-	}
 
+	// Lethal short-circuit: if a known lethal attack exists, take it.
 	lethal := eval.CalculateLethal(g, playerID)
 	if lethal.IHaveLethal && len(lethal.LethalAttackers) > 0 {
 		return lethal.LethalAttackers
 	}
 
-	race := eval.CalculateRace(g, playerID)
-
-	var attackers []uuid.UUID
-	for _, perm := range g.AllBattlefield() {
-		if perm.Controller != playerID {
-			continue
-		}
-		if !perm.CanDeclareAsAttacker(g) {
-			continue
-		}
-
-		if race.Racing {
-			if raceInformedAttack(perm, g, opponentID, race) {
-				attackers = append(attackers, perm.ID())
-			}
-		} else if shouldAttack(perm, g, opponentID, s.weights().Aggression) {
-			attackers = append(attackers, perm.ID())
-		}
-	}
-	return attackers
+	// Joint-optimal solver: enumerate attacker subsets, pick the one with the
+	// best outcome under opponent's optimal blocking response. Returns nil
+	// (skip combat) when no positive line exists.
+	r := combatsolver.SolveAttack(g, playerID, combatsolver.Options{Profile: s.solverProfile()})
+	return r.Attackers
 }
 
 func (s *HeuristicStrategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAssignment {
-	playerID := p.PlayerID()
-
-	lethal := eval.CalculateLethal(g, playerID)
-	theyHaveLethal := lethal.TheyHaveLethal
-
-	race := eval.CalculateRace(g, playerID)
-
-	var assignments []mage.BlockAssignment
-
-	var available []*mage.Permanent
-	for _, perm := range g.AllBattlefield() {
-		if perm.Controller != playerID || !perm.CanDeclareAsBlocker(g) {
-			continue
-		}
-		available = append(available, perm)
-	}
-
-	singleBlockedAttackers := make(map[uuid.UUID]bool)
-
-	for _, group := range g.CombatGroups() {
-		if group.DefenderID != playerID {
-			continue
-		}
-		atk := g.FindPermanent(group.AttackerID)
-		if atk == nil {
-			continue
-		}
-		atkPow := atk.CurrentPower(g)
-
-		if !theyHaveLethal {
-			if race.Racing && race.MyClock < race.TheirClock {
-				me := g.GetPlayer(playerID)
-				if me != nil && atkPow*4 < me.Life() {
-					continue
-				}
-			}
-			if !shouldBlock(atkPow, g, p.PlayerID(), s.weights().BlockThreshold) {
-				continue
-			}
-		}
-
-		assigned := false
-		for i, blk := range available {
-			if blk == nil {
-				continue
-			}
-			if !mage.CanBlock(blk, atk, g) {
-				continue
-			}
-			if mage.HasLandwalkEvasion(atk, playerID, g) {
-				continue
-			}
-
-			if theyHaveLethal {
-				assignments = append(assignments, mage.BlockAssignment{
-					BlockerID:  blk.ID(),
-					AttackerID: atk.ID(),
-				})
-				available[i] = nil
-				assigned = true
-				break
-			}
-
-			if race.Racing && !raceInformedBlock(atk, blk, g, race) {
-				continue
-			}
-
-			if evaluateSingleBlock(atk, blk, g, playerID) {
-				assignments = append(assignments, mage.BlockAssignment{
-					BlockerID:  blk.ID(),
-					AttackerID: atk.ID(),
-				})
-				available[i] = nil
-				assigned = true
-				singleBlockedAttackers[atk.ID()] = true
-				break
-			}
-		}
-		_ = assigned
-	}
-
-	for _, group := range g.CombatGroups() {
-		if group.DefenderID != playerID {
-			continue
-		}
-		atk := g.FindPermanent(group.AttackerID)
-		if atk == nil {
-			continue
-		}
-		alreadyBlocked := false
-		for _, a := range assignments {
-			if a.AttackerID == atk.ID() {
-				alreadyBlocked = true
-				break
-			}
-		}
-		if alreadyBlocked {
-			continue
-		}
-		if canSingleBlockKill(atk, available, g) {
-			continue
-		}
-		if mage.HasLandwalkEvasion(atk, playerID, g) {
-			continue
-		}
-
-		gangBlockers := findGangBlocks(atk, available, g, playerID, theyHaveLethal)
-		if gangBlockers == nil {
-			continue
-		}
-
-		for _, blk := range gangBlockers {
-			assignments = append(assignments, mage.BlockAssignment{
-				BlockerID:  blk.ID(),
-				AttackerID: atk.ID(),
-			})
-			for i, a := range available {
-				if a != nil && a.ID() == blk.ID() {
-					available[i] = nil
-					break
-				}
-			}
-		}
-	}
-
-	return assignments
+	r := combatsolver.SolveDefense(g, p.PlayerID(), combatsolver.Options{Profile: s.solverProfile()})
+	return r.Blocks
 }
 
 func (s *HeuristicStrategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card) []uuid.UUID {

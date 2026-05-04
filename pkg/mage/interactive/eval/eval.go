@@ -385,8 +385,20 @@ func EvalCreature(perm *mage.Permanent) int {
 // CurrentToughness, which include continuous effects (pumps, anthems, equipment).
 // Prefer this over EvalCreature whenever a *mage.Game is available.
 func EvalCreatureInGame(perm *mage.Permanent, g *mage.Game) int {
+	return evalCreatureInGame(perm, g, true)
+}
+
+// EvalCreatureInGameNoTapPenalty is like EvalCreatureInGame but skips the
+// tap-state penalty. Use it when evaluating mid-turn positions where the
+// creature's tapped state will resolve at the next untap step (e.g., the
+// active player's tapped attackers in a combat-decision leaf eval).
+func EvalCreatureInGameNoTapPenalty(perm *mage.Permanent, g *mage.Game) int {
+	return evalCreatureInGame(perm, g, false)
+}
+
+func evalCreatureInGame(perm *mage.Permanent, g *mage.Game, applyTapPenalty bool) int {
 	score := perm.CurrentPower(g)*PowerWeight + perm.CurrentToughness(g)*ToughnessWeight
-	if perm.Tapped {
+	if applyTapPenalty && perm.Tapped {
 		score = score * 2 / 3
 	}
 	if perm.HasAttr(core.AttrSummonSick) && !perm.HasAttr(core.Haste) {
@@ -544,6 +556,16 @@ func abilityBonus(perm *mage.Permanent) int {
 }
 
 // AbilityQuality scores an activated ability by its effect type and cost efficiency.
+// isEvasionKeyword reports whether a granted keyword makes a creature harder
+// to block (often unblockable in practice on the relevant board state).
+func isEvasionKeyword(kw core.Attr) bool {
+	switch kw {
+	case core.Flying, core.Fear, core.UnblockableKW:
+		return true
+	}
+	return false
+}
+
 func AbilityQuality(ab mage.ActivatedAbility) int {
 	hasTapCost := false
 	manaCostTotal := 0
@@ -594,6 +616,15 @@ func AbilityQuality(ab mage.ActivatedAbility) int {
 			s := 2
 			if manaCostTotal >= 4 {
 				s = 1
+			}
+			// Evasion-granting abilities are tactical: they can convert a
+			// blocked attacker into lethal damage. Score above the activation
+			// threshold so the heuristic and minimax search both consider them.
+			if isEvasionKeyword(props.GrantedKeyword) {
+				s = 4
+				if manaCostTotal >= 4 {
+					s = 3
+				}
 			}
 			if s > bestScore {
 				bestScore = s
