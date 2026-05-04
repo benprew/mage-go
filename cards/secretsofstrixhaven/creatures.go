@@ -2350,10 +2350,40 @@ func registerCreatures() {
 	// Emeritus of Conflict // Lightning Bolt {1}{R} // {R}
 	// Creature — Human Wizard // Instant
 	// 2/2
-	// TODO: implement
+	// First strike
+	// Whenever you cast your third spell each turn, this creature becomes prepared.
+	// (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)
+	// ---
+	// Lightning Bolt {R}
+	// Instant
+	// Lightning Bolt deals 3 damage to any target.
 	Register("Emeritus of Conflict // Lightning Bolt", func() Card {
+		spellFactory := func() Card {
+			return NewInstant("Lightning Bolt", "{R}",
+				NewTargetedSpell(TargetAnyTarget(), DealDamage(Fixed(3))),
+			)
+		}
+		// XXX: "Whenever you cast your third spell each turn, this creature becomes
+		// prepared." The engine tracks only instant spells cast per turn
+		// (instantsCastThisTurn), not total spells cast per player per turn.
+		// A per-player total-spell-count tracker would be needed to implement this
+		// trigger correctly.
+		castCopy := FuncEffect(
+			"cast a copy of this creature's spell",
+			EffectProperties{},
+			func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				return g.CastPreparedSpellCopy(controller, sourceID, spellFactory)
+			})
+		activatedAb := NewActivatedAbility(castCopy, ManaCostOf("{0}"),
+			WithSorcerySpeed(),
+			WithActivationCondition(func(g *Game, src *Permanent, controller uuid.UUID) bool {
+				return src != nil && src.HasAttr(AttrPrepared)
+			}),
+		)
 		return NewCreature("Emeritus of Conflict // Lightning Bolt", "{1}{R} // {R}", 2, 2,
-			WithSubTypes("Human", "Wizard", "//", "Instant"),
+			WithSubTypes("Human", "Wizard"),
+			WithKeyword(FirstStrike),
+			WithAbility(activatedAb),
 		)
 	})
 

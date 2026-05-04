@@ -1697,6 +1697,31 @@ func TestDelugeVirtuoso_OpusBonusPowerToughness(t *testing.T) {
 	})
 }
 
+// =============================================================================
+// Emeritus of Conflict // Lightning Bolt
+// =============================================================================
+
+// TestEmeritusOfConflict_HasFirstStrike verifies Emeritus of Conflict has first
+// strike.
+func TestEmeritusOfConflict_HasFirstStrike(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Emeritus of Conflict // Lightning Bolt")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Emeritus of Conflict // Lightning Bolt", core.FirstStrike, true)
+}
+
+// TestEmeritusOfConflict_DoesNotEnterPrepared verifies Emeritus of Conflict
+// does not enter prepared; it only becomes prepared when you cast your third
+// spell each turn.
+func TestEmeritusOfConflict_DoesNotEnterPrepared(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Emeritus of Conflict // Lightning Bolt")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Emeritus of Conflict // Lightning Bolt", core.AttrPrepared, false)
+}
+
 // TestExpressiveFiredancer_OpusBoost verifies that casting an instant or
 // sorcery spell triggers Expressive Firedancer's Opus and grants +1/+1 until
 // end of turn (expires by turn 2).
