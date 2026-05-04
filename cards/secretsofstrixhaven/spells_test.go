@@ -187,13 +187,13 @@ func TestVibrantOutburst(t *testing.T) {
 	t.Run("deals 3 damage to any target and taps a creature", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Llanowar Elves")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Vibrant Outburst")
-		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Vibrant Outburst", "PlayerB", "Grizzly Bears")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Vibrant Outburst", "PlayerB", "Llanowar Elves")
 		g.StopAt(1, core.EndStep)
 		g.Execute()
 		g.AssertLife(gametest.PlayerB, 17)
-		g.AssertTapped(gametest.PlayerA, "Grizzly Bears", true)
+		g.AssertTapped(gametest.PlayerA, "Llanowar Elves", true)
 	})
 }
 
@@ -1012,7 +1012,9 @@ func TestMusesEncouragement(t *testing.T) {
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Muse's Encouragement")
 		g.StopAt(1, core.EndStep)
 		g.Execute()
-		g.AssertPermanentCount(gametest.PlayerA, "Elemental", 1)
+		g.AssertPermanentCount(gametest.PlayerA, "Elemental Token", 1)
+		g.AssertPowerToughness(gametest.PlayerA, "Elemental Token", 3, 3)
+		g.AssertHasAbility(gametest.PlayerA, "Elemental Token", core.Flying, true)
 	})
 }
 
@@ -2168,4 +2170,44 @@ func TestRestorationSeminar_ParadigmExilesAfterResolve(t *testing.T) {
 	// After Paradigm, the spell goes to exile, not graveyard.
 	g.AssertGraveyardCount(gametest.PlayerA, "Restoration Seminar", 0)
 	g.AssertExileCount("Restoration Seminar", 1)
+}
+
+func TestLumaretsFavor(t *testing.T) {
+	t.Run("+2/+4 boost until end of turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lumaret's Favor")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lumaret's Favor", "Grizzly Bears")
+		g.StopAt(1, core.DeclareAttackers)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 4, 6)
+	})
+}
+
+func TestSuspendAggression(t *testing.T) {
+	t.Run("exiles target nonland permanent and top card of library", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Suspend Aggression")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Suspend Aggression", "Grizzly Bears")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+		g.AssertExileCount("Grizzly Bears", 1)
+		g.AssertLibraryCount(gametest.PlayerA, "Forest", 0)
+	})
+}
+
+func TestWiltInTheHeat(t *testing.T) {
+	t.Run("deals 5 damage to target creature; exiles on death", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Wilt in the Heat")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Wilt in the Heat", "Grizzly Bears")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertExileCount("Grizzly Bears", 1)
+		g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 0)
+	})
 }

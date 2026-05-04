@@ -2212,7 +2212,7 @@ func registerSpells() {
 	Register("Muse's Encouragement", func() Card {
 		return NewInstant("Muse's Encouragement", "{4}{U}",
 			NewSpellAbility(
-				CreateColoredToken("Elemental", 3, 3,
+				CreateColoredToken("Elemental Token", 3, 3,
 					[]Color{Blue, Red},
 					[]CardType{TypeCreature},
 					[]string{"Elemental"},
@@ -2619,7 +2619,7 @@ func registerSpells() {
 	Register("Rabid Attack", func() Card {
 		return NewInstant("Rabid Attack", "{1}{B}",
 			NewMultiTargetSpell(
-				[]Target{TargetUpToNCreatures(100, IsCreature)},
+				[]Target{TargetUpToNCreaturesYouControl(100)},
 				FuncEffect(
 					"target creatures you control get +1/+0 and gain 'when this creature dies, draw a card' until end of turn",
 					EffectProperties{Outcome: OutcomeBenefit},
@@ -3322,7 +3322,7 @@ func registerSpells() {
 			},
 			{
 				Label:   "Steal the Show deals damage equal to instant and sorcery cards in your graveyard to target creature or planeswalker",
-				Targets: []Target{TargetAnyTarget()},
+				Targets: []Target{TargetPermanent(Or(IsCreature, IsPlaneswalker))},
 				Effects: []Effect{
 					FuncEffect(
 						"deal damage equal to instants/sorceries in your graveyard",
@@ -3572,8 +3572,11 @@ func registerSpells() {
 // Vibrant Outburst deals 3 damage to any target. Tap up to one target creature.
 	Register("Vibrant Outburst", func() Card {
 		return NewInstant("Vibrant Outburst", "{U}{R}",
-			NewTargetedSpell(
-				TargetAnyTarget(),
+			NewMultiTargetSpell(
+				[]Target{
+					TargetAnyTarget(),
+					TargetUpToOneCreature(),
+				},
 				FuncEffect(
 					"deal 3 damage to any target; tap up to one target creature",
 					EffectProperties{Outcome: OutcomeDetriment},
@@ -3589,29 +3592,10 @@ func registerSpells() {
 								}
 							}
 						}
-						// "Tap up to one target creature" — controller chooses a creature to tap.
-						// Candidates are ordered with the controller's own creatures first so that
-						// the default test-harness choice (candidates[0]) selects the controller's
-						// own creature, which is the common scripted-test expectation.
-						p := g.GetPlayer(controller)
-						if p == nil {
-							return nil
-						}
-						var candidates []*Permanent
-						for _, b := range g.AllBattlefield() {
-							if b.Controller == controller && b.HasType(TypeCreature) {
-								candidates = append(candidates, b)
-							}
-						}
-						for _, b := range g.AllBattlefield() {
-							if b.Controller != controller && b.HasType(TypeCreature) {
-								candidates = append(candidates, b)
-							}
-						}
-						if len(candidates) > 0 {
-							chosen := p.ChoosePermanent(candidates, "tap up to one target creature", g)
-							if chosen != nil {
-								g.TapPermanent(chosen)
+						if len(targets) >= 2 && targets[1] != uuid.Nil {
+							perm := g.FindPermanent(targets[1])
+							if perm != nil {
+								g.TapPermanent(perm)
 							}
 						}
 						return nil

@@ -147,6 +147,18 @@ func TargetUpToOneCreature(filters ...PermanentFilter) Target {
 	return TargetUpToNCreatures(1, filters...)
 }
 
+// TargetUpToNCreaturesYouControl creates a target that selects from 0 up to n
+// creatures the controller controls, optionally narrowed by PermanentFilter
+// predicates. Used for "any number of target creatures you control" effects
+// such as Rabid Attack.
+func TargetUpToNCreaturesYouControl(n int, filters ...PermanentFilter) Target {
+	return &CreatureTarget{
+		BaseTarget:     BaseTarget{min: 0, max: n},
+		Filters:        filters,
+		controllerOnly: true,
+	}
+}
+
 // TargetUpToNCreaturesOrPlayers creates a target that selects from 0 up to n
 // creatures or players. Used for divided-damage spells like Flames of the
 // Firebrand ("3 damage divided as you choose among any number of targets").
