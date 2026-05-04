@@ -2472,10 +2472,38 @@ func registerCreatures() {
 	// Creature — Djinn Sorcerer
 	// 4/4
 	// Whenever this creature enters or attacks, you may draw a card. If you do, discard a card.
-	// TODO: implement
 	Register("Stadium Tidalmage", func() Card {
+		drawDiscard := FuncEffect(
+			"you may draw a card, if you do discard a card",
+			EffectProperties{Outcome: OutcomeBenefit},
+			func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				p := g.GetPlayer(controller)
+				if p == nil {
+					return nil
+				}
+				if !p.ChooseMayAbility("draw a card then discard a card") {
+					return nil
+				}
+				drawn, ok := g.PlayerDrawCard(p)
+				if !ok || drawn == nil {
+					return nil
+				}
+				currentHand := p.Hand()
+				if len(currentHand) == 0 {
+					return nil
+				}
+				chosen := p.ChooseCardsFromHand(1, "discard a card", g)
+				if len(chosen) == 0 {
+					return nil
+				}
+				g.PlayerDiscard(p, chosen[0].ID())
+				return nil
+			},
+		)
 		return NewCreature("Stadium Tidalmage", "{2}{U}{R}", 4, 4,
 			WithSubTypes("Djinn", "Sorcerer"),
+			WithAbility(EntersBattlefieldTrigger(drawDiscard, false)),
+			WithAbility(AttacksTrigger(drawDiscard, false)),
 		)
 	})
 
