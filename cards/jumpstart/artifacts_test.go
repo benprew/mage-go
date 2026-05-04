@@ -381,3 +381,20 @@ func TestManaGeode(t *testing.T) {
 	g.Execute()
 	g.AssertLibraryTop(gametest.PlayerA, "Forest", "Mountain")
 }
+
+// Terrarion: when the artifact is sacrificed (via its own activated ability),
+// the LtB trigger draws a card.
+func TestTerrarion_SacrificeDrawsCard(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Terrarion")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 2)
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears", 3)
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Terrarion")
+	g.ChooseManaColor(gametest.PlayerA, core.Blue)
+	g.ChooseManaColor(gametest.PlayerA, core.Blue)
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerA, "Terrarion", 1)
+	// Drew a Grizzly Bears (default agent doesn't auto-cast spells).
+	g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 1)
+}

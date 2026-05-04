@@ -795,3 +795,52 @@ func TestParasiticImplant(t *testing.T) {
 		g.AssertPermanentCount(gametest.PlayerA, "Myr", 0)
 	})
 }
+
+// TestRhysticStudy_OpponentDeclinesPay verifies that when an opponent casts
+// a spell and declines/cannot pay {1}, the controller draws a card.
+func TestRhysticStudy_OpponentDeclinesPay(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rhystic Study")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Plains")
+	g.SetLife(gametest.PlayerA, 20)
+	tpB := g.GetPlayer(gametest.PlayerB)
+	tpB.QueueMayAbilityChoices(false)
+	g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "PlayerA")
+	g.StopAt(2, core.EndStep)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "Plains", 1)
+	g.AssertLife(gametest.PlayerA, 17)
+}
+
+// Lawmage's Binding: enchanted creature's non-mana activated abilities can't be
+// activated.
+func TestLawmagesBinding_BlocksActivatedAbilities(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Prodigal Sorcerer")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lawmage's Binding")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 2)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 1)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lawmage's Binding", "Prodigal Sorcerer")
+	g.ActivateAbility(2, core.PrecombatMain, gametest.PlayerB, "Prodigal Sorcerer", "PlayerA")
+	g.StopAt(2, core.EndStep)
+	g.Execute()
+	// Activation blocked: PlayerA still at 20 life.
+	g.AssertLife(gametest.PlayerA, 20)
+}
+
+// Assault Formation: a 0/4 Wall attacking deals damage equal to its toughness.
+func TestAssaultFormation_AssignsToughnessAsDamage(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Assault Formation")
+	// Wall of Wood: 0/3 with defender. Use {G} to remove defender, then attack.
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Wall of Wood")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.ActivateAbility(3, core.PrecombatMain, gametest.PlayerA, "Assault Formation", "Wall of Wood")
+	g.Attack(3, gametest.PlayerA, "Wall of Wood")
+	g.StopAt(3, core.EndStep)
+	g.Execute()
+	// 0/3 wall now assigns 3 damage instead of 0.
+	g.AssertLife(gametest.PlayerB, 17)
+}
