@@ -1189,10 +1189,29 @@ func registerSpells() {
 // Fractalize {X}{U}
 // Instant
 // Until end of turn, target creature becomes a green and blue Fractal with base power and toughness each equal to X plus 1. (It loses all other colors and creature types.)
-// TODO: implement
 	Register("Fractalize", func() Card {
 		return NewInstant("Fractalize", "{X}{U}",
-			NewSpellAbility(),
+			NewTargetedSpell(TargetCreature(),
+				FuncEffect(
+					"target creature becomes green and blue Fractal with base P/T (X+1)/(X+1) until end of turn",
+					EffectProperties{Outcome: OutcomeUnknown},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						perm := g.FindPermanent(targets[0])
+						if perm == nil {
+							return nil
+						}
+						x := g.XValue()
+						pt := x + 1
+						g.AddContinuousEffect(SetBasePT(perm.ID(), pt, pt))
+						g.AddContinuousEffect(BecomesColors(perm.ID(), []Color{Green, Blue}, EndOfTurn))
+						g.AddContinuousEffect(BecomesSubType(perm.ID(), "Fractal", EndOfTurn))
+						return nil
+					},
+				),
+			),
 		)
 	})
 
