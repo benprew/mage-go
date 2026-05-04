@@ -2811,3 +2811,220 @@ func TestEmeritusOfIdeation_CastAncestralRecallDrawsThreeForTarget(t *testing.T)
 	g.AssertHandCount(gametest.PlayerA, "", 3)
 	g.AssertHasAbility(gametest.PlayerA, "Emeritus of Ideation // Ancestral Recall", core.AttrPrepared, false)
 }
+
+// =============================================================================
+// Studious First-Year // Rampant Growth
+// =============================================================================
+
+// TestStudiousFirstYear_ETBPrepared verifies that Studious First-Year enters
+// the battlefield prepared.
+func TestStudiousFirstYear_ETBPrepared(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Studious First-Year // Rampant Growth")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Studious First-Year // Rampant Growth", core.AttrPrepared, true)
+}
+
+// TestStudiousFirstYear_CastRampantGrowthFetchesLand verifies that activating
+// the Prepared ability casts Rampant Growth, putting a basic land onto the
+// battlefield tapped, and unprepares the creature.
+func TestStudiousFirstYear_CastRampantGrowthFetchesLand(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Studious First-Year // Rampant Growth")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Forest")
+	g.ChooseFromLibrary(gametest.PlayerA, "Forest")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Studious First-Year // Rampant Growth")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Forest", 1)
+	g.AssertTapped(gametest.PlayerA, "Forest", true)
+	g.AssertHasAbility(gametest.PlayerA, "Studious First-Year // Rampant Growth", core.AttrPrepared, false)
+}
+
+// =============================================================================
+// Maelstrom Artisan // Rocket Volley
+// =============================================================================
+
+// TestMaelstromArtisan_HasHaste verifies that Maelstrom Artisan has haste.
+func TestMaelstromArtisan_HasHaste(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Maelstrom Artisan // Rocket Volley")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Maelstrom Artisan // Rocket Volley", core.Haste, true)
+}
+
+// TestMaelstromArtisan_ETBPrepared verifies that Maelstrom Artisan enters
+// the battlefield prepared.
+func TestMaelstromArtisan_ETBPrepared(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Maelstrom Artisan // Rocket Volley")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Maelstrom Artisan // Rocket Volley", core.AttrPrepared, true)
+}
+
+// TestMaelstromArtisan_RocketVolleyDestroysNonbasicLand verifies that activating
+// the Prepared ability casts Rocket Volley, destroying the targeted nonbasic land.
+func TestMaelstromArtisan_RocketVolleyDestroysNonbasicLand(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Maelstrom Artisan // Rocket Volley")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Underground Sea")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Maelstrom Artisan // Rocket Volley", "Underground Sea")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerB, "Underground Sea", 0)
+	g.AssertHasAbility(gametest.PlayerA, "Maelstrom Artisan // Rocket Volley", core.AttrPrepared, false)
+}
+
+// =============================================================================
+// Pigment Wrangler // Striking Palette
+// =============================================================================
+
+// TestPigmentWrangler_HasFlying verifies that Pigment Wrangler has flying.
+func TestPigmentWrangler_HasFlying(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Pigment Wrangler // Striking Palette")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Pigment Wrangler // Striking Palette", core.Flying, true)
+}
+
+// TestPigmentWrangler_ETBPrepared verifies that Pigment Wrangler enters
+// the battlefield prepared.
+func TestPigmentWrangler_ETBPrepared(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Pigment Wrangler // Striking Palette")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Pigment Wrangler // Striking Palette", core.AttrPrepared, true)
+}
+
+// TestPigmentWrangler_StrikingPaletteCopiesNextInstantOrSorcery verifies that
+// activating the Prepared ability causes the next instant or sorcery spell cast
+// this turn to be copied.
+func TestPigmentWrangler_StrikingPaletteCopiesNextInstantOrSorcery(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Pigment Wrangler // Striking Palette")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 5)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	// Activate Striking Palette (the Prepared ability), then cast Lightning Bolt.
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Pigment Wrangler // Striking Palette")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// The bolt and its copy each deal 3 damage — PlayerB ends at 14.
+	g.AssertLife(gametest.PlayerB, 14)
+	g.AssertHasAbility(gametest.PlayerA, "Pigment Wrangler // Striking Palette", core.AttrPrepared, false)
+}
+
+// =============================================================================
+// Strife Scholar // Awaken the Ages
+// =============================================================================
+
+// TestStrifeScholar_ETBPrepared verifies that Strife Scholar enters
+// the battlefield prepared.
+func TestStrifeScholar_ETBPrepared(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Strife Scholar // Awaken the Ages")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Strife Scholar // Awaken the Ages", core.AttrPrepared, true)
+}
+
+// TestStrifeScholar_AwakenTheAgesCreatesTwoSpiritTokens verifies that
+// activating the Prepared ability creates two 2/2 red and white Spirit tokens.
+func TestStrifeScholar_AwakenTheAgesCreatesTwoSpiritTokens(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Strife Scholar // Awaken the Ages")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Strife Scholar // Awaken the Ages")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Spirit Token", 2)
+	g.AssertHasAbility(gametest.PlayerA, "Strife Scholar // Awaken the Ages", core.AttrPrepared, false)
+}
+
+// =============================================================================
+// Emeritus of Abundance // Regrowth
+// =============================================================================
+
+// TestEmeritusOfAbundance_HasVigilance verifies that Emeritus of Abundance
+// has vigilance.
+func TestEmeritusOfAbundance_HasVigilance(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Emeritus of Abundance // Regrowth")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Emeritus of Abundance // Regrowth", core.Vigilance, true)
+}
+
+// TestEmeritusOfAbundance_ETBPrepared verifies that Emeritus of Abundance
+// enters the battlefield prepared.
+func TestEmeritusOfAbundance_ETBPrepared(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Emeritus of Abundance // Regrowth")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Emeritus of Abundance // Regrowth", core.AttrPrepared, true)
+}
+
+// TestEmeritusOfAbundance_RegrowthReturnsCardFromGraveyard verifies that
+// activating the Prepared ability casts Regrowth, returning a target card from
+// the graveyard to hand.
+func TestEmeritusOfAbundance_RegrowthReturnsCardFromGraveyard(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Emeritus of Abundance // Regrowth")
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Emeritus of Abundance // Regrowth", "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 1)
+	g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 0)
+	g.AssertHasAbility(gametest.PlayerA, "Emeritus of Abundance // Regrowth", core.AttrPrepared, false)
+}
+
+// TestEmeritusOfAbundance_AttackWithEightLandsBecomesReprepared verifies that
+// when Emeritus of Abundance attacks and its controller controls eight or more
+// lands, the creature becomes prepared again.
+func TestEmeritusOfAbundance_AttackWithEightLandsBecomesReprepared(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Emeritus of Abundance // Regrowth")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 8)
+	// Activate the prepared ability first to unprepare it.
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Emeritus of Abundance // Regrowth", "Grizzly Bears")
+	// Then attack on turn 3 (need to wait for summoning sickness to wear off).
+	g.Attack(3, gametest.PlayerA, "Emeritus of Abundance // Regrowth")
+	g.StopAt(3, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Emeritus of Abundance // Regrowth", core.AttrPrepared, true)
+}
+
+// =============================================================================
+// Infirmary Healer // Stream of Life
+// =============================================================================
+
+// TestInfirmaryHealer_ETBPrepared verifies that Infirmary Healer enters
+// the battlefield prepared.
+func TestInfirmaryHealer_ETBPrepared(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Infirmary Healer // Stream of Life")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Infirmary Healer // Stream of Life", core.AttrPrepared, true)
+}
+
+// TestInfirmaryHealer_StreamOfLifeGainsXLife verifies that activating the
+// Prepared ability casts Stream of Life, causing the target player to gain X life.
+func TestInfirmaryHealer_StreamOfLifeGainsXLife(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Infirmary Healer // Stream of Life")
+	g.SetLife(gametest.PlayerA, 10)
+	// Activate with X=5 targeting self.
+	g.ActivateAbilityWithX(1, core.PrecombatMain, gametest.PlayerA, "Infirmary Healer // Stream of Life", 5, "PlayerA")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerA, 15)
+	g.AssertHasAbility(gametest.PlayerA, "Infirmary Healer // Stream of Life", core.AttrPrepared, false)
+}

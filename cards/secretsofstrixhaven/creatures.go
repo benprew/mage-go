@@ -677,10 +677,77 @@ func registerCreatures() {
 	// Harmonized Trio // Brainstorm {U} // {U}
 	// Creature — Merfolk Bard Wizard // Instant
 	// 1/1
-	// TODO: implement
+	// {T}, Tap two untapped creatures you control: This creature becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)
+	// ---
+	// Brainstorm {U}
+	// Instant
+	// Draw three cards, then put two cards from your hand on top of your library in any order.
+	//
+	// XXX: HasPreparedSpell returns false for this card because the engine's
+	// WithPreparedSpell always adds an ETB-prepared trigger which would
+	// incorrectly make it enter prepared. The Prepared mechanics are wired
+	// manually here.
 	Register("Harmonized Trio // Brainstorm", func() Card {
+		spellFactory := func() Card {
+			return NewInstant("Brainstorm", "{U}",
+				NewSpellAbility(FuncEffect(
+					"draw three cards, then put two cards from your hand on top of your library in any order",
+					EffectProperties{Outcome: OutcomeBenefit, DrawCount: 3},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						g.PlayerDrawCard(p)
+						g.PlayerDrawCard(p)
+						g.PlayerDrawCard(p)
+						// Put two cards from hand on top in chosen order.
+						chosen := p.ChooseCardsFromHand(2, "put two cards on top of your library in any order", g)
+						if len(chosen) > 0 {
+							for _, c := range chosen {
+								p.RemoveFromHand(c.ID())
+							}
+							g.PutOnTopInChosenOrder(p, chosen)
+						}
+						return nil
+					},
+				)),
+			)
+		}
+		// Activated ability: {T}, Tap two untapped creatures you control → becomes prepared.
+		becomePrepared := FuncEffect(
+			"this creature becomes prepared",
+			EffectProperties{},
+			func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				g.SetPrepared(sourceID, true)
+				return nil
+			},
+		)
+		// Activated ability: {0}, sorcery speed, gated on IsPrepared → cast copy of Brainstorm.
+		castCopy := FuncEffect(
+			"cast a copy of this creature's spell (Brainstorm)",
+			EffectProperties{},
+			func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				return g.CastPreparedSpellCopy(controller, sourceID, spellFactory)
+			},
+		)
+		castCopyAb := NewActivatedAbility(castCopy, ManaCostOf("{0}"),
+			WithSorcerySpeed(),
+			WithActivationCondition(func(g *Game, src *Permanent, controller uuid.UUID) bool {
+				return src != nil && src.HasAttr(AttrPrepared)
+			}),
+		)
 		return NewCreature("Harmonized Trio // Brainstorm", "{U} // {U}", 1, 1,
-			WithSubTypes("Merfolk", "Bard", "Wizard", "//", "Instant"),
+			WithSubTypes("Merfolk", "Bard", "Wizard"),
+			WithActivatedAbility(
+				becomePrepared,
+				ManaCostOf("{0}"),
+				WithCost(TapSourceCost()),
+				WithCost(TapCreatureCost()),
+				WithCost(TapCreatureCost()),
+				WithSorcerySpeed(),
+			),
+			WithAbility(castCopyAb),
 		)
 	})
 
