@@ -1758,10 +1758,34 @@ func registerCreatures() {
 	// 1/3
 	// Reach
 	// Opus — Whenever you cast an instant or sorcery spell, this creature deals 1 damage to each opponent. If five or more mana was spent to cast that spell, this creature deals 3 damage to each opponent instead.
-	// TODO: implement
 	Register("Thunderdrum Soloist", func() Card {
+		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c Card) bool {
+			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
+		})
 		return NewCreature("Thunderdrum Soloist", "{1}{R}", 1, 3,
 			WithSubTypes("Dwarf", "Bard"),
+			WithKeyword(Reach),
+			// Opus — Whenever you cast an instant or sorcery spell, this creature deals 1
+			// damage to each opponent. If five or more mana was spent, deals 3 instead.
+			WithAbility(WheneverYouCastSpellTrigger(
+				OpusEffect(
+					"this creature deals 1 damage (or 3 if 5+ mana spent) to each opponent",
+					func(g *Game, sourceID, controller uuid.UUID, manaSpent int) error {
+						damage := 1
+						if manaSpent >= 5 {
+							damage = 3
+						}
+						for _, pl := range g.AllPlayers() {
+							if pl.PlayerID() != controller {
+								g.DealDamageToPlayer(pl, damage, sourceID)
+							}
+						}
+						return nil
+					},
+				),
+				false,
+				isInstantOrSorcery,
+			)),
 		)
 	})
 
