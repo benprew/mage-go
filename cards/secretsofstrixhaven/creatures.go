@@ -2512,10 +2512,39 @@ func registerCreatures() {
 	// 4/4
 	// Trample, lifelink
 	// At the beginning of combat on your turn, exile up to one target card from a graveyard.
-	// TODO: implement
 	Register("Startled Relic Sloth", func() Card {
 		return NewCreature("Startled Relic Sloth", "{2}{R}{W}", 4, 4,
 			WithSubTypes("Sloth", "Beast"),
+			WithKeyword(Trample),
+			WithKeyword(Lifelink),
+			WithAbility(NewTriggered(EvtBeginCombat, true,
+				FuncEffect("exile up to one target card from a graveyard",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						var candidates []Card
+						for _, pl := range g.AllPlayers() {
+							candidates = append(candidates, pl.Graveyard()...)
+						}
+						if len(candidates) == 0 {
+							return nil
+						}
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						chosen := p.ChooseCardFromLibrary(candidates, "exile up to one card from a graveyard", g)
+						if chosen == nil {
+							return nil
+						}
+						for _, pl := range g.AllPlayers() {
+							if removed, ok := pl.RemoveFromGraveyard(chosen.ID()); ok {
+								g.ExileCard(removed, sourceID)
+								break
+							}
+						}
+						return nil
+					},
+				)).SetConditionData(EventPlayerIsController{})),
 		)
 	})
 
