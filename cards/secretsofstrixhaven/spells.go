@@ -1846,11 +1846,48 @@ func registerSpells() {
 // Sorcery
 // Put a +1/+1 counter on each creature target player controls. Target creature gains your choice of double strike or lifelink until end of turn.
 // Flashback {1}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)
-// TODO: implement
+// XXX: Flashback does not exile the card after resolution (engine feature needed).
 	Register("Practiced Offense", func() Card {
-		return NewSorcery("Practiced Offense", "{2}{W}",
-			NewSpellAbility(),
+		c := NewSorcery("Practiced Offense", "{2}{W}",
+			NewMultiTargetSpell(
+				[]Target{
+					TargetPlayer(),
+					TargetCreature(),
+				},
+				FuncEffect(
+					"put +1/+1 counter on each creature target player controls; target creature gains double strike or lifelink until end of turn",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						// Put +1/+1 counter on each creature the target player controls.
+						if targets[0] != uuid.Nil {
+							targetPlayer := g.GetPlayer(targets[0])
+							if targetPlayer != nil {
+								for _, perm := range g.FilterBattlefield(And(ControlledBy(targetPlayer.PlayerID()), IsCreature)) {
+									g.AddCountersWithReplacement(perm, P1P1, 1, sourceID, false)
+								}
+							}
+						}
+						// Target creature gains double strike or lifelink based on mode choice.
+						if len(targets) >= 2 && targets[1] != uuid.Nil {
+							perm := g.FindPermanent(targets[1])
+							if perm != nil {
+								kw := DoubleStrike
+								if g.ModeValue() == 1 {
+									kw = Lifelink
+								}
+								g.AddContinuousEffect(TemporaryKeyword(perm.ID(), kw))
+							}
+						}
+						return nil
+					},
+				),
+			),
 		)
+		c.SetModes([]string{"double strike", "lifelink"})
+		return c
 	})
 
 
