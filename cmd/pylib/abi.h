@@ -199,6 +199,33 @@ typedef struct {
     int32_t stack_close_id;
     int32_t command_open_id;
     int32_t command_close_id;
+
+    /* Inline-blank singletons. Each ``<choose-*>`` token is emitted at the
+       cursor position recorded by an EMIT_BLANK opcode; ``chosen_id`` /
+       ``yes_id`` / ``no_id`` / ``none_id`` / ``x_end_id`` may appear in legal-
+       id lists or as bookkeeping markers in the token stream. ``use_ability``
+       is the ability-action variant of ``<choose-play>``. All are independent
+       of the cardrow / ability tables — they are pure singletons. */
+    int32_t choose_target_id;
+    int32_t choose_block_id;
+    int32_t choose_damage_order_id;
+    int32_t choose_mode_id;
+    int32_t choose_may_id;
+    int32_t choose_x_digit_id;
+    int32_t choose_mana_source_id;
+    int32_t choose_play_id;
+    int32_t use_ability_id;
+    int32_t chosen_id;
+    int32_t yes_id;
+    int32_t no_id;
+    int32_t none_id;
+    int32_t x_end_id;
+
+    /* Digit tokens for inline X-cost blanks: ``num_ids[k]`` is the token id
+       for digit ``k`` (typically 0..15). Length is given by ``num_count``;
+       the count is authoritative and the array may be NULL when count==0. */
+    int32_t num_count;
+    const int32_t* num_ids;
 } MageTokenTables;
 
 /* Token-assembler dimensions shared by packed token outputs. */

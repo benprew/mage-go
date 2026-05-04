@@ -67,6 +67,22 @@ const (
 	opStackClose   // 27: emit shared </stack>
 	opCommandOpen  // 28: emit shared <command>
 	opCommandClose // 29: emit shared </command>
+	// Inline-blank opcodes (Step 3 of the inline-blank text-encoder
+	// migration). EMIT_BLANK writes a kind token at the cursor and primes a
+	// per-blank legal-id buffer of size legal_count; EMIT_BLANK_LEGAL appends
+	// one legal id to that buffer. legal_count occurrences of EMIT_BLANK_LEGAL
+	// must follow each EMIT_BLANK before the next EMIT_BLANK.
+	opEmitBlank      // 30: payload [kind_id, group_id, group_kind, legal_count]
+	opEmitBlankLegal // 31: payload [token_id]
+)
+
+// Inline-blank group-kind enum. Mirrors the Python InlineBlankGroupKind
+// values in magic_ai/text_encoder/inline_blanks.py. Stable ints — append-
+// only.
+const (
+	blankGroupPerBlank    int32 = 0
+	blankGroupCrossBlank  int32 = 1
+	blankGroupConstrained int32 = 2
 )
 
 const (

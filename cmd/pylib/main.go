@@ -1508,6 +1508,23 @@ func MageTokenTableSummary() *C.char {
 		"target_close_id":    t.targetCloseID,
 		"tapped_id":          t.tappedID,
 		"untapped_id":        t.untappedID,
+		// Inline-blank singletons + digit table (Step 1 plumb-through).
+		"choose_target_id":       t.chooseTargetID,
+		"choose_block_id":        t.chooseBlockID,
+		"choose_damage_order_id": t.chooseDamageOrderID,
+		"choose_mode_id":         t.chooseModeID,
+		"choose_may_id":          t.chooseMayID,
+		"choose_x_digit_id":      t.chooseXDigitID,
+		"choose_mana_source_id":  t.chooseManaSourceID,
+		"choose_play_id":         t.choosePlayID,
+		"use_ability_id":         t.useAbilityID,
+		"chosen_id":              t.chosenID,
+		"yes_id":                 t.yesID,
+		"no_id":                  t.noID,
+		"none_id":                t.noneID,
+		"x_end_id":               t.xEndID,
+		"num_count":              t.numCount,
+		"num_ids":                t.numIDs,
 	}
 	b, err := json.Marshal(summary)
 	if err != nil {
@@ -1562,6 +1579,20 @@ func MageTokenTableLookup(kind C.int32_t, k0 C.int32_t, k1 C.int32_t) *C.char {
 			span = nil
 		} else {
 			span = []int32{t.cardRefIDs[idx]}
+		}
+	case 12:
+		// Inline-blank singletons keyed by index (see blankSingletonAt).
+		// Indices 0..13 cover the 14 named singletons in abi.h order.
+		if id, ok := t.blankSingletonAt(int32(k0)); ok {
+			span = []int32{id}
+		}
+	case 13:
+		// Digit token id for num_ids[k0].
+		idx := int32(k0)
+		if idx < 0 || idx >= t.numCount || int(idx) >= len(t.numIDs) {
+			span = nil
+		} else {
+			span = []int32{t.numIDs[idx]}
 		}
 	default:
 		return C.CString("null")
