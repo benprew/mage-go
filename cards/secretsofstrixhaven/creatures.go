@@ -1870,10 +1870,45 @@ func registerCreatures() {
 // 6/6
 // Trample
 // When this creature enters, tap target creature an opponent controls. Put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)
-// TODO: implement
+// XXX: Stun counter (untap-prevention counter type) not in engine; tap is implemented but stun counter effect is not.
 	Register("Fractal Mascot", func() Card {
 		return NewCreature("Fractal Mascot", "{4}{G}{U}", 6, 6,
 			WithSubTypes("Fractal", "Elk"),
+			WithKeyword(Trample),
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect(
+					"tap target creature an opponent controls",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						opp := g.GetOpponent(controller)
+						if opp == nil {
+							return nil
+						}
+						var candidates []*Permanent
+						for _, perm := range g.FilterBattlefield(And(
+							ControlledBy(opp.PlayerID()),
+							IsCreature,
+						)) {
+							candidates = append(candidates, perm)
+						}
+						if len(candidates) == 0 {
+							return nil
+						}
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						chosen := p.ChoosePermanent(candidates, "tap target creature an opponent controls", g)
+						if chosen == nil {
+							return nil
+						}
+						g.TapPermanent(chosen)
+						// XXX: put a stun counter on it (engine lacks stun counter type)
+						return nil
+					},
+				),
+				false,
+			)),
 		)
 	})
 
@@ -1894,10 +1929,60 @@ func registerCreatures() {
 // Creature — Fractal Crab
 // 1/4
 // Whenever you cast a spell with {X} in its mana cost, look at the top X cards of your library. Put one of them into your hand and the rest on the bottom of your library in a random order.
-// TODO: implement
 	Register("Geometer's Arthropod", func() Card {
 		return NewCreature("Geometer's Arthropod", "{G}{U}", 1, 4,
 			WithSubTypes("Fractal", "Crab"),
+			WithAbility(WheneverYouCastSpellTrigger(
+				FuncEffect(
+					"look at top X cards, put one in hand and rest on bottom",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						// Find the triggering spell on the stack to get its X value.
+						var x int
+						objs := g.GetStack().Objects()
+						for i := len(objs) - 1; i >= 0; i-- {
+							if !objs[i].IsAbility {
+								x = objs[i].XValue
+								break
+							}
+						}
+						if x <= 0 {
+							return nil
+						}
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						revealed := g.RemoveTopN(p, x)
+						if len(revealed) == 0 {
+							return nil
+						}
+						chosen := p.ChooseCardFromLibrary(revealed, "put into hand", g)
+						var rest []Card
+						for _, c := range revealed {
+							if chosen == nil || c.ID() != chosen.ID() {
+								rest = append(rest, c)
+							} else {
+								p.AddToHand(c)
+								chosen = nil // mark as taken
+							}
+						}
+						g.PutOnBottomInRandomOrder(p, rest)
+						return nil
+					},
+				),
+				false,
+			).SetCondition(func(evt *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
+				// Condition: the cast spell has {X} in its mana cost.
+				if evt.PlayerID != controllerID {
+					return false
+				}
+				card := g.FindCardAnywhere(evt.SourceID)
+				if card == nil {
+					return false
+				}
+				return card.ManaCost().HasX
+			})),
 		)
 	})
 
@@ -1907,10 +1992,16 @@ func registerCreatures() {
 // Flying, haste
 // Discard a card: This creature gains lifelink until end of turn.
 // Whenever one or more cards leave your graveyard, put a +1/+1 counter on target creature you control.
-// TODO: implement
+// XXX: "Whenever one or more cards leave your graveyard" trigger not implemented (engine lacks graveyard-leave event).
 	Register("Hardened Academic", func() Card {
 		return NewCreature("Hardened Academic", "{R}{W}", 2, 1,
 			WithSubTypes("Bird", "Cleric"),
+			WithKeyword(Flying),
+			WithKeyword(Haste),
+			WithActivatedAbility(
+				GrantKeyword(Lifelink).Targeting(ToSource()).Until(EndOfTurn),
+				DiscardCost(1),
+			),
 		)
 	})
 
@@ -1966,11 +2057,36 @@ func registerCreatures() {
 // Flying, haste
 // Each instant and sorcery card in your hand has miracle {2}. (You may cast a card for its miracle cost when you draw it if it's the first card you drew this turn.)
 // At the beginning of each opponent's upkeep, you may discard a card. If you do, draw a card.
-// TODO: implement
 	Register("Lorehold, the Historian", func() Card {
 		return NewCreature("Lorehold, the Historian", "{3}{R}{W}", 5, 5,
 			WithSubTypes("Elder", "Dragon"),
 			WithSuperTypes(SuperLegendary),
+			WithKeyword(Flying),
+			WithKeyword(Haste),
+			// XXX: "Each instant and sorcery card in your hand has miracle {2}" not implemented —
+			// engine does not support granting miracle costs to cards in hand.
+			// At the beginning of each opponent's upkeep, you may discard a card. If you do, draw a card.
+			WithAbility(NewTriggered(EvtUpkeep, false,
+				FuncEffect(
+					"you may discard a card; if you do, draw a card",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil || len(p.Hand()) == 0 {
+							return nil
+						}
+						if !p.ChooseMayAbility("discard a card to draw a card") {
+							return nil
+						}
+						chosen := p.ChooseCardsFromHand(1, "discard a card", g)
+						for _, c := range chosen {
+							g.PlayerDiscard(p, c.ID())
+						}
+						g.PlayerDrawCard(p)
+						return nil
+					},
+				),
+			).SetConditionData(EventPlayerIsNotController{})),
 		)
 	})
 
@@ -2122,10 +2238,40 @@ func registerCreatures() {
 // 3/2
 // First strike
 // When this creature enters, exile target noncreature, nonland card from your graveyard. Until the end of your next turn, you may cast that card.
-// TODO: implement
 	Register("Practiced Scrollsmith", func() Card {
+		isNonCreatureNonLandCard := NewCardFilter("noncreature, nonland card", func(c Card) bool {
+			return !c.HasType(TypeCreature) && !c.HasType(TypeLand)
+		})
 		return NewCreature("Practiced Scrollsmith", "{R}{R/W}{W}", 3, 2,
 			WithSubTypes("Dwarf", "Cleric"),
+			WithKeyword(FirstStrike),
+			// When this creature enters, exile target noncreature, nonland card from
+			// your graveyard. Until the end of your next turn, you may cast that card.
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect("exile target noncreature, nonland card from your graveyard; until end of your next turn you may cast it",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						cardID := targets[0]
+						card, ok := p.RemoveFromGraveyard(cardID)
+						if !ok {
+							return nil
+						}
+						g.ExileCard(card, sourceID)
+						// XXX: "until the end of your next turn" duration is not
+						// supported for cast-from-exile permissions; the permission
+						// persists until the card leaves exile (indefinite).
+						g.GrantCastFromExile(controller, card.ID(), false)
+						return nil
+					}),
+				false,
+			).AddTarget(TargetCardInYourGraveyard(isNonCreatureNonLandCard))),
 		)
 	})
 
@@ -2149,10 +2295,12 @@ func registerCreatures() {
 // Flying
 // This creature enters with X +1/+1 counters on it.
 // When this creature enters, you gain 2 life.
-// TODO: implement
 	Register("Pterafractyl", func() Card {
 		return NewCreature("Pterafractyl", "{X}{G}{U}", 1, 0,
 			WithSubTypes("Dinosaur", "Fractal"),
+			WithKeyword(Flying),
+			WithAbility(EntersWithXCounters(P1P1)),
+			WithAbility(ETBEffect(GainLife(2))),
 		)
 	})
 
