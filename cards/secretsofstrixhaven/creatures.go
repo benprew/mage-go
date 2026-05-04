@@ -674,10 +674,19 @@ func registerCreatures() {
 	// Landscape Painter // Vibrant Idea {1}{U} // {4}{U}
 	// Creature — Merfolk Wizard // Sorcery
 	// 2/1
-	// TODO: implement
+	// This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)
+	// ---
+	// Vibrant Idea {4}{U}
+	// Sorcery
+	// Draw two cards.
 	Register("Landscape Painter // Vibrant Idea", func() Card {
+		spellFactory := func() Card {
+			return NewSorcery("Vibrant Idea", "{4}{U}",
+				NewSpellAbility(DrawCards(Fixed(2))))
+		}
 		return NewCreature("Landscape Painter // Vibrant Idea", "{1}{U} // {4}{U}", 2, 1,
-			WithSubTypes("Merfolk", "Wizard", "//", "Sorcery"),
+			WithSubTypes("Merfolk", "Wizard"),
+			WithPreparedSpell(spellFactory),
 		)
 	})
 

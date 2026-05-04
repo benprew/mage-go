@@ -2615,3 +2615,30 @@ func TestSpectacularSkywhale_OpusFiveManaSpentPutsCounters(t *testing.T) {
 	// 5+ mana spent: three +1/+1 counters instead of temporary boost
 	g.AssertCounterCount(gametest.PlayerA, "Spectacular Skywhale", core.P1P1, 3)
 }
+
+// =============================================================================
+// Landscape Painter // Vibrant Idea
+// =============================================================================
+
+// TestLandscapePainter_ETBPrepared: Landscape Painter enters the battlefield
+// prepared (AttrPrepared is set on ETB).
+func TestLandscapePainter_ETBPrepared(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Landscape Painter // Vibrant Idea")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Landscape Painter // Vibrant Idea", core.AttrPrepared, true)
+}
+
+// TestLandscapePainter_CastVibrantIdeaDrawsTwoCards: activating the Prepared
+// ability casts a copy of Vibrant Idea, drawing two cards for the controller.
+func TestLandscapePainter_CastVibrantIdeaDrawsTwoCards(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Landscape Painter // Vibrant Idea")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 5)
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Landscape Painter // Vibrant Idea")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "", 2)
+	g.AssertHasAbility(gametest.PlayerA, "Landscape Painter // Vibrant Idea", core.AttrPrepared, false)
+}
