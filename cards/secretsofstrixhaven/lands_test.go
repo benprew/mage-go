@@ -498,6 +498,36 @@ func TestGreatHallOfTheBiblioplex(t *testing.T) {
 	})
 }
 
+// --- Skycoach Waypoint ---
+
+func TestSkycoachWaypoint(t *testing.T) {
+	t.Run("taps_for_colorless_mana", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Skycoach Waypoint")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Skycoach Waypoint")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		pool := g.GetPlayer(gametest.PlayerA).ManaPool()
+		if pool.CountProducedThisTurn(core.Colorless) < 1 {
+			t.Errorf("expected at least 1 colorless mana, got %d", pool.CountProducedThisTurn(core.Colorless))
+		}
+	})
+
+	t.Run("prepared_ability_sets_prepared_on_eligible_creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Skycoach Waypoint")
+		// Add mana sources for the {3} cost.
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 3)
+		// Elite Interceptor has a prepared spell, making it a valid target.
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Elite Interceptor // Rejoinder")
+		g.ChoosePermanent(gametest.PlayerA, "Elite Interceptor // Rejoinder")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Skycoach Waypoint", "Elite Interceptor // Rejoinder")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertHasAbility(gametest.PlayerA, "Elite Interceptor // Rejoinder", core.AttrPrepared, true)
+	})
+}
+
 // --- Petrified Hamlet ---
 
 func TestPetrifiedHamlet(t *testing.T) {
