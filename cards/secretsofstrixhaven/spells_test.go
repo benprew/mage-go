@@ -722,11 +722,13 @@ func TestHomesickness(t *testing.T) {
 	t.Run("target player draws two cards", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Homesickness")
+		// PlayerB's library has two Grizzly Bears to draw
+		g.AddCard(core.ZoneLibrary, gametest.PlayerB, "Grizzly Bears", 2)
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Homesickness", "PlayerB")
 		g.StopAt(1, core.EndStep)
 		g.Execute()
 		// PlayerB should have drawn 2 cards (started with 0 in hand, now 2)
-		g.AssertHandCount(gametest.PlayerB, "", 2)
+		g.AssertHandCount(gametest.PlayerB, "Grizzly Bears", 2)
 	})
 	t.Run("taps up to two target creatures", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
@@ -1637,22 +1639,31 @@ func TestFlowState(t *testing.T) {
 }
 
 func TestFractalAnomaly(t *testing.T) {
+	// When X=0 (no cards drawn this turn), the 0/0 Fractal token dies immediately
+	// from state-based actions (CR 704.5f). This sub-test verifies the token does
+	// not persist on the battlefield (correct Oracle behavior).
 	t.Run("creates a 0/0 green and blue Fractal token", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Fractal Anomaly")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Fractal Anomaly")
 		g.StopAt(1, core.EndStep)
 		g.Execute()
-		g.AssertPermanentCount(gametest.PlayerA, "Fractal Token", 1)
+		// 0 cards drawn → token enters as 0/0, immediately dies from SBA
+		g.AssertPermanentCount(gametest.PlayerA, "Fractal Token", 0)
 	})
 
-	t.Run("token has no counters when no cards drawn this turn", func(t *testing.T) {
+	t.Run("token has X +1/+1 counters when cards were drawn this turn", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Fractal Anomaly")
-		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Fractal Anomaly")
-		g.StopAt(1, core.EndStep)
+		// Cast on turn 3 (PlayerA's second turn), when draw step draws 1 card (X=1).
+		// The 0/0 Fractal token enters with 1 +1/+1 counter and persists as 1/1.
+		g.CastSpell(3, core.PrecombatMain, gametest.PlayerA, "Fractal Anomaly")
+		g.StopAt(3, core.EndStep)
 		g.Execute()
-		g.AssertCounterCount(gametest.PlayerA, "Fractal Token", core.P1P1, 0)
+		// X=1 (1 card drawn in draw step); token persists as 1/1 with 1 counter
+		g.AssertPermanentCount(gametest.PlayerA, "Fractal Token", 1)
+		g.AssertCounterCount(gametest.PlayerA, "Fractal Token", core.P1P1, 1)
 	})
 }
 
