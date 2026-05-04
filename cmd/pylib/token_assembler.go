@@ -96,8 +96,10 @@ var opcodeArityArr = [...]int8{
 	opCount:        1,
 	opStackOpen:    0,
 	opStackClose:   0,
-	opCommandOpen:  0,
-	opCommandClose: 0,
+	opCommandOpen:    0,
+	opCommandClose:   0,
+	opEmitBlank:      4, // [kind_id, group_id, group_kind, legal_count]
+	opEmitBlankLegal: 1, // [token_id]
 }
 
 // opcodeArityLookup returns (arity, true) for known opcodes and (0, false)
@@ -637,7 +639,10 @@ func assembleTokensFromPlan(
 			opCounter, opAttachedTo, opOption, opTarget, opTurn, opLife,
 			opMana, opCloseRawCard, opOpenDict, opCloseDict, opDictEntry,
 			opPlaceCardRef, opCount, opStackOpen, opStackClose,
-			opCommandOpen, opCommandClose:
+			opCommandOpen, opCommandClose,
+			// Inline-blank opcodes are processed by walkBlankPlan, not here.
+			// Skip over them in the token-assembler walker.
+			opEmitBlank, opEmitBlankLegal:
 			i += 1 + arity
 			continue
 		}
