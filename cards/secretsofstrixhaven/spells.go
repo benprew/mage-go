@@ -1591,10 +1591,50 @@ func registerSpells() {
 // Mana Sculpt {1}{U}{U}
 // Instant
 // Counter target spell. If you control a Wizard, add an amount of {C} equal to the amount of mana spent to cast that spell at the beginning of your next main phase.
-// TODO: implement
 	Register("Mana Sculpt", func() Card {
 		return NewInstant("Mana Sculpt", "{1}{U}{U}",
-			NewSpellAbility(),
+			NewTargetedSpell(TargetSpellOnStack(), FuncEffect(
+				"counter target spell; if you control a Wizard, add {C} equal to mana spent at beginning of your next main phase",
+				EffectProperties{Outcome: OutcomeDetriment},
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					if len(targets) == 0 {
+						return nil
+					}
+					// Capture mana spent before countering (stack object is removed by CounterSpellOnStack).
+					obj := g.FindStackObject(targets[0])
+					manaSpent := 0
+					if obj != nil {
+						manaSpent = ManaSpentToCast(obj)
+					}
+					g.CounterSpellOnStack(targets[0])
+					wizards := g.FilterBattlefield(And(ControlledBy(controller), IsCreature, HasSubType("Wizard")))
+					if len(wizards) == 0 || manaSpent <= 0 {
+						return nil
+					}
+					// XXX: Oracle says "at the beginning of your next main phase" but no EvtMainPhase
+					// event exists. Using EvtUpkeep as fallback — mana pools persist between steps
+					// so the mana will be available at main phase, but fires at upkeep instead.
+					amount := manaSpent
+					g.RegisterDelayedTrigger(&DelayedTrigger{
+						EventType:     EvtUpkeep,
+						SourceID:      sourceID,
+						Controller:    controller,
+						MatchPlayerID: controller,
+						Effects: []Effect{FuncEffect(
+							"add {C} equal to mana spent",
+							EffectProperties{Outcome: OutcomeBenefit},
+							func(g *Game, _, ctrl uuid.UUID, _ []uuid.UUID) error {
+								p := g.GetPlayer(ctrl)
+								if p != nil {
+									p.ManaPool().Add(Colorless, amount)
+								}
+								return nil
+							},
+						)},
+					})
+					return nil
+				},
+			)),
 		)
 	})
 
