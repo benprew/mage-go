@@ -283,7 +283,8 @@ func TestEnnisDebateModerator_ETBExileReturns(t *testing.T) {
 
 // TestEnvironmentalScientist_ETBSearchesBasicLand verifies that when
 // Environmental Scientist enters, you may search your library for a basic land
-// card, reveal it, put it into your hand, then shuffle.
+// card, reveal it, put it into your hand, then shuffle. The harness auto-plays
+// lands in main phases, so the Forest goes to the battlefield via land-play.
 func TestEnvironmentalScientist_ETBSearchesBasicLand(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Environmental Scientist")
@@ -292,7 +293,9 @@ func TestEnvironmentalScientist_ETBSearchesBasicLand(t *testing.T) {
 	g.ChooseFromLibrary(gametest.PlayerA, "Forest")
 	g.StopAt(1, core.EndStep)
 	g.Execute()
-	g.AssertHandCount(gametest.PlayerA, "Forest", 1)
+	// The Forest is put into hand by the trigger, then auto-played during
+	// the precombat main phase (the harness plays lands automatically).
+	g.AssertPermanentCount(gametest.PlayerA, "Forest", 1)
 }
 
 // TestEssenceknit Scholar_ETBCreatesPestToken verifies that when Essenceknit
@@ -330,4 +333,47 @@ func TestEternalStudent_GraveyardAbilityCreatesInklings(t *testing.T) {
 	tg.AssertHasAbility(gametest.PlayerA, "Inkling Token", core.Flying, true)
 	tg.AssertGraveyardCount(gametest.PlayerA, "Eternal Student", 0)
 	tg.AssertExileCount("Eternal Student", 1)
+}
+
+// TestAzizaMageTowerCaptain_CopySpellWhenTapThree verifies that when Aziza's
+// controller casts an instant or sorcery and taps three untapped creatures,
+// the spell is copied.
+func TestAzizaMageTowerCaptain_CopySpellWhenTapThree(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Aziza, Mage Tower Captain")
+	// Three untapped creatures to tap as cost
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Llanowar Elves")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Gray Ogre")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	// Script: choose yes (mode 0) to tap creatures, then name three creatures
+	g.ChooseMode(gametest.PlayerA, 0)
+	g.ChoosePermanent(gametest.PlayerA, "Llanowar Elves")
+	g.ChoosePermanent(gametest.PlayerA, "Grizzly Bears")
+	g.ChoosePermanent(gametest.PlayerA, "Gray Ogre")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Original + copy = 6 total damage to PlayerB
+	g.AssertLife(gametest.PlayerB, 14)
+}
+
+// TestAzizaMageTowerCaptain_NoTapNoCoply verifies that when the controller
+// declines to tap three untapped creatures, the spell is not copied.
+func TestAzizaMageTowerCaptain_NoTapNoCoply(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Aziza, Mage Tower Captain")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Llanowar Elves")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Gray Ogre")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	// Script: choose no (mode 1) — do not tap creatures
+	g.ChooseMode(gametest.PlayerA, 1)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Only original bolt resolves = 3 damage
+	g.AssertLife(gametest.PlayerB, 17)
 }

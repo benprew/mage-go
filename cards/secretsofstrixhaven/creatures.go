@@ -1332,14 +1332,12 @@ func registerCreatures() {
 							return nil
 						}
 						// Player chooses three untapped creatures to tap.
-						tapped := make([]*Permanent, 0, 3)
 						for i := 0; i < 3; i++ {
 							chosen := p.ChoosePermanent(untapped, "choose untapped creature to tap", g)
 							if chosen == nil {
 								return nil
 							}
 							g.TapPermanent(chosen)
-							tapped = append(tapped, chosen)
 							// Remove chosen from candidates.
 							remaining := untapped[:0]
 							for _, c := range untapped {
@@ -1361,7 +1359,11 @@ func registerCreatures() {
 						if spellSourceID == uuid.Nil {
 							return nil
 						}
-						g.CopySpellOnStack(spellSourceID, controller, true)
+						// XXX: Oracle says "you may choose new targets for the copy" (optional reprompt),
+						// but the engine's CopySpellOnStack with true always reprompts, and ChooseTargets
+						// defaults to the first candidate rather than preserving original targets.
+						// Using false (inherit targets) is functionally correct for the common case.
+						g.CopySpellOnStack(spellSourceID, controller, false)
 						return nil
 					},
 				),
