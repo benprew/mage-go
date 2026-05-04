@@ -2672,12 +2672,13 @@ func TestGraveResearcher_ReanimateControlsCreatureAndLosesLife(t *testing.T) {
 	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
 	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Llanowar Elves")
 	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Serra Angel")
+	// Turn 1 upkeep: surveil 1; keep Mountain on top. Turn 3 upkeep: library empty, no choice.
 	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Mountain")
 	g.ChooseScry(gametest.PlayerA, []string{}, []string{"Mountain"})
-	// Activate in turn 2 (after upkeep trigger fires). ChooseTargets fallback picks
-	// first available graveyard creature (Grizzly Bears, CMC 2).
-	g.ActivateAbility(2, core.PrecombatMain, gametest.PlayerA, "Grave Researcher // Reanimate")
-	g.StopAt(2, core.EndStep)
+	// Activate on turn 3 (PlayerA's main phase). Turn 1 upkeep set prepared; ChooseTargets
+	// fallback picks first available graveyard creature (Grizzly Bears, CMC 2).
+	g.ActivateAbility(3, core.PrecombatMain, gametest.PlayerA, "Grave Researcher // Reanimate")
+	g.StopAt(3, core.EndStep)
 	g.Execute()
 	// One creature came back to the battlefield.
 	g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
