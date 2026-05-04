@@ -2406,10 +2406,20 @@ func registerCreatures() {
 	// Goblin Glasswright // Craft with Pride {1}{R} // {R}
 	// Creature — Goblin Sorcerer // Sorcery
 	// 2/2
-	// TODO: implement
+	// This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)
+	// ---
+	// Craft with Pride {R}
+	// Sorcery
+	// Create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
 	Register("Goblin Glasswright // Craft with Pride", func() Card {
+		spellFactory := func() Card {
+			return NewSorcery("Craft with Pride", "{R}",
+				NewSpellAbility(CreateTreasureToken()),
+			)
+		}
 		return NewCreature("Goblin Glasswright // Craft with Pride", "{1}{R} // {R}", 2, 2,
-			WithSubTypes("Goblin", "Sorcerer", "//", "Sorcery"),
+			WithSubTypes("Goblin", "Sorcerer"),
+			WithPreparedSpell(spellFactory),
 		)
 	})
 

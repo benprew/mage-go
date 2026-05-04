@@ -438,6 +438,33 @@ func TestGarrisonExcavator_Menace(t *testing.T) {
 	g.AssertHasAbility(gametest.PlayerA, "Garrison Excavator", core.Menace, true)
 }
 
+// =============================================================================
+// Goblin Glasswright // Craft with Pride
+// =============================================================================
+
+// TestGoblinGlasswright_ETBPrepared verifies Goblin Glasswright enters the
+// battlefield prepared.
+func TestGoblinGlasswright_ETBPrepared(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Goblin Glasswright // Craft with Pride")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Goblin Glasswright // Craft with Pride", core.AttrPrepared, true)
+}
+
+// TestGoblinGlasswright_CraftWithPrideCreatesTreasure verifies that activating
+// the Prepared ability casts Craft with Pride, creating a Treasure token and
+// unpreparing the creature.
+func TestGoblinGlasswright_CraftWithPrideCreatesTreasure(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Goblin Glasswright // Craft with Pride")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Goblin Glasswright // Craft with Pride")
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Treasure", 1)
+	g.AssertHasAbility(gametest.PlayerA, "Goblin Glasswright // Craft with Pride", core.AttrPrepared, false)
+}
+
 // TestGeometersArthropod_XSpellLooksAtTopCards verifies that when you cast a
 // spell with {X} in its mana cost, you look at the top X cards and put one
 // into your hand.
