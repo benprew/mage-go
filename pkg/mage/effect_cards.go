@@ -209,6 +209,28 @@ func (e *millTargetPlayerEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
+// scryEffect implements Scry N (CR 701.18) for the controller of the effect.
+type scryEffect struct {
+	amount ValueSource
+}
+
+// Scry creates an effect that scries N for the controller (CR 701.18):
+// "Look at the top N cards of your library, then put any number of them on the
+// bottom of your library and the rest on top in any order."
+func Scry(amount ValueSource) Effect {
+	return DataEffect(&scryEffect{amount: amount})
+}
+
+func (e *scryEffect) EffectText() string {
+	if _, ok := e.amount.(xValue); ok {
+		return "scry X"
+	}
+	return fmt.Sprintf("scry %d", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil))
+}
+func (e *scryEffect) EffectProps() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
+
 // returnToHandTargetEffect bounces a target permanent to its owner's hand.
 type returnToHandTargetEffect struct{}
 
@@ -461,7 +483,7 @@ func execDiscardRandom(ctx *EffectContext, e *discardRandomEffect) error {
 			break
 		}
 		idx := rand.Intn(len(hand))
-		targetPlayer.DiscardCard(hand[idx].ID())
+		ctx.Game.PlayerDiscard(targetPlayer, hand[idx].ID())
 	}
 	return nil
 }
@@ -484,6 +506,7 @@ func execReturnFromGraveyardToBattlefield(ctx *EffectContext, _ *returnFromGrave
 
 func execMillTargetPlayer(ctx *EffectContext, e *millTargetPlayerEffect) error {
 	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	amount = ctx.Game.ApplyMillModifiers(p.PlayerID(), amount)
 
 	var playerIDs []uuid.UUID
 	switch {
@@ -561,13 +584,7 @@ func execReturnToHandTarget(ctx *EffectContext, _ *returnToHandTargetEffect) err
 	if owner == uuid.Nil {
 		owner = perm.Controller
 	}
-	ctx.Game.RemoveFromBattlefield(perm)
-	if !isToken {
-		p := ctx.Game.GetPlayer(owner)
-		if p != nil {
-			p.AddToHand(card)
-		}
-	}
+	ctx.Game.BouncePermanentToHand(perm)
 	return nil
 }
 
@@ -579,11 +596,13 @@ func execReturnFromGraveyardToHandTarget(ctx *EffectContext, _ *returnFromGravey
 	if p == nil {
 		return ErrPlayerNotFound
 	}
-	card, ok := p.RemoveFromGraveyard(ctx.Targets[0])
-	if !ok {
-		return nil // target gone
+	for _, tid := range ctx.Targets {
+		card, ok := p.RemoveFromGraveyard(tid)
+		if !ok {
+			continue
+		}
+		p.AddToHand(card)
 	}
-	p.AddToHand(card)
 	return nil
 }
 
@@ -643,7 +662,7 @@ func execDiscardHandAndDraw(ctx *EffectContext, e *discardHandAndDrawEffect) err
 		// Discard entire hand
 		hand := p.Hand()
 		for _, c := range hand {
-			p.DiscardCard(c.ID())
+			ctx.Game.PlayerDiscard(p, c.ID())
 		}
 		// Draw N cards
 		for i := 0; i < e.drawCount; i++ {
@@ -740,6 +759,19 @@ func execSearchLibraryToBattlefield(ctx *EffectContext, e *searchLibraryToBattle
 	p.SetLibrary(newLib)
 	p.ShuffleLibrary()
 	ctx.Game.PutOnBattlefield(card, ctx.Controller)
+	return nil
+}
+
+func execScry(ctx *EffectContext, e *scryEffect) error {
+	p := ctx.Game.GetPlayer(ctx.Controller)
+	if p == nil {
+		return ErrPlayerNotFound
+	}
+	n := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	if n <= 0 {
+		return nil
+	}
+	ctx.Game.PerformScry(p, n)
 	return nil
 }
 

@@ -121,10 +121,29 @@ Examples:
 	    mage.WithTarget(mage.TargetPlayer()),
 	)
 
-	// Modal spell (Healing Salve): set modes on the card
+	// Modal spell, legacy "branch on ModeValue" form (Healing Salve):
 	c := mage.NewInstant("Healing Salve", "{W}", spell)
 	c.SetModes([]string{"Gain 3 life", "Prevent 3 damage"})
 	// Inside the FuncEffect, call g.ModeValue() to read the chosen mode (0 or 1).
+
+	// Modal spell, full per-mode targets and effects (Crushing Canopy):
+	canopy := mage.NewInstant("Crushing Canopy", "{3}{G}", nil)
+	canopy.AddAbility(mage.NewModalSpell([]mage.Mode{
+	    {
+	        Label:   "Destroy target creature with flying",
+	        Targets: []mage.Target{mage.TargetCreature(mage.HasKeywordFilter(core.Flying))},
+	        Effects: []mage.Effect{mage.DestroyTarget()},
+	    },
+	    {
+	        Label:   "Destroy target enchantment",
+	        Targets: []mage.Target{mage.TargetPermanent(mage.IsEnchantment)},
+	        Effects: []mage.Effect{mage.DestroyTarget()},
+	    },
+	}))
+	// At cast time, the engine prompts Player.ChooseMode and gathers
+	// targets only for the chosen mode (CR 700.2). At resolution, only
+	// that mode's effects run. The chosen mode index is stored on
+	// StackObject.ModeChoice; per-mode targets on StackObject.ModalTargets.
 
 # Pre-Built Effects Catalog
 
@@ -155,6 +174,8 @@ Life effects:
 	[GainLife](amount int)                   // controller gains life
 	[GainLifeTarget](amount ValueSource)     // target player gains life
 	[LoseLife](amount int)                   // controller loses life
+	[LoseLifeAmount](amount ValueSource)     // controller loses dynamic life
+	[TargetPlayerLoseLife](amount ValueSource) // target player loses life
 	[SacrificeCreatureOrDamage](dmg int)     // sacrifice or take damage (Lord of the Pit)
 
 Card manipulation effects:
@@ -167,6 +188,84 @@ Card manipulation effects:
 	[SearchLibraryToHand]()                      // Demonic Tutor
 	[SearchLibraryToTop]()                       // Vampiric Tutor
 	[ShuffleLibrary]()                           // shuffle controller's library
+	[Scry](amount ValueSource)                   // CR 701.18 — controller scries N
+
+Scry primitives:
+
+	Game.PerformScry(player, n) — engine entry point: looks at the top N
+	cards of player's library and rearranges them per
+	Player.ChooseScryPlacement. Fires EvtScry with Amount = cards seen.
+
+	Player.ChooseScryPlacement(top, reason, g) decides the split: returns
+	(bottom, topOrder) ID slices that partition `top`. BasePlayer's default
+	keeps every card on top in original order. TestPlayer queues decisions
+	via TestGame.ChooseScry(p, bottom, topOrder).
+
+Reveal-and-pick primitives (reveal.go):
+
+	Game.RevealTopN(player, n) []Card
+	    Returns a copy of the top N cards without modifying the library.
+	    Powers "look at" / "reveal the top N" effects (Commune with
+	    Dinosaurs, Silhana Wayfinder, Muxus, Lurking Predators, Sin Prodder).
+
+	Game.RemoveTopN(player, n) []Card
+	    Removes and returns the top N cards. Pair with the relocation
+	    primitives below to put cards back in the desired places.
+
+	Game.RevealAndPickFromTop(chooser, owner, n, filter, mayDecline, reason)
+	    Reveals top N of `owner`'s library, asks `chooser` to pick one
+	    card matching `filter`. Returns (chosen, revealed). chosen is nil
+	    if no card matches; if mayDecline=false the chooser is forced to
+	    pick from the candidates. The library is NOT mutated — caller
+	    typically follows with RemoveTopN + relocation.
+
+	Game.PutOnBottomInRandomOrder(player, cards)
+	    Appends `cards` to the bottom of the library in uniformly random
+	    order. The cards must already have been removed from the library.
+
+	Game.PutOnTopInChosenOrder(player, cards)
+	    Places `cards` on top in the supplied order (first = new top).
+
+	Game.RevealHand(viewer, owner) []Card
+	    Returns a copy of `owner`'s hand. The viewer parameter is
+	    informational; the engine does not currently model private vs
+	    public knowledge.
+
+	Game.PickFromHand(chooser, owner, filter, mayDecline, reason) Card
+	    Asks `chooser` to pick one card from `owner`'s hand matching the
+	    filter. Returns nil if no card matches or the chooser declines
+	    (only when mayDecline=true). The hand is NOT mutated — callers
+	    move the returned card themselves (e.g. via Game.PlayerDiscard).
+	    Powers Corpse Traders / Entomber Exarch ("you choose a card from
+	    target opponent's hand; they discard it").
+
+	Both reveal-and-pick choosers reuse Player.ChooseCardFromLibrary
+	for the actual selection — TestPlayer scripts decisions via
+	TestGame.ChooseFromLibrary(p, name).
+
+Random-card primitives (random.go):
+
+	Game.DiscardAtRandom(player, n) []Card
+	    Discards up to n cards from the player's hand chosen uniformly
+	    at random, firing EvtDiscard for each. Returns the discarded
+	    cards. Powers Goblin Lore ("then discard three cards at random")
+	    and similar self-discard-at-random effects. Distinct from the
+	    DiscardRandom Effect, which targets an opponent.
+
+	Game.RandomCardFromGraveyard(player, filter) Card
+	    Returns one card chosen uniformly at random from the player's
+	    graveyard that matches the filter, or nil if none match. Does
+	    NOT remove the card. Powers Charmbreaker Devils ("instant or
+	    sorcery card chosen at random") and Ghoulraiser ("Zombie card
+	    at random").
+
+	Game.RandomCardFromHand(player, filter) Card
+	    Same pattern for hands — useful for "reveal a card at random
+	    from your hand" effects.
+
+	All three use math/rand directly, the same RNG used by
+	ShuffleLibrary, DiscardRandomCost, and Aladdin's Lamp draw
+	replacement.
 
 Graveyard effects:
 
@@ -211,6 +310,8 @@ Misc effects:
 	[AddMana](color, amount)              // add mana to pool
 	[AddAnyMana](amount, Color)           // add mana of any one color
 	[CreateToken](name, p, t, types, subtypes, keywords...)
+	[CreateTreasureToken]() / [CreateTreasureTokens](n)  // CR 111.10c predefined token
+	[CreateFoodToken]() / [CreateFoodTokens](n)          // CR 111.10d predefined token
 	[CloneTarget](additionalTypes...)     // Copy Artifact, Clone
 	[CopySpellOnStack]()                  // Fork
 	[AttachToTarget]()                    // attach aura/equipment
@@ -294,6 +395,14 @@ Zone targets:
 	[TargetCardInYourGraveyard](filters ...CardFilter)        // any card in your graveyard (pass IsCreatureCard for creatures)
 	[TargetAnyNumberOfCardsInYourGraveyard](filters)         // any number (0+) of cards in your graveyard
 	[TargetCardInHand](filters ...CardFilter)                // any card in your hand (pass IsCreatureCard for creatures)
+
+Multi-target shapes (used with [NewMultiTargetSpell]):
+
+	[TargetUpToNCreatures](n, filters...)             // 0..n creatures (Dauntless Onslaught)
+	[TargetUpToNCreaturesOrPlayers](n)                // 0..n creatures-or-players (divided damage)
+	[TargetUpToNCardsInYourGraveyard](n, filters...)  // 0..n cards in your graveyard
+	[TargetCreatureYouControl](filters...)            // a creature you control
+	[TargetCreatureOpponentControls](filters...)      // a creature an opponent controls
 
 Restrict with filters:
 
@@ -382,6 +491,61 @@ Examples:
 	    mage.SelectController(),
 	    mage.And(mage.IsLand, mage.HasSubType("Swamp")),
 	))
+
+# Multi-Target Spells
+
+Three target shapes don't fit the single-target pattern:
+
+  - "Up to N target X" — controller picks 0..N legal targets.
+  - "Target Y you control AND target Z an opponent controls" — two distinct
+    Targets with disjoint predicates (Peel from Reality, Nature's Way).
+  - "N damage divided as you choose among any number of targets" — controller
+    chooses both the targets and the per-target damage at announcement
+    (CR 601.2d). Flames of the Firebrand, Hail of Arrows.
+
+Use [NewMultiTargetSpell] with a slice of [Target]s; the flat list of chosen
+target IDs (in declaration order) is passed to each effect via ctx.Targets.
+
+To act on every chosen target uniformly, select with [ToAllTargets]() — the
+selector iterates ctx.Targets and skips uuid.Nil placeholders or targets that
+have left the battlefield (CR 608.2b: a multi-target spell whose first target
+becomes illegal still affects the surviving targets).
+
+	// Dauntless Onslaught: Up to two target creatures get +2/+2 until EOT
+	mage.NewSorcery("Dauntless Onslaught", "{1}{W}",
+	    mage.NewMultiTargetSpell(
+	        []mage.Target{mage.TargetUpToNCreatures(2)},
+	        mage.Boost(mage.Fixed(2), mage.Fixed(2)).Targeting(mage.ToAllTargets()),
+	    ),
+	)
+
+	// Peel from Reality: Return target creature you control AND target
+	// creature an opponent controls to their owners' hands.
+	mage.NewInstant("Peel from Reality", "{1}{U}",
+	    mage.NewMultiTargetSpell(
+	        []mage.Target{
+	            mage.TargetCreatureYouControl(),
+	            mage.TargetCreatureOpponentControls(),
+	        },
+	        // FuncEffect that iterates targets and bounces each.
+	    ),
+	)
+
+	// Flames of the Firebrand: 3 damage divided as you choose among any number of targets.
+	mage.NewSorcery("Flames of the Firebrand", "{2}{R}",
+	    mage.NewMultiTargetSpell(
+	        []mage.Target{mage.TargetUpToNCreaturesOrPlayers(3)},
+	        mage.DealDividedDamage(mage.Fixed(3)),
+	    ),
+	)
+
+For divided-damage spells the engine calls [Player.ChooseDamageDistribution]
+at cast/activation time, validates the result (CR 601.2d: sum equals total,
+keys are a subset of chosen targets, no negatives), and stores the map on the
+[StackObject] as DamageDistribution. At resolution, [DealDividedDamage] reads
+the map back, skipping targets that became illegal — only their share is
+wasted, the remaining targets still take their assigned damage. Test code
+scripts the distribution with TestGame.ChooseDamageDistribution(player, map).
 
 # PermanentSelector — Source vs Target
 
@@ -507,13 +671,22 @@ constructor is [NewTriggered](eventType, optional bool, effects...). Use
 .SetCondition() to filter which events actually trigger it, and .AddTarget()
 to add targeting requirements.
 
+When a triggered ability with one or more .AddTarget(...) declarations is put
+on the stack (CR 603.3d), its controller is prompted via Player.ChooseTargets
+for each declared Target — the same mechanism used for spell-cast targeting.
+Chosen IDs become the StackObject's Targets and are passed to the ability's
+effects at resolution time. Triggers with no declared targets keep the legacy
+event-derived auto-binding (e.g. ETB triggers receive the entering permanent's
+ID, EvtZoneChange (BF→GY, was creature) triggers receive the dead creature's ID, etc.) so cards
+that read targets[0] from the firing event continue to work unchanged.
+
 Convenience constructors (set condition automatically):
 
 	[AttacksTrigger](effect, optional)                          // EvtDeclaredAttacker, source is self
-	[BlocksTrigger](effect, optional)                           // EvtCreatureBlocks, source is self (CR 509.3a; fires once per combat per blocker)
-	[EntersBattlefieldTrigger](effect, optional)                // EvtEntersBattlefield, source is self
-	[DiesCreatureTrigger](effect, optional, filter)             // EvtCreatureDied, another creature you control
-	[AnyCreatureDiesTrigger](effect, optional)                  // EvtCreatureDied, any creature
+	[BlocksTrigger](effect, optional)                           // EvtDeclaredBlocker + Flag=true (source is self; CR 509.3a; fires once per combat per blocker)
+	[EntersBattlefieldTrigger](effect, optional)                // EvtZoneChange (To=Battlefield), source is self
+	[DiesCreatureTrigger](effect, optional, filter)             // EvtZoneChange (BF→GY, was creature), another creature you control
+	[AnyCreatureDiesTrigger](effect, optional)                  // EvtZoneChange (BF→GY, was creature), any creature
 	[CreatureDealtDamageBySourceDiesTrigger](effect, optional)  // creature damaged by source dies
 	[DealsDamageToOpponentTrigger](effect, optional)            // EvtDamageDealt to opponent
 	[WhenDamageDealtToThisTrigger](effect, optional)            // EvtDamageDealt to self
@@ -524,18 +697,57 @@ Convenience constructors (set condition automatically):
 	[WheneverSpellCastTrigger](effect, optional, ...CardFilter)  // EvtSpellCast, any player, filtered
 	[WheneverYouCastSpellTrigger](effect, optional, ...CardFilter) // EvtSpellCast, controller only
 	[WhenAttachedBecomesTappedTrigger](effect, optional)        // EvtTapped, enchanted permanent
-	[WheneverPermanentEntersBattlefieldTrigger](e, opt, filter) // EvtEntersBattlefield, filtered
+	[WheneverPermanentEntersBattlefieldTrigger](e, opt, filter) // EvtZoneChange (To=Battlefield), filtered
 	[WhenOpponentPermanentBecomesTappedTrigger](e, opt, filter) // EvtTapped, opponent's matching permanent
-	[PutIntoGraveyardFromBattlefieldTrigger](effect, optional)  // EvtPutIntoGraveyardFromBattlefield, self
+	[PutIntoGraveyardFromBattlefieldTrigger](effect, optional)  // EvtZoneChange (BF→GY), self
 	[SacrificeAtUpkeepUnlessPay](manaCost)                      // sacrifice unless pay at upkeep
+	[WheneverYouGainLifeTrigger](effect, optional)              // EvtLifeGained, controller (CR 119.9)
+	[WheneverPlayerGainsLifeTrigger](effect, optional)          // EvtLifeGained, any player
+	[WheneverYouLoseLifeTrigger](effect, optional)              // EvtLifeLost, controller (CR 119.9)
+	[WheneverOpponentLosesLifeTrigger](effect, optional)        // EvtLifeLost, opponent (Exquisite Blood)
+	[WheneverPlayerLosesLifeTrigger](effect, optional)          // EvtLifeLost, any player
+	[WheneverYouDiscardTrigger](effect, optional)               // EvtDiscard, controller
+	[WheneverOpponentDiscardsTrigger](effect, optional)         // EvtDiscard, opponent (Fell Specter)
+	[WheneverPlayerDiscardsTrigger](effect, optional)           // EvtDiscard, any player
+	[WheneverYouSacrificeAnotherCreatureTrigger](effect, opt)   // EvtSacrifice, another creature you control (Kels)
+	[WheneverYouSacrificeTrigger](effect, optional)             // EvtSacrifice, any non-self permanent you control
+	[WheneverBecomesTargetTrigger](effect, optional)            // EvtBecomesTarget, source self (Departed Deckhand)
+	[WheneverBecomesTargetFirstTimeEachTurnTrigger](e, opt)     // EvtBecomesTarget, first time each turn (Kira)
+	[WheneverDealsCombatDamageToPlayerTrigger](effect, opt)     // EvtDamageDealt to a player, combat, source self
+	[WheneverPermanentDealsCombatDamageToPlayerTrigger](e, opt, filter) // combat damage to player, controller's matching permanent (Coastal Piracy, Sharding Sphinx)
+	[WheneverEnchantedPermanentDealsDamageToPlayerTrigger](e, opt)      // damage to player, source is enchanted permanent (Curiosity)
+
+EvtLifeGained / EvtLifeLost auto-binds preserve evt.Amount as the trigger's
+EventAmount (readable via mage.EventAmountValue() in effects), but do NOT
+bind a default target — "you gain that much life" triggers fall back to the
+controller naturally. EvtDiscard and EvtSacrifice auto-bind the event's
+PlayerID as targets[0] so effects like "that player loses 2 life" target
+the discarder/sacrificer.
 
 EvtBecameUntapped fires whenever a permanent becomes untapped (during the untap step or
 by an effect like Twiddle). Use with NewTriggered for "when this becomes untapped" triggers.
 
+EvtBecomesTarget fires whenever a permanent or player becomes the target of a
+spell or activated ability (CR 603.6c, 119.5). It is fired immediately after
+the spell is cast or the ability is activated (and copies pushed to the stack
+via spell-copy effects), once per distinct target. Event fields:
+
+  - SourceID — the source of the targeting (card ID for spells, permanent ID
+    for activated abilities)
+  - TargetID — the targeted object (permanent or player)
+  - PlayerID — the controller of the spell/ability that is targeting
+  - Flag    — true if the source is an activated ability, false if a spell
+
+The auto-bind passes the targeted object as targets[0] and the offending
+spell/ability source as targets[1] so a "counter that spell or ability"
+effect (Kira) can find the spell on the stack via targets[1]. Game tracks
+TimesTargetedThisTurn(id) for "first time each turn" predicates; the counter
+resets at cleanup.
+
 Custom triggers with SetConditionData (composable data predicates):
 
 	// When this creature dies (not "another" — self)
-	mage.NewTriggered(core.EvtCreatureDied, false, effect).
+	mage.NewTriggered(core.EvtZoneChange (BF→GY, was creature), false, effect).
 	    SetConditionData(mage.EventSourceIsSelf{})
 
 	// Whenever an opponent's Swamp becomes tapped
@@ -551,6 +763,22 @@ Custom triggers with SetConditionData (composable data predicates):
 
 The optional flag (second arg) controls whether the controller may decline:
 false = mandatory, true = "you may" (AI/player can decline).
+
+## "You may pay {N}. If you do, ___" (CR 603.4)
+
+Triggers of the form "Whenever X, you may pay {cost}. If you do, ___" prompt
+the controller for an optional payment mid-resolution. Wrap the inner effect
+with [MayPayMana]:
+
+	mage.MayPayMana("{1}{W}", "put X +1/+1 counters on target creature",
+	    inner)
+
+On Apply, the wrapper calls Player.ChooseMayAbility with the description; if
+the player accepts AND Game.TryPayCostFromLands succeeds for the cost, the
+inner Effect runs with the same sourceID/controller/targets the outer
+trigger received. If the player declines or the cost cannot be paid,
+nothing happens (no partial payment is taken). Used by Cradle of Vitality,
+Kels Fight Fixer, Emiel the Blessed, and similar abilities.
 
 Predicates implement [TriggerConditionData]:
 
@@ -578,6 +806,12 @@ Common atomic predicates:
 	[ControllerHasNoPermanentMatching]{Filter} // controller has no matching permanent
 
 For rare cases needing full closure access, SetCondition is still available.
+
+When refining a constructor that already installed a filter (e.g.
+WheneverPermanentEntersBattlefieldTrigger), use [GenericTriggered.AndConditionData]
+to compose the new predicate with the constructor's filter (logical AND).
+Calling SetConditionData would REPLACE the existing condition and silently
+drop the constructor's filter.
 
 # Static Abilities and Continuous Effects
 
@@ -692,8 +926,42 @@ Target effects (apply to specific permanent by ID):
 	[ColorOverride](targetID, color)                       // change color (Indefinite)
 	[TemporaryAnimate](targetID, power, toughness)         // animate until EOT
 	[TemporaryAnimateUntilEndOfCombat](id, power, tough)   // animate until end combat
+	[AnimateTargetLand](targetID, opts, duration)          // Elemental Uprising (full options)
+	[AnimateLandWhileSourceOnBattlefield](targetID, opts)  // Awakener Druid pattern
+	[AnimateAttachedLand](opts)                            // Vastwood Zendikon (aura animates host)
+	[GrantManaAbilityToAttached](productions...)           // New Horizons (extra mana ability)
 	[PreventBlockingUntilEndOfCombat](permID)              // can't block until end combat
 	[PreventAttackingUntilEndOfTurn](permID)               // can't attack until EOT (CR 506.4a)
+
+# Animate Land
+
+CR 305.7 / 612 (layer system) require a land that "becomes a creature" to
+remain a land while gaining creature type, P/T, and (optionally) extra
+subtypes/colors/keywords. The engine exposes [AnimateLandOptions] and four
+helpers built on the layer-aware effect primitives:
+
+  - [AnimateTargetLand](id, opts, dur) — for spells like Elemental Uprising
+    ("target land becomes a 4/4 Elemental creature with trample until end
+    of turn. It's still a land."). Use core.EndOfTurn for instants.
+  - [AnimateLandWhileSourceOnBattlefield](id, opts) — for Awakener Druid's
+    ETB clause ("target Forest becomes a 4/5 green Treefolk creature for
+    as long as Awakener Druid remains on the battlefield"). The effect's
+    sourceID must be set to the source permanent before registration; the
+    effect manager removes it automatically when the source leaves.
+  - [AnimateAttachedLand](opts) — for auras like Vastwood Zendikon
+    ("Enchanted land is a 6/4 green Elemental creature with trample. It's
+    still a land."). Built on [AttachedEffect] and gated by SourceAttached.
+  - [GrantManaAbilityToAttached](productions...) — companion helper for
+    cards that grant additional mana abilities to the enchanted land
+    (e.g. New Horizons' "{T}: Add {G}" clause).
+
+All four helpers route through applyAnimateLand: they grant AttrIsCreature
+/ AttrCanAttack / AttrCanBlock / AttrHasPowerToughness, set
+BasePTOverride, append (not replace) subtypes via SubTypeOverride, append
+colors via ColorOverride, and grant keyword attrs. AttrIsLand is left in
+baseAttrs so the land remains a land per CR 305.7. Each Apply() cycle
+recomputes from the card baseline so reverting (aura leaves, source
+dies, EOT cleanup) restores the land to its non-creature state.
 
 Global/source-based effects (while source on battlefield):
 
@@ -716,16 +984,99 @@ Global/source-based effects (while source on battlefield):
 	[AllowUnlimitedLandPlays]()                            // Fastbond
 	[IncreaseSpellCostForColor](color, amount)             // Gloom
 	[ReduceSpellCostForColor](color, amount)               // cost reduction
+	[ReduceSpellCostStatic](filter, amount, condition)     // conditional cost reduction (CR 601.2f)
 	[ChangeSubTypesForAll](fromSubTypes, toSubTypes)       // Conversion
 	[ManaConversion](from, to Color)                       // Sunglasses of Urza
 	[BodyguardContinuous]()                                // Veteran Bodyguard
 	[PersonalIncarnationRedirect]()                        // Personal Incarnation
 	[PreventFromAttackingIfDefendingPlayerControls](f)     // Dandân
 
+Combat restrictions (CR 509.1b/c, declared on attackers and blockers):
+
+	[SourceCantBeBlockedExceptBy](filter)              // Gingerbrute, Invisibility-style
+	[SourceCanBlockOnly](filter)                       // Rishadan Airship
+	[SourceCantBeBlockedByFewerThan](n)                // Goblin Goon: needs 3+ blockers
+	[TargetCantBeBlockedExceptBy](id, filter, dur)     // Ghirapur Guide
+	[TargetMustBeBlockedIfAble](id, dur)               // Enlarge, Irresistible Prey
+	[PreventBlockByPowerLessThanSource](filter)        // Champion of Lambholt
+	[PreventAttackingIfDefenderControlsMore](filter)   // Goblin Goon attack clause
+
+Filter helpers built for combat restrictions:
+
+	[PowerLessOrEqual](n)        // creatures with power N or less
+	[PowerGreaterThan](n)        // creatures with power > N
+
+The [EffectManager] holds the per-cycle restriction maps:
+
+	em.AddCantBeBlockedExceptBy(attackerID, filter)    // CR 509.1b
+	em.AddCanBlockOnly(blockerID, filter)              // CR 509.1b
+	em.AddMinBlockers(attackerID, n)                   // CR 509.1b ("N or more")
+
+Filter-based restrictions are checked inside [CanBlock]. The minimum-blockers
+constraint and "must be blocked if able" (AttrMustBeBlockedIfAble) are
+enforced post-declaration in doDeclareBlockers via enforceMinimumBlockers
+and enforceMustBeBlockedIfAble.
+
 Damage prevention rules (continuous):
 
 	[PreventDamageFromTo](from, toFactory, ...SourceCondition)
 	    // Camel: prevent Desert damage to self and banded creatures
+
+# Conditional Spell Cost Reduction (CR 601.2f)
+
+Two flavors are supported. Both reduce only the *generic* portion of a mana
+cost; colored requirements are unchanged. A spell's generic cost cannot drop
+below zero (per cast).
+
+  1. Static reductions sourced from a permanent on the battlefield, applying
+     to spells the source's controller casts that match a spell-filter:
+
+	[ReduceSpellCostStatic](filter, amount, condition) ContinuousEffect
+	[ReduceSpellCostStaticLabeled](label, filter, amount, condition)
+
+     Use as the argument to [WithStaticAbility]. The continuous effect
+     registers a [SpellCostReducer] entry on [GameRules.SpellCostReducers]
+     each Apply() cycle while the source is on the battlefield. Examples:
+     Warden of Evos Isle, Dragonlord's Servant, Dragonspeaker Shaman,
+     Herald's Horn.
+
+  2. Self cost reductions intrinsic to the casting card itself, reducing
+     only its own cost at cast time (works while the card is in hand —
+     the cast pipeline walks the casting card's abilities directly):
+
+	[WithSelfCostReduction](amount, condition) CardOption
+	[SelfCostReduction](amount, condition) *SelfCostReductionAbility
+
+     Examples: Bone Picker, Cryptic Serpent, Ghalta Primal Hunger.
+
+Filters ([SpellPredicate]):
+
+	[SpellAny]()                              // every spell
+	[SpellHasType](CardType)                  // creature/instant/etc.
+	[SpellHasSubType](string)                 // "Dragon", "Wizard"
+	[SpellHasKeyword](Attr)                   // Flying, Trample
+	[SpellIsSelf]()                           // the registered card itself
+	[SpellSubTypeMatchesChosen]()             // Herald's Horn (ChosenSubtype)
+	[SpellsAnd](preds...) / [SpellsOr](preds...)
+
+Amounts ([SpellAmount]):
+
+	[FixedAmount](n)                          // constant
+	[AmountByGraveyardCount](CardFilter)      // Cryptic Serpent
+	[AmountByTotalPower](PermanentFilter)     // Ghalta
+	[AmountByPermanentCount](PermanentFilter)
+
+Conditions ([SpellCondition]):
+
+	[CondCreatureDiedThisTurn]()              // Bone Picker
+	[CondControlsMatching](PermanentFilter)   // Wizard's Retort, Winged Words
+	[CondAnd](conds...)
+	(nil) — unconditional
+
+Inspection (engine tests, AI):
+
+	g.[ConditionalSpellCostReduction](controller, card) int
+	    // total generic reduction that would apply to a hypothetical cast
 
 # The Attr System
 
@@ -746,7 +1097,8 @@ Capability attrs:
 	[AttrDoesNotUntap]        // doesn't untap during untap step
 	[AttrEntersTapped]        // enters tapped
 	[AttrMustAttack]          // must attack each turn
-	[AttrMustBeBlocked]       // must be blocked if possible
+	[AttrMustBeBlocked]       // Lure: every able blocker must block this
+	[AttrMustBeBlockedIfAble] // CR 509.1c: must be blocked by at least one able blocker
 	[AttrMayNotUntap]         // player may choose not to untap
 
 Type-identity attrs:
@@ -760,7 +1112,14 @@ Keyword attrs (all >= Flying):
 	[Indestructible], [Hexproof], [Shroud], [Forestwalk], [Islandwalk],
 	[Swampwalk], [Mountainwalk], [Plainswalk], [Desertwalk], [UnblockableKW],
 	[CantBeBlockedByWalls], [CantBeBlockedExceptByWalls], [CanBlockAny],
-	[CanBlockAdditional], [BasiliskTouch], [CantRegenerate]
+	[CanBlockAdditional], [BasiliskTouch], [CantRegenerate], [Flash]
+
+Flash (CR 702.8 — "You may cast this spell any time you could cast an instant.")
+is a casting-time keyword rather than a permanent ability: it is read off the
+card while it is still in hand, by [Game.CastSpellByName] and
+[Game.GetCastableSpells], to bypass the sorcery-speed gate. The keyword is
+seeded onto the card via [WithKeyword] like any other keyword and is not
+re-checked once the spell is on the battlefield.
 
 Continuous effects use EffectManager.GrantAttr/RevokeAttr to modify grantedAttrs:
 
@@ -813,6 +1172,7 @@ continuous effects:
 	UnlimitedLandPlays bool            // bypass one-land-per-turn
 	SpellCostIncreases map[Color]int   // per-color cost increases (Gloom, etc.)
 	SpellCostReductions map[Color]int  // per-color cost reductions
+	SpellCostReducers  []SpellCostReducer // conditional generic-mana reducers (CR 601.2f)
 	ManaConversion     map[Color]Color // forced mana conversion (Celestial Dawn)
 
 Methods for special rules:
@@ -902,6 +1262,112 @@ For spell/land/ability execution on clones, use the standard methods:
 	g.ActivateAbilityByIndex(playerID, permID, idx, tgts) // put on stack (or handle mana ability)
 	g.ResolveStack()                                      // drain stack atomically
 
+# Modal Spells (CR 700.2)
+
+A modal spell offers the controller a choice of two or more options at
+cast time. Use NewModalSpell to declare per-mode targets and effects:
+
+	mage.NewModalSpell([]mage.Mode{
+	    {Label: "...", Targets: []mage.Target{...}, Effects: []mage.Effect{...}},
+	    {Label: "...", Targets: []mage.Target{...}, Effects: []mage.Effect{...}},
+	})
+
+The engine prompts Player.ChooseMode at cast time, then gathers targets
+only for the chosen mode (CR 700.2d). The chosen mode index is recorded on
+StackObject.ModeChoice; per-mode target lists on StackObject.ModalTargets.
+At resolution, only the chosen mode's Effects run.
+
+NewModalSpell panics with fewer than two modes (modal spells have at least
+two options by definition).
+
+For modal triggered abilities (Trusty Retriever, Entomber Exarch ETB), use
+ModalTriggerEffect — it prompts ChooseMode at trigger resolution and
+dispatches to the chosen ModalTriggerMode.Resolve callback. Per-mode
+targets are picked at put-on-stack time via the trigger's AddTarget
+declarations (CR 603.3d).
+
+	mage.ModalTriggerEffect("Trusty Retriever", []mage.ModalTriggerMode{
+	    {Label: "Return target ...", Resolve: func(g, src, ctrl, targets) error {...}},
+	    {Label: "Draw a card",        Resolve: func(g, src, ctrl, targets) error {...}},
+	})
+
+The legacy SetModes / g.ModeValue branch-inside-FuncEffect API still works
+for cards whose modes don't differ in target shape; both APIs share the
+same currentMode plumbing.
+
+# Spell-Copy Primitive (CR 706, 707.10)
+
+Game.CopySpellOnStack creates a duplicate StackObject of a spell already on
+the stack. Used by Doublecast, Dualcaster Mage, Twincast, Reverberate, Fork,
+Twinning Staff, Riku of Two Reflections, and similar effects.
+
+	cp := g.CopySpellOnStack(originalSourceID, controller, mayChooseNewTargets)
+	    // originalSourceID — SourceID (card ID) of the spell to copy;
+	    //                    typically read from EvtSpellCast.SourceID.
+	    // controller       — player who controls the copy (CR 706.10c).
+	    // mayChooseNewTargets — true reprompts the controller for every
+	    //                       declared Target on the spell's SpellAbility.
+	    //                       For modal spells, only the chosen mode's
+	    //                       targets are reprompted.
+
+The returned StackObject:
+
+  - Has a fresh ID and a freshly Copy()'d underlying Card (so spell-copy
+    triggers don't double-fire on the same card ID).
+  - Inherits the original's effects, X value, chosen mode, and divided-
+    damage distribution.
+  - Has IsCopy=true. ResolveStackObject honors the flag: a copy of a spell
+    ceases to exist when it resolves OR fizzles (CR 707.10) — it does
+    not enter the graveyard, the battlefield, or any other zone.
+
+Returns nil if the original spell isn't on the stack (caller can no-op).
+Use CopyStackObjectDirect when you already have the *StackObject in hand.
+
+# Casting From Non-Hand Zones (Alternate Costs)
+
+CR 117.9 / 601.2b: a player may sometimes be allowed to cast a card from a
+non-hand zone (graveyard, exile) using either no mana cost ("without paying
+its mana cost", an alternate cost of 0) or a different alternate cost. Cards
+like Scholar of the Lost Trove, Scourge of Nel Toth, Etali Primal Storm,
+Gonti Lord of Luxury and Maelstrom Archangel rely on this.
+
+The engine exposes four helpers for this:
+
+	g.CastCardFromZoneWithoutPaying(playerID, cardID, zone, targets, xValue)
+	    — Move a card from any zone (Hand, Graveyard, Library, Exile) onto the
+	      stack paying NO mana cost. Additional costs printed on the card
+	      (sacrifice, discard, etc.) are still paid (CR 601.2b). Used by
+	      "without paying its mana cost" effects.
+
+	g.CastCardFromZoneWithAlternateCost(playerID, cardID, zone, mc, targets, xValue)
+	    — Like the above but pays the supplied alternate ManaCost from the
+	      controller's pool instead of the card's printed cost. Used for
+	      Scourge-of-Nel-Toth-style "by paying {3}{B}{B} ... rather than
+	      paying its mana cost".
+
+	g.GrantCastFromExile(playerID, cardID, anyColorMana)
+	g.CastFromExilePermissionFor(playerID, cardID) *CastableFromExilePermission
+	g.ClearCastFromExilePermission(cardID)
+	g.CastExiledCardWithPermission(playerID, cardID, targets, xValue)
+	    — Per-card permission to cast a specific exiled card (Gonti, Lord of
+	      Luxury). When AnyColorMana is true, the card's colored pips collapse
+	      into generic for the cost calculation, modelling CR 609.4b "spend
+	      mana as though it were mana of any color". The permission is
+	      cleared automatically when the card leaves exile.
+
+	g.AddExileIfWouldGoToGraveyardThisTurn(cardID, sourceID)
+	g.IsCardMarkedExileInsteadOfGraveyard(cardID) bool
+	g.ClearExileInsteadOfGraveyardForTurn()
+	    — Turn-scoped rider for the Scholar-of-the-Lost-Trove pattern: "If
+	      that spell would be put into a graveyard this turn, exile it
+	      instead." Tagged cards are exiled when ResolveStackObject would put
+	      them in the graveyard, and a registered ReplacementEffect intercepts
+	      the destroy/death path for permanents. The tag is cleared at the
+	      cleanup step.
+
+These helpers fire EvtSpellCast like the standard CastSpellByName, so cast
+triggers (Storm, prowess, "whenever you cast a spell") see the cast.
+
 # Replacement Effect System
 
 The engine implements a generic replacement effect pipeline (MTG rule 614).
@@ -912,17 +1378,22 @@ card draw — it is wrapped in an [Action] struct and run through
 
 ## Action Types
 
-Five concrete action types represent pending mutations:
+Six concrete action types represent pending mutations:
 
 	[*DamageToPlayerAction]    — damage about to be dealt to a player
 	[*DamageToCreatureAction]  — damage about to be dealt to a creature
 	[*DestroyPermanentAction]  — a permanent about to be destroyed
 	[*LifeGainAction]          — a player about to gain life
 	[*DrawCardAction]          — a player about to draw a card
+	[*AddCountersAction]       — counters about to be put on a permanent (CR 614.1c)
 
 All implement the [Action] interface (single method: ActionSource() uuid.UUID).
 Damage actions expose Amount(), IsCombatDamage(), PlayerID()/PermanentID(),
 and a WithAmount(int) copy method for partial prevention.
+[*AddCountersAction] exposes PermanentID(), CounterType(), Amount(), and
+OnEntry() (true when the placement happens during enter-the-battlefield
+resolution before EvtZoneChange (To=Battlefield)); WithAmount(int) returns a copy with
+a different count.
 
 ## ReplacementEffect Interface
 
@@ -996,10 +1467,16 @@ the appropriate replacement:
 	g.PreventAllDamageFrom(sourceID)           → damagePreventionRuleReplacement
 	g.SetMinimumLife(playerID)                 → minimumLifeReplacement (cycle)
 	g.SetArtifactDamageRedirect(ctrlID, pID)   → artifactDamageRedirectReplacement (cycle)
+	g.AddCounterDoubler(srcID, ct, filter)     → counterDoublerReplacement (Doubling Season,
+	                                              Branching Evolution; CR 614.1c)
+	g.AddETBAdditionalCounters(srcID, ct, n,
+	                           filter, excludeSelf) → etbAdditionalCountersReplacement
+	                                              (Oona's Blackguard, Winding Constrictor;
+	                                              CR 614.1c)
 
 For custom replacements, call [*Game.AddReplacementEffect](r) directly.
 
-## Built-In Replacement Implementations (17)
+## Built-In Replacement Implementations (19)
 
 All live in replacement.go:
 
@@ -1020,6 +1497,10 @@ All live in replacement.go:
 	skipDrawReplacement                — skips next normal draw
 	drawReplacementEffect              — Aladdin's Lamp draw replacement
 	damagePreventionRuleReplacement    — from/to PermanentFilter-based prevention (cycle)
+	counterDoublerReplacement          — doubles +1/+1 (or other) counter placements on
+	                                      matching permanents (CR 614.1c)
+	etbAdditionalCountersReplacement   — adds N more counters when matching permanents
+	                                      enter the battlefield (CR 614.1c)
 
 ## Example: Custom Replacement on a Card
 
@@ -1054,13 +1535,23 @@ All live in replacement.go:
 
 ## Mutation Method Integration
 
-The five Game methods that produce actions:
+The six Game methods that produce actions:
 
 	DealDamageToPlayer  — creates DamageToPlayerAction, runs pipeline, executes via executeDamageToPlayer
 	DealDamageToPermanent — creates DamageToCreatureAction, runs pipeline, executes via executeDamageToCreature
 	DestroyPermanent    — creates DestroyPermanentAction, runs pipeline, removes from battlefield if not replaced
 	PlayerGainLife      — creates LifeGainAction, runs pipeline, applies life gain if not replaced
 	doDrawNormalDraw    — creates DrawCardAction, runs pipeline, draws card if not replaced
+	AddCountersWithReplacement — creates AddCountersAction, runs pipeline, calls Permanent.AddCounter
+	                              with the (possibly transformed) amount. Engine code that needs
+	                              counter doubling / ETB-additional support uses this; raw
+	                              Permanent.AddCounter bypasses the pipeline.
+
+During PutOnBattlefield the entering permanent is transiently exposed via
+g.enteringPermanent so FindPermanent (and therefore replacement Matches
+predicates) can see it before it joins g.battlefield. EntersWithXCounters
+and EntersWithNCounters route through AddCountersWithReplacement with
+onEntry=true.
 
 The executeAction dispatcher type-switches on the returned action and calls the
 appropriate executor. If a replacement changes action type (e.g., redirect
@@ -1087,8 +1578,61 @@ Attach with WithAbility:
 	[CopyCreatureOnETB]()                 // clone ETB (Doppelganger)
 	[ETBWithTargets](effect)              // run effect on ETB using spell targets
 	[ETBEffect](effect)                   // run effect on ETB without targets
+	[ETBChooseColor](reason)              // "as ~ enters, choose a color"
+	[ETBChooseColorOtherThan](reason, c)  // "as ~ enters, choose a color other than X" (Thriving cycle)
+	[ETBChooseOpponent]()                 // "as ~ enters, choose an opponent" (Nyxathid, Black Vise)
+	[ETBChooseCreatureType](options)      // "as ~ enters, choose a creature type" (Herald's Horn)
 	[ManaBonusAbility] / [NewManaBonusAbility](filter, color) // bonus mana on tap
 	[NewAttachedManaBonusAbility](color)  // Wild Growth bonus mana
+
+# "As ~ Enters the Battlefield, Choose ___" (CR 614.12)
+
+An "as it enters" replacement effect makes the controller pick a value at
+the moment a permanent enters the battlefield. The choice is recorded on
+the permanent itself, so other abilities of the same permanent can read it
+later. The four ETBChoose* constructors above each produce an
+*ETBEffectAbility that PutOnBattlefield runs unconditionally during ETB
+resolution BEFORE firing the EvtZoneChange (To=Battlefield) event — so the stored
+choice is already in place when "when this enters" triggers fire.
+
+Storage fields on Permanent:
+
+	ChosenColor    Color   // ETBChooseColor / ETBChooseColorOtherThan
+	ChosenPlayer   uuid.UUID // ETBChooseOpponent
+	ChosenSubtype  string  // ETBChooseCreatureType
+
+Example: a Thriving-cycle land that enters tapped and taps for either its
+own color or the chosen color.
+
+	mage.Register("Thriving Bluff", func() mage.Card {
+	    return mage.NewLand("Thriving Bluff",
+	        mage.WithKeyword(core.EntersTapped),
+	        mage.WithAbility(mage.ETBChooseColorOtherThan(
+	            "choose a color other than red", core.Red,
+	        )),
+	        mage.WithActivatedAbility(
+	            // Custom mana ability reads perm.ChosenColor at activation time.
+	            mage.FuncEffect("add {R} or chosen color", mage.EffectProperties{},
+	                func(g *mage.Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+	                    perm := g.FindPermanent(sourceID)
+	                    p := g.GetPlayer(controller)
+	                    // ... add core.Red or perm.ChosenColor based on player choice
+	                    return nil
+	                }),
+	            mage.TapSourceCost(),
+	        ),
+	    )
+	})
+
+Test harness scripting:
+
+	tg.ChooseManaColor(PlayerA, core.Blue)   // for ETBChooseColor / ETBChooseColorOtherThan
+	tg.ChooseString(PlayerA, "Goblin")       // for ETBChooseCreatureType
+
+ETBChooseOpponent does not consult the player in 2-player; it pins
+ChosenPlayer to the lone opponent at ETB-replacement time so downstream
+references (Nyxathid's P/T-by-hand-size, ChosenPlayerUpkeepTrigger, etc.)
+remain stable.
 
 # Mana
 
@@ -1100,6 +1644,14 @@ Mana abilities are a special ability type:
 
 Mana costs are parsed from strings like "{2}{W}{B}" via [ParseManaCost].
 Colors: [White], [Blue], [Black], [Red], [Green], [Colorless].
+
+Hybrid mana symbols (CR 107.4d, 117.7) are written {X/Y} where X and Y are
+two of W/U/B/R/G — for example "{1}{W/U}{G/W}". A hybrid symbol can be paid
+with mana of either listed color; the engine picks deterministically (the
+more-abundant color in the pool, breaking ties toward the first listed
+color). Each hybrid symbol contributes 1 to the cost's mana value (CR 202.3f)
+and counts as both of its colors for color identity (CR 202.2c). Stored on
+[ManaCost] as the [ManaCost.Hybrid] slice of [HybridSymbol]{A, B}.
 
 # Complete Card Examples
 

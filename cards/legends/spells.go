@@ -924,10 +924,12 @@ func registerSpells() {
 					}
 					ownerID := perm.Card.Owner()
 					g.RegisterDelayedTrigger(&DelayedTrigger{
-						EventType:    EvtCreatureDied,
-						SourceID:     sourceID,
-						Controller:   controller,
-						MatchEventID: targetID,
+						EventType:     EvtZoneChange,
+						SourceID:      sourceID,
+						Controller:    controller,
+						MatchEventID:  targetID,
+						MatchFromZone: ZoneBattlefield,
+						MatchToZone:   ZoneGraveyard,
 						Effects: []Effect{FuncEffect(
 							"return a creature card from owner's graveyard to the battlefield",
 							EffectProperties{Outcome: OutcomeBenefit},

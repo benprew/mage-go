@@ -206,6 +206,8 @@ type RegisterDelayedTriggerData struct {
 	TargetVar     string   // read target permanent ID from context (or empty for source)
 	Effects       []Effect // effects to execute when trigger fires
 	MatchEventVar string   // optional: match evt.SourceID against this var
+	MatchFromZone Zone     // for EvtZoneChange: ZoneAny / unset to skip
+	MatchToZone   Zone     // for EvtZoneChange: ZoneAny / unset to skip
 	Persistent    bool
 }
 
@@ -233,12 +235,14 @@ func execRegisterDelayedTrigger(ctx *EffectContext, e *RegisterDelayedTriggerDat
 		}
 	}
 	dt := &DelayedTrigger{
-		EventType:  e.EventType,
-		TargetID:   targetID,
-		Effects:    e.Effects,
-		SourceID:   ctx.SourceID,
-		Controller: ctx.Controller,
-		Persistent: e.Persistent,
+		EventType:     e.EventType,
+		TargetID:      targetID,
+		Effects:       e.Effects,
+		SourceID:      ctx.SourceID,
+		Controller:    ctx.Controller,
+		MatchFromZone: e.MatchFromZone,
+		MatchToZone:   e.MatchToZone,
+		Persistent:    e.Persistent,
 	}
 	if e.MatchEventVar != "" {
 		dt.MatchEventID = ctx.TryGetUUID(e.MatchEventVar)

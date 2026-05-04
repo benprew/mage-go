@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"sort"
 	"strings"
 	"sync"
@@ -47,11 +48,17 @@ var (
 	actionKinds        = [...]string{"pass", "play_land", "cast_spell", "activate_ability", "attacker", "blocker", "choice", "unknown"}
 	traceKinds         = [...]string{"priority", "attackers", "blockers", "choice_index", "choice_ids", "choice_color", "may"}
 	zoneSpecs          = [...]zoneSpec{{zone: "hand", owner: "self"}, {zone: "graveyard", owner: "self"}, {zone: "graveyard", owner: "opponent"}, {zone: "battlefield", owner: "self"}, {zone: "battlefield", owner: "opponent"}}
-	cardRowsOnce       sync.Once
-	cardRowByName      map[string]int64
-	cardRowOverrideMu  sync.RWMutex
-	cardRowOverrides   = map[string]int64{}
-	cardRowsOverridden bool
+	stepNamesNorm      = normalizedKeys(stepNames[:])
+	pendingKindsNorm   = normalizedKeys(pendingKinds[:])
+	actionKindsNorm    = normalizedKeys(actionKinds[:])
+	traceKindsNorm     = normalizedKeys(traceKinds[:])
+	cardRowsOnce          sync.Once
+	cardRowByName         map[string]int64
+	cardRowByRawName      map[string]int64
+	cardRowOverrideMu     sync.RWMutex
+	cardRowOverrides      = map[string]int64{}
+	cardRowOverridesByRaw = map[string]int64{}
+	cardRowsOverridden    bool
 )
 
 type zoneSpec struct {
@@ -73,35 +80,85 @@ type encodeConfig struct {
 	optionScalarDim     int64
 	targetScalarDim     int64
 	decisionCapacity    int64
+	emitRenderPlan      bool
+	renderPlanCapacity  int64
+	// dedupCardBodies turns on the v2 ``<dict>`` opcode set: each unique
+	// card cache row in the snapshot is spliced once at the top, and per-zone
+	// occurrences become short ``<card-ref>``-anchored references back to
+	// the dict entry instead of full body splices. Off by default — the
+	// native token assembler does not yet understand the v2 opcodes.
+	dedupCardBodies bool
+	// emitTokens turns on the native token-assembler pass after the
+	// render-plan emission. Output buffers live in tokenAssemblerViews.
+	emitTokens       bool
+	tokenMaxTokens   int32
+	tokenMaxOptions  int32
+	tokenMaxTargets  int32
+	tokenMaxCardRefs int32
+	// emitTokensPacked is the varlen sibling of ``emitTokens``. Only one
+	// of the two flags may be set per encode call. When set, the packed
+	// output buffers in ``outputViews`` are filled instead.
+	emitTokensPacked bool
 }
 
 type outputViews struct {
-	traceKindID       []int64
-	slotCardRows      []int64
-	slotOccupied      []float32
-	slotTapped        []float32
-	gameInfo          []float32
-	pendingKindID     []int64
-	numPresentOptions []int64
-	optionKindIDs     []int64
-	optionScalars     []float32
-	optionMask        []float32
-	optionRefSlotIdx  []int64
-	optionRefCardRow  []int64
-	targetMask        []float32
-	targetTypeIDs     []int64
-	targetScalars     []float32
-	targetOverflow    []float32
-	targetRefSlotIdx  []int64
-	targetRefIsPlayer []byte
-	targetRefIsSelf   []byte
-	mayMask           []byte
-	decisionStart     []int64
-	decisionCount     []int64
-	decisionOptionIdx []int64
-	decisionTargetIdx []int64
-	decisionMask      []byte
-	usesNoneHead      []byte
+	traceKindID        []int64
+	slotCardRows       []int64
+	slotOccupied       []float32
+	slotTapped         []float32
+	gameInfo           []float32
+	pendingKindID      []int64
+	numPresentOptions  []int64
+	optionKindIDs      []int64
+	optionScalars      []float32
+	optionMask         []float32
+	optionRefSlotIdx   []int64
+	optionRefCardRow   []int64
+	targetMask         []float32
+	targetTypeIDs      []int64
+	targetScalars      []float32
+	targetOverflow     []float32
+	targetRefSlotIdx   []int64
+	targetRefIsPlayer  []byte
+	targetRefIsSelf    []byte
+	mayMask            []byte
+	decisionStart      []int64
+	decisionCount      []int64
+	decisionOptionIdx  []int64
+	decisionTargetIdx  []int64
+	decisionMask       []byte
+	usesNoneHead       []byte
+	renderPlan         []int32
+	renderPlanLengths  []int64
+	renderPlanOverflow []int64
+
+	// Token-assembler outputs. nil when emit_tokens=false.
+	tokenIDs        []int64
+	tokenAttention  []int64
+	tokenSeqLengths []int64
+	tokenOptionPos  []int64
+	tokenOptionMask []byte
+	tokenTargetPos  []int64
+	tokenTargetMask []byte
+	tokenCardRefPos []int64
+	tokenOverflow   []int32
+
+	// Packed (varlen) token-assembler outputs. Mutually exclusive with
+	// the dense ``token*`` views above: only one of the two paths is
+	// active per encode call. ``packedTokenIDs`` etc. are sized
+	// [B*max_tokens]; ``packedSeqId`` and ``packedPosInSeq`` likewise.
+	packedTokenIDs        []int64
+	packedSeqID           []int64
+	packedPosInSeq        []int64
+	packedCuSeqlens       []int64 // [B+1]
+	packedSeqLengths      []int64 // [B]
+	packedStatePositions  []int64 // [B]
+	packedOptionPos       []int64
+	packedOptionMask      []byte
+	packedTargetPos       []int64
+	packedTargetMask      []byte
+	packedCardRefPos      []int64
+	packedTokenOverflow   []int32
 }
 
 type batchRequest struct {
@@ -131,13 +188,24 @@ func validateEncodeConfig(cfg encodeConfig) *encodeError {
 		return &encodeError{code: mageEncodeErrArg, message: "max_cached_choices must be >= max_options"}
 	case cfg.maxCachedChoices < cfg.maxTargetsPerOption+1:
 		return &encodeError{code: mageEncodeErrArg, message: "max_cached_choices must be >= max_targets_per_option + 1"}
+	case cfg.emitRenderPlan && cfg.renderPlanCapacity <= 0:
+		return &encodeError{code: mageEncodeErrArg, message: "render_plan_capacity must be positive when emit_render_plan is set"}
+	case cfg.renderPlanCapacity > math.MaxInt32:
+		return &encodeError{code: mageEncodeErrArg, message: "render_plan_capacity must fit in int32"}
 	}
 	return nil
 }
 
 func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64, *encodeError) {
-	clearOutputViews(views)
+	clearOutputViews(views, cfg)
 	decisionCursor := int64(0)
+	// Running write cursor into the packed token buffer. Only advanced
+	// when emitTokensPacked is set; ignored otherwise.
+	packedCursor := int32(0)
+	if cfg.emitTokensPacked && len(views.packedCuSeqlens) > 0 {
+		views.packedCuSeqlens[0] = 0
+	}
+	scratch := newEncodeScratch()
 	for batchIdx, handleID := range req.handles {
 		h := getHandle(handleID)
 		if h == nil {
@@ -149,7 +217,7 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 			h.mu.Unlock()
 			return decisionCursor, &encodeError{code: mageEncodeErrOver, message: fmt.Sprintf("handle %d is over", handleID)}
 		}
-		state := snapshotState(h.game)
+		state := cachedSnapshotState(h)
 		pending := buildPending(h.current)
 		if pending == nil {
 			h.mu.Unlock()
@@ -166,7 +234,8 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 			return decisionCursor, err
 		}
 
-		cardIDToSlot := map[string]int64{}
+		scratch.reset()
+		cardIDToSlot := scratch.cardIDToSlot
 		if err := fillStateEncoding(int64(batchIdx), state, pending, playerIdx, cfg, views, cardIDToSlot); err != nil {
 			h.mu.Unlock()
 			return decisionCursor, err
@@ -174,6 +243,26 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 		if err := fillActionEncoding(int64(batchIdx), state, pending, playerIdx, cfg, views, cardIDToSlot); err != nil {
 			h.mu.Unlock()
 			return decisionCursor, err
+		}
+		if cfg.emitRenderPlan {
+			if err := fillRenderPlan(int64(batchIdx), state, pending, playerIdx, cfg, views, scratch); err != nil {
+				h.mu.Unlock()
+				return decisionCursor, err
+			}
+		}
+		if cfg.emitTokens {
+			if err := fillTokenAssembly(int64(batchIdx), cfg, views); err != nil {
+				h.mu.Unlock()
+				return decisionCursor, err
+			}
+		}
+		if cfg.emitTokensPacked {
+			advanced, err := fillTokenAssemblyPacked(int64(batchIdx), packedCursor, cfg, views)
+			if err != nil {
+				h.mu.Unlock()
+				return decisionCursor, err
+			}
+			packedCursor = advanced
 		}
 		written, err := fillDecisionEncoding(int64(batchIdx), pending, cfg, views, decisionCursor)
 		h.mu.Unlock()
@@ -185,7 +274,7 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 	return decisionCursor, nil
 }
 
-func clearOutputViews(view outputViews) {
+func clearOutputViews(view outputViews, cfg encodeConfig) {
 	fillInt64(view.traceKindID, 0)
 	fillInt64(view.slotCardRows, 0)
 	fillFloat32(view.slotOccupied, 0)
@@ -212,6 +301,163 @@ func clearOutputViews(view outputViews) {
 	fillInt64(view.decisionTargetIdx, -1)
 	fillBytes(view.decisionMask, 0)
 	fillBytes(view.usesNoneHead, 0)
+	fillInt32(view.renderPlan, 0)
+	fillInt64(view.renderPlanLengths, 0)
+	fillInt64(view.renderPlanOverflow, 0)
+	// Dense token-assembler buffers are only live when emitTokens is set;
+	// zeroing them in packed mode is wasted work. The dense and packed
+	// paths are mutually exclusive (validated at the C entry points), so
+	// in packed mode the dense slices are typically nil anyway — skip the
+	// loops outright.
+	if cfg.emitTokens {
+		fillInt64(view.tokenIDs, 0)
+		fillInt64(view.tokenAttention, 0)
+		fillInt64(view.tokenSeqLengths, 0)
+		fillInt64(view.tokenOptionPos, -1)
+		fillBytes(view.tokenOptionMask, 0)
+		fillInt64(view.tokenTargetPos, -1)
+		fillBytes(view.tokenTargetMask, 0)
+		fillInt64(view.tokenCardRefPos, -1)
+		fillInt32(view.tokenOverflow, 0)
+	}
+	if cfg.emitTokensPacked {
+		// Packed buffers: clear sentinel/anchor regions. The token /
+		// seq_id / pos_in_seq buffers are written contiguously up to
+		// cu_seqlens[B]; their tail is unspecified, so no need to zero
+		// them.
+		fillInt64(view.packedCuSeqlens, 0)
+		fillInt64(view.packedSeqLengths, 0)
+		fillInt64(view.packedStatePositions, 0)
+		fillInt64(view.packedOptionPos, -1)
+		fillBytes(view.packedOptionMask, 0)
+		fillInt64(view.packedTargetPos, -1)
+		fillBytes(view.packedTargetMask, 0)
+		fillInt64(view.packedCardRefPos, -1)
+		fillInt32(view.packedTokenOverflow, 0)
+	}
+}
+
+// fillTokenAssembly walks the render-plan stream emitted for “batchIdx“
+// and fills the token-assembler outputs for that row. Requires that the
+// render plan was already emitted (cfg.emitRenderPlan must be true).
+func fillTokenAssembly(batchIdx int64, cfg encodeConfig, view outputViews) *encodeError {
+	tables := getTokenTables()
+	if tables == nil {
+		return &encodeError{
+			code:    mageEncodeErrEncodeFailure,
+			message: "MageRegisterTokenTables must be called before MageEncodeTokens",
+		}
+	}
+	planStart := batchIdx * cfg.renderPlanCapacity
+	planLen := view.renderPlanLengths[batchIdx]
+	plan := view.renderPlan[planStart : planStart+planLen]
+
+	mt := int64(cfg.tokenMaxTokens)
+	mo := int64(cfg.tokenMaxOptions)
+	mtg := int64(cfg.tokenMaxTargets)
+	mcr := int64(cfg.tokenMaxCardRefs)
+
+	out := &tokenAssemblerOut{
+		tokenIDs:      view.tokenIDs[batchIdx*mt : (batchIdx+1)*mt],
+		attentionMask: view.tokenAttention[batchIdx*mt : (batchIdx+1)*mt],
+		optionPos:     view.tokenOptionPos[batchIdx*mo : (batchIdx+1)*mo],
+		optionMask:    view.tokenOptionMask[batchIdx*mo : (batchIdx+1)*mo],
+		targetPos:     view.tokenTargetPos[batchIdx*mo*mtg : (batchIdx+1)*mo*mtg],
+		targetMask:    view.tokenTargetMask[batchIdx*mo*mtg : (batchIdx+1)*mo*mtg],
+		cardRefPos:    view.tokenCardRefPos[batchIdx*mcr : (batchIdx+1)*mcr],
+		maxOptions:    cfg.tokenMaxOptions,
+		maxTargets:    cfg.tokenMaxTargets,
+		maxCardRefs:   cfg.tokenMaxCardRefs,
+		cursorBase:    0,
+		padTail:       true,
+	}
+
+	cursor, overflow, err := assembleTokensFromPlan(plan, tables, out, cfg.tokenMaxTokens)
+	if err != nil {
+		return &encodeError{code: mageEncodeErrEncodeFailure, message: err.Error()}
+	}
+	view.tokenSeqLengths[batchIdx] = int64(cursor)
+	if overflow {
+		view.tokenOverflow[batchIdx] = 1
+	}
+	return nil
+}
+
+// fillTokenAssemblyPacked writes one row's worth of tokens into the
+// shared packed output buffer starting at ``packedCursor``. Returns the
+// new cursor (one past the last live token) so the caller can chain
+// rows without an outer-loop allocation. Anchors are written as
+// absolute offsets into the packed buffer.
+func fillTokenAssemblyPacked(
+	batchIdx int64,
+	packedCursor int32,
+	cfg encodeConfig,
+	view outputViews,
+) (int32, *encodeError) {
+	tables := getTokenTables()
+	if tables == nil {
+		return packedCursor, &encodeError{
+			code:    mageEncodeErrEncodeFailure,
+			message: "MageRegisterTokenTables must be called before MageEncodeTokensPacked",
+		}
+	}
+	planStart := batchIdx * cfg.renderPlanCapacity
+	planLen := view.renderPlanLengths[batchIdx]
+	plan := view.renderPlan[planStart : planStart+planLen]
+
+	mt := int64(cfg.tokenMaxTokens)
+	mo := int64(cfg.tokenMaxOptions)
+	mtg := int64(cfg.tokenMaxTargets)
+	mcr := int64(cfg.tokenMaxCardRefs)
+
+	// Carve a row-sized scratch slice straight out of the packed buffer
+	// at the running cursor. The assembler writes tokens into this view
+	// using its own 0-based local cursor; with cursorBase=packedCursor
+	// the anchor positions land as absolute offsets.
+	rowStart := int64(packedCursor)
+	rowEnd := rowStart + mt
+	if rowEnd > int64(len(view.packedTokenIDs)) {
+		return packedCursor, &encodeError{
+			code:    mageEncodeErrInvalidArgument,
+			message: "packed token buffer too small (need >= B*max_tokens)",
+		}
+	}
+
+	out := &tokenAssemblerOut{
+		tokenIDs:      view.packedTokenIDs[rowStart:rowEnd],
+		attentionMask: nil, // packed mode does not use attention_mask
+		optionPos:     view.packedOptionPos[batchIdx*mo : (batchIdx+1)*mo],
+		optionMask:    view.packedOptionMask[batchIdx*mo : (batchIdx+1)*mo],
+		targetPos:     view.packedTargetPos[batchIdx*mo*mtg : (batchIdx+1)*mo*mtg],
+		targetMask:    view.packedTargetMask[batchIdx*mo*mtg : (batchIdx+1)*mo*mtg],
+		cardRefPos:    view.packedCardRefPos[batchIdx*mcr : (batchIdx+1)*mcr],
+		maxOptions:    cfg.tokenMaxOptions,
+		maxTargets:    cfg.tokenMaxTargets,
+		maxCardRefs:   cfg.tokenMaxCardRefs,
+		cursorBase:    packedCursor,
+		padTail:       false,
+	}
+
+	cursor, overflow, err := assembleTokensFromPlan(plan, tables, out, cfg.tokenMaxTokens)
+	if err != nil {
+		return packedCursor, &encodeError{
+			code:    mageEncodeErrEncodeFailure,
+			message: err.Error(),
+		}
+	}
+
+	// Per-token metadata for the live region of this row.
+	for k := int32(0); k < cursor; k++ {
+		view.packedSeqID[packedCursor+k] = batchIdx
+		view.packedPosInSeq[packedCursor+k] = int64(k)
+	}
+	view.packedSeqLengths[batchIdx] = int64(cursor)
+	view.packedStatePositions[batchIdx] = int64(packedCursor)
+	view.packedCuSeqlens[batchIdx+1] = int64(packedCursor + cursor)
+	if overflow {
+		view.packedTokenOverflow[batchIdx] = 1
+	}
+	return packedCursor + cursor, nil
 }
 
 func resolvePerspectivePlayerIndex(state *apiGameState, pending *apiPending, requested int64) (int, *encodeError) {
@@ -388,8 +634,8 @@ func fillGameInfo(out []float32, state *apiGameState, pending *apiPending, persp
 
 	stepIdx := len(stepNames) - 1
 	normalizedStep := normalizeKey(state.Step)
-	for idx, stepName := range stepNames[:len(stepNames)-1] {
-		if normalizeKey(stepName) == normalizedStep {
+	for idx, stepKey := range stepNamesNorm[:len(stepNamesNorm)-1] {
+		if stepKey == normalizedStep {
 			stepIdx = idx
 			break
 		}
@@ -723,12 +969,39 @@ func playerIDs(state *apiGameState, perspectivePlayerIdx int) (string, string) {
 
 func indexOrUnknown(values []string, value string) int64 {
 	key := normalizeKey(value)
-	for idx, candidate := range values {
-		if normalizeKey(candidate) == key {
+	norm := normalizedKeysFor(values)
+	for idx, candidate := range norm {
+		if candidate == key {
 			return int64(idx)
 		}
 	}
 	return int64(len(values) - 1)
+}
+
+// normalizedKeys returns a slice of normalized keys, one per input value.
+func normalizedKeys(values []string) []string {
+	out := make([]string, len(values))
+	for i, v := range values {
+		out[i] = normalizeKey(v)
+	}
+	return out
+}
+
+// normalizedKeysFor maps the well-known shared lookup tables to their
+// precomputed normalized-key slice. Falls back to fresh normalization
+// for unknown inputs (rare on the hot path).
+func normalizedKeysFor(values []string) []string {
+	switch {
+	case len(values) == len(stepNames) && &values[0] == &stepNames[0]:
+		return stepNamesNorm
+	case len(values) == len(pendingKinds) && &values[0] == &pendingKinds[0]:
+		return pendingKindsNorm
+	case len(values) == len(actionKinds) && &values[0] == &actionKinds[0]:
+		return actionKindsNorm
+	case len(values) == len(traceKinds) && &values[0] == &traceKinds[0]:
+		return traceKindsNorm
+	}
+	return normalizedKeys(values)
 }
 
 func normalizeKey(s string) string {
@@ -736,15 +1009,19 @@ func normalizeKey(s string) string {
 }
 
 func cardRowForName(name string) (int64, bool) {
-	key := normalizeKey(name)
-	if key == "" {
+	if name == "" {
 		return 0, true
 	}
 
 	cardRowOverrideMu.RLock()
 	overridden := cardRowsOverridden
-	row, ok := cardRowOverrides[key]
 	if overridden {
+		if row, ok := cardRowOverridesByRaw[name]; ok {
+			cardRowOverrideMu.RUnlock()
+			return row, true
+		}
+		key := normalizeKey(name)
+		row, ok := cardRowOverrides[key]
 		cardRowOverrideMu.RUnlock()
 		return row, ok
 	}
@@ -754,11 +1031,16 @@ func cardRowForName(name string) (int64, bool) {
 		names := mage.RegisteredCardNames()
 		sort.Strings(names)
 		cardRowByName = make(map[string]int64, len(names))
+		cardRowByRawName = make(map[string]int64, len(names))
 		for idx, cardName := range names {
 			cardRowByName[normalizeKey(cardName)] = int64(idx + 1)
+			cardRowByRawName[cardName] = int64(idx + 1)
 		}
 	})
-	row, ok = cardRowByName[key]
+	if row, ok := cardRowByRawName[name]; ok {
+		return row, true
+	}
+	row, ok := cardRowByName[normalizeKey(name)]
 	if !ok {
 		return 0, true
 	}
@@ -767,11 +1049,14 @@ func cardRowForName(name string) (int64, bool) {
 
 func setCardRowOverrides(rows map[string]int64) {
 	next := make(map[string]int64, len(rows))
+	nextRaw := make(map[string]int64, len(rows))
 	for name, row := range rows {
 		next[normalizeKey(name)] = row
+		nextRaw[name] = row
 	}
 	cardRowOverrideMu.Lock()
 	cardRowOverrides = next
+	cardRowOverridesByRaw = nextRaw
 	cardRowsOverridden = true
 	cardRowOverrideMu.Unlock()
 }
@@ -789,6 +1074,12 @@ func fillFloat32(dst []float32, value float32) {
 }
 
 func fillBytes(dst []byte, value byte) {
+	for i := range dst {
+		dst[i] = value
+	}
+}
+
+func fillInt32(dst []int32, value int32) {
 	for i := range dst {
 		dst[i] = value
 	}

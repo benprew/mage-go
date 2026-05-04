@@ -61,6 +61,7 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 		g.runPriorityRound(false)
 
 	case PrecombatMain:
+		g.doMainPhaseActions(true)
 		g.runPriorityRound(true)
 
 	case BeginCombat:
@@ -88,6 +89,7 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 			g.resolvingCombatDamage = true
 			g.combat.ResolveDamage(g, true)
 			g.resolvingCombatDamage = false
+			g.flushCombatDamageAggregator()
 			g.runPriorityRound(false)
 		}
 
@@ -96,6 +98,7 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 			g.resolvingCombatDamage = true
 			g.combat.ResolveDamage(g, false)
 			g.resolvingCombatDamage = false
+			g.flushCombatDamageAggregator()
 			g.runPriorityRound(false)
 		}
 
@@ -111,6 +114,7 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 		g.combat.Reset()
 
 	case PostcombatMain:
+		g.doMainPhaseActions(false)
 		g.runPriorityRound(true)
 
 	case EndStep:
@@ -133,6 +137,21 @@ func (g *Game) doBeginCombatActions() {
 	g.FireEvent(GameEvent{
 		Type:     EvtBeginCombat,
 		PlayerID: active.PlayerID(),
+	})
+	g.PutTriggersOnStack()
+}
+
+// doMainPhaseActions fires EvtMainPhase at the beginning of a main phase
+// (CR 505). evt.Flag is true for the precombat main phase ("first main
+// phase") and false for the postcombat main phase. evt.PlayerID is the
+// active player. Used by cards like Black Market that trigger "at the
+// beginning of your [first/post-combat] main phase".
+func (g *Game) doMainPhaseActions(precombat bool) {
+	active := g.ActivePlayerObj()
+	g.FireEvent(GameEvent{
+		Type:     EvtMainPhase,
+		PlayerID: active.PlayerID(),
+		Flag:     precombat,
 	})
 	g.PutTriggersOnStack()
 }

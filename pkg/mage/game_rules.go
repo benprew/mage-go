@@ -28,8 +28,21 @@ type GameRules struct {
 	maxHandSize              map[uuid.UUID]int       // player -> max hand size override (Cursed Rack)
 	expansionCastBlock       []string                // set codes blocked from casting/playing
 	NullifiedLandwalks       map[Attr]bool           // landwalk attrs that are nullified (Great Wall, etc.)
-	ActivationCostReductions map[uuid.UUID]int       // permanent ID → generic mana reduction for activated abilities
-	entersTappedRules        []func(*Permanent) bool // filters registered by continuous effects (Kismet, etc.)
+	ActivationCostReductions map[uuid.UUID]int        // permanent ID → generic mana reduction for activated abilities
+	entersTappedRules []func(*Permanent) bool        // filters registered by continuous effects (Kismet, etc.)
+	SpellCostReducers []SpellCostReducer             // conditional generic-cost reducers registered each Apply() cycle
+	UncounterableFilters []uncounterableEntry        // static "can't be countered" filters (Allosaurus Shepherd, Vexing Shusher)
+	FlashGrants          []flashGrantEntry            // continuous "you may cast X spells as though they had flash" grants (Rattlechains, Vedalken Orrery, Leyline of Anticipation)
+}
+
+// flashGrantEntry holds a continuous flash-permission grant. Player is the
+// player whose spells are affected; if Player == uuid.Nil the grant applies
+// to every player. Filter restricts which cards in that player's hand are
+// granted flash; a nil filter grants flash to every nonland card.
+type flashGrantEntry struct {
+	SourceID uuid.UUID
+	Player   uuid.UUID
+	Filter   CardFilter
 }
 
 // NewGameRules creates a GameRules with all maps initialized.
@@ -69,6 +82,48 @@ func (r *GameRules) ResetPerCycle() {
 	r.NullifiedLandwalks = make(map[Attr]bool)
 	r.ActivationCostReductions = make(map[uuid.UUID]int)
 	r.entersTappedRules = nil
+	r.SpellCostReducers = nil
+	r.UncounterableFilters = nil
+	r.FlashGrants = nil
+}
+
+// AddFlashGrant registers a continuous "may cast as though it had flash"
+// permission for this Apply() cycle. If player == uuid.Nil the grant
+// applies globally; if filter == nil it applies to every nonland card. The
+// grant is keyed by sourceID so it is dropped automatically when the source
+// permanent leaves the battlefield (continuous-effect framework drops the
+// effect, ResetPerCycle clears the slice, and Apply re-registers it only if
+// the source is still active).
+func (r *GameRules) AddFlashGrant(sourceID, player uuid.UUID, filter CardFilter) {
+	r.FlashGrants = append(r.FlashGrants, flashGrantEntry{SourceID: sourceID, Player: player, Filter: filter})
+}
+
+// HasFlashGrant returns true if any active grant lets the given player cast
+// the given card as though it had flash. A grant whose Filter is the zero
+// value matches all cards (CR semantics for "may cast as though it had
+// flash" when no card-type restriction is named).
+func (r *GameRules) HasFlashGrant(player uuid.UUID, card Card) bool {
+	for _, g := range r.FlashGrants {
+		if g.Player != uuid.Nil && g.Player != player {
+			continue
+		}
+		if g.Filter.Match(card) {
+			return true
+		}
+	}
+	return false
+}
+
+// AddUncounterableFilter registers a "can't be countered" filter for this
+// Apply() cycle. Cleared by ResetPerCycle.
+func (r *GameRules) AddUncounterableFilter(sourceID uuid.UUID, filter UncounterableFilter) {
+	r.UncounterableFilters = append(r.UncounterableFilters, uncounterableEntry{SourceID: sourceID, Filter: filter})
+}
+
+// AddSpellCostReducer registers a conditional spell-cost reducer for this
+// Apply() cycle. Cleared by ResetPerCycle.
+func (r *GameRules) AddSpellCostReducer(red SpellCostReducer) {
+	r.SpellCostReducers = append(r.SpellCostReducers, red)
 }
 
 // AddEntersTappedRule registers a filter that causes matching permanents to enter tapped.

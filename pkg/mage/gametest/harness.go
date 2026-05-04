@@ -290,6 +290,29 @@ func (tg *TestGame) Block(turn int, p PlayerRef, blocker, attacker string) {
 	tp.blockActions[turn] = append(tp.blockActions[turn], blockPair{blocker, attacker})
 }
 
+// ChooseTarget scripts which target a player will choose when prompted by
+// ChooseTargets (e.g. for triggered abilities that declare .AddTarget(...)).
+// The name is matched against possible player names (e.g. "PlayerA",
+// "PlayerB") or permanent names.
+func (tg *TestGame) ChooseTarget(p PlayerRef, name string) {
+	tp := tg.GetPlayer(p)
+	tp.chooseTarget = append(tp.chooseTarget, name)
+}
+
+// ChooseDamageDistribution scripts the damage division a player will return
+// when casting a divided-damage spell (CR 601.2d). Keys are target names
+// (player names or permanent names); values are the per-target damage amount.
+// Values must sum to the spell's total or the engine will discard the
+// distribution and fall back to dumping all damage on the first target.
+func (tg *TestGame) ChooseDamageDistribution(p PlayerRef, distribution map[string]int) {
+	tp := tg.GetPlayer(p)
+	cp := make(map[string]int, len(distribution))
+	for k, v := range distribution {
+		cp[k] = v
+	}
+	tp.chooseDamageDistribution = append(tp.chooseDamageDistribution, cp)
+}
+
 // ChoosePermanent scripts which permanent a player will choose when asked.
 func (tg *TestGame) ChoosePermanent(p PlayerRef, name string) {
 	tp := tg.GetPlayer(p)
@@ -308,10 +331,25 @@ func (tg *TestGame) ChooseManaColor(p PlayerRef, color core.Color) {
 	tp.chooseManaColor = append(tp.chooseManaColor, color)
 }
 
+// ChooseString scripts the next string choice a player will make
+// (e.g. for "as ~ enters, choose a creature type").
+func (tg *TestGame) ChooseString(p PlayerRef, value string) {
+	tp := tg.GetPlayer(p)
+	tp.chooseString = append(tp.chooseString, value)
+}
+
 // ChooseFromLibrary scripts which card a player will find when searching library.
 func (tg *TestGame) ChooseFromLibrary(p PlayerRef, name string) {
 	tp := tg.GetPlayer(p)
 	tp.chooseFromLibrary = append(tp.chooseFromLibrary, name)
+}
+
+// ChooseScry queues a scry placement for the next scry the player performs
+// (CR 701.18). `bottom` lists card names (in placement order) that go to the
+// bottom of the library; `topOrder` lists the remaining card names in their
+// new top-of-library order. Both must reference cards revealed by the scry.
+func (tg *TestGame) ChooseScry(p PlayerRef, bottom []string, topOrder []string) {
+	tg.GetPlayer(p).AddScryDecision(bottom, topOrder)
 }
 
 // FormBand scripts which creatures form an attacking band on the given turn.

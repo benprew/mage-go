@@ -267,6 +267,73 @@ func execDestroyTargetNoRegen(ctx *EffectContext, _ *destroyTargetNoRegenEffect)
 	return nil
 }
 
+// ReturnedPermanentModifier mutates a permanent that has just re-entered the
+// battlefield from exile (e.g. via ExileTargetReturnAtEndStep). Implementations
+// may add counters, attach to something, etc. The Game is provided so the
+// modifier can run ApplyContinuousEffects after mutating runtime state.
+type ReturnedPermanentModifier func(g *Game, perm *Permanent)
+
+// ExileTargetReturnAtEndStep exiles the resolving target permanent and
+// registers a one-shot delayed triggered ability (CR 603.7) that, at the
+// beginning of the next end step, returns the exiled card to the battlefield
+// under its owner's control. The optional `onReturn` modifier runs once the
+// permanent re-enters the battlefield, before the next ApplyContinuousEffects
+// is needed. Used by Long Road Home (returns with a +1/+1 counter) and is the
+// general primitive behind any "exile, return at end of turn with X" effect.
+func ExileTargetReturnAtEndStep(onReturn ReturnedPermanentModifier) Effect {
+	return FuncEffect(
+		"exile target permanent; return it at the beginning of the next end step",
+		EffectProperties{Outcome: OutcomeDetriment},
+		func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+			if len(targets) == 0 {
+				return nil
+			}
+			perm := g.FindPermanent(targets[0])
+			if perm == nil {
+				return nil
+			}
+			cardID := perm.Card.ID()
+			owner := perm.Card.Owner()
+			g.ExilePermanent(perm)
+			returnEffect := FuncEffect(
+				"return exiled card",
+				EffectProperties{Outcome: OutcomeBenefit},
+				func(g *Game, _, _ uuid.UUID, _ []uuid.UUID) error {
+					card, ok := g.RemoveFromExile(cardID)
+					if !ok {
+						return nil
+					}
+					newPerm := g.PutOnBattlefield(card, owner)
+					if newPerm != nil && onReturn != nil {
+						onReturn(g, newPerm)
+					}
+					return nil
+				},
+			)
+			g.RegisterDelayedTrigger(&DelayedTrigger{
+				EventType:  EvtEndStep,
+				Effects:    []Effect{returnEffect},
+				SourceID:   sourceID,
+				Controller: controller,
+			})
+			return nil
+		},
+	)
+}
+
+// ReturnWithCounter is a ReturnedPermanentModifier that adds `amount` counters
+// of `counter` type to the returning permanent (e.g. Long Road Home's +1/+1).
+// ApplyContinuousEffects is called so dependent layers see the new counter.
+func ReturnWithCounter(counter CounterType, amount int) ReturnedPermanentModifier {
+	return func(g *Game, perm *Permanent) {
+		if amount <= 0 {
+			return
+		}
+		perm.AddCounter(counter, amount)
+		g.ApplyContinuousEffects()
+	}
+}
+
 func execExileTarget(ctx *EffectContext, _ *exileTargetEffect) error {
 	if len(ctx.Targets) == 0 {
 		return fmt.Errorf("no target for exile")

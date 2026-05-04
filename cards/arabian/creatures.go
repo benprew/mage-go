@@ -19,12 +19,13 @@ func registerCreatures() {
 		return NewCreature("Abu Ja'far", "{W}", 0, 1,
 			WithSubTypes("Human"),
 			WithAbility(
-				NewTriggered(EvtCreatureDied, false,
+				DiesTrigger(
 					ForEachCombatOpponent(
 						DestroyTargetNoRegenStep(),
 						"destroy all creatures blocking or blocked by Abu Ja'far",
 					),
-				).SetConditionData(EventSourceIsSelf{}),
+					false,
+				),
 			),
 		)
 	})
@@ -92,8 +93,8 @@ func registerCreatures() {
 		return NewCreature("Dandân", "{U}{U}", 4, 1,
 			WithSubTypes("Fish"),
 			WithStaticAbility(PreventFromAttackingIfDefendingPlayerControls(HasSubType("Island"))),
-			WithAbility(NewTriggered(EvtLeavesBattlefield, false, SacrificeSource()).
-				SetConditionData(ControllerHasNoPermanentMatching{Filter: HasSubType("Island")})),
+			WithAbility(NewTriggered(EvtZoneChange, false, SacrificeSource()).AndConditionData(EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneAny}).
+				AndConditionData(ControllerHasNoPermanentMatching{Filter: HasSubType("Island")})),
 		)
 	})
 
@@ -130,8 +131,8 @@ func registerCreatures() {
 				), false,
 			)),
 			WithStaticAbility(PreventFromAttackingIfDefendingPlayerControls(HasSubType("Island"))),
-			WithAbility(NewTriggered(EvtLeavesBattlefield, false, SacrificeSource()).
-				SetConditionData(ControllerHasNoPermanentMatching{Filter: HasSubType("Island")})),
+			WithAbility(NewTriggered(EvtZoneChange, false, SacrificeSource()).AndConditionData(EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneAny}).
+				AndConditionData(ControllerHasNoPermanentMatching{Filter: HasSubType("Island")})),
 		)
 	})
 
@@ -147,8 +148,8 @@ func registerCreatures() {
 					GainLife(2),
 				).SetConditionData(SourceIsUnblockedAttacker{}),
 			),
-			WithAbility(NewTriggered(EvtLeavesBattlefield, false, SacrificeSource()).
-				SetConditionData(ControllerHasNoPermanentMatching{Filter: HasSubType("Island")})),
+			WithAbility(NewTriggered(EvtZoneChange, false, SacrificeSource()).AndConditionData(EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneAny}).
+				AndConditionData(ControllerHasNoPermanentMatching{Filter: HasSubType("Island")})),
 		)
 	})
 
@@ -623,11 +624,12 @@ func registerCreatures() {
 		return NewCreature("Rukh Egg", "{3}{R}", 0, 3,
 			WithSubTypes("Bird", "Egg"),
 			WithAbility(
-				NewTriggered(EvtCreatureDied, false,
+				DiesTrigger(
 					RegisterDelayedTriggerStep(EvtEndStep, "",
 						CreateColoredToken("Bird", 4, 4, []Color{Red}, []CardType{TypeCreature}, []string{"Bird"}, Flying),
 					),
-				).SetConditionData(EventSourceIsSelf{}),
+					false,
+				),
 			),
 		)
 	})

@@ -216,6 +216,7 @@ type ActionDefinition struct {
 	ControlledSinceTurnStart bool      // legacy mirror for compatibility
 	activatedThisTurn        bool      // Tracks whether this ability has been activated this turn
 	activationsThisTurn      int       // Counts activations for MaxActivationsPerTurn
+	activationConds          []ActivationCondition
 }
 
 // SimpleActivatedAbility is kept as a compatibility name for activated actions.
@@ -241,46 +242,6 @@ func NewAction(kind ActionKind, opts ...ActionOption) *ActionDefinition {
 	return a
 }
 
-// NewActivated creates an activated action with a primary cost and effects.
-func NewActivated(cost Cost, parts ...any) *ActionDefinition {
-	opts := []ActionOption{WithCost(cost)}
-	opts = append(opts, actionPartsToOptions(parts...)...)
-	return NewAction(ActionActivated, opts...)
-}
-
-// NewActivatedAbility creates an activated ability with a primary effect, a primary cost,
-// and optional additional costs, targets, or effects via AbilityOption functions.
-func NewActivatedAbility(effect Effect, cost Cost, opts ...AbilityOption) *SimpleActivatedAbility {
-	parts := []any{effect}
-	for _, opt := range opts {
-		parts = append(parts, opt)
-	}
-	return NewActivated(cost, parts...)
-}
-
-func actionPartsToOptions(parts ...any) []ActionOption {
-	opts := make([]ActionOption, 0, len(parts))
-	for _, part := range parts {
-		switch v := part.(type) {
-		case nil:
-		case Effect:
-			opts = append(opts, WithEffect(v))
-		case []Effect:
-			opts = append(opts, WithEffects(v...))
-		case ActionOption:
-			opts = append(opts, v)
-		default:
-			panic("mage: unsupported action builder argument")
-		}
-	}
-	return opts
-}
-
-// Kind returns whether this action is a spell or activated ability.
-func (a *ActionDefinition) Kind() ActionKind { return a.kind }
-
-func (a *ActionDefinition) CanActivate(controller uuid.UUID, g *Game) bool {
-	if (a.timing == TimingUpkeepOnly || a.UpkeepOnly) && g.step != Upkeep {
 		return false
 	}
 	if a.timing == YourTurnOnly && g.ActivePlayerObj().PlayerID() != controller {
@@ -307,6 +268,14 @@ func (a *ActionDefinition) CanActivate(controller uuid.UUID, g *Game) bool {
 		perm := g.FindPermanent(a.source)
 		if perm == nil || perm.TurnControlGained >= g.turn {
 			return false
+		}
+	}
+	if len(a.activationConds) > 0 {
+		src := g.FindPermanent(a.source)
+		for _, cond := range a.activationConds {
+			if !cond(g, src, controller) {
+				return false
+			}
 		}
 	}
 	for _, c := range a.costs {

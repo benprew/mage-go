@@ -18,6 +18,7 @@ const (
 	KindMatching                      // controlled creatures matching a filter
 	KindAllMatching                   // all creatures on battlefield matching a filter
 	KindGathered                      // permanent ID from a pipeline context variable
+	KindAllTargets                    // every UUID in ctx.Targets (multi-target spells/abilities)
 )
 
 // TargetSelector describes which permanent(s) an effect applies to. Use the
@@ -41,6 +42,13 @@ func ToAllMatching(f PermanentFilter) TargetSelector {
 func ToGathered(varName string) TargetSelector {
 	return TargetSelector{Kind: KindGathered, VarName: varName}
 }
+
+// ToAllTargets selects every chosen target on a multi-target spell or ability.
+// Effects using this selector are applied once per UUID in ctx.Targets, skipping
+// uuid.Nil placeholders and any UUIDs that no longer resolve to a battlefield
+// permanent (so a multi-target spell whose first target leaves still affects
+// the surviving targets, per CR 608.2b).
+func ToAllTargets() TargetSelector { return TargetSelector{Kind: KindAllTargets} }
 
 // BoostUntilEndOfTurn is a compatibility helper for the older boost API.
 func BoostUntilEndOfTurn(power, toughness ValueSource, target PermanentSelector) Effect {
@@ -89,6 +97,17 @@ func resolvePermanents(ctx *EffectContext, sel TargetSelector) []*Permanent {
 		if p := ctx.Game.FindPermanent(id); p != nil {
 			return []*Permanent{p}
 		}
+	case KindAllTargets:
+		var out []*Permanent
+		for _, id := range ctx.Targets {
+			if id == uuid.Nil {
+				continue
+			}
+			if p := ctx.Game.FindPermanent(id); p != nil {
+				out = append(out, p)
+			}
+		}
+		return out
 	}
 	return nil
 }

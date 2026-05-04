@@ -860,7 +860,7 @@ func registerEnchantments() {
 	Register("Puppet Master", func() Card {
 		return NewAura("Puppet Master", "{U}{U}{U}",
 			WithAbility(
-				NewTriggered(EvtCreatureDied, false,
+				NewTriggered(EvtZoneChange, false,
 					FuncEffect("return enchanted creature to hand",
 						EffectProperties{Outcome: OutcomeBenefit},
 						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -900,7 +900,11 @@ func registerEnchantments() {
 							}
 							return nil
 						}),
-				).SetConditionData(SourceIsAttachedToEventSource{}),
+				).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+					EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard},
+					EventSourceWasOfType{Type: TypeCreature},
+					SourceIsAttachedToEventSource{},
+				}}),
 			),
 		)
 	})

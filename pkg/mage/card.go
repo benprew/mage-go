@@ -56,6 +56,7 @@ type BaseCard struct {
 	attrSeeds       map[Attr]int // keyword/attr seeds; NewPermanent copies these to baseAttrs
 	additionalCosts []Cost       // additional costs paid when casting (sacrifice, discard, etc.)
 	castTargets     []Target     // targeting requirements when casting (auras, targeted ETBs)
+	uncounterable   bool         // intrinsic "can't be countered" flag (set via WithUncounterable)
 }
 
 // AttrSeeds returns the keyword/attr seeds for this card.
@@ -123,9 +124,14 @@ func (c *BaseCard) CloneFrom(other Card) {
 		c.castTargets = make([]Target, len(ct))
 		copy(c.castTargets, ct)
 	}
-	if bc, ok := other.(*BaseCard); ok && len(bc.attrSeeds) > 0 {
-		c.attrSeeds = make(map[Attr]int, len(bc.attrSeeds))
-		maps.Copy(c.attrSeeds, bc.attrSeeds)
+	if bc, ok := other.(*BaseCard); ok {
+		if len(bc.attrSeeds) > 0 {
+			c.attrSeeds = make(map[Attr]int, len(bc.attrSeeds))
+			for k, v := range bc.attrSeeds {
+				c.attrSeeds[k] = v
+			}
+		}
+		c.uncounterable = bc.uncounterable
 	}
 }
 
@@ -195,6 +201,16 @@ func WithSuperTypes(sts ...SuperType) CardOption {
 // WithSubTypes adds creature/land subtypes to a card.
 func WithSubTypes(subTypes ...string) CardOption {
 	return func(c *BaseCard) { c.subTypes = append(c.subTypes, subTypes...) }
+}
+
+// cardHasKeyword reports whether the card was registered with the given keyword
+// attr seed. Used by the casting-permission gate (see Flash, CR 702.8) to inspect
+// keywords on a card that is not yet on the battlefield as a Permanent.
+func cardHasKeyword(c Card, kw Attr) bool {
+	if c == nil {
+		return false
+	}
+	return c.AttrSeeds()[kw] > 0
 }
 
 // WithKeyword adds a keyword ability to a card.
@@ -477,6 +493,7 @@ type Permanent struct {
 
 	RuntimeAbilities []Ability // base + granted by effects
 	SubTypeOverride  []string  // if set, replaces card's subtypes (from continuous effects)
+	SubTypeAdditions []string  // additive subtypes granted by continuous effects (CR 614 layer 4); kept alongside SubTypeOverride or card's intrinsic subtypes
 	BasePTOverride   *[2]int   // if set, overrides base P/T (for animate effects)
 	ColorOverride    *[]Color  // if set, replaces card's colors (from lace effects)
 	FaceDown         bool      // true when face-down (e.g. Illusionary Mask)
@@ -494,9 +511,12 @@ type Permanent struct {
 	powerBonus int
 	toughBonus int
 
-	// ETB choices (e.g. Jihad: choose a color and an opponent)
-	ChosenColor  Color
-	ChosenPlayer uuid.UUID
+	// ETB choices (e.g. Jihad: choose a color and an opponent;
+	// Herald's Horn: choose a creature type). Set by "as ~ enters" replacement
+	// effects (CR 614.12) and read by other abilities of the same permanent.
+	ChosenColor    Color
+	ChosenPlayer   uuid.UUID
+	ChosenSubtype  string
 
 	// Control-change tracking (e.g. Old Man of the Sea, Aladdin)
 	ControlledPermanent uuid.UUID
@@ -625,7 +645,13 @@ func (p *Permanent) HasSubType(s string) bool {
 	if len(p.SubTypeOverride) > 0 {
 		subs = p.SubTypeOverride
 	}
-	return slices.Contains(subs, s)
+	if slices.Contains(subs, s) {
+		return true
+	}
+	if slices.Contains(p.SubTypeAdditions, s) {
+		return true
+	}
+	return false
 }
 
 // HasKeyword checks if this permanent currently has the given keyword ability.

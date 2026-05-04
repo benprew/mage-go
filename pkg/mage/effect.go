@@ -309,6 +309,40 @@ func (v countZoneValue) Text() string {
 	return fmt.Sprintf("the number of %ss in the %s's %s", noun, v.who.Text(), zone)
 }
 
+// topOfLibraryManaValue resolves to the mana value of the top card of the
+// selected player's library. The library is not modified; this matches the
+// engine's existing convention that "look at" and "reveal" are read-only at
+// the rules layer (see RevealTopN). Returns 0 if the library is empty.
+type topOfLibraryManaValue struct {
+	who PlayerSelector
+}
+
+// TopOfLibraryManaValue returns a ValueSource equal to the mana value of the
+// top card of the selected player's library. Used for spells like Riddle of
+// Lightning ("reveal the top card of your library; deals damage equal to that
+// card's mana value to that permanent or player").
+func TopOfLibraryManaValue(who PlayerSelector) ValueSource {
+	return topOfLibraryManaValue{who: who}
+}
+func (v topOfLibraryManaValue) Resolve(g GameReader, sourceID, controller uuid.UUID, targets []uuid.UUID) int {
+	ids := v.who.Select(g, sourceID, controller, targets)
+	if len(ids) == 0 {
+		return 0
+	}
+	p := g.GetPlayer(ids[0])
+	if p == nil {
+		return 0
+	}
+	lib := p.Library()
+	if len(lib) == 0 {
+		return 0
+	}
+	return lib[0].ManaCost().CMC()
+}
+func (v topOfLibraryManaValue) Text() string {
+	return "the mana value of the top card of " + v.who.Text() + "'s library"
+}
+
 // selectController returns the effect's controller.
 type selectController struct{}
 
@@ -435,10 +469,14 @@ func (s selectTargetPermanentController) Select(g GameReader, _, _ uuid.UUID, ta
 	if len(targets) == 0 {
 		return nil
 	}
-	perm := g.FindPermanent(targets[0])
-	if perm == nil {
-		return nil
+	if game, ok := g.(*Game); ok {
+		if view := game.LookupObject(targets[0]); view != nil {
+			return []uuid.UUID{view.ViewController()}
+		}
 	}
-	return []uuid.UUID{perm.Controller}
+	if perm := g.FindPermanent(targets[0]); perm != nil {
+		return []uuid.UUID{perm.Controller}
+	}
+	return nil
 }
 func (s selectTargetPermanentController) Text() string { return "that permanent's controller" }

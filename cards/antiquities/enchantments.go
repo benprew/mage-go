@@ -267,7 +267,6 @@ func registerEnchantments() {
 			WithStaticAbility(animateEffects[1]),
 			// When Song leaves the battlefield, continue the effect until end of turn
 			WithAbility(
-				NewTriggered(EvtLeavesBattlefield, false,
 					Pipeline("continue Titania's Song effect until end of turn",
 						EffectProperties{},
 						AddContinuousEffectsStep(func() []ContinuousEffect {

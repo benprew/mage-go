@@ -1,10 +1,10 @@
 package interactive
 
 import (
-	"github.com/google/uuid"
 
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"github.com/google/uuid"
 )
 
 // AutoPlayer is implemented by AI players to provide priority decisions to the
@@ -146,24 +146,27 @@ type PlayerState struct {
 
 // PermanentState is a snapshot of a permanent.
 type PermanentState struct {
-	ID         uuid.UUID
-	Name       string
-	Power      int
-	Toughness  int
-	Tapped     bool
-	SummonSick bool
-	IsCreature bool
-	IsLand     bool
-	IsArtifact bool
-	Attacking  bool
-	Blocking   uuid.UUID
-	Counters   map[string]int
-	Keywords   []string
-	ManaCost   string
-	Types      string
-	SubTypes   string
-	RulesText  string
-	AttachedTo uuid.UUID
+	ID          uuid.UUID
+	Name        string
+	Power       int
+	Toughness   int
+	Tapped      bool
+	SummonSick  bool
+	FaceDown    bool
+	PhasedOut   bool
+	IsCreature  bool
+	IsLand      bool
+	IsArtifact  bool
+	Attacking   bool
+	Blocking    uuid.UUID
+	Counters    map[string]int
+	RawCounters [core.NumCounters]uint8
+	Keywords    []string
+	ManaCost    string
+	Types       string
+	SubTypes    string
+	RulesText   string
+	AttachedTo  uuid.UUID
 }
 
 // CardState is a snapshot of a card in hand.

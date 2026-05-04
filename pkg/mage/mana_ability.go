@@ -7,9 +7,14 @@ import (
 )
 
 // ManaProduction represents a single color+amount pair produced by a mana ability.
+// If AnyCombination is true and Color is AnyColor, the controller chooses a
+// color independently for each of the Amount mana produced (e.g. "Add X mana
+// in any combination of colors"). When false, AnyColor with Amount > 1 picks a
+// single color for all of them ("X mana of any one color").
 type ManaProduction struct {
-	Color  Color
-	Amount int
+	Color          Color
+	Amount         int
+	AnyCombination bool
 }
 
 // ManaAbility is a mana ability that taps to add mana.
@@ -58,7 +63,7 @@ func NewManaAbility(c Color) *ManaAbility {
 			id:          uuid.New(),
 			abilityType: AbilityMana,
 		},
-		Productions: []ManaProduction{{c, 1}},
+		Productions: []ManaProduction{{Color: c, Amount: 1}},
 	}
 }
 

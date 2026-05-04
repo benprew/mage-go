@@ -95,6 +95,33 @@ type Player interface {
 	ChooseManaColor(reason string) Color
 	ChooseCardFromLibrary(candidates []Card, reason string, g GameReader) Card
 	ChooseNumber(min, max int, reason string) int
+
+	// ChooseString asks the player to pick one option from a string list,
+	// e.g. a creature type for "as ~ enters, choose a creature type"
+	// (Herald's Horn). Implementations must return a value from `options`;
+	// callers pre-filter the list (e.g. exclude the source's own colors).
+	// If `options` is empty, implementations should return "".
+	ChooseString(options []string, reason string) string
+
+	// ChooseDamageDistribution asks the player how to divide a fixed total of
+	// damage among the given target IDs. The implementation must return a map
+	// whose values are non-negative, whose keys are a subset of `possible`,
+	// and whose values sum to exactly `total` (CR 601.2d). At least one
+	// target must receive at least 1 damage if total > 0 and possible is
+	// non-empty. The engine validates the response and falls back to a 1-per-
+	// target dump if the returned distribution is malformed.
+	ChooseDamageDistribution(possible []uuid.UUID, total int, reason string, g *Game) map[uuid.UUID]int
+
+	// ChooseScryPlacement implements the controller's choice for a scry (CR 701.18).
+	// `top` is the top N cards of the library in their current order (top first).
+	// The implementation returns:
+	//   - bottom: the subset of `top` (by ID) that go to the bottom of the library,
+	//     in the order they will be placed (last ID becomes the new bottom card).
+	//   - topOrder: the remaining cards (by ID) in the order they will be placed
+	//     back on top of the library (first ID becomes the new top card).
+	// The union of bottom and topOrder must equal the IDs in `top` exactly once each;
+	// the engine validates this and falls back to the original order on any mismatch.
+	ChooseScryPlacement(top []Card, reason string, g GameReader) (bottom []uuid.UUID, topOrder []uuid.UUID)
 }
 
 // BasePlayer implements Player with basic functionality.
@@ -275,6 +302,15 @@ func (p *BasePlayer) ChooseMayAbility(description string) bool {
 	return false
 }
 
+// ChooseDamageDistribution defaults to dumping all damage onto the first
+// possible target. Test/AI players override this for richer behavior.
+func (p *BasePlayer) ChooseDamageDistribution(possible []uuid.UUID, total int, reason string, g *Game) map[uuid.UUID]int {
+	if total <= 0 || len(possible) == 0 {
+		return nil
+	}
+	return map[uuid.UUID]int{possible[0]: total}
+}
+
 // Default choice implementations (pick first available option).
 
 func (p *BasePlayer) ChooseMode(modes []string, reason string) int {
@@ -311,6 +347,23 @@ func (p *BasePlayer) ChooseCardFromLibrary(candidates []Card, reason string, g G
 
 func (p *BasePlayer) ChooseNumber(min, max int, reason string) int {
 	return max // default: choose maximum
+}
+
+func (p *BasePlayer) ChooseString(options []string, reason string) string {
+	if len(options) == 0 {
+		return ""
+	}
+	return options[0]
+}
+
+// ChooseScryPlacement: deterministic default keeps every revealed card on top
+// in its original order. Card implementations and AI players may override this.
+func (p *BasePlayer) ChooseScryPlacement(top []Card, reason string, g GameReader) (bottom []uuid.UUID, topOrder []uuid.UUID) {
+	topOrder = make([]uuid.UUID, len(top))
+	for i, c := range top {
+		topOrder[i] = c.ID()
+	}
+	return nil, topOrder
 }
 
 func (p *BasePlayer) assertOwner(c Card) {

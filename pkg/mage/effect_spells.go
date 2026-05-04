@@ -112,6 +112,7 @@ type createTokenEffect struct {
 	subTypes  []string
 	keywords  []Keyword
 	colors    []Color
+	abilities []Ability
 	count     int // 0 means 1
 }
 
@@ -138,6 +139,32 @@ func CreateTokens(count int, name string, power, toughness int, types []CardType
 		keywords:  keywords,
 		count:     count,
 	}
+}
+
+// TokenWithAbilities decorates a token-creation effect (CreateToken /
+// CreateTokens / CreateColoredToken) with extra abilities that each created
+// token instance carries. Used by spells whose Oracle text grants the token
+// itself a triggered or static ability — e.g. Dance with Devils' "When this
+// token dies, it deals 1 damage to any target." Per CR 111.10 / 113.3, those
+// abilities exist on the token object (not on the creating spell), and they
+// continue to work after the spell that made the token has resolved.
+//
+// Decomposition rationale: keeps the four base CreateToken* constructors
+// minimal (no abilities slot in their signatures) and treats "abilities on
+// the token" as an orthogonal concern attached after construction.
+func TokenWithAbilities(base Effect, abilities ...Ability) Effect {
+	a, ok := base.(*dataEffectAdapter)
+	if !ok {
+		return base
+	}
+	t, ok := a.data.(*createTokenEffect)
+	if !ok {
+		return base
+	}
+	clone := *t
+	clone.abilities = append([]Ability(nil), t.abilities...)
+	clone.abilities = append(clone.abilities, abilities...)
+	return DataEffect(&clone)
 }
 
 // CreateColoredToken creates an effect that puts a colored token creature onto the battlefield.
@@ -471,6 +498,9 @@ func execCreateToken(ctx *EffectContext, e *createTokenEffect) error {
 		if len(e.colors) > 0 {
 			token.colorOverride = make([]Color, len(e.colors))
 			copy(token.colorOverride, e.colors)
+		}
+		for _, a := range e.abilities {
+			token.AddAbility(a)
 		}
 		perm := ctx.Game.PutOnBattlefield(token, ctx.Controller)
 		perm.IsToken = true

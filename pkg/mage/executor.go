@@ -31,8 +31,16 @@ func ExecuteEffect(ctx *EffectContext, data EffectData) error {
 		return execLoseLifeDynamic(ctx, e)
 	case *loseLifeEffect:
 		return execLoseLife(ctx, e)
+	case *loseLifeTargetEffect:
+		return execLoseLifeTarget(ctx, e)
 	case *dealDamageEffect:
 		return execDealDamage(ctx, e)
+	case *fightTargetEffect:
+		return execFightTarget(ctx, e)
+	case *onPermanentDiesEffect:
+		return execOnPermanentDies(ctx, e)
+	case *dealDividedDamageEffect:
+		return execDealDividedDamage(ctx, e)
 	case *dealDamageToAllCreaturesEffect:
 		return execDealDamageToAllCreatures(ctx, e)
 	case *dealDamageToPlayersEffect:
@@ -142,6 +150,8 @@ func ExecuteEffect(ctx *EffectContext, data EffectData) error {
 		return execSearchLibraryToBattlefield(ctx, e)
 	case *chooseColorEffect:
 		return execChooseColor(ctx, e)
+	case *scryEffect:
+		return execScry(ctx, e)
 
 	// --- Combat effects (effect_combat.go) ---
 
@@ -393,8 +403,7 @@ func execLoseLifeDynamic(ctx *EffectContext, e *loseLifeDynamicEffect) error {
 	if p == nil {
 		return ErrPlayerNotFound
 	}
-	p.LoseLife(amount)
-	ctx.Game.FireEvent(GameEvent{Type: EvtLifeLost, PlayerID: ctx.Controller, Amount: amount})
+	ctx.Game.PlayerLoseLife(p, amount)
 	return nil
 }
 
@@ -403,8 +412,26 @@ func execLoseLife(ctx *EffectContext, e *loseLifeEffect) error {
 	if p == nil {
 		return ErrPlayerNotFound
 	}
-	p.LoseLife(e.amount)
-	ctx.Game.FireEvent(GameEvent{Type: EvtLifeLost, PlayerID: ctx.Controller, Amount: e.amount})
+	ctx.Game.PlayerLoseLife(p, e.amount)
+	return nil
+}
+
+func execLoseLifeTarget(ctx *EffectContext, e *loseLifeTargetEffect) error {
+	var targetPlayer Player
+	if len(ctx.Targets) > 0 {
+		targetPlayer = ctx.Game.GetPlayer(ctx.Targets[0])
+	}
+	if targetPlayer == nil {
+		targetPlayer = ctx.Game.GetPlayer(ctx.Controller)
+	}
+	if targetPlayer == nil {
+		return ErrPlayerNotFound
+	}
+	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	if amount <= 0 {
+		return nil
+	}
+	ctx.Game.PlayerLoseLife(targetPlayer, amount)
 	return nil
 }
 
@@ -436,6 +463,50 @@ func execDealDamage(ctx *EffectContext, e *dealDamageEffect) error {
 	}
 
 	ctx.Game.DealDamageToPermanent(perm, amount, ctx.SourceID)
+	return nil
+}
+
+// execDealDividedDamage reads the per-target damage distribution chosen at
+// cast/activation time (stored on the StackObject and forwarded into ctx via
+// resolvingDamageDistribution) and applies it. CR 601.2d/609.3.5: a divided-
+// damage spell's distribution is chosen on announcement and is frozen; if a
+// target later becomes illegal, only that target's share is wasted — the
+// remaining targets still take their shares. We honor that by skipping
+// ctx.Targets entries that no longer point at a valid creature/player.
+func execDealDividedDamage(ctx *EffectContext, _ *dealDividedDamageEffect) error {
+	dist := ctx.DamageDistribution
+	if dist == nil {
+		dist = ctx.Game.resolvingDamageDistribution
+	}
+	if len(dist) == 0 {
+		return nil
+	}
+	for _, tid := range ctx.Targets {
+		amt, ok := dist[tid]
+		if !ok || amt <= 0 {
+			continue
+		}
+		applied := false
+		for _, pl := range ctx.Game.AllPlayers() {
+			if pl.PlayerID() == tid {
+				ctx.Game.DealDamageToPlayer(pl, amt, ctx.SourceID)
+				applied = true
+				break
+			}
+		}
+		if applied {
+			continue
+		}
+		perm := ctx.Game.FindPermanent(tid)
+		if perm == nil {
+			continue
+		}
+		sourceCard := ctx.Game.FindCardAnywhere(ctx.SourceID)
+		if sourceCard != nil && perm.HasProtectionFrom(sourceCard) {
+			continue
+		}
+		ctx.Game.DealDamageToPermanent(perm, amt, ctx.SourceID)
+	}
 	return nil
 }
 
