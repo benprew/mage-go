@@ -2806,10 +2806,36 @@ func registerSpells() {
 // Sorcery — Lesson
 // Return target nonland permanent card from your graveyard to the battlefield.
 // Paradigm (Then exile this spell. After you first resolve a spell with this name, you may cast a copy of it from exile without paying its mana cost at the beginning of each of your first main phases.)
-// TODO: implement
+// XXX: Paradigm recurring-cast trigger cannot be implemented — the engine does not scan exile-zone
+// triggers. The primary effect and first-resolve self-exile are fully implemented.
 	Register("Restoration Seminar", func() Card {
-		return NewSorcery("Restoration Seminar", "{5}{W}{W}",
-			NewSpellAbility(),
+		const cardName = "Restoration Seminar"
+		nonlandPermanentCard := NewCardFilter("nonland permanent card", func(c Card) bool {
+			return !c.HasType(TypeLand)
+		})
+		return NewSorcery(cardName, "{5}{W}{W}",
+			NewTargetedSpell(
+				TargetCardInYourGraveyard(nonlandPermanentCard),
+				FuncEffect(
+					"return target nonland permanent card from your graveyard to the battlefield; exile this spell (Paradigm)",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) > 0 && targets[0] != uuid.Nil {
+							p := g.GetPlayer(controller)
+							if p != nil {
+								if card, ok := p.RemoveFromGraveyard(targets[0]); ok {
+									g.PutOnBattlefield(card, controller)
+								}
+							}
+						}
+						// Paradigm: exile self instead of going to graveyard.
+						g.AddExileIfWouldGoToGraveyardThisTurn(sourceID, sourceID)
+						g.RecordParadigmResolution(controller, cardName)
+						g.RegisterParadigmExiledCopy(controller, cardName, sourceID)
+						return nil
+					},
+				),
+			),
 		)
 	})
 

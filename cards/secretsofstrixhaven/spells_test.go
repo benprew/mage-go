@@ -2134,3 +2134,38 @@ func TestWitheringCurse_DestroyAllWithLifeGain(t *testing.T) {
 	g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
 	g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
 }
+
+// ===========================================================================
+// Restoration Seminar
+// ===========================================================================
+
+// TestRestorationSeminar_ReturnsNonlandPermanent verifies that Restoration
+// Seminar returns a target nonland permanent card from the graveyard to the
+// battlefield.
+func TestRestorationSeminar_ReturnsNonlandPermanent(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Restoration Seminar")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 7)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Restoration Seminar", "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Grizzly Bears should be on the battlefield.
+	g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
+	g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 0)
+}
+
+// TestRestorationSeminar_ParadigmExilesAfterResolve verifies that after
+// resolution, the spell is exiled rather than going to the graveyard.
+func TestRestorationSeminar_ParadigmExilesAfterResolve(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Restoration Seminar")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 7)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Restoration Seminar", "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// After Paradigm, the spell goes to exile, not graveyard.
+	g.AssertGraveyardCount(gametest.PlayerA, "Restoration Seminar", 0)
+	g.AssertExileCount("Restoration Seminar", 1)
+}
