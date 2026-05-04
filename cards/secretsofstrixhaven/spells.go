@@ -1642,10 +1642,15 @@ func registerSpells() {
 // Masterful Flourish {B}
 // Instant
 // Target creature you control gets +1/+0 and gains indestructible until end of turn. (Damage and effects that say "destroy" don't destroy it.)
-// TODO: implement
 	Register("Masterful Flourish", func() Card {
 		return NewInstant("Masterful Flourish", "{B}",
-			NewSpellAbility(),
+			NewTargetedSpell(TargetControlledCreature(),
+				CompositeEffects(
+					"target creature you control gets +1/+0 and gains indestructible until end of turn",
+					Boost(Fixed(1), Fixed(0)),
+					GrantKeyword(Indestructible),
+				),
+			),
 		)
 	})
 
