@@ -18,6 +18,7 @@ const (
 	KindMatching                      // controlled creatures matching a filter
 	KindAllMatching                   // all creatures on battlefield matching a filter
 	KindGathered                      // permanent ID from a pipeline context variable
+	KindAllTargets                    // every UUID in ctx.Targets (multi-target spells/abilities)
 )
 
 // TargetSelector describes which permanent(s) an effect applies to. Use the
@@ -41,6 +42,13 @@ func ToAllMatching(f PermanentFilter) TargetSelector {
 func ToGathered(varName string) TargetSelector {
 	return TargetSelector{Kind: KindGathered, VarName: varName}
 }
+
+// ToAllTargets selects every chosen target on a multi-target spell or ability.
+// Effects using this selector are applied once per UUID in ctx.Targets, skipping
+// uuid.Nil placeholders and any UUIDs that no longer resolve to a battlefield
+// permanent (so a multi-target spell whose first target leaves still affects
+// the surviving targets, per CR 608.2b).
+func ToAllTargets() TargetSelector { return TargetSelector{Kind: KindAllTargets} }
 
 // BoostUntilEndOfTurn is a compatibility helper for the older boost API.
 func BoostUntilEndOfTurn(power, toughness ValueSource, target PermanentSelector) Effect {
@@ -89,14 +97,25 @@ func resolvePermanents(ctx *EffectContext, sel TargetSelector) []*Permanent {
 		if p := ctx.Game.FindPermanent(id); p != nil {
 			return []*Permanent{p}
 		}
+	case KindAllTargets:
+		var out []*Permanent
+		for _, id := range ctx.Targets {
+			if id == uuid.Nil {
+				continue
+			}
+			if p := ctx.Game.FindPermanent(id); p != nil {
+				out = append(out, p)
+			}
+		}
+		return out
 	}
 	return nil
 }
 
 // --- Boost DSL ---
 
-// boostEffect is a composable EffectData that temporarily modifies P/T.
-// Wrap with DataEffect() to use as an Effect.
+// boostEffect is a composable Effect that temporarily modifies P/T.
+// Use directly as an Effect.
 type boostEffect struct {
 	power     ValueSource
 	toughness ValueSource
@@ -125,7 +144,7 @@ func (e *boostEffect) Until(d Duration) *boostEffect {
 	return e
 }
 
-// EffectData interface
+// Effect interface
 func (e *boostEffect) Text() string {
 	_, pIsX := e.power.(xValue)
 	_, tIsX := e.toughness.(xValue)
@@ -177,8 +196,8 @@ func execBoost(ctx *EffectContext, e *boostEffect) error {
 
 // --- GrantKeyword DSL ---
 
-// grantKeywordEffect is a composable EffectData that temporarily grants a keyword.
-// Wrap with DataEffect() to use as an Effect.
+// grantKeywordEffect is a composable Effect that temporarily grants a keyword.
+// Use directly as an Effect.
 type grantKeywordEffect struct {
 	keyword  Keyword
 	selector TargetSelector
@@ -212,7 +231,7 @@ func (e *grantKeywordEffect) Unless(cond ConditionData) *grantKeywordEffect {
 	return e
 }
 
-// EffectData interface
+// Effect interface
 func (e *grantKeywordEffect) Text() string {
 	switch e.selector.Kind {
 	case KindSource:
@@ -247,7 +266,7 @@ func execGrantKeyword(ctx *EffectContext, e *grantKeywordEffect) error {
 
 // --- RevokeKeyword DSL ---
 
-// revokeKeywordEffect is a composable EffectData that temporarily removes a
+// revokeKeywordEffect is a composable Effect that temporarily removes a
 // keyword from a permanent. Mirrors grantKeywordEffect.
 type revokeKeywordEffect struct {
 	keyword  Keyword
@@ -310,7 +329,7 @@ func execRevokeKeyword(ctx *EffectContext, e *revokeKeywordEffect) error {
 
 // --- GrantAbility DSL ---
 
-// grantAbilityEffect is a composable EffectData that temporarily grants a
+// grantAbilityEffect is a composable Effect that temporarily grants a
 // non-keyword ability (typically a triggered ability like Rampage N) to the
 // selected permanent. Mirrors grantKeywordEffect for parameterized abilities
 // that don't fit into the Keyword/Attr enum.
@@ -396,9 +415,9 @@ func CardTypeAttr(ct CardType) Attr {
 	}
 }
 
-// grantTypeEffect is a composable EffectData that grants an additional card type
+// grantTypeEffect is a composable Effect that grants an additional card type
 // to a permanent via an indefinite continuous effect at LayerType.
-// Wrap with DataEffect() to use as an Effect.
+// Use directly as an Effect.
 type grantTypeEffect struct {
 	ct       CardType
 	selector TargetSelector
@@ -426,7 +445,7 @@ func (e *grantTypeEffect) Until(d Duration) *grantTypeEffect {
 	return e
 }
 
-// EffectData interface
+// Effect interface
 func (e *grantTypeEffect) Text() string {
 	return fmt.Sprintf("becomes a %s in addition to its other types", e.ct)
 }

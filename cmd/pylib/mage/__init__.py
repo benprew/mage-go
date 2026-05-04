@@ -63,6 +63,9 @@ typedef struct {
     int64_t option_scalar_dim;
     int64_t target_scalar_dim;
     int64_t decision_capacity;
+    int64_t emit_render_plan;
+    int64_t render_plan_capacity;
+    int64_t dedup_card_bodies;
 } MageEncodeConfig;
 typedef struct {
     int64_t *trace_kind_id;
@@ -91,6 +94,9 @@ typedef struct {
     int64_t *decision_target_idx;
     uint8_t *decision_mask;
     uint8_t *uses_none_head;
+    int32_t *render_plan;
+    int64_t *render_plan_lengths;
+    int64_t *render_plan_overflow;
 } MageEncodeOutputs;
 typedef struct {
     int64_t decision_rows_written;
@@ -120,6 +126,125 @@ char *MageWinner(int64_t id);
 void MageFree(int64_t id);
 void MageFreeString(char *s);
 char *MageRegisteredCards(void);
+char *MageRegisteredManaCosts(void);
+
+typedef struct {
+    int32_t fragment_count;
+    const int32_t *structural_tokens;
+    const int32_t *structural_offsets;
+    int32_t turn_min;
+    int32_t turn_max;
+    int32_t step_count;
+    const int32_t *turn_step_tokens;
+    const int32_t *turn_step_offsets;
+    int32_t life_min;
+    int32_t life_max;
+    int32_t owner_count;
+    const int32_t *life_owner_tokens;
+    const int32_t *life_owner_offsets;
+    int32_t ability_min;
+    int32_t ability_max;
+    const int32_t *ability_tokens;
+    const int32_t *ability_offsets;
+    int32_t count_min;
+    int32_t count_max;
+    const int32_t *count_tokens;
+    const int32_t *count_offsets;
+    int32_t zone_count;
+    const int32_t *zone_open_tokens;
+    const int32_t *zone_open_offsets;
+    const int32_t *zone_close_tokens;
+    const int32_t *zone_close_offsets;
+    int32_t action_verb_count;
+    const int32_t *action_verb_tokens;
+    const int32_t *action_verb_offsets;
+    int32_t mana_color_count;
+    const int32_t *mana_glyph_tokens;
+    const int32_t *mana_glyph_offsets;
+    int32_t card_ref_count;
+    const int32_t *card_ref_ids;
+    int32_t pad_id;
+    int32_t option_id;
+    int32_t target_open_id;
+    int32_t target_close_id;
+    int32_t tapped_id;
+    int32_t untapped_id;
+    int32_t card_closer_len;
+    const int32_t *card_closer;
+    int32_t status_tapped_len;
+    const int32_t *status_tapped;
+    int32_t status_untapped_len;
+    const int32_t *status_untapped;
+    int32_t card_row_count;
+    const int32_t *card_body_tokens;
+    const int64_t *card_body_offsets;
+    const int32_t *card_name_tokens;
+    const int64_t *card_name_offsets;
+    int32_t dict_open_id;
+    int32_t dict_close_id;
+    int32_t card_open_id;
+    const int32_t *dict_entry_ids;
+    int32_t self_id;
+    int32_t opp_id;
+    int32_t stack_open_id;
+    int32_t stack_close_id;
+    int32_t command_open_id;
+    int32_t command_close_id;
+} MageTokenTables;
+
+int32_t MageRegisterTokenTables(MageTokenTables *tables);
+char *MageTokenTableSummary(void);
+char *MageTokenTableLookup(int32_t kind, int32_t k0, int32_t k1);
+
+typedef struct {
+    int32_t max_tokens;
+    int32_t max_options;
+    int32_t max_targets;
+    int32_t max_card_refs;
+} MageTokenAssemblerConfig;
+
+typedef struct {
+    int64_t *token_ids;
+    int64_t *attention_mask;
+    int64_t *seq_lengths;
+    int64_t *option_positions;
+    uint8_t *option_mask;
+    int64_t *target_positions;
+    uint8_t *target_mask;
+    int64_t *card_ref_positions;
+    int32_t *token_overflow;
+} MageTokenAssemblerOutputs;
+
+MageEncodeResult MageEncodeTokens(
+    MageBatchRequest *req,
+    MageEncodeConfig *cfg,
+    MageEncodeOutputs *out,
+    MageTokenAssemblerConfig *tok_cfg,
+    MageTokenAssemblerOutputs *tok_out
+);
+
+typedef struct {
+    int64_t *token_ids;
+    int64_t *seq_id;
+    int64_t *pos_in_seq;
+    int64_t *cu_seqlens;
+    int64_t *seq_lengths;
+    int64_t *state_positions;
+    int64_t *option_positions;
+    uint8_t *option_mask;
+    int64_t *target_positions;
+    uint8_t *target_mask;
+    int64_t *card_ref_positions;
+    int32_t *token_overflow;
+} MagePackedTokenAssemblerOutputs;
+
+MageEncodeResult MageEncodeTokensPacked(
+    MageBatchRequest *req,
+    MageEncodeConfig *cfg,
+    MageEncodeOutputs *out,
+    MageTokenAssemblerConfig *tok_cfg,
+    MagePackedTokenAssemblerOutputs *packed_out
+);
 """
 
 
@@ -189,6 +314,11 @@ def _take(cstr) -> dict[str, Any]:
 def registered_cards() -> list[str]:
     _ensure_loaded()
     return _take_raw(_lib.MageRegisteredCards())
+
+
+def registered_mana_costs() -> list[str]:
+    _ensure_loaded()
+    return _take_raw(_lib.MageRegisteredManaCosts())
 
 
 def resolved_library_path() -> str:

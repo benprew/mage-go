@@ -15,13 +15,13 @@ import (
 // PipelineData executes steps in sequence, sharing an EffectContext so
 // intermediate values flow between steps without closures.
 type PipelineData struct {
-	Steps []EffectData
+	Steps []Effect
 	Txt   string
 	Props EffectProperties
 }
 
 // Pipeline creates a pipeline effect from a sequence of steps.
-func Pipeline(text string, props EffectProperties, steps ...EffectData) Effect {
+func Pipeline(text string, props EffectProperties, steps ...Effect) Effect {
 	return &PipelineData{Steps: steps, Txt: text, Props: props}
 }
 
@@ -56,7 +56,7 @@ type SnapshotPermanentData struct {
 }
 
 // SnapshotPermanent creates a pipeline step that reads a permanent's properties.
-func SnapshotPermanent(sel PermanentSelector, storeAs string) EffectData {
+func SnapshotPermanent(sel PermanentSelector, storeAs string) Effect {
 	return &SnapshotPermanentData{Selector: sel, StoreAs: storeAs}
 }
 
@@ -93,7 +93,7 @@ func execSnapshotPermanent(ctx *EffectContext, e *SnapshotPermanentData) error {
 // ExileGatheredData exiles the permanent stored in a context variable.
 type ExileGatheredData struct{ VarName string }
 
-func ExileGathered(varName string) EffectData { return &ExileGatheredData{VarName: varName} }
+func ExileGathered(varName string) Effect { return &ExileGatheredData{VarName: varName} }
 
 func (e *ExileGatheredData) Text() string { return "exile" }
 func (e *ExileGatheredData) Properties() EffectProperties {
@@ -119,10 +119,10 @@ type DestroyGatheredData struct {
 	NoRegen bool
 }
 
-func DestroyGathered(varName string) EffectData {
+func DestroyGathered(varName string) Effect {
 	return &DestroyGatheredData{VarName: varName}
 }
-func DestroyGatheredNoRegen(varName string) EffectData {
+func DestroyGatheredNoRegen(varName string) Effect {
 	return &DestroyGatheredData{VarName: varName, NoRegen: true}
 }
 
@@ -153,7 +153,7 @@ func execDestroyGathered(ctx *EffectContext, e *DestroyGatheredData) error {
 // SacrificeGatheredData sacrifices the permanent stored in a context variable.
 type SacrificeGatheredData struct{ VarName string }
 
-func SacrificeGathered(varName string) EffectData { return &SacrificeGatheredData{VarName: varName} }
+func SacrificeGathered(varName string) Effect { return &SacrificeGatheredData{VarName: varName} }
 
 func (e *SacrificeGatheredData) Text() string                 { return "sacrifice" }
 func (e *SacrificeGatheredData) Properties() EffectProperties { return EffectProperties{} }
@@ -174,7 +174,7 @@ func execSacrificeGathered(ctx *EffectContext, e *SacrificeGatheredData) error {
 // BounceGatheredData returns the permanent stored in a context variable to its owner's hand.
 type BounceGatheredData struct{ VarName string }
 
-func BounceGathered(varName string) EffectData { return &BounceGatheredData{VarName: varName} }
+func BounceGathered(varName string) Effect { return &BounceGatheredData{VarName: varName} }
 
 func (e *BounceGatheredData) Text() string { return "return to hand" }
 func (e *BounceGatheredData) Properties() EffectProperties {
@@ -256,12 +256,12 @@ type GainLifeVarData struct {
 	AmountVar string
 }
 
-func GainLifeFromVar(playerVar, amountVar string) EffectData {
+func GainLifeFromVar(playerVar, amountVar string) Effect {
 	return &GainLifeVarData{PlayerVar: playerVar, AmountVar: amountVar}
 }
 
 // GainLifeControllerFromVar gains life for the controller from a context variable amount.
-func GainLifeControllerFromVar(amountVar string) EffectData {
+func GainLifeControllerFromVar(amountVar string) Effect {
 	return &GainLifeVarData{AmountVar: amountVar}
 }
 
@@ -300,7 +300,7 @@ type DealDamageVarData struct {
 	AmountVar string
 }
 
-func DealDamageFromVar(amountVar string) EffectData {
+func DealDamageFromVar(amountVar string) Effect {
 	return &DealDamageVarData{AmountVar: amountVar}
 }
 
@@ -337,7 +337,7 @@ type DealDamageToPlayersVarData struct {
 	Selector  PlayerSelector
 }
 
-func DealDamageToPlayersFromVar(amountVar string, sel PlayerSelector) EffectData {
+func DealDamageToPlayersFromVar(amountVar string, sel PlayerSelector) Effect {
 	return &DealDamageToPlayersVarData{AmountVar: amountVar, Selector: sel}
 }
 
@@ -377,18 +377,18 @@ func execDealDamageToPlayersVar(ctx *EffectContext, e *DealDamageToPlayersVarDat
 type ForEachPermanentData struct {
 	Filter PermanentFilter
 	Who    PlayerSelector // optional: restrict to one player's permanents
-	Inner  EffectData
+	Inner  Effect
 	Txt    string
 }
 
 // ForEachPermanent creates an effect that iterates matching permanents.
-func ForEachPermanent(filter PermanentFilter, inner EffectData, text string) EffectData {
+func ForEachPermanent(filter PermanentFilter, inner Effect, text string) Effect {
 	return &ForEachPermanentData{Filter: filter, Inner: inner, Txt: text}
 }
 
 // ForEachControlledPermanent creates an effect that iterates matching permanents
 // controlled by the specified player.
-func ForEachControlledPermanent(who PlayerSelector, filter PermanentFilter, inner EffectData, text string) EffectData {
+func ForEachControlledPermanent(who PlayerSelector, filter PermanentFilter, inner Effect, text string) Effect {
 	return &ForEachPermanentData{Filter: filter, Who: who, Inner: inner, Txt: text}
 }
 
@@ -434,13 +434,13 @@ type ConditionData interface {
 // IfElseData branches based on a condition.
 type IfElseData struct {
 	Cond ConditionData
-	Then EffectData
-	Else EffectData // nil = do nothing
+	Then Effect
+	Else Effect // nil = do nothing
 	Txt  string
 }
 
 // IfElse creates a conditional effect.
-func IfElse(text string, cond ConditionData, then, els EffectData) EffectData {
+func IfElse(text string, cond ConditionData, then, els Effect) Effect {
 	return &IfElseData{Cond: cond, Then: then, Else: els, Txt: text}
 }
 
@@ -509,12 +509,12 @@ func (c *NotCond) Check(ctx *EffectContext) bool { return !c.Inner.Check(ctx) }
 
 // ModalEffectData branches on the chosen mode value (0, 1, ...).
 type ModalEffectData struct {
-	Modes []EffectData
+	Modes []Effect
 	Txt   string
 }
 
 // ModalEffect creates an effect that executes one of several modes.
-func ModalEffect(text string, modes ...EffectData) EffectData {
+func ModalEffect(text string, modes ...Effect) Effect {
 	return &ModalEffectData{Modes: modes, Txt: text}
 }
 
@@ -543,7 +543,7 @@ type ChoosePermanentData struct {
 }
 
 // ChoosePermanentStep creates a pipeline step where a player chooses a permanent.
-func ChoosePermanentStep(player PlayerSelector, filter PermanentFilter, reason, storeAs string) EffectData {
+func ChoosePermanentStep(player PlayerSelector, filter PermanentFilter, reason, storeAs string) Effect {
 	return &ChoosePermanentData{Player: player, Filter: filter, Reason: reason, StoreAs: storeAs}
 }
 
@@ -583,7 +583,7 @@ func execChoosePermanent(ctx *EffectContext, e *ChoosePermanentData) error {
 // SacrificeSourceData sacrifices the source permanent. Usable in pipelines.
 type SacrificeSourceData struct{}
 
-func SacrificeSourceStep() EffectData { return &SacrificeSourceData{} }
+func SacrificeSourceStep() Effect { return &SacrificeSourceData{} }
 
 func (e *SacrificeSourceData) Text() string                 { return "sacrifice" }
 func (e *SacrificeSourceData) Properties() EffectProperties { return EffectProperties{} }
@@ -603,7 +603,7 @@ func execSacrificeSourceStep(ctx *EffectContext, _ *SacrificeSourceData) error {
 
 type ShuffleGraveyardIntoLibraryData struct{}
 
-func ShuffleGraveyardIntoLibrary() EffectData { return &ShuffleGraveyardIntoLibraryData{} }
+func ShuffleGraveyardIntoLibrary() Effect { return &ShuffleGraveyardIntoLibraryData{} }
 
 func (e *ShuffleGraveyardIntoLibraryData) Text() string { return "shuffle graveyard into library" }
 func (e *ShuffleGraveyardIntoLibraryData) Properties() EffectProperties {

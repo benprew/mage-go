@@ -21,6 +21,7 @@ func (g *Game) Clone() *Game {
 		currentX:               g.currentX,
 		currentMode:            g.currentMode,
 		currentEventAmount:     g.currentEventAmount,
+		currentEventSourceID:   g.currentEventSourceID,
 		resolvingCard:          g.resolvingCard, // Card ref shared
 		landsPlayedThisTurn:    g.landsPlayedThisTurn,
 		creatureDeathsThisTurn: g.creatureDeathsThisTurn,
@@ -123,11 +124,38 @@ func (g *Game) Clone() *Game {
 	c.damageDealtBy = cloneNestedUUIDMap(g.damageDealtBy)
 	c.damageTakenThisTurn = cloneUUIDIntMap(g.damageTakenThisTurn)
 	c.artifactDamageTakenThisTurn = cloneUUIDIntMap(g.artifactDamageTakenThisTurn)
+	c.combatDamageThisStep = make(map[uuid.UUID]map[uuid.UUID]int, len(g.combatDamageThisStep))
+	for k, inner := range g.combatDamageThisStep {
+		c.combatDamageThisStep[k] = cloneUUIDIntMap(inner)
+	}
+	c.combatDamageSourcesThisStep = make(map[uuid.UUID]map[uuid.UUID]map[uuid.UUID]int, len(g.combatDamageSourcesThisStep))
+	for k, byRecip := range g.combatDamageSourcesThisStep {
+		dst := make(map[uuid.UUID]map[uuid.UUID]int, len(byRecip))
+		for r, bySrc := range byRecip {
+			dst[r] = cloneUUIDIntMap(bySrc)
+		}
+		c.combatDamageSourcesThisStep[k] = dst
+	}
 	c.artifactManaOnly = cloneUUIDBoolMap(g.artifactManaOnly)
 	c.creatureManaOnly = cloneUUIDBoolMap(g.creatureManaOnly)
 	c.attackedThisTurn = cloneUUIDBoolMap(g.attackedThisTurn)
 	c.instantsCastThisTurn = cloneUUIDIntMap(g.instantsCastThisTurn)
+	c.timesTargetedThisTurn = cloneUUIDIntMap(g.timesTargetedThisTurn)
 	c.blockedThisTurn = cloneBlockedThisTurn(g.blockedThisTurn)
+	if g.extraLandPlaysThisTurn != nil {
+		c.extraLandPlaysThisTurn = cloneUUIDIntMap(g.extraLandPlaysThisTurn)
+	}
+	if g.optionalCostPaid != nil {
+		c.optionalCostPaid = cloneUUIDBoolMap(g.optionalCostPaid)
+	}
+
+	// Deep copy cast-from-exile permissions and exile-instead-of-graveyard tags.
+	if len(g.castFromExilePermissions) > 0 {
+		c.castFromExilePermissions = make([]CastableFromExilePermission, len(g.castFromExilePermissions))
+		copy(c.castFromExilePermissions, g.castFromExilePermissions)
+	}
+	c.exileInsteadCards = make(map[uuid.UUID]uuid.UUID, len(g.exileInsteadCards))
+	maps.Copy(c.exileInsteadCards, g.exileInsteadCards)
 	c.armedStateTriggers = cloneStateTriggerMap(g.armedStateTriggers)
 
 	// Interactive callbacks are nil'd — search clones don't call back to UI.
@@ -221,6 +249,7 @@ func clonePermanentInto(dst, src *Permanent) {
 		FaceDown:            src.FaceDown,
 		ChosenColor:         src.ChosenColor,
 		ChosenPlayer:        src.ChosenPlayer,
+		ChosenSubtype:       src.ChosenSubtype,
 		ControlledPermanent: src.ControlledPermanent,
 		TurnControlGained:   src.TurnControlGained,
 		StoredValue:         src.StoredValue,
@@ -248,6 +277,10 @@ func clonePermanentInto(dst, src *Permanent) {
 	if len(src.SubTypeOverride) > 0 {
 		dst.SubTypeOverride = make([]string, len(src.SubTypeOverride))
 		copy(dst.SubTypeOverride, src.SubTypeOverride)
+	}
+	if len(src.SubTypeAdditions) > 0 {
+		dst.SubTypeAdditions = make([]string, len(src.SubTypeAdditions))
+		copy(dst.SubTypeAdditions, src.SubTypeAdditions)
 	}
 	// Deep copy BasePTOverride if non-nil (it's a *[2]int).
 	if src.BasePTOverride != nil {
@@ -280,14 +313,27 @@ func cloneStack(s *Stack) *Stack {
 // cloneStackObject deep copies a StackObject.
 func cloneStackObject(obj *StackObject) *StackObject {
 	clone := &StackObject{
-		ID:          obj.ID,
-		Card:        obj.Card, // shared Card ref
-		Controller:  obj.Controller,
-		SourceID:    obj.SourceID,
-		IsAbility:   obj.IsAbility,
-		XValue:      obj.XValue,
-		ModeChoice:  obj.ModeChoice,
-		EventAmount: obj.EventAmount,
+		ID:            obj.ID,
+		Card:          obj.Card, // shared Card ref
+		Controller:    obj.Controller,
+		SourceID:      obj.SourceID,
+		IsAbility:     obj.IsAbility,
+		XValue:        obj.XValue,
+		ModeChoice:    obj.ModeChoice,
+		EventAmount:   obj.EventAmount,
+		EventSourceID: obj.EventSourceID,
+		IsCopy:        obj.IsCopy,
+		CastZone:      obj.CastZone,
+	}
+	if len(obj.ModalTargets) > 0 {
+		clone.ModalTargets = make([][]uuid.UUID, len(obj.ModalTargets))
+		for i, t := range obj.ModalTargets {
+			if len(t) > 0 {
+				cp := make([]uuid.UUID, len(t))
+				copy(cp, t)
+				clone.ModalTargets[i] = cp
+			}
+		}
 	}
 	// Share Effect interface refs.
 	if len(obj.Effects) > 0 {
@@ -298,6 +344,10 @@ func cloneStackObject(obj *StackObject) *StackObject {
 	if len(obj.Targets) > 0 {
 		clone.Targets = make([]uuid.UUID, len(obj.Targets))
 		copy(clone.Targets, obj.Targets)
+	}
+	if len(obj.DamageDistribution) > 0 {
+		clone.DamageDistribution = make(map[uuid.UUID]int, len(obj.DamageDistribution))
+		maps.Copy(clone.DamageDistribution, obj.DamageDistribution)
 	}
 	return clone
 }
@@ -394,6 +444,10 @@ func cloneGameRules(gr *GameRules) *GameRules {
 	clone.maxHandSize = cloneUUIDIntMap(gr.maxHandSize)
 	clone.NullifiedLandwalks = cloneAttrBoolMap(gr.NullifiedLandwalks)
 	clone.ActivationCostReductions = cloneUUIDIntMap(gr.ActivationCostReductions)
+	if len(gr.SpellCostReducers) > 0 {
+		clone.SpellCostReducers = make([]SpellCostReducer, len(gr.SpellCostReducers))
+		copy(clone.SpellCostReducers, gr.SpellCostReducers)
+	}
 	// Copy expansion cast blocks.
 	if len(gr.expansionCastBlock) > 0 {
 		clone.expansionCastBlock = make([]string, len(gr.expansionCastBlock))

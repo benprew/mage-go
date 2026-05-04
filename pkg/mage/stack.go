@@ -1,6 +1,10 @@
 package mage
 
-import "github.com/google/uuid"
+import (
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+
+	"github.com/google/uuid"
+)
 
 // StackObject represents something on the stack (spell or ability).
 type StackObject struct {
@@ -14,6 +18,38 @@ type StackObject struct {
 	XValue      int // value of X for X-cost spells
 	ModeChoice  int // chosen mode for modal spells (0-indexed)
 	EventAmount int // amount from triggering event (e.g. damage dealt)
+	// EventSourceID is the SourceID of the event that produced this
+	// triggered ability (e.g. on EvtDamageDealt, the damager's ID).
+	// Read by FuncEffect via Game.EventSourceID() during resolution.
+	EventSourceID uuid.UUID
+
+	// DamageDistribution carries per-target damage assignments for
+	// divided-damage spells/abilities (CR 601.2d). The controller picks the
+	// distribution at cast or activation time; the executor reads it back at
+	// resolution. Map keys are the target IDs in StackObject.Targets; values
+	// sum to the spell's total damage.
+	DamageDistribution map[uuid.UUID]int
+
+	// IsCopy marks this stack object as a copy of a spell (CR 707.10).
+	// Copies of spells cease to exist when they resolve or are countered —
+	// they do not enter any zone, are never put into a graveyard, and do
+	// not become permanents. Set by Game.CopySpellOnStack.
+	IsCopy bool
+
+	// ModalTargets, when non-empty, holds the per-mode chosen targets for a
+	// modal spell built with NewModalSpell. The slice at index ModeChoice
+	// is the list of UUIDs the chosen mode's effects act on. Targets is
+	// kept in sync (it points at ModalTargets[ModeChoice]) so existing
+	// fizzle and target-still-legal logic works unchanged.
+	ModalTargets [][]uuid.UUID
+
+	// CastZone records the zone the spell was cast from (CR 601.2a).
+	// Populated by the cast machinery: ZoneHand for the standard cast path,
+	// or the explicit zone passed to CastCardFromZoneWithoutPaying /
+	// CastCardFromZoneWithAlternateCost. Read at resolution time via
+	// Game.ResolvingCastZone() so triggers can express "if you cast it from
+	// your hand" / "from the graveyard" / etc.
+	CastZone Zone
 }
 
 // Stack represents the game stack.

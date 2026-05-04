@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _EventTypeName = "ZoneChangeCreatureDiedEntersBattlefieldLeavesBattlefieldDeclaredAttackerDeclaredBlockerDamageDealtLifeGainedLifeLostCardDrawnSpellCastAbilityActivatedAttachDetachPutIntoGraveyardFromBattlefieldUpkeepDrawStepBeginCombatEndStepTappedLandPlayedBlockersDeclEndOfCombatBecameUntappedMainPhaseCleanupCreatureBlocksEntersAttackingEntersBlocking"
+const _EventTypeName = "ZoneChangeDeclaredAttackerDeclaredBlockerDamageDealtLifeGainedLifeLostCardDrawnSpellCastAbilityActivatedAttachDetachUpkeepDrawStepBeginCombatEndStepTappedLandPlayedBlockersDeclEndOfCombatBecameUntappedMainPhaseCleanupScryDiscardSacrificeBecomesTargetAttackersDeclaredCombatDamageDealt"
 
-var _EventTypeIndex = [...]uint16{0, 10, 22, 39, 56, 72, 87, 98, 108, 116, 125, 134, 150, 156, 162, 193, 199, 207, 218, 225, 231, 241, 253, 264, 278, 287, 294, 308, 323, 337}
+var _EventTypeIndex = [...]uint16{0, 10, 26, 41, 52, 62, 70, 79, 88, 104, 110, 116, 122, 130, 141, 148, 154, 164, 176, 187, 201, 210, 217, 221, 228, 237, 250, 267, 284}
 
-const _EventTypeLowerName = "zonechangecreaturediedentersbattlefieldleavesbattlefielddeclaredattackerdeclaredblockerdamagedealtlifegainedlifelostcarddrawnspellcastabilityactivatedattachdetachputintograveyardfrombattlefieldupkeepdrawstepbegincombatendsteptappedlandplayedblockersdeclendofcombatbecameuntappedmainphasecleanupcreatureblocksentersattackingentersblocking"
+const _EventTypeLowerName = "zonechangedeclaredattackerdeclaredblockerdamagedealtlifegainedlifelostcarddrawnspellcastabilityactivatedattachdetachupkeepdrawstepbegincombatendsteptappedlandplayedblockersdeclendofcombatbecameuntappedmainphasecleanupscrydiscardsacrificebecomestargetattackersdeclaredcombatdamagedealt"
 
 func (i EventType) String() string {
 	if i < 0 || i >= EventType(len(_EventTypeIndex)-1) {
@@ -25,129 +25,125 @@ func (i EventType) String() string {
 func _EventTypeNoOp() {
 	var x [1]struct{}
 	_ = x[EvtZoneChange-(0)]
-	_ = x[EvtCreatureDied-(1)]
-	_ = x[EvtEntersBattlefield-(2)]
-	_ = x[EvtLeavesBattlefield-(3)]
-	_ = x[EvtDeclaredAttacker-(4)]
-	_ = x[EvtDeclaredBlocker-(5)]
-	_ = x[EvtDamageDealt-(6)]
-	_ = x[EvtLifeGained-(7)]
-	_ = x[EvtLifeLost-(8)]
-	_ = x[EvtCardDrawn-(9)]
-	_ = x[EvtSpellCast-(10)]
-	_ = x[EvtAbilityActivated-(11)]
-	_ = x[EvtAttach-(12)]
-	_ = x[EvtDetach-(13)]
-	_ = x[EvtPutIntoGraveyardFromBattlefield-(14)]
-	_ = x[EvtUpkeep-(15)]
-	_ = x[EvtDrawStep-(16)]
-	_ = x[EvtBeginCombat-(17)]
-	_ = x[EvtEndStep-(18)]
-	_ = x[EvtTapped-(19)]
-	_ = x[EvtLandPlayed-(20)]
-	_ = x[EvtBlockersDecl-(21)]
-	_ = x[EvtEndOfCombat-(22)]
-	_ = x[EvtBecameUntapped-(23)]
-	_ = x[EvtMainPhase-(24)]
-	_ = x[EvtCleanup-(25)]
-	_ = x[EvtCreatureBlocks-(26)]
-	_ = x[EvtEntersAttacking-(27)]
-	_ = x[EvtEntersBlocking-(28)]
+	_ = x[EvtDeclaredAttacker-(1)]
+	_ = x[EvtDeclaredBlocker-(2)]
+	_ = x[EvtDamageDealt-(3)]
+	_ = x[EvtLifeGained-(4)]
+	_ = x[EvtLifeLost-(5)]
+	_ = x[EvtCardDrawn-(6)]
+	_ = x[EvtSpellCast-(7)]
+	_ = x[EvtAbilityActivated-(8)]
+	_ = x[EvtAttach-(9)]
+	_ = x[EvtDetach-(10)]
+	_ = x[EvtUpkeep-(11)]
+	_ = x[EvtDrawStep-(12)]
+	_ = x[EvtBeginCombat-(13)]
+	_ = x[EvtEndStep-(14)]
+	_ = x[EvtTapped-(15)]
+	_ = x[EvtLandPlayed-(16)]
+	_ = x[EvtBlockersDecl-(17)]
+	_ = x[EvtEndOfCombat-(18)]
+	_ = x[EvtBecameUntapped-(19)]
+	_ = x[EvtMainPhase-(20)]
+	_ = x[EvtCleanup-(21)]
+	_ = x[EvtScry-(22)]
+	_ = x[EvtDiscard-(23)]
+	_ = x[EvtSacrifice-(24)]
+	_ = x[EvtBecomesTarget-(25)]
+	_ = x[EvtAttackersDeclared-(26)]
+	_ = x[EvtCombatDamageDealt-(27)]
 }
 
-var _EventTypeValues = []EventType{EvtZoneChange, EvtCreatureDied, EvtEntersBattlefield, EvtLeavesBattlefield, EvtDeclaredAttacker, EvtDeclaredBlocker, EvtDamageDealt, EvtLifeGained, EvtLifeLost, EvtCardDrawn, EvtSpellCast, EvtAbilityActivated, EvtAttach, EvtDetach, EvtPutIntoGraveyardFromBattlefield, EvtUpkeep, EvtDrawStep, EvtBeginCombat, EvtEndStep, EvtTapped, EvtLandPlayed, EvtBlockersDecl, EvtEndOfCombat, EvtBecameUntapped, EvtMainPhase, EvtCleanup, EvtCreatureBlocks, EvtEntersAttacking, EvtEntersBlocking}
+var _EventTypeValues = []EventType{EvtZoneChange, EvtDeclaredAttacker, EvtDeclaredBlocker, EvtDamageDealt, EvtLifeGained, EvtLifeLost, EvtCardDrawn, EvtSpellCast, EvtAbilityActivated, EvtAttach, EvtDetach, EvtUpkeep, EvtDrawStep, EvtBeginCombat, EvtEndStep, EvtTapped, EvtLandPlayed, EvtBlockersDecl, EvtEndOfCombat, EvtBecameUntapped, EvtMainPhase, EvtCleanup, EvtScry, EvtDiscard, EvtSacrifice, EvtBecomesTarget, EvtAttackersDeclared, EvtCombatDamageDealt}
 
 var _EventTypeNameToValueMap = map[string]EventType{
 	_EventTypeName[0:10]:         EvtZoneChange,
 	_EventTypeLowerName[0:10]:    EvtZoneChange,
-	_EventTypeName[10:22]:        EvtCreatureDied,
-	_EventTypeLowerName[10:22]:   EvtCreatureDied,
-	_EventTypeName[22:39]:        EvtEntersBattlefield,
-	_EventTypeLowerName[22:39]:   EvtEntersBattlefield,
-	_EventTypeName[39:56]:        EvtLeavesBattlefield,
-	_EventTypeLowerName[39:56]:   EvtLeavesBattlefield,
-	_EventTypeName[56:72]:        EvtDeclaredAttacker,
-	_EventTypeLowerName[56:72]:   EvtDeclaredAttacker,
-	_EventTypeName[72:87]:        EvtDeclaredBlocker,
-	_EventTypeLowerName[72:87]:   EvtDeclaredBlocker,
-	_EventTypeName[87:98]:        EvtDamageDealt,
-	_EventTypeLowerName[87:98]:   EvtDamageDealt,
-	_EventTypeName[98:108]:       EvtLifeGained,
-	_EventTypeLowerName[98:108]:  EvtLifeGained,
-	_EventTypeName[108:116]:      EvtLifeLost,
-	_EventTypeLowerName[108:116]: EvtLifeLost,
-	_EventTypeName[116:125]:      EvtCardDrawn,
-	_EventTypeLowerName[116:125]: EvtCardDrawn,
-	_EventTypeName[125:134]:      EvtSpellCast,
-	_EventTypeLowerName[125:134]: EvtSpellCast,
-	_EventTypeName[134:150]:      EvtAbilityActivated,
-	_EventTypeLowerName[134:150]: EvtAbilityActivated,
-	_EventTypeName[150:156]:      EvtAttach,
-	_EventTypeLowerName[150:156]: EvtAttach,
-	_EventTypeName[156:162]:      EvtDetach,
-	_EventTypeLowerName[156:162]: EvtDetach,
-	_EventTypeName[162:193]:      EvtPutIntoGraveyardFromBattlefield,
-	_EventTypeLowerName[162:193]: EvtPutIntoGraveyardFromBattlefield,
-	_EventTypeName[193:199]:      EvtUpkeep,
-	_EventTypeLowerName[193:199]: EvtUpkeep,
-	_EventTypeName[199:207]:      EvtDrawStep,
-	_EventTypeLowerName[199:207]: EvtDrawStep,
-	_EventTypeName[207:218]:      EvtBeginCombat,
-	_EventTypeLowerName[207:218]: EvtBeginCombat,
-	_EventTypeName[218:225]:      EvtEndStep,
-	_EventTypeLowerName[218:225]: EvtEndStep,
-	_EventTypeName[225:231]:      EvtTapped,
-	_EventTypeLowerName[225:231]: EvtTapped,
-	_EventTypeName[231:241]:      EvtLandPlayed,
-	_EventTypeLowerName[231:241]: EvtLandPlayed,
-	_EventTypeName[241:253]:      EvtBlockersDecl,
-	_EventTypeLowerName[241:253]: EvtBlockersDecl,
-	_EventTypeName[253:264]:      EvtEndOfCombat,
-	_EventTypeLowerName[253:264]: EvtEndOfCombat,
-	_EventTypeName[264:278]:      EvtBecameUntapped,
-	_EventTypeLowerName[264:278]: EvtBecameUntapped,
-	_EventTypeName[278:287]:      EvtMainPhase,
-	_EventTypeLowerName[278:287]: EvtMainPhase,
-	_EventTypeName[287:294]:      EvtCleanup,
-	_EventTypeLowerName[287:294]: EvtCleanup,
-	_EventTypeName[294:308]:      EvtCreatureBlocks,
-	_EventTypeLowerName[294:308]: EvtCreatureBlocks,
-	_EventTypeName[308:323]:      EvtEntersAttacking,
-	_EventTypeLowerName[308:323]: EvtEntersAttacking,
-	_EventTypeName[323:337]:      EvtEntersBlocking,
-	_EventTypeLowerName[323:337]: EvtEntersBlocking,
+	_EventTypeName[10:26]:        EvtDeclaredAttacker,
+	_EventTypeLowerName[10:26]:   EvtDeclaredAttacker,
+	_EventTypeName[26:41]:        EvtDeclaredBlocker,
+	_EventTypeLowerName[26:41]:   EvtDeclaredBlocker,
+	_EventTypeName[41:52]:        EvtDamageDealt,
+	_EventTypeLowerName[41:52]:   EvtDamageDealt,
+	_EventTypeName[52:62]:        EvtLifeGained,
+	_EventTypeLowerName[52:62]:   EvtLifeGained,
+	_EventTypeName[62:70]:        EvtLifeLost,
+	_EventTypeLowerName[62:70]:   EvtLifeLost,
+	_EventTypeName[70:79]:        EvtCardDrawn,
+	_EventTypeLowerName[70:79]:   EvtCardDrawn,
+	_EventTypeName[79:88]:        EvtSpellCast,
+	_EventTypeLowerName[79:88]:   EvtSpellCast,
+	_EventTypeName[88:104]:       EvtAbilityActivated,
+	_EventTypeLowerName[88:104]:  EvtAbilityActivated,
+	_EventTypeName[104:110]:      EvtAttach,
+	_EventTypeLowerName[104:110]: EvtAttach,
+	_EventTypeName[110:116]:      EvtDetach,
+	_EventTypeLowerName[110:116]: EvtDetach,
+	_EventTypeName[116:122]:      EvtUpkeep,
+	_EventTypeLowerName[116:122]: EvtUpkeep,
+	_EventTypeName[122:130]:      EvtDrawStep,
+	_EventTypeLowerName[122:130]: EvtDrawStep,
+	_EventTypeName[130:141]:      EvtBeginCombat,
+	_EventTypeLowerName[130:141]: EvtBeginCombat,
+	_EventTypeName[141:148]:      EvtEndStep,
+	_EventTypeLowerName[141:148]: EvtEndStep,
+	_EventTypeName[148:154]:      EvtTapped,
+	_EventTypeLowerName[148:154]: EvtTapped,
+	_EventTypeName[154:164]:      EvtLandPlayed,
+	_EventTypeLowerName[154:164]: EvtLandPlayed,
+	_EventTypeName[164:176]:      EvtBlockersDecl,
+	_EventTypeLowerName[164:176]: EvtBlockersDecl,
+	_EventTypeName[176:187]:      EvtEndOfCombat,
+	_EventTypeLowerName[176:187]: EvtEndOfCombat,
+	_EventTypeName[187:201]:      EvtBecameUntapped,
+	_EventTypeLowerName[187:201]: EvtBecameUntapped,
+	_EventTypeName[201:210]:      EvtMainPhase,
+	_EventTypeLowerName[201:210]: EvtMainPhase,
+	_EventTypeName[210:217]:      EvtCleanup,
+	_EventTypeLowerName[210:217]: EvtCleanup,
+	_EventTypeName[217:221]:      EvtScry,
+	_EventTypeLowerName[217:221]: EvtScry,
+	_EventTypeName[221:228]:      EvtDiscard,
+	_EventTypeLowerName[221:228]: EvtDiscard,
+	_EventTypeName[228:237]:      EvtSacrifice,
+	_EventTypeLowerName[228:237]: EvtSacrifice,
+	_EventTypeName[237:250]:      EvtBecomesTarget,
+	_EventTypeLowerName[237:250]: EvtBecomesTarget,
+	_EventTypeName[250:267]:      EvtAttackersDeclared,
+	_EventTypeLowerName[250:267]: EvtAttackersDeclared,
+	_EventTypeName[267:284]:      EvtCombatDamageDealt,
+	_EventTypeLowerName[267:284]: EvtCombatDamageDealt,
 }
 
 var _EventTypeNames = []string{
 	_EventTypeName[0:10],
-	_EventTypeName[10:22],
-	_EventTypeName[22:39],
-	_EventTypeName[39:56],
-	_EventTypeName[56:72],
-	_EventTypeName[72:87],
-	_EventTypeName[87:98],
-	_EventTypeName[98:108],
-	_EventTypeName[108:116],
-	_EventTypeName[116:125],
-	_EventTypeName[125:134],
-	_EventTypeName[134:150],
-	_EventTypeName[150:156],
-	_EventTypeName[156:162],
-	_EventTypeName[162:193],
-	_EventTypeName[193:199],
-	_EventTypeName[199:207],
-	_EventTypeName[207:218],
-	_EventTypeName[218:225],
-	_EventTypeName[225:231],
-	_EventTypeName[231:241],
-	_EventTypeName[241:253],
-	_EventTypeName[253:264],
-	_EventTypeName[264:278],
-	_EventTypeName[278:287],
-	_EventTypeName[287:294],
-	_EventTypeName[294:308],
-	_EventTypeName[308:323],
-	_EventTypeName[323:337],
+	_EventTypeName[10:26],
+	_EventTypeName[26:41],
+	_EventTypeName[41:52],
+	_EventTypeName[52:62],
+	_EventTypeName[62:70],
+	_EventTypeName[70:79],
+	_EventTypeName[79:88],
+	_EventTypeName[88:104],
+	_EventTypeName[104:110],
+	_EventTypeName[110:116],
+	_EventTypeName[116:122],
+	_EventTypeName[122:130],
+	_EventTypeName[130:141],
+	_EventTypeName[141:148],
+	_EventTypeName[148:154],
+	_EventTypeName[154:164],
+	_EventTypeName[164:176],
+	_EventTypeName[176:187],
+	_EventTypeName[187:201],
+	_EventTypeName[201:210],
+	_EventTypeName[210:217],
+	_EventTypeName[217:221],
+	_EventTypeName[221:228],
+	_EventTypeName[228:237],
+	_EventTypeName[237:250],
+	_EventTypeName[250:267],
+	_EventTypeName[267:284],
 }
 
 // EventTypeString retrieves an enum value from the enum constants string name.

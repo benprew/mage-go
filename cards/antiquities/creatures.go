@@ -309,8 +309,8 @@ func registerCreatures() {
 					EffectProperties{},
 					IfElse("flip coin",
 						&FlipCoinCond{},
-						UnwrapEffect(DrawCards(Fixed(1))),
-						UnwrapEffect(CounterSpell()),
+						DrawCards(Fixed(1)),
+						CounterSpell(),
 					),
 				),
 				Tap(),
@@ -597,9 +597,7 @@ func registerCreatures() {
 			WithSubTypes("Construct"),
 			WithCardType(TypeArtifact),
 			WithAbility(
-				NewTriggered(EvtCreatureDied, false,
-					GainLife(2),
-				).SetConditionData(EventSourceIsSelf{}),
+				DiesTrigger(GainLife(2), false),
 			),
 		)
 	})
@@ -726,9 +724,7 @@ func registerCreatures() {
 			WithSubTypes("Construct"),
 			WithCardType(TypeArtifact),
 			WithAbility(
-				NewTriggered(EvtCreatureDied, false,
-					AddMana(Colorless, 4),
-				).SetConditionData(EventSourceIsSelf{}),
+				DiesTrigger(AddMana(Colorless, 4), false),
 			),
 		)
 	})

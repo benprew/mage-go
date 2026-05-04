@@ -16,8 +16,8 @@ func GainLife(amount int) Effect {
 	return &gainLifeEffect{amount: amount}
 }
 
-// GainLifeStep returns the EffectData for use in pipelines/ForEach/Modal.
-func GainLifeStep(amount int) EffectData { return &gainLifeEffect{amount: amount} }
+// GainLifeStep returns the Effect for use in pipelines/ForEach/Modal.
+func GainLifeStep(amount int) Effect { return &gainLifeEffect{amount: amount} }
 
 func (e *gainLifeEffect) Text() string {
 	return fmt.Sprintf("gain %d life", e.amount)
@@ -54,14 +54,20 @@ func GainLifeTarget(amount ValueSource) Effect {
 }
 
 func (e *gainLifeTargetEffect) Text() string {
-	if _, ok := e.amount.(xValue); ok {
+	switch e.amount.(type) {
+	case xValue:
 		return "target player gains X life"
+	case eventAmountValue:
+		return "target player gains that much life"
 	}
 	return fmt.Sprintf("target player gains %d life", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil))
 }
 func (e *gainLifeTargetEffect) Properties() EffectProperties {
 	lg := 0
-	if _, ok := e.amount.(xValue); !ok {
+	switch e.amount.(type) {
+	case xValue, eventAmountValue:
+		// dynamic; report 0 for static heuristics
+	default:
 		lg = e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil)
 	}
 	return EffectProperties{Outcome: OutcomeBenefit, LifeGain: lg}
@@ -111,6 +117,26 @@ func (e *loseLifeDynamicEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
+// loseLifeTargetEffect causes a target player (or the controller if no target)
+// to lose life equal to a dynamic value. Used for "target opponent loses N life".
+type loseLifeTargetEffect struct {
+	amount ValueSource
+}
+
+// TargetPlayerLoseLife creates an effect that causes the target player (first
+// player target) to lose the given amount of life. Falls back to the controller
+// if no target is supplied.
+func TargetPlayerLoseLife(amount ValueSource) Effect {
+	return &loseLifeTargetEffect{amount: amount}
+}
+
+func (e *loseLifeTargetEffect) Text() string {
+	return "target player loses " + e.amount.Text() + " life"
+}
+func (e *loseLifeTargetEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
+
 // loseLifeEffect causes the controller to lose life.
 type loseLifeEffect struct {
 	amount int
@@ -138,8 +164,8 @@ func DealDamage(amount ValueSource) Effect {
 	return &dealDamageEffect{amount: amount}
 }
 
-// DealDamageStep returns the EffectData for use in pipelines/ForEach.
-func DealDamageStep(amount ValueSource) EffectData { return &dealDamageEffect{amount: amount} }
+// DealDamageStep returns the Effect for use in pipelines/ForEach.
+func DealDamageStep(amount ValueSource) Effect { return &dealDamageEffect{amount: amount} }
 
 func (e *dealDamageEffect) Text() string {
 	if _, ok := e.amount.(xValue); ok {
@@ -149,6 +175,46 @@ func (e *dealDamageEffect) Text() string {
 }
 func (e *dealDamageEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment, DamageValue: e.amount}
+}
+
+// dealDividedDamageEffect deals N damage divided as the controller chose at
+// cast/activation time among any number of targets (CR 601.2d). The per-target
+// distribution is recorded on the StackObject (DamageDistribution) when the
+// spell is cast and is read back at resolution. Used by Flames of the
+// Firebrand and similar spells.
+type dealDividedDamageEffect struct {
+	total ValueSource
+}
+
+// DealDividedDamage creates an effect that deals `total` damage divided among
+// the spell's targets according to the StackObject.DamageDistribution chosen
+// at cast time. Pair with TargetUpToNCreaturesOrPlayers and pass the resulting
+// Target to NewMultiTargetSpell.
+func DealDividedDamage(total ValueSource) Effect {
+	return &dealDividedDamageEffect{total: total}
+}
+
+func (e *dealDividedDamageEffect) Text() string {
+	return fmt.Sprintf("deal %s damage divided as you choose among any number of targets", e.total.Text())
+}
+func (e *dealDividedDamageEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment, DamageValue: e.total}
+}
+
+// IsDividedDamageEffect returns true if e is a divided-damage effect (used by
+// the spell-cast flow to prompt the controller for a distribution).
+func IsDividedDamageEffect(e Effect) bool {
+	_, isDiv := e.(*dealDividedDamageEffect)
+	return isDiv
+}
+
+// DividedDamageTotal returns the ValueSource carrying the total damage of a
+// divided-damage effect, or nil if e is not one.
+func DividedDamageTotal(e Effect) ValueSource {
+	if d, isDiv := e.(*dealDividedDamageEffect); isDiv {
+		return d.total
+	}
+	return nil
 }
 
 // dealDamageToAllCreaturesEffect deals damage to all creatures matching an optional filter.
@@ -183,8 +249,8 @@ func DealDamageToPlayers(amount ValueSource, selector PlayerSelector) Effect {
 	return &dealDamageToPlayersEffect{amount: amount, selector: selector}
 }
 
-// DealDamageToPlayersStep returns the EffectData for use in pipelines/ForEach/Modal.
-func DealDamageToPlayersStep(amount ValueSource, selector PlayerSelector) EffectData {
+// DealDamageToPlayersStep returns the Effect for use in pipelines/ForEach/Modal.
+func DealDamageToPlayersStep(amount ValueSource, selector PlayerSelector) Effect {
 	return &dealDamageToPlayersEffect{amount: amount, selector: selector}
 }
 

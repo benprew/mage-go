@@ -3,6 +3,7 @@ package mage
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 
 	"github.com/google/uuid"
 
@@ -54,7 +55,7 @@ func (c *ManaCostPayment) reducedCost(sourceID uuid.UUID, g *Game) ManaCost {
 	}
 	mc := c.MC
 	// Total colored mana in the cost
-	coloredTotal := mc.White + mc.Blue + mc.Black + mc.Red + mc.Green
+	coloredTotal := mc.White + mc.Blue + mc.Black + mc.Red + mc.Green + len(mc.Hybrid)
 	total := coloredTotal + mc.Generic
 	// Can't reduce below 1 total mana
 	minGeneric := 0
@@ -69,13 +70,13 @@ func (c *ManaCostPayment) Text() string {
 	return c.MC.String()
 }
 
-// tap implements both Cost and EffectData. As a cost it taps the source
+// tap implements both Cost and Effect. As a cost it taps the source
 // permanent ({T}). As an effect it taps ctx.Targets[0]. Single DSL constructor
 // (Tap) — the call site (cost slot vs effect slot) selects the path.
 type tap struct{}
 
 // Tap creates a tap operation usable as a Cost (taps source) or Effect (taps
-// target).
+// target). The call site (cost slot vs effect slot) selects the path.
 func Tap() *tap { return &tap{} }
 
 // --- Cost interface ---
@@ -183,6 +184,7 @@ func (c *sacrificeSourceCost) Pay(sourceID, controller uuid.UUID, g *Game) error
 	if p == nil {
 		return ErrSourceNotFound
 	}
+	g.CaptureSacrificed(p)
 	g.Sacrifice(p)
 	return nil
 }
@@ -209,7 +211,7 @@ func (c *lifePayCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	if p == nil {
 		return ErrPlayerNotFound
 	}
-	p.LoseLife(c.amount)
+	g.PlayerLoseLife(p, c.amount)
 	return nil
 }
 
@@ -263,6 +265,7 @@ func (c *sacrificeMatchingCost) Pay(sourceID, controller uuid.UUID, g *Game) err
 	if chosen == nil {
 		return fmt.Errorf("no permanent chosen")
 	}
+	g.CaptureSacrificed(chosen)
 	g.Sacrifice(chosen)
 	return nil
 }
@@ -339,8 +342,7 @@ func (c *discardCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	}
 	chosen := p.ChooseCardsFromHand(c.amount, "discard cost", g)
 	for _, card := range chosen {
-		p.RemoveFromHand(card.ID())
-		p.AddToGraveyard(card)
+		g.PlayerDiscard(p, card.ID())
 	}
 	return nil
 }
@@ -350,6 +352,162 @@ func (c *discardCost) Text() string {
 		return "Discard a card"
 	}
 	return fmt.Sprintf("Discard %d cards", c.amount)
+}
+
+// revealFromHandCost is an additional cost that requires the controller
+// to reveal a card from their hand matching the given filter. The card
+// stays in hand after being revealed (CR 701.16) — no zone change.
+//
+// Used by "as an additional cost, reveal an X card from your hand"
+// (Wren's Run Vanquisher's first OR branch, etc.).
+type revealFromHandCost struct {
+	filter CardFilter
+	label  string
+}
+
+// RevealFromHandCost creates a cost that requires revealing a card from
+// the controller's hand that matches filter. Combine with [EitherCost]
+// to encode "reveal X or pay {N}" patterns.
+//
+// Example: Wren's Run Vanquisher — "As an additional cost to cast this
+// spell, reveal an Elf card from your hand or pay {3}":
+//
+//	WithAdditionalCost(EitherCost(
+//	    RevealFromHandCost(HasSubTypeCardFilter("Elf"), "Reveal an Elf card"),
+//	    ManaCostOf("{3}"),
+//	))
+func RevealFromHandCost(filter CardFilter, label string) Cost {
+	return &revealFromHandCost{filter: filter, label: label}
+}
+
+func (c *revealFromHandCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+	p := g.GetPlayer(controller)
+	if p == nil {
+		return false
+	}
+	for _, card := range p.Hand() {
+		// Skip the card currently being cast (it is no longer in hand
+		// by the time costs are paid, but defensively skip).
+		if card.ID() == sourceID {
+			continue
+		}
+		if c.filter.IsZero() || c.filter.Match(card) {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *revealFromHandCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
+	p := g.GetPlayer(controller)
+	if p == nil {
+		return ErrPlayerNotFound
+	}
+	var matches []Card
+	for _, card := range p.Hand() {
+		if card.ID() == sourceID {
+			continue
+		}
+		if c.filter.IsZero() || c.filter.Match(card) {
+			matches = append(matches, card)
+		}
+	}
+	if len(matches) == 0 {
+		return fmt.Errorf("no matching card to reveal")
+	}
+	// Use ChooseCardsFromHand to pick one. For TestPlayer this routes
+	// through scripted choices; for BasePlayer it returns the first.
+	// We delegate the picking by passing the matches as if they were a
+	// standalone hand via ChooseFromCards on the player when available;
+	// otherwise pick the first match.
+	chosen := matches[0]
+	if cp, ok := p.(interface {
+		ChooseFromCards(cards []Card, reason string) Card
+	}); ok {
+		if c2 := cp.ChooseFromCards(matches, c.label); c2 != nil {
+			chosen = c2
+		}
+	}
+	// Reveal the card; no zone change (CR 701.16). The card stays in
+	// hand. Engine clients can observe the reveal via [Game.LastCostReveal].
+	g.lastCostReveal = chosen
+	return nil
+}
+
+// LastCostReveal returns the most recently revealed card from a
+// [RevealFromHandCost] payment, or nil if none.
+func (g *Game) LastCostReveal() Card { return g.lastCostReveal }
+
+func (c *revealFromHandCost) Text() string {
+	if c.label != "" {
+		return c.label
+	}
+	return "Reveal a card from your hand"
+}
+
+// eitherCost is a branching additional cost: the controller chooses one of
+// several alternatives at pay time. Used for "as an additional cost,
+// discard a card or pay {N}" and similar OR-style additional costs.
+type eitherCost struct {
+	options []Cost
+}
+
+// EitherCost creates a branching cost that lets the controller pick which
+// underlying cost to pay (CR 118.1 — "or" in cost text). All options are
+// tried during CanPay; payment routes to the option chosen by the player
+// via ChooseMode. If only one option is payable, that one is selected
+// automatically.
+//
+// Example: "As an additional cost, discard a card or pay {5}." →
+// EitherCost(DiscardCost(1), ManaCostOf("{5}")).
+func EitherCost(options ...Cost) Cost {
+	return &eitherCost{options: options}
+}
+
+func (c *eitherCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+	for _, opt := range c.options {
+		if opt.CanPay(sourceID, controller, g) {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *eitherCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
+	var payable []int
+	var labels []string
+	for i, opt := range c.options {
+		if opt.CanPay(sourceID, controller, g) {
+			payable = append(payable, i)
+			labels = append(labels, opt.Text())
+		}
+	}
+	if len(payable) == 0 {
+		return fmt.Errorf("no payable option")
+	}
+	if len(payable) == 1 {
+		return c.options[payable[0]].Pay(sourceID, controller, g)
+	}
+	p := g.GetPlayer(controller)
+	if p == nil {
+		return ErrPlayerNotFound
+	}
+	choice := p.ChooseMode(labels, c.Text())
+	if choice < 0 || choice >= len(payable) {
+		choice = 0
+	}
+	return c.options[payable[choice]].Pay(sourceID, controller, g)
+}
+
+func (c *eitherCost) Text() string {
+	var parts strings.Builder
+	for i, opt := range c.options {
+		if i > 0 {
+			parts.WriteString(" or ")
+		}
+		parts.WriteString(opt.Text())
+	}
+	return parts.String()
 }
 
 // exileFromGraveyardCost requires exiling cards from your graveyard.
@@ -521,10 +679,12 @@ func (c *discardRandomCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	}
 	for i := 0; i < c.amount; i++ {
 		hand = p.Hand()
+		if len(hand) == 0 {
+			break
+		}
 		idx := rand.Intn(len(hand))
 		card := hand[idx]
-		p.RemoveFromHand(card.ID())
-		p.AddToGraveyard(card)
+		g.PlayerDiscard(p, card.ID())
 	}
 	return nil
 }

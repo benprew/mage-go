@@ -470,8 +470,11 @@ func TestLich(t *testing.T) {
 	})
 
 	t.Run("damage_sacrifices_permanents", func(t *testing.T) {
-		// Lich: If you would take damage, instead sacrifice that many nontoken
-		// permanents. If you can't, you lose the game.
+		// Lich: 3 damage -> sacrifice 3 permanents. With only Lich + 2 Plains
+		// = 3 permanents available, all are sacrificed including Lich.
+		// Sacrificing Lich is a battlefield -> graveyard transition (CR 700.4),
+		// which fires the "When Lich is put into a graveyard, you lose the
+		// game" trigger.
 		g := gametest.NewTestGame(t)
 		g.SetLife(gametest.PlayerA, 0)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Lich")
@@ -480,8 +483,9 @@ func TestLich(t *testing.T) {
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "PlayerA")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		// 3 damage -> sacrifice 3 permanents. Only Lich + 2 Plains = 3 total.
-		g.AssertLife(gametest.PlayerA, 0) // Lich prevents life loss
+		// All 3 permanents sacrificed; Lich's lose-game trigger fired.
+		g.AssertGraveyardCount(gametest.PlayerA, "Lich", 1)
+		g.AssertWinner(gametest.PlayerB)
 	})
 
 	t.Run("lose_when_lich_leaves", func(t *testing.T) {

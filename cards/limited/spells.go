@@ -38,8 +38,8 @@ func registerSpells() {
 		c := NewInstant("Healing Salve", "{W}",
 			NewTargetedSpell(TargetAnyTarget(), ModalEffect(
 				"target player gains 3 life or prevent the next 3 damage that would be dealt to any target this turn",
-				UnwrapEffect(GainLifeTarget(Fixed(3))),
-				UnwrapEffect(PreventDamageToTarget(Fixed(3))),
+				GainLifeTarget(Fixed(3)),
+				PreventDamageToTarget(Fixed(3)),
 			)),
 		)
 		c.SetModes([]string{

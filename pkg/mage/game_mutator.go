@@ -23,7 +23,9 @@ type GameReader interface {
 	XValue() int
 	ModeValue() int
 	EventAmount() int
+	EventSourceID() uuid.UUID
 	GetResolvingCard() Card
+	ResolvingCastZone() Zone
 	FindStackObject(uuid.UUID) *StackObject
 	CombatGroups() []*CombatGroup
 	CombatGroupFor(uuid.UUID) *CombatGroup
@@ -37,11 +39,13 @@ type GameReader interface {
 	GetBlockedThisTurn(uuid.UUID) []uuid.UUID
 	GetInstantsCastThisTurn(uuid.UUID) int
 	UntappedLandsAtTurnStart(uuid.UUID) int
+	TimesTargetedThisTurn(uuid.UUID) int
 	AllBattlefield() []*Permanent
 	GetResolvingTargets() []uuid.UUID
 	FindPermanentIncludingPhased(uuid.UUID) *Permanent
 	GetArtifactUntapMax() int
 	ActivePlayerIndex() int
+	CombatDamageSourcesThisStep(controllerID, recipientID uuid.UUID) map[uuid.UUID]int
 	HypotheticalMana(uuid.UUID) int // returns the amount of hypthetical mana a player has available
 }
 
@@ -62,8 +66,21 @@ func (g *Game) ModeValue() int { return g.currentMode }
 // EventAmount returns the amount from the triggering event (e.g. damage dealt).
 func (g *Game) EventAmount() int { return g.currentEventAmount }
 
+// EventSourceID returns the SourceID of the event that triggered the
+// currently-resolving triggered ability. For an EvtDamageDealt trigger,
+// this is the damager's permanent ID. Returns uuid.Nil when there is no
+// trigger context (e.g. spell resolution).
+func (g *Game) EventSourceID() uuid.UUID { return g.currentEventSourceID }
+
 // GetResolvingCard returns the card currently being resolved from the stack.
 func (g *Game) GetResolvingCard() Card { return g.resolvingCard }
+
+// ResolvingCastZone returns the zone the resolving spell was cast from
+// (CR 601.2a). Returns ZoneAny when no spell is resolving or the resolving
+// stack object is an ability rather than a spell. Read by triggers expressing
+// "if you cast it from your hand"/"from your graveyard" conditions, including
+// ETB triggers that fire while PutOnBattlefield is in flight.
+func (g *Game) ResolvingCastZone() Zone { return g.resolvingCastZone }
 
 // FindStackObject finds a stack object by its source card ID.
 func (g *Game) FindStackObject(id uuid.UUID) *StackObject {
@@ -327,6 +344,77 @@ func (g *Game) AddReplacementEffect(r ReplacementEffect) {
 	g.effects.AddReplacement(r)
 }
 
+// AddCountersWithReplacement places counters on a permanent after running the
+// counter-placement replacement pipeline (CR 614). This is the API engine
+// effects should use for counter placement so doubling effects (Branching
+// Evolution) and "enters with an additional counter" effects (Oona's
+// Blackguard) can intercept the placement. Direct calls to
+// Permanent.AddCounter bypass the pipeline and are reserved for replacement
+// implementations themselves and very low-level mechanics (Vanishing's Time
+// counters, etc.).
+//
+// sourceID identifies the spell/ability/permanent causing the placement.
+// onEntry must be true exactly when the placement happens during the
+// permanent's enter-the-battlefield resolution, before EvtEntersBattlefield
+// fires (used by EntersWithXCounters and EntersWithNCounters).
+func (g *Game) AddCountersWithReplacement(perm *Permanent, ct CounterType, n int, sourceID uuid.UUID, onEntry bool) {
+	if perm == nil || n <= 0 {
+		return
+	}
+	action := NewAddCountersAction(sourceID, perm.ID(), ct, n, onEntry)
+	result := g.effects.ApplyReplacements(action, g)
+	if result == nil {
+		return
+	}
+	aca, ok := result.(*AddCountersAction)
+	if !ok {
+		return
+	}
+	target := g.FindPermanent(aca.PermanentID())
+	if target == nil {
+		// During PutOnBattlefield the permanent isn't yet on the
+		// battlefield slice; fall back to the caller-supplied pointer when
+		// the IDs match (ETB additional/doubling for the same permanent).
+		if perm.ID() == aca.PermanentID() {
+			target = perm
+		}
+	}
+	if target == nil {
+		return
+	}
+	if aca.Amount() > 0 {
+		target.AddCounter(aca.CounterType(), aca.Amount())
+	}
+}
+
+// AddCounterDoubler registers a counter-doubling replacement effect (CR
+// 614.1c) for the given counter type. The filter restricts which permanents
+// the doubler applies to (e.g. ControlledBy(playerID) for Branching
+// Evolution). Pass an empty PermanentFilter to apply globally (Doubling
+// Season-style for a specific counter type).
+func (g *Game) AddCounterDoubler(sourceID uuid.UUID, ct CounterType, filter PermanentFilter) {
+	g.effects.AddReplacement(&counterDoublerReplacement{
+		replacementBase: replacementBase{sourceID: sourceID, duration: WhileOnBattlefield},
+		counterType:     ct,
+		filter:          filter,
+	})
+}
+
+// AddETBAdditionalCounters registers a replacement that puts N additional
+// counters of the given type on each permanent matching filter as it enters
+// the battlefield. excludeSelf=true keeps the source out of its own filter
+// (e.g. "Each other Rogue creature you control enters with an additional
+// +1/+1 counter on it").
+func (g *Game) AddETBAdditionalCounters(sourceID uuid.UUID, ct CounterType, extra int, filter PermanentFilter, excludeSelf bool) {
+	g.effects.AddReplacement(&etbAdditionalCountersReplacement{
+		replacementBase: replacementBase{sourceID: sourceID, duration: WhileOnBattlefield},
+		counterType:     ct,
+		extra:           extra,
+		filter:          filter,
+		excludeSelf:     excludeSelf,
+	})
+}
+
 // SetArtifactManaOnly marks a player as having artifact-only mana restriction active.
 func (g *Game) SetArtifactManaOnly(playerID uuid.UUID) {
 	if g.artifactManaOnly == nil {
@@ -576,7 +664,6 @@ func (g *Game) ExecuteBlockers(assignments []BlockAssignment) {
 		return
 	}
 	blockerCount := make(map[uuid.UUID]int)
-	var blockerOrder []uuid.UUID
 	for _, ba := range assignments {
 		blocker := g.FindPermanent(ba.BlockerID)
 		attacker := g.FindPermanent(ba.AttackerID)
@@ -595,9 +682,7 @@ func (g *Game) ExecuteBlockers(assignments []BlockAssignment) {
 		if blockerCount[ba.BlockerID] >= maxBlocks {
 			continue
 		}
-		if blockerCount[ba.BlockerID] == 0 {
-			blockerOrder = append(blockerOrder, ba.BlockerID)
-		}
+		firstForBlocker := blockerCount[ba.BlockerID] == 0
 		blockerCount[ba.BlockerID]++
 		g.combat.AddBlocker(ba.BlockerID, ba.AttackerID)
 		g.blockedThisTurn[ba.BlockerID] = append(g.blockedThisTurn[ba.BlockerID], ba.AttackerID)
@@ -605,12 +690,7 @@ func (g *Game) ExecuteBlockers(assignments []BlockAssignment) {
 			Type:     EvtDeclaredBlocker,
 			SourceID: ba.BlockerID,
 			TargetID: ba.AttackerID,
-		})
-	}
-	for _, blockerID := range blockerOrder {
-		g.FireEvent(GameEvent{
-			Type:     EvtCreatureBlocks,
-			SourceID: blockerID,
+			Flag:     firstForBlocker,
 		})
 	}
 	g.combat.SnapshotBlockedAlone()
@@ -622,7 +702,9 @@ func (g *Game) ExecuteCombatDamage() {
 	if g.combat.HasFirstStrikers(g) {
 		g.combat.ResolveDamage(g, true)
 		g.CheckStateBasedActions()
+		g.flushCombatDamageAggregator()
 	}
 	g.combat.ResolveDamage(g, false)
 	g.resolvingCombatDamage = false
+	g.flushCombatDamageAggregator()
 }

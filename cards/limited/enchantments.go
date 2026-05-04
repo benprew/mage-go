@@ -369,7 +369,7 @@ func registerEnchantments() {
 			WithAbility(BeginningOfUpkeepTrigger(
 				IfElse("you may pay {W}{W} to gain 1 life",
 					&TryPayManaCond{Cost: "{W}{W}"},
-					UnwrapEffect(GainLife(1)),
+					GainLife(1),
 					nil,
 				), false)),
 		)

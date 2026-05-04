@@ -16,8 +16,8 @@ func UntapTarget() Effect {
 	return &untapTargetEffect{}
 }
 
-// UntapTargetStep returns the EffectData for use as a pipeline/ForEach inner step.
-func UntapTargetStep() EffectData { return &untapTargetEffect{} }
+// UntapTargetStep returns the Effect for use as a pipeline/ForEach inner step.
+func UntapTargetStep() Effect { return &untapTargetEffect{} }
 
 func (e *untapTargetEffect) Text() string { return "untap target permanent" }
 func (e *untapTargetEffect) Properties() EffectProperties {

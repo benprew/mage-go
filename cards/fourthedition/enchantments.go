@@ -40,7 +40,7 @@ func registerEnchantments() {
 	Register("Creature Bond", func() Card {
 		return NewAura("Creature Bond", "{1}{U}",
 			WithAbility(
-				NewTriggered(EvtCreatureDied, false,
+				NewTriggered(EvtZoneChange, false,
 					FuncEffect(
 						"deal damage equal to creature's toughness to its controller",
 						EffectProperties{Outcome: OutcomeDetriment},
@@ -60,7 +60,11 @@ func registerEnchantments() {
 							return nil
 						},
 					),
-				).SetConditionData(SourceIsAttachedToEventSource{}),
+				).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+					EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard},
+					EventSourceWasOfType{Type: TypeCreature},
+					SourceIsAttachedToEventSource{},
+				}}),
 			),
 		)
 	})

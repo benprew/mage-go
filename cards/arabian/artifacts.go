@@ -128,8 +128,8 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				IfElse("flip coin: 5/5 Djinn or 5 damage",
 					&FlipCoinCond{},
-					UnwrapEffect(CreateToken("Djinn", 5, 5, []CardType{TypeArtifact, TypeCreature}, []string{"Djinn"}, Flying)),
-					UnwrapEffect(DealDamageToPlayers(Fixed(5), SelectController())),
+					CreateToken("Djinn", 5, 5, []CardType{TypeArtifact, TypeCreature}, []string{"Djinn"}, Flying),
+					DealDamageToPlayers(Fixed(5), SelectController()),
 				),
 				ManaCostOf("{1}"),
 				WithCost(SacrificeSourceCost()),
@@ -166,7 +166,7 @@ func registerArtifacts() {
 			),
 			// Whenever any nontoken Arabian Nights permanent enters (not self), sacrifice it
 			WithAbility(
-				NewTriggered(EvtEntersBattlefield, false,
+				NewTriggered(EvtZoneChange, false,
 					// TODO: convert to pipeline — needs ForEach with nontoken + set filter + sacrifice-excluding-self
 					FuncEffect("sacrifice entering Arabian Nights permanent",
 						EffectProperties{Outcome: OutcomeDetriment},
@@ -192,7 +192,7 @@ func registerArtifacts() {
 							return false
 						}
 						return catalog.Global().CardInSet("ARN", perm.Name()) && !perm.IsToken
-					}),
+					}).AndConditionData(EventZoneChangeMatches{From: ZoneAny, To: ZoneBattlefield}),
 			),
 			// Continuous: block casting/playing Arabian Nights cards
 			WithStaticAbility(
@@ -363,8 +363,10 @@ func registerArtifacts() {
 					SnapshotPermanent(SelectTarget, "t"),
 					GrantKeyword(Islandwalk),
 					&RegisterDelayedTriggerData{
-						EventType:     EvtCreatureDied,
+						EventType:     EvtZoneChange,
 						MatchEventVar: "t",
+						MatchFromZone: ZoneBattlefield,
+						MatchToZone:   ZoneGraveyard,
 						Effects:       []Effect{DestroyTarget()},
 					},
 				),

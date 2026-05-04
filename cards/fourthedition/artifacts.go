@@ -18,12 +18,12 @@ func registerArtifacts() {
 	Register("Dingus Egg", func() Card {
 		return NewArtifact("Dingus Egg", "{4}",
 			WithAbility(
-				NewTriggered(EvtPutIntoGraveyardFromBattlefield, false,
-					DealDamageToPlayers(Fixed(2), SelectEventController()),
+				NewTriggered(EvtZoneChange, false,
+					DealDamageToPlayers(Fixed(2), SelectTargetPermanentController()),
 				).SetCondition(func(evt *GameEvent, g GameReader, _, _ uuid.UUID) bool {
 					card := g.FindCardAnywhere(evt.SourceID)
 					return card != nil && card.HasType(TypeLand)
-				}),
+				}).AndConditionData(EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard}),
 			),
 		)
 	})

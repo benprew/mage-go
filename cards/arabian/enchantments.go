@@ -184,7 +184,7 @@ func registerEnchantments() {
 			),
 			// When the chosen player controls no nontoken permanents of the chosen color, sacrifice Jihad
 			WithAbility(
-				NewTriggered(EvtLeavesBattlefield, false,
+				NewTriggered(EvtZoneChange, false,
 					SacrificeSource(),
 				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 					perm := g.FindPermanent(sourceID)
@@ -204,7 +204,7 @@ func registerEnchantments() {
 						}
 					}
 					return true
-				}),
+				}).AndConditionData(EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneAny}),
 			),
 		)
 	})
@@ -231,10 +231,12 @@ func registerEnchantments() {
 					src.ControlledPermanent = targetID
 					// Register delayed trigger: when Oubliette leaves, phase creature back in
 					g.RegisterDelayedTrigger(&DelayedTrigger{
-						EventType:    EvtLeavesBattlefield,
-						MatchEventID: sourceID,
-						SourceID:     sourceID,
-						Controller:   controller,
+						EventType:     EvtZoneChange,
+						MatchEventID:  sourceID,
+						MatchFromZone: ZoneBattlefield,
+						MatchToZone:   ZoneAny,
+						SourceID:      sourceID,
+						Controller:    controller,
 						Effects: []Effect{FuncEffect("phase in creature",
 							EffectProperties{Outcome: OutcomeBenefit},
 							func(g *Game, _, _ uuid.UUID, _ []uuid.UUID) error {

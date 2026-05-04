@@ -93,6 +93,7 @@ extern char* MageStep(int64_t id, char* actionJSON);
 extern void MageFree(int64_t id);
 extern void MageFreeString(char* s);
 extern char* MageRegisteredCards();
+extern char* MageRegisteredManaCosts();
 extern char* MageSetCardNameRows(char* cardNameRowsJSON);
 extern MageEncodeResult MageBatchPoll(MageBatchRequest* req, MageBatchPollOutputs* out);
 extern MageEncodeResult MageBatchStepByChoice(MageStepChoiceRequest* req);

@@ -264,6 +264,11 @@ func CanBlock(blocker, attacker *Permanent, g *Game) bool {
 	if g.effects.IsBlockPrevented(blocker.ID(), attacker.ID()) {
 		return false
 	}
+	// Filter-based "can't be blocked except by X" / "can block only X" rules
+	// (CR 509.1b). Source: combat_restrictions.go.
+	if !g.effects.passesCombatRestrictions(blocker, attacker, g) {
+		return false
+	}
 	// Defender creatures can't attack (checked elsewhere), but they CAN block.
 	// Protection: creature with protection from X can't be blocked by X
 	if attacker.HasProtectionFrom(blocker.Card) {
@@ -316,6 +321,18 @@ func HasLandwalkEvasion(attacker *Permanent, defenderID uuid.UUID, g *Game) bool
 	return false
 }
 
+// combatDamageValue returns the amount of damage a creature assigns in combat:
+// its toughness if AttrAssignsDamageEqualToToughness is set (Doran the Siege
+// Tower, Assault Formation), otherwise its power. CR 702.x: such effects do
+// not change the creature's power; they only change the value used for combat
+// damage assignment.
+func combatDamageValue(p *Permanent, g *Game) int {
+	if p.HasAttr(AttrAssignsDamageEqualToToughness) {
+		return p.CurrentToughness(g)
+	}
+	return p.CurrentPower(g)
+}
+
 // ResolveDamage executes combat damage for all combat groups. It replaces the
 // old Game.DoCombatDamage method and operates on the Combat receiver so the
 // logic lives alongside the rest of the combat state.
@@ -348,7 +365,7 @@ func (c *Combat) ResolveDamage(g *Game, isFirstStrikeStep bool) {
 			if c.DealsDamageInStep(atk, isFirstStrikeStep) {
 				defender := g.GetPlayer(group.DefenderID)
 				if defender != nil {
-					dmg := atk.CurrentPower(g)
+					dmg := combatDamageValue(atk, g)
 					g.DealDamageToPlayer(defender, dmg, atk.ID())
 				}
 			}
@@ -392,7 +409,7 @@ func (c *Combat) isBlockingBand(g *Game, blockerIDs []uuid.UUID) bool {
 // doNormalBlockedDamage handles blocked combat for a single non-banded attacker.
 func (c *Combat) doNormalBlockedDamage(g *Game, atk *Permanent, group *CombatGroup, isFirstStrikeStep bool) {
 	if c.DealsDamageInStep(atk, isFirstStrikeStep) {
-		atkPower := atk.CurrentPower(g)
+		atkPower := combatDamageValue(atk, g)
 		// Order: ask attacker controller (CR 510.1c) for the damage-assignment
 		// order. Default is the BlockerIDs order recorded at block declaration.
 		orderedIDs := group.BlockerIDs
@@ -474,7 +491,7 @@ func (c *Combat) doNormalBlockedDamage(g *Game, atk *Permanent, group *CombatGro
 			continue
 		}
 		if c.DealsDamageInStep(blk, isFirstStrikeStep) {
-			g.DealDamageToPermanent(atk, blk.CurrentPower(g), blk.ID())
+			g.DealDamageToPermanent(atk, combatDamageValue(blk, g), blk.ID())
 		}
 	}
 }
@@ -559,7 +576,7 @@ func (c *Combat) doBlockingBandDamage(g *Game, atk *Permanent, group *CombatGrou
 
 	// Attacker deals damage — defending player distributes it across the blocking band.
 	if c.DealsDamageInStep(atk, isFirstStrikeStep) {
-		atkPower := atk.CurrentPower(g)
+		atkPower := combatDamageValue(atk, g)
 
 		var defendingPlayerID uuid.UUID
 		if len(blockerPerms) > 0 {
@@ -617,7 +634,7 @@ func (c *Combat) doBlockingBandDamage(g *Game, atk *Permanent, group *CombatGrou
 	// Each blocker still deals its own damage to the attacker.
 	for _, blk := range blockerPerms {
 		if c.DealsDamageInStep(blk, isFirstStrikeStep) {
-			g.DealDamageToPermanent(atk, blk.CurrentPower(g), blk.ID())
+			g.DealDamageToPermanent(atk, combatDamageValue(blk, g), blk.ID())
 		}
 	}
 }
@@ -671,7 +688,7 @@ func (c *Combat) doBandedAttackDamage(g *Game, bandMemberIDs []uuid.UUID, defend
 			if !c.DealsDamageInStep(member, isFirstStrikeStep) {
 				continue
 			}
-			dmg := member.CurrentPower(g)
+			dmg := combatDamageValue(member, g)
 			if dmg <= 0 {
 				continue
 			}
@@ -696,7 +713,7 @@ func (c *Combat) doBandedAttackDamage(g *Game, bandMemberIDs []uuid.UUID, defend
 			continue
 		}
 		if c.DealsDamageInStep(member, isFirstStrikeStep) {
-			totalBandPower += member.CurrentPower(g)
+			totalBandPower += combatDamageValue(member, g)
 			if primaryAttacker == nil {
 				primaryAttacker = member
 			}
@@ -733,7 +750,7 @@ func (c *Combat) doBandedAttackDamage(g *Game, bandMemberIDs []uuid.UUID, defend
 	for _, bid := range allBlockerIDs {
 		blk := g.FindPermanent(bid)
 		if blk != nil && c.DealsDamageInStep(blk, isFirstStrikeStep) {
-			totalIncoming += blk.CurrentPower(g)
+			totalIncoming += combatDamageValue(blk, g)
 		}
 	}
 

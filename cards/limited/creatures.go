@@ -481,7 +481,7 @@ func registerCreatures() {
 				"deal 8 damage unless you pay {G}{G}{G}{G}",
 				&TryPayManaCond{Cost: "{G}{G}{G}{G}"},
 				nil,
-				UnwrapEffect(DealDamageToPlayers(Fixed(8), SelectController())),
+				DealDamageToPlayers(Fixed(8), SelectController()),
 			)).SetConditionData(EventPlayerIsController{})),
 		)
 	})
