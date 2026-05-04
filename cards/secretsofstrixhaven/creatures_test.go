@@ -597,7 +597,7 @@ func TestMatterbendingMage_XSpellCantBeBlocked(t *testing.T) {
 	g.StopAt(1, core.EndStep)
 	g.Execute()
 	// Matterbending Mage can't be blocked, so it attacks through unblocked
-	g.AssertLife(gametest.PlayerB, 14) // bolt damage + mage damage
+	g.AssertLife(gametest.PlayerB, 15) // Fireball X=3 deals 3 damage + Mage 2/2 deals 2 unblocked = 5 total
 }
 
 // TestMindfulBiomancer_ETBGainsLife verifies that when Mindful Biomancer enters,
@@ -616,7 +616,7 @@ func TestMindfulBiomancer_ActivatedBoost(t *testing.T) {
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mindful Biomancer")
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 3)
 	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Mindful Biomancer")
-	g.StopAt(1, core.PrecombatMain)
+	g.StopAt(1, core.EndStep)
 	g.Execute()
 	g.AssertPowerToughness(gametest.PlayerA, "Mindful Biomancer", 4, 4)
 }

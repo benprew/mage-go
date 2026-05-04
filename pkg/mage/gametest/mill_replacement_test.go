@@ -67,7 +67,7 @@ func TestMillReplacement_DoublesOpponent(t *testing.T) {
 	tg.StopAt(1, core.EndStep)
 	tg.Execute()
 
-	tg.AssertGraveyardCount(PlayerB, "Plains", 6)
+	tg.AssertGraveyardCount(PlayerB, "Filler", 6)
 }
 
 // TestMillReplacement_SkipsController verifies the doubling does not apply
@@ -89,5 +89,5 @@ func TestMillReplacement_SkipsController(t *testing.T) {
 	tg.StopAt(1, core.EndStep)
 	tg.Execute()
 
-	tg.AssertGraveyardCount(PlayerA, "Plains", 3)
+	tg.AssertGraveyardCount(PlayerA, "Filler", 3)
 }

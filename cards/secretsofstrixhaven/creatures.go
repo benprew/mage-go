@@ -93,12 +93,12 @@ func registerCreatures() {
 
 	// ===== WHITE CREATURES =====
 
-// Ascendant Dustspeaker {4}{W}
-// Creature — Orc Cleric
-// 3/4
-// Flying
-// When this creature enters, put a +1/+1 counter on another target creature you control.
-// At the beginning of combat on your turn, exile up to one target card from a graveyard.
+	// Ascendant Dustspeaker {4}{W}
+	// Creature — Orc Cleric
+	// 3/4
+	// Flying
+	// When this creature enters, put a +1/+1 counter on another target creature you control.
+	// At the beginning of combat on your turn, exile up to one target card from a graveyard.
 	Register("Ascendant Dustspeaker", func() Card {
 		return NewCreature("Ascendant Dustspeaker", "{4}{W}", 3, 4,
 			WithSubTypes("Orc", "Cleric"),
@@ -142,10 +142,10 @@ func registerCreatures() {
 		)
 	})
 
-// Eager Glyphmage {3}{W}
-// Creature — Cat Cleric
-// 3/3
-// When this creature enters, create a 1/1 white and black Inkling creature token with flying.
+	// Eager Glyphmage {3}{W}
+	// Creature — Cat Cleric
+	// 3/3
+	// When this creature enters, create a 1/1 white and black Inkling creature token with flying.
 	Register("Eager Glyphmage", func() Card {
 		return NewCreature("Eager Glyphmage", "{3}{W}", 3, 3,
 			WithSubTypes("Cat", "Cleric"),
@@ -161,31 +161,31 @@ func registerCreatures() {
 		)
 	})
 
-// Elite Interceptor // Rejoinder {W} // {1}{W}
-// Creature — Human Wizard // Sorcery
-// 1/2
-// TODO: implement
+	// Elite Interceptor // Rejoinder {W} // {1}{W}
+	// Creature — Human Wizard // Sorcery
+	// 1/2
+	// TODO: implement
 	Register("Elite Interceptor // Rejoinder", func() Card {
 		return NewCreature("Elite Interceptor // Rejoinder", "{W} // {1}{W}", 1, 2,
 			WithSubTypes("Human", "Wizard", "//", "Sorcery"),
 		)
 	})
 
-// Emeritus of Truce // Swords to Plowshares {1}{W}{W} // {W}
-// Creature — Cat Cleric // Instant
-// 3/3
-// TODO: implement
+	// Emeritus of Truce // Swords to Plowshares {1}{W}{W} // {W}
+	// Creature — Cat Cleric // Instant
+	// 3/3
+	// TODO: implement
 	Register("Emeritus of Truce // Swords to Plowshares", func() Card {
 		return NewCreature("Emeritus of Truce // Swords to Plowshares", "{1}{W}{W} // {W}", 3, 3,
 			WithSubTypes("Cat", "Cleric", "//", "Instant"),
 		)
 	})
 
-// Ennis, Debate Moderator {1}{W}
-// Legendary Creature — Human Cleric
-// 1/1
-// When Ennis enters, exile up to one other target creature you control. Return that card to the battlefield under its owner's control at the beginning of the next end step.
-// At the beginning of your end step, if one or more cards were put into exile this turn, put a +1/+1 counter on Ennis.
+	// Ennis, Debate Moderator {1}{W}
+	// Legendary Creature — Human Cleric
+	// 1/1
+	// When Ennis enters, exile up to one other target creature you control. Return that card to the battlefield under its owner's control at the beginning of the next end step.
+	// At the beginning of your end step, if one or more cards were put into exile this turn, put a +1/+1 counter on Ennis.
 	Register("Ennis, Debate Moderator", func() Card {
 		return NewCreature("Ennis, Debate Moderator", "{1}{W}", 1, 1,
 			WithSubTypes("Human", "Cleric"),
@@ -201,56 +201,56 @@ func registerCreatures() {
 		)
 	})
 
-// Honorbound Page // Forum's Favor {3}{W} // {W}
-// Creature — Cat Cleric // Sorcery
-// 3/3
-// TODO: implement
+	// Honorbound Page // Forum's Favor {3}{W} // {W}
+	// Creature — Cat Cleric // Sorcery
+	// 3/3
+	// TODO: implement
 	Register("Honorbound Page // Forum's Favor", func() Card {
 		return NewCreature("Honorbound Page // Forum's Favor", "{3}{W} // {W}", 3, 3,
 			WithSubTypes("Cat", "Cleric", "//", "Sorcery"),
 		)
 	})
 
-// Informed Inkwright {1}{W}
-// Creature — Human Wizard
-// 2/2
-// Vigilance
-// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, create a 1/1 white and black Inkling creature token with flying.
-// TODO: implement
+	// Informed Inkwright {1}{W}
+	// Creature — Human Wizard
+	// 2/2
+	// Vigilance
+	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, create a 1/1 white and black Inkling creature token with flying.
+	// TODO: implement
 	Register("Informed Inkwright", func() Card {
 		return NewCreature("Informed Inkwright", "{1}{W}", 2, 2,
 			WithSubTypes("Human", "Wizard"),
 		)
 	})
 
-// Inkshape Demonstrator {3}{W}
-// Creature — Elephant Cleric
-// 3/4
-// Ward {2} (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {2}.)
-// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, this creature gets +1/+0 and gains lifelink until end of turn.
-// TODO: implement
+	// Inkshape Demonstrator {3}{W}
+	// Creature — Elephant Cleric
+	// 3/4
+	// Ward {2} (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {2}.)
+	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, this creature gets +1/+0 and gains lifelink until end of turn.
+	// TODO: implement
 	Register("Inkshape Demonstrator", func() Card {
 		return NewCreature("Inkshape Demonstrator", "{3}{W}", 3, 4,
 			WithSubTypes("Elephant", "Cleric"),
 		)
 	})
 
-// Joined Researchers // Secret Rendezvous {1}{W} // {1}{W}{W}
-// Creature — Human Cleric Wizard // Sorcery
-// 2/2
-// TODO: implement
+	// Joined Researchers // Secret Rendezvous {1}{W} // {1}{W}{W}
+	// Creature — Human Cleric Wizard // Sorcery
+	// 2/2
+	// TODO: implement
 	Register("Joined Researchers // Secret Rendezvous", func() Card {
 		return NewCreature("Joined Researchers // Secret Rendezvous", "{1}{W} // {1}{W}{W}", 2, 2,
 			WithSubTypes("Human", "Cleric", "Wizard", "//", "Sorcery"),
 		)
 	})
 
-// Owlin Historian {2}{W}
-// Creature — Bird Cleric
-// 2/3
-// Flying
-// When this creature enters, surveil 1. (Look at the top card of your library. You may put it into your graveyard.)
-// Whenever one or more cards leave your graveyard, this creature gets +1/+1 until end of turn.
+	// Owlin Historian {2}{W}
+	// Creature — Bird Cleric
+	// 2/3
+	// Flying
+	// When this creature enters, surveil 1. (Look at the top card of your library. You may put it into your graveyard.)
+	// Whenever one or more cards leave your graveyard, this creature gets +1/+1 until end of turn.
 	Register("Owlin Historian", func() Card {
 		return NewCreature("Owlin Historian", "{2}{W}", 2, 3,
 			WithSubTypes("Bird", "Cleric"),
@@ -262,168 +262,167 @@ func registerCreatures() {
 		)
 	})
 
-// Quill-Blade Laureate // Twofold Intent {1}{W} // {1}{W}
-// Creature — Human Cleric // Sorcery
-// 1/1
-// TODO: implement
+	// Quill-Blade Laureate // Twofold Intent {1}{W} // {1}{W}
+	// Creature — Human Cleric // Sorcery
+	// 1/1
+	// TODO: implement
 	Register("Quill-Blade Laureate // Twofold Intent", func() Card {
 		return NewCreature("Quill-Blade Laureate // Twofold Intent", "{1}{W} // {1}{W}", 1, 1,
 			WithSubTypes("Human", "Cleric", "//", "Sorcery"),
 		)
 	})
 
-// Rehearsed Debater {2}{W}
-// Creature — Djinn Bard
-// 3/3
-// Vigilance
-// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, this creature gets +1/+1 until end of turn.
-// TODO: implement
+	// Rehearsed Debater {2}{W}
+	// Creature — Djinn Bard
+	// 3/3
+	// Vigilance
+	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, this creature gets +1/+1 until end of turn.
+	// TODO: implement
 	Register("Rehearsed Debater", func() Card {
 		return NewCreature("Rehearsed Debater", "{2}{W}", 3, 3,
 			WithSubTypes("Djinn", "Bard"),
 		)
 	})
 
-// Shattered Acolyte {1}{W}
-// Creature — Dwarf Warlock
-// 2/2
-// Lifelink
-// {1}, Sacrifice this creature: Destroy target artifact or enchantment.
-// TODO: implement
+	// Shattered Acolyte {1}{W}
+	// Creature — Dwarf Warlock
+	// 2/2
+	// Lifelink
+	// {1}, Sacrifice this creature: Destroy target artifact or enchantment.
+	// TODO: implement
 	Register("Shattered Acolyte", func() Card {
 		return NewCreature("Shattered Acolyte", "{1}{W}", 2, 2,
 			WithSubTypes("Dwarf", "Warlock"),
 		)
 	})
 
-// Soaring Stoneglider {2}{W}
-// Creature — Elephant Cleric
-// 4/3
-// As an additional cost to cast this spell, exile two cards from your graveyard or pay {1}{W}.
-// Flying, vigilance
-// TODO: implement
+	// Soaring Stoneglider {2}{W}
+	// Creature — Elephant Cleric
+	// 4/3
+	// As an additional cost to cast this spell, exile two cards from your graveyard or pay {1}{W}.
+	// Flying, vigilance
+	// TODO: implement
 	Register("Soaring Stoneglider", func() Card {
 		return NewCreature("Soaring Stoneglider", "{2}{W}", 4, 3,
 			WithSubTypes("Elephant", "Cleric"),
 		)
 	})
 
-// Spiritcall Enthusiast // Scrollboost {2}{W} // {1}{W}
-// Creature — Cat Cleric // Sorcery
-// 3/3
-// TODO: implement
+	// Spiritcall Enthusiast // Scrollboost {2}{W} // {1}{W}
+	// Creature — Cat Cleric // Sorcery
+	// 3/3
+	// TODO: implement
 	Register("Spiritcall Enthusiast // Scrollboost", func() Card {
 		return NewCreature("Spiritcall Enthusiast // Scrollboost", "{2}{W} // {1}{W}", 3, 3,
 			WithSubTypes("Cat", "Cleric", "//", "Sorcery"),
 		)
 	})
 
-// Stirring Hopesinger {2}{W}
-// Creature — Bird Bard
-// 1/3
-// Flying, lifelink
-// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, put a +1/+1 counter on each creature you control.
-// TODO: implement
+	// Stirring Hopesinger {2}{W}
+	// Creature — Bird Bard
+	// 1/3
+	// Flying, lifelink
+	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, put a +1/+1 counter on each creature you control.
+	// TODO: implement
 	Register("Stirring Hopesinger", func() Card {
 		return NewCreature("Stirring Hopesinger", "{2}{W}", 1, 3,
 			WithSubTypes("Bird", "Bard"),
 		)
 	})
 
-// Stone Docent {1}{W}
-// Creature — Spirit Chimera
-// 3/1
-// {W}, Exile this card from your graveyard: You gain 2 life. Surveil 1. Activate only as a sorcery. (Look at the top card of your library. You may put it into your graveyard.)
-// TODO: implement
+	// Stone Docent {1}{W}
+	// Creature — Spirit Chimera
+	// 3/1
+	// {W}, Exile this card from your graveyard: You gain 2 life. Surveil 1. Activate only as a sorcery. (Look at the top card of your library. You may put it into your graveyard.)
+	// TODO: implement
 	Register("Stone Docent", func() Card {
 		return NewCreature("Stone Docent", "{1}{W}", 3, 1,
 			WithSubTypes("Spirit", "Chimera"),
 		)
 	})
 
-// Summoned Dromedary {3}{W}
-// Creature — Spirit Camel
-// 4/3
-// Vigilance
-// {1}{W}: Return this card from your graveyard to your hand. Activate only as a sorcery.
-// TODO: implement
+	// Summoned Dromedary {3}{W}
+	// Creature — Spirit Camel
+	// 4/3
+	// Vigilance
+	// {1}{W}: Return this card from your graveyard to your hand. Activate only as a sorcery.
+	// TODO: implement
 	Register("Summoned Dromedary", func() Card {
 		return NewCreature("Summoned Dromedary", "{3}{W}", 4, 3,
 			WithSubTypes("Spirit", "Camel"),
 		)
 	})
 
-
 	// ===== BLUE CREATURES =====
 
-// Campus Composer // Aqueous Aria {3}{U} // {4}{U}
-// Creature — Merfolk Bard // Sorcery
-// 3/4
-// TODO: implement
+	// Campus Composer // Aqueous Aria {3}{U} // {4}{U}
+	// Creature — Merfolk Bard // Sorcery
+	// 3/4
+	// TODO: implement
 	Register("Campus Composer // Aqueous Aria", func() Card {
 		return NewCreature("Campus Composer // Aqueous Aria", "{3}{U} // {4}{U}", 3, 4,
 			WithSubTypes("Merfolk", "Bard", "//", "Sorcery"),
 		)
 	})
 
-// Deluge Virtuoso {2}{U}
-// Creature — Human Wizard
-// 2/2
-// When this creature enters, tap target creature an opponent controls and put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)
-// Opus — Whenever you cast an instant or sorcery spell, this creature gets +1/+1 until end of turn. If five or more mana was spent to cast that spell, this creature gets +2/+2 until end of turn instead.
-// TODO: implement
+	// Deluge Virtuoso {2}{U}
+	// Creature — Human Wizard
+	// 2/2
+	// When this creature enters, tap target creature an opponent controls and put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)
+	// Opus — Whenever you cast an instant or sorcery spell, this creature gets +1/+1 until end of turn. If five or more mana was spent to cast that spell, this creature gets +2/+2 until end of turn instead.
+	// TODO: implement
 	Register("Deluge Virtuoso", func() Card {
 		return NewCreature("Deluge Virtuoso", "{2}{U}", 2, 2,
 			WithSubTypes("Human", "Wizard"),
 		)
 	})
 
-// Emeritus of Ideation // Ancestral Recall {3}{U}{U} // {U}
-// Creature — Human Wizard // Instant
-// 5/5
-// TODO: implement
+	// Emeritus of Ideation // Ancestral Recall {3}{U}{U} // {U}
+	// Creature — Human Wizard // Instant
+	// 5/5
+	// TODO: implement
 	Register("Emeritus of Ideation // Ancestral Recall", func() Card {
 		return NewCreature("Emeritus of Ideation // Ancestral Recall", "{3}{U}{U} // {U}", 5, 5,
 			WithSubTypes("Human", "Wizard", "//", "Instant"),
 		)
 	})
 
-// Encouraging Aviator // Jump {2}{U} // {U}
-// Creature — Bird Wizard // Instant
-// 2/3
-// TODO: implement
+	// Encouraging Aviator // Jump {2}{U} // {U}
+	// Creature — Bird Wizard // Instant
+	// 2/3
+	// TODO: implement
 	Register("Encouraging Aviator // Jump", func() Card {
 		return NewCreature("Encouraging Aviator // Jump", "{2}{U} // {U}", 2, 3,
 			WithSubTypes("Bird", "Wizard", "//", "Instant"),
 		)
 	})
 
-// Exhibition Tidecaller {U}
-// Creature — Djinn Wizard
-// 0/2
-// Opus — Whenever you cast an instant or sorcery spell, target player mills three cards. If five or more mana was spent to cast that spell, that player mills ten cards instead.
-// TODO: implement
+	// Exhibition Tidecaller {U}
+	// Creature — Djinn Wizard
+	// 0/2
+	// Opus — Whenever you cast an instant or sorcery spell, target player mills three cards. If five or more mana was spent to cast that spell, that player mills ten cards instead.
+	// TODO: implement
 	Register("Exhibition Tidecaller", func() Card {
 		return NewCreature("Exhibition Tidecaller", "{U}", 0, 2,
 			WithSubTypes("Djinn", "Wizard"),
 		)
 	})
 
-// Harmonized Trio // Brainstorm {U} // {U}
-// Creature — Merfolk Bard Wizard // Instant
-// 1/1
-// TODO: implement
+	// Harmonized Trio // Brainstorm {U} // {U}
+	// Creature — Merfolk Bard Wizard // Instant
+	// 1/1
+	// TODO: implement
 	Register("Harmonized Trio // Brainstorm", func() Card {
 		return NewCreature("Harmonized Trio // Brainstorm", "{U} // {U}", 1, 1,
 			WithSubTypes("Merfolk", "Bard", "Wizard", "//", "Instant"),
 		)
 	})
 
-// Hydro-Channeler {1}{U}
-// Creature — Merfolk Wizard
-// 1/3
-// {T}: Add {U}. Spend this mana only to cast an instant or sorcery spell.
-// {1}, {T}: Add one mana of any color. Spend this mana only to cast an instant or sorcery spell.
+	// Hydro-Channeler {1}{U}
+	// Creature — Merfolk Wizard
+	// 1/3
+	// {T}: Add {U}. Spend this mana only to cast an instant or sorcery spell.
+	// {1}, {T}: Add one mana of any color. Spend this mana only to cast an instant or sorcery spell.
 	Register("Hydro-Channeler", func() Card {
 		return NewCreature("Hydro-Channeler", "{1}{U}", 1, 3,
 			WithSubTypes("Merfolk", "Wizard"),
@@ -440,10 +439,10 @@ func registerCreatures() {
 		)
 	})
 
-// Jadzi, Steward of Fate // Oracle's Gift {2}{U} // {X}{X}{U}
-// Legendary Creature — Human Wizard // Sorcery
-// 2/4
-// TODO: implement
+	// Jadzi, Steward of Fate // Oracle's Gift {2}{U} // {X}{X}{U}
+	// Legendary Creature — Human Wizard // Sorcery
+	// 2/4
+	// TODO: implement
 	Register("Jadzi, Steward of Fate // Oracle's Gift", func() Card {
 		return NewCreature("Jadzi, Steward of Fate // Oracle's Gift", "{2}{U} // {X}{X}{U}", 2, 4,
 			WithSubTypes("Human", "Wizard", "//", "Sorcery"),
@@ -451,21 +450,21 @@ func registerCreatures() {
 		)
 	})
 
-// Landscape Painter // Vibrant Idea {1}{U} // {4}{U}
-// Creature — Merfolk Wizard // Sorcery
-// 2/1
-// TODO: implement
+	// Landscape Painter // Vibrant Idea {1}{U} // {4}{U}
+	// Creature — Merfolk Wizard // Sorcery
+	// 2/1
+	// TODO: implement
 	Register("Landscape Painter // Vibrant Idea", func() Card {
 		return NewCreature("Landscape Painter // Vibrant Idea", "{1}{U} // {4}{U}", 2, 1,
 			WithSubTypes("Merfolk", "Wizard", "//", "Sorcery"),
 		)
 	})
 
-// Matterbending Mage {2}{U}
-// Creature — Human Wizard
-// 2/2
-// When this creature enters, return up to one other target creature to its owner's hand.
-// Whenever you cast a spell with {X} in its mana cost, this creature can't be blocked this turn.
+	// Matterbending Mage {2}{U}
+	// Creature — Human Wizard
+	// 2/2
+	// When this creature enters, return up to one other target creature to its owner's hand.
+	// Whenever you cast a spell with {X} in its mana cost, this creature can't be blocked this turn.
 	Register("Matterbending Mage", func() Card {
 		hasXFilter := NewCardFilter("spell with {X} in mana cost", func(c Card) bool {
 			return c.ManaCost().HasX
@@ -526,22 +525,22 @@ func registerCreatures() {
 		)
 	})
 
-// Muse Seeker {1}{U}
-// Creature — Elf Wizard
-// 1/2
-// Opus — Whenever you cast an instant or sorcery spell, draw a card. Then discard a card unless five or more mana was spent to cast that spell.
-// TODO: implement
+	// Muse Seeker {1}{U}
+	// Creature — Elf Wizard
+	// 1/2
+	// Opus — Whenever you cast an instant or sorcery spell, draw a card. Then discard a card unless five or more mana was spent to cast that spell.
+	// TODO: implement
 	Register("Muse Seeker", func() Card {
 		return NewCreature("Muse Seeker", "{1}{U}", 1, 2,
 			WithSubTypes("Elf", "Wizard"),
 		)
 	})
 
-// Orysa, Tide Choreographer {4}{U}
-// Legendary Creature — Merfolk Bard
-// 2/2
-// This spell costs {3} less to cast if creatures you control have total toughness 10 or greater.
-// When Orysa enters, draw two cards.
+	// Orysa, Tide Choreographer {4}{U}
+	// Legendary Creature — Merfolk Bard
+	// 2/2
+	// This spell costs {3} less to cast if creatures you control have total toughness 10 or greater.
+	// When Orysa enters, draw two cards.
 	Register("Orysa, Tide Choreographer", func() Card {
 		totalToughnessGTE10 := func(g *Game, controller uuid.UUID, _ Card, _ uuid.UUID) bool {
 			total := 0
@@ -562,80 +561,79 @@ func registerCreatures() {
 		)
 	})
 
-// Pensive Professor {1}{U}{U}
-// Creature — Human Wizard
-// 0/2
-// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
-// Whenever one or more +1/+1 counters are put on this creature, draw a card.
-// TODO: implement
+	// Pensive Professor {1}{U}{U}
+	// Creature — Human Wizard
+	// 0/2
+	// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
+	// Whenever one or more +1/+1 counters are put on this creature, draw a card.
+	// TODO: implement
 	Register("Pensive Professor", func() Card {
 		return NewCreature("Pensive Professor", "{1}{U}{U}", 0, 2,
 			WithSubTypes("Human", "Wizard"),
 		)
 	})
 
-// Skycoach Conductor // All Aboard {2}{U} // {U}
-// Creature — Bird Pilot // Instant
-// 2/3
-// TODO: implement
+	// Skycoach Conductor // All Aboard {2}{U} // {U}
+	// Creature — Bird Pilot // Instant
+	// 2/3
+	// TODO: implement
 	Register("Skycoach Conductor // All Aboard", func() Card {
 		return NewCreature("Skycoach Conductor // All Aboard", "{2}{U} // {U}", 2, 3,
 			WithSubTypes("Bird", "Pilot", "//", "Instant"),
 		)
 	})
 
-// Spellbook Seeker // Careful Study {3}{U} // {U}
-// Creature — Bird Wizard // Sorcery
-// 3/3
-// TODO: implement
+	// Spellbook Seeker // Careful Study {3}{U} // {U}
+	// Creature — Bird Wizard // Sorcery
+	// 3/3
+	// TODO: implement
 	Register("Spellbook Seeker // Careful Study", func() Card {
 		return NewCreature("Spellbook Seeker // Careful Study", "{3}{U} // {U}", 3, 3,
 			WithSubTypes("Bird", "Wizard", "//", "Sorcery"),
 		)
 	})
 
-// Tester of the Tangential {1}{U}
-// Creature — Djinn Wizard
-// 1/1
-// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
-// At the beginning of combat on your turn, you may pay {X}. When you do, move X +1/+1 counters from this creature onto another target creature.
-// TODO: implement
+	// Tester of the Tangential {1}{U}
+	// Creature — Djinn Wizard
+	// 1/1
+	// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
+	// At the beginning of combat on your turn, you may pay {X}. When you do, move X +1/+1 counters from this creature onto another target creature.
+	// TODO: implement
 	Register("Tester of the Tangential", func() Card {
 		return NewCreature("Tester of the Tangential", "{1}{U}", 1, 1,
 			WithSubTypes("Djinn", "Wizard"),
 		)
 	})
 
-// Textbook Tabulator {2}{U}
-// Creature — Frog Wizard
-// 0/3
-// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
-// When this creature enters, surveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)
-// TODO: implement
+	// Textbook Tabulator {2}{U}
+	// Creature — Frog Wizard
+	// 0/3
+	// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
+	// When this creature enters, surveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)
+	// TODO: implement
 	Register("Textbook Tabulator", func() Card {
 		return NewCreature("Textbook Tabulator", "{2}{U}", 0, 3,
 			WithSubTypes("Frog", "Wizard"),
 		)
 	})
 
-
 	// ===== BLACK CREATURES =====
 
-// Adventurous Eater // Have a Bite {2}{B} // {B}
-// Creature — Human Warlock // Sorcery
-// 3/2
-// TODO: implement
+	// Adventurous Eater // Have a Bite {2}{B} // {B}
+	// Creature — Human Warlock // Sorcery
+	// 3/2
+	// TODO: implement
 	Register("Adventurous Eater // Have a Bite", func() Card {
 		return NewCreature("Adventurous Eater // Have a Bite", "{2}{B} // {B}", 3, 2,
 			WithSubTypes("Human", "Warlock", "//", "Sorcery"),
 		)
 	})
 
-// Arnyn, Deathbloom Botanist {2}{B}
-// Legendary Creature — Vampire Druid
-// 2/2
-// Deathtouch
-// Whenever a creature you control with power or toughness 1 or less dies, target opponent loses 2 life and you gain 2 life.
+	// Arnyn, Deathbloom Botanist {2}{B}
+	// Legendary Creature — Vampire Druid
+	// 2/2
+	// Deathtouch
+	// Whenever a creature you control with power or toughness 1 or less dies, target opponent loses 2 life and you gain 2 life.
 	Register("Arnyn, Deathbloom Botanist", func() Card {
 		return NewCreature("Arnyn, Deathbloom Botanist", "{2}{B}", 2, 2,
 			WithSubTypes("Vampire", "Druid"),
@@ -677,11 +675,11 @@ func registerCreatures() {
 		)
 	})
 
-// Burrog Banemaker {B}
-// Creature — Frog Warlock
-// 1/1
-// Deathtouch
-// {1}{B}: This creature gets +1/+1 until end of turn.
+	// Burrog Banemaker {B}
+	// Creature — Frog Warlock
+	// 1/1
+	// Deathtouch
+	// {1}{B}: This creature gets +1/+1 until end of turn.
 	Register("Burrog Banemaker", func() Card {
 		return NewCreature("Burrog Banemaker", "{B}", 1, 1,
 			WithSubTypes("Frog", "Warlock"),
@@ -694,30 +692,30 @@ func registerCreatures() {
 		)
 	})
 
-// Cheerful Osteomancer // Raise Dead {3}{B} // {B}
-// Creature — Orc Warlock // Sorcery
-// 4/2
-// TODO: implement
+	// Cheerful Osteomancer // Raise Dead {3}{B} // {B}
+	// Creature — Orc Warlock // Sorcery
+	// 4/2
+	// TODO: implement
 	Register("Cheerful Osteomancer // Raise Dead", func() Card {
 		return NewCreature("Cheerful Osteomancer // Raise Dead", "{3}{B} // {B}", 4, 2,
 			WithSubTypes("Orc", "Warlock", "//", "Sorcery"),
 		)
 	})
 
-// Emeritus of Woe // Demonic Tutor {3}{B} // {1}{B}
-// Creature — Vampire Warlock // Sorcery
-// 5/4
-// TODO: implement
+	// Emeritus of Woe // Demonic Tutor {3}{B} // {1}{B}
+	// Creature — Vampire Warlock // Sorcery
+	// 5/4
+	// TODO: implement
 	Register("Emeritus of Woe // Demonic Tutor", func() Card {
 		return NewCreature("Emeritus of Woe // Demonic Tutor", "{3}{B} // {1}{B}", 5, 4,
 			WithSubTypes("Vampire", "Warlock", "//", "Sorcery"),
 		)
 	})
 
-// Eternal Student {3}{B}
-// Creature — Zombie Warlock
-// 4/2
-// {1}{B}, Exile this card from your graveyard: Create two 1/1 white and black Inkling creature tokens with flying.
+	// Eternal Student {3}{B}
+	// Creature — Zombie Warlock
+	// 4/2
+	// {1}{B}, Exile this card from your graveyard: Create two 1/1 white and black Inkling creature tokens with flying.
 	Register("Eternal Student", func() Card {
 		inklingTokenEffect := CreateColoredToken("Inkling Token", 1, 1,
 			[]Color{White, Black},
@@ -739,67 +737,67 @@ func registerCreatures() {
 		)
 	})
 
-// Forum Necroscribe {5}{B}
-// Creature — Troll Warlock
-// 5/4
-// Ward—Discard a card.
-// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, return target creature card from your graveyard to the battlefield.
-// TODO: implement
+	// Forum Necroscribe {5}{B}
+	// Creature — Troll Warlock
+	// 5/4
+	// Ward—Discard a card.
+	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, return target creature card from your graveyard to the battlefield.
+	// TODO: implement
 	Register("Forum Necroscribe", func() Card {
 		return NewCreature("Forum Necroscribe", "{5}{B}", 5, 4,
 			WithSubTypes("Troll", "Warlock"),
 		)
 	})
 
-// Grave Researcher // Reanimate {2}{B} // {B}
-// Creature — Troll Warlock // Sorcery
-// 3/3
-// TODO: implement
+	// Grave Researcher // Reanimate {2}{B} // {B}
+	// Creature — Troll Warlock // Sorcery
+	// 3/3
+	// TODO: implement
 	Register("Grave Researcher // Reanimate", func() Card {
 		return NewCreature("Grave Researcher // Reanimate", "{2}{B} // {B}", 3, 3,
 			WithSubTypes("Troll", "Warlock", "//", "Sorcery"),
 		)
 	})
 
-// Lecturing Scornmage {B}
-// Creature — Human Warlock
-// 1/1
-// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, put a +1/+1 counter on this creature.
-// TODO: implement
+	// Lecturing Scornmage {B}
+	// Creature — Human Warlock
+	// 1/1
+	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, put a +1/+1 counter on this creature.
+	// TODO: implement
 	Register("Lecturing Scornmage", func() Card {
 		return NewCreature("Lecturing Scornmage", "{B}", 1, 1,
 			WithSubTypes("Human", "Warlock"),
 		)
 	})
 
-// Leech Collector // Bloodletting {1}{B} // {B}
-// Creature — Human Warlock // Sorcery
-// 2/2
-// TODO: implement
+	// Leech Collector // Bloodletting {1}{B} // {B}
+	// Creature — Human Warlock // Sorcery
+	// 2/2
+	// TODO: implement
 	Register("Leech Collector // Bloodletting", func() Card {
 		return NewCreature("Leech Collector // Bloodletting", "{1}{B} // {B}", 2, 2,
 			WithSubTypes("Human", "Warlock", "//", "Sorcery"),
 		)
 	})
 
-// Melancholic Poet {1}{B}
-// Creature — Elf Bard
-// 2/2
-// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, each opponent loses 1 life and you gain 1 life.
-// TODO: implement
+	// Melancholic Poet {1}{B}
+	// Creature — Elf Bard
+	// 2/2
+	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, each opponent loses 1 life and you gain 1 life.
+	// TODO: implement
 	Register("Melancholic Poet", func() Card {
 		return NewCreature("Melancholic Poet", "{1}{B}", 2, 2,
 			WithSubTypes("Elf", "Bard"),
 		)
 	})
 
-// Moseo, Vein's New Dean {2}{B}
-// Legendary Creature — Bird Skeleton Warlock
-// 2/1
-// Flying
-// When Moseo enters, create a 1/1 black and green Pest creature token with "Whenever this token attacks, you gain 1 life."
-// Infusion — At the beginning of your end step, if you gained life this turn, return up to one target creature card with mana value X or less from your graveyard to the battlefield, where X is the amount of life you gained this turn.
-// TODO: implement
+	// Moseo, Vein's New Dean {2}{B}
+	// Legendary Creature — Bird Skeleton Warlock
+	// 2/1
+	// Flying
+	// When Moseo enters, create a 1/1 black and green Pest creature token with "Whenever this token attacks, you gain 1 life."
+	// Infusion — At the beginning of your end step, if you gained life this turn, return up to one target creature card with mana value X or less from your graveyard to the battlefield, where X is the amount of life you gained this turn.
+	// TODO: implement
 	Register("Moseo, Vein's New Dean", func() Card {
 		return NewCreature("Moseo, Vein's New Dean", "{2}{B}", 2, 1,
 			WithSubTypes("Bird", "Skeleton", "Warlock"),
@@ -807,23 +805,23 @@ func registerCreatures() {
 		)
 	})
 
-// Poisoner's Apprentice {2}{B}
-// Creature — Orc Warlock
-// 2/2
-// Infusion — When this creature enters, target creature an opponent controls gets -4/-4 until end of turn if you gained life this turn.
-// TODO: implement
+	// Poisoner's Apprentice {2}{B}
+	// Creature — Orc Warlock
+	// 2/2
+	// Infusion — When this creature enters, target creature an opponent controls gets -4/-4 until end of turn if you gained life this turn.
+	// TODO: implement
 	Register("Poisoner's Apprentice", func() Card {
 		return NewCreature("Poisoner's Apprentice", "{2}{B}", 2, 2,
 			WithSubTypes("Orc", "Warlock"),
 		)
 	})
 
-// Postmortem Professor {1}{B}
-// Creature — Zombie Warlock
-// 2/2
-// This creature can't block.
-// Whenever this creature attacks, each opponent loses 1 life and you gain 1 life.
-// {1}{B}, Exile an instant or sorcery card from your graveyard: Return this card from your graveyard to the battlefield.
+	// Postmortem Professor {1}{B}
+	// Creature — Zombie Warlock
+	// 2/2
+	// This creature can't block.
+	// Whenever this creature attacks, each opponent loses 1 life and you gain 1 life.
+	// {1}{B}, Exile an instant or sorcery card from your graveyard: Return this card from your graveyard to the battlefield.
 	Register("Postmortem Professor", func() Card {
 		return NewCreature("Postmortem Professor", "{1}{B}", 2, 2,
 			WithSubTypes("Zombie", "Warlock"),
@@ -885,81 +883,80 @@ func registerCreatures() {
 		)
 	})
 
-// Scathing Shadelock // Venomous Words {4}{B} // {B}
-// Creature — Snake Warlock // Sorcery
-// 4/6
-// TODO: implement
+	// Scathing Shadelock // Venomous Words {4}{B} // {B}
+	// Creature — Snake Warlock // Sorcery
+	// 4/6
+	// TODO: implement
 	Register("Scathing Shadelock // Venomous Words", func() Card {
 		return NewCreature("Scathing Shadelock // Venomous Words", "{4}{B} // {B}", 4, 6,
 			WithSubTypes("Snake", "Warlock", "//", "Sorcery"),
 		)
 	})
 
-// Scheming Silvertongue // Sign in Blood {1}{B} // {B}{B}
-// Creature — Vampire Warlock // Sorcery
-// 1/3
-// TODO: implement
+	// Scheming Silvertongue // Sign in Blood {1}{B} // {B}{B}
+	// Creature — Vampire Warlock // Sorcery
+	// 1/3
+	// TODO: implement
 	Register("Scheming Silvertongue // Sign in Blood", func() Card {
 		return NewCreature("Scheming Silvertongue // Sign in Blood", "{1}{B} // {B}{B}", 1, 3,
 			WithSubTypes("Vampire", "Warlock", "//", "Sorcery"),
 		)
 	})
 
-// Sneering Shadewriter {4}{B}
-// Creature — Vampire Warlock
-// 3/3
-// Flying
-// When this creature enters, each opponent loses 2 life and you gain 2 life.
-// TODO: implement
+	// Sneering Shadewriter {4}{B}
+	// Creature — Vampire Warlock
+	// 3/3
+	// Flying
+	// When this creature enters, each opponent loses 2 life and you gain 2 life.
+	// TODO: implement
 	Register("Sneering Shadewriter", func() Card {
 		return NewCreature("Sneering Shadewriter", "{4}{B}", 3, 3,
 			WithSubTypes("Vampire", "Warlock"),
 		)
 	})
 
-// Tragedy Feaster {2}{B}{B}
-// Creature — Demon
-// 7/6
-// Trample
-// Ward—Discard a card.
-// Infusion — At the beginning of your end step, sacrifice a permanent unless you gained life this turn.
-// TODO: implement
+	// Tragedy Feaster {2}{B}{B}
+	// Creature — Demon
+	// 7/6
+	// Trample
+	// Ward—Discard a card.
+	// Infusion — At the beginning of your end step, sacrifice a permanent unless you gained life this turn.
+	// TODO: implement
 	Register("Tragedy Feaster", func() Card {
 		return NewCreature("Tragedy Feaster", "{2}{B}{B}", 7, 6,
 			WithSubTypes("Demon"),
 		)
 	})
 
-// Ulna Alley Shopkeep {2}{B}
-// Creature — Goblin Warlock
-// 2/3
-// Menace (This creature can't be blocked except by two or more creatures.)
-// Infusion — This creature gets +2/+0 as long as you gained life this turn.
-// TODO: implement
+	// Ulna Alley Shopkeep {2}{B}
+	// Creature — Goblin Warlock
+	// 2/3
+	// Menace (This creature can't be blocked except by two or more creatures.)
+	// Infusion — This creature gets +2/+0 as long as you gained life this turn.
+	// TODO: implement
 	Register("Ulna Alley Shopkeep", func() Card {
 		return NewCreature("Ulna Alley Shopkeep", "{2}{B}", 2, 3,
 			WithSubTypes("Goblin", "Warlock"),
 		)
 	})
 
-
 	// ===== RED CREATURES =====
 
-// Blazing Firesinger // Seething Song {2}{R} // {2}{R}
-// Creature — Dwarf Bard // Instant
-// 2/3
-// TODO: implement
+	// Blazing Firesinger // Seething Song {2}{R} // {2}{R}
+	// Creature — Dwarf Bard // Instant
+	// 2/3
+	// TODO: implement
 	Register("Blazing Firesinger // Seething Song", func() Card {
 		return NewCreature("Blazing Firesinger // Seething Song", "{2}{R} // {2}{R}", 2, 3,
 			WithSubTypes("Dwarf", "Bard", "//", "Instant"),
 		)
 	})
 
-// Charging Strifeknight {2}{R}
-// Creature — Spirit Knight
-// 3/3
-// Haste
-// {T}, Discard a card: Draw a card.
+	// Charging Strifeknight {2}{R}
+	// Creature — Spirit Knight
+	// 3/3
+	// Haste
+	// {T}, Discard a card: Draw a card.
 	Register("Charging Strifeknight", func() Card {
 		return NewCreature("Charging Strifeknight", "{2}{R}", 3, 3,
 			WithSubTypes("Spirit", "Knight"),
@@ -973,32 +970,32 @@ func registerCreatures() {
 		)
 	})
 
-// Emeritus of Conflict // Lightning Bolt {1}{R} // {R}
-// Creature — Human Wizard // Instant
-// 2/2
-// TODO: implement
+	// Emeritus of Conflict // Lightning Bolt {1}{R} // {R}
+	// Creature — Human Wizard // Instant
+	// 2/2
+	// TODO: implement
 	Register("Emeritus of Conflict // Lightning Bolt", func() Card {
 		return NewCreature("Emeritus of Conflict // Lightning Bolt", "{1}{R} // {R}", 2, 2,
 			WithSubTypes("Human", "Wizard", "//", "Instant"),
 		)
 	})
 
-// Expressive Firedancer {1}{R}
-// Creature — Human Sorcerer
-// 2/2
-// Opus — Whenever you cast an instant or sorcery spell, this creature gets +1/+1 until end of turn. If five or more mana was spent to cast that spell, this creature also gains double strike until end of turn.
-// TODO: implement
+	// Expressive Firedancer {1}{R}
+	// Creature — Human Sorcerer
+	// 2/2
+	// Opus — Whenever you cast an instant or sorcery spell, this creature gets +1/+1 until end of turn. If five or more mana was spent to cast that spell, this creature also gains double strike until end of turn.
+	// TODO: implement
 	Register("Expressive Firedancer", func() Card {
 		return NewCreature("Expressive Firedancer", "{1}{R}", 2, 2,
 			WithSubTypes("Human", "Sorcerer"),
 		)
 	})
 
-// Garrison Excavator {3}{R}
-// Creature — Orc Sorcerer
-// 3/4
-// Menace (This creature can't be blocked except by two or more creatures.)
-// Whenever one or more cards leave your graveyard, create a 2/2 red and white Spirit creature token.
+	// Garrison Excavator {3}{R}
+	// Creature — Orc Sorcerer
+	// 3/4
+	// Menace (This creature can't be blocked except by two or more creatures.)
+	// Whenever one or more cards leave your graveyard, create a 2/2 red and white Spirit creature token.
 	Register("Garrison Excavator", func() Card {
 		return NewCreature("Garrison Excavator", "{3}{R}", 3, 4,
 			WithSubTypes("Orc", "Sorcerer"),
@@ -1008,32 +1005,32 @@ func registerCreatures() {
 		)
 	})
 
-// Goblin Glasswright // Craft with Pride {1}{R} // {R}
-// Creature — Goblin Sorcerer // Sorcery
-// 2/2
-// TODO: implement
+	// Goblin Glasswright // Craft with Pride {1}{R} // {R}
+	// Creature — Goblin Sorcerer // Sorcery
+	// 2/2
+	// TODO: implement
 	Register("Goblin Glasswright // Craft with Pride", func() Card {
 		return NewCreature("Goblin Glasswright // Craft with Pride", "{1}{R} // {R}", 2, 2,
 			WithSubTypes("Goblin", "Sorcerer", "//", "Sorcery"),
 		)
 	})
 
-// Maelstrom Artisan // Rocket Volley {1}{R}{R} // {1}{R}
-// Creature — Minotaur Sorcerer // Sorcery
-// 3/2
-// TODO: implement
+	// Maelstrom Artisan // Rocket Volley {1}{R}{R} // {1}{R}
+	// Creature — Minotaur Sorcerer // Sorcery
+	// 3/2
+	// TODO: implement
 	Register("Maelstrom Artisan // Rocket Volley", func() Card {
 		return NewCreature("Maelstrom Artisan // Rocket Volley", "{1}{R}{R} // {1}{R}", 3, 2,
 			WithSubTypes("Minotaur", "Sorcerer", "//", "Sorcery"),
 		)
 	})
 
-// Magmablood Archaic {2/R}{2/R}{2/R}
-// Creature — Avatar
-// 2/2
-// Trample, reach
-// Converge — This creature enters with a +1/+1 counter on it for each color of mana spent to cast it.
-// Whenever you cast an instant or sorcery spell, creatures you control get +1/+0 until end of turn for each color of mana spent to cast that spell.
+	// Magmablood Archaic {2/R}{2/R}{2/R}
+	// Creature — Avatar
+	// 2/2
+	// Trample, reach
+	// Converge — This creature enters with a +1/+1 counter on it for each color of mana spent to cast it.
+	// Whenever you cast an instant or sorcery spell, creatures you control get +1/+0 until end of turn for each color of mana spent to cast that spell.
 	Register("Magmablood Archaic", func() Card {
 		isInstantOrSorceryCard := NewCardFilter("instant or sorcery", func(c Card) bool {
 			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
@@ -1105,11 +1102,11 @@ func registerCreatures() {
 		)
 	})
 
-// Mica, Reader of Ruins {3}{R}
-// Legendary Creature — Human Artificer
-// 4/4
-// Ward—Pay 3 life. (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays 3 life.)
-// Whenever you cast an instant or sorcery spell, you may sacrifice an artifact. If you do, copy that spell and you may choose new targets for the copy.
+	// Mica, Reader of Ruins {3}{R}
+	// Legendary Creature — Human Artificer
+	// 4/4
+	// Ward—Pay 3 life. (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays 3 life.)
+	// Whenever you cast an instant or sorcery spell, you may sacrifice an artifact. If you do, copy that spell and you may choose new targets for the copy.
 	Register("Mica, Reader of Ruins", func() Card {
 		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c Card) bool {
 			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
@@ -1171,104 +1168,103 @@ func registerCreatures() {
 		)
 	})
 
-// Molten-Core Maestro {1}{R}
-// Creature — Goblin Bard
-// 2/2
-// Menace
-// Opus — Whenever you cast an instant or sorcery spell, put a +1/+1 counter on this creature. If five or more mana was spent to cast that spell, add an amount of {R} equal to this creature's power.
-// TODO: implement
+	// Molten-Core Maestro {1}{R}
+	// Creature — Goblin Bard
+	// 2/2
+	// Menace
+	// Opus — Whenever you cast an instant or sorcery spell, put a +1/+1 counter on this creature. If five or more mana was spent to cast that spell, add an amount of {R} equal to this creature's power.
+	// TODO: implement
 	Register("Molten-Core Maestro", func() Card {
 		return NewCreature("Molten-Core Maestro", "{1}{R}", 2, 2,
 			WithSubTypes("Goblin", "Bard"),
 		)
 	})
 
-// Pigment Wrangler // Striking Palette {4}{R} // {R}
-// Creature — Orc Sorcerer // Sorcery
-// 4/4
-// TODO: implement
+	// Pigment Wrangler // Striking Palette {4}{R} // {R}
+	// Creature — Orc Sorcerer // Sorcery
+	// 4/4
+	// TODO: implement
 	Register("Pigment Wrangler // Striking Palette", func() Card {
 		return NewCreature("Pigment Wrangler // Striking Palette", "{4}{R} // {R}", 4, 4,
 			WithSubTypes("Orc", "Sorcerer", "//", "Sorcery"),
 		)
 	})
 
-// Rearing Embermare {4}{R}
-// Creature — Horse Beast
-// 4/5
-// Reach, haste
-// TODO: implement
+	// Rearing Embermare {4}{R}
+	// Creature — Horse Beast
+	// 4/5
+	// Reach, haste
+	// TODO: implement
 	Register("Rearing Embermare", func() Card {
 		return NewCreature("Rearing Embermare", "{4}{R}", 4, 5,
 			WithSubTypes("Horse", "Beast"),
 		)
 	})
 
-// Rubble Rouser {2}{R}
-// Creature — Dwarf Sorcerer
-// 1/4
-// When this creature enters, you may discard a card. If you do, draw a card.
-// {T}, Exile a card from your graveyard: Add {R}. When you do, this creature deals 1 damage to each opponent.
-// TODO: implement
+	// Rubble Rouser {2}{R}
+	// Creature — Dwarf Sorcerer
+	// 1/4
+	// When this creature enters, you may discard a card. If you do, draw a card.
+	// {T}, Exile a card from your graveyard: Add {R}. When you do, this creature deals 1 damage to each opponent.
+	// TODO: implement
 	Register("Rubble Rouser", func() Card {
 		return NewCreature("Rubble Rouser", "{2}{R}", 1, 4,
 			WithSubTypes("Dwarf", "Sorcerer"),
 		)
 	})
 
-// Strife Scholar // Awaken the Ages {2}{R} // {5}{R}
-// Creature — Orc Sorcerer // Sorcery
-// 3/2
-// TODO: implement
+	// Strife Scholar // Awaken the Ages {2}{R} // {5}{R}
+	// Creature — Orc Sorcerer // Sorcery
+	// 3/2
+	// TODO: implement
 	Register("Strife Scholar // Awaken the Ages", func() Card {
 		return NewCreature("Strife Scholar // Awaken the Ages", "{2}{R} // {5}{R}", 3, 2,
 			WithSubTypes("Orc", "Sorcerer", "//", "Sorcery"),
 		)
 	})
 
-// Tackle Artist {3}{R}
-// Creature — Orc Sorcerer
-// 4/3
-// Trample
-// Opus — Whenever you cast an instant or sorcery spell, put a +1/+1 counter on this creature. If five or more mana was spent to cast that spell, put two +1/+1 counters on this creature instead.
-// TODO: implement
+	// Tackle Artist {3}{R}
+	// Creature — Orc Sorcerer
+	// 4/3
+	// Trample
+	// Opus — Whenever you cast an instant or sorcery spell, put a +1/+1 counter on this creature. If five or more mana was spent to cast that spell, put two +1/+1 counters on this creature instead.
+	// TODO: implement
 	Register("Tackle Artist", func() Card {
 		return NewCreature("Tackle Artist", "{3}{R}", 4, 3,
 			WithSubTypes("Orc", "Sorcerer"),
 		)
 	})
 
-// Thunderdrum Soloist {1}{R}
-// Creature — Dwarf Bard
-// 1/3
-// Reach
-// Opus — Whenever you cast an instant or sorcery spell, this creature deals 1 damage to each opponent. If five or more mana was spent to cast that spell, this creature deals 3 damage to each opponent instead.
-// TODO: implement
+	// Thunderdrum Soloist {1}{R}
+	// Creature — Dwarf Bard
+	// 1/3
+	// Reach
+	// Opus — Whenever you cast an instant or sorcery spell, this creature deals 1 damage to each opponent. If five or more mana was spent to cast that spell, this creature deals 3 damage to each opponent instead.
+	// TODO: implement
 	Register("Thunderdrum Soloist", func() Card {
 		return NewCreature("Thunderdrum Soloist", "{1}{R}", 1, 3,
 			WithSubTypes("Dwarf", "Bard"),
 		)
 	})
 
-// Zealous Lorecaster {5}{R}
-// Creature — Giant Sorcerer
-// 4/4
-// When this creature enters, return target instant or sorcery card from your graveyard to your hand.
-// TODO: implement
+	// Zealous Lorecaster {5}{R}
+	// Creature — Giant Sorcerer
+	// 4/4
+	// When this creature enters, return target instant or sorcery card from your graveyard to your hand.
+	// TODO: implement
 	Register("Zealous Lorecaster", func() Card {
 		return NewCreature("Zealous Lorecaster", "{5}{R}", 4, 4,
 			WithSubTypes("Giant", "Sorcerer"),
 		)
 	})
 
-
 	// ===== GREEN CREATURES =====
 
-// Aberrant Manawurm {3}{G}
-// Creature — Wurm
-// 2/5
-// Trample
-// Whenever you cast an instant or sorcery spell, this creature gets +X/+0 until end of turn, where X is the amount of mana spent to cast that spell.
+	// Aberrant Manawurm {3}{G}
+	// Creature — Wurm
+	// 2/5
+	// Trample
+	// Whenever you cast an instant or sorcery spell, this creature gets +X/+0 until end of turn, where X is the amount of mana spent to cast that spell.
 	Register("Aberrant Manawurm", func() Card {
 		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c Card) bool {
 			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
@@ -1296,33 +1292,33 @@ func registerCreatures() {
 		)
 	})
 
-// Ambitious Augmenter {G}
-// Creature — Turtle Wizard
-// 1/1
-// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
-// When this creature dies, if it had one or more counters on it, create a 0/0 green and blue Fractal creature token, then put this creature's counters on that token.
-// TODO: implement
+	// Ambitious Augmenter {G}
+	// Creature — Turtle Wizard
+	// 1/1
+	// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
+	// When this creature dies, if it had one or more counters on it, create a 0/0 green and blue Fractal creature token, then put this creature's counters on that token.
+	// TODO: implement
 	Register("Ambitious Augmenter", func() Card {
 		return NewCreature("Ambitious Augmenter", "{G}", 1, 1,
 			WithSubTypes("Turtle", "Wizard"),
 		)
 	})
 
-// Emeritus of Abundance // Regrowth {2}{G} // {1}{G}
-// Creature — Elf Druid // Sorcery
-// 3/4
-// TODO: implement
+	// Emeritus of Abundance // Regrowth {2}{G} // {1}{G}
+	// Creature — Elf Druid // Sorcery
+	// 3/4
+	// TODO: implement
 	Register("Emeritus of Abundance // Regrowth", func() Card {
 		return NewCreature("Emeritus of Abundance // Regrowth", "{2}{G} // {1}{G}", 3, 4,
 			WithSubTypes("Elf", "Druid", "//", "Sorcery"),
 		)
 	})
 
-// Emil, Vastlands Roamer {2}{G}
-// Legendary Creature — Elf Druid
-// 3/3
-// Creatures you control with +1/+1 counters on them have trample.
-// {4}{G}, {T}: Create a 0/0 green and blue Fractal creature token. Put X +1/+1 counters on it, where X is the number of differently named lands you control.
+	// Emil, Vastlands Roamer {2}{G}
+	// Legendary Creature — Elf Druid
+	// 3/3
+	// Creatures you control with +1/+1 counters on them have trample.
+	// {4}{G}, {T}: Create a 0/0 green and blue Fractal creature token. Put X +1/+1 counters on it, where X is the number of differently named lands you control.
 	Register("Emil, Vastlands Roamer", func() Card {
 		return NewCreature("Emil, Vastlands Roamer", "{2}{G}", 3, 3,
 			WithSubTypes("Elf", "Druid"),
@@ -1377,10 +1373,10 @@ func registerCreatures() {
 		)
 	})
 
-// Environmental Scientist {1}{G}
-// Creature — Human Druid
-// 2/2
-// When this creature enters, you may search your library for a basic land card, reveal it, put it into your hand, then shuffle.
+	// Environmental Scientist {1}{G}
+	// Creature — Human Druid
+	// 2/2
+	// When this creature enters, you may search your library for a basic land card, reveal it, put it into your hand, then shuffle.
 	Register("Environmental Scientist", func() Card {
 		return NewCreature("Environmental Scientist", "{1}{G}", 2, 2,
 			WithSubTypes("Human", "Druid"),
@@ -1399,33 +1395,33 @@ func registerCreatures() {
 		)
 	})
 
-// Hungry Graffalon {3}{G}
-// Creature — Giraffe
-// 3/4
-// Reach
-// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
-// TODO: implement
+	// Hungry Graffalon {3}{G}
+	// Creature — Giraffe
+	// 3/4
+	// Reach
+	// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
+	// TODO: implement
 	Register("Hungry Graffalon", func() Card {
 		return NewCreature("Hungry Graffalon", "{3}{G}", 3, 4,
 			WithSubTypes("Giraffe"),
 		)
 	})
 
-// Infirmary Healer // Stream of Life {1}{G} // {X}{G}
-// Creature — Cat Cleric // Sorcery
-// 2/3
-// TODO: implement
+	// Infirmary Healer // Stream of Life {1}{G} // {X}{G}
+	// Creature — Cat Cleric // Sorcery
+	// 2/3
+	// TODO: implement
 	Register("Infirmary Healer // Stream of Life", func() Card {
 		return NewCreature("Infirmary Healer // Stream of Life", "{1}{G} // {X}{G}", 2, 3,
 			WithSubTypes("Cat", "Cleric", "//", "Sorcery"),
 		)
 	})
 
-// Mindful Biomancer {1}{G}
-// Creature — Dryad Druid
-// 2/2
-// When this creature enters, you gain 1 life.
-// {2}{G}: This creature gets +2/+2 until end of turn. Activate only once each turn.
+	// Mindful Biomancer {1}{G}
+	// Creature — Dryad Druid
+	// 2/2
+	// When this creature enters, you gain 1 life.
+	// {2}{G}: This creature gets +2/+2 until end of turn. Activate only once each turn.
 	Register("Mindful Biomancer", func() Card {
 		return NewCreature("Mindful Biomancer", "{1}{G}", 2, 2,
 			WithSubTypes("Dryad", "Druid"),
@@ -1440,11 +1436,11 @@ func registerCreatures() {
 		)
 	})
 
-// Noxious Newt {1}{G}
-// Creature — Salamander
-// 1/2
-// Deathtouch
-// {T}: Add {G}.
+	// Noxious Newt {1}{G}
+	// Creature — Salamander
+	// 1/2
+	// Deathtouch
+	// {T}: Add {G}.
 	Register("Noxious Newt", func() Card {
 		return NewCreature("Noxious Newt", "{1}{G}", 1, 2,
 			WithSubTypes("Salamander"),
@@ -1453,11 +1449,11 @@ func registerCreatures() {
 		)
 	})
 
-// Pestbrood Sloth {3}{G}
-// Creature — Plant Sloth
-// 4/4
-// Reach
-// When this creature dies, create two 1/1 black and green Pest creature tokens with "Whenever this token attacks, you gain 1 life."
+	// Pestbrood Sloth {3}{G}
+	// Creature — Plant Sloth
+	// 4/4
+	// Reach
+	// When this creature dies, create two 1/1 black and green Pest creature tokens with "Whenever this token attacks, you gain 1 life."
 	Register("Pestbrood Sloth", func() Card {
 		makePestToken := func() Effect {
 			return TokenWithAbilities(
@@ -1486,106 +1482,105 @@ func registerCreatures() {
 		)
 	})
 
-// Shopkeeper's Bane {2}{G}
-// Creature — Badger Pest
-// 4/2
-// Trample
-// Whenever this creature attacks, you gain 2 life.
-// TODO: implement
+	// Shopkeeper's Bane {2}{G}
+	// Creature — Badger Pest
+	// 4/2
+	// Trample
+	// Whenever this creature attacks, you gain 2 life.
+	// TODO: implement
 	Register("Shopkeeper's Bane", func() Card {
 		return NewCreature("Shopkeeper's Bane", "{2}{G}", 4, 2,
 			WithSubTypes("Badger", "Pest"),
 		)
 	})
 
-// Slumbering Trudge {X}{G}
-// Creature — Plant Beast
-// 6/6
-// This creature enters with a number of stun counters on it equal to three minus X. If X is 2 or less, it enters tapped. (If a permanent with a stun counter would become untapped, remove one from it instead.)
-// TODO: implement
+	// Slumbering Trudge {X}{G}
+	// Creature — Plant Beast
+	// 6/6
+	// This creature enters with a number of stun counters on it equal to three minus X. If X is 2 or less, it enters tapped. (If a permanent with a stun counter would become untapped, remove one from it instead.)
+	// TODO: implement
 	Register("Slumbering Trudge", func() Card {
 		return NewCreature("Slumbering Trudge", "{X}{G}", 6, 6,
 			WithSubTypes("Plant", "Beast"),
 		)
 	})
 
-// Studious First-Year // Rampant Growth {G} // {1}{G}
-// Creature — Bear Wizard // Sorcery
-// 1/1
-// TODO: implement
+	// Studious First-Year // Rampant Growth {G} // {1}{G}
+	// Creature — Bear Wizard // Sorcery
+	// 1/1
+	// TODO: implement
 	Register("Studious First-Year // Rampant Growth", func() Card {
 		return NewCreature("Studious First-Year // Rampant Growth", "{G} // {1}{G}", 1, 1,
 			WithSubTypes("Bear", "Wizard", "//", "Sorcery"),
 		)
 	})
 
-// Tenured Concocter {4}{G}
-// Creature — Troll Druid
-// 4/5
-// Vigilance
-// Whenever this creature becomes the target of a spell or ability an opponent controls, you may draw a card.
-// Infusion — This creature gets +2/+0 as long as you gained life this turn.
-// TODO: implement
+	// Tenured Concocter {4}{G}
+	// Creature — Troll Druid
+	// 4/5
+	// Vigilance
+	// Whenever this creature becomes the target of a spell or ability an opponent controls, you may draw a card.
+	// Infusion — This creature gets +2/+0 as long as you gained life this turn.
+	// TODO: implement
 	Register("Tenured Concocter", func() Card {
 		return NewCreature("Tenured Concocter", "{4}{G}", 4, 5,
 			WithSubTypes("Troll", "Druid"),
 		)
 	})
 
-// Thornfist Striker {2}{G}
-// Creature — Elf Druid
-// 3/3
-// Ward {1} (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {1}.)
-// Infusion — Creatures you control get +1/+0 and have trample as long as you gained life this turn.
-// TODO: implement
+	// Thornfist Striker {2}{G}
+	// Creature — Elf Druid
+	// 3/3
+	// Ward {1} (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {1}.)
+	// Infusion — Creatures you control get +1/+0 and have trample as long as you gained life this turn.
+	// TODO: implement
 	Register("Thornfist Striker", func() Card {
 		return NewCreature("Thornfist Striker", "{2}{G}", 3, 3,
 			WithSubTypes("Elf", "Druid"),
 		)
 	})
 
-// Topiary Lecturer {2}{G}
-// Creature — Elf Druid
-// 1/2
-// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
-// {T}: Add an amount of {G} equal to this creature's power.
-// TODO: implement
+	// Topiary Lecturer {2}{G}
+	// Creature — Elf Druid
+	// 1/2
+	// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
+	// {T}: Add an amount of {G} equal to this creature's power.
+	// TODO: implement
 	Register("Topiary Lecturer", func() Card {
 		return NewCreature("Topiary Lecturer", "{2}{G}", 1, 2,
 			WithSubTypes("Elf", "Druid"),
 		)
 	})
 
-// Vastlands Scavenger // Bind to Life {1}{G}{G} // {4}{G}
-// Creature — Bear Druid // Instant
-// 4/4
-// TODO: implement
+	// Vastlands Scavenger // Bind to Life {1}{G}{G} // {4}{G}
+	// Creature — Bear Druid // Instant
+	// 4/4
+	// TODO: implement
 	Register("Vastlands Scavenger // Bind to Life", func() Card {
 		return NewCreature("Vastlands Scavenger // Bind to Life", "{1}{G}{G} // {4}{G}", 4, 4,
 			WithSubTypes("Bear", "Druid", "//", "Instant"),
 		)
 	})
 
-// Wildgrowth Archaic {2/G}{2/G}
-// Creature — Avatar
-// 0/0
-// Trample, reach
-// Converge — This creature enters with a +1/+1 counter on it for each color of mana spent to cast it.
-// Whenever you cast a creature spell, that creature enters with X additional +1/+1 counters on it, where X is the number of colors of mana spent to cast it.
-// TODO: implement
+	// Wildgrowth Archaic {2/G}{2/G}
+	// Creature — Avatar
+	// 0/0
+	// Trample, reach
+	// Converge — This creature enters with a +1/+1 counter on it for each color of mana spent to cast it.
+	// Whenever you cast a creature spell, that creature enters with X additional +1/+1 counters on it, where X is the number of colors of mana spent to cast it.
+	// TODO: implement
 	Register("Wildgrowth Archaic", func() Card {
 		return NewCreature("Wildgrowth Archaic", "{2/G}{2/G}", 0, 0,
 			WithSubTypes("Avatar"),
 		)
 	})
 
-
 	// ===== MULTICOLOR CREATURES =====
 
-// Abigale, Poet Laureate // Heroic Stanza {1}{W}{B} // {1}{W/B}
-// Legendary Creature — Bird Bard // Sorcery
-// 2/3
-// TODO: implement
+	// Abigale, Poet Laureate // Heroic Stanza {1}{W}{B} // {1}{W/B}
+	// Legendary Creature — Bird Bard // Sorcery
+	// 2/3
+	// TODO: implement
 	Register("Abigale, Poet Laureate // Heroic Stanza", func() Card {
 		return NewCreature("Abigale, Poet Laureate // Heroic Stanza", "{1}{W}{B} // {1}{W/B}", 2, 3,
 			WithSubTypes("Bird", "Bard", "//", "Sorcery"),
@@ -1593,10 +1588,10 @@ func registerCreatures() {
 		)
 	})
 
-// Abstract Paintmage {U}{U/R}{R}
-// Creature — Djinn Sorcerer
-// 2/2
-// At the beginning of your first main phase, add {U}{R}. Spend this mana only to cast instant and sorcery spells.
+	// Abstract Paintmage {U}{U/R}{R}
+	// Creature — Djinn Sorcerer
+	// 2/2
+	// At the beginning of your first main phase, add {U}{R}. Spend this mana only to cast instant and sorcery spells.
 	Register("Abstract Paintmage", func() Card {
 		return NewCreature("Abstract Paintmage", "{U}{U/R}{R}", 2, 2,
 			WithSubTypes("Djinn", "Sorcerer"),
@@ -1612,10 +1607,10 @@ func registerCreatures() {
 		)
 	})
 
-// Aziza, Mage Tower Captain {R}{W}
-// Legendary Creature — Djinn Sorcerer
-// 2/2
-// Whenever you cast an instant or sorcery spell, you may tap three untapped creatures you control. If you do, copy that spell. You may choose new targets for the copy.
+	// Aziza, Mage Tower Captain {R}{W}
+	// Legendary Creature — Djinn Sorcerer
+	// 2/2
+	// Whenever you cast an instant or sorcery spell, you may tap three untapped creatures you control. If you do, copy that spell. You may choose new targets for the copy.
 	Register("Aziza, Mage Tower Captain", func() Card {
 		return NewCreature("Aziza, Mage Tower Captain", "{R}{W}", 2, 2,
 			WithSubTypes("Djinn", "Sorcerer"),
@@ -1690,13 +1685,13 @@ func registerCreatures() {
 		)
 	})
 
-// Berta, Wise Extrapolator {2}{G}{U}
-// Legendary Creature — Frog Druid
-// 1/4
-// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
-// Whenever one or more +1/+1 counters are put on Berta, add one mana of any color.
-// {X}, {T}: Create a 0/0 green and blue Fractal creature token and put X +1/+1 counters on it.
-// TODO: implement
+	// Berta, Wise Extrapolator {2}{G}{U}
+	// Legendary Creature — Frog Druid
+	// 1/4
+	// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
+	// Whenever one or more +1/+1 counters are put on Berta, add one mana of any color.
+	// {X}, {T}: Create a 0/0 green and blue Fractal creature token and put X +1/+1 counters on it.
+	// TODO: implement
 	Register("Berta, Wise Extrapolator", func() Card {
 		return NewCreature("Berta, Wise Extrapolator", "{2}{G}{U}", 1, 4,
 			WithSubTypes("Frog", "Druid"),
@@ -1704,10 +1699,10 @@ func registerCreatures() {
 		)
 	})
 
-// Blech, Loafing Pest {1}{B}{G}
-// Legendary Creature — Pest
-// 3/4
-// Whenever you gain life, put a +1/+1 counter on each Pest, Bat, Insect, Snake, and Spider you control.
+	// Blech, Loafing Pest {1}{B}{G}
+	// Legendary Creature — Pest
+	// 3/4
+	// Whenever you gain life, put a +1/+1 counter on each Pest, Bat, Insect, Snake, and Spider you control.
 	Register("Blech, Loafing Pest", func() Card {
 		isPestBatInsectSnakeSpider := func(perm *Permanent, _ *Game) bool {
 			return perm.HasSubType("Pest") || perm.HasSubType("Bat") ||
@@ -1735,10 +1730,10 @@ func registerCreatures() {
 		)
 	})
 
-// Bogwater Lumaret {B}{G}
-// Creature — Spirit Frog
-// 2/2
-// Whenever this creature or another creature you control enters, you gain 1 life.
+	// Bogwater Lumaret {B}{G}
+	// Creature — Spirit Frog
+	// 2/2
+	// Whenever this creature or another creature you control enters, you gain 1 life.
 	Register("Bogwater Lumaret", func() Card {
 		return NewCreature("Bogwater Lumaret", "{B}{G}", 2, 2,
 			WithSubTypes("Spirit", "Frog"),
@@ -1751,23 +1746,23 @@ func registerCreatures() {
 		)
 	})
 
-// Colorstorm Stallion {1}{U}{R}
-// Creature — Elemental Horse
-// 3/3
-// Ward {1}, haste
-// Opus — Whenever you cast an instant or sorcery spell, this creature gets +1/+1 until end of turn. If five or more mana was spent to cast that spell, create a token that's a copy of this creature.
-// TODO: implement
+	// Colorstorm Stallion {1}{U}{R}
+	// Creature — Elemental Horse
+	// 3/3
+	// Ward {1}, haste
+	// Opus — Whenever you cast an instant or sorcery spell, this creature gets +1/+1 until end of turn. If five or more mana was spent to cast that spell, create a token that's a copy of this creature.
+	// TODO: implement
 	Register("Colorstorm Stallion", func() Card {
 		return NewCreature("Colorstorm Stallion", "{1}{U}{R}", 3, 3,
 			WithSubTypes("Elemental", "Horse"),
 		)
 	})
 
-// Colossus of the Blood Age {4}{R}{W}
-// Artifact Creature — Construct
-// 6/6
-// When this creature enters, it deals 3 damage to each opponent and you gain 3 life.
-// When this creature dies, discard any number of cards, then draw that many cards plus one.
+	// Colossus of the Blood Age {4}{R}{W}
+	// Artifact Creature — Construct
+	// 6/6
+	// When this creature enters, it deals 3 damage to each opponent and you gain 3 life.
+	// When this creature dies, discard any number of cards, then draw that many cards plus one.
 	Register("Colossus of the Blood Age", func() Card {
 		return NewCreature("Colossus of the Blood Age", "{4}{R}{W}", 6, 6,
 			WithSubTypes("Construct"),
@@ -1823,48 +1818,48 @@ func registerCreatures() {
 		)
 	})
 
-// Conciliator's Duelist {W}{W}{B}{B}
-// Creature — Kor Warlock
-// 4/3
-// When this creature enters, draw a card. Each player loses 1 life.
-// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, exile up to one target creature. Return that card to the battlefield under its owner's control at the beginning of the next end step.
-// TODO: implement
+	// Conciliator's Duelist {W}{W}{B}{B}
+	// Creature — Kor Warlock
+	// 4/3
+	// When this creature enters, draw a card. Each player loses 1 life.
+	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, exile up to one target creature. Return that card to the battlefield under its owner's control at the beginning of the next end step.
+	// TODO: implement
 	Register("Conciliator's Duelist", func() Card {
 		return NewCreature("Conciliator's Duelist", "{W}{W}{B}{B}", 4, 3,
 			WithSubTypes("Kor", "Warlock"),
 		)
 	})
 
-// Cuboid Colony {G}{U}
-// Creature — Insect
-// 1/1
-// Flash
-// Flying, trample
-// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
-// TODO: implement
+	// Cuboid Colony {G}{U}
+	// Creature — Insect
+	// 1/1
+	// Flash
+	// Flying, trample
+	// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
+	// TODO: implement
 	Register("Cuboid Colony", func() Card {
 		return NewCreature("Cuboid Colony", "{G}{U}", 1, 1,
 			WithSubTypes("Insect"),
 		)
 	})
 
-// Elemental Mascot {1}{U}{R}
-// Creature — Elemental Bird
-// 1/4
-// Flying, vigilance
-// Opus — Whenever you cast an instant or sorcery spell, this creature gets +1/+0 until end of turn. If five or more mana was spent to cast that spell, exile the top card of your library. You may play that card until the end of your next turn.
-// TODO: implement
+	// Elemental Mascot {1}{U}{R}
+	// Creature — Elemental Bird
+	// 1/4
+	// Flying, vigilance
+	// Opus — Whenever you cast an instant or sorcery spell, this creature gets +1/+0 until end of turn. If five or more mana was spent to cast that spell, exile the top card of your library. You may play that card until the end of your next turn.
+	// TODO: implement
 	Register("Elemental Mascot", func() Card {
 		return NewCreature("Elemental Mascot", "{1}{U}{R}", 1, 4,
 			WithSubTypes("Elemental", "Bird"),
 		)
 	})
 
-// Essenceknit Scholar {B}{B/G}{G}
-// Creature — Dryad Warlock
-// 3/1
-// When this creature enters, create a 1/1 black and green Pest creature token with "Whenever this token attacks, you gain 1 life."
-// At the beginning of your end step, if a creature died under your control this turn, draw a card.
+	// Essenceknit Scholar {B}{B/G}{G}
+	// Creature — Dryad Warlock
+	// 3/1
+	// When this creature enters, create a 1/1 black and green Pest creature token with "Whenever this token attacks, you gain 1 life."
+	// At the beginning of your end step, if a creature died under your control this turn, draw a card.
 	Register("Essenceknit Scholar", func() Card {
 		pestTokenWithAttack := TokenWithAbilities(
 			CreateColoredToken("Pest Token", 1, 1,
@@ -1900,12 +1895,12 @@ func registerCreatures() {
 		)
 	})
 
-// Fractal Mascot {4}{G}{U}
-// Creature — Fractal Elk
-// 6/6
-// Trample
-// When this creature enters, tap target creature an opponent controls. Put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)
-// XXX: Stun counter (untap-prevention counter type) not in engine; tap is implemented but stun counter effect is not.
+	// Fractal Mascot {4}{G}{U}
+	// Creature — Fractal Elk
+	// 6/6
+	// Trample
+	// When this creature enters, tap target creature an opponent controls. Put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)
+	// XXX: Stun counter (untap-prevention counter type) not in engine; tap is implemented but stun counter effect is not.
 	Register("Fractal Mascot", func() Card {
 		return NewCreature("Fractal Mascot", "{4}{G}{U}", 6, 6,
 			WithSubTypes("Fractal", "Elk"),
@@ -1920,12 +1915,10 @@ func registerCreatures() {
 							return nil
 						}
 						var candidates []*Permanent
-						for _, perm := range g.FilterBattlefield(And(
+						candidates = append(candidates, g.FilterBattlefield(And(
 							ControlledBy(opp.PlayerID()),
 							IsCreature,
-						)) {
-							candidates = append(candidates, perm)
-						}
+						))...)
 						if len(candidates) == 0 {
 							return nil
 						}
@@ -1947,23 +1940,23 @@ func registerCreatures() {
 		)
 	})
 
-// Fractal Tender {3}{G}{U}
-// Creature — Elf Wizard
-// 3/3
-// Ward {2}
-// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
-// At the beginning of each end step, if you put a counter on this creature this turn, create a 0/0 green and blue Fractal creature token and put three +1/+1 counters on it.
-// TODO: implement
+	// Fractal Tender {3}{G}{U}
+	// Creature — Elf Wizard
+	// 3/3
+	// Ward {2}
+	// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
+	// At the beginning of each end step, if you put a counter on this creature this turn, create a 0/0 green and blue Fractal creature token and put three +1/+1 counters on it.
+	// TODO: implement
 	Register("Fractal Tender", func() Card {
 		return NewCreature("Fractal Tender", "{3}{G}{U}", 3, 3,
 			WithSubTypes("Elf", "Wizard"),
 		)
 	})
 
-// Geometer's Arthropod {G}{U}
-// Creature — Fractal Crab
-// 1/4
-// Whenever you cast a spell with {X} in its mana cost, look at the top X cards of your library. Put one of them into your hand and the rest on the bottom of your library in a random order.
+	// Geometer's Arthropod {G}{U}
+	// Creature — Fractal Crab
+	// 1/4
+	// Whenever you cast a spell with {X} in its mana cost, look at the top X cards of your library. Put one of them into your hand and the rest on the bottom of your library in a random order.
 	Register("Geometer's Arthropod", func() Card {
 		return NewCreature("Geometer's Arthropod", "{G}{U}", 1, 4,
 			WithSubTypes("Fractal", "Crab"),
@@ -2021,13 +2014,13 @@ func registerCreatures() {
 		)
 	})
 
-// Hardened Academic {R}{W}
-// Creature — Bird Cleric
-// 2/1
-// Flying, haste
-// Discard a card: This creature gains lifelink until end of turn.
-// Whenever one or more cards leave your graveyard, put a +1/+1 counter on target creature you control.
-// XXX: "Whenever one or more cards leave your graveyard" trigger not implemented (engine lacks graveyard-leave event).
+	// Hardened Academic {R}{W}
+	// Creature — Bird Cleric
+	// 2/1
+	// Flying, haste
+	// Discard a card: This creature gains lifelink until end of turn.
+	// Whenever one or more cards leave your graveyard, put a +1/+1 counter on target creature you control.
+	// XXX: "Whenever one or more cards leave your graveyard" trigger not implemented (engine lacks graveyard-leave event).
 	Register("Hardened Academic", func() Card {
 		return NewCreature("Hardened Academic", "{R}{W}", 2, 1,
 			WithSubTypes("Bird", "Cleric"),
@@ -2040,11 +2033,11 @@ func registerCreatures() {
 		)
 	})
 
-// Imperious Inkmage {1}{W}{B}
-// Creature — Orc Warlock
-// 3/3
-// Vigilance
-// When this creature enters, surveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)
+	// Imperious Inkmage {1}{W}{B}
+	// Creature — Orc Warlock
+	// 3/3
+	// Vigilance
+	// When this creature enters, surveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)
 	Register("Imperious Inkmage", func() Card {
 		return NewCreature("Imperious Inkmage", "{1}{W}{B}", 3, 3,
 			WithSubTypes("Orc", "Warlock"),
@@ -2053,21 +2046,21 @@ func registerCreatures() {
 		)
 	})
 
-// Inkling Mascot {W}{B}
-// Creature — Inkling Cat
-// 2/2
-// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, this creature gains flying until end of turn. Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)
-// TODO: implement
+	// Inkling Mascot {W}{B}
+	// Creature — Inkling Cat
+	// 2/2
+	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, this creature gains flying until end of turn. Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)
+	// TODO: implement
 	Register("Inkling Mascot", func() Card {
 		return NewCreature("Inkling Mascot", "{W}{B}", 2, 2,
 			WithSubTypes("Inkling", "Cat"),
 		)
 	})
 
-// Kirol, History Buff // Pack a Punch {R}{W} // {1}{R}{W}
-// Legendary Creature — Vampire Cleric // Sorcery
-// 2/3
-// TODO: implement
+	// Kirol, History Buff // Pack a Punch {R}{W} // {1}{R}{W}
+	// Legendary Creature — Vampire Cleric // Sorcery
+	// 2/3
+	// TODO: implement
 	Register("Kirol, History Buff // Pack a Punch", func() Card {
 		return NewCreature("Kirol, History Buff // Pack a Punch", "{R}{W} // {1}{R}{W}", 2, 3,
 			WithSubTypes("Vampire", "Cleric", "//", "Sorcery"),
@@ -2075,10 +2068,10 @@ func registerCreatures() {
 		)
 	})
 
-// Lluwen, Exchange Student // Pest Friend {2}{B}{G} // {B/G}
-// Legendary Creature — Elf Druid // Sorcery
-// 3/4
-// TODO: implement
+	// Lluwen, Exchange Student // Pest Friend {2}{B}{G} // {B/G}
+	// Legendary Creature — Elf Druid // Sorcery
+	// 3/4
+	// TODO: implement
 	Register("Lluwen, Exchange Student // Pest Friend", func() Card {
 		return NewCreature("Lluwen, Exchange Student // Pest Friend", "{2}{B}{G} // {B/G}", 3, 4,
 			WithSubTypes("Elf", "Druid", "//", "Sorcery"),
@@ -2086,12 +2079,12 @@ func registerCreatures() {
 		)
 	})
 
-// Lorehold, the Historian {3}{R}{W}
-// Legendary Creature — Elder Dragon
-// 5/5
-// Flying, haste
-// Each instant and sorcery card in your hand has miracle {2}. (You may cast a card for its miracle cost when you draw it if it's the first card you drew this turn.)
-// At the beginning of each opponent's upkeep, you may discard a card. If you do, draw a card.
+	// Lorehold, the Historian {3}{R}{W}
+	// Legendary Creature — Elder Dragon
+	// 5/5
+	// Flying, haste
+	// Each instant and sorcery card in your hand has miracle {2}. (You may cast a card for its miracle cost when you draw it if it's the first card you drew this turn.)
+	// At the beginning of each opponent's upkeep, you may discard a card. If you do, draw a card.
 	Register("Lorehold, the Historian", func() Card {
 		return NewCreature("Lorehold, the Historian", "{3}{R}{W}", 5, 5,
 			WithSubTypes("Elder", "Dragon"),
@@ -2125,11 +2118,11 @@ func registerCreatures() {
 		)
 	})
 
-// Nita, Forum Conciliator {1}{W}{B}
-// Legendary Creature — Human Advisor
-// 2/3
-// Whenever you cast a spell you don't own, put a +1/+1 counter on each creature you control.
-// {2}, Sacrifice another creature: Exile target instant or sorcery card from an opponent's graveyard. You may cast it this turn, and mana of any type can be spent to cast that spell. If that spell would be put into a graveyard, exile it instead. Activate only as a sorcery.
+	// Nita, Forum Conciliator {1}{W}{B}
+	// Legendary Creature — Human Advisor
+	// 2/3
+	// Whenever you cast a spell you don't own, put a +1/+1 counter on each creature you control.
+	// {2}, Sacrifice another creature: Exile target instant or sorcery card from an opponent's graveyard. You may cast it this turn, and mana of any type can be spent to cast that spell. If that spell would be put into a graveyard, exile it instead. Activate only as a sorcery.
 	Register("Nita, Forum Conciliator", func() Card {
 		// XXX: "Whenever you cast a spell you don't own" trigger not implemented — engine
 		// does not track spell ownership separately from controller.
@@ -2190,23 +2183,23 @@ func registerCreatures() {
 		)
 	})
 
-// Old-Growth Educator {2}{B}{G}
-// Creature — Treefolk Druid
-// 4/4
-// Vigilance, reach
-// Infusion — When this creature enters, put two +1/+1 counters on it if you gained life this turn.
-// TODO: implement
+	// Old-Growth Educator {2}{B}{G}
+	// Creature — Treefolk Druid
+	// 4/4
+	// Vigilance, reach
+	// Infusion — When this creature enters, put two +1/+1 counters on it if you gained life this turn.
+	// TODO: implement
 	Register("Old-Growth Educator", func() Card {
 		return NewCreature("Old-Growth Educator", "{2}{B}{G}", 4, 4,
 			WithSubTypes("Treefolk", "Druid"),
 		)
 	})
 
-// Paradox Surveyor {G}{G/U}{U}
-// Creature — Elf Druid
-// 3/3
-// Reach
-// When this creature enters, look at the top five cards of your library. You may reveal a land card or a card with {X} in its mana cost from among them and put it into your hand. Put the rest on the bottom of your library in a random order.
+	// Paradox Surveyor {G}{G/U}{U}
+	// Creature — Elf Druid
+	// 3/3
+	// Reach
+	// When this creature enters, look at the top five cards of your library. You may reveal a land card or a card with {X} in its mana cost from among them and put it into your hand. Put the rest on the bottom of your library in a random order.
 	Register("Paradox Surveyor", func() Card {
 		landOrXCostCard := NewCardFilter("land card or card with {X} in its mana cost", func(c Card) bool {
 			if c.HasType(TypeLand) {
@@ -2252,11 +2245,11 @@ func registerCreatures() {
 		)
 	})
 
-// Pest Mascot {1}{B}{G}
-// Creature — Pest Ape
-// 2/3
-// Trample
-// Whenever you gain life, put a +1/+1 counter on this creature.
+	// Pest Mascot {1}{B}{G}
+	// Creature — Pest Ape
+	// 2/3
+	// Trample
+	// Whenever you gain life, put a +1/+1 counter on this creature.
 	Register("Pest Mascot", func() Card {
 		return NewCreature("Pest Mascot", "{1}{B}{G}", 2, 3,
 			WithSubTypes("Pest", "Ape"),
@@ -2268,11 +2261,11 @@ func registerCreatures() {
 		)
 	})
 
-// Practiced Scrollsmith {R}{R/W}{W}
-// Creature — Dwarf Cleric
-// 3/2
-// First strike
-// When this creature enters, exile target noncreature, nonland card from your graveyard. Until the end of your next turn, you may cast that card.
+	// Practiced Scrollsmith {R}{R/W}{W}
+	// Creature — Dwarf Cleric
+	// 3/2
+	// First strike
+	// When this creature enters, exile target noncreature, nonland card from your graveyard. Until the end of your next turn, you may cast that card.
 	Register("Practiced Scrollsmith", func() Card {
 		isNonCreatureNonLandCard := NewCardFilter("noncreature, nonland card", func(c Card) bool {
 			return !c.HasType(TypeCreature) && !c.HasType(TypeLand)
@@ -2310,13 +2303,13 @@ func registerCreatures() {
 		)
 	})
 
-// Prismari, the Inspiration {5}{U}{R}
-// Legendary Creature — Elder Dragon
-// 7/7
-// Flying
-// Ward—Pay 5 life.
-// Instant and sorcery spells you cast have storm. (Whenever you cast an instant or sorcery spell, copy it for each spell cast before it this turn. You may choose new targets for the copies.)
-// TODO: implement
+	// Prismari, the Inspiration {5}{U}{R}
+	// Legendary Creature — Elder Dragon
+	// 7/7
+	// Flying
+	// Ward—Pay 5 life.
+	// Instant and sorcery spells you cast have storm. (Whenever you cast an instant or sorcery spell, copy it for each spell cast before it this turn. You may choose new targets for the copies.)
+	// TODO: implement
 	Register("Prismari, the Inspiration", func() Card {
 		return NewCreature("Prismari, the Inspiration", "{5}{U}{R}", 7, 7,
 			WithSubTypes("Elder", "Dragon"),
@@ -2324,12 +2317,12 @@ func registerCreatures() {
 		)
 	})
 
-// Pterafractyl {X}{G}{U}
-// Creature — Dinosaur Fractal
-// 1/0
-// Flying
-// This creature enters with X +1/+1 counters on it.
-// When this creature enters, you gain 2 life.
+	// Pterafractyl {X}{G}{U}
+	// Creature — Dinosaur Fractal
+	// 1/0
+	// Flying
+	// This creature enters with X +1/+1 counters on it.
+	// When this creature enters, you gain 2 life.
 	Register("Pterafractyl", func() Card {
 		return NewCreature("Pterafractyl", "{X}{G}{U}", 1, 0,
 			WithSubTypes("Dinosaur", "Fractal"),
@@ -2339,13 +2332,13 @@ func registerCreatures() {
 		)
 	})
 
-// Quandrix, the Proof {4}{G}{U}
-// Legendary Creature — Elder Dragon
-// 6/6
-// Flying, trample
-// Cascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its mana cost. Put the exiled cards on the bottom in a random order.)
-// Instant and sorcery spells you cast from your hand have cascade.
-// TODO: implement
+	// Quandrix, the Proof {4}{G}{U}
+	// Legendary Creature — Elder Dragon
+	// 6/6
+	// Flying, trample
+	// Cascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its mana cost. Put the exiled cards on the bottom in a random order.)
+	// Instant and sorcery spells you cast from your hand have cascade.
+	// TODO: implement
 	Register("Quandrix, the Proof", func() Card {
 		return NewCreature("Quandrix, the Proof", "{4}{G}{U}", 6, 6,
 			WithSubTypes("Elder", "Dragon"),
@@ -2353,10 +2346,10 @@ func registerCreatures() {
 		)
 	})
 
-// Sanar, Unfinished Genius // Wild Idea {U}{R} // {3}{U}{R}
-// Legendary Creature — Goblin Sorcerer // Sorcery
-// 0/4
-// TODO: implement
+	// Sanar, Unfinished Genius // Wild Idea {U}{R} // {3}{U}{R}
+	// Legendary Creature — Goblin Sorcerer // Sorcery
+	// 0/4
+	// TODO: implement
 	Register("Sanar, Unfinished Genius // Wild Idea", func() Card {
 		return NewCreature("Sanar, Unfinished Genius // Wild Idea", "{U}{R} // {3}{U}{R}", 0, 4,
 			WithSubTypes("Goblin", "Sorcerer", "//", "Sorcery"),
@@ -2364,25 +2357,25 @@ func registerCreatures() {
 		)
 	})
 
-// Scolding Administrator {W}{B}
-// Creature — Dwarf Cleric
-// 2/2
-// Menace (This creature can't be blocked except by two or more creatures.)
-// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, put a +1/+1 counter on this creature.
-// When this creature dies, if it had counters on it, put those counters on up to one target creature.
-// TODO: implement
+	// Scolding Administrator {W}{B}
+	// Creature — Dwarf Cleric
+	// 2/2
+	// Menace (This creature can't be blocked except by two or more creatures.)
+	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, put a +1/+1 counter on this creature.
+	// When this creature dies, if it had counters on it, put those counters on up to one target creature.
+	// TODO: implement
 	Register("Scolding Administrator", func() Card {
 		return NewCreature("Scolding Administrator", "{W}{B}", 2, 2,
 			WithSubTypes("Dwarf", "Cleric"),
 		)
 	})
 
-// Silverquill, the Disputant {2}{W}{B}
-// Legendary Creature — Elder Dragon
-// 4/4
-// Flying, vigilance
-// Each instant and sorcery spell you cast has casualty 1. (As you cast that spell, you may sacrifice a creature with power 1 or greater. When you do, copy the spell and you may choose new targets for the copy.)
-// TODO: implement
+	// Silverquill, the Disputant {2}{W}{B}
+	// Legendary Creature — Elder Dragon
+	// 4/4
+	// Flying, vigilance
+	// Each instant and sorcery spell you cast has casualty 1. (As you cast that spell, you may sacrifice a creature with power 1 or greater. When you do, copy the spell and you may choose new targets for the copy.)
+	// TODO: implement
 	Register("Silverquill, the Disputant", func() Card {
 		return NewCreature("Silverquill, the Disputant", "{2}{W}{B}", 4, 4,
 			WithSubTypes("Elder", "Dragon"),
@@ -2390,79 +2383,79 @@ func registerCreatures() {
 		)
 	})
 
-// Snooping Page {1}{W}{B}
-// Creature — Human Cleric
-// 2/3
-// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, this creature can't be blocked this turn.
-// Whenever this creature deals combat damage to a player, you draw a card and lose 1 life.
-// TODO: implement
+	// Snooping Page {1}{W}{B}
+	// Creature — Human Cleric
+	// 2/3
+	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, this creature can't be blocked this turn.
+	// Whenever this creature deals combat damage to a player, you draw a card and lose 1 life.
+	// TODO: implement
 	Register("Snooping Page", func() Card {
 		return NewCreature("Snooping Page", "{1}{W}{B}", 2, 3,
 			WithSubTypes("Human", "Cleric"),
 		)
 	})
 
-// Spectacular Skywhale {2}{U}{R}
-// Creature — Elemental Whale
-// 1/4
-// Flying
-// Opus — Whenever you cast an instant or sorcery spell, this creature gets +3/+0 until end of turn. If five or more mana was spent to cast that spell, put three +1/+1 counters on this creature instead.
-// TODO: implement
+	// Spectacular Skywhale {2}{U}{R}
+	// Creature — Elemental Whale
+	// 1/4
+	// Flying
+	// Opus — Whenever you cast an instant or sorcery spell, this creature gets +3/+0 until end of turn. If five or more mana was spent to cast that spell, put three +1/+1 counters on this creature instead.
+	// TODO: implement
 	Register("Spectacular Skywhale", func() Card {
 		return NewCreature("Spectacular Skywhale", "{2}{U}{R}", 1, 4,
 			WithSubTypes("Elemental", "Whale"),
 		)
 	})
 
-// Spirit Mascot {R}{W}
-// Creature — Spirit Ox
-// 2/2
-// Whenever one or more cards leave your graveyard, put a +1/+1 counter on this creature.
-// TODO: implement
+	// Spirit Mascot {R}{W}
+	// Creature — Spirit Ox
+	// 2/2
+	// Whenever one or more cards leave your graveyard, put a +1/+1 counter on this creature.
+	// TODO: implement
 	Register("Spirit Mascot", func() Card {
 		return NewCreature("Spirit Mascot", "{R}{W}", 2, 2,
 			WithSubTypes("Spirit", "Ox"),
 		)
 	})
 
-// Stadium Tidalmage {2}{U}{R}
-// Creature — Djinn Sorcerer
-// 4/4
-// Whenever this creature enters or attacks, you may draw a card. If you do, discard a card.
-// TODO: implement
+	// Stadium Tidalmage {2}{U}{R}
+	// Creature — Djinn Sorcerer
+	// 4/4
+	// Whenever this creature enters or attacks, you may draw a card. If you do, discard a card.
+	// TODO: implement
 	Register("Stadium Tidalmage", func() Card {
 		return NewCreature("Stadium Tidalmage", "{2}{U}{R}", 4, 4,
 			WithSubTypes("Djinn", "Sorcerer"),
 		)
 	})
 
-// Startled Relic Sloth {2}{R}{W}
-// Creature — Sloth Beast
-// 4/4
-// Trample, lifelink
-// At the beginning of combat on your turn, exile up to one target card from a graveyard.
-// TODO: implement
+	// Startled Relic Sloth {2}{R}{W}
+	// Creature — Sloth Beast
+	// 4/4
+	// Trample, lifelink
+	// At the beginning of combat on your turn, exile up to one target card from a graveyard.
+	// TODO: implement
 	Register("Startled Relic Sloth", func() Card {
 		return NewCreature("Startled Relic Sloth", "{2}{R}{W}", 4, 4,
 			WithSubTypes("Sloth", "Beast"),
 		)
 	})
 
-// Stirring Honormancer {2}{W}{W/B}{B}
-// Creature — Rhino Bard
-// 4/5
-// When this creature enters, look at the top X cards of your library, where X is the number of creatures you control. Put one of those cards into your hand and the rest into your graveyard.
-// TODO: implement
+	// Stirring Honormancer {2}{W}{W/B}{B}
+	// Creature — Rhino Bard
+	// 4/5
+	// When this creature enters, look at the top X cards of your library, where X is the number of creatures you control. Put one of those cards into your hand and the rest into your graveyard.
+	// TODO: implement
 	Register("Stirring Honormancer", func() Card {
 		return NewCreature("Stirring Honormancer", "{2}{W}{W/B}{B}", 4, 5,
 			WithSubTypes("Rhino", "Bard"),
 		)
 	})
 
-// Tam, Observant Sequencer // Deep Sight {2}{G}{U} // {G}{U}
-// Legendary Creature — Gorgon Wizard // Sorcery
-// 4/3
-// TODO: implement
+	// Tam, Observant Sequencer // Deep Sight {2}{G}{U} // {G}{U}
+	// Legendary Creature — Gorgon Wizard // Sorcery
+	// 4/3
+	// TODO: implement
 	Register("Tam, Observant Sequencer // Deep Sight", func() Card {
 		return NewCreature("Tam, Observant Sequencer // Deep Sight", "{2}{G}{U} // {G}{U}", 4, 3,
 			WithSubTypes("Gorgon", "Wizard", "//", "Sorcery"),
@@ -2470,26 +2463,26 @@ func registerCreatures() {
 		)
 	})
 
-// Teacher's Pest {B}{G}
-// Creature — Skeleton Pest
-// 1/1
-// Menace (This creature can't be blocked except by two or more creatures.)
-// Whenever this creature attacks, you gain 1 life.
-// {B}{G}: Return this card from your graveyard to the battlefield tapped.
-// TODO: implement
+	// Teacher's Pest {B}{G}
+	// Creature — Skeleton Pest
+	// 1/1
+	// Menace (This creature can't be blocked except by two or more creatures.)
+	// Whenever this creature attacks, you gain 1 life.
+	// {B}{G}: Return this card from your graveyard to the battlefield tapped.
+	// TODO: implement
 	Register("Teacher's Pest", func() Card {
 		return NewCreature("Teacher's Pest", "{B}{G}", 1, 1,
 			WithSubTypes("Skeleton", "Pest"),
 		)
 	})
 
-// Witherbloom, the Balancer {6}{B}{G}
-// Legendary Creature — Elder Dragon
-// 5/5
-// Affinity for creatures (This spell costs {1} less to cast for each creature you control.)
-// Flying, deathtouch
-// Instant and sorcery spells you cast have affinity for creatures.
-// TODO: implement
+	// Witherbloom, the Balancer {6}{B}{G}
+	// Legendary Creature — Elder Dragon
+	// 5/5
+	// Affinity for creatures (This spell costs {1} less to cast for each creature you control.)
+	// Flying, deathtouch
+	// Instant and sorcery spells you cast have affinity for creatures.
+	// TODO: implement
 	Register("Witherbloom, the Balancer", func() Card {
 		return NewCreature("Witherbloom, the Balancer", "{6}{B}{G}", 5, 5,
 			WithSubTypes("Elder", "Dragon"),
@@ -2497,11 +2490,11 @@ func registerCreatures() {
 		)
 	})
 
-// Zaffai and the Tempests {5}{U}{R}
-// Legendary Creature — Human Bard Sorcerer
-// 5/7
-// Once during each of your turns, you may cast an instant or sorcery spell from your hand without paying its mana cost.
-// TODO: implement
+	// Zaffai and the Tempests {5}{U}{R}
+	// Legendary Creature — Human Bard Sorcerer
+	// 5/7
+	// Once during each of your turns, you may cast an instant or sorcery spell from your hand without paying its mana cost.
+	// TODO: implement
 	Register("Zaffai and the Tempests", func() Card {
 		return NewCreature("Zaffai and the Tempests", "{5}{U}{R}", 5, 7,
 			WithSubTypes("Human", "Bard", "Sorcerer"),
@@ -2509,16 +2502,15 @@ func registerCreatures() {
 		)
 	})
 
-
 	// ===== COLORLESS CREATURES =====
 
-// Biblioplex Tomekeeper {4}
-// Artifact Creature — Construct
-// 3/4
-// When this creature enters, choose up to one —
-// • Target creature becomes prepared. (Only creatures with prepare spells can become prepared.)
-// • Target creature becomes unprepared.
-// TODO: implement
+	// Biblioplex Tomekeeper {4}
+	// Artifact Creature — Construct
+	// 3/4
+	// When this creature enters, choose up to one —
+	// • Target creature becomes prepared. (Only creatures with prepare spells can become prepared.)
+	// • Target creature becomes unprepared.
+	// TODO: implement
 	Register("Biblioplex Tomekeeper", func() Card {
 		return NewCreature("Biblioplex Tomekeeper", "{4}", 3, 4,
 			WithSubTypes("Construct"),
@@ -2526,10 +2518,10 @@ func registerCreatures() {
 		)
 	})
 
-// Mage Tower Referee {2}
-// Artifact Creature — Construct
-// 2/1
-// Whenever you cast a multicolored spell, put a +1/+1 counter on this creature.
+	// Mage Tower Referee {2}
+	// Artifact Creature — Construct
+	// 2/1
+	// Whenever you cast a multicolored spell, put a +1/+1 counter on this creature.
 	Register("Mage Tower Referee", func() Card {
 		isMulticoloredCard := NewCardFilter("multicolored", func(c Card) bool {
 			return len(c.ManaCost().Colors()) >= 2
@@ -2546,12 +2538,12 @@ func registerCreatures() {
 		)
 	})
 
-// Page, Loose Leaf {2}
-// Legendary Artifact Creature — Construct
-// 0/2
-// {T}: Add {C}.
-// Grandeur — Discard another card named Page, Loose Leaf: Reveal cards from the top of your library until you reveal an instant or sorcery card. Put that card into your hand and the rest on the bottom of your library in a random order.
-// TODO: implement
+	// Page, Loose Leaf {2}
+	// Legendary Artifact Creature — Construct
+	// 0/2
+	// {T}: Add {C}.
+	// Grandeur — Discard another card named Page, Loose Leaf: Reveal cards from the top of your library until you reveal an instant or sorcery card. Put that card into your hand and the rest on the bottom of your library in a random order.
+	// TODO: implement
 	Register("Page, Loose Leaf", func() Card {
 		return NewCreature("Page, Loose Leaf", "{2}", 0, 2,
 			WithSubTypes("Construct"),
@@ -2560,37 +2552,37 @@ func registerCreatures() {
 		)
 	})
 
-// Rancorous Archaic {5}
-// Creature — Avatar
-// 2/2
-// Trample, reach
-// Converge — This creature enters with a +1/+1 counter on it for each color of mana spent to cast it.
-// TODO: implement
+	// Rancorous Archaic {5}
+	// Creature — Avatar
+	// 2/2
+	// Trample, reach
+	// Converge — This creature enters with a +1/+1 counter on it for each color of mana spent to cast it.
+	// TODO: implement
 	Register("Rancorous Archaic", func() Card {
 		return NewCreature("Rancorous Archaic", "{5}", 2, 2,
 			WithSubTypes("Avatar"),
 		)
 	})
 
-// Sundering Archaic {6}
-// Creature — Avatar
-// 3/3
-// Converge — When this creature enters, exile target nonland permanent an opponent controls with mana value less than or equal to the number of colors of mana spent to cast this creature.
-// {2}: Put target card from a graveyard on the bottom of its owner's library.
-// TODO: implement
+	// Sundering Archaic {6}
+	// Creature — Avatar
+	// 3/3
+	// Converge — When this creature enters, exile target nonland permanent an opponent controls with mana value less than or equal to the number of colors of mana spent to cast this creature.
+	// {2}: Put target card from a graveyard on the bottom of its owner's library.
+	// TODO: implement
 	Register("Sundering Archaic", func() Card {
 		return NewCreature("Sundering Archaic", "{6}", 3, 3,
 			WithSubTypes("Avatar"),
 		)
 	})
 
-// The Dawning Archaic {10}
-// Legendary Creature — Avatar
-// 7/7
-// This spell costs {1} less to cast for each instant and sorcery card in your graveyard.
-// Reach
-// Whenever The Dawning Archaic attacks, you may cast target instant or sorcery card from your graveyard without paying its mana cost. If that spell would be put into your graveyard, exile it instead.
-// TODO: implement
+	// The Dawning Archaic {10}
+	// Legendary Creature — Avatar
+	// 7/7
+	// This spell costs {1} less to cast for each instant and sorcery card in your graveyard.
+	// Reach
+	// Whenever The Dawning Archaic attacks, you may cast target instant or sorcery card from your graveyard without paying its mana cost. If that spell would be put into your graveyard, exile it instead.
+	// TODO: implement
 	Register("The Dawning Archaic", func() Card {
 		return NewCreature("The Dawning Archaic", "{10}", 7, 7,
 			WithSubTypes("Avatar"),
@@ -2598,12 +2590,12 @@ func registerCreatures() {
 		)
 	})
 
-// Transcendent Archaic {7}
-// Creature — Avatar
-// 6/6
-// Vigilance
-// Converge — When this creature enters, you may draw X cards, where X is the number of colors of mana spent to cast this spell. If you draw one or more cards this way, discard two cards.
-// TODO: implement
+	// Transcendent Archaic {7}
+	// Creature — Avatar
+	// 6/6
+	// Vigilance
+	// Converge — When this creature enters, you may draw X cards, where X is the number of colors of mana spent to cast this spell. If you draw one or more cards this way, discard two cards.
+	// TODO: implement
 	Register("Transcendent Archaic", func() Card {
 		return NewCreature("Transcendent Archaic", "{7}", 6, 6,
 			WithSubTypes("Avatar"),
