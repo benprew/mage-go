@@ -2617,6 +2617,34 @@ func TestSpectacularSkywhale_OpusFiveManaSpentPutsCounters(t *testing.T) {
 }
 
 // =============================================================================
+// Adventurous Eater // Have a Bite
+// =============================================================================
+
+// TestAdventurousEater_ETBPrepared: Adventurous Eater enters the battlefield prepared.
+func TestAdventurousEater_ETBPrepared(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Adventurous Eater // Have a Bite")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Adventurous Eater // Have a Bite", core.AttrPrepared, true)
+}
+
+// TestAdventurousEater_HaveABiteCounterAndLifeGain: casting a copy of Have a Bite
+// puts a +1/+1 counter on the target creature and gains 1 life.
+func TestAdventurousEater_HaveABiteCounterAndLifeGain(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Adventurous Eater // Have a Bite")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.ChoosePermanent(gametest.PlayerA, "Grizzly Bears")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Adventurous Eater // Have a Bite")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 3, 3)
+	g.AssertLife(gametest.PlayerA, 21)
+	g.AssertHasAbility(gametest.PlayerA, "Adventurous Eater // Have a Bite", core.AttrPrepared, false)
+}
+
+// =============================================================================
 // Skycoach Conductor // All Aboard
 // =============================================================================
 

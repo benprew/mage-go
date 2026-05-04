@@ -647,10 +647,57 @@ func registerCreatures() {
 	// Emeritus of Ideation // Ancestral Recall {3}{U}{U} // {U}
 	// Creature — Human Wizard // Instant
 	// 5/5
-	// TODO: implement
+	// Flying, ward {2}
+	// This creature enters prepared.
+	// Whenever this creature attacks, you may exile eight cards from your graveyard. If you do, this creature becomes prepared.
+	// ---
+	// Ancestral Recall {U}
+	// Instant
+	// Target player draws three cards.
+	// XXX: Ward {2} — the engine has no Ward mechanic implementation.
 	Register("Emeritus of Ideation // Ancestral Recall", func() Card {
+		spellFactory := func() Card {
+			return NewInstant("Ancestral Recall", "{U}",
+				NewTargetedSpell(
+					TargetPlayer(),
+					DrawCards(Fixed(3)),
+				))
+		}
 		return NewCreature("Emeritus of Ideation // Ancestral Recall", "{3}{U}{U} // {U}", 5, 5,
-			WithSubTypes("Human", "Wizard", "//", "Instant"),
+			WithSubTypes("Human", "Wizard"),
+			WithKeyword(Flying),
+			WithPreparedSpell(spellFactory),
+			// Whenever this creature attacks, you may exile eight cards from your graveyard.
+			// If you do, this creature becomes prepared.
+			WithAbility(AttacksTrigger(
+				FuncEffect(
+					"you may exile eight cards from your graveyard; if you do, this creature becomes prepared",
+					EffectProperties{},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						if len(p.Graveyard()) < 8 {
+							return nil
+						}
+						if !p.ChooseMayAbility("exile eight cards from your graveyard to become prepared") {
+							return nil
+						}
+						// Exile eight cards from the graveyard.
+						gy := p.Graveyard()
+						for i := 0; i < 8; i++ {
+							card := gy[i]
+							if _, ok := p.RemoveFromGraveyard(card.ID()); ok {
+								g.ExileCard(card, sourceID)
+							}
+						}
+						g.SetPrepared(sourceID, true)
+						return nil
+					},
+				),
+				false,
+			)),
 		)
 	})
 
@@ -1254,10 +1301,26 @@ func registerCreatures() {
 	// Adventurous Eater // Have a Bite {2}{B} // {B}
 	// Creature — Human Warlock // Sorcery
 	// 3/2
-	// TODO: implement
+	// This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)
+	// ---
+	// Have a Bite {B}
+	// Sorcery
+	// Put a +1/+1 counter on target creature. You gain 1 life.
 	Register("Adventurous Eater // Have a Bite", func() Card {
+		spellFactory := func() Card {
+			return NewSorcery("Have a Bite", "{B}",
+				NewTargetedSpell(
+					TargetCreature(),
+					CompositeEffects(
+						"put a +1/+1 counter on target creature; you gain 1 life",
+						AddCounters(P1P1, Fixed(1)),
+						GainLife(1),
+					),
+				))
+		}
 		return NewCreature("Adventurous Eater // Have a Bite", "{2}{B} // {B}", 3, 2,
-			WithSubTypes("Human", "Warlock", "//", "Sorcery"),
+			WithSubTypes("Human", "Warlock"),
+			WithPreparedSpell(spellFactory),
 		)
 	})
 
@@ -2883,11 +2946,20 @@ func registerCreatures() {
 					AddCounters(P1P1, Fixed(1)),
 				))
 		}
+		// Abigale becomes prepared via creature-spell trigger, not at ETB.
+		// XXX: HasPreparedSpell returns false for Biblioblex Tomekeeper because this card
+		// does not use WithPreparedSpell (which would incorrectly set Prepared at ETB).
+		castCopy := FuncEffect(
+			"cast a copy of this creature's spell",
+			EffectProperties{},
+			func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				return g.CastPreparedSpellCopy(controller, sourceID, spellFactory)
+			},
+		)
 		return NewCreature("Abigale, Poet Laureate // Heroic Stanza", "{1}{W}{B} // {1}{W/B}", 2, 3,
 			WithSubTypes("Bird", "Bard", "//", "Sorcery"),
 			WithSuperTypes(SuperLegendary),
 			WithKeyword(Flying),
-			WithPreparedSpell(spellFactory),
 			// Whenever you cast a creature spell, Abigale becomes prepared.
 			WithAbility(WheneverYouCastSpellTrigger(
 				FuncEffect(
@@ -2901,6 +2973,15 @@ func registerCreatures() {
 				false,
 				IsCreatureCard,
 			)),
+			// Sorcery-speed activated ability to cast a copy of the prepared spell.
+			WithActivatedAbility(
+				castCopy,
+				ManaCostOf("{0}"),
+				WithSorcerySpeed(),
+				WithActivationCondition(func(g *Game, src *Permanent, controller uuid.UUID) bool {
+					return src != nil && src.HasAttr(AttrPrepared)
+				}),
+			),
 		)
 	})
 
@@ -3593,13 +3674,31 @@ func registerCreatures() {
 					),
 				))
 		}
+		// Kirol becomes prepared when graveyard cards leave, not at ETB.
+		// XXX: HasPreparedSpell returns false for Biblioplex Tomekeeper because this card
+		// does not use WithPreparedSpell (which would incorrectly set Prepared at ETB).
+		castCopy := FuncEffect(
+			"cast a copy of this creature's spell",
+			EffectProperties{},
+			func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				return g.CastPreparedSpellCopy(controller, sourceID, spellFactory)
+			},
+		)
 		return NewCreature("Kirol, History Buff // Pack a Punch", "{R}{W} // {1}{R}{W}", 2, 3,
 			WithSubTypes("Vampire", "Cleric", "//", "Sorcery"),
 			WithSuperTypes(SuperLegendary),
-			WithPreparedSpell(spellFactory),
 			// XXX: "Whenever one or more cards leave your graveyard, Kirol becomes prepared"
 			// is not implemented — the engine does not fire zone-change events when cards
 			// leave the graveyard. See similar XXX markers on Hardened Academic and others.
+			// Sorcery-speed activated ability to cast a copy of the prepared spell.
+			WithActivatedAbility(
+				castCopy,
+				ManaCostOf("{0}"),
+				WithSorcerySpeed(),
+				WithActivationCondition(func(g *Game, src *Permanent, controller uuid.UUID) bool {
+					return src != nil && src.HasAttr(AttrPrepared)
+				}),
+			),
 		)
 	})
 
@@ -4319,10 +4418,19 @@ func registerCreatures() {
 					GainLife(1),
 				)))
 		}
+		// Tam becomes prepared via landfall, not at ETB.
+		// XXX: HasPreparedSpell returns false for Biblioplex Tomekeeper because this card
+		// does not use WithPreparedSpell (which would incorrectly set Prepared at ETB).
+		castCopy := FuncEffect(
+			"cast a copy of this creature's spell",
+			EffectProperties{},
+			func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				return g.CastPreparedSpellCopy(controller, sourceID, spellFactory)
+			},
+		)
 		return NewCreature("Tam, Observant Sequencer // Deep Sight", "{2}{G}{U} // {G}{U}", 4, 3,
 			WithSubTypes("Gorgon", "Wizard", "//", "Sorcery"),
 			WithSuperTypes(SuperLegendary),
-			WithPreparedSpell(spellFactory),
 			// Landfall — Whenever a land you control enters, Tam becomes prepared.
 			WithAbility(NewTriggered(EvtZoneChange, false,
 				FuncEffect(
@@ -4338,6 +4446,15 @@ func registerCreatures() {
 				EventSourceMatchesPermanentFilter{Filter: IsLand},
 				EventSourceControlledByController{},
 			}})),
+			// Sorcery-speed activated ability to cast a copy of the prepared spell.
+			WithActivatedAbility(
+				castCopy,
+				ManaCostOf("{0}"),
+				WithSorcerySpeed(),
+				WithActivationCondition(func(g *Game, src *Permanent, controller uuid.UUID) bool {
+					return src != nil && src.HasAttr(AttrPrepared)
+				}),
+			),
 		)
 	})
 
