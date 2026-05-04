@@ -263,9 +263,37 @@ func registerLands() {
 // Land
 // {T}: Add {C}.
 // {3}, {T}: Target creature becomes prepared. (Only creatures with prepare spells can become prepared.)
-// TODO: implement (Skycoach Waypoint uses the "prepared" mechanic which is not in scope for this batch)
 	Register("Skycoach Waypoint", func() Card {
-		return NewLand("Skycoach Waypoint")
+		preparedFilter := NewPermanentFilter("creature with a prepare spell",
+			func(p *Permanent, g *Game) bool {
+				return p != nil && p.Card != nil && HasPreparedSpell(p.Card)
+			})
+		return NewLand("Skycoach Waypoint",
+			WithManaAbility(Colorless),
+			WithActivatedAbility(
+				FuncEffect("target creature becomes prepared",
+					EffectProperties{},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						target := targets[0]
+						perm := g.FindPermanent(target)
+						if perm == nil {
+							return nil
+						}
+						if !HasPreparedSpell(perm.Card) {
+							return nil
+						}
+						g.SetPrepared(target, true)
+						return nil
+					},
+				),
+				ManaCostOf("{3}"),
+				WithCost(TapSourceCost()),
+				WithTarget(TargetCreature(preparedFilter)),
+			),
+		)
 	})
 
 // Spectacle Summit
