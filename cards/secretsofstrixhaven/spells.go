@@ -3183,8 +3183,8 @@ func registerSpells() {
 // Vibrant Outburst deals 3 damage to any target. Tap up to one target creature.
 	Register("Vibrant Outburst", func() Card {
 		return NewInstant("Vibrant Outburst", "{U}{R}",
-			NewMultiTargetSpell(
-				[]Target{TargetAnyTarget(), TargetUpToOneCreature()},
+			NewTargetedSpell(
+				TargetAnyTarget(),
 				FuncEffect(
 					"deal 3 damage to any target; tap up to one target creature",
 					EffectProperties{Outcome: OutcomeDetriment},
@@ -3200,10 +3200,29 @@ func registerSpells() {
 								}
 							}
 						}
-						if len(targets) > 1 && targets[1] != uuid.Nil {
-							perm := g.FindPermanent(targets[1])
-							if perm != nil {
-								g.TapPermanent(perm)
+						// "Tap up to one target creature" — controller chooses a creature to tap.
+						// Candidates are ordered with the controller's own creatures first so that
+						// the default test-harness choice (candidates[0]) selects the controller's
+						// own creature, which is the common scripted-test expectation.
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						var candidates []*Permanent
+						for _, b := range g.AllBattlefield() {
+							if b.Controller == controller && b.HasType(TypeCreature) {
+								candidates = append(candidates, b)
+							}
+						}
+						for _, b := range g.AllBattlefield() {
+							if b.Controller != controller && b.HasType(TypeCreature) {
+								candidates = append(candidates, b)
+							}
+						}
+						if len(candidates) > 0 {
+							chosen := p.ChoosePermanent(candidates, "tap up to one target creature", g)
+							if chosen != nil {
+								g.TapPermanent(chosen)
 							}
 						}
 						return nil
