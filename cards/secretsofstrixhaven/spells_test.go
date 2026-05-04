@@ -305,6 +305,9 @@ func TestZimonesExperiment(t *testing.T) {
 	t.Run("puts land onto battlefield tapped and creature into hand", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Zimone's Experiment")
+		// Library contains Forest and Grizzly Bears in the top 5 to reveal.
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Zimone's Experiment")
 		// From top 5, reveal Forest (land) and Grizzly Bears (creature)
 		g.ChooseFromLibrary(gametest.PlayerA, "Forest")

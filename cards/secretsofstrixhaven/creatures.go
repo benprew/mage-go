@@ -2884,10 +2884,57 @@ func registerCreatures() {
 	// 6/6
 	// Vigilance
 	// Converge — When this creature enters, you may draw X cards, where X is the number of colors of mana spent to cast this spell. If you draw one or more cards this way, discard two cards.
-	// TODO: implement
 	Register("Transcendent Archaic", func() Card {
 		return NewCreature("Transcendent Archaic", "{7}", 6, 6,
 			WithSubTypes("Avatar"),
+			WithKeyword(Vigilance),
+			WithAbility(ETBEffect(FuncEffect(
+				"converge: you may draw X cards (X=colors spent), discard 2 if drew any",
+				EffectProperties{Outcome: OutcomeBenefit, DrawCount: 1},
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					// Converge: count only actual colors (not colorless) from ColorsSpent.
+					x := 0
+					ctx := g.ResolvingCastContext()
+					if ctx != nil {
+						for c, v := range ctx.ColorsSpent {
+							if v > 0 && c != Colorless {
+								x++
+							}
+						}
+					}
+					if x == 0 {
+						return nil
+					}
+					p := g.GetPlayer(controller)
+					if p == nil {
+						return nil
+					}
+					if !p.ChooseMayAbility("draw X cards where X is the number of colors spent") {
+						return nil
+					}
+					drawn := 0
+					for i := 0; i < x; i++ {
+						card, ok := g.PlayerDrawCard(p)
+						if !ok || card == nil {
+							break
+						}
+						drawn++
+					}
+					if drawn >= 1 {
+						for i := 0; i < 2; i++ {
+							hand := p.Hand()
+							if len(hand) == 0 {
+								break
+							}
+							chosen := p.ChooseCardsFromHand(1, "discard a card", g)
+							for _, c := range chosen {
+								g.PlayerDiscard(p, c.ID())
+							}
+						}
+					}
+					return nil
+				},
+			))),
 		)
 	})
 
