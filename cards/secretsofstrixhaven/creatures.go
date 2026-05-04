@@ -862,10 +862,14 @@ func registerCreatures() {
 	// 5/4
 	// Ward—Discard a card.
 	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, return target creature card from your graveyard to the battlefield.
-	// TODO: implement
 	Register("Forum Necroscribe", func() Card {
 		return NewCreature("Forum Necroscribe", "{5}{B}", 5, 4,
 			WithSubTypes("Troll", "Warlock"),
+			// XXX: Ward—Discard a card. The engine has no Ward mechanic implementation.
+			WithAbility(WheneverYouCastInstantOrSorceryTargetingCreatureTrigger(
+				ReturnFromGraveyardToBattlefield(),
+				false,
+			).AddTarget(TargetCardInYourGraveyard(IsCreatureCard))),
 		)
 	})
 
@@ -1122,10 +1126,31 @@ func registerCreatures() {
 	// Creature — Human Sorcerer
 	// 2/2
 	// Opus — Whenever you cast an instant or sorcery spell, this creature gets +1/+1 until end of turn. If five or more mana was spent to cast that spell, this creature also gains double strike until end of turn.
-	// TODO: implement
 	Register("Expressive Firedancer", func() Card {
+		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c Card) bool {
+			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
+		})
 		return NewCreature("Expressive Firedancer", "{1}{R}", 2, 2,
 			WithSubTypes("Human", "Sorcerer"),
+			// Opus — Whenever you cast an instant or sorcery spell, this creature gets
+			// +1/+1 until end of turn. If five or more mana was spent to cast that spell,
+			// this creature also gains double strike until end of turn.
+			WithAbility(WheneverYouCastSpellTrigger(
+				OpusEffect(
+					"this creature gets +1/+1 until end of turn; if 5+ mana spent, also gains double strike",
+					func(g *Game, sourceID, controller uuid.UUID, manaSpent int) error {
+						boost := TemporaryBoost(sourceID, 1, 1)
+						boost.SetSourceID(sourceID)
+						g.AddContinuousEffect(boost)
+						if manaSpent >= 5 {
+							_ = GrantKeyword(DoubleStrike).Targeting(ToSource()).Until(EndOfTurn).Apply(g, sourceID, controller, nil)
+						}
+						return nil
+					},
+				),
+				false,
+				isInstantOrSorcery,
+			)),
 		)
 	})
 
@@ -1467,10 +1492,60 @@ func registerCreatures() {
 	// 1/1
 	// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
 	// When this creature dies, if it had one or more counters on it, create a 0/0 green and blue Fractal creature token, then put this creature's counters on that token.
-	// TODO: implement
 	Register("Ambitious Augmenter", func() Card {
 		return NewCreature("Ambitious Augmenter", "{G}", 1, 1,
 			WithSubTypes("Turtle", "Wizard"),
+			// Increment
+			WithAbility(IncrementTrigger()),
+			// When this creature dies, if it had one or more counters on it,
+			// create a 0/0 green and blue Fractal creature token, then put
+			// this creature's counters on that token.
+			WithAbility(PutIntoGraveyardFromBattlefieldTrigger(
+				FuncEffect(
+					"if had counters, create Fractal token and move counters to it",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						lkiView := g.LookupObject(sourceID)
+						if lkiView == nil {
+							return nil
+						}
+						lki, ok := lkiView.(*PermanentLKI)
+						if !ok || lki == nil {
+							return nil
+						}
+						if lki.Snapshot == nil {
+							return nil
+						}
+						totalCounters := 0
+						for _, n := range lki.Snapshot.Counters {
+							totalCounters += int(n)
+						}
+						if totalCounters == 0 {
+							return nil
+						}
+						// Create a 0/0 green and blue Fractal creature token.
+						token := NewToken("Fractal Token", 0, 0,
+							[]CardType{TypeCreature},
+							[]string{"Fractal"},
+						)
+						token.SetColorOverride([]Color{Green, Blue})
+						token.SetOwner(controller)
+						perm := g.PutOnBattlefield(token, controller)
+						if perm == nil {
+							return nil
+						}
+						// Put this creature's counters on that token.
+						for ct, n := range lki.Snapshot.Counters {
+							if n > 0 {
+								g.AddCountersWithReplacement(perm, CounterType(ct), int(n), sourceID, false)
+							}
+						}
+						g.ApplyContinuousEffects()
+						return nil
+					},
+				),
+				false,
+			)),
 		)
 	})
 
@@ -1570,10 +1645,11 @@ func registerCreatures() {
 	// 3/4
 	// Reach
 	// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
-	// TODO: implement
 	Register("Hungry Graffalon", func() Card {
 		return NewCreature("Hungry Graffalon", "{3}{G}", 3, 4,
 			WithSubTypes("Giraffe"),
+			WithKeyword(Reach),
+			WithAbility(IncrementTrigger()),
 		)
 	})
 
@@ -2127,10 +2203,60 @@ func registerCreatures() {
 	// Ward {2}
 	// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
 	// At the beginning of each end step, if you put a counter on this creature this turn, create a 0/0 green and blue Fractal creature token and put three +1/+1 counters on it.
-	// TODO: implement
 	Register("Fractal Tender", func() Card {
+		// incrementAndFlagEffect adds a +1/+1 counter when the Increment condition is
+		// met and marks the creature with a Charge counter as a "counter-placed-this-turn"
+		// flag. The Charge counter is a repurposed flag marker — Fractal Tender has no
+		// normal use for Charge counters, so this is safe. The end-step trigger checks
+		// for the flag and clears it after creating the Fractal token.
+		incrementAndFlagEffect := OpusEffect(
+			"if mana spent > this creature's power or toughness, put a +1/+1 counter on this; mark flag",
+			func(g *Game, sourceID, controller uuid.UUID, manaSpent int) error {
+				perm := g.FindPermanent(sourceID)
+				if perm == nil {
+					return nil
+				}
+				pow := perm.CurrentPower(g)
+				tou := perm.CurrentToughness(g)
+				if manaSpent > pow || manaSpent > tou {
+					g.AddCountersWithReplacement(perm, P1P1, 1, sourceID, false)
+					// Set a Charge counter as a "counter placed this turn" flag.
+					perm.AddCounter(Charge, 1)
+				}
+				return nil
+			},
+		)
+		createFractalToken := FuncEffect(
+			"if counter placed this turn: create 0/0 green and blue Fractal token with three +1/+1 counters",
+			EffectProperties{Outcome: OutcomeBenefit},
+			func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				perm := g.FindPermanent(sourceID)
+				if perm == nil {
+					return nil
+				}
+				if perm.Counters[Charge] == 0 {
+					return nil
+				}
+				// Clear the flag.
+				perm.AddCounter(Charge, -int(perm.Counters[Charge]))
+				token := NewToken("Fractal Token", 0, 0,
+					[]CardType{TypeCreature}, []string{"Fractal"})
+				token.SetOwner(controller)
+				token.SetColorOverride([]Color{Green, Blue})
+				tokenPerm := g.PutOnBattlefield(token, controller)
+				if tokenPerm == nil {
+					return nil
+				}
+				g.AddCountersWithReplacement(tokenPerm, P1P1, 3, sourceID, false)
+				return nil
+			},
+		)
 		return NewCreature("Fractal Tender", "{3}{G}{U}", 3, 3,
 			WithSubTypes("Elf", "Wizard"),
+			// XXX: Ward {2}. The engine has no Ward mechanic implementation.
+			WithAbility(WheneverYouCastSpellTrigger(incrementAndFlagEffect, false)),
+			WithAbility(BeginningOfEachEndStepTrigger(createFractalToken, false).
+				SetConditionData(EventPlayerIsController{})),
 		)
 	})
 

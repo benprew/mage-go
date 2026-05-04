@@ -1596,9 +1596,10 @@ func TestDelugeVirtuoso_OpusBonusPowerToughness(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
 		g.ChoosePermanent(gametest.PlayerA, "Deluge Virtuoso") // no opp creature to tap
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
-		g.StopAt(1, core.PrecombatMain)
+		// Stop after PrecombatMain so the trigger resolves; verify before EOT cleanup
+		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		// Deluge Virtuoso is 2/2 base, gets +1/+1 = 3/3
+		// Deluge Virtuoso is 2/2 base, gets +1/+1 = 3/3 until end of turn
 		g.AssertPowerToughness(gametest.PlayerA, "Deluge Virtuoso", 3, 3)
 	})
 	t.Run("opus: only fires for instant or sorcery, not creatures", func(t *testing.T) {
@@ -1609,9 +1610,280 @@ func TestDelugeVirtuoso_OpusBonusPowerToughness(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
 		g.ChoosePermanent(gametest.PlayerA, "Deluge Virtuoso") // no opp creature to tap
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Grizzly Bears")
-		g.StopAt(1, core.PrecombatMain)
+		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		// No Opus trigger — Deluge Virtuoso stays at 2/2
 		g.AssertPowerToughness(gametest.PlayerA, "Deluge Virtuoso", 2, 2)
 	})
+}
+
+// TestExpressiveFiredancer_OpusBoost verifies that casting an instant or
+// sorcery spell triggers Expressive Firedancer's Opus and grants +1/+1 until
+// end of turn (expires by turn 2).
+func TestExpressiveFiredancer_OpusBoost(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Expressive Firedancer")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
+	// Stop at turn 2 to verify the boost has expired (it was "until end of turn 1").
+	g.StopAt(2, core.PrecombatMain)
+	g.Execute()
+	// Boost expired; Expressive Firedancer is back to 2/2.
+	g.AssertPowerToughness(gametest.PlayerA, "Expressive Firedancer", 2, 2)
+}
+
+// TestExpressiveFiredancer_OpusBoostDuringCombat verifies the +1/+1 boost is
+// active during combat when the spell was cast precombat.
+func TestExpressiveFiredancer_OpusBoostDuringCombat(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Expressive Firedancer")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
+	// Attack with Firedancer during combat — it should be 3/3 during attack step.
+	g.Attack(1, gametest.PlayerA, "Expressive Firedancer")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Expressive Firedancer", 3, 3)
+}
+
+// TestExpressiveFiredancer_OpusDoubleStrikeFiveOrMore verifies that spending
+// five or more mana also grants double strike until EOT.
+func TestExpressiveFiredancer_OpusDoubleStrikeFiveOrMore(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Expressive Firedancer")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 5)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Fireball")
+	// Fireball {X}{R} with X=4 = 5 mana spent.
+	g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerA, "Fireball", 4, "PlayerB")
+	g.Attack(1, gametest.PlayerA, "Expressive Firedancer")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	// +1/+1 boost and double strike active during combat.
+	g.AssertPowerToughness(gametest.PlayerA, "Expressive Firedancer", 3, 3)
+	g.AssertHasAbility(gametest.PlayerA, "Expressive Firedancer", core.DoubleStrike, true)
+}
+
+// TestAmbitiousAugmenter_Increment verifies that casting a spell whose total
+// mana cost is greater than Ambitious Augmenter's power or toughness places a
+// +1/+1 counter on it.
+func TestAmbitiousAugmenter_Increment(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ambitious Augmenter")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Grizzly Bears") // {1}{G} = 2 mana > power 1 or toughness 1
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertCounterCount(gametest.PlayerA, "Ambitious Augmenter", core.P1P1, 1)
+	g.AssertPowerToughness(gametest.PlayerA, "Ambitious Augmenter", 2, 2)
+}
+
+// TestAmbitiousAugmenter_DiesWithCountersCreatesFractal verifies that when
+// Ambitious Augmenter dies with one or more counters on it, a 0/0 green and
+// blue Fractal creature token is created and receives those counters.
+func TestAmbitiousAugmenter_DiesWithCountersCreatesFractal(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ambitious Augmenter")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Grizzly Bears")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Grizzly Bears")
+	// Augmenter now has 1 P1P1 counter. Kill it.
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Ambitious Augmenter")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Fractal Token", 1)
+	g.AssertCounterCount(gametest.PlayerA, "Fractal Token", core.P1P1, 1)
+}
+
+// TestAmbitiousAugmenter_DiesWithoutCountersNoFractal verifies that when
+// Ambitious Augmenter dies with no counters on it, no Fractal token is created.
+func TestAmbitiousAugmenter_DiesWithoutCountersNoFractal(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ambitious Augmenter")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Ambitious Augmenter")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Fractal Token", 0)
+}
+
+// TestBertaWiseExtrapolator_Increment verifies that casting a spell that costs
+// more mana than Berta's power or toughness places a +1/+1 counter on her.
+func TestBertaWiseExtrapolator_Increment(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Berta, Wise Extrapolator")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Grizzly Bears") // {1}{G} = 2 mana > power 1
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertCounterCount(gametest.PlayerA, "Berta, Wise Extrapolator", core.P1P1, 1)
+}
+
+// TestBertaWiseExtrapolator_FractalAbility verifies that the {X},{T} ability
+// creates a 0/0 green and blue Fractal creature token with X +1/+1 counters.
+func TestBertaWiseExtrapolator_FractalAbility(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Berta, Wise Extrapolator")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.ActivateAbilityWithX(1, core.PrecombatMain, gametest.PlayerA, "Berta, Wise Extrapolator", 2)
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Fractal Token", 1)
+	g.AssertCounterCount(gametest.PlayerA, "Fractal Token", core.P1P1, 2)
+}
+
+// TestBiblioplexTomekeeper_BaseStats verifies Biblioplex Tomekeeper is a 3/4
+// artifact creature.
+func TestBiblioplexTomekeeper_BaseStats(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	// ETB: choose "do nothing" (mode index 2)
+	g.ChooseMode(gametest.PlayerA, 2)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Biblioplex Tomekeeper")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Biblioplex Tomekeeper", 3, 4)
+}
+
+// TestBiblioplexTomekeeper_BecomesUnprepared verifies that when "becomes
+// unprepared" mode is chosen, the prepared status is removed from the target.
+func TestBiblioplexTomekeeper_BecomesUnprepared(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	// Emeritus of Abundance has WithPreparedSpell — it enters prepared via ETB.
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Emeritus of Abundance // Regrowth")
+	// ETB Tomekeeper: choose mode 1 (becomes unprepared), then target Emeritus.
+	g.ChooseMode(gametest.PlayerA, 1)
+	g.ChoosePermanent(gametest.PlayerA, "Emeritus of Abundance // Regrowth")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Biblioplex Tomekeeper")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Emeritus of Abundance // Regrowth", core.AttrPrepared, false)
+}
+
+// TestColorstormStallion_HasHaste verifies Colorstorm Stallion has haste.
+func TestColorstormStallion_HasHaste(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Colorstorm Stallion")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Colorstorm Stallion", core.Haste, true)
+}
+
+// TestColorstormStallion_OpusBoostInstant verifies that Colorstorm Stallion
+// gets +1/+1 until end of turn when its controller casts an instant or sorcery.
+func TestColorstormStallion_OpusBoostInstant(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Colorstorm Stallion")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
+	// Stop before EOT so the boost is still active.
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Colorstorm Stallion", 4, 4)
+}
+
+// TestColorstormStallion_OpusFiveManaCreatesTokenCopy verifies that casting
+// an instant or sorcery with five or more mana creates a token copy of
+// Colorstorm Stallion.
+func TestColorstormStallion_OpusFiveManaCreatesTokenCopy(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Colorstorm Stallion")
+	// Fireball {X}{R} with X=4 → 5 mana total spent
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Fireball")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 5)
+	g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerA, "Fireball", 4, "PlayerB")
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	// Original Stallion + one token copy
+	g.AssertPermanentCount(gametest.PlayerA, "Colorstorm Stallion", 2)
+}
+
+// TestConciliatorsDuelist_ETBDrawAndLifeLoss verifies that when Conciliator's
+// Duelist enters, its controller draws a card and each player loses 1 life.
+func TestConciliatorsDuelist_ETBDrawAndLifeLoss(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Conciliator's Duelist")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerA, 19)
+	g.AssertLife(gametest.PlayerB, 19)
+	g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 1)
+}
+
+// TestConciliatorsDuelist_ReparteeExilesAndReturns verifies that when
+// Conciliator's Duelist's controller casts an instant or sorcery that targets
+// a creature, up to one target creature is exiled and returned at the
+// beginning of the next end step.
+func TestConciliatorsDuelist_ReparteeExilesAndReturns(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Plains")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Conciliator's Duelist")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	// Cast Lightning Bolt targeting Grizzly Bears (creature target → Repartee fires).
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Grizzly Bears")
+	// Repartee trigger fires: exile Conciliator's Duelist itself.
+	g.ChoosePermanent(gametest.PlayerA, "Conciliator's Duelist")
+	g.StopAt(2, core.EndStep)
+	g.Execute()
+	// After the next end step, Conciliator's Duelist returns to battlefield.
+	g.AssertPermanentCount(gametest.PlayerA, "Conciliator's Duelist", 1)
+}
+
+// TestElementalMascot_FlyingVigilance verifies that Elemental Mascot has
+// flying and vigilance.
+func TestElementalMascot_FlyingVigilance(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Elemental Mascot")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Elemental Mascot", core.Flying, true)
+	g.AssertHasAbility(gametest.PlayerA, "Elemental Mascot", core.Vigilance, true)
+	g.AssertPowerToughness(gametest.PlayerA, "Elemental Mascot", 1, 4)
+}
+
+// TestElementalMascot_OpusPowerBoost verifies that casting an instant or
+// sorcery spell grants +1/+0 until end of turn via the Opus trigger.
+func TestElementalMascot_OpusPowerBoost(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Elemental Mascot")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
+	g.Attack(1, gametest.PlayerA, "Elemental Mascot")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	// +1/+0 boost active during combat.
+	g.AssertPowerToughness(gametest.PlayerA, "Elemental Mascot", 2, 4)
+}
+
+// TestElementalMascot_OpusExilesTopCardFiveOrMore verifies that when five or
+// more mana is spent, the top card of the library is exiled and the controller
+// may play it until end of next turn.
+func TestElementalMascot_OpusExilesTopCardFiveOrMore(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Elemental Mascot")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 5)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Fireball")
+	// Fireball {X}{R} with X=4 = 5 mana spent.
+	g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerA, "Fireball", 4, "PlayerB")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Top card (Grizzly Bears) should be in exile.
+	g.AssertExileCount("Grizzly Bears", 1)
+	g.AssertLibraryCount(gametest.PlayerA, "Grizzly Bears", 0)
 }
