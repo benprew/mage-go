@@ -1590,10 +1590,17 @@ func registerSpells() {
 // Instant
 // Create a 3/3 blue and red Elemental creature token with flying.
 // Surveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)
-// TODO: implement
 	Register("Muse's Encouragement", func() Card {
 		return NewInstant("Muse's Encouragement", "{4}{U}",
-			NewSpellAbility(),
+			NewSpellAbility(
+				CreateColoredToken("Elemental", 3, 3,
+					[]Color{Blue, Red},
+					[]CardType{TypeCreature},
+					[]string{"Elemental"},
+					Flying,
+				),
+				surveilEffect(2),
+			),
 		)
 	})
 
