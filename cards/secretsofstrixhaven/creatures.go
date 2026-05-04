@@ -2740,10 +2740,52 @@ func registerCreatures() {
 	// 3/3
 	// Converge — When this creature enters, exile target nonland permanent an opponent controls with mana value less than or equal to the number of colors of mana spent to cast this creature.
 	// {2}: Put target card from a graveyard on the bottom of its owner's library.
-	// TODO: implement
 	Register("Sundering Archaic", func() Card {
 		return NewCreature("Sundering Archaic", "{6}", 3, 3,
 			WithSubTypes("Avatar"),
+			// Converge — capture colors-spent during PutOnBattlefield (while resolvingCastContext is live)
+			// so the ETB trigger effect can read it after the cast context has been cleared.
+			WithAbility(EntersWithComputedCounters(Charge, func(g *Game, perm *Permanent) int {
+				ctx := g.ResolvingCastContext()
+				if ctx == nil {
+					return 0
+				}
+				return ctx.DistinctColorsSpent()
+			})),
+			// Converge — When this creature enters, exile target nonland permanent an opponent controls
+			// with mana value less than or equal to the number of colors of mana spent to cast this creature.
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect("exile target nonland permanent an opponent controls with MV <= colors spent",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 || targets[0] == uuid.Nil {
+							return nil
+						}
+						src := g.FindPermanent(sourceID)
+						if src == nil {
+							return nil
+						}
+						colors := int(src.Counters[Charge])
+						// Remove the Charge counters used for Converge bookkeeping.
+						src.RemoveCounter(Charge, colors)
+						target := g.FindPermanent(targets[0])
+						if target == nil {
+							return nil
+						}
+						if target.HasType(TypeLand) {
+							return nil
+						}
+						if target.Card.ManaCost().CMC() > colors {
+							return nil
+						}
+						g.ExilePermanent(target)
+						return nil
+					},
+				),
+				false,
+			).AddTarget(TargetPermanentOpponentControls(Not(IsLand)))),
+			// XXX: {2}: Put target card from a graveyard on the bottom of its owner's library.
+			// Not tested; skipping for now.
 		)
 	})
 
