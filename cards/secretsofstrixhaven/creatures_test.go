@@ -1915,8 +1915,8 @@ func TestRehearsedDebater_ReparteeBoost(t *testing.T) {
 	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Giant Growth", "Grizzly Bears")
 	g.StopAt(1, core.EndStep)
 	g.Execute()
-	// Rehearsed Debater should be 4/4 until end of turn; after end step it's 3/3 again.
-	g.AssertPowerToughness(gametest.PlayerA, "Rehearsed Debater", 3, 3)
+	// Rehearsed Debater should be 4/4 until end of turn (boost still active at EndStep).
+	g.AssertPowerToughness(gametest.PlayerA, "Rehearsed Debater", 4, 4)
 }
 
 // TestRehearsedDebater_ReparteeBoostDuringCombat verifies the +1/+1 boost is
