@@ -1428,23 +1428,27 @@ func registerCreatures() {
 // Reach
 // When this creature dies, create two 1/1 black and green Pest creature tokens with "Whenever this token attacks, you gain 1 life."
 	Register("Pestbrood Sloth", func() Card {
-		pestTokenWithAttack := TokenWithAbilities(
-			CreateColoredToken("Pest Token", 1, 1,
-				[]Color{Black, Green},
-				[]CardType{TypeCreature},
-				[]string{"Pest"},
-			),
-			AttacksTrigger(GainLife(1), false),
-		)
+		makePestToken := func() Effect {
+			return TokenWithAbilities(
+				CreateColoredToken("Pest Token", 1, 1,
+					[]Color{Black, Green},
+					[]CardType{TypeCreature},
+					[]string{"Pest"},
+				),
+				AttacksTrigger(GainLife(1), false),
+			)
+		}
 		return NewCreature("Pestbrood Sloth", "{3}{G}", 4, 4,
 			WithSubTypes("Plant", "Sloth"),
 			WithKeyword(Reach),
 			// When this creature dies, create two 1/1 black and green Pest creature tokens
 			// with "Whenever this token attacks, you gain 1 life."
+			// Two separate effect instances are used so each token gets its own ability
+			// instance (sharing a single instance causes SetSource to overwrite).
 			WithAbility(PutIntoGraveyardFromBattlefieldTrigger(
 				CompositeEffects("create two Pest tokens",
-					pestTokenWithAttack,
-					pestTokenWithAttack,
+					makePestToken(),
+					makePestToken(),
 				),
 				false,
 			)),

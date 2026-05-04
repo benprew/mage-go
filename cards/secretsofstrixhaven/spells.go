@@ -1806,6 +1806,8 @@ func registerSpells() {
 // −6: You get an emblem with "Whenever you gain life, target opponent loses that much life."
 // XXX: Loyalty-activated abilities (+2/0/−3/−6) are not implemented (engine lacks loyalty ability support, CR 606).
 // XXX: −6 emblem "Whenever you gain life, target opponent loses that much life" requires emblem support.
+// XXX: TypePlaneswalker is not handled as a permanent type in ResolveStackObject (game.go line 2276);
+//      casting from hand puts it in the graveyard instead of the battlefield. Engine fix required.
 	Register("Professor Dellian Fel", func() Card {
 		return NewPlaneswalker("Professor Dellian Fel", "{2}{B}{G}", 5,
 			WithSuperTypes(SuperLegendary),
@@ -1971,6 +1973,8 @@ func registerSpells() {
 // −7: Flip five coins. Target opponent skips their next X turns, where X is the number of coins that came up heads.
 // XXX: Loyalty-activated abilities (+1/−1/−2/−7) are not implemented (engine lacks loyalty ability support, CR 606).
 // XXX: −7 "skip turns" requires skip-turn engine support.
+// XXX: TypePlaneswalker is not handled as a permanent type in ResolveStackObject (game.go line 2276);
+//      casting from hand puts it in the graveyard instead of the battlefield. Engine fix required.
 	Register("Ral Zarek, Guest Lecturer", func() Card {
 		return NewPlaneswalker("Ral Zarek, Guest Lecturer", "{1}{B}{B}", 4,
 			WithSuperTypes(SuperLegendary),
