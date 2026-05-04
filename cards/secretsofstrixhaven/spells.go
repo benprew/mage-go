@@ -1238,10 +1238,12 @@ func registerSpells() {
 // Sorcery
 // Create a 2/2 red and white Spirit creature token.
 // Flashback—Tap three untapped creatures you control. (You may cast this card from your graveyard for its flashback cost. Then exile it.)
-// TODO: implement
+// XXX: Flashback with non-mana cost (tap creatures) not implemented.
 	Register("Group Project", func() Card {
 		return NewSorcery("Group Project", "{1}{W}",
-			NewSpellAbility(),
+			NewSpellAbility(
+				CreateColoredToken("Spirit Token", 2, 2, []Color{Red, White}, []CardType{TypeCreature}, []string{"Spirit"}),
+			),
 		)
 	})
 
