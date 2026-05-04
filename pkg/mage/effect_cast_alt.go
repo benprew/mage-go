@@ -86,7 +86,7 @@ func (g *Game) removeCardFromZone(playerID, cardID uuid.UUID, zone Zone) Card {
 		}
 		return c
 	case ZoneGraveyard:
-		c, ok := p.RemoveFromGraveyard(cardID)
+		c, ok := g.MoveFromGraveyard(playerID, cardID, ZoneStack)
 		if !ok {
 			return nil
 		}

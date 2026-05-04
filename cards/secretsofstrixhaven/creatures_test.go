@@ -1145,11 +1145,6 @@ func TestSoaringStonglider_FlyingVigilance(t *testing.T) {
 // a +1/+1 counter when one or more cards leave the controller's graveyard.
 func TestSpiritMascot_CounterWhenGraveyardCardLeaves(t *testing.T) {
 	t.Run("counter when graveyard cards are exiled as additional cost", func(t *testing.T) {
-		// XXX: ExileFromGraveyardCost.Pay appends directly to g.exile without
-		// firing EvtZoneChange, so the "cards leave your graveyard" trigger
-		// cannot fire. Skip until the engine emits a zone-change event for
-		// graveyard-to-exile transitions.
-		t.Skip("XXX: engine does not emit EvtZoneChange when cards move from graveyard to exile via additional cost")
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Spirit Mascot")
 		g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")

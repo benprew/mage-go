@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 // GraveyardActivatedAbility wraps a SimpleActivatedAbility so it is
@@ -53,7 +55,7 @@ func (c *exileSelfFromGraveyardCost) Pay(sourceID, controller uuid.UUID, g *Game
 	for _, p := range g.AllPlayers() {
 		for _, card := range p.Graveyard() {
 			if card.ID() == sourceID {
-				if removed, ok := p.RemoveFromGraveyard(sourceID); ok {
+				if removed, ok := g.MoveFromGraveyard(p.PlayerID(), sourceID, ZoneExile); ok {
 					g.ExileCard(removed, sourceID)
 					return nil
 				}

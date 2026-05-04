@@ -5,6 +5,8 @@ import (
 	"math/rand"
 
 	"github.com/google/uuid"
+
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 // drawCardsTargetEffect draws cards for a target player (or controller as fallback).
@@ -430,11 +432,7 @@ func execReturnFromGraveyardToBattlefield(ctx *EffectContext, _ *returnFromGrave
 	if len(ctx.Targets) == 0 {
 		return fmt.Errorf("no target for reanimate")
 	}
-	p := ctx.Game.GetPlayer(ctx.Controller)
-	if p == nil {
-		return ErrPlayerNotFound
-	}
-	card, ok := p.RemoveFromGraveyard(ctx.Targets[0])
+	card, ok := ctx.Game.MoveFromGraveyard(ctx.Controller, ctx.Targets[0], ZoneBattlefield)
 	if !ok {
 		return nil // target gone
 	}
@@ -463,11 +461,7 @@ func execMillTargetPlayer(ctx *EffectContext, e *millTargetPlayerEffect) error {
 }
 
 func execExileSourceFromGraveyard(ctx *EffectContext, _ *exileSourceFromGraveyardEffect) error {
-	p := ctx.Game.GetPlayer(ctx.Controller)
-	if p == nil {
-		return nil
-	}
-	card, ok := p.RemoveFromGraveyard(ctx.SourceID)
+	card, ok := ctx.Game.MoveFromGraveyard(ctx.Controller, ctx.SourceID, ZoneExile)
 	if ok && card != nil {
 		ctx.Game.ExileCard(card, ctx.SourceID)
 	}
@@ -479,7 +473,7 @@ func execReturnSourceFromGraveyardToBattlefield(ctx *EffectContext, _ *returnSou
 	// usually the owner, but the card may have moved zones since the trigger
 	// was queued.
 	for _, p := range ctx.Game.AllPlayers() {
-		if card, ok := p.RemoveFromGraveyard(ctx.SourceID); ok {
+		if card, ok := ctx.Game.MoveFromGraveyard(p.PlayerID(), ctx.SourceID, ZoneBattlefield); ok {
 			ctx.Game.PutOnBattlefield(card, p.PlayerID())
 			return nil
 		}
@@ -492,7 +486,7 @@ func execReturnSourceToHand(ctx *EffectContext, _ *returnSourceToHandEffect) err
 	if p == nil {
 		return ErrPlayerNotFound
 	}
-	card, ok := p.RemoveFromGraveyard(ctx.SourceID)
+	card, ok := ctx.Game.MoveFromGraveyard(ctx.Controller, ctx.SourceID, ZoneHand)
 	if !ok {
 		return nil // not in graveyard
 	}
@@ -525,11 +519,8 @@ func execReturnFromGraveyardToHandTarget(ctx *EffectContext, _ *returnFromGravey
 	if p == nil {
 		return ErrPlayerNotFound
 	}
-	for _, tid := range ctx.Targets {
-		card, ok := p.RemoveFromGraveyard(tid)
-		if !ok {
-			continue
-		}
+	cards := ctx.Game.MoveCardsFromGraveyard(ctx.Controller, ctx.Targets, ZoneHand)
+	for _, card := range cards {
 		p.AddToHand(card)
 	}
 	return nil

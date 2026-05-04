@@ -301,6 +301,19 @@ func DiesTrigger(effect Effect, optional bool) *GenericTriggered {
 	return OnLeaveZone(ZoneBattlefield, ZoneGraveyard, effect, optional)
 }
 
+// WheneverOneOrMoreCardsLeaveYourGraveyardTrigger fires once per "leave-
+// graveyard burst" when one or more cards leave the controller's graveyard
+// for any other zone. Implemented over EvtCardsLeftGraveyard, which the
+// engine emits exactly once per resolution that moves cards out of a
+// graveyard (CR 603.10 — multiple cards moving via the same effect form a
+// single zone-change event group). Used by Spirit Mascot, Strixhaven
+// Stadium, and similar "Whenever one or more cards leave your graveyard..."
+// abilities.
+func WheneverOneOrMoreCardsLeaveYourGraveyardTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtCardsLeftGraveyard, optional, effect).
+		SetConditionData(EventPlayerIsController{})
+}
+
 // ChooseOpponentOnETB sets the permanent's ChosenPlayer to the opponent on ETB.
 // Used by Black Vise, The Rack, and similar "as this enters, choose an opponent" cards.
 func ChooseOpponentOnETB() *GenericTriggered {

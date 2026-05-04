@@ -988,6 +988,77 @@ func (g *Game) PutPermanentIntoGraveyard(perm *Permanent) {
 	}
 }
 
+// MoveFromGraveyard removes a card from playerID's graveyard and emits the
+// appropriate zone-change events: a per-card EvtZoneChange{From: ZoneGraveyard,
+// To: to} and a single EvtCardsLeftGraveyard with Amount=1, PlayerID=playerID.
+// It does NOT add the card to the destination zone — callers handle that —
+// because destination handling varies (exile records ExiledBy, hand uses
+// AddToHand, battlefield uses PutOnBattlefield). Returns the removed card
+// or nil/false if it wasn't in that graveyard.
+//
+// For multi-card "burst" moves where Oracle text says "one or more cards
+// leave your graveyard" should fire only once per resolution (CR 603.10),
+// use MoveCardsFromGraveyard instead.
+func (g *Game) MoveFromGraveyard(playerID, cardID uuid.UUID, to Zone) (Card, bool) {
+	p := g.GetPlayer(playerID)
+	if p == nil {
+		return nil, false
+	}
+	card, ok := p.RemoveFromGraveyard(cardID)
+	if !ok {
+		return nil, false
+	}
+	g.FireEvent(GameEvent{
+		Type:     EvtZoneChange,
+		SourceID: cardID,
+		PlayerID: playerID,
+		FromZone: ZoneGraveyard,
+		ToZone:   to,
+	})
+	g.FireEvent(GameEvent{
+		Type:     EvtCardsLeftGraveyard,
+		PlayerID: playerID,
+		Amount:   1,
+	})
+	return card, true
+}
+
+// MoveCardsFromGraveyard removes the listed cards from playerID's graveyard,
+// firing per-card EvtZoneChange events and a SINGLE EvtCardsLeftGraveyard
+// event with Amount = number of cards actually removed (CR 603.10 — multiple
+// cards moving via the same effect form one zone-change event for the
+// purposes of "one or more cards leave your graveyard" triggers). Returns
+// the removed cards in input order, skipping any that weren't found.
+func (g *Game) MoveCardsFromGraveyard(playerID uuid.UUID, cardIDs []uuid.UUID, to Zone) []Card {
+	p := g.GetPlayer(playerID)
+	if p == nil {
+		return nil
+	}
+	removed := make([]Card, 0, len(cardIDs))
+	for _, id := range cardIDs {
+		c, ok := p.RemoveFromGraveyard(id)
+		if !ok {
+			continue
+		}
+		removed = append(removed, c)
+		g.FireEvent(GameEvent{
+			Type:     EvtZoneChange,
+			SourceID: id,
+			PlayerID: playerID,
+			FromZone: ZoneGraveyard,
+			ToZone:   to,
+		})
+	}
+	if len(removed) > 0 {
+		g.FireEvent(GameEvent{
+			Type:     EvtCardsLeftGraveyard,
+			PlayerID: playerID,
+			Amount:   len(removed),
+		})
+	}
+	return removed
+}
+
 // Sacrifice sacrifices a permanent (like destroy but doesn't check
 // indestructible). Self-referential triggers fire from the LKI snapshot's
 // captured abilities (CR 700.4 / 603.6c: any battlefield → graveyard
@@ -3000,11 +3071,9 @@ func (g *Game) checkGraveyardReturns(p Player) {
 		}
 	}
 
-	for _, id := range toReturn {
-		card, ok := p.RemoveFromGraveyard(id)
-		if ok {
-			g.PutOnBattlefield(card, p.PlayerID())
-		}
+	cards := g.MoveCardsFromGraveyard(p.PlayerID(), toReturn, ZoneBattlefield)
+	for _, card := range cards {
+		g.PutOnBattlefield(card, p.PlayerID())
 	}
 }
 

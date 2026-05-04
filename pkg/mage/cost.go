@@ -642,11 +642,13 @@ func (c *exileFromGraveyardCost) Pay(sourceID, controller uuid.UUID, g *Game) er
 	if n > len(gy) {
 		n = len(gy)
 	}
+	ids := make([]uuid.UUID, 0, n)
 	for i := 0; i < n; i++ {
-		card := gy[i]
-		if _, ok := p.RemoveFromGraveyard(card.ID()); ok {
-			g.exile = append(g.exile, ExiledCard{Card: card, ExiledBy: sourceID})
-		}
+		ids = append(ids, gy[i].ID())
+	}
+	removed := g.MoveCardsFromGraveyard(controller, ids, ZoneExile)
+	for _, card := range removed {
+		g.exile = append(g.exile, ExiledCard{Card: card, ExiledBy: sourceID})
 	}
 	return nil
 }
