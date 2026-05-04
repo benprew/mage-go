@@ -1389,10 +1389,28 @@ func registerSpells() {
 // Sorcery
 // Target creature gets +1/+1 until end of turn. Draw a card.
 // Whenever one or more creatures you control deal combat damage to a player, you may pay {W/B}. If you do, return this card from your graveyard to your hand.
-// TODO: implement
+// XXX: Graveyard recursion trigger not implemented (requires tracking graveyard-zone triggered abilities for sorceries).
 	Register("Killian's Confidence", func() Card {
 		return NewSorcery("Killian's Confidence", "{W}{B}",
-			NewSpellAbility(),
+			NewTargetedSpell(TargetCreature(),
+				FuncEffect(
+					"+1/+1 until end of turn; draw a card",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) > 0 {
+							perm := g.FindPermanent(targets[0])
+							if perm != nil {
+								g.AddContinuousEffect(TemporaryBoost(perm.ID(), 1, 1))
+								g.ApplyContinuousEffects()
+							}
+						}
+						if p := g.GetPlayer(controller); p != nil {
+							g.PlayerDrawCard(p)
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 
