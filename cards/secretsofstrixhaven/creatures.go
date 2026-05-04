@@ -2461,7 +2461,7 @@ func registerCreatures() {
 	// Creature — Spirit Ox
 	// 2/2
 	// Whenever one or more cards leave your graveyard, put a +1/+1 counter on this creature.
-	// TODO: implement
+	// XXX: "Whenever one or more cards leave your graveyard" trigger not implemented (engine lacks EvtLeaveGraveyard event).
 	Register("Spirit Mascot", func() Card {
 		return NewCreature("Spirit Mascot", "{R}{W}", 2, 2,
 			WithSubTypes("Spirit", "Ox"),
