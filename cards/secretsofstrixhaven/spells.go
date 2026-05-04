@@ -1234,11 +1234,48 @@ func registerSpells() {
 // • Destroy target artifact.
 // • Glorious Decay deals 4 damage to target creature with flying.
 // • Exile target card from a graveyard. Draw a card.
-// TODO: implement
 	Register("Glorious Decay", func() Card {
-		return NewInstant("Glorious Decay", "{1}{G}",
-			NewSpellAbility(),
-		)
+		c := NewInstant("Glorious Decay", "{1}{G}", nil)
+		c.AddAbility(NewModalSpell([]Mode{
+			{
+				Label:   "Destroy target artifact.",
+				Targets: []Target{TargetArtifact()},
+				Effects: []Effect{DestroyTargetArtifact()},
+			},
+			{
+				Label:   "Glorious Decay deals 4 damage to target creature with flying.",
+				Targets: []Target{TargetCreature(HasKeywordFilter(Flying))},
+				Effects: []Effect{DealDamage(Fixed(4))},
+			},
+			{
+				Label:   "Exile target card from a graveyard. Draw a card.",
+				Targets: []Target{TargetCardInAnyGraveyard()},
+				Effects: []Effect{
+					FuncEffect(
+						"exile target card from a graveyard, then draw a card",
+						EffectProperties{Outcome: OutcomeBenefit},
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+							if len(targets) == 0 {
+								return nil
+							}
+							// Remove from graveyard and exile.
+							for _, pl := range g.AllPlayers() {
+								if card, ok := pl.RemoveFromGraveyard(targets[0]); ok {
+									g.ExileCard(card, sourceID)
+									break
+								}
+							}
+							p := g.GetPlayer(controller)
+							if p != nil {
+								g.PlayerDrawCard(p)
+							}
+							return nil
+						},
+					),
+				},
+			},
+		}))
+		return c
 	})
 
 
