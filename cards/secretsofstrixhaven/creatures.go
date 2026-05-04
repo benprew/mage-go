@@ -900,10 +900,13 @@ func registerCreatures() {
 	// 0/3
 	// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
 	// When this creature enters, surveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)
-	// TODO: implement
 	Register("Textbook Tabulator", func() Card {
 		return NewCreature("Textbook Tabulator", "{2}{U}", 0, 3,
 			WithSubTypes("Frog", "Wizard"),
+			// Increment
+			WithAbility(IncrementTrigger()),
+			// When this creature enters, surveil 2.
+			WithAbility(EntersBattlefieldTrigger(surveilEffect(2), false)),
 		)
 	})
 
