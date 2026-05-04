@@ -111,6 +111,7 @@ func TestStressDream(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Serra Angel")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Stress Dream")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Stress Dream", "Serra Angel")
 		g.ChooseFromLibrary(gametest.PlayerA, "Grizzly Bears")
 		g.StopAt(1, core.EndStep)
@@ -245,8 +246,9 @@ func TestWildHypothesis(t *testing.T) {
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Wild Hypothesis")
 		g.StopAt(1, core.EndStep)
 		g.Execute()
-		// X=0: creates 0/0 Fractal with 0 counters (token still created)
-		g.AssertPermanentCount(gametest.PlayerA, "Fractal Token", 1)
+		// X=0: creates 0/0 Fractal with 0 counters; SBA immediately destroys it
+		// (CR 704.5f: a creature with toughness 0 is put into its owner's graveyard).
+		g.AssertPermanentCount(gametest.PlayerA, "Fractal Token", 0)
 	})
 }
 
