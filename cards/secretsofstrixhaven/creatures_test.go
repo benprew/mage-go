@@ -2440,3 +2440,178 @@ func TestTopiaryLecturer_TapForGreenMana(t *testing.T) {
 	g.Execute()
 	g.AssertPermanentCount(gametest.PlayerA, "Giant Spider", 1)
 }
+
+func TestStirringHopesinger_ReparteeCounterOnEachCreature(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Stirring Hopesinger")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Shock")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Llanowar Elves")
+	// Shock targets Llanowar Elves (a creature) — Repartee triggers
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Shock", "Llanowar Elves")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Each creature PlayerA controls gets a +1/+1 counter
+	g.AssertCounterCount(gametest.PlayerA, "Stirring Hopesinger", core.P1P1, 1)
+	g.AssertCounterCount(gametest.PlayerA, "Grizzly Bears", core.P1P1, 1)
+}
+
+func TestStirringHopesinger_NonCreatureTargetNoTrigger(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Stirring Hopesinger")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Shock")
+	// Shock targets PlayerB directly — not a creature
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Shock", "PlayerB")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertCounterCount(gametest.PlayerA, "Stirring Hopesinger", core.P1P1, 0)
+}
+
+func TestTackleArtist_OpusPutsOneCounter(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tackle Artist")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Shock")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Shock", "PlayerB")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertCounterCount(gametest.PlayerA, "Tackle Artist", core.P1P1, 1)
+}
+
+func TestTackleArtist_OpusFiveManaSpentPutsTwoCounters(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tackle Artist")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 5)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Fireball")
+	g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerA, "Fireball", 4, "PlayerB")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertCounterCount(gametest.PlayerA, "Tackle Artist", core.P1P1, 2)
+}
+
+func TestTenuredConcocter_TargetedByOpponentDrawsCard(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tenured Concocter")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Shock")
+	g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Shock", "Tenured Concocter")
+	g.StopAt(2, core.EndStep)
+	g.Execute()
+	// Opponent targeted Concocter; PlayerA draws a card
+	g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 1)
+}
+
+func TestTenuredConcocter_NotTargetedNoDraws(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tenured Concocter")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain", 2)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Shock")
+	// Shock targets PlayerB's own Grizzly Bears — not Concocter
+	g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Shock", "Grizzly Bears")
+	g.StopAt(2, core.EndStep)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 0)
+}
+
+func TestTenuredConcocter_InfusionBoostWhileGainedLife(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tenured Concocter")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Healing Salve")
+	// Cast Healing Salve to gain 3 life — Infusion condition satisfied
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Healing Salve", "PlayerA")
+	g.Attack(1, gametest.PlayerA, "Tenured Concocter")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// During the attack, Concocter has Infusion active: 4+2=6 power
+	// Concocter deals 6 damage unblocked; Healing Salve gains 3 life = 23 total
+	g.AssertLife(gametest.PlayerB, 14)
+	g.AssertLife(gametest.PlayerA, 23)
+}
+
+func TestSnoopingPage_ReparteeUnblockable(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Snooping Page")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Shock")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Llanowar Elves")
+	// Shock targets Llanowar Elves (a creature) — Repartee triggers
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Shock", "Llanowar Elves")
+	g.Attack(1, gametest.PlayerA, "Snooping Page")
+	// PlayerB has no blocker (Llanowar Elves died), but even if they did,
+	// Snooping Page can't be blocked.
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Snooping Page 2/3 deals 2 damage unblocked; Shock deals 2 to Llanowar Elves
+	g.AssertLife(gametest.PlayerB, 18)
+}
+
+func TestSnoopingPage_CombatDamageDrawsCard(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Snooping Page")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
+	g.Attack(1, gametest.PlayerA, "Snooping Page")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Snooping Page deals combat damage to PlayerB; draw a card, lose 1 life
+	g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 1)
+	g.AssertLife(gametest.PlayerA, 19)
+}
+
+func TestSnoopingPage_NoCombatDamageNoEffect(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Snooping Page")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Llanowar Elves")
+	g.Attack(1, gametest.PlayerA, "Snooping Page")
+	g.Block(1, gametest.PlayerB, "Grizzly Bears", "Snooping Page")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// No combat damage to player — no draw, no life loss
+	g.AssertHandCount(gametest.PlayerA, "Llanowar Elves", 0)
+	g.AssertLife(gametest.PlayerA, 20)
+}
+
+func TestSpectacularSkywhale_OpusBoostLessThanFive(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Spectacular Skywhale")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Shock")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Shock", "PlayerB")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Shock costs 1 mana (< 5): no permanent counters placed.
+	g.AssertCounterCount(gametest.PlayerA, "Spectacular Skywhale", core.P1P1, 0)
+	g.AssertLife(gametest.PlayerB, 18) // 2 from Shock
+}
+
+func TestSpectacularSkywhale_OpusBoostTemporary(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Spectacular Skywhale")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Shock")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Shock", "PlayerB")
+	g.Attack(1, gametest.PlayerA, "Spectacular Skywhale")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Skywhale 1/4 +3/+0 = 4/4 flying, deals 4 unblocked; Shock 2 = 6 total
+	g.AssertLife(gametest.PlayerB, 14)
+}
+
+func TestSpectacularSkywhale_OpusFiveManaSpentPutsCounters(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Spectacular Skywhale")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 5)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Fireball")
+	g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerA, "Fireball", 4, "PlayerB")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// 5+ mana spent: three +1/+1 counters instead of temporary boost
+	g.AssertCounterCount(gametest.PlayerA, "Spectacular Skywhale", core.P1P1, 3)
+}

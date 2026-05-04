@@ -418,13 +418,27 @@ func registerCreatures() {
 	// 1/3
 	// Flying, lifelink
 	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, put a +1/+1 counter on each creature you control.
-	// TODO: implement
 	Register("Stirring Hopesinger", func() Card {
 		return NewCreature("Stirring Hopesinger", "{2}{W}", 1, 3,
 			WithSubTypes("Bird", "Bard"),
+			WithKeyword(Flying),
+			WithKeyword(Lifelink),
+			// Repartee — Whenever you cast an instant or sorcery spell that targets a creature,
+			// put a +1/+1 counter on each creature you control.
+			WithAbility(NewTriggered(EvtSpellCast, false,
+				FuncEffect("put a +1/+1 counter on each creature you control",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						for _, perm := range g.FilterBattlefield(And(IsCreature, ControlledBy(controller))) {
+							perm.AddCounter(P1P1, 1)
+						}
+						g.ApplyContinuousEffects()
+						return nil
+					},
+				),
+			).SetCondition(reparteeCondition)),
 		)
 	})
-
 	// Stone Docent {1}{W}
 	// Creature — Spirit Chimera
 	// 3/1
@@ -1746,13 +1760,37 @@ func registerCreatures() {
 	// 4/3
 	// Trample
 	// Opus — Whenever you cast an instant or sorcery spell, put a +1/+1 counter on this creature. If five or more mana was spent to cast that spell, put two +1/+1 counters on this creature instead.
-	// TODO: implement
 	Register("Tackle Artist", func() Card {
+		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c Card) bool {
+			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
+		})
 		return NewCreature("Tackle Artist", "{3}{R}", 4, 3,
 			WithSubTypes("Orc", "Sorcerer"),
+			WithKeyword(Trample),
+			// Opus — Whenever you cast an instant or sorcery spell, put a +1/+1 counter on this
+			// creature. If five or more mana was spent to cast that spell, put two +1/+1 counters
+			// on this creature instead.
+			WithAbility(WheneverYouCastSpellTrigger(
+				OpusEffect("put +1/+1 counters; 2 if 5+ mana spent",
+					func(g *Game, sourceID, controller uuid.UUID, manaSpent int) error {
+						perm := g.FindPermanent(sourceID)
+						if perm == nil {
+							return nil
+						}
+						n := 1
+						if manaSpent >= 5 {
+							n = 2
+						}
+						perm.AddCounter(P1P1, n)
+						g.ApplyContinuousEffects()
+						return nil
+					},
+				),
+				false,
+				isInstantOrSorcery,
+			)),
 		)
 	})
-
 	// Thunderdrum Soloist {1}{R}
 	// Creature — Dwarf Bard
 	// 1/3
@@ -2147,13 +2185,32 @@ func registerCreatures() {
 	// Vigilance
 	// Whenever this creature becomes the target of a spell or ability an opponent controls, you may draw a card.
 	// Infusion — This creature gets +2/+0 as long as you gained life this turn.
-	// TODO: implement
 	Register("Tenured Concocter", func() Card {
 		return NewCreature("Tenured Concocter", "{4}{G}", 4, 5,
 			WithSubTypes("Troll", "Druid"),
+			WithKeyword(Vigilance),
+			// Whenever this creature becomes the target of a spell or ability an opponent
+			// controls, you may draw a card.
+			WithAbility(NewTriggered(EvtBecomesTarget, true,
+				DrawCards(Fixed(1)),
+			).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+				EventTargetIsSelf{},
+				EventPlayerIsOpponent{},
+			}})),
+			// Infusion — This creature gets +2/+0 as long as you gained life this turn.
+			WithStaticAbility(FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+				src := g.FindPermanent(sourceID)
+				if src == nil {
+					return nil
+				}
+				if !IfControllerGainedLifeThisTurn(g, src.Controller) {
+					return nil
+				}
+				src.BoostPT(2, 0)
+				return nil
+			})),
 		)
 	})
-
 	// Thornfist Striker {2}{G}
 	// Creature — Elf Druid
 	// 3/3
@@ -3373,25 +3430,84 @@ func registerCreatures() {
 	// 2/3
 	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, this creature can't be blocked this turn.
 	// Whenever this creature deals combat damage to a player, you draw a card and lose 1 life.
-	// TODO: implement
 	Register("Snooping Page", func() Card {
 		return NewCreature("Snooping Page", "{1}{W}{B}", 2, 3,
 			WithSubTypes("Human", "Cleric"),
+			// Repartee — Whenever you cast an instant or sorcery spell that targets a creature,
+			// this creature can't be blocked this turn.
+			WithAbility(NewTriggered(EvtSpellCast, false,
+				FuncEffect("this creature can't be blocked this turn",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						src := g.FindPermanent(sourceID)
+						if src == nil {
+							return nil
+						}
+						ce := TemporaryKeyword(sourceID, UnblockableKW)
+						ce.SetSourceID(sourceID)
+						g.AddContinuousEffect(ce)
+						g.ApplyContinuousEffects()
+						return nil
+					},
+				),
+			).SetCondition(reparteeCondition)),
+			// Whenever this creature deals combat damage to a player, you draw a card and
+			// lose 1 life.
+			WithAbility(WheneverDealsCombatDamageToPlayerTrigger(
+				FuncEffect("draw a card and lose 1 life",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						g.PlayerDrawCard(p)
+						p.LoseLife(1)
+						return nil
+					},
+				),
+				false,
+			)),
 		)
 	})
-
 	// Spectacular Skywhale {2}{U}{R}
 	// Creature — Elemental Whale
 	// 1/4
 	// Flying
 	// Opus — Whenever you cast an instant or sorcery spell, this creature gets +3/+0 until end of turn. If five or more mana was spent to cast that spell, put three +1/+1 counters on this creature instead.
-	// TODO: implement
 	Register("Spectacular Skywhale", func() Card {
+		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c Card) bool {
+			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
+		})
 		return NewCreature("Spectacular Skywhale", "{2}{U}{R}", 1, 4,
 			WithSubTypes("Elemental", "Whale"),
+			WithKeyword(Flying),
+			// Opus — Whenever you cast an instant or sorcery spell, this creature gets +3/+0
+			// until end of turn. If five or more mana was spent to cast that spell, put three
+			// +1/+1 counters on this creature instead.
+			WithAbility(WheneverYouCastSpellTrigger(
+				OpusEffect("this creature gets +3/+0 until EOT; or three +1/+1 counters if 5+ mana spent",
+					func(g *Game, sourceID, controller uuid.UUID, manaSpent int) error {
+						perm := g.FindPermanent(sourceID)
+						if perm == nil {
+							return nil
+						}
+						if manaSpent >= 5 {
+							perm.AddCounter(P1P1, 3)
+							g.ApplyContinuousEffects()
+						} else {
+							ce := TemporaryBoost(sourceID, 3, 0)
+							ce.SetSourceID(sourceID)
+							g.AddContinuousEffect(ce)
+						}
+						return nil
+					},
+				),
+				false,
+				isInstantOrSorcery,
+			)),
 		)
 	})
-
 	// Spirit Mascot {R}{W}
 	// Creature — Spirit Ox
 	// 2/2
