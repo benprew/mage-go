@@ -437,7 +437,7 @@ func registerCreatures() {
 			WithSubTypes("Human", "Wizard"),
 			WithKeyword(Vigilance),
 			WithAbility(NewTriggered(EvtSpellCast, false,
-				CreateColoredToken("Inkling", 1, 1, []Color{White, Black}, []CardType{TypeCreature}, []string{"Inkling"}, Flying),
+				CreateColoredToken("Inkling Token", 1, 1, []Color{White, Black}, []CardType{TypeCreature}, []string{"Inkling"}, Flying),
 			).SetCondition(reparteeCondition)),
 		)
 	})
@@ -4204,9 +4204,11 @@ func registerCreatures() {
 		return NewCreature("Inkling Mascot", "{W}{B}", 2, 2,
 			WithSubTypes("Inkling", "Cat"),
 			WithAbility(NewTriggered(EvtSpellCast, false,
-				// XXX: Surveil 1 is not implemented in the engine; only the
-				// "gains flying until end of turn" half is applied here.
-				GrantKeyword(Flying).Targeting(ToSource()).Until(EndOfTurn),
+				CompositeEffects(
+					"this creature gains flying until end of turn; surveil 1",
+					GrantKeyword(Flying).Targeting(ToSource()).Until(EndOfTurn),
+					surveilEffect(1),
+				),
 			).SetCondition(reparteeCondition)),
 		)
 	})
@@ -5368,8 +5370,31 @@ func registerCreatures() {
 				),
 				false,
 			).AddTarget(TargetPermanentOpponentControls(Not(IsLand)))),
-			// XXX: {2}: Put target card from a graveyard on the bottom of its owner's library.
-			// Not tested; skipping for now.
+			// {2}: Put target card from a graveyard on the bottom of its owner's library.
+			WithActivatedAbility(
+				FuncEffect("put target card from a graveyard on the bottom of its owner's library",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 || targets[0] == uuid.Nil {
+							return nil
+						}
+						cardID := targets[0]
+						for _, pl := range g.AllPlayers() {
+							if removed, ok := pl.RemoveFromGraveyard(cardID); ok {
+								owner := g.GetPlayer(removed.Owner())
+								if owner == nil {
+									owner = pl
+								}
+								g.PutOnBottomInRandomOrder(owner, []Card{removed})
+								break
+							}
+						}
+						return nil
+					},
+				),
+				ManaCostOf("{2}"),
+				WithTarget(TargetCardInAnyGraveyard()),
+			),
 		)
 	})
 

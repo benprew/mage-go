@@ -3910,3 +3910,179 @@ func TestSchemingSilvertongue_ActivateSignInBlood(t *testing.T) {
 	g.AssertLife(gametest.PlayerB, 18)
 	g.AssertHasAbility(gametest.PlayerA, "Scheming Silvertongue // Sign in Blood", core.AttrPrepared, false)
 }
+
+// TestInklingMascot_ReparteeGrantsFlyingAndSurveils verifies that Inkling Mascot
+// gains flying until end of turn and surveils 1 when a Repartee trigger fires.
+func TestInklingMascot_ReparteeGrantsFlyingAndSurveils(t *testing.T) {
+	t.Run("Repartee grants flying and surveils 1", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Inkling Mascot")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 2)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Llanowar Elves")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Shock")
+		// A card on top of library to surveil.
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
+		// Surveil 1: put top card (Grizzly Bears) into graveyard.
+		g.ChooseScry(gametest.PlayerA, []string{"Grizzly Bears"}, nil)
+		// Shock targets Llanowar Elves (a creature) — Repartee triggers.
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Shock", "Llanowar Elves")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// After Repartee: the surveiled card is in graveyard.
+		g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 1)
+	})
+}
+
+// TestMuseSeeker_OpusDrawDiscardBelowFive verifies Muse Seeker draws a card and
+// then requires a discard when fewer than five mana was spent.
+func TestMuseSeeker_OpusDrawDiscardBelowFive(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Muse Seeker")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Shock")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
+	// After drawing Grizzly Bears, discard it.
+	g.ChooseDiscard(gametest.PlayerA, "Grizzly Bears")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Shock", "PlayerB")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Drew Grizzly Bears then discarded it (net hand: 0 Grizzly Bears, 0 Shock).
+	g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 0)
+	g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 1)
+}
+
+// TestMuseSeeker_OpusNoDiscardAtFivePlus verifies Muse Seeker draws but does not
+// require a discard when five or more mana was spent. Fireball {X}{R} with X=4
+// spends 5 mana total.
+func TestMuseSeeker_OpusNoDiscardAtFivePlus(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Muse Seeker")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 5)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Fireball")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
+	// Fireball {X}{R} with X=4 => 5 mana spent; deal 4 damage to PlayerB.
+	g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerA, "Fireball", 4, "PlayerB")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Drew Grizzly Bears and kept it (no discard required when 5+ mana spent).
+	g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 1)
+}
+
+// TestSunderingArchaic_GraveyardToLibraryBottom verifies the {2} ability puts a
+// target card from any graveyard on the bottom of its owner's library.
+func TestSunderingArchaic_GraveyardToLibraryBottom(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sundering Archaic")
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 2)
+	// Pass graveyard card name as target argument.
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Sundering Archaic", "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Grizzly Bears should no longer be in PlayerB's graveyard.
+	g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 0)
+	// It should be at the bottom of PlayerB's library.
+	g.AssertLibraryCount(gametest.PlayerB, "Grizzly Bears", 1)
+}
+
+// TestInformedInkwright_ReparteeCreatesInklingToken verifies that Informed
+// Inkwright's Repartee ability creates a 1/1 white and black Inkling creature
+// token with flying when an instant or sorcery spell targeting a creature is cast.
+func TestInformedInkwright_ReparteeCreatesInklingToken(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Informed Inkwright")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 2)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Llanowar Elves")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Shock")
+	// Shock targets Llanowar Elves (a creature) — Repartee triggers.
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Shock", "Llanowar Elves")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Inkling Token", 1)
+}
+
+// TestInformedInkwright_NonCreatureTargetNoToken verifies that Informed Inkwright
+// does not create an Inkling token when the spell does not target a creature.
+func TestInformedInkwright_NonCreatureTargetNoToken(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Informed Inkwright")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Shock")
+	// Shock targets PlayerB directly — not a creature.
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Shock", "PlayerB")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Inkling Token", 0)
+}
+
+// TestInkshapeDemonstrator_ReparteeBoostsAndGrantsLifelink verifies that
+// Inkshape Demonstrator gets +1/+0 and gains lifelink until end of turn when
+// the Repartee condition is met.
+func TestInkshapeDemonstrator_ReparteeBoostsAndGrantsLifelink(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Inkshape Demonstrator")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 2)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Llanowar Elves")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Shock")
+	// Shock targets Llanowar Elves (a creature) — Repartee triggers.
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Shock", "Llanowar Elves")
+	g.StopAt(1, core.DeclareAttackers)
+	g.Execute()
+	// Inkshape Demonstrator is 3/4 base; with +1/+0 becomes 4/4.
+	g.AssertPowerToughness(gametest.PlayerA, "Inkshape Demonstrator", 4, 4)
+	g.AssertHasAbility(gametest.PlayerA, "Inkshape Demonstrator", core.Lifelink, true)
+}
+
+// TestLecturingScornmage_ReparteePutsCounter verifies that Lecturing Scornmage
+// gets a +1/+1 counter when a Repartee trigger fires.
+func TestLecturingScornmage_ReparteePutsCounter(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Lecturing Scornmage")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 2)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Llanowar Elves")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Shock")
+	// Shock targets Llanowar Elves (a creature) — Repartee triggers.
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Shock", "Llanowar Elves")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertCounterCount(gametest.PlayerA, "Lecturing Scornmage", core.P1P1, 1)
+}
+
+// TestMelancholicPoet_ReparteeLifeSwing verifies that Melancholic Poet's
+// Repartee ability causes each opponent to lose 1 life and the controller to
+// gain 1 life when the Repartee condition is met.
+func TestMelancholicPoet_ReparteeLifeSwing(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Melancholic Poet")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 2)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Llanowar Elves")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Shock")
+	// Shock targets Llanowar Elves (a creature) — Repartee triggers.
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Shock", "Llanowar Elves")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerA, 21)
+	g.AssertLife(gametest.PlayerB, 19)
+}
+
+// TestMoseo_ETBCreatesPestToken verifies that Moseo, Vein's New Dean creates a
+// 1/1 black and green Pest token with "Whenever this token attacks, you gain 1
+// life" when it enters the battlefield.
+func TestMoseo_ETBCreatesPestToken(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Moseo, Vein's New Dean")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Pest Token", 1)
+}
+
+// TestMoseo_PestTokenGainsLifeOnAttack verifies the Pest token created by Moseo
+// triggers "you gain 1 life" when it attacks.
+func TestMoseo_PestTokenGainsLifeOnAttack(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Moseo, Vein's New Dean")
+	g.Attack(3, gametest.PlayerA, "Pest Token")
+	g.StopAt(3, core.EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerA, 21)
+}
