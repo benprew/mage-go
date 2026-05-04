@@ -1318,10 +1318,42 @@ func registerSpells() {
 // Heated Argument {4}{R}
 // Instant
 // Heated Argument deals 6 damage to target creature. You may exile a card from your graveyard. If you do, Heated Argument also deals 2 damage to that creature's controller.
-// TODO: implement
 	Register("Heated Argument", func() Card {
 		return NewInstant("Heated Argument", "{4}{R}",
-			NewSpellAbility(),
+			NewTargetedSpell(TargetCreature(),
+				FuncEffect(
+					"deal 6 damage to target creature; may exile graveyard card to deal 2 to its controller",
+					EffectProperties{Outcome: OutcomeDetriment, DamageValue: Fixed(6)},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						perm := g.FindPermanent(targets[0])
+						if perm == nil {
+							return nil
+						}
+						targetController := perm.Controller
+						g.DealDamageToPermanent(perm, 6, sourceID)
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						gy := p.Graveyard()
+						if len(gy) > 0 && p.ChooseMayAbility("exile a card from your graveyard to deal 2 damage to the creature's controller") {
+							chosen := p.ChooseCardFromLibrary(gy, "exile a card from your graveyard", g)
+							if chosen != nil {
+								if _, ok := p.RemoveFromGraveyard(chosen.ID()); ok {
+									g.ExileCard(chosen, sourceID)
+								}
+								if tc := g.GetPlayer(targetController); tc != nil {
+									g.DealDamageToPlayer(tc, 2, sourceID)
+								}
+							}
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -1642,11 +1674,26 @@ func registerSpells() {
 // Choose up to four. You may choose the same mode more than once.
 // • Destroy target nonland permanent.
 // • Return target nonland permanent card from your graveyard to the battlefield.
-// TODO: implement
+// XXX: "up to four, you may choose the same mode more than once" is not supported;
+// engine NewModalSpell only supports choosing a single mode once. Each mode is correctly implemented.
 	Register("Moment of Reckoning", func() Card {
-		return NewSorcery("Moment of Reckoning", "{3}{W}{W}{B}{B}",
-			NewSpellAbility(),
-		)
+		nonlandCard := NewCardFilter("nonland permanent card", func(c Card) bool {
+			return !c.HasType(TypeLand)
+		})
+		c := NewSorcery("Moment of Reckoning", "{3}{W}{W}{B}{B}", nil)
+		c.AddAbility(NewModalSpell([]Mode{
+			{
+				Label:   "Destroy target nonland permanent",
+				Targets: []Target{TargetPermanent(Not(IsLand))},
+				Effects: []Effect{DestroyTarget()},
+			},
+			{
+				Label:   "Return target nonland permanent card from your graveyard to the battlefield",
+				Targets: []Target{TargetCardInYourGraveyard(nonlandCard)},
+				Effects: []Effect{ReturnFromGraveyardToBattlefield()},
+			},
+		}))
+		return c
 	})
 
 
@@ -1672,10 +1719,22 @@ func registerSpells() {
 // Oracle's Restoration {G}
 // Sorcery
 // Target creature you control gets +1/+1 until end of turn. You draw a card and gain 1 life.
-// TODO: implement
 	Register("Oracle's Restoration", func() Card {
 		return NewSorcery("Oracle's Restoration", "{G}",
-			NewSpellAbility(),
+			NewTargetedSpell(TargetCreatureYouControl(), CompositeEffects(
+				"target creature gets +1/+1 until end of turn, draw a card, gain 1 life",
+				Boost(Fixed(1), Fixed(1)),
+				FuncEffect("draw a card", EffectProperties{Outcome: OutcomeBenefit, DrawCount: 1},
+					func(g *Game, _, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p != nil {
+							g.PlayerDrawCard(p)
+						}
+						return nil
+					},
+				),
+				GainLife(1),
+			)),
 		)
 	})
 
@@ -1683,10 +1742,42 @@ func registerSpells() {
 // Planar Engineering {3}{G}
 // Sorcery
 // Sacrifice two lands. Search your library for four basic land cards, put them onto the battlefield tapped, then shuffle.
-// TODO: implement
 	Register("Planar Engineering", func() Card {
 		return NewSorcery("Planar Engineering", "{3}{G}",
-			NewSpellAbility(),
+			NewSpellAbility(
+				FuncEffect(
+					"sacrifice two lands; search library for four basic land cards, put them onto the battlefield tapped, then shuffle",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						// Sacrifice two lands controlled by the caster.
+						for i := 0; i < 2; i++ {
+							var lands []*Permanent
+							for _, perm := range g.AllBattlefield() {
+								if perm.Controller == controller && perm.HasType(TypeLand) {
+									lands = append(lands, perm)
+								}
+							}
+							if len(lands) == 0 {
+								break
+							}
+							chosen := p.ChoosePermanent(lands, "sacrifice a land", g)
+							if chosen == nil {
+								chosen = lands[0]
+							}
+							g.Sacrifice(chosen)
+						}
+						// Search for four basic land cards and put them onto the battlefield tapped.
+						for i := 0; i < 4; i++ {
+							searchBasicLandToBattlefieldTappedSOS(g, controller)
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 
