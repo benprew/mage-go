@@ -1019,6 +1019,30 @@ func TestSlumberingTrudge_Stats(t *testing.T) {
 	g.AssertPowerToughness(gametest.PlayerA, "Slumbering Trudge", 6, 6)
 }
 
+// TestSlumberingTrudge_EntersTappedWhenXIsTwo verifies that when cast with X=2,
+// Slumbering Trudge is tapped after ETB (X ≤ 2).
+func TestSlumberingTrudge_EntersTappedWhenXIsTwo(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Slumbering Trudge")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 3)
+	g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerA, "Slumbering Trudge", 2)
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertTapped(gametest.PlayerA, "Slumbering Trudge", true)
+}
+
+// TestSlumberingTrudge_NotTappedWhenXIsThree verifies that when cast with X=3,
+// Slumbering Trudge is not tapped (X > 2).
+func TestSlumberingTrudge_NotTappedWhenXIsThree(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Slumbering Trudge")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 4)
+	g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerA, "Slumbering Trudge", 3)
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertTapped(gametest.PlayerA, "Slumbering Trudge", false)
+}
+
 // TestSneeringShadewriter_ETBDrainsOpponent verifies that when Sneering
 // Shadewriter enters, each opponent loses 2 life and controller gains 2 life.
 func TestSneeringShadewriter_ETBDrainsOpponent(t *testing.T) {

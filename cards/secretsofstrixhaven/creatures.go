@@ -1,6 +1,8 @@
 package secretsofstrixhaven
 
 import (
+	"fmt"
+
 	"github.com/google/uuid"
 
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage"
@@ -2017,10 +2019,38 @@ func registerCreatures() {
 	// Creature — Plant Beast
 	// 6/6
 	// This creature enters with a number of stun counters on it equal to three minus X. If X is 2 or less, it enters tapped. (If a permanent with a stun counter would become untapped, remove one from it instead.)
-	// TODO: implement
+	// XXX: Stun counters are not implemented (no CounterType for Stun, no untap-prevention replacement effect). The enters-tapped condition (X ≤ 2) is implemented via ETB trigger using a sentinel Charge counter.
 	Register("Slumbering Trudge", func() Card {
+		// Use a Charge sentinel counter to communicate the X-at-cast-time to the
+		// ETB trigger. EntersWithComputedCounters runs during PutOnBattlefield
+		// while g.ResolvingCastContext() is still set, so we can gate on it to
+		// avoid tapping when placed directly (not cast).
 		return NewCreature("Slumbering Trudge", "{X}{G}", 6, 6,
 			WithSubTypes("Plant", "Beast"),
+			WithAbility(EntersWithComputedCounters(Charge, func(g *Game, perm *Permanent) int {
+				if g.ResolvingCastContext() != nil && g.XValue() <= 2 {
+					return 1
+				}
+				return 0
+			})),
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect(
+					"if entered with X ≤ 2, tap this creature",
+					EffectProperties{},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						perm := g.FindPermanent(sourceID)
+						if perm == nil {
+							return nil
+						}
+						if perm.Counters[Charge] > 0 {
+							perm.RemoveCounter(Charge, int(perm.Counters[Charge]))
+							g.TapPermanent(perm)
+						}
+						return nil
+					},
+				),
+				false,
+			)),
 		)
 	})
 
@@ -2064,10 +2094,38 @@ func registerCreatures() {
 	// 1/2
 	// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
 	// {T}: Add an amount of {G} equal to this creature's power.
-	// TODO: implement
 	Register("Topiary Lecturer", func() Card {
 		return NewCreature("Topiary Lecturer", "{2}{G}", 1, 2,
 			WithSubTypes("Elf", "Druid"),
+			// Increment
+			WithAbility(IncrementTrigger()),
+			// {T}: Add an amount of {G} equal to this creature's power.
+			// XXX: Implemented as a non-mana activated ability because ManaAbility has a
+			// fixed production list and cannot vary by power. It will not auto-tap during
+			// AI mana payment but resolves correctly via ActivateAbility.
+			WithActivatedAbility(
+				FuncEffect(
+					"add {G} equal to this creature's power",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						perm := g.FindPermanent(sourceID)
+						if perm == nil {
+							return nil
+						}
+						power := perm.CurrentPower(g)
+						if power <= 0 {
+							return nil
+						}
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						p.ManaPool().Add(Green, power)
+						return nil
+					},
+				),
+				TapSourceCost(),
+			),
 		)
 	})
 
