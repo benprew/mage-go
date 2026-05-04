@@ -2283,7 +2283,7 @@ func TestTesterOfTheTangential_MoveCountersToCombatTarget(t *testing.T) {
 	// Player chooses X=2 and targets Grizzly Bears
 	g.ChooseNumber(gametest.PlayerA, 2)
 	g.ChoosePermanent(gametest.PlayerA, "Grizzly Bears")
-	g.StopAt(1, core.BeginCombat)
+	g.StopAt(1, core.DeclareAttackers)
 	g.Execute()
 	g.AssertCounterCount(gametest.PlayerA, "Tester of the Tangential", core.P1P1, 1)
 	g.AssertCounterCount(gametest.PlayerA, "Grizzly Bears", core.P1P1, 2)

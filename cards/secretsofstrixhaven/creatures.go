@@ -838,10 +838,60 @@ func registerCreatures() {
 	// 1/1
 	// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
 	// At the beginning of combat on your turn, you may pay {X}. When you do, move X +1/+1 counters from this creature onto another target creature.
-	// TODO: implement
 	Register("Tester of the Tangential", func() Card {
 		return NewCreature("Tester of the Tangential", "{1}{U}", 1, 1,
 			WithSubTypes("Djinn", "Wizard"),
+			// Increment
+			WithAbility(IncrementTrigger()),
+			// At the beginning of combat on your turn, you may pay {X}. When you do,
+			// move X +1/+1 counters from this creature onto another target creature.
+			WithAbility(NewTriggered(EvtBeginCombat, true,
+				FuncEffect(
+					"you may pay {X}; if you do, move X +1/+1 counters onto another target creature",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						self := g.FindPermanent(sourceID)
+						if self == nil {
+							return nil
+						}
+						available := int(self.Counters[P1P1])
+						if available <= 0 {
+							return nil
+						}
+						player := g.GetPlayer(controller)
+						if player == nil {
+							return nil
+						}
+						// Player chooses X (how many counters to move / mana to pay).
+						x := player.ChooseNumber(0, available, "pay {X} and move X +1/+1 counters")
+						if x <= 0 {
+							return nil
+						}
+						// Pay X generic mana.
+						cost := fmt.Sprintf("{%d}", x)
+						if !g.TryPayCostFromLands(controller, cost) {
+							return nil
+						}
+						// Choose another target creature.
+						candidates := g.FilterBattlefield(And(IsCreature, NotID(sourceID)))
+						if len(candidates) == 0 {
+							return nil
+						}
+						target := player.ChoosePermanent(candidates, "move counters to another target creature", g)
+						if target == nil {
+							return nil
+						}
+						// Move X +1/+1 counters from self to target.
+						if x > int(self.Counters[P1P1]) {
+							x = int(self.Counters[P1P1])
+						}
+						self.RemoveCounter(P1P1, x)
+						target.AddCounter(P1P1, x)
+						g.ApplyContinuousEffects()
+						return nil
+					},
+				),
+			).SetConditionData(EventPlayerIsController{})),
 		)
 	})
 
