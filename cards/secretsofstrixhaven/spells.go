@@ -1400,10 +1400,11 @@ func registerSpells() {
 // Last Gasp {1}{B}
 // Instant
 // Target creature gets -3/-3 until end of turn.
-// TODO: implement
 	Register("Last Gasp", func() Card {
 		return NewInstant("Last Gasp", "{1}{B}",
-			NewSpellAbility(),
+			NewTargetedSpell(TargetCreature(),
+				Boost(Fixed(-3), Fixed(-3)),
+			),
 		)
 	})
 
