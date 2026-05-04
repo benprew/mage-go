@@ -1281,10 +1281,36 @@ func registerSpells() {
 // Harsh Annotation {1}{W}
 // Instant
 // Destroy target creature. Its controller creates a 1/1 white and black Inkling creature token with flying.
-// TODO: implement
 	Register("Harsh Annotation", func() Card {
 		return NewInstant("Harsh Annotation", "{1}{W}",
-			NewSpellAbility(),
+			NewTargetedSpell(TargetCreature(),
+				FuncEffect(
+					"destroy target creature; its controller creates a 1/1 white and black Inkling creature token with flying",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						perm := g.FindPermanent(targets[0])
+						if perm == nil {
+							return nil
+						}
+						targetController := perm.Controller
+						g.DestroyPermanent(perm)
+						if p := g.GetPlayer(targetController); p != nil {
+							inklingToken := NewToken("Inkling Token", 1, 1,
+								[]CardType{TypeCreature},
+								[]string{"Inkling"},
+								Flying,
+							)
+							inklingToken.SetColorOverride([]Color{White, Black})
+							inklingToken.SetOwner(targetController)
+							g.PutOnBattlefield(inklingToken, targetController)
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 
