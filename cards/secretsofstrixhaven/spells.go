@@ -1879,10 +1879,40 @@ func registerSpells() {
 // Sorcery
 // Molten Note deals damage to target creature equal to the amount of mana spent to cast this spell. Untap all creatures you control.
 // Flashback {6}{R}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)
-// TODO: implement
+// XXX: Flashback not supported by engine.
 	Register("Molten Note", func() Card {
 		return NewSorcery("Molten Note", "{X}{R}{W}",
-			NewSpellAbility(),
+			NewTargetedSpell(
+				TargetCreature(),
+				FuncEffect(
+					"deal damage equal to mana spent to target creature; untap all creatures you control",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						// Deal damage equal to total mana spent to cast.
+						ctx := g.ResolvingCastContext()
+						damage := 0
+						if ctx != nil {
+							for _, v := range ctx.ColorsSpent {
+								damage += v
+							}
+						}
+						if len(targets) > 0 && damage > 0 {
+							perm := g.FindPermanent(targets[0])
+							if perm != nil {
+								g.DealDamageToPermanent(perm, damage, sourceID)
+							}
+						}
+						// Untap all creatures you control.
+						for _, perm := range g.FilterBattlefield(And(ControlledBy(controller), IsCreature)) {
+							if perm.Tapped {
+								perm.Tapped = false
+								g.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: perm.ID()})
+							}
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 

@@ -968,10 +968,13 @@ func TestMoltenNote(t *testing.T) {
 	t.Run("untaps all creatures you control", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Molten Note")
+		// PlayerA's bears attacks and gets tapped. After combat in PostcombatMain,
+		// cast Molten Note (sorcery speed) targeting PlayerB's Hill Giant.
+		// X=0: total mana = 2 (R+W), Hill Giant (3/3) survives; untap all creatures you control.
 		g.Attack(1, gametest.PlayerA, "Grizzly Bears")
-		g.CastSpellWithX(1, core.DeclareAttackers, gametest.PlayerA, "Molten Note", 0, "Grizzly Bears")
+		g.CastSpellWithX(1, core.PostcombatMain, gametest.PlayerA, "Molten Note", 0, "Hill Giant")
 		g.StopAt(1, core.EndStep)
 		g.Execute()
 		// PlayerA's Grizzly Bears attacked (tapped), then Molten Note untapped all creatures you control
