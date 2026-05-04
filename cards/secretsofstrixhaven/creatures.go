@@ -89,6 +89,31 @@ func init() {
 	registerCreatures()
 }
 
+// Used for the "Repartee" ability word (SOS): "Whenever you cast an instant or
+// sorcery spell that targets a creature, …"
+func reparteeCondition(evt *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
+	if evt.PlayerID != controllerID {
+		return false
+	}
+	card := g.FindCardAnywhere(evt.SourceID)
+	if card == nil {
+		return false
+	}
+	if !card.HasType(TypeInstant) && !card.HasType(TypeSorcery) {
+		return false
+	}
+	obj := g.FindStackObject(evt.SourceID)
+	if obj == nil {
+		return false
+	}
+	for _, tid := range obj.Targets {
+		if perm := g.FindPermanent(tid); perm != nil && perm.HasAttr(AttrIsCreature) {
+			return true
+		}
+	}
+	return false
+}
+
 func registerCreatures() {
 
 	// ===== WHITE CREATURES =====
@@ -215,26 +240,83 @@ func registerCreatures() {
 	// Creature — Human Wizard
 	// 2/2
 	// Vigilance
-	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, create a 1/1 white and black Inkling creature token with flying.
-	// TODO: implement
+	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature,
+	// create a 1/1 white and black Inkling creature token with flying.
 	Register("Informed Inkwright", func() Card {
 		return NewCreature("Informed Inkwright", "{1}{W}", 2, 2,
 			WithSubTypes("Human", "Wizard"),
+			WithKeyword(Vigilance),
+			WithAbility(NewTriggered(EvtSpellCast, false,
+				CreateColoredToken("Inkling", 1, 1, []Color{White, Black}, []CardType{TypeCreature}, []string{"Inkling"}, Flying),
+			).SetCondition(reparteeCondition)),
 		)
 	})
-
 	// Inkshape Demonstrator {3}{W}
 	// Creature — Elephant Cleric
 	// 3/4
-	// Ward {2} (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {2}.)
-	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, this creature gets +1/+0 and gains lifelink until end of turn.
-	// TODO: implement
+	// Ward {2} (Whenever this creature becomes the target of a spell or ability an
+	// opponent controls, counter it unless that player pays {2}.)
+	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature,
+	// this creature gets +1/+0 and gains lifelink until end of turn.
 	Register("Inkshape Demonstrator", func() Card {
+		wardEffect := FuncEffect(
+			"counter that spell or ability unless its controller pays {2}",
+			EffectProperties{Outcome: OutcomeBenefit},
+			func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				// targets[0] = the targeted object (this creature, auto-bound by EvtBecomesTarget)
+				// targets[1] = the spell/ability source
+				if len(targets) < 2 || targets[1] == uuid.Nil {
+					return nil
+				}
+				// The controller of the targeting spell/ability is the opponent.
+				obj := g.FindStackObject(targets[1])
+				var opponentID uuid.UUID
+				if obj != nil {
+					opponentID = obj.Controller
+				} else {
+					// Activated ability: find permanent and get its controller.
+					perm := g.FindPermanent(targets[1])
+					if perm != nil {
+						opponentID = perm.Controller
+					}
+				}
+				if opponentID == uuid.Nil {
+					return nil
+				}
+				opponent := g.GetPlayer(opponentID)
+				if opponent == nil {
+					return nil
+				}
+				// Give the opponent the option to pay {2}; if they decline, counter.
+				paid := false
+				if ManaCostOf("{2}").CanPay(sourceID, opponentID, g) {
+					if opponent.ChooseMayAbility("pay {2} to prevent Ward from countering") {
+						if err := ManaCostOf("{2}").Pay(sourceID, opponentID, g); err == nil {
+							paid = true
+						}
+					}
+				}
+				if !paid {
+					g.CounterSpellOnStack(targets[1])
+				}
+				return nil
+			},
+		)
 		return NewCreature("Inkshape Demonstrator", "{3}{W}", 3, 4,
 			WithSubTypes("Elephant", "Cleric"),
+			WithAbility(NewTriggered(EvtBecomesTarget, false, wardEffect).
+				SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+					EventTargetIsSelf{},
+					EventPlayerIsNotController{},
+				}})),
+			WithAbility(NewTriggered(EvtSpellCast, false,
+				CompositeEffects("gets +1/+0 and gains lifelink until end of turn",
+					Boost(Fixed(1), Fixed(0)).Targeting(ToSource()).Until(EndOfTurn),
+					GrantKeyword(Lifelink).Targeting(ToSource()).Until(EndOfTurn),
+				),
+			).SetCondition(reparteeCondition)),
 		)
 	})
-
 	// Joined Researchers // Secret Rendezvous {1}{W} // {1}{W}{W}
 	// Creature — Human Cleric Wizard // Sorcery
 	// 2/2
@@ -649,13 +731,42 @@ func registerCreatures() {
 	// Creature — Elf Wizard
 	// 1/2
 	// Opus — Whenever you cast an instant or sorcery spell, draw a card. Then discard a card unless five or more mana was spent to cast that spell.
-	// TODO: implement
 	Register("Muse Seeker", func() Card {
+		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c Card) bool {
+			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
+		})
 		return NewCreature("Muse Seeker", "{1}{U}", 1, 2,
 			WithSubTypes("Elf", "Wizard"),
+			// Opus — Whenever you cast an instant or sorcery spell, draw a card. Then discard
+			// a card unless five or more mana was spent to cast that spell.
+			WithAbility(WheneverYouCastSpellTrigger(
+				OpusEffect("draw a card, then discard a card unless 5+ mana spent",
+					func(g *Game, sourceID, controller uuid.UUID, manaSpent int) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						g.PlayerDrawCard(p)
+						if manaSpent >= 5 {
+							return nil
+						}
+						hand := p.Hand()
+						if len(hand) == 0 {
+							return nil
+						}
+						chosen := p.ChooseCardsFromHand(1, "discard a card", g)
+						if len(chosen) == 0 {
+							return nil
+						}
+						g.PlayerDiscard(p, chosen[0].ID())
+						return nil
+					},
+				),
+				false,
+				isInstantOrSorcery,
+			)),
 		)
 	})
-
 	// Orysa, Tide Choreographer {4}{U}
 	// Legendary Creature — Merfolk Bard
 	// 2/2
@@ -886,14 +997,16 @@ func registerCreatures() {
 	// Lecturing Scornmage {B}
 	// Creature — Human Warlock
 	// 1/1
-	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, put a +1/+1 counter on this creature.
-	// TODO: implement
+	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature,
+	// put a +1/+1 counter on this creature.
 	Register("Lecturing Scornmage", func() Card {
 		return NewCreature("Lecturing Scornmage", "{B}", 1, 1,
 			WithSubTypes("Human", "Warlock"),
+			WithAbility(NewTriggered(EvtSpellCast, false,
+				AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
+			).SetCondition(reparteeCondition)),
 		)
 	})
-
 	// Leech Collector // Bloodletting {1}{B} // {B}
 	// Creature — Human Warlock // Sorcery
 	// 2/2
@@ -908,27 +1021,96 @@ func registerCreatures() {
 	// Creature — Elf Bard
 	// 2/2
 	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, each opponent loses 1 life and you gain 1 life.
-	// TODO: implement
 	Register("Melancholic Poet", func() Card {
 		return NewCreature("Melancholic Poet", "{1}{B}", 2, 2,
 			WithSubTypes("Elf", "Bard"),
+			// Repartee — Whenever you cast an instant or sorcery spell that targets a creature,
+			// each opponent loses 1 life and you gain 1 life.
+			WithAbility(WheneverYouCastInstantOrSorceryTargetingCreatureTrigger(
+				FuncEffect("each opponent loses 1 life and you gain 1 life",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						for _, pl := range g.AllPlayers() {
+							if pl.PlayerID() != controller {
+								pl.LoseLife(1)
+							}
+						}
+						if you := g.GetPlayer(controller); you != nil {
+							g.PlayerGainLife(you, 1)
+						}
+						return nil
+					},
+				),
+				false,
+			)),
 		)
 	})
-
 	// Moseo, Vein's New Dean {2}{B}
 	// Legendary Creature — Bird Skeleton Warlock
 	// 2/1
 	// Flying
 	// When Moseo enters, create a 1/1 black and green Pest creature token with "Whenever this token attacks, you gain 1 life."
 	// Infusion — At the beginning of your end step, if you gained life this turn, return up to one target creature card with mana value X or less from your graveyard to the battlefield, where X is the amount of life you gained this turn.
-	// TODO: implement
 	Register("Moseo, Vein's New Dean", func() Card {
+		pestTokenEffect := TokenWithAbilities(
+			CreateColoredToken("Pest Token", 1, 1,
+				[]Color{Black, Green},
+				[]CardType{TypeCreature},
+				[]string{"Pest"},
+			),
+			AttacksTrigger(GainLife(1), false),
+		)
 		return NewCreature("Moseo, Vein's New Dean", "{2}{B}", 2, 1,
 			WithSubTypes("Bird", "Skeleton", "Warlock"),
 			WithSuperTypes(SuperLegendary),
+			WithKeyword(Flying),
+			// When Moseo enters, create a 1/1 black and green Pest creature token with
+			// "Whenever this token attacks, you gain 1 life."
+			WithAbility(EntersBattlefieldTrigger(pestTokenEffect, false)),
+			// Infusion — At the beginning of your end step, if you gained life this turn,
+			// return up to one target creature card with mana value X or less from your
+			// graveyard to the battlefield, where X is the amount of life you gained this turn.
+			WithAbility(NewTriggered(EvtEndStep, false,
+				InfusionEffect(
+					"return up to one creature card with MV <= life gained from graveyard",
+					FuncEffect(
+						"return up to one creature card with MV <= life gained from graveyard",
+						EffectProperties{Outcome: OutcomeBenefit},
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+							p := g.GetPlayer(controller)
+							if p == nil {
+								return nil
+							}
+							lifeGained := LifeGainedThisTurnFor(g, controller)
+							if lifeGained <= 0 {
+								return nil
+							}
+							var eligible []Card
+							for _, c := range p.Graveyard() {
+								if !c.HasType(TypeCreature) {
+									continue
+								}
+								if c.ManaCost().CMC() <= lifeGained {
+									eligible = append(eligible, c)
+								}
+							}
+							if len(eligible) == 0 {
+								return nil
+							}
+							chosen := p.ChooseCardFromLibrary(eligible, "return creature from graveyard to battlefield (MV <= life gained)", g)
+							if chosen == nil {
+								return nil
+							}
+							if card, ok := p.RemoveFromGraveyard(chosen.ID()); ok {
+								g.PutOnBattlefield(card, controller)
+							}
+							return nil
+						},
+					),
+				),
+			).SetConditionData(EventPlayerIsController{})),
 		)
 	})
-
 	// Poisoner's Apprentice {2}{B}
 	// Creature — Orc Warlock
 	// 2/2
@@ -1336,13 +1518,43 @@ func registerCreatures() {
 	// 2/2
 	// Menace
 	// Opus — Whenever you cast an instant or sorcery spell, put a +1/+1 counter on this creature. If five or more mana was spent to cast that spell, add an amount of {R} equal to this creature's power.
-	// TODO: implement
 	Register("Molten-Core Maestro", func() Card {
+		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c Card) bool {
+			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
+		})
 		return NewCreature("Molten-Core Maestro", "{1}{R}", 2, 2,
 			WithSubTypes("Goblin", "Bard"),
+			WithKeyword(Menace),
+			// Opus — Whenever you cast an instant or sorcery spell, put a +1/+1 counter on
+			// this creature. If five or more mana was spent to cast that spell, add an amount
+			// of {R} equal to this creature's power.
+			WithAbility(WheneverYouCastSpellTrigger(
+				OpusEffect("put a +1/+1 counter; if 5+ mana spent, add {R} equal to power",
+					func(g *Game, sourceID, controller uuid.UUID, manaSpent int) error {
+						perm := g.FindPermanent(sourceID)
+						if perm == nil {
+							return nil
+						}
+						perm.AddCounter(P1P1, 1)
+						g.ApplyContinuousEffects()
+						if manaSpent >= 5 {
+							p := g.GetPlayer(controller)
+							if p == nil {
+								return nil
+							}
+							power := perm.CurrentPower(g)
+							if power > 0 {
+								p.ManaPool().Add(Red, power)
+							}
+						}
+						return nil
+					},
+				),
+				false,
+				isInstantOrSorcery,
+			)),
 		)
 	})
-
 	// Pigment Wrangler // Striking Palette {4}{R} // {R}
 	// Creature — Orc Sorcerer // Sorcery
 	// 4/4
@@ -2478,14 +2690,19 @@ func registerCreatures() {
 	// Inkling Mascot {W}{B}
 	// Creature — Inkling Cat
 	// 2/2
-	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, this creature gains flying until end of turn. Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)
-	// TODO: implement
+	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature,
+	// this creature gains flying until end of turn. Surveil 1. (Look at the top card of
+	// your library. You may put it into your graveyard.)
 	Register("Inkling Mascot", func() Card {
 		return NewCreature("Inkling Mascot", "{W}{B}", 2, 2,
 			WithSubTypes("Inkling", "Cat"),
+			WithAbility(NewTriggered(EvtSpellCast, false,
+				// XXX: Surveil 1 is not implemented in the engine; only the
+				// "gains flying until end of turn" half is applied here.
+				GrantKeyword(Flying).Targeting(ToSource()).Until(EndOfTurn),
+			).SetCondition(reparteeCondition)),
 		)
 	})
-
 	// Kirol, History Buff // Pack a Punch {R}{W} // {1}{R}{W}
 	// Legendary Creature — Vampire Cleric // Sorcery
 	// 2/3
@@ -2617,13 +2834,32 @@ func registerCreatures() {
 	// 4/4
 	// Vigilance, reach
 	// Infusion — When this creature enters, put two +1/+1 counters on it if you gained life this turn.
-	// TODO: implement
 	Register("Old-Growth Educator", func() Card {
 		return NewCreature("Old-Growth Educator", "{2}{B}{G}", 4, 4,
 			WithSubTypes("Treefolk", "Druid"),
+			WithKeyword(Vigilance),
+			WithKeyword(Reach),
+			// Infusion — When this creature enters, put two +1/+1 counters on it if you
+			// gained life this turn.
+			WithAbility(EntersBattlefieldTrigger(
+				InfusionEffect("put two +1/+1 counters on this creature",
+					FuncEffect("put two +1/+1 counters on this creature",
+						EffectProperties{Outcome: OutcomeBenefit},
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+							perm := g.FindPermanent(sourceID)
+							if perm == nil {
+								return nil
+							}
+							perm.AddCounter(P1P1, 2)
+							g.ApplyContinuousEffects()
+							return nil
+						},
+					),
+				),
+				false,
+			)),
 		)
 	})
-
 	// Paradox Surveyor {G}{G/U}{U}
 	// Creature — Elf Druid
 	// 3/3

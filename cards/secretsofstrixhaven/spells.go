@@ -1876,18 +1876,25 @@ func registerSpells() {
 	})
 
 
-// Lumaret's Favor {1}{G}
-// Instant
-// Infusion — When you cast this spell, copy it if you gained life this turn. You may choose new targets for the copy.
-// Target creature gets +2/+4 until end of turn.
-// TODO: implement
+	// Lumaret's Favor {1}{G}
+	// Instant
+	// Infusion — When you cast this spell, copy it if you gained life this turn.
+	// You may choose new targets for the copy.
+	// Target creature gets +2/+4 until end of turn.
 	Register("Lumaret's Favor", func() Card {
+		// XXX: The Infusion ability ("When you cast this spell, copy it if you
+		// gained life this turn. You may choose new targets for the copy.") is a
+		// cast-triggered ability that fires while the spell is on the stack (CR 113.6).
+		// The engine currently only scans the battlefield and graveyard for triggered
+		// abilities; ZoneStack is not supported as an active zone for triggers.
+		// The copy-on-cast half is omitted until engine support is added.
 		return NewInstant("Lumaret's Favor", "{1}{G}",
-			NewSpellAbility(),
+			NewTargetedSpell(
+				TargetCreature(),
+				Boost(Fixed(2), Fixed(4)).Targeting(ToTarget()).Until(EndOfTurn),
+			),
 		)
 	})
-
-
 // Mana Sculpt {1}{U}{U}
 // Instant
 // Counter target spell. If you control a Wizard, add an amount of {C} equal to the amount of mana spent to cast that spell at the beginning of your next main phase.
