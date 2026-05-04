@@ -2339,7 +2339,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 				if owner == uuid.Nil {
 					owner = obj.Controller
 				}
-				if g.IsCardMarkedExileInsteadOfGraveyard(obj.Card.ID()) {
+				if obj.ExileOnLeaveStack || g.IsCardMarkedExileInsteadOfGraveyard(obj.Card.ID()) {
 					g.ExileCard(obj.Card, obj.Card.ID())
 				} else {
 					p := g.GetPlayer(owner)
@@ -2393,7 +2393,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 		}
 
 		// Permanents go to the battlefield instead
-		if obj.Card.HasType(TypeCreature) || obj.Card.HasType(TypeArtifact) || obj.Card.HasType(TypeEnchantment) {
+		if obj.Card.HasType(TypeCreature) || obj.Card.HasType(TypeArtifact) || obj.Card.HasType(TypeEnchantment) || obj.Card.HasType(TypePlaneswalker) {
 			perm := g.PutOnBattlefield(obj.Card, obj.Controller)
 
 			// Handle aura attachment (only for Aura subtype, not all enchantments)
@@ -2418,8 +2418,9 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 
 		// Instants and sorceries go to graveyard, unless an active
 		// "if would be put into a graveyard, exile it instead" rider
-		// applies to this card (e.g. Scholar of the Lost Trove).
-		if g.IsCardMarkedExileInsteadOfGraveyard(obj.Card.ID()) {
+		// applies to this card (e.g. Scholar of the Lost Trove) or this
+		// spell was cast via flashback (CR 702.34).
+		if obj.ExileOnLeaveStack || g.IsCardMarkedExileInsteadOfGraveyard(obj.Card.ID()) {
 			g.ExileCard(obj.Card, obj.Card.ID())
 		} else {
 			p := g.GetPlayer(owner)

@@ -148,6 +148,13 @@ func (g *Game) CastCardFromZoneWithAlternateCost(playerID, cardID uuid.UUID, zon
 // If permitForeignOwner is true, an exiled card may be cast even if its
 // owner is not playerID (per CR 706.10 the caster becomes controller).
 func (g *Game) castCardFromZone(playerID, cardID uuid.UUID, zone Zone, targets []uuid.UUID, xValue int, alternateMC *ManaCost, permitForeignOwner bool) error {
+	return g.castCardFromZoneOpts(playerID, cardID, zone, targets, xValue, alternateMC, permitForeignOwner, false)
+}
+
+// castCardFromZoneOpts is the underlying implementation; exileOnLeaveStack
+// causes the resolver to send the card to exile instead of graveyard on
+// resolution / fizzle (used by flashback per CR 702.34).
+func (g *Game) castCardFromZoneOpts(playerID, cardID uuid.UUID, zone Zone, targets []uuid.UUID, xValue int, alternateMC *ManaCost, permitForeignOwner, exileOnLeaveStack bool) error {
 	p := g.GetPlayer(playerID)
 	if p == nil {
 		return ErrPlayerNotFound
@@ -225,17 +232,18 @@ func (g *Game) castCardFromZone(playerID, cardID uuid.UUID, zone Zone, targets [
 	}
 
 	obj := &StackObject{
-		ID:           uuid.New(),
-		Card:         card,
-		Controller:   playerID,
-		SourceID:     card.ID(),
-		Effects:      effects,
-		Targets:      targets,
-		XValue:       xValue,
-		ModeChoice:   modeChoice,
-		ModalTargets: modalTargets,
-		CastZone:     zone,
-		CastContext:  g.snapshotCastContext(playerID),
+		ID:                uuid.New(),
+		Card:              card,
+		Controller:        playerID,
+		SourceID:          card.ID(),
+		Effects:           effects,
+		Targets:           targets,
+		XValue:            xValue,
+		ModeChoice:        modeChoice,
+		ModalTargets:      modalTargets,
+		CastZone:          zone,
+		CastContext:       g.snapshotCastContext(playerID),
+		ExileOnLeaveStack: exileOnLeaveStack,
 	}
 
 	if modes := card.Modes(); len(modes) > 0 {

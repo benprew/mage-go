@@ -27,6 +27,10 @@ type AlternateCost struct {
 	Mana       ManaCost
 	Additional []Cost
 	Condition  func(g *Game, playerID uuid.UUID) bool
+	// Flashback marks this alternate cost as the flashback keyword (CR 702.34).
+	// When the spell is cast via this alt-cost, it is exiled instead of being
+	// put into its owner's graveyard upon resolution or fizzle.
+	Flashback bool
 }
 
 // WithAlternateCost registers an alternate cost on the card. The cost is paid
@@ -39,6 +43,21 @@ func WithAlternateCost(zone Zone, mana ManaCost, additional ...Cost) CardOption 
 			Zone:       zone,
 			Mana:       mana,
 			Additional: additional,
+		})
+	}
+}
+
+// WithFlashback registers the flashback alternate cost (CR 702.34): the card
+// may be cast from its owner's graveyard for the given mana cost (plus any
+// additional costs). On resolution or fizzle the card is exiled instead of
+// being put into the graveyard.
+func WithFlashback(mana ManaCost, additional ...Cost) CardOption {
+	return func(c *BaseCard) {
+		c.alternateCosts = append(c.alternateCosts, AlternateCost{
+			Zone:       ZoneGraveyard,
+			Mana:       mana,
+			Additional: additional,
+			Flashback:  true,
 		})
 	}
 }
@@ -136,5 +155,5 @@ func (g *Game) CastCardWithAlternateCost(playerID, cardID uuid.UUID, altIdx int,
 	}
 
 	mc := alt.Mana
-	return g.castCardFromZone(playerID, cardID, alt.Zone, targets, xValue, &mc, false)
+	return g.castCardFromZoneOpts(playerID, cardID, alt.Zone, targets, xValue, &mc, false, alt.Flashback)
 }

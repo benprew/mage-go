@@ -51,6 +51,12 @@ type StackObject struct {
 	// your hand" / "from the graveyard" / etc.
 	CastZone Zone
 
+	// ExileOnLeaveStack is true when this spell, on resolution or fizzle,
+	// should be exiled instead of going to its owner's graveyard. Set by the
+	// flashback cast path (CR 702.34) and similar one-shot alternate-cast
+	// effects that explicitly send the card to exile after resolving.
+	ExileOnLeaveStack bool
+
 	// CastContext snapshots cast-time state used by effects whose Oracle
 	// text references "as you cast this spell" (CR 608.2g). Populated when
 	// a spell is pushed onto the stack and read during resolution via

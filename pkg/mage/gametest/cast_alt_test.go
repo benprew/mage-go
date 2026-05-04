@@ -6,6 +6,7 @@ import (
 
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"github.com/google/uuid"
 )
 
 var castAltRegisterOnce sync.Once
@@ -27,6 +28,16 @@ func registerCastAltTestCards() {
 			mage.Register("Cast-Alt Bear", func() mage.Card {
 				return mage.NewCreature("Cast-Alt Bear", "{1}{G}", 2, 2,
 					mage.WithSubTypes("Bear"),
+				)
+			})
+		}
+		// A sorcery with the flashback keyword — used to verify CR 702.34
+		// exile-after-resolution semantics.
+		if !mage.CardRegistered("Cast-Alt Flashback Heal") {
+			mage.Register("Cast-Alt Flashback Heal", func() mage.Card {
+				return mage.NewSorcery("Cast-Alt Flashback Heal", "{2}{W}",
+					mage.NewSpellAbility(mage.GainLife(3)),
+					mage.WithFlashback(core.ParseManaCost("{4}{W}")),
 				)
 			})
 		}
@@ -227,5 +238,81 @@ func TestCastFromZoneWithAlternateCost(t *testing.T) {
 	}
 	if pA.ManaPool().TotalMana() != 0 {
 		t.Errorf("expected mana pool empty after paying alt cost, got %d", pA.ManaPool().TotalMana())
+	}
+}
+
+// CR 702.34: a card cast via flashback is exiled instead of being put into
+// its owner's graveyard when it resolves.
+func TestFlashbackExilesAfterResolution(t *testing.T) {
+	registerCastAltTestCards()
+	tg := NewTestGame(t)
+	pA := tg.GetPlayer(PlayerA)
+
+	tg.AddCard(core.ZoneGraveyard, PlayerA, "Cast-Alt Flashback Heal")
+	cardID := pA.Graveyard()[0].ID()
+
+	pA.ManaPool().Clear()
+	pA.ManaPool().Add(core.White, 1)
+	pA.ManaPool().Add(core.Colorless, 4)
+
+	if err := tg.Game.CastCardWithAlternateCost(pA.PlayerID(), cardID, 0, nil, 0); err != nil {
+		t.Fatalf("CastCardWithAlternateCost: %v", err)
+	}
+	tg.Game.ResolveStack()
+
+	if pA.Life() != 23 {
+		t.Errorf("expected life 23 after flashback Heal resolves, got %d", pA.Life())
+	}
+	for _, c := range pA.Graveyard() {
+		if c.ID() == cardID {
+			t.Errorf("flashback card returned to graveyard; expected exile")
+		}
+	}
+	if tg.Game.FindExiledCard(cardID) == nil {
+		t.Errorf("expected flashback card in exile after resolution")
+	}
+}
+
+// CR 702.34: a fizzled flashback spell is also exiled, not put into the
+// graveyard. Build a flashback sorcery with a target so we can fizzle it.
+func TestFlashbackExilesOnFizzle(t *testing.T) {
+	registerCastAltTestCards()
+	if !mage.CardRegistered("Cast-Alt Flashback Bolt") {
+		mage.Register("Cast-Alt Flashback Bolt", func() mage.Card {
+			return mage.NewSorcery("Cast-Alt Flashback Bolt", "{R}",
+				mage.NewTargetedSpell(mage.TargetCreature(), mage.DealDamage(mage.Fixed(2))),
+				mage.WithFlashback(core.ParseManaCost("{2}{R}")),
+			)
+		})
+	}
+	tg := NewTestGame(t)
+	pA := tg.GetPlayer(PlayerA)
+	pB := tg.GetPlayer(PlayerB)
+
+	tg.AddCard(core.ZoneGraveyard, PlayerA, "Cast-Alt Flashback Bolt")
+	cardID := pA.Graveyard()[0].ID()
+	tg.AddCard(core.ZoneBattlefield, PlayerB, "Grizzly Bears")
+	bear := tg.AllBattlefield()[0]
+
+	pA.ManaPool().Clear()
+	pA.ManaPool().Add(core.Red, 1)
+	pA.ManaPool().Add(core.Colorless, 2)
+
+	if err := tg.Game.CastCardWithAlternateCost(pA.PlayerID(), cardID, 0, []uuid.UUID{bear.ID()}, 0); err != nil {
+		t.Fatalf("CastCardWithAlternateCost: %v", err)
+	}
+	// Remove the target so the spell fizzles.
+	tg.Game.RemoveFromBattlefield(bear)
+	pB.AddToGraveyard(bear.Card)
+
+	tg.Game.ResolveStack()
+
+	for _, c := range pA.Graveyard() {
+		if c.ID() == cardID {
+			t.Errorf("fizzled flashback card returned to graveyard; expected exile")
+		}
+	}
+	if tg.Game.FindExiledCard(cardID) == nil {
+		t.Errorf("expected fizzled flashback card in exile")
 	}
 }

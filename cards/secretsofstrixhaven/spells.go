@@ -107,7 +107,6 @@ func registerSpells() {
 // Sorcery
 // Create two 2/2 red and white Spirit creature tokens. Then if this spell was cast from anywhere other than your hand, put a +1/+1 counter on each Spirit you control.
 // Flashback {4}{W}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)
-// XXX: Flashback does not exile the card after resolution (engine feature needed).
 	Register("Antiquities on the Loose", func() Card {
 		return NewSorcery("Antiquities on the Loose", "{1}{W}{W}",
 			NewSpellAbility(
@@ -130,7 +129,7 @@ func registerSpells() {
 					},
 				),
 			),
-			WithAlternateCost(ZoneGraveyard, ParseManaCost("{4}{W}{W}")),
+			WithFlashback(ParseManaCost("{4}{W}{W}")),
 		)
 	})
 
@@ -564,7 +563,6 @@ func registerSpells() {
 // Sorcery
 // Exile target creature you control, then return that card to the battlefield under its owner's control with a +1/+1 counter on it.
 // Flashback {2}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)
-// XXX: Flashback does not exile the card after resolution (engine feature needed).
 	Register("Daydream", func() Card {
 		return NewSorcery("Daydream", "{W}",
 			NewTargetedSpell(
@@ -594,7 +592,7 @@ func registerSpells() {
 					},
 				),
 			),
-			WithAlternateCost(ZoneGraveyard, ParseManaCost("{2}{W}")),
+			WithFlashback(ParseManaCost("{2}{W}")),
 		)
 	})
 
@@ -642,7 +640,6 @@ func registerSpells() {
 // Sorcery
 // Put a +1/+1 counter on target creature you control. It gains vigilance until end of turn.
 // Flashback {W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)
-// XXX: Flashback does not exile the card after resolution (engine feature needed).
 	Register("Dig Site Inventory", func() Card {
 		return NewSorcery("Dig Site Inventory", "{W}",
 			NewTargetedSpell(
@@ -653,7 +650,7 @@ func registerSpells() {
 					GrantKeyword(Vigilance),
 				),
 			),
-			WithAlternateCost(ZoneGraveyard, ParseManaCost("{W}")),
+			WithFlashback(ParseManaCost("{W}")),
 		)
 	})
 
@@ -811,7 +808,6 @@ func registerSpells() {
 // Sorcery
 // Duel Tactics deals 1 damage to target creature. It can't block this turn.
 // Flashback {1}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.)
-// XXX: Flashback does not exile the card after resolution (engine feature needed).
 // XXX: "It can't block this turn" — PreventBlockingUntilEndOfCombat only prevents blocking until end of combat,
 // not the full turn. For a sorcery cast during main phase, blocking happens during the following combat step.
 // PreventBlockingUntilEndOfCombat is used here as the closest available approximation.
@@ -840,7 +836,7 @@ func registerSpells() {
 					),
 				),
 			),
-			WithAlternateCost(ZoneGraveyard, ParseManaCost("{1}{R}")),
+			WithFlashback(ParseManaCost("{1}{R}")),
 		)
 	})
 
@@ -2353,7 +2349,6 @@ func registerSpells() {
 // Sorcery
 // Put a +1/+1 counter on each creature target player controls. Target creature gains your choice of double strike or lifelink until end of turn.
 // Flashback {1}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)
-// XXX: Flashback does not exile the card after resolution (engine feature needed).
 	Register("Practiced Offense", func() Card {
 		c := NewSorcery("Practiced Offense", "{2}{W}",
 			NewMultiTargetSpell(
@@ -2392,6 +2387,7 @@ func registerSpells() {
 					},
 				),
 			),
+			WithFlashback(ParseManaCost("{1}{W}")),
 		)
 		c.SetModes([]string{"double strike", "lifelink"})
 		return c
@@ -2542,7 +2538,6 @@ func registerSpells() {
 // Sorcery
 // You gain 2 life. You may discard a card. If you do, draw two cards.
 // Flashback {2}{R}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)
-// XXX: Flashback does not exile the card after resolution (engine feature needed).
 	Register("Pursue the Past", func() Card {
 		return NewSorcery("Pursue the Past", "{R}{W}",
 			NewSpellAbility(
@@ -2568,7 +2563,7 @@ func registerSpells() {
 					},
 				),
 			),
-			WithAlternateCost(ZoneGraveyard, ParseManaCost("{2}{R}{W}")),
+			WithFlashback(ParseManaCost("{2}{R}{W}")),
 		)
 	})
 
@@ -3509,11 +3504,10 @@ func registerSpells() {
 // Sorcery
 // Tome Blast deals 2 damage to any target.
 // Flashback {4}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.)
-// XXX: Flashback does not exile the card after resolution (engine feature needed).
 	Register("Tome Blast", func() Card {
 		return NewSorcery("Tome Blast", "{1}{R}",
 			NewTargetedSpell(TargetAnyTarget(), DealDamage(Fixed(2))),
-			WithAlternateCost(ZoneGraveyard, ParseManaCost("{4}{R}")),
+			WithFlashback(ParseManaCost("{4}{R}")),
 		)
 	})
 
