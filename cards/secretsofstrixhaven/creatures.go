@@ -1300,10 +1300,14 @@ func registerCreatures() {
 	// Creature — Giant Sorcerer
 	// 4/4
 	// When this creature enters, return target instant or sorcery card from your graveyard to your hand.
-	// TODO: implement
 	Register("Zealous Lorecaster", func() Card {
 		return NewCreature("Zealous Lorecaster", "{5}{R}", 4, 4,
 			WithSubTypes("Giant", "Sorcerer"),
+			// When this creature enters, return target instant or sorcery card from your graveyard to your hand.
+			WithAbility(EntersBattlefieldTrigger(
+				ReturnFromGraveyardToHandTarget(),
+				false,
+			).AddTarget(TargetCardInYourGraveyard(IsInstantOrSorceryCard))),
 		)
 	})
 
@@ -1618,10 +1622,17 @@ func registerCreatures() {
 	// Trample, reach
 	// Converge — This creature enters with a +1/+1 counter on it for each color of mana spent to cast it.
 	// Whenever you cast a creature spell, that creature enters with X additional +1/+1 counters on it, where X is the number of colors of mana spent to cast it.
-	// TODO: implement
+	// XXX: {2/G} (two-generic-or-one-colored hybrid) mana is not supported by the engine's ManaCost
+	// parser; it parses to zero cost, so no mana is recorded as spent and DistinctColorsSpent() is
+	// always 0. Converge and the creature-spell trigger cannot function until the engine gains
+	// support for generic-hybrid mana symbols.
 	Register("Wildgrowth Archaic", func() Card {
 		return NewCreature("Wildgrowth Archaic", "{2/G}{2/G}", 0, 0,
 			WithSubTypes("Avatar"),
+			WithKeyword(Trample),
+			WithKeyword(Reach),
+			// XXX: Converge counter ETB is not implemented — see XXX above.
+			// XXX: "Whenever you cast a creature spell" trigger is not implemented.
 		)
 	})
 
@@ -2643,11 +2654,20 @@ func registerCreatures() {
 	// Affinity for creatures (This spell costs {1} less to cast for each creature you control.)
 	// Flying, deathtouch
 	// Instant and sorcery spells you cast have affinity for creatures.
-	// TODO: implement
 	Register("Witherbloom, the Balancer", func() Card {
 		return NewCreature("Witherbloom, the Balancer", "{6}{B}{G}", 5, 5,
 			WithSubTypes("Elder", "Dragon"),
 			WithSuperTypes(SuperLegendary),
+			// Affinity for creatures: costs {1} less to cast for each creature you control.
+			WithSelfCostReduction(AmountByPermanentCount(IsCreature), nil),
+			WithKeyword(Flying),
+			WithKeyword(Deathtouch),
+			// Instant and sorcery spells you cast have affinity for creatures.
+			WithStaticAbility(ReduceSpellCostStatic(
+				SpellsOr(SpellHasType(TypeInstant), SpellHasType(TypeSorcery)),
+				AmountByPermanentCount(IsCreature),
+				nil,
+			)),
 		)
 	})
 
@@ -2655,11 +2675,62 @@ func registerCreatures() {
 	// Legendary Creature — Human Bard Sorcerer
 	// 5/7
 	// Once during each of your turns, you may cast an instant or sorcery spell from your hand without paying its mana cost.
-	// TODO: implement
 	Register("Zaffai and the Tempests", func() Card {
 		return NewCreature("Zaffai and the Tempests", "{5}{U}{R}", 5, 7,
 			WithSubTypes("Human", "Bard", "Sorcerer"),
 			WithSuperTypes(SuperLegendary),
+			// Once during each of your turns, you may cast an instant or sorcery spell from
+			// your hand without paying its mana cost.
+			WithActivatedAbility(
+				FuncEffect(
+					"cast an instant or sorcery spell from your hand without paying its mana cost",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						var candidates []Card
+						for _, c := range p.Hand() {
+							if c.HasType(TypeInstant) || c.HasType(TypeSorcery) {
+								candidates = append(candidates, c)
+							}
+						}
+						if len(candidates) == 0 {
+							return nil
+						}
+						chosen := p.ChooseCardFromLibrary(candidates, "cast an instant or sorcery from your hand without paying its mana cost", g)
+						if chosen == nil {
+							return nil
+						}
+						// Gather targets for the chosen spell.
+						var castTargets []uuid.UUID
+						for _, a := range chosen.Abilities() {
+							sa, ok := a.(*SpellAbility)
+							if !ok {
+								continue
+							}
+							for _, t := range sa.Targets() {
+								t.Reset()
+								possible := t.Possible(controller, chosen, g)
+								if len(possible) == 0 {
+									continue
+								}
+								selected := p.ChooseTargets(possible, t.Min(), t.Max(), g)
+								if err := t.Choose(controller, chosen, g, selected); err != nil {
+									continue
+								}
+								castTargets = append(castTargets, selected...)
+							}
+							break
+						}
+						return g.CastCardFromZoneWithoutPaying(controller, chosen.ID(), ZoneHand, castTargets, 0)
+					},
+				),
+				ManaCostOf("{0}"),
+				WithOncePerTurn(),
+				WithSorcerySpeed(),
+			),
 		)
 	})
 
@@ -2795,11 +2866,16 @@ func registerCreatures() {
 	// This spell costs {1} less to cast for each instant and sorcery card in your graveyard.
 	// Reach
 	// Whenever The Dawning Archaic attacks, you may cast target instant or sorcery card from your graveyard without paying its mana cost. If that spell would be put into your graveyard, exile it instead.
-	// TODO: implement
 	Register("The Dawning Archaic", func() Card {
 		return NewCreature("The Dawning Archaic", "{10}", 7, 7,
 			WithSubTypes("Avatar"),
 			WithSuperTypes(SuperLegendary),
+			WithKeyword(Reach),
+			WithSelfCostReduction(
+				AmountByGraveyardCount(IsInstantOrSorceryCard),
+				nil,
+			),
+			// XXX: attack trigger "cast instant/sorcery from graveyard for free; exile instead of graveyard" not implemented.
 		)
 	})
 

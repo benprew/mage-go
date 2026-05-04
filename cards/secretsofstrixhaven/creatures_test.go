@@ -1228,19 +1228,23 @@ func TestTeachersPest_GraveyardReturn(t *testing.T) {
 func TestTheDawningArchaic_CostReduction(t *testing.T) {
 	t.Run("costs 1 less per instant/sorcery in graveyard", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
-		// 2 instants in graveyard → cost 10-2=8. With 7 islands, can't pay.
+		// 2 instants + 1 creature (Gray Ogre) → reduction should be exactly 2.
 		g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Lightning Bolt")
 		g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Shock")
 		g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Gray Ogre")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "The Dawning Archaic")
-		for range 7 {
-			g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island")
-		}
-		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "The Dawning Archaic")
-		g.StopAt(1, core.EndStep)
+		g.StopAt(1, core.PrecombatMain)
 		g.Execute()
-		g.AssertPermanentCount(gametest.PlayerA, "The Dawning Archaic", 0)
-		g.AssertHandCount(gametest.PlayerA, "The Dawning Archaic", 1)
+		pid := g.GetPlayer(gametest.PlayerA).PlayerID()
+		for _, c := range g.GetPlayer(gametest.PlayerA).Hand() {
+			if c.Name() == "The Dawning Archaic" {
+				if got := g.Game.ConditionalSpellCostReduction(pid, c); got != 2 {
+					t.Errorf("CostReduction with 2 instants/sorceries: got %d, want 2", got)
+				}
+				return
+			}
+		}
+		t.Error("The Dawning Archaic not found in hand")
 	})
 }
 
@@ -1323,8 +1327,8 @@ func TestZaffaiAndTheTempests_FreeCastFromHand(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Zaffai and the Tempests")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Zaffai and the Tempests")
-		g.ChoosePermanent(gametest.PlayerA, "Lightning Bolt")
-		g.ChoosePermanent(gametest.PlayerA, "PlayerB")
+		g.ChooseFromLibrary(gametest.PlayerA, "Lightning Bolt")
+		g.ChooseTarget(gametest.PlayerA, "PlayerB")
 		g.StopAt(1, core.EndStep)
 		g.Execute()
 		g.AssertLife(gametest.PlayerB, 17)
