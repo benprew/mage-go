@@ -2902,10 +2902,24 @@ func registerSpells() {
 							if n == 0 {
 								return nil
 							}
-							chosen := target.ChooseCardsFromHand(n, "discard any number", g)
+							// Determine how many cards the player intends to discard.
+							// ChooseCardsFromHand may return duplicate IDs when the player
+							// scripts same-named cards, so we use the returned length as
+							// the intended count, then discard one card at a time to ensure
+							// each card removed is a distinct object.
+							planned := target.ChooseCardsFromHand(n, "discard any number", g)
+							count := len(planned)
 							discarded := 0
-							for _, card := range chosen {
-								if _, ok := g.PlayerDiscard(target, card.ID()); ok {
+							for i := 0; i < count; i++ {
+								currentHand := target.Hand()
+								if len(currentHand) == 0 {
+									break
+								}
+								oneCard := target.ChooseCardsFromHand(1, "discard a card", g)
+								if len(oneCard) == 0 {
+									break
+								}
+								if _, ok := g.PlayerDiscard(target, oneCard[0].ID()); ok {
 									discarded++
 								}
 							}
@@ -2981,6 +2995,9 @@ func registerSpells() {
 						if p == nil {
 							return nil
 						}
+						chosen, _ := g.RevealAndPickFromTop(p, p, 2,
+							NewCardFilter("any card", func(c Card) bool { return true }),
+							false, "put into hand")
 						top2 := g.RemoveTopN(p, 2)
 						if len(top2) == 0 {
 							return nil
@@ -2989,13 +3006,11 @@ func registerSpells() {
 							p.AddToHand(top2[0])
 							return nil
 						}
-						chosen, _ := g.RevealAndPickFromTop(g.GetPlayer(controller), g.GetPlayer(controller), 2,
-							NewCardFilter("any card", func(c Card) bool { return true }),
-							false, "put into hand")
 						if chosen != nil {
-							p.AddToHand(chosen)
 							for _, c := range top2 {
-								if c.ID() != chosen.ID() {
+								if c.ID() == chosen.ID() {
+									p.AddToHand(c)
+								} else {
 									g.PutOnBottomInRandomOrder(p, []Card{c})
 								}
 							}
@@ -3061,7 +3076,13 @@ func registerSpells() {
 						ctx := g.ResolvingCastContext()
 						x := 0
 						if ctx != nil {
-							x = ctx.DistinctColorsSpent()
+							// Count only actual colors (White/Blue/Black/Red/Green),
+							// not Colorless — colorless mana is not a color per MTG rules.
+							for c, v := range ctx.ColorsSpent {
+								if v > 0 && c != Colorless {
+									x++
+								}
+							}
 						}
 						if len(targets) > 0 {
 							tp := g.GetPlayer(targets[0])
