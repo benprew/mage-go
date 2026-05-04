@@ -1494,10 +1494,11 @@ func registerCreatures() {
 	// 4/2
 	// Trample
 	// Whenever this creature attacks, you gain 2 life.
-	// TODO: implement
 	Register("Shopkeeper's Bane", func() Card {
 		return NewCreature("Shopkeeper's Bane", "{2}{G}", 4, 2,
 			WithSubTypes("Badger", "Pest"),
+			WithKeyword(Trample),
+			WithAbility(AttacksTrigger(GainLife(2), false)),
 		)
 	})
 
