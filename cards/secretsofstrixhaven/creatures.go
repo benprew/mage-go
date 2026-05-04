@@ -289,10 +289,16 @@ func registerCreatures() {
 	// 2/2
 	// Lifelink
 	// {1}, Sacrifice this creature: Destroy target artifact or enchantment.
-	// TODO: implement
 	Register("Shattered Acolyte", func() Card {
 		return NewCreature("Shattered Acolyte", "{1}{W}", 2, 2,
 			WithSubTypes("Dwarf", "Warlock"),
+			WithKeyword(Lifelink),
+			WithActivatedAbility(
+				DestroyTarget(),
+				ManaCostOf("{1}"),
+				WithCost(SacrificeSourceCost()),
+				WithTarget(TargetArtifactOrEnchantment()),
+			),
 		)
 	})
 
