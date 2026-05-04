@@ -475,6 +475,7 @@ func registerCreatures() {
 			// When this creature enters, return up to one other target creature to its owner's hand.
 			// "Up to one" is optional (0 or 1). The trigger is mandatory but picking 0 is legal.
 			// Uses ChoosePermanent so the test harness can script the choice via g.ChoosePermanent.
+			// Offering all creatures (including self) as candidates; choosing self skips the bounce.
 			WithAbility(EntersBattlefieldTrigger(
 				FuncEffect("return up to one other target creature to its owner's hand",
 					EffectProperties{Outcome: OutcomeDetriment},
@@ -483,17 +484,13 @@ func registerCreatures() {
 						if p == nil {
 							return nil
 						}
-						// Other creatures on the battlefield (not this permanent).
-						srcID := sourceID
-						notSelf := NewPermanentFilter("not this creature", func(perm *Permanent, _ *Game) bool {
-							return perm.ID() != srcID
-						})
-						candidates := g.FilterBattlefield(And(IsCreature, notSelf))
+						// All creatures on the battlefield. Choosing self = "skip bounce" (up to one).
+						candidates := g.FilterBattlefield(IsCreature)
 						if len(candidates) == 0 {
 							return nil
 						}
 						chosen := p.ChoosePermanent(candidates, "return up to one other target creature to its owner's hand", g)
-						if chosen == nil {
+						if chosen == nil || chosen.ID() == sourceID {
 							return nil
 						}
 						owner := g.GetPlayer(chosen.Card.Owner())
@@ -519,6 +516,7 @@ func registerCreatures() {
 						ce := TemporaryKeyword(sourceID, UnblockableKW)
 						ce.SetSourceID(sourceID)
 						g.AddContinuousEffect(ce)
+						g.ApplyContinuousEffects()
 						return nil
 					},
 				),
