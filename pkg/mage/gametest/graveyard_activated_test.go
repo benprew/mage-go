@@ -60,14 +60,14 @@ func TestGraveyardActivated_ReturnSelf(t *testing.T) {
 	pool.Add(core.Black, 5)
 	pool.Add(core.Colorless, 5)
 
-	skel, idx, ok := tg.Game.FindGraveyardActivatableCard(pid, "Test Skeleton")
+	skel, idx, ok := tg.FindGraveyardActivatableCard(pid, "Test Skeleton")
 	if !ok {
 		t.Fatal("graveyard activatable not found")
 	}
-	if err := tg.Game.ActivateGraveyardAbility(pid, skel, idx, nil); err != nil {
+	if err := tg.ActivateGraveyardAbility(pid, skel, idx, nil); err != nil {
 		t.Fatalf("ActivateGraveyardAbility: %v", err)
 	}
-	tg.Game.ResolveStack()
+	tg.ResolveStack()
 
 	tg.AssertHandCount(PlayerA, "Test Skeleton", 1)
 	tg.AssertGraveyardCount(PlayerA, "Test Skeleton", 0)
@@ -90,14 +90,14 @@ func TestGraveyardActivated_ExileSelfCost(t *testing.T) {
 	pool.Add(core.Black, 5)
 	pool.Add(core.Colorless, 5)
 
-	acc, idx, ok := tg.Game.FindGraveyardActivatableCard(pid, "Test Accomplice")
+	acc, idx, ok := tg.FindGraveyardActivatableCard(pid, "Test Accomplice")
 	if !ok {
 		t.Fatal("graveyard activatable not found")
 	}
-	if err := tg.Game.ActivateGraveyardAbility(pid, acc, idx, nil); err != nil {
+	if err := tg.ActivateGraveyardAbility(pid, acc, idx, nil); err != nil {
 		t.Fatalf("ActivateGraveyardAbility: %v", err)
 	}
-	tg.Game.ResolveStack()
+	tg.ResolveStack()
 
 	tg.AssertExileCount("Test Accomplice", 1)
 	tg.AssertGraveyardCount(PlayerA, "Test Accomplice", 0)

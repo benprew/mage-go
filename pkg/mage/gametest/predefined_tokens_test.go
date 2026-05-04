@@ -1,6 +1,7 @@
 package gametest
 
 import (
+	"slices"
 	"sync"
 	"testing"
 
@@ -109,10 +110,8 @@ func assertTokenShape(t *testing.T, tg *TestGame, p PlayerRef, name, subtype str
 		if perm.Card.HasType(core.TypeCreature) {
 			t.Errorf("%s token should not be a creature", name)
 		}
-		for _, st := range perm.Card.SubTypes() {
-			if st == subtype {
-				return
-			}
+		if slices.Contains(perm.Card.SubTypes(), subtype) {
+			return
 		}
 		t.Errorf("%s token missing subtype %s, got %v", name, subtype, perm.Card.SubTypes())
 		return

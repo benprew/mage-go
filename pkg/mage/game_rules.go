@@ -28,11 +28,11 @@ type GameRules struct {
 	maxHandSize              map[uuid.UUID]int       // player -> max hand size override (Cursed Rack)
 	expansionCastBlock       []string                // set codes blocked from casting/playing
 	NullifiedLandwalks       map[Attr]bool           // landwalk attrs that are nullified (Great Wall, etc.)
-	ActivationCostReductions map[uuid.UUID]int        // permanent ID → generic mana reduction for activated abilities
-	entersTappedRules []func(*Permanent) bool        // filters registered by continuous effects (Kismet, etc.)
-	SpellCostReducers []SpellCostReducer             // conditional generic-cost reducers registered each Apply() cycle
-	UncounterableFilters []uncounterableEntry        // static "can't be countered" filters (Allosaurus Shepherd, Vexing Shusher)
-	FlashGrants          []flashGrantEntry            // continuous "you may cast X spells as though they had flash" grants (Rattlechains, Vedalken Orrery, Leyline of Anticipation)
+	ActivationCostReductions map[uuid.UUID]int       // permanent ID → generic mana reduction for activated abilities
+	entersTappedRules        []func(*Permanent) bool // filters registered by continuous effects (Kismet, etc.)
+	SpellCostReducers        []SpellCostReducer      // conditional generic-cost reducers registered each Apply() cycle
+	UncounterableFilters     []uncounterableEntry    // static "can't be countered" filters (Allosaurus Shepherd, Vexing Shusher)
+	FlashGrants              []flashGrantEntry       // continuous "you may cast X spells as though they had flash" grants (Rattlechains, Vedalken Orrery, Leyline of Anticipation)
 }
 
 // flashGrantEntry holds a continuous flash-permission grant. Player is the

@@ -3,9 +3,10 @@ package gametest
 import (
 	"testing"
 
+	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"github.com/google/uuid"
 )
 
 // "As ~ enters the battlefield, choose ___" — CR 614.12.
@@ -58,7 +59,7 @@ func TestETBChooseColor_DifferentChoiceForNewInstance(t *testing.T) {
 	}
 
 	tg := NewTestGame(t)
-	tg.ChooseManaColor(PlayerA, core.Blue) // first instance
+	tg.ChooseManaColor(PlayerA, core.Blue)  // first instance
 	tg.ChooseManaColor(PlayerA, core.Green) // second instance
 	tg.AddCard(core.ZoneHand, PlayerA, name)
 	tg.AddCard(core.ZoneHand, PlayerA, name)

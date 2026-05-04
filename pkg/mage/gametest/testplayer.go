@@ -1,6 +1,8 @@
 package gametest
 
 import (
+	"slices"
+
 	"github.com/google/uuid"
 
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
@@ -367,10 +369,8 @@ func (tp *TestPlayer) ChooseString(options []string, reason string) string {
 	if len(tp.chooseString) > 0 {
 		s := tp.chooseString[0]
 		tp.chooseString = tp.chooseString[1:]
-		for _, o := range options {
-			if o == s {
-				return s
-			}
+		if slices.Contains(options, s) {
+			return s
 		}
 		// Scripted value not in options — fall through to default.
 	}

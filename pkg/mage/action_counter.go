@@ -1,8 +1,9 @@
 package mage
 
 import (
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"github.com/google/uuid"
+
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 // AddCountersAction represents counters about to be put on a permanent (CR 614).
@@ -34,11 +35,11 @@ func NewAddCountersAction(source, permanentID uuid.UUID, ct CounterType, amount 
 	}
 }
 
-func (a *AddCountersAction) ActionSource() uuid.UUID { return a.source }
-func (a *AddCountersAction) PermanentID() uuid.UUID  { return a.permanentID }
+func (a *AddCountersAction) ActionSource() uuid.UUID  { return a.source }
+func (a *AddCountersAction) PermanentID() uuid.UUID   { return a.permanentID }
 func (a *AddCountersAction) CounterType() CounterType { return a.counterType }
-func (a *AddCountersAction) Amount() int             { return a.amount }
-func (a *AddCountersAction) OnEntry() bool           { return a.onEntry }
+func (a *AddCountersAction) Amount() int              { return a.amount }
+func (a *AddCountersAction) OnEntry() bool            { return a.onEntry }
 
 // WithAmount returns a copy with the amount replaced. Used by replacements
 // that scale the count (e.g. doubling).

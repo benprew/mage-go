@@ -10,18 +10,18 @@ const (
 	// Capability attrs — what a permanent can do / must do.
 	AttrCanAttack Attr = iota + 1
 	AttrCanBlock
-	AttrHasPowerToughness  // has P/T; takes combat damage; subject to SBAs
-	AttrSummonSick         // set on ETB for creatures; cleared at untap; Haste bypasses check
-	AttrDoesNotUntap       // replaces DoesNotUntapKW
-	AttrEntersTapped       // set on entry; cleared by PutOnBattlefield after tapping
-	AttrMustAttack         // replaces MustAttack keyword
-	AttrMustBeBlocked      // Lure semantics: all able blockers must block this
-	AttrMustBeBlockedIfAble // CR 509.1c: must be blocked by at least one able blocker
-	AttrMayNotUntap        // player may choose not to untap during untap step
-	AttrCantBeEnchanted              // permanent can't have enchantments attached to it
-	AttrCantBeTargetedByArtifacts    // permanent can't be targeted by abilities from artifact sources
-	AttrCantChangeControl            // other players can't gain control (Guardian Beast)
-	AttrCantActivateNonManaAbilities // permanent's non-mana activated abilities can't be activated (CR 605 mana abilities are unaffected)
+	AttrHasPowerToughness             // has P/T; takes combat damage; subject to SBAs
+	AttrSummonSick                    // set on ETB for creatures; cleared at untap; Haste bypasses check
+	AttrDoesNotUntap                  // replaces DoesNotUntapKW
+	AttrEntersTapped                  // set on entry; cleared by PutOnBattlefield after tapping
+	AttrMustAttack                    // replaces MustAttack keyword
+	AttrMustBeBlocked                 // Lure semantics: all able blockers must block this
+	AttrMustBeBlockedIfAble           // CR 509.1c: must be blocked by at least one able blocker
+	AttrMayNotUntap                   // player may choose not to untap during untap step
+	AttrCantBeEnchanted               // permanent can't have enchantments attached to it
+	AttrCantBeTargetedByArtifacts     // permanent can't be targeted by abilities from artifact sources
+	AttrCantChangeControl             // other players can't gain control (Guardian Beast)
+	AttrCantActivateNonManaAbilities  // permanent's non-mana activated abilities can't be activated (CR 605 mana abilities are unaffected)
 	AttrAssignsDamageEqualToToughness // permanent assigns combat damage equal to its toughness rather than its power (Doran the Siege Tower / Assault Formation)
 
 	// Type-identity attrs (battlefield) — replaces TypesAdded []CardType on Permanent.

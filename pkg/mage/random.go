@@ -27,7 +27,7 @@ func (g *Game) DiscardAtRandom(p Player, n int) []Card {
 		return nil
 	}
 	var discarded []Card
-	for i := 0; i < n; i++ {
+	for range n {
 		hand := p.Hand()
 		if len(hand) == 0 {
 			break

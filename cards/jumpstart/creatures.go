@@ -2,6 +2,7 @@ package jumpstart
 
 import (
 	"math/rand"
+	"slices"
 
 	"github.com/google/uuid"
 
@@ -491,12 +492,7 @@ func registerCreatures() {
 				DrawCards(Fixed(1)),
 				true,
 				NewCardFilter("aura card", func(c Card) bool {
-					for _, st := range c.SubTypes() {
-						if st == "Aura" {
-							return true
-						}
-					}
-					return false
+					return slices.Contains(c.SubTypes(), "Aura")
 				}),
 			)),
 		)
@@ -2393,7 +2389,7 @@ func registerCreatures() {
 							return nil
 						}
 						x := snap.Power
-						for i := 0; i < x; i++ {
+						for range x {
 							token := NewToken("Zombie", 2, 2, []CardType{TypeCreature}, []string{"Zombie"})
 							token.SetOwner(controller)
 							colors := []Color{Black}
@@ -2499,10 +2495,7 @@ func registerCreatures() {
 							return nil
 						}
 						lib := opp.Library()
-						n := 4
-						if n > len(lib) {
-							n = len(lib)
-						}
+						n := min(4, len(lib))
 						if n == 0 {
 							return nil
 						}
@@ -4077,7 +4070,7 @@ func registerCreatures() {
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, _, controller uuid.UUID, _ []uuid.UUID) error {
 						x := g.CountBattlefield(And(ControlledBy(controller), HasSubType("Goblin")))
-						for i := 0; i < x; i++ {
+						for range x {
 							tok := NewToken("Goblin", 1, 1, []CardType{TypeCreature}, []string{"Goblin"})
 							tok.SetOwner(controller)
 							g.PutOnBattlefield(tok, controller)
@@ -4276,12 +4269,7 @@ func registerCreatures() {
 			if c.ManaCost().CMC() > 5 {
 				return false
 			}
-			for _, st := range c.SubTypes() {
-				if st == "Goblin" {
-					return true
-				}
-			}
-			return false
+			return slices.Contains(c.SubTypes(), "Goblin")
 		}
 		return NewCreature("Muxus, Goblin Grandee", "{4}{R}{R}", 4, 4,
 			WithSubTypes("Goblin", "Noble"),
@@ -4728,13 +4716,7 @@ func registerCreatures() {
 				if obj.Card == nil {
 					return false
 				}
-				isGreen := false
-				for _, c := range obj.Card.ManaCost().Colors() {
-					if c == Green {
-						isGreen = true
-						break
-					}
-				}
+				isGreen := slices.Contains(obj.Card.ManaCost().Colors(), Green)
 				if !isGreen {
 					return false
 				}
@@ -4995,7 +4977,7 @@ func registerCreatures() {
 					if count == 0 {
 						return nil
 					}
-					return CreateColoredToken("Elf Warrior", 1, 1, []Color{Green}, []CardType{TypeCreature}, []string{"Elf", "Warrior"}).Apply(g, sourceID, controller, nil)
+					return ApplyEffect(g, CreateColoredToken("Elf Warrior", 1, 1, []Color{Green}, []CardType{TypeCreature}, []string{"Elf", "Warrior"}), sourceID, controller, nil)
 				},
 			), false)),
 		)
@@ -5022,7 +5004,7 @@ func registerCreatures() {
 						if p == nil {
 							return nil
 						}
-						for i := 0; i < count; i++ {
+						for range count {
 							p.ManaPool().Add(Green, 1)
 						}
 						return nil
@@ -5325,7 +5307,7 @@ func registerCreatures() {
 						if p == nil {
 							return nil
 						}
-						for i := 0; i < count; i++ {
+						for range count {
 							p.ManaPool().Add(Green, 1)
 						}
 						return nil
@@ -5416,7 +5398,7 @@ func registerCreatures() {
 	// Each creature you control with a counter on it has "{T}: Add {G}."
 	Register("Rishkar, Peema Renegade", func() Card {
 		hasAnyCounter := func(p *Permanent) bool {
-			for ct := CounterType(0); ct < NumCounters; ct++ {
+			for ct := range NumCounters {
 				if p.Counters[ct] > 0 {
 					return true
 				}
@@ -6372,10 +6354,8 @@ func registerCreatures() {
 						}
 						chosen := []Color{p.ChooseManaColor("Choose a color")}
 						seen := map[Color]bool{chosen[0]: true}
-						for {
-							if !p.ChooseMayAbility("Choose another color?") {
-								break
-							}
+						for p.ChooseMayAbility("Choose another color?") {
+
 							c := p.ChooseManaColor("Choose another color")
 							if seen[c] {
 								continue

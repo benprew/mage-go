@@ -97,6 +97,8 @@ type (
 	CombatGroupCountEquals                 = mage.CombatGroupCountEquals
 	EventAmountGreaterThan                 = mage.EventAmountGreaterThan
 	EventSourceHasType                     = mage.EventSourceHasType
+	EventSourceWasOfType                   = mage.EventSourceWasOfType
+	EventZoneChangeMatches                 = mage.EventZoneChangeMatches
 	SourceInOwnGraveyardWithCreaturesAbove = mage.SourceInOwnGraveyardWithCreaturesAbove
 	SourceAttackedOrBlockedThisTurn        = mage.SourceAttackedOrBlockedThisTurn
 	SpellCastIsType                        = mage.SpellCastIsType
@@ -246,6 +248,8 @@ var (
 	DealsDamageToOpponentTrigger               = mage.DealsDamageToOpponentTrigger
 	SacrificeUnlessLand                        = mage.SacrificeUnlessLand
 	CreatureDealtDamageBySourceDiesTrigger     = mage.CreatureDealtDamageBySourceDiesTrigger
+	DiesTrigger                                = mage.DiesTrigger
+	OnLeaveZone                                = mage.OnLeaveZone
 	DiesCreatureTrigger                        = mage.DiesCreatureTrigger
 	EntersWithNCounters                        = mage.EntersWithNCounters
 	EntersWithXCounters                        = mage.EntersWithXCounters
@@ -604,28 +608,36 @@ const (
 	Indefinite         = core.Indefinite
 )
 
+// Zones
+const (
+	ZoneLibrary     = core.ZoneLibrary
+	ZoneHand        = core.ZoneHand
+	ZoneBattlefield = core.ZoneBattlefield
+	ZoneGraveyard   = core.ZoneGraveyard
+	ZoneExile       = core.ZoneExile
+	ZoneStack       = core.ZoneStack
+	ZoneAny         = core.ZoneAny
+)
+
 // Event types
 const (
-	EvtCreatureDied                    = core.EvtCreatureDied
-	EvtEntersBattlefield               = core.EvtEntersBattlefield
-	EvtLeavesBattlefield               = core.EvtLeavesBattlefield
-	EvtBlockersDecl                    = core.EvtBlockersDecl
-	EvtEndStep                         = core.EvtEndStep
-	EvtDrawStep                        = core.EvtDrawStep
-	EvtDamageDealt                     = core.EvtDamageDealt
-	EvtTapped                          = core.EvtTapped
-	EvtUpkeep                          = core.EvtUpkeep
-	EvtDeclaredAttacker                = core.EvtDeclaredAttacker
-	EvtLifeGained                      = core.EvtLifeGained
-	EvtLandPlayed                      = core.EvtLandPlayed
-	EvtEndOfCombat                     = core.EvtEndOfCombat
-	EvtPutIntoGraveyardFromBattlefield = core.EvtPutIntoGraveyardFromBattlefield
-	EvtBecameUntapped                  = core.EvtBecameUntapped
-	EvtSpellCast                       = core.EvtSpellCast
-	EvtBeginCombat                     = core.EvtBeginCombat
-	EvtDeclaredBlocker                 = core.EvtDeclaredBlocker
-	EvtAbilityActivated                = core.EvtAbilityActivated
-	EvtCardDrawn                       = core.EvtCardDrawn
+	EvtZoneChange       = core.EvtZoneChange
+	EvtBlockersDecl     = core.EvtBlockersDecl
+	EvtEndStep          = core.EvtEndStep
+	EvtDrawStep         = core.EvtDrawStep
+	EvtDamageDealt      = core.EvtDamageDealt
+	EvtTapped           = core.EvtTapped
+	EvtUpkeep           = core.EvtUpkeep
+	EvtDeclaredAttacker = core.EvtDeclaredAttacker
+	EvtLifeGained       = core.EvtLifeGained
+	EvtLandPlayed       = core.EvtLandPlayed
+	EvtEndOfCombat      = core.EvtEndOfCombat
+	EvtBecameUntapped   = core.EvtBecameUntapped
+	EvtSpellCast        = core.EvtSpellCast
+	EvtBeginCombat      = core.EvtBeginCombat
+	EvtDeclaredBlocker  = core.EvtDeclaredBlocker
+	EvtAbilityActivated = core.EvtAbilityActivated
+	EvtCardDrawn        = core.EvtCardDrawn
 )
 
 // Card types

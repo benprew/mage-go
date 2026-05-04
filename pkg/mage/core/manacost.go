@@ -157,9 +157,9 @@ func ParseManaCost(s string) ManaCost {
 			symbol := s[i+1 : i+end]
 			if n, err := strconv.Atoi(symbol); err == nil {
 				mc.Generic += n
-			} else if slash := strings.IndexByte(symbol, '/'); slash != -1 {
-				a, okA := parseColorLetter(symbol[:slash])
-				b, okB := parseColorLetter(symbol[slash+1:])
+			} else if before, after, ok := strings.Cut(symbol, "/"); ok {
+				a, okA := parseColorLetter(before)
+				b, okB := parseColorLetter(after)
 				if okA && okB {
 					mc.Hybrid = append(mc.Hybrid, HybridSymbol{A: a, B: b})
 				}

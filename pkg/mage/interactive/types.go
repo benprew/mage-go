@@ -1,10 +1,10 @@
 package interactive
 
 import (
+	"github.com/google/uuid"
 
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"github.com/google/uuid"
 )
 
 // AutoPlayer is implemented by AI players to provide priority decisions to the

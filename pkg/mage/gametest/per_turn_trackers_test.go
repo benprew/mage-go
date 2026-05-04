@@ -61,7 +61,7 @@ func TestPlayerLifeGainedThisTurn(t *testing.T) {
 	tg.Execute()
 
 	pid := tg.GetPlayer(PlayerA).PlayerID()
-	if got := tg.Game.PlayerLifeGainedThisTurn(pid); got != 6 {
+	if got := tg.PlayerLifeGainedThisTurn(pid); got != 6 {
 		t.Errorf("PlayerLifeGainedThisTurn = %d, want 6", got)
 	}
 }
@@ -79,7 +79,7 @@ func TestPlayerDiscardCountThisTurn(t *testing.T) {
 	tg.Execute()
 
 	pid := tg.GetPlayer(PlayerA).PlayerID()
-	if got := tg.Game.PlayerDiscardCountThisTurn(pid); got != 1 {
+	if got := tg.PlayerDiscardCountThisTurn(pid); got != 1 {
 		t.Errorf("PlayerDiscardCountThisTurn = %d, want 1", got)
 	}
 }
@@ -96,7 +96,7 @@ func TestPermanentDamageReceivedThisTurn(t *testing.T) {
 	tg.StopAt(1, core.EndStep)
 	tg.Execute()
 
-	if got := tg.Game.PermanentDamageReceivedThisTurn(bearID); got != 3 {
+	if got := tg.PermanentDamageReceivedThisTurn(bearID); got != 3 {
 		t.Errorf("PermanentDamageReceivedThisTurn = %d, want 3", got)
 	}
 }
@@ -113,7 +113,7 @@ func TestPerTurnTrackersResetEachTurn(t *testing.T) {
 	tg.Execute()
 
 	pid := tg.GetPlayer(PlayerA).PlayerID()
-	if got := tg.Game.PlayerLifeGainedThisTurn(pid); got != 0 {
+	if got := tg.PlayerLifeGainedThisTurn(pid); got != 0 {
 		t.Errorf("life-gained should reset between turns; got %d", got)
 	}
 }

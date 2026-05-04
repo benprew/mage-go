@@ -19,14 +19,14 @@ func TestSanitariumSkeleton_ReturnFromGraveyard(t *testing.T) {
 	tg.StopAt(1, core.PrecombatMain)
 	tg.Execute()
 
-	skel, idx, ok := tg.Game.FindGraveyardActivatableCard(pid, "Sanitarium Skeleton")
+	skel, idx, ok := tg.FindGraveyardActivatableCard(pid, "Sanitarium Skeleton")
 	if !ok {
 		t.Fatal("graveyard activatable Sanitarium Skeleton not found")
 	}
-	if err := tg.Game.ActivateGraveyardAbility(pid, skel, idx, nil); err != nil {
+	if err := tg.ActivateGraveyardAbility(pid, skel, idx, nil); err != nil {
 		t.Fatalf("ActivateGraveyardAbility: %v", err)
 	}
-	tg.Game.ResolveStack()
+	tg.ResolveStack()
 
 	tg.AssertHandCount(gametest.PlayerA, "Sanitarium Skeleton", 1)
 	tg.AssertGraveyardCount(gametest.PlayerA, "Sanitarium Skeleton", 0)
@@ -44,14 +44,14 @@ func TestGhoulcallersAccomplice_ExileToCreateZombie(t *testing.T) {
 	tg.StopAt(1, core.PrecombatMain)
 	tg.Execute()
 
-	acc, idx, ok := tg.Game.FindGraveyardActivatableCard(pid, "Ghoulcaller's Accomplice")
+	acc, idx, ok := tg.FindGraveyardActivatableCard(pid, "Ghoulcaller's Accomplice")
 	if !ok {
 		t.Fatal("graveyard activatable Ghoulcaller's Accomplice not found")
 	}
-	if err := tg.Game.ActivateGraveyardAbility(pid, acc, idx, nil); err != nil {
+	if err := tg.ActivateGraveyardAbility(pid, acc, idx, nil); err != nil {
 		t.Fatalf("ActivateGraveyardAbility: %v", err)
 	}
-	tg.Game.ResolveStack()
+	tg.ResolveStack()
 
 	tg.AssertExileCount("Ghoulcaller's Accomplice", 1)
 	tg.AssertGraveyardCount(gametest.PlayerA, "Ghoulcaller's Accomplice", 0)
@@ -74,14 +74,14 @@ func TestCauldronFamiliar_SacFoodReturnsFromGraveyard(t *testing.T) {
 	tg.AssertPermanentCount(gametest.PlayerA, "Food", 1)
 
 	pid := tg.GetPlayer(gametest.PlayerA).PlayerID()
-	cat, idx, ok := tg.Game.FindGraveyardActivatableCard(pid, "Cauldron Familiar")
+	cat, idx, ok := tg.FindGraveyardActivatableCard(pid, "Cauldron Familiar")
 	if !ok {
 		t.Fatal("graveyard activatable Cauldron Familiar not found")
 	}
-	if err := tg.Game.ActivateGraveyardAbility(pid, cat, idx, nil); err != nil {
+	if err := tg.ActivateGraveyardAbility(pid, cat, idx, nil); err != nil {
 		t.Fatalf("ActivateGraveyardAbility: %v", err)
 	}
-	tg.Game.ResolveStack()
+	tg.ResolveStack()
 
 	tg.AssertGraveyardCount(gametest.PlayerA, "Cauldron Familiar", 0)
 	tg.AssertPermanentCount(gametest.PlayerA, "Cauldron Familiar", 1)

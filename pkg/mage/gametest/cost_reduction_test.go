@@ -68,10 +68,10 @@ func TestCostReductionBySubtype(t *testing.T) {
 	stagePrecombat(tg)
 
 	pid := tg.getPlayerID(PlayerA)
-	if got := tg.Game.ConditionalSpellCostReduction(pid, findHandCard(tg, PlayerA, dragon)); got != 1 {
+	if got := tg.ConditionalSpellCostReduction(pid, findHandCard(tg, PlayerA, dragon)); got != 1 {
 		t.Errorf("dragon reduction: got %d, want 1", got)
 	}
-	if got := tg.Game.ConditionalSpellCostReduction(pid, findHandCard(tg, PlayerA, other)); got != 0 {
+	if got := tg.ConditionalSpellCostReduction(pid, findHandCard(tg, PlayerA, other)); got != 0 {
 		t.Errorf("non-dragon reduction: got %d, want 0", got)
 	}
 }
@@ -115,16 +115,16 @@ func TestCostReductionByKeyword(t *testing.T) {
 	stagePrecombat(tg)
 
 	pid := tg.getPlayerID(PlayerA)
-	if got := tg.Game.ConditionalSpellCostReduction(pid, findHandCard(tg, PlayerA, flyer)); got != 1 {
+	if got := tg.ConditionalSpellCostReduction(pid, findHandCard(tg, PlayerA, flyer)); got != 1 {
 		t.Errorf("flyer reduction: got %d, want 1", got)
 	}
-	if got := tg.Game.ConditionalSpellCostReduction(pid, findHandCard(tg, PlayerA, ground)); got != 0 {
+	if got := tg.ConditionalSpellCostReduction(pid, findHandCard(tg, PlayerA, ground)); got != 0 {
 		t.Errorf("non-flyer reduction: got %d, want 0", got)
 	}
 
 	// Static reducer must not affect the opponent's spells.
 	tg.AddCard(core.ZoneHand, PlayerB, flyer)
-	if got := tg.Game.ConditionalSpellCostReduction(tg.getPlayerID(PlayerB), findHandCard(tg, PlayerB, flyer)); got != 0 {
+	if got := tg.ConditionalSpellCostReduction(tg.getPlayerID(PlayerB), findHandCard(tg, PlayerB, flyer)); got != 0 {
 		t.Errorf("opponent flyer reduction: got %d, want 0", got)
 	}
 }
@@ -162,7 +162,7 @@ func TestCostReductionSelfByGraveyardCount(t *testing.T) {
 
 	pid := tg.getPlayerID(PlayerA)
 	c := findHandCard(tg, PlayerA, serpent)
-	if got := tg.Game.ConditionalSpellCostReduction(pid, c); got != 4 {
+	if got := tg.ConditionalSpellCostReduction(pid, c); got != 4 {
 		t.Errorf("serpent reduction with 4 in yard: got %d, want 4", got)
 	}
 
@@ -172,7 +172,7 @@ func TestCostReductionSelfByGraveyardCount(t *testing.T) {
 	stagePrecombat(tg2)
 	pid2 := tg2.getPlayerID(PlayerA)
 	c2 := findHandCard(tg2, PlayerA, serpent)
-	if got := tg2.Game.ConditionalSpellCostReduction(pid2, c2); got != 0 {
+	if got := tg2.ConditionalSpellCostReduction(pid2, c2); got != 0 {
 		t.Errorf("serpent reduction with empty yard: got %d, want 0", got)
 	}
 }
@@ -209,7 +209,7 @@ func TestCostReductionSelfByTotalPower(t *testing.T) {
 	pid := tg.getPlayerID(PlayerA)
 	c := findHandCard(tg, PlayerA, ghalta)
 	// Generic = 10; reduction returns 12 but caps to 10.
-	if got := tg.Game.ConditionalSpellCostReduction(pid, c); got != 10 {
+	if got := tg.ConditionalSpellCostReduction(pid, c); got != 10 {
 		t.Errorf("ghalta reduction with 12 power: got %d, want 10", got)
 	}
 
@@ -220,7 +220,7 @@ func TestCostReductionSelfByTotalPower(t *testing.T) {
 	stagePrecombat(tg2)
 	pid2 := tg2.getPlayerID(PlayerA)
 	c2 := findHandCard(tg2, PlayerA, ghalta)
-	if got := tg2.Game.ConditionalSpellCostReduction(pid2, c2); got != 4 {
+	if got := tg2.ConditionalSpellCostReduction(pid2, c2); got != 4 {
 		t.Errorf("ghalta reduction with 4 power: got %d, want 4", got)
 	}
 
@@ -256,7 +256,7 @@ func TestCostReductionIfCreatureDiedThisTurn(t *testing.T) {
 	stagePrecombat(tg)
 	pid := tg.getPlayerID(PlayerA)
 	c := findHandCard(tg, PlayerA, picker)
-	if got := tg.Game.ConditionalSpellCostReduction(pid, c); got != 0 {
+	if got := tg.ConditionalSpellCostReduction(pid, c); got != 0 {
 		t.Errorf("picker reduction with no death: got %d, want 0", got)
 	}
 
@@ -277,12 +277,12 @@ func TestCostReductionIfCreatureDiedThisTurn(t *testing.T) {
 	tg2.AddCard(core.ZoneHand, PlayerA, picker)
 	stagePrecombat(tg2)
 	bp := tg2.FindPermanentByName(bear, tg2.GetPlayer(PlayerB).PlayerID())
-	tg2.Game.DestroyPermanent(bp)
-	tg2.Game.CheckStateBasedActions()
+	tg2.DestroyPermanent(bp)
+	tg2.CheckStateBasedActions()
 
 	pid2 := tg2.getPlayerID(PlayerA)
 	c2 := findHandCard(tg2, PlayerA, picker)
-	if got := tg2.Game.ConditionalSpellCostReduction(pid2, c2); got != 3 {
+	if got := tg2.ConditionalSpellCostReduction(pid2, c2); got != 3 {
 		t.Errorf("picker reduction after death: got %d, want 3", got)
 	}
 }
@@ -317,7 +317,7 @@ func TestCostReductionIfControlsMatching(t *testing.T) {
 	stagePrecombat(tg)
 	pid := tg.getPlayerID(PlayerA)
 	c := findHandCard(tg, PlayerA, winged)
-	if got := tg.Game.ConditionalSpellCostReduction(pid, c); got != 2 {
+	if got := tg.ConditionalSpellCostReduction(pid, c); got != 2 {
 		t.Errorf("winged reduction with flyer: got %d, want 2", got)
 	}
 
@@ -327,7 +327,7 @@ func TestCostReductionIfControlsMatching(t *testing.T) {
 	stagePrecombat(tg2)
 	pid2 := tg2.getPlayerID(PlayerA)
 	c2 := findHandCard(tg2, PlayerA, winged)
-	if got := tg2.Game.ConditionalSpellCostReduction(pid2, c2); got != 0 {
+	if got := tg2.ConditionalSpellCostReduction(pid2, c2); got != 0 {
 		t.Errorf("winged reduction without flyer: got %d, want 0", got)
 	}
 }
@@ -372,10 +372,10 @@ func TestCostReductionByChosenSubtype(t *testing.T) {
 	hornPerm.ChosenSubtype = "Dragon"
 
 	pid := tg.getPlayerID(PlayerA)
-	if got := tg.Game.ConditionalSpellCostReduction(pid, findHandCard(tg, PlayerA, dragon)); got != 1 {
+	if got := tg.ConditionalSpellCostReduction(pid, findHandCard(tg, PlayerA, dragon)); got != 1 {
 		t.Errorf("dragon (chosen Dragon) reduction: got %d, want 1", got)
 	}
-	if got := tg.Game.ConditionalSpellCostReduction(pid, findHandCard(tg, PlayerA, knight)); got != 0 {
+	if got := tg.ConditionalSpellCostReduction(pid, findHandCard(tg, PlayerA, knight)); got != 0 {
 		t.Errorf("knight (chosen Dragon) reduction: got %d, want 0", got)
 	}
 }
@@ -409,7 +409,7 @@ func TestCostReductionDoesNotAffectColored(t *testing.T) {
 	pid := tg.getPlayerID(PlayerA)
 	c := findHandCard(tg, PlayerA, huge)
 	// Reduction returns 99 but is capped to printed generic (4).
-	if got := tg.Game.ConditionalSpellCostReduction(pid, c); got != 4 {
+	if got := tg.ConditionalSpellCostReduction(pid, c); got != 4 {
 		t.Errorf("huge spell capped reduction: got %d, want 4", got)
 	}
 	// Colored portion is unchanged (the cap is on generic only).
@@ -447,7 +447,7 @@ func TestCostReductionStacksAdditively(t *testing.T) {
 	stagePrecombat(tg)
 
 	pid := tg.getPlayerID(PlayerA)
-	if got := tg.Game.ConditionalSpellCostReduction(pid, findHandCard(tg, PlayerA, dragon)); got != 2 {
+	if got := tg.ConditionalSpellCostReduction(pid, findHandCard(tg, PlayerA, dragon)); got != 2 {
 		t.Errorf("two stackers reduction: got %d, want 2", got)
 	}
 }

@@ -3,6 +3,7 @@ package mage
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 
 	"github.com/google/uuid"
 
@@ -77,6 +78,13 @@ type tap struct{}
 // Tap creates a tap operation usable as a Cost (taps source) or Effect (taps
 // target).
 func Tap() *tap { return &tap{} }
+
+// TapSourceCost is a backward-compatible alias for Tap used in cost slots.
+func TapSourceCost() Cost { return Tap() }
+
+// TapTarget is a backward-compatible alias for Tap used in effect slots that
+// tap the target permanent.
+func TapTarget() Effect { return Tap() }
 
 // --- Cost interface ---
 
@@ -499,14 +507,14 @@ func (c *eitherCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 }
 
 func (c *eitherCost) Text() string {
-	parts := ""
+	var parts strings.Builder
 	for i, opt := range c.options {
 		if i > 0 {
-			parts += " or "
+			parts.WriteString(" or ")
 		}
-		parts += opt.Text()
+		parts.WriteString(opt.Text())
 	}
-	return parts
+	return parts.String()
 }
 
 // exileFromGraveyardCost requires exiling cards from your graveyard.

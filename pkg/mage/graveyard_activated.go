@@ -24,8 +24,8 @@ type GraveyardActivatedAbility struct {
 // includes [ExileSelfFromGraveyardCost] to prevent infinite reuse.
 func WithGraveyardActivatedAbility(effect Effect, cost Cost, opts ...AbilityOption) CardOption {
 	return func(c *BaseCard) {
+		opts = append(opts, WithSorcerySpeed())
 		base := NewActivatedAbility(effect, cost, opts...)
-		base.SorceryOnly = true
 		c.AddAbility(&GraveyardActivatedAbility{SimpleActivatedAbility: base})
 	}
 }

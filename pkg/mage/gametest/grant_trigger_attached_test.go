@@ -39,7 +39,7 @@ func TestGrantTriggeredAbilityToAttached(t *testing.T) {
 	g := NewTestGame(t)
 	bear := g.AddCard(core.ZoneBattlefield, PlayerA, "Grizzly Bears")
 	aura := g.AddCard(core.ZoneBattlefield, PlayerA, "Test Trig Aura")
-	g.Game.Attach(aura, bear)
+	g.Attach(aura, bear)
 	g.SetLife(PlayerA, 20)
 	g.StopAt(2, core.PrecombatMain)
 	g.Execute()

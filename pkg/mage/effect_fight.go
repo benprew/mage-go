@@ -24,8 +24,8 @@ func FightTarget() Effect {
 // Modal builders.
 func FightTargetStep() EffectData { return &fightTargetEffect{} }
 
-func (e *fightTargetEffect) EffectText() string { return "this creature fights target creature" }
-func (e *fightTargetEffect) EffectProps() EffectProperties {
+func (e *fightTargetEffect) Text() string { return "this creature fights target creature" }
+func (e *fightTargetEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
@@ -87,10 +87,10 @@ func OnTargetDiesThisTurn(effects ...Effect) Effect {
 	return DataEffect(&onPermanentDiesEffect{effects: effects})
 }
 
-func (e *onPermanentDiesEffect) EffectText() string {
+func (e *onPermanentDiesEffect) Text() string {
 	return "when that permanent dies this turn, ..."
 }
-func (e *onPermanentDiesEffect) EffectProps() EffectProperties { return EffectProperties{} }
+func (e *onPermanentDiesEffect) Properties() EffectProperties { return EffectProperties{} }
 
 func execOnPermanentDies(ctx *EffectContext, e *onPermanentDiesEffect) error {
 	id := e.permID

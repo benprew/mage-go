@@ -319,6 +319,12 @@ func ExecuteEffect(ctx *EffectContext, data EffectData) error {
 		return execCreateTokenAttacking(ctx, e)
 	case *createTokenBlockingEffect:
 		return execCreateTokenBlocking(ctx, e)
+	case *mayPayManaEffect:
+		return execMayPayMana(ctx, e)
+	case *unlessPaysEffect:
+		return execUnlessPays(ctx, e)
+	case *createPredefinedTokenEffect:
+		return e.Apply(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
 
 	default:
 		_ = e

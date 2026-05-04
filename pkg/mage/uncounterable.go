@@ -1,8 +1,9 @@
 package mage
 
 import (
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"github.com/google/uuid"
+
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 // Uncounterable is the engine support for spells that "can't be countered."

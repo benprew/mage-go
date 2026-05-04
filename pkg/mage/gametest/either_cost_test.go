@@ -64,4 +64,3 @@ func TestEitherCost_FallsBackToOnlyPayable(t *testing.T) {
 
 	tg.AssertLife(PlayerA, 22)
 }
-

@@ -155,9 +155,7 @@ func (g *Game) Clone() *Game {
 		copy(c.castFromExilePermissions, g.castFromExilePermissions)
 	}
 	c.exileInsteadCards = make(map[uuid.UUID]uuid.UUID, len(g.exileInsteadCards))
-	for k, v := range g.exileInsteadCards {
-		c.exileInsteadCards[k] = v
-	}
+	maps.Copy(c.exileInsteadCards, g.exileInsteadCards)
 	c.armedStateTriggers = cloneStateTriggerMap(g.armedStateTriggers)
 
 	// Interactive callbacks are nil'd — search clones don't call back to UI.
@@ -315,13 +313,13 @@ func cloneStack(s *Stack) *Stack {
 // cloneStackObject deep copies a StackObject.
 func cloneStackObject(obj *StackObject) *StackObject {
 	clone := &StackObject{
-		ID:          obj.ID,
-		Card:        obj.Card, // shared Card ref
-		Controller:  obj.Controller,
-		SourceID:    obj.SourceID,
-		IsAbility:   obj.IsAbility,
-		XValue:      obj.XValue,
-		ModeChoice:  obj.ModeChoice,
+		ID:            obj.ID,
+		Card:          obj.Card, // shared Card ref
+		Controller:    obj.Controller,
+		SourceID:      obj.SourceID,
+		IsAbility:     obj.IsAbility,
+		XValue:        obj.XValue,
+		ModeChoice:    obj.ModeChoice,
 		EventAmount:   obj.EventAmount,
 		EventSourceID: obj.EventSourceID,
 		IsCopy:        obj.IsCopy,
@@ -349,9 +347,7 @@ func cloneStackObject(obj *StackObject) *StackObject {
 	}
 	if len(obj.DamageDistribution) > 0 {
 		clone.DamageDistribution = make(map[uuid.UUID]int, len(obj.DamageDistribution))
-		for k, v := range obj.DamageDistribution {
-			clone.DamageDistribution[k] = v
-		}
+		maps.Copy(clone.DamageDistribution, obj.DamageDistribution)
 	}
 	return clone
 }

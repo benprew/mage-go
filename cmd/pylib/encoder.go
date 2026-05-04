@@ -42,16 +42,16 @@ const (
 )
 
 var (
-	manaSymbols        = [...]string{"W", "U", "B", "R", "G", "C"}
-	stepNames          = [...]string{"Untap", "Upkeep", "Draw", "Precombat Main", "Begin Combat", "Declare Attackers", "Declare Blockers", "Combat Damage", "End Combat", "Postcombat Main", "End", "Cleanup", "Unknown"}
-	pendingKinds       = [...]string{"priority", "attackers", "blockers", "permanent", "cards_from_hand", "mana_color", "card_from_library", "may", "mode", "number", "unknown"}
-	actionKinds        = [...]string{"pass", "play_land", "cast_spell", "activate_ability", "attacker", "blocker", "choice", "unknown"}
-	traceKinds         = [...]string{"priority", "attackers", "blockers", "choice_index", "choice_ids", "choice_color", "may"}
-	zoneSpecs          = [...]zoneSpec{{zone: "hand", owner: "self"}, {zone: "graveyard", owner: "self"}, {zone: "graveyard", owner: "opponent"}, {zone: "battlefield", owner: "self"}, {zone: "battlefield", owner: "opponent"}}
-	stepNamesNorm      = normalizedKeys(stepNames[:])
-	pendingKindsNorm   = normalizedKeys(pendingKinds[:])
-	actionKindsNorm    = normalizedKeys(actionKinds[:])
-	traceKindsNorm     = normalizedKeys(traceKinds[:])
+	manaSymbols           = [...]string{"W", "U", "B", "R", "G", "C"}
+	stepNames             = [...]string{"Untap", "Upkeep", "Draw", "Precombat Main", "Begin Combat", "Declare Attackers", "Declare Blockers", "Combat Damage", "End Combat", "Postcombat Main", "End", "Cleanup", "Unknown"}
+	pendingKinds          = [...]string{"priority", "attackers", "blockers", "permanent", "cards_from_hand", "mana_color", "card_from_library", "may", "mode", "number", "unknown"}
+	actionKinds           = [...]string{"pass", "play_land", "cast_spell", "activate_ability", "attacker", "blocker", "choice", "unknown"}
+	traceKinds            = [...]string{"priority", "attackers", "blockers", "choice_index", "choice_ids", "choice_color", "may"}
+	zoneSpecs             = [...]zoneSpec{{zone: "hand", owner: "self"}, {zone: "graveyard", owner: "self"}, {zone: "graveyard", owner: "opponent"}, {zone: "battlefield", owner: "self"}, {zone: "battlefield", owner: "opponent"}}
+	stepNamesNorm         = normalizedKeys(stepNames[:])
+	pendingKindsNorm      = normalizedKeys(pendingKinds[:])
+	actionKindsNorm       = normalizedKeys(actionKinds[:])
+	traceKindsNorm        = normalizedKeys(traceKinds[:])
 	cardRowsOnce          sync.Once
 	cardRowByName         map[string]int64
 	cardRowByRawName      map[string]int64
@@ -147,18 +147,18 @@ type outputViews struct {
 	// the dense ``token*`` views above: only one of the two paths is
 	// active per encode call. ``packedTokenIDs`` etc. are sized
 	// [B*max_tokens]; ``packedSeqId`` and ``packedPosInSeq`` likewise.
-	packedTokenIDs        []int64
-	packedSeqID           []int64
-	packedPosInSeq        []int64
-	packedCuSeqlens       []int64 // [B+1]
-	packedSeqLengths      []int64 // [B]
-	packedStatePositions  []int64 // [B]
-	packedOptionPos       []int64
-	packedOptionMask      []byte
-	packedTargetPos       []int64
-	packedTargetMask      []byte
-	packedCardRefPos      []int64
-	packedTokenOverflow   []int32
+	packedTokenIDs       []int64
+	packedSeqID          []int64
+	packedPosInSeq       []int64
+	packedCuSeqlens      []int64 // [B+1]
+	packedSeqLengths     []int64 // [B]
+	packedStatePositions []int64 // [B]
+	packedOptionPos      []int64
+	packedOptionMask     []byte
+	packedTargetPos      []int64
+	packedTargetMask     []byte
+	packedCardRefPos     []int64
+	packedTokenOverflow  []int32
 }
 
 type batchRequest struct {
@@ -384,7 +384,7 @@ func fillTokenAssembly(batchIdx int64, cfg encodeConfig, view outputViews) *enco
 }
 
 // fillTokenAssemblyPacked writes one row's worth of tokens into the
-// shared packed output buffer starting at ``packedCursor``. Returns the
+// shared packed output buffer starting at “packedCursor“. Returns the
 // new cursor (one past the last live token) so the caller can chain
 // rows without an outer-loop allocation. Anchors are written as
 // absolute offsets into the packed buffer.
@@ -447,7 +447,7 @@ func fillTokenAssemblyPacked(
 	}
 
 	// Per-token metadata for the live region of this row.
-	for k := int32(0); k < cursor; k++ {
+	for k := range cursor {
 		view.packedSeqID[packedCursor+k] = batchIdx
 		view.packedPosInSeq[packedCursor+k] = int64(k)
 	}

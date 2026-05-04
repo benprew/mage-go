@@ -1495,7 +1495,7 @@ func MageTokenTableSummary() *C.char {
 	}
 	b, err := json.Marshal(summary)
 	if err != nil {
-		return errResponse(fmt.Sprintf("marshal summary: %v", err))
+		return errResponse("marshal summary: %v", err)
 	}
 	return C.CString(string(b))
 }
@@ -1554,7 +1554,7 @@ func MageTokenTableLookup(kind C.int32_t, k0 C.int32_t, k1 C.int32_t) *C.char {
 	copy(out, span)
 	b, err := json.Marshal(out)
 	if err != nil {
-		return errResponse(fmt.Sprintf("marshal: %v", err))
+		return errResponse("marshal: %v", err)
 	}
 	return C.CString(string(b))
 }
@@ -1698,7 +1698,7 @@ func MageEncodeTokensPacked(
 
 // attachPackedTokenViews wires the C-side packed token-assembler
 // buffers into the outputViews slices. Token-shaped arrays are sized
-// at the worst case ``B * max_tokens`` so a single pre-allocated
+// at the worst case “B * max_tokens“ so a single pre-allocated
 // buffer can be reused across calls of varying live-token totals.
 func attachPackedTokenViews(
 	n int64,

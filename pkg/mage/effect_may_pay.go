@@ -51,16 +51,18 @@ func (e *mayPayManaEffect) Properties() EffectProperties {
 	return e.inner.Properties()
 }
 
-func (e *mayPayManaEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	p := g.GetPlayer(controller)
+func execMayPayMana(ctx *EffectContext, e *mayPayManaEffect) error {
+	p := ctx.Game.GetPlayer(ctx.Controller)
 	if p == nil {
 		return nil
 	}
 	if !p.ChooseMayAbility(e.description) {
 		return nil
 	}
-	if !g.TryPayCostFromLands(controller, e.cost) {
+	if !ctx.Game.TryPayCostFromLands(ctx.Controller, e.cost) {
 		return nil
 	}
-	return e.inner.Apply(g, sourceID, controller, targets)
+	return ApplyEffect(ctx.Game, e.inner, ctx.SourceID, ctx.Controller, ctx.Targets)
 }
+
+var _ = uuid.Nil // keep uuid import

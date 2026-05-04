@@ -47,8 +47,8 @@ func TestMomentousFall_DrawsAndGainsLife(t *testing.T) {
 func TestLena_SacGivesIndestructibleToSmallerCreatures(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Lena, Selfless Champion") // 3/3
-	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")            // 2/2 — smaller
-	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Hill Giant")               // 3/3 — equal, not smaller
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")           // 2/2 — smaller
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Hill Giant")              // 3/3 — equal, not smaller
 	g.ActivateAbility(1, PrecombatMain, gametest.PlayerA, "Lena, Selfless Champion")
 	g.StopAt(1, EndStep)
 	g.Execute()

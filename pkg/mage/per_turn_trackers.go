@@ -1,8 +1,9 @@
 package mage
 
 import (
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"github.com/google/uuid"
+
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 // Per-turn tracking state. These maps live on *Game and are reset by
@@ -27,10 +28,7 @@ func (g *Game) recordPerTurnEvent(evt *GameEvent) {
 		if g.lifeGainedThisTurn == nil {
 			g.lifeGainedThisTurn = make(map[uuid.UUID]int)
 		}
-		amt := evt.Amount
-		if amt < 0 {
-			amt = 0
-		}
+		amt := max(evt.Amount, 0)
 		g.lifeGainedThisTurn[evt.PlayerID] += amt
 	case EvtDamageDealt:
 		// TargetID may be a permanent or a player. Track both — callers
@@ -41,10 +39,7 @@ func (g *Game) recordPerTurnEvent(evt *GameEvent) {
 		if g.permDamageReceivedThisTurn == nil {
 			g.permDamageReceivedThisTurn = make(map[uuid.UUID]int)
 		}
-		amt := evt.Amount
-		if amt < 0 {
-			amt = 0
-		}
+		amt := max(evt.Amount, 0)
 		g.permDamageReceivedThisTurn[evt.TargetID] += amt
 	case EvtDeclaredBlocker:
 		if !evt.Flag {

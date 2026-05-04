@@ -4,9 +4,10 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"github.com/google/uuid"
 )
 
 // Engine tests for the counter-placement replacement pipeline (CR 614.1c):

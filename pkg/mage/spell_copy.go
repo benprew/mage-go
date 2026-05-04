@@ -1,6 +1,8 @@
 package mage
 
 import (
+	"maps"
+
 	"github.com/google/uuid"
 )
 
@@ -82,9 +84,7 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 
 	if len(original.DamageDistribution) > 0 {
 		cp.DamageDistribution = make(map[uuid.UUID]int, len(original.DamageDistribution))
-		for k, v := range original.DamageDistribution {
-			cp.DamageDistribution[k] = v
-		}
+		maps.Copy(cp.DamageDistribution, original.DamageDistribution)
 	}
 
 	if mayChooseNewTargets && copiedCard != nil {

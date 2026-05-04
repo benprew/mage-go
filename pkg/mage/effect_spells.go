@@ -153,18 +153,14 @@ func CreateTokens(count int, name string, power, toughness int, types []CardType
 // minimal (no abilities slot in their signatures) and treats "abilities on
 // the token" as an orthogonal concern attached after construction.
 func TokenWithAbilities(base Effect, abilities ...Ability) Effect {
-	a, ok := base.(*dataEffectAdapter)
-	if !ok {
-		return base
-	}
-	t, ok := a.data.(*createTokenEffect)
+	t, ok := base.(*createTokenEffect)
 	if !ok {
 		return base
 	}
 	clone := *t
 	clone.abilities = append([]Ability(nil), t.abilities...)
 	clone.abilities = append(clone.abilities, abilities...)
-	return DataEffect(&clone)
+	return &clone
 }
 
 // CreateColoredToken creates an effect that puts a colored token creature onto the battlefield.

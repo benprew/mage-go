@@ -1,8 +1,9 @@
 package mage
 
 import (
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"github.com/google/uuid"
+
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 // CR 700.2 — Modal spells and abilities. A spell or ability is modal if it

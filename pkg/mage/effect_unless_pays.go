@@ -2,8 +2,6 @@ package mage
 
 import (
 	"fmt"
-
-	"github.com/google/uuid"
 )
 
 // unlessPaysEffect is the resolution-time "do X unless that player pays Y"
@@ -17,10 +15,10 @@ import (
 // like "At the beginning of your draw step, you may draw a card. If you
 // do, that opponent may pay {2}; if they do, you don't draw."
 type unlessPaysEffect struct {
-	payer       PlayerSelector
-	cost        Cost
-	prompt      string
-	ifNotPaid   Effect
+	payer     PlayerSelector
+	cost      Cost
+	prompt    string
+	ifNotPaid Effect
 }
 
 // UnlessTargetPays creates an effect that prompts the selected player to
@@ -47,14 +45,15 @@ func (e *unlessPaysEffect) Properties() EffectProperties {
 	return e.ifNotPaid.Properties()
 }
 
-func (e *unlessPaysEffect) Apply(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	payerIDs := e.payer.Select(g, sourceID, controller, targets)
+func execUnlessPays(ctx *EffectContext, e *unlessPaysEffect) error {
+	g := ctx.Game
+	payerIDs := e.payer.Select(g, ctx.SourceID, ctx.Controller, ctx.Targets)
 	for _, pid := range payerIDs {
 		// If the chosen payer can't pay at all, the cost is unpayable —
 		// CR 118.3 / 118.4 say they "may pay"; an unpayable cost is the
 		// same as declining, so we run ifNotPaid.
-		if !e.cost.CanPay(sourceID, pid, g) {
-			if err := e.ifNotPaid.Apply(g, sourceID, controller, targets); err != nil {
+		if !e.cost.CanPay(ctx.SourceID, pid, g) {
+			if err := ApplyEffect(g, e.ifNotPaid, ctx.SourceID, ctx.Controller, ctx.Targets); err != nil {
 				return err
 			}
 			continue
@@ -64,14 +63,14 @@ func (e *unlessPaysEffect) Apply(g *Game, sourceID, controller uuid.UUID, target
 			continue
 		}
 		if !p.ChooseMayAbility(e.prompt) {
-			if err := e.ifNotPaid.Apply(g, sourceID, controller, targets); err != nil {
+			if err := ApplyEffect(g, e.ifNotPaid, ctx.SourceID, ctx.Controller, ctx.Targets); err != nil {
 				return err
 			}
 			continue
 		}
-		if err := e.cost.Pay(sourceID, pid, g); err != nil {
+		if err := e.cost.Pay(ctx.SourceID, pid, g); err != nil {
 			// Payment unexpectedly failed — fall back to the not-paid branch.
-			if err2 := e.ifNotPaid.Apply(g, sourceID, controller, targets); err2 != nil {
+			if err2 := ApplyEffect(g, e.ifNotPaid, ctx.SourceID, ctx.Controller, ctx.Targets); err2 != nil {
 				return err2
 			}
 		}

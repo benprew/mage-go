@@ -4,9 +4,10 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"github.com/google/uuid"
 )
 
 // Engine tests for the may-pay-mana effect used in trigger resolution
@@ -31,7 +32,7 @@ func registerMayPayManaTestCards() {
 // given source/controller/targets so each test can exercise pay/decline paths.
 func applyMayPay(t *testing.T, g *TestGame, e mage.Effect, controller uuid.UUID) {
 	t.Helper()
-	if err := e.Apply(g.Game, uuid.Nil, controller, nil); err != nil {
+	if err := mage.ApplyEffect(g.Game, e, uuid.Nil, controller, nil); err != nil {
 		t.Fatalf("MayPayMana apply: %v", err)
 	}
 }

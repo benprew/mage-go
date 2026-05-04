@@ -37,6 +37,7 @@ type Card interface {
 	CloneFrom(Card)
 	SetBasePT(power, toughness int)
 	SetModes([]string)
+	IsToken() bool
 }
 
 // BaseCard provides the common card implementation.
@@ -57,6 +58,7 @@ type BaseCard struct {
 	additionalCosts []Cost       // additional costs paid when casting (sacrifice, discard, etc.)
 	castTargets     []Target     // targeting requirements when casting (auras, targeted ETBs)
 	uncounterable   bool         // intrinsic "can't be countered" flag (set via WithUncounterable)
+	isToken         bool         // true for token cards (created by NewToken)
 }
 
 // AttrSeeds returns the keyword/attr seeds for this card.
@@ -74,6 +76,7 @@ func (c *BaseCard) Owner() uuid.UUID        { return c.owner }
 func (c *BaseCard) Power() int              { return c.power }
 func (c *BaseCard) Toughness() int          { return c.toughness }
 func (c *BaseCard) Modes() []string         { return c.modes }
+func (c *BaseCard) IsToken() bool           { return c.isToken }
 func (c *BaseCard) SetModes(m []string)     { c.modes = m }
 func (c *BaseCard) SetBasePT(p, t int)      { c.power = p; c.toughness = t }
 func (c *BaseCard) SetOwner(id uuid.UUID)   { c.owner = id }
@@ -127,9 +130,7 @@ func (c *BaseCard) CloneFrom(other Card) {
 	if bc, ok := other.(*BaseCard); ok {
 		if len(bc.attrSeeds) > 0 {
 			c.attrSeeds = make(map[Attr]int, len(bc.attrSeeds))
-			for k, v := range bc.attrSeeds {
-				c.attrSeeds[k] = v
-			}
+			maps.Copy(c.attrSeeds, bc.attrSeeds)
 		}
 		c.uncounterable = bc.uncounterable
 	}
@@ -369,6 +370,7 @@ func NewToken(name string, power, toughness int, types []CardType, subTypes []st
 		subTypes:  subTypes,
 		power:     power,
 		toughness: toughness,
+		isToken:   true,
 	}
 	for _, kw := range keywords {
 		if c.attrSeeds == nil {
@@ -514,9 +516,9 @@ type Permanent struct {
 	// ETB choices (e.g. Jihad: choose a color and an opponent;
 	// Herald's Horn: choose a creature type). Set by "as ~ enters" replacement
 	// effects (CR 614.12) and read by other abilities of the same permanent.
-	ChosenColor    Color
-	ChosenPlayer   uuid.UUID
-	ChosenSubtype  string
+	ChosenColor   Color
+	ChosenPlayer  uuid.UUID
+	ChosenSubtype string
 
 	// Control-change tracking (e.g. Old Man of the Sea, Aladdin)
 	ControlledPermanent uuid.UUID

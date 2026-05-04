@@ -43,7 +43,7 @@ func TestCastFromGraveyardWithoutPaying(t *testing.T) {
 	cardID := pA.Graveyard()[0].ID()
 
 	pA.ManaPool().Clear() // ensure no mana
-	if err := tg.Game.CastCardFromZoneWithoutPaying(pA.PlayerID(), cardID, core.ZoneGraveyard, nil, 0); err != nil {
+	if err := tg.CastCardFromZoneWithoutPaying(pA.PlayerID(), cardID, core.ZoneGraveyard, nil, 0); err != nil {
 		t.Fatalf("CastCardFromZoneWithoutPaying: %v", err)
 	}
 
@@ -52,7 +52,7 @@ func TestCastFromGraveyardWithoutPaying(t *testing.T) {
 	}
 
 	// Resolve and check life gain + that the card returned to graveyard.
-	tg.Game.ResolveStack()
+	tg.ResolveStack()
 	if pA.Life() != 25 {
 		t.Errorf("expected life 25 after Heal resolves, got %d", pA.Life())
 	}
@@ -76,10 +76,10 @@ func TestCastFromGraveyardCreaturePermanent(t *testing.T) {
 	cardID := pA.Graveyard()[0].ID()
 	pA.ManaPool().Clear()
 
-	if err := tg.Game.CastCardFromZoneWithoutPaying(pA.PlayerID(), cardID, core.ZoneGraveyard, nil, 0); err != nil {
+	if err := tg.CastCardFromZoneWithoutPaying(pA.PlayerID(), cardID, core.ZoneGraveyard, nil, 0); err != nil {
 		t.Fatalf("CastCardFromZoneWithoutPaying: %v", err)
 	}
-	tg.Game.ResolveStack()
+	tg.ResolveStack()
 
 	if got := tg.AllBattlefield(); len(got) != 1 || got[0].Name() != "Cast-Alt Bear" {
 		t.Errorf("expected Cast-Alt Bear on battlefield, got %v", got)
@@ -97,13 +97,13 @@ func TestCastFromExileWithoutPaying(t *testing.T) {
 		t.Fatalf("create: %v", err)
 	}
 	card.SetOwner(pA.PlayerID())
-	tg.Game.ExileCard(card, pA.PlayerID())
+	tg.ExileCard(card, pA.PlayerID())
 	pA.ManaPool().Clear()
 
-	if err := tg.Game.CastCardFromZoneWithoutPaying(pA.PlayerID(), card.ID(), core.ZoneExile, nil, 0); err != nil {
+	if err := tg.CastCardFromZoneWithoutPaying(pA.PlayerID(), card.ID(), core.ZoneExile, nil, 0); err != nil {
 		t.Fatalf("CastCardFromZoneWithoutPaying: %v", err)
 	}
-	tg.Game.ResolveStack()
+	tg.ResolveStack()
 
 	if pA.Life() != 25 {
 		t.Errorf("expected life 25, got %d", pA.Life())
@@ -120,26 +120,26 @@ func TestCastFromExileWithAnyColorMana(t *testing.T) {
 		t.Fatalf("create: %v", err)
 	}
 	card.SetOwner(pA.PlayerID())
-	tg.Game.ExileCard(card, pA.PlayerID())
+	tg.ExileCard(card, pA.PlayerID())
 
 	// Grant Gonti-style permission with any-color mana.
-	tg.Game.GrantCastFromExile(pA.PlayerID(), card.ID(), true)
+	tg.GrantCastFromExile(pA.PlayerID(), card.ID(), true)
 
 	// Pool: 4 black mana — none white, but the card costs {2}{W}{W}. With
 	// any-color mana permission, four black should be enough.
 	pA.ManaPool().Clear()
 	pA.ManaPool().Add(core.Black, 4)
 
-	if err := tg.Game.CastExiledCardWithPermission(pA.PlayerID(), card.ID(), nil, 0); err != nil {
+	if err := tg.CastExiledCardWithPermission(pA.PlayerID(), card.ID(), nil, 0); err != nil {
 		t.Fatalf("CastExiledCardWithPermission: %v", err)
 	}
-	tg.Game.ResolveStack()
+	tg.ResolveStack()
 
 	if pA.Life() != 25 {
 		t.Errorf("expected life 25, got %d", pA.Life())
 	}
 	// Permission must be cleared once the card has left exile.
-	if tg.Game.CastFromExilePermissionFor(pA.PlayerID(), card.ID()) != nil {
+	if tg.CastFromExilePermissionFor(pA.PlayerID(), card.ID()) != nil {
 		t.Errorf("expected permission cleared after cast")
 	}
 }
@@ -154,17 +154,17 @@ func TestCastFromExileWithAnyColorMana_NotEnoughMana(t *testing.T) {
 		t.Fatalf("create: %v", err)
 	}
 	card.SetOwner(pA.PlayerID())
-	tg.Game.ExileCard(card, pA.PlayerID())
-	tg.Game.GrantCastFromExile(pA.PlayerID(), card.ID(), true)
+	tg.ExileCard(card, pA.PlayerID())
+	tg.GrantCastFromExile(pA.PlayerID(), card.ID(), true)
 
 	pA.ManaPool().Clear()
 	pA.ManaPool().Add(core.Black, 3) // need 4 total
 
-	if err := tg.Game.CastExiledCardWithPermission(pA.PlayerID(), card.ID(), nil, 0); err == nil {
+	if err := tg.CastExiledCardWithPermission(pA.PlayerID(), card.ID(), nil, 0); err == nil {
 		t.Fatal("expected error for insufficient mana")
 	}
 	// Card should remain in exile.
-	if tg.Game.FindExiledCard(card.ID()) == nil {
+	if tg.FindExiledCard(card.ID()) == nil {
 		t.Error("expected card still in exile after failed cast")
 	}
 }
@@ -179,12 +179,12 @@ func TestExileInsteadOfGraveyardOnResolve(t *testing.T) {
 	pA.ManaPool().Clear()
 
 	// Tag the card as "if it would go to the graveyard, exile it instead".
-	tg.Game.AddExileIfWouldGoToGraveyardThisTurn(cardID, cardID)
+	tg.AddExileIfWouldGoToGraveyardThisTurn(cardID, cardID)
 
-	if err := tg.Game.CastCardFromZoneWithoutPaying(pA.PlayerID(), cardID, core.ZoneGraveyard, nil, 0); err != nil {
+	if err := tg.CastCardFromZoneWithoutPaying(pA.PlayerID(), cardID, core.ZoneGraveyard, nil, 0); err != nil {
 		t.Fatalf("CastCardFromZoneWithoutPaying: %v", err)
 	}
-	tg.Game.ResolveStack()
+	tg.ResolveStack()
 
 	// The instant should have been exiled, not put into the graveyard.
 	for _, c := range pA.Graveyard() {
@@ -192,7 +192,7 @@ func TestExileInsteadOfGraveyardOnResolve(t *testing.T) {
 			t.Errorf("Cast-Alt Heal went to graveyard; expected exile")
 		}
 	}
-	if tg.Game.FindExiledCard(cardID) == nil {
+	if tg.FindExiledCard(cardID) == nil {
 		t.Errorf("expected Cast-Alt Heal in exile after resolution")
 	}
 
@@ -217,10 +217,10 @@ func TestCastFromZoneWithAlternateCost(t *testing.T) {
 	pA.ManaPool().Add(core.Colorless, 1)
 
 	alt := core.ParseManaCost("{1}{B}")
-	if err := tg.Game.CastCardFromZoneWithAlternateCost(pA.PlayerID(), cardID, core.ZoneGraveyard, alt, nil, 0); err != nil {
+	if err := tg.CastCardFromZoneWithAlternateCost(pA.PlayerID(), cardID, core.ZoneGraveyard, alt, nil, 0); err != nil {
 		t.Fatalf("CastCardFromZoneWithAlternateCost: %v", err)
 	}
-	tg.Game.ResolveStack()
+	tg.ResolveStack()
 
 	if pA.Life() != 25 {
 		t.Errorf("expected life 25, got %d", pA.Life())

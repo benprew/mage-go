@@ -3,8 +3,9 @@ package mage
 import (
 	"fmt"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"github.com/google/uuid"
+
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 // ---------------------------------------------------------------------------
@@ -242,10 +243,7 @@ func AmountByTotalPower(f PermanentFilter) SpellAmount {
 			if !f.Match(p, g) {
 				continue
 			}
-			pw := p.Card.Power()
-			if pw < 0 {
-				pw = 0
-			}
+			pw := max(p.Card.Power(), 0)
 			total += pw
 		}
 		return total
@@ -403,10 +401,7 @@ func applyExternalCostReductions(g *Game, controller uuid.UUID, card Card) int {
 // pipeline. It returns the total generic reduction owed (capped to the
 // caller's current generic cost).
 func computeConditionalCostReduction(g *Game, controller uuid.UUID, card Card, currentGeneric int) int {
-	red := applySelfCostReductions(g, controller, card) + applyExternalCostReductions(g, controller, card)
-	if red < 0 {
-		red = 0
-	}
+	red := max(applySelfCostReductions(g, controller, card)+applyExternalCostReductions(g, controller, card), 0)
 	if red > currentGeneric {
 		red = currentGeneric
 	}

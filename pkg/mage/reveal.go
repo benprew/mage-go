@@ -31,10 +31,7 @@ func (g *Game) RevealTopN(p Player, n int) []Card {
 	if len(lib) == 0 {
 		return nil
 	}
-	count := n
-	if count > len(lib) {
-		count = len(lib)
-	}
+	count := min(n, len(lib))
 	out := make([]Card, count)
 	copy(out, lib[:count])
 	return out
@@ -51,10 +48,7 @@ func (g *Game) RemoveTopN(p Player, n int) []Card {
 	if len(lib) == 0 {
 		return nil
 	}
-	count := n
-	if count > len(lib) {
-		count = len(lib)
-	}
+	count := min(n, len(lib))
 	taken := make([]Card, count)
 	copy(taken, lib[:count])
 	rest := make([]Card, len(lib)-count)
@@ -181,4 +175,3 @@ func (g *Game) PickFromHand(chooser Player, owner Player, filter CardFilter, may
 	}
 	return chosen
 }
-

@@ -1,6 +1,8 @@
 package jumpstart
 
 import (
+	"slices"
+
 	"github.com/google/uuid"
 
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage"
@@ -397,12 +399,7 @@ func registerSpells() {
 			if !c.HasType(TypeCreature) {
 				return false
 			}
-			for _, st := range c.SubTypes() {
-				if st == "Dinosaur" {
-					return true
-				}
-			}
-			return false
+			return slices.Contains(c.SubTypes(), "Dinosaur")
 		})
 		return NewSorcery("Commune with Dinosaurs", "{G}",
 			NewSpellAbility(FuncEffect(
@@ -791,10 +788,7 @@ func registerSpells() {
 						if snap == nil || len(targets) == 0 {
 							return nil
 						}
-						amt := snap.Power
-						if amt < 0 {
-							amt = 0
-						}
+						amt := max(snap.Power, 0)
 						if pl := g.GetPlayer(targets[0]); pl != nil {
 							g.DealDamageToPlayer(pl, amt, sourceID)
 							return nil
@@ -1466,8 +1460,8 @@ func registerSpells() {
 							"Sacrifice a permanent to avoid discarding a card?",
 							discardOne,
 						)
-						for i := 0; i < x; i++ {
-							if err := unless.Apply(g, sourceID, controller, nil); err != nil {
+						for range x {
+							if err := ApplyEffect(g, unless, sourceID, controller, nil); err != nil {
 								return err
 							}
 						}
@@ -1750,10 +1744,7 @@ func registerSpells() {
 							if p == nil {
 								return nil
 							}
-							n := 2
-							if len(p.Hand()) < n {
-								n = len(p.Hand())
-							}
+							n := min(len(p.Hand()), 2)
 							chosen := p.ChooseCardsFromHand(n, "discard", g)
 							for _, cd := range chosen {
 								g.PlayerDiscard(p, cd.ID())
@@ -1823,7 +1814,7 @@ func registerSpells() {
 						}
 						oppCreature := targets[0]
 						yourCreature := targets[1]
-						if err := OnPermanentDiesThisTurn(oppCreature, GainLife(3)).Apply(g, sourceID, controller, nil); err != nil {
+						if err := ApplyEffect(g, OnPermanentDiesThisTurn(oppCreature, GainLife(3)), sourceID, controller, nil); err != nil {
 							return err
 						}
 						fightBetween(g, yourCreature, oppCreature)
@@ -1997,7 +1988,7 @@ func drawSelfCard(n int) Effect {
 			if p == nil {
 				return nil
 			}
-			for i := 0; i < n; i++ {
+			for range n {
 				g.PlayerDrawCard(p)
 			}
 			return nil
@@ -2070,7 +2061,7 @@ func eachPlayerSacrificesNCreatures(n int) Effect {
 				if p == nil {
 					continue
 				}
-				for i := 0; i < n; i++ {
+				for range n {
 					candidates := g.FilterBattlefield(And(ControlledBy(pid), IsCreature))
 					if len(candidates) == 0 {
 						break
@@ -2108,12 +2099,7 @@ func apnapOrder(g *Game) []uuid.UUID {
 
 // hasSubType reports whether the card has the given subtype.
 func hasSubType(c Card, st string) bool {
-	for _, s := range c.SubTypes() {
-		if s == st {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(c.SubTypes(), st)
 }
 
 // millSelf mills n cards from the player's library to their graveyard.

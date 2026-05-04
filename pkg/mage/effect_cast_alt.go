@@ -3,8 +3,9 @@ package mage
 import (
 	"fmt"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"github.com/google/uuid"
+
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 // Cast-from-non-hand-zone helpers.

@@ -50,7 +50,7 @@ func TestGontiLordOfLuxury_ExilesOpponentTopCardAndAllowsCast(t *testing.T) {
 
 	pA := g.GetPlayer(gametest.PlayerA)
 	var foundID uuid.UUID
-	for _, ec := range g.Game.GetExile() {
+	for _, ec := range g.GetExile() {
 		if ec.Card.Name() == "Lightning Bolt" {
 			foundID = ec.Card.ID()
 		}
@@ -58,7 +58,7 @@ func TestGontiLordOfLuxury_ExilesOpponentTopCardAndAllowsCast(t *testing.T) {
 	if foundID == uuid.Nil {
 		t.Fatalf("no exiled Lightning Bolt found")
 	}
-	if g.Game.CastFromExilePermissionFor(pA.PlayerID(), foundID) == nil {
+	if g.CastFromExilePermissionFor(pA.PlayerID(), foundID) == nil {
 		t.Fatalf("expected cast-from-exile permission for Gonti's exiled card")
 	}
 }
@@ -101,10 +101,10 @@ func TestScourgeOfNelToth_AlternateCostFromGraveyard(t *testing.T) {
 
 	alt := core.ParseManaCost("{B}{B}")
 
-	if err := g.Game.CastCardFromZoneWithAlternateCost(pA.PlayerID(), scourgeID, core.ZoneGraveyard, alt, nil, 0); err != nil {
+	if err := g.CastCardFromZoneWithAlternateCost(pA.PlayerID(), scourgeID, core.ZoneGraveyard, alt, nil, 0); err != nil {
 		t.Fatalf("alternate-cost cast: %v", err)
 	}
-	g.Game.ResolveStack()
+	g.ResolveStack()
 
 	g.AssertPermanentCount(gametest.PlayerA, "Scourge of Nel Toth", 1)
 }

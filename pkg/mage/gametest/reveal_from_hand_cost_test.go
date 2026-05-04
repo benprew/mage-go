@@ -56,7 +56,7 @@ func TestRevealFromHandCost_PaysWithReveal(t *testing.T) {
 	// Elf stayed in hand.
 	tg.AssertHandCount(PlayerA, "Test Forest Elf", 1)
 	// And the engine recorded the reveal.
-	if r := tg.Game.LastCostReveal(); r == nil || r.Name() != "Test Forest Elf" {
+	if r := tg.LastCostReveal(); r == nil || r.Name() != "Test Forest Elf" {
 		t.Errorf("LastCostReveal = %v, want Test Forest Elf", r)
 	}
 }

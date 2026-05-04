@@ -1,6 +1,7 @@
 package mage
 
 import (
+	"slices"
 	"testing"
 
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
@@ -218,12 +219,7 @@ func TestPickFromHand_ChoosesMatchingCard(t *testing.T) {
 	b.AddToHand(target)
 	b.AddToHand(NewLand("Plains"))
 	noncreature := NewCardFilter("noncreature", func(c Card) bool {
-		for _, t := range c.Types() {
-			if t == TypeCreature {
-				return false
-			}
-		}
-		return true
+		return !slices.Contains(c.Types(), TypeCreature)
 	})
 	a.pick = "Forest"
 	chosen := g.PickFromHand(a, b, noncreature, false, "you choose a noncreature")
@@ -246,12 +242,7 @@ func TestPickFromHand_NoMatchReturnsNil(t *testing.T) {
 	g, a, b := revealTestGame()
 	b.AddToHand(NewCreature("Goblin", "{R}", 1, 1))
 	noncreature := NewCardFilter("noncreature", func(c Card) bool {
-		for _, t := range c.Types() {
-			if t == TypeCreature {
-				return false
-			}
-		}
-		return true
+		return !slices.Contains(c.Types(), TypeCreature)
 	})
 	chosen := g.PickFromHand(a, b, noncreature, false, "test")
 	if chosen != nil {

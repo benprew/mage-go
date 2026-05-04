@@ -71,7 +71,7 @@ func ETBChooseColorOtherThan(reason string, excluded Color) *ETBEffectAbility {
 			// player implementations honor the constraint on first try;
 			// the loop guards against scripted choices supplying an
 			// illegal value.
-			for tries := 0; tries < 8; tries++ {
+			for range 8 {
 				c := p.ChooseManaColor(reason)
 				if c != excluded && c != Colorless && c != AnyColor {
 					perm.ChosenColor = c

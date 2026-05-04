@@ -3,8 +3,9 @@ package mage
 import (
 	"fmt"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"github.com/google/uuid"
+
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 // Predefined tokens are tokens whose name, type, color, mana cost, and abilities

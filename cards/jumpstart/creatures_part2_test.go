@@ -702,7 +702,6 @@ func TestEternalTaskmaster_ReturnOnAttack(t *testing.T) {
 	g.AssertHandCount(gametest.PlayerA, "Hill Giant", 1)
 }
 
-
 func TestBelltowerSphinx_DamagerControllerMills(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Belltower Sphinx")

@@ -11,7 +11,7 @@ import (
 func TestArcaneEncyclopedia(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Arcane Encyclopedia")
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
 	}
 	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Arcane Encyclopedia")
@@ -25,7 +25,7 @@ func TestDreamstoneHedron(t *testing.T) {
 	t.Run("sacrifice_draws_three", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Dreamstone Hedron")
-		for i := 0; i < 5; i++ {
+		for range 5 {
 			g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
 		}
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Dreamstone Hedron")
@@ -61,7 +61,7 @@ func TestAetherSpellbomb(t *testing.T) {
 	t.Run("draws_card", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Aether Spellbomb")
-		for i := 0; i < 3; i++ {
+		for range 3 {
 			g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
 		}
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Aether Spellbomb", "Aether Spellbomb")
@@ -75,7 +75,7 @@ func TestAetherSpellbomb(t *testing.T) {
 func TestChromaticSphere(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Chromatic Sphere")
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
 	}
 	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Chromatic Sphere")
@@ -122,7 +122,7 @@ func TestProphethicPrism(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneHand, gametest.PlayerA, "Prophetic Prism")
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 2)
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
 	}
 	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Prophetic Prism")
@@ -156,7 +156,7 @@ func TestTerrarion(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Terrarion")
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Shatter")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain", 3)
-		for i := 0; i < 3; i++ {
+		for range 3 {
 			g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
 		}
 		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Shatter", "Terrarion")
@@ -171,7 +171,7 @@ func TestScrollOfAvacyn(t *testing.T) {
 	t.Run("draws_card_no_angel", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Scroll of Avacyn")
-		for i := 0; i < 3; i++ {
+		for range 3 {
 			g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
 		}
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Scroll of Avacyn")
@@ -184,7 +184,7 @@ func TestScrollOfAvacyn(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Scroll of Avacyn")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Serra Angel")
-		for i := 0; i < 3; i++ {
+		for range 3 {
 			g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
 		}
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Scroll of Avacyn")
@@ -232,7 +232,7 @@ func TestRoguesGloves(t *testing.T) {
 	glovesID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rogue's Gloves")
 	giantID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")
 	g.Attach(glovesID, giantID)
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
 	}
 	g.Attack(1, gametest.PlayerA, "Hill Giant")

@@ -33,10 +33,10 @@ func TestWardenOfEvosIsle_FlyingCreatureSpellsCostOneLess(t *testing.T) {
 	g.StopAt(1, core.PrecombatMain)
 	g.Execute()
 	pid := g.GetPlayer(gametest.PlayerA).PlayerID()
-	if got := g.Game.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Rishadan Airship")); got != 1 {
+	if got := g.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Rishadan Airship")); got != 1 {
 		t.Errorf("flying creature reduction: got %d, want 1", got)
 	}
-	if got := g.Game.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Grizzly Bears")); got != 0 {
+	if got := g.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Grizzly Bears")); got != 0 {
 		t.Errorf("non-flying creature reduction: got %d, want 0", got)
 	}
 }
@@ -48,7 +48,7 @@ func TestWardenOfEvosIsle_DoesNotReduceOpponentSpells(t *testing.T) {
 	g.StopAt(1, core.PrecombatMain)
 	g.Execute()
 	pid := g.GetPlayer(gametest.PlayerB).PlayerID()
-	if got := g.Game.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerB, "Rishadan Airship")); got != 0 {
+	if got := g.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerB, "Rishadan Airship")); got != 0 {
 		t.Errorf("opponent flyer reduction: got %d, want 0", got)
 	}
 }
@@ -60,7 +60,7 @@ func TestBonePicker_ReducedAfterCreatureDeath(t *testing.T) {
 		g.StopAt(1, core.PrecombatMain)
 		g.Execute()
 		pid := g.GetPlayer(gametest.PlayerA).PlayerID()
-		if got := g.Game.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Bone Picker")); got != 0 {
+		if got := g.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Bone Picker")); got != 0 {
 			t.Errorf("Bone Picker no death: got %d, want 0", got)
 		}
 	})
@@ -89,10 +89,10 @@ func TestDragonlordsServant_ReducesDragonSpellsByOne(t *testing.T) {
 	g.StopAt(1, core.PrecombatMain)
 	g.Execute()
 	pid := g.GetPlayer(gametest.PlayerA).PlayerID()
-	if got := g.Game.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Shivan Dragon")); got != 1 {
+	if got := g.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Shivan Dragon")); got != 1 {
 		t.Errorf("dragon reduction: got %d, want 1", got)
 	}
-	if got := g.Game.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Hill Giant")); got != 0 {
+	if got := g.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Hill Giant")); got != 0 {
 		t.Errorf("non-dragon reduction: got %d, want 0", got)
 	}
 }
@@ -104,7 +104,7 @@ func TestDragonspeakerShaman_ReducesDragonSpellsByTwo(t *testing.T) {
 	g.StopAt(1, core.PrecombatMain)
 	g.Execute()
 	pid := g.GetPlayer(gametest.PlayerA).PlayerID()
-	if got := g.Game.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Shivan Dragon")); got != 2 {
+	if got := g.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Shivan Dragon")); got != 2 {
 		t.Errorf("dragon reduction by Dragonspeaker Shaman: got %d, want 2", got)
 	}
 }
@@ -117,7 +117,7 @@ func TestDragonRulers_StackAdditively(t *testing.T) {
 	g.StopAt(1, core.PrecombatMain)
 	g.Execute()
 	pid := g.GetPlayer(gametest.PlayerA).PlayerID()
-	if got := g.Game.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Shivan Dragon")); got != 3 {
+	if got := g.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Shivan Dragon")); got != 3 {
 		t.Errorf("stacked dragon reduction: got %d, want 3", got)
 	}
 }
@@ -130,7 +130,7 @@ func TestGhaltaPrimalHunger_ReducedByTotalPower(t *testing.T) {
 		g.StopAt(1, core.PrecombatMain)
 		g.Execute()
 		pid := g.GetPlayer(gametest.PlayerA).PlayerID()
-		if got := g.Game.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Ghalta, Primal Hunger")); got != 10 {
+		if got := g.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Ghalta, Primal Hunger")); got != 10 {
 			t.Errorf("Ghalta reduction with 12 power: got %d, want 10 (capped)", got)
 		}
 	})
@@ -141,7 +141,7 @@ func TestGhaltaPrimalHunger_ReducedByTotalPower(t *testing.T) {
 		g.StopAt(1, core.PrecombatMain)
 		g.Execute()
 		pid := g.GetPlayer(gametest.PlayerA).PlayerID()
-		if got := g.Game.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Ghalta, Primal Hunger")); got != 0 {
+		if got := g.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Ghalta, Primal Hunger")); got != 0 {
 			t.Errorf("Ghalta reduction with no creatures: got %d, want 0", got)
 		}
 	})
@@ -156,7 +156,7 @@ func TestCrypticSerpent_ReducedByInstantsAndSorceriesInGraveyard(t *testing.T) {
 		g.StopAt(1, core.PrecombatMain)
 		g.Execute()
 		pid := g.GetPlayer(gametest.PlayerA).PlayerID()
-		if got := g.Game.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Cryptic Serpent")); got != 4 {
+		if got := g.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Cryptic Serpent")); got != 4 {
 			t.Errorf("Cryptic Serpent reduction with 4 instants/sorceries: got %d, want 4", got)
 		}
 	})
@@ -168,7 +168,7 @@ func TestCrypticSerpent_ReducedByInstantsAndSorceriesInGraveyard(t *testing.T) {
 		g.StopAt(1, core.PrecombatMain)
 		g.Execute()
 		pid := g.GetPlayer(gametest.PlayerA).PlayerID()
-		if got := g.Game.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Cryptic Serpent")); got != 0 {
+		if got := g.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Cryptic Serpent")); got != 0 {
 			t.Errorf("Cryptic Serpent reduction with only creatures in yard: got %d, want 0", got)
 		}
 	})
@@ -188,10 +188,10 @@ func TestHeraldsHorn_ReducesChosenCreatureType(t *testing.T) {
 	}
 	hornPerm.ChosenSubtype = "Dragon"
 
-	if got := g.Game.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Shivan Dragon")); got != 1 {
+	if got := g.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Shivan Dragon")); got != 1 {
 		t.Errorf("Dragon spell with chosen Dragon: got %d, want 1", got)
 	}
-	if got := g.Game.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Hill Giant")); got != 0 {
+	if got := g.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Hill Giant")); got != 0 {
 		t.Errorf("Giant spell with chosen Dragon: got %d, want 0", got)
 	}
 }
@@ -204,7 +204,7 @@ func TestWingedWords_ReducedIfYouControlFlyer(t *testing.T) {
 		g.StopAt(1, core.PrecombatMain)
 		g.Execute()
 		pid := g.GetPlayer(gametest.PlayerA).PlayerID()
-		if got := g.Game.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Winged Words")); got != 1 {
+		if got := g.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Winged Words")); got != 1 {
 			t.Errorf("Winged Words with flyer: got %d, want 1", got)
 		}
 	})
@@ -215,7 +215,7 @@ func TestWingedWords_ReducedIfYouControlFlyer(t *testing.T) {
 		g.StopAt(1, core.PrecombatMain)
 		g.Execute()
 		pid := g.GetPlayer(gametest.PlayerA).PlayerID()
-		if got := g.Game.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Winged Words")); got != 0 {
+		if got := g.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Winged Words")); got != 0 {
 			t.Errorf("Winged Words without flyer: got %d, want 0", got)
 		}
 	})
@@ -229,7 +229,7 @@ func TestWizardsRetort_ReducedIfYouControlWizard(t *testing.T) {
 		g.StopAt(1, core.PrecombatMain)
 		g.Execute()
 		pid := g.GetPlayer(gametest.PlayerA).PlayerID()
-		if got := g.Game.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Wizard's Retort")); got != 1 {
+		if got := g.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Wizard's Retort")); got != 1 {
 			t.Errorf("Wizard's Retort with Wizard: got %d, want 1", got)
 		}
 	})
@@ -240,7 +240,7 @@ func TestWizardsRetort_ReducedIfYouControlWizard(t *testing.T) {
 		g.StopAt(1, core.PrecombatMain)
 		g.Execute()
 		pid := g.GetPlayer(gametest.PlayerA).PlayerID()
-		if got := g.Game.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Wizard's Retort")); got != 0 {
+		if got := g.ConditionalSpellCostReduction(pid, handCard(g, gametest.PlayerA, "Wizard's Retort")); got != 0 {
 			t.Errorf("Wizard's Retort without Wizard: got %d, want 0", got)
 		}
 	})

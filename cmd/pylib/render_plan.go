@@ -2,6 +2,7 @@ package main
 
 import (
 	"math"
+	"slices"
 	"sort"
 	"sync"
 
@@ -273,7 +274,7 @@ func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int, index *
 		{renderOwnerOpponent, renderZoneExile},
 	}
 	for _, key := range uuidOrder {
-		cards := index.cardsByKey[renderZoneKey{owner: key.owner, zone: key.zone}]
+		cards := index.cardsByKey[renderZoneKey(key)]
 		for idx := range cards {
 			if cards[idx].id != "" {
 				if uuidIdx, ok := index.uuidByID[cards[idx].id]; ok {
@@ -293,9 +294,9 @@ func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int, index *
 		}
 		// Persist mutations back (cards is a copy of the slice header but
 		// shares the backing array, so the uuidIdx writes already landed).
-		index.cardsByKey[renderZoneKey{owner: key.owner, zone: key.zone}] = cards
+		index.cardsByKey[renderZoneKey(key)] = cards
 	}
-	sort.Slice(index.rowOrder, func(i, j int) bool { return index.rowOrder[i] < index.rowOrder[j] })
+	slices.Sort(index.rowOrder)
 	return nil
 }
 
@@ -321,7 +322,7 @@ func appendRenderCardsForZone(out []renderCardRef, player *interactive.PlayerSta
 			if !ok {
 				return nil, &encodeError{code: mageEncodeErrEncode, message: "missing card embedding for " + perm.Name}
 			}
-			perm := perm
+
 			out = append(out, renderCardRef{
 				zone:    zone,
 				owner:   owner,
@@ -415,7 +416,7 @@ func emitRenderZones(w *renderPlanWriter, state *apiGameState, playerIdx int, in
 			}
 			w.write(opPlaceCard, card.slotIdx, card.row, renderStatusBits(card.perm), card.uuidIdx)
 			if card.perm != nil {
-				for ct := core.CounterType(0); ct < core.NumCounters; ct++ {
+				for ct := range core.NumCounters {
 					count := card.perm.RawCounters[ct]
 					if count != 0 {
 						w.write(opCounter, int32(ct), int32(count))
@@ -475,7 +476,7 @@ func emitRenderActions(w *renderPlanWriter, pending *apiPending, state *apiGameS
 	if pending != nil {
 		selfID, oppID := playerIDs(state, playerIdx)
 		numPresent := minInt64(int64(len(pending.Options)), cfg.maxOptions)
-		for optIdx := int64(0); optIdx < numPresent; optIdx++ {
+		for optIdx := range numPresent {
 			option := pending.Options[optIdx]
 			sourceRow, sourceUUIDIdx := renderOptionSource(option, index)
 			w.write(opOption,

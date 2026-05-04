@@ -1028,26 +1028,26 @@ Two flavors are supported. Both reduce only the *generic* portion of a mana
 cost; colored requirements are unchanged. A spell's generic cost cannot drop
 below zero (per cast).
 
-  1. Static reductions sourced from a permanent on the battlefield, applying
-     to spells the source's controller casts that match a spell-filter:
+ 1. Static reductions sourced from a permanent on the battlefield, applying
+    to spells the source's controller casts that match a spell-filter:
 
-	[ReduceSpellCostStatic](filter, amount, condition) ContinuousEffect
-	[ReduceSpellCostStaticLabeled](label, filter, amount, condition)
+    [ReduceSpellCostStatic](filter, amount, condition) ContinuousEffect
+    [ReduceSpellCostStaticLabeled](label, filter, amount, condition)
 
-     Use as the argument to [WithStaticAbility]. The continuous effect
-     registers a [SpellCostReducer] entry on [GameRules.SpellCostReducers]
-     each Apply() cycle while the source is on the battlefield. Examples:
-     Warden of Evos Isle, Dragonlord's Servant, Dragonspeaker Shaman,
-     Herald's Horn.
+    Use as the argument to [WithStaticAbility]. The continuous effect
+    registers a [SpellCostReducer] entry on [GameRules.SpellCostReducers]
+    each Apply() cycle while the source is on the battlefield. Examples:
+    Warden of Evos Isle, Dragonlord's Servant, Dragonspeaker Shaman,
+    Herald's Horn.
 
-  2. Self cost reductions intrinsic to the casting card itself, reducing
-     only its own cost at cast time (works while the card is in hand —
-     the cast pipeline walks the casting card's abilities directly):
+ 2. Self cost reductions intrinsic to the casting card itself, reducing
+    only its own cost at cast time (works while the card is in hand —
+    the cast pipeline walks the casting card's abilities directly):
 
-	[WithSelfCostReduction](amount, condition) CardOption
-	[SelfCostReduction](amount, condition) *SelfCostReductionAbility
+    [WithSelfCostReduction](amount, condition) CardOption
+    [SelfCostReduction](amount, condition) *SelfCostReductionAbility
 
-     Examples: Bone Picker, Cryptic Serpent, Ghalta Primal Hunger.
+    Examples: Bone Picker, Cryptic Serpent, Ghalta Primal Hunger.
 
 Filters ([SpellPredicate]):
 

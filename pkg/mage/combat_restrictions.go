@@ -1,8 +1,9 @@
 package mage
 
 import (
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"github.com/google/uuid"
+
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 // Combat-restriction storage on the EffectManager. These maps are reset each

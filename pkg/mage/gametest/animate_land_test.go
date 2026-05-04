@@ -10,9 +10,10 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"github.com/google/uuid"
 )
 
 var animateLandOnce sync.Once
@@ -238,7 +239,7 @@ func TestAnimateLandWhileSourceOnBattlefield_AwakenerDruid(t *testing.T) {
 	g.Execute()
 
 	// Find any Forest, all should be on PlayerA's side
-	perms := g.Game.FilterBattlefield(mage.IsLand)
+	perms := g.FilterBattlefield(mage.IsLand)
 	var animated *mage.Permanent
 	for _, p := range perms {
 		if p.HasType(core.TypeCreature) {
@@ -284,7 +285,7 @@ func TestAnimateTargetLand_ElementalUprising(t *testing.T) {
 	g.StopAt(1, core.BeginCombat)
 	g.Execute()
 
-	perms := g.Game.FilterBattlefield(mage.IsLand)
+	perms := g.FilterBattlefield(mage.IsLand)
 	var animated *mage.Permanent
 	for _, p := range perms {
 		if p.HasType(core.TypeCreature) {
@@ -314,7 +315,7 @@ func TestAnimateTargetLand_ElementalUprising(t *testing.T) {
 	g2.StopAt(2, core.Untap)
 	g2.Execute()
 
-	for _, p := range g2.Game.FilterBattlefield(mage.IsLand) {
+	for _, p := range g2.FilterBattlefield(mage.IsLand) {
 		if p.HasType(core.TypeCreature) {
 			t.Errorf("animation should have expired by next turn; %s still a creature",
 				p.Name())

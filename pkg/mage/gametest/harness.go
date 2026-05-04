@@ -2,6 +2,7 @@ package gametest
 
 import (
 	"fmt"
+	"maps"
 	"slices"
 	"testing"
 
@@ -307,9 +308,7 @@ func (tg *TestGame) ChooseTarget(p PlayerRef, name string) {
 func (tg *TestGame) ChooseDamageDistribution(p PlayerRef, distribution map[string]int) {
 	tp := tg.GetPlayer(p)
 	cp := make(map[string]int, len(distribution))
-	for k, v := range distribution {
-		cp[k] = v
-	}
+	maps.Copy(cp, distribution)
 	tp.chooseDamageDistribution = append(tp.chooseDamageDistribution, cp)
 }
 

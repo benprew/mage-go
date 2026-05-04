@@ -56,7 +56,7 @@ func TestMillReplacement_DoublesOpponent(t *testing.T) {
 	tg := NewTestGame(t)
 	doubler := tg.AddCard(core.ZoneBattlefield, PlayerA, "Test Mill Doubler")
 	playerA := tg.getPlayerID(PlayerA)
-	tg.Game.AddMillReplacement(doubler, func(g *mage.Game, milledID uuid.UUID, amt int) int {
+	tg.AddMillReplacement(doubler, func(g *mage.Game, milledID uuid.UUID, amt int) int {
 		if milledID == playerA {
 			return amt
 		}
@@ -78,7 +78,7 @@ func TestMillReplacement_SkipsController(t *testing.T) {
 	tg := NewTestGame(t)
 	doubler := tg.AddCard(core.ZoneBattlefield, PlayerA, "Test Mill Doubler")
 	playerA := tg.getPlayerID(PlayerA)
-	tg.Game.AddMillReplacement(doubler, func(g *mage.Game, milledID uuid.UUID, amt int) int {
+	tg.AddMillReplacement(doubler, func(g *mage.Game, milledID uuid.UUID, amt int) int {
 		if milledID == playerA {
 			return amt
 		}

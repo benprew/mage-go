@@ -2,6 +2,7 @@ package mage
 
 import (
 	"math/rand"
+	"slices"
 	"testing"
 
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
@@ -70,12 +71,7 @@ func TestRandomCardFromGraveyard_FiltersAndDoesNotRemove(t *testing.T) {
 		if !c.HasType(TypeCreature) {
 			return false
 		}
-		for _, st := range c.SubTypes() {
-			if st == "Zombie" {
-				return true
-			}
-		}
-		return false
+		return slices.Contains(c.SubTypes(), "Zombie")
 	})
 	chosen := g.RandomCardFromGraveyard(a, zombieFilter)
 	if chosen == nil || chosen.Name() != "Zombie A" {
@@ -94,12 +90,7 @@ func TestRandomCardFromGraveyard_NoMatchReturnsNil(t *testing.T) {
 		if !c.HasType(TypeCreature) {
 			return false
 		}
-		for _, st := range c.SubTypes() {
-			if st == "Zombie" {
-				return true
-			}
-		}
-		return false
+		return slices.Contains(c.SubTypes(), "Zombie")
 	})
 	if got := g.RandomCardFromGraveyard(a, zombieFilter); got != nil {
 		t.Errorf("expected nil, got %v", got)
@@ -137,7 +128,7 @@ func TestRandomCardFromGraveyard_UniformDistribution(t *testing.T) {
 	a.AddToGraveyard(NewLand("Plains"))
 	a.AddToGraveyard(NewLand("Mountain"))
 	counts := map[string]int{}
-	for i := 0; i < 3000; i++ {
+	for range 3000 {
 		c := g.RandomCardFromGraveyard(a, CardFilter{})
 		counts[c.Name()]++
 	}

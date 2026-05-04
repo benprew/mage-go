@@ -1,9 +1,10 @@
 package jumpstart
 
 import (
+	"github.com/google/uuid"
+
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"github.com/google/uuid"
 )
 
 func init() {
@@ -99,7 +100,7 @@ func registerEnchantments() {
 							return nil
 						}
 						n := int(src.Counters[Charge])
-						for i := 0; i < n; i++ {
+						for range n {
 							p.ManaPool().Add(Black, 1)
 						}
 						return nil

@@ -1028,14 +1028,20 @@ func (g *Game) BouncePermanentToHand(perm *Permanent) {
 	controller := perm.Controller
 	permID := perm.ID()
 	card := perm.Card
+	isToken := perm.IsToken
 	owner := card.Owner()
 	if owner == uuid.Nil {
 		owner = controller
 	}
 	g.RemoveFromBattlefield(perm)
 	selfAbilities := g.LKIAbilities(permID)
-	if p := g.GetPlayer(owner); p != nil {
-		p.AddToHand(card)
+	if !isToken {
+		// CR 111.7 / 111.10g: tokens cease to exist when they leave the
+		// battlefield. The zone-change event still fires, but the card is
+		// not added to a hand.
+		if p := g.GetPlayer(owner); p != nil {
+			p.AddToHand(card)
+		}
 	}
 	zoneEvt := GameEvent{
 		Type:     EvtZoneChange,
@@ -1197,10 +1203,7 @@ func (g *Game) PerformScry(p Player, n int) int {
 	if len(lib) == 0 {
 		return 0
 	}
-	count := n
-	if count > len(lib) {
-		count = len(lib)
-	}
+	count := min(n, len(lib))
 	top := make([]Card, count)
 	copy(top, lib[:count])
 
@@ -2415,13 +2418,11 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		}
 	}
 
-	// Build spell action data before moving the card so action-level costs
+	// Build action costs before moving the card so action-level costs
 	// are paid as part of casting.
-	var effects []Effect
 	var actionCosts []Cost
 	for _, a := range card.Abilities() {
 		if sa, ok := a.(*SpellAbility); ok && sa.Kind() == ActionSpell {
-			effects = append(effects, sa.Effects()...)
 			actionCosts = append(actionCosts, sa.Costs()...)
 		}
 	}
@@ -2538,6 +2539,10 @@ func (g *Game) addManaProductions(productions []ManaProduction, p Player, perm *
 				g.applyManaBonuses(perm, color, p)
 			}
 			continue
+		}
+		color := prod.Color
+		if color == AnyColor {
+			color = p.ChooseManaColor("add mana")
 		}
 		p.ManaPool().Add(color, amt)
 		g.applyManaBonuses(perm, color, p)
@@ -3077,9 +3082,13 @@ func (g *Game) enforceMinimumBlockers() {
 		if len(group.BlockerIDs) >= minN {
 			continue
 		}
-		// Insufficient blockers — none of them are legal. Drop them all.
+		// Insufficient blockers — none of them are legal. Drop them all,
+		// and reset the Blocked flag so the attacker is treated as unblocked
+		// for damage assignment (CR 509.1b — those creatures aren't legal
+		// blockers, so the attacker was never legally blocked).
 		dropped := group.BlockerIDs
 		group.BlockerIDs = nil
+		group.Blocked = false
 		for _, bid := range dropped {
 			// Also clean up the per-turn blocked tracking for this attacker.
 			rest := g.blockedThisTurn[bid][:0]
@@ -3107,10 +3116,7 @@ func (g *Game) enforceMustBeBlockedIfAble(defenderID uuid.UUID) {
 		if len(group.BlockerIDs) > 0 {
 			continue
 		}
-		minN := g.effects.MinBlockers(group.AttackerID)
-		if minN < 1 {
-			minN = 1
-		}
+		minN := max(g.effects.MinBlockers(group.AttackerID), 1)
 		// Find legal blockers controlled by the defender.
 		var candidates []*Permanent
 		for _, p := range g.battlefield {
@@ -3893,6 +3899,9 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	aa, ok := inner.(ActivatedAbility)
 	if !ok {
 		return fmt.Errorf("not an activated ability")
+	}
+	if perm.HasAttr(AttrCantActivateNonManaAbilities) {
+		return fmt.Errorf("non-mana activated abilities of %s are prevented", perm.Name())
 	}
 	if !aa.CanActivate(playerID, g) {
 		return fmt.Errorf("cannot activate ability")

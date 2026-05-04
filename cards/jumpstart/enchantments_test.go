@@ -479,7 +479,6 @@ func TestEternalThirst_CounterOnOpponentCreatureDeath(t *testing.T) {
 	g.AssertCounterCount(gametest.PlayerA, "Grizzly Bears", core.P1P1, 1)
 }
 
-
 func TestVerdantEmbrace_BoostAndUpkeepSaproling(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	bearID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")

@@ -3,10 +3,11 @@ package jumpstart
 import (
 	"testing"
 
+	"github.com/google/uuid"
+
 	_ "git.sr.ht/~cdcarter/mage-go/cards/limited"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
-	"github.com/google/uuid"
 )
 
 // Tests for the white + blue creature chunk implemented in creatures.go.
@@ -679,10 +680,10 @@ func TestAngelOfTheDireHour_NotCastFromHand_NoExile(t *testing.T) {
 	if cardID == uuid.Nil {
 		t.Fatal("Angel not in graveyard")
 	}
-	if err := g.Game.CastCardFromZoneWithoutPaying(pA, cardID, core.ZoneGraveyard, nil, 0); err != nil {
+	if err := g.CastCardFromZoneWithoutPaying(pA, cardID, core.ZoneGraveyard, nil, 0); err != nil {
 		t.Fatalf("CastCardFromZoneWithoutPaying: %v", err)
 	}
-	g.Game.ResolveStack()
+	g.ResolveStack()
 	g.AssertExileCount("Hill Giant", 0)
 	g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 1)
 }

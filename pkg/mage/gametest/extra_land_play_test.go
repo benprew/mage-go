@@ -28,9 +28,9 @@ func TestGrantExtraLandPlay_AllowsSecondLand(t *testing.T) {
 	tg.Step = core.PrecombatMain
 
 	playerID := tg.getPlayerID(PlayerA)
-	tg.Game.GrantExtraLandPlay(playerID, 1)
+	tg.GrantExtraLandPlay(playerID, 1)
 
-	if got := tg.Game.MaxLandPlays(); got != 2 {
+	if got := tg.MaxLandPlays(); got != 2 {
 		t.Errorf("MaxLandPlays after GrantExtraLandPlay(1): got %d want 2", got)
 	}
 
@@ -60,18 +60,18 @@ func TestGrantExtraLandPlay_ResetAtEndOfTurn(t *testing.T) {
 	tg.padLibraries()
 
 	playerID := tg.getPlayerID(PlayerA)
-	tg.Game.GrantExtraLandPlay(playerID, 2)
-	if got := tg.Game.ExtraLandPlaysGrantedThisTurn(playerID); got != 2 {
+	tg.GrantExtraLandPlay(playerID, 2)
+	if got := tg.ExtraLandPlaysGrantedThisTurn(playerID); got != 2 {
 		t.Errorf("ExtraLandPlaysGrantedThisTurn: got %d want 2", got)
 	}
 
 	tg.StopAt(2, core.Upkeep)
 	tg.Execute()
 
-	if got := tg.Game.ExtraLandPlaysGrantedThisTurn(playerID); got != 0 {
+	if got := tg.ExtraLandPlaysGrantedThisTurn(playerID); got != 0 {
 		t.Errorf("ExtraLandPlaysGrantedThisTurn after turn flip: got %d want 0", got)
 	}
-	if got := tg.Game.MaxLandPlays(); got != 1 {
+	if got := tg.MaxLandPlays(); got != 1 {
 		t.Errorf("MaxLandPlays after reset: got %d want 1", got)
 	}
 }
@@ -81,13 +81,13 @@ func TestGrantExtraLandPlay_ResetAtEndOfTurn(t *testing.T) {
 func TestGrantExtraLandPlay_Cumulative(t *testing.T) {
 	tg := NewTestGame(t)
 	playerID := tg.getPlayerID(PlayerA)
-	tg.Game.GrantExtraLandPlay(playerID, 1)
-	tg.Game.GrantExtraLandPlay(playerID, 2)
+	tg.GrantExtraLandPlay(playerID, 1)
+	tg.GrantExtraLandPlay(playerID, 2)
 
-	if got := tg.Game.ExtraLandPlaysGrantedThisTurn(playerID); got != 3 {
+	if got := tg.ExtraLandPlaysGrantedThisTurn(playerID); got != 3 {
 		t.Errorf("cumulative grant: got %d want 3", got)
 	}
-	if got := tg.Game.MaxLandPlays(); got != 4 {
+	if got := tg.MaxLandPlays(); got != 4 {
 		t.Errorf("MaxLandPlays cumulative: got %d want 4", got)
 	}
 }

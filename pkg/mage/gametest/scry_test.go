@@ -132,7 +132,7 @@ func TestPerformScryPrimitive(t *testing.T) {
 	tg.AddCard(core.ZoneLibrary, PlayerA, "Island")
 
 	tg.ChooseScry(PlayerA, []string{"Mountain"}, []string{"Forest"})
-	seen := tg.Game.PerformScry(tg.GetPlayer(PlayerA), 2)
+	seen := tg.PerformScry(tg.GetPlayer(PlayerA), 2)
 	if seen != 2 {
 		t.Fatalf("PerformScry returned %d, want 2", seen)
 	}

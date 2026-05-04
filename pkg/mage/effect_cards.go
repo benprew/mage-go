@@ -221,13 +221,13 @@ func Scry(amount ValueSource) Effect {
 	return DataEffect(&scryEffect{amount: amount})
 }
 
-func (e *scryEffect) EffectText() string {
+func (e *scryEffect) Text() string {
 	if _, ok := e.amount.(xValue); ok {
 		return "scry X"
 	}
 	return fmt.Sprintf("scry %d", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil))
 }
-func (e *scryEffect) EffectProps() EffectProperties {
+func (e *scryEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
@@ -460,7 +460,7 @@ func execDiscardCards(ctx *EffectContext, e *discardCardsEffect) error {
 		}
 		chosen := p.ChooseCardsFromHand(amount, "discard", ctx.Game)
 		for _, card := range chosen {
-			p.DiscardCard(card.ID())
+			ctx.Game.PlayerDiscard(p, card.ID())
 		}
 	}
 	return nil
@@ -505,8 +505,7 @@ func execReturnFromGraveyardToBattlefield(ctx *EffectContext, _ *returnFromGrave
 }
 
 func execMillTargetPlayer(ctx *EffectContext, e *millTargetPlayerEffect) error {
-	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
-	amount = ctx.Game.ApplyMillModifiers(p.PlayerID(), amount)
+	baseAmount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
 
 	var playerIDs []uuid.UUID
 	switch {
@@ -521,6 +520,7 @@ func execMillTargetPlayer(ctx *EffectContext, e *millTargetPlayerEffect) error {
 		if p == nil {
 			continue
 		}
+		amount := ctx.Game.ApplyMillModifiers(p.PlayerID(), baseAmount)
 		lib := p.Library()
 		for i := 0; i < amount && len(lib) > 0; i++ {
 			card := lib[len(lib)-1]
@@ -577,12 +577,6 @@ func execReturnToHandTarget(ctx *EffectContext, _ *returnToHandTargetEffect) err
 	perm := ctx.Game.FindPermanent(ctx.Targets[0])
 	if perm == nil {
 		return nil // target gone, fizzle
-	}
-	isToken := perm.IsToken
-	card := perm.Card
-	owner := card.Owner()
-	if owner == uuid.Nil {
-		owner = perm.Controller
 	}
 	ctx.Game.BouncePermanentToHand(perm)
 	return nil

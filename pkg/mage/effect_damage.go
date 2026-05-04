@@ -130,10 +130,10 @@ func TargetPlayerLoseLife(amount ValueSource) Effect {
 	return DataEffect(&loseLifeTargetEffect{amount: amount})
 }
 
-func (e *loseLifeTargetEffect) EffectText() string {
+func (e *loseLifeTargetEffect) Text() string {
 	return "target player loses " + e.amount.Text() + " life"
 }
-func (e *loseLifeTargetEffect) EffectProps() EffectProperties {
+func (e *loseLifeTargetEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
@@ -194,30 +194,25 @@ func DealDividedDamage(total ValueSource) Effect {
 	return DataEffect(&dealDividedDamageEffect{total: total})
 }
 
-func (e *dealDividedDamageEffect) EffectText() string {
+func (e *dealDividedDamageEffect) Text() string {
 	return fmt.Sprintf("deal %s damage divided as you choose among any number of targets", e.total.Text())
 }
-func (e *dealDividedDamageEffect) EffectProps() EffectProperties {
+func (e *dealDividedDamageEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment, DamageValue: e.total}
 }
 
 // IsDividedDamageEffect returns true if e is a divided-damage effect (used by
 // the spell-cast flow to prompt the controller for a distribution).
 func IsDividedDamageEffect(e Effect) bool {
-	if a, ok := e.(*dataEffectAdapter); ok {
-		_, isDiv := a.data.(*dealDividedDamageEffect)
-		return isDiv
-	}
-	return false
+	_, isDiv := e.(*dealDividedDamageEffect)
+	return isDiv
 }
 
 // DividedDamageTotal returns the ValueSource carrying the total damage of a
 // divided-damage effect, or nil if e is not one.
 func DividedDamageTotal(e Effect) ValueSource {
-	if a, ok := e.(*dataEffectAdapter); ok {
-		if d, isDiv := a.data.(*dealDividedDamageEffect); isDiv {
-			return d.total
-		}
+	if d, isDiv := e.(*dealDividedDamageEffect); isDiv {
+		return d.total
 	}
 	return nil
 }

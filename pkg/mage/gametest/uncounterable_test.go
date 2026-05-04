@@ -1,6 +1,7 @@
 package gametest
 
 import (
+	"slices"
 	"sync"
 	"testing"
 
@@ -49,13 +50,7 @@ func registerUncounterableCards() {
 							if obj.Card == nil {
 								return false
 							}
-							isGreen := false
-							for _, c := range obj.Card.ManaCost().Colors() {
-								if c == core.Green {
-									isGreen = true
-									break
-								}
-							}
+							isGreen := slices.Contains(obj.Card.ManaCost().Colors(), core.Green)
 							return isGreen
 						},
 					)),

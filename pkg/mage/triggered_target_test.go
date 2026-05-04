@@ -228,4 +228,3 @@ func TestTriggerWithDeclaredTarget_NoLegalTargets_DoesNotPrompt(t *testing.T) {
 	// covered by isTargetStillLegal at resolution-time for normal cases.
 	_ = called
 }
-

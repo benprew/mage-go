@@ -1198,4 +1198,3 @@ func TestPillarOfFlame_PlayerTarget(t *testing.T) {
 	g.Execute()
 	g.AssertLife(gametest.PlayerB, 18)
 }
-

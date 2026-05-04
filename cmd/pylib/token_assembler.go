@@ -179,7 +179,7 @@ func assembleTokensFromPlan(
 			// Write what fits, mark overflow, stop.
 			room := maxTokens - cursor
 			if room > 0 {
-				for k := int32(0); k < room; k++ {
+				for k := range room {
 					out.tokenIDs[cursor+k] = int64(span[k])
 				}
 				cursor += room
@@ -187,7 +187,7 @@ func assembleTokensFromPlan(
 			overflow = true
 			return
 		}
-		for k := int32(0); k < n; k++ {
+		for k := range n {
 			out.tokenIDs[cursor+k] = int64(span[k])
 		}
 		cursor += n

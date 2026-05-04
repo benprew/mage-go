@@ -1,5 +1,11 @@
 package mage
 
+import (
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+
+	"github.com/google/uuid"
+)
+
 // SpellAbility is kept as a compatibility name for spell actions.
 type SpellAbility = ActionDefinition
 
@@ -27,6 +33,7 @@ func NewTargetedSpell(target Target, effects ...Effect) *SpellAbility {
 	parts = append(parts, WithTarget(target))
 	return NewSpell(parts...)
 }
+
 // NewMultiTargetSpell creates a spell ability that declares multiple Target
 // requirements. Each Target may carry its own min/max and predicate, so this
 // constructor covers:
@@ -48,4 +55,3 @@ func NewMultiTargetSpell(targets []Target, effects ...Effect) *SpellAbility {
 		targets: targets,
 	}
 }
-

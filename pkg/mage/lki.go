@@ -1,8 +1,9 @@
 package mage
 
 import (
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"github.com/google/uuid"
+
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 // Deferred follow-up steps for the LKI framework (steps A-C are done):
@@ -113,10 +114,7 @@ func (v livePermanentView) ViewHasKeyword(k Keyword) bool { return v.p.HasKeywor
 func (v livePermanentView) ViewPower() int                { return v.p.CurrentPower(v.g) }
 func (v livePermanentView) ViewToughness() int            { return v.p.CurrentToughness(v.g) }
 func (v livePermanentView) ViewIsToken() bool {
-	if bc, ok := v.p.Card.(*BaseCard); ok {
-		return bc.IsToken()
-	}
-	return false
+	return v.p.IsToken
 }
 func (v livePermanentView) ViewCounters(ct CounterType) int { return int(v.p.Counters[ct]) }
 func (v livePermanentView) ViewAbilities() []Ability        { return v.p.RuntimeAbilities }
@@ -168,8 +166,8 @@ func (l *PermanentLKI) HasSubType(s string) bool {
 // LKIView interface implementation for *PermanentLKI. Read-only,
 // snapshot-backed.
 
-func (l *PermanentLKI) ViewID() uuid.UUID   { return l.ID }
-func (l *PermanentLKI) ViewName() string    { return l.Name }
+func (l *PermanentLKI) ViewID() uuid.UUID { return l.ID }
+func (l *PermanentLKI) ViewName() string  { return l.Name }
 func (l *PermanentLKI) ViewController() uuid.UUID {
 	if l.Snapshot == nil {
 		return uuid.Nil
@@ -224,10 +222,7 @@ func (g *Game) captureLKI(p *Permanent) {
 	if g.lki == nil {
 		g.lki = make(map[uuid.UUID]*PermanentLKI)
 	}
-	isToken := false
-	if bc, ok := p.Card.(*BaseCard); ok {
-		isToken = bc.IsToken()
-	}
+	isToken := p.IsToken
 	owner := p.Card.Owner()
 	if owner == uuid.Nil {
 		owner = p.Controller

@@ -176,6 +176,20 @@ func WithControlledSinceTurnStart() ActionOption {
 	}
 }
 
+// ActivationCondition is a predicate evaluated when checking whether an
+// activated ability may be activated. It returns true if activation is
+// allowed. The source permanent may be nil if the source is not on the
+// battlefield.
+type ActivationCondition func(g *Game, source *Permanent, controller uuid.UUID) bool
+
+// WithActivationCondition adds a card-defined predicate that must return true
+// for the ability to be activatable. Multiple conditions are AND-ed.
+func WithActivationCondition(cond ActivationCondition) ActionOption {
+	return func(a *ActionDefinition) {
+		a.activationConds = append(a.activationConds, cond)
+	}
+}
+
 // WithActivationLimit applies activation limits to an action.
 func WithActivationLimit(limits ActivationLimits) ActionOption {
 	return func(a *ActionDefinition) {
@@ -242,6 +256,46 @@ func NewAction(kind ActionKind, opts ...ActionOption) *ActionDefinition {
 	return a
 }
 
+// NewActivated creates an activated action with a primary cost and effects.
+func NewActivated(cost Cost, parts ...any) *ActionDefinition {
+	opts := []ActionOption{WithCost(cost)}
+	opts = append(opts, actionPartsToOptions(parts...)...)
+	return NewAction(ActionActivated, opts...)
+}
+
+// NewActivatedAbility creates an activated ability with a primary effect, a primary cost,
+// and optional additional costs, targets, or effects via AbilityOption functions.
+func NewActivatedAbility(effect Effect, cost Cost, opts ...AbilityOption) *SimpleActivatedAbility {
+	parts := []any{effect}
+	for _, opt := range opts {
+		parts = append(parts, opt)
+	}
+	return NewActivated(cost, parts...)
+}
+
+func actionPartsToOptions(parts ...any) []ActionOption {
+	opts := make([]ActionOption, 0, len(parts))
+	for _, part := range parts {
+		switch v := part.(type) {
+		case nil:
+		case Effect:
+			opts = append(opts, WithEffect(v))
+		case []Effect:
+			opts = append(opts, WithEffects(v...))
+		case ActionOption:
+			opts = append(opts, v)
+		default:
+			panic("mage: unsupported action builder argument")
+		}
+	}
+	return opts
+}
+
+// Kind returns whether this action is a spell or activated ability.
+func (a *ActionDefinition) Kind() ActionKind { return a.kind }
+
+func (a *ActionDefinition) CanActivate(controller uuid.UUID, g *Game) bool {
+	if (a.timing == TimingUpkeepOnly || a.UpkeepOnly) && g.step != Upkeep {
 		return false
 	}
 	if a.timing == YourTurnOnly && g.ActivePlayerObj().PlayerID() != controller {

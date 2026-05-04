@@ -3,8 +3,9 @@ package mage
 import (
 	"testing"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"github.com/google/uuid"
+
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 // CR 700.2 — Modal spells.
@@ -183,7 +184,7 @@ func TestModalTriggerEffect_Dispatch(t *testing.T) {
 	})
 
 	a.modes = []int{1}
-	if err := eff.Apply(g, uuid.Nil, a.PlayerID(), nil); err != nil {
+	if err := ApplyEffect(g, eff, uuid.Nil, a.PlayerID(), nil); err != nil {
 		t.Fatalf("Apply: %v", err)
 	}
 	if chose != 1 {
