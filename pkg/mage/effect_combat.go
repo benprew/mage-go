@@ -298,18 +298,14 @@ func execUntapTarget(ctx *EffectContext, _ *untapTargetEffect) error {
 	if perm == nil {
 		return nil
 	}
-	if perm.Tapped {
-		perm.Tapped = false
-		ctx.Game.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: perm.ID()})
-	}
+	ctx.Game.UntapPermanent(perm)
 	return nil
 }
 
 func execUntapSource(ctx *EffectContext, _ *untapSourceEffect) error {
 	perm := ctx.Game.FindPermanent(ctx.SourceID)
-	if perm != nil && perm.Tapped {
-		perm.Tapped = false
-		ctx.Game.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: perm.ID()})
+	if perm != nil {
+		ctx.Game.UntapPermanent(perm)
 	}
 	return nil
 }
@@ -342,7 +338,7 @@ func execTapOrUntapTarget(ctx *EffectContext, _ *tapOrUntapTargetEffect) error {
 	if mode == 0 {
 		ctx.Game.TapPermanent(perm)
 	} else {
-		perm.Tapped = false
+		ctx.Game.UntapPermanent(perm)
 	}
 	return nil
 }

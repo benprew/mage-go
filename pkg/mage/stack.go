@@ -185,6 +185,28 @@ func (s *Stack) RemoveBySourceID(sourceID uuid.UUID) *StackObject {
 	return nil
 }
 
+// RemoveByID removes a stack object matching the given StackObject ID.
+// Returns the removed object, or nil if no object with that ID is on the stack.
+func (s *Stack) RemoveByID(id uuid.UUID) *StackObject {
+	for i, obj := range s.objects {
+		if obj.ID == id {
+			s.objects = append(s.objects[:i], s.objects[i+1:]...)
+			return obj
+		}
+	}
+	return nil
+}
+
+// FindByID finds a stack object by its ID without removing it.
+func (s *Stack) FindByID(id uuid.UUID) *StackObject {
+	for _, obj := range s.objects {
+		if obj.ID == id {
+			return obj
+		}
+	}
+	return nil
+}
+
 // FindBySourceID finds a stack object by source ID without removing it.
 func (s *Stack) FindBySourceID(sourceID uuid.UUID) *StackObject {
 	for _, obj := range s.objects {

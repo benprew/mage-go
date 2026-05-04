@@ -357,6 +357,22 @@ func TargetPermanentOpponentControls(filters ...PermanentFilter) Target {
 	}
 }
 
+// TargetUpToNPermanents creates a target that selects from 0 up to n
+// permanents on the battlefield, optionally narrowed by PermanentFilter
+// predicates. Mirrors TargetUpToNCreatures for spells like Proctor's Gaze
+// that say "up to one target nonland permanent".
+func TargetUpToNPermanents(n int, filters ...PermanentFilter) Target {
+	return &PermanentTarget{
+		BaseTarget: BaseTarget{min: 0, max: n},
+		Filters:    filters,
+	}
+}
+
+// TargetUpToOnePermanent is shorthand for TargetUpToNPermanents(1, filters...).
+func TargetUpToOnePermanent(filters ...PermanentFilter) Target {
+	return TargetUpToNPermanents(1, filters...)
+}
+
 func (t *PermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
 	for _, p := range g.battlefield {

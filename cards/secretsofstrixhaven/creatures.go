@@ -801,7 +801,6 @@ func registerCreatures() {
 	// Aqueous Aria {4}{U}
 	// Sorcery
 	// Create a 3/3 blue and red Elemental creature token with flying.
-	// XXX: Ward {2} — the engine has no Ward mechanic implementation.
 	Register("Campus Composer // Aqueous Aria", func() Card {
 		spellFactory := func() Card {
 			return NewSorcery("Aqueous Aria", "{4}{U}",
@@ -817,6 +816,7 @@ func registerCreatures() {
 		}
 		return NewCreature("Campus Composer // Aqueous Aria", "{3}{U} // {4}{U}", 3, 4,
 			WithSubTypes("Merfolk", "Bard"),
+			WithWard(ManaCostOf("{2}")),
 			WithPreparedSpell(spellFactory),
 		)
 	})
@@ -833,10 +833,9 @@ func registerCreatures() {
 		return NewCreature("Deluge Virtuoso", "{2}{U}", 2, 2,
 			WithSubTypes("Human", "Wizard"),
 			// ETB: tap target creature an opponent controls and put a stun counter on it.
-			// XXX: Stun counter (untap-prevention counter type) not in engine; tap is implemented but stun counter is not.
 			WithAbility(EntersBattlefieldTrigger(
 				FuncEffect(
-					"tap target creature an opponent controls",
+					"tap target creature an opponent controls and put a stun counter on it",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						opp := g.GetOpponent(controller)
@@ -859,7 +858,7 @@ func registerCreatures() {
 							return nil
 						}
 						g.TapPermanent(chosen)
-						// XXX: put a stun counter on it — engine lacks Stun CounterType
+						chosen.AddCounter(Stun, 1)
 						return nil
 					},
 				),
@@ -898,7 +897,6 @@ func registerCreatures() {
 	// Ancestral Recall {U}
 	// Instant
 	// Target player draws three cards.
-	// XXX: Ward {2} — the engine has no Ward mechanic implementation.
 	Register("Emeritus of Ideation // Ancestral Recall", func() Card {
 		spellFactory := func() Card {
 			return NewInstant("Ancestral Recall", "{U}",
@@ -910,6 +908,7 @@ func registerCreatures() {
 		return NewCreature("Emeritus of Ideation // Ancestral Recall", "{3}{U}{U} // {U}", 5, 5,
 			WithSubTypes("Human", "Wizard"),
 			WithKeyword(Flying),
+			WithWard(ManaCostOf("{2}")),
 			WithPreparedSpell(spellFactory),
 			// Whenever this creature attacks, you may exile eight cards from your graveyard.
 			// If you do, this creature becomes prepared.
@@ -1721,7 +1720,7 @@ func registerCreatures() {
 	Register("Forum Necroscribe", func() Card {
 		return NewCreature("Forum Necroscribe", "{5}{B}", 5, 4,
 			WithSubTypes("Troll", "Warlock"),
-			// XXX: Ward—Discard a card. The engine has no Ward mechanic implementation.
+			WithWard(DiscardCost(1)),
 			WithAbility(WheneverYouCastInstantOrSorceryTargetingCreatureTrigger(
 				ReturnFromGraveyardToBattlefield(),
 				false,
@@ -2236,7 +2235,7 @@ func registerCreatures() {
 		return NewCreature("Tragedy Feaster", "{2}{B}{B}", 7, 6,
 			WithSubTypes("Demon"),
 			WithKeyword(Trample),
-			// XXX: Ward—Discard a card. The engine has no Ward mechanic implementation.
+			WithWard(DiscardCost(1)),
 			// Infusion — At the beginning of your end step, sacrifice a permanent unless
 			// you gained life this turn.
 			WithAbility(NewTriggered(EvtEndStep, false,
@@ -2567,7 +2566,7 @@ func registerCreatures() {
 		return NewCreature("Mica, Reader of Ruins", "{3}{R}", 4, 4,
 			WithSubTypes("Human", "Artificer"),
 			WithSuperTypes(SuperLegendary),
-			// XXX: Ward—Pay 3 life. The engine has no Ward mechanic implementation.
+			WithWard(LifePayCost(3)),
 			// Whenever you cast an instant or sorcery spell, you may sacrifice an artifact.
 			// If you do, copy that spell and you may choose new targets for the copy.
 			WithAbility(WheneverYouCastSpellTrigger(
@@ -2776,7 +2775,7 @@ func registerCreatures() {
 		}
 		return NewCreature("Strife Scholar // Awaken the Ages", "{2}{R} // {5}{R}", 3, 2,
 			WithSubTypes("Orc", "Sorcerer"),
-			// XXX: Ward—Pay 2 life. The engine has no Ward mechanic implementation.
+			WithWard(LifePayCost(2)),
 			WithPreparedSpell(spellFactory),
 		)
 	})
@@ -3761,7 +3760,7 @@ func registerCreatures() {
 		})
 		return NewCreature("Colorstorm Stallion", "{1}{U}{R}", 3, 3,
 			WithSubTypes("Elemental", "Horse"),
-			// XXX: Ward {1} — the engine has no Ward mechanic implementation.
+			WithWard(ManaCostOf("{1}")),
 			WithKeyword(Haste),
 			// Opus — Whenever you cast an instant or sorcery spell, this creature
 			// gets +1/+1 until end of turn. If five or more mana was spent to cast
@@ -4094,7 +4093,7 @@ func registerCreatures() {
 		)
 		return NewCreature("Fractal Tender", "{3}{G}{U}", 3, 3,
 			WithSubTypes("Elf", "Wizard"),
-			// XXX: Ward {2}. The engine has no Ward mechanic implementation.
+			WithWard(ManaCostOf("{2}")),
 			WithAbility(WheneverYouCastSpellTrigger(incrementAndFlagEffect, false)),
 			WithAbility(BeginningOfEachEndStepTrigger(createFractalToken, false).
 				SetConditionData(EventPlayerIsController{})),
@@ -4578,7 +4577,7 @@ func registerCreatures() {
 			WithSubTypes("Elder", "Dragon"),
 			WithSuperTypes(SuperLegendary),
 			WithKeyword(Flying),
-			// XXX: Ward—Pay 5 life. The engine has no Ward mechanic implementation.
+			WithWard(LifePayCost(5)),
 			// XXX: "Instant and sorcery spells you cast have storm." The engine has no Storm
 			// keyword or a mechanism to grant Storm to spells cast while this creature is on
 			// the battlefield. Cannot be implemented without an engine change.

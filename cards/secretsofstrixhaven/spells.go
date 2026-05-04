@@ -829,8 +829,7 @@ func registerSpells() {
 							if perm == nil {
 								return nil
 							}
-							// XXX: PreventBlockingUntilEndOfCombat is an approximation; should be "this turn"
-							g.AddContinuousEffect(PreventBlockingUntilEndOfCombat(perm.ID()))
+							g.AddContinuousEffect(PreventBlockingUntilEndOfTurn(perm.ID()))
 							return nil
 						},
 					),
@@ -1602,13 +1601,12 @@ func registerSpells() {
 // Homesickness {4}{U}{U}
 // Instant
 // Target player draws two cards. Tap up to two target creatures. Put a stun counter on each of them. (If a permanent with a stun counter would become untapped, remove one from it instead.)
-// XXX: Stun counters not implemented (no CounterType for Stun). Draw and tap effects implemented.
 	Register("Homesickness", func() Card {
 		return NewInstant("Homesickness", "{4}{U}{U}",
 			NewMultiTargetSpell(
 				[]Target{TargetPlayer(), TargetUpToNCreatures(2)},
 				FuncEffect(
-					"target player draws two cards; tap up to two target creatures",
+					"target player draws two cards; tap up to two target creatures and put a stun counter on each of them",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
@@ -1628,7 +1626,7 @@ func registerSpells() {
 							perm := g.FindPermanent(tid)
 							if perm != nil {
 								g.TapPermanent(perm)
-								// XXX: stun counter not placed — engine lacks Stun CounterType
+								perm.AddCounter(Stun, 1)
 							}
 						}
 						return nil
@@ -2459,13 +2457,27 @@ func registerSpells() {
 // Procrastinate {X}{U}
 // Sorcery
 // Tap target creature. Put twice X stun counters on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)
-// XXX: Stun counters are not implemented in the engine (no CounterType for Stun, no replacement effect to remove stun counters on untap). Implements tap-only.
 	Register("Procrastinate", func() Card {
 		return NewSorcery("Procrastinate", "{X}{U}",
 			NewTargetedSpell(
 				TargetCreature(),
 				TapTarget(),
-				// XXX: stun counters not implemented
+				FuncEffect(
+					"put twice X stun counters on target creature",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 || targets[0] == uuid.Nil {
+							return nil
+						}
+						perm := g.FindPermanent(targets[0])
+						if perm == nil {
+							return nil
+						}
+						x := g.XValue()
+						perm.AddCounter(Stun, 2*x)
+						return nil
+					},
+				),
 			),
 		)
 	})
@@ -2474,11 +2486,10 @@ func registerSpells() {
 // Proctor's Gaze {2}{G}{U}
 // Instant
 // Return up to one target nonland permanent to its owner's hand. Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.
-// XXX: No TargetUpToOnePermanent exists; uses TargetUpToNCreatures(1) as approximation (only targets creatures).
 	Register("Proctor's Gaze", func() Card {
 		return NewInstant("Proctor's Gaze", "{2}{G}{U}",
 			NewMultiTargetSpell(
-				[]Target{TargetUpToNCreatures(1)},
+				[]Target{TargetUpToOnePermanent(Not(IsLand))},
 				FuncEffect(
 					"return up to one target nonland permanent to owner's hand; search for basic land, put it onto battlefield tapped",
 					EffectProperties{Outcome: OutcomeBenefit},
@@ -2690,16 +2701,19 @@ func registerSpells() {
 // Instant
 // Tap target creature. If it's your turn, put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)
 // Draw a card.
-// XXX: Stun counters are not implemented in the engine (no CounterType for Stun, no replacement effect for untap). Tap and draw are implemented.
 	Register("Rapier Wit", func() Card {
 		return NewInstant("Rapier Wit", "{1}{W}",
 			NewTargetedSpell(
 				TargetCreature(),
 				TapTarget(),
-				// XXX: "if it's your turn, put a stun counter on it" — stun counters not implemented
-				FuncEffect("draw a card",
+				FuncEffect("if it's your turn, put a stun counter on target creature; draw a card",
 					EffectProperties{Outcome: OutcomeBenefit, DrawCount: 1},
-					func(g *Game, _, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, _, controller uuid.UUID, targets []uuid.UUID) error {
+						if g.ActivePlayerObj() != nil && g.ActivePlayerObj().PlayerID() == controller && len(targets) > 0 && targets[0] != uuid.Nil {
+							if perm := g.FindPermanent(targets[0]); perm != nil {
+								perm.AddCounter(Stun, 1)
+							}
+						}
 						p := g.GetPlayer(controller)
 						if p != nil {
 							g.PlayerDrawCard(p)

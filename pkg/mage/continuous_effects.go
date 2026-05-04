@@ -338,6 +338,19 @@ func PreventBlockingUntilEndOfCombat(permID uuid.UUID) ContinuousEffect {
 	})
 }
 
+// PreventBlockingUntilEndOfTurn is the EndOfTurn-scoped sibling of
+// PreventBlockingUntilEndOfCombat: revokes AttrCanBlock from a specific
+// creature and persists across all combat phases this turn (CR 514 cleanup).
+// Use for "target creature can't block this turn" effects (Volcanic Hammer
+// variants, Conduit of Storms, etc.) where the restriction must outlive a
+// single combat phase.
+func PreventBlockingUntilEndOfTurn(permID uuid.UUID) ContinuousEffect {
+	return TargetEffect(LayerAbility, EndOfTurn, permID, func(g *Game, target *Permanent) error {
+		g.effects.RevokeAttr(target.ID(), AttrCanBlock)
+		return nil
+	})
+}
+
 // ---------------------------------------------------------------------------
 // FuncContinuousEffect-based effects (source on battlefield)
 // ---------------------------------------------------------------------------

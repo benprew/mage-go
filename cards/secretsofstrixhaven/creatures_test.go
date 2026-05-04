@@ -1448,6 +1448,7 @@ func TestForumNecroscribe_Stats(t *testing.T) {
 	g.StopAt(1, core.EndStep)
 	g.Execute()
 	g.AssertPowerToughness(gametest.PlayerA, "Forum Necroscribe", 5, 4)
+	g.AssertHasAbility(gametest.PlayerA, "Forum Necroscribe", core.Ward, true)
 }
 
 // TestForumNecroscribe_ReparteeReturnCreatureFromGraveyard verifies the Repartee
@@ -1896,6 +1897,7 @@ func TestColorstormStallion_HasHaste(t *testing.T) {
 	g.StopAt(1, core.EndStep)
 	g.Execute()
 	g.AssertHasAbility(gametest.PlayerA, "Colorstorm Stallion", core.Haste, true)
+	g.AssertHasAbility(gametest.PlayerA, "Colorstorm Stallion", core.Ward, true)
 }
 
 // TestColorstormStallion_OpusBoostInstant verifies that Colorstorm Stallion

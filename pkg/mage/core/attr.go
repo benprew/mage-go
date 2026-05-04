@@ -65,6 +65,7 @@ const (
 	CantRegenerate
 	LegendaryLandwalk
 	Flash
+	Ward // CR 702.21 — "Whenever this becomes the target of a spell or ability an opponent controls, counter it unless that player pays the ward cost." Display-only Attr; the cost and trigger are wired by WithWard.
 
 	// AttrPrepared marks a permanent as "prepared" (Secrets of Strixhaven custom
 	// keyword). A creature that "enters prepared" gains a sorcery-speed activated
@@ -202,6 +203,8 @@ func (a Attr) String() string {
 		return "Legendary Landwalk"
 	case Flash:
 		return "Flash"
+	case Ward:
+		return "Ward"
 	case AttrPrepared:
 		return "Prepared"
 	default:

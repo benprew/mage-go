@@ -3022,6 +3022,29 @@ func (g *Game) CheckStateBasedActions() {
 	g.PutTriggersOnStack()
 }
 
+// UntapPermanent untaps the given permanent unless it has a stun counter
+// (CR 122.1g — "If a permanent with a stun counter would become untapped,
+// remove a stun counter from it instead. It doesn't untap.") If the
+// permanent has at least one stun counter, exactly one is removed and the
+// permanent stays tapped; no EvtBecameUntapped fires. Otherwise, if the
+// permanent is currently tapped it untaps and EvtBecameUntapped fires.
+// Returns true if the permanent actually untapped.
+func (g *Game) UntapPermanent(p *Permanent) bool {
+	if p == nil {
+		return false
+	}
+	if p.Counters[Stun] > 0 {
+		p.RemoveCounter(Stun, 1)
+		return false
+	}
+	if !p.Tapped {
+		return false
+	}
+	p.Tapped = false
+	g.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: p.ID()})
+	return true
+}
+
 func (g *Game) doUntap() {
 	active := g.ActivePlayerObj()
 	// Island Sanctuary: clear protection at the start of the player's turn
@@ -3043,34 +3066,30 @@ func (g *Game) doUntap() {
 				if !active.ChooseMayAbility("untap " + p.Name()) {
 					continue
 				}
-				p.Tapped = false
-				g.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: p.ID()})
+				g.UntapPermanent(p)
 			} else if p.HasType(TypeLand) && landUntapLimit >= 0 {
 				// Land with untap limit in effect
 				if p.Tapped && landsUntapped < landUntapLimit {
-					p.Tapped = false
-					g.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: p.ID()})
-					landsUntapped++
+					if g.UntapPermanent(p) {
+						landsUntapped++
+					}
 				}
 			} else if p.HasType(TypeArtifact) && !p.HasType(TypeLand) && artifactUntapLimit >= 0 {
 				// Artifact (non-land) with untap limit in effect (Damping Field)
 				if p.Tapped && artifactsUntapped < artifactUntapLimit {
-					p.Tapped = false
-					g.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: p.ID()})
-					artifactsUntapped++
+					if g.UntapPermanent(p) {
+						artifactsUntapped++
+					}
 				}
 			} else if p.HasType(TypeCreature) && creatureUntapLimit >= 0 {
 				// Creature with untap limit in effect (Smoke)
 				if p.Tapped && creaturesUntapped < creatureUntapLimit {
-					p.Tapped = false
-					g.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: p.ID()})
-					creaturesUntapped++
+					if g.UntapPermanent(p) {
+						creaturesUntapped++
+					}
 				}
 			} else if p.Tapped {
-				p.Tapped = false
-				g.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: p.ID()})
-			} else {
-				p.Tapped = false
+				g.UntapPermanent(p)
 			}
 			p.RevokeBaseAttr(AttrSummonSick)
 		}
