@@ -127,7 +127,7 @@ type loseLifeTargetEffect struct {
 // player target) to lose the given amount of life. Falls back to the controller
 // if no target is supplied.
 func TargetPlayerLoseLife(amount ValueSource) Effect {
-	return DataEffect(&loseLifeTargetEffect{amount: amount})
+	return &loseLifeTargetEffect{amount: amount}
 }
 
 func (e *loseLifeTargetEffect) Text() string {
@@ -191,7 +191,7 @@ type dealDividedDamageEffect struct {
 // at cast time. Pair with TargetUpToNCreaturesOrPlayers and pass the resulting
 // Target to NewMultiTargetSpell.
 func DealDividedDamage(total ValueSource) Effect {
-	return DataEffect(&dealDividedDamageEffect{total: total})
+	return &dealDividedDamageEffect{total: total}
 }
 
 func (e *dealDividedDamageEffect) Text() string {

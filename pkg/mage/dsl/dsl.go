@@ -430,7 +430,6 @@ var (
 var (
 	Pipeline      = mage.Pipeline
 	IfElse        = mage.IfElse
-	UnwrapEffect  = mage.UnwrapEffect
 	UnwrapAbility = mage.UnwrapAbility
 	ApplyEffect   = mage.ApplyEffect
 )

@@ -290,7 +290,7 @@ func registerEnchantments() {
 			),
 			WithAbility(
 				NewTriggered(EvtEndStep, false,
-					DataEffect(SacrificeSourceStep()),
+					SacrificeSourceStep(),
 				).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
 					EventPlayerIsController{},
 					controllerDidNotAttackThisTurn{},

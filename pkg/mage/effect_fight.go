@@ -17,7 +17,7 @@ type fightTargetEffect struct{}
 // creature fight (CR 701.13). Pair with TargetCreature() (or a more
 // specific target like "another target creature").
 func FightTarget() Effect {
-	return DataEffect(&fightTargetEffect{})
+	return &fightTargetEffect{}
 }
 
 // FightTargetStep returns the EffectData for use in pipelines / ForEach /
@@ -76,7 +76,7 @@ type onPermanentDiesEffect struct {
 // such as "if it would die this turn, exile it instead" / "create a token
 // when this dies" patterns.
 func OnPermanentDiesThisTurn(permID uuid.UUID, effects ...Effect) Effect {
-	return DataEffect(&onPermanentDiesEffect{permID: permID, effects: effects})
+	return &onPermanentDiesEffect{permID: permID, effects: effects}
 }
 
 // OnTargetDiesThisTurn is the target-resolving variant: at resolution time
@@ -84,7 +84,7 @@ func OnPermanentDiesThisTurn(permID uuid.UUID, effects ...Effect) Effect {
 // trigger against that ID. Suitable for spells like "Target creature
 // fights another. When that creature dies this turn, ___."
 func OnTargetDiesThisTurn(effects ...Effect) Effect {
-	return DataEffect(&onPermanentDiesEffect{effects: effects})
+	return &onPermanentDiesEffect{effects: effects}
 }
 
 func (e *onPermanentDiesEffect) Text() string {

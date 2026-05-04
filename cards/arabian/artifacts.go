@@ -128,8 +128,8 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				IfElse("flip coin: 5/5 Djinn or 5 damage",
 					&FlipCoinCond{},
-					UnwrapEffect(CreateToken("Djinn", 5, 5, []CardType{TypeArtifact, TypeCreature}, []string{"Djinn"}, Flying)),
-					UnwrapEffect(DealDamageToPlayers(Fixed(5), SelectController())),
+					CreateToken("Djinn", 5, 5, []CardType{TypeArtifact, TypeCreature}, []string{"Djinn"}, Flying),
+					DealDamageToPlayers(Fixed(5), SelectController()),
 				),
 				ManaCostOf("{1}"),
 				WithCost(SacrificeSourceCost()),

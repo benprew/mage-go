@@ -134,12 +134,12 @@ func registerLands() {
 			WithKeyword(EntersTapped),
 			WithAbility(
 				EntersBattlefieldTrigger(
-					DataEffect(IfElse(
+					IfElse(
 						"sacrifice unless pay {1}",
 						&TryPayManaCond{Cost: "{1}"},
 						nil,
 						SacrificeSourceStep(),
-					)),
+					),
 					false,
 				),
 			),

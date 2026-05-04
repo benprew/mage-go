@@ -34,8 +34,8 @@ func registerSpells() {
 				"destroy target blue permanent or return target Island to its owner's hand",
 				EffectProperties{Outcome: OutcomeDetriment},
 				ModalEffect("choose one",
-					UnwrapEffect(DestroyTarget()),
-					UnwrapEffect(ReturnToHandTarget()),
+					DestroyTarget(),
+					ReturnToHandTarget(),
 				),
 			)),
 		)
@@ -387,8 +387,8 @@ func registerSpells() {
 				"destroy target red permanent or return target Mountain to its owner's hand",
 				EffectProperties{Outcome: OutcomeDetriment},
 				ModalEffect("choose one",
-					UnwrapEffect(DestroyTarget()),
-					UnwrapEffect(ReturnToHandTarget()),
+					DestroyTarget(),
+					ReturnToHandTarget(),
 				),
 			)),
 		)

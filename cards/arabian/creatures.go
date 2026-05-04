@@ -126,7 +126,7 @@ func registerCreatures() {
 			WithAbility(BeginningOfUpkeepTrigger(
 				IfElse("pay {U}{U}{U} to untap",
 					&TryPayManaCond{Cost: "{U}{U}{U}"},
-					UnwrapEffect(UntapSource()),
+					UntapSource(),
 					nil,
 				), false,
 			)),
@@ -412,7 +412,7 @@ func registerCreatures() {
 				IfElse("pay {2} or take 3 damage",
 					&TryPayManaCond{Cost: "{2}"},
 					nil,
-					UnwrapEffect(DealDamageToPlayers(Fixed(3), SelectController())),
+					DealDamageToPlayers(Fixed(3), SelectController()),
 				), false,
 			)),
 		)
@@ -846,7 +846,7 @@ func registerCreatures() {
 			WithAbility(BeginningOfUpkeepTrigger(
 				IfElse("pay {1} to untap",
 					&TryPayManaCond{Cost: "{1}"},
-					UnwrapEffect(UntapSource()),
+					UntapSource(),
 					nil,
 				), false,
 			)),

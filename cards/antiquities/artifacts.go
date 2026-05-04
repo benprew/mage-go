@@ -343,7 +343,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				Pipeline("prevent 1 damage to target; bounce self at next end step",
 					EffectProperties{Outcome: OutcomeBenefit},
-					UnwrapEffect(PreventDamageToTarget(Fixed(1))),
+					PreventDamageToTarget(Fixed(1)),
 					RegisterDelayedTriggerStep(EvtEndStep, "", ReturnToHandTarget()),
 				),
 				GenericCost(2),
@@ -362,7 +362,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				Pipeline("deal 1 damage to any target; destroy self at next end step",
 					EffectProperties{Outcome: OutcomeDetriment, DamageValue: Fixed(1)},
-					UnwrapEffect(DealDamage(Fixed(1))),
+					DealDamage(Fixed(1)),
 					RegisterDelayedTriggerStep(EvtEndStep, "", DestroyTarget()),
 				),
 				GenericCost(2),
@@ -398,7 +398,7 @@ func registerArtifacts() {
 						EffectProperties{Outcome: OutcomeBenefit},
 						IfElse("pay {1} to gain 1 life",
 							&TryPayManaCond{Cost: "{1}"},
-							UnwrapEffect(GainLife(1)),
+							GainLife(1),
 							nil),
 					),
 				).
@@ -622,7 +622,7 @@ func registerArtifacts() {
 						EffectProperties{Outcome: OutcomeBenefit},
 						IfElse("pay {1} to gain 1 life",
 							&TryPayManaCond{Cost: "{1}"},
-							UnwrapEffect(GainLife(1)),
+							GainLife(1),
 							nil),
 					),
 				).
@@ -643,7 +643,7 @@ func registerArtifacts() {
 						EffectProperties{Outcome: OutcomeBenefit},
 						IfElse("pay {3} to draw",
 							&TryPayManaCond{Cost: "{3}"},
-							UnwrapEffect(DrawCards(Fixed(1))),
+							DrawCards(Fixed(1)),
 							nil),
 					),
 				).

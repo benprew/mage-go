@@ -218,7 +218,7 @@ type scryEffect struct {
 // "Look at the top N cards of your library, then put any number of them on the
 // bottom of your library and the rest on top in any order."
 func Scry(amount ValueSource) Effect {
-	return DataEffect(&scryEffect{amount: amount})
+	return &scryEffect{amount: amount}
 }
 
 func (e *scryEffect) Text() string {

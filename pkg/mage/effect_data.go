@@ -96,10 +96,3 @@ func (ctx *EffectContext) GetBool(name string) bool {
 	return b
 }
 
-// DataEffect is an identity function kept for backward compatibility. Effects
-// are data; no wrapping is needed. Prefer returning the raw effect value.
-func DataEffect(data Effect) Effect { return data }
-
-// UnwrapEffect is an identity function kept for backward compatibility. Effects
-// are data; no unwrapping is needed.
-func UnwrapEffect(e Effect) Effect { return e }

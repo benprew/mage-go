@@ -115,7 +115,7 @@ func resolvePermanents(ctx *EffectContext, sel TargetSelector) []*Permanent {
 // --- Boost DSL ---
 
 // boostEffect is a composable EffectData that temporarily modifies P/T.
-// Wrap with DataEffect() to use as an Effect.
+// Use directly as an Effect.
 type boostEffect struct {
 	power     ValueSource
 	toughness ValueSource
@@ -197,7 +197,7 @@ func execBoost(ctx *EffectContext, e *boostEffect) error {
 // --- GrantKeyword DSL ---
 
 // grantKeywordEffect is a composable EffectData that temporarily grants a keyword.
-// Wrap with DataEffect() to use as an Effect.
+// Use directly as an Effect.
 type grantKeywordEffect struct {
 	keyword  Keyword
 	selector TargetSelector
@@ -417,7 +417,7 @@ func CardTypeAttr(ct CardType) Attr {
 
 // grantTypeEffect is a composable EffectData that grants an additional card type
 // to a permanent via an indefinite continuous effect at LayerType.
-// Wrap with DataEffect() to use as an Effect.
+// Use directly as an Effect.
 type grantTypeEffect struct {
 	ct       CardType
 	selector TargetSelector
