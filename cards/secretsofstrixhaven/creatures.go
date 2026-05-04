@@ -2036,10 +2036,40 @@ func registerCreatures() {
 	// 3/3
 	// Ward {1}, haste
 	// Opus — Whenever you cast an instant or sorcery spell, this creature gets +1/+1 until end of turn. If five or more mana was spent to cast that spell, create a token that's a copy of this creature.
-	// TODO: implement
 	Register("Colorstorm Stallion", func() Card {
+		isInstantOrSorcery := NewCardFilter("instant or sorcery", func(c Card) bool {
+			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
+		})
 		return NewCreature("Colorstorm Stallion", "{1}{U}{R}", 3, 3,
 			WithSubTypes("Elemental", "Horse"),
+			// XXX: Ward {1} — the engine has no Ward mechanic implementation.
+			WithKeyword(Haste),
+			// Opus — Whenever you cast an instant or sorcery spell, this creature
+			// gets +1/+1 until end of turn. If five or more mana was spent to cast
+			// that spell, create a token that's a copy of this creature.
+			WithAbility(WheneverYouCastSpellTrigger(
+				OpusEffect(
+					"gets +1/+1 until EOT; if 5+ mana, create a token copy",
+					func(g *Game, sourceID, controller uuid.UUID, manaSpent int) error {
+						perm := g.FindPermanent(sourceID)
+						if perm == nil {
+							return nil
+						}
+						// +1/+1 until end of turn.
+						ce := TemporaryBoost(perm.ID(), 1, 1)
+						ce.SetSourceID(sourceID)
+						g.AddContinuousEffect(ce)
+						// If five or more mana was spent, create a token copy.
+						if manaSpent >= 5 {
+							tokenCard := perm.Card.Copy()
+							g.PutOnBattlefield(tokenCard, controller)
+						}
+						return nil
+					},
+				),
+				false,
+				isInstantOrSorcery,
+			)),
 		)
 	})
 
@@ -2108,10 +2138,34 @@ func registerCreatures() {
 	// 4/3
 	// When this creature enters, draw a card. Each player loses 1 life.
 	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, exile up to one target creature. Return that card to the battlefield under its owner's control at the beginning of the next end step.
-	// TODO: implement
 	Register("Conciliator's Duelist", func() Card {
 		return NewCreature("Conciliator's Duelist", "{W}{W}{B}{B}", 4, 3,
 			WithSubTypes("Kor", "Warlock"),
+			// When this creature enters, draw a card. Each player loses 1 life.
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect(
+					"draw a card; each player loses 1 life",
+					EffectProperties{Outcome: OutcomeUnknown},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p != nil {
+							g.PlayerDrawCard(p)
+						}
+						for _, player := range g.AllPlayers() {
+							player.LoseLife(1)
+						}
+						return nil
+					},
+				),
+				false,
+			)),
+			// Repartee — Whenever you cast an instant or sorcery spell that targets
+			// a creature, exile up to one target creature. Return that card to the
+			// battlefield under its owner's control at the beginning of the next end step.
+			WithAbility(WheneverYouCastInstantOrSorceryTargetingCreatureTrigger(
+				ExileTargetReturnAtEndStep(nil),
+				false,
+			).AddTarget(TargetUpToOneCreature())),
 		)
 	})
 
@@ -2306,7 +2360,7 @@ func registerCreatures() {
 					return nil
 				}
 				// Clear the flag.
-				perm.AddCounter(Charge, -int(perm.Counters[Charge]))
+				perm.RemoveCounter(Charge, int(perm.Counters[Charge]))
 				token := NewToken("Fractal Token", 0, 0,
 					[]CardType{TypeCreature}, []string{"Fractal"})
 				token.SetOwner(controller)
@@ -3056,11 +3110,56 @@ func registerCreatures() {
 	// When this creature enters, choose up to one —
 	// • Target creature becomes prepared. (Only creatures with prepare spells can become prepared.)
 	// • Target creature becomes unprepared.
-	// TODO: implement
 	Register("Biblioplex Tomekeeper", func() Card {
+		// hasPreparedSpellFilter matches creatures that have a prepared spell.
+		hasPreparedSpellFilter := NewPermanentFilter("creature with a prepared spell", func(perm *Permanent, _ *Game) bool {
+			return HasPreparedSpell(perm.Card)
+		})
 		return NewCreature("Biblioplex Tomekeeper", "{4}", 3, 4,
 			WithSubTypes("Construct"),
 			WithCardType(TypeArtifact),
+			// When this creature enters, choose up to one —
+			// • Target creature becomes prepared.
+			// • Target creature becomes unprepared.
+			// "Choose up to one" is modeled with three modes: do nothing (mode 2),
+			// becomes prepared (mode 0), becomes unprepared (mode 1).
+			WithAbility(EntersBattlefieldTrigger(nil, false).WithModes(
+				Mode{
+					Label:   "Target creature becomes prepared",
+					Targets: []Target{TargetCreature(hasPreparedSpellFilter)},
+					Effects: []Effect{FuncEffect(
+						"target creature becomes prepared",
+						EffectProperties{Outcome: OutcomeBenefit},
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+							if len(targets) == 0 {
+								return nil
+							}
+							g.SetPrepared(targets[0], true)
+							return nil
+						},
+					)},
+				},
+				Mode{
+					Label:   "Target creature becomes unprepared",
+					Targets: []Target{TargetCreature()},
+					Effects: []Effect{FuncEffect(
+						"target creature becomes unprepared",
+						EffectProperties{Outcome: OutcomeDetriment},
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+							if len(targets) == 0 {
+								return nil
+							}
+							g.SetPrepared(targets[0], false)
+							return nil
+						},
+					)},
+				},
+				Mode{
+					Label:   "Do nothing",
+					Targets: nil,
+					Effects: nil,
+				},
+			)),
 		)
 	})
 
