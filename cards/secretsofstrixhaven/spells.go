@@ -2576,10 +2576,22 @@ func registerSpells() {
 // As an additional cost to cast this spell, discard a card.
 // Draw two cards and create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.")
 	Register("Seize the Spoils", func() Card {
+		treasureToken := TokenWithAbilities(
+			CreateColoredToken("Treasure Token", 0, 0,
+				[]Color{Colorless},
+				[]CardType{TypeArtifact},
+				[]string{"Treasure"},
+			),
+			NewActivatedAbility(
+				AddAnyMana(1, Colorless),
+				TapSourceCost(),
+				WithCost(SacrificeSourceCost()),
+			),
+		)
 		return NewSorcery("Seize the Spoils", "{2}{R}",
 			NewSpellAbility(
 				DrawCards(Fixed(2)),
-				CreateTreasureToken(),
+				treasureToken,
 			),
 			WithAdditionalCost(DiscardCost(1)),
 		)
