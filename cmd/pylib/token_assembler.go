@@ -26,13 +26,13 @@ const (
 // which means "no source, no ability" — equivalent to treating unknown
 // kinds as Python's "unknown".
 var kindFlags = [16]uint8{
-	0: 0,                                 // pass: no source, no ability
-	1: kindFlagHasSource,                 // play_land
-	2: kindFlagHasSource,                 // cast_spell
+	0: 0,                                   // pass: no source, no ability
+	1: kindFlagHasSource,                   // play_land
+	2: kindFlagHasSource,                   // cast_spell
 	3: kindFlagHasSource | kindFlagAbility, // activate_ability
-	4: kindFlagHasSource,                 // attacker
-	5: kindFlagHasSource,                 // blocker
-	6: 0,                                 // choice: no source, no ability
+	4: kindFlagHasSource,                   // attacker
+	5: kindFlagHasSource,                   // blocker
+	6: 0,                                   // choice: no source, no ability
 }
 
 func kindHasNoSource(kindID int32) bool {
@@ -69,33 +69,33 @@ const (
 // dominates the profile (mapaccess2_fast32 + memhash32 ~ half of CPU).
 // Unknown opcodes return -1 from opcodeArityLookup.
 var opcodeArityArr = [...]int8{
-	opOpenState:    0,
-	opCloseState:   0,
-	opTurn:         2,
-	opLife:         2,
-	opMana:         3,
-	opOpenPlayer:   1,
-	opClosePlayer:  0,
-	opOpenZone:     2,
-	opCloseZone:    0,
-	opPlaceCard:    4,
-	opCounter:      2,
-	opAttachedTo:   1,
-	opOpenActions:  0,
-	opCloseActions: 0,
-	opOption:       5,
-	opTarget:       3,
-	opLiteralTokens: -1, // variable-length; handled separately in the walker
-	opEndCard:      0,
-	opOpenRawCard:  1,
-	opCloseRawCard: 0,
-	opOpenDict:     0,
-	opCloseDict:    0,
-	opDictEntry:    1,
-	opPlaceCardRef: 4,
-	opCount:        1,
-	opStackOpen:    0,
-	opStackClose:   0,
+	opOpenState:      0,
+	opCloseState:     0,
+	opTurn:           2,
+	opLife:           2,
+	opMana:           3,
+	opOpenPlayer:     1,
+	opClosePlayer:    0,
+	opOpenZone:       2,
+	opCloseZone:      0,
+	opPlaceCard:      4,
+	opCounter:        2,
+	opAttachedTo:     1,
+	opOpenActions:    0,
+	opCloseActions:   0,
+	opOption:         5,
+	opTarget:         3,
+	opLiteralTokens:  -1, // variable-length; handled separately in the walker
+	opEndCard:        0,
+	opOpenRawCard:    1,
+	opCloseRawCard:   0,
+	opOpenDict:       0,
+	opCloseDict:      0,
+	opDictEntry:      1,
+	opPlaceCardRef:   4,
+	opCount:          1,
+	opStackOpen:      0,
+	opStackClose:     0,
 	opCommandOpen:    0,
 	opCommandClose:   0,
 	opEmitBlank:      4, // [kind_id, group_id, group_kind, legal_count]
@@ -137,6 +137,7 @@ type tokenAssemblerOut struct {
 	// offset before it is written. Packed mode passes the row's start offset
 	// into the shared packed buffer so anchors land as absolute offsets.
 	cursorBase int32
+	blank      *blankCollector
 }
 
 // assembleTokensFromPlan walks “plan“ (an int32 render-plan stream) and
@@ -551,6 +552,33 @@ func assembleTokensFromPlan(
 				writeSingle(tables.commandCloseID)
 				i++
 				continue
+			case opEmitBlank:
+				kindID := plan[i+1]
+				groupID := plan[i+2]
+				groupKind := plan[i+3]
+				legalCount := plan[i+4]
+				pos := writeSingle(kindID)
+				if pos >= 0 && out.blank != nil {
+					if err := out.blank.recordBlank(
+						pos+out.cursorBase,
+						kindID,
+						groupID,
+						groupKind,
+						legalCount,
+					); err != nil {
+						return 0, false, err
+					}
+				}
+				i += 1 + arity
+				continue
+			case opEmitBlankLegal:
+				if out.blank != nil {
+					if err := out.blank.recordLegal(plan[i+1]); err != nil {
+						return 0, false, err
+					}
+				}
+				i += 1 + arity
+				continue
 			}
 		}
 
@@ -630,6 +658,33 @@ func assembleTokensFromPlan(
 			writeSpan(tables.cardCloser)
 			i += 1 + arity
 			continue
+		case opEmitBlank:
+			kindID := plan[i+1]
+			groupID := plan[i+2]
+			groupKind := plan[i+3]
+			legalCount := plan[i+4]
+			pos := writeSingle(kindID)
+			if pos >= 0 && out.blank != nil {
+				if err := out.blank.recordBlank(
+					pos+out.cursorBase,
+					kindID,
+					groupID,
+					groupKind,
+					legalCount,
+				); err != nil {
+					return 0, false, err
+				}
+			}
+			i += 1 + arity
+			continue
+		case opEmitBlankLegal:
+			if out.blank != nil {
+				if err := out.blank.recordLegal(plan[i+1]); err != nil {
+					return 0, false, err
+				}
+			}
+			i += 1 + arity
+			continue
 		}
 
 		// Bookkeeping-only opcodes — skip over header + payload.
@@ -640,8 +695,6 @@ func assembleTokensFromPlan(
 			opMana, opCloseRawCard, opOpenDict, opCloseDict, opDictEntry,
 			opPlaceCardRef, opCount, opStackOpen, opStackClose,
 			opCommandOpen, opCommandClose,
-			// Inline-blank opcodes are processed by walkBlankPlan, not here.
-			// Skip over them in the token-assembler walker.
 			opEmitBlank, opEmitBlankLegal:
 			i += 1 + arity
 			continue
@@ -678,6 +731,12 @@ func assembleTokensFromPlan(
 			if out.cardRefPos[k] >= endAbs {
 				out.cardRefPos[k] = -1
 			}
+		}
+	}
+
+	if out.blank != nil {
+		if err := out.blank.finalize(); err != nil {
+			return 0, false, err
 		}
 	}
 

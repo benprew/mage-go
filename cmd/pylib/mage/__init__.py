@@ -190,6 +190,22 @@ typedef struct {
     int32_t stack_close_id;
     int32_t command_open_id;
     int32_t command_close_id;
+    int32_t choose_target_id;
+    int32_t choose_block_id;
+    int32_t choose_damage_order_id;
+    int32_t choose_mode_id;
+    int32_t choose_may_id;
+    int32_t choose_x_digit_id;
+    int32_t choose_mana_source_id;
+    int32_t choose_play_id;
+    int32_t use_ability_id;
+    int32_t chosen_id;
+    int32_t yes_id;
+    int32_t no_id;
+    int32_t none_id;
+    int32_t x_end_id;
+    int32_t num_count;
+    const int32_t *num_ids;
 } MageTokenTables;
 
 int32_t MageRegisterTokenTables(MageTokenTables *tables);
@@ -205,6 +221,11 @@ typedef struct {
 } MageTokenAssemblerConfig;
 
 typedef struct {
+    int32_t max_blanks;
+    int32_t max_legal_per_blank;
+} MageBlankAssemblerConfig;
+
+typedef struct {
     int32_t *token_ids;
     int32_t *cu_seqlens;
     int32_t *seq_lengths;
@@ -217,12 +238,26 @@ typedef struct {
     int32_t *token_overflow;
 } MagePackedTokenAssemblerOutputs;
 
+typedef struct {
+    int32_t k_max;
+    int32_t v_max;
+    int32_t *blank_positions;
+    int32_t *blank_kind;
+    int32_t *blank_group;
+    int32_t *blank_group_kind;
+    int32_t *blank_legal_ids;
+    uint8_t *blank_legal_mask;
+    int32_t *blank_overflow;
+} MagePackedBlankOutputs;
+
 MageEncodeResult MageEncodeTokensPacked(
     MageBatchRequest *req,
     MageEncodeConfig *cfg,
     MageEncodeOutputs *out,
     MageTokenAssemblerConfig *tok_cfg,
-    MagePackedTokenAssemblerOutputs *packed_out
+    MagePackedTokenAssemblerOutputs *packed_out,
+    MageBlankAssemblerConfig *blank_cfg,
+    MagePackedBlankOutputs *blank_out
 );
 """
 

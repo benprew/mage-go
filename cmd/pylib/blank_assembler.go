@@ -22,14 +22,15 @@ type blankCollector struct {
 	groupKind []int32
 	legalIDs  []int32
 	legalMask []uint8
+	overflow  *int32
 
 	maxBlanks      int32
 	maxLegalPerBlk int32
 
 	// Live state during a walk.
-	blankCount int32 // number of EMIT_BLANK seen so far this row
-	curLegalK  int32 // index of the in-progress blank (== blankCount-1 while filling)
-	curLegalN  int32 // number of legal ids written for the current blank
+	blankCount  int32 // number of EMIT_BLANK seen so far this row
+	curLegalK   int32 // index of the in-progress blank (== blankCount-1 while filling)
+	curLegalN   int32 // number of legal ids written for the current blank
 	curLegalCap int32 // declared legal_count for the current blank
 }
 
@@ -62,6 +63,9 @@ func (c *blankCollector) recordBlank(cursor, kindID, groupID, groupKind, legalCo
 		c.curLegalK = -1
 		c.curLegalCap = 0
 		c.curLegalN = 0
+		if c.overflow != nil {
+			*c.overflow = *c.overflow + 1
+		}
 		return nil
 	}
 	if legalCount < 0 {

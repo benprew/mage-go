@@ -3,6 +3,7 @@ package main
 import (
 	"math"
 	"slices"
+	"sort"
 	"sync"
 
 	"github.com/google/uuid"
@@ -218,13 +219,14 @@ func zoneOwnerSlot(zone, owner int32) int {
 // encodeScratch holds per-call scratch buffers for an encode batch so
 // hot-path map/slice allocations are reused across batch rows.
 type encodeScratch struct {
-	cardIDToSlot  map[string]int64
-	renderIndex   renderPlanIndex
-	tokenPlan     []int32
-	tokenPlanLen  [1]int64
-	tokenPlanOvf  [1]int64
-	directEmitter directTokenEmitter
-	directOut     tokenAssemblerOut
+	cardIDToSlot   map[string]int64
+	renderIndex    renderPlanIndex
+	tokenPlan      []int32
+	tokenPlanLen   [1]int64
+	tokenPlanOvf   [1]int64
+	directEmitter  directTokenEmitter
+	directOut      tokenAssemblerOut
+	blankCollector blankCollector
 	// directDirty USED TO live here. The per-row "what slots did the last
 	// emit write" state must be associated with the OUTPUT BUFFER, not the
 	// scratch — under parallel encode the pool can hand a different scratch
@@ -308,7 +310,6 @@ func (s *encodeScratch) internalRenderPlanView(capacity int64) outputViews {
 	}
 }
 
-
 func fillRenderPlan(batchIdx int64, state *apiGameState, pending *apiPending, playerIdx int, cfg encodeConfig, view outputViews, scratch *encodeScratch) *encodeError {
 	start := batchIdx * cfg.renderPlanCapacity
 	plan := view.renderPlan[start : start+cfg.renderPlanCapacity]
@@ -328,8 +329,14 @@ func fillRenderPlan(batchIdx int64, state *apiGameState, pending *apiPending, pl
 	}
 	w.write(opTurn, clampInt32(int64(state.Turn)), int32(indexOrUnknown(stepNames[:], state.Step)))
 	emitRenderPlayerScalars(&w, state, playerIdx)
-	emitRenderZones(&w, state, playerIdx, *index, cfg)
-	emitRenderActions(&w, pending, state, playerIdx, cfg, *index)
+	if cfg.blankMaxBlanks > 0 && cfg.blankMaxLegal > 0 {
+		inline := classifyInlinePriorityOptions(pending)
+		emitRenderZones(&w, state, playerIdx, *index, cfg, inline.byCard)
+		emitRenderInlineChoices(&w, inline)
+	} else {
+		emitRenderZones(&w, state, playerIdx, *index, cfg, nil)
+		emitRenderActions(&w, pending, state, playerIdx, cfg, *index)
+	}
 	w.write(opCloseState)
 
 	view.renderPlanLengths[batchIdx] = w.cursor
@@ -585,7 +592,7 @@ func emitRenderPlayerScalars(w *renderPlanWriter, state *apiGameState, playerIdx
 //
 // Owner-interleave (zone-outer, owner-inner) mirrors Python; the previous
 // owner-outer iteration produced a different token order.
-func emitRenderZones(w *renderPlanWriter, state *apiGameState, playerIdx int, index renderPlanIndex, cfg encodeConfig) {
+func emitRenderZones(w *renderPlanWriter, state *apiGameState, playerIdx int, index renderPlanIndex, cfg encodeConfig, blanksByCard map[uuid.UUID][]inlineBlankOption) {
 	emitCardsForZone := func(owner, zone int32) {
 		w.write(opOpenZone, zone, owner)
 		for _, card := range index.cardsByZone[zoneOwnerSlot(zone, owner)] {
@@ -611,6 +618,11 @@ func emitRenderZones(w *renderPlanWriter, state *apiGameState, playerIdx int, in
 						targetUUIDIdx = entry.uuidIdx
 					}
 					w.write(opAttachedTo, targetUUIDIdx)
+				}
+			}
+			if blanks := blanksByCard[card.cardID]; len(blanks) > 0 {
+				for _, blank := range blanks {
+					emitInlineBlank(w, blank.kindID)
 				}
 			}
 		}
@@ -652,6 +664,103 @@ func emitRenderZones(w *renderPlanWriter, state *apiGameState, playerIdx int, in
 	// not surface command-zone contents). Re-introduce when commander /
 	// conspiracy / emblem support is plumbed through the snapshot API.
 	_ = playerIdx
+}
+
+type inlineBlankOption struct {
+	kindID     int32
+	abilityIdx int
+	id         string
+	optIdx     int
+}
+
+type inlinePriorityOptions struct {
+	byCard map[uuid.UUID][]inlineBlankOption
+	passes []int
+}
+
+func classifyInlinePriorityOptions(pending *apiPending) inlinePriorityOptions {
+	out := inlinePriorityOptions{byCard: map[uuid.UUID][]inlineBlankOption{}}
+	tables := getTokenTables()
+	if pending == nil || tables == nil {
+		return out
+	}
+	passKindID := int32(0)
+	if span := tables.actionVerbSpan(0); len(span) > 0 {
+		passKindID = span[0]
+	}
+	for optIdx, option := range pending.Options {
+		switch option.Kind {
+		case "play_land", "cast_spell", "play", "cast":
+			source := option.CardUUID
+			if source == uuid.Nil {
+				source = option.PermanentUUID
+			}
+			if source != uuid.Nil {
+				out.byCard[source] = append(out.byCard[source], inlineBlankOption{
+					kindID:     tables.choosePlayID,
+					abilityIdx: option.AbilityIndex,
+					id:         option.ID,
+					optIdx:     optIdx,
+				})
+			}
+		case "activate_ability", "activate", "activated_ability":
+			source := option.PermanentUUID
+			if source == uuid.Nil {
+				source = option.CardUUID
+			}
+			if source != uuid.Nil {
+				out.byCard[source] = append(out.byCard[source], inlineBlankOption{
+					kindID:     tables.useAbilityID,
+					abilityIdx: option.AbilityIndex,
+					id:         option.ID,
+					optIdx:     optIdx,
+				})
+			}
+		case "pass":
+			out.passes = append(out.passes, optIdx)
+			_ = passKindID
+		}
+	}
+	for cardID := range out.byCard {
+		sort.Slice(out.byCard[cardID], func(i, j int) bool {
+			a := out.byCard[cardID][i]
+			b := out.byCard[cardID][j]
+			if a.kindID != b.kindID {
+				return a.kindID < b.kindID
+			}
+			if a.abilityIdx != b.abilityIdx {
+				return a.abilityIdx < b.abilityIdx
+			}
+			if a.id != b.id {
+				return a.id < b.id
+			}
+			return a.optIdx < b.optIdx
+		})
+	}
+	return out
+}
+
+func emitInlineBlank(w *renderPlanWriter, kindID int32) {
+	tables := getTokenTables()
+	if tables == nil {
+		return
+	}
+	w.write(opEmitBlank, kindID, 0, blankGroupCrossBlank, 1)
+	w.write(opEmitBlankLegal, tables.chosenID)
+}
+
+func emitRenderInlineChoices(w *renderPlanWriter, inline inlinePriorityOptions) {
+	tables := getTokenTables()
+	if tables == nil {
+		return
+	}
+	passKindID := int32(0)
+	if span := tables.actionVerbSpan(0); len(span) > 0 {
+		passKindID = span[0]
+	}
+	for range inline.passes {
+		emitInlineBlank(w, passKindID)
+	}
 }
 
 func emitRenderActions(w *renderPlanWriter, pending *apiPending, state *apiGameState, playerIdx int, cfg encodeConfig, index renderPlanIndex) {

@@ -20,20 +20,20 @@ import (
 
 // scratchPool keys a free list of encodeScratch instances by output-buffer
 // pointer, alongside the per-row directDirty state for that buffer. Each
-// parallel worker takes its own scratch (see ``acquireScratch``) so its
+// parallel worker takes its own scratch (see “acquireScratch“) so its
 // emitter / out / cardIDToSlot don't race; the directDirty state, however,
 // must be 1:1 with the OUTPUT BUFFER, not the scratch — otherwise a row
 // handled by scratch A in one call and scratch B in the next has a stale
 // dirty record on whichever scratch is reused later, and reset's partial
 // clear leaves residue from the OTHER scratch's writes in the buffer. See
-// the per-row directDirty comment on ``directDirtyState``.
+// the per-row directDirty comment on “directDirtyState“.
 type scratchPool struct {
 	mu          sync.Mutex
 	available   []*encodeScratch
 	directDirty []directDirtyState
 }
 
-// ensureDirty grows ``p.directDirty`` to at least ``n`` entries. Caller
+// ensureDirty grows “p.directDirty“ to at least “n“ entries. Caller
 // must hold p.mu OR be the only writer (e.g. before launching workers).
 func (p *scratchPool) ensureDirty(n int) {
 	if cap(p.directDirty) < n {
@@ -45,7 +45,7 @@ func (p *scratchPool) ensureDirty(n int) {
 	}
 }
 
-// rowDirty returns the per-row dirty entry for ``batchIdx``. Concurrent
+// rowDirty returns the per-row dirty entry for “batchIdx“. Concurrent
 // callers from different workers are safe as long as each batchIdx is
 // owned by at most one worker — the pointer aliases the slice element,
 // and slice growth is done up-front via ensureDirty.
@@ -67,8 +67,8 @@ func scratchPoolKey(views outputViews) uintptr {
 }
 
 // scratchPoolFor returns the per-buffer scratch pool, lazily creating it.
-// Returns nil when ``key == 0`` (no buffer bound — caller must supply a
-// fresh ``directDirtyState`` for each fillTokenAssemblyDirectPacked call).
+// Returns nil when “key == 0“ (no buffer bound — caller must supply a
+// fresh “directDirtyState“ for each fillTokenAssemblyDirectPacked call).
 func scratchPoolFor(key uintptr) *scratchPool {
 	if key == 0 {
 		return nil
@@ -196,6 +196,8 @@ type encodeConfig struct {
 	tokenMaxOptions  int32
 	tokenMaxTargets  int32
 	tokenMaxCardRefs int32
+	blankMaxBlanks   int32
+	blankMaxLegal    int32
 	// emitTokensPacked turns on the native packed token-assembler pass after
 	// render-plan emission. Output buffers live in outputViews.
 	emitTokensPacked bool
@@ -244,6 +246,13 @@ type outputViews struct {
 	packedTargetMask     []byte
 	packedCardRefPos     []int32
 	packedTokenOverflow  []int32
+	packedBlankPos       []int32
+	packedBlankKind      []int32
+	packedBlankGroup     []int32
+	packedBlankGroupKind []int32
+	packedBlankLegalIDs  []int32
+	packedBlankLegalMask []byte
+	packedBlankOverflow  []int32
 }
 
 type batchRequest struct {
@@ -730,6 +739,8 @@ func fillTokenAssemblyPacked(
 	mo := int64(cfg.tokenMaxOptions)
 	mtg := int64(cfg.tokenMaxTargets)
 	mcr := int64(cfg.tokenMaxCardRefs)
+	mb := int64(cfg.blankMaxBlanks)
+	mv := int64(cfg.blankMaxLegal)
 
 	// Carve a row-sized scratch slice straight out of the packed buffer
 	// at the running cursor. The assembler writes tokens into this view
@@ -755,6 +766,27 @@ func fillTokenAssemblyPacked(
 		maxTargets:  cfg.tokenMaxTargets,
 		maxCardRefs: cfg.tokenMaxCardRefs,
 		cursorBase:  packedCursor,
+	}
+	if mb > 0 && mv > 0 && len(outputView.packedBlankPos) > 0 {
+		rowBlankStart := outputBatchIdx * mb
+		rowBlankEnd := rowBlankStart + mb
+		rowLegalStart := outputBatchIdx * mb * mv
+		rowLegalEnd := rowLegalStart + mb*mv
+		collector := &scratch.blankCollector
+		collector.positions = outputView.packedBlankPos[rowBlankStart:rowBlankEnd]
+		collector.kind = outputView.packedBlankKind[rowBlankStart:rowBlankEnd]
+		collector.group = outputView.packedBlankGroup[rowBlankStart:rowBlankEnd]
+		collector.groupKind = outputView.packedBlankGroupKind[rowBlankStart:rowBlankEnd]
+		collector.legalIDs = outputView.packedBlankLegalIDs[rowLegalStart:rowLegalEnd]
+		collector.legalMask = outputView.packedBlankLegalMask[rowLegalStart:rowLegalEnd]
+		if outputBatchIdx >= 0 && outputBatchIdx < int64(len(outputView.packedBlankOverflow)) {
+			collector.overflow = &outputView.packedBlankOverflow[outputBatchIdx]
+			outputView.packedBlankOverflow[outputBatchIdx] = 0
+		} else {
+			collector.overflow = nil
+		}
+		collector.reset(cfg.blankMaxBlanks, cfg.blankMaxLegal)
+		out.blank = collector
 	}
 
 	outputView.packedSeqLengths[outputBatchIdx] = 0
@@ -810,6 +842,15 @@ func rebasePackedPositions(view outputViews, cfg encodeConfig, batchIdx int64, d
 	for i := cardStart; i < cardEnd; i++ {
 		if view.packedCardRefPos[i] >= 0 {
 			view.packedCardRefPos[i] += delta
+		}
+	}
+
+	mb := cfg.blankMaxBlanks
+	blankStart := batchIdx * int64(mb)
+	blankEnd := blankStart + int64(mb)
+	for i := blankStart; i < blankEnd; i++ {
+		if view.packedBlankPos[i] >= 0 {
+			view.packedBlankPos[i] += delta
 		}
 	}
 }

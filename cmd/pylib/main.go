@@ -1623,6 +1623,8 @@ func MageEncodeTokensPacked(
 	out *C.MageEncodeOutputs,
 	tokCfg *C.MageTokenAssemblerConfig,
 	packedOut *C.MagePackedTokenAssemblerOutputs,
+	blankCfg *C.MageBlankAssemblerConfig,
+	blankOut *C.MagePackedBlankOutputs,
 ) (res C.MageEncodeResult) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1645,9 +1647,21 @@ func MageEncodeTokensPacked(
 	cfgGo.tokenMaxOptions = int32(tokCfg.max_options)
 	cfgGo.tokenMaxTargets = int32(tokCfg.max_targets)
 	cfgGo.tokenMaxCardRefs = int32(tokCfg.max_card_refs)
+	if blankCfg != nil || blankOut != nil {
+		if blankCfg == nil || blankOut == nil {
+			return newEncodeResult(0, mageEncodeErrInvalidArgument, "blank_cfg and blank_out must be both nil or both non-nil")
+		}
+		cfgGo.blankMaxBlanks = int32(blankCfg.max_blanks)
+		cfgGo.blankMaxLegal = int32(blankCfg.max_legal_per_blank)
+		// Inline-blank output is populated from render-plan opcodes.
+		cfgGo.emitRenderPlan = true
+	}
 	if cfgGo.tokenMaxTokens <= 0 || cfgGo.tokenMaxOptions <= 0 ||
 		cfgGo.tokenMaxTargets < 0 || cfgGo.tokenMaxCardRefs <= 0 {
 		return newEncodeResult(0, mageEncodeErrInvalidArgument, "token assembler config has non-positive dimension")
+	}
+	if (blankCfg != nil || blankOut != nil) && (cfgGo.blankMaxBlanks < 0 || cfgGo.blankMaxLegal < 0) {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "blank assembler config has negative dimension")
 	}
 	if err := validateEncodeConfig(cfgGo); err != nil {
 		return newEncodeResult(0, err.code, err.message)
@@ -1670,6 +1684,11 @@ func MageEncodeTokensPacked(
 	}
 	if err := attachPackedTokenViews(n, cfgGo, packedOut, &views); err != nil {
 		return newEncodeResult(0, err.code, err.message)
+	}
+	if blankOut != nil {
+		if err := attachPackedBlankViews(n, cfgGo, blankOut, &views); err != nil {
+			return newEncodeResult(0, err.code, err.message)
+		}
 	}
 	rowsWritten, err := encodeBatchGo(reqGo, cfgGo, views)
 	if err != nil {
@@ -1716,6 +1735,40 @@ func attachPackedTokenViews(
 	views.packedTargetMask = unsafe.Slice((*byte)(unsafe.Pointer(packedOut.target_mask)), totalTargets)
 	views.packedCardRefPos = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.card_ref_positions)), totalCardRefs)
 	views.packedTokenOverflow = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.token_overflow)), n)
+	return nil
+}
+
+func attachPackedBlankViews(
+	n int64,
+	cfg encodeConfig,
+	blankOut *C.MagePackedBlankOutputs,
+	views *outputViews,
+) *encodeError {
+	if cfg.blankMaxBlanks <= 0 || cfg.blankMaxLegal <= 0 {
+		return nil
+	}
+	if int32(blankOut.k_max) != cfg.blankMaxBlanks || int32(blankOut.v_max) != cfg.blankMaxLegal {
+		return &encodeError{code: mageEncodeErrInvalidArgument, message: "blank output dimensions must match blank assembler config"}
+	}
+	totalBlanks := n * int64(cfg.blankMaxBlanks)
+	totalLegal := totalBlanks * int64(cfg.blankMaxLegal)
+	if blankOut.blank_positions == nil ||
+		blankOut.blank_kind == nil ||
+		blankOut.blank_group == nil ||
+		blankOut.blank_group_kind == nil ||
+		blankOut.blank_legal_ids == nil ||
+		blankOut.blank_legal_mask == nil ||
+		blankOut.blank_overflow == nil {
+		return &encodeError{code: mageEncodeErrInvalidArgument, message: "packed blank outputs must be non-nil"}
+	}
+
+	views.packedBlankPos = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_positions)), totalBlanks)
+	views.packedBlankKind = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_kind)), totalBlanks)
+	views.packedBlankGroup = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_group)), totalBlanks)
+	views.packedBlankGroupKind = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_group_kind)), totalBlanks)
+	views.packedBlankLegalIDs = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_legal_ids)), totalLegal)
+	views.packedBlankLegalMask = unsafe.Slice((*byte)(unsafe.Pointer(blankOut.blank_legal_mask)), totalLegal)
+	views.packedBlankOverflow = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_overflow)), n)
 	return nil
 }
 

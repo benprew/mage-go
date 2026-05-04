@@ -236,6 +236,11 @@ typedef struct {
     int32_t max_card_refs;
 } MageTokenAssemblerConfig;
 
+typedef struct {
+    int32_t max_blanks;
+    int32_t max_legal_per_blank;
+} MageBlankAssemblerConfig;
+
 /*
  * Packed (varlen) token-assembler outputs. Caller allocates the token-
  * shaped arrays at capacity ``B * max_tokens`` (the worst case where
@@ -259,5 +264,17 @@ typedef struct {
     int32_t* card_ref_positions; /* [B, max_card_refs] int32, absolute, -1 absent */
     int32_t* token_overflow;     /* [B] int32 (1 = row truncated) */
 } MagePackedTokenAssemblerOutputs;
+
+typedef struct {
+    int32_t k_max;
+    int32_t v_max;
+    int32_t* blank_positions;    /* [B, K] int32, absolute, -1 absent */
+    int32_t* blank_kind;         /* [B, K] int32, 0 absent */
+    int32_t* blank_group;        /* [B, K] int32, -1 absent */
+    int32_t* blank_group_kind;   /* [B, K] int32 */
+    int32_t* blank_legal_ids;    /* [B, K, V] int32, 0 pad */
+    uint8_t* blank_legal_mask;   /* [B, K, V] uint8 */
+    int32_t* blank_overflow;     /* [B] int32, count of dropped blanks */
+} MagePackedBlankOutputs;
 
 #endif
