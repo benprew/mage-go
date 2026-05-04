@@ -3883,10 +3883,41 @@ func registerSpells() {
 // Sorcery
 // All creatures get -2/-2 until end of turn.
 // Infusion — If you gained life this turn, destroy all creatures instead.
-// TODO: implement
 	Register("Withering Curse", func() Card {
 		return NewSorcery("Withering Curse", "{1}{B}{B}",
-			NewSpellAbility(),
+			NewSpellAbility(
+				FuncEffect(
+					"all creatures get -2/-2 until end of turn; infusion: destroy all creatures instead",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						if IfControllerGainedLifeThisTurn(g, controller) {
+							// Infusion: destroy all creatures instead.
+							// Collect IDs first to avoid mutation during iteration.
+							var toDestroy []uuid.UUID
+							for _, perm := range g.AllBattlefield() {
+								if perm.HasAttr(AttrIsCreature) {
+									toDestroy = append(toDestroy, perm.ID())
+								}
+							}
+							for _, id := range toDestroy {
+								perm := g.FindPermanent(id)
+								if perm != nil {
+									g.DestroyPermanent(perm)
+								}
+							}
+							return nil
+						}
+						// All creatures get -2/-2 until end of turn.
+						for _, perm := range g.AllBattlefield() {
+							if perm.HasAttr(AttrIsCreature) {
+								g.AddContinuousEffect(TemporaryBoost(perm.ID(), -2, -2))
+							}
+						}
+						g.ApplyContinuousEffects()
+						return nil
+					},
+				),
+			),
 		)
 	})
 

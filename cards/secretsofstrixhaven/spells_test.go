@@ -2097,3 +2097,40 @@ func TestFoolishFate_NoLifeLossWithoutLifeGain(t *testing.T) {
 	// PlayerB retains full 20 life (no infusion bonus).
 	g.AssertLife(gametest.PlayerB, 20)
 }
+
+// TestWitheringCurse_MinusMinusWithoutLifeGain verifies all creatures get -2/-2
+// until end of turn when no life was gained this turn.
+func TestWitheringCurse_MinusMinusWithoutLifeGain(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	// Giant Spider: 2/4 — survives -2/-2 (becomes 0/2), won't be destroyed by state check.
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Giant Spider")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Withering Curse")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 3)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Withering Curse")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Giant Spider (2/4) survives the -2/-2: it's now 0/2 until EOT (then back to 2/4).
+	// We check at EndStep so the temporary boost is still active — 0/2.
+	g.AssertPowerToughness(gametest.PlayerB, "Giant Spider", 0, 2)
+}
+
+// TestWitheringCurse_DestroyAllWithLifeGain verifies all creatures are destroyed
+// when the controller gained life this turn.
+func TestWitheringCurse_DestroyAllWithLifeGain(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	// Gain life first, then cast Withering Curse in same turn.
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Healing Salve")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Withering Curse")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 3)
+	g.ChooseMode(gametest.PlayerA, 0) // gain 3 life
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Healing Salve", "PlayerA")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Withering Curse")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Infusion: destroy all creatures.
+	g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
+	g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+}
