@@ -420,11 +420,15 @@ func (tg *TestGame) StopAt(turn int, step core.PhaseStep) {
 // padLibraries ensures each player has enough library cards to not deck out
 // during normal test execution. Tests that explicitly test deck-out should
 // not call this (or should empty the library after setup).
+//
+// Padding uses a zero-cost sorcery ("Filler") rather than a land so that
+// drawn padding cards are not auto-played during main phases, which would
+// corrupt hand-count assertions in tests that verify draws.
 func (tg *TestGame) padLibraries() {
 	for _, p := range tg.AllPlayers() {
 		if len(p.Library()) == 0 {
 			for i := 0; i < 60; i++ {
-				p.AddToLibrary(mage.NewLand("Plains"))
+				p.AddToLibrary(mage.NewSorcery("Filler", "{0}", mage.NewSpellAbility()))
 			}
 		}
 	}
@@ -1289,7 +1293,7 @@ func (tg *TestGame) AssertHandCount(p PlayerRef, name string, want int) {
 	player := tg.GetPlayer(p)
 	got := 0
 	for _, c := range player.Hand() {
-		if c.Name() == name {
+		if name == "" || c.Name() == name {
 			got++
 		}
 	}
