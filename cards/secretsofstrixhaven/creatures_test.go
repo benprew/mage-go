@@ -1967,3 +1967,246 @@ func TestUlnaAlleyShopkeep_NoBoostWithoutLifeGain(t *testing.T) {
 	g.Execute()
 	g.AssertPowerToughness(gametest.PlayerA, "Ulna Alley Shopkeep", 2, 3)
 }
+
+// TestTragedyFeaster_BaseStats verifies base P/T and trample.
+func TestTragedyFeaster_BaseStats(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tragedy Feaster")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Tragedy Feaster", 7, 6)
+	g.AssertHasAbility(gametest.PlayerA, "Tragedy Feaster", core.Trample, true)
+}
+
+// TestTragedyFeaster_SacrificesWithoutLifeGain verifies that at the beginning
+// of the controller's end step, a permanent is sacrificed if no life was gained
+// this turn.
+func TestTragedyFeaster_SacrificesWithoutLifeGain(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tragedy Feaster")
+	// Add a second permanent the controller must sacrifice.
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	// No life gain → sacrifice the Bears (scripted; default also picks first candidate).
+	g.ChoosePermanent(gametest.PlayerA, "Grizzly Bears")
+	// Stop at Cleanup so the end-step trigger has had a chance to resolve.
+	g.StopAt(1, core.Cleanup)
+	g.Execute()
+	// Grizzly Bears was sacrificed.
+	g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
+}
+
+// TestTragedyFeaster_NoSacrificeWithLifeGain verifies that if the controller
+// gained life this turn, no permanent is sacrificed at end of step.
+func TestTragedyFeaster_NoSacrificeWithLifeGain(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tragedy Feaster")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Healing Salve")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+	g.ChooseMode(gametest.PlayerA, 0) // gain 3 life
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Healing Salve", "PlayerA")
+	// Stop at Cleanup so the end-step trigger has had a chance to resolve.
+	g.StopAt(1, core.Cleanup)
+	g.Execute()
+	// Life was gained — no sacrifice.
+	g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
+}
+
+// ===========================================================================
+// Scolding Administrator
+// ===========================================================================
+
+// TestScoldingAdministrator_StatsMenace verifies base stats and menace.
+func TestScoldingAdministrator_StatsMenace(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Scolding Administrator")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Scolding Administrator", 2, 2)
+	g.AssertHasAbility(gametest.PlayerA, "Scolding Administrator", core.Menace, true)
+}
+
+// TestScoldingAdministrator_ReparteeAddsCounter verifies that casting an
+// instant or sorcery targeting a creature puts a +1/+1 counter on this creature.
+func TestScoldingAdministrator_ReparteeAddsCounter(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Scolding Administrator")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Giant Growth")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Giant Growth", "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertCounterCount(gametest.PlayerA, "Scolding Administrator", core.P1P1, 1)
+}
+
+// TestScoldingAdministrator_DeathTransfersCounters verifies that when
+// Scolding Administrator dies with counters, those counters go to a target creature.
+func TestScoldingAdministrator_DeathTransfersCounters(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Scolding Administrator")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Swamp", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Terror")
+	// Add a counter to Scolding Administrator first.
+	g.AddCounters(1, core.PrecombatMain, gametest.PlayerA, "Scolding Administrator", core.P1P1, 2)
+	// Opponent kills Scolding Administrator.
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Terror", "Scolding Administrator")
+	// Death trigger targets Grizzly Bears.
+	g.ChooseTarget(gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Scolding Administrator should be dead.
+	g.AssertPermanentCount(gametest.PlayerA, "Scolding Administrator", 0)
+	// Grizzly Bears should have 2 +1/+1 counters transferred to it.
+	g.AssertCounterCount(gametest.PlayerA, "Grizzly Bears", core.P1P1, 2)
+}
+
+// TestScoldingAdministrator_DeathNoTransferWithoutCounters verifies that
+// the death trigger does nothing when the creature had no counters.
+func TestScoldingAdministrator_DeathNoTransferWithoutCounters(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Scolding Administrator")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Swamp", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Terror")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Terror", "Scolding Administrator")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Scolding Administrator is dead with no counters to transfer.
+	g.AssertPermanentCount(gametest.PlayerA, "Scolding Administrator", 0)
+	// Grizzly Bears should have no counters added.
+	g.AssertCounterCount(gametest.PlayerA, "Grizzly Bears", core.P1P1, 0)
+}
+
+// ===========================================================================
+// Page, Loose Leaf
+// ===========================================================================
+
+// TestPageLooseLeaf_TapForColorless verifies {T}: Add {C}.
+func TestPageLooseLeaf_TapForColorless(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Page, Loose Leaf")
+	// Tap the artifact creature for {C}, use it together with two Islands to cast Gray Ogre.
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Gray Ogre")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Page, Loose Leaf")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Gray Ogre")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Gray Ogre", 1)
+}
+
+// TestPageLooseLeaf_GrandeurRevealsUntilInstantOrSorcery verifies the Grandeur
+// ability: discard another Page, Loose Leaf, reveal from top until instant/sorcery
+// found, put that into hand and rest on bottom in random order.
+func TestPageLooseLeaf_GrandeurRevealsUntilInstantOrSorcery(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Page, Loose Leaf")
+	// Second copy in hand as Grandeur discard cost.
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Page, Loose Leaf")
+	// Library top = Gray Ogre (creature), then Lightning Bolt (instant).
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Gray Ogre")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Lightning Bolt")
+	g.ChooseDiscard(gametest.PlayerA, "Page, Loose Leaf")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Page, Loose Leaf")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Lightning Bolt is in hand; Gray Ogre is in the library.
+	g.AssertHandCount(gametest.PlayerA, "Lightning Bolt", 1)
+	g.AssertLibraryCount(gametest.PlayerA, "Gray Ogre", 1)
+}
+
+// ===========================================================================
+// Pensive Professor
+// ===========================================================================
+
+// TestPensiveProfessor_Stats verifies base 0/2.
+func TestPensiveProfessor_Stats(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Pensive Professor")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Pensive Professor", 0, 2)
+}
+
+// TestPensiveProfessor_IncrementOnHighManaSpell verifies Increment puts a
+// +1/+1 counter when mana spent > power or toughness.
+func TestPensiveProfessor_IncrementOnHighManaSpell(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Pensive Professor")
+	// Spend 3 mana (> 2 toughness) on Gray Ogre.
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Gray Ogre")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 2)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Gray Ogre")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// 0/2 + counter → 1/3.
+	g.AssertPowerToughness(gametest.PlayerA, "Pensive Professor", 1, 3)
+}
+
+// ===========================================================================
+// Poisoner's Apprentice
+// ===========================================================================
+
+// TestPoisonersApprentice_InfusionWithLifeGain verifies -4/-4 fires when
+// controller gained life this turn.
+func TestPoisonersApprentice_InfusionWithLifeGain(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 3)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Healing Salve")
+	g.ChooseMode(gametest.PlayerA, 0) // gain 3 life
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Healing Salve", "PlayerA")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant") // 3/3
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Poisoner's Apprentice")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 3)
+	g.ChoosePermanent(gametest.PlayerA, "Hill Giant")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Poisoner's Apprentice")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// -4/-4 on a 3/3 kills it via SBE.
+	g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 0)
+}
+
+// TestPoisonersApprentice_NoEffectWithoutLifeGain verifies -4/-4 does not fire
+// when no life was gained.
+func TestPoisonersApprentice_NoEffectWithoutLifeGain(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant") // 3/3
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Poisoner's Apprentice")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 3)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Poisoner's Apprentice")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 1)
+}
+
+// ===========================================================================
+// Prismari, the Inspiration
+// ===========================================================================
+
+// TestPrismariTheInspiration_StatsAndFlying verifies Prismari is a 7/7 flier.
+func TestPrismariTheInspiration_StatsAndFlying(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Prismari, the Inspiration")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Prismari, the Inspiration", 7, 7)
+	g.AssertHasAbility(gametest.PlayerA, "Prismari, the Inspiration", core.Flying, true)
+}
+
+// ===========================================================================
+// Quandrix, the Proof
+// ===========================================================================
+
+// TestQuandrixTheProof_StatsAndKeywords verifies base stats, Flying, and Trample.
+func TestQuandrixTheProof_StatsAndKeywords(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Quandrix, the Proof")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Quandrix, the Proof", 6, 6)
+	g.AssertHasAbility(gametest.PlayerA, "Quandrix, the Proof", core.Flying, true)
+	g.AssertHasAbility(gametest.PlayerA, "Quandrix, the Proof", core.Trample, true)
+}

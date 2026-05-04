@@ -800,10 +800,14 @@ func registerCreatures() {
 	// 0/2
 	// Increment (Whenever you cast a spell, if the amount of mana you spent is greater than this creature's power or toughness, put a +1/+1 counter on this creature.)
 	// Whenever one or more +1/+1 counters are put on this creature, draw a card.
-	// TODO: implement
 	Register("Pensive Professor", func() Card {
 		return NewCreature("Pensive Professor", "{1}{U}{U}", 0, 2,
 			WithSubTypes("Human", "Wizard"),
+			// Increment
+			WithAbility(IncrementTrigger()),
+			// XXX: "Whenever one or more +1/+1 counters are put on this creature, draw a card."
+			// The engine has no EvtCounterAdded event, so this trigger cannot be implemented
+			// without an engine change.
 		)
 	})
 
@@ -1118,10 +1122,18 @@ func registerCreatures() {
 	// Creature — Orc Warlock
 	// 2/2
 	// Infusion — When this creature enters, target creature an opponent controls gets -4/-4 until end of turn if you gained life this turn.
-	// TODO: implement
 	Register("Poisoner's Apprentice", func() Card {
 		return NewCreature("Poisoner's Apprentice", "{2}{B}", 2, 2,
 			WithSubTypes("Orc", "Warlock"),
+			// Infusion — When this creature enters, target creature an opponent controls gets
+			// -4/-4 until end of turn if you gained life this turn.
+			WithAbility(EntersBattlefieldTrigger(
+				InfusionEffect(
+					"target creature an opponent controls gets -4/-4 until end of turn",
+					Boost(Fixed(-4), Fixed(-4)).Until(EndOfTurn),
+				),
+				false,
+			).AddTarget(TargetCreatureOpponentControls())),
 		)
 	})
 
@@ -1248,10 +1260,44 @@ func registerCreatures() {
 	// Trample
 	// Ward—Discard a card.
 	// Infusion — At the beginning of your end step, sacrifice a permanent unless you gained life this turn.
-	// TODO: implement
 	Register("Tragedy Feaster", func() Card {
 		return NewCreature("Tragedy Feaster", "{2}{B}{B}", 7, 6,
 			WithSubTypes("Demon"),
+			WithKeyword(Trample),
+			// XXX: Ward—Discard a card. The engine has no Ward mechanic implementation.
+			// Infusion — At the beginning of your end step, sacrifice a permanent unless
+			// you gained life this turn.
+			WithAbility(NewTriggered(EvtEndStep, false,
+				FuncEffect(
+					"sacrifice a permanent unless you gained life this turn",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						if IfControllerGainedLifeThisTurn(g, controller) {
+							// Life was gained — no sacrifice.
+							return nil
+						}
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						var perms []*Permanent
+						for _, perm := range g.AllBattlefield() {
+							if perm.Controller == controller {
+								perms = append(perms, perm)
+							}
+						}
+						if len(perms) == 0 {
+							return nil
+						}
+						chosen := p.ChoosePermanent(perms, "sacrifice a permanent", g)
+						if chosen == nil {
+							return nil
+						}
+						g.Sacrifice(chosen)
+						return nil
+					},
+				),
+			).SetConditionData(EventPlayerIsController{})),
 		)
 	})
 
@@ -2988,11 +3034,15 @@ func registerCreatures() {
 	// Flying
 	// Ward—Pay 5 life.
 	// Instant and sorcery spells you cast have storm. (Whenever you cast an instant or sorcery spell, copy it for each spell cast before it this turn. You may choose new targets for the copies.)
-	// TODO: implement
 	Register("Prismari, the Inspiration", func() Card {
 		return NewCreature("Prismari, the Inspiration", "{5}{U}{R}", 7, 7,
 			WithSubTypes("Elder", "Dragon"),
 			WithSuperTypes(SuperLegendary),
+			WithKeyword(Flying),
+			// XXX: Ward—Pay 5 life. The engine has no Ward mechanic implementation.
+			// XXX: "Instant and sorcery spells you cast have storm." The engine has no Storm
+			// keyword or a mechanism to grant Storm to spells cast while this creature is on
+			// the battlefield. Cannot be implemented without an engine change.
 		)
 	})
 
@@ -3017,11 +3067,16 @@ func registerCreatures() {
 	// Flying, trample
 	// Cascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its mana cost. Put the exiled cards on the bottom in a random order.)
 	// Instant and sorcery spells you cast from your hand have cascade.
-	// TODO: implement
 	Register("Quandrix, the Proof", func() Card {
 		return NewCreature("Quandrix, the Proof", "{4}{G}{U}", 6, 6,
 			WithSubTypes("Elder", "Dragon"),
 			WithSuperTypes(SuperLegendary),
+			WithKeyword(Flying),
+			WithKeyword(Trample),
+			// XXX: Cascade. The engine has no Cascade keyword or cast-triggered "exile until
+			// cheaper nonland card, may cast for free" mechanic. Cannot be implemented without
+			// an engine change.
+			// XXX: "Instant and sorcery spells you cast from your hand have cascade." Same gap.
 		)
 	})
 
@@ -3042,10 +3097,52 @@ func registerCreatures() {
 	// Menace (This creature can't be blocked except by two or more creatures.)
 	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, put a +1/+1 counter on this creature.
 	// When this creature dies, if it had counters on it, put those counters on up to one target creature.
-	// TODO: implement
 	Register("Scolding Administrator", func() Card {
 		return NewCreature("Scolding Administrator", "{W}{B}", 2, 2,
 			WithSubTypes("Dwarf", "Cleric"),
+			WithKeyword(Menace),
+			// Repartee — put a +1/+1 counter on this creature.
+			WithAbility(NewTriggered(EvtSpellCast, false,
+				AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
+			).SetCondition(reparteeCondition)),
+			// When this creature dies, if it had counters on it, put those counters on up to one target creature.
+			WithAbility(PutIntoGraveyardFromBattlefieldTrigger(
+				FuncEffect(
+					"if had counters, put those counters on up to one target creature",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						lkiView := g.LookupObject(sourceID)
+						if lkiView == nil {
+							return nil
+						}
+						lki, ok := lkiView.(*PermanentLKI)
+						if !ok || lki == nil || lki.Snapshot == nil {
+							return nil
+						}
+						totalCounters := 0
+						for _, n := range lki.Snapshot.Counters {
+							totalCounters += int(n)
+						}
+						if totalCounters == 0 {
+							return nil
+						}
+						if len(targets) == 0 || targets[0] == uuid.Nil {
+							return nil
+						}
+						dest := g.FindPermanent(targets[0])
+						if dest == nil {
+							return nil
+						}
+						for ct, n := range lki.Snapshot.Counters {
+							if n > 0 {
+								g.AddCountersWithReplacement(dest, CounterType(ct), int(n), sourceID, false)
+							}
+						}
+						return nil
+					},
+				),
+				false,
+			).AddTarget(TargetUpToOneCreature())),
 		)
 	})
 
@@ -3438,12 +3535,57 @@ func registerCreatures() {
 	// 0/2
 	// {T}: Add {C}.
 	// Grandeur — Discard another card named Page, Loose Leaf: Reveal cards from the top of your library until you reveal an instant or sorcery card. Put that card into your hand and the rest on the bottom of your library in a random order.
-	// TODO: implement
 	Register("Page, Loose Leaf", func() Card {
+		isInstantOrSorcery := NewCardFilter("instant or sorcery card", func(c Card) bool {
+			return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
+		})
+		grandeurEffect := FuncEffect(
+			"reveal cards from the top of your library until you reveal an instant or sorcery card; put it into your hand and the rest on the bottom in a random order",
+			EffectProperties{Outcome: OutcomeBenefit},
+			func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				p := g.GetPlayer(controller)
+				if p == nil {
+					return nil
+				}
+				// Walk library from the top, collecting revealed cards until an instant or sorcery is found.
+				var revealed []Card
+				var found Card
+				for _, c := range p.Library() {
+					revealed = append(revealed, c)
+					if isInstantOrSorcery.Match(c) {
+						found = c
+						break
+					}
+				}
+				taken := g.RemoveTopN(p, len(revealed))
+				if found == nil {
+					g.PutOnBottomInRandomOrder(p, taken)
+					return nil
+				}
+				var rest []Card
+				for _, c := range taken {
+					if c.ID() == found.ID() {
+						p.AddToHand(c)
+						continue
+					}
+					rest = append(rest, c)
+				}
+				g.PutOnBottomInRandomOrder(p, rest)
+				return nil
+			},
+		)
 		return NewCreature("Page, Loose Leaf", "{2}", 0, 2,
 			WithSubTypes("Construct"),
 			WithSuperTypes(SuperLegendary),
 			WithCardType(TypeArtifact),
+			// {T}: Add {C}.
+			WithManaAbility(Colorless),
+			// Grandeur — Discard another card named Page, Loose Leaf: …
+			WithAbility(NewActivatedAbility(
+				grandeurEffect,
+				DiscardAnotherCardNamedSelfCost(),
+				WithSorcerySpeed(),
+			)),
 		)
 	})
 
