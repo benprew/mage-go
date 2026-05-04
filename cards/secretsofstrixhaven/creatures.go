@@ -91,6 +91,77 @@ func init() {
 	registerCreatures()
 }
 
+// exileCreatureFromGraveyardCost is a Cost that requires the controller to exile
+// a creature card from their graveyard (used by Lluwen's re-prepare ability).
+type exileCreatureFromGraveyardCost struct{}
+
+func (c *exileCreatureFromGraveyardCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+	p := g.GetPlayer(controller)
+	if p == nil {
+		return false
+	}
+	for _, card := range p.Graveyard() {
+		if card.HasType(TypeCreature) {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *exileCreatureFromGraveyardCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
+	p := g.GetPlayer(controller)
+	if p == nil {
+		return fmt.Errorf("player not found")
+	}
+	var candidates []Card
+	for _, card := range p.Graveyard() {
+		if card.HasType(TypeCreature) {
+			candidates = append(candidates, card)
+		}
+	}
+	if len(candidates) == 0 {
+		return fmt.Errorf("no creature card in graveyard")
+	}
+	chosen := p.ChooseCardFromLibrary(candidates, "exile a creature card from your graveyard", g)
+	if chosen == nil {
+		chosen = candidates[0]
+	}
+	if removed, ok := p.RemoveFromGraveyard(chosen.ID()); ok {
+		g.ExileCard(removed, sourceID)
+	}
+	return nil
+}
+
+func (c *exileCreatureFromGraveyardCost) Text() string { return "Exile a creature card from your graveyard" }
+
+// strikingPaletteRegisterDelayedTrigger sets up a one-shot delayed trigger
+// that fires on the controller's next spell cast this turn. If that spell is
+// an instant or sorcery, it is copied (CR 706.10c). Otherwise the trigger
+// re-arms for the next instant/sorcery this turn.
+func strikingPaletteRegisterDelayedTrigger(g *Game, sourceID, controller uuid.UUID) {
+	dt := &DelayedTrigger{
+		EventType:     EvtSpellCast,
+		MatchPlayerID: controller,
+		SourceID:      sourceID,
+		Controller:    controller,
+		Effects: []Effect{FuncEffect(
+			"copy next instant/sorcery spell you cast this turn (or re-arm)",
+			EffectProperties{Outcome: OutcomeBenefit},
+			func(g2 *Game, src, ctrl uuid.UUID, _ []uuid.UUID) error {
+				top := g2.Stack().Peek()
+				if top != nil && !top.IsAbility && top.Card != nil && top.Controller == ctrl &&
+					(top.Card.HasType(TypeInstant) || top.Card.HasType(TypeSorcery)) {
+					g2.CopySpellOnStack(top.SourceID, ctrl, true)
+					return nil
+				}
+				strikingPaletteRegisterDelayedTrigger(g2, src, ctrl)
+				return nil
+			},
+		)},
+	}
+	g.RegisterDelayedTrigger(dt)
+}
+
 // Used for the "Repartee" ability word (SOS): "Whenever you cast an instant or
 // sorcery spell that targets a creature, …"
 func reparteeCondition(evt *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
@@ -775,11 +846,76 @@ func registerCreatures() {
 	// Jadzi, Steward of Fate // Oracle's Gift {2}{U} // {X}{X}{U}
 	// Legendary Creature — Human Wizard // Sorcery
 	// 2/4
-	// TODO: implement
+	// Jadzi enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)
+	// When Jadzi enters, draw two cards, then discard two cards.
+	// ---
+	// Oracle's Gift {X}{X}{U}
+	// Sorcery
+	// Create X 0/0 green and blue Fractal creature tokens, then put X +1/+1 counters on each Fractal you control.
+	//
+	// XXX: When cast as a prepared copy, X=0 (CastPreparedSpellCopy does not
+	// prompt for X values); the spell creates 0 tokens and puts 0 counters.
 	Register("Jadzi, Steward of Fate // Oracle's Gift", func() Card {
+		fractalFilter := NewPermanentFilter("Fractal", func(p *Permanent, _ *Game) bool {
+			for _, st := range p.Card.SubTypes() {
+				if st == "Fractal" {
+					return true
+				}
+			}
+			return false
+		})
+		spellFactory := func() Card {
+			return NewSorcery("Oracle's Gift", "{X}{X}{U}",
+				NewSpellAbility(FuncEffect(
+					"create X 0/0 green and blue Fractal tokens, then put X +1/+1 counters on each Fractal you control",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						x := g.XValue()
+						for i := 0; i < x; i++ {
+							token := NewToken("Fractal Token", 0, 0,
+								[]CardType{TypeCreature},
+								[]string{"Fractal"},
+							)
+							token.SetColorOverride([]Color{Green, Blue})
+							token.SetOwner(controller)
+							g.PutOnBattlefield(token, controller)
+						}
+						if x > 0 {
+							for _, perm := range g.FilterBattlefield(And(ControlledBy(controller), fractalFilter)) {
+								perm.AddCounter(P1P1, x)
+							}
+							g.ApplyContinuousEffects()
+						}
+						return nil
+					},
+				)),
+			)
+		}
 		return NewCreature("Jadzi, Steward of Fate // Oracle's Gift", "{2}{U} // {X}{X}{U}", 2, 4,
-			WithSubTypes("Human", "Wizard", "//", "Sorcery"),
+			WithSubTypes("Human", "Wizard"),
 			WithSuperTypes(SuperLegendary),
+			WithPreparedSpell(spellFactory),
+			// When Jadzi enters, draw two cards, then discard two cards.
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect(
+					"draw two cards, then discard two cards",
+					EffectProperties{Outcome: OutcomeBenefit, DrawCount: 2},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						g.PlayerDrawCard(p)
+						g.PlayerDrawCard(p)
+						chosen := p.ChooseCardsFromHand(2, "discard two cards", g)
+						for _, c := range chosen {
+							g.PlayerDiscard(p, c.ID())
+						}
+						return nil
+					},
+				),
+				false,
+			)),
 		)
 	})
 
@@ -970,22 +1106,24 @@ func registerCreatures() {
 	Register("Spellbook Seeker // Careful Study", func() Card {
 		spellFactory := func() Card {
 			return NewSorcery("Careful Study", "{U}",
-				NewSpellAbility(FuncEffect(
+				NewSpellAbility(CompositeEffects(
 					"draw two cards, then discard two cards",
-					EffectProperties{Outcome: OutcomeBenefit, DrawCount: 2},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						p := g.GetPlayer(controller)
-						if p == nil {
+					DrawCards(Fixed(2)),
+					FuncEffect(
+						"discard two cards",
+						EffectProperties{},
+						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+							p := g.GetPlayer(controller)
+							if p == nil {
+								return nil
+							}
+							chosen := p.ChooseCardsFromHand(2, "discard two cards", g)
+							for _, c := range chosen {
+								g.PlayerDiscard(p, c.ID())
+							}
 							return nil
-						}
-						g.PlayerDrawCard(p)
-						g.PlayerDrawCard(p)
-						chosen := p.ChooseCardsFromHand(2, "discard two cards", g)
-						for _, card := range chosen {
-							g.PlayerDiscard(p, card.ID())
-						}
-						return nil
-					},
+						},
+					),
 				)),
 			)
 		}
@@ -1641,10 +1779,25 @@ func registerCreatures() {
 	// Maelstrom Artisan // Rocket Volley {1}{R}{R} // {1}{R}
 	// Creature — Minotaur Sorcerer // Sorcery
 	// 3/2
-	// TODO: implement
+	// Haste
+	// This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)
+	// ---
+	// Rocket Volley {1}{R}
+	// Sorcery
+	// Destroy target nonbasic land.
 	Register("Maelstrom Artisan // Rocket Volley", func() Card {
+		nonbasicLand := NewPermanentFilter("nonbasic land", func(p *Permanent, _ *Game) bool {
+			return p.HasType(TypeLand) && !p.Card.HasSuperType(SuperBasic)
+		})
+		spellFactory := func() Card {
+			return NewSorcery("Rocket Volley", "{1}{R}",
+				NewTargetedSpell(TargetPermanent(nonbasicLand), DestroyTarget()),
+			)
+		}
 		return NewCreature("Maelstrom Artisan // Rocket Volley", "{1}{R}{R} // {1}{R}", 3, 2,
-			WithSubTypes("Minotaur", "Sorcerer", "//", "Sorcery"),
+			WithSubTypes("Minotaur", "Sorcerer"),
+			WithKeyword(Haste),
+			WithPreparedSpell(spellFactory),
 		)
 	})
 
@@ -1836,10 +1989,29 @@ func registerCreatures() {
 	// Pigment Wrangler // Striking Palette {4}{R} // {R}
 	// Creature — Orc Sorcerer // Sorcery
 	// 4/4
-	// TODO: implement
+	// Flying
+	// This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)
+	// ---
+	// Striking Palette {R}
+	// Sorcery
+	// When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy.
 	Register("Pigment Wrangler // Striking Palette", func() Card {
+		spellFactory := func() Card {
+			return NewSorcery("Striking Palette", "{R}",
+				NewSpellAbility(FuncEffect(
+					"when you next cast an instant or sorcery spell this turn, copy that spell",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						strikingPaletteRegisterDelayedTrigger(g, sourceID, controller)
+						return nil
+					},
+				)),
+			)
+		}
 		return NewCreature("Pigment Wrangler // Striking Palette", "{4}{R} // {R}", 4, 4,
-			WithSubTypes("Orc", "Sorcerer", "//", "Sorcery"),
+			WithSubTypes("Orc", "Sorcerer"),
+			WithKeyword(Flying),
+			WithPreparedSpell(spellFactory),
 		)
 	})
 
@@ -1897,10 +2069,38 @@ func registerCreatures() {
 	// Strife Scholar // Awaken the Ages {2}{R} // {5}{R}
 	// Creature — Orc Sorcerer // Sorcery
 	// 3/2
-	// TODO: implement
+	// Ward—Pay 2 life. (Whenever this creature becomes the target of a spell or ability an opponent controls,
+	// counter it unless that player pays 2 life.)
+	// This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)
+	// ---
+	// Awaken the Ages {5}{R}
+	// Sorcery
+	// Create two 2/2 red and white Spirit creature tokens.
 	Register("Strife Scholar // Awaken the Ages", func() Card {
+		spellFactory := func() Card {
+			return NewSorcery("Awaken the Ages", "{5}{R}",
+				NewSpellAbility(FuncEffect(
+					"create two 2/2 red and white Spirit creature tokens",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						for i := 0; i < 2; i++ {
+							if err := CreateColoredToken("Spirit Token", 2, 2,
+								[]Color{Red, White},
+								[]CardType{TypeCreature},
+								[]string{"Spirit"},
+							).Apply(g, sourceID, controller, nil); err != nil {
+								return err
+							}
+						}
+						return nil
+					},
+				)),
+			)
+		}
 		return NewCreature("Strife Scholar // Awaken the Ages", "{2}{R} // {5}{R}", 3, 2,
-			WithSubTypes("Orc", "Sorcerer", "//", "Sorcery"),
+			WithSubTypes("Orc", "Sorcerer"),
+			// XXX: Ward—Pay 2 life. The engine has no Ward mechanic implementation.
+			WithPreparedSpell(spellFactory),
 		)
 	})
 
@@ -2090,10 +2290,37 @@ func registerCreatures() {
 	// Emeritus of Abundance // Regrowth {2}{G} // {1}{G}
 	// Creature — Elf Druid // Sorcery
 	// 3/4
-	// TODO: implement
+	// Vigilance
+	// This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)
+	// Whenever this creature attacks, if you control eight or more lands, this creature becomes prepared.
+	// ---
+	// Regrowth {1}{G}
+	// Sorcery
+	// Return target card from your graveyard to your hand.
 	Register("Emeritus of Abundance // Regrowth", func() Card {
+		spellFactory := func() Card {
+			return NewSorcery("Regrowth", "{1}{G}",
+				NewTargetedSpell(TargetCardInYourGraveyard(), ReturnFromGraveyardToHandTarget()),
+			)
+		}
 		return NewCreature("Emeritus of Abundance // Regrowth", "{2}{G} // {1}{G}", 3, 4,
-			WithSubTypes("Elf", "Druid", "//", "Sorcery"),
+			WithSubTypes("Elf", "Druid"),
+			WithKeyword(Vigilance),
+			WithPreparedSpell(spellFactory),
+			// Whenever this creature attacks, if you control eight or more lands, this creature becomes prepared.
+			WithAbility(AttacksTrigger(
+				FuncEffect("if you control eight or more lands, this creature becomes prepared",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						landsControlled := len(g.FilterBattlefield(And(IsLand, ControlledBy(controller))))
+						if landsControlled >= 8 {
+							g.SetPrepared(sourceID, true)
+						}
+						return nil
+					},
+				),
+				false,
+			)),
 		)
 	})
 
@@ -2194,10 +2421,24 @@ func registerCreatures() {
 	// Infirmary Healer // Stream of Life {1}{G} // {X}{G}
 	// Creature — Cat Cleric // Sorcery
 	// 2/3
-	// TODO: implement
+	// This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)
+	// ---
+	// Stream of Life {X}{G}
+	// Sorcery
+	// Target player gains X life.
+	// XXX: CastPreparedSpellCopy does not forward g.currentX into the copy's
+	// StackObject.XValue, so X=0 when the copy resolves regardless of what value
+	// the controller specified. The spell structure is correct; the X-propagation
+	// gap is in the engine.
 	Register("Infirmary Healer // Stream of Life", func() Card {
+		spellFactory := func() Card {
+			return NewSorcery("Stream of Life", "{X}{G}",
+				NewTargetedSpell(TargetPlayer(), GainLifeTarget(XValue())),
+			)
+		}
 		return NewCreature("Infirmary Healer // Stream of Life", "{1}{G} // {X}{G}", 2, 3,
-			WithSubTypes("Cat", "Cleric", "//", "Sorcery"),
+			WithSubTypes("Cat", "Cleric"),
+			WithPreparedSpell(spellFactory),
 		)
 	})
 
@@ -2321,10 +2562,27 @@ func registerCreatures() {
 	// Studious First-Year // Rampant Growth {G} // {1}{G}
 	// Creature — Bear Wizard // Sorcery
 	// 1/1
-	// TODO: implement
+	// This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)
+	// ---
+	// Rampant Growth {1}{G}
+	// Sorcery
+	// Search your library for a basic land card, put that card onto the battlefield tapped, then shuffle.
 	Register("Studious First-Year // Rampant Growth", func() Card {
+		spellFactory := func() Card {
+			return NewSorcery("Rampant Growth", "{1}{G}",
+				NewSpellAbility(FuncEffect(
+					"search your library for a basic land card, put that card onto the battlefield tapped, then shuffle",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						searchBasicLandToBattlefieldTappedSOS(g, controller)
+						return nil
+					},
+				)),
+			)
+		}
 		return NewCreature("Studious First-Year // Rampant Growth", "{G} // {1}{G}", 1, 1,
-			WithSubTypes("Bear", "Wizard", "//", "Sorcery"),
+			WithSubTypes("Bear", "Wizard"),
+			WithPreparedSpell(spellFactory),
 		)
 	})
 
@@ -2487,10 +2745,64 @@ func registerCreatures() {
 	// Vastlands Scavenger // Bind to Life {1}{G}{G} // {4}{G}
 	// Creature — Bear Druid // Instant
 	// 4/4
-	// TODO: implement
+	// Deathtouch
+	// This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)
+	// ---
+	// Bind to Life {4}{G}
+	// Instant
+	// Mill seven cards. Then put a creature card from among them onto the battlefield.
 	Register("Vastlands Scavenger // Bind to Life", func() Card {
+		spellFactory := func() Card {
+			return NewInstant("Bind to Life", "{4}{G}",
+				NewSpellAbility(FuncEffect(
+					"mill seven cards; then put a creature card from among them onto the battlefield",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						// Mill seven cards from the controller's library.
+						lib := p.Library()
+						milledCount := 7
+						if milledCount > len(lib) {
+							milledCount = len(lib)
+						}
+						var milled []Card
+						for i := 0; i < milledCount; i++ {
+							milled = append(milled, lib[i])
+						}
+						for i := 0; i < milledCount; i++ {
+							p.AddToGraveyard(lib[i])
+						}
+						p.SetLibrary(lib[milledCount:])
+						// Collect creature cards from the milled batch.
+						var creatures []Card
+						for _, c := range milled {
+							if c.HasType(TypeCreature) {
+								creatures = append(creatures, c)
+							}
+						}
+						if len(creatures) == 0 {
+							return nil
+						}
+						// Prompt controller to pick one creature card to put onto the battlefield.
+						chosen := p.ChooseCardFromLibrary(creatures, "put a creature card from among the milled cards onto the battlefield", g)
+						if chosen == nil {
+							return nil
+						}
+						// Remove the chosen card from the graveyard and put it onto the battlefield.
+						if removed, ok := p.RemoveFromGraveyard(chosen.ID()); ok {
+							g.PutOnBattlefield(removed, controller)
+						}
+						return nil
+					},
+				)))
+		}
 		return NewCreature("Vastlands Scavenger // Bind to Life", "{1}{G}{G} // {4}{G}", 4, 4,
 			WithSubTypes("Bear", "Druid", "//", "Instant"),
+			WithKeyword(Deathtouch),
+			WithPreparedSpell(spellFactory),
 		)
 	})
 
@@ -2519,11 +2831,38 @@ func registerCreatures() {
 	// Abigale, Poet Laureate // Heroic Stanza {1}{W}{B} // {1}{W/B}
 	// Legendary Creature — Bird Bard // Sorcery
 	// 2/3
-	// TODO: implement
+	// Flying
+	// Whenever you cast a creature spell, Abigale becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)
+	// ---
+	// Heroic Stanza {1}{W/B}
+	// Sorcery
+	// Put a +1/+1 counter on target creature.
 	Register("Abigale, Poet Laureate // Heroic Stanza", func() Card {
+		spellFactory := func() Card {
+			return NewSorcery("Heroic Stanza", "{1}{W/B}",
+				NewTargetedSpell(
+					TargetCreature(),
+					AddCounters(P1P1, Fixed(1)),
+				))
+		}
 		return NewCreature("Abigale, Poet Laureate // Heroic Stanza", "{1}{W}{B} // {1}{W/B}", 2, 3,
 			WithSubTypes("Bird", "Bard", "//", "Sorcery"),
 			WithSuperTypes(SuperLegendary),
+			WithKeyword(Flying),
+			WithPreparedSpell(spellFactory),
+			// Whenever you cast a creature spell, Abigale becomes prepared.
+			WithAbility(WheneverYouCastSpellTrigger(
+				FuncEffect(
+					"Abigale becomes prepared",
+					EffectProperties{},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						g.SetPrepared(sourceID, true)
+						return nil
+					},
+				),
+				false,
+				IsCreatureCard,
+			)),
 		)
 	})
 
@@ -3179,22 +3518,94 @@ func registerCreatures() {
 	// Kirol, History Buff // Pack a Punch {R}{W} // {1}{R}{W}
 	// Legendary Creature — Vampire Cleric // Sorcery
 	// 2/3
-	// TODO: implement
+	// Whenever one or more cards leave your graveyard, Kirol becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)
+	// XXX: "Whenever one or more cards leave your graveyard" trigger not implemented — engine lacks graveyard-leave zone-change events.
+	// ---
+	// Pack a Punch {1}{R}{W}
+	// Sorcery
+	// Mill a card. Put two +1/+1 counters on target creature. It gains trample until end of turn.
 	Register("Kirol, History Buff // Pack a Punch", func() Card {
+		spellFactory := func() Card {
+			return NewSorcery("Pack a Punch", "{1}{R}{W}",
+				NewTargetedSpell(
+					TargetCreature(),
+					FuncEffect(
+						"mill a card; put two +1/+1 counters on target creature; it gains trample until end of turn",
+						EffectProperties{Outcome: OutcomeBenefit},
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+							p := g.GetPlayer(controller)
+							if p != nil {
+								lib := p.Library()
+								if len(lib) > 0 {
+									p.AddToGraveyard(lib[0])
+									p.SetLibrary(lib[1:])
+								}
+							}
+							if len(targets) == 0 {
+								return nil
+							}
+							perm := g.FindPermanent(targets[0])
+							if perm == nil {
+								return nil
+							}
+							g.AddCountersWithReplacement(perm, P1P1, 2, sourceID, false)
+							g.GrantAttr(perm.ID(), Trample)
+							return nil
+						},
+					),
+				))
+		}
 		return NewCreature("Kirol, History Buff // Pack a Punch", "{R}{W} // {1}{R}{W}", 2, 3,
 			WithSubTypes("Vampire", "Cleric", "//", "Sorcery"),
 			WithSuperTypes(SuperLegendary),
+			WithPreparedSpell(spellFactory),
+			// XXX: "Whenever one or more cards leave your graveyard, Kirol becomes prepared"
+			// is not implemented — the engine does not fire zone-change events when cards
+			// leave the graveyard. See similar XXX markers on Hardened Academic and others.
 		)
 	})
 
 	// Lluwen, Exchange Student // Pest Friend {2}{B}{G} // {B/G}
 	// Legendary Creature — Elf Druid // Sorcery
 	// 3/4
-	// TODO: implement
+	// Lluwen enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)
+	// Exile a creature card from your graveyard: Lluwen becomes prepared. Activate only as a sorcery.
+	// ---
+	// Pest Friend {B/G}
+	// Sorcery
+	// Create a 1/1 black and green Pest creature token with "Whenever this token attacks, you gain 1 life."
 	Register("Lluwen, Exchange Student // Pest Friend", func() Card {
+		pestToken := TokenWithAbilities(
+			CreateColoredToken("Pest Token", 1, 1,
+				[]Color{Black, Green},
+				[]CardType{TypeCreature},
+				[]string{"Pest"},
+			),
+			AttacksTrigger(GainLife(1), false),
+		)
+		spellFactory := func() Card {
+			return NewSorcery("Pest Friend", "{B/G}",
+				NewSpellAbility(pestToken))
+		}
+		isCreatureGraveyardCost := &exileCreatureFromGraveyardCost{}
 		return NewCreature("Lluwen, Exchange Student // Pest Friend", "{2}{B}{G} // {B/G}", 3, 4,
 			WithSubTypes("Elf", "Druid", "//", "Sorcery"),
 			WithSuperTypes(SuperLegendary),
+			WithPreparedSpell(spellFactory),
+			// Exile a creature card from your graveyard: Lluwen becomes prepared. Activate only as a sorcery.
+			WithActivatedAbility(
+				FuncEffect(
+					"Lluwen becomes prepared",
+					EffectProperties{},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						g.SetPrepared(sourceID, true)
+						return nil
+					},
+				),
+				ManaCostOf("{0}"),
+				WithCost(isCreatureGraveyardCost),
+				WithSorcerySpeed(),
+			),
 		)
 	})
 
@@ -3496,11 +3907,75 @@ func registerCreatures() {
 	// Sanar, Unfinished Genius // Wild Idea {U}{R} // {3}{U}{R}
 	// Legendary Creature — Goblin Sorcerer // Sorcery
 	// 0/4
-	// TODO: implement
+	// Sanar enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)
+	// {T}: Create a Treasure token. Activate only if you've cast an instant or sorcery spell this turn.
+	// ---
+	// Wild Idea {3}{U}{R}
+	// Sorcery
+	// Search your library for an instant or sorcery card, reveal it, put it into your hand, then shuffle.
 	Register("Sanar, Unfinished Genius // Wild Idea", func() Card {
+		spellFactory := func() Card {
+			return NewSorcery("Wild Idea", "{3}{U}{R}",
+				NewSpellAbility(FuncEffect(
+					"search your library for an instant or sorcery card, reveal it, put it into your hand, then shuffle",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						lib := p.Library()
+						var candidates []Card
+						for _, c := range lib {
+							if c.HasType(TypeInstant) || c.HasType(TypeSorcery) {
+								candidates = append(candidates, c)
+							}
+						}
+						if len(candidates) == 0 {
+							p.ShuffleLibrary()
+							return nil
+						}
+						chosen := p.ChooseCardFromLibrary(candidates, "search for an instant or sorcery card", g)
+						if chosen == nil {
+							p.ShuffleLibrary()
+							return nil
+						}
+						newLib := make([]Card, 0, len(lib)-1)
+						for _, c := range lib {
+							if c.ID() != chosen.ID() {
+								newLib = append(newLib, c)
+							}
+						}
+						p.SetLibrary(newLib)
+						p.ShuffleLibrary()
+						p.AddToHand(chosen)
+						return nil
+					},
+				)))
+		}
 		return NewCreature("Sanar, Unfinished Genius // Wild Idea", "{U}{R} // {3}{U}{R}", 0, 4,
 			WithSubTypes("Goblin", "Sorcerer", "//", "Sorcery"),
 			WithSuperTypes(SuperLegendary),
+			WithPreparedSpell(spellFactory),
+			// {T}: Create a Treasure token. Activate only if you've cast an instant or sorcery spell this turn.
+			// Tracked via instantsCastThisTurn (instants) and a per-permanent Charge counter (instants+sorceries).
+			// A WheneverYouCastSpellTrigger adds a Charge counter whenever an instant or sorcery is cast;
+			// Charge counters reset at cleanup (CR 514.2). The tap ability checks Charge > 0.
+			WithAbility(WheneverYouCastSpellTrigger(
+				AddCounters(Charge, Fixed(1)).Targeting(ToSource()),
+				false,
+				IsInstantOrSorceryCard,
+			)),
+			WithActivatedAbility(
+				CreateTreasureToken(),
+				TapSourceCost(),
+				WithActivationCondition(func(g *Game, src *Permanent, controller uuid.UUID) bool {
+					if src == nil {
+						return false
+					}
+					return src.Counters[Charge] > 0
+				}),
+			),
 		)
 	})
 

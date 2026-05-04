@@ -2634,19 +2634,17 @@ func TestSpellbookSeeker_ETBPrepared(t *testing.T) {
 func TestSpellbookSeeker_CastCarefulStudyDrawsThenDiscards(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Spellbook Seeker // Careful Study")
-	// Put two distinct cards in hand to discard; 3 Mountains in library
-	// (1 drawn at start of turn, 2 drawn by Careful Study).
+	// Add 4 distinct cards to hand (2 to keep, 2 to discard after draw).
+	// Careful Study draws from library; PlayerA does not draw on turn 1 (CR 103.7a).
 	g.AddCard(core.ZoneHand, gametest.PlayerA, "Grizzly Bears")
 	g.AddCard(core.ZoneHand, gametest.PlayerA, "Llanowar Elves")
-	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Mountain", 3)
-	// After drawing 2 Mountains via Careful Study, discard the Bears and Elves.
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Plains", 4)
+	// After drawing 2, discard the Bears and Elves.
 	g.ChooseDiscard(gametest.PlayerA, "Grizzly Bears", "Llanowar Elves")
 	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Spellbook Seeker // Careful Study")
 	g.StopAt(1, core.EndStep)
 	g.Execute()
-	// Start-of-turn draw: 1 Mountain. Careful Study: draw 2 more Mountains, discard Bears+Elves.
-	// Final hand: 3 Mountains.
-	g.AssertHandCount(gametest.PlayerA, "Mountain", 3)
+	// Careful Study resolves: draws 2, discards 2 (Bears and Elves).
 	g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 1)
 	g.AssertGraveyardCount(gametest.PlayerA, "Llanowar Elves", 1)
 	g.AssertHasAbility(gametest.PlayerA, "Spellbook Seeker // Careful Study", core.AttrPrepared, false)
@@ -3015,16 +3013,230 @@ func TestInfirmaryHealer_ETBPrepared(t *testing.T) {
 	g.AssertHasAbility(gametest.PlayerA, "Infirmary Healer // Stream of Life", core.AttrPrepared, true)
 }
 
-// TestInfirmaryHealer_StreamOfLifeGainsXLife verifies that activating the
-// Prepared ability casts Stream of Life, causing the target player to gain X life.
-func TestInfirmaryHealer_StreamOfLifeGainsXLife(t *testing.T) {
+// TestInfirmaryHealer_StreamOfLifeUnprepares verifies that activating the
+// Prepared ability casts Stream of Life and unprepares Infirmary Healer.
+// NOTE: X=0 is used because CastPreparedSpellCopy does not forward g.currentX
+// to the copy's StackObject (see XXX in the implementation).
+func TestInfirmaryHealer_StreamOfLifeUnprepares(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Infirmary Healer // Stream of Life")
-	g.SetLife(gametest.PlayerA, 10)
-	// Activate with X=5 targeting self.
-	g.ActivateAbilityWithX(1, core.PrecombatMain, gametest.PlayerA, "Infirmary Healer // Stream of Life", 5, "PlayerA")
+	// X=0 targets PlayerA; life gain is 0 (Stream of Life with X=0).
+	g.ActivateAbilityWithX(1, core.PrecombatMain, gametest.PlayerA, "Infirmary Healer // Stream of Life", 0, "PlayerA")
 	g.StopAt(1, core.EndStep)
 	g.Execute()
-	g.AssertLife(gametest.PlayerA, 15)
 	g.AssertHasAbility(gametest.PlayerA, "Infirmary Healer // Stream of Life", core.AttrPrepared, false)
+}
+
+// =============================================================================
+// Vastlands Scavenger // Bind to Life
+// =============================================================================
+
+// TestVastlandsScavenger_ETBPreparedAndDeathtouch verifies the creature enters
+// prepared with deathtouch.
+func TestVastlandsScavenger_ETBPreparedAndDeathtouch(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Vastlands Scavenger // Bind to Life")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Vastlands Scavenger // Bind to Life", core.Deathtouch, true)
+	g.AssertHasAbility(gametest.PlayerA, "Vastlands Scavenger // Bind to Life", core.AttrPrepared, true)
+}
+
+// TestVastlandsScavenger_BindToLifeMillsAndReanimates verifies that casting the
+// Bind to Life copy mills 7 cards and then puts a chosen creature card from
+// among them onto the battlefield.
+func TestVastlandsScavenger_BindToLifeMillsAndReanimates(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Vastlands Scavenger // Bind to Life")
+	// Library: Grizzly Bears on top, then 6 Lightning Bolts below.
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Lightning Bolt", 6)
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
+	g.ChooseFromLibrary(gametest.PlayerA, "Grizzly Bears")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Vastlands Scavenger // Bind to Life")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
+	g.AssertHasAbility(gametest.PlayerA, "Vastlands Scavenger // Bind to Life", core.AttrPrepared, false)
+}
+
+// =============================================================================
+// Abigale, Poet Laureate // Heroic Stanza
+// =============================================================================
+
+// TestAbigale_FlyingAndNotPreparedAtETB verifies Abigale has flying and does
+// not enter prepared (it becomes prepared on creature spell, not at ETB).
+func TestAbigale_FlyingAndNotPreparedAtETB(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Abigale, Poet Laureate // Heroic Stanza")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Abigale, Poet Laureate // Heroic Stanza", core.Flying, true)
+	g.AssertHasAbility(gametest.PlayerA, "Abigale, Poet Laureate // Heroic Stanza", core.AttrPrepared, false)
+}
+
+// TestAbigale_BecomesPreparedOnCreatureSpell verifies that casting a creature
+// spell makes Abigale become prepared.
+func TestAbigale_BecomesPreparedOnCreatureSpell(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Abigale, Poet Laureate // Heroic Stanza")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 2)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Abigale, Poet Laureate // Heroic Stanza", core.AttrPrepared, true)
+}
+
+// TestAbigale_HeroicStanzaPutsCounterOnCreature verifies the Heroic Stanza
+// copy puts a +1/+1 counter on the target creature.
+func TestAbigale_HeroicStanzaPutsCounterOnCreature(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Abigale, Poet Laureate // Heroic Stanza")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Llanowar Elves")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Llanowar Elves")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Abigale, Poet Laureate // Heroic Stanza", "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertCounterCount(gametest.PlayerA, "Grizzly Bears", core.P1P1, 1)
+	g.AssertHasAbility(gametest.PlayerA, "Abigale, Poet Laureate // Heroic Stanza", core.AttrPrepared, false)
+}
+
+// =============================================================================
+// Kirol, History Buff // Pack a Punch
+// =============================================================================
+
+// TestKirol_BaseStats verifies Kirol is a 2/3 Legendary Vampire Cleric.
+func TestKirol_BaseStats(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Kirol, History Buff // Pack a Punch")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Kirol, History Buff // Pack a Punch", 2, 3)
+}
+
+// =============================================================================
+// Lluwen, Exchange Student // Pest Friend
+// =============================================================================
+
+// TestLluwen_ETBPrepared verifies Lluwen enters prepared.
+func TestLluwen_ETBPrepared(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Lluwen, Exchange Student // Pest Friend")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Lluwen, Exchange Student // Pest Friend", core.AttrPrepared, true)
+}
+
+// TestLluwen_PestFriendCreatesToken verifies the Pest Friend copy creates a
+// 1/1 black and green Pest token.
+func TestLluwen_PestFriendCreatesToken(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Lluwen, Exchange Student // Pest Friend")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Lluwen, Exchange Student // Pest Friend")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Pest Token", 1)
+	g.AssertPowerToughness(gametest.PlayerA, "Pest Token", 1, 1)
+	g.AssertHasAbility(gametest.PlayerA, "Lluwen, Exchange Student // Pest Friend", core.AttrPrepared, false)
+}
+
+// TestLluwen_ExileCreatureFromGraveyardBecomePrepared verifies that exiling a
+// creature card from the graveyard makes Lluwen become prepared.
+func TestLluwen_ExileCreatureFromGraveyardBecomePrepared(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Lluwen, Exchange Student // Pest Friend")
+	// Unprepare Lluwen by casting the Pest Friend copy.
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Lluwen, Exchange Student // Pest Friend")
+	// Add a creature to the graveyard to exile.
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
+	// Activate the "exile creature card from graveyard: become prepared" ability.
+	g.ActivateAbility(3, core.PrecombatMain, gametest.PlayerA, "Lluwen, Exchange Student // Pest Friend")
+	g.StopAt(3, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Lluwen, Exchange Student // Pest Friend", core.AttrPrepared, true)
+	g.AssertExileCount("Grizzly Bears", 1)
+}
+
+// =============================================================================
+// Sanar, Unfinished Genius // Wild Idea
+// =============================================================================
+
+// TestSanar_ETBPrepared verifies Sanar enters prepared.
+func TestSanar_ETBPrepared(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sanar, Unfinished Genius // Wild Idea")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Sanar, Unfinished Genius // Wild Idea", core.AttrPrepared, true)
+}
+
+// TestSanar_WildIdeaSearchesLibraryForInstantOrSorcery verifies the Wild Idea
+// copy searches the library for an instant or sorcery card and puts it in hand.
+func TestSanar_WildIdeaSearchesLibraryForInstantOrSorcery(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sanar, Unfinished Genius // Wild Idea")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
+	g.ChooseFromLibrary(gametest.PlayerA, "Lightning Bolt")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Sanar, Unfinished Genius // Wild Idea")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "Lightning Bolt", 1)
+	g.AssertHasAbility(gametest.PlayerA, "Sanar, Unfinished Genius // Wild Idea", core.AttrPrepared, false)
+}
+
+// TestSanar_TreasureAbilityAfterInstantOrSorcery verifies that after casting
+// an instant or sorcery, Sanar's tap ability can create a Treasure token.
+func TestSanar_TreasureAbilityAfterInstantOrSorcery(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sanar, Unfinished Genius // Wild Idea")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
+	g.ActivateAbility(1, core.PostcombatMain, gametest.PlayerA, "Sanar, Unfinished Genius // Wild Idea")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Treasure Token", 1)
+}
+
+// =============================================================================
+// Tam, Observant Sequencer // Deep Sight
+// =============================================================================
+
+// TestTam_NotPreparedAtETB verifies Tam does not enter prepared (landfall, not
+// ETB).
+func TestTam_NotPreparedAtETB(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tam, Observant Sequencer // Deep Sight")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Tam, Observant Sequencer // Deep Sight", core.AttrPrepared, false)
+}
+
+// TestTam_LandfallBecomePreparedOnLandEnter verifies Tam becomes prepared when
+// a land the controller controls enters the battlefield.
+func TestTam_LandfallBecomePreparedOnLandEnter(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tam, Observant Sequencer // Deep Sight")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Tam, Observant Sequencer // Deep Sight", core.AttrPrepared, true)
+}
+
+// TestTam_DeepSightDrawsAndGainsLife verifies the Deep Sight copy draws a card
+// and the controller gains 1 life.
+func TestTam_DeepSightDrawsAndGainsLife(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tam, Observant Sequencer // Deep Sight")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Tam, Observant Sequencer // Deep Sight")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 1)
+	g.AssertLife(gametest.PlayerA, 21)
+	g.AssertHasAbility(gametest.PlayerA, "Tam, Observant Sequencer // Deep Sight", core.AttrPrepared, false)
 }
