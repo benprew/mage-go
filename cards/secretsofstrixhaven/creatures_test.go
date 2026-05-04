@@ -4086,3 +4086,45 @@ func TestMoseo_PestTokenGainsLifeOnAttack(t *testing.T) {
 	g.Execute()
 	g.AssertLife(gametest.PlayerA, 21)
 }
+
+// TestOldGrowthEducator_Stats verifies Old-Growth Educator has vigilance and reach.
+func TestOldGrowthEducator_Stats(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Old-Growth Educator")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Old-Growth Educator", 4, 4)
+	g.AssertHasAbility(gametest.PlayerA, "Old-Growth Educator", core.Vigilance, true)
+	g.AssertHasAbility(gametest.PlayerA, "Old-Growth Educator", core.Reach, true)
+}
+
+// TestOldGrowthEducator_InfusionWithLifeGain verifies Old-Growth Educator gets
+// two +1/+1 counters when it enters if you gained life this turn.
+func TestOldGrowthEducator_InfusionWithLifeGain(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Old-Growth Educator")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Healing Salve")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 3)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	// Gain life via Healing Salve first (mode 0: gain 3 life), then cast Old-Growth Educator.
+	g.ChooseMode(gametest.PlayerA, 0)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Healing Salve", "PlayerA")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Old-Growth Educator")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertCounterCount(gametest.PlayerA, "Old-Growth Educator", core.P1P1, 2)
+}
+
+// TestOldGrowthEducator_InfusionNoCountersWithoutLifeGain verifies Old-Growth
+// Educator does not get counters when it enters without gaining life this turn.
+func TestOldGrowthEducator_InfusionNoCountersWithoutLifeGain(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Old-Growth Educator")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Old-Growth Educator")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertCounterCount(gametest.PlayerA, "Old-Growth Educator", core.P1P1, 0)
+}
