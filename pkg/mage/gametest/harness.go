@@ -829,6 +829,18 @@ func (tg *TestGame) buildPriorityActionForActivate(idx int) (mage.PriorityAction
 	tg.SetXValue(aa.xValue)
 	perm, abilityIdx, err := tg.findActivatableAbilityByName(playerID, aa.permName, targets)
 	if err != nil {
+		// Fall back to graveyard-zone activated ability when the permanent is
+		// not on the battlefield (CR 112.6 — abilities that function in zones
+		// other than the battlefield).
+		cardID, graveyardAbilityIdx, ok := tg.Game.FindGraveyardActivatableCard(playerID, aa.permName)
+		if ok {
+			if activateErr := tg.Game.ActivateGraveyardAbility(playerID, cardID, graveyardAbilityIdx, targets); activateErr != nil {
+				tg.t.Logf("ActivateAbility %s (graveyard) failed: %v", aa.permName, activateErr)
+				return mage.PriorityAction{}, false
+			}
+			// The ability is now on the stack; pass priority so the engine resolves it.
+			return mage.PriorityAction{Type: mage.PriorityPass}, true
+		}
 		tg.t.Logf("ActivateAbility %s failed: %v", aa.permName, err)
 		return mage.PriorityAction{}, false
 	}
