@@ -1251,10 +1251,29 @@ func registerSpells() {
 // Growth Curve {G}{U}
 // Sorcery
 // Put a +1/+1 counter on target creature you control, then double the number of +1/+1 counters on that creature.
-// TODO: implement
 	Register("Growth Curve", func() Card {
 		return NewSorcery("Growth Curve", "{G}{U}",
-			NewSpellAbility(),
+			NewTargetedSpell(TargetCreatureYouControl(),
+				FuncEffect(
+					"put a +1/+1 counter on target creature you control, then double the number of +1/+1 counters on it",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						perm := g.FindPermanent(targets[0])
+						if perm == nil {
+							return nil
+						}
+						g.AddCountersWithReplacement(perm, P1P1, 1, sourceID, false)
+						current := int(perm.Counters[P1P1])
+						if current > 0 {
+							g.AddCountersWithReplacement(perm, P1P1, current, sourceID, false)
+						}
+						return nil
+					},
+				),
+			),
 		)
 	})
 
