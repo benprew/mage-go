@@ -1475,7 +1475,8 @@ func TestFractalTender_EndStepCreatesFractalToken(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 4)
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Giant Spider")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Giant Spider")
-		g.StopAt(1, core.EndStep)
+		// Stop at Cleanup so that the EndStep triggers have had a chance to resolve.
+		g.StopAt(1, core.Cleanup)
 		g.Execute()
 		// Fractal token should have been created at end step
 		g.AssertPermanentCount(gametest.PlayerA, "Fractal Token", 1)

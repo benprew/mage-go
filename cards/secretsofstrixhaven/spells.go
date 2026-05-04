@@ -877,6 +877,7 @@ func registerSpells() {
 						// CR 706.10: the token is a copy of the creature. Copy() produces a new
 						// Card with the same characteristics; the permanent inherits its values.
 						tokenCard := perm.Card.Copy()
+						tokenCard.SetOwner(targetPlayerID)
 						g.PutOnBattlefield(tokenCard, targetPlayerID)
 						// Paradigm: exile self instead of going to graveyard.
 						g.AddExileIfWouldGoToGraveyardThisTurn(sourceID, sourceID)
@@ -1214,10 +1215,70 @@ func registerSpells() {
 // Follow the Lumarets {1}{G}
 // Sorcery
 // Infusion — Look at the top four cards of your library. You may reveal a creature or land card from among them and put it into your hand. If you gained life this turn, you may instead reveal two creature and/or land cards from among them and put them into your hand. Put the rest on the bottom of your library in a random order.
-// TODO: implement
 	Register("Follow the Lumarets", func() Card {
+		isCreatureOrLand := NewCardFilter("creature or land card", func(c Card) bool {
+			return c.HasType(TypeCreature) || c.HasType(TypeLand)
+		})
 		return NewSorcery("Follow the Lumarets", "{1}{G}",
-			NewSpellAbility(),
+			NewSpellAbility(
+				FuncEffect(
+					"Infusion — look at top 4; reveal 1 (or 2 if gained life) creature or land, put in hand; rest on bottom random",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						// Look at top 4 cards.
+						top4 := g.RemoveTopN(p, 4)
+						if len(top4) == 0 {
+							return nil
+						}
+						// Determine how many creature/land cards may be taken.
+						gainedLife := IfControllerGainedLifeThisTurn(g, controller)
+						maxPick := 1
+						if gainedLife {
+							maxPick = 2
+						}
+						// Collect eligible candidates.
+						var candidates []Card
+						for _, c := range top4 {
+							if isCreatureOrLand.Match(c) {
+								candidates = append(candidates, c)
+							}
+						}
+						var taken []Card
+						remaining := append([]Card(nil), top4...)
+						for i := 0; i < maxPick && len(candidates) > 0; i++ {
+							chosen := p.ChooseCardFromLibrary(candidates, "reveal and put into your hand", g)
+							if chosen == nil {
+								break
+							}
+							taken = append(taken, chosen)
+							// Remove chosen from candidates and remaining using fresh slices.
+							var newCandidates []Card
+							for _, c := range candidates {
+								if c.ID() != chosen.ID() {
+									newCandidates = append(newCandidates, c)
+								}
+							}
+							candidates = newCandidates
+							var newRemaining []Card
+							for _, c := range remaining {
+								if c.ID() != chosen.ID() {
+									newRemaining = append(newRemaining, c)
+								}
+							}
+							remaining = newRemaining
+						}
+						for _, c := range taken {
+							p.AddToHand(c)
+						}
+						g.PutOnBottomInRandomOrder(p, remaining)
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -1302,10 +1363,29 @@ func registerSpells() {
 // Sorcery — Lesson
 // Put two +1/+1 counters on each creature you control.
 // Paradigm (Then exile this spell. After you first resolve a spell with this name, you may cast a copy of it from exile without paying its mana cost at the beginning of each of your first main phases.)
-// TODO: implement
+// XXX: Paradigm recurring-cast trigger cannot be implemented — the engine does not scan exile-zone
+// triggers (only graveyard triggers are supported via InZone). The primary effect and first-resolve
+// self-exile are fully implemented.
 	Register("Germination Practicum", func() Card {
-		return NewSorcery("Germination Practicum", "{3}{G}{G}",
-			NewSpellAbility(),
+		const cardName = "Germination Practicum"
+		return NewSorcery(cardName, "{3}{G}{G}",
+			NewSpellAbility(
+				FuncEffect(
+					"put two +1/+1 counters on each creature you control; exile this spell (Paradigm)",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						// Put two +1/+1 counters on each creature you control.
+						for _, perm := range g.FilterBattlefield(And(ControlledBy(controller), IsCreature)) {
+							g.AddCountersWithReplacement(perm, P1P1, 2, sourceID, false)
+						}
+						// Paradigm: exile this spell instead of sending to graveyard.
+						g.AddExileIfWouldGoToGraveyardThisTurn(sourceID, sourceID)
+						g.RecordParadigmResolution(controller, cardName)
+						g.RegisterParadigmExiledCopy(controller, cardName, sourceID)
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -1578,10 +1658,75 @@ func registerSpells() {
 // Sorcery — Lesson
 // Exile cards from the top of your library until you exile cards with total mana value 4 or greater. You may cast any number of spells from among them without paying their mana costs.
 // Paradigm (Then exile this spell. After you first resolve a spell with this name, you may cast a copy of it from exile without paying its mana cost at the beginning of each of your first main phases.)
-// TODO: implement
+// XXX: Paradigm recurring-cast trigger cannot be implemented — the engine does not scan exile-zone
+// triggers (only graveyard triggers are supported via InZone). The primary effect and first-resolve
+// self-exile are fully implemented.
 	Register("Improvisation Capstone", func() Card {
-		return NewSorcery("Improvisation Capstone", "{5}{R}{R}",
-			NewSpellAbility(),
+		const cardName = "Improvisation Capstone"
+		return NewSorcery(cardName, "{5}{R}{R}",
+			NewSpellAbility(
+				FuncEffect(
+					"exile cards from top until total mana value 4+; you may cast any number without paying their mana costs; exile this spell (Paradigm)",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						// Exile cards from the top of the library until total mana value >= 4.
+						var exiledIDs []uuid.UUID
+						totalMV := 0
+						for totalMV < 4 {
+							lib := p.Library()
+							if len(lib) == 0 {
+								break
+							}
+							top := lib[0]
+							p.SetLibrary(lib[1:])
+							g.ExileCard(top, sourceID)
+							exiledIDs = append(exiledIDs, top.ID())
+							totalMV += top.ManaCost().CMC()
+						}
+						// You may cast any number of spells from among the exiled cards.
+						for _, cid := range exiledIDs {
+							ec := g.FindExiledCard(cid)
+							if ec == nil || ec.Card.HasType(TypeLand) {
+								continue
+							}
+							if !p.ChooseMayAbility("cast " + ec.Card.Name() + " without paying its mana cost") {
+								continue
+							}
+							// Gather targets for the chosen spell.
+							var castTargets []uuid.UUID
+							for _, a := range ec.Card.Abilities() {
+								sa, ok := a.(*SpellAbility)
+								if !ok {
+									continue
+								}
+								for _, t := range sa.Targets() {
+									t.Reset()
+									possible := t.Possible(controller, ec.Card, g)
+									if len(possible) == 0 {
+										continue
+									}
+									selected := p.ChooseTargets(possible, t.Min(), t.Max(), g)
+									if err := t.Choose(controller, ec.Card, g, selected); err != nil {
+										continue
+									}
+									castTargets = append(castTargets, selected...)
+								}
+								break
+							}
+							_ = g.CastCardFromExileWithoutPaying(controller, cid, castTargets, 0)
+						}
+						// Paradigm: exile this spell instead of sending to graveyard.
+						g.AddExileIfWouldGoToGraveyardThisTurn(sourceID, sourceID)
+						g.RecordParadigmResolution(controller, cardName)
+						g.RegisterParadigmExiledCopy(controller, cardName, sourceID)
+						return nil
+					},
+				),
+			),
 		)
 	})
 

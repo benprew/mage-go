@@ -1999,3 +1999,53 @@ func TestImprovisationCapstone_ParadigmExilesAfterResolve(t *testing.T) {
 	g.AssertGraveyardCount(gametest.PlayerA, "Improvisation Capstone", 0)
 	g.AssertExileCount("Improvisation Capstone", 1)
 }
+
+// TestFollowTheLumarets_RevealsOneCreatureOrLand verifies that without life
+// gain, Follow the Lumarets lets you reveal one creature or land from the top
+// four cards of your library and put it into your hand.
+func TestFollowTheLumarets_RevealsOneCreatureOrLand(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	// Set up library: top card is a creature, rest are filler.
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Follow the Lumarets")
+	// Choose Grizzly Bears from the top 4 to put into hand.
+	g.ChooseFromLibrary(gametest.PlayerA, "Grizzly Bears")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Follow the Lumarets")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 1)
+}
+
+// TestFollowTheLumarets_InfusionRevealsTwoWithLifeGain verifies that if the
+// controller gained life this turn, up to two creature and/or land cards may
+// be put into hand.
+func TestFollowTheLumarets_InfusionRevealsTwoWithLifeGain(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	// Use two creature cards in the library so they are not auto-played as
+	// lands by the test harness after Follow the Lumarets resolves.
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Giant Spider")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Healing Salve") // {W} — gain 3 life
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Follow the Lumarets")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+	// Gain life by casting Healing Salve during Upkeep so it resolves before
+	// Follow the Lumarets is cast in PrecombatMain. This ensures gainedLife is
+	// true when the infusion condition is checked.
+	g.ChooseMode(gametest.PlayerA, 0)
+	g.CastSpell(1, core.Upkeep, gametest.PlayerA, "Healing Salve", "PlayerA")
+	// Choose two creature cards from the top 4 (Grizzly Bears and Giant Spider).
+	g.ChooseFromLibrary(gametest.PlayerA, "Grizzly Bears")
+	g.ChooseFromLibrary(gametest.PlayerA, "Giant Spider")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Follow the Lumarets")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Verify Healing Salve gained 3 life (sanity check for infusion condition).
+	g.AssertLife(gametest.PlayerA, 23)
+	g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 1)
+	// Giant Spider should be in hand if infusion condition triggered.
+	g.AssertHandCount(gametest.PlayerA, "Giant Spider", 1)
+}
