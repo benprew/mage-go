@@ -2708,7 +2708,12 @@ func registerSpells() {
 						ctx := g.ResolvingCastContext()
 						x := 0
 						if ctx != nil {
-							x = ctx.DistinctColorsSpent()
+							// Converge counts only actual colors (WUBRG), not Colorless.
+							for c, v := range ctx.ColorsSpent {
+								if v > 0 && c != Colorless {
+									x++
+								}
+							}
 						}
 						for i := 0; i < 2; i++ {
 							token := NewToken("Fractal Token", 0, 0,
