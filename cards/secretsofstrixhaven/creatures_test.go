@@ -535,7 +535,7 @@ func TestImperiousInkmage_VigilanceAndSurveil(t *testing.T) {
 	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
 	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Serra Angel")
 	// Surveil 2: put Grizzly Bears into graveyard, keep Serra Angel on top
-	g.ChooseScry(gametest.PlayerA, []string{"Grizzly Bears"}, []string{"Serra Angel"})
+	g.ChooseSurveil(gametest.PlayerA, []string{"Grizzly Bears"}, []string{"Serra Angel"})
 	g.StopAt(1, core.EndStep)
 	g.Execute()
 	g.AssertHasAbility(gametest.PlayerA, "Imperious Inkmage", core.Vigilance, true)
@@ -767,7 +767,7 @@ func TestOwlinHistorian_FlyingAndSurveil(t *testing.T) {
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Owlin Historian")
 	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
 	// Surveil 1: put the card into graveyard
-	g.ChooseScry(gametest.PlayerA, []string{"Grizzly Bears"}, nil)
+	g.ChooseSurveil(gametest.PlayerA, []string{"Grizzly Bears"}, nil)
 	g.StopAt(1, core.EndStep)
 	g.Execute()
 	g.AssertHasAbility(gametest.PlayerA, "Owlin Historian", core.Flying, true)
@@ -2736,7 +2736,7 @@ func TestGraveResearcher_BecomesPreparedWithThreeCreatureCardsInGraveyard(t *tes
 	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Serra Angel")
 	// Surveil 1: one card on library top — put it back on top.
 	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Mountain")
-	g.ChooseScry(gametest.PlayerA, []string{}, []string{"Mountain"})
+	g.ChooseSurveil(gametest.PlayerA, []string{}, []string{"Mountain"})
 	g.StopAt(2, core.PrecombatMain)
 	g.Execute()
 	g.AssertHasAbility(gametest.PlayerA, "Grave Researcher // Reanimate", core.AttrPrepared, true)
@@ -2750,7 +2750,7 @@ func TestGraveResearcher_NotPreparedWithFewerThanThreeCreatures(t *testing.T) {
 	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
 	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Llanowar Elves")
 	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Mountain")
-	g.ChooseScry(gametest.PlayerA, []string{}, []string{"Mountain"})
+	g.ChooseSurveil(gametest.PlayerA, []string{}, []string{"Mountain"})
 	g.StopAt(2, core.PrecombatMain)
 	g.Execute()
 	g.AssertHasAbility(gametest.PlayerA, "Grave Researcher // Reanimate", core.AttrPrepared, false)
@@ -2768,7 +2768,7 @@ func TestGraveResearcher_ReanimateControlsCreatureAndLosesLife(t *testing.T) {
 	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Serra Angel")
 	// Turn 1 upkeep: surveil 1; keep Mountain on top. Turn 3 upkeep: library empty, no choice.
 	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Mountain")
-	g.ChooseScry(gametest.PlayerA, []string{}, []string{"Mountain"})
+	g.ChooseSurveil(gametest.PlayerA, []string{}, []string{"Mountain"})
 	// Activate on turn 3 (PlayerA's main phase). Turn 1 upkeep set prepared; ChooseTargets
 	// fallback picks first available graveyard creature (Grizzly Bears, CMC 2).
 	g.ActivateAbility(3, core.PrecombatMain, gametest.PlayerA, "Grave Researcher // Reanimate")
@@ -3933,7 +3933,7 @@ func TestInklingMascot_ReparteeGrantsFlyingAndSurveils(t *testing.T) {
 		// A card on top of library to surveil.
 		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
 		// Surveil 1: put top card (Grizzly Bears) into graveyard.
-		g.ChooseScry(gametest.PlayerA, []string{"Grizzly Bears"}, nil)
+		g.ChooseSurveil(gametest.PlayerA, []string{"Grizzly Bears"}, nil)
 		// Shock targets Llanowar Elves (a creature) — Repartee triggers.
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Shock", "Llanowar Elves")
 		g.StopAt(1, core.EndStep)

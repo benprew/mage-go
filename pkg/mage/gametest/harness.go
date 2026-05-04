@@ -350,6 +350,14 @@ func (tg *TestGame) ChooseScry(p PlayerRef, bottom []string, topOrder []string) 
 	tg.GetPlayer(p).AddScryDecision(bottom, topOrder)
 }
 
+// ChooseSurveil queues a surveil placement for the next surveil the player
+// performs (CR 701.42). `graveyard` lists card names (in placement order) that
+// go into the graveyard; `topOrder` lists the remaining card names in their
+// new top-of-library order. Both must reference cards revealed by the surveil.
+func (tg *TestGame) ChooseSurveil(p PlayerRef, graveyard []string, topOrder []string) {
+	tg.GetPlayer(p).AddSurveilDecision(graveyard, topOrder)
+}
+
 // FormBand scripts which creatures form an attacking band on the given turn.
 func (tg *TestGame) FormBand(turn int, p PlayerRef, creatures ...string) {
 	tg.GetPlayer(p).AddBandFormation(turn, creatures)

@@ -196,6 +196,28 @@ func (e *scryEffect) EffectProps() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
+// surveilEffect implements Surveil N (CR 701.42) for the controller of the
+// effect: look at the top N cards of your library, then put any number of
+// them into your graveyard and the rest on top of your library in any order.
+type surveilEffect struct {
+	amount ValueSource
+}
+
+// Surveil creates an effect that surveils N for the controller (CR 701.42).
+func Surveil(amount ValueSource) Effect {
+	return DataEffect(&surveilEffect{amount: amount})
+}
+
+func (e *surveilEffect) EffectText() string {
+	if _, ok := e.amount.(xValue); ok {
+		return "surveil X"
+	}
+	return fmt.Sprintf("surveil %d", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil))
+}
+func (e *surveilEffect) EffectProps() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
+
 // returnToHandTargetEffect bounces a target permanent to its owner's hand.
 type returnToHandTargetEffect struct{}
 
@@ -692,6 +714,19 @@ func execScry(ctx *EffectContext, e *scryEffect) error {
 		return nil
 	}
 	ctx.Game.PerformScry(p, n)
+	return nil
+}
+
+func execSurveil(ctx *EffectContext, e *surveilEffect) error {
+	p := ctx.Game.GetPlayer(ctx.Controller)
+	if p == nil {
+		return ErrPlayerNotFound
+	}
+	n := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	if n <= 0 {
+		return nil
+	}
+	ctx.Game.PerformSurveil(p, n)
 	return nil
 }
 

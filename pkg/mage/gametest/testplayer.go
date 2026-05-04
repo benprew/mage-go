@@ -48,6 +48,7 @@ type TestPlayer struct {
 	combatBlockerOrder        map[string][]string
 	combatDamageAssignment    map[string]map[string]int
 	chooseScryDecisions       []scryDecision
+	chooseSurveilDecisions    []surveilDecision
 	chooseDamageDistribution  []map[string]int
 	chooseMayAbility          []bool
 }
@@ -63,6 +64,13 @@ func (tp *TestPlayer) QueueMayAbilityChoices(choices ...bool) {
 type scryDecision struct {
 	bottom   []string
 	topOrder []string
+}
+
+// surveilDecision is one queued surveil placement: cards to send to the
+// graveyard and the desired top order for the rest.
+type surveilDecision struct {
+	graveyard []string
+	topOrder  []string
 }
 
 func NewTestPlayer(name string) *TestPlayer {
@@ -466,6 +474,57 @@ func (tp *TestPlayer) ChooseScryPlacement(top []mage.Card, reason string, g mage
 		}
 	}
 	return bottom, topOrder
+}
+
+// AddSurveilDecision queues a surveil placement. `graveyard` lists card names
+// to put into the graveyard; `topOrder` lists card names to keep on top in the
+// given order. Names listed must be drawn from the top N revealed by surveil.
+func (tp *TestPlayer) AddSurveilDecision(graveyard, topOrder []string) {
+	tp.chooseSurveilDecisions = append(tp.chooseSurveilDecisions, surveilDecision{
+		graveyard: append([]string(nil), graveyard...),
+		topOrder:  append([]string(nil), topOrder...),
+	})
+}
+
+// ChooseSurveilPlacement consumes one queued decision; with no queued
+// decision the BasePlayer default applies (keep all on top in current order).
+func (tp *TestPlayer) ChooseSurveilPlacement(top []mage.Card, reason string, g mage.GameReader) (graveyard []uuid.UUID, topOrder []uuid.UUID) {
+	if len(tp.chooseSurveilDecisions) == 0 {
+		return tp.BasePlayer.ChooseSurveilPlacement(top, reason, g)
+	}
+	dec := tp.chooseSurveilDecisions[0]
+	tp.chooseSurveilDecisions = tp.chooseSurveilDecisions[1:]
+
+	used := make(map[uuid.UUID]bool, len(top))
+	resolve := func(name string) (uuid.UUID, bool) {
+		for _, c := range top {
+			if used[c.ID()] {
+				continue
+			}
+			if c.Name() == name {
+				used[c.ID()] = true
+				return c.ID(), true
+			}
+		}
+		return uuid.Nil, false
+	}
+
+	for _, name := range dec.graveyard {
+		if id, ok := resolve(name); ok {
+			graveyard = append(graveyard, id)
+		}
+	}
+	for _, name := range dec.topOrder {
+		if id, ok := resolve(name); ok {
+			topOrder = append(topOrder, id)
+		}
+	}
+	for _, c := range top {
+		if !used[c.ID()] {
+			topOrder = append(topOrder, c.ID())
+		}
+	}
+	return graveyard, topOrder
 }
 
 // ChooseNumber picks a number from the given range.

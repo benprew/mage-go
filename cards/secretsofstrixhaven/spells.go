@@ -299,13 +299,12 @@ func registerSpells() {
 // Banishing Betrayal {1}{U}
 // Instant
 // Return target nonland permanent to its owner's hand. Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)
-// XXX: Surveil 1 is not yet implemented in the engine (Surveil differs from Scry in that cards can go to the graveyard).
 	Register("Banishing Betrayal", func() Card {
 		return NewInstant("Banishing Betrayal", "{1}{U}",
 			NewTargetedSpell(
 				TargetPermanent(Not(IsLand)),
 				ReturnToHandTarget(),
-				// XXX: Surveil 1 not implemented
+				Surveil(Fixed(1)),
 			),
 		)
 	})
@@ -411,8 +410,6 @@ func registerSpells() {
 // Burrog Barrage {1}{G}
 // Instant
 // Target creature you control gets +1/+0 until end of turn if you've cast another instant or sorcery spell this turn. Then it deals damage equal to its power to up to one target creature an opponent controls.
-// XXX: "another instant or sorcery spell" — engine only tracks instants cast this turn via GetInstantsCastThisTurn;
-// sorcery cast tracking is not available. Partial implementation: checks for another instant cast this turn.
 	Register("Burrog Barrage", func() Card {
 		return NewInstant("Burrog Barrage", "{1}{G}",
 			NewMultiTargetSpell(
@@ -421,7 +418,7 @@ func registerSpells() {
 					TargetCreatureOpponentControls(),
 				},
 				FuncEffect(
-					"get +1/+0 if another instant cast this turn, then deal damage equal to power to opponent creature",
+					"get +1/+0 if another instant or sorcery cast this turn, then deal damage equal to power to opponent creature",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
@@ -431,9 +428,11 @@ func registerSpells() {
 						if yourCreature == nil {
 							return nil
 						}
-						// +1/+0 if another instant or sorcery was cast this turn
-						// XXX: sorceries not tracked; only checking instants
-						if g.GetInstantsCastThisTurn(controller) > 1 {
+						// +1/+0 if another instant or sorcery was cast this turn.
+						// Burrog Barrage itself is an instant currently on the
+						// stack and has already incremented the counter, so
+						// "another" means strictly greater than 1.
+						if g.GetInstantOrSorceryCastThisTurn(controller) > 1 {
 							g.AddContinuousEffect(TemporaryBoost(yourCreature.ID(), 1, 0))
 						}
 						// deal damage equal to power to opponent creature (up to one)
@@ -2218,7 +2217,7 @@ func registerSpells() {
 					[]string{"Elemental"},
 					Flying,
 				),
-				surveilEffect(2),
+				Surveil(Fixed(2)),
 			),
 		)
 	})
@@ -2412,7 +2411,7 @@ func registerSpells() {
 				Label:   "Surveil 2, then draw a card",
 				Targets: []Target{},
 				Effects: []Effect{
-					surveilEffect(2),
+					Surveil(Fixed(2)),
 					FuncEffect("draw a card",
 						EffectProperties{Outcome: OutcomeBenefit, DrawCount: 1},
 						func(g *Game, _, controller uuid.UUID, _ []uuid.UUID) error {
@@ -3555,13 +3554,12 @@ func registerSpells() {
 // Unsubtle Mockery {2}{R}
 // Instant
 // Unsubtle Mockery deals 4 damage to target creature. Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)
-// XXX: Surveil 1 not implemented (engine lacks Surveil; differs from Scry in that cards go to graveyard).
 	Register("Unsubtle Mockery", func() Card {
 		return NewInstant("Unsubtle Mockery", "{2}{R}",
 			NewTargetedSpell(
 				TargetCreature(),
 				DealDamage(Fixed(4)),
-				// XXX: Surveil 1 not implemented
+				Surveil(Fixed(1)),
 			),
 		)
 	})
@@ -3719,7 +3717,6 @@ func registerSpells() {
 // Sorcery
 // Create a 0/0 green and blue Fractal creature token. Put X +1/+1 counters on it.
 // Surveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)
-// XXX: Surveil 2 not implemented (engine lacks Surveil; differs from Scry in that cards go to graveyard).
 	Register("Wild Hypothesis", func() Card {
 		return NewSorcery("Wild Hypothesis", "{X}{G}",
 			NewSpellAbility(
@@ -3739,10 +3736,10 @@ func registerSpells() {
 							perm.AddCounter(P1P1, x)
 							g.ApplyContinuousEffects()
 						}
-						// XXX: Surveil 2 not implemented
 						return nil
 					},
 				),
+				Surveil(Fixed(2)),
 			),
 		)
 	})

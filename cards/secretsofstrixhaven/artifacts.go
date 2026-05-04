@@ -131,21 +131,8 @@ func registerArtifacts() {
 // {T}: Add one mana of any color.
 // {T}: You gain 2 life. Activate only if you've cast an instant or sorcery spell this turn.
 	Register("Potioner's Trove", func() Card {
-		// XXX: The Oracle says "if you've cast an instant or sorcery spell this
-		// turn." The engine tracks GetInstantsCastThisTurn but not sorceries
-		// separately. We check both instants and sorceries via the combined
-		// GetInstantsCastThisTurn (sorceries at sorcery speed also increment
-		// this counter per keyword_sos.go line 136 and game.go line 2594,
-		// which increments it for all instants; actual sorcery tracking uses
-		// WheneverYouCastSpellTrigger with IsInstantOrSorceryCard — but no
-		// getter for sorceries alone exists). We use GetInstantsCastThisTurn
-		// as a best-effort approximation; sorceries cast will not enable
-		// the ability until a dedicated counter is added to the engine.
-		// XXX: Sorcery detection is incomplete: GetInstantsCastThisTurn only
-		// counts instants, not sorceries. The activation condition below fires
-		// for instants only.
 		lifeGainCondition := func(g *Game, src *Permanent, controller uuid.UUID) bool {
-			return g.GetInstantsCastThisTurn(controller) > 0
+			return g.GetInstantOrSorceryCastThisTurn(controller) > 0
 		}
 		return NewArtifact("Potioner's Trove", "{3}",
 			WithAnyColorMana(),

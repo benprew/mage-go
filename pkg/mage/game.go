@@ -152,7 +152,8 @@ type Game struct {
 	blockedThisTurn map[uuid.UUID][]uuid.UUID
 
 	// Instant spells cast this turn per player (for Ichneumon Druid, etc.)
-	instantsCastThisTurn map[uuid.UUID]int
+	instantsCastThisTurn  map[uuid.UUID]int
+	sorceriesCastThisTurn map[uuid.UUID]int
 
 	// Creature deaths this turn (total count across all players)
 	creatureDeathsThisTurn int
@@ -315,6 +316,7 @@ func NewGame(playerA, playerB Player) *Game {
 		attackedThisTurn:            make(map[uuid.UUID]bool),
 		blockedThisTurn:             make(map[uuid.UUID][]uuid.UUID),
 		instantsCastThisTurn:        make(map[uuid.UUID]int),
+		sorceriesCastThisTurn:       make(map[uuid.UUID]int),
 		timesTargetedThisTurn:       make(map[uuid.UUID]int),
 		artifactManaOnly:            make(map[uuid.UUID]bool),
 		creatureManaOnly:            make(map[uuid.UUID]bool),
@@ -1454,6 +1456,53 @@ func (g *Game) PerformScry(p Player, n int) int {
 		PlayerID: p.PlayerID(),
 		Amount:   count,
 	})
+	return count
+}
+
+// PerformSurveil implements surveil N (CR 701.42): the player looks at the top
+// N cards of their library, then puts any number of them into their graveyard
+// and the rest on top of their library in any order. If the library has fewer
+// than N cards, the player surveils however many are present. Returns the
+// number of cards actually surveiled.
+//
+// The placement decision is delegated to Player.ChooseSurveilPlacement; the
+// engine validates the returned IDs and falls back to "all on top, original
+// order" on any mismatch so a buggy player implementation cannot lose cards.
+func (g *Game) PerformSurveil(p Player, n int) int {
+	if p == nil || n <= 0 {
+		return 0
+	}
+	lib := p.Library()
+	if len(lib) == 0 {
+		return 0
+	}
+	count := n
+	if count > len(lib) {
+		count = len(lib)
+	}
+	top := make([]Card, count)
+	copy(top, lib[:count])
+
+	graveyard, topOrder := p.ChooseSurveilPlacement(top, "surveil", g)
+	graveyard, topOrder = validateScryPlacement(top, graveyard, topOrder)
+
+	idToCard := make(map[uuid.UUID]Card, count)
+	for _, c := range top {
+		idToCard[c.ID()] = c
+	}
+
+	rest := lib[count:]
+	newLib := make([]Card, 0, len(lib))
+	for _, id := range topOrder {
+		newLib = append(newLib, idToCard[id])
+	}
+	newLib = append(newLib, rest...)
+	p.SetLibrary(newLib)
+	for _, id := range graveyard {
+		if c, ok := idToCard[id]; ok {
+			p.AddToGraveyard(c)
+		}
+	}
 	return count
 }
 
@@ -2660,9 +2709,12 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 
 	g.stack.Push(obj)
 
-	// Track instant spells cast per player this turn
+	// Track instant/sorcery spells cast per player this turn
 	if card.HasType(TypeInstant) {
 		g.instantsCastThisTurn[playerID]++
+	}
+	if card.HasType(TypeSorcery) {
+		g.sorceriesCastThisTurn[playerID]++
 	}
 
 	g.FireEvent(GameEvent{
@@ -3458,6 +3510,7 @@ func (g *Game) doCleanupActions() bool {
 	g.attackedThisTurn = make(map[uuid.UUID]bool)
 	g.blockedThisTurn = make(map[uuid.UUID][]uuid.UUID)
 	g.instantsCastThisTurn = make(map[uuid.UUID]int)
+	g.sorceriesCastThisTurn = make(map[uuid.UUID]int)
 	g.timesTargetedThisTurn = make(map[uuid.UUID]int)
 	g.creatureDeathsThisTurn = 0
 	g.clearLKI()

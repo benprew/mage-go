@@ -39,6 +39,8 @@ type GameReader interface {
 	GetDamageSources(uuid.UUID) map[uuid.UUID]bool
 	GetBlockedThisTurn(uuid.UUID) []uuid.UUID
 	GetInstantsCastThisTurn(uuid.UUID) int
+	GetSorceriesCastThisTurn(uuid.UUID) int
+	GetInstantOrSorceryCastThisTurn(uuid.UUID) int
 	TimesTargetedThisTurn(uuid.UUID) int
 	AllBattlefield() []*Permanent
 	GetResolvingTargets() []uuid.UUID
@@ -201,6 +203,19 @@ func (g *Game) GetBlockedThisTurn(blockerID uuid.UUID) []uuid.UUID {
 // GetInstantsCastThisTurn returns the number of instants the given player has cast this turn.
 func (g *Game) GetInstantsCastThisTurn(playerID uuid.UUID) int {
 	return g.instantsCastThisTurn[playerID]
+}
+
+// GetSorceriesCastThisTurn returns the number of sorceries the given player
+// has cast this turn.
+func (g *Game) GetSorceriesCastThisTurn(playerID uuid.UUID) int {
+	return g.sorceriesCastThisTurn[playerID]
+}
+
+// GetInstantOrSorceryCastThisTurn returns the total instants and sorceries
+// the given player has cast this turn (CR 117 — combined predicate used by
+// many cards that ask "if you've cast an instant or sorcery spell this turn").
+func (g *Game) GetInstantOrSorceryCastThisTurn(playerID uuid.UUID) int {
+	return g.instantsCastThisTurn[playerID] + g.sorceriesCastThisTurn[playerID]
 }
 
 // --- Mutation methods on *Game ---

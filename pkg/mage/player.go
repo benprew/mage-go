@@ -129,6 +129,17 @@ type Player interface {
 	// The union of bottom and topOrder must equal the IDs in `top` exactly once each;
 	// the engine validates this and falls back to the original order on any mismatch.
 	ChooseScryPlacement(top []Card, reason string, g GameReader) (bottom []uuid.UUID, topOrder []uuid.UUID)
+
+	// ChooseSurveilPlacement implements the controller's choice for a surveil
+	// (CR 701.42). `top` is the top N cards of the library in their current
+	// order (top first). The implementation returns:
+	//   - graveyard: the subset of `top` (by ID) that go to the graveyard,
+	//     in the order they will be placed.
+	//   - topOrder: the remaining cards (by ID) in the order they will be
+	//     placed back on top of the library (first ID becomes the new top card).
+	// The union must equal the IDs in `top` exactly once each; the engine
+	// validates this and falls back to the original order on any mismatch.
+	ChooseSurveilPlacement(top []Card, reason string, g GameReader) (graveyard []uuid.UUID, topOrder []uuid.UUID)
 }
 
 // BasePlayer implements Player with basic functionality.
@@ -381,6 +392,17 @@ func (p *BasePlayer) ChooseString(options []string, reason string) string {
 // ChooseScryPlacement: deterministic default keeps every revealed card on top
 // in its original order. Card implementations and AI players may override this.
 func (p *BasePlayer) ChooseScryPlacement(top []Card, reason string, g GameReader) (bottom []uuid.UUID, topOrder []uuid.UUID) {
+	topOrder = make([]uuid.UUID, len(top))
+	for i, c := range top {
+		topOrder[i] = c.ID()
+	}
+	return nil, topOrder
+}
+
+// ChooseSurveilPlacement: deterministic default keeps every revealed card on
+// top in its original order (no cards milled to the graveyard). Card
+// implementations and AI players may override this.
+func (p *BasePlayer) ChooseSurveilPlacement(top []Card, reason string, g GameReader) (graveyard []uuid.UUID, topOrder []uuid.UUID) {
 	topOrder = make([]uuid.UUID, len(top))
 	for i, c := range top {
 		topOrder[i] = c.ID()

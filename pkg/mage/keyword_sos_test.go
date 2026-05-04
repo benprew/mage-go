@@ -110,6 +110,77 @@ func TestPrepared_CannotCastWhenUnprepared(t *testing.T) {
 	}
 }
 
+// TestPrepared_CastPreparedCopyForwardsCurrentX: when CastPreparedSpellCopy
+// is invoked from inside a resolving effect (the typical Prepared activation),
+// the copy must inherit the resolving spell's X value. Otherwise X-cost
+// prepared spells resolve with X=0 (CR 706.10c — copies of X-cost spells
+// copy the chosen X).
+func TestPrepared_CastPreparedCopyForwardsCurrentX(t *testing.T) {
+	a := newRecordingPlayer("A")
+	b := newRecordingPlayer("B")
+	g := NewGame(a, b)
+	for _, p := range g.players {
+		for range 10 {
+			p.AddToLibrary(NewLand("Plains"))
+		}
+	}
+
+	spellFactory := func() Card {
+		return NewInstant("Draw X", "{X}",
+			NewSpellAbility(DrawCards(XValue())))
+	}
+	c := NewCreature("X-Mage", "{W}", 1, 2,
+		WithPreparedSpell(spellFactory),
+	)
+	c.SetOwner(a.PlayerID())
+	perm := g.PutOnBattlefield(c, a.PlayerID())
+	g.ResolveStack()
+
+	g.currentX = 3
+	if err := g.CastPreparedSpellCopy(a.PlayerID(), perm.Card.ID(), spellFactory); err != nil {
+		t.Fatalf("CastPreparedSpellCopy: %v", err)
+	}
+	top := g.stack.Peek()
+	if top.XValue != 3 {
+		t.Errorf("expected copy XValue=3, got %d", top.XValue)
+	}
+	g.ResolveStack()
+	if got := len(a.Hand()); got != 3 {
+		t.Errorf("expected 3 cards drawn (X=3), got %d", got)
+	}
+}
+
+// TestSorceriesCastThisTurnTracker: casting a sorcery increments the
+// per-player sorcery counter, leaves instants alone, and aggregates via
+// GetInstantOrSorceryCastThisTurn.
+func TestSorceriesCastThisTurnTracker(t *testing.T) {
+	a := newRecordingPlayer("A")
+	b := newRecordingPlayer("B")
+	g := NewGame(a, b)
+
+	if g.GetSorceriesCastThisTurn(a.PlayerID()) != 0 {
+		t.Fatalf("baseline sorcery count must be 0")
+	}
+
+	g.SetStep(PrecombatMain)
+	sorc := NewSorcery("Test Sorcery", "{0}", NewSpellAbility())
+	sorc.SetOwner(a.PlayerID())
+	a.AddToHand(sorc)
+	if err := g.CastSpellByID(a.PlayerID(), sorc.ID(), nil, 0); err != nil {
+		t.Fatalf("CastSpellByID: %v", err)
+	}
+
+	if got := g.GetSorceriesCastThisTurn(a.PlayerID()); got != 1 {
+		t.Errorf("sorcery counter = %d, want 1", got)
+	}
+	if got := g.GetInstantsCastThisTurn(a.PlayerID()); got != 0 {
+		t.Errorf("instant counter = %d, want 0", got)
+	}
+	if got := g.GetInstantOrSorceryCastThisTurn(a.PlayerID()); got != 1 {
+		t.Errorf("combined counter = %d, want 1", got)
+	}
+}
+
 // =============================================================================
 // Repartee
 // =============================================================================

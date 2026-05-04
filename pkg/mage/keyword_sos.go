@@ -116,6 +116,11 @@ func (g *Game) CastPreparedSpellCopy(playerID, permID uuid.UUID, spellFactory fu
 		Effects:    effects,
 		IsCopy:     true,
 		CastZone:   ZoneAny,
+		// Forward the resolving spell's X (CR 706.10c — copies of an X-cost
+		// spell copy the chosen X). When CastPreparedSpellCopy is called from
+		// inside a resolving effect (the typical Prepared activation), the
+		// engine has stashed the originating spell's X in g.currentX.
+		XValue: g.currentX,
 	}
 
 	// Prompt for targets on each declared SpellAbility target.
@@ -134,6 +139,9 @@ func (g *Game) CastPreparedSpellCopy(playerID, permID uuid.UUID, spellFactory fu
 	g.stack.Push(obj)
 	if card.HasType(TypeInstant) {
 		g.instantsCastThisTurn[playerID]++
+	}
+	if card.HasType(TypeSorcery) {
+		g.sorceriesCastThisTurn[playerID]++
 	}
 	g.FireEvent(GameEvent{
 		Type:     EvtSpellCast,
@@ -173,7 +181,7 @@ func WithPreparedSpell(spellFactory func() Card) CardOption {
 		// about >0 — so we use a distinct seed key (see HasPreparedSpell
 		// below). We mark this with a separate sentinel via SubTypes? No —
 		// keep it simple: stash on a side map tracked by HasPreparedSpell.
-		preparedSpellFactories[c] = spellFactory
+		preparedSpellFactories[c.Name()] = spellFactory
 		// ETB: become prepared.
 		c.AddAbility(EntersBattlefieldTrigger(FuncEffect(
 			"this creature enters prepared",
@@ -200,18 +208,20 @@ func WithPreparedSpell(spellFactory func() Card) CardOption {
 }
 
 // preparedSpellFactories stores the spell factory associated with a
-// Prepared creature card. Card-level lookup (HasPreparedSpell) is rare so a
-// package-level map keyed by *BaseCard pointer is sufficient.
-var preparedSpellFactories = map[*BaseCard]func() Card{}
+// Prepared creature card, keyed by card name. Card-level lookup
+// (HasPreparedSpell) is per-card-name rather than per-instance because each
+// invocation of a card factory creates a fresh *BaseCard pointer, so a
+// pointer-keyed map would miss every lookup against a card on the battlefield.
+var preparedSpellFactories = map[string]func() Card{}
 
 // HasPreparedSpell reports whether the given card was registered with a
 // Prepared spell side via WithPreparedSpell.
 func HasPreparedSpell(c Card) bool {
-	if bc, ok := c.(*BaseCard); ok {
-		_, has := preparedSpellFactories[bc]
-		return has
+	if c == nil {
+		return false
 	}
-	return false
+	_, has := preparedSpellFactories[c.Name()]
+	return has
 }
 
 // =============================================================================

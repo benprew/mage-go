@@ -259,6 +259,9 @@ func (g *Game) castCardFromZone(playerID, cardID uuid.UUID, zone Zone, targets [
 	if card.HasType(TypeInstant) {
 		g.instantsCastThisTurn[playerID]++
 	}
+	if card.HasType(TypeSorcery) {
+		g.sorceriesCastThisTurn[playerID]++
+	}
 
 	g.FireEvent(GameEvent{
 		Type:     EvtSpellCast,
@@ -419,6 +422,9 @@ func (g *Game) CastExiledCardWithPermission(playerID, cardID uuid.UUID, targets 
 	g.stack.Push(obj)
 	if card.HasType(TypeInstant) {
 		g.instantsCastThisTurn[playerID]++
+	}
+	if card.HasType(TypeSorcery) {
+		g.sorceriesCastThisTurn[playerID]++
 	}
 	g.FireEvent(GameEvent{
 		Type:     EvtSpellCast,

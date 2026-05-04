@@ -141,6 +141,7 @@ func (g *Game) Clone() *Game {
 	c.creatureManaOnly = cloneUUIDBoolMap(g.creatureManaOnly)
 	c.attackedThisTurn = cloneUUIDBoolMap(g.attackedThisTurn)
 	c.instantsCastThisTurn = cloneUUIDIntMap(g.instantsCastThisTurn)
+	c.sorceriesCastThisTurn = cloneUUIDIntMap(g.sorceriesCastThisTurn)
 	c.timesTargetedThisTurn = cloneUUIDIntMap(g.timesTargetedThisTurn)
 	c.blockedThisTurn = cloneBlockedThisTurn(g.blockedThisTurn)
 	if g.extraLandPlaysThisTurn != nil {

@@ -598,7 +598,7 @@ func registerCreatures() {
 			WithSubTypes("Bird", "Cleric"),
 			WithKeyword(Flying),
 			// When this creature enters, surveil 1.
-			WithAbility(EntersBattlefieldTrigger(surveilEffect(1), false)),
+			WithAbility(EntersBattlefieldTrigger(Surveil(Fixed(1)), false)),
 			// XXX: "Whenever one or more cards leave your graveyard, this creature gets +1/+1 until end of turn."
 			// The engine has no EvtLeaveGraveyard event; this trigger cannot be implemented.
 		)
@@ -765,7 +765,7 @@ func registerCreatures() {
 			WithGraveyardActivatedAbility(
 				CompositeEffects("gain 2 life and surveil 1",
 					GainLife(2),
-					surveilEffect(1),
+					Surveil(Fixed(1)),
 				),
 				ManaCostOf("{W}"),
 				WithCost(ExileSelfFromGraveyardCost()),
@@ -1536,7 +1536,7 @@ func registerCreatures() {
 			// Increment
 			WithAbility(IncrementTrigger()),
 			// When this creature enters, surveil 2.
-			WithAbility(EntersBattlefieldTrigger(surveilEffect(2), false)),
+			WithAbility(EntersBattlefieldTrigger(Surveil(Fixed(2)), false)),
 		)
 	})
 
@@ -1804,7 +1804,7 @@ func registerCreatures() {
 					"surveil 1; then if 3+ creature cards in graveyard, become prepared",
 					EffectProperties{},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						if err := surveilEffect(1).Apply(g, sourceID, controller, nil); err != nil {
+						if err := Surveil(Fixed(1)).Apply(g, sourceID, controller, nil); err != nil {
 							return err
 						}
 						p := g.GetPlayer(controller)
@@ -4190,7 +4190,7 @@ func registerCreatures() {
 		return NewCreature("Imperious Inkmage", "{1}{W}{B}", 3, 3,
 			WithSubTypes("Orc", "Warlock"),
 			WithKeyword(Vigilance),
-			WithAbility(EntersBattlefieldTrigger(surveilEffect(2), false)),
+			WithAbility(EntersBattlefieldTrigger(Surveil(Fixed(2)), false)),
 		)
 	})
 
@@ -4207,7 +4207,7 @@ func registerCreatures() {
 				CompositeEffects(
 					"this creature gains flying until end of turn; surveil 1",
 					GrantKeyword(Flying).Targeting(ToSource()).Until(EndOfTurn),
-					surveilEffect(1),
+					Surveil(Fixed(1)),
 				),
 			).SetCondition(reparteeCondition)),
 		)

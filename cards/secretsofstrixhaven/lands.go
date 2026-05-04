@@ -36,65 +36,6 @@ func slowLand(name string, color1, color2 Color) Card {
 	)
 }
 
-// surveilEffect performs Surveil N (CR 701.42): look at the top N cards of
-// your library; put any number of them into your graveyard, the rest on top
-// in any order.
-//
-// Surveil reuses the ChooseScryPlacement callback with reason "surveil".
-// Cards chosen for "bottom" (in scry terminology) go to the graveyard instead.
-func surveilEffect(n int) Effect {
-	return FuncEffect(
-		"surveil "+string(rune('0'+n)),
-		EffectProperties{Outcome: OutcomeBenefit},
-		func(g *Game, _, controller uuid.UUID, _ []uuid.UUID) error {
-			p := g.GetPlayer(controller)
-			if p == nil {
-				return nil
-			}
-			lib := p.Library()
-			if len(lib) == 0 {
-				return nil
-			}
-			count := n
-			if count > len(lib) {
-				count = len(lib)
-			}
-			top := make([]Card, count)
-			copy(top, lib[:count])
-
-			// Reuse scry placement: "bottom" choices go to graveyard for surveil.
-			toGraveyard, keepOnTop := p.ChooseScryPlacement(top, "surveil", g)
-
-			idToCard := make(map[uuid.UUID]Card, count)
-			for _, c := range top {
-				idToCard[c.ID()] = c
-			}
-
-			// Remaining library after removing the top N.
-			rest := lib[count:]
-
-			// Cards in keepOnTop go back to the top of the library.
-			newLib := make([]Card, 0, len(lib))
-			for _, id := range keepOnTop {
-				if c, ok := idToCard[id]; ok {
-					newLib = append(newLib, c)
-				}
-			}
-			newLib = append(newLib, rest...)
-			p.SetLibrary(newLib)
-
-			// Cards in toGraveyard go to the graveyard.
-			for _, id := range toGraveyard {
-				if c, ok := idToCard[id]; ok {
-					p.AddToGraveyard(c)
-				}
-			}
-
-			return nil
-		},
-	)
-}
-
 // surveilLand builds the "Strixhaven campus survey land" pattern: always enters
 // tapped; produces color1 (primary) or color2 (secondary) via two separate mana
 // abilities; activated surveil ability costing {manaCost}, {T}.
@@ -109,7 +50,7 @@ func surveilLand(name, manaCost string, color1, color2 Color) Card {
 		WithManaAbility(color1),
 		WithManaAbility(color2),
 		WithActivatedAbility(
-			surveilEffect(1),
+			Surveil(Fixed(1)),
 			ManaCostOf(manaCost),
 			WithCost(TapSourceCost()),
 		),
