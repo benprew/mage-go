@@ -342,10 +342,18 @@ func registerCreatures() {
 	// Creature — Spirit Chimera
 	// 3/1
 	// {W}, Exile this card from your graveyard: You gain 2 life. Surveil 1. Activate only as a sorcery. (Look at the top card of your library. You may put it into your graveyard.)
-	// TODO: implement
 	Register("Stone Docent", func() Card {
 		return NewCreature("Stone Docent", "{1}{W}", 3, 1,
 			WithSubTypes("Spirit", "Chimera"),
+			// {W}, Exile this card from your graveyard: You gain 2 life. Surveil 1. Activate only as a sorcery.
+			WithGraveyardActivatedAbility(
+				CompositeEffects("gain 2 life and surveil 1",
+					GainLife(2),
+					surveilEffect(1),
+				),
+				ManaCostOf("{W}"),
+				WithCost(ExileSelfFromGraveyardCost()),
+			),
 		)
 	})
 
