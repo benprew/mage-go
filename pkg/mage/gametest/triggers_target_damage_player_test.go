@@ -45,7 +45,7 @@ func registerTriggerTargetDamagePlayerCards() {
 		reg("Trig Tap Target", func() mage.Card {
 			return mage.NewSorcery("Trig Tap Target", "{1}",
 				mage.NewTargetedSpell(mage.TargetCreature(),
-					mage.TapTarget()))
+					mage.Tap()))
 		})
 
 		// Two-creature damage spell (multi-target). For becomes-target firing

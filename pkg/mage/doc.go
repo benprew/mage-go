@@ -1619,7 +1619,7 @@ own color or the chosen color.
 	                    // ... add core.Red or perm.ChosenColor based on player choice
 	                    return nil
 	                }),
-	            mage.TapSourceCost(),
+	            mage.Tap(),
 	        ),
 	    )
 	})

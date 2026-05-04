@@ -91,7 +91,7 @@ func registerTypeGrantingTestCards() {
 							g.AddContinuousEffect(eff)
 							return nil
 						}),
-					mage.TapSourceCost(),
+					mage.Tap(),
 					mage.WithTarget(mage.TargetPermanent(mage.IsCreature)),
 				),
 			)

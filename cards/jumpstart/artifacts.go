@@ -42,7 +42,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				DrawCards(Fixed(1)),
 				GenericCost(3),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 			),
 		)
 	})
@@ -56,7 +56,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				GainLife(4),
 				GenericCost(1),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithCost(SacrificeCreatureCost()),
 			),
 			WithActivatedAbility(
@@ -83,7 +83,7 @@ func registerArtifacts() {
 						return nil
 					}),
 				GenericCost(1),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithCost(SacrificeMatchingCost(And(IsCreature, Named("Festering Newt")), "Sacrifice a creature named Festering Newt")),
 			),
 		)
@@ -100,7 +100,7 @@ func registerArtifacts() {
 					DrawCards(Fixed(1)),
 				),
 				GenericCost(1),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithCost(SacrificeSourceCost()),
 			),
 		)
@@ -116,7 +116,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				DrawCards(Fixed(3)),
 				GenericCost(3),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithCost(SacrificeSourceCost()),
 			),
 		)
@@ -156,7 +156,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				DrawCards(Fixed(2)),
 				GenericCost(2),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithCost(SacrificeSourceCost()),
 			),
 		)
@@ -242,7 +242,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				AddAnyMana(1, Colorless),
 				GenericCost(1),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 			),
 		)
 	})
@@ -320,7 +320,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				AddAnyMana(2, Colorless),
 				GenericCost(2),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithCost(SacrificeSourceCost()),
 			),
 			WithAbility(DiesTrigger(
@@ -339,7 +339,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				DestroyTargetPermanent(),
 				GenericCost(7),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithCost(SacrificeSourceCost()),
 				WithTarget(TargetPermanent()),
 			),

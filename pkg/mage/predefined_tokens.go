@@ -22,7 +22,7 @@ func newTreasureToken() *BaseCard {
 	tok.colorOverride = []Color{Colorless}
 	tok.AddAbility(NewActivatedAbility(
 		AddAnyMana(1, Colorless),
-		TapSourceCost(),
+		Tap(),
 		WithCost(SacrificeSourceCost()),
 	))
 	return tok
@@ -37,7 +37,7 @@ func newFoodToken() *BaseCard {
 	tok.AddAbility(NewActivatedAbility(
 		GainLife(3),
 		GenericCost(2),
-		WithCost(TapSourceCost()),
+		WithCost(Tap()),
 		WithCost(SacrificeSourceCost()),
 	))
 	return tok

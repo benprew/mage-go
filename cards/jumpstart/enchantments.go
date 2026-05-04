@@ -679,7 +679,7 @@ func registerEnchantments() {
 			WithStaticAbility(
 				GrantActivatedAbilityToAttached(
 					CreateToken("Elf Warrior", 1, 1, []CardType{TypeCreature}, []string{"Elf", "Warrior"}),
-					TapSourceCost(),
+					Tap(),
 					AttachAura,
 				),
 			),

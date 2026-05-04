@@ -48,7 +48,7 @@ func thrivingLand(name string, onColor Color) Card {
 					p.ManaPool().Add(c, 1)
 					return nil
 				}),
-			TapSourceCost(),
+			Tap(),
 		),
 	)
 }
@@ -65,7 +65,7 @@ func registerLands() {
 			WithActivatedAbility(
 				ReturnFromGraveyardToHandTarget(),
 				GenericCost(2),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithCost(SacrificeSourceCost()),
 				WithTarget(TargetCardInYourGraveyard(IsArtifactCard)),
 			),
@@ -82,11 +82,11 @@ func registerLands() {
 			WithManaAbility(Colorless),
 			WithActivatedAbility(
 				AddCounters(Charge, Fixed(1)).Targeting(ToSource()),
-				TapSourceCost(),
+				Tap(),
 			),
 			WithActivatedAbility(
 				AddAnyMana(1, Colorless),
-				TapSourceCost(),
+				Tap(),
 				WithCost(RemoveCountersCost(Charge, 1)),
 			),
 		)
@@ -102,7 +102,7 @@ func registerLands() {
 			WithManaAbility(Colorless),
 			WithActivatedAbility(
 				AddMana(Black, 2),
-				TapSourceCost(),
+				Tap(),
 				WithCost(SacrificeCreatureCost()),
 			),
 		)
@@ -118,7 +118,7 @@ func registerLands() {
 			WithActivatedAbility(
 				ReturnToHandTarget(),
 				ManaCostOf("{1}{U}"),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetCreatureYouControl(HasSubType("Wizard"))),
 			),
 		)
@@ -191,7 +191,7 @@ func registerLands() {
 						}
 						return nil
 					}),
-				TapSourceCost(),
+				Tap(),
 				WithCost(SacrificeSourceCost()),
 			),
 		)

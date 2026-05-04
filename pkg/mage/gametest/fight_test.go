@@ -23,7 +23,7 @@ func registerFightCards() {
 				return mage.NewCreature("Test Fight Ox", "{2}{G}", 4, 4,
 					mage.WithActivatedAbility(
 						mage.FightTarget(),
-						mage.TapSourceCost(),
+						mage.Tap(),
 						mage.WithTarget(mage.TargetCreature()),
 					))
 			})
@@ -45,7 +45,7 @@ func registerFightCards() {
 				return mage.NewCreature("Test On-Death Self Watcher", "{1}{W}", 1, 2,
 					mage.WithActivatedAbility(
 						mage.OnTargetDiesThisTurn(mage.GainLife(3)),
-						mage.TapSourceCost(),
+						mage.Tap(),
 						mage.WithTarget(mage.TargetCreature()),
 					))
 			})

@@ -76,15 +76,8 @@ func (c *ManaCostPayment) Text() string {
 type tap struct{}
 
 // Tap creates a tap operation usable as a Cost (taps source) or Effect (taps
-// target).
+// target). The call site (cost slot vs effect slot) selects the path.
 func Tap() *tap { return &tap{} }
-
-// TapSourceCost is a backward-compatible alias for Tap used in cost slots.
-func TapSourceCost() Cost { return Tap() }
-
-// TapTarget is a backward-compatible alias for Tap used in effect slots that
-// tap the target permanent.
-func TapTarget() Effect { return Tap() }
 
 // --- Cost interface ---
 

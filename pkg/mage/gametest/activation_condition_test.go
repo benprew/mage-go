@@ -23,7 +23,7 @@ func registerActivationConditionCards() {
 				return mage.NewCreature("Test Power Gate Trainee", "{2}{R}", 2, 3,
 					mage.WithActivatedAbility(
 						mage.DealDamage(mage.Fixed(4)),
-						mage.TapSourceCost(),
+						mage.Tap(),
 						mage.WithTarget(mage.TargetCreature()),
 						mage.WithActivationCondition(func(g *mage.Game, src *mage.Permanent, _ uuid.UUID) bool {
 							if src == nil {
