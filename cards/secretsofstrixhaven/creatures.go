@@ -2606,10 +2606,34 @@ func registerCreatures() {
 	// Menace (This creature can't be blocked except by two or more creatures.)
 	// Whenever this creature attacks, you gain 1 life.
 	// {B}{G}: Return this card from your graveyard to the battlefield tapped.
-	// TODO: implement
 	Register("Teacher's Pest", func() Card {
 		return NewCreature("Teacher's Pest", "{B}{G}", 1, 1,
 			WithSubTypes("Skeleton", "Pest"),
+			WithKeyword(Menace),
+			// Whenever this creature attacks, you gain 1 life.
+			WithAbility(AttacksTrigger(GainLife(1), false)),
+			// {B}{G}: Return this card from your graveyard to the battlefield tapped.
+			WithGraveyardActivatedAbility(
+				FuncEffect("return this card from your graveyard to the battlefield tapped",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						p := g.GetPlayer(controller)
+						if p == nil {
+							return nil
+						}
+						removed, ok := p.RemoveFromGraveyard(sourceID)
+						if !ok {
+							return nil
+						}
+						perm := g.PutOnBattlefield(removed, controller)
+						if perm != nil {
+							perm.Tapped = true
+						}
+						return nil
+					},
+				),
+				ManaCostOf("{B}{G}"),
+			),
 		)
 	})
 
