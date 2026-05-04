@@ -362,10 +362,15 @@ func registerCreatures() {
 	// 4/3
 	// Vigilance
 	// {1}{W}: Return this card from your graveyard to your hand. Activate only as a sorcery.
-	// TODO: implement
 	Register("Summoned Dromedary", func() Card {
 		return NewCreature("Summoned Dromedary", "{3}{W}", 4, 3,
 			WithSubTypes("Spirit", "Camel"),
+			WithKeyword(Vigilance),
+			// {1}{W}: Return this card from your graveyard to your hand. Activate only as a sorcery.
+			WithGraveyardActivatedAbility(
+				ReturnSourceToHand(),
+				ManaCostOf("{1}{W}"),
+			),
 		)
 	})
 
