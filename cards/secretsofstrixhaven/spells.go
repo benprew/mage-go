@@ -1734,10 +1734,72 @@ func registerSpells() {
 // Mind Roots {1}{B}{G}
 // Sorcery
 // Target player discards two cards. Put up to one land card discarded this way onto the battlefield tapped under your control.
-// TODO: implement
 	Register("Mind Roots", func() Card {
 		return NewSorcery("Mind Roots", "{1}{B}{G}",
-			NewSpellAbility(),
+			NewTargetedSpell(TargetPlayer(), FuncEffect(
+				"target player discards two cards; put up to one land card discarded this way onto the battlefield tapped under your control",
+				EffectProperties{Outcome: OutcomeDetriment},
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					if len(targets) == 0 {
+						return nil
+					}
+					target := g.GetPlayer(targets[0])
+					if target == nil {
+						return nil
+					}
+					// Discard two cards, tracking which were lands.
+					chosen := target.ChooseCardsFromHand(2, "discard", g)
+					var discardedLands []Card
+					for _, card := range chosen {
+						g.PlayerDiscard(target, card.ID())
+						if card.HasType(TypeLand) {
+							discardedLands = append(discardedLands, card)
+						}
+					}
+					if len(discardedLands) == 0 {
+						return nil
+					}
+					// Build pseudo-permanents for controller to choose (up to one).
+					ctrl := g.GetPlayer(controller)
+					if ctrl == nil {
+						return nil
+					}
+					var candidates []*Permanent
+					for _, lc := range discardedLands {
+						candidates = append(candidates, NewPermanent(lc, controller))
+					}
+					chosen2 := ctrl.ChooseOptionalPermanent(candidates, "put up to one land card discarded this way onto the battlefield tapped", g)
+					if chosen2 == nil {
+						return nil
+					}
+					var selectedLand Card
+					for _, lc := range discardedLands {
+						if lc.Name() == chosen2.Name() {
+							selectedLand = lc
+							break
+						}
+					}
+					if selectedLand == nil {
+						return nil
+					}
+					// Find the actual card in target's graveyard and put it onto the battlefield tapped under our control.
+					if removed, ok := target.RemoveFromGraveyard(selectedLand.ID()); ok {
+						perm := g.PutOnBattlefield(removed, controller)
+						if perm != nil {
+							// PutOnBattlefield resets controller to Owner; register a
+							// control-change effect so the land stays under our control.
+							newController := controller
+							g.AddContinuousEffect(TargetEffect(LayerControl, Indefinite, perm.ID(), func(g *Game, t *Permanent) error {
+								t.Controller = newController
+								return nil
+							}))
+							g.ApplyContinuousEffects()
+							g.TapPermanent(perm)
+						}
+					}
+					return nil
+				},
+			)),
 		)
 	})
 
@@ -1811,10 +1873,48 @@ func registerSpells() {
 // Sorcery
 // Molten Note deals damage to target creature equal to the amount of mana spent to cast this spell. Untap all creatures you control.
 // Flashback {6}{R}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)
-// TODO: implement
+// XXX: Flashback {6}{R}{W} not implemented (engine feature needed).
+// XXX: TestMoltenNote/untaps_all_creatures_you_control casts this at DeclareAttackers, but
+// Molten Note is a Sorcery and cannot be cast at that step. The test has a design error;
+// it should use PostcombatMain.
 	Register("Molten Note", func() Card {
 		return NewSorcery("Molten Note", "{X}{R}{W}",
-			NewSpellAbility(),
+			NewTargetedSpell(TargetCreature(),
+				CompositeEffects(
+					"Molten Note deals damage equal to mana spent to target creature; untap all creatures you control",
+					FuncEffect(
+						"Molten Note deals damage to target creature equal to mana spent to cast this spell",
+						EffectProperties{Outcome: OutcomeDetriment},
+						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+							if len(targets) == 0 {
+								return nil
+							}
+							ctx := g.ResolvingCastContext()
+							manaSpent := 0
+							if ctx != nil {
+								for _, v := range ctx.ColorsSpent {
+									manaSpent += v
+								}
+							}
+							if manaSpent <= 0 {
+								return nil
+							}
+							perm := g.FindPermanent(targets[0])
+							if perm == nil {
+								return nil
+							}
+							g.DealDamageToPermanent(perm, manaSpent, sourceID)
+							return nil
+						},
+					),
+					DataEffect(ForEachControlledPermanent(
+						SelectController(),
+						IsCreature,
+						UntapTargetStep(),
+						"untap all creatures you control",
+					)),
+				),
+			),
 		)
 	})
 
