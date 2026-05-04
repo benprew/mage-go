@@ -1282,10 +1282,12 @@ func registerSpells() {
 // Grapple with Death {1}{B}{G}
 // Sorcery
 // Destroy target artifact or creature. You gain 1 life.
-// TODO: implement
 	Register("Grapple with Death", func() Card {
 		return NewSorcery("Grapple with Death", "{1}{B}{G}",
-			NewSpellAbility(),
+			NewTargetedSpell(TargetPermanent(Or(IsArtifact, IsCreature)),
+				DestroyTargetPermanent(),
+				GainLife(1),
+			),
 		)
 	})
 
