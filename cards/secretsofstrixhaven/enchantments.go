@@ -50,20 +50,44 @@ func registerEnchantments() {
 	// Enchantment
 	// Whenever you gain life, put a growth counter on this enchantment.
 	// As long as there are five or more growth counters on this enchantment, creatures you control get +3/+3.
-	// XXX: "growth" is not a defined CounterType in core/counter.go; engine needs a Growth counter type to implement this card.
 	Register("Comforting Counsel", func() Card {
-		return NewEnchantment("Comforting Counsel", "{1}{G}")
+		lifeGainTrigger := WheneverYouGainLifeTrigger(
+			AddCounters(Growth, Fixed(1)).Targeting(ToSource()),
+			false,
+		)
+		boost := FuncContinuousEffect(LayerPT, WhileOnBattlefield,
+			func(g *Game, sourceID uuid.UUID) error {
+				src := g.FindPermanent(sourceID)
+				if src == nil {
+					return nil
+				}
+				if src.Counters[Growth] < 5 {
+					return nil
+				}
+				for _, p := range g.FilterBattlefield(And(IsCreature, ControlledBy(src.Controller))) {
+					p.BoostPT(3, 3)
+				}
+				return nil
+			},
+		)
+		return NewEnchantment("Comforting Counsel", "{1}{G}",
+			WithAbility(lifeGainTrigger),
+			WithStaticAbility(boost),
+		)
 	})
 
 	// Graduation Day {W}
 	// Enchantment
 	// Repartee — Whenever you cast an instant or sorcery spell that targets a creature, put a +1/+1 counter on target creature you control.
 	Register("Graduation Day", func() Card {
-		// XXX: "Repartee — Whenever you cast an instant or sorcery spell that targets a creature" —
-		// the engine's WheneverYouCastSpellTrigger does not expose the targets of the triggering
-		// spell, so there is no way to filter "that targets a creature." The trigger itself is
-		// not implemented.
-		return NewEnchantment("Graduation Day", "{W}")
+		return NewEnchantment("Graduation Day", "{W}",
+			WithAbility(
+				WheneverYouCastInstantOrSorceryTargetingCreatureTrigger(
+					AddCounters(P1P1, Fixed(1)),
+					false,
+				).AddTarget(TargetCreatureYouControl()),
+			),
+		)
 	})
 
 	// Living History {1}{R}

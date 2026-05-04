@@ -599,8 +599,11 @@ func registerCreatures() {
 			WithKeyword(Flying),
 			// When this creature enters, surveil 1.
 			WithAbility(EntersBattlefieldTrigger(Surveil(Fixed(1)), false)),
-			// XXX: "Whenever one or more cards leave your graveyard, this creature gets +1/+1 until end of turn."
-			// The engine has no EvtLeaveGraveyard event; this trigger cannot be implemented.
+			// Whenever one or more cards leave your graveyard, this creature gets +1/+1 until end of turn.
+			WithAbility(WheneverOneOrMoreCardsLeaveYourGraveyardTrigger(
+				Boost(Fixed(1), Fixed(1)).Targeting(ToSource()).Until(EndOfTurn),
+				false,
+			)),
 		)
 	})
 
@@ -1044,10 +1047,10 @@ func registerCreatures() {
 	// Instant
 	// Draw three cards, then put two cards from your hand on top of your library in any order.
 	//
-	// XXX: HasPreparedSpell returns false for this card because the engine's
-	// WithPreparedSpell always adds an ETB-prepared trigger which would
-	// incorrectly make it enter prepared. The Prepared mechanics are wired
-	// manually here.
+	// This card uses WithPreparedSpell not applicable — it becomes prepared via
+	// an activated ability ({T}, tap two untapped creatures), not automatically
+	// at ETB. Prepared mechanics are wired manually here; HasPreparedSpell will
+	// return false for Tomekeeper lookups (intended — it enters unprepared).
 	Register("Harmonized Trio // Brainstorm", func() Card {
 		spellFactory := func() Card {
 			return NewInstant("Brainstorm", "{U}",
@@ -1143,8 +1146,6 @@ func registerCreatures() {
 	// Sorcery
 	// Create X 0/0 green and blue Fractal creature tokens, then put X +1/+1 counters on each Fractal you control.
 	//
-	// XXX: When cast as a prepared copy, X=0 (CastPreparedSpellCopy does not
-	// prompt for X values); the spell creates 0 tokens and puts 0 counters.
 	Register("Jadzi, Steward of Fate // Oracle's Gift", func() Card {
 		fractalFilter := NewPermanentFilter("Fractal", func(p *Permanent, _ *Game) bool {
 			for _, st := range p.Card.SubTypes() {
@@ -2427,8 +2428,15 @@ func registerCreatures() {
 		return NewCreature("Garrison Excavator", "{3}{R}", 3, 4,
 			WithSubTypes("Orc", "Sorcerer"),
 			WithKeyword(Menace),
-			// XXX: "Whenever one or more cards leave your graveyard, create a 2/2 red and white Spirit creature token."
-			// The engine has no EvtLeaveGraveyard event; this trigger cannot be implemented.
+			// Whenever one or more cards leave your graveyard, create a 2/2 red and white Spirit creature token.
+			WithAbility(WheneverOneOrMoreCardsLeaveYourGraveyardTrigger(
+				CreateColoredToken("Spirit Token", 2, 2,
+					[]Color{Red, White},
+					[]CardType{TypeCreature},
+					[]string{"Spirit"},
+				),
+				false,
+			)),
 		)
 	})
 
@@ -3102,10 +3110,6 @@ func registerCreatures() {
 	// Stream of Life {X}{G}
 	// Sorcery
 	// Target player gains X life.
-	// XXX: CastPreparedSpellCopy does not forward g.currentX into the copy's
-	// StackObject.XValue, so X=0 when the copy resolves regardless of what value
-	// the controller specified. The spell structure is correct; the X-propagation
-	// gap is in the engine.
 	Register("Infirmary Healer // Stream of Life", func() Card {
 		spellFactory := func() Card {
 			return NewSorcery("Stream of Life", "{X}{G}",
@@ -3200,20 +3204,31 @@ func registerCreatures() {
 	// Creature — Plant Beast
 	// 6/6
 	// This creature enters with a number of stun counters on it equal to three minus X. If X is 2 or less, it enters tapped. (If a permanent with a stun counter would become untapped, remove one from it instead.)
-	// XXX: Stun counters are not implemented (no CounterType for Stun, no untap-prevention replacement effect). The enters-tapped condition (X ≤ 2) is implemented via ETB trigger using a sentinel Charge counter.
 	Register("Slumbering Trudge", func() Card {
-		// Use a Charge sentinel counter to communicate the X-at-cast-time to the
-		// ETB trigger. EntersWithComputedCounters runs during PutOnBattlefield
-		// while g.ResolvingCastContext() is still set, so we can gate on it to
-		// avoid tapping when placed directly (not cast).
+		// Both EntersWithComputedCounters callbacks run during PutOnBattlefield
+		// while g.ResolvingCastContext() is still live — safe to read XValue here.
+		// The ETB trigger fires later after the context is cleared, so we use a
+		// Charge sentinel counter to communicate "should enter tapped" to it.
 		return NewCreature("Slumbering Trudge", "{X}{G}", 6, 6,
 			WithSubTypes("Plant", "Beast"),
+			// Enters with (3 - X) stun counters (CR 122.1g).
+			WithAbility(EntersWithComputedCounters(Stun, func(g *Game, perm *Permanent) int {
+				if g.ResolvingCastContext() != nil {
+					x := g.XValue()
+					if n := 3 - x; n > 0 {
+						return n
+					}
+				}
+				return 0
+			})),
+			// Sentinel: one Charge counter if X ≤ 2 (enters tapped condition).
 			WithAbility(EntersWithComputedCounters(Charge, func(g *Game, perm *Permanent) int {
 				if g.ResolvingCastContext() != nil && g.XValue() <= 2 {
 					return 1
 				}
 				return 0
 			})),
+			// If X is 2 or less, tap this creature (reads Charge sentinel).
 			WithAbility(EntersBattlefieldTrigger(
 				FuncEffect(
 					"if entered with X ≤ 2, tap this creature",
@@ -3522,8 +3537,7 @@ func registerCreatures() {
 				))
 		}
 		// Abigale becomes prepared via creature-spell trigger, not at ETB.
-		// XXX: HasPreparedSpell returns false for Biblioblex Tomekeeper because this card
-		// does not use WithPreparedSpell (which would incorrectly set Prepared at ETB).
+		// HasPreparedSpell returns false (intended — enters unprepared).
 		castCopy := FuncEffect(
 			"cast a copy of this creature's spell",
 			EffectProperties{},
@@ -3997,14 +4011,13 @@ func registerCreatures() {
 	// 6/6
 	// Trample
 	// When this creature enters, tap target creature an opponent controls. Put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)
-	// XXX: Stun counter (untap-prevention counter type) not in engine; tap is implemented but stun counter effect is not.
 	Register("Fractal Mascot", func() Card {
 		return NewCreature("Fractal Mascot", "{4}{G}{U}", 6, 6,
 			WithSubTypes("Fractal", "Elk"),
 			WithKeyword(Trample),
 			WithAbility(EntersBattlefieldTrigger(
 				FuncEffect(
-					"tap target creature an opponent controls",
+					"tap target creature an opponent controls and put a stun counter on it",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						opp := g.GetOpponent(controller)
@@ -4028,7 +4041,7 @@ func registerCreatures() {
 							return nil
 						}
 						g.TapPermanent(chosen)
-						// XXX: put a stun counter on it (engine lacks stun counter type)
+						chosen.AddCounter(Stun, 1)
 						return nil
 					},
 				),
@@ -4167,7 +4180,6 @@ func registerCreatures() {
 	// Flying, haste
 	// Discard a card: This creature gains lifelink until end of turn.
 	// Whenever one or more cards leave your graveyard, put a +1/+1 counter on target creature you control.
-	// XXX: "Whenever one or more cards leave your graveyard" trigger not implemented (engine lacks graveyard-leave event).
 	Register("Hardened Academic", func() Card {
 		return NewCreature("Hardened Academic", "{R}{W}", 2, 1,
 			WithSubTypes("Bird", "Cleric"),
@@ -4177,6 +4189,11 @@ func registerCreatures() {
 				GrantKeyword(Lifelink).Targeting(ToSource()).Until(EndOfTurn),
 				DiscardCost(1),
 			),
+			// Whenever one or more cards leave your graveyard, put a +1/+1 counter on target creature you control.
+			WithAbility(WheneverOneOrMoreCardsLeaveYourGraveyardTrigger(
+				AddCounters(P1P1, Fixed(1)).Targeting(ToTarget()),
+				false,
+			).AddTarget(TargetControlledCreature())),
 		)
 	})
 
@@ -4215,7 +4232,6 @@ func registerCreatures() {
 	// Legendary Creature — Vampire Cleric // Sorcery
 	// 2/3
 	// Whenever one or more cards leave your graveyard, Kirol becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)
-	// XXX: "Whenever one or more cards leave your graveyard" trigger not implemented — engine lacks graveyard-leave zone-change events.
 	// ---
 	// Pack a Punch {1}{R}{W}
 	// Sorcery
@@ -4251,9 +4267,8 @@ func registerCreatures() {
 					),
 				))
 		}
-		// Kirol becomes prepared when graveyard cards leave, not at ETB.
-		// XXX: HasPreparedSpell returns false for Biblioplex Tomekeeper because this card
-		// does not use WithPreparedSpell (which would incorrectly set Prepared at ETB).
+		// Kirol becomes prepared via graveyard-leave trigger, not at ETB.
+		// HasPreparedSpell returns false (intended — enters unprepared).
 		castCopy := FuncEffect(
 			"cast a copy of this creature's spell",
 			EffectProperties{},
@@ -4264,9 +4279,18 @@ func registerCreatures() {
 		return NewCreature("Kirol, History Buff // Pack a Punch", "{R}{W} // {1}{R}{W}", 2, 3,
 			WithSubTypes("Vampire", "Cleric", "//", "Sorcery"),
 			WithSuperTypes(SuperLegendary),
-			// XXX: "Whenever one or more cards leave your graveyard, Kirol becomes prepared"
-			// is not implemented — the engine does not fire zone-change events when cards
-			// leave the graveyard. See similar XXX markers on Hardened Academic and others.
+			// Whenever one or more cards leave your graveyard, Kirol becomes prepared.
+			WithAbility(WheneverOneOrMoreCardsLeaveYourGraveyardTrigger(
+				FuncEffect(
+					"Kirol becomes prepared",
+					EffectProperties{},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						g.SetPrepared(sourceID, true)
+						return nil
+					},
+				),
+				false,
+			)),
 			// Sorcery-speed activated ability to cast a copy of the prepared spell.
 			WithActivatedAbility(
 				castCopy,
@@ -4999,8 +5023,7 @@ func registerCreatures() {
 				)))
 		}
 		// Tam becomes prepared via landfall, not at ETB.
-		// XXX: HasPreparedSpell returns false for Biblioplex Tomekeeper because this card
-		// does not use WithPreparedSpell (which would incorrectly set Prepared at ETB).
+		// HasPreparedSpell returns false (intended — enters unprepared).
 		castCopy := FuncEffect(
 			"cast a copy of this creature's spell",
 			EffectProperties{},

@@ -9,10 +9,8 @@ import (
 )
 
 func TestArkOfHunger(t *testing.T) {
-	// XXX: Trigger "whenever one or more cards leave your graveyard" is not
-	// tested because the engine has no EvtLeaveGraveyard event. The
-	// "you may play that card this turn" sub-effect of the {T} ability is
-	// also untestable (no graveyard play permission system in the engine).
+	// Note: "You may play that card this turn" sub-effect of the {T} ability is
+	// not tested (no graveyard play permission system in the engine).
 	t.Run("enters_battlefield", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ark of Hunger")
@@ -29,6 +27,23 @@ func TestArkOfHunger(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 1)
+	})
+
+	t.Run("trigger_deals_damage_and_gains_life_when_card_leaves_graveyard", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ark of Hunger")
+		// Put a card in graveyard; Cauldron of Essence reanimation will move it out
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Cauldron of Essence")
+		g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")
+		// Activate Cauldron: sacrifice Hill Giant, reanimate Grizzly Bears from GY → Grizzly Bears leaves GY
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Cauldron of Essence", "Grizzly Bears")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Cauldron trigger (creature died — Hill Giant) also fires: PlayerB loses 1 life = 19; PlayerA gains 1 = 21
+		// Ark trigger (Grizzly Bears left GY): PlayerB loses another 1 = 18; PlayerA gains another 1 = 22
+		g.AssertLife(gametest.PlayerB, 18)
+		g.AssertLife(gametest.PlayerA, 22)
 	})
 }
 
@@ -75,24 +90,24 @@ func TestCauldronOfEssence(t *testing.T) {
 }
 
 func TestDiaryOfDreams(t *testing.T) {
-	t.Run("puts_charge_counter_when_instant_cast", func(t *testing.T) {
+	t.Run("puts_page_counter_when_instant_cast", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Diary of Dreams")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		g.AssertCounterCount(gametest.PlayerA, "Diary of Dreams", core.Charge, 1)
+		g.AssertCounterCount(gametest.PlayerA, "Diary of Dreams", core.Page, 1)
 	})
 
-	t.Run("puts_charge_counter_when_sorcery_cast", func(t *testing.T) {
+	t.Run("puts_page_counter_when_sorcery_cast", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Diary of Dreams")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Ancestral Recall")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Ancestral Recall", "PlayerA")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		g.AssertCounterCount(gametest.PlayerA, "Diary of Dreams", core.Charge, 1)
+		g.AssertCounterCount(gametest.PlayerA, "Diary of Dreams", core.Page, 1)
 	})
 
 	t.Run("does_not_trigger_on_creature_spell", func(t *testing.T) {
@@ -102,7 +117,7 @@ func TestDiaryOfDreams(t *testing.T) {
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Grizzly Bears")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		g.AssertCounterCount(gametest.PlayerA, "Diary of Dreams", core.Charge, 0)
+		g.AssertCounterCount(gametest.PlayerA, "Diary of Dreams", core.Page, 0)
 	})
 
 	t.Run("draw_ability_works_at_full_cost", func(t *testing.T) {

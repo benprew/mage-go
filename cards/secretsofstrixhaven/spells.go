@@ -808,9 +808,6 @@ func registerSpells() {
 // Sorcery
 // Duel Tactics deals 1 damage to target creature. It can't block this turn.
 // Flashback {1}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.)
-// XXX: "It can't block this turn" — PreventBlockingUntilEndOfCombat only prevents blocking until end of combat,
-// not the full turn. For a sorcery cast during main phase, blocking happens during the following combat step.
-// PreventBlockingUntilEndOfCombat is used here as the closest available approximation.
 	Register("Duel Tactics", func() Card {
 		return NewSorcery("Duel Tactics", "{R}",
 			NewTargetedSpell(
@@ -1478,11 +1475,15 @@ func registerSpells() {
 // Sorcery
 // Create a 2/2 red and white Spirit creature token.
 // Flashback—Tap three untapped creatures you control. (You may cast this card from your graveyard for its flashback cost. Then exile it.)
-// XXX: Flashback with non-mana cost (tap creatures) not implemented.
 	Register("Group Project", func() Card {
 		return NewSorcery("Group Project", "{1}{W}",
 			NewSpellAbility(
 				CreateColoredToken("Spirit Token", 2, 2, []Color{Red, White}, []CardType{TypeCreature}, []string{"Spirit"}),
+			),
+			WithFlashback(ParseManaCost(""),
+				TapCreatureCost(),
+				TapCreatureCost(),
+				TapCreatureCost(),
 			),
 		)
 	})
@@ -1770,9 +1771,8 @@ func registerSpells() {
 // Sorcery
 // Target creature gets +1/+1 until end of turn. Draw a card.
 // Whenever one or more creatures you control deal combat damage to a player, you may pay {W/B}. If you do, return this card from your graveyard to your hand.
-// XXX: Graveyard recursion trigger not implemented (requires tracking graveyard-zone triggered abilities for sorceries).
 	Register("Killian's Confidence", func() Card {
-		return NewSorcery("Killian's Confidence", "{W}{B}",
+		c := NewSorcery("Killian's Confidence", "{W}{B}",
 			NewTargetedSpell(TargetCreature(),
 				FuncEffect(
 					"+1/+1 until end of turn; draw a card",
@@ -1793,6 +1793,15 @@ func registerSpells() {
 				),
 			),
 		)
+		// Whenever one or more creatures you control deal combat damage to a
+		// player, you may pay {W/B}. If you do, return this card from your
+		// graveyard to your hand. (CR 113.6: functions in graveyard.)
+		c.AddAbility(WheneverOneOrMoreCreaturesYouControlDealCombatDamageToPlayerTrigger(
+			MayPayMana("{W/B}", "return Killian's Confidence from your graveyard to your hand",
+				ReturnSourceToHand()),
+			false,
+		).InZone(ZoneGraveyard))
+		return c
 	})
 
 
@@ -2132,7 +2141,6 @@ func registerSpells() {
 // Sorcery
 // Molten Note deals damage to target creature equal to the amount of mana spent to cast this spell. Untap all creatures you control.
 // Flashback {6}{R}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)
-// XXX: Flashback not supported by engine.
 	Register("Molten Note", func() Card {
 		return NewSorcery("Molten Note", "{X}{R}{W}",
 			NewTargetedSpell(
@@ -2166,6 +2174,7 @@ func registerSpells() {
 					},
 				),
 			),
+			WithFlashback(ParseManaCost("{6}{R}{W}")),
 		)
 	})
 

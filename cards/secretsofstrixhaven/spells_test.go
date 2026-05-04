@@ -6,6 +6,7 @@ import (
 	_ "git.sr.ht/~cdcarter/mage-go/cards/limited"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
+	"github.com/google/uuid"
 )
 
 func TestSnarlSong(t *testing.T) {
@@ -794,6 +795,21 @@ func TestKilliansConfidence(t *testing.T) {
 		// Drew a card (hand empty after casting, should have 1 card)
 		g.AssertHandCount(gametest.PlayerA, "", 1)
 	})
+	t.Run("graveyard trigger: returns to hand when creatures deal combat damage and controller pays {W/B}", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Killian's Confidence")
+		// Provide mana for the {W/B} optional cost (Plains or Swamp).
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+		g.GetPlayer(gametest.PlayerA).QueueMayAbilityChoices(true)
+		g.Attack(1, gametest.PlayerA, "Grizzly Bears")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// After Grizzly Bears deals combat damage and controller pays {W/B},
+		// Killian's Confidence returns to hand.
+		g.AssertGraveyardCount(gametest.PlayerA, "Killian's Confidence", 0)
+		g.AssertHandCount(gametest.PlayerA, "Killian's Confidence", 1)
+	})
 }
 
 func TestLastGasp(t *testing.T) {
@@ -979,6 +995,30 @@ func TestMoltenNote(t *testing.T) {
 		g.Execute()
 		// PlayerA's Grizzly Bears attacked (tapped), then Molten Note untapped all creatures you control
 		g.AssertTapped(gametest.PlayerA, "Grizzly Bears", false)
+	})
+	t.Run("flashback — exiles after resolution", func(t *testing.T) {
+		tg := gametest.NewTestGame(t)
+		tg.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+		tg.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Molten Note")
+		pA := tg.GetPlayer(gametest.PlayerA)
+		pA.ManaPool().Clear()
+		pA.ManaPool().Add(core.Colorless, 6)
+		pA.ManaPool().Add(core.Red, 1)
+		pA.ManaPool().Add(core.White, 1)
+		cardID := pA.Graveyard()[0].ID()
+		giantPerm := tg.Game.FindPermanentByName("Hill Giant", tg.GetPlayer(gametest.PlayerB).PlayerID())
+		if err := tg.Game.CastCardWithAlternateCost(pA.PlayerID(), cardID, 0, []uuid.UUID{giantPerm.ID()}, 0); err != nil {
+			t.Fatalf("CastCardWithAlternateCost (flashback): %v", err)
+		}
+		tg.Game.ResolveStack()
+		if tg.Game.FindExiledCard(cardID) == nil {
+			t.Errorf("Molten Note should be exiled after flashback resolution")
+		}
+		for _, c := range pA.Graveyard() {
+			if c.ID() == cardID {
+				t.Errorf("Molten Note returned to graveyard; expected exile")
+			}
+		}
 	})
 }
 
@@ -1518,6 +1558,45 @@ func TestDuelTactics(t *testing.T) {
 		// 2/2 takes 1 damage; survives
 		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
 	})
+	t.Run("target creature can't block this turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "White Knight")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Duel Tactics")
+		// Cast Duel Tactics on Grizzly Bears: deals 1 damage, can't block this turn.
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Duel Tactics", "Grizzly Bears")
+		g.Attack(1, gametest.PlayerA, "White Knight")
+		// PlayerB attempts to block with Grizzly Bears; can't block — block is ignored.
+		g.Block(1, gametest.PlayerB, "Grizzly Bears", "White Knight")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		// Grizzly Bears can't block so White Knight deals 2 damage unblocked.
+		g.AssertLife(gametest.PlayerB, 18)
+	})
+	t.Run("flashback — exiles after resolution", func(t *testing.T) {
+		tg := gametest.NewTestGame(t)
+		tg.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		tg.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Duel Tactics")
+		pA := tg.GetPlayer(gametest.PlayerA)
+		pA.ManaPool().Clear()
+		pA.ManaPool().Add(core.Red, 1)
+		pA.ManaPool().Add(core.Colorless, 1)
+		cardID := pA.Graveyard()[0].ID()
+		bearPerm := tg.Game.FindPermanentByName("Grizzly Bears", tg.GetPlayer(gametest.PlayerB).PlayerID())
+		if err := tg.Game.CastCardWithAlternateCost(pA.PlayerID(), cardID, 0, []uuid.UUID{bearPerm.ID()}, 0); err != nil {
+			t.Fatalf("CastCardWithAlternateCost (flashback): %v", err)
+		}
+		tg.Game.ResolveStack()
+		// Duel Tactics exiled (flashback), Grizzly Bears survives 1 damage.
+		if tg.Game.FindExiledCard(cardID) == nil {
+			t.Errorf("Duel Tactics should be exiled after flashback resolution")
+		}
+		for _, c := range pA.Graveyard() {
+			if c.ID() == cardID {
+				t.Errorf("Duel Tactics returned to graveyard; expected exile")
+			}
+		}
+	})
 }
 
 func TestEmbraceTheParadox(t *testing.T) {
@@ -1759,6 +1838,30 @@ func TestGroupProject(t *testing.T) {
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerA, "Spirit Token", 1)
 		g.AssertPowerToughness(gametest.PlayerA, "Spirit Token", 2, 2)
+	})
+	t.Run("flashback — tap three untapped creatures, creates Spirit token, exiles self", func(t *testing.T) {
+		tg := gametest.NewTestGame(t)
+		tg.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Group Project")
+		tg.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		tg.AddCard(core.ZoneBattlefield, gametest.PlayerA, "White Knight")
+		tg.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Air Elemental")
+		pA := tg.GetPlayer(gametest.PlayerA)
+		cardID := pA.Graveyard()[0].ID()
+		if err := tg.Game.CastCardWithAlternateCost(pA.PlayerID(), cardID, 0, nil, 0); err != nil {
+			t.Fatalf("CastCardWithAlternateCost (flashback): %v", err)
+		}
+		tg.Game.ResolveStack()
+		// Spirit Token created.
+		tg.AssertPermanentCount(gametest.PlayerA, "Spirit Token", 1)
+		// Group Project exiled (not returned to graveyard).
+		if tg.Game.FindExiledCard(cardID) == nil {
+			t.Errorf("Group Project should be exiled after flashback resolution")
+		}
+		for _, c := range pA.Graveyard() {
+			if c.ID() == cardID {
+				t.Errorf("Group Project returned to graveyard; expected exile")
+			}
+		}
 	})
 }
 

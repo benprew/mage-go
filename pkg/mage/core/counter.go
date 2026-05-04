@@ -46,6 +46,10 @@ const (
 
 	Stun // CR 122.1g — "If a permanent with a stun counter would become untapped, remove a stun counter from it instead. It doesn't untap." Removed in the untap step of doUntap (game.go).
 
+	// Secrets of Strixhaven counters
+	Page   // Diary of Dreams page counters
+	Growth // Comforting Counsel growth counters
+
 	// NumCounters must remain the last entry — it sizes the fixed-length
 	// counter array on Permanent, so clone is a memcpy instead of a map copy.
 	NumCounters
@@ -119,6 +123,10 @@ func (ct CounterType) String() string {
 		return "-0/-2"
 	case Stun:
 		return "Stun"
+	case Page:
+		return "Page"
+	case Growth:
+		return "Growth"
 	default:
 		return "Unknown"
 	}

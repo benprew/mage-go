@@ -429,6 +429,20 @@ func TestFractalMascot_Stats(t *testing.T) {
 	g.AssertHasAbility(gametest.PlayerA, "Fractal Mascot", core.Trample, true)
 }
 
+// TestFractalMascot_ETBPutsStunCounter verifies that the ETB trigger also puts a
+// stun counter on the tapped creature, preventing it from untapping next turn.
+func TestFractalMascot_ETBPutsStunCounter(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Fractal Mascot")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.ChoosePermanent(gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(2, core.EndStep)
+	g.Execute()
+	// Grizzly Bears was tapped and has a stun counter: it should not have untapped on turn 2.
+	g.AssertTapped(gametest.PlayerB, "Grizzly Bears", true)
+	g.AssertCounterCount(gametest.PlayerB, "Grizzly Bears", core.Stun, 0) // counter consumed during untap step
+}
+
 // TestGarrisonExcavator_Menace verifies Garrison Excavator has menace.
 func TestGarrisonExcavator_Menace(t *testing.T) {
 	g := gametest.NewTestGame(t)
@@ -436,6 +450,23 @@ func TestGarrisonExcavator_Menace(t *testing.T) {
 	g.StopAt(1, core.EndStep)
 	g.Execute()
 	g.AssertHasAbility(gametest.PlayerA, "Garrison Excavator", core.Menace, true)
+}
+
+// TestGarrisonExcavator_GraveyardLeaveCreatesToken verifies that whenever one or
+// more cards leave the controller's graveyard, Garrison Excavator creates a 2/2
+// red and white Spirit creature token.
+func TestGarrisonExcavator_GraveyardLeaveCreatesToken(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Garrison Excavator")
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Gray Ogre")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Soaring Stoneglider")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 3)
+	// Cast Soaring Stoneglider, exiling 2 graveyard cards as cost — fires one trigger burst.
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Soaring Stoneglider")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Spirit Token", 1)
 }
 
 // =============================================================================
@@ -510,6 +541,25 @@ func TestHardenedAcademic_DiscardGrantsLifelink(t *testing.T) {
 	g.Execute()
 	// 2 power + lifelink = +2 life
 	g.AssertLife(gametest.PlayerA, 22)
+}
+
+// TestHardenedAcademic_GraveyardLeaveAddsCounter verifies that whenever one or
+// more cards leave the controller's graveyard, a +1/+1 counter is put on target
+// creature you control.
+func TestHardenedAcademic_GraveyardLeaveAddsCounter(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hardened Academic")
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Gray Ogre")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Soaring Stoneglider")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 3)
+	// When the trigger fires, choose Hardened Academic as the target creature.
+	g.ChoosePermanent(gametest.PlayerA, "Hardened Academic")
+	// Cast Soaring Stoneglider, exiling 2 graveyard cards as cost.
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Soaring Stoneglider")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertCounterCount(gametest.PlayerA, "Hardened Academic", core.P1P1, 1)
 }
 
 // TestHydroChanneler_TapForBlue verifies {T} adds {U}.
@@ -772,6 +822,24 @@ func TestOwlinHistorian_FlyingAndSurveil(t *testing.T) {
 	g.Execute()
 	g.AssertHasAbility(gametest.PlayerA, "Owlin Historian", core.Flying, true)
 	g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 1)
+}
+
+// TestOwlinHistorian_GraveyardLeaveTriggerBoosts verifies that whenever one or
+// more cards leave the controller's graveyard, Owlin Historian gets +1/+1 until
+// end of turn.
+func TestOwlinHistorian_GraveyardLeaveTriggerBoosts(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Owlin Historian")
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Gray Ogre")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Soaring Stoneglider")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 3)
+	// Cast Soaring Stoneglider using graveyard exile cost — exiles 2 cards from graveyard.
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Soaring Stoneglider")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Base stats 2/3 + one +1/+1 burst = 3/4 (two cards left at once = one event).
+	g.AssertPowerToughness(gametest.PlayerA, "Owlin Historian", 3, 4)
 }
 
 // ===========================================================================
@@ -1096,6 +1164,24 @@ func TestSlumberingTrudge_NotTappedWhenXIsThree(t *testing.T) {
 	g.StopAt(1, core.EndStep)
 	g.Execute()
 	g.AssertTapped(gametest.PlayerA, "Slumbering Trudge", false)
+}
+
+// TestSlumberingTrudge_StunCountersOnEnter verifies stun counters equal to 3-X
+// are placed. When X=2, it enters with 1 stun counter. In a 2-player game, the
+// stun counter is consumed on PlayerA's turn 3 untap step (stays tapped), then
+// the creature untaps normally on PlayerA's turn 5 untap step.
+func TestSlumberingTrudge_StunCountersOnEnter(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Slumbering Trudge")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 3)
+	// X=2: enters with 1 stun counter (3 - 2 = 1), and enters tapped (X ≤ 2).
+	g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerA, "Slumbering Trudge", 2)
+	g.StopAt(5, core.EndStep)
+	g.Execute()
+	// Turn 3 untap (PlayerA): stun counter consumed — creature stays tapped.
+	// Turn 5 untap (PlayerA): no stun counters — creature untaps normally.
+	g.AssertTapped(gametest.PlayerA, "Slumbering Trudge", false)
+	g.AssertCounterCount(gametest.PlayerA, "Slumbering Trudge", core.Stun, 0)
 }
 
 // TestSneeringShadewriter_ETBDrainsOpponent verifies that when Sneering
@@ -3451,6 +3537,22 @@ func TestKirol_BaseStats(t *testing.T) {
 	g.StopAt(1, core.EndStep)
 	g.Execute()
 	g.AssertPowerToughness(gametest.PlayerA, "Kirol, History Buff // Pack a Punch", 2, 3)
+}
+
+// TestKirol_GraveyardLeaveSetsPrepared verifies that whenever one or more cards
+// leave the controller's graveyard, Kirol becomes prepared.
+func TestKirol_GraveyardLeaveSetsPrepared(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Kirol, History Buff // Pack a Punch")
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Gray Ogre")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Soaring Stoneglider")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 3)
+	// Cast Soaring Stoneglider, exiling 2 graveyard cards — triggers Kirol to become prepared.
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Soaring Stoneglider")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Kirol, History Buff // Pack a Punch", core.AttrPrepared, true)
 }
 
 // =============================================================================

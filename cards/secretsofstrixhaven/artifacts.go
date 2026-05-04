@@ -18,12 +18,14 @@ func registerArtifacts() {
 // Whenever one or more cards leave your graveyard, this artifact deals 1 damage to each opponent and you gain 1 life.
 // {T}: Mill a card. You may play that card this turn.
 	Register("Ark of Hunger", func() Card {
-		// XXX: "Whenever one or more cards leave your graveyard" — the engine
-		// has no EvtLeaveGraveyard event, so the triggered ability cannot be
-		// implemented.
 		// XXX: "You may play that card this turn" — graveyard play permissions
 		// are not supported in the engine (only exile via GrantCastFromExile).
 		// The tap ability mills one card from the controller's library only.
+		leavesGraveyardEffect := CompositeEffects(
+			"this artifact deals 1 damage to each opponent and you gain 1 life",
+			DealDamageToPlayers(Fixed(1), SelectEachOpponent()),
+			GainLife(1),
+		)
 		millOne := FuncEffect(
 			"mill a card",
 			EffectProperties{Outcome: OutcomeUnknown},
@@ -43,6 +45,7 @@ func registerArtifacts() {
 			},
 		)
 		return NewArtifact("Ark of Hunger", "{2}{R}{W}",
+			WithAbility(WheneverOneOrMoreCardsLeaveYourGraveyardTrigger(leavesGraveyardEffect, false)),
 			WithActivatedAbility(millOne, TapSourceCost()),
 		)
 	})
@@ -90,14 +93,11 @@ func registerArtifacts() {
 // Whenever you cast an instant or sorcery spell, put a page counter on this artifact.
 // {5}, {T}: Draw a card. This ability costs {1} less to activate for each page counter on this artifact.
 	Register("Diary of Dreams", func() Card {
-		// XXX: "page counter" — the engine's core/counter.go has no Page counter type.
-		// Charge counters are used as a substitute. All functional behavior is preserved,
-		// but AssertCounterCount will show Charge counters, not page counters.
 		counterTrigger := WheneverYouCastSpellTrigger(
-			AddCounters(Charge, Fixed(1)).Targeting(ToSource()),
+			AddCounters(Page, Fixed(1)).Targeting(ToSource()),
 			false, IsInstantOrSorceryCard,
 		)
-		// Continuous effect: reduce the activation cost by 1 for each charge
+		// Continuous effect: reduce the activation cost by 1 for each page
 		// counter on this artifact. ActivationCostReductions is reset each
 		// Apply() cycle, so the FuncContinuousEffect re-registers it every cycle.
 		costReduction := FuncContinuousEffect(LayerAbility, WhileOnBattlefield,
@@ -106,7 +106,7 @@ func registerArtifacts() {
 				if src == nil {
 					return nil
 				}
-				n := int(src.Counters[Charge])
+				n := int(src.Counters[Page])
 				if n > 0 {
 					g.AddActivationCostReduction(sourceID, n)
 				}
