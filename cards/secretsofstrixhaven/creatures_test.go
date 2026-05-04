@@ -2293,8 +2293,8 @@ func TestTextbookTabulator_ETBSurveil2(t *testing.T) {
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Textbook Tabulator")
 	g.StopAt(1, core.EndStep)
 	g.Execute()
-	// After ETB surveil 2, search player keeps cards in order; library count unchanged.
-	g.AssertLibraryCount(gametest.PlayerA, 2)
+	// After ETB surveil 2, the controller keeps both cards on top of the library.
+	g.AssertLibraryCount(gametest.PlayerA, "Grizzly Bears", 1)
 }
 
 // ===========================================================================
