@@ -113,18 +113,6 @@ func modalLabels(ms *ModalSpellAbility) []string {
 	return out
 }
 
-// gatherModalSpellTargets prompts the caster for a mode and then for that
-// mode's targets, returning the chosen mode index and the flat target list.
-// Used by the cast-spell pathway when a *ModalSpellAbility is present.
-func (g *Game) gatherModalSpellTargets(caster Player, card Card, ms *ModalSpellAbility) (int, []uuid.UUID) {
-	mode := caster.ChooseMode(modalLabels(ms), card.Name())
-	if mode < 0 || mode >= len(ms.modes) {
-		mode = 0
-	}
-	targets := g.promptTargetsForList(caster.PlayerID(), card, ms.modes[mode].Targets)
-	return mode, targets
-}
-
 // ModalTriggerEffect builds an Effect for a modal triggered ability (e.g.
 // Trusty Retriever, Entomber Exarch ETB). When the trigger resolves, the
 // controller is prompted with ChooseMode over the mode labels; the chosen

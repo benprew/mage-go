@@ -210,76 +210,16 @@ func (g *Game) castCardFromZoneOpts(playerID, cardID uuid.UUID, zone Zone, targe
 		return fmt.Errorf("could not remove %s from %s", card.Name(), zone)
 	}
 
-	// Build the spell ability effect list. Modal spells route through
-	// gatherModalSpellTargets so the chosen mode supplies its own
-	// targets and effects (CR 700.2).
-	var effects []Effect
-	var modalTargets [][]uuid.UUID
-	modeChoice := 0
-	if ms, ok := getModalSpellAbility(card); ok {
-		mIdx, mTargets := g.gatherModalSpellTargets(p, card, ms)
-		modeChoice = mIdx
-		effects = append(effects, ms.modes[mIdx].Effects...)
-		targets = mTargets
-		modalTargets = make([][]uuid.UUID, len(ms.modes))
-		modalTargets[mIdx] = mTargets
-	} else {
-		for _, a := range card.Abilities() {
-			if sa, ok := a.(*SpellAbility); ok {
-				effects = append(effects, sa.Effects()...)
-			}
-		}
-	}
-
-	obj := &StackObject{
-		ID:                uuid.New(),
+	_, err := g.pushCastSpellObject(castStackObjectOptions{
 		Card:              card,
 		Controller:        playerID,
-		SourceID:          card.ID(),
-		Effects:           effects,
 		Targets:           targets,
 		XValue:            xValue,
-		ModeChoice:        modeChoice,
-		ModalTargets:      modalTargets,
 		CastZone:          zone,
-		CastContext:       g.snapshotCastContext(playerID),
 		ExileOnLeaveStack: exileOnLeaveStack,
-	}
-
-	if modes := card.Modes(); len(modes) > 0 {
-		obj.ModeChoice = p.ChooseMode(modes, card.Name())
-	}
-
-	for _, eff := range effects {
-		if !IsDividedDamageEffect(eff) {
-			continue
-		}
-		total := DividedDamageTotal(eff).Resolve(g, card.ID(), playerID, targets)
-		if total > 0 && len(targets) > 0 {
-			dist := p.ChooseDamageDistribution(targets, total, card.Name(), g)
-			obj.DamageDistribution = sanitizeDamageDistribution(dist, targets, total)
-		}
-		break
-	}
-
-	g.stack.Push(obj)
-
-	if card.HasType(TypeInstant) {
-		g.instantsCastThisTurn[playerID]++
-	}
-	if card.HasType(TypeSorcery) {
-		g.sorceriesCastThisTurn[playerID]++
-	}
-
-	g.FireEvent(GameEvent{
-		Type:     EvtSpellCast,
-		SourceID: card.ID(),
-		PlayerID: playerID,
+		SnapshotCast:      true,
 	})
-
-	g.fireBecomesTargetEvents(obj, false)
-
-	return nil
+	return err
 }
 
 // CastableFromExilePermission grants a player permission to cast a specific
@@ -393,54 +333,15 @@ func (g *Game) CastExiledCardWithPermission(playerID, cardID uuid.UUID, targets 
 		return fmt.Errorf("could not remove %s from exile", card.Name())
 	}
 
-	pl := g.GetPlayer(playerID)
-	var effects []Effect
-	var modalTargets [][]uuid.UUID
-	modeChoice := 0
-	if ms, ok := getModalSpellAbility(card); ok {
-		mIdx, mTargets := g.gatherModalSpellTargets(pl, card, ms)
-		modeChoice = mIdx
-		effects = append(effects, ms.modes[mIdx].Effects...)
-		targets = mTargets
-		modalTargets = make([][]uuid.UUID, len(ms.modes))
-		modalTargets[mIdx] = mTargets
-	} else {
-		for _, a := range card.Abilities() {
-			if sa, ok := a.(*SpellAbility); ok {
-				effects = append(effects, sa.Effects()...)
-			}
-		}
-	}
-	obj := &StackObject{
-		ID:           uuid.New(),
+	_, err := g.pushCastSpellObject(castStackObjectOptions{
 		Card:         card,
 		Controller:   playerID,
-		SourceID:     card.ID(),
-		Effects:      effects,
 		Targets:      targets,
 		XValue:       xValue,
-		ModeChoice:   modeChoice,
-		ModalTargets: modalTargets,
 		CastZone:     ZoneExile,
-		CastContext:  g.snapshotCastContext(playerID),
-	}
-	if modes := card.Modes(); len(modes) > 0 {
-		obj.ModeChoice = pl.ChooseMode(modes, card.Name())
-	}
-	g.stack.Push(obj)
-	if card.HasType(TypeInstant) {
-		g.instantsCastThisTurn[playerID]++
-	}
-	if card.HasType(TypeSorcery) {
-		g.sorceriesCastThisTurn[playerID]++
-	}
-	g.FireEvent(GameEvent{
-		Type:     EvtSpellCast,
-		SourceID: card.ID(),
-		PlayerID: playerID,
+		SnapshotCast: true,
 	})
-	g.fireBecomesTargetEvents(obj, false)
-	return nil
+	return err
 }
 
 // --- "If would be put into a graveyard this turn, exile it instead" ---

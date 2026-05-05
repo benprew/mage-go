@@ -132,7 +132,9 @@ func (c *exileCreatureFromGraveyardCost) Pay(sourceID, controller uuid.UUID, g *
 	return nil
 }
 
-func (c *exileCreatureFromGraveyardCost) Text() string { return "Exile a creature card from your graveyard" }
+func (c *exileCreatureFromGraveyardCost) Text() string {
+	return "Exile a creature card from your graveyard"
+}
 
 // strikingPaletteRegisterDelayedTrigger sets up a one-shot delayed trigger
 // that fires on the controller's next spell cast this turn. If that spell is
@@ -395,7 +397,14 @@ func registerCreatures() {
 			).AddTarget(TargetAnotherCreatureYouControl())),
 			// At the beginning of your end step, if one or more cards were put into exile this turn,
 			// put a +1/+1 counter on Ennis.
-			// XXX: no per-turn exile tracking in engine; this ability is not implemented.
+			WithAbility(NewTriggered(EvtEndStep, false,
+				AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
+			).SetCondition(func(evt *GameEvent, g GameReader, _, controller uuid.UUID) bool {
+				if evt.PlayerID != controller {
+					return false
+				}
+				return g.CardsPutIntoExileThisTurn() > 0
+			})),
 		)
 	})
 

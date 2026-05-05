@@ -49,6 +49,9 @@ type GameReader interface {
 	ActivePlayerIndex() int
 	CombatDamageSourcesThisStep(controllerID, recipientID uuid.UUID) map[uuid.UUID]int
 	PlayerCardsDrawnThisTurn(uuid.UUID) int
+	PlayerCardsLeftGraveyardThisTurn(uuid.UUID) int
+	PlayerHadCardLeaveGraveyardThisTurn(uuid.UUID) bool
+	CardsPutIntoExileThisTurn() int
 }
 
 // Compile-time check that *Game satisfies GameReader.

@@ -6,12 +6,13 @@ import (
 	_ "git.sr.ht/~cdcarter/mage-go/cards/limited"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
+	"github.com/google/uuid"
 )
 
 // TestAdditiveEvolution verifies Additive Evolution's two abilities:
-// 1. ETB creates a 0/0 green and blue Fractal token with 3 +1/+1 counters.
-// 2. At the beginning of combat on your turn, put a +1/+1 counter on target
-//    creature you control. It gains vigilance until end of turn.
+//  1. ETB creates a 0/0 green and blue Fractal token with 3 +1/+1 counters.
+//  2. At the beginning of combat on your turn, put a +1/+1 counter on target
+//     creature you control. It gains vigilance until end of turn.
 func TestAdditiveEvolution(t *testing.T) {
 	t.Run("etb creates 0/0 fractal token with 3 counters", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
@@ -62,9 +63,9 @@ func TestAdditiveEvolution(t *testing.T) {
 }
 
 // TestComfortingCounsel verifies Comforting Counsel's two abilities:
-// 1. Whenever you gain life, put a growth counter on this enchantment.
-// 2. As long as there are five or more growth counters on this enchantment,
-//    creatures you control get +3/+3.
+//  1. Whenever you gain life, put a growth counter on this enchantment.
+//  2. As long as there are five or more growth counters on this enchantment,
+//     creatures you control get +3/+3.
 func TestComfortingCounsel(t *testing.T) {
 	t.Run("gain_life_puts_growth_counter", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
@@ -145,9 +146,9 @@ func TestGraduationDay(t *testing.T) {
 }
 
 // TestLivingHistory verifies Living History's two abilities:
-// 1. ETB creates a 2/2 red and white Spirit creature token.
-// 2. Whenever you attack, if a card left your graveyard this turn, target
-//    attacking creature gets +2/+0 until end of turn.
+//  1. ETB creates a 2/2 red and white Spirit creature token.
+//  2. Whenever you attack, if a card left your graveyard this turn, target
+//     attacking creature gets +2/+0 until end of turn.
 func TestLivingHistory(t *testing.T) {
 	t.Run("etb creates 2/2 red and white spirit token", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
@@ -157,6 +158,35 @@ func TestLivingHistory(t *testing.T) {
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerA, "Spirit Token", 1)
 		g.AssertPowerToughness(gametest.PlayerA, "Spirit Token", 2, 2)
+	})
+
+	t.Run("attack trigger pumps an attacking creature if card left graveyard", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Living History")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")
+		g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
+		pid := g.GetPlayer(gametest.PlayerA).PlayerID()
+		gyCard := g.GetPlayer(gametest.PlayerA).Graveyard()[0]
+		removed, ok := g.Game.MoveFromGraveyard(pid, gyCard.ID(), core.ZoneExile)
+		if !ok {
+			t.Fatalf("MoveFromGraveyard failed")
+		}
+		g.Game.ExileCard(removed, uuid.Nil)
+		g.Attack(1, gametest.PlayerA, "Hill Giant")
+		g.ChoosePermanent(gametest.PlayerA, "Hill Giant")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Hill Giant", 5, 3)
+	})
+
+	t.Run("attack trigger does not pump without graveyard move", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Living History")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")
+		g.Attack(1, gametest.PlayerA, "Hill Giant")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Hill Giant", 3, 3)
 	})
 }
 
@@ -173,6 +203,26 @@ func TestPrimaryResearch(t *testing.T) {
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
 		g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 0)
+	})
+
+	t.Run("end step draws if a card left your graveyard this turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Primary Research")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Primary Research", "Grizzly Bears")
+		g.StopAt(1, core.Cleanup)
+		g.Execute()
+		g.AssertHandCount(gametest.PlayerA, "Forest", 1)
+	})
+
+	t.Run("end step does not draw without graveyard move", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Primary Research")
+		g.StopAt(1, core.Cleanup)
+		g.Execute()
+		g.AssertHandCount(gametest.PlayerA, "Forest", 0)
 	})
 
 	t.Run("etb does not return permanent with mana value 4 or more", func(t *testing.T) {

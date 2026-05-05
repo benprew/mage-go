@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/google/uuid"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"github.com/google/uuid"
 )
 
 // Cost represents a cost to pay for a spell or ability.
@@ -648,7 +648,7 @@ func (c *exileFromGraveyardCost) Pay(sourceID, controller uuid.UUID, g *Game) er
 	}
 	removed := g.MoveCardsFromGraveyard(controller, ids, ZoneExile)
 	for _, card := range removed {
-		g.exile = append(g.exile, ExiledCard{Card: card, ExiledBy: sourceID})
+		g.ExileCard(card, sourceID)
 	}
 	return nil
 }

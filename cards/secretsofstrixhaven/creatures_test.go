@@ -3,8 +3,10 @@ package secretsofstrixhaven
 import (
 	"testing"
 
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
+	"github.com/google/uuid"
 
 	_ "git.sr.ht/~cdcarter/mage-go/cards/limited"
 )
@@ -307,6 +309,19 @@ func TestEnnisDebateModerator_ETBExileReturns(t *testing.T) {
 	g.Execute()
 	// Grizzly Bears should be back on battlefield after the end step
 	g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
+}
+
+// TestEnnisDebateModerator_EndStepCounter verifies that Ennis gets a +1/+1
+// counter at your end step if one or more cards were put into exile this turn.
+func TestEnnisDebateModerator_EndStepCounter(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ennis, Debate Moderator")
+	exiled := mage.NewLand("Test Exiled Land")
+	exiled.SetOwner(g.GetPlayer(gametest.PlayerA).PlayerID())
+	g.Game.ExileCard(exiled, uuid.Nil)
+	g.StopAt(1, core.Cleanup)
+	g.Execute()
+	g.AssertCounterCount(gametest.PlayerA, "Ennis, Debate Moderator", core.P1P1, 1)
 }
 
 // TestEnvironmentalScientist_ETBSearchesBasicLand verifies that when

@@ -88,11 +88,6 @@ func (g *Game) CastPreparedSpellCopy(playerID, permID uuid.UUID, spellFactory fu
 	if spellFactory == nil {
 		return fmt.Errorf("nil prepared spell factory")
 	}
-	pl := g.GetPlayer(playerID)
-	if pl == nil {
-		return ErrPlayerNotFound
-	}
-
 	card := spellFactory()
 	if card == nil {
 		return fmt.Errorf("prepared spell factory returned nil")
@@ -100,55 +95,18 @@ func (g *Game) CastPreparedSpellCopy(playerID, permID uuid.UUID, spellFactory fu
 	card.SetID(uuid.New())
 	card.SetOwner(playerID)
 
-	// Gather effects from the card's SpellAbility.
-	var effects []Effect
-	for _, a := range card.Abilities() {
-		if sa, ok := a.(*SpellAbility); ok {
-			effects = append(effects, sa.Effects()...)
-		}
-	}
-
-	obj := &StackObject{
-		ID:         uuid.New(),
-		Card:       card,
-		Controller: playerID,
-		SourceID:   card.ID(),
-		Effects:    effects,
-		IsCopy:     true,
-		CastZone:   ZoneAny,
-		// Forward the resolving spell's X (CR 706.10c — copies of an X-cost
-		// spell copy the chosen X). When CastPreparedSpellCopy is called from
-		// inside a resolving effect (the typical Prepared activation), the
-		// engine has stashed the originating spell's X in g.currentX.
-		XValue: g.currentX,
-	}
-
-	// Prompt for targets on each declared SpellAbility target.
-	for _, a := range card.Abilities() {
-		sa, ok := a.(*SpellAbility)
-		if !ok {
-			continue
-		}
-		if len(sa.Targets()) == 0 {
-			continue
-		}
-		obj.Targets = g.promptTargetsForList(playerID, card, sa.Targets())
-		break
-	}
-
-	g.stack.Push(obj)
-	if card.HasType(TypeInstant) {
-		g.instantsCastThisTurn[playerID]++
-	}
-	if card.HasType(TypeSorcery) {
-		g.sorceriesCastThisTurn[playerID]++
-	}
-	g.FireEvent(GameEvent{
-		Type:     EvtSpellCast,
-		SourceID: card.ID(),
-		PlayerID: playerID,
+	_, err := g.pushCastSpellObject(castStackObjectOptions{
+		Card:          card,
+		Controller:    playerID,
+		IsCopy:        true,
+		CastZone:      ZoneAny,
+		XValue:        g.currentX,
+		SnapshotCast:  true,
+		PromptTargets: true,
 	})
-	g.fireBecomesTargetEvents(obj, false)
+	if err != nil {
+		return err
+	}
 
 	// Unprepare the source permanent.
 	g.SetPrepared(permID, false)
@@ -509,6 +467,13 @@ type paradigmState struct {
 	// belonging to this player, keyed by name; the first matching id is
 	// recast at each main phase.
 	ExiledIDs map[uuid.UUID]map[string]uuid.UUID
+	// RecurringRegistered[playerID][name] — whether the persistent first-main
+	// trigger has already been registered for this player/card name.
+	RecurringRegistered map[uuid.UUID]map[string]bool
+}
+
+func (st *paradigmState) cloneCustomState() any {
+	return cloneParadigmState(st)
 }
 
 func paradigmStateOf(g *Game) *paradigmState {
@@ -518,8 +483,9 @@ func paradigmStateOf(g *Game) *paradigmState {
 	v, ok := g.customState[paradigmStateKey]
 	if !ok {
 		st := &paradigmState{
-			Resolved:  map[uuid.UUID]map[string]bool{},
-			ExiledIDs: map[uuid.UUID]map[string]uuid.UUID{},
+			Resolved:            map[uuid.UUID]map[string]bool{},
+			ExiledIDs:           map[uuid.UUID]map[string]uuid.UUID{},
+			RecurringRegistered: map[uuid.UUID]map[string]bool{},
 		}
 		g.customState[paradigmStateKey] = st
 		return st
@@ -559,6 +525,7 @@ func (g *Game) RegisterParadigmExiledCopy(playerID uuid.UUID, name string, cardI
 		st.ExiledIDs[playerID] = map[string]uuid.UUID{}
 	}
 	st.ExiledIDs[playerID][name] = cardID
+	g.RegisterParadigmRecurringCast(playerID, name)
 }
 
 // ParadigmExiledCopy returns the exiled card ID registered for (playerID,
@@ -570,6 +537,89 @@ func (g *Game) ParadigmExiledCopy(playerID uuid.UUID, name string) (uuid.UUID, b
 	}
 	id, ok := st.ExiledIDs[playerID][name]
 	return id, ok
+}
+
+// RegisterParadigmRecurringCast registers the persistent beginning-of-first-
+// main-phase trigger for a Paradigm card name. It is idempotent per
+// (player, name), so repeated copy resolutions do not create duplicate
+// triggers.
+func (g *Game) RegisterParadigmRecurringCast(playerID uuid.UUID, name string) {
+	st := paradigmStateOf(g)
+	if st.RecurringRegistered[playerID] == nil {
+		st.RecurringRegistered[playerID] = map[string]bool{}
+	}
+	st.RecurringRegistered[playerID][name] = true
+}
+
+// queueParadigmRecurringTriggers pushes the beginning-of-first-main-phase
+// Paradigm triggers for the active player. FireEvent calls this for
+// EvtMainPhase because Paradigm sources live in exile rather than on the
+// battlefield or in the graveyard.
+func (g *Game) queueParadigmRecurringTriggers(evt *GameEvent) {
+	if evt == nil || evt.Type != EvtMainPhase || !evt.Flag || evt.PlayerID == uuid.Nil {
+		return
+	}
+	st := paradigmStateOf(g)
+	for name := range st.RecurringRegistered[evt.PlayerID] {
+		if !g.HasResolvedParadigmSpell(evt.PlayerID, name) {
+			continue
+		}
+		cardID, ok := g.ParadigmExiledCopy(evt.PlayerID, name)
+		if !ok || g.FindExiledCard(cardID) == nil {
+			continue
+		}
+		name := name
+		g.stack.Push(&StackObject{
+			ID:         uuid.New(),
+			Controller: evt.PlayerID,
+			SourceID:   cardID,
+			IsAbility:  true,
+			Effects: []Effect{FuncEffect(
+				"Paradigm — cast a copy from exile",
+				EffectProperties{Outcome: OutcomeBenefit},
+				func(g *Game, _ uuid.UUID, controller uuid.UUID, _ []uuid.UUID) error {
+					p := g.GetPlayer(controller)
+					if p == nil || !p.ChooseMayAbility("cast a copy of "+name+" from exile without paying its mana cost") {
+						return nil
+					}
+					_, err := g.CastParadigmCopyFromExile(controller, name)
+					return err
+				},
+			)},
+		})
+	}
+}
+
+// CastParadigmCopyFromExile casts a copy of the exiled Paradigm card with the
+// given name without moving the exiled card. The copy uses the exiled card's
+// ID as SourceID so card text that re-registers the Paradigm source keeps
+// pointing at the original exiled card.
+func (g *Game) CastParadigmCopyFromExile(playerID uuid.UUID, name string) (*StackObject, error) {
+	cardID, ok := g.ParadigmExiledCopy(playerID, name)
+	if !ok {
+		return nil, fmt.Errorf("no exiled Paradigm copy registered for %s", name)
+	}
+	ec := g.FindExiledCard(cardID)
+	if ec == nil || ec.Card == nil {
+		return nil, fmt.Errorf("exiled Paradigm card not found for %s", name)
+	}
+	if ec.Card.Name() != name {
+		return nil, fmt.Errorf("exiled Paradigm card name mismatch: got %s, want %s", ec.Card.Name(), name)
+	}
+	card := ec.Card.Copy()
+	card.SetID(cardID)
+	card.SetOwner(playerID)
+
+	return g.pushCastSpellObject(castStackObjectOptions{
+		Card:          card,
+		Controller:    playerID,
+		SourceID:      cardID,
+		IsCopy:        true,
+		CastZone:      ZoneExile,
+		SnapshotCast:  true,
+		PromptTargets: true,
+		ModePrompt:    "Paradigm copy",
+	})
 }
 
 // =============================================================================

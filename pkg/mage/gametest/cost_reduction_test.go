@@ -5,6 +5,7 @@ import (
 
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"github.com/google/uuid"
 )
 
 // Engine-level tests for the conditional spell cost reduction system
@@ -284,6 +285,42 @@ func TestCostReductionIfCreatureDiedThisTurn(t *testing.T) {
 	c2 := findHandCard(tg2, PlayerA, picker)
 	if got := tg2.Game.ConditionalSpellCostReduction(pid2, c2); got != 3 {
 		t.Errorf("picker reduction after death: got %d, want 3", got)
+	}
+}
+
+func TestCostReductionIfCardLeftYourGraveyardThisTurn(t *testing.T) {
+	spell := "TC Graveyard Left Discount"
+	if !mage.CardRegistered(spell) {
+		mage.Register(spell, func() mage.Card {
+			return mage.NewInstant(spell, "{3}{R}",
+				mage.NewSpellAbility(mage.DealDamage(mage.Fixed(1))),
+				mage.WithSelfCostReduction(mage.FixedAmount(2), mage.CondCardLeftYourGraveyardThisTurn()),
+			)
+		})
+	}
+
+	tg := NewTestGame(t)
+	tg.AddCard(core.ZoneHand, PlayerA, spell)
+	stagePrecombat(tg)
+	pid := tg.getPlayerID(PlayerA)
+	if got := tg.Game.ConditionalSpellCostReduction(pid, findHandCard(tg, PlayerA, spell)); got != 0 {
+		t.Errorf("reduction before graveyard move: got %d, want 0", got)
+	}
+
+	tg2 := NewTestGame(t)
+	tg2.AddCard(core.ZoneHand, PlayerA, spell)
+	tg2.AddCard(core.ZoneGraveyard, PlayerA, "Grizzly Bears")
+	stagePrecombat(tg2)
+	pid2 := tg2.getPlayerID(PlayerA)
+	gyCard := tg2.GetPlayer(PlayerA).Graveyard()[0]
+	removed, ok := tg2.Game.MoveFromGraveyard(pid2, gyCard.ID(), core.ZoneExile)
+	if !ok {
+		t.Fatalf("MoveFromGraveyard failed")
+	}
+	tg2.Game.ExileCard(removed, uuid.Nil)
+
+	if got := tg2.Game.ConditionalSpellCostReduction(pid2, findHandCard(tg2, PlayerA, spell)); got != 2 {
+		t.Errorf("reduction after graveyard move: got %d, want 2", got)
 	}
 }
 

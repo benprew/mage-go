@@ -94,7 +94,6 @@ func registerEnchantments() {
 	// Enchantment
 	// When this enchantment enters, create a 2/2 red and white Spirit creature token.
 	// Whenever you attack, if a card left your graveyard this turn, target attacking creature gets +2/+0 until end of turn.
-	// XXX: "if a card left your graveyard this turn" — engine per_turn_trackers.go lacks tracking of cards exiting the graveyard; second ability not implemented.
 	Register("Living History", func() Card {
 		return NewEnchantment("Living History", "{1}{R}",
 			WithAbility(EntersBattlefieldTrigger(
@@ -105,6 +104,18 @@ func registerEnchantments() {
 				),
 				false,
 			)),
+			WithAbility(WheneverOneOrMoreCreaturesYouControlAttackTrigger(
+				Boost(Fixed(2), Fixed(0)).Targeting(ToTarget()).Until(EndOfTurn),
+				false,
+			).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controller uuid.UUID) bool {
+				if evt.PlayerID != controller {
+					return false
+				}
+				if gg, ok := g.(*Game); ok {
+					return gg.PlayerHadCardLeaveGraveyardThisTurn(controller)
+				}
+				return false
+			}).AddTarget(TargetCreature(IsAttacking))),
 		)
 	})
 
@@ -112,7 +123,6 @@ func registerEnchantments() {
 	// Enchantment
 	// When this enchantment enters, return target nonland permanent card with mana value 3 or less from your graveyard to the battlefield.
 	// At the beginning of your end step, if a card left your graveyard this turn, draw a card.
-	// XXX: "if a card left your graveyard this turn" — engine per_turn_trackers.go lacks tracking of cards exiting the graveyard; second ability not implemented.
 	Register("Primary Research", func() Card {
 		nonlandMV3OrLess := NewCardFilter("nonland permanent card with mana value 3 or less", func(c Card) bool {
 			if c.HasType(TypeLand) {
@@ -127,6 +137,20 @@ func registerEnchantments() {
 					false,
 				).AddTarget(TargetCardInYourGraveyard(nonlandMV3OrLess)),
 			),
+			WithAbility(NewTriggered(EvtEndStep, false,
+				FuncEffect("if a card left your graveyard this turn, draw a card",
+					EffectProperties{Outcome: OutcomeBenefit, DrawCount: 1},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						if !g.PlayerHadCardLeaveGraveyardThisTurn(controller) {
+							return nil
+						}
+						if p := g.GetPlayer(controller); p != nil {
+							g.PlayerDrawCard(p)
+						}
+						return nil
+					},
+				),
+			).SetConditionData(EventPlayerIsController{})),
 		)
 	})
 }

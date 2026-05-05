@@ -201,8 +201,8 @@ func TestVibrantOutburst(t *testing.T) {
 func TestViciousRivalry(t *testing.T) {
 	t.Run("destroys all artifacts and creatures with mana value <= X", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")    // MV 2
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Serra Angel")      // MV 5
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // MV 2
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Serra Angel")   // MV 5
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Vicious Rivalry")
 		g.ChooseNumber(gametest.PlayerA, 2) // pay 2 life (X=2)
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Vicious Rivalry")
@@ -210,7 +210,7 @@ func TestViciousRivalry(t *testing.T) {
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0) // MV 2 <= X=2
 		g.AssertPermanentCount(gametest.PlayerB, "Serra Angel", 1)   // MV 5 > X=2
-		g.AssertLife(gametest.PlayerA, 18)                            // paid 2 life
+		g.AssertLife(gametest.PlayerA, 18)                           // paid 2 life
 	})
 }
 
@@ -880,6 +880,22 @@ func TestManaSculpt(t *testing.T) {
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
 		g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+	})
+
+	t.Run("adds colorless at controller next main phase if wizard controlled", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Informed Inkwright")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Mana Sculpt")
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Grizzly Bears")
+		g.CastInResponseTo(gametest.PlayerA, "Mana Sculpt", "Grizzly Bears")
+		g.StopAt(3, core.BeginCombat)
+		g.Execute()
+
+		pool := g.GetPlayer(gametest.PlayerA).ManaPool()
+		if got := pool.CountProducedThisTurn(core.Colorless); got < 2 {
+			t.Errorf("colorless produced by Mana Sculpt = %d, want at least 2", got)
+		}
 	})
 }
 
@@ -2067,6 +2083,20 @@ func TestGerminationPracticum_ParadigmExilesAfterResolve(t *testing.T) {
 	g.AssertExileCount("Germination Practicum", 1)
 }
 
+func TestGerminationPracticum_ParadigmRecursAtFirstMain(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 5)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Germination Practicum")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Germination Practicum")
+	g.StopAt(3, core.EndStep)
+	g.Execute()
+
+	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 6, 6)
+	g.AssertExileCount("Germination Practicum", 1)
+	g.AssertGraveyardCount(gametest.PlayerA, "Germination Practicum", 0)
+}
+
 // TestImprovisationCapstone_ExilesUntilMV4 verifies that Improvisation
 // Capstone exiles cards from the top of the library until total mana value
 // reaches 4 or greater, then lets you cast any number for free.
@@ -2275,6 +2305,22 @@ func TestRestorationSeminar_ParadigmExilesAfterResolve(t *testing.T) {
 	g.AssertExileCount("Restoration Seminar", 1)
 }
 
+func TestRestorationSeminar_ParadigmRecurringCopyKeepsOriginalExiled(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Scathe Zombies")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Restoration Seminar")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 7)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Restoration Seminar", "Grizzly Bears")
+	g.StopAt(3, core.EndStep)
+	g.Execute()
+
+	g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
+	g.AssertPermanentCount(gametest.PlayerA, "Scathe Zombies", 1)
+	g.AssertExileCount("Restoration Seminar", 1)
+	g.AssertGraveyardCount(gametest.PlayerA, "Restoration Seminar", 0)
+}
+
 func TestLumaretsFavor(t *testing.T) {
 	t.Run("+2/+4 boost until end of turn", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
@@ -2284,6 +2330,22 @@ func TestLumaretsFavor(t *testing.T) {
 		g.StopAt(1, core.DeclareAttackers)
 		g.Execute()
 		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 4, 6)
+	})
+
+	t.Run("copies itself if controller gained life this turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Scathe Zombies")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lumaret's Favor")
+		p := g.GetPlayer(gametest.PlayerA)
+		g.Game.PlayerGainLife(p, 1)
+		g.Game.FireEvent(core.GameEvent{Type: core.EvtLifeGained, PlayerID: p.PlayerID(), Amount: 1})
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lumaret's Favor", "Grizzly Bears")
+		g.ChooseTarget(gametest.PlayerA, "Scathe Zombies")
+		g.StopAt(1, core.DeclareAttackers)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 4, 6)
+		g.AssertPowerToughness(gametest.PlayerA, "Scathe Zombies", 4, 6)
 	})
 }
 
@@ -2312,5 +2374,27 @@ func TestWiltInTheHeat(t *testing.T) {
 		g.Execute()
 		g.AssertExileCount("Grizzly Bears", 1)
 		g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 0)
+	})
+
+	t.Run("costs two less if a card left your graveyard this turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Wilt in the Heat")
+		pid := g.GetPlayer(gametest.PlayerA).PlayerID()
+		var wilt = g.GetPlayer(gametest.PlayerA).Hand()[0]
+		if got := g.Game.ConditionalSpellCostReduction(pid, wilt); got != 0 {
+			t.Fatalf("initial cost reduction = %d, want 0", got)
+		}
+
+		g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
+		gyCard := g.GetPlayer(gametest.PlayerA).Graveyard()[0]
+		removed, ok := g.Game.MoveFromGraveyard(pid, gyCard.ID(), core.ZoneExile)
+		if !ok {
+			t.Fatalf("MoveFromGraveyard failed")
+		}
+		g.Game.ExileCard(removed, uuid.Nil)
+
+		if got := g.Game.ConditionalSpellCostReduction(pid, wilt); got != 2 {
+			t.Errorf("cost reduction after graveyard move = %d, want 2", got)
+		}
 	})
 }

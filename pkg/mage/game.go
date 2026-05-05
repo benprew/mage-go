@@ -263,6 +263,9 @@ type Game struct {
 	playerCastSpellThisTurn    map[uuid.UUID]bool // playerID -> cast any spell this turn
 	playerAttackedThisTurn     map[uuid.UUID]bool // playerID -> declared at least one attacker this turn
 	cardsDrawnThisTurn         map[uuid.UUID]int  // playerID -> count of cards drawn this turn (per Zurzoth, Chaos Rider et al.)
+	cardsLeftGraveyardThisTurn map[uuid.UUID]int  // playerID -> cards that left that player's graveyard this turn
+	cardsPutIntoExileThisTurn  int                // total cards put into exile this turn
+	exileZoneChangesPending    map[uuid.UUID]int  // cardID -> ZoneExile events already counted, awaiting ExileCard append
 
 	// customState is a per-game string-keyed bag for set-specific keyword
 	// support to stash auxiliary state (e.g. Paradigm "have I resolved a
@@ -1233,11 +1236,13 @@ func (g *Game) ExilePermanent(perm *Permanent) {
 	}
 	g.FireEvent(zoneEvt)
 	g.checkAbilitiesForEvent(selfAbilities, &zoneEvt, permID, controller)
+	g.consumePendingExileZoneChange(permID)
 }
 
 // ExileCard moves a card (from any zone) to the exile zone.
 func (g *Game) ExileCard(card Card, exiledBy uuid.UUID) {
 	g.exile = append(g.exile, ExiledCard{Card: card, ExiledBy: exiledBy})
+	g.recordCardPutIntoExile(card)
 }
 
 // ExileCardFaceDown moves a card to the exile zone face down. Only players in
@@ -1254,6 +1259,7 @@ func (g *Game) ExileCardFaceDown(card Card, exiledBy uuid.UUID, revealedTo ...uu
 		FaceDown:   true,
 		RevealedTo: rev,
 	})
+	g.recordCardPutIntoExile(card)
 }
 
 // RevealExiledCardTo grants the given player permission to see the identity of
@@ -1942,6 +1948,37 @@ func (g *Game) FireEvent(evt GameEvent) {
 		}
 	}
 
+	// Scan spell abilities that function while their source spell is on the
+	// stack (CR 113.6i), such as "When you cast this spell, copy it...".
+	for _, obj := range g.stack.Objects() {
+		if obj == nil || obj.IsAbility || obj.Card == nil {
+			continue
+		}
+		for _, a := range obj.Card.Abilities() {
+			gt, ok := UnwrapAbility(a).(*GenericTriggered)
+			if !ok {
+				continue
+			}
+			if !gt.FunctionsInZone(ZoneStack) {
+				continue
+			}
+			if !gt.CheckEventType(evt.Type) {
+				continue
+			}
+			gt.SetSource(obj.SourceID)
+			gt.SetController(obj.Controller)
+			if !gt.CheckTrigger(&evt, g) {
+				continue
+			}
+			g.pendingTriggers = append(g.pendingTriggers, &pendingTrigger{
+				ability:    gt,
+				event:      &evt,
+				sourceID:   obj.SourceID,
+				controller: obj.Controller,
+			})
+		}
+	}
+
 	// Check delayed triggers (one-shot unless Persistent, removed after matching)
 	remaining := g.delayedTriggers[:0]
 	for _, dt := range g.delayedTriggers {
@@ -2001,6 +2038,7 @@ func (g *Game) FireEvent(evt GameEvent) {
 		}
 	}
 	g.delayedTriggers = remaining
+	g.queueParadigmRecurringTriggers(&evt)
 }
 
 // PutTriggersOnStack puts all pending triggers onto the stack.
@@ -2657,76 +2695,15 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	// Remove from hand
 	p.RemoveFromHand(card.ID())
 
-	// Build effects from spell abilities. Modal spells built with
-	// NewModalSpell route through gatherModalSpellTargets; the chosen mode
-	// supplies its own effects and targets.
-	var effects []Effect
-	var modalTargets [][]uuid.UUID
-	modeChoice := 0
-	if ms, ok := getModalSpellAbility(card); ok {
-		mIdx, mTargets := g.gatherModalSpellTargets(p, card, ms)
-		modeChoice = mIdx
-		effects = append(effects, ms.modes[mIdx].Effects...)
-		targets = mTargets
-		modalTargets = make([][]uuid.UUID, len(ms.modes))
-		modalTargets[mIdx] = mTargets
-	} else {
-		for _, a := range card.Abilities() {
-			if sa, ok := a.(*SpellAbility); ok {
-				effects = append(effects, sa.Effects()...)
-			}
-		}
-	}
-
-	obj := &StackObject{
-		ID:           uuid.New(),
+	_, err := g.pushCastSpellObject(castStackObjectOptions{
 		Card:         card,
 		Controller:   playerID,
-		SourceID:     card.ID(),
-		Effects:      effects,
 		Targets:      targets,
 		XValue:       xValue,
-		ModeChoice:   modeChoice,
-		ModalTargets: modalTargets,
 		CastZone:     ZoneHand,
-		CastContext:  g.snapshotCastContext(playerID),
-	}
-
-	if modes := card.Modes(); len(modes) > 0 {
-		obj.ModeChoice = p.ChooseMode(modes, card.Name())
-	}
-
-	for _, eff := range effects {
-		if !IsDividedDamageEffect(eff) {
-			continue
-		}
-		total := DividedDamageTotal(eff).Resolve(g, card.ID(), playerID, targets)
-		if total > 0 && len(targets) > 0 {
-			dist := p.ChooseDamageDistribution(targets, total, card.Name(), g)
-			obj.DamageDistribution = sanitizeDamageDistribution(dist, targets, total)
-		}
-		break
-	}
-
-	g.stack.Push(obj)
-
-	// Track instant/sorcery spells cast per player this turn
-	if card.HasType(TypeInstant) {
-		g.instantsCastThisTurn[playerID]++
-	}
-	if card.HasType(TypeSorcery) {
-		g.sorceriesCastThisTurn[playerID]++
-	}
-
-	g.FireEvent(GameEvent{
-		Type:     EvtSpellCast,
-		SourceID: card.ID(),
-		PlayerID: playerID,
+		SnapshotCast: true,
 	})
-
-	g.fireBecomesTargetEvents(obj, false)
-
-	return nil
+	return err
 }
 
 // addManaFromAbility resolves a mana ability's productions, adding mana to the player's pool.

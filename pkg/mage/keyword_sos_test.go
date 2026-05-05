@@ -150,6 +150,58 @@ func TestPrepared_CastPreparedCopyForwardsCurrentX(t *testing.T) {
 	}
 }
 
+func TestPrepared_CastPreparedModalCopyUsesChosenMode(t *testing.T) {
+	a := newRecordingPlayer("A")
+	b := newRecordingPlayer("B")
+	g := NewGame(a, b)
+	for range 3 {
+		a.AddToLibrary(NewLand("Plains"))
+	}
+
+	spellFactory := func() Card {
+		c := NewSorcery("Modal Lesson", "{1}{U}", nil)
+		c.AddAbility(NewModalSpell([]Mode{
+			{
+				Label:   "Draw a card",
+				Effects: []Effect{DrawCards(Fixed(1))},
+			},
+			{
+				Label:   "Gain 3 life",
+				Effects: []Effect{GainLife(3)},
+			},
+		}))
+		return c
+	}
+	c := NewCreature("Modal Adept", "{W}", 1, 2,
+		WithPreparedSpell(spellFactory),
+	)
+	c.SetOwner(a.PlayerID())
+	perm := g.PutOnBattlefield(c, a.PlayerID())
+	g.ResolveStack()
+
+	if err := g.CastPreparedSpellCopy(a.PlayerID(), perm.Card.ID(), spellFactory); err != nil {
+		t.Fatalf("CastPreparedSpellCopy: %v", err)
+	}
+	top := g.stack.Peek()
+	if top == nil || !top.IsCopy {
+		t.Fatalf("expected prepared modal copy on stack")
+	}
+	if top.ModeChoice != 0 {
+		t.Errorf("ModeChoice = %d, want 0", top.ModeChoice)
+	}
+	if len(top.Effects) != 1 {
+		t.Fatalf("modal copy effects = %d, want 1", len(top.Effects))
+	}
+	g.ResolveStack()
+
+	if got := len(a.Hand()); got != 1 {
+		t.Errorf("modal copy drew %d cards, want 1", got)
+	}
+	if g.IsPrepared(perm.Card.ID()) {
+		t.Errorf("expected source to unprepare after casting modal copy")
+	}
+}
+
 // TestSorceriesCastThisTurnTracker: casting a sorcery increments the
 // per-player sorcery counter, leaves instants alone, and aggregates via
 // GetInstantOrSorceryCastThisTurn.
@@ -520,5 +572,44 @@ func TestParadigm_RecordResolutionAndExiledCopy(t *testing.T) {
 	got, ok := g.ParadigmExiledCopy(a.PlayerID(), "Restoration Seminar")
 	if !ok || got != cardID {
 		t.Errorf("ParadigmExiledCopy: got (%v,%v), want (%v,true)", got, ok, cardID)
+	}
+}
+
+func TestParadigm_CastCopyFromExileKeepsOriginalExiled(t *testing.T) {
+	a := newRecordingPlayer("A")
+	b := newRecordingPlayer("B")
+	g := NewGame(a, b)
+	for range 3 {
+		a.AddToLibrary(NewLand("Plains"))
+	}
+
+	card := NewSorcery("Restoration Seminar", "{5}{W}{W}",
+		NewSpellAbility(DrawCards(Fixed(1))),
+	)
+	card.SetOwner(a.PlayerID())
+	g.ExileCard(card, uuid.Nil)
+	g.RecordParadigmResolution(a.PlayerID(), card.Name())
+	g.RegisterParadigmExiledCopy(a.PlayerID(), card.Name(), card.ID())
+
+	obj, err := g.CastParadigmCopyFromExile(a.PlayerID(), card.Name())
+	if err != nil {
+		t.Fatalf("CastParadigmCopyFromExile: %v", err)
+	}
+	if obj == nil || !obj.IsCopy {
+		t.Fatalf("expected a spell copy stack object")
+	}
+	if obj.SourceID != card.ID() {
+		t.Errorf("copy SourceID = %v, want exiled card ID %v", obj.SourceID, card.ID())
+	}
+	if g.stack.IsEmpty() {
+		t.Fatalf("expected copy on stack")
+	}
+	g.ResolveStack()
+
+	if got := len(a.Hand()); got != 1 {
+		t.Errorf("copy resolution drew %d cards, want 1", got)
+	}
+	if ec := g.FindExiledCard(card.ID()); ec == nil {
+		t.Errorf("original exiled card was removed")
 	}
 }

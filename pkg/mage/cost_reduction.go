@@ -174,6 +174,14 @@ func CondCreatureDiedThisTurn() SpellCondition {
 	}
 }
 
+// CondCardLeftYourGraveyardThisTurn matches when at least one card has left
+// the casting player's graveyard this turn.
+func CondCardLeftYourGraveyardThisTurn() SpellCondition {
+	return func(g *Game, controller uuid.UUID, _ Card, _ uuid.UUID) bool {
+		return g.PlayerHadCardLeaveGraveyardThisTurn(controller)
+	}
+}
+
 // CondControlsMatching matches when the casting player controls at least one
 // permanent satisfying f (e.g. "if you control a Wizard", "if you control a
 // creature with flying").
