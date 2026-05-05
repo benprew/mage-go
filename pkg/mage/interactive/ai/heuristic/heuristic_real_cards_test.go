@@ -1,4 +1,4 @@
-package ai
+package heuristic
 
 import (
 	"strings"
@@ -9,6 +9,7 @@ import (
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/ai"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/ai/combatsolver"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/eval"
 
@@ -20,17 +21,6 @@ import (
 // every static effect (Bad Moon's +1/+1, Unholy Strength's +2/+2, Lance's
 // first strike) and triggered ability (Abu Ja'far's "destroy whatever
 // damaged me") is in play.
-//
-// Board (AI on the play, life 11; opponent at 3 life):
-//
-//	AI:    Drudge Skeletons, Scathe Zombies +2× Unholy Strength, Lost Soul
-//	       2× Bad Moon, 2× Flying Carpet, 5 Swamps
-//	Opp:   Pikemen, Argivian Blacksmith + Lance + Artifact Ward, Abu Ja'far
-//	       Ivory Cup, 6 Plains
-//
-// User's expectation: the AI should declare some attack here. Even with all
-// attackers blocked the trades favour the AI overwhelmingly, and Lost Soul
-// alone is unblockable if Flying Carpet activates first (5 power → lethal).
 func TestHeuristicAttackers_RealCardLethalScenario(t *testing.T) {
 	pa := mage.NewBasePlayer("AI")
 	pb := mage.NewBasePlayer("Opp")
@@ -76,24 +66,23 @@ func TestHeuristicAttackers_RealCardLethalScenario(t *testing.T) {
 		put("Plains", pb)
 	}
 
-	// Sanity: 2/2 base + 2× Bad Moon (+2/+2) + 2× Unholy Strength (+4/+2) = 8/6.
 	if pow, tgh := scathe.CurrentPower(g), scathe.CurrentToughness(g); pow != 8 || tgh != 6 {
 		t.Fatalf("Scathe Zombies = %d/%d, want 8/6 (setup is wrong)", pow, tgh)
 	}
 
 	personalities := []struct {
 		name string
-		w    WeightedPersonality
+		w    ai.WeightedPersonality
 	}{
-		{"Midrange", MidrangeWeighted},
-		{"Aggro", AggroWeighted},
-		{"Control", ControlWeighted},
-		{"Tempo", TempoWeighted},
-		{"Burn", BurnWeighted},
+		{"Midrange", ai.MidrangeWeighted},
+		{"Aggro", ai.AggroWeighted},
+		{"Control", ai.ControlWeighted},
+		{"Tempo", ai.TempoWeighted},
+		{"Burn", ai.BurnWeighted},
 	}
 	for _, p := range personalities {
 		t.Run(p.name, func(t *testing.T) {
-			s := NewHeuristicStrategy(p.w)
+			s := New(p.w)
 
 			r := combatsolver.SolveAttack(g, pa.PlayerID(), combatsolver.Options{Profile: combatsolver.Profile{
 				Weights:        p.w.Weights,
@@ -109,7 +98,7 @@ func TestHeuristicAttackers_RealCardLethalScenario(t *testing.T) {
 			}
 
 			attackers := s.Attackers(pa, g)
-			t.Logf("HeuristicStrategy.Attackers: %v", attackerNames(g, attackers))
+			t.Logf("Strategy.Attackers: %v", attackerNames(g, attackers))
 			if len(attackers) == 0 {
 				t.Errorf("declared zero attackers; expected at least one")
 			}

@@ -1,4 +1,4 @@
-package ai
+package search
 
 // TTFlag identifies the bound information carried by a transposition-table
 // entry.

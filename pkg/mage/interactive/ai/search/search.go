@@ -1,4 +1,6 @@
-package ai
+// Package search implements a minimax-based AI strategy with alpha-beta
+// pruning, transposition tables, and Zobrist hashing.
+package search
 
 import (
 	"fmt"
@@ -10,31 +12,33 @@ import (
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/ai"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/ai/combatsolver"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/ai/heuristic"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/eval"
 )
 
-// DebugSearchStats enables one-line per-decision logging of search telemetry
+// DebugStats enables one-line per-decision logging of search telemetry
 // (nodes visited, depth reached, elapsed time vs. budget, chosen move).
-var DebugSearchStats bool
+var DebugStats bool
 
-// SearchConfig controls the search parameters.
-type SearchConfig struct {
+// Config controls the search parameters.
+type Config struct {
 	MaxDepth  int
 	MaxNodes  int
 	TimeLimit time.Duration
 }
 
-// DefaultSearchConfig returns the default search configuration.
-func DefaultSearchConfig() SearchConfig {
-	return SearchConfig{
+// DefaultConfig returns the default search configuration.
+func DefaultConfig() Config {
+	return Config{
 		MaxDepth:  10,
 		MaxNodes:  20000,
 		TimeLimit: 1500 * time.Millisecond,
 	}
 }
 
-// SearchStrategy implements AIStrategy using minimax search with alpha-beta pruning.
+// Strategy implements ai.AIStrategy using minimax search with alpha-beta pruning.
 // It uses Game.Clone() for accurate game state simulation and searches across
 // all decision points: priority actions, attacker declarations, and blocker assignments.
 //
@@ -47,11 +51,11 @@ func DefaultSearchConfig() SearchConfig {
 //   - Null-move pruning: skip opponent's turn for fast bound estimation
 //   - Late move reductions: reduce depth for low-heuristic moves
 //   - History heuristic: track which move types cause cutoffs for better ordering
-type SearchStrategy struct {
-	Config      SearchConfig
+type Strategy struct {
+	Config      Config
 	Evaluator   eval.StateEvaluator
-	Fallback    *HeuristicStrategy
-	Personality WeightedPersonality
+	Fallback    ai.AIStrategy
+	Personality ai.WeightedPersonality
 
 	// history tracks cutoff counts per move key for move ordering.
 	// Persists across calls within the same strategy instance.
@@ -100,6 +104,49 @@ const maxQuiescenceDepth = 2
 // is re-searched with progressively wider bounds.
 const aspirationDelta = 50
 
+// DefaultTTSizeMB is the default transposition-table size in megabytes used
+// by New. At 16 bytes per entry this fits ~262K positions in 4 MB —
+// comfortably in L3 on modern CPUs.
+const DefaultTTSizeMB = 4
+
+// New creates a search-based Strategy with a heuristic Strategy as fallback.
+// The personality's decision weights flow into both the leaf evaluator
+// (Aggression) and move ordering (TargetFace, CurvePreference, HoldInstants),
+// so each personality produces a distinct play style under the same search.
+func New(cfg Config, wp ai.WeightedPersonality) *Strategy {
+	return &Strategy{
+		Config:      cfg,
+		Evaluator:   eval.NewPersonalityEvaluator(wp.Weights, wp.Aggression),
+		Fallback:    heuristic.New(wp),
+		Personality: wp,
+		tt:          NewTranspositionTable(DefaultTTSizeMB),
+		zobrist:     DefaultZobrist,
+	}
+}
+
+// NewAdaptive returns a search-backed strategy that switches between an
+// aggressive and a defensive search based on relative life totals. Each
+// sub-strategy gets its own transposition table so scores produced by one
+// evaluator can never poison probes from the other.
+func NewAdaptive(cfg Config) ai.AIStrategy {
+	return &heuristic.Adaptive{
+		Aggressive: &Strategy{
+			Config:    cfg,
+			Evaluator: eval.NewWeightedEvaluator(ai.AggroWeighted.Weights),
+			Fallback:  heuristic.New(ai.AggroWeighted),
+			tt:        NewTranspositionTable(DefaultTTSizeMB),
+			zobrist:   DefaultZobrist,
+		},
+		Defensive: &Strategy{
+			Config:    cfg,
+			Evaluator: eval.NewWeightedEvaluator(ai.ControlWeighted.Weights),
+			Fallback:  heuristic.New(ai.ControlWeighted),
+			tt:        NewTranspositionTable(DefaultTTSizeMB),
+			zobrist:   DefaultZobrist,
+		},
+	}
+}
+
 // moveKey returns a string key for history heuristic tracking.
 // Includes the first target ID when available to differentiate moves
 // like "Bolt targeting opponent" from "Bolt targeting creature".
@@ -118,7 +165,7 @@ func moveKey(m *Move) string {
 // This biases the search toward exploring personality-appropriate moves first,
 // improving pruning efficiency and making the AI's play style match its personality
 // even when all moves are ultimately evaluated by minimax.
-func (s *SearchStrategy) adjustMoveHeuristics(moves []Move, g *mage.Game, playerID uuid.UUID, mainPhase bool) {
+func (s *Strategy) adjustMoveHeuristics(moves []Move, g *mage.Game, playerID uuid.UUID, mainPhase bool) {
 	wp := s.Personality
 	for i := range moves {
 		m := &moves[i]
@@ -164,7 +211,7 @@ func (s *SearchStrategy) adjustMoveHeuristics(moves []Move, g *mage.Game, player
 
 // ── Priority Action Search ──────────────────────────────────────────────────
 
-func (s *SearchStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, mainPhase bool) interactive.PriorityAction {
+func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, mainPhase bool) interactive.PriorityAction {
 	moves := GeneratePriorityMoves(g, p, landsPlayed, mainPhase)
 	if len(moves) <= 1 {
 		return interactive.PriorityAction{Type: interactive.ActionPass}
@@ -292,7 +339,7 @@ func (s *SearchStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed
 		action = moveToAction(bestMove)
 	}
 
-	if DebugSearchStats {
+	if DebugStats {
 		elapsed := time.Since(start)
 		moveDesc := "pass"
 		if usedFallback {
@@ -312,7 +359,7 @@ func (s *SearchStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed
 // searchRoot performs a root-level search across all moves at a given depth
 // with the specified alpha-beta window. It returns the best score, best move,
 // and the index of the best move in the moves slice.
-func (s *SearchStrategy) searchRoot(g *mage.Game, p mage.Player, moves []Move,
+func (s *Strategy) searchRoot(g *mage.Game, p mage.Player, moves []Move,
 	depth, alpha, beta, landsPlayed int, nodes *int, deadline time.Time) (int, *Move, int) {
 
 	depthBestScore := minScore
@@ -362,7 +409,7 @@ func (s *SearchStrategy) searchRoot(g *mage.Game, p mage.Player, moves []Move,
 }
 
 // sortByHistory reorders moves by history heuristic score (descending).
-func (s *SearchStrategy) sortByHistory(moves []Move) {
+func (s *Strategy) sortByHistory(moves []Move) {
 	sort.SliceStable(moves, func(i, j int) bool {
 		hi := s.history[moveKey(&moves[i])]
 		hj := s.history[moveKey(&moves[j])]
@@ -375,12 +422,12 @@ func (s *SearchStrategy) sortByHistory(moves []Move) {
 
 // ── Attacker / Blocker Search ───────────────────────────────────────────────
 //
-// Combat decisions delegate to combatsolver. SearchStrategy keeps its own
-// outer minimax for priority-action / spell-casting decisions, but combat is
-// a constrained subgame that the solver searches exhaustively without sharing
+// Combat decisions delegate to combatsolver. Strategy keeps its own outer
+// minimax for priority-action / spell-casting decisions, but combat is a
+// constrained subgame that the solver searches exhaustively without sharing
 // the outer search's depth/time budget.
 
-func (s *SearchStrategy) Attackers(p mage.Player, g *mage.Game) []uuid.UUID {
+func (s *Strategy) Attackers(p mage.Player, g *mage.Game) []uuid.UUID {
 	r := combatsolver.SolveAttack(g, p.PlayerID(), combatsolver.Options{
 		Profile:  s.solverProfile(),
 		Deadline: time.Now().Add(s.Config.TimeLimit),
@@ -391,7 +438,7 @@ func (s *SearchStrategy) Attackers(p mage.Player, g *mage.Game) []uuid.UUID {
 	return r.Attackers
 }
 
-func (s *SearchStrategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAssignment {
+func (s *Strategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAssignment {
 	r := combatsolver.SolveDefense(g, p.PlayerID(), combatsolver.Options{
 		Profile:  s.solverProfile(),
 		Deadline: time.Now().Add(s.Config.TimeLimit),
@@ -402,7 +449,7 @@ func (s *SearchStrategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAssig
 	return r.Blocks
 }
 
-func (s *SearchStrategy) solverProfile() combatsolver.Profile {
+func (s *Strategy) solverProfile() combatsolver.Profile {
 	return combatsolver.Profile{
 		Weights:        s.Personality.Weights,
 		Aggression:     s.Personality.Aggression,
@@ -412,7 +459,7 @@ func (s *SearchStrategy) solverProfile() combatsolver.Profile {
 
 // ── Minimax Core ────────────────────────────────────────────────────────────
 
-func (s *SearchStrategy) minimax(g *mage.Game, depth, alpha, beta int,
+func (s *Strategy) minimax(g *mage.Game, depth, alpha, beta int,
 	maximizing bool, playerID uuid.UUID, nodes *int, deadline time.Time, chainCount int) int {
 
 	*nodes++
@@ -641,7 +688,7 @@ func (s *SearchStrategy) minimax(g *mage.Game, depth, alpha, beta int,
 // at function entry: below alphaOrig means no move improved alpha (upper
 // bound), at/above the original beta means a beta cutoff occurred (lower
 // bound), otherwise exact.
-func (s *SearchStrategy) storeTT(hash uint64, depth, best, alphaOrig, betaOrig int) {
+func (s *Strategy) storeTT(hash uint64, depth, best, alphaOrig, betaOrig int) {
 	flag := TTExact
 	if best <= alphaOrig {
 		flag = TTUpperBound
@@ -652,7 +699,7 @@ func (s *SearchStrategy) storeTT(hash uint64, depth, best, alphaOrig, betaOrig i
 	s.TTStores++
 }
 
-func (s *SearchStrategy) eval(g *mage.Game, playerID uuid.UUID) int {
+func (s *Strategy) eval(g *mage.Game, playerID uuid.UUID) int {
 	return s.Evaluator(g, playerID)
 }
 
@@ -697,7 +744,7 @@ func isTacticalMove(m *Move) bool {
 //
 // Standing pat: the side to move can always choose not to act, so the static
 // eval serves as a lower bound (for maximizer) or upper bound (for minimizer).
-func (s *SearchStrategy) quiescence(g *mage.Game, alpha, beta int,
+func (s *Strategy) quiescence(g *mage.Game, alpha, beta int,
 	playerID uuid.UUID, nodes *int, deadline time.Time, qDepth int) int {
 
 	*nodes++
@@ -814,54 +861,4 @@ func applyMoveToClone(g *mage.Game, playerID uuid.UUID, m *Move, _ int) {
 		g.ResolveStack()
 	}
 	g.CheckStateBasedActions()
-}
-
-// DefaultTTSizeMB is the default transposition-table size in megabytes used
-// by NewSearchAI and NewAdaptiveSearchAI. At 16 bytes per entry this fits
-// ~262K positions in 4 MB — comfortably in L3 on modern CPUs.
-const DefaultTTSizeMB = 4
-
-// NewSearchAI creates an AI player that uses minimax search with a weighted personality.
-// The personality's decision weights flow into both the leaf evaluator (Aggression)
-// and move ordering (TargetFace, CurvePreference, HoldInstants), so each personality
-// produces a distinct play style even under the same search.
-func NewSearchAI(name string, config SearchConfig, wp WeightedPersonality) *AIPlayer {
-	return &AIPlayer{
-		BasePlayer: mage.NewBasePlayer(name),
-		strategy: &SearchStrategy{
-			Config:      config,
-			Evaluator:   eval.NewPersonalityEvaluator(wp.Weights, wp.Aggression),
-			Fallback:    NewHeuristicStrategy(wp),
-			Personality: wp,
-			tt:          NewTranspositionTable(DefaultTTSizeMB),
-			zobrist:     DefaultZobrist,
-		},
-	}
-}
-
-// NewAdaptiveSearchAI creates an AI player that uses an AdaptiveStrategy
-// where both sub-strategies are SearchStrategy instances: an aggressive
-// evaluator when ahead and a defensive evaluator when behind. Each sub-
-// strategy gets its own TT so that scores produced by one evaluator can
-// never poison probes from the other.
-func NewAdaptiveSearchAI(name string, config SearchConfig) *AIPlayer {
-	return &AIPlayer{
-		BasePlayer: mage.NewBasePlayer(name),
-		strategy: &AdaptiveStrategy{
-			Aggressive: &SearchStrategy{
-				Config:    config,
-				Evaluator: eval.NewWeightedEvaluator(AggroWeighted.Weights),
-				Fallback:  NewHeuristicStrategy(AggroWeighted),
-				tt:        NewTranspositionTable(DefaultTTSizeMB),
-				zobrist:   DefaultZobrist,
-			},
-			Defensive: &SearchStrategy{
-				Config:    config,
-				Evaluator: eval.NewWeightedEvaluator(ControlWeighted.Weights),
-				Fallback:  NewHeuristicStrategy(ControlWeighted),
-				tt:        NewTranspositionTable(DefaultTTSizeMB),
-				zobrist:   DefaultZobrist,
-			},
-		},
-	}
 }

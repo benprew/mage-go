@@ -1,4 +1,4 @@
-package ai
+package search
 
 import (
 	"testing"
@@ -6,6 +6,8 @@ import (
 
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/ai"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/ai/heuristic"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/eval"
 )
 
@@ -51,7 +53,7 @@ func buildMeasureState() (*mage.Game, *mage.BasePlayer, *mage.BasePlayer) {
 func TestMeasure_TTImpact(t *testing.T) {
 	// Generous budget so both variants complete the full iterative deepening
 	// — the point is to compare work-to-the-same-answer, not who stopped first.
-	cfg := SearchConfig{
+	cfg := Config{
 		MaxDepth:  6,
 		MaxNodes:  1 << 30,
 		TimeLimit: 60 * time.Second,
@@ -59,10 +61,10 @@ func TestMeasure_TTImpact(t *testing.T) {
 
 	// ── Baseline: no TT ──────────────────────────────────────────────────
 	g1, pa1, _ := buildMeasureState()
-	noTT := &SearchStrategy{
+	noTT := &Strategy{
 		Config:    cfg,
 		Evaluator: eval.DefaultEvaluator,
-		Fallback:  &HeuristicStrategy{Personality: MidrangePersonality},
+		Fallback:  heuristic.New(ai.MidrangeWeighted),
 	}
 	start := time.Now()
 	actionNoTT := noTT.PriorityAction(pa1, g1, 0, true)
@@ -71,10 +73,10 @@ func TestMeasure_TTImpact(t *testing.T) {
 
 	// ── TT-enabled ───────────────────────────────────────────────────────
 	g2, pa2, _ := buildMeasureState()
-	withTT := &SearchStrategy{
+	withTT := &Strategy{
 		Config:    cfg,
 		Evaluator: eval.DefaultEvaluator,
-		Fallback:  &HeuristicStrategy{Personality: MidrangePersonality},
+		Fallback:  heuristic.New(ai.MidrangeWeighted),
 		tt:        NewTranspositionTable(DefaultTTSizeMB),
 		zobrist:   NewZobristTables(),
 	}

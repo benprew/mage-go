@@ -18,6 +18,7 @@ import (
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/ai"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/ai/heuristic"
 
 	_ "git.sr.ht/~cdcarter/mage-go/cards"
 )
@@ -336,9 +337,9 @@ func buildDeckFromEntries(entries []tui.DeckEntry, ownerID [16]byte, rng *rand.R
 
 func createAI(name, personality string) *ai.AIPlayer {
 	if strings.EqualFold(personality, "adaptive") {
-		return ai.NewAdaptiveAI(name)
+		return ai.NewAIPlayer(name, heuristic.NewAdaptive())
 	}
-	return ai.NewWeightedAI(name, parsePersonality(personality))
+	return ai.NewAIPlayer(name, heuristic.New(parsePersonality(personality)))
 }
 
 func parsePersonality(s string) ai.WeightedPersonality {

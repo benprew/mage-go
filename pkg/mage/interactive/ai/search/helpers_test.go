@@ -1,11 +1,10 @@
-package ai
+package search
 
 import (
 	"github.com/google/uuid"
 
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
 )
 
 // makePerm creates a creature permanent with cleared summoning sickness.
@@ -25,12 +24,22 @@ func makeGame() (*mage.Game, *mage.BasePlayer, *mage.BasePlayer) {
 	return g, pa, pb
 }
 
-// dummyStrategy is a no-op AIStrategy for tests that need to construct an
-// AIPlayer but don't care about decisions.
-type dummyStrategy struct{}
-
-func (s *dummyStrategy) PriorityAction(_ mage.Player, _ *mage.Game, _ int, _ bool) interactive.PriorityAction {
-	return interactive.PriorityAction{Type: interactive.ActionPass}
+// landColor maps basic land names to their mana color.
+var landColor = map[string]core.Color{
+	"Forest":   core.Green,
+	"Mountain": core.Red,
+	"Plains":   core.White,
+	"Island":   core.Blue,
+	"Swamp":    core.Black,
 }
-func (s *dummyStrategy) Attackers(_ mage.Player, _ *mage.Game) []uuid.UUID           { return nil }
-func (s *dummyStrategy) Blockers(_ mage.Player, _ *mage.Game) []mage.BlockAssignment { return nil }
+
+func addLands(g *mage.Game, p *mage.BasePlayer, name string, count int) {
+	color := landColor[name]
+	for range count {
+		land := mage.NewLand(name, mage.WithManaAbility(color))
+		land.SetOwner(p.PlayerID())
+		perm := mage.NewPermanent(land, p.PlayerID())
+		perm.RevokeBaseAttr(core.AttrSummonSick)
+		g.AddToBattlefield(perm)
+	}
+}

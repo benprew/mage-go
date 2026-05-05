@@ -18,6 +18,8 @@ import (
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/ai"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/ai/heuristic"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/ai/search"
 
 	// Register all card sets.
 	_ "git.sr.ht/~cdcarter/mage-go/cards"
@@ -64,11 +66,11 @@ func createWasmAI(name, personality, mode string) *ai.AIPlayer {
 	}
 	switch mode {
 	case "search":
-		return ai.NewSearchAI(name, ai.DefaultSearchConfig(), wp)
+		return ai.NewAIPlayer(name, search.New(search.DefaultConfig(), wp))
 	case "adaptive":
-		return ai.NewAdaptiveAI(name)
+		return ai.NewAIPlayer(name, heuristic.NewAdaptive())
 	default:
-		return ai.NewWeightedAI(name, wp)
+		return ai.NewAIPlayer(name, heuristic.New(wp))
 	}
 }
 

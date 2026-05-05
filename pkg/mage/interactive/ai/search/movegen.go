@@ -1,4 +1,4 @@
-package ai
+package search
 
 import (
 	"sort"
@@ -433,10 +433,4 @@ func pickAdditionalTargets(g *mage.Game, playerID uuid.UUID, card mage.Card, req
 		result = append(result, best)
 	}
 	return result
-}
-
-// AutoSelectTargetsForSearch uses the same targeting logic as HeuristicStrategy.
-func AutoSelectTargetsForSearch(p mage.Player, g *mage.Game, card mage.Card) []uuid.UUID {
-	start := &HeuristicStrategy{Personality: MidrangePersonality}
-	return start.autoSelectTargets(p, g, card)
 }

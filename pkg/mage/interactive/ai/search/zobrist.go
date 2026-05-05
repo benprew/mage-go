@@ -1,4 +1,4 @@
-package ai
+package search
 
 import (
 	"math/rand"
@@ -54,7 +54,7 @@ const (
 // zobristSeed is fixed so that hashes are reproducible across runs.
 const zobristSeed = 0xC0FFEE
 
-// DefaultZobrist is the package-level ZobristTables shared by SearchStrategy
+// DefaultZobrist is the package-level ZobristTables shared by Strategy
 // instances. Using a shared instance avoids redundant table initialization and
 // name-index churn across multiple AI players within the same process.
 var DefaultZobrist = NewZobristTables()

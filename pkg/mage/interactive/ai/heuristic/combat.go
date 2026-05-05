@@ -1,4 +1,4 @@
-package ai
+package heuristic
 
 import (
 	"github.com/google/uuid"
@@ -6,6 +6,7 @@ import (
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/ai"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/eval"
 )
 
@@ -373,6 +374,7 @@ func findGangBlocks(atk *mage.Permanent, available []*mage.Permanent, g *mage.Ga
 		}
 	}
 
+	_ = playerID
 	return nil
 }
 
@@ -546,7 +548,7 @@ func profitableToAttack(atk *mage.Permanent, g *mage.Game, opponentID uuid.UUID)
 	return false
 }
 
-func holdBackValue(p mage.Player, g *mage.Game, w WeightedPersonality) float64 {
+func holdBackValue(p mage.Player, g *mage.Game, w ai.WeightedPersonality) float64 {
 	playerID := p.PlayerID()
 
 	bestInstantValue := 0.0
@@ -608,7 +610,7 @@ func holdBackValue(p mage.Player, g *mage.Game, w WeightedPersonality) float64 {
 	return 0
 }
 
-func (s *HeuristicStrategy) evaluateResponse(p mage.Player, g *mage.Game) *interactive.PriorityAction {
+func (s *Strategy) evaluateResponse(p mage.Player, g *mage.Game) *interactive.PriorityAction {
 	playerID := p.PlayerID()
 	opponent := g.GetOpponent(playerID)
 	if opponent == nil {

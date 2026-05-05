@@ -1,4 +1,6 @@
-package ai
+// Package heuristic implements a fast, personality-driven AI strategy that
+// makes decisions via local heuristics (without search).
+package heuristic
 
 import (
 	"github.com/google/uuid"
@@ -6,6 +8,7 @@ import (
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/ai"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/ai/combatsolver"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/eval"
 )
@@ -26,7 +29,7 @@ func stackHasOpponentThreat(g *mage.Game, playerID uuid.UUID) bool {
 // eligible instants (pump, damage, removal) to the post-blockers response
 // window: it's the AI's pre-combat main phase and they have at least one
 // creature that can attack.
-func (s *HeuristicStrategy) shouldHoldForCombat(g *mage.Game, playerID uuid.UUID) bool {
+func (s *Strategy) shouldHoldForCombat(g *mage.Game, playerID uuid.UUID) bool {
 	if g.GetStep() != core.PrecombatMain {
 		return false
 	}
@@ -42,7 +45,7 @@ func (s *HeuristicStrategy) shouldHoldForCombat(g *mage.Game, playerID uuid.UUID
 }
 
 // solverProfile translates a WeightedPersonality into a combatsolver.Profile.
-func (s *HeuristicStrategy) solverProfile() combatsolver.Profile {
+func (s *Strategy) solverProfile() combatsolver.Profile {
 	w := s.weights()
 	return combatsolver.Profile{
 		Weights:        w.Weights,
@@ -51,23 +54,24 @@ func (s *HeuristicStrategy) solverProfile() combatsolver.Profile {
 	}
 }
 
-// HeuristicStrategy implements AIStrategy using personality-driven heuristics.
-type HeuristicStrategy struct {
-	Personality Personality
-	Weights     WeightedPersonality
+// Strategy implements ai.AIStrategy using personality-driven heuristics.
+type Strategy struct {
+	Personality ai.Personality
+	Weights     ai.WeightedPersonality
 	weightsInit bool
 }
 
-// NewHeuristicStrategy creates a HeuristicStrategy from a WeightedPersonality.
-func NewHeuristicStrategy(w WeightedPersonality) *HeuristicStrategy {
-	return &HeuristicStrategy{Weights: w, weightsInit: true}
+// New creates a Strategy from a WeightedPersonality.
+func New(w ai.WeightedPersonality) *Strategy {
+	return &Strategy{Weights: w, weightsInit: true}
 }
 
-func newHeuristicFromOld(p Personality) *HeuristicStrategy {
-	return &HeuristicStrategy{Personality: p, Weights: p.ToWeighted(), weightsInit: true}
+// NewFromOld creates a Strategy from a legacy boolean Personality.
+func NewFromOld(p ai.Personality) *Strategy {
+	return &Strategy{Personality: p, Weights: p.ToWeighted(), weightsInit: true}
 }
 
-func (s *HeuristicStrategy) weights() WeightedPersonality {
+func (s *Strategy) weights() ai.WeightedPersonality {
 	if !s.weightsInit {
 		s.Weights = s.Personality.ToWeighted()
 		s.weightsInit = true
@@ -75,7 +79,7 @@ func (s *HeuristicStrategy) weights() WeightedPersonality {
 	return s.Weights
 }
 
-func (s *HeuristicStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, mainPhase bool) interactive.PriorityAction {
+func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, mainPhase bool) interactive.PriorityAction {
 	playerID := p.PlayerID()
 
 	lethal := eval.CalculateLethal(g, playerID)
@@ -182,10 +186,11 @@ func (s *HeuristicStrategy) PriorityAction(p mage.Player, g *mage.Game, landsPla
 		}
 	}
 
+	_ = landsPlayed
 	return interactive.PriorityAction{Type: interactive.ActionPass}
 }
 
-func (s *HeuristicStrategy) findBestRemoval(p mage.Player, g *mage.Game) *interactive.PriorityAction {
+func (s *Strategy) findBestRemoval(p mage.Player, g *mage.Game) *interactive.PriorityAction {
 	playerID := p.PlayerID()
 	opponent := g.GetOpponent(playerID)
 	if opponent == nil {
@@ -224,7 +229,7 @@ func (s *HeuristicStrategy) findBestRemoval(p mage.Player, g *mage.Game) *intera
 	return nil
 }
 
-func (s *HeuristicStrategy) considerAbilityActivation(p mage.Player, g *mage.Game) *interactive.PriorityAction {
+func (s *Strategy) considerAbilityActivation(p mage.Player, g *mage.Game) *interactive.PriorityAction {
 	playerID := p.PlayerID()
 	abilities := g.GetActivatableAbilities(playerID)
 	if len(abilities) == 0 {
@@ -308,7 +313,7 @@ func (s *HeuristicStrategy) considerAbilityActivation(p mage.Player, g *mage.Gam
 	return nil
 }
 
-func (s *HeuristicStrategy) Attackers(p mage.Player, g *mage.Game) []uuid.UUID {
+func (s *Strategy) Attackers(p mage.Player, g *mage.Game) []uuid.UUID {
 	playerID := p.PlayerID()
 
 	// Lethal short-circuit: if a known lethal attack exists, take it.
@@ -324,12 +329,12 @@ func (s *HeuristicStrategy) Attackers(p mage.Player, g *mage.Game) []uuid.UUID {
 	return r.Attackers
 }
 
-func (s *HeuristicStrategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAssignment {
+func (s *Strategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAssignment {
 	r := combatsolver.SolveDefense(g, p.PlayerID(), combatsolver.Options{Profile: s.solverProfile()})
 	return r.Blocks
 }
 
-func (s *HeuristicStrategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card) []uuid.UUID {
+func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card) []uuid.UUID {
 	playerID := p.PlayerID()
 
 	for _, a := range card.Abilities() {
@@ -521,8 +526,6 @@ func (s *HeuristicStrategy) autoSelectTargets(p mage.Player, g *mage.Game, card 
 	return nil
 }
 
-// chooseBestLand selects the best land to play from hand.
-// Prefers lands that provide colors needed by spells in hand.
 // bestXValue picks the best X value for an X-cost spell.
 // For damage spells it tries lethal values; otherwise it spends all available mana.
 func bestXValue(g *mage.Game, playerID uuid.UUID, card mage.Card, targets []uuid.UUID) int {
@@ -569,6 +572,8 @@ func bestXValue(g *mage.Game, playerID uuid.UUID, card mage.Card, targets []uuid
 	return maxX
 }
 
+// chooseBestLand selects the best land to play from hand. Prefers lands that
+// produce colors needed by spells in hand.
 func chooseBestLand(p mage.Player, _ *mage.Game) mage.Card {
 	hand := p.Hand()
 
