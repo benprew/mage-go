@@ -363,14 +363,23 @@ func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int, scratch
 			continue
 		}
 		for _, zone := range renderZoneOrder {
+			if zone == renderZoneStack || zone == renderZoneCommand {
+				continue
+			}
 			slot := zoneOwnerSlot(zone, owner)
-			cards, err := appendRenderCardsForZone(index.cardsByZone[slot][:0], player, owner, zone, scratch)
+			cards, err := appendRenderCardsForZone(index.cardsByZone[slot][:0], player, owner, zone, scratch, nil)
 			if err != nil {
 				return err
 			}
 			index.cardsByZone[slot] = cards
 		}
 	}
+	stackSlot := zoneOwnerSlot(renderZoneStack, renderOwnerSelf)
+	stackCards, err := appendRenderCardsForZone(index.cardsByZone[stackSlot][:0], nil, renderOwnerSelf, renderZoneStack, scratch, state.Stack)
+	if err != nil {
+		return err
+	}
+	index.cardsByZone[stackSlot] = stackCards
 	// UUID assignment: walk in Python's _ZONE_ORDER (owner-interleaved by
 	// zone) so card-ref ids line up byte-for-byte.
 	type zoneAssignKey struct {
@@ -386,6 +395,7 @@ func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int, scratch
 		{renderOwnerOpponent, renderZoneGraveyard},
 		{renderOwnerSelf, renderZoneExile},
 		{renderOwnerOpponent, renderZoneExile},
+		{renderOwnerSelf, renderZoneStack},
 	}
 	for _, key := range uuidOrder {
 		slot := zoneOwnerSlot(key.zone, key.owner)
@@ -442,7 +452,7 @@ func renderPlayerState(state *apiGameState, perspectivePlayerIdx int, owner int3
 	return &state.Players[idx]
 }
 
-func appendRenderCardsForZone(out []renderCardRef, player *interactive.PlayerState, owner int32, zone int32, scratch *encodeScratch) ([]renderCardRef, *encodeError) {
+func appendRenderCardsForZone(out []renderCardRef, player *interactive.PlayerState, owner int32, zone int32, scratch *encodeScratch, stackItems []interactive.StackItemState) ([]renderCardRef, *encodeError) {
 	switch zone {
 	case renderZoneBattlefield:
 		// Take pointers directly into player.Battlefield so each renderCardRef
@@ -530,6 +540,29 @@ func appendRenderCardsForZone(out []renderCardRef, player *interactive.PlayerSta
 				ref.staticStatus |= statusFaceDown
 			}
 			out = append(out, ref)
+		}
+		return out, nil
+	case renderZoneStack:
+		for _, item := range stackItems {
+			row, ok := scratch.cachedRowForName(item.Name)
+			if !ok {
+				return nil, &encodeError{code: mageEncodeErrEncode, message: "missing card embedding for " + item.Name}
+			}
+			id := uuid.Nil
+			if item.ID != "" {
+				if parsed, err := uuid.Parse(item.ID); err == nil {
+					id = parsed
+				}
+			}
+			out = append(out, renderCardRef{
+				zone:    zone,
+				owner:   owner,
+				slotIdx: -1,
+				uuidIdx: -1,
+				cardID:  id,
+				name:    item.Name,
+				row:     row,
+			})
 		}
 		return out, nil
 	default:
@@ -667,10 +700,11 @@ func emitRenderZones(w *renderPlanWriter, state *apiGameState, playerIdx int, in
 }
 
 type inlineBlankOption struct {
-	kindID     int32
-	abilityIdx int
-	id         string
-	optIdx     int
+	kindID         int32
+	abilityIdx     int
+	id             string
+	optIdx         int
+	targetLegalIDs []int32
 }
 
 type inlinePriorityOptions struct {

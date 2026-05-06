@@ -130,10 +130,11 @@ func emitDirectTokens(
 	}
 	if cfg.blankMaxBlanks > 0 && cfg.blankMaxLegal > 0 {
 		inline := classifyInlinePriorityOptions(pending)
+		enrichInlinePriorityTargetBlanks(&inline, pending, state, playerIdx, index, cfg)
 		if err := emitDirectZones(e, state, playerIdx, index, cfg, inline.byCard); err != nil {
 			return err
 		}
-		if err := emitDirectInlineChoices(e, inline); err != nil {
+		if err := emitDirectInlineChoices(e, pending, inline, index); err != nil {
 			return err
 		}
 	} else {
@@ -178,6 +179,11 @@ func emitDirectZones(e *directTokenEmitter, state *apiGameState, playerIdx int, 
 						if err := e.emitBlank(blank.kindID, int32(blank.optIdx)); err != nil {
 							return err
 						}
+						if len(blank.targetLegalIDs) > 0 {
+							if err := e.emitBlankLegal(e.tables.chooseTargetID, int32(blank.optIdx), blankGroupPerBlank, blank.targetLegalIDs); err != nil {
+								return err
+							}
+						}
 					}
 				}
 				continue
@@ -187,6 +193,11 @@ func emitDirectZones(e *directTokenEmitter, state *apiGameState, playerIdx int, 
 				for _, blank := range blanks {
 					if err := e.emitBlank(blank.kindID, int32(blank.optIdx)); err != nil {
 						return err
+					}
+					if len(blank.targetLegalIDs) > 0 {
+						if err := e.emitBlankLegal(e.tables.chooseTargetID, int32(blank.optIdx), blankGroupPerBlank, blank.targetLegalIDs); err != nil {
+							return err
+						}
 					}
 				}
 			}
@@ -225,12 +236,73 @@ func emitDirectZones(e *directTokenEmitter, state *apiGameState, playerIdx int, 
 		e.emitCloseZone(renderZoneLibrary, owner)
 	}
 	e.emitStackOpen()
+	for _, card := range index.cardsByZone[zoneOwnerSlot(renderZoneStack, renderOwnerSelf)] {
+		if cfg.dedupCardBodies {
+			e.emitPlaceCardRef(card.dictSlot, card.staticStatus, card.uuidIdx)
+		} else {
+			e.emitPlaceCard(card.row, card.staticStatus, card.uuidIdx)
+		}
+	}
 	e.emitStackClose()
 	_ = playerIdx
 	return nil
 }
 
-func emitDirectInlineChoices(e *directTokenEmitter, inline inlinePriorityOptions) error {
+func enrichInlinePriorityTargetBlanks(inline *inlinePriorityOptions, pending *apiPending, state *apiGameState, playerIdx int, index renderPlanIndex, cfg encodeConfig) {
+	if inline == nil || pending == nil || pending.Kind != "priority" {
+		return
+	}
+	selfID, oppID := playerIDs(state, playerIdx)
+	for optIdx := range pending.Options {
+		option := pending.Options[optIdx]
+		if len(option.ValidTargets) == 0 {
+			continue
+		}
+		legalIDs := targetLegalTokenIDs(option.ValidTargets, selfID, oppID, index, cfg)
+		if len(legalIDs) == 0 {
+			continue
+		}
+		source := option.CardUUID
+		if source == uuid.Nil {
+			source = option.PermanentUUID
+		}
+		blanks := inline.byCard[source]
+		for idx := range blanks {
+			if blanks[idx].optIdx == optIdx {
+				blanks[idx].targetLegalIDs = legalIDs
+				break
+			}
+		}
+		inline.byCard[source] = blanks
+	}
+}
+
+func targetLegalTokenIDs(targets []apiTarget, selfID uuid.UUID, oppID uuid.UUID, index renderPlanIndex, cfg encodeConfig) []int32 {
+	tables := getTokenTables()
+	if tables == nil {
+		return nil
+	}
+	targetCount := minInt64(int64(len(targets)), int64(cfg.tokenMaxTargets))
+	legalIDs := make([]int32, 0, targetCount)
+	for tgtIdx := int64(0); tgtIdx < targetCount; tgtIdx++ {
+		row, uuidIdx, kind := renderTarget(targets[tgtIdx], selfID, oppID, index)
+		switch kind {
+		case renderTargetPlayer:
+			if row == renderOwnerSelf {
+				legalIDs = append(legalIDs, tables.selfID)
+			} else if row == renderOwnerOpponent {
+				legalIDs = append(legalIDs, tables.oppID)
+			}
+		case renderTargetPermanent, renderTargetCardInZone:
+			if uuidIdx >= 0 && uuidIdx < int32(len(tables.cardRefIDs)) {
+				legalIDs = append(legalIDs, tables.cardRefIDs[uuidIdx])
+			}
+		}
+	}
+	return legalIDs
+}
+
+func emitDirectInlineChoices(e *directTokenEmitter, pending *apiPending, inline inlinePriorityOptions, index renderPlanIndex) error {
 	tables := getTokenTables()
 	if tables == nil {
 		return nil
@@ -244,7 +316,45 @@ func emitDirectInlineChoices(e *directTokenEmitter, inline inlinePriorityOptions
 			return err
 		}
 	}
+	if pending != nil {
+		switch pending.Kind {
+		case "permanent", "cards_from_hand", "card_from_library":
+			legalIDs := indexedChoiceLegalTokenIDs(pending.Options, index)
+			if len(legalIDs) > 0 {
+				if err := e.emitBlankLegal(tables.chooseTargetID, -1, blankGroupPerBlank, legalIDs); err != nil {
+					return err
+				}
+			}
+		}
+	}
 	return nil
+}
+
+func indexedChoiceLegalTokenIDs(options []apiOption, index renderPlanIndex) []int32 {
+	tables := getTokenTables()
+	if tables == nil || len(options) == 0 {
+		return nil
+	}
+	cardRefIDs := make([]int32, 0, len(options))
+	for _, option := range options {
+		if option.IDUUID == uuid.Nil {
+			cardRefIDs = cardRefIDs[:0]
+			break
+		}
+		entry, ok := index.byCardID[option.IDUUID]
+		if !ok || entry.uuidIdx < 0 || entry.uuidIdx >= int32(len(tables.cardRefIDs)) {
+			cardRefIDs = cardRefIDs[:0]
+			break
+		}
+		cardRefIDs = append(cardRefIDs, tables.cardRefIDs[entry.uuidIdx])
+	}
+	if len(cardRefIDs) == len(options) {
+		return cardRefIDs
+	}
+	if len(options) > int(tables.numCount) || len(options) > len(tables.numIDs) {
+		return nil
+	}
+	return append([]int32(nil), tables.numIDs[:len(options)]...)
 }
 
 func emitDirectActions(e *directTokenEmitter, pending *apiPending, state *apiGameState, playerIdx int, cfg encodeConfig, index renderPlanIndex) error {

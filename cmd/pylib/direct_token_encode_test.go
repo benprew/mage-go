@@ -46,6 +46,17 @@ const directTestMaxTokens int32 = 4096
 func directTestSetUp(t *testing.T) func() {
 	t.Helper()
 	tables := benchTokenTables()
+	tables.chooseTargetID = 130001
+	tables.choosePlayID = 130002
+	tables.useAbilityID = 130003
+	tables.chosenID = 130004
+	tables.numCount = 16
+	tables.numIDs = []int32{
+		131000, 131001, 131002, 131003,
+		131004, 131005, 131006, 131007,
+		131008, 131009, 131010, 131011,
+		131012, 131013, 131014, 131015,
+	}
 	tokenTablesMu.Lock()
 	prevTables := currentTokenTables
 	currentTokenTables = tables
@@ -75,7 +86,7 @@ func directTestSetUp(t *testing.T) func() {
 }
 
 // directTestState builds a simple priority-pending snapshot whose
-// renderPlanIndex assigns ``cardCount`` distinct uuid indices (one per
+// renderPlanIndex assigns “cardCount“ distinct uuid indices (one per
 // battlefield permanent) starting at 0. Callers vary cardCount across
 // states so the directTokenEmitter writes a different cardRefSeen
 // bitset per call.
@@ -158,12 +169,20 @@ func directTestAllocOutputs(cfg encodeConfig) outputViews {
 		packedTargetMask:     make([]byte, int64(slots)*int64(mo)*int64(mtg)),
 		packedCardRefPos:     make([]int32, int64(slots)*int64(mcr)),
 		packedTokenOverflow:  make([]int32, slots),
+		packedBlankPos:       make([]int32, int64(slots)*int64(cfg.blankMaxBlanks)),
+		packedBlankKind:      make([]int32, int64(slots)*int64(cfg.blankMaxBlanks)),
+		packedBlankGroup:     make([]int32, int64(slots)*int64(cfg.blankMaxBlanks)),
+		packedBlankGroupKind: make([]int32, int64(slots)*int64(cfg.blankMaxBlanks)),
+		packedBlankOptionIdx: make([]int32, int64(slots)*int64(cfg.blankMaxBlanks)),
+		packedBlankLegalIDs:  make([]int32, int64(slots)*int64(cfg.blankMaxBlanks)*int64(cfg.blankMaxLegal)),
+		packedBlankLegalMask: make([]byte, int64(slots)*int64(cfg.blankMaxBlanks)*int64(cfg.blankMaxLegal)),
+		packedBlankOverflow:  make([]int32, slots),
 	}
 }
 
 // runRotation invokes fillTokenAssemblyDirectPacked three times against
-// the SAME row 0 in ``view``, alternating two scratches and two card
-// rosters. ``dirtyForCall`` lets the caller decide whether each call
+// the SAME row 0 in “view“, alternating two scratches and two card
+// rosters. “dirtyForCall“ lets the caller decide whether each call
 // gets a per-scratch record (the broken design) or a single shared
 // per-buffer record (the fix).
 func runRotation(
@@ -290,5 +309,201 @@ func TestDirectTokenEncodeSharedDirtyAcrossScratches(t *testing.T) {
 				i, pos, rowSpanEnd,
 			)
 		}
+	}
+}
+
+func TestDirectTokenEncodeTargetedPriorityEmitsTargetBlank(t *testing.T) {
+	defer directTestSetUp(t)()
+	cfg := directTestCfg()
+	cfg.blankMaxBlanks = 4
+	cfg.blankMaxLegal = 4
+	view := directTestAllocOutputs(cfg)
+	scratch := newEncodeScratch()
+	dirty := &directDirtyState{}
+
+	sourceID := uuid.New()
+	targetID := uuid.New()
+	selfPlayer := interactive.PlayerState{
+		ID:           uuid.New(),
+		Name:         "P0",
+		Life:         20,
+		Hand:         []interactive.CardState{{ID: sourceID, Name: "DirtyTestSmall"}},
+		LibraryCount: 50,
+	}
+	oppPlayer := interactive.PlayerState{
+		ID:   uuid.New(),
+		Name: "P1",
+		Life: 20,
+		Battlefield: []interactive.PermanentState{{
+			ID:         targetID,
+			Name:       "DirtyTestLarge",
+			IsCreature: true,
+		}},
+		LibraryCount: 50,
+	}
+	state := &apiGameState{
+		Turn:         1,
+		Step:         "Precombat Main",
+		ActivePlayer: "P0",
+		Players:      [2]interactive.PlayerState{selfPlayer, oppPlayer},
+	}
+	pending := &apiPending{
+		Kind:      "priority",
+		PlayerIdx: 0,
+		Options: []apiOption{{
+			Kind:         "cast_spell",
+			CardID:       sourceID.String(),
+			CardUUID:     sourceID,
+			ValidTargets: []apiTarget{{ID: targetID.String(), IDUUID: targetID}},
+		}},
+	}
+
+	if _, _, err := fillTokenAssemblyDirectPacked(0, 0, state, pending, 0, cfg, view, scratch, dirty); err != nil {
+		t.Fatalf("fillTokenAssemblyDirectPacked: %s", err.message)
+	}
+
+	tables := getTokenTables()
+	if got := view.packedBlankKind[:2]; got[0] != tables.choosePlayID || got[1] != tables.chooseTargetID {
+		t.Fatalf("blank kinds = %v, want [%d %d]", got, tables.choosePlayID, tables.chooseTargetID)
+	}
+	if got := view.packedBlankGroupKind[:2]; got[0] != blankGroupCrossBlank || got[1] != blankGroupPerBlank {
+		t.Fatalf("blank group kinds = %v", got)
+	}
+	if got := view.packedBlankOptionIdx[:2]; got[0] != 0 || got[1] != 0 {
+		t.Fatalf("blank option indices = %v, want [0 0]", got)
+	}
+	targetRef := view.packedCardRefPos[0]
+	if targetRef < 0 {
+		t.Fatalf("target permanent did not receive card-ref slot 0: %v", view.packedCardRefPos[:4])
+	}
+	if got, want := view.packedBlankLegalIDs[cfg.blankMaxLegal], tables.cardRefIDs[0]; got != want {
+		t.Fatalf("target blank legal id = %d, want %d", got, want)
+	}
+	if got := view.packedBlankLegalMask[cfg.blankMaxLegal]; got != 1 {
+		t.Fatalf("target blank legal mask = %d, want 1", got)
+	}
+}
+
+func TestDirectTokenEncodeStackTargetPriorityEmitsTargetBlank(t *testing.T) {
+	defer directTestSetUp(t)()
+	cfg := directTestCfg()
+	cfg.blankMaxBlanks = 4
+	cfg.blankMaxLegal = 4
+	view := directTestAllocOutputs(cfg)
+	scratch := newEncodeScratch()
+	dirty := &directDirtyState{}
+
+	sourceID := uuid.New()
+	stackSourceID := uuid.New()
+	selfPlayer := interactive.PlayerState{
+		ID:           uuid.New(),
+		Name:         "P0",
+		Life:         20,
+		Hand:         []interactive.CardState{{ID: sourceID, Name: "DirtyTestSmall"}},
+		LibraryCount: 50,
+	}
+	oppPlayer := interactive.PlayerState{
+		ID:           uuid.New(),
+		Name:         "P1",
+		Life:         20,
+		LibraryCount: 50,
+	}
+	state := &apiGameState{
+		Turn:         1,
+		Step:         "Precombat Main",
+		ActivePlayer: "P0",
+		Players:      [2]interactive.PlayerState{selfPlayer, oppPlayer},
+		Stack: []interactive.StackItemState{{
+			ID:   stackSourceID.String(),
+			Name: "DirtyTestLarge",
+		}},
+	}
+	pending := &apiPending{
+		Kind:      "priority",
+		PlayerIdx: 0,
+		Options: []apiOption{{
+			Kind:         "cast_spell",
+			CardID:       sourceID.String(),
+			CardUUID:     sourceID,
+			ValidTargets: []apiTarget{{ID: stackSourceID.String(), IDUUID: stackSourceID}},
+		}},
+	}
+
+	if _, _, err := fillTokenAssemblyDirectPacked(0, 0, state, pending, 0, cfg, view, scratch, dirty); err != nil {
+		t.Fatalf("fillTokenAssemblyDirectPacked: %s", err.message)
+	}
+
+	tables := getTokenTables()
+	if got := view.packedBlankKind[:2]; got[0] != tables.choosePlayID || got[1] != tables.chooseTargetID {
+		t.Fatalf("blank kinds = %v, want [%d %d]", got, tables.choosePlayID, tables.chooseTargetID)
+	}
+	if got := view.packedCardRefPos[1]; got < 0 {
+		t.Fatalf("stack object did not receive card-ref slot 1: %v", view.packedCardRefPos[:4])
+	}
+	if got, want := view.packedBlankLegalIDs[cfg.blankMaxLegal], tables.cardRefIDs[1]; got != want {
+		t.Fatalf("stack target blank legal id = %d, want %d", got, want)
+	}
+	if got := view.packedBlankLegalMask[cfg.blankMaxLegal]; got != 1 {
+		t.Fatalf("stack target blank legal mask = %d, want 1", got)
+	}
+}
+
+func TestDirectTokenEncodeChoiceIDsEmitsIndexedChoiceBlank(t *testing.T) {
+	defer directTestSetUp(t)()
+	cfg := directTestCfg()
+	cfg.blankMaxBlanks = 2
+	cfg.blankMaxLegal = 4
+	view := directTestAllocOutputs(cfg)
+	scratch := newEncodeScratch()
+	dirty := &directDirtyState{}
+
+	cardA := uuid.New()
+	cardB := uuid.New()
+	state := &apiGameState{
+		Turn:         1,
+		Step:         "Precombat Main",
+		ActivePlayer: "P0",
+		Players: [2]interactive.PlayerState{
+			{
+				ID:   uuid.New(),
+				Name: "P0",
+				Life: 20,
+				Hand: []interactive.CardState{
+					{ID: cardA, Name: "DirtyTestSmall"},
+					{ID: cardB, Name: "DirtyTestLarge"},
+				},
+				LibraryCount: 50,
+			},
+			{ID: uuid.New(), Name: "P1", Life: 20, LibraryCount: 50},
+		},
+	}
+	pending := &apiPending{
+		Kind:      "cards_from_hand",
+		PlayerIdx: 0,
+		Options: []apiOption{
+			{Kind: "choice", ID: cardA.String(), IDUUID: cardA},
+			{Kind: "choice", ID: cardB.String(), IDUUID: cardB},
+		},
+	}
+
+	if _, _, err := fillTokenAssemblyDirectPacked(0, 0, state, pending, 0, cfg, view, scratch, dirty); err != nil {
+		t.Fatalf("fillTokenAssemblyDirectPacked: %s", err.message)
+	}
+
+	tables := getTokenTables()
+	if got := view.packedBlankKind[0]; got != tables.chooseTargetID {
+		t.Fatalf("blank kind = %d, want choose-target %d", got, tables.chooseTargetID)
+	}
+	if got := view.packedBlankGroupKind[0]; got != blankGroupPerBlank {
+		t.Fatalf("blank group kind = %d, want PER_BLANK", got)
+	}
+	if got := view.packedBlankOptionIdx[0]; got != -1 {
+		t.Fatalf("blank option index = %d, want -1", got)
+	}
+	if got, want := view.packedBlankLegalIDs[:2], tables.cardRefIDs[:2]; got[0] != want[0] || got[1] != want[1] {
+		t.Fatalf("choice legal ids = %v, want %v", got, want)
+	}
+	if got := view.packedBlankLegalMask[:2]; got[0] != 1 || got[1] != 1 {
+		t.Fatalf("choice legal mask prefix = %v, want [1 1]", got)
 	}
 }

@@ -201,6 +201,7 @@ type ManaPoolState struct {
 
 // StackItemState is a snapshot of a stack object.
 type StackItemState struct {
+	ID         string
 	Name       string
 	Controller string
 	IsAbility  bool
