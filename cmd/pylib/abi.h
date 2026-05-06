@@ -274,6 +274,7 @@ typedef struct {
     int32_t* blank_kind;         /* [B, K] int32, 0 absent */
     int32_t* blank_group;        /* [B, K] int32, -1 absent */
     int32_t* blank_group_kind;   /* [B, K] int32 */
+    int32_t* blank_option_index; /* [B, K] int32, engine option index, -1 absent */
     int32_t* blank_legal_ids;    /* [B, K, V] int32, 0 pad */
     uint8_t* blank_legal_mask;   /* [B, K, V] uint8 */
     int32_t* blank_overflow;     /* [B] int32, count of dropped blanks */

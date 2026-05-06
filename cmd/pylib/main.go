@@ -1655,8 +1655,6 @@ func MageEncodeTokensPacked(
 		}
 		cfgGo.blankMaxBlanks = int32(blankCfg.max_blanks)
 		cfgGo.blankMaxLegal = int32(blankCfg.max_legal_per_blank)
-		// Inline-blank output is populated from render-plan opcodes.
-		cfgGo.emitRenderPlan = true
 	}
 	if cfgGo.tokenMaxTokens <= 0 || cfgGo.tokenMaxOptions <= 0 ||
 		cfgGo.tokenMaxTargets < 0 || cfgGo.tokenMaxCardRefs <= 0 {
@@ -1758,6 +1756,7 @@ func attachPackedBlankViews(
 		blankOut.blank_kind == nil ||
 		blankOut.blank_group == nil ||
 		blankOut.blank_group_kind == nil ||
+		blankOut.blank_option_index == nil ||
 		blankOut.blank_legal_ids == nil ||
 		blankOut.blank_legal_mask == nil ||
 		blankOut.blank_overflow == nil {
@@ -1768,6 +1767,7 @@ func attachPackedBlankViews(
 	views.packedBlankKind = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_kind)), totalBlanks)
 	views.packedBlankGroup = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_group)), totalBlanks)
 	views.packedBlankGroupKind = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_group_kind)), totalBlanks)
+	views.packedBlankOptionIdx = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_option_index)), totalBlanks)
 	views.packedBlankLegalIDs = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_legal_ids)), totalLegal)
 	views.packedBlankLegalMask = unsafe.Slice((*byte)(unsafe.Pointer(blankOut.blank_legal_mask)), totalLegal)
 	views.packedBlankOverflow = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_overflow)), n)

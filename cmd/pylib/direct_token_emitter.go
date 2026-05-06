@@ -114,7 +114,6 @@ func (e *directTokenEmitter) reset(tables *tokenTables, out *tokenAssemblerOut, 
 	e.scalarOwnerOpen = -1
 }
 
-
 func (e *directTokenEmitter) writeSpan(span []int32) {
 	if e.overflow || span == nil {
 		return
@@ -392,6 +391,28 @@ func (e *directTokenEmitter) emitStatus(status int32) {
 	} else if status&statusTapped != 0 {
 		e.writeSpan(e.tables.statusTapped)
 	}
+}
+
+func (e *directTokenEmitter) emitBlank(kindID, optionIndex int32) error {
+	tables := e.tables
+	if tables == nil {
+		return nil
+	}
+	pos := e.writeSingle(kindID)
+	if pos < 0 || e.out.blank == nil {
+		return nil
+	}
+	if err := e.out.blank.recordBlank(
+		pos+e.out.cursorBase,
+		kindID,
+		0,
+		blankGroupCrossBlank,
+		optionIndex,
+		1,
+	); err != nil {
+		return err
+	}
+	return e.out.blank.recordLegal(tables.chosenID)
 }
 
 func (e *directTokenEmitter) emitOpenDict() {

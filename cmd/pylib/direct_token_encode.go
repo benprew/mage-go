@@ -1,6 +1,10 @@
 package main
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 func fillTokenAssemblyDirectPacked(
 	outputBatchIdx int64,
@@ -29,6 +33,8 @@ func fillTokenAssemblyDirectPacked(
 	mo := int64(cfg.tokenMaxOptions)
 	mtg := int64(cfg.tokenMaxTargets)
 	mcr := int64(cfg.tokenMaxCardRefs)
+	mb := int64(cfg.blankMaxBlanks)
+	mv := int64(cfg.blankMaxLegal)
 
 	rowStart := int64(packedCursor)
 	rowEnd := rowStart + mt
@@ -51,6 +57,28 @@ func fillTokenAssemblyDirectPacked(
 		maxTargets:  cfg.tokenMaxTargets,
 		maxCardRefs: cfg.tokenMaxCardRefs,
 		cursorBase:  packedCursor,
+	}
+	if mb > 0 && mv > 0 && len(outputView.packedBlankPos) > 0 {
+		rowBlankStart := outputBatchIdx * mb
+		rowBlankEnd := rowBlankStart + mb
+		rowLegalStart := outputBatchIdx * mb * mv
+		rowLegalEnd := rowLegalStart + mb*mv
+		collector := &scratch.blankCollector
+		collector.positions = outputView.packedBlankPos[rowBlankStart:rowBlankEnd]
+		collector.kind = outputView.packedBlankKind[rowBlankStart:rowBlankEnd]
+		collector.group = outputView.packedBlankGroup[rowBlankStart:rowBlankEnd]
+		collector.groupKind = outputView.packedBlankGroupKind[rowBlankStart:rowBlankEnd]
+		collector.optionIdx = outputView.packedBlankOptionIdx[rowBlankStart:rowBlankEnd]
+		collector.legalIDs = outputView.packedBlankLegalIDs[rowLegalStart:rowLegalEnd]
+		collector.legalMask = outputView.packedBlankLegalMask[rowLegalStart:rowLegalEnd]
+		if outputBatchIdx >= 0 && outputBatchIdx < int64(len(outputView.packedBlankOverflow)) {
+			collector.overflow = &outputView.packedBlankOverflow[outputBatchIdx]
+			outputView.packedBlankOverflow[outputBatchIdx] = 0
+		} else {
+			collector.overflow = nil
+		}
+		collector.reset(cfg.blankMaxBlanks, cfg.blankMaxLegal)
+		out.blank = collector
 	}
 
 	outputView.packedSeqLengths[outputBatchIdx] = 0
@@ -100,11 +128,21 @@ func emitDirectTokens(
 	if err := emitDirectPlayerScalars(e, state, playerIdx); err != nil {
 		return err
 	}
-	if err := emitDirectZones(e, state, playerIdx, index, cfg); err != nil {
-		return err
-	}
-	if err := emitDirectActions(e, pending, state, playerIdx, cfg, index); err != nil {
-		return err
+	if cfg.blankMaxBlanks > 0 && cfg.blankMaxLegal > 0 {
+		inline := classifyInlinePriorityOptions(pending)
+		if err := emitDirectZones(e, state, playerIdx, index, cfg, inline.byCard); err != nil {
+			return err
+		}
+		if err := emitDirectInlineChoices(e, inline); err != nil {
+			return err
+		}
+	} else {
+		if err := emitDirectZones(e, state, playerIdx, index, cfg, nil); err != nil {
+			return err
+		}
+		if err := emitDirectActions(e, pending, state, playerIdx, cfg, index); err != nil {
+			return err
+		}
 	}
 	e.emitCloseState()
 	return nil
@@ -129,17 +167,32 @@ func emitDirectPlayerScalars(e *directTokenEmitter, state *apiGameState, playerI
 	return nil
 }
 
-func emitDirectZones(e *directTokenEmitter, state *apiGameState, playerIdx int, index renderPlanIndex, cfg encodeConfig) error {
-	emitCardsForZone := func(owner, zone int32) {
+func emitDirectZones(e *directTokenEmitter, state *apiGameState, playerIdx int, index renderPlanIndex, cfg encodeConfig, blanksByCard map[uuid.UUID][]inlineBlankOption) error {
+	emitCardsForZone := func(owner, zone int32) error {
 		e.emitOpenZone(zone, owner)
 		for _, card := range index.cardsByZone[zoneOwnerSlot(zone, owner)] {
 			if cfg.dedupCardBodies {
 				e.emitPlaceCardRef(card.dictSlot, renderStatusBits(card.perm), card.uuidIdx)
+				if blanks := blanksByCard[card.cardID]; len(blanks) > 0 {
+					for _, blank := range blanks {
+						if err := e.emitBlank(blank.kindID, int32(blank.optIdx)); err != nil {
+							return err
+						}
+					}
+				}
 				continue
 			}
 			e.emitPlaceCard(card.row, renderStatusBits(card.perm), card.uuidIdx)
+			if blanks := blanksByCard[card.cardID]; len(blanks) > 0 {
+				for _, blank := range blanks {
+					if err := e.emitBlank(blank.kindID, int32(blank.optIdx)); err != nil {
+						return err
+					}
+				}
+			}
 		}
 		e.emitCloseZone(zone, owner)
+		return nil
 	}
 
 	for _, zone := range []int32{renderZoneBattlefield, renderZoneHand, renderZoneGraveyard} {
@@ -147,14 +200,18 @@ func emitDirectZones(e *directTokenEmitter, state *apiGameState, playerIdx int, 
 			if owner == renderOwnerOpponent && zone == renderZoneHand {
 				continue
 			}
-			emitCardsForZone(owner, zone)
+			if err := emitCardsForZone(owner, zone); err != nil {
+				return err
+			}
 		}
 	}
 	for _, owner := range []int32{renderOwnerSelf, renderOwnerOpponent} {
 		if len(index.cardsByZone[zoneOwnerSlot(renderZoneExile, owner)]) == 0 {
 			continue
 		}
-		emitCardsForZone(owner, renderZoneExile)
+		if err := emitCardsForZone(owner, renderZoneExile); err != nil {
+			return err
+		}
 	}
 	for _, owner := range []int32{renderOwnerSelf, renderOwnerOpponent} {
 		player := renderPlayerState(state, playerIdx, owner)
@@ -170,6 +227,23 @@ func emitDirectZones(e *directTokenEmitter, state *apiGameState, playerIdx int, 
 	e.emitStackOpen()
 	e.emitStackClose()
 	_ = playerIdx
+	return nil
+}
+
+func emitDirectInlineChoices(e *directTokenEmitter, inline inlinePriorityOptions) error {
+	tables := getTokenTables()
+	if tables == nil {
+		return nil
+	}
+	passKindID := int32(0)
+	if span := tables.actionVerbSpan(0); len(span) > 0 {
+		passKindID = span[0]
+	}
+	for _, optIdx := range inline.passes {
+		if err := e.emitBlank(passKindID, int32(optIdx)); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

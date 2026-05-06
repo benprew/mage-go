@@ -13,6 +13,7 @@ import "fmt"
 //	kind        [K]      int32  — kind token id (e.g. choose_target_id)
 //	group       [K]      int32  — group_id within the snapshot
 //	groupKind   [K]      int32  — blankGroup{PerBlank,CrossBlank,Constrained}
+//	optionIndex [K]      int32  — engine option index, -1 for non-option blanks
 //	legalIDs    [K*Vmax] int32  — flat row-major legal-id buffer
 //	legalMask   [K*Vmax] uint8  — 1 for valid entries, 0 for padding
 type blankCollector struct {
@@ -20,6 +21,7 @@ type blankCollector struct {
 	kind      []int32
 	group     []int32
 	groupKind []int32
+	optionIdx []int32
 	legalIDs  []int32
 	legalMask []uint8
 	overflow  *int32
@@ -47,6 +49,7 @@ func (c *blankCollector) reset(maxBlanks, maxLegalPerBlk int32) {
 	clear(c.kind)
 	clear(c.group)
 	clear(c.groupKind)
+	fillInt32(c.optionIdx, -1)
 	fillInt32(c.legalIDs, 0)
 	clear(c.legalMask)
 }
@@ -54,7 +57,7 @@ func (c *blankCollector) reset(maxBlanks, maxLegalPerBlk int32) {
 // recordBlank writes the metadata for a new EMIT_BLANK and primes the legal
 // list. cursor is the absolute (or row-local — caller's choice) token-stream
 // position where the kind token was just written.
-func (c *blankCollector) recordBlank(cursor, kindID, groupID, groupKind, legalCount int32) error {
+func (c *blankCollector) recordBlank(cursor, kindID, groupID, groupKind, optionIndex, legalCount int32) error {
 	if c.blankCount >= c.maxBlanks {
 		// Silently drop excess blanks (matches the existing options/targets
 		// truncation policy). The caller tracks this via the row's tokens-
@@ -76,6 +79,9 @@ func (c *blankCollector) recordBlank(cursor, kindID, groupID, groupKind, legalCo
 	c.kind[idx] = kindID
 	c.group[idx] = groupID
 	c.groupKind[idx] = groupKind
+	if len(c.optionIdx) > int(idx) {
+		c.optionIdx[idx] = optionIndex
+	}
 	c.curLegalK = idx
 	c.curLegalCap = legalCount
 	c.curLegalN = 0
@@ -155,7 +161,7 @@ func walkBlankPlan(plan []int32, collector *blankCollector, cursorFn func() int3
 			if cursorFn != nil {
 				cursor = cursorFn()
 			}
-			if err := collector.recordBlank(cursor, kindID, groupID, groupKind, legalCount); err != nil {
+			if err := collector.recordBlank(cursor, kindID, groupID, groupKind, -1, legalCount); err != nil {
 				return err
 			}
 		case opEmitBlankLegal:

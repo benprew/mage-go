@@ -247,6 +247,7 @@ typedef struct {
     int32_t *blank_kind;
     int32_t *blank_group;
     int32_t *blank_group_kind;
+    int32_t *blank_option_index;
     int32_t *blank_legal_ids;
     uint8_t *blank_legal_mask;
     int32_t *blank_overflow;

@@ -70,6 +70,7 @@ func newBlankCollector(maxBlanks, vmax int32) *blankCollector {
 		kind:      make([]int32, maxBlanks),
 		group:     make([]int32, maxBlanks),
 		groupKind: make([]int32, maxBlanks),
+		optionIdx: make([]int32, maxBlanks),
 		legalIDs:  make([]int32, maxBlanks*vmax),
 		legalMask: make([]uint8, maxBlanks*vmax),
 	}
@@ -137,6 +138,9 @@ func TestEmitBlankWalker(t *testing.T) {
 		}
 		if col.groupKind[i] != wantGroupKind[i] {
 			t.Errorf("groupKind[%d] = %d, want %d", i, col.groupKind[i], wantGroupKind[i])
+		}
+		if col.optionIdx[i] != -1 {
+			t.Errorf("optionIdx[%d] = %d, want -1", i, col.optionIdx[i])
 		}
 	}
 	// Slot K=3 was never written; should still be sentinel (-1 for positions).

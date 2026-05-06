@@ -564,6 +564,7 @@ func assembleTokensFromPlan(
 						kindID,
 						groupID,
 						groupKind,
+						-1,
 						legalCount,
 					); err != nil {
 						return 0, false, err
@@ -670,6 +671,7 @@ func assembleTokensFromPlan(
 					kindID,
 					groupID,
 					groupKind,
+					-1,
 					legalCount,
 				); err != nil {
 					return 0, false, err

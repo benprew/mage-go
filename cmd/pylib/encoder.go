@@ -250,6 +250,7 @@ type outputViews struct {
 	packedBlankKind      []int32
 	packedBlankGroup     []int32
 	packedBlankGroupKind []int32
+	packedBlankOptionIdx []int32
 	packedBlankLegalIDs  []int32
 	packedBlankLegalMask []byte
 	packedBlankOverflow  []int32
@@ -777,6 +778,7 @@ func fillTokenAssemblyPacked(
 		collector.kind = outputView.packedBlankKind[rowBlankStart:rowBlankEnd]
 		collector.group = outputView.packedBlankGroup[rowBlankStart:rowBlankEnd]
 		collector.groupKind = outputView.packedBlankGroupKind[rowBlankStart:rowBlankEnd]
+		collector.optionIdx = outputView.packedBlankOptionIdx[rowBlankStart:rowBlankEnd]
 		collector.legalIDs = outputView.packedBlankLegalIDs[rowLegalStart:rowLegalEnd]
 		collector.legalMask = outputView.packedBlankLegalMask[rowLegalStart:rowLegalEnd]
 		if outputBatchIdx >= 0 && outputBatchIdx < int64(len(outputView.packedBlankOverflow)) {
