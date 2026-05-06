@@ -204,6 +204,8 @@ typedef struct {
     int32_t no_id;
     int32_t none_id;
     int32_t x_end_id;
+    int32_t mulligan_id;
+    int32_t keep_id;
     int32_t num_count;
     const int32_t *num_ids;
 } MageTokenTables;

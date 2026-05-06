@@ -25,6 +25,8 @@ func makeMinimalBlankTokenTables() *tokenTables {
 		noID:                411,
 		noneID:              412,
 		xEndID:              413,
+		mulliganID:          414,
+		keepID:              415,
 		numCount:            int32(len(num)),
 		numIDs:              num,
 	}
@@ -32,7 +34,7 @@ func makeMinimalBlankTokenTables() *tokenTables {
 
 func TestBlankSingletonAtRoundTrip(t *testing.T) {
 	tab := makeMinimalBlankTokenTables()
-	want := []int32{400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413}
+	want := []int32{400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 414, 415}
 	for idx, w := range want {
 		got, ok := tab.blankSingletonAt(int32(idx))
 		if !ok {
@@ -42,8 +44,8 @@ func TestBlankSingletonAtRoundTrip(t *testing.T) {
 			t.Fatalf("blankSingletonAt(%d): got %d want %d", idx, got, w)
 		}
 	}
-	if _, ok := tab.blankSingletonAt(14); ok {
-		t.Fatalf("blankSingletonAt(14): expected not ok")
+	if _, ok := tab.blankSingletonAt(16); ok {
+		t.Fatalf("blankSingletonAt(16): expected not ok")
 	}
 	if _, ok := tab.blankSingletonAt(-1); ok {
 		t.Fatalf("blankSingletonAt(-1): expected not ok")

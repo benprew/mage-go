@@ -124,6 +124,8 @@ type tokenTables struct {
 	noID                int32
 	noneID              int32
 	xEndID              int32
+	mulliganID          int32
+	keepID              int32
 
 	// Digit tokens used by X-cost blanks. Length is taken from numCount;
 	// numIDs is a borrowed C buffer (may be nil when numCount == 0).
@@ -288,7 +290,8 @@ func (t *tokenTables) cardNameSpan(row int32) []int32 {
 //
 //	0=choose_target, 1=choose_block, 2=choose_damage_order, 3=choose_mode,
 //	4=choose_may, 5=choose_x_digit, 6=choose_mana_source, 7=choose_play,
-//	8=use_ability, 9=chosen, 10=yes, 11=no, 12=none, 13=x_end.
+//	8=use_ability, 9=chosen, 10=yes, 11=no, 12=none, 13=x_end,
+//	14=mulligan, 15=keep.
 //
 // Used by MageTokenTableLookup to round-trip the blank singletons under a
 // single kind id.
@@ -325,6 +328,10 @@ func (t *tokenTables) blankSingletonAt(idx int32) (int32, bool) {
 		return t.noneID, true
 	case 13:
 		return t.xEndID, true
+	case 14:
+		return t.mulliganID, true
+	case 15:
+		return t.keepID, true
 	}
 	return 0, false
 }
@@ -395,6 +402,8 @@ func registerTokenTables(c *C.MageTokenTables) error {
 		noID:                int32(c.no_id),
 		noneID:              int32(c.none_id),
 		xEndID:              int32(c.x_end_id),
+		mulliganID:          int32(c.mulligan_id),
+		keepID:              int32(c.keep_id),
 		numCount:            int32(c.num_count),
 	}
 

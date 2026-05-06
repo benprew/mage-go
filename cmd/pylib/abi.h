@@ -220,6 +220,8 @@ typedef struct {
     int32_t no_id;
     int32_t none_id;
     int32_t x_end_id;
+    int32_t mulligan_id;
+    int32_t keep_id;
 
     /* Digit tokens for inline X-cost blanks: ``num_ids[k]`` is the token id
        for digit ``k`` (typically 0..15). Length is given by ``num_count``;

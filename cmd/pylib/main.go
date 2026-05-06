@@ -1523,6 +1523,8 @@ func MageTokenTableSummary() *C.char {
 		"no_id":                  t.noID,
 		"none_id":                t.noneID,
 		"x_end_id":               t.xEndID,
+		"mulligan_id":            t.mulliganID,
+		"keep_id":                t.keepID,
 		"num_count":              t.numCount,
 		"num_ids":                t.numIDs,
 	}
