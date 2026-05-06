@@ -219,14 +219,18 @@ func zoneOwnerSlot(zone, owner int32) int {
 // encodeScratch holds per-call scratch buffers for an encode batch so
 // hot-path map/slice allocations are reused across batch rows.
 type encodeScratch struct {
-	cardIDToSlot   map[string]int64
-	renderIndex    renderPlanIndex
-	tokenPlan      []int32
-	tokenPlanLen   [1]int64
-	tokenPlanOvf   [1]int64
-	directEmitter  directTokenEmitter
-	directOut      tokenAssemblerOut
-	blankCollector blankCollector
+	cardIDToSlot     map[string]int64
+	renderIndex      renderPlanIndex
+	tokenPlan        []int32
+	tokenPlanLen     [1]int64
+	tokenPlanOvf     [1]int64
+	directEmitter    directTokenEmitter
+	directOut        tokenAssemblerOut
+	blankCollector   blankCollector
+	packedOptionPos  []int32
+	packedOptionMask []byte
+	packedTargetPos  []int32
+	packedTargetMask []byte
 	// directDirty USED TO live here. The per-row "what slots did the last
 	// emit write" state must be associated with the OUTPUT BUFFER, not the
 	// scratch — under parallel encode the pool can hand a different scratch
@@ -252,6 +256,34 @@ func newEncodeScratch() *encodeScratch {
 			byCardID: make(map[uuid.UUID]cardIDEntry, 64),
 		},
 	}
+}
+
+func (s *encodeScratch) packedAnchorScratch(
+	optionCount int64,
+	targetCount int64,
+) ([]int32, []byte, []int32, []byte) {
+	if optionCount < 0 {
+		optionCount = 0
+	}
+	if targetCount < 0 {
+		targetCount = 0
+	}
+	if int64(cap(s.packedOptionPos)) < optionCount {
+		s.packedOptionPos = make([]int32, optionCount)
+	}
+	if int64(cap(s.packedOptionMask)) < optionCount {
+		s.packedOptionMask = make([]byte, optionCount)
+	}
+	if int64(cap(s.packedTargetPos)) < targetCount {
+		s.packedTargetPos = make([]int32, targetCount)
+	}
+	if int64(cap(s.packedTargetMask)) < targetCount {
+		s.packedTargetMask = make([]byte, targetCount)
+	}
+	return s.packedOptionPos[:optionCount],
+		s.packedOptionMask[:optionCount],
+		s.packedTargetPos[:targetCount],
+		s.packedTargetMask[:targetCount]
 }
 
 func (s *encodeScratch) reset() {
@@ -701,9 +733,11 @@ func emitRenderZones(w *renderPlanWriter, state *apiGameState, playerIdx int, in
 
 type inlineBlankOption struct {
 	kindID         int32
+	groupKind      int32
 	abilityIdx     int
 	id             string
 	optIdx         int
+	legalIDs       []int32
 	targetLegalIDs []int32
 }
 
@@ -732,6 +766,7 @@ func classifyInlinePriorityOptions(pending *apiPending) inlinePriorityOptions {
 			if source != uuid.Nil {
 				out.byCard[source] = append(out.byCard[source], inlineBlankOption{
 					kindID:     tables.choosePlayID,
+					groupKind:  blankGroupCrossBlank,
 					abilityIdx: option.AbilityIndex,
 					id:         option.ID,
 					optIdx:     optIdx,
@@ -745,6 +780,7 @@ func classifyInlinePriorityOptions(pending *apiPending) inlinePriorityOptions {
 			if source != uuid.Nil {
 				out.byCard[source] = append(out.byCard[source], inlineBlankOption{
 					kindID:     tables.useAbilityID,
+					groupKind:  blankGroupCrossBlank,
 					abilityIdx: option.AbilityIndex,
 					id:         option.ID,
 					optIdx:     optIdx,

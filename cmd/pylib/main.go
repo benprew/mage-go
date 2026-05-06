@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"runtime/debug"
 	"sort"
 	"sync"
 	"sync/atomic"
@@ -1264,7 +1265,11 @@ func MageSetCardNameRows(cardNameRowsJSON *C.char) *C.char {
 func MageBatchPoll(req *C.MageBatchRequest, out *C.MageBatchPollOutputs) (res C.MageEncodeResult) {
 	defer func() {
 		if r := recover(); r != nil {
-			res = newEncodeResult(0, mageEncodeErrEncodeFailure, fmt.Sprintf("panic: %v", r))
+			res = newEncodeResult(
+				0,
+				mageEncodeErrEncodeFailure,
+				fmt.Sprintf("panic: %v\n%s", r, debug.Stack()),
+			)
 		}
 	}()
 	if req == nil || out == nil {
@@ -1322,7 +1327,11 @@ func MageBatchPoll(req *C.MageBatchRequest, out *C.MageBatchPollOutputs) (res C.
 func MageBatchStepByChoice(req *C.MageStepChoiceRequest) (res C.MageEncodeResult) {
 	defer func() {
 		if r := recover(); r != nil {
-			res = newEncodeResult(0, mageEncodeErrEncodeFailure, fmt.Sprintf("panic: %v", r))
+			res = newEncodeResult(
+				0,
+				mageEncodeErrEncodeFailure,
+				fmt.Sprintf("panic: %v\n%s", r, debug.Stack()),
+			)
 		}
 	}()
 	if req == nil {
@@ -1630,7 +1639,11 @@ func MageEncodeTokensPacked(
 ) (res C.MageEncodeResult) {
 	defer func() {
 		if r := recover(); r != nil {
-			res = newEncodeResult(0, mageEncodeErrEncodeFailure, fmt.Sprintf("panic: %v", r))
+			res = newEncodeResult(
+				0,
+				mageEncodeErrEncodeFailure,
+				fmt.Sprintf("panic: %v\n%s", r, debug.Stack()),
+			)
 		}
 	}()
 	if req == nil || cfg == nil || out == nil || tokCfg == nil || packedOut == nil {
@@ -1708,18 +1721,12 @@ func attachPackedTokenViews(
 	views *outputViews,
 ) *encodeError {
 	totalCap := n * int64(cfg.tokenMaxTokens)
-	totalOptions := n * int64(cfg.tokenMaxOptions)
-	totalTargets := n * int64(cfg.tokenMaxOptions) * int64(cfg.tokenMaxTargets)
 	totalCardRefs := n * int64(cfg.tokenMaxCardRefs)
 
 	if packedOut.token_ids == nil ||
 		packedOut.cu_seqlens == nil ||
 		packedOut.seq_lengths == nil ||
 		packedOut.state_positions == nil ||
-		packedOut.option_positions == nil ||
-		packedOut.option_mask == nil ||
-		packedOut.target_positions == nil ||
-		packedOut.target_mask == nil ||
 		packedOut.card_ref_positions == nil ||
 		packedOut.token_overflow == nil {
 		return &encodeError{code: mageEncodeErrInvalidArgument, message: "packed token outputs must be non-nil"}
@@ -1729,10 +1736,6 @@ func attachPackedTokenViews(
 	views.packedCuSeqlens = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.cu_seqlens)), n+1)
 	views.packedSeqLengths = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.seq_lengths)), n)
 	views.packedStatePositions = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.state_positions)), n)
-	views.packedOptionPos = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.option_positions)), totalOptions)
-	views.packedOptionMask = unsafe.Slice((*byte)(unsafe.Pointer(packedOut.option_mask)), totalOptions)
-	views.packedTargetPos = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.target_positions)), totalTargets)
-	views.packedTargetMask = unsafe.Slice((*byte)(unsafe.Pointer(packedOut.target_mask)), totalTargets)
 	views.packedCardRefPos = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.card_ref_positions)), totalCardRefs)
 	views.packedTokenOverflow = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.token_overflow)), n)
 	return nil

@@ -50,6 +50,14 @@ func directTestSetUp(t *testing.T) func() {
 	tables.choosePlayID = 130002
 	tables.useAbilityID = 130003
 	tables.chosenID = 130004
+	tables.chooseBlockID = 130005
+	tables.chooseMayID = 130006
+	tables.chooseModeID = 130007
+	tables.chooseXDigitID = 130008
+	tables.chooseManaSourceID = 130009
+	tables.noneID = 130010
+	tables.noID = 130011
+	tables.yesID = 130012
 	tables.numCount = 16
 	tables.numIDs = []int32{
 		131000, 131001, 131002, 131003,
@@ -155,18 +163,12 @@ func directTestAllocOutputs(cfg encodeConfig) outputViews {
 	// stale-residue offset.
 	const slots = 4
 	mt := cfg.tokenMaxTokens
-	mo := cfg.tokenMaxOptions
-	mtg := cfg.tokenMaxTargets
 	mcr := cfg.tokenMaxCardRefs
 	return outputViews{
 		packedTokenIDs:       make([]int32, int64(slots)*int64(mt)),
 		packedCuSeqlens:      make([]int32, slots+1),
 		packedSeqLengths:     make([]int32, slots),
 		packedStatePositions: make([]int32, slots),
-		packedOptionPos:      make([]int32, int64(slots)*int64(mo)),
-		packedOptionMask:     make([]byte, int64(slots)*int64(mo)),
-		packedTargetPos:      make([]int32, int64(slots)*int64(mo)*int64(mtg)),
-		packedTargetMask:     make([]byte, int64(slots)*int64(mo)*int64(mtg)),
 		packedCardRefPos:     make([]int32, int64(slots)*int64(mcr)),
 		packedTokenOverflow:  make([]int32, slots),
 		packedBlankPos:       make([]int32, int64(slots)*int64(cfg.blankMaxBlanks)),
@@ -505,5 +507,134 @@ func TestDirectTokenEncodeChoiceIDsEmitsIndexedChoiceBlank(t *testing.T) {
 	}
 	if got := view.packedBlankLegalMask[:2]; got[0] != 1 || got[1] != 1 {
 		t.Fatalf("choice legal mask prefix = %v, want [1 1]", got)
+	}
+}
+
+func TestDirectTokenEncodeAttackersEmitPerBlankAttackChoices(t *testing.T) {
+	defer directTestSetUp(t)()
+	cfg := directTestCfg()
+	cfg.blankMaxBlanks = 2
+	cfg.blankMaxLegal = 3
+	view := directTestAllocOutputs(cfg)
+	scratch := newEncodeScratch()
+	dirty := &directDirtyState{}
+
+	attackerID := uuid.New()
+	state := &apiGameState{
+		Turn:         1,
+		Step:         "Declare Attackers",
+		ActivePlayer: "P0",
+		Players: [2]interactive.PlayerState{
+			{
+				ID:   uuid.New(),
+				Name: "P0",
+				Life: 20,
+				Battlefield: []interactive.PermanentState{{
+					ID:         attackerID,
+					Name:       "DirtyTestSmall",
+					IsCreature: true,
+				}},
+				LibraryCount: 50,
+			},
+			{ID: uuid.New(), Name: "P1", Life: 20, LibraryCount: 50},
+		},
+	}
+	pending := &apiPending{
+		Kind:      "attackers",
+		PlayerIdx: 0,
+		Options: []apiOption{{
+			Kind:          "attacker",
+			PermanentID:   attackerID.String(),
+			PermanentUUID: attackerID,
+		}},
+	}
+
+	if _, _, err := fillTokenAssemblyDirectPacked(0, 0, state, pending, 0, cfg, view, scratch, dirty); err != nil {
+		t.Fatalf("fillTokenAssemblyDirectPacked: %s", err.message)
+	}
+
+	tables := getTokenTables()
+	if got := view.packedBlankKind[0]; got != tables.chooseTargetID {
+		t.Fatalf("attacker blank kind = %d, want choose-target %d", got, tables.chooseTargetID)
+	}
+	if got := view.packedBlankGroupKind[0]; got != blankGroupPerBlank {
+		t.Fatalf("attacker blank group kind = %d, want PER_BLANK", got)
+	}
+	if got := view.packedBlankOptionIdx[0]; got != 0 {
+		t.Fatalf("attacker blank option index = %d, want 0", got)
+	}
+	if got, want := view.packedBlankLegalIDs[:2], []int32{tables.noneID, tables.cardRefIDs[0]}; got[0] != want[0] || got[1] != want[1] {
+		t.Fatalf("attacker legal ids = %v, want %v", got, want)
+	}
+}
+
+func TestDirectTokenEncodeBlockersEmitPerBlankBlockChoices(t *testing.T) {
+	defer directTestSetUp(t)()
+	cfg := directTestCfg()
+	cfg.blankMaxBlanks = 2
+	cfg.blankMaxLegal = 3
+	view := directTestAllocOutputs(cfg)
+	scratch := newEncodeScratch()
+	dirty := &directDirtyState{}
+
+	blockerID := uuid.New()
+	attackerID := uuid.New()
+	state := &apiGameState{
+		Turn:         1,
+		Step:         "Declare Blockers",
+		ActivePlayer: "P0",
+		Players: [2]interactive.PlayerState{
+			{
+				ID:   uuid.New(),
+				Name: "P0",
+				Life: 20,
+				Battlefield: []interactive.PermanentState{{
+					ID:         attackerID,
+					Name:       "DirtyTestLarge",
+					IsCreature: true,
+					Attacking:  true,
+				}},
+				LibraryCount: 50,
+			},
+			{
+				ID:   uuid.New(),
+				Name: "P1",
+				Life: 20,
+				Battlefield: []interactive.PermanentState{{
+					ID:         blockerID,
+					Name:       "DirtyTestSmall",
+					IsCreature: true,
+				}},
+				LibraryCount: 50,
+			},
+		},
+	}
+	pending := &apiPending{
+		Kind:      "blockers",
+		PlayerIdx: 1,
+		Options: []apiOption{{
+			Kind:          "blocker",
+			PermanentID:   blockerID.String(),
+			PermanentUUID: blockerID,
+			ValidTargets:  []apiTarget{{ID: attackerID.String(), IDUUID: attackerID}},
+		}},
+	}
+
+	if _, _, err := fillTokenAssemblyDirectPacked(0, 0, state, pending, 1, cfg, view, scratch, dirty); err != nil {
+		t.Fatalf("fillTokenAssemblyDirectPacked: %s", err.message)
+	}
+
+	tables := getTokenTables()
+	if got := view.packedBlankKind[0]; got != tables.chooseBlockID {
+		t.Fatalf("blocker blank kind = %d, want choose-block %d", got, tables.chooseBlockID)
+	}
+	if got := view.packedBlankGroupKind[0]; got != blankGroupPerBlank {
+		t.Fatalf("blocker blank group kind = %d, want PER_BLANK", got)
+	}
+	if got := view.packedBlankOptionIdx[0]; got != 0 {
+		t.Fatalf("blocker blank option index = %d, want 0", got)
+	}
+	if got, want := view.packedBlankLegalIDs[:2], []int32{tables.noneID, tables.cardRefIDs[1]}; got[0] != want[0] || got[1] != want[1] {
+		t.Fatalf("blocker legal ids = %v, want %v", got, want)
 	}
 }

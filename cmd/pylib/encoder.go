@@ -240,10 +240,6 @@ type outputViews struct {
 	packedCuSeqlens      []int32 // [B+1]
 	packedSeqLengths     []int32 // [B]
 	packedStatePositions []int32 // [B]
-	packedOptionPos      []int32
-	packedOptionMask     []byte
-	packedTargetPos      []int32
-	packedTargetMask     []byte
 	packedCardRefPos     []int32
 	packedTokenOverflow  []int32
 	packedBlankPos       []int32
@@ -758,16 +754,16 @@ func fillTokenAssemblyPacked(
 
 	out := &tokenAssemblerOut{
 		tokenIDs:    outputView.packedTokenIDs[rowStart:rowEnd],
-		optionPos:   outputView.packedOptionPos[outputBatchIdx*mo : (outputBatchIdx+1)*mo],
-		optionMask:  outputView.packedOptionMask[outputBatchIdx*mo : (outputBatchIdx+1)*mo],
-		targetPos:   outputView.packedTargetPos[outputBatchIdx*mo*mtg : (outputBatchIdx+1)*mo*mtg],
-		targetMask:  outputView.packedTargetMask[outputBatchIdx*mo*mtg : (outputBatchIdx+1)*mo*mtg],
 		cardRefPos:  outputView.packedCardRefPos[outputBatchIdx*mcr : (outputBatchIdx+1)*mcr],
 		maxOptions:  cfg.tokenMaxOptions,
 		maxTargets:  cfg.tokenMaxTargets,
 		maxCardRefs: cfg.tokenMaxCardRefs,
 		cursorBase:  packedCursor,
 	}
+	out.optionPos, out.optionMask, out.targetPos, out.targetMask = scratch.packedAnchorScratch(
+		mo,
+		mo*mtg,
+	)
 	if mb > 0 && mv > 0 && len(outputView.packedBlankPos) > 0 {
 		rowBlankStart := outputBatchIdx * mb
 		rowBlankEnd := rowBlankStart + mb
@@ -815,28 +811,10 @@ func fillTokenAssemblyPacked(
 }
 
 func rebasePackedPositions(view outputViews, cfg encodeConfig, batchIdx int64, delta int32) {
-	mo := cfg.tokenMaxOptions
-	mtg := cfg.tokenMaxTargets
 	mcr := cfg.tokenMaxCardRefs
 
 	if batchIdx >= 0 && batchIdx < int64(len(view.packedStatePositions)) {
 		view.packedStatePositions[batchIdx] += delta
-	}
-
-	optionStart := batchIdx * int64(mo)
-	optionEnd := optionStart + int64(mo)
-	for i := optionStart; i < optionEnd; i++ {
-		if view.packedOptionPos[i] >= 0 {
-			view.packedOptionPos[i] += delta
-		}
-	}
-
-	targetStart := batchIdx * int64(mo) * int64(mtg)
-	targetEnd := targetStart + int64(mo)*int64(mtg)
-	for i := targetStart; i < targetEnd; i++ {
-		if view.packedTargetPos[i] >= 0 {
-			view.packedTargetPos[i] += delta
-		}
 	}
 
 	cardStart := batchIdx * int64(mcr)

@@ -259,10 +259,6 @@ typedef struct {
     int32_t* cu_seqlens;         /* [B+1] int32, exclusive prefix sum */
     int32_t* seq_lengths;        /* [B] int32 */
     int32_t* state_positions;    /* [B] int32, packed-offset of row's first token */
-    int32_t* option_positions;   /* [B, max_options] int32, absolute, -1 absent */
-    uint8_t* option_mask;        /* [B, max_options] uint8 */
-    int32_t* target_positions;   /* [B, max_options, max_targets] int32, absolute */
-    uint8_t* target_mask;        /* [B, max_options, max_targets] uint8 */
     int32_t* card_ref_positions; /* [B, max_card_refs] int32, absolute, -1 absent */
     int32_t* token_overflow;     /* [B] int32 (1 = row truncated) */
 } MagePackedTokenAssemblerOutputs;

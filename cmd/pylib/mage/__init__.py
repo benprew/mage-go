@@ -232,10 +232,6 @@ typedef struct {
     int32_t *cu_seqlens;
     int32_t *seq_lengths;
     int32_t *state_positions;
-    int32_t *option_positions;
-    uint8_t *option_mask;
-    int32_t *target_positions;
-    uint8_t *target_mask;
     int32_t *card_ref_positions;
     int32_t *token_overflow;
 } MagePackedTokenAssemblerOutputs;
