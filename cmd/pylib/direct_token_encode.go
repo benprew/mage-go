@@ -395,7 +395,7 @@ func emitDirectInlineChoices(e *directTokenEmitter, pending *apiPending, inline 
 				}
 			}
 		case "mana_color":
-			legalIDs := manaColorLegalTokenIDs()
+			legalIDs := manaColorLegalTokenIDs(pending.Options)
 			if len(legalIDs) > 0 {
 				if err := e.emitBlankLegal(tables.chooseManaSourceID, -1, blankGroupPerBlank, legalIDs); err != nil {
 					return err
@@ -414,13 +414,17 @@ func numChoiceLegalTokenIDs(count int) []int32 {
 	return append([]int32(nil), tables.numIDs[:count]...)
 }
 
-func manaColorLegalTokenIDs() []int32 {
+func manaColorLegalTokenIDs(options []apiOption) []int32 {
 	tables := getTokenTables()
 	if tables == nil || tables.manaColorCount < 6 {
 		return nil
 	}
-	out := make([]int32, 0, 6)
-	for colorID := int32(0); colorID < 6; colorID++ {
+	out := make([]int32, 0, len(options))
+	for _, option := range options {
+		colorID, ok := manaColorOptionID(option.Color)
+		if !ok {
+			return nil
+		}
 		span := tables.manaGlyphSpan(colorID)
 		if len(span) == 0 {
 			return nil
@@ -428,6 +432,24 @@ func manaColorLegalTokenIDs() []int32 {
 		out = append(out, span[0])
 	}
 	return out
+}
+
+func manaColorOptionID(color string) (int32, bool) {
+	switch color {
+	case "white", "W":
+		return 0, true
+	case "blue", "U":
+		return 1, true
+	case "black", "B":
+		return 2, true
+	case "red", "R":
+		return 3, true
+	case "green", "G":
+		return 4, true
+	case "colorless", "C":
+		return 5, true
+	}
+	return 0, false
 }
 
 func indexedChoiceLegalTokenIDs(options []apiOption, index renderPlanIndex) []int32 {

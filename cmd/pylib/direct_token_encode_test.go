@@ -638,3 +638,44 @@ func TestDirectTokenEncodeBlockersEmitPerBlankBlockChoices(t *testing.T) {
 		t.Fatalf("blocker legal ids = %v, want %v", got, want)
 	}
 }
+
+func TestDirectTokenEncodeManaColorUsesPendingOptionOrder(t *testing.T) {
+	cleanup := directTestSetUp(t)
+	defer cleanup()
+
+	cfg := directTestCfg()
+	cfg.blankMaxBlanks = 2
+	cfg.blankMaxLegal = 6
+	view := directTestAllocOutputs(cfg)
+	scratch := newEncodeScratch()
+	dirty := &directDirtyState{}
+	state, _ := directTestState(0, "DirtyTestSmall")
+	pending := &apiPending{
+		Kind:      "mana_color",
+		PlayerIdx: 0,
+		Options: []apiOption{
+			{Kind: "choice", Color: "green"},
+			{Kind: "choice", Color: "blue"},
+		},
+	}
+
+	if _, _, err := fillTokenAssemblyDirectPacked(0, 0, state, pending, 0, cfg, view, scratch, dirty); err != nil {
+		t.Fatalf("fillTokenAssemblyDirectPacked: %s", err.message)
+	}
+
+	tables := getTokenTables()
+	if got := view.packedBlankKind[0]; got != tables.chooseManaSourceID {
+		t.Fatalf("mana blank kind = %d, want choose-mana-source %d", got, tables.chooseManaSourceID)
+	}
+	if got := view.packedBlankGroupKind[0]; got != blankGroupPerBlank {
+		t.Fatalf("mana blank group kind = %d, want PER_BLANK", got)
+	}
+	green := tables.manaGlyphSpan(4)[0]
+	blue := tables.manaGlyphSpan(1)[0]
+	if got, want := view.packedBlankLegalIDs[:2], []int32{green, blue}; got[0] != want[0] || got[1] != want[1] {
+		t.Fatalf("mana legal ids = %v, want %v", got, want)
+	}
+	if got := view.packedBlankLegalMask[2]; got != 0 {
+		t.Fatalf("third mana legal mask = %d, want 0", got)
+	}
+}
