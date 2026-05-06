@@ -17,14 +17,16 @@ import "fmt"
 //	legalIDs    [K*Vmax] int32  — flat row-major legal-id buffer
 //	legalMask   [K*Vmax] uint8  — 1 for valid entries, 0 for padding
 type blankCollector struct {
-	positions []int32
-	kind      []int32
-	group     []int32
-	groupKind []int32
-	optionIdx []int32
-	legalIDs  []int32
-	legalMask []uint8
-	overflow  *int32
+	positions  []int32
+	kind       []int32
+	group      []int32
+	groupKind  []int32
+	optionIdx  []int32
+	legalIDs   []int32
+	legalMask  []uint8
+	count      *int32
+	legalCount []int32
+	overflow   *int32
 
 	maxBlanks      int32
 	maxLegalPerBlk int32
@@ -36,8 +38,8 @@ type blankCollector struct {
 	curLegalCap int32 // declared legal_count for the current blank
 }
 
-// reset zeros all output slots and resets the live state. Sized for the
-// caller's K and Vmax. Must be called before each row walk.
+// reset clears only live-count metadata and resets the live state. Stale
+// padded tail slots are ignored by the exported count arrays.
 func (c *blankCollector) reset(maxBlanks, maxLegalPerBlk int32) {
 	c.maxBlanks = maxBlanks
 	c.maxLegalPerBlk = maxLegalPerBlk
@@ -45,13 +47,9 @@ func (c *blankCollector) reset(maxBlanks, maxLegalPerBlk int32) {
 	c.curLegalK = -1
 	c.curLegalN = 0
 	c.curLegalCap = 0
-	fillInt32(c.positions, -1)
-	clear(c.kind)
-	clear(c.group)
-	clear(c.groupKind)
-	fillInt32(c.optionIdx, -1)
-	fillInt32(c.legalIDs, 0)
-	clear(c.legalMask)
+	if c.count != nil {
+		*c.count = 0
+	}
 }
 
 // recordBlank writes the metadata for a new EMIT_BLANK and primes the legal
@@ -79,6 +77,9 @@ func (c *blankCollector) recordBlank(cursor, kindID, groupID, groupKind, optionI
 	c.kind[idx] = kindID
 	c.group[idx] = groupID
 	c.groupKind[idx] = groupKind
+	if len(c.legalCount) > int(idx) {
+		c.legalCount[idx] = 0
+	}
 	if len(c.optionIdx) > int(idx) {
 		c.optionIdx[idx] = optionIndex
 	}
@@ -86,6 +87,9 @@ func (c *blankCollector) recordBlank(cursor, kindID, groupID, groupKind, optionI
 	c.curLegalCap = legalCount
 	c.curLegalN = 0
 	c.blankCount++
+	if c.count != nil {
+		*c.count = c.blankCount
+	}
 	return nil
 }
 
@@ -108,6 +112,9 @@ func (c *blankCollector) recordLegal(tokenID int32) error {
 		c.legalMask[base+c.curLegalN] = 1
 	}
 	c.curLegalN++
+	if len(c.legalCount) > int(c.curLegalK) {
+		c.legalCount[c.curLegalK] = c.curLegalN
+	}
 	return nil
 }
 

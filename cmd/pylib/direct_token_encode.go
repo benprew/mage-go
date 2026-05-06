@@ -71,6 +71,12 @@ func fillTokenAssemblyDirectPacked(
 		collector.optionIdx = outputView.packedBlankOptionIdx[rowBlankStart:rowBlankEnd]
 		collector.legalIDs = outputView.packedBlankLegalIDs[rowLegalStart:rowLegalEnd]
 		collector.legalMask = outputView.packedBlankLegalMask[rowLegalStart:rowLegalEnd]
+		if outputBatchIdx >= 0 && outputBatchIdx < int64(len(outputView.packedBlankCount)) {
+			collector.count = &outputView.packedBlankCount[outputBatchIdx]
+		} else {
+			collector.count = nil
+		}
+		collector.legalCount = outputView.packedBlankLegalCount[rowBlankStart:rowBlankEnd]
 		if outputBatchIdx >= 0 && outputBatchIdx < int64(len(outputView.packedBlankOverflow)) {
 			collector.overflow = &outputView.packedBlankOverflow[outputBatchIdx]
 			outputView.packedBlankOverflow[outputBatchIdx] = 0

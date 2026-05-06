@@ -65,14 +65,17 @@ func TestBlankNumIDsAccessor(t *testing.T) {
 }
 
 func newBlankCollector(maxBlanks, vmax int32) *blankCollector {
+	count := int32(-1)
 	c := &blankCollector{
-		positions: make([]int32, maxBlanks),
-		kind:      make([]int32, maxBlanks),
-		group:     make([]int32, maxBlanks),
-		groupKind: make([]int32, maxBlanks),
-		optionIdx: make([]int32, maxBlanks),
-		legalIDs:  make([]int32, maxBlanks*vmax),
-		legalMask: make([]uint8, maxBlanks*vmax),
+		positions:  make([]int32, maxBlanks),
+		kind:       make([]int32, maxBlanks),
+		group:      make([]int32, maxBlanks),
+		groupKind:  make([]int32, maxBlanks),
+		optionIdx:  make([]int32, maxBlanks),
+		legalIDs:   make([]int32, maxBlanks*vmax),
+		legalMask:  make([]uint8, maxBlanks*vmax),
+		count:      &count,
+		legalCount: make([]int32, maxBlanks),
 	}
 	c.reset(maxBlanks, vmax)
 	return c
@@ -143,9 +146,14 @@ func TestEmitBlankWalker(t *testing.T) {
 			t.Errorf("optionIdx[%d] = %d, want -1", i, col.optionIdx[i])
 		}
 	}
-	// Slot K=3 was never written; should still be sentinel (-1 for positions).
-	if col.positions[3] != -1 {
-		t.Errorf("positions[3] = %d, want -1 (unused)", col.positions[3])
+	if col.count == nil || *col.count != 3 {
+		t.Fatalf("count = %v, want 3", col.count)
+	}
+	wantLegalCount := []int32{3, 2, 1, 0}
+	for i, want := range wantLegalCount {
+		if col.legalCount[i] != want {
+			t.Errorf("legalCount[%d] = %d, want %d", i, col.legalCount[i], want)
+		}
 	}
 
 	// Legal ids row-major: row k, col v -> legalIDs[k*Vmax + v].

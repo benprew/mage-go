@@ -274,6 +274,8 @@ typedef struct {
     int32_t* blank_legal_ids;    /* [B, K, V] int32, 0 pad */
     uint8_t* blank_legal_mask;   /* [B, K, V] uint8 */
     int32_t* blank_overflow;     /* [B] int32, count of dropped blanks */
+    int32_t* blank_count;        /* [B] int32, live blanks per row */
+    int32_t* blank_legal_count;  /* [B, K] int32, live legal ids per blank */
 } MagePackedBlankOutputs;
 
 #endif

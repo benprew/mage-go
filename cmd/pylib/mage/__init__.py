@@ -247,6 +247,8 @@ typedef struct {
     int32_t *blank_legal_ids;
     uint8_t *blank_legal_mask;
     int32_t *blank_overflow;
+    int32_t *blank_count;
+    int32_t *blank_legal_count;
 } MagePackedBlankOutputs;
 
 MageEncodeResult MageEncodeTokensPacked(

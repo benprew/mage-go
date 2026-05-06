@@ -1763,7 +1763,9 @@ func attachPackedBlankViews(
 		blankOut.blank_option_index == nil ||
 		blankOut.blank_legal_ids == nil ||
 		blankOut.blank_legal_mask == nil ||
-		blankOut.blank_overflow == nil {
+		blankOut.blank_overflow == nil ||
+		blankOut.blank_count == nil ||
+		blankOut.blank_legal_count == nil {
 		return &encodeError{code: mageEncodeErrInvalidArgument, message: "packed blank outputs must be non-nil"}
 	}
 
@@ -1775,6 +1777,8 @@ func attachPackedBlankViews(
 	views.packedBlankLegalIDs = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_legal_ids)), totalLegal)
 	views.packedBlankLegalMask = unsafe.Slice((*byte)(unsafe.Pointer(blankOut.blank_legal_mask)), totalLegal)
 	views.packedBlankOverflow = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_overflow)), n)
+	views.packedBlankCount = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_count)), n)
+	views.packedBlankLegalCount = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_legal_count)), totalBlanks)
 	return nil
 }
 

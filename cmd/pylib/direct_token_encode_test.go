@@ -163,20 +163,22 @@ func directTestAllocOutputs(cfg encodeConfig) outputViews {
 	mt := cfg.tokenMaxTokens
 	mcr := cfg.tokenMaxCardRefs
 	return outputViews{
-		packedTokenIDs:       make([]int32, int64(slots)*int64(mt)),
-		packedCuSeqlens:      make([]int32, slots+1),
-		packedSeqLengths:     make([]int32, slots),
-		packedStatePositions: make([]int32, slots),
-		packedCardRefPos:     make([]int32, int64(slots)*int64(mcr)),
-		packedTokenOverflow:  make([]int32, slots),
-		packedBlankPos:       make([]int32, int64(slots)*int64(cfg.blankMaxBlanks)),
-		packedBlankKind:      make([]int32, int64(slots)*int64(cfg.blankMaxBlanks)),
-		packedBlankGroup:     make([]int32, int64(slots)*int64(cfg.blankMaxBlanks)),
-		packedBlankGroupKind: make([]int32, int64(slots)*int64(cfg.blankMaxBlanks)),
-		packedBlankOptionIdx: make([]int32, int64(slots)*int64(cfg.blankMaxBlanks)),
-		packedBlankLegalIDs:  make([]int32, int64(slots)*int64(cfg.blankMaxBlanks)*int64(cfg.blankMaxLegal)),
-		packedBlankLegalMask: make([]byte, int64(slots)*int64(cfg.blankMaxBlanks)*int64(cfg.blankMaxLegal)),
-		packedBlankOverflow:  make([]int32, slots),
+		packedTokenIDs:        make([]int32, int64(slots)*int64(mt)),
+		packedCuSeqlens:       make([]int32, slots+1),
+		packedSeqLengths:      make([]int32, slots),
+		packedStatePositions:  make([]int32, slots),
+		packedCardRefPos:      make([]int32, int64(slots)*int64(mcr)),
+		packedTokenOverflow:   make([]int32, slots),
+		packedBlankPos:        make([]int32, int64(slots)*int64(cfg.blankMaxBlanks)),
+		packedBlankKind:       make([]int32, int64(slots)*int64(cfg.blankMaxBlanks)),
+		packedBlankGroup:      make([]int32, int64(slots)*int64(cfg.blankMaxBlanks)),
+		packedBlankGroupKind:  make([]int32, int64(slots)*int64(cfg.blankMaxBlanks)),
+		packedBlankOptionIdx:  make([]int32, int64(slots)*int64(cfg.blankMaxBlanks)),
+		packedBlankLegalIDs:   make([]int32, int64(slots)*int64(cfg.blankMaxBlanks)*int64(cfg.blankMaxLegal)),
+		packedBlankLegalMask:  make([]byte, int64(slots)*int64(cfg.blankMaxBlanks)*int64(cfg.blankMaxLegal)),
+		packedBlankOverflow:   make([]int32, slots),
+		packedBlankCount:      make([]int32, slots),
+		packedBlankLegalCount: make([]int32, int64(slots)*int64(cfg.blankMaxBlanks)),
 	}
 }
 

@@ -236,20 +236,22 @@ type outputViews struct {
 
 	// Packed (varlen) token-assembler outputs. ``packedTokenIDs`` is sized
 	// [B*max_tokens]; per-token seq/position metadata is derived by Python.
-	packedTokenIDs       []int32
-	packedCuSeqlens      []int32 // [B+1]
-	packedSeqLengths     []int32 // [B]
-	packedStatePositions []int32 // [B]
-	packedCardRefPos     []int32
-	packedTokenOverflow  []int32
-	packedBlankPos       []int32
-	packedBlankKind      []int32
-	packedBlankGroup     []int32
-	packedBlankGroupKind []int32
-	packedBlankOptionIdx []int32
-	packedBlankLegalIDs  []int32
-	packedBlankLegalMask []byte
-	packedBlankOverflow  []int32
+	packedTokenIDs        []int32
+	packedCuSeqlens       []int32 // [B+1]
+	packedSeqLengths      []int32 // [B]
+	packedStatePositions  []int32 // [B]
+	packedCardRefPos      []int32
+	packedTokenOverflow   []int32
+	packedBlankPos        []int32
+	packedBlankKind       []int32
+	packedBlankGroup      []int32
+	packedBlankGroupKind  []int32
+	packedBlankOptionIdx  []int32
+	packedBlankLegalIDs   []int32
+	packedBlankLegalMask  []byte
+	packedBlankOverflow   []int32
+	packedBlankCount      []int32
+	packedBlankLegalCount []int32
 }
 
 type batchRequest struct {
@@ -777,6 +779,12 @@ func fillTokenAssemblyPacked(
 		collector.optionIdx = outputView.packedBlankOptionIdx[rowBlankStart:rowBlankEnd]
 		collector.legalIDs = outputView.packedBlankLegalIDs[rowLegalStart:rowLegalEnd]
 		collector.legalMask = outputView.packedBlankLegalMask[rowLegalStart:rowLegalEnd]
+		if outputBatchIdx >= 0 && outputBatchIdx < int64(len(outputView.packedBlankCount)) {
+			collector.count = &outputView.packedBlankCount[outputBatchIdx]
+		} else {
+			collector.count = nil
+		}
+		collector.legalCount = outputView.packedBlankLegalCount[rowBlankStart:rowBlankEnd]
 		if outputBatchIdx >= 0 && outputBatchIdx < int64(len(outputView.packedBlankOverflow)) {
 			collector.overflow = &outputView.packedBlankOverflow[outputBatchIdx]
 			outputView.packedBlankOverflow[outputBatchIdx] = 0
