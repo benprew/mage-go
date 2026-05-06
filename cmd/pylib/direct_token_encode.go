@@ -115,6 +115,14 @@ func emitDirectTokens(
 	index renderPlanIndex,
 ) error {
 	e.emitOpenState()
+	var inline inlinePriorityOptions
+	emitInline := cfg.blankMaxBlanks > 0 && cfg.blankMaxLegal > 0
+	if emitInline {
+		inline = classifyDirectInlineOptions(pending, state, playerIdx, index, cfg)
+		if err := emitDirectInlineChoices(e, pending, inline, state, playerIdx, cfg, index); err != nil {
+			return err
+		}
+	}
 	if cfg.dedupCardBodies && len(index.dictRowOrder) > 0 {
 		e.emitOpenDict()
 		for slot, row := range index.dictRowOrder {
@@ -128,12 +136,8 @@ func emitDirectTokens(
 	if err := emitDirectPlayerScalars(e, state, playerIdx); err != nil {
 		return err
 	}
-	if cfg.blankMaxBlanks > 0 && cfg.blankMaxLegal > 0 {
-		inline := classifyDirectInlineOptions(pending, state, playerIdx, index, cfg)
+	if emitInline {
 		if err := emitDirectZones(e, state, playerIdx, index, cfg, inline.byCard); err != nil {
-			return err
-		}
-		if err := emitDirectInlineChoices(e, pending, inline, index); err != nil {
 			return err
 		}
 	} else {
@@ -254,12 +258,7 @@ func classifyDirectInlineOptions(pending *apiPending, state *apiGameState, playe
 	if pending == nil {
 		return inlinePriorityOptions{byCard: map[uuid.UUID][]inlineBlankOption{}}
 	}
-	if pending.Kind == "priority" {
-		inline := classifyInlinePriorityOptions(pending)
-		enrichInlinePriorityTargetBlanks(&inline, pending, state, playerIdx, index, cfg)
-		return inline
-	}
-	return classifyInlineCombatOptions(pending, state, playerIdx, index, cfg)
+	return inlinePriorityOptions{byCard: map[uuid.UUID][]inlineBlankOption{}}
 }
 
 func enrichInlinePriorityTargetBlanks(inline *inlinePriorityOptions, pending *apiPending, state *apiGameState, playerIdx int, index renderPlanIndex, cfg encodeConfig) {
@@ -273,6 +272,10 @@ func enrichInlinePriorityTargetBlanks(inline *inlinePriorityOptions, pending *ap
 			continue
 		}
 		legalIDs := targetLegalTokenIDs(option.ValidTargets, selfID, oppID, index, cfg)
+		targetCount := minInt64(int64(len(option.ValidTargets)), cfg.maxTargetsPerOption)
+		if int64(len(legalIDs)) < targetCount {
+			legalIDs = targetPositionLegalTokenIDs(targetCount)
+		}
 		if len(legalIDs) == 0 {
 			continue
 		}
@@ -335,7 +338,11 @@ func targetLegalTokenIDs(targets []apiTarget, selfID uuid.UUID, oppID uuid.UUID,
 	if tables == nil {
 		return nil
 	}
-	targetCount := minInt64(int64(len(targets)), int64(cfg.tokenMaxTargets))
+	targetLimit := cfg.tokenMaxTargets
+	if targetLimit <= 0 {
+		targetLimit = int32(cfg.maxTargetsPerOption)
+	}
+	targetCount := minInt64(int64(len(targets)), int64(targetLimit))
 	legalIDs := make([]int32, 0, targetCount)
 	for tgtIdx := int64(0); tgtIdx < targetCount; tgtIdx++ {
 		row, uuidIdx, kind := renderTarget(targets[tgtIdx], selfID, oppID, index)
@@ -343,34 +350,57 @@ func targetLegalTokenIDs(targets []apiTarget, selfID uuid.UUID, oppID uuid.UUID,
 		case renderTargetPlayer:
 			if row == renderOwnerSelf {
 				legalIDs = append(legalIDs, tables.selfID)
+				continue
 			} else if row == renderOwnerOpponent {
 				legalIDs = append(legalIDs, tables.oppID)
+				continue
 			}
 		case renderTargetPermanent, renderTargetCardInZone:
 			if uuidIdx >= 0 && uuidIdx < int32(len(tables.cardRefIDs)) {
 				legalIDs = append(legalIDs, tables.cardRefIDs[uuidIdx])
+				continue
 			}
+		}
+		if tgtIdx < int64(tables.numCount) && int(tgtIdx) < len(tables.numIDs) {
+			legalIDs = append(legalIDs, tables.numIDs[tgtIdx])
 		}
 	}
 	return legalIDs
 }
 
-func emitDirectInlineChoices(e *directTokenEmitter, pending *apiPending, inline inlinePriorityOptions, index renderPlanIndex) error {
+func targetPositionLegalTokenIDs(count int64) []int32 {
+	tables := getTokenTables()
+	if tables == nil || count <= 0 {
+		return nil
+	}
+	limit := minInt64(count, int64(tables.numCount))
+	limit = minInt64(limit, int64(len(tables.numIDs)))
+	out := make([]int32, 0, limit)
+	for idx := int64(0); idx < limit; idx++ {
+		out = append(out, tables.numIDs[idx])
+	}
+	return out
+}
+
+func emitDirectInlineChoices(
+	e *directTokenEmitter,
+	pending *apiPending,
+	inline inlinePriorityOptions,
+	state *apiGameState,
+	playerIdx int,
+	cfg encodeConfig,
+	index renderPlanIndex,
+) error {
 	tables := getTokenTables()
 	if tables == nil {
 		return nil
 	}
-	passKindID := int32(0)
-	if span := tables.actionVerbSpan(0); len(span) > 0 {
-		passKindID = span[0]
-	}
-	for _, optIdx := range inline.passes {
-		if err := e.emitBlank(passKindID, int32(optIdx)); err != nil {
-			return err
-		}
-	}
 	if pending != nil {
 		switch pending.Kind {
+		case "priority":
+			if err := emitStandalonePriorityChoices(e, pending, state, playerIdx, cfg, index); err != nil {
+				return err
+			}
 		case "permanent", "cards_from_hand", "card_from_library":
 			legalIDs := indexedChoiceLegalTokenIDs(pending.Options, index)
 			if len(legalIDs) > 0 {
@@ -398,6 +428,161 @@ func emitDirectInlineChoices(e *directTokenEmitter, pending *apiPending, inline 
 			legalIDs := manaColorLegalTokenIDs(pending.Options)
 			if len(legalIDs) > 0 {
 				if err := e.emitBlankLegal(tables.chooseManaSourceID, -1, blankGroupPerBlank, legalIDs); err != nil {
+					return err
+				}
+			}
+		case "attackers", "blockers":
+			if err := emitStandaloneCombatChoices(e, pending, state, playerIdx, cfg, index); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func emitStandalonePriorityChoices(
+	e *directTokenEmitter,
+	pending *apiPending,
+	state *apiGameState,
+	playerIdx int,
+	cfg encodeConfig,
+	index renderPlanIndex,
+) error {
+	tables := getTokenTables()
+	if pending == nil || tables == nil {
+		return nil
+	}
+	passKindID := int32(0)
+	if span := tables.actionVerbSpan(0); len(span) > 0 {
+		passKindID = span[0]
+	}
+	selfID, oppID := playerIDs(state, playerIdx)
+	for optIdx, option := range pending.Options {
+		switch option.Kind {
+		case "pass":
+			if err := e.emitBlank(passKindID, int32(optIdx)); err != nil {
+				return err
+			}
+		case "play_land", "cast_spell", "play", "cast":
+			if err := e.emitBlank(tables.choosePlayID, int32(optIdx)); err != nil {
+				return err
+			}
+		case "activate_ability", "activate", "activated_ability":
+			if err := e.emitBlank(tables.useAbilityID, int32(optIdx)); err != nil {
+				return err
+			}
+		default:
+			continue
+		}
+		if len(option.ValidTargets) == 0 {
+			continue
+		}
+		legalIDs := targetLegalTokenIDs(option.ValidTargets, selfID, oppID, index, cfg)
+		targetCount := minInt64(int64(len(option.ValidTargets)), cfg.maxTargetsPerOption)
+		if int64(len(legalIDs)) < targetCount {
+			legalIDs = targetPositionLegalTokenIDs(targetCount)
+		}
+		if len(legalIDs) > 0 {
+			if err := e.emitBlankLegal(tables.chooseTargetID, int32(optIdx), blankGroupPerBlank, legalIDs); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func emitStandaloneCombatChoices(
+	e *directTokenEmitter,
+	pending *apiPending,
+	state *apiGameState,
+	playerIdx int,
+	cfg encodeConfig,
+	index renderPlanIndex,
+) error {
+	tables := getTokenTables()
+	if pending == nil || tables == nil {
+		return nil
+	}
+	selfID, oppID := playerIDs(state, playerIdx)
+	for optIdx, option := range pending.Options {
+		switch pending.Kind {
+		case "attackers":
+			legalIDs := []int32{tables.noneID}
+			source := option.PermanentUUID
+			if source == uuid.Nil {
+				source = option.CardUUID
+			}
+			if entry, ok := index.byCardID[source]; ok && entry.uuidIdx >= 0 && entry.uuidIdx < int32(len(tables.cardRefIDs)) {
+				legalIDs = append(legalIDs, tables.cardRefIDs[entry.uuidIdx])
+			} else if optIdx < int(tables.numCount) && optIdx < len(tables.numIDs) {
+				legalIDs = append(legalIDs, tables.numIDs[optIdx])
+			}
+			if len(legalIDs) < 2 {
+				continue
+			}
+			if err := e.emitBlankLegal(tables.chooseTargetID, int32(optIdx), blankGroupPerBlank, legalIDs); err != nil {
+				return err
+			}
+		case "blockers":
+			legalIDs := []int32{tables.noneID}
+			legalIDs = append(legalIDs, targetLegalTokenIDs(option.ValidTargets, selfID, oppID, index, cfg)...)
+			if err := e.emitBlankLegal(tables.chooseBlockID, int32(optIdx), blankGroupPerBlank, legalIDs); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func emitUnanchoredPriorityChoices(
+	e *directTokenEmitter,
+	pending *apiPending,
+	state *apiGameState,
+	playerIdx int,
+	cfg encodeConfig,
+	index renderPlanIndex,
+) error {
+	tables := getTokenTables()
+	if pending == nil || pending.Kind != "priority" || tables == nil {
+		return nil
+	}
+	for optIdx, option := range pending.Options {
+		source := option.CardUUID
+		if source == uuid.Nil {
+			source = option.PermanentUUID
+		}
+		if source != uuid.Nil {
+			if _, ok := index.byCardID[source]; ok {
+				continue
+			}
+		}
+
+		blank := inlineBlankOption{
+			groupKind:  blankGroupCrossBlank,
+			optIdx:     optIdx,
+			abilityIdx: option.AbilityIndex,
+			id:         option.ID,
+		}
+		switch option.Kind {
+		case "play_land", "cast_spell", "play", "cast":
+			blank.kindID = tables.choosePlayID
+		case "activate_ability", "activate", "activated_ability":
+			blank.kindID = tables.useAbilityID
+		default:
+			continue
+		}
+		if err := e.emitInlineBlankOption(blank); err != nil {
+			return err
+		}
+		if len(option.ValidTargets) > 0 {
+			selfID, oppID := playerIDs(state, playerIdx)
+			legalIDs := targetLegalTokenIDs(option.ValidTargets, selfID, oppID, index, cfg)
+			targetCount := minInt64(int64(len(option.ValidTargets)), cfg.maxTargetsPerOption)
+			if int64(len(legalIDs)) < targetCount {
+				legalIDs = targetPositionLegalTokenIDs(targetCount)
+			}
+			if len(legalIDs) > 0 {
+				if err := e.emitBlankLegal(tables.chooseTargetID, int32(optIdx), blankGroupPerBlank, legalIDs); err != nil {
 					return err
 				}
 			}
@@ -436,17 +621,17 @@ func manaColorLegalTokenIDs(options []apiOption) []int32 {
 
 func manaColorOptionID(color string) (int32, bool) {
 	switch color {
-	case "white", "W":
+	case "white", "White", "W":
 		return 0, true
-	case "blue", "U":
+	case "blue", "Blue", "U":
 		return 1, true
-	case "black", "B":
+	case "black", "Black", "B":
 		return 2, true
-	case "red", "R":
+	case "red", "Red", "R":
 		return 3, true
-	case "green", "G":
+	case "green", "Green", "G":
 		return 4, true
-	case "colorless", "C":
+	case "colorless", "Colorless", "C":
 		return 5, true
 	}
 	return 0, false

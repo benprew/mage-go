@@ -399,7 +399,7 @@ func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int, scratch
 				continue
 			}
 			slot := zoneOwnerSlot(zone, owner)
-			cards, err := appendRenderCardsForZone(index.cardsByZone[slot][:0], player, owner, zone, scratch, nil)
+			cards, err := appendRenderCardsForZone(index.cardsByZone[slot][:0], player, owner, zone, scratch, nil, nil)
 			if err != nil {
 				return err
 			}
@@ -407,7 +407,7 @@ func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int, scratch
 		}
 	}
 	stackSlot := zoneOwnerSlot(renderZoneStack, renderOwnerSelf)
-	stackCards, err := appendRenderCardsForZone(index.cardsByZone[stackSlot][:0], nil, renderOwnerSelf, renderZoneStack, scratch, state.Stack)
+	stackCards, err := appendRenderCardsForZone(index.cardsByZone[stackSlot][:0], nil, renderOwnerSelf, renderZoneStack, scratch, state.Stack, state)
 	if err != nil {
 		return err
 	}
@@ -484,7 +484,15 @@ func renderPlayerState(state *apiGameState, perspectivePlayerIdx int, owner int3
 	return &state.Players[idx]
 }
 
-func appendRenderCardsForZone(out []renderCardRef, player *interactive.PlayerState, owner int32, zone int32, scratch *encodeScratch, stackItems []interactive.StackItemState) ([]renderCardRef, *encodeError) {
+func appendRenderCardsForZone(
+	out []renderCardRef,
+	player *interactive.PlayerState,
+	owner int32,
+	zone int32,
+	scratch *encodeScratch,
+	stackItems []interactive.StackItemState,
+	state *apiGameState,
+) ([]renderCardRef, *encodeError) {
 	switch zone {
 	case renderZoneBattlefield:
 		// Take pointers directly into player.Battlefield so each renderCardRef
@@ -576,7 +584,7 @@ func appendRenderCardsForZone(out []renderCardRef, player *interactive.PlayerSta
 		return out, nil
 	case renderZoneStack:
 		for _, item := range stackItems {
-			row, ok := scratch.cachedRowForName(item.Name)
+			row, name, ok := stackItemCardRow(item, scratch, state)
 			if !ok {
 				return nil, &encodeError{code: mageEncodeErrEncode, message: "missing card embedding for " + item.Name}
 			}
@@ -592,7 +600,7 @@ func appendRenderCardsForZone(out []renderCardRef, player *interactive.PlayerSta
 				slotIdx: -1,
 				uuidIdx: -1,
 				cardID:  id,
-				name:    item.Name,
+				name:    name,
 				row:     row,
 			})
 		}
@@ -600,6 +608,31 @@ func appendRenderCardsForZone(out []renderCardRef, player *interactive.PlayerSta
 	default:
 		return out, nil
 	}
+}
+
+func stackItemCardRow(item interactive.StackItemState, scratch *encodeScratch, state *apiGameState) (int32, string, bool) {
+	name := item.Name
+	if name != "" && name != "Ability" {
+		if row, ok := scratch.cachedRowForName(name); ok {
+			return row, name, true
+		}
+	}
+	if state != nil && item.ID != "" {
+		for _, player := range state.Players {
+			for _, perm := range player.Battlefield {
+				if perm.ID.String() != item.ID {
+					continue
+				}
+				row, ok := scratch.cachedRowForName(perm.Name)
+				return row, perm.Name, ok
+			}
+		}
+	}
+	if name == "Ability" {
+		return 0, name, true
+	}
+	row, ok := scratch.cachedRowForName(name)
+	return row, name, ok
 }
 
 // cachedRowForName memoizes cardRowForName for the lifetime of the

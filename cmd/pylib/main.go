@@ -524,11 +524,12 @@ func buildAttackerPending(msg *interactive.GameMsg, playerIdx int) *apiPending {
 func buildBlockerPending(msg *interactive.GameMsg, playerIdx int) *apiPending {
 	out := make([]apiOption, 0, len(msg.Options))
 	for _, o := range msg.Options {
-		ao := apiOption{Kind: "blocker", Label: o.Label}
-		if o.PermanentID != uuid.Nil {
-			ao.PermanentID = o.PermanentID.String()
-			ao.PermanentUUID = o.PermanentID
+		if o.Type == interactive.ActionPass || o.PermanentID == uuid.Nil {
+			continue
 		}
+		ao := apiOption{Kind: "blocker", Label: o.Label}
+		ao.PermanentID = o.PermanentID.String()
+		ao.PermanentUUID = o.PermanentID
 		for i, id := range o.ValidTargets {
 			label := ""
 			if i < len(o.ValidTargetLabels) {
@@ -867,17 +868,17 @@ func actionFromStepChoice(pending *apiPending, selectedCols []int64, maySelected
 
 func parseColor(s string) core.Color {
 	switch s {
-	case "white", "W":
+	case "white", "White", "W":
 		return core.White
-	case "blue", "U":
+	case "blue", "Blue", "U":
 		return core.Blue
-	case "black", "B":
+	case "black", "Black", "B":
 		return core.Black
-	case "red", "R":
+	case "red", "Red", "R":
 		return core.Red
-	case "green", "G":
+	case "green", "Green", "G":
 		return core.Green
-	case "colorless", "C":
+	case "colorless", "Colorless", "C":
 		return core.Colorless
 	}
 	return core.Colorless
