@@ -529,6 +529,18 @@ func TestDirectTokenEncodeUnresolvedStackAbilityDoesNotRequireCardRow(t *testing
 	}
 }
 
+func TestCardRowForNameAllowsAbilitySentinelWithOverrides(t *testing.T) {
+	defer directTestSetUp(t)()
+
+	row, ok := cardRowForName("Ability")
+	if !ok {
+		t.Fatalf("cardRowForName(Ability) failed under overrides")
+	}
+	if row != 0 {
+		t.Fatalf("cardRowForName(Ability) = %d, want row 0 unknown-card sentinel", row)
+	}
+}
+
 func TestDirectTokenEncodeChoiceIDsEmitsIndexedChoiceBlank(t *testing.T) {
 	defer directTestSetUp(t)()
 	cfg := directTestCfg()

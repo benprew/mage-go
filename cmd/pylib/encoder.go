@@ -1446,6 +1446,13 @@ func cardRowForName(name string) (int64, bool) {
 	if name == "" {
 		return 0, true
 	}
+	// Stack entries for activated/triggered abilities can arrive without an
+	// inspectable source card name. They are still legitimate visible stack
+	// objects, so encode them with the row-0 unknown-card sentinel instead of
+	// looking them up in the real-card embedding table.
+	if normalizeKey(name) == "ability" {
+		return 0, true
+	}
 
 	cardRowOverrideMu.RLock()
 	overridden := cardRowsOverridden
