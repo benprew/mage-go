@@ -358,8 +358,10 @@ func cloneCombat(c *Combat) *Combat {
 		return nil
 	}
 	clone := &Combat{
-		Attackers:   cloneUUIDBoolMap(c.Attackers),
-		FirstStruck: cloneUUIDBoolMap(c.FirstStruck),
+		Attackers:     cloneUUIDBoolMap(c.Attackers),
+		FirstStruck:   cloneUUIDBoolMap(c.FirstStruck),
+		AttackedAlone: c.AttackedAlone,
+		BlockedAlone:  c.BlockedAlone,
 	}
 	// Deep copy groups.
 	if len(c.Groups) > 0 {
@@ -368,6 +370,7 @@ func cloneCombat(c *Combat) *Combat {
 			cg := &CombatGroup{
 				AttackerID: g.AttackerID,
 				DefenderID: g.DefenderID,
+				Blocked:    g.Blocked,
 			}
 			if len(g.BlockerIDs) > 0 {
 				cg.BlockerIDs = make([]uuid.UUID, len(g.BlockerIDs))
