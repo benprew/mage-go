@@ -36,9 +36,19 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 	// CR 500.5: any unspent mana empties as the step/phase ends.
 	defer g.emptyManaPools()
 
+	// Re-apply continuous effects after SBAs run, so the post-step state is
+	// consistent for any reader (search evaluators, UI, replay): cached
+	// powerBonus/toughBonus/granted abilities reflect the final effect list,
+	// including effects removed during the step body (e.g. RemoveEndOfTurn
+	// in Cleanup) and effects whose source died via SBAs. Defers are LIFO,
+	// so the order on return is: SBAs → Apply → emptyManaPools.
+	defer g.effects.Apply(g)
+
 	// Check SBAs after each step
 	defer g.CheckStateBasedActions()
 
+	// Apply at start so the step's case body reads fresh continuous-effect
+	// state (in case anything mutated effects between calls).
 	g.effects.Apply(g)
 
 	switch step {
