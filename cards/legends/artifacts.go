@@ -21,7 +21,7 @@ func manaBattery(name string, color Color) Card {
 		WithActivatedAbility(
 			AddCounters(Charge, Fixed(1)).Targeting(ToSource()),
 			ManaCostOf("{2}"),
-			WithCost(TapSourceCost()),
+			WithCost(Tap()),
 		),
 		// {T}, Remove any number of charge counters: Add colored mana = counters removed + 1
 		WithActivatedAbility(
@@ -46,7 +46,7 @@ func manaBattery(name string, color Color) Card {
 					return nil
 				},
 			),
-			TapSourceCost(),
+			Tap(),
 		),
 	)
 }
@@ -76,7 +76,7 @@ func registerArtifacts() {
 					},
 				),
 				ManaCostOf("{5}"),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 			),
 		)
 	})
@@ -106,7 +106,7 @@ func registerArtifacts() {
 					},
 				),
 				ManaCostOf("{2}"),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetPermanent()),
 			),
 		)
@@ -122,7 +122,7 @@ func registerArtifacts() {
 			WithAbility(EntersBattlefieldTrigger(
 				ForEachPermanent(
 					And(IsCreature, IsLegendary),
-					TapTargetStep(),
+					Tap(),
 					"tap all legendary creatures",
 				), false)),
 		)
@@ -196,7 +196,7 @@ func registerArtifacts() {
 					},
 				),
 				ManaCostOf("{2}"),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -247,7 +247,7 @@ func registerArtifacts() {
 					},
 				),
 				ManaCostOf("{2}"),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetCreatureYouControl()),
 			),
 		)
@@ -294,7 +294,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				AddCounters(Matrix, Fixed(1)),
 				ManaCostOf("{4}"),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetCreature()),
 				WithUpkeepOnly(),
 			),
@@ -344,7 +344,7 @@ func registerArtifacts() {
 						return nil
 					},
 				),
-				TapSourceCost(),
+				Tap(),
 				WithCost(SacrificeSourceCost()),
 				WithUpkeepOnly(),
 			),
@@ -393,8 +393,8 @@ func registerArtifacts() {
 	Register("Relic Barrier", func() Card {
 		return NewArtifact("Relic Barrier", "{2}",
 			WithActivatedAbility(
-				TapTarget(),
-				TapSourceCost(),
+				Tap(),
+				Tap(),
 				WithTarget(TargetArtifact()),
 			),
 		)
@@ -430,7 +430,7 @@ func registerArtifacts() {
 					},
 				),
 				ManaCostOf("{4}"),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 			),
 		)
 	})
@@ -501,7 +501,7 @@ func registerArtifacts() {
 						}
 						return nil
 					}),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetAnyTarget()),
 			),
 		)
@@ -519,7 +519,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				AddCounters(Hatchling, Fixed(1)).Targeting(ToSource()),
 				ManaCostOf("{3}"),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 			),
 			// Sacrifice: put creature from hand onto battlefield or reanimate from graveyard
 			// Activate only if there are two or more hatchling counters
@@ -645,7 +645,7 @@ func registerArtifacts() {
 						return nil
 					},
 				),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetAnyTarget()),
 			),
 		)

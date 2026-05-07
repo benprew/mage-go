@@ -20,7 +20,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				PreventDamageToTarget(Fixed(1)),
 				GenericCost(2),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetAnyTarget()),
 			),
 		)
@@ -106,7 +106,7 @@ func registerArtifacts() {
 						return nil
 					}),
 				GenericCost(2),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetControlledCreature()),
 			),
 		)
@@ -124,7 +124,7 @@ func registerArtifacts() {
 					AddCounters(P1P1, Fixed(1)),
 					GrantType(TypeArtifact),
 				),
-				TapSourceCost(),
+				Tap(),
 				WithCost(SacrificeSourceCost()),
 				WithTarget(TargetCreature(Not(IsArtifact))),
 			),
@@ -165,7 +165,7 @@ func registerArtifacts() {
 						return nil
 					}),
 				XManaCost(),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 			),
 		)
 	})
@@ -215,7 +215,7 @@ func registerArtifacts() {
 		return NewArtifact("Feldon's Cane", "{1}",
 			WithActivatedAbility(
 				ShuffleGraveyardIntoLibrary(),
-				TapSourceCost(),
+				Tap(),
 				WithCost(ExileSourceCost()),
 			),
 		)
@@ -244,7 +244,7 @@ func registerArtifacts() {
 						return nil
 					}),
 				GenericCost(1),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 			),
 		)
 	})
@@ -289,7 +289,7 @@ func registerArtifacts() {
 						return nil
 					}),
 				GenericCost(2),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 			),
 		)
 	})
@@ -313,7 +313,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				MillTargetPlayer(Fixed(2)),
 				GenericCost(2),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetPlayer()),
 			),
 		)
@@ -328,7 +328,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				ReturnToHandTarget(),
 				GenericCost(6),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetControlledPermanent()),
 			),
 		)
@@ -343,7 +343,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				Pipeline("prevent 1 damage to target; bounce self at next end step",
 					EffectProperties{Outcome: OutcomeBenefit},
-					UnwrapEffect(PreventDamageToTarget(Fixed(1))),
+					PreventDamageToTarget(Fixed(1)),
 					RegisterDelayedTriggerStep(EvtEndStep, "", ReturnToHandTarget()),
 				),
 				GenericCost(2),
@@ -362,7 +362,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				Pipeline("deal 1 damage to any target; destroy self at next end step",
 					EffectProperties{Outcome: OutcomeDetriment, DamageValue: Fixed(1)},
-					UnwrapEffect(DealDamage(Fixed(1))),
+					DealDamage(Fixed(1)),
 					RegisterDelayedTriggerStep(EvtEndStep, "", DestroyTarget()),
 				),
 				GenericCost(2),
@@ -380,7 +380,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				Boost(Fixed(-2), Fixed(0)),
 				GenericCost(3),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -393,16 +393,17 @@ func registerArtifacts() {
 	Register("Tablet of Epityr", func() Card {
 		return NewArtifact("Tablet of Epityr", "{1}",
 			WithAbility(
-				NewTriggered(EvtPutIntoGraveyardFromBattlefield, true,
+				NewTriggered(EvtZoneChange, true,
 					Pipeline("you may pay {1}; if you do, gain 1 life",
 						EffectProperties{Outcome: OutcomeBenefit},
 						IfElse("pay {1} to gain 1 life",
 							&TryPayManaCond{Cost: "{1}"},
-							UnwrapEffect(GainLife(1)),
+							GainLife(1),
 							nil),
 					),
 				).
 					SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+						EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard},
 						EventPlayerIsController{},
 						SpellCastIsType{Type: TypeArtifact},
 					}}),
@@ -512,12 +513,12 @@ func registerArtifacts() {
 						return nil
 					}),
 				GenericCost(3),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetCreature()),
 			),
 			// When Tawnos's Coffin leaves the battlefield, return exiled creature
 			WithAbility(
-				NewTriggered(EvtLeavesBattlefield, false,
+				OnLeaveZone(ZoneBattlefield, ZoneAny,
 					// TODO: convert to pipeline — needs exile-with-noted-state tracking
 					FuncEffect("return exiled creature to battlefield",
 						EffectProperties{},
@@ -525,7 +526,8 @@ func registerArtifacts() {
 							coffinReturnExiled(g, sourceID)
 							return nil
 						}),
-				).SetConditionData(EventSourceIsSelf{}),
+					false,
+				),
 			),
 			// When Tawnos's Coffin becomes untapped, return exiled creature
 			WithAbility(
@@ -550,7 +552,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				GrantKeyword(UnblockableKW),
 				GenericCost(2),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetCreature(HasPowerLTE(2))),
 			),
 		)
@@ -591,7 +593,7 @@ func registerArtifacts() {
 						return nil
 					}),
 				GenericCost(2),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -620,7 +622,7 @@ func registerArtifacts() {
 						EffectProperties{Outcome: OutcomeBenefit},
 						IfElse("pay {1} to gain 1 life",
 							&TryPayManaCond{Cost: "{1}"},
-							UnwrapEffect(GainLife(1)),
+							GainLife(1),
 							nil),
 					),
 				).
@@ -636,16 +638,17 @@ func registerArtifacts() {
 	Register("Urza's Miter", func() Card {
 		return NewArtifact("Urza's Miter", "{3}",
 			WithAbility(
-				NewTriggered(EvtPutIntoGraveyardFromBattlefield, true,
+				NewTriggered(EvtZoneChange, true,
 					Pipeline("pay {3} to draw a card",
 						EffectProperties{Outcome: OutcomeBenefit},
 						IfElse("pay {3} to draw",
 							&TryPayManaCond{Cost: "{3}"},
-							UnwrapEffect(DrawCards(Fixed(1))),
+							DrawCards(Fixed(1)),
 							nil),
 					),
 				).
 					SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+						EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard},
 						EventFlagIsFalse{},
 						SpellCastIsType{Type: TypeArtifact},
 						EventPlayerIsController{},

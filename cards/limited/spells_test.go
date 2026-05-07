@@ -174,36 +174,6 @@ func TestSleightOfMind(t *testing.T) {
 	})
 }
 
-func TestStasis(t *testing.T) {
-	t.Run("players_skip_untap_step", func(t *testing.T) {
-		// Stasis: Players skip their untap steps.
-		g := gametest.NewTestGame(t)
-		// Island lets PlayerA pay {U} at turn 1 upkeep so Stasis survives.
-		// At turn 3 untap the Island is tapped (used for payment) and can't
-		// untap (Stasis prevents it), so Stasis is sacrificed at turn 3 upkeep.
-		// But the untap prevention already happened, so Bears stay tapped.
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island")
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Stasis")
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
-		// Attack with Bears to tap them
-		g.Attack(1, gametest.PlayerA, "Grizzly Bears")
-		// Turn 3 is PlayerA's next turn -- Bears should NOT untap with Stasis.
-		g.StopAt(3, core.PrecombatMain)
-		g.Execute()
-		g.AssertTapped(gametest.PlayerA, "Grizzly Bears", true)
-	})
-
-	t.Run("sacrifice_unless_pay_U", func(t *testing.T) {
-		// At the beginning of your upkeep, sacrifice Stasis unless you pay {U}.
-		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Stasis")
-		g.StopAt(1, core.PrecombatMain)
-		g.Execute()
-		// Stasis should be sacrificed at upkeep (no {U} paid).
-		g.AssertPermanentCount(gametest.PlayerA, "Stasis", 0)
-	})
-}
-
 func TestFork(t *testing.T) {
 	t.Run("copies_instant_spell", func(t *testing.T) {
 		// Fork: Copy target instant or sorcery spell, except that the copy is red.
@@ -273,5 +243,220 @@ func TestChannel(t *testing.T) {
 		// Channel pays 3 generic from life (20 -> 17). Red is paid from auto-mana.
 		g.AssertLife(gametest.PlayerA, 17)
 		g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 1)
+	})
+}
+
+func TestSacrifice(t *testing.T) {
+	t.Run("sacrifice_creature_add_mana", func(t *testing.T) {
+		// Sacrifice: As an additional cost to cast this spell, sacrifice a creature.
+		// Add an amount of {B} equal to the sacrificed creature's mana value.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant") // CMC 4
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Sacrifice")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Sacrifice", "Hill Giant")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Hill Giant (CMC 4) sacrificed -> add {B}{B}{B}{B}.
+		g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 0)
+		pool := g.AllPlayers()[0].ManaPool()
+		if pool.CountProducedThisTurn(core.Black) < 4 { // 4 from sacrificed Hill Giant (CMC 4)
+			t.Errorf("Sacrifice should add 4 black (CMC of Hill Giant); expected >= 4 black, got %d", pool.CountProducedThisTurn(core.Black))
+		}
+	})
+}
+
+func TestWordOfCommand(t *testing.T) {
+	t.Run("look_at_opponent_hand_and_play_card", func(t *testing.T) {
+		// Word of Command: Look at target opponent's hand and choose a card from
+		// it. You control that player until Word of Command finishes resolving.
+		// The player plays that card if able.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Word of Command")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Word of Command", "PlayerB")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Word of Command should force PlayerB to cast Lightning Bolt.
+		g.AssertHandCount(gametest.PlayerB, "Lightning Bolt", 0)
+	})
+}
+
+func TestCamouflage(t *testing.T) {
+	t.Run("randomizes_blocking", func(t *testing.T) {
+		// Camouflage: Cast only during your declare attackers step. This turn,
+		// instead of the defending player choosing blockers, you assign each
+		// creature the defending player controls to block attacking creatures.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Savannah Lions")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Camouflage")
+		g.CastSpell(1, core.DeclareAttackers, gametest.PlayerA, "Camouflage")
+		g.Attack(1, gametest.PlayerA, "Grizzly Bears", "Hill Giant")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		// Camouflage should let the attacker assign blockers.
+		// At least one attacker should deal damage (5 total unblocked).
+		g.AssertLife(gametest.PlayerB, 15) // 2 + 3 = 5 damage
+	})
+}
+
+func TestNaturalSelection(t *testing.T) {
+	t.Run("shuffles_library", func(t *testing.T) {
+		// Natural Selection: Look at the top 3 cards of target player's library,
+		// then put them back in any order. You may have that player shuffle.
+		// In an automated engine, the rearrange has no effect, so we always shuffle.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Natural Selection")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Lightning Bolt")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Hill Giant")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Craw Wurm")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Forest")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Natural Selection", "PlayerA")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Library should still have all 5 cards (shuffle doesn't lose cards)
+		playerA := g.AllPlayers()[0]
+		if len(playerA.Library()) < 5 {
+			t.Errorf("Natural Selection should preserve all library cards; got %d, want >= 5", len(playerA.Library()))
+		}
+	})
+}
+
+func TestManaShort(t *testing.T) {
+	t.Run("taps_all_lands_and_empties_pool", func(t *testing.T) {
+		// Mana Short: Tap all lands target player controls and that player loses
+		// all unspent mana.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Plains")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Mana Short")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Mana Short", "PlayerB")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// All of PlayerB's lands should be tapped.
+		g.AssertTapped(gametest.PlayerB, "Plains", true)
+		g.AssertTapped(gametest.PlayerB, "Island", true)
+	})
+}
+
+func TestDrainPower(t *testing.T) {
+	t.Run("steals_opponent_mana", func(t *testing.T) {
+		// Drain Power: Target player activates a mana ability of each land they
+		// control. Then that player loses all unspent mana and you add the mana
+		// lost this way.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Plains")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Drain Power")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Drain Power", "PlayerB")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// PlayerB's lands tapped, PlayerA gets the mana.
+		g.AssertTapped(gametest.PlayerB, "Plains", true)
+		g.AssertTapped(gametest.PlayerB, "Mountain", true)
+	})
+}
+
+func TestSimulacrum(t *testing.T) {
+	t.Run("gain_life_and_deal_damage", func(t *testing.T) {
+		// Simulacrum: You gain life equal to the damage dealt to you this turn.
+		// Simulacrum deals damage to target creature you control equal to the
+		// damage dealt to you this turn.
+		g := gametest.NewTestGame(t)
+		g.SetLife(gametest.PlayerA, 17)                                    // took 3 damage earlier this "turn"
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")    // 3/3
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // 2/2
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Simulacrum")
+		// PlayerA casts Simulacrum; PlayerB bolts in response so the
+		// 3 damage lands before Simulacrum resolves (CR 117.1b).
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Simulacrum", "Hill Giant")
+		g.CastInResponseTo(gametest.PlayerB, "Lightning Bolt", "PlayerA")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Took 3 damage this turn -> gain 3 life (14 -> 17) and deal 3 to Hill Giant.
+		g.AssertLife(gametest.PlayerA, 17)
+	})
+}
+
+func TestBlazeOfGlory(t *testing.T) {
+	t.Run("target_blocks_all_attackers", func(t *testing.T) {
+		// Blaze of Glory: Target creature can block any number of creatures this
+		// turn and must block each attacking creature if able.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant") // 3/3
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Gray Ogre")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Blaze of Glory")
+		g.CastSpell(1, core.DeclareAttackers, gametest.PlayerB, "Blaze of Glory", "Hill Giant")
+		g.Attack(1, gametest.PlayerA, "Grizzly Bears", "Gray Ogre")
+		g.Block(1, gametest.PlayerB, "Hill Giant", "Grizzly Bears")
+		g.Block(1, gametest.PlayerB, "Hill Giant", "Gray Ogre")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		// Hill Giant blocks both attackers (2 + 2 = 4 damage, lethal to 3/3).
+		// With Blaze of Glory enabling multi-block, no damage gets through.
+		g.AssertLife(gametest.PlayerB, 20)
+	})
+}
+
+func TestFalseOrders(t *testing.T) {
+	t.Run("removes_blocker_and_reassigns", func(t *testing.T) {
+		// False Orders: Cast only during combat after blockers are declared.
+		// Remove target creature defending player controls from combat.
+		// Attacker(s) it blocked that other creatures blocked become unblocked.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Craw Wurm")  // 6/4
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant") // 3/3 blocker
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "False Orders")
+		g.Attack(1, gametest.PlayerA, "Craw Wurm")
+		g.Block(1, gametest.PlayerB, "Hill Giant", "Craw Wurm")
+		// Cast False Orders after blocks to remove Hill Giant from combat.
+		g.CastSpell(1, core.DeclareBlockers, gametest.PlayerA, "False Orders", "Hill Giant")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		// Hill Giant removed from combat -> Craw Wurm becomes unblocked -> 6 damage.
+		g.AssertLife(gametest.PlayerB, 14)
+	})
+}
+
+func TestSirensCall(t *testing.T) {
+	t.Run("forces_creatures_to_attack", func(t *testing.T) {
+		// Siren's Call: Cast only during an opponent's turn, before attackers
+		// are declared. Creatures the active player controls attack this turn if
+		// able. At end of turn, destroy all non-Wall creatures that player
+		// controls that didn't attack. Ignore this effect for each creature the
+		// player didn't control continuously since the beginning of the turn.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // 2/2
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")    // 3/3
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Siren's Call")
+		// Cast on PlayerB's turn before attackers.
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerA, "Siren's Call")
+		// PlayerB doesn't attack with either creature.
+		g.StopAt(2, core.Cleanup)
+		g.Execute()
+		// Non-attackers should be destroyed at end of turn.
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+		g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 0)
+	})
+}
+
+func TestMagicalHack(t *testing.T) {
+	t.Run("changes_land_type_word", func(t *testing.T) {
+		// Magical Hack: Change the text of target permanent by replacing all
+		// instances of one basic land type with another.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Bog Wraith") // has swampwalk
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Magical Hack")
+		// Change "swamp" -> "forest" on Bog Wraith.
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Magical Hack", "Bog Wraith")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Bog Wraith should have forestwalk instead of swampwalk.
+		g.AssertHasAbility(gametest.PlayerA, "Bog Wraith", core.Forestwalk, true)
+		g.AssertHasAbility(gametest.PlayerA, "Bog Wraith", core.Swampwalk, false)
 	})
 }

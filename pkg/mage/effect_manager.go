@@ -186,13 +186,16 @@ func (e *targetEffect) Apply(g *Game) error {
 
 // EffectManager manages and applies continuous effects.
 type EffectManager struct {
-	effects               []ContinuousEffect
-	attrDeltas            map[uuid.UUID]map[Attr]int       // deltas accumulated during Apply(); written to perm.grantedAttrs
-	blockPairRestrictions map[uuid.UUID]map[uuid.UUID]bool // attacker -> set of blockers that can't block it; reset each Apply
-	replacements          []ReplacementEffect              // persistent: one-shot, turn-scoped, while-on-battlefield
-	cycleReplacements     []ReplacementEffect              // cleared each Apply() cycle, re-registered by continuous effects
-	Damage                *DamageSystem
-	Rules                 *GameRules
+	effects                    []ContinuousEffect
+	attrDeltas                 map[uuid.UUID]map[Attr]int       // deltas accumulated during Apply(); written to perm.grantedAttrs
+	blockPairRestrictions      map[uuid.UUID]map[uuid.UUID]bool // attacker -> set of blockers that can't block it; reset each Apply
+	cantBeBlockedExceptByRules map[uuid.UUID][]PermanentFilter  // attacker -> conjunction of filters blockers must match
+	canBlockOnlyRules          map[uuid.UUID][]PermanentFilter  // blocker -> conjunction of filters attackers must match
+	minBlockers                map[uuid.UUID]int                // attacker -> minimum number of blockers required
+	replacements               []ReplacementEffect              // persistent: one-shot, turn-scoped, while-on-battlefield
+	cycleReplacements          []ReplacementEffect              // cleared each Apply() cycle, re-registered by continuous effects
+	Damage                     *DamageSystem
+	Rules                      *GameRules
 }
 
 func NewEffectManager() *EffectManager {
@@ -306,6 +309,7 @@ func (em *EffectManager) RemoveUntilYourNextTurn(g *Game, controllerID uuid.UUID
 func (em *EffectManager) Apply(g *Game) {
 	em.attrDeltas = make(map[uuid.UUID]map[Attr]int)
 	em.blockPairRestrictions = nil
+	em.resetCombatRestrictions()
 	em.cycleReplacements = nil
 	em.Rules.ResetPerCycle()
 	em.Damage.ResetPerCycle()
@@ -325,6 +329,7 @@ func (em *EffectManager) Apply(g *Game) {
 		p.RuntimeAbilities = base
 		p.Controller = p.Card.Owner()
 		p.SubTypeOverride = nil
+		p.SubTypeAdditions = nil
 		p.BasePTOverride = nil
 		p.ColorOverride = nil
 		// Reset grantedAttrs and P/T bonuses so each Apply() cycle starts fresh.

@@ -141,24 +141,30 @@ func (r *fogReplacement) Clone() ReplacementEffect {
 
 type forcefieldReplacement struct {
 	replacementBase
-	playerID uuid.UUID
+	playerID   uuid.UUID
+	attackerID uuid.UUID
+	consumed   bool
 }
 
 func (r *forcefieldReplacement) Matches(a Action, _ GameReader) bool {
+	if r.consumed {
+		return false
+	}
 	act, ok := a.(*DamageToPlayerAction)
 	if !ok {
 		return false
 	}
-	return act.IsCombatDamage() && act.PlayerID() == r.playerID && act.Amount() > 1
+	return act.IsCombatDamage() && act.PlayerID() == r.playerID && act.ActionSource() == r.attackerID && act.Amount() > 1
 }
 
 func (r *forcefieldReplacement) Replace(a Action, g *Game) Action {
 	act := a.(*DamageToPlayerAction)
+	r.consumed = true
 	return act.WithAmount(1)
 }
 
 func (r *forcefieldReplacement) IsActive(_ GameReader) bool {
-	return true
+	return !r.consumed
 }
 
 func (r *forcefieldReplacement) Clone() ReplacementEffect {
@@ -612,7 +618,47 @@ func (r *skipDrawReplacement) Clone() ReplacementEffect {
 }
 
 // ---------------------------------------------------------------------------
-// 16. Draw replacement: Aladdin's Lamp draw replacement
+// 16. Island Sanctuary: optional skip-draw with sanctuary protection
+// ---------------------------------------------------------------------------
+
+type islandSanctuaryReplacement struct {
+	replacementBase
+	playerID uuid.UUID
+}
+
+func (r *islandSanctuaryReplacement) Matches(a Action, _ GameReader) bool {
+	act, ok := a.(*DrawCardAction)
+	if !ok {
+		return false
+	}
+	// IsNormalDraw is set only for the active player's draw-step draw, so
+	// matching on it + playerID covers Oracle's "during your draw step" gate.
+	return act.IsNormalDraw() && act.PlayerID() == r.playerID
+}
+
+func (r *islandSanctuaryReplacement) Replace(a Action, g *Game) Action {
+	p := g.GetPlayer(r.playerID)
+	if p == nil {
+		return a
+	}
+	if !p.ChooseMayAbility("skip your draw to activate Island Sanctuary") {
+		return a
+	}
+	g.SetSanctuaryActive(r.playerID)
+	return nil
+}
+
+func (r *islandSanctuaryReplacement) IsActive(g GameReader) bool {
+	return g.FindPermanent(r.sourceID) != nil
+}
+
+func (r *islandSanctuaryReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
+}
+
+// ---------------------------------------------------------------------------
+// 17. Draw replacement: Aladdin's Lamp draw replacement
 // ---------------------------------------------------------------------------
 
 type drawReplacementEffect struct {
@@ -748,3 +794,103 @@ func (*colorPreventionReplacement) IsPreventionEffect() bool      { return true 
 func (*sourcePreventionReplacement) IsPreventionEffect() bool     { return true }
 func (*typePreventionReplacement) IsPreventionEffect() bool       { return true }
 func (*damagePreventionRuleReplacement) IsPreventionEffect() bool { return true }
+
+// ---------------------------------------------------------------------------
+// 18. Counter doubler: doubles +1/+1 counter placements on matching permanents
+// (Doubling Season, Branching Evolution-style — CR 614.1c)
+// ---------------------------------------------------------------------------
+
+type counterDoublerReplacement struct {
+	replacementBase
+	counterType CounterType
+	filter      PermanentFilter
+}
+
+func (r *counterDoublerReplacement) Matches(a Action, g GameReader) bool {
+	act, ok := a.(*AddCountersAction)
+	if !ok {
+		return false
+	}
+	if act.CounterType() != r.counterType {
+		return false
+	}
+	if act.Amount() <= 0 {
+		return false
+	}
+	game, _ := g.(*Game)
+	perm := g.FindPermanent(act.PermanentID())
+	if perm == nil {
+		return false
+	}
+	if r.filter.IsZero() {
+		return true
+	}
+	return r.filter.Match(perm, game)
+}
+
+func (r *counterDoublerReplacement) Replace(a Action, _ *Game) Action {
+	act := a.(*AddCountersAction)
+	return act.WithAmount(act.Amount() * 2)
+}
+
+func (r *counterDoublerReplacement) IsActive(g GameReader) bool {
+	return g.FindPermanent(r.sourceID) != nil
+}
+
+func (r *counterDoublerReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
+}
+
+// ---------------------------------------------------------------------------
+// 19. ETB-additional counters: adds N more counters when matching permanents
+// enter the battlefield (Oona's Blackguard, Winding Constrictor — CR 614.1c).
+// ---------------------------------------------------------------------------
+
+type etbAdditionalCountersReplacement struct {
+	replacementBase
+	counterType CounterType
+	extra       int
+	filter      PermanentFilter
+	// excludeSelf, if true, prevents the source permanent from buffing itself.
+	excludeSelf bool
+}
+
+func (r *etbAdditionalCountersReplacement) Matches(a Action, g GameReader) bool {
+	act, ok := a.(*AddCountersAction)
+	if !ok || !act.OnEntry() {
+		return false
+	}
+	if act.CounterType() != r.counterType {
+		return false
+	}
+	if act.Amount() <= 0 {
+		return false
+	}
+	if r.excludeSelf && act.PermanentID() == r.sourceID {
+		return false
+	}
+	game, _ := g.(*Game)
+	perm := g.FindPermanent(act.PermanentID())
+	if perm == nil {
+		return false
+	}
+	if r.filter.IsZero() {
+		return true
+	}
+	return r.filter.Match(perm, game)
+}
+
+func (r *etbAdditionalCountersReplacement) Replace(a Action, _ *Game) Action {
+	act := a.(*AddCountersAction)
+	return act.WithAmount(act.Amount() + r.extra)
+}
+
+func (r *etbAdditionalCountersReplacement) IsActive(g GameReader) bool {
+	return g.FindPermanent(r.sourceID) != nil
+}
+
+func (r *etbAdditionalCountersReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
+}

@@ -80,7 +80,7 @@ func registerBandingTestCards() {
 				mage.WithActivatedAbility(
 					mage.GrantKeyword(core.Banding),
 					mage.GenericCost(1),
-					mage.WithCost(mage.TapSourceCost()),
+					mage.WithCost(mage.Tap()),
 					mage.WithTarget(mage.TargetCreature()),
 				),
 			)

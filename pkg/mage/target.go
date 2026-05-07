@@ -32,12 +32,48 @@ func (t *BaseTarget) Min() int            { return t.min }
 func (t *BaseTarget) Max() int            { return t.max }
 func (t *BaseTarget) Reset()              { t.chosen = nil }
 
+// opponentChosenTarget wraps another Target so the *opponent* of the
+// trigger's controller is prompted to choose, not the controller. Used
+// for "of an opponent's choice" effects (Mausoleum Turnkey).
+//
+// The wrapper forwards Possible/Choose/Min/Max/Reset and exposes
+// OpponentChoosesTarget() bool so chooseTriggerTargets routes the
+// ChooseTargets prompt to the opponent.
+type opponentChosenTarget struct {
+	inner Target
+}
+
+// TargetOpponentChoice wraps inner so the opponent of the ability's
+// controller picks the target from inner's legal candidates. Combine
+// with any existing Target constructor:
+//
+//	mage.TargetOpponentChoice(mage.TargetUpToNCardsInYourGraveyard(1, mage.IsCreatureCard))
+func TargetOpponentChoice(inner Target) Target {
+	return &opponentChosenTarget{inner: inner}
+}
+
+func (t *opponentChosenTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+	return t.inner.Possible(controller, sourceCard, g)
+}
+
+func (t *opponentChosenTarget) Choose(controller uuid.UUID, sourceCard Card, g *Game, chosen []uuid.UUID) error {
+	return t.inner.Choose(controller, sourceCard, g, chosen)
+}
+
+func (t *opponentChosenTarget) Chosen() []uuid.UUID         { return t.inner.Chosen() }
+func (t *opponentChosenTarget) IsChosen() bool              { return t.inner.IsChosen() }
+func (t *opponentChosenTarget) Min() int                    { return t.inner.Min() }
+func (t *opponentChosenTarget) Max() int                    { return t.inner.Max() }
+func (t *opponentChosenTarget) Reset()                      { t.inner.Reset() }
+func (t *opponentChosenTarget) OpponentChoosesTarget() bool { return true }
+
 // CreatureTarget targets a creature on the battlefield.
 type CreatureTarget struct {
 	BaseTarget
 	Filters        []PermanentFilter
 	excludeSource  bool
 	controllerOnly bool
+	opponentOnly   bool
 }
 
 // TargetCreature creates a target that selects a creature on the battlefield,
@@ -69,6 +105,70 @@ func TargetCreatureYouControl(filters ...PermanentFilter) Target {
 	}
 }
 
+// TargetAnotherCreatureYouControl creates a target that selects a creature
+// you control other than the source permanent, optionally narrowed by
+// PermanentFilter predicates. Used by Kira-style abilities that target
+// "another creature you control".
+func TargetAnotherCreatureYouControl(filters ...PermanentFilter) Target {
+	return &CreatureTarget{
+		BaseTarget:     BaseTarget{min: 1, max: 1},
+		Filters:        filters,
+		controllerOnly: true,
+		excludeSource:  true,
+	}
+}
+
+// TargetCreatureOpponentControls creates a target that selects a creature an
+// opponent controls, optionally narrowed by PermanentFilter predicates. This
+// pairs with TargetCreatureYouControl in a multi-target spell whose targets
+// must have distinct controllers (e.g. Peel from Reality, Nature's Way).
+func TargetCreatureOpponentControls(filters ...PermanentFilter) Target {
+	return &CreatureTarget{
+		BaseTarget:   BaseTarget{min: 1, max: 1},
+		Filters:      filters,
+		opponentOnly: true,
+	}
+}
+
+// TargetUpToNCreatures creates a target that selects from 0 up to n creatures
+// on the battlefield, optionally narrowed by PermanentFilter predicates. Use
+// this for "up to N target creatures" spells (Dauntless Onslaught, Tandem
+// Tactics, Rishkar's ETB).
+func TargetUpToNCreatures(n int, filters ...PermanentFilter) Target {
+	return &CreatureTarget{
+		BaseTarget: BaseTarget{min: 0, max: n},
+		Filters:    filters,
+	}
+}
+
+// TargetUpToOneCreature creates a target that selects from 0 up to one
+// creature on the battlefield, optionally narrowed by PermanentFilter
+// predicates. Per CR 115.1b, "up to one target creature" abilities can
+// resolve with no chosen target. Used by Brightmare ("tap up to one
+// target creature") and similar effects.
+func TargetUpToOneCreature(filters ...PermanentFilter) Target {
+	return TargetUpToNCreatures(1, filters...)
+}
+
+// TargetUpToNCreaturesOrPlayers creates a target that selects from 0 up to n
+// creatures or players. Used for divided-damage spells like Flames of the
+// Firebrand ("3 damage divided as you choose among any number of targets").
+func TargetUpToNCreaturesOrPlayers(n int) Target {
+	return &AnyTarget{
+		BaseTarget: BaseTarget{min: 0, max: n},
+	}
+}
+
+// TargetUpToNCardsInYourGraveyard creates a target that selects from 0 up to n
+// cards in the controller's graveyard, optionally narrowed by CardFilter
+// predicates. Used for Macabre Waltz, Soul Salvage, etc.
+func TargetUpToNCardsInYourGraveyard(n int, filters ...CardFilter) Target {
+	return &GraveyardCardTarget{
+		BaseTarget: BaseTarget{min: 0, max: n},
+		Filters:    filters,
+	}
+}
+
 func (t *CreatureTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
 	sourceID := sourceCard.ID()
@@ -80,6 +180,9 @@ func (t *CreatureTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game
 			continue
 		}
 		if t.controllerOnly && p.Controller != controller {
+			continue
+		}
+		if t.opponentOnly && p.Controller == controller {
 			continue
 		}
 		if !p.CanBeTargetedBy(sourceCard, controller, g) {
@@ -389,7 +492,8 @@ func (t *SpellOnStackTarget) Choose(controller uuid.UUID, _ Card, g *Game, chose
 // optionally filtered by CardFilter predicates.
 type GraveyardCardTarget struct {
 	BaseTarget
-	Filters []CardFilter
+	Filters       []CardFilter
+	excludeSource bool
 }
 
 // TargetCardInYourGraveyard creates a target that selects any card in the controller's graveyard,
@@ -401,13 +505,31 @@ func TargetCardInYourGraveyard(filters ...CardFilter) Target {
 	}
 }
 
-func (t *GraveyardCardTarget) Possible(controller uuid.UUID, _ Card, g *Game) []uuid.UUID {
+// TargetOtherCreatureInYourGraveyard targets a creature card in the controller's
+// graveyard other than the source card. Used for "return another target creature
+// card from your graveyard" triggers (CR 109.5 — "another" excludes the source).
+func TargetOtherCreatureInYourGraveyard() Target {
+	return &GraveyardCardTarget{
+		BaseTarget:    BaseTarget{min: 1, max: 1},
+		Filters:       []CardFilter{IsCreatureCard},
+		excludeSource: true,
+	}
+}
+
+func (t *GraveyardCardTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return nil
 	}
+	var sourceID uuid.UUID
+	if sourceCard != nil {
+		sourceID = sourceCard.ID()
+	}
 	var result []uuid.UUID
 	for _, c := range p.Graveyard() {
+		if t.excludeSource && c.ID() == sourceID {
+			continue
+		}
 		match := true
 		for _, f := range t.Filters {
 			if !f.Match(c) {
@@ -604,14 +726,11 @@ func (t *BlockingOrBlockedBySourceTarget) Possible(controller uuid.UUID, sourceC
 					result = append(result, bid)
 				}
 			}
-		} else {
-			// Check if source is a blocker in this group
-			if slices.Contains(group.BlockerIDs, sourceID) {
-				// Source is blocking — the attacker is a valid target
-				a := g.FindPermanent(group.AttackerID)
-				if a != nil && a.CanBeTargetedBy(sourceCard, controller, g) {
-					result = append(result, group.AttackerID)
-				}
+		} else if slices.Contains(group.BlockerIDs, sourceID) {
+			// Source is blocking — the attacker is a valid target
+			a := g.FindPermanent(group.AttackerID)
+			if a != nil && a.CanBeTargetedBy(sourceCard, controller, g) {
+				result = append(result, group.AttackerID)
 			}
 		}
 	}

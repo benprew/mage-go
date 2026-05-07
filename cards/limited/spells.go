@@ -2,6 +2,7 @@ package limited
 
 import (
 	"fmt"
+	"math/rand"
 
 	"github.com/google/uuid"
 
@@ -37,8 +38,8 @@ func registerSpells() {
 		c := NewInstant("Healing Salve", "{W}",
 			NewTargetedSpell(TargetAnyTarget(), ModalEffect(
 				"target player gains 3 life or prevent the next 3 damage that would be dealt to any target this turn",
-				UnwrapEffect(GainLifeTarget(Fixed(3))),
-				UnwrapEffect(PreventDamageToTarget(Fixed(3))),
+				GainLifeTarget(Fixed(3)),
+				PreventDamageToTarget(Fixed(3)),
 			)),
 		)
 		c.SetModes([]string{
@@ -160,15 +161,6 @@ func registerSpells() {
 		)
 	})
 
-	Register("Stasis", func() Card {
-		return NewEnchantment("Stasis", "{1}{U}",
-			// Players skip their untap steps.
-			WithStaticAbility(PreventAllUntaps()),
-			// At the beginning of your upkeep, sacrifice Stasis unless you pay {U}.
-			WithAbility(SacrificeAtUpkeepUnlessPay("{U}")),
-		)
-	})
-
 	// ===== BLACK SPELLS =====
 
 	Register("Dark Ritual", func() Card {
@@ -250,27 +242,6 @@ func registerSpells() {
 
 	Register("Sinkhole", func() Card {
 		return NewLandDestruction("Sinkhole", "{B}{B}")
-	})
-
-	Register("Pestilence", func() Card {
-		return NewEnchantment("Pestilence", "{2}{B}{B}",
-			// At the beginning of the end step, if no creatures are on the battlefield, sacrifice Pestilence.
-			WithAbility(BeginningOfEachEndStepTrigger(
-				IfElse("sacrifice if no creatures",
-					&NotCond{Inner: &HasMatchingPermanentCond{Filter: IsCreature}},
-					SacrificeSourceStep(),
-					nil,
-				), false,
-			)),
-			// {B}: Deal 1 damage to each creature and each player
-			WithActivatedAbility(
-				CompositeEffects("deal 1 damage to each creature and each player",
-					DealDamageToAllCreatures(Fixed(1), PermanentFilter{}),
-					DealDamageToPlayers(Fixed(1), SelectEachPlayer()),
-				),
-				ManaCostOf("{B}"),
-			),
-		)
 	})
 
 	// XXX: missing destroy mode — Oracle is modal: "Counter target blue spell" / "Destroy target blue permanent"
@@ -488,17 +459,6 @@ func registerSpells() {
 
 	// ===== COLORLESS SPELLS =====
 
-	Register("Chaos Orb", func() Card {
-		return NewArtifact("Chaos Orb", "{2}",
-			// {1}, {T}: Destroy a random nontoken permanent you don't control, then destroy Chaos Orb.
-			WithActivatedAbility(
-				ChaosOrbEffect(),
-				GenericCost(1),
-				WithCost(TapSourceCost()),
-			),
-		)
-	})
-
 	Register("Wrath of God", func() Card {
 		return NewSorcery("Wrath of God", "{2}{W}{W}",
 			NewSpellAbility(DestroyAllCreaturesNoRegen()),
@@ -619,4 +579,206 @@ func registerSpells() {
 				})),
 		)
 	})
+	// ===== MOVED FROM OTHER FILES =====
+
+	Register("Sacrifice", func() Card {
+		return NewInstant("Sacrifice", "{B}",
+			NewTargetedSpell(TargetCreature(), Pipeline(
+				"sacrifice creature and add black mana equal to its CMC",
+				EffectProperties{},
+				SnapshotPermanent(SelectTarget, "t"),
+				SacrificeGathered("t"),
+				AddManaFromVar(Black, "t.cmc"),
+			)),
+		)
+	})
+
+	Register("Word of Command", func() Card {
+		return NewInstant("Word of Command", "{B}{B}",
+			// TODO: convert to pipeline — complex hand/cast manipulation
+			NewTargetedSpell(TargetPlayer(), FuncEffect(
+				"look at opponent's hand and force them to play a card",
+				EffectProperties{},
+				func(g *Game, _, controller uuid.UUID, targets []uuid.UUID) error {
+					if len(targets) == 0 {
+						return nil
+					}
+					targetPlayer := g.GetPlayer(targets[0])
+					if targetPlayer == nil {
+						return nil
+					}
+					hand := targetPlayer.Hand()
+					for _, card := range hand {
+						targetPlayer.ManaPool().Add(Red, 10)
+						targetPlayer.ManaPool().Add(Blue, 10)
+						targetPlayer.ManaPool().Add(Black, 10)
+						targetPlayer.ManaPool().Add(White, 10)
+						targetPlayer.ManaPool().Add(Green, 10)
+						targetPlayer.ManaPool().Add(Colorless, 10)
+						autoTargets := []uuid.UUID{controller}
+						err := g.CastSpellByName(targetPlayer.PlayerID(), card.Name(), autoTargets)
+						if err == nil {
+							return nil
+						}
+					}
+					return nil
+				})),
+		)
+	})
+
+	Register("Camouflage", func() Card {
+		return NewInstant("Camouflage", "{G}",
+			// TODO: convert to pipeline — needs PreventBlockingUntilEndOfCombat step
+			NewSpellAbility(FuncEffect(
+				"you assign blockers this combat",
+				EffectProperties{},
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					for _, p := range g.FilterBattlefield(AnyPermanent) {
+						if p.Controller != controller && p.HasType(TypeCreature) {
+							eff := PreventBlockingUntilEndOfCombat(p.ID())
+							eff.SetSourceID(sourceID)
+							g.AddContinuousEffect(eff)
+						}
+					}
+					g.ApplyContinuousEffects()
+					return nil
+				})),
+		)
+	})
+
+	Register("Natural Selection", func() Card {
+		return NewInstant("Natural Selection", "{G}",
+			// TODO: convert to pipeline — needs library manipulation steps
+			NewTargetedSpell(TargetPlayer(), FuncEffect(
+				"look at top 3 cards of target player's library, rearrange them",
+				EffectProperties{},
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					if len(targets) == 0 {
+						return nil
+					}
+					targetPlayer := g.GetPlayer(targets[0])
+					if targetPlayer == nil {
+						return nil
+					}
+					lib := targetPlayer.Library()
+					if len(lib) < 2 {
+						return nil
+					}
+					n := min(len(lib), 3)
+					// TODO it's not a random shuffle, it's the controller choosing the order
+					// TODO the controller may also choose to shuffle the library
+					rand.Shuffle(n, func(i, j int) {
+						lib[i], lib[j] = lib[j], lib[i]
+					})
+					targetPlayer.SetLibrary(lib)
+					return nil
+				})),
+		)
+	})
+
+	Register("Mana Short", func() Card {
+		// TODO Also drain player's mana pool
+		return NewInstant("Mana Short", "{2}{U}",
+			NewTargetedSpell(TargetPlayer(), TapAllLands()),
+		)
+	})
+
+	// TODO implement
+	// Target player activates a mana ability of each land they control. Then that player loses all unspent mana and you add the mana lost this way.
+	Register("Drain Power", func() Card {
+		return NewSorcery("Drain Power", "{U}{U}",
+			NewTargetedSpell(TargetPlayer(), TapAllLands()),
+		)
+	})
+
+	Register("Simulacrum", func() Card {
+		return NewInstant("Simulacrum", "{1}{B}",
+			// TODO: convert to pipeline — needs DamageTakenByPlayer as ValueSource
+			NewTargetedSpell(TargetCreatureYouControl(), FuncEffect(
+				"gain life and deal damage equal to damage taken this turn",
+				EffectProperties{},
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					dmg := g.DamageTakenByPlayer(controller)
+					if dmg > 0 {
+						p := g.GetPlayer(controller)
+						if p != nil {
+							p.GainLife(dmg)
+							g.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: controller, Amount: dmg})
+						}
+						if len(targets) > 0 {
+							perm := g.FindPermanent(targets[0])
+							if perm != nil {
+								g.DealDamageToPermanent(perm, dmg, sourceID)
+							}
+						}
+					}
+					return nil
+				})),
+		)
+	})
+
+	// TODO implement "Also blocks if able"
+	Register("Blaze of Glory", func() Card {
+		return NewInstant("Blaze of Glory", "{W}",
+			NewTargetedSpell(TargetCreature(), GrantKeyword(CanBlockAny)),
+		)
+	})
+
+	// TODO implement
+	// "Text": "Cast this spell only during the declare blockers step.\nRemove target creature defending player controls from combat. Creatures it was blocking that had become blocked by only that creature this combat become unblocked. You may have it block an attacking creature of your choice.",
+	Register("False Orders", func() Card {
+		return NewInstant("False Orders", "{R}",
+			NewTargetedSpell(TargetCreature(), RemoveFromCombat()),
+		)
+	})
+
+	Register("Siren's Call", func() Card {
+		// XXX: missing cast timing restriction and "attack if able" forced attack effect
+		return NewInstant("Siren's Call", "{U}",
+			// TODO: convert to pipeline — needs delayed trigger pipeline support
+			NewSpellAbility(FuncEffect(
+				"destroy non-attacking non-Wall creatures at end of turn",
+				EffectProperties{},
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					active := g.ActivePlayerObj()
+					activeID := active.PlayerID()
+					g.RegisterDelayedTrigger(&DelayedTrigger{
+						EventType:  EvtEndStep,
+						SourceID:   sourceID,
+						Controller: controller,
+						Effects: []Effect{FuncEffect(
+							"destroy non-attackers",
+							EffectProperties{},
+							func(g2 *Game, srcID, ctrlID uuid.UUID, _ []uuid.UUID) error {
+								var toDestroy []*Permanent
+								for _, p := range g2.FilterBattlefield(AnyPermanent) {
+									if p.Controller == activeID && p.HasType(TypeCreature) &&
+										!p.HasSubType("Wall") && !g2.HasAttackedThisTurn(p.ID()) {
+										toDestroy = append(toDestroy, p)
+									}
+								}
+								for _, p := range toDestroy {
+									g2.DestroyPermanent(p)
+								}
+								return nil
+							}),
+						},
+					})
+					return nil
+				})),
+		)
+	})
+
+	Register("Magical Hack", func() Card {
+		return NewInstant("Magical Hack", "{U}",
+			NewTargetedSpell(TargetPermanent(), ReplaceKeywordEffect(Swampwalk, Forestwalk)),
+		)
+	})
+
+	Register("Jump", func() Card {
+		return NewInstant("Jump", "{U}",
+			NewTargetedSpell(TargetCreature(), GrantKeyword(Flying)),
+		)
+	})
+
 }

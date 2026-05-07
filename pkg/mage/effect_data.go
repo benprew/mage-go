@@ -6,11 +6,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// EffectData is an alias for Effect kept for backward compatibility. There is
-// no semantic difference: every Effect is data, and execution happens through
-// the executor's type switch (ExecuteEffect / ApplyEffect).
-type EffectData = Effect
-
 // EffectContext carries runtime state through a pipeline of effects. It is
 // constructed by ApplyEffect (or pipeline steps) and threaded through executor
 // dispatch so intermediate values (snapshotted permanent properties, chosen
@@ -21,6 +16,10 @@ type EffectContext struct {
 	Controller uuid.UUID
 	Targets    []uuid.UUID
 	Vars       map[string]any
+
+	// DamageDistribution is set when the resolving stack object carries a
+	// pre-chosen damage distribution (divided-damage spells/abilities).
+	DamageDistribution map[uuid.UUID]int
 }
 
 // SetInt stores an integer variable in the context.
@@ -92,10 +91,3 @@ func (ctx *EffectContext) GetBool(name string) bool {
 	return b
 }
 
-// DataEffect is an identity function kept for backward compatibility. Effects
-// are data; no wrapping is needed. Prefer returning the raw effect value.
-func DataEffect(data Effect) Effect { return data }
-
-// UnwrapEffect is an identity function kept for backward compatibility. Effects
-// are data; no unwrapping is needed.
-func UnwrapEffect(e Effect) Effect { return e }

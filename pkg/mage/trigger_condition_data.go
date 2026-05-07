@@ -53,6 +53,23 @@ func (EventPlayerIsNotController) CheckTriggerCond(evt *GameEvent, _ GameReader,
 	return evt.PlayerID != controllerID
 }
 
+// EventPlayerIsOpponent is an alias for EventPlayerIsNotController, kept for
+// readability when expressing "an opponent did X" triggers in 2-player games.
+type EventPlayerIsOpponent struct{}
+
+func (EventPlayerIsOpponent) CheckTriggerCond(evt *GameEvent, _ GameReader, _, controllerID uuid.UUID) bool {
+	return evt.PlayerID != controllerID
+}
+
+// EventSacrificedPermanentIsCreature checks the Flag bit set by Game.Sacrifice
+// to indicate the sacrificed permanent was a creature. Used for "whenever you
+// sacrifice another creature" triggers.
+type EventSacrificedPermanentIsCreature struct{}
+
+func (EventSacrificedPermanentIsCreature) CheckTriggerCond(evt *GameEvent, _ GameReader, _, _ uuid.UUID) bool {
+	return evt.Flag
+}
+
 // EventSourceNotSelf checks evt.SourceID != sourceID ("another" creature).
 type EventSourceNotSelf struct{}
 
@@ -61,21 +78,33 @@ func (EventSourceNotSelf) CheckTriggerCond(evt *GameEvent, _ GameReader, sourceI
 }
 
 // EventSourceControlledByController checks that the permanent referenced by
-// evt.SourceID is controlled by the trigger's controller.
+// evt.SourceID is controlled by the trigger's controller. For events fired
+// after the permanent has left the battlefield (e.g. EvtCreatureDied), it
+// falls back to the LKI snapshot recorded by RemoveFromBattlefield.
 type EventSourceControlledByController struct{}
 
 func (EventSourceControlledByController) CheckTriggerCond(evt *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
-	perm := g.FindPermanent(evt.SourceID)
-	return perm != nil && perm.Controller == controllerID
+	game, ok := g.(*Game)
+	if !ok {
+		return false
+	}
+	view := game.LookupObject(evt.SourceID)
+	return view != nil && view.ViewController() == controllerID
 }
 
 // EventSourceControlledByOpponent checks that the permanent referenced by
-// evt.SourceID is NOT controlled by the trigger's controller.
+// evt.SourceID is NOT controlled by the trigger's controller. For events
+// fired after the permanent has left the battlefield (e.g. EvtCreatureDied),
+// it falls back to the LKI snapshot.
 type EventSourceControlledByOpponent struct{}
 
 func (EventSourceControlledByOpponent) CheckTriggerCond(evt *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
-	perm := g.FindPermanent(evt.SourceID)
-	return perm != nil && perm.Controller != controllerID
+	game, ok := g.(*Game)
+	if !ok {
+		return false
+	}
+	view := game.LookupObject(evt.SourceID)
+	return view != nil && view.ViewController() != controllerID
 }
 
 // EventSourceHasType checks that the permanent at evt.SourceID has a card type.
@@ -84,8 +113,15 @@ type EventSourceHasType struct {
 }
 
 func (c EventSourceHasType) CheckTriggerCond(evt *GameEvent, g GameReader, _, _ uuid.UUID) bool {
-	perm := g.FindPermanent(evt.SourceID)
-	return perm != nil && perm.HasType(c.Type)
+	if perm := g.FindPermanent(evt.SourceID); perm != nil {
+		return perm.HasType(c.Type)
+	}
+	if game, ok := g.(*Game); ok {
+		if lki := game.LKI(evt.SourceID); lki != nil {
+			return lki.HasType(c.Type)
+		}
+	}
+	return false
 }
 
 // EventSourceHasSubType checks that the permanent at evt.SourceID has a subtype.
@@ -94,8 +130,15 @@ type EventSourceHasSubType struct {
 }
 
 func (c EventSourceHasSubType) CheckTriggerCond(evt *GameEvent, g GameReader, _, _ uuid.UUID) bool {
-	perm := g.FindPermanent(evt.SourceID)
-	return perm != nil && perm.HasSubType(c.SubType)
+	if perm := g.FindPermanent(evt.SourceID); perm != nil {
+		return perm.HasSubType(c.SubType)
+	}
+	if game, ok := g.(*Game); ok {
+		if lki := game.LKI(evt.SourceID); lki != nil {
+			return lki.HasSubType(c.SubType)
+		}
+	}
+	return false
 }
 
 // EventTargetHasSubType checks that the permanent at evt.TargetID has a subtype.
@@ -116,6 +159,50 @@ type EventSourceMatchesPermanentFilter struct {
 func (c EventSourceMatchesPermanentFilter) CheckTriggerCond(evt *GameEvent, g GameReader, _, _ uuid.UUID) bool {
 	perm := g.FindPermanent(evt.SourceID)
 	return perm != nil && c.Filter.Match(perm, g.(*Game))
+}
+
+// EventSourceWasOfType checks the type of an event's source object via the
+// unified LKIView, transparently consulting either the live permanent or
+// the LKI snapshot (CR 603.6c / 603.10). Used by leave-/dies-triggers
+// fired on EvtZoneChange where the permanent may already be gone from the
+// battlefield, and equally usable for ETB triggers where the source is
+// still live.
+type EventSourceWasOfType struct {
+	Type CardType
+}
+
+func (c EventSourceWasOfType) CheckTriggerCond(evt *GameEvent, g GameReader, _, _ uuid.UUID) bool {
+	game, ok := g.(*Game)
+	if !ok {
+		return false
+	}
+	view := game.LookupObject(evt.SourceID)
+	if view == nil {
+		return false
+	}
+	return view.ViewHasType(c.Type)
+}
+
+// EventZoneChangeMatches checks that an EvtZoneChange event's FromZone and
+// ToZone match. Pass ZoneAny in either field to skip that side of the check
+// — useful for "when ~ leaves the battlefield" (To=ZoneAny) and "when ~
+// enters the battlefield" (From=ZoneAny) triggers (CR 603.6c, 603.6d).
+//
+// Per CR 603.10 a single zone change is one event, so any leaves-/enters-
+// trigger can be expressed as a ZoneChangeMatches over EvtZoneChange.
+type EventZoneChangeMatches struct {
+	From Zone // ZoneAny to skip the source check
+	To   Zone // ZoneAny to skip the destination check
+}
+
+func (c EventZoneChangeMatches) CheckTriggerCond(evt *GameEvent, _ GameReader, _, _ uuid.UUID) bool {
+	if c.From != ZoneAny && evt.FromZone != c.From {
+		return false
+	}
+	if c.To != ZoneAny && evt.ToZone != c.To {
+		return false
+	}
+	return true
 }
 
 // SourceIsAttachedToEventSource checks that the source permanent is attached
@@ -185,6 +272,20 @@ type EventFlagIsFalse struct{}
 
 func (EventFlagIsFalse) CheckTriggerCond(evt *GameEvent, _ GameReader, _, _ uuid.UUID) bool {
 	return !evt.Flag
+}
+
+// ResolvingSpellCastFromZone is true when the spell currently resolving was
+// cast from the named zone (CR 601.2a). For ETB triggers on a permanent
+// entering the battlefield as a result of casting it, this checks the zone
+// the spell was cast from — e.g. ResolvingSpellCastFromZone{Zone: ZoneHand}
+// implements "if you cast it from your hand". Returns false outside of spell
+// resolution (abilities and other paths).
+type ResolvingSpellCastFromZone struct {
+	Zone Zone
+}
+
+func (c ResolvingSpellCastFromZone) CheckTriggerCond(_ *GameEvent, g GameReader, _, _ uuid.UUID) bool {
+	return g.ResolvingCastZone() == c.Zone
 }
 
 // ---------------------------------------------------------------------------
@@ -381,6 +482,61 @@ func (EventSourceIsSelfDamageToOpponent) CheckTriggerCond(evt *GameEvent, g Game
 	}
 	p := g.GetPlayer(evt.TargetID)
 	return p != nil && p.PlayerID() != controllerID
+}
+
+// EventTargetIsPlayer checks the event's TargetID identifies a player.
+type EventTargetIsPlayer struct{}
+
+func (EventTargetIsPlayer) CheckTriggerCond(evt *GameEvent, g GameReader, _, _ uuid.UUID) bool {
+	return g.GetPlayer(evt.TargetID) != nil
+}
+
+// EventIsCombatDamage checks evt.Flag, which is set by combat damage events.
+type EventIsCombatDamage struct{}
+
+func (EventIsCombatDamage) CheckTriggerCond(evt *GameEvent, _ GameReader, _, _ uuid.UUID) bool {
+	return evt.Flag
+}
+
+// EventSourceIsAttachedTo checks that the source is attached to the event's
+// SourceID (used for "enchanted creature deals damage" patterns where the
+// source of the damage event must be the permanent the aura is attached to).
+type EventSourceIsAttachedTo struct{}
+
+func (EventSourceIsAttachedTo) CheckTriggerCond(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+	src := g.FindPermanent(sourceID)
+	if src == nil || !src.IsAttached() {
+		return false
+	}
+	return evt.SourceID == src.AttachedTo
+}
+
+// ---------------------------------------------------------------------------
+// Becomes-target predicates (CR 603.6c, 119.5)
+// ---------------------------------------------------------------------------
+
+// EventTargetIsSelfFirstTimeThisTurn checks that the event's TargetID is the
+// source permanent AND the source has been targeted exactly once this turn
+// (i.e. this is the first time it has become the target this turn). Used for
+// Kira, Great Glass-Spinner ("the first time each turn").
+type EventTargetIsSelfFirstTimeThisTurn struct{}
+
+func (EventTargetIsSelfFirstTimeThisTurn) CheckTriggerCond(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+	if evt.TargetID != sourceID {
+		return false
+	}
+	// fireBecomesTargetEvents increments the counter BEFORE firing the event,
+	// so "first time" means the counter is exactly 1 when this condition runs.
+	return g.TimesTargetedThisTurn(sourceID) == 1
+}
+
+// EventBecomesTargetSourceIsNotSelf checks that the event was caused by a
+// spell or ability whose source is not the trigger's own source (so a creature
+// doesn't trigger when it targets itself with its own ability).
+type EventBecomesTargetSourceIsNotSelf struct{}
+
+func (EventBecomesTargetSourceIsNotSelf) CheckTriggerCond(evt *GameEvent, _ GameReader, sourceID, _ uuid.UUID) bool {
+	return evt.SourceID != sourceID
 }
 
 // ---------------------------------------------------------------------------

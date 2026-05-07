@@ -255,7 +255,7 @@ g.AssertLife(gametest.PlayerB, 17)
 
 **Counters:** `AddCounters`, `RemoveCountersFromSource`
 
-**Permanents:** `TapTarget`, `UntapTarget`, `UntapSource`, `TapOrUntapTarget`, `TapAllLands`, `TapAttachedCreature`
+**Permanents:** `Tap`, `UntapTarget`, `UntapSource`, `TapOrUntapTarget`, `TapAllLands`, `TapAttachedCreature`
 
 **Misc:** `AddMana`, `AddAnyMana`, `CreateToken`, `CloneTarget`, `CopySpellOnStack`, `AttachToTarget`, `ControlChangeTarget`, `ExtraTurn`, `ChangeColorEffect`, `CounterSpell`, `CounterSpellIfColor`, `CounterSpellIfXMeetsCMC`, `RegenerateSource`, `RegenerateTarget`, `ChooseColor`, `DestroyTargetAtEndOfTurn`, `ReplaceKeywordEffect`, `CompositeEffects`
 
@@ -370,7 +370,7 @@ mage.DealDamageToPlayers(mage.Fixed(2), mage.SelectAttachedController())  // Psy
 // Prodigal Sorcerer: {T}: Deal 1 damage to any target
 mage.WithActivatedAbility(
     mage.DealDamage(mage.Fixed(1)),           // effect
-    mage.TapSourceCost(),                     // cost
+    mage.Tap(),                               // cost (taps source)
     mage.WithTarget(mage.TargetAnyTarget()),  // target
 )
 ```
@@ -381,7 +381,7 @@ mage.WithActivatedAbility(
 
 **Mana:** `ManaCostOf("{1}{R}")`, `GenericCost(n)`, `XManaCost()`
 
-**Tap:** `TapSourceCost()`
+**Tap:** `Tap()` (also usable as effect)
 
 **Sacrifice:** `SacrificeSourceCost()`, `SacrificeCreatureCost()`, `SacrificeArtifactCost()`
 
@@ -410,7 +410,7 @@ WithControlledSinceTurnStart()       // no haste
 mage.WithActivatedAbility(
     mage.DestroyTargetPermanent(),
     mage.ManaCostOf("{W}{W}"),
-    mage.WithCost(mage.TapSourceCost()),
+    mage.WithCost(mage.Tap()),
     mage.WithTarget(mage.TargetPermanent(mage.HasColorFilter(core.Black))),
 )
 ```

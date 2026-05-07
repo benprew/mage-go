@@ -14,9 +14,9 @@ package gametest
 //   - 201.4b-g DFC/split/meld/adventure frames (GAP: not implemented)
 //   - 201.5   self-reference (GAP: requires very specific effect wording)
 //   - 202.1a  Phyrexian mana life-payment (GAP: {W/P} symbol not parsed)
-//   - 202.2d  hybrid symbol color/mana-value (GAP: {W/U} not parsed)
 //   - 202.2e  color indicator distinct field (GAP: WithColorIndicator absent)
-//   - 202.3e-g X/hybrid/Phyrexian mana value (GAP: CMC for those symbols unverified)
+//   - 202.3e/g X/Phyrexian mana value (GAP: CMC for those symbols unverified;
+//     hybrid is covered in hybrid_mana_test.go)
 //   - 205.2a  battle/conspiracy/dungeon/kindred/... card types (GAP: not defined)
 //   - 205.3b  Time Lord two-word type (GAP: parsing)
 //   - 205.3d  inapplicable subtype validation (GAP: engine silently allows)

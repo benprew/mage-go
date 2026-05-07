@@ -38,6 +38,67 @@ func GrantProtectionToAttached(color Color, at AttachType) ContinuousEffect {
 	})
 }
 
+// PreventAttachedFromActivatingNonManaAbilities creates a continuous effect that
+// stops the attached permanent's non-mana activated abilities from being
+// activated. CR 605 mana abilities are unaffected (they bypass priority and the
+// stack, and aren't checked through SimpleActivatedAbility.CanActivate).
+// Used by Lawmage's Binding and similar "and its activated abilities can't be
+// activated" auras.
+func PreventAttachedFromActivatingNonManaAbilities(at AttachType) ContinuousEffect {
+	return AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
+		g.effects.GrantAttr(target.ID(), AttrCantActivateNonManaAbilities)
+		return nil
+	})
+}
+
+// AssignsDamageEqualToToughnessForCreaturesYouControl grants
+// AttrAssignsDamageEqualToToughness to each creature controlled by the
+// source's controller. Damage assignment in combat then uses the creature's
+// toughness instead of power. Used by Assault Formation
+// ("Each creature you control assigns combat damage equal to its toughness
+// rather than its power"). Does not change the creature's power.
+func AssignsDamageEqualToToughnessForCreaturesYouControl() ContinuousEffect {
+	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+		src := g.FindPermanent(sourceID)
+		if src == nil {
+			return nil
+		}
+		for _, p := range g.battlefield {
+			if !p.HasType(TypeCreature) || p.Controller != src.Controller {
+				continue
+			}
+			g.effects.GrantAttr(p.ID(), AttrAssignsDamageEqualToToughness)
+		}
+		return nil
+	})
+}
+
+// AssignsDamageEqualToToughnessSelf grants AttrAssignsDamageEqualToToughness
+// to the source permanent itself. Used by Doran the Siege Tower-style cards
+// where only the source assigns toughness instead of power.
+func AssignsDamageEqualToToughnessSelf() ContinuousEffect {
+	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+		g.effects.GrantAttr(sourceID, AttrAssignsDamageEqualToToughness)
+		return nil
+	})
+}
+
+// PreventActivationsOfMatching creates a continuous effect that stops non-mana
+// activated abilities from being activated for permanents matching filter.
+// Used by static effects like "Activated abilities of artifacts your opponents
+// control can't be activated" — pass an opponent-scoped filter.
+func PreventActivationsOfMatching(filter PermanentFilter) ContinuousEffect {
+	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+		for _, p := range g.battlefield {
+			if !filter.Match(p, g) {
+				continue
+			}
+			g.effects.GrantAttr(p.ID(), AttrCantActivateNonManaAbilities)
+		}
+		return nil
+	})
+}
+
 // RemoveKeywordFromAttached creates a continuous effect removing a keyword from the attached creature.
 func RemoveKeywordFromAttached(kw Keyword, at AttachType) ContinuousEffect {
 	return AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
@@ -85,6 +146,28 @@ func ColorToBasicLandType(c Color) string {
 	default:
 		return ""
 	}
+}
+
+// GrantTriggeredAbilityToAttached grants a triggered ability to the permanent
+// the source aura/equipment is attached to. The trigger fires from the
+// attached permanent (its source/controller), not from the aura — so e.g.
+// Curse of Bloodletting's "If a source would deal damage to enchanted player,
+// it deals double that damage instead" is registered with the enchanted
+// player's controller as the trigger source.
+//
+// Use this for auras like the Curse cycle and Stalwart Aven, where Oracle
+// text grants an ability "to enchanted creature" or "to enchanted player".
+func GrantTriggeredAbilityToAttached(eventType EventType, optional bool, cond TriggerConditionData, effects ...Effect) ContinuousEffect {
+	return AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
+		trig := NewTriggered(eventType, optional, effects...)
+		trig.source = target.ID()
+		trig.controller = target.Controller
+		if cond != nil {
+			trig.SetConditionData(cond)
+		}
+		target.RuntimeAbilities = append(target.RuntimeAbilities, &grantedByEffect{trig})
+		return nil
+	})
 }
 
 // GrantActivatedAbilityToAttached grants an activated ability to the attached creature.
@@ -281,11 +364,26 @@ func GrantActivatedAbilityToAll(effect Effect, cost Cost, filter PermanentFilter
 // GrantTriggeredAbilityToAll grants a triggered ability to all permanents matching filter.
 // Each permanent gets its own copy of the triggered ability, allowing individual trigger
 // ordering (unlike a single batch trigger). The trigger is constructed from the provided
-// event type, optional flag, condition, and effects.
+// event type, optional flag, condition, and effects. The source permanent itself is
+// excluded (typical "other creatures you control" lord behavior); use
+// GrantTriggeredAbilityToAllIncludingSource for "creatures you control" effects that
+// include the source itself (e.g. Kira, Great Glass-Spinner).
 func GrantTriggeredAbilityToAll(eventType EventType, optional bool, cond TriggerConditionData, filter PermanentFilter, effects ...Effect) ContinuousEffect {
+	return grantTriggeredAbilityToAll(eventType, optional, cond, filter, false, effects...)
+}
+
+// GrantTriggeredAbilityToAllIncludingSource is like GrantTriggeredAbilityToAll but
+// matches the source permanent as well, when filter accepts it. Used by
+// "creatures you control" lord-style triggers where Oracle text clearly includes
+// the source itself.
+func GrantTriggeredAbilityToAllIncludingSource(eventType EventType, optional bool, cond TriggerConditionData, filter PermanentFilter, effects ...Effect) ContinuousEffect {
+	return grantTriggeredAbilityToAll(eventType, optional, cond, filter, true, effects...)
+}
+
+func grantTriggeredAbilityToAll(eventType EventType, optional bool, cond TriggerConditionData, filter PermanentFilter, includeSource bool, effects ...Effect) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
 		for _, p := range g.battlefield {
-			if p.ID() == sourceID {
+			if !includeSource && p.ID() == sourceID {
 				continue
 			}
 			if !filter.Match(p, g) {
@@ -687,6 +785,147 @@ func AnimateLands(filter PermanentFilter, power, toughness int) ContinuousEffect
 	})
 }
 
+// AnimateLandOptions configures a "becomes a creature" effect on a land.
+// Per CR 305.7 / 614 layers, an animate effect makes the land also be a
+// creature with the specified P/T while keeping its land types/abilities
+// intact. SubTypes are added on top of existing subtypes (so a Forest that
+// becomes an Elemental is still a Forest), Colors are added on top of
+// existing colors, and Keywords are granted at LayerAbility.
+type AnimateLandOptions struct {
+	Power     int
+	Toughness int
+	SubTypes  []string
+	Colors    []Color
+	Keywords  []Attr
+}
+
+// applyAnimateLand applies the animate-land mutation to a single permanent.
+// The caller is responsible for choosing the layer; this function performs
+// the layer-4 (type), layer-5 (color), layer-6 (keyword), and layer-7b
+// (P/T) mutations together. Each Apply() cycle resets BasePTOverride,
+// SubTypeOverride, ColorOverride, granted keyword attrs, and granted
+// runtime abilities, so we recompute them from the card baseline here.
+func applyAnimateLand(g *Game, target *Permanent, opts AnimateLandOptions) {
+	g.effects.GrantAttr(target.ID(), AttrIsCreature)
+	g.effects.GrantAttr(target.ID(), AttrCanAttack)
+	g.effects.GrantAttr(target.ID(), AttrCanBlock)
+	g.effects.GrantAttr(target.ID(), AttrHasPowerToughness)
+	target.BasePTOverride = &[2]int{opts.Power, opts.Toughness}
+
+	if len(opts.SubTypes) > 0 {
+		base := target.Card.SubTypes()
+		merged := make([]string, 0, len(base)+len(opts.SubTypes))
+		seen := map[string]bool{}
+		for _, s := range base {
+			if !seen[s] {
+				merged = append(merged, s)
+				seen[s] = true
+			}
+		}
+		if len(target.SubTypeOverride) > 0 {
+			for _, s := range target.SubTypeOverride {
+				if !seen[s] {
+					merged = append(merged, s)
+					seen[s] = true
+				}
+			}
+		}
+		for _, s := range opts.SubTypes {
+			if !seen[s] {
+				merged = append(merged, s)
+				seen[s] = true
+			}
+		}
+		target.SubTypeOverride = merged
+	}
+
+	if len(opts.Colors) > 0 {
+		var existing []Color
+		if target.ColorOverride != nil {
+			existing = *target.ColorOverride
+		} else {
+			existing = target.Card.ManaCost().Colors()
+		}
+		merged := make([]Color, 0, len(existing)+len(opts.Colors))
+		seen := map[Color]bool{}
+		for _, c := range existing {
+			if !seen[c] {
+				merged = append(merged, c)
+				seen[c] = true
+			}
+		}
+		for _, c := range opts.Colors {
+			if !seen[c] {
+				merged = append(merged, c)
+				seen[c] = true
+			}
+		}
+		target.ColorOverride = &merged
+	}
+
+	for _, kw := range opts.Keywords {
+		g.effects.GrantAttr(target.ID(), kw)
+	}
+}
+
+// AnimateTargetLand animates a specific land into a creature for the given
+// duration (e.g. EndOfTurn for Elemental Uprising). The land remains a land
+// (its land subtypes and mana abilities are preserved). Implemented at
+// LayerType so type, subtype, color, keyword, and P/T mutations are all
+// established in one effect-manager pass.
+func AnimateTargetLand(targetID uuid.UUID, opts AnimateLandOptions, duration Duration) ContinuousEffect {
+	return TargetEffect(LayerType, duration, targetID, func(g *Game, target *Permanent) error {
+		applyAnimateLand(g, target, opts)
+		return nil
+	})
+}
+
+// AnimateLandWhileSourceOnBattlefield animates a specific land for as long as
+// the source permanent (the registered source of the effect) remains on the
+// battlefield. Used for Awakener Druid: "Target Forest becomes a 4/5 green
+// Treefolk creature for as long as Awakener Druid remains on the battlefield."
+//
+// The source ID is supplied by the effect manager when the effect is
+// registered (via SetSourceID); the target ID is the captured land ID at
+// the time the ETB effect resolves.
+func AnimateLandWhileSourceOnBattlefield(targetID uuid.UUID, opts AnimateLandOptions) ContinuousEffect {
+	return FuncContinuousEffect(LayerType, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+		target := g.FindPermanent(targetID)
+		if target == nil {
+			return nil
+		}
+		applyAnimateLand(g, target, opts)
+		return nil
+	})
+}
+
+// AnimateAttachedLand animates the permanent this aura is attached to into a
+// creature for as long as the aura remains attached. Used by Vastwood
+// Zendikon ("Enchant land. Enchanted land is a 6/4 green Elemental creature
+// with trample. It's still a land."). The effect is gated by SourceAttached
+// so that detaching/destroying the aura immediately reverts the land.
+func AnimateAttachedLand(opts AnimateLandOptions) ContinuousEffect {
+	return AttachedEffect(LayerType, func(g *Game, source, target *Permanent) error {
+		applyAnimateLand(g, target, opts)
+		return nil
+	})
+}
+
+// GrantManaAbilityToAttached grants an additional mana ability to the
+// permanent this aura is attached to. Used by New Horizons ("Enchanted land
+// has '{T}: Add {G}' as additional mana ability."). The granted ability is
+// wrapped via WrapGrantedAbility so it is cleared and re-installed on each
+// Apply() cycle.
+func GrantManaAbilityToAttached(productions ...ManaProduction) ContinuousEffect {
+	return AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
+		ma := NewMultiManaAbility(productions...)
+		ma.SetSource(target.ID())
+		ma.SetController(target.Controller)
+		target.RuntimeAbilities = append(target.RuntimeAbilities, WrapGrantedAbility(ma))
+		return nil
+	})
+}
+
 // ---------------------------------------------------------------------------
 // Animate artifact effects (P/T = mana value)
 // ---------------------------------------------------------------------------
@@ -1029,4 +1268,101 @@ func extractKeywords(p *Permanent) []Keyword {
 		}
 	}
 	return keywords
+}
+
+// ---------------------------------------------------------------------------
+// Type-granting continuous effects (CR 614 layer 4) and color-changing
+// continuous effects (CR 614 layer 5).
+// ---------------------------------------------------------------------------
+
+// addSubTypeAddition appends a subtype to a permanent's additive subtype slice
+// without duplicating one already present (in either base subtypes, an
+// override, or another addition).
+func addSubTypeAddition(p *Permanent, subtype string) {
+	if subtype == "" {
+		return
+	}
+	if p.HasSubType(subtype) {
+		return
+	}
+	p.SubTypeAdditions = append(p.SubTypeAdditions, subtype)
+}
+
+// GrantSubTypeToControlled grants a subtype to all permanents controlled by
+// the source's controller that match the given filter (e.g. Allosaurus
+// Shepherd's static "All creatures you control that are Elves are also
+// Dinosaurs in addition to their other types"). Operates at LayerType.
+func GrantSubTypeToControlled(subtype string, filter PermanentFilter) ContinuousEffect {
+	return FuncContinuousEffect(LayerType, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+		src := g.FindPermanent(sourceID)
+		if src == nil {
+			return nil
+		}
+		for _, p := range g.battlefield {
+			if p.Controller != src.Controller {
+				continue
+			}
+			if !filter.Match(p, g) {
+				continue
+			}
+			addSubTypeAddition(p, subtype)
+		}
+		return nil
+	})
+}
+
+// GrantSubTypeToAll grants a subtype to all permanents matching the filter
+// (no controller restriction). Operates at LayerType.
+func GrantSubTypeToAll(subtype string, filter PermanentFilter) ContinuousEffect {
+	return FuncContinuousEffect(LayerType, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
+		for _, p := range g.FilterBattlefield(filter) {
+			addSubTypeAddition(p, subtype)
+		}
+		return nil
+	})
+}
+
+// GrantSubTypeToTarget grants a subtype to a specific permanent for the given
+// duration ("in addition to its other types"). Operates at LayerType.
+func GrantSubTypeToTarget(targetID uuid.UUID, subtype string, duration Duration) ContinuousEffect {
+	return TargetEffect(LayerType, duration, targetID, func(g *Game, target *Permanent) error {
+		addSubTypeAddition(target, subtype)
+		return nil
+	})
+}
+
+// BecomesSubType replaces the (creature) subtypes of a specific permanent with
+// the given subtype until the given duration expires (e.g. Wishful Merfolk
+// "becomes a Human until end of turn"). The card retains all its types
+// (creature/etc.) but its printed subtypes are overridden. Operates at
+// LayerType.
+func BecomesSubType(targetID uuid.UUID, subtype string, duration Duration) ContinuousEffect {
+	return TargetEffect(LayerType, duration, targetID, func(g *Game, target *Permanent) error {
+		target.SubTypeOverride = []string{subtype}
+		target.SubTypeAdditions = nil
+		return nil
+	})
+}
+
+// BecomesColor replaces the colors of a specific permanent with the given
+// color until the given duration expires (e.g. Scuttlemutt "Target creature
+// becomes the chosen color until end of turn"). Operates at LayerColor.
+func BecomesColor(targetID uuid.UUID, color Color, duration Duration) ContinuousEffect {
+	return TargetEffect(LayerColor, duration, targetID, func(g *Game, target *Permanent) error {
+		colors := []Color{color}
+		target.ColorOverride = &colors
+		return nil
+	})
+}
+
+// BecomesColors is the multi-color variant of BecomesColor.
+func BecomesColors(targetID uuid.UUID, colors []Color, duration Duration) ContinuousEffect {
+	cs := make([]Color, len(colors))
+	copy(cs, colors)
+	return TargetEffect(LayerColor, duration, targetID, func(g *Game, target *Permanent) error {
+		out := make([]Color, len(cs))
+		copy(out, cs)
+		target.ColorOverride = &out
+		return nil
+	})
 }

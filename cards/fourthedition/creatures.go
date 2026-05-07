@@ -1,10 +1,55 @@
 package fourthedition
 
 import (
+	"math/rand"
+
 	"github.com/google/uuid"
 
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/dsl"
 )
+
+// stoneGiantTarget targets a creature its controller controls whose toughness
+// is strictly less than the source's current power. It captures source state
+// at Possible() time, which is the closest the engine's filter API allows for
+// "less than this creature's power" (filters can't see the source).
+type stoneGiantTarget struct {
+	chosen []uuid.UUID
+}
+
+func (t *stoneGiantTarget) Min() int            { return 1 }
+func (t *stoneGiantTarget) Max() int            { return 1 }
+func (t *stoneGiantTarget) Chosen() []uuid.UUID { return t.chosen }
+func (t *stoneGiantTarget) IsChosen() bool      { return len(t.chosen) > 0 }
+func (t *stoneGiantTarget) Reset()              { t.chosen = nil }
+
+func (t *stoneGiantTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+	src := g.FindPermanent(sourceCard.ID())
+	if src == nil {
+		return nil
+	}
+	srcPower := src.CurrentPower(g)
+	var result []uuid.UUID
+	for _, p := range g.AllBattlefield() {
+		if !p.HasType(TypeCreature) {
+			continue
+		}
+		if p.Controller != controller {
+			continue
+		}
+		if !p.CanBeTargetedBy(sourceCard, controller, g) {
+			continue
+		}
+		if p.CurrentToughness(g) < srcPower {
+			result = append(result, p.ID())
+		}
+	}
+	return result
+}
+
+func (t *stoneGiantTarget) Choose(_ uuid.UUID, _ Card, _ *Game, chosen []uuid.UUID) error {
+	t.chosen = chosen
+	return nil
+}
 
 func init() {
 	registerCreatures()
@@ -19,10 +64,25 @@ func registerCreatures() {
 	// 2+*/2+*
 	// Trample
 	// During your turn, Angry Mob's power and toughness are each equal to 2 plus the number of Swamps your opponents control. During turns other than yours, Angry Mob's power and toughness are each 2.
-	// TODO: implement — needs variable P/T based on turn ownership
 	Register("Angry Mob", func() Card {
 		return NewCreature("Angry Mob", "{2}{W}{W}", 0, 0,
 			WithSubTypes("Human"),
+			WithKeyword(Trample),
+			WithStaticAbility(
+				FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+					src := g.FindPermanent(sourceID)
+					if src == nil {
+						return nil
+					}
+					bonus := 2
+					ap := g.ActivePlayerObj()
+					if ap != nil && ap.PlayerID() == src.Controller {
+						bonus += g.CountBattlefield(And(NotControlledBy(src.Controller), HasSubType("Swamp")))
+					}
+					src.BoostPT(bonus, bonus)
+					return nil
+				}),
+			),
 		)
 	})
 
@@ -50,7 +110,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				AddMana(Colorless, 3),
 				ManaCostOf("{U}"),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 			),
 		)
 	})
@@ -117,10 +177,40 @@ func registerCreatures() {
 	// Creature — Human Minion
 	// 2/1
 	// {B}{B}{B}, {T}: Target opponent reveals their hand and discards a creature card at random. Activate only during your turn.
-	// TODO: implement — needs hand reveal + creature-specific random discard
 	Register("Rag Man", func() Card {
 		return NewCreature("Rag Man", "{2}{B}{B}", 2, 1,
 			WithSubTypes("Human", "Minion"),
+			WithActivatedAbility(
+				FuncEffect(
+					"target opponent reveals their hand and discards a creature card at random",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						p := g.GetPlayer(targets[0])
+						if p == nil {
+							return nil
+						}
+						var creatures []Card
+						for _, c := range p.Hand() {
+							if c.HasType(TypeCreature) {
+								creatures = append(creatures, c)
+							}
+						}
+						if len(creatures) == 0 {
+							return nil
+						}
+						chosen := creatures[rand.Intn(len(creatures))]
+						p.DiscardCard(chosen.ID())
+						return nil
+					},
+				),
+				ManaCostOf("{B}{B}{B}"),
+				WithCost(Tap()),
+				WithTarget(TargetOpponent()),
+				WithYourTurnOnly(),
+			),
 		)
 	})
 
@@ -194,7 +284,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				GrantKeyword(Mountainwalk).Targeting(ToTarget()),
 				ManaCostOf("{1}{R}{R}"),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -206,10 +296,14 @@ func registerCreatures() {
 	// Trample
 	// Goblin Rock Sled doesn't untap during your untap step if it attacked during your last turn.
 	// Goblin Rock Sled can't attack unless defending player controls a Mountain.
-	// TODO: implement — needs conditional untap + defending player land check
 	Register("Goblin Rock Sled", func() Card {
 		return NewCreature("Goblin Rock Sled", "{1}{R}", 3, 1,
 			WithSubTypes("Goblin"),
+			WithKeyword(Trample),
+			WithStaticAbility(
+				PreventFromAttackingIfDefendingPlayerControls(HasSubType("Mountain")),
+			),
+			WithAbility(AttacksTrigger(Stun().Targeting(ToSource()), false)),
 		)
 	})
 
@@ -228,10 +322,34 @@ func registerCreatures() {
 	// Creature — Giant
 	// 3/4
 	// {T}: Target creature you control with toughness less than Stone Giant's power gains flying until end of turn. Destroy that creature at the beginning of the next end step.
-	// TODO: implement — needs dynamic toughness-vs-power target filter
 	Register("Stone Giant", func() Card {
 		return NewCreature("Stone Giant", "{2}{R}{R}", 3, 4,
 			WithSubTypes("Giant"),
+			WithActivatedAbility(
+				FuncEffect(
+					"target creature gains flying until end of turn; destroy it at the next end step",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						kw := TemporaryKeyword(targets[0], Flying)
+						kw.SetSourceID(sourceID)
+						g.AddContinuousEffect(kw)
+						g.ApplyContinuousEffects()
+						g.RegisterDelayedTrigger(&DelayedTrigger{
+							EventType:  EvtEndStep,
+							TargetID:   targets[0],
+							Effects:    []Effect{DestroyTarget()},
+							SourceID:   sourceID,
+							Controller: controller,
+						})
+						return nil
+					},
+				),
+				Tap(),
+				WithTarget(&stoneGiantTarget{}),
+			),
 		)
 	})
 
@@ -253,10 +371,52 @@ func registerCreatures() {
 	// */*
 	// As long as Gaea's Liege isn't attacking, its power and toughness are each equal to the number of Forests you control. As long as Gaea's Liege is attacking, its power and toughness are each equal to the number of Forests defending player controls.
 	// {T}: Target land becomes a Forest until Gaea's Liege leaves the battlefield.
-	// TODO: implement — needs variable P/T based on attacking state + land type change
 	Register("Gaea's Liege", func() Card {
 		return NewCreature("Gaea's Liege", "{3}{G}{G}{G}", 0, 0,
 			WithSubTypes("Avatar"),
+			WithStaticAbility(
+				FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+					src := g.FindPermanent(sourceID)
+					if src == nil {
+						return nil
+					}
+					var who PermanentFilter
+					if g.IsAttackingInCombat(sourceID) {
+						who = NotControlledBy(src.Controller)
+					} else {
+						who = ControlledBy(src.Controller)
+					}
+					count := g.CountBattlefield(And(who, HasSubType("Forest")))
+					src.BoostPT(count, count)
+					return nil
+				}),
+			),
+			WithActivatedAbility(
+				FuncEffect(
+					"target land becomes a Forest until this creature leaves the battlefield",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						targetID := targets[0]
+						ce := FuncContinuousEffect(LayerType, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
+							perm := g.FindPermanent(targetID)
+							if perm == nil {
+								return nil
+							}
+							perm.SubTypeOverride = []string{"Forest"}
+							return nil
+						})
+						ce.SetSourceID(sourceID)
+						g.AddContinuousEffect(ce)
+						g.ApplyContinuousEffects()
+						return nil
+					},
+				),
+				Tap(),
+				WithTarget(TargetPermanent(IsLand)),
+			),
 		)
 	})
 
@@ -275,10 +435,11 @@ func registerCreatures() {
 	// Creature — Snake
 	// 1/2
 	// Whenever Marsh Viper deals damage to a player, that player gets two poison counters.
-	// TODO: implement — needs poison counter support
 	Register("Marsh Viper", func() Card {
 		return NewCreature("Marsh Viper", "{3}{G}", 1, 2,
 			WithSubTypes("Snake"),
+			WithAbility(NewTriggered(EvtDamageDealt, false, PoisonTargetPlayer(2)).
+				SetConditionData(EventSourceIsSelfDamageToPlayer{})),
 		)
 	})
 

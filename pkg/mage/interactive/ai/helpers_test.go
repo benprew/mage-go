@@ -5,6 +5,7 @@ import (
 
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
 )
 
 // makePerm creates a creature permanent with cleared summoning sickness.
@@ -23,3 +24,13 @@ func makeGame() (*mage.Game, *mage.BasePlayer, *mage.BasePlayer) {
 	g := mage.NewGame(pa, pb)
 	return g, pa, pb
 }
+
+// dummyStrategy is a no-op AIStrategy for tests that need to construct an
+// AIPlayer but don't care about decisions.
+type dummyStrategy struct{}
+
+func (s *dummyStrategy) PriorityAction(_ mage.Player, _ *mage.Game, _ int, _ bool) interactive.PriorityAction {
+	return interactive.PriorityAction{Type: interactive.ActionPass}
+}
+func (s *dummyStrategy) Attackers(_ mage.Player, _ *mage.Game) []uuid.UUID           { return nil }
+func (s *dummyStrategy) Blockers(_ mage.Player, _ *mage.Game) []mage.BlockAssignment { return nil }

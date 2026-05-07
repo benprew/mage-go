@@ -915,7 +915,7 @@ g.<span class="fn">AssertLife</span>(gametest.PlayerB, <span class="hl"><span cl
     </div>
     <div>
       <h3>Permanents</h3>
-      <pre class="tiny"><code><span class="fn">TapTarget</span>()
+      <pre class="tiny"><code><span class="fn">Tap</span>()
 <span class="fn">UntapTarget</span>()
 <span class="fn">UntapSource</span>()
 <span class="fn">TapOrUntapTarget</span>()
@@ -1106,7 +1106,7 @@ mage.<span class="fn">DealDamageToPlayers</span>(mage.<span class="fn">Fixed</sp
   </div>
   <pre class="zoom"><code>mage.<span class="fn">WithActivatedAbility</span>(
     <span class="hl">mage.<span class="fn">DealDamage</span>(mage.<span class="fn">Fixed</span>(<span class="nu">1</span>))</span>,       <span class="cm">// effect</span>
-    <span class="hl">mage.<span class="fn">TapSourceCost</span>()</span>,                 <span class="cm">// cost</span>
+    <span class="hl">mage.<span class="fn">Tap</span>()</span>,                          <span class="cm">// cost (taps source)</span>
     mage.<span class="fn">WithTarget</span>(mage.<span class="fn">TargetAnyTarget</span>()), <span class="cm">// target</span>
 )</code></pre>
   <div data-notes="Effect first, then primary cost, then ability options for additional costs and targeting. The pattern: what does it do, what does it cost, what can you aim at."></div>
@@ -1121,8 +1121,8 @@ mage.<span class="fn">DealDamageToPlayers</span>(mage.<span class="fn">Fixed</sp
 <span class="fn">GenericCost</span>(n)
 <span class="fn">XManaCost</span>()
 
-<span class="cm">// Tap</span>
-<span class="fn">TapSourceCost</span>()
+<span class="cm">// Tap (also usable as effect)</span>
+<span class="fn">Tap</span>()
 
 <span class="cm">// Sacrifice</span>
 <span class="fn">SacrificeSourceCost</span>()
@@ -1147,7 +1147,7 @@ mage.<span class="fn">DealDamageToPlayers</span>(mage.<span class="fn">Fixed</sp
 mage.<span class="fn">WithAdditionalCost</span>(
     mage.<span class="fn">SacrificeCreatureCost</span>())</code></pre>
   </div>
-  <div data-notes="15 cost types. ManaCostOf parses mana strings. TapSourceCost is the {T} symbol. Costs compose — an ability can have ManaCostOf plus TapSourceCost plus SacrificeCreatureCost. WithAdditionalCost is for casting costs."></div>
+  <div data-notes="15 cost types. ManaCostOf parses mana strings. Tap is the {T} symbol when used as a cost. Costs compose — an ability can have ManaCostOf plus Tap plus SacrificeCreatureCost. WithAdditionalCost is for casting costs."></div>
 </div>
 
 <!-- ABILITY OPTIONS -->
@@ -1164,7 +1164,7 @@ mage.<span class="fn">WithAdditionalCost</span>(
 mage.<span class="fn">WithActivatedAbility</span>(
     mage.<span class="fn">DestroyTargetPermanent</span>(),
     mage.<span class="fn">ManaCostOf</span>(<span class="st">"{W}{W}"</span>),
-    <span class="hl">mage.<span class="fn">WithCost</span>(mage.<span class="fn">TapSourceCost</span>())</span>,
+    <span class="hl">mage.<span class="fn">WithCost</span>(mage.<span class="fn">Tap</span>())</span>,
     <span class="hl">mage.<span class="fn">WithTarget</span>(mage.<span class="fn">TargetPermanent</span>(
         mage.<span class="fn">HasColorFilter</span>(core.Black)))</span>,
 )</code></pre>

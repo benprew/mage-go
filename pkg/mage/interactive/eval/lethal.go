@@ -67,6 +67,78 @@ func IsEvasive(perm *mage.Permanent, defenderID uuid.UUID, g *mage.Game) bool {
 	return false
 }
 
+// controllerCanGrantEvasionTo returns the evasion keyword the controller could
+// grant to perm via an activatable ability, or 0 if none.
+//
+// Limitations: this is a heuristic for the lethal short-circuit. It assumes any
+// "TargetCreature" granter can reach perm and that activation cost is payable
+// in isolation. Self-targeting grants (KindSource) only count when the source
+// is perm itself.
+func controllerCanGrantEvasionTo(perm *mage.Permanent, g *mage.Game) core.Attr {
+	controller := perm.Controller
+	for _, src := range g.AllBattlefield() {
+		if src.Controller != controller {
+			continue
+		}
+		for _, ab := range src.RuntimeAbilities {
+			act, ok := mage.UnwrapAbility(ab).(mage.ActivatedAbility)
+			if !ok {
+				continue
+			}
+			if !act.CanActivate(controller, g) {
+				continue
+			}
+			for _, e := range act.Effects() {
+				kw := e.Properties().GrantedKeyword
+				if kw == 0 || !isEvasionGrantUseful(kw) {
+					continue
+				}
+				if len(act.Targets()) == 0 && src.ID() != perm.ID() {
+					continue
+				}
+				return kw
+			}
+		}
+	}
+	return 0
+}
+
+func isEvasionGrantUseful(kw core.Attr) bool {
+	return kw == core.Flying || kw == core.UnblockableKW
+}
+
+// prospectiveUnblockable returns true if perm is not currently evasive but
+// could be granted an evasion keyword that no blocker can answer.
+func prospectiveUnblockable(perm *mage.Permanent, blockers []*mage.Permanent, g *mage.Game) bool {
+	kw := controllerCanGrantEvasionTo(perm, g)
+	if kw == 0 {
+		return false
+	}
+	for _, b := range blockers {
+		switch kw {
+		case core.UnblockableKW:
+			return false
+		case core.Flying:
+			if b.HasKeyword(core.Flying) || b.HasKeyword(core.Reach) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+// isProspectivelyUnblockable is the same check as prospectiveUnblockable but
+// computes the defender's blockers from the game state.
+func isProspectivelyUnblockable(perm *mage.Permanent, defenderID uuid.UUID, g *mage.Game) bool {
+	var blockers []*mage.Permanent
+	for _, b := range g.AllBattlefield() {
+		if b.Controller == defenderID && b.HasType(core.TypeCreature) && !b.Tapped && b.CanDeclareAsBlocker(g) {
+			blockers = append(blockers, b)
+		}
+	}
+	return prospectiveUnblockable(perm, blockers, g)
+}
+
 func estimatePushThroughDamage(g *mage.Game, attackerPlayerID, defenderPlayerID uuid.UUID) (int, []uuid.UUID) {
 	totalDmg := 0
 	var attackerIDs []uuid.UUID
@@ -139,6 +211,12 @@ func estimatePushThroughDamage(g *mage.Game, attackerPlayerID, defenderPlayerID 
 					continue
 				}
 			}
+			totalDmg += pow
+			attackerIDs = append(attackerIDs, perm.ID())
+		} else if prospectiveUnblockable(perm, blockers, g) {
+			// Controller has an activatable ability (e.g. Flying Carpet) that
+			// would make this attacker unblockable against the current defender
+			// board. Treat as evasive for lethal purposes.
 			totalDmg += pow
 			attackerIDs = append(attackerIDs, perm.ID())
 		} else if perm.HasKeyword(core.Trample) {
@@ -241,6 +319,8 @@ func findMinimalLethalSet(g *mage.Game, attackerPlayerID, defenderPlayerID uuid.
 			} else {
 				dmg = pow
 			}
+		} else if isProspectivelyUnblockable(perm, defenderPlayerID, g) {
+			dmg = pow
 		} else if perm.HasKeyword(core.Trample) && pow > effBlockTough {
 			dmg = pow - effBlockTough
 		} else if hasFS && blockerCount > 0 && pow >= bestBlockerToughness {

@@ -30,24 +30,12 @@ func registerLands() {
 	Register("Bazaar of Baghdad", func() Card {
 		return NewLand("Bazaar of Baghdad",
 			WithActivatedAbility(
-				// TODO: convert to pipeline — needs draw + ChooseCardsFromHand + discard primitives
-				FuncEffect("draw 2, discard 3",
-					EffectProperties{},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						p := g.GetPlayer(controller)
-						if p == nil {
-							return nil
-						}
-						p.DrawCard()
-						p.DrawCard()
-						chosen := p.ChooseCardsFromHand(3, "discard", g)
-						for _, card := range chosen {
-							p.RemoveFromHand(card.ID())
-							p.AddToGraveyard(card)
-						}
-						return nil
-					}),
-				TapSourceCost(),
+				CompositeEffects(
+					"draw 2, discard 3",
+					DrawCards(Fixed(2)),
+					DiscardCards(Fixed(3)).Targeting(SelectController()),
+				),
+				Tap(),
 			),
 		)
 	})
@@ -73,7 +61,7 @@ func registerLands() {
 			WithManaAbility(Colorless),
 			WithActivatedAbility(
 				DealDamage(Fixed(1)),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature(IsAttacking)),
 				WithStepOnly(EndCombat),
 			),
@@ -111,7 +99,7 @@ func registerLands() {
 						g.PlayerGainLife(p, toughness)
 						return nil
 					}),
-				TapSourceCost(),
+				Tap(),
 			),
 		)
 	})
@@ -122,7 +110,7 @@ func registerLands() {
 			WithManaAbility(Colorless),
 			WithActivatedAbility(
 				RegenerateTarget(),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature(HasSubType("Elephant"))),
 			),
 		)
@@ -133,7 +121,7 @@ func registerLands() {
 		return NewLand("Island of Wak-Wak",
 			WithActivatedAbility(
 				SetPowerUntilEndOfTurn(0, SelectTarget),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature(HasKeywordFilter(Flying))),
 			),
 		)
@@ -146,7 +134,7 @@ func registerLands() {
 			WithManaAbility(Colorless),
 			WithActivatedAbility(
 				DrawCards(Fixed(1)),
-				TapSourceCost(),
+				Tap(),
 				WithCost(&exactHandSizeCost{size: 7}),
 			),
 		)
@@ -158,7 +146,7 @@ func registerLands() {
 		return NewLand("Oasis",
 			WithActivatedAbility(
 				PreventDamageToTarget(Fixed(1)),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature()),
 			),
 		)

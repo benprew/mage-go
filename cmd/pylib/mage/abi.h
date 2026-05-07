@@ -36,6 +36,9 @@ typedef struct {
     int64_t option_scalar_dim;
     int64_t target_scalar_dim;
     int64_t decision_capacity;
+    int64_t emit_render_plan;
+    int64_t render_plan_capacity;
+    int64_t dedup_card_bodies;
 } MageEncodeConfig;
 
 typedef struct {
@@ -65,6 +68,9 @@ typedef struct {
     int64_t* decision_target_idx;
     uint8_t* decision_mask;
     uint8_t* uses_none_head;
+    int32_t* render_plan;
+    int64_t* render_plan_lengths;
+    int64_t* render_plan_overflow;
 } MageEncodeOutputs;
 
 typedef struct {

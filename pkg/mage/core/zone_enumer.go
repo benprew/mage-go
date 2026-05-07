@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _ZoneName = "LibraryHandBattlefieldGraveyardStackExileCommandAnte"
+const _ZoneName = "LibraryHandBattlefieldGraveyardStackExileCommandAnteAny"
 
-var _ZoneIndex = [...]uint8{0, 7, 11, 22, 31, 36, 41, 48, 52}
+var _ZoneIndex = [...]uint8{0, 7, 11, 22, 31, 36, 41, 48, 52, 55}
 
-const _ZoneLowerName = "libraryhandbattlefieldgraveyardstackexilecommandante"
+const _ZoneLowerName = "libraryhandbattlefieldgraveyardstackexilecommandanteany"
 
 func (i Zone) String() string {
 	if i < 0 || i >= Zone(len(_ZoneIndex)-1) {
@@ -32,9 +32,10 @@ func _ZoneNoOp() {
 	_ = x[ZoneExile-(5)]
 	_ = x[ZoneCommand-(6)]
 	_ = x[ZoneAnte-(7)]
+	_ = x[ZoneAny-(8)]
 }
 
-var _ZoneValues = []Zone{ZoneLibrary, ZoneHand, ZoneBattlefield, ZoneGraveyard, ZoneStack, ZoneExile, ZoneCommand, ZoneAnte}
+var _ZoneValues = []Zone{ZoneLibrary, ZoneHand, ZoneBattlefield, ZoneGraveyard, ZoneStack, ZoneExile, ZoneCommand, ZoneAnte, ZoneAny}
 
 var _ZoneNameToValueMap = map[string]Zone{
 	_ZoneName[0:7]:        ZoneLibrary,
@@ -53,6 +54,8 @@ var _ZoneNameToValueMap = map[string]Zone{
 	_ZoneLowerName[41:48]: ZoneCommand,
 	_ZoneName[48:52]:      ZoneAnte,
 	_ZoneLowerName[48:52]: ZoneAnte,
+	_ZoneName[52:55]:      ZoneAny,
+	_ZoneLowerName[52:55]: ZoneAny,
 }
 
 var _ZoneNames = []string{
@@ -64,6 +67,7 @@ var _ZoneNames = []string{
 	_ZoneName[36:41],
 	_ZoneName[41:48],
 	_ZoneName[48:52],
+	_ZoneName[52:55],
 }
 
 // ZoneString retrieves an enum value from the enum constants string name.

@@ -35,7 +35,7 @@ func registerRemovalTapRay(name string) {
 	}
 	mage.Register(name, func() mage.Card {
 		return mage.NewInstant(name, "{U}",
-			mage.NewTargetedSpell(mage.TargetCreature(), mage.TapTarget()))
+			mage.NewTargetedSpell(mage.TargetCreature(), mage.Tap()))
 	})
 }
 

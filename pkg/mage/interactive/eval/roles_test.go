@@ -98,7 +98,7 @@ func TestClassifyPermanent_BalancedPT_NotDefense(t *testing.T) {
 func TestClassifyPermanent_Pinger_Utility(t *testing.T) {
 	owner := uuid.New()
 	perm := makePerm("Prodigal Sorcerer", "{2}{U}", 1, 1, owner,
-		mage.WithActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.TapSourceCost(),
+		mage.WithActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.Tap(),
 			mage.WithTarget(mage.TargetAnyTarget())),
 	)
 	if role := ClassifyPermanent(perm); role != RoleUtility {

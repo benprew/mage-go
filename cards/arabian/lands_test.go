@@ -171,4 +171,35 @@ func TestDesert(t *testing.T) {
 		g.AssertGraveyardCount(gametest.PlayerB, "Savannah Lions", 1)
 
 	})
+
+	t.Run("damages_but_doesnt_kill_higher_toughness", func(t *testing.T) {
+		// Desert deals exactly 1 damage; a 2-toughness attacker survives.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant") // 3/3
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Desert")
+		g.Attack(2, gametest.PlayerB, "Hill Giant")
+		g.ActivateAbility(2, core.EndCombat, gametest.PlayerA, "Desert", "Hill Giant")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		// 1 damage from Desert; Hill Giant survives.
+		g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 1)
+		// Confirm tap state — Desert should be tapped after activation.
+		g.AssertTapped(gametest.PlayerA, "Desert", true)
+	})
+
+	t.Run("only_activatable_during_end_of_combat", func(t *testing.T) {
+		// Activating outside the end-of-combat step is illegal — try to
+		// activate during precombat main; ability should not fire.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Savannah Lions")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Desert")
+		g.Attack(2, gametest.PlayerB, "Savannah Lions")
+		// Try main phase before combat — wrong step.
+		g.ActivateAbility(2, core.PrecombatMain, gametest.PlayerA, "Desert", "Savannah Lions")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		// Damage ability did not fire — Lions still alive (it dealt combat
+		// damage to PlayerA but isn't blocked, didn't die).
+		g.AssertPermanentCount(gametest.PlayerB, "Savannah Lions", 1)
+	})
 }

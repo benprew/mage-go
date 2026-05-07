@@ -328,8 +328,9 @@ func TestForcefieldDoesNotAffectBlockedDamage(t *testing.T) {
 	g.AddCard(core.ZoneBattlefield, PlayerA, "Test Giant") // 5/5
 	g.AddCard(core.ZoneBattlefield, PlayerB, "Hill Giant") // 3/3
 
-	// Give PlayerB forcefield
-	g.AddForcefieldShield(g.AllPlayers()[1].PlayerID())
+	// Give PlayerB forcefield against Test Giant
+	tgPerm := g.FindPermanentByName("Test Giant", g.AllPlayers()[0].PlayerID())
+	g.AddForcefieldShield(g.AllPlayers()[1].PlayerID(), tgPerm.ID())
 
 	g.Attack(1, PlayerA, "Test Giant")
 	g.Block(1, PlayerB, "Hill Giant", "Test Giant")
@@ -433,7 +434,8 @@ func TestForcefieldExpiresAtEndOfTurn(t *testing.T) {
 		g := NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, PlayerA, "Test Giant") // 5/5
 
-		g.AddForcefieldShield(g.AllPlayers()[1].PlayerID())
+		tgPerm := g.FindPermanentByName("Test Giant", g.AllPlayers()[0].PlayerID())
+		g.AddForcefieldShield(g.AllPlayers()[1].PlayerID(), tgPerm.ID())
 
 		g.Attack(1, PlayerA, "Test Giant")
 		g.StopAt(1, core.EndCombat)
@@ -445,7 +447,8 @@ func TestForcefieldExpiresAtEndOfTurn(t *testing.T) {
 		g := NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, PlayerA, "Test Giant") // 5/5
 
-		g.AddForcefieldShield(g.AllPlayers()[1].PlayerID())
+		tgPerm := g.FindPermanentByName("Test Giant", g.AllPlayers()[0].PlayerID())
+		g.AddForcefieldShield(g.AllPlayers()[1].PlayerID(), tgPerm.ID())
 
 		g.Attack(1, PlayerA, "Test Giant")
 		// Turn 3 (PlayerA's next turn): no new forcefield. Full damage.

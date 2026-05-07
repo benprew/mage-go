@@ -146,24 +146,27 @@ type PlayerState struct {
 
 // PermanentState is a snapshot of a permanent.
 type PermanentState struct {
-	ID         uuid.UUID
-	Name       string
-	Power      int
-	Toughness  int
-	Tapped     bool
-	SummonSick bool
-	IsCreature bool
-	IsLand     bool
-	IsArtifact bool
-	Attacking  bool
-	Blocking   uuid.UUID
-	Counters   map[string]int
-	Keywords   []string
-	ManaCost   string
-	Types      string
-	SubTypes   string
-	RulesText  string
-	AttachedTo uuid.UUID
+	ID          uuid.UUID
+	Name        string
+	Power       int
+	Toughness   int
+	Tapped      bool
+	SummonSick  bool
+	FaceDown    bool
+	PhasedOut   bool
+	IsCreature  bool
+	IsLand      bool
+	IsArtifact  bool
+	Attacking   bool
+	Blocking    uuid.UUID
+	Counters    map[string]int
+	RawCounters [core.NumCounters]uint8
+	Keywords    []string
+	ManaCost    string
+	Types       string
+	SubTypes    string
+	RulesText   string
+	AttachedTo  uuid.UUID
 }
 
 // CardState is a snapshot of a card in hand.
@@ -191,10 +194,13 @@ type ManaPoolState struct {
 
 // StackItemState is a snapshot of a stack object.
 type StackItemState struct {
-	Name       string
-	Controller string
-	IsAbility  bool
-	Targets    []string // human-readable target names
+	Name        string
+	Controller  string
+	IsAbility   bool
+	Targets     []string    // human-readable target names
+	TargetIDs   []uuid.UUID // permanent/player IDs of targets, parallel to Targets
+	XValue      int         // chosen X for X-cost spells, 0 otherwise
+	EventAmount int         // amount from triggering event (e.g. damage dealt for triggered abilities)
 }
 
 // ChoiceType identifies what kind of interactive choice the human player must make.

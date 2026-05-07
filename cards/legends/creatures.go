@@ -86,7 +86,7 @@ func registerCreatures() {
 			WithSubTypes("Human", "Soldier", "Archer"),
 			WithActivatedAbility(
 				DealDamage(Fixed(1)),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature(Or(IsAttacking, IsBlocking))),
 			),
 		)
@@ -102,14 +102,11 @@ func registerCreatures() {
 			WithSubTypes("Dragon", "Wurm"),
 			WithKeyword(Defender),
 			WithKeyword(Trample),
-			// TODO: convert to pipeline — needs RevokeBaseAttr(kw, SelectSource) primitive
-			WithAbility(BlocksTrigger(FuncEffect("lose defender", EffectProperties{Outcome: OutcomeBenefit}, func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-				perm := g.FindPermanent(sourceID)
-				if perm != nil {
-					perm.RevokeBaseAttr(Defender)
-				}
-				return nil
-			}), false)),
+			WithAbility(BlocksTrigger(
+				Pipeline("loses defender",
+					EffectProperties{Outcome: OutcomeBenefit},
+					RevokeKeyword(Defender).Targeting(ToSource()).Until(WhileOnBattlefield),
+				), false)),
 		)
 	})
 
@@ -353,7 +350,7 @@ func registerCreatures() {
 		return NewCreature("Brine Hag", "{2}{U}{U}", 2, 2,
 			WithSubTypes("Hag"),
 			WithAbility(
-				NewTriggered(EvtCreatureDied, false, FuncEffect(
+				DiesTrigger(FuncEffect(
 					"change base P/T of all creatures that dealt damage to this to 0/2",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -379,7 +376,7 @@ func registerCreatures() {
 							}
 						}
 						return nil
-					})).SetConditionData(EventSourceIsSelf{}),
+					}), false),
 			),
 		)
 	})
@@ -461,7 +458,7 @@ func registerCreatures() {
 					DealDamageStep(Fixed(2)),
 					DealDamageToSourceStep(Fixed(3)),
 				),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetAnyTarget()),
 			),
 		)
@@ -502,7 +499,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				ReturnToHandTarget(),
 				ManaCostOf("{2}{U}{U}"),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetPermanent(NewPermanentFilter("not enchanted", func(p *Permanent, g *Game) bool {
 					for _, attachID := range p.Attachments {
 						att := g.FindPermanent(attachID)
@@ -557,23 +554,11 @@ func registerCreatures() {
 			WithSubTypes("Wall"),
 			WithKeyword(Defender),
 			WithActivatedAbility(
-				FuncEffect(
+				Pipeline(
 					"this creature gets +4/-4 until end of turn and can attack this turn as though it didn't have defender",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						// +4/-4 boost
-						boost := TemporaryBoost(sourceID, 4, -4)
-						boost.SetSourceID(sourceID)
-						g.AddContinuousEffect(boost)
-						// Revoke Defender so it can attack this turn
-						canAttack := TargetEffect(LayerAbility, EndOfTurn, sourceID, func(g *Game, target *Permanent) error {
-							g.RevokeAttr(target.ID(), Defender)
-							return nil
-						})
-						canAttack.SetSourceID(sourceID)
-						g.AddContinuousEffect(canAttack)
-						return nil
-					},
+					Boost(Fixed(4), Fixed(-4)).Targeting(ToSource()),
+					RevokeKeyword(Defender).Targeting(ToSource()),
 				),
 				ManaCostOf("{2}{U}{U}"),
 			),
@@ -708,9 +693,7 @@ func registerCreatures() {
 	Register("Cyclopean Mummy", func() Card {
 		return NewCreature("Cyclopean Mummy", "{1}{B}", 2, 1,
 			WithSubTypes("Zombie"),
-			WithAbility(NewTriggered(EvtCreatureDied, false,
-				ExileSourceFromGraveyard(),
-			).SetConditionData(EventSourceIsSelf{})),
+			WithAbility(DiesTrigger(ExileSourceFromGraveyard(), false)),
 		)
 	})
 
@@ -754,7 +737,7 @@ func registerCreatures() {
 			WithSubTypes("Spirit"),
 			WithActivatedAbility(
 				Boost(Fixed(-1), Fixed(0)),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -837,7 +820,7 @@ func registerCreatures() {
 			WithSubTypes("Horror"),
 			WithActivatedAbility(
 				ReturnFromGraveyardToBattlefield(),
-				TapSourceCost(),
+				Tap(),
 				WithCost(SacrificeCreatureCost()),
 				WithTarget(TargetCreatureInYourGraveyard()),
 				WithUpkeepOnly(),
@@ -1024,7 +1007,7 @@ func registerCreatures() {
 						return nil
 					}),
 				ManaCostOf("{B}"),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetCreature(IsAttacking)),
 			),
 		)
@@ -1261,7 +1244,7 @@ func registerCreatures() {
 		return NewCreature("Blazing Effigy", "{1}{R}", 0, 3,
 			WithSubTypes("Elemental"),
 			WithAbility(
-				NewTriggered(EvtCreatureDied, false, FuncEffect(
+				DiesTrigger(FuncEffect(
 					"deal 3+ damage to target creature",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -1281,8 +1264,7 @@ func registerCreatures() {
 						// needs per-source damage tracking by card name
 						g.DealDamageToPermanent(target, 3, sourceID)
 						return nil
-					}),
-				).SetConditionData(EventSourceIsSelf{}),
+					}), false),
 			),
 		)
 	})
@@ -1308,7 +1290,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				DealDamage(Fixed(1)),
 				ManaCostOf("{R}"),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetCreature(Or(IsAttacking, IsBlocking))),
 			),
 		)
@@ -1334,9 +1316,7 @@ func registerCreatures() {
 		return NewCreature("Firestorm Phoenix", "{4}{R}{R}", 3, 2,
 			WithSubTypes("Phoenix"),
 			WithKeyword(Flying),
-			WithAbility(NewTriggered(EvtCreatureDied, false,
-				ReturnSourceToHand(),
-			).SetConditionData(EventSourceIsSelf{})),
+			WithAbility(DiesTrigger(ReturnSourceToHand(), false)),
 		)
 	})
 
@@ -1360,7 +1340,7 @@ func registerCreatures() {
 			WithSubTypes("Human", "Artificer"),
 			WithActivatedAbility(
 				TapOrUntapTarget(),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetPermanentOpponentControls(IsArtifact)),
 			),
 		)
@@ -1496,7 +1476,7 @@ func registerCreatures() {
 			WithSubTypes("Beast"),
 			WithActivatedAbility(
 				DestroyTarget(),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature(HasColorFilter(Blue))),
 			),
 		)
@@ -1720,7 +1700,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				AddMana(Red, 1),
 				ManaCostOf("{G}"),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 			),
 		)
 	})
@@ -1903,7 +1883,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				GrantKeyword(Flying),
 				ManaCostOf("{G}{G}{G}"),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -1919,7 +1899,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				Boost(Fixed(-2), Fixed(0)),
 				ManaCostOf("{1}{G}"),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -1964,9 +1944,9 @@ func registerCreatures() {
 			WithActivatedAbility(
 				Pipeline("target creature loses flying until end of turn",
 					EffectProperties{Outcome: OutcomeDetriment},
-					RevokeKeywordFromTargetUntilEOT(Flying),
+					RevokeKeyword(Flying),
 				),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -1983,9 +1963,9 @@ func registerCreatures() {
 			WithActivatedAbility(
 				Pipeline("target creature loses all bands with other abilities until end of turn",
 					EffectProperties{Outcome: OutcomeDetriment},
-					RevokeKeywordFromTargetUntilEOT(Banding),
+					RevokeKeyword(Banding),
 				),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -2043,7 +2023,7 @@ func registerCreatures() {
 						g.AddContinuousEffect(ce)
 						return nil
 					}),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature(NewPermanentFilter("legendary creature", func(p *Permanent, _ *Game) bool {
 					return p.Card.HasSuperType(SuperLegendary)
 				}))),
@@ -2087,7 +2067,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				ReturnFromGraveyardToHandTarget(),
 				ManaCostOf("{B}{R}{G}"),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetCreatureInYourGraveyard()),
 			),
 		)
@@ -2104,7 +2084,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				PreventAllCombatDamage(),
 				ManaCostOf("{G}{W}{U}"),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 			),
 		)
 	})
@@ -2215,7 +2195,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				CreateColoredToken("Minor Demon", 1, 1, []Color{Black, Red}, []CardType{TypeCreature}, []string{"Demon"}),
 				ManaCostOf("{2}{B}{R}"),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 			),
 		)
 	})
@@ -2350,7 +2330,7 @@ func registerCreatures() {
 			WithSuperTypes(SuperLegendary),
 			WithActivatedAbility(
 				DiscardRandom(1),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetPlayer()),
 				WithYourTurnOnly(),
 			),
@@ -2448,13 +2428,14 @@ func registerCreatures() {
 				},
 			), false)),
 			// When Hazezon leaves, exile all Sand Warriors
-			WithAbility(NewTriggered(EvtLeavesBattlefield, false,
+			WithAbility(OnLeaveZone(ZoneBattlefield, ZoneAny,
 				ForEachPermanent(
 					And(HasSubType("Sand"), HasSubType("Warrior")),
 					ExileTargetStep(),
 					"exile all Sand Warriors",
 				),
-			).SetConditionData(EventSourceIsSelf{})),
+				false,
+			)),
 		)
 	})
 
@@ -2577,7 +2558,7 @@ func registerCreatures() {
 			WithSuperTypes(SuperLegendary),
 			WithActivatedAbility(
 				PreventDamageToTarget(Fixed(2)),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -2593,7 +2574,7 @@ func registerCreatures() {
 			WithSuperTypes(SuperLegendary),
 			WithActivatedAbility(
 				DealDamage(Fixed(3)),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature(Or(IsAttacking, IsBlocking))),
 			),
 		)
@@ -2628,7 +2609,7 @@ func registerCreatures() {
 					},
 				),
 				ManaCostOf("{W}{B}"),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -2788,7 +2769,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				RegenerateTarget(),
 				ManaCostOf("{G}{W}{U}"),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -2816,7 +2797,7 @@ func registerCreatures() {
 			WithSuperTypes(SuperLegendary),
 			WithActivatedAbility(
 				DestroyTarget(),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature(NewPermanentFilter("enchanted", func(p *Permanent, g *Game) bool {
 					for _, attachID := range p.Attachments {
 						att := g.FindPermanent(attachID)
@@ -2991,7 +2972,7 @@ func registerCreatures() {
 						g.AddContinuousEffect(ce)
 						return nil
 					}),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -3057,7 +3038,7 @@ func registerCreatures() {
 				},
 			), false)),
 			// When Stangg leaves, exile the token
-			WithAbility(NewTriggered(EvtLeavesBattlefield, false, FuncEffect(
+			WithAbility(OnLeaveZone(ZoneBattlefield, ZoneAny, FuncEffect(
 				"exile Stangg Twin",
 				EffectProperties{},
 				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -3067,9 +3048,9 @@ func registerCreatures() {
 					}
 					return nil
 				},
-			)).SetConditionData(EventSourceIsSelf{})),
+			), false)),
 			// When the token leaves, sacrifice Stangg
-			WithAbility(NewTriggered(EvtLeavesBattlefield, false, FuncEffect(
+			WithAbility(NewTriggered(EvtZoneChange, false, FuncEffect(
 				"sacrifice Stangg",
 				EffectProperties{},
 				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -3083,7 +3064,7 @@ func registerCreatures() {
 				// TODO: convert to data condition
 				SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 					return evt.SourceID == twinID && evt.SourceID != sourceID
-				})),
+				}).AndConditionData(EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneAny})),
 		)
 	})
 
@@ -3097,7 +3078,7 @@ func registerCreatures() {
 			WithSuperTypes(SuperLegendary),
 			WithActivatedAbility(
 				AddMana(Colorless, 2),
-				TapSourceCost(),
+				Tap(),
 			),
 		)
 	})
@@ -3115,7 +3096,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				DestroyTarget(),
 				ManaCostOf("{U}{B}{B}{R}"),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetCreature(Or(IsTapped, IsBlocking))),
 			),
 		)
@@ -3151,7 +3132,7 @@ func registerCreatures() {
 			WithSuperTypes(SuperLegendary),
 			WithActivatedAbility(
 				DealDamage(Fixed(2)),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature(Or(IsAttacking, IsBlocking))),
 			),
 		)
@@ -3180,7 +3161,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				Boost(Fixed(2), Fixed(2)),
 				ManaCostOf("{R}{G}"),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -3242,7 +3223,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				DrawCards(Fixed(1)),
 				ManaCostOf("{B}{R}{G}"),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetPlayer()),
 			),
 		)

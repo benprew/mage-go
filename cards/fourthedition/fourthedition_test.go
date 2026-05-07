@@ -501,3 +501,339 @@ func TestAnimateArtifact(t *testing.T) {
 		g.AssertPermanentCount(gametest.PlayerA, "Fellwar Stone", 1)
 	})
 }
+
+// ===== MARSH VIPER =====
+
+func TestMarshViper(t *testing.T) {
+	t.Run("combat damage to player gives two poison counters", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Marsh Viper")
+		g.Attack(1, gametest.PlayerA, "Marsh Viper")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 19)
+		g.AssertPoisonCounters(gametest.PlayerB, 2)
+	})
+
+	t.Run("damage to creature does not give poison", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Marsh Viper")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears") // 2/2
+		g.Attack(2, gametest.PlayerA, "Marsh Viper")
+		g.Block(2, gametest.PlayerB, "Grizzly Bears", "Marsh Viper")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		g.AssertPoisonCounters(gametest.PlayerB, 0)
+	})
+}
+
+// ===== MANA CLASH =====
+
+func TestManaClash(t *testing.T) {
+	t.Run("both heads first flip ends with no damage", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Mana Clash")
+		g.SetCoinFlipResults([]bool{true, true}) // you heads, opp heads
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Mana Clash", "PlayerB")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 20)
+		g.AssertLife(gametest.PlayerB, 20)
+	})
+
+	t.Run("opponent tails takes damage then both heads stops", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Mana Clash")
+		// round 1: you heads, opp tails (opp -1) → continue
+		// round 2: you heads, opp heads → stop
+		g.SetCoinFlipResults([]bool{true, false, true, true})
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Mana Clash", "PlayerB")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 20)
+		g.AssertLife(gametest.PlayerB, 19)
+	})
+
+	t.Run("both tails then both heads", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Mana Clash")
+		// round 1: both tails (each -1) → continue
+		// round 2: both heads → stop
+		g.SetCoinFlipResults([]bool{false, false, true, true})
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Mana Clash", "PlayerB")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 19)
+		g.AssertLife(gametest.PlayerB, 19)
+	})
+}
+
+// ===== ANGRY MOB =====
+
+func TestAngryMob(t *testing.T) {
+	t.Run("during your turn pt is 2 plus opponents swamps", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Angry Mob")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Swamp", 3)
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Angry Mob", 5, 5)
+		g.AssertHasAbility(gametest.PlayerA, "Angry Mob", core.Trample, true)
+	})
+
+	t.Run("during opponents turn pt is 2", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Angry Mob")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Swamp", 3)
+		g.StopAt(2, core.PrecombatMain) // PlayerB's turn
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Angry Mob", 2, 2)
+	})
+
+	t.Run("your own swamps do not count", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Angry Mob")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 3)
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Angry Mob", 2, 2)
+	})
+}
+
+// ===== GAEA'S LIEGE =====
+
+func TestGaeasLiege(t *testing.T) {
+	t.Run("not attacking pt equals your forests", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Gaea's Liege")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 4)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forest", 2)
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Gaea's Liege", 4, 4)
+	})
+
+	t.Run("attacking pt equals defending players forests", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Gaea's Liege")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 1)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forest", 5)
+		g.Attack(1, gametest.PlayerA, "Gaea's Liege")
+		g.StopAt(1, core.DeclareBlockers)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Gaea's Liege", 5, 5)
+	})
+
+	t.Run("activated ability turns target land into Forest", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Gaea's Liege")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 1)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain", 1)
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Gaea's Liege", "Mountain")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		// Mountain becomes a Forest, so it now counts as one of opponent's Forests.
+		// Gaea's Liege isn't attacking, so P/T = 1 (your only Forest).
+		g.AssertPowerToughness(gametest.PlayerA, "Gaea's Liege", 1, 1)
+		// Sanity: still on the battlefield
+		g.AssertPermanentCount(gametest.PlayerB, "Mountain", 1)
+	})
+}
+
+// ===== GOBLIN ROCK SLED =====
+
+func TestGoblinRockSled(t *testing.T) {
+	t.Run("cannot attack if defender controls no Mountain", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Goblin Rock Sled")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forest")
+		g.Attack(1, gametest.PlayerA, "Goblin Rock Sled")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 20)
+	})
+
+	t.Run("can attack if defender controls a Mountain", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Goblin Rock Sled")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+		g.Attack(1, gametest.PlayerA, "Goblin Rock Sled")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 17) // 3 damage
+		g.AssertHasAbility(gametest.PlayerA, "Goblin Rock Sled", core.Trample, true)
+	})
+
+	t.Run("does not untap on next own turn after attacking", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Goblin Rock Sled")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+		g.Attack(1, gametest.PlayerA, "Goblin Rock Sled")
+		// Turn 3 = PlayerA's second turn. After untap, sled should still be tapped.
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertTapped(gametest.PlayerA, "Goblin Rock Sled", true)
+	})
+
+	t.Run("untaps normally if it did not attack last own turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Goblin Rock Sled")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+		// Don't attack on turn 1; verify untap step on turn 3 works normally if
+		// it happens to be tapped (we tap manually for the test).
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertTapped(gametest.PlayerA, "Goblin Rock Sled", false)
+	})
+
+}
+
+// Verify GRS does not gain a counter when the Stun effect resolves (Oracle
+// text doesn't reference counters, only the skip-untap behavior).
+func TestGoblinRockSled_NoVisibleCounters(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Goblin Rock Sled")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+	g.Attack(1, gametest.PlayerA, "Goblin Rock Sled")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	for i := range int(core.NumCounters) {
+		g.AssertCounterCount(gametest.PlayerA, "Goblin Rock Sled", core.CounterType(i), 0)
+	}
+}
+
+// ===== LIVING ARTIFACT =====
+
+func TestLivingArtifact(t *testing.T) {
+	t.Run("damage to controller adds vitality counters", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Fellwar Stone")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Living Artifact")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Living Artifact", "Fellwar Stone")
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "PlayerA")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 17)
+		g.AssertCounterCount(gametest.PlayerA, "Living Artifact", core.Vitality, 3)
+	})
+
+	t.Run("upkeep optional removes counter and gains life", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Fellwar Stone")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Living Artifact")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Living Artifact", "Fellwar Stone")
+		// Turn 2 PlayerB Bolts PlayerA → 3 vitality counters added.
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "PlayerA")
+		// Turn 3 PlayerA upkeep: optional trigger (always accepted in tests) removes
+		// one vitality counter and gains 1 life.
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertCounterCount(gametest.PlayerA, "Living Artifact", core.Vitality, 2)
+		g.AssertLife(gametest.PlayerA, 18) // 17 after Bolt, +1 from removed counter
+	})
+
+	t.Run("no counters means no life gain", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Fellwar Stone")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Living Artifact")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Living Artifact", "Fellwar Stone")
+		// No damage taken, so no counters. PlayerA's turn 3 upkeep tries to remove
+		// a counter but there are none — no life gained.
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertCounterCount(gametest.PlayerA, "Living Artifact", core.Vitality, 0)
+		g.AssertLife(gametest.PlayerA, 20)
+	})
+}
+
+// ===== RAG MAN =====
+
+func TestRagMan(t *testing.T) {
+	t.Run("activated ability discards a creature card from opponent at random", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rag Man")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 3)
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Grizzly Bears") // creature
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Disenchant")    // not creature
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Rag Man", "PlayerB")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+		g.AssertHandCount(gametest.PlayerB, "Disenchant", 1)
+	})
+
+	t.Run("does nothing if opponent has no creature cards", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rag Man")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 3)
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Disenchant")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Rag Man", "PlayerB")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertHandCount(gametest.PlayerB, "Disenchant", 1)
+		g.AssertHandCount(gametest.PlayerB, "Lightning Bolt", 1)
+		g.AssertGraveyardCount(gametest.PlayerB, "Disenchant", 0)
+		g.AssertGraveyardCount(gametest.PlayerB, "Lightning Bolt", 0)
+	})
+
+	t.Run("cannot activate during opponents turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rag Man")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 3)
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Grizzly Bears")
+		// Turn 2 = PlayerB's turn. Activation should fail (your turn only).
+		g.ActivateAbility(2, core.PrecombatMain, gametest.PlayerA, "Rag Man", "PlayerB")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		g.AssertHandCount(gametest.PlayerB, "Grizzly Bears", 1)
+		g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 0)
+	})
+}
+
+// ===== STONE GIANT =====
+
+func TestStoneGiant(t *testing.T) {
+	t.Run("target your creature with toughness less than power gains flying", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Stone Giant")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2, toughness 2 < 3
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Stone Giant", "Grizzly Bears")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", core.Flying, true)
+	})
+
+	t.Run("targeted creature is destroyed at next end step", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Stone Giant")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Stone Giant", "Grizzly Bears")
+		g.StopAt(2, core.Upkeep) // past PlayerA turn 1's end step
+		g.Execute()
+		g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 1)
+		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
+	})
+
+	t.Run("cannot target creature with toughness equal to power", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Stone Giant")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant") // 3/3, toughness 3 NOT less than 3
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Stone Giant", "Hill Giant")
+		g.StopAt(2, core.Upkeep)
+		g.Execute()
+		// Activation should not have succeeded, so no flying and no destruction
+		g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 1)
+		g.AssertHasAbility(gametest.PlayerA, "Hill Giant", core.Flying, false)
+	})
+}

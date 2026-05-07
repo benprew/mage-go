@@ -912,7 +912,7 @@ Convert effects one-by-one from `Apply(GameMutator, ...)` to goroutine-based
 2. **Life effects** — `GainLife`, `LoseLife`
 3. **Removal effects** — `DestroyTarget`, `ExileTarget`
 4. **Card effects** — `DrawCards`, `DiscardCards`
-5. **Counter/tap effects** — `AddCounters`, `TapTarget`
+5. **Counter/tap effects** — `AddCounters`, `Tap`
 6. **Complex effects** — `BalanceEffect`, `ChaosOrbEffect`, `PowerSinkEffect`
 7. **FuncEffect closures** — these are the bulk; convert inline closures in
    card definitions

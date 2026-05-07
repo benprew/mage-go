@@ -3,24 +3,10 @@ package mage
 import (
 	"fmt"
 
+	"github.com/google/uuid"
+
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
-
-// tapTargetEffect taps a target permanent.
-type tapTargetEffect struct{}
-
-// TapTarget creates an effect that taps a target permanent.
-func TapTarget() Effect {
-	return &tapTargetEffect{}
-}
-
-// TapTargetStep returns the EffectData for use as a pipeline/ForEach inner step.
-func TapTargetStep() EffectData { return &tapTargetEffect{} }
-
-func (e *tapTargetEffect) Text() string { return "tap target permanent" }
-func (e *tapTargetEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment}
-}
 
 // untapTargetEffect untaps a target permanent.
 type untapTargetEffect struct{}
@@ -30,8 +16,8 @@ func UntapTarget() Effect {
 	return &untapTargetEffect{}
 }
 
-// UntapTargetStep returns the EffectData for use as a pipeline/ForEach inner step.
-func UntapTargetStep() EffectData { return &untapTargetEffect{} }
+// UntapTargetStep returns the Effect for use as a pipeline/ForEach inner step.
+func UntapTargetStep() Effect { return &untapTargetEffect{} }
 
 func (e *untapTargetEffect) Text() string { return "untap target permanent" }
 func (e *untapTargetEffect) Properties() EffectProperties {
@@ -222,6 +208,32 @@ func (e *markDestroyAtEOTAfterNActivationsEffect) Properties() EffectProperties 
 	return EffectProperties{}
 }
 
+// stunEffect causes the selected permanent to skip its next own untap step
+// (i.e. its controller's next untap step), then expires. Implemented as a
+// turn-bounded continuous effect that grants AttrDoesNotUntap; no counter is
+// placed on the permanent.
+type stunEffect struct {
+	selector TargetSelector
+}
+
+// Stun creates an effect that causes the targeted permanent to skip its next
+// untap step. Defaults to targeting the resolved target; chain .Targeting(...)
+// to apply to the source.
+func Stun() *stunEffect {
+	return &stunEffect{selector: TargetSelector{Kind: KindTarget}}
+}
+
+// Targeting sets which permanent the stun applies to.
+func (e *stunEffect) Targeting(sel TargetSelector) *stunEffect {
+	e.selector = sel
+	return e
+}
+
+func (e *stunEffect) Text() string { return "stun" }
+func (e *stunEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
+
 // destroyTargetAtEndOfTurnEffect marks a creature for destruction at end of turn.
 type destroyTargetAtEndOfTurnEffect struct{}
 
@@ -277,7 +289,7 @@ func (e *setBasePowerUntilEndOfTurnEffect) Properties() EffectProperties {
 
 // --- Combat effect executors ---
 
-func execTapTarget(ctx *EffectContext, _ *tapTargetEffect) error {
+func execTap(ctx *EffectContext, _ *tap) error {
 	if len(ctx.Targets) == 0 {
 		return fmt.Errorf("no target for tap")
 	}
@@ -450,6 +462,35 @@ func execMarkDestroyAtEOTAfterNActivations(ctx *EffectContext, e *markDestroyAtE
 			SourceID:   ctx.SourceID,
 			Controller: ctx.Controller,
 		})
+	}
+	return nil
+}
+
+func execStun(ctx *EffectContext, e *stunEffect) error {
+	perms := resolvePermanents(ctx, e.selector)
+	if len(perms) == 0 {
+		return nil
+	}
+	for _, perm := range perms {
+		permID := perm.ID()
+		// Compute the turn number on which the permanent's controller will
+		// next have an untap step. In a 2-player game that's currentTurn+2 if
+		// the permanent's controller is currently active, else currentTurn+1.
+		expiryTurn := ctx.Game.CurrentTurn() + 1
+		if ctx.Game.ActivePlayerObj().PlayerID() == perm.Controller {
+			expiryTurn = ctx.Game.CurrentTurn() + 2
+		}
+		ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, _ uuid.UUID) error {
+			p := g.FindPermanent(permID)
+			if p != nil {
+				g.GrantAttr(p.ID(), AttrDoesNotUntap)
+			}
+			return nil
+		}, func(g *Game, _ uuid.UUID) bool {
+			return g.CurrentTurn() <= expiryTurn && g.FindPermanent(permID) != nil
+		})
+		ce.SetSourceID(ctx.SourceID)
+		ctx.Game.AddContinuousEffect(ce)
 	}
 	return nil
 }

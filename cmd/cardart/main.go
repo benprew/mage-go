@@ -16,6 +16,10 @@ import (
 )
 
 func main() {
+	os.Exit(run())
+}
+
+func run() int {
 	name := flag.String("name", "", "card name (required)")
 	colorStr := flag.String("color", "", "color identity: W, U, B, R, G, or combinations like WU, BRG (empty = colorless)")
 	typeStr := flag.String("type", "creature", "card type: creature, artifact, enchantment, instant, sorcery, land")
@@ -27,7 +31,7 @@ func main() {
 	if *name == "" {
 		fmt.Fprintln(os.Stderr, "error: -name is required")
 		flag.Usage()
-		os.Exit(1)
+		return 1
 	}
 
 	input := CardInput{
@@ -42,7 +46,7 @@ func main() {
 		f, err := os.Create(*output)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error creating file: %v\n", err)
-			os.Exit(1)
+			return 1
 		}
 		defer f.Close()
 
@@ -54,7 +58,7 @@ func main() {
 		}
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error writing file: %v\n", err)
-			os.Exit(1)
+			return 1
 		}
 		fmt.Fprintf(os.Stderr, "wrote %s\n", *output)
 	}
@@ -62,6 +66,7 @@ func main() {
 	if *output == "" || *ansi {
 		fmt.Print(RenderANSI(img))
 	}
+	return 0
 }
 
 func parseColors(s string) []Color {

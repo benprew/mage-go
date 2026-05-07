@@ -40,7 +40,7 @@ func registerEnchantments() {
 	Register("Creature Bond", func() Card {
 		return NewAura("Creature Bond", "{1}{U}",
 			WithAbility(
-				NewTriggered(EvtCreatureDied, false,
+				NewTriggered(EvtZoneChange, false,
 					FuncEffect(
 						"deal damage equal to creature's toughness to its controller",
 						EffectProperties{Outcome: OutcomeDetriment},
@@ -60,7 +60,11 @@ func registerEnchantments() {
 							return nil
 						},
 					),
-				).SetConditionData(SourceIsAttachedToEventSource{}),
+				).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+					EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard},
+					EventSourceWasOfType{Type: TypeCreature},
+					SourceIsAttachedToEventSource{},
+				}}),
 			),
 		)
 	})
@@ -80,7 +84,7 @@ func registerEnchantments() {
 	Register("Flood", func() Card {
 		return NewEnchantment("Flood", "{U}",
 			WithActivatedAbility(
-				TapTarget(),
+				Tap(),
 				ManaCostOf("{U}{U}"),
 				WithTarget(TargetCreature(NotHasKeywordFilter(Flying))),
 			),
@@ -92,9 +96,31 @@ func registerEnchantments() {
 	// Enchant artifact
 	// Whenever you're dealt damage, put that many vitality counters on Living Artifact.
 	// At the beginning of your upkeep, you may remove a vitality counter from Living Artifact. If you do, you gain 1 life.
-	// TODO: implement — needs vitality counters + damage-to-you trigger
 	Register("Living Artifact", func() Card {
-		return NewAura("Living Artifact", "{G}")
+		return NewAura("Living Artifact", "{G}",
+			WithCastTarget(TargetArtifact()),
+			WithAbility(NewTriggered(EvtDamageDealt, false,
+				AddCounters(Vitality, EventAmountValue()).Targeting(ToSource()),
+			).SetCondition(func(evt *GameEvent, _ GameReader, _, controllerID uuid.UUID) bool {
+				return evt.TargetID == controllerID && evt.Amount > 0
+			})),
+			WithAbility(BeginningOfUpkeepTrigger(FuncEffect(
+				"remove a vitality counter from Living Artifact; if you do, gain 1 life",
+				EffectProperties{Outcome: OutcomeBenefit},
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					perm := g.FindPermanent(sourceID)
+					if perm == nil {
+						return nil
+					}
+					if perm.RemoveCounter(Vitality, 1) {
+						if p := g.GetPlayer(controller); p != nil {
+							g.PlayerGainLife(p, 1)
+						}
+					}
+					return nil
+				},
+			), true)),
+		)
 	})
 
 	// Power Leak {1}{U}

@@ -90,12 +90,13 @@ type EffectProperties struct {
 	Mass        bool        // true if effect is board-wide (wrath, earthquake, etc.)
 
 	// AI-search properties (used by search.go for simplified spell resolution):
-	LifeGain       int  // life gained by controller; 0 if not a life-gain effect
-	PowerBoost     int  // power boost for target; 0 if not a boost effect
-	ToughnessBoost int  // toughness boost for target; 0 if not a boost effect
-	IsBounce       bool // true if this effect bounces a permanent to hand
-	TokenPower     int  // token creature power; 0 if not a token-creation effect
-	TokenToughness int  // token creature toughness; 0 if not a token-creation effect
+	LifeGain       int     // life gained by controller; 0 if not a life-gain effect
+	PowerBoost     int     // power boost for target; 0 if not a boost effect
+	ToughnessBoost int     // toughness boost for target; 0 if not a boost effect
+	IsBounce       bool    // true if this effect bounces a permanent to hand
+	TokenPower     int     // token creature power; 0 if not a token-creation effect
+	TokenToughness int     // token creature toughness; 0 if not a token-creation effect
+	GrantedKeyword Keyword // non-zero when effect grants a keyword to a creature
 }
 
 // IsDamageEffect returns true if the given effect is a damage-dealing effect.
@@ -256,6 +257,31 @@ func (v countBattlefieldValue) Text() string {
 	return fmt.Sprintf("the number of %ss on the battlefield", noun)
 }
 
+// untappedLandsAtTurnStartValue resolves to the number of untapped lands the
+// selected player controlled at the start of the current turn (snapshot taken
+// before the untap step).
+type untappedLandsAtTurnStartValue struct {
+	who PlayerSelector
+}
+
+// UntappedLandsAtTurnStart creates a ValueSource that reads the snapshot of
+// untapped lands the selected player controlled at the very start of the
+// current turn — before the untap step ran. Used by Power Surge.
+func UntappedLandsAtTurnStart(who PlayerSelector) ValueSource {
+	return untappedLandsAtTurnStartValue{who: who}
+}
+
+func (v untappedLandsAtTurnStartValue) Resolve(g GameReader, sourceID, controller uuid.UUID, targets []uuid.UUID) int {
+	total := 0
+	for _, pid := range v.who.Select(g, sourceID, controller, targets) {
+		total += g.UntappedLandsAtTurnStart(pid)
+	}
+	return total
+}
+func (v untappedLandsAtTurnStartValue) Text() string {
+	return "the number of untapped lands " + v.who.Text() + " controlled at the beginning of this turn"
+}
+
 // countZoneValue is a ValueSource that counts cards in a player zone (hand, graveyard, library).
 type countZoneValue struct {
 	zone   Zone
@@ -307,6 +333,40 @@ func (v countZoneValue) Text() string {
 		noun = "card"
 	}
 	return fmt.Sprintf("the number of %ss in the %s's %s", noun, v.who.Text(), zone)
+}
+
+// topOfLibraryManaValue resolves to the mana value of the top card of the
+// selected player's library. The library is not modified; this matches the
+// engine's existing convention that "look at" and "reveal" are read-only at
+// the rules layer (see RevealTopN). Returns 0 if the library is empty.
+type topOfLibraryManaValue struct {
+	who PlayerSelector
+}
+
+// TopOfLibraryManaValue returns a ValueSource equal to the mana value of the
+// top card of the selected player's library. Used for spells like Riddle of
+// Lightning ("reveal the top card of your library; deals damage equal to that
+// card's mana value to that permanent or player").
+func TopOfLibraryManaValue(who PlayerSelector) ValueSource {
+	return topOfLibraryManaValue{who: who}
+}
+func (v topOfLibraryManaValue) Resolve(g GameReader, sourceID, controller uuid.UUID, targets []uuid.UUID) int {
+	ids := v.who.Select(g, sourceID, controller, targets)
+	if len(ids) == 0 {
+		return 0
+	}
+	p := g.GetPlayer(ids[0])
+	if p == nil {
+		return 0
+	}
+	lib := p.Library()
+	if len(lib) == 0 {
+		return 0
+	}
+	return lib[0].ManaCost().CMC()
+}
+func (v topOfLibraryManaValue) Text() string {
+	return "the mana value of the top card of " + v.who.Text() + "'s library"
 }
 
 // selectController returns the effect's controller.
@@ -435,10 +495,14 @@ func (s selectTargetPermanentController) Select(g GameReader, _, _ uuid.UUID, ta
 	if len(targets) == 0 {
 		return nil
 	}
-	perm := g.FindPermanent(targets[0])
-	if perm == nil {
-		return nil
+	if game, ok := g.(*Game); ok {
+		if view := game.LookupObject(targets[0]); view != nil {
+			return []uuid.UUID{view.ViewController()}
+		}
 	}
-	return []uuid.UUID{perm.Controller}
+	if perm := g.FindPermanent(targets[0]); perm != nil {
+		return []uuid.UUID{perm.Controller}
+	}
+	return nil
 }
 func (s selectTargetPermanentController) Text() string { return "that permanent's controller" }

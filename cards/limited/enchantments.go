@@ -121,12 +121,6 @@ func registerEnchantments() {
 		)
 	})
 
-	Register("Jump", func() Card {
-		return NewInstant("Jump", "{U}",
-			NewTargetedSpell(TargetCreature(), GrantKeyword(Flying)),
-		)
-	})
-
 	Register("Fear", func() Card {
 		return NewAura("Fear", "{B}{B}",
 			WithStaticAbility(
@@ -219,7 +213,9 @@ func registerEnchantments() {
 
 	Register("Animate Dead", func() Card {
 		// XXX: missing leave-battlefield sacrifice trigger — engine needs last-known-information for attachments
+		// XXX: Oracle says "creature card in a graveyard" (any graveyard); restricted to controller's graveyard for now.
 		return NewAura("Animate Dead", "{1}{B}",
+			WithCastTarget(TargetCreatureInYourGraveyard()),
 			WithAbility(NewSpellAbility(ReturnFromGraveyardToBattlefield())),
 			WithStaticAbility(
 				BoostAttached(-1, 0, AttachAura),
@@ -375,37 +371,9 @@ func registerEnchantments() {
 			WithAbility(BeginningOfUpkeepTrigger(
 				IfElse("you may pay {W}{W} to gain 1 life",
 					&TryPayManaCond{Cost: "{W}{W}"},
-					UnwrapEffect(GainLife(1)),
+					GainLife(1),
 					nil,
 				), false)),
-		)
-	})
-
-	// ===== LUCKY CHARMS =====
-
-	Register("Crystal Rod", func() Card {
-		return NewLuckyCharm("Crystal Rod", "{1}", Blue)
-	})
-
-	Register("Iron Star", func() Card {
-		return NewLuckyCharm("Iron Star", "{1}", Red)
-	})
-
-	Register("Ivory Cup", func() Card {
-		return NewLuckyCharm("Ivory Cup", "{1}", White)
-	})
-
-	Register("Throne of Bone", func() Card {
-		return NewLuckyCharm("Throne of Bone", "{1}", Black)
-	})
-
-	Register("Wooden Sphere", func() Card {
-		return NewLuckyCharm("Wooden Sphere", "{1}", Green)
-	})
-
-	Register("Soul Net", func() Card {
-		return NewArtifact("Soul Net", "{1}",
-			WithAbility(AnyCreatureDiesTrigger(GainLife(1), true)),
 		)
 	})
 
@@ -432,4 +400,379 @@ func registerEnchantments() {
 			)
 		})
 	}
+
+	// ===== MOVED FROM OTHER FILES =====
+
+	Register("Steal Artifact", func() Card {
+		return NewAura("Steal Artifact", "{2}{U}{U}",
+			WithCastTarget(TargetArtifact()),
+			WithStaticAbility(ControlChangeContinuous()),
+		)
+	})
+
+	Register("Copy Artifact", func() Card {
+		return NewArtifact("Copy Artifact", "{1}{U}",
+			WithAbility(NewTargetedSpell(TargetArtifact(), CloneTarget(TypeEnchantment))),
+		)
+	})
+
+	Register("Deathgrip", func() Card {
+		return NewEnchantment("Deathgrip", "{B}{B}",
+			WithActivatedAbility(
+				CounterSpellIfColor(Green),
+				ManaCostOf("{B}{B}"),
+				WithTarget(TargetSpellOnStack()),
+			),
+		)
+	})
+
+	Register("Lifeforce", func() Card {
+		return NewEnchantment("Lifeforce", "{G}{G}",
+			WithActivatedAbility(
+				CounterSpellIfColor(Black),
+				ManaCostOf("{G}{G}"),
+				WithTarget(TargetSpellOnStack()),
+			),
+		)
+	})
+
+	Register("Living Lands", func() Card {
+		return NewEnchantment("Living Lands", "{3}{G}",
+			WithStaticAbility(
+				AnimateLands(And(IsLand, HasSubType("Forest")), 1, 1),
+			),
+		)
+	})
+
+	// Instill Energy
+	// Enchant creature
+	// Enchanted creature can attack as though it had haste.
+	// {0}: Untap enchanted creature. Activate only once each turn.
+	Register("Instill Energy", func() Card {
+		return NewAura("Instill Energy", "{G}",
+			WithStaticAbility(
+				GrantAbilityToAttached(Haste, AttachAura),
+				GrantActivatedAbilityToAttached(
+					UntapSource(),
+					GenericCost(0),
+					AttachAura,
+					WithOncePerTurn(),
+				),
+			),
+		)
+	})
+
+	Register("Mana Flare", func() Card {
+		return NewEnchantment("Mana Flare", "{2}{R}",
+			WithAbility(NewManaFlareAbility(IsLand)),
+		)
+	})
+
+	Register("Raging River", func() Card {
+		return NewEnchantment("Raging River", "{R}{R}",
+			// TODO: convert to pipeline — needs PreventBlockingUntilEndOfCombat step
+			WithAbility(NewTriggered(EvtDeclaredAttacker, false, FuncEffect(
+				"split blockers into piles",
+				EffectProperties{},
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					var nonFlyers []*Permanent
+					for _, p := range g.FilterBattlefield(AnyPermanent) {
+						if p.Controller != controller && p.HasType(TypeCreature) &&
+							!p.HasKeyword(Flying) {
+							nonFlyers = append(nonFlyers, p)
+						}
+					}
+					for _, p := range nonFlyers {
+						eff := PreventBlockingUntilEndOfCombat(p.ID())
+						eff.SetSourceID(sourceID)
+						g.AddContinuousEffect(eff)
+					}
+					g.ApplyContinuousEffects()
+					return nil
+				})).
+				SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+					EventPlayerIsController{},
+					SourceOnBattlefield{},
+					CombatGroupCountEquals{N: 1},
+				}})),
+		)
+	})
+
+	Register("Lich", func() Card {
+		return NewEnchantment("Lich", "{B}{B}{B}{B}",
+			// ETB: lose life equal to your life total
+			// TODO: convert to pipeline — needs Lich-specific game rule steps
+			WithAbility(EntersBattlefieldTrigger(FuncEffect(
+				"lose life equal to your life total",
+				EffectProperties{},
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					p := g.GetPlayer(controller)
+					if p == nil {
+						return nil
+					}
+					life := p.Life()
+					if life > 0 {
+						p.LoseLife(life)
+					}
+					g.SetLichActive(controller, sourceID)
+					return nil
+				}), false)),
+			// When Lich is put into a graveyard from the battlefield, you lose the game.
+			// TODO: convert to pipeline — needs Lich-specific game rule steps
+			WithAbility(PutIntoGraveyardFromBattlefieldTrigger(FuncEffect(
+				"you lose the game",
+				EffectProperties{},
+				func(g *Game, _, controller uuid.UUID, _ []uuid.UUID) error {
+					g.ClearLich(controller)
+					p := g.GetPlayer(controller)
+					if p != nil {
+						p.LoseLife(9999)
+					}
+					return nil
+				}), false)),
+		)
+	})
+
+	Register("Island Sanctuary", func() Card {
+		// Oracle: "If you would draw a card during your draw step, instead you
+		// may skip that draw. If you do, until your next turn, you can't be
+		// attacked except by creatures with flying or islandwalk."
+		// Implemented as a draw replacement registered on ETB: when the
+		// controller's draw-step draw fires, the replacement asks them whether
+		// to skip; accepting both replaces the draw with nothing and arms the
+		// sanctuary attack-restriction until their next turn.
+		return NewEnchantment("Island Sanctuary", "{1}{W}",
+			WithAbility(EntersBattlefieldTrigger(FuncEffect(
+				"register Island Sanctuary draw replacement",
+				EffectProperties{},
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					g.AddIslandSanctuaryReplacement(controller, sourceID)
+					return nil
+				}), false)),
+		)
+	})
+
+	Register("Power Surge", func() Card {
+		return NewEnchantment("Power Surge", "{R}{R}",
+			WithAbility(BeginningOfEachUpkeepTrigger(
+				DealDamageToPlayers(
+					UntappedLandsAtTurnStart(SelectActivePlayer()),
+					SelectActivePlayer(),
+				), false)),
+		)
+	})
+
+	Register("Lifetap", func() Card {
+		return NewEnchantment("Lifetap", "{U}{U}",
+			WithAbility(WhenOpponentPermanentBecomesTappedTrigger(
+				GainLife(1), false,
+				And(IsLand, HasSubType("Forest")),
+			)),
+		)
+	})
+
+	Register("Conversion", func() Card {
+		return NewEnchantment("Conversion", "{2}{W}{W}",
+			WithStaticAbility(
+				ChangeSubTypesForAll([]string{"Mountain"}, []string{"Plains"}),
+			),
+			WithAbility(SacrificeAtUpkeepUnlessPay("{W}{W}")),
+		)
+	})
+
+	Register("Gloom", func() Card {
+		return NewEnchantment("Gloom", "{2}{B}",
+			WithStaticAbility(
+				IncreaseSpellCostForColor(White, 3),
+			),
+			// XXX: missing "Activated abilities of white enchantments cost {3} more to activate" — no engine support for increasing activated ability costs
+		)
+	})
+
+	Register("Magnetic Mountain", func() Card {
+		return NewEnchantment("Magnetic Mountain", "{1}{R}{R}",
+			WithStaticAbility(
+				PreventUntapForMatching(And(IsCreature, HasColorFilter(Blue))),
+			),
+			// TODO: convert to pipeline — needs ForEach + TryPayMana + untap per creature
+			WithAbility(BeginningOfEachUpkeepTrigger(
+				FuncEffect("pay {4} to untap blue creatures",
+					EffectProperties{},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						// Find the active player (whose upkeep it is)
+						activePlayer := g.ActivePlayerObj().PlayerID()
+						blues := g.FilterBattlefield(And(IsCreature, HasColorFilter(Blue), ControlledBy(activePlayer), IsTapped))
+						for _, blue := range blues {
+							if g.TryPayCostFromLands(activePlayer, "{4}") {
+								blue.Tapped = false
+							}
+						}
+						return nil
+					}), false,
+			)),
+		)
+	})
+
+	// TODO implement
+	//   "Text": "Enchant land\nEnchanted land has indestructible and can't be enchanted by other Auras.",
+	Register("Consecrate Land", func() Card {
+		return NewAura("Consecrate Land", "{W}",
+			WithCastTarget(TargetLand()),
+			WithStaticAbility(
+				GrantAbilityToAttached(Indestructible, AttachAura),
+			),
+		)
+	})
+
+	// TODO implement
+	// Fastbond's effects only apply to caster, not all players
+	Register("Fastbond", func() Card {
+		return NewEnchantment("Fastbond", "{G}",
+			WithStaticAbility(AllowUnlimitedLandPlays()),
+			WithAbility(NewTriggered(EvtLandPlayed, false,
+				DealDamageToPlayers(Fixed(1), SelectController()),
+			).
+				SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{EventPlayerIsController{}, EventAmountGreaterThan{N: 1}}})),
+		)
+	})
+
+	Register("Kudzu", func() Card {
+		return NewAura("Kudzu", "{1}{G}{G}",
+			WithCastTarget(TargetLand()),
+			// TODO: convert to pipeline — complex attachment manipulation
+			WithAbility(WhenAttachedBecomesTappedTrigger(FuncEffect(
+				"destroy enchanted land; its controller picks another land to attach Kudzu to",
+				EffectProperties{},
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					kudzu := g.FindPermanent(sourceID)
+					if kudzu == nil {
+						return nil
+					}
+					attached := g.FindPermanent(kudzu.AttachedTo)
+					if attached == nil {
+						return nil
+					}
+					attachedID := attached.ID()
+					attachedController := attached.Controller
+					kudzu.AttachedTo = uuid.Nil
+					filtered := attached.Attachments[:0]
+					for _, id := range attached.Attachments {
+						if id != sourceID {
+							filtered = append(filtered, id)
+						}
+					}
+					attached.Attachments = filtered
+					g.DestroyPermanent(attached)
+					var candidates []*Permanent
+					for _, p := range g.FilterBattlefield(AnyPermanent) {
+						if p.HasType(TypeLand) && p.ID() != attachedID {
+							candidates = append(candidates, p)
+						}
+					}
+					if len(candidates) == 0 {
+						return nil
+					}
+					chooser := g.GetPlayer(attachedController)
+					if chooser == nil {
+						return nil
+					}
+					chosen := chooser.ChoosePermanent(candidates, "attach Kudzu to a land", g)
+					if chosen == nil {
+						return nil
+					}
+					g.Attach(sourceID, chosen.ID())
+					return nil
+				}), false)),
+		)
+	})
+
+	Register("Regeneration", func() Card {
+		return NewAura("Regeneration", "{1}{G}",
+			WithStaticAbility(
+				GrantActivatedAbilityToAttached(
+					RegenerateSource(),
+					ManaCostOf("{G}"),
+					AttachAura,
+				),
+			),
+		)
+	})
+
+	// Smoke {R}{R}
+	// Enchantment
+	// Players can't untap more than one creature during their untap steps.
+	Register("Smoke", func() Card {
+		return NewEnchantment("Smoke", "{R}{R}",
+			WithStaticAbility(LimitCreatureUntaps(1)),
+		)
+	})
+
+	// Manabarbs {3}{R}
+	// Enchantment
+	// Whenever a player taps a land for mana, Manabarbs deals 1 damage to that player.
+	Register("Manabarbs", func() Card {
+		return NewEnchantment("Manabarbs", "{3}{R}",
+			WithAbility(NewTriggered(EvtTapped, false,
+				DealDamageToPlayers(Fixed(1), SelectEventController()),
+			).SetConditionData(EventSourceHasType{Type: TypeLand})),
+		)
+	})
+
+	// Animate Wall {W}
+	// Enchantment — Aura
+	// Enchant Wall
+	// Enchanted Wall can attack as though it didn't have defender.
+	Register("Animate Wall", func() Card {
+		return NewAura("Animate Wall", "{W}",
+			WithCastTarget(TargetCreature(HasSubType("Wall"))),
+			WithStaticAbility(
+				GrantAbilityToAttached(AttrCanAttack, AttachAura),
+			),
+		)
+	})
+
+	Register("Aspect of Wolf", func() Card {
+		return NewAura("Aspect of Wolf", "{1}{G}",
+			// Enchanted creature gets +X/+Y where X is half Forests you control
+			// (rounded down) and Y is half (rounded up).
+			WithStaticAbility(
+				BoostAttachedByCount(
+					And(IsLand, HasSubType("Forest")),
+					func(n int) int { return n / 2 },
+					func(n int) int { return (n + 1) / 2 },
+				),
+			),
+		)
+	})
+
+	Register("Stasis", func() Card {
+		return NewEnchantment("Stasis", "{1}{U}",
+			// Players skip their untap steps.
+			WithStaticAbility(PreventAllUntaps()),
+			// At the beginning of your upkeep, sacrifice Stasis unless you pay {U}.
+			WithAbility(SacrificeAtUpkeepUnlessPay("{U}")),
+		)
+	})
+
+	Register("Pestilence", func() Card {
+		return NewEnchantment("Pestilence", "{2}{B}{B}",
+			// At the beginning of the end step, if no creatures are on the battlefield, sacrifice Pestilence.
+			WithAbility(BeginningOfEachEndStepTrigger(
+				IfElse("sacrifice if no creatures",
+					&NotCond{Inner: &HasMatchingPermanentCond{Filter: IsCreature}},
+					SacrificeSourceStep(),
+					nil,
+				), false,
+			)),
+			// {B}: Deal 1 damage to each creature and each player
+			WithActivatedAbility(
+				CompositeEffects("deal 1 damage to each creature and each player",
+					DealDamageToAllCreatures(Fixed(1), PermanentFilter{}),
+					DealDamageToPlayers(Fixed(1), SelectEachPlayer()),
+				),
+				ManaCostOf("{B}"),
+			),
+		)
+	})
+
 }

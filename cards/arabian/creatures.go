@@ -19,12 +19,13 @@ func registerCreatures() {
 		return NewCreature("Abu Ja'far", "{W}", 0, 1,
 			WithSubTypes("Human"),
 			WithAbility(
-				NewTriggered(EvtCreatureDied, false,
+				DiesTrigger(
 					ForEachCombatOpponent(
 						DestroyTargetNoRegenStep(),
 						"destroy all creatures blocking or blocked by Abu Ja'far",
 					),
-				).SetConditionData(EventSourceIsSelf{}),
+					false,
+				),
 			),
 		)
 	})
@@ -51,7 +52,7 @@ func registerCreatures() {
 			WithSubTypes("Human", "Noble"),
 			WithActivatedAbility(
 				DestroyTarget(),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature(
 					Or(HasSubType("Djinn"), HasSubType("Efreet")),
 				)),
@@ -92,8 +93,8 @@ func registerCreatures() {
 		return NewCreature("Dandân", "{U}{U}", 4, 1,
 			WithSubTypes("Fish"),
 			WithStaticAbility(PreventFromAttackingIfDefendingPlayerControls(HasSubType("Island"))),
-			WithAbility(NewTriggered(EvtLeavesBattlefield, false, SacrificeSource()).
-				SetConditionData(ControllerHasNoPermanentMatching{Filter: HasSubType("Island")})),
+			WithAbility(NewTriggered(EvtZoneChange, false, SacrificeSource()).AndConditionData(EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneAny}).
+				AndConditionData(ControllerHasNoPermanentMatching{Filter: HasSubType("Island")})),
 		)
 	})
 
@@ -125,13 +126,13 @@ func registerCreatures() {
 			WithAbility(BeginningOfUpkeepTrigger(
 				IfElse("pay {U}{U}{U} to untap",
 					&TryPayManaCond{Cost: "{U}{U}{U}"},
-					UnwrapEffect(UntapSource()),
+					UntapSource(),
 					nil,
 				), false,
 			)),
 			WithStaticAbility(PreventFromAttackingIfDefendingPlayerControls(HasSubType("Island"))),
-			WithAbility(NewTriggered(EvtLeavesBattlefield, false, SacrificeSource()).
-				SetConditionData(ControllerHasNoPermanentMatching{Filter: HasSubType("Island")})),
+			WithAbility(NewTriggered(EvtZoneChange, false, SacrificeSource()).AndConditionData(EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneAny}).
+				AndConditionData(ControllerHasNoPermanentMatching{Filter: HasSubType("Island")})),
 		)
 	})
 
@@ -147,8 +148,8 @@ func registerCreatures() {
 					GainLife(2),
 				).SetConditionData(SourceIsUnblockedAttacker{}),
 			),
-			WithAbility(NewTriggered(EvtLeavesBattlefield, false, SacrificeSource()).
-				SetConditionData(ControllerHasNoPermanentMatching{Filter: HasSubType("Island")})),
+			WithAbility(NewTriggered(EvtZoneChange, false, SacrificeSource()).AndConditionData(EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneAny}).
+				AndConditionData(ControllerHasNoPermanentMatching{Filter: HasSubType("Island")})),
 		)
 	})
 
@@ -179,7 +180,7 @@ func registerCreatures() {
 						src.ControlledPermanent = targets[0]
 						return nil
 					}),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreatureWithPowerLESource()),
 			),
 			WithStaticAbility(FuncContinuousEffect(LayerControl, WhileOnBattlefield,
@@ -283,7 +284,7 @@ func registerCreatures() {
 						}
 						return nil
 					}),
-				TapSourceCost(),
+				Tap(),
 			),
 		)
 	})
@@ -339,7 +340,7 @@ func registerCreatures() {
 						}
 						return nil
 					}),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetAnyTarget()),
 			),
 		)
@@ -411,7 +412,7 @@ func registerCreatures() {
 				IfElse("pay {2} or take 3 damage",
 					&TryPayManaCond{Cost: "{2}"},
 					nil,
-					UnwrapEffect(DealDamageToPlayers(Fixed(3), SelectController())),
+					DealDamageToPlayers(Fixed(3), SelectController()),
 				), false,
 			)),
 		)
@@ -468,7 +469,7 @@ func registerCreatures() {
 			WithSubTypes("Human", "Wizard", "Sorcerer"),
 			WithActivatedAbility(
 				SetPTUntilEndOfTurn(0, 2, SelectTarget),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetOtherCreature()),
 			),
 		)
@@ -504,7 +505,7 @@ func registerCreatures() {
 						src.ControlledPermanent = targets[0]
 						return nil
 					}),
-				TapSourceCost(),
+				Tap(),
 				WithCost(ManaCostOf("{1}{R}{R}")),
 				WithTarget(TargetArtifact()),
 			),
@@ -530,7 +531,7 @@ func registerCreatures() {
 		return NewCreature("Ali Baba", "{R}", 1, 1,
 			WithSubTypes("Human", "Rogue"),
 			WithActivatedAbility(
-				TapTarget(),
+				Tap(),
 				ManaCostOf("{R}"),
 				WithTarget(TargetCreature(HasSubType("Wall"))),
 			),
@@ -581,7 +582,7 @@ func registerCreatures() {
 			WithSubTypes("Jackal"),
 			WithActivatedAbility(
 				GrantKeyword(CantRegenerate),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -606,7 +607,7 @@ func registerCreatures() {
 					SnapshotPermanent(SelectSource, "self"),
 					IfElse("remove from combat and tap if lost",
 						&NotCond{Inner: &FlipCoinCond{}},
-						&PipelineData{Steps: []EffectData{
+						&PipelineData{Steps: []Effect{
 							RemoveFromCombatGathered("self"),
 							TapGathered("self"),
 						}},
@@ -623,11 +624,12 @@ func registerCreatures() {
 		return NewCreature("Rukh Egg", "{3}{R}", 0, 3,
 			WithSubTypes("Bird", "Egg"),
 			WithAbility(
-				NewTriggered(EvtCreatureDied, false,
+				DiesTrigger(
 					RegisterDelayedTriggerStep(EvtEndStep, "",
 						CreateColoredToken("Bird", 4, 4, []Color{Red}, []CardType{TypeCreature}, []string{"Bird"}, Flying),
 					),
-				).SetConditionData(EventSourceIsSelf{}),
+					false,
+				),
 			),
 		)
 	})
@@ -638,22 +640,19 @@ func registerCreatures() {
 		return NewCreature("Ydwen Efreet", "{R}{R}{R}", 3, 6,
 			WithSubTypes("Efreet"),
 			WithAbility(BlocksTrigger(
-				// TODO: convert to pipeline — needs FlipCoin condition + cant-block-this-turn primitives
-				FuncEffect("flip coin or remove from combat",
+				Pipeline("flip a coin; if you lose, remove from combat and it can't block this turn",
 					EffectProperties{},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						if !g.FlipCoin(controller) {
-							g.RemoveFromCombat(sourceID)
-							// "it can't block this turn"
-							eff := TargetEffect(LayerAbility, EndOfTurn, sourceID, func(g *Game, target *Permanent) error {
-								g.RevokeAttr(target.ID(), AttrCanBlock)
-								return nil
-							})
-							g.AddContinuousEffect(eff)
-							g.ApplyContinuousEffects()
-						}
-						return nil
-					}), false,
+					SnapshotPermanent(SelectSource, "self"),
+					IfElse("on lost flip, remove from combat and revoke can-block",
+						&FlipCoinCond{},
+						nil,
+						Pipeline("remove from combat and revoke can-block",
+							EffectProperties{},
+							RemoveFromCombatGathered("self"),
+							RevokeKeyword(AttrCanBlock).Targeting(ToSource()),
+						),
+					),
+				), false,
 			)),
 		)
 	})
@@ -760,18 +759,11 @@ func registerCreatures() {
 			WithSubTypes("Efreet"),
 			WithKeyword(Flying),
 			WithActivatedAbility(
-				// TODO: convert to pipeline — needs deal-damage-to-all-matching + deal-damage-to-all-players primitives
-				FuncEffect("deal 1 to each flyer and each player",
-					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						for _, c := range g.FilterBattlefield(HasKeywordFilter(Flying)) {
-							g.DealDamageToPermanent(c, 1, sourceID)
-						}
-						for _, p := range g.AllPlayers() {
-							g.DealDamageToPlayer(p, 1, sourceID)
-						}
-						return nil
-					}),
+				CompositeEffects(
+					"Ifh-Bíff Efreet deals 1 damage to each creature with flying and each player",
+					DealDamageToAllCreatures(Fixed(1), HasKeywordFilter(Flying)),
+					DealDamageToPlayers(Fixed(1), SelectEachPlayer()),
+				),
 				ManaCostOf("{G}"),
 				WithAnyPlayerMay(),
 			),
@@ -824,7 +816,7 @@ func registerCreatures() {
 			WithSubTypes("Plant"),
 			WithActivatedAbility(
 				SetPowerUntilEndOfTurn(0, SelectTarget),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature(IsAttacking)),
 			),
 		)
@@ -836,7 +828,7 @@ func registerCreatures() {
 			WithSubTypes("Wolf"),
 			WithActivatedAbility(
 				Boost(Fixed(1), Fixed(1)),
-				TapSourceCost(),
+				Tap(),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -854,7 +846,7 @@ func registerCreatures() {
 			WithAbility(BeginningOfUpkeepTrigger(
 				IfElse("pay {1} to untap",
 					&TryPayManaCond{Cost: "{1}"},
-					UnwrapEffect(UntapSource()),
+					UntapSource(),
 					nil,
 				), false,
 			)),

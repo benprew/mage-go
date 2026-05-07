@@ -24,7 +24,7 @@ func TestUnifiedActionSpellAndActivatedAbilityResolve(t *testing.T) {
 		mage.Register(pingerName, func() mage.Card {
 			return mage.NewCreature(pingerName, "{2}{U}", 1, 1,
 				mage.WithAction(mage.NewActivated(
-					mage.TapSourceCost(),
+					mage.Tap(),
 					mage.DealDamage(mage.Fixed(1)),
 					mage.WithTarget(mage.TargetAnyTarget()),
 				)),
@@ -59,7 +59,7 @@ func TestUnifiedActionCompatibilityWrappers(t *testing.T) {
 			return mage.NewArtifact(abilityName, "{1}",
 				mage.WithActivatedAbility(
 					mage.GainLife(1),
-					mage.TapSourceCost(),
+					mage.Tap(),
 				),
 			)
 		})

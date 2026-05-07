@@ -65,12 +65,32 @@ type Game struct {
 
 	// Amount from the triggering event (e.g. damage dealt) for triggered abilities
 	currentEventAmount int
+	// SourceID of the triggering event (e.g. the damager on EvtDamageDealt).
+	// Read by Game.EventSourceID() during resolution of a triggered ability.
+	currentEventSourceID uuid.UUID
 
 	// Card currently being resolved (set during ResolveStackObject)
 	resolvingCard Card
 
+	// Zone the resolving spell was cast from (set during ResolveStackObject
+	// from StackObject.CastZone). Read by triggers expressing "if you cast it
+	// from your hand"/"from your graveyard" — including ETB triggers on the
+	// resolving permanent, since PutOnBattlefield is invoked before the field
+	// is cleared.
+	resolvingCastZone Zone
+
 	// Interactive play tracking
 	landsPlayedThisTurn int
+
+	// Per-player additional-land-play allowance granted this turn ("you may
+	// play an additional land this turn"). Reset alongside landsPlayedThisTurn
+	// during cleanup. CR 305.2 / Explore-style effects.
+	extraLandPlaysThisTurn map[uuid.UUID]int
+
+	// Per-source flag set by OptionalCost: true if the controller chose to
+	// pay the optional cost most recently. Resolution-time effects branch on
+	// LastCostOptionalPaid(sourceID).
+	optionalCostPaid map[uuid.UUID]bool
 
 	// Damage tracking: maps target permanent ID -> set of source permanent IDs that dealt damage this turn
 	damageDealtBy map[uuid.UUID]map[uuid.UUID]bool
@@ -80,6 +100,18 @@ type Game struct {
 
 	// Artifact damage tracking: maps player ID -> artifact damage taken this turn
 	artifactDamageTakenThisTurn map[uuid.UUID]int
+
+	// Per-step combat damage aggregation. Maps controllerID -> recipientPlayerID
+	// -> total combat damage dealt this damage step. Reset before each
+	// ResolveDamage call; consumed to fire EvtCombatDamageDealt afterward.
+	combatDamageThisStep map[uuid.UUID]map[uuid.UUID]int
+	// Per-step combat damage breakdown by source permanent. Maps
+	// (controllerID, recipientPlayerID) -> sourcePermanentID -> amount.
+	// Populated alongside combatDamageThisStep; preserved across the
+	// EvtCombatDamageDealt fire so trigger predicates can filter on source
+	// attributes (e.g., "non-Human creatures you control"). Cleared at the
+	// end of flushCombatDamageAggregator.
+	combatDamageSourcesThisStep map[uuid.UUID]map[uuid.UUID]map[uuid.UUID]int
 
 	// Artifact mana restriction: players who have activated artifact-only mana sources
 	artifactManaOnly map[uuid.UUID]bool
@@ -100,6 +132,15 @@ type Game struct {
 	// Creature deaths this turn (total count across all players)
 	creatureDeathsThisTurn int
 
+	// Number of untapped lands the active player controlled at the start of
+	// this turn (snapshot taken before the untap step). Read by Power Surge.
+	untappedLandsAtTurnStart map[uuid.UUID]int
+
+	// Times an object (permanent or player) became the target of a spell or
+	// activated ability this turn (CR 603.6c). Keyed by object ID. Used by
+	// "first time each turn" target triggers like Kira, Great Glass-Spinner.
+	timesTargetedThisTurn map[uuid.UUID]int
+
 	// CleanupPriorityRounds counts how many times players have received priority
 	// during a cleanup step in this game. Normally no priority is given during
 	// cleanup (CR 514.3); it is only granted when a state-based action fires or
@@ -110,6 +151,40 @@ type Game struct {
 
 	// Targets of the spell currently being resolved (for ETB copy effects)
 	resolvingTargets []uuid.UUID
+
+	// Permanent currently being put onto the battlefield during PutOnBattlefield,
+	// before it is appended to g.battlefield. Looked up by FindPermanent so
+	// that counter-placement replacements (ETB additional, doubling) can match
+	// the entering permanent during ETB resolution.
+	enteringPermanent *Permanent
+
+	// DamageDistribution chosen at cast/activation time for the spell currently
+	// being resolved (CR 601.2d, divided damage). Cleared after resolution.
+	resolvingDamageDistribution map[uuid.UUID]int
+
+	// LKI snapshot of the most recently sacrificed permanent paid as a cost
+	// for the spell or ability currently on the stack. Set by SacrificeSourceCost,
+	// SacrificeMatchingCost, and SacrificeCreatureCost; read by effects via
+	// LastSacrificed(). Cleared at the start of each cost-pay cycle and after
+	// resolution.
+	lastSacrificed *SacrificedSnapshot
+
+	// LKI snapshots for permanents that have left the battlefield, keyed by
+	// permanent ID. Populated by RemoveFromBattlefield so that death/leave
+	// triggers (and their conditions) can read the dying permanent's
+	// controller, types, P/T, and token-ness after it has moved zones.
+	// Cleared at end-of-turn cleanup.
+	lki map[uuid.UUID]*PermanentLKI
+
+	// Mill amount modifiers (CR 614 replacement-style) keyed by source permanent ID.
+	// Each entry maps milled-player ID -> proposed amount -> new amount; modifiers
+	// stack and are dropped when the source leaves the battlefield (cleared in Apply).
+	millModifiers []millModifierEntry
+
+	// Life-gain amount modifiers (CR 614 replacement-style) keyed by source
+	// permanent ID. Used by Rhox Faithmender ("If you would gain life, you
+	// gain twice that much life instead.") and similar effects.
+	lifeGainModifiers []lifeGainModifierEntry
 
 	// Delayed triggers
 	delayedTriggers []*DelayedTrigger
@@ -141,6 +216,28 @@ type Game struct {
 	// resolvingCombatDamage is true while combat damage is being resolved.
 	// Used by the replacement pipeline to identify combat damage actions.
 	resolvingCombatDamage bool
+
+	// castFromExilePermissions records which exiled cards specific players
+	// may cast (Gonti, Lord of Luxury and similar effects). The permission
+	// persists until the card leaves exile.
+	castFromExilePermissions []CastableFromExilePermission
+
+	// exileInsteadCards maps card IDs that should be exiled instead of put
+	// into a graveyard this turn (Scholar of the Lost Trove rider). Value
+	// is the source ID that granted the rider. Cleared at end of turn.
+	exileInsteadCards map[uuid.UUID]uuid.UUID
+
+	// lastCostReveal is the most recent card revealed by a
+	// [RevealFromHandCost]. Cleared on each cost-pay cycle by the cost
+	// pipeline; clients can read it during effect resolution.
+	lastCostReveal Card
+
+	// Per-turn trackers (see per_turn_trackers.go). Reset by
+	// resetPerTurnTrackers in the turn-end cleanup pipeline.
+	discardCountThisTurn       map[uuid.UUID]int  // playerID -> discards this turn
+	lifeGainedThisTurn         map[uuid.UUID]int  // playerID -> life gained this turn
+	permDamageReceivedThisTurn map[uuid.UUID]int  // permID/playerID -> damage taken this turn
+	attackedOrBlockedThisTurn  map[uuid.UUID]bool // permID -> attacked or blocked this turn
 }
 
 func (g *Game) ActivePlayer() int {
@@ -158,6 +255,8 @@ type DelayedTrigger struct {
 	MatchEventID  uuid.UUID // if set, only fire when evt.SourceID matches
 	MatchPlayerID uuid.UUID // if set, only fire when evt.PlayerID matches
 	MatchTargetID uuid.UUID // if set, only fire when evt.TargetID matches
+	MatchFromZone Zone      // for EvtZoneChange: ZoneAny to skip the from check
+	MatchToZone   Zone      // for EvtZoneChange: ZoneAny to skip the to check
 	Persistent    bool      // if true, trigger is not consumed after firing
 }
 
@@ -184,13 +283,17 @@ func NewGame(playerA, playerB Player) *Game {
 		damageDealtBy:               make(map[uuid.UUID]map[uuid.UUID]bool),
 		damageTakenThisTurn:         make(map[uuid.UUID]int),
 		artifactDamageTakenThisTurn: make(map[uuid.UUID]int),
+		combatDamageThisStep:        make(map[uuid.UUID]map[uuid.UUID]int),
+		combatDamageSourcesThisStep: make(map[uuid.UUID]map[uuid.UUID]map[uuid.UUID]int),
 		attackedThisTurn:            make(map[uuid.UUID]bool),
 		blockedThisTurn:             make(map[uuid.UUID][]uuid.UUID),
 		instantsCastThisTurn:        make(map[uuid.UUID]int),
+		timesTargetedThisTurn:       make(map[uuid.UUID]int),
 		artifactManaOnly:            make(map[uuid.UUID]bool),
 		creatureManaOnly:            make(map[uuid.UUID]bool),
 		armedStateTriggers:          make(map[stateTriggerKey]bool),
 		schedule:                    newTurnSchedule(),
+		exileInsteadCards:           make(map[uuid.UUID]uuid.UUID),
 	}
 }
 
@@ -234,6 +337,9 @@ func (g *Game) FindPermanent(id uuid.UUID) *Permanent {
 		if p.ID() == id {
 			return p
 		}
+	}
+	if g.enteringPermanent != nil && g.enteringPermanent.ID() == id {
+		return g.enteringPermanent
 	}
 	return nil
 }
@@ -454,18 +560,27 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 		perm.RevokeBaseAttr(EntersTapped)
 	}
 
-	// Add X counters if configured (replacement effect, not a trigger)
+	// Expose the entering permanent to FindPermanent for the duration of ETB
+	// resolution so counter-placement replacements (ETB additional counters,
+	// doublers) can match it before it joins g.battlefield.
+	g.enteringPermanent = perm
+	defer func() { g.enteringPermanent = nil }()
+
+	// Add X counters if configured (replacement effect, not a trigger).
+	// Routed through AddCountersWithReplacement so ETB-additional counter
+	// effects (Oona's Blackguard) and counter doublers (Branching Evolution)
+	// can intercept the placement.
 	for _, a := range perm.RuntimeAbilities {
 		if xc, ok := a.(*EntersWithXCountersAbility); ok && g.currentX > 0 {
-			perm.AddCounter(xc.CounterType, g.currentX)
+			g.AddCountersWithReplacement(perm, xc.CounterType, g.currentX, perm.ID(), true)
 			break
 		}
 	}
 
-	// Add fixed N counters if configured (replacement effect, not a trigger)
+	// Add fixed N counters if configured (replacement effect, not a trigger).
 	for _, a := range perm.RuntimeAbilities {
 		if nc, ok := a.(*EntersWithNCountersAbility); ok {
-			perm.AddCounter(nc.CounterType, nc.Count)
+			g.AddCountersWithReplacement(perm, nc.CounterType, nc.Count, perm.ID(), true)
 		}
 	}
 
@@ -511,10 +626,12 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 	g.effects.Apply(g)
 
 	g.FireEvent(GameEvent{
-		Type:     EvtEntersBattlefield,
+		Type:     EvtZoneChange,
 		SourceID: perm.ID(),
 		PlayerID: controller,
 		Amount:   g.currentX, // preserve X from resolving spell for ETB triggers
+		FromZone: ZoneAny,    // engine doesn't model the precise origin of an ETB
+		ToZone:   ZoneBattlefield,
 	})
 
 	return perm
@@ -535,12 +652,6 @@ func (g *Game) PutOnBattlefieldAttacking(card Card, controller, defenderID uuid.
 		return perm
 	}
 	g.combat.AddAttacker(perm.ID(), defenderID)
-	g.FireEvent(GameEvent{
-		Type:     EvtEntersAttacking,
-		SourceID: perm.ID(),
-		TargetID: defenderID,
-		PlayerID: controller,
-	})
 	return perm
 }
 
@@ -559,12 +670,6 @@ func (g *Game) PutOnBattlefieldBlocking(card Card, controller, attackerID uuid.U
 	}
 	g.combat.AddBlocker(perm.ID(), attackerID)
 	g.blockedThisTurn[perm.ID()] = append(g.blockedThisTurn[perm.ID()], attackerID)
-	g.FireEvent(GameEvent{
-		Type:     EvtEntersBlocking,
-		SourceID: perm.ID(),
-		TargetID: attackerID,
-		PlayerID: controller,
-	})
 	return perm
 }
 
@@ -614,11 +719,9 @@ func (g *Game) turnFaceUp(perm *Permanent) {
 
 // RemoveFromBattlefield removes a permanent and handles cleanup.
 func (g *Game) RemoveFromBattlefield(perm *Permanent) {
-	// Capture abilities before removal (for "leaves battlefield" triggers on self)
-	selfAbilities := make([]Ability, len(perm.RuntimeAbilities))
-	copy(selfAbilities, perm.RuntimeAbilities)
-	permID := perm.ID()
-	controller := perm.Controller
+	// Snapshot LKI before any state mutation so death/leave-triggers can
+	// read the dying permanent's controller, types, and P/T after the move.
+	g.captureLKI(perm)
 
 	// Remove continuous effects sourced from this permanent
 	g.effects.Remove(perm.ID())
@@ -650,15 +753,11 @@ func (g *Game) RemoveFromBattlefield(perm *Permanent) {
 	}
 
 	g.effects.Apply(g)
-
-	evt := GameEvent{
-		Type:     EvtLeavesBattlefield,
-		SourceID: permID,
-		PlayerID: controller,
-	}
-	g.FireEvent(evt)
-	// Also check the removed permanent's own triggers (since it's no longer on battlefield)
-	g.checkAbilitiesForEvent(selfAbilities, &evt, permID, controller)
+	// Leave-zone trigger dispatch (CR 603.6c) happens in the destination-
+	// specific path (Destroy / Sacrifice / Exile / Bounce /
+	// PutPermanentIntoGraveyard) via EvtZoneChange + LKIAbilities. The
+	// permanent's runtime abilities are captured into LKI by captureLKI
+	// above.
 
 	// Detach equipment immediately. Auras are left for SBAs to put into the
 	// graveyard so that "when enchanted creature dies" triggers can still see
@@ -695,13 +794,10 @@ func (g *Game) DestroyPermanent(perm *Permanent) {
 	permID := perm.ID()
 	card := perm.Card
 
-	// Capture abilities before removal (for "leaves battlefield" / "dies" triggers on self)
-	selfAbilities := make([]Ability, len(perm.RuntimeAbilities))
-	copy(selfAbilities, perm.RuntimeAbilities)
-
 	isToken := perm.IsToken
 
 	g.RemoveFromBattlefield(perm)
+	selfAbilities := g.LKIAbilities(permID)
 
 	if !isToken {
 		p := g.GetPlayer(owner)
@@ -710,24 +806,18 @@ func (g *Game) DestroyPermanent(perm *Permanent) {
 		}
 	}
 
-	// Check the destroyed permanent's own abilities for self-referencing triggers
 	graveyardEvt := GameEvent{
-		Type:     EvtPutIntoGraveyardFromBattlefield,
+		Type:     EvtZoneChange,
 		SourceID: permID,
 		PlayerID: controller,
+		FromZone: ZoneBattlefield,
+		ToZone:   ZoneGraveyard,
 	}
 	g.FireEvent(graveyardEvt)
 	g.checkAbilitiesForEvent(selfAbilities, &graveyardEvt, permID, controller)
 
 	if isCreature {
 		g.creatureDeathsThisTurn++
-		diedEvt := GameEvent{
-			Type:     EvtCreatureDied,
-			SourceID: permID,
-			PlayerID: controller,
-		}
-		g.FireEvent(diedEvt)
-		g.checkAbilitiesForEvent(selfAbilities, &diedEvt, permID, controller)
 	}
 }
 
@@ -781,11 +871,8 @@ func (g *Game) PutPermanentIntoGraveyard(perm *Permanent) {
 	permID := perm.ID()
 	card := perm.Card
 
-	// Capture abilities before removal (for "leaves battlefield" / "dies" triggers on self)
-	selfAbilities := make([]Ability, len(perm.RuntimeAbilities))
-	copy(selfAbilities, perm.RuntimeAbilities)
-
 	g.RemoveFromBattlefield(perm)
+	selfAbilities := g.LKIAbilities(permID)
 
 	if !isToken {
 		p := g.GetPlayer(owner)
@@ -795,26 +882,24 @@ func (g *Game) PutPermanentIntoGraveyard(perm *Permanent) {
 	}
 
 	graveyardEvt := GameEvent{
-		Type:     EvtPutIntoGraveyardFromBattlefield,
+		Type:     EvtZoneChange,
 		SourceID: permID,
 		PlayerID: controller,
+		FromZone: ZoneBattlefield,
+		ToZone:   ZoneGraveyard,
 	}
 	g.FireEvent(graveyardEvt)
 	g.checkAbilitiesForEvent(selfAbilities, &graveyardEvt, permID, controller)
 
 	if isCreature {
 		g.creatureDeathsThisTurn++
-		diedEvt := GameEvent{
-			Type:     EvtCreatureDied,
-			SourceID: permID,
-			PlayerID: controller,
-		}
-		g.FireEvent(diedEvt)
-		g.checkAbilitiesForEvent(selfAbilities, &diedEvt, permID, controller)
 	}
 }
 
-// Sacrifice sacrifices a permanent (like destroy but doesn't check indestructible).
+// Sacrifice sacrifices a permanent (like destroy but doesn't check
+// indestructible). Self-referential triggers fire from the LKI snapshot's
+// captured abilities (CR 700.4 / 603.6c: any battlefield → graveyard
+// transition is "put into a graveyard," including sacrifice).
 func (g *Game) Sacrifice(perm *Permanent) {
 	controller := perm.Controller
 	owner := perm.Card.Owner()
@@ -828,6 +913,7 @@ func (g *Game) Sacrifice(perm *Permanent) {
 	card := perm.Card
 
 	g.RemoveFromBattlefield(perm)
+	selfTriggers := g.LKIAbilities(permID)
 
 	if !isToken {
 		p := g.GetPlayer(owner)
@@ -836,25 +922,72 @@ func (g *Game) Sacrifice(perm *Permanent) {
 		}
 	}
 
-	g.FireEvent(GameEvent{
-		Type:     EvtPutIntoGraveyardFromBattlefield,
+	zoneEvt := GameEvent{
+		Type:     EvtZoneChange,
 		SourceID: permID,
 		PlayerID: controller,
-		Flag:     true, // Flag=true means this was a sacrifice (not destroy)
-	})
+		Flag:     true, // sacrifice path (vs. destroy/SBA)
+		FromZone: ZoneBattlefield,
+		ToZone:   ZoneGraveyard,
+	}
+	g.FireEvent(zoneEvt)
+	g.checkAbilitiesForEvent(selfTriggers, &zoneEvt, permID, controller)
+
+	sacEvt := GameEvent{
+		Type:     EvtSacrifice,
+		SourceID: permID,
+		PlayerID: controller,
+		Flag:     isCreature, // Flag=true means the sacrificed permanent was a creature
+		FromZone: ZoneBattlefield,
+		ToZone:   ZoneGraveyard,
+	}
+	g.FireEvent(sacEvt)
+	g.checkAbilitiesForEvent(selfTriggers, &sacEvt, permID, controller)
 
 	if isCreature {
 		g.creatureDeathsThisTurn++
-		g.FireEvent(GameEvent{
-			Type:     EvtCreatureDied,
-			SourceID: permID,
-			PlayerID: controller,
-		})
 	}
 }
 
-// PlayerGainLife handles life gain with replacement effects (Lich).
+// PlayerDiscard removes a card from the player's hand into their graveyard and
+// fires EvtDiscard. SourceID = card ID, PlayerID = discarding player.
+// Returns the card and true on success.
+func (g *Game) PlayerDiscard(p Player, cardID uuid.UUID) (Card, bool) {
+	c, ok := p.DiscardCard(cardID)
+	if !ok {
+		return nil, false
+	}
+	g.FireEvent(GameEvent{
+		Type:     EvtDiscard,
+		SourceID: cardID,
+		PlayerID: p.PlayerID(),
+	})
+	return c, true
+}
+
+// PlayerLoseLife reduces a player's life total and fires EvtLifeLost. Used by
+// effects that cause direct life loss (CR 119.3). Damage that causes life loss
+// fires EvtLifeLost separately from executeDamageToPlayer.
+func (g *Game) PlayerLoseLife(p Player, amount int) {
+	if amount <= 0 {
+		return
+	}
+	p.LoseLife(amount)
+	g.FireEvent(GameEvent{
+		Type:     EvtLifeLost,
+		PlayerID: p.PlayerID(),
+		Amount:   amount,
+	})
+}
+
+// PlayerGainLife handles life gain with replacement effects (Lich) and
+// life-gain amount modifiers (Rhox Faithmender — "If you would gain
+// life, you gain twice that much life instead.").
 func (g *Game) PlayerGainLife(p Player, amount int) {
+	if amount <= 0 {
+		return
+	}
+	amount = g.ApplyLifeGainModifiers(p.PlayerID(), amount)
 	if amount <= 0 {
 		return
 	}
@@ -888,11 +1021,62 @@ func (g *Game) sacrificePermanents(playerID uuid.UUID, count int) {
 	}
 }
 
-// ExilePermanent removes a permanent from the battlefield to exile.
+// BouncePermanentToHand removes a permanent from the battlefield and adds the
+// underlying card to its owner's hand, firing an EvtZoneChange{From: BF,
+// To: Hand}. Self-referencing leave triggers fire via the LKI snapshot's
+// captured abilities per CR 603.6c.
+func (g *Game) BouncePermanentToHand(perm *Permanent) {
+	if perm == nil {
+		return
+	}
+	controller := perm.Controller
+	permID := perm.ID()
+	card := perm.Card
+	isToken := perm.IsToken
+	owner := card.Owner()
+	if owner == uuid.Nil {
+		owner = controller
+	}
+	g.RemoveFromBattlefield(perm)
+	selfAbilities := g.LKIAbilities(permID)
+	if !isToken {
+		// CR 111.7 / 111.10g: tokens cease to exist when they leave the
+		// battlefield. The zone-change event still fires, but the card is
+		// not added to a hand.
+		if p := g.GetPlayer(owner); p != nil {
+			p.AddToHand(card)
+		}
+	}
+	zoneEvt := GameEvent{
+		Type:     EvtZoneChange,
+		SourceID: permID,
+		PlayerID: controller,
+		FromZone: ZoneBattlefield,
+		ToZone:   ZoneHand,
+	}
+	g.FireEvent(zoneEvt)
+	g.checkAbilitiesForEvent(selfAbilities, &zoneEvt, permID, controller)
+}
+
+// ExilePermanent removes a permanent from the battlefield to exile and fires
+// an EvtZoneChange{From: Battlefield, To: Exile}. Self-referencing leave
+// triggers fire via the LKI snapshot's captured abilities per CR 603.6c.
 func (g *Game) ExilePermanent(perm *Permanent) {
+	controller := perm.Controller
+	permID := perm.ID()
 	card := perm.Card
 	g.RemoveFromBattlefield(perm)
+	selfAbilities := g.LKIAbilities(permID)
 	g.exile = append(g.exile, ExiledCard{Card: card})
+	zoneEvt := GameEvent{
+		Type:     EvtZoneChange,
+		SourceID: permID,
+		PlayerID: controller,
+		FromZone: ZoneBattlefield,
+		ToZone:   ZoneExile,
+	}
+	g.FireEvent(zoneEvt)
+	g.checkAbilitiesForEvent(selfAbilities, &zoneEvt, permID, controller)
 }
 
 // ExileCard moves a card (from any zone) to the exile zone.
@@ -937,9 +1121,54 @@ func (g *Game) RemoveExiledCardBySource(exiledBy uuid.UUID) []ExiledCard {
 	return found
 }
 
+// flushCombatDamageAggregator fires EvtCombatDamageDealt once per (controller,
+// recipient-player) pair that took combat damage this step (CR 510.2 wrap-up).
+// Used by "whenever one or more creatures you control deal combat damage to a
+// player" aggregator triggers. Per-creature/per-target damage is also fired by
+// EvtDamageDealt; this aggregator provides once-per-step semantics.
+func (g *Game) flushCombatDamageAggregator() {
+	if len(g.combatDamageThisStep) == 0 {
+		return
+	}
+	for ctrlID, byRecipient := range g.combatDamageThisStep {
+		for recipID, amount := range byRecipient {
+			g.FireEvent(GameEvent{
+				Type:     EvtCombatDamageDealt,
+				PlayerID: ctrlID,
+				TargetID: recipID,
+				Amount:   amount,
+			})
+		}
+	}
+	g.combatDamageThisStep = make(map[uuid.UUID]map[uuid.UUID]int)
+	g.combatDamageSourcesThisStep = make(map[uuid.UUID]map[uuid.UUID]map[uuid.UUID]int)
+}
+
+// CombatDamageSourcesThisStep returns the per-source combat damage breakdown
+// for the given (controllerID, recipientPlayerID) pair during the current
+// EvtCombatDamageDealt fire. Returns nil if no combat damage was dealt for
+// this pair this step. The map is sourcePermanentID -> amount. Trigger
+// condition closures listening to EvtCombatDamageDealt may use this to
+// filter on source attributes (e.g., "non-Human creatures you control").
+func (g *Game) CombatDamageSourcesThisStep(controllerID, recipientID uuid.UUID) map[uuid.UUID]int {
+	byCtrl, ok := g.combatDamageSourcesThisStep[controllerID]
+	if !ok {
+		return nil
+	}
+	return byCtrl[recipientID]
+}
+
 // CounterSpellOnStack removes a spell from the stack by its source ID.
 // The countered spell's card goes to its owner's graveyard.
+//
+// If the targeted spell is currently uncounterable — either because the
+// card was registered with [WithUncounterable] or a static filter
+// installed via [RegisterUncounterableStatic] matches — the counter has
+// no effect: the spell stays on the stack.
 func (g *Game) CounterSpellOnStack(spellID uuid.UUID) {
+	if obj := g.stack.FindBySourceID(spellID); obj != nil && g.IsSpellUncounterable(obj) {
+		return
+	}
 	obj := g.stack.RemoveBySourceID(spellID)
 	if obj != nil && obj.Card != nil {
 		owner := g.GetPlayer(obj.Card.Owner())
@@ -959,6 +1188,89 @@ func (g *Game) PlayerDrawCard(p Player) (Card, bool) {
 		})
 	}
 	return c, ok
+}
+
+// PerformScry implements scry N (CR 701.18): the player looks at the top N
+// cards of their library, then puts any number of them on the bottom of their
+// library and the rest on top in any order. If the library has fewer than N
+// cards, the player scries however many are present. Returns the number of
+// cards actually scried.
+//
+// The placement decision is delegated to Player.ChooseScryPlacement; the engine
+// validates the returned IDs and falls back to "all on top, original order" on
+// any mismatch so a buggy player implementation cannot lose cards.
+func (g *Game) PerformScry(p Player, n int) int {
+	if p == nil || n <= 0 {
+		return 0
+	}
+	lib := p.Library()
+	if len(lib) == 0 {
+		return 0
+	}
+	count := min(n, len(lib))
+	top := make([]Card, count)
+	copy(top, lib[:count])
+
+	bottom, topOrder := p.ChooseScryPlacement(top, "scry", g)
+	bottom, topOrder = validateScryPlacement(top, bottom, topOrder)
+
+	idToCard := make(map[uuid.UUID]Card, count)
+	for _, c := range top {
+		idToCard[c.ID()] = c
+	}
+
+	rest := lib[count:]
+	newLib := make([]Card, 0, len(lib))
+	for _, id := range topOrder {
+		newLib = append(newLib, idToCard[id])
+	}
+	newLib = append(newLib, rest...)
+	for _, id := range bottom {
+		newLib = append(newLib, idToCard[id])
+	}
+	p.SetLibrary(newLib)
+
+	g.FireEvent(GameEvent{
+		Type:     EvtScry,
+		PlayerID: p.PlayerID(),
+		Amount:   count,
+	})
+	return count
+}
+
+// validateScryPlacement ensures the player's choice is a valid partition of
+// `top`. On any inconsistency it returns the safe default (all on top in the
+// original order) so cards are never dropped.
+func validateScryPlacement(top []Card, bottom, topOrder []uuid.UUID) ([]uuid.UUID, []uuid.UUID) {
+	want := make(map[uuid.UUID]bool, len(top))
+	for _, c := range top {
+		want[c.ID()] = true
+	}
+	if len(bottom)+len(topOrder) != len(top) {
+		return nil, defaultScryTopOrder(top)
+	}
+	seen := make(map[uuid.UUID]bool, len(top))
+	for _, id := range topOrder {
+		if !want[id] || seen[id] {
+			return nil, defaultScryTopOrder(top)
+		}
+		seen[id] = true
+	}
+	for _, id := range bottom {
+		if !want[id] || seen[id] {
+			return nil, defaultScryTopOrder(top)
+		}
+		seen[id] = true
+	}
+	return bottom, topOrder
+}
+
+func defaultScryTopOrder(top []Card) []uuid.UUID {
+	out := make([]uuid.UUID, len(top))
+	for i, c := range top {
+		out[i] = c.ID()
+	}
+	return out
 }
 
 // DealDamageToPlayer deals damage to a player, running it through the replacement pipeline.
@@ -1010,13 +1322,46 @@ func (g *Game) executeDamageToPlayer(a *DamageToPlayerAction) {
 	if g.effects.Rules.IsLichActive(g, p.PlayerID()) {
 		g.sacrificePermanents(p.PlayerID(), amount)
 	} else {
+		// CR 119.9: damage dealt to a player causes that player to lose that
+		// much life. Fire EvtLifeLost so "whenever a player loses life" triggers
+		// see damage-induced life loss.
 		p.LoseLife(amount)
+		g.FireEvent(GameEvent{
+			Type:     EvtLifeLost,
+			PlayerID: p.PlayerID(),
+			Amount:   amount,
+		})
 	}
 	g.damageTakenThisTurn[p.PlayerID()] += amount
 	// Track artifact damage separately (for Reverse Polarity)
 	sourceCard := g.findCardForDamageSource(sourceID)
 	if sourceCard != nil && sourceCard.HasType(TypeArtifact) {
 		g.artifactDamageTakenThisTurn[p.PlayerID()] += amount
+	}
+	// Combat damage aggregation: track total damage this step per (controller,
+	// recipient-player) pair so EvtCombatDamageDealt can fire once per pair
+	// after the damage step completes (CR 510.2). Source must be a permanent
+	// on the battlefield with a controller.
+	if a.IsCombatDamage() {
+		if srcPerm := g.FindPermanent(sourceID); srcPerm != nil {
+			byCtrl, ok := g.combatDamageThisStep[srcPerm.Controller]
+			if !ok {
+				byCtrl = make(map[uuid.UUID]int)
+				g.combatDamageThisStep[srcPerm.Controller] = byCtrl
+			}
+			byCtrl[p.PlayerID()] += amount
+			byCtrlSrcs, ok := g.combatDamageSourcesThisStep[srcPerm.Controller]
+			if !ok {
+				byCtrlSrcs = make(map[uuid.UUID]map[uuid.UUID]int)
+				g.combatDamageSourcesThisStep[srcPerm.Controller] = byCtrlSrcs
+			}
+			bySrc, ok := byCtrlSrcs[p.PlayerID()]
+			if !ok {
+				bySrc = make(map[uuid.UUID]int)
+				byCtrlSrcs[p.PlayerID()] = bySrc
+			}
+			bySrc[sourceID] += amount
+		}
 	}
 	g.FireEvent(GameEvent{
 		Type:     EvtDamageDealt,
@@ -1123,7 +1468,7 @@ func (g *Game) executeDamageToCreature(a *DamageToCreatureAction) {
 	if src != nil && src.HasKeyword(Lifelink) {
 		srcPlayer := g.GetPlayer(src.Controller)
 		if srcPlayer != nil {
-			srcPlayer.GainLife(amount)
+			g.PlayerGainLife(srcPlayer, amount)
 		}
 	}
 	// Face-down: flip the target if it was dealt damage
@@ -1213,6 +1558,50 @@ func (g *Game) Attach(sourceID, targetID uuid.UUID) {
 	})
 }
 
+// fireBecomesTargetEvents fires EvtBecomesTarget for each declared target of a
+// stack object that has just been put on the stack with its targets chosen
+// (CR 603.6c, 119.5). The event is fired once per distinct target — players
+// and permanents alike. evt.SourceID is the spell/ability source (the casting
+// card's ID for spells, the source permanent's ID for activated abilities);
+// evt.TargetID is the targeted object's ID; evt.PlayerID is the controller of
+// the spell/ability; evt.Flag is true for activated abilities, false for spells.
+//
+// CR 603.6c: "becomes the target" triggered abilities trigger only once per
+// event, even if multiple targets are chosen, BUT only the targets that the
+// trigger applies to count — i.e. each affected permanent/player sees the
+// event independently. This implementation fires one event per distinct target
+// so triggers attached to different permanents each see "their" event.
+func (g *Game) fireBecomesTargetEvents(obj *StackObject, isAbility bool) {
+	if obj == nil {
+		return
+	}
+	if g.timesTargetedThisTurn == nil {
+		g.timesTargetedThisTurn = make(map[uuid.UUID]int)
+	}
+	seen := make(map[uuid.UUID]bool)
+	for _, tid := range obj.Targets {
+		if tid == uuid.Nil || seen[tid] {
+			continue
+		}
+		seen[tid] = true
+		g.timesTargetedThisTurn[tid]++
+		g.FireEvent(GameEvent{
+			Type:     EvtBecomesTarget,
+			SourceID: obj.SourceID,
+			TargetID: tid,
+			PlayerID: obj.Controller,
+			Flag:     isAbility,
+		})
+	}
+}
+
+// TimesTargetedThisTurn returns how many times the given object (permanent or
+// player) has become the target of a spell or activated ability this turn.
+// Counter resets at the cleanup step.
+func (g *Game) TimesTargetedThisTurn(id uuid.UUID) int {
+	return g.timesTargetedThisTurn[id]
+}
+
 // RegisterDelayedTrigger registers a one-shot delayed trigger that will fire
 // when the specified event type occurs.
 func (g *Game) RegisterDelayedTrigger(dt *DelayedTrigger) {
@@ -1221,6 +1610,7 @@ func (g *Game) RegisterDelayedTrigger(dt *DelayedTrigger) {
 
 // FireEvent dispatches an event and checks triggered abilities.
 func (g *Game) FireEvent(evt GameEvent) {
+	g.recordPerTurnEvent(&evt)
 	for _, perm := range g.battlefield {
 		for _, a := range perm.RuntimeAbilities {
 			ta, ok := UnwrapAbility(a).(TriggeredAbility)
@@ -1296,14 +1686,35 @@ func (g *Game) FireEvent(evt GameEvent) {
 				remaining = append(remaining, dt)
 				continue
 			}
+			if evt.Type == EvtZoneChange {
+				// Default unset zone matchers to ZoneAny so callers that
+				// don't care about the from/to don't have to set them.
+				wantFrom := dt.MatchFromZone
+				if wantFrom == 0 {
+					wantFrom = ZoneAny
+				}
+				wantTo := dt.MatchToZone
+				if wantTo == 0 {
+					wantTo = ZoneAny
+				}
+				if wantFrom != ZoneAny && evt.FromZone != wantFrom {
+					remaining = append(remaining, dt)
+					continue
+				}
+				if wantTo != ZoneAny && evt.ToZone != wantTo {
+					remaining = append(remaining, dt)
+					continue
+				}
+			}
 			obj := &StackObject{
-				ID:          uuid.New(),
-				Controller:  dt.Controller,
-				SourceID:    dt.SourceID,
-				IsAbility:   true,
-				Effects:     dt.Effects,
-				Targets:     []uuid.UUID{dt.TargetID},
-				EventAmount: evt.Amount,
+				ID:            uuid.New(),
+				Controller:    dt.Controller,
+				SourceID:      dt.SourceID,
+				IsAbility:     true,
+				Effects:       dt.Effects,
+				Targets:       []uuid.UUID{dt.TargetID},
+				EventAmount:   evt.Amount,
+				EventSourceID: evt.SourceID,
 			}
 			g.stack.Push(obj)
 			if dt.Persistent {
@@ -1402,19 +1813,60 @@ func (g *Game) PutTriggersOnStack() {
 			IsAbility:  true,
 		}
 		obj.Effects = append(obj.Effects, pt.ability.Effects()...)
+		// CR 603.3d: when a triggered ability with targets is put on the stack,
+		// its controller chooses the targets. Declared AddTarget(...) entries
+		// take precedence over the legacy event-derived auto-binding below;
+		// triggers without declared targets fall through to the auto-bind so
+		// existing card behavior is preserved.
+		if declared := pt.ability.Targets(); len(declared) > 0 {
+			obj.Targets = g.chooseTriggerTargets(pt, declared)
+			if pt.event != nil && pt.event.Amount != 0 {
+				if gt, ok := pt.ability.(*GenericTriggered); ok {
+					switch gt.eventType {
+					case EvtZoneChange:
+						if pt.event.ToZone == ZoneBattlefield {
+							obj.XValue = pt.event.Amount
+						}
+					case EvtDamageDealt:
+						obj.EventAmount = pt.event.Amount
+						obj.EventSourceID = pt.event.SourceID
+					}
+				}
+			}
+			g.stack.Push(obj)
+			continue
+		}
 		// For triggers that need to pass the event's player as a target
 		// (e.g., "deal damage to that land's controller", "that player draws"),
 		// store the event PlayerID as a target on the stack object.
 		if pt.event != nil {
 			if gt, ok := pt.ability.(*GenericTriggered); ok {
 				switch gt.eventType {
-				case EvtEntersBattlefield:
-					// Pass the entering permanent's ID so effects can tap/modify it
-					if pt.event.SourceID != uuid.Nil {
-						obj.Targets = []uuid.UUID{pt.event.SourceID}
+				case EvtZoneChange:
+					// Route by (FromZone, ToZone) for stack-object context.
+					switch {
+					case pt.event.ToZone == ZoneBattlefield:
+						// ETB: pass the entering permanent's ID so effects can
+						// tap/modify it; preserve X for X-cost ETB triggers.
+						if pt.event.SourceID != uuid.Nil {
+							obj.Targets = []uuid.UUID{pt.event.SourceID}
+						}
+						obj.XValue = pt.event.Amount
+					case pt.event.FromZone == ZoneBattlefield:
+						// Battlefield -> elsewhere (graveyard / exile / hand /
+						// library). Pass the leaving permanent's ID first
+						// (the dies/leaves convention - Creature Bond reading
+						// the dead creature's toughness, Sengir Vampire
+						// finding it in the graveyard) and the controller's
+						// ID second (Dingus Egg "deal damage to its
+						// controller", post-LKI lookups).
+						if pt.event.SourceID != uuid.Nil {
+							obj.Targets = []uuid.UUID{pt.event.SourceID}
+							if pt.event.PlayerID != uuid.Nil {
+								obj.Targets = append(obj.Targets, pt.event.PlayerID)
+							}
+						}
 					}
-					// Preserve X value from the resolving spell (for X-cost ETB triggers)
-					obj.XValue = pt.event.Amount
 				case EvtDrawStep, EvtCardDrawn:
 					if pt.event.PlayerID != uuid.Nil {
 						obj.Targets = []uuid.UUID{pt.event.PlayerID}
@@ -1432,20 +1884,24 @@ func (g *Game) PutTriggersOnStack() {
 						obj.Targets = []uuid.UUID{pt.event.TargetID}
 					}
 					obj.EventAmount = pt.event.Amount
+					obj.EventSourceID = pt.event.SourceID
 				case EvtTapped, EvtAbilityActivated:
 					// Pass the permanent's ID so effects can identify it
 					if pt.event.SourceID != uuid.Nil {
 						obj.Targets = []uuid.UUID{pt.event.SourceID}
 					}
-				case EvtCreatureDied:
-					// Pass the dead creature's ID so effects can find it in graveyard
-					if pt.event.SourceID != uuid.Nil {
-						obj.Targets = []uuid.UUID{pt.event.SourceID}
-					}
-				case EvtPutIntoGraveyardFromBattlefield:
-					// Pass the controller's player ID so effects can deal damage/etc.
-					if pt.event.PlayerID != uuid.Nil {
-						obj.Targets = []uuid.UUID{pt.event.PlayerID}
+				case EvtBecomesTarget:
+					// Pass the targeted object's ID and the spell/ability
+					// source so effects can either identify "this" (the target,
+					// e.g. Departed Deckhand sacrificing itself) or the
+					// spell/ability that did the targeting (e.g. Kira
+					// countering it). Targets[0] is the targeted object;
+					// Targets[1] is the offending spell/ability source.
+					if pt.event.TargetID != uuid.Nil {
+						obj.Targets = []uuid.UUID{pt.event.TargetID}
+						if pt.event.SourceID != uuid.Nil {
+							obj.Targets = append(obj.Targets, pt.event.SourceID)
+						}
 					}
 				case EvtDeclaredBlocker:
 					// Pass the blocker's ID and attacker's ID
@@ -1455,10 +1911,24 @@ func (g *Game) PutTriggersOnStack() {
 							obj.Targets = append(obj.Targets, pt.event.TargetID)
 						}
 					}
-				case EvtCreatureBlocks:
-					// Pass the blocker's ID (fired once per combat per blocker)
-					if pt.event.SourceID != uuid.Nil {
-						obj.Targets = []uuid.UUID{pt.event.SourceID}
+				case EvtLifeGained, EvtLifeLost:
+					// Preserve the life delta for "gain/lose that much" triggers.
+					// We deliberately do NOT auto-bind PlayerID as a target; the
+					// affected player is rarely the same as the trigger's
+					// "you" (e.g. Exquisite Blood's "you gain that much life"
+					// targets the controller, not the opponent who lost life).
+					obj.EventAmount = pt.event.Amount
+				case EvtDiscard:
+					// Pass the discarding player's ID so effects like
+					// "that player loses 2 life" target the discarder.
+					if pt.event.PlayerID != uuid.Nil {
+						obj.Targets = []uuid.UUID{pt.event.PlayerID}
+					}
+				case EvtSacrifice:
+					// Pass the sacrificing player's ID for "you sacrifice"
+					// effects that need to identify the controller.
+					if pt.event.PlayerID != uuid.Nil {
+						obj.Targets = []uuid.UUID{pt.event.PlayerID}
 					}
 				}
 			}
@@ -1466,6 +1936,51 @@ func (g *Game) PutTriggersOnStack() {
 		g.stack.Push(obj)
 	}
 	g.pendingTriggers = nil
+}
+
+// chooseTriggerTargets prompts the trigger's controller to choose targets for
+// each declared Target on the triggered ability. Returns the flat list of
+// chosen UUIDs that becomes the StackObject's Targets.
+//
+// If a Target has no legal candidates, it is skipped (a placeholder uuid.Nil
+// is appended for required targets so positional indexing in effects survives,
+// matching the convention used elsewhere). The trigger may still resolve and
+// later fizzle via the normal isTargetStillLegal check at resolution time.
+func (g *Game) chooseTriggerTargets(pt *pendingTrigger, declared []Target) []uuid.UUID {
+	controller := g.GetPlayer(pt.controller)
+	sourceCard := g.FindCardAnywhere(pt.sourceID)
+	var out []uuid.UUID
+	for _, t := range declared {
+		t.Reset()
+		possible := t.Possible(pt.controller, sourceCard, g)
+		if len(possible) == 0 {
+			if t.Min() > 0 {
+				out = append(out, uuid.Nil)
+			}
+			continue
+		}
+		var chosen []uuid.UUID
+		// Some targets specify that the *opponent* (not the trigger's
+		// controller) chooses from the legal target set, e.g. Mausoleum
+		// Turnkey ("of an opponent's choice"). Such targets implement the
+		// OpponentChoosesTarget marker interface; we route the prompt to
+		// the opposing player.
+		chooser := controller
+		if oct, ok := t.(interface{ OpponentChoosesTarget() bool }); ok && oct.OpponentChoosesTarget() {
+			if opp := g.GetOpponent(pt.controller); opp != nil {
+				chooser = opp
+			}
+		}
+		if chooser != nil {
+			chosen = chooser.ChooseTargets(possible, t.Min(), t.Max(), g)
+		}
+		if len(chosen) == 0 && t.Min() > 0 {
+			chosen = possible[:1]
+		}
+		_ = t.Choose(pt.controller, sourceCard, g, chosen)
+		out = append(out, chosen...)
+	}
+	return out
 }
 
 func reverseTriggers(s []*pendingTrigger) {
@@ -1538,15 +2053,25 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 			}
 		}
 		if hasRealTargets && !anyLegal {
-			// Spell fizzles — put card in graveyard without resolving effects
+			// Spell fizzles — put card in graveyard without resolving effects.
+			// Copies of spells (CR 707.10) cease to exist instead of going to
+			// any zone.
+			if obj.IsCopy {
+				g.CheckStateBasedActions()
+				return
+			}
 			if obj.Card != nil && !obj.IsAbility {
 				owner := obj.Card.Owner()
 				if owner == uuid.Nil {
 					owner = obj.Controller
 				}
-				p := g.GetPlayer(owner)
-				if p != nil {
-					p.AddToGraveyard(obj.Card)
+				if g.IsCardMarkedExileInsteadOfGraveyard(obj.Card.ID()) {
+					g.ExileCard(obj.Card, obj.Card.ID())
+				} else {
+					p := g.GetPlayer(owner)
+					if p != nil {
+						p.AddToGraveyard(obj.Card)
+					}
 				}
 			}
 			g.CheckStateBasedActions()
@@ -1557,10 +2082,27 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 	g.currentX = obj.XValue
 	g.currentMode = obj.ModeChoice
 	g.currentEventAmount = obj.EventAmount
+	g.currentEventSourceID = obj.EventSourceID
 	g.resolvingCard = obj.Card
 	g.resolvingTargets = obj.Targets
+	g.resolvingDamageDistribution = obj.DamageDistribution
+	g.resolvingCastZone = obj.CastZone
 	for _, eff := range obj.Effects {
 		_ = ApplyEffect(g, eff, obj.SourceID, obj.Controller, obj.Targets)
+	}
+	g.resolvingDamageDistribution = nil
+
+	// Copies of spells cease to exist as they resolve (CR 707.10) — no
+	// graveyard, no battlefield, no exile. The effects already ran above.
+	if obj.IsCopy {
+		g.currentX = 0
+		g.currentMode = 0
+		g.resolvingCard = nil
+		g.resolvingTargets = nil
+		g.resolvingCastZone = ZoneAny
+		g.ClearSacrificed()
+		g.CheckStateBasedActions()
+		return
 	}
 
 	// If this was a spell (not an ability), put the card in the graveyard
@@ -1584,14 +2126,22 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 			g.currentX = 0
 			g.currentMode = 0
 			g.resolvingTargets = nil
+			g.resolvingCastZone = ZoneAny
+			g.ClearSacrificed()
 			g.CheckStateBasedActions()
 			return
 		}
 
-		// Instants and sorceries go to graveyard
-		p := g.GetPlayer(owner)
-		if p != nil {
-			p.AddToGraveyard(obj.Card)
+		// Instants and sorceries go to graveyard, unless an active
+		// "if would be put into a graveyard, exile it instead" rider
+		// applies to this card (e.g. Scholar of the Lost Trove).
+		if g.IsCardMarkedExileInsteadOfGraveyard(obj.Card.ID()) {
+			g.ExileCard(obj.Card, obj.Card.ID())
+		} else {
+			p := g.GetPlayer(owner)
+			if p != nil {
+				p.AddToGraveyard(obj.Card)
+			}
 		}
 	}
 
@@ -1599,8 +2149,58 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 	g.currentMode = 0
 	g.resolvingCard = nil
 	g.resolvingTargets = nil
+	g.resolvingCastZone = ZoneAny
+	g.ClearSacrificed()
 
 	g.CheckStateBasedActions()
+}
+
+// sanitizeDamageDistribution validates a player-chosen damage division for a
+// divided-damage spell or ability (CR 601.2d). The returned map is restricted
+// to keys present in `targets`, has only non-negative values, and sums to
+// exactly `total`. If the player's input is malformed (sum mismatch, unknown
+// target, negative entry, missing assignment when total > 0) we fall back to
+// "all damage to the first target," which is always a legal distribution
+// because total damage must be assigned across the chosen targets.
+func sanitizeDamageDistribution(in map[uuid.UUID]int, targets []uuid.UUID, total int) map[uuid.UUID]int {
+	if total <= 0 || len(targets) == 0 {
+		return nil
+	}
+	allowed := make(map[uuid.UUID]struct{}, len(targets))
+	for _, t := range targets {
+		if t == uuid.Nil {
+			continue
+		}
+		allowed[t] = struct{}{}
+	}
+	out := make(map[uuid.UUID]int, len(in))
+	sum := 0
+	valid := true
+	for k, v := range in {
+		if _, ok := allowed[k]; !ok {
+			valid = false
+			break
+		}
+		if v < 0 {
+			valid = false
+			break
+		}
+		if v > 0 {
+			out[k] = v
+			sum += v
+		}
+	}
+	if !valid || sum != total || len(out) == 0 {
+		out = map[uuid.UUID]int{}
+		for _, t := range targets {
+			if t != uuid.Nil {
+				out[t] = total
+				return out
+			}
+		}
+		return nil
+	}
+	return out
 }
 
 func (g *Game) validateActionTargets(controller uuid.UUID, sourceCard Card, specs []Target, chosen []uuid.UUID, label string) error {
@@ -1699,7 +2299,9 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	// is not an instant may be cast only during its controller's main phase,
 	// when the stack is empty, and when that player is the active player
 	// (i.e. could cast a sorcery).
-	if !card.HasType(TypeInstant) {
+	// CR 702.8 — Flash: "You may cast this spell any time you could cast an
+	// instant." A card with Flash bypasses the sorcery-speed gate entirely.
+	if !card.HasType(TypeInstant) && !cardHasKeyword(card, Flash) && !g.effects.Rules.HasFlashGrant(playerID, card) {
 		if !g.step.IsMainPhase() {
 			return ErrSorcerySpeed
 		}
@@ -1764,6 +2366,14 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		}
 	}
 
+	// Conditional cost reductions (CR 601.2f). Reduce generic only; never
+	// below zero. Covers static-source reducers (Warden of Evos Isle,
+	// Dragonlord's Servant, Herald's Horn) and intrinsic self-reducers
+	// (Bone Picker, Cryptic Serpent, Ghalta).
+	if r := computeConditionalCostReduction(g, playerID, card, mc.Generic); r > 0 {
+		mc.Generic -= r
+	}
+
 	// Channel: pay life for generic/X costs instead of mana
 	if g.effects.Rules.IsChannelActive(playerID) && (mc.Generic > 0 || (mc.HasX && xValue > 0)) {
 		// Pay colored portion from pool
@@ -1783,7 +2393,7 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		if mc.HasX {
 			lifeCost += xValue * mc.XCount
 		}
-		p.LoseLife(lifeCost)
+		g.PlayerLoseLife(p, lifeCost)
 	} else {
 		// Pay mana cost (auto-pay from pool)
 		payMC := mc
@@ -1812,13 +2422,11 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		}
 	}
 
-	// Build spell action data before moving the card so action-level costs
+	// Build action costs before moving the card so action-level costs
 	// are paid as part of casting.
-	var effects []Effect
 	var actionCosts []Cost
 	for _, a := range card.Abilities() {
 		if sa, ok := a.(*SpellAbility); ok && sa.Kind() == ActionSpell {
-			effects = append(effects, sa.Effects()...)
 			actionCosts = append(actionCosts, sa.Costs()...)
 		}
 	}
@@ -1843,8 +2451,58 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	// Remove from hand
 	p.RemoveFromHand(card.ID())
 
-	obj := newStackObject(playerID, card.ID(), card, effects, targets, xValue, false)
-	chooseModeForStackObject(obj, card.Modes(), p, card.Name())
+	// Build effects from spell abilities. Modal spells built with
+	// NewModalSpell route through gatherModalSpellTargets; the chosen mode
+	// supplies its own effects and targets.
+	var effects []Effect
+	var modalTargets [][]uuid.UUID
+	modeChoice := 0
+	if ms, ok := getModalSpellAbility(card); ok {
+		mIdx, mTargets := g.gatherModalSpellTargets(p, card, ms)
+		modeChoice = mIdx
+		effects = append(effects, ms.modes[mIdx].Effects...)
+		targets = mTargets
+		modalTargets = make([][]uuid.UUID, len(ms.modes))
+		modalTargets[mIdx] = mTargets
+	} else {
+		for _, a := range card.Abilities() {
+			// SpellAbility and SimpleActivatedAbility share the *ActionDefinition
+			// type, so filter by Kind() to keep activated abilities (Jalum Tome,
+			// Jade Statue, Forcefield) from running their effects on cast.
+			if sa, ok := a.(*SpellAbility); ok && sa.Kind() == ActionSpell {
+				effects = append(effects, sa.Effects()...)
+			}
+		}
+	}
+
+	obj := &StackObject{
+		ID:           uuid.New(),
+		Card:         card,
+		Controller:   playerID,
+		SourceID:     card.ID(),
+		Effects:      effects,
+		Targets:      targets,
+		XValue:       xValue,
+		ModeChoice:   modeChoice,
+		ModalTargets: modalTargets,
+		CastZone:     ZoneHand,
+	}
+
+	if modes := card.Modes(); len(modes) > 0 {
+		obj.ModeChoice = p.ChooseMode(modes, card.Name())
+	}
+
+	for _, eff := range effects {
+		if !IsDividedDamageEffect(eff) {
+			continue
+		}
+		total := DividedDamageTotal(eff).Resolve(g, card.ID(), playerID, targets)
+		if total > 0 && len(targets) > 0 {
+			dist := p.ChooseDamageDistribution(targets, total, card.Name(), g)
+			obj.DamageDistribution = sanitizeDamageDistribution(dist, targets, total)
+		}
+		break
+	}
 
 	g.stack.Push(obj)
 
@@ -1858,6 +2516,8 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		SourceID: card.ID(),
 		PlayerID: playerID,
 	})
+
+	g.fireBecomesTargetEvents(obj, false)
 
 	return nil
 }
@@ -1873,13 +2533,23 @@ func (g *Game) addManaFromAbility(ma *ManaAbility, p Player, perm *Permanent) {
 // proper *ManaAbility path and the *SimpleActivatedAbility tap-for-mana path.
 func (g *Game) addManaProductions(productions []ManaProduction, p Player, perm *Permanent) {
 	for _, prod := range productions {
-		color := prod.Color
-		if color == AnyColor {
-			color = p.ChooseManaColor("add mana")
-		}
 		amt := prod.Amount
 		if amt <= 0 {
 			amt = 1
+		}
+		// "X mana in any combination of colors": ask once per mana point so
+		// the controller can split colors arbitrarily.
+		if prod.Color == AnyColor && prod.AnyCombination && amt > 1 {
+			for i := 0; i < amt; i++ {
+				color := p.ChooseManaColor("add mana")
+				p.ManaPool().Add(color, 1)
+				g.applyManaBonuses(perm, color, p)
+			}
+			continue
+		}
+		color := prod.Color
+		if color == AnyColor {
+			color = p.ChooseManaColor("add mana")
 		}
 		p.ManaPool().Add(color, amt)
 		g.applyManaBonuses(perm, color, p)
@@ -2091,6 +2761,20 @@ func (g *Game) doUntap() {
 	// Island Sanctuary: clear protection at the start of the player's turn
 	g.effects.Rules.ClearSanctuary(active.PlayerID())
 
+	// Snapshot the active player's untapped land count before the untap loop
+	// runs (CR 502.1 happens at the very start of the turn). Power Surge and
+	// similar effects read this at upkeep.
+	if g.untappedLandsAtTurnStart == nil {
+		g.untappedLandsAtTurnStart = make(map[uuid.UUID]int)
+	}
+	count := 0
+	for _, p := range g.battlefield {
+		if p.Controller == active.PlayerID() && p.HasType(TypeLand) && !p.Tapped {
+			count++
+		}
+	}
+	g.untappedLandsAtTurnStart[active.PlayerID()] = count
+
 	landUntapLimit := g.effects.Rules.LandUntapMax
 	landsUntapped := 0
 	artifactUntapLimit := g.effects.Rules.ArtifactUntapMax
@@ -2140,6 +2824,7 @@ func (g *Game) doUntap() {
 		}
 	}
 	g.landsPlayedThisTurn = 0
+	g.extraLandPlaysThisTurn = nil
 }
 
 // TODO this should "tell" turn to do upkeep actions and give turn a list of actions to do
@@ -2273,6 +2958,18 @@ func (g *Game) doDeclareAttackers() {
 	// CR 506.5 — snapshot "attacks alone" once all attackers have been
 	// declared this step.
 	g.combat.SnapshotAttackedAlone()
+
+	// CR 506.4 / 603.6e: once-per-combat "whenever one or more creatures
+	// attack" trigger. Fired only if at least one creature was declared as
+	// an attacker. evt.Amount carries the attacker count.
+	if len(g.combat.Groups) > 0 {
+		g.FireEvent(GameEvent{
+			Type:     EvtAttackersDeclared,
+			PlayerID: active.PlayerID(),
+			Amount:   len(g.combat.Groups),
+		})
+	}
+
 	g.ResolveStack()
 }
 
@@ -2303,7 +3000,9 @@ func (g *Game) doDeclareBlockers() {
 	nonActive := g.NonActivePlayerObj()
 	assignments := nonActive.DeclareBlockers(g)
 	if assignments == nil {
-		// No blockers, but still fire the event so "attacks and isn't blocked" triggers work
+		// Even with no scripted blockers, we may need to enforce
+		// CR 509.1c "must be blocked if able" before firing the event.
+		g.enforceMustBeBlockedIfAble(nonActive.PlayerID())
 		g.combat.SnapshotBlockedAlone()
 		g.FireEvent(GameEvent{
 			Type:     EvtBlockersDecl,
@@ -2323,7 +3022,6 @@ func (g *Game) doDeclareBlockers() {
 	}
 
 	blockerCount := make(map[uuid.UUID]int) // how many attackers each blocker is assigned to
-	var blockerOrder []uuid.UUID            // insertion order for EvtCreatureBlocks (CR 509.3a)
 	for _, ba := range assignments {
 		blocker := g.FindPermanent(ba.BlockerID)
 		attackerID := ba.AttackerID
@@ -2355,29 +3053,32 @@ func (g *Game) doDeclareBlockers() {
 		if blockerCount[ba.BlockerID] >= maxBlocks {
 			continue
 		}
-		if blockerCount[ba.BlockerID] == 0 {
-			blockerOrder = append(blockerOrder, ba.BlockerID)
-		}
+		firstForBlocker := blockerCount[ba.BlockerID] == 0
 		blockerCount[ba.BlockerID]++
 		g.combat.AddBlocker(ba.BlockerID, attackerID)
 		g.blockedThisTurn[ba.BlockerID] = append(g.blockedThisTurn[ba.BlockerID], attackerID)
+		// CR 509.3a — Flag=true marks the once-per-combat "Whenever ~ blocks"
+		// firing for this blocker; subsequent attackers fire with Flag=false
+		// for "blocks a creature" per-pair triggers only.
 		g.FireEvent(GameEvent{
 			Type:     EvtDeclaredBlocker,
 			SourceID: ba.BlockerID,
 			TargetID: attackerID,
 			PlayerID: nonActive.PlayerID(),
+			Flag:     firstForBlocker,
 		})
 	}
 
-	// CR 509.3a — "Whenever [creature] blocks" fires exactly once per combat
-	// per blocking creature, regardless of how many attackers it blocks.
-	for _, blockerID := range blockerOrder {
-		g.FireEvent(GameEvent{
-			Type:     EvtCreatureBlocks,
-			SourceID: blockerID,
-			PlayerID: nonActive.PlayerID(),
-		})
-	}
+	// Enforce minimum-blocker restrictions (CR 509.1b — Goblin Goon style):
+	// if an attacker requires N+ blockers and fewer than N are declared,
+	// none of them are legal blockers. Remove them all.
+	g.enforceMinimumBlockers()
+
+	// Enforce CR 509.1c "must be blocked if able": for every attacker with
+	// AttrMustBeBlockedIfAble, if no blocker has been declared and at least
+	// one creature controlled by the defender could legally block it, force
+	// one such creature into the block.
+	g.enforceMustBeBlockedIfAble(nonActive.PlayerID())
 
 	// CR 506.5 — snapshot "blocks alone" once all blockers have been
 	// declared this step.
@@ -2388,6 +3089,88 @@ func (g *Game) doDeclareBlockers() {
 		Type:     EvtBlockersDecl,
 		PlayerID: nonActive.PlayerID(),
 	})
+}
+
+// enforceMinimumBlockers removes blockers from groups whose attacker has a
+// minimum-blocker requirement (e.g. Goblin Goon "can't be blocked except by
+// three or more creatures") that isn't met.
+func (g *Game) enforceMinimumBlockers() {
+	for _, group := range g.combat.Groups {
+		minN := g.effects.MinBlockers(group.AttackerID)
+		if minN <= 0 {
+			continue
+		}
+		if len(group.BlockerIDs) >= minN {
+			continue
+		}
+		// Insufficient blockers — none of them are legal. Drop them all,
+		// and reset the Blocked flag so the attacker is treated as unblocked
+		// for damage assignment (CR 509.1b — those creatures aren't legal
+		// blockers, so the attacker was never legally blocked).
+		dropped := group.BlockerIDs
+		group.BlockerIDs = nil
+		group.Blocked = false
+		for _, bid := range dropped {
+			// Also clean up the per-turn blocked tracking for this attacker.
+			rest := g.blockedThisTurn[bid][:0]
+			for _, aid := range g.blockedThisTurn[bid] {
+				if aid != group.AttackerID {
+					rest = append(rest, aid)
+				}
+			}
+			g.blockedThisTurn[bid] = rest
+		}
+	}
+}
+
+// enforceMustBeBlockedIfAble implements CR 509.1c: for each attacker with
+// AttrMustBeBlockedIfAble, if no blocker is currently declared, force one
+// legal blocker controlled by defenderID into the block. Picks the first
+// untapped creature that passes CanBlock; ignores creatures already maxed-out
+// on blocks.
+func (g *Game) enforceMustBeBlockedIfAble(defenderID uuid.UUID) {
+	for _, group := range g.combat.Groups {
+		atk := g.FindPermanent(group.AttackerID)
+		if atk == nil || !atk.HasAttr(AttrMustBeBlockedIfAble) {
+			continue
+		}
+		if len(group.BlockerIDs) > 0 {
+			continue
+		}
+		minN := max(g.effects.MinBlockers(group.AttackerID), 1)
+		// Find legal blockers controlled by the defender.
+		var candidates []*Permanent
+		for _, p := range g.battlefield {
+			if p.Controller != defenderID {
+				continue
+			}
+			if !p.CanDeclareAsBlocker(g) {
+				continue
+			}
+			if !CanBlock(p, atk, g) {
+				continue
+			}
+			if HasLandwalkEvasion(atk, defenderID, g) {
+				continue
+			}
+			candidates = append(candidates, p)
+		}
+		if len(candidates) < minN {
+			continue
+		}
+		for i := 0; i < minN && i < len(candidates); i++ {
+			b := candidates[i]
+			g.combat.AddBlocker(b.ID(), atk.ID())
+			g.blockedThisTurn[b.ID()] = append(g.blockedThisTurn[b.ID()], atk.ID())
+			g.FireEvent(GameEvent{
+				Type:     EvtDeclaredBlocker,
+				SourceID: b.ID(),
+				TargetID: atk.ID(),
+				PlayerID: defenderID,
+				Flag:     true,
+			})
+		}
+	}
 }
 
 // doCleanupActions performs cleanup housekeeping and places any triggers on the stack.
@@ -2406,7 +3189,7 @@ func (g *Game) doCleanupActions() bool {
 		if len(chosen) == 0 {
 			break
 		}
-		p.DiscardCard(chosen[0].ID())
+		g.PlayerDiscard(p, chosen[0].ID())
 	}
 	// Clear damage from all creatures
 	for _, p := range g.battlefield {
@@ -2419,6 +3202,7 @@ func (g *Game) doCleanupActions() bool {
 	// Remove end-of-turn effects and clear turn-scoped state
 	g.effects.RemoveEndOfTurn()
 	g.effects.ClearReplacementsEndOfTurn()
+	g.exileInsteadCards = map[uuid.UUID]uuid.UUID{}
 	g.effects.Damage.ClearEndOfTurn()
 	g.effects.Rules.ClearEndOfTurn()
 	// Clear persistent delayed triggers (they only last "this turn")
@@ -2436,7 +3220,10 @@ func (g *Game) doCleanupActions() bool {
 	g.attackedThisTurn = make(map[uuid.UUID]bool)
 	g.blockedThisTurn = make(map[uuid.UUID][]uuid.UUID)
 	g.instantsCastThisTurn = make(map[uuid.UUID]int)
+	g.timesTargetedThisTurn = make(map[uuid.UUID]int)
 	g.creatureDeathsThisTurn = 0
+	g.clearLKI()
+	g.resetPerTurnTrackers()
 	// Clear mana restrictions
 	g.artifactManaOnly = make(map[uuid.UUID]bool)
 	g.creatureManaOnly = make(map[uuid.UUID]bool)
@@ -2468,10 +3255,8 @@ func (g *Game) Run(stopTurn int, stopStep PhaseStep, maxTurns int) {
 		activeID := g.ActivePlayerObj().PlayerID()
 		if g.schedule != nil && g.schedule.consumeTurnSkip(activeID) {
 			// Fall through to the extra-turn / next-player logic below.
-		} else {
-			if g.RunTurn(stopTurn, stopStep) {
-				return
-			}
+		} else if g.RunTurn(stopTurn, stopStep) {
+			return
 		}
 		// Check for extra turns
 		if len(g.extraTurns) > 0 {
@@ -2498,7 +3283,33 @@ func (g *Game) MaxLandPlays() int {
 	if g.effects.Rules.UnlimitedLandPlays {
 		limit = 999
 	}
+	if g.extraLandPlaysThisTurn != nil {
+		limit += g.extraLandPlaysThisTurn[g.ActivePlayerObj().PlayerID()]
+	}
 	return limit
+}
+
+// GrantExtraLandPlay increases the active player's land-play allowance by n
+// for the current turn. Cumulative across multiple grants. Reset alongside
+// landsPlayedThisTurn during the cleanup step. Implements the rules-modifier
+// half of Explore / Walking Atlas / Azusa-style effects.
+func (g *Game) GrantExtraLandPlay(playerID uuid.UUID, n int) {
+	if n <= 0 {
+		return
+	}
+	if g.extraLandPlaysThisTurn == nil {
+		g.extraLandPlaysThisTurn = make(map[uuid.UUID]int)
+	}
+	g.extraLandPlaysThisTurn[playerID] += n
+}
+
+// ExtraLandPlaysGrantedThisTurn returns the cumulative additional land-play
+// allowance granted to the player this turn (not including the base 1).
+func (g *Game) ExtraLandPlaysGrantedThisTurn(playerID uuid.UUID) int {
+	if g.extraLandPlaysThisTurn == nil {
+		return 0
+	}
+	return g.extraLandPlaysThisTurn[playerID]
 }
 
 // playLandCore moves a land from a player's hand to the battlefield and fires
@@ -2560,7 +3371,7 @@ func (g *Game) PlayLand(playerID, cardID uuid.UUID) error {
 // TapForMana taps a permanent for mana using its mana ability. Recognizes both
 // *ManaAbility (built via WithManaAbility/WithMultiManaAbility) and
 // *SimpleActivatedAbility whose only cost is tapping and whose effects are
-// mana-producing (built via WithActivatedAbility(AddMana(...), TapSourceCost())
+// mana-producing (built via WithActivatedAbility(AddMana(...), Tap())
 // — e.g. Mana Vault).
 func (g *Game) TapForMana(playerID, permanentID uuid.UUID) error {
 	perm := g.FindPermanent(permanentID)
@@ -2612,7 +3423,7 @@ func activatedManaProductions(a *SimpleActivatedAbility) []ManaProduction {
 	if len(a.costs) != 1 {
 		return nil
 	}
-	if _, ok := a.costs[0].(*tapSourceCost); !ok {
+	if _, ok := a.costs[0].(*tap); !ok {
 		return nil
 	}
 	if len(a.effects) == 0 {
@@ -2734,11 +3545,43 @@ func (g *Game) AutoTapForCost(playerID uuid.UUID, mc ManaCost) error {
 	}
 	needed := map[Color]int{}
 	poolUsedForColor := 0
+	poolByColor := map[Color]int{}
 	for _, cn := range colorNeeds {
-		have := pool.Count(cn.color)
+		poolByColor[cn.color] = pool.Count(cn.color)
+	}
+	for _, cn := range colorNeeds {
+		have := poolByColor[cn.color]
 		used := min(have, cn.need)
+		poolByColor[cn.color] -= used
 		poolUsedForColor += used
 		needed[cn.color] = cn.need - used
+	}
+	availableForHybridFromSources := map[Color]int{}
+	for _, src := range sources {
+		availableForHybridFromSources[src.Color] += src.Amount
+	}
+	for _, h := range mc.Hybrid {
+		pa, pb := poolByColor[h.A], poolByColor[h.B]
+		if pa >= pb && pa > 0 {
+			poolByColor[h.A] = pa - 1
+			poolUsedForColor++
+			continue
+		}
+		if pb > 0 {
+			poolByColor[h.B] = pb - 1
+			poolUsedForColor++
+			continue
+		}
+		sa, sb := availableForHybridFromSources[h.A], availableForHybridFromSources[h.B]
+		if sa >= sb && sa > 0 {
+			availableForHybridFromSources[h.A] = sa - 1
+			needed[h.A]++
+		} else if sb > 0 {
+			availableForHybridFromSources[h.B] = sb - 1
+			needed[h.B]++
+		} else {
+			return fmt.Errorf("insufficient mana for hybrid %s", h)
+		}
 	}
 	poolRemaining := pool.TotalMana() - poolUsedForColor
 	genericNeeded := mc.Generic - min(mc.Generic, poolRemaining)
@@ -2876,14 +3719,17 @@ func (g *Game) GetCastableSpells(playerID uuid.UUID) []Card {
 		if card.HasType(TypeLand) {
 			continue
 		}
+		// CR 702.8 — Flash lets a spell be cast any time you could cast an instant,
+		// bypassing the sorcery-speed gate below.
+		hasFlash := cardHasKeyword(card, Flash) || g.effects.Rules.HasFlashGrant(p.PlayerID(), card)
 		// Sorceries can only be cast at sorcery speed (main phase, active player, empty stack)
-		if card.HasType(TypeSorcery) {
+		if card.HasType(TypeSorcery) && !hasFlash {
 			if !isMainPhase || !isActive || !g.stack.IsEmpty() {
 				continue
 			}
 		}
 		// Creatures/artifacts/enchantments are sorcery speed
-		if card.HasType(TypeCreature) || card.HasType(TypeArtifact) || card.HasType(TypeEnchantment) {
+		if (card.HasType(TypeCreature) || card.HasType(TypeArtifact) || card.HasType(TypeEnchantment)) && !hasFlash {
 			if !isMainPhase || !isActive || !g.stack.IsEmpty() {
 				continue
 			}
@@ -2962,14 +3808,14 @@ func (g *Game) GetActivatableAbilities(playerID uuid.UUID) []ActivatableInfo {
 			// Check if this ability can be used by non-controllers
 			if !isOwner {
 				saa, isSAA := UnwrapAbility(a).(*SimpleActivatedAbility)
-				if !isSAA || !saa.AnyPlayerMayUse {
+				if !isSAA || !saa.IsAnyPlayerAbility() {
 					continue
 				}
 			}
 			// If opponent-only, the controller cannot activate it
 			if isOwner {
 				saa, isSAA := UnwrapAbility(a).(*SimpleActivatedAbility)
-				if isSAA && saa.OpponentOnlyMayUse {
+				if isSAA && saa.IsOpponentOnlyAbility() {
 					continue
 				}
 			}
@@ -3075,10 +3921,13 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	if !ok {
 		return fmt.Errorf("not an activated ability")
 	}
+	if perm.HasAttr(AttrCantActivateNonManaAbilities) {
+		return fmt.Errorf("non-mana activated abilities of %s are prevented", perm.Name())
+	}
 	if !aa.CanActivate(playerID, g) {
 		return fmt.Errorf("cannot activate ability")
 	}
-	if saa, isSAA := inner.(*SimpleActivatedAbility); isSAA && saa.OpponentOnlyMayUse {
+	if saa, isSAA := inner.(*SimpleActivatedAbility); isSAA && saa.IsOpponentOnlyAbility() {
 		if perm.Controller == playerID {
 			return fmt.Errorf("only opponents may activate this ability")
 		}
@@ -3106,12 +3955,27 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	// Modal abilities: choose mode at activation time
 	chooseModeForStackObject(obj, perm.Card.Modes(), g.GetPlayer(playerID), perm.Card.Name())
 
+	for _, eff := range aa.Effects() {
+		if !IsDividedDamageEffect(eff) {
+			continue
+		}
+		total := DividedDamageTotal(eff).Resolve(g, perm.ID(), playerID, targets)
+		if total > 0 && len(targets) > 0 {
+			pl := g.GetPlayer(playerID)
+			if pl != nil {
+				dist := pl.ChooseDamageDistribution(targets, total, perm.Card.Name(), g)
+				obj.DamageDistribution = sanitizeDamageDistribution(dist, targets, total)
+			}
+		}
+		break
+	}
+
 	g.stack.Push(obj)
 
 	// Fire EvtAbilityActivated
 	hasTapCost := false
 	for _, c := range aa.Costs() {
-		if _, ok := c.(*tapSourceCost); ok {
+		if _, ok := c.(*tap); ok {
 			hasTapCost = true
 			break
 		}
@@ -3122,6 +3986,8 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		PlayerID: playerID,
 		Flag:     hasTapCost,
 	})
+
+	g.fireBecomesTargetEvents(obj, true)
 
 	return nil
 }

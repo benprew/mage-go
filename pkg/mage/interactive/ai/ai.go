@@ -1,6 +1,7 @@
 // Package ai provides computer-controlled players with pluggable strategies
-// for the MTG engine. It imports eval/ for position scoring and interactive/
-// for the PriorityAction type used by game loops.
+// for the MTG engine. Concrete strategies live in subpackages (heuristic,
+// search). This package defines the AIStrategy interface, the AIPlayer
+// wrapper, and shared personality types.
 package ai
 
 import (
@@ -21,66 +22,14 @@ type AIStrategy interface {
 // AIPlayer is a computer-controlled player with a pluggable AIStrategy.
 type AIPlayer struct {
 	*mage.BasePlayer
-	strategy AIStrategy
+	Strategy AIStrategy
 }
 
-// NewAIPlayer creates an AI player with the default Midrange personality.
-func NewAIPlayer(name string) *AIPlayer {
+// NewAIPlayer creates an AI player with the given strategy.
+func NewAIPlayer(name string, strategy AIStrategy) *AIPlayer {
 	return &AIPlayer{
 		BasePlayer: mage.NewBasePlayer(name),
-		strategy:   NewHeuristicStrategy(MidrangeWeighted),
-	}
-}
-
-// NewAggroAI creates an AI player with the Aggro personality.
-func NewAggroAI(name string) *AIPlayer {
-	return &AIPlayer{
-		BasePlayer: mage.NewBasePlayer(name),
-		strategy:   NewHeuristicStrategy(AggroWeighted),
-	}
-}
-
-// NewControlAI creates an AI player with the Control personality.
-func NewControlAI(name string) *AIPlayer {
-	return &AIPlayer{
-		BasePlayer: mage.NewBasePlayer(name),
-		strategy:   NewHeuristicStrategy(ControlWeighted),
-	}
-}
-
-// NewTempoAI creates an AI player with the Tempo personality.
-func NewTempoAI(name string) *AIPlayer {
-	return &AIPlayer{
-		BasePlayer: mage.NewBasePlayer(name),
-		strategy:   NewHeuristicStrategy(TempoWeighted),
-	}
-}
-
-// NewWeightedAI creates an AI player with a custom WeightedPersonality.
-func NewWeightedAI(name string, w WeightedPersonality) *AIPlayer {
-	return &AIPlayer{
-		BasePlayer: mage.NewBasePlayer(name),
-		strategy:   NewHeuristicStrategy(w),
-	}
-}
-
-// NewBurnAI creates an AI player focused on dealing direct damage.
-func NewBurnAI(name string) *AIPlayer {
-	return &AIPlayer{
-		BasePlayer: mage.NewBasePlayer(name),
-		strategy:   NewHeuristicStrategy(BurnWeighted),
-	}
-}
-
-// NewAdaptiveAI creates an AI that plays aggressively when ahead and switches
-// to a controlling game plan when behind on life.
-func NewAdaptiveAI(name string) *AIPlayer {
-	return &AIPlayer{
-		BasePlayer: mage.NewBasePlayer(name),
-		strategy: &AdaptiveStrategy{
-			Aggressive: NewHeuristicStrategy(AggroWeighted),
-			Defensive:  NewHeuristicStrategy(ControlWeighted),
-		},
+		Strategy:   strategy,
 	}
 }
 
@@ -92,17 +41,17 @@ func (ai *AIPlayer) ChooseMode(modes []string, reason string) int {
 
 // GetPriorityAction decides what the AI should do when it has priority.
 func (ai *AIPlayer) GetPriorityAction(g *mage.Game, landsPlayed int, mainPhase bool) interactive.PriorityAction {
-	return ai.strategy.PriorityAction(ai.BasePlayer, g, landsPlayed, mainPhase)
+	return ai.Strategy.PriorityAction(ai.BasePlayer, g, landsPlayed, mainPhase)
 }
 
 // AIAttackers returns the IDs of creatures the AI wants to attack with.
 func (ai *AIPlayer) AIAttackers(g *mage.Game) []uuid.UUID {
-	return ai.strategy.Attackers(ai.BasePlayer, g)
+	return ai.Strategy.Attackers(ai.BasePlayer, g)
 }
 
 // AIBlockers returns blocker->attacker assignments.
 func (ai *AIPlayer) AIBlockers(g *mage.Game) []mage.BlockAssignment {
-	return ai.strategy.Blockers(ai.BasePlayer, g)
+	return ai.Strategy.Blockers(ai.BasePlayer, g)
 }
 
 // DeclareAttackers implements the Player interface for AI.

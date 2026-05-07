@@ -157,7 +157,7 @@ func registerCreatures() {
 			// {T}, Remove a javelin counter: deals 1 damage to any target
 			WithActivatedAbility(
 				DealDamage(Fixed(1)),
-				TapSourceCost(),
+				Tap(),
 				WithCost(RemoveCountersCost(Javelin, 1)),
 				WithTarget(TargetAnyTarget()),
 			),
@@ -224,7 +224,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				GrantKeyword(FirstStrike),
 				GenericCost(1),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -338,7 +338,7 @@ func registerCreatures() {
 		return NewCreature("Homarid Shaman", "{2}{U}{U}", 2, 1,
 			WithSubTypes("Homarid", "Shaman"),
 			WithActivatedAbility(
-				TapTarget(),
+				Tap(),
 				ManaCostOf("{U}"),
 				WithTarget(TargetCreature(HasColorFilter(Green))),
 			),
@@ -393,7 +393,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				GrantKeyword(Shroud),
 				ManaCostOf("{U}{U}"),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetCreature()),
 				WithUpkeepOnly(),
 			),
@@ -468,7 +468,7 @@ func registerCreatures() {
 			WithSubTypes("Thrull"),
 			WithActivatedAbility(
 				AddCounters(P1P2, Fixed(1)),
-				TapSourceCost(),
+				Tap(),
 				WithCost(SacrificeSourceCost()),
 				WithTarget(TargetCreature()),
 			),
@@ -484,7 +484,7 @@ func registerCreatures() {
 			WithSubTypes("Thrull"),
 			WithActivatedAbility(
 				AddMana(Black, 2),
-				TapSourceCost(),
+				Tap(),
 				WithCost(SacrificeSourceCost()),
 			),
 		)
@@ -855,7 +855,7 @@ func registerCreatures() {
 						return nil
 					}),
 				ManaCostOf("{1}{G}"),
-				WithCost(TapSourceCost()),
+				WithCost(Tap()),
 				WithTarget(TargetCreature()),
 			),
 		)

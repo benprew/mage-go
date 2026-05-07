@@ -153,6 +153,8 @@ func snapshotPlayer(g *mage.Game, p mage.Player, showHand bool) PlayerState {
 			Toughness:  perm.CurrentToughness(g),
 			Tapped:     perm.Tapped,
 			SummonSick: perm.HasAttr(core.AttrSummonSick),
+			FaceDown:   perm.FaceDown,
+			PhasedOut:  perm.PhasedOut,
 			IsCreature: perm.HasType(core.TypeCreature),
 			IsLand:     perm.HasType(core.TypeLand),
 			IsArtifact: perm.HasType(core.TypeArtifact),
@@ -177,6 +179,7 @@ func snapshotPlayer(g *mage.Game, p mage.Player, showHand bool) PlayerState {
 			if n == 0 {
 				continue
 			}
+			permState.RawCounters[ct] = n
 			if permState.Counters == nil {
 				permState.Counters = make(map[string]int)
 			}
@@ -223,14 +226,19 @@ func snapshotStack(g *mage.Game) []StackItemState {
 			controller = p.Name()
 		}
 		var targetNames []string
+		var targetIDs []uuid.UUID
 		for _, tid := range obj.Targets {
 			targetNames = append(targetNames, resolveTargetName(g, tid))
+			targetIDs = append(targetIDs, tid)
 		}
 		items = append(items, StackItemState{
-			Name:       name,
-			Controller: controller,
-			IsAbility:  obj.IsAbility,
-			Targets:    targetNames,
+			Name:        name,
+			Controller:  controller,
+			IsAbility:   obj.IsAbility,
+			Targets:     targetNames,
+			TargetIDs:   targetIDs,
+			XValue:      obj.XValue,
+			EventAmount: obj.EventAmount,
 		})
 	}
 	return items

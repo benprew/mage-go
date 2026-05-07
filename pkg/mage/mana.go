@@ -119,9 +119,16 @@ func (mp *ManaPool) CanPay(mc ManaCost) bool {
 			if avail[r.color] < r.needed {
 				return false
 			}
-			remaining += avail[r.color] - r.needed
+			avail[r.color] -= r.needed
+			remaining += avail[r.color]
 		}
-		remaining += avail[Colorless]
+		if !allocateHybrids(mc.Hybrid, avail) {
+			return false
+		}
+		remaining = avail[Colorless]
+		for _, r := range reqs {
+			remaining += avail[r.color]
+		}
 		return remaining >= mc.Generic
 	}
 
@@ -148,11 +155,40 @@ func (mp *ManaPool) CanPay(mc ManaCost) bool {
 			return false
 		}
 	}
-	remaining := 0
+	remainingByColor := map[Color]int{}
 	for c, count := range avail {
-		remaining += count - used[c]
+		remainingByColor[c] = count - used[c]
+	}
+	if !allocateHybrids(mc.Hybrid, remainingByColor) {
+		return false
+	}
+	remaining := 0
+	for _, count := range remainingByColor {
+		remaining += count
 	}
 	return remaining >= mc.Generic
+}
+
+// allocateHybrids greedily assigns each hybrid symbol to one of its two colors
+// from the available pool, mutating the map to reflect consumption. Returns
+// false if any symbol cannot be paid. The allocation is deterministic: it
+// prefers the more-abundant color, breaking ties by symbol order (color A
+// first). This is sufficient for the simple cases the engine currently sees;
+// it can fail to find a valid allocation only when colors share constraints
+// across symbols, which doesn't arise for the hybrid costs in print.
+func allocateHybrids(syms []HybridSymbol, avail map[Color]int) bool {
+	for _, h := range syms {
+		a, b := avail[h.A], avail[h.B]
+		switch {
+		case a >= b && a > 0:
+			avail[h.A] = a - 1
+		case b > 0:
+			avail[h.B] = b - 1
+		default:
+			return false
+		}
+	}
+	return true
 }
 
 // Surplus returns how much mana would remain after paying the given cost,
@@ -193,6 +229,14 @@ func (mp *ManaPool) Pay(mc ManaCost) error {
 					}
 				}
 			}
+		}
+	}
+	for _, h := range mc.Hybrid {
+		a, b := mp.Count(h.A), mp.Count(h.B)
+		if a >= b && a > 0 {
+			mp.removeUpTo(h.A, 1)
+		} else if b > 0 {
+			mp.removeUpTo(h.B, 1)
 		}
 	}
 	generic := mc.Generic

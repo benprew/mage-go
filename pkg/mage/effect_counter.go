@@ -11,7 +11,7 @@ import (
 // --- Add counters ---
 
 // addCountersEffect is a composable effect that adds counters to a permanent.
-// It implements both EffectData (for pipelines) and Effect (for direct use).
+// It implements both Effect (for pipelines) and Effect (for direct use).
 // Defaults to targeting targets[0]; use .Targeting() to override.
 type addCountersEffect struct {
 	ct       CounterType
@@ -41,7 +41,7 @@ func (e *addCountersEffect) Max(n int) *addCountersEffect {
 	return e
 }
 
-// EffectData interface
+// Effect interface
 func (e *addCountersEffect) Text() string {
 	if _, ok := e.amount.(xValue); ok {
 		if e.maxTotal > 0 {
@@ -77,7 +77,7 @@ func execAddCounters(ctx *EffectContext, e *addCountersEffect) error {
 			amount = min(amount, room)
 		}
 		if amount > 0 {
-			perm.AddCounter(e.ct, amount)
+			ctx.Game.AddCountersWithReplacement(perm, e.ct, amount, ctx.SourceID, false)
 		}
 	}
 	return nil
@@ -86,7 +86,7 @@ func execAddCounters(ctx *EffectContext, e *addCountersEffect) error {
 // --- Remove counters ---
 
 // removeCountersEffect is a composable effect that removes counters from a
-// permanent. It implements both EffectData (for pipelines) and Effect (for
+// permanent. It implements both Effect (for pipelines) and Effect (for
 // direct use). Defaults to targeting the source; use .Targeting() to override.
 type removeCountersEffect struct {
 	ct       CounterType
@@ -109,7 +109,7 @@ func (e *removeCountersEffect) Targeting(sel TargetSelector) *removeCountersEffe
 	return e
 }
 
-// EffectData interface
+// Effect interface
 func (e *removeCountersEffect) Text() string {
 	switch e.selector.Kind {
 	case KindSource:
@@ -128,6 +128,50 @@ func execRemoveCounters(ctx *EffectContext, e *removeCountersEffect) error {
 	return nil
 }
 
+// MoveCountersFromSourceToTarget creates an effect that prompts the
+// controller to move up to N counters of the given type from the source
+// permanent to the resolving target permanent. N is capped at the
+// number of counters currently on the source. Used by Scrounging
+// Bandar / Power Conduit / Crystalline Crawler-shape upkeep triggers
+// ("you may move any number of +1/+1 counters from this creature onto
+// another target creature"). The choice is delegated to
+// Player.ChooseNumber(0, available, reason) so AI/TUI can override.
+func MoveCountersFromSourceToTarget(ct CounterType) Effect {
+	return FuncEffect(
+		"move any number of counters from source to target",
+		EffectProperties{Outcome: OutcomeBenefit},
+		func(g *Game, sourceID, controllerID uuid.UUID, targets []uuid.UUID) error {
+			if len(targets) == 0 {
+				return nil
+			}
+			source := g.FindPermanent(sourceID)
+			target := g.FindPermanent(targets[0])
+			if source == nil || target == nil {
+				return nil
+			}
+			available := int(source.Counters[ct])
+			if available <= 0 {
+				return nil
+			}
+			player := g.GetPlayer(controllerID)
+			if player == nil {
+				return nil
+			}
+			n := player.ChooseNumber(0, available, fmt.Sprintf("Move how many %s counters?", ct))
+			if n <= 0 {
+				return nil
+			}
+			if n > available {
+				n = available
+			}
+			source.RemoveCounter(ct, n)
+			target.AddCounter(ct, n)
+			g.ApplyContinuousEffects()
+			return nil
+		},
+	)
+}
+
 // --- Snapshot source counter (pipeline) ---
 
 // SnapshotSourceCounterData reads a counter value from the source permanent.
@@ -137,7 +181,7 @@ type SnapshotSourceCounterData struct {
 }
 
 // SnapshotSourceCounter reads a counter count from the source permanent.
-func SnapshotSourceCounter(ct CounterType, storeAs string) EffectData {
+func SnapshotSourceCounter(ct CounterType, storeAs string) Effect {
 	return &SnapshotSourceCounterData{CounterType: ct, StoreAs: storeAs}
 }
 

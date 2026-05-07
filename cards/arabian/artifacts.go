@@ -102,7 +102,7 @@ func registerArtifacts() {
 						g.SetDrawReplacement(controller, x)
 						return nil
 					}),
-				TapSourceCost(),
+				Tap(),
 				WithCost(ManaCostOf("{X}")),
 			),
 		)
@@ -113,7 +113,7 @@ func registerArtifacts() {
 		return NewArtifact("Aladdin's Ring", "{8}",
 			WithActivatedAbility(
 				DealDamage(Fixed(4)),
-				TapSourceCost(),
+				Tap(),
 				WithCost(ManaCostOf("{8}")),
 				WithTarget(TargetAnyTarget()),
 			),
@@ -128,8 +128,8 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				IfElse("flip coin: 5/5 Djinn or 5 damage",
 					&FlipCoinCond{},
-					UnwrapEffect(CreateToken("Djinn", 5, 5, []CardType{TypeArtifact, TypeCreature}, []string{"Djinn"}, Flying)),
-					UnwrapEffect(DealDamageToPlayers(Fixed(5), SelectController())),
+					CreateToken("Djinn", 5, 5, []CardType{TypeArtifact, TypeCreature}, []string{"Djinn"}, Flying),
+					DealDamageToPlayers(Fixed(5), SelectController()),
 				),
 				ManaCostOf("{1}"),
 				WithCost(SacrificeSourceCost()),
@@ -166,7 +166,7 @@ func registerArtifacts() {
 			),
 			// Whenever any nontoken Arabian Nights permanent enters (not self), sacrifice it
 			WithAbility(
-				NewTriggered(EvtEntersBattlefield, false,
+				NewTriggered(EvtZoneChange, false,
 					// TODO: convert to pipeline — needs ForEach with nontoken + set filter + sacrifice-excluding-self
 					FuncEffect("sacrifice entering Arabian Nights permanent",
 						EffectProperties{Outcome: OutcomeDetriment},
@@ -192,7 +192,7 @@ func registerArtifacts() {
 							return false
 						}
 						return catalog.Global().CardInSet("ARN", perm.Name()) && !perm.IsToken
-					}),
+					}).AndConditionData(EventZoneChangeMatches{From: ZoneAny, To: ZoneBattlefield}),
 			),
 			// Continuous: block casting/playing Arabian Nights cards
 			WithStaticAbility(
@@ -219,7 +219,7 @@ func registerArtifacts() {
 					UntapGathered("t"),
 					RemoveFromCombatGathered("t"),
 				),
-				TapSourceCost(),
+				Tap(),
 				WithCost(ManaCostOf("{2}")),
 				WithTarget(TargetCreatureYouControl(IsAttacking)),
 			),
@@ -231,7 +231,7 @@ func registerArtifacts() {
 		return NewArtifact("Flying Carpet", "{4}",
 			WithActivatedAbility(
 				GrantKeyword(Flying),
-				TapSourceCost(),
+				Tap(),
 				WithCost(ManaCostOf("{2}")),
 				WithTarget(TargetCreature()),
 			),
@@ -243,7 +243,7 @@ func registerArtifacts() {
 		return NewArtifact("Jandor's Ring", "{6}",
 			WithActivatedAbility(
 				DrawCards(Fixed(1)),
-				TapSourceCost(),
+				Tap(),
 				WithCost(ManaCostOf("{2}")),
 				WithCost(&discardLastDrawnCost{}),
 			),
@@ -255,7 +255,7 @@ func registerArtifacts() {
 		return NewArtifact("Jandor's Saddlebags", "{2}",
 			WithActivatedAbility(
 				UntapTarget(),
-				TapSourceCost(),
+				Tap(),
 				WithCost(ManaCostOf("{3}")),
 				WithTarget(TargetCreature()),
 			),
@@ -300,7 +300,7 @@ func registerArtifacts() {
 						p.DrawCard()
 						return nil
 					}),
-				TapSourceCost(),
+				Tap(),
 			),
 		)
 	})
@@ -363,12 +363,14 @@ func registerArtifacts() {
 					SnapshotPermanent(SelectTarget, "t"),
 					GrantKeyword(Islandwalk),
 					&RegisterDelayedTriggerData{
-						EventType:     EvtCreatureDied,
+						EventType:     EvtZoneChange,
 						MatchEventVar: "t",
+						MatchFromZone: ZoneBattlefield,
+						MatchToZone:   ZoneGraveyard,
 						Effects:       []Effect{DestroyTarget()},
 					},
 				),
-				TapSourceCost(),
+				Tap(),
 				WithCost(ManaCostOf("{2}")),
 				WithTarget(TargetCreature()),
 			),
