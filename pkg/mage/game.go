@@ -2879,9 +2879,12 @@ func (g *Game) CheckStateBasedActions() {
 
 		// MTG rule 704.5j: Legend rule — if a player controls two or more legendary
 		// permanents with the same name, they choose one and sacrifice the rest.
-		legendCounts := make(map[uuid.UUID]map[string][]*Permanent) // controller -> name -> perms
+		var legendCounts map[uuid.UUID]map[string][]*Permanent // controller -> name -> perms
 		for _, p := range g.battlefield {
 			if p.Card.HasSuperType(SuperLegendary) {
+				if legendCounts == nil {
+					legendCounts = make(map[uuid.UUID]map[string][]*Permanent)
+				}
 				if legendCounts[p.Controller] == nil {
 					legendCounts[p.Controller] = make(map[string][]*Permanent)
 				}
