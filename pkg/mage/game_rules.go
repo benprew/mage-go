@@ -11,31 +11,31 @@ import (
 // Channel, Sanctuary, and minimum life. It is owned by EffectManager and
 // exposed as a public field.
 type GameRules struct {
-	ManaConversion     map[Color]Color         // from color -> to color (Sunglasses of Urza)
-	SpellCostIncreases map[Color]int           // color -> additional generic cost for spells of that color
-	SpellCostReductions map[Color]int          // color -> generic cost reduction for spells of that color
-	SpellTypeCostReductions map[CardType]int   // type -> generic cost reduction for spells of that type
-	LandUntapMax       int                     // -1 = no limit; >= 0 = max lands that may untap per turn
-	ArtifactUntapMax   int                     // -1 = no limit; >= 0 = max artifacts that may untap per turn
-	CreatureUntapMax   int                     // -1 = no limit; >= 0 = max creatures that may untap per turn
-	UnlimitedLandPlays bool                    // true if a player can play unlimited lands (Fastbond)
-	sanctuaryActive    map[uuid.UUID]bool      // player -> if true, only flying/islandwalk can attack them
-	lichActive         map[uuid.UUID]uuid.UUID // player -> source permanent ID of active Lich
-	skipNextDraw       map[uuid.UUID]bool      // player -> if true, skip normal draw in draw step
-	channelActive      map[uuid.UUID]bool      // players with Channel active this turn
-	minimumLife        map[uuid.UUID]bool      // players whose life can't go below 1 (Ali from Cairo)
-	maxHandSize        map[uuid.UUID]int       // player -> max hand size override (Cursed Rack)
-	expansionCastBlock   []string                // set codes blocked from casting/playing
-	NullifiedLandwalks       map[Attr]bool           // landwalk attrs that are nullified (Great Wall, etc.)
-	ActivationCostReductions map[uuid.UUID]int        // permanent ID → generic mana reduction for activated abilities
-	entersTappedRules []func(*Permanent) bool        // filters registered by continuous effects (Kismet, etc.)
-	SpellCostReducers []SpellCostReducer             // conditional generic-cost reducers registered each Apply() cycle
-	UncounterableFilters []uncounterableEntry        // static "can't be countered" filters (Allosaurus Shepherd, Vexing Shusher)
-	FlashGrants          []flashGrantEntry            // continuous "you may cast X spells as though they had flash" grants (Rattlechains, Vedalken Orrery, Leyline of Anticipation)
-	cantCastSpells       map[uuid.UUID]bool           // players forbidden from casting spells this Apply() cycle (Angelic Arbiter, etc.)
-	revealedTopCard      map[uuid.UUID]bool           // players playing with top card of library revealed (Future Sight, Oracle of Mul Daya). Per Apply() cycle.
-	playLandsFromZones   map[uuid.UUID]map[Zone]bool  // player -> zones (other than hand) from which lands may be played. Per Apply() cycle.
-	additionalLandPlays  map[uuid.UUID]int            // per-cycle additional land-play allowance from static abilities (Azusa, Oracle of Mul Daya).
+	ManaConversion           map[Color]Color             // from color -> to color (Sunglasses of Urza)
+	SpellCostIncreases       map[Color]int               // color -> additional generic cost for spells of that color
+	SpellCostReductions      map[Color]int               // color -> generic cost reduction for spells of that color
+	SpellTypeCostReductions  map[CardType]int            // type -> generic cost reduction for spells of that type
+	LandUntapMax             int                         // -1 = no limit; >= 0 = max lands that may untap per turn
+	ArtifactUntapMax         int                         // -1 = no limit; >= 0 = max artifacts that may untap per turn
+	CreatureUntapMax         int                         // -1 = no limit; >= 0 = max creatures that may untap per turn
+	UnlimitedLandPlays       bool                        // true if a player can play unlimited lands (Fastbond)
+	sanctuaryActive          map[uuid.UUID]bool          // player -> if true, only flying/islandwalk can attack them
+	lichActive               map[uuid.UUID]uuid.UUID     // player -> source permanent ID of active Lich
+	skipNextDraw             map[uuid.UUID]bool          // player -> if true, skip normal draw in draw step
+	channelActive            map[uuid.UUID]bool          // players with Channel active this turn
+	minimumLife              map[uuid.UUID]bool          // players whose life can't go below 1 (Ali from Cairo)
+	maxHandSize              map[uuid.UUID]int           // player -> max hand size override (Cursed Rack)
+	expansionCastBlock       []string                    // set codes blocked from casting/playing
+	NullifiedLandwalks       map[Attr]bool               // landwalk attrs that are nullified (Great Wall, etc.)
+	ActivationCostReductions map[uuid.UUID]int           // permanent ID → generic mana reduction for activated abilities
+	entersTappedRules        []func(*Permanent) bool     // filters registered by continuous effects (Kismet, etc.)
+	SpellCostReducers        []SpellCostReducer          // conditional generic-cost reducers registered each Apply() cycle
+	UncounterableFilters     []uncounterableEntry        // static "can't be countered" filters (Allosaurus Shepherd, Vexing Shusher)
+	FlashGrants              []flashGrantEntry           // continuous "you may cast X spells as though they had flash" grants (Rattlechains, Vedalken Orrery, Leyline of Anticipation)
+	cantCastSpells           map[uuid.UUID]bool          // players forbidden from casting spells this Apply() cycle (Angelic Arbiter, etc.)
+	revealedTopCard          map[uuid.UUID]bool          // players playing with top card of library revealed (Future Sight, Oracle of Mul Daya). Per Apply() cycle.
+	playLandsFromZones       map[uuid.UUID]map[Zone]bool // player -> zones (other than hand) from which lands may be played. Per Apply() cycle.
+	additionalLandPlays      map[uuid.UUID]int           // per-cycle additional land-play allowance from static abilities (Azusa, Oracle of Mul Daya).
 }
 
 // flashGrantEntry holds a continuous flash-permission grant. Player is the
@@ -51,19 +51,19 @@ type flashGrantEntry struct {
 // NewGameRules creates a GameRules with all maps initialized.
 func NewGameRules() *GameRules {
 	return &GameRules{
-		LandUntapMax:            -1,
-		ArtifactUntapMax:        -1,
-		CreatureUntapMax:        -1,
-		ManaConversion:          make(map[Color]Color),
-		SpellCostIncreases:      make(map[Color]int),
-		SpellCostReductions:     make(map[Color]int),
-		SpellTypeCostReductions: make(map[CardType]int),
-		sanctuaryActive:         make(map[uuid.UUID]bool),
-		lichActive:              make(map[uuid.UUID]uuid.UUID),
-		skipNextDraw:            make(map[uuid.UUID]bool),
-		channelActive:           make(map[uuid.UUID]bool),
-		minimumLife:             make(map[uuid.UUID]bool),
-		maxHandSize:             make(map[uuid.UUID]int),
+		LandUntapMax:             -1,
+		ArtifactUntapMax:         -1,
+		CreatureUntapMax:         -1,
+		ManaConversion:           make(map[Color]Color),
+		SpellCostIncreases:       make(map[Color]int),
+		SpellCostReductions:      make(map[Color]int),
+		SpellTypeCostReductions:  make(map[CardType]int),
+		sanctuaryActive:          make(map[uuid.UUID]bool),
+		lichActive:               make(map[uuid.UUID]uuid.UUID),
+		skipNextDraw:             make(map[uuid.UUID]bool),
+		channelActive:            make(map[uuid.UUID]bool),
+		minimumLife:              make(map[uuid.UUID]bool),
+		maxHandSize:              make(map[uuid.UUID]int),
 		NullifiedLandwalks:       make(map[Attr]bool),
 		ActivationCostReductions: make(map[uuid.UUID]int),
 	}
@@ -75,23 +75,23 @@ func (r *GameRules) ResetPerCycle() {
 	r.ArtifactUntapMax = -1
 	r.CreatureUntapMax = -1
 	r.UnlimitedLandPlays = false
-	r.maxHandSize = make(map[uuid.UUID]int)
-	r.SpellCostIncreases = make(map[Color]int)
-	r.SpellCostReductions = make(map[Color]int)
-	r.SpellTypeCostReductions = make(map[CardType]int)
-	r.ManaConversion = make(map[Color]Color)
-	r.minimumLife = make(map[uuid.UUID]bool)
-	r.expansionCastBlock = nil
-	r.NullifiedLandwalks = make(map[Attr]bool)
-	r.ActivationCostReductions = make(map[uuid.UUID]int)
-	r.entersTappedRules = nil
-	r.SpellCostReducers = nil
-	r.UncounterableFilters = nil
-	r.FlashGrants = nil
-	r.cantCastSpells = nil
-	r.revealedTopCard = nil
-	r.playLandsFromZones = nil
-	r.additionalLandPlays = nil
+	clear(r.maxHandSize)
+	clear(r.SpellCostIncreases)
+	clear(r.SpellCostReductions)
+	clear(r.SpellTypeCostReductions)
+	clear(r.ManaConversion)
+	clear(r.minimumLife)
+	r.expansionCastBlock = r.expansionCastBlock[:0]
+	clear(r.NullifiedLandwalks)
+	clear(r.ActivationCostReductions)
+	r.entersTappedRules = r.entersTappedRules[:0]
+	r.SpellCostReducers = r.SpellCostReducers[:0]
+	r.UncounterableFilters = r.UncounterableFilters[:0]
+	r.FlashGrants = r.FlashGrants[:0]
+	clear(r.cantCastSpells)
+	clear(r.revealedTopCard)
+	clear(r.playLandsFromZones)
+	clear(r.additionalLandPlays)
 }
 
 // AddRevealedTopCard marks playerID as playing with the top card of their
