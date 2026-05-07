@@ -63,6 +63,7 @@ type Game struct {
 	stack       *Stack
 	combat      *Combat
 	effects     *EffectManager
+	manaScratch []manaSourceInfo
 
 	turn         int
 	step         PhaseStep
@@ -3789,6 +3790,10 @@ func (g *Game) countManaBonuses(permanentID uuid.UUID) int {
 // getUntappedManaSources returns all untapped permanents with mana abilities for a player.
 func (g *Game) getUntappedManaSources(playerID uuid.UUID) []manaSourceInfo {
 	var sources []manaSourceInfo
+	return g.appendUntappedManaSources(playerID, sources)
+}
+
+func (g *Game) appendUntappedManaSources(playerID uuid.UUID, sources []manaSourceInfo) []manaSourceInfo {
 	for _, perm := range g.battlefield {
 		if perm.Controller != playerID || perm.Tapped {
 			continue
@@ -3945,7 +3950,9 @@ func (g *Game) CanAfford(playerID uuid.UUID, mc ManaCost) bool {
 	for _, color := range []Color{White, Blue, Black, Red, Green, Colorless} {
 		hypothetical.Add(color, pool.Count(color))
 	}
-	for _, src := range g.getUntappedManaSources(playerID) {
+	sources := g.appendUntappedManaSources(playerID, g.manaScratch[:0])
+	g.manaScratch = sources
+	for _, src := range sources {
 		hypothetical.Add(src.Color, src.Amount)
 		hypothetical.Add(src.Color, g.countManaBonuses(src.PermanentID))
 	}
