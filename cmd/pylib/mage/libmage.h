@@ -26,6 +26,13 @@ typedef struct { const char *p; ptrdiff_t n; } _GoString_;
 
 #line 1 "cgo-generated-wrapper"
 
+#line 3 "text_rollout.go"
+
+#include <stdlib.h>
+#include "abi.h"
+
+#line 1 "cgo-generated-wrapper"
+
 
 /* End of preamble from import "C" comments.  */
 
@@ -128,6 +135,10 @@ extern MageEncodeResult MageEncodeTokensPacked(MageBatchRequest* req, MageEncode
 extern int64_t MagePendingPlayer(int64_t id);
 extern int64_t MageIsOver(int64_t id);
 extern char* MageWinner(int64_t id);
+extern MageEncodeResult MageStartTextRollout(MageTextRolloutStartRequest* req);
+extern MageTextReadyBatchResult MageNextTextInferenceBatch(int64_t maxRows, int64_t timeoutMS, MageTextReadyBatchOutputs* out);
+extern MageEncodeResult MageSubmitTextChoices(MageTextChoiceSubmitRequest* req);
+extern int32_t MageStopTextRollout(int32_t waitForActive);
 
 #ifdef __cplusplus
 }

@@ -84,6 +84,45 @@ typedef struct {
     char* error_message;
 } MageEncodeResult;
 
+typedef struct {
+    int64_t n;
+    const int64_t* handles;
+    const int64_t* slot_ids;
+    const int64_t* episode_ids;
+    int64_t max_steps_per_game;
+    int64_t max_options;
+    int64_t max_targets_per_option;
+    int64_t max_cached_choices;
+    int64_t zone_slot_count;
+    int64_t game_info_dim;
+    int64_t option_scalar_dim;
+    int64_t target_scalar_dim;
+    int64_t render_plan_capacity;
+    int64_t dedup_card_bodies;
+    int64_t max_tokens;
+    int64_t max_card_refs;
+    int64_t max_blanks;
+    int64_t max_legal_per_blank;
+    int64_t ready_queue_capacity;
+    int64_t terminal_queue_capacity;
+} MageTextRolloutStartRequest;
+
+typedef struct {
+    int64_t rows_written;
+    int64_t terminal_events_written;
+    int64_t decision_rows_written;
+    int64_t error_code;
+    char* error_message;
+} MageTextReadyBatchResult;
+
+typedef struct {
+    int64_t n;
+    const int64_t* request_ids;
+    const int64_t* decision_count;
+    const int64_t* selected_choice_cols;
+    const int64_t* may_selected;
+} MageTextChoiceSubmitRequest;
+
 /*
  * Token-table registration: Python ships the closed-vocabulary token tables
  * needed by the future native text-encoder assembler. The wire format is a
@@ -277,5 +316,22 @@ typedef struct {
     int32_t* blank_count;        /* [B] int32, live blanks per row */
     int32_t* blank_legal_count;  /* [B, K] int32, live legal ids per blank */
 } MagePackedBlankOutputs;
+
+typedef struct {
+    int64_t* request_ids;
+    int64_t* slot_ids;
+    int64_t* episode_ids;
+    int64_t* step_indices;
+    int64_t* perspective_player_idx;
+    int64_t* terminal_slot_ids;
+    int64_t* terminal_episode_ids;
+    int64_t* terminal_winner_idx;
+    int64_t* terminal_is_timeout;
+    int64_t* terminal_life_p0;
+    int64_t* terminal_life_p1;
+    MageEncodeOutputs encode;
+    MagePackedTokenAssemblerOutputs packed_tokens;
+    MagePackedBlankOutputs blanks;
+} MageTextReadyBatchOutputs;
 
 #endif
