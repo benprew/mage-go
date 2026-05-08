@@ -346,7 +346,10 @@ func TestBlackCat_RandomDiscardOnDeath(t *testing.T) {
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
 	// Use a non-land card so the harness's auto-land-play doesn't move it
 	// out of PlayerB's hand before Black Cat's death trigger resolves.
+	// Stack PlayerB's library with Lightning Bolts too so the turn-2 draw
+	// can't introduce a different card and make the random discard ambiguous.
 	g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerB, "Lightning Bolt", 5)
 	g.Attack(2, gametest.PlayerB, "Hill Giant")
 	g.Block(2, gametest.PlayerA, "Black Cat", "Hill Giant")
 	g.StopAt(2, core.EndStep)
