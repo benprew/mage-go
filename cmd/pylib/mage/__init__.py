@@ -214,6 +214,7 @@ int32_t MageRegisterTokenTables(MageTokenTables *tables);
 char *MageTokenTableSummary(void);
 char *MageTokenTableLookup(int32_t kind, int32_t k0, int32_t k1);
 char *MageEncodeTimingSummary(int32_t reset);
+char *MageNativeTimingSummary(int32_t reset);
 
 typedef struct {
     int32_t max_tokens;
@@ -340,6 +341,11 @@ def resolved_library_path() -> str:
     _ensure_loaded()
     assert _lib_path_used is not None
     return _lib_path_used
+
+
+def native_timing_summary(reset: bool = False) -> dict[str, Any]:
+    _ensure_loaded()
+    return _take_raw(_lib.MageNativeTimingSummary(1 if reset else 0))
 
 
 def new_game(

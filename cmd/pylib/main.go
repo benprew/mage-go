@@ -26,6 +26,7 @@ import (
 	"sort"
 	"sync"
 	"sync/atomic"
+	"time"
 	"unsafe"
 
 	"github.com/google/uuid"
@@ -1113,7 +1114,7 @@ func MageNewGame(cfgJSON *C.char) (id C.int64_t, resp *C.char) {
 
 	go func() {
 		defer func() { _ = recover() }()
-		interactive.RunMultiplayerGameLoop(g, channels)
+		interactive.RunNativeMultiplayerGameLoop(g, channels)
 	}()
 
 	ev := waitForNext(h)
@@ -1352,6 +1353,14 @@ func MageBatchStepByChoice(req *C.MageStepChoiceRequest) (res C.MageEncodeResult
 		return newEncodeResult(0, mageEncodeErrInvalidArgument, "handles, decision_start, decision_count, and may_selected must be non-nil")
 	}
 
+	timingEnabled := nativeLoopTimingEnabled()
+	callStart := time.Time{}
+	phaseStart := time.Time{}
+	var prepareTiming, pendingActionTiming, routeTiming, waitTiming time.Duration
+	if timingEnabled {
+		callStart = time.Now()
+		phaseStart = callStart
+	}
 	handles := unsafe.Slice((*int64)(unsafe.Pointer(req.handles)), n)
 	decisionStart := unsafe.Slice((*int64)(unsafe.Pointer(req.decision_start)), n)
 	decisionCount := unsafe.Slice((*int64)(unsafe.Pointer(req.decision_count)), n)
@@ -1373,6 +1382,9 @@ func MageBatchStepByChoice(req *C.MageStepChoiceRequest) (res C.MageEncodeResult
 		}
 		selectedChoiceCols = unsafe.Slice((*int64)(unsafe.Pointer(req.selected_choice_cols)), maxSelected)
 	}
+	if timingEnabled {
+		prepareTiming = time.Since(phaseStart)
+	}
 
 	for i, handleID := range handles {
 		h := getHandle(handleID)
@@ -1383,6 +1395,9 @@ func MageBatchStepByChoice(req *C.MageStepChoiceRequest) (res C.MageEncodeResult
 		if h.done {
 			h.mu.Unlock()
 			return newEncodeResult(0, mageEncodeErrGameOver, fmt.Sprintf("handle %d is over", handleID))
+		}
+		if timingEnabled {
+			phaseStart = time.Now()
 		}
 		pending := buildPending(h.current)
 		count := decisionCount[i]
@@ -1400,15 +1415,29 @@ func MageBatchStepByChoice(req *C.MageStepChoiceRequest) (res C.MageEncodeResult
 			h.mu.Unlock()
 			return newEncodeResult(0, mageEncodeErrInvalidArgument, fmt.Sprintf("handle %d: %v", handleID, err))
 		}
+		if timingEnabled {
+			pendingActionTiming += time.Since(phaseStart)
+			phaseStart = time.Now()
+		}
 		if err := routeAction(h, action); err != nil {
 			h.mu.Unlock()
 			return newEncodeResult(0, mageEncodeErrEncodeFailure, fmt.Sprintf("handle %d: %v", handleID, err))
 		}
+		if timingEnabled {
+			routeTiming += time.Since(phaseStart)
+			phaseStart = time.Now()
+		}
 		ev := waitForNext(h)
+		if timingEnabled {
+			waitTiming += time.Since(phaseStart)
+		}
 		h.current = ev
 		h.done = ev.Over
 		h.stateBuf = nil
 		h.mu.Unlock()
+	}
+	if timingEnabled {
+		addNativeStepTiming(n, time.Since(callStart), prepareTiming, pendingActionTiming, routeTiming, waitTiming)
 	}
 	return newEncodeResult(0, mageEncodeErrOK, "")
 }
@@ -1452,6 +1481,16 @@ func MageEncodeBatch(req *C.MageBatchRequest, cfg *C.MageEncodeConfig, out *C.Ma
 		return newEncodeResult(rowsWritten, err.code, err.message)
 	}
 	return newEncodeResult(rowsWritten, mageEncodeErrOK, "")
+}
+
+//export MageNativeTimingSummary
+func MageNativeTimingSummary(reset C.int32_t) *C.char {
+	summary := nativeLoopTimingTakeSnapshot(reset != 0)
+	b, err := json.Marshal(summary)
+	if err != nil {
+		return errResponse("marshal native timing summary: %v", err)
+	}
+	return C.CString(string(b))
 }
 
 // Stores the borrowed pointers in “tokenTables“ for use by the future

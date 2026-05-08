@@ -294,12 +294,21 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 		return encodeBatchGoPackedParallel(req, cfg, views)
 	}
 
+	timingEnabled := nativeLoopTimingEnabled()
 	callStart := time.Time{}
+	var clearTiming, stateActionTiming, decisionTiming time.Duration
 	var gameTiming, renderTiming, assemblyTiming, metadataTiming time.Duration
-	if cfg.emitTokensPacked {
+	if cfg.emitTokensPacked || timingEnabled {
 		callStart = time.Now()
 	}
+	clearStart := time.Time{}
+	if timingEnabled {
+		clearStart = time.Now()
+	}
 	clearOutputViews(views, cfg)
+	if timingEnabled {
+		clearTiming = time.Since(clearStart)
+	}
 	decisionCursor := int64(0)
 	// Running write cursor into the packed token buffer. Only advanced
 	// when emitTokensPacked is set; ignored otherwise.
@@ -368,8 +377,14 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 			h.mu.Unlock()
 			return decisionCursor, err
 		}
-		if cfg.emitTokensPacked {
-			gameTiming += time.Since(phaseStart)
+		if cfg.emitTokensPacked || timingEnabled {
+			elapsed := time.Since(phaseStart)
+			if cfg.emitTokensPacked {
+				gameTiming += elapsed
+			}
+			if timingEnabled {
+				stateActionTiming += elapsed
+			}
 		}
 		if cfg.emitRenderPlan {
 			renderBatchIdx := int64(batchIdx)
@@ -422,8 +437,14 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 		}
 		phaseStart = time.Now()
 		written, err := fillDecisionEncoding(int64(batchIdx), pending, cfg, views, decisionCursor)
-		if cfg.emitTokensPacked {
-			gameTiming += time.Since(phaseStart)
+		if cfg.emitTokensPacked || timingEnabled {
+			elapsed := time.Since(phaseStart)
+			if cfg.emitTokensPacked {
+				gameTiming += elapsed
+			}
+			if timingEnabled {
+				decisionTiming += elapsed
+			}
 		}
 		h.mu.Unlock()
 		if err != nil {
@@ -438,6 +459,16 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 			renderTiming,
 			assemblyTiming,
 			metadataTiming,
+		)
+	}
+	if timingEnabled {
+		addNativeEncodeTiming(
+			int64(len(req.handles)),
+			time.Since(callStart),
+			0,
+			clearTiming,
+			stateActionTiming,
+			decisionTiming,
 		)
 	}
 	return decisionCursor, nil

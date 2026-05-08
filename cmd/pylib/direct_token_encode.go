@@ -182,7 +182,7 @@ func emitDirectZones(e *directTokenEmitter, state *apiGameState, playerIdx int, 
 		e.emitOpenZone(zone, owner)
 		for _, card := range index.cardsByZone[zoneOwnerSlot(zone, owner)] {
 			if cfg.dedupCardBodies {
-				e.emitPlaceCardRef(card.dictSlot, renderStatusBits(card.perm), card.uuidIdx)
+				e.emitPlaceCardRef(card.dictSlot, card.row, renderStatusBits(card.perm), card.uuidIdx)
 				if blanks := blanksByCard[card.cardID]; len(blanks) > 0 {
 					for _, blank := range blanks {
 						if err := e.emitInlineBlankOption(blank); err != nil {
@@ -237,7 +237,7 @@ func emitDirectZones(e *directTokenEmitter, state *apiGameState, playerIdx int, 
 	e.emitStackOpen()
 	for _, card := range index.cardsByZone[zoneOwnerSlot(renderZoneStack, renderOwnerSelf)] {
 		if cfg.dedupCardBodies {
-			e.emitPlaceCardRef(card.dictSlot, card.staticStatus, card.uuidIdx)
+			e.emitPlaceCardRef(card.dictSlot, card.row, card.staticStatus, card.uuidIdx)
 		} else {
 			e.emitPlaceCard(card.row, card.staticStatus, card.uuidIdx)
 		}

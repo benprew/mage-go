@@ -398,6 +398,9 @@ func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int, scratch
 			if zone == renderZoneStack || zone == renderZoneCommand {
 				continue
 			}
+			if owner == renderOwnerOpponent && zone == renderZoneHand {
+				continue
+			}
 			slot := zoneOwnerSlot(zone, owner)
 			cards, err := appendRenderCardsForZone(index.cardsByZone[slot][:0], player, owner, zone, scratch, nil, nil)
 			if err != nil {
@@ -422,7 +425,6 @@ func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int, scratch
 		{renderOwnerSelf, renderZoneBattlefield},
 		{renderOwnerOpponent, renderZoneBattlefield},
 		{renderOwnerSelf, renderZoneHand},
-		{renderOwnerOpponent, renderZoneHand},
 		{renderOwnerSelf, renderZoneGraveyard},
 		{renderOwnerOpponent, renderZoneGraveyard},
 		{renderOwnerSelf, renderZoneExile},
