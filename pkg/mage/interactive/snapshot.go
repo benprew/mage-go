@@ -69,17 +69,22 @@ func SnapshotGameState(g *mage.Game, humanIndex int) *GameState {
 	aiIndex := (humanIndex + 1) % 2
 	ai := g.PlayerAt(aiIndex)
 
+	viewerID := human.PlayerID()
 	return &GameState{
 		Turn:         g.CurrentTurn(),
 		Step:         g.GetStep().String(),
 		ActivePlayer: g.ActivePlayerObj().Name(),
-		You:          snapshotPlayer(g, human, true),
-		Opponent:     snapshotPlayer(g, ai, false),
+		You:          snapshotPlayer(g, human, viewerID, true),
+		Opponent:     snapshotPlayer(g, ai, viewerID, false),
 		StackItems:   snapshotStack(g),
 	}
 }
 
-func snapshotPlayer(g *mage.Game, p mage.Player, showHand bool) PlayerState {
+// snapshotPlayer builds a PlayerState for player p, redacting any private
+// information that viewerID is not permitted to see (most importantly,
+// face-down exiled cards owned by p that viewerID is not in the
+// RevealedTo set for, per CR 707.2).
+func snapshotPlayer(g *mage.Game, p mage.Player, viewerID uuid.UUID, showHand bool) PlayerState {
 	ps := PlayerState{
 		ID:             p.PlayerID(),
 		Name:           p.Name(),
@@ -140,6 +145,40 @@ func snapshotPlayer(g *mage.Game, p mage.Player, showHand bool) PlayerState {
 			cs.SubTypes += st
 		}
 		ps.Graveyard = append(ps.Graveyard, cs)
+	}
+
+	exile := g.GetExile()
+	for i := range exile {
+		ec := &exile[i]
+		if ec.Card.Owner() != p.PlayerID() {
+			continue
+		}
+		cs := CardState{
+			ID:       ec.Card.ID(),
+			FaceDown: ec.FaceDown,
+		}
+		if ec.VisibleTo(viewerID) {
+			c := ec.Card
+			cs.Name = c.Name()
+			cs.ManaCost = c.ManaCost().String()
+			cs.IsLand = c.HasType(core.TypeLand)
+			cs.Power = c.Power()
+			cs.Toughness = c.Toughness()
+			cs.RulesText = buildRulesText(c)
+			for _, t := range c.Types() {
+				if cs.Types != "" {
+					cs.Types += " "
+				}
+				cs.Types += t.String()
+			}
+			for _, st := range c.SubTypes() {
+				if cs.SubTypes != "" {
+					cs.SubTypes += " "
+				}
+				cs.SubTypes += st
+			}
+		}
+		ps.Exile = append(ps.Exile, cs)
 	}
 
 	for _, perm := range g.AllBattlefield() {
@@ -232,6 +271,7 @@ func snapshotStack(g *mage.Game) []StackItemState {
 			targetIDs = append(targetIDs, tid)
 		}
 		items = append(items, StackItemState{
+			ID:          obj.SourceID.String(),
 			Name:        name,
 			Controller:  controller,
 			IsAbility:   obj.IsAbility,

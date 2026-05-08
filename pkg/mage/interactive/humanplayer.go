@@ -133,6 +133,26 @@ func (p *HumanPlayer) ChoosePermanent(candidates []*mage.Permanent, reason strin
 	return candidates[0]
 }
 
+func (p *HumanPlayer) ChooseCardFromHand(candidates []mage.Card, reason string, g mage.GameReader) mage.Card {
+	if len(candidates) == 0 {
+		return nil
+	}
+	opts := make([]ChoiceOption, len(candidates))
+	for i, c := range candidates {
+		opts[i] = ChoiceOption{ID: c.ID(), Label: c.Name() + " " + c.ManaCost().String()}
+	}
+	p.choiceReqs <- ChoiceRequest{Type: ChoiceCardsFromHand, Reason: reason, Amount: 1, Options: opts}
+	resp := <-p.choiceResps
+	if len(resp.SelectedIDs) > 0 {
+		for _, c := range candidates {
+			if c.ID() == resp.SelectedIDs[0] {
+				return c
+			}
+		}
+	}
+	return candidates[0]
+}
+
 func (p *HumanPlayer) ChooseCardsFromHand(amount int, reason string, g mage.GameReader) []mage.Card {
 	hand := p.Hand()
 	if amount <= 0 || len(hand) == 0 {

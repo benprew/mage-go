@@ -59,20 +59,42 @@ func registerCreatures() {
 	// Creature — Cat Soldier
 	// 3/3
 	// Whenever an enchantment you control enters, create a 2/2 white Cat creature token. If that enchantment is an Aura, you may attach it to the token.
-	// XXX: aura-attach-on-token portion deferred; token creation is implemented.
 	Register("Ajani's Chosen", func() Card {
+		ajanisChosenEffect := FuncEffect(
+			"create a 2/2 white Cat token; if the entering enchantment is an Aura, may attach it to the token",
+			EffectProperties{Outcome: OutcomeBenefit, TokenPower: 2, TokenToughness: 2},
+			func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				token := NewToken("Cat", 2, 2, []CardType{TypeCreature}, []string{"Cat"})
+				token.SetOwner(controller)
+				tokenPerm := g.PutOnBattlefield(token, controller)
+				if tokenPerm == nil {
+					return nil
+				}
+				g.AddContinuousEffect(ColorOverride(tokenPerm.ID(), White))
+
+				if len(targets) == 0 {
+					return nil
+				}
+				enteringID := targets[0]
+				entering := g.FindPermanent(enteringID)
+				if entering == nil || !entering.HasSubType("Aura") {
+					return nil
+				}
+				p := g.GetPlayer(controller)
+				if p == nil {
+					return nil
+				}
+				if !p.ChooseMayAbility("attach Aura to the Cat token created by Ajani's Chosen") {
+					return nil
+				}
+				g.Attach(enteringID, tokenPerm.ID())
+				return nil
+			},
+		)
 		return NewCreature("Ajani's Chosen", "{2}{W}{W}", 3, 3,
 			WithSubTypes("Cat", "Soldier"),
-			WithAbility(NewTriggered(EvtZoneChange, false,
-				CreateColoredToken("Cat", 2, 2, []Color{White},
-					[]CardType{TypeCreature}, []string{"Cat"})).
-				SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-					perm := g.FindPermanent(evt.SourceID)
-					if perm == nil {
-						return false
-					}
-					return perm.Controller == controllerID && perm.HasType(TypeEnchantment)
-				}).AndConditionData(EventZoneChangeMatches{From: ZoneAny, To: ZoneBattlefield})),
+			WithAbility(WheneverPermanentEntersBattlefieldTrigger(ajanisChosenEffect, false, IsEnchantment).
+				AndConditionData(EventSourceControlledByController{})),
 		)
 	})
 
@@ -134,11 +156,36 @@ func registerCreatures() {
 	// Flying
 	// Each opponent who cast a spell this turn can't attack with creatures.
 	// Each opponent who attacked with a creature this turn can't cast spells.
-	// XXX: requires "opponent cast spell / attacked this turn" restrictions
 	Register("Angelic Arbiter", func() Card {
 		return NewCreature("Angelic Arbiter", "{5}{W}{W}", 5, 6,
 			WithSubTypes("Angel"),
 			WithKeyword(Flying),
+			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield,
+				func(g *Game, sourceID uuid.UUID) error {
+					src := g.FindPermanent(sourceID)
+					if src == nil {
+						return nil
+					}
+					opp := g.GetOpponent(src.Controller)
+					if opp == nil {
+						return nil
+					}
+					oppID := opp.PlayerID()
+					// Clause 1: each opponent who cast a spell this turn
+					// can't attack with creatures. Revoke AttrCanAttack from
+					// every creature that opponent controls.
+					if g.PlayerCastSpellThisTurn(oppID) {
+						for _, p := range g.FilterBattlefield(And(IsCreature, ControlledBy(oppID))) {
+							g.RevokeAttr(p.ID(), AttrCanAttack)
+						}
+					}
+					// Clause 2: each opponent who attacked with a creature
+					// this turn can't cast spells.
+					if g.PlayerAttackedThisTurn(oppID) {
+						g.AddCantCastSpells(oppID)
+					}
+					return nil
+				})),
 		)
 	})
 
@@ -583,12 +630,25 @@ func registerCreatures() {
 	// 3/4
 	// Flying
 	// Activated abilities of creatures your opponents control can't be activated.
-	// XXX: requires opponent-activated-ability suppression
 	Register("Linvala, Keeper of Silence", func() Card {
 		return NewCreature("Linvala, Keeper of Silence", "{2}{W}{W}", 3, 4,
 			WithSubTypes("Angel"),
 			WithSuperTypes(SuperLegendary),
 			WithKeyword(Flying),
+			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield,
+				func(g *Game, sourceID uuid.UUID) error {
+					src := g.FindPermanent(sourceID)
+					if src == nil {
+						return nil
+					}
+					for _, p := range g.AllBattlefield() {
+						if !p.HasType(TypeCreature) || p.Controller == src.Controller {
+							continue
+						}
+						g.GrantAttr(p.ID(), AttrCantActivate)
+					}
+					return nil
+				})),
 		)
 	})
 
@@ -1131,8 +1191,62 @@ func registerCreatures() {
 	// Flying
 	// {2}{W/U}: Attacking creatures with flying get +1/+1 until end of turn. ({W/U} can be paid with either {W} or {U}.)
 	// Whenever three or more creatures you control with flying attack, each player gains control of a nonland permanent of your choice controlled by the player to their right.
-	// XXX: player-to-right (multiplayer) mechanics not in scope
 	Register("Inniaz, the Gale Force", func() Card {
+		// In a 2-player game, "the player to their right" collapses to each
+		// player's unique opponent. The "of your choice" qualifier means
+		// Inniaz's controller picks the permanent for both assignments.
+		inniazSwap := FuncEffect(
+			"each player gains control of a nonland permanent of your choice controlled by the player to their right",
+			EffectProperties{Outcome: OutcomeBenefit},
+			func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				inniazController := g.GetPlayer(controller)
+				if inniazController == nil {
+					return nil
+				}
+				opp := g.GetOpponent(controller)
+				if opp == nil {
+					return nil
+				}
+				// Each player P gains a nonland permanent of Inniaz's
+				// controller's choice controlled by P's opponent.
+				// 2-player rotation:
+				//   recipient = controller,        donor = opp        (controller picks from opp)
+				//   recipient = opp,               donor = controller (controller picks from controller)
+				type assignment struct {
+					recipientID uuid.UUID
+					donorID     uuid.UUID
+				}
+				assignments := []assignment{
+					{recipientID: controller, donorID: opp.PlayerID()},
+					{recipientID: opp.PlayerID(), donorID: controller},
+				}
+				for _, a := range assignments {
+					candidates := g.FilterBattlefield(
+						And(ControlledBy(a.donorID), Not(IsLand)),
+					)
+					if len(candidates) == 0 {
+						continue
+					}
+					chosen := inniazController.ChoosePermanent(
+						candidates,
+						"gain control of a nonland permanent",
+						g,
+					)
+					if chosen == nil {
+						continue
+					}
+					newController := a.recipientID
+					ce := TargetEffect(LayerControl, Indefinite, chosen.ID(),
+						func(g *Game, target *Permanent) error {
+							target.Controller = newController
+							return nil
+						})
+					ce.SetSourceID(sourceID)
+					g.AddContinuousEffect(ce)
+				}
+				return nil
+			},
+		)
 		return NewCreature("Inniaz, the Gale Force", "{3}{U}{U}", 4, 4,
 			WithSubTypes("Djinn"),
 			WithSuperTypes(SuperLegendary),
@@ -1142,6 +1256,31 @@ func registerCreatures() {
 					Targeting(ToAllMatching(And(IsAttacking, HasKeywordFilter(Flying)))).
 					Until(EndOfTurn),
 				ManaCostOf("{2}{W/U}"),
+			),
+			WithAbility(
+				// Use the bare "one or more attack" trigger and refine it to
+				// require ≥ 3 flying attackers controlled by the trigger's
+				// controller. Going through the bare trigger (rather than the
+				// "you control" wrapper) lets us own the full condition
+				// closure; the controller-is-active-player check is folded
+				// into the count below since flying attackers controlled by
+				// `controllerID` only exist when controllerID is attacking.
+				WheneverOneOrMoreCreaturesAttackTrigger(inniazSwap, false).
+					SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
+						// CR 603.2c: aggregate the batch — fire once if ≥ 3
+						// flying attackers controlled by the trigger's
+						// controller were declared this combat.
+						if evt.PlayerID != controllerID {
+							return false
+						}
+						count := 0
+						for _, p := range g.FilterBattlefield(IsAttacking) {
+							if p.Controller == controllerID && p.HasKeyword(Flying) {
+								count++
+							}
+						}
+						return count >= 3
+					}),
 			),
 		)
 	})
@@ -1295,14 +1434,34 @@ func registerCreatures() {
 	// Legendary Creature — Sphinx
 	// 5/5
 	// Flying
-	// If you would draw a card while your library has no cards in it, instead put five +1/+1 counters on Ormos.
+	// If you would draw a card while your library has no cards in it, instead put five +1/+1 counters on Ormos, Archive Keeper.
 	// {1}{U}{U}, Discard three cards with different names: Draw five cards.
-	// XXX: requires different-names tracking and draw-replacement-from-empty-library
 	Register("Ormos, Archive Keeper", func() Card {
 		return NewCreature("Ormos, Archive Keeper", "{4}{U}{U}", 5, 5,
 			WithSubTypes("Sphinx"),
 			WithSuperTypes(SuperLegendary),
 			WithKeyword(Flying),
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect(
+					"register empty-library draw replacement",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						g.AddEmptyLibraryDrawReplacement(sourceID, controller, func(g *Game, srcID uuid.UUID) {
+							perm := g.FindPermanent(srcID)
+							if perm == nil {
+								return
+							}
+							g.AddCountersWithReplacement(perm, P1P1, 5, srcID, false)
+						})
+						return nil
+					},
+				), false,
+			)),
+			WithActivatedAbility(
+				DrawCards(Fixed(5)),
+				ManaCostOf("{1}{U}{U}"),
+				WithCost(DiscardCardsWithDifferentNamesCost(3)),
+			),
 		)
 	})
 
@@ -2211,67 +2370,44 @@ func registerCreatures() {
 	// When this creature enters, choose one —
 	// • Return target creature card from your graveyard to your hand.
 	// • Target opponent reveals their hand. You choose a noncreature card from it. That player discards that card.
-	// XXX: target gathering for modal triggers occurs before mode selection (CR
-	// 603.3d). Until the engine supports per-mode target gathering for triggers,
-	// this implementation prompts ChooseMode and then prompts the mode's
-	// chooser inline (so neither mode declares an AddTarget on the trigger).
 	Register("Entomber Exarch", func() Card {
 		noncreatureCard := NewCardFilter("noncreature card", func(c Card) bool {
 			return !c.HasType(TypeCreature)
 		})
+		revealAndDiscard := FuncEffect(
+			"target opponent reveals their hand; you choose a noncreature card; they discard it",
+			EffectProperties{Outcome: OutcomeDetriment},
+			func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				you := g.GetPlayer(controller)
+				if you == nil || len(targets) == 0 {
+					return nil
+				}
+				opp := g.GetPlayer(targets[0])
+				if opp == nil {
+					return nil
+				}
+				_ = g.RevealHand(you, opp)
+				chosen := g.PickFromHand(you, opp, noncreatureCard, false,
+					"choose a noncreature card to discard")
+				if chosen == nil {
+					return nil
+				}
+				g.PlayerDiscard(opp, chosen.ID())
+				return nil
+			})
 		return NewCreature("Entomber Exarch", "{2}{B}{B}", 2, 2,
 			WithSubTypes("Phyrexian", "Cleric"),
-			WithAbility(EntersBattlefieldTrigger(
-				FuncEffect("Entomber Exarch ETB modal",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						you := g.GetPlayer(controller)
-						if you == nil {
-							return nil
-						}
-						labels := []string{
-							"Return target creature card from your graveyard to your hand",
-							"Target opponent reveals their hand; you choose a noncreature card; they discard it",
-						}
-						idx := you.ChooseMode(labels, "Entomber Exarch ETB")
-						if idx < 0 || idx > 1 {
-							idx = 0
-						}
-						switch idx {
-						case 0:
-							var creatures []Card
-							for _, c := range you.Graveyard() {
-								if c.HasType(TypeCreature) {
-									creatures = append(creatures, c)
-								}
-							}
-							if len(creatures) == 0 {
-								return nil
-							}
-							chosen := you.ChooseCardFromLibrary(creatures,
-								"return creature card from graveyard to hand", g)
-							if chosen == nil {
-								return nil
-							}
-							if c, ok := you.RemoveFromGraveyard(chosen.ID()); ok {
-								you.AddToHand(c)
-							}
-						case 1:
-							opp := g.GetOpponent(controller)
-							if opp == nil {
-								return nil
-							}
-							_ = g.RevealHand(you, opp)
-							chosen := g.PickFromHand(you, opp, noncreatureCard, false,
-								"choose a noncreature card to discard")
-							if chosen == nil {
-								return nil
-							}
-							g.PlayerDiscard(opp, chosen.ID())
-						}
-						return nil
-					}),
-				false,
+			WithAbility(EntersBattlefieldTrigger(nil, false).WithModes(
+				Mode{
+					Label:   "Return target creature card from your graveyard to your hand",
+					Targets: []Target{TargetCardInYourGraveyard(IsCreatureCard)},
+					Effects: []Effect{ReturnFromGraveyardToHandTarget()},
+				},
+				Mode{
+					Label:   "Target opponent reveals their hand. You choose a noncreature card from it. That player discards that card.",
+					Targets: []Target{TargetOpponent()},
+					Effects: []Effect{revealAndDiscard},
+				},
 			)),
 		)
 	})
@@ -2476,8 +2612,6 @@ func registerCreatures() {
 	// 2/3
 	// Deathtouch
 	// When Gonti enters, look at the top four cards of target opponent's library, exile one of them face down, then put the rest on the bottom of that library in a random order. You may cast that card for as long as it remains exiled, and mana of any type can be spent to cast that spell.
-	// XXX: face-down exile and "look at" privacy aren't modeled — the exiled
-	// card is placed in exile face up and visible to both players.
 	Register("Gonti, Lord of Luxury", func() Card {
 		return NewCreature("Gonti, Lord of Luxury", "{2}{B}{B}", 2, 3,
 			WithSubTypes("Aetherborn", "Rogue"),
@@ -2518,7 +2652,7 @@ func registerCreatures() {
 						newLib = append(newLib, rest...)
 						newLib = append(newLib, bottom...)
 						opp.SetLibrary(newLib)
-						g.ExileCard(chosenCard, sourceID)
+						g.ExileCardFaceDown(chosenCard, sourceID, controller)
 						g.GrantCastFromExile(controller, chosenCard.ID(), true)
 						return nil
 					}),
@@ -2624,7 +2758,7 @@ func registerCreatures() {
 			WithSubTypes("Azra", "Warlock"),
 			WithSuperTypes(SuperLegendary),
 			WithKeyword(Menace),
-			WithAbility(WheneverYouSacrificeAnotherCreatureTrigger(
+			WithAbility(WheneverYouSacrificeCreatureTrigger(
 				MayPayMana("{U/B}", "draw a card", DrawCards(Fixed(1))),
 				false,
 			)),
@@ -2908,11 +3042,54 @@ func registerCreatures() {
 	// Flying
 	// Each other Rogue creature you control enters with an additional +1/+1 counter on it.
 	// Whenever a creature you control with a +1/+1 counter on it deals combat damage to a player, that player discards a card.
-	// XXX: AddETBAdditionalCounters only augments an existing AddCountersAction; a creature entering with no base counters never triggers the replacement, so the primitive cannot wire this card. Also need a "creature-you-control-with-+1/+1 counter deals combat damage to a player" trigger for the second ability.
 	Register("Oona's Blackguard", func() Card {
+		rogueYouControl := NewPermanentFilter("Rogue creature", func(p *Permanent, _ *Game) bool {
+			return p.HasType(TypeCreature) && p.HasSubType("Rogue")
+		})
 		return NewCreature("Oona's Blackguard", "{1}{B}", 1, 1,
 			WithSubTypes("Faerie", "Rogue"),
 			WithKeyword(Flying),
+			WithAbility(ETBEffect(FuncEffect(
+				"each other Rogue creature you control enters with an additional +1/+1 counter on it",
+				EffectProperties{},
+				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					g.AddETBAdditionalCounters(sourceID, P1P1, 1, rogueYouControl, true)
+					return nil
+				},
+			))),
+			WithAbility(NewTriggered(EvtCombatDamageDealt, false,
+				FuncEffect("each creature you control with a +1/+1 counter that dealt combat damage to that player makes them discard a card",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						recipID := g.EventSourceID()
+						if recipID == uuid.Nil {
+							return nil
+						}
+						recip := g.GetPlayer(recipID)
+						if recip == nil {
+							return nil
+						}
+						sources := g.CombatDamageSourcesThisStep(controller, recipID)
+						discards := 0
+						for srcID := range sources {
+							src := g.FindPermanent(srcID)
+							if src == nil || src.Controller != controller {
+								continue
+							}
+							if src.Counters[P1P1] == 0 {
+								continue
+							}
+							discards++
+						}
+						for i := 0; i < discards; i++ {
+							chosen := recip.ChooseCardsFromHand(1, "discard", g)
+							for _, c := range chosen {
+								g.PlayerDiscard(recip, c.ID())
+							}
+						}
+						return nil
+					}),
+			).SetConditionData(EventPlayerIsController{})),
 		)
 	})
 
@@ -3053,16 +3230,14 @@ func registerCreatures() {
 	// 6/6
 	// Flying
 	// You may cast this creature from your graveyard by paying {B}{B} and sacrificing two creatures rather than paying its mana cost.
-	// XXX: card itself has no engine-side hook to register the alternate-cost
-	// graveyard cast permission for player priority. The mechanic is reachable
-	// only by calling g.CastCardFromZoneWithAlternateCost directly. Needs an
-	// engine primitive that registers a static "you may cast from your
-	// graveyard by paying <cost> + <additional>" permission discoverable from
-	// player priority.
 	Register("Scourge of Nel Toth", func() Card {
 		return NewCreature("Scourge of Nel Toth", "{5}{B}{B}", 6, 6,
 			WithSubTypes("Zombie", "Dragon"),
 			WithKeyword(Flying),
+			WithAlternateCost(ZoneGraveyard, ParseManaCost("{B}{B}"),
+				SacrificeCreatureCost(),
+				SacrificeCreatureCost(),
+			),
 		)
 	})
 
@@ -3736,12 +3911,6 @@ func registerCreatures() {
 	// Legendary Creature — Elder Dinosaur
 	// 6/6
 	// Whenever Etali attacks, exile the top card of each player's library, then you may cast any number of spells from among those cards without paying their mana costs.
-	// XXX: CastCardFromZoneWithoutPaying / findCardInZone enforces
-	// owner == playerID for exile, so the controller cannot cast cards owned
-	// by an opponent. Etali's exile from each player's library leaves
-	// opponent-owned cards uncastable. Engine needs an "ignore owner" mode
-	// (or per-card cast permission decoupled from ownership) for this and any
-	// other "cast from exile" effects targeting an opponent's library.
 	Register("Etali, Primal Storm", func() Card {
 		return NewCreature("Etali, Primal Storm", "{4}{R}{R}", 6, 6,
 			WithSubTypes("Elder", "Dinosaur"),
@@ -3773,14 +3942,11 @@ func registerCreatures() {
 							if ec == nil || ec.Card.HasType(TypeLand) {
 								continue
 							}
-							if ec.Card.Owner() != controller {
-								continue
-							}
 							if !ctrl.ChooseMayAbility("cast " + ec.Card.Name() + " without paying its mana cost") {
 								continue
 							}
 							castTargets := gatherCastTargetsFromZone(g, ctrl, ec.Card)
-							_ = g.CastCardFromZoneWithoutPaying(controller, cid, ZoneExile, castTargets, 0)
+							_ = g.CastCardFromExileWithoutPaying(controller, cid, castTargets, 0)
 						}
 						return nil
 					}),
@@ -3814,7 +3980,8 @@ func registerCreatures() {
 	Register("Flametongue Kavu", func() Card {
 		return NewCreature("Flametongue Kavu", "{3}{R}", 4, 2,
 			WithSubTypes("Kavu"),
-			WithETBEffect(DealDamage(Fixed(4))),
+			WithAbility(EntersBattlefieldTrigger(DealDamage(Fixed(4)), false).
+				AddTarget(TargetCreature())),
 		)
 	})
 
@@ -3825,10 +3992,11 @@ func registerCreatures() {
 	Register("Forge Devil", func() Card {
 		return NewCreature("Forge Devil", "{R}", 1, 1,
 			WithSubTypes("Devil"),
-			WithETBEffect(CompositeEffects("deal 1 to target creature and 1 to you",
-				DealDamage(Fixed(1)),
-				DealDamageToPlayers(Fixed(1), SelectController()),
-			)),
+			WithAbility(EntersBattlefieldTrigger(
+				CompositeEffects("deal 1 to target creature and 1 to you",
+					DealDamage(Fixed(1)),
+					DealDamageToPlayers(Fixed(1), SelectController()),
+				), false).AddTarget(TargetCreature())),
 		)
 	})
 
@@ -3871,7 +4039,8 @@ func registerCreatures() {
 	Register("Goblin Commando", func() Card {
 		return NewCreature("Goblin Commando", "{4}{R}", 2, 2,
 			WithSubTypes("Goblin"),
-			WithETBEffect(DealDamage(Fixed(2))),
+			WithAbility(EntersBattlefieldTrigger(DealDamage(Fixed(2)), false).
+				AddTarget(TargetCreature())),
 		)
 	})
 
@@ -3987,11 +4156,11 @@ func registerCreatures() {
 			WithAbility(NewTriggered(EvtDeclaredAttacker, false,
 				FuncEffect("deal 1 damage to the player or planeswalker it's attacking",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, _ uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 {
+					func(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
+						atkID := g.EventSourceID()
+						if atkID == uuid.Nil {
 							return nil
 						}
-						atkID := targets[0]
 						for _, group := range g.CombatGroups() {
 							if group.AttackerID == atkID {
 								if def := g.GetPlayer(group.DefenderID); def != nil {
@@ -4134,12 +4303,20 @@ func registerCreatures() {
 	// Flying, haste
 	// This creature can't block.
 	// At the beginning of your end step, if an opponent was dealt 3 or more damage this turn, you may pay {R}. If you do, return this card from your graveyard to the battlefield.
-	// XXX: per-turn damage tracker exists (PermanentDamageReceivedThisTurn applies to players too), but the engine has no graveyard-zone triggered-ability primitive — triggered abilities only fire while the source is on the battlefield. Need a "while in graveyard" trigger registration before this can be wired.
 	Register("Lightning Phoenix", func() Card {
 		return NewCreature("Lightning Phoenix", "{2}{R}", 2, 2,
 			WithSubTypes("Phoenix"),
 			WithKeyword(Flying),
 			WithKeyword(Haste),
+			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+				g.RevokeAttr(sourceID, AttrCanBlock)
+				return nil
+			})),
+			WithAbility(BeginningOfYourEndStepFromGraveyard(
+				MayPayMana("{R}", "return Lightning Phoenix from your graveyard to the battlefield",
+					ReturnSourceFromGraveyardToBattlefield()),
+				false,
+			).AndConditionData(opponentDealt3PlusDamageThisTurnCond{})),
 		)
 	})
 
@@ -4657,11 +4834,120 @@ func registerCreatures() {
 	// 2/3
 	// Whenever an opponent draws their first card each turn, if it's not their turn, you create a 1/1 red Devil creature token with "When this token dies, it deals 1 damage to any target."
 	// Whenever one or more Devils you control attack one or more players, you and those players each draw a card, then discard a card at random.
-	// XXX: requires opponent-draw-state tracking and random-discard primitive
 	Register("Zurzoth, Chaos Rider", func() Card {
+		// Clause 2 effect: each of {controller, defending players} draws a
+		// card, then each discards a card at random. Per CR 603.2c the trigger
+		// itself is once-per-combat (one batch); the player set is the
+		// controller plus every player being attacked by a Devil-attacker that
+		// the controller controls.
+		zurzothDevilsAttack := FuncEffect(
+			"you and those players each draw a card, then discard a card at random",
+			EffectProperties{Outcome: OutcomeBenefit},
+			func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				playerIDs := []uuid.UUID{controller}
+				seen := map[uuid.UUID]bool{controller: true}
+				for _, group := range g.CombatGroups() {
+					attacker := g.FindPermanent(group.AttackerID)
+					if attacker == nil {
+						continue
+					}
+					if attacker.Controller != controller {
+						continue
+					}
+					if !attacker.HasSubType("Devil") {
+						continue
+					}
+					if group.DefenderID == uuid.Nil || seen[group.DefenderID] {
+						continue
+					}
+					if pl := g.GetPlayer(group.DefenderID); pl != nil {
+						playerIDs = append(playerIDs, group.DefenderID)
+						seen[group.DefenderID] = true
+					}
+				}
+				for _, pid := range playerIDs {
+					if pl := g.GetPlayer(pid); pl != nil {
+						g.PlayerDrawCard(pl)
+					}
+				}
+				for _, pid := range playerIDs {
+					if pl := g.GetPlayer(pid); pl != nil {
+						g.DiscardAtRandom(pl, 1)
+					}
+				}
+				return nil
+			},
+		)
+
 		return NewCreature("Zurzoth, Chaos Rider", "{2}{R}", 2, 3,
 			WithSubTypes("Devil"),
 			WithSuperTypes(SuperLegendary),
+			// Clause 1: opponent's first card draw each turn, if it's not
+			// their turn → create a 1/1 red Devil token with the dies trigger.
+			WithAbility(NewTriggered(EvtCardDrawn, false,
+				TokenWithAbilities(
+					CreateColoredToken("Devil", 1, 1, []Color{Red},
+						[]CardType{TypeCreature}, []string{"Devil"}),
+					PutIntoGraveyardFromBattlefieldTrigger(
+						DealDamage(Fixed(1)), false,
+					).AddTarget(TargetAnyTarget()),
+				),
+			).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
+				if evt.PlayerID == controllerID {
+					return false
+				}
+				active := g.ActivePlayerObj()
+				if active != nil && active.PlayerID() == evt.PlayerID {
+					return false
+				}
+				// recordPerTurnEvent has already incremented the counter for
+				// this draw, so "first card this turn" == count of exactly 1.
+				return g.PlayerCardsDrawnThisTurn(evt.PlayerID) == 1
+			})),
+			// Clause 2: one or more Devils you control attack one or more
+			// players → you and those players each draw a card, then each
+			// discards a card at random.
+			WithAbility(WheneverOneOrMoreCreaturesYouControlAttackTrigger(
+				zurzothDevilsAttack, false,
+			).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
+				if evt.PlayerID != controllerID {
+					return false
+				}
+				for _, p := range g.FilterBattlefield(IsAttacking) {
+					if p.Controller == controllerID && p.HasSubType("Devil") {
+						return true
+					}
+				}
+				return false
+			})),
+		)
+	})
+
+	// Pia Nalaar, Consul of Revival {2}{R}
+	// Legendary Creature — Human Artificer
+	// 3/2
+	// When this creature enters, create a 1/1 colorless Thopter artifact creature token with flying.
+	// Sacrifice an artifact: Creatures you control get +1/+0 until end of turn.
+	// At the beginning of your end step, if an opponent was dealt 3 or more damage this turn, you may pay {R}. If you do, return this card from your graveyard to the battlefield.
+	Register("Pia Nalaar, Consul of Revival", func() Card {
+		return NewCreature("Pia Nalaar, Consul of Revival", "{2}{R}", 3, 2,
+			WithSubTypes("Human", "Artificer"),
+			WithSuperTypes(SuperLegendary),
+			WithAbility(EntersBattlefieldTrigger(
+				CreateToken("Thopter", 1, 1,
+					[]CardType{TypeArtifact, TypeCreature},
+					[]string{"Thopter"},
+					Flying),
+				false)),
+			WithActivatedAbility(
+				Boost(Fixed(1), Fixed(0)).Targeting(ToMatching(IsCreature)).Until(EndOfTurn),
+				SacrificeArtifactCost(),
+			),
+			WithAbility(BeginningOfYourEndStepFromGraveyard(
+				MayPayMana("{R}", "return Pia Nalaar from your graveyard to the battlefield",
+					ReturnSourceFromGraveyardToBattlefield()),
+				false,
+			).AndConditionData(opponentDealt3PlusDamageThisTurnCond{})),
 		)
 	})
 
@@ -4889,7 +5175,7 @@ func registerCreatures() {
 				AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
 				false,
 				IsCreature,
-			).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+			).AndConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
 				EventSourceNotSelf{},
 				EventSourceControlledByController{},
 			}})),
@@ -5258,11 +5544,85 @@ func registerCreatures() {
 	// 3/3
 	// Whenever one or more creatures you control fight or become blocked, draw a card.
 	// At the beginning of combat on your turn, you may pay {2}{R/G}. If you do, double target creature's power until end of turn. That creature must be blocked this combat if able. ({R/G} can be paid with either {R} or {G}.)
-	// XXX: requires may-pay-mana cost in trigger resolution, "one or more ... fight" aggregation, "must be blocked this combat" restriction
 	Register("Neyith of the Dire Hunt", func() Card {
+		// Aggregating "draw a card" trigger — CR 603.2c. Fires once per
+		// "blockers declared" dispatch if any creature controlled by Neyith's
+		// controller was blocked, and once per fight resolution involving a
+		// creature Neyith's controller controls. Each dispatch is a single
+		// event window so the once-per-dispatch firing satisfies "one or
+		// more" without further deduplication.
+		blockedAggregate := NewTriggered(EvtBlockersDecl, false,
+			DrawCards(Fixed(1)),
+		).SetCondition(func(_ *GameEvent, gr GameReader, _, controllerID uuid.UUID) bool {
+			game, ok := gr.(*Game)
+			if !ok || game.GetCombat() == nil {
+				return false
+			}
+			for _, grp := range game.GetCombat().Groups {
+				if len(grp.BlockerIDs) == 0 {
+					continue
+				}
+				atk := game.FindPermanent(grp.AttackerID)
+				if atk != nil && atk.Controller == controllerID {
+					return true
+				}
+			}
+			return false
+		})
+
+		fightAggregate := NewTriggered(EvtFight, false,
+			DrawCards(Fixed(1)),
+		).SetCondition(func(evt *GameEvent, gr GameReader, _, controllerID uuid.UUID) bool {
+			game, ok := gr.(*Game)
+			if !ok {
+				return false
+			}
+			for _, id := range []uuid.UUID{evt.SourceID, evt.TargetID} {
+				if perm := game.FindPermanent(id); perm != nil && perm.Controller == controllerID {
+					return true
+				}
+			}
+			return false
+		})
+
+		// At the beginning of combat on your turn, you may pay {2}{R/G}.
+		// If you do, double target creature's power until end of turn and
+		// that creature must be blocked this combat if able (CR 509.1c
+		// applied for the duration of the current combat phase).
+		mustBeBlockedThisCombat := FuncEffect(
+			"that creature must be blocked this combat if able",
+			EffectProperties{Outcome: OutcomeBenefit},
+			func(g *Game, sourceID, _ uuid.UUID, targets []uuid.UUID) error {
+				if len(targets) == 0 {
+					return nil
+				}
+				eff := TargetMustBeBlockedIfAble(targets[0], EndOfCombat)
+				eff.SetSourceID(sourceID)
+				g.AddContinuousEffect(eff)
+				g.ApplyContinuousEffects()
+				return nil
+			},
+		)
+
+		combatAbility := NewTriggered(EvtBeginCombat, true,
+			MayPayMana("{2}{R/G}",
+				"double target creature's power and force it to be blocked this combat",
+				CompositeEffects(
+					"double target creature's power; must be blocked this combat",
+					DoubleTargetPower(),
+					mustBeBlockedThisCombat,
+				),
+			),
+		).SetCondition(func(evt *GameEvent, _ GameReader, _, controllerID uuid.UUID) bool {
+			return evt.PlayerID == controllerID
+		}).AddTarget(TargetCreature())
+
 		return NewCreature("Neyith of the Dire Hunt", "{2}{G}{G}", 3, 3,
 			WithSubTypes("Human", "Warrior"),
 			WithSuperTypes(SuperLegendary),
+			WithAbility(blockedAggregate),
+			WithAbility(fightAggregate),
+			WithAbility(combatAbility),
 		)
 	})
 
@@ -5272,10 +5632,14 @@ func registerCreatures() {
 	// You may play an additional land on each of your turns.
 	// Play with the top card of your library revealed.
 	// You may play lands from the top of your library.
-	// XXX: requires play-lands-from-top-of-library and library top reveal infrastructure
 	Register("Oracle of Mul Daya", func() Card {
 		return NewCreature("Oracle of Mul Daya", "{3}{G}", 2, 2,
 			WithSubTypes("Elf", "Shaman"),
+			WithStaticAbility(
+				AdditionalLandPlayStatic(),
+				RevealTopCardOfLibrary(),
+				PlayLandsFromTopOfLibrary(),
+			),
 		)
 	})
 
@@ -5465,14 +5829,12 @@ func registerCreatures() {
 	// 2/3
 	// Whenever another creature enters, its controller may draw a card if its power is greater than each other creature's power.
 	// {G}, {T}: Add X mana in any combination of colors, where X is the greatest power among creatures you control.
-	// XXX: Oracle grants the draw to the *entering creature's controller* and
-	// makes it a "may". Current wiring fires the draw to Selvala's controller
-	// unconditionally — matches the wave-6 reference test pattern but
-	// diverges in multiplayer when the entering creature is controlled by
-	// someone else. Two-player engine treats this as equivalent because
-	// the only "another creature enters" cases that matter for this card
-	// are creatures Selvala's controller cast.
 	Register("Selvala, Heart of the Wilds", func() Card {
+		// The trigger's effect is "that creature's controller draws a card" —
+		// the entering creature's controller, not Selvala's. The ETB-trigger
+		// auto-binding sets Targets[0] to the entering permanent's ID, so we
+		// look it up at resolution time and draw for its current controller
+		// (CR 603.6 — values used at resolution).
 		// {G}, {T}: Add X mana in any combination of colors, where X is the
 		// greatest power among creatures you control. Implemented as a regular
 		// activated ability (FuncEffect into mana pool) because ManaProduction
@@ -5480,8 +5842,30 @@ func registerCreatures() {
 		// can't compute X. This still respects "any combination of colors"
 		// (ChooseManaColor per mana point), but goes through the stack rather
 		// than CR 605's mana-ability fast path.
+		drawForEnteringController := FuncEffect(
+			"that creature's controller may draw a card",
+			EffectProperties{Outcome: OutcomeBenefit, DrawCount: 1},
+			func(g *Game, _, _ uuid.UUID, targets []uuid.UUID) error {
+				if len(targets) == 0 {
+					return nil
+				}
+				perm := g.FindPermanent(targets[0])
+				if perm == nil {
+					return nil
+				}
+				p := g.GetPlayer(perm.Controller)
+				if p == nil {
+					return nil
+				}
+				if !p.ChooseMayAbility("draw a card (Selvala, Heart of the Wilds)") {
+					return nil
+				}
+				g.PlayerDrawCard(p)
+				return nil
+			},
+		)
 		etbDraw := WheneverPermanentEntersBattlefieldTrigger(
-			DrawCards(Fixed(1)), false, IsCreature,
+			drawForEnteringController, false, IsCreature,
 		).AndConditionData(EventSourceNotSelf{}).
 			AndConditionData(eventSourcePowerGreaterThanAllOthers{})
 		return NewCreature("Selvala, Heart of the Wilds", "{1}{G}{G}", 2, 3,
@@ -5587,10 +5971,6 @@ func registerCreatures() {
 	// 6/6
 	// Trample
 	// Whenever another nontoken creature you control enters, you may draw a card.
-	// XXX: nontoken filter inside trigger-condition closure suffers from the
-	// same engine bug as Lathliss: token detection on EvtEntersBattlefield
-	// event source is unreliable, so this trigger may also fire for token
-	// creatures entering. Behaves correctly for the common nontoken-only path.
 	Register("Soul of the Harvest", func() Card {
 		nontokenCreature := NewPermanentFilter("nontoken creature", func(p *Permanent, _ *Game) bool {
 			return p.HasType(TypeCreature) && !p.Card.IsToken()
@@ -5690,10 +6070,23 @@ func registerCreatures() {
 	// 0/0
 	// This creature enters with X +1/+1 counters on it, where X is the total toughness of other creatures you control.
 	// Sacrifice a creature with defender: All creatures gain trample until end of turn.
-	// XXX: requires "enters with X counters where X is total toughness of other creatures" replacement
 	Register("Towering Titan", func() Card {
 		return NewCreature("Towering Titan", "{4}{G}{G}", 0, 0,
 			WithSubTypes("Giant"),
+			WithAbility(EntersWithComputedCounters(P1P1, func(g *Game, perm *Permanent) int {
+				total := 0
+				controller := perm.Controller
+				for _, p := range g.FilterBattlefield(IsCreature) {
+					if p.ID() == perm.ID() {
+						continue
+					}
+					if p.Controller != controller {
+						continue
+					}
+					total += p.CurrentToughness(g)
+				}
+				return total
+			})),
 			WithActivatedAbility(
 				FuncEffect(
 					"all creatures gain trample until end of turn",
@@ -5953,29 +6346,8 @@ func registerCreatures() {
 	Register("Raging Regisaur", func() Card {
 		return NewCreature("Raging Regisaur", "{2}{R}{G}", 4, 4,
 			WithSubTypes("Dinosaur"),
-			WithAbility(AttacksTrigger(FuncEffect(
-				"deal 1 damage to any target",
-				EffectProperties{Outcome: OutcomeDetriment, DamageValue: Fixed(1)},
-				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					p := g.GetPlayer(controller)
-					if p == nil {
-						return nil
-					}
-					var creatureCands []*Permanent
-					creatureCands = append(creatureCands, g.FilterBattlefield(And(IsCreature, NotControlledBy(controller)))...)
-					if opp := g.GetOpponent(controller); opp != nil {
-						g.DealDamageToPlayer(opp, 1, sourceID)
-						return nil
-					}
-					if len(creatureCands) > 0 {
-						chosen := p.ChoosePermanent(creatureCands, "1 damage", g)
-						if chosen != nil {
-							g.DealDamageToPermanent(chosen, 1, sourceID)
-						}
-					}
-					return nil
-				},
-			), false)),
+			WithAbility(AttacksTrigger(DealDamage(Fixed(1)), false).
+				AddTarget(TargetAnyTarget())),
 		)
 	})
 
@@ -6035,14 +6407,27 @@ func registerCreatures() {
 	// Chamber Sentry {X}
 	// Artifact Creature — Construct
 	// 0/0
-	// This creature enters with a +1/+1 counter on it for each color of mana spent to cast it.
-	// {X}, {T}, Remove X +1/+1 counters from this creature: It deals X damage to any target.
+	// Chamber Sentry enters with a +1/+1 counter on it for each color of mana spent to cast it.
+	// {X}, {T}, Remove X +1/+1 counters from this creature: Chamber Sentry deals X damage to any target.
 	// {W}{U}{B}{R}{G}: Return this card from your graveyard to your hand.
-	// XXX: requires colors-of-mana-spent tracking and graveyard activated abilities
 	Register("Chamber Sentry", func() Card {
 		return NewCreature("Chamber Sentry", "{X}", 0, 0,
 			WithSubTypes("Construct"),
 			WithCardType(TypeArtifact),
+			WithAbility(EntersWithComputedCounters(P1P1, func(g *Game, perm *Permanent) int {
+				return g.ResolvingCastContext().DistinctColorsSpent()
+			})),
+			WithActivatedAbility(
+				DealDamage(XValue()),
+				XManaCost(),
+				WithCost(Tap()),
+				WithCost(RemoveXCountersFromSourceCost(P1P1)),
+				WithTarget(TargetAnyTarget()),
+			),
+			WithGraveyardActivatedAbility(
+				ReturnSourceToHand(),
+				ManaCostOf("{W}{U}{B}{R}{G}"),
+			),
 		)
 	})
 
@@ -6176,26 +6561,8 @@ func registerCreatures() {
 		return NewCreature("Meteor Golem", "{7}", 3, 3,
 			WithSubTypes("Golem"),
 			WithCardType(TypeArtifact),
-			WithAbility(EntersBattlefieldTrigger(FuncEffect(
-				"destroy target nonland permanent an opponent controls",
-				EffectProperties{Outcome: OutcomeDetriment},
-				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					p := g.GetPlayer(controller)
-					if p == nil {
-						return nil
-					}
-					candidates := g.FilterBattlefield(And(NotControlledBy(controller), Not(IsLand)))
-					if len(candidates) == 0 {
-						return nil
-					}
-					chosen := p.ChoosePermanent(candidates, "destroy target", g)
-					if chosen == nil {
-						return nil
-					}
-					g.DestroyPermanent(chosen)
-					return nil
-				},
-			), false)),
+			WithAbility(EntersBattlefieldTrigger(DestroyTarget(), false).
+				AddTarget(TargetPermanentOpponentControls(Not(IsLand)))),
 		)
 	})
 
@@ -6222,29 +6589,8 @@ func registerCreatures() {
 		return NewCreature("Perilous Myr", "{2}", 1, 1,
 			WithSubTypes("Phyrexian", "Myr"),
 			WithCardType(TypeArtifact),
-			WithAbility(PutIntoGraveyardFromBattlefieldTrigger(FuncEffect(
-				"deal 2 damage to any target",
-				EffectProperties{Outcome: OutcomeDetriment, DamageValue: Fixed(2)},
-				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					p := g.GetPlayer(controller)
-					if p == nil {
-						return nil
-					}
-					var creatureCands []*Permanent
-					creatureCands = append(creatureCands, g.FilterBattlefield(IsCreature)...)
-					if len(creatureCands) > 0 {
-						chosen := p.ChoosePermanent(creatureCands, "2 damage to creature", g)
-						if chosen != nil {
-							g.DealDamageToPermanent(chosen, 2, sourceID)
-							return nil
-						}
-					}
-					if opp := g.GetOpponent(controller); opp != nil {
-						g.DealDamageToPlayer(opp, 2, sourceID)
-					}
-					return nil
-				},
-			), false)),
+			WithAbility(DiesTrigger(DealDamage(Fixed(2)), false).
+				AddTarget(TargetAnyTarget())),
 		)
 	})
 

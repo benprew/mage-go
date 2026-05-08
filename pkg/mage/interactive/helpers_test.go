@@ -540,6 +540,87 @@ func TestSnapshotGameState_LibraryCount(t *testing.T) {
 	}
 }
 
+// ── SnapshotGameState exile zone ────────────────────────────────────────────
+
+func TestSnapshotGameState_ExileFaceUpVisibleToBoth(t *testing.T) {
+	g, pa, _ := makeGame()
+	card := mage.NewCreature("Bear", "{1}{G}", 2, 2)
+	card.SetOwner(pa.PlayerID())
+	g.ExileCard(card, uuid.Nil)
+
+	for _, idx := range []int{0, 1} {
+		snap := SnapshotGameState(g, idx)
+		owner := snap.You
+		if idx == 1 {
+			owner = snap.Opponent
+		}
+		if len(owner.Exile) != 1 {
+			t.Fatalf("viewer=%d: owner exile len = %d, want 1", idx, len(owner.Exile))
+		}
+		if owner.Exile[0].Name != "Bear" {
+			t.Errorf("viewer=%d: exile name = %q, want Bear", idx, owner.Exile[0].Name)
+		}
+		if owner.Exile[0].FaceDown {
+			t.Errorf("viewer=%d: face-up card reported FaceDown", idx)
+		}
+	}
+}
+
+func TestSnapshotGameState_ExileFaceDownOwnerSeesIdentity(t *testing.T) {
+	g, pa, pb := makeGame()
+	card := mage.NewCreature("Secret", "{1}{B}", 3, 3)
+	card.SetOwner(pa.PlayerID())
+	// Exiled face down by pb (Gonti-style); only pb may inspect identity.
+	g.ExileCardFaceDown(card, uuid.Nil, pb.PlayerID())
+
+	// From pa's perspective (the owner): pa is NOT in RevealedTo, so
+	// pa cannot see the card identity even though pa owns the card.
+	snapA := SnapshotGameState(g, 0)
+	if len(snapA.You.Exile) != 1 {
+		t.Fatalf("owner exile len = %d, want 1", len(snapA.You.Exile))
+	}
+	if snapA.You.Exile[0].Name != "" {
+		t.Errorf("owner saw face-down identity = %q, want redacted", snapA.You.Exile[0].Name)
+	}
+	if !snapA.You.Exile[0].FaceDown {
+		t.Errorf("owner snapshot did not mark FaceDown")
+	}
+	if snapA.You.Exile[0].ID == uuid.Nil {
+		t.Errorf("owner snapshot dropped tracking ID")
+	}
+
+	// From pb's perspective: pa is the opponent (still owns the card),
+	// and pb is in RevealedTo, so pb sees Secret in pa's exile.
+	snapB := SnapshotGameState(g, 1)
+	if len(snapB.Opponent.Exile) != 1 {
+		t.Fatalf("pb view of pa exile len = %d, want 1", len(snapB.Opponent.Exile))
+	}
+	if snapB.Opponent.Exile[0].Name != "Secret" {
+		t.Errorf("revealedTo viewer name = %q, want Secret", snapB.Opponent.Exile[0].Name)
+	}
+	if !snapB.Opponent.Exile[0].FaceDown {
+		t.Errorf("FaceDown bit lost when viewer is in RevealedTo")
+	}
+}
+
+func TestSnapshotGameState_ExileGroupedByOwner(t *testing.T) {
+	g, pa, pb := makeGame()
+	cardA := mage.NewCreature("Bear", "{1}{G}", 2, 2)
+	cardA.SetOwner(pa.PlayerID())
+	cardB := mage.NewCreature("Elf", "{G}", 1, 1)
+	cardB.SetOwner(pb.PlayerID())
+	g.ExileCard(cardA, uuid.Nil)
+	g.ExileCard(cardB, uuid.Nil)
+
+	snap := SnapshotGameState(g, 0)
+	if len(snap.You.Exile) != 1 || snap.You.Exile[0].Name != "Bear" {
+		t.Errorf("You.Exile = %+v, want one Bear", snap.You.Exile)
+	}
+	if len(snap.Opponent.Exile) != 1 || snap.Opponent.Exile[0].Name != "Elf" {
+		t.Errorf("Opponent.Exile = %+v, want one Elf", snap.Opponent.Exile)
+	}
+}
+
 // ── PromptType.String ───────────────────────────────────────────────────────
 
 func TestPromptType_String(t *testing.T) {

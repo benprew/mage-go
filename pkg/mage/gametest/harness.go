@@ -351,6 +351,14 @@ func (tg *TestGame) ChooseScry(p PlayerRef, bottom []string, topOrder []string) 
 	tg.GetPlayer(p).AddScryDecision(bottom, topOrder)
 }
 
+// ChooseSurveil queues a surveil placement for the next surveil the player
+// performs (CR 701.42). `graveyard` lists card names (in placement order) that
+// go into the graveyard; `topOrder` lists the remaining card names in their
+// new top-of-library order. Both must reference cards revealed by the surveil.
+func (tg *TestGame) ChooseSurveil(p PlayerRef, graveyard []string, topOrder []string) {
+	tg.GetPlayer(p).AddSurveilDecision(graveyard, topOrder)
+}
+
 // FormBand scripts which creatures form an attacking band on the given turn.
 func (tg *TestGame) FormBand(turn int, p PlayerRef, creatures ...string) {
 	tg.GetPlayer(p).AddBandFormation(turn, creatures)
@@ -421,11 +429,15 @@ func (tg *TestGame) StopAt(turn int, step core.PhaseStep) {
 // padLibraries ensures each player has enough library cards to not deck out
 // during normal test execution. Tests that explicitly test deck-out should
 // not call this (or should empty the library after setup).
+//
+// Padding uses a zero-cost sorcery ("Filler") rather than a land so that
+// drawn padding cards are not auto-played during main phases, which would
+// corrupt hand-count assertions in tests that verify draws.
 func (tg *TestGame) padLibraries() {
 	for _, p := range tg.AllPlayers() {
 		if len(p.Library()) == 0 {
 			for range 60 {
-				p.AddToLibrary(mage.NewLand("Plains"))
+				p.AddToLibrary(mage.NewSorcery("Filler", "{0}", mage.NewSpellAbility()))
 			}
 		}
 	}
@@ -826,6 +838,18 @@ func (tg *TestGame) buildPriorityActionForActivate(idx int) (mage.PriorityAction
 	tg.SetXValue(aa.xValue)
 	perm, abilityIdx, err := tg.findActivatableAbilityByName(playerID, aa.permName, targets)
 	if err != nil {
+		// Fall back to graveyard-zone activated ability when the permanent is
+		// not on the battlefield (CR 112.6 — abilities that function in zones
+		// other than the battlefield).
+		cardID, graveyardAbilityIdx, ok := tg.FindGraveyardActivatableCard(playerID, aa.permName)
+		if ok {
+			if activateErr := tg.ActivateGraveyardAbility(playerID, cardID, graveyardAbilityIdx, targets); activateErr != nil {
+				tg.t.Logf("ActivateAbility %s (graveyard) failed: %v", aa.permName, activateErr)
+				return mage.PriorityAction{}, false
+			}
+			// The ability is now on the stack; pass priority so the engine resolves it.
+			return mage.PriorityAction{Type: mage.PriorityPass}, true
+		}
 		tg.t.Logf("ActivateAbility %s failed: %v", aa.permName, err)
 		return mage.PriorityAction{}, false
 	}
@@ -1104,6 +1128,24 @@ func (tg *TestGame) resolveTargets(names []string, controllerID uuid.UUID) []uui
 		if found {
 			continue
 		}
+		for _, pl := range tg.AllPlayers() {
+			if pl.PlayerID() == controllerID {
+				continue
+			}
+			for _, c := range pl.Graveyard() {
+				if c.Name() == name {
+					targets = append(targets, c.ID())
+					found = true
+					break
+				}
+			}
+			if found {
+				break
+			}
+		}
+		if found {
+			continue
+		}
 		for _, obj := range tg.StackObjects() {
 			if obj.IsAbility || obj.Card == nil {
 				continue
@@ -1277,7 +1319,7 @@ func (tg *TestGame) AssertHandCount(p PlayerRef, name string, want int) {
 	player := tg.GetPlayer(p)
 	got := 0
 	for _, c := range player.Hand() {
-		if c.Name() == name {
+		if name == "" || c.Name() == name {
 			got++
 		}
 	}

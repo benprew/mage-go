@@ -19,6 +19,15 @@ import (
 // the counters.
 func (g *Game) recordPerTurnEvent(evt *GameEvent) {
 	switch evt.Type {
+	case EvtZoneChange:
+		if evt.ToZone != ZoneExile || evt.SourceID == uuid.Nil {
+			return
+		}
+		g.cardsPutIntoExileThisTurn++
+		if g.exileZoneChangesPending == nil {
+			g.exileZoneChangesPending = make(map[uuid.UUID]int)
+		}
+		g.exileZoneChangesPending[evt.SourceID]++
 	case EvtDiscard:
 		if g.discardCountThisTurn == nil {
 			g.discardCountThisTurn = make(map[uuid.UUID]int)
@@ -55,6 +64,34 @@ func (g *Game) recordPerTurnEvent(evt *GameEvent) {
 			g.attackedOrBlockedThisTurn = make(map[uuid.UUID]bool)
 		}
 		g.attackedOrBlockedThisTurn[evt.SourceID] = true
+		// Track which player declared an attacker this turn (Angelic Arbiter,
+		// etc.). PlayerID on EvtDeclaredAttacker is the attacking (active)
+		// player.
+		if g.playerAttackedThisTurn == nil {
+			g.playerAttackedThisTurn = make(map[uuid.UUID]bool)
+		}
+		g.playerAttackedThisTurn[evt.PlayerID] = true
+	case EvtCardDrawn:
+		if g.cardsDrawnThisTurn == nil {
+			g.cardsDrawnThisTurn = make(map[uuid.UUID]int)
+		}
+		g.cardsDrawnThisTurn[evt.PlayerID]++
+	case EvtCardsLeftGraveyard:
+		if g.cardsLeftGraveyardThisTurn == nil {
+			g.cardsLeftGraveyardThisTurn = make(map[uuid.UUID]int)
+		}
+		amt := evt.Amount
+		if amt <= 0 {
+			amt = 1
+		}
+		g.cardsLeftGraveyardThisTurn[evt.PlayerID] += amt
+	case EvtSpellCast:
+		// Track which player cast a spell this turn (Angelic Arbiter, etc.).
+		// PlayerID on EvtSpellCast is the casting player.
+		if g.playerCastSpellThisTurn == nil {
+			g.playerCastSpellThisTurn = make(map[uuid.UUID]bool)
+		}
+		g.playerCastSpellThisTurn[evt.PlayerID] = true
 	}
 }
 
@@ -66,6 +103,67 @@ func (g *Game) resetPerTurnTrackers() {
 	g.lifeGainedThisTurn = nil
 	g.permDamageReceivedThisTurn = nil
 	g.attackedOrBlockedThisTurn = nil
+	g.playerCastSpellThisTurn = nil
+	g.playerAttackedThisTurn = nil
+	g.cardsDrawnThisTurn = nil
+	g.cardsLeftGraveyardThisTurn = nil
+	g.cardsPutIntoExileThisTurn = 0
+	g.exileZoneChangesPending = nil
+}
+
+// PlayerCardsDrawnThisTurn returns the number of cards the given player has
+// drawn this turn (counts every EvtCardDrawn — turn-based draws, replacement-
+// granted extra draws like Howling Mine, and resolved spells/abilities).
+// Used by cards that key on "their first card each turn" (Zurzoth, Chaos
+// Rider).
+func (g *Game) PlayerCardsDrawnThisTurn(playerID uuid.UUID) int {
+	return g.cardsDrawnThisTurn[playerID]
+}
+
+// PlayerCardsLeftGraveyardThisTurn returns the number of cards that left the
+// given player's graveyard this turn. Multi-card bursts are counted by the
+// EvtCardsLeftGraveyard Amount.
+func (g *Game) PlayerCardsLeftGraveyardThisTurn(playerID uuid.UUID) int {
+	return g.cardsLeftGraveyardThisTurn[playerID]
+}
+
+// PlayerHadCardLeaveGraveyardThisTurn reports whether at least one card left
+// the given player's graveyard this turn.
+func (g *Game) PlayerHadCardLeaveGraveyardThisTurn(playerID uuid.UUID) bool {
+	return g.PlayerCardsLeftGraveyardThisTurn(playerID) > 0
+}
+
+// recordCardPutIntoExile updates the global per-turn exile count.
+func (g *Game) recordCardPutIntoExile(card Card) {
+	if card == nil {
+		return
+	}
+	if g.consumePendingExileZoneChange(card.ID()) {
+		return
+	}
+	g.cardsPutIntoExileThisTurn++
+}
+
+func (g *Game) consumePendingExileZoneChange(cardID uuid.UUID) bool {
+	if cardID == uuid.Nil || g.exileZoneChangesPending == nil {
+		return false
+	}
+	n := g.exileZoneChangesPending[cardID]
+	if n <= 0 {
+		return false
+	}
+	if n == 1 {
+		delete(g.exileZoneChangesPending, cardID)
+	} else {
+		g.exileZoneChangesPending[cardID] = n - 1
+	}
+	return true
+}
+
+// CardsPutIntoExileThisTurn returns the number of cards put into exile this
+// turn, regardless of owner/controller.
+func (g *Game) CardsPutIntoExileThisTurn() int {
+	return g.cardsPutIntoExileThisTurn
 }
 
 // PlayerDiscardCountThisTurn returns the number of times the given player
@@ -92,4 +190,18 @@ func (g *Game) PermanentDamageReceivedThisTurn(permID uuid.UUID) int {
 // cards like Heart of Light or Foundry Champion.
 func (g *Game) PermanentAttackedOrBlockedThisTurn(permID uuid.UUID) bool {
 	return g.attackedOrBlockedThisTurn[permID]
+}
+
+// PlayerCastSpellThisTurn reports whether the given player has cast at
+// least one spell this turn. Used by cards like Angelic Arbiter that key
+// on whether an opponent cast a spell this turn.
+func (g *Game) PlayerCastSpellThisTurn(playerID uuid.UUID) bool {
+	return g.playerCastSpellThisTurn[playerID]
+}
+
+// PlayerAttackedThisTurn reports whether the given player declared at
+// least one attacker this turn. Used by cards like Angelic Arbiter that
+// key on whether an opponent attacked with a creature this turn.
+func (g *Game) PlayerAttackedThisTurn(playerID uuid.UUID) bool {
+	return g.playerAttackedThisTurn[playerID]
 }

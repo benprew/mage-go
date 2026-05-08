@@ -68,6 +68,22 @@ const (
 	opStackClose   // 27: emit shared </stack>
 	opCommandOpen  // 28: emit shared <command>
 	opCommandClose // 29: emit shared </command>
+	// Inline-blank opcodes (Step 3 of the inline-blank text-encoder
+	// migration). EMIT_BLANK writes a kind token at the cursor and primes a
+	// per-blank legal-id buffer of size legal_count; EMIT_BLANK_LEGAL appends
+	// one legal id to that buffer. legal_count occurrences of EMIT_BLANK_LEGAL
+	// must follow each EMIT_BLANK before the next EMIT_BLANK.
+	opEmitBlank      // 30: payload [kind_id, group_id, group_kind, legal_count]
+	opEmitBlankLegal // 31: payload [token_id]
+)
+
+// Inline-blank group-kind enum. Mirrors the Python InlineBlankGroupKind
+// values in magic_ai/text_encoder/inline_blanks.py. Stable ints — append-
+// only.
+const (
+	blankGroupPerBlank    int32 = 0
+	blankGroupCrossBlank  int32 = 1
+	blankGroupConstrained int32 = 2
 )
 
 const (
@@ -142,76 +158,197 @@ func (w *renderPlanWriter) write(op int32, args ...int32) {
 }
 
 type renderCardRef struct {
-	zone    int32
-	owner   int32
-	slotIdx int32
-	uuidIdx int32
-	id      string
-	name    string
-	row     int32
-	perm    *interactive.PermanentState
+	zone     int32
+	owner    int32
+	slotIdx  int32
+	uuidIdx  int32
+	dictSlot int32
+	cardID   uuid.UUID
+	name     string
+	row      int32
+	perm     *interactive.PermanentState
+	// staticStatus holds status bits for non-permanent cards (e.g.
+	// exile face-down). For battlefield cards the bits are computed
+	// from PermanentState; for graveyard / hand the value is 0.
+	staticStatus int32
 }
 
+// cardIDEntry pairs the values previously held in two separate maps
+// (uuidByID, rowByID) so the index only does one map write per card and
+// renderTarget / renderOptionSource only do one lookup. row=-1 / uuidIdx=-1
+// indicate "no value" in the same way the old separate maps did via
+// presence.
+type cardIDEntry struct {
+	uuidIdx int32
+	row     int32
+}
+
+const renderZoneArrayLen = int(renderZoneCommand) + 1
+
 type renderPlanIndex struct {
-	cards      []renderCardRef
-	uuidByID   map[string]int32
-	rowByID    map[string]int32
-	slotByID   map[string]int32
-	cardsByKey map[renderZoneKey][]renderCardRef
+	cards    []renderCardRef
+	byCardID map[uuid.UUID]cardIDEntry
+	// cardsByZone is indexed by zone*2 + owner, where owner is renderOwnerSelf
+	// (0) or renderOwnerOpponent (1). Replaces a map[renderZoneKey][]renderCardRef
+	// with a fixed array since the keyspace is small (zoneCount*2 == 14) and
+	// hit on every card insert + every emitter zone iteration.
+	cardsByZone [renderZoneArrayLen * 2][]renderCardRef
 	// rowOrder lists each unique card cache row that appears in any zone of
-	// this snapshot, in deterministic ascending order. Populated for v2 dict
-	// emission. Mirrors the Python emitter's ``unique_rows`` (collected in
-	// _RENDER_ZONES order, then sorted ascending).
+	// this snapshot, in deterministic ascending order. Populated for the
+	// legacy row-keyed render-plan dict emission.
 	rowOrder []int32
+	// dictRowOrder lists each unique row in *insertion order* (the order the
+	// card was first seen during index construction). Position in this slice
+	// IS the card's per-snapshot dict slot, which the direct emitter uses as
+	// the dict-entry token id — so the model can't memorize a stable card
+	// identity across snapshots.
+	dictRowOrder []int32
+	// dictSlotByRow is the sparse half of a sparse-dense int set
+	// (Briggs/Torczon). dictSlotByRow[row] is the candidate slot for row;
+	// row is actually present iff dictSlotByRow[row] < len(dictRowOrder)
+	// and dictRowOrder[dictSlotByRow[row]] == row. This makes reset O(1)
+	// (just truncate dictRowOrder) without ever touching dictSlotByRow,
+	// and per-row insert / membership is two loads + a compare.
+	dictSlotByRow []int32
+}
+
+func zoneOwnerSlot(zone, owner int32) int {
+	return int(zone)*2 + int(owner)
 }
 
 // encodeScratch holds per-call scratch buffers for an encode batch so
 // hot-path map/slice allocations are reused across batch rows.
 type encodeScratch struct {
-	cardIDToSlot map[string]int64
-	renderIndex  renderPlanIndex
-	rowSeen      map[int32]struct{}
+	cardIDToSlot     map[string]int64
+	renderIndex      renderPlanIndex
+	tokenPlan        []int32
+	tokenPlanLen     [1]int64
+	tokenPlanOvf     [1]int64
+	directEmitter    directTokenEmitter
+	directOut        tokenAssemblerOut
+	blankCollector   blankCollector
+	packedOptionPos  []int32
+	packedOptionMask []byte
+	packedTargetPos  []int32
+	packedTargetMask []byte
+	// directDirty USED TO live here. The per-row "what slots did the last
+	// emit write" state must be associated with the OUTPUT BUFFER, not the
+	// scratch — under parallel encode the pool can hand a different scratch
+	// to the same row across calls, and the dirty record on a stale scratch
+	// no longer reflects what's actually sitting in the buffer. See
+	// ``scratchPool.directDirty`` for the per-buffer state.
+	// nameRowCache memoizes cardRowForName lookups for the lifetime of
+	// the scratch. Names repeat heavily within a snapshot (multiple
+	// copies of the same card across battlefield / hand / graveyard /
+	// options), so the first lookup pays the lock + map-probe cost and
+	// subsequent ones hit a small unlocked map.
+	nameRowCache map[string]int32
 }
 
 func newEncodeScratch() *encodeScratch {
+	// Pre-size the hot-path maps so the typical batch row's ~28 cards
+	// don't trigger a rehash during index construction. Sizes are upper
+	// bounds for realistic snapshots: 64 distinct UUIDs (battlefield +
+	// hand + graveyard for both players) and 64 distinct card rows.
 	return &encodeScratch{
-		cardIDToSlot: make(map[string]int64),
+		cardIDToSlot: make(map[string]int64, 64),
 		renderIndex: renderPlanIndex{
-			uuidByID:   make(map[string]int32),
-			rowByID:    make(map[string]int32),
-			slotByID:   make(map[string]int32),
-			cardsByKey: make(map[renderZoneKey][]renderCardRef),
+			byCardID: make(map[uuid.UUID]cardIDEntry, 64),
 		},
-		rowSeen: make(map[int32]struct{}),
 	}
+}
+
+func (s *encodeScratch) packedAnchorScratch(
+	optionCount int64,
+	targetCount int64,
+) ([]int32, []byte, []int32, []byte) {
+	if optionCount < 0 {
+		optionCount = 0
+	}
+	if targetCount < 0 {
+		targetCount = 0
+	}
+	if int64(cap(s.packedOptionPos)) < optionCount {
+		s.packedOptionPos = make([]int32, optionCount)
+	}
+	if int64(cap(s.packedOptionMask)) < optionCount {
+		s.packedOptionMask = make([]byte, optionCount)
+	}
+	if int64(cap(s.packedTargetPos)) < targetCount {
+		s.packedTargetPos = make([]int32, targetCount)
+	}
+	if int64(cap(s.packedTargetMask)) < targetCount {
+		s.packedTargetMask = make([]byte, targetCount)
+	}
+	return s.packedOptionPos[:optionCount],
+		s.packedOptionMask[:optionCount],
+		s.packedTargetPos[:targetCount],
+		s.packedTargetMask[:targetCount]
 }
 
 func (s *encodeScratch) reset() {
 	clear(s.cardIDToSlot)
 	idx := &s.renderIndex
-	clear(idx.uuidByID)
-	clear(idx.rowByID)
-	clear(idx.slotByID)
-	for k, v := range idx.cardsByKey {
-		idx.cardsByKey[k] = v[:0]
+	clear(idx.byCardID)
+	for slot := range idx.cardsByZone {
+		idx.cardsByZone[slot] = idx.cardsByZone[slot][:0]
 	}
 	idx.cards = idx.cards[:0]
 	idx.rowOrder = idx.rowOrder[:0]
-	clear(s.rowSeen)
+	// Sparse-dense reset: only truncate the dense side. Stale dictSlotByRow
+	// entries are auto-rejected by the membership check, so this stays O(1).
+	idx.dictRowOrder = idx.dictRowOrder[:0]
+	s.tokenPlanLen[0] = 0
+	s.tokenPlanOvf[0] = 0
 }
 
-type renderZoneKey struct {
-	owner int32
-	zone  int32
+// ensureDictSparse grows dictSlotByRow so it can hold up to rowCount entries.
+// Reused across calls — staleness is detected by the dictRowOrder[slot] == row
+// check, so no clear is needed when growing.
+func (idx *renderPlanIndex) ensureDictSparse(rowCount int32) {
+	if int(rowCount) <= len(idx.dictSlotByRow) {
+		return
+	}
+	next := make([]int32, rowCount)
+	copy(next, idx.dictSlotByRow)
+	idx.dictSlotByRow = next
+}
+
+// dictSlotFor returns the per-snapshot slot for row, allocating a fresh one
+// (in insertion order) if row hasn't been seen yet. O(1) amortized.
+func (idx *renderPlanIndex) dictSlotFor(row int32) int32 {
+	if row < 0 || int(row) >= len(idx.dictSlotByRow) {
+		return -1
+	}
+	s := idx.dictSlotByRow[row]
+	if s >= 0 && int(s) < len(idx.dictRowOrder) && idx.dictRowOrder[s] == row {
+		return s
+	}
+	s = int32(len(idx.dictRowOrder))
+	idx.dictRowOrder = append(idx.dictRowOrder, row)
+	idx.dictSlotByRow[row] = s
+	return s
+}
+
+func (s *encodeScratch) internalRenderPlanView(capacity int64) outputViews {
+	if int64(cap(s.tokenPlan)) < capacity {
+		s.tokenPlan = make([]int32, capacity)
+	}
+	s.tokenPlan = s.tokenPlan[:capacity]
+	return outputViews{
+		renderPlan:         s.tokenPlan,
+		renderPlanLengths:  s.tokenPlanLen[:],
+		renderPlanOverflow: s.tokenPlanOvf[:],
+	}
 }
 
 func fillRenderPlan(batchIdx int64, state *apiGameState, pending *apiPending, playerIdx int, cfg encodeConfig, view outputViews, scratch *encodeScratch) *encodeError {
 	start := batchIdx * cfg.renderPlanCapacity
 	plan := view.renderPlan[start : start+cfg.renderPlanCapacity]
-	index := &scratch.renderIndex
-	if err := buildRenderPlanIndex(state, playerIdx, index, &scratch.rowSeen); err != nil {
+	if err := buildRenderPlanIndex(state, playerIdx, scratch); err != nil {
 		return err
 	}
+	index := &scratch.renderIndex
 
 	w := renderPlanWriter{buf: plan}
 	w.write(opOpenState)
@@ -224,8 +361,14 @@ func fillRenderPlan(batchIdx int64, state *apiGameState, pending *apiPending, pl
 	}
 	w.write(opTurn, clampInt32(int64(state.Turn)), int32(indexOrUnknown(stepNames[:], state.Step)))
 	emitRenderPlayerScalars(&w, state, playerIdx)
-	emitRenderZones(&w, state, playerIdx, *index, cfg)
-	emitRenderActions(&w, pending, state, playerIdx, cfg, *index)
+	if cfg.blankMaxBlanks > 0 && cfg.blankMaxLegal > 0 {
+		inline := classifyInlinePriorityOptions(pending)
+		emitRenderZones(&w, state, playerIdx, *index, cfg, inline.byCard)
+		emitRenderInlineChoices(&w, inline)
+	} else {
+		emitRenderZones(&w, state, playerIdx, *index, cfg, nil)
+		emitRenderActions(&w, pending, state, playerIdx, cfg, *index)
+	}
 	w.write(opCloseState)
 
 	view.renderPlanLengths[batchIdx] = w.cursor
@@ -235,8 +378,11 @@ func fillRenderPlan(batchIdx int64, state *apiGameState, pending *apiPending, pl
 	return nil
 }
 
-func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int, index *renderPlanIndex, rowSeenPtr *map[int32]struct{}) *encodeError {
-	rowSeen := *rowSeenPtr
+func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int, scratch *encodeScratch) *encodeError {
+	index := &scratch.renderIndex
+	if tables := getTokenTables(); tables != nil && tables.cardRowCount > 0 {
+		index.ensureDictSparse(tables.cardRowCount)
+	}
 	// First pass: build the full card lists per (owner, zone) but do NOT
 	// assign UUID indices yet. UUID-ordering must match Python's
 	// _assign_card_refs which walks zones owner-interleaved (self.bf,
@@ -249,14 +395,23 @@ func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int, index *
 			continue
 		}
 		for _, zone := range renderZoneOrder {
-			key := renderZoneKey{owner: owner, zone: zone}
-			cards, err := appendRenderCardsForZone(index.cardsByKey[key][:0], player, owner, zone)
+			if zone == renderZoneStack || zone == renderZoneCommand {
+				continue
+			}
+			slot := zoneOwnerSlot(zone, owner)
+			cards, err := appendRenderCardsForZone(index.cardsByZone[slot][:0], player, owner, zone, scratch, nil, nil)
 			if err != nil {
 				return err
 			}
-			index.cardsByKey[key] = cards
+			index.cardsByZone[slot] = cards
 		}
 	}
+	stackSlot := zoneOwnerSlot(renderZoneStack, renderOwnerSelf)
+	stackCards, err := appendRenderCardsForZone(index.cardsByZone[stackSlot][:0], nil, renderOwnerSelf, renderZoneStack, scratch, state.Stack, state)
+	if err != nil {
+		return err
+	}
+	index.cardsByZone[stackSlot] = stackCards
 	// UUID assignment: walk in Python's _ZONE_ORDER (owner-interleaved by
 	// zone) so card-ref ids line up byte-for-byte.
 	type zoneAssignKey struct {
@@ -272,31 +427,46 @@ func buildRenderPlanIndex(state *apiGameState, perspectivePlayerIdx int, index *
 		{renderOwnerOpponent, renderZoneGraveyard},
 		{renderOwnerSelf, renderZoneExile},
 		{renderOwnerOpponent, renderZoneExile},
+		{renderOwnerSelf, renderZoneStack},
 	}
 	for _, key := range uuidOrder {
-		cards := index.cardsByKey[renderZoneKey(key)]
+		slot := zoneOwnerSlot(key.zone, key.owner)
+		cards := index.cardsByZone[slot]
 		for idx := range cards {
-			if cards[idx].id != "" {
-				if uuidIdx, ok := index.uuidByID[cards[idx].id]; ok {
-					cards[idx].uuidIdx = uuidIdx
+			if cards[idx].cardID != uuid.Nil {
+				if existing, ok := index.byCardID[cards[idx].cardID]; ok {
+					cards[idx].uuidIdx = existing.uuidIdx
 				} else {
-					cards[idx].uuidIdx = int32(len(index.uuidByID))
-					index.uuidByID[cards[idx].id] = cards[idx].uuidIdx
+					cards[idx].uuidIdx = int32(len(index.byCardID))
+					index.byCardID[cards[idx].cardID] = cardIDEntry{
+						uuidIdx: cards[idx].uuidIdx,
+						row:     cards[idx].row,
+					}
 				}
-				index.rowByID[cards[idx].id] = cards[idx].row
-				index.slotByID[cards[idx].id] = cards[idx].slotIdx
 			}
-			if _, dup := rowSeen[cards[idx].row]; !dup {
-				rowSeen[cards[idx].row] = struct{}{}
-				index.rowOrder = append(index.rowOrder, cards[idx].row)
+			row := cards[idx].row
+			// Sparse-dense dict slot assignment: O(1) amortized membership +
+			// insertion. dictRowOrder is the dense insertion-ordered list
+			// the direct emitter walks; the per-card dictSlot is the
+			// position the card claims in that list.
+			cards[idx].dictSlot = index.dictSlotFor(row)
+			// Legacy ascending-sorted rowOrder still maintained for the
+			// render-plan path, which keys dict ids by row, not slot.
+			pos := 0
+			for pos < len(index.rowOrder) && index.rowOrder[pos] < row {
+				pos++
+			}
+			if pos == len(index.rowOrder) || index.rowOrder[pos] != row {
+				index.rowOrder = append(index.rowOrder, 0)
+				copy(index.rowOrder[pos+1:], index.rowOrder[pos:len(index.rowOrder)-1])
+				index.rowOrder[pos] = row
 			}
 			index.cards = append(index.cards, cards[idx])
 		}
 		// Persist mutations back (cards is a copy of the slice header but
 		// shares the backing array, so the uuidIdx writes already landed).
-		index.cardsByKey[renderZoneKey(key)] = cards
+		index.cardsByZone[slot] = cards
 	}
-	slices.Sort(index.rowOrder)
 	return nil
 }
 
@@ -314,30 +484,42 @@ func renderPlayerState(state *apiGameState, perspectivePlayerIdx int, owner int3
 	return &state.Players[idx]
 }
 
-func appendRenderCardsForZone(out []renderCardRef, player *interactive.PlayerState, owner int32, zone int32) ([]renderCardRef, *encodeError) {
+func appendRenderCardsForZone(
+	out []renderCardRef,
+	player *interactive.PlayerState,
+	owner int32,
+	zone int32,
+	scratch *encodeScratch,
+	stackItems []interactive.StackItemState,
+	state *apiGameState,
+) ([]renderCardRef, *encodeError) {
 	switch zone {
 	case renderZoneBattlefield:
-		for idx, perm := range player.Battlefield {
-			row, ok := cardRowForName(perm.Name)
+		// Take pointers directly into player.Battlefield so each renderCardRef
+		// shares the snapshot's PermanentState rather than getting its own
+		// heap-allocated copy. The snapshot outlives the index, and the encode
+		// path is read-only.
+		for idx := range player.Battlefield {
+			perm := &player.Battlefield[idx]
+			row, ok := scratch.cachedRowForName(perm.Name)
 			if !ok {
 				return nil, &encodeError{code: mageEncodeErrEncode, message: "missing card embedding for " + perm.Name}
 			}
-
 			out = append(out, renderCardRef{
 				zone:    zone,
 				owner:   owner,
 				slotIdx: renderSlotIndex(owner, zone, idx),
 				uuidIdx: -1,
-				id:      perm.ID.String(),
+				cardID:  perm.ID,
 				name:    perm.Name,
-				row:     clampInt32(row),
-				perm:    &perm,
+				row:     row,
+				perm:    perm,
 			})
 		}
 		return out, nil
 	case renderZoneHand:
 		for idx, card := range player.Hand {
-			row, ok := cardRowForName(card.Name)
+			row, ok := scratch.cachedRowForName(card.Name)
 			if !ok {
 				return nil, &encodeError{code: mageEncodeErrEncode, message: "missing card embedding for " + card.Name}
 			}
@@ -346,15 +528,15 @@ func appendRenderCardsForZone(out []renderCardRef, player *interactive.PlayerSta
 				owner:   owner,
 				slotIdx: renderSlotIndex(owner, zone, idx),
 				uuidIdx: -1,
-				id:      card.ID.String(),
+				cardID:  card.ID,
 				name:    card.Name,
-				row:     clampInt32(row),
+				row:     row,
 			})
 		}
 		return out, nil
 	case renderZoneGraveyard:
 		for idx, card := range player.Graveyard {
-			row, ok := cardRowForName(card.Name)
+			row, ok := scratch.cachedRowForName(card.Name)
 			if !ok {
 				return nil, &encodeError{code: mageEncodeErrEncode, message: "missing card embedding for " + card.Name}
 			}
@@ -363,15 +545,120 @@ func appendRenderCardsForZone(out []renderCardRef, player *interactive.PlayerSta
 				owner:   owner,
 				slotIdx: renderSlotIndex(owner, zone, idx),
 				uuidIdx: -1,
-				id:      card.ID.String(),
+				cardID:  card.ID,
 				name:    card.Name,
-				row:     clampInt32(row),
+				row:     row,
+			})
+		}
+		return out, nil
+	case renderZoneExile:
+		// Face-down exile that the snapshot viewer cannot inspect arrives
+		// with Name="" — emit a row=0 sentinel and the face-down status
+		// bit so the model sees "card present, identity unknown" instead
+		// of being silently dropped (which would break the count signal).
+		for idx, card := range player.Exile {
+			var row int32
+			if card.FaceDown && card.Name == "" {
+				row = 0
+			} else {
+				r, ok := scratch.cachedRowForName(card.Name)
+				if !ok {
+					return nil, &encodeError{code: mageEncodeErrEncode, message: "missing card embedding for " + card.Name}
+				}
+				row = r
+			}
+			ref := renderCardRef{
+				zone:    zone,
+				owner:   owner,
+				slotIdx: renderSlotIndex(owner, zone, idx),
+				uuidIdx: -1,
+				cardID:  card.ID,
+				name:    card.Name,
+				row:     row,
+			}
+			if card.FaceDown {
+				ref.staticStatus |= statusFaceDown
+			}
+			out = append(out, ref)
+		}
+		return out, nil
+	case renderZoneStack:
+		for _, item := range stackItems {
+			row, name, ok := stackItemCardRow(item, scratch, state)
+			if !ok {
+				return nil, &encodeError{code: mageEncodeErrEncode, message: "missing card embedding for " + item.Name}
+			}
+			id := uuid.Nil
+			if item.ID != "" {
+				if parsed, err := uuid.Parse(item.ID); err == nil {
+					id = parsed
+				}
+			}
+			out = append(out, renderCardRef{
+				zone:    zone,
+				owner:   owner,
+				slotIdx: -1,
+				uuidIdx: -1,
+				cardID:  id,
+				name:    name,
+				row:     row,
 			})
 		}
 		return out, nil
 	default:
 		return out, nil
 	}
+}
+
+func stackItemCardRow(item interactive.StackItemState, scratch *encodeScratch, state *apiGameState) (int32, string, bool) {
+	name := item.Name
+	if name != "" && name != "Ability" {
+		if row, ok := scratch.cachedRowForName(name); ok {
+			return row, name, true
+		}
+	}
+	if state != nil && item.ID != "" {
+		for _, player := range state.Players {
+			for _, perm := range player.Battlefield {
+				if perm.ID.String() != item.ID {
+					continue
+				}
+				row, ok := scratch.cachedRowForName(perm.Name)
+				return row, perm.Name, ok
+			}
+		}
+	}
+	if name == "Ability" {
+		return 0, name, true
+	}
+	row, ok := scratch.cachedRowForName(name)
+	return row, name, ok
+}
+
+// cachedRowForName memoizes cardRowForName for the lifetime of the
+// scratch. Negative cached values mean "lookup failed (missing
+// embedding)" so retries don't re-acquire the global RWMutex.
+func (s *encodeScratch) cachedRowForName(name string) (int32, bool) {
+	if name == "" {
+		return 0, true
+	}
+	if v, ok := s.nameRowCache[name]; ok {
+		if v < 0 {
+			return 0, false
+		}
+		return v, true
+	}
+	row, ok := cardRowForName(name)
+	if s.nameRowCache == nil {
+		s.nameRowCache = make(map[string]int32, 64)
+	}
+	if !ok {
+		s.nameRowCache[name] = -1
+		return 0, false
+	}
+	clamped := clampInt32(row)
+	s.nameRowCache[name] = clamped
+	return clamped, true
 }
 
 func emitRenderPlayerScalars(w *renderPlanWriter, state *apiGameState, playerIdx int) {
@@ -403,18 +690,19 @@ func emitRenderPlayerScalars(w *renderPlanWriter, state *apiGameState, playerIdx
 //
 // Owner-interleave (zone-outer, owner-inner) mirrors Python; the previous
 // owner-outer iteration produced a different token order.
-func emitRenderZones(w *renderPlanWriter, state *apiGameState, playerIdx int, index renderPlanIndex, cfg encodeConfig) {
+func emitRenderZones(w *renderPlanWriter, state *apiGameState, playerIdx int, index renderPlanIndex, cfg encodeConfig, blanksByCard map[uuid.UUID][]inlineBlankOption) {
 	emitCardsForZone := func(owner, zone int32) {
 		w.write(opOpenZone, zone, owner)
-		for _, card := range index.cardsByKey[renderZoneKey{owner: owner, zone: zone}] {
+		for _, card := range index.cardsByZone[zoneOwnerSlot(zone, owner)] {
+			status := renderStatusBits(card.perm) | card.staticStatus
 			if cfg.dedupCardBodies {
 				// v2: ref the dict entry, no body splice. Per-card counter /
 				// attached_to are skipped to match the Python emitter, which
 				// does not emit them in dedup mode.
-				w.write(opPlaceCardRef, card.slotIdx, card.row, renderStatusBits(card.perm), card.uuidIdx)
+				w.write(opPlaceCardRef, card.slotIdx, card.row, status, card.uuidIdx)
 				continue
 			}
-			w.write(opPlaceCard, card.slotIdx, card.row, renderStatusBits(card.perm), card.uuidIdx)
+			w.write(opPlaceCard, card.slotIdx, card.row, status, card.uuidIdx)
 			if card.perm != nil {
 				for ct := range core.NumCounters {
 					count := card.perm.RawCounters[ct]
@@ -424,10 +712,15 @@ func emitRenderZones(w *renderPlanWriter, state *apiGameState, playerIdx int, in
 				}
 				if card.perm.AttachedTo != uuid.Nil {
 					targetUUIDIdx := int32(-1)
-					if idx, ok := index.uuidByID[card.perm.AttachedTo.String()]; ok {
-						targetUUIDIdx = idx
+					if entry, ok := index.byCardID[card.perm.AttachedTo]; ok {
+						targetUUIDIdx = entry.uuidIdx
 					}
 					w.write(opAttachedTo, targetUUIDIdx)
+				}
+			}
+			if blanks := blanksByCard[card.cardID]; len(blanks) > 0 {
+				for _, blank := range blanks {
+					emitInlineBlank(w, blank.kindID)
 				}
 			}
 		}
@@ -445,7 +738,7 @@ func emitRenderZones(w *renderPlanWriter, state *apiGameState, playerIdx int, in
 	}
 	// Exile: skip when empty for that owner.
 	for _, owner := range []int32{renderOwnerSelf, renderOwnerOpponent} {
-		if len(index.cardsByKey[renderZoneKey{owner: owner, zone: renderZoneExile}]) == 0 {
+		if len(index.cardsByZone[zoneOwnerSlot(renderZoneExile, owner)]) == 0 {
 			continue
 		}
 		emitCardsForZone(owner, renderZoneExile)
@@ -469,6 +762,108 @@ func emitRenderZones(w *renderPlanWriter, state *apiGameState, playerIdx int, in
 	// not surface command-zone contents). Re-introduce when commander /
 	// conspiracy / emblem support is plumbed through the snapshot API.
 	_ = playerIdx
+}
+
+type inlineBlankOption struct {
+	kindID         int32
+	groupKind      int32
+	abilityIdx     int
+	id             string
+	optIdx         int
+	legalIDs       []int32
+	targetLegalIDs []int32
+}
+
+type inlinePriorityOptions struct {
+	byCard map[uuid.UUID][]inlineBlankOption
+	passes []int
+}
+
+func classifyInlinePriorityOptions(pending *apiPending) inlinePriorityOptions {
+	out := inlinePriorityOptions{byCard: map[uuid.UUID][]inlineBlankOption{}}
+	tables := getTokenTables()
+	if pending == nil || tables == nil {
+		return out
+	}
+	passKindID := int32(0)
+	if span := tables.actionVerbSpan(0); len(span) > 0 {
+		passKindID = span[0]
+	}
+	for optIdx, option := range pending.Options {
+		switch option.Kind {
+		case "play_land", "cast_spell", "play", "cast":
+			source := option.CardUUID
+			if source == uuid.Nil {
+				source = option.PermanentUUID
+			}
+			if source != uuid.Nil {
+				out.byCard[source] = append(out.byCard[source], inlineBlankOption{
+					kindID:     tables.choosePlayID,
+					groupKind:  blankGroupCrossBlank,
+					abilityIdx: option.AbilityIndex,
+					id:         option.ID,
+					optIdx:     optIdx,
+				})
+			}
+		case "activate_ability", "activate", "activated_ability":
+			source := option.PermanentUUID
+			if source == uuid.Nil {
+				source = option.CardUUID
+			}
+			if source != uuid.Nil {
+				out.byCard[source] = append(out.byCard[source], inlineBlankOption{
+					kindID:     tables.useAbilityID,
+					groupKind:  blankGroupCrossBlank,
+					abilityIdx: option.AbilityIndex,
+					id:         option.ID,
+					optIdx:     optIdx,
+				})
+			}
+		case "pass":
+			out.passes = append(out.passes, optIdx)
+			_ = passKindID
+		}
+	}
+	for cardID := range out.byCard {
+		sort.Slice(out.byCard[cardID], func(i, j int) bool {
+			a := out.byCard[cardID][i]
+			b := out.byCard[cardID][j]
+			if a.kindID != b.kindID {
+				return a.kindID < b.kindID
+			}
+			if a.abilityIdx != b.abilityIdx {
+				return a.abilityIdx < b.abilityIdx
+			}
+			if a.id != b.id {
+				return a.id < b.id
+			}
+			return a.optIdx < b.optIdx
+		})
+	}
+	return out
+}
+
+func emitInlineBlank(w *renderPlanWriter, kindID int32) {
+	tables := getTokenTables()
+	if tables == nil {
+		return
+	}
+	w.write(opEmitBlank, kindID, 0, blankGroupCrossBlank, 1)
+	w.write(opEmitBlankLegal, tables.chosenID)
+}
+
+func emitRenderInlineChoices(w *renderPlanWriter, inline inlinePriorityOptions) {
+	tables := getTokenTables()
+	if tables == nil {
+		return
+	}
+	passKindID := int32(0)
+	if span := tables.actionVerbSpan(0); len(span) > 0 {
+		passKindID = span[0]
+	}
+	for range inline.passes {
+		emitInlineBlank(w, passKindID)
+	}
 }
 
 func emitRenderActions(w *renderPlanWriter, pending *apiPending, state *apiGameState, playerIdx int, cfg encodeConfig, index renderPlanIndex) {
@@ -538,20 +933,35 @@ func renderStatusBits(perm *interactive.PermanentState) int32 {
 }
 
 func renderOptionSource(option apiOption, index renderPlanIndex) (int32, int32) {
-	for _, id := range []string{option.CardID, option.PermanentID, option.ID} {
-		if id == "" {
-			continue
+	// In practice an option carries exactly one source identifier:
+	// cast_spell / play_land / choice → CardUUID, the rest → PermanentUUID
+	// (with ChoiceMay using IDUUID). Try the most likely field first per
+	// kind, then fall back through the remaining ones for safety.
+	var first uuid.UUID
+	switch option.Kind {
+	case "cast_spell", "play_land", "choice":
+		first = option.CardUUID
+	default:
+		first = option.PermanentUUID
+	}
+	if first != uuid.Nil {
+		if entry, ok := index.byCardID[first]; ok {
+			return entry.row, entry.uuidIdx
 		}
-		uuidIdx, hasUUID := index.uuidByID[id]
-		row, hasRow := index.rowByID[id]
-		if hasUUID || hasRow {
-			if !hasUUID {
-				uuidIdx = -1
-			}
-			if !hasRow {
-				row = -1
-			}
-			return row, uuidIdx
+	}
+	if option.CardUUID != uuid.Nil && option.CardUUID != first {
+		if entry, ok := index.byCardID[option.CardUUID]; ok {
+			return entry.row, entry.uuidIdx
+		}
+	}
+	if option.PermanentUUID != uuid.Nil && option.PermanentUUID != first {
+		if entry, ok := index.byCardID[option.PermanentUUID]; ok {
+			return entry.row, entry.uuidIdx
+		}
+	}
+	if option.IDUUID != uuid.Nil {
+		if entry, ok := index.byCardID[option.IDUUID]; ok {
+			return entry.row, entry.uuidIdx
 		}
 	}
 	if option.CardName != "" {
@@ -563,30 +973,22 @@ func renderOptionSource(option apiOption, index renderPlanIndex) (int32, int32) 
 	return -1, -1
 }
 
-func renderTarget(target apiTarget, selfID string, oppID string, index renderPlanIndex) (int32, int32, int32) {
-	if target.ID == "" {
+func renderTarget(target apiTarget, selfID uuid.UUID, oppID uuid.UUID, index renderPlanIndex) (int32, int32, int32) {
+	if target.IDUUID == uuid.Nil {
 		return -1, -1, renderTargetUnknown
 	}
 	// For player targets the assembler doesn't need a row / uuid index — it
 	// emits ``<self>`` or ``<opp>`` directly. Encode the owner index in the
 	// row slot (0=self, 1=opp) so the assembler can dispatch on a single
 	// payload word without needing to know the player's UUID.
-	if target.ID == selfID {
+	if target.IDUUID == selfID {
 		return renderOwnerSelf, -1, renderTargetPlayer
 	}
-	if target.ID == oppID {
+	if target.IDUUID == oppID {
 		return renderOwnerOpponent, -1, renderTargetPlayer
 	}
-	uuidIdx, hasUUID := index.uuidByID[target.ID]
-	row, hasRow := index.rowByID[target.ID]
-	if hasUUID || hasRow {
-		if !hasUUID {
-			uuidIdx = -1
-		}
-		if !hasRow {
-			row = -1
-		}
-		return row, uuidIdx, renderTargetPermanent
+	if entry, ok := index.byCardID[target.IDUUID]; ok {
+		return entry.row, entry.uuidIdx, renderTargetPermanent
 	}
 	return -1, -1, renderTargetUnknown
 }
@@ -648,7 +1050,7 @@ func initManaCostRows() {
 		for cost := range seen {
 			manaCostRows = append(manaCostRows, cost)
 		}
-		sort.Strings(manaCostRows)
+		slices.Sort(manaCostRows)
 		manaCostRowByKey = make(map[string]int32, len(manaCostRows))
 		for idx, cost := range manaCostRows {
 			manaCostRowByKey[cost] = int32(idx)

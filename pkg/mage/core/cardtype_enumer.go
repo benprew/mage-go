@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _CardTypeName = "CreatureInstantSorceryLandArtifactEnchantment"
+const _CardTypeName = "CreatureInstantSorceryLandArtifactEnchantmentPlaneswalker"
 
-var _CardTypeIndex = [...]uint8{0, 8, 15, 22, 26, 34, 45}
+var _CardTypeIndex = [...]uint8{0, 8, 15, 22, 26, 34, 45, 57}
 
-const _CardTypeLowerName = "creatureinstantsorcerylandartifactenchantment"
+const _CardTypeLowerName = "creatureinstantsorcerylandartifactenchantmentplaneswalker"
 
 func (i CardType) String() string {
 	if i < 0 || i >= CardType(len(_CardTypeIndex)-1) {
@@ -30,9 +30,10 @@ func _CardTypeNoOp() {
 	_ = x[TypeLand-(3)]
 	_ = x[TypeArtifact-(4)]
 	_ = x[TypeEnchantment-(5)]
+	_ = x[TypePlaneswalker-(6)]
 }
 
-var _CardTypeValues = []CardType{TypeCreature, TypeInstant, TypeSorcery, TypeLand, TypeArtifact, TypeEnchantment}
+var _CardTypeValues = []CardType{TypeCreature, TypeInstant, TypeSorcery, TypeLand, TypeArtifact, TypeEnchantment, TypePlaneswalker}
 
 var _CardTypeNameToValueMap = map[string]CardType{
 	_CardTypeName[0:8]:        TypeCreature,
@@ -47,6 +48,8 @@ var _CardTypeNameToValueMap = map[string]CardType{
 	_CardTypeLowerName[26:34]: TypeArtifact,
 	_CardTypeName[34:45]:      TypeEnchantment,
 	_CardTypeLowerName[34:45]: TypeEnchantment,
+	_CardTypeName[45:57]:      TypePlaneswalker,
+	_CardTypeLowerName[45:57]: TypePlaneswalker,
 }
 
 var _CardTypeNames = []string{
@@ -56,6 +59,7 @@ var _CardTypeNames = []string{
 	_CardTypeName[22:26],
 	_CardTypeName[26:34],
 	_CardTypeName[34:45],
+	_CardTypeName[45:57],
 }
 
 // CardTypeString retrieves an enum value from the enum constants string name.

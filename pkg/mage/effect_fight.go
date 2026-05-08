@@ -55,6 +55,12 @@ func execFightTarget(ctx *EffectContext, _ *fightTargetEffect) error {
 	if tgtPower > 0 && (srcCard == nil || !src.HasProtectionFrom(tgtCard)) {
 		ctx.Game.DealDamageToPermanent(src, tgtPower, tgt.ID())
 	}
+	ctx.Game.FireEvent(GameEvent{
+		Type:     EvtFight,
+		SourceID: ctx.SourceID,
+		TargetID: tgt.ID(),
+		PlayerID: ctx.Controller,
+	})
 	return nil
 }
 

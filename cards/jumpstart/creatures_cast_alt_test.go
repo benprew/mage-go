@@ -76,35 +76,3 @@ func TestMaelstromArchangel_CastsFromHandOnCombatDamage(t *testing.T) {
 	g.AssertHandCount(gametest.PlayerA, "Lightning Bolt", 0)
 	g.AssertGraveyardCount(gametest.PlayerA, "Lightning Bolt", 1)
 }
-
-func TestScourgeOfNelToth_AlternateCostFromGraveyard(t *testing.T) {
-	g := gametest.NewTestGame(t)
-	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Scourge of Nel Toth")
-	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sanitarium Skeleton", 2)
-	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 2)
-	g.StopAt(1, core.PrecombatMain)
-	g.Execute()
-
-	pA := g.GetPlayer(gametest.PlayerA)
-	pA.ManaPool().Clear()
-	pA.ManaPool().Add(core.Black, 2)
-
-	var scourgeID uuid.UUID
-	for _, c := range pA.Graveyard() {
-		if c.Name() == "Scourge of Nel Toth" {
-			scourgeID = c.ID()
-		}
-	}
-	if scourgeID == uuid.Nil {
-		t.Fatalf("Scourge not in graveyard")
-	}
-
-	alt := core.ParseManaCost("{B}{B}")
-
-	if err := g.CastCardFromZoneWithAlternateCost(pA.PlayerID(), scourgeID, core.ZoneGraveyard, alt, nil, 0); err != nil {
-		t.Fatalf("alternate-cost cast: %v", err)
-	}
-	g.ResolveStack()
-
-	g.AssertPermanentCount(gametest.PlayerA, "Scourge of Nel Toth", 1)
-}

@@ -15,19 +15,20 @@ import (
 // Players are wrapped in SearchPlayer for non-interactive choice defaults.
 func (g *Game) Clone() *Game {
 	c := &Game{
-		turn:                   g.turn,
-		step:                   g.step,
-		activePlayer:           g.activePlayer,
-		currentX:               g.currentX,
-		currentMode:            g.currentMode,
-		currentEventAmount:     g.currentEventAmount,
-		currentEventSourceID:   g.currentEventSourceID,
-		resolvingCard:          g.resolvingCard, // Card ref shared
-		landsPlayedThisTurn:    g.landsPlayedThisTurn,
-		creatureDeathsThisTurn: g.creatureDeathsThisTurn,
-		cleanupPriorityRounds:  g.cleanupPriorityRounds,
-		stopped:                g.stopped,
-		resolvingCombatDamage:  g.resolvingCombatDamage,
+		turn:                      g.turn,
+		step:                      g.step,
+		activePlayer:              g.activePlayer,
+		currentX:                  g.currentX,
+		currentMode:               g.currentMode,
+		currentEventAmount:        g.currentEventAmount,
+		currentEventSourceID:      g.currentEventSourceID,
+		resolvingCard:             g.resolvingCard, // Card ref shared
+		landsPlayedThisTurn:       g.landsPlayedThisTurn,
+		creatureDeathsThisTurn:    g.creatureDeathsThisTurn,
+		cleanupPriorityRounds:     g.cleanupPriorityRounds,
+		stopped:                   g.stopped,
+		resolvingCombatDamage:     g.resolvingCombatDamage,
+		cardsPutIntoExileThisTurn: g.cardsPutIntoExileThisTurn,
 	}
 
 	// Deep copy players, wrapping in SearchPlayer for non-interactive choices.
@@ -140,7 +141,17 @@ func (g *Game) Clone() *Game {
 	c.creatureManaOnly = cloneUUIDBoolMap(g.creatureManaOnly)
 	c.attackedThisTurn = cloneUUIDBoolMap(g.attackedThisTurn)
 	c.instantsCastThisTurn = cloneUUIDIntMap(g.instantsCastThisTurn)
+	c.sorceriesCastThisTurn = cloneUUIDIntMap(g.sorceriesCastThisTurn)
 	c.timesTargetedThisTurn = cloneUUIDIntMap(g.timesTargetedThisTurn)
+	c.discardCountThisTurn = cloneUUIDIntMap(g.discardCountThisTurn)
+	c.lifeGainedThisTurn = cloneUUIDIntMap(g.lifeGainedThisTurn)
+	c.permDamageReceivedThisTurn = cloneUUIDIntMap(g.permDamageReceivedThisTurn)
+	c.attackedOrBlockedThisTurn = cloneUUIDBoolMap(g.attackedOrBlockedThisTurn)
+	c.playerCastSpellThisTurn = cloneUUIDBoolMap(g.playerCastSpellThisTurn)
+	c.playerAttackedThisTurn = cloneUUIDBoolMap(g.playerAttackedThisTurn)
+	c.cardsDrawnThisTurn = cloneUUIDIntMap(g.cardsDrawnThisTurn)
+	c.cardsLeftGraveyardThisTurn = cloneUUIDIntMap(g.cardsLeftGraveyardThisTurn)
+	c.exileZoneChangesPending = cloneUUIDIntMap(g.exileZoneChangesPending)
 	c.blockedThisTurn = cloneBlockedThisTurn(g.blockedThisTurn)
 	if g.extraLandPlaysThisTurn != nil {
 		c.extraLandPlaysThisTurn = cloneUUIDIntMap(g.extraLandPlaysThisTurn)
@@ -148,6 +159,7 @@ func (g *Game) Clone() *Game {
 	if g.optionalCostPaid != nil {
 		c.optionalCostPaid = cloneUUIDBoolMap(g.optionalCostPaid)
 	}
+	c.customState = cloneCustomState(g.customState)
 
 	// Deep copy cast-from-exile permissions and exile-instead-of-graveyard tags.
 	if len(g.castFromExilePermissions) > 0 {
@@ -324,6 +336,7 @@ func cloneStackObject(obj *StackObject) *StackObject {
 		EventSourceID: obj.EventSourceID,
 		IsCopy:        obj.IsCopy,
 		CastZone:      obj.CastZone,
+		CastContext:   obj.CastContext,
 	}
 	if len(obj.ModalTargets) > 0 {
 		clone.ModalTargets = make([][]uuid.UUID, len(obj.ModalTargets))
@@ -537,6 +550,62 @@ func cloneBlockedThisTurn(src map[uuid.UUID][]uuid.UUID) map[uuid.UUID][]uuid.UU
 		s := make([]uuid.UUID, len(v))
 		copy(s, v)
 		dst[k] = s
+	}
+	return dst
+}
+
+func cloneCustomState(src map[string]any) map[string]any {
+	if src == nil {
+		return make(map[string]any)
+	}
+	dst := make(map[string]any, len(src))
+	for k, v := range src {
+		if st, ok := v.(cloneableCustomState); ok {
+			dst[k] = st.cloneCustomState()
+			continue
+		}
+		dst[k] = v
+	}
+	return dst
+}
+
+type cloneableCustomState interface {
+	cloneCustomState() any
+}
+
+func cloneParadigmState(src *paradigmState) *paradigmState {
+	if src == nil {
+		return nil
+	}
+	return &paradigmState{
+		Resolved:            cloneNestedUUIDStringBoolMap(src.Resolved),
+		ExiledIDs:           cloneNestedUUIDStringUUIDMap(src.ExiledIDs),
+		RecurringRegistered: cloneNestedUUIDStringBoolMap(src.RecurringRegistered),
+	}
+}
+
+func cloneNestedUUIDStringBoolMap(src map[uuid.UUID]map[string]bool) map[uuid.UUID]map[string]bool {
+	if src == nil {
+		return make(map[uuid.UUID]map[string]bool)
+	}
+	dst := make(map[uuid.UUID]map[string]bool, len(src))
+	for k, inner := range src {
+		innerDst := make(map[string]bool, len(inner))
+		maps.Copy(innerDst, inner)
+		dst[k] = innerDst
+	}
+	return dst
+}
+
+func cloneNestedUUIDStringUUIDMap(src map[uuid.UUID]map[string]uuid.UUID) map[uuid.UUID]map[string]uuid.UUID {
+	if src == nil {
+		return make(map[uuid.UUID]map[string]uuid.UUID)
+	}
+	dst := make(map[uuid.UUID]map[string]uuid.UUID, len(src))
+	for k, inner := range src {
+		innerDst := make(map[string]uuid.UUID, len(inner))
+		maps.Copy(innerDst, inner)
+		dst[k] = innerDst
 	}
 	return dst
 }

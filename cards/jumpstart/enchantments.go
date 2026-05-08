@@ -114,15 +114,12 @@ func registerEnchantments() {
 	// Enchantment
 	// Prevent all noncombat damage that would be dealt to you and creatures you control.
 	// Whenever a nontoken creature you control enters, create a 2/2 white Unicorn creature token.
-	// XXX: first clause ("Prevent all noncombat damage...") is not implemented.
-	// damagePreventionRule supports combatOnly but has no NoncombatOnly flag,
-	// and PreventDamageFromTo has no way to scope to noncombat damage. Engine
-	// work needed: a NoncombatOnly option on the prevention rule.
 	Register("Blessed Sanctuary", func() Card {
 		nontokenCreatureYouControl := NewPermanentFilter("nontoken creature you control", func(p *Permanent, _ *Game) bool {
 			return p.HasType(TypeCreature) && !p.Card.IsToken()
 		})
 		return NewEnchantment("Blessed Sanctuary", "{3}{W}{W}",
+			WithStaticAbility(PreventNoncombatDamageToControllerAndCreatures()),
 			WithAbility(WheneverPermanentEntersBattlefieldTrigger(
 				CreateColoredToken("Unicorn", 2, 2, []Color{White}, []CardType{TypeCreature}, []string{"Unicorn"}),
 				false,
@@ -642,18 +639,59 @@ func registerEnchantments() {
 	// Enchantment — Aura
 	// Enchant creature
 	// At the beginning of your upkeep, enchanted creature's controller sacrifices it and you create a 1/1 colorless Phyrexian Myr artifact creature token.
-	// XXX: requires sacrifice-attached + token creation pipeline integration
 	Register("Parasitic Implant", func() Card {
-		return NewAura("Parasitic Implant", "{3}{B}")
+		return NewAura("Parasitic Implant", "{3}{B}",
+			WithAbility(BeginningOfUpkeepTrigger(
+				FuncEffect(
+					"enchanted creature's controller sacrifices it; create a 1/1 colorless Phyrexian Myr artifact creature token",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						src := g.FindPermanent(sourceID)
+						if src == nil || src.AttachedTo == uuid.Nil {
+							return nil
+						}
+						host := g.FindPermanent(src.AttachedTo)
+						if host != nil {
+							g.Sacrifice(host)
+						}
+						token := NewToken("Myr", 1, 1,
+							[]CardType{TypeArtifact, TypeCreature}, []string{"Phyrexian", "Myr"})
+						token.SetOwner(controller)
+						g.PutOnBattlefield(token, controller)
+						return nil
+					},
+				),
+				false,
+			)),
+		)
 	})
 
 	// Path of Bravery {2}{W}
 	// Enchantment
 	// As long as your life total is greater than or equal to your starting life total, creatures you control get +1/+1.
 	// Whenever one or more creatures you control attack, you gain life equal to the number of attacking creatures.
-	// XXX: requires "starting life total" comparison and attack-count gain-life trigger
 	Register("Path of Bravery", func() Card {
-		return NewEnchantment("Path of Bravery", "{2}{W}")
+		return NewEnchantment("Path of Bravery", "{2}{W}",
+			WithStaticAbility(
+				FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+					src := g.FindPermanent(sourceID)
+					if src == nil {
+						return nil
+					}
+					ctrl := g.GetPlayer(src.Controller)
+					if ctrl == nil || ctrl.Life() < ctrl.StartingLife() {
+						return nil
+					}
+					for _, p := range g.FilterBattlefield(And(IsCreature, ControlledBy(src.Controller))) {
+						p.BoostPT(1, 1)
+					}
+					return nil
+				}),
+			),
+			WithAbility(WheneverOneOrMoreCreaturesYouControlAttackTrigger(
+				GainLifeAmount(EventAmountValue()), false,
+			)),
+		)
 	})
 
 	// Phyrexian Reclamation {B}
@@ -691,9 +729,23 @@ func registerEnchantments() {
 	// Whenever you cast a creature spell, create a 3/3 green Beast creature token.
 	// Whenever you cast a noncreature spell, put three +1/+1 counters on target creature you control.
 	// Landfall — Whenever a land you control enters, you gain 3 life.
-	// XXX: requires landfall + cast-creature-spell + cast-noncreature-spell modal triggers with target
 	Register("Primeval Bounty", func() Card {
-		return NewEnchantment("Primeval Bounty", "{5}{G}")
+		noncreatureCard := NewCardFilter("noncreature card", func(c Card) bool {
+			return !c.HasType(TypeCreature)
+		})
+		return NewEnchantment("Primeval Bounty", "{5}{G}",
+			WithAbility(WheneverYouCastSpellTrigger(
+				CreateColoredToken("Beast", 3, 3, []Color{Green}, []CardType{TypeCreature}, []string{"Beast"}),
+				false, IsCreatureCard,
+			)),
+			WithAbility(WheneverYouCastSpellTrigger(
+				AddCounters(P1P1, Fixed(3)).Targeting(ToTarget()),
+				false, noncreatureCard,
+			).AddTarget(TargetCreatureYouControl())),
+			WithAbility(WheneverLandEntersBattlefieldTrigger(
+				GainLife(3), false,
+			).AndConditionData(EventSourceControlledByController{})),
+		)
 	})
 
 	// Rhystic Study {2}{U}
@@ -876,7 +928,7 @@ func registerEnchantments() {
 		return NewEnchantment("Zendikar's Roil", "{3}{G}{G}",
 			WithAbility(
 				NewTriggered(EvtZoneChange, false,
-					CreateToken("Elemental", 2, 2, []CardType{TypeCreature}, []string{"Elemental"}),
+					CreateColoredToken("Elemental", 2, 2, []Color{Green}, []CardType{TypeCreature}, []string{"Elemental"}),
 				).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
 					EventZoneChangeMatches{From: ZoneAny, To: ZoneBattlefield},
 					EventSourceControlledByController{},

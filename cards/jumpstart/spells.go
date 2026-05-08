@@ -15,11 +15,20 @@ func init() {
 
 // discardCardOfTypeCost is a Cost that discards one card from the controller's
 // hand matching the given filter. Used by Thirst for Knowledge ("discard an
-// artifact card"). Picks the first matching card; behaviorally identical to
-// player-choice when the hand has only one matching card.
+// artifact card"). The controller chooses which matching card to discard.
 type discardCardOfTypeCost struct {
 	filter CardFilter
 	label  string
+}
+
+func (c *discardCardOfTypeCost) candidates(p Player) []Card {
+	var out []Card
+	for _, card := range p.Hand() {
+		if c.filter.IsZero() || c.filter.Match(card) {
+			out = append(out, card)
+		}
+	}
+	return out
 }
 
 func (c *discardCardOfTypeCost) CanPay(_, controller uuid.UUID, g *Game) bool {
@@ -27,12 +36,7 @@ func (c *discardCardOfTypeCost) CanPay(_, controller uuid.UUID, g *Game) bool {
 	if p == nil {
 		return false
 	}
-	for _, card := range p.Hand() {
-		if c.filter.IsZero() || c.filter.Match(card) {
-			return true
-		}
-	}
-	return false
+	return len(c.candidates(p)) > 0
 }
 
 func (c *discardCardOfTypeCost) Pay(_, controller uuid.UUID, g *Game) error {
@@ -40,13 +44,16 @@ func (c *discardCardOfTypeCost) Pay(_, controller uuid.UUID, g *Game) error {
 	if p == nil {
 		return ErrPlayerNotFound
 	}
-	for _, card := range p.Hand() {
-		if c.filter.IsZero() || c.filter.Match(card) {
-			g.PlayerDiscard(p, card.ID())
-			return nil
-		}
+	cands := c.candidates(p)
+	if len(cands) == 0 {
+		return ErrPlayerNotFound
 	}
-	return ErrPlayerNotFound
+	chosen := p.ChooseCardFromHand(cands, c.label, g)
+	if chosen == nil {
+		chosen = cands[0]
+	}
+	g.PlayerDiscard(p, chosen.ID())
+	return nil
 }
 
 func (c *discardCardOfTypeCost) Text() string { return c.label }
@@ -75,6 +82,11 @@ func fightBetween(g *Game, aID, bID uuid.UUID) {
 	if bPower > 0 && (aCard == nil || !a.HasProtectionFrom(bCard)) {
 		g.DealDamageToPermanent(a, bPower, bID)
 	}
+	g.FireEvent(GameEvent{
+		Type:     EvtFight,
+		SourceID: aID,
+		TargetID: bID,
+	})
 }
 
 func registerSpells() {
@@ -388,9 +400,6 @@ func registerSpells() {
 	// Commune with Dinosaurs {G}
 	// Sorcery
 	// Look at the top five cards of your library. You may reveal a Dinosaur or land card from among them and put it into your hand. Put the rest on the bottom of your library in any order.
-	// XXX: Oracle says "in any order" (controller-chosen); engine only exposes
-	// PutOnBottomInRandomOrder, so the rest currently go to bottom in random
-	// order. This is hidden-information so the difference is minor in practice.
 	Register("Commune with Dinosaurs", func() Card {
 		dinoOrLandCard := NewCardFilter("Dinosaur or land card", func(c Card) bool {
 			if c.HasType(TypeLand) {
@@ -424,7 +433,7 @@ func registerSpells() {
 							rest = append(rest, c)
 						}
 					}
-					g.PutOnBottomInRandomOrder(p, rest)
+					g.PutOnBottomInChosenOrder(p, rest)
 					return nil
 				}),
 			),
@@ -523,10 +532,8 @@ func registerSpells() {
 	// Instant
 	// As an additional cost to cast this spell, you may reveal a Dragon card from your hand.
 	// Draconic Roar deals 3 damage to target creature. If you revealed a Dragon card or controlled a Dragon as you cast this spell, Draconic Roar deals 3 damage to that creature's controller.
-	// XXX: the "controlled a Dragon as you cast this spell" half is checked at
-	// resolution rather than snapshotted at cast — engine has no cast-time
-	// snapshot hook, so a Dragon that leaves between cast and resolution is
-	// not counted. The optional reveal half is implemented exactly.
+	// CR 608.2g: both halves of the bonus condition are evaluated against
+	// the cast-time snapshot (CastContext), not live state at resolution.
 	Register("Draconic Roar", func() Card {
 		dragonCard := NewCardFilter("Dragon card", func(c Card) bool {
 			return c.HasSubType("Dragon")
@@ -540,15 +547,16 @@ func registerSpells() {
 						g.ClearOptionalCostPaid(sourceID)
 						return nil
 					}
-					revealed := g.LastCostOptionalPaid(sourceID)
-					controlsDragon := g.AnyBattlefield(And(ControlledBy(controller), IsCreature, HasSubType("Dragon")))
+					ctx := g.ResolvingCastContext()
+					revealedDragon := ctx.RevealedSubtypeAtCast("Dragon")
+					controlledDragon := ctx.HasControlledSubtypeAtCast("Dragon")
 					perm := g.FindPermanent(targets[0])
 					if perm == nil {
 						g.ClearOptionalCostPaid(sourceID)
 						return nil
 					}
 					g.DealDamageToPermanent(perm, 3, sourceID)
-					if revealed || controlsDragon {
+					if revealedDragon || controlledDragon {
 						if owner := g.GetPlayer(perm.Controller); owner != nil {
 							g.DealDamageToPlayer(owner, 3, sourceID)
 						}
@@ -822,11 +830,11 @@ func registerSpells() {
 		c.AddAbility(NewModalSpell([]Mode{
 			{
 				Label:   "Creatures you control get +2/+0 until end of turn",
-				Effects: []Effect{BoostMatchingUntilEndOfTurn(Fixed(2), Fixed(0), AnyPermanent)},
+				Effects: []Effect{BoostMatchingUntilEndOfTurn(Fixed(2), Fixed(0), IsCreature)},
 			},
 			{
 				Label:   "Creatures you control get +0/+2 until end of turn",
-				Effects: []Effect{BoostMatchingUntilEndOfTurn(Fixed(0), Fixed(2), AnyPermanent)},
+				Effects: []Effect{BoostMatchingUntilEndOfTurn(Fixed(0), Fixed(2), IsCreature)},
 			},
 		}))
 		return c
@@ -968,10 +976,28 @@ func registerSpells() {
 	// Hunter's Insight {2}{G}
 	// Instant
 	// Choose target creature you control. Whenever that creature deals combat damage to a player or planeswalker this turn, draw that many cards.
-	// XXX: requires per-creature this-turn delayed triggered ability
 	Register("Hunter's Insight", func() Card {
 		return NewInstant("Hunter's Insight", "{2}{G}",
-			NewSpellAbility(),
+			NewTargetedSpell(TargetCreatureYouControl(),
+				FuncEffect("register a delayed trigger this turn",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						g.RegisterDelayedTrigger(&DelayedTrigger{
+							EventType:    EvtDamageDealt,
+							Effects:      []Effect{DrawCards(EventAmountValue())},
+							SourceID:     sourceID,
+							Controller:   controller,
+							MatchEventID: targets[0],
+							MatchFlag:    true,
+							Persistent:   true,
+						})
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -1343,10 +1369,56 @@ func registerSpells() {
 	// Path to Exile {W}
 	// Instant
 	// Exile target creature. Its controller may search their library for a basic land card, put that card onto the battlefield tapped, then shuffle.
-	// XXX: requires opponent-may-search-library + put tapped onto battlefield primitive
 	Register("Path to Exile", func() Card {
 		return NewInstant("Path to Exile", "{W}",
-			NewTargetedSpell(TargetCreature(), ExileTarget()),
+			NewTargetedSpell(TargetCreature(),
+				FuncEffect("exile target creature; its controller may search their library for a basic land",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 || targets[0] == uuid.Nil {
+							return nil
+						}
+						perm := g.FindPermanent(targets[0])
+						if perm == nil {
+							return nil
+						}
+						creatureCtrl := perm.Controller
+						g.ExilePermanent(perm)
+						p := g.GetPlayer(creatureCtrl)
+						if p == nil {
+							return nil
+						}
+						mode := p.ChooseMode([]string{"yes", "no"}, "search your library for a basic land?")
+						if mode != 0 {
+							return nil
+						}
+						var basics []Card
+						for _, c := range p.Library() {
+							if c.HasType(TypeLand) && c.HasSuperType(SuperBasic) {
+								basics = append(basics, c)
+							}
+						}
+						if len(basics) > 0 {
+							chosen := p.ChooseCardFromLibrary(basics, "basic land", g)
+							if chosen != nil {
+								newLib := make([]Card, 0, len(p.Library())-1)
+								for _, c := range p.Library() {
+									if c.ID() != chosen.ID() {
+										newLib = append(newLib, c)
+									}
+								}
+								p.SetLibrary(newLib)
+								newPerm := g.PutOnBattlefield(chosen, creatureCtrl)
+								if newPerm != nil {
+									newPerm.Tapped = true
+								}
+							}
+						}
+						p.ShuffleLibrary()
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -1477,23 +1549,34 @@ func registerSpells() {
 	// Put target creature card from a graveyard onto the battlefield under your control. You lose life equal to that card's mana value.
 	Register("Reanimate", func() Card {
 		return NewSorcery("Reanimate", "{B}",
-			NewTargetedSpell(TargetCreatureInYourGraveyard(), FuncEffect(
+			NewTargetedSpell(TargetCreatureCardInAnyGraveyard(), FuncEffect(
 				"reanimate; lose life = mana value",
 				EffectProperties{Outcome: OutcomeBenefit},
 				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					if len(targets) == 0 {
 						return nil
 					}
-					p := g.GetPlayer(controller)
-					if p == nil {
+					ctrl := g.GetPlayer(controller)
+					if ctrl == nil {
 						return nil
 					}
-					picked, ok := p.RemoveFromGraveyard(targets[0])
+					picked, ok := ctrl.RemoveFromGraveyard(targets[0])
 					if !ok {
-						return nil
+						if opp := g.GetOpponent(controller); opp != nil {
+							picked, ok = opp.RemoveFromGraveyard(targets[0])
+						}
+						if !ok {
+							return nil
+						}
 					}
-					g.PutOnBattlefield(picked, controller)
-					p.LoseLife(picked.ManaCost().CMC())
+					perm := g.PutOnBattlefield(picked, controller)
+					if perm != nil && picked.Owner() != controller {
+						g.AddContinuousEffect(TargetEffect(LayerControl, Indefinite, perm.ID(), func(g *Game, target *Permanent) error {
+							target.Controller = controller
+							return nil
+						}))
+					}
+					ctrl.LoseLife(picked.ManaCost().CMC())
 					return nil
 				},
 			)),
@@ -1583,9 +1666,6 @@ func registerSpells() {
 	// Sorcery
 	// This spell costs {2} less to cast if it targets a Dinosaur you control.
 	// Put a +1/+1 counter on target creature you control. Then that creature fights target creature you don't control.
-	// XXX: cost-reduction-on-target piece is not wired — SpellCondition runs
-	// before targets are chosen, so "if it targets a Dinosaur you control" has
-	// no hook. Counter + fight + multi-target are implemented exactly.
 	Register("Savage Stomp", func() Card {
 		return NewSorcery("Savage Stomp", "{2}{G}",
 			NewMultiTargetSpell(
@@ -1603,16 +1683,52 @@ func registerSpells() {
 					},
 				),
 			),
+			WithTargetConditionalCostReduction(2, func(g *Game, controller uuid.UUID, c Card, targets []uuid.UUID) bool {
+				for _, id := range targets {
+					perm := g.FindPermanent(id)
+					if perm == nil {
+						continue
+					}
+					if perm.Controller != controller {
+						continue
+					}
+					if perm.Card.HasSubType("Dinosaur") {
+						return true
+					}
+				}
+				return false
+			}),
 		)
 	})
 
 	// Settle the Score {2}{B}{B}
 	// Sorcery
 	// Exile target creature. Put two loyalty counters on a planeswalker you control.
-	// XXX: requires planeswalker / loyalty-counter primitive; implement only exile portion
 	Register("Settle the Score", func() Card {
 		return NewSorcery("Settle the Score", "{2}{B}{B}",
-			NewTargetedSpell(TargetCreature(), ExileTarget()),
+			NewTargetedSpell(TargetCreature(),
+				ExileTarget(),
+				FuncEffect(
+					"put two loyalty counters on a planeswalker you control",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						candidates := g.FilterBattlefield(And(ControlledBy(controller), IsPlaneswalker))
+						if len(candidates) == 0 {
+							return nil
+						}
+						player := g.GetPlayer(controller)
+						if player == nil {
+							return nil
+						}
+						chosen := player.ChoosePermanent(candidates, "planeswalker to gain two loyalty counters", g)
+						if chosen == nil {
+							return nil
+						}
+						g.AddCountersWithReplacement(chosen, Loyalty, 2, sourceID, false)
+						return nil
+					},
+				),
+			),
 		)
 	})
 
@@ -1721,10 +1837,6 @@ func registerSpells() {
 	// Thirst for Knowledge {2}{U}
 	// Instant
 	// Draw three cards. Then discard two cards unless you discard an artifact card.
-	// XXX: when paying the "discard an artifact card" branch, the engine
-	// has no choose-card-from-hand-by-filter primitive, so the cost picks the
-	// first artifact card in the controller's hand rather than letting them
-	// choose. Behaviorally identical when the hand has only one artifact.
 	Register("Thirst for Knowledge", func() Card {
 		artifactCard := NewCardFilter("artifact card", func(c Card) bool {
 			return c.HasType(TypeArtifact)

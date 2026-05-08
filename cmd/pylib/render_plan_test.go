@@ -155,6 +155,106 @@ var testRenderPlanArity = map[int32]int{
 	opCommandClose: 0,
 }
 
+func TestRenderPlanEmitsExileFaceUp(t *testing.T) {
+	state := testRenderState(uuid.New())
+	exiledID := uuid.New()
+	state.Players[0].Exile = []interactive.CardState{{
+		ID:   exiledID,
+		Name: "Grizzly Bears",
+	}}
+	cfg := testRenderConfig(256)
+	view := outputViews{
+		renderPlan:         make([]int32, cfg.renderPlanCapacity),
+		renderPlanLengths:  make([]int64, 1),
+		renderPlanOverflow: make([]int64, 1),
+	}
+	if err := fillRenderPlan(0, state, &apiPending{Kind: "priority"}, 0, cfg, view, newEncodeScratch()); err != nil {
+		t.Fatalf("fillRenderPlan: %v", err)
+	}
+	plan := view.renderPlan[:view.renderPlanLengths[0]]
+	if !planContainsZoneOpen(plan, renderZoneExile, renderOwnerSelf) {
+		t.Fatalf("expected exile zone block, got %v", plan)
+	}
+	if _, ok := firstPlaceCardInZone(plan, renderZoneExile, renderOwnerSelf); !ok {
+		t.Fatalf("expected at least one opPlaceCard in exile, got %v", plan)
+	}
+}
+
+func TestRenderPlanEmitsExileFaceDownRedactedSentinel(t *testing.T) {
+	state := testRenderState(uuid.New())
+	exiledID := uuid.New()
+	// Face-down exile redacted to this viewer: Name="" and FaceDown=true.
+	state.Players[1].Exile = []interactive.CardState{{
+		ID:       exiledID,
+		Name:     "",
+		FaceDown: true,
+	}}
+	cfg := testRenderConfig(256)
+	view := outputViews{
+		renderPlan:         make([]int32, cfg.renderPlanCapacity),
+		renderPlanLengths:  make([]int64, 1),
+		renderPlanOverflow: make([]int64, 1),
+	}
+	if err := fillRenderPlan(0, state, &apiPending{Kind: "priority"}, 0, cfg, view, newEncodeScratch()); err != nil {
+		t.Fatalf("fillRenderPlan: %v", err)
+	}
+	plan := view.renderPlan[:view.renderPlanLengths[0]]
+	if !planContainsZoneOpen(plan, renderZoneExile, renderOwnerOpponent) {
+		t.Fatalf("expected opponent exile zone block, got %v", plan)
+	}
+	payload, ok := firstPlaceCardInZone(plan, renderZoneExile, renderOwnerOpponent)
+	if !ok {
+		t.Fatalf("expected opPlaceCard for redacted face-down card, got %v", plan)
+	}
+	// payload = [slotIdx, row, status, uuidIdx]
+	if payload[1] != 0 {
+		t.Errorf("face-down sentinel row = %d, want 0", payload[1])
+	}
+	if payload[2]&statusFaceDown == 0 {
+		t.Errorf("face-down status bit not set: status=%d", payload[2])
+	}
+}
+
+func planContainsZoneOpen(plan []int32, zone, owner int32) bool {
+	for cursor := 0; cursor < len(plan); {
+		op := plan[cursor]
+		arity, ok := testRenderPlanArity[op]
+		if !ok || cursor+1+arity > len(plan) {
+			return false
+		}
+		if op == opOpenZone && plan[cursor+1] == zone && plan[cursor+2] == owner {
+			return true
+		}
+		cursor += 1 + arity
+	}
+	return false
+}
+
+// firstPlaceCardInZone returns the payload of the first opPlaceCard
+// inside the given zone/owner block.
+func firstPlaceCardInZone(plan []int32, zone, owner int32) ([]int32, bool) {
+	inZone := false
+	for cursor := 0; cursor < len(plan); {
+		op := plan[cursor]
+		arity, ok := testRenderPlanArity[op]
+		if !ok || cursor+1+arity > len(plan) {
+			return nil, false
+		}
+		switch op {
+		case opOpenZone:
+			inZone = plan[cursor+1] == zone && plan[cursor+2] == owner
+		case opCloseZone:
+			inZone = false
+		case opPlaceCard:
+			if inZone {
+				return plan[cursor+1 : cursor+1+arity], true
+			}
+		}
+		cursor += 1 + arity
+	}
+	return nil, false
+}
+
 func TestRenderPlanV1NoDictOpcodes(t *testing.T) {
 	state := testRenderState(uuid.New())
 	cfg := testRenderConfig(128)

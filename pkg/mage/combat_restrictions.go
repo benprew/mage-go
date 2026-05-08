@@ -63,9 +63,9 @@ func (em *EffectManager) MinBlockers(attackerID uuid.UUID) int {
 // resetCombatRestrictions clears all per-cycle restriction maps. Called from
 // EffectManager.Apply alongside blockPairRestrictions.
 func (em *EffectManager) resetCombatRestrictions() {
-	em.cantBeBlockedExceptByRules = nil
-	em.canBlockOnlyRules = nil
-	em.minBlockers = nil
+	clear(em.cantBeBlockedExceptByRules)
+	clear(em.canBlockOnlyRules)
+	clear(em.minBlockers)
 }
 
 // passesCombatRestrictions returns true if blocker is allowed to block

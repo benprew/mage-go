@@ -199,17 +199,38 @@ typedef struct {
     int32_t stack_close_id;
     int32_t command_open_id;
     int32_t command_close_id;
+
+    /* Inline-blank singletons. Each ``<choose-*>`` token is emitted at the
+       cursor position recorded by an EMIT_BLANK opcode; ``chosen_id`` /
+       ``yes_id`` / ``no_id`` / ``none_id`` / ``x_end_id`` may appear in legal-
+       id lists or as bookkeeping markers in the token stream. ``use_ability``
+       is the ability-action variant of ``<choose-play>``. All are independent
+       of the cardrow / ability tables — they are pure singletons. */
+    int32_t choose_target_id;
+    int32_t choose_block_id;
+    int32_t choose_damage_order_id;
+    int32_t choose_mode_id;
+    int32_t choose_may_id;
+    int32_t choose_x_digit_id;
+    int32_t choose_mana_source_id;
+    int32_t choose_play_id;
+    int32_t use_ability_id;
+    int32_t chosen_id;
+    int32_t yes_id;
+    int32_t no_id;
+    int32_t none_id;
+    int32_t x_end_id;
+    int32_t mulligan_id;
+    int32_t keep_id;
+
+    /* Digit tokens for inline X-cost blanks: ``num_ids[k]`` is the token id
+       for digit ``k`` (typically 0..15). Length is given by ``num_count``;
+       the count is authoritative and the array may be NULL when count==0. */
+    int32_t num_count;
+    const int32_t* num_ids;
 } MageTokenTables;
 
-/*
- * Token-assembler outputs. Filled per-batch-row by the native walker
- * after the render-plan has been emitted. Buffers are (B, max_tokens)
- * for sequence-shaped fields and (B, max_options[, max_targets]) for
- * anchor fields. -1 sentinels mark absent positions; mask buffers carry
- * 1/0 indicators (matching the Python assembler's bool tensors after a
- * widening cast). Allocations are owned by the caller; pass nil if a
- * particular output is unwanted.
- */
+/* Token-assembler dimensions shared by packed token outputs. */
 typedef struct {
     int32_t max_tokens;
     int32_t max_options;
@@ -218,16 +239,9 @@ typedef struct {
 } MageTokenAssemblerConfig;
 
 typedef struct {
-    int64_t* token_ids;          /* (B, max_tokens) int64, pad-filled */
-    int64_t* attention_mask;     /* (B, max_tokens) int64 */
-    int64_t* seq_lengths;        /* (B,) int64 */
-    int64_t* option_positions;   /* (B, max_options) int64 (-1 = absent) */
-    uint8_t* option_mask;        /* (B, max_options) uint8 (0/1) */
-    int64_t* target_positions;   /* (B, max_options, max_targets) int64 */
-    uint8_t* target_mask;        /* (B, max_options, max_targets) uint8 */
-    int64_t* card_ref_positions; /* (B, max_card_refs) int64 (-1 = absent) */
-    int32_t* token_overflow;     /* (B,) int32 (1 = truncated) */
-} MageTokenAssemblerOutputs;
+    int32_t max_blanks;
+    int32_t max_legal_per_blank;
+} MageBlankAssemblerConfig;
 
 /*
  * Packed (varlen) token-assembler outputs. Caller allocates the token-
@@ -236,23 +250,32 @@ typedef struct {
  * into ``token_ids`` (i.e. they are already shifted by cu_seqlens[b]).
  *
  * After a successful call, ``cu_seqlens[B]`` is the total live token
- * count; ``token_ids[0 : cu_seqlens[B]]``, ``seq_id[0 : cu_seqlens[B]]``
- * and ``pos_in_seq[0 : cu_seqlens[B]]`` are the live region. The trailing
- * portion of the buffer is unspecified.
+ * count; ``token_ids[0 : cu_seqlens[B]]`` is the live region. The trailing
+ * portion of the buffer is unspecified. ``seq_id`` and ``pos_in_seq`` are
+ * derivable from ``cu_seqlens`` and are intentionally not written by Go.
  */
 typedef struct {
-    int64_t* token_ids;          /* [B*max_tokens] int64, live region */
-    int64_t* seq_id;             /* [B*max_tokens] int64, doc index per token */
-    int64_t* pos_in_seq;         /* [B*max_tokens] int64, in-doc RoPE position */
-    int64_t* cu_seqlens;         /* [B+1] int64, exclusive prefix sum */
-    int64_t* seq_lengths;        /* [B] int64 */
-    int64_t* state_positions;    /* [B] int64, packed-offset of row's first token */
-    int64_t* option_positions;   /* [B, max_options] int64, absolute, -1 absent */
-    uint8_t* option_mask;        /* [B, max_options] uint8 */
-    int64_t* target_positions;   /* [B, max_options, max_targets] int64, absolute */
-    uint8_t* target_mask;        /* [B, max_options, max_targets] uint8 */
-    int64_t* card_ref_positions; /* [B, max_card_refs] int64, absolute, -1 absent */
+    int32_t* token_ids;          /* [B*max_tokens] int32, live region */
+    int32_t* cu_seqlens;         /* [B+1] int32, exclusive prefix sum */
+    int32_t* seq_lengths;        /* [B] int32 */
+    int32_t* state_positions;    /* [B] int32, packed-offset of row's first token */
+    int32_t* card_ref_positions; /* [B, max_card_refs] int32, absolute, -1 absent */
     int32_t* token_overflow;     /* [B] int32 (1 = row truncated) */
 } MagePackedTokenAssemblerOutputs;
+
+typedef struct {
+    int32_t k_max;
+    int32_t v_max;
+    int32_t* blank_positions;    /* [B, K] int32, absolute, -1 absent */
+    int32_t* blank_kind;         /* [B, K] int32, 0 absent */
+    int32_t* blank_group;        /* [B, K] int32, -1 absent */
+    int32_t* blank_group_kind;   /* [B, K] int32 */
+    int32_t* blank_option_index; /* [B, K] int32, engine option index, -1 absent */
+    int32_t* blank_legal_ids;    /* [B, K, V] int32, 0 pad */
+    uint8_t* blank_legal_mask;   /* [B, K, V] uint8 */
+    int32_t* blank_overflow;     /* [B] int32, count of dropped blanks */
+    int32_t* blank_count;        /* [B] int32, live blanks per row */
+    int32_t* blank_legal_count;  /* [B, K] int32, live legal ids per blank */
+} MagePackedBlankOutputs;
 
 #endif

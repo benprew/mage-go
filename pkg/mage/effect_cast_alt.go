@@ -27,6 +27,15 @@ import (
 // zone, or nil if not present. Stack and battlefield are not supported here
 // (those are not cast-from zones in the normal sense).
 func (g *Game) findCardInZone(playerID, cardID uuid.UUID, zone Zone) Card {
+	return g.findCardInZoneOpt(playerID, cardID, zone, false)
+}
+
+// findCardInZoneOpt is like findCardInZone but, when permitForeignOwner is
+// true, does not require an exiled card to be owned by playerID. This
+// supports effects (e.g. Etali, Primal Storm) that exile cards from each
+// player's library and let one player cast any of them, regardless of
+// original ownership.
+func (g *Game) findCardInZoneOpt(playerID, cardID uuid.UUID, zone Zone, permitForeignOwner bool) Card {
 	p := g.GetPlayer(playerID)
 	if p == nil {
 		return nil
@@ -52,7 +61,10 @@ func (g *Game) findCardInZone(playerID, cardID uuid.UUID, zone Zone) Card {
 		}
 	case ZoneExile:
 		for _, ec := range g.exile {
-			if ec.Card.ID() == cardID && ec.Card.Owner() == playerID {
+			if ec.Card.ID() != cardID {
+				continue
+			}
+			if permitForeignOwner || ec.Card.Owner() == playerID {
 				return ec.Card
 			}
 		}
@@ -75,7 +87,7 @@ func (g *Game) removeCardFromZone(playerID, cardID uuid.UUID, zone Zone) Card {
 		}
 		return c
 	case ZoneGraveyard:
-		c, ok := p.RemoveFromGraveyard(cardID)
+		c, ok := g.MoveFromGraveyard(playerID, cardID, ZoneStack)
 		if !ok {
 			return nil
 		}
@@ -108,7 +120,17 @@ func (g *Game) removeCardFromZone(playerID, cardID uuid.UUID, zone Zone) Card {
 // its mana cost" sets X = 0 unless the alternate cost specifies otherwise —
 // callers may pass 0 for the standard case).
 func (g *Game) CastCardFromZoneWithoutPaying(playerID, cardID uuid.UUID, zone Zone, targets []uuid.UUID, xValue int) error {
-	return g.castCardFromZone(playerID, cardID, zone, targets, xValue, nil)
+	return g.castCardFromZone(playerID, cardID, zone, targets, xValue, nil, false)
+}
+
+// CastCardFromExileWithoutPaying is like CastCardFromZoneWithoutPaying for
+// ZoneExile, but does not require the caster to be the card's owner. Per
+// CR 706.10, the player casting the spell becomes its controller regardless
+// of ownership; this helper supports effects (e.g. Etali, Primal Storm) that
+// exile cards from each player's library and grant one player the option
+// to cast any of them.
+func (g *Game) CastCardFromExileWithoutPaying(playerID, cardID uuid.UUID, targets []uuid.UUID, xValue int) error {
+	return g.castCardFromZone(playerID, cardID, ZoneExile, targets, xValue, nil, true)
 }
 
 // CastCardFromZoneWithAlternateCost casts the named card from the given zone
@@ -118,18 +140,27 @@ func (g *Game) CastCardFromZoneWithoutPaying(playerID, cardID uuid.UUID, zone Zo
 // responsible for ensuring the pool holds enough mana before calling.
 func (g *Game) CastCardFromZoneWithAlternateCost(playerID, cardID uuid.UUID, zone Zone, alternate ManaCost, targets []uuid.UUID, xValue int) error {
 	mc := alternate
-	return g.castCardFromZone(playerID, cardID, zone, targets, xValue, &mc)
+	return g.castCardFromZone(playerID, cardID, zone, targets, xValue, &mc, false)
 }
 
 // castCardFromZone is the shared implementation for the public cast-from-zone
 // helpers. If alternateMC is nil, no mana cost is paid (free cast). If
 // alternateMC is non-nil, the alternate mana cost is paid from the pool.
-func (g *Game) castCardFromZone(playerID, cardID uuid.UUID, zone Zone, targets []uuid.UUID, xValue int, alternateMC *ManaCost) error {
+// If permitForeignOwner is true, an exiled card may be cast even if its
+// owner is not playerID (per CR 706.10 the caster becomes controller).
+func (g *Game) castCardFromZone(playerID, cardID uuid.UUID, zone Zone, targets []uuid.UUID, xValue int, alternateMC *ManaCost, permitForeignOwner bool) error {
+	return g.castCardFromZoneOpts(playerID, cardID, zone, targets, xValue, alternateMC, permitForeignOwner, false)
+}
+
+// castCardFromZoneOpts is the underlying implementation; exileOnLeaveStack
+// causes the resolver to send the card to exile instead of graveyard on
+// resolution / fizzle (used by flashback per CR 702.34).
+func (g *Game) castCardFromZoneOpts(playerID, cardID uuid.UUID, zone Zone, targets []uuid.UUID, xValue int, alternateMC *ManaCost, permitForeignOwner, exileOnLeaveStack bool) error {
 	p := g.GetPlayer(playerID)
 	if p == nil {
 		return ErrPlayerNotFound
 	}
-	card := g.findCardInZone(playerID, cardID, zone)
+	card := g.findCardInZoneOpt(playerID, cardID, zone, permitForeignOwner)
 	if card == nil {
 		return fmt.Errorf("card %s not found in %s", cardID, zone)
 	}
@@ -141,6 +172,10 @@ func (g *Game) castCardFromZone(playerID, cardID uuid.UUID, zone Zone, targets [
 	if card.HasType(TypeLand) {
 		return fmt.Errorf("can't cast a land")
 	}
+
+	// Reset per-spell drained-colors tally so the cast snapshot can capture
+	// exactly which colors were spent (or none, for free casts).
+	p.ManaPool().ResetLastDrained()
 
 	// Pay the alternate mana cost if specified.
 	if alternateMC != nil && !alternateMC.IsZero() {
@@ -176,71 +211,16 @@ func (g *Game) castCardFromZone(playerID, cardID uuid.UUID, zone Zone, targets [
 		return fmt.Errorf("could not remove %s from %s", card.Name(), zone)
 	}
 
-	// Build the spell ability effect list. Modal spells route through
-	// gatherModalSpellTargets so the chosen mode supplies its own
-	// targets and effects (CR 700.2).
-	var effects []Effect
-	var modalTargets [][]uuid.UUID
-	modeChoice := 0
-	if ms, ok := getModalSpellAbility(card); ok {
-		mIdx, mTargets := g.gatherModalSpellTargets(p, card, ms)
-		modeChoice = mIdx
-		effects = append(effects, ms.modes[mIdx].Effects...)
-		targets = mTargets
-		modalTargets = make([][]uuid.UUID, len(ms.modes))
-		modalTargets[mIdx] = mTargets
-	} else {
-		for _, a := range card.Abilities() {
-			if sa, ok := a.(*SpellAbility); ok {
-				effects = append(effects, sa.Effects()...)
-			}
-		}
-	}
-
-	obj := &StackObject{
-		ID:           uuid.New(),
-		Card:         card,
-		Controller:   playerID,
-		SourceID:     card.ID(),
-		Effects:      effects,
-		Targets:      targets,
-		XValue:       xValue,
-		ModeChoice:   modeChoice,
-		ModalTargets: modalTargets,
-		CastZone:     zone,
-	}
-
-	if modes := card.Modes(); len(modes) > 0 {
-		obj.ModeChoice = p.ChooseMode(modes, card.Name())
-	}
-
-	for _, eff := range effects {
-		if !IsDividedDamageEffect(eff) {
-			continue
-		}
-		total := DividedDamageTotal(eff).Resolve(g, card.ID(), playerID, targets)
-		if total > 0 && len(targets) > 0 {
-			dist := p.ChooseDamageDistribution(targets, total, card.Name(), g)
-			obj.DamageDistribution = sanitizeDamageDistribution(dist, targets, total)
-		}
-		break
-	}
-
-	g.stack.Push(obj)
-
-	if card.HasType(TypeInstant) {
-		g.instantsCastThisTurn[playerID]++
-	}
-
-	g.FireEvent(GameEvent{
-		Type:     EvtSpellCast,
-		SourceID: card.ID(),
-		PlayerID: playerID,
+	_, err := g.pushCastSpellObject(castStackObjectOptions{
+		Card:              card,
+		Controller:        playerID,
+		Targets:           targets,
+		XValue:            xValue,
+		CastZone:          zone,
+		ExileOnLeaveStack: exileOnLeaveStack,
+		SnapshotCast:      true,
 	})
-
-	g.fireBecomesTargetEvents(obj, false)
-
-	return nil
+	return err
 }
 
 // CastableFromExilePermission grants a player permission to cast a specific
@@ -299,7 +279,10 @@ func (g *Game) CastExiledCardWithPermission(playerID, cardID uuid.UUID, targets 
 	if perm == nil {
 		return fmt.Errorf("no permission to cast %s from exile", cardID)
 	}
-	card := g.findCardInZone(playerID, cardID, ZoneExile)
+	// Per CR 706.10 the caster becomes controller regardless of original
+	// ownership; Gonti exiles cards owned by an opponent, so we permit
+	// foreign ownership when looking up the exiled card.
+	card := g.findCardInZoneOpt(playerID, cardID, ZoneExile, true)
 	if card == nil {
 		return fmt.Errorf("card not in exile")
 	}
@@ -351,50 +334,15 @@ func (g *Game) CastExiledCardWithPermission(playerID, cardID uuid.UUID, targets 
 		return fmt.Errorf("could not remove %s from exile", card.Name())
 	}
 
-	pl := g.GetPlayer(playerID)
-	var effects []Effect
-	var modalTargets [][]uuid.UUID
-	modeChoice := 0
-	if ms, ok := getModalSpellAbility(card); ok {
-		mIdx, mTargets := g.gatherModalSpellTargets(pl, card, ms)
-		modeChoice = mIdx
-		effects = append(effects, ms.modes[mIdx].Effects...)
-		targets = mTargets
-		modalTargets = make([][]uuid.UUID, len(ms.modes))
-		modalTargets[mIdx] = mTargets
-	} else {
-		for _, a := range card.Abilities() {
-			if sa, ok := a.(*SpellAbility); ok {
-				effects = append(effects, sa.Effects()...)
-			}
-		}
-	}
-	obj := &StackObject{
-		ID:           uuid.New(),
+	_, err := g.pushCastSpellObject(castStackObjectOptions{
 		Card:         card,
 		Controller:   playerID,
-		SourceID:     card.ID(),
-		Effects:      effects,
 		Targets:      targets,
 		XValue:       xValue,
-		ModeChoice:   modeChoice,
-		ModalTargets: modalTargets,
 		CastZone:     ZoneExile,
-	}
-	if modes := card.Modes(); len(modes) > 0 {
-		obj.ModeChoice = pl.ChooseMode(modes, card.Name())
-	}
-	g.stack.Push(obj)
-	if card.HasType(TypeInstant) {
-		g.instantsCastThisTurn[playerID]++
-	}
-	g.FireEvent(GameEvent{
-		Type:     EvtSpellCast,
-		SourceID: card.ID(),
-		PlayerID: playerID,
+		SnapshotCast: true,
 	})
-	g.fireBecomesTargetEvents(obj, false)
-	return nil
+	return err
 }
 
 // --- "If would be put into a graveyard this turn, exile it instead" ---

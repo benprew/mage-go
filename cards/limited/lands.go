@@ -24,6 +24,7 @@ func registerLands() {
 		color := land.color
 		Register(name, func() Card {
 			return NewLand(name,
+				WithSuperTypes(SuperBasic),
 				WithSubTypes(name),
 				WithManaAbility(color),
 			)

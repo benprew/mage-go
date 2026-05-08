@@ -209,6 +209,20 @@ func (sp *SearchPlayer) ChooseCardsFromHand(amount int, reason string, g GameRea
 	return result
 }
 
+// ChooseCardFromHand picks the lowest-CMC candidate (cheapest to discard).
+func (sp *SearchPlayer) ChooseCardFromHand(candidates []Card, reason string, g GameReader) Card {
+	if len(candidates) == 0 {
+		return nil
+	}
+	best := candidates[0]
+	for _, c := range candidates[1:] {
+		if c.ManaCost().CMC() < best.ManaCost().CMC() {
+			best = c
+		}
+	}
+	return best
+}
+
 // ChooseManaColor returns the first available color in the pool,
 // falling back to White if the pool is empty.
 func (sp *SearchPlayer) ChooseManaColor(reason string) Color {

@@ -695,25 +695,92 @@ func (r *drawReplacementEffect) Clone() ReplacementEffect {
 }
 
 // ---------------------------------------------------------------------------
+// 16b. Empty-library draw replacement: "if you would draw a card while your
+//      library has no cards in it, instead <callback>" (Ormos, Archive Keeper).
+//      Stays active while the source permanent is on the battlefield.
+// ---------------------------------------------------------------------------
+
+type emptyLibraryDrawReplacement struct {
+	replacementBase
+	playerID uuid.UUID
+	callback func(g *Game, sourceID uuid.UUID)
+}
+
+func (r *emptyLibraryDrawReplacement) Matches(a Action, g GameReader) bool {
+	act, ok := a.(*DrawCardAction)
+	if !ok {
+		return false
+	}
+	if act.PlayerID() != r.playerID {
+		return false
+	}
+	p := g.GetPlayer(r.playerID)
+	if p == nil {
+		return false
+	}
+	return len(p.Library()) == 0
+}
+
+func (r *emptyLibraryDrawReplacement) Replace(_ Action, g *Game) Action {
+	if r.callback != nil {
+		r.callback(g, r.sourceID)
+	}
+	return nil
+}
+
+func (r *emptyLibraryDrawReplacement) IsActive(g GameReader) bool {
+	return g.FindPermanent(r.sourceID) != nil
+}
+
+func (r *emptyLibraryDrawReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
+}
+
+// ---------------------------------------------------------------------------
 // 17. Damage prevention rule: from/to filter-based prevention
 // ---------------------------------------------------------------------------
 
 type damagePreventionRuleReplacement struct {
 	replacementBase
-	from       PermanentFilter
-	to         PermanentFilter
-	oneShot    bool
-	consumed   bool
-	combatOnly bool
-	playerOnly bool
+	from          PermanentFilter
+	to            PermanentFilter
+	oneShot       bool
+	consumed      bool
+	combatOnly    bool
+	noncombatOnly bool
+	playerOnly    bool
+	// toPlayerID, when non-zero, makes this rule also match damage dealt to
+	// that player (DamageToPlayerAction). Used for prevention rules that
+	// protect a specific player (e.g. Blessed Sanctuary's "dealt to you").
+	toPlayerID uuid.UUID
 }
 
 func (r *damagePreventionRuleReplacement) Matches(a Action, g GameReader) bool {
 	game := g.(*Game)
 	switch act := a.(type) {
 	case *DamageToPlayerAction:
-		// For player damage, only match rules with a "from" filter and no "to" filter
-		// (source-only prevention like Lady Evangela, Horn of Deafening)
+		// Player-targeted rules: a rule with toPlayerID set protects that
+		// player; otherwise (legacy) the rule must have a "from" filter and
+		// no "to" filter (source-only prevention like Lady Evangela).
+		if r.toPlayerID != uuid.Nil {
+			if act.PlayerID() != r.toPlayerID {
+				return false
+			}
+			if !r.from.IsZero() {
+				source := g.FindPermanent(act.ActionSource())
+				if source == nil || !r.from.Match(source, game) {
+					return false
+				}
+			}
+			if r.combatOnly && !act.IsCombatDamage() {
+				return false
+			}
+			if r.noncombatOnly && act.IsCombatDamage() {
+				return false
+			}
+			return true
+		}
 		if !r.to.IsZero() {
 			return false
 		}
@@ -727,9 +794,17 @@ func (r *damagePreventionRuleReplacement) Matches(a Action, g GameReader) bool {
 		if r.combatOnly && !act.IsCombatDamage() {
 			return false
 		}
+		if r.noncombatOnly && act.IsCombatDamage() {
+			return false
+		}
 		return true
 	case *DamageToCreatureAction:
 		if r.playerOnly {
+			return false
+		}
+		// A rule scoped exclusively to a target player (toPlayerID set, no
+		// from/to filters) protects only that player, not creatures.
+		if r.from.IsZero() && r.to.IsZero() {
 			return false
 		}
 		source := g.FindPermanent(act.ActionSource())
@@ -739,11 +814,10 @@ func (r *damagePreventionRuleReplacement) Matches(a Action, g GameReader) bool {
 		}
 		fromMatch := r.from.IsZero() || (source != nil && r.from.Match(source, game))
 		toMatch := r.to.IsZero() || r.to.Match(target, game)
-		// If both are zero, this doesn't match anything useful
-		if r.from.IsZero() && r.to.IsZero() {
+		if r.combatOnly && !act.IsCombatDamage() {
 			return false
 		}
-		if r.combatOnly && !act.IsCombatDamage() {
+		if r.noncombatOnly && act.IsCombatDamage() {
 			return false
 		}
 		return fromMatch && toMatch
@@ -864,9 +938,6 @@ func (r *etbAdditionalCountersReplacement) Matches(a Action, g GameReader) bool 
 	if act.CounterType() != r.counterType {
 		return false
 	}
-	if act.Amount() <= 0 {
-		return false
-	}
 	if r.excludeSelf && act.PermanentID() == r.sourceID {
 		return false
 	}
@@ -893,4 +964,35 @@ func (r *etbAdditionalCountersReplacement) IsActive(g GameReader) bool {
 func (r *etbAdditionalCountersReplacement) Clone() ReplacementEffect {
 	c := *r
 	return &c
+}
+
+// etbAdditionalCounterTypesFor returns the unique set of counter types from
+// active etbAdditionalCountersReplacement effects whose filter matches the
+// entering permanent. Used by PutOnBattlefield (CR 614.1c) to synthesize
+// AddCountersActions for permanents with no native "enters with" clause so
+// effects like Oona's Blackguard can still place counters.
+func (g *Game) etbAdditionalCounterTypesFor(perm *Permanent) []CounterType {
+	seen := map[CounterType]bool{}
+	var out []CounterType
+	for _, r := range g.effects.replacements {
+		etb, ok := r.(*etbAdditionalCountersReplacement)
+		if !ok {
+			continue
+		}
+		if !etb.IsActive(g) {
+			continue
+		}
+		if etb.excludeSelf && perm.ID() == etb.sourceID {
+			continue
+		}
+		if !etb.filter.IsZero() && !etb.filter.Match(perm, g) {
+			continue
+		}
+		if seen[etb.counterType] {
+			continue
+		}
+		seen[etb.counterType] = true
+		out = append(out, etb.counterType)
+	}
+	return out
 }

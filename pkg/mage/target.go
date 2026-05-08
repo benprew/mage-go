@@ -150,6 +150,18 @@ func TargetUpToOneCreature(filters ...PermanentFilter) Target {
 	return TargetUpToNCreatures(1, filters...)
 }
 
+// TargetUpToNCreaturesYouControl creates a target that selects from 0 up to n
+// creatures the controller controls, optionally narrowed by PermanentFilter
+// predicates. Used for "any number of target creatures you control" effects
+// such as Rabid Attack.
+func TargetUpToNCreaturesYouControl(n int, filters ...PermanentFilter) Target {
+	return &CreatureTarget{
+		BaseTarget:     BaseTarget{min: 0, max: n},
+		Filters:        filters,
+		controllerOnly: true,
+	}
+}
+
 // TargetUpToNCreaturesOrPlayers creates a target that selects from 0 up to n
 // creatures or players. Used for divided-damage spells like Flames of the
 // Firebrand ("3 damage divided as you choose among any number of targets").
@@ -346,6 +358,22 @@ func TargetPermanentOpponentControls(filters ...PermanentFilter) Target {
 		Filters:      filters,
 		opponentOnly: true,
 	}
+}
+
+// TargetUpToNPermanents creates a target that selects from 0 up to n
+// permanents on the battlefield, optionally narrowed by PermanentFilter
+// predicates. Mirrors TargetUpToNCreatures for spells like Proctor's Gaze
+// that say "up to one target nonland permanent".
+func TargetUpToNPermanents(n int, filters ...PermanentFilter) Target {
+	return &PermanentTarget{
+		BaseTarget: BaseTarget{min: 0, max: n},
+		Filters:    filters,
+	}
+}
+
+// TargetUpToOnePermanent is shorthand for TargetUpToNPermanents(1, filters...).
+func TargetUpToOnePermanent(filters ...PermanentFilter) Target {
+	return TargetUpToNPermanents(1, filters...)
 }
 
 func (t *PermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
@@ -557,6 +585,54 @@ func TargetAnyNumberOfCardsInYourGraveyard(filters ...CardFilter) Target {
 		BaseTarget: BaseTarget{min: 0, max: 100},
 		Filters:    filters,
 	}
+}
+
+// AnyGraveyardCardTarget targets a card in any player's graveyard, optionally
+// filtered by CardFilter predicates. Used by effects worded "from a graveyard"
+// (e.g. Reanimate, "Put target creature card from a graveyard onto the
+// battlefield under your control").
+type AnyGraveyardCardTarget struct {
+	BaseTarget
+	Filters []CardFilter
+}
+
+// TargetCardInAnyGraveyard creates a target that selects any card in any
+// player's graveyard, optionally narrowed by CardFilter predicates.
+func TargetCardInAnyGraveyard(filters ...CardFilter) Target {
+	return &AnyGraveyardCardTarget{
+		BaseTarget: BaseTarget{min: 1, max: 1},
+		Filters:    filters,
+	}
+}
+
+// TargetCreatureCardInAnyGraveyard targets a creature card in any player's
+// graveyard. Convenience wrapper for TargetCardInAnyGraveyard(IsCreatureCard).
+func TargetCreatureCardInAnyGraveyard() Target {
+	return TargetCardInAnyGraveyard(IsCreatureCard)
+}
+
+func (t *AnyGraveyardCardTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+	var result []uuid.UUID
+	for _, p := range g.players {
+		for _, c := range p.Graveyard() {
+			match := true
+			for _, f := range t.Filters {
+				if !f.Match(c) {
+					match = false
+					break
+				}
+			}
+			if match {
+				result = append(result, c.ID())
+			}
+		}
+	}
+	return result
+}
+
+func (t *AnyGraveyardCardTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
+	t.chosen = chosen
+	return nil
 }
 
 // HandCardTarget targets a card in the controller's hand, optionally filtered by CardFilter predicates.

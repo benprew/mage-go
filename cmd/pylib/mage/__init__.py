@@ -190,11 +190,30 @@ typedef struct {
     int32_t stack_close_id;
     int32_t command_open_id;
     int32_t command_close_id;
+    int32_t choose_target_id;
+    int32_t choose_block_id;
+    int32_t choose_damage_order_id;
+    int32_t choose_mode_id;
+    int32_t choose_may_id;
+    int32_t choose_x_digit_id;
+    int32_t choose_mana_source_id;
+    int32_t choose_play_id;
+    int32_t use_ability_id;
+    int32_t chosen_id;
+    int32_t yes_id;
+    int32_t no_id;
+    int32_t none_id;
+    int32_t x_end_id;
+    int32_t mulligan_id;
+    int32_t keep_id;
+    int32_t num_count;
+    const int32_t *num_ids;
 } MageTokenTables;
 
 int32_t MageRegisterTokenTables(MageTokenTables *tables);
 char *MageTokenTableSummary(void);
 char *MageTokenTableLookup(int32_t kind, int32_t k0, int32_t k1);
+char *MageEncodeTimingSummary(int32_t reset);
 
 typedef struct {
     int32_t max_tokens;
@@ -204,46 +223,42 @@ typedef struct {
 } MageTokenAssemblerConfig;
 
 typedef struct {
-    int64_t *token_ids;
-    int64_t *attention_mask;
-    int64_t *seq_lengths;
-    int64_t *option_positions;
-    uint8_t *option_mask;
-    int64_t *target_positions;
-    uint8_t *target_mask;
-    int64_t *card_ref_positions;
-    int32_t *token_overflow;
-} MageTokenAssemblerOutputs;
-
-MageEncodeResult MageEncodeTokens(
-    MageBatchRequest *req,
-    MageEncodeConfig *cfg,
-    MageEncodeOutputs *out,
-    MageTokenAssemblerConfig *tok_cfg,
-    MageTokenAssemblerOutputs *tok_out
-);
+    int32_t max_blanks;
+    int32_t max_legal_per_blank;
+} MageBlankAssemblerConfig;
 
 typedef struct {
-    int64_t *token_ids;
-    int64_t *seq_id;
-    int64_t *pos_in_seq;
-    int64_t *cu_seqlens;
-    int64_t *seq_lengths;
-    int64_t *state_positions;
-    int64_t *option_positions;
-    uint8_t *option_mask;
-    int64_t *target_positions;
-    uint8_t *target_mask;
-    int64_t *card_ref_positions;
+    int32_t *token_ids;
+    int32_t *cu_seqlens;
+    int32_t *seq_lengths;
+    int32_t *state_positions;
+    int32_t *card_ref_positions;
     int32_t *token_overflow;
 } MagePackedTokenAssemblerOutputs;
+
+typedef struct {
+    int32_t k_max;
+    int32_t v_max;
+    int32_t *blank_positions;
+    int32_t *blank_kind;
+    int32_t *blank_group;
+    int32_t *blank_group_kind;
+    int32_t *blank_option_index;
+    int32_t *blank_legal_ids;
+    uint8_t *blank_legal_mask;
+    int32_t *blank_overflow;
+    int32_t *blank_count;
+    int32_t *blank_legal_count;
+} MagePackedBlankOutputs;
 
 MageEncodeResult MageEncodeTokensPacked(
     MageBatchRequest *req,
     MageEncodeConfig *cfg,
     MageEncodeOutputs *out,
     MageTokenAssemblerConfig *tok_cfg,
-    MagePackedTokenAssemblerOutputs *packed_out
+    MagePackedTokenAssemblerOutputs *packed_out,
+    MageBlankAssemblerConfig *blank_cfg,
+    MagePackedBlankOutputs *blank_out
 );
 """
 

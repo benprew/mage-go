@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	_ "git.sr.ht/~cdcarter/mage-go/cards/limited"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
 )
@@ -594,7 +595,6 @@ func TestSarkhansUnsealing_Power7Trigger(t *testing.T) {
 }
 
 // Blessed Sanctuary: nontoken creature ETB creates a 2/2 white Unicorn token.
-// Damage prevention clause is not implemented — see XXX in source.
 func TestBlessedSanctuary_NontokenETBCreatesUnicorn(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Blessed Sanctuary")
@@ -622,4 +622,224 @@ func TestBlessedSanctuary_TokenETBDoesNotTrigger(t *testing.T) {
 	g.AssertPermanentCount(gametest.PlayerA, "Saproling", 1)
 	// Exactly one Unicorn (from nontoken Sporemound ETB), zero from the Saproling token.
 	g.AssertPermanentCount(gametest.PlayerA, "Unicorn", 1)
+}
+
+// Noncombat damage to controller is prevented.
+func TestBlessedSanctuary_PreventsBoltToController(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Blessed Sanctuary")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+	g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "PlayerA")
+	g.StopAt(2, core.EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerA, 20)
+}
+
+// Noncombat damage to a creature you control is prevented.
+func TestBlessedSanctuary_PreventsBoltToYourCreature(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Blessed Sanctuary")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+	g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Grizzly Bears")
+	g.StopAt(2, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
+}
+
+// Combat damage is NOT prevented.
+func TestBlessedSanctuary_DoesNotPreventCombatDamage(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Blessed Sanctuary")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+	g.Attack(2, gametest.PlayerB, "Hill Giant")
+	g.StopAt(2, core.EndStep)
+	g.Execute()
+	g.AssertLife(gametest.PlayerA, 17)
+}
+
+// Damage to opponent's creatures is NOT prevented.
+func TestBlessedSanctuary_DoesNotPreventDamageToOpponentCreatures(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Blessed Sanctuary")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+}
+
+func TestPathOfBravery_BoostsAtFullLifeAndGainsOnAttack(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Path of Bravery")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")
+	// Life is 20 = starting life → +1/+1 active.
+	g.Attack(1, gametest.PlayerA, "Grizzly Bears", "Hill Giant")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Two attackers → gain 2 life → 22.
+	g.AssertLife(gametest.PlayerA, 22)
+	// Boost still active during postcombat.
+	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 3, 3)
+	g.AssertPowerToughness(gametest.PlayerA, "Hill Giant", 4, 4)
+}
+
+func TestPathOfBravery_BoostInactiveBelowStartingLife(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Path of Bravery")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.SetLife(gametest.PlayerA, 19)
+	g.StopAt(1, core.PrecombatMain)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 2)
+}
+
+func TestAjanisChosen_NonAuraEnchantmentCreatesCatToken(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ajani's Chosen")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 5)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Black Market")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Black Market")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Black Market", 1)
+	g.AssertPermanentCount(gametest.PlayerA, "Cat", 1)
+	g.AssertPowerToughness(gametest.PlayerA, "Cat", 2, 2)
+}
+
+func TestAjanisChosen_AuraOnExistingCreatureMayReattachToToken(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ajani's Chosen")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 2)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Pacifism")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Pacifism", "Hill Giant")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Cat", 1)
+	g.AssertAttachedTo(gametest.PlayerA, "Pacifism", "Cat")
+}
+
+func TestAjanisChosen_UnattachedAuraAttachesToCatToken(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ajani's Chosen")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 2)
+	g.StopAt(1, core.PrecombatMain)
+	g.Execute()
+
+	pacifismCard, err := mage.CreateCard("Pacifism")
+	if err != nil {
+		t.Fatalf("CreateCard: %v", err)
+	}
+	playerAID := g.GetPlayer(gametest.PlayerA).PlayerID()
+	pacifismCard.SetOwner(playerAID)
+	g.PutOnBattlefield(pacifismCard, playerAID)
+	g.PutTriggersOnStack()
+	g.ResolveStack()
+
+	g.AssertPermanentCount(gametest.PlayerA, "Cat", 1)
+	g.AssertAttachedTo(gametest.PlayerA, "Pacifism", "Cat")
+}
+
+func TestParasiticImplant(t *testing.T) {
+	t.Run("upkeep: enchanted creature's controller sacrifices it; aura controller gets a 1/1 colorless Phyrexian Myr artifact creature token", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		bearID := g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		auraID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Parasitic Implant")
+		g.Attach(auraID, bearID)
+		g.StopAt(3, core.Upkeep)
+		g.Execute()
+		g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+		g.AssertPermanentCount(gametest.PlayerA, "Myr", 1)
+		g.AssertPowerToughness(gametest.PlayerA, "Myr", 1, 1)
+		g.AssertHasAbility(gametest.PlayerA, "Myr", core.Flying, false)
+		g.AssertGraveyardCount(gametest.PlayerA, "Parasitic Implant", 1)
+
+		pid := g.GetPlayer(gametest.PlayerA).PlayerID()
+		myr := g.FindPermanentByName("Myr", pid)
+		if myr == nil {
+			t.Fatalf("Myr token not on battlefield")
+		}
+		if !myr.HasType(core.TypeArtifact) || !myr.HasType(core.TypeCreature) {
+			t.Fatalf("Myr token types: got %v, want Artifact Creature", myr.Card.Types())
+		}
+		hasPhyrexian := false
+		hasMyr := false
+		for _, st := range myr.Card.SubTypes() {
+			if st == "Phyrexian" {
+				hasPhyrexian = true
+			}
+			if st == "Myr" {
+				hasMyr = true
+			}
+		}
+		if !hasPhyrexian || !hasMyr {
+			t.Fatalf("Myr token subtypes: got %v, want [Phyrexian Myr]", myr.Card.SubTypes())
+		}
+		if cs := myr.Colors(); len(cs) != 0 {
+			t.Fatalf("Myr token should be colorless, got %v", cs)
+		}
+	})
+
+	t.Run("no host: aura is detached and falls off; no token", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Parasitic Implant")
+		g.StopAt(2, core.Upkeep)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Myr", 0)
+	})
+}
+
+// TestRhysticStudy_OpponentDeclinesPay verifies that when an opponent casts
+// a spell and declines/cannot pay {1}, the controller draws a card.
+func TestRhysticStudy_OpponentDeclinesPay(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rhystic Study")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Plains")
+	g.SetLife(gametest.PlayerA, 20)
+	tpB := g.GetPlayer(gametest.PlayerB)
+	tpB.QueueMayAbilityChoices(false)
+	g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "PlayerA")
+	g.StopAt(2, core.EndStep)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "Plains", 1)
+	g.AssertLife(gametest.PlayerA, 17)
+}
+
+// Lawmage's Binding: enchanted creature's non-mana activated abilities can't be
+// activated.
+func TestLawmagesBinding_BlocksActivatedAbilities(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Prodigal Sorcerer")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lawmage's Binding")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 2)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 1)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lawmage's Binding", "Prodigal Sorcerer")
+	g.ActivateAbility(2, core.PrecombatMain, gametest.PlayerB, "Prodigal Sorcerer", "PlayerA")
+	g.StopAt(2, core.EndStep)
+	g.Execute()
+	// Activation blocked: PlayerA still at 20 life.
+	g.AssertLife(gametest.PlayerA, 20)
+}
+
+// Assault Formation: a 0/4 Wall attacking deals damage equal to its toughness.
+func TestAssaultFormation_AssignsToughnessAsDamage(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Assault Formation")
+	// Wall of Wood: 0/3 with defender. Use {G} to remove defender, then attack.
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Wall of Wood")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.ActivateAbility(3, core.PrecombatMain, gametest.PlayerA, "Assault Formation", "Wall of Wood")
+	g.Attack(3, gametest.PlayerA, "Wall of Wood")
+	g.StopAt(3, core.EndStep)
+	g.Execute()
+	// 0/3 wall now assigns 3 damage instead of 0.
+	g.AssertLife(gametest.PlayerB, 17)
 }

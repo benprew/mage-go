@@ -46,6 +46,8 @@ type Player interface {
 	Name() string
 	Life() int
 	SetLife(int)
+	StartingLife() int
+	SetStartingLife(int)
 	GainLife(int)
 	LoseLife(int)
 	IsAlive() bool
@@ -92,6 +94,12 @@ type Player interface {
 	ChooseMode(modes []string, reason string) int
 	ChoosePermanent(candidates []*Permanent, reason string, g GameReader) *Permanent
 	ChooseCardsFromHand(amount int, reason string, g GameReader) []Card
+	// ChooseCardFromHand picks one card from a pre-filtered candidate list
+	// drawn from the player's hand. Used when an effect or cost limits the
+	// choice to a subset of hand (e.g. "discard an artifact card"). Callers
+	// must pre-filter candidates; implementations should return a card from
+	// `candidates` (or nil if empty).
+	ChooseCardFromHand(candidates []Card, reason string, g GameReader) Card
 	ChooseManaColor(reason string) Color
 	ChooseCardFromLibrary(candidates []Card, reason string, g GameReader) Card
 	ChooseNumber(min, max int, reason string) int
@@ -122,6 +130,17 @@ type Player interface {
 	// The union of bottom and topOrder must equal the IDs in `top` exactly once each;
 	// the engine validates this and falls back to the original order on any mismatch.
 	ChooseScryPlacement(top []Card, reason string, g GameReader) (bottom []uuid.UUID, topOrder []uuid.UUID)
+
+	// ChooseSurveilPlacement implements the controller's choice for a surveil
+	// (CR 701.42). `top` is the top N cards of the library in their current
+	// order (top first). The implementation returns:
+	//   - graveyard: the subset of `top` (by ID) that go to the graveyard,
+	//     in the order they will be placed.
+	//   - topOrder: the remaining cards (by ID) in the order they will be
+	//     placed back on top of the library (first ID becomes the new top card).
+	// The union must equal the IDs in `top` exactly once each; the engine
+	// validates this and falls back to the original order on any mismatch.
+	ChooseSurveilPlacement(top []Card, reason string, g GameReader) (graveyard []uuid.UUID, topOrder []uuid.UUID)
 }
 
 // BasePlayer implements Player with basic functionality.
@@ -129,6 +148,7 @@ type BasePlayer struct {
 	id              uuid.UUID
 	name            string
 	life            int
+	startingLife    int
 	lost            bool // true if the player has lost the game (e.g. deck-out)
 	drewFromEmpty   bool // set when a draw is attempted from an empty library
 	hand            []Card
@@ -163,11 +183,18 @@ func (p *BasePlayer) PlayerID() uuid.UUID { return p.id }
 func (p *BasePlayer) Name() string        { return p.name }
 func (p *BasePlayer) Life() int           { return p.life }
 func (p *BasePlayer) SetLife(n int)       { p.life = n }
-func (p *BasePlayer) IsAlive() bool       { return p.life > 0 && !p.lost }
-func (p *BasePlayer) DrewFromEmpty() bool { return p.drewFromEmpty }
-func (p *BasePlayer) ClearDrewFromEmpty() { p.drewFromEmpty = false }
-func (p *BasePlayer) SetLost()            { p.lost = true }
-func (p *BasePlayer) ManaPool() *ManaPool { return p.manaPool }
+func (p *BasePlayer) StartingLife() int {
+	if p.startingLife == 0 {
+		return 20
+	}
+	return p.startingLife
+}
+func (p *BasePlayer) SetStartingLife(n int) { p.startingLife = n }
+func (p *BasePlayer) IsAlive() bool         { return p.life > 0 && !p.lost }
+func (p *BasePlayer) DrewFromEmpty() bool   { return p.drewFromEmpty }
+func (p *BasePlayer) ClearDrewFromEmpty()   { p.drewFromEmpty = false }
+func (p *BasePlayer) SetLost()              { p.lost = true }
+func (p *BasePlayer) ManaPool() *ManaPool   { return p.manaPool }
 
 func (p *BasePlayer) GainLife(n int) {
 	p.life += n
@@ -334,6 +361,13 @@ func (p *BasePlayer) ChooseCardsFromHand(amount int, reason string, g GameReader
 	return result
 }
 
+func (p *BasePlayer) ChooseCardFromHand(candidates []Card, reason string, g GameReader) Card {
+	if len(candidates) == 0 {
+		return nil
+	}
+	return candidates[0]
+}
+
 func (p *BasePlayer) ChooseManaColor(reason string) Color {
 	return White // default to White
 }
@@ -359,6 +393,17 @@ func (p *BasePlayer) ChooseString(options []string, reason string) string {
 // ChooseScryPlacement: deterministic default keeps every revealed card on top
 // in its original order. Card implementations and AI players may override this.
 func (p *BasePlayer) ChooseScryPlacement(top []Card, reason string, g GameReader) (bottom []uuid.UUID, topOrder []uuid.UUID) {
+	topOrder = make([]uuid.UUID, len(top))
+	for i, c := range top {
+		topOrder[i] = c.ID()
+	}
+	return nil, topOrder
+}
+
+// ChooseSurveilPlacement: deterministic default keeps every revealed card on
+// top in its original order (no cards milled to the graveyard). Card
+// implementations and AI players may override this.
+func (p *BasePlayer) ChooseSurveilPlacement(top []Card, reason string, g GameReader) (graveyard []uuid.UUID, topOrder []uuid.UUID) {
 	topOrder = make([]uuid.UUID, len(top))
 	for i, c := range top {
 		topOrder[i] = c.ID()

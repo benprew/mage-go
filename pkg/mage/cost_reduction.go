@@ -175,6 +175,14 @@ func CondCreatureDiedThisTurn() SpellCondition {
 	}
 }
 
+// CondCardLeftYourGraveyardThisTurn matches when at least one card has left
+// the casting player's graveyard this turn.
+func CondCardLeftYourGraveyardThisTurn() SpellCondition {
+	return func(g *Game, controller uuid.UUID, _ Card, _ uuid.UUID) bool {
+		return g.PlayerHadCardLeaveGraveyardThisTurn(controller)
+	}
+}
+
 // CondControlsMatching matches when the casting player controls at least one
 // permanent satisfying f (e.g. "if you control a Wizard", "if you control a
 // creature with flying").
@@ -325,7 +333,16 @@ type SelfCostReductionAbility struct {
 	BaseAbility
 	Amount    SpellAmount
 	Condition SpellCondition
-	Label     string
+	// TargetPredicate, if non-nil, gates the reduction based on the chosen
+	// targets for this cast. It is consulted in addition to Condition. CR
+	// 601.2f says total cost is determined after modes and targets are
+	// chosen, so target-conditional reducers like Savage Stomp ("This spell
+	// costs {2} less to cast if it targets a Dinosaur you control") evaluate
+	// here. If a cost-reduction query has no targets context (e.g. a UI
+	// hint before the player picks targets), TargetPredicate is treated as
+	// false and the reducer does not apply.
+	TargetPredicate func(g *Game, controller uuid.UUID, card Card, targets []uuid.UUID) bool
+	Label           string
 }
 
 // SelfCostReduction creates a self cost reduction ability. The optional
@@ -345,6 +362,30 @@ func SelfCostReductionLabeled(label string, amount SpellAmount, condition SpellC
 	return a
 }
 
+// WithTargetConditionalCostReduction attaches a self cost-reduction ability
+// to a card whose applicability depends on the chosen targets at cast time
+// (CR 601.2f). The predicate receives the full target list (multi-target
+// spells include all chosen IDs in declaration order).
+//
+// Example: Savage Stomp — "This spell costs {2} less to cast if it targets
+// a Dinosaur you control."
+//
+//	WithTargetConditionalCostReduction(2, func(g *Game, controller uuid.UUID, c Card, targets []uuid.UUID) bool {
+//	    for _, id := range targets {
+//	        if perm := g.FindPermanent(id); perm != nil && perm.Controller == controller && perm.Card.HasSubType("Dinosaur") {
+//	            return true
+//	        }
+//	    }
+//	    return false
+//	})
+func WithTargetConditionalCostReduction(amount int, predicate func(g *Game, controller uuid.UUID, card Card, targets []uuid.UUID) bool) CardOption {
+	return func(c *BaseCard) {
+		ab := SelfCostReduction(FixedAmount(amount), nil)
+		ab.TargetPredicate = predicate
+		c.AddAbility(ab)
+	}
+}
+
 // WithSelfCostReduction attaches a SelfCostReductionAbility to a card.
 //
 // Example: Bone Picker — "This costs {3} less to cast if a creature died this turn."
@@ -356,8 +397,11 @@ func WithSelfCostReduction(amount SpellAmount, condition SpellCondition) CardOpt
 }
 
 // applySelfCostReductions walks card.Abilities() and returns the total generic
-// reduction owed by intrinsic SelfCostReductionAbility entries.
-func applySelfCostReductions(g *Game, controller uuid.UUID, card Card) int {
+// reduction owed by intrinsic SelfCostReductionAbility entries. The targets
+// slice carries the chosen targets for this cast (per CR 601.2f, the total
+// cost is determined after modes and targets are chosen). Pass nil for
+// pre-target queries — target-conditional reducers will skip themselves.
+func applySelfCostReductions(g *Game, controller uuid.UUID, card Card, targets []uuid.UUID) int {
 	total := 0
 	for _, a := range card.Abilities() {
 		scr, ok := UnwrapAbility(a).(*SelfCostReductionAbility)
@@ -366,6 +410,11 @@ func applySelfCostReductions(g *Game, controller uuid.UUID, card Card) int {
 		}
 		if scr.Condition != nil && !scr.Condition(g, controller, card, card.ID()) {
 			continue
+		}
+		if scr.TargetPredicate != nil {
+			if targets == nil || !scr.TargetPredicate(g, controller, card, targets) {
+				continue
+			}
 		}
 		if scr.Amount == nil {
 			continue
@@ -399,9 +448,11 @@ func applyExternalCostReductions(g *Game, controller uuid.UUID, card Card) int {
 
 // computeConditionalCostReduction is the entry point used by the cast-cost
 // pipeline. It returns the total generic reduction owed (capped to the
-// caller's current generic cost).
-func computeConditionalCostReduction(g *Game, controller uuid.UUID, card Card, currentGeneric int) int {
-	red := min(max(applySelfCostReductions(g, controller, card)+applyExternalCostReductions(g, controller, card), 0), currentGeneric)
+// caller's current generic cost). The targets slice carries the chosen
+// targets for the cast (CR 601.2f: total cost is calculated after modes
+// and targets are chosen). Pass nil for pre-target queries.
+func computeConditionalCostReduction(g *Game, controller uuid.UUID, card Card, currentGeneric int, targets []uuid.UUID) int {
+	red := min(max(applySelfCostReductions(g, controller, card, targets)+applyExternalCostReductions(g, controller, card), 0), currentGeneric)
 	return red
 }
 
@@ -415,7 +466,17 @@ func (g *Game) ConditionalSpellCostReduction(controller uuid.UUID, card Card) in
 	if card == nil {
 		return 0
 	}
-	return computeConditionalCostReduction(g, controller, card, card.ManaCost().Generic)
+	return computeConditionalCostReduction(g, controller, card, card.ManaCost().Generic, nil)
+}
+
+// ConditionalSpellCostReductionWithTargets is like ConditionalSpellCostReduction
+// but evaluates target-conditional reducers (CR 601.2f) against the given
+// chosen-target list. Used by the cast pipeline and for engine tests.
+func (g *Game) ConditionalSpellCostReductionWithTargets(controller uuid.UUID, card Card, targets []uuid.UUID) int {
+	if card == nil {
+		return 0
+	}
+	return computeConditionalCostReduction(g, controller, card, card.ManaCost().Generic, targets)
 }
 
 // String formats a reducer for debugging.

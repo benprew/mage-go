@@ -88,9 +88,8 @@ func execUntapGathered(ctx *EffectContext, e *UntapGatheredData) error {
 		return nil
 	}
 	perm := ctx.Game.FindPermanent(id)
-	if perm != nil && perm.Tapped {
-		perm.Tapped = false
-		ctx.Game.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: perm.ID()})
+	if perm != nil {
+		ctx.Game.UntapPermanent(perm)
 	}
 	return nil
 }

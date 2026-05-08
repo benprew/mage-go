@@ -1,6 +1,8 @@
 package mage
 
 import (
+	"maps"
+
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 
 	"github.com/google/uuid"
@@ -26,6 +28,7 @@ type GameReader interface {
 	EventSourceID() uuid.UUID
 	GetResolvingCard() Card
 	ResolvingCastZone() Zone
+	ResolvingCastContext() *CastContext
 	FindStackObject(uuid.UUID) *StackObject
 	CombatGroups() []*CombatGroup
 	CombatGroupFor(uuid.UUID) *CombatGroup
@@ -39,6 +42,8 @@ type GameReader interface {
 	GetBlockedThisTurn(uuid.UUID) []uuid.UUID
 	GetInstantsCastThisTurn(uuid.UUID) int
 	UntappedLandsAtTurnStart(uuid.UUID) int
+	GetSorceriesCastThisTurn(uuid.UUID) int
+	GetInstantOrSorceryCastThisTurn(uuid.UUID) int
 	TimesTargetedThisTurn(uuid.UUID) int
 	AllBattlefield() []*Permanent
 	GetResolvingTargets() []uuid.UUID
@@ -47,6 +52,10 @@ type GameReader interface {
 	ActivePlayerIndex() int
 	CombatDamageSourcesThisStep(controllerID, recipientID uuid.UUID) map[uuid.UUID]int
 	HypotheticalMana(uuid.UUID) int // returns the amount of hypthetical mana a player has available
+	PlayerCardsDrawnThisTurn(uuid.UUID) int
+	PlayerCardsLeftGraveyardThisTurn(uuid.UUID) int
+	PlayerHadCardLeaveGraveyardThisTurn(uuid.UUID) bool
+	CardsPutIntoExileThisTurn() int
 }
 
 // Compile-time check that *Game satisfies GameReader.
@@ -81,6 +90,51 @@ func (g *Game) GetResolvingCard() Card { return g.resolvingCard }
 // "if you cast it from your hand"/"from your graveyard" conditions, including
 // ETB triggers that fire while PutOnBattlefield is in flight.
 func (g *Game) ResolvingCastZone() Zone { return g.resolvingCastZone }
+
+// ResolvingCastContext returns the cast-time snapshot of the spell currently
+// being resolved (CR 608.2g). Returns nil when there is no resolving spell
+// or the resolving stack object is an ability. Effects that reference
+// cast-time state ("as you cast this spell") should consult this rather
+// than re-querying live state.
+func (g *Game) ResolvingCastContext() *CastContext { return g.resolvingCastContext }
+
+// snapshotCastContext builds a CastContext for a spell about to be pushed
+// onto the stack by the controller with playerID. Captures the controller's
+// permanent subtypes (CR 608.2g) and consumes any pending lastCostReveal
+// recorded by additional costs paid earlier in the cast pipeline.
+//
+// Must be called AFTER additional costs have been paid so that reveal-style
+// costs are visible in the snapshot.
+func (g *Game) snapshotCastContext(playerID uuid.UUID) *CastContext {
+	ctx := &CastContext{
+		ControllerSubtypesAtCast: make(map[string]bool),
+	}
+	for _, perm := range g.AllBattlefield() {
+		if perm == nil || perm.Controller != playerID || perm.FaceDown {
+			continue
+		}
+		subs := perm.Card.SubTypes()
+		if len(perm.SubTypeOverride) > 0 {
+			subs = perm.SubTypeOverride
+		}
+		for _, st := range subs {
+			ctx.ControllerSubtypesAtCast[st] = true
+		}
+		for _, st := range perm.SubTypeAdditions {
+			ctx.ControllerSubtypesAtCast[st] = true
+		}
+	}
+	if g.lastCostReveal != nil {
+		ctx.RevealedAtCast = append(ctx.RevealedAtCast, g.lastCostReveal)
+	}
+	if pl := g.GetPlayer(playerID); pl != nil {
+		if drained := pl.ManaPool().LastDrainedColors; len(drained) > 0 {
+			ctx.ColorsSpent = make(map[Color]int, len(drained))
+			maps.Copy(ctx.ColorsSpent, drained)
+		}
+	}
+	return ctx
+}
 
 // FindStackObject finds a stack object by its source card ID.
 func (g *Game) FindStackObject(id uuid.UUID) *StackObject {
@@ -161,6 +215,19 @@ func (g *Game) GetInstantsCastThisTurn(playerID uuid.UUID) int {
 // the untap step). Used by Power Surge.
 func (g *Game) UntappedLandsAtTurnStart(playerID uuid.UUID) int {
 	return g.untappedLandsAtTurnStart[playerID]
+}
+
+// GetSorceriesCastThisTurn returns the number of sorceries the given player
+// has cast this turn.
+func (g *Game) GetSorceriesCastThisTurn(playerID uuid.UUID) int {
+	return g.sorceriesCastThisTurn[playerID]
+}
+
+// GetInstantOrSorceryCastThisTurn returns the total instants and sorceries
+// the given player has cast this turn (CR 117 — combined predicate used by
+// many cards that ask "if you've cast an instant or sorcery spell this turn").
+func (g *Game) GetInstantOrSorceryCastThisTurn(playerID uuid.UUID) int {
+	return g.instantsCastThisTurn[playerID] + g.sorceriesCastThisTurn[playerID]
 }
 
 // --- Mutation methods on *Game ---
@@ -271,6 +338,21 @@ func (g *Game) SetChannelActive(playerID uuid.UUID) {
 	g.effects.Rules.SetChannelActive(playerID)
 }
 
+// AddCantCastSpells registers a continuous "this player can't cast spells"
+// rule for the current Apply() cycle. Used by Angelic Arbiter and similar
+// effects. The flag is cleared at the start of each Apply() cycle, so
+// continuous effects must re-register it every cycle while the source
+// permanent is on the battlefield.
+func (g *Game) AddCantCastSpells(playerID uuid.UUID) {
+	g.effects.Rules.AddCantCastSpells(playerID)
+}
+
+// PlayerCantCastSpells reports whether a continuous effect currently
+// forbids the given player from casting spells.
+func (g *Game) PlayerCantCastSpells(playerID uuid.UUID) bool {
+	return g.effects.Rules.PlayerCantCastSpells(playerID)
+}
+
 // SetCreatureDamageRedirect redirects damage dealt to a creature to a player.
 func (g *Game) SetCreatureDamageRedirect(creatureID, playerID uuid.UUID) {
 	g.effects.AddReplacement(&creatureDamageRedirectReplacement{
@@ -353,6 +435,22 @@ func (g *Game) SetDamageReflection(playerID, eyeSourceID, chosenSourceID uuid.UU
 // SetDrawReplacement stores a pending draw replacement for a player (Aladdin's Lamp).
 func (g *Game) SetDrawReplacement(playerID uuid.UUID, count int) {
 	g.effects.AddReplacement(&drawReplacementEffect{replacementBase: replacementBase{duration: EndOfTurn}, playerID: playerID, count: count})
+}
+
+// AddEmptyLibraryDrawReplacement registers a replacement effect that fires
+// when playerID would draw a card while their library is empty. The
+// replacement stays active while sourceID is on the battlefield (CR 614 +
+// 614.6: replacement effects on a permanent function only while it's on
+// the battlefield). The callback runs in place of the draw, receiving
+// the game and source permanent ID. Used by Ormos, Archive Keeper —
+// "If you would draw a card while your library has no cards in it,
+// instead put five +1/+1 counters on Ormos."
+func (g *Game) AddEmptyLibraryDrawReplacement(sourceID, playerID uuid.UUID, callback func(g *Game, sourceID uuid.UUID)) {
+	g.effects.AddReplacement(&emptyLibraryDrawReplacement{
+		replacementBase: replacementBase{sourceID: sourceID, duration: WhileOnBattlefield},
+		playerID:        playerID,
+		callback:        callback,
+	})
 }
 
 // AddReplacementEffect adds a replacement effect to the effect manager.

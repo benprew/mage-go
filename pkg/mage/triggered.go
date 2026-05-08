@@ -1,6 +1,8 @@
 package mage
 
 import (
+	"slices"
+
 	"github.com/google/uuid"
 
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
@@ -37,6 +39,13 @@ type TriggerCondition func(evt *GameEvent, g GameReader, sourceID, controllerID 
 // function to decide whether to fire. All existing trigger constructors
 // (AttacksTrigger, BeginningOfUpkeepTrigger, etc.) are thin wrappers that
 // create a GenericTriggered with the appropriate condition.
+//
+// Most triggered abilities function only while the source is on the battlefield
+// (CR 113.6). For abilities that function while the source is in another zone
+// — e.g. Pia Nalaar's "at the beginning of your end step ... return ~ from your
+// graveyard to the battlefield" — set the active zone via [GenericTriggered.InZone]
+// or use [WhileInZoneTrigger]. The zone list defaults to [ZoneBattlefield] so
+// existing behavior is preserved.
 type GenericTriggered struct {
 	BaseAbility
 	eventType      EventType
@@ -46,6 +55,8 @@ type GenericTriggered struct {
 	effects        []Effect
 	targets        []Target
 	isStateTrigger bool
+	zones          []Zone
+	modes          []Mode
 }
 
 // NewTriggered creates a GenericTriggered ability that fires on the given event type.
@@ -76,6 +87,39 @@ func (t *GenericTriggered) TriggerSourceZone() Zone { return t.sourceZone }
 func (t *GenericTriggered) SetCondition(cond TriggerCondition) *GenericTriggered {
 	t.Condition = cond
 	return t
+}
+
+// InZone declares an additional zone in which this trigger functions. By
+// default a GenericTriggered is active only on the battlefield; calling InZone
+// adds another zone (e.g. ZoneGraveyard for Pia Nalaar). Multiple calls are
+// additive. CR 113.6 governs which abilities of an object function in each
+// zone; this hook is for "while in graveyard / hand / exile" Oracle wording.
+func (t *GenericTriggered) InZone(z Zone) *GenericTriggered {
+	t.zones = append(t.zones, z)
+	return t
+}
+
+// ActiveZones returns the zones in which this trigger functions. The base
+// zone comes from sourceZone (default ZoneBattlefield, overridden by
+// FromGraveyard et al.). Any zones added via InZone are appended.
+func (t *GenericTriggered) ActiveZones() []Zone {
+	base := t.sourceZone
+	if base == 0 {
+		base = ZoneBattlefield
+	}
+	zones := []Zone{base}
+	for _, z := range t.zones {
+		if z != base {
+			zones = append(zones, z)
+		}
+	}
+	return zones
+}
+
+// FunctionsInZone reports whether this trigger functions while its source is
+// in the given zone.
+func (t *GenericTriggered) FunctionsInZone(z Zone) bool {
+	return slices.Contains(t.ActiveZones(), z)
 }
 
 // SetConditionData sets the trigger condition from a composable TriggerConditionData
@@ -115,6 +159,32 @@ func (t *GenericTriggered) AddTarget(tgt Target) *GenericTriggered {
 	t.targets = append(t.targets, tgt)
 	return t
 }
+
+// WithModes declares the trigger as modal (CR 603.1f). When the trigger is put
+// on the stack, the engine prompts Player.ChooseMode for the mode index
+// (CR 603.1f) and then gathers targets only for that mode's Targets list
+// (CR 603.3d). Only the chosen mode's Effects are pushed onto the stack
+// object, so resolution runs only the selected mode.
+//
+// At least two modes are required ("Choose one — …" implies >= 2 options
+// per CR 700.2). Calling WithModes with fewer than two panics.
+//
+// Modes and the legacy AddTarget/AddEffect path are mutually exclusive:
+// when modes are present, targets/effects declared via AddEffect/AddTarget
+// are ignored in favor of the chosen mode's lists.
+func (t *GenericTriggered) WithModes(modes ...Mode) *GenericTriggered {
+	if len(modes) < 2 {
+		panic("WithModes: a modal trigger needs at least two modes (CR 700.2)")
+	}
+	t.modes = modes
+	return t
+}
+
+// Modes returns the configured modes for a modal trigger (empty for non-modal).
+func (t *GenericTriggered) Modes() []Mode { return t.modes }
+
+// IsModal reports whether the trigger has been declared modal via WithModes.
+func (t *GenericTriggered) IsModal() bool { return len(t.modes) > 0 }
 
 func (t *GenericTriggered) CheckEventType(et EventType) bool {
 	return et == t.eventType
@@ -276,6 +346,19 @@ func PutIntoGraveyardFromBattlefieldTrigger(effect Effect, optional bool) *Gener
 // permanent has left the battlefield.
 func DiesTrigger(effect Effect, optional bool) *GenericTriggered {
 	return OnLeaveZone(ZoneBattlefield, ZoneGraveyard, effect, optional)
+}
+
+// WheneverOneOrMoreCardsLeaveYourGraveyardTrigger fires once per "leave-
+// graveyard burst" when one or more cards leave the controller's graveyard
+// for any other zone. Implemented over EvtCardsLeftGraveyard, which the
+// engine emits exactly once per resolution that moves cards out of a
+// graveyard (CR 603.10 — multiple cards moving via the same effect form a
+// single zone-change event group). Used by Spirit Mascot, Strixhaven
+// Stadium, and similar "Whenever one or more cards leave your graveyard..."
+// abilities.
+func WheneverOneOrMoreCardsLeaveYourGraveyardTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtCardsLeftGraveyard, optional, effect).
+		SetConditionData(EventPlayerIsController{})
 }
 
 // ChooseOpponentOnETB sets the permanent's ChosenPlayer to the opponent on ETB.
@@ -533,6 +616,16 @@ func WheneverYouSacrificeAnotherCreatureTrigger(effect Effect, optional bool) *G
 		}})
 }
 
+// WheneverYouSacrificeCreatureTrigger fires whenever the controller sacrifices
+// a creature, including the source itself (e.g. Kels, Fight Fixer).
+func WheneverYouSacrificeCreatureTrigger(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtSacrifice, optional, effect).
+		SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+			EventPlayerIsController{},
+			EventSacrificedPermanentIsCreature{},
+		}})
+}
+
 // WheneverYouSacrificeTrigger fires whenever the controller sacrifices any
 // permanent (creature or otherwise), excluding the source itself.
 func WheneverYouSacrificeTrigger(effect Effect, optional bool) *GenericTriggered {
@@ -610,4 +703,33 @@ func WhenOpponentPermanentBecomesTappedTrigger(effect Effect, optional bool, fil
 			EventSourceControlledByOpponent{},
 			EventSourceMatchesPermanentFilter{Filter: filter},
 		}})
+}
+
+// WhileInZoneTrigger creates a triggered ability that functions while its
+// source card is in the given zone (rather than the default battlefield).
+// Used by Pia Nalaar (graveyard), Squee-style hand triggers, and flashback-
+// adjacent registrations. The zone defaults to ZoneBattlefield if zone is the
+// zero value.
+//
+// Per CR 113.6, an ability of an object only functions in the zones the rules
+// of that ability or the object's text specify. Wrap the inner condition with
+// AndTriggerCond if you need to add e.g. EventPlayerIsController.
+func WhileInZoneTrigger(zone Zone, evtType EventType, effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(evtType, optional, effect).InZone(zone)
+}
+
+// BeginningOfYourEndStepFromGraveyard fires at the beginning of the
+// controller's (i.e. owner's) end step while the source card is in its
+// owner's graveyard. Used by Pia Nalaar, Consul of Revival ("At the beginning
+// of your end step, if an opponent was dealt 3 or more damage this turn, you
+// may pay {R}. If you do, return this card from your graveyard to the
+// battlefield.").
+//
+// The trigger sets EventPlayerIsController so it only fires on the source
+// owner's end step. Composing additional conditions (e.g. "if an opponent was
+// dealt 3 or more damage this turn") should be added with AndConditionData.
+func BeginningOfYourEndStepFromGraveyard(effect Effect, optional bool) *GenericTriggered {
+	return NewTriggered(EvtEndStep, optional, effect).
+		SetConditionData(EventPlayerIsController{}).
+		InZone(ZoneGraveyard)
 }

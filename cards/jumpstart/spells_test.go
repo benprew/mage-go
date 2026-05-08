@@ -184,16 +184,32 @@ func TestThoughtScour(t *testing.T) {
 }
 
 func TestReanimate(t *testing.T) {
-	g := gametest.NewTestGame(t)
-	g.SetLife(gametest.PlayerA, 20)
-	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
-	g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Hill Giant")
-	g.AddCard(core.ZoneHand, gametest.PlayerA, "Reanimate")
-	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Reanimate", "Hill Giant")
-	g.StopAt(1, core.BeginCombat)
-	g.Execute()
-	g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 1)
-	g.AssertLife(gametest.PlayerA, 16)
+	t.Run("from your graveyard", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.SetLife(gametest.PlayerA, 20)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+		g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Hill Giant")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Reanimate")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Reanimate", "Hill Giant")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 1)
+		g.AssertLife(gametest.PlayerA, 16)
+	})
+
+	t.Run("from opponent's graveyard", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.SetLife(gametest.PlayerA, 20)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+		g.AddCard(core.ZoneGraveyard, gametest.PlayerB, "Hill Giant")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Reanimate")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Reanimate", "Hill Giant")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 1)
+		g.AssertLife(gametest.PlayerA, 16)
+		g.AssertGraveyardCount(gametest.PlayerB, "Hill Giant", 0)
+	})
 }
 
 func TestActOfTreason(t *testing.T) {
@@ -997,6 +1013,7 @@ func TestCrushingCanopy_DestroyEnchantment(t *testing.T) {
 func TestFortify_PowerMode(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 3)
 	g.AddCard(core.ZoneHand, gametest.PlayerA, "Fortify")
 	g.ChooseMode(gametest.PlayerA, 0)
@@ -1004,6 +1021,7 @@ func TestFortify_PowerMode(t *testing.T) {
 	g.StopAt(1, core.BeginCombat)
 	g.Execute()
 	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 4, 2)
+	g.AssertPowerToughness(gametest.PlayerB, "Hill Giant", 3, 3)
 }
 
 func TestFortify_ToughnessMode(t *testing.T) {
@@ -1197,4 +1215,426 @@ func TestPillarOfFlame_PlayerTarget(t *testing.T) {
 	g.StopAt(1, core.BeginCombat)
 	g.Execute()
 	g.AssertLife(gametest.PlayerB, 18)
+}
+
+func TestHuntersInsight_DrawsOnEachCombatHit(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Hunter's Insight")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 3)
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Lightning Bolt", 5)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Hunter's Insight", "Grizzly Bears")
+	g.Attack(1, gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Grizzly Bears (2 power) connects on turn 1: trigger fires, draw 2 cards.
+	g.AssertHandCount(gametest.PlayerA, "Lightning Bolt", 2)
+}
+
+func TestHuntersInsight_ExpiresEndOfTurn(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Hunter's Insight")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 3)
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Lightning Bolt", 5)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Hunter's Insight", "Grizzly Bears")
+	// Don't attack on turn 1; trigger expires at end of turn 1.
+	g.Attack(3, gametest.PlayerA, "Grizzly Bears")
+	g.StopAt(3, core.EndStep)
+	g.Execute()
+	// Without expiration, Bears would draw 2 extra cards from the trigger; but
+	// it expired at end of turn 1. PlayerA only drew 1 normal draw-step card on
+	// turn 3 (PlayerB's turn 2 draw doesn't touch PlayerA's library), so
+	// library went from 5 → 4.
+	g.AssertLibraryCount(gametest.PlayerA, "Lightning Bolt", 4)
+}
+
+func TestPathToExile_ExilesAndOpponentMaySearch(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerB, "Forest", 3)
+	g.AddCard(core.ZoneLibrary, gametest.PlayerB, "Mountain", 3)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Path to Exile")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
+	g.ChooseMode(gametest.PlayerB, 0)
+	g.ChooseFromLibrary(gametest.PlayerB, "Forest")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Path to Exile", "Grizzly Bears")
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+	g.AssertExileCount("Grizzly Bears", 1)
+	g.AssertPermanentCount(gametest.PlayerB, "Forest", 1)
+	g.AssertTapped(gametest.PlayerB, "Forest", true)
+}
+
+// Commune with Dinosaurs: scripted bottom order is honored, and the chosen
+// Dinosaur card is moved to hand. The library after resolution should be the
+// pre-existing tail (cards 6..N) followed by the four un-picked top cards in
+// the order the player scripted (last name = new bottom card).
+func TestCommuneWithDinosaurs_BottomOrderHonored(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Commune with Dinosaurs")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	// Top 5 of library, in order:
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Mountain")         // top
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Orazca Frillback") // chosen Dinosaur
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Plains")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Aegis of the Heavens")
+	// Tail (untouched):
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Swamp")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Island")
+
+	g.ChooseFromLibrary(gametest.PlayerA, "Orazca Frillback")
+	// Place the four un-picked cards on bottom, deepest last:
+	// shallow -> deep: Mountain, Plains, Lightning Bolt, Aegis of the Heavens.
+	g.ChooseScry(gametest.PlayerA, []string{
+		"Mountain", "Plains", "Lightning Bolt", "Aegis of the Heavens",
+	}, nil)
+
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Commune with Dinosaurs")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+
+	g.AssertHandCount(gametest.PlayerA, "Orazca Frillback", 1)
+	g.AssertLibraryCount(gametest.PlayerA, "Orazca Frillback", 0)
+	// Tail (Swamp, Island) is now on top, then the chosen bottom order.
+	g.AssertLibraryTop(gametest.PlayerA,
+		"Swamp",
+		"Island",
+		"Mountain",
+		"Plains",
+		"Lightning Bolt",
+		"Aegis of the Heavens",
+	)
+}
+
+// Commune with Dinosaurs: when no revealed card is a Dinosaur or land, the
+// player has no legal pick. All five cards are bottomed in chosen order and
+// hand size is unchanged (other than the spell leaving hand for graveyard).
+func TestCommuneWithDinosaurs_NoLegalPick(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Commune with Dinosaurs")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+	// Top 5: all instants/sorceries (no creatures, no lands).
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Aegis of the Heavens")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Aggressive Urge")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Path to Exile")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Cloudshift")
+	// Tail.
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Swamp")
+
+	g.ChooseScry(gametest.PlayerA, []string{
+		"Cloudshift", "Path to Exile", "Aggressive Urge", "Aegis of the Heavens", "Lightning Bolt",
+	}, nil)
+
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Commune with Dinosaurs")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+
+	// Nothing put into hand from the top 5.
+	g.AssertHandCount(gametest.PlayerA, "Lightning Bolt", 0)
+	g.AssertHandCount(gametest.PlayerA, "Aegis of the Heavens", 0)
+	g.AssertHandCount(gametest.PlayerA, "Aggressive Urge", 0)
+	g.AssertHandCount(gametest.PlayerA, "Path to Exile", 0)
+	g.AssertHandCount(gametest.PlayerA, "Cloudshift", 0)
+	// All 5 are still in the library, on the bottom in the scripted order.
+	g.AssertLibraryTop(gametest.PlayerA,
+		"Swamp",
+		"Cloudshift",
+		"Path to Exile",
+		"Aggressive Urge",
+		"Aegis of the Heavens",
+		"Lightning Bolt",
+	)
+}
+
+// TestSavageStomp_CounterAndFight verifies +1/+1 counter then fight between
+// two targets. A 2/2 (post-counter 3/3) fights a 3/3 — both die.
+func TestSavageStomp_CounterAndFight(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 3)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Savage Stomp")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Savage Stomp", "Grizzly Bears", "Hill Giant")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 1)
+	g.AssertGraveyardCount(gametest.PlayerB, "Hill Giant", 1)
+}
+
+// TestTimeToFeed_FightAndGain3 verifies the fight resolves and the on-death
+// trigger fires for +3 life when the opponent's creature dies.
+func TestTimeToFeed_FightAndGain3(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.SetLife(gametest.PlayerA, 20)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 3)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Time to Feed")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Time to Feed", "Grizzly Bears", "Hill Giant")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+	g.AssertLife(gametest.PlayerA, 23)
+}
+
+// TestThirstForKnowledge_DiscardArtifact verifies the controller defaults to
+// "yes pay" and discards an artifact card to avoid the 2-card discard.
+func TestThirstForKnowledge_DiscardArtifact(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 3)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Thirst for Knowledge")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Plains", 5)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Sol Ring")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Thirst for Knowledge")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerA, "Sol Ring", 1)
+}
+
+// TestThirstForKnowledge_PlayerChoosesArtifact verifies that with multiple
+// artifact cards in hand, the controller picks which one to discard rather
+// than the engine auto-picking the first.
+func TestThirstForKnowledge_PlayerChoosesArtifact(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 3)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Thirst for Knowledge")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Sol Ring")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Mox Ruby")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Plains", 5)
+	g.ChooseDiscard(gametest.PlayerA, "Mox Ruby")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Thirst for Knowledge")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerA, "Mox Ruby", 1)
+	g.AssertGraveyardCount(gametest.PlayerA, "Sol Ring", 0)
+	g.AssertHandCount(gametest.PlayerA, "Sol Ring", 1)
+}
+
+// TestThirstForKnowledge_NoArtifactDiscardTwo verifies that when there is no
+// artifact card in hand, the controller cannot pay the artifact branch and
+// must discard two cards instead.
+func TestThirstForKnowledge_NoArtifactDiscardTwo(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 3)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Thirst for Knowledge")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Counterspell")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Plains", 5)
+	g.ChooseDiscard(gametest.PlayerA, "Lightning Bolt", "Counterspell")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Thirst for Knowledge")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerA, "Lightning Bolt", 1)
+	g.AssertGraveyardCount(gametest.PlayerA, "Counterspell", 1)
+	g.AssertGraveyardCount(gametest.PlayerA, "Thirst for Knowledge", 1)
+}
+
+// TestThirstForKnowledge_DeclineArtifactBranch verifies that the controller
+// can choose NOT to pay the discard-an-artifact branch even when an artifact
+// is in hand, and instead discard two non-artifact cards of their choice.
+func TestThirstForKnowledge_DeclineArtifactBranch(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 3)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Thirst for Knowledge")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Mox Ruby")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Counterspell")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Plains", 5)
+	tpA := g.GetPlayer(gametest.PlayerA)
+	tpA.QueueMayAbilityChoices(false)
+	g.ChooseDiscard(gametest.PlayerA, "Lightning Bolt", "Counterspell")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Thirst for Knowledge")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "Mox Ruby", 1)
+	g.AssertGraveyardCount(gametest.PlayerA, "Mox Ruby", 0)
+	g.AssertGraveyardCount(gametest.PlayerA, "Lightning Bolt", 1)
+	g.AssertGraveyardCount(gametest.PlayerA, "Counterspell", 1)
+}
+
+// TestReadTheRunes_X1Discard verifies that for X=1 with the controller
+// declining the sacrifice option, the discard branch fires once.
+func TestReadTheRunes_X1Discard(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Read the Runes")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Plains")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Forest")
+	tp := g.GetPlayer(gametest.PlayerA)
+	tp.QueueMayAbilityChoices(false)
+	g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerA, "Read the Runes", 1)
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerA, "Read the Runes", 1)
+}
+
+// TestDraconicRoar_RevealedDragonDealsExtra verifies the optional reveal pays
+// off as +3 damage to the targeted creature's controller.
+func TestDraconicRoar_RevealedDragonDealsExtra(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.SetLife(gametest.PlayerB, 20)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Draconic Roar")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Shivan Dragon")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Draconic Roar", "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+	g.AssertLife(gametest.PlayerB, 17)
+	g.AssertHandCount(gametest.PlayerA, "Shivan Dragon", 1)
+}
+
+// TestDraconicRoar_NoDragonNoBonus verifies that without a Dragon to reveal
+// or control, only the base 3 damage applies and the controller takes no hit.
+func TestDraconicRoar_NoDragonNoBonus(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.SetLife(gametest.PlayerB, 20)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Draconic Roar")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Draconic Roar", "Hill Giant")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerB, "Hill Giant", 1)
+	g.AssertLife(gametest.PlayerB, 20)
+}
+
+// TestDraconicRoar_ControlledDragonAtCastDealsExtra verifies that a Dragon
+// the caster controls at cast time triggers the bonus damage on resolution.
+// PlayerA declines the optional reveal — the controlled-Dragon half alone
+// must satisfy the condition.
+func TestDraconicRoar_ControlledDragonAtCastDealsExtra(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.SetLife(gametest.PlayerB, 20)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 2)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Dragon Hatchling")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Draconic Roar")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	tpA := g.GetPlayer(gametest.PlayerA)
+	tpA.QueueMayAbilityChoices(false) // decline optional reveal
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Draconic Roar", "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+	g.AssertLife(gametest.PlayerB, 17)
+}
+
+// TestDraconicRoar_ControlledDragonLeavesBeforeResolution verifies CR 608.2g:
+// the "controlled a Dragon as you cast this spell" condition is fixed at
+// cast time, so a Dragon that is killed in response between cast and
+// resolution still satisfies the condition. PlayerA's Dragon Hatchling
+// (0/1) is killed by PlayerB's Lightning Bolt cast in response to
+// Draconic Roar; when Draconic Roar resolves it must still deal the
+// bonus damage to PlayerB.
+func TestDraconicRoar_ControlledDragonLeavesBeforeResolution(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.SetLife(gametest.PlayerB, 20)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 2)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Dragon Hatchling")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Draconic Roar")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	tpA := g.GetPlayer(gametest.PlayerA)
+	tpA.QueueMayAbilityChoices(false) // decline optional reveal — only the controlled half should matter
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Draconic Roar", "Grizzly Bears")
+	g.CastInResponseTo(gametest.PlayerB, "Lightning Bolt", "Dragon Hatchling")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Dragon Hatchling died to the Bolt before Draconic Roar resolved.
+	g.AssertGraveyardCount(gametest.PlayerA, "Dragon Hatchling", 1)
+	// Grizzly Bears died to Draconic Roar's 3 damage.
+	g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+	// Bonus damage from cast-time-snapshotted "controlled a Dragon" still applied.
+	g.AssertLife(gametest.PlayerB, 17)
+}
+
+// TestDraconicRoar_RevealedDragonOnlyNoBattlefieldDragon verifies the
+// reveal-half of the condition independently: PlayerA controls no Dragon
+// but reveals a Dragon card from hand as the optional additional cost,
+// triggering the bonus damage.
+func TestDraconicRoar_RevealedDragonOnlyNoBattlefieldDragon(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.SetLife(gametest.PlayerB, 20)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Draconic Roar")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Shivan Dragon")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Draconic Roar", "Grizzly Bears")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+	g.AssertHandCount(gametest.PlayerA, "Shivan Dragon", 1)
+	g.AssertLife(gametest.PlayerB, 17)
+}
+
+// TestExplore_AllowsSecondLand verifies that after Explore resolves, the
+// active player's land-play allowance is bumped to 2. The harness's auto-
+// land-play loop then plays both Forests in the same main phase.
+func TestExplore_AllowsSecondLand(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 2)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Explore")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Forest", 2)
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Plains")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Explore")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Forest", 4)
+}
+
+// Long Road Home: exile target creature, return at next end step with a
+// +1/+1 counter.
+func TestLongRoadHome(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Long Road Home")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 2)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Long Road Home", "Grizzly Bears")
+	g.StopAt(2, core.Upkeep)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
+	g.AssertPowerToughness(gametest.PlayerB, "Grizzly Bears", 3, 3)
+}
+
+// Elemental Uprising: target land becomes 4/4 Elemental w/ haste.
+func TestElementalUprising_AnimatesLand(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Elemental Uprising")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 5)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Elemental Uprising", "Forest")
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Forest", 4, 4)
+}
+
+// Riddle of Lightning: damage equals top card's mana value.
+func TestRiddleOfLightning(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Riddle of Lightning")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 5)
+	// Top card after Scry will still be Hill Giant; bottom-stuff with Mountains.
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Hill Giant")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Mountain", 5)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Riddle of Lightning", "PlayerB")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	// Hill Giant CMC is 4.
+	g.AssertLife(gametest.PlayerB, 16)
+}
+
+// Dance with Devils: creates two 1/1 Devil tokens with the dies trigger.
+func TestDanceWithDevils_TokensWithDiesTrigger(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Dance with Devils")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 4)
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Dance with Devils")
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Devil", 2)
 }

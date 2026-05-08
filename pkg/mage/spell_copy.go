@@ -61,6 +61,7 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 		EventAmount: original.EventAmount,
 		IsCopy:      true,
 		CastZone:    original.CastZone,
+		CastContext: original.CastContext,
 	}
 	if copiedCard != nil {
 		cp.SourceID = copiedCard.ID()

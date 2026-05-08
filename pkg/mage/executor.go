@@ -152,6 +152,8 @@ func ExecuteEffect(ctx *EffectContext, data Effect) error {
 		return execChooseColor(ctx, e)
 	case *scryEffect:
 		return execScry(ctx, e)
+	case *surveilEffect:
+		return execSurveil(ctx, e)
 
 	// --- Combat effects (effect_combat.go) ---
 

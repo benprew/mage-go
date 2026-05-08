@@ -329,7 +329,7 @@ var (
 	TapAllLands                               = mage.TapAllLands
 	RemoveFromCombat                          = mage.RemoveFromCombat
 	RegenerateSource                          = mage.RegenerateSource
-	Stun                                      = mage.Stun
+	StunCreature                              = mage.StunCreature
 	ReplaceKeywordEffect                      = mage.ReplaceKeywordEffect
 	ForEachCombatOpponent                     = mage.ForEachCombatOpponent
 	ForEachPermanent                          = mage.ForEachPermanent
@@ -648,6 +648,7 @@ const (
 	TypeInstant     = core.TypeInstant
 	TypeSorcery     = core.TypeSorcery
 
+	SuperBasic     = core.SuperBasic
 	SuperLegendary = core.SuperLegendary
 	SuperWorld     = core.SuperWorld
 )

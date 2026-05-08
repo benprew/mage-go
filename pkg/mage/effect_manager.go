@@ -307,10 +307,10 @@ func (em *EffectManager) RemoveUntilYourNextTurn(g *Game, controllerID uuid.UUID
 
 // Apply resets computed bonuses and reapplies all active effects in layer order.
 func (em *EffectManager) Apply(g *Game) {
-	em.attrDeltas = make(map[uuid.UUID]map[Attr]int)
-	em.blockPairRestrictions = nil
+	clear(em.attrDeltas)
+	clear(em.blockPairRestrictions)
 	em.resetCombatRestrictions()
-	em.cycleReplacements = nil
+	em.cycleReplacements = em.cycleReplacements[:0]
 	em.Rules.ResetPerCycle()
 	em.Damage.ResetPerCycle()
 
@@ -320,7 +320,7 @@ func (em *EffectManager) Apply(g *Game) {
 			// Face-down permanents keep their overrides and empty abilities
 			continue
 		}
-		var base []Ability
+		base := p.RuntimeAbilities[:0]
 		for _, a := range p.RuntimeAbilities {
 			if _, ok := a.(*grantedByEffect); !ok {
 				base = append(base, a)

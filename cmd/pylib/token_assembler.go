@@ -9,12 +9,37 @@ const (
 	statusTappedKnown int32 = 0x2000
 )
 
-// Action-kind ids that skip the source-row / ability suffix on OP_OPTION.
-// Matches the Python guard “verb in ("pass", "choice", "unknown")“.
-//
-//	0=pass, 6=choice
+// Action-kind metadata flags. Bits set per kind id; consumers branch on
+// flags rather than open-coded equality checks. kindFlagHasSource is set
+// for every kind that participates in the source-row / ability suffix
+// emission on OP_OPTION (everything except pass=0 and choice=6, matching
+// the Python guard 'verb in ("pass", "choice", "unknown")'). kindFlagAbility
+// is set only for activate_ability=3, which is the kind that consumes
+// abilityIdx into a real span emit.
+const (
+	kindFlagHasSource uint8 = 1 << 0
+	kindFlagAbility   uint8 = 1 << 1
+)
+
+// kindFlags is indexed by action-kind id. Sized at 16 to give room for
+// future kinds without rebuilding; entries past actionKinds remain zero,
+// which means "no source, no ability" — equivalent to treating unknown
+// kinds as Python's "unknown".
+var kindFlags = [16]uint8{
+	0: 0,                                   // pass: no source, no ability
+	1: kindFlagHasSource,                   // play_land
+	2: kindFlagHasSource,                   // cast_spell
+	3: kindFlagHasSource | kindFlagAbility, // activate_ability
+	4: kindFlagHasSource,                   // attacker
+	5: kindFlagHasSource,                   // blocker
+	6: 0,                                   // choice: no source, no ability
+}
+
 func kindHasNoSource(kindID int32) bool {
-	return kindID == 0 || kindID == 6
+	if kindID < 0 || int(kindID) >= len(kindFlags) {
+		return true
+	}
+	return kindFlags[kindID]&kindFlagHasSource == 0
 }
 
 // MAX_CARD_REFS is mirrored from magic_ai/text_encoder/tokenizer.py.
@@ -38,35 +63,56 @@ const (
 
 // Opcode arities mirrored from render_plan.py. Variable-length opcodes
 // (OP_LITERAL_TOKENS) carry their length as the first payload word.
-var opcodeArity = map[int32]int{
-	opOpenState:    0,
-	opCloseState:   0,
-	opTurn:         2,
-	opLife:         2,
-	opMana:         3,
-	opOpenPlayer:   1,
-	opClosePlayer:  0,
-	opOpenZone:     2,
-	opCloseZone:    0,
-	opPlaceCard:    4,
-	opCounter:      2,
-	opAttachedTo:   1,
-	opOpenActions:  0,
-	opCloseActions: 0,
-	opOption:       5,
-	opTarget:       3,
-	opEndCard:      0,
-	opOpenRawCard:  1,
-	opCloseRawCard: 0,
-	opOpenDict:     0,
-	opCloseDict:    0,
-	opDictEntry:    1,
-	opPlaceCardRef: 4,
-	opCount:        1,
-	opStackOpen:    0,
-	opStackClose:   0,
-	opCommandOpen:  0,
-	opCommandClose: 0,
+//
+// Stored as a fixed-size array keyed by opcode rather than a map because
+// the assembler hot loop indexes this on every opcode and a map lookup
+// dominates the profile (mapaccess2_fast32 + memhash32 ~ half of CPU).
+// Unknown opcodes return -1 from opcodeArityLookup.
+var opcodeArityArr = [...]int8{
+	opOpenState:      0,
+	opCloseState:     0,
+	opTurn:           2,
+	opLife:           2,
+	opMana:           3,
+	opOpenPlayer:     1,
+	opClosePlayer:    0,
+	opOpenZone:       2,
+	opCloseZone:      0,
+	opPlaceCard:      4,
+	opCounter:        2,
+	opAttachedTo:     1,
+	opOpenActions:    0,
+	opCloseActions:   0,
+	opOption:         5,
+	opTarget:         3,
+	opLiteralTokens:  -1, // variable-length; handled separately in the walker
+	opEndCard:        0,
+	opOpenRawCard:    1,
+	opCloseRawCard:   0,
+	opOpenDict:       0,
+	opCloseDict:      0,
+	opDictEntry:      1,
+	opPlaceCardRef:   4,
+	opCount:          1,
+	opStackOpen:      0,
+	opStackClose:     0,
+	opCommandOpen:    0,
+	opCommandClose:   0,
+	opEmitBlank:      4, // [kind_id, group_id, group_kind, legal_count]
+	opEmitBlankLegal: 1, // [token_id]
+}
+
+// opcodeArityLookup returns (arity, true) for known opcodes and (0, false)
+// otherwise. Mirrors a map lookup but avoids the hash-table cost.
+func opcodeArityLookup(op int32) (int, bool) {
+	if op <= 0 || int(op) >= len(opcodeArityArr) {
+		return 0, false
+	}
+	a := opcodeArityArr[op]
+	if a < 0 {
+		return 0, false
+	}
+	return int(a), true
 }
 
 type zoneEntry struct {
@@ -78,27 +124,20 @@ type zoneEntry struct {
 // walker. Slices are views into the Python-allocated output tensors. -1
 // sentinels mark absent positions; mask slices carry 0/1 indicators.
 type tokenAssemblerOut struct {
-	tokenIDs      []int64
-	attentionMask []int64 // optional: may be nil in packed mode
-	optionPos     []int64
-	optionMask    []uint8
-	targetPos     []int64 // length max_options*max_targets
-	targetMask    []uint8 // length max_options*max_targets
-	cardRefPos    []int64
-	maxOptions    int32
-	maxTargets    int32
-	maxCardRefs   int32
+	tokenIDs    []int32
+	optionPos   []int32
+	optionMask  []uint8
+	targetPos   []int32 // length max_options*max_targets
+	targetMask  []uint8 // length max_options*max_targets
+	cardRefPos  []int32
+	maxOptions  int32
+	maxTargets  int32
+	maxCardRefs int32
 	// cursorBase shifts every recorded anchor position by a constant
-	// offset before it is written. Dense (per-row) mode passes 0 so the
-	// existing byte-for-byte behavior is preserved; packed mode passes
-	// the row's start offset into the shared packed buffer so anchors
-	// land as absolute offsets.
+	// offset before it is written. Packed mode passes the row's start offset
+	// into the shared packed buffer so anchors land as absolute offsets.
 	cursorBase int32
-	// padTail, when true, fills the unused tail of ``tokenIDs`` with
-	// ``tables.padID`` and zeroes the unused tail of ``attentionMask``.
-	// Packed mode disables this because the next row will write into
-	// the same backing buffer and the trailing region is unused.
-	padTail bool
+	blank      *blankCollector
 }
 
 // assembleTokensFromPlan walks “plan“ (an int32 render-plan stream) and
@@ -136,7 +175,8 @@ func assembleTokensFromPlan(
 	}
 
 	// First-occurrence card-ref bitmap (matches Python's "k not in card_ref_positions").
-	cardRefSeen := make([]bool, tokenAssemblerMaxCardRefs)
+	// 256-bit stack-resident bitset avoids a per-row [256]bool heap alloc.
+	var cardRefSeen [tokenAssemblerMaxCardRefs / 64]uint64
 
 	var (
 		cursor          int32 // next write index in tokenIDs
@@ -146,8 +186,12 @@ func assembleTokensFromPlan(
 		curTargetCount  int32 = 0
 		optionOpen      bool
 		scalarOwnerOpen int32 = -1 // -1 / 0 / 1
-		zoneStack       []zoneEntry
 	)
+	// Stack-resident backing array for zoneStack avoids the heap alloc of
+	// the first append. Plans nest at most a few zones deep; spillover
+	// would just trigger a normal growslice.
+	var zoneStackArr [8]zoneEntry
+	zoneStack := zoneStackArr[:0]
 
 	// Detect literal-tokens mode by scanning the opcode stream. Naive
 	// "any token equals OP_LITERAL_TOKENS" misfires on payload ints.
@@ -160,7 +204,7 @@ func assembleTokensFromPlan(
 				structured = false
 				break
 			}
-			arity, ok := opcodeArity[op]
+			arity, ok := opcodeArityLookup(op)
 			if !ok {
 				break
 			}
@@ -179,17 +223,13 @@ func assembleTokensFromPlan(
 			// Write what fits, mark overflow, stop.
 			room := maxTokens - cursor
 			if room > 0 {
-				for k := range room {
-					out.tokenIDs[cursor+k] = int64(span[k])
-				}
+				copy(out.tokenIDs[cursor:cursor+room], span[:room])
 				cursor += room
 			}
 			overflow = true
 			return
 		}
-		for k := range n {
-			out.tokenIDs[cursor+k] = int64(span[k])
-		}
+		copy(out.tokenIDs[cursor:cursor+n], span)
 		cursor += n
 	}
 
@@ -202,7 +242,7 @@ func assembleTokensFromPlan(
 			return -1
 		}
 		pos := cursor
-		out.tokenIDs[cursor] = int64(id)
+		out.tokenIDs[cursor] = id
 		cursor++
 		return pos
 	}
@@ -221,9 +261,11 @@ func assembleTokensFromPlan(
 		if pos < 0 {
 			return false
 		}
-		if !cardRefSeen[uuidIdx] {
-			cardRefSeen[uuidIdx] = true
-			out.cardRefPos[uuidIdx] = int64(pos + out.cursorBase)
+		mask := uint64(1) << (uint32(uuidIdx) & 63)
+		word := uint32(uuidIdx) >> 6
+		if cardRefSeen[word]&mask == 0 {
+			cardRefSeen[word] |= mask
+			out.cardRefPos[uuidIdx] = pos + out.cursorBase
 		}
 		return true
 	}
@@ -252,7 +294,7 @@ func assembleTokensFromPlan(
 	i := 0
 	for i < len(plan) && !overflow {
 		op := plan[i]
-		arity, ok := opcodeArity[op]
+		arity, ok := opcodeArityLookup(op)
 		if !ok {
 			return 0, false, fmt.Errorf("unknown opcode %d at position %d", op, i)
 		}
@@ -271,7 +313,7 @@ func assembleTokensFromPlan(
 				switch {
 				case tid == tables.optionID:
 					if nextOption < out.maxOptions {
-						out.optionPos[nextOption] = int64(pos + out.cursorBase)
+						out.optionPos[nextOption] = pos + out.cursorBase
 						out.optionMask[nextOption] = 1
 						curOptionIdx = nextOption
 						curTargetCount = 0
@@ -280,16 +322,20 @@ func assembleTokensFromPlan(
 				case tid == tables.targetOpenID && curOptionIdx >= 0:
 					if curTargetCount < out.maxTargets {
 						idx := curOptionIdx*out.maxTargets + curTargetCount
-						out.targetPos[idx] = int64(pos + out.cursorBase)
+						out.targetPos[idx] = pos + out.cursorBase
 						out.targetMask[idx] = 1
 						curTargetCount++
 					}
 				default:
 					// card-ref ids: record first-occurrence position per K.
 					for k := int32(0); k < tables.cardRefCount; k++ {
-						if tables.cardRefIDs[k] == tid && !cardRefSeen[k] {
-							cardRefSeen[k] = true
-							out.cardRefPos[k] = int64(pos + out.cursorBase)
+						if tables.cardRefIDs[k] == tid {
+							mask := uint64(1) << (uint32(k) & 63)
+							word := uint32(k) >> 6
+							if cardRefSeen[word]&mask == 0 {
+								cardRefSeen[word] |= mask
+								out.cardRefPos[k] = pos + out.cursorBase
+							}
 							break
 						}
 					}
@@ -405,7 +451,7 @@ func assembleTokensFromPlan(
 
 				pos := writeSingle(tables.optionID)
 				if pos >= 0 && nextOption < out.maxOptions {
-					out.optionPos[nextOption] = int64(pos + out.cursorBase)
+					out.optionPos[nextOption] = pos + out.cursorBase
 					out.optionMask[nextOption] = 1
 					curOptionIdx = nextOption
 					curTargetCount = 0
@@ -451,7 +497,7 @@ func assembleTokensFromPlan(
 				pos := writeSingle(tables.targetOpenID)
 				if pos >= 0 && curOptionIdx >= 0 && curTargetCount < out.maxTargets {
 					idx := curOptionIdx*out.maxTargets + curTargetCount
-					out.targetPos[idx] = int64(pos + out.cursorBase)
+					out.targetPos[idx] = pos + out.cursorBase
 					out.targetMask[idx] = 1
 					curTargetCount++
 				}
@@ -505,6 +551,34 @@ func assembleTokensFromPlan(
 			case opCommandClose:
 				writeSingle(tables.commandCloseID)
 				i++
+				continue
+			case opEmitBlank:
+				kindID := plan[i+1]
+				groupID := plan[i+2]
+				groupKind := plan[i+3]
+				legalCount := plan[i+4]
+				pos := writeSingle(kindID)
+				if pos >= 0 && out.blank != nil {
+					if err := out.blank.recordBlank(
+						pos+out.cursorBase,
+						kindID,
+						groupID,
+						groupKind,
+						-1,
+						legalCount,
+					); err != nil {
+						return 0, false, err
+					}
+				}
+				i += 1 + arity
+				continue
+			case opEmitBlankLegal:
+				if out.blank != nil {
+					if err := out.blank.recordLegal(plan[i+1]); err != nil {
+						return 0, false, err
+					}
+				}
+				i += 1 + arity
 				continue
 			}
 		}
@@ -585,6 +659,34 @@ func assembleTokensFromPlan(
 			writeSpan(tables.cardCloser)
 			i += 1 + arity
 			continue
+		case opEmitBlank:
+			kindID := plan[i+1]
+			groupID := plan[i+2]
+			groupKind := plan[i+3]
+			legalCount := plan[i+4]
+			pos := writeSingle(kindID)
+			if pos >= 0 && out.blank != nil {
+				if err := out.blank.recordBlank(
+					pos+out.cursorBase,
+					kindID,
+					groupID,
+					groupKind,
+					-1,
+					legalCount,
+				); err != nil {
+					return 0, false, err
+				}
+			}
+			i += 1 + arity
+			continue
+		case opEmitBlankLegal:
+			if out.blank != nil {
+				if err := out.blank.recordLegal(plan[i+1]); err != nil {
+					return 0, false, err
+				}
+			}
+			i += 1 + arity
+			continue
 		}
 
 		// Bookkeeping-only opcodes — skip over header + payload.
@@ -594,7 +696,8 @@ func assembleTokensFromPlan(
 			opCounter, opAttachedTo, opOption, opTarget, opTurn, opLife,
 			opMana, opCloseRawCard, opOpenDict, opCloseDict, opDictEntry,
 			opPlaceCardRef, opCount, opStackOpen, opStackClose,
-			opCommandOpen, opCommandClose:
+			opCommandOpen, opCommandClose,
+			opEmitBlank, opEmitBlankLegal:
 			i += 1 + arity
 			continue
 		}
@@ -607,10 +710,9 @@ func assembleTokensFromPlan(
 	// (the option exists) but option_position is unreachable. Same for
 	// targets and card-refs.
 	if overflow {
-		// Compare against the absolute end-of-row offset so the same
-		// truncation pass works for dense (cursorBase=0) and packed
-		// (cursorBase=row_start) callers.
-		endAbs := int64(cursor + out.cursorBase)
+		// Compare against the absolute end-of-row offset so truncation tests
+		// packed absolute anchors against the row-local token budget.
+		endAbs := cursor + out.cursorBase
 		for o := int32(0); o < out.maxOptions; o++ {
 			if out.optionPos[o] >= endAbs {
 				out.optionPos[o] = -1
@@ -634,21 +736,9 @@ func assembleTokensFromPlan(
 		}
 	}
 
-	if out.attentionMask != nil {
-		for k := int32(0); k < cursor; k++ {
-			out.attentionMask[k] = 1
-		}
-		if out.padTail {
-			for k := cursor; k < maxTokens; k++ {
-				out.attentionMask[k] = 0
-			}
-		}
-	}
-
-	if out.padTail {
-		pad := int64(tables.padID)
-		for k := cursor; k < maxTokens; k++ {
-			out.tokenIDs[k] = pad
+	if out.blank != nil {
+		if err := out.blank.finalize(); err != nil {
+			return 0, false, err
 		}
 	}
 

@@ -3,13 +3,115 @@ package main
 import (
 	"fmt"
 	"math"
+	"os"
+	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
+	"unsafe"
+
+	"github.com/google/uuid"
 
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
 )
+
+// scratchPool keys a free list of encodeScratch instances by output-buffer
+// pointer, alongside the per-row directDirty state for that buffer. Each
+// parallel worker takes its own scratch (see “acquireScratch“) so its
+// emitter / out / cardIDToSlot don't race; the directDirty state, however,
+// must be 1:1 with the OUTPUT BUFFER, not the scratch — otherwise a row
+// handled by scratch A in one call and scratch B in the next has a stale
+// dirty record on whichever scratch is reused later, and reset's partial
+// clear leaves residue from the OTHER scratch's writes in the buffer. See
+// the per-row directDirty comment on “directDirtyState“.
+type scratchPool struct {
+	mu          sync.Mutex
+	available   []*encodeScratch
+	directDirty []directDirtyState
+}
+
+// ensureDirty grows “p.directDirty“ to at least “n“ entries. Caller
+// must hold p.mu OR be the only writer (e.g. before launching workers).
+func (p *scratchPool) ensureDirty(n int) {
+	if cap(p.directDirty) < n {
+		grown := make([]directDirtyState, n)
+		copy(grown, p.directDirty)
+		p.directDirty = grown
+	} else if len(p.directDirty) < n {
+		p.directDirty = p.directDirty[:n]
+	}
+}
+
+// rowDirty returns the per-row dirty entry for “batchIdx“. Concurrent
+// callers from different workers are safe as long as each batchIdx is
+// owned by at most one worker — the pointer aliases the slice element,
+// and slice growth is done up-front via ensureDirty.
+func (p *scratchPool) rowDirty(batchIdx int64) *directDirtyState {
+	return &p.directDirty[batchIdx]
+}
+
+var scratchPools sync.Map // uintptr -> *scratchPool
+
+// scratchPoolKey returns a stable pool key for the given output views, or
+// 0 if no packed buffer is bound (in which case caching is skipped). Uses
+// the address of packedTokenIDs[0] since that buffer is allocated once
+// per outputs object and reused on every call.
+func scratchPoolKey(views outputViews) uintptr {
+	if len(views.packedTokenIDs) == 0 {
+		return 0
+	}
+	return uintptr(unsafe.Pointer(&views.packedTokenIDs[0]))
+}
+
+// scratchPoolFor returns the per-buffer scratch pool, lazily creating it.
+// Returns nil when “key == 0“ (no buffer bound — caller must supply a
+// fresh “directDirtyState“ for each fillTokenAssemblyDirectPacked call).
+func scratchPoolFor(key uintptr) *scratchPool {
+	if key == 0 {
+		return nil
+	}
+	val, ok := scratchPools.Load(key)
+	if !ok {
+		val, _ = scratchPools.LoadOrStore(key, &scratchPool{})
+	}
+	return val.(*scratchPool)
+}
+
+func acquireScratch(key uintptr) *encodeScratch {
+	p := scratchPoolFor(key)
+	if p == nil {
+		return newEncodeScratch()
+	}
+	p.mu.Lock()
+	var s *encodeScratch
+	if n := len(p.available); n > 0 {
+		s = p.available[n-1]
+		p.available[n-1] = nil
+		p.available = p.available[:n-1]
+	}
+	p.mu.Unlock()
+	if s == nil {
+		s = newEncodeScratch()
+	}
+	return s
+}
+
+func releaseScratch(key uintptr, s *encodeScratch) {
+	if key == 0 {
+		return
+	}
+	val, ok := scratchPools.Load(key)
+	if !ok {
+		return
+	}
+	p := val.(*scratchPool)
+	p.mu.Lock()
+	p.available = append(p.available, s)
+	p.mu.Unlock()
+}
 
 const (
 	zoneSlotCount                = 50
@@ -39,6 +141,8 @@ const (
 	mageEncodeErrGameOver        = mageEncodeErrOver
 	mageEncodeErrBufferTooSmall  = mageEncodeErrBuffer
 	mageEncodeErrEncodeFailure   = mageEncodeErrEncode
+	packedParallelMinRows        = 128
+	packedParallelMaxWorkers     = 8
 )
 
 var (
@@ -87,17 +191,15 @@ type encodeConfig struct {
 	// occurrences become short ``<card-ref>``-anchored references back to
 	// the dict entry instead of full body splices. Off by default — the
 	// native token assembler does not yet understand the v2 opcodes.
-	dedupCardBodies bool
-	// emitTokens turns on the native token-assembler pass after the
-	// render-plan emission. Output buffers live in tokenAssemblerViews.
-	emitTokens       bool
+	dedupCardBodies  bool
 	tokenMaxTokens   int32
 	tokenMaxOptions  int32
 	tokenMaxTargets  int32
 	tokenMaxCardRefs int32
-	// emitTokensPacked is the varlen sibling of ``emitTokens``. Only one
-	// of the two flags may be set per encode call. When set, the packed
-	// output buffers in ``outputViews`` are filled instead.
+	blankMaxBlanks   int32
+	blankMaxLegal    int32
+	// emitTokensPacked turns on the native packed token-assembler pass after
+	// render-plan emission. Output buffers live in outputViews.
 	emitTokensPacked bool
 }
 
@@ -132,33 +234,24 @@ type outputViews struct {
 	renderPlanLengths  []int64
 	renderPlanOverflow []int64
 
-	// Token-assembler outputs. nil when emit_tokens=false.
-	tokenIDs        []int64
-	tokenAttention  []int64
-	tokenSeqLengths []int64
-	tokenOptionPos  []int64
-	tokenOptionMask []byte
-	tokenTargetPos  []int64
-	tokenTargetMask []byte
-	tokenCardRefPos []int64
-	tokenOverflow   []int32
-
-	// Packed (varlen) token-assembler outputs. Mutually exclusive with
-	// the dense ``token*`` views above: only one of the two paths is
-	// active per encode call. ``packedTokenIDs`` etc. are sized
-	// [B*max_tokens]; ``packedSeqId`` and ``packedPosInSeq`` likewise.
-	packedTokenIDs       []int64
-	packedSeqID          []int64
-	packedPosInSeq       []int64
-	packedCuSeqlens      []int64 // [B+1]
-	packedSeqLengths     []int64 // [B]
-	packedStatePositions []int64 // [B]
-	packedOptionPos      []int64
-	packedOptionMask     []byte
-	packedTargetPos      []int64
-	packedTargetMask     []byte
-	packedCardRefPos     []int64
-	packedTokenOverflow  []int32
+	// Packed (varlen) token-assembler outputs. ``packedTokenIDs`` is sized
+	// [B*max_tokens]; per-token seq/position metadata is derived by Python.
+	packedTokenIDs        []int32
+	packedCuSeqlens       []int32 // [B+1]
+	packedSeqLengths      []int32 // [B]
+	packedStatePositions  []int32 // [B]
+	packedCardRefPos      []int32
+	packedTokenOverflow   []int32
+	packedBlankPos        []int32
+	packedBlankKind       []int32
+	packedBlankGroup      []int32
+	packedBlankGroupKind  []int32
+	packedBlankOptionIdx  []int32
+	packedBlankLegalIDs   []int32
+	packedBlankLegalMask  []byte
+	packedBlankOverflow   []int32
+	packedBlankCount      []int32
+	packedBlankLegalCount []int32
 }
 
 type batchRequest struct {
@@ -188,8 +281,8 @@ func validateEncodeConfig(cfg encodeConfig) *encodeError {
 		return &encodeError{code: mageEncodeErrArg, message: "max_cached_choices must be >= max_options"}
 	case cfg.maxCachedChoices < cfg.maxTargetsPerOption+1:
 		return &encodeError{code: mageEncodeErrArg, message: "max_cached_choices must be >= max_targets_per_option + 1"}
-	case cfg.emitRenderPlan && cfg.renderPlanCapacity <= 0:
-		return &encodeError{code: mageEncodeErrArg, message: "render_plan_capacity must be positive when emit_render_plan is set"}
+	case (cfg.emitRenderPlan || cfg.emitTokensPacked) && cfg.renderPlanCapacity <= 0:
+		return &encodeError{code: mageEncodeErrArg, message: "render_plan_capacity must be positive when render-plan-backed token assembly is set"}
 	case cfg.renderPlanCapacity > math.MaxInt32:
 		return &encodeError{code: mageEncodeErrArg, message: "render_plan_capacity must fit in int32"}
 	}
@@ -197,6 +290,15 @@ func validateEncodeConfig(cfg encodeConfig) *encodeError {
 }
 
 func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64, *encodeError) {
+	if cfg.emitTokensPacked && !cfg.emitRenderPlan && len(req.handles) >= packedParallelMinRows {
+		return encodeBatchGoPackedParallel(req, cfg, views)
+	}
+
+	callStart := time.Time{}
+	var gameTiming, renderTiming, assemblyTiming, metadataTiming time.Duration
+	if cfg.emitTokensPacked {
+		callStart = time.Now()
+	}
 	clearOutputViews(views, cfg)
 	decisionCursor := int64(0)
 	// Running write cursor into the packed token buffer. Only advanced
@@ -205,7 +307,28 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 	if cfg.emitTokensPacked && len(views.packedCuSeqlens) > 0 {
 		views.packedCuSeqlens[0] = 0
 	}
-	scratch := newEncodeScratch()
+	poolKey := scratchPoolKey(views)
+	scratch := acquireScratch(poolKey)
+	defer releaseScratch(poolKey, scratch)
+	pool := scratchPoolFor(poolKey)
+	// Per-row directDirty lives on the buffer-keyed pool (not on scratch),
+	// so all scratches that touch this buffer share the same dirty record
+	// and partial-clears reflect what's actually in the buffer.
+	var fallbackDirty directDirtyState
+	if pool != nil {
+		pool.mu.Lock()
+		pool.ensureDirty(len(req.handles))
+		pool.mu.Unlock()
+	}
+	rowDirty := func(batchIdx int64) *directDirtyState {
+		if pool != nil {
+			return pool.rowDirty(batchIdx)
+		}
+		// No buffer bound — fall back to a fresh state per call. Forces
+		// full clears, which is correct (no buffer to track).
+		fallbackDirty = directDirtyState{}
+		return &fallbackDirty
+	}
 	for batchIdx, handleID := range req.handles {
 		h := getHandle(handleID)
 		if h == nil {
@@ -236,6 +359,7 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 
 		scratch.reset()
 		cardIDToSlot := scratch.cardIDToSlot
+		phaseStart := time.Now()
 		if err := fillStateEncoding(int64(batchIdx), state, pending, playerIdx, cfg, views, cardIDToSlot); err != nil {
 			h.mu.Unlock()
 			return decisionCursor, err
@@ -244,34 +368,308 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 			h.mu.Unlock()
 			return decisionCursor, err
 		}
+		if cfg.emitTokensPacked {
+			gameTiming += time.Since(phaseStart)
+		}
 		if cfg.emitRenderPlan {
-			if err := fillRenderPlan(int64(batchIdx), state, pending, playerIdx, cfg, views, scratch); err != nil {
+			renderBatchIdx := int64(batchIdx)
+			renderViews := views
+			phaseStart = time.Now()
+			if err := fillRenderPlan(renderBatchIdx, state, pending, playerIdx, cfg, renderViews, scratch); err != nil {
 				h.mu.Unlock()
 				return decisionCursor, err
 			}
-		}
-		if cfg.emitTokens {
-			if err := fillTokenAssembly(int64(batchIdx), cfg, views); err != nil {
-				h.mu.Unlock()
-				return decisionCursor, err
+			if cfg.emitTokensPacked {
+				renderTiming += time.Since(phaseStart)
 			}
 		}
 		if cfg.emitTokensPacked {
-			advanced, err := fillTokenAssemblyPacked(int64(batchIdx), packedCursor, cfg, views)
+			phaseStart = time.Now()
+			var advanced int32
+			var metadata time.Duration
+			var err *encodeError
+			if cfg.emitRenderPlan {
+				advanced, metadata, err = fillTokenAssemblyPacked(
+					int64(batchIdx),
+					int64(batchIdx),
+					packedCursor,
+					cfg,
+					views,
+					views,
+					scratch,
+				)
+			} else {
+				advanced, metadata, err = fillTokenAssemblyDirectPacked(
+					int64(batchIdx),
+					packedCursor,
+					state,
+					pending,
+					playerIdx,
+					cfg,
+					views,
+					scratch,
+					rowDirty(int64(batchIdx)),
+				)
+			}
 			if err != nil {
 				h.mu.Unlock()
 				return decisionCursor, err
 			}
+			elapsed := time.Since(phaseStart)
+			assemblyTiming += elapsed - metadata
+			metadataTiming += metadata
 			packedCursor = advanced
 		}
+		phaseStart = time.Now()
 		written, err := fillDecisionEncoding(int64(batchIdx), pending, cfg, views, decisionCursor)
+		if cfg.emitTokensPacked {
+			gameTiming += time.Since(phaseStart)
+		}
 		h.mu.Unlock()
 		if err != nil {
 			return decisionCursor, err
 		}
 		decisionCursor += written
 	}
+	if cfg.emitTokensPacked {
+		addPackedEncodeTiming(
+			time.Since(callStart),
+			gameTiming,
+			renderTiming,
+			assemblyTiming,
+			metadataTiming,
+		)
+	}
 	return decisionCursor, nil
+}
+
+func encodeBatchGoPackedParallel(req batchRequest, cfg encodeConfig, views outputViews) (int64, *encodeError) {
+	callStart := time.Now()
+	clearOutputViews(views, cfg)
+	if len(views.packedCuSeqlens) > 0 {
+		views.packedCuSeqlens[0] = 0
+	}
+
+	n := len(req.handles)
+	decisionRows := make([]int64, n)
+	gameTimings := make([]time.Duration, n)
+	renderTimings := make([]time.Duration, n)
+	assemblyTimings := make([]time.Duration, n)
+	metadataTimings := make([]time.Duration, n)
+	pendings := make([]*apiPending, n)
+
+	workers := packedEncodeWorkerCount(n)
+	var wg sync.WaitGroup
+	var errMu sync.Mutex
+	var firstErr *encodeError
+	setErr := func(err *encodeError) {
+		if err == nil {
+			return
+		}
+		errMu.Lock()
+		if firstErr == nil {
+			firstErr = err
+		}
+		errMu.Unlock()
+	}
+
+	poolKey := scratchPoolKey(views)
+	pool := scratchPoolFor(poolKey)
+	if pool != nil {
+		// Size the per-buffer dirty slice once up-front so workers can
+		// take aliasing pointers into it without locking — each worker
+		// owns a disjoint row range.
+		pool.mu.Lock()
+		pool.ensureDirty(n)
+		pool.mu.Unlock()
+	}
+	for workerIdx := range workers {
+		start := workerIdx * n / workers
+		end := (workerIdx + 1) * n / workers
+		if start == end {
+			continue
+		}
+		wg.Add(1)
+		go func(start, end int) {
+			defer wg.Done()
+			scratch := acquireScratch(poolKey)
+			defer releaseScratch(poolKey, scratch)
+			for batchIdx := start; batchIdx < end; batchIdx++ {
+				errMu.Lock()
+				stopped := firstErr != nil
+				errMu.Unlock()
+				if stopped {
+					return
+				}
+				handleID := req.handles[batchIdx]
+				h := getHandle(handleID)
+				if h == nil {
+					setErr(&encodeError{code: mageEncodeErrHandle, message: fmt.Sprintf("unknown handle %d", handleID)})
+					return
+				}
+
+				h.mu.Lock()
+				if h.done {
+					h.mu.Unlock()
+					setErr(&encodeError{code: mageEncodeErrOver, message: fmt.Sprintf("handle %d is over", handleID)})
+					return
+				}
+				state := cachedSnapshotState(h)
+				pending := buildPending(h.current)
+				if pending == nil {
+					h.mu.Unlock()
+					setErr(&encodeError{code: mageEncodeErrEncode, message: fmt.Sprintf("handle %d has no pending request", handleID)})
+					return
+				}
+				pendings[batchIdx] = pending
+
+				requestedPerspective := int64(-1)
+				if req.perspectives != nil {
+					requestedPerspective = req.perspectives[batchIdx]
+				}
+				playerIdx, encErr := resolvePerspectivePlayerIndex(state, pending, requestedPerspective)
+				if encErr != nil {
+					h.mu.Unlock()
+					setErr(encErr)
+					return
+				}
+
+				scratch.reset()
+				cardIDToSlot := scratch.cardIDToSlot
+				phaseStart := time.Now()
+				if encErr := fillStateEncoding(int64(batchIdx), state, pending, playerIdx, cfg, views, cardIDToSlot); encErr != nil {
+					h.mu.Unlock()
+					setErr(encErr)
+					return
+				}
+				if encErr := fillActionEncoding(int64(batchIdx), state, pending, playerIdx, cfg, views, cardIDToSlot); encErr != nil {
+					h.mu.Unlock()
+					setErr(encErr)
+					return
+				}
+				gameTimings[batchIdx] += time.Since(phaseStart)
+
+				rowStart := int32(int64(batchIdx) * int64(cfg.tokenMaxTokens))
+				phaseStart = time.Now()
+				var dirty *directDirtyState
+				if pool != nil {
+					dirty = pool.rowDirty(int64(batchIdx))
+				} else {
+					dirty = &directDirtyState{}
+				}
+				_, metadata, encErr := fillTokenAssemblyDirectPacked(
+					int64(batchIdx),
+					rowStart,
+					state,
+					pending,
+					playerIdx,
+					cfg,
+					views,
+					scratch,
+					dirty,
+				)
+				if encErr != nil {
+					h.mu.Unlock()
+					setErr(encErr)
+					return
+				}
+				elapsed := time.Since(phaseStart)
+				assemblyTimings[batchIdx] += elapsed - metadata
+				metadataTimings[batchIdx] += metadata
+
+				phaseStart = time.Now()
+				decisionRows[batchIdx] = decisionRowsForPending(pending, cfg)
+				gameTimings[batchIdx] += time.Since(phaseStart)
+				h.mu.Unlock()
+			}
+		}(start, end)
+	}
+	wg.Wait()
+	if firstErr != nil {
+		return 0, firstErr
+	}
+
+	decisionCursor := int64(0)
+	for batchIdx, count := range decisionRows {
+		if decisionCursor+count > cfg.decisionCapacity {
+			return decisionCursor, &encodeError{code: mageEncodeErrBuffer, message: "decision_capacity too small for decision rows"}
+		}
+		if pending := pendings[batchIdx]; pending != nil {
+			written, encErr := fillDecisionEncoding(int64(batchIdx), pending, cfg, views, decisionCursor)
+			if encErr != nil {
+				return decisionCursor, encErr
+			}
+			if written != count {
+				return decisionCursor, &encodeError{
+					code:    mageEncodeErrEncode,
+					message: fmt.Sprintf("decision row count mismatch for batch row %d: precomputed=%d written=%d", batchIdx, count, written),
+				}
+			}
+		}
+		decisionCursor += count
+	}
+
+	metadataStart := time.Now()
+	if encErr := compactPackedRows(views, cfg); encErr != nil {
+		return decisionCursor, encErr
+	}
+	metadataTimings[0] += time.Since(metadataStart)
+
+	var gameTiming, renderTiming, assemblyTiming, metadataTiming time.Duration
+	for i := range n {
+		gameTiming += gameTimings[i]
+		renderTiming += renderTimings[i]
+		assemblyTiming += assemblyTimings[i]
+		metadataTiming += metadataTimings[i]
+	}
+	addPackedEncodeTiming(
+		time.Since(callStart),
+		gameTiming,
+		renderTiming,
+		assemblyTiming,
+		metadataTiming,
+	)
+	return decisionCursor, nil
+}
+
+func packedEncodeWorkerCount(n int) int {
+	workers := minInt(n, runtime.GOMAXPROCS(0))
+	workers = minInt(workers, packedParallelMaxWorkers)
+	if raw := os.Getenv("MAGE_PACKED_ENCODE_WORKERS"); raw != "" {
+		if parsed, err := strconv.Atoi(raw); err == nil && parsed > 0 {
+			workers = minInt(n, parsed)
+		}
+	}
+	if workers < 1 {
+		workers = 1
+	}
+	return workers
+}
+
+func compactPackedRows(views outputViews, cfg encodeConfig) *encodeError {
+	n := len(views.packedSeqLengths)
+	packedCursor := int32(0)
+	for batchIdx := range n {
+		length := views.packedSeqLengths[batchIdx]
+		if length < 0 || length > cfg.tokenMaxTokens {
+			return &encodeError{code: mageEncodeErrEncode, message: fmt.Sprintf("invalid packed sequence length %d at batch row %d", length, batchIdx)}
+		}
+		views.packedCuSeqlens[batchIdx+1] = packedCursor + length
+		rowStart := int32(int64(batchIdx) * int64(cfg.tokenMaxTokens))
+		if length > 0 && packedCursor != rowStart {
+			copy(
+				views.packedTokenIDs[packedCursor:packedCursor+length],
+				views.packedTokenIDs[rowStart:rowStart+length],
+			)
+		}
+		delta := packedCursor - rowStart
+		if delta != 0 {
+			rebasePackedPositions(views, cfg, int64(batchIdx), delta)
+		}
+		views.packedStatePositions[batchIdx] = packedCursor
+		packedCursor += length
+	}
+	return nil
 }
 
 func clearOutputViews(view outputViews, cfg encodeConfig) {
@@ -304,83 +702,11 @@ func clearOutputViews(view outputViews, cfg encodeConfig) {
 	fillInt32(view.renderPlan, 0)
 	fillInt64(view.renderPlanLengths, 0)
 	fillInt64(view.renderPlanOverflow, 0)
-	// Dense token-assembler buffers are only live when emitTokens is set;
-	// zeroing them in packed mode is wasted work. The dense and packed
-	// paths are mutually exclusive (validated at the C entry points), so
-	// in packed mode the dense slices are typically nil anyway — skip the
-	// loops outright.
-	if cfg.emitTokens {
-		fillInt64(view.tokenIDs, 0)
-		fillInt64(view.tokenAttention, 0)
-		fillInt64(view.tokenSeqLengths, 0)
-		fillInt64(view.tokenOptionPos, -1)
-		fillBytes(view.tokenOptionMask, 0)
-		fillInt64(view.tokenTargetPos, -1)
-		fillBytes(view.tokenTargetMask, 0)
-		fillInt64(view.tokenCardRefPos, -1)
-		fillInt32(view.tokenOverflow, 0)
-	}
 	if cfg.emitTokensPacked {
-		// Packed buffers: clear sentinel/anchor regions. The token /
-		// seq_id / pos_in_seq buffers are written contiguously up to
-		// cu_seqlens[B]; their tail is unspecified, so no need to zero
-		// them.
-		fillInt64(view.packedCuSeqlens, 0)
-		fillInt64(view.packedSeqLengths, 0)
-		fillInt64(view.packedStatePositions, 0)
-		fillInt64(view.packedOptionPos, -1)
-		fillBytes(view.packedOptionMask, 0)
-		fillInt64(view.packedTargetPos, -1)
-		fillBytes(view.packedTargetMask, 0)
-		fillInt64(view.packedCardRefPos, -1)
-		fillInt32(view.packedTokenOverflow, 0)
+		// Packed token outputs are reset by the Python wrapper before
+		// every reuse. Avoid clearing these large slabs a second time here;
+		// the assembler only writes the live token region and active anchors.
 	}
-}
-
-// fillTokenAssembly walks the render-plan stream emitted for “batchIdx“
-// and fills the token-assembler outputs for that row. Requires that the
-// render plan was already emitted (cfg.emitRenderPlan must be true).
-func fillTokenAssembly(batchIdx int64, cfg encodeConfig, view outputViews) *encodeError {
-	tables := getTokenTables()
-	if tables == nil {
-		return &encodeError{
-			code:    mageEncodeErrEncodeFailure,
-			message: "MageRegisterTokenTables must be called before MageEncodeTokens",
-		}
-	}
-	planStart := batchIdx * cfg.renderPlanCapacity
-	planLen := view.renderPlanLengths[batchIdx]
-	plan := view.renderPlan[planStart : planStart+planLen]
-
-	mt := int64(cfg.tokenMaxTokens)
-	mo := int64(cfg.tokenMaxOptions)
-	mtg := int64(cfg.tokenMaxTargets)
-	mcr := int64(cfg.tokenMaxCardRefs)
-
-	out := &tokenAssemblerOut{
-		tokenIDs:      view.tokenIDs[batchIdx*mt : (batchIdx+1)*mt],
-		attentionMask: view.tokenAttention[batchIdx*mt : (batchIdx+1)*mt],
-		optionPos:     view.tokenOptionPos[batchIdx*mo : (batchIdx+1)*mo],
-		optionMask:    view.tokenOptionMask[batchIdx*mo : (batchIdx+1)*mo],
-		targetPos:     view.tokenTargetPos[batchIdx*mo*mtg : (batchIdx+1)*mo*mtg],
-		targetMask:    view.tokenTargetMask[batchIdx*mo*mtg : (batchIdx+1)*mo*mtg],
-		cardRefPos:    view.tokenCardRefPos[batchIdx*mcr : (batchIdx+1)*mcr],
-		maxOptions:    cfg.tokenMaxOptions,
-		maxTargets:    cfg.tokenMaxTargets,
-		maxCardRefs:   cfg.tokenMaxCardRefs,
-		cursorBase:    0,
-		padTail:       true,
-	}
-
-	cursor, overflow, err := assembleTokensFromPlan(plan, tables, out, cfg.tokenMaxTokens)
-	if err != nil {
-		return &encodeError{code: mageEncodeErrEncodeFailure, message: err.Error()}
-	}
-	view.tokenSeqLengths[batchIdx] = int64(cursor)
-	if overflow {
-		view.tokenOverflow[batchIdx] = 1
-	}
-	return nil
 }
 
 // fillTokenAssemblyPacked writes one row's worth of tokens into the
@@ -389,26 +715,31 @@ func fillTokenAssembly(batchIdx int64, cfg encodeConfig, view outputViews) *enco
 // rows without an outer-loop allocation. Anchors are written as
 // absolute offsets into the packed buffer.
 func fillTokenAssemblyPacked(
-	batchIdx int64,
+	planBatchIdx int64,
+	outputBatchIdx int64,
 	packedCursor int32,
 	cfg encodeConfig,
-	view outputViews,
-) (int32, *encodeError) {
+	planView outputViews,
+	outputView outputViews,
+	scratch *encodeScratch,
+) (int32, time.Duration, *encodeError) {
 	tables := getTokenTables()
 	if tables == nil {
-		return packedCursor, &encodeError{
+		return packedCursor, 0, &encodeError{
 			code:    mageEncodeErrEncodeFailure,
 			message: "MageRegisterTokenTables must be called before MageEncodeTokensPacked",
 		}
 	}
-	planStart := batchIdx * cfg.renderPlanCapacity
-	planLen := view.renderPlanLengths[batchIdx]
-	plan := view.renderPlan[planStart : planStart+planLen]
+	planStart := planBatchIdx * cfg.renderPlanCapacity
+	planLen := planView.renderPlanLengths[planBatchIdx]
+	plan := planView.renderPlan[planStart : planStart+planLen]
 
 	mt := int64(cfg.tokenMaxTokens)
 	mo := int64(cfg.tokenMaxOptions)
 	mtg := int64(cfg.tokenMaxTargets)
 	mcr := int64(cfg.tokenMaxCardRefs)
+	mb := int64(cfg.blankMaxBlanks)
+	mv := int64(cfg.blankMaxLegal)
 
 	// Carve a row-sized scratch slice straight out of the packed buffer
 	// at the running cursor. The assembler writes tokens into this view
@@ -416,48 +747,123 @@ func fillTokenAssemblyPacked(
 	// the anchor positions land as absolute offsets.
 	rowStart := int64(packedCursor)
 	rowEnd := rowStart + mt
-	if rowEnd > int64(len(view.packedTokenIDs)) {
-		return packedCursor, &encodeError{
+	if rowEnd > int64(len(outputView.packedTokenIDs)) {
+		return packedCursor, 0, &encodeError{
 			code:    mageEncodeErrInvalidArgument,
 			message: "packed token buffer too small (need >= B*max_tokens)",
 		}
 	}
 
 	out := &tokenAssemblerOut{
-		tokenIDs:      view.packedTokenIDs[rowStart:rowEnd],
-		attentionMask: nil, // packed mode does not use attention_mask
-		optionPos:     view.packedOptionPos[batchIdx*mo : (batchIdx+1)*mo],
-		optionMask:    view.packedOptionMask[batchIdx*mo : (batchIdx+1)*mo],
-		targetPos:     view.packedTargetPos[batchIdx*mo*mtg : (batchIdx+1)*mo*mtg],
-		targetMask:    view.packedTargetMask[batchIdx*mo*mtg : (batchIdx+1)*mo*mtg],
-		cardRefPos:    view.packedCardRefPos[batchIdx*mcr : (batchIdx+1)*mcr],
-		maxOptions:    cfg.tokenMaxOptions,
-		maxTargets:    cfg.tokenMaxTargets,
-		maxCardRefs:   cfg.tokenMaxCardRefs,
-		cursorBase:    packedCursor,
-		padTail:       false,
+		tokenIDs:    outputView.packedTokenIDs[rowStart:rowEnd],
+		cardRefPos:  outputView.packedCardRefPos[outputBatchIdx*mcr : (outputBatchIdx+1)*mcr],
+		maxOptions:  cfg.tokenMaxOptions,
+		maxTargets:  cfg.tokenMaxTargets,
+		maxCardRefs: cfg.tokenMaxCardRefs,
+		cursorBase:  packedCursor,
 	}
+	out.optionPos, out.optionMask, out.targetPos, out.targetMask = scratch.packedAnchorScratch(
+		mo,
+		mo*mtg,
+	)
+	if mb > 0 && mv > 0 && len(outputView.packedBlankPos) > 0 {
+		rowBlankStart := outputBatchIdx * mb
+		rowBlankEnd := rowBlankStart + mb
+		rowLegalStart := outputBatchIdx * mb * mv
+		rowLegalEnd := rowLegalStart + mb*mv
+		collector := &scratch.blankCollector
+		collector.positions = outputView.packedBlankPos[rowBlankStart:rowBlankEnd]
+		collector.kind = outputView.packedBlankKind[rowBlankStart:rowBlankEnd]
+		collector.group = outputView.packedBlankGroup[rowBlankStart:rowBlankEnd]
+		collector.groupKind = outputView.packedBlankGroupKind[rowBlankStart:rowBlankEnd]
+		collector.optionIdx = outputView.packedBlankOptionIdx[rowBlankStart:rowBlankEnd]
+		collector.legalIDs = outputView.packedBlankLegalIDs[rowLegalStart:rowLegalEnd]
+		collector.legalMask = outputView.packedBlankLegalMask[rowLegalStart:rowLegalEnd]
+		if outputBatchIdx >= 0 && outputBatchIdx < int64(len(outputView.packedBlankCount)) {
+			collector.count = &outputView.packedBlankCount[outputBatchIdx]
+		} else {
+			collector.count = nil
+		}
+		collector.legalCount = outputView.packedBlankLegalCount[rowBlankStart:rowBlankEnd]
+		if outputBatchIdx >= 0 && outputBatchIdx < int64(len(outputView.packedBlankOverflow)) {
+			collector.overflow = &outputView.packedBlankOverflow[outputBatchIdx]
+			outputView.packedBlankOverflow[outputBatchIdx] = 0
+		} else {
+			collector.overflow = nil
+		}
+		collector.reset(cfg.blankMaxBlanks, cfg.blankMaxLegal)
+		out.blank = collector
+	}
+
+	outputView.packedSeqLengths[outputBatchIdx] = 0
+	outputView.packedStatePositions[outputBatchIdx] = 0
+	outputView.packedCuSeqlens[outputBatchIdx+1] = packedCursor
+	outputView.packedTokenOverflow[outputBatchIdx] = 0
 
 	cursor, overflow, err := assembleTokensFromPlan(plan, tables, out, cfg.tokenMaxTokens)
 	if err != nil {
-		return packedCursor, &encodeError{
+		return packedCursor, 0, &encodeError{
 			code:    mageEncodeErrEncodeFailure,
 			message: err.Error(),
 		}
 	}
 
-	// Per-token metadata for the live region of this row.
-	for k := range cursor {
-		view.packedSeqID[packedCursor+k] = batchIdx
-		view.packedPosInSeq[packedCursor+k] = int64(k)
-	}
-	view.packedSeqLengths[batchIdx] = int64(cursor)
-	view.packedStatePositions[batchIdx] = int64(packedCursor)
-	view.packedCuSeqlens[batchIdx+1] = int64(packedCursor + cursor)
+	metadataStart := time.Now()
+	outputView.packedSeqLengths[outputBatchIdx] = cursor
+	outputView.packedStatePositions[outputBatchIdx] = packedCursor
+	outputView.packedCuSeqlens[outputBatchIdx+1] = packedCursor + cursor
 	if overflow {
-		view.packedTokenOverflow[batchIdx] = 1
+		outputView.packedTokenOverflow[outputBatchIdx] = 1
 	}
-	return packedCursor + cursor, nil
+	return packedCursor + cursor, time.Since(metadataStart), nil
+}
+
+func rebasePackedPositions(view outputViews, cfg encodeConfig, batchIdx int64, delta int32) {
+	mcr := cfg.tokenMaxCardRefs
+
+	if batchIdx >= 0 && batchIdx < int64(len(view.packedStatePositions)) {
+		view.packedStatePositions[batchIdx] += delta
+	}
+
+	cardStart := batchIdx * int64(mcr)
+	cardEnd := cardStart + int64(mcr)
+	for i := cardStart; i < cardEnd; i++ {
+		if view.packedCardRefPos[i] >= 0 {
+			view.packedCardRefPos[i] += delta
+		}
+	}
+
+	mb := cfg.blankMaxBlanks
+	blankStart := batchIdx * int64(mb)
+	blankEnd := blankStart + int64(mb)
+	for i := blankStart; i < blankEnd; i++ {
+		if view.packedBlankPos[i] >= 0 {
+			view.packedBlankPos[i] += delta
+		}
+	}
+}
+
+func decisionRowsForPending(pending *apiPending, cfg encodeConfig) int64 {
+	traceKind := traceKindForPending(pending)
+	switch traceKind {
+	case "may":
+		return 0
+	case "priority":
+		optionCount := minInt64(int64(len(pending.Options)), cfg.maxOptions)
+		count := minInt64(priorityCandidateCount(pending, optionCount, cfg.maxTargetsPerOption), cfg.maxCachedChoices)
+		if count == 0 {
+			return 0
+		}
+		return 1
+	case "attackers", "blockers":
+		return minInt64(int64(len(pending.Options)), cfg.maxOptions)
+	default:
+		optionCount := minInt64(int64(len(pending.Options)), cfg.maxOptions)
+		if optionCount == 0 {
+			return 0
+		}
+		return 1
+	}
 }
 
 func resolvePerspectivePlayerIndex(state *apiGameState, pending *apiPending, requested int64) (int, *encodeError) {
@@ -698,10 +1104,10 @@ func fillActionEncoding(batchIdx int64, state *apiGameState, pending *apiPending
 			targetScalars[targetScalarBase+tgtIdx*cfg.targetScalarDim] = clipNorm(float64(tgtIdx), maxTargetScalar)
 			targetScalars[targetScalarBase+tgtIdx*cfg.targetScalarDim+1] = 1
 
-			if target.ID != "" && (target.ID == selfID || target.ID == oppID) {
+			if target.IDUUID != uuid.Nil && (target.IDUUID == selfID || target.IDUUID == oppID) {
 				targetTypeIDs[targetBase+tgtIdx] = 0
 				targetRefIsPlayer[targetBase+tgtIdx] = 1
-				if target.ID == selfID {
+				if target.IDUUID == selfID {
 					targetRefIsSelf[targetBase+tgtIdx] = 1
 				}
 				continue
@@ -955,19 +1361,30 @@ func priorityCandidateCount(pending *apiPending, maxOptions int64, maxTargetsPer
 	return count
 }
 
-func playerIDs(state *apiGameState, perspectivePlayerIdx int) (string, string) {
-	selfID := ""
+func playerIDs(state *apiGameState, perspectivePlayerIdx int) (uuid.UUID, uuid.UUID) {
+	var selfID, oppID uuid.UUID
 	if len(state.Players) > 0 {
-		selfID = state.Players[perspectivePlayerIdx].ID.String()
+		selfID = state.Players[perspectivePlayerIdx].ID
 	}
-	oppID := ""
 	if len(state.Players) == 2 {
-		oppID = state.Players[1-perspectivePlayerIdx].ID.String()
+		oppID = state.Players[1-perspectivePlayerIdx].ID
 	}
 	return selfID, oppID
 }
 
 func indexOrUnknown(values []string, value string) int64 {
+	if cache := indexCacheFor(values); cache != nil {
+		if cached, ok := cache.Load(value); ok {
+			return cached.(int64)
+		}
+		idx := indexOrUnknownSlow(values, value)
+		cache.Store(value, idx)
+		return idx
+	}
+	return indexOrUnknownSlow(values, value)
+}
+
+func indexOrUnknownSlow(values []string, value string) int64 {
 	key := normalizeKey(value)
 	norm := normalizedKeysFor(values)
 	for idx, candidate := range norm {
@@ -976,6 +1393,31 @@ func indexOrUnknown(values []string, value string) int64 {
 		}
 	}
 	return int64(len(values) - 1)
+}
+
+// indexCacheFor returns a per-table sync.Map memoizing prior raw-input
+// lookups. Hot-path callers (the encoder dispatches an option-kind lookup
+// per option, per row, per batch) avoid the strings.Fields cost that way.
+// Returns nil for unknown tables so the slow path stays correct.
+var (
+	stepNamesIndexCache    sync.Map
+	pendingKindsIndexCache sync.Map
+	actionKindsIndexCache  sync.Map
+	traceKindsIndexCache   sync.Map
+)
+
+func indexCacheFor(values []string) *sync.Map {
+	switch {
+	case len(values) == len(stepNames) && &values[0] == &stepNames[0]:
+		return &stepNamesIndexCache
+	case len(values) == len(pendingKinds) && &values[0] == &pendingKinds[0]:
+		return &pendingKindsIndexCache
+	case len(values) == len(actionKinds) && &values[0] == &actionKinds[0]:
+		return &actionKindsIndexCache
+	case len(values) == len(traceKinds) && &values[0] == &traceKinds[0]:
+		return &traceKindsIndexCache
+	}
+	return nil
 }
 
 // normalizedKeys returns a slice of normalized keys, one per input value.
@@ -1010,6 +1452,13 @@ func normalizeKey(s string) string {
 
 func cardRowForName(name string) (int64, bool) {
 	if name == "" {
+		return 0, true
+	}
+	// Stack entries for activated/triggered abilities can arrive without an
+	// inspectable source card name. They are still legitimate visible stack
+	// objects, so encode them with the row-0 unknown-card sentinel instead of
+	// looking them up in the real-card embedding table.
+	if normalizeKey(name) == "ability" {
 		return 0, true
 	}
 

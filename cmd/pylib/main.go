@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"runtime/debug"
 	"sort"
 	"sync"
 	"sync/atomic"
@@ -163,11 +164,21 @@ type apiOption struct {
 	ValidTargets []apiTarget `json:"valid_targets,omitempty"`
 	ID           string      `json:"id,omitempty"`
 	Color        string      `json:"color,omitempty"`
+	// CardUUID / PermanentUUID / IDUUID mirror the string IDs above as
+	// raw uuid.UUID values. Populated alongside the strings during
+	// snapshot conversion so the encode hot path can avoid a round-trip
+	// through uuid.Parse on every option lookup. Excluded from JSON to
+	// keep the wire format unchanged.
+	CardUUID      uuid.UUID `json:"-"`
+	PermanentUUID uuid.UUID `json:"-"`
+	IDUUID        uuid.UUID `json:"-"`
 }
 
 type apiTarget struct {
 	ID    string `json:"id"`
 	Label string `json:"label"`
+	// IDUUID mirrors ID for the encode hot path. See apiOption above.
+	IDUUID uuid.UUID `json:"-"`
 }
 
 // actionRequest is what Python sends back to MageStep.
@@ -415,7 +426,7 @@ func targetsFromActionOption(opt interactive.ActionOption) []apiTarget {
 		if i < len(opt.ValidTargetLabels) {
 			label = opt.ValidTargetLabels[i]
 		}
-		out = append(out, apiTarget{ID: id.String(), Label: label})
+		out = append(out, apiTarget{ID: id.String(), Label: label, IDUUID: id})
 	}
 	return out
 }
@@ -438,9 +449,11 @@ func convertPriorityOptions(opts []interactive.ActionOption) []apiOption {
 		}
 		if o.CardID != uuid.Nil {
 			ao.CardID = o.CardID.String()
+			ao.CardUUID = o.CardID
 		}
 		if o.PermanentID != uuid.Nil {
 			ao.PermanentID = o.PermanentID.String()
+			ao.PermanentUUID = o.PermanentID
 		}
 		switch o.Type {
 		case interactive.ActionPass:
@@ -485,6 +498,7 @@ func convertChoiceOptions(choiceType interactive.ChoiceType, opts []interactive.
 		ao := apiOption{Kind: "choice", Label: o.Label}
 		if o.ID != uuid.Nil {
 			ao.ID = o.ID.String()
+			ao.IDUUID = o.ID
 		}
 		if choiceType == interactive.ChoiceManaColor {
 			ao.Color = o.Color.String()
@@ -500,6 +514,7 @@ func buildAttackerPending(msg *interactive.GameMsg, playerIdx int) *apiPending {
 		ao := apiOption{Kind: "attacker", Label: o.Label}
 		if o.PermanentID != uuid.Nil {
 			ao.PermanentID = o.PermanentID.String()
+			ao.PermanentUUID = o.PermanentID
 		}
 		out = append(out, ao)
 	}
@@ -509,16 +524,18 @@ func buildAttackerPending(msg *interactive.GameMsg, playerIdx int) *apiPending {
 func buildBlockerPending(msg *interactive.GameMsg, playerIdx int) *apiPending {
 	out := make([]apiOption, 0, len(msg.Options))
 	for _, o := range msg.Options {
-		ao := apiOption{Kind: "blocker", Label: o.Label}
-		if o.PermanentID != uuid.Nil {
-			ao.PermanentID = o.PermanentID.String()
+		if o.Type == interactive.ActionPass || o.PermanentID == uuid.Nil {
+			continue
 		}
+		ao := apiOption{Kind: "blocker", Label: o.Label}
+		ao.PermanentID = o.PermanentID.String()
+		ao.PermanentUUID = o.PermanentID
 		for i, id := range o.ValidTargets {
 			label := ""
 			if i < len(o.ValidTargetLabels) {
 				label = o.ValidTargetLabels[i]
 			}
-			ao.ValidTargets = append(ao.ValidTargets, apiTarget{ID: id.String(), Label: label})
+			ao.ValidTargets = append(ao.ValidTargets, apiTarget{ID: id.String(), Label: label, IDUUID: id})
 		}
 		out = append(out, ao)
 	}
@@ -851,17 +868,17 @@ func actionFromStepChoice(pending *apiPending, selectedCols []int64, maySelected
 
 func parseColor(s string) core.Color {
 	switch s {
-	case "white", "W":
+	case "white", "White", "W":
 		return core.White
-	case "blue", "U":
+	case "blue", "Blue", "U":
 		return core.Blue
-	case "black", "B":
+	case "black", "Black", "B":
 		return core.Black
-	case "red", "R":
+	case "red", "Red", "R":
 		return core.Red
-	case "green", "G":
+	case "green", "Green", "G":
 		return core.Green
-	case "colorless", "C":
+	case "colorless", "Colorless", "C":
 		return core.Colorless
 	}
 	return core.Colorless
@@ -1249,7 +1266,11 @@ func MageSetCardNameRows(cardNameRowsJSON *C.char) *C.char {
 func MageBatchPoll(req *C.MageBatchRequest, out *C.MageBatchPollOutputs) (res C.MageEncodeResult) {
 	defer func() {
 		if r := recover(); r != nil {
-			res = newEncodeResult(0, mageEncodeErrEncodeFailure, fmt.Sprintf("panic: %v", r))
+			res = newEncodeResult(
+				0,
+				mageEncodeErrEncodeFailure,
+				fmt.Sprintf("panic: %v\n%s", r, debug.Stack()),
+			)
 		}
 	}()
 	if req == nil || out == nil {
@@ -1307,7 +1328,11 @@ func MageBatchPoll(req *C.MageBatchRequest, out *C.MageBatchPollOutputs) (res C.
 func MageBatchStepByChoice(req *C.MageStepChoiceRequest) (res C.MageEncodeResult) {
 	defer func() {
 		if r := recover(); r != nil {
-			res = newEncodeResult(0, mageEncodeErrEncodeFailure, fmt.Sprintf("panic: %v", r))
+			res = newEncodeResult(
+				0,
+				mageEncodeErrEncodeFailure,
+				fmt.Sprintf("panic: %v\n%s", r, debug.Stack()),
+			)
 		}
 	}()
 	if req == nil {
@@ -1382,6 +1407,7 @@ func MageBatchStepByChoice(req *C.MageStepChoiceRequest) (res C.MageEncodeResult
 		ev := waitForNext(h)
 		h.current = ev
 		h.done = ev.Over
+		h.stateBuf = nil
 		h.mu.Unlock()
 	}
 	return newEncodeResult(0, mageEncodeErrOK, "")
@@ -1492,6 +1518,25 @@ func MageTokenTableSummary() *C.char {
 		"target_close_id":    t.targetCloseID,
 		"tapped_id":          t.tappedID,
 		"untapped_id":        t.untappedID,
+		// Inline-blank singletons + digit table (Step 1 plumb-through).
+		"choose_target_id":       t.chooseTargetID,
+		"choose_block_id":        t.chooseBlockID,
+		"choose_damage_order_id": t.chooseDamageOrderID,
+		"choose_mode_id":         t.chooseModeID,
+		"choose_may_id":          t.chooseMayID,
+		"choose_x_digit_id":      t.chooseXDigitID,
+		"choose_mana_source_id":  t.chooseManaSourceID,
+		"choose_play_id":         t.choosePlayID,
+		"use_ability_id":         t.useAbilityID,
+		"chosen_id":              t.chosenID,
+		"yes_id":                 t.yesID,
+		"no_id":                  t.noID,
+		"none_id":                t.noneID,
+		"x_end_id":               t.xEndID,
+		"mulligan_id":            t.mulliganID,
+		"keep_id":                t.keepID,
+		"num_count":              t.numCount,
+		"num_ids":                t.numIDs,
 	}
 	b, err := json.Marshal(summary)
 	if err != nil {
@@ -1547,6 +1592,20 @@ func MageTokenTableLookup(kind C.int32_t, k0 C.int32_t, k1 C.int32_t) *C.char {
 		} else {
 			span = []int32{t.cardRefIDs[idx]}
 		}
+	case 12:
+		// Inline-blank singletons keyed by index (see blankSingletonAt).
+		// Indices 0..13 cover the 14 named singletons in abi.h order.
+		if id, ok := t.blankSingletonAt(int32(k0)); ok {
+			span = []int32{id}
+		}
+	case 13:
+		// Digit token id for num_ids[k0].
+		idx := int32(k0)
+		if idx < 0 || idx >= t.numCount || int(idx) >= len(t.numIDs) {
+			span = nil
+		} else {
+			span = []int32{t.numIDs[idx]}
+		}
 	default:
 		return C.CString("null")
 	}
@@ -1559,76 +1618,14 @@ func MageTokenTableLookup(kind C.int32_t, k0 C.int32_t, k1 C.int32_t) *C.char {
 	return C.CString(string(b))
 }
 
-// Same as MageEncodeBatch but additionally runs the native token-assembler
-// after the render-plan emission. “cfg.emit_render_plan“ is forced on
-// inside the call (the assembler walks the freshly-emitted plan). Token
-// outputs go into “tok_out“ (caller-owned buffers, shapes determined by
-// “tok_cfg“). Requires MageRegisterTokenTables to have been called.
-//
-//export MageEncodeTokens
-func MageEncodeTokens(
-	req *C.MageBatchRequest,
-	cfg *C.MageEncodeConfig,
-	out *C.MageEncodeOutputs,
-	tokCfg *C.MageTokenAssemblerConfig,
-	tokOut *C.MageTokenAssemblerOutputs,
-) (res C.MageEncodeResult) {
-	defer func() {
-		if r := recover(); r != nil {
-			res = newEncodeResult(0, mageEncodeErrEncodeFailure, fmt.Sprintf("panic: %v", r))
-		}
-	}()
-	if req == nil || cfg == nil || out == nil || tokCfg == nil || tokOut == nil {
-		return newEncodeResult(0, mageEncodeErrInvalidArgument, "req, cfg, out, tok_cfg, tok_out must be non-nil")
-	}
-	if getTokenTables() == nil {
-		return newEncodeResult(0, mageEncodeErrInvalidArgument, "MageRegisterTokenTables must be called before MageEncodeTokens")
-	}
-	n := int64(req.n)
-	if n < 0 {
-		return newEncodeResult(0, mageEncodeErrInvalidArgument, "req.n must be non-negative")
-	}
-	cfgGo := parseEncodeConfigC(cfg)
-	if !cfgGo.emitRenderPlan {
-		return newEncodeResult(0, mageEncodeErrInvalidArgument, "MageEncodeTokens requires cfg.emit_render_plan=1")
-	}
-	cfgGo.emitTokens = true
-	cfgGo.tokenMaxTokens = int32(tokCfg.max_tokens)
-	cfgGo.tokenMaxOptions = int32(tokCfg.max_options)
-	cfgGo.tokenMaxTargets = int32(tokCfg.max_targets)
-	cfgGo.tokenMaxCardRefs = int32(tokCfg.max_card_refs)
-	if cfgGo.tokenMaxTokens <= 0 || cfgGo.tokenMaxOptions <= 0 ||
-		cfgGo.tokenMaxTargets < 0 || cfgGo.tokenMaxCardRefs <= 0 {
-		return newEncodeResult(0, mageEncodeErrInvalidArgument, "token assembler config has non-positive dimension")
-	}
-	if err := validateEncodeConfig(cfgGo); err != nil {
-		return newEncodeResult(0, err.code, err.message)
-	}
-	if n == 0 {
-		return newEncodeResult(0, mageEncodeErrOK, "")
-	}
-	if req.handles == nil {
-		return newEncodeResult(0, mageEncodeErrInvalidArgument, "req.handles must be non-nil when n > 0")
-	}
-	reqGo := batchRequest{
-		handles: unsafe.Slice((*int64)(unsafe.Pointer(req.handles)), n),
-	}
-	if req.perspective_player_idx != nil {
-		reqGo.perspectives = unsafe.Slice((*int64)(unsafe.Pointer(req.perspective_player_idx)), n)
-	}
-	views, viewErr := makeOutputViewsC(n, cfgGo, out)
-	if viewErr != nil {
-		return newEncodeResult(0, viewErr.code, viewErr.message)
-	}
-	tokenViewErr := attachTokenViews(n, cfgGo, tokOut, &views)
-	if tokenViewErr != nil {
-		return newEncodeResult(0, tokenViewErr.code, tokenViewErr.message)
-	}
-	rowsWritten, err := encodeBatchGo(reqGo, cfgGo, views)
+//export MageEncodeTimingSummary
+func MageEncodeTimingSummary(reset C.int32_t) *C.char {
+	summary := packedEncodeTimingSnapshot(reset != 0)
+	b, err := json.Marshal(summary)
 	if err != nil {
-		return newEncodeResult(rowsWritten, err.code, err.message)
+		return errResponse("marshal timing summary: %v", err)
 	}
-	return newEncodeResult(rowsWritten, mageEncodeErrOK, "")
+	return C.CString(string(b))
 }
 
 //export MageEncodeTokensPacked
@@ -1638,10 +1635,16 @@ func MageEncodeTokensPacked(
 	out *C.MageEncodeOutputs,
 	tokCfg *C.MageTokenAssemblerConfig,
 	packedOut *C.MagePackedTokenAssemblerOutputs,
+	blankCfg *C.MageBlankAssemblerConfig,
+	blankOut *C.MagePackedBlankOutputs,
 ) (res C.MageEncodeResult) {
 	defer func() {
 		if r := recover(); r != nil {
-			res = newEncodeResult(0, mageEncodeErrEncodeFailure, fmt.Sprintf("panic: %v", r))
+			res = newEncodeResult(
+				0,
+				mageEncodeErrEncodeFailure,
+				fmt.Sprintf("panic: %v\n%s", r, debug.Stack()),
+			)
 		}
 	}()
 	if req == nil || cfg == nil || out == nil || tokCfg == nil || packedOut == nil {
@@ -1655,17 +1658,24 @@ func MageEncodeTokensPacked(
 		return newEncodeResult(0, mageEncodeErrInvalidArgument, "req.n must be non-negative")
 	}
 	cfgGo := parseEncodeConfigC(cfg)
-	if !cfgGo.emitRenderPlan {
-		return newEncodeResult(0, mageEncodeErrInvalidArgument, "MageEncodeTokensPacked requires cfg.emit_render_plan=1")
-	}
 	cfgGo.emitTokensPacked = true
 	cfgGo.tokenMaxTokens = int32(tokCfg.max_tokens)
 	cfgGo.tokenMaxOptions = int32(tokCfg.max_options)
 	cfgGo.tokenMaxTargets = int32(tokCfg.max_targets)
 	cfgGo.tokenMaxCardRefs = int32(tokCfg.max_card_refs)
+	if blankCfg != nil || blankOut != nil {
+		if blankCfg == nil || blankOut == nil {
+			return newEncodeResult(0, mageEncodeErrInvalidArgument, "blank_cfg and blank_out must be both nil or both non-nil")
+		}
+		cfgGo.blankMaxBlanks = int32(blankCfg.max_blanks)
+		cfgGo.blankMaxLegal = int32(blankCfg.max_legal_per_blank)
+	}
 	if cfgGo.tokenMaxTokens <= 0 || cfgGo.tokenMaxOptions <= 0 ||
 		cfgGo.tokenMaxTargets < 0 || cfgGo.tokenMaxCardRefs <= 0 {
 		return newEncodeResult(0, mageEncodeErrInvalidArgument, "token assembler config has non-positive dimension")
+	}
+	if (blankCfg != nil || blankOut != nil) && (cfgGo.blankMaxBlanks < 0 || cfgGo.blankMaxLegal < 0) {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "blank assembler config has negative dimension")
 	}
 	if err := validateEncodeConfig(cfgGo); err != nil {
 		return newEncodeResult(0, err.code, err.message)
@@ -1689,6 +1699,11 @@ func MageEncodeTokensPacked(
 	if err := attachPackedTokenViews(n, cfgGo, packedOut, &views); err != nil {
 		return newEncodeResult(0, err.code, err.message)
 	}
+	if blankOut != nil {
+		if err := attachPackedBlankViews(n, cfgGo, blankOut, &views); err != nil {
+			return newEncodeResult(0, err.code, err.message)
+		}
+	}
 	rowsWritten, err := encodeBatchGo(reqGo, cfgGo, views)
 	if err != nil {
 		return newEncodeResult(rowsWritten, err.code, err.message)
@@ -1707,74 +1722,63 @@ func attachPackedTokenViews(
 	views *outputViews,
 ) *encodeError {
 	totalCap := n * int64(cfg.tokenMaxTokens)
-	totalOptions := n * int64(cfg.tokenMaxOptions)
-	totalTargets := n * int64(cfg.tokenMaxOptions) * int64(cfg.tokenMaxTargets)
 	totalCardRefs := n * int64(cfg.tokenMaxCardRefs)
 
 	if packedOut.token_ids == nil ||
-		packedOut.seq_id == nil ||
-		packedOut.pos_in_seq == nil ||
 		packedOut.cu_seqlens == nil ||
 		packedOut.seq_lengths == nil ||
 		packedOut.state_positions == nil ||
-		packedOut.option_positions == nil ||
-		packedOut.option_mask == nil ||
-		packedOut.target_positions == nil ||
-		packedOut.target_mask == nil ||
 		packedOut.card_ref_positions == nil ||
 		packedOut.token_overflow == nil {
 		return &encodeError{code: mageEncodeErrInvalidArgument, message: "packed token outputs must be non-nil"}
 	}
 
-	views.packedTokenIDs = unsafe.Slice((*int64)(unsafe.Pointer(packedOut.token_ids)), totalCap)
-	views.packedSeqID = unsafe.Slice((*int64)(unsafe.Pointer(packedOut.seq_id)), totalCap)
-	views.packedPosInSeq = unsafe.Slice((*int64)(unsafe.Pointer(packedOut.pos_in_seq)), totalCap)
-	views.packedCuSeqlens = unsafe.Slice((*int64)(unsafe.Pointer(packedOut.cu_seqlens)), n+1)
-	views.packedSeqLengths = unsafe.Slice((*int64)(unsafe.Pointer(packedOut.seq_lengths)), n)
-	views.packedStatePositions = unsafe.Slice((*int64)(unsafe.Pointer(packedOut.state_positions)), n)
-	views.packedOptionPos = unsafe.Slice((*int64)(unsafe.Pointer(packedOut.option_positions)), totalOptions)
-	views.packedOptionMask = unsafe.Slice((*byte)(unsafe.Pointer(packedOut.option_mask)), totalOptions)
-	views.packedTargetPos = unsafe.Slice((*int64)(unsafe.Pointer(packedOut.target_positions)), totalTargets)
-	views.packedTargetMask = unsafe.Slice((*byte)(unsafe.Pointer(packedOut.target_mask)), totalTargets)
-	views.packedCardRefPos = unsafe.Slice((*int64)(unsafe.Pointer(packedOut.card_ref_positions)), totalCardRefs)
+	views.packedTokenIDs = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.token_ids)), totalCap)
+	views.packedCuSeqlens = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.cu_seqlens)), n+1)
+	views.packedSeqLengths = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.seq_lengths)), n)
+	views.packedStatePositions = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.state_positions)), n)
+	views.packedCardRefPos = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.card_ref_positions)), totalCardRefs)
 	views.packedTokenOverflow = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.token_overflow)), n)
 	return nil
 }
 
-// attachTokenViews wires the C-side token-assembler buffers into the
-// outputViews slices. Each pointer field becomes a borrowed Go slice.
-func attachTokenViews(
+func attachPackedBlankViews(
 	n int64,
 	cfg encodeConfig,
-	tokOut *C.MageTokenAssemblerOutputs,
+	blankOut *C.MagePackedBlankOutputs,
 	views *outputViews,
 ) *encodeError {
-	totalTokens := n * int64(cfg.tokenMaxTokens)
-	totalOptions := n * int64(cfg.tokenMaxOptions)
-	totalTargets := n * int64(cfg.tokenMaxOptions) * int64(cfg.tokenMaxTargets)
-	totalCardRefs := n * int64(cfg.tokenMaxCardRefs)
-
-	if tokOut.token_ids == nil ||
-		tokOut.attention_mask == nil ||
-		tokOut.seq_lengths == nil ||
-		tokOut.option_positions == nil ||
-		tokOut.option_mask == nil ||
-		tokOut.target_positions == nil ||
-		tokOut.target_mask == nil ||
-		tokOut.card_ref_positions == nil ||
-		tokOut.token_overflow == nil {
-		return &encodeError{code: mageEncodeErrInvalidArgument, message: "token outputs must be non-nil"}
+	if cfg.blankMaxBlanks <= 0 || cfg.blankMaxLegal <= 0 {
+		return nil
+	}
+	if int32(blankOut.k_max) != cfg.blankMaxBlanks || int32(blankOut.v_max) != cfg.blankMaxLegal {
+		return &encodeError{code: mageEncodeErrInvalidArgument, message: "blank output dimensions must match blank assembler config"}
+	}
+	totalBlanks := n * int64(cfg.blankMaxBlanks)
+	totalLegal := totalBlanks * int64(cfg.blankMaxLegal)
+	if blankOut.blank_positions == nil ||
+		blankOut.blank_kind == nil ||
+		blankOut.blank_group == nil ||
+		blankOut.blank_group_kind == nil ||
+		blankOut.blank_option_index == nil ||
+		blankOut.blank_legal_ids == nil ||
+		blankOut.blank_legal_mask == nil ||
+		blankOut.blank_overflow == nil ||
+		blankOut.blank_count == nil ||
+		blankOut.blank_legal_count == nil {
+		return &encodeError{code: mageEncodeErrInvalidArgument, message: "packed blank outputs must be non-nil"}
 	}
 
-	views.tokenIDs = unsafe.Slice((*int64)(unsafe.Pointer(tokOut.token_ids)), totalTokens)
-	views.tokenAttention = unsafe.Slice((*int64)(unsafe.Pointer(tokOut.attention_mask)), totalTokens)
-	views.tokenSeqLengths = unsafe.Slice((*int64)(unsafe.Pointer(tokOut.seq_lengths)), n)
-	views.tokenOptionPos = unsafe.Slice((*int64)(unsafe.Pointer(tokOut.option_positions)), totalOptions)
-	views.tokenOptionMask = unsafe.Slice((*byte)(unsafe.Pointer(tokOut.option_mask)), totalOptions)
-	views.tokenTargetPos = unsafe.Slice((*int64)(unsafe.Pointer(tokOut.target_positions)), totalTargets)
-	views.tokenTargetMask = unsafe.Slice((*byte)(unsafe.Pointer(tokOut.target_mask)), totalTargets)
-	views.tokenCardRefPos = unsafe.Slice((*int64)(unsafe.Pointer(tokOut.card_ref_positions)), totalCardRefs)
-	views.tokenOverflow = unsafe.Slice((*int32)(unsafe.Pointer(tokOut.token_overflow)), n)
+	views.packedBlankPos = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_positions)), totalBlanks)
+	views.packedBlankKind = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_kind)), totalBlanks)
+	views.packedBlankGroup = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_group)), totalBlanks)
+	views.packedBlankGroupKind = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_group_kind)), totalBlanks)
+	views.packedBlankOptionIdx = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_option_index)), totalBlanks)
+	views.packedBlankLegalIDs = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_legal_ids)), totalLegal)
+	views.packedBlankLegalMask = unsafe.Slice((*byte)(unsafe.Pointer(blankOut.blank_legal_mask)), totalLegal)
+	views.packedBlankOverflow = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_overflow)), n)
+	views.packedBlankCount = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_count)), n)
+	views.packedBlankLegalCount = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_legal_count)), totalBlanks)
 	return nil
 }
 

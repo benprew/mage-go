@@ -88,6 +88,11 @@ var IsLand = NewPermanentFilter("land", func(p *Permanent, _ *Game) bool {
 	return p.HasType(TypeLand)
 })
 
+// IsPlaneswalker matches planeswalker permanents.
+var IsPlaneswalker = NewPermanentFilter("planeswalker", func(p *Permanent, _ *Game) bool {
+	return p.HasType(TypePlaneswalker)
+})
+
 // IsLegendary matches legendary permanents.
 var IsLegendary = NewPermanentFilter("legendary", func(p *Permanent, _ *Game) bool {
 	return p.Card.HasSuperType(SuperLegendary)
@@ -252,6 +257,23 @@ var IsArtifactCard = NewCardFilter("artifact card", func(c Card) bool {
 // IsEnchantmentCard matches enchantment cards.
 var IsEnchantmentCard = NewCardFilter("enchantment card", func(c Card) bool {
 	return c.HasType(TypeEnchantment)
+})
+
+// IsInstantCard matches instant cards.
+var IsInstantCard = NewCardFilter("instant card", func(c Card) bool {
+	return c.HasType(TypeInstant)
+})
+
+// IsSorceryCard matches sorcery cards.
+var IsSorceryCard = NewCardFilter("sorcery card", func(c Card) bool {
+	return c.HasType(TypeSorcery)
+})
+
+// IsInstantOrSorceryCard matches cards that are instants or sorceries.
+// Used by triggers like Opus ("Whenever you cast an instant or sorcery
+// spell, …") and by cost-reduction value sources.
+var IsInstantOrSorceryCard = NewCardFilter("instant or sorcery card", func(c Card) bool {
+	return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
 })
 
 // HasColorCardFilter returns a CardFilter matching cards with the given color.

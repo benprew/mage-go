@@ -256,6 +256,11 @@ func (a *ActionDefinition) CanActivate(controller uuid.UUID, g *Game) bool {
 	if a.timing == TimingUpkeepOnly && g.step != Upkeep {
 		return false
 	}
+	if perm := g.FindPermanent(a.source); perm != nil {
+		if perm.HasAttr(AttrCantActivate) || perm.HasAttr(AttrCantActivateNonManaAbilities) {
+			return false
+		}
+	}
 	if a.timing == YourTurnOnly && g.ActivePlayerObj().PlayerID() != controller {
 		return false
 	}

@@ -4,6 +4,8 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
@@ -42,6 +44,14 @@ func registerPerTurnTrackerCards() {
 			mage.Register("Test Tracker Bear", func() mage.Card {
 				return mage.NewCreature("Test Tracker Bear", "{1}{G}", 4, 4,
 					mage.WithSubTypes("Bear"))
+			})
+		}
+		if !mage.CardRegistered("Test Exile Graveyard Cost") {
+			mage.Register("Test Exile Graveyard Cost", func() mage.Card {
+				return mage.NewSorcery("Test Exile Graveyard Cost", "{B}",
+					mage.NewSpellAbility(mage.GainLife(1)),
+					mage.WithAdditionalCost(mage.ExileFromGraveyardCost(1)),
+				)
 			})
 		}
 	})
@@ -115,5 +125,56 @@ func TestPerTurnTrackersResetEachTurn(t *testing.T) {
 	pid := tg.GetPlayer(PlayerA).PlayerID()
 	if got := tg.PlayerLifeGainedThisTurn(pid); got != 0 {
 		t.Errorf("life-gained should reset between turns; got %d", got)
+	}
+}
+
+func TestPlayerCardsLeftGraveyardThisTurn(t *testing.T) {
+	registerPerTurnTrackerCards()
+
+	tg := NewTestGame(t)
+	tg.AddCard(core.ZoneGraveyard, PlayerA, "Grizzly Bears")
+	pid := tg.GetPlayer(PlayerA).PlayerID()
+	cardID := tg.GetPlayer(PlayerA).Graveyard()[0].ID()
+
+	if got := tg.PlayerCardsLeftGraveyardThisTurn(pid); got != 0 {
+		t.Fatalf("initial cards-left-graveyard = %d, want 0", got)
+	}
+
+	card, ok := tg.MoveFromGraveyard(pid, cardID, core.ZoneExile)
+	if !ok {
+		t.Fatalf("MoveFromGraveyard failed")
+	}
+	tg.ExileCard(card, uuid.Nil)
+
+	if got := tg.PlayerCardsLeftGraveyardThisTurn(pid); got != 1 {
+		t.Errorf("PlayerCardsLeftGraveyardThisTurn = %d, want 1", got)
+	}
+	if !tg.PlayerHadCardLeaveGraveyardThisTurn(pid) {
+		t.Errorf("PlayerHadCardLeaveGraveyardThisTurn = false, want true")
+	}
+}
+
+func TestCardsPutIntoExileThisTurn(t *testing.T) {
+	registerPerTurnTrackerCards()
+
+	tg := NewTestGame(t)
+	tg.AddCard(core.ZoneBattlefield, PlayerA, "Test Tracker Bear")
+	card := mage.NewLand("Test Exiled Land")
+
+	if got := tg.CardsPutIntoExileThisTurn(); got != 0 {
+		t.Fatalf("initial exile count = %d, want 0", got)
+	}
+	tg.ExileCard(card, uuid.Nil)
+	if got := tg.CardsPutIntoExileThisTurn(); got != 1 {
+		t.Errorf("CardsPutIntoExileThisTurn after ExileCard = %d, want 1", got)
+	}
+
+	perm := tg.FindPermanentByName("Test Tracker Bear", tg.GetPlayer(PlayerA).PlayerID())
+	if perm == nil {
+		t.Fatalf("missing Test Tracker Bear")
+	}
+	tg.ExilePermanent(perm)
+	if got := tg.CardsPutIntoExileThisTurn(); got != 2 {
+		t.Errorf("CardsPutIntoExileThisTurn after ExilePermanent = %d, want 2", got)
 	}
 }

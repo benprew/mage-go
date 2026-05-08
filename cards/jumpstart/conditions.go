@@ -46,6 +46,24 @@ func (eventSourcePowerGreaterThanAllOthers) CheckTriggerCond(evt *GameEvent, g G
 	return true
 }
 
+// opponentDealt3PlusDamageThisTurnCond is satisfied when an opponent of the
+// trigger's controller has been dealt 3 or more damage this turn (any source,
+// combat or noncombat). Shared by Pia Nalaar, Consul of Revival and Lightning
+// Phoenix's graveyard end-step triggers.
+type opponentDealt3PlusDamageThisTurnCond struct{}
+
+func (opponentDealt3PlusDamageThisTurnCond) CheckTriggerCond(_ *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
+	for _, p := range g.AllPlayers() {
+		if p.PlayerID() == controllerID {
+			continue
+		}
+		if g.DamageTakenByPlayer(p.PlayerID()) >= 3 {
+			return true
+		}
+	}
+	return false
+}
+
 // anotherAuraAttachedTo returns true if any aura other than self is attached
 // to host. Used by Face of Divinity for "as long as another Aura is attached".
 func anotherAuraAttachedTo(g *Game, self, host *Permanent) bool {

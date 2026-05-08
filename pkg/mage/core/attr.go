@@ -22,6 +22,7 @@ const (
 	AttrCantBeTargetedByArtifacts     // permanent can't be targeted by abilities from artifact sources
 	AttrCantChangeControl             // other players can't gain control (Guardian Beast)
 	AttrCantActivateNonManaAbilities  // permanent's non-mana activated abilities can't be activated (CR 605 mana abilities are unaffected)
+	AttrCantActivate                  // permanent's activated abilities (including mana abilities) can't be activated (Linvala, Keeper of Silence)
 	AttrAssignsDamageEqualToToughness // permanent assigns combat damage equal to its toughness rather than its power (Doran the Siege Tower / Assault Formation)
 
 	// Type-identity attrs (battlefield) — replaces TypesAdded []CardType on Permanent.
@@ -64,6 +65,15 @@ const (
 	CantRegenerate
 	LegendaryLandwalk
 	Flash
+	Ward // CR 702.21 — "Whenever this becomes the target of a spell or ability an opponent controls, counter it unless that player pays the ward cost." Display-only Attr; the cost and trigger are wired by WithWard.
+
+	// AttrPrepared marks a permanent as "prepared" (Secrets of Strixhaven custom
+	// keyword). A creature that "enters prepared" gains a sorcery-speed activated
+	// ability allowing its controller to cast a copy of its associated spell-side
+	// for free; doing so unprepares it (clears the attr). See
+	// pkg/mage/keyword_sos.go for the Prepared API (WithPreparedSpell,
+	// Game.SetPrepared, Game.IsPrepared, Game.CastPreparedSpellCopy).
+	AttrPrepared
 
 	// attrCount is a sentinel marking one past the last Attr value.
 	// NumAttrs exposes this as a sized array bound for Permanent attr storage.
@@ -119,6 +129,8 @@ func (a Attr) String() string {
 		return "Can't Change Control"
 	case AttrCantActivateNonManaAbilities:
 		return "Can't Activate Non-Mana Abilities"
+	case AttrCantActivate:
+		return "Can't Activate Abilities"
 	case AttrAssignsDamageEqualToToughness:
 		return "Assigns Combat Damage Equal to Toughness"
 	case AttrIsCreature:
@@ -191,6 +203,10 @@ func (a Attr) String() string {
 		return "Legendary Landwalk"
 	case Flash:
 		return "Flash"
+	case Ward:
+		return "Ward"
+	case AttrPrepared:
+		return "Prepared"
 	default:
 		return "Unknown"
 	}

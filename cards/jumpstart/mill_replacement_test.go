@@ -20,8 +20,8 @@ func TestBruvac_DoublesOpponentMill(t *testing.T) {
 	g.CastSpell(1, PostcombatMain, gametest.PlayerA, "Thought Scour", "PlayerB")
 	g.StopAt(1, EndStep)
 	g.Execute()
-	// Thought Scour mills 2 → doubled to 4 of PlayerB's basic library cards.
-	g.AssertGraveyardCount(gametest.PlayerB, "Plains", 4)
+	// Thought Scour mills 2 → doubled to 4 of PlayerB's padded library cards.
+	g.AssertGraveyardCount(gametest.PlayerB, "Filler", 4)
 }
 
 // TestBruvac_DoesNotDoubleSelfMill verifies the modifier does not apply
@@ -36,5 +36,5 @@ func TestBruvac_DoesNotDoubleSelfMill(t *testing.T) {
 	g.StopAt(1, EndStep)
 	g.Execute()
 	// Self-mill is not doubled: 2 cards from PlayerA's library.
-	g.AssertGraveyardCount(gametest.PlayerA, "Plains", 2)
+	g.AssertGraveyardCount(gametest.PlayerA, "Filler", 2)
 }

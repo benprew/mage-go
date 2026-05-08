@@ -5,6 +5,8 @@ import (
 	"math/rand"
 
 	"github.com/google/uuid"
+
+	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
 // drawCardsTargetEffect draws cards for a player. By default the player is read
@@ -228,6 +230,28 @@ func (e *scryEffect) Text() string {
 	return fmt.Sprintf("scry %d", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil))
 }
 func (e *scryEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
+
+// surveilEffect implements Surveil N (CR 701.42) for the controller of the
+// effect: look at the top N cards of your library, then put any number of
+// them into your graveyard and the rest on top of your library in any order.
+type surveilEffect struct {
+	amount ValueSource
+}
+
+// Surveil creates an effect that surveils N for the controller (CR 701.42).
+func Surveil(amount ValueSource) Effect {
+	return &surveilEffect{amount: amount}
+}
+
+func (e *surveilEffect) Text() string {
+	if _, ok := e.amount.(xValue); ok {
+		return "surveil X"
+	}
+	return fmt.Sprintf("surveil %d", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil))
+}
+func (e *surveilEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
@@ -492,11 +516,7 @@ func execReturnFromGraveyardToBattlefield(ctx *EffectContext, _ *returnFromGrave
 	if len(ctx.Targets) == 0 {
 		return fmt.Errorf("no target for reanimate")
 	}
-	p := ctx.Game.GetPlayer(ctx.Controller)
-	if p == nil {
-		return ErrPlayerNotFound
-	}
-	card, ok := p.RemoveFromGraveyard(ctx.Targets[0])
+	card, ok := ctx.Game.MoveFromGraveyard(ctx.Controller, ctx.Targets[0], ZoneBattlefield)
 	if !ok {
 		return nil // target gone
 	}
@@ -533,11 +553,7 @@ func execMillTargetPlayer(ctx *EffectContext, e *millTargetPlayerEffect) error {
 }
 
 func execExileSourceFromGraveyard(ctx *EffectContext, _ *exileSourceFromGraveyardEffect) error {
-	p := ctx.Game.GetPlayer(ctx.Controller)
-	if p == nil {
-		return nil
-	}
-	card, ok := p.RemoveFromGraveyard(ctx.SourceID)
+	card, ok := ctx.Game.MoveFromGraveyard(ctx.Controller, ctx.SourceID, ZoneExile)
 	if ok && card != nil {
 		ctx.Game.ExileCard(card, ctx.SourceID)
 	}
@@ -545,15 +561,15 @@ func execExileSourceFromGraveyard(ctx *EffectContext, _ *exileSourceFromGraveyar
 }
 
 func execReturnSourceFromGraveyardToBattlefield(ctx *EffectContext, _ *returnSourceFromGraveyardToBattlefieldEffect) error {
-	p := ctx.Game.GetPlayer(ctx.Controller)
-	if p == nil {
-		return ErrPlayerNotFound
+	// Search every graveyard for the source card; the trigger controller is
+	// usually the owner, but the card may have moved zones since the trigger
+	// was queued.
+	for _, p := range ctx.Game.AllPlayers() {
+		if card, ok := ctx.Game.MoveFromGraveyard(p.PlayerID(), ctx.SourceID, ZoneBattlefield); ok {
+			ctx.Game.PutOnBattlefield(card, p.PlayerID())
+			return nil
+		}
 	}
-	card, ok := p.RemoveFromGraveyard(ctx.SourceID)
-	if !ok {
-		return nil // source no longer in graveyard — fizzle
-	}
-	ctx.Game.PutOnBattlefield(card, ctx.Controller)
 	return nil
 }
 
@@ -562,7 +578,7 @@ func execReturnSourceToHand(ctx *EffectContext, _ *returnSourceToHandEffect) err
 	if p == nil {
 		return ErrPlayerNotFound
 	}
-	card, ok := p.RemoveFromGraveyard(ctx.SourceID)
+	card, ok := ctx.Game.MoveFromGraveyard(ctx.Controller, ctx.SourceID, ZoneHand)
 	if !ok {
 		return nil // not in graveyard
 	}
@@ -590,11 +606,8 @@ func execReturnFromGraveyardToHandTarget(ctx *EffectContext, _ *returnFromGravey
 	if p == nil {
 		return ErrPlayerNotFound
 	}
-	for _, tid := range ctx.Targets {
-		card, ok := p.RemoveFromGraveyard(tid)
-		if !ok {
-			continue
-		}
+	cards := ctx.Game.MoveCardsFromGraveyard(ctx.Controller, ctx.Targets, ZoneHand)
+	for _, card := range cards {
 		p.AddToHand(card)
 	}
 	return nil
@@ -766,6 +779,19 @@ func execScry(ctx *EffectContext, e *scryEffect) error {
 		return nil
 	}
 	ctx.Game.PerformScry(p, n)
+	return nil
+}
+
+func execSurveil(ctx *EffectContext, e *surveilEffect) error {
+	p := ctx.Game.GetPlayer(ctx.Controller)
+	if p == nil {
+		return ErrPlayerNotFound
+	}
+	n := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	if n <= 0 {
+		return nil
+	}
+	ctx.Game.PerformSurveil(p, n)
 	return nil
 }
 

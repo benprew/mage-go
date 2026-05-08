@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	_ "git.sr.ht/~cdcarter/mage-go/cards/limited"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
 )
@@ -243,14 +244,129 @@ func TestRoguesGloves(t *testing.T) {
 }
 
 func TestWarmongersChariot(t *testing.T) {
-	g := gametest.NewTestGame(t)
-	chariotID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Warmonger's Chariot")
-	wallID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Wall of Wood")
-	g.Attach(chariotID, wallID)
-	g.Attack(1, gametest.PlayerA, "Wall of Wood")
-	g.StopAt(1, core.EndStep)
-	g.Execute()
-	g.AssertLife(gametest.PlayerB, 18)
+	t.Run("equipped defender can attack", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		chariotID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Warmonger's Chariot")
+		wallID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Wall of Wood")
+		g.Attach(chariotID, wallID)
+		g.Attack(1, gametest.PlayerA, "Wall of Wood")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 18)
+	})
+
+	t.Run("equipped non-defender still gets +2/+2 boost", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		chariotID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Warmonger's Chariot")
+		bearID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.Attach(chariotID, bearID)
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 4, 4)
+	})
+}
+
+func TestHeraldsHorn(t *testing.T) {
+	t.Run("cost_reduction_only_for_chosen_type", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.ChooseString(gametest.PlayerA, "Bear")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Herald's Horn")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 5)
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Herald's Horn")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+
+		// Herald's Horn entered and recorded "Bear" as the chosen type.
+		pid := g.GetPlayer(gametest.PlayerA).PlayerID()
+		hornPerm := g.FindPermanentByName("Herald's Horn", pid)
+		if hornPerm == nil {
+			t.Fatalf("Herald's Horn not on battlefield")
+		}
+		if hornPerm.ChosenSubtype != "Bear" {
+			t.Fatalf("ChosenSubtype: got %q, want %q", hornPerm.ChosenSubtype, "Bear")
+		}
+
+		// Stage hand cards to inspect ConditionalSpellCostReduction.
+		bearCard, err := mage.CreateCard("Grizzly Bears")
+		if err != nil {
+			t.Fatalf("create Grizzly Bears: %v", err)
+		}
+		bearCard.SetOwner(pid)
+		g.GetPlayer(gametest.PlayerA).AddToHand(bearCard)
+
+		goblinCard, err := mage.CreateCard("Mons's Goblin Raiders")
+		if err != nil {
+			t.Fatalf("create Mons's Goblin Raiders: %v", err)
+		}
+		goblinCard.SetOwner(pid)
+		g.GetPlayer(gametest.PlayerA).AddToHand(goblinCard)
+
+		if got := g.ConditionalSpellCostReduction(pid, bearCard); got != 1 {
+			t.Errorf("Bear (chosen) reduction: got %d, want 1", got)
+		}
+		if got := g.ConditionalSpellCostReduction(pid, goblinCard); got != 0 {
+			t.Errorf("Goblin (not chosen) reduction: got %d, want 0", got)
+		}
+	})
+
+	t.Run("upkeep_reveals_chosen_creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.ChooseString(gametest.PlayerA, "Bear")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Herald's Horn")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Mountain")
+		g.StopAt(2, core.PrecombatMain)
+		g.Execute()
+
+		// Upkeep on turn 2 sees Grizzly Bears on top, may-prompt defaults to
+		// true, so it goes to hand. Mountain remains as the new top.
+		g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 1)
+		g.AssertLibraryCount(gametest.PlayerA, "Grizzly Bears", 0)
+		g.AssertLibraryTop(gametest.PlayerA, "Mountain")
+	})
+
+	t.Run("upkeep_does_not_reveal_non_creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.ChooseString(gametest.PlayerA, "Bear")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Herald's Horn")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
+		g.StopAt(2, core.PrecombatMain)
+		g.Execute()
+
+		// Top is Mountain (not a creature, not a Bear). Hand and library
+		// are unchanged with respect to this trigger.
+		g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 0)
+		g.AssertHandCount(gametest.PlayerA, "Mountain", 0)
+		g.AssertLibraryTop(gametest.PlayerA, "Mountain", "Grizzly Bears")
+	})
+
+	t.Run("upkeep_does_not_reveal_wrong_subtype", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.ChooseString(gametest.PlayerA, "Bear")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Herald's Horn")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Mons's Goblin Raiders")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
+		g.StopAt(2, core.PrecombatMain)
+		g.Execute()
+
+		g.AssertHandCount(gametest.PlayerA, "Mons's Goblin Raiders", 0)
+		g.AssertLibraryTop(gametest.PlayerA, "Mons's Goblin Raiders", "Grizzly Bears")
+	})
+
+	t.Run("upkeep_player_declines_reveal", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.ChooseString(gametest.PlayerA, "Bear")
+		g.GetPlayer(gametest.PlayerA).QueueMayAbilityChoices(false)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Herald's Horn")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Mountain")
+		g.StopAt(2, core.PrecombatMain)
+		g.Execute()
+
+		g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 0)
+		g.AssertLibraryTop(gametest.PlayerA, "Grizzly Bears", "Mountain")
+	})
 }
 
 func TestManaGeode(t *testing.T) {
@@ -264,4 +380,21 @@ func TestManaGeode(t *testing.T) {
 	g.StopAt(1, core.EndStep)
 	g.Execute()
 	g.AssertLibraryTop(gametest.PlayerA, "Forest", "Mountain")
+}
+
+// Terrarion: when the artifact is sacrificed (via its own activated ability),
+// the LtB trigger draws a card.
+func TestTerrarion_SacrificeDrawsCard(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Terrarion")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 2)
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Grizzly Bears", 3)
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Terrarion")
+	g.ChooseManaColor(gametest.PlayerA, core.Blue)
+	g.ChooseManaColor(gametest.PlayerA, core.Blue)
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerA, "Terrarion", 1)
+	// Drew a Grizzly Bears (default agent doesn't auto-cast spells).
+	g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 1)
 }

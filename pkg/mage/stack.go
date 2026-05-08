@@ -50,6 +50,90 @@ type StackObject struct {
 	// Game.ResolvingCastZone() so triggers can express "if you cast it from
 	// your hand" / "from the graveyard" / etc.
 	CastZone Zone
+
+	// ExileOnLeaveStack is true when this spell, on resolution or fizzle,
+	// should be exiled instead of going to its owner's graveyard. Set by the
+	// flashback cast path (CR 702.34) and similar one-shot alternate-cast
+	// effects that explicitly send the card to exile after resolving.
+	ExileOnLeaveStack bool
+
+	// CastContext snapshots cast-time state used by effects whose Oracle
+	// text references "as you cast this spell" (CR 608.2g). Populated when
+	// a spell is pushed onto the stack and read during resolution via
+	// Game.ResolvingCastContext(). Nil for activated/triggered abilities
+	// and for spell stack objects whose cast path predates the snapshot
+	// machinery; callers should treat nil as empty.
+	CastContext *CastContext
+}
+
+// CastContext captures the cast-time snapshot mandated by CR 608.2g for
+// effects that reference values "as you cast this spell". Fields are
+// intentionally minimal — extend as new cards require.
+//
+// Populated by the cast pipeline immediately after additional costs have
+// been paid (so reveal-style additional costs make it into the snapshot)
+// and immediately before the StackObject is pushed.
+type CastContext struct {
+	// ControllerSubtypesAtCast records every subtype present on a permanent
+	// the spell's controller controlled at the moment the spell went on the
+	// stack. Used by cards like Draconic Roar ("controlled a Dragon as you
+	// cast this spell"): a Dragon leaving between cast and resolution must
+	// not flip the condition false.
+	ControllerSubtypesAtCast map[string]bool
+
+	// RevealedAtCast lists cards revealed as part of paying additional
+	// costs for this spell (e.g. RevealFromHandCost). Used by cards like
+	// Draconic Roar ("If you revealed a Dragon card... as you cast this
+	// spell"). Card references are LKI: even if the card later changes
+	// zones, this slice continues to point at the snapshotted Card.
+	RevealedAtCast []Card
+
+	// ColorsSpent records how many mana of each color were spent paying
+	// the spell's mana cost (the colored portion plus any colored mana
+	// used to satisfy generic / X requirements). Populated by the cast
+	// pipeline immediately after the mana cost is paid. Used by Chamber
+	// Sentry's "enters with a +1/+1 counter on it for each color of mana
+	// spent to cast it" effect — count distinct colors with value > 0.
+	ColorsSpent map[Color]int
+}
+
+// DistinctColorsSpent returns the number of distinct colors of mana that
+// were spent to cast this spell. Returns 0 if ctx is nil.
+func (ctx *CastContext) DistinctColorsSpent() int {
+	if ctx == nil {
+		return 0
+	}
+	n := 0
+	for _, v := range ctx.ColorsSpent {
+		if v > 0 {
+			n++
+		}
+	}
+	return n
+}
+
+// HasControlledSubtypeAtCast is a small helper for the common
+// "controlled an X as you cast this spell" predicate. Returns false if
+// ctx is nil.
+func (ctx *CastContext) HasControlledSubtypeAtCast(subtype string) bool {
+	if ctx == nil || ctx.ControllerSubtypesAtCast == nil {
+		return false
+	}
+	return ctx.ControllerSubtypesAtCast[subtype]
+}
+
+// RevealedSubtypeAtCast reports whether any card revealed as an additional
+// cost for this spell had the given subtype. Returns false if ctx is nil.
+func (ctx *CastContext) RevealedSubtypeAtCast(subtype string) bool {
+	if ctx == nil {
+		return false
+	}
+	for _, c := range ctx.RevealedAtCast {
+		if c != nil && c.HasSubType(subtype) {
+			return true
+		}
+	}
+	return false
 }
 
 // Stack represents the game stack.
@@ -95,6 +179,28 @@ func (s *Stack) RemoveBySourceID(sourceID uuid.UUID) *StackObject {
 	for i, obj := range s.objects {
 		if obj.SourceID == sourceID {
 			s.objects = append(s.objects[:i], s.objects[i+1:]...)
+			return obj
+		}
+	}
+	return nil
+}
+
+// RemoveByID removes a stack object matching the given StackObject ID.
+// Returns the removed object, or nil if no object with that ID is on the stack.
+func (s *Stack) RemoveByID(id uuid.UUID) *StackObject {
+	for i, obj := range s.objects {
+		if obj.ID == id {
+			s.objects = append(s.objects[:i], s.objects[i+1:]...)
+			return obj
+		}
+	}
+	return nil
+}
+
+// FindByID finds a stack object by its ID without removing it.
+func (s *Stack) FindByID(id uuid.UUID) *StackObject {
+	for _, obj := range s.objects {
+		if obj.ID == id {
 			return obj
 		}
 	}

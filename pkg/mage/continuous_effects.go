@@ -335,6 +335,19 @@ func PreventBlockingUntilEndOfCombat(permID uuid.UUID) ContinuousEffect {
 	})
 }
 
+// PreventBlockingUntilEndOfTurn is the EndOfTurn-scoped sibling of
+// PreventBlockingUntilEndOfCombat: revokes AttrCanBlock from a specific
+// creature and persists across all combat phases this turn (CR 514 cleanup).
+// Use for "target creature can't block this turn" effects (Volcanic Hammer
+// variants, Conduit of Storms, etc.) where the restriction must outlive a
+// single combat phase.
+func PreventBlockingUntilEndOfTurn(permID uuid.UUID) ContinuousEffect {
+	return TargetEffect(LayerAbility, EndOfTurn, permID, func(g *Game, target *Permanent) error {
+		g.effects.RevokeAttr(target.ID(), AttrCanBlock)
+		return nil
+	})
+}
+
 // ---------------------------------------------------------------------------
 // FuncContinuousEffect-based effects (source on battlefield)
 // ---------------------------------------------------------------------------
@@ -1178,6 +1191,51 @@ func (e *preventDamageRuleContinuous) Apply(g *Game) error {
 		replacementBase: replacementBase{sourceID: e.sourceID},
 		from:            e.from,
 		to:              toFilter,
+	})
+	return nil
+}
+
+// preventNoncombatDamageToControllerContinuous prevents all noncombat damage
+// dealt to the source's controller and to creatures the controller controls.
+// Used by Blessed Sanctuary.
+type preventNoncombatDamageToControllerContinuous struct {
+	effectSource
+}
+
+// PreventNoncombatDamageToControllerAndCreatures creates a continuous effect
+// that prevents all noncombat damage that would be dealt to the source's
+// controller and to creatures that controller controls.
+func PreventNoncombatDamageToControllerAndCreatures() ContinuousEffect {
+	return &preventNoncombatDamageToControllerContinuous{}
+}
+
+func (e *preventNoncombatDamageToControllerContinuous) GetLayer() Layer {
+	return LayerAbility
+}
+
+func (e *preventNoncombatDamageToControllerContinuous) GetDuration() Duration {
+	return WhileOnBattlefield
+}
+
+func (e *preventNoncombatDamageToControllerContinuous) IsActive(g *Game) bool {
+	return g.FindPermanent(e.sourceID) != nil
+}
+
+func (e *preventNoncombatDamageToControllerContinuous) Apply(g *Game) error {
+	src := g.FindPermanent(e.sourceID)
+	if src == nil {
+		return nil
+	}
+	controller := src.Controller
+	g.effects.AddCycleReplacement(&damagePreventionRuleReplacement{
+		replacementBase: replacementBase{sourceID: e.sourceID},
+		to:              And(IsCreature, ControlledBy(controller)),
+		noncombatOnly:   true,
+	})
+	g.effects.AddCycleReplacement(&damagePreventionRuleReplacement{
+		replacementBase: replacementBase{sourceID: e.sourceID},
+		toPlayerID:      controller,
+		noncombatOnly:   true,
 	})
 	return nil
 }

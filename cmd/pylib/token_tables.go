@@ -83,11 +83,16 @@ type tokenTables struct {
 	cardNameOff  []int64
 
 	// v2 dedup. dictEntryIDs is one int32 per card row (the
-	// ``<dict-entry:R>`` token id). NULL/empty when v2 is disabled.
+	// ``<dict-entry:R>`` token id) — used by the legacy row-keyed render-plan
+	// path. dictSlotIDs is one int32 per per-snapshot slot (the
+	// ``<dict-slot:S>`` token id) — used by the direct emitter so the model
+	// sees a slot index that's reassigned per snapshot in insertion order
+	// rather than a stable per-card identity. NULL/empty when v2 is disabled.
 	dictOpenID   int32
 	dictCloseID  int32
 	cardOpenID   int32
 	dictEntryIDs []int32
+	dictSlotIDs  []int32
 
 	// Singletons used by the Go emitter for byte-equal parity with the
 	// Python emit_render_plan path. ``selfID`` / ``oppID`` are written
@@ -100,6 +105,32 @@ type tokenTables struct {
 	stackCloseID   int32
 	commandOpenID  int32
 	commandCloseID int32
+
+	// Inline-blank singletons (Step 1 of the inline-blank text-encoder
+	// migration). The assembler references these once EMIT_BLANK opcodes
+	// start landing in the render plan; until then they are present but
+	// only round-trip through MageTokenTableLookup parity tests.
+	chooseTargetID      int32
+	chooseBlockID       int32
+	chooseDamageOrderID int32
+	chooseModeID        int32
+	chooseMayID         int32
+	chooseXDigitID      int32
+	chooseManaSourceID  int32
+	choosePlayID        int32
+	useAbilityID        int32
+	chosenID            int32
+	yesID               int32
+	noID                int32
+	noneID              int32
+	xEndID              int32
+	mulliganID          int32
+	keepID              int32
+
+	// Digit tokens used by X-cost blanks. Length is taken from numCount;
+	// numIDs is a borrowed C buffer (may be nil when numCount == 0).
+	numCount int32
+	numIDs   []int32
 }
 
 var (
@@ -254,6 +285,57 @@ func (t *tokenTables) cardNameSpan(row int32) []int32 {
 	return t.cardNameToks[t.cardNameOff[row]:t.cardNameOff[row+1]]
 }
 
+// blankSingletonAt returns the inline-blank singleton id at logical index
+// idx (0..13), in the same order as the abi.h field declarations:
+//
+//	0=choose_target, 1=choose_block, 2=choose_damage_order, 3=choose_mode,
+//	4=choose_may, 5=choose_x_digit, 6=choose_mana_source, 7=choose_play,
+//	8=use_ability, 9=chosen, 10=yes, 11=no, 12=none, 13=x_end,
+//	14=mulligan, 15=keep.
+//
+// Used by MageTokenTableLookup to round-trip the blank singletons under a
+// single kind id.
+func (t *tokenTables) blankSingletonAt(idx int32) (int32, bool) {
+	if t == nil {
+		return 0, false
+	}
+	switch idx {
+	case 0:
+		return t.chooseTargetID, true
+	case 1:
+		return t.chooseBlockID, true
+	case 2:
+		return t.chooseDamageOrderID, true
+	case 3:
+		return t.chooseModeID, true
+	case 4:
+		return t.chooseMayID, true
+	case 5:
+		return t.chooseXDigitID, true
+	case 6:
+		return t.chooseManaSourceID, true
+	case 7:
+		return t.choosePlayID, true
+	case 8:
+		return t.useAbilityID, true
+	case 9:
+		return t.chosenID, true
+	case 10:
+		return t.yesID, true
+	case 11:
+		return t.noID, true
+	case 12:
+		return t.noneID, true
+	case 13:
+		return t.xEndID, true
+	case 14:
+		return t.mulliganID, true
+	case 15:
+		return t.keepID, true
+	}
+	return 0, false
+}
+
 // getTokenTables returns the currently-registered tables, or nil if Python
 // has not yet called MageRegisterTokenTables.
 func getTokenTables() *tokenTables {
@@ -305,6 +387,24 @@ func registerTokenTables(c *C.MageTokenTables) error {
 		stackCloseID:    int32(c.stack_close_id),
 		commandOpenID:   int32(c.command_open_id),
 		commandCloseID:  int32(c.command_close_id),
+
+		chooseTargetID:      int32(c.choose_target_id),
+		chooseBlockID:       int32(c.choose_block_id),
+		chooseDamageOrderID: int32(c.choose_damage_order_id),
+		chooseModeID:        int32(c.choose_mode_id),
+		chooseMayID:         int32(c.choose_may_id),
+		chooseXDigitID:      int32(c.choose_x_digit_id),
+		chooseManaSourceID:  int32(c.choose_mana_source_id),
+		choosePlayID:        int32(c.choose_play_id),
+		useAbilityID:        int32(c.use_ability_id),
+		chosenID:            int32(c.chosen_id),
+		yesID:               int32(c.yes_id),
+		noID:                int32(c.no_id),
+		noneID:              int32(c.none_id),
+		xEndID:              int32(c.x_end_id),
+		mulliganID:          int32(c.mulligan_id),
+		keepID:              int32(c.keep_id),
+		numCount:            int32(c.num_count),
 	}
 
 	fragmentCount := int(c.fragment_count)
@@ -412,6 +512,8 @@ func registerTokenTables(c *C.MageTokenTables) error {
 	// when v2 dedup is disabled. The native side never indexes past
 	// rowCount, so the same length bound is safe.
 	t.dictEntryIDs = sliceI32(c.dict_entry_ids, rowCount)
+
+	t.numIDs = sliceI32(c.num_ids, int(t.numCount))
 
 	tokenTablesMu.Lock()
 	currentTokenTables = t

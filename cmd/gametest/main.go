@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"runtime/pprof"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -37,6 +38,7 @@ func main() {
 	modeB := flag.String("mode-b", "heuristic", "AI mode for player B (heuristic, search, adaptive)")
 	cpuProfile := flag.String("cpuprofile", "", "write cpu profile to file")
 	memProfile := flag.String("memprofile", "", "write memory profile to file")
+	loopTiming := flag.Bool("loop-timing", false, "write aggregate main game-loop timing to stderr")
 	quiet := flag.Bool("quiet", false, "suppress per-action game log output")
 	flag.Parse()
 
@@ -93,6 +95,7 @@ func main() {
 
 	wpA := parsePersonality(*persA)
 	wpB := parsePersonality(*persB)
+	totalLoop := time.Duration(0)
 
 	for gameNum := 1; gameNum <= *games; gameNum++ {
 		dA := *deckA
@@ -128,11 +131,20 @@ func main() {
 		fmt.Printf("Alice hand (%d): %s\n", len(playerA.Hand()), handStr(playerA.Hand()))
 		fmt.Printf("Bob   hand (%d): %s\n\n", len(playerB.Hand()), handStr(playerB.Hand()))
 
-		runGame(g, *maxTurns)
+		totalLoop += runGame(g, *maxTurns)
+	}
+	if *loopTiming {
+		fmt.Fprintf(
+			os.Stderr,
+			"loop_elapsed_s=%.6f games=%d loop_games_per_s=%.3f\n",
+			totalLoop.Seconds(),
+			*games,
+			float64(*games)/max(totalLoop.Seconds(), 1e-9),
+		)
 	}
 }
 
-func runGame(g *mage.Game, maxTurns int) {
+func runGame(g *mage.Game, maxTurns int) time.Duration {
 
 	// Track last printed turn so we print the header once.
 	lastTurn := -1
@@ -217,6 +229,7 @@ func runGame(g *mage.Game, maxTurns int) {
 	})
 
 	// Main turn loop.
+	loopStart := time.Now()
 	for g.CurrentTurn() <= maxTurns {
 		for _, step := range core.AllSteps() {
 			// Combat preview.
@@ -243,7 +256,7 @@ func runGame(g *mage.Game, maxTurns int) {
 				fmt.Printf("\n=== Game Over ===\n")
 				fmt.Printf("Winner: %s\n", g.Winner())
 				printFinalState(g)
-				return
+				return time.Since(loopStart)
 			}
 		}
 
@@ -262,6 +275,7 @@ func runGame(g *mage.Game, maxTurns int) {
 	}
 	fmt.Printf("\n=== Game ended after %d turns (no winner) ===\n", maxTurns)
 	printFinalState(g)
+	return time.Since(loopStart)
 }
 
 func createAI(name string, wp ai.WeightedPersonality, mode string) *ai.AIPlayer {

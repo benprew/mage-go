@@ -54,16 +54,24 @@ type BaseCard struct {
 	toughness       int
 	colorOverride   []Color
 	modes           []string
-	attrSeeds       map[Attr]int // keyword/attr seeds; NewPermanent copies these to baseAttrs
-	additionalCosts []Cost       // additional costs paid when casting (sacrifice, discard, etc.)
-	castTargets     []Target     // targeting requirements when casting (auras, targeted ETBs)
-	uncounterable   bool         // intrinsic "can't be countered" flag (set via WithUncounterable)
-	isToken         bool         // true for token cards (created by NewToken)
+	attrSeeds       map[Attr]int    // keyword/attr seeds; NewPermanent copies these to baseAttrs
+	additionalCosts []Cost          // additional costs paid when casting (sacrifice, discard, etc.)
+	alternateCosts  []AlternateCost // card-level alternate casting costs (CR 117.9); see alternate_cost.go
+	castTargets     []Target        // targeting requirements when casting (auras, targeted ETBs)
+	uncounterable   bool            // intrinsic "can't be countered" flag (set via WithUncounterable)
+	isToken         bool            // true for token cards (created by NewToken)
 }
 
 // AttrSeeds returns the keyword/attr seeds for this card.
 // NewPermanent uses these to populate the permanent's baseAttrs.
 func (c *BaseCard) AttrSeeds() map[Attr]int { return c.attrSeeds }
+
+// SetColorOverride sets the colors of a card directly, bypassing mana cost
+// derivation. Used by token-creation paths that produce colored tokens
+// (CreateColoredToken).
+func (c *BaseCard) SetColorOverride(colors []Color) {
+	c.colorOverride = append([]Color(nil), colors...)
+}
 
 func (c *BaseCard) ID() uuid.UUID           { return c.id }
 func (c *BaseCard) Name() string            { return c.name }
@@ -133,6 +141,9 @@ func (c *BaseCard) CloneFrom(other Card) {
 			maps.Copy(c.attrSeeds, bc.attrSeeds)
 		}
 		c.uncounterable = bc.uncounterable
+		if len(bc.alternateCosts) > 0 {
+			c.alternateCosts = append([]AlternateCost(nil), bc.alternateCosts...)
+		}
 	}
 }
 
@@ -450,6 +461,27 @@ func NewEnchantment(name, cost string, opts ...CardOption) *BaseCard {
 	return c
 }
 
+// NewPlaneswalker creates a new planeswalker card. The permanent enters with
+// startingLoyalty loyalty counters via an EntersWithNCounters(Loyalty, …)
+// replacement (CR 614.1c / 306.5b). This is the minimal planeswalker primitive:
+// loyalty-activated abilities, attacking planeswalkers (CR 506.4 / 508.1), and
+// the planeswalker damage-redirection rules (CR 117.6, removed in 2018) are NOT
+// implemented. The 0-loyalty state-based action (CR 704.5i) IS implemented in
+// CheckStateBasedActions.
+func NewPlaneswalker(name, cost string, startingLoyalty int, opts ...CardOption) *BaseCard {
+	c := &BaseCard{
+		id:       uuid.New(),
+		name:     name,
+		manaCost: ParseManaCost(cost),
+		types:    []CardType{TypePlaneswalker},
+	}
+	if startingLoyalty > 0 {
+		c.AddAbility(EntersWithNCounters(Loyalty, startingLoyalty))
+	}
+	applyCardOpts(c, opts)
+	return c
+}
+
 // NewAura creates a new aura enchantment card. Defaults to "enchant creature"
 // targeting. Use WithCastTarget() to override (e.g. enchant land, enchant artifact).
 func NewAura(name, cost string, opts ...CardOption) *BaseCard {
@@ -542,6 +574,7 @@ func NewPermanent(card Card, controller uuid.UUID) *Permanent {
 	p := &Permanent{
 		Card:       card,
 		Controller: controller,
+		IsToken:    card.IsToken(),
 	}
 	// Copy base abilities
 	for _, a := range card.Abilities() {

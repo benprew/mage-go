@@ -43,7 +43,21 @@ sorceries accept spell effects/options directly, plus [CardOption] values:
 	[NewArtifact](name, manaCost, ...CardOption)
 	[NewEquipment](name, manaCost, ...CardOption)       // TypeArtifact + "Equipment" subtype
 	[NewLand](name, ...CardOption)                      // no mana cost
+	[NewPlaneswalker](name, manaCost, startingLoyalty, ...CardOption)
 	[NewToken](name, power, toughness, types, subTypes, ...keywords)
+
+# Planeswalkers (minimal)
+
+The planeswalker primitive is intentionally minimal. [NewPlaneswalker] gives a
+card TypePlaneswalker and an EntersWithNCounters(Loyalty, N) replacement so the
+permanent enters with its starting loyalty (CR 614.1c / 306.5b). The 0-loyalty
+state-based action (CR 704.5i) is implemented in CheckStateBasedActions.
+
+XXX: NOT yet implemented:
+  - Loyalty-activated abilities (+N / -N abilities, CR 606)
+  - Attacking planeswalkers (CR 506.4 / 508.1) and the planeswalker as a valid
+    attack/spell/ability target as an alternative to a player
+  - Damage redirection rules (legacy CR 117.6, removed in 2018)
 
 # CardOption Functions
 
@@ -222,6 +236,16 @@ Reveal-and-pick primitives (reveal.go):
 	Game.PutOnBottomInRandomOrder(player, cards)
 	    Appends `cards` to the bottom of the library in uniformly random
 	    order. The cards must already have been removed from the library.
+
+	Game.PutOnBottomInChosenOrder(player, cards)
+	    Asks the player (via Player.ChooseScryPlacement, reason
+	    "put on bottom in any order") to order `cards` and appends them to
+	    the bottom of the library in that order. The first ID in the
+	    chosen ordering ends up just above the previous bottom card; the
+	    last ID becomes the new deepest card. Powers "Put the rest on the
+	    bottom of your library in any order" (Commune with Dinosaurs etc.).
+	    Test players script the order via TestGame.ChooseScry(player,
+	    ordering, nil).
 
 	Game.PutOnTopInChosenOrder(player, cards)
 	    Places `cards` on top in the supplied order (first = new top).
@@ -547,6 +571,36 @@ the map back, skipping targets that became illegal — only their share is
 wasted, the remaining targets still take their assigned damage. Test code
 scripts the distribution with TestGame.ChooseDamageDistribution(player, map).
 
+# Cast-Time Snapshot (CR 608.2g)
+
+Some spells reference values that are fixed when the spell is put on the
+stack rather than re-queried at resolution. Oracle text cues are phrases
+like "as you cast this spell" or "as ~ enters" — for example, Draconic
+Roar's "If you revealed a Dragon card or controlled a Dragon as you cast
+this spell". Per CR 608.2g, those values are locked in at cast time;
+state changes between cast and resolution must not flip the condition.
+
+The cast pipeline writes a [CastContext] onto the [StackObject] when the
+spell goes on the stack, populated immediately after additional costs
+have been paid. Effects read it back during resolution via
+[Game.ResolvingCastContext]:
+
+	ctx := g.ResolvingCastContext()
+	if ctx.HasControlledSubtypeAtCast("Dragon") || ctx.RevealedSubtypeAtCast("Dragon") {
+	    // bonus damage half — fixed at cast time, immune to in-response removal
+	}
+
+[CastContext] is intentionally minimal — extend with new fields as cards
+require. Currently captured:
+
+  - ControllerSubtypesAtCast: every subtype the controller had on a
+    permanent at cast time (used by "controlled an X as you cast..." riders).
+  - RevealedAtCast: cards revealed by [RevealFromHandCost] payments paid
+    for this spell (used by "revealed an X as you cast..." riders).
+
+[CastContext] is nil for activated and triggered abilities; helper methods
+(HasControlledSubtypeAtCast, RevealedSubtypeAtCast) are nil-safe.
+
 # PermanentSelector — Source vs Target
 
 Effects that can apply to either the source permanent or a resolved target use
@@ -597,6 +651,7 @@ The [Cost] interface has CanPay, Pay, and Text methods. Cost constructors:
 	[RemoveCountersCost](ct, n)        // remove n counters of type ct
 	[DiscardCost](n)                   // discard n cards
 	[DiscardRandomCost](n)             // discard n cards at random
+	[DiscardCardsWithDifferentNamesCost](n)  // discard n cards w/ distinct names
 	[ExileFromGraveyardCost](n)        // exile n cards from your graveyard
 	[ExileSourceCost]()                // exile self
 	[ReturnToHandCost](filter)         // bounce a permanent to hand (nil = any)
@@ -716,6 +771,15 @@ Convenience constructors (set condition automatically):
 	[WheneverDealsCombatDamageToPlayerTrigger](effect, opt)     // EvtDamageDealt to a player, combat, source self
 	[WheneverPermanentDealsCombatDamageToPlayerTrigger](e, opt, filter) // combat damage to player, controller's matching permanent (Coastal Piracy, Sharding Sphinx)
 	[WheneverEnchantedPermanentDealsDamageToPlayerTrigger](e, opt)      // damage to player, source is enchanted permanent (Curiosity)
+	[WhileInZoneTrigger](zone, evtType, effect, optional)               // CR 113.6 — trigger functions while source is in zone (Pia Nalaar from graveyard)
+	[BeginningOfYourEndStepFromGraveyard](effect, optional)             // EvtEndStep, controller's, source in graveyard (Pia Nalaar)
+
+By default, GenericTriggered functions only on the battlefield (CR 113.6). Use
+[GenericTriggered.InZone] to declare an additional active zone (graveyard,
+hand, exile). FireEvent scans each player's graveyard for card-level
+GenericTriggered abilities whose ActiveZones include ZoneGraveyard, sets the
+ability's source/controller transiently to the card and its owner, and queues
+the trigger like any battlefield trigger.
 
 EvtLifeGained / EvtLifeLost auto-binds preserve evt.Amount as the trigger's
 EventAmount (readable via mage.EventAmountValue() in effects), but do NOT
@@ -1210,6 +1274,8 @@ Read methods (GameReader):
 	XValue() int
 	ModeValue() int
 	GetResolvingCard() Card
+	ResolvingCastZone() Zone
+	ResolvingCastContext() *CastContext
 	FindStackObject(uuid.UUID) *StackObject
 	CombatGroups() []*CombatGroup
 
@@ -1280,15 +1346,42 @@ At resolution, only the chosen mode's Effects run.
 NewModalSpell panics with fewer than two modes (modal spells have at least
 two options by definition).
 
-For modal triggered abilities (Trusty Retriever, Entomber Exarch ETB), use
-ModalTriggerEffect — it prompts ChooseMode at trigger resolution and
-dispatches to the chosen ModalTriggerMode.Resolve callback. Per-mode
-targets are picked at put-on-stack time via the trigger's AddTarget
-declarations (CR 603.3d).
+For modal triggered abilities with per-mode targets (Entomber Exarch ETB,
+"Choose one — …" trigger wording), use GenericTriggered.WithModes. Per CR
+603.1f the mode is chosen as the trigger goes on the stack, and per CR
+603.3d the chosen mode's targets are gathered at the same time. The engine
+prompts Player.ChooseMode for the mode index, runs target selection for
+that mode only, and pushes only that mode's Effects onto the stack object
+— so resolution runs only the selected mode.
+
+	mage.EntersBattlefieldTrigger(nil, false).WithModes(
+	    mage.Mode{
+	        Label:   "Return target creature card from your graveyard to your hand",
+	        Targets: []mage.Target{mage.TargetCardInYourGraveyard(mage.IsCreatureCard)},
+	        Effects: []mage.Effect{mage.ReturnFromGraveyardToHandTarget()},
+	    },
+	    mage.Mode{
+	        Label:   "Target opponent reveals their hand …",
+	        Targets: []mage.Target{mage.TargetOpponent()},
+	        Effects: []mage.Effect{revealAndDiscard},
+	    },
+	)
+
+WithModes panics with fewer than two modes (CR 700.2). When modes are
+declared, AddTarget/AddEffect on the same trigger are ignored — the chosen
+mode's lists fully replace them.
+
+For modal triggers whose modes have no targets (Trusty Retriever's "put a
+counter on this" / "draw a card"), ModalTriggerEffect remains an option.
+It prompts ChooseMode at trigger resolution time rather than at
+put-on-stack time, which is observably indistinguishable when no targets
+are involved. Prefer WithModes for any modal trigger that has per-mode
+targets — only WithModes implements the strict CR 603.1f / 603.3d ordering
+(mode and targets chosen at stack placement, before priority passes).
 
 	mage.ModalTriggerEffect("Trusty Retriever", []mage.ModalTriggerMode{
-	    {Label: "Return target ...", Resolve: func(g, src, ctrl, targets) error {...}},
-	    {Label: "Draw a card",        Resolve: func(g, src, ctrl, targets) error {...}},
+	    {Label: "Put a counter on this", Resolve: func(g, src, ctrl, targets) error {...}},
+	    {Label: "Draw a card",            Resolve: func(g, src, ctrl, targets) error {...}},
 	})
 
 The legacy SetModes / g.ModeValue branch-inside-FuncEffect API still works
@@ -1341,9 +1434,30 @@ The engine exposes four helpers for this:
 
 	g.CastCardFromZoneWithAlternateCost(playerID, cardID, zone, mc, targets, xValue)
 	    — Like the above but pays the supplied alternate ManaCost from the
-	      controller's pool instead of the card's printed cost. Used for
-	      Scourge-of-Nel-Toth-style "by paying {3}{B}{B} ... rather than
-	      paying its mana cost".
+	      controller's pool instead of the card's printed cost. The caller
+	      provides both the zone and the mana cost; the card need not declare
+	      the alt-cost itself. Used by effect-driven alt-casts where the
+	      grant lives on a different card.
+
+	WithAlternateCost(zone, mana, additional...) CardOption
+	g.CastCardWithAlternateCost(playerID, cardID, altIdx, targets, xValue)
+	    — Card-level alternate cost (CR 117.9). The card's constructor
+	      registers one or more AlternateCost entries (zone + mana cost +
+	      optional additional costs such as sacrifice/discard/pay-life), and
+	      callers route through CastCardWithAlternateCost which:
+	        1. Verifies the card is in the alt's source zone.
+	        2. Auto-taps for the alt mana cost if the pool is short.
+	        3. Validates that all additional costs can be paid together
+	           (e.g. two SacrificeCreatureCost entries require two
+	           sacrificable creatures, not just one).
+	        4. Pays the additional costs, then enters the standard
+	           cast-from-zone pipeline (paying the alt mana, removing the
+	           card from its zone, pushing onto the stack, firing
+	           EvtSpellCast). Used by Scourge of Nel Toth ("cast from your
+	           graveyard by paying {B}{B} and sacrificing two creatures").
+	      An optional Condition func gates the alt-cost (e.g. "only on your
+	      turn"); when nil the alt is always available while the card sits
+	      in the named zone.
 
 	g.GrantCastFromExile(playerID, cardID, anyColorMana)
 	g.CastFromExilePermissionFor(playerID, cardID) *CastableFromExilePermission
@@ -1353,7 +1467,22 @@ The engine exposes four helpers for this:
 	      Luxury). When AnyColorMana is true, the card's colored pips collapse
 	      into generic for the cost calculation, modelling CR 609.4b "spend
 	      mana as though it were mana of any color". The permission is
-	      cleared automatically when the card leaves exile.
+	      cleared automatically when the card leaves exile. The caster need
+	      not own the exiled card (CR 706.10): Gonti's controller can cast a
+	      card originally owned by an opponent.
+
+	g.ExileCardFaceDown(card, exiledBy, revealedTo...)
+	g.RevealExiledCardTo(cardID, playerID)
+	ExiledCard.FaceDown / ExiledCard.RevealedTo / ExiledCard.VisibleTo(playerID)
+	    — Face-down exile (CR 707, 408). A face-down exiled card hides its
+	      identity from every player except those listed in RevealedTo. Used
+	      by Gonti, Lord of Luxury: the chosen card is exiled face down and
+	      only Gonti's controller is permitted to see it. RevealExiledCardTo
+	      grants additional players permission to look at the identity later
+	      (no-op once the entry has gone face-up or left exile). When the
+	      card leaves exile (cast / removed) the face-down state is dropped
+	      with the entry; UI/observers should query VisibleTo to decide
+	      whether to display the card's name and characteristics.
 
 	g.AddExileIfWouldGoToGraveyardThisTurn(cardID, sourceID)
 	g.IsCardMarkedExileInsteadOfGraveyard(cardID) bool
@@ -1463,6 +1592,10 @@ the appropriate replacement:
 	g.SetAttackerDamageRedirect(aID, absID)    → attackerDamageRedirectReplacement
 	g.SetSkipNextDraw(playerID)                → skipDrawReplacement
 	g.SetDrawReplacement(playerID, count)      → drawReplacementEffect
+	g.AddEmptyLibraryDrawReplacement(srcID,
+	    playerID, callback)                    → emptyLibraryDrawReplacement
+	                                              (Ormos, Archive Keeper; "if you would
+	                                              draw while your library is empty")
 	g.SetLichActive(playerID, sourceID)        → lichLifeGainReplacement
 	g.PreventAllDamageFrom(sourceID)           → damagePreventionRuleReplacement
 	g.SetMinimumLife(playerID)                 → minimumLifeReplacement (cycle)
@@ -1476,7 +1609,7 @@ the appropriate replacement:
 
 For custom replacements, call [*Game.AddReplacementEffect](r) directly.
 
-## Built-In Replacement Implementations (19)
+## Built-In Replacement Implementations (20)
 
 All live in replacement.go:
 
@@ -1496,7 +1629,13 @@ All live in replacement.go:
 	minimumLifeReplacement             — caps damage so life stays >= 1 (cycle)
 	skipDrawReplacement                — skips next normal draw
 	drawReplacementEffect              — Aladdin's Lamp draw replacement
-	damagePreventionRuleReplacement    — from/to PermanentFilter-based prevention (cycle)
+	emptyLibraryDrawReplacement        — replaces draws from an empty library with a
+	                                      card-supplied callback (Ormos, Archive Keeper)
+	damagePreventionRuleReplacement    — from/to PermanentFilter-based prevention (cycle).
+	                                      Supports combatOnly / noncombatOnly flags and a
+	                                      toPlayerID gate for "damage dealt to <player>"
+	                                      (e.g. Blessed Sanctuary). See
+	                                      PreventNoncombatDamageToControllerAndCreatures.
 	counterDoublerReplacement          — doubles +1/+1 (or other) counter placements on
 	                                      matching permanents (CR 614.1c)
 	etbAdditionalCountersReplacement   — adds N more counters when matching permanents
@@ -1575,6 +1714,7 @@ Attach with WithAbility:
 
 	[SacrificeUnlessLand](subtype)        // sacrifice if you don't control land type
 	[EntersWithXCounters](counterType)    // ETB with X counters
+	[EntersWithComputedCounters](counterType, compute) // ETB with counters computed from board state (Towering Titan)
 	[CopyCreatureOnETB]()                 // clone ETB (Doppelganger)
 	[ETBWithTargets](effect)              // run effect on ETB using spell targets
 	[ETBEffect](effect)                   // run effect on ETB without targets
@@ -1825,5 +1965,87 @@ Complex card with FuncEffect:
 	        )),
 	    )
 	})
+
+# Custom-keyword support: Secrets of Strixhaven (keyword_sos.go)
+
+The Secrets of Strixhaven set introduces seven set-specific keywords that
+ship as small composable helpers in keyword_sos.go (no engine-wide
+constants beyond AttrPrepared):
+
+	Prepared:
+	    [WithPreparedSpell](spellFactory func() Card) CardOption
+	    Game.IsPrepared(permID) bool
+	    Game.SetPrepared(permID, prepared bool)
+	    Game.CastPreparedSpellCopy(playerID, permID, spellFactory) error
+	    AttrPrepared (core.Attr; in keyword range)
+	    HasPreparedSpell(card) bool
+
+	    The CardOption installs:
+	      1) An ETB trigger that calls SetPrepared(self, true).
+	      2) A free, sorcery-speed activated ability gated on
+	         IsPrepared(self) that calls CastPreparedSpellCopy. The cast
+	         pushes a freshly built copy of `spellFactory()` onto the
+	         stack with IsCopy=true, prompts for any declared targets,
+	         fires EvtSpellCast, then calls SetPrepared(self, false).
+
+	Repartee:
+	    [WheneverYouCastInstantOrSorceryTargetingCreatureTrigger](effect, optional)
+	          *GenericTriggered
+
+	    Fires only when the controller casts an instant/sorcery whose
+	    declared targets include at least one creature on the battlefield.
+
+	Opus / Increment ("amount of mana spent to cast"):
+	    [ManaSpentToCast](*StackObject) int           — sums ColorsSpent
+	    [ManaSpentForSpellEvent](evt, GameReader) int  — for trigger predicates
+	    [OpusEffect](text, fn(g, src, ctrl, manaSpent)) Effect
+	    [IncrementTrigger]() *GenericTriggered
+
+	    OpusEffect wraps a closure that receives the total mana the
+	    controller spent to cast the triggering spell. Inside an
+	    EvtSpellCast trigger the helper reads the topmost non-ability
+	    StackObject's CastContext.ColorsSpent.
+
+	    IncrementTrigger() returns the standard Increment cast-trigger:
+	    "Whenever you cast a spell, if the amount of mana you spent is
+	    greater than this creature's power or toughness, put a +1/+1
+	    counter on this creature."
+
+	Infusion ("if you gained life this turn"):
+	    [IfControllerGainedLifeThisTurn](GameReader, controller) bool
+	    [LifeGainedThisTurnFor](GameReader, controller) int
+	    [InfusionEffect](text, inner Effect) Effect
+
+	    InfusionEffect wraps `inner` so it only resolves when the
+	    controller has gained at least one life this turn. Backed by the
+	    existing PlayerLifeGainedThisTurn tracker — life-gain effects
+	    that fire EvtLifeGained populate the count automatically.
+
+	Grandeur ("Discard another card with the same name as this"):
+	    [DiscardAnotherCardNamedSelfCost]() Cost
+
+	    A Cost suitable for an activated ability: payable iff the
+	    controller's hand contains a card with the source's name that
+	    isn't the source itself.
+
+	Paradigm ("After you first resolve a spell with this name, …"):
+	    Game.RecordParadigmResolution(playerID, name)
+	    Game.HasResolvedParadigmSpell(playerID, name) bool
+	    Game.RegisterParadigmExiledCopy(playerID, name, cardID)
+	    Game.ParadigmExiledCopy(playerID, name) (uuid.UUID, bool)
+
+	    These are per-game state hooks: a Paradigm spell, after first
+	    resolving, calls RecordParadigmResolution + (after exile)
+	    RegisterParadigmExiledCopy. A main-phase trigger (defined on the
+	    card) consults HasResolvedParadigmSpell and ParadigmExiledCopy to
+	    decide whether to offer the recurring free-cast.
+
+# Custom Per-Game State
+
+For set-specific state that doesn't fit any existing Game field, the engine
+provides a per-game string-keyed bag (Game.customState) accessed through
+typed helpers in the relevant keyword file (e.g. paradigmStateOf in
+keyword_sos.go). The bag is allocated by NewGame and survives the lifetime
+of the game.
 */
 package mage
