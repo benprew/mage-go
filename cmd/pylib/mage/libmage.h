@@ -136,6 +136,7 @@ extern int64_t MagePendingPlayer(int64_t id);
 extern int64_t MageIsOver(int64_t id);
 extern char* MageWinner(int64_t id);
 extern MageEncodeResult MageStartTextRollout(MageTextRolloutStartRequest* req);
+extern MageEncodeResult MageAddTextRolloutGames(MageTextRolloutStartRequest* req);
 extern MageTextReadyBatchResult MageNextTextInferenceBatch(int64_t maxRows, int64_t timeoutMS, MageTextReadyBatchOutputs* out);
 extern MageEncodeResult MageSubmitTextChoices(MageTextChoiceSubmitRequest* req);
 extern int32_t MageStopTextRollout(int32_t waitForActive);

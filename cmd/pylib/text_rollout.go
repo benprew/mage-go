@@ -60,7 +60,6 @@ type textRolloutScheduler struct {
 	stopCh    chan struct{}
 	readyCh   chan textPendingRequest
 	termCh    chan textTerminalEvent
-	doneCh    chan struct{}
 	wg        sync.WaitGroup
 	mu        sync.Mutex
 	nextReqID int64
@@ -121,6 +120,32 @@ func (s *textRolloutScheduler) removePending(requestID int64) {
 	s.mu.Unlock()
 }
 
+func (s *textRolloutScheduler) emitTerminal(term textTerminalEvent) {
+	select {
+	case s.termCh <- term:
+	case <-s.stopCh:
+	}
+}
+
+func (s *textRolloutScheduler) emitAbort(slotID, episodeID int64) {
+	s.emitTerminal(textTerminalEvent{
+		slotID: slotID, episodeID: episodeID, winnerIdx: -2,
+		isTimeout: 1, lifeP0: 0, lifeP1: 0,
+	})
+}
+
+func (s *textRolloutScheduler) addWorker(handleID, slotID, episodeID int64) bool {
+	s.mu.Lock()
+	if s.stopped {
+		s.mu.Unlock()
+		return false
+	}
+	s.wg.Add(1)
+	s.mu.Unlock()
+	go s.worker(handleID, slotID, episodeID)
+	return true
+}
+
 func (s *textRolloutScheduler) worker(handleID, slotID, episodeID int64) {
 	defer s.wg.Done()
 	stepIndex := int64(0)
@@ -132,6 +157,7 @@ func (s *textRolloutScheduler) worker(handleID, slotID, episodeID int64) {
 		}
 		h := getHandle(handleID)
 		if h == nil {
+			s.emitAbort(slotID, episodeID)
 			return
 		}
 		h.mu.Lock()
@@ -142,24 +168,19 @@ func (s *textRolloutScheduler) worker(handleID, slotID, episodeID int64) {
 				isTimeout: 0, lifeP0: l0, lifeP1: l1,
 			}
 			h.mu.Unlock()
-			select {
-			case s.termCh <- term:
-			case <-s.stopCh:
-			}
+			s.emitTerminal(term)
 			return
 		}
 		if s.cfg.maxStepsPerGame > 0 && stepIndex >= s.cfg.maxStepsPerGame {
 			l0, l1 := textRolloutLifeTotals(h)
 			h.mu.Unlock()
-			select {
-			case s.termCh <- textTerminalEvent{slotID: slotID, episodeID: episodeID, winnerIdx: -1, isTimeout: 1, lifeP0: l0, lifeP1: l1}:
-			case <-s.stopCh:
-			}
+			s.emitTerminal(textTerminalEvent{slotID: slotID, episodeID: episodeID, winnerIdx: -1, isTimeout: 1, lifeP0: l0, lifeP1: l1})
 			return
 		}
 		pending := buildPending(h.current)
 		if pending == nil {
 			h.mu.Unlock()
+			s.emitAbort(slotID, episodeID)
 			return
 		}
 		playerIdx := int64(pending.PlayerIdx)
@@ -190,10 +211,16 @@ func (s *textRolloutScheduler) worker(handleID, slotID, episodeID int64) {
 
 		h = getHandle(handleID)
 		if h == nil {
+			s.emitAbort(slotID, episodeID)
 			return
 		}
 		h.mu.Lock()
 		pending = buildPending(h.current)
+		if pending == nil {
+			h.mu.Unlock()
+			s.emitAbort(slotID, episodeID)
+			return
+		}
 		action, err := actionFromStepChoice(
 			pending,
 			choice.selectedCols,
@@ -203,10 +230,12 @@ func (s *textRolloutScheduler) worker(handleID, slotID, episodeID int64) {
 		)
 		if err != nil {
 			h.mu.Unlock()
+			s.emitAbort(slotID, episodeID)
 			return
 		}
 		if err := routeAction(h, action); err != nil {
 			h.mu.Unlock()
+			s.emitAbort(slotID, episodeID)
 			return
 		}
 		ev := waitForNext(h)
@@ -228,6 +257,15 @@ func (s *textRolloutScheduler) stop(wait bool) {
 	if wait {
 		s.wg.Wait()
 	}
+}
+
+func validateTextRolloutHandles(handles []int64) (int64, bool) {
+	for _, handleID := range handles {
+		if getHandle(handleID) == nil {
+			return handleID, false
+		}
+	}
+	return 0, true
 }
 
 func textRolloutSchedulerCurrent() *textRolloutScheduler {
@@ -300,9 +338,15 @@ func MageStartTextRollout(req *C.MageTextRolloutStartRequest) (res C.MageEncodeR
 	if termCap <= 0 {
 		termCap = int(textMaxInt64(1, n))
 	}
+	handles := unsafe.Slice((*int64)(unsafe.Pointer(req.handles)), n)
+	slots := unsafe.Slice((*int64)(unsafe.Pointer(req.slot_ids)), n)
+	episodes := unsafe.Slice((*int64)(unsafe.Pointer(req.episode_ids)), n)
+	if handleID, ok := validateTextRolloutHandles(handles); !ok {
+		return newEncodeResult(0, mageEncodeErrUnknownHandle, fmt.Sprintf("unknown handle %d", handleID))
+	}
 	s := &textRolloutScheduler{
 		cfg: cfg, stopCh: make(chan struct{}), readyCh: make(chan textPendingRequest, readyCap),
-		termCh: make(chan textTerminalEvent, termCap), doneCh: make(chan struct{}),
+		termCh:  make(chan textTerminalEvent, termCap),
 		pending: make(map[int64]textPendingRequest),
 	}
 
@@ -313,15 +357,40 @@ func MageStartTextRollout(req *C.MageTextRolloutStartRequest) (res C.MageEncodeR
 	textRollout.scheduler = s
 	textRollout.mu.Unlock()
 
+	for i := int64(0); i < n; i++ {
+		if !s.addWorker(handles[i], slots[i], episodes[i]) {
+			return newEncodeResult(0, mageEncodeErrInvalidArgument, "text rollout scheduler is stopping")
+		}
+	}
+	return newEncodeResult(0, mageEncodeErrOK, "")
+}
+
+//export MageAddTextRolloutGames
+func MageAddTextRolloutGames(req *C.MageTextRolloutStartRequest) (res C.MageEncodeResult) {
+	if req == nil {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "req must be non-nil")
+	}
+	s := textRolloutSchedulerCurrent()
+	if s == nil {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "text rollout scheduler is not running")
+	}
+	n := int64(req.n)
+	if n < 0 {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "req.n must be non-negative")
+	}
+	if n > 0 && (req.handles == nil || req.slot_ids == nil || req.episode_ids == nil) {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "handles, slot_ids, and episode_ids must be non-nil")
+	}
 	handles := unsafe.Slice((*int64)(unsafe.Pointer(req.handles)), n)
 	slots := unsafe.Slice((*int64)(unsafe.Pointer(req.slot_ids)), n)
 	episodes := unsafe.Slice((*int64)(unsafe.Pointer(req.episode_ids)), n)
+	if handleID, ok := validateTextRolloutHandles(handles); !ok {
+		return newEncodeResult(0, mageEncodeErrUnknownHandle, fmt.Sprintf("unknown handle %d", handleID))
+	}
 	for i := int64(0); i < n; i++ {
-		if getHandle(handles[i]) == nil {
-			return newEncodeResult(0, mageEncodeErrUnknownHandle, fmt.Sprintf("unknown handle %d", handles[i]))
+		if !s.addWorker(handles[i], slots[i], episodes[i]) {
+			return newEncodeResult(0, mageEncodeErrInvalidArgument, "text rollout scheduler is stopping")
 		}
-		s.wg.Add(1)
-		go s.worker(handles[i], slots[i], episodes[i])
 	}
 	return newEncodeResult(0, mageEncodeErrOK, "")
 }
