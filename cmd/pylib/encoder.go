@@ -196,8 +196,6 @@ type encodeConfig struct {
 	tokenMaxOptions  int32
 	tokenMaxTargets  int32
 	tokenMaxCardRefs int32
-	blankMaxBlanks   int32
-	blankMaxLegal    int32
 	// emitTokensPacked turns on the native packed token-assembler pass after
 	// render-plan emission. Output buffers live in outputViews.
 	emitTokensPacked bool
@@ -236,22 +234,12 @@ type outputViews struct {
 
 	// Packed (varlen) token-assembler outputs. ``packedTokenIDs`` is sized
 	// [B*max_tokens]; per-token seq/position metadata is derived by Python.
-	packedTokenIDs        []int32
-	packedCuSeqlens       []int32 // [B+1]
-	packedSeqLengths      []int32 // [B]
-	packedStatePositions  []int32 // [B]
-	packedCardRefPos      []int32
-	packedTokenOverflow   []int32
-	packedBlankPos        []int32
-	packedBlankKind       []int32
-	packedBlankGroup      []int32
-	packedBlankGroupKind  []int32
-	packedBlankOptionIdx  []int32
-	packedBlankLegalIDs   []int32
-	packedBlankLegalMask  []byte
-	packedBlankOverflow   []int32
-	packedBlankCount      []int32
-	packedBlankLegalCount []int32
+	packedTokenIDs       []int32
+	packedCuSeqlens      []int32 // [B+1]
+	packedSeqLengths     []int32 // [B]
+	packedStatePositions []int32 // [B]
+	packedCardRefPos     []int32
+	packedTokenOverflow  []int32
 }
 
 type batchRequest struct {
@@ -769,8 +757,6 @@ func fillTokenAssemblyPacked(
 	mo := int64(cfg.tokenMaxOptions)
 	mtg := int64(cfg.tokenMaxTargets)
 	mcr := int64(cfg.tokenMaxCardRefs)
-	mb := int64(cfg.blankMaxBlanks)
-	mv := int64(cfg.blankMaxLegal)
 
 	// Carve a row-sized scratch slice straight out of the packed buffer
 	// at the running cursor. The assembler writes tokens into this view
@@ -797,34 +783,6 @@ func fillTokenAssemblyPacked(
 		mo,
 		mo*mtg,
 	)
-	if mb > 0 && mv > 0 && len(outputView.packedBlankPos) > 0 {
-		rowBlankStart := outputBatchIdx * mb
-		rowBlankEnd := rowBlankStart + mb
-		rowLegalStart := outputBatchIdx * mb * mv
-		rowLegalEnd := rowLegalStart + mb*mv
-		collector := &scratch.blankCollector
-		collector.positions = outputView.packedBlankPos[rowBlankStart:rowBlankEnd]
-		collector.kind = outputView.packedBlankKind[rowBlankStart:rowBlankEnd]
-		collector.group = outputView.packedBlankGroup[rowBlankStart:rowBlankEnd]
-		collector.groupKind = outputView.packedBlankGroupKind[rowBlankStart:rowBlankEnd]
-		collector.optionIdx = outputView.packedBlankOptionIdx[rowBlankStart:rowBlankEnd]
-		collector.legalIDs = outputView.packedBlankLegalIDs[rowLegalStart:rowLegalEnd]
-		collector.legalMask = outputView.packedBlankLegalMask[rowLegalStart:rowLegalEnd]
-		if outputBatchIdx >= 0 && outputBatchIdx < int64(len(outputView.packedBlankCount)) {
-			collector.count = &outputView.packedBlankCount[outputBatchIdx]
-		} else {
-			collector.count = nil
-		}
-		collector.legalCount = outputView.packedBlankLegalCount[rowBlankStart:rowBlankEnd]
-		if outputBatchIdx >= 0 && outputBatchIdx < int64(len(outputView.packedBlankOverflow)) {
-			collector.overflow = &outputView.packedBlankOverflow[outputBatchIdx]
-			outputView.packedBlankOverflow[outputBatchIdx] = 0
-		} else {
-			collector.overflow = nil
-		}
-		collector.reset(cfg.blankMaxBlanks, cfg.blankMaxLegal)
-		out.blank = collector
-	}
 
 	outputView.packedSeqLengths[outputBatchIdx] = 0
 	outputView.packedStatePositions[outputBatchIdx] = 0
@@ -861,15 +819,6 @@ func rebasePackedPositions(view outputViews, cfg encodeConfig, batchIdx int64, d
 	for i := cardStart; i < cardEnd; i++ {
 		if view.packedCardRefPos[i] >= 0 {
 			view.packedCardRefPos[i] += delta
-		}
-	}
-
-	mb := cfg.blankMaxBlanks
-	blankStart := batchIdx * int64(mb)
-	blankEnd := blankStart + int64(mb)
-	for i := blankStart; i < blankEnd; i++ {
-		if view.packedBlankPos[i] >= 0 {
-			view.packedBlankPos[i] += delta
 		}
 	}
 }

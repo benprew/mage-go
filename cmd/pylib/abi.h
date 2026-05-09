@@ -101,8 +101,6 @@ typedef struct {
     int64_t dedup_card_bodies;
     int64_t max_tokens;
     int64_t max_card_refs;
-    int64_t max_blanks;
-    int64_t max_legal_per_blank;
     int64_t ready_queue_capacity;
     int64_t terminal_queue_capacity;
 } MageTextRolloutStartRequest;
@@ -238,35 +236,6 @@ typedef struct {
     int32_t stack_close_id;
     int32_t command_open_id;
     int32_t command_close_id;
-
-    /* Inline-blank singletons. Each ``<choose-*>`` token is emitted at the
-       cursor position recorded by an EMIT_BLANK opcode; ``chosen_id`` /
-       ``yes_id`` / ``no_id`` / ``none_id`` / ``x_end_id`` may appear in legal-
-       id lists or as bookkeeping markers in the token stream. ``use_ability``
-       is the ability-action variant of ``<choose-play>``. All are independent
-       of the cardrow / ability tables — they are pure singletons. */
-    int32_t choose_target_id;
-    int32_t choose_block_id;
-    int32_t choose_damage_order_id;
-    int32_t choose_mode_id;
-    int32_t choose_may_id;
-    int32_t choose_x_digit_id;
-    int32_t choose_mana_source_id;
-    int32_t choose_play_id;
-    int32_t use_ability_id;
-    int32_t chosen_id;
-    int32_t yes_id;
-    int32_t no_id;
-    int32_t none_id;
-    int32_t x_end_id;
-    int32_t mulligan_id;
-    int32_t keep_id;
-
-    /* Digit tokens for inline X-cost blanks: ``num_ids[k]`` is the token id
-       for digit ``k`` (typically 0..15). Length is given by ``num_count``;
-       the count is authoritative and the array may be NULL when count==0. */
-    int32_t num_count;
-    const int32_t* num_ids;
 } MageTokenTables;
 
 /* Token-assembler dimensions shared by packed token outputs. */
@@ -276,11 +245,6 @@ typedef struct {
     int32_t max_targets;
     int32_t max_card_refs;
 } MageTokenAssemblerConfig;
-
-typedef struct {
-    int32_t max_blanks;
-    int32_t max_legal_per_blank;
-} MageBlankAssemblerConfig;
 
 /*
  * Packed (varlen) token-assembler outputs. Caller allocates the token-
@@ -367,21 +331,6 @@ typedef struct {
 } MageDecisionSpecTokens;
 
 typedef struct {
-    int32_t k_max;
-    int32_t v_max;
-    int32_t* blank_positions;    /* [B, K] int32, absolute, -1 absent */
-    int32_t* blank_kind;         /* [B, K] int32, 0 absent */
-    int32_t* blank_group;        /* [B, K] int32, -1 absent */
-    int32_t* blank_group_kind;   /* [B, K] int32 */
-    int32_t* blank_option_index; /* [B, K] int32, engine option index, -1 absent */
-    int32_t* blank_legal_ids;    /* [B, K, V] int32, 0 pad */
-    uint8_t* blank_legal_mask;   /* [B, K, V] uint8 */
-    int32_t* blank_overflow;     /* [B] int32, count of dropped blanks */
-    int32_t* blank_count;        /* [B] int32, live blanks per row */
-    int32_t* blank_legal_count;  /* [B, K] int32, live legal ids per blank */
-} MagePackedBlankOutputs;
-
-typedef struct {
     int64_t* request_ids;
     int64_t* slot_ids;
     int64_t* episode_ids;
@@ -395,7 +344,6 @@ typedef struct {
     int64_t* terminal_life_p1;
     MageEncodeOutputs encode;
     MagePackedTokenAssemblerOutputs packed_tokens;
-    MagePackedBlankOutputs blanks;
 } MageTextReadyBatchOutputs;
 
 #endif
