@@ -489,7 +489,7 @@ var (
 	TargetCreature                          = mage.TargetCreature
 	TargetOtherCreature                     = mage.TargetOtherCreature
 	TargetArtifact                          = mage.TargetArtifact
-	TargetAnyTarget                         = mage.TargetAnyTarget
+	TargetDamageAnyTarget                         = mage.TargetDamageAnyTarget
 	TargetCreatureWithPowerLESource         = mage.TargetCreatureWithPowerLESource
 	TargetCreatureYouControl                = mage.TargetCreatureYouControl
 	TargetPermanent                         = mage.TargetPermanent

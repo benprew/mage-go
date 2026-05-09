@@ -341,7 +341,7 @@ func registerCreatures() {
 						return nil
 					}),
 				Tap(),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
 	})

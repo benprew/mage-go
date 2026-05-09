@@ -459,7 +459,7 @@ func registerCreatures() {
 					DealDamageToSourceStep(Fixed(3)),
 				),
 				Tap(),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
 	})

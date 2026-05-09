@@ -62,7 +62,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				PreventDamageToTarget(Fixed(1)),
 				ManaCostOf("{1}{W}"),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
 	}))
@@ -159,7 +159,7 @@ func registerCreatures() {
 				DealDamage(Fixed(1)),
 				Tap(),
 				WithCost(RemoveCountersCost(Javelin, 1)),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
 	}))
@@ -982,7 +982,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				DealDamage(Fixed(1)),
 				RemoveCountersCost(Spore, 3),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
 	}))

@@ -138,7 +138,7 @@ func registerArtifacts() {
 				DealDamage(Fixed(1)),
 				GenericCost(3),
 				WithCost(Tap()),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
 	})

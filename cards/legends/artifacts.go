@@ -502,7 +502,7 @@ func registerArtifacts() {
 						return nil
 					}),
 				Tap(),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
 	})
@@ -646,7 +646,7 @@ func registerArtifacts() {
 					},
 				),
 				Tap(),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
 	})

@@ -262,7 +262,7 @@ func registerCreatures() {
 					DealDamageToPlayers(Fixed(1), SelectController()),
 				),
 				ManaCostOf("{1}{R}{R}"),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
 	})

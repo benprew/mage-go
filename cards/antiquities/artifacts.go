@@ -21,7 +21,7 @@ func registerArtifacts() {
 				PreventDamageToTarget(Fixed(1)),
 				GenericCost(2),
 				WithCost(Tap()),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
 	})
@@ -347,7 +347,7 @@ func registerArtifacts() {
 					RegisterDelayedTriggerStep(EvtEndStep, "", ReturnToHandTarget()),
 				),
 				GenericCost(2),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
 	})
@@ -366,7 +366,7 @@ func registerArtifacts() {
 					RegisterDelayedTriggerStep(EvtEndStep, "", DestroyTarget()),
 				),
 				GenericCost(2),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 				WithControlledSinceTurnStart(),
 			),
 		)

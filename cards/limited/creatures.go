@@ -101,7 +101,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				DealDamage(Fixed(1)),
 				Tap(),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
 	})
@@ -116,7 +116,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				DealDamage(Fixed(1)),
 				Tap(),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 			// When you control no Islands, sacrifice Pirate Ship.
 			WithAbility(SacrificeUnlessLand("Island")),
@@ -763,7 +763,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				PreventDamageToTarget(Fixed(1)),
 				Tap(),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
 	})
@@ -966,7 +966,7 @@ func registerCreatures() {
 					DealDamageToPlayers(Fixed(3), SelectController()),
 				),
 				Tap(),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
 	})

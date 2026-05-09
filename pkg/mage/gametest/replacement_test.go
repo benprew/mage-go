@@ -50,7 +50,7 @@ func registerReplacementTestCards() {
 		if !mage.CardRegistered("Big Blast") {
 			mage.Register("Big Blast", func() mage.Card {
 				return mage.NewSorcery("Big Blast", "{4}{R}{R}",
-					mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(6))),
+					mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(6))),
 				)
 			})
 		}

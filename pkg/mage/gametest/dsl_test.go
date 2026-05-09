@@ -156,7 +156,7 @@ func TestXVariantCollapse(t *testing.T) {
 		if !mage.CardRegistered(name) {
 			mage.Register(name, func() mage.Card {
 				return mage.NewSorcery(name, "{X}{R}",
-					mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.XValue())),
+					mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.XValue())),
 				)
 			})
 		}

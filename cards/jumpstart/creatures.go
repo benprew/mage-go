@@ -3832,7 +3832,7 @@ func registerCreatures() {
 				ManaCostOf("{X}{R}"),
 				WithCost(Tap()),
 				WithCost(SacrificeSourceCost()),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
 	})
@@ -3968,7 +3968,7 @@ func registerCreatures() {
 				DealDamage(Fixed(1)),
 				Tap(),
 				WithCost(SacrificeSourceCost()),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
 	})
@@ -4106,7 +4106,7 @@ func registerCreatures() {
 				ManaCostOf("{R}"),
 				WithCost(Tap()),
 				WithCost(ExileFromGraveyardCost(2)),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
 	})
@@ -4696,7 +4696,7 @@ func registerCreatures() {
 				DealDamage(Fixed(1)),
 				false,
 				AnyPermanent,
-			).AddTarget(TargetPlayer())),
+			).AddTarget(TargetPlayerOrPlaneswalker())),
 		)
 	})
 
@@ -4743,7 +4743,7 @@ func registerCreatures() {
 			WithAbility(DiesTrigger(
 				DealDamage(Fixed(1)),
 				false,
-			).AddTarget(TargetAnyTarget())),
+			).AddTarget(TargetDamageAnyTarget())),
 			WithActivatedAbility(
 				Boost(Fixed(2), Fixed(0)).Targeting(ToSource()),
 				ManaCostOf("{1}{R}"),
@@ -4890,7 +4890,7 @@ func registerCreatures() {
 						[]CardType{TypeCreature}, []string{"Devil"}),
 					PutIntoGraveyardFromBattlefieldTrigger(
 						DealDamage(Fixed(1)), false,
-					).AddTarget(TargetAnyTarget()),
+					).AddTarget(TargetDamageAnyTarget()),
 				),
 			).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 				if evt.PlayerID == controllerID {
@@ -6347,7 +6347,7 @@ func registerCreatures() {
 		return NewCreature("Raging Regisaur", "{2}{R}{G}", 4, 4,
 			WithSubTypes("Dinosaur"),
 			WithAbility(AttacksTrigger(DealDamage(Fixed(1)), false).
-				AddTarget(TargetAnyTarget())),
+				AddTarget(TargetDamageAnyTarget())),
 		)
 	})
 
@@ -6422,7 +6422,7 @@ func registerCreatures() {
 				XManaCost(),
 				WithCost(Tap()),
 				WithCost(RemoveXCountersFromSourceCost(P1P1)),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 			WithGraveyardActivatedAbility(
 				ReturnSourceToHand(),
@@ -6548,7 +6548,7 @@ func registerCreatures() {
 				ManaCostOf("{5}"),
 				WithCost(Tap()),
 				WithCost(SacrificeSourceCost()),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
 	})
@@ -6590,7 +6590,7 @@ func registerCreatures() {
 			WithSubTypes("Phyrexian", "Myr"),
 			WithCardType(TypeArtifact),
 			WithAbility(DiesTrigger(DealDamage(Fixed(2)), false).
-				AddTarget(TargetAnyTarget())),
+				AddTarget(TargetDamageAnyTarget())),
 		)
 	})
 

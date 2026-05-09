@@ -72,7 +72,7 @@ func registerEnchantments() {
 				DealDamage(Fixed(1)),
 				ManaCostOf("{R}"),
 				WithCost(SacrificeCreatureCost()),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
 	})
@@ -497,7 +497,7 @@ func registerEnchantments() {
 			WithStaticAbility(BoostAttached(2, 2, AttachAura)),
 			WithAbility(
 				EntersBattlefieldTrigger(DealDamage(Fixed(2)), false).
-					AddTarget(TargetAnyTarget()),
+					AddTarget(TargetDamageAnyTarget()),
 			),
 		)
 	})
@@ -548,7 +548,7 @@ func registerEnchantments() {
 				DealDamage(Fixed(1)),
 				GenericCost(1),
 				WithCost(SacrificeMatchingCost(Or(IsArtifact, IsCreature), "Sacrifice an artifact or creature")),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
 	})
@@ -783,11 +783,11 @@ func registerEnchantments() {
 		return NewEnchantment("Sarkhan's Unsealing", "{3}{R}",
 			WithAbility(
 				WheneverYouCastSpellTrigger(DealDamage(Fixed(4)), false, creaturePower4to6).
-					AddTarget(TargetAnyTarget()),
+					AddTarget(TargetDamageAnyTarget()),
 			),
 			WithAbility(
 				WheneverYouCastSpellTrigger(FuncEffect(
-					"deal 4 damage to each opponent and each creature they control",
+					"deal 4 damage to each opponent and each creature and planeswalker they control",
 					EffectProperties{Outcome: OutcomeBenefit, Mass: true},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						opponent := g.GetOpponent(controller)
@@ -795,9 +795,9 @@ func registerEnchantments() {
 							g.DealDamageToPlayer(opponent, 4, sourceID)
 						}
 						for _, perm := range g.FilterBattlefield(NewPermanentFilter(
-							"creature opponent controls",
+							"creature or planeswalker opponent controls",
 							func(p *Permanent, _ *Game) bool {
-								return p.Controller != controller && p.HasType(TypeCreature)
+								return p.Controller != controller && (p.HasType(TypeCreature) || p.HasType(TypePlaneswalker))
 							},
 						)) {
 							g.DealDamageToPermanent(perm, 4, sourceID)

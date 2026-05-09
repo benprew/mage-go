@@ -38,7 +38,7 @@ func TestSearch_FindLethal(t *testing.T) {
 
 	// Give player A a Lightning Bolt and a Mountain to cast it
 	bolt := mage.NewInstant("Lightning Bolt", "{R}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 	)
 	bolt.SetOwner(pa.PlayerID())
 	pa.AddToHand(bolt)
@@ -406,7 +406,7 @@ func TestApplyMoveToClone_DamageSpell(t *testing.T) {
 	g.SetStep(core.PrecombatMain)
 	g.SetActivePlayerIndex(0)
 	bolt := mage.NewInstant("Lightning Bolt", "{R}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 	)
 	bolt.SetOwner(pa.PlayerID())
 	pa.AddToHand(bolt)
@@ -507,7 +507,7 @@ func TestSearch_MultiSpell_BoltAndCreature(t *testing.T) {
 	pb.SetLife(20)
 
 	bolt := mage.NewInstant("Lightning Bolt", "{R}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 	)
 	bolt.SetOwner(pa.PlayerID())
 	pa.AddToHand(bolt)
@@ -566,7 +566,7 @@ func TestXSpell_GeneratesMultipleVariants(t *testing.T) {
 	g, pa, pb := makeGame()
 
 	fireball := mage.NewSorcery("Fireball", "{X}{R}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.XValue())),
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.XValue())),
 	)
 	fireball.SetOwner(pa.PlayerID())
 	pa.AddToHand(fireball)
@@ -600,7 +600,7 @@ func TestXSpell_SearchPicksExactLethal(t *testing.T) {
 	pb.SetLife(3)
 
 	fireball := mage.NewSorcery("Fireball", "{X}{R}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.XValue())),
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.XValue())),
 	)
 	fireball.SetOwner(pa.PlayerID())
 	pa.AddToHand(fireball)
@@ -630,7 +630,7 @@ func TestXSpell_ApplySpellCast_UsesXValue(t *testing.T) {
 	g.SetStep(core.PrecombatMain)
 	g.SetActivePlayerIndex(0)
 	fireball := mage.NewSorcery("Fireball", "{X}{R}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.XValue())),
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.XValue())),
 	)
 	fireball.SetOwner(pa.PlayerID())
 	pa.AddToHand(fireball)
@@ -656,7 +656,7 @@ func TestXSpell_NoVariantsIfCantAfford(t *testing.T) {
 	g, pa, _ := makeGame()
 
 	fireball := mage.NewSorcery("Fireball", "{X}{R}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.XValue())),
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.XValue())),
 	)
 	fireball.SetOwner(pa.PlayerID())
 	pa.AddToHand(fireball)
@@ -679,7 +679,7 @@ func TestSearch_HistoryHeuristicPersists(t *testing.T) {
 	pb.SetLife(15)
 
 	bolt := mage.NewInstant("Lightning Bolt", "{R}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 	)
 	bolt.SetOwner(pa.PlayerID())
 	pa.AddToHand(bolt)
@@ -764,7 +764,7 @@ func TestGeneratePriorityMoves_NonModalSpellNoModeIndex(t *testing.T) {
 	g, pa, _ := makeGame()
 
 	bolt := mage.NewInstant("Lightning Bolt", "{R}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 	)
 	bolt.SetOwner(pa.PlayerID())
 	pa.AddToHand(bolt)
@@ -852,7 +852,7 @@ func TestApplySpellCast_MultiEffect_DrawAndDamage(t *testing.T) {
 	pb.SetLife(20)
 
 	multiSpell := mage.NewSorcery("Arcane Blast", "{1}{R}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(),
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(),
 			mage.DealDamage(mage.Fixed(3)),
 			mage.DrawCardsActivePlayer(mage.Fixed(2)),
 		),
@@ -925,7 +925,7 @@ func TestApplySpellCast_XSpellDamage(t *testing.T) {
 	pb.SetLife(20)
 
 	fireball := mage.NewSorcery("Fireball", "{X}{R}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.XValue())),
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.XValue())),
 	)
 	fireball.SetOwner(pa.PlayerID())
 	pa.AddToHand(fireball)
@@ -963,7 +963,7 @@ func BenchmarkSearch_TypicalBoard_Depth2(b *testing.B) {
 		addLands(g, pb, "Mountain", 3)
 
 		bolt := mage.NewInstant("Lightning Bolt", "{R}",
-			mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+			mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 		)
 		bolt.SetOwner(pa.PlayerID())
 		pa.AddToHand(bolt)
@@ -990,7 +990,7 @@ func BenchmarkSearch_TypicalBoard_Depth5(b *testing.B) {
 		addLands(g, pb, "Mountain", 3)
 
 		bolt := mage.NewInstant("Lightning Bolt", "{R}",
-			mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+			mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 		)
 		bolt.SetOwner(pa.PlayerID())
 		pa.AddToHand(bolt)
@@ -1065,7 +1065,7 @@ func BenchmarkSearch_LargeBoard_Depth6(b *testing.B) {
 		addLands(g, pb, "Swamp", 2)
 
 		bolt := mage.NewInstant("Lightning Bolt", "{R}",
-			mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+			mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 		)
 		bolt.SetOwner(pa.PlayerID())
 		pa.AddToHand(bolt)
@@ -1120,7 +1120,7 @@ func BenchmarkSearch_TypicalBoard_Depth3(b *testing.B) {
 		addLands(g, pb, "Mountain", 3)
 
 		bolt := mage.NewInstant("Lightning Bolt", "{R}",
-			mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+			mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 		)
 		bolt.SetOwner(pa.PlayerID())
 		pa.AddToHand(bolt)

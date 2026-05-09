@@ -29,7 +29,7 @@ func TestStrategy_OldControlHoldsInstants(t *testing.T) {
 	start := &Strategy{Personality: ai.ControlPersonality}
 	g, pa, _ := makeGame()
 	card := mage.NewInstant("Bolt", "{R}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 	)
 	card.SetOwner(pa.PlayerID())
 	pa.AddToHand(card)
@@ -86,7 +86,7 @@ func TestWeightedPresets_BurnTargetsFace(t *testing.T) {
 	g.AddToBattlefield(oppCreature)
 
 	card := mage.NewInstant("Bolt", "{R}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 	)
 	card.SetOwner(pa.PlayerID())
 	pa.AddToHand(card)
@@ -101,7 +101,7 @@ func TestWeightedPresets_BurnTargetsFace(t *testing.T) {
 func TestWeightedPresets_ControlHoldsInstants(t *testing.T) {
 	g, pa, pb := makeGame()
 	card := mage.NewInstant("Bolt", "{R}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 	)
 	card.SetOwner(pa.PlayerID())
 	pa.AddToHand(card)
@@ -156,7 +156,7 @@ func TestIntermediateTargetFace(t *testing.T) {
 	g.AddToBattlefield(oppCreature)
 
 	card := mage.NewInstant("Bolt", "{R}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 	)
 	card.SetOwner(pa.PlayerID())
 	pa.AddToHand(card)

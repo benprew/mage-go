@@ -36,7 +36,7 @@ func registerSpells() {
 
 	Register("Healing Salve", func() Card {
 		c := NewInstant("Healing Salve", "{W}",
-			NewTargetedSpell(TargetAnyTarget(), ModalEffect(
+			NewTargetedSpell(TargetDamageAnyTarget(), ModalEffect(
 				"target player gains 3 life or prevent the next 3 damage that would be dealt to any target this turn",
 				GainLifeTarget(Fixed(3)),
 				PreventDamageToTarget(Fixed(3)),
@@ -87,7 +87,7 @@ func registerSpells() {
 		// XXX: missing repeatable {1} prevention ability after initial X prevention
 		return NewInstant("Guardian Angel", "{X}{W}",
 			// Prevent the next X damage that would be dealt to any target this turn
-			NewTargetedSpell(TargetAnyTarget(), PreventDamageToTarget(XValue())),
+			NewTargetedSpell(TargetDamageAnyTarget(), PreventDamageToTarget(XValue())),
 		)
 	})
 
@@ -194,7 +194,7 @@ func registerSpells() {
 		// XXX: missing "Spend only black mana on X" restriction
 		// TODO: convert to pipeline — needs life-capping logic (cap gain at target toughness/life)
 		return NewSorcery("Drain Life", "{X}{1}{B}",
-			NewTargetedSpell(TargetAnyTarget(), FuncEffect(
+			NewTargetedSpell(TargetDamageAnyTarget(), FuncEffect(
 				"deal X damage to target and gain life equal to damage dealt",
 				EffectProperties{Outcome: OutcomeDetriment},
 				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -256,19 +256,19 @@ func registerSpells() {
 
 	Register("Lightning Bolt", func() Card {
 		return NewInstant("Lightning Bolt", "{R}",
-			NewTargetedSpell(TargetAnyTarget(), DealDamage(Fixed(3))),
+			NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(Fixed(3))),
 		)
 	})
 
 	Register("Shock", func() Card {
 		return NewInstant("Shock", "{R}",
-			NewTargetedSpell(TargetAnyTarget(), DealDamage(Fixed(2))),
+			NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(Fixed(2))),
 		)
 	})
 
 	Register("Fireball", func() Card {
 		return NewSorcery("Fireball", "{X}{R}",
-			NewTargetedSpell(TargetAnyTarget(), DealDamage(XValue())),
+			NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(XValue())),
 		)
 	})
 
@@ -276,7 +276,7 @@ func registerSpells() {
 	// TODO: convert to pipeline — needs GrantAttrToTarget primitive for CantRegenerate
 	Register("Disintegrate", func() Card {
 		return NewSorcery("Disintegrate", "{X}{R}",
-			NewTargetedSpell(TargetAnyTarget(), FuncEffect(
+			NewTargetedSpell(TargetDamageAnyTarget(), FuncEffect(
 				"deal X damage; creature can't be regenerated this turn",
 				EffectProperties{Outcome: OutcomeDetriment},
 				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -470,7 +470,7 @@ func registerSpells() {
 	// Psionic Blast deals 4 damage to any target and 2 damage to you.
 	Register("Psionic Blast", func() Card {
 		return NewInstant("Psionic Blast", "{2}{U}",
-			NewTargetedSpell(TargetAnyTarget(), CompositeEffects(
+			NewTargetedSpell(TargetDamageAnyTarget(), CompositeEffects(
 				"deal 4 damage to any target and 2 damage to you",
 				DealDamage(Fixed(4)),
 				DealDamageToPlayers(Fixed(2), SelectController()),

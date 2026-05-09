@@ -243,7 +243,7 @@ func TestNewWeightedEvaluator_TempoValuesUntappedMana(t *testing.T) {
 func TestEvalCreature_PingerVsVanilla(t *testing.T) {
 	pinger := makePerm("Prodigal Sorcerer", "{2}{U}", 1, 1, uuid.New(),
 		mage.WithActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.Tap(),
-			mage.WithTarget(mage.TargetAnyTarget())),
+			mage.WithTarget(mage.TargetDamageAnyTarget())),
 	)
 	vanilla := makePerm("Bear", "{1}{G}", 1, 1, uuid.New())
 
@@ -279,7 +279,7 @@ func TestEvalCreature_DrawCreatureVsVanilla(t *testing.T) {
 
 func TestAbilityQuality_TapToDealDamage(t *testing.T) {
 	ab := mage.NewActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.Tap(),
-		mage.WithTarget(mage.TargetAnyTarget()))
+		mage.WithTarget(mage.TargetDamageAnyTarget()))
 	got := eval.AbilityQuality(ab)
 	if got != 4 {
 		t.Errorf("AbilityQuality(tap to ping) = %d, want 4", got)
@@ -341,7 +341,7 @@ func TestAbilityQuality_FreeTapAbility(t *testing.T) {
 
 func TestAbilityQuality_PingerBeatsPump(t *testing.T) {
 	pinger := mage.NewActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.Tap(),
-		mage.WithTarget(mage.TargetAnyTarget()))
+		mage.WithTarget(mage.TargetDamageAnyTarget()))
 	pump := mage.NewActivatedAbility(
 		mage.FuncEffect("pump", mage.EffectProperties{Outcome: mage.OutcomeBenefit},
 			func(g *mage.Game, s, c uuid.UUID, t []uuid.UUID) error { return nil }),

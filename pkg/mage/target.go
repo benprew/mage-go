@@ -166,7 +166,7 @@ func TargetUpToNCreaturesYouControl(n int, filters ...PermanentFilter) Target {
 // creatures or players. Used for divided-damage spells like Flames of the
 // Firebrand ("3 damage divided as you choose among any number of targets").
 func TargetUpToNCreaturesOrPlayers(n int) Target {
-	return &AnyTarget{
+	return &DamageAnyTarget{
 		BaseTarget: BaseTarget{min: 0, max: n},
 	}
 }
@@ -271,22 +271,22 @@ func (t *ControllerTarget) Choose(controller uuid.UUID, _ Card, _ *Game, _ []uui
 	return nil
 }
 
-// AnyTarget targets a creature or player.
-type AnyTarget struct {
+// DamageAnyTarget targets "any target" for damage: a creature, planeswalker, or player (CR 115.4).
+type DamageAnyTarget struct {
 	BaseTarget
 }
 
-// TargetAnyTarget creates a target that selects any creature or player ("any target").
-func TargetAnyTarget() Target {
-	return &AnyTarget{
+// TargetDamageAnyTarget creates a target that selects any creature, planeswalker, or player ("any target").
+func TargetDamageAnyTarget() Target {
+	return &DamageAnyTarget{
 		BaseTarget: BaseTarget{min: 1, max: 1},
 	}
 }
 
-func (t *AnyTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+func (t *DamageAnyTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
 	for _, p := range g.battlefield {
-		if p.HasType(TypeCreature) && p.CanBeTargetedBy(sourceCard, controller, g) {
+		if (p.HasType(TypeCreature) || p.HasType(TypePlaneswalker)) && p.CanBeTargetedBy(sourceCard, controller, g) {
 			result = append(result, p.ID())
 		}
 	}
@@ -296,7 +296,38 @@ func (t *AnyTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []u
 	return result
 }
 
-func (t *AnyTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
+func (t *DamageAnyTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
+	t.chosen = chosen
+	return nil
+}
+
+// PlayerOrPlaneswalkerTarget targets a player or a planeswalker (e.g. "target
+// player or planeswalker" damage).
+type PlayerOrPlaneswalkerTarget struct {
+	BaseTarget
+}
+
+// TargetPlayerOrPlaneswalker creates a target that selects a player or planeswalker.
+func TargetPlayerOrPlaneswalker() Target {
+	return &PlayerOrPlaneswalkerTarget{
+		BaseTarget: BaseTarget{min: 1, max: 1},
+	}
+}
+
+func (t *PlayerOrPlaneswalkerTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+	var result []uuid.UUID
+	for _, p := range g.battlefield {
+		if p.HasType(TypePlaneswalker) && p.CanBeTargetedBy(sourceCard, controller, g) {
+			result = append(result, p.ID())
+		}
+	}
+	for _, p := range g.players {
+		result = append(result, p.PlayerID())
+	}
+	return result
+}
+
+func (t *PlayerOrPlaneswalkerTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
 	t.chosen = chosen
 	return nil
 }

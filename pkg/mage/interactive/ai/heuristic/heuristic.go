@@ -350,7 +350,7 @@ func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card
 
 			outcome := mage.SpellOutcome(sa.Effects())
 			switch t.(type) {
-			case *mage.AnyTarget:
+			case *mage.DamageAnyTarget:
 				if outcome == mage.OutcomeBenefit {
 					var ownBest uuid.UUID
 					ownBestScore := -1

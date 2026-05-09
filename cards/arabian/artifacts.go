@@ -115,7 +115,7 @@ func registerArtifacts() {
 				DealDamage(Fixed(4)),
 				Tap(),
 				WithCost(ManaCostOf("{8}")),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
 	})

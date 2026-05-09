@@ -15,7 +15,7 @@ func TestUnifiedActionSpellAndActivatedAbilityResolve(t *testing.T) {
 			return mage.NewInstant(boltName, "{R}",
 				mage.NewSpell(
 					mage.DealDamage(mage.Fixed(3)),
-					mage.WithTarget(mage.TargetAnyTarget()),
+					mage.WithTarget(mage.TargetDamageAnyTarget()),
 				),
 			)
 		})
@@ -26,7 +26,7 @@ func TestUnifiedActionSpellAndActivatedAbilityResolve(t *testing.T) {
 				mage.WithAction(mage.NewActivated(
 					mage.Tap(),
 					mage.DealDamage(mage.Fixed(1)),
-					mage.WithTarget(mage.TargetAnyTarget()),
+					mage.WithTarget(mage.TargetDamageAnyTarget()),
 				)),
 			)
 		})
@@ -115,7 +115,7 @@ func TestUnifiedSpellActionPaysActionCosts(t *testing.T) {
 			return mage.NewInstant(name, "{R}",
 				mage.NewSpell(
 					mage.DealDamage(mage.Fixed(3)),
-					mage.WithTarget(mage.TargetAnyTarget()),
+					mage.WithTarget(mage.TargetDamageAnyTarget()),
 					mage.WithCost(mage.DiscardCost(1)),
 				),
 			)
@@ -147,7 +147,7 @@ func TestInstantAndSorceryAcceptActionParts(t *testing.T) {
 		mage.Register(boltName, func() mage.Card {
 			return mage.NewInstant(boltName, "{R}",
 				mage.DealDamage(mage.Fixed(3)),
-				mage.WithTarget(mage.TargetAnyTarget()),
+				mage.WithTarget(mage.TargetDamageAnyTarget()),
 			)
 		})
 	}

@@ -244,7 +244,7 @@ func TestPriorityAction_HoldsCombatTrickPrecombat(t *testing.T) {
 	g.AddToBattlefield(bear)
 
 	bolt := mage.NewInstant("Bolt", "{R}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 	)
 	bolt.SetOwner(pa.PlayerID())
 	pa.AddToHand(bolt)
@@ -270,7 +270,7 @@ func TestPriorityAction_CastsTrickWithNoAttackers(t *testing.T) {
 	g.AddToBattlefield(oppCreature)
 
 	bolt := mage.NewInstant("Bolt", "{R}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 	)
 	bolt.SetOwner(pa.PlayerID())
 	pa.AddToHand(bolt)
@@ -297,7 +297,7 @@ func TestAutoSelectTargets_AnyTargetBenefit_OwnCreature(t *testing.T) {
 	g.AddToBattlefield(ownCreature)
 
 	card := mage.NewInstant("Heal", "{W}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DrawCards(mage.Fixed(1))),
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DrawCards(mage.Fixed(1))),
 	)
 	card.SetOwner(pa.PlayerID())
 	pa.AddToHand(card)
@@ -315,7 +315,7 @@ func TestAutoSelectTargets_AnyTargetDetriment_OpponentCreature(t *testing.T) {
 	g.AddToBattlefield(oppCreature)
 
 	card := mage.NewInstant("Bolt", "{R}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 	)
 	card.SetOwner(pa.PlayerID())
 	pa.AddToHand(card)
@@ -333,7 +333,7 @@ func TestAutoSelectTargets_BurnTargetsFace(t *testing.T) {
 	g.AddToBattlefield(oppCreature)
 
 	card := mage.NewInstant("Bolt", "{R}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 	)
 	card.SetOwner(pa.PlayerID())
 	pa.AddToHand(card)
@@ -420,7 +420,7 @@ func TestAutoSelectTargets_LethalPreference(t *testing.T) {
 	g.AddToBattlefield(big, small)
 
 	card := mage.NewInstant("Bolt", "{R}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 	)
 	card.SetOwner(pa.PlayerID())
 	pa.AddToHand(card)
@@ -435,7 +435,7 @@ func TestAutoSelectTargets_LethalPreference(t *testing.T) {
 func TestAutoSelectTargets_FallbackToOpponentFace(t *testing.T) {
 	g, pa, pb := makeGame()
 	card := mage.NewInstant("Bolt", "{R}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 	)
 	card.SetOwner(pa.PlayerID())
 	pa.AddToHand(card)
@@ -549,7 +549,7 @@ func TestPriorityAction_ActivatesAbility(t *testing.T) {
 
 	pinger := makePerm("Pinger", "{1}{R}", 1, 1, pa.PlayerID(),
 		mage.WithActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.Tap(),
-			mage.WithTarget(mage.TargetAnyTarget())),
+			mage.WithTarget(mage.TargetDamageAnyTarget())),
 	)
 	g.AddToBattlefield(pinger)
 

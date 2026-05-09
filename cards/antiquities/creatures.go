@@ -329,7 +329,7 @@ func registerCreatures() {
 				DealDamage(Fixed(2)),
 				Tap(),
 				WithCost(SacrificeArtifactCost()),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
 	})
@@ -825,7 +825,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				DealDamage(Fixed(1)),
 				RemoveCountersCost(P1P1, 1),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
 	})
