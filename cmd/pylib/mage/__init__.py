@@ -115,6 +115,22 @@ MageEncodeResult MageBatchPoll(
 MageEncodeResult MageBatchStepByChoice(
     MageStepChoiceRequest *req
 );
+typedef struct {
+    int64_t n;
+    int64_t max_decode_len;
+    int64_t max_anchors;
+    const int64_t *handles;
+    const int32_t *decision_type;
+    const int32_t *output_token_ids;
+    const int32_t *output_pointer_subjects;
+    const uint8_t *output_is_pointer;
+    const int32_t *output_lens;
+    const int32_t *pointer_anchor_handles;
+    const int32_t *pointer_anchor_count;
+} MageDecoderStepRequest;
+MageEncodeResult MageBatchStepByDecoderAction(
+    MageDecoderStepRequest *req
+);
 MageEncodeResult MageEncodeBatch(
     MageBatchRequest *req,
     MageEncodeConfig *cfg,
@@ -449,6 +465,111 @@ def release_batch_handle(batch_handle: int) -> None:
 
     _ensure_loaded()
     _lib.MageReleaseBatchHandle(batch_handle)
+
+
+def _as_ptr(buf, ctype: str):
+    """Best-effort coercion of a numpy / torch / list buffer to a cffi pointer.
+
+    For numpy arrays and torch tensors with __array_interface__ /
+    data_ptr(), wrap the existing memory as a cffi pointer (no copy). For
+    plain Python sequences, allocate a fresh cffi buffer (the caller must
+    keep the returned keepalive alive for the duration of the cgo call).
+    Returns ``(ptr, keepalive)``.
+    """
+
+    if buf is None:
+        return _ffi.NULL, None
+    # numpy array
+    if hasattr(buf, "__array_interface__"):
+        addr = buf.__array_interface__["data"][0]
+        return _ffi.cast(ctype, addr), buf
+    # torch tensor (CPU contiguous)
+    if hasattr(buf, "data_ptr"):
+        return _ffi.cast(ctype, buf.data_ptr()), buf
+    # cffi pointer already
+    if isinstance(buf, _ffi.CData):
+        return _ffi.cast(ctype, buf), buf
+    # fallback: allocate a fresh buffer from a Python sequence
+    elem = ctype.replace("const ", "").replace(" *", "[]")
+    keep = _ffi.new(elem, list(buf))
+    return _ffi.cast(ctype, keep), keep
+
+
+def batch_step_by_decoder_action(
+    handles,
+    decision_type,
+    output_token_ids,
+    output_pointer_subjects,
+    output_is_pointer,
+    output_lens,
+    pointer_anchor_handles,
+    pointer_anchor_count,
+) -> None:
+    """Apply a batch of decoder-shaped actions to the engine.
+
+    All array arguments must be host-resident, contiguous, and of the dtypes
+    declared on the C ABI (see abi.h::MageDecoderStepRequest):
+
+    * ``handles`` — ``[n]`` int64 game handles.
+    * ``decision_type`` — ``[n]`` int32 (DecisionType enum, -1 = no-op).
+    * ``output_token_ids`` — ``[n, L_max]`` int32 (PAD-padded).
+    * ``output_pointer_subjects`` — ``[n, L_max]`` int32 (-1 on vocab steps).
+    * ``output_is_pointer`` — ``[n, L_max]`` uint8.
+    * ``output_lens`` — ``[n]`` int32.
+    * ``pointer_anchor_handles`` — ``[n, N_max]`` int32.
+    * ``pointer_anchor_count`` — ``[n]`` int32.
+
+    Per-env errors are logged on the Go side and the env is skipped — the
+    rest of the batch advances. See ``docs/decoder_impala_plan.md`` item 1.
+    """
+
+    _ensure_loaded()
+    n = int(handles.shape[0]) if hasattr(handles, "shape") else len(handles)
+    if hasattr(output_token_ids, "shape"):
+        l_max = int(output_token_ids.shape[1])
+    else:
+        l_max = 0
+    if hasattr(pointer_anchor_handles, "shape"):
+        n_max = int(pointer_anchor_handles.shape[1])
+    else:
+        n_max = 0
+
+    handles_p, _kh = _as_ptr(handles, "const int64_t *")
+    dt_p, _kd = _as_ptr(decision_type, "const int32_t *")
+    tok_p, _kt = _as_ptr(output_token_ids, "const int32_t *")
+    ptr_p, _kp = _as_ptr(output_pointer_subjects, "const int32_t *")
+    is_ptr_p, _ki = _as_ptr(output_is_pointer, "const uint8_t *")
+    lens_p, _kl = _as_ptr(output_lens, "const int32_t *")
+    anc_p, _ka = _as_ptr(pointer_anchor_handles, "const int32_t *")
+    cnt_p, _kc = _as_ptr(pointer_anchor_count, "const int32_t *")
+
+    req = _ffi.new("MageDecoderStepRequest *")
+    req.n = n
+    req.max_decode_len = l_max
+    req.max_anchors = n_max
+    req.handles = handles_p
+    req.decision_type = dt_p
+    req.output_token_ids = tok_p
+    req.output_pointer_subjects = ptr_p
+    req.output_is_pointer = is_ptr_p
+    req.output_lens = lens_p
+    req.pointer_anchor_handles = anc_p
+    req.pointer_anchor_count = cnt_p
+
+    res = _lib.MageBatchStepByDecoderAction(req)
+    if res.error_code != 0:
+        msg = (
+            _ffi.string(res.error_message).decode("utf-8")
+            if res.error_message
+            else ""
+        )
+        if res.error_message:
+            _lib.MageFreeString(res.error_message)
+        raise MageError(
+            f"MageBatchStepByDecoderAction failed (code {res.error_code}): {msg}"
+        )
+    if res.error_message:
+        _lib.MageFreeString(res.error_message)
 
 
 def register_decision_spec_tokens(

@@ -123,6 +123,7 @@ extern char* MageRegisteredManaCosts(void);
 extern char* MageSetCardNameRows(char* cardNameRowsJSON);
 extern MageEncodeResult MageBatchPoll(MageBatchRequest* req, MageBatchPollOutputs* out);
 extern MageEncodeResult MageBatchStepByChoice(MageStepChoiceRequest* req);
+extern MageEncodeResult MageBatchStepByDecoderAction(MageDecoderStepRequest* req);
 extern MageEncodeResult MageEncodeBatch(MageBatchRequest* req, MageEncodeConfig* cfg, MageEncodeOutputs* out);
 extern char* MageNativeTimingSummary(int32_t reset);
 extern int32_t MageRegisterTokenTables(MageTokenTables* tables);

@@ -27,6 +27,47 @@ typedef struct {
     const int64_t* may_selected;
 } MageStepChoiceRequest;
 
+/*
+ * Decoder-pipeline batched engine step. Each env's action is encoded as the
+ * raw autoregressive decoder output (token ids + per-step pointer subjects +
+ * is_pointer mask) plus the per-env pointer-anchor handle table.
+ *
+ * Per env:
+ *   - decision_type[i]   : DecisionType enum (0=PRIORITY, 1=DECLARE_ATTACKERS,
+ *                          2=DECLARE_BLOCKERS, 3=CHOOSE_TARGETS, 4=MAY,
+ *                          5=CHOOSE_MODE, 6=CHOOSE_X, -1 = no-op).
+ *   - output_token_ids[i, :output_lens[i]]
+ *                        : grammar-vocab ids (see decision_mask.go).
+ *   - output_is_pointer[i, :output_lens[i]]
+ *                        : 1 = step is a pointer step (token id is ignored;
+ *                          subject_index is used instead), 0 = vocab step.
+ *   - output_pointer_subjects[i, :output_lens[i]]
+ *                        : per-step subject_index into the anchor table; -1
+ *                          on vocab steps.
+ *   - pointer_anchor_handles[i, :pointer_anchor_count[i]]
+ *                        : engine handle (option index for PRIORITY /
+ *                          ATTACKERS / TARGETS, attacker-order index for
+ *                          BLOCKERS' attacker side, defender player_idx for
+ *                          ATTACKERS' defender side). Indexed by subject_index.
+ *
+ * Errors are handled per env: a malformed decoder action logs and is skipped,
+ * the rest of the batch advances. Mirrors MageBatchStepByChoice's overall
+ * shape and return semantics.
+ */
+typedef struct {
+    int64_t n;
+    int64_t max_decode_len;
+    int64_t max_anchors;
+    const int64_t* handles;                    /* [n] */
+    const int32_t* decision_type;              /* [n] */
+    const int32_t* output_token_ids;           /* [n, max_decode_len] */
+    const int32_t* output_pointer_subjects;    /* [n, max_decode_len] */
+    const uint8_t* output_is_pointer;          /* [n, max_decode_len] */
+    const int32_t* output_lens;                /* [n] */
+    const int32_t* pointer_anchor_handles;     /* [n, max_anchors] */
+    const int32_t* pointer_anchor_count;       /* [n] */
+} MageDecoderStepRequest;
+
 typedef struct {
     int64_t max_options;
     int64_t max_targets_per_option;

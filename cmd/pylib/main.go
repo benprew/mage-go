@@ -1442,6 +1442,118 @@ func MageBatchStepByChoice(req *C.MageStepChoiceRequest) (res C.MageEncodeResult
 	return newEncodeResult(0, mageEncodeErrOK, "")
 }
 
+// MageBatchStepByDecoderAction applies a batch of decoder-shaped actions to
+// the engine. See abi.h::MageDecoderStepRequest for the wire layout. Per-env
+// errors are logged and skipped (the rest of the batch advances) — matching
+// MageBatchStepByChoice's semantics for a malformed env.
+//
+//export MageBatchStepByDecoderAction
+func MageBatchStepByDecoderAction(req *C.MageDecoderStepRequest) (res C.MageEncodeResult) {
+	defer func() {
+		if r := recover(); r != nil {
+			res = newEncodeResult(
+				0,
+				mageEncodeErrEncodeFailure,
+				fmt.Sprintf("panic: %v\n%s", r, debug.Stack()),
+			)
+		}
+	}()
+	if req == nil {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "req must be non-nil")
+	}
+	n := int64(req.n)
+	if n < 0 {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "req.n must be non-negative")
+	}
+	if n == 0 {
+		return newEncodeResult(0, mageEncodeErrOK, "")
+	}
+	maxLen := int64(req.max_decode_len)
+	maxAnchors := int64(req.max_anchors)
+	if maxLen < 0 || maxAnchors < 0 {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "max_decode_len and max_anchors must be non-negative")
+	}
+	if req.handles == nil || req.decision_type == nil || req.output_lens == nil ||
+		req.pointer_anchor_count == nil {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "handles, decision_type, output_lens, pointer_anchor_count must be non-nil")
+	}
+	if maxLen > 0 && (req.output_token_ids == nil || req.output_pointer_subjects == nil || req.output_is_pointer == nil) {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "output_token_ids, output_pointer_subjects, output_is_pointer must be non-nil when max_decode_len > 0")
+	}
+	if maxAnchors > 0 && req.pointer_anchor_handles == nil {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "pointer_anchor_handles must be non-nil when max_anchors > 0")
+	}
+
+	handles := unsafe.Slice((*int64)(unsafe.Pointer(req.handles)), n)
+	decisionTypes := unsafe.Slice((*int32)(unsafe.Pointer(req.decision_type)), n)
+	outputLens := unsafe.Slice((*int32)(unsafe.Pointer(req.output_lens)), n)
+	anchorCounts := unsafe.Slice((*int32)(unsafe.Pointer(req.pointer_anchor_count)), n)
+	var tokens, ptrSubjects []int32
+	var isPointer []uint8
+	var anchorHandles []int32
+	if maxLen > 0 {
+		tokens = unsafe.Slice((*int32)(unsafe.Pointer(req.output_token_ids)), n*maxLen)
+		ptrSubjects = unsafe.Slice((*int32)(unsafe.Pointer(req.output_pointer_subjects)), n*maxLen)
+		isPointer = unsafe.Slice((*uint8)(unsafe.Pointer(req.output_is_pointer)), n*maxLen)
+	}
+	if maxAnchors > 0 {
+		anchorHandles = unsafe.Slice((*int32)(unsafe.Pointer(req.pointer_anchor_handles)), n*maxAnchors)
+	}
+
+	for i, handleID := range handles {
+		dt := decisionType(decisionTypes[i])
+		if dt == decTypeNone {
+			continue
+		}
+		h := getHandle(handleID)
+		if h == nil {
+			fmt.Printf("MageBatchStepByDecoderAction: unknown handle %d (env %d), skipping\n", handleID, i)
+			continue
+		}
+		h.mu.Lock()
+		if h.done {
+			h.mu.Unlock()
+			continue
+		}
+		ln := int64(outputLens[i])
+		if ln < 0 || ln > maxLen {
+			h.mu.Unlock()
+			fmt.Printf("MageBatchStepByDecoderAction: env %d output_lens=%d out of range [0,%d], skipping\n", i, ln, maxLen)
+			continue
+		}
+		ac := int64(anchorCounts[i])
+		if ac < 0 || ac > maxAnchors {
+			h.mu.Unlock()
+			fmt.Printf("MageBatchStepByDecoderAction: env %d pointer_anchor_count=%d out of range [0,%d], skipping\n", i, ac, maxAnchors)
+			continue
+		}
+		var tokSlice, ptrSlice []int32
+		var isPtrSlice []uint8
+		var anchorSlice []int32
+		if ln > 0 {
+			rowStart := int64(i) * maxLen
+			tokSlice = tokens[rowStart : rowStart+ln]
+			ptrSlice = ptrSubjects[rowStart : rowStart+ln]
+			isPtrSlice = isPointer[rowStart : rowStart+ln]
+		}
+		if ac > 0 {
+			rowStart := int64(i) * maxAnchors
+			anchorSlice = anchorHandles[rowStart : rowStart+ac]
+		}
+		if err := applyDecoderAction(dt, tokSlice, ptrSlice, isPtrSlice, anchorSlice, h); err != nil {
+			h.mu.Unlock()
+			fmt.Printf("MageBatchStepByDecoderAction: env %d apply failed: %v, skipping\n", i, err)
+			continue
+		}
+		ev := waitForNext(h)
+		h.current = ev
+		h.done = ev.Over
+		h.stateBuf = nil
+		h.mu.Unlock()
+	}
+	return newEncodeResult(0, mageEncodeErrOK, "")
+}
+
 //export MageEncodeBatch
 func MageEncodeBatch(req *C.MageBatchRequest, cfg *C.MageEncodeConfig, out *C.MageEncodeOutputs) (res C.MageEncodeResult) {
 	defer func() {
