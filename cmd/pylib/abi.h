@@ -302,6 +302,70 @@ typedef struct {
     int32_t* token_overflow;     /* [B] int32 (1 = row truncated) */
 } MagePackedTokenAssemblerOutputs;
 
+/*
+ * Per-row decision-spec outputs emitted alongside the packed token stream.
+ * The caller pre-allocates buffers at capacity ``B * T_spec_max`` (and
+ * similarly for anchors and the legal-edge bitmap). The native side packs
+ * each row's emitted spec tokens into the row's slice (0-padded), with
+ * pointer_anchor_positions already shifted by the row's emitted state-token
+ * length so they reference the combined ``[state_tokens] + [spec_tokens]``
+ * stream. ``spec_overflow`` is set to a nonzero value if any per-row cap
+ * was exceeded.
+ */
+typedef struct {
+    int32_t* spec_tokens;             /* [B, T_spec_max] int32, 0 = pad */
+    int32_t* spec_lens;               /* [B] int32 */
+    int32_t* decision_type;           /* [B] int32, -1 = no pending */
+    int32_t* pointer_anchor_positions;/* [B, N_anchors_max] int32, -1 = pad */
+    int32_t* pointer_anchor_kinds;    /* [B, N_anchors_max] int32, -1 = pad */
+    int32_t* pointer_anchor_subjects; /* [B, N_anchors_max] int32 */
+    int32_t* pointer_anchor_handles;  /* [B, N_anchors_max] int32 */
+    int32_t* pointer_anchor_counts;   /* [B] int32 */
+    uint8_t* legal_edge_bitmap;       /* [B, N_blockers_max, N_attackers_max] */
+    int32_t* legal_edge_n_blockers;   /* [B] int32 */
+    int32_t* legal_edge_n_attackers;  /* [B] int32 */
+    int32_t  T_spec_max;
+    int32_t  N_anchors_max;
+    int32_t  N_blockers_max;
+    int32_t  N_attackers_max;
+    int32_t  spec_overflow;
+} MagePackedSpecOutputs;
+
+/*
+ * Decision-spec tag tokens + digit-token lookup table. Caller passes the
+ * 12 fixed structural tag ids, the 7 decision-type-name ids, the 16
+ * stack-ref ids, and the BPE digit-id table indexed by integer value.
+ * Pointers are borrowed; tensors must outlive the registration.
+ */
+typedef struct {
+    int32_t spec_open_id;
+    int32_t spec_close_id;
+    int32_t decision_type_id;
+    int32_t legal_attacker_id;
+    int32_t legal_blocker_id;
+    int32_t legal_target_id;
+    int32_t legal_action_id;
+    int32_t for_action_id;
+    int32_t max_value_open_id;
+    int32_t max_value_close_id;
+    int32_t player_ref0_id;
+    int32_t player_ref1_id;
+
+    /* dt_name_ids[k] = id for `<dt-{name}>` for decisionType k.
+       k in [0..6] (priority, declare_attackers, declare_blockers,
+       choose_targets, may, choose_mode, choose_x). */
+    const int32_t* dt_name_ids;       /* length 7 */
+
+    /* stack_ref_ids[k] = id for `<stack-ref:k>`. length 16. */
+    const int32_t* stack_ref_ids;     /* length 16 */
+
+    /* Digit lookup: value v in [0, max_value_digit_max] maps to the
+       int32 sequence at digits[offsets[v]:offsets[v+1]]. */
+    int32_t max_value_digit_max;
+    const int32_t* max_value_digits;
+    const int32_t* max_value_digit_offsets; /* length max_value_digit_max + 2 */
+} MageDecisionSpecTokens;
+
 typedef struct {
     int32_t k_max;
     int32_t v_max;

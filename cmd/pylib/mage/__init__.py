@@ -261,6 +261,69 @@ MageEncodeResult MageEncodeTokensPacked(
     MageBlankAssemblerConfig *blank_cfg,
     MagePackedBlankOutputs *blank_out
 );
+
+typedef struct {
+    int32_t *spec_tokens;
+    int32_t *spec_lens;
+    int32_t *decision_type;
+    int32_t *pointer_anchor_positions;
+    int32_t *pointer_anchor_kinds;
+    int32_t *pointer_anchor_subjects;
+    int32_t *pointer_anchor_handles;
+    int32_t *pointer_anchor_counts;
+    uint8_t *legal_edge_bitmap;
+    int32_t *legal_edge_n_blockers;
+    int32_t *legal_edge_n_attackers;
+    int32_t T_spec_max;
+    int32_t N_anchors_max;
+    int32_t N_blockers_max;
+    int32_t N_attackers_max;
+    int32_t spec_overflow;
+} MagePackedSpecOutputs;
+
+typedef struct {
+    int32_t spec_open_id;
+    int32_t spec_close_id;
+    int32_t decision_type_id;
+    int32_t legal_attacker_id;
+    int32_t legal_blocker_id;
+    int32_t legal_target_id;
+    int32_t legal_action_id;
+    int32_t for_action_id;
+    int32_t max_value_open_id;
+    int32_t max_value_close_id;
+    int32_t player_ref0_id;
+    int32_t player_ref1_id;
+    const int32_t *dt_name_ids;
+    const int32_t *stack_ref_ids;
+    int32_t max_value_digit_max;
+    const int32_t *max_value_digits;
+    const int32_t *max_value_digit_offsets;
+} MageDecisionSpecTokens;
+
+int32_t MageRegisterDecisionSpecTokens(MageDecisionSpecTokens *tables);
+
+MageEncodeResult MageEncodeDecisionSpec(
+    MageBatchRequest *req,
+    int32_t *state_token_lens,
+    MagePackedSpecOutputs *spec_out,
+    int64_t *handle_out
+);
+
+int32_t MageDecisionMaskNext(
+    int64_t batch_handle,
+    int32_t *prefix_tokens,
+    int32_t *prefix_pointers,
+    int32_t *prefix_lens,
+    int32_t batch_size,
+    int32_t prefix_len_max,
+    int32_t grammar_vocab_size,
+    int32_t n_anchors_max,
+    uint8_t *out_vocab_mask,
+    uint8_t *out_pointer_mask
+);
+
+void MageReleaseBatchHandle(int64_t handle);
 """
 
 
@@ -346,6 +409,146 @@ def resolved_library_path() -> str:
 def native_timing_summary(reset: bool = False) -> dict[str, Any]:
     _ensure_loaded()
     return _take_raw(_lib.MageNativeTimingSummary(1 if reset else 0))
+
+
+def encode_decision_spec(
+    handles,
+    state_token_lens,
+    spec_out,
+):
+    """Run MageEncodeDecisionSpec for the given batch.
+
+    ``handles`` is a sequence of int64 game handles. ``state_token_lens`` is
+    a sequence of int32 state-text lengths (one per row) used to shift
+    pointer-anchor positions into the combined stream. ``spec_out`` is a
+    pre-built cffi ``MagePackedSpecOutputs *`` with all output buffers
+    bound; the caller owns those buffers.
+
+    Returns ``(rows_written, batch_handle)``. The handle is freed by
+    ``release_batch_handle`` after all decoder steps for this batch are
+    done.
+    """
+
+    _ensure_loaded()
+    n = len(handles)
+    handles_buf = _ffi.new("int64_t[]", list(handles))
+    lens_buf = _ffi.new("int32_t[]", list(state_token_lens))
+    req = _ffi.new("MageBatchRequest *")
+    req.n = n
+    req.handles = handles_buf
+    req.perspective_player_idx = _ffi.NULL
+    handle_out = _ffi.new("int64_t *")
+    res = _lib.MageEncodeDecisionSpec(req, lens_buf, spec_out, handle_out)
+    if res.error_code != 0:
+        msg = _ffi.string(res.error_message).decode("utf-8") if res.error_message else ""
+        if res.error_message:
+            _lib.MageFreeString(res.error_message)
+        raise MageError(f"MageEncodeDecisionSpec failed (code {res.error_code}): {msg}")
+    if res.error_message:
+        _lib.MageFreeString(res.error_message)
+    return int(res.decision_rows_written), int(handle_out[0])
+
+
+def decision_mask_next(
+    batch_handle: int,
+    prefix_tokens,
+    prefix_pointers,
+    prefix_lens,
+    batch_size: int,
+    prefix_len_max: int,
+    grammar_vocab_size: int,
+    n_anchors_max: int,
+    out_vocab_mask,
+    out_pointer_mask,
+) -> int:
+    """Compute per-row vocab + pointer masks for one decoder step.
+
+    All array arguments are cffi pointers (``int32_t *`` / ``uint8_t *``)
+    backed by caller-owned numpy / torch buffers. Returns 0 on success.
+    """
+
+    _ensure_loaded()
+    return int(
+        _lib.MageDecisionMaskNext(
+            batch_handle,
+            prefix_tokens,
+            prefix_pointers,
+            prefix_lens,
+            batch_size,
+            prefix_len_max,
+            grammar_vocab_size,
+            n_anchors_max,
+            out_vocab_mask,
+            out_pointer_mask,
+        )
+    )
+
+
+def release_batch_handle(batch_handle: int) -> None:
+    """Drop a batch handle previously returned by ``encode_decision_spec``."""
+
+    _ensure_loaded()
+    _lib.MageReleaseBatchHandle(batch_handle)
+
+
+def register_decision_spec_tokens(
+    spec_open_id: int,
+    spec_close_id: int,
+    decision_type_id: int,
+    legal_attacker_id: int,
+    legal_blocker_id: int,
+    legal_target_id: int,
+    legal_action_id: int,
+    for_action_id: int,
+    max_value_open_id: int,
+    max_value_close_id: int,
+    player_ref0_id: int,
+    player_ref1_id: int,
+    dt_name_ids,
+    stack_ref_ids,
+    max_value_digit_max: int,
+    max_value_digits,
+    max_value_digit_offsets,
+):
+    """Register the spec-tag id table + digit-token lookup with the Go side.
+
+    ``dt_name_ids`` is a length-7 int sequence (one per DecisionType).
+    ``stack_ref_ids`` is length-16. ``max_value_digits`` is a flat int32
+    buffer of all digit-id sequences concatenated; ``max_value_digit_offsets``
+    has length ``max_value_digit_max + 2``.
+
+    Returns the cffi keepalive object: callers must hold a reference for
+    the lifetime of the registration so the borrowed buffers stay alive.
+    """
+
+    _ensure_loaded()
+    dt_buf = _ffi.new("int32_t[]", list(dt_name_ids))
+    stack_buf = _ffi.new("int32_t[]", list(stack_ref_ids))
+    digits_buf = _ffi.new("int32_t[]", list(max_value_digits))
+    offsets_buf = _ffi.new("int32_t[]", list(max_value_digit_offsets))
+    tables = _ffi.new("MageDecisionSpecTokens *")
+    tables.spec_open_id = spec_open_id
+    tables.spec_close_id = spec_close_id
+    tables.decision_type_id = decision_type_id
+    tables.legal_attacker_id = legal_attacker_id
+    tables.legal_blocker_id = legal_blocker_id
+    tables.legal_target_id = legal_target_id
+    tables.legal_action_id = legal_action_id
+    tables.for_action_id = for_action_id
+    tables.max_value_open_id = max_value_open_id
+    tables.max_value_close_id = max_value_close_id
+    tables.player_ref0_id = player_ref0_id
+    tables.player_ref1_id = player_ref1_id
+    tables.dt_name_ids = dt_buf
+    tables.stack_ref_ids = stack_buf
+    tables.max_value_digit_max = max_value_digit_max
+    tables.max_value_digits = digits_buf
+    tables.max_value_digit_offsets = offsets_buf
+    rc = int(_lib.MageRegisterDecisionSpecTokens(tables))
+    if rc != 0:
+        raise MageError(f"MageRegisterDecisionSpecTokens failed (code {rc})")
+    # Caller must keep the keepalive alive — return the buffers + struct.
+    return (tables, dt_buf, stack_buf, digits_buf, offsets_buf)
 
 
 def new_game(
