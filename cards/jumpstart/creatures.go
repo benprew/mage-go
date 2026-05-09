@@ -4774,6 +4774,7 @@ func registerCreatures() {
 	Register("Volley Veteran", func() Card {
 		return NewCreature("Volley Veteran", "{3}{R}", 4, 2,
 			WithSubTypes("Goblin", "Warrior"),
+			WithCastTarget(TargetPermanentOpponentControls(IsCreature)),
 			WithETBEffect(DealDamage(CountBattlefield(SelectController(),
 				And(IsCreature, HasSubType("Goblin"))))),
 		)
@@ -4786,6 +4787,7 @@ func registerCreatures() {
 	Register("Warfire Javelineer", func() Card {
 		return NewCreature("Warfire Javelineer", "{3}{R}", 2, 3,
 			WithSubTypes("Minotaur", "Warrior"),
+			WithCastTarget(TargetPermanentOpponentControls(IsCreature)),
 			WithETBEffect(DealDamage(CountZone(ZoneGraveyard, SelectController(),
 				NewCardFilter("instant or sorcery", func(c Card) bool {
 					return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
@@ -4960,6 +4962,7 @@ func registerCreatures() {
 	Register("Affectionate Indrik", func() Card {
 		return NewCreature("Affectionate Indrik", "{5}{G}", 4, 4,
 			WithSubTypes("Beast"),
+			WithCastTarget(TargetPermanentOpponentControls(IsCreature)),
 			WithETBEffect(FuncEffect("fight target creature you don't control",
 				EffectProperties{Outcome: OutcomeBenefit},
 				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
