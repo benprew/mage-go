@@ -393,41 +393,6 @@ func (e *directTokenEmitter) emitStatus(status int32) {
 	}
 }
 
-func (e *directTokenEmitter) emitBlank(kindID, optionIndex int32) error {
-	tables := e.tables
-	if tables == nil {
-		return nil
-	}
-	return e.emitBlankLegal(kindID, optionIndex, blankGroupCrossBlank, []int32{tables.chosenID})
-}
-
-func (e *directTokenEmitter) emitBlankLegal(kindID, optionIndex, groupKind int32, legalIDs []int32) error {
-	tables := e.tables
-	if tables == nil || len(legalIDs) == 0 {
-		return nil
-	}
-	pos := e.writeSingle(kindID)
-	if pos < 0 || e.out.blank == nil {
-		return nil
-	}
-	if err := e.out.blank.recordBlank(
-		pos+e.out.cursorBase,
-		kindID,
-		0,
-		groupKind,
-		optionIndex,
-		int32(len(legalIDs)),
-	); err != nil {
-		return err
-	}
-	for _, legalID := range legalIDs {
-		if err := e.out.blank.recordLegal(legalID); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func (e *directTokenEmitter) emitOpenDict() {
 	e.closeScalarOwner()
 	e.writeSingle(e.tables.dictOpenID)

@@ -26,8 +26,6 @@ type textRolloutConfig struct {
 	dedupCardBodies     bool
 	maxTokens           int32
 	maxCardRefs         int32
-	maxBlanks           int32
-	maxLegalPerBlank    int32
 }
 
 type textPendingRequest struct {
@@ -291,8 +289,6 @@ func makeTextEncodeConfig(cfg textRolloutConfig, rows int64) encodeConfig {
 		tokenMaxOptions:     int32(cfg.maxOptions),
 		tokenMaxTargets:     int32(cfg.maxTargetsPerOption),
 		tokenMaxCardRefs:    cfg.maxCardRefs,
-		blankMaxBlanks:      cfg.maxBlanks,
-		blankMaxLegal:       cfg.maxLegalPerBlank,
 	}
 }
 
@@ -321,8 +317,6 @@ func MageStartTextRollout(req *C.MageTextRolloutStartRequest) (res C.MageEncodeR
 		dedupCardBodies:     int64(req.dedup_card_bodies) != 0,
 		maxTokens:           int32(req.max_tokens),
 		maxCardRefs:         int32(req.max_card_refs),
-		maxBlanks:           int32(req.max_blanks),
-		maxLegalPerBlank:    int32(req.max_legal_per_blank),
 	}
 	if err := validateEncodeConfig(makeTextEncodeConfig(cfg, textMaxInt64(1, n))); err != nil {
 		return newEncodeResult(0, err.code, err.message)
@@ -488,9 +482,6 @@ drained:
 		return newTextReadyResult(0, 0, 0, viewErr.code, viewErr.message)
 	}
 	if err := attachPackedTokenViews(rows, cfg, &out.packed_tokens, &views); err != nil {
-		return newTextReadyResult(0, 0, 0, err.code, err.message)
-	}
-	if err := attachPackedBlankViews(rows, cfg, &out.blanks, &views); err != nil {
 		return newTextReadyResult(0, 0, 0, err.code, err.message)
 	}
 	decisions, err := encodeBatchGo(batchRequest{handles: handles, perspectives: perspectives}, cfg, views)
