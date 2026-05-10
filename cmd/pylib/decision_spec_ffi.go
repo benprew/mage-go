@@ -436,3 +436,121 @@ func MageDecisionMaskNext(
 	wg.Wait()
 	return 0
 }
+
+// MagePackCombinedTokens rewrites the packed token stream produced by
+// MageEncodeTokensPacked so that each row's spec tokens (emitted into a side
+// buffer by MageEncodeDecisionSpec) are concatenated immediately after that
+// row's state tokens. After this call, ``packed.token_ids[0:cu_seqlens[B]]``
+// holds ``state || spec`` for every row in row-major packed layout, with all
+// supporting outputs (cu_seqlens, seq_lengths, state_positions,
+// card_ref_positions, spec.pointer_anchor_positions) updated to the new
+// combined-stream coordinates.
+//
+// The rewrite is in-place: state tokens are shifted forward (lower row index
+// processed last) so the source slice is read before being overwritten by a
+// later row's destination. Per-row card_ref_positions get the row's
+// cumulative-spec offset added; per-row pointer_anchor_positions (which Go
+// previously wrote in row-local combined coords) get the row's new packed
+// start added so they share the card-ref convention.
+//
+// Returns 0 on success, -1 if the combined stream would exceed
+// ``token_capacity`` (caller must allocate ``B * max_tokens`` large enough to
+// hold state + spec for every row).
+//
+//export MagePackCombinedTokens
+func MagePackCombinedTokens(
+	n C.int32_t,
+	tokenCapacity C.int32_t,
+	maxCardRefs C.int32_t,
+	packed *C.MagePackedTokenAssemblerOutputs,
+	spec *C.MagePackedSpecOutputs,
+) C.int32_t {
+	defer func() { _ = recover() }()
+	if packed == nil || spec == nil {
+		return -2
+	}
+	nInt := int(n)
+	if nInt == 0 {
+		return 0
+	}
+	cardRefsW := int(maxCardRefs)
+	tSpec := int(spec.T_spec_max)
+	nAnchors := int(spec.N_anchors_max)
+
+	tokens := unsafe.Slice((*int32)(unsafe.Pointer(packed.token_ids)), int(tokenCapacity))
+	cu := unsafe.Slice((*int32)(unsafe.Pointer(packed.cu_seqlens)), nInt+1)
+	seqLens := unsafe.Slice((*int32)(unsafe.Pointer(packed.seq_lengths)), nInt)
+	statePos := unsafe.Slice((*int32)(unsafe.Pointer(packed.state_positions)), nInt)
+	var cardRefs []int32
+	if cardRefsW > 0 {
+		cardRefs = unsafe.Slice((*int32)(unsafe.Pointer(packed.card_ref_positions)), nInt*cardRefsW)
+	}
+	var specTokens []int32
+	if tSpec > 0 {
+		specTokens = unsafe.Slice((*int32)(unsafe.Pointer(spec.spec_tokens)), nInt*tSpec)
+	}
+	specLens := unsafe.Slice((*int32)(unsafe.Pointer(spec.spec_lens)), nInt)
+	var anchorPos []int32
+	if nAnchors > 0 {
+		anchorPos = unsafe.Slice((*int32)(unsafe.Pointer(spec.pointer_anchor_positions)), nInt*nAnchors)
+	}
+
+	// Compute new combined cu_seqlens and check overflow before mutating.
+	newCu := make([]int32, nInt+1)
+	for b := 0; b < nInt; b++ {
+		newCu[b+1] = newCu[b] + seqLens[b] + specLens[b]
+	}
+	if int(newCu[nInt]) > int(tokenCapacity) {
+		return -1
+	}
+
+	// Walk rows in reverse so the destination range never clobbers a yet-
+	// unread source range (every row's new start is >= its old start).
+	for b := nInt - 1; b >= 0; b-- {
+		oldStart := statePos[b]
+		newStart := newCu[b]
+		sLen := seqLens[b]
+		pLen := specLens[b]
+		// Move state tokens from [oldStart, oldStart+sLen) to
+		// [newStart, newStart+sLen). Copy right-to-left within the row to
+		// avoid overwriting the source when newStart > oldStart.
+		if oldStart != newStart {
+			for i := sLen - 1; i >= 0; i-- {
+				tokens[newStart+i] = tokens[oldStart+i]
+			}
+		}
+		// Append spec tokens immediately after state.
+		for i := int32(0); i < pLen; i++ {
+			tokens[newStart+sLen+i] = specTokens[int32(b)*int32(tSpec)+i]
+		}
+		// Shift card_ref_positions for this row by (newStart - oldStart),
+		// preserving -1 sentinels.
+		delta := newStart - oldStart
+		if delta != 0 && cardRefsW > 0 {
+			base := b * cardRefsW
+			for i := 0; i < cardRefsW; i++ {
+				v := cardRefs[base+i]
+				if v >= 0 {
+					cardRefs[base+i] = v + delta
+				}
+			}
+		}
+		// Shift pointer_anchor_positions: row-local combined → packed
+		// combined (add the row's new packed start).
+		if nAnchors > 0 {
+			base := b * nAnchors
+			for i := 0; i < nAnchors; i++ {
+				v := anchorPos[base+i]
+				if v >= 0 {
+					anchorPos[base+i] = v + newStart
+				}
+			}
+		}
+		statePos[b] = newStart
+		seqLens[b] = sLen + pLen
+	}
+	for b := 0; b <= nInt; b++ {
+		cu[b] = newCu[b]
+	}
+	return 0
+}

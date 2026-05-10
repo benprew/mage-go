@@ -286,6 +286,14 @@ MageEncodeResult MageEncodeDecisionSpec(
     int64_t *handle_out
 );
 
+int32_t MagePackCombinedTokens(
+    int32_t n,
+    int32_t token_capacity,
+    int32_t max_card_refs,
+    MagePackedTokenAssemblerOutputs *packed,
+    MagePackedSpecOutputs *spec
+);
+
 int32_t MageDecisionMaskNext(
     int64_t batch_handle,
     int32_t *prefix_tokens,

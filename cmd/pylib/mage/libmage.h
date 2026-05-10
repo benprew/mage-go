@@ -106,6 +106,7 @@ extern int32_t MageRegisterDecisionSpecTokens(MageDecisionSpecTokens* tables);
 extern void MageReleaseBatchHandle(int64_t handle);
 extern MageEncodeResult MageEncodeDecisionSpec(MageBatchRequest* req, int32_t* stateTokenLensPtr, MagePackedSpecOutputs* specOut, int64_t* handleOut);
 extern int32_t MageDecisionMaskNext(int64_t batchHandle, int32_t* prefixTokensPtr, int32_t* prefixPointersPtr, int32_t* prefixLensPtr, int32_t batchSize, int32_t prefixLenMax, int32_t grammarVocabSizeArg, int32_t nAnchorsMax, uint8_t* outVocabMaskPtr, uint8_t* outPointerMaskPtr);
+extern int32_t MagePackCombinedTokens(int32_t n, int32_t tokenCapacity, int32_t maxCardRefs, MagePackedTokenAssemblerOutputs* packed, MagePackedSpecOutputs* spec);
 
 /* Return type for MageNewGame */
 struct MageNewGame_return {
