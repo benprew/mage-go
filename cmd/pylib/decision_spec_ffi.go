@@ -8,6 +8,7 @@ import "C"
 
 import (
 	"fmt"
+	"runtime/debug"
 	"sync"
 	"sync/atomic"
 	"unsafe"
@@ -146,7 +147,7 @@ func MageEncodeDecisionSpec(
 ) (res C.MageEncodeResult) {
 	defer func() {
 		if r := recover(); r != nil {
-			res = newEncodeResult(0, mageEncodeErrEncodeFailure, fmt.Sprintf("panic: %v", r))
+			res = newEncodeResult(0, mageEncodeErrEncodeFailure, fmt.Sprintf("panic: %v\n%s", r, debug.Stack()))
 		}
 	}()
 	if req == nil || specOut == nil || handleOut == nil {

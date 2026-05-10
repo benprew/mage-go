@@ -1558,7 +1558,7 @@ func MageBatchStepByDecoderAction(req *C.MageDecoderStepRequest) (res C.MageEnco
 func MageEncodeBatch(req *C.MageBatchRequest, cfg *C.MageEncodeConfig, out *C.MageEncodeOutputs) (res C.MageEncodeResult) {
 	defer func() {
 		if r := recover(); r != nil {
-			res = newEncodeResult(0, mageEncodeErrEncodeFailure, fmt.Sprintf("panic: %v", r))
+			res = newEncodeResult(0, mageEncodeErrEncodeFailure, fmt.Sprintf("panic: %v\n%s", r, debug.Stack()))
 		}
 	}()
 	if req == nil || cfg == nil || out == nil {
